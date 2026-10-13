@@ -56,7 +56,7 @@ const REDIRECT_URIS = `
   };
   console.log(JSON.stringify({
     google: await start('/sign-in/social', { provider: 'google' }),
-    oidc: await start('/sign-in/oauth2', { providerId: 'oidc' }),
+    oidc: await start('/sign-in/social', { provider: 'oidc' }),
   }));
 `;
 

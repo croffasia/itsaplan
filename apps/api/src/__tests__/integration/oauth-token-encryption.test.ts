@@ -79,10 +79,10 @@ describe('OAuth tokens at rest', () => {
   // through the app handler.
   async function signInThroughProvider(): Promise<string> {
     const start = await app.handle(
-      new Request('http://localhost/api/auth/sign-in/oauth2', {
+      new Request('http://localhost/api/auth/sign-in/social', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ providerId: 'oidc', callbackURL: '/' }),
+        body: JSON.stringify({ provider: 'oidc', callbackURL: '/' }),
       }),
     );
     expect(start.status).toBe(200);
@@ -99,12 +99,12 @@ describe('OAuth tokens at rest', () => {
     return cookiesOf(callback);
   }
 
-  async function readAccessToken(cookie: string): Promise<string> {
+  async function readAccessToken(cookie: string, accountId: string): Promise<string> {
     const res = await app.handle(
       new Request('http://localhost/api/auth/get-access-token', {
         method: 'POST',
         headers: { 'content-type': 'application/json', origin: trustedOrigins[0], cookie },
-        body: JSON.stringify({ providerId: 'oidc' }),
+        body: JSON.stringify({ accountId }),
       }),
     );
     expect(res.status).toBe(200);
@@ -121,15 +121,16 @@ describe('OAuth tokens at rest', () => {
     expect(row.accessToken).not.toContain(ACCESS_TOKEN);
     expect(row.refreshToken).not.toContain(REFRESH_TOKEN);
 
-    expect(await readAccessToken(cookie)).toBe(ACCESS_TOKEN);
+    expect(await readAccessToken(cookie, row.id)).toBe(ACCESS_TOKEN);
   });
 
   it('still reads a token stored in clear text before encryption was turned on', async () => {
     await enableOidc();
     const user = await signUpTestUser();
     // Such a row can no longer be produced through sign-in, so it is written directly.
+    const id = crypto.randomUUID();
     await db.insert(account).values({
-      id: crypto.randomUUID(),
+      id,
       accountId: 'idp-user-2',
       providerId: 'oidc',
       userId: user.userId,
@@ -139,6 +140,6 @@ describe('OAuth tokens at rest', () => {
       updatedAt: new Date(),
     });
 
-    expect(await readAccessToken(user.cookie)).toBe(ACCESS_TOKEN);
+    expect(await readAccessToken(user.cookie, id)).toBe(ACCESS_TOKEN);
   });
 });

@@ -3,32 +3,28 @@
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { API_URL } from '@/lib/api/core/client';
-
-type ConsentResponse = { redirectURI?: string; message?: string };
+import { authClient } from '@/lib/auth-client';
 
 export default function OAuthConsentPage() {
   const t = useTranslations('mcp');
   const searchParams = useSearchParams();
-  const consentCode = searchParams.get('consent_code');
+  // The signed authorization request the server sent the person here with.
+  const signed = searchParams.has('sig');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   async function decide(accept: boolean) {
-    if (!consentCode || pending) return;
+    if (!signed || pending) return;
     setPending(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/api/auth/oauth2/consent`, {
+      // The auth client adds the signed request from the URL and follows the redirect
+      // to the MCP client the answer comes with.
+      const { error } = await authClient.$fetch('/oauth2/consent', {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ accept, consent_code: consentCode }),
+        body: { accept },
       });
-      const result = (await response.json()) as ConsentResponse;
-      if (!response.ok || !result.redirectURI)
-        throw new Error(result.message || t('oauth.consent.failed'));
-      window.location.assign(result.redirectURI);
+      if (error) throw new Error(error.message || t('oauth.consent.failed'));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : t('oauth.consent.failed'));
       setPending(false);
@@ -42,7 +38,7 @@ export default function OAuthConsentPage() {
           <h1 className="text-xl font-semibold">{t('oauth.consent.title')}</h1>
           <p className="text-sm text-muted-foreground">{t('oauth.consent.description')}</p>
         </div>
-        {!consentCode ? (
+        {!signed ? (
           <p className="text-sm text-destructive">{t('oauth.consent.missingCode')}</p>
         ) : (
           <div className="flex justify-end gap-3">

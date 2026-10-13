@@ -16,6 +16,7 @@ async function signIn(email: string) {
 }
 
 const REDIRECT_URI = 'https://client.example.com/callback';
+const MCP_RESOURCE = `${process.env.API_URL}/mcp`;
 // The RFC 7636 example pair: the challenge is the S256 of the verifier.
 const CODE_VERIFIER = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
 const CODE_CHALLENGE = 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM';
@@ -24,7 +25,7 @@ const CODE_CHALLENGE = 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM';
 // their session, consent, and exchange the code.
 async function mcpAccessToken(cookie: string): Promise<string> {
   const registered = await app.handle(
-    new Request('http://localhost/api/auth/mcp/register', {
+    new Request('http://localhost/api/auth/oauth2/register', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
@@ -37,7 +38,7 @@ async function mcpAccessToken(cookie: string): Promise<string> {
   const clientId = ((await registered.json()) as { client_id: string }).client_id;
   const authorize = await app.handle(
     new Request(
-      `http://localhost/api/auth/mcp/authorize?${new URLSearchParams({
+      `http://localhost/api/auth/oauth2/authorize?${new URLSearchParams({
         response_type: 'code',
         client_id: clientId,
         redirect_uri: REDIRECT_URI,
@@ -45,29 +46,28 @@ async function mcpAccessToken(cookie: string): Promise<string> {
         code_challenge_method: 'S256',
         scope: 'openid',
         state: 'st',
+        resource: MCP_RESOURCE,
       })}`,
       { headers: { cookie } },
     ),
   );
-  const consentCode = new URL(
-    authorize.headers.get('location') ?? '',
-    'http://localhost',
-  ).searchParams.get('consent_code');
+  // The consent page receives the signed authorization request and posts it back.
+  const consentPage = new URL(authorize.headers.get('location') ?? '');
   const consent = await app.handle(
     new Request('http://localhost/api/auth/oauth2/consent', {
       method: 'POST',
       headers: { 'content-type': 'application/json', cookie },
-      body: JSON.stringify({ accept: true, consent_code: consentCode }),
+      body: JSON.stringify({ accept: true, oauth_query: consentPage.search.slice(1) }),
     }),
   );
-  const { redirectURI } = (await consent.json()) as { redirectURI: string };
+  const { url } = (await consent.json()) as { url: string };
   const token = await app.handle(
-    new Request('http://localhost/api/auth/mcp/token', {
+    new Request('http://localhost/api/auth/oauth2/token', {
       method: 'POST',
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         grant_type: 'authorization_code',
-        code: new URL(redirectURI).searchParams.get('code') ?? '',
+        code: new URL(url).searchParams.get('code') ?? '',
         redirect_uri: REDIRECT_URI,
         client_id: clientId,
         code_verifier: CODE_VERIFIER,

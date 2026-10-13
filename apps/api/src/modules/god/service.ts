@@ -3,6 +3,7 @@ import {
   user,
   session,
   oauthAccessToken,
+  oauthRefreshToken,
   teamInvite,
   account,
   agentSkill,
@@ -339,6 +340,7 @@ export async function setInstanceUserActive(
   await db.update(user).set({ active }).where(eq(user.id, userId));
   if (!active) {
     await db.delete(session).where(eq(session.userId, userId));
+    await db.delete(oauthRefreshToken).where(eq(oauthRefreshToken.userId, userId));
     await db.delete(oauthAccessToken).where(eq(oauthAccessToken.userId, userId));
     // Their pending invites would otherwise keep the registration gate open.
     await db

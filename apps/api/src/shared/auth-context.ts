@@ -7,6 +7,7 @@ import {
   ensurePersonalWorkspace,
   getSessionFromHeaders,
   isAccountDeactivated,
+  verifyMcpAccessToken,
 } from '@repo/auth';
 import { HttpError } from './lib';
 import { getMcpOAuthToken } from './mcp-request';
@@ -44,14 +45,10 @@ export const authContext = new Elysia({ name: 'auth-context' }).resolve(
     const session = await getSessionFromHeaders(request.headers);
     if (session) return { user: await signedIn(session.user) };
     const mcpToken = getMcpOAuthToken(request);
-    if (mcpToken) {
-      const oauthSession = await auth.api.getMcpSession({
-        headers: new Headers({ Authorization: `Bearer ${mcpToken}` }),
-      });
-      if (oauthSession) {
-        const user = await db.query.user.findFirst({ where: eq(users.id, oauthSession.userId) });
-        if (user) return { user: await signedIn(user as SessionUser) };
-      }
+    const mcpUserId = mcpToken ? await verifyMcpAccessToken(mcpToken) : null;
+    if (mcpUserId) {
+      const user = await db.query.user.findFirst({ where: eq(users.id, mcpUserId) });
+      if (user) return { user: await signedIn(user as SessionUser) };
     }
     // The public raw-attachment route has no session and needs none.
     if (request.method === 'GET' && PUBLIC_GET.test(path)) return { user: null };

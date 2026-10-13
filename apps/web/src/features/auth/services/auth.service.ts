@@ -123,8 +123,8 @@ export async function signInWithGoogle(): Promise<void> {
 // Google call above: it navigates away, and both callback URLs must be on the web
 // origin. The provider id is fixed — the instance has exactly one.
 export async function signInWithOidc(): Promise<void> {
-  const result = await signIn.oauth2({
-    providerId: 'oidc',
+  const result = await signIn.social({
+    provider: 'oidc',
     callbackURL: appUrl('/'),
     errorCallbackURL: appUrl('/login'),
   });

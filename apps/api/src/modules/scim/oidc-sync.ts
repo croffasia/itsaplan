@@ -30,7 +30,7 @@ export function decodeJwtPayload(token: string): Record<string, unknown> | null 
   }
 }
 
-// Called with the response of `/api/auth/oauth2/callback/:providerId`, whose
+// Called with the response of the OIDC callback, whose
 // Set-Cookie header resolves the session a successful sign-in just opened. Best
 // effort throughout: a decode failure, a missing claim, or a DB error is logged and
 // swallowed rather than surfaced, since none of it should turn a successful sign-in

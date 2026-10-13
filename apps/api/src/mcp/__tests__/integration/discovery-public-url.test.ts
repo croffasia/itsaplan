@@ -71,10 +71,10 @@ describe('MCP discovery behind a public path prefix', () => {
       expect(res!.status).toBe(200);
       expect(res!.body).toMatchObject({
         issuer: 'https://example.test/api',
-        authorization_endpoint: 'https://example.test/api/api/auth/mcp/authorize',
-        token_endpoint: 'https://example.test/api/api/auth/mcp/token',
-        registration_endpoint: 'https://example.test/api/api/auth/mcp/register',
-        jwks_uri: 'https://example.test/api/api/auth/mcp/jwks',
+        authorization_endpoint: 'https://example.test/api/api/auth/oauth2/authorize',
+        token_endpoint: 'https://example.test/api/api/auth/oauth2/token',
+        registration_endpoint: 'https://example.test/api/api/auth/oauth2/register',
+        jwks_uri: 'https://example.test/api/api/auth/jwks',
       });
     },
     LOAD_TIMEOUT,
@@ -119,17 +119,7 @@ describe('MCP discovery behind a public path prefix', () => {
         'Bearer resource_metadata="https://example.test/api/.well-known/oauth-protected-resource/mcp"';
       expect(res!.status).toBe(401);
       expect(res!.challenge).toBe(expected);
-      expect((res!.body.error as Record<string, unknown>)['www-authenticate']).toBe(expected);
     },
     LOAD_TIMEOUT,
   );
-
-  it('passes through the null better-auth answers when it cannot build a document', async () => {
-    const { withPublicDiscoveryUrls } = await import('@repo/auth');
-
-    const res = await withPublicDiscoveryUrls(Response.json(null));
-
-    expect(res.status).toBe(200);
-    expect(await res.json()).toBeNull();
-  });
 });

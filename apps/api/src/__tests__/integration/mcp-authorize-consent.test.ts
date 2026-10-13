@@ -3,12 +3,12 @@ import { app } from '../helpers/app';
 import { signUpTestUser } from '../helpers/auth';
 import { resetDb } from '../helpers/db';
 
-describe('MCP authorization always asks for consent', () => {
+describe('MCP authorization asks for consent', () => {
   beforeEach(resetDb);
 
   async function registerClient(): Promise<string> {
     const res = await app.handle(
-      new Request('http://localhost/api/auth/mcp/register', {
+      new Request('http://localhost/api/auth/oauth2/register', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -26,8 +26,7 @@ describe('MCP authorization always asks for consent', () => {
     expect(await registerClient()).toBeTruthy();
   });
 
-  it('sends a signed-in person to the consent page instead of the client', async () => {
-    const user = await signUpTestUser({ team: false });
+  async function authorize(cookie?: string): Promise<URL> {
     const params = new URLSearchParams({
       response_type: 'code',
       client_id: await registerClient(),
@@ -37,15 +36,43 @@ describe('MCP authorization always asks for consent', () => {
       scope: 'openid',
       state: 'st',
     });
-
     const res = await app.handle(
-      new Request(`http://localhost/api/auth/mcp/authorize?${params}`, {
-        headers: { cookie: user.cookie },
+      new Request(`http://localhost/api/auth/oauth2/authorize?${params}`, {
+        headers: cookie ? { cookie } : {},
+      }),
+    );
+    return new URL(res.headers.get('location') ?? '');
+  }
+
+  it('sends a signed-in person to the consent page instead of the client', async () => {
+    const user = await signUpTestUser({ team: false });
+
+    const location = await authorize(user.cookie);
+
+    // The consent page carries the signed request, the client's redirect URI among it.
+    expect(location.pathname).toBe('/oauth/consent');
+    expect(location.host).not.toBe('client.example.com');
+  });
+
+  it('continues to the consent page once the person signs in', async () => {
+    const user = await signUpTestUser({ team: false });
+    const login = await authorize();
+    expect(login.pathname).toBe('/login');
+
+    // The sign-in screen posts the signed request it was sent with.
+    const res = await app.handle(
+      new Request('http://localhost/api/auth/sign-in/email', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          email: user.email,
+          password: 'test-password-123',
+          oauth_query: login.search.slice(1),
+        }),
       }),
     );
 
-    const location = res.headers.get('location') ?? '';
-    expect(location).toContain('/oauth/consent');
-    expect(location).not.toContain('client.example.com');
+    const { url } = (await res.json()) as { url: string };
+    expect(new URL(url).pathname).toBe('/oauth/consent');
   });
 });

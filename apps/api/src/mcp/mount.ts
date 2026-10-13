@@ -1,6 +1,6 @@
 import { t } from 'elysia';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
-import { auth, isAccountDeactivated, withMcpAuth, withPublicMcpChallenge } from '@repo/auth';
+import { auth, isAccountDeactivated, mcpUnauthorized, verifyMcpAccessToken } from '@repo/auth';
 import { buildMcpServer } from './server';
 import type { McpApp } from './types';
 import type { McpCredential } from './credential';
@@ -52,16 +52,12 @@ export function mountMcp(app: any): void {
           if (session && !isAccountDeactivated(session.user))
             return serve({ kind: 'api-key', apiKey }, session.user.id);
         } catch {
-          // Not an API key: let the native OAuth handler validate the bearer token.
+          // Not an API key: it may be an OAuth access token, checked below.
         }
       }
-      // withMcpAuth verifies the native OAuth token and returns the standard MCP
-      // WWW-Authenticate challenge that clients use for OAuth discovery.
-      return withPublicMcpChallenge(
-        await withMcpAuth(auth, (_request, oauthSession) =>
-          serve({ kind: 'oauth', accessToken: oauthSession.accessToken }, oauthSession.userId),
-        )(request),
-      );
+      const userId = apiKey ? await verifyMcpAccessToken(apiKey) : null;
+      if (apiKey && userId) return serve({ kind: 'oauth', accessToken: apiKey }, userId);
+      return mcpUnauthorized();
     },
     {
       body: t.Any(),

@@ -1,13 +1,18 @@
 import { randomInt } from 'node:crypto';
 import { createWorkspace, db, instanceWorkspaceId } from '@repo/db';
-import { and, eq, sql, type SQL } from 'drizzle-orm';
-import { betterAuth } from 'better-auth';
+import { and, eq, gt, sql, type SQL } from 'drizzle-orm';
+import { betterAuth, type BetterAuthPlugin } from 'better-auth';
 import { createAuthMiddleware, APIError } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { passkey } from '@better-auth/passkey';
 import { apiKey } from '@better-auth/api-key';
-import { mcp, openAPI, magicLink, username, genericOAuth } from 'better-auth/plugins';
-import type { GenericOAuthConfig } from 'better-auth/plugins/generic-oauth';
+import { mcp } from '@better-auth/mcp';
+import {
+  oauthProviderAuthServerMetadata,
+  oauthProviderOpenIdConfigMetadata,
+} from '@better-auth/oauth-provider';
+import { jwt, openAPI, magicLink, username, genericOAuth } from 'better-auth/plugins';
+import { createLocalJWKSet, jwtVerify } from 'jose';
 import * as schema from '@repo/db/schema';
 import {
   getAuthSettings,
@@ -104,51 +109,101 @@ function withPublicOrigin(url: string): string {
   return url.startsWith(baseURL) ? apiPublicUrl + url.slice(baseURL.length) : url;
 }
 
-// MCP clients follow the discovery documents verbatim, and better-auth builds their
-// URLs from the same origin-only baseURL: behind a path prefix they would land on
-// whatever serves the root of the host. `resource` comes from apiPublicUrl already.
-const DISCOVERY_URL_KEYS = new Set([
-  'issuer',
-  'authorization_servers',
-  'authorization_endpoint',
-  'token_endpoint',
-  'userinfo_endpoint',
-  'jwks_uri',
-  'registration_endpoint',
-]);
+// The MCP authorization server. Its issuer is the public URL of the api, so the access
+// tokens, the authorization responses and the discovery documents name the URL a
+// client reaches, behind a path prefix too.
+const MCP_ISSUER = apiPublicUrl;
+const MCP_RESOURCE = `${apiPublicUrl}/mcp`;
 
-export async function withPublicDiscoveryUrls(response: Response): Promise<Response> {
-  const metadata = (await response.json()) as Record<string, unknown> | null;
-  // better-auth answers null when it cannot build the document (no issuer).
-  if (metadata === null || typeof metadata !== 'object') {
-    return new Response(JSON.stringify(metadata), {
-      status: response.status,
-      headers: response.headers,
-    });
-  }
+// better-auth accepts a plain-HTTP MCP resource only on a loopback host. Any other
+// instance without HTTPS serves MCP to personal API keys only.
+const mcpOAuth =
+  apiUrl.protocol === 'https:' ||
+  apiUrl.hostname === 'localhost' ||
+  apiUrl.hostname === '[::1]' ||
+  apiUrl.hostname.startsWith('127.');
+
+// The discovery documents list endpoints built from the origin-only baseURL; behind a
+// path prefix they would land on whatever serves the root of the host.
+async function withPublicDiscoveryUrls(response: Response): Promise<Response> {
+  if (!apiHasPath || !response.ok) return response;
+  const authBase = `${baseURL}/api/auth`;
+  const toPublic = (value: unknown) =>
+    typeof value === 'string' && value.startsWith(authBase) ? withPublicOrigin(value) : value;
+  const metadata = (await response.json()) as Record<string, unknown>;
   for (const [key, value] of Object.entries(metadata)) {
-    if (!DISCOVERY_URL_KEYS.has(key)) continue;
-    if (typeof value === 'string') metadata[key] = withPublicOrigin(value);
-    else if (Array.isArray(value)) metadata[key] = value.map((v) => withPublicOrigin(String(v)));
+    metadata[key] = Array.isArray(value) ? value.map(toPublic) : toPublic(value);
   }
-  return new Response(JSON.stringify(metadata), {
-    status: response.status,
-    headers: response.headers,
-  });
+  return Response.json(metadata, { status: response.status, headers: response.headers });
 }
 
-// withMcpAuth points the 401 challenge at better-auth's own copy of the metadata,
-// built from the origin-only baseURL; behind a path prefix it is replaced by the copy
-// served under the prefix. Without one, better-auth's challenge reaches the api as is.
-const MCP_CHALLENGE = `Bearer resource_metadata="${apiPublicUrl}/.well-known/oauth-protected-resource/mcp"`;
+const notFound = () => new Response(null, { status: 404 });
 
-export async function withPublicMcpChallenge(response: Response): Promise<Response> {
-  if (!apiHasPath || !response.headers.has('WWW-Authenticate')) return response;
-  const headers = new Headers(response.headers);
-  headers.set('WWW-Authenticate', MCP_CHALLENGE);
-  const body = (await response.json()) as { error?: Record<string, unknown> };
-  if (body.error) body.error['www-authenticate'] = MCP_CHALLENGE;
-  return new Response(JSON.stringify(body), { status: response.status, headers });
+export async function oauthAuthorizationServerMetadata(request: Request): Promise<Response> {
+  if (!mcpOAuth) return notFound();
+  return withPublicDiscoveryUrls(await oauthProviderAuthServerMetadata(auth)(request));
+}
+
+export async function openIdConfiguration(request: Request): Promise<Response> {
+  if (!mcpOAuth) return notFound();
+  return withPublicDiscoveryUrls(await oauthProviderOpenIdConfigMetadata(auth)(request));
+}
+
+// The mcp plugin serves this document itself, for a request under its own path.
+export async function oauthProtectedResourceMetadata(): Promise<Response> {
+  if (!mcpOAuth) return notFound();
+  return auth.handler(new Request(`${baseURL}/.well-known/oauth-protected-resource`));
+}
+
+// The answer to an MCP request without a usable credential. The challenge names the
+// resource metadata, which is where an MCP client starts the OAuth flow.
+export function mcpUnauthorized(): Response {
+  const headers = new Headers({ 'Content-Type': 'application/json' });
+  if (mcpOAuth) {
+    headers.set(
+      'WWW-Authenticate',
+      `Bearer resource_metadata="${apiPublicUrl}/.well-known/oauth-protected-resource/mcp"`,
+    );
+  }
+  return new Response(
+    JSON.stringify({ jsonrpc: '2.0', error: { code: -32000, message: 'Unauthorized' }, id: null }),
+    { status: 401, headers },
+  );
+}
+
+// The account an MCP access token was issued to, or null when the token is not valid
+// or the account is deactivated. The tokens are JWTs signed with this instance's keys
+// and are checked against them in-process: requireMcpAuth fetches the key set over
+// HTTP from the public URL, which a container cannot always reach. A JWT stays valid
+// until it expires, so the rest is read on every request, as better-auth's own
+// introspection does: a token issued in a session ends with it, and so does every
+// token of a deactivated account. A DPoP-bound token is valid only with its proof,
+// which this check does not take.
+export async function verifyMcpAccessToken(token: string): Promise<string | null> {
+  if (!mcpOAuth) return null;
+  let claims: { sub?: string; sid?: unknown; cnf?: unknown };
+  try {
+    ({ payload: claims } = await jwtVerify(token, createLocalJWKSet(await auth.api.getJwks()), {
+      issuer: MCP_ISSUER,
+      audience: MCP_RESOURCE,
+    }));
+  } catch {
+    return null;
+  }
+  if (claims.cnf || !claims.sub) return null;
+  const [account] = await db
+    .select({ active: schema.user.active })
+    .from(schema.user)
+    .where(eq(schema.user.id, claims.sub));
+  if (!account || isAccountDeactivated(account)) return null;
+  if (typeof claims.sid === 'string') {
+    const [open] = await db
+      .select({ n: sql`1` })
+      .from(schema.session)
+      .where(and(eq(schema.session.id, claims.sid), gt(schema.session.expiresAt, new Date())));
+    if (!open) return null;
+  }
+  return claims.sub;
 }
 
 // The fallback for a callback that fails early is better-auth's own /api/auth/error;
@@ -188,45 +243,77 @@ async function refreshGoogleOptions(): Promise<boolean> {
 }
 
 // The generic OIDC provider. One per instance, so its id is a constant: it is what
-// the `account` rows store, and better-auth materialises the provider list once at
-// startup — the config array can neither grow nor be re-keyed afterwards. As with
-// Google, the plugin keeps this object by reference and reads its fields on every
-// call, so refreshing it per request is what lets the owner change the credentials
-// without a restart. Assign the fields, never replace the object.
+// the `account` rows store.
 export const OIDC_PROVIDER_ID = 'oidc';
 
-// The exact redirect URI to register with the identity provider; god mode shows it
-// for copying.
+// The redirect URI to register with the identity provider; god mode shows it for
+// copying. better-auth serves the callback at /callback/oidc and the api passes this
+// path on to it, so a provider registered with it keeps working.
 export const OIDC_REDIRECT_URI = `${apiPublicUrl}/api/auth/oauth2/callback/${OIDC_PROVIDER_ID}`;
 
-// redirectURI is explicit for the same reason as in googleOptions.
-const oidcOptions: GenericOAuthConfig = {
-  providerId: OIDC_PROVIDER_ID,
-  clientId: '',
-  clientSecret: '',
-  discoveryUrl: '',
-  scopes: [],
-  pkce: true,
-  redirectURI: OIDC_REDIRECT_URI,
-};
+type PluginContext = Parameters<NonNullable<BetterAuthPlugin['init']>>[0];
+type SocialProvider = PluginContext['socialProviders'][number];
 
-// Loads the stored credentials into that object and reports whether OIDC sign-in can
-// run. A read failure disables the provider rather than failing the request with a
-// stale secret.
-async function refreshOidcOptions(): Promise<boolean> {
+// genericOAuth reads the discovery document once, when the plugin starts, and keeps
+// the endpoints it found, while this provider is configured in god mode and changes
+// without a restart. So better-auth holds this proxy, and every read on it goes to a
+// provider genericOAuth built from the stored settings.
+let oidc: { settings: string; provider: SocialProvider } | undefined;
+const oidcProvider = new Proxy({ id: OIDC_PROVIDER_ID } as SocialProvider, {
+  get: (fallback, key) => Reflect.get(oidc?.provider ?? fallback, key),
+});
+
+// Rebuilds the provider when the stored settings changed and reports whether OIDC
+// sign-in can run. A failed read or discovery disables the provider rather than
+// running the request on stale settings.
+async function refreshOidcProvider(): Promise<boolean> {
   try {
     const config = await getOidcConfig();
-    oidcOptions.clientId = config.clientId;
-    oidcOptions.clientSecret = config.clientSecret;
-    oidcOptions.discoveryUrl = config.discoveryUrl;
-    oidcOptions.scopes = config.scopes;
-    oidcOptions.pkce = config.pkce;
-    return isOidcUsable(config);
+    if (!isOidcUsable(config)) return false;
+    const settings = JSON.stringify(config);
+    if (oidc?.settings === settings) return true;
+    const plugin = genericOAuth({
+      config: [
+        {
+          providerId: OIDC_PROVIDER_ID,
+          clientId: config.clientId,
+          clientSecret: config.clientSecret,
+          discoveryUrl: config.discoveryUrl,
+          scopes: config.scopes,
+          pkce: config.pkce,
+          // redirectURI is explicit for the same reason as in googleOptions.
+          redirectURI: OIDC_REDIRECT_URI,
+          // The `account` rows hold the OIDC subject. genericOAuth reads `id` instead
+          // when the discovery document lists no id_token signing algorithms.
+          accountSubject: ({ profile }) => String(profile.sub ?? ''),
+          // Signing out of the app leaves the session at the identity provider alone.
+          disableProviderLogout: true,
+        },
+      ],
+    });
+    const built = await plugin.init({ ...pluginContext!, socialProviders: [] });
+    // genericOAuth skips a provider whose discovery failed, and logs why.
+    const provider = built?.context?.socialProviders?.[0];
+    if (!provider) return false;
+    oidc = { settings, provider };
+    return true;
   } catch (error) {
-    console.error('[auth] could not read the OIDC credentials:', error);
+    console.error('[auth] could not load the OIDC provider:', error);
     return false;
   }
 }
+
+// The context genericOAuth builds a provider in; kept from startup, when better-auth
+// hands it to the plugin below.
+let pluginContext: PluginContext | undefined;
+
+const instanceOidc = (): BetterAuthPlugin => ({
+  id: 'instance-oidc',
+  init: (context) => {
+    pluginContext = context;
+    return { context: { socialProviders: [oidcProvider, ...context.socialProviders] } };
+  },
+});
 
 // The two conditions better-auth checks before linking an address to an account that
 // already has it are read from different places: `trustedProviders` per request,
@@ -419,9 +506,14 @@ export const auth = betterAuth({
       verification: schema.verification,
       passkey: schema.passkey,
       apikey: schema.apikey,
-      oauthApplication: schema.oauthApplication,
+      jwks: schema.jwks,
+      oauthClient: schema.oauthClient,
+      oauthResource: schema.oauthResource,
+      oauthClientResource: schema.oauthClientResource,
+      oauthRefreshToken: schema.oauthRefreshToken,
       oauthAccessToken: schema.oauthAccessToken,
       oauthConsent: schema.oauthConsent,
+      oauthClientAssertion: schema.oauthClientAssertion,
     },
   }),
 
@@ -489,8 +581,8 @@ export const auth = betterAuth({
         return !trustProviderEmails;
       },
     },
-    // generic-oauth stores id_token unencrypted, so this covers only the access and
-    // refresh tokens.
+    // The id_token is stored unencrypted, so this covers only the access and refresh
+    // tokens.
     encryptOAuthTokens: true,
   },
 
@@ -532,32 +624,30 @@ export const auth = betterAuth({
         });
       }
 
-      // RFC 7591 makes `client_name` optional, and the MCP plugin stores it as the
-      // client's name, which its table requires.
-      if (ctx.path === '/mcp/register') {
-        const body = ctx.body as { client_name?: string } | undefined;
-        if (body && !body.client_name) {
-          return { context: { body: { ...body, client_name: 'MCP client' } } };
-        }
-        return;
-      }
-
-      // Any client can register itself, and the MCP plugin releases the code straight to
-      // its redirect URI unless the request asks for consent, so every request asks.
-      if (ctx.path === '/mcp/authorize') {
-        return { context: { query: { ...ctx.query, prompt: 'consent' } } };
-      }
-
       if (ctx.path === '/sign-up/email') {
         await assertRegistrationAllowed((ctx.body as { email?: string } | undefined)?.email ?? '');
         return;
       }
 
-      // Both halves of the OIDC round trip. The refusal carries a code because the
-      // callback turns it into the ?error= it redirects with; without one the
-      // callback fails the request instead.
-      if (ctx.path === '/sign-in/oauth2' || ctx.path.startsWith('/oauth2/callback/')) {
-        if (!(await refreshOidcOptions())) {
+      const provider =
+        ctx.path === '/sign-in/social' || ctx.path === '/link-social'
+          ? (ctx.body as { provider?: string } | undefined)?.provider
+          : ctx.path.startsWith('/callback/')
+            ? ctx.path.slice('/callback/'.length)
+            : undefined;
+      // No screen links an OIDC identity to the signed-in account, and better-auth
+      // already attaches a sign-in to a matching confirmed address on its own.
+      if (ctx.path === '/link-social' && provider === OIDC_PROVIDER_ID) {
+        throw new APIError('FORBIDDEN', { message: 'Single sign-on cannot be linked' });
+      }
+
+      // Both halves of an OAuth round trip: starting it and coming back from it. This
+      // is where the stored settings are loaded into the provider, so a request never
+      // runs on a value the owner has since changed. The OIDC refusal carries a code
+      // because the callback turns it into the ?error= it redirects with; without one
+      // the callback fails the request instead.
+      if (provider === OIDC_PROVIDER_ID) {
+        if (!(await refreshOidcProvider())) {
           throw new APIError('FORBIDDEN', {
             code: 'OIDC_DISABLED',
             message: 'Single sign-on is disabled on this instance',
@@ -565,11 +655,7 @@ export const auth = betterAuth({
         }
         return;
       }
-
-      // Both halves of the Google round trip: starting it and coming back from it.
-      // This is where the stored credentials are loaded into the provider's options,
-      // so a request never runs on a value the owner has since changed.
-      if (ctx.path === '/sign-in/social' || ctx.path.startsWith('/callback/google')) {
+      if (provider === 'google') {
         if (!(await refreshGoogleOptions())) {
           throw new APIError('FORBIDDEN', {
             message: 'Google sign-in is disabled on this instance',
@@ -759,12 +845,8 @@ export const auth = betterAuth({
         });
       },
     }),
-    // A single generic OIDC/OAuth2 provider, configured by the instance owner and
-    // discovered from its well-known document. Adds /sign-in/oauth2 and
-    // /oauth2/callback/:providerId; it reuses the `account` table, so it adds none.
-    // The config array is materialised at startup — see oidcOptions above for why
-    // there is exactly one entry and why its fields are mutated rather than replaced.
-    genericOAuth({ config: [oidcOptions] }),
+    // The instance's OIDC provider, configured in god mode; see oidcProvider above.
+    instanceOidc(),
     // Usernames: a second identifier next to the address, unique across the
     // instance. Adds `username` / `display_username` to the user table and the
     // /sign-in/username endpoint the sign-in screen uses when the visitor typed a
@@ -774,18 +856,24 @@ export const auth = betterAuth({
       minUsernameLength: USERNAME_MIN_LENGTH,
       maxUsernameLength: USERNAME_MAX_LENGTH,
     }),
-    // Native OAuth 2.1 provider for Streamable HTTP MCP clients. It uses the
-    // existing Better Auth session, requires PKCE, and supports dynamic public
-    // clients such as ChatGPT without exposing a personal API key.
-    mcp({
-      loginPage: `${trustedOrigins[0]}/login`,
-      resource: `${apiPublicUrl}/mcp`,
-      oidcConfig: {
-        loginPage: `${trustedOrigins[0]}/login`,
-        requirePKCE: true,
-        consentPage: `${trustedOrigins[0]}/oauth/consent`,
-      },
-    }),
+    // OAuth 2.1 for Streamable HTTP MCP clients, on top of the existing session. Any
+    // client registers itself (RFC 7591), as ChatGPT and Claude do. The access tokens
+    // are JWTs signed by jwt(); no screen reads a session JWT, so it does not put one
+    // on every session response.
+    ...(mcpOAuth
+      ? [
+          jwt({ disableSettingJwtHeader: true, jwt: { issuer: MCP_ISSUER } }),
+          mcp({
+            resource: MCP_RESOURCE,
+            loginPage: `${trustedOrigins[0]}/login`,
+            consentPage: `${trustedOrigins[0]}/oauth/consent`,
+            // Every token acts for a person; client_credentials would mint one for none.
+            grantTypes: ['authorization_code', 'refresh_token'],
+            allowDynamicClientRegistration: true,
+            allowUnauthenticatedClientRegistration: true,
+          }),
+        ]
+      : []),
     // OpenAPI reference for the better-auth handler. Serves a Scalar UI at
     // /api/auth/reference and the raw schema at /api/auth/open-api/generate-schema.
     // The schema is built from every active plugin, so the passkey and apiKey
@@ -800,10 +888,8 @@ export const auth = betterAuth({
   // /is-username-available answers for anyone, and a username is derived from the
   // address, so it would tell a stranger which addresses are registered. Nothing in
   // the app calls it — the profile form learns a name is taken from updateUser's
-  // error. /oauth2/link attaches an OIDC identity to the signed-in account, which no
-  // screen offers: better-auth already links a sign-in to a matching confirmed
-  // address on its own.
-  disabledPaths: ['/is-username-available', '/oauth2/link'],
+  // error. jwt()'s /token hands out a JWT of the session, which nothing reads.
+  disabledPaths: ['/is-username-available', '/token'],
 
   advanced: {
     // Share the session cookie across subdomains when COOKIE_DOMAIN is the parent
@@ -903,9 +989,3 @@ export type {
   InstanceOidcConfig,
   WorkspaceScimDto,
 } from './instance';
-
-export {
-  withMcpAuth,
-  oAuthDiscoveryMetadata,
-  oAuthProtectedResourceMetadata,
-} from 'better-auth/plugins';

@@ -103,10 +103,10 @@ own check of `emailAndPassword.requireEmailVerification`.
 
 ## Generic OIDC
 
-`genericOAuth({ config: [oidcOptions] })` adds one OIDC/OAuth2 provider, discovered from
-the well-known document the operator points it at in god mode (`app_secret` key
-`auth.oidc`). It adds `/sign-in/oauth2` and `/oauth2/callback/:providerId`, and reuses the
-`account` table, so it adds none of its own.
+One OIDC/OAuth2 provider, discovered from the well-known document the operator points it
+at in god mode (`app_secret` key `auth.oidc`). It is a social provider with the id
+`OIDC_PROVIDER_ID` (`"oidc"`): sign-in is `/sign-in/social` with that provider, the
+callback is `/callback/oidc`, and it reuses the `account` table, so it adds none.
 
 A provider per workspace is not built on this one. A sign-in through it joins the account
 that already holds the address, which is safe only because the provider is the instance
@@ -114,16 +114,21 @@ owner's: a workspace owner's provider could name any address. It needs the works
 prove it owns the address's domain first, and is left to a hosted module, which adds its
 settings section through `useWorkspaceSections` in the web app's `@/cloud` seam.
 
-`providerId` is the constant `OIDC_PROVIDER_ID` (`"oidc"`): it is what the `account` rows
-store, and better-auth materialises the provider list once at startup, so the config array
-can neither grow nor be re-keyed afterwards. That is also why there is exactly one
-provider. `oidcOptions` is refreshed per request by `refreshOidcOptions()` in
-`hooks.before` — the same by-reference rule as `googleOptions`: assign its fields, never
-replace the object.
+`providerId` is a constant because it is what the `account` rows store, and the rows hold
+the OIDC `sub` (`accountSubject`). genericOAuth reads the discovery document once, when
+its plugin starts, while this provider changes in god mode without a restart. So
+better-auth holds a proxy (`oidcProvider`, registered by the `instanceOidc` plugin), and
+`refreshOidcProvider()` in `hooks.before` builds the real provider with genericOAuth from
+the stored settings whenever they change, on both halves of the round trip.
 
-`/oauth2/link` is in `disabledPaths`. No screen offers linking an OIDC identity to the
-signed-in account, and better-auth already attaches a sign-in to a matching confirmed
-address on its own.
+The redirect URI registered with the identity provider is `OIDC_REDIRECT_URI`,
+`/api/auth/oauth2/callback/oidc`. The api passes that path on to better-auth's
+`/api/auth/callback/oidc`, so the URI the identity providers hold stays valid.
+
+Signing out leaves the session at the identity provider alone (`disableProviderLogout`).
+No screen offers linking an OIDC identity to the signed-in account, so `hooks.before`
+refuses `/link-social` for it; better-auth already attaches a sign-in to a matching
+confirmed address on its own.
 
 ## Turning password authentication off
 
@@ -227,10 +232,29 @@ a request may carry a key.
 
 ## MCP OAuth
 
-`mcp()` serves OAuth 2.1 to MCP clients and adds the `oauth_application`,
-`oauth_access_token` and `oauth_consent` tables. Dynamic registration takes `client_name` as
-optional (RFC 7591) while the table requires a name, so `hooks.before` names a client that
-sends none `MCP client`.
+`mcp()` from `@better-auth/mcp` serves OAuth 2.1 to MCP clients, with `jwt()` signing the
+access tokens. It adds the `oauth_client`, `oauth_resource`, `oauth_client_resource`,
+`oauth_refresh_token`, `oauth_access_token`, `oauth_consent`, `oauth_client_assertion`
+and `jwks` tables, and writes the MCP resource (`<API_URL>/mcp`) into `oauth_resource`
+at startup. Any client registers itself (RFC 7591), as ChatGPT and Claude do; the
+provider asks the person for consent the first time a client asks for their account.
+Only `authorization_code` and `refresh_token` are granted, so every token acts for a
+person.
+
+The issuer is `API_URL` itself, path included, so the tokens and the discovery documents
+name the URL a client reaches. The api serves the documents at the root of its origin
+(`oauthAuthorizationServerMetadata`, `openIdConfiguration`,
+`oauthProtectedResourceMetadata`), and the endpoints in them get the path back the way the
+links in auth emails do.
+
+`verifyMcpAccessToken` checks a token against the instance's own keys in-process, then
+reads what a JWT cannot carry: the account must not be deactivated, and a token issued in
+a session ends with that session, as better-auth's introspection has it. That is what
+makes deactivation, which deletes the sessions, end every MCP token at once.
+
+better-auth accepts a plain-HTTP MCP resource only on a loopback host, so any other
+instance without HTTPS leaves `mcp()` and `jwt()` out and serves MCP to personal API keys
+only.
 
 ## OpenAPI reference
 

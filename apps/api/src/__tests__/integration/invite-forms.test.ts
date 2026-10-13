@@ -135,6 +135,7 @@ describe('invites over an API key', () => {
 
     const created = await asKey.invites.post({ email: 'key@example.com', role: 'member' });
     expect(created.status).toBe(201);
+    expect(created.data!.emailFailed).toBe(false);
     await db
       .update(teamInvite)
       .set({ createdAt: new Date(Date.now() - 8 * DAY) })

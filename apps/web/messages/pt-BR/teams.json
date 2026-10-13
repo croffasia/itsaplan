@@ -107,6 +107,8 @@
     "joinsProject": "Entra no time e em {project}",
     "copyLink": "Copiar link",
     "copied": "Copiado",
+    "resendEmail": "Enviar e-mail",
+    "resendingEmail": "Enviando…",
     "revokeAction": "Revogar convite",
     "revokeTitle": "Revogar convite de {email}?",
     "revokeConfirm": "Revogar convite",

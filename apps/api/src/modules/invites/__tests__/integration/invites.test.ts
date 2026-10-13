@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach, beforeEach } from 'bun:test';
+import { describe, it, expect, afterAll, afterEach, beforeAll, beforeEach } from 'bun:test';
 import { authedApi } from '#tests/helpers/app';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -177,6 +177,98 @@ describe('invites', () => {
         .projects({ projectKey: 'MKT' })
         .invites.post({ email: 'x@example.com', role: 'member' });
       expect(res.status).toBe(403);
+    });
+  });
+
+  // A team invite names no project, so it cannot go through the notification outbox,
+  // which belongs to one: it only created a link to copy, and nobody was told.
+  describe('team invite email — POST /teams/:teamId/invites', () => {
+    let smtp: Bun.TCPSocketListener<{ data: boolean }>;
+    let received: { to: string[]; body: string }[] = [];
+
+    beforeAll(() => {
+      smtp = Bun.listen<{ data: boolean }>({
+        hostname: '127.0.0.1',
+        port: 0,
+        socket: {
+          open(socket) {
+            socket.data = { data: false };
+            received.push({ to: [], body: '' });
+            socket.write('220 fake ESMTP\r\n');
+          },
+          data(socket, chunk) {
+            const message = received[received.length - 1]!;
+            for (const line of chunk.toString().split('\r\n')) {
+              if (socket.data.data) {
+                if (line === '.') {
+                  socket.data.data = false;
+                  socket.write('250 queued\r\n');
+                } else message.body += line + '\n';
+                continue;
+              }
+              if (!line) continue;
+              const command = line.split(' ')[0]!.toUpperCase();
+              if (command === 'EHLO') socket.write('250 fake\r\n');
+              else if (command === 'RCPT') {
+                message.to.push(line);
+                socket.write('250 ok\r\n');
+              } else if (command === 'DATA') {
+                socket.data.data = true;
+                socket.write('354 go ahead\r\n');
+              } else if (command === 'QUIT') {
+                socket.write('221 bye\r\n');
+                socket.end();
+              } else socket.write('250 ok\r\n');
+            }
+          },
+        },
+      });
+    });
+
+    afterAll(() => smtp.stop(true));
+
+    beforeEach(() => {
+      received = [];
+    });
+
+    it('emails the invite link through the instance provider', async () => {
+      const owner = await setupOwner();
+      const configured = await owner.api.god['email-settings'].put({
+        from: 'Test <noreply@example.com>',
+        smtp: {
+          enabled: true,
+          host: '127.0.0.1',
+          port: smtp.port,
+          encryption: 'none',
+          username: '',
+          timeout: 5,
+        },
+        allowProjects: false,
+      });
+      expect(configured.status).toBe(200);
+      const teamId = await ownTeamId(owner.api);
+
+      const res = await owner.api
+        .teams({ teamId })
+        .invites.post({ email: 'newcomer@example.com', role: 'member' });
+
+      expect(res.status).toBe(201);
+      expect(res.data?.emailQueued).toBe(true);
+      const sent = received.find((m) => m.to.some((to) => to.includes('newcomer@example.com')));
+      expect(sent?.body).toContain(`/invite/${res.data!.token}`);
+    });
+
+    it('still creates the link when no email provider is configured', async () => {
+      const owner = await setupOwner();
+      const teamId = await ownTeamId(owner.api);
+
+      const res = await owner.api
+        .teams({ teamId })
+        .invites.post({ email: 'newcomer@example.com', role: 'member' });
+
+      expect(res.status).toBe(201);
+      expect(res.data?.emailQueued).toBe(false);
+      expect(res.data?.token.length).toBeGreaterThan(0);
     });
   });
 

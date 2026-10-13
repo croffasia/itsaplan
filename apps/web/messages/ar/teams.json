@@ -107,6 +107,8 @@
     "joinsProject": "هيدخل الفريق و{project}",
     "copyLink": "نسخ الرابط",
     "copied": "تم النسخ",
+    "resendEmail": "إرسال بريد إلكتروني",
+    "resendingEmail": "جارٍ الإرسال…",
     "revokeAction": "إلغاء الدعوة",
     "revokeTitle": "إلغاء دعوة {email}؟",
     "revokeConfirm": "إلغاء الدعوة",

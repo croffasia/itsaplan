@@ -107,6 +107,8 @@
     "joinsProject": "Приєднається до команди і до {project}",
     "copyLink": "Скопіювати посилання",
     "copied": "Скопійовано",
+    "resendEmail": "Надіслати лист",
+    "resendingEmail": "Надсилання…",
     "revokeAction": "Відкликати запрошення",
     "revokeTitle": "Відкликати запрошення для {email}?",
     "revokeConfirm": "Відкликати запрошення",

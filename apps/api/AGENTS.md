@@ -160,7 +160,9 @@ Enforced declaratively through macros, never imperative calls in handlers.
   every workspace owner (see SCIM below).
 - **A member of the team joins a project directly** (`POST /projects/:key/members`,
   from the candidate list); anyone else joins through an invite, which puts them in
-  the team as well. A team invite (`/teams/:teamId/invites`) names no project. One
+  the team as well. A team invite (`/teams/:teamId/invites`) names no project, so its
+  email cannot go through the notification outbox, which belongs to a project:
+  `invites/email.ts` sends it at once, without the outbox's retries. One
   pending invite per (team, email) and per (project, email) — partial unique indexes →
   409, and so is an address already in the team or in the project: accepting such an
   invite would rewrite the membership it already holds, demoting an owner past the

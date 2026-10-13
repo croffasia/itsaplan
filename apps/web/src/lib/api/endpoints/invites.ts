@@ -36,6 +36,8 @@ export interface InviteRow {
 
 export interface InviteCreateResult extends InviteRow {
   emailQueued: boolean;
+  // A mail provider is set but the email could not go out; the link still works.
+  emailFailed: boolean;
 }
 
 export interface InviteEmailResult {
@@ -104,10 +106,13 @@ export const deleteInvite = (projectKey: string, inviteId: number) =>
 export const listTeamInvites = (teamId: number) => request<InviteRow[]>(`/teams/${teamId}/invites`);
 
 export const createTeamInvite = (teamId: number, input: { email: string; role: InviteTeamRole }) =>
-  request<InviteRow>(`/teams/${teamId}/invites`, {
+  request<InviteCreateResult>(`/teams/${teamId}/invites`, {
     method: 'POST',
     body: JSON.stringify(input),
   });
+
+export const sendTeamInviteEmail = (teamId: number, inviteId: number) =>
+  request<InviteEmailResult>(`/teams/${teamId}/invites/${inviteId}/email`, { method: 'POST' });
 
 export const renewTeamInvite = (teamId: number, inviteId: number) =>
   request<InviteCreateResult>(`/teams/${teamId}/invites/${inviteId}/renew`, { method: 'POST' });

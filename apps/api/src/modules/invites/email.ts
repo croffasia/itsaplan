@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { db, notificationDelivery, getInstanceEmailConfig } from '@repo/db';
+import { db, notificationDelivery, getInstanceEmailConfig, team } from '@repo/db';
 import { trustedOrigins } from '@repo/auth';
-import { hasEmailProvider } from '@repo/mailer';
+import { emailBody, hasEmailProvider, sendEmail } from '@repo/mailer';
 import { and, eq, sql } from 'drizzle-orm';
 import type { InviteRow } from './service';
 
-export interface InviteProject {
+interface InviteProject {
   id: number;
   name: string;
 }
@@ -66,4 +66,30 @@ export async function enqueueInviteEmail(
     });
   });
   return true;
+}
+
+// A team invite names no project, and the notification outbox belongs to one, so it
+// cannot be queued there. It is sent at once instead, as the sign-in emails are:
+// best effort, without the outbox's retries. A failure leaves the link to be copied.
+export async function sendTeamInviteEmail(teamId: number, invite: InviteRow): Promise<boolean> {
+  const config = await getInstanceEmailConfig();
+  if (!config || !hasEmailProvider(config)) return false;
+
+  const [row] = await db.select({ name: team.name }).from(team).where(eq(team.id, teamId));
+  const teamName = (row?.name ?? 'a team').replace(/[\r\n]+/g, ' ');
+  const inviter = invite.invitedByName ?? invite.invitedByEmail ?? "An It's a Plan user";
+  const { text, html } = emailBody(
+    `${inviter} invited you to join the team ${teamName} as ${invite.teamRole}.\n\n` +
+      'Open the invitation to sign in or create an account. ' +
+      'If you did not expect this invitation, you can ignore this email.',
+    `${trustedOrigins[0]}/invite/${invite.token}`,
+  );
+  const result = await sendEmail(config, {
+    to: invite.email,
+    subject: `You were invited to ${teamName} on It's a Plan`,
+    text,
+    html,
+  });
+  if (!result.ok) console.error('[invites] team invite email failed:', result.error);
+  return result.ok;
 }

@@ -107,6 +107,8 @@
     "joinsProject": "팀 및 {project} 프로젝트에 참여",
     "copyLink": "링크 복사",
     "copied": "복사됨",
+    "resendEmail": "이메일 보내기",
+    "resendingEmail": "전송 중…",
     "revokeAction": "초대 취소",
     "revokeTitle": "{email} 초대를 취소하시겠습니까?",
     "revokeConfirm": "초대 취소",

@@ -107,6 +107,8 @@
     "joinsProject": "Se une al equipo y a {project}",
     "copyLink": "Copiar el enlace",
     "copied": "Copiado",
+    "resendEmail": "Enviar correo",
+    "resendingEmail": "Enviando…",
     "revokeAction": "Revocar invitación",
     "revokeTitle": "¿Revocar la invitación de {email}?",
     "revokeConfirm": "Revocar invitación",

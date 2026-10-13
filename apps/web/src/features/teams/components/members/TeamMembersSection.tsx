@@ -10,6 +10,7 @@ import type { TeamMember } from '@/lib/api/endpoints/teams';
 import {
   useDeleteTeamInvite,
   useRenewTeamInvite,
+  useSendTeamInviteEmail,
   useRemoveTeamMember,
   useTeam,
   useTeamInvitesQuery,
@@ -53,6 +54,7 @@ export default function TeamMembersSection({ teamId }: { teamId: number }) {
   const invitesQuery = useTeamInvitesQuery(teamId, canInvite);
   const deleteInvite = useDeleteTeamInvite(teamId);
   const renewInvite = useRenewTeamInvite(teamId);
+  const sendInviteEmail = useSendTeamInviteEmail(teamId);
   const removeMember = useRemoveTeamMember(teamId);
   const [inviting, setInviting] = useState(false);
   const [target, setTarget] = useState<InviteRow | null>(null);
@@ -110,6 +112,8 @@ export default function TeamMembersSection({ teamId }: { teamId: number }) {
               mayRenewInvite(invite, { teamRole: team?.role ?? null, ownsProject: false })
             }
             renewingId={renewInvite.isPending ? (renewInvite.variables ?? null) : null}
+            onResend={(valid) => sendInviteEmail.mutate(valid.id)}
+            resendingId={sendInviteEmail.isPending ? (sendInviteEmail.variables ?? null) : null}
           />
         )}
 

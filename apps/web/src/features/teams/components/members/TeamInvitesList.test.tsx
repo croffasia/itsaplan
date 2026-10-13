@@ -62,6 +62,8 @@ async function render(rows: InviteRow[]) {
           onRenew={() => {}}
           canRenew={() => true}
           renewingId={null}
+          onResend={() => {}}
+          resendingId={null}
         />
       </NextIntlClientProvider>,
     ),

@@ -54,14 +54,7 @@ export default function AgentModelField({
       <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
         <Command>
           <CommandInput placeholder={t('searchModel')} value={search} onValueChange={setSearch} />
-          <CommandList
-            className="max-h-[16rem]"
-            // The field lives inside a Radix Sheet whose scroll lock blocks wheel
-            // events on this portaled list, so scroll it manually on wheel.
-            onWheel={(e) => {
-              e.currentTarget.scrollTop += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
-            }}
-          >
+          <CommandList className="max-h-[16rem]">
             {!loading && !showCustom && <CommandEmpty>{t('noModels')}</CommandEmpty>}
             {loading && (
               <div className="px-3 py-2 text-sm text-muted-foreground">{t('loadingModels')}</div>

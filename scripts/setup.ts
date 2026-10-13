@@ -9,7 +9,7 @@ import { EnvFile } from './env-file.ts';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const file = (name: string) => join(root, name);
 
-const answer = <T>(value: T | symbol): T => {
+const answer = <T>(value: T | typeof p.CANCEL_SYMBOL): T => {
   if (p.isCancel(value)) {
     p.cancel('Setup cancelled.');
     process.exit(0);

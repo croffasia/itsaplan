@@ -744,6 +744,8 @@ export const auth = betterAuth({
     // sender refuses when it is off. It reuses the `verification` table — no new
     // table, so `auth:generate` output is unchanged.
     magicLink({
+      // Stored plain, an OAuth state also passes as a token (GHSA-965c-763c-88jm).
+      storeToken: 'hashed',
       sendMagicLink: async ({ email, url }) => {
         const settings = await getAuthSettings();
         if (!settings.magicLink) {

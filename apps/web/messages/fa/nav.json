@@ -20,7 +20,7 @@
   "mcpServer": "سرور MCP",
   "godMode": "حالت God",
   "godModeSection": "حالت God: {section}",
-  "instanceSettings": "تنظیمات نمونه",
+  "instanceSettings": "تنظیمات سامانه",
   "backToApp": "بازگشت به اپ",
   "integrations": "یکپارچه‌سازی‌ها",
   "projects": "پروژه‌ها",
@@ -39,7 +39,7 @@
     "workflow": "گردش کار",
     "automation": "اتوماسیون"
   },
-  "godModeOwnerOnly": "حالت God فقط برای مالک نمونه باز است.",
+  "godModeOwnerOnly": "حالت God فقط برای مالک سامانه باز است.",
   "project": "پروژه",
   "projectPicker": {
     "sortName": "نام پروژه",

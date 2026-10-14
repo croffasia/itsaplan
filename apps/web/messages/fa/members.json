@@ -60,15 +60,22 @@
     "resendUnavailable": "ایمیل پیکربندی نشده است. لینک دعوت را کپی کنید و به اشتراک بگذارید.",
     "resendEmail": "ارسال ایمیل",
     "resendingEmail": "در حال قرار دادن در صف…",
+    "renew": "تمدید",
+    "renewing": "در حال تمدید…",
+    "renewed": "دعوت تمدید شد: لینک جدید ایمیل شد",
+    "renewedNoEmail": "دعوت تمدید شد. ایمیل تنظیم نشده است: لینک جدید را کپی کنید تا به اشتراک بگذارید.",
+    "renewedCopyLink": "دعوت تمدید شد. لینک جدید را کپی کنید تا به اشتراک بگذارید.",
     "revokeAction": "لغو دعوت",
     "removeAction": "حذف دعوت",
     "invitedBy": "دعوت‌شده توسط {name} · ",
     "createdAt": "ایجاد {date}",
+    "expiredAt": "منقضی شده در {date}",
     "respondedAt": "{status, select, accepted {پذیرفت} rejected {رد کرد} other {به‌روزرسانی شد}} {date}",
     "status": {
       "pending": "در انتظار",
       "accepted": "پذیرفته‌شده",
-      "rejected": "رد‌شده"
+      "rejected": "رد‌شده",
+      "expired": "منقضی شده"
     },
     "revokeTitle": "لغو دعوت {email}",
     "revokeConfirm": "لغو دعوت",

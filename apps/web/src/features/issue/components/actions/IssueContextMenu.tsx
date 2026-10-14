@@ -321,6 +321,7 @@ export default function IssueContextMenu({
                           weekday: 'short',
                           month: 'short',
                           day: 'numeric',
+                          calendar: 'gregory',
                         })}
                       </ContextMenuShortcut>
                     </ContextMenuItem>

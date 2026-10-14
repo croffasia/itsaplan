@@ -76,9 +76,9 @@
     "workDone": "کار انجام‌شده",
     "timeElapsed": "زمان سپری‌شده",
     "trail": "میزان عقب‌ماندگی کار از زمان",
-    "trailOnTrack": "تا 10% عقب‌ماندگی",
-    "trailAtRisk": "10-25% عقب‌ماندگی",
-    "trailOffTrack": "بیش از 25% عقب‌ماندگی"
+    "trailOnTrack": "تا ۱۰% عقب‌ماندگی",
+    "trailAtRisk": "۱۰-۲۵% عقب‌ماندگی",
+    "trailOffTrack": "بیش از ۲۵% عقب‌ماندگی"
   },
   "timeline": {
     "title": "خط زمانی",

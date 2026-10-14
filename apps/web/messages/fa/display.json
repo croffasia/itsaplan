@@ -39,7 +39,7 @@
     "initiative": "ابتکار",
     "cycle": "سیکل",
     "labels": "برچسب‌ها",
-    "estimatePoints": "امتیاز داستان",
+    "estimatePoints": "استوری پوینت",
     "estimateTime": "برآورد زمان",
     "startDate": "تاریخ شروع",
     "dueDate": "تاریخ سررسید",
@@ -70,7 +70,7 @@
   "rows": {
     "columns": "ستون‌ها",
     "grouping": "گروه‌بندی",
-    "swimlanes": "خطوط شنا",
+    "swimlanes": "Swimlane‌ها",
     "subGrouping": "زیرگروه‌بندی",
     "ordering": "ترتیب",
     "ascending": "صعودی",

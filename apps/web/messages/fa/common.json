@@ -44,7 +44,7 @@
     "resetShortcut": "بازنشانی این میانبر",
     "groups": {
       "general": "عمومی",
-      "workItems": "آیتم‌های کاری"
+      "workItems": "تسک‌ها"
     },
     "commands": {
       "palette": {
@@ -186,7 +186,7 @@
     "internalPreviewUnavailable": "این صفحه در دسترس نیست یا شما دسترسی ندارید.",
     "previewNoteCount": "{count, plural, one {# یادداشت} other {# یادداشت}}",
     "previewCustomField": "فیلد سفارشی",
-    "previewAllWorkItems": "همه آیتم‌های کاری",
+    "previewAllWorkItems": "همه تسک‌ها",
     "previewUpdated": "به‌روزرسانی شده {date}",
     "previewOtherValues": "({count} مورد دیگر)",
     "previewLink": "پیش‌نمایش پیوند",

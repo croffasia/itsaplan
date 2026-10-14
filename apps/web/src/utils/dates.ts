@@ -19,6 +19,13 @@ export function getDisplayLocale(): string {
   return displayLocale;
 }
 
+// The locale tag handed to Intl. Persian defaults to the solar Hijri calendar, but the
+// calendar grids and the date picker are Gregorian, so a date written in one and
+// picked in the other would not match; pin Persian to the Gregorian calendar.
+export function getIntlLocale(): string {
+  return displayLocale === 'fa' ? 'fa-u-ca-gregory' : displayLocale;
+}
+
 // The zone timestamps are rendered in, from the user's account preferences. The API
 // stores and returns UTC; only the display side applies a zone. Held in a module
 // variable so the formatters stay plain functions callable outside React, and set
@@ -64,7 +71,7 @@ export function formatShortDate(value: string): string {
   const dateOnly = value.length <= 10;
   const date = new Date(dateOnly ? `${value}T00:00:00` : value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString(displayLocale, {
+  return date.toLocaleDateString(getIntlLocale(), {
     month: 'short',
     day: 'numeric',
     ...(dateOnly ? {} : zoneOption()),
@@ -77,7 +84,7 @@ export function formatDate(value: string): string {
   const dateOnly = value.length <= 10;
   const date = new Date(dateOnly ? `${value}T00:00:00` : value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString(displayLocale, {
+  return date.toLocaleDateString(getIntlLocale(), {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -98,7 +105,7 @@ export function formatDateTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   const thisYear = zonedYear(date) === zonedYear(new Date());
-  return date.toLocaleString(displayLocale, {
+  return date.toLocaleString(getIntlLocale(), {
     month: 'short',
     day: 'numeric',
     ...(thisYear ? {} : { year: 'numeric' }),
@@ -161,7 +168,7 @@ export function formatDateTimeRange(start: string, end: string | null): string {
   const endDate = new Date(end);
   const endTime = Number.isNaN(endDate.getTime())
     ? end
-    : endDate.toLocaleTimeString(displayLocale, {
+    : endDate.toLocaleTimeString(getIntlLocale(), {
         hour: '2-digit',
         minute: '2-digit',
         hour12: displayLocale === 'ko',
@@ -174,7 +181,7 @@ export function formatDateTimeRange(start: string, end: string | null): string {
 export function formatLongDate(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString(displayLocale, {
+  return date.toLocaleDateString(getIntlLocale(), {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
@@ -186,7 +193,7 @@ export function formatLongDate(value: string): string {
 export function formatTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleTimeString(displayLocale, {
+  return date.toLocaleTimeString(getIntlLocale(), {
     hour: 'numeric',
     minute: '2-digit',
     ...zoneOption(),
@@ -196,7 +203,7 @@ export function formatTime(value: string): string {
 // "July 2026" for a calendar date the caller already built in local time (the
 // timeline's month band), so no zone is applied.
 export function formatMonthYear(date: Date): string {
-  return date.toLocaleDateString(displayLocale, { month: 'long', year: 'numeric' });
+  return date.toLocaleDateString(getIntlLocale(), { month: 'long', year: 'numeric' });
 }
 
 // The calendar day a moment falls on in the user's zone, as "YYYY-MM-DD". Used to

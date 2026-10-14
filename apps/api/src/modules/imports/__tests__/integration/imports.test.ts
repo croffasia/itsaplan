@@ -127,9 +127,10 @@ describe('imports', () => {
   it('refuses a mapping that names a column the file does not have', async () => {
     const { asOwner } = await setup();
     const uploaded = await uploadWorkbook(asOwner, [['Task'], ['Only']]);
-    await expect(mapImport(uploaded.data!.id, { title: 'Nope' })).rejects.toThrow(
-      'not in the file',
-    );
+    // Settled before the assertion: Bun's `rejects` on a pending promise waits in a
+    // nested event loop, where reading the workbook takes seconds and trips the timeout.
+    const error = await mapImport(uploaded.data!.id, { title: 'Nope' }).catch((e: unknown) => e);
+    expect((error as Error).message).toContain('not in the file');
   });
 
   it('refuses to map a file that does not parse into a table', async () => {

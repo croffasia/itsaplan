@@ -1,0 +1,14 @@
+{
+  "placeholder": "یک دستور بنویسید یا جستجو کنید…",
+  "noResults": "نتیجه‌ای یافت نشد.",
+  "issues": "تسک‌ها",
+  "searching": "در حال جستجو…",
+  "selectAllIssues": "انتخاب همه تسک‌ها",
+  "newIssue": "تسک جدید",
+  "newInitiative": "ابتکار جدید",
+  "newProject": "پروژه جدید",
+  "toggleChat": "نمایش یا پنهان کردن چت هوش مصنوعی",
+  "board": "برد",
+  "commands": "دستورها",
+  "switchProject": "تغییر پروژه"
+}

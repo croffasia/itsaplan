@@ -1,0 +1,237 @@
+{
+  "noAccess": "شما به داشبوردها دسترسی ندارید.",
+  "defaultName": "نمای کلی",
+  "newDashboard": "داشبورد جدید",
+  "renameDashboard": "تغییر نام داشبورد",
+  "namePlaceholder": "نام داشبورد",
+  "options": "گزینه‌های داشبورد",
+  "rename": "تغییر نام",
+  "editLayout": "ویرایش چیدمان",
+  "discard": "لغو",
+  "saveDashboard": "ذخیره داشبورد",
+  "saveChanges": "ذخیره تغییرات",
+  "noWidgets": "هنوز ویجتی وجود ندارد. برای ساخت این داشبورد یکی اضافه کنید.",
+  "addWidget": "افزودن ویجت",
+  "addWidgetTitle": "افزودن ویجت",
+  "addWidgetDescription": "یک ویجت برای افزودن به این داشبورد انتخاب کنید.",
+  "searchWidgets": "جستجوی ویجت‌ها",
+  "clearSearch": "پاک کردن جستجو",
+  "noWidgetMatches": "هیچ ویجتی با «{query}» مطابقت ندارد.",
+  "dragToMove": "برای جابه‌جایی بکشید",
+  "widgetName": "نام ویجت",
+  "widgetSettings": "تنظیمات ویجت",
+  "widgetOptions": "گزینه‌های ویجت",
+  "removeWidget": "حذف ویجت",
+  "lastDays": "{days} روز اخیر",
+  "showRows": "نمایش {count}",
+  "widgetGroups": {
+    "issues": "تسک‌ها",
+    "agents": "ایجنت‌های AI و وب‌هوک‌ها"
+  },
+  "widgets": {
+    "stat": {
+      "label": "عدد",
+      "description": "تعداد تسک‌های مطابق با یک فیلتر"
+    },
+    "recent_issues": {
+      "label": "تسک‌های اخیر",
+      "description": "آخرین تسک‌ها بر اساس زمان ایجاد یا به‌روزرسانی"
+    },
+    "activity_feed": {
+      "label": "فید فعالیت",
+      "description": "تاریخچه تغییرات کل پروژه، قابل فیلتر بر اساس کاربر و اقدام"
+    },
+    "pulse": {
+      "label": "پالس",
+      "description": "نقشه حرارتی به سبک GitHub از فعالیت روزانه"
+    },
+    "throughput": {
+      "label": "توان عملیاتی",
+      "description": "تسک‌های ایجادشده در مقابل بسته‌شده در هر هفته"
+    },
+    "burnup": {
+      "label": "نمودار Burnup",
+      "description": "محدوده، تسک‌های شروع‌شده و تکمیل‌شده در هر روز همراه با تاریخ تکمیل پیش‌بینی‌شده"
+    },
+    "breakdown": {
+      "label": "تفکیک",
+      "description": "تعداد تسک‌ها بر اساس وضعیت، اولویت، نوع یا مسئول"
+    },
+    "agent_runs": {
+      "label": "اجراهای ایجنت",
+      "description": "اجراهای اخیر ایجنت AI همراه با نتیجه آن‌ها"
+    },
+    "agent_health": {
+      "label": "سلامت ایجنت",
+      "description": "نرخ موفقیت و شکست اجراهای ایجنت در یک بازه"
+    },
+    "webhook_health": {
+      "label": "سلامت وب‌هوک",
+      "description": "نتایج تحویل وب‌هوک و نقاط پایانی غیرفعال"
+    },
+    "agent_workload": {
+      "label": "بار کاری ایجنت",
+      "description": "تسک‌های واگذارشده و نتایج اجرا به تفکیک ایجنت"
+    }
+  },
+  "breakdown": {
+    "empty": "هنوز تسکی وجود ندارد.",
+    "by": {
+      "status": "وضعیت",
+      "priority": "اولویت",
+      "type": "نوع",
+      "assignee": "مسئول",
+      "delegate": "واگذارشده"
+    },
+    "caption": {
+      "status": "بر اساس وضعیت",
+      "priority": "بر اساس اولویت",
+      "type": "بر اساس نوع",
+      "assignee": "بر اساس مسئول",
+      "delegate": "بر اساس واگذارشده"
+    }
+  },
+  "recentIssues": {
+    "empty": "هیچ تسکی با این فیلتر مطابقت ندارد.",
+    "captionCreated": "جدیدترین‌ها",
+    "captionUpdated": "اخیراً به‌روزرسانی‌شده",
+    "filterCount": "{count, plural, one {# فیلتر} other {# فیلتر}}",
+    "sort": {
+      "created": "جدیدترین",
+      "updated": "به‌روزرسانی‌شده"
+    }
+  },
+  "activityFeed": {
+    "empty": "هیچ فعالیتی با این فیلتر مطابقت ندارد.",
+    "someone": "یک نفر",
+    "filterCount": "{count, plural, one {# فیلتر} other {# فیلتر}}",
+    "actions": {
+      "all": "همه فعالیت‌ها",
+      "status": "تغییرات وضعیت",
+      "assignee": "واگذاری‌ها",
+      "priority": "اولویت",
+      "created": "ایجادشده"
+    },
+    "verbs": {
+      "comment": "دیدگاه گذاشت روی",
+      "created": "ایجاد کرد",
+      "title": "تغییر نام داد",
+      "description": "توضیحات را به‌روزرسانی کرد برای",
+      "status": "وضعیت را تغییر داد برای",
+      "assignee": "مسئول را تغییر داد برای",
+      "priority": "اولویت را تغییر داد برای",
+      "type": "نوع را تغییر داد برای",
+      "start_date": "تاریخ شروع را تغییر داد برای",
+      "due_date": "تاریخ سررسید را تغییر داد برای",
+      "label_add": "برچسبی اضافه کرد به",
+      "label_remove": "برچسبی حذف کرد از",
+      "field": "فیلدی را به‌روزرسانی کرد روی",
+      "other": "به‌روزرسانی کرد"
+    }
+  },
+  "pulse": {
+    "caption": {
+      "hour": "بر اساس ساعت",
+      "day": "بر اساس روز",
+      "week": "بر اساس هفته"
+    },
+    "unit": {
+      "hour": "ساعت‌ها",
+      "day": "روزها",
+      "week": "هفته‌ها"
+    },
+    "events": "{count, plural, one {# رویداد} other {# رویداد}}",
+    "eventNoun": "{count, plural, one {رویداد} other {رویداد}}",
+    "active": "{count} فعال",
+    "less": "کمتر",
+    "more": "بیشتر",
+    "scope": {
+      "project": "کل پروژه",
+      "me": "فعالیت من"
+    }
+  },
+  "throughput": {
+    "empty": "هیچ فعالیتی در این بازه وجود ندارد.",
+    "lastWeeks": "{weeks} هفته اخیر",
+    "created": "ایجادشده",
+    "closed": "بسته‌شده"
+  },
+  "burnup": {
+    "empty": "هیچ تسکی در این بازه وجود ندارد.",
+    "scope": "محدوده",
+    "started": "شروع‌شده",
+    "completed": "تکمیل‌شده",
+    "projection": "پیش‌بینی",
+    "band": "بازه پیش‌بینی",
+    "projected": "پیش‌بینی‌شده {date}",
+    "range": "{from} – {to}",
+    "forecastShape": {
+      "line": "خط پیش‌بینی",
+      "range": "بازه پیش‌بینی"
+    },
+    "noForecast": "هیچ پیشرفتی در {weeks, plural, one {# هفته} other {# هفته}} اخیر وجود ندارد",
+    "allDone": "همه انجام شد",
+    "velocity": "{rate}/روز",
+    "growth": "+{rate}/روز جدید",
+    "target": "هدف {date}",
+    "targetLabel": "هدف",
+    "today": "امروز",
+    "wholeProject": "کل پروژه",
+    "forecastWeeks": "نرخ در {weeks, plural, one {# هفته} other {# هفته}}"
+  },
+  "agentRuns": {
+    "empty": "هنوز اجرای ایجنتی وجود ندارد.",
+    "filters": {
+      "all": "همه اجراها",
+      "failed": "ناموفق",
+      "pending": "در صف",
+      "success": "موفق"
+    },
+    "status": {
+      "pending": "در صف",
+      "success": "موفق",
+      "failed": "ناموفق",
+      "canceled": "لغوشده"
+    },
+    "trigger": {
+      "mention": "اجرا شد با منشن در",
+      "delegation": "اجرا شد با واگذاری",
+      "field": "اجرا شد روی فیلدی از",
+      "manual": "به‌صورت دستی اجرا شد",
+      "schedule": "طبق زمان‌بندی اجرا شد",
+      "status": "اجرا شد با تغییر وضعیت",
+      "event": "اجرا شد با رویدادی از"
+    }
+  },
+  "agentHealth": {
+    "empty": "هیچ اجرای ایجنتی وجود ندارد.",
+    "successRate": "نرخ موفقیت",
+    "runs": "{count, plural, one {# اجرا} other {# اجرا}}",
+    "failed": "{count} ناموفق",
+    "queued": "{count} در صف"
+  },
+  "webhookHealth": {
+    "deliveries": "تحویل‌ها",
+    "failed": "{count} ناموفق",
+    "pending": "{count} در انتظار",
+    "allDelivered": "همه تحویل شد",
+    "disabled": "{count, plural, one {# نقطه پایانی غیرفعال} other {# نقطه پایانی غیرفعال}}"
+  },
+  "agentWorkload": {
+    "empty": "هیچ ایجنتی در این پروژه نیست.",
+    "agent": "ایجنت",
+    "delegated": "واگذارشده",
+    "runs": "اجراها",
+    "failed": "{count} ناموفق",
+    "kind": {
+      "external": "خارجی",
+      "internal": "داخلی"
+    }
+  },
+  "defaultWidgets": {
+    "open": "باز",
+    "inProgress": "در حال انجام",
+    "backlog": "بک‌لاگ",
+    "unassigned": "بدون مسئول"
+  }
+}

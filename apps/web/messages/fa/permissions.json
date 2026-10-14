@@ -1,0 +1,53 @@
+{
+  "none": "هیچ دسترسی‌ای داده نشده",
+  "grantedCount": "{count, plural, one {# دسترسی} other {# دسترسی}} داده شده",
+  "resources": {
+    "work_items": "تسک‌ها",
+    "initiatives": "ابتکارها",
+    "cycles": "سیکل‌ها",
+    "dashboards": "داشبوردها",
+    "documents": "مستندات",
+    "views": "نماهای تسک",
+    "members_invite": "دعوت‌ها",
+    "members_manage": "اعضا",
+    "states": "وضعیت‌ها",
+    "issue_types": "انواع تسک",
+    "labels": "برچسب‌ها",
+    "ai_agents": "ایجنت‌های AI",
+    "integrations": "یکپارچه‌سازی‌ها",
+    "agent_skills": "مهارت‌های ایجنت",
+    "agent_tools": "ابزارهای ایجنت",
+    "agent_usage": "مصرف ایجنت",
+    "custom_fields": "فیلدهای سفارشی",
+    "issue_templates": "قالب‌های تسک",
+    "workflow_config": "پیکربندی گردش کار",
+    "actions": "اکشن‌ها",
+    "webhooks": "وب‌هوک‌ها",
+    "repositories": "مخزن‌ها",
+    "note_boards": "تخته‌های یادداشت",
+    "import_export": "ورود/خروج",
+    "danger_zone": "منطقه خطر"
+  },
+  "actions": {
+    "create": "ایجاد",
+    "edit": "ویرایش",
+    "read": "خواندن",
+    "delete": "حذف"
+  },
+  "groups": {
+    "workItems": "تسک‌ها",
+    "dashboards": "داشبوردها",
+    "documents": "مستندات",
+    "notes": "یادداشت‌ها",
+    "ai": "AI",
+    "configuration": "پیکربندی",
+    "members": "اعضا",
+    "project": "پروژه",
+    "other": "سایر"
+  },
+  "resourceColumn": "منبع",
+  "allowed": "مجاز",
+  "notAllowed": "غیرمجاز",
+  "accessHeading": "دسترسی به این پروژه",
+  "joined": "پیوستن {date}"
+}

@@ -1,0 +1,12 @@
+{
+  "updateAvailable": "به‌روزرسانی موجود است",
+  "releaseHistory": "تاریخچه انتشار",
+  "running": "شما در حال اجرای {current} هستید.",
+  "badgeRunning": "در حال اجرا",
+  "badgeNew": "جدید",
+  "check": "بررسی به‌روزرسانی‌ها",
+  "checking": "در حال بررسی",
+  "lastChecked": "آخرین بررسی",
+  "allReleases": "همه انتشارها",
+  "noNotes": "این انتشار یادداشتی ندارد."
+}

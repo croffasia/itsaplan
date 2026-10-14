@@ -1,0 +1,46 @@
+{
+  "title": "سرور MCP",
+  "description": "ایجنت‌های هوش مصنوعی را از طریق پروتکل Model Context به این پروژه متصل کنید. هر ایجنت فقط چیزهایی را می‌بیند که کلید API آن اجازه می‌دهد.",
+  "disabled": "غیرفعال",
+  "offForTeam": "MCP برای تیم {team} خاموش است.",
+  "offForProject": "MCP برای تیم {team} روشن است، اما برای این پروژه خاموش است.",
+  "openTeamSettings": "باز کردن تنظیمات MCP تیم",
+  "askManager": "از مالک یا مدیر تیم بخواهید آن را روشن کند:",
+  "keyHint": "در صفحه <link>کلیدهای API</link> یک کلید بسازید، سپس <code>{apiKey}</code> را در قطعه‌کد جایگزین کنید.",
+  "endpoint": "نقطه پایانی MCP",
+  "clientTabsAria": "کلاینت",
+  "addToFile": "افزودن به <code>{file}</code>",
+  "notes": {
+    "claudeCode": "این را در ترمینال خود اجرا کنید.",
+    "vscode": "به GitHub Copilot نیاز دارد.",
+    "claudeDesktop": "Claude Desktop از طریق پل mcp-remote به سرورهای راه دور متصل می‌شود. به Node.js نیاز دارد.",
+    "other": "هر کلاینتی که از MCP روی Streamable HTTP پشتیبانی کند کار می‌کند. آن را به نقطه پایانی اشاره دهید. هدر Authorization: Bearer {apiKey} را ارسال کنید."
+  },
+  "clients": {
+    "other": "سایر"
+  },
+  "oauth": {
+    "configuration": "نحوه اتصال",
+    "methodTabsAria": "روش اتصال",
+    "method": "OAuth",
+    "personalKey": "کلید API",
+    "description": "از این برای هر کلاینت MCP که از OAuth پشتیبانی می‌کند، مانند ChatGPT یا Claude، استفاده کنید. با حساب Itsaplan خود وارد می‌شوید. کلاینت هرگز کلید API دریافت نمی‌کند.",
+    "discovery": "کشف OAuth",
+    "steps": {
+      "add": "یک اپ MCP در کلاینت خود اضافه کنید.",
+      "paste": "نقطه پایانی MCP را جای‌گذاری کنید.",
+      "choose": "وقتی کلاینت پرسید چگونه وارد شوید، OAuth را انتخاب کنید.",
+      "signIn": "به Itsaplan وارد شوید و دسترسی را تأیید کنید."
+    },
+    "security": "OAuth از PKCE (S256)، ثبت پویای کلاینت و توکن‌های دسترسی محدود به حساب Itsaplan شما استفاده می‌کند.",
+    "consent": {
+      "title": "مجوز دادن به Itsaplan",
+      "description": "به این کلاینت MCP اجازه دهید با مجوزهای حساب Itsaplan شما عمل کند.",
+      "missingCode": "این درخواست مجوز فاقد کد رضایت است.",
+      "cancel": "لغو",
+      "pending": "در حال مجوز دادن…",
+      "authorize": "مجوز دادن",
+      "failed": "تکمیل مجوز OAuth ممکن نشد."
+    }
+  }
+}

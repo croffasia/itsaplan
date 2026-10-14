@@ -1,0 +1,107 @@
+{
+  "title": "اعضا",
+  "description": "افرادی که به این پروژه دسترسی دارند.",
+  "add": {
+    "action": "افزودن عضو",
+    "title": "افزودن عضو",
+    "personLabel": "عضو تیم یا ایمیل",
+    "pickPlaceholder": "یک نفر را انتخاب کنید",
+    "searchPlaceholder": "تیم را جست‌وجو کنید یا یک ایمیل بنویسید",
+    "searchTeamPlaceholder": "جست‌وجوی تیم",
+    "fromTeam": "از تیم",
+    "byEmail": "دعوت با ایمیل",
+    "inviteEmail": "دعوت {email}",
+    "alreadyInvited": "{email} قبلاً دعوت شده است",
+    "alreadyMember": "{email} قبلاً در این پروژه است",
+    "alreadyInTeam": "{email} قبلاً در تیم است — از فهرست بالا انتخابش کنید",
+    "refused": "{email} افزوده نشد",
+    "typeEmail": "کسی پیدا نشد. برای دعوت، یک ایمیل کامل بنویسید.",
+    "noCandidates": "همه‌ی اعضای تیم قبلاً در این پروژه هستند.",
+    "willJoinTeam": "به تیم {teamName} و این پروژه می‌پیوندد",
+    "roleLabel": "نقش در پروژه",
+    "rolePlaceholder": "نقش",
+    "submit": "افزودن به پروژه",
+    "sendInvite": "ارسال دعوت"
+  },
+  "columns": {
+    "member": "عضو",
+    "role": "نقش",
+    "timezone": "منطقهٔ زمانی",
+    "joined": "تاریخ پیوستن",
+    "actions": "عملیات"
+  },
+  "profileHeading": "پروفایل",
+  "you": "(شما)",
+  "aiAgent": "ایجنت هوش مصنوعی",
+  "tabs": {
+    "all": "همه",
+    "people": "افراد",
+    "agents": "ایجنت‌های هوش مصنوعی",
+    "label": "نمایش"
+  },
+  "leaveProject": "ترک پروژه",
+  "revokeAccess": "لغو دسترسی",
+  "lastOwner": "پروژه باید حداقل یک مالک داشته باشد",
+  "leaveTitle": "ترک این پروژه",
+  "leaveDescription": "دسترسی شما به این پروژه و تسک‌هایش قطع می‌شود. یک مالک می‌تواند بعداً شما را دوباره دعوت کند.",
+  "revokeTitle": "لغو دسترسی {name}",
+  "revokeDescription": "{name} دسترسی خود به این پروژه را از دست می‌دهد. امکان دعوت مجدد بعداً وجود دارد.",
+  "selectRole": "انتخاب نقش",
+  "editDescription": "ویرایش توضیحات",
+  "descriptionQuestionSelf": "شما در این پروژه چه می‌کنید؟",
+  "descriptionQuestionOther": "این فرد در این پروژه چه می‌کند؟",
+  "descriptionPlaceholder": "مثلاً مهندس بک‌اند، مسئول API و اتصال‌ها",
+  "invites": {
+    "pendingCount": "{count, plural, one {# دعوت در انتظار} other {# دعوت در انتظار}}",
+    "copyLink": "کپی لینک",
+    "copied": "کپی شد",
+    "emailQueued": "ایمیل دعوت در صف قرار گرفت",
+    "emailUnavailable": "دعوت ایجاد شد، اما ایمیل در صف قرار نگرفت. لینک را کپی کنید و به اشتراک بگذارید.",
+    "resendUnavailable": "ایمیل پیکربندی نشده است. لینک دعوت را کپی کنید و به اشتراک بگذارید.",
+    "resendEmail": "ارسال ایمیل",
+    "resendingEmail": "در حال قرار دادن در صف…",
+    "revokeAction": "لغو دعوت",
+    "removeAction": "حذف دعوت",
+    "invitedBy": "دعوت‌شده توسط {name} · ",
+    "createdAt": "ایجاد {date}",
+    "respondedAt": "{status, select, accepted {پذیرفت} rejected {رد کرد} other {به‌روزرسانی شد}} {date}",
+    "status": {
+      "pending": "در انتظار",
+      "accepted": "پذیرفته‌شده",
+      "rejected": "رد‌شده"
+    },
+    "revokeTitle": "لغو دعوت {email}",
+    "revokeConfirm": "لغو دعوت",
+    "revokeDescription": "لینک دعوت دیگر کار نمی‌کند. می‌توانید بعداً این ایمیل را دوباره دعوت کنید."
+  },
+  "promoted": "عضو به مالک ارتقا یافت",
+  "roleUpdated": "نقش عضو به‌روزرسانی شد",
+  "descriptionUpdated": "توضیحات عضو به‌روزرسانی شد",
+  "added": "عضو افزوده شد",
+  "provisioned": "مدیریت‌شده توسط SCIM",
+  "search": {
+    "all": "جست‌وجوی اعضا",
+    "people": "جست‌وجوی افراد",
+    "agents": "جست‌وجوی ایجنت‌های هوش مصنوعی"
+  },
+  "empty": {
+    "all": {
+      "title": "هنوز عضوی نیست",
+      "description": "افراد و ایجنت‌های هوش مصنوعی پس از پیوستن اینجا نمایش داده می‌شوند."
+    },
+    "human": {
+      "title": "هنوز فردی نیست",
+      "description": "افراد پس از پیوستن اینجا نمایش داده می‌شوند."
+    },
+    "agent": {
+      "title": "هنوز ایجنت هوش مصنوعی نیست",
+      "description": "ایجنت‌های هوش مصنوعی پس از افزوده‌شدن اینجا نمایش داده می‌شوند."
+    },
+    "search": {
+      "title": "چیزی پیدا نشد",
+      "all": "هیچ عضوی با این جست‌وجو مطابقت ندارد.",
+      "human": "هیچ فردی با این جست‌وجو مطابقت ندارد.",
+      "agent": "هیچ ایجنت هوش مصنوعی با این جست‌وجو مطابقت ندارد."
+    }
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "title": "نمایش",
+  "layouts": {
+    "kanban": "کانبان",
+    "table": "جدول",
+    "timeline": "خط زمانی",
+    "calendar": "تقویم"
+  },
+  "sortFields": {
+    "manual": "دستی",
+    "title": "عنوان",
+    "identifier": "شماره تسک",
+    "status": "وضعیت",
+    "priority": "اولویت",
+    "assignee": "مسئول",
+    "type": "نوع",
+    "startDate": "تاریخ شروع",
+    "dueDate": "تاریخ سررسید",
+    "created": "ایجاد شده",
+    "updated": "به‌روزرسانی شده"
+  },
+  "groupFields": {
+    "none": "بدون گروه‌بندی",
+    "status": "وضعیت",
+    "assignee": "مسئول",
+    "delegate": "نماینده",
+    "priority": "اولویت",
+    "type": "نوع",
+    "initiative": "ابتکار",
+    "cycle": "سیکل"
+  },
+  "properties": {
+    "id": "شناسه",
+    "status": "وضعیت",
+    "priority": "اولویت",
+    "type": "نوع",
+    "assignee": "مسئول",
+    "delegate": "نماینده",
+    "initiative": "ابتکار",
+    "cycle": "سیکل",
+    "labels": "برچسب‌ها",
+    "estimatePoints": "امتیاز داستان",
+    "estimateTime": "برآورد زمان",
+    "startDate": "تاریخ شروع",
+    "dueDate": "تاریخ سررسید",
+    "created": "ایجاد شده",
+    "updated": "به‌روزرسانی شده",
+    "statusAge": "زمان در وضعیت"
+  },
+  "stateTypes": {
+    "backlog": "بک‌لاگ",
+    "unstarted": "شروع‌نشده",
+    "started": "شروع‌شده",
+    "completed": "تکمیل‌شده",
+    "canceled": "لغو‌شده"
+  },
+  "timelineScales": {
+    "week": "هفته",
+    "month": "ماه",
+    "quarter": "فصل"
+  },
+  "weekStart": {
+    "0": "یکشنبه",
+    "1": "دوشنبه"
+  },
+  "dateFields": {
+    "dueDate": "تاریخ سررسید",
+    "startDate": "تاریخ شروع"
+  },
+  "rows": {
+    "columns": "ستون‌ها",
+    "grouping": "گروه‌بندی",
+    "swimlanes": "خطوط شنا",
+    "subGrouping": "زیرگروه‌بندی",
+    "ordering": "ترتیب",
+    "ascending": "صعودی",
+    "descending": "نزولی",
+    "showEmptyColumns": "نمایش ستون‌های خالی",
+    "showEmptyGroups": "نمایش گروه‌های خالی",
+    "showLinks": "نمایش پیوندها",
+    "separateSubtaskCards": "نمایش زیرتسک‌ها به‌صورت کارت‌های جداگانه",
+    "separateSubtaskRows": "نمایش زیرتسک‌ها به‌صورت ردیف‌های جداگانه",
+    "startSubtasksCollapsed": "شروع با زیرتسک‌های جمع‌شده",
+    "showNestedSubtasks": "نمایش زیرتسک‌های تودرتو",
+    "nestedSubtasks": "زیرتسک‌های تودرتو",
+    "displayProperties": "نمایش ویژگی‌ها",
+    "placeBy": "قرارگیری بر اساس",
+    "startWeekOn": "شروع هفته از",
+    "startCollapsed": "شروع با گروه‌های جمع‌شده",
+    "scale": "مقیاس",
+    "addCustomField": "افزودن فیلد سفارشی",
+    "viewIcon": "آیکون نما"
+  },
+  "layoutCommand": "چیدمان {layout}"
+}

@@ -1,0 +1,119 @@
+{
+  "newIssue": "تسک جدید",
+  "pin": "سنجاق کردن",
+  "unpin": "برداشتن سنجاق",
+  "collapse": "جمع کردن",
+  "expand": "باز کردن",
+  "hide": "پنهان کردن",
+  "show": "نمایش",
+  "hiddenColumns": "ستون‌های پنهان",
+  "hiddenGroups": "گروه‌های پنهان",
+  "selectAll": "انتخاب همه",
+  "deselectAll": "لغو انتخاب همه",
+  "resizeColumn": "تغییر اندازه ستون",
+  "viewNamePlaceholder": "همه تسک‌ها",
+  "sortedOrder": "تسک‌ها بر اساس {field} مرتب شده‌اند. برای جابه‌جایی، ترتیب را به دستی تغییر دهید.",
+  "statusSince": "در وضعیت فعلی از {date}",
+  "createdOn": "ایجاد شده {date}",
+  "updatedOn": "به‌روزرسانی شده {date}",
+  "subtasksProgress": "زیرتسک‌ها {done}/{total}",
+  "subtasksDone": "{done} از {total} زیرتسک انجام شد",
+  "wip": {
+    "reached": "{column} به محدودیت {limit} تسک رسیده است.",
+    "tooltip": "محدودیت کار در جریان: {max}",
+    "count": "{count} / {max}",
+    "filteredCount": "{shown} از {total} / {max}",
+    "filteredTooltip": "{shown} مورد توسط فیلترهای فعلی نمایش داده شده است. محدودیت {max} همه {total} تسک ستون را می‌شمارد."
+  },
+  "columns": {
+    "title": "عنوان",
+    "status": "وضعیت",
+    "statusAge": "در وضعیت",
+    "priority": "اولویت",
+    "type": "نوع",
+    "initiative": "ابتکار",
+    "cycle": "سیکل",
+    "labels": "برچسب‌ها",
+    "estimatePoints": "امتیاز داستان",
+    "estimateTime": "زمان",
+    "startDate": "شروع",
+    "dueDate": "سررسید",
+    "created": "ایجاد شده",
+    "updated": "به‌روزرسانی شده"
+  },
+  "calendar": {
+    "previousMonth": "ماه قبل",
+    "nextMonth": "ماه بعد",
+    "today": "امروز",
+    "moreIssues": "+{count} مورد دیگر",
+    "issueCount": "{count, plural, one {# تسک} other {# تسک}}",
+    "weekdays": {
+      "sun": "یک‌شنبه",
+      "mon": "دوشنبه",
+      "tue": "سه‌شنبه",
+      "wed": "چهارشنبه",
+      "thu": "پنج‌شنبه",
+      "fri": "جمعه",
+      "sat": "شنبه"
+    },
+    "noDate": {
+      "dueDate": "بدون تاریخ سررسید",
+      "startDate": "بدون تاریخ شروع",
+      "custom": "بدون تاریخ"
+    },
+    "allDated": {
+      "dueDate": "همه‌چیز تاریخ سررسید دارد.",
+      "startDate": "همه‌چیز تاریخ شروع دارد.",
+      "custom": "همه‌چیز تاریخ دارد."
+    }
+  },
+  "timeline": {
+    "empty": "هنوز تسکی برای قرار دادن روی خط زمانی وجود ندارد.",
+    "expandGroup": "باز کردن گروه",
+    "collapseGroup": "جمع کردن گروه",
+    "inferredStart": "شروع استنباط‌شده از تاریخ ایجاد",
+    "inferredStartDraggable": "شروع استنباط‌شده از تاریخ ایجاد — برای تنظیم بکشید"
+  },
+  "bulk": {
+    "selected": "{count} مورد انتخاب شده",
+    "status": "وضعیت",
+    "priority": "اولویت",
+    "assignee": "مسئول",
+    "delegate": "نماینده",
+    "initiative": "ابتکار",
+    "cycle": "سیکل",
+    "labels": "برچسب‌ها",
+    "noAssignee": "بدون مسئول",
+    "noDelegate": "بدون نماینده",
+    "noInitiative": "بدون ابتکار",
+    "noCycle": "بدون سیکل",
+    "archive": "بایگانی",
+    "clearSelection": "پاک کردن انتخاب"
+  },
+  "removal": {
+    "archive": {
+      "title": "{count, plural, one {بایگانی تسک} other {بایگانی تسک‌ها}}",
+      "confirm": "{count, plural, one {بایگانی # تسک} other {بایگانی # تسک}}",
+      "description": "{count, plural, one {# تسک انتخاب‌شده بایگانی شود؟ از برد خارج می‌شود و بعداً قابل بازیابی است.} other {# تسک انتخاب‌شده بایگانی شوند؟ از برد خارج می‌شوند و بعداً قابل بازیابی هستند.}}"
+    },
+    "delete": {
+      "title": "{count, plural, one {حذف تسک} other {حذف تسک‌ها}}",
+      "confirm": "{count, plural, one {حذف # تسک} other {حذف # تسک}}",
+      "description": "{count, plural, one {# تسک انتخاب‌شده حذف شود؟} other {# تسک انتخاب‌شده حذف شوند؟}} این کار دیدگاه‌ها، فعالیت‌ها و پیوست‌ها را نیز حذف می‌کند. این عمل قابل بازگشت نیست."
+    }
+  },
+  "share": {
+    "issueTitle": "تسک",
+    "issueUnavailable": "این تسک در دسترس نیست.",
+    "boardUnavailable": "این برد اشتراکی در دسترس نیست. ممکن است لینک لغو شده باشد."
+  },
+  "groups": {
+    "noAssignee": "بدون مسئول",
+    "noDelegate": "بدون نماینده",
+    "noPriority": "بدون اولویت",
+    "noType": "بدون نوع",
+    "noInitiative": "بدون ابتکار",
+    "noCycle": "بدون سیکل",
+    "noMember": "بدون مقدار"
+  }
+}

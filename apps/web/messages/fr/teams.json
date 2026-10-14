@@ -111,7 +111,10 @@
     "revokeTitle": "Révoquer l'invitation de {email} ?",
     "revokeConfirm": "Révoquer l'invitation",
     "revokeDescription": "Le lien cesse de fonctionner. Vous pourrez réinviter cette personne plus tard.",
-    "pending": "Invité"
+    "pending": "Invité",
+    "expiredAt": "expirée le {date}",
+    "renew": "Renouveler",
+    "renewing": "Renouvellement…"
   },
   "manage": {
     "label": "Gérer les équipes",

@@ -111,7 +111,10 @@
     "revokeTitle": "{email} 초대를 취소하시겠습니까?",
     "revokeConfirm": "초대 취소",
     "revokeDescription": "초대 링크를 더 이상 사용할 수 없습니다. 나중에 다시 초대할 수 있습니다.",
-    "pending": "초대됨"
+    "pending": "초대됨",
+    "expiredAt": "{date}에 만료",
+    "renew": "갱신",
+    "renewing": "갱신 중…"
   },
   "manage": {
     "label": "팀 관리",
@@ -466,12 +469,12 @@
     "searchTools": "도구 검색",
     "advanced": "고급",
     "advancedHint": "샘플링, 단계 제한 및 메모리",
+    "temperature": "Temperature",
     "reasoningEffort": "추론 수준",
     "reasoningEffortDefault": "공급자 기본값",
     "reasoningEffortLow": "낮음",
     "reasoningEffortMedium": "중간",
     "reasoningEffortHigh": "높음",
-    "temperature": "Temperature",
     "optional": "선택 사항",
     "maxSteps": "최대 단계 수",
     "memory": "대화 메모리",

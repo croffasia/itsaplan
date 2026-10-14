@@ -140,7 +140,8 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       response: { 200: AuthSettingsResponse, ...errors(401, 403) },
       detail: {
         summary: 'Get authentication settings',
-        description: 'Get the instance registration mode and email-dependent auth options.',
+        description:
+          'Get the instance registration mode, invite lifetime and email-dependent auth options.',
       },
     },
   )
@@ -168,7 +169,8 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       response: { 200: AuthSettingsResponse, ...errors(400, 401, 403) },
       detail: {
         summary: 'Update authentication settings',
-        description: 'Update the instance registration mode and email-dependent auth options.',
+        description:
+          'Update the instance registration mode, invite lifetime and email-dependent auth options.',
       },
     },
   )

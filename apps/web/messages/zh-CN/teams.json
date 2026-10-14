@@ -111,7 +111,10 @@
     "revokeTitle": "撤销 {email} 的邀请？",
     "revokeConfirm": "撤销邀请",
     "revokeDescription": "链接将失效。之后可以重新邀请。",
-    "pending": "已邀请"
+    "pending": "已邀请",
+    "expiredAt": "已于 {date} 过期",
+    "renew": "续期",
+    "renewing": "正在续期…"
   },
   "manage": {
     "label": "管理团队",

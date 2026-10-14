@@ -23,6 +23,8 @@ export interface InstanceAuthSettings {
   emailPassword: boolean;
   trustProviderEmails: boolean;
   personalWorkspaces: boolean;
+  // Days an invite link stays valid; 0 means invites never expire.
+  inviteTtlDays: number;
   hasEmailProvider: boolean;
   // Whether Google or the OIDC provider can run. Password sign-in may only be turned
   // off while one of them can.
@@ -36,6 +38,7 @@ export interface InstanceAuthSettingsPatch {
   emailPassword?: boolean;
   trustProviderEmails?: boolean;
   personalWorkspaces?: boolean;
+  inviteTtlDays?: number;
 }
 
 // The instance mail provider used for authentication email (password reset, address

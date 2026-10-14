@@ -12,7 +12,7 @@ import {
   INSTANCE_EMAIL_SECRET_KEY,
   type InstanceEmailConfig,
 } from '@repo/db';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, gte, lt } from 'drizzle-orm';
 import { hasEmailProvider, type SmtpConfig } from '@repo/mailer';
 
 // Authentication settings: who may register, whether email has to be confirmed,
@@ -62,6 +62,10 @@ export interface AuthSettings {
   // Give every person a workspace of their own: created with the account, and offered
   // to an account that has none. Off, only the instance owner has a workspace.
   personalWorkspaces: boolean;
+  // How many days an invite link stays valid, counted from when it was created. A
+  // pending invite older than this neither gates registration nor can be accepted.
+  // 0 disables the limit (invites never expire).
+  inviteTtlDays: number;
 }
 
 function defaultAuthSettings(): AuthSettings {
@@ -72,6 +76,7 @@ function defaultAuthSettings(): AuthSettings {
     emailPassword: true,
     trustProviderEmails: false,
     personalWorkspaces: true,
+    inviteTtlDays: 7,
   };
 }
 
@@ -79,6 +84,14 @@ export async function getAuthSettings(): Promise<AuthSettings> {
   const stored = await getSetting<Partial<AuthSettings>>(AUTH_SETTING_KEY);
   // Merge over the default so a value written before a field was added stays valid.
   return { ...defaultAuthSettings(), ...(stored ?? {}) };
+}
+
+// The cutoff an invite's createdAt must be at or after to still count, or null when
+// the instance has turned expiry off.
+export async function inviteValidSince(): Promise<Date | null> {
+  const days = (await getAuthSettings()).inviteTtlDays;
+  if (!days || days <= 0) return null;
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 }
 
 export async function setAuthSettings(patch: Partial<AuthSettings>): Promise<AuthSettings> {
@@ -489,20 +502,47 @@ export async function verifyScimToken(candidate: string): Promise<number | null>
 
 // ── Invites ───────────────────────────────────────────────────────────────────
 
-// True when this address has a pending invite. That is what "invite only" means on
-// this instance: someone invites them to a team or to one of its projects, and that
-// invite is what lets them register at all. Invites are created and revoked inside a
-// team (team_invite), so there is nothing instance-level to manage.
+// True when this address has a pending, unexpired invite. That is what "invite only"
+// means on this instance: someone invites them to a team or to one of its projects, and
+// that invite is what lets them register at all. Invites are created and revoked inside
+// a team (team_invite), so there is nothing instance-level to manage.
 //
 // The invite itself is accepted after sign-up, on the /invite/:token screen — this
 // only decides whether the account may be created, and leaves the invite pending.
 export async function hasPendingInvite(email: string): Promise<boolean> {
   const address = email.trim().toLowerCase();
   if (!address) return false;
+  const since = await inviteValidSince();
   const rows = await db
     .select({ id: teamInvite.id })
     .from(teamInvite)
-    .where(and(eq(teamInvite.email, address), eq(teamInvite.status, 'pending')))
+    .where(
+      and(
+        eq(teamInvite.email, address),
+        eq(teamInvite.status, 'pending'),
+        since ? gte(teamInvite.createdAt, since) : undefined,
+      ),
+    )
+    .limit(1);
+  return rows.length > 0;
+}
+
+// True when the address has a pending invite that has expired. Asked after
+// hasPendingInvite says no, so the person knows to ask for a new link.
+export async function hasExpiredInvite(email: string): Promise<boolean> {
+  const address = email.trim().toLowerCase();
+  const since = await inviteValidSince();
+  if (!address || !since) return false;
+  const rows = await db
+    .select({ id: teamInvite.id })
+    .from(teamInvite)
+    .where(
+      and(
+        eq(teamInvite.email, address),
+        eq(teamInvite.status, 'pending'),
+        lt(teamInvite.createdAt, since),
+      ),
+    )
     .limit(1);
   return rows.length > 0;
 }

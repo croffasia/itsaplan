@@ -60,15 +60,22 @@
     "resendUnavailable": "邮件尚未配置。请复制邀请链接进行分享。",
     "resendEmail": "发送邮件",
     "resendingEmail": "正在加入队列…",
+    "renew": "续期",
+    "renewing": "正在续期…",
+    "renewed": "邀请已续期：新链接已通过邮件发送",
+    "renewedNoEmail": "邀请已续期。尚未配置邮件：请复制新链接进行分享。",
+    "renewedCopyLink": "邀请已续期。请复制新链接进行分享。",
     "revokeAction": "撤销邀请",
     "removeAction": "移除邀请",
     "invitedBy": "由 {name} 邀请 · ",
     "createdAt": "创建于 {date}",
+    "expiredAt": "已于 {date} 过期",
     "respondedAt": "{status, select, accepted {已接受} rejected {已拒绝} other {已更新}} {date}",
     "status": {
       "pending": "待处理",
       "accepted": "已接受",
-      "rejected": "已拒绝"
+      "rejected": "已拒绝",
+      "expired": "已过期"
     },
     "revokeTitle": "撤销发送至 {email} 的邀请",
     "revokeConfirm": "撤销邀请",

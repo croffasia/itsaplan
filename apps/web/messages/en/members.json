@@ -60,15 +60,22 @@
     "resendUnavailable": "Email is not configured. Copy the invitation link to share it.",
     "resendEmail": "Send email",
     "resendingEmail": "Queueing…",
+    "renew": "Renew",
+    "renewing": "Renewing…",
+    "renewed": "Invite renewed: a new link was emailed",
+    "renewedNoEmail": "Invite renewed. Email is not configured: copy the new link to share it.",
+    "renewedCopyLink": "Invite renewed. Copy the new link to share it.",
     "revokeAction": "Revoke invite",
     "removeAction": "Remove invite",
     "invitedBy": "Invited by {name} · ",
     "createdAt": "created {date}",
+    "expiredAt": "expired {date}",
     "respondedAt": "{status, select, accepted {accepted} rejected {rejected} other {updated}} {date}",
     "status": {
       "pending": "Pending",
       "accepted": "Accepted",
-      "rejected": "Rejected"
+      "rejected": "Rejected",
+      "expired": "Expired"
     },
     "revokeTitle": "Revoke invite for {email}",
     "revokeConfirm": "Revoke invite",

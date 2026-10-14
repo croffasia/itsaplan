@@ -5,10 +5,13 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import {
   type InviteTeamRole,
   listTeamInvites,
   createTeamInvite,
+  renewTeamInvite,
   deleteTeamInvite,
 } from '@/lib/api/endpoints/invites';
 import type { MemberKind, MemberListParams } from '@/lib/api/endpoints/members';
@@ -261,6 +264,21 @@ export function useCreateTeamInvite(teamId: number) {
     mutationFn: (input: { email: string; role: InviteTeamRole }) => createTeamInvite(teamId, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.teamInvites(teamId) }),
     meta: { suppressErrorToast: true },
+  });
+}
+
+export function useRenewTeamInvite(teamId: number) {
+  const t = useTranslations('members.invites');
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (inviteId: number) => renewTeamInvite(teamId, inviteId),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: qk.teamInvites(teamId) });
+      if (result.emailQueued) toast.success(t('renewed'));
+      // A team invite has no email of its own; only a project one is mailed.
+      else if (result.projectName == null) toast.info(t('renewedCopyLink'));
+      else toast.info(t('renewedNoEmail'));
+    },
   });
 }
 

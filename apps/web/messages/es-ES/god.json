@@ -190,6 +190,9 @@
     "saved": "Los ajustes de autenticación se han guardado",
     "registration": "Registro",
     "registrationHint": "Quién puede crear una cuenta en esta instancia.",
+    "inviteTtlDays": "Caducidad de las invitaciones (días)",
+    "inviteTtlDaysHint": "Pasado este plazo, el enlace de una invitación deja de funcionar y, con el registro por invitación, ya no permite darse de alta. Con 0, las invitaciones no caducan.",
+    "inviteTtlDaysInvalid": "Escribe un número entero de días entre 0 y {max}.",
     "modes": {
       "open": {
         "label": "Abierto",

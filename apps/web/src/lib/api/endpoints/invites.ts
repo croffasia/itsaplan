@@ -26,6 +26,9 @@ export interface InviteRow {
   roleName: string | null;
   status: InviteStatus;
   createdAt: string;
+  // When a pending invite stops working; null once it was answered or when invites
+  // never expire.
+  expiresAt: string | null;
   respondedAt: string | null;
   invitedByName: string | null;
   invitedByEmail: string | null;
@@ -54,6 +57,7 @@ export interface InviteView {
   roleName: string | null;
   status: InviteStatus;
   createdAt: string;
+  expired: boolean;
   // Whether the invited email already has an account, so the accept screen can
   // open in sign-in mode instead of registration.
   hasAccount: boolean;
@@ -88,6 +92,12 @@ export const sendInviteEmail = (projectKey: string, inviteId: number) =>
     method: 'POST',
   });
 
+// A renewed invite is a new one under a new link; the expired one is gone.
+export const renewInvite = (projectKey: string, inviteId: number) =>
+  request<InviteCreateResult>(`/projects/${projectKey}/invites/${inviteId}/renew`, {
+    method: 'POST',
+  });
+
 export const deleteInvite = (projectKey: string, inviteId: number) =>
   request<void>(`/projects/${projectKey}/invites/${inviteId}`, { method: 'DELETE' });
 
@@ -98,6 +108,9 @@ export const createTeamInvite = (teamId: number, input: { email: string; role: I
     method: 'POST',
     body: JSON.stringify(input),
   });
+
+export const renewTeamInvite = (teamId: number, inviteId: number) =>
+  request<InviteCreateResult>(`/teams/${teamId}/invites/${inviteId}/renew`, { method: 'POST' });
 
 export const deleteTeamInvite = (teamId: number, inviteId: number) =>
   request<void>(`/teams/${teamId}/invites/${inviteId}`, { method: 'DELETE' });

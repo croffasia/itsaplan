@@ -60,15 +60,22 @@
     "resendUnavailable": "Почта не настроена. Скопируйте ссылку на приглашение.",
     "resendEmail": "Отправить письмо",
     "resendingEmail": "В очередь…",
+    "renew": "Обновить",
+    "renewing": "Обновление…",
+    "renewed": "Приглашение обновлено: новая ссылка отправлена по почте",
+    "renewedNoEmail": "Приглашение обновлено. Почта не настроена: скопируйте новую ссылку, чтобы поделиться ею.",
+    "renewedCopyLink": "Приглашение обновлено. Скопируйте новую ссылку, чтобы поделиться ею.",
     "revokeAction": "Отозвать приглашение",
     "removeAction": "Убрать приглашение",
     "invitedBy": "Пригласил {name} · ",
     "createdAt": "создано {date}",
+    "expiredAt": "истекло {date}",
     "respondedAt": "{status, select, accepted {принято} rejected {отклонено} other {обновлено}} {date}",
     "status": {
       "pending": "В ожидании",
       "accepted": "Принято",
-      "rejected": "Отклонено"
+      "rejected": "Отклонено",
+      "expired": "Истекло"
     },
     "revokeTitle": "Отозвать приглашение для {email}",
     "revokeConfirm": "Отозвать приглашение",

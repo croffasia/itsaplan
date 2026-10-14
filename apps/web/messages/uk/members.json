@@ -60,15 +60,22 @@
     "resendUnavailable": "Пошту не налаштовано. Скопіюйте посилання на запрошення.",
     "resendEmail": "Надіслати лист",
     "resendingEmail": "У чергу…",
+    "renew": "Оновити",
+    "renewing": "Оновлення…",
+    "renewed": "Запрошення оновлено: нове посилання надіслано поштою",
+    "renewedNoEmail": "Запрошення оновлено. Пошту не налаштовано: скопіюйте нове посилання, щоб поділитися ним.",
+    "renewedCopyLink": "Запрошення оновлено. Скопіюйте нове посилання, щоб поділитися ним.",
     "revokeAction": "Відкликати запрошення",
     "removeAction": "Прибрати запрошення",
     "invitedBy": "Запросив {name} · ",
     "createdAt": "створено {date}",
+    "expiredAt": "термін минув {date}",
     "respondedAt": "{status, select, accepted {прийнято} rejected {відхилено} other {оновлено}} {date}",
     "status": {
       "pending": "В очікуванні",
       "accepted": "Прийнято",
-      "rejected": "Відхилено"
+      "rejected": "Відхилено",
+      "expired": "Термін минув"
     },
     "revokeTitle": "Відкликати запрошення для {email}",
     "revokeConfirm": "Відкликати запрошення",

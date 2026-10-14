@@ -12,6 +12,7 @@ import {
   projectColumn,
   projectMember,
   team,
+  teamInvite,
   teamMember,
   teamRole,
   user,
@@ -1026,6 +1027,17 @@ async function dropTeamMembership(tx: Transaction, teamId: number, userId: strin
   await tx
     .delete(projectMember)
     .where(and(eq(projectMember.userId, userId), inArray(projectMember.projectId, teamProjects)));
+  // A pending invite this member created outlives them otherwise, keeping the
+  // registration gate open on their behalf after they were removed.
+  await tx
+    .delete(teamInvite)
+    .where(
+      and(
+        eq(teamInvite.teamId, teamId),
+        eq(teamInvite.invitedByUserId, userId),
+        eq(teamInvite.status, 'pending'),
+      ),
+    );
   // A column cannot keep assigning issues to someone who no longer belongs to the
   // project, the same rule remove_member follows.
   await tx

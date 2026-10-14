@@ -190,6 +190,9 @@
     "saved": "Configurações de autenticação salvas",
     "registration": "Registro",
     "registrationHint": "Quem pode criar uma conta nesta instância.",
+    "inviteTtlDays": "Validade dos convites (dias)",
+    "inviteTtlDaysHint": "Depois desse prazo, o link do convite deixa de funcionar e, com o cadastro somente por convite, não permite mais criar a conta. Com 0, os convites não expiram.",
+    "inviteTtlDaysInvalid": "Informe um número inteiro de dias entre 0 e {max}.",
     "modes": {
       "open": {
         "label": "Aberto",

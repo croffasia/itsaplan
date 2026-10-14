@@ -4,6 +4,9 @@ import { useState } from 'react';
 import type { InstanceAuthSettings, RegistrationMode } from '@/lib/api/endpoints/god';
 import { useUpdateInstanceAuthSettings } from '../services/god.service';
 
+// The api's own limit on the invite lifetime.
+export const MAX_INVITE_TTL_DAYS = 3650;
+
 export interface GodPolicyForm {
   registration: RegistrationMode;
   setRegistration: (v: RegistrationMode) => void;
@@ -15,6 +18,10 @@ export interface GodPolicyForm {
   setEmailPassword: (v: boolean) => void;
   trustProviderEmails: boolean;
   setTrustProviderEmails: (v: boolean) => void;
+  // Kept as typed, so a half-written number can sit in the field without saving.
+  inviteTtlDays: string;
+  setInviteTtlDays: (v: string) => void;
+  inviteTtlDaysValid: boolean;
   dirty: boolean;
   saving: boolean;
   save: () => Promise<void>;
@@ -32,21 +39,28 @@ export function useGodPolicyForm(settings: InstanceAuthSettings): GodPolicyForm 
   const [magicLink, setMagicLink] = useState(settings.magicLink);
   const [emailPassword, setEmailPassword] = useState(settings.emailPassword);
   const [trustProviderEmails, setTrustProviderEmails] = useState(settings.trustProviderEmails);
+  const [inviteTtlDays, setInviteTtlDays] = useState(String(settings.inviteTtlDays));
+  const inviteTtlDaysValid =
+    /^\d+$/.test(inviteTtlDays.trim()) && Number(inviteTtlDays) <= MAX_INVITE_TTL_DAYS;
 
   const dirty =
     registration !== settings.registration ||
     requireEmailVerification !== settings.requireEmailVerification ||
     magicLink !== settings.magicLink ||
     emailPassword !== settings.emailPassword ||
-    trustProviderEmails !== settings.trustProviderEmails;
+    trustProviderEmails !== settings.trustProviderEmails ||
+    inviteTtlDays.trim() !== String(settings.inviteTtlDays);
 
   async function save() {
+    // An empty field would be read as 0, which turns expiry off.
+    if (!inviteTtlDaysValid) return;
     await update.mutateAsync({
       registration,
       requireEmailVerification,
       magicLink,
       emailPassword,
       trustProviderEmails,
+      inviteTtlDays: Number(inviteTtlDays.trim()),
     });
   }
 
@@ -61,6 +75,9 @@ export function useGodPolicyForm(settings: InstanceAuthSettings): GodPolicyForm 
     setEmailPassword,
     trustProviderEmails,
     setTrustProviderEmails,
+    inviteTtlDays,
+    setInviteTtlDays,
+    inviteTtlDaysValid,
     dirty,
     saving: update.isPending,
     save,

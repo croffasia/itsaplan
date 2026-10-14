@@ -60,15 +60,22 @@
     "resendUnavailable": "البريد الإلكتروني غير مهيأ. انسخ رابط الدعوة وشاركه.",
     "resendEmail": "إرسال إيميل",
     "resendingEmail": "جارٍ الإضافة…",
+    "renew": "تجديد",
+    "renewing": "جارٍ التجديد…",
+    "renewed": "تم تجديد الدعوة: أُرسل رابط جديد بالبريد الإلكتروني",
+    "renewedNoEmail": "تم تجديد الدعوة. البريد الإلكتروني غير مُعدّ: انسخ الرابط الجديد لمشاركته.",
+    "renewedCopyLink": "تم تجديد الدعوة. انسخ الرابط الجديد لمشاركته.",
     "revokeAction": "إلغاء الدعوة",
     "removeAction": "إزالة الدعوة",
     "invitedBy": "بدعوة من {name} · ",
     "createdAt": "أُنشئت {date}",
+    "expiredAt": "انتهت في {date}",
     "respondedAt": "{status, select, accepted {قُبلت} rejected {رُفضت} other {حُدّثت}} {date}",
     "status": {
       "pending": "معلّقة",
       "accepted": "مقبولة",
-      "rejected": "مرفوضة"
+      "rejected": "مرفوضة",
+      "expired": "منتهية"
     },
     "revokeTitle": "إلغاء الدعوة إلى {email}",
     "revokeConfirm": "إلغاء الدعوة",

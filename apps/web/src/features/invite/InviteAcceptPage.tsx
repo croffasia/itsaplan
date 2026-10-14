@@ -29,7 +29,7 @@ export default function InviteAcceptPage({ token }: { token: string }) {
     title = t('notFoundTitle');
     subtitle = t('notFoundSubtitle');
     body = (
-      <InviteNotice message={t('notFoundMessage')}>
+      <InviteNotice>
         <Button asChild variant="outline">
           <Link href="/login">{t('goToSignIn')}</Link>
         </Button>
@@ -39,6 +39,9 @@ export default function InviteAcceptPage({ token }: { token: string }) {
     if (invite.status !== 'pending') {
       title = t('closedTitle');
       subtitle = t('closedSubtitle', { status: invite.status });
+    } else if (invite.expired) {
+      title = t('expiredTitle');
+      subtitle = t('expiredSubtitle');
     }
     body = (
       <div className="flex flex-col gap-6">

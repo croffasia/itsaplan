@@ -190,6 +190,9 @@
     "saved": "Authentication settings saved",
     "registration": "Registration",
     "registrationHint": "Who may create an account on this instance.",
+    "inviteTtlDays": "Invite expiry (days)",
+    "inviteTtlDaysHint": "After this many days an invite link stops working and, with invite-only registration, no longer lets its address sign up. 0 keeps invites valid until they are answered.",
+    "inviteTtlDaysInvalid": "Enter a whole number of days from 0 to {max}.",
     "modes": {
       "open": {
         "label": "Open",

@@ -9,6 +9,7 @@ import type { MemberKind } from '@/lib/api/endpoints/members';
 import type { TeamMember } from '@/lib/api/endpoints/teams';
 import {
   useDeleteTeamInvite,
+  useRenewTeamInvite,
   useRemoveTeamMember,
   useTeam,
   useTeamInvitesQuery,
@@ -29,14 +30,15 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TeamInviteDialog from './TeamInviteDialog';
-import TeamInviteRow from './TeamInviteRow';
+import TeamInvitesList from './TeamInvitesList';
+import { mayRenewInvite } from '@/utils/invites';
 import TeamMemberRow from './TeamMemberRow';
 
 // The team's members, a page at a time, with the invites that have not been answered
-// yet above them. People and agents work on one board, so both are listed and the tabs
-// tell them apart; selecting an agent opens the section that configures it. Owners and
-// managers run the list, so only they invite and see the pending invites; only an owner
-// removes a person from it.
+// yet listed apart above them. People and agents work on one board, so both are listed
+// and the tabs tell them apart; selecting an agent opens the section that configures it.
+// Owners and managers run the list, so only they invite and see the pending invites; only
+// an owner removes a person from it.
 export default function TeamMembersSection({ teamId }: { teamId: number }) {
   const t = useTranslations('teams');
   const tMembers = useTranslations('members');
@@ -50,6 +52,7 @@ export default function TeamMembersSection({ teamId }: { teamId: number }) {
   const canInvite = team != null && team.role !== 'member';
   const invitesQuery = useTeamInvitesQuery(teamId, canInvite);
   const deleteInvite = useDeleteTeamInvite(teamId);
+  const renewInvite = useRenewTeamInvite(teamId);
   const removeMember = useRemoveTeamMember(teamId);
   const [inviting, setInviting] = useState(false);
   const [target, setTarget] = useState<InviteRow | null>(null);
@@ -59,12 +62,12 @@ export default function TeamMembersSection({ teamId }: { teamId: number }) {
 
   const members = membersQuery.data?.items ?? [];
   const total = membersQuery.data?.total ?? 0;
-  // An invite is nobody yet, so it matches no tab and no search term: the rows only
-  // stand above the first page of the plain list.
-  const pending =
-    paging.params.page === 1 && kind !== 'agent' && term === undefined
-      ? (invitesQuery.data ?? []).filter((invite) => invite.status === 'pending')
-      : [];
+  // The invites are not part of the paged member list, so tabs and pages leave them be;
+  // a search narrows them by address like it narrows the members.
+  const needle = term?.toLowerCase();
+  const pending = (invitesQuery.data ?? []).filter(
+    (invite) => invite.status === 'pending' && (!needle || invite.email.includes(needle)),
+  );
 
   function onKindChange(next: string) {
     setKind(next as MemberKind);
@@ -98,6 +101,18 @@ export default function TeamMembersSection({ teamId }: { teamId: number }) {
       }
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
+        {pending.length > 0 && (
+          <TeamInvitesList
+            invites={pending}
+            onRevoke={setTarget}
+            onRenew={(expired) => renewInvite.mutate(expired.id)}
+            canRenew={(invite) =>
+              mayRenewInvite(invite, { teamRole: team?.role ?? null, ownsProject: false })
+            }
+            renewingId={renewInvite.isPending ? (renewInvite.variables ?? null) : null}
+          />
+        )}
+
         <Tabs value={kind} onValueChange={onKindChange}>
           <div className="flex items-center justify-between gap-3">
             <TabsList variant="line" className="w-auto border-b-0">
@@ -116,7 +131,7 @@ export default function TeamMembersSection({ teamId }: { teamId: number }) {
 
         {membersQuery.isPending ? (
           <ListSkeleton rows={4} rowClassName="h-12" />
-        ) : members.length === 0 && pending.length === 0 ? (
+        ) : members.length === 0 ? (
           <MembersEmptyState kind={kind} searching={term !== undefined} />
         ) : (
           <div className="overflow-x-auto">
@@ -144,9 +159,6 @@ export default function TeamMembersSection({ teamId }: { teamId: number }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pending.map((invite) => (
-                  <TeamInviteRow key={invite.id} invite={invite} onRevoke={setTarget} />
-                ))}
                 {members.map((member) => (
                   <TeamMemberRow
                     key={member.userId}

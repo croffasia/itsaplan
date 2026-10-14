@@ -38,6 +38,7 @@ export const InviteRowResponse = t.Object({
   roleName: t.Nullable(t.String()),
   status: inviteStatus,
   createdAt: t.String(),
+  expiresAt: t.Nullable(t.String()),
   respondedAt: t.Nullable(t.String()),
   invitedByName: t.Nullable(t.String()),
   invitedByEmail: t.Nullable(t.String()),
@@ -66,6 +67,7 @@ export const InviteViewResponse = t.Object({
   roleName: t.Nullable(t.String()),
   status: inviteStatus,
   createdAt: t.String(),
+  expired: t.Boolean(),
   hasAccount: t.Boolean(),
 });
 

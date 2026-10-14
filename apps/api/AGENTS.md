@@ -283,6 +283,9 @@ undoes one.
   answers 409 to an update; only a delete goes through.
 - `setRunAdmission` (`modules/agents/core/run-admission.ts`): the seconds a claimed run
   waits before it starts, asked in the poller and in a runner's claim.
+- `setRunRefusal` (`modules/agents/core/run-refusal.ts`): whether an internal agent works
+  at all, asked in the poller before a queued run starts and in `prepareRun` before a chat
+  answer. A reason fails the run without a retry, and answers the chat with 403.
 - `onProjectEvent` (`modules/webhooks/emit.ts`): every issue and comment event the
   webhooks get, inside the request that caused it.
 

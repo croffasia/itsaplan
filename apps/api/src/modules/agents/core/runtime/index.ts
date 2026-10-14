@@ -17,6 +17,7 @@ import { buildLocalTools } from './tools/local';
 import { buildSkillTool, skillsPreamble } from './skill-runtime';
 import { buildMemory, ensureThread, DEFAULT_LAST_MESSAGES } from './memory';
 import { getMastra } from './observability';
+import { runRefusal } from '../run-refusal';
 import { toolArgsText, toolText } from '../../chat-parts';
 import { recordContextUsage, type ContextUsage } from '../../chat-usage';
 import { isChatThreadId, newChatThreadId } from './thread-ids';
@@ -290,6 +291,16 @@ async function prepareRun(
   if (!row) throw new HttpError(404, 'Agent not found');
   if (row.kind !== 'internal') {
     throw new HttpError(400, 'Only internal agents can be run');
+  }
+  // A queued run was asked about in the poller, before it was recorded as started.
+  if (opts.runId == null) {
+    const refused = await runRefusal({
+      agentId: row.id,
+      teamId: row.teamId,
+      projectId,
+      userId: opts.callerUserId,
+    });
+    if (refused) throw new HttpError(403, refused, 'run_refused');
   }
   // A chat run with no threadId starts a new conversation; every other run continues
   // the thread its caller named (see thread-ids). Without memory every run is a

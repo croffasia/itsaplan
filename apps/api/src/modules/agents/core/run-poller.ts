@@ -5,6 +5,7 @@ import { getLimits } from '#shared/limits';
 import { framePrompt, peopleContext, runModePreamble } from './prompt/framing';
 import { agentRunStarted, recordAgentRunFinished } from './run-activity';
 import { runAdmissionDelay } from './run-admission';
+import { runRefusal } from './run-refusal';
 import {
   agentRunConfig,
   claimDueRuns,
@@ -33,7 +34,8 @@ export async function processAgentRuns(): Promise<void> {
 }
 
 async function processRun(run: ClaimedRun): Promise<void> {
-  const workspaceId = await teamWorkspaceId(await getProjectTeamId(run.projectId), db);
+  const teamId = await getProjectTeamId(run.projectId);
+  const workspaceId = await teamWorkspaceId(teamId, db);
   const { maxConcurrentRuns, maxRunSeconds } = await getLimits(workspaceId);
   if (maxConcurrentRuns > 0 && (await countRunsAhead(workspaceId, run.id)) >= maxConcurrentRuns) {
     await deferRun(run.id, DEFERRED_RETRY_SECONDS);
@@ -42,6 +44,18 @@ async function processRun(run: ClaimedRun): Promise<void> {
   const wait = await runAdmissionDelay(run);
   if (wait > 0) {
     await deferRun(run.id, wait);
+    return;
+  }
+  // Refused before anything is recorded on the issue, and not retried: the attempt would
+  // be refused for the same reason.
+  const refused = await runRefusal({
+    agentId: run.agentId,
+    teamId,
+    projectId: run.projectId,
+    userId: run.requesterUserId,
+  });
+  if (refused) {
+    await markRunFailed(run.id, refused);
     return;
   }
   // The issue's timeline entries are written here, where the agent's work actually

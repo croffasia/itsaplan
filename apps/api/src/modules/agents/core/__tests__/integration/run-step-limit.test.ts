@@ -7,6 +7,7 @@ import { createCredential } from '#tests/helpers/integrations';
 import { claimDueRuns, enqueueAgentRun } from '../../run-queue';
 import { processAgentRuns } from '../../run-poller';
 import { STEP_LIMIT_MESSAGE, streamAgent, type AgentRunEvent } from '../../runtime';
+import { getMastra } from '../../runtime/observability';
 
 // An OpenAI-compatible model that asks for a tool on every call, so the run ends only
 // because it reaches maxSteps; with `answers` set it replies once and stops instead.
@@ -65,6 +66,7 @@ describe('agent run step limit', () => {
 
   afterEach(async () => {
     await endpoint.stop(true);
+    await getMastra().observability.flush();
   });
 
   async function setup() {

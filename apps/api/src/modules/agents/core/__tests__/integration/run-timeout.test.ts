@@ -9,6 +9,7 @@ import { createAgent } from '#tests/helpers/agents';
 import { createCredential } from '#tests/helpers/integrations';
 import { claimDueRuns, enqueueAgentRun } from '../../run-queue';
 import { processAgentRuns } from '../../run-poller';
+import { getMastra } from '../../runtime/observability';
 
 // A run that outlasts the team's maxRunSeconds. The model endpoint accepts the request
 // and never answers, so the run ends only because its abort signal fires.
@@ -24,6 +25,7 @@ describe('agent run timeout', () => {
   afterEach(async () => {
     clearLimits();
     await endpoint.stop(true);
+    await getMastra().observability.flush();
   });
 
   it('ends a run that exhausts its time as failed and does not retry it', async () => {

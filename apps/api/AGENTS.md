@@ -445,6 +445,11 @@ directly). Helpers in `src/__tests__/helpers/`: `api` (anonymous client), `authe
 - The first `signUpTestUser` in a test is `god` (fresh DB per `resetDb`). To act as a
   plain user, create the god user first and act as the second.
 - Don't hardcode ids or the "-42" sequence — read them from the create response.
+- A test that runs an internal agent against a model leaves its spans in the trace
+  exporter, which writes them in batches up to 5 s later. By then the next test has reset
+  the database and reused the ids, so the late spans count as that test's runs. Flush them
+  before the test ends, in `afterEach` or right after the run:
+  `await getMastra().observability.flush()`.
 
 ## Rules
 

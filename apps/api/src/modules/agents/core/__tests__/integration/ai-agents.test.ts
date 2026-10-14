@@ -9,6 +9,7 @@ import { resetDb } from '#tests/helpers/db';
 import { createAgent, projectIdOf } from '#tests/helpers/agents';
 import { createCredential } from '#tests/helpers/integrations';
 import { untaggedRoutes } from '#tests/helpers/mcp';
+import { getMastra } from '../../runtime/observability';
 
 // AI agents owned by a team. Each agent is backed by a hidden bot user, owns a
 // better-auth API key, and is a member of the projects it is attached to, acting under
@@ -360,6 +361,7 @@ describe('ai agents', () => {
       expect(endpoint.bodies.at(-1)).not.toHaveProperty('reasoning_effort');
     } finally {
       endpoint.stop();
+      await getMastra().observability.flush();
     }
   });
 

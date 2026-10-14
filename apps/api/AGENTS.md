@@ -450,6 +450,11 @@ directly). Helpers in `src/__tests__/helpers/`: `api` (anonymous client), `authe
   the database and reused the ids, so the late spans count as that test's runs. Flush them
   before the test ends, in `afterEach` or right after the run:
   `await getMastra().observability.flush()`.
+- `expect(promise).rejects` and `.resolves` stall for up to a second on each `setImmediate`
+  the promise waits on while a database connection is open (oven-sh/bun#45020). Reading an
+  uploaded workbook goes through JSZip, which yields that way between chunks, so a test of
+  that path awaits the rejection first and asserts on the error:
+  `const error = await promise.catch((e: unknown) => e)`.
 
 ## Rules
 

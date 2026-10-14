@@ -3,6 +3,7 @@ import ExcelJS from 'exceljs';
 import { authedApi } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { HttpError } from '#shared/lib';
 import { getProjectByRef } from '#modules/projects/service';
 import { createMappedImport } from '../../service';
 
@@ -127,9 +128,15 @@ describe('imports', () => {
   it('refuses a mapping that names a column the file does not have', async () => {
     const { asOwner } = await setup();
     const uploaded = await uploadWorkbook(asOwner, [['Task'], ['Only']]);
-    await expect(mapImport(uploaded.data!.id, { title: 'Nope' })).rejects.toThrow(
-      'not in the file',
+    // Not expect().rejects: it stalls on the workbook read (oven-sh/bun#45020).
+    const refused = await mapImport(uploaded.data!.id, { title: 'Nope' }).catch(
+      (error: unknown) => error,
     );
+    expect(refused).toBeInstanceOf(HttpError);
+    expect(refused).toMatchObject({
+      status: 400,
+      message: expect.stringContaining('not in the file'),
+    });
   });
 
   it('refuses to map a file that does not parse into a table', async () => {

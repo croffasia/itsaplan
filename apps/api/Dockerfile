@@ -27,7 +27,16 @@ COPY packages/eslint-config/package.json ./packages/eslint-config/
 # those need their own workspace links and the devDeps the suites import.
 ARG INSTALL_FILTER="--filter api"
 ARG INSTALL_FLAGS="--production"
-RUN bun install --frozen-lockfile $INSTALL_FILTER $INSTALL_FLAGS
+# --production still installs the devDependencies of workspace packages
+# (oven-sh/bun#25804), so drizzle-kit lands in the image with tsx and three esbuild
+# binaries it pulls in, two of them built with a Go release that image scanners flag.
+# Nothing at runtime uses them: migrate.ts goes through drizzle-orm. The test gate
+# keeps them.
+RUN bun install --frozen-lockfile $INSTALL_FILTER $INSTALL_FLAGS \
+ && if [ "$INSTALL_FLAGS" = "--production" ]; then \
+      rm -rf node_modules/.bun/esbuild@* node_modules/.bun/@esbuild+* \
+        node_modules/.bun/@esbuild-kit+* node_modules/.bun/drizzle-kit@* node_modules/.bun/tsx@*; \
+    fi
 
 # 2) Final image. bun keeps some workspace deps in per-package node_modules
 # (packages/db/node_modules, apps/api/node_modules) rather than hoisting them to

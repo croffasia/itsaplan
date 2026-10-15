@@ -193,6 +193,9 @@
     "inviteTtlDays": "Caducidad de las invitaciones (días)",
     "inviteTtlDaysHint": "Pasado este plazo, el enlace de una invitación deja de funcionar y, con el registro por invitación, ya no permite darse de alta. Con 0, las invitaciones no caducan.",
     "inviteTtlDaysInvalid": "Escribe un número entero de días entre 0 y {max}.",
+    "allowedEmailDomains": "Dominios de correo permitidos",
+    "allowedEmailDomainsHint": "Solo las direcciones de estos dominios pueden crear una cuenta. Sepáralos con comas o deja el campo vacío para permitir cualquiera. Las cuentas existentes conservan el acceso.",
+    "allowedEmailDomainsInvalid": "Cada dominio debe tener la forma example.com, con un máximo de 100.",
     "modes": {
       "open": {
         "label": "Abierto",

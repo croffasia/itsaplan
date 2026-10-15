@@ -12,6 +12,7 @@
     "byEmail": "Invitar por correo",
     "inviteEmail": "Invitar a {email}",
     "alreadyInvited": "{email} ya está invitado",
+    "domainNotAllowed": "El dominio de {email} no está permitido en esta instancia",
     "alreadyMember": "{email} ya está en este proyecto",
     "alreadyInTeam": "{email} ya está en el equipo — selecciónalo de la lista de arriba",
     "refused": "No se ha podido añadir a {email}",

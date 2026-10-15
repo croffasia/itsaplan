@@ -7,6 +7,19 @@ import { useUpdateInstanceAuthSettings } from '../services/god.service';
 // The api's own limit on the invite lifetime.
 export const MAX_INVITE_TTL_DAYS = 3650;
 
+// The api's own rule for an allowed email domain, and its limit on how many there are.
+const EMAIL_DOMAIN = /^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,63}$/;
+const MAX_EMAIL_DOMAINS = 100;
+
+function parseEmailDomains(text: string): string[] {
+  const domains = text
+    .toLowerCase()
+    .split(/[\s,;]+/)
+    .map((domain) => domain.replace(/^@/, ''))
+    .filter(Boolean);
+  return [...new Set(domains)];
+}
+
 export interface GodPolicyForm {
   registration: RegistrationMode;
   setRegistration: (v: RegistrationMode) => void;
@@ -22,6 +35,9 @@ export interface GodPolicyForm {
   inviteTtlDays: string;
   setInviteTtlDays: (v: string) => void;
   inviteTtlDaysValid: boolean;
+  allowedEmailDomains: string;
+  setAllowedEmailDomains: (v: string) => void;
+  allowedEmailDomainsValid: boolean;
   dirty: boolean;
   saving: boolean;
   save: () => Promise<void>;
@@ -42,6 +58,12 @@ export function useGodPolicyForm(settings: InstanceAuthSettings): GodPolicyForm 
   const [inviteTtlDays, setInviteTtlDays] = useState(String(settings.inviteTtlDays));
   const inviteTtlDaysValid =
     /^\d+$/.test(inviteTtlDays.trim()) && Number(inviteTtlDays) <= MAX_INVITE_TTL_DAYS;
+  const [allowedEmailDomains, setAllowedEmailDomains] = useState(
+    settings.allowedEmailDomains.join(', '),
+  );
+  const domains = parseEmailDomains(allowedEmailDomains);
+  const allowedEmailDomainsValid =
+    domains.length <= MAX_EMAIL_DOMAINS && domains.every((domain) => EMAIL_DOMAIN.test(domain));
 
   const dirty =
     registration !== settings.registration ||
@@ -49,11 +71,12 @@ export function useGodPolicyForm(settings: InstanceAuthSettings): GodPolicyForm 
     magicLink !== settings.magicLink ||
     emailPassword !== settings.emailPassword ||
     trustProviderEmails !== settings.trustProviderEmails ||
-    inviteTtlDays.trim() !== String(settings.inviteTtlDays);
+    inviteTtlDays.trim() !== String(settings.inviteTtlDays) ||
+    domains.join() !== settings.allowedEmailDomains.join();
 
   async function save() {
     // An empty field would be read as 0, which turns expiry off.
-    if (!inviteTtlDaysValid) return;
+    if (!inviteTtlDaysValid || !allowedEmailDomainsValid) return;
     await update.mutateAsync({
       registration,
       requireEmailVerification,
@@ -61,6 +84,7 @@ export function useGodPolicyForm(settings: InstanceAuthSettings): GodPolicyForm 
       emailPassword,
       trustProviderEmails,
       inviteTtlDays: Number(inviteTtlDays.trim()),
+      allowedEmailDomains: domains,
     });
   }
 
@@ -78,6 +102,9 @@ export function useGodPolicyForm(settings: InstanceAuthSettings): GodPolicyForm 
     inviteTtlDays,
     setInviteTtlDays,
     inviteTtlDaysValid,
+    allowedEmailDomains,
+    setAllowedEmailDomains,
+    allowedEmailDomainsValid,
     dirty,
     saving: update.isPending,
     save,

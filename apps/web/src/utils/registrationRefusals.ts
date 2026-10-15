@@ -4,6 +4,7 @@
 export const REGISTRATION_REFUSAL_KEYS = {
   REGISTRATION_CLOSED: 'registrationClosed',
   INVITE_ONLY: 'inviteOnly',
+  EMAIL_DOMAIN_NOT_ALLOWED: 'emailDomainNotAllowed',
 } as const;
 
 export function registrationRefusalKey(

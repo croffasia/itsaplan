@@ -12,6 +12,7 @@
     "byEmail": "通过邮箱邀请",
     "inviteEmail": "邀请 {email}",
     "alreadyInvited": "{email} 已被邀请",
+    "domainNotAllowed": "此实例不允许 {email} 所在的域名",
     "alreadyMember": "{email} 已在此项目中",
     "alreadyInTeam": "{email} 已在团队中 — 请从上方列表中选择",
     "refused": "无法添加 {email}",

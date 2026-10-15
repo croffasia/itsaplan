@@ -6,8 +6,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { JSDOM } from 'jsdom';
 import type { InstanceAuthSettings, InstanceAuthSettingsPatch } from '@/lib/api/endpoints/god';
 
-// The invite lifetime is typed into the form as text: only a whole number of days, 0 or
-// more, can be saved, and it is saved with the rest of the page.
+// The invite lifetime and the allowed email domains are typed into the form as text:
+// only a whole number of days, 0 or more, and domains the api accepts can be saved, and
+// they are saved with the rest of the page.
 const replacedGlobals = [
   'window',
   'document',
@@ -34,6 +35,7 @@ const settings = {
   trustProviderEmails: false,
   personalWorkspaces: true,
   inviteTtlDays: 7,
+  allowedEmailDomains: ['company.com'],
   hasEmailProvider: true,
   hasSsoProvider: true,
 } satisfies InstanceAuthSettings;
@@ -127,5 +129,48 @@ describe('useGodPolicyForm invite lifetime', () => {
 
     assert.equal(saved.length, 1);
     assert.equal(saved[0].inviteTtlDays, 3);
+  });
+});
+
+describe('useGodPolicyForm allowed email domains', () => {
+  it('starts clean on the stored list', async () => {
+    await render();
+
+    assert.equal(form.allowedEmailDomains, 'company.com');
+    assert.equal(form.dirty, false);
+  });
+
+  it('stays clean when the same domains are typed differently', async () => {
+    await render();
+
+    await act(async () => form.setAllowedEmailDomains(' @Company.com, company.com '));
+    assert.equal(form.dirty, false);
+  });
+
+  it('refuses a value that is not a domain', async () => {
+    await render();
+
+    for (const value of ['company', 'company .com', 'company.com/x', '-company.com']) {
+      await act(async () => form.setAllowedEmailDomains(value));
+      assert.equal(form.allowedEmailDomainsValid, false, value);
+    }
+  });
+
+  it('saves the domains as a lowercase list, and an empty field as none', async () => {
+    await render();
+
+    await act(async () =>
+      form.setAllowedEmailDomains('company.com,  @Company.IO\nsub.company.com'),
+    );
+    await act(async () => form.save());
+    await act(async () => form.setAllowedEmailDomains(''));
+    await act(async () => form.save());
+
+    assert.deepEqual(saved[0].allowedEmailDomains, [
+      'company.com',
+      'company.io',
+      'sub.company.com',
+    ]);
+    assert.deepEqual(saved[1].allowedEmailDomains, []);
   });
 });

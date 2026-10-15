@@ -6,6 +6,7 @@ describe('registrationRefusalKey', () => {
   it('names each refusal of the registration gate', () => {
     assert.equal(registrationRefusalKey('REGISTRATION_CLOSED'), 'registrationClosed');
     assert.equal(registrationRefusalKey('INVITE_ONLY'), 'inviteOnly');
+    assert.equal(registrationRefusalKey('EMAIL_DOMAIN_NOT_ALLOWED'), 'emailDomainNotAllowed');
   });
 
   it('leaves any other code to the caller', () => {

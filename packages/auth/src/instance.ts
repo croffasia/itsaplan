@@ -66,6 +66,9 @@ export interface AuthSettings {
   // pending invite older than this neither gates registration nor can be accepted.
   // 0 disables the limit (invites never expire).
   inviteTtlDays: number;
+  // The domains a new account's address must be at, lowercase. Empty admits any address.
+  // Accounts that already exist keep signing in.
+  allowedEmailDomains: string[];
 }
 
 function defaultAuthSettings(): AuthSettings {
@@ -77,7 +80,15 @@ function defaultAuthSettings(): AuthSettings {
     trustProviderEmails: false,
     personalWorkspaces: true,
     inviteTtlDays: 7,
+    allowedEmailDomains: [],
   };
+}
+
+// A subdomain is not admitted by its parent: listing company.com leaves eu.company.com out.
+export function emailDomainAllowed(email: string, domains: string[]): boolean {
+  if (domains.length === 0) return true;
+  const address = email.trim().toLowerCase();
+  return domains.includes(address.slice(address.lastIndexOf('@') + 1));
 }
 
 export async function getAuthSettings(): Promise<AuthSettings> {

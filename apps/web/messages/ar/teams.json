@@ -95,6 +95,7 @@
     "emailPlaceholder": "name@example.com",
     "alreadyMember": "{email} موجود بالفعل في هذا الفريق",
     "alreadyPending": "{email} لديه دعوة معلقة بالفعل",
+    "domainNotAllowed": "نطاق {email} غير مسموح به في هذه النسخة",
     "refused": "تعذّرت دعوة {email}",
     "roleLabel": "الدور في الفريق",
     "roleHint": {

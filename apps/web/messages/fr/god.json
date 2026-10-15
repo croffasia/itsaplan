@@ -193,6 +193,9 @@
     "inviteTtlDays": "Expiration des invitations (jours)",
     "inviteTtlDaysHint": "Passé ce délai, le lien d'invitation ne fonctionne plus et, avec l'inscription sur invitation, ne permet plus de créer un compte. Avec 0, les invitations n'expirent pas.",
     "inviteTtlDaysInvalid": "Saisissez un nombre entier de jours entre 0 et {max}.",
+    "allowedEmailDomains": "Domaines e-mail autorisés",
+    "allowedEmailDomainsHint": "Seules les adresses de ces domaines peuvent créer un compte. Séparez-les par des virgules ou laissez vide pour tout autoriser. Les comptes existants gardent leur accès.",
+    "allowedEmailDomainsInvalid": "Chaque domaine doit avoir la forme example.com, 100 au maximum.",
     "modes": {
       "open": {
         "label": "Ouverte",

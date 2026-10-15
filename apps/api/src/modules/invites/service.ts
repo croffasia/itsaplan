@@ -1,6 +1,6 @@
 import { db, teamInvite, teamMember, projectMember, teamRole, team, project, user } from '@repo/db';
 import { and, desc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
-import { getAuthSettings, inviteValidSince } from '@repo/auth';
+import { emailDomainAllowed, getAuthSettings, inviteValidSince } from '@repo/auth';
 import { HttpError, iso, pgErrorCode } from '#shared/lib';
 import { getProjectAccess, getTeamAccess } from '#shared/access';
 import { teamRef } from '#modules/teams/ref';
@@ -171,9 +171,19 @@ async function findAccount(email: string): Promise<{ id: string } | undefined> {
 // An address already inside the team takes no invite. Accepting one rewrites the
 // membership the account already holds, which is how a project's last owner would be
 // demoted to member; a team member reaches a project through its member list instead.
-async function assertNotAlreadyMember(input: NewInvite, email: string): Promise<void> {
+// An address with no account takes one only if it could register.
+async function assertInvitable(input: NewInvite, email: string): Promise<void> {
   const account = await findAccount(email);
-  if (!account) return;
+  if (!account) {
+    if (!emailDomainAllowed(email, (await getAuthSettings()).allowedEmailDomains)) {
+      throw new HttpError(
+        400,
+        'This instance does not admit addresses at this domain',
+        'EMAIL_DOMAIN_NOT_ALLOWED',
+      );
+    }
+    return;
+  }
 
   if (input.projectId != null && (await getMembership(input.projectId, account.id))) {
     throw new HttpError(
@@ -225,7 +235,7 @@ export async function mayGrantInviteRanks(
 
 export async function createInvite(input: NewInvite): Promise<InviteRow> {
   const email = normalizeEmail(input.email);
-  await assertNotAlreadyMember(input, email);
+  await assertInvitable(input, email);
   // Project owners bypass roles, so an owner invite never carries a role_id.
   const roleId = input.projectRole === 'member' ? input.roleId : null;
   // An expired invite still holds the one pending slot per address; it gives way to the

@@ -12,6 +12,7 @@
     "byEmail": "이메일로 초대",
     "inviteEmail": "{email} 초대",
     "alreadyInvited": "{email} 주소로 이미 초대했습니다",
+    "domainNotAllowed": "{email}의 도메인은 이 서버에서 허용되지 않습니다",
     "alreadyMember": "{email} 계정은 이미 이 프로젝트의 멤버입니다",
     "alreadyInTeam": "{email} 계정은 이미 팀에 있습니다. 위 목록에서 선택하세요.",
     "refused": "{email} 계정을 추가할 수 없습니다",

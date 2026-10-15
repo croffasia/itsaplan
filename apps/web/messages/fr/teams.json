@@ -95,6 +95,7 @@
     "emailPlaceholder": "nom@exemple.com",
     "alreadyMember": "{email} fait déjà partie de cette équipe",
     "alreadyPending": "{email} a déjà une invitation en attente",
+    "domainNotAllowed": "Le domaine de {email} n'est pas autorisé sur cette instance",
     "refused": "{email} n'a pas pu être invité",
     "roleLabel": "Rôle dans l'équipe",
     "roleHint": {

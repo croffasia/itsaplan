@@ -141,7 +141,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       detail: {
         summary: 'Get authentication settings',
         description:
-          'Get the instance registration mode, invite lifetime and email-dependent auth options.',
+          'Get the instance registration mode, allowed email domains, invite lifetime and email-dependent auth options.',
       },
     },
   )
@@ -170,7 +170,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       detail: {
         summary: 'Update authentication settings',
         description:
-          'Update the instance registration mode, invite lifetime and email-dependent auth options.',
+          'Update the instance registration mode, allowed email domains, invite lifetime and email-dependent auth options.',
       },
     },
   )

@@ -6,6 +6,8 @@ import { USER_KINDS } from './service';
 
 const encryption = t.UnionEnum(['none', 'ssl', 'tls']);
 
+const EMAIL_DOMAIN_PATTERN = '^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z0-9-]{2,63}$';
+
 export const userParams = t.Object({ userId: t.String() });
 
 export const projectParams = t.Object({ projectId: t.Numeric() });
@@ -39,6 +41,7 @@ export const AuthSettingsResponse = t.Object({
   trustProviderEmails: t.Boolean(),
   personalWorkspaces: t.Boolean(),
   inviteTtlDays: t.Integer(),
+  allowedEmailDomains: t.Array(t.String()),
   // The settings that depend on outbound email cannot be turned on without a mail
   // provider, and the UI explains why.
   hasEmailProvider: t.Boolean(),
@@ -58,6 +61,10 @@ export const AuthSettingsBody = t.Object({
   personalWorkspaces: t.Optional(t.Boolean()),
   // The cap keeps createdAt plus the lifetime inside the range a Date can hold.
   inviteTtlDays: t.Optional(t.Integer({ minimum: 0, maximum: 3650 })),
+  // Lowercase domains, compared with the part of an address after the "@".
+  allowedEmailDomains: t.Optional(
+    t.Array(t.String({ pattern: EMAIL_DOMAIN_PATTERN }), { maxItems: 100, uniqueItems: true }),
+  ),
 });
 
 export const EmailSettingsResponse = t.Object({

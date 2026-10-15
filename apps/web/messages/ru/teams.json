@@ -95,6 +95,7 @@
     "emailPlaceholder": "name@example.com",
     "alreadyMember": "{email} уже в этой команде",
     "alreadyPending": "{email} уже приглашён",
+    "domainNotAllowed": "Домен адреса {email} не разрешён на этом инстансе",
     "refused": "Не удалось пригласить {email}",
     "roleLabel": "Роль в команде",
     "roleHint": {

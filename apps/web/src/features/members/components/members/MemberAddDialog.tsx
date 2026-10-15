@@ -25,12 +25,14 @@ import { OWNER_VALUE, chosenRole, ownerOffered } from '../../utils/addMemberRole
 
 // The message for each refusal the API can answer with; any other error falls back
 // to 'refused'.
-type RefusalKey = 'alreadyMember' | 'alreadyInTeam' | 'alreadyInvited' | 'refused';
+type RefusalKey =
+  'alreadyMember' | 'alreadyInTeam' | 'alreadyInvited' | 'domainNotAllowed' | 'refused';
 
 const REFUSAL_KEY: Record<string, RefusalKey> = {
   ALREADY_PROJECT_MEMBER: 'alreadyMember',
   ALREADY_TEAM_MEMBER: 'alreadyInTeam',
   INVITE_ALREADY_PENDING: 'alreadyInvited',
+  EMAIL_DOMAIN_NOT_ALLOWED: 'domainNotAllowed',
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

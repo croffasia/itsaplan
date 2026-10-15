@@ -33,7 +33,8 @@ workspace settings can change them without a restart. Read them
 through this module — never inline a query on `app_setting` / `app_secret` elsewhere.
 
 - `app_setting` key `auth` → `{ registration, requireEmailVerification, magicLink,
-  emailPassword }`.
+  emailPassword, trustProviderEmails, personalWorkspaces, inviteTtlDays,
+  allowedEmailDomains }`.
 - `app_secret` keys `auth.email`, `auth.google` and `auth.oidc` → the mail provider, Google
   and the OIDC provider, set in god mode; `workspace.<id>.scim` → a workspace's SCIM token,
   set by the workspace owner. All encrypted with `@repo/crypto`, each with a `redacted`
@@ -51,9 +52,9 @@ Invites are created and revoked inside a team, so there is no instance-level inv
 table and god mode has no invite section — do not add one; god mode only sets how long
 they last.
 
-`hooks.before` gates `/sign-up/email` (closed → 403, invite → no pending, unexpired
-invite for that address → 403) and holds back `/sign-in/email` for an unconfirmed address while
-verification is required. The requirement never outlives the mail provider: the api
+`hooks.before` gates `/sign-up/email` (closed → 403, an address outside
+`allowedEmailDomains` → 403, invite → no pending, unexpired invite for that address → 403)
+and holds back `/sign-in/email` for an unconfirmed address while verification is required. The requirement never outlives the mail provider: the api
 refuses to turn it on without one, and `setEmailSettings` clears it when the provider
 is removed, so the setting alone is what the gate, the sign-up endpoint and the
 public `/auth-config` read — none of them checks the provider again.
@@ -203,14 +204,20 @@ receive its real owner.
 The registration gate (`assertRegistrationAllowed`) runs in
 `databaseHooks.user.create.before`, which every account creation passes, and that is what
 applies closed/invite-only to a Google, OIDC or magic-link sign-up. It refuses with
-`REGISTRATION_CLOSED` on a closed instance, `INVITE_ONLY` when the address has no pending
-invite, and `INVITE_EXPIRED` when its only invites have expired. That last one reveals that
-the address was invited, so it is given only where the address is proven (provider, magic
-link); the email form, open to anyone, gets `INVITE_ONLY`. Its `APIError`s carry a `code`
-because the provider callback and the magic link turn that into the `?error=` they redirect
-with; without one the callback fails the request instead (`invite-forms.test.ts` pins
-`INVITE_EXPIRED` and `INVITE_ONLY`). Agent bot users are written with a direct insert and never
-reach the hook.
+`REGISTRATION_CLOSED` on a closed instance, `EMAIL_DOMAIN_NOT_ALLOWED` when the address is
+not at one of `allowedEmailDomains` (an empty list admits any), `INVITE_ONLY` when the
+address has no pending invite, and `INVITE_EXPIRED` when its only invites have expired.
+That last one reveals that the address was invited, so it is given only where the address
+is proven (provider, magic link); the email form, open to anyone, gets `INVITE_ONLY`. Its
+`APIError`s carry a `code` because the provider callback and the magic link turn that into
+the `?error=` they redirect with; without one the callback fails the request instead
+(`invite-forms.test.ts` pins `INVITE_EXPIRED` and `INVITE_ONLY`). Agent bot users are
+written with a direct insert and never reach the hook.
+
+A domain in `allowedEmailDomains` matches the part of the address after the "@" exactly, so
+a subdomain is listed on its own. The list applies to new accounts only; the api also
+refuses to invite an address that has no account and is outside it, since it could not
+register.
 
 ## API keys
 

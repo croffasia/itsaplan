@@ -193,6 +193,9 @@
     "inviteTtlDays": "邀请有效期（天）",
     "inviteTtlDaysHint": "超过此期限后，邀请链接将失效；在仅限邀请注册时，也无法再用它注册。设为 0 则邀请永不过期。",
     "inviteTtlDaysInvalid": "请输入 0 到 {max} 之间的整数天数。",
+    "allowedEmailDomains": "允许的邮箱域名",
+    "allowedEmailDomainsHint": "只有这些域名下的地址可以创建账户。用逗号分隔；留空则允许任何地址。已有账户不受影响。",
+    "allowedEmailDomainsInvalid": "每个域名应类似 example.com，最多 100 个。",
     "modes": {
       "open": {
         "label": "开放注册",

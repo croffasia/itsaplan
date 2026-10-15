@@ -193,6 +193,9 @@
     "inviteTtlDays": "Invite expiry (days)",
     "inviteTtlDaysHint": "After this many days an invite link stops working and, with invite-only registration, no longer lets its address sign up. 0 keeps invites valid until they are answered.",
     "inviteTtlDaysInvalid": "Enter a whole number of days from 0 to {max}.",
+    "allowedEmailDomains": "Allowed email domains",
+    "allowedEmailDomainsHint": "Only addresses at these domains can create an account. Separate them with commas, or leave empty to allow any. Existing accounts keep their access.",
+    "allowedEmailDomainsInvalid": "Each domain should look like example.com, with up to 100 domains.",
     "modes": {
       "open": {
         "label": "Open",

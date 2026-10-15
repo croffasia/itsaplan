@@ -16,6 +16,7 @@ import { createLocalJWKSet, jwtVerify } from 'jose';
 import * as schema from '@repo/db/schema';
 import {
   getAuthSettings,
+  emailDomainAllowed,
   hasPendingInvite,
   hasExpiredInvite,
   getGoogleConfig,
@@ -359,6 +360,7 @@ const REGISTRATION_REFUSALS = {
   REGISTRATION_CLOSED: 'Registration is closed on this instance',
   INVITE_ONLY: 'This instance is invite-only. Ask a project owner to invite this address.',
   INVITE_EXPIRED: 'The invite for this address has expired. Ask for a new one.',
+  EMAIL_DOMAIN_NOT_ALLOWED: 'This instance does not admit addresses at this domain',
 } as const;
 
 function refuseRegistration(code: keyof typeof REGISTRATION_REFUSALS): never {
@@ -379,6 +381,9 @@ async function assertRegistrationAllowed(
 ): Promise<void> {
   const settings = await getAuthSettings();
   if (settings.registration === 'closed') refuseRegistration('REGISTRATION_CLOSED');
+  if (!emailDomainAllowed(email, settings.allowedEmailDomains)) {
+    refuseRegistration('EMAIL_DOMAIN_NOT_ALLOWED');
+  }
   if (settings.registration === 'invite' && !(await hasPendingInvite(email))) {
     const expired = addressProven && (await hasExpiredInvite(email));
     refuseRegistration(expired ? 'INVITE_EXPIRED' : 'INVITE_ONLY');
@@ -970,6 +975,7 @@ export {
   REGISTRATION_MODES,
   getAuthSettings,
   setAuthSettings,
+  emailDomainAllowed,
   inviteValidSince,
   getEmailSettings,
   setEmailSettings,

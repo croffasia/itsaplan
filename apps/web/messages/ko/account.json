@@ -50,7 +50,16 @@
     "thisDevice": "이 기기",
     "deleteWarning": "이 패스키로 더 이상 로그인할 수 없게 됩니다. 이 작업은 되돌릴 수 없습니다.",
     "passkeyFallback": "패스키",
-    "passkeysLoadFailed": "패스키를 불러올 수 없습니다."
+    "passkeysLoadFailed": "패스키를 불러올 수 없습니다.",
+    "connectedAppsTitle": "연결된 애플리케이션",
+    "connectedAppsDescription": "MCP를 통해 나를 대신하여 작업하도록 허용한 Claude 또는 ChatGPT 같은 애플리케이션입니다. 내가 볼 수 있고 할 수 있는 것을 똑같이 할 수 있습니다.",
+    "connectedAppsEmpty": "계정에 연결된 애플리케이션이 없습니다.",
+    "connectedAppUsed": "{connected}에 연결 · 마지막 사용 {used}",
+    "connectedAppSince": "{connected}에 연결",
+    "disconnectApp": "연결 해제",
+    "disconnectAppTitle": "{name} 연결을 해제하시겠습니까?",
+    "disconnectAppWarning": "즉시 접근 권한을 잃습니다. 다시 연결하면 동의를 다시 요청합니다.",
+    "disconnectAppFailed": "애플리케이션 연결을 해제할 수 없습니다."
   },
   "accounts": {
     "label": "계정",

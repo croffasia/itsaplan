@@ -1,6 +1,6 @@
 import { randomInt } from 'node:crypto';
 import { createWorkspace, db, instanceWorkspaceId } from '@repo/db';
-import { and, eq, gt, sql, type SQL } from 'drizzle-orm';
+import { and, eq, gt, isNull, sql, type SQL } from 'drizzle-orm';
 import { betterAuth, type BetterAuthPlugin } from 'better-auth';
 import { createAuthMiddleware, APIError } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
@@ -185,7 +185,7 @@ export function mcpUnauthorized(): Response {
 // which this check does not take.
 export async function verifyMcpAccessToken(token: string): Promise<string | null> {
   if (!mcpOAuth) return null;
-  let claims: { sub?: string; sid?: unknown; cnf?: unknown };
+  let claims: { sub?: string; sid?: unknown; cnf?: unknown; client_id?: unknown };
   try {
     ({ payload: claims } = await jwtVerify(token, createLocalJWKSet(await auth.api.getJwks()), {
       issuer: MCP_ISSUER,
@@ -200,6 +200,9 @@ export async function verifyMcpAccessToken(token: string): Promise<string | null
     .from(schema.user)
     .where(eq(schema.user.id, claims.sub));
   if (!account || isAccountDeactivated(account)) return null;
+  // Disconnecting the application on the account's Security page ends its tokens at once.
+  if (typeof claims.client_id !== 'string') return null;
+  if (!(await isClientConnected(claims.sub, claims.client_id))) return null;
   if (typeof claims.sid === 'string') {
     const [open] = await db
       .select({ n: sql`1` })
@@ -208,6 +211,30 @@ export async function verifyMcpAccessToken(token: string): Promise<string | null
     if (!open) return null;
   }
   return claims.sub;
+}
+
+// Connected while the person's consent stands or a refresh token can still mint tokens,
+// the same rule the Security page lists applications by.
+async function isClientConnected(userId: string, clientId: string): Promise<boolean> {
+  const [consent] = await db
+    .select({ n: sql`1` })
+    .from(schema.oauthConsent)
+    .where(and(eq(schema.oauthConsent.userId, userId), eq(schema.oauthConsent.clientId, clientId)))
+    .limit(1);
+  if (consent) return true;
+  const [refresh] = await db
+    .select({ n: sql`1` })
+    .from(schema.oauthRefreshToken)
+    .where(
+      and(
+        eq(schema.oauthRefreshToken.userId, userId),
+        eq(schema.oauthRefreshToken.clientId, clientId),
+        isNull(schema.oauthRefreshToken.revoked),
+        gt(schema.oauthRefreshToken.expiresAt, new Date()),
+      ),
+    )
+    .limit(1);
+  return Boolean(refresh);
 }
 
 // An error better-auth cannot hand back to the page that started the flow lands here.

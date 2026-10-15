@@ -50,7 +50,16 @@
     "thisDevice": "Este dispositivo",
     "deleteWarning": "Ya no podrás iniciar sesión con este passkey. No se puede deshacer.",
     "passkeyFallback": "Passkey",
-    "passkeysLoadFailed": "No se han podido cargar los passkeys."
+    "passkeysLoadFailed": "No se han podido cargar los passkeys.",
+    "connectedAppsTitle": "Aplicaciones conectadas",
+    "connectedAppsDescription": "Aplicaciones como Claude o ChatGPT a las que permitiste actuar en tu nombre mediante MCP. Ven y hacen lo mismo que tú.",
+    "connectedAppsEmpty": "No hay ninguna aplicación conectada a tu cuenta.",
+    "connectedAppUsed": "Conectada el {connected} · último uso el {used}",
+    "connectedAppSince": "Conectada el {connected}",
+    "disconnectApp": "Desconectar",
+    "disconnectAppTitle": "¿Desconectar {name}?",
+    "disconnectAppWarning": "Pierde el acceso al momento. Si vuelves a conectarla, se te pedirá de nuevo tu consentimiento.",
+    "disconnectAppFailed": "No se pudo desconectar la aplicación."
   },
   "accounts": {
     "label": "Cuentas",

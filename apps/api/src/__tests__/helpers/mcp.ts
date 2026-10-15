@@ -18,9 +18,7 @@ const MCP_RESOURCE = `${process.env.API_URL}/mcp`;
 const CODE_VERIFIER = 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk';
 const CODE_CHALLENGE = 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM';
 
-// The MCP OAuth token a person gets by approving a client: register, authorize with
-// their session, consent, and exchange the code.
-export async function mcpAccessToken(cookie: string): Promise<string> {
+export async function registerMcpClient(name = 'Test client'): Promise<string> {
   const registered = await app.handle(
     new Request('http://localhost/api/auth/oauth2/register', {
       method: 'POST',
@@ -28,11 +26,20 @@ export async function mcpAccessToken(cookie: string): Promise<string> {
       body: JSON.stringify({
         redirect_uris: [REDIRECT_URI],
         token_endpoint_auth_method: 'none',
-        client_name: 'Test client',
+        client_name: name,
       }),
     }),
   );
-  const clientId = ((await registered.json()) as { client_id: string }).client_id;
+  return ((await registered.json()) as { client_id: string }).client_id;
+}
+
+// Where the authorize endpoint sends the person: the consent page while the client has
+// no consent from them, straight back to the client with a code once it has.
+export async function authorizeMcpClient(
+  cookie: string,
+  clientId: string,
+  scope = 'openid',
+): Promise<URL> {
   const authorize = await app.handle(
     new Request(
       `http://localhost/api/auth/oauth2/authorize?${new URLSearchParams({
@@ -41,15 +48,25 @@ export async function mcpAccessToken(cookie: string): Promise<string> {
         redirect_uri: REDIRECT_URI,
         code_challenge: CODE_CHALLENGE,
         code_challenge_method: 'S256',
-        scope: 'openid',
+        scope,
         state: 'st',
         resource: MCP_RESOURCE,
       })}`,
       { headers: { cookie } },
     ),
   );
+  return new URL(authorize.headers.get('location') ?? '');
+}
+
+// The MCP OAuth token a person gets by approving a client: authorize with their session,
+// consent, and exchange the code.
+export async function connectMcpClient(
+  cookie: string,
+  clientId: string,
+  scope = 'openid',
+): Promise<string> {
   // The consent page receives the signed authorization request and posts it back.
-  const consentPage = new URL(authorize.headers.get('location') ?? '');
+  const consentPage = await authorizeMcpClient(cookie, clientId, scope);
   const consent = await app.handle(
     new Request('http://localhost/api/auth/oauth2/consent', {
       method: 'POST',
@@ -58,18 +75,26 @@ export async function mcpAccessToken(cookie: string): Promise<string> {
     }),
   );
   const { url } = (await consent.json()) as { url: string };
-  const token = await app.handle(
+  const token = await exchangeMcpCode(clientId, new URL(url).searchParams.get('code') ?? '');
+  return ((await token.json()) as { access_token: string }).access_token;
+}
+
+export function exchangeMcpCode(clientId: string, code: string): Promise<Response> {
+  return app.handle(
     new Request('http://localhost/api/auth/oauth2/token', {
       method: 'POST',
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
         grant_type: 'authorization_code',
-        code: new URL(url).searchParams.get('code') ?? '',
+        code,
         redirect_uri: REDIRECT_URI,
         client_id: clientId,
         code_verifier: CODE_VERIFIER,
       }),
     }),
   );
-  return ((await token.json()) as { access_token: string }).access_token;
+}
+
+export async function mcpAccessToken(cookie: string): Promise<string> {
+  return connectMcpClient(cookie, await registerMcpClient());
 }

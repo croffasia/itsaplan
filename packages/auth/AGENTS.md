@@ -271,7 +271,10 @@ links in auth emails do.
 `verifyMcpAccessToken` checks a token against the instance's own keys in-process, then
 reads what a JWT cannot carry: the account must not be deactivated, and a token issued in
 a session ends with that session, as better-auth's introspection has it. That is what
-makes deactivation, which deletes the sessions, end every MCP token at once.
+makes deactivation, which deletes the sessions, end every MCP token at once. The token's
+client must also still be connected to the account, through the person's consent or a
+refresh token that has not expired: disconnecting it on the account's Security page
+(`DELETE /account/connected-apps/:clientId`, which deletes both) ends its tokens at once.
 
 better-auth accepts a plain-HTTP MCP resource only on a loopback host, so any other
 instance without HTTPS leaves `mcp()` and `jwt()` out and serves MCP to personal API keys

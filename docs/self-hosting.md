@@ -68,6 +68,10 @@ host to the api: `/.well-known/oauth-authorization-server*`,
 MCP clients sign in with OAuth only over HTTPS. On an `API_URL` that is plain HTTP and not
 `localhost`, MCP takes personal API keys only.
 
+An authorization the api cannot hand back to the client, because it does not know the client
+or its redirect URI, ends on the web's sign-in page, which says what happened. A client that
+keeps a registration the instance no longer has is told to remove the server and add it again.
+
 The OAuth redirect URIs that god mode shows include the path. An api on a different
 registrable domain than the web app (`api.other.com`) does not work: the session cookie
 cannot be shared across sites.

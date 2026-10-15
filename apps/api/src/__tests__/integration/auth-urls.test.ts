@@ -92,13 +92,14 @@ const EMAIL_LINKS = `
 describe('auth URLs from the environment', () => {
   beforeEach(resetDb);
 
-  it('leaves better-auth its own error page when API_URL has no path', async () => {
+  // better-auth's own error page redirects a production browser to the api's root.
+  it('sends early OAuth failures to the sign-in page when the api has its own host', async () => {
     const loaded = await runAuth(
       { API_URL: 'http://localhost:3000/', APP_URL: 'http://app.test' },
       ERROR_URL,
     );
 
-    expect(loaded.errorURL).toBeNull();
+    expect(loaded.errorURL).toBe('http://app.test/login');
   });
 
   it('sends early OAuth failures to the sign-in page when API_URL has a path', async () => {

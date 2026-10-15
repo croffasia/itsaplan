@@ -75,4 +75,55 @@ describe('MCP authorization asks for consent', () => {
     const { url } = (await res.json()) as { url: string };
     expect(new URL(url).pathname).toBe('/oauth/consent');
   });
+
+  // The api cannot send this error back to a client it does not know, so the person sees
+  // it: on the web's sign-in screen, in either form of API_URL.
+  it('sends an authorization for an unknown client to the sign-in screen with the reason', async () => {
+    const res = await app.handle(
+      new Request(
+        `http://localhost/api/auth/oauth2/authorize?${new URLSearchParams({
+          response_type: 'code',
+          client_id: 'no-such-client',
+          redirect_uri: 'https://client.example.com/callback',
+          code_challenge: 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+          code_challenge_method: 'S256',
+          state: 'st',
+        })}`,
+      ),
+    );
+
+    const location = new URL(res.headers.get('location') ?? '');
+    expect(`${location.origin}${location.pathname}`).toBe(`${process.env.APP_URL}/login`);
+    expect(location.searchParams.get('error')).toBe('invalid_client');
+  });
+
+  async function authorizeWith(overrides: Record<string, string>): Promise<URL> {
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: await registerClient(),
+      redirect_uri: 'https://client.example.com/callback',
+      code_challenge: 'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+      code_challenge_method: 'S256',
+      state: 'st',
+      ...overrides,
+    });
+    const res = await app.handle(
+      new Request(`http://localhost/api/auth/oauth2/authorize?${params}`),
+    );
+    return new URL(res.headers.get('location') ?? '');
+  }
+
+  it('sends an authorization for an unregistered redirect URI to the sign-in screen', async () => {
+    const location = await authorizeWith({ redirect_uri: 'https://other.example.com/callback' });
+
+    expect(`${location.origin}${location.pathname}`).toBe(`${process.env.APP_URL}/login`);
+    expect(location.searchParams.get('error')).toBe('invalid_redirect');
+  });
+
+  it('still answers the client an error it can send back', async () => {
+    const location = await authorizeWith({ scope: 'no-such-scope' });
+
+    expect(`${location.origin}${location.pathname}`).toBe('https://client.example.com/callback');
+    expect(location.searchParams.get('error')).toBe('invalid_scope');
+  });
 });

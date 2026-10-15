@@ -46,6 +46,11 @@ describe('proxy', () => {
     assert.equal(res.headers.get('location'), 'http://localhost/');
   });
 
+  it('leaves a signed-in user on the login page when it carries an error', () => {
+    const res = run('/login?error=invalid_client', COOKIE);
+    assert.equal(res.headers.get('location'), null);
+  });
+
   // Over HTTPS the api names the session cookie with the __Host- prefix.
   it('treats a __Host- session cookie as a session', () => {
     const res = run('/login', '__Host-better-auth.session_token=value');

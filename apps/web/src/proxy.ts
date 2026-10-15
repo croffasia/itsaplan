@@ -74,7 +74,10 @@ function gate(request: NextRequest): NextResponse {
     // check below and bounces the browser back into the app, where the next 401 starts
     // the cycle over.
     if (request.nextUrl.searchParams.get('expired') === '1') return clearSession(request);
-    if (hasSession) return NextResponse.redirect(new URL('/', request.url));
+    // An error the api could not hand back to the page that asked (an MCP client it
+    // does not know, a provider callback that failed) has only this screen to say so.
+    const showsError = request.nextUrl.searchParams.has('error');
+    if (hasSession && !showsError) return NextResponse.redirect(new URL('/', request.url));
     return NextResponse.next();
   }
 

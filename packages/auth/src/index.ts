@@ -207,9 +207,10 @@ export async function verifyMcpAccessToken(token: string): Promise<string | null
   return claims.sub;
 }
 
-// The fallback for a callback that fails early is better-auth's own /api/auth/error;
-// under a path prefix that route is outside it, and /login turns ?error= into a message.
-const oauthErrorURL = apiHasPath ? `${trustedOrigins[0]}/login` : undefined;
+// An error better-auth cannot hand back to the page that started the flow lands here.
+// Its own /api/auth/error is outside a path prefix and, on the api's own host, sends a
+// production browser to the api's root; /login turns ?error= into a message.
+const oauthErrorURL = `${trustedOrigins[0]}/login`;
 
 // User roles. "god" is the owner of the instance: the very first registered user
 // gets it automatically; everyone after is a plain "user". The role is assigned
@@ -505,7 +506,7 @@ export const API_KEY_MAX_EXPIRES_IN_DAYS = 365;
 export const auth = betterAuth({
   baseURL,
   secret: process.env.BETTER_AUTH_SECRET,
-  onAPIError: oauthErrorURL ? { errorURL: oauthErrorURL } : undefined,
+  onAPIError: { errorURL: oauthErrorURL },
 
   database: drizzleAdapter(db, {
     provider: 'pg',

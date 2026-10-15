@@ -82,4 +82,11 @@ describe('useRedirectError', () => {
     assert.equal(render('something_else', 'Provider said no'), 'Provider said no');
     assert.equal(render('something_else'), auth.errors.generic);
   });
+
+  it('names an MCP authorization for a client the instance does not know', () => {
+    assert.equal(render('invalid_client', 'client_id is required'), auth.errors.oauthClientUnknown);
+    assert.equal(render('invalid_redirect'), auth.errors.oauthRedirectUnknown);
+    assert.equal(render('client_disabled'), auth.errors.oauthClientRefused);
+    assert.equal(render('unauthorized_client'), auth.errors.oauthClientRefused);
+  });
 });

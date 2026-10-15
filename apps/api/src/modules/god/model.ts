@@ -5,6 +5,7 @@ import { PermissionMatrixSchema } from '#shared/permissions';
 import { USER_KINDS } from './service';
 
 const encryption = t.UnionEnum(['none', 'ssl', 'tls']);
+const smtpAuth = t.UnionEnum(['password', 'microsoft365']);
 
 const EMAIL_DOMAIN_PATTERN = '^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z0-9-]{2,63}$';
 
@@ -79,6 +80,8 @@ export const EmailSettingsResponse = t.Object({
     username: t.String(),
     hasPassword: t.Boolean(),
     timeout: t.Nullable(t.Number()),
+    auth: smtpAuth,
+    oauth: t.Object({ tenantId: t.String(), clientId: t.String(), hasClientSecret: t.Boolean() }),
   }),
   resend: t.Object({ enabled: t.Boolean(), hasApiKey: t.Boolean() }),
   from: t.String(),
@@ -97,6 +100,14 @@ export const EmailSettingsBody = t.Object({
       username: t.String(),
       password: t.Optional(t.String()),
       timeout: t.Nullable(t.Integer({ minimum: 1 })),
+      auth: t.Optional(smtpAuth),
+      oauth: t.Optional(
+        t.Object({
+          tenantId: t.String({ maxLength: 128 }),
+          clientId: t.String({ maxLength: 128 }),
+          clientSecret: t.Optional(t.String({ maxLength: 1024 })),
+        }),
+      ),
     }),
   ),
   resend: t.Optional(t.Object({ enabled: t.Boolean(), apiKey: t.Optional(t.String()) })),

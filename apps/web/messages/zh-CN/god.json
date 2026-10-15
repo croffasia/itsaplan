@@ -277,7 +277,18 @@
     "testing": "正在发送…",
     "testHint": "使用当前设置发送真实邮件，无需先保存。",
     "testConfigureFirst": "请先启用服务商并填写所需凭据。",
-    "testSent": "测试邮件已发送至 {email}"
+    "testSent": "测试邮件已发送至 {email}",
+    "smtpAuth": "身份验证",
+    "smtpAuthOptions": {
+      "password": "密码",
+      "microsoft365": "Microsoft 365（OAuth）"
+    },
+    "mailbox": "邮箱",
+    "tenantId": "租户 ID",
+    "clientId": "客户端 ID",
+    "clientSecret": "客户端密钥",
+    "clientSecretPlaceholder": "应用注册的密钥",
+    "microsoft365Hint": "以 Entra ID 应用注册的身份登录，而不是使用邮箱密码，因此邮箱可以保持开启 MFA。该应用需要 Office 365 Exchange Online 的应用程序权限 SMTP.SendAsApp 并经过管理员同意，在 Exchange 中拥有此邮箱的访问权限，并为该邮箱开启 SMTP AUTH。"
   },
   "authProvider": {
     "saved": "身份验证提供商已保存",

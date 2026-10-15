@@ -277,7 +277,18 @@
     "testing": "Enviando…",
     "testHint": "Envía un mensaje real con los ajustes actuales sin guardarlos.",
     "testConfigureFirst": "Activa primero un proveedor y añade sus credenciales obligatorias.",
-    "testSent": "Correo de prueba enviado a {email}"
+    "testSent": "Correo de prueba enviado a {email}",
+    "smtpAuth": "Autenticación",
+    "smtpAuthOptions": {
+      "password": "Contraseña",
+      "microsoft365": "Microsoft 365 (OAuth)"
+    },
+    "mailbox": "Buzón",
+    "tenantId": "ID de inquilino (tenant)",
+    "clientId": "ID de cliente",
+    "clientSecret": "Secreto de cliente",
+    "clientSecretPlaceholder": "Secreto del registro de aplicación",
+    "microsoft365Hint": "Inicia sesión como un registro de aplicación de Entra ID en lugar de con la contraseña del buzón, así el buzón puede mantener el MFA. La aplicación necesita el permiso de aplicación SMTP.SendAsApp de Office 365 Exchange Online con consentimiento de administrador, acceso a este buzón en Exchange y SMTP AUTH activado en el buzón."
   },
   "authProvider": {
     "saved": "El proveedor de autenticación se ha guardado",

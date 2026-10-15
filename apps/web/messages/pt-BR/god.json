@@ -277,7 +277,18 @@
     "testing": "Enviando…",
     "testHint": "Envie uma mensagem real com as configurações atuais sem salvá-las.",
     "testConfigureFirst": "Ative um provedor e adicione suas credenciais obrigatórias primeiro.",
-    "testSent": "E-mail de teste enviado para {email}"
+    "testSent": "E-mail de teste enviado para {email}",
+    "smtpAuth": "Autenticação",
+    "smtpAuthOptions": {
+      "password": "Senha",
+      "microsoft365": "Microsoft 365 (OAuth)"
+    },
+    "mailbox": "Caixa de correio",
+    "tenantId": "ID do locatário (tenant)",
+    "clientId": "ID do cliente",
+    "clientSecret": "Segredo do cliente",
+    "clientSecretPlaceholder": "Segredo do registro de aplicativo",
+    "microsoft365Hint": "Entra como um registro de aplicativo do Entra ID em vez da senha da caixa de correio, que pode manter o MFA. O aplicativo precisa da permissão de aplicativo SMTP.SendAsApp do Office 365 Exchange Online com consentimento de administrador, acesso a esta caixa no Exchange e SMTP AUTH ativado na caixa."
   },
   "authProvider": {
     "saved": "Provedor de autenticação salvo",

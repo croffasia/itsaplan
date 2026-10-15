@@ -44,6 +44,10 @@ export interface InstanceAuthSettingsPatch {
   allowedEmailDomains?: string[];
 }
 
+// 'microsoft365' signs in to smtp.office365.com as an app registration (OAuth) instead
+// of with the mailbox password, which Microsoft refuses once the mailbox has MFA.
+export type SmtpAuth = 'password' | 'microsoft365';
+
 // The instance mail provider used for authentication email (password reset, address
 // verification, magic links). Separate from a team's notification provider.
 // Secrets are never returned, only a `hasX` flag.
@@ -56,6 +60,8 @@ export interface InstanceEmailSettings {
     username: string;
     hasPassword: boolean;
     timeout: number | null;
+    auth: SmtpAuth;
+    oauth: { tenantId: string; clientId: string; hasClientSecret: boolean };
   };
   resend: { enabled: boolean; hasApiKey: boolean };
   from: string;
@@ -72,6 +78,8 @@ export interface InstanceEmailSettingsPatch {
     username: string;
     password?: string;
     timeout: number | null;
+    auth?: SmtpAuth;
+    oauth?: { tenantId: string; clientId: string; clientSecret?: string };
   };
   resend?: { enabled: boolean; apiKey?: string };
   from?: string;

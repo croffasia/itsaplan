@@ -76,6 +76,26 @@ The OAuth redirect URIs that god mode shows include the path. An api on a differ
 registrable domain than the web app (`api.other.com`) does not work: the session cookie
 cannot be shared across sites.
 
+## Mail
+
+The instance sends password resets, address confirmations, sign-in links and invites through
+the mail provider set in god mode under **Integrations → Email provider**: SMTP or Resend.
+
+A Microsoft 365 mailbox refuses a password over SMTP once it has MFA. Set **Authentication**
+to **Microsoft 365 (OAuth)** instead: the instance signs in as an Entra ID app registration
+and sends as the mailbox over XOAUTH2. An empty server is filled with
+`smtp.office365.com:587` and STARTTLS. On the Microsoft side:
+
+1. Register an app in Entra ID, add a client secret, and grant it the Office 365 Exchange
+   Online application permission `SMTP.SendAsApp`, with admin consent.
+2. In Exchange Online PowerShell, register the app's service principal and give it access
+   to the mailbox: `New-ServicePrincipal -AppId <client id> -ObjectId <enterprise app object id>`,
+   then `Add-MailboxPermission -Identity <mailbox> -User <service principal id> -AccessRights FullAccess`.
+3. Turn on SMTP AUTH for that mailbox (`Set-CASMailbox <mailbox> -SmtpClientAuthenticationDisabled $false`).
+
+Then paste the tenant ID, the client ID and the secret into the page and send a test. A
+refused token is reported as rejected credentials and is not retried.
+
 ## Single sign-on
 
 Any provider with an OpenID Connect discovery document works: Keycloak, Authentik, KanIDM,

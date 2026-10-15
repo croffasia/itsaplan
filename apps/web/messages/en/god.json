@@ -277,7 +277,18 @@
     "testing": "Sending…",
     "testHint": "Send a real message with the current settings without saving them.",
     "testConfigureFirst": "Enable a provider and add its required credentials first.",
-    "testSent": "Test email sent to {email}"
+    "testSent": "Test email sent to {email}",
+    "smtpAuth": "Authentication",
+    "smtpAuthOptions": {
+      "password": "Password",
+      "microsoft365": "Microsoft 365 (OAuth)"
+    },
+    "mailbox": "Mailbox",
+    "tenantId": "Tenant ID",
+    "clientId": "Client ID",
+    "clientSecret": "Client secret",
+    "clientSecretPlaceholder": "App registration secret",
+    "microsoft365Hint": "Signs in as an app registration in Entra ID instead of with the mailbox password, so the mailbox can keep MFA on. The app needs the Office 365 Exchange Online application permission SMTP.SendAsApp with admin consent, access to this mailbox in Exchange, and SMTP AUTH turned on for the mailbox."
   },
   "authProvider": {
     "saved": "Auth provider saved",

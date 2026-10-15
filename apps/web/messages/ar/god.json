@@ -277,7 +277,18 @@
     "testing": "جارٍ الإرسال…",
     "testHint": "أرسل رسالة حقيقية بالإعدادات الحالية من دون حفظها.",
     "testConfigureFirst": "فعّل مزوّدًا وأضف بيانات الاعتماد المطلوبة أولًا.",
-    "testSent": "تم إرسال رسالة اختبار إلى {email}"
+    "testSent": "تم إرسال رسالة اختبار إلى {email}",
+    "smtpAuth": "المصادقة",
+    "smtpAuthOptions": {
+      "password": "كلمة المرور",
+      "microsoft365": "Microsoft 365 (OAuth)"
+    },
+    "mailbox": "صندوق البريد",
+    "tenantId": "معرّف المستأجر (tenant)",
+    "clientId": "معرّف العميل",
+    "clientSecret": "سرّ العميل",
+    "clientSecretPlaceholder": "سرّ تسجيل التطبيق",
+    "microsoft365Hint": "يسجّل الدخول كتسجيل تطبيق في Entra ID بدلًا من كلمة مرور صندوق البريد، فيمكن أن يبقى التحقق متعدد العوامل مفعّلًا. يحتاج التطبيق إلى إذن التطبيق SMTP.SendAsApp من Office 365 Exchange Online بموافقة المسؤول، وإلى الوصول إلى هذا الصندوق في Exchange، وتفعيل SMTP AUTH للصندوق."
   },
   "authProvider": {
     "saved": "تم حفظ مزوّد المصادقة",

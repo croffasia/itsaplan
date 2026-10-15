@@ -277,7 +277,18 @@
     "testing": "Надсилання…",
     "testHint": "Надіслати справжній лист із поточними налаштуваннями, не зберігаючи їх.",
     "testConfigureFirst": "Увімкніть провайдера та додайте обов’язкові облікові дані.",
-    "testSent": "Тестовий лист надіслано на {email}"
+    "testSent": "Тестовий лист надіслано на {email}",
+    "smtpAuth": "Автентифікація",
+    "smtpAuthOptions": {
+      "password": "Пароль",
+      "microsoft365": "Microsoft 365 (OAuth)"
+    },
+    "mailbox": "Поштова скринька",
+    "tenantId": "ID клієнта Entra (tenant)",
+    "clientId": "ID застосунку (client)",
+    "clientSecret": "Секрет застосунку",
+    "clientSecretPlaceholder": "Секрет реєстрації застосунку",
+    "microsoft365Hint": "Входить як реєстрація застосунку в Entra ID замість пароля скриньки, тож скринька може залишити MFA. Застосунку потрібен дозвіл застосунку SMTP.SendAsApp з Office 365 Exchange Online зі згодою адміністратора, доступ до цієї скриньки в Exchange і ввімкнений SMTP AUTH для скриньки."
   },
   "authProvider": {
     "saved": "Провайдера входу збережено",

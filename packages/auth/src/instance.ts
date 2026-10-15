@@ -14,7 +14,7 @@ import {
   type InstanceEmailConfig,
 } from '@repo/db';
 import { and, eq, gte, like, lt, sql } from 'drizzle-orm';
-import { hasEmailProvider, type SmtpConfig } from '@repo/mailer';
+import { hasEmailProvider, type SmtpAuth, type SmtpConfig } from '@repo/mailer';
 import type { GenericEndpointContext } from 'better-auth';
 
 // Authentication settings: who may register, whether email has to be confirmed,
@@ -173,6 +173,8 @@ export interface InstanceEmailDto {
     username: string;
     hasPassword: boolean;
     timeout: number | null;
+    auth: SmtpAuth;
+    oauth: { tenantId: string; clientId: string; hasClientSecret: boolean };
   };
   resend: { enabled: boolean; hasApiKey: boolean };
   from: string;
@@ -191,6 +193,8 @@ export interface InstanceEmailPatch {
     username: string;
     password?: string;
     timeout: number | null;
+    auth?: SmtpAuth;
+    oauth?: { tenantId: string; clientId: string; clientSecret?: string };
   };
   resend?: { enabled: boolean; apiKey?: string };
   from?: string;
@@ -207,6 +211,12 @@ function toEmailDto(config: InstanceEmailConfig): InstanceEmailDto {
       username: config.smtp.username,
       hasPassword: config.smtp.password.length > 0,
       timeout: config.smtp.timeout,
+      auth: config.smtp.auth ?? 'password',
+      oauth: {
+        tenantId: config.smtp.oauth?.tenantId ?? '',
+        clientId: config.smtp.oauth?.clientId ?? '',
+        hasClientSecret: (config.smtp.oauth?.clientSecret ?? '').length > 0,
+      },
     },
     resend: { enabled: config.resend.enabled, hasApiKey: config.resend.apiKey.length > 0 },
     from: config.from,
@@ -218,6 +228,25 @@ export async function getEmailSettings(): Promise<InstanceEmailDto> {
   return toEmailDto((await getInstanceEmailConfig()) ?? defaultInstanceEmailConfig());
 }
 
+function resolveSmtp(
+  current: SmtpConfig,
+  patch: NonNullable<InstanceEmailPatch['smtp']>,
+): SmtpConfig {
+  const { oauth, ...rest } = patch;
+  return {
+    ...rest,
+    password: mergeSecret(current.password, patch.password),
+    auth: patch.auth ?? current.auth ?? 'password',
+    oauth: oauth
+      ? {
+          tenantId: oauth.tenantId,
+          clientId: oauth.clientId,
+          clientSecret: mergeSecret(current.oauth?.clientSecret ?? '', oauth.clientSecret),
+        }
+      : current.oauth,
+  };
+}
+
 // Resolve a prospective configuration without persisting it. The email test route uses
 // this so an owner can validate edited values first, while omitted secrets still reuse
 // the encrypted value already on the instance.
@@ -226,9 +255,7 @@ export async function resolveEmailConfig(
 ): Promise<InstanceEmailConfig> {
   const current = (await getInstanceEmailConfig()) ?? defaultInstanceEmailConfig();
   return {
-    smtp: patch.smtp
-      ? { ...patch.smtp, password: mergeSecret(current.smtp.password, patch.smtp.password) }
-      : current.smtp,
+    smtp: patch.smtp ? resolveSmtp(current.smtp, patch.smtp) : current.smtp,
     resend: patch.resend
       ? {
           enabled: patch.resend.enabled,

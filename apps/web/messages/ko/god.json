@@ -277,7 +277,18 @@
     "testing": "전송 중…",
     "testHint": "현재 설정을 저장하지 않고 실제 테스트 이메일을 전송합니다.",
     "testConfigureFirst": "먼저 공급자를 활성화하고 필요한 인증 정보를 입력하세요.",
-    "testSent": "테스트 이메일을 {email}(으)로 전송했습니다"
+    "testSent": "테스트 이메일을 {email}(으)로 전송했습니다",
+    "smtpAuth": "인증",
+    "smtpAuthOptions": {
+      "password": "비밀번호",
+      "microsoft365": "Microsoft 365 (OAuth)"
+    },
+    "mailbox": "메일함",
+    "tenantId": "테넌트 ID",
+    "clientId": "클라이언트 ID",
+    "clientSecret": "클라이언트 시크릿",
+    "clientSecretPlaceholder": "앱 등록 시크릿",
+    "microsoft365Hint": "메일함 비밀번호 대신 Entra ID의 앱 등록으로 로그인하므로 메일함에 MFA를 유지할 수 있습니다. 앱에는 관리자 동의를 받은 Office 365 Exchange Online 애플리케이션 권한 SMTP.SendAsApp, Exchange에서 이 메일함에 대한 접근 권한, 메일함에서 활성화된 SMTP AUTH가 필요합니다."
   },
   "authProvider": {
     "saved": "인증 공급자 설정이 저장되었습니다",

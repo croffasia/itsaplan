@@ -48,6 +48,9 @@ export function useRedirectError() {
     if (!error) return null;
     const key = MESSAGE_KEYS[error as keyof typeof MESSAGE_KEYS];
     if (key) return t(key);
+    // A build that sends codes of its own names their texts under auth.errors.codes.
+    const own = `codes.${error}` as Parameters<typeof t.has>[0];
+    if (t.has(own)) return t(own);
     return description ?? t('generic');
   };
 }

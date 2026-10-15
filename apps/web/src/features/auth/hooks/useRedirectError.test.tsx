@@ -22,10 +22,10 @@ function Message({ error, description }: { error: string; description: string | 
   return <p>{useRedirectError()(error, description)}</p>;
 }
 
-function render(error: string, description: string | null = null): string {
+function render(error: string, description: string | null = null, messages = { auth }): string {
   act(() =>
     root.render(
-      <NextIntlClientProvider locale="en" messages={{ auth }} timeZone="UTC">
+      <NextIntlClientProvider locale="en" messages={messages} timeZone="UTC">
         <Message error={error} description={description} />
       </NextIntlClientProvider>,
     ),
@@ -76,6 +76,12 @@ describe('useRedirectError', () => {
 
   it('names an invite-only instance', () => {
     assert.equal(render('INVITE_ONLY'), auth.errors.inviteOnly);
+  });
+
+  it("names a build's own code by the text the build gives it", () => {
+    const text = 'Sign out at your identity provider, then try again.';
+    const messages = { auth: { ...auth, errors: { ...auth.errors, codes: { BUILD_CODE: text } } } };
+    assert.equal(render('BUILD_CODE', 'English description', messages), text);
   });
 
   it('falls back to the description, then to the generic text, for an unknown error', () => {

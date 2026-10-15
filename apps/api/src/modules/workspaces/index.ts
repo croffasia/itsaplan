@@ -38,6 +38,7 @@ import {
 import {
   listWorkspaceProjectOptions,
   listWorkspaceScimGroups,
+  reconcileWorkspaceGrants,
   setWorkspaceScimGroupMappings,
 } from './scim';
 
@@ -195,7 +196,10 @@ export const workspaceRoutes = new Elysia({ name: 'workspaces', detail: { tags: 
       if (body.enabled && !current.hasToken) {
         throw new HttpError(400, 'Generate a SCIM token first');
       }
-      return { ...(await setScimSettings(standing.workspaceId, body)), baseUrl: SCIM_BASE_URL };
+      const settings = await setScimSettings(standing.workspaceId, body);
+      if (settings.enabled !== current.enabled)
+        await reconcileWorkspaceGrants(standing.workspaceId);
+      return { ...settings, baseUrl: SCIM_BASE_URL };
     },
     {
       workspaceScim: true,

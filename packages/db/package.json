@@ -12,6 +12,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "lint": "eslint .",
+    "test": "bun test --env-file=../../.env.test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

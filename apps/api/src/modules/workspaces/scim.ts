@@ -7,8 +7,8 @@ import {
   team,
   teamRole,
 } from '@repo/db';
-import { and, asc, eq, inArray, sql } from 'drizzle-orm';
-import { workspaceScim } from '@repo/auth';
+import { and, asc, eq, inArray, notInArray, or, sql } from 'drizzle-orm';
+import { instanceScimWorkspace, workspacesWithOwnScim } from '@repo/auth';
 import { HttpError } from '#shared/lib';
 import { mappedProjectIds, reconcileProjects } from '#modules/scim/reconcile';
 
@@ -98,12 +98,16 @@ export async function setWorkspaceScimGroupMappings(
   if (new Set(projectIds).size !== projectIds.length) {
     throw new HttpError(400, 'A group can be mapped to a project only once');
   }
+  const before = await mappedProjectIds(groupId);
   if (projectIds.length > 0) {
+    // A mapping the group already has is kept even where it may no longer grant: the
+    // reconciliation passes over it there, and it grants again once that changes.
+    const where = await grantable(workspaceId);
     const known = await db
       .select({ id: project.id, teamId: project.teamId })
       .from(project)
       .innerJoin(team, eq(team.id, project.teamId))
-      .where(and(inArray(project.id, projectIds), grantable(workspaceId)));
+      .where(and(inArray(project.id, projectIds), where && or(where, inArray(project.id, before))));
     if (known.length !== projectIds.length) throw new HttpError(400, 'Unknown project');
     // A role belongs to one team, so a mapping that names another team's role would
     // silently grant the wrong permissions.
@@ -124,7 +128,6 @@ export async function setWorkspaceScimGroupMappings(
     }
   }
 
-  const before = await mappedProjectIds(groupId);
   await db.transaction(async (tx) => {
     await tx.delete(scimGroupMapping).where(eq(scimGroupMapping.groupId, groupId));
     if (mappings.length > 0) {
@@ -148,18 +151,19 @@ export async function setWorkspaceScimGroupMappings(
 // Every project a group may grant, with the roles of the team that owns it. What the
 // group mapping form fills its project and role selects from.
 export async function listWorkspaceProjectOptions(workspaceId: number) {
+  const where = await grantable(workspaceId);
   const [projects, roles] = await Promise.all([
     db
       .select({ id: project.id, key: project.key, name: project.name, teamId: project.teamId })
       .from(project)
       .innerJoin(team, eq(team.id, project.teamId))
-      .where(grantable(workspaceId))
+      .where(where)
       .orderBy(asc(project.key)),
     db
       .select({ id: teamRole.id, name: teamRole.name, teamId: teamRole.teamId })
       .from(teamRole)
       .innerJoin(team, eq(team.id, teamRole.teamId))
-      .where(grantable(workspaceId))
+      .where(where)
       .orderBy(asc(teamRole.id)),
   ]);
   return projects.map(({ teamId, ...entry }) => ({
@@ -168,7 +172,22 @@ export async function listWorkspaceProjectOptions(workspaceId: number) {
   }));
 }
 
-// The teams whose projects a workspace's groups may grant, as a condition on `team`.
-function grantable(workspaceId: number) {
-  return workspaceScim() ? eq(team.workspaceId, workspaceId) : undefined;
+// The teams whose projects a workspace's groups may grant, as a condition on `team`: its
+// own, or for the instance's provider every team outside a workspace with SCIM of its own.
+async function grantable(workspaceId: number) {
+  if (workspaceId !== (await instanceScimWorkspace())) return eq(team.workspaceId, workspaceId);
+  const own = await workspacesWithOwnScim();
+  return own.length > 0 ? notInArray(team.workspaceId, own) : undefined;
+}
+
+// A workspace turning its own SCIM on or off takes the instance's groups out of its
+// projects or lets them back in, so every project of it a group grants is reconciled.
+export async function reconcileWorkspaceGrants(workspaceId: number): Promise<void> {
+  const rows = await db
+    .selectDistinct({ projectId: scimGroupMapping.projectId })
+    .from(scimGroupMapping)
+    .innerJoin(project, eq(project.id, scimGroupMapping.projectId))
+    .innerJoin(team, eq(team.id, project.teamId))
+    .where(eq(team.workspaceId, workspaceId));
+  await reconcileProjects(rows.map((row) => row.projectId));
 }

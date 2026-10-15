@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { verifyScimToken, workspaceScim } from '@repo/auth';
+import { verifyScimToken } from '@repo/auth';
 import { HttpError } from '#shared/lib';
 import { noContent } from '#shared/http';
 import {
@@ -38,6 +38,7 @@ import {
 import {
   GROUP_FILTER_ATTRIBUTES,
   USER_FILTER_ATTRIBUTES,
+  actsOnInstance,
   createScimGroup,
   createScimUser,
   deleteScimGroup,
@@ -226,15 +227,15 @@ const scimHandlers = new Elysia({
     '/Users/:id',
     async ({ workspaceId, params, body }) => {
       const doc = asDoc(body);
-      const account = workspaceScim()
-        ? {}
-        : {
+      const account = (await actsOnInstance(workspaceId))
+        ? {
             email: readAccountEmail(doc),
             name: joinName(
               doc.name as never,
               (doc.displayName as string) || (await requireUser(workspaceId, params.id)).name,
             ),
-          };
+          }
+        : {};
       const updated = await updateScimUser(workspaceId, params.id, {
         ...account,
         active: doc.active === undefined ? true : asBoolean(doc.active),
@@ -260,6 +261,7 @@ const scimHandlers = new Elysia({
       const ops = parsePatch(body);
       // The address comes from `emails` when the request carries it, as on a create.
       const sendsEmails = ops.some((op) => op.path!.toLowerCase().startsWith('emails'));
+      const instanceWide = await actsOnInstance(workspaceId);
       for (const op of ops) {
         const path = op.path!.toLowerCase();
         if (op.op === 'remove') {
@@ -275,7 +277,7 @@ const scimHandlers = new Elysia({
         else if (path === 'externalid') patch.externalId = asString(op.value, 'externalId');
         else if (!ACCOUNT_ATTRIBUTE.test(path)) {
           throw new ScimError(400, `Attribute '${op.path}' is not writable`, 'invalidPath');
-        } else if (!workspaceScim() && !(path === 'username' && sendsEmails)) {
+        } else if (instanceWide && !(path === 'username' && sendsEmails)) {
           const name = patch.name ?? (await requireUser(workspaceId, params.id)).name;
           Object.assign(patch, accountOp(path, op.value, name));
         }

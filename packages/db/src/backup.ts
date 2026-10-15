@@ -34,18 +34,33 @@ interface JournalEntry {
   tag: string;
 }
 
+const CORE_TABLE = '__drizzle_migrations';
+
+// The newest row of a drizzle bookkeeping table, or null when the table is missing or
+// empty.
+async function lastApplied(sql: Sql, table: string): Promise<string | null> {
+  const [found] = await sql<{ exists: boolean }[]>`
+    select to_regclass(${`drizzle.${table}`}) is not null as exists
+  `;
+  if (!found?.exists) return null;
+  const [applied] = await sql<{ last: string | null }[]>`
+    select max(created_at)::text as last from drizzle.${sql(table)}
+  `;
+  return applied?.last ?? null;
+}
+
 // The migrations drizzle is about to apply: the journal entries newer than the last
 // row of its own table, which is exactly what its migrator compares.
 export async function pendingMigrations(
   sql: Sql,
   journal: { entries: JournalEntry[] },
+  table = CORE_TABLE,
 ): Promise<string[]> {
-  const [applied] = await sql<{ last: string | null }[]>`
-    select max(created_at)::text as last from drizzle.__drizzle_migrations
-  `.catch(() => [{ last: null }]);
-  // No drizzle table, or an empty one: the database is new and holds nothing to dump.
-  if (!applied?.last) return [];
-  const last = Number(applied.last);
+  const core = await lastApplied(sql, CORE_TABLE);
+  // No core table, or an empty one: the database is new and holds nothing to dump.
+  if (core === null) return [];
+  // A build's table that is missing or empty has every migration of the build ahead of it.
+  const last = Number((table === CORE_TABLE ? core : await lastApplied(sql, table)) ?? 0);
   return journal.entries
     .filter((e) => e.when > last)
     .sort((a, b) => a.when - b.when)

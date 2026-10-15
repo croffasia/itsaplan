@@ -1,6 +1,7 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import {
   db,
+  appSecret,
   instanceWorkspaceId,
   teamInvite,
   getSetting,
@@ -12,8 +13,9 @@ import {
   INSTANCE_EMAIL_SECRET_KEY,
   type InstanceEmailConfig,
 } from '@repo/db';
-import { and, eq, gte, lt } from 'drizzle-orm';
+import { and, eq, gte, like, lt, sql } from 'drizzle-orm';
 import { hasEmailProvider, type SmtpConfig } from '@repo/mailer';
+import type { GenericEndpointContext } from 'better-auth';
 
 // Authentication settings: who may register, whether email has to be confirmed,
 // which sign-in methods are offered, the mail provider used for authentication email,
@@ -89,6 +91,47 @@ export function emailDomainAllowed(email: string, domains: string[]): boolean {
   if (domains.length === 0) return true;
   const address = email.trim().toLowerCase();
   return domains.includes(address.slice(address.lastIndexOf('@') + 1));
+}
+
+type RegistrationEmailPolicy = (email: string) => Promise<boolean>;
+
+const atInstanceDomains: RegistrationEmailPolicy = async (email) =>
+  emailDomainAllowed(email, (await getAuthSettings()).allowedEmailDomains);
+
+// Whether an address may create an account: by default, when it is at one of the
+// instance's allowed domains. A build that lets a workspace keep domains of its own can
+// also admit an address that workspace invited.
+let registrationEmailPolicy = atInstanceDomains;
+
+export function setRegistrationEmailPolicy(next = atInstanceDomains): void {
+  registrationEmailPolicy = next;
+}
+
+export function registrationEmailAllowed(email: string): Promise<boolean> {
+  return registrationEmailPolicy(email);
+}
+
+type RegistrationAdmission = (
+  email: string,
+  ctx: GenericEndpointContext | null,
+) => Promise<boolean>;
+
+const noAdmission: RegistrationAdmission = async () => false;
+
+// Whether an account goes past the registration gate whatever the instance's settings, by
+// the request creating it: a build that manages providers of its own can let one of them
+// create accounts on a closed instance, as SCIM does. It throws to turn the account away.
+let registrationAdmission = noAdmission;
+
+export function setRegistrationAdmission(next = noAdmission): void {
+  registrationAdmission = next;
+}
+
+export function admittedPastGate(
+  email: string,
+  ctx: GenericEndpointContext | null,
+): Promise<boolean> {
+  return registrationAdmission(email, ctx);
 }
 
 export async function getAuthSettings(): Promise<AuthSettings> {
@@ -428,20 +471,58 @@ export function workspaceScim(): boolean {
   return scimPerWorkspace;
 }
 
+// Set up per workspace, whether the instance workspace's provider still acts on the
+// whole instance, as it does while SCIM is the instance's. A build where one
+// organisation runs the instance keeps its own provider over every account, and a
+// workspace that sets up its own decides who is in that workspace instead.
+let instanceScimBeside = false;
+
+export function setInstanceScimBeside(on = true): void {
+  instanceScimBeside = on;
+}
+
+const instanceScimWide = () => !scimPerWorkspace || instanceScimBeside;
+
+// The workspace whose provider acts on the whole instance, or null when none does.
+export async function instanceScimWorkspace(): Promise<number | null> {
+  return instanceScimWide() ? instanceWorkspaceId(db) : null;
+}
+
 // True for an account the instance's identity provider deactivated (`user.active`),
-// while SCIM acts on the whole instance. Such an account cannot sign in, and the api
-// refuses the sessions and keys it already holds.
+// while that provider acts on the whole instance. Such an account cannot sign in, and
+// the api refuses the sessions and keys it already holds.
 export function isAccountDeactivated(account: { active?: boolean | null }): boolean {
-  return !scimPerWorkspace && account.active === false;
+  return instanceScimWide() && account.active === false;
 }
 
 // Whether an identity provider decides which accounts are active, so god does not: SCIM
-// per workspace, where a deactivation has no effect, or the instance workspace's SCIM set
-// up with a token, the same condition under which verifyScimToken opens /scim/v2.
+// per workspace alone, where a deactivation has no effect, or the instance workspace's
+// SCIM set up with a token, the same condition under which verifyScimToken opens /scim/v2.
 export async function accountsManagedByScim(): Promise<boolean> {
-  if (scimPerWorkspace) return true;
+  if (!instanceScimWide()) return true;
   const config = await getScimConfig(await instanceWorkspaceId(db));
   return config.enabled && config.token.length > 0;
+}
+
+// The workspaces besides the instance's that set up SCIM of their own, read from the
+// redacted mirror. Their own provider decides who is in them, so the instance's groups
+// grant nothing there.
+export async function workspacesWithOwnScim(): Promise<number[]> {
+  if (!scimPerWorkspace) return [];
+  const rows = await db
+    .select({ key: appSecret.key })
+    .from(appSecret)
+    .where(
+      and(
+        like(appSecret.key, 'workspace.%.scim'),
+        sql`${appSecret.redacted}->>'enabled' = 'true'`,
+        sql`${appSecret.redacted}->>'hasToken' = 'true'`,
+      ),
+    );
+  const instanceId = await instanceWorkspaceId(db);
+  return rows
+    .map((row) => Number(row.key.split('.')[1]))
+    .filter((id) => Number.isInteger(id) && id !== instanceId);
 }
 
 // A token reads scim_<workspaceId>_<secret>, so the workspace it opens is found

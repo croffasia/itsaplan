@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./extensions": "./src/extensions.ts"
   },
   "scripts": {
     "auth:generate": "dotenv -e ../../.env -- bunx auth@1.7.7 generate --config ./src/index.ts --output ../db/src/schema/auth.ts --yes",

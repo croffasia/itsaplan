@@ -167,6 +167,10 @@ Enforced declaratively through macros, never imperative calls in handlers.
   last-owner check. An expired invite gives way: inviting the address again, or
   renewing it (`.../invites/:inviteId/renew`), replaces it with a new invite under a new
   link. A link is never reissued, and an expired one is neither accepted nor mailed.
+  An address takes an invite only where the installed policy admits it
+  (`invites/email-policy.ts`, 400 `EMAIL_DOMAIN_NOT_ALLOWED`): by default, one with an
+  account always and one without only if it could register. A build that lets a
+  workspace keep domains of its own calls `setInviteEmailPolicy` with a check against them.
   `members/` removes (last owner protected).
 - The member list of a project is governed by its role matrix **or** by the team that
   owns it: `memberAdmin: ["members_manage", "<action>"]` passes an owner or manager of
@@ -359,6 +363,16 @@ links it. The group mappings and the settings are routes of `modules/workspaces/
   workspaces. It sees the accounts it linked and the people in the workspace's teams
   (`inWorkspace` in `service.ts`), a name or address it sends is accepted and the account
   keeps its own, and a group maps to projects of its workspace only.
+- **On, with the instance's beside it** (`setInstanceScimBeside()` from `@repo/auth`), for
+  a build where one organisation runs the instance: the instance workspace's provider acts
+  as when SCIM is the instance's, every other workspace's as when it is each workspace's.
+  `instanceScimWorkspace()` names the workspace whose provider acts on the whole instance,
+  or null, and `actsOnInstance` in `service.ts` is what the routes ask. The instance's
+  groups grant nothing in a workspace that set up SCIM of its own
+  (`workspacesWithOwnScim`): `reconcile.ts` leaves them out there, the mapping picker
+  leaves its projects out, and turning that workspace's SCIM on or off reconciles its
+  mapped projects (`reconcileWorkspaceGrants` in `workspaces/scim.ts`). That provider's
+  settings stay the instance owner's (`workspaceScim` guard).
 
 A create first asks the installed policy whether the workspace may provision the address
 (`email-policy.ts`). A self-hosted instance allows any address, since only its owner sets

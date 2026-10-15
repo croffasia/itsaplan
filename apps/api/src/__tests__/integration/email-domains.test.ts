@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it } from 'bun:test';
-import { auth, setAuthSettings } from '@repo/auth';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+import { auth, setAuthSettings, setRegistrationEmailPolicy } from '@repo/auth';
+import { setInviteEmailPolicy } from '#modules/invites/email-policy';
 import { authedApi } from '#tests/helpers/app';
 import { openMagicLink, signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -32,6 +33,10 @@ async function refusalCode(promise: Promise<unknown>): Promise<string | null> {
 
 describe('allowed email domains', () => {
   beforeEach(resetDb);
+  afterEach(() => {
+    setRegistrationEmailPolicy();
+    setInviteEmailPolicy();
+  });
 
   it('admits an address at a listed domain, in any case', async () => {
     await setup();
@@ -80,5 +85,21 @@ describe('allowed email domains', () => {
     expect((await settings.put({ allowedEmailDomains: ['not a domain'] })).status).toBe(400);
     const saved = await settings.put({ allowedEmailDomains: ['company.com', 'company.io'] });
     expect(saved.data?.allowedEmailDomains).toEqual(['company.com', 'company.io']);
+  });
+
+  it('registers an address the installed policy admits', async () => {
+    await setup();
+    setRegistrationEmailPolicy(async (email) => email.endsWith('@partner.com'));
+    expect((await signUp('newcomer@partner.com')).status).toBe(200);
+  });
+
+  it('refuses an invite the installed policy refuses, to an account as well', async () => {
+    const { asOwner } = await setup();
+    await signUpTestUser({ email: 'someone@company.com' });
+    setInviteEmailPolicy(async () => false);
+    const res = await asOwner
+      .projects({ projectKey: 'MKT' })
+      .invites.post({ email: 'someone@company.com', role: 'member' });
+    expect(res.status).toBe(400);
   });
 });

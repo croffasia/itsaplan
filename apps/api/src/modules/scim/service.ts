@@ -13,7 +13,7 @@ import {
   workspaceManager,
 } from '@repo/db';
 import { and, eq, exists, inArray, isNotNull, notExists, or, sql } from 'drizzle-orm';
-import { generateUsername, workspaceScim } from '@repo/auth';
+import { generateUsername, instanceScimWorkspace } from '@repo/auth';
 import { iso } from '#shared/lib';
 import { deleteAccount } from '#shared/account-deletion';
 import { countOwners } from '#modules/members/service';
@@ -26,14 +26,14 @@ import { mappedProjectIds, reconcileProjects } from './reconcile';
 // bearer token opened, and what its provider says about a person — its own id for
 // them and whether they are active — is kept per workspace in `scim_user`.
 //
-// How far the provider reaches depends on `workspaceScim()` in @repo/auth. Off, as on
-// a self-hosted instance, SCIM is the instance owner's and acts on the whole instance,
-// through the instance workspace: the provider sees every account, keeps names and
-// addresses in step, a deactivated account cannot sign in, and a delete removes the
-// account. On, as in a hosted build, a workspace's provider decides who has the
-// workspace, not who has an account: it sees the accounts it linked and the people in
-// the workspace's teams, deactivating or deleting someone takes them out of those
-// teams, and their name, address and sign-in stay as they are.
+// How far a provider reaches depends on its workspace (`instanceScimWorkspace()` in
+// @repo/auth). The instance workspace's, on a self-hosted instance and wherever it stays
+// beside the workspaces', is the instance owner's and acts on the whole instance: it
+// sees every account, keeps names and addresses in step, a deactivated account cannot
+// sign in, and a delete removes the account. Any other workspace's, as in a hosted
+// build, decides who has the workspace, not who has an account: it sees the accounts it
+// linked and the people in the workspace's teams, deactivating or deleting someone takes
+// them out of those teams, and their name, address and sign-in stay as they are.
 //
 // A create for an address that has no account inserts the `user` row directly rather
 // than going through better-auth's sign-up — the same way an agent's bot user is
@@ -65,10 +65,14 @@ function linkOf(workspaceId: number) {
   return and(eq(scimUser.userId, user.id), eq(scimUser.workspaceId, workspaceId));
 }
 
+export async function actsOnInstance(workspaceId: number): Promise<boolean> {
+  return workspaceId === (await instanceScimWorkspace());
+}
+
 // The accounts a workspace's provider sees: the ones it wrote, and the people in the
-// workspace's teams. While SCIM is the instance's, every account.
-function inWorkspace(workspaceId: number) {
-  if (!workspaceScim()) return notAnAgent;
+// workspace's teams. The instance's provider, every account.
+async function inWorkspace(workspaceId: number) {
+  if (await actsOnInstance(workspaceId)) return notAnAgent;
   return and(
     notAnAgent,
     or(
@@ -128,19 +132,18 @@ const userColumns = {
 
 // ── Users ─────────────────────────────────────────────────────────────────────
 
-function userWhere(workspaceId: number, filter: ScimFilter | null) {
-  if (!filter) return inWorkspace(workspaceId);
-  if (filter.attribute === 'externalid') {
-    return and(inWorkspace(workspaceId), eq(scimUser.externalId, filter.value));
-  }
-  return and(inWorkspace(workspaceId), emailEq(filter.value));
+async function userWhere(workspaceId: number, filter: ScimFilter | null) {
+  const seen = await inWorkspace(workspaceId);
+  if (!filter) return seen;
+  if (filter.attribute === 'externalid') return and(seen, eq(scimUser.externalId, filter.value));
+  return and(seen, emailEq(filter.value));
 }
 
 export async function listScimUsers(
   workspaceId: number,
   options: { filter: ScimFilter | null; startIndex: number; count: number },
 ): Promise<{ records: ScimUserRecord[]; total: number }> {
-  const where = userWhere(workspaceId, options.filter);
+  const where = await userWhere(workspaceId, options.filter);
   const [rows, totals] = await Promise.all([
     db
       .select(userColumns)
@@ -164,7 +167,7 @@ export async function getScimUser(workspaceId: number, id: string): Promise<Scim
     .select(userColumns)
     .from(user)
     .leftJoin(scimUser, linkOf(workspaceId))
-    .where(and(eq(user.id, id), inWorkspace(workspaceId)));
+    .where(and(eq(user.id, id), await inWorkspace(workspaceId)));
   return rows[0] ? toUserRecord(rows[0]) : null;
 }
 
@@ -176,11 +179,11 @@ function assertNotGod(role: string | null, action: string): void {
 }
 
 // The workspace owner runs its SCIM provisioning and receives what a deprovisioned
-// person owned alone, so the workspace's own provider cannot take it from them. While
-// SCIM is the instance's, that owner is the instance owner, whom assertNotGod covers,
-// and nothing is handed over.
+// person owned alone, so the workspace's own provider cannot take it from them. The
+// instance's provider answers to the instance owner, whom assertNotGod covers, and
+// nothing is handed over.
 async function assertNotWorkspaceOwner(workspaceId: number, userId: string): Promise<void> {
-  if (!workspaceScim()) return;
+  if (await actsOnInstance(workspaceId)) return;
   const [owner] = await db
     .select({ userId: workspaceManager.userId })
     .from(workspaceManager)
@@ -230,9 +233,9 @@ export async function createScimUser(
 
   // An address with an account is that person: the provider links it rather than
   // creating a second one, and leaves its name and username as the person set them.
-  // While SCIM is the instance's, `active` is the account's own: it decides whether
-  // the account signs in at all.
-  const instanceWide = !workspaceScim();
+  // For the instance's provider, `active` is the account's own: it decides whether the
+  // account signs in at all.
+  const instanceWide = await actsOnInstance(workspaceId);
   const userId = await db.transaction(async (tx) => {
     let id = existing?.id;
     if (id && instanceWide) {
@@ -265,14 +268,14 @@ export async function createScimUser(
     return id;
   });
   if (input.active) await reconcileProjects(await groupProjectIds(workspaceId, userId));
-  else if (workspaceScim()) await dropWorkspaceMemberships(workspaceId, userId);
+  else if (!instanceWide) await dropWorkspaceMemberships(workspaceId, userId);
   return (await getScimUser(workspaceId, userId))!;
 }
 
 // Writes what the provider says about a person: its id for them and whether they are
-// active. While SCIM is the instance's, it writes their name and address too; set up
-// per workspace, those are the person's own, and a PUT or PATCH that carries them
-// leaves them as they are.
+// active. The instance's provider writes their name and address too; for a workspace's,
+// those are the person's own, and a PUT or PATCH that carries them leaves them as they
+// are.
 export async function updateScimUser(
   workspaceId: number,
   id: string,
@@ -282,13 +285,14 @@ export async function updateScimUser(
     .select({ role: user.role, active: scimUser.active })
     .from(user)
     .leftJoin(scimUser, linkOf(workspaceId))
-    .where(and(eq(user.id, id), inWorkspace(workspaceId)));
+    .where(and(eq(user.id, id), await inWorkspace(workspaceId)));
   if (!target) return null;
   assertNotGod(target.role, 'updated');
   const wasActive = target.active !== false;
   const active = patch.active ?? wasActive;
   if (wasActive && !active) await assertNotWorkspaceOwner(workspaceId, id);
-  if (!workspaceScim()) await updateAccount(id, { ...patch, active });
+  const instanceWide = await actsOnInstance(workspaceId);
+  if (instanceWide) await updateAccount(id, { ...patch, active });
 
   await db
     .insert(scimUser)
@@ -297,7 +301,7 @@ export async function updateScimUser(
       target: [scimUser.workspaceId, scimUser.userId],
       set: { active, ...(patch.externalId !== undefined ? { externalId: patch.externalId } : {}) },
     });
-  if (wasActive && !active && workspaceScim()) await dropWorkspaceMemberships(workspaceId, id);
+  if (wasActive && !active && !instanceWide) await dropWorkspaceMemberships(workspaceId, id);
   // Back in the workspace: the groups they are still in grant their projects again.
   if (!wasActive && active) await reconcileProjects(await groupProjectIds(workspaceId, id));
   return getScimUser(workspaceId, id);
@@ -390,21 +394,21 @@ export async function syncEmbeddedGroups(
   await reconcileProjects(projectIds);
 }
 
-// Set up per workspace, unlinks a person from the provider and takes them out of the
-// workspace: its teams, its projects and its groups. The account stays. While SCIM is
-// the instance's, removes the account, the way god mode does; deprovisioning normally
-// arrives as `active: false` instead.
+// For a workspace's provider, unlinks a person from it and takes them out of the
+// workspace: its teams, its projects and its groups. The account stays. The instance's
+// provider removes the account, the way god mode does; deprovisioning normally arrives
+// as `active: false` instead.
 export async function deleteScimUser(workspaceId: number, id: string): Promise<void> {
   const [target] = await db
     .select({ role: user.role })
     .from(user)
     .leftJoin(scimUser, linkOf(workspaceId))
-    .where(and(eq(user.id, id), inWorkspace(workspaceId)));
+    .where(and(eq(user.id, id), await inWorkspace(workspaceId)));
   // An agent's bot user and an account outside the workspace are not part of its
   // SCIM user surface at all, so they answer the same way an unknown id does.
   if (!target) throw new ScimError(404, `User '${id}' not found`);
   assertNotGod(target.role, 'deleted');
-  if (!workspaceScim()) {
+  if (await actsOnInstance(workspaceId)) {
     if (await ownsProjectAlone(id)) {
       throw new ScimError(
         409,
@@ -490,7 +494,7 @@ async function assertKnownMembers(workspaceId: number, ids: string[]): Promise<v
     .select({ id: user.id })
     .from(user)
     .leftJoin(scimUser, linkOf(workspaceId))
-    .where(and(inArray(user.id, ids), inWorkspace(workspaceId)));
+    .where(and(inArray(user.id, ids), await inWorkspace(workspaceId)));
   const knownIds = new Set(known.map((row) => row.id));
   const missing = ids.filter((id) => !knownIds.has(id));
   if (missing.length > 0) {

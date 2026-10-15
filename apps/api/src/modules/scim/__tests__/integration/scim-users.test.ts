@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, beforeEach } from 'bun:test';
-import { setWorkspaceScim } from '@repo/auth';
+import { setInstanceScimBeside, setWorkspaceScim } from '@repo/auth';
 import { createWorkspace, db, notificationDelivery, team, teamMember } from '@repo/db';
 import { eq } from 'drizzle-orm';
 import { app, authedApi } from '#tests/helpers/app';
@@ -827,6 +827,50 @@ describe('SCIM users', () => {
       expect(await memberIdsOf(god, 'MKT')).not.toContain(member.id);
       expect(await memberIdsOf(god, 'SOL')).toEqual([god.id]);
       expect((await god.api.god.users({ userId: member.id }).get()).status).toBe(200);
+    });
+  });
+
+  // Beside the workspaces' own, the instance's provider still acts on the whole instance,
+  // and every other workspace's on its own workspace.
+  describe("beside the workspaces' own", () => {
+    beforeEach(() => {
+      setWorkspaceScim();
+      setInstanceScimBeside();
+    });
+    afterEach(() => {
+      setWorkspaceScim(false);
+      setInstanceScimBeside(false);
+    });
+
+    it("lets the instance's provider deactivate an account in any workspace", async () => {
+      const { god, scim } = await setupScim();
+      const member = await signUpTestUser({ email: 'member@example.com' });
+      const [memberTeam] = (await authedApi(member.cookie).teams.get()).data!;
+      await setupOtherWorkspace(god, [memberTeam!.id]);
+      const session = authedApi(member.cookie);
+
+      const res = await scim.scim.v2
+        .Users({ id: member.userId })
+        .patch(patchOps([{ op: 'replace', path: 'active', value: false }]));
+
+      expect(res.status).toBe(200);
+      expect((await session.projects.get()).status).toBe(401);
+    });
+
+    it("leaves an account signing in when another workspace's provider deactivates it", async () => {
+      const { god } = await setupScim();
+      const member = await signUpTestUser({ email: 'member@example.com' });
+      const [memberTeam] = (await authedApi(member.cookie).teams.get()).data!;
+      const other = await setupOtherWorkspace(god, [memberTeam!.id]);
+
+      const res = await other.scim.scim.v2
+        .Users({ id: member.userId })
+        .patch(patchOps([{ op: 'replace', path: 'active', value: false }]));
+
+      expect(res.status).toBe(200);
+      expect((await authedApi(member.cookie).me.get()).data).toMatchObject({
+        authenticated: true,
+      });
     });
   });
 });

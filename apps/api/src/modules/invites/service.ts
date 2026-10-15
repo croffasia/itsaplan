@@ -1,11 +1,12 @@
 import { db, teamInvite, teamMember, projectMember, teamRole, team, project, user } from '@repo/db';
 import { and, desc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
-import { emailDomainAllowed, getAuthSettings, inviteValidSince } from '@repo/auth';
+import { getAuthSettings, inviteValidSince } from '@repo/auth';
 import { HttpError, iso, pgErrorCode } from '#shared/lib';
 import { getProjectAccess, getTeamAccess } from '#shared/access';
 import { teamRef } from '#modules/teams/ref';
 import { getMembership, type MemberRole } from '#modules/members/service';
 import { assertSeatFree, getTeamMembership, runsTeam, type TeamRole } from '#modules/teams/service';
+import { isInviteEmailAllowed } from './email-policy';
 
 // Data access for invites. An invite is a token-addressed grant of membership in a
 // team, and — when it names a project — in that project too. Creating one requires
@@ -171,19 +172,16 @@ async function findAccount(email: string): Promise<{ id: string } | undefined> {
 // An address already inside the team takes no invite. Accepting one rewrites the
 // membership the account already holds, which is how a project's last owner would be
 // demoted to member; a team member reaches a project through its member list instead.
-// An address with no account takes one only if it could register.
 async function assertInvitable(input: NewInvite, email: string): Promise<void> {
   const account = await findAccount(email);
-  if (!account) {
-    if (!emailDomainAllowed(email, (await getAuthSettings()).allowedEmailDomains)) {
-      throw new HttpError(
-        400,
-        'This instance does not admit addresses at this domain',
-        'EMAIL_DOMAIN_NOT_ALLOWED',
-      );
-    }
-    return;
+  if (!(await isInviteEmailAllowed(input.teamId, email, account != null))) {
+    throw new HttpError(
+      400,
+      'Addresses at this domain cannot be invited here',
+      'EMAIL_DOMAIN_NOT_ALLOWED',
+    );
   }
+  if (!account) return;
 
   if (input.projectId != null && (await getMembership(input.projectId, account.id))) {
     throw new HttpError(

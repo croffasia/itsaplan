@@ -162,7 +162,13 @@
     "completedIssues": "Issues concluídas",
     "canceledIssues": "Issues canceladas",
     "staleHint": "Arquivar após este número de dias sem atividade.",
-    "days": "dias"
+    "days": "dias",
+    "branchName": "Nomes de branch",
+    "branchNameHint": "O nome de branch que Copiar nome do branch e Copiar prompt sugerem para uma issue.",
+    "branchNamePlaceholders": "Marcadores: '{user}' seu nome de usuário, '{key}' a chave da issue, '{title}' o título, '{cycle}' o ciclo da issue. Um marcador sem valor é omitido junto com o separador.",
+    "branchNamePreview": "Exemplo:",
+    "branchNameSampleTitle": "Corrigir acampamentos vazios",
+    "branchNameSampleCycle": "Acampamentos"
   },
   "states": {
     "addState": "Adicionar estado {type}",

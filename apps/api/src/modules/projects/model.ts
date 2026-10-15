@@ -202,6 +202,8 @@ export const ProjectBoardResponse = t.Object({
   viewer: ViewerResponse,
   // The caller's resolved permission matrix (owners get every flag).
   permissions: PermissionMatrixSchema,
+  // The template of the branch name the issue actions suggest (see BranchNameResponse).
+  branchNameTemplate: t.String(),
 });
 
 // Which optional sections the project shows (ProjectFeatures from the service).
@@ -264,3 +266,10 @@ export const SubtaskAutomationResponse = t.Object({
 });
 
 export const updateSubtaskAutomationBody = SubtaskAutomationResponse;
+
+// The template of the suggested branch name: free text with the placeholders {user}
+// (the account's username), {key} (the issue key, lowercase), {title} (a slug of the
+// title) and {cycle} (a slug of the issue's cycle). An empty template restores the
+// default, {user}/{key}-{title}.
+export const BranchNameResponse = t.Object({ template: t.String() });
+export const updateBranchNameBody = t.Object({ template: t.String({ maxLength: 200 }) });

@@ -115,6 +115,8 @@ export interface ProjectScaffold {
   viewer: ProjectViewer;
   // The caller's resolved permission matrix (owners get every flag).
   permissions: Permissions;
+  // The template of the branch name the issue actions suggest (see buildIssueBranchName).
+  branchNameTemplate: string;
 }
 
 // The scaffold composed with its issues and the project's unfinished cycles, as

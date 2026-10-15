@@ -15,15 +15,17 @@ import { SettingsResourceProvider } from './context/settingsPermission';
 import SettingsSubtaskAutomation from './components/configuration/SettingsSubtaskAutomation';
 import SettingsEstimates from './components/configuration/SettingsEstimates';
 import SettingsAutoArchive from './components/configuration/SettingsAutoArchive';
+import SettingsBranchName from './components/configuration/SettingsBranchName';
 import { useAutoArchiveForm } from './hooks/useAutoArchiveForm';
+import { useBranchNameForm } from './hooks/useBranchNameForm';
 import { useEstimatesForm } from './hooks/useEstimatesForm';
 import { useSubtaskAutomationForm } from './hooks/useSubtaskAutomationForm';
 
 const section = settingsSection('configuration');
 
 // The Configuration settings page (/:team/:projectKey/settings/configuration).
-// Holds the subtask automations, the estimate kinds and the auto-archive
-// thresholds; the Save in the page header writes all of them.
+// Holds the subtask automations, the estimate kinds, the auto-archive thresholds
+// and the branch name template; the Save in the page header writes all of them.
 export default function SettingsConfigurationPage() {
   const { project } = useShell();
   if (!project) return null;
@@ -39,13 +41,15 @@ function ConfigurationPage({ project }: { project: ProjectDetail }) {
   const subtasks = useSubtaskAutomationForm(project.project.ref);
   const estimates = useEstimatesForm(project.project);
   const archive = useAutoArchiveForm(project.project.ref);
-  const saving = subtasks.saving || estimates.saving || archive.saving;
+  const branchName = useBranchNameForm(project);
+  const saving = subtasks.saving || estimates.saving || archive.saving || branchName.saving;
   const loaded = subtasks.loaded && archive.loaded;
 
   async function save() {
     await subtasks.save();
     await estimates.save();
     await archive.save();
+    await branchName.save();
     toast.success(t('saved'));
   }
 
@@ -67,6 +71,7 @@ function ConfigurationPage({ project }: { project: ProjectDetail }) {
             {features.subtasks && <SettingsSubtaskAutomation form={subtasks} />}
             <SettingsEstimates form={estimates} />
             <SettingsAutoArchive form={archive} />
+            <SettingsBranchName form={branchName} projectKey={project.project.key} />
           </div>
         </RequirePermission>
       </SettingsResourceProvider>

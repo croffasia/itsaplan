@@ -117,6 +117,12 @@ export const updateSubtaskAutomation = (projectKey: string, input: SubtaskAutoma
     body: JSON.stringify(input),
   });
 
+export const updateBranchName = (projectKey: string, input: { template: string }) =>
+  request<{ template: string }>(`/projects/${projectKey}/settings/branch-name`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  });
+
 export const updateEstimates = (projectKey: string, input: EstimateSettings) =>
   request<EstimateSettings>(`/projects/${projectKey}/settings/estimates`, {
     method: 'PATCH',

@@ -162,7 +162,13 @@
     "completedIssues": "Issue selesai",
     "canceledIssues": "Issue dibatalkan",
     "staleHint": "Arsipkan setelah sekian hari tanpa aktivitas.",
-    "days": "hari"
+    "days": "hari",
+    "branchName": "Nama branch",
+    "branchNameHint": "Nama branch yang disarankan Salin nama branch dan Salin prompt untuk sebuah isu.",
+    "branchNamePlaceholders": "Placeholder: '{user}' nama pengguna Anda, '{key}' kunci isu, '{title}' judul, '{cycle}' siklus isu. Placeholder tanpa nilai dihapus beserta pemisahnya.",
+    "branchNamePreview": "Contoh:",
+    "branchNameSampleTitle": "Perbaiki kamp kosong",
+    "branchNameSampleCycle": "Kamp"
   },
   "states": {
     "addState": "Tambah status {type}",

@@ -288,6 +288,49 @@ describe('projects', () => {
     });
   });
 
+  describe('branch name', () => {
+    it('suggests the default template until one is set', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+
+      const view = await viewOf(api, 'MKT');
+      expect(view.data?.branchNameTemplate).toBe('{user}/{key}-{title}');
+    });
+
+    it('stores a template, and an empty one restores the default', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const settings = api.projects({ projectKey: 'MKT' }).settings['branch-name'];
+
+      const set = await settings.patch({ template: '  camps/{key}-{title} ' });
+      expect(set.status).toBe(200);
+      expect(set.data).toEqual({ template: 'camps/{key}-{title}' });
+      expect((await viewOf(api, 'MKT')).data?.branchNameTemplate).toBe('camps/{key}-{title}');
+
+      await settings.patch({ template: '' });
+      expect((await viewOf(api, 'MKT')).data?.branchNameTemplate).toBe('{user}/{key}-{title}');
+    });
+
+    it('is read by every member and changed only with the workflow configuration', async () => {
+      const owner = await signUpClient();
+      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await owner.api.projects({ projectKey: 'MKT' }).settings['branch-name'].patch({
+        template: 'mkt/{key}',
+      });
+      const role = await createRole(owner.api, 'MKT', {
+        name: 'Issues only',
+        permissions: { work_items: { read: true } },
+      });
+      const member = await addProjectMember(owner.api, 'MKT', role.data!.id);
+
+      expect((await viewOf(member, 'MKT')).data?.branchNameTemplate).toBe('mkt/{key}');
+      const res = await member
+        .projects({ projectKey: 'MKT' })
+        .settings['branch-name'].patch({ template: '{key}' });
+      expect(res.status).toBe(403);
+    });
+  });
+
   describe('copy', () => {
     // Builds a source project with one label and one issue, so a copy can assert
     // the structure is copied but the issues are not.

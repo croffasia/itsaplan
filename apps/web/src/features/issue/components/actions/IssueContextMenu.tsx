@@ -32,7 +32,8 @@ import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import { ShellCtx } from '@/context/shellContext';
 import { useArchiveAction } from '../../hooks/useArchiveAction';
 import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueActions';
-import { buildIssueBranchName, buildIssuePrompt } from '../../utils/issuePrompt';
+import { buildIssuePrompt } from '../../utils/issuePrompt';
+import { buildIssueBranchName } from '@/utils/branchName';
 import { delegatableAgents } from '../../utils/delegates';
 import { useSession } from '@/lib/auth-client';
 import { toDateStr } from '@/utils/dates';
@@ -402,7 +403,9 @@ export default function IssueContextMenu({
                 {t('copyDescription')}
               </ContextMenuItem>
               <ContextMenuItem
-                onSelect={() => copyText(buildIssueBranchName(issue, session?.user))}
+                onSelect={() =>
+                  copyText(buildIssueBranchName(issue, session?.user, project.branchNameTemplate))
+                }
               >
                 {t('copyBranch')}
               </ContextMenuItem>

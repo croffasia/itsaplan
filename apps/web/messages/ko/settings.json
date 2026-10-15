@@ -162,7 +162,13 @@
     "completedIssues": "완료된 이슈",
     "canceledIssues": "취소된 이슈",
     "staleHint": "활동이 없는 상태로 다음 일수가 지나면 보관합니다.",
-    "days": "일"
+    "days": "일",
+    "branchName": "브랜치 이름",
+    "branchNameHint": "브랜치 이름 복사와 프롬프트 복사가 이슈에 제안하는 브랜치 이름입니다.",
+    "branchNamePlaceholders": "자리 표시자: '{user}' 사용자 이름, '{key}' 이슈 키, '{title}' 제목, '{cycle}' 이슈의 사이클. 값이 없는 자리 표시자는 구분자와 함께 빠집니다.",
+    "branchNamePreview": "예시:",
+    "branchNameSampleTitle": "빈 캠프 수정",
+    "branchNameSampleCycle": "캠프"
   },
   "states": {
     "addState": "{type} 상태 추가",

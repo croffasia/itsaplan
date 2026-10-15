@@ -1,35 +1,7 @@
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue } from '@/lib/api/endpoints/issues';
 import { issuePath } from '@/utils/paths';
-
-// A git-branch-safe handle from the current user: the email local part (or name)
-// with everything but letters and digits removed. "poluosmak.a@gmail.com" ->
-// "poluosmaka". Empty when there is no user, which drops the branch prefix.
-function userHandle(name: string | null | undefined, email: string | null | undefined): string {
-  const base = email ? email.split('@')[0] : (name ?? '');
-  return base.toLowerCase().replace(/[^a-z0-9]+/g, '');
-}
-
-// A kebab slug from the issue title for the branch name: lowercase, non-alphanumeric
-// runs collapsed to a single dash, trimmed, capped so the branch stays short.
-function titleSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 50)
-    .replace(/-+$/, '');
-}
-
-export function buildIssueBranchName(
-  issue: Pick<Issue, 'identifier' | 'title'>,
-  user?: { name?: string | null; email?: string | null },
-): string {
-  const handle = userHandle(user?.name, user?.email);
-  const slug = titleSlug(issue.title);
-  const id = issue.identifier.toLowerCase();
-  return `${handle ? `${handle}/` : ''}${slug ? `${id}-${slug}` : id}`;
-}
+import { buildIssueBranchName, type BranchNameUser } from '@/utils/branchName';
 
 // Builds the prompt copied by "Copy Prompt", matching Linear's format: a lead
 // instruction, a suggested branch name, then the issue as XML-like tags with the
@@ -39,7 +11,7 @@ export function buildIssueBranchName(
 export function buildIssuePrompt(
   issue: Issue,
   project: ProjectDetail,
-  user?: { name?: string | null; email?: string | null },
+  user?: BranchNameUser,
 ): string {
   const status = project.columns.find((c) => c.id === issue.columnId)?.name;
   const type =
@@ -55,7 +27,7 @@ export function buildIssuePrompt(
     .filter((name): name is string => Boolean(name));
   const url = `${window.location.origin}${issuePath(project.project.ref, issue.sequenceNumber)}`;
 
-  const branch = buildIssueBranchName(issue, user);
+  const branch = buildIssueBranchName(issue, user, project.branchNameTemplate);
 
   const tags: string[] = [
     `<issue identifier="${issue.identifier}">`,

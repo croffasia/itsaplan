@@ -162,7 +162,13 @@
     "completedIssues": "Completed issues",
     "canceledIssues": "Canceled issues",
     "staleHint": "Archive after this many days without activity.",
-    "days": "days"
+    "days": "days",
+    "branchName": "Branch names",
+    "branchNameHint": "The branch name Copy branch name and Copy prompt suggest for an issue.",
+    "branchNamePlaceholders": "Placeholders: '{user}' your username, '{key}' the issue key, '{title}' the title, '{cycle}' the issue's cycle. A placeholder without a value is left out with its separator.",
+    "branchNamePreview": "Example:",
+    "branchNameSampleTitle": "Fix empty camps",
+    "branchNameSampleCycle": "Camps"
   },
   "states": {
     "addState": "Add {type} state",

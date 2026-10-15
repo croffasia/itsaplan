@@ -752,6 +752,31 @@ export async function setSubtaskAutomationSettings(
   return next;
 }
 
+// The template of the branch name the issue actions suggest (Copy branch name, and
+// the branch in Copy prompt), stored in project_setting under BRANCH_NAME_KEY as
+// { template }. It is free text with the placeholders {user}, {key}, {title} and
+// {cycle}, which the web app fills in (features/issue/utils/branchName.ts). A project
+// with no stored row suggests DEFAULT_BRANCH_NAME_TEMPLATE. Every member's project
+// payload carries the template, since every member can copy a branch name.
+const BRANCH_NAME_KEY = 'branch_name';
+
+export const DEFAULT_BRANCH_NAME_TEMPLATE = '{user}/{key}-{title}';
+
+export async function getBranchNameTemplate(projectId: number): Promise<string> {
+  const stored = await getProjectSetting<{ template?: unknown }>(projectId, BRANCH_NAME_KEY);
+  const template = typeof stored?.template === 'string' ? stored.template.trim() : '';
+  return template || DEFAULT_BRANCH_NAME_TEMPLATE;
+}
+
+export async function setBranchNameTemplate(
+  projectId: number,
+  input: { template: string },
+): Promise<{ template: string }> {
+  const template = input.template.trim() || DEFAULT_BRANCH_NAME_TEMPLATE;
+  await setProjectSetting(projectId, BRANCH_NAME_KEY, { template });
+  return { template };
+}
+
 // Deletes a project and everything scoped to it. Every project-scoped foreign key
 // has ON DELETE CASCADE on project_id, so deleting the project row removes its
 // columns, issue types, labels, initiatives, issues, views, dashboards, and

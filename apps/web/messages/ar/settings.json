@@ -162,7 +162,13 @@
     "completedIssues": "المهام المكتملة",
     "canceledIssues": "المهام الملغاة",
     "staleHint": "بتتأرشف بعد عدد الأيام ده من غير أي نشاط عليها.",
-    "days": "أيام"
+    "days": "أيام",
+    "branchName": "أسماء الفروع",
+    "branchNameHint": "اسم الفرع الذي يقترحه «نسخ اسم الفرع» و«نسخ الموجّه» للمهمة.",
+    "branchNamePlaceholders": "العناصر النائبة: '{user}' اسم المستخدم، '{key}' مفتاح المهمة، '{title}' العنوان، '{cycle}' دورة المهمة. يُحذف العنصر النائب الذي لا قيمة له مع الفاصل الذي يليه.",
+    "branchNamePreview": "مثال:",
+    "branchNameSampleTitle": "إصلاح المخيمات الفارغة",
+    "branchNameSampleCycle": "المخيمات"
   },
   "states": {
     "addState": "إضافة حالة {type}",

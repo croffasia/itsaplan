@@ -2,6 +2,7 @@ import type { Permissions } from '@/lib/api/endpoints/roles';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { BoardIssue } from '@/lib/api/endpoints/issues';
 import type { PublicScaffold } from '@/lib/api/endpoints/share';
+import { DEFAULT_BRANCH_NAME_TEMPLATE } from './branchName';
 
 // Assembles a ProjectDetail from a public share bundle so the read-only pages can
 // reuse the same components as the authenticated app (the board layouts, the issue
@@ -30,6 +31,8 @@ export function toPublicProjectDetail(
     issueTemplates: [],
     viewer: { role: 'member', teamRole: null, via: 'member' },
     permissions: {} as Permissions,
+    // A public page offers no branch name to copy.
+    branchNameTemplate: DEFAULT_BRANCH_NAME_TEMPLATE,
     issues,
     // A share bundle carries no cycle list; a view grouped by cycle gets its lanes
     // from the cycles the shared issues are planned into.

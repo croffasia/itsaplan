@@ -22,6 +22,7 @@ import {
   ProjectResponse,
   ProjectSettingsResponse,
   SubtaskAutomationResponse,
+  BranchNameResponse,
   copyProjectBody,
   createProjectBody,
   listProjectsQuery,
@@ -30,6 +31,7 @@ import {
   updateProjectBody,
   updateProjectSettingsBody,
   updateSubtaskAutomationBody,
+  updateBranchNameBody,
 } from './model';
 import {
   listProjects,
@@ -38,6 +40,8 @@ import {
   deleteProject,
   projectFeatures,
   setProjectFeatures,
+  getBranchNameTemplate,
+  setBranchNameTemplate,
   getAutoArchiveSettings,
   setAutoArchiveSettings,
   getSubtaskAutomationSettings,
@@ -142,6 +146,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         issueTemplates,
         viewer,
         teamAccess,
+        branchNameTemplate,
       ] = await Promise.all([
         listColumns(project.id),
         listIssueTypes(project.id),
@@ -152,6 +157,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         listIssueTemplates(project.id),
         getProjectAccess(project.id, userId),
         getTeamAccess(project.teamId, userId),
+        getBranchNameTemplate(project.id),
       ]);
       // The permission guard already asserted access, so it always exists here; guard
       // against a race (access revoked mid-request).
@@ -167,6 +173,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         issueTemplates,
         viewer: { role: viewer.role, teamRole: teamAccess?.role ?? null, via: viewer.via },
         permissions: viewer.permissions,
+        branchNameTemplate,
       };
     },
     {
@@ -297,6 +304,19 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       permission: ['workflow_config', 'edit'],
       response: { 200: SubtaskAutomationResponse, ...commonErrors },
       detail: { summary: "Update a project's subtask automations" },
+    },
+  )
+
+  // The template of the branch name the issue actions suggest. The current one comes
+  // with the project payload every member already gets, so only the write lives here.
+  .patch(
+    '/projects/:projectKey/settings/branch-name',
+    ({ project, body }) => setBranchNameTemplate(project.id, body),
+    {
+      body: updateBranchNameBody,
+      permission: ['workflow_config', 'edit'],
+      response: { 200: BranchNameResponse, ...commonErrors },
+      detail: { summary: "Update a project's branch name template" },
     },
   )
 

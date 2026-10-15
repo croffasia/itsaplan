@@ -23,7 +23,8 @@ import { qk } from '@/services/queryKeys';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useArchiveAction } from '../../hooks/useArchiveAction';
 import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueActions';
-import { buildIssueBranchName, buildIssuePrompt } from '../../utils/issuePrompt';
+import { buildIssuePrompt } from '../../utils/issuePrompt';
+import { buildIssueBranchName } from '@/utils/branchName';
 import { useSession } from '@/lib/auth-client';
 import { shareIssuePath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
@@ -97,7 +98,9 @@ export default function IssueActionsBar({
   }
 
   async function copyBranch() {
-    await navigator.clipboard.writeText(buildIssueBranchName(issue, session?.user));
+    await navigator.clipboard.writeText(
+      buildIssueBranchName(issue, session?.user, project.branchNameTemplate),
+    );
     toast.success(t('branchCopied'));
   }
 

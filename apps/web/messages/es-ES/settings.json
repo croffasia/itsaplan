@@ -162,7 +162,13 @@
     "completedIssues": "Tickets completados",
     "canceledIssues": "Tickets cancelados",
     "staleHint": "Archivar tras estos días sin actividad.",
-    "days": "días"
+    "days": "días",
+    "branchName": "Nombres de rama",
+    "branchNameHint": "El nombre de rama que sugieren Copiar nombre de rama y Copiar prompt para una incidencia.",
+    "branchNamePlaceholders": "Marcadores: '{user}' tu nombre de usuario, '{key}' la clave de la incidencia, '{title}' el título, '{cycle}' el ciclo de la incidencia. Un marcador sin valor se omite junto con su separador.",
+    "branchNamePreview": "Ejemplo:",
+    "branchNameSampleTitle": "Arreglar campamentos vacíos",
+    "branchNameSampleCycle": "Campamentos"
   },
   "states": {
     "addState": "Añadir un estado {type}",

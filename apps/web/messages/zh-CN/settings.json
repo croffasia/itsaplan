@@ -162,7 +162,13 @@
     "completedIssues": "已完成的工作项",
     "canceledIssues": "已取消的工作项",
     "staleHint": "超过此天数无活动",
-    "days": "天"
+    "days": "天",
+    "branchName": "分支名称",
+    "branchNameHint": "“复制分支名称”和“复制提示词”为议题建议的分支名称。",
+    "branchNamePlaceholders": "占位符：'{user}' 你的用户名，'{key}' 议题键，'{title}' 标题，'{cycle}' 议题所在周期。没有值的占位符会连同分隔符一起省略。",
+    "branchNamePreview": "示例：",
+    "branchNameSampleTitle": "修复空营地",
+    "branchNameSampleCycle": "营地"
   },
   "states": {
     "addState": "添加{type}状态",

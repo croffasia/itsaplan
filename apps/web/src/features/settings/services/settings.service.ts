@@ -15,6 +15,7 @@ import {
   getAutoArchive,
   updateAutoArchive,
   getSubtaskAutomation,
+  updateBranchName,
   updateSubtaskAutomation,
   updateEstimates,
   updateProjectSettings,
@@ -204,6 +205,14 @@ export function useUpdateSubtaskAutomation(projectKey: string) {
 export function useUpdateEstimates(projectKey: string) {
   return useProjectMutation(projectKey, (input: EstimateSettings) =>
     updateEstimates(projectKey, input),
+  );
+}
+
+// The branch name template comes with the project detail, so the write invalidates it
+// the same way.
+export function useUpdateBranchName(projectKey: string) {
+  return useProjectMutation(projectKey, (template: string) =>
+    updateBranchName(projectKey, { template }),
   );
 }
 

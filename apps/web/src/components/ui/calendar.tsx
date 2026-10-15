@@ -38,7 +38,8 @@ function Calendar({
       )}
       captionLayout={captionLayout}
       formatters={{
-        formatMonthDropdown: (date) => date.toLocaleString(dateLocale.code, { month: 'short', calendar: 'gregory' }),
+        formatMonthDropdown: (date) =>
+          date.toLocaleString(dateLocale.code, { month: 'short', calendar: 'gregory' }),
         ...formatters,
       }}
       classNames={{

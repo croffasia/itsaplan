@@ -105,7 +105,9 @@ Enforced declaratively through macros, never imperative calls in handlers.
 - **Session:** `authContext` (named plugin) reads the better-auth session once, puts
   `user` on context, throws 401 with none. `planner.ts` gates every planner route;
   a feature also `.use(authContext)` when its handlers/macros reference `user`. An
-  `x-api-key` header resolves through `getSession` — no special-casing.
+  `x-api-key` header resolves through `getSession` — no special-casing. A route outside
+  the planner that answers without credentials (`/me`) reads the same account through
+  `requestUser`, which also takes the MCP OAuth token of a tool call.
 - **Membership:** access is by a `project_member` row (`owner` | `member`), raised by
   the caller's role in the workspace that holds the project. Owners bypass the
   permission matrix; the global `user.role` (`god` | `user`) does **not**. Keep at least

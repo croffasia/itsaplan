@@ -730,6 +730,23 @@ export const agentRun = pgTable(
   ],
 );
 
+// A bounded execution transcript for one external runner attempt.
+export const agentRunTrace = pgTable(
+  'agent_run_trace',
+  {
+    runId: integer('run_id')
+      .notNull()
+      .references(() => agentRun.id, { onDelete: 'cascade' }),
+    attempt: integer('attempt').notNull(),
+    sessionId: text('session_id'),
+    events: jsonb('events').notNull().default([]),
+    nextOffset: integer('next_offset').notNull().default(0),
+    truncated: boolean('truncated').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.runId, t.attempt] })],
+);
+
 // A conversation between one member and one external agent. The internal agents'
 // threads are held by Mastra's own store; an external agent is driven by a runner on
 // its operator's machine, which has no memory of its own, so the conversation lives

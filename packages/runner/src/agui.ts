@@ -329,14 +329,42 @@ export class AnswerStream {
       return;
     }
     const item = message.item;
-    if (message.type !== 'item.completed' || !item) return;
-    if (item.type === 'agent_message' && item.text) {
+    if (!item) return;
+    if (message.type === 'item.completed' && item.type === 'agent_message' && item.text) {
       this.appendText(item.text);
       return;
     }
-    if (item.type === 'command_execution' && item.id) {
-      this.pushToolCall(item.id, 'shell', item.command ?? '');
-      this.pushToolResult(item.id, item.aggregated_output ?? '');
+    if (
+      !item.id ||
+      !['command_execution', 'mcp_tool_call', 'file_change', 'web_search'].includes(item.type ?? '')
+    )
+      return;
+    if (!['item.started', 'item.completed'].includes(message.type ?? '')) return;
+    if (!this.openToolCalls.has(item.id)) {
+      this.openToolCalls.add(item.id);
+      const name = item.type === 'command_execution' ? 'shell' : (item.tool ?? item.type ?? 'tool');
+      const args =
+        item.command ?? JSON.stringify(item.arguments ?? item.changes ?? { query: item.query });
+      this.pushToolCall(item.id, name, args);
+    }
+    if (message.type === 'item.completed' && !this.closedToolCalls.has(item.id)) {
+      this.closedToolCalls.add(item.id);
+      let result = item.aggregated_output;
+      if (
+        result == null ||
+        item.status === 'failed' ||
+        (item.exit_code != null && item.exit_code !== 0)
+      ) {
+        result = JSON.stringify({
+          status: item.status,
+          exitCode: item.exit_code,
+          output: item.aggregated_output,
+          result: item.result,
+          error: item.error,
+          changes: item.changes,
+        });
+      }
+      this.pushToolResult(item.id, result);
     }
   }
 
@@ -630,6 +658,14 @@ interface CodexLine {
     text?: string;
     command?: string;
     aggregated_output?: string;
+    exit_code?: number;
+    status?: string;
+    tool?: string;
+    arguments?: unknown;
+    result?: unknown;
+    error?: unknown;
+    changes?: unknown;
+    query?: string;
   };
 }
 

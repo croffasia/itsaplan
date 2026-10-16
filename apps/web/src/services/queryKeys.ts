@@ -4,6 +4,7 @@ import type { FeedFilter, FeedOrder } from '@/lib/api/endpoints/activity';
 // or key scopes its entry. Kept in one registry so a mutation in one service can
 // invalidate another service's queries by the same key.
 export const qk = {
+  externalRunTrace: (runId: number) => ['externalRunTrace', runId] as const,
   runnerQueue: ['runnerQueue'] as const,
   issueAgentRuns: (issueId: number) => ['issueAgentRuns', issueId] as const,
   issueAgentRunTrace: (issueId: number, runId: number, traceId?: string) =>

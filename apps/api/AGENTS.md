@@ -417,7 +417,17 @@ attempt of that run, or the one named by `traceId`. Each trace links to the prev
 attempt. A missing latest trace returns null; an unknown or unrelated `traceId` returns 404.
 Both permission checks and the read use the same resolved project id. Other people's chat
 traces stay private.
-External runners report their final output; their execution steps are not stored here.
+External runners reporting run events also retain messages, tool inputs/results and a
+local Codex session link per attempt. `GET /agent-runs/:runId/trace?attempt=N` uses
+both read permissions in the original project and excludes moved issues. It also
+serves scheduled/manual runs without an issue. The latest recorded attempt is the default.
+`POST /agent-runs/:runId/events` accepts only the calling agent's current executing,
+unexpired attempt. Event offsets deduplicate retries and reject gaps. Transcripts
+stop recording after 2,000 events or 1 MB; acknowledgements continue so the runner
+can report its final result. A Codex UUID forms the local `codex://threads/` link;
+no supplied URL is accepted. The event-capable runner also sends the attempt number
+on heartbeat and result calls, so a reclaimed attempt rejects the old process.
+Legacy clients may omit this field for compatibility.
 
 ## Security
 

@@ -30,7 +30,7 @@ export interface RunnerConfig {
   pollIntervalMs: number;
   // How long one task may take before it is killed and reported as failed.
   timeoutMs: number;
-  // How the output is read when the command answers a chat message. 'text' takes whatever
+  // How the output of a queued run or chat answer is read. 'text' takes whatever
   // it prints; the others read one CLI's own event stream, which also carries the tool
   // calls it makes and the session it started.
   outputFormat: OutputFormat;

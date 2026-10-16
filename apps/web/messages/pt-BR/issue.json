@@ -496,7 +496,7 @@
     "input": "Input",
     "trace": "Latest recorded attempt",
     "noTrace": "No execution steps have been recorded yet. Steps may appear after the trace is saved.",
-    "externalHint": "External runners report their task and final output. Execution steps are not recorded here.",
+    "externalHint": "No execution transcript was recorded. Use a runner version that reports run events.",
     "attributes": "Attributes",
     "recordedAttempt": "Recorded attempt",
     "latestAttempt": "Latest attempt",
@@ -523,6 +523,11 @@
       "online": "Runner online",
       "offline": "Runner offline",
       "never": "Runner not connected"
-    }
+    },
+    "externalAttempt": "Recorded attempt {attempt}",
+    "openCodex": "Open in Codex",
+    "sessionHint": "Opens the local Codex app. The session must be available on this computer or its connected host.",
+    "traceTruncated": "The recording limit was reached. Later events are omitted; the final run result is still available.",
+    "message": "Agent message"
   }
 }

@@ -214,3 +214,24 @@ export const listAgentRuns = (teamId: number, agentId: number, before?: number) 
   request<AgentRunPage>(
     `/teams/${teamId}/ai-agents/${agentId}/runs?limit=25${before ? `&before=${before}` : ''}`,
   );
+
+export interface ExternalRunEvent {
+  type: string;
+  toolCallId?: string;
+  toolCallName?: string;
+  delta?: string;
+  content?: string;
+  message?: string;
+}
+export interface ExternalRunTrace {
+  attempt: number;
+  previousAttempt: number | null;
+  sessionId: string | null;
+  sessionUrl: string | null;
+  truncated: boolean;
+  events: { event: ExternalRunEvent; receivedAt: string }[];
+}
+export const getExternalRunTrace = (runId: number, attempt?: number) =>
+  request<ExternalRunTrace | null>(
+    `/agent-runs/${runId}/trace${attempt == null ? '' : `?attempt=${attempt}`}`,
+  );

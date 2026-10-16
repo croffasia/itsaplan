@@ -1,3 +1,4 @@
+import AgentRunExternalTrace from '@/components/common/agent-runs/AgentRunExternalTrace';
 import { useId, useState } from 'react';
 import { Ban, ChevronDown, ChevronRight } from 'lucide-react';
 import type { AgentScheduleRun } from '@/lib/api/endpoints/agentSchedules';
@@ -68,6 +69,7 @@ export function SettingsScheduleRunRow({
             label={run.lastError ? t('error') : t('result')}
             value={run.lastError ?? run.output ?? t('noOutput')}
           />
+          {run.kind === 'external' && <AgentRunExternalTrace runId={run.id} />}
         </div>
       )}
     </div>

@@ -53,6 +53,7 @@ export interface AgentScheduleInput {
 }
 
 export interface AgentScheduleRun {
+  kind: string;
   id: number;
   status: AgentRunStatus;
   executionState: AgentRun['executionState'];

@@ -374,6 +374,7 @@ export async function cancelPendingScheduleRuns(
 }
 
 export interface ScheduleRunRow {
+  kind: string;
   id: number;
   status: string;
   executionState: 'queued' | 'running' | 'success' | 'failed' | 'canceled';
@@ -399,13 +400,15 @@ export async function listScheduleRuns(
   const schedule = await getAgentSchedule(projectId, scheduleId, actorUserId);
   if (!schedule) return null;
   const rows = await db
-    .select({ ...getTableColumns(agentRun), executionState })
+    .select({ ...getTableColumns(agentRun), executionState, kind: aiAgent.kind })
     .from(agentRun)
+    .innerJoin(aiAgent, eq(aiAgent.id, agentRun.agentId))
     .where(eq(agentRun.scheduleId, scheduleId))
     .orderBy(desc(agentRun.id))
     .limit(50);
   return rows.map((row) => ({
     id: row.id,
+    kind: row.kind,
     status: row.status,
     executionState: row.executionState,
     trigger: row.trigger,

@@ -26,7 +26,7 @@ export function TeamAiAgentRunsSheet({
             {agent ? t('runsSubtitle', { username: agent.username }) : ''}
           </SheetDescription>
         </SheetHeader>
-        {agent && <TeamAiAgentRunsList agentId={agent.id} />}
+        {agent && <TeamAiAgentRunsList agentId={agent.id} external={agent.kind === 'external'} />}
       </SheetContent>
     </Sheet>
   );

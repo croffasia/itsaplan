@@ -119,6 +119,7 @@ export const agentSchedulePageQuery = t.Object(pageQueryFields);
 // `output` once the run has finished.
 export const ScheduleRunResponse = t.Object({
   id: t.Number(),
+  kind: t.String(),
   status: t.String(),
   executionState: agentExecutionState,
   trigger: t.String(),

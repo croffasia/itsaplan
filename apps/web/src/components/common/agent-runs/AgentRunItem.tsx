@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { AgentContextSize } from '@/components/common/agent-chat/AgentContextSize';
 import AgentRunBlock from './AgentRunBlock';
 import AgentRunTrace from './AgentRunTrace';
+import AgentRunExternalTrace from './AgentRunExternalTrace';
 
 export default function AgentRunItem({
   issueId,
@@ -66,7 +67,9 @@ export default function AgentRunItem({
           <AgentRunBlock label={t('result')} value={run.output} />
           {run.kind === 'internal' && issueId != null ? (
             <AgentRunTrace issueId={issueId} runId={run.id} />
-          ) : (
+          ) : null}
+          {run.kind === 'external' && <AgentRunExternalTrace runId={run.id} />}
+          {issueId == null && run.kind !== 'external' && (
             <p className="text-xs text-muted-foreground">{t('externalHint')}</p>
           )}
         </div>

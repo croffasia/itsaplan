@@ -8,7 +8,13 @@ import { qk } from '@/services/queryKeys';
 import { useAgentSection } from '../../context/agentSection';
 import TeamAiAgentRunItem from './TeamAiAgentRunItem';
 
-export default function TeamAiAgentRunsList({ agentId }: { agentId: number }) {
+export default function TeamAiAgentRunsList({
+  agentId,
+  external,
+}: {
+  agentId: number;
+  external: boolean;
+}) {
   const t = useTranslations('teams.agents');
   const tCommon = useTranslations('common');
   const tRuns = useTranslations('issue.agentRuns');
@@ -40,7 +46,7 @@ export default function TeamAiAgentRunsList({ agentId }: { agentId: number }) {
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="divide-y divide-border/50">
         {runs.map((r) => (
-          <TeamAiAgentRunItem key={r.id} run={r} />
+          <TeamAiAgentRunItem key={r.id} run={r} external={external} />
         ))}
       </div>
       <div className="p-4">

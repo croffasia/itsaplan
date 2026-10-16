@@ -80,6 +80,7 @@ export async function getRunnerAgent(userId: string): Promise<RunnerAgent | null
 }
 
 export interface RunnerRun {
+  traceEvents: boolean;
   id: number;
   trigger: AgentRunTrigger;
   // The task as the agent should read it: the trigger text framed with what started
@@ -97,7 +98,7 @@ export interface RunnerRun {
 
 // The claim's raw row, before framing. The extra people columns exist only to build
 // the prompts and are not handed to the runner.
-type ClaimedRow = Omit<RunnerRun, 'systemPrompt'> & {
+type ClaimedRow = Omit<RunnerRun, 'systemPrompt' | 'traceEvents'> & {
   // The project the run works in, which is what its system prompt names.
   projectId: number;
   projectKey: string;
@@ -216,6 +217,7 @@ export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | nu
     return null;
   }
   const result = {
+    traceEvents: true,
     id: row.id,
     trigger: row.trigger,
     prompt: framePrompt(forPrompt),
@@ -250,7 +252,11 @@ function buildSystemPrompt(agent: RunnerAgent, project: RunnerProject, run: RunF
 // can outlive the lease by far, so the runner sends this periodically; without it the
 // run would be handed to another runner mid-flight. False when the run is not this
 // agent's, or is already finished.
-export async function heartbeatRun(agentId: number, runId: number): Promise<boolean> {
+export async function heartbeatRun(
+  agentId: number,
+  runId: number,
+  attempt?: number,
+): Promise<boolean> {
   await touchRunner(agentId);
   const rows = await db
     .update(agentRun)
@@ -263,6 +269,7 @@ export async function heartbeatRun(agentId: number, runId: number): Promise<bool
         eq(agentRun.id, runId),
         eq(agentRun.agentId, agentId),
         eq(agentRun.status, 'pending'),
+        attempt == null ? undefined : eq(agentRun.attempts, attempt),
         isNotNull(agentRun.startedAt),
         or(isNotNull(agentRun.executionStartedAt), isNull(agentRun.lastError)),
       ),
@@ -279,6 +286,7 @@ export async function finishRun(
   runId: number,
   result: {
     status: 'success' | 'failed';
+    attempt?: number;
     output?: string | null;
     error?: string | null;
     usage?: ContextUsage | null;
@@ -297,7 +305,12 @@ export async function finishRun(
       finishedAt: new Date(),
     })
     .where(
-      and(eq(agentRun.id, runId), eq(agentRun.agentId, agent.id), eq(agentRun.status, 'pending')),
+      and(
+        eq(agentRun.id, runId),
+        eq(agentRun.agentId, agent.id),
+        eq(agentRun.status, 'pending'),
+        result.attempt == null ? undefined : eq(agentRun.attempts, result.attempt),
+      ),
     )
     .returning({ issueId: agentRun.issueId });
   const row = rows[0];

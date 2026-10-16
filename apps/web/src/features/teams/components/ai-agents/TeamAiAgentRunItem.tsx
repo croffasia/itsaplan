@@ -1,3 +1,4 @@
+import AgentRunExternalTrace from '@/components/common/agent-runs/AgentRunExternalTrace';
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -15,7 +16,13 @@ function runSubject(r: AgentRun, t: ReturnType<typeof useTranslations<'teams.age
   return `${r.issueIdentifier}${r.issueTitle ? ` · ${r.issueTitle}` : ''}`;
 }
 
-export default function TeamAiAgentRunItem({ run: r }: { run: AgentRun }) {
+export default function TeamAiAgentRunItem({
+  run: r,
+  external,
+}: {
+  run: AgentRun;
+  external: boolean;
+}) {
   const t = useTranslations('teams.agents');
   const relativeTime = useRelativeTime();
   const [open, setOpen] = useState(false);
@@ -64,6 +71,7 @@ export default function TeamAiAgentRunItem({ run: r }: { run: AgentRun }) {
               value={`Attempts: ${r.attempts}. Next attempt: ${formatDateTime(r.nextAttemptAt)}.`}
             />
           )}
+          {external && <AgentRunExternalTrace runId={r.id} />}
           {outcome && <p className="text-xs text-muted-foreground">{outcome}</p>}
         </div>
       )}

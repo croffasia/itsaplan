@@ -137,6 +137,7 @@
     "description": "Description",
     "other": "Other",
     "submit": "Create issue",
+    "requiredFieldsMissing": "Fill in the required fields: {names}",
     "template": "Template",
     "applyTemplate": "Apply template…",
     "noTemplates": "No templates."

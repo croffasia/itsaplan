@@ -408,6 +408,7 @@ export async function copyProject(
             name: f.name,
             fieldType: f.fieldType,
             memberScope: f.memberScope,
+            required: f.required,
             position: f.position,
           })
           .returning({ id: customField.id });

@@ -420,6 +420,16 @@ export const IssueCycleResponse = t.Object({
 
 export const projectKeyParams = t.Object({ projectKey: t.String() });
 
+// A custom field value, the same shape for a write to one field and for the fields of
+// a new issue.
+const fieldValueProps = {
+  value: t.Optional(
+    t.Nullable(t.Union([t.String({ maxLength: ISSUE_TEXT_LIMIT }), t.Number(), t.Boolean()])),
+  ),
+  valueEnd: t.Optional(t.Nullable(t.String())),
+  optionIds: t.Optional(t.Array(t.Integer())),
+};
+
 export const createIssueBody = t.Object({
   typeId: t.Optional(
     t.Nullable(t.Integer({ description: 'Issue type id, or null. From get_project.' })),
@@ -480,6 +490,12 @@ export const createIssueBody = t.Object({
   dueDate: t.Optional(t.Nullable(isoDate("Due date 'YYYY-MM-DD', or null."))),
   labelIds: t.Optional(
     t.Array(t.Integer(), { description: 'Label ids to attach. From get_project.labels.' }),
+  ),
+  fields: t.Optional(
+    t.Array(t.Object({ fieldId: t.Integer(), ...fieldValueProps }), {
+      description:
+        'Custom field values to set on the new issue. From list_custom_fields for the issue type: optionIds for a select or multi_select field, value for every other type, valueEnd for the end of a datetime_range. A field marked required must be given a value here.',
+    }),
   ),
 });
 
@@ -620,13 +636,7 @@ export const subtaskDispositionQuery = t.Object({
   newParentId: t.Optional(t.Numeric(NewParentIdSchema)),
 });
 
-export const setIssueFieldValueBody = t.Object({
-  value: t.Optional(
-    t.Nullable(t.Union([t.String({ maxLength: ISSUE_TEXT_LIMIT }), t.Number(), t.Boolean()])),
-  ),
-  valueEnd: t.Optional(t.Nullable(t.String())),
-  optionIds: t.Optional(t.Array(t.Integer())),
-});
+export const setIssueFieldValueBody = t.Object(fieldValueProps);
 
 export const issueFieldParams = t.Object({ issueId: t.Numeric(), fieldId: t.Numeric() });
 

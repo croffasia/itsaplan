@@ -310,6 +310,8 @@
     },
     "mainInfo": "Main info",
     "mainInfoTooltip": "Shows in the issue body, not Properties",
+    "required": "Required",
+    "requiredTooltip": "A new issue needs a value, and the value cannot be cleared",
     "mainInfoMeta": "Main info",
     "menu": "Custom field import and export",
     "copy": "Copy custom fields",

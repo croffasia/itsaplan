@@ -253,6 +253,8 @@ export interface NewIssueInput {
   startDate?: string | null;
   dueDate?: string | null;
   labelIds?: number[];
+  // Custom field values the issue is created with. A required field must be here.
+  fields?: (IssueFieldValueInput & { fieldId: number })[];
 }
 
 // The fields a bulk update can set on many issues at once (the board-relevant

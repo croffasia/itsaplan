@@ -38,6 +38,7 @@ import type { ProjectRow } from '#modules/projects/service';
 import { assertProjectFeature } from '#shared/access';
 import {
   getCustomFieldById,
+  listCustomFields,
   type CustomFieldRow,
   type CustomFieldType,
   type MemberScope,
@@ -722,6 +723,17 @@ export interface NewIssueInput {
   startDate?: string | null;
   dueDate?: string | null;
   labelIds?: number[];
+  fields?: NewIssueFieldValue[];
+}
+
+export interface FieldValueInput {
+  value?: string | number | boolean | null;
+  valueEnd?: string | null;
+  optionIds?: number[];
+}
+
+export interface NewIssueFieldValue extends FieldValueInput {
+  fieldId: number;
 }
 
 // Enforces that assignee holds a project member and delegate holds an agent of the
@@ -871,6 +883,7 @@ export async function createIssue(
   assertDateOrder(input.startDate, input.dueDate);
   // Also checked by setIssueLabels below, but here it fails before the issue exists.
   await assertIssueLabels(project.id, input.labelIds);
+  const fields = await resolveNewIssueFields(project.id, input.typeId ?? null, input.fields ?? []);
   // An issue created in a column enters it the same way a moved one does, so the
   // column's auto-assignee applies. An assignee sent with the create wins over it.
   const assigneeUserId = input.assigneeUserId ?? (await columnAutoAssignee(input.columnId));
@@ -920,6 +933,9 @@ export async function createIssue(
   // the issue.created payload, so a separate change event would be redundant.
   if (input.labelIds?.length)
     await setIssueLabels(project.id, issueId, input.labelIds, actorUserId, false);
+  for (const { field, value } of fields) {
+    await setIssueFieldValue(project.id, issueId, field.id, value, actorUserId);
+  }
   const created = (await getIssue(issueId))!;
   // The author follows what they filed; the assignee is subscribed by the
   // assignment notification below, the same as a later assignment does.
@@ -1558,38 +1574,124 @@ async function fieldMarkdown(issueId: number, fieldId: number): Promise<string> 
   return row?.valueText ?? '';
 }
 
+function hasFieldValue(field: CustomFieldRow, input: FieldValueInput): boolean {
+  if (field.fieldType === 'select' || field.fieldType === 'multi_select') {
+    return (input.optionIds?.length ?? 0) > 0;
+  }
+  return input.value != null && input.value !== '';
+}
+
+// Rejects a value the field cannot hold, so a create with fields fails before the
+// issue exists.
+async function assertFieldInput(
+  projectId: number,
+  field: CustomFieldRow,
+  input: FieldValueInput,
+): Promise<void> {
+  const value = input.value;
+  switch (field.fieldType) {
+    case 'url':
+      // Stored as text, but must hold an http(s) URL.
+      if (typeof value === 'string' && value !== '' && !isHttpUrl(value)) {
+        throw new HttpError(400, 'Invalid URL');
+      }
+      break;
+    case 'number':
+      if (value != null && value !== '' && !Number.isFinite(Number(value))) {
+        throw new HttpError(400, 'Invalid number');
+      }
+      break;
+    case 'member':
+      if (typeof value === 'string' && value !== '') {
+        await assertFieldMember(projectId, field.memberScope, value);
+      }
+      break;
+    case 'select':
+    case 'multi_select':
+      // An option must be one of this field's own: the issue_field_option foreign key
+      // only requires it to exist somewhere.
+      for (const optionId of input.optionIds ?? []) {
+        if (!field.options.some((o) => o.id === optionId)) {
+          throw new HttpError(400, 'Option does not belong to this field');
+        }
+      }
+      break;
+    case 'date':
+      parseDate(value);
+      break;
+    case 'datetime':
+      parseDatetime(value);
+      break;
+    case 'datetime_range': {
+      const start = parseDatetime(value);
+      const end = parseDatetime(input.valueEnd);
+      if (end && !start) throw new HttpError(400, 'Range end needs a start');
+      if (start && end && end <= start)
+        throw new HttpError(400, 'Range end must be after its start');
+      break;
+    }
+  }
+}
+
+// The values a new issue is created with, each matched to a field that applies to the
+// issue's type and checked before the issue is written. A value that holds nothing is
+// dropped.
+async function resolveNewIssueFields(
+  projectId: number,
+  typeId: number | null,
+  values: NewIssueFieldValue[],
+): Promise<{ field: CustomFieldRow; value: FieldValueInput }[]> {
+  if (values.length === 0) return [];
+  const fields = await listCustomFields(projectId, { issueTypeId: typeId ?? undefined });
+  const resolved: { field: CustomFieldRow; value: FieldValueInput }[] = [];
+  for (const { fieldId, ...value } of values) {
+    const field = fields.find((f) => f.id === fieldId);
+    if (!field) throw new HttpError(400, `Custom field ${fieldId} does not apply to this issue`);
+    await assertFieldInput(projectId, field, value);
+    if (hasFieldValue(field, value)) resolved.push({ field, value });
+  }
+  return resolved;
+}
+
+// Rejects a new issue that leaves a required field of its type empty. The create route
+// checks it; an import creates issues as their source holds them.
+export async function assertRequiredFields(
+  projectId: number,
+  typeId: number | null,
+  values: NewIssueFieldValue[],
+): Promise<void> {
+  const fields = await listCustomFields(projectId, { issueTypeId: typeId ?? undefined });
+  const missing = fields.filter(
+    (field) =>
+      field.required && !hasFieldValue(field, values.find((v) => v.fieldId === field.id) ?? {}),
+  );
+  if (missing.length > 0) {
+    throw new HttpError(400, `Required fields are empty: ${missing.map((f) => f.name).join(', ')}`);
+  }
+}
+
 // Sets one field's value on one issue. projectId is the issue's project: the field
 // is resolved inside it, so a field id belonging to another project does not match.
 // For select/multi_select fields, pass optionIds (replaces the full selection); for
 // every other field type, pass value matching the field's type. A datetime_range
-// takes its end in valueEnd.
+// takes its end in valueEnd. A required field cannot be cleared.
 export async function setIssueFieldValue(
   projectId: number,
   issueId: number,
   fieldId: number,
-  input: {
-    value?: string | number | boolean | null;
-    valueEnd?: string | null;
-    optionIds?: number[];
-  },
+  input: FieldValueInput,
   actorUserId?: string | null,
 ): Promise<void> {
   const field = await getCustomFieldById(projectId, fieldId);
   if (!field) throw new HttpError(404, 'Custom field not found');
-
-  // A url field stores its value as text but must hold a valid http(s) URL.
-  if (field.fieldType === 'url' && typeof input.value === 'string' && input.value !== '') {
-    if (!isHttpUrl(input.value)) throw new HttpError(400, 'Invalid URL');
+  if (field.required && !hasFieldValue(field, input)) {
+    throw new HttpError(400, `${field.name} is required`);
   }
-  // A number field must be a finite number; the value column is numeric.
-  if (field.fieldType === 'number' && input.value != null && input.value !== '') {
-    if (!Number.isFinite(Number(input.value))) throw new HttpError(400, 'Invalid number');
-  }
+  await assertFieldInput(projectId, field, input);
   const memberUserId =
     field.fieldType === 'member' && typeof input.value === 'string' && input.value !== ''
       ? input.value
       : null;
-  if (memberUserId) await assertFieldMember(projectId, field.memberScope, memberUserId);
 
   // The markdown a field held before this write, so only the mentions the write
   // adds reach anyone.

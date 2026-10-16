@@ -355,7 +355,7 @@ const PASSWORD_PATHS = new Set([
   '/sign-up/email',
   '/sign-in/email',
   '/sign-in/username',
-  '/forget-password',
+  '/request-password-reset',
   '/reset-password',
   '/sign-in/magic-link',
   '/magic-link/verify',

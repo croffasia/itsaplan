@@ -50,7 +50,7 @@ it('renders the local session link and truncation notice while escaping event te
   assert.match(html, /href="codex:\/\/threads\/0199a213-81c0-7800-8aa1-bbab2a035a53"/);
   assert.match(html, /recording limit/);
   assert.match(html, /Private trace/);
-  assert.doesNotMatch(html, /<script>/);
+  assert.ok(html.includes('Private trace &lt;script&gt;alert(1)&lt;/script&gt;'));
 });
 
 it('hides cached external events and session links when access is denied', () => {

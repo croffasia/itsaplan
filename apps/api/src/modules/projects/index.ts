@@ -46,11 +46,13 @@ import {
 } from './service';
 import { copyProject } from './copy';
 import { projectPreferences } from './preferences';
+import { projectTransfers } from './transfer-routes';
 
 export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Projects'] } })
   .use(authContext)
   .use(guards)
   .use(projectPreferences)
+  .use(projectTransfers)
   .get(
     '/projects',
     ({ user, request, query }) =>
@@ -323,12 +325,12 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
   .delete(
     '/projects/:projectKey',
     async ({ project }) => {
-      await deleteProject(project.id);
+      await deleteProject(project.id, project.teamId);
       return noContent();
     },
     {
       permission: ['danger_zone', 'delete'],
-      response: { 204: t.Void(), ...accessErrors },
+      response: { 204: t.Void(), ...accessErrors, ...errors(409) },
       detail: {
         summary: 'Delete a project',
         description: 'Permanently delete a project and everything in it. Irreversible.',

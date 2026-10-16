@@ -1051,6 +1051,13 @@
       "when": 1791907060303,
       "tag": "0149_oauth_provider_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 150,
+      "version": "7",
+      "when": 1792062663164,
+      "tag": "0150_project_transfer_guards",
+      "breakpoints": true
     }
   ]
 }

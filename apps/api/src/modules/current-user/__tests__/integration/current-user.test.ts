@@ -44,7 +44,8 @@ describe('GET /me', () => {
     const { data, status } = await asPerson.me.get();
 
     expect(status).toBe(200);
-    expect(data).toEqual({
+    // Treaty revives the iso() dates into Dates, so they compare with the session's own.
+    expect(data as unknown).toEqual({
       authenticated: true,
       user: { ...session!.user, timezone: 'Europe/Madrid', isAgent: false },
     });

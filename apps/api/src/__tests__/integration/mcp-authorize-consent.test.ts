@@ -126,4 +126,23 @@ describe('MCP authorization asks for consent', () => {
     expect(`${location.origin}${location.pathname}`).toBe('https://client.example.com/callback');
     expect(location.searchParams.get('error')).toBe('invalid_scope');
   });
+
+  // The consent page names the client and where the answer goes from these.
+  it('tells the consent page which client asks and where the answer goes', async () => {
+    const user = await signUpTestUser({ team: false });
+
+    const consentPage = await authorize(user.cookie);
+    const clientId = consentPage.searchParams.get('client_id') ?? '';
+    expect(consentPage.searchParams.get('redirect_uri')).toBe(
+      'https://client.example.com/callback',
+    );
+
+    const res = await app.handle(
+      new Request(`http://localhost/api/auth/oauth2/public-client?client_id=${clientId}`, {
+        headers: { cookie: user.cookie },
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(((await res.json()) as { client_name?: string }).client_name).toBe('Test client');
+  });
 });

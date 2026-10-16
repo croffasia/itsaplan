@@ -34,8 +34,11 @@
     },
     "security": "OAuth는 PKCE(S256), 동적 클라이언트 등록 및 Itsaplan 계정의 권한 범위가 적용된 액세스 토큰을 사용합니다.",
     "consent": {
-      "title": "Itsaplan 권한 승인",
-      "description": "이 MCP 클라이언트가 Itsaplan 계정의 권한으로 작업하도록 허용합니다.",
+      "title": "{client}에서 계정에 연결하려고 합니다",
+      "titleUnnamed": "MCP 클라이언트가 계정에 연결하려고 합니다",
+      "description": "이 앱은 사용자의 권한으로 동작합니다. 사용자가 보고 바꿀 수 있는 것은 이 앱도 할 수 있습니다.",
+      "account": "{email}(으)로 로그인됨",
+      "redirect": "응답하면 {host}(으)로 돌아갑니다.",
       "missingCode": "이 인증 요청에 동의 코드가 없습니다.",
       "cancel": "취소",
       "pending": "승인 중…",

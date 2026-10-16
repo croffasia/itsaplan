@@ -162,25 +162,40 @@ export async function getAgentTrace(
   return { trace: toSummary(root), spans };
 }
 
-// Retries share a queued run id; the issue opens the latest recorded attempt.
+// Retries share a queued run id. Each trace links to the previous recorded attempt.
 export async function getRunTrace(
   agentId: number,
   runId: number,
   projectId: number,
   issueId: number,
   viewerId: string,
+  traceId?: string,
 ) {
-  if (!(await spansTableExists())) return null;
+  if (!(await spansTableExists())) return traceId == null ? null : undefined;
+  const where = sql`r."parentSpanId" IS NULL
+    AND r.metadata->>'agentId' = ${String(agentId)}
+    AND r.metadata->>'runId' = ${String(runId)}
+    AND r.metadata->>'projectId' = ${String(projectId)}
+    AND r.metadata->>'issueId' = ${String(issueId)}
+    AND (r.metadata->>'userId' IS NULL OR r.metadata->>'userId' = ${viewerId})`;
   const rows = await db.execute<{ traceId: string }>(sql`
     SELECT r."traceId" FROM mastra_ai_spans r
-    WHERE r."parentSpanId" IS NULL
-      AND r.metadata->>'agentId' = ${String(agentId)}
-      AND r.metadata->>'runId' = ${String(runId)}
-      AND r.metadata->>'projectId' = ${String(projectId)}
-      AND r.metadata->>'issueId' = ${String(issueId)}
-      AND (r.metadata->>'userId' IS NULL OR r.metadata->>'userId' = ${viewerId})
+    WHERE ${where}
+      ${traceId == null ? sql`` : sql`AND r."traceId" = ${traceId}`}
     ORDER BY r."startedAtZ" DESC, r."traceId" DESC
     LIMIT 1`);
-  if (!rows[0]) return null;
-  return getAgentTrace(agentId, rows[0].traceId, viewerId);
+  if (!rows[0]) return traceId == null ? null : undefined;
+  const detail = await getAgentTrace(agentId, rows[0].traceId, viewerId);
+  if (!detail) return traceId == null ? null : undefined;
+  const older = await db.execute<{ traceId: string }>(sql`
+    SELECT r."traceId" FROM mastra_ai_spans r
+    WHERE ${where}
+      AND (r."startedAtZ", r."traceId") < (
+        SELECT anchor."startedAtZ", anchor."traceId" FROM mastra_ai_spans anchor
+        WHERE anchor."traceId" = ${detail.trace.traceId} AND anchor."parentSpanId" IS NULL
+        LIMIT 1
+      )
+    ORDER BY r."startedAtZ" DESC, r."traceId" DESC
+    LIMIT 1`);
+  return { ...detail, previousTraceId: older[0]?.traceId ?? null };
 }

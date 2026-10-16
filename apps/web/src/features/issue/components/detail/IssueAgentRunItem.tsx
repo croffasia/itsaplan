@@ -28,7 +28,7 @@ export default function IssueAgentRunItem({ issueId, run }: { issueId: number; r
           {t(run.status)}
         </Badge>
         <span className="text-muted-foreground">
-          #{run.id} · {run.trigger}
+          #{run.id} · {t(`triggers.${run.trigger}`)}
         </span>
         {run.contextTokens != null && <AgentContextSize tokens={run.contextTokens} />}
         <time

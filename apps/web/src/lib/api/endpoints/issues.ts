@@ -1,6 +1,7 @@
 import type { CycleStatus } from '@/lib/api/endpoints/cycles';
 import type { InitiativeStatus } from '@/lib/api/endpoints/initiatives';
 import { request } from '@/lib/api/core/client';
+import type { AgentRunTrigger } from '@/lib/api/endpoints/agents';
 import type { Checklist } from '@/lib/api/endpoints/checklists';
 import type { CustomFieldType } from '@/lib/api/endpoints/customFields';
 import type { DevelopmentLink } from '@/lib/api/endpoints/git';
@@ -415,7 +416,7 @@ export interface IssueAgentRun {
   username: string;
   kind: string;
   status: 'pending' | 'success' | 'failed' | 'canceled';
-  trigger: string;
+  trigger: AgentRunTrigger;
   prompt: string;
   output: string | null;
   attempts: number;
@@ -443,6 +444,7 @@ export interface IssueAgentTraceSpan {
 }
 
 export interface IssueAgentRunTrace {
+  previousTraceId: string | null;
   trace: { traceId: string; status: string; startedAt: string; endedAt: string | null };
   spans: IssueAgentTraceSpan[];
 }
@@ -452,5 +454,7 @@ export const listIssueAgentRuns = (issueId: number, before?: number) =>
     `/issues/${issueId}/agent-runs${before == null ? '' : `?before=${before}`}`,
   );
 
-export const getIssueAgentRunTrace = (issueId: number, runId: number) =>
-  request<IssueAgentRunTrace | null>(`/issues/${issueId}/agent-runs/${runId}/trace`);
+export const getIssueAgentRunTrace = (issueId: number, runId: number, traceId?: string) =>
+  request<IssueAgentRunTrace | null>(
+    `/issues/${issueId}/agent-runs/${runId}/trace${traceId == null ? '' : `?traceId=${encodeURIComponent(traceId)}`}`,
+  );

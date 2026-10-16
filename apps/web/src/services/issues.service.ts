@@ -488,9 +488,9 @@ export function useIssueAgentRunsQuery(issueId: number, enabled: boolean) {
   });
 }
 
-export function useIssueAgentRunTraceQuery(issueId: number, runId: number) {
+export function useIssueAgentRunTraceQuery(issueId: number, runId: number, traceId?: string) {
   return useQuery({
-    queryKey: qk.issueAgentRunTrace(issueId, runId),
-    queryFn: () => getIssueAgentRunTrace(issueId, runId),
+    queryKey: qk.issueAgentRunTrace(issueId, runId, traceId),
+    queryFn: () => getIssueAgentRunTrace(issueId, runId, traceId),
   });
 }

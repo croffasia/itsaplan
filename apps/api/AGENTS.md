@@ -413,7 +413,10 @@ gets — a name missing from a later sync is never removed by this path, only by
 `work_items read` and `ai_agents read` in the issue's current project are required.
 Runs keep their original project, so a moved issue does not expose its former project's
 prompts or traces. `/issues/:issueId/agent-runs/:runId/trace` reads the latest recorded
-attempt of that run, or null when none is recorded. Other people's chat traces stay private.
+attempt of that run, or the one named by `traceId`. Each trace links to the previous recorded
+attempt. A missing latest trace returns null; an unknown or unrelated `traceId` returns 404.
+Both permission checks and the read use the same resolved project id. Other people's chat
+traces stay private.
 External runners report their final output; their execution steps are not stored here.
 
 ## Security

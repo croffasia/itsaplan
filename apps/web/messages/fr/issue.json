@@ -497,6 +497,20 @@
     "trace": "Latest recorded attempt",
     "noTrace": "No execution steps have been recorded yet. Steps may appear after the trace is saved.",
     "externalHint": "External runners report their task and final output. Execution steps are not recorded here.",
-    "attributes": "Attributes"
+    "attributes": "Attributes",
+    "recordedAttempt": "Recorded attempt",
+    "latestAttempt": "Latest attempt",
+    "previousAttempt": "Previous attempt",
+    "attemptStarted": "Attempt started: {date}",
+    "duration": "{milliseconds, number} ms",
+    "triggers": {
+      "mention": "Mention",
+      "delegation": "Delegation",
+      "field": "Member field",
+      "schedule": "Schedule",
+      "manual": "Manual",
+      "status": "Status change",
+      "event": "Event"
+    }
   }
 }

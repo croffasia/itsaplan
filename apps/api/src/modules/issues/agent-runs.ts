@@ -4,7 +4,12 @@ import { iso } from '#shared/lib';
 import { contextTokensOf } from '#modules/agents/core/run-queue';
 import { getRunTrace } from '#modules/agents/core/runtime/traces';
 
-export async function listIssueAgentRuns(issueId: number, before?: number, limit = 25) {
+export async function listIssueAgentRuns(
+  projectId: number,
+  issueId: number,
+  before?: number,
+  limit = 25,
+) {
   const rows = await db
     .select({
       id: agentRun.id,
@@ -31,7 +36,8 @@ export async function listIssueAgentRuns(issueId: number, before?: number, limit
       and(
         eq(issue.id, issueId),
         // A moved issue does not grant access to prompts from its former project.
-        eq(agentRun.projectId, issue.projectId),
+        eq(agentRun.projectId, projectId),
+        eq(issue.projectId, projectId),
         before == null ? undefined : lt(agentRun.id, before),
       ),
     )
@@ -52,14 +58,25 @@ export async function listIssueAgentRuns(issueId: number, before?: number, limit
   };
 }
 
-export async function getIssueAgentRunTrace(issueId: number, runId: number, viewerId: string) {
+export async function getIssueAgentRunTrace(
+  projectId: number,
+  issueId: number,
+  runId: number,
+  viewerId: string,
+  traceId?: string,
+) {
   const [run] = await db
-    .select({ agentId: agentRun.agentId, projectId: agentRun.projectId })
+    .select({ agentId: agentRun.agentId })
     .from(agentRun)
     .innerJoin(issue, eq(issue.id, agentRun.issueId))
     .where(
-      and(eq(agentRun.id, runId), eq(issue.id, issueId), eq(agentRun.projectId, issue.projectId)),
+      and(
+        eq(agentRun.id, runId),
+        eq(issue.id, issueId),
+        eq(agentRun.projectId, projectId),
+        eq(issue.projectId, projectId),
+      ),
     );
   if (!run) return undefined;
-  return getRunTrace(run.agentId, runId, run.projectId, issueId, viewerId);
+  return getRunTrace(run.agentId, runId, projectId, issueId, viewerId, traceId);
 }

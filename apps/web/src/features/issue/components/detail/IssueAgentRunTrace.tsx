@@ -1,23 +1,40 @@
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { useIssueAgentRunTraceQuery } from '@/services/issues.service';
+import { formatDateTime } from '@/utils/dates';
 import IssueAgentRunBlock from './IssueAgentRunBlock';
 
 export default function IssueAgentRunTrace({ issueId, runId }: { issueId: number; runId: number }) {
   const t = useTranslations('issue.agentRuns');
-  const query = useIssueAgentRunTraceQuery(issueId, runId);
+  const [traceId, setTraceId] = useState<string>();
+  const query = useIssueAgentRunTraceQuery(issueId, runId, traceId);
+  const detail = query.isError ? null : query.data;
+  const previousTraceId = detail?.previousTraceId;
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-medium">{t('trace')}</p>
-        <Button
-          size="sm"
-          variant="ghost"
-          disabled={query.isFetching}
-          onClick={() => void query.refetch()}
-        >
-          {t('refresh')}
-        </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-medium">{t(traceId == null ? 'trace' : 'recordedAttempt')}</p>
+        <div className="flex items-center gap-2">
+          {traceId != null && (
+            <Button size="sm" variant="ghost" onClick={() => setTraceId(undefined)}>
+              {t('latestAttempt')}
+            </Button>
+          )}
+          {previousTraceId && (
+            <Button size="sm" variant="ghost" onClick={() => setTraceId(previousTraceId)}>
+              {t('previousAttempt')}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={query.isFetching}
+            onClick={() => void query.refetch()}
+          >
+            {t('refresh')}
+          </Button>
+        </div>
       </div>
       {query.isLoading && <p className="text-xs text-muted-foreground">{t('loading')}</p>}
       {query.isError && (
@@ -25,13 +42,21 @@ export default function IssueAgentRunTrace({ issueId, runId }: { issueId: number
           {t('loadError')}
         </p>
       )}
-      {query.isSuccess && query.data == null && (
+      {query.isSuccess && detail == null && (
         <p className="text-xs text-muted-foreground">{t('noTrace')}</p>
       )}
-      {query.data?.spans.map((span) => (
+      {detail && (
+        <p className="text-xs text-muted-foreground">
+          {t('attemptStarted', { date: formatDateTime(detail.trace.startedAt) })}
+        </p>
+      )}
+      {detail?.spans.map((span) => (
         <details key={span.spanId} className="rounded-md border p-3">
           <summary className="cursor-pointer text-xs">
             <span dir="auto">{span.name}</span> · {span.type} · {span.status}
+            {span.durationMs != null && (
+              <> · {t('duration', { milliseconds: span.durationMs })}</>
+            )}
           </summary>
           <div className="mt-3 space-y-3">
             <IssueAgentRunBlock label={t('input')} value={span.input} />

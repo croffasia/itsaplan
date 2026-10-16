@@ -165,6 +165,20 @@ describe('issue agent runs', () => {
     const trace = await route({ runId: run.id }).trace.get();
     expect(trace.status).toBe(200);
     expect(trace.data!.trace.traceId).toBe('issue-run-latest');
+    expect(trace.data!.previousTraceId).toBe('issue-run-old');
+    const earlier = await route({ runId: run.id }).trace.get({
+      query: { traceId: trace.data!.previousTraceId! },
+    });
+    expect(earlier.data!.trace.traceId).toBe('issue-run-old');
+    expect(earlier.data!.previousTraceId).toBeNull();
+    const privateTrace = await route({ runId: run.id }).trace.get({
+      query: { traceId: 'issue-run-private' },
+    });
+    expect(privateTrace.status).toBe(404);
+    const missingTrace = await route({ runId: run.id }).trace.get({
+      query: { traceId: 'missing' },
+    });
+    expect(missingTrace.status).toBe(404);
     expect(trace.data!.spans).toContainEqual(
       expect.objectContaining({
         name: 'get_issue',
@@ -172,6 +186,39 @@ describe('issue agent runs', () => {
         output: { title: 'Review this' },
       }),
     );
+  });
+
+  it('rejects traces of another issue, project or run', async () => {
+    const { api, issue, agent } = await setup();
+    const route = api.issues({ issueId: issue.id })['agent-runs'];
+    const run = (await route.get()).data!.items[0];
+    const metadata = { agentId: agent.id, runId: run.id, issueId: issue.id, projectId: issue.projectId };
+    for (const [traceId, otherScope] of [
+      ['other-issue', { issueId: issue.id + 1000 }],
+      ['other-project', { projectId: issue.projectId + 1000 }],
+      ['other-run', { runId: run.id + 1000 }],
+    ] as const) {
+      await seedTrace(traceId, { ...metadata, ...otherScope }, new Date());
+      const trace = await route({ runId: run.id }).trace.get({ query: { traceId } });
+      expect(trace.status).toBe(404);
+    }
+    expect((await route({ runId: run.id }).trace.get()).data).toBeNull();
+  });
+
+  it('orders attempts with equal start times without repeating the cursor', async () => {
+    const { api, issue, agent } = await setup();
+    const route = api.issues({ issueId: issue.id })['agent-runs'];
+    const run = (await route.get()).data!.items[0];
+    const metadata = { agentId: agent.id, runId: run.id, issueId: issue.id, projectId: issue.projectId };
+    const startedAt = new Date('2026-01-01T00:00:00Z');
+    await seedTrace('attempt-a', metadata, startedAt);
+    await seedTrace('attempt-z', metadata, startedAt);
+    const latest = await route({ runId: run.id }).trace.get();
+    expect(latest.data!.trace.traceId).toBe('attempt-z');
+    expect(latest.data!.previousTraceId).toBe('attempt-a');
+    const previous = await route({ runId: run.id }).trace.get({ query: { traceId: 'attempt-a' } });
+    expect(previous.data!.trace.traceId).toBe('attempt-a');
+    expect(previous.data!.previousTraceId).toBeNull();
   });
 
   it('shows the output and error reported by an external runner', async () => {

@@ -24,7 +24,7 @@ export default function IssueAgentRunsPanel({
     enabled: canRead,
   });
   if (!canRead) return null;
-  const runs = query.data?.pages.flatMap((page) => page.items) ?? [];
+  const runs = query.isError ? [] : (query.data?.pages.flatMap((page) => page.items) ?? []);
   return (
     <section className="mt-6 border-t pt-5">
       <div className="flex h-7 items-center justify-between gap-2">
@@ -54,7 +54,7 @@ export default function IssueAgentRunsPanel({
           {runs.map((run) => (
             <IssueAgentRunItem key={run.id} issueId={issueId} run={run} />
           ))}
-          {query.hasNextPage && (
+          {!query.isError && query.hasNextPage && (
             <Button
               variant="outline"
               size="sm"

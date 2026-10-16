@@ -1,6 +1,7 @@
 import { t } from 'elysia';
 import { ActivityPayloadResponse } from '#shared/activity';
 import { DevelopmentLinkResponse } from '#modules/git/model';
+import { AgentTraceDetailResponse } from '#modules/agents/core/model';
 import { isoDate } from '#shared/schemas';
 
 // Ceiling of every markdown text written on an issue: the description, a comment
@@ -723,3 +724,14 @@ export const IssueAgentRunPageResponse = t.Object({
   ),
   nextCursor: t.Nullable(t.Number()),
 });
+
+export const issueAgentTraceQuery = t.Object({
+  traceId: t.Optional(t.String({ minLength: 1, maxLength: 128 })),
+});
+
+export const IssueAgentRunTraceResponse = t.Nullable(
+  t.Object({
+    ...AgentTraceDetailResponse.properties,
+    previousTraceId: t.Nullable(t.String()),
+  }),
+);

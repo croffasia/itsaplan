@@ -1,5 +1,4 @@
-import { Elysia, t } from 'elysia';
-import { AgentTraceDetailResponse } from '#modules/agents/core/model';
+import { Elysia, t, type DocumentDecoration } from 'elysia';
 import { listIssueAgentRuns, getIssueAgentRunTrace } from './agent-runs';
 import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
@@ -98,6 +97,8 @@ import {
   issueAgentRunsQuery,
   issueAgentRunParams,
   IssueAgentRunPageResponse,
+  IssueAgentRunTraceResponse,
+  issueAgentTraceQuery,
   issueDevelopmentLinkParams,
   issueDevelopmentRepositoryParams,
   issueDevelopmentListQuery,
@@ -203,9 +204,19 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // entry and a comment belong to the issue that carries them, so they all resolve
   // to the same work_items permission.
   .macro({
-    issueAgentRuns: entityGuard('ai_agents', 'Issue not found', (p) =>
-      getIssueProjectId(Number(p.issueId)),
-    ),
+    issueAgentRuns(_enabled: boolean) {
+      return {
+        detail: requiresPermission(['ai_agents', 'read']) as DocumentDecoration,
+        async resolve({ params, user, request }) {
+          const projectId = await getIssueProjectId(Number((params as { issueId: string }).issueId));
+          if (projectId == null) throw new HttpError(404, 'Issue not found');
+          await assertPermission(projectId, user, 'work_items', 'read');
+          await assertPermission(projectId, user, 'ai_agents', 'read');
+          await assertMcpAllowed(projectId, request.headers);
+          return { projectId };
+        },
+      };
+    },
     workItem: entityGuard('work_items', 'Issue not found', (p) =>
       getIssueProjectId(Number(p.issueId)),
     ),
@@ -1114,12 +1125,12 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
 
   .get(
     '/issues/:issueId/agent-runs',
-    async ({ params, query }) => listIssueAgentRuns(params.issueId, query.before, query.limit),
+    async ({ params, query, projectId }) =>
+      listIssueAgentRuns(projectId, params.issueId, query.before, query.limit),
     {
       params: issueParams,
       query: issueAgentRunsQuery,
-      workItem: 'read',
-      issueAgentRuns: 'read',
+      issueAgentRuns: true,
       response: { 200: IssueAgentRunPageResponse, ...commonErrors },
       detail: {
         summary: "List an issue's agent runs",
@@ -1131,20 +1142,30 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
 
   .get(
     '/issues/:issueId/agent-runs/:runId/trace',
-    async ({ params, user }) => {
-      const trace = await getIssueAgentRunTrace(params.issueId, params.runId, requireUser(user).id);
+    async ({ params, user, query, projectId }) => {
+      const trace = await getIssueAgentRunTrace(
+        projectId,
+        params.issueId,
+        params.runId,
+        requireUser(user).id,
+        query.traceId,
+      );
       if (trace === undefined) throw new HttpError(404, 'Run not found');
       return trace;
     },
     {
       params: issueAgentRunParams,
-      workItem: 'read',
-      issueAgentRuns: 'read',
-      response: { 200: t.Nullable(AgentTraceDetailResponse), ...commonErrors },
+      query: issueAgentTraceQuery,
+      issueAgentRuns: true,
+      response: {
+        200: IssueAgentRunTraceResponse,
+        ...commonErrors,
+      },
       detail: {
-        summary: "Read an issue run's latest trace",
+        summary: "Read an issue run's trace",
         description:
-          'The latest recorded attempt, with model and tool calls. Null when no trace is available.',
+          'The selected or latest recorded attempt, with a link to the previous one. ' +
+          'Null when no latest trace is available.',
       },
     },
   )

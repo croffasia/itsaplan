@@ -108,6 +108,10 @@
     "ai-agents": {
       "label": "Agen AI",
       "description": "Agen AI yang bekerja dalam proyek ini."
+    },
+    "queue": {
+      "label": "Runner queue",
+      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
     }
   }
 }

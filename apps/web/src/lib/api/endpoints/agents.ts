@@ -88,6 +88,7 @@ export type AgentRunTrigger =
 export interface AgentRun {
   id: number;
   status: AgentRunStatus;
+  executionState: 'queued' | 'running' | 'success' | 'failed' | 'canceled';
   trigger: AgentRunTrigger;
   issueId: number | null;
   issueIdentifier: string | null;

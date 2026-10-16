@@ -6,7 +6,7 @@ import { useIssueAgentRunsQuery } from '@/services/issues.service';
 import { qk } from '@/services/queryKeys';
 import { revScope } from '@/utils/revScopes';
 import IssueSectionHeading from './IssueSectionHeading';
-import IssueAgentRunItem from './IssueAgentRunItem';
+import AgentRunItem from '@/components/common/agent-runs/AgentRunItem';
 
 export default function IssueAgentRunsPanel({
   issueId,
@@ -20,6 +20,11 @@ export default function IssueAgentRunsPanel({
   const query = useIssueAgentRunsQuery(issueId, canRead);
   useLiveRefresh({
     scope: revScope.issue(issueId),
+    targets: [qk.issueAgentRuns(issueId)],
+    enabled: canRead,
+  });
+  useLiveRefresh({
+    scope: revScope.runnerQueue,
     targets: [qk.issueAgentRuns(issueId)],
     enabled: canRead,
   });
@@ -52,7 +57,7 @@ export default function IssueAgentRunsPanel({
             <p className="text-xs text-muted-foreground">{t('empty')}</p>
           )}
           {runs.map((run) => (
-            <IssueAgentRunItem key={run.id} issueId={issueId} run={run} />
+            <AgentRunItem key={run.id} issueId={issueId} run={run} />
           ))}
           {!query.isError && query.hasNextPage && (
             <Button

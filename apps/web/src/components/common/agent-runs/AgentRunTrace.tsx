@@ -3,9 +3,9 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { useIssueAgentRunTraceQuery } from '@/services/issues.service';
 import { formatDateTime } from '@/utils/dates';
-import IssueAgentRunBlock from './IssueAgentRunBlock';
+import AgentRunBlock from './AgentRunBlock';
 
-export default function IssueAgentRunTrace({ issueId, runId }: { issueId: number; runId: number }) {
+export default function AgentRunTrace({ issueId, runId }: { issueId: number; runId: number }) {
   const t = useTranslations('issue.agentRuns');
   const [traceId, setTraceId] = useState<string>();
   const query = useIssueAgentRunTraceQuery(issueId, runId, traceId);
@@ -59,10 +59,10 @@ export default function IssueAgentRunTrace({ issueId, runId }: { issueId: number
             )}
           </summary>
           <div className="mt-3 space-y-3">
-            <IssueAgentRunBlock label={t('input')} value={span.input} />
-            <IssueAgentRunBlock label={t('result')} value={span.output} />
-            <IssueAgentRunBlock label={t('error')} value={span.error} />
-            <IssueAgentRunBlock label={t('attributes')} value={span.attributes} />
+            <AgentRunBlock label={t('input')} value={span.input} />
+            <AgentRunBlock label={t('result')} value={span.output} />
+            <AgentRunBlock label={t('error')} value={span.error} />
+            <AgentRunBlock label={t('attributes')} value={span.attributes} />
           </div>
         </details>
       ))}

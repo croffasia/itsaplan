@@ -109,3 +109,11 @@ export type ChatThreadPage = {
   items: ChatThreadSummary[];
   nextPage: number | null;
 };
+
+export const agentExecutionState = t.Union([
+  t.Literal('queued'),
+  t.Literal('running'),
+  t.Literal('success'),
+  t.Literal('failed'),
+  t.Literal('canceled'),
+]);

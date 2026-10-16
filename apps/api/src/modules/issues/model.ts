@@ -1,4 +1,5 @@
 import { t } from 'elysia';
+import { agentExecutionState } from '#modules/agents/model';
 import { ActivityPayloadResponse } from '#shared/activity';
 import { DevelopmentLinkResponse } from '#modules/git/model';
 import { AgentTraceDetailResponse } from '#modules/agents/core/model';
@@ -710,6 +711,7 @@ export const IssueAgentRunPageResponse = t.Object({
       username: t.String(),
       kind: t.String(),
       status: t.String(),
+      executionState: agentExecutionState,
       trigger: t.String(),
       prompt: t.String(),
       output: t.Nullable(t.String()),

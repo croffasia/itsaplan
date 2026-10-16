@@ -10,6 +10,8 @@ import {
 } from '@/lib/api/endpoints/agentSchedules';
 import type { PageParams } from '@/lib/api/core/paging';
 import { qk } from '@/services/queryKeys';
+import { useLiveRefresh } from '@/hooks/useLiveRefresh';
+import { revScope } from '@/utils/revScopes';
 
 // One page of the project's schedules. A page with a run still going is polled, so the
 // row's status catches up on its own.
@@ -26,12 +28,14 @@ export function useAgentSchedules(projectKey: string, params: PageParams) {
 }
 
 export function useAgentScheduleRuns(projectKey: string, scheduleId: number | null) {
+  useLiveRefresh({
+    scope: scheduleId == null ? null : revScope.runnerQueue,
+    targets: [qk.agentScheduleRuns(projectKey, scheduleId ?? 0)],
+  });
   return useQuery({
     queryKey: qk.agentScheduleRuns(projectKey, scheduleId ?? 0),
     queryFn: () => listAgentScheduleRuns(projectKey, scheduleId!),
     enabled: scheduleId != null,
-    refetchInterval: (query) =>
-      query.state.data?.some((run) => run.status === 'pending') ? 2000 : false,
   });
 }
 

@@ -20,7 +20,7 @@ export function SettingsScheduleRunRow({
   const t = useTranslations('settings.schedules');
   const [open, setOpen] = useState(false);
   const contentId = useId();
-  const running = run.status === 'pending' && run.startedAt != null;
+  const tRun = useTranslations('issue.agentRuns');
   return (
     <div>
       <div className="flex items-center gap-2 pe-2 hover:bg-accent/50">
@@ -37,7 +37,7 @@ export function SettingsScheduleRunRow({
             <ChevronRight className="size-3.5 shrink-0" />
           )}
           <Badge variant={statusVariant(run.status)}>
-            {running ? t('runStatus.running') : t(`runStatus.${run.status}`)}
+            {tRun(run.executionState)}
           </Badge>
           <span className="capitalize">{run.trigger}</span>
           <span className="ms-auto flex shrink-0 items-center gap-4">

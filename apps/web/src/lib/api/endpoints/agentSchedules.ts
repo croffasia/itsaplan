@@ -1,5 +1,5 @@
 import { request } from '@/lib/api/core/client';
-import type { AgentRunStatus } from '@/lib/api/endpoints/agents';
+import type { AgentRun, AgentRunStatus } from '@/lib/api/endpoints/agents';
 import { pageQuery, type Page, type PageParams } from '@/lib/api/core/paging';
 
 // 'cron' runs on its cron; 'status' runs on an issue each time one enters its column.
@@ -55,6 +55,7 @@ export interface AgentScheduleInput {
 export interface AgentScheduleRun {
   id: number;
   status: AgentRunStatus;
+  executionState: AgentRun['executionState'];
   trigger: 'schedule' | 'manual' | 'status' | 'event';
   prompt: string;
   attempts: number;

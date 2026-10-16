@@ -1,11 +1,12 @@
 import { db, aiAgent, agentRun, project, projectMember } from '@repo/db';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { type ContextUsage } from '../chat-usage';
 import {
   agentRunConfig,
   deferRun,
   issueRunTurn,
   loadThreadContext,
+  markRunExecuting,
   runRetryDelayMs,
   scheduleRunRetry,
 } from '../core/run-queue';
@@ -124,7 +125,12 @@ export async function touchRunner(agentId: number): Promise<void> {
 async function expireExhaustedRuns(agent: RunnerAgent): Promise<void> {
   const rows = await db
     .update(agentRun)
-    .set({ status: 'failed', lastError: 'Runner did not report a result', finishedAt: new Date() })
+    .set({
+      status: 'failed',
+      executionStartedAt: null,
+      lastError: 'Runner did not report a result',
+      finishedAt: new Date(),
+    })
     .where(
       and(
         eq(agentRun.agentId, agent.id),
@@ -148,6 +154,7 @@ export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | nu
     UPDATE agent_run r
     SET attempts = r.attempts + 1,
         started_at = coalesce(r.started_at, now()),
+        execution_started_at = NULL,
         next_attempt_at = now() + make_interval(secs => ${agentRunConfig.leaseSeconds()})
     WHERE r.id = (
       SELECT id FROM agent_run q
@@ -208,7 +215,7 @@ export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | nu
     await scheduleRunRetry(row.id, runRetryDelayMs(row.attempts), message);
     return null;
   }
-  return {
+  const result = {
     id: row.id,
     trigger: row.trigger,
     prompt: framePrompt(forPrompt),
@@ -221,6 +228,8 @@ export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | nu
     issueId: row.issueId,
     issueIdentifier: row.issueIdentifier,
   };
+  if (!(await markRunExecuting(row.id, row.attempts))) return null;
+  return result;
 }
 
 // What the agent is told about the run before the task itself: the project the run
@@ -245,9 +254,18 @@ export async function heartbeatRun(agentId: number, runId: number): Promise<bool
   await touchRunner(agentId);
   const rows = await db
     .update(agentRun)
-    .set({ nextAttemptAt: sql`now() + make_interval(secs => ${agentRunConfig.leaseSeconds()})` })
+    .set({
+      executionStartedAt: sql`coalesce(${agentRun.executionStartedAt}, now())`,
+      nextAttemptAt: sql`now() + make_interval(secs => ${agentRunConfig.leaseSeconds()})`,
+    })
     .where(
-      and(eq(agentRun.id, runId), eq(agentRun.agentId, agentId), eq(agentRun.status, 'pending')),
+      and(
+        eq(agentRun.id, runId),
+        eq(agentRun.agentId, agentId),
+        eq(agentRun.status, 'pending'),
+        isNotNull(agentRun.startedAt),
+        or(isNotNull(agentRun.executionStartedAt), isNull(agentRun.lastError)),
+      ),
     )
     .returning({ id: agentRun.id });
   return rows.length > 0;
@@ -271,6 +289,7 @@ export async function finishRun(
     .update(agentRun)
     .set({
       status: result.status,
+      executionStartedAt: null,
       output: result.output?.slice(0, 10_000) ?? null,
       lastError: result.status === 'failed' ? (result.error?.slice(0, 500) ?? 'Run failed') : null,
       inputTokens: result.usage?.inputTokens ?? null,

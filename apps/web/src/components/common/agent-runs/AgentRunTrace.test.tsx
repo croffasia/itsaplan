@@ -7,8 +7,8 @@ import { NextIntlClientProvider } from 'next-intl';
 import { JSDOM } from 'jsdom';
 import type { IssueAgentRunTrace as Trace } from '@/lib/api/endpoints/issues';
 import { qk } from '@/services/queryKeys';
-import issue from '../../../../../messages/en/issue.json';
-import IssueAgentRunTrace from './IssueAgentRunTrace';
+import issue from '../../../../messages/en/issue.json';
+import AgentRunTrace from './AgentRunTrace';
 
 let root: Root;
 let dom: JSDOM;
@@ -74,7 +74,7 @@ beforeEach(async () => {
     root.render(
       <QueryClientProvider client={client}>
         <NextIntlClientProvider locale="en" messages={{ issue }} timeZone="UTC">
-          <IssueAgentRunTrace issueId={1} runId={2} />
+          <AgentRunTrace issueId={1} runId={2} />
         </NextIntlClientProvider>
       </QueryClientProvider>,
     ),

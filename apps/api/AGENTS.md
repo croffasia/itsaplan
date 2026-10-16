@@ -486,3 +486,21 @@ directly). Helpers in `src/__tests__/helpers/`: `api` (anonymous client), `authe
 - swagger `/docs` (planner) is separate from better-auth's `/api/auth/reference`; both
   stay reachable without a session.
 - Dev: `bun run dev`. Prod: the Dockerfile migrates, then starts the server; the compose files and the Helm chart run the migrations as a separate step and start only the server.
+
+## Runner queue and execution state
+
+`GET /agent-runs/queue` pages external runs across the caller's readable projects,
+including archived projects. Both `work_items read` and `ai_agents read` are required
+in each project. Moved issues do not expose their original project's prompt.
+
+The stored `status` keeps the runner protocol's `pending` value. `executionState`
+is `running` only after admission succeeds and while its lease is valid; it is
+`queued` during delays, retry backoff and after lease expiry. Terminal states retain
+their names. `execution_started_at` is cleared on claim, defer, retry and completion,
+and set before execution is handed out. A heartbeat can restore the marker for a
+claimed external run that was already in flight when this column was added.
+
+`runnerQueue:1` is a user-scoped sync marker. It combines the visible projects'
+`runner-queue:` revisions with lease expiry and runner presence, so time-based state
+changes are visible without a write. The queue and issue run panel share this scope.
+A runner being online is separate from a run holding an execution lease.

@@ -1,4 +1,4 @@
-export default function IssueAgentRunBlock({ label, value }: { label: string; value: unknown }) {
+export default function AgentRunBlock({ label, value }: { label: string; value: unknown }) {
   if (value == null) return null;
   const text = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
   return (

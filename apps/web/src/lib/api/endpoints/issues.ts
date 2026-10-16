@@ -416,6 +416,7 @@ export interface IssueAgentRun {
   username: string;
   kind: string;
   status: 'pending' | 'success' | 'failed' | 'canceled';
+  executionState: 'queued' | 'running' | 'success' | 'failed' | 'canceled';
   trigger: AgentRunTrigger;
   prompt: string;
   output: string | null;

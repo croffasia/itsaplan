@@ -710,6 +710,7 @@ export const agentRun = pgTable(
     inputTokens: integer('input_tokens'),
     outputTokens: integer('output_tokens'),
     startedAt: timestamp('started_at', { withTimezone: true }),
+    executionStartedAt: timestamp('execution_started_at', { withTimezone: true }),
     finishedAt: timestamp('finished_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },

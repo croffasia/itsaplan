@@ -1,7 +1,7 @@
 import { db, agentRun, aiAgent, issue } from '@repo/db';
 import { and, desc, eq, lt } from 'drizzle-orm';
 import { iso } from '#shared/lib';
-import { contextTokensOf } from '#modules/agents/core/run-queue';
+import { contextTokensOf, executionState } from '#modules/agents/core/run-queue';
 import { getRunTrace } from '#modules/agents/core/runtime/traces';
 
 export async function listIssueAgentRuns(
@@ -17,6 +17,7 @@ export async function listIssueAgentRuns(
       username: aiAgent.username,
       kind: aiAgent.kind,
       status: agentRun.status,
+      executionState,
       trigger: agentRun.trigger,
       prompt: agentRun.prompt,
       output: agentRun.output,

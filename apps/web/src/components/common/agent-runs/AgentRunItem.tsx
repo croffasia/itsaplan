@@ -6,10 +6,10 @@ import { useRelativeTime } from '@/context/relativeTimeContext';
 import { formatDateTime } from '@/utils/dates';
 import { Badge } from '@/components/ui/badge';
 import { AgentContextSize } from '@/components/common/agent-chat/AgentContextSize';
-import IssueAgentRunBlock from './IssueAgentRunBlock';
-import IssueAgentRunTrace from './IssueAgentRunTrace';
+import AgentRunBlock from './AgentRunBlock';
+import AgentRunTrace from './AgentRunTrace';
 
-export default function IssueAgentRunItem({ issueId, run }: { issueId: number; run: IssueAgentRun }) {
+export default function AgentRunItem({ issueId, run }: { issueId: number | null; run: IssueAgentRun }) {
   const t = useTranslations('issue.agentRuns');
   const relativeTime = useRelativeTime();
   const [open, setOpen] = useState(false);
@@ -25,7 +25,7 @@ export default function IssueAgentRunItem({ issueId, run }: { issueId: number; r
         <Chevron className="size-3.5 shrink-0" />
         <span className="font-medium">@{run.username}</span>
         <Badge variant={run.status === 'failed' ? 'destructive' : 'outline'}>
-          {t(run.status)}
+          {t(run.executionState)}
         </Badge>
         <span className="text-muted-foreground">
           #{run.id} · {t(`triggers.${run.trigger}`)}
@@ -52,14 +52,14 @@ export default function IssueAgentRunItem({ issueId, run }: { issueId: number; r
               {t('finished', { date: formatDateTime(run.finishedAt) })}
             </p>
           )}
-          {run.status === 'pending' && (
-            <p className="text-xs text-muted-foreground">{t('pendingHint')}</p>
+          {run.executionState === 'queued' && (
+            <p className="text-xs text-muted-foreground">{t('queuedHint')}</p>
           )}
-          <IssueAgentRunBlock label={t('task')} value={run.prompt} />
-          <IssueAgentRunBlock label={t('error')} value={run.lastError} />
-          <IssueAgentRunBlock label={t('result')} value={run.output} />
-          {run.kind === 'internal' ? (
-            <IssueAgentRunTrace issueId={issueId} runId={run.id} />
+          <AgentRunBlock label={t('task')} value={run.prompt} />
+          <AgentRunBlock label={t('error')} value={run.lastError} />
+          <AgentRunBlock label={t('result')} value={run.output} />
+          {run.kind === 'internal' && issueId != null ? (
+            <AgentRunTrace issueId={issueId} runId={run.id} />
           ) : (
             <p className="text-xs text-muted-foreground">{t('externalHint')}</p>
           )}

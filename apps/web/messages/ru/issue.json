@@ -511,6 +511,18 @@
       "manual": "Вручную",
       "status": "Смена статуса",
       "event": "Событие"
+    },
+    "queued": "Ожидает",
+    "running": "Выполняется",
+    "queuedHint": "Ожидает runner, повторной попытки или запланированного времени.",
+    "queueTitle": "Очередь runner",
+    "queueDescription": "Задания внешних runner во всех доступных проектах. Сначала выполняющиеся, затем ожидающие по времени запуска.",
+    "queueCounts": "Ожидают: {queued, number} · Выполняются: {running, number}",
+    "queueEmpty": "Нет ожидающих или выполняющихся заданий.",
+    "presence": {
+      "online": "Runner онлайн",
+      "offline": "Runner офлайн",
+      "never": "Runner не подключён"
     }
   }
 }

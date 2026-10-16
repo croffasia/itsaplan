@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { auth } from '@repo/auth';
-import { app, authedApi } from '#tests/helpers/app';
+import { app, authedApi, createProject } from '#tests/helpers/app';
 import { resetDb } from '#tests/helpers/db';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { createAgent, teamOf } from '#tests/helpers/agents';
@@ -82,7 +82,7 @@ describe('GET /me', () => {
   it('tells an agent it is one, with its handle', async () => {
     const owner = await signUpTestUser({ name: 'Owner' });
     const asOwner = authedApi(owner.cookie);
-    await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+    await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
     const teamId = await teamOf(asOwner, 'MKT');
     const created = await createAgent(asOwner, 'MKT', {
       name: 'Triage Bot',

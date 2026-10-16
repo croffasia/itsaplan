@@ -1,6 +1,7 @@
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { presetOf, type RunnerConfig } from './config';
 import { presetArgv, presetPrompt, type Preset } from './presets';
+import { resolveCommand } from './windows';
 
 // Runs one task: the command the preset builds, or the operator's own in a shell, with the
 // task on stdin and its context in the environment. Everything the agent needs beyond the
@@ -49,8 +50,15 @@ function childEnv(config: RunnerConfig, task: Task): Record<string, string> {
 // The command gets its own process group, so the Ctrl-C that stops the runner does not
 // reach it — the runner promises to finish what is in flight. The timeout and the
 // member's stop then have to kill that group themselves, or a command that is a
-// pipeline leaves its children behind.
+// pipeline leaves its children behind. Windows has no process groups, so the tree goes.
 function killGroup(pid: number): void {
+  if (process.platform === 'win32') {
+    spawnSync('taskkill', ['/pid', String(pid), '/t', '/f'], {
+      stdio: 'ignore',
+      windowsHide: true,
+    });
+    return;
+  }
   try {
     process.kill(-pid, 'SIGKILL');
   } catch {
@@ -65,12 +73,14 @@ function spawnArgs(
   config: RunnerConfig,
   preset: Preset | undefined,
   task: Task,
+  env: Record<string, string>,
 ): [string, string[]] {
   if (!preset) return ['sh', ['-c', config.command ?? '']];
-  return [
+  return resolveCommand(
     preset.bin,
     presetArgv(preset, task.sessionId ?? null, task.systemPrompt, config.args, task.prompt),
-  ];
+    env,
+  );
 }
 
 // A CLI that took the task as an argument would read it twice if it also arrived here.
@@ -89,11 +99,13 @@ export async function execute(
   opts: { onData?: (chunk: string) => void; signal?: AbortSignal } = {},
 ): Promise<Outcome> {
   const preset = presetOf(config);
-  const [bin, args] = spawnArgs(config, preset, task);
+  const env = childEnv(config, task);
+  const [bin, args] = spawnArgs(config, preset, task, env);
   const child = spawn(bin, args, {
     cwd: config.cwd,
-    env: childEnv(config, task),
+    env,
     detached: true,
+    windowsHide: true,
   });
 
   const kill = () => {

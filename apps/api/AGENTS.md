@@ -407,6 +407,15 @@ channel and is read only for a claim, not for authentication. Both funnel into
 gets — a name missing from a later sync is never removed by this path, only by an explicit
 `PATCH /Groups/:id` or an unmapping in the workspace settings.
 
+## Issue agent runs
+
+`GET /issues/:issueId/agent-runs` reads triggered runs with cursor pagination. Both
+`work_items read` and `ai_agents read` in the issue's current project are required.
+Runs keep their original project, so a moved issue does not expose its former project's
+prompts or traces. `/issues/:issueId/agent-runs/:runId/trace` reads the latest recorded
+attempt of that run, or null when none is recorded. Other people's chat traces stay private.
+External runners report their final output; their execution steps are not stored here.
+
 ## Security
 
 - **`GET /attachments/:publicId/raw` is public and unauthenticated** (used in

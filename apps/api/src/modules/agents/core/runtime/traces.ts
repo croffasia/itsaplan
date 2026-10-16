@@ -1,6 +1,6 @@
 import { db } from '@repo/db';
 import { sql } from 'drizzle-orm';
-import { getStore } from './store';
+import { getStore, spansTableExists } from './store';
 import { toIso } from '../helpers/dates';
 import type { AgentRunTrigger } from '../../model';
 
@@ -160,4 +160,27 @@ export async function getAgentTrace(
       attributes: span.attributes ?? null,
     }));
   return { trace: toSummary(root), spans };
+}
+
+// Retries share a queued run id; the issue opens the latest recorded attempt.
+export async function getRunTrace(
+  agentId: number,
+  runId: number,
+  projectId: number,
+  issueId: number,
+  viewerId: string,
+) {
+  if (!(await spansTableExists())) return null;
+  const rows = await db.execute<{ traceId: string }>(sql`
+    SELECT r."traceId" FROM mastra_ai_spans r
+    WHERE r."parentSpanId" IS NULL
+      AND r.metadata->>'agentId' = ${String(agentId)}
+      AND r.metadata->>'runId' = ${String(runId)}
+      AND r.metadata->>'projectId' = ${String(projectId)}
+      AND r.metadata->>'issueId' = ${String(issueId)}
+      AND (r.metadata->>'userId' IS NULL OR r.metadata->>'userId' = ${viewerId})
+    ORDER BY r."startedAtZ" DESC, r."traceId" DESC
+    LIMIT 1`);
+  if (!rows[0]) return null;
+  return getAgentTrace(agentId, rows[0].traceId, viewerId);
 }

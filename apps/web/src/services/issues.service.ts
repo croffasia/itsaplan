@@ -23,6 +23,8 @@ import {
   type BoardIssues,
   type SubtaskDisposition,
   getIssue,
+  listIssueAgentRuns,
+  getIssueAgentRunTrace,
   listIssueCycles,
   getIssueBySeq,
   searchIssues,
@@ -473,5 +475,22 @@ export function useCreateIssue() {
       void qc.invalidateQueries({ queryKey: qk.boardIssues(projectKey) });
       invalidateGroupings(qc);
     },
+  });
+}
+
+export function useIssueAgentRunsQuery(issueId: number, enabled: boolean) {
+  return useInfiniteQuery({
+    queryKey: qk.issueAgentRuns(issueId),
+    queryFn: ({ pageParam }) => listIssueAgentRuns(issueId, pageParam),
+    initialPageParam: undefined as number | undefined,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+    enabled,
+  });
+}
+
+export function useIssueAgentRunTraceQuery(issueId: number, runId: number) {
+  return useQuery({
+    queryKey: qk.issueAgentRunTrace(issueId, runId),
+    queryFn: () => getIssueAgentRunTrace(issueId, runId),
   });
 }

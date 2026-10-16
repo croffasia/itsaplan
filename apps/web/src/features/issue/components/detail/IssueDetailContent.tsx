@@ -14,6 +14,7 @@ import IssueChecklistsPanel from './IssueChecklistsPanel';
 import IssueLinksPanel from './IssueLinksPanel';
 import IssueDevelopmentPanel from './IssueDevelopmentPanel';
 import IssueDocumentsPanel from './IssueDocumentsPanel';
+import IssueAgentRunsPanel from './IssueAgentRunsPanel';
 import IssueWorklogPanel from './IssueWorklogPanel';
 import IssueSubtasksPanel from './IssueSubtasksPanel';
 import IssueActivityFeed from './IssueActivityFeed';
@@ -207,6 +208,11 @@ export default function IssueDetailContent({
           canLink={canLinkDocuments}
         />
       )}
+
+      <IssueAgentRunsPanel
+        issueId={issue.id}
+        canRead={can('ai_agents', 'read') && can('work_items', 'read')}
+      />
 
       <IssueLinksPanel project={project} issue={issue} />
     </>

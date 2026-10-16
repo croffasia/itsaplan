@@ -474,5 +474,29 @@
     "noAssignee": "بلا مسؤول",
     "noType": "بلا نوع",
     "noLabels": "لا شيء"
+  },
+  "agentRuns": {
+    "title": "Agent runs",
+    "refresh": "Refresh",
+    "loading": "Loading runs…",
+    "loadError": "Could not load run history. Try refreshing.",
+    "empty": "No agent runs for this issue.",
+    "loadMore": "Load older runs",
+    "pending": "Pending",
+    "success": "Succeeded",
+    "failed": "Failed",
+    "canceled": "Canceled",
+    "attempts": "Attempts: {count}",
+    "started": "First started: {date}",
+    "finished": "Finished: {date}",
+    "pendingHint": "This run is waiting or executing. Refresh to read its latest state.",
+    "task": "Task",
+    "error": "Last error",
+    "result": "Result",
+    "input": "Input",
+    "trace": "Latest recorded attempt",
+    "noTrace": "No execution steps have been recorded yet. Steps may appear after the trace is saved.",
+    "externalHint": "External runners report their task and final output. Execution steps are not recorded here.",
+    "attributes": "Attributes"
   }
 }

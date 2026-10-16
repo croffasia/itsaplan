@@ -1,4 +1,6 @@
 import { Elysia, t } from 'elysia';
+import { AgentTraceDetailResponse } from '#modules/agents/core/model';
+import { listIssueAgentRuns, getIssueAgentRunTrace } from './agent-runs';
 import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
 import { guards, entityGuard, assertMcpAllowed, requiresPermission } from '#shared/guards';
@@ -93,6 +95,9 @@ import {
 
 import {
   issueParams,
+  issueAgentRunsQuery,
+  issueAgentRunParams,
+  IssueAgentRunPageResponse,
   issueDevelopmentLinkParams,
   issueDevelopmentRepositoryParams,
   issueDevelopmentListQuery,
@@ -198,6 +203,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // entry and a comment belong to the issue that carries them, so they all resolve
   // to the same work_items permission.
   .macro({
+    issueAgentRuns: entityGuard('ai_agents', 'Issue not found', (p) =>
+      getIssueProjectId(Number(p.issueId)),
+    ),
     workItem: entityGuard('work_items', 'Issue not found', (p) =>
       getIssueProjectId(Number(p.issueId)),
     ),
@@ -1100,6 +1108,43 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         summary: 'Delete a checklist item',
         description: 'Remove one item from a checklist.',
         ...mcpTool('delete_checklist_item'),
+      },
+    },
+  )
+
+  .get(
+    '/issues/:issueId/agent-runs',
+    async ({ params, query }) => listIssueAgentRuns(params.issueId, query.before, query.limit),
+    {
+      params: issueParams,
+      query: issueAgentRunsQuery,
+      workItem: 'read',
+      issueAgentRuns: 'read',
+      response: { 200: IssueAgentRunPageResponse, ...commonErrors },
+      detail: {
+        summary: "List an issue's agent runs",
+        description:
+          'Triggered runs in the current project, newest first, including the prompt, result and error.',
+      },
+    },
+  )
+
+  .get(
+    '/issues/:issueId/agent-runs/:runId/trace',
+    async ({ params, user }) => {
+      const trace = await getIssueAgentRunTrace(params.issueId, params.runId, requireUser(user).id);
+      if (trace === undefined) throw new HttpError(404, 'Run not found');
+      return trace;
+    },
+    {
+      params: issueAgentRunParams,
+      workItem: 'read',
+      issueAgentRuns: 'read',
+      response: { 200: t.Nullable(AgentTraceDetailResponse), ...commonErrors },
+      detail: {
+        summary: "Read an issue run's latest trace",
+        description:
+          'The latest recorded attempt, with model and tool calls. Null when no trace is available.',
       },
     },
   )

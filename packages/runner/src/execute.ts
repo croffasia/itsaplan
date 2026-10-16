@@ -47,10 +47,11 @@ function childEnv(config: RunnerConfig, task: Task): Record<string, string> {
   };
 }
 
-// The command gets its own process group, so the Ctrl-C that stops the runner does not
-// reach it — the runner promises to finish what is in flight. The timeout and the
-// member's stop then have to kill that group themselves, or a command that is a
-// pipeline leaves its children behind. Windows has no process groups, so the tree goes.
+// The command gets its own process group (on Windows, its own hidden console), so the
+// Ctrl-C that stops the runner does not reach it — the runner promises to finish what is
+// in flight. The timeout and the member's stop then have to kill that group themselves,
+// or a command that is a pipeline leaves its children behind. Windows cannot signal a
+// group, so taskkill ends the process tree instead.
 function killGroup(pid: number): void {
   if (process.platform === 'win32') {
     spawnSync('taskkill', ['/pid', String(pid), '/t', '/f'], {
@@ -101,15 +102,21 @@ export async function execute(
   const preset = presetOf(config);
   const env = childEnv(config, task);
   const [bin, args] = spawnArgs(config, preset, task, env);
+  // On Windows `detached` would drop the hidden console that windowsHide gives the
+  // command, and every console program it starts would open a window.
   const child = spawn(bin, args, {
     cwd: config.cwd,
     env,
-    detached: true,
+    detached: process.platform !== 'win32',
     windowsHide: true,
   });
 
+  // Windows frees the pid when the command exits, while a child it left may still hold
+  // stdout open; taskkill would then reach whatever process got the pid next.
+  const pidReleased = () =>
+    process.platform === 'win32' && (child.exitCode !== null || child.signalCode !== null);
   const kill = () => {
-    if (child.pid !== undefined) killGroup(child.pid);
+    if (child.pid !== undefined && !pidReleased()) killGroup(child.pid);
   };
   let timedOut = false;
   const timer = setTimeout(() => {

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { resolveCommand } from '../windows';
 
 // The shims below follow what npm's cmd-shim writes.
-const exeShim = `@ECHO off
+const exeShim = String.raw`@ECHO off
 GOTO start
 :find_dp0
 SET dp0=%~dp0
@@ -13,10 +13,13 @@ EXIT /b
 :start
 SETLOCAL
 CALL :find_dp0
-"%dp0%\\node_modules\\@anthropic-ai\\claude-code\\bin\\claude.exe"   %*
+"%dp0%\node_modules\@anthropic-ai\claude-code\bin\claude.exe"   %*
 `;
 
-const scriptShim = `@ECHO off
+// For a script, cmd-shim takes the interpreter from the script's shebang.
+function scriptShim(prog: string, target: string, progArgs = ''): string {
+  const between = progArgs ? ` ${progArgs}` : '';
+  return `@ECHO off
 GOTO start
 :find_dp0
 SET dp0=%~dp0
@@ -25,15 +28,16 @@ EXIT /b
 SETLOCAL
 CALL :find_dp0
 
-IF EXIST "%dp0%\\node.exe" (
-  SET "_prog=%dp0%\\node.exe"
+IF EXIST "%dp0%\\${prog}.exe" (
+  SET "_prog=%dp0%\\${prog}.exe"
 ) ELSE (
-  SET "_prog=node"
+  SET "_prog=${prog}"
   SET PATHEXT=%PATHEXT:;.JS;=;%
 )
 
-endLocal & goto #_undefined_# 2>NUL || title %COMSPEC% & "%_prog%"  "%dp0%\\node_modules\\@openai\\codex\\bin\\codex.js" %*
+endLocal & goto #_undefined_# 2>NUL || title %COMSPEC% & "%_prog%"${between}  "%dp0%\\${target}" %*
 `;
+}
 
 describe('resolveCommand', () => {
   let dir: string;
@@ -60,17 +64,50 @@ describe('resolveCommand', () => {
     ]);
   });
 
-  it('starts node with the script that an npm shim points at', async () => {
-    await writeFile(join(dir, 'codex.cmd'), scriptShim);
-    const [bin, argv] = resolveCommand('codex', args, { PATH: dir }, 'win32');
-    expect(bin).toBe(process.execPath);
-    expect(argv).toEqual([join(dir, 'node_modules/@openai/codex/bin/codex.js'), ...args]);
+  it('starts the interpreter a script shim names, with the script', async () => {
+    await writeFile(
+      join(dir, 'codex.cmd'),
+      scriptShim('node', String.raw`node_modules\@openai\codex\bin\codex.js`),
+    );
+    expect(resolveCommand('codex', args, { PATH: dir }, 'win32')).toEqual([
+      'node',
+      [join(dir, 'node_modules/@openai/codex/bin/codex.js'), ...args],
+    ]);
   });
 
-  it('prefers the node.exe next to a script shim', async () => {
-    await writeFile(join(dir, 'codex.cmd'), scriptShim);
+  it('prefers the interpreter next to a script shim', async () => {
+    await writeFile(
+      join(dir, 'codex.cmd'),
+      scriptShim('node', String.raw`node_modules\codex\cli.js`),
+    );
     await writeFile(join(dir, 'node.exe'), '');
     expect(resolveCommand('codex', args, { PATH: dir }, 'win32')[0]).toBe(join(dir, 'node.exe'));
+  });
+
+  it('starts a bun script with the bun found on the path', async () => {
+    await mkdir(join(dir, 'bun-bin'));
+    await writeFile(join(dir, 'bun-bin', 'bun.exe'), '');
+    await writeFile(
+      join(dir, 'omp.cmd'),
+      scriptShim('bun', String.raw`node_modules\omp\dist\cli.js`),
+    );
+    expect(
+      resolveCommand('omp', args, { PATH: `${dir};${join(dir, 'bun-bin')}` }, 'win32'),
+    ).toEqual([
+      join(dir, 'bun-bin', 'bun.exe'),
+      [join(dir, 'node_modules/omp/dist/cli.js'), ...args],
+    ]);
+  });
+
+  it('starts a script with no extension through its interpreter, with the shebang arguments', async () => {
+    await writeFile(
+      join(dir, 'tool.cmd'),
+      scriptShim('node', String.raw`node_modules\tool\bin\tool`, '--no-warnings'),
+    );
+    expect(resolveCommand('tool', args, { PATH: dir }, 'win32')).toEqual([
+      'node',
+      ['--no-warnings', join(dir, 'node_modules/tool/bin/tool'), ...args],
+    ]);
   });
 
   it('starts an executable found on the path directly', async () => {
@@ -80,6 +117,15 @@ describe('resolveCommand', () => {
       join(dir, 'bin', 'claude.exe'),
       args,
     ]);
+  });
+
+  it('reads the same PATH variant the child gets', async () => {
+    await mkdir(join(dir, 'upper'));
+    await mkdir(join(dir, 'mixed'));
+    await writeFile(join(dir, 'upper', 'claude.exe'), '');
+    await writeFile(join(dir, 'mixed', 'claude.exe'), '');
+    const env = { Path: join(dir, 'mixed'), PATH: join(dir, 'upper') };
+    expect(resolveCommand('claude', args, env, 'win32')[0]).toBe(join(dir, 'upper', 'claude.exe'));
   });
 
   it('refuses a batch file that names no target', async () => {

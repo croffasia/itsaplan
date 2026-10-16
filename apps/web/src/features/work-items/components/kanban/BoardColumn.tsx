@@ -8,6 +8,7 @@ import type { BoardIssue } from '@/lib/api/endpoints/issues';
 import { type Maps, type IssueGroup } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import type { PropertyKey } from '@/utils/viewSettings';
+import type { Sort } from '@/utils/viewTypes';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -21,6 +22,7 @@ import { useIncomingCount } from '../../hooks/useIncomingCount';
 import { COLUMN_WIDTH, PINNED_COLUMN } from '../../utils/kanban';
 import { wipAllows, wipFullColor, WIP_FULL_TINT, type WipState } from '../../utils/wipLimit';
 import { WipCount } from './WipCount';
+import { ColumnSortControl } from './ColumnSortControl';
 
 // The add button sits under the last card, outside the measured cards. It carries
 // its own copy of the gap that CardDropSlot puts above a card (pt-2).
@@ -38,7 +40,9 @@ export function BoardColumn({
   issues,
   maps,
   properties,
-  manualOrder,
+  sort,
+  inheritedSort,
+  onSortChange,
   onMoveIssue,
   onOpenIssue,
   onAddIssue,
@@ -56,9 +60,11 @@ export function BoardColumn({
   issues: BoardIssue[];
   maps: Maps;
   properties: PropertyKey[];
-  // Whether the view is ordered manually. A card moves within the column only then.
-  // With any other sort field, that field decides the order.
-  manualOrder: boolean;
+  // The column's effective ordering. A card moves within the column only when it is
+  // manual; with any other sort field, that field decides the order.
+  sort: Sort;
+  inheritedSort: boolean;
+  onSortChange: (sort: Sort | null) => void;
   // `index` is where the drop lands in this column's issues. The board turns it
   // into a position for each issue the drag carries.
   onMoveIssue: (issueIds: number[], group: IssueGroup, index: number) => void;
@@ -79,6 +85,7 @@ export function BoardColumn({
   readOnly?: boolean;
 }) {
   const t = useTranslations('workItems');
+  const manualOrder = sort.field === 'manual';
   const { can } = usePermissions();
   const canCreateIssue = can('work_items', 'create') && !readOnly;
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -132,6 +139,12 @@ export function BoardColumn({
           {!readOnly && (
             <>
               <SelectAllToggle ids={issues.map((i) => i.id)} />
+              <ColumnSortControl
+                columnName={group.name}
+                sort={sort}
+                inherited={inheritedSort}
+                onChange={onSortChange}
+              />
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button

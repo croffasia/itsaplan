@@ -1,7 +1,7 @@
 import { ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { CustomField } from '@/lib/api/endpoints/customFields';
-import { SORT_FIELDS, type SortField, type WorkItemsView } from '@/utils/viewTypes';
+import { SORT_FIELDS, sortForField, type SortField, type WorkItemsView } from '@/utils/viewTypes';
 import {
   customFieldKey,
   isFieldEnabled,
@@ -109,6 +109,7 @@ export default function DisplayGroupingRows({
             className="size-8 shrink-0"
             disabled={settings.sort.field === 'manual'}
             title={settings.sort.dir === 'asc' ? t('ascending') : t('descending')}
+            aria-label={settings.sort.dir === 'asc' ? t('ascending') : t('descending')}
             onClick={() =>
               onChange({
                 sort: { ...settings.sort, dir: settings.sort.dir === 'asc' ? 'desc' : 'asc' },
@@ -119,7 +120,7 @@ export default function DisplayGroupingRows({
           </Button>
           <DisplaySettingsSelect
             value={settings.sort.field}
-            onChange={(v) => onChange({ sort: { ...settings.sort, field: v as SortField } })}
+            onChange={(v) => onChange({ sort: sortForField(v as SortField, settings.sort) })}
             options={sortOptions}
           />
         </DisplaySettingsRow>

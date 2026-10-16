@@ -19,6 +19,12 @@
     "created": "Created",
     "updated": "Updated"
   },
+  "columnOrdering": {
+    "title": "Order {column}",
+    "button": "{column}: {field}, {direction}",
+    "field": "Column ordering",
+    "board": "Board ordering"
+  },
   "groupFields": {
     "none": "No grouping",
     "status": "State",

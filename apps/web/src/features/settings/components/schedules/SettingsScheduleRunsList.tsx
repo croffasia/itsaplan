@@ -4,7 +4,10 @@ import { Button } from '@/components/ui/button';
 import { SettingsScheduleRunRow } from './SettingsScheduleRunRow';
 
 export default function SettingsScheduleRunsList({
-  runs, canCancel, canceling, onCancel,
+  runs,
+  canCancel,
+  canceling,
+  onCancel,
 }: {
   runs: AgentScheduleRun[];
   canCancel: boolean;
@@ -13,9 +16,21 @@ export default function SettingsScheduleRunsList({
 }) {
   const t = useTranslations('settings.schedules');
   const groups = [
-    { key: 'pending', title: t('pendingGroup'), runs: runs.filter((run) => run.executionState === 'queued') },
-    { key: 'running', title: t('runningGroup'), runs: runs.filter((run) => run.executionState === 'running') },
-    { key: 'completed', title: t('completedGroup'), runs: runs.filter((run) => run.status !== 'pending') },
+    {
+      key: 'pending',
+      title: t('pendingGroup'),
+      runs: runs.filter((run) => run.executionState === 'queued'),
+    },
+    {
+      key: 'running',
+      title: t('runningGroup'),
+      runs: runs.filter((run) => run.executionState === 'running'),
+    },
+    {
+      key: 'completed',
+      title: t('completedGroup'),
+      runs: runs.filter((run) => run.status !== 'pending'),
+    },
   ].filter((group) => group.runs.length > 0);
   if (!groups.length) return <p className="p-4 text-sm text-muted-foreground">{t('noRuns')}</p>;
   return (
@@ -31,8 +46,12 @@ export default function SettingsScheduleRunsList({
               </p>
               {group.key === 'pending' && canCancel && cancelable > 0 && (
                 <Button
-                  type="button" variant="ghost" size="sm" className="ms-auto h-6 text-xs"
-                  disabled={canceling} onClick={() => onCancel()}
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="ms-auto h-6 text-xs"
+                  disabled={canceling}
+                  onClick={() => onCancel()}
                 >
                   <span>
                     {t('stopAllPending')}
@@ -44,8 +63,14 @@ export default function SettingsScheduleRunsList({
             <div className="divide-y divide-border/50">
               {group.runs.map((run) => (
                 <SettingsScheduleRunRow
-                  key={run.id} run={run} canceling={canceling}
-                  onCancel={group.key === 'pending' && !run.startedAt && canCancel ? () => onCancel(run.id) : undefined}
+                  key={run.id}
+                  run={run}
+                  canceling={canceling}
+                  onCancel={
+                    group.key === 'pending' && !run.startedAt && canCancel
+                      ? () => onCancel(run.id)
+                      : undefined
+                  }
                 />
               ))}
             </div>

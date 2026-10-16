@@ -70,4 +70,3 @@ export default function TeamAiAgentRunItem({ run: r }: { run: AgentRun }) {
     </div>
   );
 }
-

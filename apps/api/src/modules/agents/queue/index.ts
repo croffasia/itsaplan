@@ -7,14 +7,21 @@ import { isMcpRequest } from '#shared/mcp-request';
 import { queueQuery, RunnerQueueResponse } from './model';
 import { listRunnerQueue } from './service';
 
-export const runnerQueueRoutes = new Elysia({ name: 'runner-queue', detail: { tags: ['Agent Runner'] } })
+export const runnerQueueRoutes = new Elysia({
+  name: 'runner-queue',
+  detail: { tags: ['Agent Runner'] },
+})
   .use(authContext)
   .get(
     '/agent-runs/queue',
     async ({ user, query, request }) => {
       let counts = { queued: 0, running: 0 };
       const page = await paginate(query, async (window) => {
-        const result = await listRunnerQueue(requireUser(user).id, window, isMcpRequest(request.headers));
+        const result = await listRunnerQueue(
+          requireUser(user).id,
+          window,
+          isMcpRequest(request.headers),
+        );
         counts = { queued: result.queued, running: result.running };
         return result;
       });

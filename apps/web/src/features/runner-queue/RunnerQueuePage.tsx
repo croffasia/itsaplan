@@ -33,13 +33,19 @@ export default function RunnerQueuePage() {
         </Button>
       </div>
       {data && (
-        <p className="text-sm">{t('queueCounts', { queued: data.queued, running: data.running })}</p>
+        <p className="text-sm">
+          {t('queueCounts', { queued: data.queued, running: data.running })}
+        </p>
       )}
       {query.isLoading && <p className="text-sm text-muted-foreground">{t('loading')}</p>}
       {query.isError && (
-        <p role="alert" className="text-sm text-destructive">{t('loadError')}</p>
+        <p role="alert" className="text-sm text-destructive">
+          {t('loadError')}
+        </p>
       )}
-      {data && data.total === 0 && <p className="text-sm text-muted-foreground">{t('queueEmpty')}</p>}
+      {data && data.total === 0 && (
+        <p className="text-sm text-muted-foreground">{t('queueEmpty')}</p>
+      )}
       {data?.items.map((run) => (
         <RunnerQueueRow key={run.id} run={run} />
       ))}

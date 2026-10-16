@@ -19,8 +19,12 @@ export default function TeamAiAgentRunsList({ agentId }: { agentId: number }) {
   if (query.isError) {
     return (
       <div className="space-y-2 p-4">
-        <p role="alert" className="text-xs text-destructive">{tRuns('loadError')}</p>
-        <Button variant="ghost" onClick={() => void query.refetch()}>{tRuns('refresh')}</Button>
+        <p role="alert" className="text-xs text-destructive">
+          {tRuns('loadError')}
+        </p>
+        <Button variant="ghost" onClick={() => void query.refetch()}>
+          {tRuns('refresh')}
+        </Button>
       </div>
     );
   }
@@ -57,4 +61,3 @@ export default function TeamAiAgentRunsList({ agentId }: { agentId: number }) {
     </div>
   );
 }
-

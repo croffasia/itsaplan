@@ -1,7 +1,11 @@
 import type { AiAgent } from '@/lib/api/endpoints/agents';
 import { useTranslations } from 'next-intl';
 import {
-  Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
 } from '@/components/ui/sheet';
 import TeamAiAgentRunsList from './TeamAiAgentRunsList';
 
@@ -27,4 +31,3 @@ export function TeamAiAgentRunsSheet({
     </Sheet>
   );
 }
-

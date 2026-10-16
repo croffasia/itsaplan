@@ -1,5 +1,13 @@
 import {
-  db, agentRun, aiAgent, project, projectMember, team, teamRole, issue, revision,
+  db,
+  agentRun,
+  aiAgent,
+  project,
+  projectMember,
+  team,
+  teamRole,
+  issue,
+  revision,
 } from '@repo/db';
 import { and, asc, eq, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { workspaceGrants } from '#modules/workspaces/service';
@@ -44,8 +52,11 @@ async function queueProjectIds(userId: string, mcpOnly = false) {
     .filter((row) => {
       const member = row.role ? toMemberContext(row.role as MemberRole, row.permissions) : null;
       const access = projectAccess(member, grants.get(row.teamId) ?? null);
-      return access && hasPermission(access.permissions, 'work_items', 'read') &&
-        hasPermission(access.permissions, 'ai_agents', 'read');
+      return (
+        access &&
+        hasPermission(access.permissions, 'work_items', 'read') &&
+        hasPermission(access.permissions, 'ai_agents', 'read')
+      );
     })
     .map((row) => row.id)
     .sort((a, b) => a - b);
@@ -65,31 +76,32 @@ export async function listRunnerQueue(
     or(isNull(agentRun.issueId), eq(issue.projectId, agentRun.projectId)),
   );
   const [rows, counted] = await Promise.all([
-    db.select({
-      id: agentRun.id,
-      agentId: agentRun.agentId,
-      username: aiAgent.username,
-      kind: aiAgent.kind,
-      status: agentRun.status,
-      executionState,
-      trigger: agentRun.trigger,
-      prompt: agentRun.prompt,
-      output: agentRun.output,
-      attempts: agentRun.attempts,
-      lastError: agentRun.lastError,
-      inputTokens: agentRun.inputTokens,
-      outputTokens: agentRun.outputTokens,
-      createdAt: agentRun.createdAt,
-      startedAt: agentRun.startedAt,
-      finishedAt: agentRun.finishedAt,
-      nextAttemptAt: agentRun.nextAttemptAt,
-      runnerState: runnerPresence,
-      issueId: agentRun.issueId,
-      sequenceNumber: issue.sequenceNumber,
-      issueTitle: issue.title,
-      projectKey: project.key,
-      teamRef: sql<string>`coalesce(${team.slug}, ${team.id}::text)`,
-    })
+    db
+      .select({
+        id: agentRun.id,
+        agentId: agentRun.agentId,
+        username: aiAgent.username,
+        kind: aiAgent.kind,
+        status: agentRun.status,
+        executionState,
+        trigger: agentRun.trigger,
+        prompt: agentRun.prompt,
+        output: agentRun.output,
+        attempts: agentRun.attempts,
+        lastError: agentRun.lastError,
+        inputTokens: agentRun.inputTokens,
+        outputTokens: agentRun.outputTokens,
+        createdAt: agentRun.createdAt,
+        startedAt: agentRun.startedAt,
+        finishedAt: agentRun.finishedAt,
+        nextAttemptAt: agentRun.nextAttemptAt,
+        runnerState: runnerPresence,
+        issueId: agentRun.issueId,
+        sequenceNumber: issue.sequenceNumber,
+        issueTitle: issue.title,
+        projectKey: project.key,
+        teamRef: sql<string>`coalesce(${team.slug}, ${team.id}::text)`,
+      })
       .from(agentRun)
       .innerJoin(aiAgent, eq(aiAgent.id, agentRun.agentId))
       .innerJoin(project, eq(project.id, agentRun.projectId))
@@ -103,10 +115,11 @@ export async function listRunnerQueue(
       )
       .limit(window.limit)
       .offset(window.offset),
-    db.select({
-      total: sql<number>`count(*)::int`,
-      running: sql<number>`count(*) FILTER (WHERE ${executionState} = 'running')::int`,
-    })
+    db
+      .select({
+        total: sql<number>`count(*)::int`,
+        running: sql<number>`count(*) FILTER (WHERE ${executionState} = 'running')::int`,
+      })
       .from(agentRun)
       .innerJoin(aiAgent, eq(aiAgent.id, agentRun.agentId))
       .leftJoin(issue, eq(issue.id, agentRun.issueId))
@@ -134,23 +147,38 @@ export async function runnerQueueRevision(userId: string, mcpOnly = false) {
   const ids = await queueProjectIds(userId, mcpOnly);
   if (!ids.length) return '0';
   const [rows, expiredRows, presence] = await Promise.all([
-    db.select({ scope: revision.scope, rev: revision.rev }).from(revision)
-      .where(inArray(revision.scope, ids.map((id) => `runner-queue:${id}`)))
+    db
+      .select({ scope: revision.scope, rev: revision.rev })
+      .from(revision)
+      .where(
+        inArray(
+          revision.scope,
+          ids.map((id) => `runner-queue:${id}`),
+        ),
+      )
       .orderBy(revision.scope),
-    db.select({ total: sql<number>`count(*)::int` }).from(agentRun)
-      .where(and(
-        inArray(agentRun.projectId, ids),
-        eq(agentRun.status, 'pending'),
-        isNotNull(agentRun.executionStartedAt),
-        sql`${agentRun.nextAttemptAt} <= now()`,
-      )),
-    db.selectDistinct({ id: aiAgent.id, state: runnerPresence }).from(aiAgent)
+    db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(agentRun)
+      .where(
+        and(
+          inArray(agentRun.projectId, ids),
+          eq(agentRun.status, 'pending'),
+          isNotNull(agentRun.executionStartedAt),
+          sql`${agentRun.nextAttemptAt} <= now()`,
+        ),
+      ),
+    db
+      .selectDistinct({ id: aiAgent.id, state: runnerPresence })
+      .from(aiAgent)
       .innerJoin(agentRun, eq(agentRun.agentId, aiAgent.id))
-      .where(and(
-        inArray(agentRun.projectId, ids),
-        eq(agentRun.status, 'pending'),
-        eq(aiAgent.kind, 'external'),
-      ))
+      .where(
+        and(
+          inArray(agentRun.projectId, ids),
+          eq(agentRun.status, 'pending'),
+          eq(aiAgent.kind, 'external'),
+        ),
+      )
       .orderBy(aiAgent.id),
   ]);
   return [

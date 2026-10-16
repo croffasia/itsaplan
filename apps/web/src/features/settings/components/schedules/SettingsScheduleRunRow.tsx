@@ -36,9 +36,7 @@ export function SettingsScheduleRunRow({
           ) : (
             <ChevronRight className="size-3.5 shrink-0" />
           )}
-          <Badge variant={statusVariant(run.status)}>
-            {tRun(run.executionState)}
-          </Badge>
+          <Badge variant={statusVariant(run.status)}>{tRun(run.executionState)}</Badge>
           <span className="capitalize">{run.trigger}</span>
           <span className="ms-auto flex shrink-0 items-center gap-4">
             <span className="w-12 text-end">

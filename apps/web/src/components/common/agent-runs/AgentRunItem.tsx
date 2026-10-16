@@ -9,7 +9,13 @@ import { AgentContextSize } from '@/components/common/agent-chat/AgentContextSiz
 import AgentRunBlock from './AgentRunBlock';
 import AgentRunTrace from './AgentRunTrace';
 
-export default function AgentRunItem({ issueId, run }: { issueId: number | null; run: IssueAgentRun }) {
+export default function AgentRunItem({
+  issueId,
+  run,
+}: {
+  issueId: number | null;
+  run: IssueAgentRun;
+}) {
   const t = useTranslations('issue.agentRuns');
   const relativeTime = useRelativeTime();
   const [open, setOpen] = useState(false);

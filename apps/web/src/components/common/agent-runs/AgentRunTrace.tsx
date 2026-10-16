@@ -54,9 +54,7 @@ export default function AgentRunTrace({ issueId, runId }: { issueId: number; run
         <details key={span.spanId} className="rounded-md border p-3">
           <summary className="cursor-pointer text-xs">
             <span dir="auto">{span.name}</span> · {span.type} · {span.status}
-            {span.durationMs != null && (
-              <> · {t('duration', { milliseconds: span.durationMs })}</>
-            )}
+            {span.durationMs != null && <> · {t('duration', { milliseconds: span.durationMs })}</>}
           </summary>
           <div className="mt-3 space-y-3">
             <AgentRunBlock label={t('input')} value={span.input} />

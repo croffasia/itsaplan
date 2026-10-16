@@ -211,7 +211,7 @@ export default function IssueDetailContent({
 
       <IssueAgentRunsPanel
         issueId={issue.id}
-        canRead={can('ai_agents', 'read') && can('work_items', 'read')}
+        canRead={permissions.can('ai_agents', 'read') && permissions.can('work_items', 'read')}
       />
 
       <IssueLinksPanel project={project} issue={issue} />

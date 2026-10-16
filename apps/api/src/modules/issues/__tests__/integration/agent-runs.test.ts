@@ -124,7 +124,9 @@ describe('issue agent runs', () => {
     const { api, issue } = await setup();
     expect((await api.issues({ issueId: issue.id + 1000 })['agent-runs'].get()).status).toBe(404);
     for (const limit of [0, 51, 1.5]) {
-      const response = await api.issues({ issueId: issue.id })['agent-runs'].get({ query: { limit } });
+      const response = await api
+        .issues({ issueId: issue.id })
+        ['agent-runs'].get({ query: { limit } });
       expect(response.status).toBe(400);
     }
   });
@@ -154,7 +156,12 @@ describe('issue agent runs', () => {
     const { api, issue, agent } = await setup();
     const route = api.issues({ issueId: issue.id })['agent-runs'];
     const run = (await route.get()).data!.items[0];
-    const metadata = { agentId: agent.id, runId: run.id, issueId: issue.id, projectId: issue.projectId };
+    const metadata = {
+      agentId: agent.id,
+      runId: run.id,
+      issueId: issue.id,
+      projectId: issue.projectId,
+    };
     await seedTrace('issue-run-old', metadata, new Date('2026-01-01T00:00:00Z'));
     await seedTrace('issue-run-latest', metadata, new Date('2026-01-02T00:00:00Z'));
     await seedTrace(
@@ -192,7 +199,12 @@ describe('issue agent runs', () => {
     const { api, issue, agent } = await setup();
     const route = api.issues({ issueId: issue.id })['agent-runs'];
     const run = (await route.get()).data!.items[0];
-    const metadata = { agentId: agent.id, runId: run.id, issueId: issue.id, projectId: issue.projectId };
+    const metadata = {
+      agentId: agent.id,
+      runId: run.id,
+      issueId: issue.id,
+      projectId: issue.projectId,
+    };
     for (const [traceId, otherScope] of [
       ['other-issue', { issueId: issue.id + 1000 }],
       ['other-project', { projectId: issue.projectId + 1000 }],
@@ -209,7 +221,12 @@ describe('issue agent runs', () => {
     const { api, issue, agent } = await setup();
     const route = api.issues({ issueId: issue.id })['agent-runs'];
     const run = (await route.get()).data!.items[0];
-    const metadata = { agentId: agent.id, runId: run.id, issueId: issue.id, projectId: issue.projectId };
+    const metadata = {
+      agentId: agent.id,
+      runId: run.id,
+      issueId: issue.id,
+      projectId: issue.projectId,
+    };
     const startedAt = new Date('2026-01-01T00:00:00Z');
     await seedTrace('attempt-a', metadata, startedAt);
     await seedTrace('attempt-z', metadata, startedAt);
@@ -227,6 +244,7 @@ describe('issue agent runs', () => {
       name: 'External',
       username: 'external',
       kind: 'external',
+      triggerOnMention: true,
     });
     const runner = apiKeyApi(created.data!.apiKey!);
     for (const status of ['success', 'failed'] as const) {

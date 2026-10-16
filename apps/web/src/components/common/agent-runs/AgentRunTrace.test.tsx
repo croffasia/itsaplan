@@ -92,7 +92,9 @@ afterEach(() => {
 });
 
 function click(label: string) {
-  const button = [...document.querySelectorAll('button')].find((item) => item.textContent === label);
+  const button = [...document.querySelectorAll('button')].find(
+    (item) => item.textContent === label,
+  );
   assert.ok(button);
   act(() => button.click());
 }

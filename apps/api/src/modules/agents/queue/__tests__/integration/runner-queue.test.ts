@@ -16,13 +16,25 @@ async function setup() {
   const project = (await api.projects.post({ key: 'RUN', name: 'Runs' })).data!;
   const view = (await api.projects({ projectKey: 'RUN' }).get()).data!;
   const created = await createAgent(api, 'RUN', {
-    name: 'Runner', username: 'runner', kind: 'external',
+    name: 'Runner',
+    username: 'runner',
+    kind: 'external',
+    triggerOnMention: true,
   });
-  const issue = (await api.projects({ projectKey: 'RUN' }).issues.post({
-    title: 'Run this', columnId: view.columns[0].id,
-  })).data!;
+  const issue = (
+    await api.projects({ projectKey: 'RUN' }).issues.post({
+      title: 'Run this',
+      columnId: view.columns[0].id,
+    })
+  ).data!;
   await api.issues({ issueId: issue.id }).comments.post({ body: '@runner start' });
-  return { api, project, issue, agent: created.data!.agent, runner: apiKeyApi(created.data!.apiKey!) };
+  return {
+    api,
+    project,
+    issue,
+    agent: created.data!.agent,
+    runner: apiKeyApi(created.data!.apiKey!),
+  };
 }
 
 const scopes = { query: { scopes: 'runnerQueue:1' } };
@@ -36,19 +48,40 @@ describe('runner queue', () => {
     const queued = await api['agent-runs'].queue.get();
     expect(queued.status).toBe(200);
     expect(queued.data).toMatchObject({ total: 1, queued: 1, running: 0 });
-    expect(queued.data!.items[0]).toMatchObject({ status: 'pending', executionState: 'queued', runnerState: 'never' });
+    expect(queued.data!.items[0]).toMatchObject({
+      status: 'pending',
+      executionState: 'queued',
+      runnerState: 'never',
+    });
     const before = (await api.sync.rev.get(scopes)).data!.revs['runnerQueue:1'];
     const claimed = (await runner['agent-runs'].claim.post()).data!.run!;
     const running = await api['agent-runs'].queue.get();
     expect(running.data).toMatchObject({ total: 1, queued: 0, running: 1 });
-    expect(running.data!.items[0]).toMatchObject({ id: claimed.id, status: 'pending', executionState: 'running', runnerState: 'online' });
+    expect(running.data!.items[0]).toMatchObject({
+      id: claimed.id,
+      status: 'pending',
+      executionState: 'running',
+      runnerState: 'online',
+    });
     expect((await api.sync.rev.get(scopes)).data!.revs['runnerQueue:1']).not.toBe(before);
-    expect((await api.issues({ issueId: issue.id })['agent-runs'].get()).data!.items[0].executionState).toBe('running');
+    expect(
+      (await api.issues({ issueId: issue.id })['agent-runs'].get()).data!.items[0].executionState,
+    ).toBe('running');
     await runner['agent-runs']({ runId: claimed.id }).heartbeat.post();
     expect((await api['agent-runs'].queue.get()).data!.running).toBe(1);
-    await runner['agent-runs']({ runId: claimed.id }).result.post({ status: 'success', output: 'Done' });
-    expect((await api['agent-runs'].queue.get()).data).toMatchObject({ items: [], total: 0, running: 0, queued: 0 });
-    expect((await api.issues({ issueId: issue.id })['agent-runs'].get()).data!.items[0].executionState).toBe('success');
+    await runner['agent-runs']({ runId: claimed.id }).result.post({
+      status: 'success',
+      output: 'Done',
+    });
+    expect((await api['agent-runs'].queue.get()).data).toMatchObject({
+      items: [],
+      total: 0,
+      running: 0,
+      queued: 0,
+    });
+    expect(
+      (await api.issues({ issueId: issue.id })['agent-runs'].get()).data!.items[0].executionState,
+    ).toBe('success');
   });
 
   it('keeps admission delays and retry backoff in the waiting state', async () => {
@@ -60,21 +93,36 @@ describe('runner queue', () => {
     expect((await runner['agent-runs']({ runId: queued.id }).heartbeat.post()).status).toBe(404);
     setRunAdmission();
     // Move the admission deadline forward without sleeping through a real minute.
-    await db.update(agentRun).set({ nextAttemptAt: new Date(0) }).where(eq(agentRun.id, queued.id));
+    await db
+      .update(agentRun)
+      .set({ nextAttemptAt: new Date(0) })
+      .where(eq(agentRun.id, queued.id));
     const claimed = (await runner['agent-runs'].claim.post()).data!.run!;
     await scheduleRunRetry(claimed.id, 60_000, 'Temporary failure');
     expect((await runner['agent-runs']({ runId: claimed.id }).heartbeat.post()).status).toBe(404);
-    expect((await api['agent-runs'].queue.get()).data!.items[0]).toMatchObject({ executionState: 'queued', lastError: 'Temporary failure' });
+    expect((await api['agent-runs'].queue.get()).data!.items[0]).toMatchObject({
+      executionState: 'queued',
+      lastError: 'Temporary failure',
+    });
     setRunAdmission(async () => 60);
-    await db.update(agentRun).set({ nextAttemptAt: new Date(0) }).where(eq(agentRun.id, claimed.id));
+    await db
+      .update(agentRun)
+      .set({ nextAttemptAt: new Date(0) })
+      .where(eq(agentRun.id, claimed.id));
     expect((await runner['agent-runs'].claim.post()).data!.run).toBeNull();
-    expect((await api['agent-runs'].queue.get()).data!.items[0]).toMatchObject({ executionState: 'queued', attempts: 1 });
+    expect((await api['agent-runs'].queue.get()).data!.items[0]).toMatchObject({
+      executionState: 'queued',
+      attempts: 1,
+    });
   });
 
   it('shows an expired execution lease as waiting', async () => {
     const { api, runner } = await setup();
     const run = (await runner['agent-runs'].claim.post()).data!.run!;
-    await db.update(agentRun).set({ nextAttemptAt: new Date(0) }).where(eq(agentRun.id, run.id));
+    await db
+      .update(agentRun)
+      .set({ nextAttemptAt: new Date(0) })
+      .where(eq(agentRun.id, run.id));
     expect((await api['agent-runs'].queue.get()).data).toMatchObject({ queued: 1, running: 0 });
     const reclaimed = (await runner['agent-runs'].claim.post()).data!.run!;
     expect(reclaimed).toMatchObject({ id: run.id, attempts: 2 });
@@ -83,12 +131,24 @@ describe('runner queue', () => {
 
   it('filters projects, counts and markers by both read permissions', async () => {
     const { api, project, agent } = await setup();
-    const other = (await api.teams({ teamId: project.teamId }).projects.post({ key: 'HID', name: 'Hidden' })).data!;
-    await api.teams({ teamId: project.teamId })['ai-agents']({ agentId: agent.id }).projects.put({ projectIds: [project.id, other.id] });
+    const other = (
+      await api.teams({ teamId: project.teamId }).projects.post({ key: 'HID', name: 'Hidden' })
+    ).data!;
+    await api
+      .teams({ teamId: project.teamId })
+      ['ai-agents']({ agentId: agent.id })
+      .projects.put({ projectIds: [project.id, other.id] });
     const columnId = (await api.projects({ projectKey: 'HID' }).get()).data!.columns[0].id;
-    const issue = (await api.projects({ projectKey: 'HID' }).issues.post({ columnId, title: 'Secret' })).data!;
+    const issue = (
+      await api.projects({ projectKey: 'HID' }).issues.post({ columnId, title: 'Secret' })
+    ).data!;
     await api.issues({ issueId: issue.id }).comments.post({ body: '@runner hidden work' });
-    const role = (await createRole(api, 'RUN', { name: 'Run reader', permissions: { work_items: { read: true }, ai_agents: { read: true } } })).data!;
+    const role = (
+      await createRole(api, 'RUN', {
+        name: 'Run reader',
+        permissions: { work_items: { read: true }, ai_agents: { read: true } },
+      })
+    ).data!;
     const reader = await addProjectMember(api, 'RUN', role.id);
     expect((await api['agent-runs'].queue.get()).data!.total).toBe(2);
     const mine = (await reader['agent-runs'].queue.get()).data!;
@@ -98,9 +158,12 @@ describe('runner queue', () => {
     await api.issues({ issueId: issue.id }).comments.post({ body: '@runner more hidden work' });
     expect((await reader.sync.rev.get(scopes)).data!.revs['runnerQueue:1']).toBe(marker);
     for (const permissions of [{ work_items: { read: true } }, { ai_agents: { read: true } }]) {
-      const restricted = (await createRole(api, 'RUN', {
-        name: JSON.stringify(permissions), permissions,
-      })).data!;
+      const restricted = (
+        await createRole(api, 'RUN', {
+          name: JSON.stringify(permissions),
+          permissions,
+        })
+      ).data!;
       const denied = await addProjectMember(api, 'RUN', restricted.id);
       expect((await denied['agent-runs'].queue.get()).data).toMatchObject({ items: [], total: 0 });
       expect((await denied.sync.rev.get(scopes)).data!.revs['runnerQueue:1']).toBe('0');
@@ -111,7 +174,9 @@ describe('runner queue', () => {
     const { api, issue, runner } = await setup();
     await api.issues({ issueId: issue.id }).comments.post({ body: '@runner second run' });
     await createAgent(api, 'RUN', { name: 'Internal', username: 'internal', kind: 'internal' });
-    await api.issues({ issueId: issue.id }).comments.post({ body: '@internal private internal work' });
+    await api
+      .issues({ issueId: issue.id })
+      .comments.post({ body: '@internal private internal work' });
     const first = (await api['agent-runs'].queue.get({ query: { page: 1, pageSize: 1 } })).data!;
     const second = (await api['agent-runs'].queue.get({ query: { page: 2, pageSize: 1 } })).data!;
     expect(first.total).toBe(2);
@@ -127,18 +192,33 @@ describe('runner queue', () => {
   it('includes a scheduled manual run that has no issue', async () => {
     const { api, agent } = await setup();
     const schedule = await api.projects({ projectKey: 'RUN' })['agent-schedules'].post({
-      agentId: agent.id, name: 'Daily', cron: '0 9 * * *', prompt: 'Daily work',
+      agentId: agent.id,
+      name: 'Daily',
+      cron: '0 9 * * *',
+      prompt: 'Daily work',
     });
     expect(schedule.status).toBe(201);
-    const queued = await api.projects({ projectKey: 'RUN' })['agent-schedules']({ scheduleId: schedule.data!.id }).run.post();
+    const queued = await api
+      .projects({ projectKey: 'RUN' })
+      ['agent-schedules']({ scheduleId: schedule.data!.id })
+      .run.post();
     expect(queued.status).toBe(202);
     const queue = (await api['agent-runs'].queue.get()).data!;
-    expect(queue.items).toContainEqual(expect.objectContaining({ id: queued.data!.runId, issueId: null, trigger: 'manual', executionState: 'queued' }));
+    expect(queue.items).toContainEqual(
+      expect.objectContaining({
+        id: queued.data!.runId,
+        issueId: null,
+        trigger: 'manual',
+        executionState: 'queued',
+      }),
+    );
   });
 
   it('removes canceled runs after their issue moves', async () => {
     const { api, project, issue } = await setup();
-    const other = (await api.teams({ teamId: project.teamId }).projects.post({ key: 'NEXT', name: 'Next' })).data!;
+    const other = (
+      await api.teams({ teamId: project.teamId }).projects.post({ key: 'NEXT', name: 'Next' })
+    ).data!;
     const moved = await api.issues({ issueId: issue.id }).move.post({ projectId: other.id });
     expect(moved.status).toBe(200);
     expect((await api['agent-runs'].queue.get()).data!.total).toBe(0);

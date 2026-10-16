@@ -208,7 +208,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       return {
         detail: requiresPermission(['ai_agents', 'read']) as DocumentDecoration,
         async resolve({ params, user, request }) {
-          const projectId = await getIssueProjectId(Number((params as { issueId: string }).issueId));
+          const projectId = await getIssueProjectId(
+            Number((params as { issueId: string }).issueId),
+          );
           if (projectId == null) throw new HttpError(404, 'Issue not found');
           await assertPermission(projectId, user, 'work_items', 'read');
           await assertPermission(projectId, user, 'ai_agents', 'read');
@@ -1151,7 +1153,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         query.traceId,
       );
       if (trace === undefined) throw new HttpError(404, 'Run not found');
-      return trace;
+      return Response.json(trace);
     },
     {
       params: issueAgentRunParams,

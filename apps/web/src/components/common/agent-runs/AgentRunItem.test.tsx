@@ -27,7 +27,12 @@ const run: IssueAgentRun = {
 
 function markup(executionState: 'queued' | 'running') {
   return renderToStaticMarkup(
-    <NextIntlClientProvider locale="en" messages={{ issue }} timeZone="UTC" now={new Date('2026-01-01T00:00:00Z')}>
+    <NextIntlClientProvider
+      locale="en"
+      messages={{ issue }}
+      timeZone="UTC"
+      now={new Date('2026-01-01T00:00:00Z')}
+    >
       <RelativeTimeProvider>
         <AgentRunItem issueId={null} run={{ ...run, executionState }} />
       </RelativeTimeProvider>

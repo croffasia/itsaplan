@@ -420,8 +420,6 @@ export const IssueCycleResponse = t.Object({
 
 export const projectKeyParams = t.Object({ projectKey: t.String() });
 
-// A custom field value, the same shape for a write to one field and for the fields of
-// a new issue.
 const fieldValueProps = {
   value: t.Optional(
     t.Nullable(t.Union([t.String({ maxLength: ISSUE_TEXT_LIMIT }), t.Number(), t.Boolean()])),

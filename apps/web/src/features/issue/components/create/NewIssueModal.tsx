@@ -243,12 +243,17 @@ export default function NewIssueModal({
   async function submit() {
     setSaving(true);
     setError(null);
-    // Body fields always apply; property fields only once they are shown.
-    const fields = fieldDefs.flatMap((def) => {
+    const filled = fieldDefs.flatMap((def) => {
       if (!def.showInBody && !activeFieldIds.includes(def.id)) return [];
       const value = fieldValues[def.id];
-      return hasFieldValue(value) ? [{ fieldId: def.id, ...value }] : [];
+      return hasFieldValue(value) ? [{ def, value }] : [];
     });
+    // A value that embeds a pending file holds its blob: URL until the upload, so it is
+    // written after it, unless the field is required and has to come with the create.
+    const embedsPending = (value: IssueFieldValueInput) =>
+      typeof value.value === 'string' && value.value.includes('blob:');
+    const withCreate = filled.filter(({ def, value }) => def.required || !embedsPending(value));
+    const afterUpload = filled.filter((entry) => !withCreate.includes(entry));
     try {
       const created = await createIssue.mutateAsync({
         projectKey: project.project.ref,
@@ -268,7 +273,7 @@ export default function NewIssueModal({
           startDate: startDate || null,
           dueDate: dueDate || null,
           labelIds,
-          fields,
+          fields: withCreate.map(({ def, value }) => ({ fieldId: def.id, ...value })),
         },
       });
       // Upload the pending files, then point every embed at its stored URL
@@ -287,14 +292,22 @@ export default function NewIssueModal({
         await updateIssue.mutateAsync({ id: created.id, patch: { description: body.trim() } });
       }
 
-      // A field that embeds a pending file was created with its blob: URL.
-      for (const { fieldId, ...value } of fields) {
-        if (typeof value.value !== 'string') continue;
-        const stored = rewrite(value.value);
-        if (stored === value.value) continue;
+      for (const { def, value } of afterUpload) {
         await setFieldValueMutation.mutateAsync({
           issueId: created.id,
-          fieldId,
+          fieldId: def.id,
+          value: { ...value, value: rewrite(String(value.value)) },
+        });
+      }
+      // A required value went out with its blob: URL. A failed upload that would empty
+      // it leaves that value: a required field cannot be cleared.
+      for (const { def, value } of withCreate) {
+        if (!embedsPending(value)) continue;
+        const stored = rewrite(String(value.value));
+        if (stored === value.value || stored.trim() === '') continue;
+        await setFieldValueMutation.mutateAsync({
+          issueId: created.id,
+          fieldId: def.id,
           value: { ...value, value: stored },
         });
       }

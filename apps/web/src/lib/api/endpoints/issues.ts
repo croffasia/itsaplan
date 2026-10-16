@@ -253,7 +253,7 @@ export interface NewIssueInput {
   startDate?: string | null;
   dueDate?: string | null;
   labelIds?: number[];
-  // Custom field values the issue is created with. A required field must be here.
+  // A required field must be here.
   fields?: (IssueFieldValueInput & { fieldId: number })[];
 }
 

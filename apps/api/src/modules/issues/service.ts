@@ -1633,9 +1633,6 @@ async function assertFieldInput(
   }
 }
 
-// The values a new issue is created with, each matched to a field that applies to the
-// issue's type and checked before the issue is written. A value that holds nothing is
-// dropped.
 async function resolveNewIssueFields(
   projectId: number,
   typeId: number | null,
@@ -1653,8 +1650,7 @@ async function resolveNewIssueFields(
   return resolved;
 }
 
-// Rejects a new issue that leaves a required field of its type empty. The create route
-// checks it; an import creates issues as their source holds them.
+// The create route checks it; an import creates issues as their source holds them.
 export async function assertRequiredFields(
   projectId: number,
   typeId: number | null,
@@ -1712,14 +1708,9 @@ export async function setIssueFieldValue(
 
   if (field.fieldType === 'select' || field.fieldType === 'multi_select') {
     const optionIds = input.optionIds ?? [];
-    // An option must be one of this field's own: the issue_field_option foreign key
-    // only requires it to exist somewhere. Resolved before the delete so a rejected
-    // request leaves the current selection untouched.
-    const names = optionIds.map((optionId) => {
-      const option = field.options.find((o) => o.id === optionId);
-      if (!option) throw new HttpError(400, 'Option does not belong to this field');
-      return option.value;
-    });
+    const names = optionIds.map(
+      (optionId) => field.options.find((o) => o.id === optionId)?.value ?? '',
+    );
 
     await db
       .delete(issueFieldOption)
@@ -1751,16 +1742,12 @@ export async function setIssueFieldValue(
       case 'datetime':
         column = { valueDatetime: parseDatetime(input.value), valueDatetimeEnd: null };
         break;
-      case 'datetime_range': {
-        const start = parseDatetime(input.value);
-        const end = parseDatetime(input.valueEnd);
-        if (end && !start) throw new HttpError(400, 'Range end needs a start');
-        if (start && end && end <= start) {
-          throw new HttpError(400, 'Range end must be after its start');
-        }
-        column = { valueDatetime: start, valueDatetimeEnd: end };
+      case 'datetime_range':
+        column = {
+          valueDatetime: parseDatetime(input.value),
+          valueDatetimeEnd: parseDatetime(input.valueEnd),
+        };
         break;
-      }
       default:
         column = { valueText: (input.value as string) ?? null };
     }

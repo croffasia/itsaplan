@@ -1,0 +1,115 @@
+{
+  "title": "Mitglieder",
+  "description": "Personen mit Zugriff auf dieses Projekt.",
+  "add": {
+    "action": "Mitglied hinzufügen",
+    "title": "Mitglied hinzufügen",
+    "personLabel": "Teammitglied oder E-Mail",
+    "pickPlaceholder": "Jemanden auswählen",
+    "searchPlaceholder": "Team durchsuchen oder E-Mail eingeben",
+    "searchTeamPlaceholder": "Team durchsuchen",
+    "fromTeam": "Aus dem Team",
+    "byEmail": "Per E-Mail einladen",
+    "inviteEmail": "{email} einladen",
+    "alreadyInvited": "{email} ist bereits eingeladen",
+    "domainNotAllowed": "{email} gehört zu einer Domain, die diese Instanz nicht zulässt",
+    "alreadyMember": "{email} ist bereits in diesem Projekt",
+    "alreadyInTeam": "{email} ist bereits im Team — oben aus der Liste wählen",
+    "refused": "{email} konnte nicht hinzugefügt werden",
+    "typeEmail": "Niemand gefunden. Geben Sie eine vollständige E-Mail-Adresse ein, um einzuladen.",
+    "noCandidates": "Alle im Team sind bereits in diesem Projekt.",
+    "willJoinTeam": "Tritt dem Team {teamName} und diesem Projekt bei",
+    "roleLabel": "Rolle im Projekt",
+    "rolePlaceholder": "Rolle",
+    "submit": "Zum Projekt hinzufügen",
+    "sendInvite": "Einladung senden"
+  },
+  "columns": {
+    "member": "Mitglied",
+    "role": "Rolle",
+    "timezone": "Zeitzone",
+    "joined": "Beigetreten",
+    "actions": "Aktionen"
+  },
+  "profileHeading": "Profil",
+  "you": "(Sie)",
+  "aiAgent": "KI-Agent",
+  "tabs": {
+    "all": "Alle",
+    "people": "Personen",
+    "agents": "KI-Agenten",
+    "label": "Anzeigen"
+  },
+  "leaveProject": "Projekt verlassen",
+  "revokeAccess": "Zugriff widerrufen",
+  "lastOwner": "Ein Projekt muss mindestens einen Inhaber behalten",
+  "leaveTitle": "Dieses Projekt verlassen",
+  "leaveDescription": "Sie verlieren den Zugriff auf dieses Projekt und seine Vorgänge. Ein Inhaber kann Sie später wieder einladen.",
+  "revokeTitle": "Zugriff für {name} widerrufen",
+  "revokeDescription": "{name} verliert den Zugriff auf dieses Projekt. Die Person kann später wieder eingeladen werden.",
+  "selectRole": "Rolle auswählen",
+  "editDescription": "Beschreibung bearbeiten",
+  "descriptionQuestionSelf": "Was machen Sie in diesem Projekt?",
+  "descriptionQuestionOther": "Was macht diese Person in diesem Projekt?",
+  "descriptionPlaceholder": "z. B. Backend-Entwickler, verantwortlich für API und Integrationen",
+  "invites": {
+    "pendingCount": "{count, plural, one {# ausstehende Einladung} other {# ausstehende Einladungen}}",
+    "copyLink": "Link kopieren",
+    "copied": "Kopiert",
+    "emailQueued": "Einladungs-E-Mail in Warteschlange",
+    "emailUnavailable": "Einladung erstellt, aber E-Mail nicht in Warteschlange. Kopieren Sie den Link zum Teilen.",
+    "resendUnavailable": "E-Mail ist nicht konfiguriert. Kopieren Sie den Einladungslink zum Teilen.",
+    "resendEmail": "E-Mail senden",
+    "resendingEmail": "Wird in Warteschlange gestellt…",
+    "renew": "Erneuern",
+    "renewing": "Wird erneuert…",
+    "renewed": "Einladung erneuert: ein neuer Link wurde per E-Mail gesendet",
+    "renewedNoEmail": "Einladung erneuert. E-Mail nicht konfiguriert: kopieren Sie den neuen Link zum Teilen.",
+    "renewedCopyLink": "Einladung erneuert. Kopieren Sie den neuen Link zum Teilen.",
+    "revokeAction": "Einladung widerrufen",
+    "removeAction": "Einladung entfernen",
+    "invitedBy": "Eingeladen von {name} · ",
+    "createdAt": "erstellt {date}",
+    "expiredAt": "abgelaufen {date}",
+    "respondedAt": "{status, select, accepted {angenommen} rejected {abgelehnt} other {aktualisiert}} {date}",
+    "status": {
+      "pending": "Ausstehend",
+      "accepted": "Angenommen",
+      "rejected": "Abgelehnt",
+      "expired": "Abgelaufen"
+    },
+    "revokeTitle": "Einladung für {email} widerrufen",
+    "revokeConfirm": "Einladung widerrufen",
+    "revokeDescription": "Der Einladungslink funktioniert nicht mehr. Sie können diese E-Mail später erneut einladen."
+  },
+  "promoted": "Mitglied zum Inhaber befördert",
+  "roleUpdated": "Rolle des Mitglieds aktualisiert",
+  "descriptionUpdated": "Beschreibung des Mitglieds aktualisiert",
+  "added": "Mitglied hinzugefügt",
+  "provisioned": "Verwaltet durch SCIM",
+  "search": {
+    "all": "Mitglieder durchsuchen",
+    "people": "Personen durchsuchen",
+    "agents": "KI-Agenten durchsuchen"
+  },
+  "empty": {
+    "all": {
+      "title": "Noch keine Mitglieder",
+      "description": "Personen und KI-Agenten erscheinen hier, sobald sie beitreten."
+    },
+    "human": {
+      "title": "Noch keine Personen",
+      "description": "Personen erscheinen hier, sobald sie beitreten."
+    },
+    "agent": {
+      "title": "Noch keine KI-Agenten",
+      "description": "KI-Agenten erscheinen hier, sobald sie hinzugefügt werden."
+    },
+    "search": {
+      "title": "Nichts gefunden",
+      "all": "Kein Mitglied entspricht dieser Suche.",
+      "human": "Keine Person entspricht dieser Suche.",
+      "agent": "Kein KI-Agent entspricht dieser Suche."
+    }
+  }
+}

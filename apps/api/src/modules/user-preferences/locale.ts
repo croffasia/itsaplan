@@ -9,6 +9,7 @@ export const LOCALES = [
   'id',
   'es-ES',
   'ko',
+  'de',
 ] as const;
 
 export type Locale = (typeof LOCALES)[number];

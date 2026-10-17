@@ -1,0 +1,119 @@
+{
+  "newIssue": "Neuer Vorgang",
+  "pin": "Anheften",
+  "unpin": "Loslösen",
+  "collapse": "Einklappen",
+  "expand": "Ausklappen",
+  "hide": "Ausblenden",
+  "show": "Anzeigen",
+  "hiddenColumns": "Ausgeblendete Spalten",
+  "hiddenGroups": "Ausgeblendete Gruppen",
+  "selectAll": "Alle auswählen",
+  "deselectAll": "Auswahl aufheben",
+  "resizeColumn": "Spalte anpassen",
+  "viewNamePlaceholder": "Alle Vorgänge",
+  "sortedOrder": "Vorgänge sind nach {field} sortiert. Wechseln Sie die Sortierung auf Manuell, um sie zu verschieben.",
+  "statusSince": "Seit {date} im aktuellen Status",
+  "createdOn": "Erstellt am {date}",
+  "updatedOn": "Aktualisiert am {date}",
+  "subtasksProgress": "Unteraufgaben {done}/{total}",
+  "subtasksDone": "{done} von {total} Unteraufgaben erledigt",
+  "wip": {
+    "reached": "{column} hat sein Limit von {limit} Vorgängen erreicht.",
+    "tooltip": "Work-in-Progress-Limit: {max}",
+    "count": "{count} / {max}",
+    "filteredCount": "{shown} von {total} / {max}",
+    "filteredTooltip": "{shown} durch die aktuellen Filter angezeigt. Das Limit von {max} zählt alle {total} Vorgänge in der Spalte."
+  },
+  "columns": {
+    "title": "Titel",
+    "status": "Status",
+    "statusAge": "Im Status",
+    "priority": "Priorität",
+    "type": "Typ",
+    "initiative": "Initiative",
+    "cycle": "Zyklus",
+    "labels": "Labels",
+    "estimatePoints": "Story Points",
+    "estimateTime": "Zeit",
+    "startDate": "Start",
+    "dueDate": "Fällig",
+    "created": "Erstellt",
+    "updated": "Aktualisiert"
+  },
+  "calendar": {
+    "previousMonth": "Vorheriger Monat",
+    "nextMonth": "Nächster Monat",
+    "today": "Heute",
+    "moreIssues": "+{count} weitere",
+    "issueCount": "{count, plural, one {# Vorgang} other {# Vorgänge}}",
+    "weekdays": {
+      "sun": "So",
+      "mon": "Mo",
+      "tue": "Di",
+      "wed": "Mi",
+      "thu": "Do",
+      "fri": "Fr",
+      "sat": "Sa"
+    },
+    "noDate": {
+      "dueDate": "Kein Fälligkeitsdatum",
+      "startDate": "Kein Startdatum",
+      "custom": "Kein Datum"
+    },
+    "allDated": {
+      "dueDate": "Alles hat ein Fälligkeitsdatum.",
+      "startDate": "Alles hat ein Startdatum.",
+      "custom": "Alles hat ein Datum."
+    }
+  },
+  "timeline": {
+    "empty": "Noch keine Vorgänge für die Zeitleiste.",
+    "expandGroup": "Gruppe ausklappen",
+    "collapseGroup": "Gruppe einklappen",
+    "inferredStart": "Start aus dem Erstellungsdatum abgeleitet",
+    "inferredStartDraggable": "Start aus dem Erstellungsdatum abgeleitet — ziehen, um ihn festzulegen"
+  },
+  "bulk": {
+    "selected": "{count} ausgewählt",
+    "status": "Status",
+    "priority": "Priorität",
+    "assignee": "Zugewiesen an",
+    "delegate": "Delegierter",
+    "initiative": "Initiative",
+    "cycle": "Zyklus",
+    "labels": "Labels",
+    "noAssignee": "Kein Zuständiger",
+    "noDelegate": "Kein Delegierter",
+    "noInitiative": "Keine Initiative",
+    "noCycle": "Kein Zyklus",
+    "archive": "Archivieren",
+    "clearSelection": "Auswahl leeren"
+  },
+  "removal": {
+    "archive": {
+      "title": "{count, plural, one {Vorgang archivieren} other {Vorgänge archivieren}}",
+      "confirm": "{count, plural, one {# Vorgang archivieren} other {# Vorgänge archivieren}}",
+      "description": "{count, plural, one {# ausgewählten Vorgang archivieren? Er verlässt das Board und kann später wiederhergestellt werden.} other {# ausgewählte Vorgänge archivieren? Sie verlassen das Board und können später wiederhergestellt werden.}}"
+    },
+    "delete": {
+      "title": "{count, plural, one {Vorgang löschen} other {Vorgänge löschen}}",
+      "confirm": "{count, plural, one {# Vorgang löschen} other {# Vorgänge löschen}}",
+      "description": "{count, plural, one {# ausgewählten Vorgang löschen?} other {# ausgewählte Vorgänge löschen?}} Kommentare, Aktivität und Anhänge werden ebenfalls entfernt. Dies kann nicht rückgängig gemacht werden."
+    }
+  },
+  "share": {
+    "issueTitle": "Vorgang",
+    "issueUnavailable": "Dieser Vorgang ist nicht verfügbar.",
+    "boardUnavailable": "Dieses geteilte Board ist nicht verfügbar. Der Link wurde möglicherweise widerrufen."
+  },
+  "groups": {
+    "noAssignee": "Kein Zuständiger",
+    "noDelegate": "Kein Delegierter",
+    "noPriority": "Keine Priorität",
+    "noType": "Kein Typ",
+    "noInitiative": "Keine Initiative",
+    "noCycle": "Kein Zyklus",
+    "noMember": "Kein Wert"
+  }
+}

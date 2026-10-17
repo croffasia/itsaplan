@@ -1,0 +1,76 @@
+{
+  "title": "Zyklen",
+  "newCycle": "Neuer Zyklus",
+  "status": {
+    "upcoming": "Kommend",
+    "active": "Aktiv",
+    "completed": "Abgeschlossen"
+  },
+  "views": {
+    "table": "Tabelle",
+    "timeline": "Zeitleiste"
+  },
+  "columns": {
+    "name": "Name",
+    "dates": "Daten",
+    "length": "Dauer",
+    "issues": "Vorgänge",
+    "progress": "Fortschritt"
+  },
+  "emptyTitle": "Noch keine Zyklen",
+  "emptyDescription": "Ein Zyklus ist ein zeitlich begrenzter Zeitraum, in den das Team seine Vorgänge plant.",
+  "nothingPlannedTitle": "Nichts geplant",
+  "nothingPlannedDescription": "Die Zeitleiste zeigt aktive und kommende Zyklen. Abgeschlossene finden Sie in der Tabelle.",
+  "options": "Zyklusoptionen",
+  "transferIssues": "{count, plural, one {# unerledigten Vorgang verschieben} other {# unerledigte Vorgänge verschieben}}",
+  "finishedEarly": "Früh beendet, geplant bis {date}",
+  "form": {
+    "editTitle": "Zyklus bearbeiten",
+    "newTitle": "Neuer Zyklus",
+    "name": "Name",
+    "goal": "Ziel",
+    "goalPlaceholder": "Was soll dieser Zyklus liefern?",
+    "length": "Dauer",
+    "starts": "Startet",
+    "ends": "Endet",
+    "create": "Zyklus erstellen",
+    "saveFailed": "Zyklus konnte nicht gespeichert werden"
+  },
+  "weeks": "{count, plural, one {# Woche} other {# Wochen}}",
+  "transfer": {
+    "title": "Unerledigte Vorgänge verschieben",
+    "description": "Unerledigte Vorgänge werden in den von Ihnen gewählten Zyklus verschoben. Abgeschlossene und abgebrochene bleiben hier.",
+    "moveTo": "Verschieben nach",
+    "noCycle": "Kein Zyklus",
+    "submit": "Vorgänge verschieben",
+    "moving": "Wird verschoben…",
+    "moved": "{count, plural, one {# Vorgang verschoben} other {# Vorgänge verschoben}}",
+    "failed": "Vorgänge konnten nicht verschoben werden"
+  },
+  "finish": {
+    "action": "Zyklus beenden",
+    "title": "Zyklus früh beenden",
+    "description": "{cycle} schließt heute statt {date}. Sie können ihn nicht wieder öffnen. {count, plural, =0 {Nichts bleibt unerledigt.} one {# unerledigter Vorgang bleibt darauf.} other {# unerledigte Vorgänge bleiben darauf.}}",
+    "submit": "Zyklus beenden"
+  },
+  "startNext": {
+    "action": "Nächsten Zyklus heute starten",
+    "title": "Nächsten Zyklus heute starten",
+    "description": "{cycle} schließt heute und kann nicht wieder geöffnet werden. {next} startet heute und endet weiterhin am {date}. {count, plural, =0 {Nichts wird übernommen.} one {# unerledigter Vorgang wird übernommen.} other {# unerledigte Vorgänge werden übernommen.}} Abgeschlossene und abgebrochene Vorgänge bleiben auf {cycle}.",
+    "submit": "Nächsten Zyklus starten",
+    "started": "{cycle} gestartet. {count, plural, =0 {Keine Vorgänge übernommen.} one {# Vorgang übernommen.} other {# Vorgänge übernommen.}}"
+  },
+  "delete": {
+    "title": "Zyklus löschen",
+    "description": "{cycle} wird endgültig gelöscht. {count, plural, =0 {Er enthält keine Vorgänge.} one {# Vorgang bleibt im Projekt, ohne Zyklus.} other {# Vorgänge bleiben im Projekt, ohne Zyklus.}}"
+  },
+  "details": "Zyklusdetails",
+  "goal": "Ziel",
+  "noGoal": "Kein Ziel festgelegt.",
+  "progress": "Fortschritt",
+  "openCycle": "Zyklus öffnen",
+  "dragFailed": "Zyklus konnte nicht verschoben werden",
+  "notFound": "Zyklus nicht gefunden.",
+  "defaultName": "Sprint {n}",
+  "issuesDone": "Vorgänge erledigt"
+}

@@ -1,0 +1,37 @@
+{
+  "title": "Posteingang",
+  "empty": "Keine Benachrichtigungen",
+  "selectNotification": "Benachrichtigung auswählen",
+  "backToList": "Posteingang",
+  "filter": "Filter",
+  "display": "Anzeige",
+  "notificationType": "Benachrichtigungstyp",
+  "showRead": "Gelesene anzeigen",
+  "showSnoozed": "Zurückgestellte anzeigen",
+  "markAllRead": "Alle als gelesen markieren",
+  "deleteAllRead": "Alle gelesenen löschen",
+  "deleteAllReadCompleted": "Alle gelesenen für abgeschlossene Vorgänge löschen",
+  "types": {
+    "assigned": "Zugewiesen",
+    "mentioned": "Erwähnt",
+    "commented": "Kommentiert",
+    "state_changed": "Status geändert"
+  },
+  "actions": {
+    "markRead": "Als gelesen markieren",
+    "markUnread": "Als ungelesen markieren",
+    "snooze": "Zurückstellen",
+    "unsnooze": "Zurückstellung aufheben",
+    "tomorrow": "Morgen",
+    "inAWeek": "In einer Woche",
+    "pickDate": "Datum wählen…"
+  },
+  "event": {
+    "someone": "Jemand",
+    "assigned": "{who} hat Ihnen den Vorgang zugewiesen",
+    "mentioned": "{who} hat Sie erwähnt",
+    "commented": "{who} hat kommentiert",
+    "stateChanged": "{who} hat den Status von {from} auf {to} geändert",
+    "stateChangedPlain": "{who} hat den Status geändert"
+  }
+}

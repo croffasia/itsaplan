@@ -1,0 +1,51 @@
+{
+  "name": "Name",
+  "key": "Schlüssel (kurz, z. B. MKT)",
+  "copyKey": "Schlüssel",
+  "description": "Beschreibung",
+  "issueTypes": "Vorgangstypen",
+  "typesCreated": "{count, plural, one {# Vorgangstyp} other {# Vorgangstypen}} werden erstellt",
+  "defaultType": "Neue Vorgänge erhalten standardmäßig {type}. Typen sind in den Einstellungen bearbeitbar.",
+  "presets": {
+    "general": "Allgemein",
+    "software": "Software",
+    "product": "Produkt",
+    "content": "Inhalt",
+    "marketing": "Marketing",
+    "design": "Design",
+    "sales": "Vertrieb",
+    "operations": "Betrieb",
+    "support": "Support",
+    "recruiting": "Recruiting"
+  },
+  "copyConfiguration": "Konfiguration kopieren",
+  "selectAll": "Alle auswählen",
+  "clearAll": "Alle leeren",
+  "copyGroups": {
+    "workflow": "Workflow",
+    "automation": "Automatisierung",
+    "views": "Ansichten",
+    "aiTeam": "KI-Team",
+    "knowledge": "Wissen"
+  },
+  "copyItems": {
+    "states": "Status",
+    "issueTypes": "Vorgangstypen",
+    "labels": "Labels",
+    "customFields": "Benutzerdefinierte Felder",
+    "views": "Ansichten",
+    "dashboards": "Übersichten",
+    "documents": "Dokumente",
+    "actions": "Aktionen",
+    "configuration": "Konfiguration",
+    "webhooks": "Webhooks",
+    "agents": "Agenten",
+    "schedules": "Zeitpläne"
+  },
+  "title": "Neues Projekt",
+  "copyTitle": "Projekt „{name}“ kopieren",
+  "create": "Projekt erstellen",
+  "copyAction": "Projekt kopieren",
+  "defaultAgents": "Agenten, die diesem Projekt beitreten: {names}",
+  "copyName": "Kopie von {name}"
+}

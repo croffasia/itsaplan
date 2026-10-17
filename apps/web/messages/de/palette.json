@@ -1,0 +1,14 @@
+{
+  "placeholder": "Befehl eingeben oder suchen…",
+  "noResults": "Keine Ergebnisse gefunden.",
+  "issues": "Vorgänge",
+  "searching": "Suche…",
+  "selectAllIssues": "Alle Vorgänge auswählen",
+  "newIssue": "Neuer Vorgang",
+  "newInitiative": "Neue Initiative",
+  "newProject": "Neues Projekt",
+  "toggleChat": "KI-Chat ein- oder ausblenden",
+  "board": "Board",
+  "commands": "Befehle",
+  "switchProject": "Projekt wechseln"
+}

@@ -1,0 +1,113 @@
+{
+  "account": {
+    "profile": "Profil",
+    "preferences": "Einstellungen",
+    "accounts": "Konten",
+    "security": "Sicherheit",
+    "api-keys": "API-Schlüssel"
+  },
+  "godGroups": {
+    "management": "Verwaltung",
+    "instance": "Instanz"
+  },
+  "god": {
+    "users": {
+      "label": "Benutzer",
+      "description": "Alle Konten dieser Instanz: die globale Rolle, ob die Adresse bestätigt ist und welche Projekte jeder Benutzer erreichen kann."
+    },
+    "teams": {
+      "label": "Teams",
+      "description": "Alle Teams dieser Instanz: die Projekte, die sie besitzen, und wer zu ihnen gehört."
+    },
+    "projects": {
+      "label": "Projekte",
+      "description": "Alle Projekte dieser Instanz: was jedes enthält, wann es zuletzt aktiv war und wer es erreichen kann."
+    },
+    "general": {
+      "label": "Allgemein",
+      "description": "Persönliche Workspaces, Standards für neue Projekte und Agentenprotokolle."
+    },
+    "authentication": {
+      "label": "Authentifizierung",
+      "description": "Wer sich auf dieser Instanz registrieren darf, wie Konten bestätigt werden und die Anbieter, mit denen sich Personen anmelden."
+    },
+    "hotkeys": {
+      "label": "Tastenkürzel",
+      "description": "Die Taste, an die jeder Befehl für alle auf dieser Instanz gebunden ist. Jede Person kann ein Kürzel für ihr eigenes Konto in ihren Einstellungen neu belegen."
+    },
+    "storage": {
+      "label": "Speicher",
+      "description": "Wie viel Personen hochladen dürfen: die Größe einer einzelnen Datei, die akzeptierten Anhangstypen und der Speicher, den jedes Projekt erhält."
+    },
+    "telegram": {
+      "label": "Telegram",
+      "description": "Der Bot, mit dem Personen ihr Telegram-Konto verbinden, und der, der Telegram-Benachrichtigungen für Projekte ohne eigenen Bot zustellt."
+    },
+    "email": {
+      "label": "E-Mail-Anbieter",
+      "description": "Der Mail-Anbieter, über den die Instanz sendet: Passwortzurücksetzungen, Adressbestätigungen und Anmeldelinks."
+    },
+    "auth-provider": {
+      "label": "Authentifizierungsanbieter",
+      "description": "Die externen Konten, mit denen sich Personen anmelden dürfen."
+    },
+    "scim": {
+      "label": "SCIM",
+      "description": "Lassen Sie einen Identity Provider Konten auf dieser Instanz erstellen, aktualisieren und deaktivieren und Projektzugriff über seine Gruppen gewähren."
+    }
+  },
+  "settings": {
+    "general": {
+      "label": "Allgemein",
+      "description": "Der Name des Projekts, seine Beschreibung und die Abschnitte, die es anzeigt."
+    },
+    "states": {
+      "label": "Status",
+      "description": "Die Workflow-Status, durch die Vorgänge laufen, jeweils als Spalte angezeigt."
+    },
+    "issue-types": {
+      "label": "Vorgangstypen",
+      "description": "Die Arten von Vorgängen, die dieses Projekt enthalten kann, jeweils mit eigenen Feldern."
+    },
+    "labels": {
+      "label": "Labels",
+      "description": "Tags zum Organisieren und Filtern von Vorgängen im Projekt."
+    },
+    "custom-fields": {
+      "label": "Benutzerdefinierte Felder",
+      "description": "Zusätzliche Felder, die auf Vorgängen angezeigt werden, global oder auf einen Vorgangstyp beschränkt."
+    },
+    "issue-templates": {
+      "label": "Vorgangsvorlagen",
+      "description": "Vorlagen, aus denen ein neuer Vorgang erstellt werden kann: Titel, Beschreibung und Eigenschaften."
+    },
+    "configuration": {
+      "label": "Konfiguration",
+      "description": "Wie Unteraufgaben mit ihrem übergeordneten Vorgang geschlossen werden und wann veraltete Vorgänge archiviert werden."
+    },
+    "actions": {
+      "label": "Aktionen",
+      "description": "Schaltflächen auf einem Vorgang, die Felder mit einem Klick setzen."
+    },
+    "schedules": {
+      "label": "Zeitpläne",
+      "description": "Agentenaufgaben nach einem wiederkehrenden Zeitplan ausführen."
+    },
+    "webhooks": {
+      "label": "Webhooks",
+      "description": "Projektereignisse an externe URLs senden, signiert mit einem geheimen Schlüssel pro Webhook."
+    },
+    "git": {
+      "label": "Repositories",
+      "description": "Vorgänge schließen, wenn ihre Pull Requests auf GitHub, GitLab, Gitea, Forgejo oder Bitbucket gemerged werden."
+    },
+    "import-export": {
+      "label": "Import/Export",
+      "description": "Vorgänge, Kommentare und Labels aus einer selbst gehosteten Plane-Instanz importieren oder die Daten dieses Projekts als JSON exportieren."
+    },
+    "ai-agents": {
+      "label": "KI-Agenten",
+      "description": "KI-Agenten, die in diesem Projekt arbeiten."
+    }
+  }
+}

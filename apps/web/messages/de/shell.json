@@ -1,0 +1,14 @@
+{
+  "noProjectAccess": "Sie haben keinen Zugriff auf dieses Projekt.",
+  "projectUnavailable": "Dieses Projekt ist nicht verfügbar.",
+  "noProjects": "Noch keine Projekte, erstellen Sie eines, um zu beginnen.",
+  "noTeamsTitle": "Noch kein Team",
+  "noTeamsHint": "Erstellen Sie Ihr Team. Seine Projekte, Mitglieder und Agenten werden darin verwaltet.",
+  "noTeamsMemberHint": "Bitten Sie den Workspace-Inhaber, Sie zu einem Team hinzuzufügen.",
+  "noProjectAccessHint": "Bitten Sie einen Team-Inhaber oder -Manager, Sie zu einem Projekt hinzuzufügen.",
+  "noProjectAccessOwnerHint": "Bitten Sie einen Team-Inhaber oder -Manager, Sie zu einem Projekt hinzuzufügen, oder erstellen Sie Ihr eigenes Team.",
+  "createTeam": "Team erstellen",
+  "noProjectsTitle": "Noch keine Projekte",
+  "noProjectsHint": "Erstellen Sie Ihr erstes Projekt, um Vorgänge auf einem Board zu planen.",
+  "createProject": "Projekt erstellen"
+}

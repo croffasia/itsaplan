@@ -26,11 +26,20 @@ describe('localeFromAcceptLanguage', () => {
     expect(localeFromAcceptLanguage('ko-KR,ko;q=0.9,en;q=0.8')).toBe('ko');
   });
 
+  it('matches a German browser locale to the supported language', () => {
+    expect(localeFromAcceptLanguage('de-DE,de;q=0.9,en;q=0.8')).toBe('de');
+  });
+
+  it('matches Austrian and Swiss German browser locales', () => {
+    expect(localeFromAcceptLanguage('de-AT,de;q=0.9,en;q=0.8')).toBe('de');
+    expect(localeFromAcceptLanguage('de-CH,de;q=0.9,en;q=0.8')).toBe('de');
+  });
+
   it('uses the fallback for a preferred wildcard', () => {
-    expect(localeFromAcceptLanguage('de-DE,*;q=0.9,zh;q=0.8')).toBe('en');
+    expect(localeFromAcceptLanguage('ja-JP,*;q=0.9,zh;q=0.8')).toBe('en');
   });
 
   it('falls back to English when no requested language is supported', () => {
-    expect(localeFromAcceptLanguage('de-DE,ja;q=0.9')).toBe('en');
+    expect(localeFromAcceptLanguage('ja-JP,it-IT;q=0.9')).toBe('en');
   });
 });

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { db, agentRun } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { apiKeyApi, authedApi } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent } from '#tests/helpers/agents';
@@ -13,7 +13,7 @@ import { scheduleRunRetry } from '../../../core/run-queue';
 async function setup() {
   const owner = await signUpTestUser();
   const api = authedApi(owner.cookie);
-  const project = (await api.projects.post({ key: 'RUN', name: 'Runs' })).data!;
+  const project = (await createProject(api, { key: 'RUN', name: 'Runs' })).data!;
   const view = (await api.projects({ projectKey: 'RUN' }).get()).data!;
   const created = await createAgent(api, 'RUN', {
     name: 'Runner',

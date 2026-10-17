@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { db, agentRun } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { authedApi, apiKeyApi } from '#tests/helpers/app';
+import { authedApi, apiKeyApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent } from '#tests/helpers/agents';
@@ -17,7 +17,7 @@ const events = [
 async function setup() {
   const user = await signUpTestUser();
   const api = authedApi(user.cookie);
-  await api.projects.post({ key: 'RUN', name: 'Runs' });
+  await createProject(api, { key: 'RUN', name: 'Runs' });
   const project = (await api.projects({ projectKey: 'RUN' }).get()).data!;
   const created = (
     await createAgent(api, 'RUN', {
@@ -129,7 +129,7 @@ describe('external run events', () => {
       const member = await addProjectMember(api, 'RUN', role.id);
       expect((await member['agent-runs']({ runId: run.id }).trace.get()).status).toBe(403);
     }
-    const other = (await api.projects.post({ key: 'NEXT', name: 'Next' })).data!;
+    const other = (await createProject(api, { key: 'NEXT', name: 'Next' })).data!;
     await api.issues({ issueId: issue.id }).move.post({ projectId: other.id });
     expect((await api['agent-runs']({ runId: run.id }).trace.get()).status).toBe(404);
   }, 20_000);

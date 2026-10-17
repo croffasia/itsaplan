@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { SpanType } from '@mastra/core/observability';
-import { apiKeyApi, authedApi } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent } from '#tests/helpers/agents';
@@ -11,7 +11,7 @@ import { getStore } from '#modules/agents/core/runtime/store';
 async function setup() {
   const owner = await signUpTestUser();
   const api = authedApi(owner.cookie);
-  await api.projects.post({ key: 'RUN', name: 'Runs' });
+  await createProject(api, { key: 'RUN', name: 'Runs' });
   const project = (await api.projects({ projectKey: 'RUN' }).get()).data!;
   const agent = (
     await createAgent(api, 'RUN', {
@@ -134,7 +134,7 @@ describe('issue agent runs', () => {
   it('does not show prompts from the former project of a moved issue', async () => {
     const { api, issue } = await setup();
     const run = (await api.issues({ issueId: issue.id })['agent-runs'].get()).data!.items[0];
-    const target = (await api.projects.post({ key: 'NEXT', name: 'Next' })).data!;
+    const target = (await createProject(api, { key: 'NEXT', name: 'Next' })).data!;
     const moved = await api.issues({ issueId: issue.id }).move.post({ projectId: target.id });
     expect(moved.status).toBe(200);
     const route = api.issues({ issueId: issue.id })['agent-runs'];

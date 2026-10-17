@@ -310,6 +310,8 @@
     },
     "mainInfo": "Informations principales",
     "mainInfoTooltip": "S'affiche dans le corps du ticket, pas dans Propriétés",
+    "required": "Obligatoire",
+    "requiredTooltip": "Un nouveau ticket doit avoir une valeur, et la valeur ne peut pas être effacée",
     "mainInfoMeta": "Informations principales",
     "menu": "Import et export de champs personnalisés",
     "copy": "Copier les champs personnalisés",

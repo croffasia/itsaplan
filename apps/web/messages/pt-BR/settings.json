@@ -310,6 +310,8 @@
     },
     "mainInfo": "Informação principal",
     "mainInfoTooltip": "Mostra no corpo da issue, não em Propriedades",
+    "required": "Obrigatório",
+    "requiredTooltip": "Uma nova issue precisa de um valor, e o valor não pode ser apagado",
     "mainInfoMeta": "Informação principal",
     "menu": "Importar e exportar campos personalizados",
     "copy": "Copiar campos personalizados",

@@ -196,11 +196,13 @@ export default function NewIssueModal({
 
   const [addFieldOpen, setAddFieldOpen] = useState(false);
 
-  // Drop shown fields that no longer apply to the selected type. Nothing is shown
-  // by default — the user adds fields from the "…" menu.
+  // Drop shown fields that no longer apply to the selected type. A required field is
+  // shown from the start; the rest are added from the "…" menu.
   useEffect(() => {
-    const valid = new Set(fieldDefs.filter((d) => !d.showInBody).map((d) => d.id));
-    setActiveFieldIds((prev) => prev.filter((id) => valid.has(id)));
+    const properties = fieldDefs.filter((d) => !d.showInBody);
+    const valid = new Set(properties.map((d) => d.id));
+    const required = properties.filter((d) => d.required).map((d) => d.id);
+    setActiveFieldIds((prev) => [...new Set([...prev.filter((id) => valid.has(id)), ...required])]);
   }, [fieldDefs]);
 
   // The calendars grey out days that would put one date on the wrong side of the
@@ -214,6 +216,7 @@ export default function NewIssueModal({
   const propertyDefs = fieldDefs.filter((d) => !d.showInBody);
   const activeDefs = propertyDefs.filter((d) => activeFieldIds.includes(d.id));
   const availableDefs = propertyDefs.filter((d) => !activeFieldIds.includes(d.id));
+  const missingRequired = fieldDefs.filter((d) => d.required && !hasFieldValue(fieldValues[d.id]));
 
   function toggleLabel(id: number) {
     setLabelIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
@@ -240,6 +243,17 @@ export default function NewIssueModal({
   async function submit() {
     setSaving(true);
     setError(null);
+    const filled = fieldDefs.flatMap((def) => {
+      if (!def.showInBody && !activeFieldIds.includes(def.id)) return [];
+      const value = fieldValues[def.id];
+      return hasFieldValue(value) ? [{ def, value }] : [];
+    });
+    // A value that embeds a pending file holds its blob: URL until the upload, so it is
+    // written after it, unless the field is required and has to come with the create.
+    const embedsPending = (value: IssueFieldValueInput) =>
+      typeof value.value === 'string' && value.value.includes('blob:');
+    const withCreate = filled.filter(({ def, value }) => def.required || !embedsPending(value));
+    const afterUpload = filled.filter((entry) => !withCreate.includes(entry));
     try {
       const created = await createIssue.mutateAsync({
         projectKey: project.project.ref,
@@ -259,6 +273,7 @@ export default function NewIssueModal({
           startDate: startDate || null,
           dueDate: dueDate || null,
           labelIds,
+          fields: withCreate.map(({ def, value }) => ({ fieldId: def.id, ...value })),
         },
       });
       // Upload the pending files, then point every embed at its stored URL
@@ -277,14 +292,24 @@ export default function NewIssueModal({
         await updateIssue.mutateAsync({ id: created.id, patch: { description: body.trim() } });
       }
 
-      // Set custom field values on the freshly created issue. Body fields are
-      // always applicable; property fields only if the user added them.
-      for (const def of fieldDefs) {
-        if (!def.showInBody && !activeFieldIds.includes(def.id)) continue;
-        const v = fieldValues[def.id];
-        if (!hasFieldValue(v)) continue;
-        const value = typeof v.value === 'string' ? { ...v, value: rewrite(v.value) } : v;
-        await setFieldValueMutation.mutateAsync({ issueId: created.id, fieldId: def.id, value });
+      for (const { def, value } of afterUpload) {
+        await setFieldValueMutation.mutateAsync({
+          issueId: created.id,
+          fieldId: def.id,
+          value: { ...value, value: rewrite(String(value.value)) },
+        });
+      }
+      // A required value went out with its blob: URL. A failed upload that would empty
+      // it leaves that value: a required field cannot be cleared.
+      for (const { def, value } of withCreate) {
+        if (!embedsPending(value)) continue;
+        const stored = rewrite(String(value.value));
+        if (stored === value.value || stored.trim() === '') continue;
+        await setFieldValueMutation.mutateAsync({
+          issueId: created.id,
+          fieldId: def.id,
+          value: { ...value, value: stored },
+        });
       }
       onCreated(created);
     } catch (err) {
@@ -312,7 +337,7 @@ export default function NewIssueModal({
         active.contains(titleRef.current);
       if (!isTitleFocused && !isDialogFocused) return;
       e.preventDefault();
-      if (saving || !title.trim()) return;
+      if (saving || !title.trim() || missingRequired.length > 0) return;
       void submit();
     }
     document.addEventListener('keydown', onKeyDown);
@@ -503,6 +528,11 @@ export default function NewIssueModal({
         </div>
 
         {errorMessage && <p className="mt-3 text-xs text-destructive">{errorMessage}</p>}
+        {missingRequired.length > 0 && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            {t('requiredFieldsMissing', { names: missingRequired.map((d) => d.name).join(', ') })}
+          </p>
+        )}
 
         <div className="mt-4 flex items-center gap-2 border-t pt-3">
           <NewIssueAttachButton onPick={attachments.attach} />
@@ -512,7 +542,11 @@ export default function NewIssueModal({
             onAnnotate={annotateAttachment}
             onRemove={removeAttachment}
           />
-          <Button className="ms-auto" disabled={saving || !title.trim()} onClick={submit}>
+          <Button
+            className="ms-auto"
+            disabled={saving || !title.trim() || missingRequired.length > 0}
+            onClick={submit}
+          >
             {t('submit')}
           </Button>
         </div>

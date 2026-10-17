@@ -4,6 +4,7 @@ import type { Editor } from '@tiptap/react';
 import type { SelectionBookmark } from '@tiptap/pm/state';
 import { useTranslations } from 'next-intl';
 import { type Issue, createIssue } from '@/lib/api/endpoints/issues';
+import { ApiError } from '@/lib/api/core/client';
 import { listDocumentIssueLinks, linkDocumentIssue } from '@/lib/api/endpoints/documents';
 import { useShell } from '@/context/shellContext';
 import { qk } from '@/services/queryKeys';
@@ -40,12 +41,13 @@ export default function DocumentCreateIssueDialog({
   const [title, setTitle] = useState(quote.slice(0, 255));
   const [columnId, setColumnId] = useState(project?.columns[0]?.id ?? 0);
   const [pending, setPending] = useState(false);
-  const [failure, setFailure] = useState(false);
+  // The API's own reason when it refused the create, such as required fields left empty.
+  const [failure, setFailure] = useState<{ reason: string | null } | null>(null);
   const created = useRef<Issue | null>(null);
   const create = async () => {
     if (pending || !title.trim() || !columnId) return;
     setPending(true);
-    setFailure(false);
+    setFailure(null);
     try {
       if (!created.current)
         created.current = await createIssue(projectKey, {
@@ -86,8 +88,8 @@ export default function DocumentCreateIssueDialog({
       void qc.invalidateQueries({ queryKey: qk.documentIssueLinks(projectKey, documentId) });
       void qc.invalidateQueries({ queryKey: qk.boardIssues(projectKey) });
       onClose();
-    } catch {
-      setFailure(true);
+    } catch (err) {
+      setFailure({ reason: err instanceof ApiError && err.status === 400 ? err.message : null });
     } finally {
       setPending(false);
     }
@@ -131,7 +133,7 @@ export default function DocumentCreateIssueDialog({
         </label>
         {failure && (
           <p role="alert" className="text-sm text-destructive">
-            {created.current ? t('linkFailed') : t('failed')}
+            {created.current ? t('linkFailed') : (failure.reason ?? t('failed'))}
           </p>
         )}
         <DialogFooter>

@@ -47,6 +47,7 @@ export interface CustomFieldRow {
   fieldType: CustomFieldType;
   memberScope: MemberScope | null;
   showInBody: boolean;
+  required: boolean;
   position: number;
   options: CustomFieldOptionRow[];
 }
@@ -62,6 +63,7 @@ function mapField(
     fieldType: row.fieldType as CustomFieldType,
     memberScope: row.memberScope as MemberScope | null,
     showInBody: row.showInBody,
+    required: row.required,
     position: row.position,
     options,
   };
@@ -151,6 +153,7 @@ export async function createCustomField(input: {
   fieldType: CustomFieldType;
   memberScope?: MemberScope | null;
   showInBody?: boolean;
+  required?: boolean;
   options?: string[];
 }): Promise<CustomFieldRow> {
   const issueTypeId = input.issueTypeId ?? null;
@@ -181,6 +184,7 @@ export async function createCustomField(input: {
         fieldType: input.fieldType,
         memberScope: input.fieldType === 'member' ? (input.memberScope ?? 'all') : null,
         showInBody: input.showInBody ?? false,
+        required: input.required ?? false,
         position: Number(pos),
       })
       .returning({ id: customField.id });
@@ -269,6 +273,7 @@ export async function updateCustomField(
   patch: {
     name?: string;
     showInBody?: boolean;
+    required?: boolean;
     fieldType?: CustomFieldType;
     memberScope?: MemberScope;
     options?: { id?: number; value: string }[];
@@ -292,6 +297,7 @@ export async function updateCustomField(
       .set({
         name: patch.name ?? current.name,
         showInBody: patch.showInBody ?? current.showInBody,
+        required: patch.required ?? current.required,
         fieldType,
         memberScope,
       })

@@ -1,0 +1,29 @@
+{
+  "editAction": "Projekt bearbeiten",
+  "copyAction": "Projekt kopieren",
+  "deleteAction": "Projekt löschen",
+  "leaveAction": "Projekt verlassen",
+  "archiveAction": "Projekt archivieren",
+  "restoreAction": "Projekt wiederherstellen",
+  "archived": "{name} archiviert",
+  "restored": "{name} wiederhergestellt",
+  "deleteDialog": {
+    "title": "{name} löschen?",
+    "confirm": "Endgültig löschen",
+    "description": "Dadurch werden <strong>{name}</strong> und alles darin dauerhaft gelöscht: Vorgänge, Kommentare, Anhänge und Einstellungen. Dies kann nicht rückgängig gemacht werden.",
+    "typeToConfirm": "Geben Sie <code>{key}</code> zur Bestätigung ein."
+  },
+  "leaveDialog": {
+    "title": "{name} verlassen?",
+    "confirm": "Projekt verlassen",
+    "description": "Sie verlieren den Zugriff auf <strong>{name}</strong> und seine Arbeitselemente. Um erneut beizutreten, benötigen Sie eine neue Einladung von einem Inhaber."
+  },
+  "editDialog": {
+    "title": "Projekt bearbeiten",
+    "key": "Schlüssel",
+    "keyHint": "Vorgangslinks benötigen einen Schlüssel aus Großbuchstaben und Ziffern, der mit einem Buchstaben beginnt. Nach dem Speichern kann der Schlüssel nicht mehr geändert werden.",
+    "name": "Name",
+    "description": "Beschreibung",
+    "submit": "Speichern"
+  }
+}

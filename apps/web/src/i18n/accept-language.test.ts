@@ -27,11 +27,20 @@ describe('localeFromAcceptLanguage', () => {
     assert.equal(localeFromAcceptLanguage('ko-KR,ko;q=0.9,en;q=0.8'), 'ko');
   });
 
+  it('matches a German browser locale to the supported language', () => {
+    assert.equal(localeFromAcceptLanguage('de-DE,de;q=0.9,en;q=0.8'), 'de');
+  });
+
+  it('matches Austrian and Swiss German browser locales', () => {
+    assert.equal(localeFromAcceptLanguage('de-AT,de;q=0.9,en;q=0.8'), 'de');
+    assert.equal(localeFromAcceptLanguage('de-CH,de;q=0.9,en;q=0.8'), 'de');
+  });
+
   it('uses the fallback for a preferred wildcard', () => {
-    assert.equal(localeFromAcceptLanguage('de-DE,*;q=0.9,zh;q=0.8'), 'en');
+    assert.equal(localeFromAcceptLanguage('ja-JP,*;q=0.9,zh;q=0.8'), 'en');
   });
 
   it('falls back to English when no requested language is supported', () => {
-    assert.equal(localeFromAcceptLanguage('de-DE,ja;q=0.9'), 'en');
+    assert.equal(localeFromAcceptLanguage('ja-JP,it-IT;q=0.9'), 'en');
   });
 });

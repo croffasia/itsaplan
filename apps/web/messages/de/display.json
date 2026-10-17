@@ -1,0 +1,95 @@
+{
+  "title": "Anzeige",
+  "layouts": {
+    "kanban": "Kanban",
+    "table": "Tabelle",
+    "timeline": "Zeitleiste",
+    "calendar": "Kalender"
+  },
+  "sortFields": {
+    "manual": "Manuell",
+    "title": "Titel",
+    "identifier": "Vorgangsnummer",
+    "status": "Status",
+    "priority": "Priorität",
+    "assignee": "Zugewiesen an",
+    "type": "Typ",
+    "startDate": "Startdatum",
+    "dueDate": "Fälligkeitsdatum",
+    "created": "Erstellt",
+    "updated": "Aktualisiert"
+  },
+  "groupFields": {
+    "none": "Keine Gruppierung",
+    "status": "Status",
+    "assignee": "Zugewiesen an",
+    "delegate": "Delegierter",
+    "priority": "Priorität",
+    "type": "Typ",
+    "initiative": "Initiative",
+    "cycle": "Zyklus"
+  },
+  "properties": {
+    "id": "ID",
+    "status": "Status",
+    "priority": "Priorität",
+    "type": "Typ",
+    "assignee": "Zugewiesen an",
+    "delegate": "Delegierter",
+    "initiative": "Initiative",
+    "cycle": "Zyklus",
+    "labels": "Labels",
+    "estimatePoints": "Story Points",
+    "estimateTime": "Zeitschätzung",
+    "startDate": "Startdatum",
+    "dueDate": "Fälligkeitsdatum",
+    "created": "Erstellt",
+    "updated": "Aktualisiert",
+    "statusAge": "Zeit im Status"
+  },
+  "stateTypes": {
+    "backlog": "Backlog",
+    "unstarted": "Nicht gestartet",
+    "started": "Gestartet",
+    "completed": "Abgeschlossen",
+    "canceled": "Abgebrochen"
+  },
+  "timelineScales": {
+    "week": "Woche",
+    "month": "Monat",
+    "quarter": "Quartal"
+  },
+  "weekStart": {
+    "0": "Sonntag",
+    "1": "Montag"
+  },
+  "dateFields": {
+    "dueDate": "Fälligkeitsdatum",
+    "startDate": "Startdatum"
+  },
+  "rows": {
+    "columns": "Spalten",
+    "grouping": "Gruppierung",
+    "swimlanes": "Swimlanes",
+    "subGrouping": "Untergruppierung",
+    "ordering": "Sortierung",
+    "ascending": "Aufsteigend",
+    "descending": "Absteigend",
+    "showEmptyColumns": "Leere Spalten anzeigen",
+    "showEmptyGroups": "Leere Gruppen anzeigen",
+    "showLinks": "Links anzeigen",
+    "separateSubtaskCards": "Unteraufgaben als separate Karten anzeigen",
+    "separateSubtaskRows": "Unteraufgaben als separate Zeilen anzeigen",
+    "startSubtasksCollapsed": "Mit eingeklappten Unteraufgaben starten",
+    "showNestedSubtasks": "Verschachtelte Unteraufgaben anzeigen",
+    "nestedSubtasks": "Verschachtelte Unteraufgaben",
+    "displayProperties": "Anzeigeeigenschaften",
+    "placeBy": "Platzieren nach",
+    "startWeekOn": "Woche beginnt am",
+    "startCollapsed": "Mit eingeklappten Gruppen starten",
+    "scale": "Skalierung",
+    "addCustomField": "Benutzerdefiniertes Feld hinzufügen",
+    "viewIcon": "Ansichtssymbol"
+  },
+  "layoutCommand": "{layout}-Layout"
+}

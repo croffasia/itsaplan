@@ -1,0 +1,49 @@
+{
+  "title": "MCP-Server",
+  "description": "Verbinden Sie KI-Agenten über das Model Context Protocol mit diesem Projekt. Ein Agent sieht nur, was sein API-Schlüssel erlaubt.",
+  "disabled": "Deaktiviert",
+  "offForTeam": "MCP ist für das Team {team} deaktiviert.",
+  "offForProject": "Das Team {team} hat MCP aktiviert, aber dieses Projekt ist deaktiviert.",
+  "openTeamSettings": "MCP-Einstellungen des Teams öffnen",
+  "askManager": "Bitten Sie einen Team-Inhaber oder -Manager, es zu aktivieren:",
+  "keyHint": "Erstellen Sie einen Schlüssel auf der Seite <link>API-Schlüssel</link>, und ersetzen Sie dann <code>{apiKey}</code> im Ausschnitt.",
+  "endpoint": "MCP-Endpunkt",
+  "clientTabsAria": "Client",
+  "addToFile": "Zu <code>{file}</code> hinzufügen",
+  "notes": {
+    "claudeCode": "Führen Sie dies in Ihrem Terminal aus.",
+    "vscode": "Benötigt GitHub Copilot.",
+    "claudeDesktop": "Claude Desktop verbindet sich über die mcp-remote-Brücke mit entfernten Servern. Benötigt Node.js.",
+    "other": "Jeder Client, der MCP über Streamable HTTP unterstützt, funktioniert. Verweisen Sie ihn auf den Endpunkt. Senden Sie einen Authorization: Bearer {apiKey}-Header."
+  },
+  "clients": {
+    "other": "Sonstige"
+  },
+  "oauth": {
+    "configuration": "Verbindung herstellen",
+    "methodTabsAria": "Verbindungsmethode",
+    "method": "OAuth",
+    "personalKey": "API-Schlüssel",
+    "description": "Verwenden Sie dies für jeden MCP-Client, der OAuth unterstützt, z. B. ChatGPT oder Claude. Sie melden sich mit Ihrem Itsaplan-Konto an. Der Client erhält niemals einen API-Schlüssel.",
+    "discovery": "OAuth-Discovery",
+    "steps": {
+      "add": "Fügen Sie in Ihrem Client eine MCP-App hinzu.",
+      "paste": "Fügen Sie den MCP-Endpunkt ein.",
+      "choose": "Wählen Sie OAuth, wenn der Client nach der Anmeldemethode fragt.",
+      "signIn": "Melden Sie sich bei Itsaplan an und genehmigen Sie den Zugriff."
+    },
+    "security": "OAuth verwendet PKCE (S256), dynamische Client-Registrierung und Zugriffstoken, die auf Ihr Itsaplan-Konto beschränkt sind.",
+    "consent": {
+      "title": "{client} möchte sich mit Ihrem Konto verbinden",
+      "titleUnnamed": "Ein MCP-Client möchte sich mit Ihrem Konto verbinden",
+      "description": "Er handelt mit Ihren Berechtigungen: Was Sie sehen und ändern können, kann er auch.",
+      "account": "Angemeldet als {email}",
+      "redirect": "Nach Ihrer Antwort gelangen Sie zurück zu {host}.",
+      "missingCode": "Dieser Autorisierungsanfrage fehlt ihr Einwilligungscode.",
+      "cancel": "Abbrechen",
+      "pending": "Autorisierung läuft…",
+      "authorize": "Autorisieren",
+      "failed": "OAuth-Autorisierung konnte nicht abgeschlossen werden."
+    }
+  }
+}

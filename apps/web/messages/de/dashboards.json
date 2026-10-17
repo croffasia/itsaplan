@@ -1,0 +1,237 @@
+{
+  "noAccess": "Sie haben keinen Zugriff auf Übersichten.",
+  "defaultName": "Übersicht",
+  "newDashboard": "Neue Übersicht",
+  "renameDashboard": "Übersicht umbenennen",
+  "namePlaceholder": "Übersichtsname",
+  "options": "Übersichtsoptionen",
+  "rename": "Umbenennen",
+  "editLayout": "Layout bearbeiten",
+  "discard": "Verwerfen",
+  "saveDashboard": "Übersicht speichern",
+  "saveChanges": "Änderungen speichern",
+  "noWidgets": "Noch keine Widgets. Fügen Sie eines hinzu, um diese Übersicht aufzubauen.",
+  "addWidget": "Widget hinzufügen",
+  "addWidgetTitle": "Widget hinzufügen",
+  "addWidgetDescription": "Wählen Sie ein Widget, das dieser Übersicht hinzugefügt werden soll.",
+  "searchWidgets": "Widgets durchsuchen",
+  "clearSearch": "Suche leeren",
+  "noWidgetMatches": "Kein Widget entspricht „{query}“.",
+  "dragToMove": "Zum Verschieben ziehen",
+  "widgetName": "Widget-Name",
+  "widgetSettings": "Widget-Einstellungen",
+  "widgetOptions": "Widget-Optionen",
+  "removeWidget": "Widget entfernen",
+  "lastDays": "Letzte {days} Tage",
+  "showRows": "{count} anzeigen",
+  "widgetGroups": {
+    "issues": "Vorgänge",
+    "agents": "KI-Agenten und Webhooks"
+  },
+  "widgets": {
+    "stat": {
+      "label": "Zahl",
+      "description": "Anzahl der Vorgänge, die einem Filter entsprechen"
+    },
+    "recent_issues": {
+      "label": "Neueste Vorgänge",
+      "description": "Neueste Vorgänge nach Erstellungs- oder Aktualisierungszeit"
+    },
+    "activity_feed": {
+      "label": "Aktivitätsfeed",
+      "description": "Projektweites Änderungsprotokoll, filterbar nach Akteur und Aktion"
+    },
+    "pulse": {
+      "label": "Puls",
+      "description": "GitHub-artige Heatmap der täglichen Aktivität"
+    },
+    "throughput": {
+      "label": "Durchsatz",
+      "description": "Erstellte vs. geschlossene Vorgänge pro Woche"
+    },
+    "burnup": {
+      "label": "Burnup",
+      "description": "Umfang, gestartete und abgeschlossene Vorgänge pro Tag mit voraussichtlichem Abschlussdatum"
+    },
+    "breakdown": {
+      "label": "Aufschlüsselung",
+      "description": "Vorgangszahlen nach Status, Priorität, Typ oder Zuständigem"
+    },
+    "agent_runs": {
+      "label": "Agentenläufe",
+      "description": "Neueste KI-Agentenläufe mit ihrem Ergebnis"
+    },
+    "agent_health": {
+      "label": "Agentenzustand",
+      "description": "Erfolgsrate und Fehler von Agentenläufen über einen Zeitraum"
+    },
+    "webhook_health": {
+      "label": "Webhook-Zustand",
+      "description": "Webhook-Zustellungs-Ergebnisse und deaktivierte Endpunkte"
+    },
+    "agent_workload": {
+      "label": "Agentenauslastung",
+      "description": "Delegierte Vorgänge und Lauf-Ergebnisse pro Agent"
+    }
+  },
+  "breakdown": {
+    "empty": "Noch keine Vorgänge.",
+    "by": {
+      "status": "Status",
+      "priority": "Priorität",
+      "type": "Typ",
+      "assignee": "Zugewiesen an",
+      "delegate": "Delegierter"
+    },
+    "caption": {
+      "status": "Nach Status",
+      "priority": "Nach Priorität",
+      "type": "Nach Typ",
+      "assignee": "Nach Zuständigem",
+      "delegate": "Nach Delegiertem"
+    }
+  },
+  "recentIssues": {
+    "empty": "Keine Vorgänge entsprechen diesem Filter.",
+    "captionCreated": "Neueste zuerst",
+    "captionUpdated": "Zuletzt aktualisiert",
+    "filterCount": "{count, plural, one {# Filter} other {# Filter}}",
+    "sort": {
+      "created": "Neueste",
+      "updated": "Aktualisiert"
+    }
+  },
+  "activityFeed": {
+    "empty": "Keine Aktivität entspricht diesem Filter.",
+    "someone": "Jemand",
+    "filterCount": "{count, plural, one {# Filter} other {# Filter}}",
+    "actions": {
+      "all": "Alle Aktivität",
+      "status": "Statusänderungen",
+      "assignee": "Zuweisungen",
+      "priority": "Priorität",
+      "created": "Erstellt"
+    },
+    "verbs": {
+      "comment": "hat kommentiert",
+      "created": "erstellt",
+      "title": "umbenannt",
+      "description": "hat die Beschreibung aktualisiert",
+      "status": "hat den Status geändert",
+      "assignee": "hat den Zuständigen geändert",
+      "priority": "hat die Priorität geändert",
+      "type": "hat den Typ geändert",
+      "start_date": "hat das Startdatum geändert",
+      "due_date": "hat das Fälligkeitsdatum geändert",
+      "label_add": "hat ein Label hinzugefügt",
+      "label_remove": "hat ein Label entfernt",
+      "field": "hat ein Feld aktualisiert",
+      "other": "aktualisiert"
+    }
+  },
+  "pulse": {
+    "caption": {
+      "hour": "Nach Stunde",
+      "day": "Nach Tag",
+      "week": "Nach Woche"
+    },
+    "unit": {
+      "hour": "Stunden",
+      "day": "Tage",
+      "week": "Wochen"
+    },
+    "events": "{count, plural, one {# Ereignis} other {# Ereignisse}}",
+    "eventNoun": "{count, plural, one {Ereignis} other {Ereignisse}}",
+    "active": "{count} aktiv",
+    "less": "Weniger",
+    "more": "Mehr",
+    "scope": {
+      "project": "Ganzes Projekt",
+      "me": "Meine Aktivität"
+    }
+  },
+  "throughput": {
+    "empty": "Keine Aktivität in diesem Zeitraum.",
+    "lastWeeks": "Letzte {weeks} Wochen",
+    "created": "Erstellt",
+    "closed": "Geschlossen"
+  },
+  "burnup": {
+    "empty": "Keine Vorgänge in diesem Zeitraum.",
+    "scope": "Umfang",
+    "started": "Gestartet",
+    "completed": "Abgeschlossen",
+    "projection": "Projektion",
+    "band": "Prognosebereich",
+    "projected": "Voraussichtlich {date}",
+    "range": "{from} – {to}",
+    "forecastShape": {
+      "line": "Prognoselinie",
+      "range": "Prognosebereich"
+    },
+    "noForecast": "Kein Fortschritt in den letzten {weeks, plural, one {# Woche} other {# Wochen}}",
+    "allDone": "Alles erledigt",
+    "velocity": "{rate}/Tag",
+    "growth": "+{rate}/Tag neu",
+    "target": "Ziel {date}",
+    "targetLabel": "Ziel",
+    "today": "Heute",
+    "wholeProject": "Ganzes Projekt",
+    "forecastWeeks": "Rate über {weeks, plural, one {# Woche} other {# Wochen}}"
+  },
+  "agentRuns": {
+    "empty": "Noch keine Agentenläufe.",
+    "filters": {
+      "all": "Alle Läufe",
+      "failed": "Fehlgeschlagen",
+      "pending": "In Warteschlange",
+      "success": "Erfolgreich"
+    },
+    "status": {
+      "pending": "in Warteschlange",
+      "success": "erfolgreich",
+      "failed": "fehlgeschlagen",
+      "canceled": "abgebrochen"
+    },
+    "trigger": {
+      "mention": "lief bei Erwähnung in",
+      "delegation": "lief bei Delegation von",
+      "field": "lief bei Feld von",
+      "manual": "manuell gestartet",
+      "schedule": "lief nach Zeitplan",
+      "status": "lief bei Statusänderung von",
+      "event": "lief bei Ereignis von"
+    }
+  },
+  "agentHealth": {
+    "empty": "Keine Agentenläufe.",
+    "successRate": "Erfolgsrate",
+    "runs": "{count, plural, one {# Lauf} other {# Läufe}}",
+    "failed": "{count} fehlgeschlagen",
+    "queued": "{count} in Warteschlange"
+  },
+  "webhookHealth": {
+    "deliveries": "Zustellungen",
+    "failed": "{count} fehlgeschlagen",
+    "pending": "{count} ausstehend",
+    "allDelivered": "alle zugestellt",
+    "disabled": "{count, plural, one {# deaktivierter Endpunkt} other {# deaktivierte Endpunkte}}"
+  },
+  "agentWorkload": {
+    "empty": "Keine Agenten in diesem Projekt.",
+    "agent": "Agent",
+    "delegated": "Delegiert",
+    "runs": "Läufe",
+    "failed": "{count} fehlgeschlagen",
+    "kind": {
+      "external": "Extern",
+      "internal": "Intern"
+    }
+  },
+  "defaultWidgets": {
+    "open": "Offen",
+    "inProgress": "In Bearbeitung",
+    "backlog": "Backlog",
+    "unassigned": "Nicht zugewiesen"
+  }
+}

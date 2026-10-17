@@ -1,0 +1,82 @@
+{
+  "window": "{days, plural, =1 {Letzte 24 Stunden} other {Letzte # Tage}}",
+  "retentionNote": "Nur interne Agenten. Läufe, die älter als die Trace-Aufbewahrung der Instanz sind, werden nicht gezählt.",
+  "noComparison": "Nichts zu vergleichen",
+  "vsPrevious": "gegenüber {value} zuvor",
+  "deletedAgent": "Gelöschter Agent",
+  "deletedProject": "Gelöschtes Projekt",
+  "allProjects": "Alle Projekte",
+  "totalTokens": "Tokens gesamt",
+  "totalCost": "Kosten gesamt",
+  "stats": {
+    "cost": "Modellkosten",
+    "tokens": "Tokens",
+    "runs": "Läufe",
+    "errors": "Fehlgeschlagene Läufe"
+  },
+  "unpriced": "{count, plural, one {# Modell hat keinen Preis} other {# Modelle haben keinen Preis}}",
+  "setPrices": "Preise festlegen",
+  "measure": {
+    "tokens": "Tokens",
+    "cost": "Kosten"
+  },
+  "series": {
+    "input": "Eingabe",
+    "output": "Ausgabe"
+  },
+  "models": {
+    "title": "Nach Modell",
+    "description": "Tokens und Kosten jedes Modells.",
+    "model": "Modell",
+    "input": "Eingabe",
+    "output": "Ausgabe",
+    "cost": "Kosten",
+    "empty": "Keine Modellaufrufe in diesem Zeitraum"
+  },
+  "byAgent": {
+    "title": "Nach Agent",
+    "description": "Was jeder Agent verwendet hat.",
+    "empty": "Keine Agentenläufe in diesem Zeitraum"
+  },
+  "byProject": {
+    "title": "Nach Projekt",
+    "description": "Was die Agenten in jedem Projekt verwendet haben.",
+    "empty": "Keine Agentenläufe in diesem Zeitraum"
+  },
+  "byTeam": {
+    "title": "Nach Team",
+    "description": "Was die Agenten jedes Teams verwendet haben.",
+    "empty": "Keine Agentenläufe in diesem Zeitraum"
+  },
+  "overTime": {
+    "title": "Über die Zeit",
+    "description": "Tokens und Kosten über den Zeitraum.",
+    "empty": "Keine Nutzung in diesem Zeitraum"
+  },
+  "preview": {
+    "title": "Mehr in Cloud und Pro",
+    "description": "Ausgaben nach Person und Auslöser, Laufzeit und Tool-Aufrufe. Verfügbar in Cloud und selbst gehostetem Pro.",
+    "hide": "Ausblenden",
+    "show": "Anzeigen",
+    "byPerson": {
+      "title": "Nach Person",
+      "description": "Wer Läufe in einem Chat oder mit einer Erwähnung gestartet hat."
+    },
+    "byTrigger": {
+      "title": "Nach Auslöser",
+      "description": "Chat, Erwähnung, Zeitplan oder Vorgangsereignis."
+    },
+    "bySchedule": {
+      "title": "Nach Zeitplan",
+      "description": "Was jeder Zeitplan ausgegeben hat."
+    },
+    "tools": {
+      "title": "Werkzeuge",
+      "description": "Tool-Aufrufe und wie viele fehlgeschlagen sind."
+    },
+    "latency": {
+      "title": "Laufzeit",
+      "description": "Median und 95. Perzentil pro Tag."
+    }
+  }
+}

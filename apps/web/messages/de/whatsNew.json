@@ -1,0 +1,25 @@
+{
+  "eyebrow": "Aktualisiert",
+  "title": "Neu in {version}",
+  "done": "Verstanden",
+  "backup": {
+    "title": "Vor dem Update wurde eine Sicherung erstellt",
+    "body": "Die Datenbank wurde vor den Migrationen dieses Releases gesichert: {size}, aufbewahrt bis {expires}, dann automatisch gelöscht. Stellen Sie sie wieder her, wenn Sie zur vorherigen Version zurückgehen.",
+    "credentialsHint": "Benutzer- und Datenbanknamen sind der POSTGRES_USER und POSTGRES_DB aus Ihrer .env."
+  },
+  "report": {
+    "title": "Was sich in Ihren Daten geändert hat",
+    "subtitle": "Projekte gehören jetzt zu einem Team, und ein Team teilt sich eine Liste von Rollen, Fähigkeiten, Agenten und Integration-Zugangsdaten.",
+    "teamsHeading": "Teams und ihre Projekte",
+    "renamedRoles": "Umbenannte Rollen",
+    "renamedSkills": "Umbenannte Fähigkeiten",
+    "renamedAgents": "Umbenannte Agenten-Handles",
+    "renamedCredentials": "Neu bezeichnete Integrations-Zugangsdaten",
+    "mergedHeading": "Zusammengeführt und verschoben",
+    "mergedRoles": "{count, plural, one {# doppelte Standardrolle wurde eine} other {# doppelte Standardrollen wurden eine}}",
+    "mergedTools": "{count, plural, one {# doppeltes konfiguriertes Werkzeug wurde eines} other {# doppelte konfigurierte Werkzeuge wurden eines}}",
+    "movedInvites": "{count, plural, one {# ausstehende Einladung ins Team verschoben} other {# ausstehende Einladungen ins Team verschoben}}",
+    "notificationsHeading": "Benachrichtigungsanbieter",
+    "notificationsBody": "Ein Team verwaltet eine Benachrichtigungsanbieter-Konfiguration, daher wurde die zuletzt gespeicherte beibehalten. Geben Sie die Einstellungen erneut ein für: {projects}."
+  }
+}

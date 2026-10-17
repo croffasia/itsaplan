@@ -1,0 +1,53 @@
+{
+  "none": "Keine Berechtigungen gewährt",
+  "grantedCount": "{count, plural, one {# Berechtigung} other {# Berechtigungen}} gewährt",
+  "resources": {
+    "work_items": "Arbeitselemente",
+    "initiatives": "Initiativen",
+    "cycles": "Zyklen",
+    "dashboards": "Übersichten",
+    "documents": "Dokumente",
+    "views": "Arbeitselement-Ansichten",
+    "members_invite": "Einladungen",
+    "members_manage": "Mitglieder",
+    "states": "Status",
+    "issue_types": "Vorgangstypen",
+    "labels": "Labels",
+    "ai_agents": "KI-Agenten",
+    "integrations": "Integrationen",
+    "agent_skills": "Agentenfähigkeiten",
+    "agent_tools": "Agentenwerkzeuge",
+    "agent_usage": "Agentennutzung",
+    "custom_fields": "Benutzerdefinierte Felder",
+    "issue_templates": "Vorgangsvorlagen",
+    "workflow_config": "Workflow-Konfiguration",
+    "actions": "Aktionen",
+    "webhooks": "Webhooks",
+    "repositories": "Repositories",
+    "note_boards": "Notiz-Boards",
+    "import_export": "Import/Export",
+    "danger_zone": "Gefahrenbereich"
+  },
+  "actions": {
+    "create": "Erstellen",
+    "edit": "Bearbeiten",
+    "read": "Lesen",
+    "delete": "Löschen"
+  },
+  "groups": {
+    "workItems": "Arbeitselemente",
+    "dashboards": "Übersichten",
+    "documents": "Dokumente",
+    "notes": "Notizen",
+    "ai": "KI",
+    "configuration": "Konfiguration",
+    "members": "Mitglieder",
+    "project": "Projekt",
+    "other": "Sonstige"
+  },
+  "resourceColumn": "Ressource",
+  "allowed": "erlaubt",
+  "notAllowed": "nicht erlaubt",
+  "accessHeading": "Zugriff auf dieses Projekt",
+  "joined": "beitgetreten {date}"
+}

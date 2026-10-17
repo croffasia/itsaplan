@@ -95,6 +95,7 @@
     "emailPlaceholder": "name@example.com",
     "alreadyMember": "{email}은(는) 이미 이 팀의 멤버입니다",
     "alreadyPending": "{email}에 이미 대기 중인 초대가 있습니다",
+    "domainNotAllowed": "{email}의 도메인은 이 서버에서 허용되지 않습니다",
     "refused": "{email}을(를) 초대할 수 없습니다",
     "roleLabel": "팀 역할",
     "roleHint": {

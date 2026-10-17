@@ -50,7 +50,16 @@
     "thisDevice": "Это устройство",
     "deleteWarning": "Вы больше не сможете входить по этому passkey. Это действие нельзя отменить.",
     "passkeyFallback": "Passkey",
-    "passkeysLoadFailed": "Не удалось загрузить passkey."
+    "passkeysLoadFailed": "Не удалось загрузить passkey.",
+    "connectedAppsTitle": "Подключённые приложения",
+    "connectedAppsDescription": "Приложения вроде Claude или ChatGPT, которым вы разрешили действовать от вашего имени через MCP. Они видят и делают то же, что и вы.",
+    "connectedAppsEmpty": "К вашему аккаунту не подключено ни одного приложения.",
+    "connectedAppUsed": "Подключено {connected} · последнее использование {used}",
+    "connectedAppSince": "Подключено {connected}",
+    "disconnectApp": "Отключить",
+    "disconnectAppTitle": "Отключить {name}?",
+    "disconnectAppWarning": "Приложение сразу потеряет доступ. При повторном подключении ваше согласие будет запрошено снова.",
+    "disconnectAppFailed": "Не удалось отключить приложение."
   },
   "accounts": {
     "label": "Аккаунты",

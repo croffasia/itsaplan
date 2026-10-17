@@ -95,6 +95,7 @@
     "emailPlaceholder": "nama@example.com",
     "alreadyMember": "{email} sudah berada di tim ini",
     "alreadyPending": "{email} sudah memiliki undangan tertunda",
+    "domainNotAllowed": "Domain {email} tidak diizinkan di instance ini",
     "refused": "{email} tidak dapat diundang",
     "roleLabel": "Peran tim",
     "roleHint": {

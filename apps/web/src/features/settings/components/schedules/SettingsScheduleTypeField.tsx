@@ -12,8 +12,8 @@ import { PRO_URL } from '@/utils/app';
 import { SettingsScheduleField } from './SettingsScheduleField';
 import { useTranslations } from 'next-intl';
 
-// The last item opens the page about Cloud and Pro, which start schedules on more
-// events. An item rather than a link, so the keyboard reaches it too.
+// The last item opens the page about the editions that start schedules on more events.
+// An item rather than a link, so the keyboard reaches it too.
 const MORE = 'more';
 
 export function SettingsScheduleTypeField({

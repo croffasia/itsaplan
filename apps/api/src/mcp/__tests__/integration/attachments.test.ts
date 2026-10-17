@@ -3,7 +3,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { CallToolResultSchema, type CallToolRequest } from '@modelcontextprotocol/sdk/types.js';
 import { auth } from '@repo/auth';
-import { app, authedApi } from '#tests/helpers/app';
+import { app, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { buildMcpServer } from '../../server';
@@ -47,7 +47,7 @@ async function connect(userId: string) {
 async function setup() {
   const owner = await signUpTestUser();
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
   const issue = await asOwner
     .projects({ projectKey: 'MKT' })

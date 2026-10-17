@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { db, agentRun } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { authedApi } from '#tests/helpers/app';
+import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
@@ -31,7 +31,7 @@ describe('agent run timeout', () => {
   it('ends a run that exhausts its time as failed and does not retry it', async () => {
     const owner = await signUpTestUser({ name: 'Owner' });
     const asOwner = authedApi(owner.cookie);
-    await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+    await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
     const view = await asOwner.projects({ projectKey: 'MKT' }).get();
     const credentialId = await createCredential(asOwner, 'MKT', {
       integrationKey: 'openai-compatible',

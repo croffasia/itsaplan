@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { createProject } from '#tests/helpers/app';
 import { resetDb } from '#tests/helpers/db';
 import { addUser, setup } from '../helpers';
 
@@ -50,7 +51,7 @@ describe('god project defaults', () => {
     it('creates a project with MCP on under the default', async () => {
       const { god } = await setup();
 
-      const created = await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const created = await createProject(god.api, { key: 'MKT', name: 'Marketing' });
       const settings = await god.api.projects({ projectKey: 'MKT' }).settings.get();
 
       expect(created.status).toBe(201);
@@ -61,7 +62,7 @@ describe('god project defaults', () => {
       const { god } = await setup();
       await god.api.god['project-defaults'].put({ mcpEnabled: false });
 
-      await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(god.api, { key: 'MKT', name: 'Marketing' });
       const settings = await god.api.projects({ projectKey: 'MKT' }).settings.get();
 
       expect(settings.data?.mcpEnabled).toBe(false);
@@ -69,7 +70,7 @@ describe('god project defaults', () => {
 
     it('leaves projects that already exist untouched', async () => {
       const { god } = await setup();
-      await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(god.api, { key: 'MKT', name: 'Marketing' });
       const before = await god.api.projects({ projectKey: 'MKT' }).settings.get();
       expect(before.data?.mcpEnabled).toBe(true);
 
@@ -84,7 +85,7 @@ describe('god project defaults', () => {
       await god.api.god['project-defaults'].put({ mcpEnabled: false });
       const alice = await addUser();
 
-      await alice.api.projects.post({ key: 'ALC', name: 'Alice Only' });
+      await createProject(alice.api, { key: 'ALC', name: 'Alice Only' });
       const settings = await alice.api.projects({ projectKey: 'ALC' }).settings.get();
 
       expect(settings.data?.mcpEnabled).toBe(false);

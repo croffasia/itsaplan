@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 import type { NotificationEncryption } from '@/lib/api/endpoints/notificationSettings';
+import type { SmtpAuth } from '@/lib/api/endpoints/god';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -18,6 +19,7 @@ import type { GodEmailForm } from '../../hooks/useGodEmailForm';
 import GodEmailTestButton from './GodEmailTestButton';
 
 const ENCRYPTION_OPTIONS: NotificationEncryption[] = ['none', 'ssl', 'tls'];
+const AUTH_OPTIONS: SmtpAuth[] = ['password', 'microsoft365'];
 
 export default function GodEmailProviderSection({ form }: { form: GodEmailForm }) {
   const t = useTranslations('god.email');
@@ -86,7 +88,24 @@ export default function GodEmailProviderSection({ form }: { form: GodEmailForm }
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="smtp-username">{t('username')}</Label>
+              <Label htmlFor="smtp-auth">{t('smtpAuth')}</Label>
+              <Select value={form.smtpAuth} onValueChange={(v) => form.setSmtpAuth(v as SmtpAuth)}>
+                <SelectTrigger id="smtp-auth" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {AUTH_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>
+                      {t(`smtpAuthOptions.${option}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="smtp-username">
+                {t(form.smtpAuth === 'microsoft365' ? 'mailbox' : 'username')}
+              </Label>
               <Input
                 id="smtp-username"
                 value={form.username}
@@ -95,16 +114,52 @@ export default function GodEmailProviderSection({ form }: { form: GodEmailForm }
                 autoComplete="off"
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="smtp-password">{t('password')}</Label>
-              <SecretInput
-                id="smtp-password"
-                value={form.password}
-                onChange={form.setPassword}
-                hasStored={settings.smtp.hasPassword}
-                placeholder={t('passwordPlaceholder')}
-              />
-            </div>
+            {form.smtpAuth === 'microsoft365' ? (
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor="smtp-tenant">{t('tenantId')}</Label>
+                  <Input
+                    id="smtp-tenant"
+                    value={form.tenantId}
+                    onChange={(e) => form.setTenantId(e.target.value)}
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="smtp-client">{t('clientId')}</Label>
+                  <Input
+                    id="smtp-client"
+                    value={form.clientId}
+                    onChange={(e) => form.setClientId(e.target.value)}
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="smtp-client-secret">{t('clientSecret')}</Label>
+                  <SecretInput
+                    id="smtp-client-secret"
+                    value={form.clientSecret}
+                    onChange={form.setClientSecret}
+                    hasStored={settings.smtp.oauth.hasClientSecret}
+                    placeholder={t('clientSecretPlaceholder')}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground sm:col-span-3">
+                  {t('microsoft365Hint')}
+                </p>
+              </>
+            ) : (
+              <div className="space-y-1.5">
+                <Label htmlFor="smtp-password">{t('password')}</Label>
+                <SecretInput
+                  id="smtp-password"
+                  value={form.password}
+                  onChange={form.setPassword}
+                  hasStored={settings.smtp.hasPassword}
+                  placeholder={t('passwordPlaceholder')}
+                />
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="smtp-timeout">{t('timeout')}</Label>
               <Input

@@ -192,6 +192,7 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
                         <SettingsStateRow
                           key={c.id}
                           column={c}
+                          deletable={s !== 'backlog' || group.length > 1}
                           autoAssignee={project.assignees.find(
                             (a) => a.userId === c.autoAssignUserId,
                           )}

@@ -12,6 +12,7 @@
     "byEmail": "دعوة بالبريد",
     "inviteEmail": "دعوة {email}",
     "alreadyInvited": "{email} مدعو بالفعل",
+    "domainNotAllowed": "نطاق {email} غير مسموح به في هذه النسخة",
     "alreadyMember": "{email} موجود بالفعل في هذا المشروع",
     "alreadyInTeam": "{email} موجود بالفعل في الفريق — اخترهم من القائمة أعلاه",
     "refused": "تعذّرت إضافة {email}",

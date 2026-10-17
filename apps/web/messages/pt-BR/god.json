@@ -193,6 +193,9 @@
     "inviteTtlDays": "Validade dos convites (dias)",
     "inviteTtlDaysHint": "Depois desse prazo, o link do convite deixa de funcionar e, com o cadastro somente por convite, não permite mais criar a conta. Com 0, os convites não expiram.",
     "inviteTtlDaysInvalid": "Informe um número inteiro de dias entre 0 e {max}.",
+    "allowedEmailDomains": "Domínios de e-mail permitidos",
+    "allowedEmailDomainsHint": "Só endereços desses domínios podem criar uma conta. Separe-os por vírgulas ou deixe vazio para permitir qualquer um. As contas existentes mantêm o acesso.",
+    "allowedEmailDomainsInvalid": "Cada domínio deve ter o formato example.com, até 100 domínios.",
     "modes": {
       "open": {
         "label": "Aberto",
@@ -274,7 +277,18 @@
     "testing": "Enviando…",
     "testHint": "Envie uma mensagem real com as configurações atuais sem salvá-las.",
     "testConfigureFirst": "Ative um provedor e adicione suas credenciais obrigatórias primeiro.",
-    "testSent": "E-mail de teste enviado para {email}"
+    "testSent": "E-mail de teste enviado para {email}",
+    "smtpAuth": "Autenticação",
+    "smtpAuthOptions": {
+      "password": "Senha",
+      "microsoft365": "Microsoft 365 (OAuth)"
+    },
+    "mailbox": "Caixa de correio",
+    "tenantId": "ID do locatário (tenant)",
+    "clientId": "ID do cliente",
+    "clientSecret": "Segredo do cliente",
+    "clientSecretPlaceholder": "Segredo do registro de aplicativo",
+    "microsoft365Hint": "Entra como um registro de aplicativo do Entra ID em vez da senha da caixa de correio, que pode manter o MFA. O aplicativo precisa da permissão de aplicativo SMTP.SendAsApp do Office 365 Exchange Online com consentimento de administrador, acesso a esta caixa no Exchange e SMTP AUTH ativado na caixa."
   },
   "authProvider": {
     "saved": "Provedor de autenticação salvo",

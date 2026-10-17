@@ -383,7 +383,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
     {
       teamManager: true,
       params: teamInviteParams,
-      response: { 201: InviteCreateResponse, ...errors(401, 403, 404, 409) },
+      response: { 201: InviteCreateResponse, ...errors(400, 401, 403, 404, 409) },
       detail: {
         summary: 'Renew an expired invite of the team',
         description:

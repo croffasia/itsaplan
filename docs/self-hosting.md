@@ -76,6 +76,26 @@ The OAuth redirect URIs that god mode shows include the path. An api on a differ
 registrable domain than the web app (`api.other.com`) does not work: the session cookie
 cannot be shared across sites.
 
+## Mail
+
+The instance sends password resets, address confirmations, sign-in links and invites through
+the mail provider set in god mode under **Integrations → Email provider**: SMTP or Resend.
+
+A Microsoft 365 mailbox refuses a password over SMTP once it has MFA. Set **Authentication**
+to **Microsoft 365 (OAuth)** instead: the instance signs in as an Entra ID app registration
+and sends as the mailbox over XOAUTH2. An empty server is filled with
+`smtp.office365.com:587` and STARTTLS. On the Microsoft side:
+
+1. Register an app in Entra ID, add a client secret, and grant it the Office 365 Exchange
+   Online application permission `SMTP.SendAsApp`, with admin consent.
+2. In Exchange Online PowerShell, register the app's service principal and give it access
+   to the mailbox: `New-ServicePrincipal -AppId <client id> -ObjectId <enterprise app object id>`,
+   then `Add-MailboxPermission -Identity <mailbox> -User <service principal id> -AccessRights FullAccess`.
+3. Turn on SMTP AUTH for that mailbox (`Set-CASMailbox <mailbox> -SmtpClientAuthenticationDisabled $false`).
+
+Then paste the tenant ID, the client ID and the secret into the page and send a test. A
+refused token is reported as rejected credentials and is not retried.
+
 ## Single sign-on
 
 Any provider with an OpenID Connect discovery document works: Keycloak, Authentik, KanIDM,
@@ -112,29 +132,28 @@ instance cannot be left with no way in.
 
 ## Provisioning with SCIM
 
-An identity provider can add people to a workspace and remove them over SCIM 2.0, and grant
-project access through its groups. Provisioning is a setting of the workspace, and only its
-owner can change it.
+An identity provider can create, deactivate and delete the accounts of the instance over
+SCIM 2.0, and grant project access through its groups. Provisioning is set up in god mode by
+the instance owner.
 
-1. In the workspace settings, open **SCIM**, generate a token and copy it — it is shown
-   once — then turn provisioning on.
+1. In god mode, open **SCIM**, generate a token and copy it — it is shown once — then turn
+   provisioning on.
 2. Point your provider's SCIM application at the endpoint the page shows
    (`<API_URL>/scim/v2`), authenticating with `Authorization: Bearer <token>`.
 3. Push users, and groups if you use them.
 
-An account belongs to the person, not to the workspace: one person can be in the teams of
-several workspaces, and each workspace's provider only decides whether they are in its own.
-The provider sees the people it created or linked and the people in the workspace's teams. A
-create for an address that already has an account links that account instead of making a
-second one; a name or address the provider sends is accepted and left as the account has it.
+The provider sees every account of the instance except those of AI agents. A create for an
+address that already has an account links that account instead of making a second one, and a
+name or address the provider sends is written to the account. While provisioning is on, the
+provider decides which accounts are active, and god mode cannot deactivate or reactivate one.
 
-Deactivating someone at the provider (`active: false`) or deleting them takes them out of
-every team and project of the workspace, including the ones they joined through an invite. A
-team or project they were the only owner of passes to the workspace owner. The account, its
-sign-in and the person's other workspaces are not touched. Reactivating gives back the
-projects their groups grant; memberships from invites do not come back. The instance owner and
-the workspace owner are outside SCIM's reach, and a repeated create for an address the
-provider already linked answers "already exists" rather than overwriting the link.
+Deactivating someone at the provider (`active: false`) keeps their teams and projects, but the
+account cannot sign in, and its sessions and API keys are refused until it is reactivated.
+Reactivating gives them the projects their groups grant. Deleting someone deletes the
+account. The delete is refused while they are the only owner of a project outside their own
+workspaces: deactivate them instead, or hand the project to another owner first. The instance
+owner is outside SCIM's reach, and a repeated create for an address the provider already
+linked answers "already exists" rather than overwriting the link.
 
 A pushed group grants nothing until you say what it is for: on the same page, open a group
 and add the projects its members should join, and the role they join on. A project belongs

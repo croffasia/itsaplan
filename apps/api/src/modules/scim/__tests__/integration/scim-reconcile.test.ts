@@ -1,19 +1,20 @@
 import { describe, expect, it, afterEach, beforeEach } from 'bun:test';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { setWorkspaceScim } from '@repo/auth';
 import { createWorkspace, db, team } from '@repo/db';
 import { resetDb } from '#tests/helpers/db';
 import { addUser, joinProject, type Actor } from '#modules/god/__tests__/helpers';
 import { createRole, teamIdOf } from '#tests/helpers/roles';
+import { createProject as createOwnProject, ownWorkspaceId } from '#tests/helpers/app';
 import { patchOps, scimUserBody, setupOtherWorkspace, setupScim, type ScimSetup } from '../helpers';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
 
-// What a provisioned group grants: the mappings the workspace owner declares turn
+// What a provisioned group grants: the mappings god or a workspace owner declares turn
 // group membership into project membership. Only the rows the sync owns
 // are ever touched, so a membership somebody set up through an invite survives.
 
 async function createProject(owner: Actor, name: string, key: string) {
-  const created = await owner.api.projects.post({ name, key });
+  const created = await createOwnProject(owner.api, { name, key });
   return created.data!;
 }
 
@@ -27,7 +28,11 @@ async function teamMemberIds(owner: Actor, teamId: number) {
   return res.data!.items.map((m) => m.userId);
 }
 
-async function provisionGroup(setup: ScimSetup, displayName: string, memberIds: string[]) {
+async function provisionGroup(
+  setup: Pick<ScimSetup, 'scim'>,
+  displayName: string,
+  memberIds: string[],
+) {
   const created = await setup.scim.scim.v2.Groups.post({
     schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group'],
     displayName,
@@ -355,7 +360,11 @@ describe('SCIM group reconciliation', () => {
     it('refuses a role that belongs to another team', async () => {
       const setup = await setupScim();
       const marketing = await createProject(setup.god, 'Marketing', 'MKT');
-      const otherTeam = await setup.god.api.teams.post({ name: 'Design', slug: 'design' });
+      const otherTeam = await setup.god.api.teams.post({
+        name: 'Design',
+        slug: 'design',
+        workspaceId: await ownWorkspaceId(setup.god.api),
+      });
       await setup.god.api.teams({ teamId: otherTeam.data!.id }).projects.post({
         key: 'DSN',
         name: 'Design',
@@ -388,14 +397,11 @@ describe('SCIM group reconciliation', () => {
       expect(res.status).toBe(400);
     });
 
-    it('refuses an admin of the workspace', async () => {
+    it('refuses anyone but the instance owner', async () => {
       const setup = await setupScim();
-      const admin = await addUser({ email: 'someone@example.com' });
-      await setup.god.api
-        .workspaces({ workspaceId: setup.workspaceId })
-        .managers.post({ userId: admin.id });
+      const someone = await addUser({ email: 'someone@example.com' });
       const groupId = await provisionGroup(setup, 'Engineering', []);
-      const scim = admin.api.workspaces({ workspaceId: setup.workspaceId }).scim;
+      const scim = someone.api.god.scim;
 
       expect((await scim.groups.get()).status).toBe(403);
       expect((await scim.groups({ groupId }).mappings.put({ mappings: [] })).status).toBe(403);
@@ -436,54 +442,116 @@ describe('SCIM group reconciliation', () => {
     });
 
     expect(res.status).toBe(200);
-    const options = (
-      await setup.god.api.workspaces({ workspaceId: setup.workspaceId }).projects.options.get()
-    ).data!;
+    const options = (await setup.settings.projects.get()).data!;
     expect(options.map((o) => o.key)).toContain('SAL');
   });
 
-  // Set up per workspace, as in a hosted build, a group grants projects of its own
-  // workspace only, and nothing to a person its provider deactivated.
+  // Set up per workspace, as in a hosted build, a workspace's group grants projects of
+  // its own workspace only, and nothing to a person its provider deactivated. The
+  // instance's provider still grants projects of every workspace, except one that set up
+  // SCIM of its own: its provider decides there.
   describe('set up per workspace', () => {
     beforeEach(() => setWorkspaceScim());
     afterEach(() => setWorkspaceScim(false));
 
     it('grants a deactivated member nothing, and grants it again once they are back', async () => {
-      const setup = await setupScim();
-      const project = await createProject(setup.god, 'Marketing', 'MKT');
-      const ada = await setup.scim.scim.v2.Users.post(scimUserBody());
-      const groupId = await provisionGroup(setup, 'Engineering', [ada.data!.id]);
-      await setup.settings.groups({ groupId }).mappings.put({
+      const god = await addUser({ email: 'root@example.com' });
+      const project = await createProject(god, 'Marketing', 'MKT');
+      const own = await setupOtherWorkspace(god, [project.teamId]);
+      const ada = await own.scim.scim.v2.Users.post(scimUserBody());
+      const groupId = await provisionGroup(own, 'Engineering', [ada.data!.id]);
+      await own.settings.groups({ groupId }).mappings.put({
         mappings: [{ projectId: project.id, role: 'member', roleId: null }],
       });
       const setActive = (value: boolean) =>
-        setup.scim.scim.v2
+        own.scim.scim.v2
           .Users({ id: ada.data!.id })
           .patch(patchOps([{ op: 'replace', path: 'active', value }]));
 
       await setActive(false);
       // A group change reconciles the project again; the deactivated member stays out.
-      await setup.scim.scim.v2
+      await own.scim.scim.v2
         .Groups({ id: groupId })
         .patch(patchOps([{ op: 'replace', path: 'displayName', value: 'Engineers' }]));
-      expect((await membersOf(setup.god, 'MKT')).map((m) => m.userId)).not.toContain(ada.data!.id);
+      expect((await membersOf(god, 'MKT')).map((m) => m.userId)).not.toContain(ada.data!.id);
 
       await setActive(true);
-      expect((await membersOf(setup.god, 'MKT')).map((m) => m.userId)).toContain(ada.data!.id);
+      expect((await membersOf(god, 'MKT')).map((m) => m.userId)).toContain(ada.data!.id);
     });
 
     it('refuses a project of another workspace', async () => {
-      const setup = await setupScim();
-      const project = await createProject(setup.god, 'Marketing', 'MKT');
-      const groupId = await provisionGroup(setup, 'Engineering', []);
-      await setupOtherWorkspace(setup.god, [project.teamId]);
+      const god = await addUser({ email: 'root@example.com' });
+      const project = await createProject(god, 'Marketing', 'MKT');
+      const own = await setupOtherWorkspace(god);
+      const groupId = await provisionGroup(own, 'Engineering', []);
 
-      const res = await setup.settings.groups({ groupId }).mappings.put({
+      const res = await own.settings.groups({ groupId }).mappings.put({
         mappings: [{ projectId: project.id, role: 'member', roleId: null }],
       });
 
       expect(res.status).toBe(400);
       expect(res.error!.value).toMatchObject({ error: 'Unknown project' });
+    });
+
+    it("takes the instance's groups out of a workspace with its own, and lets them back", async () => {
+      const setup = await setupScim();
+      const outsider = await addUser({ email: 'outsider@example.com' });
+      const project = await createProject(outsider, 'Sales', 'SAL');
+      const workspaceId = await createWorkspace(db, 'Other', outsider.id);
+      await db.update(team).set({ workspaceId }).where(eq(team.id, project.teamId));
+      const ada = await setup.scim.scim.v2.Users.post(scimUserBody());
+      const groupId = await provisionGroup(setup, 'Engineering', [ada.data!.id]);
+      await setup.settings.groups({ groupId }).mappings.put({
+        mappings: [{ projectId: project.id, role: 'member', roleId: null }],
+      });
+      const memberIds = async () => (await membersOf(outsider, 'SAL')).map((m) => m.userId);
+      const options = async () => (await setup.settings.projects.get()).data!.map((o) => o.key);
+      expect(await memberIds()).toContain(ada.data!.id);
+
+      const own = outsider.api.workspaces({ workspaceId }).scim;
+      await own.token.post();
+      expect((await own.patch({ enabled: true })).status).toBe(200);
+      expect(await memberIds()).not.toContain(ada.data!.id);
+      expect(await options()).not.toContain('SAL');
+
+      await own.patch({ enabled: false });
+      expect(await memberIds()).toContain(ada.data!.id);
+      expect(await options()).toContain('SAL');
+    });
+
+    it('keeps a mapping into a workspace with its own when the group is saved again', async () => {
+      const setup = await setupScim();
+      const outsider = await addUser({ email: 'outsider@example.com' });
+      const sales = await createProject(outsider, 'Sales', 'SAL');
+      const support = await createProject(outsider, 'Support', 'SUP');
+      const marketing = await createProject(setup.god, 'Marketing', 'MKT');
+      const workspaceId = await createWorkspace(db, 'Other', outsider.id);
+      await db
+        .update(team)
+        .set({ workspaceId })
+        .where(inArray(team.id, [sales.teamId, support.teamId]));
+      const ada = await setup.scim.scim.v2.Users.post(scimUserBody());
+      const groupId = await provisionGroup(setup, 'Engineering', [ada.data!.id]);
+      const map = (...projectIds: number[]) =>
+        setup.settings.groups({ groupId }).mappings.put({
+          mappings: projectIds.map((projectId) => ({
+            projectId,
+            role: 'member' as const,
+            roleId: null,
+          })),
+        });
+      const memberIds = async () => (await membersOf(outsider, 'SAL')).map((m) => m.userId);
+      await map(sales.id);
+      const own = outsider.api.workspaces({ workspaceId }).scim;
+      await own.token.post();
+      await own.patch({ enabled: true });
+
+      expect((await map(sales.id, marketing.id)).status).toBe(200);
+      expect(await memberIds()).not.toContain(ada.data!.id);
+      expect((await map(sales.id, marketing.id, support.id)).status).toBe(400);
+
+      await own.patch({ enabled: false });
+      expect(await memberIds()).toContain(ada.data!.id);
     });
   });
 

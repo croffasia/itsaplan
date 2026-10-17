@@ -50,7 +50,16 @@
     "thisDevice": "Este dispositivo",
     "deleteWarning": "Você não poderá mais entrar com esta chave de acesso. Isso não pode ser desfeito.",
     "passkeyFallback": "Chave de acesso",
-    "passkeysLoadFailed": "Não foi possível carregar as chaves de acesso."
+    "passkeysLoadFailed": "Não foi possível carregar as chaves de acesso.",
+    "connectedAppsTitle": "Aplicativos conectados",
+    "connectedAppsDescription": "Aplicativos como Claude ou ChatGPT que você autorizou a agir em seu nome via MCP. Eles veem e fazem o que você pode.",
+    "connectedAppsEmpty": "Nenhum aplicativo está conectado à sua conta.",
+    "connectedAppUsed": "Conectado em {connected} · último uso em {used}",
+    "connectedAppSince": "Conectado em {connected}",
+    "disconnectApp": "Desconectar",
+    "disconnectAppTitle": "Desconectar {name}?",
+    "disconnectAppWarning": "Ele perde o acesso imediatamente. Conectá-lo de novo pedirá seu consentimento outra vez.",
+    "disconnectAppFailed": "Não foi possível desconectar o aplicativo."
   },
   "accounts": {
     "label": "Contas",

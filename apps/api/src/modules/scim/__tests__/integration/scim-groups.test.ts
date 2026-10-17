@@ -258,7 +258,8 @@ describe('SCIM groups', () => {
     afterEach(() => setWorkspaceScim(false));
 
     it("keeps one workspace's groups away from another's provider", async () => {
-      const { god, scim } = await setupScim();
+      const god = await addUser({ email: 'root@example.com' });
+      const { scim } = await setupOtherWorkspace(god);
       const other = await setupOtherWorkspace(god);
       const created = await scim.scim.v2.Groups.post(groupBody());
 
@@ -271,7 +272,7 @@ describe('SCIM groups', () => {
     });
 
     it('refuses a member the workspace does not see', async () => {
-      const { god } = await setupScim();
+      const god = await addUser({ email: 'root@example.com' });
       const other = await setupOtherWorkspace(god);
       const outsider = await addUser({ email: 'outsider@example.com' });
 
@@ -283,12 +284,13 @@ describe('SCIM groups', () => {
     });
 
     it('keeps accepting changes to a group holding a member the workspace no longer sees', async () => {
-      const { god, scim } = await setupScim();
+      const god = await addUser({ email: 'root@example.com' });
       const outsider = await addUser({ email: 'outsider@example.com' });
+      const [outsiderTeam] = (await outsider.api.teams.get()).data!;
+      const { scim } = await setupOtherWorkspace(god, [outsiderTeam!.id]);
       const created = await scim.scim.v2.Groups.post(
         groupBody({ members: [{ value: outsider.id }] }),
       );
-      const [outsiderTeam] = (await outsider.api.teams.get()).data!;
       await setupOtherWorkspace(god, [outsiderTeam!.id]);
       const ada = await scim.scim.v2.Users.post(scimUserBody());
 

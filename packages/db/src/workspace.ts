@@ -1,17 +1,6 @@
-import { asc, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type { DbExecutor } from './client';
 import { team, workspace, workspaceManager } from './schema';
-
-// The instance owner's workspace, the first one. Migration 0135 creates it.
-export async function instanceWorkspaceId(executor: DbExecutor): Promise<number> {
-  const [row] = await executor
-    .select({ id: workspace.id })
-    .from(workspace)
-    .orderBy(asc(workspace.id))
-    .limit(1);
-  if (!row) throw new Error('The instance has no workspace');
-  return row.id;
-}
 
 export async function teamWorkspaceId(teamId: number, executor: DbExecutor): Promise<number> {
   const [row] = await executor

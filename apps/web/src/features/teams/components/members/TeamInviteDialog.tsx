@@ -20,11 +20,12 @@ import { useCreateTeamInvite } from '@/services/teams.service';
 
 // The message for each refusal the API can answer with; any other error falls back
 // to 'refused'.
-type RefusalKey = 'alreadyMember' | 'alreadyPending' | 'refused';
+type RefusalKey = 'alreadyMember' | 'alreadyPending' | 'domainNotAllowed' | 'refused';
 
 const REFUSAL_KEY: Record<string, RefusalKey> = {
   ALREADY_TEAM_MEMBER: 'alreadyMember',
   INVITE_ALREADY_PENDING: 'alreadyPending',
+  EMAIL_DOMAIN_NOT_ALLOWED: 'domainNotAllowed',
 };
 
 // Invites someone to the team itself: they join its member list and reach its

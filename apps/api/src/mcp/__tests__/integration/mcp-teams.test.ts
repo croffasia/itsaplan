@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { auth } from '@repo/auth';
-import { app, authedApi } from '#tests/helpers/app';
+import { app, authedApi, ownWorkspaceId, createProject } from '#tests/helpers/app';
 import { resetDb } from '#tests/helpers/db';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { createAgent, setAgentProjectRole, teamOf } from '#tests/helpers/agents';
@@ -43,7 +43,7 @@ async function call(apiKey: string, name: string, args: Record<string, unknown> 
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const teamId = await teamOf(asOwner, 'MKT');
   const role = await createRole(asOwner, 'MKT', {
     name: 'Agent Admin',
@@ -86,7 +86,7 @@ describe('MCP team resolution', () => {
     const { agentKey, roleId } = await setup();
     const other = await signUpTestUser({ name: 'Other', email: 'other@example.com' });
     const asOther = authedApi(other.cookie);
-    await asOther.projects.post({ key: 'OPS', name: 'Ops' });
+    await createProject(asOther, { key: 'OPS', name: 'Ops' });
     const otherTeam = await teamOf(asOther, 'OPS');
 
     await call(agentKey, 'create_ai_agent', {
@@ -103,7 +103,11 @@ describe('MCP team resolution', () => {
 
   it('asks a person in more than one team to name the team', async () => {
     const { owner, asOwner, agentKey } = await setup();
-    await asOwner.teams.post({ name: 'Second Team', slug: 'second-team' });
+    await asOwner.teams.post({
+      name: 'Second Team',
+      slug: 'second-team',
+      workspaceId: await ownWorkspaceId(asOwner),
+    });
     const personKey = (await auth.api.createApiKey({ body: { userId: owner.userId, name: 'mcp' } }))
       .key;
 
@@ -121,7 +125,11 @@ describe('MCP team resolution', () => {
 
   it('lists the teams of the caller', async () => {
     const { owner, asOwner } = await setup();
-    await asOwner.teams.post({ name: 'Second Team', slug: 'second-team' });
+    await asOwner.teams.post({
+      name: 'Second Team',
+      slug: 'second-team',
+      workspaceId: await ownWorkspaceId(asOwner),
+    });
     const personKey = (await auth.api.createApiKey({ body: { userId: owner.userId, name: 'mcp' } }))
       .key;
 

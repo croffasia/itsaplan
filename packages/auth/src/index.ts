@@ -1,6 +1,6 @@
 import { randomInt } from 'node:crypto';
-import { createWorkspace, db, instanceWorkspaceId } from '@repo/db';
-import { and, eq, gt, sql, type SQL } from 'drizzle-orm';
+import { createWorkspace, db } from '@repo/db';
+import { and, eq, gt, isNull, sql, type SQL } from 'drizzle-orm';
 import { betterAuth, type BetterAuthPlugin } from 'better-auth';
 import { createAuthMiddleware, APIError } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
@@ -16,6 +16,8 @@ import { createLocalJWKSet, jwtVerify } from 'jose';
 import * as schema from '@repo/db/schema';
 import {
   getAuthSettings,
+  admittedPastGate,
+  registrationEmailAllowed,
   hasPendingInvite,
   hasExpiredInvite,
   getGoogleConfig,
@@ -25,6 +27,7 @@ import {
   isAccountDeactivated,
 } from './instance';
 import { sendAuthEmail } from './mail';
+import { readAuthExtensions } from './extensions';
 
 // Frontend origins allowed to call the auth handler. Mandatory config: cookies, the
 // WebAuthn relying party and the cookie domain are all derived from it, so a deploy
@@ -182,7 +185,7 @@ export function mcpUnauthorized(): Response {
 // which this check does not take.
 export async function verifyMcpAccessToken(token: string): Promise<string | null> {
   if (!mcpOAuth) return null;
-  let claims: { sub?: string; sid?: unknown; cnf?: unknown };
+  let claims: { sub?: string; sid?: unknown; cnf?: unknown; client_id?: unknown };
   try {
     ({ payload: claims } = await jwtVerify(token, createLocalJWKSet(await auth.api.getJwks()), {
       issuer: MCP_ISSUER,
@@ -197,6 +200,9 @@ export async function verifyMcpAccessToken(token: string): Promise<string | null
     .from(schema.user)
     .where(eq(schema.user.id, claims.sub));
   if (!account || isAccountDeactivated(account)) return null;
+  // Disconnecting the application on the account's Security page ends its tokens at once.
+  if (typeof claims.client_id !== 'string') return null;
+  if (!(await isClientConnected(claims.sub, claims.client_id))) return null;
   if (typeof claims.sid === 'string') {
     const [open] = await db
       .select({ n: sql`1` })
@@ -205,6 +211,30 @@ export async function verifyMcpAccessToken(token: string): Promise<string | null
     if (!open) return null;
   }
   return claims.sub;
+}
+
+// Connected while the person's consent stands or a refresh token can still mint tokens,
+// the same rule the Security page lists applications by.
+async function isClientConnected(userId: string, clientId: string): Promise<boolean> {
+  const [consent] = await db
+    .select({ n: sql`1` })
+    .from(schema.oauthConsent)
+    .where(and(eq(schema.oauthConsent.userId, userId), eq(schema.oauthConsent.clientId, clientId)))
+    .limit(1);
+  if (consent) return true;
+  const [refresh] = await db
+    .select({ n: sql`1` })
+    .from(schema.oauthRefreshToken)
+    .where(
+      and(
+        eq(schema.oauthRefreshToken.userId, userId),
+        eq(schema.oauthRefreshToken.clientId, clientId),
+        isNull(schema.oauthRefreshToken.revoked),
+        gt(schema.oauthRefreshToken.expiresAt, new Date()),
+      ),
+    )
+    .limit(1);
+  return Boolean(refresh);
 }
 
 // An error better-auth cannot hand back to the page that started the flow lands here.
@@ -324,11 +354,14 @@ const instanceOidc = (): BetterAuthPlugin => ({
 // leaves the setting here for the getter to read.
 let trustProviderEmails = false;
 
-// The trusted providers for one request. The settings are read on the OAuth callback
-// only — the resolver runs on every request to the auth API, and a session check has
-// no linking decision to make.
+// The trusted providers for one request. The settings are read where a provider's
+// sign-in comes back — an OAuth callback, or a SAML response posted to `/acs/` — only:
+// the resolver runs on every request to the auth API, and a session check has no linking
+// decision to make.
+const PROVIDER_RETURN = /\/(callback|acs)\//;
+
 async function resolveTrustedProviders(request?: Request): Promise<string[]> {
-  if (!request || !new URL(request.url).pathname.includes('/callback/')) return [];
+  if (!request || !PROVIDER_RETURN.test(new URL(request.url).pathname)) return [];
   trustProviderEmails = (await getAuthSettings()).trustProviderEmails;
   return trustProviderEmails ? ['google', OIDC_PROVIDER_ID] : [];
 }
@@ -349,7 +382,7 @@ const PASSWORD_PATHS = new Set([
   '/sign-up/email',
   '/sign-in/email',
   '/sign-in/username',
-  '/forget-password',
+  '/request-password-reset',
   '/reset-password',
   '/sign-in/magic-link',
   '/magic-link/verify',
@@ -359,6 +392,7 @@ const REGISTRATION_REFUSALS = {
   REGISTRATION_CLOSED: 'Registration is closed on this instance',
   INVITE_ONLY: 'This instance is invite-only. Ask a project owner to invite this address.',
   INVITE_EXPIRED: 'The invite for this address has expired. Ask for a new one.',
+  EMAIL_DOMAIN_NOT_ALLOWED: 'This instance does not admit addresses at this domain',
 } as const;
 
 function refuseRegistration(code: keyof typeof REGISTRATION_REFUSALS): never {
@@ -379,6 +413,7 @@ async function assertRegistrationAllowed(
 ): Promise<void> {
   const settings = await getAuthSettings();
   if (settings.registration === 'closed') refuseRegistration('REGISTRATION_CLOSED');
+  if (!(await registrationEmailAllowed(email))) refuseRegistration('EMAIL_DOMAIN_NOT_ALLOWED');
   if (settings.registration === 'invite' && !(await hasPendingInvite(email))) {
     const expired = addressProven && (await hasExpiredInvite(email));
     refuseRegistration(expired ? 'INVITE_EXPIRED' : 'INVITE_ONLY');
@@ -410,30 +445,34 @@ function randomSuffix(): string {
   return String(100 + randomInt(900));
 }
 
-// Accounts that need no personal workspace made: they own a workspace, or are the
-// instance owner or an agent's bot user. Kept per process, so once an account is known a
-// request costs a lookup here and nothing in the database.
+// Accounts that need no personal workspace made: they own a workspace, or are an agent's
+// bot user. Kept per process, so once an account is known a request costs a lookup here
+// and nothing in the database.
 const settled = new Set<string>();
 
-// The personal workspace of an account that owns none, while personal workspaces are on,
-// named after the person. Sign-up calls it, and apps/api on every request, so an account
-// made before personal workspaces, by SCIM, or while they were off gets its own without
-// signing in again. Nothing in the API creates a workspace; an edition that lets a
-// person own more mounts a route of its own. The instance owner owns the instance
-// workspace instead, and an agent's bot user is no person.
+// The personal workspace of an account that owns none, named after the person: the
+// instance owner's always, anyone else's while personal workspaces are on. Sign-up calls
+// it, and apps/api on every request, so an account made before personal workspaces, by
+// SCIM, or while they were off gets its own without signing in again. Nothing in the API
+// creates a workspace; an edition that lets a person own more mounts a route of its own.
+// An agent's bot user is no person.
 // ponytail: an account with no workspace while they are off reads the setting on each
 // request; cache it with the setting if that ever shows.
-export async function ensurePersonalWorkspace(userId: string): Promise<void> {
+export async function ensurePersonalWorkspace(account: {
+  id: string;
+  role?: string | null;
+}): Promise<void> {
+  const userId = account.id;
   if (settled.has(userId)) return;
-  if (!(await getAuthSettings()).personalWorkspaces) return;
+  if (account.role !== 'god' && !(await getAuthSettings()).personalWorkspaces) return;
   await db.transaction(async (tx) => {
     // Two sign-ins at once would otherwise both find none.
-    const [account] = await tx
-      .select({ name: schema.user.name, email: schema.user.email, role: schema.user.role })
+    const [person] = await tx
+      .select({ name: schema.user.name, email: schema.user.email })
       .from(schema.user)
       .where(eq(schema.user.id, userId))
       .for('update');
-    if (!account || account.role === 'god') return;
+    if (!person) return;
     const [owned] = await tx
       .select({ n: sql`1` })
       .from(schema.workspaceManager)
@@ -447,7 +486,7 @@ export async function ensurePersonalWorkspace(userId: string): Promise<void> {
       .where(eq(schema.aiAgent.userId, userId))
       .limit(1);
     if (owned || agent) return;
-    const name = (account.name.trim() || account.email.split('@')[0]!).slice(0, 60);
+    const name = (person.name.trim() || person.email.split('@')[0]!).slice(0, 60);
     await createWorkspace(tx, name, userId);
   });
   settled.add(userId);
@@ -503,442 +542,454 @@ const DAY_SEC = 24 * 60 * 60;
 export const API_KEY_DEFAULT_EXPIRES_IN_SEC = 90 * DAY_SEC;
 export const API_KEY_MAX_EXPIRES_IN_DAYS = 365;
 
-export const auth = betterAuth({
-  baseURL,
-  secret: process.env.BETTER_AUTH_SECRET,
-  onAPIError: { errorURL: oauthErrorURL },
+// Created on first use rather than on import, so a build's extendAuth (./extensions) takes
+// effect wherever a bundler puts its module, as long as it runs before the first request.
+function createAuth() {
+  const extensions = readAuthExtensions();
+  return betterAuth({
+    baseURL,
+    secret: process.env.BETTER_AUTH_SECRET,
+    onAPIError: { errorURL: oauthErrorURL },
 
-  database: drizzleAdapter(db, {
-    provider: 'pg',
-    schema: {
-      user: schema.user,
-      session: schema.session,
-      account: schema.account,
-      verification: schema.verification,
-      passkey: schema.passkey,
-      apikey: schema.apikey,
-      jwks: schema.jwks,
-      oauthClient: schema.oauthClient,
-      oauthResource: schema.oauthResource,
-      oauthClientResource: schema.oauthClientResource,
-      oauthRefreshToken: schema.oauthRefreshToken,
-      oauthAccessToken: schema.oauthAccessToken,
-      oauthConsent: schema.oauthConsent,
-      oauthClientAssertion: schema.oauthClientAssertion,
-    },
-  }),
-
-  emailAndPassword: {
-    enabled: true,
-    // While this is true, sign-up answers without a session and a duplicate address
-    // gets the same answer as a new one; sign-in of an unconfirmed account is
-    // refused in the hook below before better-auth's own check runs.
-    get requireEmailVerification() {
-      return verificationRequired;
-    },
-    autoSignIn: true,
-    // A reset is how a stolen password is dealt with, so every session opened with
-    // the old one ends with it. The signed-in change-password form sends
-    // revokeOtherSessions for the same reason.
-    revokeSessionsOnPasswordReset: true,
-    sendResetPassword: async ({ user, url }) => {
-      await sendAuthEmail({
-        to: user.email,
-        subject: 'Reset your password',
-        text: 'Use the link below to set a new password. Ignore this email if you did not ask for it.',
-        url: withPublicOrigin(url),
-      });
-    },
-  },
-
-  emailVerification: {
-    // The mail goes out on every sign-up; sendVerificationEmail below drops it when
-    // the instance does not require verification.
-    sendOnSignUp: true,
-    autoSignInAfterVerification: true,
-    sendVerificationEmail: async ({ user, url }) => {
-      const settings = await getAuthSettings();
-      if (!settings.requireEmailVerification) return;
-      await sendAuthEmail({
-        to: user.email,
-        subject: 'Confirm your email address',
-        text: 'Use the link below to confirm this address and finish signing up.',
-        url: withPublicOrigin(url),
-      });
-    },
-  },
-
-  // Google sign-in. The provider is always mounted; whether it may run is decided per
-  // request in the hook below, the same way the magic link is handled. The factory
-  // runs once, at startup, and returns the shared options object described above.
-  socialProviders: {
-    google: async () => {
-      await refreshGoogleOptions();
-      return googleOptions;
-    },
-  },
-
-  // A provider address that already has an account signs into it and gains a linked
-  // account row, rather than being refused as a duplicate. By default that happens
-  // only when the provider reported the address as verified and the local account
-  // confirmed its own — Google always reports a verified address, an OIDC provider
-  // need not, and an instance with no mail provider has no confirmed accounts at
-  // all. The instance setting drops both conditions; after a successful link
-  // better-auth marks the local user confirmed too.
-  account: {
-    accountLinking: {
-      trustedProviders: resolveTrustedProviders,
-      get requireLocalEmailVerified() {
-        return !trustProviderEmails;
-      },
-    },
-    // The id_token is stored unencrypted, so this covers only the access and refresh
-    // tokens.
-    encryptOAuthTokens: true,
-  },
-
-  // Extra column on the user table. Not client-settable (input: false) — the role
-  // is decided by the create hook below.
-  user: {
-    additionalFields: {
-      role: {
-        type: 'string',
-        required: false,
-        defaultValue: 'user',
-        input: false,
-      },
-      // Deprovisioning flag, written only over SCIM while it acts on the whole instance.
-      // Nullable: read it through isAccountDeactivated, which takes only `false`.
-      active: {
-        type: 'boolean',
-        required: false,
-        defaultValue: true,
-        input: false,
-      },
-    },
-  },
-
-  // The registration gate and the verification check. Both read instance settings
-  // per request, so god mode can change them without a restart.
-  hooks: {
-    before: createAuthMiddleware(async (ctx) => {
-      // Read here so the two sign-in endpoints, which also go through the
-      // verification gate below, make one query instead of two.
-      const passwordSettings = PASSWORD_PATHS.has(ctx.path) ? await getAuthSettings() : null;
-      if (passwordSettings) verificationRequired = passwordSettings.requireEmailVerification;
-      // The api will not let the switch be turned off while no OAuth provider is
-      // configured, so this cannot leave an instance with no way in.
-      if (passwordSettings && !passwordSettings.emailPassword) {
-        throw new APIError('FORBIDDEN', {
-          code: 'PASSWORD_AUTH_DISABLED',
-          message: 'Password sign-in is disabled on this instance',
-        });
-      }
-
-      if (ctx.path === '/sign-up/email') {
-        await assertRegistrationAllowed((ctx.body as { email?: string } | undefined)?.email ?? '', {
-          addressProven: false,
-        });
-        return;
-      }
-
-      const provider =
-        ctx.path === '/sign-in/social' || ctx.path === '/link-social'
-          ? (ctx.body as { provider?: string } | undefined)?.provider
-          : ctx.path.startsWith('/callback/')
-            ? ctx.path.slice('/callback/'.length)
-            : undefined;
-      // No screen links an OIDC identity to the signed-in account, and better-auth
-      // already attaches a sign-in to a matching confirmed address on its own.
-      if (ctx.path === '/link-social' && provider === OIDC_PROVIDER_ID) {
-        throw new APIError('FORBIDDEN', { message: 'Single sign-on cannot be linked' });
-      }
-
-      // Both halves of an OAuth round trip: starting it and coming back from it. This
-      // is where the stored settings are loaded into the provider, so a request never
-      // runs on a value the owner has since changed. The OIDC refusal carries a code
-      // because the callback turns it into the ?error= it redirects with; without one
-      // the callback fails the request instead.
-      if (provider === OIDC_PROVIDER_ID) {
-        if (!(await refreshOidcProvider())) {
-          throw new APIError('FORBIDDEN', {
-            code: 'OIDC_DISABLED',
-            message: 'Single sign-on is disabled on this instance',
-          });
-        }
-        return;
-      }
-      if (provider === 'google') {
-        if (!(await refreshGoogleOptions())) {
-          throw new APIError('FORBIDDEN', {
-            message: 'Google sign-in is disabled on this instance',
-          });
-        }
-        return;
-      }
-
-      // Both password endpoints: the sign-in screen sends the one field it has to
-      // /sign-in/email or /sign-in/username depending on what was typed, and the
-      // instance gate has to apply either way.
-      if (ctx.path === '/sign-in/email' || ctx.path === '/sign-in/username') {
-        const settings = passwordSettings ?? (await getAuthSettings());
-        if (!settings.requireEmailVerification) return;
-        const body = ctx.body as { email?: string; username?: string } | undefined;
-        const identifier =
-          ctx.path === '/sign-in/email'
-            ? eq(schema.user.email, (body?.email ?? '').trim().toLowerCase())
-            : eq(schema.user.username, (body?.username ?? '').trim().toLowerCase());
-        if (await isUnverified(identifier)) {
-          throw new APIError('FORBIDDEN', {
-            message: 'Confirm your email address before signing in',
-          });
-        }
-        return;
-      }
-
-      // The profile form changes the username here. The plugin only checks it against
-      // the other accounts, so the agents are checked on this side.
-      if (ctx.path === '/update-user') {
-        const handle = (ctx.body as { username?: string } | undefined)?.username;
-        if (handle && (await isAgentHandle(handle))) {
-          throw new APIError('BAD_REQUEST', {
-            message: 'Username is already taken. Please try another.',
-          });
-        }
-        return;
-      }
-
-      // A key resolves to its owner's session, so a request carrying a leaked key
-      // reaches the key endpoints. It may not issue another one: a new key starts a
-      // fresh lifetime, which is the expiry of the leaked key renewed under a
-      // different row. Issuing a key is left to a signed-in session. The server-side
-      // call that issues an agent's key carries no request and is unaffected.
-      if (ctx.path === '/api-key/create' && ctx.request?.headers.get('x-api-key')) {
-        throw new APIError('FORBIDDEN', {
-          message: 'An API key cannot create another API key. Sign in to create one.',
-        });
-      }
-
-      // The lifetime is fixed at creation for the same reason; a longer one is a new
-      // key, created from a session.
-      if (ctx.path === '/api-key/update') {
-        const body = ctx.body as { expiresIn?: number | null } | undefined;
-        if (body && body.expiresIn !== undefined) {
-          throw new APIError('FORBIDDEN', {
-            message: 'The expiry of an API key cannot be changed. Create a new key instead.',
-          });
-        }
-      }
-    }),
-  },
-
-  databaseHooks: {
-    user: {
-      create: {
-        // Every account creation passes here, whichever method made it, so this is
-        // where the registration gate applies to Google. Agent bot users are written
-        // with a direct insert and never reach this hook.
-        //
-        // Assign the role before the row is inserted: first user ever → "god",
-        // everyone else → "user".
-        before: async (user) => {
-          // The email form is refused up front unless its invite is valid, so a refusal
-          // here comes from a provider or a magic link, which prove the address.
-          await assertRegistrationAllowed(user.email, { addressProven: true });
-          const isFirstUser = (await db.$count(schema.user)) === 0;
-          // A sign-up that carried its own username has passed the plugin's own
-          // check against the other accounts by now, but not the one against the
-          // agents; only an account without one gets a derived name.
-          const carried = typeof user.username === 'string' ? user.username : null;
-          if (carried && (await isAgentHandle(carried))) {
-            throw new APIError('BAD_REQUEST', {
-              code: 'USERNAME_IS_ALREADY_TAKEN',
-              message: 'Username is already taken. Please try another.',
-            });
-          }
-          const derived = carried ?? (await generateUsername(user.email));
-          return {
-            data: {
-              ...user,
-              role: isFirstUser ? 'god' : 'user',
-              username: derived,
-              displayUsername: user.displayUsername ?? derived,
-            },
-          };
-        },
-        after: async (user) => {
-          if (user.role === 'god') {
-            await db
-              .insert(schema.workspaceManager)
-              .values({
-                workspaceId: await instanceWorkspaceId(db),
-                userId: user.id,
-                role: 'owner',
-              })
-              .onConflictDoNothing();
-          } else {
-            await ensurePersonalWorkspace(user.id);
-          }
-        },
-      },
-    },
-    session: {
-      create: {
-        // Every sign-in method ends here, so one check covers password, magic link,
-        // passkey, Google and OIDC. Deactivation arrives over SCIM or from god mode;
-        // apps/api refuses the sessions that are already open.
-        before: async (session) => {
-          const [account] = await db
-            .select({ active: schema.user.active })
-            .from(schema.user)
-            .where(eq(schema.user.id, session.userId));
-          if (account && isAccountDeactivated(account)) {
-            throw new APIError('FORBIDDEN', {
-              code: 'ACCOUNT_DEACTIVATED',
-              message: 'This account is deactivated',
-            });
-          }
-        },
-      },
-    },
-  },
-
-  plugins: [
-    // WebAuthn passkeys, a second sign-in method alongside email + password. A
-    // passkey is added to an already signed-in account (passkey.addPasskey) and
-    // then used to sign in (signIn.passkey). Adds the `passkey` table.
-    passkey({
-      rpID: passkeyRpID,
-      rpName: process.env.PASSKEY_RP_NAME ?? "It's a Plan",
-      // Expected origin(s) of the WebAuthn ceremony — the frontend origins.
-      origin: trustedOrigins,
-    }),
-    // Personal API keys: a signed-in user creates a named key, sees its value once
-    // at creation, and can list (value hidden) or delete it. Adds the `apikey` table.
-    // enableSessionForAPIKeys makes a request carrying an `x-api-key` header resolve
-    // to the key owner's session, so getSession (and every planner guard built on it)
-    // accepts API keys without any change in apps/api. Rate limit: 100 requests per
-    // second per key (timeWindow is in milliseconds). The ceiling is set for the
-    // heaviest legitimate caller rather than a typical one: an internal AI agent runs
-    // on its own key and dispatches every tool call through a route, and a model that
-    // emits a batch of tool calls in one step turns them into a burst of requests.
-    apiKey({
-      enableSessionForAPIKeys: true,
-      // Brand prefix so a leaked key is identifiable by secret scanners and in logs.
-      // The trailing underscore separates it from the random part (itp_<64 chars>).
-      defaultPrefix: 'itp_',
-      // A key is a full-account credential, so one that was forgotten stops working
-      // on its own. The caller may pick a shorter or longer life up to the maximum;
-      // an agent's key is the exception, cleared where it is issued in apps/api.
-      keyExpiration: {
-        defaultExpiresIn: API_KEY_DEFAULT_EXPIRES_IN_SEC,
-        maxExpiresIn: API_KEY_MAX_EXPIRES_IN_DAYS,
-      },
-      rateLimit: {
-        enabled: true,
-        timeWindow: 1000,
-        maxRequests: 100,
+    database: drizzleAdapter(db, {
+      provider: 'pg',
+      schema: {
+        user: schema.user,
+        session: schema.session,
+        account: schema.account,
+        verification: schema.verification,
+        passkey: schema.passkey,
+        apikey: schema.apikey,
+        jwks: schema.jwks,
+        oauthClient: schema.oauthClient,
+        oauthResource: schema.oauthResource,
+        oauthClientResource: schema.oauthClientResource,
+        oauthRefreshToken: schema.oauthRefreshToken,
+        oauthAccessToken: schema.oauthAccessToken,
+        oauthConsent: schema.oauthConsent,
+        oauthClientAssertion: schema.oauthClientAssertion,
+        ...extensions.schema,
       },
     }),
-    // Sign-in by emailed link, offered alongside the password. Whether it is
-    // available is an instance setting, so the plugin is always mounted and the
-    // sender refuses when it is off. It reuses the `verification` table — no new
-    // table, so `auth:generate` output is unchanged.
-    magicLink({
-      // Stored plain, an OAuth state also passes as a token (GHSA-965c-763c-88jm).
-      storeToken: 'hashed',
-      sendMagicLink: async ({ email, url }) => {
-        const settings = await getAuthSettings();
-        if (!settings.magicLink) {
-          throw new APIError('FORBIDDEN', { message: 'Magic links are disabled on this instance' });
-        }
+
+    emailAndPassword: {
+      enabled: true,
+      // While this is true, sign-up answers without a session and a duplicate address
+      // gets the same answer as a new one; sign-in of an unconfirmed account is
+      // refused in the hook below before better-auth's own check runs.
+      get requireEmailVerification() {
+        return verificationRequired;
+      },
+      autoSignIn: true,
+      // A reset is how a stolen password is dealt with, so every session opened with
+      // the old one ends with it. The signed-in change-password form sends
+      // revokeOtherSessions for the same reason.
+      revokeSessionsOnPasswordReset: true,
+      sendResetPassword: async ({ user, url }) => {
         await sendAuthEmail({
-          to: email,
-          subject: 'Your sign-in link',
-          text: 'Use the link below to sign in. It works once and expires shortly.',
+          to: user.email,
+          subject: 'Reset your password',
+          text: 'Use the link below to set a new password. Ignore this email if you did not ask for it.',
           url: withPublicOrigin(url),
         });
       },
-    }),
-    // The instance's OIDC provider, configured in god mode; see oidcProvider above.
-    instanceOidc(),
-    // Usernames: a second identifier next to the address, unique across the
-    // instance. Adds `username` / `display_username` to the user table and the
-    // /sign-in/username endpoint the sign-in screen uses when the visitor typed a
-    // name rather than an address. Nobody is asked for one — the create hook above
-    // derives it from the address, and the profile page changes it afterwards.
-    username({
-      minUsernameLength: USERNAME_MIN_LENGTH,
-      maxUsernameLength: USERNAME_MAX_LENGTH,
-    }),
-    // OAuth 2.1 for Streamable HTTP MCP clients, on top of the existing session. Any
-    // client registers itself (RFC 7591), as ChatGPT and Claude do. The access tokens
-    // are JWTs signed by jwt(); no screen reads a session JWT, so it does not put one
-    // on every session response.
-    ...(mcpOAuth
-      ? [
-          jwt({ disableSettingJwtHeader: true, jwt: { issuer: MCP_ISSUER } }),
-          mcp({
-            resource: MCP_RESOURCE,
-            loginPage: `${trustedOrigins[0]}/login`,
-            consentPage: `${trustedOrigins[0]}/oauth/consent`,
-            // Every token acts for a person; client_credentials would mint one for none.
-            grantTypes: ['authorization_code', 'refresh_token'],
-            allowDynamicClientRegistration: true,
-            allowUnauthenticatedClientRegistration: true,
-          }),
-        ]
-      : []),
-    // OpenAPI reference for the better-auth handler. Serves a Scalar UI at
-    // /api/auth/reference and the raw schema at /api/auth/open-api/generate-schema.
-    // The schema is built from every active plugin, so the passkey and apiKey
-    // endpoints are documented automatically. This is docs-only: it adds no table,
-    // so `auth:generate` is not needed. The planner's own OpenAPI docs stay at /docs.
-    openAPI(),
-  ],
-
-  // The frontend runs on a different origin (Next :3001) — allow its requests.
-  trustedOrigins,
-
-  // /is-username-available answers for anyone, and a username is derived from the
-  // address, so it would tell a stranger which addresses are registered. Nothing in
-  // the app calls it — the profile form learns a name is taken from updateUser's
-  // error. jwt()'s /token hands out a JWT of the session, which nothing reads.
-  disabledPaths: ['/is-username-available', '/token'],
-
-  advanced: {
-    // Share the session cookie across subdomains when COOKIE_DOMAIN is the parent
-    // domain (e.g. ".itsaplan.dev" for app.itsaplan.dev + api.itsaplan.dev). Without
-    // it the cookie is host-only for the api origin, so the SSR web app on another
-    // subdomain cannot read the session. Leave COOKIE_DOMAIN unset on localhost
-    // (single host), where "lax" host-only cookies already work across ports.
-    ...(cookieDomain
-      ? {
-          crossSubDomainCookies: {
-            enabled: true,
-            domain: cookieDomain,
-          },
-        }
-      : {}),
-    // For a single site (localhost / one domain) "lax" is enough. Subdomains of one
-    // registrable domain are same-site, so "lax" cookies are still sent between them.
-    ...(hostPrefixedCookies
-      ? {
-          useSecureCookies: false,
-          cookiePrefix: '__Secure-better-auth',
-          cookies: Object.fromEntries(
-            SESSION_COOKIES.map((name) => [
-              name,
-              { name: `__Host-better-auth.${name}`, attributes: { path: '/', secure: true } },
-            ]),
-          ),
-        }
-      : {}),
-    defaultCookieAttributes: {
-      sameSite: 'lax',
-      secure: hostPrefixedCookies || process.env.NODE_ENV === 'production',
     },
-  },
+
+    emailVerification: {
+      // The mail goes out on every sign-up; sendVerificationEmail below drops it when
+      // the instance does not require verification.
+      sendOnSignUp: true,
+      autoSignInAfterVerification: true,
+      sendVerificationEmail: async ({ user, url }) => {
+        const settings = await getAuthSettings();
+        if (!settings.requireEmailVerification) return;
+        await sendAuthEmail({
+          to: user.email,
+          subject: 'Confirm your email address',
+          text: 'Use the link below to confirm this address and finish signing up.',
+          url: withPublicOrigin(url),
+        });
+      },
+    },
+
+    // Google sign-in. The provider is always mounted; whether it may run is decided per
+    // request in the hook below, the same way the magic link is handled. The factory
+    // runs once, at startup, and returns the shared options object described above.
+    socialProviders: {
+      google: async () => {
+        await refreshGoogleOptions();
+        return googleOptions;
+      },
+    },
+
+    // A provider address that already has an account signs into it and gains a linked
+    // account row, rather than being refused as a duplicate. By default that happens
+    // only when the provider reported the address as verified and the local account
+    // confirmed its own — Google always reports a verified address, an OIDC provider
+    // need not, and an instance with no mail provider has no confirmed accounts at
+    // all. The instance setting drops both conditions; after a successful link
+    // better-auth marks the local user confirmed too.
+    account: {
+      accountLinking: {
+        trustedProviders: resolveTrustedProviders,
+        get requireLocalEmailVerified() {
+          return !trustProviderEmails;
+        },
+      },
+      // The id_token is stored unencrypted, so this covers only the access and refresh
+      // tokens.
+      encryptOAuthTokens: true,
+    },
+
+    // Extra column on the user table. Not client-settable (input: false) — the role
+    // is decided by the create hook below.
+    user: {
+      additionalFields: {
+        role: {
+          type: 'string',
+          required: false,
+          defaultValue: 'user',
+          input: false,
+        },
+        // Deprovisioning flag, written only over SCIM while it acts on the whole instance.
+        // Nullable: read it through isAccountDeactivated, which takes only `false`.
+        active: {
+          type: 'boolean',
+          required: false,
+          defaultValue: true,
+          input: false,
+        },
+      },
+    },
+
+    // The registration gate and the verification check. Both read instance settings
+    // per request, so god mode can change them without a restart.
+    hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        // Read here so the two sign-in endpoints, which also go through the
+        // verification gate below, make one query instead of two.
+        const passwordSettings = PASSWORD_PATHS.has(ctx.path) ? await getAuthSettings() : null;
+        if (passwordSettings) verificationRequired = passwordSettings.requireEmailVerification;
+        // The api will not let the switch be turned off while no OAuth provider is
+        // configured, so this cannot leave an instance with no way in.
+        if (passwordSettings && !passwordSettings.emailPassword) {
+          throw new APIError('FORBIDDEN', {
+            code: 'PASSWORD_AUTH_DISABLED',
+            message: 'Password sign-in is disabled on this instance',
+          });
+        }
+
+        if (ctx.path === '/sign-up/email') {
+          await assertRegistrationAllowed(
+            (ctx.body as { email?: string } | undefined)?.email ?? '',
+            {
+              addressProven: false,
+            },
+          );
+          return;
+        }
+
+        const provider =
+          ctx.path === '/sign-in/social' || ctx.path === '/link-social'
+            ? (ctx.body as { provider?: string } | undefined)?.provider
+            : ctx.path.startsWith('/callback/')
+              ? ctx.path.slice('/callback/'.length)
+              : undefined;
+        // No screen links an OIDC identity to the signed-in account, and better-auth
+        // already attaches a sign-in to a matching confirmed address on its own.
+        if (ctx.path === '/link-social' && provider === OIDC_PROVIDER_ID) {
+          throw new APIError('FORBIDDEN', { message: 'Single sign-on cannot be linked' });
+        }
+
+        // Both halves of an OAuth round trip: starting it and coming back from it. This
+        // is where the stored settings are loaded into the provider, so a request never
+        // runs on a value the owner has since changed. The OIDC refusal carries a code
+        // because the callback turns it into the ?error= it redirects with; without one
+        // the callback fails the request instead.
+        if (provider === OIDC_PROVIDER_ID) {
+          if (!(await refreshOidcProvider())) {
+            throw new APIError('FORBIDDEN', {
+              code: 'OIDC_DISABLED',
+              message: 'Single sign-on is disabled on this instance',
+            });
+          }
+          return;
+        }
+        if (provider === 'google') {
+          if (!(await refreshGoogleOptions())) {
+            throw new APIError('FORBIDDEN', {
+              message: 'Google sign-in is disabled on this instance',
+            });
+          }
+          return;
+        }
+
+        // Both password endpoints: the sign-in screen sends the one field it has to
+        // /sign-in/email or /sign-in/username depending on what was typed, and the
+        // instance gate has to apply either way.
+        if (ctx.path === '/sign-in/email' || ctx.path === '/sign-in/username') {
+          const settings = passwordSettings ?? (await getAuthSettings());
+          if (!settings.requireEmailVerification) return;
+          const body = ctx.body as { email?: string; username?: string } | undefined;
+          const identifier =
+            ctx.path === '/sign-in/email'
+              ? eq(schema.user.email, (body?.email ?? '').trim().toLowerCase())
+              : eq(schema.user.username, (body?.username ?? '').trim().toLowerCase());
+          if (await isUnverified(identifier)) {
+            throw new APIError('FORBIDDEN', {
+              message: 'Confirm your email address before signing in',
+            });
+          }
+          return;
+        }
+
+        // The profile form changes the username here. The plugin only checks it against
+        // the other accounts, so the agents are checked on this side.
+        if (ctx.path === '/update-user') {
+          const handle = (ctx.body as { username?: string } | undefined)?.username;
+          if (handle && (await isAgentHandle(handle))) {
+            throw new APIError('BAD_REQUEST', {
+              message: 'Username is already taken. Please try another.',
+            });
+          }
+          return;
+        }
+
+        // A key resolves to its owner's session, so a request carrying a leaked key
+        // reaches the key endpoints. It may not issue another one: a new key starts a
+        // fresh lifetime, which is the expiry of the leaked key renewed under a
+        // different row. Issuing a key is left to a signed-in session. The server-side
+        // call that issues an agent's key carries no request and is unaffected.
+        if (ctx.path === '/api-key/create' && ctx.request?.headers.get('x-api-key')) {
+          throw new APIError('FORBIDDEN', {
+            message: 'An API key cannot create another API key. Sign in to create one.',
+          });
+        }
+
+        // The lifetime is fixed at creation for the same reason; a longer one is a new
+        // key, created from a session.
+        if (ctx.path === '/api-key/update') {
+          const body = ctx.body as { expiresIn?: number | null } | undefined;
+          if (body && body.expiresIn !== undefined) {
+            throw new APIError('FORBIDDEN', {
+              message: 'The expiry of an API key cannot be changed. Create a new key instead.',
+            });
+          }
+        }
+      }),
+    },
+
+    databaseHooks: {
+      user: {
+        create: {
+          // Every account creation passes here, whichever method made it, so this is
+          // where the registration gate applies to Google. Agent bot users are written
+          // with a direct insert and never reach this hook.
+          //
+          // Assign the role before the row is inserted: first user ever → "god",
+          // everyone else → "user".
+          before: async (user, ctx) => {
+            // The email form is refused up front unless its invite is valid, so a refusal
+            // here comes from a provider or a magic link, which prove the address.
+            if (!(await admittedPastGate(user.email, ctx))) {
+              await assertRegistrationAllowed(user.email, { addressProven: true });
+            }
+            const isFirstUser = (await db.$count(schema.user)) === 0;
+            // A sign-up that carried its own username has passed the plugin's own
+            // check against the other accounts by now, but not the one against the
+            // agents; only an account without one gets a derived name.
+            const carried = typeof user.username === 'string' ? user.username : null;
+            if (carried && (await isAgentHandle(carried))) {
+              throw new APIError('BAD_REQUEST', {
+                code: 'USERNAME_IS_ALREADY_TAKEN',
+                message: 'Username is already taken. Please try another.',
+              });
+            }
+            const derived = carried ?? (await generateUsername(user.email));
+            return {
+              data: {
+                ...user,
+                role: isFirstUser ? 'god' : 'user',
+                username: derived,
+                displayUsername: user.displayUsername ?? derived,
+              },
+            };
+          },
+          after: async (user) => {
+            await ensurePersonalWorkspace(user);
+          },
+        },
+      },
+      session: {
+        create: {
+          // Every sign-in method ends here, so one check covers password, magic link,
+          // passkey, Google and OIDC. Deactivation arrives over SCIM or from god mode;
+          // apps/api refuses the sessions that are already open.
+          before: async (session) => {
+            const [account] = await db
+              .select({ active: schema.user.active })
+              .from(schema.user)
+              .where(eq(schema.user.id, session.userId));
+            if (account && isAccountDeactivated(account)) {
+              throw new APIError('FORBIDDEN', {
+                code: 'ACCOUNT_DEACTIVATED',
+                message: 'This account is deactivated',
+              });
+            }
+          },
+        },
+      },
+    },
+
+    plugins: [
+      // WebAuthn passkeys, a second sign-in method alongside email + password. A
+      // passkey is added to an already signed-in account (passkey.addPasskey) and
+      // then used to sign in (signIn.passkey). Adds the `passkey` table.
+      passkey({
+        rpID: passkeyRpID,
+        rpName: process.env.PASSKEY_RP_NAME ?? "It's a Plan",
+        // Expected origin(s) of the WebAuthn ceremony — the frontend origins.
+        origin: trustedOrigins,
+      }),
+      // Personal API keys: a signed-in user creates a named key, sees its value once
+      // at creation, and can list (value hidden) or delete it. Adds the `apikey` table.
+      // enableSessionForAPIKeys makes a request carrying an `x-api-key` header resolve
+      // to the key owner's session, so getSession (and every planner guard built on it)
+      // accepts API keys without any change in apps/api. Rate limit: 100 requests per
+      // second per key (timeWindow is in milliseconds). The ceiling is set for the
+      // heaviest legitimate caller rather than a typical one: an internal AI agent runs
+      // on its own key and dispatches every tool call through a route, and a model that
+      // emits a batch of tool calls in one step turns them into a burst of requests.
+      apiKey({
+        enableSessionForAPIKeys: true,
+        // Brand prefix so a leaked key is identifiable by secret scanners and in logs.
+        // The trailing underscore separates it from the random part (itp_<64 chars>).
+        defaultPrefix: 'itp_',
+        // A key is a full-account credential, so one that was forgotten stops working
+        // on its own. The caller may pick a shorter or longer life up to the maximum;
+        // an agent's key is the exception, cleared where it is issued in apps/api.
+        keyExpiration: {
+          defaultExpiresIn: API_KEY_DEFAULT_EXPIRES_IN_SEC,
+          maxExpiresIn: API_KEY_MAX_EXPIRES_IN_DAYS,
+        },
+        rateLimit: {
+          enabled: true,
+          timeWindow: 1000,
+          maxRequests: 100,
+        },
+      }),
+      // Sign-in by emailed link, offered alongside the password. Whether it is
+      // available is an instance setting, so the plugin is always mounted and the
+      // sender refuses when it is off. It reuses the `verification` table — no new
+      // table, so `auth:generate` output is unchanged.
+      magicLink({
+        // Stored plain, an OAuth state also passes as a token (GHSA-965c-763c-88jm).
+        storeToken: 'hashed',
+        sendMagicLink: async ({ email, url }) => {
+          const settings = await getAuthSettings();
+          if (!settings.magicLink) {
+            throw new APIError('FORBIDDEN', {
+              message: 'Magic links are disabled on this instance',
+            });
+          }
+          await sendAuthEmail({
+            to: email,
+            subject: 'Your sign-in link',
+            text: 'Use the link below to sign in. It works once and expires shortly.',
+            url: withPublicOrigin(url),
+          });
+        },
+      }),
+      // The instance's OIDC provider, configured in god mode; see oidcProvider above.
+      instanceOidc(),
+      // Usernames: a second identifier next to the address, unique across the
+      // instance. Adds `username` / `display_username` to the user table and the
+      // /sign-in/username endpoint the sign-in screen uses when the visitor typed a
+      // name rather than an address. Nobody is asked for one — the create hook above
+      // derives it from the address, and the profile page changes it afterwards.
+      username({
+        minUsernameLength: USERNAME_MIN_LENGTH,
+        maxUsernameLength: USERNAME_MAX_LENGTH,
+      }),
+      // OAuth 2.1 for Streamable HTTP MCP clients, on top of the existing session. Any
+      // client registers itself (RFC 7591), as ChatGPT and Claude do. The access tokens
+      // are JWTs signed by jwt(); no screen reads a session JWT, so it does not put one
+      // on every session response.
+      ...(mcpOAuth
+        ? [
+            jwt({ disableSettingJwtHeader: true, jwt: { issuer: MCP_ISSUER } }),
+            mcp({
+              resource: MCP_RESOURCE,
+              loginPage: `${trustedOrigins[0]}/login`,
+              consentPage: `${trustedOrigins[0]}/oauth/consent`,
+              // Every token acts for a person; client_credentials would mint one for none.
+              grantTypes: ['authorization_code', 'refresh_token'],
+              allowDynamicClientRegistration: true,
+              allowUnauthenticatedClientRegistration: true,
+            }),
+          ]
+        : []),
+      // OpenAPI reference for the better-auth handler. Serves a Scalar UI at
+      // /api/auth/reference and the raw schema at /api/auth/open-api/generate-schema.
+      // The schema is built from every active plugin, so the passkey and apiKey
+      // endpoints are documented automatically. This is docs-only: it adds no table,
+      // so `auth:generate` is not needed. The planner's own OpenAPI docs stay at /docs.
+      openAPI(),
+      // A build's own (./extensions). Typed as none, so the instance's type stays the core's.
+      ...(extensions.plugins as []),
+    ],
+
+    // The frontend runs on a different origin (Next :3001) — allow its requests.
+    trustedOrigins,
+
+    // /is-username-available answers for anyone, and a username is derived from the
+    // address, so it would tell a stranger which addresses are registered. Nothing in
+    // the app calls it — the profile form learns a name is taken from updateUser's
+    // error. jwt()'s /token hands out a JWT of the session, which nothing reads.
+    disabledPaths: ['/is-username-available', '/token', ...extensions.disabledPaths],
+
+    advanced: {
+      // Share the session cookie across subdomains when COOKIE_DOMAIN is the parent
+      // domain (e.g. ".itsaplan.dev" for app.itsaplan.dev + api.itsaplan.dev). Without
+      // it the cookie is host-only for the api origin, so the SSR web app on another
+      // subdomain cannot read the session. Leave COOKIE_DOMAIN unset on localhost
+      // (single host), where "lax" host-only cookies already work across ports.
+      ...(cookieDomain
+        ? {
+            crossSubDomainCookies: {
+              enabled: true,
+              domain: cookieDomain,
+            },
+          }
+        : {}),
+      // For a single site (localhost / one domain) "lax" is enough. Subdomains of one
+      // registrable domain are same-site, so "lax" cookies are still sent between them.
+      ...(hostPrefixedCookies
+        ? {
+            useSecureCookies: false,
+            cookiePrefix: '__Secure-better-auth',
+            cookies: Object.fromEntries(
+              SESSION_COOKIES.map((name) => [
+                name,
+                { name: `__Host-better-auth.${name}`, attributes: { path: '/', secure: true } },
+              ]),
+            ),
+          }
+        : {}),
+      defaultCookieAttributes: {
+        sameSite: 'lax',
+        secure: hostPrefixedCookies || process.env.NODE_ENV === 'production',
+      },
+    },
+  });
+}
+
+let instance: ReturnType<typeof createAuth> | undefined;
+const instanceOf = () => (instance ??= createAuth());
+
+export const auth = new Proxy({} as ReturnType<typeof createAuth>, {
+  get: (_target, key) => Reflect.get(instanceOf(), key),
+  has: (_target, key) => Reflect.has(instanceOf(), key),
 });
 
 export type Auth = typeof auth;
@@ -970,6 +1021,10 @@ export {
   REGISTRATION_MODES,
   getAuthSettings,
   setAuthSettings,
+  emailDomainAllowed,
+  registrationEmailAllowed,
+  setRegistrationEmailPolicy,
+  setRegistrationAdmission,
   inviteValidSince,
   getEmailSettings,
   setEmailSettings,
@@ -989,6 +1044,7 @@ export {
   verifyScimToken,
   setWorkspaceScim,
   workspaceScim,
+  workspacesWithOwnScim,
   isAccountDeactivated,
   accountsManagedByScim,
 } from './instance';
@@ -1003,5 +1059,5 @@ export type {
   InstanceOidcDto,
   InstanceOidcPatch,
   InstanceOidcConfig,
-  WorkspaceScimDto,
+  ScimSettingsDto,
 } from './instance';

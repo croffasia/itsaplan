@@ -32,8 +32,8 @@ export interface AgentSchedule {
   // False when the agent's runner is scoped to another member, who alone may run or
   // stop it.
   canTrigger: boolean;
-  // False for a schedule set up with Cloud or Pro, whose type or options this instance
-  // lacks: kept as it is, it starts no run and can only be deleted.
+  // False for a schedule set up by a build whose type or options this instance lacks:
+  // kept as it is, it starts no run and can only be deleted.
   supported: boolean;
   createdAt: string;
   updatedAt: string;

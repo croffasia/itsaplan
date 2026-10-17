@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { auth } from '@repo/auth';
-import { db, instanceWorkspaceId } from '@repo/db';
+import { db, workspaceManager } from '@repo/db';
+import { and, eq } from 'drizzle-orm';
 import { insertOwnedTeam } from '#modules/teams/service';
 import { app } from './app';
 
@@ -13,6 +14,9 @@ export interface TestUser {
   // The handle the sign-up hook derived from the address, which is how a test
   // mentions this user.
   username: string;
+  // The workspace sign-up gave the account, or null when it got none (personal
+  // workspaces off, and not the instance owner).
+  workspaceId: number | null;
 }
 
 let counter = 0;
@@ -23,7 +27,8 @@ let counter = 0;
 // tests do not collide. Pass this cookie to authenticated requests.
 //
 // Sign-up creates no team. Most tests need one to create projects in, so the user is
-// given a team named after its username, without a slug, unless `team` is false.
+// given a team named after its username, without a slug, in its own workspace, unless
+// `team` is false.
 //
 // Note: the very first user created in a fresh database becomes the "god" role
 // (better-auth create hook). resetDb() clears users between tests, so whichever
@@ -56,13 +61,19 @@ export async function signUpTestUser(
   if (!userId) throw new Error(`signUpTestUser: no user id returned for ${email}`);
   const username = body.user?.username;
   if (!username) throw new Error(`signUpTestUser: no username returned for ${email}`);
+  const [own] = await db
+    .select({ workspaceId: workspaceManager.workspaceId })
+    .from(workspaceManager)
+    .where(and(eq(workspaceManager.userId, userId), eq(workspaceManager.role, 'owner')));
+  const workspaceId = own?.workspaceId ?? null;
   if (overrides.team !== false) {
-    await db.transaction(async (tx) =>
-      insertOwnedTeam(tx, await instanceWorkspaceId(tx), username, userId),
-    );
+    if (workspaceId === null) {
+      throw new Error(`signUpTestUser: ${email} has no workspace for a team; pass team: false`);
+    }
+    await db.transaction(async (tx) => insertOwnedTeam(tx, workspaceId, username, userId));
   }
 
-  return { cookie, userId, email, username };
+  return { cookie, userId, email, username, workspaceId };
 }
 
 // Opens a magic link for `email` as the web asks for one (errorCallbackURL on the sign-in

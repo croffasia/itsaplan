@@ -49,9 +49,8 @@ export const appSecret = pgTable('app_secret', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-// A workspace owns teams; its members are derived from them. The instance workspace was
-// created by the migration that introduced the table and belongs to the instance owner;
-// everyone else gets one of their own at sign-up.
+// A workspace owns teams; its members are derived from them. Every person, the instance
+// owner included, gets one of their own at sign-up, and a team is always created in one.
 export const workspace = pgTable(
   'workspace',
   {

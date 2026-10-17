@@ -5,10 +5,21 @@ import { PermissionMatrixSchema } from '#shared/permissions';
 import { USER_KINDS } from './service';
 
 const encryption = t.UnionEnum(['none', 'ssl', 'tls']);
+const smtpAuth = t.UnionEnum(['password', 'microsoft365']);
+
+const EMAIL_DOMAIN_PATTERN = '^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z0-9-]{2,63}$';
+
+// Lowercase domains, compared with the part of an address after the "@".
+export const EmailDomains = t.Array(t.String({ pattern: EMAIL_DOMAIN_PATTERN }), {
+  maxItems: 100,
+  uniqueItems: true,
+});
 
 export const userParams = t.Object({ userId: t.String() });
 
 export const projectParams = t.Object({ projectId: t.Numeric() });
+
+export const scimGroupParams = t.Object({ groupId: t.String() });
 
 export const listUsersQuery = t.Object({
   search: t.Optional(t.String()),
@@ -39,6 +50,7 @@ export const AuthSettingsResponse = t.Object({
   trustProviderEmails: t.Boolean(),
   personalWorkspaces: t.Boolean(),
   inviteTtlDays: t.Integer(),
+  allowedEmailDomains: t.Array(t.String()),
   // The settings that depend on outbound email cannot be turned on without a mail
   // provider, and the UI explains why.
   hasEmailProvider: t.Boolean(),
@@ -58,6 +70,7 @@ export const AuthSettingsBody = t.Object({
   personalWorkspaces: t.Optional(t.Boolean()),
   // The cap keeps createdAt plus the lifetime inside the range a Date can hold.
   inviteTtlDays: t.Optional(t.Integer({ minimum: 0, maximum: 3650 })),
+  allowedEmailDomains: t.Optional(EmailDomains),
 });
 
 export const EmailSettingsResponse = t.Object({
@@ -69,6 +82,8 @@ export const EmailSettingsResponse = t.Object({
     username: t.String(),
     hasPassword: t.Boolean(),
     timeout: t.Nullable(t.Number()),
+    auth: smtpAuth,
+    oauth: t.Object({ tenantId: t.String(), clientId: t.String(), hasClientSecret: t.Boolean() }),
   }),
   resend: t.Object({ enabled: t.Boolean(), hasApiKey: t.Boolean() }),
   from: t.String(),
@@ -87,6 +102,14 @@ export const EmailSettingsBody = t.Object({
       username: t.String(),
       password: t.Optional(t.String()),
       timeout: t.Nullable(t.Integer({ minimum: 1 })),
+      auth: t.Optional(smtpAuth),
+      oauth: t.Optional(
+        t.Object({
+          tenantId: t.String({ maxLength: 128 }),
+          clientId: t.String({ maxLength: 128 }),
+          clientSecret: t.Optional(t.String({ maxLength: 1024 })),
+        }),
+      ),
     }),
   ),
   resend: t.Optional(t.Object({ enabled: t.Boolean(), apiKey: t.Optional(t.String()) })),

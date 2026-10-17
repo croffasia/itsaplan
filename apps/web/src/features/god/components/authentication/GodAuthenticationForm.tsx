@@ -47,7 +47,12 @@ export default function GodAuthenticationForm({
         <Button
           size="sm"
           onClick={() => void save()}
-          disabled={!policy.dirty || !policy.inviteTtlDaysValid || policy.saving}
+          disabled={
+            !policy.dirty ||
+            !policy.inviteTtlDaysValid ||
+            !policy.allowedEmailDomainsValid ||
+            policy.saving
+          }
         >
           {policy.saving ? tCommon('saving') : tCommon('save')}
         </Button>
@@ -60,6 +65,22 @@ export default function GodAuthenticationForm({
               value={policy.registration}
               disabled={policy.saving}
               onChange={policy.setRegistration}
+            />
+            <SettingsRow
+              title={t('allowedEmailDomains')}
+              description={t('allowedEmailDomainsHint')}
+              note={policy.allowedEmailDomainsValid ? undefined : t('allowedEmailDomainsInvalid')}
+              control={
+                <Input
+                  className="w-40 shrink-0 sm:w-72"
+                  placeholder="example.com"
+                  aria-label={t('allowedEmailDomains')}
+                  aria-invalid={!policy.allowedEmailDomainsValid}
+                  value={policy.allowedEmailDomains}
+                  disabled={policy.saving}
+                  onChange={(e) => policy.setAllowedEmailDomains(e.target.value)}
+                />
+              }
             />
             <SettingsRow
               title={t('inviteTtlDays')}

@@ -1,43 +1,66 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { db, instanceWorkspaceId, team, workspace, workspaceManager } from '@repo/db';
-import { eq } from 'drizzle-orm';
+import { setAuthSettings } from '@repo/auth';
+import { db, team, workspace, workspaceManager } from '@repo/db';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { authedApi } from '#tests/helpers/app';
 import { resetDb } from '#tests/helpers/db';
 
-describe('instance workspace', () => {
+describe('the workspace of a team', () => {
   beforeEach(resetDb);
 
-  it('makes the first account its owner and nobody else a manager', async () => {
+  it('gives every account, the instance owner included, a workspace of its own', async () => {
     const first = await signUpTestUser({ team: false });
-    await signUpTestUser({ team: false });
+    const second = await signUpTestUser({ team: false });
 
-    const managers = await db
-      .select()
-      .from(workspaceManager)
-      .where(eq(workspaceManager.workspaceId, await instanceWorkspaceId(db)));
-    expect(managers).toHaveLength(1);
-    expect(managers[0]).toMatchObject({ userId: first.userId, role: 'owner' });
+    const managers = await db.select().from(workspaceManager);
+    expect(managers).toHaveLength(2);
+    expect(managers).toContainEqual(
+      expect.objectContaining({ userId: first.userId, role: 'owner' }),
+    );
+    expect(managers).toContainEqual(
+      expect.objectContaining({ userId: second.userId, role: 'owner' }),
+    );
+    expect(first.workspaceId).not.toBe(second.workspaceId);
   });
 
-  it('puts every new team in it', async () => {
-    await signUpTestUser();
-    await signUpTestUser();
-    const [managed] = await db.select().from(workspaceManager);
+  it('gives the instance owner one while personal workspaces are off', async () => {
+    await setAuthSettings({ personalWorkspaces: false });
+
+    const first = await signUpTestUser({ team: false });
+    const second = await signUpTestUser({ team: false });
+
+    expect(first.workspaceId).not.toBeNull();
+    expect(second.workspaceId).toBeNull();
+  });
+
+  it("puts each person's team in their own workspace", async () => {
+    const first = await signUpTestUser();
+    const second = await signUpTestUser();
 
     const teams = await db.select({ workspaceId: team.workspaceId }).from(team);
-    expect(teams).toEqual([
-      { workspaceId: managed!.workspaceId },
-      { workspaceId: managed!.workspaceId },
-    ]);
+    expect(teams.map((row) => row.workspaceId).sort()).toEqual(
+      [first.workspaceId!, second.workspaceId!].sort(),
+    );
+  });
+
+  it('refuses a team that names no workspace', async () => {
+    const owner = await signUpTestUser({ team: false });
+
+    const refused = await authedApi(owner.cookie).teams.post({
+      name: 'Design',
+      slug: 'design',
+    } as never);
+
+    expect(refused.status).toBe(400);
   });
 
   it('lets only the workspace owner create a team', async () => {
     const owner = await signUpTestUser({ team: false });
     const member = await signUpTestUser({ team: false });
+    const body = { name: 'Design', slug: 'design', workspaceId: owner.workspaceId! };
 
-    const refused = await authedApi(member.cookie).teams.post({ name: 'Design', slug: 'design' });
-    const created = await authedApi(owner.cookie).teams.post({ name: 'Design', slug: 'design' });
+    const refused = await authedApi(member.cookie).teams.post(body);
+    const created = await authedApi(owner.cookie).teams.post(body);
 
     expect(refused.status).toBe(403);
     expect(created.status).toBe(201);

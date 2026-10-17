@@ -12,6 +12,7 @@
     "byEmail": "Запросити поштою",
     "inviteEmail": "Запросити {email}",
     "alreadyInvited": "{email} вже запрошений",
+    "domainNotAllowed": "Домен адреси {email} не дозволений на цьому інстансі",
     "alreadyMember": "{email} вже в цьому проєкті",
     "alreadyInTeam": "{email} вже в команді — виберіть його у списку вище",
     "refused": "Не вдалося додати {email}",

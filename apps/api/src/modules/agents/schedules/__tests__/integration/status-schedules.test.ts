@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { db, agentRun, issue as issueTable } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { apiKeyApi, authedApi, type Api } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent } from '#tests/helpers/agents';
@@ -15,7 +15,7 @@ const schedules = (api: Api) => api.projects({ projectKey: 'MKT' })['agent-sched
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const columns = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!.columns;
   const backlog = columns.find((c) => c.stateType === 'backlog')!;
   const started = columns.find((c) => c.stateType === 'started')!;
@@ -74,7 +74,7 @@ describe('status agent schedules', () => {
 
   it('refuses the fields of the other type and a missing required one', async () => {
     const { asOwner, started, agent } = await setup();
-    await asOwner.projects.post({ key: 'OPS', name: 'Ops' });
+    await createProject(asOwner, { key: 'OPS', name: 'Ops' });
     const opsColumn = (await asOwner.projects({ projectKey: 'OPS' }).get()).data!.columns[0];
 
     const withCron = await schedules(asOwner).post({

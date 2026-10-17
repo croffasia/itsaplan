@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { SpanType } from '@mastra/core/observability';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent, projectIdOf, teamOf } from '#tests/helpers/agents';
@@ -22,7 +22,7 @@ import { setAgentSettings } from '#modules/settings/service';
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   return { asOwner, teamId: await teamOf(asOwner, 'MKT') };
 }
 
@@ -145,7 +145,7 @@ describe('agent traces', () => {
 
   it('gives a member only the traces of a project they belong to', async () => {
     const { asOwner, teamId } = await setup();
-    await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+    await createProject(asOwner, { key: 'OPS', name: 'Operations' });
     const agent = await createInternalAgent(asOwner, 'Scout', 'scout');
     const mkt = await projectIdOf(asOwner, 'MKT');
     const ops = await projectIdOf(asOwner, 'OPS');

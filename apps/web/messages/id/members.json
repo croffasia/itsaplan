@@ -12,6 +12,7 @@
     "byEmail": "Undang lewat email",
     "inviteEmail": "Undang {email}",
     "alreadyInvited": "{email} sudah diundang",
+    "domainNotAllowed": "Domain {email} tidak diizinkan di instance ini",
     "alreadyMember": "{email} sudah ada di proyek ini",
     "alreadyInTeam": "{email} sudah ada di tim — pilih mereka dari daftar di atas",
     "refused": "{email} tidak dapat ditambahkan",

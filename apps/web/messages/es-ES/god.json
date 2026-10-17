@@ -193,6 +193,9 @@
     "inviteTtlDays": "Caducidad de las invitaciones (días)",
     "inviteTtlDaysHint": "Pasado este plazo, el enlace de una invitación deja de funcionar y, con el registro por invitación, ya no permite darse de alta. Con 0, las invitaciones no caducan.",
     "inviteTtlDaysInvalid": "Escribe un número entero de días entre 0 y {max}.",
+    "allowedEmailDomains": "Dominios de correo permitidos",
+    "allowedEmailDomainsHint": "Solo las direcciones de estos dominios pueden crear una cuenta. Sepáralos con comas o deja el campo vacío para permitir cualquiera. Las cuentas existentes conservan el acceso.",
+    "allowedEmailDomainsInvalid": "Cada dominio debe tener la forma example.com, con un máximo de 100.",
     "modes": {
       "open": {
         "label": "Abierto",
@@ -274,7 +277,18 @@
     "testing": "Enviando…",
     "testHint": "Envía un mensaje real con los ajustes actuales sin guardarlos.",
     "testConfigureFirst": "Activa primero un proveedor y añade sus credenciales obligatorias.",
-    "testSent": "Correo de prueba enviado a {email}"
+    "testSent": "Correo de prueba enviado a {email}",
+    "smtpAuth": "Autenticación",
+    "smtpAuthOptions": {
+      "password": "Contraseña",
+      "microsoft365": "Microsoft 365 (OAuth)"
+    },
+    "mailbox": "Buzón",
+    "tenantId": "ID de inquilino (tenant)",
+    "clientId": "ID de cliente",
+    "clientSecret": "Secreto de cliente",
+    "clientSecretPlaceholder": "Secreto del registro de aplicación",
+    "microsoft365Hint": "Inicia sesión como un registro de aplicación de Entra ID en lugar de con la contraseña del buzón, así el buzón puede mantener el MFA. La aplicación necesita el permiso de aplicación SMTP.SendAsApp de Office 365 Exchange Online con consentimiento de administrador, acceso a este buzón en Exchange y SMTP AUTH activado en el buzón."
   },
   "authProvider": {
     "saved": "El proveedor de autenticación se ha guardado",

@@ -95,6 +95,7 @@
     "emailPlaceholder": "nome@exemplo.com",
     "alreadyMember": "{email} já está neste time",
     "alreadyPending": "{email} já tem um convite pendente",
+    "domainNotAllowed": "O domínio de {email} não é permitido nesta instância",
     "refused": "{email} não pôde ser convidado",
     "roleLabel": "Função no time",
     "roleHint": {

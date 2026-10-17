@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, beforeEach } from 'bun:test';
 import { db, agentRun } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { apiKeyApi, authedApi } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
@@ -16,7 +16,7 @@ import { setRunAdmission, type RunForAdmission } from '../../run-admission';
 async function setup(kind: 'internal' | 'external') {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const columnId = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!.columns[0].id;
   const created = await createAgent(asOwner, 'MKT', { name: 'Bot', username: 'bot', kind });
   const agent = created.data!.agent;
@@ -101,8 +101,9 @@ describe('agent run admission', () => {
     expect(await read(run.id)).toMatchObject({ status: 'pending', attempts: 0, startedAt: null });
   });
 
-  // One poll claims both runs, and the second waits for the first, which holds its slot
-  // until the extension holds it back. On its next attempt the second finds it free.
+  // One poll claims both runs and processes them together. The second waits for the
+  // first only if it counts the runs ahead before the extension holds the first back, so
+  // it may start in either poll; it must not wait on the held back run for good.
   it('leaves the slot of a held back run to the workspace', async () => {
     const { enqueue } = await setup('internal');
     const held = await enqueue('first');
@@ -115,9 +116,8 @@ describe('agent run admission', () => {
     await db.update(agentRun).set({ nextAttemptAt: new Date() }).where(eq(agentRun.id, next.id));
     await processAgentRuns();
 
-    expect(await read(next.id)).toMatchObject({
-      attempts: 1,
-      lastError: 'Agent has no model credential set',
-    });
+    const second = await read(next.id);
+    expect(second.lastError).toBe('Agent has no model credential set');
+    expect(second.attempts).toBeGreaterThan(0);
   });
 });

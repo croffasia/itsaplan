@@ -6,6 +6,7 @@ import { getProjectAccess, getTeamAccess } from '#shared/access';
 import { teamRef } from '#modules/teams/ref';
 import { getMembership, type MemberRole } from '#modules/members/service';
 import { assertSeatFree, getTeamMembership, runsTeam, type TeamRole } from '#modules/teams/service';
+import { isInviteEmailAllowed } from './email-policy';
 
 // Data access for invites. An invite is a token-addressed grant of membership in a
 // team, and — when it names a project — in that project too. Creating one requires
@@ -171,8 +172,15 @@ async function findAccount(email: string): Promise<{ id: string } | undefined> {
 // An address already inside the team takes no invite. Accepting one rewrites the
 // membership the account already holds, which is how a project's last owner would be
 // demoted to member; a team member reaches a project through its member list instead.
-async function assertNotAlreadyMember(input: NewInvite, email: string): Promise<void> {
+async function assertInvitable(input: NewInvite, email: string): Promise<void> {
   const account = await findAccount(email);
+  if (!(await isInviteEmailAllowed(input.teamId, email, account != null))) {
+    throw new HttpError(
+      400,
+      'Addresses at this domain cannot be invited here',
+      'EMAIL_DOMAIN_NOT_ALLOWED',
+    );
+  }
   if (!account) return;
 
   if (input.projectId != null && (await getMembership(input.projectId, account.id))) {
@@ -225,7 +233,7 @@ export async function mayGrantInviteRanks(
 
 export async function createInvite(input: NewInvite): Promise<InviteRow> {
   const email = normalizeEmail(input.email);
-  await assertNotAlreadyMember(input, email);
+  await assertInvitable(input, email);
   // Project owners bypass roles, so an owner invite never carries a role_id.
   const roleId = input.projectRole === 'member' ? input.roleId : null;
   // An expired invite still holds the one pending slot per address; it gives way to the

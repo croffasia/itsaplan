@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, ownWorkspaceId, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
@@ -41,7 +41,7 @@ describe('projects', () => {
     it('creates a project and lists it for its owner', async () => {
       const { api } = await signUpClient();
 
-      const created = await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const created = await createProject(api, { key: 'MKT', name: 'Marketing' });
       expect(created.status).toBe(201);
       expect(created.data).toMatchObject({ key: 'MKT', name: 'Marketing', description: '' });
       expect(typeof created.data?.id).toBe('number');
@@ -53,27 +53,20 @@ describe('projects', () => {
       expect(list.data?.[0]).toMatchObject({ key: 'MKT', name: 'Marketing', role: 'owner' });
     });
 
-    it('puts the project in the team the account owns', async () => {
-      const { user, api } = await signUpClient();
-      const other = await signUpClient();
+    it('puts the project in the team it is created in', async () => {
+      const { api } = await signUpClient();
+      const workspaceId = await ownWorkspaceId(api);
+      const second = (await api.teams.post({ name: 'Second', slug: 'second', workspaceId })).data!;
 
-      const created = await api.projects.post({ key: 'MKT', name: 'Marketing' });
-      expect(created.data).toMatchObject({ teamName: user.username });
-
-      const theirs = await other.api.projects.post({ key: 'OPS', name: 'Operations' });
-      expect(theirs.data).toMatchObject({ teamName: other.user.username });
-
-      const list = await api.projects.get();
-      expect(list.data?.[0]).toMatchObject({
-        key: 'MKT',
-        teamId: created.data?.teamId,
-        teamName: user.username,
-      });
+      const created = await api
+        .teams({ teamId: second.id })
+        .projects.post({ key: 'MKT', name: 'Marketing' });
+      expect(created.data).toMatchObject({ teamId: second.id, teamName: 'Second' });
     });
 
     it('stores a provided description', async () => {
       const { api } = await signUpClient();
-      const created = await api.projects.post({
+      const created = await createProject(api, {
         key: 'MKT',
         name: 'Marketing',
         description: 'Growth work',
@@ -83,7 +76,7 @@ describe('projects', () => {
 
     it('seeds the five default columns', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const view = await viewOf(api, 'MKT');
       expect(view.status).toBe(200);
@@ -92,7 +85,7 @@ describe('projects', () => {
 
     it('denies a project member whose rank in the team is member', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'SRC', name: 'Source' });
+      await createProject(owner.api, { key: 'SRC', name: 'Source' });
       const role = await createRole(owner.api, 'SRC', {
         name: 'Reader',
         permissions: { work_items: { read: true } },
@@ -108,19 +101,19 @@ describe('projects', () => {
 
     it('rejects an empty key', async () => {
       const { api } = await signUpClient();
-      const res = await api.projects.post({ key: '', name: 'Marketing' });
+      const res = await createProject(api, { key: '', name: 'Marketing' });
       expect(res.status).toBe(400);
     });
 
     it('rejects an empty name', async () => {
       const { api } = await signUpClient();
-      const res = await api.projects.post({ key: 'MKT', name: '' });
+      const res = await createProject(api, { key: 'MKT', name: '' });
       expect(res.status).toBe(400);
     });
 
     it('rejects a missing name', async () => {
       const { api } = await signUpClient();
-      const res = await api.projects.post({ key: 'MKT' } as unknown as {
+      const res = await createProject(api, { key: 'MKT' } as unknown as {
         key: string;
         name: string;
       });
@@ -129,16 +122,16 @@ describe('projects', () => {
 
     it('rejects a duplicate key with 409', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
-      const dup = await api.projects.post({ key: 'MKT', name: 'Marketing Two' });
+      const dup = await createProject(api, { key: 'MKT', name: 'Marketing Two' });
       expect(dup.status).toBe(409);
     });
 
     it('requires a session', async () => {
       // The anonymous client carries no cookie, so the session gate rejects it.
       const anon = authedApi('');
-      const res = await anon.projects.post({ key: 'MKT', name: 'Marketing' });
+      const res = await anon.teams({ teamId: 1 }).projects.post({ key: 'MKT', name: 'Marketing' });
       expect(res.status).toBe(401);
     });
   });
@@ -146,8 +139,8 @@ describe('projects', () => {
   describe('list', () => {
     it('returns only the projects the user is a member of, ordered by key', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'OPS', name: 'Operations' });
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'OPS', name: 'Operations' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const list = await api.projects.get();
       expect(list.status).toBe(200);
@@ -156,7 +149,7 @@ describe('projects', () => {
 
     it('does not show a project to a non-member', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
 
       const outsider = await signUpClient();
       const list = await outsider.api.projects.get();
@@ -166,7 +159,7 @@ describe('projects', () => {
 
     it('omits permissions by default and includes them with the flag', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const bare = await api.projects.get();
       expect(bare.data?.[0].permissions).toBeUndefined();
@@ -184,7 +177,7 @@ describe('projects', () => {
   describe('update', () => {
     it("updates an owner's project name and description, leaving the key", async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const res = await api
         .projects({ projectKey: 'MKT' })
@@ -202,7 +195,7 @@ describe('projects', () => {
 
     it('rejects a description over the limit', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const res = await api
         .projects({ projectKey: 'MKT' })
@@ -212,7 +205,7 @@ describe('projects', () => {
 
     it('denies a non-member (owner-only)', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
 
       const outsider = await signUpClient();
       const res = await outsider.api.projects({ projectKey: 'MKT' }).patch({ name: 'Hijacked' });
@@ -223,7 +216,7 @@ describe('projects', () => {
   describe('view', () => {
     it('returns the full work-items view for a member', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const view = await viewOf(api, 'MKT');
       expect(view.status).toBe(200);
@@ -238,7 +231,7 @@ describe('projects', () => {
 
     it('includes every custom field of the project, both scopes', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
       const type = (await api.projects({ projectKey: 'MKT' })['issue-types'].post({ name: 'Bug' }))
         .data!;
       const cf = api.projects({ projectKey: 'MKT' })['custom-fields'];
@@ -264,7 +257,7 @@ describe('projects', () => {
 
     it('denies a non-member with 403', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
 
       const outsider = await signUpClient();
       const res = await viewOf(outsider.api, 'MKT');
@@ -273,7 +266,7 @@ describe('projects', () => {
 
     it('opens to a member whose role grants nothing, so any role can enter the project', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
       const role = await createRole(owner.api, 'MKT', {
         name: 'Notes only',
         permissions: { note_boards: { read: true } },
@@ -292,7 +285,7 @@ describe('projects', () => {
     // Builds a source project with one label and one issue, so a copy can assert
     // the structure is copied but the issues are not.
     async function setupSource(api: Api) {
-      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await createProject(api, { key: 'SRC', name: 'Source' });
       const backlog = (await viewOf(api, 'SRC')).data!.columns.find((c) => c.name === 'Backlog')!;
       await api.projects({ projectKey: 'SRC' }).labels.post({ name: 'bug', color: '#ff0000' });
       await api
@@ -355,7 +348,7 @@ describe('projects', () => {
 
     it("copies the source project's issue types", async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await createProject(api, { key: 'SRC', name: 'Source' });
       await api.projects({ projectKey: 'SRC' })['issue-types'].post({ name: 'Bug' });
 
       await api.projects({ projectKey: 'SRC' }).copy.post({ key: 'DST', name: 'Destination' });
@@ -368,7 +361,7 @@ describe('projects', () => {
 
     it('copies which optional sections the source project shows', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await createProject(api, { key: 'SRC', name: 'Source' });
       await api
         .projects({ projectKey: 'SRC' })
         .settings.patch({ features: { documents: false, notes: false, dashboards: false } });
@@ -391,7 +384,7 @@ describe('projects', () => {
     it('takes mcpEnabled from the instance default, not from the source project', async () => {
       const { api } = await signUpClient();
       const teamId = (await api.teams.get()).data![0].id;
-      const source = (await api.projects.post({ key: 'SRC', name: 'Source' })).data!;
+      const source = (await createProject(api, { key: 'SRC', name: 'Source' })).data!;
       await api
         .teams({ teamId })
         .mcp.patch({ projects: [{ projectId: source.id, enabled: false }] });
@@ -406,7 +399,7 @@ describe('projects', () => {
     // carry a fixed value. The first account of a fresh database holds the god role.
     it('copies a project with MCP off once the instance default is turned off', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await createProject(api, { key: 'SRC', name: 'Source' });
       await api.god['project-defaults'].put({ mcpEnabled: false });
 
       await api.projects({ projectKey: 'SRC' }).copy.post({ key: 'DST', name: 'Destination' });
@@ -417,7 +410,7 @@ describe('projects', () => {
 
     it('copies the estimate kinds and time logging the source project carries', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await createProject(api, { key: 'SRC', name: 'Source' });
       await api.projects({ projectKey: 'SRC' }).settings.estimates.patch({
         points: true,
         time: true,
@@ -436,7 +429,7 @@ describe('projects', () => {
 
     it("remaps a saved view's filter ids to the copied project's entities", async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await createProject(api, { key: 'SRC', name: 'Source' });
       const srcBacklog = (await viewOf(api, 'SRC')).data!.columns.find(
         (c) => c.name === 'Backlog',
       )!;
@@ -504,7 +497,7 @@ describe('projects', () => {
 
     it('force-enables a dependency: copying views pulls in the referenced states', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await createProject(api, { key: 'SRC', name: 'Source' });
       const review = (
         await api
           .projects({ projectKey: 'SRC' })
@@ -535,7 +528,7 @@ describe('projects', () => {
 
     it("points a copied status schedule at the copy's own column", async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await createProject(api, { key: 'SRC', name: 'Source' });
       const agent = (
         await createAgent(api, 'SRC', { name: 'Bot', username: 'bot', kind: 'internal' })
       ).data!.agent;
@@ -570,7 +563,7 @@ describe('projects', () => {
 
     it("draws on the target team's roles, which the source team's do not reach", async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await createProject(api, { key: 'SRC', name: 'Source' });
       await createRole(api, 'SRC', {
         name: 'Editor',
         permissions: { work_items: { create: true, edit: true, read: true, delete: false } },
@@ -588,7 +581,7 @@ describe('projects', () => {
     // project — no second agent, no second bot user, no new key.
     it("puts the source project's agents in a copy inside the team", async () => {
       const { api, user } = await signUpClient();
-      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await createProject(api, { key: 'SRC', name: 'Source' });
       await createAgent(api, 'SRC', {
         name: 'Ext',
         username: 'ext',
@@ -612,9 +605,15 @@ describe('projects', () => {
 
     it('carries no agent into another team', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await createProject(api, { key: 'SRC', name: 'Source' });
       await createAgent(api, 'SRC', { name: 'Ext', username: 'ext', kind: 'external' });
-      const target = (await api.teams.post({ name: 'Other Team', slug: 'other-team' })).data!;
+      const target = (
+        await api.teams.post({
+          name: 'Other Team',
+          slug: 'other-team',
+          workspaceId: await ownWorkspaceId(api),
+        })
+      ).data!;
       const sourceId = await projectIdOf(api, 'SRC');
 
       await api
@@ -631,8 +630,8 @@ describe('projects', () => {
 
     it('rejects a duplicate key with 409 and no statement in the body', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'SRC', name: 'Source' });
-      await api.projects.post({ key: 'DST', name: 'Existing' });
+      await createProject(api, { key: 'SRC', name: 'Source' });
+      await createProject(api, { key: 'DST', name: 'Existing' });
 
       const res = await api.projects({ projectKey: 'SRC' }).copy.post({
         key: 'DST',
@@ -653,7 +652,7 @@ describe('projects', () => {
 
     it('denies a non-member with 403', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'SRC', name: 'Source' });
+      await createProject(owner.api, { key: 'SRC', name: 'Source' });
 
       const outsider = await signUpClient();
       const res = await outsider.api.projects({ projectKey: 'SRC' }).copy.post({
@@ -665,7 +664,7 @@ describe('projects', () => {
 
     it('rejects an empty key', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await createProject(api, { key: 'SRC', name: 'Source' });
       const res = await api
         .projects({ projectKey: 'SRC' })
         .copy.post({ key: '', name: 'Destination' });
@@ -676,7 +675,7 @@ describe('projects', () => {
   describe('delete', () => {
     it('deletes a project and its scoped entities for an owner', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
       const backlog = (await viewOf(api, 'MKT')).data!.columns.find((c) => c.name === 'Backlog')!;
       await api
         .projects({ projectKey: 'MKT' })
@@ -699,7 +698,7 @@ describe('projects', () => {
 
     it('denies a non-member with 403', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
 
       const outsider = await signUpClient();
       const res = await outsider.api.projects({ projectKey: 'MKT' }).delete();
@@ -721,7 +720,7 @@ describe('projects', () => {
 
     it('defaults a new project to the instance project default (MCP on)', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const view = await viewOf(api, 'MKT');
       expect(view.data?.project).toMatchObject({ mcpEnabled: true, teamMcpEnabled: true });
@@ -729,7 +728,7 @@ describe('projects', () => {
 
     it('no longer takes the toggle on the project settings route', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       // The field is gone from the body schema, so an old client sending it changes
       // nothing rather than reopening the project from outside the team's settings.
@@ -743,7 +742,7 @@ describe('projects', () => {
 
     it('blocks an MCP call to a project the team no longer covers, but not a web call', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
       const teamId = await teamOf(api, 'MKT');
       const projectId = (await viewOf(api, 'MKT')).data!.project.id;
       await api.teams({ teamId }).mcp.patch({ projects: [{ projectId, enabled: false }] });
@@ -759,7 +758,7 @@ describe('projects', () => {
 
     it("blocks an MCP call to every project once the team's switch is off", async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
       const teamId = await teamOf(api, 'MKT');
       await api.teams({ teamId }).mcp.patch({ enabled: false });
 
@@ -773,7 +772,7 @@ describe('projects', () => {
 
     it('blocks an MCP call on an entity-by-id route of a project out of reach', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
       const teamId = await teamOf(api, 'MKT');
       const projectId = (await viewOf(api, 'MKT')).data!.project.id;
       await api.teams({ teamId }).mcp.patch({ projects: [{ projectId, enabled: false }] });
@@ -790,8 +789,8 @@ describe('projects', () => {
 
     it('hides projects out of reach from an MCP list_projects call', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'ON', name: 'Enabled' });
-      await api.projects.post({ key: 'OFF', name: 'Disabled' });
+      await createProject(api, { key: 'ON', name: 'Enabled' });
+      await createProject(api, { key: 'OFF', name: 'Disabled' });
       const teamId = await teamOf(api, 'OFF');
       const projectId = (await viewOf(api, 'OFF')).data!.project.id;
       await api.teams({ teamId }).mcp.patch({ projects: [{ projectId, enabled: false }] });
@@ -804,7 +803,7 @@ describe('projects', () => {
   describe('settings', () => {
     it('defaults a new project to the instance project default (MCP on)', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const res = await api.projects({ projectKey: 'MKT' }).settings.get();
       expect(res.status).toBe(200);
@@ -813,7 +812,7 @@ describe('projects', () => {
 
     it('starts a new project with every optional section enabled', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const res = await api.projects({ projectKey: 'MKT' }).settings.get();
       expect(res.data?.features).toMatchObject({
@@ -838,7 +837,7 @@ describe('projects', () => {
 
     it('lets an owner turn a section off and back on, leaving the others', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const off = await api
         .projects({ projectKey: 'MKT' })
@@ -861,7 +860,7 @@ describe('projects', () => {
 
     it('lets an owner turn off the sections of an issue', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const off = await api
         .projects({ projectKey: 'MKT' })
@@ -881,7 +880,7 @@ describe('projects', () => {
 
     it('closes the routes and the fields of a section that is turned off', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
       const columnId = (await viewOf(api, 'MKT')).data!.columns[0].id;
       const parent = await api.projects({ projectKey: 'MKT' }).issues.post({
         columnId,
@@ -904,7 +903,7 @@ describe('projects', () => {
 
     it('reports a section the team cannot use as off and refuses to turn it on', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
       setLimits({ blockedFeatures: ['initiatives'] });
 
       const settings = await api.projects({ projectKey: 'MKT' }).settings.get();
@@ -928,7 +927,7 @@ describe('projects', () => {
 
     it('denies turning a section off to a non-owner (owner-only)', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
 
       const outsider = await signUpClient();
       const res = await outsider.api
@@ -939,7 +938,7 @@ describe('projects', () => {
 
     it('changes only the supplied field, leaving the other', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
       await api.projects({ projectKey: 'MKT' }).settings.patch({ features: { notes: false } });
 
       const res = await api
@@ -950,7 +949,7 @@ describe('projects', () => {
 
     it('denies writing settings to someone outside the project and its team', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
 
       const outsider = await signUpClient();
       const res = await outsider.api
@@ -961,7 +960,7 @@ describe('projects', () => {
 
     it('denies writing settings to a plain member of the project', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
       const member = await addProjectMember(owner.api, 'MKT');
 
       const res = await member
@@ -972,7 +971,7 @@ describe('projects', () => {
 
     it("lets the team's owner write settings on a project they left", async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
 
       // Hand MKT to someone else and leave it. The team still owns the project, so
       // its owner keeps the settings without a membership of their own.
@@ -1000,7 +999,7 @@ describe('projects', () => {
 
     it('defaults a new project to the default thresholds', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const res = await autoArchive(api).get();
       expect(res.status).toBe(200);
@@ -1009,7 +1008,7 @@ describe('projects', () => {
 
     it('lets an owner set and read back the thresholds', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const patch = await autoArchive(api).patch({ completedDays: 14, canceledDays: 3 });
       expect(patch.status).toBe(200);
@@ -1023,7 +1022,7 @@ describe('projects', () => {
 
     it('stores null to disable a state group', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const res = await autoArchive(api).patch({ completedDays: 30, canceledDays: null });
       expect(res.status).toBe(200);
@@ -1032,7 +1031,7 @@ describe('projects', () => {
 
     it('rejects a day count below 1', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const res = await autoArchive(api).patch({ completedDays: 0, canceledDays: 7 });
       expect(res.status).toBe(400);
@@ -1042,7 +1041,7 @@ describe('projects', () => {
     // day count no interval can carry fails that statement for the whole instance.
     it('rejects a day count no interval can carry', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const res = await autoArchive(api).patch({ completedDays: 3_000_000, canceledDays: 7 });
       expect(res.status).toBe(400);
@@ -1050,7 +1049,7 @@ describe('projects', () => {
 
     it('holds the default member role out of the section', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
       const member = await addProjectMember(owner.api, 'MKT');
 
       expect((await autoArchive(member).get()).status).toBe(403);
@@ -1061,7 +1060,7 @@ describe('projects', () => {
 
     it('lets a granted role read the thresholds but not change them without edit', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
       const role = await createRole(owner.api, 'MKT', {
         name: 'Reader',
         permissions: { workflow_config: { read: true } },
@@ -1076,7 +1075,7 @@ describe('projects', () => {
 
     it('lets a role with edit change the thresholds', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
       const role = await createRole(owner.api, 'MKT', {
         name: 'Archivist',
         permissions: { workflow_config: { read: true, edit: true } },
@@ -1094,7 +1093,7 @@ describe('projects', () => {
 
     it('defaults a new project to both kinds and time logging off', async () => {
       const { api } = await signUpClient();
-      const created = await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const created = await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       expect(created.data).toMatchObject({
         pointsEstimateEnabled: false,
@@ -1105,7 +1104,7 @@ describe('projects', () => {
 
     it('lets an owner turn a kind on and reads it back with the project', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const patch = await estimates(api).patch({ points: true, time: false, logging: true });
       expect(patch.status).toBe(200);
@@ -1121,7 +1120,7 @@ describe('projects', () => {
 
     it('keeps the estimates on the issues when a kind is turned off', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
       const view = await viewOf(api, 'MKT');
       await estimates(api).patch({ points: true, time: true, logging: false });
       const issue = await api
@@ -1136,7 +1135,7 @@ describe('projects', () => {
 
     it('holds the default member role out of the section', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
       const member = await addProjectMember(owner.api, 'MKT');
 
       expect(
@@ -1146,7 +1145,7 @@ describe('projects', () => {
 
     it('lets a role with edit change the kinds', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
       const role = await createRole(owner.api, 'MKT', {
         name: 'Planner',
         permissions: { workflow_config: { read: true, edit: true } },
@@ -1164,7 +1163,7 @@ describe('projects', () => {
 
     it('defaults a new project to both automations off', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const res = await subtasks(api).get();
       expect(res.status).toBe(200);
@@ -1173,7 +1172,7 @@ describe('projects', () => {
 
     it('lets an owner set and read back the automations', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const patch = await subtasks(api).patch({ completeParent: true, closeSubtasks: false });
       expect(patch.status).toBe(200);
@@ -1187,7 +1186,7 @@ describe('projects', () => {
 
     it('holds the default member role out of the section', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
       const member = await addProjectMember(owner.api, 'MKT');
 
       expect((await subtasks(member).get()).status).toBe(403);
@@ -1198,7 +1197,7 @@ describe('projects', () => {
 
     it('lets a granted role read the automations but not change them without edit', async () => {
       const owner = await signUpClient();
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
       const role = await createRole(owner.api, 'MKT', {
         name: 'Reader',
         permissions: { workflow_config: { read: true } },

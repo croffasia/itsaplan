@@ -1,5 +1,5 @@
 import { describe, it, expect, afterAll, afterEach, beforeAll, beforeEach } from 'bun:test';
-import { authedApi } from '#tests/helpers/app';
+import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createRole } from '#tests/helpers/roles';
@@ -20,7 +20,7 @@ async function setupOwner(): Promise<{
 }> {
   const user = await signUpTestUser();
   const api = authedApi(user.cookie);
-  const project = await api.projects.post({ key: 'MKT', name: 'Marketing' });
+  const project = await createProject(api, { key: 'MKT', name: 'Marketing' });
   return { user, api, projectId: project.data!.id };
 }
 
@@ -160,7 +160,7 @@ describe('invites', () => {
       // Every project of a team shares its roles, so only a role of another team is
       // out of reach here.
       const stranger = authedApi((await signUpTestUser()).cookie);
-      await stranger.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(stranger, { key: 'OPS', name: 'Operations' });
       const foreign = await createRole(stranger, 'OPS', { name: 'Ops', permissions: {} });
 
       const res = await owner.api

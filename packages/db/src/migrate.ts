@@ -25,6 +25,13 @@ const db = drizzle(migrationClient);
 
 const migrationsFolder = fileURLToPath(new URL('../drizzle', import.meta.url));
 
+// A build's own tables, kept apart from the core's: its migrations folder, applied after
+// the core's under the same lock and backup, with a bookkeeping table of its own.
+const buildFolder = process.env.BUILD_MIGRATIONS_DIR;
+const BUILD_TABLE = '__build_migrations';
+const readJournal = (folder: string) =>
+  JSON.parse(readFileSync(`${folder}/meta/_journal.json`, 'utf8'));
+
 // Compose orders the api behind a healthy postgres, but a platform without that
 // guarantee (Railway, plain `docker run`) starts both at once and the first
 // connections are refused. Wait for the server separately so a failing migration
@@ -61,8 +68,12 @@ if (!locked) {
 // SKIP_PRE_MIGRATION_BACKUP=1 is for an operator who backs up by other means, and is
 // what `db:migrate:test` sets — BACKUP_DIR is a path only the api container has, and
 // a test database that is truncated between tests has nothing to go back to.
-const journal = JSON.parse(readFileSync(`${migrationsFolder}/meta/_journal.json`, 'utf8'));
-const pending = await pendingMigrations(migrationClient, journal);
+const pending = [
+  ...(await pendingMigrations(migrationClient, readJournal(migrationsFolder))),
+  ...(buildFolder
+    ? await pendingMigrations(migrationClient, readJournal(buildFolder), BUILD_TABLE)
+    : []),
+];
 const skipBackup = process.env.SKIP_PRE_MIGRATION_BACKUP === '1';
 let backup = null;
 
@@ -82,6 +93,7 @@ if (pending.length > 0 && !skipBackup) {
 
 console.log('⏳ Running migrations...');
 await migrate(db, { migrationsFolder });
+if (buildFolder) await migrate(db, { migrationsFolder: buildFolder, migrationsTable: BUILD_TABLE });
 if (pending.length > 0) await recordMigrationRun(migrationClient, pending);
 if (backup) await recordBackup(migrationClient, backup);
 const removed = await pruneBackups();

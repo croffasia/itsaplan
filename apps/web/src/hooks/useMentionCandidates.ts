@@ -7,15 +7,20 @@ import { isForeignAgent } from '@/utils/foreignAgent';
 
 // An agent is offered only when a mention by this user would start a run: one that
 // does not answer mentions, or works only for another member, would stay silent.
+export function offersMention(a: Assignee, currentUserId: string | null): boolean {
+  if (!a.username) return false;
+  return a.kind !== 'agent' || (!!a.respondsToMention && !isForeignAgent(a, currentUserId));
+}
+
 export function mentionCandidatesFrom(
   assignees: Assignee[],
   currentUserId: string | null,
 ): MentionCandidate[] {
-  return assignees.flatMap((a) => {
-    if (!a.username) return [];
-    if (a.kind === 'agent' && (!a.respondsToMention || isForeignAgent(a, currentUserId))) return [];
-    return [{ userId: a.userId, name: a.name, username: a.username, kind: a.kind }];
-  });
+  return assignees.flatMap((a) =>
+    offersMention(a, currentUserId)
+      ? [{ userId: a.userId, name: a.name, username: a.username!, kind: a.kind }]
+      : [],
+  );
 }
 
 // Who the editors offer after an "@": the active project's members and agents that

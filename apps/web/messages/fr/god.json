@@ -193,6 +193,9 @@
     "inviteTtlDays": "Expiration des invitations (jours)",
     "inviteTtlDaysHint": "Passé ce délai, le lien d'invitation ne fonctionne plus et, avec l'inscription sur invitation, ne permet plus de créer un compte. Avec 0, les invitations n'expirent pas.",
     "inviteTtlDaysInvalid": "Saisissez un nombre entier de jours entre 0 et {max}.",
+    "allowedEmailDomains": "Domaines e-mail autorisés",
+    "allowedEmailDomainsHint": "Seules les adresses de ces domaines peuvent créer un compte. Séparez-les par des virgules ou laissez vide pour tout autoriser. Les comptes existants gardent leur accès.",
+    "allowedEmailDomainsInvalid": "Chaque domaine doit avoir la forme example.com, 100 au maximum.",
     "modes": {
       "open": {
         "label": "Ouverte",
@@ -274,7 +277,18 @@
     "testing": "Envoi…",
     "testHint": "Envoyer un vrai message avec les paramètres actuels, sans les enregistrer.",
     "testConfigureFirst": "Activez d'abord un fournisseur et renseignez ses identifiants obligatoires.",
-    "testSent": "E-mail de test envoyé à {email}"
+    "testSent": "E-mail de test envoyé à {email}",
+    "smtpAuth": "Authentification",
+    "smtpAuthOptions": {
+      "password": "Mot de passe",
+      "microsoft365": "Microsoft 365 (OAuth)"
+    },
+    "mailbox": "Boîte aux lettres",
+    "tenantId": "ID du locataire (tenant)",
+    "clientId": "ID client",
+    "clientSecret": "Secret client",
+    "clientSecretPlaceholder": "Secret de l’inscription d’application",
+    "microsoft365Hint": "Se connecte en tant qu’inscription d’application Entra ID au lieu du mot de passe de la boîte, qui peut ainsi garder la MFA. L’application a besoin de l’autorisation d’application SMTP.SendAsApp d’Office 365 Exchange Online avec consentement administrateur, d’un accès à cette boîte dans Exchange et de SMTP AUTH activé sur la boîte."
   },
   "authProvider": {
     "saved": "Fournisseur d'authentification enregistré",

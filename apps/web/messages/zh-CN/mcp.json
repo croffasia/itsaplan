@@ -34,8 +34,11 @@
     },
     "security": "OAuth 使用 PKCE (S256)、动态客户端注册以及限定到您的 Itsaplan 帐户的访问令牌。",
     "consent": {
-      "title": "授权 Itsaplan",
-      "description": "允许此 MCP 客户端使用您的 Itsaplan 帐户权限执行操作。",
+      "title": "{client} 想要连接到你的账户",
+      "titleUnnamed": "一个 MCP 客户端想要连接到你的账户",
+      "description": "它将以你的权限行事：你能查看和修改的内容，它也都可以。",
+      "account": "已登录为 {email}",
+      "redirect": "回答后，你将返回 {host}。",
       "missingCode": "此授权请求缺少同意代码。",
       "cancel": "取消",
       "pending": "正在授权…",

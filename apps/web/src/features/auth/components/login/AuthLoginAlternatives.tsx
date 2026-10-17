@@ -2,6 +2,7 @@
 
 import { KeyRound, Lock, Mail, ShieldCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { SignInExtras } from '@/cloud';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import GoogleIcon from '@/components/common/GoogleIcon';
@@ -50,6 +51,7 @@ export default function AuthLoginAlternatives({
           {authConfig.oidcLabel || t('withSso')}
         </Button>
       )}
+      <SignInExtras pending={pending} />
       {authConfig?.google && (
         <Button type="button" variant="outline" onClick={onGoogle} disabled={pending}>
           <GoogleIcon className="size-4" />

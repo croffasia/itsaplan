@@ -3,7 +3,7 @@ export * from './schema';
 export * from './permissions';
 export { getSetting, getOrCreateSetting, setSetting } from './settings';
 export { readSecret, writeSecret } from './secrets';
-export { createWorkspace, instanceWorkspaceId, teamWorkspaceId } from './workspace';
+export { createWorkspace, teamWorkspaceId } from './workspace';
 export {
   TELEGRAM_BOT_SECRET_KEY,
   getInstanceBotConfig,

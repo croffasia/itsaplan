@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import ExcelJS from 'exceljs';
-import { authedApi } from '#tests/helpers/app';
+import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { getProjectByRef } from '#modules/projects/service';
@@ -14,7 +14,7 @@ import { createMappedImport } from '../../service';
 async function setup() {
   const owner = await signUpTestUser();
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   return { asOwner };
 }
 
@@ -146,7 +146,7 @@ describe('imports', () => {
 
   it('refuses to map an attachment of another project', async () => {
     const { asOwner } = await setup();
-    await asOwner.projects.post({ key: 'OPS', name: 'Ops' });
+    await createProject(asOwner, { key: 'OPS', name: 'Ops' });
     const uploaded = await uploadWorkbook(asOwner, [['Task'], ['Only']]);
     const ops = await getProjectByRef('OPS', '');
     if (!ops) throw new Error('Test project was not created');
@@ -169,7 +169,7 @@ describe('imports', () => {
 
   it('hides drafts of other projects', async () => {
     const { asOwner } = await setup();
-    await asOwner.projects.post({ key: 'OPS', name: 'Ops' });
+    await createProject(asOwner, { key: 'OPS', name: 'Ops' });
     const uploaded = await uploadWorkbook(asOwner, [['Task']]);
     const draft = await mapImport(uploaded.data!.id, { title: 'Task' });
     const wrong = await authedApi((await signUpTestUser()).cookie)

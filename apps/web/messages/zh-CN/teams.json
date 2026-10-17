@@ -95,6 +95,7 @@
     "emailPlaceholder": "name@example.com",
     "alreadyMember": "{email} 已在此团队中",
     "alreadyPending": "{email} 已有待处理的邀请",
+    "domainNotAllowed": "此实例不允许 {email} 所在的域名",
     "refused": "无法邀请 {email}",
     "roleLabel": "团队角色",
     "roleHint": {

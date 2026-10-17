@@ -14,8 +14,7 @@ const PANELS = ['byPerson', 'byTrigger', 'bySchedule', 'tools', 'latency'] as co
 // still, so they do not read as a panel that is loading.
 const BARS = ['85%', '60%', '40%'];
 
-// What the panels of the hosted build and Pro add to the dashboard, named and shown as
-// empty shapes.
+// The panels a build adds to the dashboard, named and shown as empty shapes.
 export default function AgentAnalyticsPreview() {
   const t = useTranslations('agentAnalytics.preview');
   const tCommon = useTranslations('common');

@@ -7,17 +7,18 @@ import {
   team,
   teamRole,
 } from '@repo/db';
-import { and, asc, eq, inArray, sql } from 'drizzle-orm';
-import { workspaceScim } from '@repo/auth';
+import { and, asc, eq, inArray, notInArray, or, sql } from 'drizzle-orm';
+import { workspacesWithOwnScim } from '@repo/auth';
 import { HttpError } from '#shared/lib';
-import { mappedProjectIds, reconcileProjects } from '#modules/scim/reconcile';
+import { mappedProjectIds, reconcileProjects } from './reconcile';
+import { ofProvider } from './service';
 
-// The groups a workspace's identity provider has pushed, and what each one grants.
-// The group and its members belong to the provider and are read-only here; the
-// mappings are the workspace owner's, and are what turns group membership into
-// project access. A group grants projects of its own workspace when SCIM is set up per
-// workspace, and any project while it is the instance's.
-export interface WorkspaceScimGroupMapping {
+// The groups an identity provider has pushed, and what each one grants: the instance's
+// for `workspaceId` null, set up by god, or a workspace's, set up by its owner. The group
+// and its members belong to the provider and are read-only here; the mappings are what
+// turns group membership into project access. The instance's groups grant any project
+// outside a workspace with SCIM of its own, a workspace's the projects of that workspace.
+export interface ProvisionedGroupMapping {
   projectId: number;
   projectKey: string;
   projectName: string;
@@ -25,26 +26,25 @@ export interface WorkspaceScimGroupMapping {
   roleId: number | null;
 }
 
-export interface WorkspaceScimGroup {
+export interface ProvisionedGroup {
   id: string;
   displayName: string;
   externalId: string | null;
   memberCount: number;
-  mappings: WorkspaceScimGroupMapping[];
+  mappings: ProvisionedGroupMapping[];
 }
 
-export async function listWorkspaceScimGroups(workspaceId: number): Promise<WorkspaceScimGroup[]> {
+export async function listProvisionedGroups(
+  workspaceId: number | null,
+): Promise<ProvisionedGroup[]> {
+  const own = ofProvider(scimGroup.workspaceId, workspaceId);
   const [groups, counts, mappings] = await Promise.all([
-    db
-      .select()
-      .from(scimGroup)
-      .where(eq(scimGroup.workspaceId, workspaceId))
-      .orderBy(scimGroup.displayName),
+    db.select().from(scimGroup).where(own).orderBy(scimGroup.displayName),
     db
       .select({ groupId: scimGroupMember.groupId, count: sql<number>`count(*)::int` })
       .from(scimGroupMember)
       .innerJoin(scimGroup, eq(scimGroup.id, scimGroupMember.groupId))
-      .where(eq(scimGroup.workspaceId, workspaceId))
+      .where(own)
       .groupBy(scimGroupMember.groupId),
     db
       .select({
@@ -58,7 +58,7 @@ export async function listWorkspaceScimGroups(workspaceId: number): Promise<Work
       .from(scimGroupMapping)
       .innerJoin(scimGroup, eq(scimGroup.id, scimGroupMapping.groupId))
       .innerJoin(project, eq(project.id, scimGroupMapping.projectId))
-      .where(eq(scimGroup.workspaceId, workspaceId))
+      .where(own)
       .orderBy(project.name),
   ]);
 
@@ -83,27 +83,31 @@ export async function listWorkspaceScimGroups(workspaceId: number): Promise<Work
 // Replaces what a group grants, then reconciles every project the change touched —
 // the ones it granted before as well as the ones it grants now, so a project it was
 // unmapped from loses the memberships that came from it.
-export async function setWorkspaceScimGroupMappings(
-  workspaceId: number,
+export async function setGroupMappings(
+  workspaceId: number | null,
   groupId: string,
   mappings: { projectId: number; role: 'owner' | 'member'; roleId: number | null }[],
-): Promise<WorkspaceScimGroup> {
+): Promise<ProvisionedGroup> {
   const found = await db
     .select({ id: scimGroup.id })
     .from(scimGroup)
-    .where(and(eq(scimGroup.id, groupId), eq(scimGroup.workspaceId, workspaceId)));
+    .where(and(eq(scimGroup.id, groupId), ofProvider(scimGroup.workspaceId, workspaceId)));
   if (!found[0]) throw new HttpError(404, 'Group not found');
 
   const projectIds = mappings.map((m) => m.projectId);
   if (new Set(projectIds).size !== projectIds.length) {
     throw new HttpError(400, 'A group can be mapped to a project only once');
   }
+  const before = await mappedProjectIds(groupId);
   if (projectIds.length > 0) {
+    // A mapping the group already has is kept even where it may no longer grant: the
+    // reconciliation passes over it there, and it grants again once that changes.
+    const where = await grantable(workspaceId);
     const known = await db
       .select({ id: project.id, teamId: project.teamId })
       .from(project)
       .innerJoin(team, eq(team.id, project.teamId))
-      .where(and(inArray(project.id, projectIds), grantable(workspaceId)));
+      .where(and(inArray(project.id, projectIds), where && or(where, inArray(project.id, before))));
     if (known.length !== projectIds.length) throw new HttpError(400, 'Unknown project');
     // A role belongs to one team, so a mapping that names another team's role would
     // silently grant the wrong permissions.
@@ -124,7 +128,6 @@ export async function setWorkspaceScimGroupMappings(
     }
   }
 
-  const before = await mappedProjectIds(groupId);
   await db.transaction(async (tx) => {
     await tx.delete(scimGroupMapping).where(eq(scimGroupMapping.groupId, groupId));
     if (mappings.length > 0) {
@@ -141,25 +144,26 @@ export async function setWorkspaceScimGroupMappings(
   });
   await reconcileProjects([...before, ...projectIds]);
 
-  const groups = await listWorkspaceScimGroups(workspaceId);
+  const groups = await listProvisionedGroups(workspaceId);
   return groups.find((g) => g.id === groupId)!;
 }
 
 // Every project a group may grant, with the roles of the team that owns it. What the
 // group mapping form fills its project and role selects from.
-export async function listWorkspaceProjectOptions(workspaceId: number) {
+export async function listMappableProjects(workspaceId: number | null) {
+  const where = await grantable(workspaceId);
   const [projects, roles] = await Promise.all([
     db
       .select({ id: project.id, key: project.key, name: project.name, teamId: project.teamId })
       .from(project)
       .innerJoin(team, eq(team.id, project.teamId))
-      .where(grantable(workspaceId))
+      .where(where)
       .orderBy(asc(project.key)),
     db
       .select({ id: teamRole.id, name: teamRole.name, teamId: teamRole.teamId })
       .from(teamRole)
       .innerJoin(team, eq(team.id, teamRole.teamId))
-      .where(grantable(workspaceId))
+      .where(where)
       .orderBy(asc(teamRole.id)),
   ]);
   return projects.map(({ teamId, ...entry }) => ({
@@ -168,7 +172,23 @@ export async function listWorkspaceProjectOptions(workspaceId: number) {
   }));
 }
 
-// The teams whose projects a workspace's groups may grant, as a condition on `team`.
-function grantable(workspaceId: number) {
-  return workspaceScim() ? eq(team.workspaceId, workspaceId) : undefined;
+// The teams whose projects a provider's groups may grant, as a condition on `team`: a
+// workspace's own, or for the instance's provider every team outside a workspace with
+// SCIM of its own.
+async function grantable(workspaceId: number | null) {
+  if (workspaceId !== null) return eq(team.workspaceId, workspaceId);
+  const own = await workspacesWithOwnScim();
+  return own.length > 0 ? notInArray(team.workspaceId, own) : undefined;
+}
+
+// A workspace turning its own SCIM on or off takes the instance's groups out of its
+// projects or lets them back in, so every project of it a group grants is reconciled.
+export async function reconcileWorkspaceGrants(workspaceId: number): Promise<void> {
+  const rows = await db
+    .selectDistinct({ projectId: scimGroupMapping.projectId })
+    .from(scimGroupMapping)
+    .innerJoin(project, eq(project.id, scimGroupMapping.projectId))
+    .innerJoin(team, eq(team.id, project.teamId))
+    .where(eq(team.workspaceId, workspaceId));
+  await reconcileProjects(rows.map((row) => row.projectId));
 }

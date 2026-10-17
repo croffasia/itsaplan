@@ -193,6 +193,9 @@
     "inviteTtlDays": "Masa berlaku undangan (hari)",
     "inviteTtlDaysHint": "Setelah jangka waktu ini, tautan undangan tidak berfungsi lagi dan, dengan pendaftaran khusus undangan, tidak bisa lagi dipakai untuk mendaftar. Dengan 0, undangan tidak kedaluwarsa.",
     "inviteTtlDaysInvalid": "Masukkan jumlah hari berupa bilangan bulat dari 0 sampai {max}.",
+    "allowedEmailDomains": "Domain email yang diizinkan",
+    "allowedEmailDomainsHint": "Hanya alamat di domain ini yang bisa membuat akun. Pisahkan dengan koma, atau kosongkan untuk mengizinkan semua alamat. Akun yang sudah ada tetap bisa masuk.",
+    "allowedEmailDomainsInvalid": "Setiap domain harus berbentuk seperti example.com, maksimal 100 domain.",
     "modes": {
       "open": {
         "label": "Terbuka",
@@ -274,7 +277,18 @@
     "testing": "Mengirim…",
     "testHint": "Kirim pesan nyata dengan pengaturan saat ini tanpa menyimpannya.",
     "testConfigureFirst": "Aktifkan penyedia dan tambahkan kredensial yang diperlukan terlebih dahulu.",
-    "testSent": "Email uji dikirim ke {email}"
+    "testSent": "Email uji dikirim ke {email}",
+    "smtpAuth": "Autentikasi",
+    "smtpAuthOptions": {
+      "password": "Kata sandi",
+      "microsoft365": "Microsoft 365 (OAuth)"
+    },
+    "mailbox": "Kotak surat",
+    "tenantId": "ID tenant",
+    "clientId": "ID klien",
+    "clientSecret": "Rahasia klien",
+    "clientSecretPlaceholder": "Rahasia pendaftaran aplikasi",
+    "microsoft365Hint": "Masuk sebagai pendaftaran aplikasi Entra ID, bukan dengan kata sandi kotak surat, sehingga kotak surat tetap bisa memakai MFA. Aplikasi memerlukan izin aplikasi SMTP.SendAsApp dari Office 365 Exchange Online dengan persetujuan admin, akses ke kotak surat ini di Exchange, dan SMTP AUTH aktif untuk kotak surat."
   },
   "authProvider": {
     "saved": "Penyedia autentikasi disimpan",

@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, beforeEach } from 'bun:test';
-import { setInstanceScimBeside, setWorkspaceScim } from '@repo/auth';
+import { setWorkspaceScim } from '@repo/auth';
 import { createWorkspace, db, notificationDelivery, team, teamMember } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { app, authedApi } from '#tests/helpers/app';
+import { app, authedApi, ownWorkspaceId, createProject } from '#tests/helpers/app';
 import { resetDb } from '#tests/helpers/db';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { addUser, createAgentUser, joinProject, type Actor } from '#modules/god/__tests__/helpers';
@@ -276,7 +276,7 @@ describe('SCIM users', () => {
     // it, which stops the agent without a trace.
     it('leaves them out of the list, and 404s every route that names one', async () => {
       const { god, scim } = await setupScim();
-      const project = await god.api.projects.post({ name: 'Agents', key: 'AGT' });
+      const project = await createProject(god.api, { name: 'Agents', key: 'AGT' });
       const agentUserId = await createAgentUser(god, project.data!.key);
 
       const list = await scim.scim.v2.Users.get({ query: {} });
@@ -404,7 +404,7 @@ describe('SCIM users', () => {
     it('leaves a deactivated account its teams and projects', async () => {
       const { god, scim } = await setupScim();
       const member = await addUser({ email: 'member@example.com' });
-      await god.api.projects.post({ name: 'Marketing', key: 'MKT' });
+      await createProject(god.api, { name: 'Marketing', key: 'MKT' });
       await joinProject(god, member, 'MKT', 'member');
 
       await scim.scim.v2
@@ -417,7 +417,7 @@ describe('SCIM users', () => {
     it('sends a deactivated account no notifications', async () => {
       const { god, scim } = await setupScim();
       const member = await addUser({ email: 'member@example.com' });
-      const project = (await god.api.projects.post({ name: 'Marketing', key: 'MKT' })).data!;
+      const project = (await createProject(god.api, { name: 'Marketing', key: 'MKT' })).data!;
       await joinProject(god, member, 'MKT', 'member');
       await god.api.teams({ teamId: project.teamId })['notification-settings'].put({
         smtp: {
@@ -574,7 +574,7 @@ describe('SCIM users', () => {
 
     it("does not see an AI agent's account", async () => {
       const { god, scim } = await setupScim();
-      const project = await god.api.projects.post({ name: 'Agents', key: 'AGT' });
+      const project = await createProject(god.api, { name: 'Agents', key: 'AGT' });
       const agentUserId = await createAgentUser(god, project.data!.key);
 
       const res = await scim.scim.v2.Users({ id: agentUserId }).delete();
@@ -597,10 +597,15 @@ describe('SCIM users', () => {
       expect(members).toEqual([expect.objectContaining({ userId: god.id, role: 'owner' })]);
     });
 
-    it('refuses the only owner of a project', async () => {
+    it('refuses the only owner of a project outside their own workspace', async () => {
       const { god, scim } = await setupScim();
       const owner = await addUser({ email: 'owner@example.com' });
-      await owner.api.projects.post({ name: 'Solo', key: 'SOL' });
+      const [ownerTeam] = await teamsOf(owner);
+      await createProject(owner.api, { name: 'Solo', key: 'SOL' });
+      await db
+        .update(team)
+        .set({ workspaceId: await ownWorkspaceId(god.api) })
+        .where(eq(team.id, ownerTeam!.id));
       expect(god.id).not.toBe(owner.id);
 
       const res = await scim.scim.v2.Users({ id: owner.id }).delete();
@@ -643,17 +648,18 @@ describe('SCIM users', () => {
 
   // Set up per workspace, as in a hosted build, a workspace's provider sees the accounts
   // it wrote and the people in its teams. Nothing else on the instance is visible to it,
-  // and what it writes stays its own.
+  // and what it writes stays its own. The instance's provider still acts on the whole
+  // instance.
   describe('set up per workspace', () => {
     beforeEach(() => setWorkspaceScim());
     afterEach(() => setWorkspaceScim(false));
 
     it('sees nobody outside its own teams', async () => {
-      const { god, scim } = await setupScim();
+      const god = await addUser({ email: 'root@example.com' });
       const member = await addUser({ email: 'member@example.com' });
       const outsider = await addUser({ email: 'outsider@example.com' });
-      const [outsiderTeam] = (await outsider.api.teams.get()).data!;
-      await setupOtherWorkspace(god, [outsiderTeam!.id]);
+      const [memberTeam] = await teamsOf(member);
+      const { scim } = await setupOtherWorkspace(god, [memberTeam!.id]);
 
       const list = await scim.scim.v2.Users.get({ query: {} });
       const ids = list.data!.Resources.map((u) => u.id);
@@ -667,7 +673,8 @@ describe('SCIM users', () => {
     });
 
     it('links the same person in two workspaces, each with its own id', async () => {
-      const { god, scim } = await setupScim();
+      const god = await addUser({ email: 'root@example.com' });
+      const { scim } = await setupOtherWorkspace(god);
       const other = await setupOtherWorkspace(god);
       const ada = await scim.scim.v2.Users.post(scimUserBody({ externalId: 'first-1' }));
       expect((await other.scim.scim.v2.Users({ id: ada.data!.id }).get()).status).toBe(404);
@@ -682,14 +689,16 @@ describe('SCIM users', () => {
     });
 
     it('deactivates a person in its own workspace only', async () => {
-      const { god, scim } = await setupScim();
+      const god = await addUser({ email: 'root@example.com' });
       const owner = await addUser({ email: 'owner@example.com' });
       const person = await addUser({ email: 'person@example.com' });
-      await god.api.projects.post({ name: 'Marketing', key: 'MKT' });
+      const [godTeam] = await teamsOf(god);
+      await createProject(god.api, { name: 'Marketing', key: 'MKT' });
       await joinProject(god, person, 'MKT', 'member');
       const [ownerTeam] = await teamsOf(owner);
-      await owner.api.projects.post({ name: 'Sales', key: 'SAL' });
+      await createProject(owner.api, { name: 'Sales', key: 'SAL' });
       await joinProject(owner, person, 'SAL', 'member');
+      const { scim } = await setupOtherWorkspace(god, [godTeam!.id]);
       const other = await setupOtherWorkspace(owner, [ownerTeam!.id]);
 
       const res = await other.scim.scim.v2
@@ -704,7 +713,8 @@ describe('SCIM users', () => {
     });
 
     it("writes the provider's id and keeps the name and address the account holds", async () => {
-      const { scim } = await setupScim();
+      const god = await addUser({ email: 'root@example.com' });
+      const { scim } = await setupOtherWorkspace(god);
       const created = await scim.scim.v2.Users.post(scimUserBody({ externalId: 'idp-1' }));
 
       const res = await scim.scim.v2.Users({ id: created.data!.id }).put(
@@ -724,10 +734,12 @@ describe('SCIM users', () => {
     });
 
     it('takes a deactivated person out of the workspace and leaves the account', async () => {
-      const { god, scim } = await setupScim();
+      const god = await addUser({ email: 'root@example.com' });
       const member = await addUser({ email: 'member@example.com' });
-      await god.api.projects.post({ name: 'Marketing', key: 'MKT' });
+      const [godTeam] = await teamsOf(god);
+      await createProject(god.api, { name: 'Marketing', key: 'MKT' });
       await joinProject(god, member, 'MKT', 'member');
+      const { scim } = await setupOtherWorkspace(god, [godTeam!.id]);
 
       const res = await scim.scim.v2
         .Users({ id: member.id })
@@ -736,7 +748,7 @@ describe('SCIM users', () => {
       expect(res.status).toBe(200);
       expect(res.data).toMatchObject({ active: false });
       expect(await memberIdsOf(god, 'MKT')).not.toContain(member.id);
-      expect(await teamsOf(member)).toHaveLength(0);
+      expect((await teamsOf(member)).map((t) => t.id)).not.toContain(godTeam!.id);
       expect((await member.api.me.get()).data).toMatchObject({ authenticated: true });
       const signIn = await app.handle(
         new Request('http://localhost/api/auth/sign-in/email', {
@@ -749,10 +761,11 @@ describe('SCIM users', () => {
     });
 
     it('passes a team and a project the person owned alone to the workspace owner', async () => {
-      const { god, scim } = await setupScim();
+      const god = await addUser({ email: 'root@example.com' });
       const member = await addUser({ email: 'member@example.com' });
       const [ownTeam] = await teamsOf(member);
-      await member.api.projects.post({ name: 'Solo', key: 'SOL' });
+      await createProject(member.api, { name: 'Solo', key: 'SOL' });
+      const { scim } = await setupOtherWorkspace(god, [ownTeam!.id]);
 
       await scim.scim.v2
         .Users({ id: member.id })
@@ -765,7 +778,7 @@ describe('SCIM users', () => {
     });
 
     it('refuses to deactivate the workspace owner', async () => {
-      const { god } = await setupScim();
+      const god = await addUser({ email: 'root@example.com' });
       const owner = await addUser({ email: 'owner@example.com' });
       const [ownerTeam] = await teamsOf(owner);
       const other = await setupOtherWorkspace(owner, [ownerTeam!.id]);
@@ -783,7 +796,8 @@ describe('SCIM users', () => {
     });
 
     it('accepts the path-less replace some providers send', async () => {
-      const { scim } = await setupScim();
+      const god = await addUser({ email: 'root@example.com' });
+      const { scim } = await setupOtherWorkspace(god);
       const created = await scim.scim.v2.Users.post(scimUserBody());
 
       const res = await scim.scim.v2
@@ -795,7 +809,8 @@ describe('SCIM users', () => {
     });
 
     it('accepts a name and an address and leaves the account its own', async () => {
-      const { scim } = await setupScim();
+      const god = await addUser({ email: 'root@example.com' });
+      const { scim } = await setupOtherWorkspace(god);
       const created = await scim.scim.v2.Users.post(scimUserBody());
 
       const res = await scim.scim.v2.Users({ id: created.data!.id }).patch(
@@ -814,11 +829,14 @@ describe('SCIM users', () => {
     });
 
     it('takes the person out of the workspace and keeps the account', async () => {
-      const { god, scim } = await setupScim();
+      const god = await addUser({ email: 'root@example.com' });
       const member = await addUser({ email: 'member@example.com' });
-      await god.api.projects.post({ name: 'Marketing', key: 'MKT' });
+      const [godTeam] = await teamsOf(god);
+      const [memberTeam] = await teamsOf(member);
+      await createProject(god.api, { name: 'Marketing', key: 'MKT' });
       await joinProject(god, member, 'MKT', 'member');
-      await member.api.projects.post({ name: 'Solo', key: 'SOL' });
+      await createProject(member.api, { name: 'Solo', key: 'SOL' });
+      const { scim } = await setupOtherWorkspace(god, [godTeam!.id, memberTeam!.id]);
 
       const res = await scim.scim.v2.Users({ id: member.id }).delete();
 
@@ -827,19 +845,6 @@ describe('SCIM users', () => {
       expect(await memberIdsOf(god, 'MKT')).not.toContain(member.id);
       expect(await memberIdsOf(god, 'SOL')).toEqual([god.id]);
       expect((await god.api.god.users({ userId: member.id }).get()).status).toBe(200);
-    });
-  });
-
-  // Beside the workspaces' own, the instance's provider still acts on the whole instance,
-  // and every other workspace's on its own workspace.
-  describe("beside the workspaces' own", () => {
-    beforeEach(() => {
-      setWorkspaceScim();
-      setInstanceScimBeside();
-    });
-    afterEach(() => {
-      setWorkspaceScim(false);
-      setInstanceScimBeside(false);
     });
 
     it("lets the instance's provider deactivate an account in any workspace", async () => {

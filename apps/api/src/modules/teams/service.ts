@@ -3,7 +3,6 @@ import {
   agentTool,
   aiAgent,
   db,
-  instanceWorkspaceId,
   teamWorkspaceId,
   integrationCredential,
   issue,
@@ -827,9 +826,8 @@ export async function createTeam(
   name: string,
   slug: string,
   ownerId: string,
-  requestedWorkspaceId?: number,
+  workspaceId: number,
 ): Promise<TeamRow> {
-  const workspaceId = requestedWorkspaceId ?? (await instanceWorkspaceId(db));
   await assertMayCreateTeam(workspaceId, ownerId);
   const { maxTeams } = await getLimits(workspaceId);
   if (maxTeams > 0 && (await db.$count(team, eq(team.workspaceId, workspaceId))) >= maxTeams) {
@@ -1131,15 +1129,12 @@ export async function releaseOwnedWorkspaces(userId: string): Promise<void> {
     .where(and(eq(workspaceManager.userId, userId), eq(workspaceManager.role, 'owner')));
   if (owned.length === 0) return;
   const [instanceOwner] = await db
-    .select({ userId: workspaceManager.userId })
-    .from(workspaceManager)
-    .where(
-      and(
-        eq(workspaceManager.workspaceId, await instanceWorkspaceId(db)),
-        eq(workspaceManager.role, 'owner'),
-      ),
-    );
-  const successor = instanceOwner?.userId;
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.role, 'god'))
+    .orderBy(user.createdAt)
+    .limit(1);
+  const successor = instanceOwner?.id;
   for (const { workspaceId } of owned) {
     if (!(await workspaceHoldsWork(workspaceId))) {
       await db.delete(workspace).where(eq(workspace.id, workspaceId));

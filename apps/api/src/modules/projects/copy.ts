@@ -233,8 +233,8 @@ export async function copyProject(
   sourceProjectId: number,
   input: { key: string; name: string; description?: string },
   ownerId: string,
+  teamId: number,
   rawInclude?: Partial<CopyProjectInclude>,
-  teamId?: number,
 ): Promise<ProjectRow> {
   const inc = normalizeInclude(rawInclude);
 

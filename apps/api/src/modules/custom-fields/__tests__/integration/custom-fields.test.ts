@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent } from '#tests/helpers/agents';
@@ -14,7 +14,7 @@ import { createAgent } from '#tests/helpers/agents';
 async function setupProject() {
   const owner = await signUpTestUser();
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   return { asOwner };
 }
 
@@ -39,7 +39,7 @@ function createType(client: Api, name: string, projectKey = 'MKT') {
 async function setupWithIssue() {
   const owner = await signUpTestUser();
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
   const issue = (
     await asOwner.projects({ projectKey: 'MKT' }).issues.post({
@@ -125,7 +125,7 @@ describe('custom-fields', () => {
 
     it('rejects a type-scoped field whose type belongs to another project', async () => {
       const { asOwner } = await setupProject();
-      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
       const foreignType = (await createType(asOwner, 'Bug', 'OPS')).data!;
 
       const res = await fields(asOwner).post({
@@ -495,7 +495,7 @@ describe('custom-fields', () => {
   describe('cross-project isolation', () => {
     it('does not patch a field from another project', async () => {
       const { asOwner } = await setupProject();
-      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
       const foreign = (await fields(asOwner, 'OPS').post({ name: 'Foreign', fieldType: 'text' }))
         .data!;
 
@@ -508,7 +508,7 @@ describe('custom-fields', () => {
 
     it('does not delete a field from another project', async () => {
       const { asOwner } = await setupProject();
-      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
       const foreign = (await fields(asOwner, 'OPS').post({ name: 'Foreign', fieldType: 'text' }))
         .data!;
 
@@ -638,7 +638,9 @@ describe('custom-fields', () => {
 
     it('sets a member given in fields, and refuses someone outside the project', async () => {
       const { asOwner, bug, severity, steps, columnId } = await setupRequired();
-      const ownerId = (await asOwner.me.get()).data!.user!.id;
+      const me = (await asOwner.me.get()).data!;
+      if (!me.authenticated) throw new Error('the owner is signed in');
+      const ownerId = me.user.id;
       const owner = (
         await fields(asOwner).post({ issueTypeId: bug.id, name: 'Owner', fieldType: 'member' })
       ).data!;

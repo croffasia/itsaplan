@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { api, authedApi, type Api } from '#tests/helpers/app';
+import { api, authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createRole } from '#tests/helpers/roles';
@@ -19,7 +19,7 @@ interface Setup {
 async function setup(key = 'MKT'): Promise<Setup> {
   const u = await signUpTestUser();
   const asOwner = authedApi(u.cookie);
-  await asOwner.projects.post({ key, name: 'Marketing' });
+  await createProject(asOwner, { key, name: 'Marketing' });
   const view = await asOwner.projects({ projectKey: key }).get();
   return {
     asOwner,
@@ -395,7 +395,7 @@ describe('sync', () => {
 
       // A fresh project with the same key gets fresh markers: the caller is a member
       // again, so a leftover row would show up here.
-      await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
       const view = await asOwner.projects({ projectKey: 'MKT' }).get();
       expect(await rev(asOwner, `board:${view.data!.project.id}`)).toBe('0');
       expect(await rev(asOwner, `issue:${issue.id}`)).toBe('0');

@@ -1,4 +1,4 @@
-import { db, workspace } from '@repo/db';
+import { db } from '@repo/db';
 import { sql } from 'drizzle-orm';
 
 // TRUNCATEs every table in the test database so each test starts clean. Two
@@ -17,8 +17,7 @@ export async function resetDb(): Promise<void> {
   // All application and better-auth tables live in the public schema. The
   // drizzle migrations bookkeeping table is excluded so migrations are not
   // re-run, and so is the MCP resource better-auth writes once, at startup.
-  // RESTART IDENTITY resets serial ids; CASCADE handles FK order. The instance
-  // workspace the migration created goes with them, so it is written again.
+  // RESTART IDENTITY resets serial ids; CASCADE handles FK order.
   const rows = (await db.execute(sql`
     SELECT tablename FROM pg_tables
     WHERE schemaname = 'public' AND tablename NOT IN ('__drizzle_migrations', 'oauth_resource')
@@ -27,5 +26,4 @@ export async function resetDb(): Promise<void> {
   const tables = rows.map((r) => `"${r.tablename}"`).join(', ');
   if (tables.length === 0) return;
   await db.execute(sql.raw(`TRUNCATE ${tables} RESTART IDENTITY CASCADE`));
-  await db.insert(workspace).values({ name: 'Workspace' });
 }

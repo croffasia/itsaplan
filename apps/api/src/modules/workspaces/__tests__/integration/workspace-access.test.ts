@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { db, team } from '@repo/db';
+import { inArray } from 'drizzle-orm';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { readOnlyPermissions, setWorkspaceRoleGrant } from '#shared/workspace-roles';
@@ -15,9 +17,16 @@ async function setup() {
   const asOwner = authedApi(owner.cookie);
   const asLead = authedApi(lead.cookie);
 
-  await asLead.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asLead, { key: 'MKT', name: 'Marketing' });
   const scaffold = (await asLead.projects({ projectKey: 'MKT' }).get()).data!;
-  const workspaceId = (await asOwner.workspaces.get()).data!.find((w) => w.role === 'owner')!.id;
+  const workspaceId = owner.workspaceId!;
+  // The lead's and the admin's teams are in the owner's workspace; the owner is in
+  // neither, and the admin is not in the lead's.
+  const [adminTeam] = (await authedApi(admin.cookie).teams.get()).data!;
+  await db
+    .update(team)
+    .set({ workspaceId })
+    .where(inArray(team.id, [scaffold.project.teamId, adminTeam!.id]));
   await asOwner.workspaces({ workspaceId }).managers.post({ userId: admin.userId });
 
   return {

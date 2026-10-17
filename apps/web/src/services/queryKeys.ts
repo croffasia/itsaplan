@@ -1,5 +1,8 @@
 import type { FeedFilter, FeedOrder } from '@/lib/api/endpoints/activity';
 
+const scimKey = (workspaceId: number | null) =>
+  workspaceId === null ? (['god', 'scim'] as const) : (['workspace', workspaceId, 'scim'] as const);
+
 // Query keys shared by every service. Each is a stable tuple; a project/issue id
 // or key scopes its entry. Kept in one registry so a mutation in one service can
 // invalidate another service's queries by the same key.
@@ -15,11 +18,9 @@ export const qk = {
   workspaceManagers: (workspaceId: number) => ['workspace', workspaceId, 'managers'] as const,
   workspaceManagerCandidates: (workspaceId: number, search: string) =>
     ['workspace', workspaceId, 'managers', 'candidates', search] as const,
-  workspaceScim: (workspaceId: number) => ['workspace', workspaceId, 'scim'] as const,
-  workspaceScimGroups: (workspaceId: number) =>
-    ['workspace', workspaceId, 'scim', 'groups'] as const,
-  workspaceProjectOptions: (workspaceId: number) =>
-    ['workspace', workspaceId, 'projectOptions'] as const,
+  scim: scimKey,
+  scimGroups: (workspaceId: number | null) => [...scimKey(workspaceId), 'groups'] as const,
+  scimProjects: (workspaceId: number | null) => [...scimKey(workspaceId), 'projects'] as const,
   teamProjectDefaults: (teamId: number) => ['team', teamId, 'project-defaults'] as const,
   // The members of a team and the projects it owns, each read by its own section. A
   // page is scoped by the search term and the window it was read with.

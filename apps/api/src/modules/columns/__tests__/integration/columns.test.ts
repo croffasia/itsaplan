@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
@@ -12,7 +12,7 @@ import { resetDb } from '#tests/helpers/db';
 async function setupProject() {
   const owner = await signUpTestUser();
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   return { asOwner };
 }
 
@@ -105,7 +105,7 @@ describe('columns', () => {
 
     it('ignores ids that belong to another project', async () => {
       const { asOwner } = await setupProject();
-      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
       const opsBefore = await columnsOf(asOwner, 'OPS');
       const foreignId = opsBefore[0].id;
 
@@ -261,7 +261,7 @@ describe('columns', () => {
     it('rejects a move whose target is in another project', async () => {
       const { asOwner } = await setupProject();
       const todo = await columnByName(asOwner, 'Todo');
-      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
       const foreign = (await columnsOf(asOwner, 'OPS'))[0];
 
       const res = await asOwner
@@ -309,7 +309,7 @@ describe('columns', () => {
   describe('cross-project isolation', () => {
     it('does not patch a column that belongs to another project', async () => {
       const { asOwner } = await setupProject();
-      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
       const foreign = await columnByName(asOwner, 'Todo', 'OPS');
 
       const res = await asOwner
@@ -324,7 +324,7 @@ describe('columns', () => {
 
     it('does not delete a column that belongs to another project', async () => {
       const { asOwner } = await setupProject();
-      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
       const foreign = await columnByName(asOwner, 'Todo', 'OPS');
 
       const res = await asOwner

@@ -1,7 +1,7 @@
 import { createHmac } from 'node:crypto';
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { app } from '../../../../app';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createRole, listProjectRoles } from '#tests/helpers/roles';
@@ -21,7 +21,7 @@ interface Setup {
 async function setupProject(): Promise<Setup> {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
   const settings = await asOwner.projects({ projectKey: 'MKT' }).settings.git.get();
   await asOwner.projects({ projectKey: 'MKT' }).settings.git.patch({ enabled: true });
@@ -194,7 +194,7 @@ describe('Repository webhook', () => {
   it('exposes connected development repositories from an issue', async () => {
     const owner = await signUpTestUser({ name: 'Owner' });
     const asOwner = authedApi(owner.cookie);
-    await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+    await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
     const project = await asOwner.projects({ projectKey: 'MKT' }).get();
     const issue = await createIssue(asOwner, project.data!.columns[0]!.id);
 
@@ -211,7 +211,7 @@ describe('Repository webhook', () => {
   it('rejects linking from a repository outside the issue project', async () => {
     const owner = await signUpTestUser({ name: 'Owner' });
     const asOwner = authedApi(owner.cookie);
-    await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+    await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
     const project = await asOwner.projects({ projectKey: 'MKT' }).get();
     const issue = await createIssue(asOwner, project.data!.columns[0]!.id);
 

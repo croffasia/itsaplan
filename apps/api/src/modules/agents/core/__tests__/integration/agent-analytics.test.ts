@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { SpanType } from '@mastra/core/observability';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, ownWorkspaceId, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent, projectIdOf, teamOf } from '#tests/helpers/agents';
@@ -18,7 +18,7 @@ import { getStore } from '../../runtime/store';
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   return { asOwner, teamId: await teamOf(asOwner, 'MKT') };
 }
 
@@ -96,10 +96,6 @@ const teamDashboard = (api: Api, teamId: number) => api.teams({ teamId })['agent
 const workspaceDashboard = (api: Api, workspaceId: number) =>
   api.workspaces({ workspaceId })['agent-analytics'];
 
-async function ownWorkspaceId(api: Api): Promise<number> {
-  return (await api.workspaces.get()).data!.find((one) => one.role === 'owner')!.id;
-}
-
 describe('agent analytics', () => {
   beforeEach(async () => {
     await resetDb();
@@ -146,7 +142,7 @@ describe('agent analytics', () => {
 
   it('splits the window by project', async () => {
     const { asOwner, teamId } = await setup();
-    await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+    await createProject(asOwner, { key: 'OPS', name: 'Operations' });
     const agentId = await createScout(asOwner);
     const mkt = await projectIdOf(asOwner, 'MKT');
     const ops = await projectIdOf(asOwner, 'OPS');
@@ -168,7 +164,7 @@ describe('agent analytics', () => {
 
   it('narrows the window to one project', async () => {
     const { asOwner, teamId } = await setup();
-    await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+    await createProject(asOwner, { key: 'OPS', name: 'Operations' });
     const agentId = await createScout(asOwner);
     const mkt = await projectIdOf(asOwner, 'MKT');
     const ops = await projectIdOf(asOwner, 'OPS');
@@ -244,7 +240,7 @@ describe('agent analytics', () => {
 
   it('shows a member with usage only the projects where their role grants it', async () => {
     const { asOwner, teamId } = await setup();
-    await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+    await createProject(asOwner, { key: 'OPS', name: 'Operations' });
     const agentId = await createScout(asOwner);
     const usage = { inputTokens: 100, outputTokens: 0 };
     const mkt = await projectIdOf(asOwner, 'MKT');
@@ -268,7 +264,13 @@ describe('agent analytics', () => {
 
   it('reads every team of the workspace and compares them', async () => {
     const { asOwner, teamId } = await setup();
-    const ops = (await asOwner.teams.post({ name: 'Ops', slug: 'ops' })).data!;
+    const ops = (
+      await asOwner.teams.post({
+        name: 'Ops',
+        slug: 'ops',
+        workspaceId: await ownWorkspaceId(asOwner),
+      })
+    ).data!;
     const meta = {
       agentId: await createScout(asOwner),
       projectId: await projectIdOf(asOwner, 'MKT'),

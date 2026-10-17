@@ -1,5 +1,5 @@
 import { and, desc, eq } from 'drizzle-orm';
-import { db, account, instanceWorkspaceId } from '@repo/db';
+import { db, account } from '@repo/db';
 import { auth, OIDC_PROVIDER_ID } from '@repo/auth';
 import { groupDisplayNames } from './resource';
 import { syncEmbeddedGroups } from './service';
@@ -7,9 +7,9 @@ import { syncEmbeddedGroups } from './service';
 // Folds an OIDC sign-in's `groups` claim into the same scim_group /
 // scim_group_member tables a SCIM sync writes to, so a group mapped to a project
 // grants access in a workspace that uses OIDC, SCIM, or both. The provider is the
-// instance's, set in god mode, and its groups go to the instance workspace. Runs
-// after every successful callback, not just the first one, so membership follows the
-// provider going forward.
+// instance's, set in god mode, so its groups are the instance's SCIM groups. Runs after
+// every successful callback, not just the first one, so membership follows the provider
+// going forward.
 //
 // The claim lives in the ID token, not necessarily the userinfo response some
 // providers keep small — better-auth stores the raw token on the linked `account`
@@ -57,7 +57,7 @@ export async function syncOidcGroupsAfterCallback(response: Response): Promise<v
 
     const claims = decodeJwtPayload(idToken);
     const names = groupDisplayNames(claims?.groups);
-    await syncEmbeddedGroups(await instanceWorkspaceId(db), session.user.id, names);
+    await syncEmbeddedGroups(null, session.user.id, names);
   } catch (error) {
     console.error('[scim] OIDC group sync failed:', error);
   }

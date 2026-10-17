@@ -28,3 +28,22 @@ export function scimApi(token: string) {
 }
 
 export type Api = typeof api;
+
+// The workspace the caller owns, where a test creates teams of its own.
+export async function ownWorkspaceId(client: Api): Promise<number> {
+  const own = (await client.workspaces.get()).data?.find((w) => w.role === 'owner');
+  if (!own) throw new Error('ownWorkspaceId: the caller owns no workspace');
+  return own.id;
+}
+
+type CreateProjectBody = Parameters<ReturnType<Api['teams']>['projects']['post']>[0];
+
+// Creates a project in the first team the caller owns, the team signUpTestUser gives it.
+export async function createProject(client: Api, body: CreateProjectBody) {
+  const teams = (await client.teams.get()).data ?? [];
+  const own = teams
+    .filter((team) => team.role === 'owner' && team.via === 'member')
+    .sort((a, b) => a.id - b.id)[0];
+  if (!own) throw new Error('createProject: the caller owns no team');
+  return client.teams({ teamId: own.id }).projects.post(body);
+}

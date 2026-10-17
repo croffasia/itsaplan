@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'bun:test';
 import { auth, setAuthSettings } from '@repo/auth';
 import { db, teamInvite } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { createRole } from '#tests/helpers/roles';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -12,7 +12,7 @@ import { resetDb } from '#tests/helpers/db';
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  const project = await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  const project = await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   return { asOwner, teamId: project.data!.teamId };
 }
 
@@ -289,7 +289,7 @@ describe('renewing an expired invite', () => {
 
   it('does not renew from a project or a team the invite does not belong to', async () => {
     const { asOwner, teamId } = await setup();
-    await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+    await createProject(asOwner, { key: 'OPS', name: 'Operations' });
     const elsewhere = await asOwner
       .projects({ projectKey: 'OPS' })
       .invites.post({ email: 'ops@example.com', role: 'member' });
@@ -299,7 +299,7 @@ describe('renewing an expired invite', () => {
 
     const other = await signUpTestUser({ name: 'Other' });
     const asOther = authedApi(other.cookie);
-    const otherTeam = (await asOther.projects.post({ key: 'OTH', name: 'Other' })).data!.teamId;
+    const otherTeam = (await createProject(asOther, { key: 'OTH', name: 'Other' })).data!.teamId;
     const foreign = await asOther
       .teams({ teamId: otherTeam })
       .invites.post({ email: 'foreign@example.com', role: 'member' });

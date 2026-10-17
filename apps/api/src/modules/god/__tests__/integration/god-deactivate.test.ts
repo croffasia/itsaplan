@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { auth } from '@repo/auth';
-import { apiKeyApi, app, authedApi } from '#tests/helpers/app';
+import { apiKeyApi, app, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { mcpAccessToken } from '#tests/helpers/mcp';
 import { resetDb } from '#tests/helpers/db';
@@ -137,7 +137,7 @@ describe('god deactivate / reactivate', () => {
 
   it("refuses to switch an agent's account", async () => {
     const { god } = await setup();
-    await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
+    await createProject(god.api, { key: 'MKT', name: 'Marketing' });
     const botId = await createAgentUser(god, 'MKT');
 
     expect((await god.api.god.users({ userId: botId }).deactivate.post()).status).toBe(403);
@@ -158,7 +158,7 @@ describe('god deactivate / reactivate', () => {
 
   it('drops the pending invites the deactivated account created', async () => {
     const { god } = await setup();
-    await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
+    await createProject(god.api, { key: 'MKT', name: 'Marketing' });
     const inviter = await signUpTestUser({ team: false });
     const invite = await god.api.projects({ projectKey: 'MKT' }).invites.post({
       email: inviter.email,

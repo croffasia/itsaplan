@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { db, aiAgent, apikey, teamMember } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { getProjectByRef } from '#modules/projects/service';
@@ -26,7 +26,7 @@ const agents = (api: Api, teamId: number) => api.teams({ teamId })['ai-agents'];
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  const project = await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  const project = await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   return { owner, asOwner, teamId: project.data!.teamId };
 }
 
@@ -101,7 +101,7 @@ describe('internal agent route tools', () => {
 
   it('binds projectKey: it is not asked of the model and cannot be redirected', async () => {
     const { asOwner } = await setup();
-    await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+    await createProject(asOwner, { key: 'OPS', name: 'Operations' });
     const view = await asOwner.projects({ projectKey: 'MKT' }).get();
     const columnId = view.data?.columns[0]?.id;
     if (columnId === undefined) throw new Error('Test project has no columns');

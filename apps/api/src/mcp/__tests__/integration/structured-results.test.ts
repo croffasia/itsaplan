@@ -3,7 +3,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { CallToolResultSchema, type CallToolRequest } from '@modelcontextprotocol/sdk/types.js';
 import { auth } from '@repo/auth';
-import { app, authedApi } from '#tests/helpers/app';
+import { app, authedApi, ownWorkspaceId, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { buildMcpServer } from '../../server';
@@ -80,7 +80,7 @@ describe('MCP structured results through the SDK client', () => {
   it('validates structured validation, conflict, and permission errors without changing their text', async () => {
     const owner = await signUpTestUser();
     const api = authedApi(owner.cookie);
-    await api.projects.post({ key: 'PRIVATE', name: 'Private project' });
+    await createProject(api, { key: 'PRIVATE', name: 'Private project' });
     const client = await connect(owner.userId);
     await client.listTools();
     for (const [args, status] of [
@@ -119,7 +119,11 @@ describe('MCP structured results through the SDK client', () => {
 
   it('returns the same error envelope for missing team arguments and unknown tools', async () => {
     const user = await signUpTestUser();
-    await authedApi(user.cookie).teams.post({ name: 'Another team', slug: 'another-team' });
+    await authedApi(user.cookie).teams.post({
+      name: 'Another team',
+      slug: 'another-team',
+      workspaceId: await ownWorkspaceId(authedApi(user.cookie)),
+    });
     const client = await connect(user.userId);
     await client.listTools();
     const missing = await callTool(client, { name: 'list_ai_agents' });

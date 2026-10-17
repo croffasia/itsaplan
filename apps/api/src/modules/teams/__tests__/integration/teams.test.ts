@@ -1,5 +1,12 @@
 import { describe, it, expect, afterEach, beforeEach } from 'bun:test';
-import { api as anonApi, apiKeyApi, authedApi, type Api } from '#tests/helpers/app';
+import {
+  api as anonApi,
+  apiKeyApi,
+  authedApi,
+  type Api,
+  ownWorkspaceId,
+  createProject,
+} from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
@@ -45,7 +52,7 @@ describe('teams', () => {
     it('attaches selected team agents only to new projects', async () => {
       const owner = await signUpClient();
       const teamId = (await owner.api.teams.get()).data![0].id;
-      await owner.api.projects.post({ key: 'SRC', name: 'Source' });
+      await createProject(owner.api, { key: 'SRC', name: 'Source' });
       const created = await createAgent(owner.api, 'SRC', {
         name: 'Triage',
         username: 'triage',
@@ -74,8 +81,8 @@ describe('teams', () => {
     it('keeps the source agents when copying a project', async () => {
       const owner = await signUpClient();
       const teamId = (await owner.api.teams.get()).data![0].id;
-      await owner.api.projects.post({ key: 'SRC', name: 'Source' });
-      await owner.api.projects.post({ key: 'OTHER', name: 'Other' });
+      await createProject(owner.api, { key: 'SRC', name: 'Source' });
+      await createProject(owner.api, { key: 'OTHER', name: 'Other' });
       const sourceAgent = await createAgent(owner.api, 'SRC', {
         name: 'Source agent',
         username: 'source-agent',
@@ -134,11 +141,14 @@ describe('teams', () => {
 
   describe('list', () => {
     it('gives a new account no team, so it has nowhere to create a project', async () => {
+      const other = await signUpClient();
+      const teamId = (await other.api.teams.get()).data![0]!.id;
       const user = await signUpTestUser({ team: false });
       const api = authedApi(user.cookie);
 
       expect((await api.teams.get()).data).toEqual([]);
-      expect((await api.projects.post({ key: 'MKT', name: 'Marketing' })).status).toBe(400);
+      const created = await api.teams({ teamId }).projects.post({ key: 'MKT', name: 'Marketing' });
+      expect(created.status).toBe(404);
     });
 
     it('lists the team the account owns', async () => {
@@ -158,7 +168,7 @@ describe('teams', () => {
 
     it('counts the projects the team owns', async () => {
       const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
 
       const list = await api.teams.get();
       expect(list.data?.[0]).toMatchObject({ projectCount: 1 });
@@ -167,7 +177,15 @@ describe('teams', () => {
     it("lists only the caller's own teams", async () => {
       const owner = await signUpClient();
       const { api } = await signUpClient();
-      expect((await owner.api.teams.post({ name: 'Design', slug: 'design' })).status).toBe(201);
+      expect(
+        (
+          await owner.api.teams.post({
+            name: 'Design',
+            slug: 'design',
+            workspaceId: await ownWorkspaceId(owner.api),
+          })
+        ).status,
+      ).toBe(201);
 
       const list = await api.teams.get();
       expect(list.data?.map((t) => t.name)).not.toContain('Design');
@@ -183,7 +201,11 @@ describe('teams', () => {
     it('creates a team with the caller as its owner', async () => {
       const { api } = await signUpClient();
 
-      const created = await api.teams.post({ name: 'Design', slug: 'design' });
+      const created = await api.teams.post({
+        name: 'Design',
+        slug: 'design',
+        workspaceId: await ownWorkspaceId(api),
+      });
       expect(created.status).toBe(201);
       expect(created.data).toMatchObject({ name: 'Design', role: 'owner' });
 
@@ -192,34 +214,75 @@ describe('teams', () => {
       expect(list.data?.map((t) => t.name)).toContain('Design');
     });
 
+    it('requires the workspace', async () => {
+      const { api } = await signUpClient();
+
+      // @ts-expect-error the request names the workspace that holds the team
+      expect((await api.teams.post({ name: 'Design', slug: 'design' })).status).toBe(400);
+    });
+
     it('trims the name', async () => {
       const { api } = await signUpClient();
 
-      const created = await api.teams.post({ name: '  Design  ', slug: 'design' });
+      const created = await api.teams.post({
+        name: '  Design  ',
+        slug: 'design',
+        workspaceId: await ownWorkspaceId(api),
+      });
       expect(created.data).toMatchObject({ name: 'Design' });
     });
 
     it('rejects an empty or blank name', async () => {
       const { api } = await signUpClient();
 
-      expect((await api.teams.post({ name: '', slug: 'team' })).status).toBe(400);
-      expect((await api.teams.post({ name: '   ', slug: 'team' })).status).toBe(400);
+      expect(
+        (await api.teams.post({ name: '', slug: 'team', workspaceId: await ownWorkspaceId(api) }))
+          .status,
+      ).toBe(400);
+      expect(
+        (
+          await api.teams.post({
+            name: '   ',
+            slug: 'team',
+            workspaceId: await ownWorkspaceId(api),
+          })
+        ).status,
+      ).toBe(400);
     });
 
     it('rejects a name longer than 60 characters', async () => {
       const { api } = await signUpClient();
 
-      expect((await api.teams.post({ name: 'a'.repeat(60), slug: 'long' })).status).toBe(201);
-      expect((await api.teams.post({ name: 'a'.repeat(61), slug: 'longer' })).status).toBe(400);
+      expect(
+        (
+          await api.teams.post({
+            name: 'a'.repeat(60),
+            slug: 'long',
+            workspaceId: await ownWorkspaceId(api),
+          })
+        ).status,
+      ).toBe(201);
+      expect(
+        (
+          await api.teams.post({
+            name: 'a'.repeat(61),
+            slug: 'longer',
+            workspaceId: await ownWorkspaceId(api),
+          })
+        ).status,
+      ).toBe(400);
     });
 
     it('refuses one more team than the workspace limits allow', async () => {
-      const { api } = await signUpClient({ team: false });
-      // The other account's team already fills the workspace.
-      await signUpClient();
+      // Its own team already fills the workspace.
+      const { api } = await signUpClient();
       setLimits({ maxTeams: 1 });
 
-      const created = await api.teams.post({ name: 'Design', slug: 'design' });
+      const created = await api.teams.post({
+        name: 'Design',
+        slug: 'design',
+        workspaceId: await ownWorkspaceId(api),
+      });
       expect(created.status).toBe(409);
       const names = (await api.teams.get()).data!.map((team) => team.name);
       expect(names).not.toContain('Design');
@@ -228,23 +291,55 @@ describe('teams', () => {
     it('creates the team under the slug it is given', async () => {
       const { api } = await signUpClient();
 
-      const created = await api.teams.post({ name: 'Design', slug: 'design' });
+      const created = await api.teams.post({
+        name: 'Design',
+        slug: 'design',
+        workspaceId: await ownWorkspaceId(api),
+      });
       expect(created.status).toBe(201);
       expect(created.data).toMatchObject({ slug: 'design', ref: 'design' });
     });
 
     it('refuses a slug that is malformed, reserved or taken', async () => {
       const { api } = await signUpClient();
-      await api.teams.post({ name: 'Design', slug: 'design' });
+      await api.teams.post({
+        name: 'Design',
+        slug: 'design',
+        workspaceId: await ownWorkspaceId(api),
+      });
 
-      expect((await api.teams.post({ name: 'Bad', slug: 'Bad Slug' })).status).toBe(400);
-      expect((await api.teams.post({ name: 'Settings', slug: 'settings' })).status).toBe(400);
-      expect((await api.teams.post({ name: 'Design 2', slug: 'design' })).status).toBe(409);
+      expect(
+        (
+          await api.teams.post({
+            name: 'Bad',
+            slug: 'Bad Slug',
+            workspaceId: await ownWorkspaceId(api),
+          })
+        ).status,
+      ).toBe(400);
+      expect(
+        (
+          await api.teams.post({
+            name: 'Settings',
+            slug: 'settings',
+            workspaceId: await ownWorkspaceId(api),
+          })
+        ).status,
+      ).toBe(400);
+      expect(
+        (
+          await api.teams.post({
+            name: 'Design 2',
+            slug: 'design',
+            workspaceId: await ownWorkspaceId(api),
+          })
+        ).status,
+      ).toBe(409);
       expect(await api.teams.get().then((list) => list.data)).toHaveLength(2);
     });
 
     it('rejects a request without a session', async () => {
-      const created = await anonApi.teams.post({ name: 'Design', slug: 'design' });
+      const created = await anonApi.teams.post({ name: 'Design', slug: 'design', workspaceId: 1 });
       expect(created.status).toBe(401);
     });
   });
@@ -252,7 +347,7 @@ describe('teams', () => {
   describe('detail', () => {
     it('returns the team with what it holds and what the caller may do', async () => {
       const { user, api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
       const teamId = (await api.teams.get()).data![0].id;
 
       const detail = await api.teams({ teamId }).get();
@@ -270,7 +365,7 @@ describe('teams', () => {
 
     it('lists the members and the projects of the team by their own routes', async () => {
       const { user, api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
       const teamId = (await api.teams.get()).data![0].id;
 
       const members = await api.teams({ teamId }).members.get();
@@ -406,7 +501,6 @@ describe('teams', () => {
     });
 
     it('hides the members and the projects of a team the caller is not in', async () => {
-      // The first account owns the instance workspace, which reaches every team in it.
       const other = await signUpClient();
       const { api } = await signUpClient();
       const otherTeamId = (await other.api.teams.get()).data![0].id;
@@ -416,7 +510,6 @@ describe('teams', () => {
     });
 
     it('hides a team the caller is not a member of', async () => {
-      // The first account owns the instance workspace, which reaches every team in it.
       const other = await signUpClient();
       const { api } = await signUpClient();
       const otherTeamId = (await other.api.teams.get()).data![0].id;
@@ -435,7 +528,7 @@ describe('teams', () => {
   describe('project detail', () => {
     it("returns the reader's own access to a project the team owns", async () => {
       const { api } = await signUpClient();
-      const project = await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const project = await createProject(api, { key: 'MKT', name: 'Marketing' });
       const teamId = (await api.teams.get()).data![0].id;
 
       const detail = await api.teams({ teamId }).projects({ projectId: project.data!.id }).get();
@@ -446,7 +539,7 @@ describe('teams', () => {
 
     it('counts the open issues of the project and reports its last activity', async () => {
       const { api } = await signUpClient();
-      const project = await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const project = await createProject(api, { key: 'MKT', name: 'Marketing' });
       const teamId = (await api.teams.get()).data![0].id;
 
       const empty = await api.teams({ teamId }).projects({ projectId: project.data!.id }).get();
@@ -462,10 +555,9 @@ describe('teams', () => {
     });
 
     it("404s for a project of another account's team", async () => {
-      // The first account owns the instance workspace, which reaches every team in it.
       const other = await signUpClient();
       const { api } = await signUpClient();
-      const otherProject = await other.api.projects.post({ key: 'OTH', name: 'Other' });
+      const otherProject = await createProject(other.api, { key: 'OTH', name: 'Other' });
       const teamId = (await api.teams.get()).data![0].id;
 
       const detail = await api
@@ -476,10 +568,9 @@ describe('teams', () => {
     });
 
     it('404s for a team the caller is not a member of', async () => {
-      // The first account owns the instance workspace, which reaches every team in it.
       const other = await signUpClient();
       const { api } = await signUpClient();
-      const otherProject = await other.api.projects.post({ key: 'OTH', name: 'Other' });
+      const otherProject = await createProject(other.api, { key: 'OTH', name: 'Other' });
       const otherTeamId = (await other.api.teams.get()).data![0].id;
 
       const detail = await api
@@ -493,7 +584,7 @@ describe('teams', () => {
   describe('project members', () => {
     it('lists the owners of the project before its members', async () => {
       const { user, api } = await signUpClient();
-      const project = await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const project = await createProject(api, { key: 'MKT', name: 'Marketing' });
       const promoted = await addProjectMember(api, 'MKT');
       const promotedUserId = (
         await api.projects({ projectKey: 'MKT' }).members.get()
@@ -522,7 +613,7 @@ describe('teams', () => {
 
     it('windows the list and reports how many there are in total', async () => {
       const { user, api } = await signUpClient();
-      const project = await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const project = await createProject(api, { key: 'MKT', name: 'Marketing' });
       await addProjectMember(api, 'MKT');
       await addProjectMember(api, 'MKT');
       const teamId = (await api.teams.get()).data![0].id;
@@ -543,7 +634,7 @@ describe('teams', () => {
 
     it('narrows the list to the people or to the AI agents', async () => {
       const { api } = await signUpClient();
-      const project = await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const project = await createProject(api, { key: 'MKT', name: 'Marketing' });
       await addProjectMember(api, 'MKT');
       const teamId = (await api.teams.get()).data![0].id;
       const members = api.teams({ teamId }).projects({ projectId: project.data!.id }).members;
@@ -557,7 +648,7 @@ describe('teams', () => {
 
     it('searches by name, address and handle', async () => {
       const { user, api } = await signUpClient();
-      const project = await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const project = await createProject(api, { key: 'MKT', name: 'Marketing' });
       await addProjectMember(api, 'MKT');
       const teamId = (await api.teams.get()).data![0].id;
       const members = api.teams({ teamId }).projects({ projectId: project.data!.id }).members;
@@ -575,7 +666,7 @@ describe('teams', () => {
 
     it('404s for a member of the team who is not in the project', async () => {
       const { api } = await signUpClient();
-      const project = await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const project = await createProject(api, { key: 'MKT', name: 'Marketing' });
       const teamId = (await api.teams.get()).data![0].id;
       const outsider = await addTeamMember({ api }, teamId);
 
@@ -588,7 +679,7 @@ describe('teams', () => {
 
     it('lets a manager of the team read a project they are not in', async () => {
       const { api } = await signUpClient();
-      const project = await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const project = await createProject(api, { key: 'MKT', name: 'Marketing' });
       const teamId = (await api.teams.get()).data![0].id;
       const manager = await addTeamMember({ api }, teamId, 'manager');
 
@@ -632,7 +723,6 @@ describe('teams', () => {
       });
 
       it("404s for another account's team", async () => {
-        // The first account owns the instance workspace, which reaches every team in it.
         const other = await signUpClient();
         const { api } = await signUpClient();
         const otherTeamId = await ownTeamId(other.api);
@@ -668,7 +758,7 @@ describe('teams', () => {
       it("404s for a project of another account's team", async () => {
         const { api } = await signUpClient();
         const other = await signUpClient();
-        const otherProject = await other.api.projects.post({ key: 'OTH', name: 'Other' });
+        const otherProject = await createProject(other.api, { key: 'OTH', name: 'Other' });
         const teamId = await ownTeamId(api);
 
         const copied = await api
@@ -703,7 +793,7 @@ describe('teams', () => {
       it("404s for a project of another account's team", async () => {
         const { api } = await signUpClient();
         const other = await signUpClient();
-        const otherProject = await other.api.projects.post({ key: 'OTH', name: 'Other' });
+        const otherProject = await createProject(other.api, { key: 'OTH', name: 'Other' });
         const teamId = await ownTeamId(api);
 
         const updated = await api
@@ -749,7 +839,7 @@ describe('teams', () => {
       it('404s for a project of another team, leaving it in place', async () => {
         const { api } = await signUpClient();
         const other = await signUpClient();
-        const otherProject = await other.api.projects.post({ key: 'OTH', name: 'Other' });
+        const otherProject = await createProject(other.api, { key: 'OTH', name: 'Other' });
         const teamId = await ownTeamId(api);
 
         const deleted = await api
@@ -845,7 +935,7 @@ describe('teams', () => {
       it('404s for a project of another team', async () => {
         const { api } = await signUpClient();
         const other = await signUpClient();
-        const otherProject = await other.api.projects.post({ key: 'OTH', name: 'Other' });
+        const otherProject = await createProject(other.api, { key: 'OTH', name: 'Other' });
         const teamId = await ownTeamId(api);
 
         const archived = await api
@@ -866,7 +956,7 @@ describe('teams', () => {
     it('starts with MCP on and every project covered', async () => {
       const { api } = await signUpClient();
       const teamId = (await api.teams.get()).data![0].id;
-      const project = (await api.projects.post({ key: 'MKT', name: 'Marketing' })).data!;
+      const project = (await createProject(api, { key: 'MKT', name: 'Marketing' })).data!;
 
       expect((await api.teams.get()).data?.[0]).toMatchObject({ mcpEnabled: true });
       expect((await api.teams({ teamId }).projects.get()).data?.items).toMatchObject([
@@ -877,8 +967,8 @@ describe('teams', () => {
     it('sets the switch and the covered projects in one call', async () => {
       const { api } = await signUpClient();
       const teamId = (await api.teams.get()).data![0].id;
-      const on = (await api.projects.post({ key: 'ON', name: 'On' })).data!;
-      const off = (await api.projects.post({ key: 'OFF', name: 'Off' })).data!;
+      const on = (await createProject(api, { key: 'ON', name: 'On' })).data!;
+      const off = (await createProject(api, { key: 'OFF', name: 'Off' })).data!;
 
       const res = await api.teams({ teamId }).mcp.patch({
         enabled: false,
@@ -903,7 +993,7 @@ describe('teams', () => {
       const { api } = await signUpClient();
       const teamId = (await api.teams.get()).data![0].id;
       const other = await signUpClient();
-      const foreign = (await other.api.projects.post({ key: 'OTH', name: 'Other' })).data!;
+      const foreign = (await createProject(other.api, { key: 'OTH', name: 'Other' })).data!;
 
       const res = await api.teams({ teamId }).mcp.patch({
         projects: [{ projectId: foreign.id, enabled: false }],
@@ -921,7 +1011,7 @@ describe('teams', () => {
     it('lets a manager write the settings', async () => {
       const owner = await signUpClient();
       const teamId = (await owner.api.teams.get()).data![0].id;
-      const project = (await owner.api.projects.post({ key: 'MKT', name: 'Marketing' })).data!;
+      const project = (await createProject(owner.api, { key: 'MKT', name: 'Marketing' })).data!;
       const manager = await addTeamMember(owner, teamId, 'manager');
 
       const res = await manager.api.teams({ teamId }).mcp.patch({
@@ -935,7 +1025,7 @@ describe('teams', () => {
     it('lets a member read the state but not write it', async () => {
       const owner = await signUpClient();
       const teamId = (await owner.api.teams.get()).data![0].id;
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
       const member = await addProjectMember(owner.api, 'MKT');
 
       expect((await member.teams({ teamId }).projects.get()).data?.items).toMatchObject([
@@ -963,7 +1053,13 @@ describe('teams', () => {
     it('hides a team with MCP off from an MCP list_teams call', async () => {
       const { api } = await signUpClient();
       const teamId = (await api.teams.get()).data![0].id;
-      const second = (await api.teams.post({ name: 'Growth', slug: 'growth' })).data!;
+      const second = (
+        await api.teams.post({
+          name: 'Growth',
+          slug: 'growth',
+          workspaceId: await ownWorkspaceId(api),
+        })
+      ).data!;
       await api.teams({ teamId }).mcp.patch({ enabled: false });
 
       expect((await api.teams.get()).data?.map((t) => t.id).sort()).toEqual(
@@ -995,7 +1091,6 @@ describe('teams', () => {
     });
 
     it("rejects a rename of another account's team", async () => {
-      // The first account owns the instance workspace, which reaches every team in it.
       const other = await signUpClient();
       const { api } = await signUpClient();
       const otherTeamId = (await other.api.teams.get()).data![0].id;
@@ -1146,7 +1241,7 @@ describe('teams', () => {
     it('drops the member and their access to the projects of the team', async () => {
       const owner = await signUpClient();
       const teamId = (await owner.api.teams.get()).data![0].id;
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
       const member = await addTeamMember(owner, teamId);
       await owner.api
         .projects({ projectKey: 'MKT' })
@@ -1202,7 +1297,7 @@ describe('teams', () => {
       const owner = await signUpClient();
       const teamId = (await owner.api.teams.get()).data![0].id;
       const member = await addTeamMember(owner, teamId);
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
       await owner.api
         .projects({ projectKey: 'MKT' })
         .members.post({ userId: member.user.userId, role: 'owner' });
@@ -1285,8 +1380,7 @@ describe('teams', () => {
   });
 
   describe('delete', () => {
-    // The first account owns the instance workspace, which reaches every team in it, so
-    // the team owner is the second.
+    // The team owner is a plain account, not the instance owner.
     async function teamOwner() {
       await signUpTestUser();
       const owner = await signUpClient();
@@ -1363,7 +1457,7 @@ describe('teams', () => {
     it('takes the projects of the team with it', async () => {
       const owner = await signUpClient();
       const teamId = (await owner.api.teams.get()).data![0].id;
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
       const member = await addTeamMember(owner, teamId);
       await owner.api
         .projects({ projectKey: 'MKT' })
@@ -1374,7 +1468,6 @@ describe('teams', () => {
     });
 
     it('404s for a team the caller is not a member of', async () => {
-      // The first account owns the instance workspace, which reaches every team in it.
       const other = await signUpClient();
       const { api } = await signUpClient();
       const otherTeamId = (await other.api.teams.get()).data![0].id;
@@ -1403,7 +1496,7 @@ describe('teams', () => {
     it('rejects an agent leaving with its own key', async () => {
       const owner = await signUpClient();
       const teamId = (await owner.api.teams.get()).data![0].id;
-      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(owner.api, { key: 'MKT', name: 'Marketing' });
       const created = await createAgent(owner.api, 'MKT', {
         name: 'Runner',
         username: 'runner',

@@ -10,8 +10,8 @@ import {
   teamWorkspaceId,
   user,
 } from '@repo/db';
-import { and, eq, isNull, ne, or } from 'drizzle-orm';
-import { instanceScimWorkspace, workspacesWithOwnScim } from '@repo/auth';
+import { and, eq, isNotNull, isNull, or, sql } from 'drizzle-orm';
+import { workspacesWithOwnScim } from '@repo/auth';
 import { removeMember, setMembership, type MemberRole } from '#modules/members/service';
 import { listSeatHolderIds } from '#modules/teams/service';
 import { getLimits } from '#shared/limits';
@@ -38,18 +38,14 @@ export async function reconcileProjects(projectIds: number[]): Promise<void> {
 // The group members whose mappings grant a project of this workspace, as a condition on
 // `scimGroup`, `scimUser` and `user`. A person a workspace's provider deactivated is
 // granted nothing by its groups. An account the instance's provider deactivated keeps
-// what it had: it cannot sign in, and is back where it was once reactivated. A person it
-// deactivated in `scim_user` alone, as it did while it ran per workspace, can still sign
-// in, so its groups grant them nothing. The instance's groups grant nothing in a
-// workspace that set up SCIM of its own.
+// what it had: it cannot sign in, and is back where it was once reactivated. The
+// instance's groups grant nothing in a workspace that set up SCIM of its own.
 async function grantingMembers(workspaceId: number) {
   const active = or(isNull(scimUser.active), eq(scimUser.active, true));
-  const instanceId = await instanceScimWorkspace();
-  if (instanceId === null) return active;
   if ((await workspacesWithOwnScim()).includes(workspaceId)) {
-    return and(ne(scimGroup.workspaceId, instanceId), active);
+    return and(isNotNull(scimGroup.workspaceId), active);
   }
-  return or(active, and(eq(scimGroup.workspaceId, instanceId), eq(user.active, false)));
+  return or(active, and(isNull(scimGroup.workspaceId), eq(user.active, false)));
 }
 
 // Who the mappings say should be a member of this project. A user reachable
@@ -73,7 +69,7 @@ async function desiredMembers(
     .leftJoin(
       scimUser,
       and(
-        eq(scimUser.workspaceId, scimGroup.workspaceId),
+        sql`${scimUser.workspaceId} IS NOT DISTINCT FROM ${scimGroup.workspaceId}`,
         eq(scimUser.userId, scimGroupMember.userId),
       ),
     )

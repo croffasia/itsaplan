@@ -3,11 +3,11 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { CallToolResultSchema, type CallToolRequest } from '@modelcontextprotocol/sdk/types.js';
 import { auth } from '@repo/auth';
-import { app, authedApi, type Api } from '#tests/helpers/app';
+import { app, authedApi, type Api, ownWorkspaceId, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent } from '#tests/helpers/agents';
-import { routeTools, withoutFields } from '../../generate';
+import { routeTools } from '../../generate';
 import { buildMcpServer } from '../../server';
 
 const clients: Client[] = [];
@@ -36,12 +36,10 @@ async function addTeamMember(api: Api, teamId: number, role: 'manager' | 'member
 }
 
 describe('MCP team project route', () => {
-  it('advertises the guarded team route with the existing project schemas', () => {
+  it('advertises project creation on the guarded team route only', () => {
     const tools = routeTools(app);
-    const tool = tools.find((tool) => tool.name === 'create_team_project');
-    const generic = tools.find((tool) => tool.name === 'create_project')!;
+    const tool = tools.find((tool) => tool.name === 'create_project');
 
-    expect(tool).toBeDefined();
     expect(tool).toMatchObject({
       method: 'POST',
       path: '/teams/:teamId/projects',
@@ -55,9 +53,7 @@ describe('MCP team project route', () => {
       },
     });
     expect(tool!.inputSchema.required).toContain('teamId');
-    expect(withoutFields(tool!.inputSchema, ['teamId'])).toEqual(generic.inputSchema);
-    expect(tool!.outputSchema).toEqual(generic.outputSchema);
-    expect(generic).toMatchObject({ method: 'POST', path: '/projects', pathParams: [] });
+    expect(tools.some((tool) => tool.method === 'POST' && tool.path === '/projects')).toBe(false);
   });
 });
 
@@ -67,18 +63,24 @@ describe('MCP team project creation', () => {
     await Promise.all(clients.splice(0).map((client) => client.close()));
   });
 
-  it('creates in the explicitly selected team and keeps generic creation in the first owned team', async () => {
+  it('creates in the explicitly selected team', async () => {
     const owner = await signUpTestUser();
     const api = authedApi(owner.cookie);
     const firstTeamId = (await api.teams.get()).data![0].id;
-    const second = (await api.teams.post({ name: 'Second team', slug: 'second-team' })).data!;
+    const second = (
+      await api.teams.post({
+        name: 'Second team',
+        slug: 'second-team',
+        workspaceId: await ownWorkspaceId(api),
+      })
+    ).data!;
     const client = await connect(owner.userId);
     const listed = await client.listTools();
-    const tool = listed.tools.find((tool) => tool.name === 'create_team_project')!;
+    const tool = listed.tools.find((tool) => tool.name === 'create_project')!;
     expect(tool.inputSchema.required).toContain('teamId');
 
     const created = await callTool(client, {
-      name: 'create_team_project',
+      name: 'create_project',
       arguments: { teamId: second.id, key: 'TEAM', name: 'Team project', description: 'Details' },
     });
     expect(created.isError).toBe(false);
@@ -91,16 +93,6 @@ describe('MCP team project creation', () => {
     expect((await api.teams({ teamId: second.id }).projects.get()).data?.items).toMatchObject([
       { key: 'TEAM', isMember: true },
     ]);
-
-    const generic = await callTool(client, {
-      name: 'create_project',
-      arguments: { key: 'GENERIC', name: 'Generic project' },
-    });
-    expect(generic.isError).toBe(false);
-    expect(generic.structuredContent).toMatchObject({
-      status: 201,
-      data: { teamId: firstTeamId, key: 'GENERIC' },
-    });
   });
 
   it('uses the existing key-derived team for a person with one MCP-enabled team', async () => {
@@ -108,14 +100,12 @@ describe('MCP team project creation', () => {
     const api = authedApi(owner.cookie);
     const teamId = (await api.teams.get()).data![0].id;
     const client = await connect(owner.userId);
-    const tool = (await client.listTools()).tools.find(
-      (tool) => tool.name === 'create_team_project',
-    )!;
+    const tool = (await client.listTools()).tools.find((tool) => tool.name === 'create_project')!;
     expect(tool.inputSchema.properties).not.toHaveProperty('teamId');
     expect(tool.inputSchema.required).not.toContain('teamId');
 
     const created = await callTool(client, {
-      name: 'create_team_project',
+      name: 'create_project',
       arguments: { key: 'ONE', name: 'One team' },
     });
     expect(created.isError).toBe(false);
@@ -125,9 +115,13 @@ describe('MCP team project creation', () => {
   it('requires teamId when more than one team is available', async () => {
     const owner = await signUpTestUser();
     const api = authedApi(owner.cookie);
-    await api.teams.post({ name: 'Second team', slug: 'second-team' });
+    await api.teams.post({
+      name: 'Second team',
+      slug: 'second-team',
+      workspaceId: await ownWorkspaceId(api),
+    });
     const result = await callTool(await connect(owner.userId), {
-      name: 'create_team_project',
+      name: 'create_project',
       arguments: { key: 'MISSING', name: 'Missing team' },
     });
     expect(result.isError).toBe(true);
@@ -144,7 +138,7 @@ describe('MCP team project creation', () => {
     const teamId = (await api.teams.get()).data![0].id;
     const manager = await addTeamMember(api, teamId, 'manager');
     const result = await callTool(await connect(manager.user.userId), {
-      name: 'create_team_project',
+      name: 'create_project',
       arguments: { teamId, key: 'MANAGED', name: 'Managed project', preset: 'software' },
     });
     expect(result.isError).toBe(false);
@@ -163,7 +157,7 @@ describe('MCP team project creation', () => {
     const teamId = (await api.teams.get()).data![0].id;
     const member = await addTeamMember(api, teamId, 'member');
     const result = await callTool(await connect(member.user.userId), {
-      name: 'create_team_project',
+      name: 'create_project',
       arguments: { teamId, key: 'DENIED', name: 'Denied project' },
     });
     expect(result.isError).toBe(true);
@@ -175,10 +169,16 @@ describe('MCP team project creation', () => {
     const owner = await signUpTestUser();
     const api = authedApi(owner.cookie);
     const privateTeamId = (await api.teams.get()).data![0].id;
-    const visible = (await api.teams.post({ name: 'Visible', slug: 'visible' })).data!;
+    const visible = (
+      await api.teams.post({
+        name: 'Visible',
+        slug: 'visible',
+        workspaceId: await ownWorkspaceId(api),
+      })
+    ).data!;
     const outsider = await addTeamMember(api, visible.id, 'member');
     const result = await callTool(await connect(outsider.user.userId), {
-      name: 'create_team_project',
+      name: 'create_project',
       arguments: { teamId: privateTeamId, key: 'PRIVATE', name: 'Private project' },
     });
     expect(result.isError).toBe(true);
@@ -189,8 +189,10 @@ describe('MCP team project creation', () => {
   it('refuses an agent key even when the caller names another team', async () => {
     const owner = await signUpTestUser();
     const api = authedApi(owner.cookie);
-    const project = (await api.projects.post({ key: 'SOURCE', name: 'Source project' })).data!;
-    const other = (await api.teams.post({ name: 'Other', slug: 'other' })).data!;
+    const project = (await createProject(api, { key: 'SOURCE', name: 'Source project' })).data!;
+    const other = (
+      await api.teams.post({ name: 'Other', slug: 'other', workspaceId: await ownWorkspaceId(api) })
+    ).data!;
     const agent = (
       await createAgent(api, 'SOURCE', {
         name: 'Agent',
@@ -199,7 +201,7 @@ describe('MCP team project creation', () => {
       })
     ).data!;
     const result = await callTool(await connect(agent.agent.userId), {
-      name: 'create_team_project',
+      name: 'create_project',
       arguments: { teamId: other.id, key: 'AGENT', name: 'Agent project' },
     });
     expect(result.isError).toBe(true);
@@ -213,11 +215,21 @@ describe('MCP team project creation', () => {
   it('refuses a team with MCP disabled while its HTTP route remains available', async () => {
     const owner = await signUpTestUser();
     const api = authedApi(owner.cookie);
-    await api.teams.post({ name: 'Second', slug: 'second' });
-    const disabled = (await api.teams.post({ name: 'Disabled', slug: 'disabled' })).data!;
+    await api.teams.post({
+      name: 'Second',
+      slug: 'second',
+      workspaceId: await ownWorkspaceId(api),
+    });
+    const disabled = (
+      await api.teams.post({
+        name: 'Disabled',
+        slug: 'disabled',
+        workspaceId: await ownWorkspaceId(api),
+      })
+    ).data!;
     await api.teams({ teamId: disabled.id }).mcp.patch({ enabled: false });
     const result = await callTool(await connect(owner.userId), {
-      name: 'create_team_project',
+      name: 'create_project',
       arguments: { teamId: disabled.id, key: 'BLOCKED', name: 'Blocked project' },
     });
     expect(result.isError).toBe(true);
@@ -235,7 +247,13 @@ describe('MCP team project creation', () => {
   it('validates team and project fields without creating a project', async () => {
     const owner = await signUpTestUser();
     const api = authedApi(owner.cookie);
-    const target = (await api.teams.post({ name: 'Target', slug: 'target' })).data!;
+    const target = (
+      await api.teams.post({
+        name: 'Target',
+        slug: 'target',
+        workspaceId: await ownWorkspaceId(api),
+      })
+    ).data!;
     const client = await connect(owner.userId);
     for (const fields of [
       { teamId: 'invalid' },
@@ -249,7 +267,7 @@ describe('MCP team project creation', () => {
       { preset: 'invalid' },
     ]) {
       const result = await callTool(client, {
-        name: 'create_team_project',
+        name: 'create_project',
         arguments: { teamId: target.id, key: 'VALID', name: 'Valid project', ...fields },
       });
       expect(result.isError).toBe(true);
@@ -264,7 +282,7 @@ describe('MCP team project creation', () => {
     const teamId = (await api.teams.get()).data![0].id;
     const description = 'x'.repeat(2000);
     const result = await callTool(await connect(owner.userId), {
-      name: 'create_team_project',
+      name: 'create_project',
       arguments: { key: 'A123456789', name: 'Boundary project', description },
     });
     expect(result.isError).toBe(false);
@@ -277,9 +295,13 @@ describe('MCP team project creation', () => {
   it('returns 404 for an unknown team', async () => {
     const owner = await signUpTestUser();
     const api = authedApi(owner.cookie);
-    await api.teams.post({ name: 'Second', slug: 'second' });
+    await api.teams.post({
+      name: 'Second',
+      slug: 'second',
+      workspaceId: await ownWorkspaceId(api),
+    });
     const result = await callTool(await connect(owner.userId), {
-      name: 'create_team_project',
+      name: 'create_project',
       arguments: { teamId: 999999, key: 'UNKNOWN', name: 'Unknown team' },
     });
     expect(result.isError).toBe(true);
@@ -291,11 +313,17 @@ describe('MCP team project creation', () => {
     const owner = await signUpTestUser();
     const api = authedApi(owner.cookie);
     const firstTeamId = (await api.teams.get()).data![0].id;
-    const second = (await api.teams.post({ name: 'Second', slug: 'second' })).data!;
+    const second = (
+      await api.teams.post({
+        name: 'Second',
+        slug: 'second',
+        workspaceId: await ownWorkspaceId(api),
+      })
+    ).data!;
     const client = await connect(owner.userId);
     for (const teamId of [firstTeamId, second.id]) {
       const result = await callTool(client, {
-        name: 'create_team_project',
+        name: 'create_project',
         arguments: { teamId, key: 'SHARED', name: 'Shared key' },
       });
       expect(result.isError).toBe(false);
@@ -305,7 +333,7 @@ describe('MCP team project creation', () => {
       });
     }
     const duplicate = await callTool(client, {
-      name: 'create_team_project',
+      name: 'create_project',
       arguments: { teamId: second.id, key: 'SHARED', name: 'Duplicate' },
     });
     expect(duplicate.isError).toBe(true);

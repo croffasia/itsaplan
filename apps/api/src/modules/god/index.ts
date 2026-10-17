@@ -12,6 +12,9 @@ import {
   hasConfiguredGoogle,
   getOidcSettings,
   setOidcSettings,
+  getScimSettings,
+  setScimSettings,
+  rotateScimToken,
   hasConfiguredOidc,
 } from '@repo/auth';
 import { hasConfiguredEmailProvider, getStorageSettings } from '@repo/db';
@@ -23,6 +26,20 @@ import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { paginate } from '#shared/pagination';
 import { noContent } from '#shared/http';
 import { deleteProject } from '#modules/projects/service';
+import { SCIM_BASE_URL } from '#modules/scim/resource';
+import {
+  MappableProjectListResponse,
+  ScimGroupMappingsBody,
+  ProvisionedGroupResponse,
+  ScimSettingsBody,
+  ScimSettingsResponse,
+  ScimTokenResponse,
+} from '#modules/scim/model';
+import {
+  listMappableProjects,
+  listProvisionedGroups,
+  setGroupMappings,
+} from '#modules/scim/mappings';
 import {
   deleteInstanceUser,
   getInstanceProject,
@@ -61,6 +78,7 @@ import {
   deleteUserQuery,
   listUsersQuery,
   projectParams,
+  scimGroupParams,
   searchPageQuery,
   teamParams,
   userParams,
@@ -87,9 +105,9 @@ import {
 
 // God mode: instance-wide administration, open only to the "god" user (the first
 // registered account). It covers how people may register, the mail provider that
-// sends authentication email, and the OAuth credentials. SCIM provisioning belongs to
-// a workspace and is set in its settings. Invites are per team (team_invite), managed in the team panel and in the project's Members
-// section — there is nothing instance-level to add here.
+// sends authentication email, the OAuth credentials, and the instance's SCIM
+// provisioning. Invites are per team (team_invite), managed in the team panel and in the
+// project's Members section — there is nothing instance-level to add here.
 //
 // The settings themselves are owned by @repo/auth, which reads them at sign-up and
 // when sending mail; these routes only expose them over HTTP. Secrets are never
@@ -313,6 +331,80 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       },
     },
   )
+
+  .get('/god/scim', async () => ({ ...(await getScimSettings(null)), baseUrl: SCIM_BASE_URL }), {
+    response: { 200: ScimSettingsResponse, ...errors(401, 403) },
+    detail: {
+      summary: 'Get SCIM provisioning settings',
+      description: 'Get whether SCIM provisioning is on and whether a token has been generated.',
+    },
+  })
+
+  .patch(
+    '/god/scim',
+    async ({ body }) => {
+      // Enabling it without a token would leave the endpoint answering 401 to
+      // everything, which reads as a broken integration rather than a missing step.
+      if (body.enabled && !(await getScimSettings(null)).hasToken) {
+        throw new HttpError(400, 'Generate a SCIM token first');
+      }
+      return { ...(await setScimSettings(null, body)), baseUrl: SCIM_BASE_URL };
+    },
+    {
+      body: ScimSettingsBody,
+      response: { 200: ScimSettingsResponse, ...errors(400, 401, 403) },
+      detail: {
+        summary: 'Update SCIM provisioning settings',
+        description: 'Turn SCIM provisioning on or off.',
+      },
+    },
+  )
+
+  .post('/god/scim/token', async () => ({ token: await rotateScimToken(null) }), {
+    response: { 200: ScimTokenResponse, ...errors(401, 403) },
+    detail: {
+      summary: 'Generate a SCIM token',
+      description:
+        'Generate the bearer token an identity provider sends to /scim/v2, replacing any ' +
+        'previous one. The value is returned once and cannot be read back.',
+    },
+  })
+
+  .get('/god/scim/groups', () => listProvisionedGroups(null), {
+    response: { 200: t.Array(ProvisionedGroupResponse), ...errors(401, 403) },
+    detail: {
+      summary: 'List provisioned groups',
+      description:
+        "The groups the instance's identity provider has pushed, with their member counts and " +
+        'the projects they grant membership in.',
+    },
+  })
+
+  .put(
+    '/god/scim/groups/:groupId/mappings',
+    ({ params, body }) => setGroupMappings(null, params.groupId, body.mappings),
+    {
+      params: scimGroupParams,
+      body: ScimGroupMappingsBody,
+      response: { 200: ProvisionedGroupResponse, ...errors(400, 401, 403, 404) },
+      detail: {
+        summary: "Set a group's project mappings",
+        description:
+          'Replace the projects a provisioned group grants membership in, then reconcile the ' +
+          'membership of every project the change touched.',
+      },
+    },
+  )
+
+  .get('/god/scim/projects', () => listMappableProjects(null), {
+    response: { 200: MappableProjectListResponse, ...errors(401, 403) },
+    detail: {
+      summary: 'List mappable projects',
+      description:
+        'Every project a provisioned group may grant, with the roles its team assigns, for ' +
+        'the group mapping picker.',
+    },
+  })
 
   .get('/god/storage-settings', () => getStorageSettings(), {
     response: { 200: StorageSettingsSchema, ...errors(401, 403) },

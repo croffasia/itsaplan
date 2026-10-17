@@ -15,8 +15,8 @@ export interface WorkspaceSummary {
 // one of its teams.
 export type TeamCreation = 'owner' | 'managers' | 'members';
 
-// `deletion` says whether the owner may delete it: `instance` for the instance workspace,
-// which stays; `work` while a team of it holds a project or an AI agent.
+// `deletion` says whether the owner may delete it: `work` while a team of it holds a
+// project or an AI agent.
 export interface Workspace {
   id: number;
   name: string;
@@ -24,7 +24,7 @@ export interface Workspace {
   managerCount: number;
   color: string | null;
   teamCreation: TeamCreation;
-  deletion: 'allowed' | 'instance' | 'work';
+  deletion: 'allowed' | 'work';
 }
 
 export interface WorkspacePatch {
@@ -75,8 +75,9 @@ export const addWorkspaceAdmin = (workspaceId: number, userId: string) =>
 export const removeWorkspaceAdmin = (workspaceId: number, userId: string) =>
   request<void>(`/workspaces/${workspaceId}/managers/${userId}`, { method: 'DELETE' });
 
-// SCIM provisioning. The token is never returned, only its prefix; a new one is
-// generated with createWorkspaceScimToken and shown once.
+// SCIM provisioning of a workspace, or of the instance in god mode when `workspaceId` is
+// null. The token is never returned, only its prefix; a new one is generated with
+// createWorkspaceScimToken and shown once.
 export interface WorkspaceScimSettings {
   enabled: boolean;
   hasToken: boolean;
@@ -102,7 +103,7 @@ export interface WorkspaceScimGroup {
   mappings: WorkspaceScimGroupMapping[];
 }
 
-// A project of the workspace as the group mapping form picks it, with the roles of
+// A project a group may grant, as the group mapping form picks it, with the roles of
 // the team that owns it.
 export interface WorkspaceProjectOption {
   id: number;
@@ -111,31 +112,34 @@ export interface WorkspaceProjectOption {
   roles: { id: number; name: string }[];
 }
 
-export const getWorkspaceScim = (workspaceId: number) =>
-  request<WorkspaceScimSettings>(`/workspaces/${workspaceId}/scim`);
+const scimPath = (workspaceId: number | null) =>
+  workspaceId === null ? '/god/scim' : `/workspaces/${workspaceId}/scim`;
 
-export const updateWorkspaceScim = (workspaceId: number, patch: { enabled: boolean }) =>
-  request<WorkspaceScimSettings>(`/workspaces/${workspaceId}/scim`, {
+export const getWorkspaceScim = (workspaceId: number | null) =>
+  request<WorkspaceScimSettings>(scimPath(workspaceId));
+
+export const updateWorkspaceScim = (workspaceId: number | null, patch: { enabled: boolean }) =>
+  request<WorkspaceScimSettings>(scimPath(workspaceId), {
     method: 'PATCH',
     body: JSON.stringify(patch),
   });
 
 // Returns the new token in the clear. It is shown once and cannot be read back.
-export const createWorkspaceScimToken = (workspaceId: number) =>
-  request<{ token: string }>(`/workspaces/${workspaceId}/scim/token`, { method: 'POST' });
+export const createWorkspaceScimToken = (workspaceId: number | null) =>
+  request<{ token: string }>(`${scimPath(workspaceId)}/token`, { method: 'POST' });
 
-export const listWorkspaceScimGroups = (workspaceId: number) =>
-  request<WorkspaceScimGroup[]>(`/workspaces/${workspaceId}/scim/groups`);
+export const listWorkspaceScimGroups = (workspaceId: number | null) =>
+  request<WorkspaceScimGroup[]>(`${scimPath(workspaceId)}/groups`);
 
 export const setWorkspaceScimGroupMappings = (
-  workspaceId: number,
+  workspaceId: number | null,
   groupId: string,
   mappings: { projectId: number; role: 'owner' | 'member'; roleId: number | null }[],
 ) =>
-  request<WorkspaceScimGroup>(`/workspaces/${workspaceId}/scim/groups/${groupId}/mappings`, {
+  request<WorkspaceScimGroup>(`${scimPath(workspaceId)}/groups/${groupId}/mappings`, {
     method: 'PUT',
     body: JSON.stringify({ mappings }),
   });
 
-export const listWorkspaceProjectOptions = (workspaceId: number) =>
-  request<WorkspaceProjectOption[]>(`/workspaces/${workspaceId}/projects/options`);
+export const listWorkspaceProjectOptions = (workspaceId: number | null) =>
+  request<WorkspaceProjectOption[]>(`${scimPath(workspaceId)}/projects`);

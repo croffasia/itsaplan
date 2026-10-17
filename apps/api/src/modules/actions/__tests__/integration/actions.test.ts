@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi } from '#tests/helpers/app';
+import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
 async function setupOwnerProject() {
   const owner = await signUpTestUser();
   const asOwner = authedApi(owner.cookie);
-  const project = await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  const project = await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   return { asOwner, projectId: project.data!.id };
 }
 
@@ -187,7 +187,7 @@ describe('actions', () => {
 
     it('ignores ids that belong to another project', async () => {
       const { asOwner } = await setupOwnerProject();
-      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
       const mkt = (await asOwner.projects({ projectKey: 'MKT' }).actions.post({ name: 'Mine' }))
         .data!;
       // The OPS action sits at position 0; the reorder below places its id at

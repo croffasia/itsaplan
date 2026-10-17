@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { auth } from '@repo/auth';
-import { app, authedApi } from '#tests/helpers/app';
+import { app, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
@@ -8,7 +8,7 @@ import { addProjectMember } from '#tests/helpers/members';
 async function setup() {
   const user = await signUpTestUser();
   const api = authedApi(user.cookie);
-  const created = await api.projects.post({ key: 'MKT', name: 'Marketing' });
+  const created = await createProject(api, { key: 'MKT', name: 'Marketing' });
   expect(created.status).toBe(201);
   return { user, api };
 }
@@ -124,7 +124,7 @@ describe('personal project preferences', () => {
 
   it('updates only the selected project', async () => {
     const { api } = await setup();
-    const other = await api.projects.post({ key: 'OPS', name: 'Operations' });
+    const other = await createProject(api, { key: 'OPS', name: 'Operations' });
     expect(other.status).toBe(201);
 
     const updated = await api

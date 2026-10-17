@@ -86,54 +86,54 @@ export function useRemoveWorkspaceAdmin(workspaceId: number) {
 }
 
 // SCIM provisioning: the token an identity provider authenticates with, and what the
-// groups it pushes grant.
-export function useWorkspaceScimQuery(workspaceId: number) {
+// groups it pushes grant. A workspace's, or the instance's in god mode for null.
+export function useWorkspaceScimQuery(workspaceId: number | null) {
   return useQuery({
-    queryKey: qk.workspaceScim(workspaceId),
+    queryKey: qk.scim(workspaceId),
     queryFn: () => getWorkspaceScim(workspaceId),
   });
 }
 
-export function useUpdateWorkspaceScim(workspaceId: number) {
+export function useUpdateWorkspaceScim(workspaceId: number | null) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (patch: { enabled: boolean }) => updateWorkspaceScim(workspaceId, patch),
-    onSuccess: (data) => qc.setQueryData(qk.workspaceScim(workspaceId), data),
+    onSuccess: (data) => qc.setQueryData(qk.scim(workspaceId), data),
   });
 }
 
-export function useCreateWorkspaceScimToken(workspaceId: number) {
+export function useCreateWorkspaceScimToken(workspaceId: number | null) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => createWorkspaceScimToken(workspaceId),
     // The response is the token itself, not the settings, so the redacted view has
     // to be refetched for its new prefix.
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.workspaceScim(workspaceId), exact: true }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.scim(workspaceId), exact: true }),
   });
 }
 
-export function useWorkspaceScimGroupsQuery(workspaceId: number) {
+export function useWorkspaceScimGroupsQuery(workspaceId: number | null) {
   return useQuery({
-    queryKey: qk.workspaceScimGroups(workspaceId),
+    queryKey: qk.scimGroups(workspaceId),
     queryFn: () => listWorkspaceScimGroups(workspaceId),
   });
 }
 
-export function useSetWorkspaceScimGroupMappings(workspaceId: number) {
+export function useSetWorkspaceScimGroupMappings(workspaceId: number | null) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: {
       groupId: string;
       mappings: { projectId: number; role: 'owner' | 'member'; roleId: number | null }[];
     }) => setWorkspaceScimGroupMappings(workspaceId, input.groupId, input.mappings),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.workspaceScimGroups(workspaceId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.scimGroups(workspaceId) }),
   });
 }
 
-// Every project of the workspace, for the group mapping picker.
-export function useWorkspaceProjectOptionsQuery(workspaceId: number) {
+// Every project a group may grant, for the group mapping picker.
+export function useWorkspaceProjectOptionsQuery(workspaceId: number | null) {
   return useQuery({
-    queryKey: qk.workspaceProjectOptions(workspaceId),
+    queryKey: qk.scimProjects(workspaceId),
     queryFn: () => listWorkspaceProjectOptions(workspaceId),
   });
 }

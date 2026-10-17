@@ -1,15 +1,29 @@
 import { eq } from 'drizzle-orm';
 import { rotateScimToken, setScimSettings } from '@repo/auth';
 import { createWorkspace, db, team } from '@repo/db';
-import { scimApi } from '#tests/helpers/app';
+import { scimApi, type Api } from '#tests/helpers/app';
 import { addUser, type Actor } from '#modules/god/__tests__/helpers';
 
-// Turns SCIM provisioning of the instance workspace on and hands back a client that
-// authenticates with the generated token, the way an identity provider does. `god`
-// owns the workspace, and `settings` is its SCIM section.
+// Turns the instance's SCIM provisioning on in god mode and hands back a client that
+// authenticates with the generated token, the way an identity provider does.
 
 export interface ScimSetup {
   god: Actor;
+  settings: Api['god']['scim'];
+  token: string;
+  scim: ReturnType<typeof scimApi>;
+}
+
+export async function setupScim(): Promise<ScimSetup> {
+  const god = await addUser({ name: 'Root', email: 'root@example.com' });
+  const settings = god.api.god.scim;
+  const created = await settings.token.post();
+  const token = created.data!.token;
+  await settings.patch({ enabled: true });
+  return { god, settings, token, scim: scimApi(token) };
+}
+
+export interface WorkspaceScimSetup {
   workspaceId: number;
   settings: ReturnType<typeof workspaceScim>;
   token: string;
@@ -20,23 +34,13 @@ function workspaceScim(owner: Actor, workspaceId: number) {
   return owner.api.workspaces({ workspaceId }).scim;
 }
 
-export async function setupScim(): Promise<ScimSetup> {
-  const god = await addUser({ name: 'Root', email: 'root@example.com' });
-  const [workspace] = (await god.api.workspaces.get()).data!;
-  const workspaceId = workspace!.id;
-  const settings = workspaceScim(god, workspaceId);
-  const created = await settings.token.post();
-  const token = created.data!.token;
-  await settings.patch({ enabled: true });
-  return { god, workspaceId, settings, token, scim: scimApi(token) };
-}
-
-// A second workspace owned by `owner`, with provisioning on, holding `teamIds`. Its
-// provisioning is set up directly, since through the api only the instance owner may.
+// A second workspace owned by `owner`, with SCIM of its own on, holding `teamIds`, for a
+// build that sets SCIM up per workspace (setWorkspaceScim). Its provisioning is set up
+// directly, so it works with the switch off as well.
 export async function setupOtherWorkspace(
   owner: Actor,
   teamIds: number[] = [],
-): Promise<Omit<ScimSetup, 'god'>> {
+): Promise<WorkspaceScimSetup> {
   const workspaceId = await createWorkspace(db, 'Other', owner.id);
   for (const teamId of teamIds) {
     await db.update(team).set({ workspaceId }).where(eq(team.id, teamId));

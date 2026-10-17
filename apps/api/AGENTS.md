@@ -105,7 +105,9 @@ Enforced declaratively through macros, never imperative calls in handlers.
 - **Session:** `authContext` (named plugin) reads the better-auth session once, puts
   `user` on context, throws 401 with none. `planner.ts` gates every planner route;
   a feature also `.use(authContext)` when its handlers/macros reference `user`. An
-  `x-api-key` header resolves through `getSession` — no special-casing.
+  `x-api-key` header resolves through `getSession` — no special-casing. A route outside
+  the planner that answers without credentials (`/me`) reads the same account through
+  `requestUser`, which also takes the MCP OAuth token of a tool call.
 - **Membership:** access is by a `project_member` row (`owner` | `member`), raised by
   the caller's role in the workspace that holds the project. Owners bypass the
   permission matrix; the global `user.role` (`god` | `user`) does **not**. Keep at least
@@ -140,11 +142,13 @@ Enforced declaratively through macros, never imperative calls in handlers.
 - **The workspace decides who creates a team in it** (`POST /teams`, `createTeam` in
   `teams/service.ts`, `assertMayCreateTeam` in `workspaces/service.ts`): its owner by
   default, also its admins, or anyone in one of its teams, as its owner sets
-  `teamCreation`. `workspaceId` in the body names the workspace; left out, it is the
-  instance workspace, the one the instance owner owns. Anyone else gets 403.
+  `teamCreation`. `workspaceId` in the body names the workspace and is required. Anyone
+  else gets 403.
 - **Every person owns one workspace.** No route creates one: sign-up makes it
   (`@repo/auth`), and `authContext` makes it on the next request for an account that has
-  none (`ensurePersonalWorkspace`), while `personalWorkspaces` is on in the auth settings.
+  none (`ensurePersonalWorkspace`): the instance owner always, anyone else while
+  `personalWorkspaces` is on in the auth settings. There is no shared workspace; every
+  team is in the workspace of its owner.
   A build that lets a person own more mounts its own route on `createOwnWorkspace` and
   `workspaceCreation` (`workspaces/service.ts`, which refuse an agent's bot user) and
   raises the number with `setOwnedWorkspaceLimit` (`shared/limits.ts`). When an account is deleted (`deleteAccount`), a workspace it
@@ -152,12 +156,12 @@ Enforced declaratively through macros, never imperative calls in handlers.
   instance owner with what the account owned alone in it (`releaseOwnedWorkspaces` in
   `teams/service.ts`). God mode asks about sole-owned projects only outside the account's
   own workspaces. The owner deletes a workspace under the same rule
-  (`DELETE /workspaces/:id`, `workspaceDeletion` in `workspaces/service.ts`); the instance
-  workspace never goes. No core route hands a workspace over; `transferWorkspace` is
-  there for a build that offers it. SCIM provisioning creates and attaches accounts across the
-  instance, so its routes (`workspaceScim` guard) are the instance owner's alone; a hosted
-  build sets SCIM up per workspace with `setWorkspaceScim()` from `@repo/auth`, which lets
-  every workspace owner (see SCIM below).
+  (`DELETE /workspaces/:id`, `workspaceDeletion` in `workspaces/service.ts`). No core
+  route hands a workspace over; `transferWorkspace` is there for a build that offers it.
+  SCIM provisioning creates and attaches accounts across the instance, so it is set up in
+  god mode (`/god/scim`); a hosted build also sets it up per workspace with
+  `setWorkspaceScim()` from `@repo/auth`, whose routes (`workspaceScim` guard) are each
+  workspace owner's (see SCIM below).
 - **A member of the team joins a project directly** (`POST /projects/:key/members`,
   from the candidate list); anyone else joins through an invite, which puts them in
   the team as well. A team invite (`/teams/:teamId/invites`) names no project. One
@@ -316,9 +320,9 @@ to provision users and groups with. Three things make it unlike every other modu
 
 - **Mounted on the root app in `app.ts`, not under `planner`.** The planner's `authContext`
   answers 401 before the bearer check could run. Authentication is one `resolve` that hands
-  the token to `verifyScimToken` from `@repo/auth`, which answers with the workspace the
-  token belongs to. Every route acts for that workspace, and every function in `service.ts`
-  takes its id.
+  the token to `verifyScimToken` from `@repo/auth`, which answers with the provider the
+  token belongs to: the instance's (`workspaceId` null) or a workspace's. Every route acts
+  for that provider, and every function in `service.ts` takes its `workspaceId`.
 - **Its own error document.** `onError` sits on a parent instance that `.use()`s the routes
   and answers only for paths under `/scim/v2`, handing everything else back to the planner's
   handler. Two reasons for that shape: an `onError` beside the routes widens the inferred
@@ -336,48 +340,43 @@ does, which deliberately skips the registration gate — with SCIM on, the ident
 brings people in, and that is what makes `registration: 'closed'` plus SSO work.
 
 An account is one `user` row across the instance. What a provider says about a person — its
-own id for them and whether they are active — is a `scim_user` row per (workspace, user).
-Groups belong to a workspace (`scim_group.workspace_id`), their names are unique within it,
-and their members must be accounts it sees. A create for an address that has an account
-links it. The group mappings and the settings are routes of `modules/workspaces/` (see the
-`workspaceScim` guard above). How far a provider reaches is `workspaceScim()` from
-`@repo/auth`:
+own id for them and whether they are active — is a `scim_user` row per (provider, user), where
+`workspace_id` is null for the instance's provider. Groups belong to a provider
+(`scim_group.workspace_id`, null for the instance's), their names are unique within it, and
+their members must be accounts it sees. A create for an address that has an account links
+it. The group mappings are in `scim/mappings.ts`; they and the settings are served from god
+mode (`/god/scim/...`) and, for a workspace, from `modules/workspaces/` (`/workspaces/:id/scim/...`).
 
-- **Off, as on a self-hosted instance, SCIM is the instance's.** God mode sets it up for the
-  instance workspace, and only that workspace's token opens `/scim/v2`. The provider sees
-  every account, PUT and PATCH write the name and address, a group maps to any project, and
-  DELETE removes the account the way god mode does (409 for the only owner of a project
-  outside the workspaces they own, whose projects pass to the instance owner).
+- **The instance's provider** is god's, set up in god mode, and every build has it. Its
+  token reads `scim_<secret>`. The provider sees every account, PUT and PATCH write the name
+  and address, a group maps to any project, and DELETE removes the account the way god mode
+  does (409 for the only owner of a project outside the workspaces they own, whose projects
+  pass to the instance owner).
   A deactivated account (`user.active` false, written alongside `scim_user.active`) keeps
   its teams and projects but cannot sign in, and `isAccountDeactivated` makes
   `authContext`, `/me` and the MCP key check refuse what it already holds.
   God mode writes `user.active` too (`POST /god/users/:userId/deactivate` and
-  `/reactivate` in `modules/god/`) while no provider manages accounts
-  (`accountsManagedByScim` from `@repo/auth`), and answers 409 while one does. Deactivating
+  `/reactivate` in `modules/god/`) while the instance's provider does not manage accounts
+  (`accountsManagedByScim` from `@repo/auth`), and answers 409 while it does. Deactivating
   there also deletes the account's sessions, its MCP OAuth tokens and the pending invites
   it created; its API keys are kept and answer 401 until it is reactivated. The instance
   owner and an agent's account are refused (403). The user list and detail carry
   `activeLock` (`owner`, `agent` or `scim`), the reason the switch is locked, or null.
-- **On, as in a hosted build, SCIM is each workspace's.** A workspace's provider decides who
-  is in the workspace, not who has an account, so the same person can be linked by several
-  workspaces. It sees the accounts it linked and the people in the workspace's teams
-  (`inWorkspace` in `service.ts`), a name or address it sends is accepted and the account
-  keeps its own, and a group maps to projects of its workspace only.
-- **On, with the instance's beside it** (`setInstanceScimBeside()` from `@repo/auth`), for
-  a build where one organisation runs the instance: the instance workspace's provider acts
-  as when SCIM is the instance's, every other workspace's as when it is each workspace's.
-  `instanceScimWorkspace()` names the workspace whose provider acts on the whole instance,
-  or null, and `actsOnInstance` in `service.ts` is what the routes ask. The instance's
-  groups grant nothing in a workspace that set up SCIM of its own
-  (`workspacesWithOwnScim`): `reconcile.ts` leaves them out there, the mapping picker
-  leaves its projects out, and turning that workspace's SCIM on or off reconciles its
-  mapped projects (`reconcileWorkspaceGrants` in `workspaces/scim.ts`). That provider's
-  settings stay the instance owner's (`workspaceScim` guard).
+- **A workspace's provider**, where a hosted build turns `setWorkspaceScim()` on, decides
+  who is in the workspace, not who has an account, so the same person can be linked by
+  several workspaces. Its token reads `scim_<workspaceId>_<secret>`. It sees the accounts it
+  linked and the people in the workspace's teams (`inWorkspace` in `service.ts`), a name or
+  address it sends is accepted and the account keeps its own, and a group maps to projects
+  of its workspace only. The instance's groups grant nothing in a workspace that set up
+  SCIM of its own (`workspacesWithOwnScim`): `reconcile.ts` leaves them out there, the
+  mapping picker leaves its projects out, and turning that workspace's SCIM on or off
+  reconciles its mapped projects (`reconcileWorkspaceGrants` in `scim/mappings.ts`).
 
-A create first asks the installed policy whether the workspace may provision the address
-(`email-policy.ts`). A self-hosted instance allows any address, since only its owner sets
-up provisioning; a hosted build calls `setScimEmailPolicy` with a check against the domains the workspace has
-verified, and a refused address answers 400 `invalidValue`.
+A create first asks the installed policy whether the provider may provision the address
+(`email-policy.ts`, with `workspaceId` null for the instance's). By default it allows any
+address, since only god sets up the instance's provider; a hosted build calls
+`setScimEmailPolicy` with a check against the domains a workspace has verified, and a refused
+address answers 400 `invalidValue`.
 
 Set up per workspace, deactivation (`active: false`) and DELETE take the person out of every
 team of the workspace through `dropWorkspaceMemberships` in `teams/service.ts`, invite memberships

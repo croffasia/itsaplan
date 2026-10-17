@@ -193,6 +193,9 @@
     "inviteTtlDays": "انقضای دعوت‌نامه (روز)",
     "inviteTtlDaysHint": "بعد از این تعداد روز، لینک دعوت‌نامه از کار می‌افتد و در حالت ثبت‌نام فقط با دعوت، دیگر اجازه نمی‌دهد نشانی آن ثبت‌نام کند. مقدار ۰ دعوت‌نامه‌ها را تا زمان پاسخ‌دادن معتبر نگه می‌دارد.",
     "inviteTtlDaysInvalid": "یک عدد صحیح از ۰ تا {max} روز وارد کنید.",
+    "allowedEmailDomains": "دامنه‌های ایمیل مجاز",
+    "allowedEmailDomainsHint": "فقط نشانی‌های این دامنه‌ها می‌توانند حساب بسازند. آن‌ها را با ویرگول جدا کنید، یا برای پذیرفتن همه خالی بگذارید. حساب‌های موجود دسترسی خود را حفظ می‌کنند.",
+    "allowedEmailDomainsInvalid": "هر دامنه باید شبیه example.com باشد و حداکثر ۱۰۰ دامنه مجاز است.",
     "modes": {
       "open": {
         "label": "باز",
@@ -274,7 +277,18 @@
     "testing": "در حال ارسال…",
     "testHint": "یک پیام واقعی با تنظیمات فعلی بفرست، بدون ذخیره آن‌ها.",
     "testConfigureFirst": "ابتدا یک ارائه‌دهنده را فعال کنید و اطلاعات ورود لازم آن را اضافه کنید.",
-    "testSent": "ایمیل آزمایشی به {email} ارسال شد"
+    "testSent": "ایمیل آزمایشی به {email} ارسال شد",
+    "smtpAuth": "احراز هویت",
+    "smtpAuthOptions": {
+      "password": "رمز عبور",
+      "microsoft365": "Microsoft 365 (OAuth)"
+    },
+    "mailbox": "صندوق پستی",
+    "tenantId": "Tenant ID",
+    "clientId": "Client ID",
+    "clientSecret": "Client secret",
+    "clientSecretPlaceholder": "رمز ثبت برنامه",
+    "microsoft365Hint": "به‌جای گذرواژهٔ صندوق پستی، به‌عنوان یک ثبت برنامه (app registration) در Entra ID وارد می‌شود تا MFA صندوق پستی روشن بماند. برنامه به مجوز برنامه‌ای SMTP.SendAsApp از Office 365 Exchange Online با تأیید مدیر، دسترسی به این صندوق پستی در Exchange و روشن بودن SMTP AUTH برای صندوق پستی نیاز دارد."
   },
   "authProvider": {
     "saved": "ارائه‌دهنده احراز هویت ذخیره شد",

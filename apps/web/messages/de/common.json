@@ -17,7 +17,7 @@
   "toggleTheme": "Design umschalten",
   "priority": {
     "label": "Priorität",
-    "tooltip": "{priority}-Priorität",
+    "tooltip": "Priorität: {priority}",
     "setTo": "Priorität setzen auf…",
     "none": "Keine Priorität",
     "urgent": "Dringend",
@@ -41,7 +41,7 @@
   "hotkeys": {
     "pressKeys": "Tasten drücken",
     "fixed": "Festgelegt",
-    "resetShortcut": "Dieses Kürzel zurücksetzen",
+    "resetShortcut": "Tastenkombination zurücksetzen",
     "groups": {
       "general": "Allgemein",
       "workItems": "Arbeitselemente"
@@ -127,7 +127,7 @@
     "changeFailed": "Anzeige des Links konnte nicht geändert werden. Versuchen Sie es erneut.",
     "stopFailed": "Teilen konnte nicht beendet werden. Versuchen Sie es erneut.",
     "copyFailed": "Link konnte nicht kopiert werden. Wählen Sie ihn aus und kopieren Sie ihn manuell.",
-    "hint": "Jeder mit dem Link kann ihn lesen. Kein Konto erforderlich.",
+    "hint": "Alle Personen mit diesem Link können die Inhalte ansehen. Ein Konto ist nicht erforderlich.",
     "shareLink": "Link teilen",
     "fullDetails": "Vollständige Vorgangsdetails",
     "fullDetailsHint": "Zuständige, Labels, benutzerdefinierte Felder und Aktivität.",
@@ -176,7 +176,7 @@
     "tableDelete": "Tabelle löschen",
     "insertImage": "Bild einfügen",
     "insertNamed": "{name} einfügen",
-    "noImages": "Noch keine Bilder angehängt. Laden Sie eines über das Anhänge-Panel hoch oder ziehen Sie es direkt in den Editor.",
+    "noImages": "Noch keine Bilder angehängt. Laden Sie ein Bild über den Bereich „Anhänge“ hoch oder ziehen Sie es direkt in den Editor.",
     "image": "Bild",
     "linkPreview": "Linkvorschau",
     "openPreviewLink": "{name} in neuem Tab öffnen",

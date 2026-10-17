@@ -31,7 +31,7 @@
     "startsAfter": "Startet nach {minutes} Min",
     "startsAtOnce": "Startet sofort",
     "nextRunOnStatus": "Wenn ein Vorgang den Status erreicht",
-    "nextRunOnTrigger": "Wenn der Auslöser feuert",
+    "nextRunOnTrigger": "Sobald das auslösende Ereignis eintritt",
     "externalAgentHint": "Dieser Agent läuft auf seinem eigenen Runner. Eine geplante Aufgabe wartet in der Warteschlange, bis dieser Runner online ist.",
     "scheduleUtc": "Zeitplan (UTC)",
     "schedule": "Zeitplan",
@@ -49,7 +49,7 @@
     "statusActive": "Aktiv",
     "statusPaused": "Pausiert",
     "unavailable": "Benötigt Cloud oder Pro",
-    "unavailableHint": "Einrichtung mit Cloud oder Pro. Bleibt wie es ist, läuft hier aber nicht.",
+    "unavailableHint": "Die Einrichtung erfordert Cloud oder Pro. Bestehende Einstellungen bleiben erhalten, werden hier jedoch nicht ausgeführt.",
     "viewTask": "Aufgabe ansehen",
     "noRunsShort": "Noch keine Läufe",
     "pause": "Zeitplan pausieren",
@@ -88,7 +88,7 @@
   },
   "agents": {
     "empty": "Noch keine Agenten",
-    "emptyHint": "Das Team hängt sie in seinen Einstellungen an ein Projekt."
+    "emptyHint": "Agenten können in den Teameinstellungen einem Projekt zugeordnet werden."
   },
   "notifications": {
     "title": "Benachrichtigungen",
@@ -127,11 +127,11 @@
     "projectHint": "Der Schlüssel steht vor jedem Vorgang und kann nicht geändert werden.",
     "key": "Schlüssel",
     "features": "Funktionen",
-    "featuresHint": "Abschnitte, die dieses Projekt anzeigt. Ein Ausgeschalteter wird ausgeblendet, sein Inhalt bleibt erhalten.",
+    "featuresHint": "Abschnitte, die dieses Projekt anzeigt. Deaktivierte Bereiche werden ausgeblendet, ihre Inhalte bleiben erhalten.",
     "featureHints": {
       "dashboards": "Diagramme und Metriken auf gespeicherten Übersichten.",
       "initiatives": "Gruppen von Vorgängen, die als eine Arbeitseinheit verfolgt werden.",
-      "cycles": "Zeitlich begrenzte Zeiträume, in die Vorgänge geplant werden.",
+      "cycles": "Feste Planungszeiträume, denen Vorgänge zugeordnet werden.",
       "notes": "Freie Boards mit Haftnotizen.",
       "subtasks": "Vorgänge, die unter einem übergeordneten Vorgang in Unteraufgaben zerlegt werden.",
       "checklists": "Listen von Schritten, die in einem Vorgang verfolgt werden.",
@@ -177,7 +177,7 @@
     "deleteConfirm": "Status löschen",
     "moveAndDelete": "Verschieben und löschen",
     "deleteNoIssues": "Dieser Status hat keine Vorgänge. Er wird entfernt.",
-    "deleteHasIssues": "Dieser Status hat {count, plural, one {# Vorgang} other {# Vorgänge}}. Wählen Sie, was damit geschieht.",
+    "deleteHasIssues": "Diesem Status sind {count, plural, one {# Vorgang} other {# Vorgänge}} zugeordnet. Wählen Sie, was damit geschieht.",
     "moveIssues": "Vorgänge in einen anderen Status verschieben",
     "selectState": "Status auswählen",
     "stateOption": "{name} ({type})",
@@ -189,7 +189,7 @@
     "copied": "{count, plural, one {# Status kopiert.} other {# Status kopiert.}}",
     "parseFailed": "Status konnten nicht aus der Zwischenablage gelesen werden.",
     "importTitle": "Status aus der Zwischenablage anwenden",
-    "importSummary": "{count, plural, one {# Status} other {# Status}} werden angewendet. Ein passender Status behält seine Gruppe; nur seine Farbe wird aktualisiert.",
+    "importSummary": "{count, plural, one {# Status} other {# Status}} werden angewendet. Bei vorhandenen Status bleibt die Gruppenzuordnung erhalten; lediglich die Farbe wird aktualisiert.",
     "importApply": "{count, plural, one {# Status anwenden} other {# Status anwenden}}",
     "imported": "Status angewendet: {created} erstellt, {updated} aktualisiert.",
     "autoAssign": {
@@ -200,12 +200,12 @@
     "wip": {
       "label": "Work-in-Progress-Limit",
       "none": "Kein Limit",
-      "help": "Wie viele Vorgänge dieser Status halten sollte. Das Board zeigt die Anzahl dagegen.",
+      "help": "Legt fest, wie viele Vorgänge sich in diesem Status befinden dürfen. Das Board zeigt die aktuelle Auslastung an.",
       "modeLabel": "Am Limit",
       "softLabel": "Warnen",
       "softHelp": "Das Board markiert den Status als voll. Vorgänge können weiterhin hineinverschoben werden.",
       "hardLabel": "Blockieren",
-      "hardHelp": "Vorgänge können nicht in den Status verschoben werden, solange er voll ist, von überall.",
+      "hardHelp": "Sobald das Limit erreicht ist, können keine weiteren Vorgänge in diesen Status verschoben werden.",
       "badgeSoft": "max. {limit}",
       "badgeHard": "max. {limit}, erzwungen"
     }
@@ -233,7 +233,7 @@
     "copied": "{count, plural, one {# Vorgangstyp kopiert.} other {# Vorgangstypen kopiert.}}",
     "parseFailed": "Vorgangstypen konnten nicht aus der Zwischenablage gelesen werden.",
     "importTitle": "Vorgangstypen aus der Zwischenablage anwenden",
-    "importSummary": "{count, plural, one {# Vorgangstyp} other {# Vorgangstypen}} werden angewendet. Ein passender Typ hat nur seine Farbe aktualisiert.",
+    "importSummary": "{count, plural, one {# Vorgangstyp} other {# Vorgangstypen}} werden angewendet. Bei vorhandenen Vorgangstypen wird nur die Farbe aktualisiert.",
     "importApply": "{count, plural, one {# Typ anwenden} other {# Typen anwenden}}",
     "imported": "Vorgangstypen angewendet: {created} erstellt, {updated} aktualisiert."
   },
@@ -260,7 +260,7 @@
     "deleteLabelTitle": "Label „{name}“ löschen",
     "deleteLabelMessage": "{count, plural, =0 {Keine Vorgänge verwenden dieses Label.} one {Dieses Label ist auf # Vorgang und wird von ihm entfernt.} other {Dieses Label ist auf # Vorgängen und wird von ihnen entfernt.}} Dies kann nicht rückgängig gemacht werden.",
     "deleteGroupTitle": "Gruppe „{name}“ löschen",
-    "deleteGroupMessage": "{count, plural, =0 {Diese Gruppe hat keine Labels.} one {# Label wird nicht gruppiert, aber behalten.} other {# Labels werden nicht gruppiert, aber behalten.}} Dies kann nicht rückgängig gemacht werden.",
+    "deleteGroupMessage": "{count, plural, =0 {Diese Gruppe hat keine Labels.} one {Das Label wird aus der Gruppe entfernt, bleibt aber erhalten.} other {Die Labels werden aus der Gruppe entfernt, bleiben aber erhalten.}} Dies kann nicht rückgängig gemacht werden.",
     "menu": "Label importieren und exportieren",
     "copy": "Labels kopieren",
     "paste": "Labels einfügen",

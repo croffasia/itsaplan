@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto';
-import { createWorkspace, db, instanceWorkspaceId } from '@repo/db';
+import { createWorkspace, db } from '@repo/db';
 import { and, eq, gt, isNull, sql, type SQL } from 'drizzle-orm';
 import { betterAuth, type BetterAuthPlugin } from 'better-auth';
 import { createAuthMiddleware, APIError } from 'better-auth/api';
@@ -445,30 +445,34 @@ function randomSuffix(): string {
   return String(100 + randomInt(900));
 }
 
-// Accounts that need no personal workspace made: they own a workspace, or are the
-// instance owner or an agent's bot user. Kept per process, so once an account is known a
-// request costs a lookup here and nothing in the database.
+// Accounts that need no personal workspace made: they own a workspace, or are an agent's
+// bot user. Kept per process, so once an account is known a request costs a lookup here
+// and nothing in the database.
 const settled = new Set<string>();
 
-// The personal workspace of an account that owns none, while personal workspaces are on,
-// named after the person. Sign-up calls it, and apps/api on every request, so an account
-// made before personal workspaces, by SCIM, or while they were off gets its own without
-// signing in again. Nothing in the API creates a workspace; an edition that lets a
-// person own more mounts a route of its own. The instance owner owns the instance
-// workspace instead, and an agent's bot user is no person.
+// The personal workspace of an account that owns none, named after the person: the
+// instance owner's always, anyone else's while personal workspaces are on. Sign-up calls
+// it, and apps/api on every request, so an account made before personal workspaces, by
+// SCIM, or while they were off gets its own without signing in again. Nothing in the API
+// creates a workspace; an edition that lets a person own more mounts a route of its own.
+// An agent's bot user is no person.
 // ponytail: an account with no workspace while they are off reads the setting on each
 // request; cache it with the setting if that ever shows.
-export async function ensurePersonalWorkspace(userId: string): Promise<void> {
+export async function ensurePersonalWorkspace(account: {
+  id: string;
+  role?: string | null;
+}): Promise<void> {
+  const userId = account.id;
   if (settled.has(userId)) return;
-  if (!(await getAuthSettings()).personalWorkspaces) return;
+  if (account.role !== 'god' && !(await getAuthSettings()).personalWorkspaces) return;
   await db.transaction(async (tx) => {
     // Two sign-ins at once would otherwise both find none.
-    const [account] = await tx
-      .select({ name: schema.user.name, email: schema.user.email, role: schema.user.role })
+    const [person] = await tx
+      .select({ name: schema.user.name, email: schema.user.email })
       .from(schema.user)
       .where(eq(schema.user.id, userId))
       .for('update');
-    if (!account || account.role === 'god') return;
+    if (!person) return;
     const [owned] = await tx
       .select({ n: sql`1` })
       .from(schema.workspaceManager)
@@ -482,7 +486,7 @@ export async function ensurePersonalWorkspace(userId: string): Promise<void> {
       .where(eq(schema.aiAgent.userId, userId))
       .limit(1);
     if (owned || agent) return;
-    const name = (account.name.trim() || account.email.split('@')[0]!).slice(0, 60);
+    const name = (person.name.trim() || person.email.split('@')[0]!).slice(0, 60);
     await createWorkspace(tx, name, userId);
   });
   settled.add(userId);
@@ -812,18 +816,7 @@ function createAuth() {
             };
           },
           after: async (user) => {
-            if (user.role === 'god') {
-              await db
-                .insert(schema.workspaceManager)
-                .values({
-                  workspaceId: await instanceWorkspaceId(db),
-                  userId: user.id,
-                  role: 'owner',
-                })
-                .onConflictDoNothing();
-            } else {
-              await ensurePersonalWorkspace(user.id);
-            }
+            await ensurePersonalWorkspace(user);
           },
         },
       },
@@ -1051,8 +1044,6 @@ export {
   verifyScimToken,
   setWorkspaceScim,
   workspaceScim,
-  setInstanceScimBeside,
-  instanceScimWorkspace,
   workspacesWithOwnScim,
   isAccountDeactivated,
   accountsManagedByScim,
@@ -1068,5 +1059,5 @@ export type {
   InstanceOidcDto,
   InstanceOidcPatch,
   InstanceOidcConfig,
-  WorkspaceScimDto,
+  ScimSettingsDto,
 } from './instance';

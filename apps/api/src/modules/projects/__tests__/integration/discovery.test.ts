@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { auth } from '@repo/auth';
-import { app, authedApi, type Api } from '#tests/helpers/app';
+import { app, authedApi, type Api, ownWorkspaceId, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
@@ -28,10 +28,10 @@ describe('project discovery', () => {
 
   it('searches key, name, and description without treating SQL wildcards as patterns', async () => {
     const { api } = await setup();
-    await api.projects.post({ key: 'ALPHA', name: 'Research', description: 'Release readiness' });
-    await api.projects.post({ key: 'PCT', name: '100% ready' });
-    await api.projects.post({ key: 'UNDER', name: 'under_score' });
-    await api.projects.post({ key: 'SLASH', name: 'back\\slash' });
+    await createProject(api, { key: 'ALPHA', name: 'Research', description: 'Release readiness' });
+    await createProject(api, { key: 'PCT', name: '100% ready' });
+    await createProject(api, { key: 'UNDER', name: 'under_score' });
+    await createProject(api, { key: 'SLASH', name: 'back\\slash' });
 
     for (const [q, expected] of [
       ['  alpha  ', ['ALPHA']],
@@ -52,9 +52,9 @@ describe('project discovery', () => {
 
   it('sorts by name and newest creation, with stable key ordering for equal names', async () => {
     const { api } = await setup();
-    await api.projects.post({ key: 'Z', name: 'Alpha' });
-    await api.projects.post({ key: 'B', name: 'alpha' });
-    await api.projects.post({ key: 'A', name: 'Zulu' });
+    await createProject(api, { key: 'Z', name: 'Alpha' });
+    await createProject(api, { key: 'B', name: 'alpha' });
+    await createProject(api, { key: 'A', name: 'Zulu' });
 
     const byName = await api.projects.get({ query: { sort: 'name' } });
     expect(byName.status).toBe(200);
@@ -67,7 +67,7 @@ describe('project discovery', () => {
   it('orders activity by work-item changes and comments, leaving empty projects last by key', async () => {
     const { api } = await setup();
     for (const key of ['ZEMPTY', 'B', 'A', 'AEMPTY']) {
-      await api.projects.post({ key, name: key });
+      await createProject(api, { key, name: key });
     }
     const first = await createWorkItem(api, 'A');
     await createWorkItem(api, 'B');
@@ -94,7 +94,7 @@ describe('project discovery', () => {
 
   it('keeps private document changes out of the activity timestamp', async () => {
     const { api } = await setup();
-    await api.projects.post({ key: 'DOC', name: 'Documents' });
+    await createProject(api, { key: 'DOC', name: 'Documents' });
     const member = await addProjectMember(api, 'DOC');
     const created = await api.projects({ projectKey: 'DOC' }).documents.post({
       title: 'Private planning',
@@ -108,7 +108,7 @@ describe('project discovery', () => {
 
   it('does not expose or sort by activity when the member cannot read work items', async () => {
     const { api } = await setup();
-    for (const key of ['A', 'B']) await api.projects.post({ key, name: key });
+    for (const key of ['A', 'B']) await createProject(api, { key, name: key });
     const role = await createRole(api, 'A', { name: 'Documents only', permissions: {} });
     const user = await signUpTestUser();
     const member = authedApi(user.cookie);
@@ -135,8 +135,14 @@ describe('project discovery', () => {
 
   it('combines team and search filters without revealing projects to a non-member', async () => {
     const { api } = await setup();
-    const first = (await api.projects.post({ key: 'ONE', name: 'Shared name' })).data!;
-    const team = (await api.teams.post({ name: 'Second team', slug: 'second-team' })).data!;
+    const first = (await createProject(api, { key: 'ONE', name: 'Shared name' })).data!;
+    const team = (
+      await api.teams.post({
+        name: 'Second team',
+        slug: 'second-team',
+        workspaceId: await ownWorkspaceId(api),
+      })
+    ).data!;
     const second = await api.teams({ teamId: team.id }).projects.post({
       key: 'TWO',
       name: 'Shared name',
@@ -164,9 +170,15 @@ describe('project discovery', () => {
 
   it('exposes discovery arguments over MCP and preserves both MCP opt-in switches', async () => {
     const { user, api } = await setup();
-    const on = (await api.projects.post({ key: 'ON', name: 'Visible project' })).data!;
-    const off = (await api.projects.post({ key: 'OFF', name: 'Visible disabled project' })).data!;
-    const secondTeam = (await api.teams.post({ name: 'Closed team', slug: 'closed-team' })).data!;
+    const on = (await createProject(api, { key: 'ON', name: 'Visible project' })).data!;
+    const off = (await createProject(api, { key: 'OFF', name: 'Visible disabled project' })).data!;
+    const secondTeam = (
+      await api.teams.post({
+        name: 'Closed team',
+        slug: 'closed-team',
+        workspaceId: await ownWorkspaceId(api),
+      })
+    ).data!;
     await api
       .teams({ teamId: secondTeam.id })
       .projects.post({ key: 'TEAMOFF', name: 'Visible team' });

@@ -1,5 +1,5 @@
 {
-  "id": "70980e70-41e9-412c-bff3-8363012b3515",
+  "id": "2e4b7f25-0a5a-4548-bd8a-cb97fce4b45d",
   "prevId": "4cd74f3e-e253-459d-8de4-c74dba487814",
   "version": "7",
   "dialect": "postgresql",
@@ -2600,12 +2600,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "execution_started_at": {
-          "name": "execution_started_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {
@@ -11983,7 +11977,7 @@
           "name": "workspace_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "display_name": {
           "name": "display_name",
@@ -12012,7 +12006,24 @@
           "default": "now()"
         }
       },
-      "indexes": {},
+      "indexes": {
+        "scim_group_instance_display_name_uq": {
+          "name": "scim_group_instance_display_name_uq",
+          "columns": [
+            {
+              "expression": "display_name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"scim_group\".\"workspace_id\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "scim_group_workspace_id_workspace_id_fk": {
           "name": "scim_group_workspace_id_workspace_id_fk",
@@ -12248,7 +12259,7 @@
           "name": "workspace_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "user_id": {
           "name": "user_id",
@@ -12278,6 +12289,22 @@
         }
       },
       "indexes": {
+        "scim_user_instance_user_uq": {
+          "name": "scim_user_instance_user_uq",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"scim_user\".\"workspace_id\" IS NULL",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "scim_user_user_idx": {
           "name": "scim_user_user_idx",
           "columns": [
@@ -12322,16 +12349,17 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {
-        "scim_user_workspace_id_user_id_pk": {
-          "name": "scim_user_workspace_id_user_id_pk",
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "scim_user_workspace_id_user_id_unique": {
+          "name": "scim_user_workspace_id_user_id_unique",
+          "nullsNotDistinct": false,
           "columns": [
             "workspace_id",
             "user_id"
           ]
         }
       },
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

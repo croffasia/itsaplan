@@ -8,15 +8,23 @@ import { HttpError } from '#shared/lib';
 import { errors } from '#shared/responses';
 import { SCIM_BASE_URL } from '#modules/scim/resource';
 import {
+  MappableProjectListResponse,
   ScimGroupMappingsBody,
-  ScimGroupResponse,
+  ProvisionedGroupResponse,
   ScimSettingsBody,
   ScimSettingsResponse,
   ScimTokenResponse,
+} from '#modules/scim/model';
+import {
+  listMappableProjects,
+  listProvisionedGroups,
+  reconcileWorkspaceGrants,
+  setGroupMappings,
+} from '#modules/scim/mappings';
+import {
   WorkspaceCandidateListResponse,
   WorkspaceListResponse,
   WorkspaceManagerListResponse,
-  WorkspaceProjectOptionListResponse,
   WorkspaceResponse,
   addManagerBody,
   scimGroupParams,
@@ -35,18 +43,13 @@ import {
   removeAdmin,
   updateWorkspace,
 } from './service';
-import {
-  listWorkspaceProjectOptions,
-  listWorkspaceScimGroups,
-  reconcileWorkspaceGrants,
-  setWorkspaceScimGroupMappings,
-} from './scim';
 
 // A workspace owns teams. Only its owner and admins manage it; everyone else sees it
 // through the teams they are in. No route creates one: sign-up and sign-in make each
 // person's own (@repo/auth), and an edition that lets a person own more mounts its route
-// on createOwnWorkspace. SCIM provisioning is set up only by the instance owner, in a
-// workspace they own: the identity provider decides who has access to the workspace.
+// on createOwnWorkspace. SCIM of its own is there only where a build sets SCIM up per
+// workspace (setWorkspaceScim in @repo/auth): its owner sets it up, and the identity
+// provider decides who has access to the workspace. The instance's is set up in god mode.
 export const workspaceRoutes = new Elysia({ name: 'workspaces', detail: { tags: ['Workspaces'] } })
   .use(authContext)
   .use(guards)
@@ -103,8 +106,8 @@ export const workspaceRoutes = new Elysia({ name: 'workspaces', detail: { tags: 
       detail: {
         summary: 'Delete a workspace',
         description:
-          'Delete a workspace you own, with its teams. The instance workspace stays, and one ' +
-          'whose teams hold a project or an AI agent is refused until those are gone.',
+          'Delete a workspace you own, with its teams. One whose teams hold a project or an ' +
+          'AI agent is refused until those are gone.',
       },
     },
   )
@@ -182,7 +185,7 @@ export const workspaceRoutes = new Elysia({ name: 'workspaces', detail: { tags: 
         summary: 'Get SCIM provisioning settings',
         description:
           'Whether SCIM provisioning is on and whether a token has been generated. ' +
-          'Instance owner only.',
+          'Workspace owner only.',
       },
     },
   )
@@ -208,7 +211,7 @@ export const workspaceRoutes = new Elysia({ name: 'workspaces', detail: { tags: 
       response: { 200: ScimSettingsResponse, ...errors(400, 401, 403, 404) },
       detail: {
         summary: 'Update SCIM provisioning settings',
-        description: 'Turn SCIM provisioning on or off. Instance owner only.',
+        description: 'Turn SCIM provisioning on or off. Workspace owner only.',
       },
     },
   )
@@ -224,23 +227,23 @@ export const workspaceRoutes = new Elysia({ name: 'workspaces', detail: { tags: 
         summary: 'Generate a SCIM token',
         description:
           'Generate the bearer token an identity provider sends to /scim/v2, replacing any ' +
-          'previous one. The value is returned once and cannot be read back. Instance owner only.',
+          'previous one. The value is returned once and cannot be read back. Workspace owner only.',
       },
     },
   )
 
   .get(
     '/workspaces/:workspaceId/scim/groups',
-    ({ standing }) => listWorkspaceScimGroups(standing.workspaceId),
+    ({ standing }) => listProvisionedGroups(standing.workspaceId),
     {
       workspaceScim: true,
       params: workspaceParams,
-      response: { 200: t.Array(ScimGroupResponse), ...errors(401, 403, 404) },
+      response: { 200: t.Array(ProvisionedGroupResponse), ...errors(401, 403, 404) },
       detail: {
         summary: 'List provisioned groups',
         description:
           "The groups the workspace's identity provider has pushed, with their member counts " +
-          'and the projects they grant membership in. Instance owner only.',
+          'and the projects they grant membership in. Workspace owner only.',
       },
     },
   )
@@ -248,33 +251,33 @@ export const workspaceRoutes = new Elysia({ name: 'workspaces', detail: { tags: 
   .put(
     '/workspaces/:workspaceId/scim/groups/:groupId/mappings',
     ({ standing, params, body }) =>
-      setWorkspaceScimGroupMappings(standing.workspaceId, params.groupId, body.mappings),
+      setGroupMappings(standing.workspaceId, params.groupId, body.mappings),
     {
       workspaceScim: true,
       params: scimGroupParams,
       body: ScimGroupMappingsBody,
-      response: { 200: ScimGroupResponse, ...errors(400, 401, 403, 404) },
+      response: { 200: ProvisionedGroupResponse, ...errors(400, 401, 403, 404) },
       detail: {
         summary: "Set a group's project mappings",
         description:
           'Replace the projects of the workspace a provisioned group grants membership in, ' +
-          'then reconcile the membership of every project the change touched. Instance owner only.',
+          'then reconcile the membership of every project the change touched. Workspace owner only.',
       },
     },
   )
 
   .get(
-    '/workspaces/:workspaceId/projects/options',
-    ({ standing }) => listWorkspaceProjectOptions(standing.workspaceId),
+    '/workspaces/:workspaceId/scim/projects',
+    ({ standing }) => listMappableProjects(standing.workspaceId),
     {
       workspaceScim: true,
       params: workspaceParams,
-      response: { 200: WorkspaceProjectOptionListResponse, ...errors(401, 403, 404) },
+      response: { 200: MappableProjectListResponse, ...errors(401, 403, 404) },
       detail: {
         summary: 'List workspace projects',
         description:
           'Every project of the workspace with the roles its team assigns, for the group ' +
-          'mapping picker. Instance owner only.',
+          'mapping picker. Workspace owner only.',
       },
     },
   );

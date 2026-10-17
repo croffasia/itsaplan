@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi } from '#tests/helpers/app';
+import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createRole, listProjectRoles } from '#tests/helpers/roles';
@@ -19,7 +19,7 @@ type Actor = { user: TestUser; api: ReturnType<typeof authedApi> };
 async function setupOwner(): Promise<Actor> {
   const user = await signUpTestUser();
   const api = authedApi(user.cookie);
-  await api.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(api, { key: 'MKT', name: 'Marketing' });
   return { user, api };
 }
 
@@ -28,7 +28,7 @@ async function setupOwner(): Promise<Actor> {
 async function setupOwner2(): Promise<Actor> {
   const user = await signUpTestUser();
   const api = authedApi(user.cookie);
-  await api.projects.post({ key: 'OPS', name: 'Operations' });
+  await createProject(api, { key: 'OPS', name: 'Operations' });
   return { user, api };
 }
 

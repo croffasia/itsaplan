@@ -1,5 +1,5 @@
 import { Elysia, type DocumentDecoration } from 'elysia';
-import { instanceScimWorkspace, workspaceScim as isScimPerWorkspace } from '@repo/auth';
+import { workspaceScim as isScimPerWorkspace } from '@repo/auth';
 import { authContext } from './auth-context';
 import {
   requireProjectAccess,
@@ -343,10 +343,9 @@ export const guards = new Elysia({ name: 'guards' }).use(authContext).macro({
     };
   },
 
-  // SCIM creates accounts and attaches existing ones to the workspace, which reaches past
-  // the workspace to the whole instance, so only the instance owner sets it up, in a
-  // workspace they own, unless SCIM is set up per workspace (setWorkspaceScim in
-  // @repo/auth). The provider that acts on the whole instance stays the instance owner's.
+  // A workspace's own SCIM, where a build sets SCIM up per workspace (setWorkspaceScim in
+  // @repo/auth). Its provider attaches accounts to the workspace, so only the owner sets
+  // it up. Without it SCIM is the instance's, set up in god mode.
   workspaceScim(_enabled: boolean) {
     return {
       async resolve({ params, user }) {
@@ -354,13 +353,11 @@ export const guards = new Elysia({ name: 'guards' }).use(authContext).macro({
           Number((params as WorkspaceIdParams).workspaceId),
           user,
         );
-        const byWorkspaceOwner =
-          isScimPerWorkspace() && standing.workspaceId !== (await instanceScimWorkspace());
-        if (standing.role !== 'owner' || (!byWorkspaceOwner && user?.role !== 'god')) {
-          throw new HttpError(
-            403,
-            `Only the ${byWorkspaceOwner ? 'workspace' : 'instance'} owner sets up SCIM provisioning`,
-          );
+        if (!isScimPerWorkspace()) {
+          throw new HttpError(403, 'SCIM is set up for the whole instance in god mode');
+        }
+        if (standing.role !== 'owner') {
+          throw new HttpError(403, 'Only the workspace owner sets up SCIM provisioning');
         }
         return { standing };
       },

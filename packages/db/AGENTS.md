@@ -90,7 +90,7 @@ the resource a watcher must be allowed to read — and the mirror in
 - FKs use `.references(() => other.id, { onDelete: "cascade" })`.
 - `drizzle.config.ts` loads the root `.env` via `dotenv` — needs a valid `DATABASE_URL`.
 
-`0150_agent_execution_state.sql` adds the current execution marker to `agent_run`.
+`0151_agent_execution_state.sql` adds the current execution marker to `agent_run`.
 Its trigger bumps `runner-queue:<projectId>` on queue writes. It does not write the
 issue scope: the issue run panel watches the user-scoped runner queue marker too,
 which avoids introducing a queue/issue revision lock ordering dependency.

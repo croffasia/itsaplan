@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach } from 'bun:test';
-import { apiKeyApi, authedApi, type Api } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { untaggedRoutes } from '#tests/helpers/mcp';
@@ -15,7 +15,7 @@ const schedules = (api: Api, projectKey = 'MKT') => api.projects({ projectKey })
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   return { asOwner };
 }
 
@@ -220,7 +220,7 @@ describe('agent schedules', () => {
   it('rejects an agent of another project', async () => {
     const { asOwner } = await setup();
 
-    await asOwner.projects.post({ key: 'ENG', name: 'Engineering' });
+    await createProject(asOwner, { key: 'ENG', name: 'Engineering' });
     const foreignId = await makeAgent(asOwner, { username: 'eng', projectKey: 'ENG' });
     expect((await createSchedule(asOwner, foreignId)).status).toBe(400);
   });

@@ -17,9 +17,9 @@ The **server-side** better-auth instance. Consumed by `apps/api`. See root `AGEN
 The user table has a `role` column (`"god"` | `"user"`), declared as a better-auth
 `additionalField` with `input: false` (not client-settable). A `databaseHooks.user.create.before`
 hook sets it: the first user to register gets `"god"`, everyone after gets `"user"`.
-`databaseHooks.user.create.after` makes the `"god"` account the owner of the instance
-workspace and gives every other account a workspace of its own, named after the person,
-while `personalWorkspaces` is on in the auth settings (`ensurePersonalWorkspace`). apps/api
+`databaseHooks.user.create.after` gives the account a workspace of its own, named after
+the person (`ensurePersonalWorkspace`): the `"god"` account always, every other account
+while `personalWorkspaces` is on in the auth settings. apps/api
 calls the same function on every request, so an account made before, by SCIM (a direct
 insert, which passes no hook) or while the setting was off gets its own on its next
 request. It remembers per process who needs nothing, so a request costs a lookup; an
@@ -35,9 +35,9 @@ through this module — never inline a query on `app_setting` / `app_secret` els
 - `app_setting` key `auth` → `{ registration, requireEmailVerification, magicLink,
   emailPassword, trustProviderEmails, personalWorkspaces, inviteTtlDays,
   allowedEmailDomains }`.
-- `app_secret` keys `auth.email`, `auth.google` and `auth.oidc` → the mail provider, Google
-  and the OIDC provider, set in god mode; `workspace.<id>.scim` → a workspace's SCIM token,
-  set by the workspace owner. All encrypted with `@repo/crypto`, each with a `redacted`
+- `app_secret` keys `auth.email`, `auth.google`, `auth.oidc` and `auth.scim` → the mail
+  provider, Google, the OIDC provider and the instance's SCIM token, set in god mode;
+  `workspace.<id>.scim` → a workspace's SCIM token, set by the workspace owner. All encrypted with `@repo/crypto`, each with a `redacted`
   mirror for the settings UI. Secrets never leave the server.
 
 The mail provider is read by the api and the worker as well, so its shape and reader
@@ -150,29 +150,27 @@ which is what stops an instance being left with no way in.
 
 ## SCIM
 
-What a provider says about a person is kept per workspace in `scim_user`, written by
-`apps/api`. How far it reaches is `workspaceScim()`, which a hosted build turns on with
-`setWorkspaceScim()`. Off, as on a self-hosted instance, SCIM is the instance's: only the
-instance workspace's token opens it, and it also writes `active`, one more
+What a provider says about a person is kept per provider in `scim_user`, written by
+`apps/api`. The instance's provider is set up in god mode and stored with `workspace_id`
+null; a hosted build also lets every workspace set up its own with `setWorkspaceScim()`
+(`workspaceScim()` reads it). The instance's provider writes `active`, one more
 `additionalField` on the user table (nullable, so every check is `active !== false`).
-God mode writes `active` too, from the users table, while no provider manages accounts
-(`accountsManagedByScim`: SCIM per workspace alone, or the instance workspace's SCIM set
-up with a token); while one does, `apps/api` answers god's switch with 409. An account
-with `active` false (`isAccountDeactivated`) is refused at sign-in by the
-`session.create.before` hook with `ACCOUNT_DEACTIVATED`, which covers every sign-in method
-at once; `apps/api` refuses the sessions and keys it already holds. On, a workspace's
-provider decides who is in the workspace, not who has an account, `active` is not read,
-and nothing here refuses a session. `setInstanceScimBeside()` keeps the instance
-workspace's provider, beside every other workspace's, as it is while off: acting on the
-whole instance and writing `active`. `instanceScimWorkspace()` names the workspace whose
-provider acts on the whole instance, or null when none does.
+God mode writes `active` too, from the users table, while that provider does not manage
+accounts (`accountsManagedByScim`: its SCIM on with a token); while it does, `apps/api`
+answers god's switch with 409. An account with `active` false (`isAccountDeactivated`) is
+refused at sign-in by the `session.create.before` hook with `ACCOUNT_DEACTIVATED`, which
+covers every sign-in method at once; `apps/api` refuses the sessions and keys it already
+holds. A workspace's provider decides who is in the workspace, not who has an account;
+`active` is not written for it, and nothing here refuses a session.
 
-`getScimSettings` / `rotateScimToken` / `verifyScimToken` hold the bearer token of each
-workspace that the SCIM endpoints in `apps/api` authenticate with. A token reads
-`scim_<workspaceId>_<secret>`, so `verifyScimToken` reads one workspace's token and answers
-with that workspace's id; a token issued before workspaces reads `scim_<secret>` and belongs
-to the instance workspace. The token is returned in the clear exactly once, when it is
-generated; only its prefix is kept in the redacted mirror.
+`getScimSettings` / `rotateScimToken` / `verifyScimToken` take the workspace, or null for the
+instance, and hold the bearer token the SCIM endpoints in `apps/api` authenticate with. The
+instance's is stored under `auth.scim` and reads `scim_<secret>`; one it held while it
+belonged to the first workspace reads `scim_<id>_<secret>` and keeps working. A workspace's
+is stored under `workspace.<id>.scim` and reads `scim_<workspaceId>_<secret>`, so
+`verifyScimToken` checks the instance's first and then reads only the named workspace's.
+The token is returned in the clear exactly once, when it is generated; only its prefix is
+kept in the redacted mirror.
 
 ## Passkey
 

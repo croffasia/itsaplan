@@ -49,9 +49,9 @@ describe('OpenAPI document', () => {
     const doc = await document();
     const genericMediaTypes = ['application/json', 'multipart/form-data', 'text/plain'];
 
-    expect(Object.keys(doc.paths['/projects']!.post!.requestBody!.content!)).toEqual([
-      'application/json',
-    ]);
+    expect(Object.keys(doc.paths['/teams/{teamId}/projects']!.post!.requestBody!.content!)).toEqual(
+      ['application/json'],
+    );
     expect(
       Object.keys(doc.paths['/issues/{issueId}/attachments']!.post!.requestBody!.content!),
     ).toEqual(['multipart/form-data']);

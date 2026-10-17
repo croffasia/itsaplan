@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, beforeEach } from 'bun:test';
 import { db, agentRun } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { apiKeyApi, authedApi } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
@@ -16,7 +16,7 @@ import { setRunAdmission, type RunForAdmission } from '../../run-admission';
 async function setup(kind: 'internal' | 'external') {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const columnId = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!.columns[0].id;
   const created = await createAgent(asOwner, 'MKT', { name: 'Bot', username: 'bot', kind });
   const agent = created.data!.agent;

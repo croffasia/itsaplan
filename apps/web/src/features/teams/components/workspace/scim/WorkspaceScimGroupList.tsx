@@ -12,7 +12,7 @@ import WorkspaceScimGroupMappingDialog from './WorkspaceScimGroupMappingDialog';
 
 // The groups the identity provider has pushed. The list itself is read-only — it is
 // the provider's — and what each group grants is set here.
-export default function WorkspaceScimGroupList({ workspaceId }: { workspaceId: number }) {
+export default function WorkspaceScimGroupList({ workspaceId }: { workspaceId: number | null }) {
   const t = useTranslations('teams.workspace.scim');
   const groups = useWorkspaceScimGroupsQuery(workspaceId);
   const [editing, setEditing] = useState<WorkspaceScimGroup | null>(null);

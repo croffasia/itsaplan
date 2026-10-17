@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { db, importJob } from '@repo/db';
 import { eq } from 'drizzle-orm';
 import { decryptSecret } from '@repo/crypto';
-import { authedApi } from '#tests/helpers/app';
+import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createRole } from '#tests/helpers/roles';
@@ -12,7 +12,7 @@ type Client = ReturnType<typeof authedApi>;
 async function setupOwnerProject(): Promise<{ api: Client; userId: string }> {
   const owner = await signUpTestUser();
   const api = authedApi(owner.cookie);
-  await api.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(api, { key: 'MKT', name: 'Marketing' });
   return { api, userId: owner.userId };
 }
 

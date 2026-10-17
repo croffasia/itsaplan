@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, ownWorkspaceId, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
@@ -10,8 +10,8 @@ import { resetDb } from '#tests/helpers/db';
 async function setup() {
   const owner = await signUpTestUser();
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
-  const ops = (await asOwner.projects.post({ key: 'OPS', name: 'Operations' })).data!;
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
+  const ops = (await createProject(asOwner, { key: 'OPS', name: 'Operations' })).data!;
   const mkt = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!;
   const opsView = (await asOwner.projects({ projectKey: 'OPS' }).get()).data!;
   return { asOwner, ops, mktColumns: mkt.columns, opsColumns: opsView.columns };
@@ -160,7 +160,13 @@ describe('move issue', () => {
       .move.post({ projectId: mkt.project.id });
     expect(same.status).toBe(400);
 
-    const team = (await asOwner.teams.post({ name: 'Second', slug: 'second' })).data!;
+    const team = (
+      await asOwner.teams.post({
+        name: 'Second',
+        slug: 'second',
+        workspaceId: await ownWorkspaceId(asOwner),
+      })
+    ).data!;
     const other = (
       await asOwner.teams({ teamId: team.id }).projects.post({ key: 'SEC', name: 'Second' })
     ).data!;

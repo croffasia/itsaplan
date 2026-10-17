@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { auth } from '@repo/auth';
-import { authedApi } from '../helpers/app';
+import { authedApi, createProject } from '../helpers/app';
 import { signUpTestUser } from '../helpers/auth';
 import { resetDb } from '../helpers/db';
 import { createAgent } from '../helpers/agents';
@@ -17,7 +17,7 @@ async function usernameOf(cookie: string): Promise<string | null> {
 async function projectWithAgent(handle: string): Promise<void> {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   await createAgent(asOwner, 'MKT', {
     name: 'Design Bot',
     username: handle,

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { apiKeyApi, authedApi, type Api } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent } from '#tests/helpers/agents';
@@ -9,7 +9,7 @@ import { onProjectEvent, type ProjectEvent } from '../../emit';
 async function setupOwnerProject() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  const project = await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  const project = await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   // createProject seeds five default columns; the first is the target for issues.
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
   return {

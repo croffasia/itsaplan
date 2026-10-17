@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
@@ -15,7 +15,7 @@ import { createRole } from '#tests/helpers/roles';
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  const project = await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  const project = await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   return { owner, asOwner, teamId: project.data!.teamId };
 }
 

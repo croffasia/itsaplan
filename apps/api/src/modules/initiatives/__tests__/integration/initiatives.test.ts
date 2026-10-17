@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
@@ -13,7 +13,7 @@ import { createRole } from '#tests/helpers/roles';
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
   const columns = view.data!.columns;
   const columnId = columns[0].id;
@@ -110,7 +110,7 @@ describe('initiatives', () => {
     it('rejects an owner and labels from another project before creating', async () => {
       const { asOwner } = await setup();
       const outsider = await signUpTestUser({ name: 'Outsider' });
-      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
       const foreignLabel = (
         await asOwner.projects({ projectKey: 'OPS' }).labels.post({ name: 'ops' })
       ).data!;
@@ -342,7 +342,7 @@ describe('initiatives', () => {
 
     it('rejects linking an issue to an initiative from another project', async () => {
       const { asOwner, columnId } = await setup();
-      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
       const otherInitiative = (
         await asOwner.projects({ projectKey: 'OPS' }).initiatives.post({ title: 'Other' })
       ).data!;

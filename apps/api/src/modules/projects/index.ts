@@ -23,7 +23,6 @@ import {
   ProjectSettingsResponse,
   SubtaskAutomationResponse,
   copyProjectBody,
-  createProjectBody,
   listProjectsQuery,
   updateAutoArchiveBody,
   updateEstimatesBody,
@@ -33,7 +32,6 @@ import {
 } from './model';
 import {
   listProjects,
-  createProject,
   updateProject,
   deleteProject,
   projectFeatures,
@@ -76,31 +74,11 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
   )
 
   .post(
-    '/projects',
-    async ({ body, user, set }) => {
-      set.status = 201;
-      return createProject(body, requireUser(user).id);
-    },
-    {
-      body: createProjectBody,
-      response: { 201: ProjectResponse, ...errors(400, 401) },
-      detail: {
-        summary: 'Create a project',
-        description:
-          'Create a project you own. `key` is the immutable prefix for issue ids, unique within the team ' +
-          "(e.g. 'MKT' -> 'MKT-1'). Seeds the default columns and the issue types of the " +
-          'chosen `preset`.',
-        ...mcpTool('create_project'),
-      },
-    },
-  )
-
-  .post(
     '/projects/:projectKey/copy',
     async ({ project, body, user, set }) => {
       const { include, ...meta } = body;
       set.status = 201;
-      return await copyProject(project.id, meta, requireUser(user).id, include);
+      return await copyProject(project.id, meta, requireUser(user).id, project.teamId, include);
     },
     {
       body: copyProjectBody,
@@ -109,8 +87,8 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       detail: {
         summary: 'Copy a project',
         description:
-          "Copy a project's configuration into a new project you own, without its issues. " +
-          'Only an owner or a manager of the team that owns the source project may copy it. ' +
+          "Copy a project's configuration into a new project you own in the same team, without " +
+          'its issues. Only an owner or a manager of that team may copy it. ' +
           'By default the structure (states, issue types, labels, custom fields, views, ' +
           'dashboards, documents, actions) is copied. Pass `include` to choose sections; the API ' +
           'force-enables dependencies (e.g. a view pulls in the states it references).',

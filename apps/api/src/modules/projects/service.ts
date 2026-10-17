@@ -347,10 +347,8 @@ export async function getProjectTeamId(projectId: number): Promise<number> {
   return rows[0].teamId;
 }
 
-// The team a new project belongs to. `teamId` names it explicitly (the caller's
-// rank in it is checked by the route); without one it is the team the caller owns.
-export async function targetTeam(userId: string, teamId?: number): Promise<TargetTeam> {
-  if (teamId == null) return ownedTeam(userId);
+// The team a new project belongs to. The caller's rank in it is checked by the route.
+export async function targetTeam(userId: string, teamId: number): Promise<TargetTeam> {
   const [row] = await db
     .select({
       id: team.id,
@@ -384,25 +382,6 @@ export interface TargetTeam {
   slug: string | null;
   mcpEnabled: boolean;
   defaultAgentIds: number[];
-}
-
-// The first team the caller owns. An account has none until it creates one.
-async function ownedTeam(userId: string): Promise<TargetTeam> {
-  const [row] = await db
-    .select({
-      id: team.id,
-      name: team.name,
-      slug: team.slug,
-      mcpEnabled: team.mcpEnabled,
-      defaultAgentIds: team.defaultAgentIds,
-    })
-    .from(teamMember)
-    .innerJoin(team, eq(team.id, teamMember.teamId))
-    .where(and(eq(teamMember.userId, userId), eq(teamMember.role, 'owner')))
-    .orderBy(team.id)
-    .limit(1);
-  if (!row) throw new HttpError(400, 'You do not own a team to create a project in');
-  return row;
 }
 
 // Every new project starts with one column per state type, so it's usable (has
@@ -492,7 +471,7 @@ export async function createProject(
     preset?: string;
   },
   ownerId: string,
-  teamId?: number,
+  teamId: number,
 ): Promise<ProjectRow> {
   const ownerTeam = await targetTeam(ownerId, teamId);
   // What a new project starts with, set instance-wide in god mode. Read before the

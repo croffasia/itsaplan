@@ -2,7 +2,6 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import {
   db,
   appSecret,
-  instanceWorkspaceId,
   teamInvite,
   getSetting,
   setSetting,
@@ -26,15 +25,17 @@ import type { GenericEndpointContext } from 'better-auth';
 // Non-secret settings are one jsonb blob in app_setting under the 'auth' key; the
 // credentials are encrypted in app_secret, each with a `redacted` mirror the settings
 // UI can read without decrypting. The instance's own are under 'auth.email',
-// 'auth.google' and 'auth.oidc', set in god mode; SCIM belongs to a workspace and is
-// stored under 'workspace.<id>.scim'. The mail config is also read by the api and the
-// worker, so its shape and reader live in @repo/db; what stays here is the write side.
+// 'auth.google', 'auth.oidc' and 'auth.scim', set in god mode; a workspace's SCIM, where
+// a build sets it up per workspace, is under 'workspace.<id>.scim'. The mail config is
+// also read by the api and the worker, so its shape and reader live in @repo/db; what
+// stays here is the write side.
 
 const AUTH_SETTING_KEY = 'auth';
 const GOOGLE_SECRET_KEY = 'auth.google';
 const OIDC_SECRET_KEY = 'auth.oidc';
 
-const scimSecretKey = (workspaceId: number) => `workspace.${workspaceId}.scim`;
+const scimSecretKey = (workspaceId: number | null) =>
+  workspaceId === null ? 'auth.scim' : `workspace.${workspaceId}.scim`;
 
 // Who may create an account.
 //   open   — anyone can sign up
@@ -467,15 +468,17 @@ export async function setOidcSettings(patch: InstanceOidcPatch): Promise<Instanc
 
 // ── SCIM provisioning token ───────────────────────────────────────────────────
 
-// The bearer token an identity provider sends to /scim/v2. One token per workspace,
-// generated here and shown to the owner once: only its prefix is kept in the
-// redacted mirror, so a lost token is replaced rather than recovered.
-export interface WorkspaceScimConfig {
+// The bearer token an identity provider sends to /scim/v2: the instance's, set up in god
+// mode, and one per workspace where a build sets SCIM up per workspace. Every function
+// here takes the workspace, or null for the instance's. A token is generated here and
+// shown once: only its prefix is kept in the redacted mirror, so a lost token is
+// replaced rather than recovered.
+export interface ScimConfig {
   enabled: boolean;
   token: string;
 }
 
-export interface WorkspaceScimDto {
+export interface ScimSettingsDto {
   enabled: boolean;
   hasToken: boolean;
   // First characters of the stored token, so the owner can tell which one an IdP
@@ -483,11 +486,10 @@ export interface WorkspaceScimDto {
   tokenPrefix: string;
 }
 
-// Whether SCIM is set up per workspace. Off, as on a self-hosted instance, it is the
-// instance owner's alone and acts on the whole instance: only the instance workspace's
-// token opens /scim/v2, its provider sees and deactivates every account, and a
-// deactivated account cannot sign in. On, as in a hosted build, every workspace owner
-// sets it up and their provider decides who is in their workspace, nothing more.
+// The instance's provider is god's and acts on the whole instance: it sees and
+// deactivates every account, and a deactivated account cannot sign in. A hosted build
+// also lets every workspace owner set up a provider of their own, which decides who is
+// in their workspace, nothing more.
 let scimPerWorkspace = false;
 
 export function setWorkspaceScim(on = true): void {
@@ -498,42 +500,23 @@ export function workspaceScim(): boolean {
   return scimPerWorkspace;
 }
 
-// Set up per workspace, whether the instance workspace's provider still acts on the
-// whole instance, as it does while SCIM is the instance's. A build where one
-// organisation runs the instance keeps its own provider over every account, and a
-// workspace that sets up its own decides who is in that workspace instead.
-let instanceScimBeside = false;
-
-export function setInstanceScimBeside(on = true): void {
-  instanceScimBeside = on;
-}
-
-const instanceScimWide = () => !scimPerWorkspace || instanceScimBeside;
-
-// The workspace whose provider acts on the whole instance, or null when none does.
-export async function instanceScimWorkspace(): Promise<number | null> {
-  return instanceScimWide() ? instanceWorkspaceId(db) : null;
-}
-
-// True for an account the instance's identity provider deactivated (`user.active`),
-// while that provider acts on the whole instance. Such an account cannot sign in, and
-// the api refuses the sessions and keys it already holds.
+// True for an account the instance's identity provider or god deactivated
+// (`user.active`). Such an account cannot sign in, and the api refuses the sessions and
+// keys it already holds.
 export function isAccountDeactivated(account: { active?: boolean | null }): boolean {
-  return instanceScimWide() && account.active === false;
+  return account.active === false;
 }
 
-// Whether an identity provider decides which accounts are active, so god does not: SCIM
-// per workspace alone, where a deactivation has no effect, or the instance workspace's
-// SCIM set up with a token, the same condition under which verifyScimToken opens /scim/v2.
+// Whether the instance's identity provider decides which accounts are active, so god
+// does not: its SCIM is on with a token, the condition under which verifyScimToken
+// opens /scim/v2 for it.
 export async function accountsManagedByScim(): Promise<boolean> {
-  if (!instanceScimWide()) return true;
-  const config = await getScimConfig(await instanceWorkspaceId(db));
+  const config = await getScimConfig(null);
   return config.enabled && config.token.length > 0;
 }
 
-// The workspaces besides the instance's that set up SCIM of their own, read from the
-// redacted mirror. Their own provider decides who is in them, so the instance's groups
-// grant nothing there.
+// The workspaces that set up SCIM of their own, read from the redacted mirror. Their own
+// provider decides who is in them, so the instance's groups grant nothing there.
 export async function workspacesWithOwnScim(): Promise<number[]> {
   if (!scimPerWorkspace) return [];
   const rows = await db
@@ -546,23 +529,21 @@ export async function workspacesWithOwnScim(): Promise<number[]> {
         sql`${appSecret.redacted}->>'hasToken' = 'true'`,
       ),
     );
-  const instanceId = await instanceWorkspaceId(db);
-  return rows
-    .map((row) => Number(row.key.split('.')[1]))
-    .filter((id) => Number.isInteger(id) && id !== instanceId);
+  return rows.map((row) => Number(row.key.split('.')[1])).filter(Number.isInteger);
 }
 
-// A token reads scim_<workspaceId>_<secret>, so the workspace it opens is found
-// without trying the token of every workspace. A token issued before workspaces
-// existed reads scim_<secret> and belongs to the instance workspace.
+// A workspace's token reads scim_<workspaceId>_<secret>, so the workspace it opens is
+// found without trying the token of every workspace. The instance's reads
+// scim_<secret>, or carries the id of the workspace it belonged to before SCIM was the
+// instance's.
 const SCIM_TOKEN_PREFIX = 'scim_';
 const SCIM_TOKEN_WORKSPACE = /^scim_(\d+)_/;
 
-function defaultScimConfig(): WorkspaceScimConfig {
+function defaultScimConfig(): ScimConfig {
   return { enabled: false, token: '' };
 }
 
-function toScimDto(config: WorkspaceScimConfig): WorkspaceScimDto {
+function toScimDto(config: ScimConfig): ScimSettingsDto {
   return {
     enabled: config.enabled,
     hasToken: config.token.length > 0,
@@ -572,21 +553,21 @@ function toScimDto(config: WorkspaceScimConfig): WorkspaceScimDto {
   };
 }
 
-async function getScimConfig(workspaceId: number): Promise<WorkspaceScimConfig> {
-  const stored = await readSecret<WorkspaceScimConfig>(scimSecretKey(workspaceId));
+async function getScimConfig(workspaceId: number | null): Promise<ScimConfig> {
+  const stored = await readSecret<ScimConfig>(scimSecretKey(workspaceId));
   return { ...defaultScimConfig(), ...(stored ?? {}) };
 }
 
-export async function getScimSettings(workspaceId: number): Promise<WorkspaceScimDto> {
+export async function getScimSettings(workspaceId: number | null): Promise<ScimSettingsDto> {
   return toScimDto(await getScimConfig(workspaceId));
 }
 
 export async function setScimSettings(
-  workspaceId: number,
+  workspaceId: number | null,
   patch: { enabled?: boolean },
-): Promise<WorkspaceScimDto> {
+): Promise<ScimSettingsDto> {
   const current = await getScimConfig(workspaceId);
-  const next: WorkspaceScimConfig = { ...current, enabled: patch.enabled ?? current.enabled };
+  const next: ScimConfig = { ...current, enabled: patch.enabled ?? current.enabled };
   const redacted = toScimDto(next);
   await writeSecret(scimSecretKey(workspaceId), next, redacted);
   return redacted;
@@ -594,29 +575,36 @@ export async function setScimSettings(
 
 // Mints a token, replacing any previous one, and returns it in the clear. This is
 // the only time the value leaves the server.
-export async function rotateScimToken(workspaceId: number): Promise<string> {
+export async function rotateScimToken(workspaceId: number | null): Promise<string> {
   const current = await getScimConfig(workspaceId);
-  const token = `${SCIM_TOKEN_PREFIX}${workspaceId}_${randomBytes(24).toString('hex')}`;
-  const next: WorkspaceScimConfig = { ...current, token };
+  const scope = workspaceId === null ? '' : `${workspaceId}_`;
+  const token = `${SCIM_TOKEN_PREFIX}${scope}${randomBytes(24).toString('hex')}`;
+  const next: ScimConfig = { ...current, token };
   await writeSecret(scimSecretKey(workspaceId), next, toScimDto(next));
   return token;
 }
 
-// The workspace a token opens, or null when it opens none: provisioning is off, no
-// token was generated, the token is wrong, or it is another workspace's while SCIM is
-// the instance's. The comparison is constant-time, so a
-// wrong token cannot be recovered by timing the answer. Lengths are compared first
-// because timingSafeEqual rejects buffers of different sizes.
-export async function verifyScimToken(candidate: string): Promise<number | null> {
-  const named = candidate.match(SCIM_TOKEN_WORKSPACE)?.[1];
-  const instanceId = await instanceWorkspaceId(db);
-  const workspaceId = named ? Number(named) : instanceId;
-  if (!scimPerWorkspace && workspaceId !== instanceId) return null;
+// The comparison is constant-time, so a wrong token cannot be recovered by timing the
+// answer. Lengths are compared first because timingSafeEqual rejects buffers of
+// different sizes.
+async function tokenOpens(workspaceId: number | null, candidate: string): Promise<boolean> {
   const config = await getScimConfig(workspaceId);
-  if (!config.enabled || config.token.length === 0) return null;
+  if (!config.enabled || config.token.length === 0) return false;
   const expected = Buffer.from(config.token);
   const given = Buffer.from(candidate);
-  return expected.length === given.length && timingSafeEqual(expected, given) ? workspaceId : null;
+  return expected.length === given.length && timingSafeEqual(expected, given);
+}
+
+// The provider a token opens: the instance's (workspaceId null) or a workspace's, or
+// null when it opens none.
+export async function verifyScimToken(
+  candidate: string,
+): Promise<{ workspaceId: number | null } | null> {
+  if (await tokenOpens(null, candidate)) return { workspaceId: null };
+  const named = candidate.match(SCIM_TOKEN_WORKSPACE)?.[1];
+  if (!scimPerWorkspace || !named) return null;
+  const workspaceId = Number(named);
+  return (await tokenOpens(workspaceId, candidate)) ? { workspaceId } : null;
 }
 
 // ── Invites ───────────────────────────────────────────────────────────────────

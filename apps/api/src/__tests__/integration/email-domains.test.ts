@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { auth, setAuthSettings, setRegistrationEmailPolicy } from '@repo/auth';
 import { setInviteEmailPolicy } from '#modules/invites/email-policy';
-import { authedApi } from '#tests/helpers/app';
+import { authedApi, createProject } from '#tests/helpers/app';
 import { openMagicLink, signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
@@ -11,7 +11,7 @@ import { resetDb } from '#tests/helpers/db';
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   await setAuthSettings({ allowedEmailDomains: ['company.com'] });
   return { asOwner };
 }
@@ -69,7 +69,7 @@ describe('allowed email domains', () => {
   it('invites an account that already exists at another domain', async () => {
     const owner = await signUpTestUser({ name: 'Owner' });
     const asOwner = authedApi(owner.cookie);
-    await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+    await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
     await signUpTestUser({ email: 'earlier@gmail.com' });
     await setAuthSettings({ allowedEmailDomains: ['company.com'] });
     const res = await asOwner

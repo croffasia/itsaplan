@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach } from 'bun:test';
-import { api, authedApi } from '#tests/helpers/app';
+import { api, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
@@ -11,7 +11,7 @@ import { clearLimits, setLimits } from '#tests/helpers/limits';
 async function setupInitiative() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const created = await asOwner
     .projects({ projectKey: 'MKT' })
     .initiatives.post({ title: 'Q3 Launch' });

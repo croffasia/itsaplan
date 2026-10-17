@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { createProject } from '#tests/helpers/app';
 import { resetDb } from '#tests/helpers/db';
 import { addUser, createAgentUser, joinProject, setup } from '../helpers';
 
@@ -17,7 +18,7 @@ describe('god projects', () => {
   describe('access', () => {
     it('refuses both routes for a user who is not the instance owner', async () => {
       const { god } = await setup();
-      const created = await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const created = await createProject(god.api, { key: 'MKT', name: 'Marketing' });
       const outsider = await addUser();
 
       expect((await outsider.api.god.projects.get({ query: PAGE })).status).toBe(403);
@@ -31,7 +32,7 @@ describe('god projects', () => {
     it('lists every project on the instance, including ones the owner is not in', async () => {
       const { god } = await setup();
       const alice = await addUser({ email: 'alice@example.com' });
-      await alice.api.projects.post({ key: 'ALC', name: 'Alice Only' });
+      await createProject(alice.api, { key: 'ALC', name: 'Alice Only' });
 
       const res = await god.api.god.projects.get({ query: PAGE });
 
@@ -48,7 +49,7 @@ describe('god projects', () => {
 
     it('counts what a project holds and when it was last active', async () => {
       const { god } = await setup();
-      const created = await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const created = await createProject(god.api, { key: 'MKT', name: 'Marketing' });
       const project = created.data!;
       const alice = await addUser({ email: 'alice@example.com' });
       await joinProject(god, alice, 'MKT', 'member');
@@ -83,7 +84,7 @@ describe('god projects', () => {
 
     it('counts an archived issue apart from the active ones', async () => {
       const { god } = await setup();
-      await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(god.api, { key: 'MKT', name: 'Marketing' });
       const view = await god.api.projects({ projectKey: 'MKT' }).get();
       const created = await god.api.projects({ projectKey: 'MKT' }).issues.post({
         title: 'Old',
@@ -98,8 +99,8 @@ describe('god projects', () => {
 
     it('matches the search term against the key or the name', async () => {
       const { god } = await setup();
-      await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
-      await god.api.projects.post({ key: 'ENG', name: 'Engineering' });
+      await createProject(god.api, { key: 'MKT', name: 'Marketing' });
+      await createProject(god.api, { key: 'ENG', name: 'Engineering' });
 
       const byKey = await god.api.god.projects.get({ query: { ...PAGE, search: 'mkt' } });
       const byName = await god.api.god.projects.get({ query: { ...PAGE, search: 'engineer' } });
@@ -115,9 +116,9 @@ describe('god projects', () => {
 
     it('pages with limit and offset while the total stays the full match count', async () => {
       const { god } = await setup();
-      await god.api.projects.post({ key: 'ONE', name: 'One' });
-      await god.api.projects.post({ key: 'TWO', name: 'Two' });
-      await god.api.projects.post({ key: 'THR', name: 'Three' });
+      await createProject(god.api, { key: 'ONE', name: 'One' });
+      await createProject(god.api, { key: 'TWO', name: 'Two' });
+      await createProject(god.api, { key: 'THR', name: 'Three' });
 
       const first = await god.api.god.projects.get({ query: { page: 1, pageSize: 2 } });
       const second = await god.api.god.projects.get({ query: { page: 2, pageSize: 2 } });
@@ -147,7 +148,7 @@ describe('god projects', () => {
     it('resolves an owner membership to full permissions', async () => {
       const { god } = await setup();
       const alice = await addUser({ name: 'Alice', email: 'alice@example.com' });
-      const created = await alice.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const created = await createProject(alice.api, { key: 'MKT', name: 'Marketing' });
 
       const res = await god.api.god.projects({ projectId: created.data!.id }).get();
 
@@ -168,7 +169,7 @@ describe('god projects', () => {
 
     it("resolves a member membership to the assigned role's matrix", async () => {
       const { god } = await setup();
-      const created = await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const created = await createProject(god.api, { key: 'MKT', name: 'Marketing' });
       const bob = await addUser({ name: 'Bob', email: 'bob@example.com' });
       await joinProject(god, bob, 'MKT', 'member');
 
@@ -183,7 +184,7 @@ describe('god projects', () => {
 
     it("marks an agent's bot user as an agent", async () => {
       const { god } = await setup();
-      const created = await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const created = await createProject(god.api, { key: 'MKT', name: 'Marketing' });
       const agentUserId = await createAgentUser(god, 'MKT');
 
       const res = await god.api.god.projects({ projectId: created.data!.id }).get();

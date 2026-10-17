@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { api, authedApi } from '#tests/helpers/app';
+import { api, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
@@ -12,7 +12,7 @@ import { resetDb } from '#tests/helpers/db';
 async function setup() {
   const owner = await signUpTestUser();
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const board = await asOwner.projects({ projectKey: 'MKT' }).get();
   const columnId = board.data!.columns[0].id;
   const issue = await asOwner
@@ -314,7 +314,7 @@ describe('share', () => {
 
     it('refuses to open an issue from another project via a board token', async () => {
       const { asOwner, token } = await sharedView();
-      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
       const opsBoard = await asOwner.projects({ projectKey: 'OPS' }).get();
       const other = await asOwner
         .projects({ projectKey: 'OPS' })

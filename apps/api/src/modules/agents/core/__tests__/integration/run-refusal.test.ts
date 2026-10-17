@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, beforeEach } from 'bun:test';
 import { db, agentRun, issueActivity } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
-import { authedApi } from '#tests/helpers/app';
+import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent } from '#tests/helpers/agents';
@@ -16,7 +16,7 @@ const REASON = 'The agent budget is spent';
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  const project = (await asOwner.projects.post({ key: 'MKT', name: 'Marketing' })).data!;
+  const project = (await createProject(asOwner, { key: 'MKT', name: 'Marketing' })).data!;
   const columnId = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!.columns[0].id;
   const agent = (
     await createAgent(asOwner, 'MKT', { name: 'Bot', username: 'bot', kind: 'internal' })

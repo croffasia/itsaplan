@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'bun:test';
 import { auth, setAuthSettings } from '@repo/auth';
 import { db, teamInvite } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { app, authedApi, apiKeyApi } from '#tests/helpers/app';
+import { app, authedApi, apiKeyApi, createProject } from '#tests/helpers/app';
 import { openMagicLink, signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { mcpAccessToken } from '#tests/helpers/mcp';
@@ -18,7 +18,7 @@ const DAY = 24 * 60 * 60 * 1000;
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  const project = await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  const project = await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   return { owner, asOwner, teamId: project.data!.teamId };
 }
 

@@ -24,7 +24,7 @@ export default function WorkspaceScimGroupMappingDialog({
   group,
   onClose,
 }: {
-  workspaceId: number;
+  workspaceId: number | null;
   group: WorkspaceScimGroup;
   onClose: () => void;
 }) {

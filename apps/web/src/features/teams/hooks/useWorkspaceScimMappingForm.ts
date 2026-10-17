@@ -31,7 +31,7 @@ function serialize(mappings: ScimMappingDraft[]): string {
 }
 
 export function useWorkspaceScimMappingForm(
-  workspaceId: number,
+  workspaceId: number | null,
   group: WorkspaceScimGroup,
 ): WorkspaceScimMappingForm {
   const update = useSetWorkspaceScimGroupMappings(workspaceId);

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { apiKeyApi, authedApi, type Api } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent, teamOf } from '#tests/helpers/agents';
@@ -12,7 +12,7 @@ import { createAgent, teamOf } from '#tests/helpers/agents';
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
   const columnId = view.data!.columns[0].id;
   const created = await createAgent(asOwner, 'MKT', {

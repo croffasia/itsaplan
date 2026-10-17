@@ -108,6 +108,10 @@
     "ai-agents": {
       "label": "AI 에이전트",
       "description": "이 프로젝트에서 작업하는 AI 에이전트를 관리합니다."
+    },
+    "queue": {
+      "label": "Runner queue",
+      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
     }
   }
 }

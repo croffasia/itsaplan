@@ -406,6 +406,28 @@ channel and is read only for a claim, not for authentication. Both funnel into
 gets — a name missing from a later sync is never removed by this path, only by an explicit
 `PATCH /Groups/:id` or an unmapping in the workspace settings.
 
+## Issue agent runs
+
+`GET /issues/:issueId/agent-runs` reads triggered runs with cursor pagination. Both
+`work_items read` and `ai_agents read` in the issue's current project are required.
+Runs keep their original project, so a moved issue does not expose its former project's
+prompts or traces. `/issues/:issueId/agent-runs/:runId/trace` reads the latest recorded
+attempt of that run, or the one named by `traceId`. Each trace links to the previous recorded
+attempt. A missing latest trace returns null; an unknown or unrelated `traceId` returns 404.
+Both permission checks and the read use the same resolved project id. Other people's chat
+traces stay private.
+External runners reporting run events also retain messages, tool inputs/results and a
+local Codex session link per attempt. `GET /agent-runs/:runId/trace?attempt=N` uses
+both read permissions in the original project and excludes moved issues. It also
+serves scheduled/manual runs without an issue. The latest recorded attempt is the default.
+`POST /agent-runs/:runId/events` accepts only the calling agent's current executing,
+unexpired attempt. Event offsets deduplicate retries and reject gaps. Transcripts
+stop recording after 2,000 events or 1 MB; acknowledgements continue so the runner
+can report its final result. A Codex UUID forms the local `codex://threads/` link;
+no supplied URL is accepted. The event-capable runner also sends the attempt number
+on heartbeat and result calls, so a reclaimed attempt rejects the old process.
+Legacy clients may omit this field for compatibility.
+
 ## Security
 
 - **`GET /attachments/:publicId/raw` is public and unauthenticated** (used in
@@ -473,3 +495,21 @@ directly). Helpers in `src/__tests__/helpers/`: `api` (anonymous client), `authe
 - swagger `/docs` (planner) is separate from better-auth's `/api/auth/reference`; both
   stay reachable without a session.
 - Dev: `bun run dev`. Prod: the Dockerfile migrates, then starts the server; the compose files and the Helm chart run the migrations as a separate step and start only the server.
+
+## Runner queue and execution state
+
+`GET /agent-runs/queue` pages external runs across the caller's readable projects,
+including archived projects. Both `work_items read` and `ai_agents read` are required
+in each project. Moved issues do not expose their original project's prompt.
+
+The stored `status` keeps the runner protocol's `pending` value. `executionState`
+is `running` only after admission succeeds and while its lease is valid; it is
+`queued` during delays, retry backoff and after lease expiry. Terminal states retain
+their names. `execution_started_at` is cleared on claim, defer, retry and completion,
+and set before execution is handed out. A heartbeat can restore the marker for a
+claimed external run that was already in flight when this column was added.
+
+`runnerQueue:1` is a user-scoped sync marker. It combines the visible projects'
+`runner-queue:` revisions with lease expiry and runner presence, so time-based state
+changes are visible without a write. The queue and issue run panel share this scope.
+A runner being online is separate from a run holding an execution lease.

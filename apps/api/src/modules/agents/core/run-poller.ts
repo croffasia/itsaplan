@@ -12,6 +12,7 @@ import {
   countRunsAhead,
   deferRun,
   markRunFailed,
+  markRunExecuting,
   markRunSuccess,
   runRetryDelayMs,
   scheduleRunRetry,
@@ -64,6 +65,7 @@ async function processRun(run: ClaimedRun): Promise<void> {
   const timeoutMs = runTimeoutMs(maxRunSeconds);
   try {
     await agentRunStarted(run);
+    if (!(await markRunExecuting(run.id, run.attempts))) return;
     const result = await runAgent(run.agentId, run.projectId, framePrompt(run), {
       callerUserId: run.agentUserId,
       threadId: runThreadId(run),

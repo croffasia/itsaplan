@@ -1,6 +1,7 @@
 import type { CycleStatus } from '@/lib/api/endpoints/cycles';
 import type { InitiativeStatus } from '@/lib/api/endpoints/initiatives';
 import { request } from '@/lib/api/core/client';
+import type { AgentRunTrigger } from '@/lib/api/endpoints/agents';
 import type { Checklist } from '@/lib/api/endpoints/checklists';
 import type { CustomFieldType } from '@/lib/api/endpoints/customFields';
 import type { DevelopmentLink } from '@/lib/api/endpoints/git';
@@ -408,3 +409,53 @@ export const setFieldValue = (issueId: number, fieldId: number, input: IssueFiel
     method: 'PUT',
     body: JSON.stringify(input),
   });
+
+export interface IssueAgentRun {
+  id: number;
+  agentId: number;
+  username: string;
+  kind: string;
+  status: 'pending' | 'success' | 'failed' | 'canceled';
+  executionState: 'queued' | 'running' | 'success' | 'failed' | 'canceled';
+  trigger: AgentRunTrigger;
+  prompt: string;
+  output: string | null;
+  attempts: number;
+  lastError: string | null;
+  contextTokens?: number;
+  createdAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+  nextAttemptAt: string;
+}
+
+export interface IssueAgentTraceSpan {
+  spanId: string;
+  parentSpanId: string | null;
+  name: string;
+  type: string;
+  status: string;
+  startedAt: string;
+  endedAt: string | null;
+  durationMs: number | null;
+  input: unknown;
+  output: unknown;
+  error: unknown;
+  attributes: unknown;
+}
+
+export interface IssueAgentRunTrace {
+  previousTraceId: string | null;
+  trace: { traceId: string; status: string; startedAt: string; endedAt: string | null };
+  spans: IssueAgentTraceSpan[];
+}
+
+export const listIssueAgentRuns = (issueId: number, before?: number) =>
+  request<{ items: IssueAgentRun[]; nextCursor: number | null }>(
+    `/issues/${issueId}/agent-runs${before == null ? '' : `?before=${before}`}`,
+  );
+
+export const getIssueAgentRunTrace = (issueId: number, runId: number, traceId?: string) =>
+  request<IssueAgentRunTrace | null>(
+    `/issues/${issueId}/agent-runs/${runId}/trace${traceId == null ? '' : `?traceId=${encodeURIComponent(traceId)}`}`,
+  );

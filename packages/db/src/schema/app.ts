@@ -709,6 +709,7 @@ export const agentRun = pgTable(
     inputTokens: integer('input_tokens'),
     outputTokens: integer('output_tokens'),
     startedAt: timestamp('started_at', { withTimezone: true }),
+    executionStartedAt: timestamp('execution_started_at', { withTimezone: true }),
     finishedAt: timestamp('finished_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -726,6 +727,23 @@ export const agentRun = pgTable(
     index('agent_run_schedule_idx').on(t.scheduleId),
     index('agent_run_project_idx').on(t.projectId),
   ],
+);
+
+// A bounded execution transcript for one external runner attempt.
+export const agentRunTrace = pgTable(
+  'agent_run_trace',
+  {
+    runId: integer('run_id')
+      .notNull()
+      .references(() => agentRun.id, { onDelete: 'cascade' }),
+    attempt: integer('attempt').notNull(),
+    sessionId: text('session_id'),
+    events: jsonb('events').notNull().default([]),
+    nextOffset: integer('next_offset').notNull().default(0),
+    truncated: boolean('truncated').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.runId, t.attempt] })],
 );
 
 // A conversation between one member and one external agent. The internal agents'

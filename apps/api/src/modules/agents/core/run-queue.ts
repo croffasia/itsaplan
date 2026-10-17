@@ -137,6 +137,7 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
     UPDATE agent_run r
     SET attempts = r.attempts + 1,
         started_at = coalesce(r.started_at, now()),
+        execution_started_at = NULL,
         next_attempt_at = now() + make_interval(secs => ${leaseSeconds})
     WHERE r.id IN (
       SELECT id FROM agent_run q
@@ -226,6 +227,7 @@ export async function markRunSuccess(
     .update(agentRun)
     .set({
       status: 'success',
+      executionStartedAt: null,
       output,
       lastError: null,
       inputTokens: usage?.inputTokens ?? null,
@@ -241,6 +243,7 @@ export async function scheduleRunRetry(id: number, delayMs: number, error: strin
     .update(agentRun)
     .set({
       status: 'pending',
+      executionStartedAt: null,
       nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,
       lastError: error.slice(0, 500),
     })
@@ -250,7 +253,12 @@ export async function scheduleRunRetry(id: number, delayMs: number, error: strin
 export async function markRunFailed(id: number, error: string): Promise<void> {
   await db
     .update(agentRun)
-    .set({ status: 'failed', lastError: error.slice(0, 500), finishedAt: new Date() })
+    .set({
+      status: 'failed',
+      executionStartedAt: null,
+      lastError: error.slice(0, 500),
+      finishedAt: new Date(),
+    })
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
 }
 
@@ -263,6 +271,7 @@ export async function deferRun(id: number, delaySeconds: number): Promise<void> 
   await db
     .update(agentRun)
     .set({
+      executionStartedAt: null,
       attempts: sql`${agentRun.attempts} - 1`,
       startedAt: sql`CASE WHEN ${agentRun.attempts} = 1 THEN NULL ELSE ${agentRun.startedAt} END`,
       nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,
@@ -270,11 +279,32 @@ export async function deferRun(id: number, delaySeconds: number): Promise<void> 
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
 }
 
-// One row of an agent's run history, for the runs sidebar. The issue is joined for
-// its human key and title.
+export const executionState = sql<'queued' | 'running' | 'success' | 'failed' | 'canceled'>`
+  CASE WHEN ${agentRun.status} <> 'pending' THEN ${agentRun.status}
+    WHEN ${agentRun.executionStartedAt} IS NOT NULL AND ${agentRun.nextAttemptAt} > now()
+      THEN 'running'
+    ELSE 'queued' END`;
+
+export async function markRunExecuting(id: number, attempts: number): Promise<boolean> {
+  const rows = await db
+    .update(agentRun)
+    .set({ executionStartedAt: new Date() })
+    .where(
+      and(
+        eq(agentRun.id, id),
+        eq(agentRun.status, 'pending'),
+        eq(agentRun.attempts, attempts),
+        gt(agentRun.nextAttemptAt, sql`now()`),
+      ),
+    )
+    .returning({ id: agentRun.id });
+  return rows.length > 0;
+}
+
 export interface AgentRunRow {
   id: number;
   status: string;
+  executionState: 'queued' | 'running' | 'success' | 'failed' | 'canceled';
   trigger: AgentRunTrigger;
   issueId: number | null;
   issueIdentifier: string | null;
@@ -323,6 +353,7 @@ export async function listAgentRuns(
     .select({
       id: agentRun.id,
       status: agentRun.status,
+      executionState,
       trigger: agentRun.trigger,
       issueId: agentRun.issueId,
       prompt: agentRun.prompt,
@@ -355,6 +386,7 @@ export async function listAgentRuns(
     items: page.map((r) => ({
       id: r.id,
       status: r.status,
+      executionState: r.executionState,
       trigger: r.trigger as AgentRunTrigger,
       issueId: r.issueId,
       issueIdentifier: r.projectKey && r.issueSeq != null ? `${r.projectKey}-${r.issueSeq}` : null,

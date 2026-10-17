@@ -1,7 +1,7 @@
 import { t } from 'elysia';
 
 import { pageQueryFields, pageResponse } from '#shared/pagination';
-import { agentRunTrigger, runContextTokens } from '../model';
+import { agentRunTrigger, agentExecutionState, runContextTokens } from '../model';
 
 export { agentParams, projectAgentParams } from '../model';
 
@@ -172,6 +172,7 @@ export const RunAgentResponse = t.Object({
 export const AgentRunResponse = t.Object({
   id: t.Number(),
   status: t.String(),
+  executionState: agentExecutionState,
   trigger: agentRunTrigger,
   issueId: t.Nullable(t.Number()),
   issueIdentifier: t.Nullable(t.String()),

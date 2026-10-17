@@ -1,3 +1,4 @@
+import AgentRunExternalTrace from '@/components/common/agent-runs/AgentRunExternalTrace';
 import { useId, useState } from 'react';
 import { Ban, ChevronDown, ChevronRight } from 'lucide-react';
 import type { AgentScheduleRun } from '@/lib/api/endpoints/agentSchedules';
@@ -20,7 +21,7 @@ export function SettingsScheduleRunRow({
   const t = useTranslations('settings.schedules');
   const [open, setOpen] = useState(false);
   const contentId = useId();
-  const running = run.status === 'pending' && run.startedAt != null;
+  const tRun = useTranslations('issue.agentRuns');
   return (
     <div>
       <div className="flex items-center gap-2 pe-2 hover:bg-accent/50">
@@ -36,9 +37,7 @@ export function SettingsScheduleRunRow({
           ) : (
             <ChevronRight className="size-3.5 shrink-0" />
           )}
-          <Badge variant={statusVariant(run.status)}>
-            {running ? t('runStatus.running') : t(`runStatus.${run.status}`)}
-          </Badge>
+          <Badge variant={statusVariant(run.status)}>{tRun(run.executionState)}</Badge>
           <span className="capitalize">{run.trigger}</span>
           <span className="ms-auto flex shrink-0 items-center gap-4">
             <span className="w-12 text-end">
@@ -70,6 +69,7 @@ export function SettingsScheduleRunRow({
             label={run.lastError ? t('error') : t('result')}
             value={run.lastError ?? run.output ?? t('noOutput')}
           />
+          {run.kind === 'external' && <AgentRunExternalTrace runId={run.id} />}
         </div>
       )}
     </div>

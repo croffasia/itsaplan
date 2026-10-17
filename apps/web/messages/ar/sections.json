@@ -108,6 +108,10 @@
     "ai-agents": {
       "label": "وكلاء الذكاء الاصطناعي",
       "description": "وكلاء الذكاء الاصطناعي العاملون في هذا المشروع."
+    },
+    "queue": {
+      "label": "Runner queue",
+      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
     }
   }
 }

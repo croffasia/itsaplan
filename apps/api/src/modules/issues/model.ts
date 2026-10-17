@@ -1,6 +1,8 @@
 import { t } from 'elysia';
+import { agentExecutionState } from '#modules/agents/model';
 import { ActivityPayloadResponse } from '#shared/activity';
 import { DevelopmentLinkResponse } from '#modules/git/model';
+import { AgentTraceDetailResponse } from '#modules/agents/core/model';
 import { isoDate } from '#shared/schemas';
 
 // Ceiling of every markdown text written on an issue: the description, a comment
@@ -690,3 +692,48 @@ export const BulkDeletedResponse = t.Object({ deleted: t.Number() });
 export const BoardResponse = t.Object({ issues: t.Array(BoardIssueResponse) });
 
 export const WatchStateResponse = t.Object({ ok: t.Boolean() });
+
+export const issueAgentRunsQuery = t.Object({
+  before: t.Optional(t.Numeric({ minimum: 1, multipleOf: 1 })),
+  limit: t.Optional(t.Numeric({ minimum: 1, maximum: 50, multipleOf: 1, default: 25 })),
+});
+
+export const issueAgentRunParams = t.Object({
+  issueId: t.Numeric(),
+  runId: t.Numeric(),
+});
+
+export const IssueAgentRunPageResponse = t.Object({
+  items: t.Array(
+    t.Object({
+      id: t.Number(),
+      agentId: t.Number(),
+      username: t.String(),
+      kind: t.String(),
+      status: t.String(),
+      executionState: agentExecutionState,
+      trigger: t.String(),
+      prompt: t.String(),
+      output: t.Nullable(t.String()),
+      attempts: t.Number(),
+      lastError: t.Nullable(t.String()),
+      contextTokens: t.Optional(t.Number()),
+      createdAt: t.String(),
+      startedAt: t.Nullable(t.String()),
+      finishedAt: t.Nullable(t.String()),
+      nextAttemptAt: t.String(),
+    }),
+  ),
+  nextCursor: t.Nullable(t.Number()),
+});
+
+export const issueAgentTraceQuery = t.Object({
+  traceId: t.Optional(t.String({ minLength: 1, maxLength: 128 })),
+});
+
+export const IssueAgentRunTraceResponse = t.Nullable(
+  t.Object({
+    ...AgentTraceDetailResponse.properties,
+    previousTraceId: t.Nullable(t.String()),
+  }),
+);

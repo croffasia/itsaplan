@@ -9,6 +9,7 @@ import {
   useTestLinearStatesPreview,
   useTestTrelloStatesPreview,
   useTestPlaneStatesPreview,
+  useTestProcoreStatesPreview,
 } from '../../services/settings.service';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -27,6 +28,11 @@ import type {
   LinearImportJobFields,
   PlaneImportJobFields,
   TrelloImportJobFields,
+  ProcoreImportJobFields,
+  MsProjectImportJobFields,
+  ProcoreConnectionInput,
+  ProcoreTool,
+  PlaneStateOption,
   JiraConnectionInput,
   TrelloConnectionInput,
   LinearTeamOption,
@@ -37,17 +43,51 @@ import type {
 } from '@/lib/api/endpoints/importExport';
 
 // What is about to be imported: one Plane project, one Linear team's project
-// (projectId) or its issues with no project (projectId null), one Jira project, or
-// one Trello board.
+// (projectId) or its issues with no project (projectId null), one Jira project, one
+// Trello board, one tool of a Procore project, or an uploaded MS Project file, whose
+// states come with the upload.
 export type ImportReviewTarget =
   | { source: 'plane'; connection: PlaneConnectionInput; project: PlaneProjectOption }
   | { source: 'linear'; apiToken: string; team: LinearTeamOption; projectId: string | null }
   | { source: 'jira'; connection: JiraConnectionInput; jiraProjectKey: string }
-  | { source: 'trello'; connection: TrelloConnectionInput; trelloBoardId: string };
+  | { source: 'trello'; connection: TrelloConnectionInput; trelloBoardId: string }
+  | {
+      source: 'procore';
+      connection: ProcoreConnectionInput;
+      procoreProjectId: string;
+      procoreTool: ProcoreTool;
+    }
+  | {
+      source: 'msproject';
+      fileKey: string;
+      fileName: string;
+      states: PlaneStateOption[];
+    };
 
 function jobFields(
   target: ImportReviewTarget,
-): PlaneImportJobFields | LinearImportJobFields | JiraImportJobFields | TrelloImportJobFields {
+):
+  | PlaneImportJobFields
+  | LinearImportJobFields
+  | JiraImportJobFields
+  | TrelloImportJobFields
+  | ProcoreImportJobFields
+  | MsProjectImportJobFields {
+  if (target.source === 'procore') {
+    return {
+      source: 'procore',
+      ...target.connection,
+      procoreProjectId: target.procoreProjectId,
+      procoreTool: target.procoreTool,
+    };
+  }
+  if (target.source === 'msproject') {
+    return {
+      source: 'msproject',
+      msprojectFileKey: target.fileKey,
+      msprojectName: target.fileName,
+    };
+  }
   if (target.source === 'jira') {
     return { source: 'jira', ...target.connection, jiraProjectKey: target.jiraProjectKey };
   }
@@ -111,12 +151,31 @@ export default function SettingsImportExportMappingReview({
       ? { ...target.connection, trelloBoardId: target.trelloBoardId }
       : null,
   );
-  const preview = {
-    plane: planePreview,
-    linear: linearPreview,
-    jira: jiraPreview,
-    trello: trelloPreview,
-  }[target.source];
+  const procorePreview = useTestProcoreStatesPreview(
+    projectKey,
+    target.source === 'procore'
+      ? {
+          ...target.connection,
+          procoreProjectId: target.procoreProjectId,
+          procoreTool: target.procoreTool,
+        }
+      : null,
+  );
+  const preview =
+    target.source === 'msproject'
+      ? {
+          isPending: false,
+          isError: false,
+          data: { states: target.states },
+          refetch: async () => {},
+        }
+      : {
+          plane: planePreview,
+          linear: linearPreview,
+          jira: jiraPreview,
+          trello: trelloPreview,
+          procore: procorePreview,
+        }[target.source];
   const createJob = useCreateImportJob(projectKey);
   const [overrides, setOverrides] = useState<Record<string, StateCategory>>({});
   const [unmatchedUserPolicy, setUnmatchedUserPolicy] = useState<UnmatchedUserPolicy>('unassigned');

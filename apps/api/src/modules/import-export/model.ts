@@ -98,12 +98,64 @@ const trelloImportJobBody = t.Object({
   ...importJobChoices,
 });
 
+const procoreConnectionFields = {
+  clientId: t.String({ minLength: 1, description: 'The client ID of a Procore service account.' }),
+  clientSecret: t.String({ minLength: 1, description: 'The client secret of that account.' }),
+  companyId: t.String({ minLength: 1, description: 'The Procore company id.' }),
+  sandbox: t.Optional(t.Boolean({ description: 'Use the Procore sandbox instead of production.' })),
+};
+
+const procoreTool = t.UnionEnum(['punch_items', 'rfis'], {
+  description: 'The Procore tool to import.',
+});
+
+const procoreImportJobBody = t.Object({
+  source: t.Literal('procore'),
+  ...procoreConnectionFields,
+  procoreProjectId: t.String({ minLength: 1, description: 'The Procore project id.' }),
+  procoreTool,
+  ...importJobChoices,
+});
+
+const msprojectImportJobBody = t.Object({
+  source: t.Literal('msproject'),
+  msprojectFileKey: t.String({
+    minLength: 1,
+    description: 'The key returned by the MS Project upload.',
+  }),
+  msprojectName: t.String({ description: 'The uploaded file name.' }),
+  ...importJobChoices,
+});
+
 export const createImportJobBody = t.Union([
   planeImportJobBody,
   linearImportJobBody,
   jiraImportJobBody,
   trelloImportJobBody,
+  procoreImportJobBody,
+  msprojectImportJobBody,
 ]);
+
+export const procoreConnectionBody = t.Object(procoreConnectionFields);
+
+export const ProcoreTestConnectionResponse = t.Object({
+  projects: t.Array(t.Object({ id: t.String(), name: t.String() })),
+});
+
+export const procorePreviewBody = t.Object({
+  ...procoreConnectionFields,
+  procoreProjectId: t.String({ minLength: 1 }),
+  procoreTool,
+});
+
+export const msprojectUploadBody = t.Object({ file: t.File() });
+
+export const MsProjectUploadResponse = t.Object({
+  fileKey: t.String(),
+  fileName: t.String(),
+  taskCount: t.Number(),
+  states: t.Array(t.Object({ id: t.String(), name: t.String(), category: stateCategory })),
+});
 
 export const jiraConnectionBody = t.Object(jiraConnectionFields);
 
@@ -222,7 +274,7 @@ export const ProjectExportResponse = t.Object({
 export const ImportJobResponse = t.Object({
   id: t.Number(),
   projectId: t.Number(),
-  source: t.UnionEnum(['plane', 'linear', 'jira', 'trello']),
+  source: t.UnionEnum(['plane', 'linear', 'jira', 'trello', 'procore', 'msproject']),
   phase: t.UnionEnum(['discover', 'create', 'link', 'rewrite', 'attachments', 'done']),
   status: t.UnionEnum(['pending', 'running', 'paused', 'completed', 'failed']),
   counts: CountsResponse,

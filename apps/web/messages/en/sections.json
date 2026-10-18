@@ -103,7 +103,7 @@
     },
     "import-export": {
       "label": "Import/Export",
-      "description": "Bring issues, comments, and labels in from a self-hosted Plane instance, or export this project's data as JSON."
+      "description": "Bring issues, comments, and labels in from Plane, Linear, Jira, Trello, Procore, MS Project, or export this project's data as JSON."
     },
     "ai-agents": {
       "label": "AI Agents",

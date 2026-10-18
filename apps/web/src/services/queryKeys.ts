@@ -79,9 +79,12 @@ export const qk = {
   // The same preview for one Linear team's workflow states.
   linearPreview: (projectKey: string, teamId: string) =>
     ['linearPreview', projectKey, teamId] as const,
-  // The same preview for a Jira project's statuses or a Trello board's lists.
-  sourcePreview: (projectKey: string, source: 'jira' | 'trello', sourceProjectId: string) =>
-    ['sourcePreview', projectKey, source, sourceProjectId] as const,
+  // The same preview for a Jira project's statuses a Trello board's lists or a Procore tool's states.
+  sourcePreview: (
+    projectKey: string,
+    source: 'jira' | 'trello' | 'procore',
+    sourceProjectId: string,
+  ) => ['sourcePreview', projectKey, source, sourceProjectId] as const,
   // Saved dashboards (the analytics tabs) and the read-only metrics behind their
   // widgets. `kind` names the metric (stats/pulse/throughput/breakdown/...) and
   // `params` scopes it to the widget's query (window, filters).

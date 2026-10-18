@@ -54,6 +54,14 @@ running to completion in one.
   `resolveAttachmentDownload` follows `uploads.linear.app`'s redirects itself
   and sends the key to that host only. `docs/dev/linear-import.md` has the
   queries, limits and mapping.
+- `procore-adapter.ts` and `procore-mapping.ts` — the Procore implementation: its REST API at
+  Procore's fixed hosts with a client-credentials bearer token, one tool (punch list items or
+  RFIs) of one project per job. The bearer goes to `procore.com` hosts only.
+  `docs/dev/procore-import.md` has the requests and what is unverified.
+- `msproject-adapter.ts` and `msproject-mapping.ts` — the MS Project implementation: an MSPDI
+  XML file the api stored in the object store, parsed once. It has no credential (the job stores
+  `{}`), and `completeImportJob`/`failImportJob` delete the stored file.
+  `docs/dev/msproject-import.md` has the mapping.
 - `cross-reference.ts` — pure text matching for a source's own "KEY-123"-style
   issue identifier: no `@repo/db`, no network, unit-tested directly. What
   the Rewrite phase resolves into One Health's own issue ids.

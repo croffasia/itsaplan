@@ -145,10 +145,22 @@ export async function advanceImportJobPhase(
     .where(eq(importJob.id, jobId));
 }
 
+// An MS Project job's uploaded file is not needed once the job is terminal. A failed
+// delete leaves an orphan object and does not fail the job.
+async function deleteUploadedSourceFile(config: unknown): Promise<void> {
+  const key = (config as { msprojectFileKey?: unknown } | null)?.msprojectFileKey;
+  if (typeof key !== 'string' || key === '') return;
+  try {
+    await deleteObject(key);
+  } catch (error) {
+    console.error('import: could not delete the uploaded source file', error);
+  }
+}
+
 // Terminal states clear the credential columns: nothing needs to read them
 // again once the job can no longer make progress.
 export async function completeImportJob(jobId: number): Promise<void> {
-  await db
+  const [row] = await db
     .update(importJob)
     .set({
       status: 'completed',
@@ -159,11 +171,13 @@ export async function completeImportJob(jobId: number): Promise<void> {
       credentialIv: null,
       credentialAuthTag: null,
     })
-    .where(eq(importJob.id, jobId));
+    .where(eq(importJob.id, jobId))
+    .returning({ config: importJob.config });
+  await deleteUploadedSourceFile(row?.config);
 }
 
 export async function failImportJob(jobId: number, error: string): Promise<void> {
-  await db
+  const [row] = await db
     .update(importJob)
     .set({
       status: 'failed',
@@ -173,7 +187,9 @@ export async function failImportJob(jobId: number, error: string): Promise<void>
       credentialIv: null,
       credentialAuthTag: null,
     })
-    .where(eq(importJob.id, jobId));
+    .where(eq(importJob.id, jobId))
+    .returning({ config: importJob.config });
+  await deleteUploadedSourceFile(row?.config);
 }
 
 // A transient failure (rate limited, a network error, an unreachable

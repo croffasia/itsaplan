@@ -41,6 +41,7 @@
     "drizzle-orm": "^0.45.4",
     "elysia": "^1.4.30",
     "exceljs": "^4.4.0",
+    "fast-xml-parser": "^5.11.2",
     "mammoth": "^1.13.0",
     "zod": "^4.6.7"
   },

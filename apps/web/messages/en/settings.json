@@ -571,6 +571,34 @@
       "noBoards": "This token can't see any boards.",
       "closedBoard": "{name} (closed)"
     },
+    "procore": {
+      "connect": "Connect to Procore",
+      "connectHint": "Enter the credentials of a Procore service account to check them and load the projects it can read.",
+      "clientId": "Client ID",
+      "clientSecret": "Client secret",
+      "clientSecretHint": "From the Developer Managed Service Account of your Procore app. It needs read access to the Punch List and RFIs tools.",
+      "companyId": "Company ID",
+      "companyIdHint": "The number in your Procore company URL.",
+      "sandbox": "Use the Procore sandbox",
+      "scope": "What to import",
+      "scopeHint": "Pick a project and a tool. Each import brings in one tool of one project.",
+      "project": "Procore project",
+      "projectPlaceholder": "Select a project",
+      "noProjects": "This service account can't read any projects.",
+      "tool": "Tool",
+      "toolPlaceholder": "Select a tool",
+      "toolPunchItems": "Punch list items",
+      "toolRfis": "RFIs (answers become comments)"
+    },
+    "msproject": {
+      "upload": "Upload an MS Project plan",
+      "uploadHint": "Import the tasks of a plan. Summary tasks become parent issues and links between tasks become blocking relations.",
+      "file": "Plan file (.xml)",
+      "fileHint": "In MS Project, save the plan as XML first: File → Save As → XML Format. Binary .mpp files can't be imported. Maximum 20 MB.",
+      "uploading": "Uploading…",
+      "mppRejected": "This is a binary .mpp file. Save the plan as XML first (File → Save As → XML Format), then upload the .xml file.",
+      "summary": "{name} — tasks to import: {count}"
+    },
     "statuses": {
       "pending": "Pending",
       "running": "Running",

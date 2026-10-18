@@ -52,4 +52,5 @@ policy chosen in the review step.
 ## Other sources
 
 [Plane](importing-from-plane.md), [Linear](importing-from-linear.md),
-[Jira](importing-from-jira.md).
+[Jira](importing-from-jira.md), [Procore](importing-from-procore.md),
+[MS Project](importing-from-ms-project.md).

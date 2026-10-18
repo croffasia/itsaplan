@@ -103,7 +103,7 @@
     },
     "import-export": {
       "label": "Importar/Exportar",
-      "description": "Importe issues, comentários e etiquetas de uma instância Plane auto-hospedada, ou exporte os dados deste projeto como JSON."
+      "description": "Importe issues, comentários e etiquetas de Plane, Linear, Jira, Trello, Procore, MS Project, ou exporte os dados deste projeto como JSON."
     },
     "ai-agents": {
       "label": "Agentes de IA",

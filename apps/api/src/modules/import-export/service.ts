@@ -1,11 +1,14 @@
 import { db, importJob, importRecord, type ImportSource } from '@repo/db';
 import { desc, eq, sql } from 'drizzle-orm';
 import { encryptSecret } from '@repo/crypto';
+import { deleteObject } from '@repo/storage';
 import { HttpError, iso } from '#shared/lib';
 import { pinnedFetch } from '#shared/net';
 import { linearJobFields, type CreateLinearImportJobInput } from './linear';
 import { jiraJobFields, type CreateJiraImportJobInput } from './jira';
 import { trelloJobFields, type CreateTrelloImportJobInput } from './trello';
+import { procoreJobFields, type CreateProcoreImportJobInput } from './procore';
+import { msprojectJobFields, type CreateMsProjectImportJobInput } from './msproject';
 
 // Data access and the Plane connection check for import jobs (Linear's, Jira's and
 // Trello's are in linear.ts, jira.ts and trello.ts). Creating a job only encrypts and stores the submitted credential and
@@ -153,9 +156,11 @@ export type CreateImportJobInput = ImportJobChoices &
     | CreateLinearImportJobInput
     | CreateJiraImportJobInput
     | CreateTrelloImportJobInput
+    | CreateProcoreImportJobInput
+    | CreateMsProjectImportJobInput
   );
 
-function jobFields(input: CreateImportJobInput) {
+function jobFields(projectId: number, input: CreateImportJobInput) {
   switch (input.source) {
     case 'linear':
       return linearJobFields(input);
@@ -163,6 +168,10 @@ function jobFields(input: CreateImportJobInput) {
       return jiraJobFields(input);
     case 'trello':
       return trelloJobFields(input);
+    case 'procore':
+      return procoreJobFields(input);
+    case 'msproject':
+      return msprojectJobFields(projectId, input);
     default:
       return planeJobFields(input);
   }
@@ -193,7 +202,7 @@ export async function createImportJob(
   actorUserId: string,
   input: CreateImportJobInput,
 ): Promise<ImportJobDto> {
-  const { source, credential, config } = jobFields(input);
+  const { source, credential, config } = jobFields(projectId, input);
   const encrypted = encryptSecret(JSON.stringify(credential));
   const [row] = await db
     .insert(importJob)
@@ -276,6 +285,8 @@ export async function cancelImportJob(id: number): Promise<ImportJobDto> {
     })
     .where(eq(importJob.id, id))
     .returning();
+  const fileKey = (row.config as { msprojectFileKey?: unknown }).msprojectFileKey;
+  if (typeof fileKey === 'string') await deleteObject(fileKey).catch(() => undefined);
   return toDto(updated!, await entityCounts(id));
 }
 

@@ -18,6 +18,8 @@ import SettingsImportExportDownloadButton from './SettingsImportExportDownloadBu
 import SettingsImportExportLinear from './SettingsImportExportLinear';
 import SettingsImportExportJira from './SettingsImportExportJira';
 import SettingsImportExportTrello from './SettingsImportExportTrello';
+import SettingsImportExportProcore from './SettingsImportExportProcore';
+import SettingsImportExportMsProject from './SettingsImportExportMsProject';
 
 export interface PlaneConnection extends PlaneConnectionInput {
   projects: PlaneProjectOption[];
@@ -28,6 +30,8 @@ const SOURCES = [
   { key: 'linear', label: 'Linear' },
   { key: 'jira', label: 'Jira' },
   { key: 'trello', label: 'Trello' },
+  { key: 'procore', label: 'Procore' },
+  { key: 'msproject', label: 'MS Project' },
 ] as const;
 
 // Import and export on two tabs. Import: pick a source, connect to it, pick a
@@ -101,6 +105,8 @@ export default function SettingsImportExport({ project }: { project: ProjectDeta
             {source === 'linear' && <SettingsImportExportLinear projectKey={projectKey} />}
             {source === 'jira' && <SettingsImportExportJira projectKey={projectKey} />}
             {source === 'trello' && <SettingsImportExportTrello projectKey={projectKey} />}
+            {source === 'procore' && <SettingsImportExportProcore projectKey={projectKey} />}
+            {source === 'msproject' && <SettingsImportExportMsProject projectKey={projectKey} />}
           </>
         )}
         <SettingsSection title={t('jobs')} description={t('jobsHint')}>

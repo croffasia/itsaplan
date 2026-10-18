@@ -571,6 +571,34 @@
       "noBoards": "Este token não vê nenhum quadro.",
       "closedBoard": "{name} (fechado)"
     },
+    "procore": {
+      "connect": "Conectar ao Procore",
+      "connectHint": "Informe as credenciais de uma conta de serviço do Procore para verificá-las e carregar os projetos que ela pode ler.",
+      "clientId": "ID do cliente",
+      "clientSecret": "Segredo do cliente",
+      "clientSecretHint": "Da conta de serviço gerenciada pelo desenvolvedor do seu aplicativo Procore. Ela precisa de acesso de leitura às ferramentas Lista de pendências (Punch List) e RFIs.",
+      "companyId": "ID da empresa",
+      "companyIdHint": "O número que aparece na URL da sua empresa no Procore.",
+      "sandbox": "Usar o sandbox do Procore",
+      "scope": "O que importar",
+      "scopeHint": "Escolha um projeto e uma ferramenta. Cada importação traz uma ferramenta de um projeto.",
+      "project": "Projeto do Procore",
+      "projectPlaceholder": "Selecione um projeto",
+      "noProjects": "Esta conta de serviço não consegue ler nenhum projeto.",
+      "tool": "Ferramenta",
+      "toolPlaceholder": "Selecione uma ferramenta",
+      "toolPunchItems": "Itens da lista de pendências",
+      "toolRfis": "RFIs (as respostas viram comentários)"
+    },
+    "msproject": {
+      "upload": "Enviar um plano do MS Project",
+      "uploadHint": "Importe as tarefas de um plano. Tarefas de resumo viram issues pai e vínculos entre tarefas viram relações de bloqueio.",
+      "file": "Arquivo do plano (.xml)",
+      "fileHint": "No MS Project, salve primeiro o plano como XML: Arquivo → Salvar como → Formato XML. Arquivos .mpp binários não podem ser importados. Máximo de 20 MB.",
+      "uploading": "Enviando…",
+      "mppRejected": "Este é um arquivo .mpp binário. Salve primeiro o plano como XML (Arquivo → Salvar como → Formato XML) e envie o arquivo .xml.",
+      "summary": "{name} — tarefas a importar: {count}"
+    },
     "statuses": {
       "pending": "Pendente",
       "running": "Em execução",

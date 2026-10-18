@@ -103,7 +103,7 @@
     },
     "import-export": {
       "label": "Importar/Exportar",
-      "description": "Traer tickets, comentarios y etiquetas desde una instancia autoalojada de Plane, o exportar los datos de este proyecto como JSON."
+      "description": "Traer tickets, comentarios y etiquetas desde Plane, Linear, Jira, Trello, Procore, MS Project, o exportar los datos de este proyecto como JSON."
     },
     "ai-agents": {
       "label": "Agentes de IA",

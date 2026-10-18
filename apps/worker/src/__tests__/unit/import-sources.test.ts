@@ -4,6 +4,8 @@ import { LinearReader } from '../../linear-adapter';
 import { PlaneReader } from '../../plane-adapter';
 import { JiraReader } from '../../jira-adapter';
 import { TrelloReader } from '../../trello-adapter';
+import { ProcoreReader } from '../../procore-adapter';
+import { MsProjectReader } from '../../msproject-adapter';
 import { UnsupportedImportSourceError } from '../../reader';
 
 const planeCredential = {
@@ -32,6 +34,32 @@ describe('readerForJob', () => {
     expect(readerForJob(trello, { apiKey: 'k', token: 't' })).toBeInstanceOf(TrelloReader);
     expect(sourceProjectKeyForJob(trello)).toBeNull();
     expect(() => readerForJob(trello, linearCredential)).toThrow('not a Trello key and token');
+  });
+
+  it('builds a Procore reader and refuses a job with no project or tool', () => {
+    const credential = { clientId: 'c', clientSecret: 's', companyId: '5' };
+    const job = {
+      id: 11,
+      source: 'procore',
+      config: { procoreProjectId: '9', procoreTool: 'rfis' },
+    };
+    expect(readerForJob(job, credential)).toBeInstanceOf(ProcoreReader);
+    expect(sourceProjectKeyForJob(job)).toBeNull();
+    expect(() => readerForJob({ ...job, config: { procoreProjectId: '9' } }, credential)).toThrow(
+      'no source project configured',
+    );
+    expect(() => readerForJob(job, linearCredential)).toThrow('not a Procore service account');
+  });
+
+  it('builds an MS Project reader that needs no credential, and refuses a job with no file', () => {
+    const job = {
+      id: 12,
+      source: 'msproject',
+      config: { msprojectFileKey: 'import-sources/1/a.xml' },
+    };
+    expect(readerForJob(job, {})).toBeInstanceOf(MsProjectReader);
+    expect(sourceProjectKeyForJob(job)).toBeNull();
+    expect(() => readerForJob({ ...job, config: {} }, {})).toThrow('no uploaded file configured');
   });
 
   it('builds a Plane reader for a Plane job', () => {

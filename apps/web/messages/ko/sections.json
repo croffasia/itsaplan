@@ -103,7 +103,7 @@
     },
     "import-export": {
       "label": "가져오기/내보내기",
-      "description": "셀프 호스팅 Plane 인스턴스에서 이슈, 댓글 및 라벨을 가져오거나 이 프로젝트의 데이터를 JSON으로 내보냅니다."
+      "description": "Plane, Linear, Jira, Trello, Procore, MS Project에서 이슈, 댓글 및 라벨을 가져오거나 이 프로젝트의 데이터를 JSON으로 내보냅니다."
     },
     "ai-agents": {
       "label": "AI 에이전트",

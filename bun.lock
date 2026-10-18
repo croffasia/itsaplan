@@ -43,6 +43,7 @@
         "drizzle-orm": "^0.45.4",
         "elysia": "^1.4.30",
         "exceljs": "^4.4.0",
+        "fast-xml-parser": "^5.11.2",
         "mammoth": "^1.13.0",
         "zod": "^4.6.7",
       },
@@ -168,6 +169,7 @@
         "@repo/storage": "workspace:*",
         "croner": "^10.0.1",
         "drizzle-orm": "^0.45.4",
+        "fast-xml-parser": "^5.11.2",
       },
       "devDependencies": {
         "@repo/eslint-config": "workspace:*",

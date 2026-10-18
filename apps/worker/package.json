@@ -17,7 +17,8 @@
     "@repo/net": "workspace:*",
     "@repo/storage": "workspace:*",
     "croner": "^10.0.1",
-    "drizzle-orm": "^0.45.4"
+    "drizzle-orm": "^0.45.4",
+    "fast-xml-parser": "^5.11.2"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

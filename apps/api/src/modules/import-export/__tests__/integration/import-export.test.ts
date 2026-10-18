@@ -9,11 +9,11 @@ import { createRole } from '#tests/helpers/roles';
 
 type Client = ReturnType<typeof authedApi>;
 
-async function setupOwnerProject(): Promise<{ api: Client; userId: string }> {
+async function setupOwnerProject(): Promise<{ api: Client; userId: string; projectId: number }> {
   const owner = await signUpTestUser();
   const api = authedApi(owner.cookie);
-  await createProject(api, { key: 'MKT', name: 'Marketing' });
-  return { api, userId: owner.userId };
+  const created = await createProject(api, { key: 'MKT', name: 'Marketing' });
+  return { api, userId: owner.userId, projectId: created.data!.id };
 }
 
 // Adds a member to project MKT through the invite flow, optionally on a custom role.
@@ -408,6 +408,100 @@ describe('import jobs', () => {
         ).status,
       ).toBe(400);
       expect((await jobs(api)['trello-preview'].post({} as never)).status).toBe(400);
+    });
+  });
+
+  describe('procore and msproject', () => {
+    const procoreBody = {
+      source: 'procore' as const,
+      clientId: 'cid',
+      clientSecret: 'csecret',
+      companyId: '55',
+      procoreProjectId: '9001',
+      procoreTool: 'rfis' as const,
+    };
+
+    async function storedJob(id: number) {
+      const [row] = await db.select().from(importJob).where(eq(importJob.id, id));
+      const credential = decryptSecret({
+        ciphertext: row!.credentialCiphertext!,
+        iv: row!.credentialIv!,
+        authTag: row!.credentialAuthTag!,
+      });
+      return { config: row!.config, credential: JSON.parse(credential) as unknown };
+    }
+
+    it('creates a pending Procore job with the encrypted service account', async () => {
+      const { api } = await setupOwnerProject();
+      const res = await jobs(api).post({ ...procoreBody, sandbox: true });
+      expect(res.status).toBe(201);
+      expect(res.data).toMatchObject({
+        source: 'procore',
+        status: 'pending',
+        counts: zeroedCounts,
+      });
+      expect(await storedJob(res.data!.id)).toEqual({
+        config: {
+          procoreProjectId: '9001',
+          procoreTool: 'rfis',
+          unmatchedUserPolicy: 'unassigned',
+        },
+        credential: { clientId: 'cid', clientSecret: 'csecret', companyId: '55', sandbox: true },
+      });
+    });
+
+    it.each([
+      ['a non-numeric company', { companyId: 'acme' }],
+      ['a non-numeric project', { procoreProjectId: '../x' }],
+      ['an unknown tool', { procoreTool: 'drawings' }],
+      ['a blank secret', { clientSecret: ' ' }],
+    ])('rejects a Procore job with %s', async (_case, change) => {
+      const { api } = await setupOwnerProject();
+      expect((await jobs(api).post({ ...procoreBody, ...change } as never)).status).toBe(400);
+    });
+
+    it('creates an MS Project job from an uploaded file key, with an empty credential', async () => {
+      const { api, projectId } = await setupOwnerProject();
+      const msprojectFileKey = `import-sources/${projectId}/2f6c1c3e.xml`;
+      const res = await jobs(api).post({
+        source: 'msproject',
+        msprojectFileKey,
+        msprojectName: 'plan.xml',
+      });
+      expect(res.status).toBe(201);
+      expect(res.data).toMatchObject({ source: 'msproject', status: 'pending' });
+      expect(await storedJob(res.data!.id)).toEqual({
+        config: { msprojectFileKey, msprojectName: 'plan.xml', unmatchedUserPolicy: 'unassigned' },
+        credential: {},
+      });
+    });
+
+    it.each([
+      ['another project', (id: number) => `import-sources/${id + 1}/a.xml`],
+      ['a path outside the import prefix', (id: number) => `attachments/${id}/a.xml`],
+      ['a path with ..', (id: number) => `import-sources/${id}/../a.xml`],
+      ['a file that is not xml', (id: number) => `import-sources/${id}/a.mpp`],
+    ])('rejects an MS Project job whose key is %s', async (_case, key) => {
+      const { api, projectId } = await setupOwnerProject();
+      const res = await jobs(api).post({
+        source: 'msproject',
+        msprojectFileKey: key(projectId),
+        msprojectName: 'plan.xml',
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a .mpp upload and a file that is not MSPDI, before storing anything', async () => {
+      const { api } = await setupOwnerProject();
+      const mpp = await jobs(api)['msproject-upload'].post({
+        file: new File(['x'], 'plan.mpp'),
+      });
+      expect(mpp.status).toBe(400);
+      expect(JSON.stringify(mpp.error?.value)).toContain('Save the plan as XML');
+      const other = await jobs(api)['msproject-upload'].post({
+        file: new File(['<Other/>'], 'plan.xml'),
+      });
+      expect(other.status).toBe(400);
     });
   });
 

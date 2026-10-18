@@ -571,6 +571,34 @@
       "noBoards": "Ce jeton ne voit aucun tableau.",
       "closedBoard": "{name} (fermé)"
     },
+    "procore": {
+      "connect": "Se connecter à Procore",
+      "connectHint": "Saisissez les identifiants d'un compte de service Procore pour les vérifier et charger les projets qu'il peut lire.",
+      "clientId": "ID client",
+      "clientSecret": "Secret client",
+      "clientSecretHint": "Issu du compte de service géré par le développeur de votre application Procore. Il doit avoir un accès en lecture aux outils Liste de réserves (Punch List) et RFI.",
+      "companyId": "ID de l'entreprise",
+      "companyIdHint": "Le numéro figurant dans l'URL de votre entreprise Procore.",
+      "sandbox": "Utiliser le bac à sable Procore",
+      "scope": "Quoi importer",
+      "scopeHint": "Choisissez un projet et un outil. Chaque import apporte un outil d'un projet.",
+      "project": "Projet Procore",
+      "projectPlaceholder": "Sélectionner un projet",
+      "noProjects": "Ce compte de service ne peut lire aucun projet.",
+      "tool": "Outil",
+      "toolPlaceholder": "Sélectionner un outil",
+      "toolPunchItems": "Éléments de la liste de réserves",
+      "toolRfis": "RFI (les réponses deviennent des commentaires)"
+    },
+    "msproject": {
+      "upload": "Téléverser un plan MS Project",
+      "uploadHint": "Importez les tâches d'un plan. Les tâches récapitulatives deviennent des tickets parents et les liens entre tâches deviennent des relations de blocage.",
+      "file": "Fichier du plan (.xml)",
+      "fileHint": "Dans MS Project, enregistrez d'abord le plan au format XML : Fichier → Enregistrer sous → Format XML. Les fichiers .mpp binaires ne peuvent pas être importés. 20 Mo maximum.",
+      "uploading": "Téléversement…",
+      "mppRejected": "Ceci est un fichier .mpp binaire. Enregistrez d'abord le plan au format XML (Fichier → Enregistrer sous → Format XML), puis téléversez le fichier .xml.",
+      "summary": "{name} — tâches à importer : {count}"
+    },
     "statuses": {
       "pending": "En attente",
       "running": "En cours",

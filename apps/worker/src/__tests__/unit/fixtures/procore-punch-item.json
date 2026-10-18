@@ -1,0 +1,21 @@
+{
+  "id": 4021,
+  "position": 12,
+  "name": "Repaint lobby wall",
+  "description": "<p>Paint is chipped near the <b>elevator</b> &amp; door.</p>",
+  "status": "Ready for Review",
+  "priority": "High",
+  "due_date": "2025-03-14",
+  "created_at": "2025-02-01T09:30:00Z",
+  "updated_at": "2025-02-10T16:00:00Z",
+  "assignments": [{ "id": 1, "name": "Sam Painter", "login": "sam@example.com" }],
+  "attachments": [
+    {
+      "id": 77,
+      "name": "wall.jpg",
+      "url": "https://api.procore.com/rest/v1.0/files/77/download",
+      "content_type": "image/jpeg",
+      "size": 2048
+    }
+  ]
+}

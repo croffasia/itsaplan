@@ -571,6 +571,34 @@
       "noBoards": "Token ini tidak dapat melihat papan apa pun.",
       "closedBoard": "{name} (ditutup)"
     },
+    "procore": {
+      "connect": "Hubungkan ke Procore",
+      "connectHint": "Masukkan kredensial akun layanan Procore untuk memeriksanya dan memuat proyek yang dapat dibacanya.",
+      "clientId": "Client ID",
+      "clientSecret": "Client secret",
+      "clientSecretHint": "Dari Developer Managed Service Account pada aplikasi Procore Anda. Akun ini memerlukan akses baca ke alat Punch List dan RFI.",
+      "companyId": "ID perusahaan",
+      "companyIdHint": "Angka pada URL perusahaan Procore Anda.",
+      "sandbox": "Gunakan sandbox Procore",
+      "scope": "Yang akan diimpor",
+      "scopeHint": "Pilih proyek dan alat. Setiap impor membawa satu alat dari satu proyek.",
+      "project": "Proyek Procore",
+      "projectPlaceholder": "Pilih proyek",
+      "noProjects": "Akun layanan ini tidak dapat membaca proyek apa pun.",
+      "tool": "Alat",
+      "toolPlaceholder": "Pilih alat",
+      "toolPunchItems": "Item punch list",
+      "toolRfis": "RFI (jawaban menjadi komentar)"
+    },
+    "msproject": {
+      "upload": "Unggah rencana MS Project",
+      "uploadHint": "Impor tugas dari sebuah rencana. Tugas ringkasan menjadi isu induk dan tautan antartugas menjadi relasi pemblokiran.",
+      "file": "File rencana (.xml)",
+      "fileHint": "Di MS Project, simpan dulu rencana sebagai XML: File → Save As → XML Format. File .mpp biner tidak dapat diimpor. Maksimum 20 MB.",
+      "uploading": "Mengunggah…",
+      "mppRejected": "Ini adalah file .mpp biner. Simpan dulu rencana sebagai XML (File → Save As → XML Format), lalu unggah file .xml.",
+      "summary": "{name} — tugas yang akan diimpor: {count}"
+    },
     "statuses": {
       "pending": "Tertunda",
       "running": "Berjalan",

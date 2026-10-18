@@ -571,6 +571,34 @@
       "noBoards": "该令牌无法查看任何看板。",
       "closedBoard": "{name}（已关闭）"
     },
+    "procore": {
+      "connect": "连接 Procore",
+      "connectHint": "输入 Procore 服务账号的凭据，以验证并加载其可读取的项目。",
+      "clientId": "客户端 ID",
+      "clientSecret": "客户端密钥",
+      "clientSecretHint": "来自你的 Procore 应用的开发者托管服务账号（DMSA）。它需要对 Punch List 和 RFI 工具有读取权限。",
+      "companyId": "公司 ID",
+      "companyIdHint": "Procore 公司 URL 中的数字。",
+      "sandbox": "使用 Procore 沙盒",
+      "scope": "导入内容",
+      "scopeHint": "选择一个项目和一个工具。每次导入会带入一个项目的一个工具。",
+      "project": "Procore 项目",
+      "projectPlaceholder": "选择项目",
+      "noProjects": "此服务账号无法读取任何项目。",
+      "tool": "工具",
+      "toolPlaceholder": "选择工具",
+      "toolPunchItems": "Punch List 条目",
+      "toolRfis": "RFI（答复将成为评论）"
+    },
+    "msproject": {
+      "upload": "上传 MS Project 计划",
+      "uploadHint": "导入计划中的任务。摘要任务会成为父事项，任务之间的链接会成为阻塞关系。",
+      "file": "计划文件（.xml）",
+      "fileHint": "请先在 MS Project 中将计划另存为 XML：文件 → 另存为 → XML 格式。无法导入二进制 .mpp 文件。最大 20 MB。",
+      "uploading": "正在上传…",
+      "mppRejected": "这是二进制 .mpp 文件。请先将计划另存为 XML（文件 → 另存为 → XML 格式），再上传 .xml 文件。",
+      "summary": "{name} — 待导入任务：{count}"
+    },
     "statuses": {
       "pending": "待处理",
       "running": "运行中",

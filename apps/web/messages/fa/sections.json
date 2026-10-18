@@ -103,7 +103,7 @@
     },
     "import-export": {
       "label": "ورود/خروج",
-      "description": "واردکردن تسک‌ها، دیدگاه‌ها و برچسب‌ها از یک سامانه Plane خودمیزبان، یا خروج داده‌های این پروژه به‌صورت JSON."
+      "description": "واردکردن تسک‌ها، دیدگاه‌ها و برچسب‌ها از Plane, Linear, Jira, Trello, Procore, MS Project، یا خروج داده‌های این پروژه به‌صورت JSON."
     },
     "ai-agents": {
       "label": "ایجنت‌های AI",

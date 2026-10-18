@@ -1,14 +1,14 @@
-import { request } from '@/lib/api/core/client';
+import { request, uploadFile } from '@/lib/api/core/client';
 
 // Import jobs bring issues in from a Plane instance, a Linear workspace, a Jira
-// Cloud site or a Trello board (mirrors apps/api modules/import-export). Creating one stores an
+// Cloud site, a Trello board, a Procore project or an uploaded MS Project file (mirrors apps/api modules/import-export). Creating one stores an
 // encrypted credential and leaves the job 'pending' for the worker to drive through
 // its phases.
 
 export type ImportJobPhase = 'discover' | 'create' | 'link' | 'rewrite' | 'attachments' | 'done';
 export type ImportJobStatus = 'pending' | 'running' | 'paused' | 'completed' | 'failed';
 export type ImportEntityType = 'issue' | 'comment' | 'label' | 'state' | 'cycle' | 'attachment';
-export type ImportSource = 'plane' | 'linear' | 'jira' | 'trello';
+export type ImportSource = 'plane' | 'linear' | 'jira' | 'trello' | 'procore' | 'msproject';
 
 export interface ImportEntityCount {
   discovered: number;
@@ -117,8 +117,48 @@ export interface TrelloImportJobFields extends TrelloConnectionInput {
   trelloBoardId: string;
 }
 
+export type ProcoreTool = 'punch_items' | 'rfis';
+
+export interface ProcoreConnectionInput {
+  clientId: string;
+  clientSecret: string;
+  companyId: string;
+  sandbox: boolean;
+}
+
+export interface ProcoreProjectOption {
+  id: string;
+  name: string;
+}
+
+export interface ProcoreImportJobFields extends ProcoreConnectionInput {
+  source: 'procore';
+  procoreProjectId: string;
+  procoreTool: ProcoreTool;
+}
+
+export interface MsProjectUpload {
+  fileKey: string;
+  fileName: string;
+  taskCount: number;
+  states: PlaneStateOption[];
+}
+
+export interface MsProjectImportJobFields {
+  source: 'msproject';
+  msprojectFileKey: string;
+  msprojectName: string;
+}
+
 export type CreateImportJobInput = ImportJobChoices &
-  (PlaneImportJobFields | LinearImportJobFields | JiraImportJobFields | TrelloImportJobFields);
+  (
+    | PlaneImportJobFields
+    | LinearImportJobFields
+    | JiraImportJobFields
+    | TrelloImportJobFields
+    | ProcoreImportJobFields
+    | MsProjectImportJobFields
+  );
 
 export const testPlaneConnection = (projectKey: string, input: PlaneConnectionInput) =>
   request<{ projects: PlaneProjectOption[] }>(
@@ -179,6 +219,24 @@ export const testTrelloStatesPreview = (
     method: 'POST',
     body: JSON.stringify(input),
   });
+
+export const testProcoreConnection = (projectKey: string, input: ProcoreConnectionInput) =>
+  request<{ projects: ProcoreProjectOption[] }>(
+    `/projects/${projectKey}/import-jobs/procore-test-connection`,
+    { method: 'POST', body: JSON.stringify(input) },
+  );
+
+export const testProcoreStatesPreview = (
+  projectKey: string,
+  input: ProcoreConnectionInput & { procoreProjectId: string; procoreTool: ProcoreTool },
+) =>
+  request<{ states: PlaneStateOption[] }>(`/projects/${projectKey}/import-jobs/procore-preview`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+
+export const uploadMsProjectFile = (projectKey: string, file: File) =>
+  uploadFile<MsProjectUpload>(`/projects/${projectKey}/import-jobs/msproject-upload`, 'POST', file);
 
 export const createImportJob = (projectKey: string, input: CreateImportJobInput) =>
   request<ImportJob>(`/projects/${projectKey}/import-jobs`, {

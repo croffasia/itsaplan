@@ -1,0 +1,27 @@
+{
+  "id": 9001,
+  "number": 7,
+  "full_number": "7",
+  "subject": "Beam size at gridline C",
+  "status": "Open",
+  "due_date": "2025-04-01T00:00:00Z",
+  "created_at": "2025-03-01T08:00:00Z",
+  "updated_at": "2025-03-05T08:00:00Z",
+  "questions": [{ "id": 1, "plain_text_body": "Is the beam W12x26 or W14x30?" }],
+  "responses": [
+    {
+      "id": 502,
+      "body": "<p>Later answer</p>",
+      "created_at": "2025-03-04T10:00:00Z",
+      "created_by": { "name": "Eng Lee", "login": "lee@example.com" }
+    },
+    {
+      "id": 501,
+      "plain_text_body": "Checking with the engineer.",
+      "created_at": "2025-03-02T10:00:00Z",
+      "created_by": { "name": "Pat PM" }
+    }
+  ],
+  "assignees": [{ "name": "Eng Lee", "login": "lee@example.com" }],
+  "attachments": []
+}

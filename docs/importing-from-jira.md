@@ -55,4 +55,5 @@ project. The phases, pausing, rate limits and re-running behave as described in
 ## Other sources
 
 [Plane](importing-from-plane.md), [Linear](importing-from-linear.md),
-[Trello](importing-from-trello.md).
+[Trello](importing-from-trello.md), [Procore](importing-from-procore.md),
+[MS Project](importing-from-ms-project.md).

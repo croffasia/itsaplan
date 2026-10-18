@@ -3,6 +3,9 @@ import { LinearReader, type LinearCredential } from './linear-adapter';
 import { PlaneReader, type PlaneCredential } from './plane-adapter';
 import { JiraReader, type JiraCredential } from './jira-adapter';
 import { TrelloReader, type TrelloCredential } from './trello-adapter';
+import { ProcoreReader, type ProcoreCredential } from './procore-adapter';
+import { MsProjectReader } from './msproject-adapter';
+import type { ProcoreTool } from './procore-mapping';
 import { UnsupportedImportSourceError, type SourceReader } from './reader';
 
 // The import_job.config fields every source shares; the phases read them directly.
@@ -36,6 +39,22 @@ export interface TrelloImportConfig extends CommonImportConfig {
   trelloBoardId: string;
 }
 
+// Procore items have no "KEY-123" identifier, so Rewrite leaves their text as written.
+export interface ProcoreImportConfig extends CommonImportConfig {
+  procoreProjectId: string;
+  procoreTool: ProcoreTool;
+}
+
+// The uploaded MSPDI file's object key. Tasks have no "KEY-123" identifier either.
+export interface MsProjectImportConfig extends CommonImportConfig {
+  msprojectFileKey: string;
+  msprojectName?: string;
+}
+
+// An MS Project job reads an uploaded file and needs no credential; the api stores an
+// empty object because the pipeline requires one.
+export type MsProjectCredential = Record<string, never>;
+
 // One entry per import_job.source. A new source adds a member to both maps and an
 // entry to IMPORT_SOURCES.
 export interface ImportCredentials {
@@ -43,6 +62,8 @@ export interface ImportCredentials {
   linear: LinearCredential;
   jira: JiraCredential;
   trello: TrelloCredential;
+  procore: ProcoreCredential;
+  msproject: MsProjectCredential;
 }
 
 export interface ImportConfigs {
@@ -50,6 +71,8 @@ export interface ImportConfigs {
   linear: LinearImportConfig;
   jira: JiraImportConfig;
   trello: TrelloImportConfig;
+  procore: ProcoreImportConfig;
+  msproject: MsProjectImportConfig;
 }
 
 export type ImportSourceKind = keyof ImportConfigs;
@@ -117,6 +140,36 @@ const IMPORT_SOURCES: { [S in ImportSourceKind]: ImportSourceDefinition<S> } = {
         throw new Error(`import job ${jobId} has no source project configured`);
       }
       return new TrelloReader(credential, config.trelloBoardId);
+    },
+    projectKey: () => null,
+  },
+  procore: {
+    buildReader(credential, config, jobId) {
+      if (
+        typeof credential?.clientId !== 'string' ||
+        typeof credential.clientSecret !== 'string' ||
+        typeof credential.companyId !== 'string'
+      ) {
+        throw new Error(
+          `import job ${jobId} has a credential that is not a Procore service account`,
+        );
+      }
+      if (
+        !config.procoreProjectId ||
+        (config.procoreTool !== 'punch_items' && config.procoreTool !== 'rfis')
+      ) {
+        throw new Error(`import job ${jobId} has no source project configured`);
+      }
+      return new ProcoreReader(credential, config.procoreProjectId, config.procoreTool);
+    },
+    projectKey: () => null,
+  },
+  msproject: {
+    buildReader(_credential, config, jobId) {
+      if (!config.msprojectFileKey) {
+        throw new Error(`import job ${jobId} has no uploaded file configured`);
+      }
+      return new MsProjectReader(config.msprojectFileKey);
     },
     projectKey: () => null,
   },

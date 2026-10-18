@@ -13,6 +13,8 @@ import {
   JiraTestConnectionResponse,
   TrelloTestConnectionResponse,
   SourcePreviewResponse,
+  ProcoreTestConnectionResponse,
+  MsProjectUploadResponse,
   ProjectExportResponse,
   createImportJobBody,
   importJobParams,
@@ -24,6 +26,9 @@ import {
   jiraPreviewBody,
   trelloConnectionBody,
   trelloPreviewBody,
+  procoreConnectionBody,
+  procorePreviewBody,
+  msprojectUploadBody,
 } from './model';
 import {
   cancelImportJob,
@@ -40,6 +45,8 @@ import { exportProject } from './export';
 import { previewLinearStates, testLinearConnection } from './linear';
 import { previewJiraStates, testJiraConnection } from './jira';
 import { previewTrelloStates, testTrelloConnection } from './trello';
+import { previewProcoreStates, testProcoreConnection } from './procore';
+import { uploadMsProjectFile } from './msproject';
 
 // Import jobs bring issues from an external tracker into a project. Creating one
 // stores an encrypted credential and leaves it 'pending' for the worker
@@ -184,6 +191,54 @@ export const importExportRoutes = new Elysia({
     },
   )
 
+  .post(
+    '/projects/:projectKey/import-jobs/procore-test-connection',
+    ({ body }) => testProcoreConnection(body),
+    {
+      permission: ['import_export', 'create'],
+      body: procoreConnectionBody,
+      response: { 200: ProcoreTestConnectionResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'Test a Procore service account',
+        description:
+          'Validate a Procore client ID, secret and company id live, without storing anything. ' +
+          'Returns the projects the service account can read.',
+      },
+    },
+  )
+
+  .post(
+    '/projects/:projectKey/import-jobs/procore-preview',
+    ({ body }) => previewProcoreStates(body),
+    {
+      permission: ['import_export', 'create'],
+      body: procorePreviewBody,
+      response: { 200: SourcePreviewResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'Preview a Procore tool before importing it',
+        description:
+          'Check the project and tool can be read, and return the states the tool maps to, ' +
+          'each with the category One Health would automatically map it to.',
+      },
+    },
+  )
+
+  .post(
+    '/projects/:projectKey/import-jobs/msproject-upload',
+    ({ project, body }) => uploadMsProjectFile(project.id, body.file),
+    {
+      permission: ['import_export', 'create'],
+      body: msprojectUploadBody,
+      response: { 200: MsProjectUploadResponse, ...commonErrors, ...errors(413, 502) },
+      detail: {
+        summary: 'Upload an MS Project XML file',
+        description:
+          'Check an MSPDI XML file (File > Save As > XML Format in MS Project), store it, and ' +
+          'return its key with the task count and the states tasks map to. Binary .mpp is rejected.',
+      },
+    },
+  )
+
   .get('/projects/:projectKey/import-jobs/export', ({ project }) => exportProject(project.id), {
     permission: ['import_export', 'create'],
     response: { 200: ProjectExportResponse, ...accessErrors },
@@ -209,7 +264,7 @@ export const importExportRoutes = new Elysia({
       detail: {
         summary: 'Create an import job',
         description:
-          "Create a Plane job, or a Linear, Jira or Trello one with source 'linear', 'jira' or 'trello'. Encrypt and store the " +
+          "Create a Plane job, or a Linear, Jira, Trello, Procore or MS Project one with source 'linear', 'jira', 'trello', 'procore' or 'msproject'. Encrypt and store the " +
           "submitted credential and leave the job 'pending' for the worker.",
       },
     },

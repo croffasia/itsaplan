@@ -43,6 +43,8 @@ import {
   type CreateImportJobInput,
   type JiraConnectionInput,
   type TrelloConnectionInput,
+  type ProcoreConnectionInput,
+  type ProcoreTool,
   type LinearConnectionInput,
   type PlaneConnectionInput,
   testLinearConnection,
@@ -50,6 +52,9 @@ import {
   testJiraConnection,
   testJiraStatesPreview,
   testTrelloConnection,
+  testProcoreConnection,
+  testProcoreStatesPreview,
+  uploadMsProjectFile,
   testTrelloStatesPreview,
   testPlaneConnection,
   testPlaneStatesPreview,
@@ -281,7 +286,7 @@ export function useDisconnectGitRepository(projectKey: string, connectionId: num
 }
 
 // Import/export section: testing a connection to a Plane instance, a Linear API
-// key, a Jira Cloud site or a Trello token, starting an import job, and tracking
+// key, a Jira Cloud site, a Trello token, a Procore service account or an MS Project file, starting an import job, and tracking
 // the ones already running.
 export function useTestPlaneConnection(projectKey: string) {
   return useMutation({
@@ -353,6 +358,31 @@ export function useTestTrelloStatesPreview(
     queryFn: () => testTrelloStatesPreview(projectKey, input!),
     enabled: input != null,
   });
+}
+
+export function useTestProcoreConnection(projectKey: string) {
+  return useMutation({
+    mutationFn: (input: ProcoreConnectionInput) => testProcoreConnection(projectKey, input),
+  });
+}
+
+export function useTestProcoreStatesPreview(
+  projectKey: string,
+  input: (ProcoreConnectionInput & { procoreProjectId: string; procoreTool: ProcoreTool }) | null,
+) {
+  return useQuery({
+    queryKey: qk.sourcePreview(
+      projectKey,
+      'procore',
+      input ? `${input.procoreProjectId}:${input.procoreTool}` : 'none',
+    ),
+    queryFn: () => testProcoreStatesPreview(projectKey, input!),
+    enabled: input != null,
+  });
+}
+
+export function useUploadMsProjectFile(projectKey: string) {
+  return useMutation({ mutationFn: (file: File) => uploadMsProjectFile(projectKey, file) });
 }
 
 export function useCreateImportJob(projectKey: string) {

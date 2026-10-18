@@ -103,7 +103,7 @@
     },
     "import-export": {
       "label": "Import/Export",
-      "description": "Importez les tickets, commentaires et étiquettes depuis une instance Plane auto-hébergée, ou exportez les données du projet au format JSON."
+      "description": "Importez les tickets, commentaires et étiquettes depuis Plane, Linear, Jira, Trello, Procore, MS Project, ou exportez les données du projet au format JSON."
     },
     "ai-agents": {
       "label": "Agents",

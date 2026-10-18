@@ -103,7 +103,7 @@
     },
     "import-export": {
       "label": "Impor/Ekspor",
-      "description": "Impor issue, komentar, dan label dari instans Plane self-hosted, atau ekspor data proyek ini sebagai JSON."
+      "description": "Impor issue, komentar, dan label dari Plane, Linear, Jira, Trello, Procore, MS Project, atau ekspor data proyek ini sebagai JSON."
     },
     "ai-agents": {
       "label": "Agen AI",

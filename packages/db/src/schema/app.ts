@@ -2291,7 +2291,7 @@ export const webhookDelivery = pgTable(
 // job's own per-phase resumability checkpoint, not the source API's pagination
 // cursor. The credential columns are cleared once the job reaches a terminal
 // status. One source adapter per value (apps/worker/src/import-sources.ts).
-export type ImportSource = 'plane' | 'linear' | 'jira' | 'trello';
+export type ImportSource = 'plane' | 'linear' | 'jira' | 'trello' | 'procore' | 'msproject';
 
 export const importJob = pgTable(
   'import_job',
@@ -2318,7 +2318,10 @@ export const importJob = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    check('import_job_source_check', sql`${t.source} IN ('plane', 'linear', 'jira', 'trello')`),
+    check(
+      'import_job_source_check',
+      sql`${t.source} IN ('plane', 'linear', 'jira', 'trello', 'procore', 'msproject')`,
+    ),
     check(
       'import_job_phase_check',
       sql`${t.phase} IN ('discover', 'create', 'link', 'rewrite', 'attachments', 'done')`,

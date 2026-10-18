@@ -571,6 +571,34 @@
       "noBoards": "Este token no puede ver ningún tablero.",
       "closedBoard": "{name} (cerrado)"
     },
+    "procore": {
+      "connect": "Conectar con Procore",
+      "connectHint": "Introduce las credenciales de una cuenta de servicio de Procore para comprobarlas y cargar los proyectos que puede leer.",
+      "clientId": "ID de cliente",
+      "clientSecret": "Secreto de cliente",
+      "clientSecretHint": "De la cuenta de servicio gestionada por el desarrollador de tu aplicación de Procore. Necesita acceso de lectura a las herramientas Lista de pendientes (Punch List) y RFI.",
+      "companyId": "ID de la empresa",
+      "companyIdHint": "El número de la URL de tu empresa en Procore.",
+      "sandbox": "Usar el sandbox de Procore",
+      "scope": "Qué importar",
+      "scopeHint": "Elige un proyecto y una herramienta. Cada importación trae una herramienta de un proyecto.",
+      "project": "Proyecto de Procore",
+      "projectPlaceholder": "Selecciona un proyecto",
+      "noProjects": "Esta cuenta de servicio no puede leer ningún proyecto.",
+      "tool": "Herramienta",
+      "toolPlaceholder": "Selecciona una herramienta",
+      "toolPunchItems": "Elementos de la lista de pendientes",
+      "toolRfis": "RFI (las respuestas pasan a ser comentarios)"
+    },
+    "msproject": {
+      "upload": "Subir un plan de MS Project",
+      "uploadHint": "Importa las tareas de un plan. Las tareas de resumen pasan a ser incidencias padre y los vínculos entre tareas pasan a ser relaciones de bloqueo.",
+      "file": "Archivo del plan (.xml)",
+      "fileHint": "En MS Project, guarda primero el plan como XML: Archivo → Guardar como → Formato XML. No se pueden importar archivos .mpp binarios. Máximo 20 MB.",
+      "uploading": "Subiendo…",
+      "mppRejected": "Es un archivo .mpp binario. Guarda primero el plan como XML (Archivo → Guardar como → Formato XML) y sube el archivo .xml.",
+      "summary": "{name} — tareas a importar: {count}"
+    },
     "statuses": {
       "pending": "Pendiente",
       "running": "En ejecución",

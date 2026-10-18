@@ -126,4 +126,5 @@ Plane, and nothing is scheduled or kept running.
 
 [Importing from Linear](importing-from-linear.md) describes the Linear source.
 [Importing from Jira](importing-from-jira.md) and [Importing from Trello](importing-from-trello.md)
-describe the Jira and Trello sources.
+describe the Jira and Trello sources. [Importing from Procore](importing-from-procore.md) and
+[Importing from MS Project](importing-from-ms-project.md) describe the Procore and MS Project sources.

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Project xmlns="http://schemas.microsoft.com/project">
+  <Name>Office fit-out</Name>
+  <CreationDate>2025-01-02T08:00:00</CreationDate>
+  <Tasks>
+    <Task><UID>0</UID><ID>0</ID><Name>Office fit-out</Name><OutlineLevel>0</OutlineLevel><Summary>1</Summary></Task>
+    <Task><UID>1</UID><ID>1</ID><Name>Design &amp; permits</Name><OutlineNumber>1</OutlineNumber><OutlineLevel>1</OutlineLevel><Summary>1</Summary><Priority>500</Priority><Start>2025-01-06T08:00:00</Start><Finish>2025-01-31T17:00:00</Finish><PercentComplete>40</PercentComplete></Task>
+    <Task><UID>2</UID><ID>2</ID><Name>Draw plans</Name><OutlineLevel>2</OutlineLevel><Priority>800</Priority><Start>2025-01-06T08:00:00</Start><Finish>2025-01-17T17:00:00</Finish><PercentComplete>100</PercentComplete><CreateDate>2025-01-03T09:00:00</CreateDate><Notes>Use the &lt;final&gt; survey.</Notes></Task>
+    <Task><UID>3</UID><ID>3</ID><Name>Permit approved</Name><OutlineLevel>2</OutlineLevel><Milestone>1</Milestone><Priority>950</Priority><Start>2025-01-31T08:00:00</Start><Finish>2025-01-31T08:00:00</Finish><PercentComplete>0</PercentComplete><PredecessorLink><PredecessorUID>2</PredecessorUID><Type>1</Type></PredecessorLink></Task>
+    <Task><UID>4</UID><ID>4</ID><Name></Name><OutlineLevel>1</OutlineLevel></Task>
+    <Task><UID>5</UID><ID>5</ID><Name>Build</Name><OutlineLevel>1</OutlineLevel><Priority>100</Priority><Start>2025-02-03T08:00:00</Start><Finish>2025-03-28T17:00:00</Finish><PercentComplete>0</PercentComplete><PredecessorLink><PredecessorUID>3</PredecessorUID></PredecessorLink><PredecessorLink><PredecessorUID>99</PredecessorUID></PredecessorLink></Task>
+  </Tasks>
+  <Resources>
+    <Resource><UID>0</UID><ID>0</ID><Name>Unassigned</Name></Resource>
+    <Resource><UID>1</UID><ID>1</ID><Name>Dana</Name><EmailAddress>dana@example.com</EmailAddress></Resource>
+    <Resource><UID>2</UID><ID>2</ID><Name>No mail</Name></Resource>
+  </Resources>
+  <Assignments>
+    <Assignment><UID>1</UID><TaskUID>2</TaskUID><ResourceUID>2</ResourceUID></Assignment>
+    <Assignment><UID>2</UID><TaskUID>2</TaskUID><ResourceUID>1</ResourceUID></Assignment>
+    <Assignment><UID>3</UID><TaskUID>5</TaskUID><ResourceUID>-65535</ResourceUID></Assignment>
+  </Assignments>
+</Project>

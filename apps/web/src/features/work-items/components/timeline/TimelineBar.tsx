@@ -19,6 +19,7 @@ export function TimelineBar({
   color,
   active,
   readOnly,
+  milestone,
   onBeginDrag,
   onOpen,
 }: {
@@ -31,6 +32,9 @@ export function TimelineBar({
   // In a read-only share the bar cannot be dragged or resized; a click on it
   // still opens the issue.
   readOnly?: boolean;
+  // A milestone (an issue labelled "Milestone") is drawn as a diamond on its due
+  // date instead of a bar; dragging it moves the date.
+  milestone?: boolean;
   onBeginDrag: (e: React.PointerEvent, issue: Issue, mode: TimelineDragMode) => void;
   onOpen: (id: number) => void;
 }) {
@@ -39,8 +43,36 @@ export function TimelineBar({
   let cursor = 'cursor-ew-resize';
   if (readOnly) cursor = 'cursor-pointer';
   else if (active) cursor = 'cursor-grabbing';
+  if (milestone) {
+    return (
+      <div
+        data-timeline-bar={issue.id}
+        onPointerDown={readOnly ? undefined : (e) => onBeginDrag(e, issue, 'move')}
+        onClick={(e) => {
+          e.preventDefault();
+          if (readOnly) onOpen(issue.id);
+        }}
+        title={issue.title}
+        className={cn(
+          'absolute top-1/2 z-10 flex h-6 -translate-y-1/2 items-center gap-1.5 select-none',
+          cursor,
+        )}
+        style={{ left: rect.left + rect.width - 12 }}
+      >
+        <span
+          className="size-3 shrink-0 rotate-45 rounded-[2px]"
+          style={{
+            backgroundColor: color,
+            boxShadow: blocked ? '0 0 0 1.5px var(--destructive)' : undefined,
+          }}
+        />
+        <span className="truncate text-[11px] leading-none whitespace-nowrap">{issue.title}</span>
+      </div>
+    );
+  }
   const bar = (
     <div
+      data-timeline-bar={issue.id}
       onPointerDown={readOnly ? undefined : (e) => onBeginDrag(e, issue, 'move')}
       // A drag ends in a click too, so both modes mark it handled and the detail
       // panel keeps it rather than reading it as a click outside.

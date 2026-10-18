@@ -89,6 +89,7 @@ export function TimelineSubtaskRows({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div
+                    data-timeline-bar={subtask.id}
                     onClick={(e) => {
                       e.preventDefault();
                       onOpen(subtask.id);

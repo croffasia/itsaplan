@@ -19,6 +19,7 @@ import { TimelineIssueBlock } from './TimelineIssueBlock';
 import { TimelineIssueRow } from './TimelineIssueRow';
 import { TimelineLinkRows } from './TimelineLinkRows';
 import { TimelineSubtaskRows } from './TimelineSubtaskRows';
+import { TimelineDependencyArrows } from './TimelineDependencyArrows';
 
 interface TimelineViewProps extends WorkItemsViewProps {
   collapsedGroups?: Set<string>;
@@ -218,6 +219,7 @@ export default function TimelineView({
               </TimelineIssueBlock>
             );
           })}
+          <TimelineDependencyArrows />
         </div>
       </div>
 

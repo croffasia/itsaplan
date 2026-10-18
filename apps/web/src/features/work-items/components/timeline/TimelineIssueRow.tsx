@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
 import { type TimelineDragMode } from '../../hooks/useTimelineDrag';
 import { ROW_H, type Span } from '../../utils/timeline';
+import { isMilestone } from '../../utils/timelineDependencies';
 import { IssueIdentifier } from '../shared/IssueIdentifier';
 import { SubtaskProgress } from '../shared/SubtaskProgress';
 import { useIssueSubtaskFold } from '../../context/useSubtasks';
@@ -104,6 +105,7 @@ export function TimelineIssueRow({
           color={color}
           active={active}
           readOnly={readOnly}
+          milestone={isMilestone(issue, maps)}
           onBeginDrag={onBeginDrag}
           onOpen={onOpen}
         />

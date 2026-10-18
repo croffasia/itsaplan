@@ -108,3 +108,8 @@ export function useParentIssue(parentId: number | null): Issue | undefined {
   const byId = useContext(IssueContext);
   return parentId === null ? undefined : byId.get(parentId);
 }
+
+// Every issue on the board by id, subtasks included.
+export function useBoardIssueMap(): Map<number, Issue> {
+  return useContext(IssueContext);
+}

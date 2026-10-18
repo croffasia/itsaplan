@@ -95,6 +95,7 @@
     "emailPlaceholder": "name@example.com",
     "alreadyMember": "{email} از قبل در این تیم است",
     "alreadyPending": "{email} از قبل یک دعوت در انتظار دارد",
+    "domainNotAllowed": "{email} در دامنه‌ای است که این نمونه مجاز نمی‌داند",
     "refused": "{email} دعوت نشد",
     "roleLabel": "نقش تیمی",
     "roleHint": {
@@ -107,6 +108,8 @@
     "joinsProject": "به تیم و {project} می‌پیوندد",
     "copyLink": "کپی لینک",
     "copied": "کپی شد",
+    "resendEmail": "ارسال ایمیل",
+    "resendingEmail": "در حال ارسال…",
     "revokeAction": "لغو دعوت",
     "revokeTitle": "لغو دعوت برای {email}؟",
     "revokeConfirm": "لغو دعوت",
@@ -477,6 +480,9 @@
     "reasoningEffortHigh": "زیاد",
     "optional": "اختیاری",
     "maxSteps": "حداکثر گام‌ها",
+    "monthlyBudget": "بودجه ماهانه (دلار)",
+    "monthlyBudgetPlaceholder": "بدون محدودیت",
+    "monthlyBudgetHint": "وقتی هزینه به این مبلغ برسد، اجراها تا پایان ماه متوقف می‌شوند. هزینه بر پایه قیمت مدل‌ها در داشبورد عامل است. اجرایی که آغاز شده به پایان می‌رسد. فراخوانی مدل بدون قیمت شمرده نمی‌شود.",
     "memory": "حافظه گفتگو",
     "memoryHint": "یادآوری پیام‌های اخیر در یک رشته گفتگو.",
     "memoryCount": "به‌خاطر سپردن N پیام آخر",
@@ -713,5 +719,37 @@
       "removePrice": "حذف قیمت",
       "save": "ذخیره قیمت"
     }
+  },
+  "agentActions": {
+    "title": "اقدامات عامل",
+    "logTab": "گزارش اقدامات",
+    "approvalsTab": "تأییدها",
+    "noActions": "این عامل هنوز تغییری نداده است.",
+    "run": "اجرای #{id}",
+    "noPending": "هیچ تغییری در انتظار تأیید نیست.",
+    "requireApproval": "نیاز به تأیید",
+    "requireApprovalHint": "تغییرات عامل و فراخوانی‌های یکپارچه‌سازی تا تأیید یکی از اعضای پروژه منتظر می‌مانند. این فقط برای عامل‌های داخلی است: فراخوانی‌های عامل بیرونی ثبت می‌شوند، نه نگه داشته.",
+    "on": "روشن",
+    "off": "خاموش",
+    "approve": "تأیید",
+    "reject": "رد",
+    "cancel": "انصراف",
+    "reason": "دلیل",
+    "reasonPlaceholder": "چرا این تغییر رد می‌شود؟",
+    "approved": "تغییر اعمال شد",
+    "rejected": "تغییر رد شد",
+    "failed": "تغییر اعمال نشد",
+    "issueTitle": "{count, plural, one {# تغییر عامل در انتظار تأیید است} other {# تغییر عامل در انتظار تأیید است}}",
+    "status": {
+      "pending": "در انتظار",
+      "applying": "در حال اعمال",
+      "approved": "تأییدشده",
+      "rejected": "ردشده",
+      "failed": "ناموفق",
+      "expired": "منقضی‌شده"
+    },
+    "from": "از",
+    "to": "به",
+    "approvedBy": "تأییدشده توسط {name}"
   }
 }

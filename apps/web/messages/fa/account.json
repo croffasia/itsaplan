@@ -50,7 +50,16 @@
     "thisDevice": "این دستگاه",
     "deleteWarning": "دیگر نمی‌توانید با این کلید عبور وارد شوید. این کار قابل بازگشت نیست.",
     "passkeyFallback": "کلید عبور",
-    "passkeysLoadFailed": "بارگذاری کلیدهای عبور ممکن نشد."
+    "passkeysLoadFailed": "بارگذاری کلیدهای عبور ممکن نشد.",
+    "connectedAppsTitle": "برنامه‌های متصل",
+    "connectedAppsDescription": "برنامه‌هایی مانند Claude یا ChatGPT که به آن‌ها اجازه داده‌اید از طریق MCP از طرف شما عمل کنند. آن‌ها هر چه شما می‌توانید ببینید و انجام دهید را می‌بینند و انجام می‌دهند.",
+    "connectedAppsEmpty": "هیچ برنامه‌ای به حساب شما متصل نیست.",
+    "connectedAppUsed": "متصل از {connected} · آخرین استفاده {used}",
+    "connectedAppSince": "متصل از {connected}",
+    "disconnectApp": "قطع اتصال",
+    "disconnectAppTitle": "اتصال {name} قطع شود؟",
+    "disconnectAppWarning": "دسترسی آن بلافاصله قطع می‌شود. اتصال دوباره به رضایت دوباره شما نیاز دارد.",
+    "disconnectAppFailed": "قطع اتصال برنامه انجام نشد."
   },
   "accounts": {
     "label": "حساب‌ها",

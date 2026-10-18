@@ -160,6 +160,14 @@
   "featureOffTitle": "{feature} غیرفعال است",
   "toggleSidebar": "تغییر نوار کناری",
   "system": "سیستم",
+  "systemScreen": {
+    "notFoundTitle": "صفحه پیدا نشد",
+    "notFoundDescription": "صفحه‌ای که باز کردید وجود ندارد یا جابه‌جا شده است.",
+    "errorTitle": "مشکلی پیش آمد",
+    "errorDescription": "این صفحه بارگذاری نشد. دوباره تلاش کنید یا به خانه برگردید.",
+    "retry": "تلاش دوباره",
+    "home": "رفتن به خانه"
+  },
   "genericError": "مشکلی پیش آمد",
   "commandPalette": "پالت فرمان",
   "commandPaletteHint": "جستجوی فرمان برای اجرا…",
@@ -212,5 +220,10 @@
     "perPage": "در هر صفحه",
     "range": "{first}-{last} از {total}"
   },
-  "aboutCloudAndPro": "درباره Cloud و Pro"
+  "aboutCloudAndPro": "درباره Cloud و Pro",
+  "hero": {
+    "plansOnTrack": "برنامه‌های طبق روال",
+    "careTeamsSynced": "تیم‌های مراقبت همگام‌شده",
+    "tasksDoneThisWeek": "کارهای انجام‌شده این هفته"
+  }
 }

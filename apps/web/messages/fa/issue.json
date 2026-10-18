@@ -64,7 +64,9 @@
     "noInitiative": "بدون ابتکار",
     "noCycle": "بدون سیکل",
     "copyFailed": "کپی در کلیپ‌بورد ممکن نشد",
-    "promptCopied": "پرامپت در کلیپ‌بورد کپی شد"
+    "promptCopied": "پرامپت در کلیپ‌بورد کپی شد",
+    "groups": "گروه‌ها",
+    "noGroup": "بدون گروه"
   },
   "commands": {
     "preview": "پیش‌نمایش تسک",
@@ -89,7 +91,10 @@
     "archive": "بایگانی تسک",
     "delete": "حذف تسک",
     "promptCopied": "پرامپت در کلیپ‌بورد کپی شد",
-    "shortLinkCopied": "لینک کوتاه کپی شد"
+    "shortLinkCopied": "لینک کوتاه کپی شد",
+    "assigneeGroup": "واگذاری به گروه",
+    "assigneeGroupPlaceholder": "واگذاری به گروه…",
+    "noGroup": "بدون گروه"
   },
   "dueDatePresets": {
     "tomorrow": "فردا",
@@ -456,7 +461,8 @@
     "labelCount": "{count, plural, one {# برچسب} other {# برچسب}}",
     "noMember": "تنظیم نشده",
     "pickMember": "یک نفر انتخاب کنید…",
-    "noCandidates": "کسی برای انتخاب وجود ندارد."
+    "noCandidates": "کسی برای انتخاب وجود ندارد.",
+    "groups": "گروه‌ها"
   },
   "watchers": {
     "watch": "دنبال کردن",

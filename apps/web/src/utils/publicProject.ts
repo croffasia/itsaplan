@@ -19,6 +19,7 @@ export function toPublicProjectDetail(
     issueTypes: scaffold.issueTypes,
     labels: scaffold.labels,
     labelGroups: scaffold.labelGroups,
+    groups: scaffold.groups,
     assignees: scaffold.assignees.map((a) => ({
       ...a,
       email: '',

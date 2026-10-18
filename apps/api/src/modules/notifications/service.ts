@@ -13,6 +13,7 @@ import { and, desc, eq, inArray, lt, or, sql, isNull } from 'drizzle-orm';
 import { addedMentionHandles, resolveMentionHandles, type MentionedUsers } from '#shared/mentions';
 import { autoWatchIssue, watcherUserIds } from '#modules/issues/watchers';
 import { iso } from '#shared/lib';
+import { groupMemberIds } from '#modules/groups/service';
 import { enqueueOutbound } from './outbound';
 
 // Inbox notifications. A notification is one (recipient, event) row: a user is told
@@ -168,14 +169,16 @@ export async function notifyTextMentions(input: {
 }
 
 // Fan out issue field changes recorded by an update. A new assignee (if a member and
-// not the actor) gets 'assigned'; a status change notifies the issue's watchers with
-// 'state_changed'. The actor is never notified. Being assigned subscribes to the
-// issue, and stays that way when the issue is later handed to someone else.
+// not the actor) gets 'assigned', and so does every member of a newly assigned group;
+// a status change notifies the issue's watchers with 'state_changed'. The actor is
+// never notified. Being assigned subscribes to the issue, and stays that way when the
+// issue is later handed to someone else.
 export async function notifyIssueChange(input: {
   projectId: number;
   issueId: number;
   actorUserId: string | null;
   assignedUserId?: string | null;
+  assignedGroupId?: number | null;
   assignedActivityId?: number | null;
   statusChanged?: boolean;
   statusActivityId?: number | null;
@@ -183,29 +186,34 @@ export async function notifyIssueChange(input: {
   const { projectId, issueId, actorUserId: actor } = input;
   const rows: NewNotificationRow[] = [];
 
-  if (input.assignedUserId) {
-    await autoWatchIssue(projectId, issueId, [input.assignedUserId]);
-    if (input.assignedUserId !== actor) {
-      const members = await keepProjectMembers(projectId, [input.assignedUserId]);
-      if (members.has(input.assignedUserId)) {
-        rows.push({
-          userId: input.assignedUserId,
-          projectId,
-          issueId,
-          sourceActivityId: input.assignedActivityId ?? null,
-          type: 'assigned',
-          actorUserId: actor,
-        });
-      }
+  const assignedIds = new Set<string>();
+  if (input.assignedUserId) assignedIds.add(input.assignedUserId);
+  if (input.assignedGroupId) {
+    for (const id of await groupMemberIds(input.assignedGroupId)) assignedIds.add(id);
+  }
+  if (assignedIds.size > 0) {
+    await autoWatchIssue(projectId, issueId, [...assignedIds]);
+    const members = await keepProjectMembers(
+      projectId,
+      [...assignedIds].filter((id) => id !== actor),
+    );
+    for (const userId of members) {
+      rows.push({
+        userId,
+        projectId,
+        issueId,
+        sourceActivityId: input.assignedActivityId ?? null,
+        type: 'assigned',
+        actorUserId: actor,
+      });
     }
   }
 
   if (input.statusChanged) {
-    const assigned = input.assignedUserId ?? null;
     const watchers = await watcherUserIds(projectId, issueId);
     for (const userId of watchers) {
       // Skip the actor and anyone already told they were just assigned.
-      if (userId === actor || userId === assigned) continue;
+      if (userId === actor || assignedIds.has(userId)) continue;
       rows.push({
         userId,
         projectId,

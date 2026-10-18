@@ -27,7 +27,8 @@
     "priority": "اولویت",
     "type": "نوع",
     "initiative": "ابتکار",
-    "cycle": "سیکل"
+    "cycle": "سیکل",
+    "assigneeGroup": "گروه مسئول"
   },
   "properties": {
     "id": "شناسه",
@@ -45,7 +46,8 @@
     "dueDate": "تاریخ سررسید",
     "created": "ایجاد شده",
     "updated": "به‌روزرسانی شده",
-    "statusAge": "زمان در وضعیت"
+    "statusAge": "زمان در وضعیت",
+    "assigneeGroup": "گروه"
   },
   "stateTypes": {
     "backlog": "بک‌لاگ",

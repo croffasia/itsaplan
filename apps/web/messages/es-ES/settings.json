@@ -639,5 +639,25 @@
     "propertiesHint": "Se aplican cuando se crea el ticket, y son editables antes de que se haga.",
     "emptyTitle": "Todavía no hay plantillas",
     "emptyDescription": "Una plantilla rellena un ticket nuevo con un título, una descripción y propiedades."
+  },
+  "groups": {
+    "add": "Añadir un grupo",
+    "namePlaceholder": "Nombre del grupo",
+    "emptyTitle": "Todavía no hay grupos",
+    "emptyHint": "Agrupa a los miembros del proyecto en equipos, como Farmacia o Enfermería, para asignar tickets a un equipo completo.",
+    "columns": {
+      "group": "Grupo",
+      "members": "Miembros",
+      "issues": "Tickets"
+    },
+    "memberCount": "{count, plural, =0 {Sin miembros} one {# miembro} other {# miembros}}",
+    "issueCount": "{count, plural, =0 {Sin tickets} one {# ticket} other {# tickets}}",
+    "edit": "Editar el grupo",
+    "delete": "Eliminar el grupo",
+    "deleteTitle": "Eliminar el grupo «{name}»",
+    "deleteConfirm": "Eliminar el grupo",
+    "deleteMessage": "{count, plural, =0 {Ningún ticket está asignado a este grupo.} one {# ticket está asignado a este grupo y perderá esa asignación.} other {# tickets están asignados a este grupo y perderán esa asignación.}} Esta acción no se puede deshacer.",
+    "searchMembers": "Buscar miembros…",
+    "noMembers": "Sin miembros."
   }
 }

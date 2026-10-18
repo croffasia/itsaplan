@@ -64,7 +64,9 @@
     "noInitiative": "이니셔티브 없음",
     "noCycle": "사이클 없음",
     "copyFailed": "클립보드에 복사할 수 없습니다.",
-    "promptCopied": "프롬프트가 클립보드에 복사되었습니다."
+    "promptCopied": "프롬프트가 클립보드에 복사되었습니다.",
+    "groups": "그룹",
+    "noGroup": "그룹 없음"
   },
   "commands": {
     "preview": "이슈 미리보기",
@@ -89,7 +91,10 @@
     "archive": "이슈 보관",
     "delete": "이슈 삭제",
     "promptCopied": "프롬프트가 클립보드에 복사되었습니다.",
-    "shortLinkCopied": "짧은 링크가 복사되었습니다."
+    "shortLinkCopied": "짧은 링크가 복사되었습니다.",
+    "assigneeGroup": "그룹에 지정",
+    "assigneeGroupPlaceholder": "그룹에 지정…",
+    "noGroup": "그룹 없음"
   },
   "dueDatePresets": {
     "tomorrow": "내일",
@@ -456,7 +461,8 @@
     "labelCount": "{count, plural, one {라벨 #개} other {라벨 #개}}",
     "noMember": "설정되지 않음",
     "pickMember": "멤버 선택…",
-    "noCandidates": "선택할 수 있는 멤버가 없습니다."
+    "noCandidates": "선택할 수 있는 멤버가 없습니다.",
+    "groups": "그룹"
   },
   "watchers": {
     "watch": "구독",

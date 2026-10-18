@@ -108,6 +108,10 @@
     "ai-agents": {
       "label": "Agents",
       "description": "Des comptes bots auxquels vous pouvez déléguer des tickets."
+    },
+    "groups": {
+      "label": "Groupes",
+      "description": "Des ensembles nommés de membres du projet auxquels les tickets peuvent être assignés."
     }
   }
 }

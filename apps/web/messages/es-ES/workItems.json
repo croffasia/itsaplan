@@ -39,7 +39,8 @@
     "startDate": "Inicio",
     "dueDate": "Vencimiento",
     "created": "Creada",
-    "updated": "Actualizada"
+    "updated": "Actualizada",
+    "assigneeGroup": "Grupo"
   },
   "calendar": {
     "previousMonth": "Mes anterior",
@@ -88,7 +89,9 @@
     "noInitiative": "Sin iniciativa",
     "noCycle": "Sin ciclo",
     "archive": "Archivar",
-    "clearSelection": "Limpiar la selección"
+    "clearSelection": "Limpiar la selección",
+    "groups": "Grupos",
+    "noGroup": "Sin grupo"
   },
   "removal": {
     "archive": {
@@ -114,6 +117,7 @@
     "noType": "Sin tipo",
     "noInitiative": "Sin iniciativa",
     "noCycle": "Sin ciclo",
-    "noMember": "Sin valor"
+    "noMember": "Sin valor",
+    "noAssigneeGroup": "Sin grupo"
   }
 }

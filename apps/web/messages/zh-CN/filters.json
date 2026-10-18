@@ -40,7 +40,8 @@
     "dueDate": "截止日期",
     "startDate": "开始日期",
     "created": "创建时间",
-    "updated": "更新时间"
+    "updated": "更新时间",
+    "assigneeGroup": "负责组"
   },
   "unset": {
     "assignee": "无负责人",
@@ -48,6 +49,7 @@
     "type": "无类型",
     "initiative": "无计划",
     "cycle": "无周期",
-    "member": "无值"
+    "member": "无值",
+    "assigneeGroup": "无分组"
   }
 }

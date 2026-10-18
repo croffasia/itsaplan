@@ -13,7 +13,15 @@ import type { Sort, WorkItemsView } from '@/utils/viewTypes';
 // A `cf:<id>` key groups by a member custom field, which holds one person or agent
 // the way assignee and delegate do.
 export type BuiltinGroupField =
-  'none' | 'status' | 'assignee' | 'delegate' | 'priority' | 'type' | 'initiative' | 'cycle';
+  | 'none'
+  | 'status'
+  | 'assignee'
+  | 'assigneeGroup'
+  | 'delegate'
+  | 'priority'
+  | 'type'
+  | 'initiative'
+  | 'cycle';
 export type GroupField = BuiltinGroupField | CustomFieldKey;
 
 // Issue properties that can be shown on a Project card or as a Table column.
@@ -25,6 +33,7 @@ export type DisplayProperty =
   | 'priority'
   | 'type'
   | 'assignee'
+  | 'assigneeGroup'
   | 'delegate'
   | 'initiative'
   | 'cycle'
@@ -57,6 +66,7 @@ export const DISPLAY_PROPERTIES: DisplayProperty[] = [
   'priority',
   'type',
   'assignee',
+  'assigneeGroup',
   'delegate',
   'initiative',
   'cycle',
@@ -214,6 +224,7 @@ const GROUP_FIELDS: BuiltinGroupField[] = [
   'none',
   'status',
   'assignee',
+  'assigneeGroup',
   'delegate',
   'priority',
   'type',

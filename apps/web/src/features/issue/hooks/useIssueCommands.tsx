@@ -13,6 +13,7 @@ import {
   Tag,
   Trash2,
   User,
+  Users,
   X,
 } from 'lucide-react';
 import type { ActionDef } from '@/lib/api/endpoints/actions';
@@ -199,6 +200,35 @@ export function useIssueCommands(
               icon: <User />,
               checked: a.userId === issue.assigneeUserId,
               run: () => patch({ assigneeUserId: a.userId }),
+            })),
+          ],
+        },
+      });
+    }
+
+    if (project.groups.length > 0) {
+      items.push({
+        id: 'issue.assigneeGroup',
+        label: t('assigneeGroup'),
+        icon: <Users />,
+        keywords: 'team group',
+        submenu: {
+          heading: t('assigneeGroup'),
+          placeholder: t('assigneeGroupPlaceholder'),
+          items: [
+            {
+              id: 'issue.assigneeGroup.none',
+              label: t('noGroup'),
+              icon: <CircleDashed />,
+              checked: issue.assigneeGroupId == null,
+              run: () => patch({ assigneeGroupId: null }),
+            },
+            ...project.groups.map((g) => ({
+              id: `issue.assigneeGroup.${g.id}`,
+              label: g.name,
+              icon: <Users />,
+              checked: g.id === issue.assigneeGroupId,
+              run: () => patch({ assigneeGroupId: g.id }),
             })),
           ],
         },

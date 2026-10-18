@@ -12,6 +12,7 @@ export interface IssueTemplateFormValues {
   columnId: number | null;
   priority: string;
   assigneeUserId: string | null;
+  assigneeGroupId: number | null;
   labelIds: number[];
 }
 
@@ -25,6 +26,7 @@ export function templateFormValues(template?: IssueTemplate): IssueTemplateFormV
     columnId: template?.columnId ?? null,
     priority: template?.priority ?? '',
     assigneeUserId: template?.assigneeUserId ?? null,
+    assigneeGroupId: template?.assigneeGroupId ?? null,
     labelIds: template?.labelIds ?? [],
   };
 }
@@ -39,6 +41,7 @@ export function templateInput(values: IssueTemplateFormValues): NewIssueTemplate
     columnId: values.columnId,
     priority: values.priority || null,
     assigneeUserId: values.assigneeUserId,
+    assigneeGroupId: values.assigneeGroupId,
     labelIds: values.labelIds,
   };
 }

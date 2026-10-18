@@ -163,6 +163,7 @@ export async function moveIssue(
           cycleId: null,
           initiativeId: null,
           assigneeUserId: member(p.assigneeUserId),
+          assigneeGroupId: null,
           delegateUserId: member(p.delegateUserId),
           position: Number(posRow.pos),
           updatedAt: sql`now()`,

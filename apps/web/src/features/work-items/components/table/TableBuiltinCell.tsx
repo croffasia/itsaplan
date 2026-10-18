@@ -11,6 +11,7 @@ import {
   LabelBadge,
 } from '@/features/issue/components/shared/IssueBadges';
 import { PriorityIcon, StateIcon } from '@/features/issue/components/shared/IssueIcons';
+import GroupAvatar from '@/components/common/fields/GroupAvatar';
 import { type TableColumn } from '../../utils/table';
 
 const DASH = <span className="text-muted-foreground/40">—</span>;
@@ -80,9 +81,25 @@ export function TableBuiltinCell({
     case 'assignee': {
       const assignee =
         issue.assigneeUserId != null ? maps.assigneeById.get(issue.assigneeUserId) : undefined;
+      const group =
+        issue.assigneeGroupId != null ? maps.groupById.get(issue.assigneeGroupId) : undefined;
       return (
-        <div className="flex justify-end">
-          {assignee ? <AssigneeAvatar name={assignee.name} image={assignee.image} /> : DASH}
+        <div className="flex items-center justify-end gap-1">
+          {group && <GroupAvatar group={group} />}
+          {assignee ? (
+            <AssigneeAvatar name={assignee.name} image={assignee.image} />
+          ) : (
+            !group && DASH
+          )}
+        </div>
+      );
+    }
+    case 'assigneeGroup': {
+      const group =
+        issue.assigneeGroupId != null ? maps.groupById.get(issue.assigneeGroupId) : undefined;
+      return (
+        <div className="flex min-w-0 items-center overflow-hidden">
+          {group ? <LabelBadge color={group.color} name={group.name} /> : DASH}
         </div>
       );
     }

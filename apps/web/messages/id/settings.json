@@ -639,5 +639,25 @@
     "propertiesHint": "Diterapkan saat issue dibuat, dan dapat diedit sebelumnya.",
     "emptyTitle": "Belum ada templat",
     "emptyDescription": "Templat mengisi issue baru dengan judul, deskripsi, dan properti."
+  },
+  "groups": {
+    "add": "Tambah grup",
+    "namePlaceholder": "Nama grup",
+    "emptyTitle": "Belum ada grup",
+    "emptyHint": "Kelompokkan anggota proyek menjadi tim, misalnya Farmasi atau Keperawatan, untuk menugaskan issue ke seluruh tim.",
+    "columns": {
+      "group": "Grup",
+      "members": "Anggota",
+      "issues": "Issue"
+    },
+    "memberCount": "{count, plural, =0 {Tidak ada anggota} one {# anggota} other {# anggota}}",
+    "issueCount": "{count, plural, =0 {Tidak ada issue} one {# issue} other {# issue}}",
+    "edit": "Ubah grup",
+    "delete": "Hapus grup",
+    "deleteTitle": "Hapus grup \"{name}\"",
+    "deleteConfirm": "Hapus grup",
+    "deleteMessage": "{count, plural, =0 {Tidak ada issue yang ditugaskan ke grup ini.} one {# issue ditugaskan ke grup ini dan akan kehilangan penugasan itu.} other {# issue ditugaskan ke grup ini dan akan kehilangan penugasan itu.}} Tindakan ini tidak dapat dibatalkan.",
+    "searchMembers": "Cari anggota…",
+    "noMembers": "Tidak ada anggota."
   }
 }

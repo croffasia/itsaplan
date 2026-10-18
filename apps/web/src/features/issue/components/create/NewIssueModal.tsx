@@ -94,6 +94,9 @@ export default function NewIssueModal({
       ? userId
       : null;
   });
+  const [assigneeGroupId, setAssigneeGroupId] = useState<number | null>(
+    defaults.assigneeGroupId ?? null,
+  );
   const [delegateUserId, setDelegateUserId] = useState<string | null>(
     defaults.delegateUserId ?? null,
   );
@@ -234,6 +237,7 @@ export default function NewIssueModal({
     if (next.typeId != null) setTypeId(next.typeId);
     if (next.priority != null) setPriority(next.priority);
     if (next.assigneeUserId != null) setAssigneeUserId(next.assigneeUserId);
+    if (next.assigneeGroupId != null) setAssigneeGroupId(next.assigneeGroupId);
     if (next.labelIds.length > 0) setLabelIds(next.labelIds);
   }
 
@@ -252,6 +256,7 @@ export default function NewIssueModal({
           initiativeId,
           cycleId: cycle?.id ?? null,
           assigneeUserId,
+          assigneeGroupId,
           delegateUserId,
           priority: priority || null,
           estimatePoints,
@@ -389,11 +394,14 @@ export default function NewIssueModal({
         >
           <StatusSelect columns={project.columns} value={columnId} onChange={setColumnId} />
 
-          {project.assignees.some((a) => a.kind === 'member') && (
+          {(project.assignees.some((a) => a.kind === 'member') || project.groups.length > 0) && (
             <AssigneeSelect
               assignees={project.assignees}
               value={assigneeUserId}
               onChange={setAssigneeUserId}
+              groups={project.groups}
+              groupValue={assigneeGroupId}
+              onGroupChange={setAssigneeGroupId}
               placeholder={tFields('assignee')}
             />
           )}

@@ -125,12 +125,15 @@ export default function IssueProperties({
     {
       key: 'groupPeople',
       rows: [
-        hasMembers && (
+        (hasMembers || project.groups.length > 0) && (
           <IssuePropertyRow key="assignee" label={t('assignee')}>
             <AssigneeSelect
               assignees={project.assignees}
               value={issue.assigneeUserId}
               onChange={(userId) => onPatch({ assigneeUserId: userId })}
+              groups={project.groups}
+              groupValue={issue.assigneeGroupId}
+              onGroupChange={(groupId) => onPatch({ assigneeGroupId: groupId })}
               readOnly={readOnly}
             />
           </IssuePropertyRow>

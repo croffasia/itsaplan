@@ -108,6 +108,10 @@
     "ai-agents": {
       "label": "Agentes de IA",
       "description": "Agentes de IA que trabajan en este proyecto."
+    },
+    "groups": {
+      "label": "Grupos",
+      "description": "Conjuntos con nombre de miembros del proyecto a los que se pueden asignar tickets."
     }
   }
 }

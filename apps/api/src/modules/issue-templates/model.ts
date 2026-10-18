@@ -13,6 +13,7 @@ export const IssueTemplateResponse = t.Object({
   columnId: t.Nullable(t.Number()),
   priority: t.Nullable(t.String()),
   assigneeUserId: t.Nullable(t.String()),
+  assigneeGroupId: t.Nullable(t.Number()),
   labelIds: t.Array(t.Number()),
 });
 
@@ -29,6 +30,7 @@ export const createIssueTemplateBody = t.Object({
   columnId: t.Optional(t.Nullable(t.Integer())),
   priority: t.Optional(t.Nullable(t.String())),
   assigneeUserId: t.Optional(t.Nullable(t.String())),
+  assigneeGroupId: t.Optional(t.Nullable(t.Integer())),
   labelIds: t.Optional(t.Array(t.Integer())),
 });
 

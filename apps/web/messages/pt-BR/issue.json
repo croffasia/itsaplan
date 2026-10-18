@@ -64,7 +64,9 @@
     "noInitiative": "Sem iniciativa",
     "noCycle": "Sem ciclo",
     "copyFailed": "Não foi possível copiar",
-    "promptCopied": "Prompt copiado para a área de transferência"
+    "promptCopied": "Prompt copiado para a área de transferência",
+    "groups": "Grupos",
+    "noGroup": "Sem grupo"
   },
   "commands": {
     "preview": "Visualizar issue",
@@ -89,7 +91,10 @@
     "archive": "Arquivar issue",
     "delete": "Excluir issue",
     "promptCopied": "Prompt copiado para a área de transferência",
-    "shortLinkCopied": "Link curto copiado"
+    "shortLinkCopied": "Link curto copiado",
+    "assigneeGroup": "Atribuir a um grupo",
+    "assigneeGroupPlaceholder": "Atribuir a um grupo…",
+    "noGroup": "Sem grupo"
   },
   "dueDatePresets": {
     "tomorrow": "Amanhã",
@@ -456,7 +461,8 @@
     "labelCount": "{count, plural, one {# etiqueta} other {# etiquetas}}",
     "noMember": "Não definido",
     "pickMember": "Escolha alguém…",
-    "noCandidates": "Ninguém para escolher."
+    "noCandidates": "Ninguém para escolher.",
+    "groups": "Grupos"
   },
   "watchers": {
     "watch": "Acompanhar",

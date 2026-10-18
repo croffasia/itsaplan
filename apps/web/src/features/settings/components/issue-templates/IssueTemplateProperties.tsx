@@ -41,11 +41,14 @@ export default function IssueTemplateProperties({
           />
         )}
 
-        {project.assignees.some((a) => a.kind === 'member') && (
+        {(project.assignees.some((a) => a.kind === 'member') || project.groups.length > 0) && (
           <AssigneeSelect
             assignees={project.assignees}
             value={values.assigneeUserId}
             onChange={(assigneeUserId) => onChange({ assigneeUserId })}
+            groups={project.groups}
+            groupValue={values.assigneeGroupId}
+            onGroupChange={(assigneeGroupId) => onChange({ assigneeGroupId })}
             placeholder={tFields('assignee')}
           />
         )}

@@ -5,6 +5,7 @@
 import type { Column, StateType } from '@/lib/api/endpoints/columns';
 import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { IssueType } from '@/lib/api/endpoints/issueTypes';
+import type { ProjectGroup } from '@/lib/api/endpoints/groups';
 import type { Label } from '@/lib/api/endpoints/labels';
 import type { Assignee, ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { InitiativeRef, Issue, IssuePatch, NewIssueInput } from '@/lib/api/endpoints/issues';
@@ -49,6 +50,7 @@ export type NewIssueDefaults = Partial<
     | 'initiativeId'
     | 'cycleId'
     | 'assigneeUserId'
+    | 'assigneeGroupId'
     | 'delegateUserId'
     | 'priority'
     | 'title'
@@ -113,6 +115,7 @@ export function defaultsFromFilters(
     initiativeId: pinnedEntity('initiative', planned.initiatives),
     cycleId: pinnedEntity('cycle', planned.cycles),
     assigneeUserId: pinnedText('assignee'),
+    assigneeGroupId: pinnedId('assigneeGroup'),
     delegateUserId: pinnedText('delegate'),
     priority: pinnedText('priority'),
     labelIds: labelId != null ? [labelId] : undefined,
@@ -158,6 +161,7 @@ export interface Maps {
   typeById: Map<number, IssueType>;
   labelById: Map<number, Label>;
   assigneeById: Map<string, Assignee>;
+  groupById: Map<number, ProjectGroup>;
   columnById: Map<number, Column>;
 }
 
@@ -166,6 +170,7 @@ export function buildMaps(project: ProjectDetail): Maps {
     typeById: new Map(project.issueTypes.map((t) => [t.id, t])),
     labelById: new Map(project.labels.map((l) => [l.id, l])),
     assigneeById: new Map(project.assignees.map((a) => [a.userId, a])),
+    groupById: new Map(project.groups.map((g) => [g.id, g])),
     columnById: new Map(project.columns.map((c) => [c.id, c])),
   };
 }
@@ -299,6 +304,7 @@ export interface IssueGroup {
 // they read in the reader's language.
 export interface GroupLabels {
   noAssignee: string;
+  noAssigneeGroup: string;
   noDelegate: string;
   noPriority: string;
   noType: string;
@@ -349,6 +355,22 @@ function allGroups(project: ProjectDetail, group: GroupField, labels: GroupLabel
           key: 'a-none',
           name: labels.noAssignee,
           assign: patchOnly({ assigneeUserId: null }),
+          values: [null],
+        },
+      ];
+    case 'assigneeGroup':
+      return [
+        ...project.groups.map((g) => ({
+          key: `g${g.id}`,
+          name: g.name,
+          color: g.color,
+          assign: patchOnly({ assigneeGroupId: g.id }),
+          values: [g.id],
+        })),
+        {
+          key: 'g-none',
+          name: labels.noAssigneeGroup,
+          assign: patchOnly({ assigneeGroupId: null }),
           values: [null],
         },
       ];
@@ -528,6 +550,8 @@ export function groupKeyOf(issue: Issue, group: GroupField): string {
       return `c${issue.columnId}`;
     case 'assignee':
       return issue.assigneeUserId != null ? `a${issue.assigneeUserId}` : 'a-none';
+    case 'assigneeGroup':
+      return issue.assigneeGroupId != null ? `g${issue.assigneeGroupId}` : 'g-none';
     case 'delegate':
       return issue.delegateUserId != null ? `d${issue.delegateUserId}` : 'd-none';
     case 'priority':

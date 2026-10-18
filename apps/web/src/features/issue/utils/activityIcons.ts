@@ -20,6 +20,7 @@ import {
   Tag,
   Timer,
   UserRound,
+  Users,
   type LucideIcon,
 } from 'lucide-react';
 import type { ActivityAction } from '@/lib/api/endpoints/activity';
@@ -33,6 +34,7 @@ export const ACTION_ICON: Record<ActivityAction, LucideIcon> = {
   description: FileText,
   status: CircleDot,
   assignee: UserRound,
+  assignee_group: Users,
   delegate: Bot,
   priority: SignalHigh,
   estimate: Gauge,

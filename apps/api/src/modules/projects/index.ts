@@ -11,6 +11,7 @@ import { listAssigneeCandidates } from '#modules/members/service';
 import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '#modules/issue-types/service';
 import { listLabels, listLabelGroups } from '#modules/labels/service';
+import { listGroups } from '#modules/groups/service';
 import { listCustomFields } from '#modules/custom-fields/service';
 import { listIssueTemplates } from '#modules/issue-templates/service';
 import {
@@ -115,6 +116,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         issueTypes,
         labels,
         labelGroups,
+        groups,
         assignees,
         customFields,
         issueTemplates,
@@ -125,6 +127,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         listIssueTypes(project.id),
         listLabels(project.id),
         listLabelGroups(project.id),
+        listGroups(project.id),
         listAssigneeCandidates(project.id),
         listCustomFields(project.id, { allTypes: true }),
         listIssueTemplates(project.id),
@@ -140,6 +143,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         issueTypes,
         labels,
         labelGroups,
+        groups,
         assignees,
         customFields,
         issueTemplates,
@@ -153,7 +157,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       detail: {
         summary: 'Get a project',
         description:
-          'Get a project setup by key: columns, issue types, labels, custom fields, issue ' +
+          'Get a project setup by key: columns, issue types, labels, assignee groups, custom fields, issue ' +
           'templates, and assignable users and agents. Resolves the ids create_issue and update_issue ' +
           'take. For issues use list_issues or search_issues.',
         ...mcpTool('get_project'),

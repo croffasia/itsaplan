@@ -64,7 +64,9 @@
     "noInitiative": "Aucune initiative",
     "noCycle": "Aucun cycle",
     "copyFailed": "Impossible de copier dans le presse-papiers",
-    "promptCopied": "Prompt copié dans le presse-papiers"
+    "promptCopied": "Prompt copié dans le presse-papiers",
+    "groups": "Groupes",
+    "noGroup": "Aucun groupe"
   },
   "commands": {
     "preview": "Aperçu du ticket",
@@ -89,7 +91,10 @@
     "archive": "Archiver le ticket",
     "delete": "Supprimer le ticket",
     "promptCopied": "Prompt copié dans le presse-papiers",
-    "shortLinkCopied": "Lien court copié"
+    "shortLinkCopied": "Lien court copié",
+    "assigneeGroup": "Assigner à un groupe",
+    "assigneeGroupPlaceholder": "Assigner à un groupe…",
+    "noGroup": "Aucun groupe"
   },
   "dueDatePresets": {
     "tomorrow": "Demain",
@@ -456,7 +461,8 @@
     "labelCount": "{count, plural, one {# étiquette} other {# étiquettes}}",
     "noMember": "Non défini",
     "pickMember": "Choisir quelqu'un…",
-    "noCandidates": "Personne à choisir."
+    "noCandidates": "Personne à choisir.",
+    "groups": "Groupes"
   },
   "watchers": {
     "watch": "Suivre",

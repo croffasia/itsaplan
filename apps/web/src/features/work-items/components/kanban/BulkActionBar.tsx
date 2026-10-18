@@ -14,7 +14,11 @@ import { colorDot } from '@/components/common/fields/colorDot';
 import { PRIORITY_FIELDS } from '@/components/common/fields/priorityFields';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import {
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { StateIcon } from '@/features/issue/components/shared/IssueIcons';
 import { useSelection } from '../../context/useSelection';
 import { useBulkActions } from '../../hooks/useBulkActions';
@@ -97,7 +101,7 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
                 ))}
               </BarMenu>
 
-              {members.length > 0 && (
+              {(members.length > 0 || project.groups.length > 0) && (
                 <BarMenu
                   icon={<User className="size-4" />}
                   label={t('assignee')}
@@ -116,6 +120,27 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
                       <span className="flex-1 truncate">{a.name}</span>
                     </DropdownMenuItem>
                   ))}
+                  {project.groups.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel>{t('groups')}</DropdownMenuLabel>
+                      <DropdownMenuItem
+                        onSelect={() => void bulk.patch(ids, { assigneeGroupId: null })}
+                      >
+                        <CircleDashed />
+                        <span className="flex-1">{t('noGroup')}</span>
+                      </DropdownMenuItem>
+                      {project.groups.map((g) => (
+                        <DropdownMenuItem
+                          key={g.id}
+                          onSelect={() => void bulk.patch(ids, { assigneeGroupId: g.id })}
+                        >
+                          {colorDot(g.color)}
+                          <span className="flex-1 truncate">{g.name}</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </>
+                  )}
                 </BarMenu>
               )}
 

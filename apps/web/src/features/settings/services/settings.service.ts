@@ -69,6 +69,7 @@ import {
   updateIssueTemplate,
   deleteIssueTemplate,
 } from '@/lib/api/endpoints/issueTemplates';
+import { createGroup, updateGroup, deleteGroup, setGroupMembers } from '@/lib/api/endpoints/groups';
 import { createIssueType, updateIssueType, deleteIssueType } from '@/lib/api/endpoints/issueTypes';
 import {
   createLabel,
@@ -140,6 +141,30 @@ export function useUpdateIssueType(projectKey: string) {
 
 export function useDeleteIssueType(projectKey: string) {
   return useProjectMutation(projectKey, (id: number) => deleteIssueType(projectKey, id));
+}
+
+export function useCreateGroup(projectKey: string) {
+  return useProjectMutation(projectKey, (input: Parameters<typeof createGroup>[1]) =>
+    createGroup(projectKey, input),
+  );
+}
+
+export function useUpdateGroup(projectKey: string) {
+  return useProjectMutation(
+    projectKey,
+    ({ id, patch }: { id: number; patch: Parameters<typeof updateGroup>[2] }) =>
+      updateGroup(projectKey, id, patch),
+  );
+}
+
+export function useDeleteGroup(projectKey: string) {
+  return useProjectMutation(projectKey, (id: number) => deleteGroup(projectKey, id));
+}
+
+export function useSetGroupMembers(projectKey: string) {
+  return useProjectMutation(projectKey, ({ id, userIds }: { id: number; userIds: string[] }) =>
+    setGroupMembers(projectKey, id, userIds),
+  );
 }
 
 export function useCreateLabel(projectKey: string) {

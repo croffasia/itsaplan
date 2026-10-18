@@ -108,6 +108,10 @@
     "ai-agents": {
       "label": "AI 에이전트",
       "description": "이 프로젝트에서 작업하는 AI 에이전트를 관리합니다."
+    },
+    "groups": {
+      "label": "그룹",
+      "description": "이슈를 지정할 수 있는, 이름이 붙은 프로젝트 멤버 모음입니다."
     }
   }
 }

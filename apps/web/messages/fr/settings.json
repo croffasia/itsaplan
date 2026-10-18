@@ -639,5 +639,25 @@
     "propertiesHint": "Appliquées à la création du ticket, et modifiables avant.",
     "emptyTitle": "Aucun modèle pour l'instant",
     "emptyDescription": "Un modèle remplit un nouveau ticket avec un titre, une description et des propriétés."
+  },
+  "groups": {
+    "add": "Ajouter un groupe",
+    "namePlaceholder": "Nom du groupe",
+    "emptyTitle": "Aucun groupe pour l'instant",
+    "emptyHint": "Regroupez les membres du projet en équipes, comme Pharmacie ou Soins infirmiers, pour assigner des tickets à une équipe entière.",
+    "columns": {
+      "group": "Groupe",
+      "members": "Membres",
+      "issues": "Tickets"
+    },
+    "memberCount": "{count, plural, =0 {Aucun membre} one {# membre} other {# membres}}",
+    "issueCount": "{count, plural, =0 {Aucun ticket} one {# ticket} other {# tickets}}",
+    "edit": "Modifier le groupe",
+    "delete": "Supprimer le groupe",
+    "deleteTitle": "Supprimer le groupe « {name} »",
+    "deleteConfirm": "Supprimer le groupe",
+    "deleteMessage": "{count, plural, =0 {Aucun ticket n'est assigné à ce groupe.} one {# ticket est assigné à ce groupe et perdra cette assignation.} other {# tickets sont assignés à ce groupe et perdront cette assignation.}} Cette action est irréversible.",
+    "searchMembers": "Rechercher des membres…",
+    "noMembers": "Aucun membre."
   }
 }

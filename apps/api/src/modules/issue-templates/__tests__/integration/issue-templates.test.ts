@@ -125,6 +125,34 @@ describe('issue-templates', () => {
     });
   });
 
+  describe('assignee group preset', () => {
+    it('presets a group of the project and clears it when the group is deleted', async () => {
+      const { asOwner } = await setupProject();
+      const group = (await asOwner.projects({ projectKey: 'MKT' }).groups.post({ name: 'Nursing' }))
+        .data!;
+
+      const created = await templates(asOwner).post({
+        name: 'Ward task',
+        assigneeGroupId: group.id,
+      });
+      expect(created.status).toBe(201);
+      expect(created.data).toMatchObject({ assigneeGroupId: group.id });
+
+      await asOwner.projects({ projectKey: 'MKT' }).groups({ groupId: group.id }).delete();
+      expect((await listTemplates(asOwner))[0]).toMatchObject({ assigneeGroupId: null });
+    });
+
+    it('rejects a group of another project', async () => {
+      const { asOwner } = await setupProject();
+      await createProject(asOwner, { key: 'OPS', name: 'Ops' });
+      const foreign = (
+        await asOwner.projects({ projectKey: 'OPS' }).groups.post({ name: 'Nursing' })
+      ).data!;
+      const created = await templates(asOwner).post({ name: 'X', assigneeGroupId: foreign.id });
+      expect(created.status).toBe(400);
+    });
+  });
+
   describe('read', () => {
     it('lists the project templates on the project scaffold', async () => {
       const { asOwner, labelId } = await setupProject();

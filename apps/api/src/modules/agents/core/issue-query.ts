@@ -39,6 +39,11 @@ export const issueQuerySchema = z.object({
     .nullable()
     .optional()
     .describe('Exact member user id from get_project, or null for unassigned issues.'),
+  assigneeGroupId: z
+    .number()
+    .nullable()
+    .optional()
+    .describe('Exact assignee group id from get_project.groups, or null for issues with no group.'),
   delegateUserId: z
     .string()
     .nullable()

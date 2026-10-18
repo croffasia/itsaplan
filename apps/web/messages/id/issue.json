@@ -64,7 +64,9 @@
     "noInitiative": "Tanpa inisiatif",
     "noCycle": "Tanpa cycle",
     "copyFailed": "Gagal menyalin ke papan klip",
-    "promptCopied": "Prompt disalin ke papan klip"
+    "promptCopied": "Prompt disalin ke papan klip",
+    "groups": "Grup",
+    "noGroup": "Tanpa grup"
   },
   "commands": {
     "preview": "Pratinjau issue",
@@ -89,7 +91,10 @@
     "archive": "Arsipkan issue",
     "delete": "Hapus issue",
     "promptCopied": "Prompt disalin ke papan klip",
-    "shortLinkCopied": "Tautan singkat disalin"
+    "shortLinkCopied": "Tautan singkat disalin",
+    "assigneeGroup": "Tugaskan ke grup",
+    "assigneeGroupPlaceholder": "Tugaskan ke grup…",
+    "noGroup": "Tanpa grup"
   },
   "dueDatePresets": {
     "tomorrow": "Besok",
@@ -456,7 +461,8 @@
     "labelCount": "{count, plural, one {# label} other {# label}}",
     "noMember": "Belum diatur",
     "pickMember": "Pilih anggota…",
-    "noCandidates": "Tidak ada yang dapat dipilih."
+    "noCandidates": "Tidak ada yang dapat dipilih.",
+    "groups": "Grup"
   },
   "watchers": {
     "watch": "Ikuti",

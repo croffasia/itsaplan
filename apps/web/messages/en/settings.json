@@ -639,5 +639,25 @@
     "propertiesHint": "Applied when the issue is created, and editable before it is.",
     "emptyTitle": "No templates yet",
     "emptyDescription": "A template fills a new issue with a title, a description and properties."
+  },
+  "groups": {
+    "add": "Add group",
+    "namePlaceholder": "Group name",
+    "emptyTitle": "No groups yet",
+    "emptyHint": "Group project members into teams, such as Pharmacy or Nursing, to assign issues to a whole team.",
+    "columns": {
+      "group": "Group",
+      "members": "Members",
+      "issues": "Issues"
+    },
+    "memberCount": "{count, plural, =0 {No members} one {# member} other {# members}}",
+    "issueCount": "{count, plural, =0 {No issues} one {# issue} other {# issues}}",
+    "edit": "Edit group",
+    "delete": "Delete group",
+    "deleteTitle": "Delete group \"{name}\"",
+    "deleteConfirm": "Delete group",
+    "deleteMessage": "{count, plural, =0 {No issues are assigned to this group.} one {# issue is assigned to this group and will lose that assignment.} other {# issues are assigned to this group and will lose that assignment.}} This cannot be undone.",
+    "searchMembers": "Search members…",
+    "noMembers": "No members."
   }
 }

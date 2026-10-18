@@ -24,6 +24,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { StateIcon } from '@/features/issue/components/shared/IssueIcons';
+import GroupAvatar from '@/components/common/fields/GroupAvatar';
 import { IssueIdentifier } from '../shared/IssueIdentifier';
 import { IssueCardLinks } from './IssueCardLinks';
 import { IssueCardSubtasks } from './IssueCardSubtasks';
@@ -46,6 +47,8 @@ export function IssueCardBody({
   const type = issue.typeId != null ? maps.typeById.get(issue.typeId) : undefined;
   const assignee =
     issue.assigneeUserId != null ? maps.assigneeById.get(issue.assigneeUserId) : undefined;
+  const group =
+    issue.assigneeGroupId != null ? maps.groupById.get(issue.assigneeGroupId) : undefined;
   const delegate =
     issue.delegateUserId != null ? maps.assigneeById.get(issue.delegateUserId) : undefined;
   const initiative = issue.initiative ?? undefined;
@@ -56,6 +59,7 @@ export function IssueCardBody({
     (has('dueDate') && issue.dueDate) ||
     (has('startDate') && issue.startDate) ||
     (has('type') && type) ||
+    (has('assigneeGroup') && group) ||
     (has('initiative') && initiative) ||
     (has('cycle') && cycle) ||
     (has('estimatePoints') && issue.estimatePoints != null) ||
@@ -64,7 +68,7 @@ export function IssueCardBody({
   const footerShown =
     has('created') ||
     has('updated') ||
-    (has('assignee') && assignee) ||
+    (has('assignee') && (assignee || group)) ||
     (has('delegate') && delegate);
 
   return (
@@ -145,6 +149,7 @@ export function IssueCardBody({
               {type.name}
             </Badge>
           )}
+          {has('assigneeGroup') && group && <LabelBadge color={group.color} name={group.name} />}
           {has('initiative') && initiative && (
             <Badge
               variant="outline"
@@ -206,6 +211,9 @@ export function IssueCardBody({
                 image={delegate.image}
                 className="ring-2 ring-[var(--kanban-card)]"
               />
+            )}
+            {has('assignee') && group && !has('assigneeGroup') && (
+              <GroupAvatar group={group} className="ring-2 ring-[var(--kanban-card)]" />
             )}
             {has('assignee') && assignee && (
               <AssigneeAvatar

@@ -13,6 +13,7 @@ export interface IssueTemplate {
   columnId: number | null;
   priority: string | null;
   assigneeUserId: string | null;
+  assigneeGroupId: number | null;
   labelIds: number[];
 }
 
@@ -25,6 +26,7 @@ export interface NewIssueTemplateInput {
   columnId?: number | null;
   priority?: string | null;
   assigneeUserId?: string | null;
+  assigneeGroupId?: number | null;
   labelIds?: number[];
 }
 

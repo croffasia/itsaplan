@@ -11,6 +11,7 @@ type FilterField =
   | 'status'
   | 'statusType'
   | 'assignee'
+  | 'assigneeGroup'
   | 'delegate'
   | 'priority'
   | 'type'
@@ -84,6 +85,8 @@ function builtinSetValues(
       return [columnStateType.get(issue.columnId) ?? null];
     case 'assignee':
       return [issue.assigneeUserId];
+    case 'assigneeGroup':
+      return [issue.assigneeGroupId];
     case 'delegate':
       return [issue.delegateUserId];
     case 'priority':

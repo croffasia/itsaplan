@@ -40,7 +40,8 @@
     "dueDate": "Tenggat waktu",
     "startDate": "Tanggal mulai",
     "created": "Dibuat",
-    "updated": "Diperbarui"
+    "updated": "Diperbarui",
+    "assigneeGroup": "Grup penerima tugas"
   },
   "unset": {
     "assignee": "Tanpa penerima tugas",
@@ -48,6 +49,7 @@
     "type": "Tanpa tipe",
     "initiative": "Tanpa inisiatif",
     "cycle": "Tanpa cycle",
-    "member": "Tanpa nilai"
+    "member": "Tanpa nilai",
+    "assigneeGroup": "Tanpa grup"
   }
 }

@@ -11,6 +11,7 @@ import {
 } from '@repo/db';
 import { and, desc, eq, ilike, isNotNull, isNull, notExists, or, sql } from 'drizzle-orm';
 import { iso } from '#shared/lib';
+import { dropGroupMemberships } from '#modules/groups/service';
 import { DEFAULT_TIMEZONE } from '#modules/user-preferences/service';
 import {
   defaultMemberPermissions,
@@ -508,6 +509,7 @@ export async function removeMember(projectId: number, userId: string): Promise<v
     await tx
       .delete(projectMember)
       .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, userId)));
+    await dropGroupMemberships(tx, userId, [projectId]);
     // A column cannot keep assigning issues to someone who is no longer a member:
     // the same assignment sent as a patch would be refused.
     await tx

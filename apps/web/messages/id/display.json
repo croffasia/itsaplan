@@ -27,7 +27,8 @@
     "priority": "Prioritas",
     "type": "Tipe",
     "initiative": "Inisiatif",
-    "cycle": "Cycle"
+    "cycle": "Cycle",
+    "assigneeGroup": "Grup penerima tugas"
   },
   "properties": {
     "id": "ID",
@@ -45,7 +46,8 @@
     "dueDate": "Tenggat waktu",
     "created": "Dibuat",
     "updated": "Diperbarui",
-    "statusAge": "Waktu dalam status"
+    "statusAge": "Waktu dalam status",
+    "assigneeGroup": "Grup"
   },
   "stateTypes": {
     "backlog": "Backlog",

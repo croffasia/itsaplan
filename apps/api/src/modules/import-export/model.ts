@@ -256,6 +256,7 @@ const ExportedIssue = t.Object({
   dueDate: t.Nullable(t.String()),
   parentIdentifier: t.Nullable(t.String()),
   assigneeEmail: t.Nullable(t.String()),
+  assigneeGroup: t.Nullable(t.String()),
   comments: t.Array(ExportedComment),
   relations: t.Array(ExportedRelation),
 });
@@ -265,6 +266,7 @@ export const ProjectExportResponse = t.Object({
   project: t.Object({ key: t.String(), name: t.String(), description: t.String() }),
   states: t.Array(t.Object({ name: t.String(), category: t.String() })),
   labels: t.Array(t.Object({ name: t.String(), color: t.String() })),
+  groups: t.Array(t.Object({ name: t.String(), color: t.String() })),
   cycles: t.Array(
     t.Object({ name: t.String(), startDate: t.String(), endDate: t.String(), goal: t.String() }),
   ),

@@ -40,7 +40,8 @@
     "dueDate": "Дедлайн",
     "startDate": "Дата начала",
     "created": "Создано",
-    "updated": "Обновлено"
+    "updated": "Обновлено",
+    "assigneeGroup": "Группа исполнителей"
   },
   "unset": {
     "assignee": "Без исполнителя",
@@ -48,6 +49,7 @@
     "type": "Без типа",
     "initiative": "Без инициативы",
     "cycle": "Без цикла",
-    "member": "Не задано"
+    "member": "Не задано",
+    "assigneeGroup": "Без группы"
   }
 }

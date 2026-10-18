@@ -40,7 +40,8 @@
     "dueDate": "تاریخ سررسید",
     "startDate": "تاریخ شروع",
     "created": "ایجادشده",
-    "updated": "به‌روزرسانی‌شده"
+    "updated": "به‌روزرسانی‌شده",
+    "assigneeGroup": "گروه مسئول"
   },
   "unset": {
     "assignee": "بدون مسئول",
@@ -48,6 +49,7 @@
     "type": "بدون نوع",
     "initiative": "بدون ابتکار",
     "cycle": "بدون سیکل",
-    "member": "بدون مقدار"
+    "member": "بدون مقدار",
+    "assigneeGroup": "بدون گروه"
   }
 }

@@ -64,7 +64,9 @@
     "noInitiative": "无计划",
     "noCycle": "无周期",
     "copyFailed": "无法复制到剪贴板",
-    "promptCopied": "提示词已复制到剪贴板"
+    "promptCopied": "提示词已复制到剪贴板",
+    "groups": "分组",
+    "noGroup": "无分组"
   },
   "commands": {
     "preview": "预览工作项",
@@ -89,7 +91,10 @@
     "archive": "归档工作项",
     "delete": "删除工作项",
     "promptCopied": "提示词已复制到剪贴板",
-    "shortLinkCopied": "短链接已复制"
+    "shortLinkCopied": "短链接已复制",
+    "assigneeGroup": "指派给分组",
+    "assigneeGroupPlaceholder": "指派给分组…",
+    "noGroup": "无分组"
   },
   "dueDatePresets": {
     "tomorrow": "明天",
@@ -456,7 +461,8 @@
     "labelCount": "{count, plural, other {# 个标签}}",
     "noMember": "未设置",
     "pickMember": "选择…",
-    "noCandidates": "没有可选对象。"
+    "noCandidates": "没有可选对象。",
+    "groups": "分组"
   },
   "watchers": {
     "watch": "关注",

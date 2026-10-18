@@ -27,7 +27,8 @@
     "priority": "Priorité",
     "type": "Type",
     "initiative": "Initiative",
-    "cycle": "Cycle"
+    "cycle": "Cycle",
+    "assigneeGroup": "Groupe responsable"
   },
   "properties": {
     "id": "ID",
@@ -45,7 +46,8 @@
     "dueDate": "Échéance",
     "created": "Date de création",
     "updated": "Date de mise à jour",
-    "statusAge": "Temps dans l'état"
+    "statusAge": "Temps dans l'état",
+    "assigneeGroup": "Groupe"
   },
   "stateTypes": {
     "backlog": "Backlog",

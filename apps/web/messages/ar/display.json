@@ -27,7 +27,8 @@
     "priority": "الأولوية",
     "type": "النوع",
     "initiative": "المبادرة",
-    "cycle": "الدورة"
+    "cycle": "الدورة",
+    "assigneeGroup": "مجموعة المسؤولين"
   },
   "properties": {
     "id": "المعرّف",
@@ -45,7 +46,8 @@
     "dueDate": "تاريخ الاستحقاق",
     "created": "الإنشاء",
     "updated": "التحديث",
-    "statusAge": "المدة في الحالة"
+    "statusAge": "المدة في الحالة",
+    "assigneeGroup": "المجموعة"
   },
   "stateTypes": {
     "backlog": "قائمة الانتظار",

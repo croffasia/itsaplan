@@ -26,6 +26,7 @@ import { listAgentMemberFieldIds } from '#modules/custom-fields/service';
 import { runsTeam, type TeamStanding } from '#modules/teams/service';
 import { projectRefSql } from '#modules/teams/ref';
 import { getDefaultRoleId } from '#modules/roles/service';
+import { dropGroupMemberships } from '#modules/groups/service';
 import { deleteAccount } from '#shared/account-deletion';
 
 // Data access for AI agents. Each agent is backed by a hidden bot user
@@ -691,6 +692,14 @@ async function setAgentProjects(agent: AiAgentRow, projectIds: number[]): Promis
           wanted.length > 0 ? notInArray(projectMember.projectId, wanted) : undefined,
         ),
       );
+    await dropGroupMemberships(
+      tx,
+      agent.userId,
+      tx
+        .select({ id: project.id })
+        .from(project)
+        .where(wanted.length > 0 ? notInArray(project.id, wanted) : undefined),
+    );
     // A column cannot keep assigning issues to an agent that no longer works in the
     // project, the same rule remove_member follows.
     await tx

@@ -40,7 +40,8 @@
     "dueDate": "Échéance",
     "startDate": "Date de début",
     "created": "Créé le",
-    "updated": "Mis à jour le"
+    "updated": "Mis à jour le",
+    "assigneeGroup": "Groupe responsable"
   },
   "unset": {
     "assignee": "Aucun responsable",
@@ -48,6 +49,7 @@
     "type": "Aucun type",
     "initiative": "Aucune initiative",
     "cycle": "Aucun cycle",
-    "member": "Aucune valeur"
+    "member": "Aucune valeur",
+    "assigneeGroup": "Aucun groupe"
   }
 }

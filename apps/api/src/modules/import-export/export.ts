@@ -8,6 +8,7 @@ import {
   issueLabel,
   issueActivity,
   issueLink,
+  projectGroup,
   user,
 } from '@repo/db';
 import { eq, and, inArray } from 'drizzle-orm';
@@ -44,6 +45,7 @@ export interface ExportedIssue {
   dueDate: string | null;
   parentIdentifier: string | null;
   assigneeEmail: string | null;
+  assigneeGroup: string | null;
   comments: ExportedComment[];
   relations: ExportedRelation[];
 }
@@ -53,6 +55,7 @@ export interface ProjectExport {
   project: { key: string; name: string; description: string };
   states: { name: string; category: string }[];
   labels: { name: string; color: string }[];
+  groups: { name: string; color: string }[];
   cycles: { name: string; startDate: string; endDate: string; goal: string }[];
   issues: ExportedIssue[];
 }
@@ -76,6 +79,13 @@ export async function exportProject(projectId: number): Promise<ProjectExport> {
     .where(eq(label.projectId, projectId));
   const labelNameById = new Map(labelRows.map((l) => [l.id, l.name]));
 
+  const groupRows = await db
+    .select({ id: projectGroup.id, name: projectGroup.name, color: projectGroup.color })
+    .from(projectGroup)
+    .where(eq(projectGroup.projectId, projectId))
+    .orderBy(projectGroup.position, projectGroup.id);
+  const groupNameById = new Map(groupRows.map((g) => [g.id, g.name]));
+
   const cycleRows = await db
     .select({
       id: cycle.id,
@@ -98,6 +108,7 @@ export async function exportProject(projectId: number): Promise<ProjectExport> {
       cycleId: issue.cycleId,
       parentId: issue.parentId,
       assigneeUserId: issue.assigneeUserId,
+      assigneeGroupId: issue.assigneeGroupId,
       priority: issue.priority,
       startDate: issue.startDate,
       dueDate: issue.dueDate,
@@ -203,6 +214,8 @@ export async function exportProject(projectId: number): Promise<ProjectExport> {
         row.parentId != null ? (identifierByIssueId.get(row.parentId) ?? null) : null,
       assigneeEmail:
         row.assigneeUserId != null ? (emailByUserId.get(row.assigneeUserId) ?? null) : null,
+      assigneeGroup:
+        row.assigneeGroupId != null ? (groupNameById.get(row.assigneeGroupId) ?? null) : null,
       comments: issueComments.map((c) => ({
         authorName: c.actorName,
         authorEmail: c.actorUserId != null ? (emailByUserId.get(c.actorUserId) ?? null) : null,
@@ -221,6 +234,7 @@ export async function exportProject(projectId: number): Promise<ProjectExport> {
     project: projectRow,
     states: columns.map((c) => ({ name: c.name, category: c.category })),
     labels: labelRows.map((l) => ({ name: l.name, color: l.color })),
+    groups: groupRows.map((g) => ({ name: g.name, color: g.color })),
     cycles: cycleRows.map((c) => ({
       name: c.name,
       startDate: c.startDate,

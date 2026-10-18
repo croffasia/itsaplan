@@ -27,6 +27,7 @@ const GROUP_FIELDS: BuiltinGroupField[] = [
   'none',
   'status',
   'assignee',
+  'assigneeGroup',
   'delegate',
   'priority',
   'type',

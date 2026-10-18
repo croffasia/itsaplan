@@ -58,7 +58,7 @@ export const AGENT_ACTIONS: ToolMeta[] = [
     group: 'issues',
     label: 'Update issues',
     description:
-      "Change an issue's state, type, initiative, cycle, assignee, delegate, details, priority, dates, or labels.",
+      "Change an issue's state, type, initiative, cycle, assignee, assignee group, delegate, details, priority, dates, or labels.",
     always: false,
   },
   {

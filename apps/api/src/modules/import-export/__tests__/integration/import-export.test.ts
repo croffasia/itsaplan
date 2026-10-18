@@ -703,6 +703,29 @@ describe('import jobs', () => {
       expect(exportedIssue?.comments).toMatchObject([{ body: 'looking into it' }]);
     });
 
+    it('names the group an issue is assigned to', async () => {
+      const { api } = await setupOwnerProject();
+      const view = await api.projects({ projectKey: 'MKT' }).get();
+      const group = (
+        await api
+          .projects({ projectKey: 'MKT' })
+          .groups.post({ name: 'Pharmacy', color: '#123456' })
+      ).data!;
+      const issue = (
+        await api.projects({ projectKey: 'MKT' }).issues.post({
+          columnId: view.data!.columns[0]!.id,
+          title: 'Restock',
+          assigneeGroupId: group.id,
+        })
+      ).data!;
+
+      const res = await jobs(api).export.get();
+      expect(res.data?.groups).toContainEqual({ name: 'Pharmacy', color: '#123456' });
+      expect(
+        res.data?.issues.find((i) => i.identifier === `MKT-${issue.sequenceNumber}`),
+      ).toMatchObject({ assigneeGroup: 'Pharmacy' });
+    });
+
     it('denies a member whose role lacks the import_export permission', async () => {
       const { api } = await setupOwnerProject();
       const member = await addMember(api);

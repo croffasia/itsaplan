@@ -27,7 +27,8 @@
     "priority": "优先级",
     "type": "类型",
     "initiative": "计划",
-    "cycle": "周期"
+    "cycle": "周期",
+    "assigneeGroup": "负责组"
   },
   "properties": {
     "id": "ID",
@@ -45,7 +46,8 @@
     "dueDate": "截止日期",
     "created": "创建时间",
     "updated": "更新时间",
-    "statusAge": "处于当前状态的时间"
+    "statusAge": "处于当前状态的时间",
+    "assigneeGroup": "分组"
   },
   "stateTypes": {
     "backlog": "待办池",

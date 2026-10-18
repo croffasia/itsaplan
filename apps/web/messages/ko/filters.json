@@ -40,7 +40,8 @@
     "dueDate": "마감일",
     "startDate": "시작일",
     "created": "생성일",
-    "updated": "업데이트일"
+    "updated": "업데이트일",
+    "assigneeGroup": "담당 그룹"
   },
   "unset": {
     "assignee": "담당자 없음",
@@ -48,6 +49,7 @@
     "type": "유형 없음",
     "initiative": "이니셔티브 없음",
     "cycle": "사이클 없음",
-    "member": "값 없음"
+    "member": "값 없음",
+    "assigneeGroup": "그룹 없음"
   }
 }

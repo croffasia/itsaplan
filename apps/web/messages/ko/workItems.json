@@ -39,7 +39,8 @@
     "startDate": "시작일",
     "dueDate": "마감일",
     "created": "생성일",
-    "updated": "업데이트일"
+    "updated": "업데이트일",
+    "assigneeGroup": "그룹"
   },
   "calendar": {
     "previousMonth": "이전 달",
@@ -88,7 +89,9 @@
     "noInitiative": "이니셔티브 없음",
     "noCycle": "사이클 없음",
     "archive": "보관",
-    "clearSelection": "선택 해제"
+    "clearSelection": "선택 해제",
+    "groups": "그룹",
+    "noGroup": "그룹 없음"
   },
   "removal": {
     "archive": {
@@ -114,6 +117,7 @@
     "noType": "유형 없음",
     "noInitiative": "이니셔티브 없음",
     "noCycle": "사이클 없음",
-    "noMember": "값 없음"
+    "noMember": "값 없음",
+    "noAssigneeGroup": "그룹 없음"
   }
 }

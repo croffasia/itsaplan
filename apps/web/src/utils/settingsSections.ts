@@ -11,6 +11,7 @@ import {
   Shapes,
   SlidersHorizontal,
   Tags,
+  Users,
   Webhook,
   Zap,
 } from 'lucide-react';
@@ -60,6 +61,12 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     slug: 'labels',
     icon: Tags,
+    resource: 'labels',
+    group: 'configuration',
+  },
+  {
+    slug: 'groups',
+    icon: Users,
     resource: 'labels',
     group: 'configuration',
   },

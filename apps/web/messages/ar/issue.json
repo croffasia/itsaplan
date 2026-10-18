@@ -64,7 +64,9 @@
     "noInitiative": "بلا مبادرة",
     "noCycle": "بلا دورة",
     "copyFailed": "تعذّر النسخ إلى الحافظة",
-    "promptCopied": "تم نسخ التوجيه إلى الحافظة"
+    "promptCopied": "تم نسخ التوجيه إلى الحافظة",
+    "groups": "المجموعات",
+    "noGroup": "بلا مجموعة"
   },
   "commands": {
     "preview": "معاينة المهمة",
@@ -89,7 +91,10 @@
     "archive": "أرشفة المهمة",
     "delete": "حذف المهمة",
     "promptCopied": "تم نسخ التوجيه إلى الحافظة",
-    "shortLinkCopied": "تم نسخ الرابط المختصر"
+    "shortLinkCopied": "تم نسخ الرابط المختصر",
+    "assigneeGroup": "الإسناد إلى مجموعة",
+    "assigneeGroupPlaceholder": "الإسناد إلى مجموعة…",
+    "noGroup": "بلا مجموعة"
   },
   "dueDatePresets": {
     "tomorrow": "غدًا",
@@ -456,7 +461,8 @@
     "labelCount": "{count, plural, zero {لا وسوم} one {وسم واحد} two {وسمان} few {# وسوم} many {# وسمًا} other {# وسم}}",
     "noMember": "مش متحدد",
     "pickMember": "اختار حد…",
-    "noCandidates": "مفيش حد تختاره."
+    "noCandidates": "مفيش حد تختاره.",
+    "groups": "المجموعات"
   },
   "watchers": {
     "watch": "متابعة",

@@ -50,6 +50,7 @@ export type ActivityAction =
   | 'description'
   | 'status'
   | 'assignee'
+  | 'assignee_group'
   | 'delegate'
   | 'priority'
   | 'estimate'

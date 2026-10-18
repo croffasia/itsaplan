@@ -639,5 +639,25 @@
     "propertiesHint": "이슈 생성 시 적용되며 생성 전에도 편집할 수 있습니다.",
     "emptyTitle": "아직 템플릿이 없습니다",
     "emptyDescription": "템플릿을 사용하면 새 이슈의 제목, 설명 및 속성을 미리 채울 수 있습니다."
+  },
+  "groups": {
+    "add": "그룹 추가",
+    "namePlaceholder": "그룹 이름",
+    "emptyTitle": "아직 그룹이 없습니다",
+    "emptyHint": "약국이나 간호처럼 프로젝트 멤버를 팀으로 묶어 이슈를 팀 전체에 지정하세요.",
+    "columns": {
+      "group": "그룹",
+      "members": "멤버",
+      "issues": "이슈"
+    },
+    "memberCount": "{count, plural, =0 {멤버 없음} one {멤버 #명} other {멤버 #명}}",
+    "issueCount": "{count, plural, =0 {이슈 없음} one {이슈 #개} other {이슈 #개}}",
+    "edit": "그룹 편집",
+    "delete": "그룹 삭제",
+    "deleteTitle": "\"{name}\" 그룹 삭제",
+    "deleteConfirm": "그룹 삭제",
+    "deleteMessage": "{count, plural, =0 {이 그룹에 지정된 이슈가 없습니다.} one {이슈 #개가 이 그룹에 지정되어 있으며 지정이 해제됩니다.} other {이슈 #개가 이 그룹에 지정되어 있으며 지정이 해제됩니다.}} 이 작업은 되돌릴 수 없습니다.",
+    "searchMembers": "멤버 검색…",
+    "noMembers": "멤버가 없습니다."
   }
 }

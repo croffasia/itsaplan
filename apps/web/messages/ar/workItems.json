@@ -32,7 +32,8 @@
     "startDate": "البدء",
     "dueDate": "الاستحقاق",
     "created": "الإنشاء",
-    "updated": "التحديث"
+    "updated": "التحديث",
+    "assigneeGroup": "المجموعة"
   },
   "calendar": {
     "previousMonth": "الشهر السابق",
@@ -81,7 +82,9 @@
     "noInitiative": "بلا مبادرة",
     "noCycle": "بلا دورة",
     "archive": "أرشفة",
-    "clearSelection": "مسح التحديد"
+    "clearSelection": "مسح التحديد",
+    "groups": "المجموعات",
+    "noGroup": "بلا مجموعة"
   },
   "removal": {
     "archive": {
@@ -107,7 +110,8 @@
     "noType": "بلا نوع",
     "noInitiative": "بلا مبادرة",
     "noCycle": "بلا دورة",
-    "noMember": "بدون قيمة"
+    "noMember": "بدون قيمة",
+    "noAssigneeGroup": "بلا مجموعة"
   },
   "wip": {
     "reached": "{column} وصل لحدّه الأقصى وهو {limit} مهمة.",

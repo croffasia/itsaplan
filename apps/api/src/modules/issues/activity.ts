@@ -8,6 +8,7 @@ import {
   label,
   initiative,
   cycle,
+  projectGroup,
   type ActivityPayload,
   type ActivitySide,
 } from '@repo/db';
@@ -625,6 +626,14 @@ async function initiativeSide(id: number | null): Promise<ActivitySide | undefin
     .where(eq(initiative.id, id));
   return rowSide(rows[0]?.title, id);
 }
+async function groupSide(id: number | null): Promise<ActivitySide | undefined> {
+  if (id == null) return undefined;
+  const rows = await db
+    .select({ name: projectGroup.name })
+    .from(projectGroup)
+    .where(eq(projectGroup.id, id));
+  return rowSide(rows[0]?.name, id);
+}
 async function cycleSide(id: number | null): Promise<ActivitySide | undefined> {
   if (id == null) return undefined;
   const rows = await db.select({ name: cycle.name }).from(cycle).where(eq(cycle.id, id));
@@ -662,6 +671,7 @@ export interface IssueSnapshot {
   initiativeId: number | null;
   cycleId: number | null;
   assigneeUserId: string | null;
+  assigneeGroupId: number | null;
   delegateUserId: string | null;
   priority: string | null;
   estimatePoints: number | null;
@@ -728,6 +738,12 @@ export async function logIssueUpdate(
       from: await userSide(before.assigneeUserId),
       to: await userSide(after.assigneeUserId),
     });
+  if (before.assigneeGroupId !== after.assigneeGroupId)
+    events.push({
+      action: 'assignee_group',
+      from: await groupSide(before.assigneeGroupId),
+      to: await groupSide(after.assigneeGroupId),
+    });
   if (before.delegateUserId !== after.delegateUserId)
     events.push({
       action: 'delegate',
@@ -772,9 +788,10 @@ export async function logIssueUpdate(
   // assignee, a status change, and the mentions a rewritten description added. Each
   // links back to its activity row.
   const assigneeChanged = before.assigneeUserId !== after.assigneeUserId;
+  const groupChanged = before.assigneeGroupId !== after.assigneeGroupId;
   const statusChanged = before.columnId !== after.columnId;
   const descriptionChanged = before.description !== after.description;
-  if (!assigneeChanged && !statusChanged && !descriptionChanged) return;
+  if (!assigneeChanged && !groupChanged && !statusChanged && !descriptionChanged) return;
   const [row] = await db
     .select({ projectId: issue.projectId })
     .from(issue)
@@ -782,13 +799,14 @@ export async function logIssueUpdate(
   if (!row) return;
 
   const idByAction = new Map(inserted.map((r) => [r.action, r.id]));
-  if (assigneeChanged || statusChanged) {
+  if (assigneeChanged || groupChanged || statusChanged) {
     await notifyIssueChange({
       projectId: row.projectId,
       issueId: after.id,
       actorUserId: actorId(actor),
       assignedUserId: assigneeChanged ? after.assigneeUserId : null,
-      assignedActivityId: idByAction.get('assignee') ?? null,
+      assignedGroupId: groupChanged ? after.assigneeGroupId : null,
+      assignedActivityId: idByAction.get('assignee') ?? idByAction.get('assignee_group') ?? null,
       statusChanged,
       statusActivityId: idByAction.get('status') ?? null,
     });

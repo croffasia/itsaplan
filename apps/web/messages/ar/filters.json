@@ -40,7 +40,8 @@
     "dueDate": "تاريخ الاستحقاق",
     "startDate": "تاريخ البدء",
     "created": "تاريخ الإنشاء",
-    "updated": "تاريخ التحديث"
+    "updated": "تاريخ التحديث",
+    "assigneeGroup": "مجموعة المسؤولين"
   },
   "unset": {
     "assignee": "بلا مسؤول",
@@ -48,6 +49,7 @@
     "type": "بلا نوع",
     "initiative": "بلا مبادرة",
     "cycle": "بلا دورة",
-    "member": "بدون قيمة"
+    "member": "بدون قيمة",
+    "assigneeGroup": "بلا مجموعة"
   }
 }

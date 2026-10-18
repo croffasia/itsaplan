@@ -27,7 +27,8 @@
     "priority": "우선순위",
     "type": "유형",
     "initiative": "이니셔티브",
-    "cycle": "사이클"
+    "cycle": "사이클",
+    "assigneeGroup": "담당 그룹"
   },
   "properties": {
     "id": "ID",
@@ -45,7 +46,8 @@
     "dueDate": "마감일",
     "created": "생성일",
     "updated": "업데이트일",
-    "statusAge": "현재 상태 유지 시간"
+    "statusAge": "현재 상태 유지 시간",
+    "assigneeGroup": "그룹"
   },
   "stateTypes": {
     "backlog": "백로그",

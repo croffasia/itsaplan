@@ -108,6 +108,10 @@
     "ai-agents": {
       "label": "AI 代理",
       "description": "在该项目中工作的 AI 代理。"
+    },
+    "groups": {
+      "label": "分组",
+      "description": "可以将工作项指派给的、已命名的项目成员分组。"
     }
   }
 }

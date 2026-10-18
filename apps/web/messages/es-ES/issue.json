@@ -64,7 +64,9 @@
     "noInitiative": "Sin iniciativa",
     "noCycle": "Sin ciclo",
     "copyFailed": "No se pudo copiar al portapapeles",
-    "promptCopied": "La consigna se ha copiado al portapapeles"
+    "promptCopied": "La consigna se ha copiado al portapapeles",
+    "groups": "Grupos",
+    "noGroup": "Sin grupo"
   },
   "commands": {
     "preview": "Previsualizar el ticket",
@@ -89,7 +91,10 @@
     "archive": "Archivar el ticket",
     "delete": "Eliminar el ticket",
     "promptCopied": "La consigna se ha copiado al portapapeles",
-    "shortLinkCopied": "El enlace corto se ha copiado"
+    "shortLinkCopied": "El enlace corto se ha copiado",
+    "assigneeGroup": "Asignar a un grupo",
+    "assigneeGroupPlaceholder": "Asignar a un grupo…",
+    "noGroup": "Sin grupo"
   },
   "dueDatePresets": {
     "tomorrow": "Mañana",
@@ -456,7 +461,8 @@
     "labelCount": "{count, plural, one {# etiqueta} other {# etiquetas}}",
     "noMember": "No definido",
     "pickMember": "Elegir a alguien…",
-    "noCandidates": "No hay nadie que elegir."
+    "noCandidates": "No hay nadie que elegir.",
+    "groups": "Grupos"
   },
   "watchers": {
     "watch": "Seguir",

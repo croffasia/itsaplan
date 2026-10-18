@@ -5,6 +5,8 @@ import { type Maps } from '@/utils/project';
 import { useIsPhone } from '@/hooks/useIsPhone';
 import { cn } from '@/lib/utils';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
+import GroupAvatar from '@/components/common/fields/GroupAvatar';
+import { AssigneeAvatar } from '@/features/issue/components/shared/IssueBadges';
 import { type TimelineDragMode } from '../../hooks/useTimelineDrag';
 import { ROW_H, type Span } from '../../utils/timeline';
 import { isMilestone } from '../../utils/timelineDependencies';
@@ -56,6 +58,10 @@ export function TimelineIssueRow({
 }) {
   const isPhone = useIsPhone();
   const fold = useIssueSubtaskFold();
+  const group =
+    issue.assigneeGroupId != null ? maps.groupById.get(issue.assigneeGroupId) : undefined;
+  const assignee =
+    issue.assigneeUserId != null ? maps.assigneeById.get(issue.assigneeUserId) : undefined;
   const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
     id: issue.id,
     disabled: isPhone || readOnly,
@@ -89,6 +95,12 @@ export function TimelineIssueRow({
           />
           <span className="min-w-0 flex-1 truncate text-sm text-foreground">{issue.title}</span>
           <SubtaskProgress issueId={issue.id} maps={maps} open={fold.open} onToggle={fold.toggle} />
+          {(group || assignee) && (
+            <span className="flex shrink-0 items-center gap-1">
+              {group && <GroupAvatar group={group} />}
+              {assignee && <AssigneeAvatar name={assignee.name} image={assignee.image} />}
+            </span>
+          )}
         </div>
       </IssueContextMenu>
       <div className="relative" style={{ width: trackWidth, ...dayLines }}>

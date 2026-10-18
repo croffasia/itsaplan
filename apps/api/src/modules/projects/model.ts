@@ -5,6 +5,7 @@ import { ColumnResponse } from '#modules/columns/model';
 import { CustomFieldResponse } from '#modules/custom-fields/model';
 import { IssueTemplateResponse } from '#modules/issue-templates/model';
 import { IssueTypeResponse } from '#modules/issue-types/model';
+import { GroupResponse } from '#modules/groups/model';
 import { LabelGroupResponse, LabelResponse } from '#modules/labels/model';
 import { PermissionMatrixSchema } from '#shared/permissions';
 import { AccessViaSchema } from '#shared/workspace-roles';
@@ -187,7 +188,7 @@ const ViewerResponse = t.Object({
 });
 
 // The project board scaffold (GET /projects/:projectKey): the project plus its
-// columns, issue types, labels, label groups, assignable users, custom fields,
+// columns, issue types, labels, label groups, assignee groups, assignable users, custom fields,
 // issue templates, and the caller's own effective access. The issues themselves come from
 // GET /projects/:projectKey/issues/board.
 export const ProjectBoardResponse = t.Object({
@@ -196,6 +197,7 @@ export const ProjectBoardResponse = t.Object({
   issueTypes: t.Array(IssueTypeResponse),
   labels: t.Array(LabelResponse),
   labelGroups: t.Array(LabelGroupResponse),
+  groups: t.Array(GroupResponse),
   assignees: t.Array(AssigneeCandidateResponse),
   customFields: t.Array(CustomFieldResponse),
   issueTemplates: t.Array(IssueTemplateResponse),

@@ -639,5 +639,25 @@
     "propertiesHint": "Aplicadas quando a issue é criada, e editáveis antes disso.",
     "emptyTitle": "Nenhum modelo ainda",
     "emptyDescription": "Um modelo preenche uma nova issue com título, descrição e propriedades."
+  },
+  "groups": {
+    "add": "Adicionar grupo",
+    "namePlaceholder": "Nome do grupo",
+    "emptyTitle": "Nenhum grupo ainda",
+    "emptyHint": "Agrupe os membros do projeto em equipes, como Farmácia ou Enfermagem, para atribuir issues a uma equipe inteira.",
+    "columns": {
+      "group": "Grupo",
+      "members": "Membros",
+      "issues": "Issues"
+    },
+    "memberCount": "{count, plural, =0 {Nenhum membro} one {# membro} other {# membros}}",
+    "issueCount": "{count, plural, =0 {Nenhuma issue} one {# issue} other {# issues}}",
+    "edit": "Editar grupo",
+    "delete": "Excluir grupo",
+    "deleteTitle": "Excluir grupo \"{name}\"",
+    "deleteConfirm": "Excluir grupo",
+    "deleteMessage": "{count, plural, =0 {Nenhuma issue está atribuída a este grupo.} one {# issue está atribuída a este grupo e perderá essa atribuição.} other {# issues estão atribuídas a este grupo e perderão essa atribuição.}} Isso não pode ser desfeito.",
+    "searchMembers": "Buscar membros…",
+    "noMembers": "Nenhum membro."
   }
 }

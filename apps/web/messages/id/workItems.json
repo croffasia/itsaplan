@@ -39,7 +39,8 @@
     "startDate": "Mulai",
     "dueDate": "Tenggat",
     "created": "Dibuat",
-    "updated": "Diperbarui"
+    "updated": "Diperbarui",
+    "assigneeGroup": "Grup"
   },
   "calendar": {
     "previousMonth": "Bulan sebelumnya",
@@ -88,7 +89,9 @@
     "noInitiative": "Tanpa inisiatif",
     "noCycle": "Tanpa cycle",
     "archive": "Arsipkan",
-    "clearSelection": "Hapus pilihan"
+    "clearSelection": "Hapus pilihan",
+    "groups": "Grup",
+    "noGroup": "Tanpa grup"
   },
   "removal": {
     "archive": {
@@ -114,6 +117,7 @@
     "noType": "Tanpa tipe",
     "noInitiative": "Tanpa inisiatif",
     "noCycle": "Tanpa cycle",
-    "noMember": "Tanpa nilai"
+    "noMember": "Tanpa nilai",
+    "noAssigneeGroup": "Tanpa grup"
   }
 }

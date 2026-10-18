@@ -174,6 +174,15 @@ export function useFilterFields(projectKey?: string) {
         ],
       },
       {
+        field: 'assigneeGroup',
+        label: t('fields.assigneeGroup'),
+        kind: 'set',
+        options: [
+          ...project.groups.map((g) => ({ value: g.id, label: g.name, color: g.color })),
+          { value: null, label: t('unset.assigneeGroup') },
+        ],
+      },
+      {
         field: 'delegate',
         label: t('fields.delegate'),
         kind: 'set',

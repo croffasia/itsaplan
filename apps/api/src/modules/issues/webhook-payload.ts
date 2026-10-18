@@ -1,4 +1,14 @@
-import { db, issue, issueType, label, project, projectColumn, team, user } from '@repo/db';
+import {
+  db,
+  issue,
+  issueType,
+  label,
+  project,
+  projectColumn,
+  projectGroup,
+  team,
+  user,
+} from '@repo/db';
 import { eq, inArray } from 'drizzle-orm';
 import { emitWebhookEvents } from '#modules/webhooks/emit';
 import type { WebhookEventType } from '#modules/webhooks/service';
@@ -36,7 +46,7 @@ async function projectUrls(
 }
 
 export async function issuePayloads(issues: IssueRow[]) {
-  const [columns, users, types, labels, urls] = await Promise.all([
+  const [columns, users, groups, types, labels, urls] = await Promise.all([
     byIds(
       issues.map((i) => i.columnId),
       (ids) =>
@@ -48,6 +58,14 @@ export async function issuePayloads(issues: IssueRow[]) {
     byIds(
       issues.flatMap((i) => [i.assigneeUserId, i.delegateUserId]).filter((id) => id !== null),
       (ids) => db.select({ id: user.id, name: user.name }).from(user).where(inArray(user.id, ids)),
+    ),
+    byIds(
+      issues.map((i) => i.assigneeGroupId).filter((id) => id !== null),
+      (ids) =>
+        db
+          .select({ id: projectGroup.id, name: projectGroup.name })
+          .from(projectGroup)
+          .where(inArray(projectGroup.id, ids)),
     ),
     byIds(
       issues.map((i) => i.typeId).filter((id) => id !== null),
@@ -69,6 +87,7 @@ export async function issuePayloads(issues: IssueRow[]) {
   ]);
   const columnById = new Map(columns.map((c) => [c.id, c]));
   const userById = new Map(users.map((u) => [u.id, u]));
+  const groupById = new Map(groups.map((g) => [g.id, g]));
   const typeById = new Map(types.map((t) => [t.id, t]));
   const labelById = new Map(labels.map((l) => [l.id, l]));
   const person = (id: string | null) => (id ? (userById.get(id) ?? { id, name: null }) : null);
@@ -78,6 +97,7 @@ export async function issuePayloads(issues: IssueRow[]) {
     url: urls.get(i.projectId)?.(i.sequenceNumber) ?? null,
     state: columnById.get(i.columnId) ?? null,
     assignee: person(i.assigneeUserId),
+    assigneeGroup: i.assigneeGroupId === null ? null : (groupById.get(i.assigneeGroupId) ?? null),
     delegate: person(i.delegateUserId),
     issueType: i.typeId === null ? null : (typeById.get(i.typeId) ?? null),
     labels: i.labelIds.flatMap((id) => labelById.get(id) ?? []),

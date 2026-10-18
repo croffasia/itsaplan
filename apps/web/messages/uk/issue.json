@@ -64,7 +64,9 @@
     "noInitiative": "Без ініціативи",
     "noCycle": "Без циклу",
     "copyFailed": "Не вдалося скопіювати",
-    "promptCopied": "Промпт скопійовано"
+    "promptCopied": "Промпт скопійовано",
+    "groups": "Групи",
+    "noGroup": "Без групи"
   },
   "commands": {
     "preview": "Переглянути задачу",
@@ -89,7 +91,10 @@
     "archive": "Архівувати задачу",
     "delete": "Видалити задачу",
     "promptCopied": "Промпт скопійовано",
-    "shortLinkCopied": "Коротке посилання скопійовано"
+    "shortLinkCopied": "Коротке посилання скопійовано",
+    "assigneeGroup": "Призначити групі",
+    "assigneeGroupPlaceholder": "Призначити групі…",
+    "noGroup": "Без групи"
   },
   "dueDatePresets": {
     "tomorrow": "Завтра",
@@ -456,7 +461,8 @@
     "labelCount": "{count, plural, one {# мітка} few {# мітки} many {# міток} other {# мітки}}",
     "noMember": "Не задано",
     "pickMember": "Вибрати…",
-    "noCandidates": "Нема кого вибрати."
+    "noCandidates": "Нема кого вибрати.",
+    "groups": "Групи"
   },
   "watchers": {
     "watch": "Стежити",

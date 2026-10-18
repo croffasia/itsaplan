@@ -40,7 +40,8 @@
     "dueDate": "Data de vencimento",
     "startDate": "Data de início",
     "created": "Criado",
-    "updated": "Atualizado"
+    "updated": "Atualizado",
+    "assigneeGroup": "Grupo responsável"
   },
   "unset": {
     "assignee": "Sem responsável",
@@ -48,6 +49,7 @@
     "type": "Sem tipo",
     "initiative": "Sem iniciativa",
     "cycle": "Sem ciclo",
-    "member": "Sem valor"
+    "member": "Sem valor",
+    "assigneeGroup": "Sem grupo"
   }
 }

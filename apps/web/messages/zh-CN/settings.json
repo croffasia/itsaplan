@@ -639,5 +639,25 @@
     "propertiesHint": "创建问题时套用，创建前仍可修改。",
     "emptyTitle": "还没有模板",
     "emptyDescription": "模板会为新问题预填标题、描述和属性。"
+  },
+  "groups": {
+    "add": "添加分组",
+    "namePlaceholder": "分组名称",
+    "emptyTitle": "暂无分组",
+    "emptyHint": "将项目成员按团队分组，例如药房或护理，即可把工作项指派给整个团队。",
+    "columns": {
+      "group": "分组",
+      "members": "成员",
+      "issues": "工作项"
+    },
+    "memberCount": "{count, plural, =0 {没有成员} other {# 位成员}}",
+    "issueCount": "{count, plural, =0 {没有工作项} other {# 个工作项}}",
+    "edit": "编辑分组",
+    "delete": "删除分组",
+    "deleteTitle": "删除分组“{name}”",
+    "deleteConfirm": "删除分组",
+    "deleteMessage": "{count, plural, =0 {没有工作项指派给此分组。} other {# 个工作项已指派给此分组，将失去该指派。}} 此操作无法撤销。",
+    "searchMembers": "搜索成员…",
+    "noMembers": "暂无成员。"
   }
 }

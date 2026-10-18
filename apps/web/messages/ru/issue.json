@@ -64,7 +64,9 @@
     "noInitiative": "Без инициативы",
     "noCycle": "Без цикла",
     "copyFailed": "Не удалось скопировать",
-    "promptCopied": "Промпт скопирован"
+    "promptCopied": "Промпт скопирован",
+    "groups": "Группы",
+    "noGroup": "Без группы"
   },
   "commands": {
     "preview": "Посмотреть задачу",
@@ -89,7 +91,10 @@
     "archive": "Архивировать задачу",
     "delete": "Удалить задачу",
     "promptCopied": "Промпт скопирован",
-    "shortLinkCopied": "Короткая ссылка скопирована"
+    "shortLinkCopied": "Короткая ссылка скопирована",
+    "assigneeGroup": "Назначить группе",
+    "assigneeGroupPlaceholder": "Назначить группе…",
+    "noGroup": "Без группы"
   },
   "dueDatePresets": {
     "tomorrow": "Завтра",
@@ -456,7 +461,8 @@
     "labelCount": "{count, plural, one {# метка} few {# метки} many {# меток} other {# метки}}",
     "noMember": "Не задано",
     "pickMember": "Выбрать…",
-    "noCandidates": "Некого выбрать."
+    "noCandidates": "Некого выбрать.",
+    "groups": "Группы"
   },
   "watchers": {
     "watch": "Следить",

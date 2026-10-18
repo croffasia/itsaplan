@@ -2,6 +2,7 @@ import { db, issueTemplate, issueTemplateLabel, issueType, label, projectColumn 
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
 import { getMembership } from '#modules/members/service';
+import { assertGroupInProject } from '#modules/groups/service';
 
 // Data access for issue templates: the presets a new issue can be created from.
 // Every template belongs to a project, and each of its properties is optional —
@@ -19,6 +20,7 @@ export interface IssueTemplateRow {
   columnId: number | null;
   priority: string | null;
   assigneeUserId: string | null;
+  assigneeGroupId: number | null;
   labelIds: number[];
 }
 
@@ -33,6 +35,7 @@ function mapTemplate(row: typeof issueTemplate.$inferSelect, labelIds: number[])
     columnId: row.columnId,
     priority: row.priority,
     assigneeUserId: row.assigneeUserId,
+    assigneeGroupId: row.assigneeGroupId,
     labelIds,
   };
 }
@@ -87,6 +90,7 @@ export interface IssueTemplateInput {
   columnId?: number | null;
   priority?: string | null;
   assigneeUserId?: string | null;
+  assigneeGroupId?: number | null;
   labelIds?: number[];
 }
 
@@ -112,6 +116,7 @@ async function assertPresets(projectId: number, input: Partial<IssueTemplateInpu
     const role = await getMembership(projectId, input.assigneeUserId);
     if (!role) throw new HttpError(400, 'Assignee must be a project member');
   }
+  await assertGroupInProject(projectId, input.assigneeGroupId);
   const labelIds = [...new Set(input.labelIds ?? [])];
   if (labelIds.length > 0) {
     const rows = await db
@@ -149,6 +154,7 @@ export async function createIssueTemplate(
       columnId: input.columnId ?? null,
       priority: input.priority ?? null,
       assigneeUserId: input.assigneeUserId ?? null,
+      assigneeGroupId: input.assigneeGroupId ?? null,
     })
     .returning({ id: issueTemplate.id });
   if (input.labelIds?.length) await setTemplateLabels(row.id, input.labelIds);
@@ -177,6 +183,8 @@ export async function updateIssueTemplate(
       priority: patch.priority === undefined ? current.priority : patch.priority,
       assigneeUserId:
         patch.assigneeUserId === undefined ? current.assigneeUserId : patch.assigneeUserId,
+      assigneeGroupId:
+        patch.assigneeGroupId === undefined ? current.assigneeGroupId : patch.assigneeGroupId,
     })
     .where(and(eq(issueTemplate.id, id), eq(issueTemplate.projectId, projectId)));
   if (patch.labelIds) await setTemplateLabels(id, patch.labelIds);

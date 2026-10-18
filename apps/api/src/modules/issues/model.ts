@@ -96,6 +96,7 @@ export const IssueResponse = t.Object({
   // through cycleId.
   cycle: t.Nullable(t.Object({ id: t.Number(), name: t.String(), status: t.String() })),
   assigneeUserId: t.Nullable(t.String()),
+  assigneeGroupId: t.Nullable(t.Number()),
   delegateUserId: t.Nullable(t.String()),
   columnId: t.Number(),
   // The issue this one is a subtask of, or null. Create and update set it.
@@ -323,6 +324,7 @@ export const IssueSearchHitResponse = t.Object({
   cycleId: t.Nullable(t.Number()),
   parentId: t.Nullable(t.Number()),
   assigneeUserId: t.Nullable(t.String()),
+  assigneeGroupId: t.Nullable(t.Number()),
   delegateUserId: t.Nullable(t.String()),
   priority: t.Nullable(t.String()),
   dueDate: t.Nullable(t.String()),
@@ -447,6 +449,18 @@ export const createIssueBody = t.Object({
       }),
     ),
   ),
+  assigneeGroupId: t.Optional(
+    t.Nullable(
+      t.Integer({
+        description: 'Assignee group id, or null. From get_project.groups.',
+      }),
+    ),
+  ),
+  assigneeGroupName: t.Optional(
+    t.String({
+      description: 'Assignee group name, instead of assigneeGroupId. From get_project.groups.',
+    }),
+  ),
   delegateUserId: t.Optional(
     t.Nullable(
       t.String({
@@ -491,6 +505,7 @@ export const bulkUpdateIssuesBody = t.Object({
     initiativeId: t.Optional(t.Nullable(t.Integer())),
     cycleId: t.Optional(t.Nullable(t.Integer())),
     assigneeUserId: t.Optional(t.Nullable(t.String())),
+    assigneeGroupId: t.Optional(t.Nullable(t.Integer())),
     delegateUserId: t.Optional(t.Nullable(t.String())),
     priority: t.Optional(t.Nullable(t.String())),
     estimatePoints: t.Optional(EstimatePointsSchema),
@@ -536,6 +551,7 @@ export const listIssuesQuery = t.Object({
     t.Numeric({ description: 'Parent issue id, to list that issue’s subtasks.' }),
   ),
   assigneeUserId: t.Optional(t.String({ description: 'Exact assignee user id.' })),
+  assigneeGroupId: t.Optional(t.Numeric({ description: 'Exact assignee group id.' })),
   delegateUserId: t.Optional(t.String({ description: 'Exact delegate agent id.' })),
   priority: t.Optional(t.String({ description: 'Exact priority value.' })),
   labelIds: t.Optional(t.String({ description: 'CSV of label ids; the issue must carry all.' })),
@@ -595,6 +611,16 @@ export const updateIssueBody = t.Object({
   ),
   assigneeUserId: t.Optional(
     t.Nullable(t.String({ description: 'New assignee user id (a project member), or null.' })),
+  ),
+  assigneeGroupId: t.Optional(
+    t.Nullable(
+      t.Integer({ description: 'New assignee group id (from get_project.groups), or null.' }),
+    ),
+  ),
+  assigneeGroupName: t.Optional(
+    t.String({
+      description: 'New assignee group name, instead of assigneeGroupId. From get_project.groups.',
+    }),
   ),
   delegateUserId: t.Optional(
     t.Nullable(t.String({ description: 'New delegate user id (an AI agent), or null.' })),

@@ -35,6 +35,8 @@ export function viewPreviewFilters(view: View, project: ProjectScaffold): Previe
           if (field === 'status') return project.columns.find((item) => item.id === value)?.name;
           if (field === 'type') return project.issueTypes.find((item) => item.id === value)?.name;
           if (field === 'labels') return project.labels.find((item) => item.id === value)?.name;
+          if (field === 'assigneeGroup')
+            return project.groups.find((item) => item.id === value)?.name;
           if (field === 'assignee' || field === 'delegate')
             return project.assignees.find((item) => item.userId === value)?.name;
           if (custom?.fieldType === 'select' || custom?.fieldType === 'multi_select')

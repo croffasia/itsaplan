@@ -36,6 +36,7 @@ import {
 } from '#modules/members/service';
 import { getStats, type StatsDto } from '#modules/analytics/service';
 import { teamSkillObjectKeys } from '#modules/agents/skills/service';
+import { dropGroupMemberships } from '#modules/groups/service';
 import { deleteObjects } from '@repo/storage';
 import {
   assertMayCreateTeam,
@@ -1025,6 +1026,7 @@ async function dropTeamMembership(tx: Transaction, teamId: number, userId: strin
   await tx
     .delete(projectMember)
     .where(and(eq(projectMember.userId, userId), inArray(projectMember.projectId, teamProjects)));
+  await dropGroupMemberships(tx, userId, teamProjects);
   // A pending invite this member created outlives them otherwise, keeping the
   // registration gate open on their behalf after they were removed.
   await tx

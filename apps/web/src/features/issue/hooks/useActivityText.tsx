@@ -61,6 +61,7 @@ export function useActivityText() {
           ? { line: rich('statusMoved', { from, to: to ?? '' }) }
           : { line: rich('statusSet', { status: to ?? '' }) };
       case 'assignee':
+      case 'assignee_group':
         if (!to) return { line: rich('assigneeRemoved', { name: from ?? '' }) };
         return {
           line: rich(from ? 'assigneeChanged' : 'assigneeSet', { name: to }),

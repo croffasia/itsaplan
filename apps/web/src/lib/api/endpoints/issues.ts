@@ -40,6 +40,7 @@ export interface Issue {
   // null. Set through updateIssue by cycleId.
   cycle: CycleRef | null;
   assigneeUserId: string | null;
+  assigneeGroupId: number | null;
   delegateUserId: string | null;
   columnId: number;
   // The issue this one is a subtask of, or null when it stands on its own. The
@@ -89,6 +90,7 @@ export interface IssueSearchHit {
   cycleId: number | null;
   parentId: number | null;
   assigneeUserId: string | null;
+  assigneeGroupId: number | null;
   delegateUserId: string | null;
   priority: string | null;
   dueDate: string | null;
@@ -242,6 +244,7 @@ export interface NewIssueInput {
   initiativeId?: number | null;
   cycleId?: number | null;
   assigneeUserId?: string | null;
+  assigneeGroupId?: number | null;
   delegateUserId?: string | null;
   columnId: number;
   parentId?: number | null;
@@ -263,6 +266,7 @@ export interface BulkIssuePatch {
   initiativeId?: number | null;
   cycleId?: number | null;
   assigneeUserId?: string | null;
+  assigneeGroupId?: number | null;
   delegateUserId?: string | null;
   priority?: string | null;
   estimatePoints?: number | null;
@@ -279,6 +283,7 @@ export interface IssuePatch {
   initiativeId?: number | null;
   cycleId?: number | null;
   assigneeUserId?: string | null;
+  assigneeGroupId?: number | null;
   delegateUserId?: string | null;
   title?: string;
   description?: string;

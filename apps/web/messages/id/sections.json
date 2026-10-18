@@ -108,6 +108,10 @@
     "ai-agents": {
       "label": "Agen AI",
       "description": "Agen AI yang bekerja dalam proyek ini."
+    },
+    "groups": {
+      "label": "Grup",
+      "description": "Kumpulan anggota proyek bernama yang dapat diberi issue."
     }
   }
 }

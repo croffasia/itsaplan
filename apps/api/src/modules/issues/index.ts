@@ -447,6 +447,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           cycleId: posId(query.cycleId),
           parentId: posId(query.parentId),
           assigneeUserId: str(query.assigneeUserId),
+          assigneeGroupId: posId(query.assigneeGroupId),
           delegateUserId: str(query.delegateUserId),
           priority: str(query.priority),
           labelIds: labelIds && labelIds.length ? labelIds : undefined,

@@ -4,6 +4,7 @@ import { request } from '@/lib/api/core/client';
 import type { Column } from '@/lib/api/endpoints/columns';
 import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { IssueTemplate } from '@/lib/api/endpoints/issueTemplates';
+import type { ProjectGroup } from '@/lib/api/endpoints/groups';
 import type { IssueType } from '@/lib/api/endpoints/issueTypes';
 import type { Label, LabelGroup } from '@/lib/api/endpoints/labels';
 import type { MemberRole } from '@/lib/api/endpoints/members';
@@ -107,6 +108,7 @@ export interface ProjectScaffold {
   issueTypes: IssueType[];
   labels: Label[];
   labelGroups: LabelGroup[];
+  groups: ProjectGroup[];
   assignees: Assignee[];
   // Every custom field of the project (all type scopes); consumers filter by
   // issueTypeId locally.

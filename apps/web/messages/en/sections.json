@@ -108,6 +108,10 @@
     "ai-agents": {
       "label": "AI Agents",
       "description": "AI agents working in this project."
+    },
+    "groups": {
+      "label": "Groups",
+      "description": "Named sets of project members that issues can be assigned to."
     }
   }
 }

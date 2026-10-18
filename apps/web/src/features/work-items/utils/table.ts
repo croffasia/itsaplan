@@ -27,6 +27,7 @@ export const COLUMN_META: Record<TableColumn, { width: string }> = {
   priority: { width: '88px' },
   type: { width: '120px' },
   assignee: { width: '56px' },
+  assigneeGroup: { width: 'minmax(100px,160px)' },
   delegate: { width: '56px' },
   initiative: { width: 'minmax(140px,220px)' },
   cycle: { width: 'minmax(120px,180px)' },

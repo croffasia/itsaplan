@@ -46,6 +46,7 @@ import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuLabel,
   ContextMenuSeparator,
   ContextMenuShortcut,
   ContextMenuSub,
@@ -205,7 +206,7 @@ export default function IssueContextMenu({
                 </ContextMenuSubContent>
               </ContextMenuSub>
 
-              {members.length > 0 && (
+              {(members.length > 0 || project.groups.length > 0) && (
                 <ContextMenuSub>
                   <ContextMenuSubTrigger>
                     <User />
@@ -227,6 +228,27 @@ export default function IssueContextMenu({
                         <SelectedCheck selected={a.userId === issue.assigneeUserId} />
                       </ContextMenuItem>
                     ))}
+                    {project.groups.length > 0 && (
+                      <>
+                        <ContextMenuSeparator />
+                        <ContextMenuLabel>{t('groups')}</ContextMenuLabel>
+                        <ContextMenuItem onSelect={() => patch({ assigneeGroupId: null })}>
+                          <CircleDashed />
+                          <span className="flex-1">{t('noGroup')}</span>
+                          <SelectedCheck selected={issue.assigneeGroupId == null} />
+                        </ContextMenuItem>
+                        {project.groups.map((g) => (
+                          <ContextMenuItem
+                            key={g.id}
+                            onSelect={() => patch({ assigneeGroupId: g.id })}
+                          >
+                            {colorDot(g.color)}
+                            <span className="flex-1 truncate">{g.name}</span>
+                            <SelectedCheck selected={g.id === issue.assigneeGroupId} />
+                          </ContextMenuItem>
+                        ))}
+                      </>
+                    )}
                   </ContextMenuSubContent>
                 </ContextMenuSub>
               )}

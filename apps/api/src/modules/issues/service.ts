@@ -60,6 +60,7 @@ import { recordCycleChange } from './cycle-history';
 import { recordStatusChange } from './status-history';
 import { mapAttachment, type AttachmentRow } from '#modules/attachments/service';
 import { notifyIssueChange, notifyTextMentions } from '#modules/notifications/service';
+import { assertGroupInProject, groupIdByName } from '#modules/groups/service';
 import { emitIssueEvent } from './webhook-payload';
 import {
   getAssignTriggerAgent,
@@ -105,6 +106,7 @@ export interface IssueRow {
   // attachGroupings; mapIssue alone leaves it null.
   cycle: { id: number; name: string; status: CycleStatus } | null;
   assigneeUserId: string | null;
+  assigneeGroupId: number | null;
   delegateUserId: string | null;
   columnId: number;
   // The issue this one is a subtask of, or null when it stands on its own. One
@@ -158,6 +160,7 @@ function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow 
     initiative: null,
     cycle: null,
     assigneeUserId: row.assigneeUserId,
+    assigneeGroupId: row.assigneeGroupId,
     delegateUserId: row.delegateUserId,
     columnId: row.columnId,
     parentId: row.parentId,
@@ -213,6 +216,7 @@ function snapshot(row: IssueRow): IssueSnapshot {
     initiativeId: row.initiative?.id ?? null,
     cycleId: row.cycle?.id ?? null,
     assigneeUserId: row.assigneeUserId,
+    assigneeGroupId: row.assigneeGroupId,
     delegateUserId: row.delegateUserId,
     priority: row.priority,
     estimatePoints: row.estimatePoints,
@@ -269,6 +273,7 @@ export interface IssueSearchHit {
   cycleId: number | null;
   parentId: number | null;
   assigneeUserId: string | null;
+  assigneeGroupId: number | null;
   delegateUserId: string | null;
   priority: string | null;
   dueDate: string | null;
@@ -359,6 +364,12 @@ export async function searchIssues(
         ? isNull(issue.assigneeUserId)
         : eq(issue.assigneeUserId, filters.assigneeUserId),
     );
+  if (filters.assigneeGroupId !== undefined)
+    conds.push(
+      filters.assigneeGroupId === null
+        ? isNull(issue.assigneeGroupId)
+        : eq(issue.assigneeGroupId, filters.assigneeGroupId),
+    );
   if (filters.delegateUserId !== undefined)
     conds.push(
       filters.delegateUserId === null
@@ -402,6 +413,7 @@ export async function searchIssues(
       cycleId: issue.cycleId,
       parentId: issue.parentId,
       assigneeUserId: issue.assigneeUserId,
+      assigneeGroupId: issue.assigneeGroupId,
       delegateUserId: issue.delegateUserId,
       columnId: issue.columnId,
       title: issue.title,
@@ -425,6 +437,7 @@ export async function searchIssues(
     cycleId: r.cycleId,
     parentId: r.parentId,
     assigneeUserId: r.assigneeUserId,
+    assigneeGroupId: r.assigneeGroupId,
     delegateUserId: r.delegateUserId,
     priority: r.priority,
     dueDate: r.dueDate,
@@ -625,6 +638,7 @@ async function loadSnapshot(
       initiativeId: issue.initiativeId,
       cycleId: issue.cycleId,
       assigneeUserId: issue.assigneeUserId,
+      assigneeGroupId: issue.assigneeGroupId,
       delegateUserId: issue.delegateUserId,
       priority: issue.priority,
       estimatePoints: issue.estimatePoints,
@@ -711,6 +725,8 @@ export interface NewIssueInput {
   initiativeId?: number | null;
   cycleId?: number | null;
   assigneeUserId?: string | null;
+  assigneeGroupId?: number | null;
+  assigneeGroupName?: string;
   delegateUserId?: string | null;
   columnId: number;
   parentId?: number | null;
@@ -724,17 +740,22 @@ export interface NewIssueInput {
   labelIds?: number[];
 }
 
-// Enforces that assignee holds a project member and delegate holds an agent of the
-// same project. Only checks the fields present in the patch, and only when set to a
+// Enforces that assignee holds a project member, the assignee group belongs to the
+// project, and delegate holds an agent of the same project. Only checks the fields present in the patch, and only when set to a
 // non-null value (clearing a field is always allowed). Throws 400 otherwise.
 async function assertAssignments(
   projectId: number,
-  patch: { assigneeUserId?: string | null; delegateUserId?: string | null },
+  patch: {
+    assigneeUserId?: string | null;
+    assigneeGroupId?: number | null;
+    delegateUserId?: string | null;
+  },
 ): Promise<void> {
   if (patch.assigneeUserId) {
     const role = await getMembership(projectId, patch.assigneeUserId);
     if (!role) throw new HttpError(400, 'Assignee must be a project member');
   }
+  await assertGroupInProject(projectId, patch.assigneeGroupId);
   if (patch.delegateUserId) {
     if (!(await isProjectAgent(projectId, patch.delegateUserId)))
       throw new HttpError(400, 'Delegate must be an agent of this project');
@@ -861,6 +882,8 @@ export async function createIssue(
   input: NewIssueInput,
   actorUserId?: string | null,
 ): Promise<IssueRow> {
+  if (input.assigneeGroupName !== undefined && input.assigneeGroupId === undefined)
+    input = { ...input, assigneeGroupId: await groupIdByName(project.id, input.assigneeGroupName) };
   await assertAssignments(project.id, input);
   await assertInitiative(project.id, input.initiativeId);
   await assertCycle(project.id, input.cycleId);
@@ -894,6 +917,7 @@ export async function createIssue(
         initiativeId: input.initiativeId ?? null,
         cycleId: input.cycleId ?? null,
         assigneeUserId,
+        assigneeGroupId: input.assigneeGroupId ?? null,
         delegateUserId: input.delegateUserId ?? null,
         columnId: input.columnId,
         parentId: input.parentId ?? null,
@@ -931,12 +955,13 @@ export async function createIssue(
   await queueStatusRuns([issueId], input.columnId, actorUserId);
   // An issue created already assigned to a member notifies them, the same as
   // assigning one later does.
-  if (created.assigneeUserId) {
+  if (created.assigneeUserId || created.assigneeGroupId) {
     await notifyIssueChange({
       projectId: project.id,
       issueId,
       actorUserId: actorUserId ?? null,
       assignedUserId: created.assigneeUserId,
+      assignedGroupId: created.assigneeGroupId,
     });
   }
   // A description written on creation reaches the people it mentions, the same as
@@ -1006,6 +1031,8 @@ export interface IssuePatch {
   initiativeId?: number | null;
   cycleId?: number | null;
   assigneeUserId?: string | null;
+  assigneeGroupId?: number | null;
+  assigneeGroupName?: string;
   delegateUserId?: string | null;
   title?: string;
   description?: string;
@@ -1033,6 +1060,11 @@ export async function updateIssue(
 ): Promise<IssueRow | null> {
   const before = await loadSnapshot(id);
   if (!before) return null;
+  if (patch.assigneeGroupName !== undefined && patch.assigneeGroupId === undefined)
+    patch = {
+      ...patch,
+      assigneeGroupId: await groupIdByName(before.projectId, patch.assigneeGroupName),
+    };
 
   // Each date is checked against the effective other one: a patch sets one date
   // and leaves the stored value of the other in force.
@@ -1071,6 +1103,7 @@ export async function updateIssue(
   if (patch.cycleId !== undefined) set.cycleId = patch.cycleId;
   if (patch.assigneeUserId !== undefined) set.assigneeUserId = patch.assigneeUserId;
   else if (autoAssignee) set.assigneeUserId = autoAssignee;
+  if (patch.assigneeGroupId !== undefined) set.assigneeGroupId = patch.assigneeGroupId;
   if (patch.delegateUserId !== undefined) set.delegateUserId = patch.delegateUserId;
   if (patch.title !== undefined) set.title = patch.title;
   if (patch.description !== undefined) set.description = patch.description;
@@ -1103,7 +1136,10 @@ export async function updateIssue(
     if (changed) {
       await emitIssueEvent('issue.updated', after, actor);
       // Granular events fire in addition to issue.updated when their field changed.
-      if (before.assigneeUserId !== after.assigneeUserId)
+      if (
+        before.assigneeUserId !== after.assigneeUserId ||
+        before.assigneeGroupId !== after.assigneeGroupId
+      )
         await emitIssueEvent('issue.assigned', after, actor);
       if (before.delegateUserId !== after.delegateUserId) await enqueueDelegateRun(after, actor);
       if (before.columnId !== after.columnId) {

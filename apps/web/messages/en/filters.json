@@ -40,7 +40,8 @@
     "dueDate": "Due date",
     "startDate": "Start date",
     "created": "Created",
-    "updated": "Updated"
+    "updated": "Updated",
+    "assigneeGroup": "Assignee group"
   },
   "unset": {
     "assignee": "No assignee",
@@ -48,6 +49,7 @@
     "type": "No type",
     "initiative": "No initiative",
     "cycle": "No cycle",
-    "member": "No value"
+    "member": "No value",
+    "assigneeGroup": "No group"
   }
 }

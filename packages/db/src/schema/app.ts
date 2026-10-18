@@ -497,6 +497,39 @@ export const label = pgTable(
   (t) => [unique().on(t.projectId, t.name)],
 );
 
+// A named set of a project's members (a team inside the team, such as "Nursing") that
+// an issue can be assigned to. A member row is removed when the user leaves the project.
+export const projectGroup = pgTable(
+  'project_group',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    color: text('color').notNull().default('#6b7280'),
+    position: doublePrecision('position').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('project_group_project_name_uq').on(t.projectId, sql`lower(${t.name})`)],
+);
+
+export const projectGroupMember = pgTable(
+  'project_group_member',
+  {
+    groupId: integer('group_id')
+      .notNull()
+      .references(() => projectGroup.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.groupId, t.userId] }),
+    index('project_group_member_user_idx').on(t.userId),
+  ],
+);
+
 // AI agents owned by a team. Each agent is backed by a hidden bot user
 // (user_id -> user.id): that user is what a work item is delegated to, what a
 // comment/activity is authored by, and what owns the agent's API key (better-auth
@@ -1262,6 +1295,9 @@ export const issueTemplate = pgTable(
     columnId: integer('column_id').references(() => projectColumn.id, { onDelete: 'set null' }),
     priority: text('priority'),
     assigneeUserId: text('assignee_user_id').references(() => user.id, { onDelete: 'set null' }),
+    assigneeGroupId: integer('assignee_group_id').references(() => projectGroup.id, {
+      onDelete: 'set null',
+    }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique().on(t.projectId, t.name)],
@@ -1416,6 +1452,11 @@ export const issue = pgTable(
     assigneeUserId: text('assignee_user_id').references(() => user.id, {
       onDelete: 'set null',
     }),
+    // The group of project members the issue is assigned to, alongside or instead of
+    // the person. Deleting the group clears it.
+    assigneeGroupId: integer('assignee_group_id').references(() => projectGroup.id, {
+      onDelete: 'set null',
+    }),
     // The AI agent an issue is delegated to. Like assignee this points at a bot
     // user (ai_agent.user_id); assignee holds a project member, delegate holds an
     // agent. Setting a delegate on an internal agent with trigger_on_assign enqueues
@@ -1468,6 +1509,9 @@ export const issue = pgTable(
     index('issue_cycle_idx')
       .on(t.cycleId)
       .where(sql`${t.cycleId} IS NOT NULL`),
+    index('issue_assignee_group_idx')
+      .on(t.assigneeGroupId)
+      .where(sql`${t.assigneeGroupId} IS NOT NULL`),
   ],
 );
 

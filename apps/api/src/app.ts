@@ -99,6 +99,7 @@ export const app = new Elysia()
           { name: 'Columns', description: 'Work items columns and their order' },
           { name: 'Issue Types', description: 'Per-project issue types' },
           { name: 'Labels', description: 'Labels and label groups' },
+          { name: 'Groups', description: 'Groups of project members issues are assigned to' },
           { name: 'AI Agents', description: 'AI agents attached to a project' },
           {
             name: 'Integrations',

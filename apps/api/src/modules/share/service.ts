@@ -5,6 +5,7 @@ import { getProjectById, type ProjectRow } from '#modules/projects/service';
 import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '#modules/issue-types/service';
 import { listLabels, listLabelGroups } from '#modules/labels/service';
+import { listGroups } from '#modules/groups/service';
 import { listCustomFields } from '#modules/custom-fields/service';
 import { listAssigneeCandidates } from '#modules/members/service';
 import { getIssue, getIssueFieldValues, listIssues, type IssueRow } from '#modules/issues/service';
@@ -34,6 +35,7 @@ export interface ShareScaffold {
   issueTypes: Awaited<ReturnType<typeof listIssueTypes>>;
   labels: Awaited<ReturnType<typeof listLabels>>;
   labelGroups: Awaited<ReturnType<typeof listLabelGroups>>;
+  groups: Awaited<ReturnType<typeof listGroups>>;
   assignees: Array<{
     userId: string;
     name: string;
@@ -72,14 +74,16 @@ export interface SharedViewBundle {
 // issue payload can reference — the columns and issue types — so a link that hides
 // the people, labels and custom fields does not name them in the scaffold either.
 async function buildScaffold(project: ProjectRow, extended: boolean): Promise<ShareScaffold> {
-  const [columns, issueTypes, labels, labelGroups, assignees, customFields] = await Promise.all([
-    listColumns(project.id),
-    listIssueTypes(project.id),
-    extended ? listLabels(project.id) : [],
-    extended ? listLabelGroups(project.id) : [],
-    extended ? listAssigneeCandidates(project.id) : [],
-    extended ? listCustomFields(project.id, { allTypes: true }) : [],
-  ]);
+  const [columns, issueTypes, labels, labelGroups, groups, assignees, customFields] =
+    await Promise.all([
+      listColumns(project.id),
+      listIssueTypes(project.id),
+      extended ? listLabels(project.id) : [],
+      extended ? listLabelGroups(project.id) : [],
+      extended ? listGroups(project.id) : [],
+      extended ? listAssigneeCandidates(project.id) : [],
+      extended ? listCustomFields(project.id, { allTypes: true }) : [],
+    ]);
   const { teamId: _teamId, teamName: _teamName, ...publicProject } = project;
   return {
     project: publicProject,
@@ -87,6 +91,8 @@ async function buildScaffold(project: ProjectRow, extended: boolean): Promise<Sh
     issueTypes,
     labels,
     labelGroups,
+    // Member ids stay private; a public page shows the group's name and color.
+    groups: groups.map((g) => ({ ...g, memberIds: [] })),
     // Drop the email — a public page renders names and avatars only.
     assignees: assignees.map((a) => ({
       userId: a.userId,
@@ -109,6 +115,7 @@ function redactIssue<T extends IssueRow>(row: T): T {
     initiative: null,
     cycle: null,
     assigneeUserId: null,
+    assigneeGroupId: null,
     delegateUserId: null,
     labelIds: [],
     fieldValues: [],

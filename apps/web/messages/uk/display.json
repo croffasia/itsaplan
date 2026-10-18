@@ -27,7 +27,8 @@
     "priority": "Пріоритет",
     "type": "Тип",
     "initiative": "Ініціатива",
-    "cycle": "Цикл"
+    "cycle": "Цикл",
+    "assigneeGroup": "Група виконавців"
   },
   "properties": {
     "id": "ID",
@@ -45,7 +46,8 @@
     "dueDate": "Дедлайн",
     "created": "Створено",
     "updated": "Оновлено",
-    "statusAge": "Час у статусі"
+    "statusAge": "Час у статусі",
+    "assigneeGroup": "Група"
   },
   "stateTypes": {
     "backlog": "Беклог",

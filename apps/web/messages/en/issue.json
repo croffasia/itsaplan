@@ -64,7 +64,9 @@
     "noInitiative": "No initiative",
     "noCycle": "No cycle",
     "copyFailed": "Could not copy to clipboard",
-    "promptCopied": "Prompt copied to clipboard"
+    "promptCopied": "Prompt copied to clipboard",
+    "groups": "Groups",
+    "noGroup": "No group"
   },
   "commands": {
     "preview": "Preview issue",
@@ -89,7 +91,10 @@
     "archive": "Archive issue",
     "delete": "Delete issue",
     "promptCopied": "Prompt copied to clipboard",
-    "shortLinkCopied": "Short link copied"
+    "shortLinkCopied": "Short link copied",
+    "assigneeGroup": "Assign to group",
+    "assigneeGroupPlaceholder": "Assign to group…",
+    "noGroup": "No group"
   },
   "dueDatePresets": {
     "tomorrow": "Tomorrow",
@@ -456,7 +461,8 @@
     "labelCount": "{count, plural, one {# label} other {# labels}}",
     "noMember": "Not set",
     "pickMember": "Pick someone…",
-    "noCandidates": "Nobody to pick."
+    "noCandidates": "Nobody to pick.",
+    "groups": "Groups"
   },
   "watchers": {
     "watch": "Watch",

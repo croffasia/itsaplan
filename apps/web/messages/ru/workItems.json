@@ -39,7 +39,8 @@
     "startDate": "Начало",
     "dueDate": "Дедлайн",
     "created": "Создано",
-    "updated": "Обновлено"
+    "updated": "Обновлено",
+    "assigneeGroup": "Группа"
   },
   "calendar": {
     "previousMonth": "Предыдущий месяц",
@@ -88,7 +89,9 @@
     "noInitiative": "Без инициативы",
     "noCycle": "Без цикла",
     "archive": "Архивировать",
-    "clearSelection": "Снять выбор"
+    "clearSelection": "Снять выбор",
+    "groups": "Группы",
+    "noGroup": "Без группы"
   },
   "removal": {
     "archive": {
@@ -114,6 +117,7 @@
     "noType": "Без типа",
     "noInitiative": "Без инициативы",
     "noCycle": "Без цикла",
-    "noMember": "Не задано"
+    "noMember": "Не задано",
+    "noAssigneeGroup": "Без группы"
   }
 }

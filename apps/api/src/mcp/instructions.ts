@@ -23,7 +23,7 @@ refused because several of your teams use it, pass the project's ref instead,
 
 When you have no identifier, start with list_projects to find the project, then
 get_project to resolve its ids. Every id another tool takes — columnId, typeId,
-labelIds, assigneeUserId, custom field ids, member user ids — comes from
+labelIds, assigneeUserId, assigneeGroupId, custom field ids, member user ids — comes from
 get_project. Never invent an id, and never reuse one across projects: ids are per
 project.
 

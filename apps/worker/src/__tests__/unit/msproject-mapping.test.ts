@@ -97,11 +97,19 @@ describe('mapMsProjectTask', () => {
 });
 
 describe('mapMsProjectRelations', () => {
-  it('makes each predecessor block its successor and drops unknown ones', () => {
-    expect(mapMsProjectRelations(task('5'), plan)).toEqual([
+  // The Link phase creates each relation from the issue it reads them for, so a task
+  // lists the tasks it blocks, not its own predecessors.
+  it('lists the successors a task blocks, from the task itself', () => {
+    expect(mapMsProjectRelations(task('3'), plan)).toEqual([
       { kind: 'blocks', sourceIssueSourceId: '3', targetIssueSourceId: '5' },
     ]);
-    expect(mapMsProjectRelations(task('1'), plan)).toEqual([]);
+    expect(mapMsProjectRelations(task('2'), plan)).toEqual([
+      { kind: 'blocks', sourceIssueSourceId: '2', targetIssueSourceId: '3' },
+    ]);
+  });
+
+  it('gives a task that blocks nothing no relations, whatever its predecessors', () => {
+    expect(mapMsProjectRelations(task('5'), plan)).toEqual([]);
   });
 });
 
@@ -116,7 +124,7 @@ describe('MsProjectReader', () => {
     expect(page.items).toHaveLength(4);
     expect(page.cursor).toBeNull();
     expect((await reader.getIssue('5')).title).toBe('Build');
-    expect(await reader.listIssueRelations('5')).toHaveLength(1);
+    expect(await reader.listIssueRelations('3')).toHaveLength(1);
     expect(await reader.listIssueComments()).toEqual([]);
     expect(reads).toBe(1);
   });

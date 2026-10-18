@@ -208,17 +208,18 @@ export function mapMsProjectTask(task: MsProjectTask, plan: MsProjectPlan): Cano
   };
 }
 
-// A predecessor blocks its successor; a link to a task that is not imported is dropped.
+// A predecessor blocks its successor. The Link phase reads a task's relations as the
+// ones it is the source of, so a task lists the tasks that name it as their
+// predecessor: the ones it blocks. A link to a task that is not imported is dropped.
 export function mapMsProjectRelations(
   task: MsProjectTask,
   plan: MsProjectPlan,
 ): CanonicalRelation[] {
-  const known = new Set(plan.tasks.map((t) => t.uid));
-  return task.predecessorUids
-    .filter((uid) => known.has(uid) && uid !== task.uid)
-    .map((uid) => ({
+  return plan.tasks
+    .filter((other) => other.uid !== task.uid && other.predecessorUids.includes(task.uid))
+    .map((successor) => ({
       kind: 'blocks' as const,
-      sourceIssueSourceId: uid,
-      targetIssueSourceId: task.uid,
+      sourceIssueSourceId: task.uid,
+      targetIssueSourceId: successor.uid,
     }));
 }

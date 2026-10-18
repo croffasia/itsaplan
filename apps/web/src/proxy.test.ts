@@ -133,6 +133,12 @@ describe('proxy with API_PROXY_TARGET', () => {
       null,
     );
     assert.equal(rewrite(request('/media/avatars/a.png', { 'sec-fetch-dest': 'empty' })), null);
+    const hmr = { 'sec-fetch-dest': 'empty', upgrade: 'websocket' };
+    assert.equal(rewrite(request('/_next/webpack-hmr', hmr)), null);
+    assert.equal(
+      rewrite(request('/__nextjs_original-stack-frames', { 'sec-fetch-dest': 'empty' })),
+      null,
+    );
   });
 
   it('leaves every request to the web app without a target', () => {

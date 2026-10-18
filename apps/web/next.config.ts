@@ -43,6 +43,17 @@ const nextConfig: NextConfig = {
   // next dev otherwise appends a block of its own to apps/web/AGENTS.md on every
   // start, which leaves the working tree dirty for anyone running the dev server.
   agentRules: false,
+  // The dev server serves its live-reload socket only to the origins it trusts. A page
+  // opened on 127.0.0.1 (which keeps its cookies apart from other localhost apps) or on
+  // a dev proxy host such as *.orca.localhost would otherwise never finish loading.
+  // DEV_ORIGINS adds more hosts, comma-separated. Production ignores this setting.
+  allowedDevOrigins: [
+    '127.0.0.1',
+    '*.localhost',
+    ...(process.env.DEV_ORIGINS?.split(',')
+      .map((host) => host.trim())
+      .filter(Boolean) ?? []),
+  ],
   // Every local image is served by app/media. Next 16 refuses a query string on
   // a local image unless its path is listed here; the attachments panel stamps a
   // replaced attachment's URL with one so the optimizer refetches it.

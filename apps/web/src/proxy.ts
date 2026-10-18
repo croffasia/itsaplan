@@ -58,6 +58,10 @@ function isApiCall(request: NextRequest): boolean {
   const { pathname } = request.nextUrl;
   if (pathname === '/api/auth' || pathname.startsWith('/api/auth/')) return true;
   if (MEDIA_PATHS.some(matcher(pathname))) return false;
+  // Next's own endpoints (the dev server's live-reload socket among them, which a
+  // browser sends with Sec-Fetch-Dest "empty") are never the api's.
+  if (pathname.startsWith('/_next/') || pathname.startsWith('/__nextjs')) return false;
+  if (request.headers.get('upgrade')?.toLowerCase() === 'websocket') return false;
   if (request.headers.has('rsc') || request.headers.has('next-action')) return false;
   const dest = request.headers.get('sec-fetch-dest');
   return dest == null || dest === 'empty';

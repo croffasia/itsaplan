@@ -8,6 +8,8 @@ const scimKey = (workspaceId: number | null) =>
 // invalidate another service's queries by the same key.
 export const qk = {
   projects: ['projects'] as const,
+  // Under projects, so what refreshes the project list refreshes every search with it.
+  projectSearch: (filters: unknown) => ['projects', 'search', filters] as const,
   teams: ['teams'] as const,
   // One team: its counters and what the caller may do with what it holds.
   team: (teamId: number) => ['team', teamId] as const,

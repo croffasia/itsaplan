@@ -12,3 +12,5 @@ export const workspaceInitial = (name: string) => [...name.trim()][0]?.toUpperCa
 
 export const workspaceTileStyle = (color: string | null) =>
   color ? { backgroundColor: color, color: '#fff' } : undefined;
+
+export const workspaceRowClass = 'h-9 w-full justify-start gap-2.5 px-2 font-normal';

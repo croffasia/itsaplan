@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Project } from '@/lib/api/endpoints/projects';
 import { useSession } from '@/lib/auth-client';
@@ -10,6 +10,11 @@ import { SidebarMenu, SidebarMenuItem, useSidebar } from '@/components/ui/sideba
 import ProjectSwitcherTrigger from './ProjectSwitcherTrigger';
 import ProjectSwitcherMenu from './ProjectSwitcherMenu';
 import { useProjectSwitcherPreferences } from './hooks/useProjectSwitcherPreferences';
+import { useRecentProjects } from './hooks/useRecentProjects';
+
+// What the list beside the workspaces shows: the starred and recently opened projects,
+// the hidden ones, or the projects of one team, by its id.
+export type ProjectSwitcherScope = 'recent' | 'hidden' | number;
 
 export default function ProjectSwitcher({
   projects,
@@ -27,10 +32,17 @@ export default function ProjectSwitcher({
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const preferences = useProjectSwitcherPreferences(session?.user.id);
+  const recent = useRecentProjects(session?.user.id);
   const current = projects.find((project) => project.ref === currentProjectKey);
   const [open, setOpen] = useState(false);
-  const [openTeams, setOpenTeams] = useState<Record<number, boolean>>({});
   const [pickedWorkspaceId, setPickedWorkspaceId] = useState<number | null>(null);
+  const [scope, setScope] = useState<ProjectSwitcherScope>('recent');
+
+  const currentId = current?.id;
+  const { record } = recent;
+  useEffect(() => {
+    if (currentId !== undefined) record(currentId);
+  }, [currentId, record]);
 
   // A project reaches its workspace through its team, so nothing is narrowed until the
   // teams have loaded.
@@ -42,10 +54,6 @@ export default function ProjectSwitcher({
   const workspaceTeams = workspace
     ? teams.filter((team) => team.workspaceId === workspace.id)
     : teams;
-  const workspaceTeamIds = new Set(workspaceTeams.map((team) => team.id));
-  const workspaceProjects = workspace
-    ? projects.filter((project) => workspaceTeamIds.has(project.teamId))
-    : projects;
 
   return (
     <SidebarMenu>
@@ -57,6 +65,7 @@ export default function ProjectSwitcher({
             setOpen(value);
             if (!value) return;
             setPickedWorkspaceId(null);
+            setScope('recent');
             void queryClient.invalidateQueries({ queryKey: qk.projects });
           }}
         >
@@ -64,15 +73,18 @@ export default function ProjectSwitcher({
             <ProjectSwitcherTrigger current={current} />
           </PopoverTrigger>
           <ProjectSwitcherMenu
-            projects={workspaceProjects}
-            teams={workspaceTeams}
             workspaces={workspaces}
             workspace={workspace}
-            onPickWorkspace={setPickedWorkspaceId}
-            current={current}
+            teams={workspaceTeams}
+            scope={scope}
+            onScopeChange={setScope}
+            onPickWorkspace={(workspaceId) => {
+              setPickedWorkspaceId(workspaceId);
+              setScope('recent');
+            }}
+            currentProjectKey={currentProjectKey}
+            recentIds={recent.ids}
             preferences={preferences}
-            openTeams={openTeams}
-            onOpenTeam={(teamId, value) => setOpenTeams((prev) => ({ ...prev, [teamId]: value }))}
             onSelectProject={(key) => {
               setOpen(false);
               onSelectProject(key);

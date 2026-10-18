@@ -1,0 +1,18 @@
+# Two sites: the web app and the api, each with a certificate from Let's Encrypt.
+# Both domains must point (A/AAAA record) at this server before the first start.
+{
+	email {$ACME_EMAIL}
+}
+
+{$APP_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy web:3001
+}
+
+{$API_DOMAIN} {
+	encode zstd gzip
+	# Agent chat and run streams are server-sent events; flush them as they arrive.
+	reverse_proxy api:3000 {
+		flush_interval -1
+	}
+}

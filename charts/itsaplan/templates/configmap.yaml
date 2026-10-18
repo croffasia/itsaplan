@@ -18,6 +18,24 @@ data:
   S3_REGION: {{ .Values.api.env.S3_REGION | quote }}
   S3_ENDPOINT: {{ include "itsaplan.s3Endpoint" . | quote }}
   S3_FORCE_PATH_STYLE: {{ .Values.api.env.S3_FORCE_PATH_STYLE | quote }}
+  {{- with .Values.api.env.STORAGE_DRIVER }}
+  STORAGE_DRIVER: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.api.env.SHAREPOINT_TENANT_ID }}
+  SHAREPOINT_TENANT_ID: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.api.env.SHAREPOINT_CLIENT_ID }}
+  SHAREPOINT_CLIENT_ID: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.api.env.SHAREPOINT_SITE_ID }}
+  SHAREPOINT_SITE_ID: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.api.env.SHAREPOINT_DRIVE_ID }}
+  SHAREPOINT_DRIVE_ID: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.api.env.SHAREPOINT_ROOT_FOLDER }}
+  SHAREPOINT_ROOT_FOLDER: {{ . | quote }}
+  {{- end }}
   SERVICE_URL_API: {{ include "itsaplan.internalApiUrl" . | quote }}
   TELEMETRY_DISABLED: {{ .Values.api.env.TELEMETRY_DISABLED | quote }}
   DO_NOT_TRACK: {{ .Values.worker.env.DO_NOT_TRACK | default "1" | quote }}

@@ -1,52 +1,41 @@
 import { randomUUID } from 'node:crypto';
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-} from '@aws-sdk/client-s3';
+import type { StorageDriver } from './driver';
+import { createS3Driver } from './s3';
+import { createSharePointDriver, sharePointConfigFromEnv } from './sharepoint';
 
-// S3-compatible object store (RustFS in the Compose stacks) for attachments — api's issue/chat/document/
-// initiative attachments and the worker's imported issue attachments alike. Only
-// the file bytes live here; the metadata and object key are rows in whichever
-// table owns them (issue_attachment, chat_attachment, ...).
+export type { StorageDriver, StoredObject } from './driver';
+export { createS3Driver } from './s3';
+export { createSharePointDriver, sharePointConfigFromEnv } from './sharepoint';
+
+// Object store for attachments — api's issue/chat/document/initiative attachments,
+// avatars, skill files and the worker's imported issue attachments alike. Only the
+// file bytes live here; the metadata and object key are rows in whichever table
+// owns them (issue_attachment, chat_attachment, ...).
 //
-// Config comes from env. forcePathStyle is required for RustFS (and most
-// self-hosted S3 gateways) because they do not serve virtual-host-style buckets;
-// hosted stores that only serve virtual-host-style buckets set
-// S3_FORCE_PATH_STYLE=false. region is sent but ignored by RustFS; a value is
-// still required by the SDK.
+// STORAGE_DRIVER picks the backend: "s3" (the default; RustFS in the Compose
+// stacks or any S3-compatible store) or "sharepoint" (a SharePoint document
+// library / OneDrive through Microsoft Graph). A misconfigured driver throws on
+// first use, naming the variables to set.
 
-let cached: { client: S3Client; bucket: string } | null = null;
+export function storageDriverName(env: NodeJS.ProcessEnv = process.env): 's3' | 'sharepoint' {
+  const name = (env.STORAGE_DRIVER || 's3').trim().toLowerCase();
+  if (name === 's3' || name === 'sharepoint') return name;
+  throw new Error(`Unknown STORAGE_DRIVER '${env.STORAGE_DRIVER}': use "s3" or "sharepoint".`);
+}
 
-function getClient(): { client: S3Client; bucket: string } {
-  if (cached) return cached;
-  const endpoint = process.env.S3_ENDPOINT;
-  const bucket = process.env.S3_BUCKET;
-  const accessKeyId = process.env.S3_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.S3_SECRET_ACCESS_KEY;
-  if (!endpoint || !bucket || !accessKeyId || !secretAccessKey) {
-    throw new Error(
-      'S3 storage is not configured: set S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY.',
-    );
-  }
-  cached = {
-    client: new S3Client({
-      endpoint,
-      region: process.env.S3_REGION || 'us-east-1',
-      credentials: { accessKeyId, secretAccessKey },
-      forcePathStyle: process.env.S3_FORCE_PATH_STYLE !== 'false',
-    }),
-    bucket,
-  };
-  return cached;
+let cached: { name: string; driver: StorageDriver } | null = null;
+
+function driver(): StorageDriver {
+  const name = storageDriverName();
+  if (cached?.name === name) return cached.driver;
+  const created =
+    name === 'sharepoint' ? createSharePointDriver(sharePointConfigFromEnv()) : createS3Driver();
+  cached = { name, driver: created };
+  return created;
 }
 
 export async function putObject(key: string, body: Buffer, contentType: string): Promise<void> {
-  const { client, bucket } = getClient();
-  await client.send(
-    new PutObjectCommand({ Bucket: bucket, Key: key, Body: body, ContentType: contentType }),
-  );
+  await driver().put(key, body, contentType);
 }
 
 // Returns a web ReadableStream of the object body so a route can stream it to
@@ -55,14 +44,7 @@ export async function putObject(key: string, body: Buffer, contentType: string):
 export async function getObject(
   key: string,
 ): Promise<{ body: ReadableStream; contentType: string; contentLength?: number }> {
-  const { client, bucket } = getClient();
-  const res = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
-  if (!res.Body) throw new Error(`Object '${key}' has no body`);
-  return {
-    body: (res.Body as { transformToWebStream: () => ReadableStream }).transformToWebStream(),
-    contentType: res.ContentType || 'application/octet-stream',
-    contentLength: res.ContentLength,
-  };
+  return driver().get(key);
 }
 
 // Reads a whole object into a UTF-8 string. For small text objects (skill
@@ -73,8 +55,7 @@ export async function getObjectText(key: string): Promise<string> {
 }
 
 export async function deleteObject(key: string): Promise<void> {
-  const { client, bucket } = getClient();
-  await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+  await driver().delete(key);
 }
 
 // Deletes several objects, best-effort (a failed delete only orphans bytes).

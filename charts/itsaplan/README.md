@@ -187,6 +187,12 @@ bot:
 | `api.env.S3_BUCKET`                   | S3 bucket name                                            | `""`                             |
 | `api.env.S3_REGION`                   | S3 region                                                 | `us-east-1`                      |
 | `api.env.S3_FORCE_PATH_STYLE`         | S3 path-style access                                      | `"true"`                         |
+| `api.env.STORAGE_DRIVER`              | `s3` (default) or `sharepoint`                            | (unset)                          |
+| `api.env.SHAREPOINT_TENANT_ID`        | Entra tenant id (SharePoint storage)                      | (unset)                          |
+| `api.env.SHAREPOINT_CLIENT_ID`        | Entra app client id (SharePoint storage)                  | (unset)                          |
+| `api.env.SHAREPOINT_SITE_ID`          | SharePoint site id (or set `SHAREPOINT_DRIVE_ID`)         | (unset)                          |
+| `api.env.SHAREPOINT_DRIVE_ID`         | Drive id; defaults to the site's document library         | (unset)                          |
+| `api.env.SHAREPOINT_ROOT_FOLDER`      | Folder in the drive that holds the files                  | `itsaplan`                       |
 | `api.env.TELEMETRY_DISABLED`          | Disable telemetry                                         | `"1"`                            |
 | `api.resources`                       | CPU/memory requests and limits                            | `{}`                             |
 | `api.nodeSelector`                    | Node selector                                             | `{}`                             |
@@ -287,6 +293,7 @@ bot:
 | `secrets.appEncryptionKey`    | AES encryption key for secrets at rest    | `""`    |
 | `secrets.s3AccessKeyId`       | S3 access key (also RustFS root user)     | `""`    |
 | `secrets.s3SecretAccessKey`   | S3 secret key (also RustFS root password) | `""`    |
+| `secrets.sharepointClientSecret` | Entra app client secret (SharePoint storage) | `""` |
 
 ### External services
 

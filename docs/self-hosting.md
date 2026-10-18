@@ -196,6 +196,97 @@ push, and anyone who signs in through OIDC while their identity provider puts a 
 claim on the token — set that up as a claim mapping on the OIDC client if the provider
 supports one. Either way, map the group the same way once it shows up.
 
+## Storing files in SharePoint / OneDrive
+
+By default every stored file (issue, chat, document and initiative attachments, avatars,
+skill files, import uploads) goes to the S3-compatible store. Set `STORAGE_DRIVER=sharepoint`
+to keep them in a SharePoint document library or OneDrive drive through Microsoft Graph
+instead. The database, the object keys and the app behave the same either way; with
+`sharepoint` the `S3_*` variables are not read and the bundled RustFS is not needed.
+
+**1. Register an app in Entra ID.** In the Azure portal, open Microsoft Entra ID, App
+registrations, New registration (single tenant). Note the **Directory (tenant) ID** and
+**Application (client) ID**. Under Certificates & secrets, create a client secret and copy its
+value.
+
+**2. Give it permission.** Under API permissions, add Microsoft Graph, **Application**
+permissions, and grant admin consent. Use one of:
+
+- `Sites.Selected` (recommended, least privilege). The app can reach only the sites you grant
+  it in step 3.
+- `Sites.ReadWrite.All` (simpler). The app can read and write every site in the tenant. Skip
+  step 3.
+
+**3. Grant the app one site (`Sites.Selected` only).** Find the site id (step 4), then, as an
+admin with `Sites.FullControl.All` (a separate admin app or Graph Explorer):
+
+```
+POST https://graph.microsoft.com/v1.0/sites/{site-id}/permissions
+Content-Type: application/json
+
+{
+  "roles": ["write"],
+  "grantedToIdentities": [
+    { "application": { "id": "<client id>", "displayName": "itsaplan" } }
+  ]
+}
+```
+
+or with PnP PowerShell: `Grant-PnPAzureADAppSitePermission -AppId <client id> -DisplayName itsaplan -Site https://contoso.sharepoint.com/sites/itsaplan -Permissions Write`.
+
+**4. Find the site id.**
+
+```
+GET https://graph.microsoft.com/v1.0/sites/{hostname}:/sites/{path}
+```
+
+for example `.../sites/contoso.sharepoint.com:/sites/itsaplan`. The `id` in the response
+(`contoso.sharepoint.com,<siteCollectionId>,<webId>`) is `SHAREPOINT_SITE_ID`. The app uses the
+site's default document library. To use another library or a OneDrive drive, set
+`SHAREPOINT_DRIVE_ID` instead (`GET /sites/{site-id}/drives` lists them).
+
+**5. Set the variables** on the api and the worker (the compose files and the Helm chart pass
+them through):
+
+| Variable                  | Value                                                       |
+| ------------------------- | ----------------------------------------------------------- |
+| `STORAGE_DRIVER`          | `sharepoint` (unset or `s3` keeps S3)                       |
+| `SHAREPOINT_TENANT_ID`    | Directory (tenant) ID                                       |
+| `SHAREPOINT_CLIENT_ID`    | Application (client) ID                                     |
+| `SHAREPOINT_CLIENT_SECRET`| Client secret value                                         |
+| `SHAREPOINT_SITE_ID`      | Site id (or `SHAREPOINT_DRIVE_ID`)                          |
+| `SHAREPOINT_ROOT_FOLDER`  | Folder inside the drive for every file. Default `itsaplan`  |
+
+A missing variable makes the first upload or download fail with a message naming it.
+
+How it behaves:
+
+- Files live under `<root folder>/<object key>`, for example
+  `itsaplan/projects/3/attachments/12/<uuid>-report.pdf`. Do not rename or move them in
+  SharePoint: the app finds them by that path.
+- Uploads up to 4 MB are one request. Larger files use a Graph upload session in 10 MiB chunks
+  (a multiple of 320 KiB, as Graph requires).
+- Graph stores no arbitrary content type. Attachments are served with the content type kept in
+  the database. Where the app has only the file (avatars), the type comes from the file
+  extension, or from the first bytes for images and PDFs.
+- Graph throttling (429, 503, 504) is retried up to 5 times, honouring `Retry-After`.
+- SharePoint limits apply: file names cannot contain `" * : < > ? \ |`, and a library has its
+  own storage quota and versioning (every overwrite makes a version).
+
+**Existing files are not migrated.** After switching, objects already in S3 are missing until
+you copy them. The one-off script reads every object key from the database (issue, chat,
+initiative and document attachments, skill files, avatars) and copies it from S3 to SharePoint
+under the same key. It never deletes from S3 and is safe to run again:
+
+```bash
+# .env still holds the S3_* values and now the SHAREPOINT_* ones
+bun --env-file=.env scripts/storage-copy-s3-to-sharepoint.ts --dry-run   # list the keys
+bun --env-file=.env scripts/storage-copy-s3-to-sharepoint.ts
+```
+
+Run it before or just after switching the api and worker, from a checkout of the repository
+with dependencies installed. Keys missing in S3 are reported and skipped.
+
 ## Updating
 
 ```bash

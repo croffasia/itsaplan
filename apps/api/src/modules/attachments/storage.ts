@@ -91,7 +91,7 @@ export async function storeAttachmentObject(
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(
-      `[planner] object store PUT failed (bucket=${process.env.S3_BUCKET}, key=${key}, size=${bytes.length}):`,
+      `[planner] object store PUT failed (driver=${process.env.STORAGE_DRIVER || 's3'}, key=${key}, size=${bytes.length}):`,
       error,
     );
     throw new HttpError(502, `Object store error: ${message}`);

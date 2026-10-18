@@ -106,8 +106,9 @@ release.
 - A run starts on an @mention in a comment, on an assignment, or on a schedule
 - A monthly budget per internal agent. Once its cost for the month reaches the budget,
   new runs and chat answers are refused until the next month
-- Tools for the services outside the tracker: Notion, Telegram, Threads, Instagram, Jina,
-  Firecrawl, and Gitea
+- Tools for the services outside the tracker: Microsoft 365 (OneDrive, SharePoint, Outlook
+  mail and calendar, Teams channels), Notion, Telegram, Threads, Instagram, Jina, Firecrawl,
+  and Gitea ([docs/microsoft365.md](docs/microsoft365.md))
 - Local and air-gapped models: Ollama, LM Studio, vLLM, or any OpenAI-compatible server,
   with no outbound calls ([docs/local-models.md](docs/local-models.md))
 - Built-in chat with each agent, with its own conversation history

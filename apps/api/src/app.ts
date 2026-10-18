@@ -22,6 +22,7 @@ import { scimRoutes } from './modules/scim';
 import { currentUserRoutes } from './modules/current-user';
 import { syncOidcGroupsAfterCallback } from './modules/scim/oidc-sync';
 import { normalizeOpenApiResponse } from './openapi';
+import { requestTracking } from './shared/request-tracker';
 import pkg from '../../../package.json';
 
 const apiUrl = (process.env.API_URL ?? 'http://localhost:3000').replace(/\/+$/, '');
@@ -63,6 +64,8 @@ export const app = new Elysia()
       allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
     }),
   )
+  // Before the routes: a hook applies only to the routes registered after it.
+  .use(requestTracking)
   .onAfterHandle({ as: 'global' }, ({ request, response }) =>
     normalizeOpenApiResponse(request, response),
   )

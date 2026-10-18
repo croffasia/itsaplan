@@ -5,7 +5,7 @@ import type {
   AiAgentPatch,
   ReasoningEffort,
 } from '@/lib/api/endpoints/agents';
-import { transliterate } from '@/utils/projectKey';
+import { transliterate } from '@/utils/transliterate';
 import { delaySecFromMinutes } from '@/utils/runDelay';
 
 // The editable shape of an agent form. temperature/maxSteps are kept as strings so

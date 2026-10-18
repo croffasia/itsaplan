@@ -113,6 +113,14 @@ describe('agent skills', () => {
     )({ skillId }).references.content.get({ query: { path } });
     expect(content.status).toBe(200);
     expect(content.data?.content).toBe('# Checklist\n\nItem one');
+
+    const transliterated = await skills(
+      asOwner,
+      teamId,
+    )({ skillId }).references.post({
+      file: new File(['Пункт'], 'Чек-лист релиза.md', { type: 'text/markdown' }),
+    });
+    expect(transliterated.data?.files.map((one) => one.path)).toContain('refs/Chek-list_reliza.md');
   });
 
   it("overwrites a reference file's content and updates its size", async () => {

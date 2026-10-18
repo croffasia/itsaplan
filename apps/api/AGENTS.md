@@ -298,6 +298,10 @@ undoes one.
   answer. A reason fails the run without a retry, and answers the chat with 403.
 - `onProjectEvent` (`modules/webhooks/emit.ts`): every issue and comment event the
   webhooks get, inside the request that caused it.
+- `setRequestTracker` (`shared/request-tracker.ts`): every request, with its declared
+  route, params and body, before the guards run; a request it follows gets its status,
+  its account and the handler's value back after the handler, before the answer is sent,
+  or the status of the error a guard or the handler refused or failed it with.
 
 Functions with no setter, for the routes such a build adds:
 

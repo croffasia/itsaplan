@@ -31,7 +31,9 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   the app shell, god mode and the teams pages; here it shows nothing, while the hosted
   build shows notices about the instance there. `godSections(core)` returns the god mode
   sections: here the core's as they are, while the hosted build adds, replaces or drops
-  some. One it adds carries in `Component` the page `/god/<slug>` opens. The instance's
+  some. One it adds carries in `Component` the page `/god/<slug>` opens, and may sit in a
+  group of its own: the sidebar lists the groups in the order their first section comes,
+  each named in `sections.godGroups`. The instance's
   SCIM is set up in god mode; the hosted build that also sets it up per workspace adds
   `WorkspaceScimSection` through `useWorkspaceSections`. `SignInExtras` sits among the sign-in methods, after the
   instance's own provider; here it adds nothing, while the hosted build offers a sign-in

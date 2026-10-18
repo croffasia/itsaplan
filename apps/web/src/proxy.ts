@@ -69,6 +69,12 @@ export function proxy(request: NextRequest) {
     const { pathname, search } = request.nextUrl;
     return NextResponse.rewrite(new URL(`${pathname}${search}`, target));
   }
+  // A dotted path is matched only for the pass-through above; without it, it is left
+  // alone as before.
+  const { pathname } = request.nextUrl;
+  if (!target && pathname.includes('.') && !matcher(pathname)('/protected-media')) {
+    return NextResponse.next();
+  }
   const response = gate(request);
   if (!MEDIA_PATHS.some(matcher(request.nextUrl.pathname))) {
     response.headers.set('Content-Security-Policy', contentSecurityPolicy());
@@ -121,5 +127,15 @@ export const config = {
   // Run on every route except Next internals and static assets.
   // Protected media is listed first so a valid project key containing a dot is
   // still session-gated instead of falling through the static-file exclusion.
-  matcher: ['/protected-media/:path*', '/((?!_next/static|_next/image|favicon.ico|.*\\.).*)'],
+  // The last entry reaches a script's fetch of any path, a dotted one included
+  // (a project ref such as team.KEY), so an api call passed through by
+  // API_PROXY_TARGET is not left to the static-file exclusion.
+  matcher: [
+    '/protected-media/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.).*)',
+    {
+      source: '/((?!_next/).*)',
+      has: [{ type: 'header', key: 'sec-fetch-dest', value: 'empty' }],
+    },
+  ],
 };

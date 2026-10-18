@@ -16,8 +16,10 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
 - **`@/cloud` is the seam for the hosted edition.** It resolves to `src/ce/index.ts`, which
   exports what a self-hosted instance runs. A cloud-only part is imported from there and
   nowhere else. `useWorkspaceSections(workspace, core)` returns a workspace's settings menu,
-  shown by `WorkspaceSectionNav`: here the core's sections as they are, while the hosted
-  build adds its own at any position or drops some. One it adds carries in `Component` the
+  shown by `WorkspaceSectionNav`: here the core's sections, then previews of the
+  dashboard, the AI budgets and the audit log, and for the owner of email domains, single
+  sign-on and SCIM (`components/common/page/SectionPreview`), while the hosted build adds
+  its own at any position or drops some. One it adds carries in `Component` the
   page `/workspaces/:id/:sectionId` opens; that page answers 404 only once the workspace and
   every query in flight have loaded, so a section that waits on a query of its own opens
   from a direct link. Every section names its group: an `overview` one sits at the top of
@@ -30,10 +32,10 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   than one workspace per person is available. `ShellNotice` is a strip under the top bar of
   the app shell, god mode and the teams pages; here it shows nothing, while the hosted
   build shows notices about the instance there. `godSections(core)` returns the god mode
-  sections: here the core's as they are, while the hosted build adds, replaces or drops
-  some. One it adds carries in `Component` the page `/god/<slug>` opens, and may sit in a
-  group of its own: the sidebar lists the groups in the order their first section comes,
-  each named in `sections.godGroups`. The instance's
+  sections: here the core's and a preview of the audit log, in a `security` group, while
+  the hosted build adds, replaces or drops some. One it adds carries in `Component` the
+  page `/god/<slug>` opens, and may sit in a group of its own: the sidebar lists the groups
+  in the order their first section comes, each named in `sections.godGroups`. The instance's
   SCIM is set up in god mode; the hosted build that also sets it up per workspace adds
   `WorkspaceScimSection` through `useWorkspaceSections`. `SignInExtras` sits among the sign-in methods, after the
   instance's own provider; here it adds nothing, while the hosted build offers a sign-in

@@ -8,7 +8,8 @@
   },
   "godGroups": {
     "management": "Gerenciamento",
-    "instance": "Instância"
+    "instance": "Instância",
+    "security": "Segurança"
   },
   "god": {
     "users": {
@@ -54,6 +55,10 @@
     "scim": {
       "label": "SCIM",
       "description": "Permita que um provedor de identidade crie, atualize e desative contas nesta instância e conceda acesso a projetos por seus grupos."
+    },
+    "audit-log": {
+      "label": "Log de auditoria",
+      "description": "Quem fez o quê nesta instância, quando e de onde."
     }
   },
   "settings": {
@@ -108,6 +113,76 @@
     "ai-agents": {
       "label": "Agentes de IA",
       "description": "Agentes de IA trabalhando neste projeto."
+    }
+  },
+  "previews": {
+    "available": "Disponível no Cloud e no Pro auto-hospedado.",
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "A atividade dos times e projetos deste workspace.",
+      "summary": {
+        "teams": "Times",
+        "projects": "Projetos",
+        "people": "Pessoas",
+        "agents": "Agentes de IA",
+        "openIssues": "Issues abertas",
+        "storage": "Armazenamento"
+      },
+      "blocks": {
+        "agents": "Agentes de IA",
+        "schedules": "Execuções agendadas",
+        "time": "Tempo registrado",
+        "flow": "Fluxo de issues",
+        "projects": "Projetos ativos",
+        "teams": "Times ativos"
+      }
+    },
+    "agentBudgets": {
+      "title": "Orçamentos de IA",
+      "description": "Limites para o que os agentes gastam com modelos.",
+      "workspace": "Espaço inteiro",
+      "figures": {
+        "spent": "Gasto",
+        "limit": "Limite",
+        "left": "Resta",
+        "forecast": "Previsão para o período"
+      },
+      "list": "Orçamentos",
+      "columns": {
+        "budget": "Orçamento",
+        "spent": "Gasto"
+      }
+    },
+    "auditLog": {
+      "title": "Log de auditoria",
+      "description": "Quem fez o quê neste workspace, em seus times e projetos, e quando as pessoas entraram.",
+      "columns": {
+        "time": "Horário",
+        "actor": "Quem",
+        "action": "Ação",
+        "where": "Onde",
+        "from": "Origem"
+      }
+    },
+    "emailDomains": {
+      "title": "Domínios de e-mail",
+      "description": "Escolha quais domínios de e-mail podem entrar neste workspace.",
+      "label": "Domínios de e-mail permitidos",
+      "hint": "Só endereços desses domínios podem ser convidados ou adicionados por SCIM, e as pessoas convidadas podem se cadastrar com eles. Deixe vazio para usar os domínios da instância. Os membros atuais mantêm o acesso."
+    },
+    "sso": {
+      "title": "Login único",
+      "description": "Permita que as pessoas deste workspace entrem com o provedor de identidade da sua empresa.",
+      "provider": "Provedor de identidade",
+      "providerHint": "Informe o que seu provedor de identidade fornece e adicione nele os endereços abaixo.",
+      "fields": {
+        "domains": "Domínios de e-mail",
+        "entryPoint": "URL de login",
+        "entityId": "Entity ID do provedor",
+        "certificate": "Certificado de assinatura",
+        "acsUrl": "URL de ACS",
+        "spEntityId": "Entity ID e metadados"
+      }
     }
   }
 }

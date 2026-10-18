@@ -8,7 +8,8 @@
   },
   "godGroups": {
     "management": "관리",
-    "instance": "인스턴스"
+    "instance": "인스턴스",
+    "security": "보안"
   },
   "god": {
     "users": {
@@ -54,6 +55,10 @@
     "scim": {
       "label": "SCIM",
       "description": "ID 공급자가 이 인스턴스의 계정을 생성, 업데이트 및 비활성화하고 그룹을 통해 프로젝트 접근 권한을 부여할 수 있도록 설정합니다."
+    },
+    "audit-log": {
+      "label": "감사 로그",
+      "description": "이 인스턴스에서 누가 언제 어디서 무엇을 했는지 보여줍니다."
     }
   },
   "settings": {
@@ -108,6 +113,76 @@
     "ai-agents": {
       "label": "AI 에이전트",
       "description": "이 프로젝트에서 작업하는 AI 에이전트를 관리합니다."
+    }
+  },
+  "previews": {
+    "available": "Cloud 및 셀프 호스팅 Pro에서 사용할 수 있습니다.",
+    "dashboard": {
+      "title": "대시보드",
+      "description": "이 워크스페이스의 팀과 프로젝트 활동입니다.",
+      "summary": {
+        "teams": "팀",
+        "projects": "프로젝트",
+        "people": "사람",
+        "agents": "AI 에이전트",
+        "openIssues": "열린 이슈",
+        "storage": "저장 공간"
+      },
+      "blocks": {
+        "agents": "AI 에이전트",
+        "schedules": "예약된 실행",
+        "time": "기록된 시간",
+        "flow": "이슈 흐름",
+        "projects": "활성 프로젝트",
+        "teams": "활성 팀"
+      }
+    },
+    "agentBudgets": {
+      "title": "AI 예산",
+      "description": "에이전트가 모델에 쓰는 비용의 한도입니다.",
+      "workspace": "워크스페이스 전체",
+      "figures": {
+        "spent": "사용액",
+        "limit": "한도",
+        "left": "남은 금액",
+        "forecast": "기간 말 예상"
+      },
+      "list": "예산",
+      "columns": {
+        "budget": "예산",
+        "spent": "사용액"
+      }
+    },
+    "auditLog": {
+      "title": "감사 로그",
+      "description": "이 워크스페이스와 팀, 프로젝트에서 누가 무엇을 했는지, 멤버가 언제 로그인했는지 보여줍니다.",
+      "columns": {
+        "time": "시간",
+        "actor": "사용자",
+        "action": "작업",
+        "where": "위치",
+        "from": "출처"
+      }
+    },
+    "emailDomains": {
+      "title": "이메일 도메인",
+      "description": "이 워크스페이스에 참여할 수 있는 이메일 도메인을 선택합니다.",
+      "label": "허용된 이메일 도메인",
+      "hint": "이 도메인의 주소만 초대하거나 SCIM으로 추가할 수 있으며, 초대받은 사람은 이 주소로 가입할 수 있습니다. 비워 두면 인스턴스의 도메인을 사용합니다. 기존 멤버는 접근 권한을 유지합니다."
+    },
+    "sso": {
+      "title": "싱글 사인온",
+      "description": "이 워크스페이스의 사람들이 회사의 ID 공급자로 로그인하게 합니다.",
+      "provider": "ID 공급자",
+      "providerHint": "ID 공급자가 제공한 정보를 입력한 다음 아래 주소를 공급자에 추가하세요.",
+      "fields": {
+        "domains": "이메일 도메인",
+        "entryPoint": "로그인 URL",
+        "entityId": "공급자 Entity ID",
+        "certificate": "서명 인증서",
+        "acsUrl": "ACS URL",
+        "spEntityId": "Entity ID 및 메타데이터"
+      }
     }
   }
 }

@@ -8,7 +8,8 @@
   },
   "godGroups": {
     "management": "Manajemen",
-    "instance": "Instance"
+    "instance": "Instance",
+    "security": "Keamanan"
   },
   "god": {
     "users": {
@@ -54,6 +55,10 @@
     "scim": {
       "label": "SCIM",
       "description": "Izinkan penyedia identitas membuat, memperbarui, dan menonaktifkan akun di instance ini, serta memberikan akses proyek melalui grupnya."
+    },
+    "audit-log": {
+      "label": "Log audit",
+      "description": "Siapa melakukan apa di instance ini, kapan, dan dari mana."
     }
   },
   "settings": {
@@ -108,6 +113,76 @@
     "ai-agents": {
       "label": "Agen AI",
       "description": "Agen AI yang bekerja dalam proyek ini."
+    }
+  },
+  "previews": {
+    "available": "Tersedia di Cloud dan Pro self-hosted.",
+    "dashboard": {
+      "title": "Dasbor",
+      "description": "Aktivitas tim dan proyek di workspace ini.",
+      "summary": {
+        "teams": "Tim",
+        "projects": "Proyek",
+        "people": "Orang",
+        "agents": "Agen AI",
+        "openIssues": "Issue terbuka",
+        "storage": "Penyimpanan"
+      },
+      "blocks": {
+        "agents": "Agen AI",
+        "schedules": "Eksekusi terjadwal",
+        "time": "Waktu dicatat",
+        "flow": "Arus issue",
+        "projects": "Proyek aktif",
+        "teams": "Tim aktif"
+      }
+    },
+    "agentBudgets": {
+      "title": "Anggaran AI",
+      "description": "Batas pengeluaran agen untuk model.",
+      "workspace": "Seluruh ruang kerja",
+      "figures": {
+        "spent": "Terpakai",
+        "limit": "Batas",
+        "left": "Sisa",
+        "forecast": "Perkiraan hingga akhir periode"
+      },
+      "list": "Anggaran",
+      "columns": {
+        "budget": "Anggaran",
+        "spent": "Terpakai"
+      }
+    },
+    "auditLog": {
+      "title": "Log audit",
+      "description": "Siapa melakukan apa di workspace ini, tim dan proyeknya, serta kapan orang-orangnya masuk.",
+      "columns": {
+        "time": "Waktu",
+        "actor": "Siapa",
+        "action": "Tindakan",
+        "where": "Di mana",
+        "from": "Asal"
+      }
+    },
+    "emailDomains": {
+      "title": "Domain email",
+      "description": "Pilih domain email yang bisa bergabung ke workspace ini.",
+      "label": "Domain email yang diizinkan",
+      "hint": "Hanya alamat di domain ini yang bisa diundang atau ditambahkan lewat SCIM, dan orang yang diundang bisa mendaftar dengannya. Kosongkan untuk memakai domain instance. Anggota saat ini tetap punya akses."
+    },
+    "sso": {
+      "title": "Single sign-on",
+      "description": "Izinkan orang di workspace ini masuk dengan penyedia identitas perusahaan Anda.",
+      "provider": "Penyedia identitas",
+      "providerHint": "Masukkan data dari penyedia identitas Anda, lalu tambahkan alamat di bawah ke penyedia itu.",
+      "fields": {
+        "domains": "Domain email",
+        "entryPoint": "URL masuk",
+        "entityId": "Entity ID penyedia",
+        "certificate": "Sertifikat penandatanganan",
+        "acsUrl": "URL ACS",
+        "spEntityId": "Entity ID dan metadata"
+      }
     }
   }
 }

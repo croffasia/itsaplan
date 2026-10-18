@@ -8,7 +8,8 @@
   },
   "godGroups": {
     "management": "管理",
-    "instance": "实例"
+    "instance": "实例",
+    "security": "安全"
   },
   "god": {
     "users": {
@@ -54,6 +55,10 @@
     "scim": {
       "label": "SCIM",
       "description": "让身份提供方在此实例上创建、更新和停用账号，并通过其群组授予项目访问权限。"
+    },
+    "audit-log": {
+      "label": "审计日志",
+      "description": "谁在此实例上做了什么、何时以及从何处操作。"
     }
   },
   "settings": {
@@ -108,6 +113,76 @@
     "ai-agents": {
       "label": "AI 代理",
       "description": "在该项目中工作的 AI 代理。"
+    }
+  },
+  "previews": {
+    "available": "可在 Cloud 和自托管 Pro 版中使用。",
+    "dashboard": {
+      "title": "仪表盘",
+      "description": "此工作区中各团队和项目的动态。",
+      "summary": {
+        "teams": "团队",
+        "projects": "项目",
+        "people": "人员",
+        "agents": "AI 代理",
+        "openIssues": "未完成工作项",
+        "storage": "存储"
+      },
+      "blocks": {
+        "agents": "AI 代理",
+        "schedules": "计划运行",
+        "time": "已记录工时",
+        "flow": "工作项流转",
+        "projects": "活跃项目",
+        "teams": "活跃团队"
+      }
+    },
+    "agentBudgets": {
+      "title": "AI 预算",
+      "description": "限制代理在模型上的花费。",
+      "workspace": "整个工作区",
+      "figures": {
+        "spent": "已用",
+        "limit": "限额",
+        "left": "剩余",
+        "forecast": "本周期预计花费"
+      },
+      "list": "预算",
+      "columns": {
+        "budget": "预算",
+        "spent": "已用"
+      }
+    },
+    "auditLog": {
+      "title": "审计日志",
+      "description": "此工作区及其团队和项目中谁做了什么，以及成员何时登录。",
+      "columns": {
+        "time": "时间",
+        "actor": "操作人",
+        "action": "操作",
+        "where": "位置",
+        "from": "来源"
+      }
+    },
+    "emailDomains": {
+      "title": "邮箱域名",
+      "description": "选择哪些邮箱域名可以加入此工作区。",
+      "label": "允许的邮箱域名",
+      "hint": "只有这些域名的地址才能被邀请或通过 SCIM 添加，被邀请的人也可以用它们注册。留空则使用实例的域名。现有成员保留访问权限。"
+    },
+    "sso": {
+      "title": "单点登录",
+      "description": "让此工作区的成员使用你公司的身份提供方登录。",
+      "provider": "身份提供方",
+      "providerHint": "填写身份提供方给你的信息，然后把下面的地址添加到身份提供方。",
+      "fields": {
+        "domains": "邮箱域名",
+        "entryPoint": "登录 URL",
+        "entityId": "身份提供方 Entity ID",
+        "certificate": "签名证书",
+        "acsUrl": "ACS URL",
+        "spEntityId": "Entity ID 和元数据"
+      }
     }
   }
 }

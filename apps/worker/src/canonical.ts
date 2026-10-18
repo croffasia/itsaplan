@@ -1,10 +1,10 @@
 // The canonical intermediate shape a source adapter (SourceReader, see reader.ts)
 // produces. Plain types only, no runtime logic. import-worker.ts converts these
-// into itsaplan's own tables; nothing here depends on @repo/db so a future
+// into One Health's own tables; nothing here depends on @repo/db so a future
 // Linear or Jira adapter can produce the same shape without pulling in the
 // worker's persistence layer.
 
-// itsaplan's own project_column.state_type values (packages/db/src/schema/app.ts).
+// One Health's own project_column.state_type values (packages/db/src/schema/app.ts).
 export type CanonicalStateCategory = 'backlog' | 'unstarted' | 'started' | 'completed' | 'canceled';
 
 export interface CanonicalState {
@@ -22,7 +22,7 @@ export interface CanonicalLabel {
 export interface CanonicalCycle {
   sourceId: string;
   name: string;
-  // Date-only ('YYYY-MM-DD'): itsaplan's cycle.startDate/endDate carry no time of day.
+  // Date-only ('YYYY-MM-DD'): One Health's cycle.startDate/endDate carry no time of day.
   startDate: string;
   endDate: string;
   goal?: string;

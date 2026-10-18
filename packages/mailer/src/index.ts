@@ -261,11 +261,35 @@ function escape(s: string): string {
     .replace(/"/g, '&quot;');
 }
 
+const FONT =
+  "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+
 // Wraps a plain-text body (and an optional link) into the text/html pair the
-// transport needs. Shared so every message in the app looks the same.
+// transport needs. Shared so every message in the app looks the same. Tables and
+// inline styles because mail clients drop <style>, SVG and modern layout.
 export function emailBody(text: string, url?: string | null): { text: string; html: string } {
   const plain = url ? `${text}\n\n${url}` : text;
   const body = escape(text).replace(/\n/g, '<br>');
-  const link = url ? `<p><a href="${escape(url)}">${escape(url)}</a></p>` : '';
-  return { text: plain, html: `<p>${body}</p>${link}` };
+  const link = url
+    ? `<tr><td style="padding:0 32px 32px;${FONT}">` +
+      `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>` +
+      `<td style="background:#7dccba;border-radius:999px">` +
+      `<a href="${escape(url)}" style="display:inline-block;padding:12px 28px;${FONT};font-size:15px;font-weight:600;color:#003a3b;text-decoration:none">Open in One Health</a>` +
+      `</td></tr></table>` +
+      `<p style="margin:16px 0 0;font-size:12px;line-height:18px;color:#6b6b6b;word-break:break-all">${escape(url)}</p>` +
+      `</td></tr>`
+    : '';
+  const html =
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f2f5f5">` +
+    `<tr><td align="center" style="padding:24px 12px">` +
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden">` +
+    `<tr><td style="background:#006264;padding:20px 32px;${FONT};font-size:22px;line-height:28px;color:#ffffff;letter-spacing:0.5px">` +
+    `<span style="font-weight:300">one</span> <span style="font-weight:700">HEALTH</span></td></tr>` +
+    `<tr><td style="height:3px;line-height:3px;font-size:0;background:#7dccba">&nbsp;</td></tr>` +
+    `<tr><td style="padding:32px;${FONT};font-size:15px;line-height:24px;color:#232323">${body}</td></tr>` +
+    link +
+    `<tr><td style="background:#f4f4f4;padding:16px 32px;${FONT};font-size:12px;line-height:18px;color:#989898">` +
+    `Sent by One Health</td></tr>` +
+    `</table></td></tr></table>`;
+  return { text: plain, html };
 }

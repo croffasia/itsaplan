@@ -160,6 +160,14 @@
   "featureOffTitle": "Раздел «{feature}» выключен",
   "toggleSidebar": "Показать или скрыть боковую панель",
   "system": "Системная",
+  "systemScreen": {
+    "notFoundTitle": "Страница не найдена",
+    "notFoundDescription": "Открытая страница не существует или была перемещена.",
+    "errorTitle": "Что-то пошло не так",
+    "errorDescription": "Не удалось загрузить страницу. Попробуйте снова или вернитесь на главную.",
+    "retry": "Попробовать снова",
+    "home": "На главную"
+  },
   "genericError": "Что-то пошло не так",
   "commandPalette": "Палитра команд",
   "commandPaletteHint": "Найдите команду для выполнения…",
@@ -182,7 +190,7 @@
     "openPreviewLink": "Open {name} in a new tab",
     "loadingPreview": "Loading preview…",
     "previewUnavailable": "A preview is not available. Open the link to view this page.",
-    "internalPage": "ItsAPlan page",
+    "internalPage": "One Health page",
     "internalPreviewUnavailable": "This page is unavailable or you do not have access.",
     "previewNoteCount": "{count, plural, one {# note} other {# notes}}",
     "previewCustomField": "Custom field",
@@ -212,5 +220,10 @@
     "perPage": "на странице",
     "range": "{first}-{last} из {total}"
   },
-  "aboutCloudAndPro": "Подробнее о Cloud и Pro"
+  "aboutCloudAndPro": "Подробнее о Cloud и Pro",
+  "hero": {
+    "plansOnTrack": "Планы по графику",
+    "careTeamsSynced": "Синхронизированные команды ухода",
+    "tasksDoneThisWeek": "Задачи, выполненные за неделю"
+  }
 }

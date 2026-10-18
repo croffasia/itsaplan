@@ -1,0 +1,1 @@
+export const AI_ASSIST_CALLS_PER_HOUR = 20; ... // Per process: with several api replicas each one counts on its own. const calls = new Map<string, number[]>(); ... throw new HttpError(429, `AI assist allows ${AI_ASSIST_CALLS_PER_HOUR} drafts per hour. Try again later.`); ... takeAiAssistCall(requireUser(user).id);

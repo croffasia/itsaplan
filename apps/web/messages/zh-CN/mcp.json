@@ -24,15 +24,15 @@
     "methodTabsAria": "连接方式",
     "method": "OAuth",
     "personalKey": "API 密钥",
-    "description": "适用于任何支持 OAuth 的 MCP 客户端，例如 ChatGPT 或 Claude。您使用 Itsaplan 帐户登录。客户端不会收到 API 密钥。",
+    "description": "适用于任何支持 OAuth 的 MCP 客户端，例如 ChatGPT 或 Claude。您使用 One Health 帐户登录。客户端不会收到 API 密钥。",
     "discovery": "OAuth 发现",
     "steps": {
       "add": "在客户端中添加 MCP 应用。",
       "paste": "粘贴 MCP 端点。",
       "choose": "当客户端询问登录方式时选择 OAuth。",
-      "signIn": "登录 Itsaplan 并批准访问。"
+      "signIn": "登录 One Health 并批准访问。"
     },
-    "security": "OAuth 使用 PKCE (S256)、动态客户端注册以及限定到您的 Itsaplan 帐户的访问令牌。",
+    "security": "OAuth 使用 PKCE (S256)、动态客户端注册以及限定到您的 One Health 帐户的访问令牌。",
     "consent": {
       "title": "{client} 想要连接到你的账户",
       "titleUnnamed": "一个 MCP 客户端想要连接到你的账户",

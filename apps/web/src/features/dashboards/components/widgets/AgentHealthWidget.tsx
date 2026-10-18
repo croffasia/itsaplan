@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
 import { Skeleton } from '@/components/ui/skeleton';
+import RadialGauge from '@/components/common/chart/RadialGauge';
 import { useAgentRunStatsQuery } from '../../services/analytics.service';
 
 // Agent run health over a window: the success rate as the headline figure, with the
@@ -30,10 +31,15 @@ export default function AgentHealthWidget({
         <p className="py-3 text-sm text-muted-foreground">{t('agentHealth.empty')}</p>
       ) : (
         <>
-          <div className="text-4xl font-semibold tracking-tight tabular-nums">
-            {rate == null ? '—' : `${rate}%`}
+          <div className="flex items-center gap-4">
+            {rate != null && <RadialGauge percent={rate} />}
+            <div>
+              <div className="text-4xl font-semibold tracking-tight tabular-nums">
+                {rate == null ? '—' : `${rate}%`}
+              </div>
+              <p className="text-xs text-muted-foreground">{t('agentHealth.successRate')}</p>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground">{t('agentHealth.successRate')}</p>
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground tabular-nums">
             <span>{t('agentHealth.runs', { count: data.total })}</span>
             {data.failed > 0 && (

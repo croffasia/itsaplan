@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useRef } from 'react';
+import { memo, useId, useRef } from 'react';
 import {
   Area,
   Bar,
@@ -40,6 +40,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
+import AreaGradient from './AreaGradient';
 import ChartDownload from './ChartDownload';
 
 // Draws a chart spec — what an agent gets back from the create_chart tool, drawn where
@@ -53,6 +54,8 @@ import ChartDownload from './ChartDownload';
 // by series for the rest (see chartLegend).
 function ChartBlock({ spec }: { spec: ChartSpec; source: string }) {
   const chartRef = useRef<HTMLDivElement>(null);
+  // An SVG gradient is referenced by a document-wide id, so each chart needs its own.
+  const gradientId = `chart-fill-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const legend = chartLegend(spec);
   const config: ChartConfig = Object.fromEntries(
     legend.map((entry) => [entry.key, { label: entry.label }]),
@@ -62,11 +65,12 @@ function ChartBlock({ spec }: { spec: ChartSpec; source: string }) {
     // `min-w-64` gives the figure an intrinsic width: the chart container is sized in
     // percentages, so it contributes nothing to the fit-content width of the chat
     // bubble around it and a chart-only answer would collapse to the header row.
-    <figure className="my-3 w-full min-w-64">
+    <figure className="my-3 w-full min-w-64 rounded-xl border border-border/60 bg-card/60 p-3 shadow-xs">
       <div className="mb-2 flex items-center gap-2">
         {spec.title && (
-          <figcaption className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-            {spec.title}
+          <figcaption className="flex min-w-0 flex-1 items-center gap-2 text-sm font-medium tracking-tight text-foreground">
+            <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-primary" />
+            <span className="truncate">{spec.title}</span>
           </figcaption>
         )}
         <ChartDownload chartRef={chartRef} spec={spec} />
@@ -82,7 +86,7 @@ function ChartBlock({ spec }: { spec: ChartSpec; source: string }) {
         config={config}
         className="h-[220px] w-full [&_[class*='recharts-treemap-depth']_text]:fill-white"
       >
-        {chart(spec, legend)}
+        {chart(spec, legend, gradientId)}
       </ChartContainer>
     </figure>
   );
@@ -93,7 +97,7 @@ function ChartBlock({ spec }: { spec: ChartSpec; source: string }) {
 // is what stops a finished chart from redrawing for the rest of the message.
 export default memo(ChartBlock, (previous, next) => previous.source === next.source);
 
-function chart(spec: ChartSpec, legend: ChartLegendEntry[]) {
+function chart(spec: ChartSpec, legend: ChartLegendEntry[], gradientId: string) {
   switch (spec.type) {
     case 'pie':
       return pie(spec, legend);
@@ -106,7 +110,7 @@ function chart(spec: ChartSpec, legend: ChartLegendEntry[]) {
     case 'treemap':
       return treemap(spec, legend);
     default:
-      return cartesian(spec);
+      return cartesian(spec, gradientId);
   }
 }
 
@@ -237,7 +241,7 @@ const percentTick = (value: number) => `${Math.round(value * 100)}%`;
 // Bars, lines, areas, and points share every axis, so they are drawn by one composed
 // chart that differs only in the mark each series gets — which is also what lets a
 // series carry a mark of its own and one chart mix them.
-function cartesian(spec: ChartSpec) {
+function cartesian(spec: ChartSpec, gradientId: string) {
   const percent = spec.stacked === 'percent';
   // A scatter chart puts a number on both axes; a horizontal one swaps which axis
   // carries the categories.
@@ -255,7 +259,17 @@ function cartesian(spec: ChartSpec) {
       layout={spec.horizontal ? 'vertical' : 'horizontal'}
       stackOffset={percent ? 'expand' : undefined}
     >
+      <defs>
+        {spec.series.map((series, index) => (
+          <AreaGradient
+            key={series.key}
+            id={`${gradientId}-${index}`}
+            color={seriesColor(series, index)}
+          />
+        ))}
+      </defs>
       <CartesianGrid
+        strokeDasharray="3 3"
         horizontal={!spec.horizontal}
         vertical={Boolean(spec.horizontal) || spec.type === 'scatter'}
       />
@@ -266,13 +280,15 @@ function cartesian(spec: ChartSpec) {
         width={spec.horizontal ? 90 : 40}
       />
       <ChartTooltip content={<ChartTooltipContent />} />
-      {spec.series.map((series, index) => mark(spec, series, seriesColor(series, index)))}
+      {spec.series.map((series, index) =>
+        mark(spec, series, seriesColor(series, index), `url(#${gradientId}-${index})`),
+      )}
       {legendOf(spec)}
     </ComposedChart>
   );
 }
 
-function mark(spec: ChartSpec, series: ChartSeries, color: string) {
+function mark(spec: ChartSpec, series: ChartSeries, color: string, areaFill: string) {
   const key = series.key;
   const stackId = spec.stacked ? 'a' : undefined;
   const curve = spec.curve ?? 'monotone';
@@ -291,8 +307,8 @@ function mark(spec: ChartSpec, series: ChartSeries, color: string) {
           type={curve}
           stackId={stackId}
           stroke={color}
-          fill={color}
-          fillOpacity={0.25}
+          strokeWidth={2}
+          fill={areaFill}
         >
           {valueLabels(spec, 'top')}
         </Area>
@@ -301,7 +317,13 @@ function mark(spec: ChartSpec, series: ChartSeries, color: string) {
       return <Scatter key={key} dataKey={key} fill={color} />;
     default:
       return (
-        <Bar key={key} dataKey={key} stackId={stackId} fill={color} radius={3}>
+        <Bar
+          key={key}
+          dataKey={key}
+          stackId={stackId}
+          fill={color}
+          radius={spec.horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]}
+        >
           {valueLabels(spec, spec.horizontal ? 'right' : 'top')}
         </Bar>
       );

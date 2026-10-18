@@ -1,0 +1,25 @@
+@keyframes nudge {
+  50% {
+    transform: translateY(-1px) scale(1.04);
+  }
+}
+@keyframes glow {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.animated,
+.fill {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animated {
+    animation: nudge 3.2s ease-in-out infinite;
+  }
+  .animated .fill {
+    animation: glow 3.2s ease-in-out infinite;
+  }
+}

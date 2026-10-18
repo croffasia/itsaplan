@@ -1,0 +1,35 @@
+.arc {
+  transform-box: view-box;
+  transform-origin: center;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+@keyframes nudge {
+  50% {
+    transform: translateX(6px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .arc {
+    animation: spin 12s linear infinite;
+  }
+  .fast {
+    animation-duration: 1.4s;
+  }
+  .halo {
+    animation: breathe 4s ease-in-out infinite;
+  }
+  .nudge {
+    animation: nudge 2.4s ease-in-out infinite;
+  }
+}

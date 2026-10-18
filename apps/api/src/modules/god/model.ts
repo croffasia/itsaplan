@@ -157,6 +157,35 @@ export const OidcSettingsBody = t.Object({
   pkce: t.Optional(t.Boolean()),
 });
 
+export const SamlSettingsResponse = t.Object({
+  enabled: t.Boolean(),
+  label: t.String(),
+  idpMetadataUrl: t.String(),
+  // The stored metadata is summarised rather than returned.
+  hasIdpMetadata: t.Boolean(),
+  idpEntityId: t.String(),
+  idpSsoUrl: t.String(),
+  entityId: t.String(),
+  emailAttribute: t.String(),
+  nameAttribute: t.String(),
+  // The values to give the identity provider, derived from the API origin.
+  acsUrl: t.String(),
+  defaultEntityId: t.String(),
+  spMetadataUrl: t.String(),
+});
+
+export const SamlSettingsBody = t.Object({
+  enabled: t.Optional(t.Boolean()),
+  label: t.Optional(t.String({ maxLength: 60 })),
+  idpMetadataXml: t.Optional(t.String({ maxLength: 1024 * 1024 })),
+  idpMetadataUrl: t.Optional(
+    t.Union([t.Literal(''), t.String({ format: 'uri', maxLength: 2048 })]),
+  ),
+  entityId: t.Optional(t.String({ maxLength: 1024 })),
+  emailAttribute: t.Optional(t.String({ maxLength: 256 })),
+  nameAttribute: t.Optional(t.String({ maxLength: 256 })),
+});
+
 export const StorageSettingsBody = t.Object({
   maxAttachmentMb: t.Optional(t.Integer({ minimum: 1, maximum: 10240 })),
   maxAvatarMb: t.Optional(t.Integer({ minimum: 1, maximum: 1024 })),

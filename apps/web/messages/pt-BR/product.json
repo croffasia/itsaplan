@@ -1,0 +1,180 @@
+{
+  "meta": {
+    "title": "One Health: o rastreador de tarefas em que agentes de IA são colegas de equipe",
+    "description": "Rastreador de tarefas open source sob AGPL, para hospedar por conta própria. Atribua trabalho a pessoas ou agentes de IA, defina um orçamento e execute os agentes na sua própria máquina. Sem cobrança de IA por usuário."
+  },
+  "nav": {
+    "label": "Página do produto",
+    "features": "Recursos",
+    "architecture": "Arquitetura",
+    "compare": "Comparação",
+    "roadmap": "Roteiro",
+    "signIn": "Entrar",
+    "github": "GitHub"
+  },
+  "hero": {
+    "eyebrow": "Open source · AGPL-3.0 · Hospedagem própria",
+    "title": "O rastreador de tarefas em que agentes de IA são colegas de equipe",
+    "subtitle": "Atribua uma tarefa a uma pessoa ou a um agente. Os agentes rodam nos seus modelos, no seu servidor ou na sua própria máquina, dentro de um orçamento definido por você. Ninguém cobra por usuário.",
+    "primary": "Hospedar por conta própria",
+    "secondary": "Ver no GitHub",
+    "statRuns": "Execuções de agentes hoje",
+    "statBudget": "Orçamento usado",
+    "statDone": "Tarefas fechadas"
+  },
+  "problem": {
+    "title": "A IA nos rastreadores é vendida por crédito",
+    "body": "Os rastreadores hospedados oferecem agentes como um extra pago. Cada interação com o assistente consome créditos de uma franquia, a franquia acaba e o excedente é cobrado. O trabalho e os dados ficam nos servidores do fornecedor.",
+    "points": {
+      "metered": "O uso de agentes é medido em créditos e cobrado acima de uma franquia.",
+      "tier": "Os recursos de agentes ficam em planos mais caros.",
+      "data": "Tarefas, contexto de código e prompts saem da sua infraestrutura."
+    }
+  },
+  "different": {
+    "title": "O que o One Health faz de diferente",
+    "items": {
+      "teammates": {
+        "title": "Agentes são colegas de equipe",
+        "body": "Um agente é membro da equipe. Atribua uma tarefa a ele, mencione-o em um comentário ou coloque-o em uma agenda."
+      },
+      "metering": {
+        "title": "Sem medição",
+        "body": "Você traz as chaves dos modelos ou um modelo local. O One Health não adiciona créditos nem cobrança de excedente."
+      },
+      "selfHost": {
+        "title": "Hospedagem própria e AGPL",
+        "body": "Execute toda a stack com Docker Compose, Coolify ou Helm. O código-fonte é aberto sob AGPL-3.0."
+      },
+      "runner": {
+        "title": "Runner na sua máquina",
+        "body": "A CLI do runner pega as tarefas na fila de um agente externo e as executa no seu próprio computador, junto ao seu código."
+      },
+      "api": {
+        "title": "API, webhooks e MCP",
+        "body": "Controle cada objeto pela API REST, receba webhooks a cada mudança e conecte clientes de IA por MCP."
+      }
+    }
+  },
+  "features": {
+    "title": "Tudo o que uma equipe precisa para planejar o trabalho",
+    "items": {
+      "board": "Quadros e listas",
+      "cycle": "Ciclos",
+      "docs": "Documentos",
+      "notes": "Notas",
+      "dashboard": "Painéis",
+      "chat": "Chat de IA",
+      "mention": "Menções",
+      "team": "Equipes",
+      "workspace": "Espaços de trabalho",
+      "schedule": "Agendas de agentes",
+      "budget": "Orçamentos de agentes",
+      "translate": "10 idiomas"
+    }
+  },
+  "architecture": {
+    "title": "Como tudo se encaixa",
+    "body": "Quatro serviços e um banco de dados. Tudo roda em uma infraestrutura que você controla.",
+    "figureTitle": "Arquitetura do One Health",
+    "figureDesc": "O navegador se comunica com o aplicativo web, que chama a API. A API armazena os dados no PostgreSQL. O worker entrega webhooks e notificações e inicia as agendas de agentes. O bot do Telegram se comunica com a API. Clientes de IA se conectam à API por MCP. O runner na sua máquina consulta a API em busca de tarefas de agentes na fila.",
+    "nodes": {
+      "browser": "Navegador",
+      "web": "web",
+      "webNote": "Next.js",
+      "api": "api",
+      "apiNote": "Elysia · REST · MCP",
+      "worker": "worker",
+      "workerNote": "webhooks · agendas",
+      "bot": "bot",
+      "botNote": "Telegram",
+      "postgres": "PostgreSQL",
+      "runner": "runner",
+      "runnerNote": "sua máquina",
+      "mcp": "Cliente de IA",
+      "mcpNote": "MCP"
+    },
+    "flowTitle": "Uma execução de agente",
+    "flowDesc": "Uma tarefa é atribuída a um agente. O orçamento é verificado. O agente roda no seu modelo ou no runner. O resultado é publicado na tarefa.",
+    "flow": {
+      "assign": "Atribuir tarefa",
+      "budget": "Verificar orçamento",
+      "run": "Executar agente",
+      "result": "Publicar resultado"
+    }
+  },
+  "compare": {
+    "title": "Como os agentes são oferecidos em outros produtos",
+    "caption": "Recursos de agentes e como são pagos, em outubro de 2026.",
+    "product": "Produto",
+    "agents": "Agentes de IA",
+    "billing": "Como o uso de agentes é pago",
+    "selfHost": "Hospedagem própria",
+    "rows": {
+      "oneHealth": {
+        "name": "One Health",
+        "agents": "Agentes são membros da equipe em todas as instâncias",
+        "billing": "Suas próprias chaves de modelo ou um modelo local; sem créditos",
+        "selfHost": "Sim, AGPL-3.0"
+      },
+      "linear": {
+        "name": "Linear",
+        "agents": "Automações de agentes nos planos Business e Enterprise",
+        "billing": "Pacote de créditos de IA pré-pago",
+        "selfHost": "Não"
+      },
+      "jira": {
+        "name": "Jira",
+        "agents": "Agentes Rovo",
+        "billing": "Créditos por usuário por mês, excedente cobrado a partir de 3 dez 2026",
+        "selfHost": "Edição Data Center"
+      },
+      "trello": {
+        "name": "Trello",
+        "agents": "Assistentes de IA, sem agentes",
+        "billing": "Incluído nos planos pagos",
+        "selfHost": "Não"
+      },
+      "plane": {
+        "name": "Plane",
+        "agents": "Agentes nas edições pagas",
+        "billing": "Créditos de agente por usuário nos planos pagos",
+        "selfHost": "Sim; os agentes exigem uma licença comercial paga"
+      }
+    }
+  },
+  "trust": {
+    "title": "Feito para merecer a confiança no seu trabalho",
+    "items": {
+      "data": "Seus dados ficam no seu PostgreSQL.",
+      "secrets": "Segredos são criptografados em repouso com AES-256-GCM.",
+      "keys": "Uma chave de API é exibida uma vez, pode expirar e pode ser excluída a qualquer momento.",
+      "ssrf": "Requisições feitas pelo servidor passam por uma proteção contra SSRF.",
+      "backup": "Toda migração faz antes um backup do banco de dados.",
+      "source": "O código-fonte é aberto para auditoria."
+    }
+  },
+  "roadmap": {
+    "title": "Roteiro",
+    "shipped": "Lançado",
+    "inProgress": "Em andamento",
+    "items": {
+      "budget": "Orçamentos de agentes",
+      "actionLog": "Registro de ações dos agentes",
+      "approvals": "Aprovações para ações dos agentes",
+      "import": "Importação do Jira e do Trello",
+      "saml": "Login único SAML",
+      "quickAi": "Ações rápidas de IA"
+    }
+  },
+  "cta": {
+    "title": "Execute no seu próprio servidor hoje",
+    "body": "Um único arquivo Docker Compose inicia toda a stack.",
+    "docs": "Ler o guia de hospedagem própria",
+    "github": "Dar uma estrela no GitHub"
+  },
+  "footer": {
+    "license": "O One Health é software livre sob a licença AGPL-3.0.",
+    "trademarks": "Linear, Jira, Trello e Plane são marcas registradas de seus respectivos proprietários."
+  }
+}

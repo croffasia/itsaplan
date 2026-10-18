@@ -5,6 +5,7 @@ import { threadsToken, threadsRequest } from './client';
 // Delete one of the token owner's own Threads posts or replies.
 export const threadsDelete: CustomToolEntry = {
   key: 'threads_delete',
+  writes: true,
   label: 'Threads Delete Post',
   scopes: ['threads_basic', 'threads_delete'],
   description: 'Delete one of your own Threads posts or replies by its media id.',

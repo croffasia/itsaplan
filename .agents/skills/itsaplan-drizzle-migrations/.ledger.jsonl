@@ -1,0 +1,1 @@
+{"action": "create", "reason": "Drizzle db:generate in itsaplan names each migration with a random tag (for example 0151_fearless_killmonger). The episode renamed it to a descriptive tag by hand, editing the journal, then applied it to both databases. The workflow is repeatable, so it belongs in a skill.", "evidence": "references/evidence-21f9eae7.md"}

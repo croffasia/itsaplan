@@ -5,6 +5,7 @@ import { giteaRequest, repoPath, type GiteaIssue } from './client';
 // Opens a new issue in a repository.
 export const giteaCreateIssue: CustomToolEntry = {
   key: 'gitea_create_issue',
+  writes: true,
   label: 'Gitea Create Issue',
   description:
     'Create an issue in a Gitea repository. The body is markdown. Returns the new issue with its number, which the other Gitea tools take.',

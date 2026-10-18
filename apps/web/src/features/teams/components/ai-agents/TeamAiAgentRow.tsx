@@ -1,4 +1,13 @@
-import { Check, History, MessageSquare, Minus, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import {
+  Check,
+  History,
+  ListChecks,
+  MessageSquare,
+  Minus,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
 import type { AiAgent } from '@/lib/api/endpoints/agents';
 import { AgentRunnerStatus } from '@/components/common/agent-chat/AgentRunnerStatus';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +38,7 @@ export function TeamAiAgentRow({
   providerLabel,
   onChat,
   onRuns,
+  onActions,
   onEdit,
   onDelete,
   joinsNewProjects,
@@ -39,6 +49,7 @@ export function TeamAiAgentRow({
   providerLabel: (key: string) => string;
   onChat: () => void;
   onRuns: () => void;
+  onActions: () => void;
   onEdit: () => void;
   onDelete: () => void;
   joinsNewProjects: boolean;
@@ -48,6 +59,7 @@ export function TeamAiAgentRow({
 }) {
   const t = useTranslations('teams.agents');
   const tCommon = useTranslations('common');
+  const tActions = useTranslations('teams.agentActions');
   const can = useAgentCan();
   const canHistory = can('read');
   const KindIcon = AGENT_KIND_ICON[agent.kind];
@@ -142,6 +154,12 @@ export function TeamAiAgentRow({
                   <DropdownMenuItem className="min-h-11 sm:min-h-8" onSelect={onRuns}>
                     <History />
                     {t('runHistory')}
+                  </DropdownMenuItem>
+                )}
+                {canHistory && (
+                  <DropdownMenuItem className="min-h-11 sm:min-h-8" onSelect={onActions}>
+                    <ListChecks />
+                    {tActions('title')}
                   </DropdownMenuItem>
                 )}
                 {canHistory && (

@@ -35,8 +35,9 @@ through this module — never inline a query on `app_setting` / `app_secret` els
 - `app_setting` key `auth` → `{ registration, requireEmailVerification, magicLink,
   emailPassword, trustProviderEmails, personalWorkspaces, inviteTtlDays,
   allowedEmailDomains }`.
-- `app_secret` keys `auth.email`, `auth.google`, `auth.oidc` and `auth.scim` → the mail
-  provider, Google, the OIDC provider and the instance's SCIM token, set in god mode;
+- `app_secret` keys `auth.email`, `auth.google`, `auth.oidc`, `auth.saml` and `auth.scim` →
+  the mail provider, Google, the OIDC provider, the SAML provider and the instance's SCIM
+  token, set in god mode;
   `workspace.<id>.scim` → a workspace's SCIM token, set by the workspace owner. All encrypted with `@repo/crypto`, each with a `redacted`
   mirror for the settings UI. Secrets never leave the server.
 
@@ -135,6 +136,31 @@ No screen offers linking an OIDC identity to the signed-in account, so `hooks.be
 refuses `/link-social` for it; better-auth already attaches a sign-in to a matching
 confirmed address on its own.
 
+## SAML
+
+One SAML 2.0 identity provider, set in god mode (`app_secret` key `auth.saml`:
+`{ enabled, label, idpMetadataXml, idpMetadataUrl, entityId, emailAttribute, nameAttribute }`).
+`sso()` from `@better-auth/sso` serves it with the id `SAML_PROVIDER_ID` (`"saml"`): sign-in
+is `/sign-in/sso` with that `providerId`, the IdP posts to `SAML_ACS_URL`
+(`/sso/saml2/sp/acs/saml`), and `/sso/saml2/sp/metadata?providerId=saml` serves the SP
+metadata. A sign-in creates or links an `account` row like OIDC does.
+
+The plugin reads `defaultSSO` off its options on every request, so it holds the module array
+`samlProviders`, which `refreshSamlProvider()` in `hooks.before` refills from the stored
+settings on those paths. The plugin adds the `sso_provider` table, which stays empty: its
+provider endpoints (`/sso/register`, `/sso/update-provider`, …) let any signed-in user add
+an identity provider for a domain, so they are in `disabledPaths`.
+
+The SP metadata is built here (`buildSpMetadata` in `src/saml.ts`), not by the plugin: the
+plugin names the ACS URL from the origin-only `baseURL`, which drops an `API_URL` path. The
+metadata asks for signed assertions. `parseIdpMetadata` is what the api checks a document
+with before storing it; the api fetches a metadata URL on save and stores the XML, so a
+sign-in never fetches it.
+
+The registration gate applies through `databaseHooks.user.create.before` as for every other
+provider. A SAML response carries no verified flag for the address, so it joins an existing
+account only while `trustProviderEmails` is on (it is in the trusted list then).
+
 ## Turning password authentication off
 
 `AuthSettings.emailPassword` (default `true`). When it is off, the first branch of
@@ -145,7 +171,7 @@ an account that already exists.
 
 Like every other instance setting this is read per request, so it cannot be
 `emailAndPassword.enabled: false` (evaluated at startup) and cannot live in `disabledPaths`
-(a static array). The api refuses to turn it off while neither Google nor OIDC is usable,
+(a static array). The api refuses to turn it off while none of Google, OIDC and SAML is usable,
 which is what stops an instance being left with no way in.
 
 ## SCIM

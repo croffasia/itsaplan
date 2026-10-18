@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./extensions": "./src/extensions.ts"
+    "./extensions": "./src/extensions.ts",
+    "./saml": "./src/saml.ts"
   },
   "scripts": {
     "auth:generate": "dotenv -e ../../.env -- bunx auth@1.7.7 generate --config ./src/index.ts --output ../db/src/schema/auth.ts --yes",
@@ -17,11 +18,13 @@
     "@better-auth/mcp": "1.7.7",
     "@better-auth/oauth-provider": "1.7.7",
     "@better-auth/passkey": "1.7.7",
+    "@better-auth/sso": "1.7.7",
     "@repo/crypto": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/mailer": "workspace:*",
     "better-auth": "1.7.7",
     "drizzle-orm": "^0.45.4",
+    "fast-xml-parser": "^5.8.0",
     "jose": "^6.2.3"
   },
   "devDependencies": {

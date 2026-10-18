@@ -1,6 +1,8 @@
 import type { CanonicalStateCategory } from './canonical';
 import { LinearReader, type LinearCredential } from './linear-adapter';
 import { PlaneReader, type PlaneCredential } from './plane-adapter';
+import { JiraReader, type JiraCredential } from './jira-adapter';
+import { TrelloReader, type TrelloCredential } from './trello-adapter';
 import { UnsupportedImportSourceError, type SourceReader } from './reader';
 
 // The import_job.config fields every source shares; the phases read them directly.
@@ -24,16 +26,30 @@ export interface LinearImportConfig extends CommonImportConfig {
   projectId: string | null;
 }
 
+export interface JiraImportConfig extends CommonImportConfig {
+  // The project key ("OPS" in "OPS-12"): the JQL scope and the Rewrite prefix.
+  jiraProjectKey: string;
+}
+
+// Trello cards have no "KEY-123" identifier, so Rewrite leaves their text as written.
+export interface TrelloImportConfig extends CommonImportConfig {
+  trelloBoardId: string;
+}
+
 // One entry per import_job.source. A new source adds a member to both maps and an
 // entry to IMPORT_SOURCES.
 export interface ImportCredentials {
   plane: PlaneCredential;
   linear: LinearCredential;
+  jira: JiraCredential;
+  trello: TrelloCredential;
 }
 
 export interface ImportConfigs {
   plane: PlaneImportConfig;
   linear: LinearImportConfig;
+  jira: JiraImportConfig;
+  trello: TrelloImportConfig;
 }
 
 export type ImportSourceKind = keyof ImportConfigs;
@@ -79,6 +95,30 @@ const IMPORT_SOURCES: { [S in ImportSourceKind]: ImportSourceDefinition<S> } = {
       });
     },
     projectKey: (config) => config.teamKey ?? null,
+  },
+  jira: {
+    buildReader(credential, config, jobId) {
+      if (typeof credential?.email !== 'string' || typeof credential.apiToken !== 'string') {
+        throw new Error(`import job ${jobId} has a credential that is not a Jira API token`);
+      }
+      if (!config.jiraProjectKey) {
+        throw new Error(`import job ${jobId} has no source project configured`);
+      }
+      return new JiraReader(credential, config.jiraProjectKey);
+    },
+    projectKey: (config) => config.jiraProjectKey ?? null,
+  },
+  trello: {
+    buildReader(credential, config, jobId) {
+      if (typeof credential?.apiKey !== 'string' || typeof credential.token !== 'string') {
+        throw new Error(`import job ${jobId} has a credential that is not a Trello key and token`);
+      }
+      if (!config.trelloBoardId) {
+        throw new Error(`import job ${jobId} has no source project configured`);
+      }
+      return new TrelloReader(credential, config.trelloBoardId);
+    },
+    projectKey: () => null,
   },
 };
 

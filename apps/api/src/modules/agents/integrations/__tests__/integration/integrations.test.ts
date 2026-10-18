@@ -43,6 +43,66 @@ describe('integrations', () => {
     );
   });
 
+  it('stores an Ollama credential with a base URL and no API key', async () => {
+    const { asOwner, teamId } = await setup();
+    const catalog = await integrations(asOwner, teamId).catalog.get();
+    const ollama = catalog.data!.find((i) => i.key === 'ollama');
+    expect(ollama?.credentialSchema).toEqual([
+      expect.objectContaining({ key: 'apiKey', required: false }),
+      expect.objectContaining({
+        key: 'baseUrl',
+        required: true,
+        placeholder: 'http://localhost:11434/v1',
+      }),
+    ]);
+
+    process.env.LLM_ALLOWED_PRIVATE_HOSTS = 'ollama:11434, localhost:11434';
+    try {
+      const res = await integrations(asOwner, teamId).post({
+        integrationKey: 'ollama',
+        label: 'Local',
+        credential: { baseUrl: 'http://localhost:11434/v1' },
+      });
+      expect(res.status).toBe(201);
+      expect(res.data).toMatchObject({ integrationKey: 'ollama' });
+    } finally {
+      delete process.env.LLM_ALLOWED_PRIVATE_HOSTS;
+    }
+  });
+
+  it('refuses an LLM base URL on a private host that is not allowed', async () => {
+    const { asOwner, teamId } = await setup();
+    const created = await integrations(asOwner, teamId).post({
+      integrationKey: 'ollama',
+      credential: { baseUrl: 'http://169.254.169.254/latest' },
+    });
+    expect(created.status).toBe(400);
+
+    process.env.LLM_ALLOWED_PRIVATE_HOSTS = 'localhost:11434';
+    try {
+      const local = await integrations(asOwner, teamId).post({
+        integrationKey: 'ollama',
+        credential: { baseUrl: 'http://localhost:11434/v1' },
+      });
+      expect(local.status).toBe(201);
+      const other = await integrations(asOwner, teamId).post({
+        integrationKey: 'ollama',
+        credential: { baseUrl: 'http://localhost:6379' },
+      });
+      expect(other.status).toBe(400);
+
+      const updated = await integrations(
+        asOwner,
+        teamId,
+      )({ credentialId: local.data!.id }).patch({
+        credential: { baseUrl: 'http://10.0.0.5:11434/v1' },
+      });
+      expect(updated.status).toBe(400);
+    } finally {
+      delete process.env.LLM_ALLOWED_PRIVATE_HOSTS;
+    }
+  });
+
   it('stores an LLM credential, masks the secret, and never returns the raw value', async () => {
     const { asOwner, teamId } = await setup();
     const res = await integrations(asOwner, teamId).post({

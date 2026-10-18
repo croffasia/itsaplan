@@ -5,7 +5,9 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
   useCreateImportJob,
+  useTestJiraStatesPreview,
   useTestLinearStatesPreview,
+  useTestTrelloStatesPreview,
   useTestPlaneStatesPreview,
 } from '../../services/settings.service';
 import { Button } from '@/components/ui/button';
@@ -21,22 +23,37 @@ import SettingsCard from '@/components/common/page/SettingsCard';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import SettingsImportExportStateOverrideRow from './SettingsImportExportStateOverrideRow';
 import type {
+  JiraImportJobFields,
   LinearImportJobFields,
+  PlaneImportJobFields,
+  TrelloImportJobFields,
+  JiraConnectionInput,
+  TrelloConnectionInput,
   LinearTeamOption,
   PlaneConnectionInput,
-  PlaneImportJobFields,
   PlaneProjectOption,
   StateCategory,
   UnmatchedUserPolicy,
 } from '@/lib/api/endpoints/importExport';
 
-// What is about to be imported: one Plane project, or one Linear team's project
-// (projectId) or its issues with no project (projectId null).
+// What is about to be imported: one Plane project, one Linear team's project
+// (projectId) or its issues with no project (projectId null), one Jira project, or
+// one Trello board.
 export type ImportReviewTarget =
   | { source: 'plane'; connection: PlaneConnectionInput; project: PlaneProjectOption }
-  | { source: 'linear'; apiToken: string; team: LinearTeamOption; projectId: string | null };
+  | { source: 'linear'; apiToken: string; team: LinearTeamOption; projectId: string | null }
+  | { source: 'jira'; connection: JiraConnectionInput; jiraProjectKey: string }
+  | { source: 'trello'; connection: TrelloConnectionInput; trelloBoardId: string };
 
-function jobFields(target: ImportReviewTarget): PlaneImportJobFields | LinearImportJobFields {
+function jobFields(
+  target: ImportReviewTarget,
+): PlaneImportJobFields | LinearImportJobFields | JiraImportJobFields | TrelloImportJobFields {
+  if (target.source === 'jira') {
+    return { source: 'jira', ...target.connection, jiraProjectKey: target.jiraProjectKey };
+  }
+  if (target.source === 'trello') {
+    return { source: 'trello', ...target.connection, trelloBoardId: target.trelloBoardId };
+  }
   if (target.source === 'plane') {
     return {
       source: 'plane',
@@ -54,7 +71,7 @@ function jobFields(target: ImportReviewTarget): PlaneImportJobFields | LinearImp
 }
 
 // Shown once a source project is picked, before the job is created: the states
-// the source reports for it, each pre-filled with the category itsaplan would map it
+// the source reports for it, each pre-filled with the category One Health would map it
 // to automatically, and the unmatched-assignee/comment-author policy. Only a state
 // row the user actually changes from its default is sent as an override.
 export default function SettingsImportExportMappingReview({
@@ -82,7 +99,24 @@ export default function SettingsImportExportMappingReview({
     projectKey,
     target.source === 'linear' ? { apiToken: target.apiToken, teamId: target.team.id } : null,
   );
-  const preview = target.source === 'plane' ? planePreview : linearPreview;
+  const jiraPreview = useTestJiraStatesPreview(
+    projectKey,
+    target.source === 'jira'
+      ? { ...target.connection, jiraProjectKey: target.jiraProjectKey }
+      : null,
+  );
+  const trelloPreview = useTestTrelloStatesPreview(
+    projectKey,
+    target.source === 'trello'
+      ? { ...target.connection, trelloBoardId: target.trelloBoardId }
+      : null,
+  );
+  const preview = {
+    plane: planePreview,
+    linear: linearPreview,
+    jira: jiraPreview,
+    trello: trelloPreview,
+  }[target.source];
   const createJob = useCreateImportJob(projectKey);
   const [overrides, setOverrides] = useState<Record<string, StateCategory>>({});
   const [unmatchedUserPolicy, setUnmatchedUserPolicy] = useState<UnmatchedUserPolicy>('unassigned');

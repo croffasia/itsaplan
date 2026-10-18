@@ -6,6 +6,7 @@ import { threadsToken, publishMedia, REPLY_CONTROL } from './client';
 // text and/or public media URLs. Returns the published reply's media id and permalink.
 export const threadsReply: CustomToolEntry = {
   key: 'threads_reply',
+  writes: true,
   label: 'Threads Reply',
   scopes: ['threads_basic', 'threads_content_publish'],
   description:

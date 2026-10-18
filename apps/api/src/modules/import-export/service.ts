@@ -4,9 +4,11 @@ import { encryptSecret } from '@repo/crypto';
 import { HttpError, iso } from '#shared/lib';
 import { pinnedFetch } from '#shared/net';
 import { linearJobFields, type CreateLinearImportJobInput } from './linear';
+import { jiraJobFields, type CreateJiraImportJobInput } from './jira';
+import { trelloJobFields, type CreateTrelloImportJobInput } from './trello';
 
-// Data access and the Plane connection check for import jobs (Linear's is in
-// linear.ts). Creating a job only encrypts and stores the submitted credential and
+// Data access and the Plane connection check for import jobs (Linear's, Jira's and
+// Trello's are in linear.ts, jira.ts and trello.ts). Creating a job only encrypts and stores the submitted credential and
 // leaves the row 'pending' for the worker (apps/worker/src/import-worker.ts) to pick
 // up and drive through its phases — this module never talks to the worker or reads
 // the credential back. Progress is read from import_record, the worker's own
@@ -146,7 +148,25 @@ export interface CreatePlaneImportJobInput {
 }
 
 export type CreateImportJobInput = ImportJobChoices &
-  (CreatePlaneImportJobInput | CreateLinearImportJobInput);
+  (
+    | CreatePlaneImportJobInput
+    | CreateLinearImportJobInput
+    | CreateJiraImportJobInput
+    | CreateTrelloImportJobInput
+  );
+
+function jobFields(input: CreateImportJobInput) {
+  switch (input.source) {
+    case 'linear':
+      return linearJobFields(input);
+    case 'jira':
+      return jiraJobFields(input);
+    case 'trello':
+      return trelloJobFields(input);
+    default:
+      return planeJobFields(input);
+  }
+}
 
 function planeJobFields(input: CreatePlaneImportJobInput) {
   const baseUrl = normalizePlaneBaseUrl(input.baseUrl);
@@ -173,8 +193,7 @@ export async function createImportJob(
   actorUserId: string,
   input: CreateImportJobInput,
 ): Promise<ImportJobDto> {
-  const { source, credential, config } =
-    input.source === 'linear' ? linearJobFields(input) : planeJobFields(input);
+  const { source, credential, config } = jobFields(input);
   const encrypted = encryptSecret(JSON.stringify(credential));
   const [row] = await db
     .insert(importJob)
@@ -334,7 +353,7 @@ const STATE_CATEGORY_MAP: Record<string, StateCategory> = {
   triage: 'backlog',
 };
 
-// The source project's states, each with the category itsaplan would automatically
+// The source project's states, each with the category One Health would automatically
 // map it to - what the mapping review step shows before a job is created, so a user
 // can override one before anything is imported.
 export async function testPlaneStatesPreview(

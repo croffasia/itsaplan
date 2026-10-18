@@ -1,0 +1,1 @@
+(fail) ProjectSwitcher > focuses search on desktop and allows keyboard selection [1131.67ms] ... TypeError: undefined is not an object (evaluating 'session?.user.id') ... Found it: in the full run, `useSession()` returns no `user` because Bun's global `mock.module` lets another test file's `auth-client` mock leak in.

@@ -92,14 +92,23 @@ export function BoardCard({
         className={cn(
           // select-none so a Shift/Cmd-click toggles selection without the browser
           // also starting a native text selection across cards.
-          'kanban-card cursor-grab rounded-md p-2 select-none',
-          isDragging && 'opacity-40',
+          'kanban-card relative cursor-grab overflow-hidden rounded-lg p-2 ps-3 shadow-xs ring-1 ring-border/50 select-none',
+          isDragging
+            ? 'opacity-40'
+            : 'motion-safe:transition-transform motion-safe:duration-150 motion-safe:hover:-translate-y-0.5',
           isBlocked(issue) && 'kanban-card-blocked',
           // Selected cards read as a primary-tinted fill, like Linear — no border,
           // no checkbox (see .kanban-card-selected in globals.css).
           selected && 'kanban-card-selected',
         )}
       >
+        {issue.priority && (
+          <span
+            aria-hidden="true"
+            className="absolute inset-y-0 start-0 w-0.5"
+            style={{ backgroundColor: `var(--priority-${issue.priority})` }}
+          />
+        )}
         <IssueCardBody issue={issue} maps={maps} properties={properties} onOpen={onOpen} />
       </div>
     </IssueContextMenu>

@@ -480,6 +480,9 @@
     "reasoningEffortHigh": "Alto",
     "optional": "Opcional",
     "maxSteps": "Máximo de pasos",
+    "monthlyBudget": "Presupuesto mensual (USD)",
+    "monthlyBudgetPlaceholder": "Sin límite",
+    "monthlyBudgetHint": "Las ejecuciones se detienen durante el resto del mes cuando el coste alcanza este importe. El coste usa los precios de los modelos del panel del agente. Una ejecución ya iniciada termina. Las llamadas a un modelo sin precio no se cuentan.",
     "memory": "Memoria de la conversación",
     "memoryHint": "Recuerda los mensajes recientes dentro de un hilo de conversación.",
     "memoryCount": "Recordar los últimos N mensajes",
@@ -716,5 +719,37 @@
       "removePrice": "Quitar precio",
       "save": "Guardar precio"
     }
+  },
+  "agentActions": {
+    "title": "Acciones del agente",
+    "logTab": "Registro de acciones",
+    "approvalsTab": "Aprobaciones",
+    "noActions": "Este agente aún no ha hecho ningún cambio.",
+    "run": "Ejecución n.º {id}",
+    "noPending": "No hay cambios pendientes de aprobación.",
+    "requireApproval": "Requerir aprobación",
+    "requireApprovalHint": "Los cambios del agente y sus llamadas a integraciones esperan a que un miembro del proyecto los apruebe. Solo se aplica a agentes internos: las llamadas de un agente externo se registran, pero no se retienen.",
+    "on": "Activado",
+    "off": "Desactivado",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "cancel": "Cancelar",
+    "reason": "Motivo",
+    "reasonPlaceholder": "¿Por qué se rechaza este cambio?",
+    "approved": "Cambio aplicado",
+    "rejected": "Cambio rechazado",
+    "failed": "No se pudo aplicar el cambio",
+    "issueTitle": "{count, plural, one {# cambio del agente espera aprobación} other {# cambios del agente esperan aprobación}}",
+    "status": {
+      "pending": "Pendiente",
+      "applying": "Aplicando",
+      "approved": "Aprobado",
+      "rejected": "Rechazado",
+      "failed": "Fallido",
+      "expired": "Caducado"
+    },
+    "from": "Desde",
+    "to": "Hasta",
+    "approvedBy": "Aprobado por {name}"
   }
 }

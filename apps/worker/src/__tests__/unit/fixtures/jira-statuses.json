@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Task",
+    "statuses": [
+      { "id": "1", "name": "To Do", "statusCategory": { "key": "new" } },
+      { "id": "3", "name": "In Progress", "statusCategory": { "key": "indeterminate" } },
+      { "id": "10000", "name": "Done", "statusCategory": { "key": "done" } }
+    ]
+  },
+  {
+    "name": "Bug",
+    "statuses": [
+      { "id": "1", "name": "To Do", "statusCategory": { "key": "new" } },
+      { "id": "10001", "name": "Backlog", "statusCategory": { "key": "new" } },
+      { "id": "10002", "name": "Won't Do", "statusCategory": { "key": "done" } }
+    ]
+  }
+]

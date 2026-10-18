@@ -16,7 +16,7 @@ import {
 } from '@repo/db';
 import { and, eq, inArray, ne, notInArray, sql } from 'drizzle-orm';
 import { auth } from '@repo/auth';
-import { iso, HttpError, rethrowDuplicate } from '#shared/lib';
+import { iso, num, HttpError, rethrowDuplicate } from '#shared/lib';
 import { getCredentialById } from '../integrations/service';
 import { integrationKind } from '../integrations/catalog';
 import { encryptSecret, decryptSecret } from '@repo/crypto';
@@ -95,6 +95,8 @@ export interface AiAgentRow {
   temperature: number | null;
   reasoningEffort: ReasoningEffort | null;
   maxSteps: number | null;
+  monthlyBudgetUsd: number | null;
+  requireApproval: boolean;
   // Conversation memory: recall the last memoryLastMessages messages of a thread.
   memoryEnabled: boolean;
   memoryLastMessages: number | null;
@@ -144,6 +146,8 @@ function mapAgent(row: {
   temperature: number | null;
   reasoningEffort: string | null;
   maxSteps: number | null;
+  monthlyBudgetUsd: string | null;
+  requireApproval: boolean;
   memoryEnabled: boolean;
   memoryLastMessages: number | null;
   triggerOnMention: boolean;
@@ -175,6 +179,8 @@ function mapAgent(row: {
     temperature: row.temperature,
     reasoningEffort: row.reasoningEffort as ReasoningEffort | null,
     maxSteps: row.maxSteps,
+    monthlyBudgetUsd: row.monthlyBudgetUsd == null ? null : num(row.monthlyBudgetUsd),
+    requireApproval: row.requireApproval,
     memoryEnabled: row.memoryEnabled,
     memoryLastMessages: row.memoryLastMessages,
     triggerOnMention: row.triggerOnMention,
@@ -212,6 +218,8 @@ const agentColumns = {
   temperature: aiAgent.temperature,
   reasoningEffort: aiAgent.reasoningEffort,
   maxSteps: aiAgent.maxSteps,
+  monthlyBudgetUsd: aiAgent.monthlyBudgetUsd,
+  requireApproval: aiAgent.requireApproval,
   memoryEnabled: aiAgent.memoryEnabled,
   memoryLastMessages: aiAgent.memoryLastMessages,
   triggerOnMention: aiAgent.triggerOnMention,
@@ -525,6 +533,8 @@ export interface NewAgentInput {
   temperature?: number | null;
   reasoningEffort?: ReasoningEffort | null;
   maxSteps?: number | null;
+  monthlyBudgetUsd?: number | null;
+  requireApproval?: boolean;
   memoryEnabled?: boolean;
   memoryLastMessages?: number | null;
   // Run triggers. Assign is off by default, and so is mention for an external agent:
@@ -582,6 +592,11 @@ async function issueKey(userId: string, name: string): Promise<string> {
   return created.key;
 }
 
+// The driver writes a numeric column as text.
+function budgetText(value: number | null | undefined): string | null {
+  return value == null ? null : value.toFixed(2);
+}
+
 // Creates an agent: a bot user, the ai_agent config row, its team and project
 // memberships, and its first API key. Internal-agent config fields are stored only for
 // kind "internal"; an external agent keeps them null.
@@ -622,6 +637,8 @@ export async function createAgent(
           temperature: isInternal ? (input.temperature ?? null) : null,
           reasoningEffort: isInternal ? (input.reasoningEffort ?? null) : null,
           maxSteps: isInternal ? (input.maxSteps ?? null) : null,
+          monthlyBudgetUsd: isInternal ? budgetText(input.monthlyBudgetUsd) : null,
+          requireApproval: isInternal ? (input.requireApproval ?? false) : false,
           memoryEnabled: isInternal ? (input.memoryEnabled ?? false) : false,
           memoryLastMessages: isInternal ? (input.memoryLastMessages ?? null) : null,
           triggerOnMention: input.triggerOnMention ?? isInternal,
@@ -780,6 +797,8 @@ export interface AgentPatch {
   temperature?: number | null;
   reasoningEffort?: ReasoningEffort | null;
   maxSteps?: number | null;
+  monthlyBudgetUsd?: number | null;
+  requireApproval?: boolean;
   memoryEnabled?: boolean;
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
@@ -817,6 +836,15 @@ export async function updateAgent(
   if (patch.temperature !== undefined) set.temperature = patch.temperature;
   if (patch.reasoningEffort !== undefined) set.reasoningEffort = patch.reasoningEffort;
   if (patch.maxSteps !== undefined) set.maxSteps = patch.maxSteps;
+  if (patch.monthlyBudgetUsd !== undefined)
+    set.monthlyBudgetUsd = budgetText(patch.monthlyBudgetUsd);
+  if (patch.requireApproval !== undefined) {
+    // An agent that could lift its own approval would make the approval pointless.
+    if (actorUserId === agent.userId) {
+      throw new HttpError(403, 'An agent cannot change its own approval setting');
+    }
+    set.requireApproval = patch.requireApproval;
+  }
   if (patch.memoryEnabled !== undefined) set.memoryEnabled = patch.memoryEnabled;
   if (patch.memoryLastMessages !== undefined) set.memoryLastMessages = patch.memoryLastMessages;
   if (patch.triggerOnMention !== undefined) set.triggerOnMention = patch.triggerOnMention;

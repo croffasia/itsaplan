@@ -5,6 +5,7 @@ import { creds, igRequest } from './client';
 // Replies to a mention of the account, either in a media caption or in a comment.
 export const instagramReplyToMention: CustomToolEntry = {
   key: 'instagram_reply_to_mention',
+  writes: true,
   scopes: ['instagram_basic', 'instagram_manage_comments'],
   label: 'Instagram Reply To Mention',
   description:

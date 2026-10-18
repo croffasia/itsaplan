@@ -4,7 +4,6 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Providers } from '@/components/providers';
 import RuntimeEnvScript from '@/components/runtime-env-script';
-import WhatsNew from '@/features/whats-new/WhatsNew';
 import { localeDirection, type Locale } from '@/i18n/locales';
 import './globals.css';
 
@@ -13,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: t('title'),
     description: t('description'),
-    appleWebApp: { title: "It's a Plan", capable: true, statusBarStyle: 'default' },
+    appleWebApp: { title: 'One Health', capable: true, statusBarStyle: 'default' },
   };
 }
 
@@ -35,7 +34,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} dir={localeDirection(locale as Locale)} suppressHydrationWarning>
-      <body className="antialiased">
+      <body className="antialiased" suppressHydrationWarning>
         <RuntimeEnvScript />
         <ThemeProvider
           attribute="class"
@@ -48,10 +47,7 @@ export default async function RootLayout({
           storageKey="itsaplan-theme"
         >
           <NextIntlClientProvider>
-            <Providers>
-              {children}
-              <WhatsNew />
-            </Providers>
+            <Providers>{children}</Providers>
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>

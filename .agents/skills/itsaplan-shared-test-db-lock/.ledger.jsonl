@@ -1,0 +1,1 @@
+{"action": "create", "reason": "Several agent panes ran the api ai-assist suite at once against the one shared test database, whose suite truncates every table before each test. A mkdir lock serialized the runs. The rule should be reusable by any parallel agent running api, worker, or bot tests.", "evidence": "references/evidence-89ebde0f.md"}

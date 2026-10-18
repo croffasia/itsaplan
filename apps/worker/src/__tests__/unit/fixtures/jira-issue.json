@@ -1,0 +1,117 @@
+{
+  "id": "10042",
+  "key": "OPS-12",
+  "fields": {
+    "summary": "Login fails on Safari",
+    "description": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+        {
+          "type": "heading",
+          "attrs": { "level": 2 },
+          "content": [{ "type": "text", "text": "Steps" }]
+        },
+        {
+          "type": "orderedList",
+          "content": [
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    { "type": "text", "text": "Open " },
+                    { "type": "text", "text": "/login", "marks": [{ "type": "code" }] }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "listItem",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [{ "type": "text", "text": "Submit", "marks": [{ "type": "strong" }] }]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "See " },
+            { "type": "inlineCard", "attrs": { "url": "https://acme.atlassian.net/browse/OPS-7" } },
+            { "type": "text", "text": " and " },
+            {
+              "type": "text",
+              "text": "docs",
+              "marks": [{ "type": "link", "attrs": { "href": "https://example.com/docs" } }]
+            },
+            { "type": "text", "text": ", cc " },
+            { "type": "mention", "attrs": { "id": "557058:abc", "text": "@Dana" } }
+          ]
+        },
+        {
+          "type": "codeBlock",
+          "attrs": { "language": "js" },
+          "content": [{ "type": "text", "text": "login()" }]
+        },
+        {
+          "type": "mediaSingle",
+          "content": [{ "type": "media", "attrs": { "id": "f-1", "type": "file" } }]
+        },
+        {
+          "type": "taskList",
+          "content": [
+            {
+              "type": "taskItem",
+              "attrs": { "state": "DONE" },
+              "content": [{ "type": "text", "text": "repro" }]
+            },
+            {
+              "type": "taskItem",
+              "attrs": { "state": "TODO" },
+              "content": [{ "type": "text", "text": "fix" }]
+            }
+          ]
+        }
+      ]
+    },
+    "status": { "id": "3" },
+    "priority": { "name": "Highest" },
+    "assignee": { "emailAddress": "dana@example.com", "displayName": "Dana" },
+    "labels": ["frontend", "safari"],
+    "parent": { "id": "10001", "key": "OPS-1" },
+    "duedate": "2024-03-01",
+    "created": "2024-01-05T10:00:00.000+0100",
+    "updated": "2024-01-06T11:30:00.000+0000",
+    "issuelinks": [
+      { "type": { "name": "Blocks" }, "outwardIssue": { "id": "10050" } },
+      { "type": { "name": "Blocks" }, "inwardIssue": { "id": "10051" } },
+      { "type": { "name": "Duplicate" }, "outwardIssue": { "id": "10052" } },
+      { "type": { "name": "Cloners" }, "outwardIssue": { "id": "10053" } }
+    ],
+    "attachment": [
+      { "id": "20001", "filename": "screen.png", "mimeType": "image/png", "size": 2048 }
+    ],
+    "customfield_10020": [
+      {
+        "id": 3,
+        "name": "Sprint 3",
+        "state": "closed",
+        "startDate": "2023-12-01T09:00:00.000Z",
+        "endDate": "2023-12-14T09:00:00.000Z"
+      },
+      {
+        "id": 4,
+        "name": "Sprint 4",
+        "state": "active",
+        "startDate": "2024-01-01T09:00:00.000Z",
+        "endDate": "2024-01-14T09:00:00.000Z",
+        "goal": "Ship login"
+      }
+    ]
+  }
+}

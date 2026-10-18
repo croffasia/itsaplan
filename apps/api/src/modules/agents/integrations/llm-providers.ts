@@ -6,6 +6,7 @@
 // entry is addressed as an OpenAI-compatible endpoint whose base URL comes from the
 // registry, so no base URL is asked for. `openai-compatible` is the catch-all for a
 // provider not in the registry — it has no fixed endpoint, so the UI asks for one.
+// `ollama` is a local server: it asks for a base URL and takes no API key.
 //
 // The major providers are listed first; the rest follow alphabetically.
 
@@ -13,6 +14,8 @@ export interface ProviderMeta {
   key: string;
   label: string;
   requiresBaseUrl: boolean;
+  defaultBaseUrl?: string;
+  apiKeyOptional?: boolean;
 }
 
 export const AI_PROVIDERS: ProviderMeta[] = [
@@ -172,5 +175,12 @@ export const AI_PROVIDERS: ProviderMeta[] = [
   { key: 'zai-coding-plan', label: 'Z.AI Coding Plan', requiresBaseUrl: false },
   { key: 'zenifra', label: 'Zenifra', requiresBaseUrl: false },
   { key: 'zhipuai-coding-plan', label: 'Zhipu AI Coding Plan', requiresBaseUrl: false },
+  {
+    key: 'ollama',
+    label: 'Ollama (local)',
+    requiresBaseUrl: true,
+    defaultBaseUrl: 'http://localhost:11434/v1',
+    apiKeyOptional: true,
+  },
   { key: 'openai-compatible', label: 'OpenAI-compatible (custom)', requiresBaseUrl: true },
 ];

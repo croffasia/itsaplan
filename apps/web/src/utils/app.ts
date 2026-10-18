@@ -2,7 +2,7 @@ import { runtimeEnv } from './runtimeEnv';
 
 // The product name shown to users: the login panel, the passkey label in the OS
 // picker, and the account page. It is defined once, so a rebrand is one edit.
-export const APP_NAME = "It's a Plan";
+export const APP_NAME = 'One Health';
 
 // The product site. The product mark on the public share pages links to it.
 export const APP_SITE_URL = 'https://itsaplan.dev/';

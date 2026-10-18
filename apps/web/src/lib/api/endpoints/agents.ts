@@ -48,6 +48,8 @@ export interface AiAgent {
   temperature: number | null;
   reasoningEffort: ReasoningEffort | null;
   maxSteps: number | null;
+  monthlyBudgetUsd: number | null;
+  requireApproval: boolean;
   memoryEnabled: boolean;
   memoryLastMessages: number | null;
   // Run triggers.
@@ -133,6 +135,7 @@ export interface NewAiAgentInput {
   temperature?: number | null;
   reasoningEffort?: ReasoningEffort | null;
   maxSteps?: number | null;
+  monthlyBudgetUsd?: number | null;
   memoryEnabled?: boolean;
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
@@ -153,6 +156,7 @@ export interface AiAgentPatch {
   temperature?: number | null;
   reasoningEffort?: ReasoningEffort | null;
   maxSteps?: number | null;
+  monthlyBudgetUsd?: number | null;
   memoryEnabled?: boolean;
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;

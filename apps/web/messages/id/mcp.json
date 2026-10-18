@@ -24,15 +24,15 @@
     "methodTabsAria": "Metode koneksi",
     "method": "OAuth",
     "personalKey": "Kunci API",
-    "description": "Gunakan ini untuk klien MCP apa pun yang mendukung OAuth, seperti ChatGPT atau Claude. Anda masuk dengan akun Itsaplan Anda. Klien tidak pernah menerima kunci API.",
+    "description": "Gunakan ini untuk klien MCP apa pun yang mendukung OAuth, seperti ChatGPT atau Claude. Anda masuk dengan akun One Health Anda. Klien tidak pernah menerima kunci API.",
     "discovery": "Penemuan OAuth",
     "steps": {
       "add": "Tambahkan aplikasi MCP di klien Anda.",
       "paste": "Tempel endpoint MCP.",
       "choose": "Pilih OAuth saat klien menanyakan cara masuk.",
-      "signIn": "Masuk ke Itsaplan dan setujui akses."
+      "signIn": "Masuk ke One Health dan setujui akses."
     },
-    "security": "OAuth menggunakan PKCE (S256), pendaftaran klien dinamis, dan token akses yang dicakupkan ke akun Itsaplan Anda.",
+    "security": "OAuth menggunakan PKCE (S256), pendaftaran klien dinamis, dan token akses yang dicakupkan ke akun One Health Anda.",
     "consent": {
       "title": "{client} ingin terhubung ke akun Anda",
       "titleUnnamed": "Sebuah klien MCP ingin terhubung ke akun Anda",

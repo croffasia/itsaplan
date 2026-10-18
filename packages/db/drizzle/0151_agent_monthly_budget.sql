@@ -1,0 +1,2 @@
+ALTER TABLE "ai_agent" ADD COLUMN "monthly_budget_usd" numeric(12, 2);--> statement-breakpoint
+ALTER TABLE "ai_agent" ADD CONSTRAINT "ai_agent_monthly_budget_check" CHECK ("ai_agent"."monthly_budget_usd" >= 0);

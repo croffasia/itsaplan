@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import ItsAPlanMark from '@/components/brand/ItsAPlanMark';
+import AppLogo from '@/components/common/AppLogo';
 import ReleaseHistory from '@/features/whats-new/components/ReleaseHistory';
 import { useSession } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
@@ -35,10 +35,12 @@ export default function SidebarBrandFooter() {
 
   const content = (
     <>
-      <ItsAPlanMark className="size-9 shrink-0 text-sidebar-foreground" />
-      <div className="grid text-left leading-none group-data-[collapsible=icon]:hidden">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-sidebar-primary/10 ring-1 ring-sidebar-primary/25">
+        <AppLogo className="size-7 text-sidebar-primary" />
+      </span>
+      <div className="grid text-start leading-none group-data-[collapsible=icon]:hidden">
         <span className="text-base font-semibold tracking-tight text-sidebar-foreground">
-          It&apos;s a Plan
+          One Health
         </span>
         {newerVersion ? (
           <span className="mt-1 flex items-center gap-1.5 text-[10px] font-medium tracking-wider text-primary uppercase">

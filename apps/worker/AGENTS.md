@@ -56,7 +56,7 @@ running to completion in one.
   queries, limits and mapping.
 - `cross-reference.ts` — pure text matching for a source's own "KEY-123"-style
   issue identifier: no `@repo/db`, no network, unit-tested directly. What
-  the Rewrite phase resolves into itsaplan's own issue ids.
+  the Rewrite phase resolves into One Health's own issue ids.
 - `import-store.ts` — all `@repo/db` access for imports: claiming due jobs,
   reading/writing a job's phase/cursor/status, the `import_record`
   source-id-to-local-id upsert, and creating the local rows (states, labels,

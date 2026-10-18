@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { TriangleAlert } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { AgentAnalytics } from '@/lib/api/endpoints/agentAnalytics';
+import RadialGauge from '@/components/common/chart/RadialGauge';
 import StatDelta, { type StatComparison } from './StatDelta';
 import { formatCost, formatCount } from '../utils/format';
 
@@ -58,11 +59,33 @@ export default function StatCards({
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-x-8 gap-y-6 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
       {stats.map((stat) => (
-        <div key={stat.key} className="min-w-0">
-          <p className="text-xs text-muted-foreground">{stat.label}</p>
-          <p className="mt-1 text-3xl font-semibold tracking-tight tabular-nums">{stat.value}</p>
+        <div
+          key={stat.key}
+          className="relative min-w-0 overflow-hidden rounded-xl border border-border/60 bg-linear-to-br from-primary/[0.06] to-card p-4 shadow-xs"
+        >
+          <span
+            aria-hidden="true"
+            className="absolute inset-x-4 top-0 h-0.5 rounded-b bg-primary/60"
+          />
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                {stat.label}
+              </p>
+              <p className="mt-1 text-3xl font-semibold tracking-tight tabular-nums">
+                {stat.value}
+              </p>
+            </div>
+            {stat.key === 'errors' && totals.runs > 0 && (
+              <RadialGauge
+                percent={(totals.errors / totals.runs) * 100}
+                tone="destructive"
+                className="size-10 shrink-0"
+              />
+            )}
+          </div>
           <StatDelta stat={stat} />
           {stat.key === 'cost' && unpriced > 0 && (
             <p className="mt-1 flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400">

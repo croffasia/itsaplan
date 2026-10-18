@@ -17,6 +17,7 @@ import {
   type InstanceEmailSettingsPatch,
   type InstanceGoogleSettingsPatch,
   type InstanceOidcSettingsPatch,
+  type InstanceSamlSettingsPatch,
   type InstanceTelegramSettingsPatch,
   type InstanceUserKind,
   getInstanceAuthSettings,
@@ -28,6 +29,8 @@ import {
   updateInstanceGoogleSettings,
   getInstanceOidcSettings,
   updateInstanceOidcSettings,
+  getInstanceSamlSettings,
+  updateInstanceSamlSettings,
   getInstanceTelegramSettings,
   updateInstanceTelegramSettings,
   getInstanceProjectDefaults,
@@ -133,6 +136,24 @@ export function useUpdateInstanceOidcSettings() {
     mutationFn: (patch: InstanceOidcSettingsPatch) => updateInstanceOidcSettings(patch),
     onSuccess: (data) => {
       qc.setQueryData(qk.instanceOidcSettings, data);
+      invalidateSignInMethods(qc);
+    },
+  });
+}
+
+export function useInstanceSamlSettingsQuery() {
+  return useQuery({
+    queryKey: qk.instanceSamlSettings,
+    queryFn: () => getInstanceSamlSettings(),
+  });
+}
+
+export function useUpdateInstanceSamlSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: InstanceSamlSettingsPatch) => updateInstanceSamlSettings(patch),
+    onSuccess: (data) => {
+      qc.setQueryData(qk.instanceSamlSettings, data);
       invalidateSignInMethods(qc);
     },
   });

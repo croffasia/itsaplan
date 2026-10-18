@@ -24,6 +24,7 @@ import { isChatThreadId, newChatThreadId } from './thread-ids';
 import { errorMessage } from '../helpers/errors';
 import { projectPreamble } from '../prompt/framing';
 import { HttpError } from '#shared/lib';
+import { takeDecisionsPreamble } from '#modules/agent-actions/service';
 import type { AgentRunTrigger } from '../../model';
 
 // Runtime execution of internal agents via Mastra. An agent is built on demand
@@ -113,6 +114,7 @@ async function buildAgent(
   projectId: number,
   contextPreamble: string,
   sessionId: string,
+  opts: RunOpts,
 ): Promise<Agent> {
   const project = await getProjectById(projectId);
   if (!project) throw new HttpError(404, 'Project not found');
@@ -120,8 +122,15 @@ async function buildAgent(
   const skills = await listAgentSkills(row.id);
   const customTools = await listAgentToolsForRun(row.id);
   const apiKey = await getInternalAgentApiKey(row);
+  const context = {
+    agentId: row.id,
+    issueId: opts.issueId ?? null,
+    runId: opts.runId ?? null,
+    hold: row.requireApproval,
+  };
   const instructions =
     projectPreamble(project) +
+    (await takeDecisionsPreamble(row.id, projectId)) +
     contextPreamble +
     (row.instructions ?? DEFAULT_INSTRUCTIONS) +
     skillsPreamble(skills);
@@ -135,10 +144,10 @@ async function buildAgent(
     // tool with no route; read_skill loads any enabled skills on demand; custom tools
     // are the external integrations configured on the team and enabled here.
     tools: {
-      ...buildRouteTools(project, apiKey, row.tools),
+      ...buildRouteTools(project, apiKey, row.tools, context),
       ...buildLocalTools(projectId, row.tools),
       ...(skills.length > 0 ? buildSkillTool(row.teamId, skills) : {}),
-      ...buildCustomTools(customTools),
+      ...buildCustomTools(customTools, { ...context, projectId }),
     },
     // Conversation memory (last N messages of a thread) when enabled.
     ...(row.memoryEnabled
@@ -313,6 +322,7 @@ async function prepareRun(
     projectId,
     opts.contextPreamble ?? '',
     threadId ?? randomUUID(),
+    opts,
   );
 
   // Mastra's generate/stream have overloaded options; type the shape we use. In

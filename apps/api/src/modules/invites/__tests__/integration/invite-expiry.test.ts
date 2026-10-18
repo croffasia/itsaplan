@@ -187,7 +187,7 @@ describe('renewing an expired invite', () => {
   it('queues the email of a renewed project invite, as creating one does', async () => {
     const { asOwner } = await setup();
     const configured = await asOwner.god['email-settings'].put({
-      from: "It's a Plan <noreply@example.com>",
+      from: 'One Health <noreply@example.com>',
       resend: { enabled: true, apiKey: 're_test_key' },
       allowProjects: false,
     });

@@ -23,7 +23,7 @@ export async function enqueueInviteEmail(
   if (!config || !hasEmailProvider(config)) return false;
 
   const dedupeKey = `project-invite:${invite.id}`;
-  const inviter = invite.invitedByName ?? invite.invitedByEmail ?? "An It's a Plan user";
+  const inviter = invite.invitedByName ?? invite.invitedByEmail ?? 'A One Health user';
   const role = invite.role === 'owner' ? 'owner' : (invite.roleName ?? 'member');
   const projectName = project.name.replace(/[\r\n]+/g, ' ');
   const url = new URL(`/invite/${invite.token}`, trustedOrigins[0]).toString();
@@ -52,7 +52,7 @@ export async function enqueueInviteEmail(
       channel: 'email',
       recipient: invite.email,
       payload: {
-        subject: `You were invited to ${projectName} on It's a Plan`,
+        subject: `You were invited to ${projectName} on One Health`,
         text:
           `${inviter} invited you to join ${projectName} as ${role}.\n\n` +
           'Open the invitation to sign in or create an account. ' +

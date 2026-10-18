@@ -1,6 +1,6 @@
 # itsaplan Helm Chart
 
-Helm chart for deploying [It's a Plan](https://github.com/croffasia/itsaplan) on Kubernetes.
+Helm chart for deploying [One Health](https://github.com/croffasia/itsaplan) on Kubernetes.
 
 ## Prerequisites
 

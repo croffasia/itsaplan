@@ -326,6 +326,91 @@ describe('import jobs', () => {
     });
   });
 
+  describe('jira and trello', () => {
+    const jiraBody = {
+      source: 'jira' as const,
+      baseUrl: 'https://acme.atlassian.net/',
+      email: 'dana@example.com',
+      apiToken: 'atl_token',
+      jiraProjectKey: 'OPS',
+    };
+    const trelloBody = {
+      source: 'trello' as const,
+      apiKey: 'trello-key',
+      token: 'trello-token',
+      trelloBoardId: 'board-1',
+    };
+
+    async function storedJob(id: number) {
+      const [row] = await db.select().from(importJob).where(eq(importJob.id, id));
+      const credential = decryptSecret({
+        ciphertext: row!.credentialCiphertext!,
+        iv: row!.credentialIv!,
+        authTag: row!.credentialAuthTag!,
+      });
+      return { config: row!.config, credential: JSON.parse(credential) as unknown };
+    }
+
+    it('creates a pending Jira job with the site origin, credential and project key', async () => {
+      const { api } = await setupOwnerProject();
+      const res = await jobs(api).post(jiraBody);
+      expect(res.status).toBe(201);
+      expect(res.data).toMatchObject({ source: 'jira', status: 'pending', counts: zeroedCounts });
+      expect(await storedJob(res.data!.id)).toEqual({
+        config: { jiraProjectKey: 'OPS', unmatchedUserPolicy: 'unassigned' },
+        credential: {
+          baseUrl: 'https://acme.atlassian.net',
+          email: 'dana@example.com',
+          apiToken: 'atl_token',
+        },
+      });
+    });
+
+    it('creates a pending Trello job', async () => {
+      const { api } = await setupOwnerProject();
+      const res = await jobs(api).post({ ...trelloBody, unmatchedUserPolicy: 'skip' });
+      expect(res.status).toBe(201);
+      expect(res.data).toMatchObject({ source: 'trello', status: 'pending' });
+      expect(await storedJob(res.data!.id)).toEqual({
+        config: { trelloBoardId: 'board-1', unmatchedUserPolicy: 'skip' },
+        credential: { apiKey: 'trello-key', token: 'trello-token' },
+      });
+    });
+
+    it.each([
+      ['a site that is not Jira Cloud', { baseUrl: 'https://jira.example.com' }],
+      ['an http site', { baseUrl: 'http://acme.atlassian.net' }],
+      ['a lowercase project key', { jiraProjectKey: 'ops' }],
+      ['a blank email', { email: '  ' }],
+    ])('rejects a Jira job with %s', async (_case, change) => {
+      const { api } = await setupOwnerProject();
+      expect((await jobs(api).post({ ...jiraBody, ...change })).status).toBe(400);
+    });
+
+    it.each([
+      ['a blank token', { token: ' ' }],
+      ['a quote in the key', { apiKey: 'a"b' }],
+      ['a missing board', { trelloBoardId: undefined }],
+    ])('rejects a Trello job with %s', async (_case, change) => {
+      const { api } = await setupOwnerProject();
+      expect((await jobs(api).post({ ...trelloBody, ...change } as never)).status).toBe(400);
+    });
+
+    it('rejects a non-Jira site on the Jira endpoints before any request', async () => {
+      const { api } = await setupOwnerProject();
+      const { source: _s, jiraProjectKey: _k, ...connection } = jiraBody;
+      expect(
+        (
+          await jobs(api)['jira-test-connection'].post({
+            ...connection,
+            baseUrl: 'https://127.0.0.1',
+          })
+        ).status,
+      ).toBe(400);
+      expect((await jobs(api)['trello-preview'].post({} as never)).status).toBe(400);
+    });
+  });
+
   describe('linear', () => {
     const linearBody = {
       source: 'linear' as const,

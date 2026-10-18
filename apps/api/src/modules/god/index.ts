@@ -16,6 +16,9 @@ import {
   setScimSettings,
   rotateScimToken,
   hasConfiguredOidc,
+  hasConfiguredSaml,
+  setSamlSettings,
+  getSamlConfig,
 } from '@repo/auth';
 import { hasConfiguredEmailProvider, getStorageSettings } from '@repo/db';
 import { emailBody, hasEmailProvider, sendEmail } from '@repo/mailer';
@@ -72,6 +75,8 @@ import {
   InstanceUserPageResponse,
   OidcSettingsBody,
   OidcSettingsResponse,
+  SamlSettingsBody,
+  SamlSettingsResponse,
   StorageSettingsBody,
   TelegramSettingsBody,
   TelegramSettingsResponse,
@@ -84,6 +89,7 @@ import {
   userParams,
 } from './model';
 import { emailTestError } from './email-test';
+import { resolveSamlPatch, toSamlSettings } from './saml';
 import { getInstanceBotSettings, setInstanceBotSettings } from '#modules/telegram/service';
 import {
   setStorageSettings,
@@ -116,7 +122,9 @@ import {
 // Whether any single sign-on provider can run right now. Password sign-in may only
 // be turned off while one can.
 async function hasSsoProvider(): Promise<boolean> {
-  return (await hasConfiguredOidc()) || (await hasConfiguredGoogle());
+  return (
+    (await hasConfiguredOidc()) || (await hasConfiguredGoogle()) || (await hasConfiguredSaml())
+  );
 }
 
 async function assertUsableSignInMethod(
@@ -221,13 +229,13 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       }
 
       const body = emailBody(
-        "This test confirms that It's a Plan can send email through the configured provider.",
+        'This test confirms that One Health can send email through the configured provider.',
       );
       const result = await sendEmail(
         { ...config, smtp: { ...config.smtp, timeout: config.smtp.timeout ?? 15 } },
         {
           to: current.email,
-          subject: "It's a Plan email test",
+          subject: 'One Health email test',
           ...body,
         },
       );
@@ -274,7 +282,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       }
       await assertUsableSignInMethod(
         enabled && clientId.length > 0 && hasClientSecret,
-        await hasConfiguredOidc(),
+        (await hasConfiguredOidc()) || (await hasConfiguredSaml()),
       );
       const next = await setGoogleSettings(body);
       return { ...next, redirectUri: GOOGLE_REDIRECT_URI };
@@ -316,7 +324,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       }
       await assertUsableSignInMethod(
         enabled && discoveryUrl.length > 0 && clientId.length > 0 && hasClientSecret,
-        await hasConfiguredGoogle(),
+        (await hasConfiguredGoogle()) || (await hasConfiguredSaml()),
       );
       const next = await setOidcSettings(body);
       return { ...next, redirectUri: OIDC_REDIRECT_URI };
@@ -328,6 +336,37 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
         summary: 'Update OIDC sign-in settings',
         description:
           'Update the generic OIDC/OAuth2 credentials and whether the provider is offered.',
+      },
+    },
+  )
+
+  .get('/god/saml-settings', async () => toSamlSettings(await getSamlConfig()), {
+    response: { 200: SamlSettingsResponse, ...errors(401, 403) },
+    detail: {
+      summary: 'Get SAML sign-in settings',
+      description:
+        'Get the SAML identity provider settings and the values to register at the provider.',
+    },
+  })
+
+  .put(
+    '/god/saml-settings',
+    async ({ body }) => {
+      const next = await resolveSamlPatch(body);
+      await assertUsableSignInMethod(
+        next.enabled,
+        (await hasConfiguredGoogle()) || (await hasConfiguredOidc()),
+      );
+      return toSamlSettings(await setSamlSettings(next));
+    },
+    {
+      body: SamlSettingsBody,
+      response: { 200: SamlSettingsResponse, ...errors(400, 401, 403) },
+      detail: {
+        summary: 'Update SAML sign-in settings',
+        description:
+          'Update the SAML identity provider metadata, attribute mapping and whether it is offered. ' +
+          'A metadata URL is fetched once, on save.',
       },
     },
   )

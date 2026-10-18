@@ -498,7 +498,6 @@
     "import": "가져오기",
     "source": "가져올 위치",
     "sourceHint": "데이터를 가져올 위치를 선택하세요.",
-    "comingSoon": "출시 예정",
     "connect": "Plane에 연결",
     "connectHint": "셀프 호스팅 Plane 인스턴스를 입력하여 연결을 확인하고 프로젝트를 불러옵니다.",
     "baseUrl": "Plane URL",
@@ -549,6 +548,28 @@
       "projectPlaceholder": "프로젝트 선택",
       "noProject": "프로젝트가 없는 이슈",
       "noTeams": "이 API 키로 접근할 수 있는 팀이 없습니다."
+    },
+    "jira": {
+      "connect": "Jira에 연결",
+      "connectHint": "Jira Cloud 사이트와 계정 이메일, API 토큰을 입력해 확인하고 계정이 볼 수 있는 프로젝트를 불러옵니다.",
+      "siteUrl": "Jira 사이트 URL",
+      "email": "계정 이메일",
+      "apiTokenHint": "id.atlassian.com의 보안 → API 토큰에서 만드세요. 계정에 프로젝트 조회 권한이 있어야 합니다.",
+      "projectHint": "가져올 Jira 프로젝트를 선택하세요. 스프린트는 사이클이 됩니다.",
+      "project": "Jira 프로젝트",
+      "noProjects": "이 계정은 볼 수 있는 프로젝트가 없습니다."
+    },
+    "trello": {
+      "connect": "Trello에 연결",
+      "connectHint": "Trello API 키와 토큰을 입력해 확인하고 볼 수 있는 보드를 불러옵니다.",
+      "apiKey": "API 키",
+      "token": "토큰",
+      "tokenHint": "trello.com/power-ups/admin에서 Power-Up을 만들어 API 키를 받은 뒤 토큰을 생성하세요. 읽기 권한이면 충분합니다.",
+      "board": "보드",
+      "boardHint": "가져올 보드를 선택하세요. 리스트는 상태가 되고 카드는 이슈가 됩니다.",
+      "boardPlaceholder": "보드 선택",
+      "noBoards": "이 토큰으로 볼 수 있는 보드가 없습니다.",
+      "closedBoard": "{name} (닫힘)"
     },
     "statuses": {
       "pending": "대기 중",

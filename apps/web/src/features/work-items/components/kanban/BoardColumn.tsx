@@ -126,7 +126,9 @@ export function BoardColumn({
         <div className="flex items-center gap-2 text-sm font-medium text-foreground">
           <GroupDot group={group} />
           {group.name}
-          <WipCount filteredCount={issues.length} wip={wip} filtered={filtered} />
+          <span className="rounded-full bg-background/70 px-1.5 py-px text-xs ring-1 ring-border/60">
+            <WipCount filteredCount={issues.length} wip={wip} filtered={filtered} />
+          </span>
         </div>
         <div className="flex items-center gap-1">
           {!readOnly && (

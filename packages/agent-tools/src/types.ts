@@ -44,6 +44,9 @@ export interface CustomToolEntry {
   label: string;
   // Shown in the catalog and given to the model as the tool description.
   description: string;
+  // True when a call changes something at the service (posts, edits, deletes). Such a
+  // call is recorded in the agent's action log.
+  writes?: boolean;
   // The OAuth scopes/permissions the credential's access token must carry for this
   // tool to work, e.g. ["threads_basic", "threads_content_publish"]. Shown in the tool
   // catalog UI so a human knows what the token needs. Omit for tools with no scope

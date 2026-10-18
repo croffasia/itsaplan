@@ -1,0 +1,8 @@
+/* Tailwind v4 theme extension. Import after brand/tokens.css. */
+@theme inline {
+  --color-oh-teal: var(--oh-brand-teal);
+  --color-oh-mint: var(--oh-brand-mint);
+  --color-oh-grey: var(--oh-brand-grey);
+  --color-oh-ink: var(--oh-brand-ink);
+  --font-arabic: var(--oh-font-arabic);
+}

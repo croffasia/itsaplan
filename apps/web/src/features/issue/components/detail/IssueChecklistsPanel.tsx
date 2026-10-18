@@ -12,6 +12,7 @@ import { useCreateChecklist, useReorderChecklists } from '../../services/checkli
 import IssueChecklistAddInput from './IssueChecklistAddInput';
 import IssueChecklistCard from './IssueChecklistCard';
 import IssueSectionHeading from './IssueSectionHeading';
+import AiAssistChecklistButton from '@/components/common/ai-assist/AiAssistChecklistButton';
 import { useTranslations } from 'next-intl';
 
 // The issue's checklists: lists of small steps that do not warrant subtasks of
@@ -43,9 +44,17 @@ export default function IssueChecklistsPanel({ issue }: { issue: IssueWithWatche
       <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
         <IssueSectionHeading label={t('title')} open={open} onToggle={toggle} tally={tally} />
         {open && canEdit && !adding && (
-          <Button variant="ghost" size="sm" className="h-7 gap-1.5" onClick={() => setAdding(true)}>
-            <Plus className="size-4" /> {tCommon('add')}
-          </Button>
+          <div className="flex items-center gap-1">
+            <AiAssistChecklistButton issueId={issue.id} />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1.5"
+              onClick={() => setAdding(true)}
+            >
+              <Plus className="size-4" /> {tCommon('add')}
+            </Button>
+          </div>
         )}
       </div>
 

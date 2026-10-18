@@ -6,6 +6,7 @@ import { notionId, notionRequest, notionToken } from './client';
 // discussion read with notion_read_comments.
 export const notionAddComment: CustomToolEntry = {
   key: 'notion_add_comment',
+  writes: true,
   label: 'Notion Add Comment',
   scopes: ['Insert comments'],
   description:

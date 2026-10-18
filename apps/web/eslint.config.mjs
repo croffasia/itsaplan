@@ -12,7 +12,7 @@ const namespaces = fs.readdirSync(path.join(messagesDir, 'en'));
 
 // The rules below only see files that exist, so a namespace a language does not
 // carry at all would pass unnoticed. It fails here instead.
-for (const locale of fs.readdirSync(messagesDir)) {
+for (const locale of fs.readdirSync(messagesDir).filter((name) => !name.startsWith('.'))) {
   const missing = namespaces.filter((ns) => !fs.existsSync(path.join(messagesDir, locale, ns)));
   if (missing.length > 0) throw new Error(`messages/${locale} is missing: ${missing.join(', ')}`);
 }

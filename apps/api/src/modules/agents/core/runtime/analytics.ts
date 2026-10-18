@@ -59,6 +59,7 @@ export interface AnalyticsWindow {
 export interface AnalyticsScope {
   teamIds: number[];
   projectIds?: number[] | null;
+  agentIds?: number[];
 }
 
 // Whether the scope reads nothing at all, which no query is sent for.
@@ -142,6 +143,10 @@ export function tracedRuns(scope: AnalyticsScope, from: Date): SQL {
     ? sql` AND CASE WHEN r.metadata->>'projectId' ~ '^[0-9]+$'
                     THEN (r.metadata->>'projectId')::int END IN (${ids(scope.projectIds)})`
     : sql``;
+  const agents = scope.agentIds
+    ? sql` AND CASE WHEN r.metadata->>'agentId' ~ '^[0-9]+$'
+                    THEN (r.metadata->>'agentId')::int END IN (${ids(scope.agentIds)})`
+    : sql``;
   return sql`
     SELECT r."traceId" AS trace_id,
            ${teamId} AS team_id,
@@ -154,7 +159,7 @@ export function tracedRuns(scope: AnalyticsScope, from: Date): SQL {
       FROM mastra_ai_spans r
      WHERE r."parentSpanId" IS NULL
        AND ${teamId} IN (${ids(scope.teamIds)})
-       AND r."startedAtZ" >= ${from.toISOString()}::timestamptz${projects}
+       AND r."startedAtZ" >= ${from.toISOString()}::timestamptz${projects}${agents}
   `;
 }
 
@@ -396,4 +401,19 @@ export async function getAgentAnalytics(
   result.teams = [...byTeam.values()].sort(byTokens);
   result.tokensPerDay = [...byDay.values()].sort((a, b) => a.day.localeCompare(b.day));
   return result;
+}
+
+// What one agent's model calls cost since `from`, with the prices its workspace set.
+// Calls no price covers count as nothing.
+export async function agentCostSince(teamId: number, agentId: number, from: Date): Promise<number> {
+  const scope = { teamIds: [teamId], agentIds: [agentId] };
+  if (!(await spansTableExists())) return 0;
+  const window: AnalyticsWindow = { from, to: new Date(), previousFrom: from, bucket: 'day' };
+  const [calls, own] = await Promise.all([modelCalls(scope, window), ownPrices(scope)]);
+  let cost = 0;
+  for (const row of calls) {
+    if (!row.provider || !row.model) continue;
+    cost += estimateCost(row.provider, row.model, callUsage(row), row.calls, own) ?? 0;
+  }
+  return cost;
 }

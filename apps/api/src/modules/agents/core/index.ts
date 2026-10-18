@@ -10,6 +10,7 @@ import { teamParams } from '#modules/teams/model';
 import { workspaceParams } from '#modules/workspaces/model';
 import { runsTeam } from '#modules/teams/service';
 import { paginate } from '#shared/pagination';
+import { agentActionRoutes } from '#modules/agent-actions/index';
 import {
   listAgents,
   createAgent,
@@ -193,6 +194,7 @@ async function resolveAgentProjects(
 export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['AI Agents'] } })
   .use(authContext)
   .use(guards)
+  .use(agentActionRoutes)
   .get(
     '/teams/:teamId/ai-agents',
     ({ membership, query }) =>

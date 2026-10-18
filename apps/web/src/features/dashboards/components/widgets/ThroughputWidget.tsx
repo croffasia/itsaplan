@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/chart';
 import { useThroughputQuery } from '../../services/analytics.service';
 
-const SERIES_COLOR = { created: '#6366f1', closed: '#22c55e' };
+const SERIES_COLOR = { created: 'var(--chart-2)', closed: 'var(--chart-1)' };
 
 // Created vs closed issues per week, as grouped bars. "Closed" is an issue entering
 // the completed state it is still in; see the analytics store. The window is a
@@ -47,12 +47,12 @@ export default function ThroughputWidget({
     return (
       <ChartContainer dir="ltr" config={chartConfig} className="h-[180px] w-full">
         <BarChart data={chartData}>
-          <CartesianGrid vertical={false} />
+          <CartesianGrid vertical={false} strokeDasharray="3 3" />
           <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} />
           <ChartTooltip content={<ChartTooltipContent />} />
           <ChartLegend content={<ChartLegendContent />} />
-          <Bar dataKey="created" fill="var(--color-created)" radius={3} />
-          <Bar dataKey="closed" fill="var(--color-closed)" radius={3} />
+          <Bar dataKey="created" fill="var(--color-created)" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="closed" fill="var(--color-closed)" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ChartContainer>
     );

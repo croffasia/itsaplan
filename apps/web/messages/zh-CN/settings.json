@@ -498,7 +498,6 @@
     "import": "导入",
     "source": "来源",
     "sourceHint": "选择导入来源。",
-    "comingSoon": "即将推出",
     "connect": "连接 Plane",
     "connectHint": "输入自托管的 Plane 实例地址以检查连接并加载其项目。",
     "baseUrl": "Plane 地址",
@@ -549,6 +548,28 @@
       "projectPlaceholder": "选择一个项目",
       "noProject": "无项目的工作项",
       "noTeams": "此 API 密钥看不到任何团队。"
+    },
+    "jira": {
+      "connect": "连接到 Jira",
+      "connectHint": "输入 Jira Cloud 站点、账户邮箱和 API 令牌，以验证并加载该账户可浏览的项目。",
+      "siteUrl": "Jira 站点 URL",
+      "email": "账户邮箱",
+      "apiTokenHint": "在 id.atlassian.com 的 安全 → API 令牌 中创建。账户需要有浏览该项目的权限。",
+      "projectHint": "选择要导入的 Jira 项目。冲刺会成为周期。",
+      "project": "Jira 项目",
+      "noProjects": "该账户无法浏览任何项目。"
+    },
+    "trello": {
+      "connect": "连接到 Trello",
+      "connectHint": "输入 Trello API 密钥和令牌，以验证并加载它们可见的看板。",
+      "apiKey": "API 密钥",
+      "token": "令牌",
+      "tokenHint": "在 trello.com/power-ups/admin 创建 Power-Up 获取 API 密钥，然后为其生成令牌。只读权限即可。",
+      "board": "看板",
+      "boardHint": "选择要导入的看板。列表会成为状态，卡片会成为事项。",
+      "boardPlaceholder": "选择看板",
+      "noBoards": "该令牌无法查看任何看板。",
+      "closedBoard": "{name}（已关闭）"
     },
     "statuses": {
       "pending": "待处理",

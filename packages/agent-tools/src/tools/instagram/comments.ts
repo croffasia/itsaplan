@@ -32,6 +32,7 @@ export const instagramListComments: CustomToolEntry = {
 // Posts a top-level comment on a media object.
 export const instagramCreateComment: CustomToolEntry = {
   key: 'instagram_create_comment',
+  writes: true,
   scopes: ['instagram_basic', 'instagram_manage_comments'],
   label: 'Instagram Create Comment',
   description:
@@ -97,6 +98,7 @@ export const instagramListCommentReplies: CustomToolEntry = {
 // Replies to a comment.
 export const instagramReplyToComment: CustomToolEntry = {
   key: 'instagram_reply_to_comment',
+  writes: true,
   scopes: ['instagram_basic', 'instagram_manage_comments'],
   label: 'Instagram Reply To Comment',
   description: 'Post a reply to an existing comment.',
@@ -115,6 +117,7 @@ export const instagramReplyToComment: CustomToolEntry = {
 // Hides or unhides a comment on the account's own media.
 export const instagramHideComment: CustomToolEntry = {
   key: 'instagram_hide_comment',
+  writes: true,
   scopes: ['instagram_basic', 'instagram_manage_comments'],
   label: 'Instagram Hide Comment',
   description: "Hide or unhide a comment on one of the connected account's own media.",
@@ -133,6 +136,7 @@ export const instagramHideComment: CustomToolEntry = {
 // Deletes a comment on the account's own media.
 export const instagramDeleteComment: CustomToolEntry = {
   key: 'instagram_delete_comment',
+  writes: true,
   scopes: ['instagram_basic', 'instagram_manage_comments'],
   label: 'Instagram Delete Comment',
   description:

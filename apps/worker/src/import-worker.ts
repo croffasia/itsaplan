@@ -178,7 +178,7 @@ export async function runCreate(job: ClaimedImportJob, reader: SourceReader): Pr
   await saveImportJobCursor(job.id, next);
 }
 
-// stateOverrides (Plane state id -> itsaplan category) comes from the mapping review
+// stateOverrides (Plane state id -> One Health category) comes from the mapping review
 // step at job creation; only newly-created columns are affected, never a dedup-matched
 // existing one - createLocalStateAndRecord already never touches an existing match's
 // stateType.
@@ -323,7 +323,7 @@ async function createComments(
 }
 
 // --- Link: for each created issue, fetch its relations and create the ones
-// with a destination in itsaplan's issue_link.kind (see "Relations vs.
+// with a destination in One Health's issue_link.kind (see "Relations vs.
 // dependencies" in the notes file). Also gives every issue's parent link a
 // second chance to resolve: Create only knew what import_record held at the
 // moment it ran, so a sub-issue processed before its parent existed was left

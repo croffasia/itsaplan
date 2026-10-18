@@ -54,6 +54,7 @@ export const instagramMediaChildren: CustomToolEntry = {
 // Toggles comments on one of the account's own media.
 export const instagramUpdateMedia: CustomToolEntry = {
   key: 'instagram_update_media',
+  writes: true,
   scopes: ['instagram_basic', 'instagram_manage_comments'],
   label: 'Instagram Update Media',
   description: "Enable or disable comments on one of the connected account's own media.",
@@ -72,6 +73,7 @@ export const instagramUpdateMedia: CustomToolEntry = {
 // Deletes one of the account's own media.
 export const instagramDeleteMedia: CustomToolEntry = {
   key: 'instagram_delete_media',
+  writes: true,
   scopes: ['instagram_basic', 'instagram_content_publish'],
   label: 'Instagram Delete Media',
   description:

@@ -1,0 +1,34 @@
+{
+  "board": {
+    "button": "AI로 보드 초안 만들기",
+    "title": "AI로 보드 초안 만들기",
+    "description": "프로젝트를 설명하세요. AI가 열과 이슈를 제안하며, 확인하기 전에는 아무것도 만들어지지 않습니다.",
+    "promptPlaceholder": "리서치부터 출시까지 모바일 앱 출시 계획",
+    "generate": "초안 만들기",
+    "regenerate": "다시 만들기",
+    "columns": "열",
+    "issues": "이슈",
+    "due": "마감 {date}",
+    "confirm": "열 {columns, plural, other {#개}}와 이슈 {issues, plural, other {#개}} 만들기",
+    "created": "보드를 만들었습니다"
+  },
+  "checklist": {
+    "button": "체크리스트 제안",
+    "description": "이슈의 제목과 설명으로 제안한 단계입니다. 원하지 않는 단계를 지운 뒤 체크리스트를 추가하세요.",
+    "remove": "단계 삭제",
+    "confirm": "체크리스트 추가"
+  },
+  "settings": {
+    "title": "AI 어시스트",
+    "description": "빠른 AI 기능(보드 초안 만들기, 체크리스트 제안)이 사용하는 모델입니다. 선택하지 않으면 해당 버튼이 숨겨집니다.",
+    "credential": "공급자 키",
+    "model": "모델",
+    "modelPlaceholder": "gpt-5-mini",
+    "none": "끔",
+    "save": "저장",
+    "saved": "AI 어시스트 모델을 저장했습니다",
+    "off": "AI 어시스트가 꺼져 있습니다.",
+    "on": "AI 어시스트가 {model}을(를) 사용합니다.",
+    "managersOnly": "팀 소유자와 매니저가 변경할 수 있습니다."
+  }
+}

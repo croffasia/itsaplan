@@ -5,6 +5,7 @@ import { giteaRequest, issueRef, repoPath } from './client';
 // Comments on an issue.
 export const giteaCommentIssue: CustomToolEntry = {
   key: 'gitea_comment_issue',
+  writes: true,
   label: 'Gitea Comment Issue',
   description:
     'Comment on an issue in a Gitea repository. The text is markdown. Returns the id of the new comment.',

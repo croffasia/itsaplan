@@ -14,6 +14,7 @@ import { useAgentSection } from '../../context/agentSection';
 import { TeamAiAgentRow } from './TeamAiAgentRow';
 import { TeamAiAgentSheet } from './TeamAiAgentSheet';
 import { TeamAiAgentRunsSheet } from './TeamAiAgentRunsSheet';
+import { TeamAiAgentActionsSheet } from './TeamAiAgentActionsSheet';
 import { integrationLabel } from '@/utils/integrationLabels';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
@@ -48,6 +49,8 @@ export default function TeamAiAgents() {
   const [editingId, setEditingId] = useState<number | null>(null);
   // The agent whose run history sidebar is open.
   const [runsAgent, setRunsAgent] = useState<AiAgent | null>(null);
+  // The agent whose actions sidebar is open, by id so it reads the agent fresh.
+  const [actionsId, setActionsId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState<AiAgent | null>(null);
   const paging = usePaging();
 
@@ -106,6 +109,7 @@ export default function TeamAiAgents() {
                   providerLabel={(key: string) => integrationLabel(catalog, key)}
                   onChat={() => setEditingId(a.id)}
                   onRuns={() => setRunsAgent(a)}
+                  onActions={() => setActionsId(a.id)}
                   onEdit={() => setEditingId(a.id)}
                   onDelete={() => setDeleting(a)}
                   joinsNewProjects={defaultIds.includes(a.id)}
@@ -134,6 +138,11 @@ export default function TeamAiAgents() {
       />
 
       <TeamAiAgentRunsSheet agent={runsAgent} onClose={() => setRunsAgent(null)} />
+
+      <TeamAiAgentActionsSheet
+        agent={agents.find((a) => a.id === actionsId) ?? null}
+        onClose={() => setActionsId(null)}
+      />
 
       {deleting && (
         <ConfirmDialog

@@ -1,13 +1,13 @@
 <div align="center">
 
-<img src="assets/banner.png" alt="It's a Plan — open-source project management and issue tracking where people and AI agents ship together" width="100%" />
+<img src="assets/banner.png" alt="One Health — open-source project management and issue tracking where people and AI agents ship together" width="100%" />
 
 ### Open-source alternative to Linear, Jira, Trello, and Plane, with AI agents built in
 
 Self-hosted project management and issue tracking. The difference: AI agents work here like any
 teammate — and everything is available over the REST API, webhooks, and MCP.
 
-If It's a Plan looks useful to you, star the repo ⭐ — it helps other people find it.
+If One Health looks useful to you, star the repo ⭐ — it helps other people find it.
 
 <a href="https://railway.com/deploy/its-a-plan?referralCode=lQ5O6i&utm_medium=integration&utm_source=button&utm_campaign=itsaplan"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="40" /></a>
 <a href="docs/coolify.md"><img src="assets/coolify-button.svg" alt="Deploy on Coolify" height="40" /></a>
@@ -26,7 +26,7 @@ If It's a Plan looks useful to you, star the repo ⭐ — it helps other people 
 
 ## About
 
-It's a Plan is a full issue tracker on its own: projects, boards, cycles, custom fields,
+One Health is a full issue tracker on its own: projects, boards, cycles, custom fields,
 and dashboards. Use it that way and never turn on a single agent.
 
 **The difference: AI agents work here like any teammate.** An agent gets a role,
@@ -36,7 +36,10 @@ It fits any kind of work: software development, marketing, design, support, sale
 operations, research. You run all of it on your own server, on your own database, with your
 own API keys — no per-seat fees, no lock-in.
 
-It's a Plan is under active development. Expect breaking changes before the first stable
+**No metering.** Agents call the model with your own API keys, or run on your own machine
+through the runner. One Health charges no per-seat or per-credit fee for AI.
+
+One Health is under active development. Expect breaking changes before the first stable
 release.
 
 ## How to help
@@ -101,8 +104,13 @@ release.
   Antigravity CLI, GitHub Copilot CLI, opencode, or any command that reads stdin
 - Or control the run queue through the API and do the work in your own implementation
 - A run starts on an @mention in a comment, on an assignment, or on a schedule
-- Tools for the services outside the tracker: Notion, Telegram, Threads, Instagram, Jina,
-  Firecrawl, and Gitea
+- A monthly budget per internal agent. Once its cost for the month reaches the budget,
+  new runs and chat answers are refused until the next month
+- Tools for the services outside the tracker: Microsoft 365 (OneDrive, SharePoint, Outlook
+  mail and calendar, Teams channels), Notion, Telegram, Threads, Instagram, Jina, Firecrawl,
+  and Gitea ([docs/microsoft365.md](docs/microsoft365.md))
+- Local and air-gapped models: Ollama, LM Studio, vLLM, or any OpenAI-compatible server,
+  with no outbound calls ([docs/local-models.md](docs/local-models.md))
 - Built-in chat with each agent, with its own conversation history
 - Chat with an external agent too. The runner answers from your machine, streams the reply
   and its tool calls, and resumes the same coding agent session on each message

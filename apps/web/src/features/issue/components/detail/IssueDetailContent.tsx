@@ -10,6 +10,7 @@ import { useIssueDetail } from '../../hooks/useIssueDetail';
 import { usePersistedOpen, usePersistedOpenGroups } from '@/hooks/usePersistedOpen';
 import { useFilePaste } from '../../hooks/useFilePaste';
 import IssueAttachmentsPanel from './IssueAttachmentsPanel';
+import { IssueAgentPendingActions } from '@/components/common/agent-actions/IssueAgentPendingActions';
 import IssueChecklistsPanel from './IssueChecklistsPanel';
 import IssueLinksPanel from './IssueLinksPanel';
 import IssueDevelopmentPanel from './IssueDevelopmentPanel';
@@ -186,6 +187,7 @@ export default function IssueDetailContent({
 
       {features.subtasks && <IssueSubtasksPanel project={project} issue={issue} />}
 
+      <IssueAgentPendingActions issueId={issue.id} />
       {features.checklists && <IssueChecklistsPanel issue={issue} />}
 
       {features.timeLogging && <IssueWorklogPanel project={project} issue={issue} />}

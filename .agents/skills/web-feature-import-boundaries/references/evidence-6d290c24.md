@@ -1,0 +1,1 @@
+mv $F/components/$n.tsx $C/; ... mv $F/services/aiAssist.service.ts services/; ... rm -rf features/ai-assist/components/.claude features/ai-assist/services 2>/dev/null; ... rmdir features/ai-assist/components features/ai-assist 2>&1; grep -rn "features/ai-assist\|ShellCtx\|@/features" components/common/ai-assist services/aiAssist.service.ts

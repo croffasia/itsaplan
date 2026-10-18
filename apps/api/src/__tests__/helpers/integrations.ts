@@ -16,3 +16,16 @@ export async function createCredential(
   const res = await api.teams({ teamId: project.teamId }).integrations.post(body);
   return res.data!.id;
 }
+
+// Lets a credential name a model server the test runs on its own machine, which the
+// base URL check otherwise refuses as private. Returns the call that undoes it.
+export function allowLocalModel(baseUrl: string): () => void {
+  const previous = process.env.LLM_ALLOWED_PRIVATE_HOSTS;
+  process.env.LLM_ALLOWED_PRIVATE_HOSTS = [previous, new URL(baseUrl).host]
+    .filter(Boolean)
+    .join(',');
+  return () => {
+    if (previous === undefined) delete process.env.LLM_ALLOWED_PRIVATE_HOSTS;
+    else process.env.LLM_ALLOWED_PRIVATE_HOSTS = previous;
+  };
+}

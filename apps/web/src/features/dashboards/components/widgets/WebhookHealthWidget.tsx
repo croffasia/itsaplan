@@ -2,6 +2,7 @@ import { AlertTriangle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
 import { Skeleton } from '@/components/ui/skeleton';
+import RadialGauge from '@/components/common/chart/RadialGauge';
 import { useWebhookStatsQuery } from '../../services/analytics.service';
 
 // Webhook delivery health over a window: the delivered total as the headline figure,
@@ -24,8 +25,13 @@ export default function WebhookHealthWidget({
   return (
     <div className="space-y-2">
       <p className="text-xs text-muted-foreground">{t('lastDays', { days })}</p>
-      <div className="text-4xl font-semibold tracking-tight tabular-nums">{data.total}</div>
-      <p className="text-xs text-muted-foreground">{t('webhookHealth.deliveries')}</p>
+      <div className="flex items-center gap-4">
+        {data.total > 0 && <RadialGauge percent={(data.success / data.total) * 100} />}
+        <div>
+          <div className="text-4xl font-semibold tracking-tight tabular-nums">{data.total}</div>
+          <p className="text-xs text-muted-foreground">{t('webhookHealth.deliveries')}</p>
+        </div>
+      </div>
       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground tabular-nums">
         {data.failed > 0 && (
           <span className="text-destructive">

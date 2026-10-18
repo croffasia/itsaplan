@@ -38,7 +38,7 @@ const PER_PAGE = 100;
 export class PlaneNotFoundError extends Error {}
 
 // Plane's GroupEnum uses British spelling ('cancelled') and adds 'triage',
-// which itsaplan's project_column.state_type has no equivalent for.
+// which One Health's project_column.state_type has no equivalent for.
 const STATE_CATEGORY_MAP: Record<string, CanonicalStateCategory> = {
   backlog: 'backlog',
   unstarted: 'unstarted',
@@ -53,7 +53,7 @@ export function normalizeStateCategory(planeGroup: string): CanonicalStateCatego
 }
 
 // Plane's WorkItemRelationTypeEnum. start_before/after and finish_before/after
-// are Gantt-style scheduling dependencies with no destination in itsaplan's
+// are Gantt-style scheduling dependencies with no destination in One Health's
 // schema at all, so they are dropped rather than mapped.
 const RELATION_KIND_MAP: Record<string, CanonicalRelation['kind']> = {
   blocking: 'blocks',
@@ -238,7 +238,7 @@ export class PlaneReader implements SourceReader {
       end_date: string | null;
       description?: string;
     }>('/cycles/');
-    // Cycles carry full timestamps, not dates; itsaplan's cycle.startDate/
+    // Cycles carry full timestamps, not dates; One Health's cycle.startDate/
     // endDate are date-only so the time of day is dropped here.
     return rows
       .filter((c) => c.start_date && c.end_date)

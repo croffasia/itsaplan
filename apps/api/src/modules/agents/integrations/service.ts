@@ -9,7 +9,8 @@ import {
 } from '@repo/agent-tools';
 import { iso, HttpError } from '#shared/lib';
 import { encryptSecret, decryptSecret } from '@repo/crypto';
-import { credentialSchemaFor } from './catalog';
+import { assertPublicHttpUrl, UrlNotAllowedError } from '@repo/net';
+import { credentialSchemaFor, integrationKind } from './catalog';
 
 // Data access for integration credentials. They belong to the team, so a
 // project-scoped caller resolves its team id first. The full credential object is
@@ -64,6 +65,28 @@ function coerce(fields: ConfigField[], input: unknown): ToolConfig {
     return coerceConfig(fields, input);
   } catch (err) {
     if (err instanceof ToolConfigError) throw new HttpError(400, err.message);
+    throw err;
+  }
+}
+
+// An LLM base URL is fetched by the API itself, so it must be public unless the
+// operator named its host:port in LLM_ALLOWED_PRIVATE_HOSTS (a local model server).
+async function checkLlmBaseUrl(integrationKey: string, config: ToolConfig): Promise<void> {
+  const raw = config.baseUrl;
+  if (integrationKind(integrationKey) !== 'llm' || typeof raw !== 'string') return;
+  const allowed = (process.env.LLM_ALLOWED_PRIVATE_HOSTS ?? '')
+    .split(',')
+    .map((entry) => entry.trim().toLowerCase())
+    .filter(Boolean);
+  try {
+    const url = new URL(raw);
+    if (['http:', 'https:'].includes(url.protocol) && allowed.includes(url.host.toLowerCase())) {
+      return;
+    }
+    await assertPublicHttpUrl(raw);
+  } catch (err) {
+    if (err instanceof UrlNotAllowedError) throw new HttpError(400, `Base URL: ${err.message}`);
+    if (err instanceof TypeError) throw new HttpError(400, 'Base URL: url must be a valid URL');
     throw err;
   }
 }
@@ -137,6 +160,7 @@ export async function createCredential(
   const schema = credentialSchemaFor(input.integrationKey);
   if (!schema) throw new HttpError(400, `Unknown integration: ${input.integrationKey}`);
   const config = coerce(schema, input.credential);
+  await checkLlmBaseUrl(input.integrationKey, config);
   const enc = encryptSecret(JSON.stringify(config));
   const [row] = await db
     .insert(integrationCredential)
@@ -177,6 +201,7 @@ export async function updateCredential(
     // out by the form) are preserved, then re-validate the whole credential.
     const current = (await decrypt(id, teamId)) ?? {};
     const merged = coerce(schema, { ...current, ...patch.credential });
+    await checkLlmBaseUrl(existing.integrationKey, merged);
     const enc = encryptSecret(JSON.stringify(merged));
     set.ciphertext = enc.ciphertext;
     set.iv = enc.iv;

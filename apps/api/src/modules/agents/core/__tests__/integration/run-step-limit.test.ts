@@ -3,7 +3,7 @@ import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent } from '#tests/helpers/agents';
-import { createCredential } from '#tests/helpers/integrations';
+import { allowLocalModel, createCredential } from '#tests/helpers/integrations';
 import { claimDueRuns, enqueueAgentRun } from '../../run-queue';
 import { processAgentRuns } from '../../run-poller';
 import { STEP_LIMIT_MESSAGE, streamAgent, type AgentRunEvent } from '../../runtime';
@@ -53,6 +53,7 @@ function reply(stream: boolean): Response {
 
 describe('agent run step limit', () => {
   let endpoint: ReturnType<typeof Bun.serve>;
+  let disallow: () => void;
 
   beforeEach(async () => {
     await resetDb();
@@ -62,9 +63,11 @@ describe('agent run step limit', () => {
       port: 0,
       fetch: async (req) => reply(Boolean(((await req.json()) as { stream?: boolean }).stream)),
     });
+    disallow = allowLocalModel(`http://localhost:${endpoint.port}`);
   });
 
   afterEach(async () => {
+    disallow();
     await endpoint.stop(true);
     await getMastra().observability.flush();
   });

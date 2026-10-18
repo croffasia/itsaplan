@@ -8,10 +8,15 @@ import type { WidgetConfig } from '@/utils/dashboardWidgets';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePulseQuery } from '../../services/analytics.service';
 
-// Green ramp for the four non-empty activity levels (GitHub-style). Empty cells
+// Brand ramp for the four non-empty activity levels (GitHub-style). Empty cells
 // use the theme `muted` surface instead of a bright gray, so they read as a quiet
 // part of the theme (a touch lighter than the background) in light and dark.
-const FILL_COLORS = ['#9be9a8', '#40c463', '#30a14e', '#216e39'];
+const FILL_COLORS = [
+  'color-mix(in oklch, var(--chart-2) 45%, transparent)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-1)',
+];
 
 // Per-unit heatmap geometry. `rows` cells stack per column (a day column is 24
 // hours, a week column is 7 days, a week is one cell); cell/gap size the grid,

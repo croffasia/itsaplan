@@ -10,11 +10,11 @@ import {
 import { SourceRateLimitedError } from '../../reader';
 
 describe('normalizeStateCategory', () => {
-  it("maps the British-spelled cancelled to itsaplan's canceled", () => {
+  it("maps the British-spelled cancelled to One Health's canceled", () => {
     expect(normalizeStateCategory('cancelled')).toBe('canceled');
   });
 
-  it('falls back triage to backlog, which itsaplan has no equivalent for', () => {
+  it('falls back triage to backlog, which One Health has no equivalent for', () => {
     expect(normalizeStateCategory('triage')).toBe('backlog');
   });
 

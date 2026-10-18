@@ -1,0 +1,180 @@
+{
+  "meta": {
+    "title": "One Health: the issue tracker where AI agents are teammates",
+    "description": "Self-hosted, open-source issue tracking under AGPL. Assign work to people or AI agents, set a budget, and run agents on your own machine. No per-seat AI metering."
+  },
+  "nav": {
+    "label": "Product page",
+    "features": "Features",
+    "architecture": "Architecture",
+    "compare": "Compare",
+    "roadmap": "Roadmap",
+    "signIn": "Sign in",
+    "github": "GitHub"
+  },
+  "hero": {
+    "eyebrow": "Open source · AGPL-3.0 · Self-hosted",
+    "title": "The issue tracker where AI agents are teammates",
+    "subtitle": "Assign an issue to a person or to an agent. Agents run on your models, on your server or your own machine, inside a budget you set. Nobody meters them per seat.",
+    "primary": "Self-host it",
+    "secondary": "View on GitHub",
+    "statRuns": "Agent runs today",
+    "statBudget": "Budget used",
+    "statDone": "Issues closed"
+  },
+  "problem": {
+    "title": "AI in trackers is sold by the credit",
+    "body": "Hosted trackers add agents as a paid extra. Each assistant interaction draws from a credit allowance, the allowance runs out, and the overage is billed. The work and the data stay on the vendor's servers.",
+    "points": {
+      "metered": "Agent use is metered in credits and billed above an allowance.",
+      "tier": "Agent features sit behind higher plans.",
+      "data": "Issues, code context and prompts leave your infrastructure."
+    }
+  },
+  "different": {
+    "title": "What One Health does differently",
+    "items": {
+      "teammates": {
+        "title": "Agents are teammates",
+        "body": "An agent is a member of the team. Assign it an issue, mention it in a comment, or put it on a schedule."
+      },
+      "metering": {
+        "title": "No metering",
+        "body": "You bring the model keys or a local model. One Health adds no credits and no overage."
+      },
+      "selfHost": {
+        "title": "Self-hosted and AGPL",
+        "body": "Run the whole stack with Docker Compose, Coolify or Helm. The source is open under AGPL-3.0."
+      },
+      "runner": {
+        "title": "Runner on your machine",
+        "body": "The runner CLI takes an external agent's queued tasks and runs them on your own computer, next to your code."
+      },
+      "api": {
+        "title": "API, webhooks and MCP",
+        "body": "Drive every object through the REST API, receive webhooks on changes, and connect AI clients over MCP."
+      }
+    }
+  },
+  "features": {
+    "title": "Everything a team needs to plan work",
+    "items": {
+      "board": "Boards and lists",
+      "cycle": "Cycles",
+      "docs": "Documents",
+      "notes": "Notes",
+      "dashboard": "Dashboards",
+      "chat": "AI chat",
+      "mention": "Mentions",
+      "team": "Teams",
+      "workspace": "Workspaces",
+      "schedule": "Agent schedules",
+      "budget": "Agent budgets",
+      "translate": "10 languages"
+    }
+  },
+  "architecture": {
+    "title": "How it fits together",
+    "body": "Four services and one database. Everything runs on infrastructure you control.",
+    "figureTitle": "One Health architecture",
+    "figureDesc": "The browser talks to the web app, which calls the API. The API stores data in PostgreSQL. The worker delivers webhooks and notifications and starts agent schedules. The Telegram bot talks to the API. AI clients connect to the API over MCP. The runner on your machine polls the API for queued agent tasks.",
+    "nodes": {
+      "browser": "Browser",
+      "web": "web",
+      "webNote": "Next.js",
+      "api": "api",
+      "apiNote": "Elysia · REST · MCP",
+      "worker": "worker",
+      "workerNote": "webhooks · schedules",
+      "bot": "bot",
+      "botNote": "Telegram",
+      "postgres": "PostgreSQL",
+      "runner": "runner",
+      "runnerNote": "your machine",
+      "mcp": "AI client",
+      "mcpNote": "MCP"
+    },
+    "flowTitle": "An agent run",
+    "flowDesc": "An issue is assigned to an agent. The budget is checked. The agent runs on your model or on the runner. The result is posted to the issue.",
+    "flow": {
+      "assign": "Assign issue",
+      "budget": "Check budget",
+      "run": "Run agent",
+      "result": "Post result"
+    }
+  },
+  "compare": {
+    "title": "How agents are offered elsewhere",
+    "caption": "Agent features and how they are paid for, as of October 2026.",
+    "product": "Product",
+    "agents": "AI agents",
+    "billing": "How agent use is paid",
+    "selfHost": "Self-hosted",
+    "rows": {
+      "oneHealth": {
+        "name": "One Health",
+        "agents": "Agents are team members on every instance",
+        "billing": "Your own model keys or a local model; no credits",
+        "selfHost": "Yes, AGPL-3.0"
+      },
+      "linear": {
+        "name": "Linear",
+        "agents": "Agent automations on Business and Enterprise plans",
+        "billing": "Prepaid AI credit pool",
+        "selfHost": "No"
+      },
+      "jira": {
+        "name": "Jira",
+        "agents": "Rovo agents",
+        "billing": "Credits per user per month, overage billed from 3 Dec 2026",
+        "selfHost": "Data Center edition"
+      },
+      "trello": {
+        "name": "Trello",
+        "agents": "AI assistants, no agents",
+        "billing": "Included in paid plans",
+        "selfHost": "No"
+      },
+      "plane": {
+        "name": "Plane",
+        "agents": "Agents in paid editions",
+        "billing": "Agent credits per seat on paid plans",
+        "selfHost": "Yes; agents need a paid commercial license"
+      }
+    }
+  },
+  "trust": {
+    "title": "Built to be trusted with your work",
+    "items": {
+      "data": "Your data stays in your PostgreSQL.",
+      "secrets": "Secrets are encrypted at rest with AES-256-GCM.",
+      "keys": "An API key is shown once, can expire, and can be deleted at any time.",
+      "ssrf": "Server-side fetches pass an SSRF guard.",
+      "backup": "Every migration takes a database backup first.",
+      "source": "The source is open to audit."
+    }
+  },
+  "roadmap": {
+    "title": "Roadmap",
+    "shipped": "Shipped",
+    "inProgress": "In progress",
+    "items": {
+      "budget": "Agent budgets",
+      "actionLog": "Agent action log",
+      "approvals": "Approvals for agent actions",
+      "import": "Jira and Trello import",
+      "saml": "SAML single sign-on",
+      "quickAi": "Quick AI actions"
+    }
+  },
+  "cta": {
+    "title": "Run it on your own server today",
+    "body": "One Docker Compose file starts the whole stack.",
+    "docs": "Read the self-hosting guide",
+    "github": "Star on GitHub"
+  },
+  "footer": {
+    "license": "One Health is free software under the AGPL-3.0 license.",
+    "trademarks": "Linear, Jira, Trello and Plane are trademarks of their owners."
+  }
+}

@@ -39,11 +39,15 @@ export default function GodShell({
     <SidebarProvider defaultOpen={defaultSidebarOpen} className="h-svh overflow-hidden">
       <GodSidebar />
       <SidebarInset className="min-w-0">
-        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-2 sm:px-4">
+        <header className="relative flex h-12 shrink-0 items-center gap-2 bg-background/80 px-2 backdrop-blur-md sm:px-4">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-primary/45 to-transparent"
+          />
           <SidebarTrigger />
-          <Separator orientation="vertical" className="mr-1 h-4" />
+          <Separator orientation="vertical" className="me-1 h-4" />
           <div className="min-w-0 truncate text-sm font-medium">{t('godMode')}</div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ms-auto flex items-center gap-2">
             <LocaleToggle />
             <ThemeToggle />
             <UserMenu />

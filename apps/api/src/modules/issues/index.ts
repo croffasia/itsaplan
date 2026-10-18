@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
+import { withTitleDueDate } from '#modules/ai-assist/due-date';
 import { guards, entityGuard, assertMcpAllowed, requiresPermission } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
 import {
@@ -291,7 +292,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     '/projects/:projectKey/issues',
     async ({ project, body, user, set }) => {
       set.status = 201;
-      return createIssue(project, body, requireUser(user).id);
+      return createIssue(project, withTitleDueDate(body), requireUser(user).id);
     },
     {
       body: createIssueBody,

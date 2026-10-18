@@ -235,7 +235,7 @@ describe('explicit link preview dialog', () => {
         signal?.addEventListener('abort', () => reject(signal.reason));
       });
     await render(links);
-    const titles = ['github.com', 'github.com', 'ItsAPlan page', 'The project plan'];
+    const titles = ['github.com', 'github.com', 'One Health page', 'The project plan'];
     for (const [index, title] of titles.entries()) {
       const rows = [...document.querySelectorAll<HTMLButtonElement>('li button')];
       await click(rows[index]!);

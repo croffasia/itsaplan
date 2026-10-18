@@ -498,7 +498,6 @@
     "import": "Importer",
     "source": "Source",
     "sourceHint": "Choisissez la source de l’import.",
-    "comingSoon": "Bientôt",
     "connect": "Se connecter à Plane",
     "connectHint": "Indiquez une instance Plane auto-hébergée pour vérifier la connexion et charger ses projets.",
     "baseUrl": "URL de Plane",
@@ -549,6 +548,28 @@
       "projectPlaceholder": "Sélectionner un projet",
       "noProject": "Tickets sans projet",
       "noTeams": "Cette clé API ne voit aucune équipe."
+    },
+    "jira": {
+      "connect": "Se connecter à Jira",
+      "connectHint": "Saisissez un site Jira Cloud, l'e-mail du compte et un jeton d'API pour les vérifier et charger les projets que le compte peut consulter.",
+      "siteUrl": "URL du site Jira",
+      "email": "E-mail du compte",
+      "apiTokenHint": "Créez-en un sur id.atlassian.com, dans Sécurité → Jetons d'API. Le compte doit pouvoir consulter le projet.",
+      "projectHint": "Choisissez le projet Jira à importer. Les sprints deviennent des cycles.",
+      "project": "Projet Jira",
+      "noProjects": "Ce compte ne peut consulter aucun projet."
+    },
+    "trello": {
+      "connect": "Se connecter à Trello",
+      "connectHint": "Saisissez une clé d'API et un jeton Trello pour les vérifier et charger les tableaux qu'ils voient.",
+      "apiKey": "Clé d'API",
+      "token": "Jeton",
+      "tokenHint": "Créez un Power-Up sur trello.com/power-ups/admin pour obtenir une clé d'API, puis générez un jeton pour celle-ci. L'accès en lecture suffit.",
+      "board": "Tableau",
+      "boardHint": "Choisissez le tableau à importer. Ses listes deviennent des états et ses cartes des tickets.",
+      "boardPlaceholder": "Sélectionnez un tableau",
+      "noBoards": "Ce jeton ne voit aucun tableau.",
+      "closedBoard": "{name} (fermé)"
     },
     "statuses": {
       "pending": "En attente",

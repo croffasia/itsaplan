@@ -375,8 +375,9 @@ describe('checklists', () => {
 
   // The list comes with the issue read, so it stays session-only.
   it('exposes the checklist writes an agent needs to MCP', () => {
-    expect(untaggedRoutes((route) => route.includes('checklist'))).toEqual([
-      'GET /issues/:issueId/checklists',
-    ]);
+    // The AI assist routes draft with the team's own model, which an MCP client has no use for.
+    expect(
+      untaggedRoutes((route) => route.includes('checklist') && !route.includes('/ai/')),
+    ).toEqual(['GET /issues/:issueId/checklists']);
   });
 });

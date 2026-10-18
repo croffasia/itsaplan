@@ -14,7 +14,8 @@ const importJobChoices = {
   ),
   stateOverrides: t.Optional(
     t.Record(t.String(), stateCategory, {
-      description: 'Source state id -> itsaplan state category, overriding the automatic mapping.',
+      description:
+        'Source state id -> One Health state category, overriding the automatic mapping.',
     }),
   ),
 };
@@ -64,7 +65,67 @@ const linearImportJobBody = t.Object({
   ...importJobChoices,
 });
 
-export const createImportJobBody = t.Union([planeImportJobBody, linearImportJobBody]);
+const jiraConnectionFields = {
+  baseUrl: t.String({
+    minLength: 1,
+    description: 'The Jira Cloud site, e.g. "https://acme.atlassian.net".',
+  }),
+  email: t.String({ minLength: 1, description: 'The Atlassian account email.' }),
+  apiToken: t.String({ minLength: 1, description: 'An Atlassian API token of that account.' }),
+};
+
+const jiraImportJobBody = t.Object({
+  source: t.Literal('jira'),
+  ...jiraConnectionFields,
+  jiraProjectKey: t.String({
+    minLength: 1,
+    description:
+      'The Jira project key (e.g. "OPS"): the project to import, and the prefix used to ' +
+      'rewrite cross-references like "OPS-12" in imported text.',
+  }),
+  ...importJobChoices,
+});
+
+const trelloConnectionFields = {
+  apiKey: t.String({ minLength: 1, description: 'A Trello Power-Up API key.' }),
+  token: t.String({ minLength: 1, description: 'A Trello user token authorized for that key.' }),
+};
+
+const trelloImportJobBody = t.Object({
+  source: t.Literal('trello'),
+  ...trelloConnectionFields,
+  trelloBoardId: t.String({ minLength: 1, description: 'The Trello board id to import from.' }),
+  ...importJobChoices,
+});
+
+export const createImportJobBody = t.Union([
+  planeImportJobBody,
+  linearImportJobBody,
+  jiraImportJobBody,
+  trelloImportJobBody,
+]);
+
+export const jiraConnectionBody = t.Object(jiraConnectionFields);
+
+export const JiraTestConnectionResponse = t.Object({
+  projects: t.Array(t.Object({ id: t.String(), key: t.String(), name: t.String() })),
+});
+
+export const jiraPreviewBody = t.Object({
+  ...jiraConnectionFields,
+  jiraProjectKey: t.String({ minLength: 1 }),
+});
+
+export const trelloConnectionBody = t.Object(trelloConnectionFields);
+
+export const TrelloTestConnectionResponse = t.Object({
+  boards: t.Array(t.Object({ id: t.String(), name: t.String(), closed: t.Boolean() })),
+});
+
+export const trelloPreviewBody = t.Object({
+  ...trelloConnectionFields,
+  trelloBoardId: t.String({ minLength: 1 }),
+});
 
 export const testConnectionBody = t.Object({
   baseUrl: t.String({ minLength: 1 }),
@@ -108,6 +169,7 @@ export const linearPreviewBody = t.Object({
 });
 
 export const LinearPreviewResponse = PlanePreviewResponse;
+export const SourcePreviewResponse = PlanePreviewResponse;
 
 // Mirrors import_record_source_entity_type_check in packages/db/src/schema/app.ts.
 const entityCount = t.Object({ discovered: t.Number(), created: t.Number() });
@@ -160,7 +222,7 @@ export const ProjectExportResponse = t.Object({
 export const ImportJobResponse = t.Object({
   id: t.Number(),
   projectId: t.Number(),
-  source: t.UnionEnum(['plane', 'linear']),
+  source: t.UnionEnum(['plane', 'linear', 'jira', 'trello']),
   phase: t.UnionEnum(['discover', 'create', 'link', 'rewrite', 'attachments', 'done']),
   status: t.UnionEnum(['pending', 'running', 'paused', 'completed', 'failed']),
   counts: CountsResponse,

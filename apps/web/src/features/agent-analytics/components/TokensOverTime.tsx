@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { CartesianGrid, Line, LineChart, XAxis } from 'recharts';
+import { useId, useState } from 'react';
+import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 import { useTranslations } from 'next-intl';
 import type { AgentAnalytics } from '@/lib/api/endpoints/agentAnalytics';
 import {
@@ -8,17 +8,19 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
+import AreaGradient from '@/components/common/chart/AreaGradient';
 import Panel from './Panel';
 import PanelEmpty from './PanelEmpty';
 import MeasureTabs, { type Measure } from './MeasureTabs';
 import { bucketLabel, formatCost, formatCount } from '../utils/format';
 
-const SERIES_COLOR = { input: '#6366f1', output: '#f59e0b' };
+const SERIES_COLOR = { input: 'var(--chart-1)', output: 'var(--chart-2)' };
 
 // Input and output tokens per day, or what each day cost.
 export default function TokensOverTime({ data }: { data: AgentAnalytics }) {
   const t = useTranslations('agentAnalytics');
   const [measure, setMeasure] = useState<Measure>('tokens');
+  const gradientId = `tokens-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const tokens = data.totals.inputTokens + data.totals.outputTokens;
 
   const chartData = data.tokensPerDay.map((day) => ({
@@ -52,8 +54,17 @@ export default function TokensOverTime({ data }: { data: AgentAnalytics }) {
           // Recharts draws to absolute SVG coordinates and does not read the document
           // direction, so a mirrored chart would put its axes and series out of step.
           <ChartContainer dir="ltr" config={config} className="h-[200px] w-full">
-            <LineChart data={chartData}>
-              <CartesianGrid vertical={false} />
+            <AreaChart data={chartData}>
+              <defs>
+                {keys.map((key) => (
+                  <AreaGradient
+                    key={key}
+                    id={`${gradientId}-${key}`}
+                    color={`var(--color-${key})`}
+                  />
+                ))}
+              </defs>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis
                 dataKey="label"
                 tickLine={false}
@@ -71,16 +82,17 @@ export default function TokensOverTime({ data }: { data: AgentAnalytics }) {
                 }
               />
               {keys.map((key) => (
-                <Line
+                <Area
                   key={key}
                   dataKey={key}
                   type="monotone"
                   stroke={`var(--color-${key})`}
                   strokeWidth={2}
+                  fill={`url(#${gradientId}-${key})`}
                   dot={false}
                 />
               ))}
-            </LineChart>
+            </AreaChart>
           </ChartContainer>
         )}
       </div>

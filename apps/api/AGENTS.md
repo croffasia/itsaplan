@@ -254,6 +254,14 @@ key matches it directly. The file is outside the package's exports map: a releas
 moves it leaves the table empty, an unpriced call reports no cost, and the dashboard shows
 the tokens without an amount.
 
+An internal agent can carry a monthly budget in US dollars (`ai_agent.monthly_budget_usd`,
+`monthlyBudgetUsd` in the API; null means no limit). `budgetRefusal` in
+`modules/agents/core/budget.ts` sums the agent's cost since the start of the current UTC
+month with `agentCostSince`, the same pricing the dashboard uses. When that sum is equal to
+or above the budget, the run is refused with "The agent's monthly budget of $X.XX is spent".
+The budget is stored only for internal agents: an external agent's cost is not known to the
+instance.
+
 A workspace sets its own price for any model in `model_price`, which the dashboards of its
 teams read before the table (`ownPrices` in `analytics.ts`): a model the table lacks, such
 as one behind an OpenAI-compatible proxy, or one bought at another rate. The cost is
@@ -295,7 +303,9 @@ undoes one.
   waits before it starts, asked in the poller and in a runner's claim.
 - `setRunRefusal` (`modules/agents/core/run-refusal.ts`): whether an internal agent works
   at all, asked in the poller before a queued run starts and in `prepareRun` before a chat
-  answer. A reason fails the run without a retry, and answers the chat with 403.
+  answer. The agent's own monthly budget is checked first (`budgetRefusal` in
+  `modules/agents/core/budget.ts`), before the refusal the setter installs. A reason fails
+  the run without a retry, and answers the chat with 403.
 - `onProjectEvent` (`modules/webhooks/emit.ts`): every issue and comment event the
   webhooks get, inside the request that caused it.
 
@@ -407,6 +417,14 @@ channel and is read only for a claim, not for authentication. Both funnel into
 `syncEmbeddedGroups`, the same additive-only join a group pushed through `POST /Groups`
 gets — a name missing from a later sync is never removed by this path, only by an explicit
 `PATCH /Groups/:id` or an unmapping in the workspace settings.
+
+## AI assist
+
+`modules/ai-assist` drafts a board or a checklist on the team's own LLM credential.
+The draft routes (`/ai/board`, `/ai/checklist`) allow 20 calls per person per hour,
+counted in memory in each api process, and answer 429 past it. These calls create no
+agent run, so their tokens are not in the run analytics and do not count against an
+agent's budget or the team's monthly budget.
 
 ## Security
 

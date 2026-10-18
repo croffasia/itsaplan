@@ -5,6 +5,7 @@ import { threadsToken, threadsRequest } from './client';
 // Hide or unhide a reply to one of the token owner's posts.
 export const threadsManageReply: CustomToolEntry = {
   key: 'threads_manage_reply',
+  writes: true,
   label: 'Threads Hide/Unhide Reply',
   scopes: ['threads_basic', 'threads_manage_replies'],
   description: "Hide or unhide a reply to one of your posts, by the reply's media id.",
@@ -29,6 +30,7 @@ export const threadsManageReply: CustomToolEntry = {
 // Approve or reject a pending reply on a post whose reply audience is restricted.
 export const threadsManagePendingReply: CustomToolEntry = {
   key: 'threads_manage_pending_reply',
+  writes: true,
   label: 'Threads Approve/Reject Pending Reply',
   scopes: ['threads_basic', 'threads_manage_replies'],
   description:

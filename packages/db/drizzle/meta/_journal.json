@@ -1058,6 +1058,55 @@
       "when": 1792098421237,
       "tag": "0150_workspace_per_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 151,
+      "version": "7",
+      "when": 1792254924377,
+      "tag": "0151_agent_monthly_budget",
+      "breakpoints": true
+    },
+    {
+      "idx": 152,
+      "version": "7",
+      "when": 1792256029121,
+      "tag": "0152_agent_approval",
+      "breakpoints": true
+    },
+    {
+      "idx": 153,
+      "version": "7",
+      "when": 1792256107903,
+      "tag": "0153_team_ai_assist",
+      "breakpoints": true
+    },
+    {
+      "idx": 154,
+      "version": "7",
+      "when": 1792256477372,
+      "tag": "0154_import_jira_trello",
+      "breakpoints": true
+    },
+    {
+      "idx": 155,
+      "version": "7",
+      "when": 1792256686272,
+      "tag": "0155_sso_provider",
+      "breakpoints": true
+    },
+    {
+      "idx": 156,
+      "version": "7",
+      "when": 1792258622610,
+      "tag": "0156_agent_pending_action_applying",
+      "breakpoints": true
+    },
+    {
+      "idx": 157,
+      "version": "7",
+      "when": 1792266298083,
+      "tag": "0157_agent_action_log",
+      "breakpoints": true
     }
   ]
 }

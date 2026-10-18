@@ -498,7 +498,6 @@
     "import": "استيراد",
     "source": "المصدر",
     "sourceHint": "اختر مصدر الاستيراد.",
-    "comingSoon": "قريبًا",
     "connect": "الاتصال بـ Plane",
     "connectHint": "حط بيانات نسخة Plane المستضافة ذاتيًا عشان نتأكد من الاتصال ونجيب مشاريعها.",
     "baseUrl": "رابط Plane",
@@ -549,6 +548,28 @@
       "projectPlaceholder": "اختر مشروعًا",
       "noProject": "مهام بلا مشروع",
       "noTeams": "لا يمكن لمفتاح API هذا الوصول إلى أي فريق."
+    },
+    "jira": {
+      "connect": "الاتصال بـ Jira",
+      "connectHint": "أدخل موقع Jira Cloud مع بريد الحساب ورمز API للتحقق منهما وتحميل المشاريع التي يمكن للحساب تصفحها.",
+      "siteUrl": "رابط موقع Jira",
+      "email": "بريد الحساب",
+      "apiTokenHint": "أنشئ رمزًا في id.atlassian.com ضمن الأمان ← رموز API. يحتاج الحساب إلى صلاحية تصفح المشروع.",
+      "projectHint": "اختر مشروع Jira للاستيراد منه. تصبح السبرنتات دورات.",
+      "project": "مشروع Jira",
+      "noProjects": "لا يمكن لهذا الحساب تصفح أي مشاريع."
+    },
+    "trello": {
+      "connect": "الاتصال بـ Trello",
+      "connectHint": "أدخل مفتاح API ورمز Trello للتحقق منهما وتحميل اللوحات التي يمكنهما رؤيتها.",
+      "apiKey": "مفتاح API",
+      "token": "الرمز",
+      "tokenHint": "أنشئ Power-Up في trello.com/power-ups/admin للحصول على مفتاح API، ثم أنشئ رمزًا له. صلاحية القراءة كافية.",
+      "board": "اللوحة",
+      "boardHint": "اختر اللوحة للاستيراد. تصبح قوائمها حالات وبطاقاتها مهام.",
+      "boardPlaceholder": "اختر لوحة",
+      "noBoards": "لا يمكن لهذا الرمز رؤية أي لوحات.",
+      "closedBoard": "{name} (مغلقة)"
     },
     "statuses": {
       "pending": "قيد الانتظار",

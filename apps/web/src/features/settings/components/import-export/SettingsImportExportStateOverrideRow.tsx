@@ -16,7 +16,7 @@ const STATE_CATEGORIES: StateCategory[] = [
   'canceled',
 ];
 
-// One Plane state and the itsaplan category it will be created with, changeable
+// One Plane state and the One Health category it will be created with, changeable
 // from what the automatic mapping picked. A row of the card its parent renders
 // (divide-y, this component only supplies its own padding).
 export default function SettingsImportExportStateOverrideRow({

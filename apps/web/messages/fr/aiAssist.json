@@ -1,0 +1,34 @@
+{
+  "board": {
+    "button": "Créer un tableau avec l'IA",
+    "title": "Créer un tableau avec l'IA",
+    "description": "Décrivez le projet. L'IA propose des colonnes et des tickets ; rien n'est créé avant votre confirmation.",
+    "promptPlaceholder": "Un plan de lancement d'application mobile, de la recherche à la sortie",
+    "generate": "Proposer",
+    "regenerate": "Proposer à nouveau",
+    "columns": "Colonnes",
+    "issues": "Tickets",
+    "due": "Échéance {date}",
+    "confirm": "Créer {columns, plural, one {# colonne} other {# colonnes}} et {issues, plural, one {# ticket} other {# tickets}}",
+    "created": "Tableau créé"
+  },
+  "checklist": {
+    "button": "Suggérer une checklist",
+    "description": "Étapes proposées à partir du titre et de la description du ticket. Retirez celles que vous ne voulez pas, puis ajoutez la checklist.",
+    "remove": "Retirer l'étape",
+    "confirm": "Ajouter la checklist"
+  },
+  "settings": {
+    "title": "Assistant IA",
+    "description": "Le modèle utilisé par les fonctions IA rapides : créer un tableau et suggérer une checklist. Sans modèle choisi, ces boutons sont masqués.",
+    "credential": "Clé du fournisseur",
+    "model": "Modèle",
+    "modelPlaceholder": "gpt-5-mini",
+    "none": "Désactivé",
+    "save": "Enregistrer",
+    "saved": "Modèle de l'assistant IA enregistré",
+    "off": "L'assistant IA est désactivé.",
+    "on": "L'assistant IA utilise {model}.",
+    "managersOnly": "Les propriétaires et responsables de l'équipe peuvent modifier ce réglage."
+  }
+}

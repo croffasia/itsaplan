@@ -498,7 +498,6 @@
     "import": "Import",
     "source": "Source",
     "sourceHint": "Choose where to import from.",
-    "comingSoon": "Soon",
     "connect": "Connect to Plane",
     "connectHint": "Enter a self-hosted Plane instance to check the connection and load its projects.",
     "baseUrl": "Plane URL",
@@ -549,6 +548,28 @@
       "projectPlaceholder": "Select a project",
       "noProject": "Issues with no project",
       "noTeams": "This API key can't see any teams."
+    },
+    "jira": {
+      "connect": "Connect to Jira",
+      "connectHint": "Enter a Jira Cloud site with an account email and API token to check them and load the projects the account can browse.",
+      "siteUrl": "Jira site URL",
+      "email": "Account email",
+      "apiTokenHint": "Create one at id.atlassian.com under Security → API tokens. The account needs browse access to the project.",
+      "projectHint": "Pick the Jira project to import from. Sprints become cycles.",
+      "project": "Jira project",
+      "noProjects": "This account can't browse any projects."
+    },
+    "trello": {
+      "connect": "Connect to Trello",
+      "connectHint": "Enter a Trello API key and token to check them and load the boards they can see.",
+      "apiKey": "API key",
+      "token": "Token",
+      "tokenHint": "Create a Power-Up at trello.com/power-ups/admin to get an API key, then generate a token for it. Read access is enough.",
+      "board": "Board",
+      "boardHint": "Pick the board to import. Its lists become states and its cards become issues.",
+      "boardPlaceholder": "Select a board",
+      "noBoards": "This token can't see any boards.",
+      "closedBoard": "{name} (closed)"
     },
     "statuses": {
       "pending": "Pending",

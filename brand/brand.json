@@ -1,0 +1,1063 @@
+{
+  "$schema": "brand profile v1, generated 2026-10-17 from the working tree (uncommitted rebrand included)",
+  "names": {
+    "product_en": {
+      "value": "One Health",
+      "source": "apps/web/src/utils/app.ts:5 APP_NAME; apps/web/src/app/manifest.ts:9",
+      "confidence": "high"
+    },
+    "product_ar": {
+      "value": "One Health",
+      "source": "apps/web/messages/ar/meta.json:2 (Latin name kept inside Arabic copy)",
+      "confidence": "medium"
+    },
+    "short_name": {
+      "value": "One Health",
+      "source": "apps/web/src/app/manifest.ts:10",
+      "confidence": "high"
+    },
+    "legacy_name": {
+      "value": "It's a Plan / itsaplan",
+      "source": "package.json:2, git HEAD README.md:3, assets/logo-light.svg",
+      "confidence": "high"
+    },
+    "repo_package_id": {
+      "value": "itsaplan",
+      "source": "package.json:2",
+      "confidence": "high"
+    },
+    "images": {
+      "value": "ghcr.io/croffasia/itsaplan-<service>",
+      "source": "AGENTS.md CI section",
+      "confidence": "high"
+    },
+    "domains": {
+      "value": ["itsaplan.dev", "itsaplan.dev/pro"],
+      "source": "apps/web/src/utils/app.ts:8,11",
+      "confidence": "medium"
+    },
+    "sub_brands": {
+      "value": ["Pro edition (itsaplan.dev/pro)", "@itsaplan/runner CLI"],
+      "source": "apps/web/src/utils/app.ts:11; AGENTS.md layout",
+      "confidence": "high"
+    },
+    "legal_entity": {
+      "value": "Andrii Poluosmak (project owner)",
+      "source": "ICLA.md:6",
+      "confidence": "high"
+    },
+    "license": {
+      "value": "AGPL-3.0-only",
+      "source": "package.json:4",
+      "confidence": "high"
+    },
+    "social_handles": {
+      "value": null,
+      "source": "none found",
+      "confidence": "missing"
+    },
+    "category": {
+      "value": "Self-hosted, open-source project management and issue tracking with AI agents as teammates",
+      "source": "README.md:8-11; apps/web/messages/en/meta.json:3",
+      "confidence": "high"
+    },
+    "descriptor": {
+      "value": "Issue tracking for people and agents",
+      "source": "apps/web/messages/en/meta.json:2",
+      "confidence": "high"
+    }
+  },
+  "verbal": {
+    "tagline_en": {
+      "value": "Issue tracking for people and agents",
+      "source": "apps/web/messages/en/meta.json:2",
+      "confidence": "high"
+    },
+    "tagline_ar": {
+      "value": "تتبّع المهام للأشخاص والوكلاء",
+      "source": "apps/web/messages/ar/meta.json:2",
+      "confidence": "high"
+    },
+    "headline_comparative": {
+      "value": "Open-source alternative to Linear, Jira, Trello, and Plane, with AI agents built in",
+      "source": "README.md:5",
+      "confidence": "high"
+    },
+    "value_prop": {
+      "value": "AI agents work like any teammate; everything is available over the REST API, webhooks and MCP; self-hosted, no per-seat fees, no lock-in",
+      "source": "README.md:8-37",
+      "confidence": "high"
+    },
+    "key_messages": {
+      "value": [
+        "Agents work here like any teammate",
+        "Your server, your database, your API keys",
+        "No per-seat fees, no lock-in",
+        "Everything over REST API, webhooks and MCP",
+        "A full issue tracker without a single agent turned on"
+      ],
+      "source": "README.md:26-37",
+      "confidence": "high"
+    },
+    "tone": {
+      "value": ["plain", "literal", "direct", "technical", "unhyped"],
+      "source": "AGENTS.md \"Writing style\": no metaphors, no flourishes, short sentences",
+      "confidence": "high"
+    },
+    "do": {
+      "value": ["\"Assign work to people or agents.\"", "\"Data is stored in Postgres.\""],
+      "source": "apps/web/messages/en/meta.json:3; AGENTS.md",
+      "confidence": "high"
+    },
+    "dont": {
+      "value": ["\"the heart of the step\"", "\"self-healing queue\"", "dramatized importance"],
+      "source": "AGENTS.md Writing style",
+      "confidence": "high"
+    },
+    "capitalization": {
+      "value": "Sentence case in UI and headings; product name always \"One Health\" (two words, both capitalised)",
+      "source": "messages/*/common.json, README headings",
+      "confidence": "medium"
+    },
+    "cta_style": {
+      "value": "Verb-first, short: \"Deploy on Railway\", \"Deploy on Coolify\", \"star the repo\"",
+      "source": "README.md:12-15",
+      "confidence": "medium"
+    }
+  },
+  "logo": {
+    "mark": {
+      "value": "brand/logo/mark.svg — open ring + flag arrow (viewBox 0 0 112 100)",
+      "source": "apps/web/src/components/common/AppLogo.tsx",
+      "confidence": "high"
+    },
+    "wordmark": {
+      "value": "brand/logo/lockup.svg — \"One\" (mark as O) over spaced \"HEALTH\" (viewBox 0 0 329 173)",
+      "source": "apps/web/src/components/common/AppWordmark.tsx",
+      "confidence": "high"
+    },
+    "app_icon": {
+      "value": "teal #006264 rounded square rx 7/32, white ring, mint arrow",
+      "source": "apps/web/src/app/icon.svg; public/icon-*.png; app/apple-icon.png",
+      "confidence": "high"
+    },
+    "arrow_rule": {
+      "value": "arrow grey #989898 on light, mint #7dccba on dark (--logo-arrow)",
+      "source": "AppLogo.tsx:1-2; globals.css:84,145",
+      "confidence": "high"
+    },
+    "clear_space": {
+      "value": "1× arrow height (proposed)",
+      "source": "not documented",
+      "confidence": "missing"
+    },
+    "min_size": {
+      "value": "mark 16px, lockup 96px wide (proposed)",
+      "source": "not documented",
+      "confidence": "missing"
+    },
+    "stale_assets": {
+      "value": [],
+      "source": "assets/logo-*.svg, banner.png, social-preview.png regenerated 2026-10-17 from brand/logo",
+      "confidence": "high"
+    }
+  },
+  "color": {
+    "brand": {
+      "teal": {
+        "value": "#006264",
+        "source": "apps/web/src/app/globals.css:80 --brand-teal",
+        "confidence": "high"
+      },
+      "mint": {
+        "value": "#7dccba",
+        "source": "apps/web/src/app/globals.css:81 --brand-mint",
+        "confidence": "high"
+      },
+      "grey": {
+        "value": "#989898",
+        "source": "apps/web/src/app/globals.css:82 --brand-grey",
+        "confidence": "high"
+      },
+      "ink": {
+        "value": "#232323",
+        "source": "apps/web/src/app/globals.css:83 --brand-ink",
+        "confidence": "high"
+      }
+    },
+    "roles": {
+      "background": {
+        "light": {
+          "value": "oklch(0.985 0.003 197)",
+          "hex": "#f8fbfb"
+        },
+        "dark": {
+          "value": "oklch(0.2 0.008 200)",
+          "hex": "#121717"
+        },
+        "token": "--background",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "foreground": {
+        "light": {
+          "value": "oklch(0.18 0 0)",
+          "hex": "#121212"
+        },
+        "dark": {
+          "value": "oklch(0.965 0 0)",
+          "hex": "#f3f3f3"
+        },
+        "token": "--foreground",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "card": {
+        "light": {
+          "value": "oklch(0.998 0.001 197)",
+          "hex": "#feffff"
+        },
+        "dark": {
+          "value": "oklch(0.235 0.01 200)",
+          "hex": "#192020"
+        },
+        "token": "--card",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "popover": {
+        "light": {
+          "value": "oklch(0.998 0.001 197)",
+          "hex": "#feffff"
+        },
+        "dark": {
+          "value": "oklch(0.25 0.012 200)",
+          "hex": "#1b2324"
+        },
+        "token": "--popover",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "primary": {
+        "light": {
+          "value": "oklch(0.45 0.077 197)",
+          "hex": "#006264"
+        },
+        "dark": {
+          "value": "oklch(0.79 0.083 178)",
+          "hex": "#7dccba"
+        },
+        "token": "--primary",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "primary-foreground": {
+        "light": {
+          "value": "oklch(0.985 0.003 197)",
+          "hex": "#f8fbfb"
+        },
+        "dark": {
+          "value": "oklch(0.22 0.03 197)",
+          "hex": "#071f1f"
+        },
+        "token": "--primary-foreground",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "secondary": {
+        "light": {
+          "value": "oklch(0.958 0.008 197)",
+          "hex": "#ebf3f3"
+        },
+        "dark": {
+          "value": "oklch(0.29 0.015 200)",
+          "hex": "#232e2e"
+        },
+        "token": "--secondary",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "secondary-foreground": {
+        "light": {
+          "value": "oklch(0.32 0.05 197)",
+          "hex": "#083b3c"
+        },
+        "dark": {
+          "value": "oklch(0.965 0 0)",
+          "hex": "#f3f3f3"
+        },
+        "token": "--secondary-foreground",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "muted": {
+        "light": {
+          "value": "oklch(0.962 0.006 197)",
+          "hex": "#eef4f4"
+        },
+        "dark": {
+          "value": "oklch(0.29 0.012 200)",
+          "hex": "#252d2e"
+        },
+        "token": "--muted",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "muted-foreground": {
+        "light": {
+          "value": "oklch(0.5 0 0)",
+          "hex": "#636363"
+        },
+        "dark": {
+          "value": "oklch(0.85 0 0)",
+          "hex": "#cecece"
+        },
+        "token": "--muted-foreground",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "accent": {
+        "light": {
+          "value": "oklch(0.945 0.022 185)",
+          "hex": "#ddf2ef"
+        },
+        "dark": {
+          "value": "oklch(0.32 0.035 195)",
+          "hex": "#1b3838"
+        },
+        "token": "--accent",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "accent-foreground": {
+        "light": {
+          "value": "oklch(0.32 0.05 197)",
+          "hex": "#083b3c"
+        },
+        "dark": {
+          "value": "oklch(0.965 0 0)",
+          "hex": "#f3f3f3"
+        },
+        "token": "--accent-foreground",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "destructive": {
+        "light": {
+          "value": "oklch(0.505 0.21 27)",
+          "hex": "#c0000f"
+        },
+        "dark": {
+          "value": "oklch(0.77 0.18 22)",
+          "hex": "#ff7e7f"
+        },
+        "token": "--destructive",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "warning": {
+        "light": {
+          "value": "oklch(0.56 0.13 75)",
+          "hex": "#a06700"
+        },
+        "dark": {
+          "value": "oklch(0.82 0.14 80)",
+          "hex": "#f3b94c"
+        },
+        "token": "--warning",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "border": {
+        "light": {
+          "value": "oklch(0.9 0.008 197)",
+          "hex": "#d8e0e0"
+        },
+        "dark": {
+          "value": "oklch(1 0 0 / 12%)",
+          "hex": null
+        },
+        "token": "--border",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "input": {
+        "light": {
+          "value": "oklch(0.875 0.01 197)",
+          "hex": "#cfd8d8"
+        },
+        "dark": {
+          "value": "oklch(1 0 0 / 18%)",
+          "hex": null
+        },
+        "token": "--input",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "ring": {
+        "light": {
+          "value": "oklch(0.45 0.077 197)",
+          "hex": "#006264"
+        },
+        "dark": {
+          "value": "oklch(0.79 0.083 178)",
+          "hex": "#7dccba"
+        },
+        "token": "--ring",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "sidebar": {
+        "light": {
+          "value": "oklch(0.968 0.008 197)",
+          "hex": "#eff6f6"
+        },
+        "dark": {
+          "value": "oklch(0.165 0.01 200)",
+          "hex": "#091010"
+        },
+        "token": "--sidebar",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "sidebar-foreground": {
+        "light": {
+          "value": "oklch(0.18 0 0)",
+          "hex": "#121212"
+        },
+        "dark": {
+          "value": "oklch(0.965 0 0)",
+          "hex": "#f3f3f3"
+        },
+        "token": "--sidebar-foreground",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "sidebar-primary": {
+        "light": {
+          "value": "oklch(0.45 0.077 197)",
+          "hex": "#006264"
+        },
+        "dark": {
+          "value": "oklch(0.79 0.083 178)",
+          "hex": "#7dccba"
+        },
+        "token": "--sidebar-primary",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "sidebar-accent": {
+        "light": {
+          "value": "oklch(0.93 0.022 185)",
+          "hex": "#d9edea"
+        },
+        "dark": {
+          "value": "oklch(0.26 0.025 195)",
+          "hex": "#152828"
+        },
+        "token": "--sidebar-accent",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "chart-1": {
+        "light": {
+          "value": "oklch(0.45 0.077 197)",
+          "hex": "#006264"
+        },
+        "dark": {
+          "value": "oklch(0.79 0.083 178)",
+          "hex": "#7dccba"
+        },
+        "token": "--chart-1",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "chart-2": {
+        "light": {
+          "value": "oklch(0.62 0.09 185)",
+          "hex": "#38988d"
+        },
+        "dark": {
+          "value": "oklch(0.7 0.085 185)",
+          "hex": "#5ab0a5"
+        },
+        "token": "--chart-2",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "chart-3": {
+        "light": {
+          "value": "oklch(0.55 0.08 192)",
+          "hex": "#2b807e"
+        },
+        "dark": {
+          "value": "oklch(0.6 0.08 192)",
+          "hex": "#3c8f8c"
+        },
+        "token": "--chart-3",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "chart-4": {
+        "light": {
+          "value": "oklch(0.58 0 0)",
+          "hex": "#7a7a7a"
+        },
+        "dark": {
+          "value": "oklch(0.68 0 0)",
+          "hex": "#989898"
+        },
+        "token": "--chart-4",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "chart-5": {
+        "light": {
+          "value": "oklch(0.256 0 0)",
+          "hex": "#232323"
+        },
+        "dark": {
+          "value": "oklch(0.4 0.02 200)",
+          "hex": "#3b4b4c"
+        },
+        "token": "--chart-5",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "priority-low": {
+        "light": {
+          "value": "#6b7280",
+          "hex": "#6b7280"
+        },
+        "dark": {
+          "value": "#9ca3af",
+          "hex": "#9ca3af"
+        },
+        "token": "--priority-low",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "priority-medium": {
+        "light": {
+          "value": "#a16207",
+          "hex": "#a16207"
+        },
+        "dark": {
+          "value": "#eab308",
+          "hex": "#eab308"
+        },
+        "token": "--priority-medium",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "priority-high": {
+        "light": {
+          "value": "#ea580c",
+          "hex": "#ea580c"
+        },
+        "dark": {
+          "value": "#f97316",
+          "hex": "#f97316"
+        },
+        "token": "--priority-high",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "priority-urgent": {
+        "light": {
+          "value": "#d65530",
+          "hex": "#d65530"
+        },
+        "dark": {
+          "value": "#f2683c",
+          "hex": "#f2683c"
+        },
+        "token": "--priority-urgent",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "kanban-column": {
+        "light": {
+          "value": "oklch(0.945 0.008 197)",
+          "hex": "#e7efef"
+        },
+        "dark": {
+          "value": "oklch(0.16 0.008 200)",
+          "hex": "#090e0f"
+        },
+        "token": "--kanban-column",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "kanban-card": {
+        "light": {
+          "value": "oklch(0.976 0.005 197)",
+          "hex": "#f3f8f8"
+        },
+        "dark": {
+          "value": "oklch(0.215 0.01 200)",
+          "hex": "#141b1b"
+        },
+        "token": "--kanban-card",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      },
+      "kanban-card-selected": {
+        "light": {
+          "value": "oklch(0.925 0.04 185)",
+          "hex": "#caefea"
+        },
+        "dark": {
+          "value": "oklch(0.32 0.055 185)",
+          "hex": "#033c36"
+        },
+        "token": "--kanban-card-selected",
+        "source": "apps/web/src/app/globals.css :root / .dark"
+      }
+    },
+    "contrast": [
+      {
+        "mode": "light",
+        "fg": "foreground",
+        "bg": "background",
+        "ratio": 18.03,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "primary-foreground",
+        "bg": "primary",
+        "ratio": 6.86,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "muted-foreground",
+        "bg": "background",
+        "ratio": 5.75,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "muted-foreground",
+        "bg": "muted",
+        "ratio": 5.38,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "secondary-foreground",
+        "bg": "secondary",
+        "ratio": 11.02,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "accent-foreground",
+        "bg": "accent",
+        "ratio": 10.66,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "destructive",
+        "bg": "background",
+        "ratio": 6.2,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "warning",
+        "bg": "background",
+        "ratio": 4.55,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "primary",
+        "bg": "background",
+        "ratio": 6.86,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "sidebar-foreground",
+        "bg": "sidebar",
+        "ratio": 17.19,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "card-foreground",
+        "bg": "card",
+        "ratio": 18.71,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "chart-2",
+        "bg": "background",
+        "ratio": 3.34,
+        "AA_text": false,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "chart-3",
+        "bg": "background",
+        "ratio": 4.47,
+        "AA_text": false,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "chart-4",
+        "bg": "background",
+        "ratio": 4.11,
+        "AA_text": false,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "priority-medium",
+        "bg": "background",
+        "ratio": 4.73,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "priority-high",
+        "bg": "background",
+        "ratio": 3.42,
+        "AA_text": false,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "priority-urgent",
+        "bg": "background",
+        "ratio": 3.88,
+        "AA_text": false,
+        "AA_ui": true
+      },
+      {
+        "mode": "light",
+        "fg": "priority-low",
+        "bg": "background",
+        "ratio": 4.64,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "foreground",
+        "bg": "background",
+        "ratio": 16.32,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "primary-foreground",
+        "bg": "primary",
+        "ratio": 9.21,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "muted-foreground",
+        "bg": "background",
+        "ratio": 11.43,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "muted-foreground",
+        "bg": "muted",
+        "ratio": 8.89,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "secondary-foreground",
+        "bg": "secondary",
+        "ratio": 12.68,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "accent-foreground",
+        "bg": "accent",
+        "ratio": 11.29,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "destructive",
+        "bg": "background",
+        "ratio": 7.37,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "warning",
+        "bg": "background",
+        "ratio": 10.21,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "primary",
+        "bg": "background",
+        "ratio": 9.69,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "sidebar-foreground",
+        "bg": "sidebar",
+        "ratio": 17.38,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "card-foreground",
+        "bg": "card",
+        "ratio": 15.02,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "chart-2",
+        "bg": "background",
+        "ratio": 7.03,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "chart-3",
+        "bg": "background",
+        "ratio": 4.76,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "chart-4",
+        "bg": "background",
+        "ratio": 6.27,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "priority-medium",
+        "bg": "background",
+        "ratio": 9.42,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "priority-high",
+        "bg": "background",
+        "ratio": 6.45,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "priority-urgent",
+        "bg": "background",
+        "ratio": 5.87,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "dark",
+        "fg": "priority-low",
+        "bg": "background",
+        "ratio": 7.12,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "raw",
+        "fg": "brand-teal",
+        "bg": "#ffffff",
+        "ratio": 7.16,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "raw",
+        "fg": "brand-teal",
+        "bg": "#fafafa",
+        "ratio": 6.86,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "raw",
+        "fg": "brand-mint",
+        "bg": "#ffffff",
+        "ratio": 1.87,
+        "AA_text": false,
+        "AA_ui": false
+      },
+      {
+        "mode": "raw",
+        "fg": "brand-mint",
+        "bg": "#fafafa",
+        "ratio": 1.79,
+        "AA_text": false,
+        "AA_ui": false
+      },
+      {
+        "mode": "raw",
+        "fg": "brand-grey",
+        "bg": "#ffffff",
+        "ratio": 2.88,
+        "AA_text": false,
+        "AA_ui": false
+      },
+      {
+        "mode": "raw",
+        "fg": "brand-grey",
+        "bg": "#fafafa",
+        "ratio": 2.76,
+        "AA_text": false,
+        "AA_ui": false
+      },
+      {
+        "mode": "raw",
+        "fg": "brand-ink",
+        "bg": "#ffffff",
+        "ratio": 15.72,
+        "AA_text": true,
+        "AA_ui": true
+      },
+      {
+        "mode": "raw",
+        "fg": "brand-ink",
+        "bg": "#fafafa",
+        "ratio": 15.06,
+        "AA_text": true,
+        "AA_ui": true
+      }
+    ]
+  },
+  "typography": {
+    "latin": {
+      "value": "'InterVariable', sans-serif (inter-ui ^4.1.1)",
+      "source": "apps/web/src/app/globals.css:17; apps/web/package.json:63",
+      "confidence": "high"
+    },
+    "heading": {
+      "value": "same as sans (--font-heading: var(--font-sans))",
+      "source": "apps/web/src/app/globals.css:16",
+      "confidence": "high"
+    },
+    "arabic": {
+      "value": "'IBM Plex Sans Arabic', 'InterVariable', sans-serif",
+      "source": "apps/web/src/app/globals.css --font-arabic, @fontsource/ibm-plex-sans-arabic (OFL), applied to :lang(ar) and [dir=rtl]",
+      "confidence": "high"
+    },
+    "scale_line_heights": {
+      "value": {
+        "xs": 1.5,
+        "sm": 1.5,
+        "base": 1.6,
+        "lg": 1.55,
+        "xl": 1.4,
+        "2xl": 1.25,
+        "3xl": 1.15,
+        "4xl": 1.1
+      },
+      "source": "apps/web/src/app/globals.css:64-74",
+      "confidence": "high"
+    },
+    "letter_spacing": {
+      "value": {
+        "2xl": "-0.01em",
+        "3xl": "-0.02em",
+        "4xl": "-0.025em"
+      },
+      "source": "apps/web/src/app/globals.css:70-74",
+      "confidence": "high"
+    }
+  },
+  "shape": {
+    "radius_base": {
+      "value": "0.625rem (10px); sm .6×, md .8×, lg 1×, xl 1.4×, 2xl 1.8×, 3xl 2.2×, 4xl 2.6×",
+      "source": "apps/web/src/app/globals.css:54-60,109",
+      "confidence": "high"
+    },
+    "shadows": {
+      "value": {
+        "overlay": "0 12px 28px -8px rgb(0 0 0 / 0.18), 0 4px 10px -4px rgb(0 0 0 / 0.1)",
+        "modal": "0 32px 64px -16px rgb(0 0 0 / 0.28), 0 12px 24px -12px rgb(0 0 0 / 0.16)",
+        "side_panel": "0 0 28px 6px rgb(0 0 0 / 0.16)"
+      },
+      "source": "apps/web/src/app/globals.css:133-141",
+      "confidence": "high"
+    },
+    "spacing": {
+      "value": "Tailwind v4 default 0.25rem scale",
+      "source": "no override in globals.css",
+      "confidence": "medium"
+    },
+    "breakpoints": {
+      "value": "Tailwind v4 defaults (sm 40rem, md 48rem, lg 64rem, xl 80rem)",
+      "source": "no override",
+      "confidence": "medium"
+    },
+    "borders": {
+      "value": "1px var(--border); dark uses white 12%",
+      "source": "apps/web/src/app/globals.css:101,162",
+      "confidence": "high"
+    }
+  },
+  "iconography": {
+    "library": {
+      "value": "lucide-react (stroke 2, 24 grid, round caps)",
+      "source": "apps/web/package.json",
+      "confidence": "medium"
+    },
+    "illustration": {
+      "value": "line + data-viz motifs: orbit rings, pulse/ECG line, sparkline, radial progress, mini bars",
+      "source": "apps/web/src/components/brand/hero/*",
+      "confidence": "high"
+    }
+  },
+  "motion": {
+    "durations": {
+      "value": {
+        "ui_transition": "100ms",
+        "shimmer": "1.5s",
+        "ecg": "3.2s",
+        "node_pulse": "3s",
+        "float": "7s",
+        "orbit": "40s / 60s",
+        "system_spin": "12s"
+      },
+      "source": "apps/web/src/app/globals.css:869,918; components/brand/hero/hero.module.css:74-97; system/system.module.css:22-33",
+      "confidence": "high"
+    },
+    "easing": {
+      "value": ["ease-in-out (ambient loops)", "ease-out (draw-in)", "linear (rotation)"],
+      "source": "hero.module.css; system.module.css",
+      "confidence": "high"
+    },
+    "reduced_motion": {
+      "value": "all ambient animation inside @media (prefers-reduced-motion: no-preference); explicit reduce block in hero",
+      "source": "hero.module.css:74,101; globals.css:391",
+      "confidence": "high"
+    },
+    "signature": {
+      "value": [
+        "OrbitRings slow counter-rotation",
+        "PulseLine ECG stroke draw",
+        "OrbitMark breathe/nudge on system screens"
+      ],
+      "source": "apps/web/src/components/brand/hero, brand/system",
+      "confidence": "high"
+    }
+  },
+  "components": {
+    "value": "shadcn/ui (new-york) with the tokens above; buttons primary=teal/mint, destructive, outline, ghost; radius lg",
+    "source": "apps/web/components.json, src/components/ui",
+    "confidence": "medium"
+  }
+}

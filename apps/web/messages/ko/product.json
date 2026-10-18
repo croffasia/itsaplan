@@ -1,0 +1,180 @@
+{
+  "meta": {
+    "title": "One Health: AI 에이전트가 팀원인 이슈 트래커",
+    "description": "AGPL 라이선스의 오픈 소스 셀프 호스팅 이슈 트래커입니다. 사람이나 AI 에이전트에게 작업을 할당하고, 예산을 설정하고, 에이전트를 내 컴퓨터에서 실행하세요. 좌석당 AI 과금이 없습니다."
+  },
+  "nav": {
+    "label": "제품 페이지",
+    "features": "기능",
+    "architecture": "아키텍처",
+    "compare": "비교",
+    "roadmap": "로드맵",
+    "signIn": "로그인",
+    "github": "GitHub"
+  },
+  "hero": {
+    "eyebrow": "오픈 소스 · AGPL-3.0 · 셀프 호스팅",
+    "title": "AI 에이전트가 팀원인 이슈 트래커",
+    "subtitle": "이슈를 사람이나 에이전트에게 할당하세요. 에이전트는 내 모델을 사용해 내 서버 또는 내 컴퓨터에서, 설정한 예산 안에서 실행됩니다. 좌석당 과금은 없습니다.",
+    "primary": "직접 호스팅하기",
+    "secondary": "GitHub에서 보기",
+    "statRuns": "오늘 에이전트 실행",
+    "statBudget": "사용한 예산",
+    "statDone": "종료된 이슈"
+  },
+  "problem": {
+    "title": "트래커의 AI는 크레딧으로 판매됩니다",
+    "body": "호스팅형 트래커는 에이전트를 유료 추가 기능으로 제공합니다. 어시스턴트를 사용할 때마다 기본 제공량에서 크레딧이 차감되고, 제공량이 소진되면 초과분이 청구됩니다. 작업과 데이터는 공급업체의 서버에 남습니다.",
+    "points": {
+      "metered": "에이전트 사용량은 크레딧으로 측정되며 기본 제공량을 넘으면 청구됩니다.",
+      "tier": "에이전트 기능은 상위 요금제에서만 제공됩니다.",
+      "data": "이슈, 코드 컨텍스트, 프롬프트가 내 인프라 밖으로 나갑니다."
+    }
+  },
+  "different": {
+    "title": "One Health의 차별점",
+    "items": {
+      "teammates": {
+        "title": "에이전트는 팀원입니다",
+        "body": "에이전트는 팀의 구성원입니다. 이슈를 할당하거나, 댓글에서 멘션하거나, 일정에 등록하세요."
+      },
+      "metering": {
+        "title": "사용량 측정 없음",
+        "body": "모델 키 또는 로컬 모델은 직접 준비합니다. One Health는 크레딧도 초과 요금도 추가하지 않습니다."
+      },
+      "selfHost": {
+        "title": "셀프 호스팅과 AGPL",
+        "body": "Docker Compose, Coolify 또는 Helm으로 전체 스택을 실행하세요. 소스 코드는 AGPL-3.0으로 공개되어 있습니다."
+      },
+      "runner": {
+        "title": "내 컴퓨터에서 실행되는 runner",
+        "body": "runner CLI는 외부 에이전트의 대기 중인 작업을 가져와 코드가 있는 내 컴퓨터에서 실행합니다."
+      },
+      "api": {
+        "title": "API, 웹훅, MCP",
+        "body": "REST API로 모든 객체를 제어하고, 변경 시 웹훅을 받고, MCP로 AI 클라이언트를 연결하세요."
+      }
+    }
+  },
+  "features": {
+    "title": "팀이 작업을 계획하는 데 필요한 모든 것",
+    "items": {
+      "board": "보드와 목록",
+      "cycle": "사이클",
+      "docs": "문서",
+      "notes": "노트",
+      "dashboard": "대시보드",
+      "chat": "AI 채팅",
+      "mention": "멘션",
+      "team": "팀",
+      "workspace": "워크스페이스",
+      "schedule": "에이전트 일정",
+      "budget": "에이전트 예산",
+      "translate": "10개 언어"
+    }
+  },
+  "architecture": {
+    "title": "구성 방식",
+    "body": "서비스 네 개와 데이터베이스 하나입니다. 모든 것이 직접 관리하는 인프라에서 실행됩니다.",
+    "figureTitle": "One Health 아키텍처",
+    "figureDesc": "브라우저는 웹 앱과 통신하고, 웹 앱은 API를 호출합니다. API는 데이터를 PostgreSQL에 저장합니다. worker는 웹훅과 알림을 전달하고 에이전트 일정을 시작합니다. Telegram 봇은 API와 통신합니다. AI 클라이언트는 MCP로 API에 연결합니다. 내 컴퓨터의 runner는 API에서 대기 중인 에이전트 작업을 주기적으로 확인합니다.",
+    "nodes": {
+      "browser": "브라우저",
+      "web": "web",
+      "webNote": "Next.js",
+      "api": "api",
+      "apiNote": "Elysia · REST · MCP",
+      "worker": "worker",
+      "workerNote": "웹훅 · 일정",
+      "bot": "bot",
+      "botNote": "Telegram",
+      "postgres": "PostgreSQL",
+      "runner": "runner",
+      "runnerNote": "내 컴퓨터",
+      "mcp": "AI 클라이언트",
+      "mcpNote": "MCP"
+    },
+    "flowTitle": "에이전트 실행 과정",
+    "flowDesc": "이슈가 에이전트에게 할당됩니다. 예산을 확인합니다. 에이전트가 내 모델 또는 runner에서 실행됩니다. 결과가 이슈에 게시됩니다.",
+    "flow": {
+      "assign": "이슈 할당",
+      "budget": "예산 확인",
+      "run": "에이전트 실행",
+      "result": "결과 게시"
+    }
+  },
+  "compare": {
+    "title": "다른 제품의 에이전트 제공 방식",
+    "caption": "에이전트 기능과 비용 지불 방식, 2026년 10월 기준.",
+    "product": "제품",
+    "agents": "AI 에이전트",
+    "billing": "에이전트 사용 비용 지불 방식",
+    "selfHost": "셀프 호스팅",
+    "rows": {
+      "oneHealth": {
+        "name": "One Health",
+        "agents": "모든 인스턴스에서 에이전트가 팀원입니다",
+        "billing": "직접 준비한 모델 키 또는 로컬 모델, 크레딧 없음",
+        "selfHost": "예, AGPL-3.0"
+      },
+      "linear": {
+        "name": "Linear",
+        "agents": "Business 및 Enterprise 요금제의 에이전트 자동화",
+        "billing": "선불 AI 크레딧 풀",
+        "selfHost": "아니요"
+      },
+      "jira": {
+        "name": "Jira",
+        "agents": "Rovo 에이전트",
+        "billing": "사용자당 월 크레딧, 2026년 12월 3일부터 초과분 청구",
+        "selfHost": "Data Center 에디션"
+      },
+      "trello": {
+        "name": "Trello",
+        "agents": "AI 어시스턴트, 에이전트 없음",
+        "billing": "유료 요금제에 포함",
+        "selfHost": "아니요"
+      },
+      "plane": {
+        "name": "Plane",
+        "agents": "유료 에디션의 에이전트",
+        "billing": "유료 요금제의 좌석당 에이전트 크레딧",
+        "selfHost": "예, 에이전트는 유료 상용 라이선스가 필요합니다"
+      }
+    }
+  },
+  "trust": {
+    "title": "작업을 믿고 맡길 수 있도록 설계했습니다",
+    "items": {
+      "data": "데이터는 내 PostgreSQL에 저장됩니다.",
+      "secrets": "비밀 값은 AES-256-GCM으로 암호화되어 저장됩니다.",
+      "keys": "API 키는 한 번만 표시되고, 만료일을 설정할 수 있으며, 언제든 삭제할 수 있습니다.",
+      "ssrf": "서버 측 요청은 SSRF 보호를 거칩니다.",
+      "backup": "모든 마이그레이션은 먼저 데이터베이스를 백업합니다.",
+      "source": "소스 코드가 공개되어 감사할 수 있습니다."
+    }
+  },
+  "roadmap": {
+    "title": "로드맵",
+    "shipped": "출시됨",
+    "inProgress": "진행 중",
+    "items": {
+      "budget": "에이전트 예산",
+      "actionLog": "에이전트 작업 로그",
+      "approvals": "에이전트 작업 승인",
+      "import": "Jira 및 Trello 가져오기",
+      "saml": "SAML 싱글 사인온",
+      "quickAi": "빠른 AI 작업"
+    }
+  },
+  "cta": {
+    "title": "지금 내 서버에서 실행하세요",
+    "body": "Docker Compose 파일 하나로 전체 스택이 시작됩니다.",
+    "docs": "셀프 호스팅 가이드 읽기",
+    "github": "GitHub에서 스타 누르기"
+  },
+  "footer": {
+    "license": "One Health는 AGPL-3.0 라이선스의 자유 소프트웨어입니다.",
+    "trademarks": "Linear, Jira, Trello, Plane은 각 소유자의 상표입니다."
+  }
+}

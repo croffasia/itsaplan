@@ -478,6 +478,9 @@
     "reasoningEffortHigh": "Tinggi",
     "optional": "Opsional",
     "maxSteps": "Maks langkah",
+    "monthlyBudget": "Anggaran bulanan (USD)",
+    "monthlyBudgetPlaceholder": "Tanpa batas",
+    "monthlyBudgetHint": "Eksekusi berhenti selama sisa bulan setelah biaya mencapai jumlah ini. Biaya memakai harga model di dasbor agen. Eksekusi yang sudah dimulai tetap selesai. Panggilan ke model tanpa harga tidak dihitung.",
     "memory": "Memori percakapan",
     "memoryHint": "Mengingat pesan terbaru dalam utas percakapan.",
     "memoryCount": "Ingat N pesan terakhir",
@@ -714,5 +717,37 @@
       "removePrice": "Hapus harga",
       "save": "Simpan harga"
     }
+  },
+  "agentActions": {
+    "title": "Tindakan agen",
+    "logTab": "Log tindakan",
+    "approvalsTab": "Persetujuan",
+    "noActions": "Agen ini belum membuat perubahan apa pun.",
+    "run": "Run #{id}",
+    "noPending": "Tidak ada perubahan yang menunggu persetujuan.",
+    "requireApproval": "Wajibkan persetujuan",
+    "requireApprovalHint": "Perubahan agen dan panggilan integrasinya menunggu persetujuan anggota proyek. Ini hanya berlaku untuk agen internal: panggilan agen eksternal dicatat, tidak ditahan.",
+    "on": "Aktif",
+    "off": "Nonaktif",
+    "approve": "Setujui",
+    "reject": "Tolak",
+    "cancel": "Batal",
+    "reason": "Alasan",
+    "reasonPlaceholder": "Mengapa perubahan ini ditolak?",
+    "approved": "Perubahan diterapkan",
+    "rejected": "Perubahan ditolak",
+    "failed": "Perubahan tidak dapat diterapkan",
+    "issueTitle": "{count, plural, other {# perubahan agen menunggu persetujuan}}",
+    "status": {
+      "pending": "Menunggu",
+      "applying": "Sedang diterapkan",
+      "approved": "Disetujui",
+      "rejected": "Ditolak",
+      "failed": "Gagal",
+      "expired": "Kedaluwarsa"
+    },
+    "from": "Dari",
+    "to": "Sampai",
+    "approvedBy": "Disetujui oleh {name}"
   }
 }

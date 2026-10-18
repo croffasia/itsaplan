@@ -1,0 +1,34 @@
+{
+  "board": {
+    "button": "用 AI 起草看板",
+    "title": "用 AI 起草看板",
+    "description": "描述这个项目。AI 会提议列和事项；在你确认之前不会创建任何内容。",
+    "promptPlaceholder": "一个移动应用的发布计划，从调研到上线",
+    "generate": "起草",
+    "regenerate": "重新起草",
+    "columns": "列",
+    "issues": "事项",
+    "due": "截止 {date}",
+    "confirm": "创建 {columns, plural, other {# 列}}和 {issues, plural, other {# 个事项}}",
+    "created": "看板已创建"
+  },
+  "checklist": {
+    "button": "建议清单",
+    "description": "根据事项的标题和描述提议的步骤。删除不需要的步骤，然后添加清单。",
+    "remove": "删除步骤",
+    "confirm": "添加清单"
+  },
+  "settings": {
+    "title": "AI 助手",
+    "description": "快速 AI 功能（起草看板、建议清单）使用的模型。未选择时，这些按钮会隐藏。",
+    "credential": "提供商密钥",
+    "model": "模型",
+    "modelPlaceholder": "gpt-5-mini",
+    "none": "关闭",
+    "save": "保存",
+    "saved": "AI 助手模型已保存",
+    "off": "AI 助手已关闭。",
+    "on": "AI 助手使用 {model}。",
+    "managersOnly": "由团队所有者和经理更改。"
+  }
+}

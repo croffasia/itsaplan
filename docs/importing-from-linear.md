@@ -110,7 +110,7 @@ truncated import, instead of importing the issue without the rest.
 ## Reviewing the mapping before you import
 
 After you pick the team and project, the team's workflow states are shown with the category
-itsaplan would automatically map each one to: Linear's own Backlog, Unstarted, Started,
+One Health would automatically map each one to: Linear's own Backlog, Unstarted, Started,
 Completed, and Canceled types map to the same categories, Triage to Backlog, and Duplicate to
 Canceled. Change any row that reads wrong before starting the import — a state you don't
 change keeps the automatic mapping.
@@ -150,5 +150,6 @@ title stay two issues, and two comments with the same text and time stay two com
 
 ## Other sources
 
-[Importing from Plane](importing-from-plane.md) describes the Plane source. Jira and Trello
-are not available.
+[Importing from Plane](importing-from-plane.md) describes the Plane source.
+[Importing from Jira](importing-from-jira.md) and [Importing from Trello](importing-from-trello.md)
+describe the Jira and Trello sources.

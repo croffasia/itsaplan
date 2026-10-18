@@ -16,17 +16,18 @@ import SettingsImportExportMappingReview from './SettingsImportExportMappingRevi
 import SettingsImportExportJobList from './SettingsImportExportJobList';
 import SettingsImportExportDownloadButton from './SettingsImportExportDownloadButton';
 import SettingsImportExportLinear from './SettingsImportExportLinear';
+import SettingsImportExportJira from './SettingsImportExportJira';
+import SettingsImportExportTrello from './SettingsImportExportTrello';
 
 export interface PlaneConnection extends PlaneConnectionInput {
   projects: PlaneProjectOption[];
 }
 
-// Plane and Linear import today; the rest are listed disabled.
 const SOURCES = [
-  { key: 'plane', label: 'Plane', available: true },
-  { key: 'linear', label: 'Linear', available: true },
-  { key: 'jira', label: 'Jira', available: false },
-  { key: 'trello', label: 'Trello', available: false },
+  { key: 'plane', label: 'Plane' },
+  { key: 'linear', label: 'Linear' },
+  { key: 'jira', label: 'Jira' },
+  { key: 'trello', label: 'Trello' },
 ] as const;
 
 // Import and export on two tabs. Import: pick a source, connect to it, pick a
@@ -62,13 +63,8 @@ export default function SettingsImportExport({ project }: { project: ProjectDeta
               <Tabs value={source} onValueChange={(value) => setSource(value as ImportSource)}>
                 <TabsList variant="line">
                   {SOURCES.map((option) => (
-                    <TabsTrigger key={option.key} value={option.key} disabled={!option.available}>
+                    <TabsTrigger key={option.key} value={option.key}>
                       {option.label}
-                      {!option.available && (
-                        <span className="text-[10px] font-normal tracking-wide uppercase">
-                          {t('comingSoon')}
-                        </span>
-                      )}
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -103,6 +99,8 @@ export default function SettingsImportExport({ project }: { project: ProjectDeta
               </>
             )}
             {source === 'linear' && <SettingsImportExportLinear projectKey={projectKey} />}
+            {source === 'jira' && <SettingsImportExportJira projectKey={projectKey} />}
+            {source === 'trello' && <SettingsImportExportTrello projectKey={projectKey} />}
           </>
         )}
         <SettingsSection title={t('jobs')} description={t('jobsHint')}>

@@ -51,7 +51,7 @@ Originally all missing against the design posted to #253; now built:
   longer starts the job directly — `SettingsImportExportMappingReview.tsx` fetches the
   source project's states from the new `POST /projects/:projectKey/import-jobs/plane-preview`
   route (`testPlaneStatesPreview`, `apps/api/src/modules/import-export/service.ts`) and shows
-  each one with the category itsaplan would automatically map it to, editable before the job
+  each one with the category One Health would automatically map it to, editable before the job
   is created. Only a row the user actually changes is sent as a `stateOverrides` entry;
   `materializeStates` (`import-worker.ts`) resolves `overrides[state.sourceId] ?? state.
   category` before calling `createLocalStateAndRecord`, so an override only ever affects a
@@ -128,7 +128,7 @@ attachment) are a distinct path, not covered by this — see "Inline images" in
   endpoint, and the endpoint 404s on some self-hosted versions).
 - **Four of Plane's eight relation kinds are dropped intentionally**: `RELATION_KIND_MAP`
   (`plane-adapter.ts`) has no entry for `start_before`/`start_after`/`finish_before`/
-  `finish_after` — itsaplan's `issue_link.kind` has no scheduling-dependency concept, so
+  `finish_after` — One Health's `issue_link.kind` has no scheduling-dependency concept, so
   these are filtered out, not a bug.
 - **Re-running an import against the same source project reuses what a previous run already
   created, by name/content match, not by any record of which import created what.**
@@ -151,7 +151,7 @@ attachment) are a distinct path, not covered by this — see "Inline images" in
   outright, caught by `isUniqueViolation` in `createIssueLink`.
   State/cycle name matching is exact (case-sensitive); issue title matching is not. Nothing
   currently makes the two consistent — worth revisiting if a Plane workspace turns out to
-  use different casing than itsaplan's own default column names.
+  use different casing than One Health's own default column names.
   Concurrent ticks racing this lookup-then-insert (two import jobs targeting the same
   project, processed by two different worker replicas at once) could still both miss the
   same not-yet-created match and insert twice — not addressed, since a self-hosted worker

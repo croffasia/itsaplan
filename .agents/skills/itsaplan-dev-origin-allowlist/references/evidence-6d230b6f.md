@@ -1,0 +1,1 @@
+The api only accepted requests from `localhost:3001`, so the browser blocked the sign-in request. I restarted the dev servers with `APP_URL=http://localhost:3001,http://itsaplan-4.orca.localhost:56592`. The api now accepts sign-in requests from the Orca address.

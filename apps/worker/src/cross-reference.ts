@@ -2,7 +2,7 @@
 // identifier shape). Source-independent and dependency-free like canonical.ts and
 // plane-adapter.ts's pure functions, so this is unit-tested directly, without a
 // database: see import-worker.ts's Rewrite phase for how it resolves what these
-// find into itsaplan's own issue ids.
+// find into One Health's own issue ids.
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

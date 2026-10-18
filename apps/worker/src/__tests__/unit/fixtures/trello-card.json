@@ -1,0 +1,49 @@
+{
+  "id": "5f1a2b3c4d5e6f7a8b9c0d1e",
+  "idShort": 17,
+  "name": "Write onboarding guide",
+  "desc": "Draft the **guide**.",
+  "idList": "list-doing",
+  "idLabels": ["lab-1"],
+  "idMembers": ["mem-2", "mem-1"],
+  "start": "2024-02-01T09:00:00.000Z",
+  "due": "2024-02-10T17:00:00.000Z",
+  "dateLastActivity": "2024-02-03T12:00:00.000Z",
+  "shortUrl": "https://trello.com/c/AbC123",
+  "checklists": [
+    {
+      "id": "cl-2",
+      "name": "Review",
+      "pos": 2,
+      "checkItems": [{ "id": "ci-3", "name": "Proofread", "state": "incomplete", "pos": 1 }]
+    },
+    {
+      "id": "cl-1",
+      "name": "Draft",
+      "pos": 1,
+      "checkItems": [
+        { "id": "ci-2", "name": "Write body", "state": "incomplete", "pos": 2 },
+        { "id": "ci-1", "name": "Outline", "state": "complete", "pos": 1 }
+      ]
+    }
+  ],
+  "attachments": [
+    {
+      "id": "att-1",
+      "name": "spec.pdf",
+      "url": "https://trello.com/1/cards/5f1a2b3c4d5e6f7a8b9c0d1e/attachments/att-1/download/spec.pdf",
+      "isUpload": true,
+      "mimeType": "application/pdf",
+      "bytes": 4096,
+      "fileName": "spec.pdf"
+    },
+    {
+      "id": "att-2",
+      "name": "Figma [v2]",
+      "url": "https://figma.com/file/x",
+      "isUpload": false,
+      "mimeType": null,
+      "bytes": null
+    }
+  ]
+}

@@ -341,6 +341,22 @@ export default function TeamAiAgentFields({
       </div>
 
       <div className="space-y-1.5">
+        <label htmlFor="agent-monthly-budget" className="text-sm font-medium">
+          {t('monthlyBudget')}
+        </label>
+        <Input
+          id="agent-monthly-budget"
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder={t('monthlyBudgetPlaceholder')}
+          value={value.monthlyBudgetUsd}
+          onChange={(e) => onChange({ monthlyBudgetUsd: e.target.value })}
+        />
+        <p className="text-xs text-muted-foreground">{t('monthlyBudgetHint')}</p>
+      </div>
+
+      <div className="space-y-1.5">
         <label className="flex cursor-pointer items-start gap-2">
           <Checkbox
             className="mt-0.5"

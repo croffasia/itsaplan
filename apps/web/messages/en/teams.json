@@ -478,6 +478,9 @@
     "reasoningEffortHigh": "High",
     "optional": "Optional",
     "maxSteps": "Max steps",
+    "monthlyBudget": "Monthly budget (USD)",
+    "monthlyBudgetPlaceholder": "No limit",
+    "monthlyBudgetHint": "Runs stop for the rest of the month once the cost reaches this amount. The cost uses the model prices on the agent dashboard. A run that has already started finishes. Calls to a model with no price are not counted.",
     "memory": "Conversation memory",
     "memoryHint": "Recall recent messages within a conversation thread.",
     "memoryCount": "Remember last N messages",
@@ -714,5 +717,37 @@
       "removePrice": "Remove price",
       "save": "Save price"
     }
+  },
+  "agentActions": {
+    "title": "Agent actions",
+    "logTab": "Action log",
+    "approvalsTab": "Approvals",
+    "noActions": "This agent has not made any change yet.",
+    "run": "Run #{id}",
+    "noPending": "No changes wait for approval.",
+    "requireApproval": "Require approval",
+    "requireApprovalHint": "The agent's changes and integration calls wait until a project member approves them. This holds internal agents only: an external agent's calls are logged, not held.",
+    "on": "On",
+    "off": "Off",
+    "approve": "Approve",
+    "reject": "Reject",
+    "cancel": "Cancel",
+    "reason": "Reason",
+    "reasonPlaceholder": "Why is this change rejected?",
+    "approved": "Change applied",
+    "rejected": "Change rejected",
+    "failed": "The change could not be applied",
+    "issueTitle": "{count, plural, one {# agent change waits for approval} other {# agent changes wait for approval}}",
+    "status": {
+      "pending": "Pending",
+      "applying": "Applying",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "failed": "Failed",
+      "expired": "Expired"
+    },
+    "from": "From",
+    "to": "To",
+    "approvedBy": "Approved by {name}"
   }
 }

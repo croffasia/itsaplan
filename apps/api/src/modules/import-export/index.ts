@@ -10,6 +10,9 @@ import {
   PlanePreviewResponse,
   LinearTestConnectionResponse,
   LinearPreviewResponse,
+  JiraTestConnectionResponse,
+  TrelloTestConnectionResponse,
+  SourcePreviewResponse,
   ProjectExportResponse,
   createImportJobBody,
   importJobParams,
@@ -17,6 +20,10 @@ import {
   planePreviewBody,
   linearConnectionBody,
   linearPreviewBody,
+  jiraConnectionBody,
+  jiraPreviewBody,
+  trelloConnectionBody,
+  trelloPreviewBody,
 } from './model';
 import {
   cancelImportJob,
@@ -31,6 +38,8 @@ import {
 } from './service';
 import { exportProject } from './export';
 import { previewLinearStates, testLinearConnection } from './linear';
+import { previewJiraStates, testJiraConnection } from './jira';
+import { previewTrelloStates, testTrelloConnection } from './trello';
 
 // Import jobs bring issues from an external tracker into a project. Creating one
 // stores an encrypted credential and leaves it 'pending' for the worker
@@ -77,7 +86,7 @@ export const importExportRoutes = new Elysia({
       detail: {
         summary: 'Preview a Plane project before importing it',
         description:
-          "Fetch the source project's states, each with the category itsaplan would " +
+          "Fetch the source project's states, each with the category One Health would " +
           'automatically map it to, for review before a job is created.',
       },
     },
@@ -109,8 +118,68 @@ export const importExportRoutes = new Elysia({
       detail: {
         summary: 'Preview a Linear team before importing from it',
         description:
-          "Fetch the team's workflow states, each with the category itsaplan would " +
+          "Fetch the team's workflow states, each with the category One Health would " +
           'automatically map it to, for review before a job is created.',
+      },
+    },
+  )
+
+  .post(
+    '/projects/:projectKey/import-jobs/jira-test-connection',
+    ({ body }) => testJiraConnection(body),
+    {
+      permission: ['import_export', 'create'],
+      body: jiraConnectionBody,
+      response: { 200: JiraTestConnectionResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'Test a Jira Cloud connection',
+        description:
+          'Validate a Jira Cloud site, account email, and API token live, without storing ' +
+          'anything. Returns the projects the account can browse.',
+      },
+    },
+  )
+
+  .post('/projects/:projectKey/import-jobs/jira-preview', ({ body }) => previewJiraStates(body), {
+    permission: ['import_export', 'create'],
+    body: jiraPreviewBody,
+    response: { 200: SourcePreviewResponse, ...commonErrors, ...errors(502) },
+    detail: {
+      summary: 'Preview a Jira project before importing it',
+      description:
+        "Fetch the project's statuses, each with the category One Health would " +
+        'automatically map it to, for review before a job is created.',
+    },
+  })
+
+  .post(
+    '/projects/:projectKey/import-jobs/trello-test-connection',
+    ({ body }) => testTrelloConnection(body),
+    {
+      permission: ['import_export', 'create'],
+      body: trelloConnectionBody,
+      response: { 200: TrelloTestConnectionResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'Test a Trello API key and token',
+        description:
+          'Validate a Trello API key and token live, without storing anything. Returns the ' +
+          'boards the token can see.',
+      },
+    },
+  )
+
+  .post(
+    '/projects/:projectKey/import-jobs/trello-preview',
+    ({ body }) => previewTrelloStates(body),
+    {
+      permission: ['import_export', 'create'],
+      body: trelloPreviewBody,
+      response: { 200: SourcePreviewResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'Preview a Trello board before importing it',
+        description:
+          "Fetch the board's lists, each with the category One Health would automatically " +
+          'map it to, for review before a job is created.',
       },
     },
   )
@@ -140,7 +209,7 @@ export const importExportRoutes = new Elysia({
       detail: {
         summary: 'Create an import job',
         description:
-          "Create a Plane job, or a Linear one with source 'linear'. Encrypt and store the " +
+          "Create a Plane job, or a Linear, Jira or Trello one with source 'linear', 'jira' or 'trello'. Encrypt and store the " +
           "submitted credential and leave the job 'pending' for the worker.",
       },
     },

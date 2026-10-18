@@ -38,11 +38,11 @@ export function CardOverlay({
           {depths.map((depth) => (
             <div
               key={depth}
-              className="kanban-card absolute inset-0 rounded-md border border-border/60 shadow-md"
+              className="kanban-card absolute inset-0 rounded-lg border border-border/60 shadow-md"
               style={{ transform: `translate(${depth * 6}px, ${depth * 6}px)` }}
             />
           ))}
-          <div className="kanban-card relative rounded-md p-2 shadow-lg">
+          <div className="kanban-card relative rounded-lg p-2 shadow-lg">
             <IssueCardBody issue={issue} maps={maps} properties={properties} />
             {count > 1 && (
               <Badge className="absolute -top-2 -right-2 rounded-full shadow">{count}</Badge>

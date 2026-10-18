@@ -1,0 +1,34 @@
+{
+  "board": {
+    "button": "Crear tablero con IA",
+    "title": "Crear un tablero con IA",
+    "description": "Describe el proyecto. La IA propone columnas e incidencias; no se crea nada hasta que confirmes.",
+    "promptPlaceholder": "Un plan de lanzamiento de una app móvil, de la investigación al lanzamiento",
+    "generate": "Proponer",
+    "regenerate": "Proponer de nuevo",
+    "columns": "Columnas",
+    "issues": "Incidencias",
+    "due": "Vence el {date}",
+    "confirm": "Crear {columns, plural, one {# columna} other {# columnas}} y {issues, plural, one {# incidencia} other {# incidencias}}",
+    "created": "Tablero creado"
+  },
+  "checklist": {
+    "button": "Sugerir checklist",
+    "description": "Pasos propuestos a partir del título y la descripción de la incidencia. Quita los que no quieras y añade la checklist.",
+    "remove": "Quitar paso",
+    "confirm": "Añadir checklist"
+  },
+  "settings": {
+    "title": "Asistente de IA",
+    "description": "El modelo que usan las funciones rápidas de IA: crear un tablero y sugerir una checklist. Sin modelo elegido, esos botones se ocultan.",
+    "credential": "Clave del proveedor",
+    "model": "Modelo",
+    "modelPlaceholder": "gpt-5-mini",
+    "none": "Desactivado",
+    "save": "Guardar",
+    "saved": "Modelo del asistente de IA guardado",
+    "off": "El asistente de IA está desactivado.",
+    "on": "El asistente de IA usa {model}.",
+    "managersOnly": "Los propietarios y gestores del equipo cambian este ajuste."
+  }
+}

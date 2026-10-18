@@ -1,0 +1,34 @@
+{
+  "board": {
+    "button": "Criar quadro com IA",
+    "title": "Criar um quadro com IA",
+    "description": "Descreva o projeto. A IA propõe colunas e tarefas; nada é criado até você confirmar.",
+    "promptPlaceholder": "Um plano de lançamento de um app móvel, da pesquisa ao lançamento",
+    "generate": "Propor",
+    "regenerate": "Propor de novo",
+    "columns": "Colunas",
+    "issues": "Tarefas",
+    "due": "Prazo {date}",
+    "confirm": "Criar {columns, plural, one {# coluna} other {# colunas}} e {issues, plural, one {# tarefa} other {# tarefas}}",
+    "created": "Quadro criado"
+  },
+  "checklist": {
+    "button": "Sugerir checklist",
+    "description": "Passos propostos a partir do título e da descrição da tarefa. Remova os que não quiser e adicione a checklist.",
+    "remove": "Remover passo",
+    "confirm": "Adicionar checklist"
+  },
+  "settings": {
+    "title": "Assistente de IA",
+    "description": "O modelo usado pelos recursos rápidos de IA: criar um quadro e sugerir uma checklist. Sem modelo escolhido, esses botões ficam ocultos.",
+    "credential": "Chave do provedor",
+    "model": "Modelo",
+    "modelPlaceholder": "gpt-5-mini",
+    "none": "Desligado",
+    "save": "Salvar",
+    "saved": "Modelo do assistente de IA salvo",
+    "off": "O assistente de IA está desligado.",
+    "on": "O assistente de IA usa {model}.",
+    "managersOnly": "Donos e gerentes da equipe alteram esta configuração."
+  }
+}

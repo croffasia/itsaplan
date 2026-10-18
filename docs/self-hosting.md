@@ -17,15 +17,15 @@ docker compose up -d
 
 The stack refuses to start while one of these is missing:
 
-| Variable                | Value                                      |
-| ----------------------- | ------------------------------------------ |
-| `API_URL`               | public URL of the api                      |
-| `APP_URL`               | public origin of the web app               |
-| `POSTGRES_PASSWORD`     | `openssl rand -base64 32`                  |
-| `BETTER_AUTH_SECRET`    | `openssl rand -base64 32`                  |
-| `APP_ENCRYPTION_KEY`    | `openssl rand -base64 32`                  |
-| `S3_ACCESS_KEY_ID`      | the RustFS root user, any name over 3 chars |
-| `S3_SECRET_ACCESS_KEY`  | `openssl rand -base64 32`                  |
+| Variable               | Value                                       |
+| ---------------------- | ------------------------------------------- |
+| `API_URL`              | public URL of the api                       |
+| `APP_URL`              | public origin of the web app                |
+| `POSTGRES_PASSWORD`    | `openssl rand -base64 32`                   |
+| `BETTER_AUTH_SECRET`   | `openssl rand -base64 32`                   |
+| `APP_ENCRYPTION_KEY`   | `openssl rand -base64 32`                   |
+| `S3_ACCESS_KEY_ID`     | the RustFS root user, any name over 3 chars |
+| `S3_SECRET_ACCESS_KEY` | `openssl rand -base64 32`                   |
 
 On a machine with [Bun](https://bun.sh), the setup script generates them instead. Run
 `bun install && bun run setup`, answer **Generate env**, and answer no when it offers to
@@ -124,7 +124,32 @@ the token, or when the instance has no mail provider and so no confirmed account
 on only where you control who can register at the provider: anyone who registers an address
 there takes over the account that holds it here.
 
-Once a provider works, you can turn off **Authentication → Email and password**. The sign-in
+### SAML 2.0
+
+Any SAML 2.0 identity provider works: Okta, Entra ID, ADFS, Google Workspace, Keycloak,
+Authentik. It is set on the same page, under **SAML 2.0**.
+
+1. Give the provider the values the page shows: the **ACS URL**
+   (`<API_URL>/api/auth/sso/saml2/sp/acs/saml`), where it posts the signed response, and the
+   **SP entity ID**. A provider that reads SP metadata can take the **SP metadata URL**
+   (`<API_URL>/api/auth/sso/saml2/sp/metadata?providerId=saml`) instead; it answers once IdP
+   metadata is stored.
+2. Paste the provider's metadata URL, or its metadata XML. A URL is fetched once, when you
+   save, and the document is stored; save again after the provider rotates its certificate.
+   The document must name the provider's entity ID, an HTTP-Redirect or HTTP-POST sign-on
+   URL, and a signing certificate.
+3. The address is read from the `email` attribute, then from the NameID, and the name from
+   `givenName` and `surname`, then `displayName`. Set **Email attribute** and **Name
+   attribute** when the provider uses other names (Entra ID sends
+   `http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress`).
+4. Name the sign-in button and turn the provider on.
+
+Assertions must be signed. The registration mode applies as it does to OIDC. A SAML provider
+reports no verified flag for the address, so a sign-in joins an existing account only while
+**Trust addresses from sign-in providers** is on.
+
+Once a provider works, you can turn off **Authentication → Email and password**, or **Single
+sign-on only** under SAML 2.0, which is the same switch. The sign-in
 and sign-up forms, password reset and sign-in links are then hidden and refused, and the
 provider is the only way in. Passkeys keep working, because a passkey can only be added to an
 account that already exists. The switch stays disabled until a provider is configured, so an

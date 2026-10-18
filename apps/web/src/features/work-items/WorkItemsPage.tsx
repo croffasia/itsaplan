@@ -29,6 +29,7 @@ import KanbanBoard from './components/kanban/KanbanBoard';
 import TableView from './components/table/TableView';
 import TimelineView from './components/timeline/TimelineView';
 import CalendarView from './components/calendar/CalendarView';
+import AiAssistBoardButton from '@/components/common/ai-assist/AiAssistBoardButton';
 
 interface TimelineCollapseState {
   scope: string;
@@ -221,6 +222,10 @@ export default function WorkItemsPage() {
             />
           </div>
         </div>
+      )}
+
+      {project.issues.length === 0 && can('states', 'create') && can('work_items', 'create') && (
+        <AiAssistBoardButton projectKey={project.project.ref} />
       )}
 
       <div className="relative flex-1 overflow-hidden">

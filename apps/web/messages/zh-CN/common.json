@@ -160,6 +160,14 @@
   "featureOffTitle": "{feature}已停用",
   "toggleSidebar": "切换侧边栏",
   "system": "系统",
+  "systemScreen": {
+    "notFoundTitle": "页面未找到",
+    "notFoundDescription": "你打开的页面不存在或已被移动。",
+    "errorTitle": "出现问题",
+    "errorDescription": "无法加载此页面。请重试，或返回首页。",
+    "retry": "重试",
+    "home": "返回首页"
+  },
   "genericError": "出现错误",
   "commandPalette": "命令面板",
   "commandPaletteHint": "搜索要运行的命令…",
@@ -182,7 +190,7 @@
     "openPreviewLink": "Open {name} in a new tab",
     "loadingPreview": "Loading preview…",
     "previewUnavailable": "A preview is not available. Open the link to view this page.",
-    "internalPage": "ItsAPlan page",
+    "internalPage": "One Health page",
     "internalPreviewUnavailable": "This page is unavailable or you do not have access.",
     "previewNoteCount": "{count, plural, one {# note} other {# notes}}",
     "previewCustomField": "Custom field",
@@ -212,5 +220,10 @@
     "perPage": "每页",
     "range": "第 {first}-{last} 项，共 {total} 项"
   },
-  "aboutCloudAndPro": "了解 Cloud 和 Pro"
+  "aboutCloudAndPro": "了解 Cloud 和 Pro",
+  "hero": {
+    "plansOnTrack": "计划按期推进",
+    "careTeamsSynced": "已同步的护理团队",
+    "tasksDoneThisWeek": "本周完成的任务"
+  }
 }

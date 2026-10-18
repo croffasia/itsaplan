@@ -11,12 +11,19 @@ const PUBLIC_PATHS = ['/login', '/register'];
 // logged-in one (who accepts directly). The password screens are here for the same
 // reason: a reset link opened in a browser that still holds a session must show the
 // form, not bounce to the app. The public read-only share pages (/share/*) open for
-// anyone with the link, signed in or not.
+// anyone with the link, signed in or not. The product page (/product) is public.
 // `/media` streams avatars and attachments from the api, which serves them without
 // a session — a share page opened by a logged-out visitor shows them too.
 // `/protected-media` is intentionally absent: document assets carry private project
 // content and must pass this session gate before their route forwards the cookie.
-const OPEN_PATHS = ['/invite', '/forgot-password', '/reset-password', '/share', '/media'];
+const OPEN_PATHS = [
+  '/invite',
+  '/forgot-password',
+  '/reset-password',
+  '/share',
+  '/media',
+  '/product',
+];
 
 // Routes that stream bytes from the api and pass its headers through, including the
 // sandbox policy it puts on a download. The document policy is for html only, and set

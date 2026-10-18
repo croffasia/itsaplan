@@ -1,0 +1,180 @@
+{
+  "meta": {
+    "title": "One Health：AI 智能体是团队成员的问题跟踪工具",
+    "description": "基于 AGPL 的开源自托管问题跟踪工具。可将工作分配给成员或 AI 智能体，设置预算，并在自己的机器上运行智能体。AI 不按席位计费。"
+  },
+  "nav": {
+    "label": "产品页面",
+    "features": "功能",
+    "architecture": "架构",
+    "compare": "对比",
+    "roadmap": "路线图",
+    "signIn": "登录",
+    "github": "GitHub"
+  },
+  "hero": {
+    "eyebrow": "开源 · AGPL-3.0 · 自托管",
+    "title": "AI 智能体是团队成员的问题跟踪工具",
+    "subtitle": "可将问题分配给成员或智能体。智能体使用你的模型，运行在你的服务器或你自己的机器上，并受你设置的预算限制。不按席位计费。",
+    "primary": "自行部署",
+    "secondary": "在 GitHub 上查看",
+    "statRuns": "今日智能体运行次数",
+    "statBudget": "已用预算",
+    "statDone": "已关闭问题"
+  },
+  "problem": {
+    "title": "跟踪工具中的 AI 按额度出售",
+    "body": "托管式跟踪工具把智能体作为付费附加项。每次与助手交互都会消耗额度，额度用完后超出部分另行计费。工作内容和数据留在供应商的服务器上。",
+    "points": {
+      "metered": "智能体的使用按额度计量，超出额度部分计费。",
+      "tier": "智能体功能仅在更高级的套餐中提供。",
+      "data": "问题、代码上下文和提示词会离开你的基础设施。"
+    }
+  },
+  "different": {
+    "title": "One Health 的不同之处",
+    "items": {
+      "teammates": {
+        "title": "智能体是团队成员",
+        "body": "智能体是团队的一员。可以给它分配问题、在评论中提及它，或为它设置计划任务。"
+      },
+      "metering": {
+        "title": "不计量",
+        "body": "你自备模型密钥或使用本地模型。One Health 不增加额度，也不收超额费用。"
+      },
+      "selfHost": {
+        "title": "自托管与 AGPL",
+        "body": "使用 Docker Compose、Coolify 或 Helm 运行整套服务。源代码以 AGPL-3.0 开源。"
+      },
+      "runner": {
+        "title": "运行在你机器上的 runner",
+        "body": "runner CLI 获取外部智能体的排队任务，并在你自己的电脑上、代码旁边运行这些任务。"
+      },
+      "api": {
+        "title": "API、Webhook 和 MCP",
+        "body": "通过 REST API 操作所有对象，通过 Webhook 接收变更通知，并通过 MCP 连接 AI 客户端。"
+      }
+    }
+  },
+  "features": {
+    "title": "团队规划工作所需的一切",
+    "items": {
+      "board": "看板和列表",
+      "cycle": "迭代周期",
+      "docs": "文档",
+      "notes": "笔记",
+      "dashboard": "仪表盘",
+      "chat": "AI 聊天",
+      "mention": "提及",
+      "team": "团队",
+      "workspace": "工作区",
+      "schedule": "智能体计划任务",
+      "budget": "智能体预算",
+      "translate": "10 种语言"
+    }
+  },
+  "architecture": {
+    "title": "各部分如何配合",
+    "body": "四个服务和一个数据库。一切都运行在你可控的基础设施上。",
+    "figureTitle": "One Health 架构",
+    "figureDesc": "浏览器访问 Web 应用，Web 应用调用 API。API 将数据存储在 PostgreSQL 中。Worker 发送 Webhook 和通知，并启动智能体计划任务。Telegram 机器人与 API 通信。AI 客户端通过 MCP 连接到 API。你机器上的 runner 向 API 轮询排队的智能体任务。",
+    "nodes": {
+      "browser": "浏览器",
+      "web": "web",
+      "webNote": "Next.js",
+      "api": "api",
+      "apiNote": "Elysia · REST · MCP",
+      "worker": "worker",
+      "workerNote": "Webhook · 计划任务",
+      "bot": "bot",
+      "botNote": "Telegram",
+      "postgres": "PostgreSQL",
+      "runner": "runner",
+      "runnerNote": "你的机器",
+      "mcp": "AI 客户端",
+      "mcpNote": "MCP"
+    },
+    "flowTitle": "一次智能体运行",
+    "flowDesc": "将问题分配给智能体。检查预算。智能体在你的模型或 runner 上运行。结果发布到该问题中。",
+    "flow": {
+      "assign": "分配问题",
+      "budget": "检查预算",
+      "run": "运行智能体",
+      "result": "发布结果"
+    }
+  },
+  "compare": {
+    "title": "其他产品如何提供智能体",
+    "caption": "智能体功能及其付费方式，截至 2026 年 10 月。",
+    "product": "产品",
+    "agents": "AI 智能体",
+    "billing": "智能体使用如何付费",
+    "selfHost": "自托管",
+    "rows": {
+      "oneHealth": {
+        "name": "One Health",
+        "agents": "每个实例中智能体都是团队成员",
+        "billing": "自备模型密钥或使用本地模型；无额度",
+        "selfHost": "支持，AGPL-3.0"
+      },
+      "linear": {
+        "name": "Linear",
+        "agents": "Business 和 Enterprise 套餐提供智能体自动化",
+        "billing": "预付的 AI 额度池",
+        "selfHost": "不支持"
+      },
+      "jira": {
+        "name": "Jira",
+        "agents": "Rovo 智能体",
+        "billing": "按用户每月额度，2026 年 12 月 3 日起超额部分计费",
+        "selfHost": "Data Center 版"
+      },
+      "trello": {
+        "name": "Trello",
+        "agents": "AI 助手，无智能体",
+        "billing": "包含在付费套餐中",
+        "selfHost": "不支持"
+      },
+      "plane": {
+        "name": "Plane",
+        "agents": "付费版本提供智能体",
+        "billing": "付费套餐按席位提供智能体额度",
+        "selfHost": "支持；智能体需要付费商业许可证"
+      }
+    }
+  },
+  "trust": {
+    "title": "值得你托付工作",
+    "items": {
+      "data": "你的数据保存在你自己的 PostgreSQL 中。",
+      "secrets": "密钥使用 AES-256-GCM 加密存储。",
+      "keys": "API 密钥只显示一次，可设置过期时间，并可随时删除。",
+      "ssrf": "服务器端请求会经过 SSRF 防护。",
+      "backup": "每次迁移前都会先备份数据库。",
+      "source": "源代码公开，可供审计。"
+    }
+  },
+  "roadmap": {
+    "title": "路线图",
+    "shipped": "已发布",
+    "inProgress": "进行中",
+    "items": {
+      "budget": "智能体预算",
+      "actionLog": "智能体操作日志",
+      "approvals": "智能体操作审批",
+      "import": "从 Jira 和 Trello 导入",
+      "saml": "SAML 单点登录",
+      "quickAi": "快捷 AI 操作"
+    }
+  },
+  "cta": {
+    "title": "今天就在自己的服务器上运行",
+    "body": "一个 Docker Compose 文件即可启动整套服务。",
+    "docs": "阅读自托管指南",
+    "github": "在 GitHub 上加星标"
+  },
+  "footer": {
+    "license": "One Health 是基于 AGPL-3.0 许可证的自由软件。",
+    "trademarks": "Linear、Jira、Trello 和 Plane 是其各自所有者的商标。"
+  }
+}

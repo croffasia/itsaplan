@@ -6,6 +6,7 @@ import { jsonOrThrow } from '../../http';
 // the model or fall back to the credential's default chat.
 export const telegramSend: CustomToolEntry = {
   key: 'telegram_send',
+  writes: true,
   label: 'Telegram Send Message',
   description: 'Send a text message to a Telegram chat through a bot.',
   inputSchema: z.object({

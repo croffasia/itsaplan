@@ -6,7 +6,7 @@ import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
 import { createAgent } from '#tests/helpers/agents';
-import { createCredential } from '#tests/helpers/integrations';
+import { allowLocalModel, createCredential } from '#tests/helpers/integrations';
 import { claimDueRuns, enqueueAgentRun } from '../../run-queue';
 import { processAgentRuns } from '../../run-poller';
 import { getMastra } from '../../runtime/observability';
@@ -16,13 +16,16 @@ import { getMastra } from '../../runtime/observability';
 
 describe('agent run timeout', () => {
   let endpoint: ReturnType<typeof Bun.serve>;
+  let disallow: () => void;
 
   beforeEach(async () => {
     await resetDb();
     endpoint = Bun.serve({ port: 0, fetch: () => new Promise<Response>(() => {}) });
+    disallow = allowLocalModel(`http://localhost:${endpoint.port}`);
   });
 
   afterEach(async () => {
+    disallow();
     clearLimits();
     await endpoint.stop(true);
     await getMastra().observability.flush();

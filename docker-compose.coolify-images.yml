@@ -144,6 +144,7 @@ services:
       # Hosts trusted even though they resolve privately. Also governs webhook URL
       # validation and attachment import.
       - SSRF_ALLOWED_HOSTS=${SSRF_ALLOWED_HOSTS:-}
+      - LLM_ALLOWED_PRIVATE_HOSTS=${LLM_ALLOWED_PRIVATE_HOSTS:-}
     healthcheck:
       test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/']
       interval: 15s

@@ -478,6 +478,9 @@
     "reasoningEffortHigh": "高",
     "optional": "可选",
     "maxSteps": "最大步骤数",
+    "monthlyBudget": "每月预算 (USD)",
+    "monthlyBudgetPlaceholder": "无限制",
+    "monthlyBudgetHint": "费用达到此金额后，本月剩余时间内将停止运行。费用按代理仪表板中的模型价格计算。已开始的运行会继续完成。没有价格的模型调用不计入。",
     "memory": "对话记忆",
     "memoryHint": "在对话线程中回顾最近的消息。",
     "memoryCount": "记住最近 N 条消息",
@@ -714,5 +717,37 @@
       "removePrice": "删除价格",
       "save": "保存价格"
     }
+  },
+  "agentActions": {
+    "title": "智能体操作",
+    "logTab": "操作日志",
+    "approvalsTab": "审批",
+    "noActions": "此智能体尚未做出任何更改。",
+    "run": "运行 #{id}",
+    "noPending": "没有等待审批的更改。",
+    "requireApproval": "需要审批",
+    "requireApprovalHint": "代理的更改和集成调用需等待项目成员批准。仅适用于内部代理：外部代理的调用只会被记录，不会被拦截。",
+    "on": "开",
+    "off": "关",
+    "approve": "批准",
+    "reject": "拒绝",
+    "cancel": "取消",
+    "reason": "原因",
+    "reasonPlaceholder": "为什么拒绝此更改？",
+    "approved": "更改已应用",
+    "rejected": "更改已拒绝",
+    "failed": "无法应用更改",
+    "issueTitle": "{count, plural, other {# 项智能体更改等待审批}}",
+    "status": {
+      "pending": "待处理",
+      "applying": "正在应用",
+      "approved": "已批准",
+      "rejected": "已拒绝",
+      "failed": "失败",
+      "expired": "已过期"
+    },
+    "from": "从",
+    "to": "到",
+    "approvedBy": "由 {name} 批准"
   }
 }

@@ -41,10 +41,16 @@ import {
 } from '@/lib/api/endpoints/git';
 import {
   type CreateImportJobInput,
+  type JiraConnectionInput,
+  type TrelloConnectionInput,
   type LinearConnectionInput,
   type PlaneConnectionInput,
   testLinearConnection,
   testLinearStatesPreview,
+  testJiraConnection,
+  testJiraStatesPreview,
+  testTrelloConnection,
+  testTrelloStatesPreview,
   testPlaneConnection,
   testPlaneStatesPreview,
   createImportJob,
@@ -274,8 +280,9 @@ export function useDisconnectGitRepository(projectKey: string, connectionId: num
   });
 }
 
-// Import/export section: testing a connection to a source Plane instance or a
-// Linear API key, starting an import job, and tracking the ones already running.
+// Import/export section: testing a connection to a Plane instance, a Linear API
+// key, a Jira Cloud site or a Trello token, starting an import job, and tracking
+// the ones already running.
 export function useTestPlaneConnection(projectKey: string) {
   return useMutation({
     mutationFn: (input: PlaneConnectionInput) => testPlaneConnection(projectKey, input),
@@ -310,6 +317,40 @@ export function useTestLinearStatesPreview(
   return useQuery({
     queryKey: qk.linearPreview(projectKey, input?.teamId ?? 'none'),
     queryFn: () => testLinearStatesPreview(projectKey, input!),
+    enabled: input != null,
+  });
+}
+
+export function useTestJiraConnection(projectKey: string) {
+  return useMutation({
+    mutationFn: (input: JiraConnectionInput) => testJiraConnection(projectKey, input),
+  });
+}
+
+export function useTestJiraStatesPreview(
+  projectKey: string,
+  input: (JiraConnectionInput & { jiraProjectKey: string }) | null,
+) {
+  return useQuery({
+    queryKey: qk.sourcePreview(projectKey, 'jira', input?.jiraProjectKey ?? 'none'),
+    queryFn: () => testJiraStatesPreview(projectKey, input!),
+    enabled: input != null,
+  });
+}
+
+export function useTestTrelloConnection(projectKey: string) {
+  return useMutation({
+    mutationFn: (input: TrelloConnectionInput) => testTrelloConnection(projectKey, input),
+  });
+}
+
+export function useTestTrelloStatesPreview(
+  projectKey: string,
+  input: (TrelloConnectionInput & { trelloBoardId: string }) | null,
+) {
+  return useQuery({
+    queryKey: qk.sourcePreview(projectKey, 'trello', input?.trelloBoardId ?? 'none'),
+    queryFn: () => testTrelloStatesPreview(projectKey, input!),
     enabled: input != null,
   });
 }

@@ -1,0 +1,180 @@
+{
+  "meta": {
+    "title": "One Health: pelacak isu di mana agen AI adalah anggota tim",
+    "description": "Pelacak isu open source berlisensi AGPL yang di-host sendiri. Tugaskan pekerjaan kepada orang atau agen AI, tetapkan anggaran, dan jalankan agen di mesin Anda sendiri. Tanpa tarif AI per kursi."
+  },
+  "nav": {
+    "label": "Halaman produk",
+    "features": "Fitur",
+    "architecture": "Arsitektur",
+    "compare": "Perbandingan",
+    "roadmap": "Peta jalan",
+    "signIn": "Masuk",
+    "github": "GitHub"
+  },
+  "hero": {
+    "eyebrow": "Open source · AGPL-3.0 · Di-host sendiri",
+    "title": "Pelacak isu di mana agen AI adalah anggota tim",
+    "subtitle": "Tugaskan isu kepada seseorang atau kepada agen. Agen berjalan dengan model Anda, di server atau mesin Anda sendiri, dalam anggaran yang Anda tetapkan. Tidak ada biaya per kursi.",
+    "primary": "Host sendiri",
+    "secondary": "Lihat di GitHub",
+    "statRuns": "Eksekusi agen hari ini",
+    "statBudget": "Anggaran terpakai",
+    "statDone": "Isu ditutup"
+  },
+  "problem": {
+    "title": "AI di pelacak isu dijual per kredit",
+    "body": "Pelacak isu hosting menambahkan agen sebagai tambahan berbayar. Setiap interaksi dengan asisten mengurangi kuota kredit, kuota habis, dan kelebihan pemakaian ditagih. Pekerjaan dan data tetap berada di server vendor.",
+    "points": {
+      "metered": "Penggunaan agen diukur dalam kredit dan ditagih di atas kuota.",
+      "tier": "Fitur agen hanya ada di paket yang lebih tinggi.",
+      "data": "Isu, konteks kode, dan prompt keluar dari infrastruktur Anda."
+    }
+  },
+  "different": {
+    "title": "Yang berbeda dari One Health",
+    "items": {
+      "teammates": {
+        "title": "Agen adalah anggota tim",
+        "body": "Agen adalah anggota tim. Tugaskan isu kepadanya, sebut dalam komentar, atau masukkan ke dalam jadwal."
+      },
+      "metering": {
+        "title": "Tanpa pengukuran",
+        "body": "Anda membawa kunci model sendiri atau memakai model lokal. One Health tidak menambahkan kredit maupun biaya kelebihan pemakaian."
+      },
+      "selfHost": {
+        "title": "Di-host sendiri dan AGPL",
+        "body": "Jalankan seluruh stack dengan Docker Compose, Coolify, atau Helm. Kode sumber terbuka di bawah AGPL-3.0."
+      },
+      "runner": {
+        "title": "Runner di mesin Anda",
+        "body": "CLI runner mengambil tugas antrean milik agen eksternal dan menjalankannya di komputer Anda sendiri, di samping kode Anda."
+      },
+      "api": {
+        "title": "API, webhook, dan MCP",
+        "body": "Kendalikan setiap objek melalui REST API, terima webhook saat ada perubahan, dan hubungkan klien AI melalui MCP."
+      }
+    }
+  },
+  "features": {
+    "title": "Semua yang dibutuhkan tim untuk merencanakan pekerjaan",
+    "items": {
+      "board": "Papan dan daftar",
+      "cycle": "Siklus",
+      "docs": "Dokumen",
+      "notes": "Catatan",
+      "dashboard": "Dasbor",
+      "chat": "Obrolan AI",
+      "mention": "Sebutan",
+      "team": "Tim",
+      "workspace": "Ruang kerja",
+      "schedule": "Jadwal agen",
+      "budget": "Anggaran agen",
+      "translate": "10 bahasa"
+    }
+  },
+  "architecture": {
+    "title": "Cara semuanya terhubung",
+    "body": "Empat layanan dan satu basis data. Semuanya berjalan di infrastruktur yang Anda kendalikan.",
+    "figureTitle": "Arsitektur One Health",
+    "figureDesc": "Browser berkomunikasi dengan aplikasi web, yang memanggil API. API menyimpan data di PostgreSQL. Worker mengirim webhook dan notifikasi serta memulai jadwal agen. Bot Telegram berkomunikasi dengan API. Klien AI terhubung ke API melalui MCP. Runner di mesin Anda memeriksa API untuk tugas agen yang antre.",
+    "nodes": {
+      "browser": "Browser",
+      "web": "web",
+      "webNote": "Next.js",
+      "api": "api",
+      "apiNote": "Elysia · REST · MCP",
+      "worker": "worker",
+      "workerNote": "webhook · jadwal",
+      "bot": "bot",
+      "botNote": "Telegram",
+      "postgres": "PostgreSQL",
+      "runner": "runner",
+      "runnerNote": "mesin Anda",
+      "mcp": "Klien AI",
+      "mcpNote": "MCP"
+    },
+    "flowTitle": "Satu eksekusi agen",
+    "flowDesc": "Sebuah isu ditugaskan kepada agen. Anggaran diperiksa. Agen berjalan dengan model Anda atau di runner. Hasilnya diposting ke isu.",
+    "flow": {
+      "assign": "Tugaskan isu",
+      "budget": "Periksa anggaran",
+      "run": "Jalankan agen",
+      "result": "Posting hasil"
+    }
+  },
+  "compare": {
+    "title": "Cara agen ditawarkan di tempat lain",
+    "caption": "Fitur agen dan cara pembayarannya, per Oktober 2026.",
+    "product": "Produk",
+    "agents": "Agen AI",
+    "billing": "Cara penggunaan agen dibayar",
+    "selfHost": "Di-host sendiri",
+    "rows": {
+      "oneHealth": {
+        "name": "One Health",
+        "agents": "Agen adalah anggota tim di setiap instans",
+        "billing": "Kunci model Anda sendiri atau model lokal; tanpa kredit",
+        "selfHost": "Ya, AGPL-3.0"
+      },
+      "linear": {
+        "name": "Linear",
+        "agents": "Otomatisasi agen di paket Business dan Enterprise",
+        "billing": "Kumpulan kredit AI prabayar",
+        "selfHost": "Tidak"
+      },
+      "jira": {
+        "name": "Jira",
+        "agents": "Agen Rovo",
+        "billing": "Kredit per pengguna per bulan, kelebihan ditagih mulai 3 Des 2026",
+        "selfHost": "Edisi Data Center"
+      },
+      "trello": {
+        "name": "Trello",
+        "agents": "Asisten AI, tanpa agen",
+        "billing": "Termasuk dalam paket berbayar",
+        "selfHost": "Tidak"
+      },
+      "plane": {
+        "name": "Plane",
+        "agents": "Agen di edisi berbayar",
+        "billing": "Kredit agen per kursi di paket berbayar",
+        "selfHost": "Ya; agen memerlukan lisensi komersial berbayar"
+      }
+    }
+  },
+  "trust": {
+    "title": "Dibuat agar layak dipercaya untuk pekerjaan Anda",
+    "items": {
+      "data": "Data Anda tetap berada di PostgreSQL Anda.",
+      "secrets": "Rahasia dienkripsi saat disimpan dengan AES-256-GCM.",
+      "keys": "Kunci API hanya ditampilkan sekali, dapat kedaluwarsa, dan dapat dihapus kapan saja.",
+      "ssrf": "Permintaan sisi server melewati perlindungan SSRF.",
+      "backup": "Setiap migrasi didahului pencadangan basis data.",
+      "source": "Kode sumber terbuka untuk diaudit."
+    }
+  },
+  "roadmap": {
+    "title": "Peta jalan",
+    "shipped": "Dirilis",
+    "inProgress": "Sedang dikerjakan",
+    "items": {
+      "budget": "Anggaran agen",
+      "actionLog": "Log tindakan agen",
+      "approvals": "Persetujuan untuk tindakan agen",
+      "import": "Impor dari Jira dan Trello",
+      "saml": "Single sign-on SAML",
+      "quickAi": "Tindakan AI cepat"
+    }
+  },
+  "cta": {
+    "title": "Jalankan di server Anda sendiri hari ini",
+    "body": "Satu berkas Docker Compose menjalankan seluruh stack.",
+    "docs": "Baca panduan host sendiri",
+    "github": "Beri bintang di GitHub"
+  },
+  "footer": {
+    "license": "One Health adalah perangkat lunak bebas berlisensi AGPL-3.0.",
+    "trademarks": "Linear, Jira, Trello, dan Plane adalah merek dagang milik pemiliknya masing-masing."
+  }
+}

@@ -1,0 +1,1 @@
+{"action": "create", "reason": "format:check failed in this episode only on autoharness runtime JSON the agent did not touch. Without a rule, the next agent either reformats files it does not own or wrongly reports its own change as failing. The rule is to verify owned files directly and report the foreign paths.", "evidence": "references/evidence-ca547b6c.md"}

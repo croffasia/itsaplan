@@ -180,7 +180,7 @@ like the state/user mapping, and runs a fresh import against the same source pro
 currently stops that from creating 976 issues instead of updating the original 488. Plane's own
 `external_id`/`external_source` fields — present on `WorkItem`, `WorkItemComment`, and
 `WorkItemAttachment` already, confirmed in the models — exist for exactly this kind of
-cross-system dedup. Whether itsaplan's own tables need an equivalent persisted reference (a
+cross-system dedup. Whether One Health's own tables need an equivalent persisted reference (a
 migration, not just the job-scoped `import_record`) is an open product/schema decision, not
 something to default silently — the maintainer should weigh in given it's a real schema change
 beyond what's already proposed.
@@ -223,7 +223,7 @@ same machinery Linear and Jira will need anyway.
 
 ## Modules — 30 of them, real usage, a concrete answer rather than more investigation
 
-Confirmed live: this project reports `total_modules: 30`. Itsaplan has no module-equivalent
+Confirmed live: this project reports `total_modules: 30`. One Health has no module-equivalent
 table. Rather than treat this as an open question needing more API exploration, the workspace's
 own data already implies the answer: this team already models secondary grouping through
 prefixed labels (`"Page: API / Backend"`, `"Suggestion: Must Have"`). A `"Module: <name>"`
@@ -235,25 +235,25 @@ than folded wordlessly into the does-not-migrate list.
 ## Relations vs. dependencies — two different concepts
 
 `WorkItemRelationTypeEnum`: `blocking, blocked_by, duplicate, relates_to, start_before,
-start_after, finish_before, finish_after`. Three map cleanly onto itsaplan's `issue_link.kind`:
+start_after, finish_before, finish_after`. Three map cleanly onto One Health's `issue_link.kind`:
 
-| Plane                     | itsaplan `issue_link.kind` |
+| Plane                     | One Health `issue_link.kind` |
 | ------------------------- | --------------------------- |
 | `blocking` / `blocked_by` | `blocks` (one row, direction read both ways) |
 | `duplicate`               | `duplicates`                 |
 | `relates_to`               | `relates`                     |
 
 The other four (`start_before/after`, `finish_before/after`) are Gantt-style scheduling
-dependencies with no destination in itsaplan's schema at all — not a translation problem, an
+dependencies with no destination in One Health's schema at all — not a translation problem, an
 absent concept. Add to the does-not-migrate list, or collapse to `relates` as a lossy
 best-effort (undecided — see open questions).
 
 There is also a separate **custom relation definitions** system
 (`work_item_relation_definitions.py`, `CreateWorkItemCustomRelation`) — workspaces can define
 their own named relation types beyond the eight built-in ones. **Unverified** whether this
-workspace actually uses any; if it does, those have no destination in itsaplan either.
+workspace actually uses any; if it does, those have no destination in One Health either.
 
-## Custom properties (`work_item_property`) vs itsaplan's `custom_field`
+## Custom properties (`work_item_property`) vs One Health's `custom_field`
 
 **Structural difference, confirmed live, bigger than the type-mapping table below**: Plane
 scopes custom properties to a *work item type*, not to the project directly —
@@ -273,7 +273,7 @@ treating a 404 here the same as a 404 on, say, work-items list.
 `PropertyTypeEnum`: `TEXT, DATETIME, DECIMAL, BOOLEAN, OPTION, RELATION, URL, EMAIL, FILE,
 FORMULA`.
 
-| Plane        | itsaplan `custom_field.field_type` | Notes |
+| Plane        | One Health `custom_field.field_type` | Notes |
 | ------------- | ------------------------------------ | ----- |
 | `TEXT`        | `text`                                | direct |
 | `DATETIME`    | `datetime`                            | direct (Plane has no separate plain `date`) |
@@ -284,18 +284,18 @@ FORMULA`.
 | `RELATION`→USER | `member`                             | direct, if the relation target is a user |
 | `RELATION`→ISSUE/RELEASE | — | no destination; drop or flatten to text |
 | `EMAIL`       | —                                      | no destination; flatten to `text` (value survives, validation semantics don't) |
-| `FILE`        | —                                      | no destination as a *field* (itsaplan attachments aren't field values); best-effort: store the file's name/URL as text, or drop |
+| `FILE`        | —                                      | no destination as a *field* (One Health attachments aren't field values); best-effort: store the file's name/URL as text, or drop |
 | `FORMULA`     | —                                      | computed at Plane's layer; the formula itself can't migrate, only its last computed value could be snapshotted as read-only text |
 
 ## State categories — the category can't be trusted, confirmed on real data
 
-`GroupEnum`: `backlog, unstarted, started, completed, cancelled, triage`. itsaplan's
+`GroupEnum`: `backlog, unstarted, started, completed, cancelled, triage`. One Health's
 `project_column.state_type`: `backlog, unstarted, started, completed, canceled`.
 
-- Spelling: Plane uses `cancelled` (double L), itsaplan uses `canceled` (single L). A
+- Spelling: Plane uses `cancelled` (double L), One Health uses `canceled` (single L). A
   category-fallback mapping that does a naive string match will silently fail on every
   cancelled-category state unless this is normalized explicitly.
-- `triage` has no itsaplan equivalent (itsaplan has no intake/triage concept at all). Falls
+- `triage` has no One Health equivalent (One Health has no intake/triage concept at all). Falls
   back to `backlog`.
 - **The real data makes the case for a mandatory review step, not just politeness.** This
   workspace's actual states include one named "In Progress" whose `group` is `backlog`, and one
@@ -320,13 +320,13 @@ FORMULA`.
 - **Labels have a `parent` field** (nullable, self-referential UUID) — Plane supports real
   label hierarchies natively. Unused in this workspace (66 labels, all `parent: null`, using a
   `"Suggestion: X"` / `"Page: Y"` naming convention instead of the real hierarchy) but a source
-  workspace that *does* use `parent` would need it mapped onto itsaplan's separate
+  workspace that *does* use `parent` would need it mapped onto One Health's separate
   `label_group` table.
 - **Members** (`GET .../members/`) return `{id, first_name, last_name, email, display_name,
   avatar, avatar_url}` directly, flat list, no pagination — exactly the shape needed for
   email-based user matching, no extra lookup required.
 - **Cycles carry full timestamps, not dates** — `start_date`/`end_date` are
-  `2026-08-20T13:19:13.714493+05:00`, not a plain date. itsaplan's `cycle.startDate`/`endDate`
+  `2026-08-20T13:19:13.714493+05:00`, not a plain date. One Health's `cycle.startDate`/`endDate`
   are date-only columns, so the time-of-day is dropped on import — lossy but harmless, worth
   one line in the PR description rather than a silent truncation nobody documented.
 

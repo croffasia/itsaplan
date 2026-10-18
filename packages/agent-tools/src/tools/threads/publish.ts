@@ -7,6 +7,7 @@ import { threadsToken, publishMedia, REPLY_CONTROL } from './client';
 // JPEG/PNG, video MP4/MOV). Handles container creation, processing, and publishing.
 export const threadsPublish: CustomToolEntry = {
   key: 'threads_publish',
+  writes: true,
   label: 'Threads Publish Post',
   scopes: ['threads_basic', 'threads_content_publish'],
   description:

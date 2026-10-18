@@ -9,13 +9,14 @@ import GoogleIcon from '@/components/common/GoogleIcon';
 import { useAuthConfig } from '@/services/authConfig.service';
 
 // The sign-in methods that are not the email + password form: the magic link toggle,
-// the instance's own OIDC provider, Google, and passkeys. Which of the first three
-// show depends on the instance config.
+// the instance's own OIDC and SAML providers, Google, and passkeys. Which of the first
+// four show depends on the instance config.
 export default function AuthLoginAlternatives({
   signingInWithLink,
   pending,
   onToggleMethod,
   onOidc,
+  onSaml,
   onGoogle,
   onPasskey,
 }: {
@@ -23,6 +24,7 @@ export default function AuthLoginAlternatives({
   pending: boolean;
   onToggleMethod: () => void;
   onOidc: () => void;
+  onSaml: () => void;
   onGoogle: () => void;
   onPasskey: () => void;
 }) {
@@ -49,6 +51,12 @@ export default function AuthLoginAlternatives({
           {/* The operator named their own identity provider, so the label is shown
               as given rather than translated. */}
           {authConfig.oidcLabel || t('withSso')}
+        </Button>
+      )}
+      {authConfig?.saml && (
+        <Button type="button" variant="outline" onClick={onSaml} disabled={pending}>
+          <ShieldCheck />
+          {authConfig.samlLabel || t('withSaml')}
         </Button>
       )}
       <SignInExtras pending={pending} />

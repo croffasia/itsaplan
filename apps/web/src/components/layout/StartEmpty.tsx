@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LocaleToggle } from '@/components/locale-toggle';
 import { ThemeToggle } from '@/components/theme-toggle';
+import EmptyIllustration from '@/components/brand/hero/EmptyIllustration';
 import UserMenu from '@/components/layout/UserMenu';
 import {
   Empty,
@@ -39,6 +40,7 @@ export default function StartEmpty({
         <UserMenu />
       </div>
       <Empty className="max-w-md">
+        <EmptyIllustration />
         <EmptyHeader>
           <EmptyMedia variant="icon">{icon}</EmptyMedia>
           <EmptyTitle>{title}</EmptyTitle>

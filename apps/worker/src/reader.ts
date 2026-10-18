@@ -51,7 +51,7 @@ export interface Page<T> {
 //
 // - states/labels/cycles are small, unpaginated project-level lists.
 // - listIssues walks the source's own pagination for the Discover snapshot.
-// - getIssue re-fetches one issue by id: Create resumes from itsaplan's own
+// - getIssue re-fetches one issue by id: Create resumes from One Health's own
 //   import_record snapshot, not from the source's pagination position, so it
 //   needs a single-item fetch rather than a page walk (see the notes file's
 //   "Design consequence" under Pagination).

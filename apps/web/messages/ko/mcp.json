@@ -24,15 +24,15 @@
     "methodTabsAria": "연결 방식",
     "method": "OAuth",
     "personalKey": "API 키",
-    "description": "ChatGPT나 Claude처럼 OAuth를 지원하는 MCP 클라이언트에서 사용할 수 있습니다. Itsaplan 계정으로 로그인하며, 클라이언트에는 API 키가 전달되지 않습니다.",
+    "description": "ChatGPT나 Claude처럼 OAuth를 지원하는 MCP 클라이언트에서 사용할 수 있습니다. One Health 계정으로 로그인하며, 클라이언트에는 API 키가 전달되지 않습니다.",
     "discovery": "OAuth Discovery",
     "steps": {
       "add": "클라이언트에 MCP 앱을 추가합니다.",
       "paste": "MCP 엔드포인트를 붙여넣습니다.",
       "choose": "클라이언트에서 로그인 방식을 묻는 경우 OAuth를 선택합니다.",
-      "signIn": "Itsaplan에 로그인하고 접근 권한을 승인합니다."
+      "signIn": "One Health에 로그인하고 접근 권한을 승인합니다."
     },
-    "security": "OAuth는 PKCE(S256), 동적 클라이언트 등록 및 Itsaplan 계정의 권한 범위가 적용된 액세스 토큰을 사용합니다.",
+    "security": "OAuth는 PKCE(S256), 동적 클라이언트 등록 및 One Health 계정의 권한 범위가 적용된 액세스 토큰을 사용합니다.",
     "consent": {
       "title": "{client}에서 계정에 연결하려고 합니다",
       "titleUnnamed": "MCP 클라이언트가 계정에 연결하려고 합니다",

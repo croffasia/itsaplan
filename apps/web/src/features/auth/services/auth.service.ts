@@ -1,4 +1,5 @@
 import {
+  authClient,
   signIn,
   signUp,
   requestPasswordReset,
@@ -138,6 +139,23 @@ export async function signInWithOidc(): Promise<void> {
     errorCallbackURL: appUrl('/login'),
   });
   if (result.error) throw new Error(result.error.message ?? '');
+}
+
+// Starts the round trip through the instance's SAML identity provider. The SSO plugin
+// has no client here, so the request is made directly; it answers with the IdP URL to
+// navigate to, and the IdP posts back to the API, which then sends the browser to one
+// of these two URLs.
+export async function signInWithSaml(): Promise<void> {
+  const result = await authClient.$fetch<{ url: string }>('/sign-in/sso', {
+    method: 'POST',
+    body: {
+      providerId: 'saml',
+      callbackURL: appUrl('/'),
+      errorCallbackURL: appUrl('/login'),
+    },
+  });
+  if (result.error) throw new Error(result.error.message ?? '');
+  window.location.href = result.data.url;
 }
 
 export async function signInWithPasskey(): Promise<void> {

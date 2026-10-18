@@ -26,7 +26,7 @@ async function setupOwner(): Promise<{
 
 async function configureEmail(owner: ReturnType<typeof authedApi>) {
   const result = await owner.god['email-settings'].put({
-    from: "It's a Plan <noreply@example.com>",
+    from: 'One Health <noreply@example.com>',
     resend: { enabled: true, apiKey: 're_test_key' },
     allowProjects: false,
   });

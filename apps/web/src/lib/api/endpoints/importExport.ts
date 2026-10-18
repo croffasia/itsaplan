@@ -1,14 +1,14 @@
 import { request } from '@/lib/api/core/client';
 
-// Import jobs bring issues in from a Plane instance or a Linear workspace (mirrors
-// apps/api modules/import-export/service.ts and linear.ts). Creating one stores an
+// Import jobs bring issues in from a Plane instance, a Linear workspace, a Jira
+// Cloud site or a Trello board (mirrors apps/api modules/import-export). Creating one stores an
 // encrypted credential and leaves the job 'pending' for the worker to drive through
 // its phases.
 
 export type ImportJobPhase = 'discover' | 'create' | 'link' | 'rewrite' | 'attachments' | 'done';
 export type ImportJobStatus = 'pending' | 'running' | 'paused' | 'completed' | 'failed';
 export type ImportEntityType = 'issue' | 'comment' | 'label' | 'state' | 'cycle' | 'attachment';
-export type ImportSource = 'plane' | 'linear';
+export type ImportSource = 'plane' | 'linear' | 'jira' | 'trello';
 
 export interface ImportEntityCount {
   discovered: number;
@@ -84,8 +84,41 @@ export interface LinearImportJobFields extends LinearConnectionInput {
   projectId?: string;
 }
 
+export interface JiraConnectionInput {
+  baseUrl: string;
+  email: string;
+  apiToken: string;
+}
+
+export interface JiraProjectOption {
+  id: string;
+  key: string;
+  name: string;
+}
+
+export interface JiraImportJobFields extends JiraConnectionInput {
+  source: 'jira';
+  jiraProjectKey: string;
+}
+
+export interface TrelloConnectionInput {
+  apiKey: string;
+  token: string;
+}
+
+export interface TrelloBoardOption {
+  id: string;
+  name: string;
+  closed: boolean;
+}
+
+export interface TrelloImportJobFields extends TrelloConnectionInput {
+  source: 'trello';
+  trelloBoardId: string;
+}
+
 export type CreateImportJobInput = ImportJobChoices &
-  (PlaneImportJobFields | LinearImportJobFields);
+  (PlaneImportJobFields | LinearImportJobFields | JiraImportJobFields | TrelloImportJobFields);
 
 export const testPlaneConnection = (projectKey: string, input: PlaneConnectionInput) =>
   request<{ projects: PlaneProjectOption[] }>(
@@ -113,6 +146,36 @@ export const testLinearStatesPreview = (
   input: LinearConnectionInput & { teamId: string },
 ) =>
   request<{ states: PlaneStateOption[] }>(`/projects/${projectKey}/import-jobs/linear-preview`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+
+export const testJiraConnection = (projectKey: string, input: JiraConnectionInput) =>
+  request<{ projects: JiraProjectOption[] }>(
+    `/projects/${projectKey}/import-jobs/jira-test-connection`,
+    { method: 'POST', body: JSON.stringify(input) },
+  );
+
+export const testJiraStatesPreview = (
+  projectKey: string,
+  input: JiraConnectionInput & { jiraProjectKey: string },
+) =>
+  request<{ states: PlaneStateOption[] }>(`/projects/${projectKey}/import-jobs/jira-preview`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+
+export const testTrelloConnection = (projectKey: string, input: TrelloConnectionInput) =>
+  request<{ boards: TrelloBoardOption[] }>(
+    `/projects/${projectKey}/import-jobs/trello-test-connection`,
+    { method: 'POST', body: JSON.stringify(input) },
+  );
+
+export const testTrelloStatesPreview = (
+  projectKey: string,
+  input: TrelloConnectionInput & { trelloBoardId: string },
+) =>
+  request<{ states: PlaneStateOption[] }>(`/projects/${projectKey}/import-jobs/trello-preview`, {
     method: 'POST',
     body: JSON.stringify(input),
   });

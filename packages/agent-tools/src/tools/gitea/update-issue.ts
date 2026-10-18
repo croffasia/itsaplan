@@ -5,6 +5,7 @@ import { giteaRequest, issueRef, repoPath, type GiteaIssue } from './client';
 // Edits an issue's title, body, or state.
 export const giteaUpdateIssue: CustomToolEntry = {
   key: 'gitea_update_issue',
+  writes: true,
   label: 'Gitea Update Issue',
   description:
     'Update an issue in a Gitea repository: change its title or markdown body, or close and reopen it. Give at least one of title, body or state.',

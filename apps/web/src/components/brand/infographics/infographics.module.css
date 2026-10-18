@@ -1,0 +1,24 @@
+@keyframes flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    transition:
+      opacity 0.6s ease-out,
+      transform 0.6s ease-out;
+  }
+  .reveal[data-reveal='hidden'] {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  .reveal[data-reveal='shown'] .edge {
+    animation: flow 1.6s linear infinite;
+  }
+}
+
+.edge {
+  stroke-dasharray: 6 6;
+}

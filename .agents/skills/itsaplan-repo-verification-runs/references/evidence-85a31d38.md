@@ -1,0 +1,1 @@
+A parallel `bun test` (pid 74908) on the shared test DB caused failures I couldn't attribute (TRUNCATE failed, "caller owns no team"). Runs must not overlap. I waited for it to finish before the final runs.

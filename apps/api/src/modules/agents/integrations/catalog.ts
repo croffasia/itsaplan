@@ -1,6 +1,6 @@
 import type { ConfigField } from '@repo/agent-tools';
 import { integrationDescriptors } from '@repo/agent-tools';
-import { AI_PROVIDERS } from './llm-providers';
+import { AI_PROVIDERS, type ProviderMeta } from './llm-providers';
 
 // The unified integration catalog: every service a project can store a credential
 // for. Two kinds:
@@ -25,17 +25,23 @@ export interface UnifiedIntegration {
 
 // The credential fields of an LLM provider: an API key, plus a base URL for the
 // OpenAI-compatible providers that require one.
-function llmCredentialSchema(requiresBaseUrl: boolean): ConfigField[] {
+function llmCredentialSchema(p: ProviderMeta): ConfigField[] {
   const fields: ConfigField[] = [
-    { key: 'apiKey', label: 'API key', type: 'secret', required: true, placeholder: 'sk-…' },
+    {
+      key: 'apiKey',
+      label: 'API key',
+      type: 'secret',
+      required: !p.apiKeyOptional,
+      placeholder: 'sk-…',
+    },
   ];
-  if (requiresBaseUrl) {
+  if (p.requiresBaseUrl) {
     fields.push({
       key: 'baseUrl',
       label: 'Base URL',
       type: 'url',
       required: true,
-      placeholder: 'https://your-endpoint/v1',
+      placeholder: p.defaultBaseUrl ?? 'https://your-endpoint/v1',
     });
   }
   return fields;
@@ -45,7 +51,7 @@ const LLM_INTEGRATIONS: UnifiedIntegration[] = AI_PROVIDERS.map((p) => ({
   key: p.key,
   label: p.label,
   kind: 'llm',
-  credentialSchema: llmCredentialSchema(p.requiresBaseUrl),
+  credentialSchema: llmCredentialSchema(p),
   tools: [],
 }));
 

@@ -25,7 +25,7 @@ import type { GenericEndpointContext } from 'better-auth';
 // Non-secret settings are one jsonb blob in app_setting under the 'auth' key; the
 // credentials are encrypted in app_secret, each with a `redacted` mirror the settings
 // UI can read without decrypting. The instance's own are under 'auth.email',
-// 'auth.google', 'auth.oidc' and 'auth.scim', set in god mode; a workspace's SCIM, where
+// 'auth.google', 'auth.oidc', 'auth.saml' and 'auth.scim', set in god mode; a workspace's SCIM, where
 // a build sets it up per workspace, is under 'workspace.<id>.scim'. The mail config is
 // also read by the api and the worker, so its shape and reader live in @repo/db; what
 // stays here is the write side.
@@ -33,6 +33,7 @@ import type { GenericEndpointContext } from 'better-auth';
 const AUTH_SETTING_KEY = 'auth';
 const GOOGLE_SECRET_KEY = 'auth.google';
 const OIDC_SECRET_KEY = 'auth.oidc';
+const SAML_SECRET_KEY = 'auth.saml';
 
 const scimSecretKey = (workspaceId: number | null) =>
   workspaceId === null ? 'auth.scim' : `workspace.${workspaceId}.scim`;
@@ -464,6 +465,66 @@ export async function setOidcSettings(patch: InstanceOidcPatch): Promise<Instanc
   const redacted = toOidcDto(next);
   await writeSecret(OIDC_SECRET_KEY, next, redacted);
   return redacted;
+}
+
+// ── SAML 2.0 ──────────────────────────────────────────────────────────────────
+
+// One SAML identity provider per instance. Nothing in it is a credential — the IdP
+// metadata is public, and its certificate verifies signatures rather than making them —
+// but it decides who may sign in as whom, so it is stored with the other providers.
+export interface InstanceSamlConfig {
+  enabled: boolean;
+  // Text of the sign-in button, shown as given. Empty falls back to a translated default.
+  label: string;
+  // The IdP's metadata document. When `idpMetadataUrl` is set the api fetches it from
+  // there on save and stores the result here, so a sign-in never waits on the IdP.
+  idpMetadataXml: string;
+  idpMetadataUrl: string;
+  // The entity id this instance presents to the IdP. Empty uses SAML_SP_ENTITY_ID.
+  entityId: string;
+  // Assertion attributes that carry the address and the display name. Empty uses the
+  // plugin's defaults: `email` (then the NameID), and `givenName` + `surname` or
+  // `displayName`.
+  emailAttribute: string;
+  nameAttribute: string;
+}
+
+export type InstanceSamlPatch = Partial<InstanceSamlConfig>;
+
+function defaultSamlConfig(): InstanceSamlConfig {
+  return {
+    enabled: false,
+    label: '',
+    idpMetadataXml: '',
+    idpMetadataUrl: '',
+    entityId: '',
+    emailAttribute: '',
+    nameAttribute: '',
+  };
+}
+
+export async function getSamlConfig(): Promise<InstanceSamlConfig> {
+  const stored = await readSecret<InstanceSamlConfig>(SAML_SECRET_KEY);
+  return { ...defaultSamlConfig(), ...(stored ?? {}) };
+}
+
+export function isSamlUsable(config: InstanceSamlConfig): boolean {
+  return config.enabled && config.idpMetadataXml.length > 0;
+}
+
+export async function hasConfiguredSaml(): Promise<boolean> {
+  return isSamlUsable(await getSamlConfig());
+}
+
+export async function getSamlLabel(): Promise<string> {
+  const config = await getSamlConfig();
+  return isSamlUsable(config) ? config.label : '';
+}
+
+export async function setSamlSettings(patch: InstanceSamlPatch): Promise<InstanceSamlConfig> {
+  const next = { ...(await getSamlConfig()), ...patch };
+  await writeSecret(SAML_SECRET_KEY, next, { enabled: next.enabled });
+  return next;
 }
 
 // ── SCIM provisioning token ───────────────────────────────────────────────────

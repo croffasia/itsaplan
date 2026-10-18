@@ -9,6 +9,8 @@ import {
   hasConfiguredGoogle,
   hasConfiguredOidc,
   getOidcLabel,
+  getSamlLabel,
+  hasConfiguredSaml,
 } from '@repo/auth';
 import { db, hasConfiguredEmailProvider, user } from '@repo/db';
 import { cors } from '@elysiajs/cors';
@@ -82,7 +84,7 @@ export const app = new Elysia()
       },
       documentation: {
         info: {
-          title: "It's a Plan API",
+          title: 'One Health API',
           version: pkg.version,
           description: apiDescription,
         },
@@ -102,6 +104,7 @@ export const app = new Elysia()
             name: 'Integrations',
             description: 'Stored integration credentials (LLM keys and tool creds)',
           },
+          { name: 'AI Assist', description: "Quick AI drafts on the team's own model" },
           { name: 'Agent Skills', description: 'Skill library given to internal agents' },
           {
             name: 'Agent Runner',
@@ -288,6 +291,8 @@ export const app = new Elysia()
         // Names the operator's own identity provider, so the button shows it as
         // given. Empty falls back to a translated default.
         oidcLabel: await getOidcLabel(),
+        saml: await hasConfiguredSaml(),
+        samlLabel: await getSamlLabel(),
         hasUsers: (await db.$count(user)) > 0,
       };
     },
@@ -302,7 +307,7 @@ export const app = new Elysia()
     },
   )
   // Root doubles as the liveness/health endpoint.
-  .get('/', () => ({ name: "It's a Plan api", status: 'ok' }), {
+  .get('/', () => ({ name: 'One Health api', status: 'ok' }), {
     detail: {
       tags: ['System'],
       summary: 'Check that the api is up',

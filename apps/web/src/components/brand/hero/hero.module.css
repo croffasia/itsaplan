@@ -1,0 +1,106 @@
+.orbit,
+.orbitReverse,
+.node,
+.ecg,
+.float,
+.bar,
+.draw {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes node-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.7);
+  }
+}
+@keyframes ecg {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes float {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes bar {
+  0%,
+  100% {
+    transform: scaleY(0.55);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes draw {
+  from {
+    stroke-dashoffset: 120;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes drift {
+  50% {
+    transform: translate(12px, -10px) scale(1.06);
+  }
+}
+
+.bar {
+  transform-origin: bottom;
+}
+.ecg {
+  stroke-dasharray: 1;
+}
+.draw {
+  stroke-dasharray: 120;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .orbit {
+    animation: spin 40s linear infinite;
+  }
+  .orbitReverse {
+    animation: spin 60s linear infinite reverse;
+  }
+  .node {
+    animation: node-pulse 3s ease-in-out infinite;
+  }
+  .ecg {
+    animation: ecg 3.2s ease-in-out infinite;
+  }
+  .float {
+    animation: float 7s ease-in-out infinite;
+  }
+  .bar {
+    animation: bar 2.8s ease-in-out infinite;
+  }
+  .draw {
+    animation: draw 2.4s ease-out both;
+  }
+  .drift {
+    animation: drift 18s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ecg,
+  .draw {
+    stroke-dashoffset: 0;
+  }
+}

@@ -478,6 +478,9 @@
     "reasoningEffortHigh": "Alto",
     "optional": "Opcional",
     "maxSteps": "Máximo de passos",
+    "monthlyBudget": "Orçamento mensal (USD)",
+    "monthlyBudgetPlaceholder": "Sem limite",
+    "monthlyBudgetHint": "As execuções param pelo resto do mês quando o custo atinge este valor. O custo usa os preços dos modelos no painel do agente. Uma execução já iniciada termina. Chamadas a um modelo sem preço não são contadas.",
     "memory": "Memória de conversa",
     "memoryHint": "Lembrar mensagens recentes dentro de um tópico de conversa.",
     "memoryCount": "Lembrar as últimas N mensagens",
@@ -714,5 +717,37 @@
       "removePrice": "Remover preço",
       "save": "Salvar preço"
     }
+  },
+  "agentActions": {
+    "title": "Ações do agente",
+    "logTab": "Registro de ações",
+    "approvalsTab": "Aprovações",
+    "noActions": "Este agente ainda não fez nenhuma alteração.",
+    "run": "Execução nº {id}",
+    "noPending": "Nenhuma alteração aguardando aprovação.",
+    "requireApproval": "Exigir aprovação",
+    "requireApprovalHint": "As alterações do agente e suas chamadas a integrações aguardam a aprovação de um membro do projeto. Isso vale só para agentes internos: as chamadas de um agente externo são registradas, não retidas.",
+    "on": "Ativado",
+    "off": "Desativado",
+    "approve": "Aprovar",
+    "reject": "Rejeitar",
+    "cancel": "Cancelar",
+    "reason": "Motivo",
+    "reasonPlaceholder": "Por que esta alteração foi rejeitada?",
+    "approved": "Alteração aplicada",
+    "rejected": "Alteração rejeitada",
+    "failed": "Não foi possível aplicar a alteração",
+    "issueTitle": "{count, plural, one {# alteração do agente aguarda aprovação} other {# alterações do agente aguardam aprovação}}",
+    "status": {
+      "pending": "Pendente",
+      "applying": "Aplicando",
+      "approved": "Aprovada",
+      "rejected": "Rejeitada",
+      "failed": "Falhou",
+      "expired": "Expirado"
+    },
+    "from": "De",
+    "to": "Até",
+    "approvedBy": "Aprovado por {name}"
   }
 }

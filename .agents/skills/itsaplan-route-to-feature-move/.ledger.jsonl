@@ -1,0 +1,1 @@
+{"action": "create", "reason": "Moving product page sections into a feature folder needed a repeatable sequence: thin route, plain mv for untracked files, import rewrites, checks. The git mv failure cost a retry.", "evidence": "references/evidence-10709189.md"}

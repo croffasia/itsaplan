@@ -1,0 +1,34 @@
+{
+  "board": {
+    "button": "Draft board with AI",
+    "title": "Draft a board with AI",
+    "description": "Describe the project. The AI proposes columns and issues; nothing is created until you confirm.",
+    "promptPlaceholder": "A launch plan for a mobile app, from research to release",
+    "generate": "Draft",
+    "regenerate": "Draft again",
+    "columns": "Columns",
+    "issues": "Issues",
+    "due": "Due {date}",
+    "confirm": "Create {columns, plural, one {# column} other {# columns}} and {issues, plural, one {# issue} other {# issues}}",
+    "created": "Board created"
+  },
+  "checklist": {
+    "button": "Suggest checklist",
+    "description": "Steps proposed from the issue's title and description. Remove any you do not want, then add the checklist.",
+    "remove": "Remove step",
+    "confirm": "Add checklist"
+  },
+  "settings": {
+    "title": "AI assist",
+    "description": "The model the quick AI features use: drafting a board and suggesting a checklist. With none picked, those buttons are hidden.",
+    "credential": "Provider key",
+    "model": "Model",
+    "modelPlaceholder": "gpt-5-mini",
+    "none": "Off",
+    "save": "Save",
+    "saved": "AI assist model saved",
+    "off": "AI assist is off.",
+    "on": "AI assist runs on {model}.",
+    "managersOnly": "Team owners and managers change this."
+  }
+}

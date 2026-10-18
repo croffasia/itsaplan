@@ -498,7 +498,6 @@
     "import": "Importar",
     "source": "Origen",
     "sourceHint": "Elige desde dónde importar.",
-    "comingSoon": "Pronto",
     "connect": "Conectar con Plane",
     "connectHint": "Introduce una instancia autoalojada de Plane para comprobar la conexión y cargar sus proyectos.",
     "baseUrl": "URL de Plane",
@@ -549,6 +548,28 @@
       "projectPlaceholder": "Selecciona un proyecto",
       "noProject": "Tickets sin proyecto",
       "noTeams": "Esta clave de API no ve ningún equipo."
+    },
+    "jira": {
+      "connect": "Conectar con Jira",
+      "connectHint": "Introduce un sitio de Jira Cloud con el correo de la cuenta y un token de API para comprobarlos y cargar los proyectos que la cuenta puede ver.",
+      "siteUrl": "URL del sitio de Jira",
+      "email": "Correo de la cuenta",
+      "apiTokenHint": "Créalo en id.atlassian.com, en Seguridad → Tokens de API. La cuenta necesita acceso de lectura al proyecto.",
+      "projectHint": "Elige el proyecto de Jira que quieres importar. Los sprints se convierten en ciclos.",
+      "project": "Proyecto de Jira",
+      "noProjects": "Esta cuenta no puede ver ningún proyecto."
+    },
+    "trello": {
+      "connect": "Conectar con Trello",
+      "connectHint": "Introduce una clave de API y un token de Trello para comprobarlos y cargar los tableros que pueden ver.",
+      "apiKey": "Clave de API",
+      "token": "Token",
+      "tokenHint": "Crea un Power-Up en trello.com/power-ups/admin para obtener una clave de API y genera un token para ella. Basta con acceso de lectura.",
+      "board": "Tablero",
+      "boardHint": "Elige el tablero que quieres importar. Sus listas se convierten en estados y sus tarjetas en incidencias.",
+      "boardPlaceholder": "Selecciona un tablero",
+      "noBoards": "Este token no puede ver ningún tablero.",
+      "closedBoard": "{name} (cerrado)"
     },
     "statuses": {
       "pending": "Pendiente",

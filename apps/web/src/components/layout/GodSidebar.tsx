@@ -42,10 +42,10 @@ export default function GodSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" className="cursor-default hover:bg-transparent" asChild>
               <div>
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-full bg-linear-to-br from-brand-teal to-sidebar-primary text-sidebar-primary-foreground ring-1 ring-sidebar-primary/30">
                   <Shield className="size-4" />
                 </div>
-                <div className="grid flex-1 text-left leading-tight">
+                <div className="grid flex-1 text-start leading-tight">
                   <span className="truncate text-sm font-semibold">{t('godMode')}</span>
                   <span className="truncate text-xs text-muted-foreground">
                     {t('instanceSettings')}

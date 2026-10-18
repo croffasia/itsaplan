@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
+import OrbitMark from '@/components/brand/system/OrbitMark';
 import {
   Empty,
   EmptyContent,
@@ -14,15 +16,18 @@ import {
 export function EmptyState({
   title,
   description,
+  icon,
   children,
 }: {
   title: string;
   description: string;
+  icon?: LucideIcon;
   children?: ReactNode;
 }) {
   return (
     <Empty>
       <EmptyHeader>
+        <OrbitMark icon={icon} still className="mb-2 w-30" />
         <EmptyTitle>{title}</EmptyTitle>
         <EmptyDescription>{description}</EmptyDescription>
       </EmptyHeader>

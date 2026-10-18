@@ -6,7 +6,7 @@ import { REGISTRATION_REFUSAL_KEYS } from '@/utils/registrationRefusals';
 // Some auth failures reach the sign-in screen as a redirect rather than a rejected
 // promise, and carry their reason in ?error=<code> (plus ?error_description=<text>
 // when the instance itself refused — the registration gate passes its own message
-// that way). Five flows land here: the Google round trip, the OIDC one, the magic link,
+// that way). Six flows land here: the Google round trip, the OIDC one, the SAML one, the magic link,
 // the confirmation link from the address verification email, and an MCP authorization
 // the api could not hand back to its client. Codes raised by better-auth carry no
 // description, or one written for developers (an unknown MCP client arrives as
@@ -22,6 +22,7 @@ const MESSAGE_KEYS = {
   signup_disabled: 'signupDisabled',
   INVITE_EXPIRED: 'inviteExpired',
   OIDC_DISABLED: 'ssoDisabled',
+  SAML_DISABLED: 'ssoDisabled',
   PASSWORD_AUTH_DISABLED: 'passwordDisabled',
   ACCOUNT_DEACTIVATED: 'accountDeactivated',
   email_not_found: 'emailNotFound',

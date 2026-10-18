@@ -81,6 +81,9 @@ export interface PublicAuthConfig {
   // The sign-in button text the operator gave their identity provider. Empty when
   // OIDC is not offered, or when they left it blank.
   oidcLabel: string;
+  saml: boolean;
+  // The same for the SAML identity provider.
+  samlLabel: string;
   hasUsers: boolean;
 }
 

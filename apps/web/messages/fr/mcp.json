@@ -24,15 +24,15 @@
     "methodTabsAria": "Méthode de connexion",
     "method": "OAuth",
     "personalKey": "Clé d'API",
-    "description": "Pour tout client MCP compatible OAuth, par exemple ChatGPT ou Claude. Vous vous connectez avec votre compte Itsaplan. Le client ne reçoit aucune clé d'API.",
+    "description": "Pour tout client MCP compatible OAuth, par exemple ChatGPT ou Claude. Vous vous connectez avec votre compte One Health. Le client ne reçoit aucune clé d'API.",
     "discovery": "Découverte OAuth",
     "steps": {
       "add": "Ajoutez une application MCP dans votre client.",
       "paste": "Collez le point d'accès MCP.",
       "choose": "Choisissez OAuth lorsque le client demande la méthode de connexion.",
-      "signIn": "Connectez-vous à Itsaplan et approuvez l'accès."
+      "signIn": "Connectez-vous à One Health et approuvez l'accès."
     },
-    "security": "OAuth utilise PKCE (S256), l'enregistrement dynamique des clients et des jetons d'accès limités à votre compte Itsaplan.",
+    "security": "OAuth utilise PKCE (S256), l'enregistrement dynamique des clients et des jetons d'accès limités à votre compte One Health.",
     "consent": {
       "title": "{client} souhaite se connecter à votre compte",
       "titleUnnamed": "Un client MCP souhaite se connecter à votre compte",

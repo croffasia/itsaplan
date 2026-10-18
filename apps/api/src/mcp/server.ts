@@ -8,6 +8,7 @@ import { dispatchTool } from './dispatch';
 import { SERVER_INSTRUCTIONS } from './instructions';
 import type { McpCredential } from './credential';
 import { toolError } from './result';
+import { recordMcpAgentAction } from '#modules/agent-actions/service';
 
 // The path param of every team-scoped route.
 const TEAM_PARAM = 'teamId';
@@ -39,7 +40,7 @@ export async function buildMcpServer(
   const server = new Server(
     // `name` is the stable programmatic identifier; `title` is the human-readable
     // display name a client shows to the user (per the MCP Implementation spec).
-    { name: 'itsaplan', title: 'Itsaplan', version: '1.0.0' },
+    { name: 'itsaplan', title: 'One Health', version: '1.0.0' },
     // `instructions` reaches the client in the initialize response and covers what
     // no single tool description can: which tool resolves ids, how a column is
     // picked, how far a request to "work on an issue" goes.
@@ -92,6 +93,9 @@ export async function buildMcpServer(
     const { text, isError, structuredContent } = await dispatchTool(app, tool, args, credential, {
       viaMcpEndpoint: true,
     });
+    if (tool.method !== 'GET' && !tool.annotations.readOnlyHint) {
+      await recordMcpAgentAction(userId, tool.name, args, isError ? text : null);
+    }
     if (tool.images && !isError) return { content: imageContent(text) };
     return { content: [{ type: 'text', text }], isError, structuredContent };
   });

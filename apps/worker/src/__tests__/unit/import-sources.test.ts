@@ -2,6 +2,8 @@ import { describe, it, expect } from 'bun:test';
 import { readerForJob, sourceProjectKeyForJob } from '../../import-sources';
 import { LinearReader } from '../../linear-adapter';
 import { PlaneReader } from '../../plane-adapter';
+import { JiraReader } from '../../jira-adapter';
+import { TrelloReader } from '../../trello-adapter';
 import { UnsupportedImportSourceError } from '../../reader';
 
 const planeCredential = {
@@ -13,6 +15,25 @@ const planeCredential = {
 const linearCredential = { apiKey: 'lin_api_test' };
 
 describe('readerForJob', () => {
+  it('builds Jira and Trello readers, with the Jira key as the Rewrite prefix', () => {
+    const jira = {
+      id: 9,
+      source: 'jira',
+      config: { jiraProjectKey: 'OPS' },
+    };
+    const jiraCredential = {
+      baseUrl: 'https://acme.atlassian.net',
+      email: 'a@x.com',
+      apiToken: 't',
+    };
+    expect(readerForJob(jira, jiraCredential)).toBeInstanceOf(JiraReader);
+    expect(sourceProjectKeyForJob(jira)).toBe('OPS');
+    const trello = { id: 10, source: 'trello', config: { trelloBoardId: 'b1' } };
+    expect(readerForJob(trello, { apiKey: 'k', token: 't' })).toBeInstanceOf(TrelloReader);
+    expect(sourceProjectKeyForJob(trello)).toBeNull();
+    expect(() => readerForJob(trello, linearCredential)).toThrow('not a Trello key and token');
+  });
+
   it('builds a Plane reader for a Plane job', () => {
     const job = { id: 7, source: 'plane', config: { planeProjectId: 'project-1' } };
     expect(readerForJob(job, planeCredential)).toBeInstanceOf(PlaneReader);
@@ -67,11 +88,11 @@ describe('readerForJob', () => {
   });
 
   it('marks an unsupported source as a permanent error', () => {
-    const job = { id: 7, source: 'jira', config: {} };
+    const job = { id: 7, source: 'asana', config: {} };
     expect(() => readerForJob(job, planeCredential)).toThrow(UnsupportedImportSourceError);
   });
 
-  it.each(['jira', 'toString', ''])('refuses the unsupported source "%s"', (source) => {
+  it.each(['asana', 'toString', ''])('refuses the unsupported source "%s"', (source) => {
     const job = { id: 7, source, config: { planeProjectId: 'project-1' } };
     expect(() => readerForJob(job, planeCredential)).toThrow(
       `import job 7 has unsupported source "${source}"`,

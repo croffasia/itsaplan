@@ -5,6 +5,7 @@ import { routeTools, withoutFields, type McpInputSchema, type McpRouteTool } fro
 import type { Permission } from '#shared/guards';
 import { dispatchTool } from '#mcp/dispatch';
 import { getMcpApp } from '#mcp/app-ref';
+import { createPendingAction, recordAgentAction } from '#modules/agent-actions/service';
 import {
   AGENT_ACTIONS,
   ALWAYS_ON_ACTIONS,
@@ -67,13 +68,25 @@ export function actionCatalog(): (ToolMeta & { permission?: Permission })[] {
   }));
 }
 
+// Where a write call is logged, or held when `hold` is set for an agent that requires
+// approval.
+export type ActionContext = {
+  agentId: number;
+  issueId: number | null;
+  runId: number | null;
+  hold: boolean;
+};
+
 // Builds the route-backed tools for one agent, keyed by tool id. The read-only
 // always-on actions are always included; a mutating action only when its key is in
-// enabledActions (the agent's granted actions, from ai_agent.tools).
+// enabledActions (the agent's granted actions, from ai_agent.tools). With `context`, a
+// mutating call is logged once its route answers, or stored for a project member to
+// decide instead of being sent when `context.hold` is set.
 export function buildRouteTools(
   project: ProjectRow,
   apiKey: string,
   enabledActions: string[] = [],
+  context?: ActionContext,
 ): Record<string, ReturnType<typeof createTool>> {
   const app = getMcpApp();
   const granted = new Set([...ALWAYS_ON_KEYS, ...normalizeToolKeys(enabledActions)]);
@@ -84,7 +97,7 @@ export function buildRouteTools(
   const tools: Record<string, ReturnType<typeof createTool>> = {};
   for (const route of routeTools(app)) {
     if (!granted.has(route.name)) continue;
-    tools[route.name] = buildOne(route, project, apiKey);
+    tools[route.name] = buildOne(route, project, apiKey, context);
   }
   return tools;
 }
@@ -93,6 +106,7 @@ function buildOne(
   route: McpRouteTool,
   project: ProjectRow,
   apiKey: string,
+  context: ActionContext | undefined,
 ): ReturnType<typeof createTool> {
   const overrides = toolMeta(route.name)?.overrides;
   const bindsProject = route.pathParams.includes('projectKey');
@@ -111,6 +125,25 @@ function buildOne(
       const args: Record<string, unknown> = { ...input };
       for (const name of hidden) delete args[name];
       if (bindsProject) args.projectKey = project.ref;
+      const writes = route.method !== 'GET' && !route.annotations.readOnlyHint;
+      const issueId = typeof args.issueId === 'number' ? args.issueId : (context?.issueId ?? null);
+      if (context?.hold && writes) {
+        const actionId = await createPendingAction({
+          agentId: context.agentId,
+          projectId: project.id,
+          issueId,
+          runId: context.runId,
+          tool: route.name,
+          args,
+        });
+        // The run goes on without the result: the call is applied, or rejected with a
+        // reason, later and outside this run.
+        return {
+          pendingApproval: true,
+          actionId,
+          message: 'This change waits for a project member to approve it. It is not applied yet.',
+        };
+      }
       const { text, isError } = await dispatchTool(
         getMcpApp(),
         route,
@@ -118,6 +151,17 @@ function buildOne(
         { kind: 'api-key', apiKey },
         { viaMcpEndpoint: false },
       );
+      if (context && writes) {
+        await recordAgentAction({
+          agentId: context.agentId,
+          projectId: project.id,
+          issueId,
+          runId: context.runId,
+          tool: route.name,
+          args,
+          error: isError ? text : null,
+        });
+      }
       const body = parseBody(text);
       // A route failure is returned to the model as a result rather than thrown, so
       // it can correct the call instead of the run aborting. Custom tools do the same.

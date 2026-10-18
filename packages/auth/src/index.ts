@@ -7,6 +7,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { passkey } from '@better-auth/passkey';
 import { apiKey } from '@better-auth/api-key';
 import { mcp } from '@better-auth/mcp';
+import { sso } from '@better-auth/sso';
 import {
   oauthProviderAuthServerMetadata,
   oauthProviderOpenIdConfigMetadata,
@@ -24,8 +25,11 @@ import {
   isGoogleUsable,
   getOidcConfig,
   isOidcUsable,
+  getSamlConfig,
+  isSamlUsable,
   isAccountDeactivated,
 } from './instance';
+import { buildSpMetadata } from './saml';
 import { sendAuthEmail } from './mail';
 import { readAuthExtensions } from './extensions';
 
@@ -347,6 +351,61 @@ const instanceOidc = (): BetterAuthPlugin => ({
   },
 });
 
+// The instance's SAML identity provider. One per instance, so its id is a constant: it
+// is what the `account` rows store, next to the NameID.
+export const SAML_PROVIDER_ID = 'saml';
+
+// What the IdP is told about this instance; god mode shows them for copying. The ACS URL
+// is where the IdP posts its response, and the metadata URL serves both in one document.
+export const SAML_ACS_URL = `${apiPublicUrl}/api/auth/sso/saml2/sp/acs/${SAML_PROVIDER_ID}`;
+export const SAML_SP_METADATA_URL = `${apiPublicUrl}/api/auth/sso/saml2/sp/metadata?providerId=${SAML_PROVIDER_ID}`;
+// The entity id when god mode leaves it empty: the metadata URL, as most IdPs expect.
+export const SAML_SP_ENTITY_ID = SAML_SP_METADATA_URL;
+
+type DefaultSso = NonNullable<NonNullable<Parameters<typeof sso>[0]>['defaultSSO']>;
+
+// The SSO plugin reads `defaultSSO` off its options on every request, so it holds this
+// array, and refreshSamlProvider() refills it from the stored settings. Its own
+// `sso_provider` table stays empty: providers there are registered by signed-in users,
+// and those endpoints are in disabledPaths. refreshSamlProvider() must clear and refill
+// it with no `await` in between, or a concurrent request reads it half-filled.
+const samlProviders: DefaultSso = [];
+
+// Loads the stored provider into that array and reports whether a SAML sign-in may run.
+// The provider is loaded while it only has metadata, so the SP metadata URL answers
+// before the switch is turned on; a sign-in also needs the switch.
+async function refreshSamlProvider(): Promise<boolean> {
+  try {
+    const config = await getSamlConfig();
+    samlProviders.length = 0;
+    if (!config.idpMetadataXml) return false;
+    const entityId = config.entityId || SAML_SP_ENTITY_ID;
+    samlProviders.push({
+      providerId: SAML_PROVIDER_ID,
+      // Matched only when a sign-in names no provider; the screen always names it.
+      domain: apiUrl!.hostname,
+      samlConfig: {
+        issuer: entityId,
+        // Read from the metadata instead.
+        entryPoint: '',
+        callbackUrl: `${trustedOrigins[0]}/`,
+        idpMetadata: { metadata: config.idpMetadataXml },
+        spMetadata: { metadata: buildSpMetadata({ entityId, acsUrl: SAML_ACS_URL }) },
+        wantAssertionsSigned: true,
+        mapping: {
+          email: config.emailAttribute || undefined,
+          name: config.nameAttribute || undefined,
+        },
+      },
+    });
+    return isSamlUsable(config);
+  } catch (error) {
+    console.error('[auth] could not load the SAML provider:', error);
+    samlProviders.length = 0;
+    return false;
+  }
+}
+
 // The two conditions better-auth checks before linking an address to an account that
 // already has it are read from different places: `trustedProviders` per request,
 // through the resolver below, and `requireLocalEmailVerified` off the options object
@@ -363,7 +422,7 @@ const PROVIDER_RETURN = /\/(callback|acs)\//;
 async function resolveTrustedProviders(request?: Request): Promise<string[]> {
   if (!request || !PROVIDER_RETURN.test(new URL(request.url).pathname)) return [];
   trustProviderEmails = (await getAuthSettings()).trustProviderEmails;
-  return trustProviderEmails ? ['google', OIDC_PROVIDER_ID] : [];
+  return trustProviderEmails ? ['google', OIDC_PROVIDER_ID, SAML_PROVIDER_ID] : [];
 }
 
 // Whether a new account has to confirm its address before it gets a session. An
@@ -560,6 +619,7 @@ function createAuth() {
         verification: schema.verification,
         passkey: schema.passkey,
         apikey: schema.apikey,
+        ssoProvider: schema.ssoProvider,
         jwks: schema.jwks,
         oauthClient: schema.oauthClient,
         oauthResource: schema.oauthResource,
@@ -724,6 +784,21 @@ function createAuth() {
           return;
         }
 
+        // Starting a SAML sign-in, the IdP's response, and the SP metadata. The response
+        // is a form the IdP's page posts, so a refusal there goes back to the sign-in
+        // screen with a code rather than as JSON.
+        if (ctx.path === '/sign-in/sso' || ctx.path.startsWith('/sso/saml2/')) {
+          const usable = await refreshSamlProvider();
+          if (usable || ctx.path === '/sso/saml2/sp/metadata') return;
+          if (ctx.path.startsWith('/sso/saml2/sp/acs/')) {
+            throw ctx.redirect(`${oauthErrorURL}?error=SAML_DISABLED`);
+          }
+          throw new APIError('FORBIDDEN', {
+            code: 'SAML_DISABLED',
+            message: 'SAML sign-in is disabled on this instance',
+          });
+        }
+
         // Both password endpoints: the sign-in screen sends the one field it has to
         // /sign-in/email or /sign-in/username depending on what was typed, and the
         // instance gate has to apply either way.
@@ -847,7 +922,7 @@ function createAuth() {
       // then used to sign in (signIn.passkey). Adds the `passkey` table.
       passkey({
         rpID: passkeyRpID,
-        rpName: process.env.PASSKEY_RP_NAME ?? "It's a Plan",
+        rpName: process.env.PASSKEY_RP_NAME ?? 'One Health',
         // Expected origin(s) of the WebAuthn ceremony — the frontend origins.
         origin: trustedOrigins,
       }),
@@ -902,6 +977,9 @@ function createAuth() {
       }),
       // The instance's OIDC provider, configured in god mode; see oidcProvider above.
       instanceOidc(),
+      // The instance's SAML provider, configured in god mode; see samlProviders above.
+      // Adds the `ssoProvider` table, which stays empty.
+      sso({ defaultSSO: samlProviders }),
       // Usernames: a second identifier next to the address, unique across the
       // instance. Adds `username` / `display_username` to the user table and the
       // /sign-in/username endpoint the sign-in screen uses when the visitor typed a
@@ -946,7 +1024,21 @@ function createAuth() {
     // address, so it would tell a stranger which addresses are registered. Nothing in
     // the app calls it — the profile form learns a name is taken from updateUser's
     // error. jwt()'s /token hands out a JWT of the session, which nothing reads.
-    disabledPaths: ['/is-username-available', '/token', ...extensions.disabledPaths],
+    // The SSO plugin's provider endpoints let any signed-in user register an identity
+    // provider for a domain, which would sign its addresses into existing accounts; the
+    // instance's one provider is set in god mode instead.
+    disabledPaths: [
+      '/is-username-available',
+      '/token',
+      '/sso/register',
+      '/sso/providers',
+      '/sso/get-provider',
+      '/sso/update-provider',
+      '/sso/delete-provider',
+      '/sso/request-domain-verification',
+      '/sso/verify-domain',
+      ...extensions.disabledPaths,
+    ],
 
     advanced: {
       // Share the session cookie across subdomains when COOKIE_DOMAIN is the parent
@@ -1038,6 +1130,10 @@ export {
   getOidcConfig,
   getOidcLabel,
   hasConfiguredOidc,
+  getSamlConfig,
+  setSamlSettings,
+  getSamlLabel,
+  hasConfiguredSaml,
   getScimSettings,
   setScimSettings,
   rotateScimToken,
@@ -1059,5 +1155,8 @@ export type {
   InstanceOidcDto,
   InstanceOidcPatch,
   InstanceOidcConfig,
+  InstanceSamlConfig,
+  InstanceSamlPatch,
   ScimSettingsDto,
 } from './instance';
+export { parseIdpMetadata, SamlMetadataError, type IdpMetadataSummary } from './saml';

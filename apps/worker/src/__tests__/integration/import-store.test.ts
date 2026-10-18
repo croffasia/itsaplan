@@ -162,7 +162,7 @@ describe('import_job source', () => {
     const { projectId, userId } = await makeProject();
     const error = await db
       .insert(importJob)
-      .values({ projectId, createdByUserId: userId, source: 'jira' })
+      .values({ projectId, createdByUserId: userId, source: 'asana' })
       .catch((e: unknown) => e);
     expect((error as { cause?: Error }).cause?.message).toContain('import_job_source_check');
   });

@@ -160,6 +160,14 @@
   "featureOffTitle": "{feature} dinonaktifkan",
   "toggleSidebar": "Tampilkan atau sembunyikan bilah sisi",
   "system": "Sistem",
+  "systemScreen": {
+    "notFoundTitle": "Halaman tidak ditemukan",
+    "notFoundDescription": "Halaman yang Anda buka tidak ada atau telah dipindahkan.",
+    "errorTitle": "Terjadi kesalahan",
+    "errorDescription": "Halaman ini tidak dapat dimuat. Coba lagi, atau kembali ke beranda.",
+    "retry": "Coba lagi",
+    "home": "Ke beranda"
+  },
   "genericError": "Terjadi kesalahan",
   "commandPalette": "Palet perintah",
   "commandPaletteHint": "Cari perintah untuk dijalankan…",
@@ -182,7 +190,7 @@
     "openPreviewLink": "Buka {name} di tab baru",
     "loadingPreview": "Memuat pratinjau…",
     "previewUnavailable": "Pratinjau tidak tersedia. Buka tautan untuk melihat halaman ini.",
-    "internalPage": "Halaman ItsAPlan",
+    "internalPage": "Halaman One Health",
     "internalPreviewUnavailable": "Halaman ini tidak tersedia atau Anda tidak memiliki akses.",
     "previewNoteCount": "{count, plural, one {# catatan} other {# catatan}}",
     "previewCustomField": "Bidang kustom",
@@ -212,5 +220,10 @@
     "perPage": "per halaman",
     "range": "{first}-{last} dari {total}"
   },
-  "aboutCloudAndPro": "Pelajari Cloud dan Pro"
+  "aboutCloudAndPro": "Pelajari Cloud dan Pro",
+  "hero": {
+    "plansOnTrack": "Rencana sesuai jalur",
+    "careTeamsSynced": "Tim perawatan tersinkron",
+    "tasksDoneThisWeek": "Tugas selesai minggu ini"
+  }
 }

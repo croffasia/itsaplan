@@ -160,6 +160,14 @@
   "featureOffTitle": "{feature} están desactivadas",
   "toggleSidebar": "Cambiar la barra lateral",
   "system": "Sistema",
+  "systemScreen": {
+    "notFoundTitle": "Página no encontrada",
+    "notFoundDescription": "La página que has abierto no existe o se ha movido.",
+    "errorTitle": "Algo ha salido mal",
+    "errorDescription": "No se ha podido cargar esta página. Inténtalo de nuevo o vuelve al inicio.",
+    "retry": "Reintentar",
+    "home": "Ir al inicio"
+  },
   "genericError": "Algo ha salido mal",
   "commandPalette": "Paleta de comandos",
   "commandPaletteHint": "Busca un comando para ejecutar…",
@@ -182,7 +190,7 @@
     "openPreviewLink": "Abrir {name} en una pestaña nueva",
     "loadingPreview": "Cargando la vista previa…",
     "previewUnavailable": "No hay una vista previa disponible. Abre el enlace para ver esta página.",
-    "internalPage": "Página de ItsAPlan",
+    "internalPage": "Página de One Health",
     "internalPreviewUnavailable": "Esta página no está disponible o no tienes acceso a ella.",
     "previewNoteCount": "{count, plural, one {# nota} other {# notas}}",
     "previewCustomField": "Campo personalizado",
@@ -212,5 +220,10 @@
     "perPage": "por página",
     "range": "{first}-{last} de {total}"
   },
-  "aboutCloudAndPro": "Más sobre Cloud y Pro"
+  "aboutCloudAndPro": "Más sobre Cloud y Pro",
+  "hero": {
+    "plansOnTrack": "Planes en marcha",
+    "careTeamsSynced": "Equipos de atención sincronizados",
+    "tasksDoneThisWeek": "Tareas completadas esta semana"
+  }
 }

@@ -57,6 +57,9 @@ without being a person in it.
 
 `ai_agent_team_username_uq` makes the mention handle unique per team, not per project.
 
+`ai_agent.monthly_budget_usd` (`numeric(12,2)`, nullable) is an internal agent's spending
+limit for one UTC month. Null means no limit. The api reads it before a run starts.
+
 ## Revision engine
 
 `revision` holds one counter per scope — the change markers the clients poll through

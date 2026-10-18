@@ -36,7 +36,11 @@ export default function AppHeader({
   const canCreateIssue = hasProject && can('work_items', 'create');
   const canUseChat = hasProject && can('ai_agents', 'read');
   return (
-    <header className="flex h-12 shrink-0 items-center gap-2 border-b px-2 sm:px-4">
+    <header className="relative flex h-12 shrink-0 items-center gap-2 bg-background/80 px-2 backdrop-blur-md sm:px-4">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-primary/45 to-transparent"
+      />
       <SidebarTrigger />
       <Separator orientation="vertical" className="me-1 h-4" />
       <div className="min-w-0 truncate text-sm font-medium">{title}</div>
@@ -47,13 +51,13 @@ export default function AppHeader({
             type="button"
             onClick={onOpenCommand}
             aria-label={t('searchHint', { key: paletteKey ?? '' })}
-            className="ms-auto flex size-8 shrink-0 items-center justify-center rounded-md border text-sm text-muted-foreground transition-colors hover:bg-accent sm:w-auto sm:max-w-xs sm:min-w-0 sm:flex-1 sm:shrink sm:justify-start sm:gap-2 sm:px-3"
+            className="ms-auto flex size-8 shrink-0 items-center justify-center rounded-lg border border-border/70 bg-muted/40 text-sm text-muted-foreground transition-colors hover:border-primary/40 hover:bg-accent hover:text-foreground sm:w-auto sm:max-w-xs sm:min-w-0 sm:flex-1 sm:shrink sm:justify-start sm:gap-2 sm:px-3"
           >
             <Search className="size-4 shrink-0" />
             <span className="hidden truncate sm:inline">{t('search')}</span>
             <kbd
               dir="ltr"
-              className="ms-auto hidden rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] sm:inline"
+              className="ms-auto hidden rounded border border-border/70 bg-background px-1.5 py-0.5 font-mono text-[11px] sm:inline"
             >
               {paletteKey}
             </kbd>

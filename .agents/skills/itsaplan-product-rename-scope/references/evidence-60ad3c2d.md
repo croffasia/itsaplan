@@ -1,0 +1,1 @@
+Scope: user-facing "It's a Plan" strings → "One Health". Infrastructure identifiers (package names, GHCR images, domain, npm `@itsaplan/runner`, DB names) stay — renaming them breaks deploys and insta... Legal entity found: ICLA.md:6 names Andrii Poluosmak as project owner.

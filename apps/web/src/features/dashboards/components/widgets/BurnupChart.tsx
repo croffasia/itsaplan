@@ -1,4 +1,5 @@
 import { Area, CartesianGrid, ComposedChart, Line, ReferenceLine, XAxis, YAxis } from 'recharts';
+import { useId } from 'react';
 import { useTranslations } from 'next-intl';
 import { formatDate, formatShortDate } from '@/utils/dates';
 import {
@@ -9,6 +10,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart';
+import AreaGradient from '@/components/common/chart/AreaGradient';
 import type { BurnupPoint } from '../../utils/burnupSeries';
 
 const TODAY_COLOR = '#94a3b8';
@@ -62,6 +64,7 @@ export default function BurnupChart({
   target: string | null;
 }) {
   const t = useTranslations('dashboards.burnup');
+  const gradientId = `burnup-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const hasFuture = points.at(-1)?.date !== today;
   const showTarget = target != null && points.some((p) => p.date === target);
   const hasProjection = points.some((p) => p.projection != null);
@@ -72,6 +75,10 @@ export default function BurnupChart({
   return (
     <ChartContainer dir="ltr" config={config} className="h-full min-h-[180px] w-full">
       <ComposedChart data={points}>
+        <defs>
+          <AreaGradient id={`${gradientId}-scope`} color="var(--color-scope)" />
+          <AreaGradient id={`${gradientId}-completed`} color="var(--color-completed)" />
+        </defs>
         <CartesianGrid vertical={false} />
         <XAxis
           dataKey="date"
@@ -125,8 +132,7 @@ export default function BurnupChart({
           type="monotone"
           dataKey="scope"
           stroke="var(--color-scope)"
-          fill="var(--color-scope)"
-          fillOpacity={0.12}
+          fill={`url(#${gradientId}-scope)`}
           dot={false}
           isAnimationActive={false}
         />
@@ -143,8 +149,7 @@ export default function BurnupChart({
           dataKey="completed"
           stroke="var(--color-completed)"
           strokeWidth={1.5}
-          fill="var(--color-completed)"
-          fillOpacity={0.2}
+          fill={`url(#${gradientId}-completed)`}
           dot={false}
           isAnimationActive={false}
         />

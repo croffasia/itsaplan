@@ -1,0 +1,1 @@
+{"action": "create", "reason": "The product rename to One Health needed a fixed scope rule. Visible strings change; infrastructure identifiers stay. The next rename or copy pass needs this boundary.", "evidence": "references/evidence-60ad3c2d.md"}

@@ -71,7 +71,7 @@ of them affect data you may not notice is missing until later.
 
 ## Reviewing the mapping before you import
 
-After you pick the source project, its states are shown with the category itsaplan would
+After you pick the source project, its states are shown with the category One Health would
 automatically map each one to (matched by name, falling back to Plane's own backlog/
 unstarted/started/completed group when no name matches). This matters because Plane's own
 state categories are not always accurate: a real workspace checked during development had a
@@ -124,5 +124,6 @@ Plane, and nothing is scheduled or kept running.
 
 ## Other sources
 
-[Importing from Linear](importing-from-linear.md) describes the Linear source. Jira and Trello
-are not available.
+[Importing from Linear](importing-from-linear.md) describes the Linear source.
+[Importing from Jira](importing-from-jira.md) and [Importing from Trello](importing-from-trello.md)
+describe the Jira and Trello sources.

@@ -1,0 +1,34 @@
+{
+  "board": {
+    "button": "Buat papan dengan AI",
+    "title": "Buat papan dengan AI",
+    "description": "Jelaskan proyeknya. AI mengusulkan kolom dan isu; tidak ada yang dibuat sampai Anda mengonfirmasi.",
+    "promptPlaceholder": "Rencana peluncuran aplikasi seluler, dari riset hingga rilis",
+    "generate": "Usulkan",
+    "regenerate": "Usulkan lagi",
+    "columns": "Kolom",
+    "issues": "Isu",
+    "due": "Tenggat {date}",
+    "confirm": "Buat {columns, plural, other {# kolom}} dan {issues, plural, other {# isu}}",
+    "created": "Papan dibuat"
+  },
+  "checklist": {
+    "button": "Sarankan checklist",
+    "description": "Langkah yang diusulkan dari judul dan deskripsi isu. Hapus yang tidak Anda inginkan, lalu tambahkan checklist.",
+    "remove": "Hapus langkah",
+    "confirm": "Tambahkan checklist"
+  },
+  "settings": {
+    "title": "Asisten AI",
+    "description": "Model yang dipakai fitur AI cepat: membuat papan dan menyarankan checklist. Tanpa model yang dipilih, tombol tersebut disembunyikan.",
+    "credential": "Kunci penyedia",
+    "model": "Model",
+    "modelPlaceholder": "gpt-5-mini",
+    "none": "Nonaktif",
+    "save": "Simpan",
+    "saved": "Model asisten AI disimpan",
+    "off": "Asisten AI nonaktif.",
+    "on": "Asisten AI memakai {model}.",
+    "managersOnly": "Pemilik dan manajer tim yang mengubah ini."
+  }
+}

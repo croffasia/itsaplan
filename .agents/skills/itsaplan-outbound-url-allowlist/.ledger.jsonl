@@ -1,0 +1,1 @@
+{"action": "create", "reason": "The episode added an LLM base-URL SSRF guard with an allow-list. The rule (merged-credential check on create and update, host:port allow-list, env var wiring) is reusable for other user-supplied URLs.", "evidence": "references/evidence-8e272f5f.md"}

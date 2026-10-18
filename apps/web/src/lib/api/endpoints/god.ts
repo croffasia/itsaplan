@@ -130,6 +130,35 @@ export interface InstanceOidcSettingsPatch {
   pkce?: boolean;
 }
 
+// The instance's SAML identity provider. The stored metadata is summarised rather than
+// returned; acsUrl, defaultEntityId and spMetadataUrl are derived from the API origin and
+// go to the identity provider.
+export interface InstanceSamlSettings {
+  enabled: boolean;
+  label: string;
+  idpMetadataUrl: string;
+  hasIdpMetadata: boolean;
+  idpEntityId: string;
+  idpSsoUrl: string;
+  entityId: string;
+  emailAttribute: string;
+  nameAttribute: string;
+  acsUrl: string;
+  defaultEntityId: string;
+  spMetadataUrl: string;
+}
+
+// A metadata URL sent without XML is fetched by the API on save.
+export interface InstanceSamlSettingsPatch {
+  enabled?: boolean;
+  label?: string;
+  idpMetadataXml?: string;
+  idpMetadataUrl?: string;
+  entityId?: string;
+  emailAttribute?: string;
+  nameAttribute?: string;
+}
+
 // The instance Telegram bot: the one bot users link their accounts through, and the
 // default sender for Telegram notifications. `botUsername` is resolved from Telegram
 // when the token is saved.
@@ -317,6 +346,14 @@ export const getInstanceOidcSettings = () => request<InstanceOidcSettings>('/god
 
 export const updateInstanceOidcSettings = (patch: InstanceOidcSettingsPatch) =>
   request<InstanceOidcSettings>('/god/oidc-settings', {
+    method: 'PUT',
+    body: JSON.stringify(patch),
+  });
+
+export const getInstanceSamlSettings = () => request<InstanceSamlSettings>('/god/saml-settings');
+
+export const updateInstanceSamlSettings = (patch: InstanceSamlSettingsPatch) =>
+  request<InstanceSamlSettings>('/god/saml-settings', {
     method: 'PUT',
     body: JSON.stringify(patch),
   });

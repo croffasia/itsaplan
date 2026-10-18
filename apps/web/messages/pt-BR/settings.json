@@ -498,7 +498,6 @@
     "import": "Importar",
     "source": "Origem",
     "sourceHint": "Escolha de onde importar.",
-    "comingSoon": "Em breve",
     "connect": "Conectar ao Plane",
     "connectHint": "Informe uma instância Plane auto-hospedada para verificar a conexão e carregar seus projetos.",
     "baseUrl": "URL do Plane",
@@ -549,6 +548,28 @@
       "projectPlaceholder": "Selecione um projeto",
       "noProject": "Issues sem projeto",
       "noTeams": "Esta chave de API não vê nenhum time."
+    },
+    "jira": {
+      "connect": "Conectar ao Jira",
+      "connectHint": "Informe um site do Jira Cloud com o e-mail da conta e um token de API para verificá-los e carregar os projetos que a conta pode ver.",
+      "siteUrl": "URL do site do Jira",
+      "email": "E-mail da conta",
+      "apiTokenHint": "Crie um em id.atlassian.com, em Segurança → Tokens de API. A conta precisa de acesso de leitura ao projeto.",
+      "projectHint": "Escolha o projeto do Jira a importar. Sprints viram ciclos.",
+      "project": "Projeto do Jira",
+      "noProjects": "Esta conta não pode ver nenhum projeto."
+    },
+    "trello": {
+      "connect": "Conectar ao Trello",
+      "connectHint": "Informe uma chave de API e um token do Trello para verificá-los e carregar os quadros que eles podem ver.",
+      "apiKey": "Chave de API",
+      "token": "Token",
+      "tokenHint": "Crie um Power-Up em trello.com/power-ups/admin para obter uma chave de API e gere um token para ela. Acesso de leitura basta.",
+      "board": "Quadro",
+      "boardHint": "Escolha o quadro a importar. As listas viram estados e os cartões viram issues.",
+      "boardPlaceholder": "Selecione um quadro",
+      "noBoards": "Este token não vê nenhum quadro.",
+      "closedBoard": "{name} (fechado)"
     },
     "statuses": {
       "pending": "Pendente",

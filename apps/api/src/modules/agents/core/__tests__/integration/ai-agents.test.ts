@@ -7,7 +7,7 @@ import { addProjectMember } from '#tests/helpers/members';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent, projectIdOf } from '#tests/helpers/agents';
-import { createCredential } from '#tests/helpers/integrations';
+import { allowLocalModel, createCredential } from '#tests/helpers/integrations';
 import { untaggedRoutes } from '#tests/helpers/mcp';
 import { getMastra } from '../../runtime/observability';
 
@@ -334,6 +334,7 @@ describe('ai agents', () => {
   it('sends the reasoning effort to the model as reasoning_effort, and none when unset', async () => {
     const { asOwner, teamId } = await setup();
     const endpoint = stubModelEndpoint();
+    const disallow = allowLocalModel(endpoint.baseUrl);
     try {
       const credentialId = await createCredential(asOwner, 'MKT', {
         integrationKey: 'openai-compatible',
@@ -364,6 +365,7 @@ describe('ai agents', () => {
       expect((await run()).data).toMatchObject({ text: 'ok' });
       expect(endpoint.bodies.at(-1)).not.toHaveProperty('reasoning_effort');
     } finally {
+      disallow();
       endpoint.stop();
       await getMastra().observability.flush();
     }
@@ -1055,10 +1057,13 @@ describe('ai agents', () => {
   // An agent is set up and talked to entirely over MCP. What stays out serves the chat
   // UI: the streamed run and the caller's own thread history, plus this agent's run
   // history and the traces of those runs — the analytics routes carry the project-wide
-  // run feed MCP reads instead.
+  // run feed MCP reads instead. The action log and the held calls serve the agent's
+  // page, where a person decides them.
   it('exposes agent management and the run to MCP', () => {
     const untagged = untaggedRoutes((route) => route.includes('/ai-agents'));
     expect(untagged).toEqual([
+      'GET /teams/:teamId/ai-agents/:agentId/actions',
+      'GET /teams/:teamId/ai-agents/:agentId/pending-actions',
       'GET /teams/:teamId/ai-agents/:agentId/runs',
       'GET /teams/:teamId/ai-agents/:agentId/traces',
       'GET /teams/:teamId/ai-agents/:agentId/traces/:traceId',

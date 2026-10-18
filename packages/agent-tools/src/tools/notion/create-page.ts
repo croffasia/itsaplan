@@ -5,6 +5,7 @@ import { titleProperty } from './page';
 
 export const notionCreatePage: CustomToolEntry = {
   key: 'notion_create_page',
+  writes: true,
   label: 'Notion Create Page',
   scopes: ['Insert content'],
   description:

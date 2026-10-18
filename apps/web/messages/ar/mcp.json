@@ -24,15 +24,15 @@
     "methodTabsAria": "طريقة الاتصال",
     "method": "OAuth",
     "personalKey": "مفتاح API",
-    "description": "استخدم هذا مع أي عميل MCP يدعم OAuth، مثل ChatGPT أو Claude. تسجّل الدخول بحساب Itsaplan. لا يستلم العميل أي مفتاح API.",
+    "description": "استخدم هذا مع أي عميل MCP يدعم OAuth، مثل ChatGPT أو Claude. تسجّل الدخول بحساب One Health. لا يستلم العميل أي مفتاح API.",
     "discovery": "اكتشاف OAuth",
     "steps": {
       "add": "أضف تطبيق MCP في عميلك.",
       "paste": "الصق نقطة نهاية MCP.",
       "choose": "اختر OAuth عندما يسأل العميل عن طريقة تسجيل الدخول.",
-      "signIn": "سجّل الدخول إلى Itsaplan ووافق على الوصول."
+      "signIn": "سجّل الدخول إلى One Health ووافق على الوصول."
     },
-    "security": "يستخدم OAuth آلية PKCE (S256) وتسجيل العملاء الديناميكي ورموز وصول مقيّدة بحساب Itsaplan.",
+    "security": "يستخدم OAuth آلية PKCE (S256) وتسجيل العملاء الديناميكي ورموز وصول مقيّدة بحساب One Health.",
     "consent": {
       "title": "يريد {client} الاتصال بحسابك",
       "titleUnnamed": "يريد عميل MCP الاتصال بحسابك",

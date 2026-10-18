@@ -1,4 +1,4 @@
-# Contributing to It's a Plan
+# Contributing to One Health
 
 Thanks for wanting to help. This document covers how to get the project running, what
 the code conventions are, and how a change gets merged.

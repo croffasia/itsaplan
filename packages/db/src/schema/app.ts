@@ -534,6 +534,12 @@ export const aiAgent = pgTable(
     // NULL leaves the reasoning effort to the provider's default.
     reasoningEffort: text('reasoning_effort'),
     maxSteps: integer('max_steps'),
+    // What an internal agent may spend on model calls in a calendar month (UTC), in
+    // USD. NULL sets no limit. A run is refused once the month's cost reaches it.
+    monthlyBudgetUsd: numeric('monthly_budget_usd', { precision: 12, scale: 2 }),
+    // When set, an internal agent's mutating tool calls are stored as
+    // agent_pending_action rows and applied only once a project member approves them.
+    requireApproval: boolean('require_approval').notNull().default(false),
     // Internal-agent run triggers. A mention in a comment enqueues a run when
     // trigger_on_mention is set; being set as an issue's delegate enqueues one when
     // trigger_on_assign is set.
@@ -578,6 +584,7 @@ export const aiAgent = pgTable(
       'ai_agent_delegation_delay_check',
       sql`${t.delegationDelaySec} >= 0 AND ${t.delegationDelaySec} <= 86400`,
     ),
+    check('ai_agent_monthly_budget_check', sql`${t.monthlyBudgetUsd} >= 0`),
     index('ai_agent_team_idx').on(t.teamId),
   ],
 );
@@ -2284,7 +2291,7 @@ export const webhookDelivery = pgTable(
 // job's own per-phase resumability checkpoint, not the source API's pagination
 // cursor. The credential columns are cleared once the job reaches a terminal
 // status. One source adapter per value (apps/worker/src/import-sources.ts).
-export type ImportSource = 'plane' | 'linear';
+export type ImportSource = 'plane' | 'linear' | 'jira' | 'trello';
 
 export const importJob = pgTable(
   'import_job',
@@ -2311,7 +2318,7 @@ export const importJob = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    check('import_job_source_check', sql`${t.source} IN ('plane', 'linear')`),
+    check('import_job_source_check', sql`${t.source} IN ('plane', 'linear', 'jira', 'trello')`),
     check(
       'import_job_phase_check',
       sql`${t.phase} IN ('discover', 'create', 'link', 'rewrite', 'attachments', 'done')`,
@@ -2479,3 +2486,86 @@ export const documentComment = pgTable(
   },
   (t) => [index('document_comment_document_idx').on(t.documentId, t.createdAt)],
 );
+
+// A mutating tool call of an internal agent that requires approval. `tool` and `args`
+// are the call as the agent made it, with its project already bound, so approving it
+// dispatches the same call with the agent's key. A rejected call keeps the reason.
+export const agentPendingAction = pgTable(
+  'agent_pending_action',
+  {
+    id: serial('id').primaryKey(),
+    agentId: integer('agent_id')
+      .notNull()
+      .references(() => aiAgent.id, { onDelete: 'cascade' }),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    issueId: integer('issue_id').references(() => issue.id, { onDelete: 'cascade' }),
+    runId: integer('run_id').references(() => agentRun.id, { onDelete: 'set null' }),
+    tool: text('tool').notNull(),
+    args: jsonb('args').$type<Record<string, unknown>>().notNull(),
+    status: text('status').notNull().default('pending'),
+    reason: text('reason'),
+    result: text('result'),
+    decidedByUserId: text('decided_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    decidedAt: timestamp('decided_at', { withTimezone: true }),
+    // When the decision was put in front of the agent at the start of a run. Null while
+    // the agent has not seen it.
+    reportedAt: timestamp('reported_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check(
+      'agent_pending_action_status_check',
+      sql`${t.status} IN ('pending', 'applying', 'approved', 'rejected', 'failed', 'expired')`,
+    ),
+    index('agent_pending_action_agent_idx').on(t.agentId, t.createdAt.desc()),
+    index('agent_pending_action_issue_idx').on(t.issueId, t.status),
+  ],
+);
+
+// One write tool call of an internal agent that reached its route or integration: the
+// call as made, whether it succeeded, and the error when it did not. A call applied after
+// approval keeps the member who approved it. A held call is in agent_pending_action
+// until it is decided.
+export const agentActionLog = pgTable(
+  'agent_action_log',
+  {
+    id: serial('id').primaryKey(),
+    agentId: integer('agent_id')
+      .notNull()
+      .references(() => aiAgent.id, { onDelete: 'cascade' }),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    issueId: integer('issue_id').references(() => issue.id, { onDelete: 'set null' }),
+    runId: integer('run_id').references(() => agentRun.id, { onDelete: 'set null' }),
+    tool: text('tool').notNull(),
+    args: jsonb('args').$type<Record<string, unknown>>().notNull(),
+    status: text('status').notNull(),
+    error: text('error'),
+    approvedByUserId: text('approved_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check('agent_action_log_status_check', sql`${t.status} IN ('success', 'failed')`),
+    index('agent_action_log_agent_idx').on(t.agentId, t.createdAt.desc()),
+  ],
+);
+
+// The credential and model a team's quick AI features (a drafted board, a suggested
+// checklist) run on. No row means the team has not picked one, and those features are off.
+export const teamAiAssist = pgTable('team_ai_assist', {
+  teamId: integer('team_id')
+    .primaryKey()
+    .references(() => team.id, { onDelete: 'cascade' }),
+  credentialId: integer('credential_id')
+    .notNull()
+    .references(() => integrationCredential.id, { onDelete: 'cascade' }),
+  model: text('model').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});

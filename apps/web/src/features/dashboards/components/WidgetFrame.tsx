@@ -10,10 +10,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
-// A borderless widget section: a quiet header (title + edit affordances) over a
-// hairline divider, then the body directly on the page. No card box — surfaces are
-// separated by space and the header rule, per DESIGN.md. Widget settings live in a
-// popover opened from the header, not inline in the body, so shrinking the widget's
+// A widget card: a header (title + edit affordances) over a hairline divider, then
+// the body. Widget settings live in a popover opened from the header, not inline in the body, so shrinking the widget's
 // height never hides them. The `.widget-drag-handle` grip is react-grid-layout's
 // drag handle; `movable` is off when the grid does not accept drags, and size is
 // set from the corner instead (see WidgetGrid).
@@ -42,8 +40,8 @@ export default function WidgetFrame({
   const defaultTitle = t.has(labelKey) ? t(labelKey) : widget.type;
   const title = widget.title || defaultTitle;
   return (
-    <section className="flex h-full flex-col">
-      <header className="mb-4 flex items-center gap-2 border-b border-border/60 pb-2">
+    <section className="flex h-full flex-col rounded-xl border border-border/60 bg-linear-to-b from-primary/[0.04] to-card p-4 shadow-xs">
+      <header className="mb-4 flex items-center gap-2 border-b border-border/60 pb-2.5">
         {movable && (
           <button
             type="button"
@@ -62,8 +60,12 @@ export default function WidgetFrame({
             className="min-w-0 flex-1 rounded-md bg-transparent px-1 py-0.5 text-sm font-semibold tracking-tight text-foreground outline-none placeholder:text-muted-foreground/60 focus:bg-accent/50"
           />
         ) : (
-          <h3 className="min-w-0 flex-1 truncate text-sm font-semibold tracking-tight text-foreground">
-            {title}
+          <h3 className="flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold tracking-tight text-foreground">
+            <span
+              aria-hidden="true"
+              className="size-2 shrink-0 rounded-full bg-primary ring-3 ring-primary/15"
+            />
+            <span className="truncate">{title}</span>
           </h3>
         )}
         {editing && settings && (

@@ -478,6 +478,9 @@
     "reasoningEffortHigh": "Élevé",
     "optional": "Facultatif",
     "maxSteps": "Étapes maximum",
+    "monthlyBudget": "Budget mensuel (USD)",
+    "monthlyBudgetPlaceholder": "Aucune limite",
+    "monthlyBudgetHint": "Les exécutions s'arrêtent pour le reste du mois une fois que le coût atteint ce montant. Le coût utilise les prix des modèles du tableau de bord de l'agent. Une exécution déjà commencée se termine. Les appels à un modèle sans prix ne sont pas comptés.",
     "memory": "Mémoire de conversation",
     "memoryHint": "Se souvenir des messages récents au sein d'un fil de conversation.",
     "memoryCount": "Retenir les N derniers messages",
@@ -714,5 +717,37 @@
       "removePrice": "Supprimer le prix",
       "save": "Enregistrer le prix"
     }
+  },
+  "agentActions": {
+    "title": "Actions de l'agent",
+    "logTab": "Journal des actions",
+    "approvalsTab": "Approbations",
+    "noActions": "Cet agent n'a encore fait aucune modification.",
+    "run": "Exécution n° {id}",
+    "noPending": "Aucune modification en attente d'approbation.",
+    "requireApproval": "Exiger une approbation",
+    "requireApprovalHint": "Les modifications de l'agent et ses appels aux intégrations attendent l'approbation d'un membre du projet. Cela ne concerne que les agents internes : les appels d'un agent externe sont journalisés, pas retenus.",
+    "on": "Activé",
+    "off": "Désactivé",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "cancel": "Annuler",
+    "reason": "Motif",
+    "reasonPlaceholder": "Pourquoi cette modification est-elle rejetée ?",
+    "approved": "Modification appliquée",
+    "rejected": "Modification rejetée",
+    "failed": "La modification n'a pas pu être appliquée",
+    "issueTitle": "{count, plural, one {# modification de l'agent attend une approbation} other {# modifications de l'agent attendent une approbation}}",
+    "status": {
+      "pending": "En attente",
+      "applying": "En cours d'application",
+      "approved": "Approuvée",
+      "rejected": "Rejetée",
+      "failed": "Échouée",
+      "expired": "Expiré"
+    },
+    "from": "Du",
+    "to": "Au",
+    "approvedBy": "Approuvé par {name}"
   }
 }

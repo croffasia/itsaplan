@@ -69,6 +69,23 @@ const configFields = {
     }),
   ),
   maxSteps: t.Optional(t.Nullable(t.Integer({ description: 'Max tool-call steps per run.' }))),
+  monthlyBudgetUsd: t.Optional(
+    t.Nullable(
+      t.Number({
+        minimum: 0,
+        maximum: 9999999999,
+        description:
+          'What an internal agent may spend on model calls in a calendar month (UTC), in USD. ' +
+          'Its runs are refused once the cost reaches it. Null sets no limit.',
+      }),
+    ),
+  ),
+  requireApproval: t.Optional(
+    t.Boolean({
+      description:
+        "Hold an internal agent's mutating tool calls until a project member approves them.",
+    }),
+  ),
   memoryEnabled: t.Optional(
     t.Boolean({ description: 'Keep conversation memory across a thread.' }),
   ),
@@ -135,6 +152,8 @@ export const AiAgentResponse = t.Object({
   temperature: t.Nullable(t.Number()),
   reasoningEffort: t.Nullable(reasoningEffort),
   maxSteps: t.Nullable(t.Number()),
+  monthlyBudgetUsd: t.Nullable(t.Number()),
+  requireApproval: t.Boolean(),
   memoryEnabled: t.Boolean(),
   memoryLastMessages: t.Nullable(t.Number()),
   triggerOnMention: t.Boolean(),

@@ -1,5 +1,6 @@
 import account from '../../messages/en/account.json';
 import agentAnalytics from '../../messages/en/agentAnalytics.json';
+import aiAssist from '../../messages/en/aiAssist.json';
 import aiChat from '../../messages/en/aiChat.json';
 import apiKeys from '../../messages/en/apiKeys.json';
 import auth from '../../messages/en/auth.json';
@@ -23,6 +24,7 @@ import newProject from '../../messages/en/newProject.json';
 import notes from '../../messages/en/notes.json';
 import palette from '../../messages/en/palette.json';
 import permissions from '../../messages/en/permissions.json';
+import product from '../../messages/en/product.json';
 import projects from '../../messages/en/projects.json';
 import sections from '../../messages/en/sections.json';
 import settings from '../../messages/en/settings.json';
@@ -58,6 +60,7 @@ const coreMessages = {
   mcp,
   projects,
   aiChat,
+  aiAssist,
   inbox,
   permissions,
   members,
@@ -73,6 +76,7 @@ const coreMessages = {
   agentAnalytics,
   updates,
   whatsNew,
+  product,
 };
 
 const NAMESPACES = Object.keys(coreMessages) as (keyof typeof coreMessages)[];

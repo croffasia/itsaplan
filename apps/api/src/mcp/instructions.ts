@@ -6,7 +6,7 @@
 // Keep it short and true for every project. Anything project-specific (column
 // names, issue types, labels) is data, and the model reads it from get_project.
 export const SERVER_INSTRUCTIONS = `
-Itsaplan is a project tracker. A project holds issues, and defines its own columns
+One Health is a project tracker. A project holds issues, and defines its own columns
 (states), issue types, labels, custom fields, and members.
 
 ## Resolving ids

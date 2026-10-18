@@ -26,9 +26,9 @@ export default function BarList({
       {rows.map((row) => {
         const content = (
           <>
-            <div className="h-6 min-w-0 flex-1 rounded-sm bg-muted/40">
+            <div className="h-6 min-w-0 flex-1 rounded-md bg-muted/50">
               <div
-                className="flex h-full min-w-fit items-center rounded-sm bg-primary/85"
+                className="flex h-full min-w-fit items-center rounded-md bg-primary/85 shadow-xs"
                 style={{ width: `${(row.value / max) * 100}%` }}
               >
                 <span className="truncate px-2 text-xs text-primary-foreground">{row.label}</span>

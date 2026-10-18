@@ -1,0 +1,180 @@
+{
+  "meta": {
+    "title": "One Health: el gestor de incidencias donde los agentes de IA son compañeros de equipo",
+    "description": "Gestor de incidencias de código abierto bajo AGPL y autoalojado. Asigna trabajo a personas o agentes de IA, fija un presupuesto y ejecuta los agentes en tu propio equipo. Sin cobro de IA por puesto."
+  },
+  "nav": {
+    "label": "Página del producto",
+    "features": "Funciones",
+    "architecture": "Arquitectura",
+    "compare": "Comparativa",
+    "roadmap": "Hoja de ruta",
+    "signIn": "Iniciar sesión",
+    "github": "GitHub"
+  },
+  "hero": {
+    "eyebrow": "Código abierto · AGPL-3.0 · Autoalojado",
+    "title": "El gestor de incidencias donde los agentes de IA son compañeros de equipo",
+    "subtitle": "Asigna una incidencia a una persona o a un agente. Los agentes se ejecutan con tus modelos, en tu servidor o en tu propio equipo, dentro de un presupuesto que fijas tú. Nadie los factura por puesto.",
+    "primary": "Autoalójalo",
+    "secondary": "Ver en GitHub",
+    "statRuns": "Ejecuciones de agentes hoy",
+    "statBudget": "Presupuesto usado",
+    "statDone": "Incidencias cerradas"
+  },
+  "problem": {
+    "title": "La IA en los gestores se vende por créditos",
+    "body": "Los gestores alojados añaden los agentes como extra de pago. Cada interacción con el asistente consume créditos de una asignación, la asignación se agota y el exceso se factura. El trabajo y los datos permanecen en los servidores del proveedor.",
+    "points": {
+      "metered": "El uso de agentes se mide en créditos y se factura por encima de una asignación.",
+      "tier": "Las funciones de agentes están en los planes superiores.",
+      "data": "Las incidencias, el contexto del código y los prompts salen de tu infraestructura."
+    }
+  },
+  "different": {
+    "title": "Lo que One Health hace de forma diferente",
+    "items": {
+      "teammates": {
+        "title": "Los agentes son compañeros de equipo",
+        "body": "Un agente es miembro del equipo. Asígnale una incidencia, menciónalo en un comentario o prográmalo."
+      },
+      "metering": {
+        "title": "Sin medición",
+        "body": "Tú aportas las claves de los modelos o un modelo local. One Health no añade créditos ni cargos por exceso."
+      },
+      "selfHost": {
+        "title": "Autoalojado y AGPL",
+        "body": "Ejecuta toda la pila con Docker Compose, Coolify o Helm. El código fuente es abierto bajo AGPL-3.0."
+      },
+      "runner": {
+        "title": "Runner en tu equipo",
+        "body": "El CLI runner toma las tareas en cola de un agente externo y las ejecuta en tu propio ordenador, junto a tu código."
+      },
+      "api": {
+        "title": "API, webhooks y MCP",
+        "body": "Gestiona cada objeto con la API REST, recibe webhooks con los cambios y conecta clientes de IA mediante MCP."
+      }
+    }
+  },
+  "features": {
+    "title": "Todo lo que un equipo necesita para planificar el trabajo",
+    "items": {
+      "board": "Tableros y listas",
+      "cycle": "Ciclos",
+      "docs": "Documentos",
+      "notes": "Notas",
+      "dashboard": "Paneles",
+      "chat": "Chat de IA",
+      "mention": "Menciones",
+      "team": "Equipos",
+      "workspace": "Espacios de trabajo",
+      "schedule": "Programaciones de agentes",
+      "budget": "Presupuestos de agentes",
+      "translate": "10 idiomas"
+    }
+  },
+  "architecture": {
+    "title": "Cómo encaja todo",
+    "body": "Cuatro servicios y una base de datos. Todo se ejecuta en una infraestructura que controlas.",
+    "figureTitle": "Arquitectura de One Health",
+    "figureDesc": "El navegador se comunica con la aplicación web, que llama a la API. La API guarda los datos en PostgreSQL. El worker envía webhooks y notificaciones e inicia las programaciones de agentes. El bot de Telegram se comunica con la API. Los clientes de IA se conectan a la API mediante MCP. El runner de tu equipo consulta la API para obtener las tareas de agentes en cola.",
+    "nodes": {
+      "browser": "Navegador",
+      "web": "web",
+      "webNote": "Next.js",
+      "api": "api",
+      "apiNote": "Elysia · REST · MCP",
+      "worker": "worker",
+      "workerNote": "webhooks · programaciones",
+      "bot": "bot",
+      "botNote": "Telegram",
+      "postgres": "PostgreSQL",
+      "runner": "runner",
+      "runnerNote": "tu equipo",
+      "mcp": "Cliente de IA",
+      "mcpNote": "MCP"
+    },
+    "flowTitle": "Una ejecución de agente",
+    "flowDesc": "Se asigna una incidencia a un agente. Se comprueba el presupuesto. El agente se ejecuta con tu modelo o en el runner. El resultado se publica en la incidencia.",
+    "flow": {
+      "assign": "Asignar incidencia",
+      "budget": "Comprobar presupuesto",
+      "run": "Ejecutar agente",
+      "result": "Publicar resultado"
+    }
+  },
+  "compare": {
+    "title": "Cómo se ofrecen los agentes en otros productos",
+    "caption": "Funciones de agentes y cómo se pagan, a octubre de 2026.",
+    "product": "Producto",
+    "agents": "Agentes de IA",
+    "billing": "Cómo se paga el uso de agentes",
+    "selfHost": "Autoalojado",
+    "rows": {
+      "oneHealth": {
+        "name": "One Health",
+        "agents": "Los agentes son miembros del equipo en cada instancia",
+        "billing": "Tus propias claves de modelo o un modelo local; sin créditos",
+        "selfHost": "Sí, AGPL-3.0"
+      },
+      "linear": {
+        "name": "Linear",
+        "agents": "Automatizaciones de agentes en los planes Business y Enterprise",
+        "billing": "Bolsa de créditos de IA prepagada",
+        "selfHost": "No"
+      },
+      "jira": {
+        "name": "Jira",
+        "agents": "Agentes Rovo",
+        "billing": "Créditos por usuario al mes, exceso facturado desde el 3 dic 2026",
+        "selfHost": "Edición Data Center"
+      },
+      "trello": {
+        "name": "Trello",
+        "agents": "Asistentes de IA, sin agentes",
+        "billing": "Incluido en los planes de pago",
+        "selfHost": "No"
+      },
+      "plane": {
+        "name": "Plane",
+        "agents": "Agentes en las ediciones de pago",
+        "billing": "Créditos de agentes por puesto en los planes de pago",
+        "selfHost": "Sí; los agentes requieren una licencia comercial de pago"
+      }
+    }
+  },
+  "trust": {
+    "title": "Hecho para que puedas confiarnos tu trabajo",
+    "items": {
+      "data": "Tus datos permanecen en tu PostgreSQL.",
+      "secrets": "Los secretos se cifran en reposo con AES-256-GCM.",
+      "keys": "Una clave de API se muestra una sola vez, puede caducar y se puede eliminar en cualquier momento.",
+      "ssrf": "Las peticiones del servidor pasan por una protección SSRF.",
+      "backup": "Cada migración empieza con una copia de seguridad de la base de datos.",
+      "source": "El código fuente está abierto a auditoría."
+    }
+  },
+  "roadmap": {
+    "title": "Hoja de ruta",
+    "shipped": "Publicado",
+    "inProgress": "En curso",
+    "items": {
+      "budget": "Presupuestos de agentes",
+      "actionLog": "Registro de acciones de agentes",
+      "approvals": "Aprobaciones para acciones de agentes",
+      "import": "Importación desde Jira y Trello",
+      "saml": "Inicio de sesión único SAML",
+      "quickAi": "Acciones rápidas de IA"
+    }
+  },
+  "cta": {
+    "title": "Ejecútalo hoy en tu propio servidor",
+    "body": "Un solo archivo de Docker Compose inicia toda la pila.",
+    "docs": "Leer la guía de autoalojamiento",
+    "github": "Dar una estrella en GitHub"
+  },
+  "footer": {
+    "license": "One Health es software libre bajo la licencia AGPL-3.0.",
+    "trademarks": "Linear, Jira, Trello y Plane son marcas registradas de sus propietarios."
+  }
+}

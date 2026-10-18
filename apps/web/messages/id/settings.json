@@ -498,7 +498,6 @@
     "import": "Impor",
     "source": "Sumber",
     "sourceHint": "Pilih sumber impor.",
-    "comingSoon": "Segera",
     "connect": "Hubungkan ke Plane",
     "connectHint": "Masukkan instans Plane self-hosted untuk memeriksa koneksi dan memuat proyeknya.",
     "baseUrl": "URL Plane",
@@ -549,6 +548,28 @@
       "projectPlaceholder": "Pilih proyek",
       "noProject": "Issue tanpa proyek",
       "noTeams": "Kunci API ini tidak dapat melihat tim mana pun."
+    },
+    "jira": {
+      "connect": "Hubungkan ke Jira",
+      "connectHint": "Masukkan situs Jira Cloud beserta email akun dan token API untuk memeriksanya dan memuat proyek yang dapat dilihat akun tersebut.",
+      "siteUrl": "URL situs Jira",
+      "email": "Email akun",
+      "apiTokenHint": "Buat di id.atlassian.com pada Keamanan → Token API. Akun perlu akses melihat proyek.",
+      "projectHint": "Pilih proyek Jira yang akan diimpor. Sprint menjadi siklus.",
+      "project": "Proyek Jira",
+      "noProjects": "Akun ini tidak dapat melihat proyek apa pun."
+    },
+    "trello": {
+      "connect": "Hubungkan ke Trello",
+      "connectHint": "Masukkan kunci API dan token Trello untuk memeriksanya dan memuat papan yang dapat dilihat.",
+      "apiKey": "Kunci API",
+      "token": "Token",
+      "tokenHint": "Buat Power-Up di trello.com/power-ups/admin untuk mendapatkan kunci API, lalu buat token untuknya. Akses baca sudah cukup.",
+      "board": "Papan",
+      "boardHint": "Pilih papan yang akan diimpor. Daftarnya menjadi status dan kartunya menjadi isu.",
+      "boardPlaceholder": "Pilih papan",
+      "noBoards": "Token ini tidak dapat melihat papan apa pun.",
+      "closedBoard": "{name} (ditutup)"
     },
     "statuses": {
       "pending": "Tertunda",

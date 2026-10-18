@@ -10,6 +10,7 @@ import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Button } from '@/components/ui/button';
 import { CredentialDialog } from './CredentialDialog';
 import TeamIntegrations from './TeamIntegrations';
+import AiAssistTeamSettings from './AiAssistTeamSettings';
 
 // The integrations of a team: the API keys of AI providers and the credentials of
 // tool integrations, shared by every project the team owns. Secrets are write-only,
@@ -44,6 +45,13 @@ export default function TeamIntegrationsSection({ teamId }: { teamId: number }) 
         <p className="text-sm text-muted-foreground">{t('integrations.noAccess')}</p>
       ) : (
         <TeamIntegrations teamId={teamId} catalog={catalog} permissions={permissions} />
+      )}
+      {team && (
+        <AiAssistTeamSettings
+          teamId={teamId}
+          catalog={catalog}
+          canEdit={team.role === 'owner' || team.role === 'manager'}
+        />
       )}
 
       {creating && (

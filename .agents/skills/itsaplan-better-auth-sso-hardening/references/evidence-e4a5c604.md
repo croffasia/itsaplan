@@ -1,1 +1,0 @@
-Agent report: "`/sso/request-domain-verification` and `/sso/verify-domain` added to disabledPaths. Comment added that the samlProviders clear and refill must have no await between them." and "unsigned and forged-signature responses posted to the ACS while SAML is on get a 302 to `error=saml_error` with no set-cookie. The two domain-verification paths return 404."

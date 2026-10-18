@@ -1,1 +1,0 @@
-api:test: -   "redirectUri": "http://localhost:3000/api/auth/oauth2/callback/oidc", api:test: +   "redirectUri": "http://localhost:3001/api/auth/oauth2/callback/oidc" ... -   "baseUrl": "http://localhost:3000/scim/v2", api:test: +   "baseUrl": "http://localhost:3001/scim/v2"

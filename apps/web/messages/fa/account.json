@@ -52,14 +52,14 @@
     "passkeyFallback": "کلید عبور",
     "passkeysLoadFailed": "بارگذاری کلیدهای عبور ممکن نشد.",
     "connectedAppsTitle": "برنامه‌های متصل",
-    "connectedAppsDescription": "برنامه‌هایی مانند Claude یا ChatGPT که به آن‌ها اجازه داده‌اید از طریق MCP از طرف شما عمل کنند. آن‌ها هر چه شما می‌توانید ببینید و انجام دهید را می‌بینند و انجام می‌دهند.",
+    "connectedAppsDescription": "برنامه‌هایی مانند Claude یا ChatGPT که به آن‌ها اجازه داده‌اید از طریق MCP از طرف شما عمل کنند. آن‌ها هر چیزی را که شما می‌توانید ببینید و انجام دهید، می‌بینند و انجام می‌دهند.",
     "connectedAppsEmpty": "هیچ برنامه‌ای به حساب شما متصل نیست.",
-    "connectedAppUsed": "متصل از {connected} · آخرین استفاده {used}",
-    "connectedAppSince": "متصل از {connected}",
+    "connectedAppUsed": "اتصال: {connected} · آخرین استفاده: {used}",
+    "connectedAppSince": "اتصال: {connected}",
     "disconnectApp": "قطع اتصال",
     "disconnectAppTitle": "اتصال {name} قطع شود؟",
-    "disconnectAppWarning": "دسترسی آن بلافاصله قطع می‌شود. اتصال دوباره به رضایت دوباره شما نیاز دارد.",
-    "disconnectAppFailed": "قطع اتصال برنامه انجام نشد."
+    "disconnectAppWarning": "دسترسی آن بی‌درنگ قطع می‌شود. برای اتصال دوباره، باز هم از شما رضایت خواسته می‌شود.",
+    "disconnectAppFailed": "قطع اتصال برنامه ممکن نشد."
   },
   "accounts": {
     "label": "حساب‌ها",

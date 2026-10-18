@@ -1,1 +1,0 @@
-The API on :3002 rejects sign-in from `127.0.0.1:3012` with `INVALID_ORIGIN`. I signed in by curl using the trusted origin (`localhost:3001`) and set that session cookie on 127.0.0.1.

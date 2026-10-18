@@ -1,2 +1,0 @@
-{"type":"assistant","message":{"content":[{"type":"text","text":"Typecheck failure is in api; check whether it's mine/web-related, and format status of my files."}]}}
-{"type":"assistant","message":{"content":[{"type":"text","text":"The monthly budget field is added to the agent settings form for internal agents. Web typecheck, lint and Prettier on my files pass. Root `bun run typecheck` still fails, but only in `api#typecheck`, which I don't own. I didn't open that error, so I haven't confirmed it's unrelated to this feature."}]}}

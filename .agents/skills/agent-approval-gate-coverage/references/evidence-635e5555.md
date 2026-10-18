@@ -1,1 +1,0 @@
-Approval bypass: custom integration tools are not held. `apps/api/src/modules/agents/core/runtime/index.ts:139-149`: `requireApproval` is passed only to `buildRouteTools`. `buildCustomTools(customTools)` (`runtime/tools/custom-tools.ts:27`) runs `tool.execute` at once.

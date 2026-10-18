@@ -1,1 +1,0 @@
-{"action": "create", "reason": "The episode hardened SAML by disabling unused better-auth paths, guarding a clear-and-refill race, and adding negative ACS tests. Future SSO changes in this repo need the same steps.", "evidence": "references/evidence-e4a5c604.md"}

@@ -1,2 +1,0 @@
-{"action": "create", "reason": "A web test passed alone but failed in the full bun test run because a mock.module from another file replaced useSession. Future sessions need to know that bun mock.module is process-wide and to check other files' mocks before blaming the change.", "evidence": "references/evidence-ee4bc580.md"}
-{"action": "patch", "reason": "The stash-based pre-existing proof and the load-timeout distinction were both used in this episode and are not in the skill.", "evidence": "references/evidence-41221763.md"}

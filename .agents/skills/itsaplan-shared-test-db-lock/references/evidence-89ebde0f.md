@@ -1,1 +1,0 @@
-until mkdir /tmp/gaps-briefs/test.lock 2>/dev/null; do sleep 10; done; cd apps/api && bun test --env-file=../../.env.test src/modules/ai-assist 2>&1 | tail -8; rmdir /tmp/gaps-briefs/test.lock

@@ -1,2 +1,0 @@
-{"action": "create", "reason": "A senior review found custom integration tools ran at once even with require-approval on. Every state-changing agent tool must pass the same approval gate.", "evidence": "references/evidence-635e5555.md"}
-{"action": "patch", "reason": "The episode extended the gate to custom integration tools and found the old read-only exemption had no catalog support, plus a claim-before-dispatch status pattern.", "evidence": "references/evidence-49d316d9.md"}

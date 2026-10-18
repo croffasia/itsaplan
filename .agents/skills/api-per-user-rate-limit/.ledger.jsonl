@@ -1,1 +1,0 @@
-{"action": "create", "reason": "A costly api route (model-backed drafts) needed a per-user cap. No shared limiter existed, so the pattern was a module-local helper that throws 429, with a test and an AGENTS.md note on the per-process limit. A future route limit should follow the same shape.", "evidence": "references/evidence-c1dc3f1e.md"}

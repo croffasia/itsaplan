@@ -1,1 +1,0 @@
-Port clash again: `.env` publishes the API on 3001, the same as the web. Recreating with the API on 3002. ... API_PORT=3002 API_URL=http://localhost:3002 APP_URL=http://localhost:3001 docker compose up -d --build web ... (R5 gate rewritten: "browser: unauthenticated curl is redirected to /login, which would falsely match")

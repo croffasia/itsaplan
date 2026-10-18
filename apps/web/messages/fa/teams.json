@@ -95,7 +95,7 @@
     "emailPlaceholder": "name@example.com",
     "alreadyMember": "{email} از قبل در این تیم است",
     "alreadyPending": "{email} از قبل یک دعوت در انتظار دارد",
-    "domainNotAllowed": "{email} در دامنه‌ای است که این نمونه مجاز نمی‌داند",
+    "domainNotAllowed": "دامنهٔ {email} در این سامانه مجاز نیست",
     "refused": "{email} دعوت نشد",
     "roleLabel": "نقش تیمی",
     "roleHint": {

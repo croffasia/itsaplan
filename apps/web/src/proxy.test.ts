@@ -6,14 +6,20 @@ import { proxy } from './proxy';
 const COOKIE = 'better-auth.session_token=stale.signature';
 
 let originalApiUrl: string | undefined;
+let originalProxyTarget: string | undefined;
 
+// A local apps/web/.env may set API_PROXY_TARGET; each test starts without it.
 beforeEach(() => {
   originalApiUrl = process.env.API_URL;
+  originalProxyTarget = process.env.API_PROXY_TARGET;
+  delete process.env.API_PROXY_TARGET;
 });
 
 afterEach(() => {
   if (originalApiUrl === undefined) delete process.env.API_URL;
   else process.env.API_URL = originalApiUrl;
+  if (originalProxyTarget === undefined) delete process.env.API_PROXY_TARGET;
+  else process.env.API_PROXY_TARGET = originalProxyTarget;
 });
 
 function run(path: string, cookie?: string) {
@@ -90,5 +96,42 @@ describe('proxy security headers', () => {
     assert.equal(run('/media/avatars/u1', COOKIE).headers.get('content-security-policy'), null);
     const document = '/protected-media/projects/KEY/documents/1/assets/x/raw';
     assert.equal(run(document, COOKIE).headers.get('content-security-policy'), null);
+  });
+});
+
+describe('proxy with API_PROXY_TARGET', () => {
+  beforeEach(() => {
+    process.env.API_PROXY_TARGET = 'http://127.0.0.1:4001';
+  });
+  function request(path: string, headers: Record<string, string>) {
+    return proxy(new NextRequest(`http://itsaplan-8.orca.localhost:60418${path}`, { headers }));
+  }
+  const rewrite = (res: Response) => res.headers.get('x-middleware-rewrite');
+
+  it('passes a script fetch of an api path to the api', () => {
+    const res = request('/teams?x=1', { 'sec-fetch-dest': 'empty', cookie: COOKIE });
+    assert.equal(rewrite(res), 'http://127.0.0.1:4001/teams?x=1');
+  });
+
+  it('always passes the auth handler, navigations included', () => {
+    const res = request('/api/auth/callback/oidc', { 'sec-fetch-dest': 'document' });
+    assert.equal(rewrite(res), 'http://127.0.0.1:4001/api/auth/callback/oidc');
+  });
+
+  it('keeps page loads, RSC fetches and media on the web app', () => {
+    assert.equal(
+      rewrite(request('/teams', { 'sec-fetch-dest': 'document', cookie: COOKIE })),
+      null,
+    );
+    assert.equal(
+      rewrite(request('/teams', { 'sec-fetch-dest': 'empty', rsc: '1', cookie: COOKIE })),
+      null,
+    );
+    assert.equal(rewrite(request('/media/avatars/a.png', { 'sec-fetch-dest': 'empty' })), null);
+  });
+
+  it('leaves every request to the web app without a target', () => {
+    delete process.env.API_PROXY_TARGET;
+    assert.equal(rewrite(request('/teams', { 'sec-fetch-dest': 'empty', cookie: COOKIE })), null);
   });
 });

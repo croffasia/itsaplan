@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSessionCookie } from 'better-auth/cookies';
 import { contentSecurityPolicy } from '@/utils/contentSecurityPolicy';
+import { apiProxyTarget } from '@/utils/runtimeEnv';
 
 // Routes reachable without a session, and that bounce a signed-in user back to
 // the app. Everything else requires one.
@@ -47,7 +48,27 @@ function clearSession(request: NextRequest): NextResponse {
   return response;
 }
 
+// With API_PROXY_TARGET set, the api is served on this origin: the browser's api calls
+// are passed through to it. The api's routes share paths with pages (/projects,
+// /teams), so a request is told apart by what asks for it: a page load, an RSC fetch
+// or a server action goes to Next, a script's fetch or XHR (Sec-Fetch-Dest "empty",
+// or no fetch metadata at all) goes to the api. The auth handler always does, since
+// its redirects are navigations.
+function isApiCall(request: NextRequest): boolean {
+  const { pathname } = request.nextUrl;
+  if (pathname === '/api/auth' || pathname.startsWith('/api/auth/')) return true;
+  if (MEDIA_PATHS.some(matcher(pathname))) return false;
+  if (request.headers.has('rsc') || request.headers.has('next-action')) return false;
+  const dest = request.headers.get('sec-fetch-dest');
+  return dest == null || dest === 'empty';
+}
+
 export function proxy(request: NextRequest) {
+  const target = apiProxyTarget();
+  if (target && isApiCall(request)) {
+    const { pathname, search } = request.nextUrl;
+    return NextResponse.rewrite(new URL(`${pathname}${search}`, target));
+  }
   const response = gate(request);
   if (!MEDIA_PATHS.some(matcher(request.nextUrl.pathname))) {
     response.headers.set('Content-Security-Policy', contentSecurityPolicy());

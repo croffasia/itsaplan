@@ -1,4 +1,4 @@
-import { serverRuntimeEnv } from '@/utils/runtimeEnv';
+import { serverApiOrigin } from '@/utils/runtimeEnv';
 
 // This route deliberately has a fixed shape. Unlike the public /media proxy it
 // forwards the session cookie, so accepting an arbitrary upstream path here would
@@ -31,7 +31,7 @@ export async function GET(request: Request, { params }: { params: Promise<RouteP
   const cookie = request.headers.get('cookie');
   if (!cookie) return new Response(null, { status: 401 });
 
-  const origin = process.env.SERVICE_URL_API || serverRuntimeEnv().apiUrl;
+  const origin = serverApiOrigin();
   const upstream = await fetch(
     `${origin}/projects/${encodeURIComponent(projectKey)}/documents/${documentId}/assets/${publicId}/raw`,
     {

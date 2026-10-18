@@ -23,15 +23,33 @@ function readOrigin(name: string): string {
   return process.env[name] || process.env[`NEXT_PUBLIC_${name}`] || '';
 }
 
+// The api the web server passes the browser's api calls through to (src/proxy.ts).
+// Set, the browser reaches the api on the page's own origin, whatever host it was
+// opened on, so the session cookie is first-party there too; API_URL is then not
+// handed to the browser.
+export function apiProxyTarget(): string {
+  return process.env.API_PROXY_TARGET?.replace(/\/+$/, '') ?? '';
+}
+
+// Where server code (the media routes) reaches the api.
+export function serverApiOrigin(): string {
+  return process.env.SERVICE_URL_API || apiProxyTarget() || readOrigin('API_URL');
+}
+
+// What the browser is handed. An empty apiUrl means "this page's origin".
 export function serverRuntimeEnv(): RuntimeEnv {
   return {
-    apiUrl: readOrigin('API_URL'),
+    apiUrl: apiProxyTarget() ? '' : readOrigin('API_URL'),
     privacyUrl: readOrigin('PRIVACY_URL'),
     termsUrl: readOrigin('TERMS_URL'),
   };
 }
 
 export function runtimeEnv(): RuntimeEnv {
-  if (typeof window === 'undefined') return serverRuntimeEnv();
-  return window.__ITSAPLAN_ENV__ ?? { apiUrl: '', privacyUrl: '', termsUrl: '' };
+  if (typeof window === 'undefined') {
+    const env = serverRuntimeEnv();
+    return env.apiUrl ? env : { ...env, apiUrl: serverApiOrigin() };
+  }
+  const env = window.__ITSAPLAN_ENV__ ?? { apiUrl: '', privacyUrl: '', termsUrl: '' };
+  return env.apiUrl ? env : { ...env, apiUrl: window.location.origin };
 }

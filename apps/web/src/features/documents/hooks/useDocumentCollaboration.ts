@@ -300,6 +300,7 @@ export function useDocumentCollaboration({
     status,
     version: confirmedVersion.current,
     ready,
+    openFailed: !ready && (status === 'error' || status === 'offline'),
     flush,
     recoveryConflict,
     discardRecovery,

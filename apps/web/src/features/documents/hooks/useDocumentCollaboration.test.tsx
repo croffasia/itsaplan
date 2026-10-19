@@ -29,6 +29,8 @@ let useDocumentCollaboration: UseDocumentCollaboration;
 let originalFetch: typeof fetch;
 let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
 let sessionSeed: Record<string, unknown> | null;
+let sessionRejected: boolean;
+let collaboration: ReturnType<UseDocumentCollaboration>;
 
 function projectDocument(version: number, content: string): ProjectDocument {
   return {
@@ -56,7 +58,7 @@ function projectDocument(version: number, content: string): ProjectDocument {
 }
 
 function Probe({ document }: { document: ProjectDocument }) {
-  useDocumentCollaboration({
+  collaboration = useDocumentCollaboration({
     editor,
     projectKey: 'SEKTA',
     document,
@@ -97,8 +99,15 @@ beforeEach(async () => {
   ({ useDocumentCollaboration } = await import('./useDocumentCollaboration'));
   originalFetch = globalThis.fetch;
   sessionSeed = null;
+  sessionRejected = false;
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     if (String(input).endsWith('/session')) {
+      if (sessionRejected) {
+        return Response.json(
+          { error: 'contentJson contains an unsupported node.' },
+          { status: 400 },
+        );
+      }
       sessionSeed = JSON.parse(String(init?.body)).contentJson;
       return Response.json({ documentId: 42, epoch: 'e1', version: 0, contentJson: sessionSeed });
     }
@@ -151,5 +160,20 @@ describe('useDocumentCollaboration', () => {
     assert.match(JSON.stringify(sessionSeed), /New requirement/);
     assert.doesNotMatch(JSON.stringify(sessionSeed), /Old requirement/);
     assert.equal(editor.getText(), 'New requirement');
+    assert.equal(collaboration.openFailed, false);
+  });
+
+  it('reports a session the api refused to open', async () => {
+    sessionRejected = true;
+    await act(async () => {
+      root.render(
+        <QueryClientProvider client={queryClient}>
+          <Probe document={projectDocument(2, 'New requirement')} />
+        </QueryClientProvider>,
+      );
+    });
+
+    assert.equal(collaboration.ready, false);
+    assert.equal(collaboration.openFailed, true);
   });
 });

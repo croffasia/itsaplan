@@ -258,7 +258,15 @@ and `jwks` tables, and writes the MCP resource (`<API_URL>/mcp`) into `oauth_res
 at startup. Any client registers itself (RFC 7591), as ChatGPT and Claude do; the
 provider asks the person for consent the first time a client asks for their account.
 Only `authorization_code` and `refresh_token` are granted, so every token acts for a
-person.
+person. A registration that also lists a grant the server does not issue, as Claude's
+connector does with `jwt-bearer`, is registered with the supported grants; one that lists
+none of them is refused.
+
+MCP clients register without `application_type`, and `mcp()` registers them as `native`
+(`clientRegistrationDefaultApplicationType`): an http callback is accepted only on
+`localhost`, `127.0.0.1` or `[::1]` (Claude Code), an https one on any host, and a custom
+scheme such as Cursor's `cursor://`. better-auth's own default, `web`, refuses the first and
+the last. A client that sends `"application_type": "web"` still gets the web checks.
 
 The issuer is `API_URL` itself, path included, so the tokens and the discovery documents
 name the URL a client reaches. The api serves the documents at the root of its origin

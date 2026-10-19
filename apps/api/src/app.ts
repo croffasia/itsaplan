@@ -322,7 +322,7 @@ export const app = new Elysia()
   // Planner API: projects, issues, and their dependent entities.
   .use(planner);
 
-// MCP endpoint (POST /mcp). Added after the chain so `type App` (the Eden client
+// MCP endpoint (/mcp). Added after the chain so `type App` (the Eden client
 // type) stays the REST surface; the MCP endpoint is JSON-RPC, not called via Eden.
 // Its tools are generated from the routes tagged with mcpTool().
 mountMcp(app);

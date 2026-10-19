@@ -256,6 +256,9 @@
     "labelPlaceholder": "例如：团队账户",
     "labelHint": "用于区分同一集成的不同凭据。密钥会加密存储。",
     "noFields": "无字段",
+    "connect": "连接",
+    "reconnect": "重新连接",
+    "signInFailed": "MCP 登录失败：{reason}",
     "search": "搜索集成",
     "noMatches": "没有与“{query}”匹配的集成。",
     "empty": "暂无凭据",
@@ -341,6 +344,7 @@
     "clearGroup": "清除",
     "selectedCount": "{count, plural, other {已选择 # 个工具}}",
     "oneIntegration": "请选择同一集成的工具，它们使用同一份凭据。",
+    "mcpUnavailable": "{server} 未列出任何工具：{reason}",
     "continue": "继续",
     "alreadyAdded": "{count, plural, other {其中 # 个工具已在该凭据上配置，将被跳过。}}",
     "noAccess": "你没有权限查看该团队的工具。"

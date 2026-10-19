@@ -177,7 +177,10 @@ describe('integrations', () => {
   it('exposes the credential reads to MCP, not the writes', () => {
     const untagged = untaggedRoutes((route) => route.includes('integrations'));
     expect(untagged).toEqual([
+      'GET /integrations/mcp/callback',
       'GET /teams/:teamId/integrations/options',
+      'GET /teams/:teamId/integrations/:credentialId/mcp-tools',
+      'POST /teams/:teamId/integrations/:credentialId/mcp-sign-in',
       'POST /teams/:teamId/integrations',
       'PATCH /teams/:teamId/integrations/:credentialId',
       'DELETE /teams/:teamId/integrations/:credentialId',

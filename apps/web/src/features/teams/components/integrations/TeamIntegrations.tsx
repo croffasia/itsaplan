@@ -1,7 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import type { ResourcePermissions } from '@/lib/api/endpoints/roles';
-import type { IntegrationCredential, IntegrationMeta } from '@/lib/api/endpoints/integrations';
+import {
+  startMcpSignIn,
+  type IntegrationCredential,
+  type IntegrationMeta,
+} from '@/lib/api/endpoints/integrations';
 import { useCredentialsPageQuery, useDeleteCredential } from '@/services/integrations.service';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmptyState } from '@/components/common/page/EmptyState';
@@ -34,6 +40,25 @@ export default function TeamIntegrations({
   const total = credentialsQuery.data?.total ?? 0;
   const deleteCredential = useDeleteCredential(teamId);
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const signInError = searchParams.get('mcp_error');
+  useEffect(() => {
+    if (!signInError) return;
+    toast.error(t('signInFailed', { reason: signInError }));
+    router.replace(pathname);
+  }, [signInError, router, pathname, t]);
+
+  async function connect(credential: IntegrationCredential) {
+    try {
+      const { url } = await startMcpSignIn(teamId, credential.id);
+      window.location.assign(url);
+    } catch (err) {
+      toast.error(t('signInFailed', { reason: err instanceof Error ? err.message : '' }));
+    }
+  }
+
   return (
     <>
       {total === 0 ? (
@@ -43,9 +68,9 @@ export default function TeamIntegrations({
           <div className="overflow-x-auto">
             <Table className="min-w-[560px] table-fixed">
               <colgroup>
-                <col className="w-[34%]" />
-                <col className="w-[50%]" />
-                <col className="w-[16%]" />
+                <col className="w-[30%]" />
+                <col className="w-[46%]" />
+                <col className="w-[24%]" />
               </colgroup>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
@@ -70,6 +95,7 @@ export default function TeamIntegrations({
                     canDelete={permissions.delete}
                     onEdit={() => setEditing(c)}
                     onDelete={() => setDeleting(c)}
+                    onConnect={c.integrationKey === 'mcp' ? () => connect(c) : undefined}
                   />
                 ))}
               </TableBody>

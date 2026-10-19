@@ -256,6 +256,9 @@
     "labelPlaceholder": "ex. Compte de l'équipe",
     "labelHint": "Aide à distinguer plusieurs identifiants d'une même intégration. Les secrets sont stockés chiffrés.",
     "noFields": "Aucun champ",
+    "connect": "Connecter",
+    "reconnect": "Reconnecter",
+    "signInFailed": "Échec de la connexion MCP : {reason}",
     "search": "Rechercher une intégration",
     "noMatches": "Aucune intégration ne correspond à « {query} ».",
     "empty": "Aucun identifiant pour l'instant",
@@ -341,6 +344,7 @@
     "clearGroup": "Effacer",
     "selectedCount": "{count, plural, one {# outil sélectionné} other {# outils sélectionnés}}",
     "oneIntegration": "Choisissez des outils d'une seule intégration — ils s'exécutent avec un même identifiant.",
+    "mcpUnavailable": "{server} ne liste aucun outil : {reason}",
     "continue": "Continuer",
     "alreadyAdded": "{count, plural, one {# outil est déjà associé à cet identifiant et est ignoré.} other {# outils sont déjà associés à cet identifiant et sont ignorés.}}",
     "noAccess": "Vous n'avez pas accès aux outils de cette équipe."

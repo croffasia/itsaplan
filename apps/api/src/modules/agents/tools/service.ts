@@ -1,9 +1,10 @@
 import { db, agentTool, agentToolLink, integrationCredential } from '@repo/db';
 import { and, eq, inArray, sql } from 'drizzle-orm';
-import { getTool, type ToolConfig } from '@repo/agent-tools';
+import { getTool, MCP_TOOL_PREFIX, type ToolConfig } from '@repo/agent-tools';
 import { iso, HttpError, rethrowDuplicate } from '#shared/lib';
 import { decryptSecret } from '@repo/crypto';
 import { getCredentialById } from '../integrations/service';
+import { listCredentialMcpTools } from '../integrations/mcp';
 
 // Data access for configured tools, shared by every project the team owns. A
 // configured tool binds a catalog tool (tool_key) to one integration_credential of the
@@ -80,15 +81,24 @@ export async function createAgentTool(
   teamId: number,
   input: NewAgentToolInput,
 ): Promise<AgentToolRow> {
-  const tool = getTool(input.toolKey);
-  if (!tool) throw new HttpError(400, `Unknown tool: ${input.toolKey}`);
-  const credential = await getCredentialById(input.credentialId, teamId);
-  if (!credential) throw new HttpError(400, 'Credential not found');
-  if (credential.integrationKey !== tool.integration.key) {
-    throw new HttpError(
-      400,
-      `This tool needs a ${tool.integration.label} credential, not ${credential.integrationKey}.`,
-    );
+  if (input.toolKey.startsWith(MCP_TOOL_PREFIX)) {
+    const tools = await listCredentialMcpTools(input.credentialId, teamId);
+    if (!tools) throw new HttpError(400, 'This tool needs an MCP server credential.');
+    const name = input.toolKey.slice(MCP_TOOL_PREFIX.length);
+    if (!tools.some((t) => t.name === name)) {
+      throw new HttpError(400, `The MCP server offers no tool named ${name}.`);
+    }
+  } else {
+    const tool = getTool(input.toolKey);
+    if (!tool) throw new HttpError(400, `Unknown tool: ${input.toolKey}`);
+    const credential = await getCredentialById(input.credentialId, teamId);
+    if (!credential) throw new HttpError(400, 'Credential not found');
+    if (credential.integrationKey !== tool.integration.key) {
+      throw new HttpError(
+        400,
+        `This tool needs a ${tool.integration.label} credential, not ${credential.integrationKey}.`,
+      );
+    }
   }
   try {
     const [row] = await db
@@ -127,11 +137,12 @@ export async function listAgentToolLinks(agentId: number): Promise<AgentToolRow[
 // key and its bound credential. Not exposed over HTTP.
 export async function listAgentToolsForRun(
   agentId: number,
-): Promise<{ id: number; toolKey: string; credential: ToolConfig }[]> {
+): Promise<{ id: number; toolKey: string; credentialId: number; credential: ToolConfig }[]> {
   const rows = await db
     .select({
       id: agentTool.id,
       toolKey: agentTool.toolKey,
+      credentialId: agentTool.credentialId,
       ciphertext: integrationCredential.ciphertext,
       iv: integrationCredential.iv,
       authTag: integrationCredential.authTag,
@@ -143,6 +154,7 @@ export async function listAgentToolsForRun(
   return rows.map((r) => ({
     id: r.id,
     toolKey: r.toolKey,
+    credentialId: r.credentialId,
     credential: JSON.parse(
       decryptSecret({ ciphertext: r.ciphertext, iv: r.iv, authTag: r.authTag }),
     ) as ToolConfig,

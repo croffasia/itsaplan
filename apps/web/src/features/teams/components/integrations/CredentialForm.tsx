@@ -11,14 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useCreateCredential, useUpdateCredential } from '@/services/integrations.service';
 import { IntegrationIcon } from '@/components/common/IntegrationIcon';
+import SecretInput from '@/components/common/inputs/SecretInput';
 import { useTranslations } from 'next-intl';
 
 type FieldValue = string | boolean;
-
-const INPUT_TYPES: Partial<Record<ConfigField['type'], string>> = {
-  secret: 'password',
-  number: 'number',
-};
 
 // Seeds the form state for an integration's fields. On edit, non-secret fields are
 // prefilled from the credential's redacted view; secret fields start empty (a blank
@@ -152,17 +148,27 @@ export function CredentialForm({
                 {field.label}
                 {!field.required && <span className="text-muted-foreground"> (optional)</span>}
               </Label>
-              <Input
-                type={INPUT_TYPES[field.type] ?? 'text'}
-                autoComplete="off"
-                value={typeof values[field.key] === 'string' ? (values[field.key] as string) : ''}
-                onChange={(e) => setField(field.key, e.target.value)}
-                placeholder={
-                  isEdit && field.type === 'secret'
-                    ? `Leave blank to keep ${existing?.redacted[field.key] ?? '••••'}`
-                    : field.placeholder
-                }
-              />
+              {field.type === 'secret' ? (
+                <SecretInput
+                  id={`credential-${field.key}`}
+                  value={typeof values[field.key] === 'string' ? (values[field.key] as string) : ''}
+                  onChange={(v) => setField(field.key, v)}
+                  hasStored={false}
+                  placeholder={
+                    isEdit
+                      ? `Leave blank to keep ${existing?.redacted[field.key] ?? '••••'}`
+                      : field.placeholder
+                  }
+                />
+              ) : (
+                <Input
+                  type={field.type === 'number' ? 'number' : 'text'}
+                  autoComplete="off"
+                  value={typeof values[field.key] === 'string' ? (values[field.key] as string) : ''}
+                  onChange={(e) => setField(field.key, e.target.value)}
+                  placeholder={field.placeholder}
+                />
+              )}
             </>
           )}
           {field.help && <p className="text-xs text-muted-foreground">{field.help}</p>}

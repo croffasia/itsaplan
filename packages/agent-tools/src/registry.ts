@@ -13,6 +13,7 @@ import { threads } from './tools/threads';
 import { instagram } from './tools/instagram';
 import { notion } from './tools/notion';
 import { gitea } from './tools/gitea';
+import { mcp } from './tools/mcp';
 
 // The registry of tool integrations. Add an integration by creating its folder under
 // tools/ and listing it here.
@@ -24,6 +25,7 @@ export const INTEGRATIONS: Integration[] = [
   instagram,
   notion,
   gitea,
+  mcp,
 ];
 
 const BY_KEY = new Map(INTEGRATIONS.map((i) => [i.key, i]));

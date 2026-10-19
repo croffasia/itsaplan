@@ -138,7 +138,7 @@ async function buildAgent(
       ...buildRouteTools(project, apiKey, row.tools),
       ...buildLocalTools(projectId, row.tools),
       ...(skills.length > 0 ? buildSkillTool(row.teamId, skills) : {}),
-      ...buildCustomTools(customTools),
+      ...(await buildCustomTools(customTools)),
     },
     // Conversation memory (last N messages of a thread) when enabled.
     ...(row.memoryEnabled

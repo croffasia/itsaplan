@@ -256,6 +256,9 @@
     "labelPlaceholder": "p. ej. Cuenta del equipo",
     "labelHint": "Ayuda a distinguir credenciales de la misma integración. Los secretos se guardan cifrados.",
     "noFields": "Sin campos",
+    "connect": "Conectar",
+    "reconnect": "Volver a conectar",
+    "signInFailed": "Error al iniciar sesión en MCP: {reason}",
     "search": "Buscar integraciones",
     "noMatches": "Ninguna integración coincide con «{query}».",
     "empty": "Todavía no hay credenciales",
@@ -341,6 +344,7 @@
     "clearGroup": "Limpiar",
     "selectedCount": "{count, plural, one {# herramienta seleccionada} other {# herramientas seleccionadas}}",
     "oneIntegration": "Elige herramientas de una sola integración — funcionan sobre una sola credencial.",
+    "mcpUnavailable": "{server} no muestra herramientas: {reason}",
     "continue": "Continuar",
     "alreadyAdded": "{count, plural, one {# herramienta ya está en esta credencial y se salta.} other {# herramientas ya están en esta credencial y se saltan.}}",
     "noAccess": "No tienes acceso a las herramientas de este equipo."

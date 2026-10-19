@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   type CredentialPatch,
   type IntegrationKind,
@@ -7,6 +13,7 @@ import {
   listIntegrationOptions,
   listIntegrationCatalog,
   listIntegrationModels,
+  listMcpTools,
   createCredential,
   updateCredential,
   deleteCredential,
@@ -53,6 +60,26 @@ export function useIntegrationModelsQuery(teamId: number | null, provider: strin
     queryFn: () => listIntegrationModels(teamId!, provider!),
     enabled: teamId != null && provider != null && provider.length > 0,
     staleTime: Infinity,
+  });
+}
+
+// A server that cannot list its tools carries the reason, e.g. that it is not connected.
+export function useMcpServerToolsQuery(teamId: number) {
+  const servers = (useIntegrationOptionsQuery(teamId, 'tool').data ?? []).filter(
+    (c) => c.integrationKey === 'mcp',
+  );
+  return useQueries({
+    queries: servers.map((server) => ({
+      queryKey: qk.mcpTools(teamId, server.id),
+      queryFn: () => listMcpTools(teamId, server.id),
+      retry: false,
+    })),
+    combine: (results) =>
+      servers.map((server, i) => ({
+        server,
+        tools: results[i]?.data ?? [],
+        error: results[i]?.error?.message ?? null,
+      })),
   });
 }
 

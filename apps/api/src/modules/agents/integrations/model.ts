@@ -57,6 +57,21 @@ const IntegrationResponse = t.Object({
   ),
 });
 
+export const McpToolListResponse = t.Array(
+  t.Object({ key: t.String(), label: t.String(), description: t.String() }),
+);
+
+export const McpSignInResponse = t.Object({
+  url: t.String({ description: 'Where to send the browser to sign in to the MCP server.' }),
+});
+
+export const mcpCallbackQuery = t.Object({
+  state: t.Optional(t.String()),
+  code: t.Optional(t.String()),
+  error: t.Optional(t.String()),
+  error_description: t.Optional(t.String()),
+});
+
 export const IntegrationCatalogResponse = t.Array(IntegrationResponse);
 
 export const ProviderModelListResponse = t.Array(t.Object({ id: t.String(), name: t.String() }));

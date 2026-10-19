@@ -80,6 +80,16 @@ export const listIntegrationOptions = (teamId: number, kind?: IntegrationKind) =
     `/teams/${teamId}/integrations/options${kind ? `?kind=${kind}` : ''}`,
   );
 
+export const listMcpTools = (teamId: number, credentialId: number) =>
+  request<{ key: string; label: string; description: string }[]>(
+    `/teams/${teamId}/integrations/${credentialId}/mcp-tools`,
+  );
+
+export const startMcpSignIn = (teamId: number, credentialId: number) =>
+  request<{ url: string }>(`/teams/${teamId}/integrations/${credentialId}/mcp-sign-in`, {
+    method: 'POST',
+  });
+
 export const createCredential = (teamId: number, input: NewCredentialInput) =>
   request<IntegrationCredential>(`/teams/${teamId}/integrations`, {
     method: 'POST',

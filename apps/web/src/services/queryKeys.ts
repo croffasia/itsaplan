@@ -195,6 +195,8 @@ export const qk = {
   // credential mutation refreshes them too.
   integrationOptions: (teamId: number, kind?: string) =>
     ['integrations', 'team', teamId, 'options', kind ?? 'all'] as const,
+  mcpTools: (teamId: number, credentialId: number) =>
+    ['integrations', 'team', teamId, 'mcp-tools', credentialId] as const,
   // Everything skill-scoped in one team. A write invalidates at this prefix, so the
   // page the section shows, the whole library the picker reads and the skill the
   // editor has open all refresh together.

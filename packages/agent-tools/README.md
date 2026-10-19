@@ -70,6 +70,18 @@ Everything downstream reads from that array: the tool index, the
 `integrationDescriptors()` catalog for the UI, and `coerceConfig`/`redactConfig`. No
 other file needs editing.
 
+## MCP servers
+
+The `mcp` integration (`src/tools/mcp`) is a team's own MCP server, reached over the
+Streamable HTTP transport by the client in `src/mcp.ts`. It declares no tools: they come
+from the server's `tools/list`, and a configured tool stores `mcp:<remote tool name>`
+as its key, bound to the server's credential. The api checks the server answers when the
+credential is saved, lists its tools for the add-tool dialog, and at run time reads each
+enabled server's tools once and builds them with the input schema the server sent.
+
+Requests go through `pinnedFetch` from `@repo/net`, so a server on a private network
+needs its host in `SSRF_ALLOWED_HOSTS`. The legacy HTTP+SSE transport is not supported.
+
 ## Rules
 
 - **A tool `key` is unique across all integrations.** The tool index is a flat map by

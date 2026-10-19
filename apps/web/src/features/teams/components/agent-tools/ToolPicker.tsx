@@ -47,16 +47,16 @@ export function ToolPicker({
     return [...byIntegration.values()];
   }, [matches]);
 
-  const lockedTo = options.find((o) => o.toolKey === selected[0])?.integrationKey ?? null;
+  const lockedTo = options.find((o) => o.id === selected[0])?.integrationKey ?? null;
 
-  function toggle(toolKey: string, on: boolean) {
-    setSelected((prev) => (on ? [...prev, toolKey] : prev.filter((k) => k !== toolKey)));
+  function toggle(id: string, on: boolean) {
+    setSelected((prev) => (on ? [...prev, id] : prev.filter((k) => k !== id)));
   }
 
   // The group toggle acts on the tools the search leaves on screen, so it never selects
   // a tool the user is not looking at.
   function toggleGroup(items: ToolOption[], allSelected: boolean) {
-    const keys = items.map((o) => o.toolKey);
+    const keys = items.map((o) => o.id);
     setSelected((prev) =>
       allSelected ? prev.filter((k) => !keys.includes(k)) : [...new Set([...prev, ...keys])],
     );
@@ -84,7 +84,7 @@ export function ToolPicker({
         {groups.map((items) => {
           const { integrationKey, integrationLabel } = items[0];
           const disabled = lockedTo != null && lockedTo !== integrationKey;
-          const allSelected = items.every((o) => selected.includes(o.toolKey));
+          const allSelected = items.every((o) => selected.includes(o.id));
           return (
             <div key={integrationKey} className={cn('space-y-1.5', disabled && 'opacity-50')}>
               <div className="flex items-center gap-2 px-1">
@@ -107,7 +107,7 @@ export function ToolPicker({
               <div className="space-y-1">
                 {items.map((o) => (
                   <label
-                    key={o.toolKey}
+                    key={o.id}
                     className={cn(
                       'flex w-full items-start gap-2.5 rounded-lg border border-transparent px-3 py-2 transition-colors',
                       disabled ? 'cursor-not-allowed' : 'cursor-pointer hover:bg-muted/60',
@@ -116,8 +116,8 @@ export function ToolPicker({
                     <Checkbox
                       className="mt-0.5"
                       disabled={disabled}
-                      checked={selected.includes(o.toolKey)}
-                      onCheckedChange={(v) => toggle(o.toolKey, v === true)}
+                      checked={selected.includes(o.id)}
+                      onCheckedChange={(v) => toggle(o.id, v === true)}
                     />
                     <span className="min-w-0">
                       <span className="block text-sm font-medium text-foreground">{o.label}</span>
@@ -155,7 +155,7 @@ export function ToolPicker({
         </span>
         <Button
           disabled={selected.length === 0}
-          onClick={() => onSubmit(options.filter((o) => selected.includes(o.toolKey)))}
+          onClick={() => onSubmit(options.filter((o) => selected.includes(o.id)))}
         >
           {t('continue')}
         </Button>

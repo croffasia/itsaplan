@@ -256,6 +256,9 @@
     "labelPlaceholder": "cth. Akun tim",
     "labelHint": "Membantu membedakan kredensial dari integrasi yang sama. Rahasia disimpan secara terenkripsi.",
     "noFields": "Tidak ada bidang",
+    "connect": "Hubungkan",
+    "reconnect": "Hubungkan ulang",
+    "signInFailed": "Masuk MCP gagal: {reason}",
     "search": "Cari integrasi",
     "noMatches": "Tidak ada integrasi yang cocok dengan “{query}”.",
     "empty": "Belum ada kredensial",
@@ -341,6 +344,7 @@
     "clearGroup": "Hapus pilihan",
     "selectedCount": "{count, plural, one {# alat dipilih} other {# alat dipilih}}",
     "oneIntegration": "Pilih alat dari satu integrasi — alat-alat tersebut berjalan dengan satu kredensial.",
+    "mcpUnavailable": "{server} tidak menampilkan alat: {reason}",
     "continue": "Lanjutkan",
     "alreadyAdded": "{count, plural, one {# alat sudah menggunakan kredensial ini dan dilewati.} other {# alat sudah menggunakan kredensial ini dan dilewati.}}",
     "noAccess": "Anda tidak memiliki akses ke alat tim ini."

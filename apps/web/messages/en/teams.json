@@ -256,6 +256,9 @@
     "labelPlaceholder": "e.g. Team account",
     "labelHint": "Helps tell apart credentials of the same integration. Secrets are stored encrypted.",
     "noFields": "No fields",
+    "connect": "Connect",
+    "reconnect": "Reconnect",
+    "signInFailed": "MCP sign-in failed: {reason}",
     "search": "Search integrations",
     "noMatches": "No integration matches “{query}”.",
     "empty": "No credentials yet",
@@ -341,6 +344,7 @@
     "clearGroup": "Clear",
     "selectedCount": "{count, plural, one {# tool selected} other {# tools selected}}",
     "oneIntegration": "Pick tools of one integration — they run on one credential.",
+    "mcpUnavailable": "{server} lists no tools: {reason}",
     "continue": "Continue",
     "alreadyAdded": "{count, plural, one {# tool is already on this credential and is skipped.} other {# tools are already on this credential and are skipped.}}",
     "noAccess": "You do not have access to the tools of this team."

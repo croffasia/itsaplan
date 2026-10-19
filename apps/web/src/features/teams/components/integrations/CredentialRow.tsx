@@ -1,4 +1,4 @@
-import { KeyRound, Pencil, Trash2 } from 'lucide-react';
+import { KeyRound, LogIn, Pencil, Trash2 } from 'lucide-react';
 import type { IntegrationCredential } from '@/lib/api/endpoints/integrations';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ export function CredentialRow({
   canDelete,
   onEdit,
   onDelete,
+  onConnect,
 }: {
   credential: IntegrationCredential;
   integrationLabel: string;
@@ -21,6 +22,7 @@ export function CredentialRow({
   canDelete: boolean;
   onEdit: () => void;
   onDelete: () => void;
+  onConnect?: () => void;
 }) {
   const t = useTranslations('teams.integrations');
   const fields = Object.entries(credential.redacted);
@@ -54,6 +56,26 @@ export function CredentialRow({
       </TableCell>
       <TableCell className="px-3 py-2">
         <div className="flex items-center justify-end gap-1">
+          {canEdit && onConnect && credential.redacted.oauth ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-muted-foreground hover:text-foreground"
+              onClick={onConnect}
+              aria-label={t('reconnect')}
+              title={t('reconnect')}
+            >
+              <LogIn className="size-4" />
+            </Button>
+          ) : (
+            canEdit &&
+            onConnect && (
+              <Button variant="outline" size="sm" className="h-8" onClick={onConnect}>
+                <LogIn className="size-4" />
+                {t('connect')}
+              </Button>
+            )
+          )}
           {canEdit && (
             <Button
               variant="ghost"

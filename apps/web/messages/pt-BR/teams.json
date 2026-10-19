@@ -256,6 +256,9 @@
     "labelPlaceholder": "ex. Conta do time",
     "labelHint": "Ajuda a distinguir credenciais da mesma integração. Os segredos são armazenados criptografados.",
     "noFields": "Sem campos",
+    "connect": "Conectar",
+    "reconnect": "Reconectar",
+    "signInFailed": "Falha no login do MCP: {reason}",
     "search": "Buscar integrações",
     "noMatches": "Nenhuma integração corresponde a “{query}”.",
     "empty": "Nenhuma credencial ainda",
@@ -341,6 +344,7 @@
     "clearGroup": "Limpar",
     "selectedCount": "{count, plural, one {# ferramenta selecionada} other {# ferramentas selecionadas}}",
     "oneIntegration": "Escolha ferramentas de uma integração — elas rodam sobre uma credencial.",
+    "mcpUnavailable": "{server} não lista ferramentas: {reason}",
     "continue": "Continuar",
     "alreadyAdded": "{count, plural, one {# ferramenta já está nesta credencial e será ignorada.} other {# ferramentas já estão nesta credencial e serão ignoradas.}}",
     "noAccess": "Você não tem acesso às ferramentas deste time."

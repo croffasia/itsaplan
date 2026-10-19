@@ -49,7 +49,8 @@ export function ToolCredentialStep({
   // The credential list arrives with the query, so the choice falls back to the first
   // one rather than being seeded into state.
   const [picked, setPicked] = useState<number | null>(null);
-  const credentialId = picked ?? matching[0]?.id ?? null;
+  const bound = tools[0].credentialId;
+  const credentialId = bound ?? picked ?? matching[0]?.id ?? null;
   const [busy, setBusy] = useState(false);
 
   const configured = useConfiguredToolOptionsQuery(teamId).data ?? [];
@@ -123,28 +124,29 @@ export function ToolCredentialStep({
       )}
 
       <div className="space-y-1.5">
-        <Label>{t('credential')}</Label>
-        {matching.length === 0 ? (
-          <p className="text-xs text-muted-foreground">
-            {t('noCredential', { integration: integrationLabel })}
-          </p>
-        ) : (
-          <Select
-            value={credentialId != null ? String(credentialId) : ''}
-            onValueChange={(v) => setPicked(Number(v))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('chooseCredential')} />
-            </SelectTrigger>
-            <SelectContent>
-              {matching.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>
-                  {credLabel(c)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+        {bound == null && <Label>{t('credential')}</Label>}
+        {bound == null &&
+          (matching.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              {t('noCredential', { integration: integrationLabel })}
+            </p>
+          ) : (
+            <Select
+              value={credentialId != null ? String(credentialId) : ''}
+              onValueChange={(v) => setPicked(Number(v))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('chooseCredential')} />
+              </SelectTrigger>
+              <SelectContent>
+                {matching.map((c) => (
+                  <SelectItem key={c.id} value={String(c.id)}>
+                    {credLabel(c)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ))}
         {skipped > 0 && (
           <p className="text-xs text-muted-foreground">{t('alreadyAdded', { count: skipped })}</p>
         )}

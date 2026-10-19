@@ -256,6 +256,9 @@
     "labelPlaceholder": "예: 팀 계정",
     "labelHint": "같은 연동의 인증 정보를 쉽게 구분할 수 있도록 표시합니다. 시크릿은 암호화되어 저장됩니다.",
     "noFields": "필드 없음",
+    "connect": "연결",
+    "reconnect": "다시 연결",
+    "signInFailed": "MCP 로그인 실패: {reason}",
     "search": "연동 검색",
     "noMatches": "“{query}”과(와) 일치하는 연동이 없습니다.",
     "empty": "아직 인증 정보가 없습니다",
@@ -341,6 +344,7 @@
     "clearGroup": "모두 해제",
     "selectedCount": "{count, plural, one {도구 #개 선택됨} other {도구 #개 선택됨}}",
     "oneIntegration": "하나의 연동에 속한 도구를 선택하세요. 선택한 도구는 하나의 인증 정보를 사용합니다.",
+    "mcpUnavailable": "{server}에 도구가 없습니다: {reason}",
     "continue": "계속",
     "alreadyAdded": "{count, plural, one {도구 #개가 이미 이 인증 정보에 추가되어 있어 건너뜁니다.} other {도구 #개가 이미 이 인증 정보에 추가되어 있어 건너뜁니다.}}",
     "noAccess": "이 팀의 도구에 접근할 수 없습니다."

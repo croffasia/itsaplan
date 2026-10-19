@@ -3,6 +3,9 @@ import { and, eq, sql } from 'drizzle-orm';
 import {
   coerceConfig,
   redactConfig,
+  listMcpTools,
+  McpAuthRequiredError,
+  MCP_INTEGRATION_KEY,
   ToolConfigError,
   type ToolConfig,
   type ConfigField,
@@ -10,6 +13,7 @@ import {
 import { iso, HttpError } from '#shared/lib';
 import { encryptSecret, decryptSecret } from '@repo/crypto';
 import { credentialSchemaFor } from './catalog';
+import { errorMessage } from '../core/helpers/errors';
 
 // Data access for integration credentials. They belong to the team, so a
 // project-scoped caller resolves its team id first. The full credential object is
@@ -66,6 +70,20 @@ function coerce(fields: ConfigField[], input: unknown): ToolConfig {
     if (err instanceof ToolConfigError) throw new HttpError(400, err.message);
     throw err;
   }
+}
+
+// A server that asks for authorization passes: it is connected over OAuth once stored.
+async function probeMcpServer(config: ToolConfig): Promise<void> {
+  try {
+    await listMcpTools(config);
+  } catch (err) {
+    if (err instanceof McpAuthRequiredError && !config.headerValue) return;
+    throw new HttpError(400, `MCP server: ${errorMessage(err, 'unreachable')}`);
+  }
+}
+
+export function redactCredential(fields: ConfigField[], config: ToolConfig) {
+  return { ...redactConfig(fields, config), ...(config.oauth ? { oauth: 'connected' } : {}) };
 }
 
 // One page of the team's credentials, by integration key, with how many it holds in
@@ -137,6 +155,7 @@ export async function createCredential(
   const schema = credentialSchemaFor(input.integrationKey);
   if (!schema) throw new HttpError(400, `Unknown integration: ${input.integrationKey}`);
   const config = coerce(schema, input.credential);
+  if (input.integrationKey === MCP_INTEGRATION_KEY) await probeMcpServer(config);
   const enc = encryptSecret(JSON.stringify(config));
   const [row] = await db
     .insert(integrationCredential)
@@ -147,7 +166,7 @@ export async function createCredential(
       ciphertext: enc.ciphertext,
       iv: enc.iv,
       authTag: enc.authTag,
-      redacted: redactConfig(schema, config),
+      redacted: redactCredential(schema, config),
     })
     .returning(dtoColumns);
   return mapRow(row);
@@ -177,11 +196,15 @@ export async function updateCredential(
     // out by the form) are preserved, then re-validate the whole credential.
     const current = (await decrypt(id, teamId)) ?? {};
     const merged = coerce(schema, { ...current, ...patch.credential });
+    if (existing.integrationKey === MCP_INTEGRATION_KEY) {
+      if (current.oauth && merged.url === current.url) merged.oauth = current.oauth;
+      await probeMcpServer(merged);
+    }
     const enc = encryptSecret(JSON.stringify(merged));
     set.ciphertext = enc.ciphertext;
     set.iv = enc.iv;
     set.authTag = enc.authTag;
-    set.redacted = redactConfig(schema, merged);
+    set.redacted = redactCredential(schema, merged);
   }
 
   if (Object.keys(set).length > 0) {

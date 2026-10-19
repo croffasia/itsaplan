@@ -17,3 +17,11 @@ export {
   coerceConfig,
   redactConfig,
 } from './registry';
+export {
+  MCP_INTEGRATION_KEY,
+  MCP_TOOL_PREFIX,
+  listMcpTools,
+  callMcpTool,
+  McpAuthRequiredError,
+  type McpTool,
+} from './mcp';

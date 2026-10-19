@@ -1,12 +1,14 @@
 import { Elysia, t } from 'elysia';
 import { noContent } from '#shared/http';
 import { guards } from '#shared/guards';
-import { authContext } from '#shared/auth-context';
+import { authContext, requestUser } from '#shared/auth-context';
+import { requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
-import { accessErrors, commonErrors } from '#shared/responses';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { mcpTool } from '#mcp/generate';
 import { paginate } from '#shared/pagination';
 import { teamParams } from '#modules/teams/model';
+import { MCP_TOOL_PREFIX } from '@repo/agent-tools';
 import { INTEGRATION_CATALOG, integrationKind } from './catalog';
 import { listModelsForProvider } from './provider-models';
 import {
@@ -15,6 +17,9 @@ import {
   CredentialResponse,
   IntegrationCatalogResponse,
   IntegrationOptionListResponse,
+  McpSignInResponse,
+  McpToolListResponse,
+  mcpCallbackQuery,
   ProviderModelListResponse,
   createCredentialBody,
   credentialParams,
@@ -29,6 +34,7 @@ import {
   updateCredential,
   deleteCredential,
 } from './service';
+import { finishMcpSignIn, listCredentialMcpTools, startMcpSignIn } from './mcp';
 
 // The credential store belongs to the team and serves every project it owns, so every
 // route sits under :teamId, gated by the integrations resource on the team: its owner
@@ -127,6 +133,52 @@ export const integrationRoutes = new Elysia({
     },
   )
 
+  // Backs the dialog that configures tools, so it carries that dialog's permission.
+  .get(
+    '/teams/:teamId/integrations/:credentialId/mcp-tools',
+    async ({ params, membership }) => {
+      const tools = await listCredentialMcpTools(params.credentialId, membership.teamId);
+      if (!tools) throw new HttpError(404, 'MCP server credential not found');
+      return tools.map((tool) => ({
+        key: MCP_TOOL_PREFIX + tool.name,
+        label: tool.title ?? tool.name,
+        description: tool.description ?? '',
+      }));
+    },
+    {
+      params: credentialParams,
+      teamPermission: ['agent_tools', 'create'],
+      response: { 200: McpToolListResponse, ...commonErrors },
+      detail: {
+        summary: "List an MCP server's tools",
+        description: 'The tools an MCP server credential offers, read from the server.',
+      },
+    },
+  )
+
+  // Answers with the URL rather than redirecting, because the browser calls it over fetch.
+  .post(
+    '/teams/:teamId/integrations/:credentialId/mcp-sign-in',
+    async ({ params, membership, user }) => {
+      const url = await startMcpSignIn(
+        params.credentialId,
+        membership.teamId,
+        requireUser(user).id,
+      );
+      if (!url) throw new HttpError(404, 'MCP server credential not found');
+      return { url };
+    },
+    {
+      params: credentialParams,
+      teamPermission: ['integrations', 'edit'],
+      response: { 200: McpSignInResponse, ...commonErrors },
+      detail: {
+        summary: 'Sign in to an MCP server',
+        description: 'Start the OAuth sign-in of an MCP server credential.',
+      },
+    },
+  )
+
   .post(
     '/teams/:teamId/integrations',
     async ({ membership, body, set }) => {
@@ -183,3 +235,25 @@ export const integrationRoutes = new Elysia({
       },
     },
   );
+
+// The encrypted `state` names the credential and the account that started the sign-in,
+// which must be the one the request's session belongs to. Mounted on the root app,
+// outside the planner's guard.
+export const mcpSignInCallbackRoutes = new Elysia({
+  name: 'integrations-mcp-callback',
+  detail: { tags: ['Integrations'] },
+}).get(
+  '/integrations/mcp/callback',
+  async ({ query, request }) => {
+    const location = await finishMcpSignIn(query, (await requestUser(request))?.id);
+    return new Response(null, { status: 302, headers: { location } });
+  },
+  {
+    query: mcpCallbackQuery,
+    response: errors(400, 403),
+    detail: {
+      summary: 'Finish an MCP server sign-in',
+      description: 'The OAuth redirect target. Stores the tokens and returns to the web app.',
+    },
+  },
+);

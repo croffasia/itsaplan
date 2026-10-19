@@ -19,8 +19,8 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 // The overview sections at the top of the menu, then the settings folded into a group,
-// as the team menu folds its AI sections. With no overview to sit under there is nothing
-// to fold, and the settings are listed as they are.
+// as the team menu folds its AI sections, then the history below the group. With no
+// overview to sit under there is nothing to fold, and every section is listed as it is.
 export default function WorkspaceSectionNav({ workspace }: { workspace: WorkspaceSummary }) {
   const t = useTranslations('teams.workspace');
   const pathname = usePathname();
@@ -37,7 +37,8 @@ export default function WorkspaceSectionNav({ workspace }: { workspace: Workspac
       }));
   const overview = items('overview');
   const settings = items('settings');
-  const entries = [...overview, ...settings];
+  const history = items('history');
+  const entries = [...overview, ...settings, ...history];
   const active = entries.find((entry) => entry.href === pathname);
   const activeId = active?.id ?? null;
   // The workspace's own path opens the first entry of the menu.
@@ -49,7 +50,7 @@ export default function WorkspaceSectionNav({ workspace }: { workspace: Workspac
   const settingsOpen = toggled ?? settings.some((entry) => entry.id === activeId);
 
   if (overview.length === 0) {
-    return <SectionNav sections={settings} activeId={activeId} label={workspace.name} />;
+    return <SectionNav sections={entries} activeId={activeId} label={workspace.name} />;
   }
 
   return (
@@ -71,6 +72,9 @@ export default function WorkspaceSectionNav({ workspace }: { workspace: Workspac
             <SectionNav sections={settings} activeId={activeId} label={t('settingsGroup')} />
           </CollapsibleContent>
         </Collapsible>
+      )}
+      {history.length > 0 && (
+        <SectionNav sections={history} activeId={activeId} label={workspace.name} />
       )}
     </div>
   );

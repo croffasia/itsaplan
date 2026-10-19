@@ -49,7 +49,7 @@ export default function useWorkspaceSections(
       id: 'audit-log',
       label: t('auditLog.title'),
       icon: ScrollText,
-      group: 'overview',
+      group: 'history',
       Component: WorkspaceAuditLogPreview,
     },
   ];

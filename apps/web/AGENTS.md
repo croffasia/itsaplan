@@ -23,7 +23,8 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   page `/workspaces/:id/:sectionId` opens; that page answers 404 only once the workspace and
   every query in flight have loaded, so a section that waits on a query of its own opens
   from a direct link. Every section names its group: an `overview` one sits at the top of
-  the menu, a `settings` one in the folding Settings group below, each in the order given.
+  the menu, a `settings` one in the folding Settings group below, a `history` one below that
+  group, each in the order given.
   `/workspaces/:id` names no section and opens the first entry of the menu, so the order
   also decides the page a workspace opens on.
   `NoTeamStart` is the start page of an account with no team and no workspace it owns,
@@ -41,7 +42,8 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   instance's own provider, on the sign-in screen and on the invite screen, where it gets the
   invited address as `email`; here it adds nothing, while the hosted build offers a sign-in
   through providers of its own. `SignInPage` is what `/login/<name>` shows, a sign-in page under a
-  name of its own; here every name answers 404. A sign-in that comes back with a code the core does not
+  name of its own; here every name answers 404, while the hosted build can show the sign-in
+  form there under a title of its own (`AuthLoginForm`'s `title`). A sign-in that comes back with a code the core does not
   know shows the text the build's messages give it under `auth.errors.codes.<code>`.
   `GodSectionExtras` renders at the end of every god section page, by its slug, for settings the hosted build adds to an existing section; `WorkspaceSectionExtras`
   does the same on a workspace's own settings pages (`general`, `managers`), with the

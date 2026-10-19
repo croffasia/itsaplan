@@ -14,7 +14,7 @@ import {
 import AuthFormHeader from '../AuthFormHeader';
 import AuthMessagePanel from '../AuthMessagePanel';
 import AuthRegisterPasswordFields from './AuthRegisterPasswordFields';
-import AuthRegisterProviders from './AuthRegisterProviders';
+import AuthRegisterProviders from '../AuthRegisterProviders';
 import { signInWithGoogle, signInWithOidc, signUpWithEmail } from '../../services/auth.service';
 import { useAuthAction } from '../../hooks/useAuthAction';
 import { useAuthConfig } from '@/services/authConfig.service';

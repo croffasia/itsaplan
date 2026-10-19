@@ -926,9 +926,8 @@ function createAuth() {
               grantTypes: ['authorization_code', 'refresh_token'],
               allowDynamicClientRegistration: true,
               allowUnauthenticatedClientRegistration: true,
-              // MCP clients send no application_type, and the "web" default refuses Claude
-              // Code's http loopback callback and Cursor's cursor:// one.
-              clientRegistrationDefaultApplicationType: 'native',
+              // Claude Code and Cursor send no application_type; "web" would refuse them.
+              clientRegistrationDefaultApplicationType: 'infer',
             }),
           ]
         : []),

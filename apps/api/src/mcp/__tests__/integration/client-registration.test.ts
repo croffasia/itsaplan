@@ -29,11 +29,12 @@ describe('MCP client registration', () => {
     }
   });
 
-  it("registers Cursor's custom-scheme callback", async () => {
-    const { status } = await register({
+  it("registers Cursor's custom-scheme callback as a native app", async () => {
+    const { status, body } = await register({
       redirect_uris: ['cursor://anysphere.cursor-mcp/oauth/callback'],
     });
     expect(status).toBe(201);
+    expect(body).toMatchObject({ application_type: 'native' });
   });
 
   it("registers Claude's connector and keeps only the grants the server issues", async () => {
@@ -50,9 +51,12 @@ describe('MCP client registration', () => {
     expect(body.grant_types).toEqual(['authorization_code', 'refresh_token']);
   });
 
-  it('still registers an https callback that sends no application type', async () => {
-    const { status } = await register({ redirect_uris: ['https://client.example.com/callback'] });
+  it('still registers an https callback that sends no application type, as a web app', async () => {
+    const { status, body } = await register({
+      redirect_uris: ['https://client.example.com/callback'],
+    });
     expect(status).toBe(201);
+    expect(body).toMatchObject({ application_type: 'web' });
   });
 
   it('refuses a loopback callback for a client that says it is a web app', async () => {

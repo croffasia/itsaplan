@@ -262,11 +262,12 @@ person. A registration that also lists a grant the server does not issue, as Cla
 connector does with `jwt-bearer`, is registered with the supported grants; one that lists
 none of them is refused.
 
-MCP clients register without `application_type`, and `mcp()` registers them as `native`
-(`clientRegistrationDefaultApplicationType`): an http callback is accepted only on
-`localhost`, `127.0.0.1` or `[::1]` (Claude Code), an https one on any host, and a custom
-scheme such as Cursor's `cursor://`. better-auth's own default, `web`, refuses the first and
-the last. A client that sends `"application_type": "web"` still gets the web checks.
+MCP clients register without `application_type`, and `mcp()` infers it
+(`clientRegistrationDefaultApplicationType: 'infer'`): a client whose callback is http on
+`localhost`, `127.0.0.1` or `[::1]` (Claude Code) or uses a custom scheme such as Cursor's
+`cursor://` is registered as `native`, and any other as `web`, which takes an https callback
+only. better-auth's own default, `web`, refuses the first two. A client that sends its
+`application_type` keeps it.
 
 The issuer is `API_URL` itself, path included, so the tokens and the discovery documents
 name the URL a client reaches. The api serves the documents at the root of its origin

@@ -1,5 +1,7 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
 import { auth } from '@repo/auth';
+import { apikey, db } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import { app } from '#tests/helpers/app';
 import { resetDb } from '#tests/helpers/db';
 import { signUpTestUser } from '#tests/helpers/auth';
@@ -60,5 +62,21 @@ describe('MCP authentication', () => {
       .patch(patchOps([{ op: 'replace', path: 'active', value: false }]));
 
     expect((await initialize(created.key)).status).toBe(401);
+  });
+
+  it('answers a rate-limited key with 429 and Retry-After, not a 401 OAuth challenge', async () => {
+    const member = await signUpTestUser({ email: 'rated@example.com' });
+    const created = await auth.api.createApiKey({ body: { userId: member.userId, name: 'mcp' } });
+
+    await db
+      .update(apikey)
+      .set({ requestCount: 100, lastRequest: new Date() })
+      .where(eq(apikey.id, created.id));
+
+    const res = await initialize(created.key);
+
+    expect(res.status).toBe(429);
+    expect(res.headers.get('retry-after')).toBe('1');
+    expect(res.headers.get('www-authenticate')).toBeNull();
   });
 });

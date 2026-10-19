@@ -125,6 +125,23 @@ describe('api keys', () => {
     );
   });
 
+  it('answers a rate-limited key on a planner route with 429, not 500', async () => {
+    const user = await signUpTestUser();
+    const created = await auth.api.createApiKey({ body: { userId: user.userId, name: 'ci' } });
+
+    await db
+      .update(apikey)
+      .set({ requestCount: 100, lastRequest: new Date() })
+      .where(eq(apikey.id, created.id));
+
+    const res = await app.handle(
+      new Request('http://localhost/projects', { headers: { 'x-api-key': created.key } }),
+    );
+
+    expect(res.status).toBe(429);
+    expect(res.headers.get('retry-after')).toBe('1');
+  });
+
   it('lists a key with its expiry', async () => {
     const user = await signUpTestUser();
     await auth.api.createApiKey({ body: { userId: user.userId, name: 'ci' } });

@@ -66,6 +66,8 @@ export const planner = new Elysia({ name: 'planner' })
     const answer = errorAnswer(code, error);
     if (answer.status === 500) console.error('[planner] unhandled error:', error);
     set.status = answer.status;
+    if (answer.headers)
+      for (const [name, value] of Object.entries(answer.headers)) set.headers[name] = value;
     return answer.body;
   })
   .use(projectRoutes)

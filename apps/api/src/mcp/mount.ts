@@ -1,6 +1,13 @@
 import { t } from 'elysia';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
-import { auth, isAccountDeactivated, mcpUnauthorized, verifyMcpAccessToken } from '@repo/auth';
+import {
+  auth,
+  isAccountDeactivated,
+  mcpRateLimited,
+  mcpUnauthorized,
+  rateLimitRetryAfter,
+  verifyMcpAccessToken,
+} from '@repo/auth';
 import { buildMcpServer } from './server';
 import type { McpApp } from './types';
 import type { McpCredential } from './credential';
@@ -51,7 +58,11 @@ export function mountMcp(app: any): void {
           // god mode, after the key was issued.
           if (session && !isAccountDeactivated(session.user))
             return serve({ kind: 'api-key', apiKey }, session.user.id);
-        } catch {
+        } catch (error) {
+          // A rate-limited key is refused with 429 so the client backs off; answering
+          // 401 here would read as a revoked credential.
+          const retryAfter = rateLimitRetryAfter(error);
+          if (retryAfter !== null) return mcpRateLimited(retryAfter);
           // Not an API key: it may be an OAuth access token, checked below.
         }
       }

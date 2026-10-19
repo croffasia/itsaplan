@@ -1,3 +1,5 @@
+import { rateLimitRetryAfter } from '@repo/auth';
+
 // Shared helpers for the planner API (projects, issues, and their dependent
 // entities). Each feature folder under modules/ holds a service.ts (Drizzle data
 // access) and an index.ts (Elysia routes) that exposes it over HTTP.
@@ -66,12 +68,20 @@ export function rethrowDuplicate(err: unknown, what: string): never {
   throw err;
 }
 
-// The status and the { error } body the planner answers an error with. `code` is the
-// one Elysia hands to onError.
+// The status, headers and the { error } body the planner answers an error with.
+// `code` is the one Elysia hands to onError.
 export function errorAnswer(
   code: unknown,
   error: unknown,
-): { status: number; body: { error: string; code?: string } } {
+): { status: number; body: { error: string; code?: string }; headers?: Record<string, string> } {
+  const retryAfter = rateLimitRetryAfter(error);
+  if (retryAfter !== null) {
+    return {
+      status: 429,
+      headers: { 'Retry-After': String(retryAfter) },
+      body: { error: 'Rate limit exceeded' },
+    };
+  }
   if (error instanceof HttpError) {
     const body = error.code ? { error: error.message, code: error.code } : { error: error.message };
     return { status: error.status, body };

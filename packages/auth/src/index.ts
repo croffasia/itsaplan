@@ -175,6 +175,32 @@ export function mcpUnauthorized(): Response {
   );
 }
 
+// The seconds until a rate-limited API key is accepted again, or null when the error
+// is not the apiKey plugin's rate limit. The plugin reports tryAgainIn in milliseconds
+// (the remainder of the timeWindow); Retry-After is in seconds, at least one.
+export function rateLimitRetryAfter(error: unknown): number | null {
+  if (!(error instanceof APIError) || error.statusCode !== 429) return null;
+  const tryAgainIn = (error.body as { details?: { tryAgainIn?: number } } | undefined)?.details
+    ?.tryAgainIn;
+  return typeof tryAgainIn === 'number' ? Math.max(1, Math.ceil(tryAgainIn / 1000)) : 1;
+}
+
+// The answer to an MCP request whose API key is rate-limited. 429 with Retry-After, so
+// a client backs off instead of reading the 401 challenge as a revoked credential.
+export function mcpRateLimited(retryAfterSeconds: number): Response {
+  return new Response(
+    JSON.stringify({
+      jsonrpc: '2.0',
+      error: { code: -32000, message: 'Rate limit exceeded' },
+      id: null,
+    }),
+    {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', 'Retry-After': String(retryAfterSeconds) },
+    },
+  );
+}
+
 // The account an MCP access token was issued to, or null when the token is not valid
 // or the account is deactivated. The tokens are JWTs signed with this instance's keys
 // and are checked against them in-process: requireMcpAuth fetches the key set over

@@ -23,7 +23,7 @@ import DocumentEditor from './components/DocumentEditor';
 import DocumentLoadError from './components/DocumentLoadError';
 import DocumentLoadingState from './components/DocumentLoadingState';
 import DocumentsIndex from './components/DocumentsIndex';
-import { MARKDOWN_MAX_CHARACTERS, markdownTitle } from './utils/documentImport';
+import { importedMarkdownJson, markdownTitle } from './utils/documentImport';
 import { documentBelongsToTab, type DocumentListTab } from './utils/documentList';
 import { documentAncestors } from './utils/documentTree';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -160,7 +160,8 @@ export default function DocumentsPage() {
       toast.error(t('markdownReadFailed'));
       return;
     }
-    if (markdown.length > MARKDOWN_MAX_CHARACTERS) {
+    const contentJson = importedMarkdownJson(markdown);
+    if (!contentJson) {
       toast.error(t('markdownTooLarge'));
       return;
     }
@@ -169,6 +170,7 @@ export default function DocumentsPage() {
       const newDocument = await createDocument.mutateAsync({
         title: markdownTitle(file.name),
         content: markdown,
+        contentJson,
         isPrivate: listTab === 'private',
       });
       router.push(documentPath(projectKey, newDocument.id));

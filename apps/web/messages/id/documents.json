@@ -136,7 +136,7 @@
   "exporting": "Menyiapkan…",
   "exportFailed": "Ekspor tidak dapat menyertakan semua aset yang terproteksi. Coba lagi.",
   "exportTooLarge": "Halaman ini memiliki terlalu banyak atau terlalu besar konten terproteksi untuk diekspor sekaligus (maksimum 50 file dan 100 MB).",
-  "markdownTooLarge": "File Markdown ini terlalu besar. Satu halaman menampung hingga 250.000 karakter.",
+  "markdownTooLarge": "File Markdown ini terlalu besar untuk satu halaman.",
   "markdownReadFailed": "Gagal membaca file Markdown.",
   "cancel": "Batal",
   "linkWorkItem": {

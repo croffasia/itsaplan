@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { createDocument } from '@tiptap/core';
 import type { Editor } from '@tiptap/react';
 import { Step } from '@tiptap/pm/transform';
 import { history } from '@tiptap/pm/history';
@@ -20,6 +19,7 @@ import {
   readDocumentRecovery,
   type DocumentSessionState,
 } from '../utils/documentRecovery';
+import { markdownJson } from '../utils/documentImport';
 
 export type DocumentSyncState =
   'connecting' | 'saved' | 'saving' | 'offline' | 'error' | 'conflict';
@@ -189,12 +189,7 @@ export function useDocumentCollaboration({
           projectKey,
           document.id,
           current.version,
-          current.contentJson ??
-            createDocument(
-              editor.storage.markdown.parser.parse(current.content),
-              editor.schema,
-              editor.options.parseOptions,
-            ).toJSON(),
+          current.contentJson ?? markdownJson(editor, current.content),
         );
         if (cancelled || editor.isDestroyed) return;
         const recovery = readDocumentRecovery(storageKey);

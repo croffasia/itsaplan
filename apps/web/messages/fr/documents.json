@@ -136,7 +136,7 @@
   "exporting": "Préparation…",
   "exportFailed": "L'exportation n'a pas pu inclure tous les fichiers protégés. Réessayez.",
   "exportTooLarge": "Cette page contient trop de contenu protégé pour être exportée en une fois (maximum 50 fichiers et 100 Mo).",
-  "markdownTooLarge": "Ce fichier Markdown est trop volumineux. Une page peut contenir jusqu’à 250 000 caractères.",
+  "markdownTooLarge": "Ce fichier Markdown est trop volumineux pour une seule page.",
   "markdownReadFailed": "Impossible de lire le fichier Markdown.",
   "cancel": "Annuler",
   "linkWorkItem": {

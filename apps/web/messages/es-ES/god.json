@@ -190,6 +190,7 @@
     "saved": "Los ajustes de autenticación se han guardado",
     "registration": "Registro",
     "registrationHint": "Quién puede crear una cuenta en esta instancia.",
+    "registrationPasswordlessNote": "El alta y la recuperación de contraseña las gestiona el proveedor de inicio de sesión.",
     "inviteTtlDays": "Caducidad de las invitaciones (días)",
     "inviteTtlDaysHint": "Pasado este plazo, el enlace de una invitación deja de funcionar y, con el registro por invitación, ya no permite darse de alta. Con 0, las invitaciones no caducan.",
     "inviteTtlDaysInvalid": "Escribe un número entero de días entre 0 y {max}.",
@@ -199,15 +200,18 @@
     "modes": {
       "open": {
         "label": "Abierto",
-        "description": "Cualquiera que llegue a la página de registro puede crear una cuenta."
+        "description": "Cualquiera que llegue a la página de registro puede crear una cuenta.",
+        "descriptionPasswordless": "Quien inicie sesión por primera vez con el proveedor recibe una cuenta."
       },
       "invite": {
         "label": "Solo con invitación",
-        "description": "Una cuenta solo se puede crear a través de un enlace de invitación."
+        "description": "Una cuenta solo se puede crear a través de un enlace de invitación.",
+        "descriptionPasswordless": "Quien inicie sesión con el proveedor solo recibe una cuenta si tiene una invitación pendiente para su correo."
       },
       "closed": {
         "label": "Cerrado",
-        "description": "No hay cuentas nuevas. Las existentes siguen iniciando sesión."
+        "description": "No hay cuentas nuevas. Las existentes siguen iniciando sesión.",
+        "descriptionPasswordless": "No se crean cuentas nuevas, tampoco para quien llegue desde el proveedor. Las existentes siguen iniciando sesión."
       }
     },
     "signIn": "Opciones de inicio de sesión",

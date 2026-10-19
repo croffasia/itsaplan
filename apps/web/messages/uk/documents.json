@@ -1,6 +1,7 @@
 {
   "title": "Документи",
   "newDocument": "Нова сторінка",
+  "uploadMarkdown": "Завантажити Markdown",
   "favoritePages": "Обрані",
   "newSubpage": "Додати сторінку до {title}",
   "addSubpage": "Додати підсторінку",
@@ -79,6 +80,8 @@
   "exporting": "Підготовка…",
   "exportFailed": "Не вдалося додати до експорту всі захищені файли. Спробуйте ще раз.",
   "exportTooLarge": "На сторінці забагато захищених файлів або вони завеликі для одного експорту (максимум 50 файлів і 100 МБ).",
+  "markdownTooLarge": "Файл Markdown завеликий. Сторінка вміщує до 250 000 символів.",
+  "markdownReadFailed": "Не вдалося прочитати файл Markdown.",
   "cancel": "Скасувати",
   "publicPages": "Спільні",
   "privatePages": "Особисті",

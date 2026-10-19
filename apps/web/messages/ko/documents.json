@@ -1,6 +1,7 @@
 {
   "title": "문서",
   "newDocument": "새 페이지",
+  "uploadMarkdown": "Markdown 업로드",
   "favoritePages": "즐겨찾기",
   "publicPages": "공개",
   "privatePages": "비공개",
@@ -135,6 +136,8 @@
   "exporting": "준비 중…",
   "exportFailed": "보호된 파일을 모두 포함하여 내보낼 수 없습니다. 다시 시도해 주세요.",
   "exportTooLarge": "이 페이지에는 한 번에 내보낼 수 있는 보호된 콘텐츠가 너무 많습니다. 최대 50개 파일, 총 100MB까지 내보낼 수 있습니다.",
+  "markdownTooLarge": "Markdown 파일이 너무 큽니다. 페이지당 최대 250,000자까지 저장할 수 있습니다.",
+  "markdownReadFailed": "Markdown 파일을 읽지 못했습니다.",
   "cancel": "취소",
   "linkWorkItem": {
     "tab": "작업",

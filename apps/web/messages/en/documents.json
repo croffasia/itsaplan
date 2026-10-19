@@ -1,6 +1,7 @@
 {
   "title": "Docs",
   "newDocument": "New page",
+  "uploadMarkdown": "Upload Markdown",
   "favoritePages": "Favorites",
   "publicPages": "Public",
   "privatePages": "Private",
@@ -135,6 +136,8 @@
   "exporting": "Preparing…",
   "exportFailed": "The export could not include all protected assets. Try again.",
   "exportTooLarge": "This page has too many or too much protected content to export at once (maximum 50 files and 100 MB).",
+  "markdownTooLarge": "This Markdown file is too large. A page holds up to 250,000 characters.",
+  "markdownReadFailed": "Could not read the Markdown file.",
   "cancel": "Cancel",
   "linkWorkItem": {
     "tab": "Work items",

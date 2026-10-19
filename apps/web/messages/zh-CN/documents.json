@@ -1,6 +1,7 @@
 {
   "title": "文档",
   "newDocument": "新建页面",
+  "uploadMarkdown": "上传 Markdown",
   "favoritePages": "收藏",
   "newSubpage": "在 {title} 下添加页面",
   "addSubpage": "添加子页面",
@@ -79,6 +80,8 @@
   "exporting": "正在准备…",
   "exportFailed": "无法在导出中包含所有受保护的文件。请重试。",
   "exportTooLarge": "此页面的受保护文件过多或过大，无法一次导出（最多 50 个文件和 100 MB）。",
+  "markdownTooLarge": "Markdown 文件过大。每个页面最多可容纳 250,000 个字符。",
+  "markdownReadFailed": "无法读取 Markdown 文件。",
   "cancel": "取消",
   "publicPages": "公开",
   "privatePages": "私人",

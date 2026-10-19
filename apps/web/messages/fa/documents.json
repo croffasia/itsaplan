@@ -1,6 +1,7 @@
 {
   "title": "مستندات",
   "newDocument": "صفحه جدید",
+  "uploadMarkdown": "بارگذاری Markdown",
   "favoritePages": "موردعلاقه‌ها",
   "publicPages": "عمومی",
   "privatePages": "خصوصی",
@@ -135,6 +136,8 @@
   "exporting": "در حال آماده‌سازی…",
   "exportFailed": "خروجی نتوانست همه فایل‌های محافظت‌شده را شامل شود. دوباره تلاش کنید.",
   "exportTooLarge": "این صفحه محتوای محافظت‌شده بیش از حد یا بیش از اندازه زیادی برای خروجی یکجا دارد (حداکثر ۵۰ فایل و ۱۰۰ مگابایت).",
+  "markdownTooLarge": "این فایل Markdown بسیار بزرگ است. هر صفحه تا ۲۵۰٬۰۰۰ نویسه را می‌پذیرد.",
+  "markdownReadFailed": "خواندن فایل Markdown ممکن نشد.",
   "cancel": "لغو",
   "linkWorkItem": {
     "tab": "تسک‌ها",

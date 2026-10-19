@@ -1,6 +1,7 @@
 {
   "title": "Documentos",
   "newDocument": "Nueva página",
+  "uploadMarkdown": "Subir Markdown",
   "favoritePages": "Favoritas",
   "publicPages": "Públicas",
   "privatePages": "Privadas",
@@ -135,6 +136,8 @@
   "exporting": "Preparando…",
   "exportFailed": "La exportación no ha podido incluir todos los recursos protegidos. Inténtalo otra vez.",
   "exportTooLarge": "Esta página tiene demasiados contenidos protegidos para exportar de golpe (máximo 50 ficheros y 100 MB).",
+  "markdownTooLarge": "Este archivo Markdown es demasiado grande. Una página admite hasta 250.000 caracteres.",
+  "markdownReadFailed": "No se pudo leer el archivo Markdown.",
   "cancel": "Cancelar",
   "linkWorkItem": {
     "tab": "Elementos de trabajo",

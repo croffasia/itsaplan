@@ -4,6 +4,7 @@ import { requireUser } from '#shared/access';
 import { guards } from '#shared/guards';
 import { mcpTool } from '#mcp/generate';
 import { accessErrors, commonErrors } from '#shared/responses';
+import { instantParam } from '#shared/lib';
 import {
   ActivityPage,
   AgentRunFeedListResponse,
@@ -184,6 +185,8 @@ export const analyticsRoutes = new Elysia({
         actorUserId: query.actorUserId ?? null,
         action: query.action ?? null,
         issueIds,
+        from: instantParam('from', query.from),
+        to: instantParam('to', query.to),
       });
     },
     {
@@ -192,7 +195,8 @@ export const analyticsRoutes = new Elysia({
       response: { 200: ActivityPage, ...commonErrors },
       detail: {
         summary: 'Get project activity',
-        description: 'Project-wide feed of issue activity.',
+        description:
+          'Project-wide feed of issue activity, newest first: comments and changes such as creation and state moves. `from` and `to` limit it to one period.',
         ...mcpTool('get_project_activity'),
       },
     },

@@ -329,7 +329,8 @@ export const ALWAYS_ON_ACTIONS: ToolMeta[] = [
     key: 'list_issues',
     group: 'issues',
     label: 'List issues by filters',
-    description: 'List issues filtered by state, type, assignee, priority, label, or due date.',
+    description:
+      'List issues filtered by state, type, assignee, priority, label, due date, or when they were created or updated.',
     always: true,
   },
   {
@@ -344,6 +345,13 @@ export const ALWAYS_ON_ACTIONS: ToolMeta[] = [
     group: 'issues',
     label: 'Read an issue discussion',
     description: "Read an issue's comments and change log, replies included.",
+    always: true,
+  },
+  {
+    key: 'get_project_activity',
+    group: 'project',
+    label: 'Read project activity',
+    description: 'Read the comments and changes across all issues of the project, by period.',
     always: true,
   },
   {

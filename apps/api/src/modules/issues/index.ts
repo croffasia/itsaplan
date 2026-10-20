@@ -12,7 +12,7 @@ import {
   requireUser,
 } from '#shared/access';
 import { getProjectById } from '#modules/projects/service';
-import { HttpError } from '#shared/lib';
+import { HttpError, instantParam } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { deleteObject } from '@repo/storage';
 import {
@@ -472,6 +472,10 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           labelIds: labelIds && labelIds.length ? labelIds : undefined,
           dueFrom: str(query.dueFrom),
           dueTo: str(query.dueTo),
+          createdFrom: instantParam('createdFrom', query.createdFrom),
+          createdTo: instantParam('createdTo', query.createdTo),
+          updatedFrom: instantParam('updatedFrom', query.updatedFrom),
+          updatedTo: instantParam('updatedTo', query.updatedTo),
           limit,
         },
         { includeArchived: query.includeArchived === 'true' },
@@ -484,7 +488,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 200: t.Array(IssueSearchHitResponse), ...commonErrors },
       detail: {
         summary: 'List issues by filters',
-        description: "List a project's issues by field filters.",
+        description:
+          "List a project's issues by field filters, most recently updated first. Each issue carries createdAt, updatedAt and completedAt.",
         ...mcpTool('list_issues'),
       },
     },

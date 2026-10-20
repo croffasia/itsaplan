@@ -3,7 +3,7 @@ import { agentExecutionState } from '#modules/agents/model';
 import { ActivityPayloadResponse } from '#shared/activity';
 import { DevelopmentLinkResponse } from '#modules/git/model';
 import { AgentTraceDetailResponse } from '#modules/agents/core/model';
-import { isoDate } from '#shared/schemas';
+import { instantQuery, isoDate } from '#shared/schemas';
 
 // Ceiling of every markdown text written on an issue: the description, a comment
 // and a custom field value. Each of them is scanned for mentions.
@@ -330,6 +330,9 @@ export const IssueSearchHitResponse = t.Object({
   dueDate: t.Nullable(t.String()),
   labelIds: t.Array(t.Number()),
   archived: t.Boolean(),
+  createdAt: t.String(),
+  updatedAt: t.String(),
+  completedAt: t.Nullable(t.String()),
 });
 
 // FeedItemRow from activity.ts: one timeline entry (comment or change-log).
@@ -543,6 +546,10 @@ export const listIssuesQuery = t.Object({
   labelIds: t.Optional(t.String({ description: 'CSV of label ids; the issue must carry all.' })),
   dueFrom: t.Optional(t.String({ description: "Inclusive earliest due date 'YYYY-MM-DD'." })),
   dueTo: t.Optional(t.String({ description: "Inclusive latest due date 'YYYY-MM-DD'." })),
+  createdFrom: instantQuery('Inclusive earliest creation time.'),
+  createdTo: instantQuery('Exclusive latest creation time.'),
+  updatedFrom: instantQuery('Inclusive earliest last-update time.'),
+  updatedTo: instantQuery('Exclusive latest last-update time.'),
   includeArchived: t.Optional(
     t.String({ description: "'true' to include archived issues. Default false." }),
   ),

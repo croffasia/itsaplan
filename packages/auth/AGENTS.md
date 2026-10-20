@@ -54,7 +54,9 @@ they last.
 
 `hooks.before` gates `/sign-up/email` (closed → 403, an address outside
 `allowedEmailDomains` → 403, invite → no pending, unexpired invite for that address → 403)
-and holds back `/sign-in/email` for an unconfirmed address while verification is required. The requirement never outlives the mail provider: the api
+and holds back `/sign-in/email` for an unconfirmed address while verification is required, with 403
+`EMAIL_NOT_VERIFIED`, better-auth's own code for it. The sign-in form reads that code to offer the
+confirmation link again; a deactivated account and a disabled password form are 403s too. The requirement never outlives the mail provider: the api
 refuses to turn it on without one, and `setEmailSettings` clears it when the provider
 is removed, so the setting alone is what the gate, the sign-up endpoint and the
 public `/auth-config` read — none of them checks the provider again.

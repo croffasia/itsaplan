@@ -94,6 +94,37 @@ webhook is updated in place on the next reconcile: saving the provider token aga
 regenerating the project's webhook secret. Deliveries are still authenticated by the
 project's secret. Auth, email links, the browser and MCP keep using `API_URL`.
 
+### Client IP
+
+The api rate-limits authentication per client address: sign-in, sign-up, password change and
+email change to 3 requests per 10 seconds, sign-in links (requesting and opening one) to 5 per
+minute, password reset and confirmation emails to 3 per minute. It reads the address from `X-Forwarded-For` and takes it only when the header holds
+one address. When it finds no address it can use, every client shares one limit per route,
+and the api logs `Rate limiting could not determine a client IP` once.
+
+Caddy, Traefik, and ingress-nginx in its default configuration drop the `X-Forwarded-For` a
+client sends and write the address they see, so they need no setting. These setups do:
+
+- **nginx** writes no `X-Forwarded-For` unless told to. Set
+  `proxy_set_header X-Forwarded-For $remote_addr;`. The common
+  `$proxy_add_x_forwarded_for` appends the address to the one the client sent; with it, list
+  the nginx address in `TRUSTED_PROXIES`.
+- **Cloudflare** in front of the proxy: set `CLIENT_IP_HEADER=cf-connecting-ip`. Cloudflare
+  puts the client address in that header, and the proxy behind it sees only Cloudflare's.
+  The proxy must then accept connections from Cloudflare alone: a request sent to it directly
+  carries any value in that header.
+- **A chain of proxies that append**: list their addresses or CIDR ranges, comma-separated,
+  in `TRUSTED_PROXIES`. The chain is read from the right, the listed addresses are skipped,
+  and the first other one is the client.
+
+`CLIENT_IP_HEADER` names any header the proxy writes itself, such as `x-real-ip` when nginx
+sets `proxy_set_header X-Real-IP $remote_addr;`. A header the proxy passes on unchanged lets a
+client pick its own address: Caddy passes `X-Real-IP` on as the client sent it.
+
+A client that reaches the api without the proxy writes any of these headers itself.
+`docker-compose.yml` publishes the api on `API_PORT` of the host; keep that port closed to
+everything but the proxy.
+
 ## Mail
 
 The instance sends password resets, address confirmations, sign-in links and invites through

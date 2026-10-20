@@ -132,6 +132,9 @@ services:
       # Set COOKIE_DOMAIN only to override the parent domain derived from
       # APP_URL (multi-label TLDs, deep subdomains).
       COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
+      # Where the client IP for the rate limit is read; empty reads X-Forwarded-For.
+      CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-}
       # Public origin for incoming Git webhooks when API_URL is private; empty uses API_URL.
       GIT_WEBHOOK_BASE_URL: ${GIT_WEBHOOK_BASE_URL:-}
       S3_ENDPOINT: http://minio:9000

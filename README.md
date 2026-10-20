@@ -20,7 +20,7 @@ If It's a Plan looks useful to you, star the repo ⭐ — it helps other people 
 [![Stars](https://img.shields.io/github/stars/croffasia/itsaplan?style=flat)](https://github.com/croffasia/itsaplan/stargazers)
 [![Last commit](https://img.shields.io/github/last-commit/croffasia/itsaplan)](https://github.com/croffasia/itsaplan/commits/main)
 
-<a href="https://trendshift.io/repositories/95056?utm_source=repository-badge&utm_medium=badge&utm_campaign=badge-repository-95056" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/95056" alt="#15 Repository of the Day on GitHub Trending" width="250" height="55"/></a>
+<a href="https://trendshift.io/repositories/95056?utm_source=repository-badge&utm_medium=badge&utm_campaign=badge-repository-95056" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/95056" alt="#8 Repository of the Day on GitHub Trending" width="250" height="55"/></a>
 <a href="https://trendshift.io/repositories/95056?utm_source=trendshift-badge&utm_medium=badge&utm_campaign=badge-trendshift-95056" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/95056/daily?language=TypeScript" alt="#13 TypeScript Repository of the Day on Trendshift" width="250" height="55"/></a>
 
 <img src="assets/screenshots/tour.gif" alt="Board, AI chat, initiatives, timeline, calendar, and agent schedules" width="100%" />

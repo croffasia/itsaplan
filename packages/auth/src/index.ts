@@ -83,6 +83,13 @@ const cookieDomain =
 // public frontend hostname.
 const passkeyRpID = process.env.PASSKEY_RP_ID ?? new URL(trustedOrigins[0]).hostname;
 
+// The client IP keys the rate limit. Unset, better-auth reads X-Forwarded-For and takes
+// it only when it holds one address; TRUSTED_PROXIES lets it read a chain.
+const clientIpHeader = process.env.CLIENT_IP_HEADER;
+const trustedProxies = process.env.TRUSTED_PROXIES?.split(',')
+  .map((entry) => entry.trim())
+  .filter(Boolean);
+
 // Public URL of the backend, with the path a subpath proxy adds; the links in auth
 // emails and the OAuth redirect URIs are built from it.
 const apiPublicUrl = (process.env.API_URL ?? '').replace(/\/+$/, '');
@@ -736,7 +743,10 @@ function createAuth() {
               ? eq(schema.user.email, (body?.email ?? '').trim().toLowerCase())
               : eq(schema.user.username, (body?.username ?? '').trim().toLowerCase());
           if (await isUnverified(identifier)) {
+            // The code is better-auth's own for this refusal; the sign-in form tells it
+            // apart from the other 403s, such as a deactivated account, by it.
             throw new APIError('FORBIDDEN', {
+              code: 'EMAIL_NOT_VERIFIED',
               message: 'Confirm your email address before signing in',
             });
           }
@@ -981,6 +991,10 @@ function createAuth() {
       defaultCookieAttributes: {
         sameSite: 'lax',
         secure: hostPrefixedCookies || process.env.NODE_ENV === 'production',
+      },
+      ipAddress: {
+        ipAddressHeaders: clientIpHeader ? [clientIpHeader] : undefined,
+        trustedProxies,
       },
     },
   });

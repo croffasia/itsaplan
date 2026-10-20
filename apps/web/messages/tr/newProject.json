@@ -1,0 +1,51 @@
+{
+  "name": "Ad",
+  "key": "Anahtar (kısa kod, örn. PAZ)",
+  "copyKey": "Anahtar",
+  "description": "Açıklama",
+  "issueTypes": "İş türleri",
+  "typesCreated": "{count, plural, one {# iş türü} other {# iş türü}} oluşturulacak",
+  "defaultType": "Yeni işler varsayılan olarak {type} türünü alır. Türler ayarlardan düzenlenebilir.",
+  "presets": {
+    "general": "Genel",
+    "software": "Yazılım",
+    "product": "Ürün",
+    "content": "İçerik",
+    "marketing": "Pazarlama",
+    "design": "Tasarım",
+    "sales": "Satış",
+    "operations": "Operasyon",
+    "support": "Destek",
+    "recruiting": "İşe Alım"
+  },
+  "copyConfiguration": "Yapılandırmayı kopyala",
+  "selectAll": "Tümünü seç",
+  "clearAll": "Tümünü temizle",
+  "copyGroups": {
+    "workflow": "İş Akışı",
+    "automation": "Otomasyon",
+    "views": "Görünümler",
+    "aiTeam": "Yapay Zekâ Takımı",
+    "knowledge": "Bilgi Bankası"
+  },
+  "copyItems": {
+    "states": "Durumlar",
+    "issueTypes": "İş türleri",
+    "labels": "Etiketler",
+    "customFields": "Özel alanlar",
+    "views": "Görünümler",
+    "dashboards": "Panolar",
+    "documents": "Belgeler",
+    "actions": "Eylemler",
+    "configuration": "Yapılandırma",
+    "webhooks": "Webhook'lar",
+    "agents": "Ajanlar",
+    "schedules": "Zamanlamalar"
+  },
+  "title": "Yeni proje",
+  "copyTitle": "\"{name}\" projesini kopyala",
+  "create": "Proje oluştur",
+  "copyAction": "Projeyi kopyala",
+  "defaultAgents": "Bu projeye katılacak ajanlar: {names}",
+  "copyName": "{name} kopyası"
+}

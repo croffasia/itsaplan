@@ -1,0 +1,25 @@
+{
+  "eyebrow": "Güncellendi",
+  "title": "{version} sürümündeki yenilikler",
+  "done": "Anladım",
+  "backup": {
+    "title": "Güncellemeden önce yedek alındı",
+    "body": "Bu sürümün veritabanı geçişleri çalıştırılmadan önce veritabanı dökümü alındı: {size}, {expires} tarihine kadar saklanır, ardından otomatik olarak silinir. Önceki sürüme dönmeniz gerekirse bu yedeği geri yükleyebilirsiniz.",
+    "credentialsHint": "Kullanıcı ve veritabanı adları, .env dosyanızdaki POSTGRES_USER ve POSTGRES_DB değerleridir."
+  },
+  "report": {
+    "title": "Verilerinizde neler değişti",
+    "subtitle": "Projeler artık bir takıma bağlıdır; takım genelinde ortak roller, yetenekler, ajanlar ve entegrasyon kimlik bilgileri paylaşılır.",
+    "teamsHeading": "Takımlar ve projeleri",
+    "renamedRoles": "Yeniden adlandırılan roller",
+    "renamedSkills": "Yeniden adlandırılan yetenekler",
+    "renamedAgents": "Kullanıcı adı değiştirilen ajanlar",
+    "renamedCredentials": "Etiketi güncellenen entegrasyon bilgileri",
+    "mergedHeading": "Birleştirilen ve taşınanlar",
+    "mergedRoles": "{count, plural, one {# yinelenen varsayılan rol birleştirildi} other {# yinelenen varsayılan rol birleştirildi}}",
+    "mergedTools": "{count, plural, one {# yinelenen yapılandırılmış araç birleştirildi} other {# yinelenen yapılandırılmış araç birleştirildi}}",
+    "movedInvites": "{count, plural, one {# bekleyen davet takıma taşındı} other {# bekleyen davet takıma taşındı}}",
+    "notificationsHeading": "Bildirim sağlayıcıları",
+    "notificationsBody": "Takımlar tek bir bildirim sağlayıcı yapılandırması tutar, bu nedenle son kaydedilen ayar korundu. Şu projeler için ayarları tekrar girin: {projects}."
+  }
+}

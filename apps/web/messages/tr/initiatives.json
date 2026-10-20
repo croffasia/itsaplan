@@ -1,0 +1,168 @@
+{
+  "title": "Girişimler",
+  "newInitiative": "Yeni girişim",
+  "notFound": "Girişim bulunamadı.",
+  "options": "Girişim seçenekleri",
+  "showDescription": "Açıklamayı göster",
+  "noDescription": "Açıklama yok.",
+  "noOwner": "Sahip atanmamış",
+  "startDate": "Başlangıç tarihi",
+  "targetDate": "Hedef tarih",
+  "progress": "İlerleme",
+  "activity": "Etkinlik",
+  "noActivity": "Henüz etkinlik yok.",
+  "noIssuesLinked": "Henüz bağlı bir iş yok.",
+  "inProgress": "Devam ediyor",
+  "emptyTitle": "Henüz girişim yok",
+  "emptyDescription": "Bir girişim, bir hedef altındaki ilgili işleri bir araya toplar.",
+  "emptyTabDescription": "Girişimler durumları değiştikçe sekmeler arasında taşınır.",
+  "emptyTab": {
+    "active": "Aktif girişim yok",
+    "planned": "Planlanan girişim yok",
+    "proposed": "Önerilen girişim yok",
+    "completed": "Tamamlanan girişim yok"
+  },
+  "tabs": {
+    "active": "Aktif",
+    "planned": "Planlanan",
+    "proposed": "Önerilen",
+    "completed": "Tamamlanan",
+    "all": "Tüm girişimler"
+  },
+  "detailTabs": {
+    "overview": "Genel Bakış",
+    "progress": "İlerleme",
+    "issues": "İşler"
+  },
+  "columns": {
+    "name": "Ad",
+    "priority": "Öncelik",
+    "owner": "Sahip",
+    "target": "Hedef",
+    "progress": "İlerleme",
+    "health": "Sağlık Durumu"
+  },
+  "status": {
+    "proposed": "Önerilen",
+    "planned": "Planlanan",
+    "active": "Aktif",
+    "completed": "Tamamlanan",
+    "canceled": "İptal Edilen"
+  },
+  "stateGroups": {
+    "backlog": "İş Havuzu",
+    "unstarted": "Yapılacak",
+    "started": "Devam Ediyor",
+    "completed": "Tamamlandı",
+    "canceled": "İptal Edildi"
+  },
+  "health": {
+    "on_track": "Yolunda",
+    "at_risk": "Risk altında",
+    "off_track": "Gecikmede",
+    "unknown": "Güncelleme yok"
+  },
+  "healthInfo": {
+    "trigger": "Sağlık durumu nasıl hesaplanır?",
+    "title": "Sağlık Durumu",
+    "description": "Tamamlanan işi geçen süreyle karşılaştırır. Otomatik olarak güncellenir.",
+    "legend": {
+      "on_track": "İlerleme planlanan takvime uygun gidiyor.",
+      "at_risk": "İlerleme takvimin biraz gerisinde kalıyor.",
+      "off_track": "İşler belirgin şekilde geride veya hedef tarih aşıldı.",
+      "unknown": "Yeterli veri yok: Henüz iş veya hedef tarih tanımlanmamış."
+    },
+    "howCalculated": "Nasıl hesaplanır?",
+    "workDone": "Tamamlanan iş",
+    "timeElapsed": "Geçen süre",
+    "trail": "İşin süreden sapma oranı",
+    "trailOnTrack": "%10'a kadar geride",
+    "trailAtRisk": "%10-25 arası geride",
+    "trailOffTrack": "%25'ten fazla geride"
+  },
+  "timeline": {
+    "title": "Zaman Çizelgesi",
+    "started": "Başladı",
+    "target": "Hedef",
+    "remaining": "Kalan",
+    "overdue": "{days} gün gecikti",
+    "dueToday": "Bitiş günü bugün",
+    "left": "{days} gün kaldı",
+    "timeElapsed": "Geçen süre",
+    "workDone": "Tamamlanan iş",
+    "noTargetDate": "İlerlemeyi izlemek için bir hedef tarih belirleyin."
+  },
+  "form": {
+    "titlePlaceholder": "3. Çeyrek Lansmanı",
+    "descriptionPlaceholder": "Bu girişim ne hakkında?",
+    "create": "Girişim oluştur",
+    "creating": "Oluşturuluyor…",
+    "editTitle": "Girişimi düzenle",
+    "save": "Değişiklikleri kaydet"
+  },
+  "pagination": {
+    "range": "{total} kayıttan {from}–{to} arası",
+    "previous": "Önceki sayfa",
+    "next": "Sonraki sayfa"
+  },
+  "select": {
+    "label": "Girişim",
+    "search": "Girişime bağla…",
+    "empty": "Girişim yok.",
+    "none": "Girişim yok",
+    "create": "Girişim oluştur"
+  },
+  "feed": {
+    "system": "Sistem",
+    "createdInitiative": "girişimi oluşturdu",
+    "createdIssue": "işi oluşturdu",
+    "renamed": "başlığı “{title}” olarak değiştirdi",
+    "descriptionUpdated": "açıklamayı güncelledi",
+    "descriptionCleared": "açıklamayı temizledi",
+    "statusSet": "durumu {status} yaptı",
+    "statusMoved": "{from} durumundan {to} durumuna taşıdı",
+    "prioritySet": "önceliği {priority} yaptı",
+    "priorityRemoved": "önceliği kaldırdı",
+    "ownerSet": "sahibi {name} olarak atadı",
+    "ownerRemoved": "sahip {name} kişisini kaldırdı",
+    "assigneeSet": "{name} kişisine atadı",
+    "assigneeRemoved": "{name} üzerindeki atamayı kaldırdı",
+    "delegateSet": "{name} kişisini temsilci olarak belirledi",
+    "delegateRemoved": "{name} temsilcisini kaldırdı",
+    "targetDateSet": "hedef tarihi {date} yaptı",
+    "targetDateRemoved": "hedef tarihi kaldırdı",
+    "startDateSet": "başlangıç tarihini {date} yaptı",
+    "startDateRemoved": "başlangıç tarihini kaldırdı",
+    "dueDateSet": "bitiş tarihini {date} yaptı",
+    "dueDateRemoved": "bitiş tarihini kaldırdı",
+    "labelAdded": "{label} etiketini ekledi",
+    "labelRemoved": "{label} etiketini kaldırdı",
+    "typeSet": "türü {type} yaptı",
+    "typeRemoved": "türü kaldırdı",
+    "linked": "{name} ile bağladı",
+    "unlinked": "girişimden bağlantıyı kaldırdı"
+  },
+  "attachments": {
+    "title": "Ekler",
+    "add": "Ekle",
+    "uploading": "Yükleniyor…",
+    "empty": "Henüz ek yok.",
+    "emptyHint": "Dosyaları buraya bırakın veya yüklemek için Ekle butonunu kullanın.",
+    "dropToUpload": "Yüklemek için dosyaları bırakın",
+    "uploadFailed": "Yükleme başarısız",
+    "open": "{name} dosyasını aç",
+    "download": "İndir",
+    "downloadFile": "{name} dosyasını indir",
+    "deleteFile": "{name} dosyasını sil",
+    "deleteTitle": "Eki sil",
+    "deleteConfirmation": "{name} silinsin mi? Açıklamada gömülü olduğu her yerden de kaldırılacaktır. Bu işlem geri alınamaz."
+  },
+  "documents": {
+    "title": "Belgeler",
+    "add": "Belge bağla",
+    "empty": "Henüz bağlı belge yok.",
+    "loadFailed": "Bağlı belgeler yüklenemedi. Tekrar deneyin.",
+    "untitled": "Başlıksız",
+    "remove": "{title} bağlantısını kaldır"
+  }
+}

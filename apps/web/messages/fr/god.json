@@ -190,6 +190,7 @@
     "saved": "Paramètres d'authentification enregistrés",
     "registration": "Inscription",
     "registrationHint": "Qui peut créer un compte sur cette instance.",
+    "registrationPasswordlessNote": "L'inscription et la récupération du mot de passe sont gérées par le fournisseur de connexion.",
     "inviteTtlDays": "Expiration des invitations (jours)",
     "inviteTtlDaysHint": "Passé ce délai, le lien d'invitation ne fonctionne plus et, avec l'inscription sur invitation, ne permet plus de créer un compte. Avec 0, les invitations n'expirent pas.",
     "inviteTtlDaysInvalid": "Saisissez un nombre entier de jours entre 0 et {max}.",
@@ -199,15 +200,18 @@
     "modes": {
       "open": {
         "label": "Ouverte",
-        "description": "Toute personne accédant à la page d'inscription peut créer un compte."
+        "description": "Toute personne accédant à la page d'inscription peut créer un compte.",
+        "descriptionPasswordless": "Toute personne qui se connecte pour la première fois via le fournisseur obtient un compte."
       },
       "invite": {
         "label": "Sur invitation",
-        "description": "Un compte ne peut être créé qu'à partir d'un lien d'invitation."
+        "description": "Un compte ne peut être créé qu'à partir d'un lien d'invitation.",
+        "descriptionPasswordless": "La connexion via le fournisseur ne crée un compte que s'il existe une invitation en attente pour cette adresse."
       },
       "closed": {
         "label": "Fermée",
-        "description": "Aucun nouveau compte. Les comptes existants continuent de se connecter."
+        "description": "Aucun nouveau compte. Les comptes existants continuent de se connecter.",
+        "descriptionPasswordless": "Aucun nouveau compte, même pour une personne venant du fournisseur. Les comptes existants continuent de se connecter."
       }
     },
     "signIn": "Options de connexion",

@@ -1,0 +1,37 @@
+{
+  "title": "Gelen Kutusu",
+  "empty": "Bildirim yok",
+  "selectNotification": "Bir bildirim seçin",
+  "backToList": "Gelen Kutusu",
+  "filter": "Filtrele",
+  "display": "Görünüm",
+  "notificationType": "Bildirim türü",
+  "showRead": "Okunanları göster",
+  "showSnoozed": "Ertelenenleri göster",
+  "markAllRead": "Tümünü okundu olarak işaretle",
+  "deleteAllRead": "Okunanların tümünü sil",
+  "deleteAllReadCompleted": "Tamamlanan işlerin okunan bildirimlerini sil",
+  "types": {
+    "assigned": "Atandı",
+    "mentioned": "Bahsedildi",
+    "commented": "Yorum yapıldı",
+    "state_changed": "Durum değişti"
+  },
+  "actions": {
+    "markRead": "Okundu olarak işaretle",
+    "markUnread": "Okunmadı olarak işaretle",
+    "snooze": "Ertele",
+    "unsnooze": "Ertelemeyi kaldır",
+    "tomorrow": "Yarına",
+    "inAWeek": "Bir hafta sonra",
+    "pickDate": "Tarih seçin…"
+  },
+  "event": {
+    "someone": "Biri",
+    "assigned": "{who} bu işi size atadı",
+    "mentioned": "{who} sizden bahsetti",
+    "commented": "{who} bir yorum yaptı",
+    "stateChanged": "{who} durumu {from} değerinden {to} değerine değiştirdi",
+    "stateChangedPlain": "{who} durumu değiştirdi"
+  }
+}

@@ -8,7 +8,7 @@ import GoogleIcon from '@/components/common/GoogleIcon';
 import { useAuthConfig } from '@/services/authConfig.service';
 
 // Signing in through a provider covers sign-up too: an address without an account
-// gets one, subject to the same registration mode as the form above.
+// gets one, subject to the instance registration mode.
 export default function AuthRegisterProviders({
   pending,
   onOidc,

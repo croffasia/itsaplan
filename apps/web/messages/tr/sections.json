@@ -1,0 +1,188 @@
+{
+  "account": {
+    "profile": "Profil",
+    "preferences": "Tercihler",
+    "accounts": "Hesaplar",
+    "security": "Güvenlik",
+    "api-keys": "API anahtarları"
+  },
+  "godGroups": {
+    "management": "Yönetim",
+    "instance": "Örneklem",
+    "security": "Güvenlik"
+  },
+  "god": {
+    "users": {
+      "label": "Kullanıcılar",
+      "description": "Bu örneklemdeki her hesap: genel rol, e-posta onay durumu ve kullanıcının erişebildiği projeler."
+    },
+    "teams": {
+      "label": "Takımlar",
+      "description": "Bu örneklemdeki her takım: sahip olduğu projeler ve takıma ait üyeler."
+    },
+    "projects": {
+      "label": "Projeler",
+      "description": "Bu örneklemdeki her proje: içerdiği varlıklar, son etkinlik zamanı ve erişebilen kişiler."
+    },
+    "general": {
+      "label": "Genel",
+      "description": "Kişisel çalışma alanları, yeni projeler için varsayılanlar ve ajan izleme kayıtları."
+    },
+    "authentication": {
+      "label": "Kimlik Doğrulama",
+      "description": "Bu örnekleme kimlerin kayıt olabileceği, hesapların nasıl onaylanacağı ve giriş sağlayıcıları."
+    },
+    "hotkeys": {
+      "label": "Klavye Kısayolları",
+      "description": "Bu örneklemdeki herkes için komutlara atanan kısayollar. Kullanıcılar tercihlerinden kendilerine özel kısayol tanımlayabilir."
+    },
+    "storage": {
+      "label": "Depolama",
+      "description": "Yükleme limitleri: tek dosya boyutu, kabul edilen ek türleri ve projelere tanınan depolama alanı."
+    },
+    "telegram": {
+      "label": "Telegram",
+      "description": "Kullanıcıların Telegram hesaplarını bağladığı ve kendi botunu ayarlamayan projeler için bildirim gönderen bot."
+    },
+    "email": {
+      "label": "E-posta Sağlayıcısı",
+      "description": "Örneklemin e-posta gönderdiği sağlayıcı: şifre sıfırlama, adres doğrulama ve giriş bağlantıları."
+    },
+    "auth-provider": {
+      "label": "Kimlik Doğrulama Sağlayıcısı",
+      "description": "Kullanıcıların giriş yapabileceği harici hesaplar."
+    },
+    "scim": {
+      "label": "SCIM",
+      "description": "Bir kimlik sağlayıcısının bu örneklemde hesap oluşturmasına, güncellemesine ve devre dışı bırakmasına izin verin."
+    },
+    "audit-log": {
+      "label": "Denetim Günlüğü",
+      "description": "Bu örneklemde kimin, ne zaman ve nereden ne yaptığını gösteren kayıtlar."
+    }
+  },
+  "settings": {
+    "general": {
+      "label": "Genel",
+      "description": "Projenin adı, açıklaması ve gösterdiği bölümler."
+    },
+    "states": {
+      "label": "Durumlar",
+      "description": "İşlerin geçtiği iş akışı durumları (her biri bir sütun olarak gösterilir)."
+    },
+    "issue-types": {
+      "label": "İş türleri",
+      "description": "Bu projenin içerebileceği iş türleri (her biri kendi alanlarına sahiptir)."
+    },
+    "labels": {
+      "label": "Etiketler",
+      "description": "Proje genelindeki işleri düzenlemek ve filtrelemek için etiketler."
+    },
+    "custom-fields": {
+      "label": "Özel alanlar",
+      "description": "İşlerde gösterilen ek alanlar (genel veya belirli bir iş türüne özel)."
+    },
+    "issue-templates": {
+      "label": "İş şablonları",
+      "description": "Yeni iş oluştururken kullanılabilecek şablonlar: başlık, açıklama ve özellikler."
+    },
+    "configuration": {
+      "label": "Yapılandırma",
+      "description": "Alt işlerin ana işle birlikte kapanma kuralı ve bekleyen işlerin arşivlenme zamanı."
+    },
+    "actions": {
+      "label": "Eylemler",
+      "description": "Bir iş üzerinde tek tıkla alanları güncelleyen özel butonlar."
+    },
+    "schedules": {
+      "label": "Zamanlamalar",
+      "description": "Ajan görevlerini yinelenen bir zaman çizelgesine göre çalıştırın."
+    },
+    "webhooks": {
+      "label": "Webhook'lar",
+      "description": "Proje olaylarını harici URL'lere gönderin (her webhook özel bir anahtarla imzalanır)."
+    },
+    "git": {
+      "label": "Kod Depoları",
+      "description": "GitHub, GitLab, Gitea, Forgejo veya Bitbucket üzerinde pull request birleştiğinde işleri kapatın."
+    },
+    "import-export": {
+      "label": "İçe/Dışa Aktarma",
+      "description": "Kendi barındırdığınız bir Plane örnekleminden işleri, yorumları ve etiketleri içe aktarın veya bu projenin verilerini JSON olarak dışa aktarın."
+    },
+    "ai-agents": {
+      "label": "Yapay Zekâ Ajanları",
+      "description": "Bu projede çalışan yapay zekâ ajanları."
+    }
+  },
+  "previews": {
+    "available": "Cloud ve kendi sunucunuzda barındırılan Pro sürümünde mevcuttur.",
+    "dashboard": {
+      "title": "Pano",
+      "description": "Bu çalışma alanının takımları ve projeleri genelindeki etkinlikler.",
+      "summary": {
+        "teams": "Takımlar",
+        "projects": "Projeler",
+        "people": "Kişiler",
+        "agents": "Yapay zekâ ajanları",
+        "openIssues": "Açık işler",
+        "storage": "Depolama"
+      },
+      "blocks": {
+        "agents": "Yapay zekâ ajanları",
+        "schedules": "Zamanlanmış çalışmalar",
+        "time": "Kaydedilen süre",
+        "flow": "İş akışı",
+        "projects": "Aktif projeler",
+        "teams": "Aktif takımlar"
+      }
+    },
+    "agentBudgets": {
+      "title": "Yapay zekâ bütçeleri",
+      "description": "Ajanların modeller üzerinde yapabileceği harcama limitleri.",
+      "workspace": "Tüm çalışma alanı",
+      "figures": {
+        "spent": "Harcanan",
+        "limit": "Limit",
+        "left": "Kalan",
+        "forecast": "Dönem tahmini"
+      },
+      "list": "Bütçeler",
+      "columns": {
+        "budget": "Bütçe",
+        "spent": "Harcanan"
+      }
+    },
+    "auditLog": {
+      "title": "Denetim günlüğü",
+      "description": "Bu çalışma alanında, takımlarında ve projelerinde kimin ne yaptığı ve kişilerin ne zaman giriş yaptığı.",
+      "columns": {
+        "time": "Zaman",
+        "actor": "Kişi",
+        "action": "Eylem",
+        "where": "Konum",
+        "from": "Kaynak"
+      }
+    },
+    "emailDomains": {
+      "title": "E-posta alan adları",
+      "description": "Bu çalışma alanına hangi e-posta alan adlarının katılabileceğini belirleyin.",
+      "label": "İzin verilen e-posta alan adları",
+      "hint": "Yalnızca bu alan adlarındaki adresler davet edilebilir veya SCIM ile eklenebilir. Boş bırakırsanız örneklem alan adları geçerli olur. Mevcut üyelerin erişimi korunur."
+    },
+    "sso": {
+      "title": "Tekil oturum açma (SSO)",
+      "description": "Bu çalışma alanındaki kişilerin şirketinizin kimlik sağlayıcısıyla oturum açmasını sağlayın.",
+      "provider": "Kimlik sağlayıcısı",
+      "providerHint": "Kimlik sağlayıcınızın verdiği bilgileri girin, ardından aşağıdaki adresleri sağlayıcınıza ekleyin.",
+      "fields": {
+        "domains": "E-posta alan adları",
+        "entryPoint": "Giriş URL'si",
+        "entityId": "Sağlayıcı varlık kimliği (Entity ID)",
+        "certificate": "İmzalama sertifikası",
+        "acsUrl": "ACS URL'si",
+        "spEntityId": "Varlık kimliği ve meta veri"
+      }
+    }
+  }
+}

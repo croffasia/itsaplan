@@ -1,0 +1,116 @@
+{
+  "title": "Üyeler",
+  "description": "Bu projeye erişimi olan kişiler.",
+  "add": {
+    "action": "Üye ekle",
+    "title": "Üye ekle",
+    "personLabel": "Takım üyesi veya e-posta",
+    "pickPlaceholder": "Birini seçin",
+    "searchPlaceholder": "Takımda arayın veya bir e-posta yazın",
+    "searchTeamPlaceholder": "Takımda arayın",
+    "fromTeam": "Takımdan",
+    "byEmail": "E-posta ile davet et",
+    "inviteEmail": "{email} adresini davet et",
+    "alreadyInvited": "{email} zaten davet edildi",
+    "domainNotAllowed": "{email} bu örneklemin izin vermediği bir alan adına ait",
+    "alreadyMember": "{email} zaten bu projenin üyesi",
+    "alreadyInTeam": "{email} zaten takımda — yukarıdaki listeden seçin",
+    "refused": "{email} eklenemedi",
+    "typeEmail": "Kimse bulunamadı. Davet etmek için tam bir e-posta adresi yazın.",
+    "noCandidates": "Takımdaki herkes zaten bu projede yer alıyor.",
+    "willJoinTeam": "{teamName} takımına ve bu projeye katılır",
+    "roleLabel": "Projedeki rolü",
+    "rolePlaceholder": "Rol",
+    "submit": "Projeye ekle",
+    "sendInvite": "Davet gönder"
+  },
+  "columns": {
+    "member": "Üye",
+    "role": "Rol",
+    "timezone": "Saat dilimi",
+    "joined": "Katılma",
+    "actions": "İşlemler"
+  },
+  "profileHeading": "Profil",
+  "you": "(siz)",
+  "aiAgent": "Yapay Zekâ Ajanı",
+  "tabs": {
+    "all": "Tümü",
+    "people": "Kişiler",
+    "agents": "Yapay zekâ ajanları",
+    "label": "Göster"
+  },
+  "leaveProject": "Projeden ayrıl",
+  "revokeAccess": "Erişimi kaldır",
+  "lastOwner": "Bir projede en az bir sahip bulunmalıdır",
+  "leaveTitle": "Bu projeden ayrıl",
+  "leaveDescription": "Bu projeye ve işlerine erişiminizi kaybedeceksiniz. Bir proje sahibi sizi daha sonra tekrar davet edebilir.",
+  "revokeTitle": "{name} için erişimi kaldır",
+  "revokeDescription": "{name} bu projeye erişimini kaybedecek. Daha sonra tekrar davet edilebilir.",
+  "selectRole": "Rol seçin",
+  "editDescription": "Açıklamayı düzenle",
+  "descriptionQuestionSelf": "Bu projede ne yapıyorsunuz?",
+  "descriptionQuestionOther": "Bu kişi bu projede ne yapıyor?",
+  "descriptionPlaceholder": "Örn. Backend mühendisi, API ve entegrasyonlardan sorumlu",
+  "invites": {
+    "pendingCount": "{count, plural, one {# bekleyen davet} other {# bekleyen davet}}",
+    "copyLink": "Bağlantıyı kopyala",
+    "copied": "Kopyalandı",
+    "emailQueued": "Davet e-postası sıraya alındı",
+    "emailUnavailable": "Davet oluşturuldu ancak e-posta sıraya alınamadı. Paylaşmak için bağlantıyı kopyalayın.",
+    "emailFailed": "Davet oluşturuldu ancak e-postası gönderilemedi. Paylaşmak için bağlantıyı kopyalayın.",
+    "resendUnavailable": "E-posta yapılandırılmamış. Paylaşmak için davet bağlantısını kopyalayın.",
+    "resendEmail": "E-posta gönder",
+    "resendingEmail": "Sıraya alınıyor…",
+    "renew": "Yenile",
+    "renewing": "Yenileniyor…",
+    "renewed": "Davet yenilendi: Yeni bağlantı e-posta ile gönderildi",
+    "renewedNoEmail": "Davet yenilendi. E-posta yapılandırılmamış: Paylaşmak için yeni bağlantıyı kopyalayın.",
+    "renewedEmailFailed": "Davet yenilendi ancak e-postası gönderilemedi. Paylaşmak için yeni bağlantıyı kopyalayın.",
+    "revokeAction": "Daveti iptal et",
+    "removeAction": "Daveti kaldır",
+    "invitedBy": "{name} tarafından davet edildi · ",
+    "createdAt": "{date} tarihinde oluşturuldu",
+    "expiredAt": "süresi {date} tarihinde doldu",
+    "respondedAt": "{date} tarihinde {status, select, accepted {kabul edildi} rejected {reddedildi} other {güncellendi}}",
+    "status": {
+      "pending": "Bekliyor",
+      "accepted": "Kabul edildi",
+      "rejected": "Reddedildi",
+      "expired": "Süresi doldu"
+    },
+    "revokeTitle": "{email} için daveti iptal et",
+    "revokeConfirm": "Daveti iptal et",
+    "revokeDescription": "Davet bağlantısı geçersiz hale gelecektir. Bu e-posta adresini daha sonra tekrar davet edebilirsiniz."
+  },
+  "promoted": "Üye sahip (owner) rolüne yükseltildi",
+  "roleUpdated": "Üye rolü güncellendi",
+  "descriptionUpdated": "Üye açıklaması güncellendi",
+  "added": "Üye eklendi",
+  "provisioned": "SCIM tarafından yönetiliyor",
+  "search": {
+    "all": "Üyeleri ara",
+    "people": "Kişileri ara",
+    "agents": "Yapay zekâ ajanlarını ara"
+  },
+  "empty": {
+    "all": {
+      "title": "Henüz üye yok",
+      "description": "Kişiler ve yapay zekâ ajanları katıldıkça burada listelenir."
+    },
+    "human": {
+      "title": "Henüz kişi yok",
+      "description": "Kişiler katıldıkça burada listelenir."
+    },
+    "agent": {
+      "title": "Henüz yapay zekâ ajanı yok",
+      "description": "Yapay zekâ ajanları eklendikçe burada listelenir."
+    },
+    "search": {
+      "title": "Sonuç bulunamadı",
+      "all": "Bu aramayla eşleşen üye bulunamadı.",
+      "human": "Bu aramayla eşleşen kişi bulunamadı.",
+      "agent": "Bu aramayla eşleşen yapay zekâ ajanı bulunamadı."
+    }
+  }
+}

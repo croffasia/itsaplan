@@ -41,6 +41,7 @@ import { modelPriceRoutes } from './modules/agents/prices';
 import { runnerQueueRoutes } from './modules/agents/queue';
 import { agentRunnerRoutes } from './modules/agents/runner';
 import { agentChatRoutes } from './modules/agents/chat';
+import { agentInvocationRoutes } from './modules/agents/invocation';
 import { notificationRoutes } from './modules/notifications';
 import { notificationSettingsRoutes } from './modules/notification-settings';
 import { notificationPreferenceRoutes } from './modules/notification-preferences';
@@ -102,6 +103,7 @@ export const planner = new Elysia({ name: 'planner' })
   .use(agentRunnerRoutes)
   .use(runnerQueueRoutes)
   .use(agentChatRoutes)
+  .use(agentInvocationRoutes)
   .use(dashboardRoutes)
   .use(noteBoardRoutes)
   .use(documentRoutes)

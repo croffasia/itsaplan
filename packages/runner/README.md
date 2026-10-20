@@ -11,6 +11,8 @@ This package runs such agents on your own machine — one, or several at once.
   Pi, and Oh My Pi (`omp`). Each preset sets the unattended flags and the session resume.
 - Runs your own `command` instead, if you prefer. The command takes the task on stdin.
 - Answers the agent's chat. Sends the text and the tool calls while the CLI prints them.
+- Receives the tasks on a port instead of polling, for an agent whose Connection is
+  Endpoint. See [Receiving tasks on a port](#receiving-tasks-on-a-port).
 
 ## Quick start
 
@@ -149,6 +151,86 @@ options describe every agent at once; an entry has priority over them.
 
 An agent whose key the instance refuses stops on its own, and the others keep working.
 
+## Receiving tasks on a port
+
+By default the runner polls the instance for tasks. With `listen`, the instance sends each
+task to the runner when the task is created. The runner then does not poll.
+
+Use `listen` for a runner on a server that the instance can reach. On a laptop behind a
+router, use polling. Polling needs no setup, and the chat is equally fast with it: a chat
+claim waits on the server until a message comes.
+
+**1.** In the agent's settings, open Connection and select Endpoint. Enter the public
+HTTPS address of the runner's port (see [Reaching the port](#reaching-the-port)), and
+save. Copy the signing secret.
+
+**2.** Add `listen` and `signingSecret` to `itsaplan-runner.json`:
+
+```json
+{
+  "url": "https://plan.example.com",
+  "apiKey": "the agent's key",
+  "agent": "claude",
+  "listen": 4000,
+  "signingSecret": "whsec_…"
+}
+```
+
+**3.** Start the runner. It logs `listening on port 4000`. In the agent's settings, click
+Send test. The result must be `200`.
+
+The runner answers each task immediately. Then it runs the task as it runs a polled task,
+with the same command, heartbeats and result. The rules for a request:
+
+- The runner accepts only a `POST` request signed with the secret of one of its agents.
+- It refuses a request whose signature time is more than five minutes from its clock.
+- If the instance sends a task again while the task runs, the runner does not start it a
+  second time.
+
+Several agents can use one port. The runner identifies the agent by the secret, so each
+agent needs its own `signingSecret`. Put the agents in `agents`:
+
+```json
+{
+  "url": "https://plan.example.com",
+  "agent": "claude",
+  "listen": 4000,
+  "agents": [
+    { "apiKey": "the first agent's key", "signingSecret": "whsec_first…" },
+    { "apiKey": "the second agent's key", "signingSecret": "whsec_second…" }
+  ]
+}
+```
+
+In the same file, the runner polls for each agent that has no `listen`.
+
+### Reaching the port
+
+The runner serves plain HTTP. In production, the instance requires HTTPS. Put a tunnel or a
+reverse proxy in front of the port:
+
+- **Reverse proxy** on a server with a domain. Caddy gets the certificate automatically:
+
+  ```
+  runner.example.com {
+    reverse_proxy localhost:4000
+  }
+  ```
+
+- **Cloudflare Tunnel.** `cloudflared tunnel --url http://localhost:4000` prints a
+  `trycloudflare.com` address. The address changes each time the tunnel starts, and then
+  you must change the agent's URL too. A named tunnel on your own domain keeps the same
+  address.
+- **ngrok.** `ngrok http 4000`. A static domain in your ngrok account keeps the same
+  address.
+- **Tailscale Funnel.** `tailscale funnel 4000` publishes the port at the machine's
+  `ts.net` address.
+
+On a private network without a tunnel, add the runner's host to `SSRF_ALLOWED_HOSTS` on
+the instance. That host must also use HTTPS. When `NODE_ENV` on the instance is not
+`production` or `test`, the instance also accepts `http://` and private addresses, for
+example `http://localhost:4000`.
+
 ## Settings
 
 The runner reads `./itsaplan-runner.json`. For a different file, give the path as an
@@ -176,6 +258,8 @@ priority over both. An `agents` entry has priority over all three, for the field
 | `pollIntervalMs` | `ITSAPLAN_POLL_INTERVAL_MS` | `3000`             | Wait after an empty queue. Minimum 1000                            |
 | `timeoutMs`      | `ITSAPLAN_TIMEOUT_MS`       | `1800000`          | Time before the runner stops a task                                |
 | `outputFormat`   | `ITSAPLAN_OUTPUT_FORMAT`    | the preset's       | How the runner reads run and chat output                                 |
+| `listen`         | `ITSAPLAN_LISTEN`           | —                  | Port that receives the tasks. The runner does not poll for the agent |
+| `signingSecret`  | `ITSAPLAN_SIGNING_SECRET`   | —                  | The agent's signing secret. Required with `listen`                 |
 
 Set `agent` or `command`. With the environment you need no file at all:
 
@@ -265,7 +349,7 @@ Without a session the server sends the last 20 messages of the conversation as p
 
 - **Node 20 or later.**
 - **An It's a Plan instance 0.10.0 or later.** The chat needs 0.11.0. An older instance
-  gives the runner only the queued runs.
+  gives the runner only the queued runs. `listen` needs 1.6.0.
 - **An external agent in your project.** The runner authenticates with its API key.
 - **The coding agent, installed and signed in on the same machine.** The runner starts the
   CLI as you, but it cannot sign in for you.

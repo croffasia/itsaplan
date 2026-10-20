@@ -1,0 +1,14 @@
+{
+  "noProjectAccess": "Bu projeye erişiminiz yok.",
+  "projectUnavailable": "Bu projeye ulaşılamıyor.",
+  "noProjects": "Henüz proje yok, başlamak için bir tane oluşturun.",
+  "noTeamsTitle": "Henüz takım yok",
+  "noTeamsHint": "Takımınızı oluşturun. Projeler, üyeler ve ajanlar takım içinde yönetilir.",
+  "noTeamsMemberHint": "Sizi bir takıma eklemesi için çalışma alanı sahibine danışın.",
+  "noProjectAccessHint": "Sizi bir projeye eklemesi için takım sahibine veya yöneticisine danışın.",
+  "noProjectAccessOwnerHint": "Sizi bir projeye eklemesi için takım sahibine danışın veya kendinize ait bir takım oluşturun.",
+  "createTeam": "Takım oluştur",
+  "noProjectsTitle": "Henüz proje yok",
+  "noProjectsHint": "İşleri bir pano üzerinde planlamaya başlamak için ilk projenizi oluşturun.",
+  "createProject": "Proje oluştur"
+}

@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes } from 'node:crypto';
 
 // Symmetric encryption for secrets stored at rest (provider API keys). AES-256-GCM
 // with a per-value random IV; the auth tag is kept alongside so decryption is
@@ -52,4 +52,14 @@ export function decryptSecret(enc: EncryptedSecret): string {
     decipher.final(),
   ]);
   return plaintext.toString('utf8');
+}
+
+// HMAC-SHA256 over `${timestamp}.${body}`, formatted as the X-Itsaplan-Signature header
+// value (`t=<ts>,v1=<hex>`). It signs every request this instance sends to a URL someone
+// configured: a webhook delivery and an agent invocation. The timestamp lets the
+// receiver reject replays; the receiver recomputes the HMAC over the exact bytes it
+// received and compares in constant time.
+export function signPayload(secret: string, timestampSeconds: number, body: string): string {
+  const digest = createHmac('sha256', secret).update(`${timestampSeconds}.${body}`).digest('hex');
+  return `t=${timestampSeconds},v1=${digest}`;
 }

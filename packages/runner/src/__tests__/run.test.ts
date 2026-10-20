@@ -3,6 +3,7 @@ import { AnswerStream, type AgUiEvent } from '../agui';
 import { Client, type Run } from '../client';
 import type { RunnerConfig } from '../config';
 import { runTask } from '../run';
+import { handleRun } from '../tasks';
 
 const sessionId = '0199a213-81c0-7800-8aa1-bbab2a035a53';
 
@@ -101,14 +102,14 @@ it('executes a queued task and reports its session and tool events before the fi
     issueIdentifier: null,
   };
   try {
-    await runTask(config, new Client(config), run);
+    await handleRun(config, new Client(config), () => {}, run);
     expect(posts[0].path).toBe('/agent-runs/1/events');
     expect(posts[0].body).toMatchObject({ attempt: 2, offset: 0, sessionId });
     expect(posts[0].body.events).toContainEqual(
       expect.objectContaining({ type: 'TOOL_CALL_RESULT', content: 'README.md' }),
     );
     expect(posts[posts.length - 1].path).toBe('/agent-runs/1/result');
-    expect(posts[posts.length - 1].body.status).toBe('success');
+    expect(posts[posts.length - 1].body).toMatchObject({ status: 'success', attempt: 2 });
   } finally {
     globalThis.fetch = original;
   }

@@ -190,6 +190,7 @@
     "saved": "인증 설정이 저장되었습니다",
     "registration": "회원가입",
     "registrationHint": "이 인스턴스에서 계정을 생성할 수 있는 사용자를 설정합니다.",
+    "registrationPasswordlessNote": "회원가입과 비밀번호 복구는 로그인 공급자에서 처리합니다.",
     "inviteTtlDays": "초대 유효 기간(일)",
     "inviteTtlDaysHint": "초대 링크는 이 일수가 지나면 더 이상 작동하지 않으며, 초대 전용 회원가입에서는 해당 주소로 가입할 수 없게 됩니다. 0으로 설정하면 초대에 응답할 때까지 유효합니다.",
     "inviteTtlDaysInvalid": "0에서 {max} 사이의 정수 일수를 입력하세요.",
@@ -199,15 +200,18 @@
     "modes": {
       "open": {
         "label": "공개",
-        "description": "회원가입 페이지에 접근할 수 있는 사람은 누구나 계정을 생성할 수 있습니다."
+        "description": "회원가입 페이지에 접근할 수 있는 사람은 누구나 계정을 생성할 수 있습니다.",
+        "descriptionPasswordless": "공급자로 처음 로그인하는 사용자에게 계정이 생성됩니다."
       },
       "invite": {
         "label": "초대 전용",
-        "description": "초대 링크를 통해서만 계정을 생성할 수 있습니다."
+        "description": "초대 링크를 통해서만 계정을 생성할 수 있습니다.",
+        "descriptionPasswordless": "공급자로 로그인하면 해당 이메일 주소에 대기 중인 초대가 있을 때만 계정이 생성됩니다."
       },
       "closed": {
         "label": "비공개",
-        "description": "새 계정을 생성할 수 없습니다. 기존 계정은 계속 로그인할 수 있습니다."
+        "description": "새 계정을 생성할 수 없습니다. 기존 계정은 계속 로그인할 수 있습니다.",
+        "descriptionPasswordless": "공급자에서 오는 사용자를 포함해 새 계정을 생성하지 않습니다. 기존 계정은 계속 로그인할 수 있습니다."
       }
     },
     "signIn": "로그인 옵션",

@@ -1,5 +1,5 @@
 {
-  "id": "2341e5ee-7a22-4a7c-9ae3-0f8b672504bb",
+  "id": "17a18039-6e6c-432b-86df-fafcf1d9c744",
   "prevId": "2e4b7f25-0a5a-4548-bd8a-cb97fce4b45d",
   "version": "7",
   "dialect": "postgresql",
@@ -2588,12 +2588,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "execution_started_at": {
-          "name": "execution_started_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
         "finished_at": {
           "name": "finished_at",
           "type": "timestamp with time zone",
@@ -3532,6 +3526,30 @@
         "last_seen_at": {
           "name": "last_seen_at",
           "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "invocation_url": {
+          "name": "invocation_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "invocation_secret_ciphertext": {
+          "name": "invocation_secret_ciphertext",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "invocation_secret_iv": {
+          "name": "invocation_secret_iv",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "invocation_secret_auth_tag": {
+          "name": "invocation_secret_auth_tag",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },

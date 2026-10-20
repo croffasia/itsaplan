@@ -1,0 +1,53 @@
+{
+  "none": "Hiçbir izin verilmedi",
+  "grantedCount": "{count, plural, one {# izin} other {# izin}} verildi",
+  "resources": {
+    "work_items": "İş maddeleri",
+    "initiatives": "Girişimler",
+    "cycles": "Döngüler",
+    "dashboards": "Panolar",
+    "documents": "Belgeler",
+    "views": "İş görünümü",
+    "members_invite": "Davetler",
+    "members_manage": "Üyeler",
+    "states": "Durumlar",
+    "issue_types": "İş türleri",
+    "labels": "Etiketler",
+    "ai_agents": "Yapay zekâ ajanları",
+    "integrations": "Entegrasyonlar",
+    "agent_skills": "Ajan yetenekleri",
+    "agent_tools": "Ajan araçları",
+    "agent_usage": "Ajan kullanımı",
+    "custom_fields": "Özel alanlar",
+    "issue_templates": "İş şablonları",
+    "workflow_config": "İş akışı yapılandırması",
+    "actions": "Eylemler",
+    "webhooks": "Webhook'lar",
+    "repositories": "Kod depoları",
+    "note_boards": "Not panoları",
+    "import_export": "İçe/Dışa Aktarma",
+    "danger_zone": "Tehlikeli bölge"
+  },
+  "actions": {
+    "create": "Oluştur",
+    "edit": "Düzenle",
+    "read": "Görüntüle",
+    "delete": "Sil"
+  },
+  "groups": {
+    "workItems": "İş maddeleri",
+    "dashboards": "Panolar",
+    "documents": "Belgeler",
+    "notes": "Notlar",
+    "ai": "Yapay Zekâ",
+    "configuration": "Yapılandırma",
+    "members": "Üyeler",
+    "project": "Proje",
+    "other": "Diğer"
+  },
+  "resourceColumn": "Kaynak",
+  "allowed": "izin verildi",
+  "notAllowed": "izin verilmedi",
+  "accessHeading": "Bu projeye erişim",
+  "joined": "katılma tarihi: {date}"
+}

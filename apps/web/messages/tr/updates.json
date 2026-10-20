@@ -1,0 +1,12 @@
+{
+  "updateAvailable": "Güncelleme mevcut",
+  "releaseHistory": "Sürüm geçmişi",
+  "running": "{current} sürümünü kullanıyorsunuz.",
+  "badgeRunning": "Kullanılan",
+  "badgeNew": "Yeni",
+  "check": "Güncellemeleri denetle",
+  "checking": "Denetleniyor",
+  "lastChecked": "Son denetim",
+  "allReleases": "Tüm sürümler",
+  "noNotes": "Bu sürüm için sürüm notu bulunmuyor."
+}

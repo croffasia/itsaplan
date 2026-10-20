@@ -12,6 +12,7 @@ export const LOCALES = [
   'id',
   'es-ES',
   'ko',
+  'tr',
 ] as const;
 
 export type Locale = (typeof LOCALES)[number];
@@ -36,6 +37,7 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   id: 'Bahasa Indonesia',
   'es-ES': 'Español (España)',
   ko: '한국어',
+  tr: 'Türkçe',
 };
 
 export const LOCALE_FLAGS: Record<Locale, string> = {
@@ -50,6 +52,7 @@ export const LOCALE_FLAGS: Record<Locale, string> = {
   id: '🇮🇩',
   'es-ES': '🇪🇸',
   ko: '🇰🇷',
+  tr: '🇹🇷',
 };
 
 export function isLocale(value: string | undefined | null): value is Locale {

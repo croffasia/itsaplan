@@ -166,6 +166,8 @@ export const qk = {
     ['aiAgents', teamId, agentId, 'skills'] as const,
   // An agent's triggered run history (the runs sidebar).
   agentRuns: (teamId: number, agentId: number) => ['aiAgents', teamId, agentId, 'runs'] as const,
+  invocationSecret: (teamId: number, agentId: number) =>
+    ['aiAgents', teamId, agentId, 'invocationSecret'] as const,
   agentSchedules: (projectKey: string) => ['agentSchedules', projectKey] as const,
   // One page of them: the window scopes the entry.
   agentSchedulePage: (projectKey: string, params: unknown) =>

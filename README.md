@@ -70,7 +70,7 @@ release.
 | --------- | ------------------------------------------------------------------------------------- |
 | Product management | Kanban, table, timeline, and calendar views · cycles · custom fields · dashboards · docs · notes boards |
 | AI agents | Agents as project members · internal on any model, or external on your coding CLI · runs start on an @mention, an assignment, or a schedule |
-| Platform | REST API with OpenAPI · MCP server · webhooks · pull requests from 5 forges · passkeys and Google sign-in · 11 languages |
+| Platform | REST API with OpenAPI · MCP server · webhooks · pull requests from 5 forges · passkeys and Google sign-in · 12 languages |
 
 <details>
 <summary><b>Product management</b> — the full list</summary>
@@ -122,7 +122,7 @@ release.
 - Outgoing webhooks: subscribe to events, signed payloads, and retries with a delivery log
 - Sign in with an email or a username and a password, a passkey, or Google
 - Notifications by email (SMTP or Resend) and Telegram, with per-member preferences
-- Interface in English, Ukrainian, Russian, Simplified Chinese, Arabic, Persian, French, Portuguese (Brazil), Bahasa Indonesia, Spanish (Spain), and Korean
+- Interface in English, Ukrainian, Russian, Simplified Chinese, Arabic, Persian, French, Portuguese (Brazil), Bahasa Indonesia, Spanish (Spain), Korean, and Turkish
 - Instance administration: storage limits, mail transport, and instance-wide settings
 
 </details>
@@ -160,6 +160,7 @@ needed. Run it again later to restart the instance; the data stays.
 - [Deploy on Kubernetes](docs/helm.md) — Helm chart for any Kubernetes cluster
 - [Local development](docs/development.md) — running the apps on the host, and the tests
 - [Coding agent setup](docs/runner.md) — the config for each CLI that `@itsaplan/runner` runs
+- [Agent endpoint](docs/agent-endpoint.md) — the instance sends an external agent's tasks to a URL that you run, such as an AWS Lambda function
 
 ## Built with
 

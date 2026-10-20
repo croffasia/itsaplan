@@ -28,6 +28,12 @@ export interface RunnerConfig {
   concurrency: number;
   // How often to ask for work when the queue was empty.
   pollIntervalMs: number;
+  // The port the instance sends this agent's tasks to, for an agent whose Connection is an
+  // endpoint. Such an agent is not polled.
+  listen?: number;
+  // The agent's signing secret, which proves a request on that port came from the
+  // instance. Required with `listen`.
+  signingSecret?: string;
   // How long one task may take before it is killed and reported as failed.
   timeoutMs: number;
   // How the output of a queued run or chat answer is read. 'text' takes whatever
@@ -93,6 +99,15 @@ function agentFrom(value: unknown): PresetName | undefined {
     throw new Error(`agent must be one of ${PRESET_NAMES.join(', ')}`);
   }
   return name;
+}
+
+function portFrom(value: unknown): number | undefined {
+  if (value === undefined || value === '') return undefined;
+  const port = intFrom(value, 0);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error('listen must be a port number from 1 to 65535');
+  }
+  return port;
 }
 
 function argsFrom(value: unknown): string[] {
@@ -191,6 +206,11 @@ function nameOf(entry: Fields, index: number, total: number): string {
 function configFrom(fields: Fields, name: string, extraArgs: string[]): RunnerConfig {
   const agent = agentFrom(fields.agent);
   const command = textOf(fields.command);
+  const listen = portFrom(fields.listen);
+  const signingSecret = textOf(fields.signingSecret);
+  if (listen !== undefined && !signingSecret) {
+    throw new Error('signingSecret is required with listen — copy it from the agent settings');
+  }
   if (!agent && !command) {
     throw new Error(
       `set either agent (one of ${PRESET_NAMES.join(', ')}) or command in the config file or the environment`,
@@ -212,7 +232,26 @@ function configFrom(fields: Fields, name: string, extraArgs: string[]): RunnerCo
     ),
     timeoutMs: intFrom(fields.timeoutMs, DEFAULTS.timeoutMs),
     outputFormat: outputFormatFrom(fields.outputFormat, presetOf({ agent, command })),
+    listen,
+    signingSecret,
   };
+}
+
+// The agents on one port are told apart by the secret a request is signed with, so two of
+// them sharing one would make a request belong to both. The instance issues every agent a
+// secret of its own, so this refuses `apiKeys` given one shared `signingSecret`.
+function assertSecretsApart(configs: RunnerConfig[]): void {
+  const seen = new Set<string>();
+  for (const config of configs) {
+    if (config.listen === undefined) continue;
+    const key = `${config.listen} ${config.signingSecret}`;
+    if (seen.has(key)) {
+      throw new Error(
+        'each agent on a listen port needs its own signingSecret — list them in agents',
+      );
+    }
+    seen.add(key);
+  }
 }
 
 // Whatever the environment and the command line said, which is what the file's shared
@@ -230,6 +269,8 @@ function sharedFields(file: Fields, overrides: ConfigOverrides): Fields {
     pollIntervalMs: env.ITSAPLAN_POLL_INTERVAL_MS,
     timeoutMs: env.ITSAPLAN_TIMEOUT_MS,
     outputFormat: env.ITSAPLAN_OUTPUT_FORMAT,
+    listen: env.ITSAPLAN_LISTEN,
+    signingSecret: env.ITSAPLAN_SIGNING_SECRET,
   };
   // A variable that is not set says nothing about the field, so it must not overwrite it.
   for (const [field, value] of Object.entries(outside)) {
@@ -249,7 +290,9 @@ export async function loadConfig(
     throw new Error('no agents configured — apiKeys and agents cannot be empty');
   }
   const shared = sharedFields(file, overrides);
-  return entries.map((entry, index) =>
+  const configs = entries.map((entry, index) =>
     configFrom(merge(shared, entry), nameOf(entry, index, entries.length), overrides.args ?? []),
   );
+  assertSecretsApart(configs);
+  return configs;
 }

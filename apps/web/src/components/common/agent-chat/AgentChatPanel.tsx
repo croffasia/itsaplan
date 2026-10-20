@@ -78,8 +78,9 @@ export function AgentChatPanel({
   const fileInputRef = useRef<HTMLInputElement>(null);
   // An external agent answers on its runner, so with none polling the message would sit
   // in the queue with nothing to take it. The composer says so instead of accepting it.
-  // A message typed while the agent is answering is not refused — it waits its turn.
-  const runnerOffline = agent.kind === 'external' && !isRunnerOnline(agent);
+  // A message typed while the agent is answering is not refused — it waits its turn. An
+  // agent with an endpoint is sent the message, so nothing has to be online.
+  const runnerOffline = agent.kind === 'external' && !agent.invocationUrl && !isRunnerOnline(agent);
   const canSend = input.trim().length > 0 && !runnerOffline;
 
   function submit() {

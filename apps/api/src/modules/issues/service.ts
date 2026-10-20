@@ -18,6 +18,7 @@ import {
 } from '@repo/db';
 import {
   and,
+  desc,
   eq,
   exists,
   gte,
@@ -274,6 +275,8 @@ export interface IssueSearchHit {
   dueDate: string | null;
   labelIds: number[];
   archived: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Escapes LIKE metacharacters so the query is matched literally (Postgres LIKE uses
@@ -292,7 +295,11 @@ function escapeLike(value: string): string {
 export async function searchIssues(
   project: ProjectRow,
   filters: IssueQuery,
-  opts: { includeArchived?: boolean } = {},
+  opts: {
+    includeArchived?: boolean;
+    sort?: 'updated' | 'created';
+    offset?: number;
+  } = {},
 ): Promise<IssueSearchHit[]> {
   const conds: SQL[] = [eq(issue.projectId, project.id)];
   if (!opts.includeArchived) conds.push(isNull(issue.archivedAt));
@@ -384,14 +391,12 @@ export async function searchIssues(
   if (filters.dueFrom !== undefined) conds.push(gte(issue.dueDate, filters.dueFrom));
   if (filters.dueTo !== undefined) conds.push(lte(issue.dueDate, filters.dueTo));
 
-  // Exact number match first (if any), then most recently updated.
-  const orderBy =
-    seqMatch !== null
-      ? [
-          sql`case when ${issue.sequenceNumber} = ${seqMatch} then 0 else 1 end`,
-          sql`${issue.updatedAt} desc`,
-        ]
-      : [sql`${issue.updatedAt} desc`];
+  // Exact number match first (if any), then newest first by the chosen timestamp.
+  const orderBy: SQL[] = [];
+  if (seqMatch !== null) {
+    orderBy.push(sql`case when ${issue.sequenceNumber} = ${seqMatch} then 0 else 1 end`);
+  }
+  orderBy.push(desc(opts.sort === 'created' ? issue.createdAt : issue.updatedAt), desc(issue.id));
 
   const base = db
     .select({
@@ -408,11 +413,14 @@ export async function searchIssues(
       priority: issue.priority,
       dueDate: issue.dueDate,
       archivedAt: issue.archivedAt,
+      createdAt: issue.createdAt,
+      updatedAt: issue.updatedAt,
     })
     .from(issue)
     .where(and(...conds))
     .orderBy(...orderBy);
-  const rows = filters.limit !== undefined ? await base.limit(filters.limit) : await base;
+  const limited = filters.limit !== undefined ? base.limit(filters.limit) : base;
+  const rows = opts.offset !== undefined ? await limited.offset(opts.offset) : await limited;
 
   const hits: IssueSearchHit[] = rows.map((r) => ({
     id: r.id,
@@ -430,6 +438,8 @@ export async function searchIssues(
     dueDate: r.dueDate,
     labelIds: [],
     archived: r.archivedAt !== null,
+    createdAt: iso(r.createdAt),
+    updatedAt: iso(r.updatedAt),
   }));
   await attachLabels(hits);
   return hits;

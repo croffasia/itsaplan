@@ -19,6 +19,12 @@
     "created": "Creada",
     "updated": "Actualizada"
   },
+  "columnOrdering": {
+    "title": "Ordenar {column}",
+    "button": "{column}: {field}, {direction}",
+    "field": "Orden de la columna",
+    "board": "Orden del tablero"
+  },
   "groupFields": {
     "none": "Sin agrupación",
     "status": "Estado",

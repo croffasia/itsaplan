@@ -19,6 +19,12 @@
     "created": "Dibuat",
     "updated": "Diperbarui"
   },
+  "columnOrdering": {
+    "title": "Urutkan {column}",
+    "button": "{column}: {field}, {direction}",
+    "field": "Urutan kolom",
+    "board": "Urutan papan"
+  },
   "groupFields": {
     "none": "Tanpa pengelompokan",
     "status": "Status",

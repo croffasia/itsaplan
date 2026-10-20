@@ -19,6 +19,12 @@
     "created": "Criado",
     "updated": "Atualizado"
   },
+  "columnOrdering": {
+    "title": "Ordenar {column}",
+    "button": "{column}: {field}, {direction}",
+    "field": "Ordenação da coluna",
+    "board": "Ordenação do quadro"
+  },
   "groupFields": {
     "none": "Sem agrupamento",
     "status": "Estado",

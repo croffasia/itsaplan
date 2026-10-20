@@ -121,6 +121,43 @@ describe('internal agent route tools', () => {
     expect(mkt.data).toEqual([expect.objectContaining({ title: 'Stray' })]);
   });
 
+  it('offers list sorting and offset to MCP clients and agents, and applies them', async () => {
+    const external = routeTools(getMcpApp()).find((route) => route.name === 'list_issues');
+    expect(external?.inputSchema.properties).toMatchObject({
+      sort: { enum: ['updated', 'created'] },
+      offset: { minimum: 0, multipleOf: 1 },
+    });
+    expect(external?.inputSchema.required).toContain('projectKey');
+
+    const { asOwner } = await setup();
+    const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const columnId = view.data!.columns[0].id;
+    const first = (
+      await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title: 'First' })
+    ).data!;
+    await Bun.sleep(10);
+    await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title: 'Second' });
+    const tools = await toolsFor(asOwner, []);
+    const schema = tools.list_issues?.inputSchema as unknown as {
+      getJsonSchema(): { properties: Record<string, unknown>; required?: string[] };
+    };
+    const generated = schema.getJsonSchema();
+    expect(generated.properties).toMatchObject({
+      sort: { enum: ['updated', 'created'] },
+      offset: { minimum: 0, multipleOf: 1 },
+    });
+    expect(generated.properties).not.toHaveProperty('projectKey');
+
+    const page = await run(tools, 'list_issues', { sort: 'created', limit: 1, offset: 1 });
+    expect(page).toEqual([
+      expect.objectContaining({
+        id: first.id,
+        createdAt: expect.any(String),
+        updatedAt: expect.any(String),
+      }),
+    ]);
+  });
+
   it('hides visibility on note boards: the agent only creates boards the project sees', async () => {
     const { asOwner } = await setup();
     const tools = await toolsFor(asOwner, ['create_note_board']);

@@ -673,6 +673,18 @@ function createAuth() {
     // per request, so god mode can change them without a restart.
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
+        // A key resolves to its owner's session on every endpoint here, and what such a
+        // session sets up outlives the key: a passkey enrolled with it still signs in
+        // after the key is deleted and the password reset, and a new key starts a fresh
+        // lifetime. A key is for the planner API; the account is managed from a signed-in
+        // session. A server-side call, such as the one issuing an agent's key, carries
+        // no request and passes.
+        if (ctx.request?.headers.get('x-api-key')) {
+          throw new APIError('FORBIDDEN', {
+            message: 'An API key cannot manage the account. Sign in to do this.',
+          });
+        }
+
         // Read here so the two sign-in endpoints, which also go through the
         // verification gate below, make one query instead of two.
         const passwordSettings = PASSWORD_PATHS.has(ctx.path) ? await getAuthSettings() : null;
@@ -762,19 +774,7 @@ function createAuth() {
           return;
         }
 
-        // A key resolves to its owner's session, so a request carrying a leaked key
-        // reaches the key endpoints. It may not issue another one: a new key starts a
-        // fresh lifetime, which is the expiry of the leaked key renewed under a
-        // different row. Issuing a key is left to a signed-in session. The server-side
-        // call that issues an agent's key carries no request and is unaffected.
-        if (ctx.path === '/api-key/create' && ctx.request?.headers.get('x-api-key')) {
-          throw new APIError('FORBIDDEN', {
-            message: 'An API key cannot create another API key. Sign in to create one.',
-          });
-        }
-
-        // The lifetime is fixed at creation for the same reason; a longer one is a new
-        // key, created from a session.
+        // The lifetime of a key is fixed at creation; a longer one is a new key.
         if (ctx.path === '/api-key/update') {
           const body = ctx.body as { expiresIn?: number | null } | undefined;
           if (body && body.expiresIn !== undefined) {

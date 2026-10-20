@@ -112,6 +112,18 @@ const configFields = {
         "'team' any member's.",
     }),
   ),
+  invocationUrl: t.Optional(
+    t.Nullable(
+      t.String({
+        minLength: 1,
+        maxLength: 2048,
+        description:
+          "HTTPS URL an external agent's runs and chat messages are POSTed to, signed with " +
+          'its invocation secret, instead of being claimed by a runner. Null puts the agent ' +
+          'back on a runner. Ignored for an internal agent.',
+      }),
+    ),
+  ),
 };
 
 // An agent DTO (AiAgentRow from the service).
@@ -144,6 +156,7 @@ export const AiAgentResponse = t.Object({
   ownerUserId: t.Nullable(t.String()),
   runnerScope: t.Union([t.Literal('owner'), t.Literal('team')]),
   lastSeenAt: t.Nullable(t.String()),
+  invocationUrl: t.Nullable(t.String()),
   createdAt: t.String(),
   apiKeyStart: t.Nullable(t.String()),
   modelProvider: t.Nullable(t.String()),

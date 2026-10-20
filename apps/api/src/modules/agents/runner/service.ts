@@ -1,5 +1,6 @@
 import { db, aiAgent, agentRun, project, projectMember } from '@repo/db';
 import { and, eq, sql } from 'drizzle-orm';
+import { HttpError } from '#shared/lib';
 import { type ContextUsage } from '../chat-usage';
 import {
   agentRunConfig,
@@ -49,6 +50,8 @@ export interface RunnerAgent {
   // A chat names all of them in the system prompt; a run names the one it works in.
   projects: RunnerProject[];
   instructions: string | null;
+  // Set when the agent is sent its work rather than drained by a runner.
+  invocationUrl: string | null;
 }
 
 // The agent whose bot user is the caller, or null when the caller is not an agent.
@@ -63,6 +66,7 @@ export async function getRunnerAgent(userId: string): Promise<RunnerAgent | null
       userId: aiAgent.userId,
       username: aiAgent.username,
       instructions: aiAgent.instructions,
+      invocationUrl: aiAgent.invocationUrl,
     })
     .from(aiAgent)
     .where(eq(aiAgent.userId, userId))
@@ -138,12 +142,26 @@ async function expireExhaustedRuns(agent: RunnerAgent): Promise<void> {
     await recordAgentRunFinished({ ...row, agentUserId: agent.userId }, 'failed');
 }
 
-// Claims the agent's next due run, or null when it has none. FOR UPDATE SKIP LOCKED
-// keeps two runners on the same key from taking the same run.
+// An agent with an invocation URL is sent its work, so a runner that claims as well
+// would take tasks the endpoint is meant to get. The endpoint reports through the runner
+// routes too; only the claims are refused.
+export function assertRunnerDrained(agent: RunnerAgent): void {
+  if (agent.invocationUrl) {
+    throw new HttpError(409, 'This agent receives its work at its invocation URL');
+  }
+}
+
 export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | null> {
+  assertRunnerDrained(agent);
+  await touchRunner(agent.id);
+  return takeNextRun(agent);
+}
+
+// Claims the agent's next due run, or null when it has none. FOR UPDATE SKIP LOCKED
+// keeps two claims on the same agent from taking the same run.
+export async function takeNextRun(agent: RunnerAgent): Promise<RunnerRun | null> {
   const agentId = agent.id;
   await expireExhaustedRuns(agent);
-  await touchRunner(agentId);
   const rows = await db.execute(sql`
     UPDATE agent_run r
     SET attempts = r.attempts + 1,

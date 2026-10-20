@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import { createHmac } from 'node:crypto';
-import { signPayload } from '../../signature';
-import { isRetryableStatus } from '../../delivery';
+import { signPayload } from '../index';
 
 describe('signPayload', () => {
   it('produces t=<ts>,v1=<hmac> over `${ts}.${body}`', () => {
@@ -18,15 +17,5 @@ describe('signPayload', () => {
 
   it('changes when the secret changes', () => {
     expect(signPayload('a', 1, '{}')).not.toBe(signPayload('b', 1, '{}'));
-  });
-});
-
-describe('isRetryableStatus', () => {
-  it('retries 408, 429, and 5xx', () => {
-    for (const s of [408, 429, 500, 502, 503]) expect(isRetryableStatus(s)).toBe(true);
-  });
-
-  it('does not retry other 4xx', () => {
-    for (const s of [400, 401, 403, 404, 410, 422]) expect(isRetryableStatus(s)).toBe(false);
   });
 });

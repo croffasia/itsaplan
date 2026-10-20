@@ -563,6 +563,16 @@ export const aiAgent = pgTable(
     // Last time a runner claimed work or sent a heartbeat for this agent, which is
     // what the UI shows as its presence. NULL for an agent no runner ever polled.
     lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
+    // Where an external agent receives its work instead of from a runner: each of its
+    // runs and chat answers is POSTed here, and the endpoint reports back through the
+    // routes a runner uses. NULL for an agent a runner drains, and for an internal one.
+    invocationUrl: text('invocation_url'),
+    // The key those requests are signed with, encrypted at rest like the API key above
+    // because every request reads it back. It outlives a cleared URL, so pointing the
+    // agent at a URL again needs no change on the receiving side.
+    invocationSecretCiphertext: text('invocation_secret_ciphertext'),
+    invocationSecretIv: text('invocation_secret_iv'),
+    invocationSecretAuthTag: text('invocation_secret_auth_tag'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

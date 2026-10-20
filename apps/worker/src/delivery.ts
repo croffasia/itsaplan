@@ -1,5 +1,5 @@
 import { pinnedFetch, UrlNotAllowedError } from '@repo/net';
-import { signPayload } from './signature';
+import { signPayload } from '@repo/crypto';
 
 export interface DeliverInput {
   url: string;

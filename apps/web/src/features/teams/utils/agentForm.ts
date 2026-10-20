@@ -35,7 +35,12 @@ export interface AgentFormValue {
   // else, so an agent with none authenticates and sees no project.
   projectIds: number[];
   runnerScope: 'owner' | 'team';
+  // How an external agent gets its tasks: taken by a runner, or sent to its URL.
+  delivery: AgentDelivery;
+  invocationUrl: string;
 }
+
+export type AgentDelivery = 'runner' | 'url';
 
 export interface FormFieldTrigger {
   fieldId: number;
@@ -43,6 +48,8 @@ export interface FormFieldTrigger {
 }
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9._-]+$/;
+// Only the shape is checked here; the server refuses an address it will not send to.
+const URL_PATTERN = /^https?:\/\/\S+$/;
 
 // Suggests a mention handle from the agent's name: non-Latin scripts are
 // transliterated, the result is lowercased, every run of characters the handle can't
@@ -56,11 +63,17 @@ export function suggestUsername(name: string): string {
     .slice(0, 64);
 }
 
-// Whether the form holds a submittable value: a non-empty name and a username
-// matching the server rules (1-64 chars, [a-zA-Z0-9._-]).
+// Whether the form holds a submittable value: a non-empty name, a username matching
+// the server rules (1-64 chars, [a-zA-Z0-9._-]), and a URL when the tasks are sent to one.
 export function isAgentFormValid(v: AgentFormValue): boolean {
   const username = v.username.trim();
-  return v.name.trim().length > 0 && username.length <= 64 && USERNAME_PATTERN.test(username);
+  const sendsToUrl = v.kind === 'external' && v.delivery === 'url';
+  return (
+    v.name.trim().length > 0 &&
+    username.length <= 64 &&
+    USERNAME_PATTERN.test(username) &&
+    (!sendsToUrl || URL_PATTERN.test(v.invocationUrl.trim()))
+  );
 }
 
 // The form's starting value, from an existing agent when editing or blank defaults
@@ -88,6 +101,8 @@ export function initialAgentValue(agent?: AiAgent): AgentFormValue {
     delegationDelayMin: String(Math.round((agent?.delegationDelaySec ?? 120) / 60)),
     projectIds: (agent?.projects ?? []).map((project) => project.id),
     runnerScope: agent?.runnerScope ?? 'team',
+    delivery: agent?.invocationUrl ? 'url' : 'runner',
+    invocationUrl: agent?.invocationUrl ?? '',
   };
 }
 
@@ -102,8 +117,8 @@ function parseNum(s: string): number | null {
 
 // The kind-specific config, shared by the create input and edit patch. Both kinds
 // carry their projects, their run triggers, and their instructions; an external agent
-// adds the scope of the runs its runner receives, an internal one the model/tools
-// config.
+// adds the scope of the runs it receives and where they are sent, an internal one the
+// model/tools config.
 function configFields(v: AgentFormValue) {
   const common = {
     projectIds: v.projectIds,
@@ -117,7 +132,11 @@ function configFields(v: AgentFormValue) {
     delegationDelaySec: delaySecFromMinutes(v.delegationDelayMin),
   };
   if (v.kind === 'external') {
-    return { ...common, runnerScope: v.runnerScope };
+    return {
+      ...common,
+      runnerScope: v.runnerScope,
+      invocationUrl: v.delivery === 'url' ? v.invocationUrl.trim() : null,
+    };
   }
   return {
     ...common,

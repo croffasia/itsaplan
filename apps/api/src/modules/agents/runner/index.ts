@@ -16,12 +16,13 @@ export const agentRunnerRoutes = new Elysia({
 
   .post('/agent-runs/claim', async ({ agent }) => ({ run: await claimRunnerRun(agent) }), {
     runnerAgent: true,
-    response: { 200: ClaimResponse, ...errors(401, 403) },
+    response: { 200: ClaimResponse, ...errors(401, 403, 409) },
     detail: {
       summary: 'Claim the next run',
       description:
         "Take the calling agent's next queued run, or run: null when it has none. It is " +
-        'leased: report a result or send heartbeats, otherwise it is handed out again.',
+        'leased: report a result or send heartbeats, otherwise it is handed out again. ' +
+        '409 for an agent with an invocation URL, whose runs are sent to that URL.',
     },
   })
 

@@ -27,6 +27,8 @@ import { runsTeam, type TeamStanding } from '#modules/teams/service';
 import { projectRefSql } from '#modules/teams/ref';
 import { getDefaultRoleId } from '#modules/roles/service';
 import { deleteAccount } from '#shared/account-deletion';
+import { assertPublicHttpUrl } from '#shared/net';
+import { ensureInvocationSecret } from '../invocation/secret';
 
 // Data access for AI agents. Each agent is backed by a hidden bot user
 // (ai_agent.user_id -> user.id): that user is what a work item is assigned to,
@@ -114,6 +116,9 @@ export interface AiAgentRow {
   // When a runner last polled for this agent, which is what presence is derived
   // from. Null until a runner connects.
   lastSeenAt: string | null;
+  // Where an external agent's work is sent instead of being claimed by a runner, or
+  // null when a runner drains it.
+  invocationUrl: string | null;
   createdAt: string;
   // The agent's current API key, for display only — the secret is never returned
   // after creation. start is the key's leading characters kept for identification.
@@ -153,6 +158,7 @@ function mapAgent(row: {
   ownerUserId: string | null;
   runnerScope: string;
   lastSeenAt: Date | null;
+  invocationUrl: string | null;
   createdAt: Date;
   apiKeyStart: string | null;
   modelProvider: string | null;
@@ -184,6 +190,7 @@ function mapAgent(row: {
     ownerUserId: row.ownerUserId,
     runnerScope: row.runnerScope as RunnerScope,
     lastSeenAt: row.lastSeenAt ? iso(row.lastSeenAt) : null,
+    invocationUrl: row.invocationUrl,
     createdAt: iso(row.createdAt),
     apiKeyStart: row.apiKeyStart,
     modelProvider: row.modelProvider,
@@ -223,6 +230,7 @@ const agentColumns = {
   ownerUserId: aiAgent.ownerUserId,
   runnerScope: aiAgent.runnerScope,
   lastSeenAt: aiAgent.lastSeenAt,
+  invocationUrl: aiAgent.invocationUrl,
   createdAt: aiAgent.createdAt,
   apiKeyStart: apikey.start,
   modelProvider: integrationCredential.integrationKey,
@@ -540,6 +548,8 @@ export interface NewAgentInput {
   projectIds?: number[];
   // External-agent runner scope (default: any member's runs).
   runnerScope?: RunnerScope;
+  // Where an external agent's work is sent; omitted or null for one a runner drains.
+  invocationUrl?: string | null;
   // The member creating the agent, who owns its runner.
   ownerUserId?: string | null;
 }
@@ -596,8 +606,10 @@ export async function createAgent(
   const userId = crypto.randomUUID();
   const email = `${userId}@agents.local`;
   const isInternal = input.kind === 'internal';
+  const invocationUrl = isInternal ? null : (input.invocationUrl ?? null);
   await assertUsernameFree(teamId, input.username);
   if (isInternal) await assertModelCredential(teamId, input.modelCredentialId);
+  if (invocationUrl) await assertPublicHttpUrl(invocationUrl);
   const projectIds = await resolveTeamProjectIds(teamId, input.projectIds ?? []);
   // An agent joins a project the way a person accepting an invite does: on the team's
   // default role, changed per project from the project's member list afterwards.
@@ -629,6 +641,7 @@ export async function createAgent(
           delegationDelaySec: input.delegationDelaySec,
           ownerUserId: input.ownerUserId ?? null,
           runnerScope: input.runnerScope ?? 'team',
+          invocationUrl,
         })
         .returning({ id: aiAgent.id });
       // The agent belongs to the team's member list like a person does, on a standing
@@ -649,6 +662,7 @@ export async function createAgent(
   if (input.fieldTriggers?.length) {
     await setFieldTriggers(agentId, projectIds, input.fieldTriggers);
   }
+  if (invocationUrl) await ensureInvocationSecret(agentId);
 
   // Issued outside the transaction: better-auth writes the key through its own
   // connection, so it cannot join this one.
@@ -787,6 +801,7 @@ export interface AgentPatch {
   fieldTriggers?: FieldTrigger[];
   delegationDelaySec?: number;
   runnerScope?: RunnerScope;
+  invocationUrl?: string | null;
 }
 
 export async function updateAgent(
@@ -799,6 +814,9 @@ export async function updateAgent(
   const agent = await getAgentById(id, teamId);
   if (!agent) return null;
   await assertModelCredential(teamId, patch.modelCredentialId);
+  // Only an external agent is sent its work; an internal one runs here.
+  const invocationUrl = agent.kind === 'external' ? patch.invocationUrl : undefined;
+  if (invocationUrl) await assertPublicHttpUrl(invocationUrl);
 
   // The display name lives on the bot user.
   if (patch.name !== undefined) {
@@ -828,6 +846,7 @@ export async function updateAgent(
     set.runnerScope = patch.runnerScope;
     if (patch.runnerScope === 'owner') set.ownerUserId = actorUserId;
   }
+  if (invocationUrl !== undefined) set.invocationUrl = invocationUrl;
   if (Object.keys(set).length > 0) {
     try {
       await db
@@ -848,6 +867,7 @@ export async function updateAgent(
   if (patch.fieldTriggers !== undefined) {
     await setFieldTriggers(id, projectIds, patch.fieldTriggers);
   }
+  if (invocationUrl) await ensureInvocationSecret(id);
 
   return getAgentById(id, teamId);
 }

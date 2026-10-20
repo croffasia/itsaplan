@@ -64,6 +64,9 @@ export interface AiAgent {
   runnerScope: 'owner' | 'team';
   // When the agent's runner last polled, or null while none ever has.
   lastSeenAt: string | null;
+  // Where an external agent's tasks and chat messages are sent instead of being taken
+  // by a runner; null when a runner takes them.
+  invocationUrl: string | null;
   createdAt: string;
   apiKeyStart: string | null;
   // The integration key of the model credential (the provider, e.g. "openai"), or
@@ -141,6 +144,7 @@ export interface NewAiAgentInput {
   delegationDelaySec?: number;
   projectIds?: number[];
   runnerScope?: 'owner' | 'team';
+  invocationUrl?: string | null;
 }
 
 export interface AiAgentPatch {
@@ -161,6 +165,7 @@ export interface AiAgentPatch {
   delegationDelaySec?: number;
   projectIds?: number[];
   runnerScope?: 'owner' | 'team';
+  invocationUrl?: string | null;
 }
 
 // One event of a streamed agent run (mirrors the API's AgentRunEvent). `text` is a
@@ -203,6 +208,32 @@ export const updateAiAgent = (teamId: number, agentId: number, patch: AiAgentPat
 
 export const regenerateAiAgentKey = (teamId: number, agentId: number) =>
   request<{ apiKey: string }>(`/teams/${teamId}/ai-agents/${agentId}/regenerate-key`, {
+    method: 'POST',
+  });
+
+// How the endpoint at the invocation URL answered a test ping. `status` is null when no
+// answer arrived.
+export interface InvocationTestResult {
+  ok: boolean;
+  timedOut: boolean;
+  status: number | null;
+  error: string | null;
+  responseBody: string | null;
+  durationMs: number;
+}
+
+// The key the requests to an external agent's invocation URL are signed with. Null
+// until the agent first gets a URL.
+export const getInvocationSecret = (teamId: number, agentId: number) =>
+  request<{ secret: string | null }>(`/teams/${teamId}/ai-agents/${agentId}/invocation-secret`);
+
+export const rotateInvocationSecret = (teamId: number, agentId: number) =>
+  request<{ secret: string }>(`/teams/${teamId}/ai-agents/${agentId}/invocation-secret`, {
+    method: 'POST',
+  });
+
+export const testInvocation = (teamId: number, agentId: number) =>
+  request<InvocationTestResult>(`/teams/${teamId}/ai-agents/${agentId}/invocation-test`, {
     method: 'POST',
   });
 

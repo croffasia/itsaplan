@@ -160,6 +160,7 @@ needed. Run it again later to restart the instance; the data stays.
 - [Deploy on Kubernetes](docs/helm.md) — Helm chart for any Kubernetes cluster
 - [Local development](docs/development.md) — running the apps on the host, and the tests
 - [Coding agent setup](docs/runner.md) — the config for each CLI that `@itsaplan/runner` runs
+- [Agent endpoint](docs/agent-endpoint.md) — the instance sends an external agent's tasks to a URL that you run, such as an AWS Lambda function
 
 ## Built with
 

@@ -13,6 +13,9 @@ This page holds both files for each preset, and the notes that apply to that CLI
 runner's own settings are in its
 [README](https://github.com/croffasia/itsaplan/blob/main/packages/runner/README.md).
 
+The instance can also send the tasks to an endpoint that you run. See
+[Agent endpoint](agent-endpoint.md).
+
 Enable MCP for the project first, in Settings, MCP Server. It is off by default.
 
 ## Claude Code

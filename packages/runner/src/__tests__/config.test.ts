@@ -126,3 +126,52 @@ describe('several agents', () => {
     ).rejects.toThrow('each with its own apiKey');
   });
 });
+
+describe('listen', () => {
+  it('reads the port and the secret, from the file or the environment', async () => {
+    const [config] = await load({
+      ...base,
+      apiKey: 'key-a',
+      listen: 4000,
+      signingSecret: 'whsec_a',
+    });
+    expect(config).toMatchObject({ listen: 4000, signingSecret: 'whsec_a' });
+
+    process.env.ITSAPLAN_LISTEN = '4100';
+    process.env.ITSAPLAN_SIGNING_SECRET = 'whsec_env';
+    const [fromEnv] = await load({ ...base, apiKey: 'key-a' });
+    expect(fromEnv).toMatchObject({ listen: 4100, signingSecret: 'whsec_env' });
+  });
+
+  it('leaves an agent without listen to the polling', async () => {
+    const [config] = await load({ ...base, apiKey: 'key-a' });
+    expect(config.listen).toBeUndefined();
+  });
+
+  it('refuses listen without a secret, and a port that is not one', async () => {
+    await expect(load({ ...base, apiKey: 'key-a', listen: 4000 })).rejects.toThrow(
+      'signingSecret is required',
+    );
+    for (const listen of [0, 70000, 'abc', 40.5]) {
+      await expect(
+        load({ ...base, apiKey: 'key-a', listen, signingSecret: 'whsec_a' }),
+      ).rejects.toThrow('listen must be a port');
+    }
+  });
+
+  it('needs a secret of its own for each agent on a port', async () => {
+    await expect(
+      load({ ...base, apiKeys: ['key-a', 'key-b'], listen: 4000, signingSecret: 'whsec_shared' }),
+    ).rejects.toThrow('its own signingSecret');
+
+    const configs = await load({
+      ...base,
+      listen: 4000,
+      agents: [
+        { apiKey: 'key-a', signingSecret: 'whsec_a' },
+        { apiKey: 'key-b', signingSecret: 'whsec_b' },
+      ],
+    });
+    expect(configs.map((config) => config.signingSecret)).toEqual(['whsec_a', 'whsec_b']);
+  });
+});

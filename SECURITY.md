@@ -43,6 +43,9 @@ An instance is only as safe as its configuration:
   Never reuse the example values.
 - `APP_ENCRYPTION_KEY` encrypts stored provider credentials at rest. Losing it makes
   those credentials undecryptable, changing it has the same effect.
+- `BETTER_AUTH_SECRET` also encrypts the access and refresh tokens that Google and the
+  OIDC provider return at sign-in. Changing it makes them unreadable, and each user
+  signs in with the provider again.
 - Serve the app over HTTPS. Cookies are marked `secure` in production.
 - Keep the RustFS console and the Postgres port off the public network.
 - `APP_URL` must be the real frontend origin, and nothing else (it is the auth trusted origin).

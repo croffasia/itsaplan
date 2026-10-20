@@ -53,6 +53,7 @@ export const DevelopmentLinkResponse = t.Object({
 export const GitSettingsResponse = t.Object({
   enabled: t.Boolean(),
   webhookId: t.String(),
+  payloadUrl: t.String(),
   secret: t.String(),
   onMergeColumnId: t.Nullable(t.Number()),
   onOpenColumnId: t.Nullable(t.Number()),

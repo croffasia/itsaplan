@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { db, agentRun } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
@@ -22,7 +22,7 @@ import { createAgent } from '#tests/helpers/agents';
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  const project = await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  const project = await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
   const columnId = view.data!.columns[0].id;
   return { owner, asOwner, columnId, teamId: project.data!.teamId };

@@ -14,6 +14,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { useSettingsCan } from '../../context/settingsPermission';
+import { useScheduleTypeName } from '../../hooks/useScheduleTypeName';
 import { formatUtc, parseScheduleInput } from '../../utils/cronSchedule';
 import { SettingsScheduleRunRow } from './SettingsScheduleRunRow';
 import { useTranslations } from 'next-intl';
@@ -35,13 +36,20 @@ export function SettingsScheduleRunsSheet({
   const cancelRuns = useCancelAgentScheduleRuns(projectKey);
   const canCancel = can('edit') && schedule?.canTrigger === true;
   const runs = query.data ?? [];
-  const parsed = schedule?.cron ? parseScheduleInput(schedule.cron) : null;
-  const when = parsed?.ok
-    ? parsed.description
-    : (schedule?.cron ?? t('entersColumn', { column: columnName ?? '' }));
+  const typeName = useScheduleTypeName();
+  // A type the hosted build added, which starts when its trigger fires.
+  const addedType = schedule && !schedule.cron && schedule.type !== 'status' ? schedule.type : null;
+  let when = t('entersColumn', { column: columnName ?? '' });
+  if (schedule?.cron) {
+    const parsed = parseScheduleInput(schedule.cron);
+    when = parsed.ok ? parsed.description : schedule.cron;
+  } else if (addedType) {
+    when = typeName(addedType);
+  }
   const delayMin = Math.round((schedule?.delaySec ?? 0) / 60);
   let nextRun = t('startsAtOnce');
   if (schedule?.nextRunAt) nextRun = `${t('nextRun')}: ${formatUtc(schedule.nextRunAt)}`;
+  else if (addedType) nextRun = t('nextRunOnTrigger');
   else if (delayMin > 0) nextRun = t('startsAfter', { minutes: delayMin });
 
   function cancel(runId?: number) {

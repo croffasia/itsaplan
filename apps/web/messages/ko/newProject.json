@@ -1,0 +1,51 @@
+{
+  "name": "이름",
+  "key": "키 (짧게, 예: MKT)",
+  "copyKey": "키",
+  "description": "설명",
+  "issueTypes": "이슈 유형",
+  "typesCreated": "{count, plural, one {이슈 유형 #개가 생성됩니다} other {이슈 유형 #개가 생성됩니다}}",
+  "defaultType": "새 이슈에는 기본적으로 {type} 유형이 적용됩니다. 유형은 설정에서 편집할 수 있습니다.",
+  "presets": {
+    "general": "일반",
+    "software": "소프트웨어",
+    "product": "제품",
+    "content": "콘텐츠",
+    "marketing": "마케팅",
+    "design": "디자인",
+    "sales": "영업",
+    "operations": "운영",
+    "support": "고객 지원",
+    "recruiting": "채용"
+  },
+  "copyConfiguration": "설정 복사",
+  "selectAll": "모두 선택",
+  "clearAll": "모두 해제",
+  "copyGroups": {
+    "workflow": "워크플로",
+    "automation": "자동화",
+    "views": "보기",
+    "aiTeam": "AI 팀",
+    "knowledge": "지식"
+  },
+  "copyItems": {
+    "states": "상태",
+    "issueTypes": "이슈 유형",
+    "labels": "라벨",
+    "customFields": "사용자 지정 필드",
+    "views": "보기",
+    "dashboards": "대시보드",
+    "documents": "문서",
+    "actions": "액션",
+    "configuration": "설정",
+    "webhooks": "웹훅",
+    "agents": "AI 에이전트",
+    "schedules": "일정"
+  },
+  "title": "새 프로젝트",
+  "copyTitle": "\"{name}\" 프로젝트 복사",
+  "create": "프로젝트 생성",
+  "copyAction": "프로젝트 복사",
+  "defaultAgents": "이 프로젝트에 참여할 AI 에이전트: {names}",
+  "copyName": "{name} 복사본"
+}

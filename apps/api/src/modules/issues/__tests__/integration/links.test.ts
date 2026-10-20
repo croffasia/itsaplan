@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { type IssueLinkInputKind } from '../../links';
@@ -20,7 +20,7 @@ interface Setup {
 async function setupProject(): Promise<Setup> {
   const owner = await signUpTestUser();
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
   return { asOwner, columnId: view.data!.columns[0].id };
 }
@@ -52,7 +52,7 @@ function unlink(client: Api, issueId: number, linkId: number) {
 
 // An issue of a second project owned by the same team.
 async function foreignIssue(client: Api) {
-  await client.projects.post({ key: 'OPS', name: 'Operations' });
+  await createProject(client, { key: 'OPS', name: 'Operations' });
   const view = await client.projects({ projectKey: 'OPS' }).get();
   const res = await client
     .projects({ projectKey: 'OPS' })
@@ -215,7 +215,15 @@ describe('issue links', () => {
     it('does not link issues owned by different teams', async () => {
       const { asOwner, columnId } = await setupProject();
       const source = (await createIssue(asOwner, columnId)).data!;
-      const team = (await asOwner.teams.post({ name: 'Other Team', slug: 'other-team' })).data!;
+      const project = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!.project;
+      const sourceTeam = (await asOwner.teams({ teamId: project.teamId }).get()).data!;
+      const team = (
+        await asOwner.teams.post({
+          name: 'Other Team',
+          slug: 'other-team',
+          workspaceId: sourceTeam.workspaceId,
+        })
+      ).data!;
       await asOwner.teams({ teamId: team.id }).projects.post({ key: 'OTH', name: 'Other' });
       const targetProject = await asOwner.projects({ projectKey: 'OTH' }).get();
       const target = (

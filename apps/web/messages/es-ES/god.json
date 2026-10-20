@@ -19,7 +19,8 @@
       "signIn": "Inicio de sesión",
       "projects": "Proyectos",
       "lastSeen": "Última actividad",
-      "email": "Correo"
+      "email": "Correo",
+      "active": "Activa"
     },
     "registered": "se unió el {date}",
     "roleGod": "Dios",
@@ -30,7 +31,20 @@
     "verified": "Verificado",
     "notVerified": "No verificado",
     "open": "Abrir la cuenta",
-    "showAccess": "Mostrar el acceso a proyectos"
+    "showAccess": "Mostrar el acceso a proyectos",
+    "activeAria": "Cuenta activa: {email}",
+    "activeState": {
+      "on": "Activa",
+      "off": "Inactiva"
+    },
+    "activeLock": {
+      "owner": "El propietario de la instancia siempre está activo.",
+      "agent": "La cuenta de un agente sigue a su agente.",
+      "scim": "Tu proveedor de identidad (SCIM) decide qué cuentas están activas."
+    },
+    "deactivateTitle": "¿Desactivar {email}?",
+    "deactivateBody": "Se cierra su sesión al momento y no podrá entrar ni usar sus claves de API hasta que vuelvas a activar la cuenta. Se quitan sus conexiones MCP y las invitaciones que envió. No se borra nada más.",
+    "deactivateConfirm": "Desactivar"
   },
   "userPanel": {
     "instanceOwner": "Propietario de la instancia",
@@ -146,7 +160,7 @@
     "members": "Miembros",
     "searchMembers": "Buscar miembros",
     "noMembersTitle": "Sin miembros",
-    "noMembersHint": "Todavía no pertene nadie a este equipo.",
+    "noMembersHint": "Todavía no pertenece nadie a este equipo.",
     "noMemberMatches": "Ningún miembro coincide con esta búsqueda.",
     "roles": {
       "owner": "Propietario",
@@ -164,12 +178,24 @@
     "workspacesSaved": "Ajustes de espacios de trabajo guardados",
     "workspaces": "Espacios de trabajo",
     "personalWorkspaces": "Un espacio de trabajo para cada persona",
-    "personalWorkspacesHint": "Cada cuenta recibe un espacio de trabajo propio con el nombre de la persona. Desactivado, cada persona trabaja solo en los espacios de trabajo a los que se le ha añadido."
+    "personalWorkspacesHint": "Cada cuenta recibe un espacio de trabajo propio con el nombre de la persona. Desactivado, cada persona trabaja solo en los espacios de trabajo a los que se le ha añadido.",
+    "agents": "Agentes",
+    "agentsSaved": "Ajustes de agentes guardados",
+    "traceRetention": "Conservar trazas de ejecución",
+    "traceRetentionHint": "Cada ejecución de un agente registra sus llamadas al modelo y a las herramientas. Los paneles de consumo solo cuentan las ejecuciones conservadas.",
+    "traceDays": "{days, plural, one {# día} other {# días}}",
+    "traceForever": "Siempre"
   },
   "authentication": {
     "saved": "Los ajustes de autenticación se han guardado",
     "registration": "Registro",
     "registrationHint": "Quién puede crear una cuenta en esta instancia.",
+    "inviteTtlDays": "Caducidad de las invitaciones (días)",
+    "inviteTtlDaysHint": "Pasado este plazo, el enlace de una invitación deja de funcionar y, con el registro por invitación, ya no permite darse de alta. Con 0, las invitaciones no caducan.",
+    "inviteTtlDaysInvalid": "Escribe un número entero de días entre 0 y {max}.",
+    "allowedEmailDomains": "Dominios de correo permitidos",
+    "allowedEmailDomainsHint": "Solo las direcciones de estos dominios pueden crear una cuenta. Sepáralos con comas o deja el campo vacío para permitir cualquiera. Las cuentas existentes conservan el acceso.",
+    "allowedEmailDomainsInvalid": "Cada dominio debe tener la forma example.com, con un máximo de 100.",
     "modes": {
       "open": {
         "label": "Abierto",
@@ -210,7 +236,7 @@
     "avatarHint": "La foto de perfil que las personas suben para su cuenta.",
     "mimeTypes": "Tipos de adjunto aceptados",
     "mimeTypesHint": "Un tipo de contenido por línea. Déjalo vacío para aceptar cualquier fichero.",
-    "mimeTypesNote": "Una línea es un tipo completo (application/pdf) o un comodín (image/*). Los ficheros ya guardados se mantienen digalo que diga la lista.",
+    "mimeTypesNote": "Una línea es un tipo completo (application/pdf) o un comodín (image/*). Los ficheros ya guardados se mantienen diga lo que diga la lista.",
     "quota": "Cuota del proyecto",
     "quotaHint": "Almacenamiento total de adjuntos que puede usar un proyecto. 0 significa sin límite.",
     "quotaMb": "Almacenamiento por proyecto (MB)",
@@ -242,7 +268,7 @@
     "username": "Nombre de usuario",
     "password": "Contraseña",
     "passwordPlaceholder": "Contraseña de SMTP",
-    "timeout": "Expiry (s)",
+    "timeout": "Tiempo de espera (s)",
     "optional": "Opcional",
     "apiKey": "Clave de API",
     "teamNotifications": "Notificaciones del equipo",
@@ -251,7 +277,18 @@
     "testing": "Enviando…",
     "testHint": "Envía un mensaje real con los ajustes actuales sin guardarlos.",
     "testConfigureFirst": "Activa primero un proveedor y añade sus credenciales obligatorias.",
-    "testSent": "Correo de prueba enviado a {email}"
+    "testSent": "Correo de prueba enviado a {email}",
+    "smtpAuth": "Autenticación",
+    "smtpAuthOptions": {
+      "password": "Contraseña",
+      "microsoft365": "Microsoft 365 (OAuth)"
+    },
+    "mailbox": "Buzón",
+    "tenantId": "ID de inquilino (tenant)",
+    "clientId": "ID de cliente",
+    "clientSecret": "Secreto de cliente",
+    "clientSecretPlaceholder": "Secreto del registro de aplicación",
+    "microsoft365Hint": "Inicia sesión como un registro de aplicación de Entra ID en lugar de con la contraseña del buzón, así el buzón puede mantener el MFA. La aplicación necesita el permiso de aplicación SMTP.SendAsApp de Office 365 Exchange Online con consentimiento de administrador, acceso a este buzón en Exchange y SMTP AUTH activado en el buzón."
   },
   "authProvider": {
     "saved": "El proveedor de autenticación se ha guardado",

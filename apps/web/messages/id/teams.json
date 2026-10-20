@@ -51,6 +51,10 @@
     "agents": {
       "title": "Agen AI",
       "description": "Agen AI yang dimiliki tim ini, dan proyek tempat mereka bekerja."
+    },
+    "analytics": {
+      "title": "Penggunaan",
+      "description": "Biaya model yang dipakai agen tim, per agen, proyek, dan hari."
     }
   },
   "info": {
@@ -91,6 +95,7 @@
     "emailPlaceholder": "nama@example.com",
     "alreadyMember": "{email} sudah berada di tim ini",
     "alreadyPending": "{email} sudah memiliki undangan tertunda",
+    "domainNotAllowed": "Domain {email} tidak diizinkan di instance ini",
     "refused": "{email} tidak dapat diundang",
     "roleLabel": "Peran tim",
     "roleHint": {
@@ -103,11 +108,16 @@
     "joinsProject": "Bergabung ke tim dan {project}",
     "copyLink": "Salin tautan",
     "copied": "Disalin",
+    "resendEmail": "Kirim email",
+    "resendingEmail": "Mengirim…",
     "revokeAction": "Cabut undangan",
     "revokeTitle": "Cabut undangan untuk {email}?",
     "revokeConfirm": "Cabut undangan",
     "revokeDescription": "Tautan tidak akan berfungsi lagi. Anda dapat mengundangnya lagi nanti.",
-    "pending": "Diundang"
+    "pending": "Diundang",
+    "expiredAt": "kedaluwarsa {date}",
+    "renew": "Perbarui",
+    "renewing": "Memperbarui…"
   },
   "manage": {
     "label": "Kelola tim",
@@ -461,8 +471,13 @@
     "goToTools": "Buka Alat",
     "searchTools": "Cari alat",
     "advanced": "Tingkat lanjut",
-    "advancedHint": "Sampling, batas langkah, dan memori",
+    "advancedHint": "Sampling, penalaran, batas langkah, dan memori",
     "temperature": "Temperatur",
+    "reasoningEffort": "Upaya penalaran",
+    "reasoningEffortDefault": "Bawaan penyedia",
+    "reasoningEffortLow": "Rendah",
+    "reasoningEffortMedium": "Sedang",
+    "reasoningEffortHigh": "Tinggi",
     "optional": "Opsional",
     "maxSteps": "Maks langkah",
     "memory": "Memori percakapan",
@@ -653,6 +668,53 @@
       "title": "Hapus {name}?",
       "description": "<strong>{name}</strong> dan timnya akan dihapus. Orang-orang tetap memiliki akun dan tim lain mereka. Tindakan ini tidak dapat dibatalkan.",
       "deleted": "Workspace dihapus"
+    },
+    "agentUsage": {
+      "title": "Penggunaan AI",
+      "description": "Biaya model yang dipakai agen semua tim."
+    },
+    "settingsGroup": "Pengaturan",
+    "modelPrices": {
+      "title": "Harga model",
+      "description": "Penggunaan AI menghitung biaya setiap panggilan model dengan harga ini, per 1M token. Perubahan juga menghitung ulang panggilan lama.",
+      "used": {
+        "title": "Dipakai di workspace ini",
+        "description": "Model yang dipanggil agen Anda dalam 90 hari terakhir, dan model yang Anda beri harga.",
+        "unpriced": "{count, plural, other {# model tidak punya harga, jadi panggilannya tidak masuk ke biaya.}}",
+        "empty": "Tidak ada panggilan model dalam 90 hari terakhir. Model muncul di sini setelah agen Anda memanggilnya."
+      },
+      "all": {
+        "title": "Semua model",
+        "description": "Harga bawaan. Tetapkan harga Anda sendiri untuk model mana pun.",
+        "search": "Cari model",
+        "noMatch": "Tidak ada model yang cocok dengan “{query}”."
+      },
+      "columns": {
+        "model": "Model",
+        "calls": "Panggilan",
+        "input": "Input",
+        "output": "Output",
+        "cacheRead": "Baca cache",
+        "cacheWrite": "Tulis cache",
+        "price": "Harga"
+      },
+      "source": {
+        "own": "Milik Anda",
+        "builtIn": "Bawaan",
+        "none": "Tanpa harga"
+      },
+      "setPrice": "Tetapkan harga",
+      "edit": "Ubah",
+      "setTitle": "Tetapkan harga",
+      "editTitle": "Ubah harga",
+      "perMillion": "USD per 1M token.",
+      "builtInPrice": "Bawaan: {input} input, {output} output.",
+      "noBuiltInPrice": "Model ini tidak punya harga bawaan.",
+      "sameAsInput": "Sama dengan input",
+      "appliesToPast": "Berlaku untuk semua panggilan model ini di workspace ini, termasuk yang lama.",
+      "useBuiltIn": "Pakai harga bawaan",
+      "removePrice": "Hapus harga",
+      "save": "Simpan harga"
     }
   }
 }

@@ -17,6 +17,7 @@
     "integrations": "Integrations",
     "agent_skills": "Agent skills",
     "agent_tools": "Agent tools",
+    "agent_usage": "Agent usage",
     "custom_fields": "Custom fields",
     "issue_templates": "Issue templates",
     "workflow_config": "Workflow configuration",

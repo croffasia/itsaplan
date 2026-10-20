@@ -1,10 +1,15 @@
 import type { FeedFilter, FeedOrder } from '@/lib/api/endpoints/activity';
 
+const scimKey = (workspaceId: number | null) =>
+  workspaceId === null ? (['god', 'scim'] as const) : (['workspace', workspaceId, 'scim'] as const);
+
 // Query keys shared by every service. Each is a stable tuple; a project/issue id
 // or key scopes its entry. Kept in one registry so a mutation in one service can
 // invalidate another service's queries by the same key.
 export const qk = {
   projects: ['projects'] as const,
+  // Under projects, so what refreshes the project list refreshes every search with it.
+  projectSearch: (filters: unknown) => ['projects', 'search', filters] as const,
   teams: ['teams'] as const,
   // One team: its counters and what the caller may do with what it holds.
   team: (teamId: number) => ['team', teamId] as const,
@@ -15,11 +20,9 @@ export const qk = {
   workspaceManagers: (workspaceId: number) => ['workspace', workspaceId, 'managers'] as const,
   workspaceManagerCandidates: (workspaceId: number, search: string) =>
     ['workspace', workspaceId, 'managers', 'candidates', search] as const,
-  workspaceScim: (workspaceId: number) => ['workspace', workspaceId, 'scim'] as const,
-  workspaceScimGroups: (workspaceId: number) =>
-    ['workspace', workspaceId, 'scim', 'groups'] as const,
-  workspaceProjectOptions: (workspaceId: number) =>
-    ['workspace', workspaceId, 'projectOptions'] as const,
+  scim: scimKey,
+  scimGroups: (workspaceId: number | null) => [...scimKey(workspaceId), 'groups'] as const,
+  scimProjects: (workspaceId: number | null) => [...scimKey(workspaceId), 'projects'] as const,
   teamProjectDefaults: (teamId: number) => ['team', teamId, 'project-defaults'] as const,
   // The members of a team and the projects it owns, each read by its own section. A
   // page is scoped by the search term and the window it was read with.
@@ -109,6 +112,15 @@ export const qk = {
     ['noteBoards', projectKey, 'board', boardId] as const,
   noteBoardAccessCandidates: (projectKey: string) =>
     ['noteBoards', projectKey, 'accessCandidates'] as const,
+  agentAnalytics: (teamId: number, days: number, projectId: number | null) =>
+    ['agentAnalytics', teamId, days, projectId] as const,
+  workspaceAgentAnalytics: (workspaceId: number, days: number) =>
+    ['workspaceAgentAnalytics', workspaceId, days] as const,
+  // The model prices of a workspace: the models it uses, and pages of the built-in table.
+  modelPrices: (workspaceId: number) => ['modelPrices', workspaceId] as const,
+  usedModelPrices: (workspaceId: number) => ['modelPrices', workspaceId, 'used'] as const,
+  modelPriceCatalog: (workspaceId: number, params: unknown) =>
+    ['modelPrices', workspaceId, 'catalog', params] as const,
   analytics: (projectKey: string, kind: string, params?: unknown) =>
     ['analytics', projectKey, kind, params ?? {}] as const,
   analyticsForProject: (projectKey: string) => ['analytics', projectKey] as const,
@@ -264,14 +276,20 @@ export const qk = {
   notifications: (projectKey: string, filters?: unknown) =>
     ['notifications', projectKey, filters ?? {}] as const,
   notificationsUnread: (projectKey: string) => ['notificationsUnread', projectKey] as const,
+  // The unread count across every project (the app icon badge).
+  notificationsUnreadTotal: ['notificationsUnreadTotal'] as const,
   // The signed-in user's WebAuthn passkeys (account security page).
   passkeys: ['passkeys'] as const,
+  // The OAuth applications the signed-in user authorized (account security page).
+  connectedApps: ['connectedApps'] as const,
   // The signed-in user's connected external accounts (accounts page): the linked
   // Telegram account, and the auth providers better-auth reports.
   telegramAccount: ['telegramAccount'] as const,
   linkedAccounts: ['linkedAccounts'] as const,
   // The instance sign-in policy, including which social providers are configured.
   authConfig: ['authConfig'] as const,
+  // The name an MCP client registered with, shown on the OAuth consent page.
+  oauthClientName: (clientId: string) => ['oauthClientName', clientId] as const,
   // The signed-in user's personal API keys (API keys page).
   apiKeys: ['apiKeys'] as const,
   // The signed-in user's interface preferences (timezone, theme, issue open mode,
@@ -285,6 +303,7 @@ export const qk = {
   instanceOidcSettings: ['instanceOidcSettings'] as const,
   instanceTelegramSettings: ['instanceTelegramSettings'] as const,
   instanceProjectDefaults: ['instanceProjectDefaults'] as const,
+  instanceAgentSettings: ['instanceAgentSettings'] as const,
   instanceStorageSettings: ['instanceStorageSettings'] as const,
   // The upload limits as read by the upload UI (open to any signed-in user).
   storageSettings: ['storageSettings'] as const,

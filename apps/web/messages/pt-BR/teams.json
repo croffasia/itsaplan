@@ -51,6 +51,10 @@
     "agents": {
       "title": "Agentes de IA",
       "description": "Os agentes de IA que este time possui e os projetos em que cada um trabalha."
+    },
+    "analytics": {
+      "title": "Consumo",
+      "description": "Quanto os agentes da equipe gastaram com modelos, por agente, projeto e dia."
     }
   },
   "info": {
@@ -91,6 +95,7 @@
     "emailPlaceholder": "nome@exemplo.com",
     "alreadyMember": "{email} já está neste time",
     "alreadyPending": "{email} já tem um convite pendente",
+    "domainNotAllowed": "O domínio de {email} não é permitido nesta instância",
     "refused": "{email} não pôde ser convidado",
     "roleLabel": "Função no time",
     "roleHint": {
@@ -103,11 +108,16 @@
     "joinsProject": "Entra no time e em {project}",
     "copyLink": "Copiar link",
     "copied": "Copiado",
+    "resendEmail": "Enviar e-mail",
+    "resendingEmail": "Enviando…",
     "revokeAction": "Revogar convite",
     "revokeTitle": "Revogar convite de {email}?",
     "revokeConfirm": "Revogar convite",
     "revokeDescription": "O link deixa de funcionar. Você pode convidá-lo de novo depois.",
-    "pending": "Convidado"
+    "pending": "Convidado",
+    "expiredAt": "expirou em {date}",
+    "renew": "Renovar",
+    "renewing": "Renovando…"
   },
   "manage": {
     "label": "Gerenciar times",
@@ -461,8 +471,13 @@
     "goToTools": "Ir às Ferramentas",
     "searchTools": "Buscar ferramentas",
     "advanced": "Avançado",
-    "advancedHint": "Amostragem, limite de passos e memória",
+    "advancedHint": "Amostragem, raciocínio, limite de passos e memória",
     "temperature": "Temperatura",
+    "reasoningEffort": "Esforço de raciocínio",
+    "reasoningEffortDefault": "Padrão do provedor",
+    "reasoningEffortLow": "Baixo",
+    "reasoningEffortMedium": "Médio",
+    "reasoningEffortHigh": "Alto",
     "optional": "Opcional",
     "maxSteps": "Máximo de passos",
     "memory": "Memória de conversa",
@@ -653,6 +668,53 @@
       "title": "Excluir {name}?",
       "description": "<strong>{name}</strong> e os times dele são excluídos. As pessoas mantêm suas contas e seus outros times. Isso não pode ser desfeito.",
       "deleted": "Workspace excluído"
+    },
+    "agentUsage": {
+      "title": "Consumo de IA",
+      "description": "Quanto os agentes de todas as equipes gastaram com modelos."
+    },
+    "settingsGroup": "Configurações",
+    "modelPrices": {
+      "title": "Preços dos modelos",
+      "description": "O Consumo de IA calcula o custo de cada chamada de modelo com estes preços, por 1M de tokens. Uma mudança também recalcula as chamadas passadas.",
+      "used": {
+        "title": "Em uso neste workspace",
+        "description": "Modelos que seus agentes chamaram nos últimos 90 dias e os que têm o seu preço.",
+        "unpriced": "{count, plural, one {# modelo não tem preço, então as chamadas dele ficam fora do custo.} other {# modelos não têm preço, então as chamadas deles ficam fora do custo.}}",
+        "empty": "Nenhuma chamada de modelo nos últimos 90 dias. Um modelo aparece aqui quando seus agentes o chamam."
+      },
+      "all": {
+        "title": "Todos os modelos",
+        "description": "Preços embutidos. Defina o seu para qualquer modelo.",
+        "search": "Buscar modelos",
+        "noMatch": "Nenhum modelo corresponde a “{query}”."
+      },
+      "columns": {
+        "model": "Modelo",
+        "calls": "Chamadas",
+        "input": "Entrada",
+        "output": "Saída",
+        "cacheRead": "Leitura de cache",
+        "cacheWrite": "Gravação de cache",
+        "price": "Preço"
+      },
+      "source": {
+        "own": "Seu",
+        "builtIn": "Embutido",
+        "none": "Sem preço"
+      },
+      "setPrice": "Definir preço",
+      "edit": "Editar",
+      "setTitle": "Definir preço",
+      "editTitle": "Editar preço",
+      "perMillion": "USD por 1M de tokens.",
+      "builtInPrice": "Embutido: {input} de entrada, {output} de saída.",
+      "noBuiltInPrice": "Este modelo não tem preço embutido.",
+      "sameAsInput": "Igual à entrada",
+      "appliesToPast": "Vale para todas as chamadas deste modelo neste workspace, inclusive as passadas.",
+      "useBuiltIn": "Usar o preço embutido",
+      "removePrice": "Remover preço",
+      "save": "Salvar preço"
     }
   }
 }

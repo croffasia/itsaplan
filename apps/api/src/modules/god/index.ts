@@ -12,6 +12,9 @@ import {
   hasConfiguredGoogle,
   getOidcSettings,
   setOidcSettings,
+  getScimSettings,
+  setScimSettings,
+  rotateScimToken,
   hasConfiguredOidc,
 } from '@repo/auth';
 import { hasConfiguredEmailProvider, getStorageSettings } from '@repo/db';
@@ -23,6 +26,20 @@ import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { paginate } from '#shared/pagination';
 import { noContent } from '#shared/http';
 import { deleteProject } from '#modules/projects/service';
+import { SCIM_BASE_URL } from '#modules/scim/resource';
+import {
+  MappableProjectListResponse,
+  ScimGroupMappingsBody,
+  ProvisionedGroupResponse,
+  ScimSettingsBody,
+  ScimSettingsResponse,
+  ScimTokenResponse,
+} from '#modules/scim/model';
+import {
+  listMappableProjects,
+  listProvisionedGroups,
+  setGroupMappings,
+} from '#modules/scim/mappings';
 import {
   deleteInstanceUser,
   getInstanceProject,
@@ -33,7 +50,9 @@ import {
   listInstanceTeamProjects,
   listInstanceTeamMembers,
   listInstanceUsers,
+  setInstanceUserActive,
   verifyInstanceUserEmail,
+  type ActiveLock,
 } from './service';
 import {
   AuthSettingsBody,
@@ -59,6 +78,7 @@ import {
   deleteUserQuery,
   listUsersQuery,
   projectParams,
+  scimGroupParams,
   searchPageQuery,
   teamParams,
   userParams,
@@ -71,9 +91,12 @@ import {
   setHotkeySettings,
   getProjectDefaults,
   setProjectDefaults,
+  getAgentSettings,
+  setAgentSettings,
 } from '#modules/settings/service';
 import { getUpdateStatus } from '#modules/settings/updates';
 import {
+  AgentSettingsSchema,
   HotkeyCombosSchema,
   ProjectDefaultsSchema,
   StorageSettingsSchema,
@@ -82,9 +105,9 @@ import {
 
 // God mode: instance-wide administration, open only to the "god" user (the first
 // registered account). It covers how people may register, the mail provider that
-// sends authentication email, and the OAuth credentials. SCIM provisioning belongs to
-// a workspace and is set in its settings. Invites are per team (team_invite), managed in the team panel and in the project's Members
-// section — there is nothing instance-level to add here.
+// sends authentication email, the OAuth credentials, and the instance's SCIM
+// provisioning. Invites are per team (team_invite), managed in the team panel and in the
+// project's Members section — there is nothing instance-level to add here.
 //
 // The settings themselves are owned by @repo/auth, which reads them at sign-up and
 // when sending mail; these routes only expose them over HTTP. Secrets are never
@@ -103,6 +126,16 @@ async function assertUsableSignInMethod(
   const auth = await getAuthSettings();
   if (!auth.emailPassword && !nextProviderUsable && !otherProviderUsable) {
     throw new HttpError(400, 'Enable password sign-in or another single sign-on provider first');
+  }
+}
+
+// Deactivating the instance owner is how an instance locks itself out, and an agent's
+// account follows its agent; with SCIM the identity provider decides.
+function assertActiveSwitchable(lock: ActiveLock | null): void {
+  if (lock === 'owner') throw new HttpError(403, 'An instance owner cannot be deactivated');
+  if (lock === 'agent') throw new HttpError(403, "An agent's account follows its agent");
+  if (lock === 'scim') {
+    throw new HttpError(409, 'Accounts are activated and deactivated by the SCIM provider');
   }
 }
 
@@ -125,7 +158,8 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       response: { 200: AuthSettingsResponse, ...errors(401, 403) },
       detail: {
         summary: 'Get authentication settings',
-        description: 'Get the instance registration mode and email-dependent auth options.',
+        description:
+          'Get the instance registration mode, allowed email domains, invite lifetime and email-dependent auth options.',
       },
     },
   )
@@ -153,7 +187,8 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       response: { 200: AuthSettingsResponse, ...errors(400, 401, 403) },
       detail: {
         summary: 'Update authentication settings',
-        description: 'Update the instance registration mode and email-dependent auth options.',
+        description:
+          'Update the instance registration mode, allowed email domains, invite lifetime and email-dependent auth options.',
       },
     },
   )
@@ -297,6 +332,80 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     },
   )
 
+  .get('/god/scim', async () => ({ ...(await getScimSettings(null)), baseUrl: SCIM_BASE_URL }), {
+    response: { 200: ScimSettingsResponse, ...errors(401, 403) },
+    detail: {
+      summary: 'Get SCIM provisioning settings',
+      description: 'Get whether SCIM provisioning is on and whether a token has been generated.',
+    },
+  })
+
+  .patch(
+    '/god/scim',
+    async ({ body }) => {
+      // Enabling it without a token would leave the endpoint answering 401 to
+      // everything, which reads as a broken integration rather than a missing step.
+      if (body.enabled && !(await getScimSettings(null)).hasToken) {
+        throw new HttpError(400, 'Generate a SCIM token first');
+      }
+      return { ...(await setScimSettings(null, body)), baseUrl: SCIM_BASE_URL };
+    },
+    {
+      body: ScimSettingsBody,
+      response: { 200: ScimSettingsResponse, ...errors(400, 401, 403) },
+      detail: {
+        summary: 'Update SCIM provisioning settings',
+        description: 'Turn SCIM provisioning on or off.',
+      },
+    },
+  )
+
+  .post('/god/scim/token', async () => ({ token: await rotateScimToken(null) }), {
+    response: { 200: ScimTokenResponse, ...errors(401, 403) },
+    detail: {
+      summary: 'Generate a SCIM token',
+      description:
+        'Generate the bearer token an identity provider sends to /scim/v2, replacing any ' +
+        'previous one. The value is returned once and cannot be read back.',
+    },
+  })
+
+  .get('/god/scim/groups', () => listProvisionedGroups(null), {
+    response: { 200: t.Array(ProvisionedGroupResponse), ...errors(401, 403) },
+    detail: {
+      summary: 'List provisioned groups',
+      description:
+        "The groups the instance's identity provider has pushed, with their member counts and " +
+        'the projects they grant membership in.',
+    },
+  })
+
+  .put(
+    '/god/scim/groups/:groupId/mappings',
+    ({ params, body }) => setGroupMappings(null, params.groupId, body.mappings),
+    {
+      params: scimGroupParams,
+      body: ScimGroupMappingsBody,
+      response: { 200: ProvisionedGroupResponse, ...errors(400, 401, 403, 404) },
+      detail: {
+        summary: "Set a group's project mappings",
+        description:
+          'Replace the projects a provisioned group grants membership in, then reconcile the ' +
+          'membership of every project the change touched.',
+      },
+    },
+  )
+
+  .get('/god/scim/projects', () => listMappableProjects(null), {
+    response: { 200: MappableProjectListResponse, ...errors(401, 403) },
+    detail: {
+      summary: 'List mappable projects',
+      description:
+        'Every project a provisioned group may grant, with the roles its team assigns, for ' +
+        'the group mapping picker.',
+    },
+  })
+
   .get('/god/storage-settings', () => getStorageSettings(), {
     response: { 200: StorageSettingsSchema, ...errors(401, 403) },
     detail: {
@@ -330,6 +439,25 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       summary: 'Update project defaults',
       description:
         'Update what a newly created project starts with. Projects that already exist are untouched; each setting stays editable per project.',
+    },
+  })
+
+  .get('/god/agent-settings', () => getAgentSettings(), {
+    response: { 200: AgentSettingsSchema, ...errors(401, 403) },
+    detail: {
+      summary: 'Get instance agent settings',
+      description: "Get what applies to every team's agents on this instance.",
+    },
+  })
+
+  .put('/god/agent-settings', ({ body }) => setAgentSettings(body), {
+    body: AgentSettingsSchema,
+    response: { 200: AgentSettingsSchema, ...errors(400, 401, 403) },
+    detail: {
+      summary: 'Update instance agent settings',
+      description:
+        "Update what applies to every team's agents. A shorter trace retention takes effect " +
+        'on the next sweep, which deletes the traces already past it.',
     },
   })
 
@@ -460,6 +588,51 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
         summary: 'Confirm a user email address',
         description:
           'Mark an account as email-confirmed without the user opening a confirmation link.',
+      },
+    },
+  )
+
+  .post(
+    '/god/users/:userId/deactivate',
+    async ({ params }) => {
+      const target = await getInstanceUser(params.userId);
+      if (!target) throw new HttpError(404, 'User not found');
+      assertActiveSwitchable(target.activeLock);
+      const updated = await setInstanceUserActive(params.userId, false);
+      if (!updated) throw new HttpError(404, 'User not found');
+      return updated;
+    },
+    {
+      params: userParams,
+      response: { 200: InstanceUserDetailResponse, ...errors(401, 403, 404, 409) },
+      detail: {
+        summary: 'Deactivate a user',
+        description:
+          'Cut off an account without deleting it: end its sessions, revoke its MCP OAuth ' +
+          'tokens and pending invites, and refuse its sign-ins and API keys until it is ' +
+          'reactivated. Refused with 409 while a SCIM provider manages accounts.',
+      },
+    },
+  )
+
+  .post(
+    '/god/users/:userId/reactivate',
+    async ({ params }) => {
+      const target = await getInstanceUser(params.userId);
+      if (!target) throw new HttpError(404, 'User not found');
+      assertActiveSwitchable(target.activeLock);
+      const updated = await setInstanceUserActive(params.userId, true);
+      if (!updated) throw new HttpError(404, 'User not found');
+      return updated;
+    },
+    {
+      params: userParams,
+      response: { 200: InstanceUserDetailResponse, ...errors(401, 403, 404, 409) },
+      detail: {
+        summary: 'Reactivate a user',
+        description:
+          'Lift a deactivation so the account can sign in again and its API keys work. ' +
+          'Refused with 409 while a SCIM provider manages accounts.',
       },
     },
   )

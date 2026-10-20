@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useCycleQuery } from '@/services/cycles.service';
+import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 import CycleHeader from './components/detail/CycleHeader';
 import CycleIssuesBoard from './components/detail/CycleIssuesBoard';
 
@@ -14,6 +15,7 @@ export default function CycleDetailPage({ cycleId }: { cycleId: number }) {
   const projectKey = project?.project.ref ?? null;
   const query = useCycleQuery(cycleId);
   const cycle = query.data;
+  useDocumentTitle(titlePath(project?.project.name, !query.isError && cycle?.name));
 
   if (!project || !projectKey) return null;
   if (!cycle)

@@ -5,7 +5,18 @@ import nodemailer from 'nodemailer';
 // instance). Only the transport lives here. Where the credentials come from, how
 // they are stored, and what the message says belong to the caller.
 
-const RESEND_TIMEOUT_MS = 15_000;
+const HTTP_TIMEOUT_MS = 15_000;
+
+// Microsoft 365 refuses a password once the mailbox has MFA, and is retiring password
+// SMTP altogether. 'microsoft365' signs in as an app registration (client credentials,
+// permission SMTP.SendAsApp) and presents the token over XOAUTH2 as `username`.
+export type SmtpAuth = 'password' | 'microsoft365';
+
+export interface MicrosoftOAuthConfig {
+  tenantId: string;
+  clientId: string;
+  clientSecret: string;
+}
 
 export interface SmtpConfig {
   enabled: boolean;
@@ -15,6 +26,9 @@ export interface SmtpConfig {
   username: string;
   password: string;
   timeout: number | null;
+  // Absent on configs stored before it existed: those are password ones.
+  auth?: SmtpAuth;
+  oauth?: MicrosoftOAuthConfig;
 }
 
 export interface ResendConfig {
@@ -57,6 +71,81 @@ function fromAddress(config: EmailConfig, provider: 'smtp' | 'resend'): string |
   return null;
 }
 
+class TokenError extends Error {
+  constructor(
+    message: string,
+    readonly retryable: boolean,
+  ) {
+    super(message);
+  }
+}
+
+// A token lasts about an hour; reusing it spares Microsoft a sign-in per message.
+const tokenCache = new Map<string, { token: string; expiresAt: number }>();
+const TOKEN_MARGIN_MS = 60_000;
+
+async function microsoftAccessToken(oauth: MicrosoftOAuthConfig): Promise<string> {
+  const key = `${oauth.tenantId}|${oauth.clientId}|${oauth.clientSecret}`;
+  const cached = tokenCache.get(key);
+  if (cached && cached.expiresAt - TOKEN_MARGIN_MS > Date.now()) return cached.token;
+
+  let res: Response;
+  try {
+    res = await fetch(
+      `https://login.microsoftonline.com/${encodeURIComponent(oauth.tenantId)}/oauth2/v2.0/token`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        signal: AbortSignal.timeout(HTTP_TIMEOUT_MS),
+        body: new URLSearchParams({
+          grant_type: 'client_credentials',
+          client_id: oauth.clientId,
+          client_secret: oauth.clientSecret,
+          scope: 'https://outlook.office365.com/.default',
+        }),
+      },
+    );
+  } catch (err) {
+    throw new TokenError(
+      err instanceof Error ? err.message : 'microsoft token request failed',
+      true,
+    );
+  }
+  const body = (await res.json().catch(() => ({}))) as {
+    access_token?: string;
+    expires_in?: number;
+    error_description?: string;
+  };
+  if (!res.ok || !body.access_token) {
+    const retryable = res.status >= 500 || res.status === 429;
+    // A 4xx is a wrong tenant, client or secret, or a missing grant: retrying will not fix it.
+    const reason = retryable
+      ? 'microsoft token request failed'
+      : 'microsoft refused the credentials';
+    throw new TokenError(
+      `${reason} (${res.status}): ${body.error_description ?? 'no description'}`,
+      retryable,
+    );
+  }
+  tokenCache.set(key, {
+    token: body.access_token,
+    expiresAt: Date.now() + (body.expires_in ?? 3600) * 1000,
+  });
+  return body.access_token;
+}
+
+async function smtpAuth(smtp: SmtpConfig) {
+  if (smtp.auth === 'microsoft365') {
+    if (!smtp.oauth) throw new TokenError('microsoft 365 app credentials are missing', false);
+    return {
+      type: 'OAuth2' as const,
+      user: smtp.username,
+      accessToken: await microsoftAccessToken(smtp.oauth),
+    };
+  }
+  return smtp.username ? { user: smtp.username, pass: smtp.password } : undefined;
+}
+
 async function sendSmtp(
   smtp: SmtpConfig,
   message: EmailMessage,
@@ -64,12 +153,19 @@ async function sendSmtp(
 ): Promise<SendResult> {
   // The config stores the timeout in seconds, nodemailer takes milliseconds.
   const timeoutMs = smtp.timeout ? smtp.timeout * 1000 : undefined;
+  let auth: Awaited<ReturnType<typeof smtpAuth>>;
+  try {
+    auth = await smtpAuth(smtp);
+  } catch (err) {
+    const retryable = err instanceof TokenError ? err.retryable : true;
+    return { ok: false, retryable, error: err instanceof Error ? err.message : 'smtp auth failed' };
+  }
   const transporter = nodemailer.createTransport({
     host: smtp.host,
     port: smtp.port ?? (smtp.encryption === 'ssl' ? 465 : 587),
     secure: smtp.encryption === 'ssl',
     requireTLS: smtp.encryption === 'tls',
-    auth: smtp.username ? { user: smtp.username, pass: smtp.password } : undefined,
+    auth,
     connectionTimeout: timeoutMs,
     greetingTimeout: timeoutMs,
     socketTimeout: timeoutMs,
@@ -105,7 +201,7 @@ async function sendResend(
         'content-type': 'application/json',
         ...(message.idempotencyKey ? { 'idempotency-key': message.idempotencyKey } : {}),
       },
-      signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
+      signal: AbortSignal.timeout(HTTP_TIMEOUT_MS),
       body: JSON.stringify({
         from,
         to: [message.to],

@@ -1,0 +1,82 @@
+{
+  "window": "{days, plural, =1 {Last 24 hours} other {Last # days}}",
+  "retentionNote": "Internal agents only. Runs older than the instance's trace retention are not counted.",
+  "noComparison": "Nothing to compare with",
+  "vsPrevious": "vs {value} before",
+  "deletedAgent": "Deleted agent",
+  "deletedProject": "Deleted project",
+  "allProjects": "All projects",
+  "totalTokens": "Total tokens",
+  "totalCost": "Total cost",
+  "stats": {
+    "cost": "Model cost",
+    "tokens": "Tokens",
+    "runs": "Runs",
+    "errors": "Failed runs"
+  },
+  "unpriced": "{count, plural, one {# model has no price} other {# models have no price}}",
+  "setPrices": "Set prices",
+  "measure": {
+    "tokens": "Tokens",
+    "cost": "Cost"
+  },
+  "series": {
+    "input": "Input",
+    "output": "Output"
+  },
+  "models": {
+    "title": "By model",
+    "description": "Tokens and cost of each model.",
+    "model": "Model",
+    "input": "Input",
+    "output": "Output",
+    "cost": "Cost",
+    "empty": "No model calls in this period"
+  },
+  "byAgent": {
+    "title": "By agent",
+    "description": "What each agent used.",
+    "empty": "No agent runs in this period"
+  },
+  "byProject": {
+    "title": "By project",
+    "description": "What the agents used in each project.",
+    "empty": "No agent runs in this period"
+  },
+  "byTeam": {
+    "title": "By team",
+    "description": "What each team's agents used.",
+    "empty": "No agent runs in this period"
+  },
+  "overTime": {
+    "title": "Over time",
+    "description": "Tokens and cost across the period.",
+    "empty": "No usage in this period"
+  },
+  "preview": {
+    "title": "More in Cloud and Pro",
+    "description": "Spend by person and trigger, run time and tool calls. Available in Cloud and self-hosted Pro.",
+    "hide": "Hide",
+    "show": "Show",
+    "byPerson": {
+      "title": "By person",
+      "description": "Who started runs in a chat or with a mention."
+    },
+    "byTrigger": {
+      "title": "By trigger",
+      "description": "Chat, mention, schedule or issue event."
+    },
+    "bySchedule": {
+      "title": "By schedule",
+      "description": "What each schedule spent."
+    },
+    "tools": {
+      "title": "Tools",
+      "description": "Tool calls and how many failed."
+    },
+    "latency": {
+      "title": "Run time",
+      "description": "Median and 95th percentile per day."
+    }
+  }
+}

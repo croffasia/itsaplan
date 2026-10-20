@@ -1,0 +1,82 @@
+{
+  "window": "{days, plural, =1 {Últimas 24 horas} other {Últimos # días}}",
+  "retentionNote": "Solo agentes internos. No se cuentan las ejecuciones más antiguas que la retención de trazas de la instancia.",
+  "noComparison": "Nada con lo que comparar",
+  "vsPrevious": "frente a {value} antes",
+  "deletedAgent": "Agente eliminado",
+  "deletedProject": "Proyecto eliminado",
+  "allProjects": "Todos los proyectos",
+  "totalTokens": "Total de tokens",
+  "totalCost": "Coste total",
+  "stats": {
+    "cost": "Coste de modelos",
+    "tokens": "Tokens",
+    "runs": "Ejecuciones",
+    "errors": "Ejecuciones fallidas"
+  },
+  "unpriced": "{count, plural, one {# modelo sin precio} other {# modelos sin precio}}",
+  "setPrices": "Poner precios",
+  "measure": {
+    "tokens": "Tokens",
+    "cost": "Coste"
+  },
+  "series": {
+    "input": "Entrada",
+    "output": "Salida"
+  },
+  "models": {
+    "title": "Por modelo",
+    "description": "Tokens y coste de cada modelo.",
+    "model": "Modelo",
+    "input": "Entrada",
+    "output": "Salida",
+    "cost": "Coste",
+    "empty": "No hubo llamadas a modelos en este periodo"
+  },
+  "byAgent": {
+    "title": "Por agente",
+    "description": "Lo que ha usado cada agente.",
+    "empty": "No hubo ejecuciones de agentes en este periodo"
+  },
+  "byProject": {
+    "title": "Por proyecto",
+    "description": "Lo que han usado los agentes en cada proyecto.",
+    "empty": "No hubo ejecuciones de agentes en este periodo"
+  },
+  "byTeam": {
+    "title": "Por equipo",
+    "description": "Lo que han usado los agentes de cada equipo.",
+    "empty": "No hubo ejecuciones de agentes en este periodo"
+  },
+  "overTime": {
+    "title": "En el tiempo",
+    "description": "Tokens y coste del periodo.",
+    "empty": "Sin consumo en este periodo"
+  },
+  "preview": {
+    "title": "Más en Cloud y Pro",
+    "description": "Gasto por persona y disparador, duración de ejecuciones y llamadas a herramientas. Disponible en Cloud y en Pro autoalojado.",
+    "hide": "Ocultar",
+    "show": "Mostrar",
+    "byPerson": {
+      "title": "Por persona",
+      "description": "Quién inició ejecuciones en un chat o con una mención."
+    },
+    "byTrigger": {
+      "title": "Por disparador",
+      "description": "Chat, mención, programación o evento de tarea."
+    },
+    "bySchedule": {
+      "title": "Por programación",
+      "description": "Lo que gastó cada programación."
+    },
+    "tools": {
+      "title": "Herramientas",
+      "description": "Llamadas a herramientas y cuántas fallaron."
+    },
+    "latency": {
+      "title": "Duración",
+      "description": "Mediana y percentil 95 por día."
+    }
+  }
+}

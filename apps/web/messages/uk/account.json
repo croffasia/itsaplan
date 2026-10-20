@@ -50,7 +50,16 @@
     "thisDevice": "Цей пристрій",
     "deleteWarning": "Ви більше не зможете входити за цим passkey. Цю дію не можна скасувати.",
     "passkeyFallback": "Passkey",
-    "passkeysLoadFailed": "Не вдалося завантажити passkey."
+    "passkeysLoadFailed": "Не вдалося завантажити passkey.",
+    "connectedAppsTitle": "Під’єднані застосунки",
+    "connectedAppsDescription": "Застосунки на кшталт Claude чи ChatGPT, яким ви дозволили діяти від вашого імені через MCP. Вони бачать і роблять те саме, що й ви.",
+    "connectedAppsEmpty": "До вашого облікового запису не під’єднано жодного застосунку.",
+    "connectedAppUsed": "Під’єднано {connected} · востаннє використано {used}",
+    "connectedAppSince": "Під’єднано {connected}",
+    "disconnectApp": "Від’єднати",
+    "disconnectAppTitle": "Від’єднати {name}?",
+    "disconnectAppWarning": "Застосунок одразу втратить доступ. Під час повторного під’єднання вашу згоду буде запитано знову.",
+    "disconnectAppFailed": "Не вдалося від’єднати застосунок."
   },
   "accounts": {
     "label": "Акаунти",

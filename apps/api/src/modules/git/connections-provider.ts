@@ -182,7 +182,7 @@ export function providerErrorMessage(
 async function providerRequest(
   input: ProviderConnectionInput,
   path: string,
-  init: RequestInit = {},
+  init: RequestInit & { allowMissing?: boolean } = {},
 ): Promise<Response> {
   const headers = providerHeaders(input.provider, input.token);
   if (init.body !== undefined) headers.set('content-type', 'application/json');
@@ -201,8 +201,8 @@ async function providerRequest(
       `${PROVIDER_LABEL[input.provider]} could not be reached. Check the provider URL and network access.`,
     );
   }
-  const missingDelete = init.method === 'DELETE' && response.status === 404;
-  if (!response.ok && !missingDelete) {
+  const missing = response.status === 404 && (init.method === 'DELETE' || init.allowMissing);
+  if (!response.ok && !missing) {
     const body = record(
       await response
         .clone()
@@ -721,27 +721,38 @@ export async function createProviderPullRequest(
   };
 }
 
-export async function installProviderWebhook(
-  input: ProviderConnectionInput,
+interface ProviderWebhookApi {
+  hooksPath: string;
+  listQuery: string;
+  updateMethod: 'PATCH' | 'PUT';
+  hooks(body: unknown): unknown[];
+  url(hook: Record<string, unknown> | null): string | null;
+  id(hook: Record<string, unknown> | null): string | null;
+  body(create: boolean): unknown;
+}
+
+function numericId(hook: Record<string, unknown> | null): string | null {
+  const id = hook?.id;
+  return typeof id === 'number' || typeof id === 'string' ? String(id) : null;
+}
+
+function providerWebhookApi(
+  provider: GitProvider,
   repository: ProviderRepository,
   payloadUrl: string,
   secret: string,
-): Promise<string> {
-  if (input.provider === 'gitlab') {
-    const hooksPath = `/projects/${encodeURIComponent(repository.externalId)}/hooks`;
-    const hooksResponse = await providerRequest(input, `${hooksPath}?per_page=100`);
-    const hooks: unknown = await hooksResponse.json();
-    const existing = Array.isArray(hooks)
-      ? hooks.map(record).find((hook) => text(hook?.url) === payloadUrl)
-      : undefined;
-    const existingId = existing?.id;
-    const path =
-      typeof existingId === 'number' || typeof existingId === 'string'
-        ? `${hooksPath}/${encodeURIComponent(String(existingId))}`
-        : hooksPath;
-    const response = await providerRequest(input, path, {
-      method: existing ? 'PUT' : 'POST',
-      body: JSON.stringify({
+): ProviderWebhookApi {
+  const arrayBody = (body: unknown) => (Array.isArray(body) ? body : []);
+  const configUrl = (hook: Record<string, unknown> | null) => text(record(hook?.config)?.url);
+  if (provider === 'gitlab') {
+    return {
+      hooksPath: `/projects/${encodeURIComponent(repository.externalId)}/hooks`,
+      listQuery: '?per_page=100',
+      updateMethod: 'PUT',
+      hooks: arrayBody,
+      url: (hook) => text(hook?.url),
+      id: numericId,
+      body: () => ({
         url: payloadUrl,
         token: secret,
         merge_requests_events: true,
@@ -749,52 +760,33 @@ export async function installProviderWebhook(
         push_events: true,
         enable_ssl_verification: true,
       }),
-    });
-    const id = record(await response.json())?.id;
-    if (typeof id !== 'number' && typeof id !== 'string')
-      throw new HttpError(502, 'GitLab returned an invalid webhook');
-    return String(id);
+    };
   }
-
-  if (input.provider === 'gitea' || input.provider === 'forgejo') {
-    const hooksPath = `${githubRepoPath(repository.fullName)}/hooks`;
-    const hooksResponse = await providerRequest(input, `${hooksPath}?limit=100`);
-    const hooks: unknown = await hooksResponse.json();
-    const existing = Array.isArray(hooks)
-      ? hooks.map(record).find((hook) => text(record(hook?.config)?.url) === payloadUrl)
-      : undefined;
-    const existingId = existing?.id;
-    const path =
-      typeof existingId === 'number' || typeof existingId === 'string'
-        ? `${hooksPath}/${encodeURIComponent(String(existingId))}`
-        : hooksPath;
-    const response = await providerRequest(input, path, {
-      method: existing ? 'PATCH' : 'POST',
-      body: JSON.stringify({
-        ...(existing ? {} : { type: 'gitea' }),
+  if (provider === 'gitea' || provider === 'forgejo') {
+    return {
+      hooksPath: `${githubRepoPath(repository.fullName)}/hooks`,
+      listQuery: '?limit=100',
+      updateMethod: 'PATCH',
+      hooks: arrayBody,
+      url: configUrl,
+      id: numericId,
+      body: (create) => ({
+        ...(create ? { type: 'gitea' } : {}),
         active: true,
         events: ['pull_request', 'create', 'delete'],
         config: { url: payloadUrl, content_type: 'json', secret },
       }),
-    });
-    const id = record(await response.json())?.id;
-    if (typeof id !== 'number' && typeof id !== 'string')
-      throw new HttpError(502, `${input.provider} returned an invalid webhook`);
-    return String(id);
+    };
   }
-
-  if (input.provider === 'bitbucket') {
-    const hooksPath = `${bitbucketRepoPath(repository.fullName)}/hooks`;
-    const hooksResponse = await providerRequest(input, `${hooksPath}?pagelen=100`);
-    const hooks = record(await hooksResponse.json())?.values;
-    const existing = Array.isArray(hooks)
-      ? hooks.map(record).find((hook) => text(hook?.url) === payloadUrl)
-      : undefined;
-    const existingId = text(existing?.uuid);
-    const path = existingId ? `${hooksPath}/${encodeURIComponent(existingId)}` : hooksPath;
-    const response = await providerRequest(input, path, {
-      method: existing ? 'PUT' : 'POST',
-      body: JSON.stringify({
+  if (provider === 'bitbucket') {
+    return {
+      hooksPath: `${bitbucketRepoPath(repository.fullName)}/hooks`,
+      listQuery: '?pagelen=100',
+      updateMethod: 'PUT',
+      hooks: (body) => arrayBody(record(body)?.values),
+      url: (hook) => text(hook?.url),
+      id: (hook) => text(hook?.uuid),
+      body: () => ({
         description: "It's a Plan",
         url: payloadUrl,
         active: true,
@@ -808,36 +800,61 @@ export async function installProviderWebhook(
           'repo:branch_deleted',
         ],
       }),
-    });
-    const id = text(record(await response.json())?.uuid);
-    if (!id) throw new HttpError(502, 'Bitbucket returned an invalid webhook');
-    return id;
+    };
   }
-
-  const hooksPath = `${githubRepoPath(repository.fullName)}/hooks`;
-  const hooksResponse = await providerRequest(input, `${hooksPath}?per_page=100`);
-  const hooks: unknown = await hooksResponse.json();
-  const existing = Array.isArray(hooks)
-    ? hooks.map(record).find((hook) => text(record(hook?.config)?.url) === payloadUrl)
-    : undefined;
-  const existingId = existing?.id;
-  const path =
-    typeof existingId === 'number' || typeof existingId === 'string'
-      ? `${hooksPath}/${encodeURIComponent(String(existingId))}`
-      : hooksPath;
-  const response = await providerRequest(input, path, {
-    method: existing ? 'PATCH' : 'POST',
-    body: JSON.stringify({
-      ...(existing ? {} : { name: 'web' }),
+  return {
+    hooksPath: `${githubRepoPath(repository.fullName)}/hooks`,
+    listQuery: '?per_page=100',
+    updateMethod: 'PATCH',
+    hooks: arrayBody,
+    url: configUrl,
+    id: numericId,
+    body: (create) => ({
+      ...(create ? { name: 'web' } : {}),
       active: true,
       events: ['pull_request', 'check_run', 'create', 'delete'],
       config: { url: payloadUrl, content_type: 'json', insecure_ssl: '0', secret },
     }),
+  };
+}
+
+// Updates the hook stored as `webhookExternalId` in place, whatever URL it has now.
+// Without a stored id (first install) it reuses a hook with this exact URL. A stored
+// hook the provider no longer has is created again.
+export async function installProviderWebhook(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  payloadUrl: string,
+  secret: string,
+  webhookExternalId: string | null,
+): Promise<string> {
+  const api = providerWebhookApi(input.provider, repository, payloadUrl, secret);
+  let existingId = webhookExternalId;
+  if (existingId === null) {
+    const hooksResponse = await providerRequest(input, `${api.hooksPath}${api.listQuery}`);
+    const existing = api
+      .hooks(await hooksResponse.json())
+      .map(record)
+      .find((hook) => api.url(hook) === payloadUrl);
+    existingId = existing ? api.id(existing) : null;
+  }
+  let response: Response | null = null;
+  if (existingId !== null) {
+    response = await providerRequest(input, `${api.hooksPath}/${encodeURIComponent(existingId)}`, {
+      method: api.updateMethod,
+      body: JSON.stringify(api.body(false)),
+      allowMissing: true,
+    });
+    if (response.status === 404) response = null;
+  }
+  response ??= await providerRequest(input, api.hooksPath, {
+    method: 'POST',
+    body: JSON.stringify(api.body(true)),
   });
-  const id = record(await response.json())?.id;
-  if (typeof id !== 'number' && typeof id !== 'string')
-    throw new HttpError(502, 'GitHub returned an invalid webhook');
-  return String(id);
+  const id = api.id(record(await response.json()));
+  if (!id)
+    throw new HttpError(502, `${PROVIDER_LABEL[input.provider]} returned an invalid webhook`);
+  return id;
 }
 
 export async function deleteProviderWebhook(

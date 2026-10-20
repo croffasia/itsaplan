@@ -50,7 +50,16 @@
     "thisDevice": "Perangkat ini",
     "deleteWarning": "Anda tidak akan dapat masuk lagi dengan passkey ini. Tindakan ini tidak dapat dibatalkan.",
     "passkeyFallback": "Passkey",
-    "passkeysLoadFailed": "Gagal memuat passkey."
+    "passkeysLoadFailed": "Gagal memuat passkey.",
+    "connectedAppsTitle": "Aplikasi terhubung",
+    "connectedAppsDescription": "Aplikasi seperti Claude atau ChatGPT yang Anda izinkan bertindak atas nama Anda melalui MCP. Aplikasi ini melihat dan melakukan apa yang bisa Anda lakukan.",
+    "connectedAppsEmpty": "Tidak ada aplikasi yang terhubung ke akun Anda.",
+    "connectedAppUsed": "Terhubung {connected} · terakhir digunakan {used}",
+    "connectedAppSince": "Terhubung {connected}",
+    "disconnectApp": "Putuskan",
+    "disconnectAppTitle": "Putuskan {name}?",
+    "disconnectAppWarning": "Aksesnya langsung dicabut. Menghubungkannya lagi akan meminta persetujuan Anda kembali.",
+    "disconnectAppFailed": "Tidak dapat memutuskan aplikasi."
   },
   "accounts": {
     "label": "Akun",

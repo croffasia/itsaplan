@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { verifyScimToken, workspaceScim } from '@repo/auth';
+import { verifyScimToken } from '@repo/auth';
 import { HttpError } from '#shared/lib';
 import { noContent } from '#shared/http';
 import {
@@ -52,8 +52,8 @@ import {
 } from './service';
 
 // SCIM 2.0 provisioning (RFC 7643 / 7644). An identity provider pushes users and
-// groups here with a workspace's SCIM bearer token, and every request acts for that
-// workspace.
+// groups here with a SCIM bearer token, and every request acts for the provider it
+// opens: the instance's (`workspaceId` null) or a workspace's.
 
 function extractToken(authorization: string | undefined): string | null {
   return authorization?.match(/^Bearer\s+(.+)$/i)?.[1] ?? null;
@@ -65,9 +65,9 @@ function extractToken(authorization: string | undefined): string | null {
 // which raises SCIM errors rather than the planner's validation error.
 const anyBody = { body: t.Any() };
 
-// The name and address of the account. While SCIM is the instance's, the provider keeps
-// them in step. Set up per workspace, they are the person's own, not the workspace's, so
-// a provider that sends them on every sync gets them accepted and left as they are.
+// The name and address of the account. The instance's provider keeps them in step. For a
+// workspace's they are the person's own, not the workspace's, so a provider that sends
+// them on every sync gets them accepted and left as they are.
 const ACCOUNT_ATTRIBUTE = /^(username|displayname|name(\..+)?|emails(\[.*])?(\..+)?)$/;
 
 // What one PATCH operation on an account attribute sets. `name` is the name before it,
@@ -121,9 +121,9 @@ const scimHandlers = new Elysia({
     const token = extractToken(headers.authorization);
     // One answer for "off", "no token" and "wrong token": whether provisioning is
     // configured is not something an unauthenticated caller should learn.
-    const workspaceId = token ? await verifyScimToken(token) : null;
-    if (workspaceId === null) throw new ScimError(401, 'Invalid or missing SCIM bearer token');
-    return { workspaceId };
+    const provider = token ? await verifyScimToken(token) : null;
+    if (!provider) throw new ScimError(401, 'Invalid or missing SCIM bearer token');
+    return { workspaceId: provider.workspaceId };
   })
 
   // ── Discovery ───────────────────────────────────────────────────────────────
@@ -226,15 +226,16 @@ const scimHandlers = new Elysia({
     '/Users/:id',
     async ({ workspaceId, params, body }) => {
       const doc = asDoc(body);
-      const account = workspaceScim()
-        ? {}
-        : {
-            email: readAccountEmail(doc),
-            name: joinName(
-              doc.name as never,
-              (doc.displayName as string) || (await requireUser(workspaceId, params.id)).name,
-            ),
-          };
+      const account =
+        workspaceId === null
+          ? {
+              email: readAccountEmail(doc),
+              name: joinName(
+                doc.name as never,
+                (doc.displayName as string) || (await requireUser(workspaceId, params.id)).name,
+              ),
+            }
+          : {};
       const updated = await updateScimUser(workspaceId, params.id, {
         ...account,
         active: doc.active === undefined ? true : asBoolean(doc.active),
@@ -275,7 +276,7 @@ const scimHandlers = new Elysia({
         else if (path === 'externalid') patch.externalId = asString(op.value, 'externalId');
         else if (!ACCOUNT_ATTRIBUTE.test(path)) {
           throw new ScimError(400, `Attribute '${op.path}' is not writable`, 'invalidPath');
-        } else if (!workspaceScim() && !(path === 'username' && sendsEmails)) {
+        } else if (workspaceId === null && !(path === 'username' && sendsEmails)) {
           const name = patch.name ?? (await requireUser(workspaceId, params.id)).name;
           Object.assign(patch, accountOp(path, op.value, name));
         }
@@ -461,13 +462,13 @@ function requireUpdated<T>(record: T | null, resource: string, id: string): T {
   return record;
 }
 
-async function requireUser(workspaceId: number, id: string) {
+async function requireUser(workspaceId: number | null, id: string) {
   const record = await getScimUser(workspaceId, id);
   if (!record) throw new ScimError(404, `User '${id}' not found`);
   return record;
 }
 
-async function requireGroup(workspaceId: number, id: string) {
+async function requireGroup(workspaceId: number | null, id: string) {
   const record = await getScimGroup(workspaceId, id);
   if (!record) throw new ScimError(404, `Group '${id}' not found`);
   return record;

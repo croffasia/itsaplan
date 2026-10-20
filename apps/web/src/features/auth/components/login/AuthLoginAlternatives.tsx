@@ -2,6 +2,7 @@
 
 import { KeyRound, Lock, Mail, ShieldCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { SignInExtras } from '@/cloud';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import GoogleIcon from '@/components/common/GoogleIcon';
@@ -9,18 +10,21 @@ import { useAuthConfig } from '@/services/authConfig.service';
 
 // The sign-in methods that are not the email + password form: the magic link toggle,
 // the instance's own OIDC provider, Google, and passkeys. Which of the first three
-// show depends on the instance config.
+// show depends on the instance config. The invite screen has no magic link toggle, and
+// passes the invited address as `email`.
 export default function AuthLoginAlternatives({
-  signingInWithLink,
+  signingInWithLink = false,
   pending,
+  email,
   onToggleMethod,
   onOidc,
   onGoogle,
   onPasskey,
 }: {
-  signingInWithLink: boolean;
+  signingInWithLink?: boolean;
   pending: boolean;
-  onToggleMethod: () => void;
+  email?: string;
+  onToggleMethod?: () => void;
   onOidc: () => void;
   onGoogle: () => void;
   onPasskey: () => void;
@@ -36,7 +40,7 @@ export default function AuthLoginAlternatives({
   // they are one stack of choices, not separate answers.
   return (
     <Field className="gap-2">
-      {authConfig?.magicLink && passwordEnabled && (
+      {onToggleMethod && authConfig?.magicLink && passwordEnabled && (
         <Button type="button" variant="outline" disabled={pending} onClick={onToggleMethod}>
           {signingInWithLink ? <Lock /> : <Mail />}
           {signingInWithLink ? t('withPassword') : t('withLink')}
@@ -50,6 +54,7 @@ export default function AuthLoginAlternatives({
           {authConfig.oidcLabel || t('withSso')}
         </Button>
       )}
+      <SignInExtras pending={pending} email={email} />
       {authConfig?.google && (
         <Button type="button" variant="outline" onClick={onGoogle} disabled={pending}>
           <GoogleIcon className="size-4" />

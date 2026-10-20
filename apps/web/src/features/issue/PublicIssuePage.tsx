@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { getSharedIssue } from '@/lib/api/endpoints/share';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import PublicShareFrame from '@/components/common/page/PublicShareFrame';
 import PublicShareHeader from '@/components/common/page/PublicShareHeader';
 import IssueDetailSkeleton from './components/detail/IssueDetailSkeleton';
@@ -18,6 +19,8 @@ export default function PublicIssuePage({ token }: { token: string }) {
     queryFn: () => getSharedIssue(token),
     retry: false,
   });
+  const issue = query.isError ? undefined : query.data?.issue;
+  useDocumentTitle(issue ? `${issue.identifier} ${issue.title}` : null);
 
   if (query.isLoading) {
     return (

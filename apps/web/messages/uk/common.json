@@ -211,5 +211,6 @@
     "page": "Сторінка {number}",
     "perPage": "на сторінці",
     "range": "{first}-{last} з {total}"
-  }
+  },
+  "aboutCloudAndPro": "Докладніше про Cloud і Pro"
 }

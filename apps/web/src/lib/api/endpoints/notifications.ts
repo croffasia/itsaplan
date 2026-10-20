@@ -68,10 +68,10 @@ export const listNotifications = (
   return request<NotificationPage>(`/notifications?${q.toString()}`);
 };
 
-// Unread count for the sidebar badge, refetched when the inbox scope moves.
-export const getUnreadCount = (projectId: number | null) =>
+// Unread count for the sidebar badge. Without a project it counts every project's.
+export const getUnreadCount = (projectId?: number | null) =>
   request<{ unread: number }>(
-    `/notifications/unread${projectId == null ? '' : `?projectId=${projectId}`}`,
+    projectId == null ? '/notifications/unread' : `/notifications/unread?projectId=${projectId}`,
   );
 
 export const setNotificationRead = (id: number, read: boolean) =>

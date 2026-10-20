@@ -1,5 +1,6 @@
 import { db, agentSkill, agentSkillLink } from '@repo/db';
 import { and, eq, inArray, sql } from 'drizzle-orm';
+import { transliterate } from 'transliteration';
 import { iso, rethrowDuplicate, HttpError } from '#shared/lib';
 import { putObject, getObjectText, deleteObjects } from '@repo/storage';
 import { parseFrontmatter, isDisallowedRef } from './skill-format';
@@ -261,7 +262,8 @@ export async function updateSkill(
 }
 
 // Adds a reference file to a skill. Rejects executable files (no scripts in a
-// skill). The path is the sanitized file name under refs/.
+// skill). The path is the file name under refs/, transliterated so a name in another
+// script does not turn into underscores only.
 export async function addReference(
   id: number,
   teamId: number,
@@ -269,7 +271,7 @@ export async function addReference(
   bytes: Buffer,
   contentType: string,
 ): Promise<SkillRow | null> {
-  const safeName = filename.replace(/[^A-Za-z0-9._-]/g, '_');
+  const safeName = transliterate(filename).replace(/[^A-Za-z0-9._-]/g, '_');
   if (!safeName || isDisallowedRef(safeName)) {
     throw new HttpError(400, 'This file type is not allowed as a skill reference');
   }

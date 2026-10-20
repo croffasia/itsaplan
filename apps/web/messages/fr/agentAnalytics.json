@@ -1,0 +1,82 @@
+{
+  "window": "{days, plural, =1 {Dernières 24 heures} other {# derniers jours}}",
+  "retentionNote": "Agents internes uniquement. Les exécutions plus anciennes que la conservation des traces de l'instance ne sont pas comptées.",
+  "noComparison": "Rien à comparer",
+  "vsPrevious": "contre {value} avant",
+  "deletedAgent": "Agent supprimé",
+  "deletedProject": "Projet supprimé",
+  "allProjects": "Tous les projets",
+  "totalTokens": "Total des jetons",
+  "totalCost": "Coût total",
+  "stats": {
+    "cost": "Coût des modèles",
+    "tokens": "Jetons",
+    "runs": "Exécutions",
+    "errors": "Exécutions en échec"
+  },
+  "unpriced": "{count, plural, one {# modèle sans prix} other {# modèles sans prix}}",
+  "setPrices": "Fixer les prix",
+  "measure": {
+    "tokens": "Jetons",
+    "cost": "Coût"
+  },
+  "series": {
+    "input": "Entrée",
+    "output": "Sortie"
+  },
+  "models": {
+    "title": "Par modèle",
+    "description": "Jetons et coût de chaque modèle.",
+    "model": "Modèle",
+    "input": "Entrée",
+    "output": "Sortie",
+    "cost": "Coût",
+    "empty": "Aucun appel de modèle sur cette période"
+  },
+  "byAgent": {
+    "title": "Par agent",
+    "description": "Ce que chaque agent a utilisé.",
+    "empty": "Aucune exécution d'agent sur cette période"
+  },
+  "byProject": {
+    "title": "Par projet",
+    "description": "Ce que les agents ont utilisé dans chaque projet.",
+    "empty": "Aucune exécution d'agent sur cette période"
+  },
+  "byTeam": {
+    "title": "Par équipe",
+    "description": "Ce que les agents de chaque équipe ont utilisé.",
+    "empty": "Aucune exécution d'agent sur cette période"
+  },
+  "overTime": {
+    "title": "Dans le temps",
+    "description": "Jetons et coût sur la période.",
+    "empty": "Aucune consommation sur cette période"
+  },
+  "preview": {
+    "title": "Plus dans Cloud et Pro",
+    "description": "Dépenses par personne et par déclencheur, durée des exécutions et appels d'outils. Disponible dans Cloud et dans Pro auto-hébergé.",
+    "hide": "Masquer",
+    "show": "Afficher",
+    "byPerson": {
+      "title": "Par personne",
+      "description": "Qui a lancé des exécutions dans un chat ou par une mention."
+    },
+    "byTrigger": {
+      "title": "Par déclencheur",
+      "description": "Chat, mention, planification ou événement de tâche."
+    },
+    "bySchedule": {
+      "title": "Par planification",
+      "description": "Ce que chaque planification a dépensé."
+    },
+    "tools": {
+      "title": "Outils",
+      "description": "Appels d'outils et combien ont échoué."
+    },
+    "latency": {
+      "title": "Durée d'exécution",
+      "description": "Médiane et 95e centile par jour."
+    }
+  }
+}

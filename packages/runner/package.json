@@ -1,6 +1,6 @@
 {
   "name": "@itsaplan/runner",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Runs an Itsaplan external agent's queued tasks and answers its chat on your own machine",
   "keywords": [
     "itsaplan",
@@ -53,7 +53,7 @@
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@types/bun": "latest",
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.6.5",
     "eslint": "^9.39.0",
     "typescript": "^6.0.3"
   }

@@ -1,7 +1,6 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { GodGroup } from '@/utils/godSections';
 import { byKey } from '@/utils/messageKey';
 
 // The names and blurbs of the navigable sections — project settings, god mode and
@@ -24,7 +23,7 @@ export function useGodSectionText() {
   const tGroup = useTranslations('sections.godGroups');
   return {
     section: (slug: string) => sectionText(t, slug),
-    group: (group: GodGroup) => tGroup(group),
+    group: (group: string) => byKey(tGroup)(group),
   };
 }
 

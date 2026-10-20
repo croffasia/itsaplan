@@ -25,9 +25,9 @@ export default function InviteStep({ token, invite }: { token: string; invite: I
     router.refresh();
   }
 
-  if (invite.status !== 'pending') {
+  if (invite.status !== 'pending' || invite.expired) {
     return (
-      <InviteNotice message={t('alreadyHandled', { status: invite.status })}>
+      <InviteNotice>
         <Button asChild variant="outline">
           <Link href="/">{t('goToApp')}</Link>
         </Button>

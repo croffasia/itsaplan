@@ -3,32 +3,36 @@
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { API_URL } from '@/lib/api/core/client';
-
-type ConsentResponse = { redirectURI?: string; message?: string };
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { authClient, useSession } from '@/lib/auth-client';
+import { useOAuthClientNameQuery } from '../services/oauthClients.service';
+import { consentRequest } from '../utils/consentRequest';
 
 export default function OAuthConsentPage() {
   const t = useTranslations('mcp');
+  const tScreens = useTranslations('meta.screens');
+  useDocumentTitle(tScreens('authorizeApp'));
   const searchParams = useSearchParams();
-  const consentCode = searchParams.get('consent_code');
+  // The signed authorization request the server sent the person here with.
+  const signed = searchParams.has('sig');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const { clientId, redirectHost } = consentRequest(searchParams);
+  const { data: session } = useSession();
+  const { data: clientName } = useOAuthClientNameQuery(clientId);
 
   async function decide(accept: boolean) {
-    if (!consentCode || pending) return;
+    if (!signed || pending) return;
     setPending(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/api/auth/oauth2/consent`, {
+      // The auth client adds the signed request from the URL and follows the redirect
+      // to the MCP client the answer comes with.
+      const { error } = await authClient.$fetch('/oauth2/consent', {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ accept, consent_code: consentCode }),
+        body: { accept },
       });
-      const result = (await response.json()) as ConsentResponse;
-      if (!response.ok || !result.redirectURI)
-        throw new Error(result.message || t('oauth.consent.failed'));
-      window.location.assign(result.redirectURI);
+      if (error) throw new Error(error.message || t('oauth.consent.failed'));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : t('oauth.consent.failed'));
       setPending(false);
@@ -39,10 +43,24 @@ export default function OAuthConsentPage() {
     <main className="flex min-h-screen items-center justify-center bg-background p-6 text-foreground">
       <section className="w-full max-w-md space-y-5 rounded-lg border bg-card p-6 shadow-sm">
         <div className="space-y-2">
-          <h1 className="text-xl font-semibold">{t('oauth.consent.title')}</h1>
+          <h1 className="text-xl font-semibold">
+            {clientName
+              ? t('oauth.consent.title', { client: clientName })
+              : t('oauth.consent.titleUnnamed')}
+          </h1>
           <p className="text-sm text-muted-foreground">{t('oauth.consent.description')}</p>
+          {session?.user.email ? (
+            <p className="text-sm text-muted-foreground">
+              {t('oauth.consent.account', { email: session.user.email })}
+            </p>
+          ) : null}
+          {redirectHost ? (
+            <p className="text-sm text-muted-foreground">
+              {t('oauth.consent.redirect', { host: redirectHost })}
+            </p>
+          ) : null}
         </div>
-        {!consentCode ? (
+        {!signed ? (
           <p className="text-sm text-destructive">{t('oauth.consent.missingCode')}</p>
         ) : (
           <div className="flex justify-end gap-3">

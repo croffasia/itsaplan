@@ -199,7 +199,8 @@
       "field": "executou por um campo de",
       "manual": "executou manualmente",
       "schedule": "executou por agendamento",
-      "status": "executou por mudança de estado de"
+      "status": "executou por mudança de estado de",
+      "event": "executou por um evento de"
     }
   },
   "agentHealth": {

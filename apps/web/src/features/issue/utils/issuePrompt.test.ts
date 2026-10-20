@@ -13,13 +13,24 @@ describe('buildIssueBranchName', () => {
     );
   });
 
-  it('falls back to an identifier-only branch for a non-latin title', () => {
+  it('transliterates a title in another script', () => {
     assert.equal(
       buildIssueBranchName(
         { identifier: 'ENG-7', title: 'Проверить пилот' },
         { email: 'alex.smith@example.com' },
       ),
-      'alexsmith/eng-7',
+      'alexsmith/eng-7-proverit-pilot',
+    );
+    assert.equal(
+      buildIssueBranchName({ identifier: 'ENG-8', title: '修复登录' }, { name: 'Анна' }),
+      'anna/eng-8-xiu-fu-deng-lu',
+    );
+  });
+
+  it('falls back to an identifier-only branch for a title with no letters', () => {
+    assert.equal(
+      buildIssueBranchName({ identifier: 'ENG-9', title: '🚀 !!!' }, { email: 'a@example.com' }),
+      'a/eng-9',
     );
   });
 });

@@ -51,8 +51,9 @@ Ingress, TLS certificates, and a ServiceAccount are available but disabled by de
 
 ## Ingress
 
-The API cannot serve behind a path prefix (better-auth mounts at `/api/auth/*` and treats a path inside `API_URL` as a
-replacement for its base path). The chart offers two modes instead.
+The chart routes the API in one of the two modes below. `API_URL` can also be a path on the web's host (see
+[Where the api lives](self-hosting.md#where-the-api-lives)), but then the proxy has to remove that path before the
+request reaches the api. A standard Ingress has no portable way to do that, so the chart does not template this mode.
 
 ### Separate host
 

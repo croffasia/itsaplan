@@ -3,7 +3,7 @@ import AuthLoginForm from './components/login/AuthLoginForm';
 
 export default function AuthLoginPage() {
   return (
-    <AuthCard>
+    <AuthCard screen="signIn">
       <AuthLoginForm />
     </AuthCard>
   );

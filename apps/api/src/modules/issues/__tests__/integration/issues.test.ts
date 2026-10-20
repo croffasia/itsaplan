@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent } from '#tests/helpers/agents';
@@ -23,7 +23,7 @@ interface Setup {
 async function setupProject(): Promise<Setup> {
   const owner = await signUpTestUser();
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
   const columnIds = view.data!.columns.map((c) => c.id);
   return { asOwner, ownerUserId: owner.userId, columnId: columnIds[0], columnIds };
@@ -35,7 +35,7 @@ function createIssue(client: Api, columnId: number, patch: Record<string, unknow
 
 // A label of a second project, which no issue of the first one may carry.
 async function foreignLabel(client: Api) {
-  await client.projects.post({ key: 'OPS', name: 'Operations' });
+  await createProject(client, { key: 'OPS', name: 'Operations' });
   const res = await client.projects({ projectKey: 'OPS' }).labels.post({ name: 'ops-secret' });
   return res.data!;
 }
@@ -43,7 +43,7 @@ async function foreignLabel(client: Api) {
 // A column and an issue type of a second project, which no issue of the first one
 // may point at.
 async function foreignProject(client: Api) {
-  await client.projects.post({ key: 'OPS', name: 'Operations' });
+  await createProject(client, { key: 'OPS', name: 'Operations' });
   const view = await client.projects({ projectKey: 'OPS' }).get();
   const type = await client
     .projects({ projectKey: 'OPS' })
@@ -627,7 +627,7 @@ describe('issues', () => {
     // A project-wide field (no issueTypeId) of a second project, which must stay
     // invisible to the issues of the first one.
     async function foreignField(client: Api) {
-      await client.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(client, { key: 'OPS', name: 'Operations' });
       const res = await client
         .projects({ projectKey: 'OPS' })
         ['custom-fields'].post({ name: 'Source URL', fieldType: 'text' });
@@ -1211,7 +1211,7 @@ describe('issues', () => {
     it('does not find issues from another project', async () => {
       const { asOwner, columnId } = await setupProject();
       await createIssue(asOwner, columnId, { title: 'Kestrel here' });
-      await asOwner.projects.post({ key: 'OPS', name: 'Ops' });
+      await createProject(asOwner, { key: 'OPS', name: 'Ops' });
       const opsCols = (await asOwner.projects({ projectKey: 'OPS' }).get()).data!.columns;
       await asOwner
         .projects({ projectKey: 'OPS' })
@@ -1432,7 +1432,7 @@ describe('issues', () => {
       const mine = (await createIssue(asOwner, columnId)).data!;
       // A second project owned by the same user; its issue must not be touched by a
       // bulk action scoped to the first project.
-      await asOwner.projects.post({ key: 'OPS', name: 'Ops' });
+      await createProject(asOwner, { key: 'OPS', name: 'Ops' });
       const opsColumn = (await asOwner.projects({ projectKey: 'OPS' }).get()).data!.columns[0].id;
       const foreign = (
         await asOwner

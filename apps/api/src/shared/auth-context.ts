@@ -7,6 +7,7 @@ import {
   ensurePersonalWorkspace,
   getSessionFromHeaders,
   isAccountDeactivated,
+  verifyMcpAccessToken,
 } from '@repo/auth';
 import { HttpError } from './lib';
 import { getMcpOAuthToken } from './mcp-request';
@@ -41,29 +42,32 @@ export type SessionUser = SessionResult['user'];
 export const authContext = new Elysia({ name: 'auth-context' }).resolve(
   { as: 'scoped' },
   async ({ request, path }): Promise<{ user: SessionUser | null }> => {
-    const session = await getSessionFromHeaders(request.headers);
-    if (session) return { user: await signedIn(session.user) };
-    const mcpToken = getMcpOAuthToken(request);
-    if (mcpToken) {
-      const oauthSession = await auth.api.getMcpSession({
-        headers: new Headers({ Authorization: `Bearer ${mcpToken}` }),
-      });
-      if (oauthSession) {
-        const user = await db.query.user.findFirst({ where: eq(users.id, oauthSession.userId) });
-        if (user) return { user: await signedIn(user as SessionUser) };
-      }
-    }
+    const user = await requestUser(request);
+    if (user) return { user: await signedIn(user) };
     // The public raw-attachment route has no session and needs none.
     if (request.method === 'GET' && PUBLIC_GET.test(path)) return { user: null };
     throw new HttpError(401, 'Authentication required');
   },
 );
 
+// The account the request's credentials belong to: a session or an API key, or the MCP
+// OAuth token of a tool call, which reaches the route beside the request rather than in
+// its headers. Whether the account may act is left to the caller.
+export async function requestUser(request: Request): Promise<SessionUser | null> {
+  const session = await getSessionFromHeaders(request.headers);
+  if (session) return session.user;
+  const mcpToken = getMcpOAuthToken(request);
+  const mcpUserId = mcpToken ? await verifyMcpAccessToken(mcpToken) : null;
+  if (!mcpUserId) return null;
+  const user = await db.query.user.findFirst({ where: eq(users.id, mcpUserId) });
+  return (user as SessionUser | undefined) ?? null;
+}
+
 // A deactivated account goes no further. Any other gets its personal workspace here when
 // it has none yet, so one made before personal workspaces, by SCIM or while they were off
 // has it on its next request instead of its next sign-in.
 async function signedIn(user: SessionUser): Promise<SessionUser> {
   if (isAccountDeactivated(user)) throw new HttpError(401, 'This account is deactivated');
-  await ensurePersonalWorkspace(user.id);
+  await ensurePersonalWorkspace(user);
   return user;
 }

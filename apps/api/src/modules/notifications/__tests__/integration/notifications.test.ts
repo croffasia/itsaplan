@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
@@ -22,7 +22,7 @@ async function setup(): Promise<{
 }> {
   const u = await signUpTestUser();
   const api = authedApi(u.cookie);
-  await api.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(api, { key: 'MKT', name: 'Marketing' });
   const view = await api.projects({ projectKey: 'MKT' }).get();
   const columns = view.data!.columns;
   const done = columns.find((c) => c.stateType === 'completed') ?? columns[columns.length - 1];

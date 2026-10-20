@@ -1,0 +1,14 @@
+{
+  "noProjectAccess": "이 프로젝트에 접근할 수 없습니다.",
+  "projectUnavailable": "이 프로젝트를 사용할 수 없습니다.",
+  "noProjects": "아직 프로젝트가 없습니다. 새 프로젝트를 생성하여 시작하세요.",
+  "noTeamsTitle": "아직 팀이 없습니다",
+  "noTeamsHint": "팀을 생성하세요. 프로젝트, 멤버 및 AI 에이전트는 팀에서 관리됩니다.",
+  "noTeamsMemberHint": "워크스페이스 소유자에게 팀에 추가해 달라고 요청하세요.",
+  "noProjectAccessHint": "팀 소유자 또는 관리자에게 프로젝트에 추가해 달라고 요청하세요.",
+  "noProjectAccessOwnerHint": "팀 소유자 또는 관리자에게 프로젝트에 추가해 달라고 요청하거나 직접 팀을 생성하세요.",
+  "createTeam": "팀 생성",
+  "noProjectsTitle": "아직 프로젝트가 없습니다",
+  "noProjectsHint": "첫 프로젝트를 생성하고 보드에서 이슈 계획을 시작하세요.",
+  "createProject": "프로젝트 생성"
+}

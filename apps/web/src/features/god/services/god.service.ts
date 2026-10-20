@@ -12,6 +12,7 @@ import type { ProjectDefaults } from '@/lib/api/endpoints/projects';
 import { nextPageParam, type PageParams } from '@/lib/api/core/paging';
 import { DEFAULT_PAGE_SIZE } from '@/hooks/usePaging';
 import {
+  type AgentSettings,
   type InstanceAuthSettingsPatch,
   type InstanceEmailSettingsPatch,
   type InstanceGoogleSettingsPatch,
@@ -31,9 +32,12 @@ import {
   updateInstanceTelegramSettings,
   getInstanceProjectDefaults,
   updateInstanceProjectDefaults,
+  getInstanceAgentSettings,
+  updateInstanceAgentSettings,
   getInstanceStorageSettings,
   updateInstanceStorageSettings,
   listInstanceUsers,
+  setInstanceUserActive,
   getInstanceUser,
   deleteInstanceUser,
   listInstanceProjects,
@@ -168,6 +172,22 @@ export function useUpdateInstanceProjectDefaults() {
   });
 }
 
+// What applies to every team's agents: how long their run traces are kept.
+export function useInstanceAgentSettingsQuery() {
+  return useQuery({
+    queryKey: qk.instanceAgentSettings,
+    queryFn: () => getInstanceAgentSettings(),
+  });
+}
+
+export function useUpdateInstanceAgentSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: AgentSettings) => updateInstanceAgentSettings(body),
+    onSuccess: (data) => qc.setQueryData(qk.instanceAgentSettings, data),
+  });
+}
+
 // The upload limits: file sizes, accepted attachment types, and the per-project
 // storage quota.
 export function useInstanceStorageSettingsQuery() {
@@ -249,6 +269,18 @@ export function useInstanceProjectQuery(projectId: number) {
   return useQuery({
     queryKey: qk.instanceProject(projectId),
     queryFn: () => getInstanceProject(projectId),
+  });
+}
+
+export function useSetInstanceUserActive() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, active }: { userId: string; active: boolean }) =>
+      setInstanceUserActive(userId, active),
+    onSuccess: (data) => {
+      qc.setQueryData(qk.instanceUser(data.id), data);
+      void qc.invalidateQueries({ queryKey: qk.anyInstanceUsers });
+    },
   });
 }
 

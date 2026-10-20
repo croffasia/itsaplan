@@ -103,6 +103,7 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
     project,
     filteredProject,
     views,
+    viewsFailed: viewsQuery.isError,
     editor,
     customFields,
     canCreateIssue,

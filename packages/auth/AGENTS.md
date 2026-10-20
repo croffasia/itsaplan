@@ -17,9 +17,9 @@ The **server-side** better-auth instance. Consumed by `apps/api`. See root `AGEN
 The user table has a `role` column (`"god"` | `"user"`), declared as a better-auth
 `additionalField` with `input: false` (not client-settable). A `databaseHooks.user.create.before`
 hook sets it: the first user to register gets `"god"`, everyone after gets `"user"`.
-`databaseHooks.user.create.after` makes the `"god"` account the owner of the instance
-workspace and gives every other account a workspace of its own, named after the person,
-while `personalWorkspaces` is on in the auth settings (`ensurePersonalWorkspace`). apps/api
+`databaseHooks.user.create.after` gives the account a workspace of its own, named after
+the person (`ensurePersonalWorkspace`): the `"god"` account always, every other account
+while `personalWorkspaces` is on in the auth settings. apps/api
 calls the same function on every request, so an account made before, by SCIM (a direct
 insert, which passes no hook) or while the setting was off gets its own on its next
 request. It remembers per process who needs nothing, so a request costs a lookup; an
@@ -33,23 +33,28 @@ workspace settings can change them without a restart. Read them
 through this module — never inline a query on `app_setting` / `app_secret` elsewhere.
 
 - `app_setting` key `auth` → `{ registration, requireEmailVerification, magicLink,
-  emailPassword }`.
-- `app_secret` keys `auth.email`, `auth.google` and `auth.oidc` → the mail provider, Google
-  and the OIDC provider, set in god mode; `workspace.<id>.scim` → a workspace's SCIM token,
-  set by the workspace owner. All encrypted with `@repo/crypto`, each with a `redacted`
+  emailPassword, trustProviderEmails, personalWorkspaces, inviteTtlDays,
+  allowedEmailDomains }`.
+- `app_secret` keys `auth.email`, `auth.google`, `auth.oidc` and `auth.scim` → the mail
+  provider, Google, the OIDC provider and the instance's SCIM token, set in god mode;
+  `workspace.<id>.scim` → a workspace's SCIM token, set by the workspace owner. All encrypted with `@repo/crypto`, each with a `redacted`
   mirror for the settings UI. Secrets never leave the server.
 
 The mail provider is read by the api and the worker as well, so its shape and reader
 live in `@repo/db` (`domains/instance-email.ts`); what is here is the write side god
 mode drives.
 
-"Invite only" means the address has a pending `team_invite` (`hasPendingInvite`).
+"Invite only" means the address has a pending `team_invite` that has not expired
+(`hasPendingInvite`). An invite expires `inviteTtlDays` after it was created (7 by
+default, 0 for never, at most 3650; `inviteValidSince` gives the cutoff): it then neither gates
+registration nor can be accepted, and a new invite for the same address replaces it.
 Invites are created and revoked inside a team, so there is no instance-level invite
-table and god mode has no invite section — do not add one.
+table and god mode has no invite section — do not add one; god mode only sets how long
+they last.
 
-`hooks.before` gates `/sign-up/email` (closed → 403, invite → no pending invite for
-that address → 403) and holds back `/sign-in/email` for an unconfirmed address while
-verification is required. The requirement never outlives the mail provider: the api
+`hooks.before` gates `/sign-up/email` (closed → 403, an address outside
+`allowedEmailDomains` → 403, invite → no pending, unexpired invite for that address → 403)
+and holds back `/sign-in/email` for an unconfirmed address while verification is required. The requirement never outlives the mail provider: the api
 refuses to turn it on without one, and `setEmailSettings` clears it when the provider
 is removed, so the setting alone is what the gate, the sign-up endpoint and the
 public `/auth-config` read — none of them checks the provider again.
@@ -103,10 +108,10 @@ own check of `emailAndPassword.requireEmailVerification`.
 
 ## Generic OIDC
 
-`genericOAuth({ config: [oidcOptions] })` adds one OIDC/OAuth2 provider, discovered from
-the well-known document the operator points it at in god mode (`app_secret` key
-`auth.oidc`). It adds `/sign-in/oauth2` and `/oauth2/callback/:providerId`, and reuses the
-`account` table, so it adds none of its own.
+One OIDC/OAuth2 provider, discovered from the well-known document the operator points it
+at in god mode (`app_secret` key `auth.oidc`). It is a social provider with the id
+`OIDC_PROVIDER_ID` (`"oidc"`): sign-in is `/sign-in/social` with that provider, the
+callback is `/callback/oidc`, and it reuses the `account` table, so it adds none.
 
 A provider per workspace is not built on this one. A sign-in through it joins the account
 that already holds the address, which is safe only because the provider is the instance
@@ -114,16 +119,21 @@ owner's: a workspace owner's provider could name any address. It needs the works
 prove it owns the address's domain first, and is left to a hosted module, which adds its
 settings section through `useWorkspaceSections` in the web app's `@/cloud` seam.
 
-`providerId` is the constant `OIDC_PROVIDER_ID` (`"oidc"`): it is what the `account` rows
-store, and better-auth materialises the provider list once at startup, so the config array
-can neither grow nor be re-keyed afterwards. That is also why there is exactly one
-provider. `oidcOptions` is refreshed per request by `refreshOidcOptions()` in
-`hooks.before` — the same by-reference rule as `googleOptions`: assign its fields, never
-replace the object.
+`providerId` is a constant because it is what the `account` rows store, and the rows hold
+the OIDC `sub` (`accountSubject`). genericOAuth reads the discovery document once, when
+its plugin starts, while this provider changes in god mode without a restart. So
+better-auth holds a proxy (`oidcProvider`, registered by the `instanceOidc` plugin), and
+`refreshOidcProvider()` in `hooks.before` builds the real provider with genericOAuth from
+the stored settings whenever they change, on both halves of the round trip.
 
-`/oauth2/link` is in `disabledPaths`. No screen offers linking an OIDC identity to the
-signed-in account, and better-auth already attaches a sign-in to a matching confirmed
-address on its own.
+The redirect URI registered with the identity provider is `OIDC_REDIRECT_URI`,
+`/api/auth/oauth2/callback/oidc`. The api passes that path on to better-auth's
+`/api/auth/callback/oidc`, so the URI the identity providers hold stays valid.
+
+Signing out leaves the session at the identity provider alone (`disableProviderLogout`).
+No screen offers linking an OIDC identity to the signed-in account, so `hooks.before`
+refuses `/link-social` for it; better-auth already attaches a sign-in to a matching
+confirmed address on its own.
 
 ## Turning password authentication off
 
@@ -140,23 +150,27 @@ which is what stops an instance being left with no way in.
 
 ## SCIM
 
-What a provider says about a person is kept per workspace in `scim_user`, written by
-`apps/api`. How far it reaches is `workspaceScim()`, which a hosted build turns on with
-`setWorkspaceScim()`. Off, as on a self-hosted instance, SCIM is the instance's: only the
-instance workspace's token opens it, and it also writes `active`, one more
-`additionalField` on the user table (nullable, so every check is `active !== false`). An
-account with `active` false (`isAccountDeactivated`) is refused at sign-in by the
-`session.create.before` hook with `ACCOUNT_DEACTIVATED`, which covers every sign-in method
-at once; `apps/api` refuses the sessions and keys it already holds. On, a workspace's
-provider decides who is in the workspace, not who has an account, `active` is not read,
-and nothing here refuses a session.
+What a provider says about a person is kept per provider in `scim_user`, written by
+`apps/api`. The instance's provider is set up in god mode and stored with `workspace_id`
+null; a hosted build also lets every workspace set up its own with `setWorkspaceScim()`
+(`workspaceScim()` reads it). The instance's provider writes `active`, one more
+`additionalField` on the user table (nullable, so every check is `active !== false`).
+God mode writes `active` too, from the users table, while that provider does not manage
+accounts (`accountsManagedByScim`: its SCIM on with a token); while it does, `apps/api`
+answers god's switch with 409. An account with `active` false (`isAccountDeactivated`) is
+refused at sign-in by the `session.create.before` hook with `ACCOUNT_DEACTIVATED`, which
+covers every sign-in method at once; `apps/api` refuses the sessions and keys it already
+holds. A workspace's provider decides who is in the workspace, not who has an account;
+`active` is not written for it, and nothing here refuses a session.
 
-`getScimSettings` / `rotateScimToken` / `verifyScimToken` hold the bearer token of each
-workspace that the SCIM endpoints in `apps/api` authenticate with. A token reads
-`scim_<workspaceId>_<secret>`, so `verifyScimToken` reads one workspace's token and answers
-with that workspace's id; a token issued before workspaces reads `scim_<secret>` and belongs
-to the instance workspace. The token is returned in the clear exactly once, when it is
-generated; only its prefix is kept in the redacted mirror.
+`getScimSettings` / `rotateScimToken` / `verifyScimToken` take the workspace, or null for the
+instance, and hold the bearer token the SCIM endpoints in `apps/api` authenticate with. The
+instance's is stored under `auth.scim` and reads `scim_<secret>`; one it held while it
+belonged to the first workspace reads `scim_<id>_<secret>` and keeps working. A workspace's
+is stored under `workspace.<id>.scim` and reads `scim_<workspaceId>_<secret>`, so
+`verifyScimToken` checks the instance's first and then reads only the named workspace's.
+The token is returned in the clear exactly once, when it is generated; only its prefix is
+kept in the redacted mirror.
 
 ## Passkey
 
@@ -190,10 +204,23 @@ receive its real owner.
 
 The registration gate (`assertRegistrationAllowed`) runs in
 `databaseHooks.user.create.before`, which every account creation passes, and that is what
-applies closed/invite-only to a Google sign-up. Its `APIError`s carry a `code` because the
-social callback turns that into the `?error=` it redirects with; without one the callback
-fails the request instead. Agent bot users are written with a direct insert and never
-reach the hook.
+applies closed/invite-only to a Google, OIDC or magic-link sign-up. It refuses with
+`REGISTRATION_CLOSED` on a closed instance, `EMAIL_DOMAIN_NOT_ALLOWED` when the address is
+not at one of `allowedEmailDomains` (an empty list admits any), `INVITE_ONLY` when the
+address has no pending invite, and `INVITE_EXPIRED` when its only invites have expired.
+That last one reveals that the address was invited, so it is given only where the address
+is proven (provider, magic link); the email form, open to anyone, gets `INVITE_ONLY`. Its
+`APIError`s carry a `code` because the provider callback and the magic link turn that into
+the `?error=` they redirect with; without one the callback fails the request instead
+(`invite-forms.test.ts` pins `INVITE_EXPIRED` and `INVITE_ONLY`). Agent bot users are
+written with a direct insert and never reach the hook.
+
+A domain in `allowedEmailDomains` matches the part of the address after the "@" exactly, so
+a subdomain is listed on its own. The list applies to new accounts only; the api also
+refuses to invite an address that has no account and is outside it, since it could not
+register. The gate asks `registrationEmailAllowed`, which checks the list unless a build
+installs its own policy with `setRegistrationEmailPolicy`, as one that lets a workspace
+keep domains of its own does to admit an address that workspace invited.
 
 ## API keys
 
@@ -224,10 +251,41 @@ a request may carry a key.
 
 ## MCP OAuth
 
-`mcp()` serves OAuth 2.1 to MCP clients and adds the `oauth_application`,
-`oauth_access_token` and `oauth_consent` tables. Dynamic registration takes `client_name` as
-optional (RFC 7591) while the table requires a name, so `hooks.before` names a client that
-sends none `MCP client`.
+`mcp()` from `@better-auth/mcp` serves OAuth 2.1 to MCP clients, with `jwt()` signing the
+access tokens. It adds the `oauth_client`, `oauth_resource`, `oauth_client_resource`,
+`oauth_refresh_token`, `oauth_access_token`, `oauth_consent`, `oauth_client_assertion`
+and `jwks` tables, and writes the MCP resource (`<API_URL>/mcp`) into `oauth_resource`
+at startup. Any client registers itself (RFC 7591), as ChatGPT and Claude do; the
+provider asks the person for consent the first time a client asks for their account.
+Only `authorization_code` and `refresh_token` are granted, so every token acts for a
+person. A registration that also lists a grant the server does not issue, as Claude's
+connector does with `jwt-bearer`, is registered with the supported grants; one that lists
+none of them is refused.
+
+MCP clients register without `application_type`, and `mcp()` infers it
+(`clientRegistrationDefaultApplicationType: 'infer'`): a client whose callback is http on
+`localhost`, `127.0.0.1` or `[::1]` (Claude Code) or uses a custom scheme such as Cursor's
+`cursor://` is registered as `native`, and any other as `web`, which takes an https callback
+only. better-auth's own default, `web`, refuses the first two. A client that sends its
+`application_type` keeps it.
+
+The issuer is `API_URL` itself, path included, so the tokens and the discovery documents
+name the URL a client reaches. The api serves the documents at the root of its origin
+(`oauthAuthorizationServerMetadata`, `openIdConfiguration`,
+`oauthProtectedResourceMetadata`), and the endpoints in them get the path back the way the
+links in auth emails do.
+
+`verifyMcpAccessToken` checks a token against the instance's own keys in-process, then
+reads what a JWT cannot carry: the account must not be deactivated, and a token issued in
+a session ends with that session, as better-auth's introspection has it. That is what
+makes deactivation, which deletes the sessions, end every MCP token at once. The token's
+client must also still be connected to the account, through the person's consent or a
+refresh token that has not expired: disconnecting it on the account's Security page
+(`DELETE /account/connected-apps/:clientId`, which deletes both) ends its tokens at once.
+
+better-auth accepts a plain-HTTP MCP resource only on a loopback host, so any other
+instance without HTTPS leaves `mcp()` and `jwt()` out and serves MCP to personal API keys
+only.
 
 ## OpenAPI reference
 
@@ -239,20 +297,43 @@ from the planner's own OpenAPI docs at `/docs` (the `@elysiajs/swagger` spec, wh
 not see the catch-all auth handler). Docs-only: it adds no table, so `auth:generate` is
 not required for it.
 
+## What a build adds
+
+`@repo/auth/extensions` is the one module of this package that does not create the
+instance. A build calls `extendAuth({ plugins, schema, disabledPaths })` from it before
+the first request: the plugins join the core's, their drizzle tables join the adapter's
+schema by model name, and the paths are refused to requests while the server still calls
+them through `auth.api`. `./index.ts` creates the instance on its first use, not on
+import, so the call takes effect wherever a bundler puts the build's module; it reads the
+extensions then, and a later call throws. A plugin that needs origins trusted adds them
+itself, through its `init`. The plugins are typed as none, so `Auth` stays the core's
+type.
+
+`setRegistrationAdmission(fn)` is a build's say on an account the gate is about to create,
+by the request creating it (the better-auth endpoint context): true lets it past the
+registration mode and the allowed domains, as a sign-in through a provider the build
+manages that may create accounts; a throw turns it away. Without one the gate decides.
+
 ## Rules
 
 - This package is **server-only** — never import a client SDK (`better-auth/react`) here;
   the web app owns its own `auth-client.ts`.
 - Changing the config (plugins, fields) can change the DB tables → run `bun run auth:generate`
   (writes `packages/db/src/schema/auth.ts`), then `db:generate` + `db:migrate`.
-- Config is env-driven: `API_URL` (backend origin, used as better-auth `baseURL`),
-  `BETTER_AUTH_SECRET`, `APP_URL` (frontend origin(s), comma-separated). `API_URL` and
-  `APP_URL` are mandatory and have no default — importing this module throws
-  when either is missing. Do not add a localhost fallback: cookies, the passkey
-  relying party, the cookie domain and every link in an authentication email are
-  derived from them, so a wrong value fails silently at runtime instead of at startup.
-  The parsed `trustedOrigins` list (from `APP_URL`) is exported so the api's CORS uses
-  the same value.
-- **Cross-domain prod:** default cookies are `sameSite: "lax"`. If frontend/backend run on
-  different domains, switch to `sameSite: "none"` + `secure: true`; for subdomains use
-  `advanced.crossSubDomainCookies`.
+- Config is env-driven: `API_URL` (public URL of the backend), `BETTER_AUTH_SECRET`,
+  `APP_URL` (frontend origin(s), comma-separated). `API_URL` and `APP_URL` are mandatory
+  and have no default — importing this module throws when either is missing. Do not add
+  a localhost fallback: cookies, the passkey relying party, the cookie domain and every
+  link in an authentication email are derived from them, so a wrong value fails silently
+  at runtime instead of at startup. The parsed `trustedOrigins` list (from `APP_URL`) is
+  exported so the api's CORS uses the same value.
+- **`API_URL` with a path** (the api under a path of the web's host): better-auth's
+  `baseURL` gets only the origin, because a path there replaces its `/api/auth` base path
+  and the api's fixed mount stops matching. Every public URL built from it — the OAuth
+  redirect URIs, the links in auth emails, the MCP resource and discovery documents — gets
+  the path back through `apiPublicUrl` / `withPublicOrigin`.
+- **Cookies:** `sameSite: "lax"`. Web and api on sibling subdomains share the cookie through
+  `advanced.crossSubDomainCookies` on the parent domain of `APP_URL` (`COOKIE_DOMAIN`
+  overrides it). On one host the cookie has no domain, and over HTTPS the session cookies
+  are named `__Host-better-auth.*`. If frontend/backend run on different domains, switch
+  to `sameSite: "none"` + `secure: true`.

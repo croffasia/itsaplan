@@ -5,10 +5,14 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import {
   type InviteTeamRole,
   listTeamInvites,
   createTeamInvite,
+  renewTeamInvite,
+  sendTeamInviteEmail,
   deleteTeamInvite,
 } from '@/lib/api/endpoints/invites';
 import type { MemberKind, MemberListParams } from '@/lib/api/endpoints/members';
@@ -256,11 +260,42 @@ export function useTeamInvitesQuery(teamId: number, enabled = true) {
 // The invite dialog shows the reason under its address field, so this mutation opts
 // out of the global error toast.
 export function useCreateTeamInvite(teamId: number) {
+  const t = useTranslations('members.invites');
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { email: string; role: InviteTeamRole }) => createTeamInvite(teamId, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.teamInvites(teamId) }),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: qk.teamInvites(teamId) });
+      if (result.emailQueued) toast.success(t('emailQueued'));
+      else if (result.emailFailed) toast.error(t('emailFailed'));
+      else toast.info(t('emailUnavailable'));
+    },
     meta: { suppressErrorToast: true },
+  });
+}
+
+export function useSendTeamInviteEmail(teamId: number) {
+  const t = useTranslations('members.invites');
+  return useMutation({
+    mutationFn: (inviteId: number) => sendTeamInviteEmail(teamId, inviteId),
+    onSuccess: (result) => {
+      if (result.emailQueued) toast.success(t('emailQueued'));
+      else toast.info(t('resendUnavailable'));
+    },
+  });
+}
+
+export function useRenewTeamInvite(teamId: number) {
+  const t = useTranslations('members.invites');
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (inviteId: number) => renewTeamInvite(teamId, inviteId),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: qk.teamInvites(teamId) });
+      if (result.emailQueued) toast.success(t('renewed'));
+      else if (result.emailFailed) toast.error(t('renewedEmailFailed'));
+      else toast.info(t('renewedNoEmail'));
+    },
   });
 }
 

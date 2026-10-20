@@ -17,6 +17,7 @@
     "integrations": "التكاملات (integrations)",
     "agent_skills": "مهارات الوكلاء (agent skills)",
     "agent_tools": "أدوات الوكلاء (agent tools)",
+    "agent_usage": "استهلاك الوكلاء",
     "custom_fields": "الحقول المخصّصة",
     "issue_templates": "قوالب المهام",
     "workflow_config": "تهيئة سير العمل",

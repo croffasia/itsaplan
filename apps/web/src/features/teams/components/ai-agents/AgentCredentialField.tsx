@@ -43,14 +43,7 @@ export default function AgentCredentialField({
             the list navigable by keyboard. */}
         <Command>
           <CommandInput placeholder={t('searchCredential')} />
-          <CommandList
-            className="max-h-[16rem]"
-            // The field lives inside a Radix Sheet whose scroll lock blocks wheel
-            // events on this portaled list, so scroll it manually on wheel.
-            onWheel={(e) => {
-              e.currentTarget.scrollTop += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
-            }}
-          >
+          <CommandList className="max-h-[16rem]">
             <CommandEmpty>{t('noCredentialsFound')}</CommandEmpty>
             <CommandGroup>
               {credentials.map((credential) => (

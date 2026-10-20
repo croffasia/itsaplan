@@ -11,7 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1109.0"
+    "@aws-sdk/client-s3": "^3.1150.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

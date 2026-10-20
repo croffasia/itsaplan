@@ -1,6 +1,7 @@
 {
   "title": "المستندات",
   "newDocument": "صفحة جديدة",
+  "uploadMarkdown": "رفع ملف Markdown",
   "favoritePages": "المفضلة",
   "newSubpage": "إضافة صفحة تحت {title}",
   "addSubpage": "إضافة صفحة فرعية",
@@ -79,6 +80,8 @@
   "exporting": "جارٍ التحضير…",
   "exportFailed": "تعذّر تضمين جميع الملفات المحمية في التصدير. حاول مرة أخرى.",
   "exportTooLarge": "تحتوي الصفحة على ملفات محمية كثيرة جدًا أو كبيرة جدًا لتصدير واحد (بحد أقصى 50 ملفًا و100 ميغابايت).",
+  "markdownTooLarge": "ملف Markdown هذا أكبر من أن تستوعبه صفحة واحدة.",
+  "markdownReadFailed": "تعذّرت قراءة ملف Markdown.",
   "cancel": "إلغاء",
   "publicPages": "عامة",
   "privatePages": "خاصة",

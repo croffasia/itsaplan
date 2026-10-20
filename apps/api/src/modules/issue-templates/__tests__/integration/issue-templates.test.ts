@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
@@ -18,7 +18,7 @@ function templates(client: Api, projectKey = 'MKT') {
 async function setupProject() {
   const owner = await signUpTestUser();
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const scaffold = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!;
   const label = (await asOwner.projects({ projectKey: 'MKT' }).labels.post({ name: 'bug' })).data!;
   const type = (await asOwner.projects({ projectKey: 'MKT' })['issue-types'].post({ name: 'Bug' }))
@@ -103,7 +103,7 @@ describe('issue-templates', () => {
 
     it('rejects a preset that belongs to another project', async () => {
       const { asOwner } = await setupProject();
-      await asOwner.projects.post({ key: 'OPS', name: 'Ops' });
+      await createProject(asOwner, { key: 'OPS', name: 'Ops' });
       const other = (await asOwner.projects({ projectKey: 'OPS' }).get()).data!;
 
       const created = await templates(asOwner).post({
@@ -136,7 +136,7 @@ describe('issue-templates', () => {
 
     it('does not list a template of another project', async () => {
       const { asOwner } = await setupProject();
-      await asOwner.projects.post({ key: 'OPS', name: 'Ops' });
+      await createProject(asOwner, { key: 'OPS', name: 'Ops' });
       await templates(asOwner).post({ name: 'Bug report' });
 
       expect(await listTemplates(asOwner, 'OPS')).toEqual([]);
@@ -178,7 +178,7 @@ describe('issue-templates', () => {
 
     it('answers 404 for a template of another project', async () => {
       const { asOwner } = await setupProject();
-      await asOwner.projects.post({ key: 'OPS', name: 'Ops' });
+      await createProject(asOwner, { key: 'OPS', name: 'Ops' });
       const created = (await templates(asOwner).post({ name: 'Bug report' })).data!;
 
       const updated = await templates(

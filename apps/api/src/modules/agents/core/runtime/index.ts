@@ -1,6 +1,12 @@
 import { randomUUID } from 'node:crypto';
-import { Agent } from '@mastra/core/agent';
-import { getAgentInProject, getInternalAgentApiKey, type AiAgentRow } from '../service';
+import { Agent, type AgentExecutionOptions } from '@mastra/core/agent';
+import type { TracingOptions } from '@mastra/core/observability';
+import {
+  getAgentInProject,
+  getInternalAgentApiKey,
+  type AiAgentRow,
+  type ReasoningEffort,
+} from '../service';
 import { getProjectById } from '#modules/projects/service';
 import { getCredentialSecret } from '../../integrations/service';
 import { listAgentSkills } from '../../skills/service';
@@ -10,12 +16,15 @@ import { buildRouteTools } from './tools/route-tools';
 import { buildLocalTools } from './tools/local';
 import { buildSkillTool, skillsPreamble } from './skill-runtime';
 import { buildMemory, ensureThread, DEFAULT_LAST_MESSAGES } from './memory';
+import { getMastra } from './observability';
+import { runRefusal } from '../run-refusal';
 import { toolArgsText, toolText } from '../../chat-parts';
 import { recordContextUsage, type ContextUsage } from '../../chat-usage';
 import { isChatThreadId, newChatThreadId } from './thread-ids';
 import { errorMessage } from '../helpers/errors';
 import { projectPreamble } from '../prompt/framing';
 import { HttpError } from '#shared/lib';
+import type { AgentRunTrigger } from '../../model';
 
 // Runtime execution of internal agents via Mastra. An agent is built on demand
 // from its stored configuration (provider/model/instructions) and run against a
@@ -69,6 +78,25 @@ async function resolveModel(row: AiAgentRow, sessionId: string): Promise<ModelCo
   };
 }
 
+// The reasoning effort as provider options. Each provider SDK reads only its own key, so
+// one object covers whichever provider the model resolves to. `openaiCompatible` is read
+// by every provider Mastra addresses as an OpenAI-compatible endpoint — most of the
+// registry, and any credential with a base URL — and is sent as `reasoning_effort`.
+// Mastra's provider-neutral `modelSettings.reasoning` is not used: it only reaches
+// AI SDK v7 models, and the providers Mastra bundles are v6.
+function reasoningProviderOptions(effort: ReasoningEffort): ProviderOptions {
+  return {
+    openaiCompatible: { reasoningEffort: effort },
+    openai: { reasoningEffort: effort },
+    anthropic: { effort },
+    google: { thinkingConfig: { thinkingLevel: effort } },
+    xai: { reasoningEffort: effort },
+    groq: { reasoningEffort: effort },
+    deepseek: { reasoningEffort: effort },
+    openrouter: { reasoning: { effort } },
+  };
+}
+
 // One event of a streamed agent run, sent to the caller as it happens. `text` is
 // a chunk of the answer to append; `tool-start`/`tool-end` report a capability the
 // agent is using (so the UI can show what it is doing); `done` closes the stream
@@ -97,7 +125,7 @@ async function buildAgent(
     contextPreamble +
     (row.instructions ?? DEFAULT_INSTRUCTIONS) +
     skillsPreamble(skills);
-  return new Agent({
+  const agent = new Agent({
     id: `ai-agent-${row.id}`,
     name: row.name,
     instructions,
@@ -117,6 +145,9 @@ async function buildAgent(
       ? { memory: buildMemory(row.memoryLastMessages ?? DEFAULT_LAST_MESSAGES) }
       : {}),
   });
+  // An agent traces its run only through a container (see observability.ts).
+  agent.__registerMastra(getMastra());
+  return agent;
 }
 
 // Runs the internal agent identified by agentId in the given project against the
@@ -128,19 +159,46 @@ async function buildAgent(
 // thread: threadId identifies the conversation (a new one is created when omitted)
 // and the caller (callerUserId) owns it. The thread id used is returned so the
 // caller can continue the conversation; it is null when memory is off.
+//
+// `aborted` is true when opts.abortSignal fired: Mastra then resolves with the partial
+// text instead of rejecting, so only this tells it from a normal finish. `stepLimit` is
+// true when the run used its last step still calling tools: Mastra resolves that as a
+// finish too, with the text of the steps and no answer.
 export async function runAgent(
   agentId: number,
   projectId: number,
   prompt: string,
   opts: RunOpts,
-): Promise<{ text: string; threadId: string | null; usage: ContextUsage | null }> {
+): Promise<{
+  text: string;
+  threadId: string | null;
+  usage: ContextUsage | null;
+  aborted: boolean;
+  stepLimit: boolean;
+}> {
   const { agent, row, options, threadId } = await prepareRun(agentId, projectId, prompt, opts);
   const result = await agent.generate(prompt, { ...options, abortSignal: opts.abortSignal });
   const usage = contextOf(result.usage);
   // A chat thread keeps one number, replaced by each answer. An autonomous run keeps
   // the counts of that run instead, on its own row, so its caller stores them.
   if (threadId && isChatThreadId(threadId)) await recordContextUsage(threadId, row.id, usage);
-  return { text: (result.text ?? '').trim(), threadId, usage };
+  return {
+    text: (result.text ?? '').trim(),
+    threadId,
+    usage,
+    aborted: opts.abortSignal?.aborted ?? false,
+    stepLimit: reachedStepLimit(result.finishReason, result.steps.length, options.maxSteps),
+  };
+}
+
+export const STEP_LIMIT_MESSAGE = 'Reached the step limit';
+
+function reachedStepLimit(
+  finishReason: string | undefined,
+  steps: number,
+  maxSteps: number,
+): boolean {
+  return finishReason === 'tool-calls' && steps >= maxSteps;
 }
 
 // What the model reported about the last call of an answer, as the pair the chat keeps.
@@ -205,6 +263,11 @@ export async function* streamAgent(
           break;
       }
     }
+    if (
+      reachedStepLimit(await result.finishReason, (await result.steps).length, options.maxSteps)
+    ) {
+      yield { type: 'error', message: STEP_LIMIT_MESSAGE };
+    }
     // An answer the member stopped never reaches here: the stream is aborted and the
     // thread keeps the number of the answer before it.
     if (threadId) await recordContextUsage(threadId, row.id, contextOf(usage));
@@ -229,6 +292,16 @@ async function prepareRun(
   if (row.kind !== 'internal') {
     throw new HttpError(400, 'Only internal agents can be run');
   }
+  // A queued run was asked about in the poller, before it was recorded as started.
+  if (opts.runId == null) {
+    const refused = await runRefusal({
+      agentId: row.id,
+      teamId: row.teamId,
+      projectId,
+      userId: opts.callerUserId,
+    });
+    if (refused) throw new HttpError(403, refused, 'run_refused');
+  }
   // A chat run with no threadId starts a new conversation; every other run continues
   // the thread its caller named (see thread-ids). Without memory every run is a
   // conversation of its own, which is what the model's session id follows.
@@ -245,8 +318,28 @@ async function prepareRun(
   // Mastra's generate/stream have overloaded options; type the shape we use. In
   // Mastra v1 the temperature belongs to the call's model settings — a flat
   // `temperature` option is only read by the legacy generate.
-  const options: RunOptions = { maxSteps: row.maxSteps ?? DEFAULT_MAX_STEPS };
+  const options: RunOptions = {
+    maxSteps: row.maxSteps ?? DEFAULT_MAX_STEPS,
+    // What the run belongs to, kept on the trace: the spans hold no foreign keys of ours.
+    // A queued run names its run, a chat run the person who asked, since the caller of a
+    // queued run is the agent's own bot user.
+    tracingOptions: {
+      metadata: {
+        agentId: row.id,
+        teamId: row.teamId,
+        projectId,
+        ...(opts.runId != null
+          ? { runId: opts.runId, trigger: opts.trigger }
+          : { userId: opts.callerUserId }),
+        ...(opts.issueId != null ? { issueId: opts.issueId } : {}),
+        ...(opts.scheduleId != null ? { scheduleId: opts.scheduleId } : {}),
+      },
+    },
+  };
   if (row.temperature != null) options.modelSettings = { temperature: row.temperature };
+  if (row.reasoningEffort != null) {
+    options.providerOptions = reasoningProviderOptions(row.reasoningEffort);
+  }
   if (threadId) {
     // The thread is created up front with what it is bound to and a title, so the chat
     // history can list it and deleting the agent, project or issue can find it. The
@@ -281,12 +374,19 @@ export type RunOpts = {
   threadId?: string | null;
   issueId?: number | null;
   scheduleId?: number | null;
+  // The queued run this executes, and what triggered it. Absent for a chat run.
+  runId?: number;
+  trigger?: AgentRunTrigger;
   contextPreamble?: string;
 };
 
 type RunOptions = {
   maxSteps: number;
+  tracingOptions: TracingOptions;
   modelSettings?: { temperature: number };
+  providerOptions?: ProviderOptions;
   memory?: { thread: string; resource: string };
   abortSignal?: AbortSignal;
 };
+
+type ProviderOptions = NonNullable<AgentExecutionOptions['providerOptions']>;

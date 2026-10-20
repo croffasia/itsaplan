@@ -1,19 +1,19 @@
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue } from '@/lib/api/endpoints/issues';
 import { issuePath } from '@/utils/paths';
+import { transliterate } from '@/utils/transliterate';
 
-// A git-branch-safe handle from the current user: the email local part (or name)
-// with everything but letters and digits removed. "poluosmak.a@gmail.com" ->
+// A git-branch-safe handle from the current user: "poluosmak.a@gmail.com" ->
 // "poluosmaka". Empty when there is no user, which drops the branch prefix.
 function userHandle(name: string | null | undefined, email: string | null | undefined): string {
   const base = email ? email.split('@')[0] : (name ?? '');
-  return base.toLowerCase().replace(/[^a-z0-9]+/g, '');
+  return transliterate(base)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '');
 }
 
-// A kebab slug from the issue title for the branch name: lowercase, non-alphanumeric
-// runs collapsed to a single dash, trimmed, capped so the branch stays short.
 function titleSlug(title: string): string {
-  return title
+  return transliterate(title)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')

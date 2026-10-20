@@ -17,6 +17,7 @@
     "integrations": "Integrasi",
     "agent_skills": "Keahlian agen",
     "agent_tools": "Alat agen",
+    "agent_usage": "Penggunaan agen",
     "custom_fields": "Bidang kustom",
     "issue_templates": "Templat issue",
     "workflow_config": "Konfigurasi alur kerja",

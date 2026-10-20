@@ -50,7 +50,16 @@
     "thisDevice": "This device",
     "deleteWarning": "You will no longer be able to sign in with this passkey. This cannot be undone.",
     "passkeyFallback": "Passkey",
-    "passkeysLoadFailed": "Could not load passkeys."
+    "passkeysLoadFailed": "Could not load passkeys.",
+    "connectedAppsTitle": "Connected applications",
+    "connectedAppsDescription": "Applications such as Claude or ChatGPT that you allowed to act on your behalf through MCP. They see and do what you can.",
+    "connectedAppsEmpty": "No application is connected to your account.",
+    "connectedAppUsed": "Connected {connected} · last used {used}",
+    "connectedAppSince": "Connected {connected}",
+    "disconnectApp": "Disconnect",
+    "disconnectAppTitle": "Disconnect {name}?",
+    "disconnectAppWarning": "It loses access at once. Connecting it again will ask for your consent again.",
+    "disconnectAppFailed": "Could not disconnect the application."
   },
   "accounts": {
     "label": "Accounts",

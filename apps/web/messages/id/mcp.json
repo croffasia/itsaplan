@@ -34,8 +34,11 @@
     },
     "security": "OAuth menggunakan PKCE (S256), pendaftaran klien dinamis, dan token akses yang dicakupkan ke akun Itsaplan Anda.",
     "consent": {
-      "title": "Otorisasi Itsaplan",
-      "description": "Izinkan klien MCP ini bertindak dengan izin dari akun Itsaplan Anda.",
+      "title": "{client} ingin terhubung ke akun Anda",
+      "titleUnnamed": "Sebuah klien MCP ingin terhubung ke akun Anda",
+      "description": "Aplikasi ini akan bertindak dengan izin Anda: apa pun yang dapat Anda lihat dan ubah, ia juga bisa.",
+      "account": "Masuk sebagai {email}",
+      "redirect": "Setelah Anda menjawab, Anda kembali ke {host}.",
       "missingCode": "Permintaan otorisasi ini kehilangan kode persetujuannya.",
       "cancel": "Batal",
       "pending": "Mengotorisasi…",

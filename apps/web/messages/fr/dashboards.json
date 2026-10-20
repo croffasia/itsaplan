@@ -199,7 +199,8 @@
       "field": "lancée sur un champ de",
       "manual": "lancée manuellement",
       "schedule": "lancée par planification",
-      "status": "lancée sur changement d'état de"
+      "status": "lancée sur changement d'état de",
+      "event": "lancée sur un événement de"
     }
   },
   "agentHealth": {

@@ -5,8 +5,15 @@ import { useTranslations } from 'next-intl';
 import type { InviteRow as Invite } from '@/lib/api/endpoints/invites';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import { ItemGroup } from '@/components/ui/item';
-import { useDeleteInvite, useInvitesQuery, useSendInviteEmail } from '@/services/members.service';
+import {
+  useDeleteInvite,
+  useInvitesQuery,
+  useRenewInvite,
+  useSendInviteEmail,
+} from '@/services/members.service';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useShell } from '@/context/shellContext';
+import { mayRenewInvite } from '@/utils/invites';
 import InviteRow from './InviteRow';
 
 // Invite panel shown above the members list: the invites that have not been accepted
@@ -15,13 +22,15 @@ import InviteRow from './InviteRow';
 // standing of an owner or manager of the team — and renders nothing without it.
 export default function InvitesManager({ projectKey }: { projectKey: string }) {
   const t = useTranslations('members.invites');
-  const { can, isAdmin } = usePermissions();
+  const { can, isAdmin, isOwner } = usePermissions();
+  const viewerTeamRole = useShell().project?.viewer?.teamRole ?? null;
   const canRead = can('members_invite', 'read') || isAdmin;
   const canCreate = can('members_invite', 'create') || isAdmin;
   const canDelete = can('members_invite', 'delete') || isAdmin;
   const invitesQuery = useInvitesQuery(projectKey, canRead);
   const deleteInvite = useDeleteInvite(projectKey);
   const sendEmail = useSendInviteEmail(projectKey);
+  const renew = useRenewInvite(projectKey);
   const [target, setTarget] = useState<Invite | null>(null);
 
   function resendInvite(invite: Invite) {
@@ -45,6 +54,13 @@ export default function InvitesManager({ projectKey }: { projectKey: string }) {
               key={invite.id}
               invite={invite}
               onResend={canCreate ? resendInvite : undefined}
+              onRenew={
+                canCreate &&
+                mayRenewInvite(invite, { teamRole: viewerTeamRole, ownsProject: isOwner })
+                  ? (expired) => renew.mutate(expired.id)
+                  : undefined
+              }
+              renewing={renew.isPending && renew.variables === invite.id}
               onRevoke={canDelete ? setTarget : undefined}
               resending={sendEmail.isPending && sendEmail.variables === invite.id}
             />

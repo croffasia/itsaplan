@@ -38,14 +38,17 @@ export const InviteRowResponse = t.Object({
   roleName: t.Nullable(t.String()),
   status: inviteStatus,
   createdAt: t.String(),
+  expiresAt: t.Nullable(t.String()),
   respondedAt: t.Nullable(t.String()),
   invitedByName: t.Nullable(t.String()),
   invitedByEmail: t.Nullable(t.String()),
 });
 
+// emailFailed: a mail provider is set but the invite's email could not go out; the link
+// still works. Without a provider both are false.
 export const InviteCreateResponse = t.Composite([
   InviteRowResponse,
-  t.Object({ emailQueued: t.Boolean() }),
+  t.Object({ emailQueued: t.Boolean(), emailFailed: t.Boolean() }),
 ]);
 
 export const InviteEmailResponse = t.Object({ emailQueued: t.Boolean() });
@@ -66,6 +69,7 @@ export const InviteViewResponse = t.Object({
   roleName: t.Nullable(t.String()),
   status: inviteStatus,
   createdAt: t.String(),
+  expired: t.Boolean(),
   hasAccount: t.Boolean(),
 });
 

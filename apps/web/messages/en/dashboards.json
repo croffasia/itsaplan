@@ -199,7 +199,8 @@
       "field": "ran on a field of",
       "manual": "ran manually",
       "schedule": "ran on schedule",
-      "status": "ran on state change of"
+      "status": "ran on state change of",
+      "event": "ran on an event of"
     }
   },
   "agentHealth": {

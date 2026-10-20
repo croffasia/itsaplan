@@ -110,13 +110,14 @@ export interface ClaimedRun {
   issueIdentifier: string | null;
   issueTitle: string | null;
   // The issue's assignee (the responsible human) and, for a mention run, the author of
-  // the comment that mentioned the agent (from the source activity's name snapshot).
-  // Each carries the handle the agent tags them by. Any may be null: no assignee, a
-  // deleted user, or a run with no source comment.
+  // the comment that mentioned the agent (from the source activity's name snapshot) with
+  // their account. Each carries the handle the agent tags them by. Any may be null: no
+  // assignee, a deleted user, or a run with no source comment.
   assigneeName: string | null;
   assigneeUsername: string | null;
   requesterName: string | null;
   requesterUsername: string | null;
+  requesterUserId: string | null;
   // The comments the source comment replies to, oldest first, when it is a reply.
   // Null for a top-level mention or a delegation.
   threadContext: string | null;
@@ -172,7 +173,8 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
       (SELECT COALESCE(u.username, ag.username)
          FROM issue_activity a JOIN "user" u ON u.id = a.actor_user_id
          LEFT JOIN ai_agent ag ON ag.user_id = u.id
-         WHERE a.id = r.source_activity_id) AS "requesterUsername"
+         WHERE a.id = r.source_activity_id) AS "requesterUsername",
+      (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterUserId"
   `);
   const runs = rows as unknown as ClaimedRun[];
   return Promise.all(
@@ -253,14 +255,16 @@ export async function markRunFailed(id: number, error: string): Promise<void> {
 }
 
 // Puts a claimed run back in the queue without spending the attempt, for a run the
-// team has no free slot for. Waiting for a slot is not a failed attempt, and nothing
-// has been recorded on the issue yet, so the run leaves no trace of having been picked
-// up at all.
+// team has no free slot for or one held back by setRunAdmission. Waiting is not a failed
+// attempt, and nothing has been recorded on the issue yet, so the run leaves no trace of
+// having been picked up at all: a first claim's started_at goes too, so the waiting run
+// holds no slot in countRunsAhead and can be canceled as not started.
 export async function deferRun(id: number, delaySeconds: number): Promise<void> {
   await db
     .update(agentRun)
     .set({
       attempts: sql`${agentRun.attempts} - 1`,
+      startedAt: sql`CASE WHEN ${agentRun.attempts} = 1 THEN NULL ELSE ${agentRun.startedAt} END`,
       nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,
     })
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));

@@ -2,12 +2,14 @@ import { Elysia, t } from 'elysia';
 import { noContent, sseFrame, sseResponse } from '#shared/http';
 import { guards } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
-import { requireUser, type TeamMembership } from '#shared/access';
+import { projectsWithPermission, requireUser, type TeamMembership } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { mcpTool } from '#mcp/generate';
 import { teamParams } from '#modules/teams/model';
+import { workspaceParams } from '#modules/workspaces/model';
 import { runsTeam } from '#modules/teams/service';
+import { paginate } from '#shared/pagination';
 import {
   listAgents,
   createAgent,
@@ -21,7 +23,11 @@ import {
   type AgentKind,
 } from './service';
 import {
+  AgentAnalyticsResponse,
+  TeamAgentAnalyticsResponse,
   AgentRunPageResponse,
+  AgentTraceDetailResponse,
+  AgentTracePageResponse,
   AiAgentListResponse,
   AiAgentResponse,
   ChatMessagesResponse,
@@ -32,6 +38,8 @@ import {
   RunAgentResponse,
   agentListQuery,
   agentParams,
+  analyticsQuery,
+  workspaceAnalyticsQuery,
   createAgentBody,
   projectAgentParams,
   runBody,
@@ -40,6 +48,8 @@ import {
   threadListQuery,
   threadPageQuery,
   threadParams,
+  traceParams,
+  tracesQuery,
   updateAgentBody,
 } from './model';
 import { runAgent, streamAgent, type AgentRunEvent, type RunOpts } from './runtime';
@@ -47,6 +57,13 @@ import { peoplePreamble } from './prompt/run-context';
 import { attachmentPreamble, chartPreamble } from './prompt/framing';
 import type { SessionUser } from '#shared/auth-context';
 import { listAgentRuns } from './run-queue';
+import { getAgentTrace, listAgentTraces } from './runtime/traces';
+import {
+  analyticsProjects,
+  getAgentAnalytics,
+  onlyProject,
+  workspaceScope,
+} from './runtime/analytics';
 import {
   listChatThreads,
   getChatThreadMessages,
@@ -111,6 +128,25 @@ function threadStore(kind: AgentKind) {
         remove: deleteChatThread,
         owns: ownsChatThread,
       };
+}
+
+const DEFAULT_ANALYTICS_DAYS = 30;
+
+// Whether the caller may read the traces of that project: an owner or a manager of the
+// team reads every project the agent works in, anyone else only a project they belong to
+// themselves. The list names the project in the query and one trace carries it in its own
+// metadata, so a trace that names none is refused to everyone else.
+async function assertTraceScope(
+  membership: TeamMembership,
+  projectId: number | null,
+): Promise<void> {
+  if (runsTeam(membership.role)) return;
+  const mine =
+    projectId != null &&
+    (await memberProjectIds(membership.teamId, membership.userId)).includes(projectId);
+  if (!mine) {
+    throw new HttpError(403, 'You can only read the traces of a project you are a member of');
+  }
 }
 
 // The agent a :agentId path addresses, scoped by agentScopeOf — one of another team, and
@@ -331,6 +367,111 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
         description:
           "List an agent's triggered runs. An owner or a manager of the team sees them all; " +
           'anyone else only the runs that happened in a project they belong to.',
+      },
+    },
+  )
+
+  // The traces of the agent's runs: what the model and the tools were called with at
+  // every step, recorded by the runtime. A run of the queue carries its runId, so the
+  // run history and its trace name each other.
+  .get(
+    '/teams/:teamId/ai-agents/:agentId/traces',
+    async ({ params, membership, query }) => {
+      await requireVisibleAgent(params.agentId, membership);
+      await assertTraceScope(membership, query.projectId ?? null);
+      return paginate(query, (window) =>
+        listAgentTraces(params.agentId, membership.userId, {
+          ...window,
+          projectId: query.projectId,
+        }),
+      );
+    },
+    {
+      params: agentParams,
+      query: tracesQuery,
+      teamPermission: ['ai_agents', 'read'],
+      response: { 200: AgentTracePageResponse, ...commonErrors },
+      detail: {
+        summary: 'List agent traces',
+        description:
+          "One page of the traces of an agent's runs, newest first. An owner or a manager of " +
+          'the team reads them all; anyone else names a project they belong to. A chat ' +
+          'run is read only by the member who chatted.',
+      },
+    },
+  )
+
+  .get(
+    '/teams/:teamId/ai-agents/:agentId/traces/:traceId',
+    async ({ params, membership }) => {
+      await requireVisibleAgent(params.agentId, membership);
+      const trace = await getAgentTrace(params.agentId, params.traceId, membership.userId);
+      if (!trace) throw new HttpError(404, 'Trace not found');
+      await assertTraceScope(membership, trace.trace.projectId);
+      return trace;
+    },
+    {
+      params: traceParams,
+      teamPermission: ['ai_agents', 'read'],
+      response: { 200: AgentTraceDetailResponse, ...commonErrors },
+      detail: {
+        summary: 'Read an agent trace',
+        description:
+          'Every step of one trace, oldest first: the run, the model calls it made, and the ' +
+          'tools it used, each with what it was given and what it returned.',
+      },
+    },
+  )
+
+  .get(
+    '/teams/:teamId/agent-analytics',
+    async ({ membership, query }) => {
+      const scope = {
+        teamIds: [membership.teamId],
+        projectIds: await projectsWithPermission(membership, 'agent_usage', 'read'),
+      };
+      const [analytics, readableProjects] = await Promise.all([
+        getAgentAnalytics(
+          onlyProject(scope, query.projectId),
+          query.days ?? DEFAULT_ANALYTICS_DAYS,
+        ),
+        analyticsProjects(scope),
+      ]);
+      return { ...analytics, readableProjects };
+    },
+    {
+      params: teamParams,
+      query: analyticsQuery,
+      teamPermission: ['agent_usage', 'read'],
+      response: { 200: TeamAgentAnalyticsResponse, ...commonErrors },
+      detail: {
+        summary: 'Read the agent dashboard of a team',
+        description:
+          'Runs, tokens and model cost of the agents of the team, over the last `days` days ' +
+          'beside the same span before it. An owner or a manager of the team reads every ' +
+          'project; anyone else the projects where their role grants agent_usage read. ' +
+          '`projectId` narrows it to one of them.',
+      },
+    },
+  )
+
+  .get(
+    '/workspaces/:workspaceId/agent-analytics',
+    async ({ standing, query }) =>
+      getAgentAnalytics(
+        await workspaceScope(standing.workspaceId),
+        query.days ?? DEFAULT_ANALYTICS_DAYS,
+      ),
+    {
+      workspaceManager: true,
+      params: workspaceParams,
+      query: workspaceAnalyticsQuery,
+      response: { 200: AgentAnalyticsResponse, ...errors(400, 401, 404) },
+      detail: {
+        summary: 'Read the agent dashboard of a workspace',
+        description:
+          'The agent dashboard over every team of a workspace you manage, with the teams ' +
+          'compared in `teams`.',
       },
     },
   )

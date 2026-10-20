@@ -211,5 +211,6 @@
     "page": "الصفحة {number}",
     "perPage": "لكل صفحة",
     "range": "{first}-{last} من {total}"
-  }
+  },
+  "aboutCloudAndPro": "اعرف المزيد عن Cloud وPro"
 }

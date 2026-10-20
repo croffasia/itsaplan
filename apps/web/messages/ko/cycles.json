@@ -1,0 +1,76 @@
+{
+  "title": "사이클",
+  "newCycle": "새 사이클",
+  "status": {
+    "upcoming": "예정",
+    "active": "진행 중",
+    "completed": "완료"
+  },
+  "views": {
+    "table": "테이블",
+    "timeline": "타임라인"
+  },
+  "columns": {
+    "name": "이름",
+    "dates": "기간",
+    "length": "기간",
+    "issues": "이슈",
+    "progress": "진행률"
+  },
+  "emptyTitle": "아직 사이클이 없습니다",
+  "emptyDescription": "사이클은 팀이 정해진 기간 동안 진행할 이슈를 계획하는 단위입니다.",
+  "nothingPlannedTitle": "계획된 사이클이 없습니다",
+  "nothingPlannedDescription": "타임라인에는 진행 중이거나 예정된 사이클이 표시됩니다. 완료된 사이클은 테이블에서 확인할 수 있습니다.",
+  "options": "사이클 옵션",
+  "transferIssues": "{count, plural, one {완료되지 않은 이슈 #개 이동} other {완료되지 않은 이슈 #개 이동}}",
+  "finishedEarly": "조기 완료됨 · 예정 종료일 {date}",
+  "form": {
+    "editTitle": "사이클 편집",
+    "newTitle": "새 사이클",
+    "name": "이름",
+    "goal": "목표",
+    "goalPlaceholder": "이 사이클에서 달성할 목표를 입력하세요.",
+    "length": "기간",
+    "starts": "시작일",
+    "ends": "종료일",
+    "create": "사이클 생성",
+    "saveFailed": "사이클을 저장할 수 없습니다."
+  },
+  "weeks": "{count, plural, one {#주} other {#주}}",
+  "transfer": {
+    "title": "완료되지 않은 이슈 이동",
+    "description": "완료되지 않은 이슈는 선택한 사이클로 이동합니다. 완료되거나 취소된 이슈는 현재 사이클에 남습니다.",
+    "moveTo": "이동할 사이클",
+    "noCycle": "사이클 없음",
+    "submit": "이슈 이동",
+    "moving": "이동 중…",
+    "moved": "{count, plural, one {이슈 #개 이동됨} other {이슈 #개 이동됨}}",
+    "failed": "이슈를 이동할 수 없습니다."
+  },
+  "finish": {
+    "action": "사이클 완료",
+    "title": "사이클 조기 완료",
+    "description": "{cycle} 사이클이 {date} 대신 오늘 종료됩니다. 종료한 사이클은 다시 열 수 없습니다. {count, plural, =0 {완료되지 않은 이슈가 없습니다.} one {완료되지 않은 이슈 #개가 이 사이클에 남습니다.} other {완료되지 않은 이슈 #개가 이 사이클에 남습니다.}}",
+    "submit": "사이클 완료"
+  },
+  "startNext": {
+    "action": "다음 사이클 오늘 시작",
+    "title": "다음 사이클을 오늘 시작",
+    "description": "{cycle} 사이클은 오늘 종료되며 다시 열 수 없습니다. {next} 사이클은 오늘 시작되며 종료일은 {date}로 유지됩니다. {count, plural, =0 {다음 사이클로 이동할 이슈가 없습니다.} one {완료되지 않은 이슈 #개가 다음 사이클로 이동합니다.} other {완료되지 않은 이슈 #개가 다음 사이클로 이동합니다.}} 완료되거나 취소된 이슈는 {cycle} 사이클에 남습니다.",
+    "submit": "다음 사이클 시작",
+    "started": "{cycle} 사이클이 시작되었습니다. {count, plural, =0 {이동된 이슈가 없습니다.} one {이슈 #개가 이동되었습니다.} other {이슈 #개가 이동되었습니다.}}"
+  },
+  "delete": {
+    "title": "사이클 삭제",
+    "description": "{cycle} 사이클이 영구적으로 삭제됩니다. {count, plural, =0 {이 사이클에는 이슈가 없습니다.} one {이슈 #개는 사이클이 지정되지 않은 상태로 프로젝트에 남습니다.} other {이슈 #개는 사이클이 지정되지 않은 상태로 프로젝트에 남습니다.}}"
+  },
+  "details": "사이클 상세 정보",
+  "goal": "목표",
+  "noGoal": "설정된 목표가 없습니다.",
+  "progress": "진행률",
+  "openCycle": "사이클 열기",
+  "dragFailed": "사이클을 이동할 수 없습니다.",
+  "notFound": "사이클을 찾을 수 없습니다.",
+  "defaultName": "스프린트 {n}",
+  "issuesDone": "완료된 이슈"
+}

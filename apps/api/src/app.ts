@@ -1,14 +1,14 @@
 import {
   auth,
-  getSessionFromHeaders,
-  oAuthDiscoveryMetadata,
-  oAuthProtectedResourceMetadata,
+  oauthAuthorizationServerMetadata,
+  oauthProtectedResourceMetadata,
+  openIdConfiguration,
+  OIDC_PROVIDER_ID,
   trustedOrigins,
   getAuthSettings,
   hasConfiguredGoogle,
   hasConfiguredOidc,
   getOidcLabel,
-  isAccountDeactivated,
 } from '@repo/auth';
 import { db, hasConfiguredEmailProvider, user } from '@repo/db';
 import { cors } from '@elysiajs/cors';
@@ -19,8 +19,10 @@ import { mountMcp } from './mcp/mount';
 import { setMcpApp } from './mcp/app-ref';
 import { gitWebhookRoutes } from './modules/git/webhook';
 import { scimRoutes } from './modules/scim';
+import { currentUserRoutes } from './modules/current-user';
 import { syncOidcGroupsAfterCallback } from './modules/scim/oidc-sync';
 import { normalizeOpenApiResponse } from './openapi';
+import { requestTracking } from './shared/request-tracker';
 import pkg from '../../../package.json';
 
 const apiUrl = (process.env.API_URL ?? 'http://localhost:3000').replace(/\/+$/, '');
@@ -45,6 +47,11 @@ JSON errors use \`{ "error": "message" }\` and may also include a stable \`code\
 
 For agent clients, use the MCP endpoint at [${apiUrl}/mcp](${apiUrl}/mcp). SCIM, worker-internal routes, and repository webhooks use the separate credentials shown on their operations.`;
 
+// better-auth serves the OIDC callback at /callback/oidc; identity providers keep the
+// redirect URI they were registered with, which is this path.
+const LEGACY_OIDC_CALLBACK = `/api/auth/oauth2/callback/${OIDC_PROVIDER_ID}`;
+const OIDC_CALLBACK = `/api/auth/callback/${OIDC_PROVIDER_ID}`;
+
 // The assembled Elysia app, without `.listen()`. `index.ts` imports this and
 // binds the port; tests import it and pass it to Eden Treaty to drive routes in
 // memory (no network). Keep the chain unbroken so `type App` stays accurate.
@@ -57,6 +64,8 @@ export const app = new Elysia()
       allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
     }),
   )
+  // Before the routes: a hook applies only to the routes registered after it.
+  .use(requestTracking)
   .onAfterHandle({ as: 'global' }, ({ request, response }) =>
     normalizeOpenApiResponse(request, response),
   )
@@ -140,6 +149,7 @@ export const app = new Elysia()
               'Repository integration: the inbound pull request webhook and its per-project settings',
           },
           { name: 'Agent Schedules', description: 'Recurring tasks for internal agents' },
+          { name: 'Model Prices', description: 'The prices a workspace costs model calls at' },
           { name: 'Dashboards', description: 'Saved analytics dashboards' },
           { name: 'Documents', description: 'Shared project Docs pages' },
           { name: 'Link previews', description: 'Public web link metadata' },
@@ -227,47 +237,35 @@ export const app = new Elysia()
   // OAuth discovery lives at the API origin because MCP clients resolve the
   // authorization server from protected-resource metadata before entering the
   // Better Auth base path.
+  //
+  // An issuer with a path is looked up with the path after the well-known segment
+  // (RFC 8414 §3), and some clients fall back to OpenID discovery, so each document
+  // answers under any suffix; the proxy decides which of these paths reach the api.
   .get('/.well-known/oauth-authorization-server', ({ request }) =>
-    oAuthDiscoveryMetadata(auth)(request),
+    oauthAuthorizationServerMetadata(request),
   )
-  .get('/.well-known/oauth-protected-resource/mcp', ({ request }) =>
-    oAuthProtectedResourceMetadata(auth)(request),
+  .get('/.well-known/oauth-authorization-server/*', ({ request }) =>
+    oauthAuthorizationServerMetadata(request),
   )
+  .get('/.well-known/openid-configuration', ({ request }) => openIdConfiguration(request))
+  .get('/.well-known/openid-configuration/*', ({ request }) => openIdConfiguration(request))
+  .get('/.well-known/oauth-protected-resource', () => oauthProtectedResourceMetadata())
+  .get('/.well-known/oauth-protected-resource/*', () => oauthProtectedResourceMetadata())
   // better-auth: forward every /api/auth/* request to its handler. The OIDC
   // callback gets one extra step afterwards: folding the provider's `groups` claim
   // into the SCIM group tables, so a group mapped to a project in god mode grants
   // access on an OIDC-only instance too, not just one that also runs a SCIM sync.
   .all('/api/auth/*', async ({ request }) => {
-    const response = await auth.handler(request);
-    if (new URL(request.url).pathname.startsWith('/api/auth/oauth2/callback/')) {
-      await syncOidcGroupsAfterCallback(response);
+    const url = new URL(request.url);
+    if (url.pathname === LEGACY_OIDC_CALLBACK) {
+      url.pathname = OIDC_CALLBACK;
+      request = new Request(url.href, request);
     }
+    const response = await auth.handler(request);
+    if (url.pathname === OIDC_CALLBACK) await syncOidcGroupsAfterCallback(response);
     return response;
   })
-  // Example protected handler: read the session from better-auth.
-  .get(
-    '/me',
-    async ({ request }) => {
-      const session = await getSessionFromHeaders(request.headers);
-      // A deactivated account is not signed in as far as the app is concerned:
-      // every planner route answers 401 for it, and this is what the screens ask
-      // first. Deactivation arrives over SCIM, after the session was opened.
-      if (!session || isAccountDeactivated(session.user)) {
-        return { authenticated: false };
-      }
-      return { authenticated: true, user: session.user };
-    },
-    {
-      detail: {
-        tags: ['System'],
-        summary: 'Get the current session user',
-        description:
-          'Resolve the request credentials to a session and return the user it belongs to. ' +
-          'Without a session, or for a deactivated account, it answers ' +
-          '`{ authenticated: false }` instead of failing.',
-      },
-    },
-  )
+  .use(currentUserRoutes)
   // What the sign-in and sign-up screens need before there is a session: whether
   // registration is open, invite-only, or closed, and which sign-in methods are
   // offered. Public on purpose — the screens are reached logged out. It carries no
@@ -324,9 +322,9 @@ export const app = new Elysia()
   // Planner API: projects, issues, and their dependent entities.
   .use(planner);
 
-// MCP endpoint (POST /mcp). Added after the chain so `type App` (the Eden client
+// MCP endpoint (/mcp). Added after the chain so `type App` (the Eden client
 // type) stays the REST surface; the MCP endpoint is JSON-RPC, not called via Eden.
-// Its tools are generated from the planner routes tagged with mcpTool().
+// Its tools are generated from the routes tagged with mcpTool().
 mountMcp(app);
 
 // Hands the assembled app to the internal agent runtime, which builds an agent's

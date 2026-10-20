@@ -19,7 +19,8 @@
       "signIn": "Masuk",
       "projects": "Proyek",
       "lastSeen": "Terakhir dilihat",
-      "email": "Email"
+      "email": "Email",
+      "active": "Aktif"
     },
     "registered": "bergabung {date}",
     "roleGod": "God",
@@ -30,7 +31,20 @@
     "verified": "Terverifikasi",
     "notVerified": "Belum terverifikasi",
     "open": "Buka akun",
-    "showAccess": "Tampilkan akses proyek"
+    "showAccess": "Tampilkan akses proyek",
+    "activeAria": "Akun aktif: {email}",
+    "activeState": {
+      "on": "Aktif",
+      "off": "Nonaktif"
+    },
+    "activeLock": {
+      "owner": "Pemilik instans selalu aktif.",
+      "agent": "Akun agen mengikuti agennya.",
+      "scim": "Penyedia identitas Anda (SCIM) menentukan akun mana yang aktif."
+    },
+    "deactivateTitle": "Nonaktifkan {email}?",
+    "deactivateBody": "Orang ini langsung dikeluarkan dan tidak bisa masuk atau memakai kunci API-nya sampai Anda mengaktifkan akunnya lagi. Koneksi MCP dan undangan yang dikirimnya dihapus. Tidak ada yang lain yang dihapus.",
+    "deactivateConfirm": "Nonaktifkan"
   },
   "userPanel": {
     "instanceOwner": "Pemilik instance",
@@ -164,12 +178,24 @@
     "workspacesSaved": "Pengaturan workspace disimpan",
     "workspaces": "Workspace",
     "personalWorkspaces": "Workspace untuk setiap orang",
-    "personalWorkspacesHint": "Setiap akun mendapat workspace sendiri dengan nama pemiliknya. Jika nonaktif, orang hanya bekerja di workspace tempat mereka ditambahkan."
+    "personalWorkspacesHint": "Setiap akun mendapat workspace sendiri dengan nama pemiliknya. Jika nonaktif, orang hanya bekerja di workspace tempat mereka ditambahkan.",
+    "agents": "Agen",
+    "agentsSaved": "Pengaturan agen disimpan",
+    "traceRetention": "Simpan trace eksekusi",
+    "traceRetentionHint": "Setiap eksekusi agen mencatat panggilan ke model dan alat. Dasbor penggunaan hanya menghitung eksekusi yang masih disimpan.",
+    "traceDays": "{days} hari",
+    "traceForever": "Selamanya"
   },
   "authentication": {
     "saved": "Pengaturan autentikasi disimpan",
     "registration": "Pendaftaran",
     "registrationHint": "Siapa yang boleh membuat akun di instance ini.",
+    "inviteTtlDays": "Masa berlaku undangan (hari)",
+    "inviteTtlDaysHint": "Setelah jangka waktu ini, tautan undangan tidak berfungsi lagi dan, dengan pendaftaran khusus undangan, tidak bisa lagi dipakai untuk mendaftar. Dengan 0, undangan tidak kedaluwarsa.",
+    "inviteTtlDaysInvalid": "Masukkan jumlah hari berupa bilangan bulat dari 0 sampai {max}.",
+    "allowedEmailDomains": "Domain email yang diizinkan",
+    "allowedEmailDomainsHint": "Hanya alamat di domain ini yang bisa membuat akun. Pisahkan dengan koma, atau kosongkan untuk mengizinkan semua alamat. Akun yang sudah ada tetap bisa masuk.",
+    "allowedEmailDomainsInvalid": "Setiap domain harus berbentuk seperti example.com, maksimal 100 domain.",
     "modes": {
       "open": {
         "label": "Terbuka",
@@ -251,7 +277,18 @@
     "testing": "Mengirim…",
     "testHint": "Kirim pesan nyata dengan pengaturan saat ini tanpa menyimpannya.",
     "testConfigureFirst": "Aktifkan penyedia dan tambahkan kredensial yang diperlukan terlebih dahulu.",
-    "testSent": "Email uji dikirim ke {email}"
+    "testSent": "Email uji dikirim ke {email}",
+    "smtpAuth": "Autentikasi",
+    "smtpAuthOptions": {
+      "password": "Kata sandi",
+      "microsoft365": "Microsoft 365 (OAuth)"
+    },
+    "mailbox": "Kotak surat",
+    "tenantId": "ID tenant",
+    "clientId": "ID klien",
+    "clientSecret": "Rahasia klien",
+    "clientSecretPlaceholder": "Rahasia pendaftaran aplikasi",
+    "microsoft365Hint": "Masuk sebagai pendaftaran aplikasi Entra ID, bukan dengan kata sandi kotak surat, sehingga kotak surat tetap bisa memakai MFA. Aplikasi memerlukan izin aplikasi SMTP.SendAsApp dari Office 365 Exchange Online dengan persetujuan admin, akses ke kotak surat ini di Exchange, dan SMTP AUTH aktif untuk kotak surat."
   },
   "authProvider": {
     "saved": "Penyedia autentikasi disimpan",

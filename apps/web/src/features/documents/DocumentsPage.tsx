@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { useShellRoute } from '@/hooks/useShellRoute';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -22,9 +23,11 @@ import DocumentEditor from './components/DocumentEditor';
 import DocumentLoadError from './components/DocumentLoadError';
 import DocumentLoadingState from './components/DocumentLoadingState';
 import DocumentsIndex from './components/DocumentsIndex';
+import { importedMarkdownJson, markdownTitle } from './utils/documentImport';
 import { documentBelongsToTab, type DocumentListTab } from './utils/documentList';
 import { documentAncestors } from './utils/documentTree';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useDocumentNavigation, useRecentDocuments } from '@/hooks/useDocumentNavigation';
 import { useTranslations } from 'next-intl';
 
@@ -85,6 +88,11 @@ export default function DocumentsPage() {
       : document,
   );
   const documentQuery = useDocumentQuery(projectKey, documentId);
+  const documentTitle =
+    !documentQuery.isError &&
+    documentQuery.data &&
+    (documentQuery.data.title.trim() || t('untitled'));
+  useDocumentTitle(titlePath(project?.project.name, documentTitle));
   const createDocument = useCreateDocument(projectKey);
   const deleteDocument = useDeleteDocument(projectKey);
   const duplicateDocument = useDuplicateDocument(projectKey);
@@ -138,6 +146,33 @@ export default function DocumentsPage() {
     try {
       setSearch('');
       const newDocument = await createDocument.mutateAsync({ parentId, isPrivate });
+      router.push(documentPath(projectKey, newDocument.id));
+    } catch {
+      // Mutation errors are reported by the shared query client.
+    }
+  };
+
+  const upload = async (file: File) => {
+    let markdown: string;
+    try {
+      markdown = (await file.text()).replace(/^\uFEFF/, '');
+    } catch {
+      toast.error(t('markdownReadFailed'));
+      return;
+    }
+    const contentJson = importedMarkdownJson(markdown);
+    if (!contentJson) {
+      toast.error(t('markdownTooLarge'));
+      return;
+    }
+    try {
+      setSearch('');
+      const newDocument = await createDocument.mutateAsync({
+        title: markdownTitle(file.name),
+        content: markdown,
+        contentJson,
+        isPrivate: listTab === 'private',
+      });
       router.push(documentPath(projectKey, newDocument.id));
     } catch {
       // Mutation errors are reported by the shared query client.
@@ -200,6 +235,7 @@ export default function DocumentsPage() {
         onSearchChange={setSearch}
         onTabChange={setListTab}
         onCreate={(parentId) => void create(parentId, listTab === 'private')}
+        onUpload={(file) => void upload(file)}
         onRetry={() => void visibleDocumentsQuery.refetch()}
       />
     );

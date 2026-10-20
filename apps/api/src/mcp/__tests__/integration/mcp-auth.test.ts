@@ -46,6 +46,17 @@ describe('MCP authentication', () => {
     expect(res.status).toBe(401);
   });
 
+  it('answers GET and DELETE with 405', async () => {
+    for (const method of ['GET', 'DELETE']) {
+      const res = await app.handle(
+        new Request('http://localhost/mcp', { method, headers: { accept: 'text/event-stream' } }),
+      );
+
+      expect(res.status).toBe(405);
+      expect(res.headers.get('allow')).toBe('POST');
+    }
+  });
+
   it('refuses a key whose account was deactivated over SCIM', async () => {
     const { scim } = await setupScim();
     const member = await signUpTestUser({ email: 'member@example.com' });

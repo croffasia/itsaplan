@@ -1,13 +1,21 @@
-import { db, projectColumn, issue, issueLabel, issueFieldValue, issueFieldOption } from '@repo/db';
+import {
+  db,
+  project,
+  projectColumn,
+  issue,
+  issueLabel,
+  issueFieldValue,
+  issueFieldOption,
+} from '@repo/db';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
 import { getMembership } from '#modules/members/service';
 import { recordActivityForIssues, statusSide } from '#modules/issues/activity';
 import { getIssues } from '#modules/issues/service';
 import { emitIssueEvents, issuePayloads } from '#modules/issues/webhook-payload';
-import { emitWebhookEvents, subscribedWebhooks } from '#modules/webhooks/emit';
+import { emitWebhookEvents, projectEventWanted } from '#modules/webhooks/emit';
 import { recordStatusChange } from '#modules/issues/status-history';
-import { hasUnfinishedStatusRuns, queueStatusRuns } from '#modules/agents/schedules/status-runs';
+import { hasUnfinishedStatusRuns, queueStatusRuns } from '#modules/agents/schedules/issue-runs';
 
 export interface ColumnRow {
   id: number;
@@ -210,9 +218,8 @@ export async function reorderColumns(projectId: number, orderedIds: number[]): P
 
 export type DeleteColumnOptions = { mode: 'move'; targetColumnId: number } | { mode: 'delete' };
 
-// Backlog columns cannot be deleted, which keeps at least one column on every
-// project. The column and its issues go in one transaction so neither is left
-// half-deleted.
+// Keep one backlog column per project. The column and its issues go in one
+// transaction so neither is left half-deleted.
 export async function deleteColumn(
   columnId: number,
   projectId: number,
@@ -222,7 +229,6 @@ export async function deleteColumn(
   const column = await getColumnById(columnId);
   if (!column || column.projectId !== projectId)
     throw new HttpError(404, `Column ${columnId} not found`);
-  if (column.stateType === 'backlog') throw new HttpError(400, 'Backlog columns cannot be deleted');
   if (await hasUnfinishedStatusRuns(columnId)) {
     throw new HttpError(
       409,
@@ -241,12 +247,26 @@ export async function deleteColumn(
 
   // Built before the transaction: the payloads name the column, which it deletes.
   let deletedPayloads: unknown[] = [];
-  if (opts.mode === 'delete' && (await subscribedWebhooks(projectId, 'issue.deleted')).length > 0) {
+  if (opts.mode === 'delete' && (await projectEventWanted(projectId, 'issue.deleted'))) {
     const rows = await db.select({ id: issue.id }).from(issue).where(eq(issue.columnId, columnId));
     deletedPayloads = await issuePayloads(await getIssues(rows.map((r) => r.id)));
   }
 
   const movedIssueIds = await db.transaction(async (tx) => {
+    if (column.stateType === 'backlog') {
+      // Serialize backlog deletions so concurrent requests cannot remove the last two.
+      await tx
+        .select({ id: project.id })
+        .from(project)
+        .where(eq(project.id, projectId))
+        .for('update');
+      const [{ count }] = await tx
+        .select({ count: sql<number>`count(*)::int` })
+        .from(projectColumn)
+        .where(and(eq(projectColumn.projectId, projectId), eq(projectColumn.stateType, 'backlog')));
+      if (count <= 1) throw new HttpError(400, 'The last backlog column cannot be deleted');
+    }
+
     let moved: number[] = [];
     if (opts.mode === 'move') {
       const rows = await tx

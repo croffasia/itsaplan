@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { authedApi } from '#tests/helpers/app';
+import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
@@ -10,7 +10,7 @@ const contentJson = {
 async function setup() {
   const owner = await signUpTestUser();
   const client = authedApi(owner.cookie);
-  await client.projects.post({ key: 'DOC', name: 'Documents' });
+  await createProject(client, { key: 'DOC', name: 'Documents' });
   const routes = client.projects({ projectKey: 'DOC' }).documents;
   const created = await routes.post({ title: 'Shared', content: 'Hello world', contentJson });
   const doc = routes({ documentId: created.data!.id });

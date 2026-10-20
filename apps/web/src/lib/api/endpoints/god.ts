@@ -23,6 +23,10 @@ export interface InstanceAuthSettings {
   emailPassword: boolean;
   trustProviderEmails: boolean;
   personalWorkspaces: boolean;
+  // Days an invite link stays valid; 0 means invites never expire.
+  inviteTtlDays: number;
+  // The domains a new account's address must be at; empty admits any address.
+  allowedEmailDomains: string[];
   hasEmailProvider: boolean;
   // Whether Google or the OIDC provider can run. Password sign-in may only be turned
   // off while one of them can.
@@ -36,7 +40,13 @@ export interface InstanceAuthSettingsPatch {
   emailPassword?: boolean;
   trustProviderEmails?: boolean;
   personalWorkspaces?: boolean;
+  inviteTtlDays?: number;
+  allowedEmailDomains?: string[];
 }
+
+// 'microsoft365' signs in to smtp.office365.com as an app registration (OAuth) instead
+// of with the mailbox password, which Microsoft refuses once the mailbox has MFA.
+export type SmtpAuth = 'password' | 'microsoft365';
 
 // The instance mail provider used for authentication email (password reset, address
 // verification, magic links). Separate from a team's notification provider.
@@ -50,6 +60,8 @@ export interface InstanceEmailSettings {
     username: string;
     hasPassword: boolean;
     timeout: number | null;
+    auth: SmtpAuth;
+    oauth: { tenantId: string; clientId: string; hasClientSecret: boolean };
   };
   resend: { enabled: boolean; hasApiKey: boolean };
   from: string;
@@ -66,6 +78,8 @@ export interface InstanceEmailSettingsPatch {
     username: string;
     password?: string;
     timeout: number | null;
+    auth?: SmtpAuth;
+    oauth?: { tenantId: string; clientId: string; clientSecret?: string };
   };
   resend?: { enabled: boolean; apiKey?: string };
   from?: string;
@@ -142,6 +156,9 @@ export interface InstanceUser {
   isAgent: boolean;
   providers: string[];
   projectCount: number;
+  active: boolean;
+  // Why god cannot switch `active`, or null when it can.
+  activeLock: 'owner' | 'agent' | 'scim' | null;
   lastSeenAt: string | null;
   createdAt: string;
 }
@@ -265,6 +282,20 @@ export const updateInstanceProjectDefaults = (body: ProjectDefaults) =>
     body: JSON.stringify(body),
   });
 
+// What applies to every team's agents on this instance.
+export interface AgentSettings {
+  // Days a run trace is kept for. 0 keeps traces until they are deleted by hand.
+  traceRetentionDays: number;
+}
+
+export const getInstanceAgentSettings = () => request<AgentSettings>('/god/agent-settings');
+
+export const updateInstanceAgentSettings = (body: AgentSettings) =>
+  request<AgentSettings>('/god/agent-settings', {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
+
 export const getInstanceStorageSettings = () => request<StorageSettings>('/god/storage-settings');
 
 export const updateInstanceStorageSettings = (patch: StorageSettingsPatch) =>
@@ -301,6 +332,11 @@ export const listInstanceUsers = (
 
 export const getInstanceUser = (userId: string) =>
   request<InstanceUserDetail>(`/god/users/${userId}`);
+
+export const setInstanceUserActive = (userId: string, active: boolean) =>
+  request<InstanceUserDetail>(`/god/users/${userId}/${active ? 'reactivate' : 'deactivate'}`, {
+    method: 'POST',
+  });
 
 export const verifyInstanceUserEmail = (userId: string) =>
   request<InstanceUserDetail>(`/god/users/${userId}/verify-email`, { method: 'POST' });

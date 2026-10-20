@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { db, issue } from '@repo/db';
 import { eq, sql } from 'drizzle-orm';
-import { authedApi } from '#tests/helpers/app';
+import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { sweepStaleIssues } from '../../auto-archive';
@@ -13,7 +13,7 @@ import { sweepStaleIssues } from '../../auto-archive';
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const api = authedApi(owner.cookie);
-  await api.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(api, { key: 'MKT', name: 'Marketing' });
   const columns = (await api.projects({ projectKey: 'MKT' }).get()).data!.columns;
   const done = columns.find((c) => c.stateType === 'completed')!;
   const todo = columns.find((c) => c.stateType === 'unstarted')!;

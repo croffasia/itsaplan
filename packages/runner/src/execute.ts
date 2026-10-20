@@ -42,6 +42,7 @@ function childEnv(config: RunnerConfig, task: Task): Record<string, string> {
     ITSAPLAN_URL: config.url,
     ITSAPLAN_API_KEY: config.apiKey,
     ...task.env,
+    ITSAPLAN_TIMEOUT_MS: String(config.timeoutMs),
   };
 }
 

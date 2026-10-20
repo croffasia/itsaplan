@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import BrandPanel from '@/components/common/page/BrandPanel';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,8 @@ import InviteStep from './components/InviteStep';
 export default function InviteAcceptPage({ token }: { token: string }) {
   const t = useTranslations('invite');
   const inviteQuery = useInviteQuery(token);
+  const tScreens = useTranslations('meta.screens');
+  useDocumentTitle(tScreens('invitation'));
   const invite = inviteQuery.data;
 
   // The heading reflects the invite state so the copy never contradicts the body
@@ -29,7 +32,7 @@ export default function InviteAcceptPage({ token }: { token: string }) {
     title = t('notFoundTitle');
     subtitle = t('notFoundSubtitle');
     body = (
-      <InviteNotice message={t('notFoundMessage')}>
+      <InviteNotice>
         <Button asChild variant="outline">
           <Link href="/login">{t('goToSignIn')}</Link>
         </Button>
@@ -39,6 +42,9 @@ export default function InviteAcceptPage({ token }: { token: string }) {
     if (invite.status !== 'pending') {
       title = t('closedTitle');
       subtitle = t('closedSubtitle', { status: invite.status });
+    } else if (invite.expired) {
+      title = t('expiredTitle');
+      subtitle = t('expiredSubtitle');
     }
     body = (
       <div className="flex flex-col gap-6">

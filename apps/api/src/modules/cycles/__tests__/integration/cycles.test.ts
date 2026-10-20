@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
@@ -21,7 +21,7 @@ function day(offset: number): string {
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
   const columns = view.data!.columns;
   return {
@@ -120,7 +120,7 @@ describe('cycles', () => {
     it('allows the same dates in another project', async () => {
       const { asOwner } = await setup();
       await createCycle(asOwner, { startDate: day(0), endDate: day(6) });
-      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
 
       const other = await asOwner
         .projects({ projectKey: 'OPS' })
@@ -317,7 +317,7 @@ describe('cycles', () => {
 
     it('rejects a cycle from another project', async () => {
       const { asOwner, columnId } = await setup();
-      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
       const foreign = (
         await asOwner
           .projects({ projectKey: 'OPS' })
@@ -430,7 +430,7 @@ describe('cycles', () => {
     it('rejects a target cycle from another project', async () => {
       const { asOwner } = await setup();
       const cycle = (await createCycle(asOwner, {})).data!;
-      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
       const foreign = (
         await asOwner
           .projects({ projectKey: 'OPS' })

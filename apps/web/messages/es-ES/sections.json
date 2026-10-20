@@ -8,7 +8,8 @@
   },
   "godGroups": {
     "management": "Gestión",
-    "instance": "Instancia"
+    "instance": "Instancia",
+    "security": "Seguridad"
   },
   "god": {
     "users": {
@@ -17,7 +18,7 @@
     },
     "teams": {
       "label": "Equipos",
-      "description": "Todos los equipos de esta instancia: los proyectos que posee cada uno, y quién pertene a él."
+      "description": "Todos los equipos de esta instancia: los proyectos que posee cada uno, y quién pertenece a él."
     },
     "projects": {
       "label": "Proyectos",
@@ -25,7 +26,7 @@
     },
     "general": {
       "label": "General",
-      "description": "Espacios de trabajo personales y valores por defecto para los proyectos nuevos."
+      "description": "Espacios de trabajo personales, valores por defecto para los proyectos nuevos y trazas de agentes."
     },
     "authentication": {
       "label": "Autenticación",
@@ -54,6 +55,10 @@
     "scim": {
       "label": "SCIM",
       "description": "Permite que un proveedor de identidades cree, actualize y desactive cuentas en esta instancia, y conceda acceso a proyectos a través de sus grupos."
+    },
+    "audit-log": {
+      "label": "Registro de auditoría",
+      "description": "Quién hizo qué en esta instancia, cuándo y desde dónde."
     }
   },
   "settings": {
@@ -108,6 +113,76 @@
     "ai-agents": {
       "label": "Agentes de IA",
       "description": "Agentes de IA que trabajan en este proyecto."
+    }
+  },
+  "previews": {
+    "available": "Disponible en Cloud y en Pro autoalojado.",
+    "dashboard": {
+      "title": "Panel",
+      "description": "La actividad de los equipos y proyectos de este espacio de trabajo.",
+      "summary": {
+        "teams": "Equipos",
+        "projects": "Proyectos",
+        "people": "Personas",
+        "agents": "Agentes de IA",
+        "openIssues": "Tickets abiertos",
+        "storage": "Almacenamiento"
+      },
+      "blocks": {
+        "agents": "Agentes de IA",
+        "schedules": "Ejecuciones programadas",
+        "time": "Tiempo registrado",
+        "flow": "Flujo de tickets",
+        "projects": "Proyectos activos",
+        "teams": "Equipos activos"
+      }
+    },
+    "agentBudgets": {
+      "title": "Presupuestos de IA",
+      "description": "Límites a lo que gastan los agentes en modelos.",
+      "workspace": "Todo el espacio",
+      "figures": {
+        "spent": "Gastado",
+        "limit": "Límite",
+        "left": "Queda",
+        "forecast": "Previsión para el periodo"
+      },
+      "list": "Presupuestos",
+      "columns": {
+        "budget": "Presupuesto",
+        "spent": "Gastado"
+      }
+    },
+    "auditLog": {
+      "title": "Registro de auditoría",
+      "description": "Quién hizo qué en este espacio de trabajo, sus equipos y proyectos, y cuándo iniciaron sesión sus miembros.",
+      "columns": {
+        "time": "Fecha",
+        "actor": "Quién",
+        "action": "Acción",
+        "where": "Dónde",
+        "from": "Origen"
+      }
+    },
+    "emailDomains": {
+      "title": "Dominios de correo",
+      "description": "Elige qué dominios de correo pueden unirse a este espacio de trabajo.",
+      "label": "Dominios de correo permitidos",
+      "hint": "Solo se pueden invitar o añadir por SCIM direcciones de estos dominios, y las personas invitadas pueden registrarse con ellas. Déjalo vacío para usar los dominios de la instancia. Los miembros actuales conservan su acceso."
+    },
+    "sso": {
+      "title": "Inicio de sesión único",
+      "description": "Permite que las personas de este espacio de trabajo inicien sesión con el proveedor de identidad de tu empresa.",
+      "provider": "Proveedor de identidad",
+      "providerHint": "Introduce lo que te da tu proveedor de identidad y añade en él las direcciones de abajo.",
+      "fields": {
+        "domains": "Dominios de correo",
+        "entryPoint": "URL de inicio de sesión",
+        "entityId": "Entity ID del proveedor",
+        "certificate": "Certificado de firma",
+        "acsUrl": "URL de ACS",
+        "spEntityId": "Entity ID y metadatos"
+      }
     }
   }
 }

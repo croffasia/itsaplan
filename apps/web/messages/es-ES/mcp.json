@@ -34,8 +34,11 @@
     },
     "security": "OAuth usa PKCE (S256), registración dinámica de clientes y tokens de acceso acotados a tu cuenta de Itsaplan.",
     "consent": {
-      "title": "Autorizar Itsaplan",
-      "description": "Permite que este cliente MCP actúe con los permisos de tu cuenta de Itsaplan.",
+      "title": "{client} quiere conectarse a tu cuenta",
+      "titleUnnamed": "Un cliente MCP quiere conectarse a tu cuenta",
+      "description": "Actuará con tus permisos: todo lo que tú puedes ver y cambiar, podrá hacerlo también.",
+      "account": "Has iniciado sesión como {email}",
+      "redirect": "Después de responder, vuelves a {host}.",
       "missingCode": "A esta petición de autorización le falta su código de consentimiento.",
       "cancel": "Cancelar",
       "pending": "Autorizando…",

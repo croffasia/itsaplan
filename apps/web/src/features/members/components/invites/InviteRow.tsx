@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Copy, Mail, X } from 'lucide-react';
+import { Check, Copy, Mail, RefreshCw, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { InviteRow as Invite } from '@/lib/api/endpoints/invites';
+import { isInviteExpired } from '@/utils/invites';
 import { inviteLink } from '@/utils/paths';
 import { formatShortDate } from '@/utils/dates';
 import { Badge } from '@/components/ui/badge';
@@ -14,30 +15,42 @@ const STATUS_VARIANT = { pending: 'secondary', accepted: 'default', rejected: 'o
 
 // One invite row: the invited email and role, its status, who sent it, and — for
 // a pending invite — email, copy-link, and revoke actions. Copy reads the link from
-// the current web origin so it works in any deployment.
+// the current web origin so it works in any deployment. An expired invite offers no
+// link to copy or mail, only a renewal, which sends a new one.
 export default function InviteRow({
   invite,
   onResend,
+  onRenew,
   onRevoke,
   resending,
+  renewing,
 }: {
   invite: Invite;
   onResend?: (invite: Invite) => void;
+  onRenew?: (invite: Invite) => void;
   onRevoke?: (invite: Invite) => void;
   resending: boolean;
+  renewing: boolean;
 }) {
   const t = useTranslations('members.invites');
   const tCommon = useTranslations('common');
   const [copied, setCopied] = useState(false);
-  const pending = invite.status === 'pending';
+  const expired = invite.status === 'pending' && isInviteExpired(invite);
+  const pending = invite.status === 'pending' && !expired;
 
-  // When the invite last changed: its creation for a pending one, otherwise the
-  // moment it was accepted or rejected.
-  const timestamp = pending
-    ? t('createdAt', { date: formatShortDate(invite.createdAt) })
-    : invite.respondedAt
-      ? t('respondedAt', { status: invite.status, date: formatShortDate(invite.respondedAt) })
-      : formatShortDate(invite.createdAt);
+  let timestamp: string;
+  if (expired) {
+    timestamp = t('expiredAt', { date: formatShortDate(invite.expiresAt!) });
+  } else if (pending) {
+    timestamp = t('createdAt', { date: formatShortDate(invite.createdAt) });
+  } else if (invite.respondedAt) {
+    timestamp = t('respondedAt', {
+      status: invite.status,
+      date: formatShortDate(invite.respondedAt),
+    });
+  } else {
+    timestamp = formatShortDate(invite.createdAt);
+  }
 
   async function copy() {
     const origin = typeof window === 'undefined' ? '' : window.location.origin;
@@ -76,10 +89,10 @@ export default function InviteRow({
             {roleLabel}
           </Badge>
           <Badge
-            variant={STATUS_VARIANT[invite.status]}
+            variant={expired ? 'destructive' : STATUS_VARIANT[invite.status]}
             className="px-1.5 py-0 text-[10px] font-normal"
           >
-            {t(`status.${invite.status}`)}
+            {expired ? t('status.expired') : t(`status.${invite.status}`)}
           </Badge>
         </ItemTitle>
         <span className="text-xs text-muted-foreground">
@@ -88,6 +101,18 @@ export default function InviteRow({
         </span>
       </ItemContent>
       <ItemActions className="ms-auto w-full justify-end sm:w-auto">
+        {expired && onRenew && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            disabled={renewing}
+            onClick={() => onRenew(invite)}
+          >
+            <RefreshCw className="size-3.5" />
+            {renewing ? t('renewing') : t('renew')}
+          </Button>
+        )}
         {pending && onResend && (
           <Button
             variant="ghost"
@@ -116,7 +141,7 @@ export default function InviteRow({
             variant="ghost"
             size="icon"
             className="size-7 text-muted-foreground hover:text-destructive"
-            title={pending ? t('revokeAction') : t('removeAction')}
+            title={pending || expired ? t('revokeAction') : t('removeAction')}
             onClick={revoke}
           >
             <X className="size-4" />

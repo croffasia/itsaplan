@@ -50,7 +50,16 @@
     "thisDevice": "هذا الجهاز",
     "deleteWarning": "مش هتقدر تسجّل دخول بمفتاح المرور ده تاني، وده مش هينفع ترجع فيه.",
     "passkeyFallback": "مفتاح مرور",
-    "passkeysLoadFailed": "تعذّر تحميل مفاتيح المرور."
+    "passkeysLoadFailed": "تعذّر تحميل مفاتيح المرور.",
+    "connectedAppsTitle": "التطبيقات المتصلة",
+    "connectedAppsDescription": "تطبيقات مثل Claude أو ChatGPT سمحت لها بالتصرف نيابةً عنك عبر MCP. ترى وتفعل ما يمكنك فعله.",
+    "connectedAppsEmpty": "لا يوجد أي تطبيق متصل بحسابك.",
+    "connectedAppUsed": "متصل منذ {connected} · آخر استخدام {used}",
+    "connectedAppSince": "متصل منذ {connected}",
+    "disconnectApp": "قطع الاتصال",
+    "disconnectAppTitle": "قطع اتصال {name}؟",
+    "disconnectAppWarning": "سيفقد الوصول فورًا. وعند توصيله مجددًا ستُطلب موافقتك مرة أخرى.",
+    "disconnectAppFailed": "تعذّر قطع اتصال التطبيق."
   },
   "accounts": {
     "label": "الحسابات",

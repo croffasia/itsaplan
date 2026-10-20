@@ -1,0 +1,49 @@
+{
+  "title": "MCP 서버",
+  "description": "Model Context Protocol을 통해 AI 에이전트를 이 프로젝트에 연결합니다. 에이전트는 API 키에 허용된 범위에서만 접근할 수 있습니다.",
+  "disabled": "비활성화",
+  "offForTeam": "{team} 팀에서 MCP가 비활성화되어 있습니다.",
+  "offForProject": "{team} 팀에서는 MCP가 활성화되어 있지만 이 프로젝트에서는 비활성화되어 있습니다.",
+  "openTeamSettings": "팀 MCP 설정 열기",
+  "askManager": "팀 소유자 또는 관리자에게 MCP 활성화를 요청하세요:",
+  "keyHint": "<link>API 키</link> 페이지에서 키를 생성한 다음 아래 코드의 <code>{apiKey}</code>를 생성한 키로 바꾸세요.",
+  "endpoint": "MCP 엔드포인트",
+  "clientTabsAria": "클라이언트",
+  "addToFile": "<code>{file}</code>에 추가",
+  "notes": {
+    "claudeCode": "터미널에서 이 명령을 실행하세요.",
+    "vscode": "GitHub Copilot이 필요합니다.",
+    "claudeDesktop": "Claude Desktop은 mcp-remote 브리지를 통해 원격 서버에 연결합니다. Node.js가 필요합니다.",
+    "other": "Streamable HTTP를 통한 MCP를 지원하는 모든 클라이언트에서 사용할 수 있습니다. MCP 엔드포인트를 지정하고 Authorization: Bearer {apiKey} 헤더를 전송하세요."
+  },
+  "clients": {
+    "other": "기타"
+  },
+  "oauth": {
+    "configuration": "연결 방법",
+    "methodTabsAria": "연결 방식",
+    "method": "OAuth",
+    "personalKey": "API 키",
+    "description": "ChatGPT나 Claude처럼 OAuth를 지원하는 MCP 클라이언트에서 사용할 수 있습니다. Itsaplan 계정으로 로그인하며, 클라이언트에는 API 키가 전달되지 않습니다.",
+    "discovery": "OAuth Discovery",
+    "steps": {
+      "add": "클라이언트에 MCP 앱을 추가합니다.",
+      "paste": "MCP 엔드포인트를 붙여넣습니다.",
+      "choose": "클라이언트에서 로그인 방식을 묻는 경우 OAuth를 선택합니다.",
+      "signIn": "Itsaplan에 로그인하고 접근 권한을 승인합니다."
+    },
+    "security": "OAuth는 PKCE(S256), 동적 클라이언트 등록 및 Itsaplan 계정의 권한 범위가 적용된 액세스 토큰을 사용합니다.",
+    "consent": {
+      "title": "{client}에서 계정에 연결하려고 합니다",
+      "titleUnnamed": "MCP 클라이언트가 계정에 연결하려고 합니다",
+      "description": "이 앱은 사용자의 권한으로 동작합니다. 사용자가 보고 바꿀 수 있는 것은 이 앱도 할 수 있습니다.",
+      "account": "{email}(으)로 로그인됨",
+      "redirect": "응답하면 {host}(으)로 돌아갑니다.",
+      "missingCode": "이 인증 요청에 동의 코드가 없습니다.",
+      "cancel": "취소",
+      "pending": "승인 중…",
+      "authorize": "승인",
+      "failed": "OAuth 인증을 완료할 수 없습니다."
+    }
+  }
+}

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { AgentSchedule, AgentScheduleInput } from '@/lib/api/endpoints/agentSchedules';
+import { ScheduleDialog } from '@/cloud';
 import { aiAgentsPath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/common/page/EmptyState';
@@ -19,7 +20,6 @@ import {
 import { useProjectAgents } from '@/hooks/useProjectAgents';
 import { useSettingsCan } from '../../context/settingsPermission';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
-import { SettingsScheduleDialog } from './SettingsScheduleDialog';
 import { SettingsScheduleRunsSheet } from './SettingsScheduleRunsSheet';
 import { SettingsSchedulesTable } from './SettingsSchedulesTable';
 import { useTranslations } from 'next-intl';
@@ -129,7 +129,7 @@ export default function SettingsSchedules({
       )}
 
       {showEditor && (
-        <SettingsScheduleDialog
+        <ScheduleDialog
           key={editingSchedule?.id ?? 'new'}
           projectKey={projectKey}
           agents={agents}

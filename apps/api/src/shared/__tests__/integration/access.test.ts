@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi } from '../../../__tests__/helpers/app';
+import { authedApi, createProject } from '../../../__tests__/helpers/app';
 import { signUpTestUser } from '../../../__tests__/helpers/auth';
 import { resetDb } from '../../../__tests__/helpers/db';
 import { createRole } from '#tests/helpers/roles';
@@ -16,7 +16,7 @@ type Owner = { api: ReturnType<typeof authedApi> };
 async function setupOwnerProject(): Promise<Owner> {
   const owner = await signUpTestUser();
   const api = authedApi(owner.cookie);
-  await api.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(api, { key: 'MKT', name: 'Marketing' });
   return { api };
 }
 

@@ -1,7 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import type { InstanceEmailSettings, InstanceEmailSettingsPatch } from '@/lib/api/endpoints/god';
+import type {
+  InstanceEmailSettings,
+  InstanceEmailSettingsPatch,
+  SmtpAuth,
+} from '@/lib/api/endpoints/god';
 import type { NotificationEncryption } from '@/lib/api/endpoints/notificationSettings';
 import type { EmailProvider } from '@/components/common/inputs/ProviderToggle';
 import { toPositiveInt } from '@/lib/utils';
@@ -27,6 +31,14 @@ export interface GodEmailForm {
   setUsername: (v: string) => void;
   password: string;
   setPassword: (v: string) => void;
+  smtpAuth: SmtpAuth;
+  setSmtpAuth: (v: SmtpAuth) => void;
+  tenantId: string;
+  setTenantId: (v: string) => void;
+  clientId: string;
+  setClientId: (v: string) => void;
+  clientSecret: string;
+  setClientSecret: (v: string) => void;
   timeout: string;
   setTimeout: (v: string) => void;
   apiKey: string;
@@ -66,6 +78,10 @@ export function useGodEmailForm(settings: InstanceEmailSettings): GodEmailForm {
   const [encryption, setEncryption] = useState<NotificationEncryption>(settings.smtp.encryption);
   const [username, setUsername] = useState(settings.smtp.username);
   const [password, setPassword] = useState('');
+  const [smtpAuth, setSmtpAuthState] = useState<SmtpAuth>(settings.smtp.auth);
+  const [tenantId, setTenantId] = useState(settings.smtp.oauth.tenantId);
+  const [clientId, setClientId] = useState(settings.smtp.oauth.clientId);
+  const [clientSecret, setClientSecret] = useState('');
   const [timeout, setTimeout] = useState(initialTimeout);
   const [apiKey, setApiKey] = useState('');
   const [allowProjects, setAllowProjects] = useState(settings.allowProjects);
@@ -76,7 +92,18 @@ export function useGodEmailForm(settings: InstanceEmailSettings): GodEmailForm {
     encryption !== settings.smtp.encryption ||
     username !== settings.smtp.username ||
     timeout !== initialTimeout ||
-    password.length > 0;
+    password.length > 0 ||
+    smtpAuth !== settings.smtp.auth ||
+    tenantId !== settings.smtp.oauth.tenantId ||
+    clientId !== settings.smtp.oauth.clientId ||
+    clientSecret.length > 0;
+  const smtpCredentialsReady =
+    smtpAuth === 'microsoft365'
+      ? username.trim().length > 0 &&
+        tenantId.trim().length > 0 &&
+        clientId.trim().length > 0 &&
+        (clientSecret.length > 0 || settings.smtp.oauth.hasClientSecret)
+      : username.trim().length === 0 || password.length > 0 || settings.smtp.hasPassword;
   const dirty =
     provider !== initialProvider ||
     enabled !== initialEnabled ||
@@ -87,7 +114,7 @@ export function useGodEmailForm(settings: InstanceEmailSettings): GodEmailForm {
     enabled &&
     (provider === 'smtp'
       ? host.trim().length > 0 &&
-        (username.trim().length === 0 || password.length > 0 || settings.smtp.hasPassword) &&
+        smtpCredentialsReady &&
         (from.trim().length > 0 || username.trim().length > 0)
       : (apiKey.length > 0 || settings.resend.hasApiKey) && from.trim().length > 0);
 
@@ -103,6 +130,12 @@ export function useGodEmailForm(settings: InstanceEmailSettings): GodEmailForm {
         username: username.trim(),
         ...(password.length > 0 ? { password } : {}),
         timeout: toPositiveInt(timeout),
+        auth: smtpAuth,
+        oauth: {
+          tenantId: tenantId.trim(),
+          clientId: clientId.trim(),
+          ...(clientSecret.length > 0 ? { clientSecret } : {}),
+        },
       },
       resend: {
         enabled: provider === 'resend' && enabled,
@@ -111,9 +144,21 @@ export function useGodEmailForm(settings: InstanceEmailSettings): GodEmailForm {
     };
   }
 
+  // Microsoft 365 only accepts OAuth on its own endpoint, so an empty server is filled
+  // with it rather than left for the owner to look up.
+  function setSmtpAuth(next: SmtpAuth) {
+    setSmtpAuthState(next);
+    if (next === 'microsoft365' && host.trim().length === 0) {
+      setHost('smtp.office365.com');
+      setPort('587');
+      setEncryption('tls');
+    }
+  }
+
   async function save() {
     await update.mutateAsync(currentPatch());
     setPassword('');
+    setClientSecret('');
     setApiKey('');
   }
 
@@ -139,6 +184,14 @@ export function useGodEmailForm(settings: InstanceEmailSettings): GodEmailForm {
     setUsername,
     password,
     setPassword,
+    smtpAuth,
+    setSmtpAuth,
+    tenantId,
+    setTenantId,
+    clientId,
+    setClientId,
+    clientSecret,
+    setClientSecret,
     timeout,
     setTimeout,
     apiKey,

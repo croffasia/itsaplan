@@ -20,6 +20,9 @@ If It's a Plan looks useful to you, star the repo ⭐ — it helps other people 
 [![Stars](https://img.shields.io/github/stars/croffasia/itsaplan?style=flat)](https://github.com/croffasia/itsaplan/stargazers)
 [![Last commit](https://img.shields.io/github/last-commit/croffasia/itsaplan)](https://github.com/croffasia/itsaplan/commits/main)
 
+<a href="https://trendshift.io/repositories/95056?utm_source=repository-badge&utm_medium=badge&utm_campaign=badge-repository-95056" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/95056" alt="#15 Repository of the Day on GitHub Trending" width="250" height="55"/></a>
+<a href="https://trendshift.io/repositories/95056?utm_source=trendshift-badge&utm_medium=badge&utm_campaign=badge-trendshift-95056" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/95056/daily?language=TypeScript" alt="#13 TypeScript Repository of the Day on Trendshift" width="250" height="55"/></a>
+
 <img src="assets/screenshots/tour.gif" alt="Board, AI chat, initiatives, timeline, calendar, and agent schedules" width="100%" />
 
 </div>
@@ -67,7 +70,7 @@ release.
 | --------- | ------------------------------------------------------------------------------------- |
 | Product management | Kanban, table, timeline, and calendar views · cycles · custom fields · dashboards · docs · notes boards |
 | AI agents | Agents as project members · internal on any model, or external on your coding CLI · runs start on an @mention, an assignment, or a schedule |
-| Platform | REST API with OpenAPI · MCP server · webhooks · pull requests from 5 forges · passkeys and Google sign-in · 9 languages |
+| Platform | REST API with OpenAPI · MCP server · webhooks · pull requests from 5 forges · passkeys and Google sign-in · 11 languages |
 
 <details>
 <summary><b>Product management</b> — the full list</summary>
@@ -119,7 +122,7 @@ release.
 - Outgoing webhooks: subscribe to events, signed payloads, and retries with a delivery log
 - Sign in with an email or a username and a password, a passkey, or Google
 - Notifications by email (SMTP or Resend) and Telegram, with per-member preferences
-- Interface in English, Ukrainian, Russian, Simplified Chinese, Arabic, French, Portuguese (Brazil), Bahasa Indonesia, and Spanish (Spain)
+- Interface in English, Ukrainian, Russian, Simplified Chinese, Arabic, Persian, French, Portuguese (Brazil), Bahasa Indonesia, Spanish (Spain), and Korean
 - Instance administration: storage limits, mail transport, and instance-wide settings
 
 </details>

@@ -51,6 +51,10 @@
     "agents": {
       "title": "AI Agents",
       "description": "The AI agents this team owns, and the projects each of them works in."
+    },
+    "analytics": {
+      "title": "Usage",
+      "description": "What the team's agents spent on models, by agent, project and day."
     }
   },
   "info": {
@@ -91,6 +95,7 @@
     "emailPlaceholder": "name@example.com",
     "alreadyMember": "{email} is already in this team",
     "alreadyPending": "{email} already has a pending invite",
+    "domainNotAllowed": "{email} is at a domain this instance doesn't allow",
     "refused": "{email} could not be invited",
     "roleLabel": "Team role",
     "roleHint": {
@@ -103,11 +108,16 @@
     "joinsProject": "Joins the team and {project}",
     "copyLink": "Copy link",
     "copied": "Copied",
+    "resendEmail": "Send email",
+    "resendingEmail": "Sending…",
     "revokeAction": "Revoke invite",
     "revokeTitle": "Revoke invite for {email}?",
     "revokeConfirm": "Revoke invite",
     "revokeDescription": "The link stops working. You can invite them again later.",
-    "pending": "Invited"
+    "pending": "Invited",
+    "expiredAt": "expired {date}",
+    "renew": "Renew",
+    "renewing": "Renewing…"
   },
   "manage": {
     "label": "Manage teams",
@@ -461,8 +471,13 @@
     "goToTools": "Go to Tools",
     "searchTools": "Search tools",
     "advanced": "Advanced",
-    "advancedHint": "Sampling, step limit, and memory",
+    "advancedHint": "Sampling, reasoning, step limit, and memory",
     "temperature": "Temperature",
+    "reasoningEffort": "Reasoning effort",
+    "reasoningEffortDefault": "Provider default",
+    "reasoningEffortLow": "Low",
+    "reasoningEffortMedium": "Medium",
+    "reasoningEffortHigh": "High",
     "optional": "Optional",
     "maxSteps": "Max steps",
     "memory": "Conversation memory",
@@ -653,6 +668,53 @@
       "title": "Delete {name}?",
       "description": "<strong>{name}</strong> and its teams are deleted. People keep their accounts and their other teams. This cannot be undone.",
       "deleted": "Workspace deleted"
+    },
+    "agentUsage": {
+      "title": "AI usage",
+      "description": "What the agents of every team spent on models."
+    },
+    "settingsGroup": "Settings",
+    "modelPrices": {
+      "title": "Model prices",
+      "description": "AI usage costs each model call at these prices, per 1M tokens. A change recounts past calls too.",
+      "used": {
+        "title": "Used in this workspace",
+        "description": "Models your agents called in the last 90 days, and those you set a price for.",
+        "unpriced": "{count, plural, one {# model has no price, so its calls are left out of the cost.} other {# models have no price, so their calls are left out of the cost.}}",
+        "empty": "No model calls in the last 90 days. A model shows up here once your agents call it."
+      },
+      "all": {
+        "title": "All models",
+        "description": "Built-in prices. Set your own for any model.",
+        "search": "Search models",
+        "noMatch": "No models match “{query}”."
+      },
+      "columns": {
+        "model": "Model",
+        "calls": "Calls",
+        "input": "Input",
+        "output": "Output",
+        "cacheRead": "Cache read",
+        "cacheWrite": "Cache write",
+        "price": "Price"
+      },
+      "source": {
+        "own": "Yours",
+        "builtIn": "Built-in",
+        "none": "No price"
+      },
+      "setPrice": "Set price",
+      "edit": "Edit",
+      "setTitle": "Set price",
+      "editTitle": "Edit price",
+      "perMillion": "USD per 1M tokens.",
+      "builtInPrice": "Built-in: {input} input, {output} output.",
+      "noBuiltInPrice": "This model has no built-in price.",
+      "sameAsInput": "Same as input",
+      "appliesToPast": "Applies to every call of this model in this workspace, past ones too.",
+      "useBuiltIn": "Use built-in price",
+      "removePrice": "Remove price",
+      "save": "Save price"
     }
   }
 }

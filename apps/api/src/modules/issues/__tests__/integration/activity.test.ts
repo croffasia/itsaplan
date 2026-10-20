@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
@@ -19,7 +19,7 @@ interface Setup {
 async function setupProject(): Promise<Setup> {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
   const columnIds = view.data!.columns.map((c) => c.id);
   return { asOwner, owner, columnId: columnIds[0], columnIds };
@@ -396,7 +396,7 @@ describe('issue activity', () => {
 
     it("does not log the name of another project's label", async () => {
       const { asOwner, columnId } = await setupProject();
-      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
       const foreign = (
         await asOwner.projects({ projectKey: 'OPS' }).labels.post({ name: 'ops-secret' })
       ).data!;

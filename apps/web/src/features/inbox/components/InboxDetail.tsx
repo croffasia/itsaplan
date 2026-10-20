@@ -35,15 +35,16 @@ export default function InboxDetail({
   const cyclesQuery = useCycleOptionsQuery(
     projectQuery.data?.project.cyclesEnabled ? foreignKey : null,
   );
-  const detailProject: ProjectDetail | null = foreignKey
-    ? projectQuery.data
+  let detailProject: ProjectDetail | null = project;
+  if (foreignKey) {
+    detailProject = projectQuery.data
       ? {
           ...projectQuery.data,
           issues: boardQuery.data?.issues ?? [],
           plannedCycles: cyclesQuery.data ?? [],
         }
-      : null
-    : project;
+      : null;
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">

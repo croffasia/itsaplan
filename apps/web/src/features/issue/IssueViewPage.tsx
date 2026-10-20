@@ -11,6 +11,7 @@ import { useIssueBySeqQuery } from '@/services/issues.service';
 import { useProjectsQuery } from '@/services/projects.service';
 import IssueDetailContent from './components/detail/IssueDetailContent';
 import IssueDetailSkeleton from './components/detail/IssueDetailSkeleton';
+import { useIssueTitle } from './hooks/useIssueTitle';
 import { useTranslations } from 'next-intl';
 
 // The full-page issue view (/:team/issue/:identifier), rendered inside the Shell
@@ -38,6 +39,7 @@ export default function IssueViewPage() {
     if (movedTo && issueQuery.data)
       router.replace(issuePath(movedTo.ref, issueQuery.data.sequenceNumber));
   }, [movedTo, issueQuery.data, router]);
+  useIssueTitle(moved || issueQuery.isError ? null : (issueQuery.data?.id ?? null), 'page');
 
   if (!project) return null;
 

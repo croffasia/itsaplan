@@ -1,0 +1,82 @@
+{
+  "window": "{days, plural, =1 {最近 24 小时} other {最近 # 天}}",
+  "retentionNote": "仅统计内部代理。早于实例追踪保留期的运行不计入。",
+  "noComparison": "没有可对比的数据",
+  "vsPrevious": "之前为 {value}",
+  "deletedAgent": "已删除的代理",
+  "deletedProject": "已删除的项目",
+  "allProjects": "所有项目",
+  "totalTokens": "Token 总数",
+  "totalCost": "总花费",
+  "stats": {
+    "cost": "模型花费",
+    "tokens": "Token",
+    "runs": "运行",
+    "errors": "失败的运行"
+  },
+  "unpriced": "{count, plural, other {# 个模型没有价格}}",
+  "setPrices": "设置价格",
+  "measure": {
+    "tokens": "Token",
+    "cost": "花费"
+  },
+  "series": {
+    "input": "输入",
+    "output": "输出"
+  },
+  "models": {
+    "title": "按模型",
+    "description": "每个模型的 Token 与花费。",
+    "model": "模型",
+    "input": "输入",
+    "output": "输出",
+    "cost": "花费",
+    "empty": "此期间没有模型调用"
+  },
+  "byAgent": {
+    "title": "按代理",
+    "description": "每个代理的用量。",
+    "empty": "此期间没有代理运行"
+  },
+  "byProject": {
+    "title": "按项目",
+    "description": "代理在每个项目中的用量。",
+    "empty": "此期间没有代理运行"
+  },
+  "byTeam": {
+    "title": "按团队",
+    "description": "每个团队的代理用量。",
+    "empty": "此期间没有代理运行"
+  },
+  "overTime": {
+    "title": "随时间",
+    "description": "此期间的 Token 与花费。",
+    "empty": "此期间没有用量"
+  },
+  "preview": {
+    "title": "Cloud 和 Pro 中的更多内容",
+    "description": "按人员和触发方式的花费、运行时长和工具调用。可在 Cloud 和自托管 Pro 版中使用。",
+    "hide": "隐藏",
+    "show": "显示",
+    "byPerson": {
+      "title": "按人员",
+      "description": "谁在聊天中或通过提及启动了运行。"
+    },
+    "byTrigger": {
+      "title": "按触发方式",
+      "description": "聊天、提及、计划或任务事件。"
+    },
+    "bySchedule": {
+      "title": "按计划",
+      "description": "每个计划的花费。"
+    },
+    "tools": {
+      "title": "工具",
+      "description": "工具调用次数及失败次数。"
+    },
+    "latency": {
+      "title": "运行时长",
+      "description": "每天的中位数和第 95 百分位。"
+    }
+  }
+}

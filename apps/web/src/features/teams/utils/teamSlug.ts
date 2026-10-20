@@ -1,4 +1,4 @@
-import { transliterate } from '@/utils/projectKey';
+import { transliterate } from '@/utils/transliterate';
 
 // Mirrors the API's rule for a slug.
 export const TEAM_SLUG_PATTERN = /^[a-z][a-z0-9-]{0,38}[a-z0-9]$/;

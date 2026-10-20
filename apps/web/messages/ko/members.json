@@ -1,0 +1,116 @@
+{
+  "title": "멤버",
+  "description": "이 프로젝트에 접근할 수 있는 사용자입니다.",
+  "add": {
+    "action": "멤버 추가",
+    "title": "멤버 추가",
+    "personLabel": "팀 멤버 또는 이메일",
+    "pickPlaceholder": "멤버 선택",
+    "searchPlaceholder": "팀 검색 또는 이메일 입력",
+    "searchTeamPlaceholder": "팀 멤버 검색",
+    "fromTeam": "팀에서 선택",
+    "byEmail": "이메일로 초대",
+    "inviteEmail": "{email} 초대",
+    "alreadyInvited": "{email} 주소로 이미 초대했습니다",
+    "domainNotAllowed": "{email}의 도메인은 이 서버에서 허용되지 않습니다",
+    "alreadyMember": "{email} 계정은 이미 이 프로젝트의 멤버입니다",
+    "alreadyInTeam": "{email} 계정은 이미 팀에 있습니다. 위 목록에서 선택하세요.",
+    "refused": "{email} 계정을 추가할 수 없습니다",
+    "typeEmail": "일치하는 멤버가 없습니다. 초대하려면 전체 이메일 주소를 입력하세요.",
+    "noCandidates": "팀의 모든 멤버가 이미 이 프로젝트에 참여하고 있습니다.",
+    "willJoinTeam": "{teamName} 팀과 이 프로젝트에 참여합니다",
+    "roleLabel": "프로젝트 역할",
+    "rolePlaceholder": "역할",
+    "submit": "프로젝트에 추가",
+    "sendInvite": "초대 보내기"
+  },
+  "columns": {
+    "member": "멤버",
+    "role": "역할",
+    "timezone": "시간대",
+    "joined": "가입일",
+    "actions": "작업"
+  },
+  "profileHeading": "프로필",
+  "you": "(나)",
+  "aiAgent": "AI 에이전트",
+  "tabs": {
+    "all": "전체",
+    "people": "사용자",
+    "agents": "AI 에이전트",
+    "label": "표시"
+  },
+  "leaveProject": "프로젝트 나가기",
+  "revokeAccess": "접근 권한 해제",
+  "lastOwner": "프로젝트에는 최소 한 명의 소유자가 있어야 합니다",
+  "leaveTitle": "이 프로젝트에서 나가기",
+  "leaveDescription": "이 프로젝트와 이슈에 더 이상 접근할 수 없습니다. 나중에 소유자가 다시 초대할 수 있습니다.",
+  "revokeTitle": "{name}의 접근 권한 해제",
+  "revokeDescription": "{name}은(는) 이 프로젝트에 더 이상 접근할 수 없습니다. 나중에 다시 초대할 수 있습니다.",
+  "selectRole": "역할 선택",
+  "editDescription": "설명 편집",
+  "descriptionQuestionSelf": "이 프로젝트에서 어떤 역할을 담당하시나요?",
+  "descriptionQuestionOther": "이 멤버는 프로젝트에서 어떤 역할을 담당하나요?",
+  "descriptionPlaceholder": "예: 백엔드 엔지니어, API 및 연동 담당",
+  "invites": {
+    "pendingCount": "{count, plural, one {대기 중인 초대 #개} other {대기 중인 초대 #개}}",
+    "copyLink": "링크 복사",
+    "copied": "복사됨",
+    "emailQueued": "초대 이메일이 전송 대기열에 추가되었습니다",
+    "emailUnavailable": "초대가 생성되었지만 이메일을 전송 대기열에 추가하지 못했습니다. 초대 링크를 복사하여 공유하세요.",
+    "emailFailed": "초대가 생성되었지만 이메일을 보내지 못했습니다. 링크를 복사하여 공유하세요.",
+    "resendUnavailable": "이메일이 설정되어 있지 않습니다. 초대 링크를 복사하여 공유하세요.",
+    "resendEmail": "이메일 보내기",
+    "resendingEmail": "전송 대기열에 추가 중…",
+    "renew": "갱신",
+    "renewing": "갱신 중…",
+    "renewed": "초대가 갱신되었습니다. 새 링크를 이메일로 보냈습니다",
+    "renewedNoEmail": "초대가 갱신되었습니다. 이메일이 설정되어 있지 않습니다. 새 링크를 복사하여 공유하세요.",
+    "renewedEmailFailed": "초대가 갱신되었지만 이메일을 보내지 못했습니다. 새 링크를 복사하여 공유하세요.",
+    "revokeAction": "초대 취소",
+    "removeAction": "초대 삭제",
+    "invitedBy": "{name}이(가) 초대 · ",
+    "createdAt": "{date}에 생성",
+    "expiredAt": "{date}에 만료",
+    "respondedAt": "{status, select, accepted {수락} rejected {거절} other {업데이트}} · {date}",
+    "status": {
+      "pending": "대기 중",
+      "accepted": "수락됨",
+      "rejected": "거절됨",
+      "expired": "만료됨"
+    },
+    "revokeTitle": "{email} 초대 취소",
+    "revokeConfirm": "초대 취소",
+    "revokeDescription": "초대 링크를 더 이상 사용할 수 없게 됩니다. 나중에 이 이메일 주소로 다시 초대할 수 있습니다."
+  },
+  "promoted": "멤버가 소유자로 승격되었습니다",
+  "roleUpdated": "멤버 역할이 업데이트되었습니다",
+  "descriptionUpdated": "멤버 설명이 업데이트되었습니다",
+  "added": "멤버가 추가되었습니다",
+  "provisioned": "SCIM으로 관리됨",
+  "search": {
+    "all": "멤버 검색",
+    "people": "사용자 검색",
+    "agents": "AI 에이전트 검색"
+  },
+  "empty": {
+    "all": {
+      "title": "아직 멤버가 없습니다",
+      "description": "사용자와 AI 에이전트가 참여하면 여기에 표시됩니다."
+    },
+    "human": {
+      "title": "아직 사용자가 없습니다",
+      "description": "사용자가 참여하면 여기에 표시됩니다."
+    },
+    "agent": {
+      "title": "아직 AI 에이전트가 없습니다",
+      "description": "AI 에이전트가 추가되면 여기에 표시됩니다."
+    },
+    "search": {
+      "title": "검색 결과가 없습니다",
+      "all": "검색 조건과 일치하는 멤버가 없습니다.",
+      "human": "검색 조건과 일치하는 사용자가 없습니다.",
+      "agent": "검색 조건과 일치하는 AI 에이전트가 없습니다."
+    }
+  }
+}

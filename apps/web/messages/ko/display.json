@@ -1,0 +1,95 @@
+{
+  "title": "보기 설정",
+  "layouts": {
+    "kanban": "칸반",
+    "table": "테이블",
+    "timeline": "타임라인",
+    "calendar": "캘린더"
+  },
+  "sortFields": {
+    "manual": "수동",
+    "title": "제목",
+    "identifier": "이슈 번호",
+    "status": "상태",
+    "priority": "우선순위",
+    "assignee": "담당자",
+    "type": "유형",
+    "startDate": "시작일",
+    "dueDate": "마감일",
+    "created": "생성일",
+    "updated": "업데이트일"
+  },
+  "groupFields": {
+    "none": "그룹화 없음",
+    "status": "상태",
+    "assignee": "담당자",
+    "delegate": "위임 대상",
+    "priority": "우선순위",
+    "type": "유형",
+    "initiative": "이니셔티브",
+    "cycle": "사이클"
+  },
+  "properties": {
+    "id": "ID",
+    "status": "상태",
+    "priority": "우선순위",
+    "type": "유형",
+    "assignee": "담당자",
+    "delegate": "위임 대상",
+    "initiative": "이니셔티브",
+    "cycle": "사이클",
+    "labels": "라벨",
+    "estimatePoints": "스토리 포인트",
+    "estimateTime": "예상 시간",
+    "startDate": "시작일",
+    "dueDate": "마감일",
+    "created": "생성일",
+    "updated": "업데이트일",
+    "statusAge": "현재 상태 유지 시간"
+  },
+  "stateTypes": {
+    "backlog": "백로그",
+    "unstarted": "시작 전",
+    "started": "진행 중",
+    "completed": "완료",
+    "canceled": "취소됨"
+  },
+  "timelineScales": {
+    "week": "주",
+    "month": "월",
+    "quarter": "분기"
+  },
+  "weekStart": {
+    "0": "일요일",
+    "1": "월요일"
+  },
+  "dateFields": {
+    "dueDate": "마감일",
+    "startDate": "시작일"
+  },
+  "rows": {
+    "columns": "열",
+    "grouping": "그룹화",
+    "swimlanes": "스윔레인",
+    "subGrouping": "하위 그룹화",
+    "ordering": "정렬",
+    "ascending": "오름차순",
+    "descending": "내림차순",
+    "showEmptyColumns": "빈 열 표시",
+    "showEmptyGroups": "빈 그룹 표시",
+    "showLinks": "링크 표시",
+    "separateSubtaskCards": "하위 이슈를 별도 카드로 표시",
+    "separateSubtaskRows": "하위 이슈를 별도 행으로 표시",
+    "startSubtasksCollapsed": "하위 이슈를 접은 상태로 시작",
+    "showNestedSubtasks": "중첩된 하위 이슈 표시",
+    "nestedSubtasks": "중첩된 하위 이슈",
+    "displayProperties": "표시할 속성",
+    "placeBy": "배치 기준",
+    "startWeekOn": "주 시작 요일",
+    "startCollapsed": "그룹을 접은 상태로 시작",
+    "scale": "시간 단위",
+    "addCustomField": "사용자 지정 필드 추가",
+    "viewIcon": "보기 아이콘"
+  },
+  "layoutCommand": "{layout} 보기"
+}

@@ -3,12 +3,14 @@ import { and, eq, sql } from 'drizzle-orm';
 import { type ContextUsage } from '../chat-usage';
 import {
   agentRunConfig,
+  deferRun,
   issueRunTurn,
   loadThreadContext,
   runRetryDelayMs,
   scheduleRunRetry,
 } from '../core/run-queue';
 import { agentRunStarted, recordAgentRunFinished } from '../core/run-activity';
+import { runAdmissionDelay } from '../core/run-admission';
 import type { AgentKind } from '../core/service';
 import type { AgentRunTrigger } from '../model';
 import {
@@ -96,6 +98,7 @@ export interface RunnerRun {
 // the prompts and are not handed to the runner.
 type ClaimedRow = Omit<RunnerRun, 'systemPrompt'> & {
   // The project the run works in, which is what its system prompt names.
+  projectId: number;
   projectKey: string;
   projectName: string;
   projectDescription: string;
@@ -105,6 +108,7 @@ type ClaimedRow = Omit<RunnerRun, 'systemPrompt'> & {
   requesterName: string | null;
   requesterUsername: string | null;
   sourceActivityId: number | null;
+  scheduleId: number | null;
 };
 
 // Records that a runner polled, which is what the UI shows as the agent's presence.
@@ -159,6 +163,8 @@ export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | nu
       r.prompt,
       r.attempts,
       r.issue_id AS "issueId",
+      r.schedule_id AS "scheduleId",
+      r.project_id AS "projectId",
       (SELECT p.key FROM project p WHERE p.id = r.project_id) AS "projectKey",
       (SELECT p.name FROM project p WHERE p.id = r.project_id) AS "projectName",
       (SELECT p.description FROM project p WHERE p.id = r.project_id) AS "projectDescription",
@@ -181,6 +187,11 @@ export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | nu
   `);
   const row = (rows as unknown as ClaimedRow[])[0];
   if (!row) return null;
+  const wait = await runAdmissionDelay({ ...row, agentId });
+  if (wait > 0) {
+    await deferRun(row.id, wait);
+    return null;
+  }
   const threadContext = await loadThreadContext(row.sourceActivityId);
   const forPrompt = {
     ...row,

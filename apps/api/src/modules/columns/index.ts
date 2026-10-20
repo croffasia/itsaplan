@@ -97,7 +97,7 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
         summary: 'Delete a column',
         description:
           "Delete a column. Body mode 'move' reassigns its issues to targetColumnId, " +
-          "'delete' removes them. Backlog columns cannot be deleted, nor a column whose " +
+          "'delete' removes them. The last backlog column cannot be deleted, nor a column whose " +
           'agent schedules have runs that have not finished. The schedules of a deleted ' +
           'column are deleted with it.',
         ...mcpTool('delete_column'),

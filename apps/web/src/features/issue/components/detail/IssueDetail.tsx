@@ -6,6 +6,7 @@ import IssueDetailContent from './IssueDetailContent';
 import IssueActionsBar from '../actions/IssueActionsBar';
 import { useExitOnEscape } from '@/hooks/useExitOnEscape';
 import { useExitOnClickOutside } from '../../hooks/useExitOnClickOutside';
+import { useIssueTitle } from '../../hooks/useIssueTitle';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
 
@@ -31,6 +32,7 @@ export default function IssueDetail({
 
   useExitOnEscape(onClose);
   useExitOnClickOutside(panelRef, onClose);
+  useIssueTitle(issueId, 'panel');
 
   return (
     <div

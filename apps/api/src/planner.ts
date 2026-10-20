@@ -1,5 +1,5 @@
 import { Elysia } from 'elysia';
-import { HttpError, pgErrorCode } from './shared/lib';
+import { errorAnswer } from './shared/lib';
 import { authContext } from './shared/auth-context';
 import { projectRoutes } from './modules/projects';
 import { teamRoutes } from './modules/teams';
@@ -37,12 +37,14 @@ import { chartRoutes } from './modules/charts';
 import { settingsRoutes } from './modules/settings';
 import { godRoutes } from './modules/god';
 import { agentScheduleRoutes } from './modules/agents/schedules';
+import { modelPriceRoutes } from './modules/agents/prices';
 import { agentRunnerRoutes } from './modules/agents/runner';
 import { agentChatRoutes } from './modules/agents/chat';
 import { notificationRoutes } from './modules/notifications';
 import { notificationSettingsRoutes } from './modules/notification-settings';
 import { notificationPreferenceRoutes } from './modules/notification-preferences';
 import { userPreferenceRoutes } from './modules/user-preferences';
+import { connectedAppRoutes } from './modules/connected-apps';
 import { telegramRoutes } from './modules/telegram';
 import { syncRoutes } from './modules/sync';
 import { linkPreviewRoutes } from './modules/link-previews';
@@ -61,30 +63,10 @@ import { linkPreviewRoutes } from './modules/link-previews';
 export const planner = new Elysia({ name: 'planner' })
   .use(authContext)
   .onError({ as: 'global' }, ({ code, error, set }) => {
-    if (error instanceof HttpError) {
-      set.status = error.status;
-      return error.code ? { error: error.message, code: error.code } : { error: error.message };
-    }
-    if (code === 'VALIDATION') {
-      set.status = 400;
-      // The validator's first message is enough for the UI; the full report is
-      // large JSON that the client would just show verbatim.
-      const first = (error as { all?: { summary?: string }[] }).all?.[0]?.summary;
-      return { error: first ?? 'Invalid request body' };
-    }
-    if (code === 'NOT_FOUND') {
-      set.status = 404;
-      return { error: 'Not found' };
-    }
-    if (pgErrorCode(error) === '23505') {
-      set.status = 409;
-      return { error: 'A record with this name already exists.' };
-    }
-    // The message stays in the log only. drizzle puts the failed statement and its
-    // parameters in it, and the public routes would hand that to anyone.
-    console.error('[planner] unhandled error:', error);
-    set.status = 500;
-    return { error: 'Internal server error' };
+    const answer = errorAnswer(code, error);
+    if (answer.status === 500) console.error('[planner] unhandled error:', error);
+    set.status = answer.status;
+    return answer.body;
   })
   .use(projectRoutes)
   .use(teamRoutes)
@@ -115,6 +97,7 @@ export const planner = new Elysia({ name: 'planner' })
   .use(webhookRoutes)
   .use(gitSettingsRoutes)
   .use(agentScheduleRoutes)
+  .use(modelPriceRoutes)
   .use(agentRunnerRoutes)
   .use(agentChatRoutes)
   .use(dashboardRoutes)
@@ -126,6 +109,7 @@ export const planner = new Elysia({ name: 'planner' })
   .use(notificationSettingsRoutes)
   .use(notificationPreferenceRoutes)
   .use(userPreferenceRoutes)
+  .use(connectedAppRoutes)
   .use(telegramRoutes)
   .use(syncRoutes)
   .use(linkPreviewRoutes)

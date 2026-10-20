@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { api, authedApi } from '#tests/helpers/app';
+import { api, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { PERMISSION_RESOURCES, PERMISSION_ACTIONS, resourceActions } from '#shared/permissions';
@@ -22,7 +22,7 @@ type Actor = { user: TestUser; api: ReturnType<typeof authedApi>; teamId: number
 async function setupOwner(projectKey = 'MKT'): Promise<Actor> {
   const user = await signUpTestUser();
   const client = authedApi(user.cookie);
-  await client.projects.post({ key: projectKey, name: 'Marketing' });
+  await createProject(client, { key: projectKey, name: 'Marketing' });
   const teams = await client.teams.get();
   return { user, api: client, teamId: teams.data![0].id };
 }

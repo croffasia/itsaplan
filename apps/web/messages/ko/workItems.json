@@ -1,0 +1,119 @@
+{
+  "newIssue": "새 이슈",
+  "pin": "고정",
+  "unpin": "고정 해제",
+  "collapse": "접기",
+  "expand": "펼치기",
+  "hide": "숨기기",
+  "show": "표시",
+  "hiddenColumns": "숨긴 열",
+  "hiddenGroups": "숨긴 그룹",
+  "selectAll": "모두 선택",
+  "deselectAll": "모두 해제",
+  "resizeColumn": "열 너비 조절",
+  "viewNamePlaceholder": "모든 이슈",
+  "sortedOrder": "이슈가 {field} 기준으로 정렬되어 있습니다. 순서를 변경하려면 정렬 방식을 수동으로 전환하세요.",
+  "statusSince": "{date}부터 현재 상태",
+  "createdOn": "{date}에 생성됨",
+  "updatedOn": "{date}에 업데이트됨",
+  "subtasksProgress": "하위 이슈 {done}/{total}",
+  "subtasksDone": "하위 이슈 {total}개 중 {done}개 완료",
+  "wip": {
+    "reached": "{column}의 이슈가 제한인 {limit}개에 도달했습니다.",
+    "tooltip": "진행 중 작업 제한: {max}",
+    "count": "{count} / {max}",
+    "filteredCount": "전체 {total} 중 {shown}개 표시 / 제한 {max}",
+    "filteredTooltip": "현재 필터에 따라 {shown}개가 표시됩니다. 제한 {max}개는 이 열의 전체 이슈 {total}개를 기준으로 적용됩니다."
+  },
+  "columns": {
+    "title": "제목",
+    "status": "상태",
+    "statusAge": "현재 상태 유지 시간",
+    "priority": "우선순위",
+    "type": "유형",
+    "initiative": "이니셔티브",
+    "cycle": "사이클",
+    "labels": "라벨",
+    "estimatePoints": "스토리 포인트",
+    "estimateTime": "예상 시간",
+    "startDate": "시작일",
+    "dueDate": "마감일",
+    "created": "생성일",
+    "updated": "업데이트일"
+  },
+  "calendar": {
+    "previousMonth": "이전 달",
+    "nextMonth": "다음 달",
+    "today": "오늘",
+    "moreIssues": "외 {count}개",
+    "issueCount": "{count, plural, one {이슈 #개} other {이슈 #개}}",
+    "weekdays": {
+      "sun": "일",
+      "mon": "월",
+      "tue": "화",
+      "wed": "수",
+      "thu": "목",
+      "fri": "금",
+      "sat": "토"
+    },
+    "noDate": {
+      "dueDate": "마감일 없음",
+      "startDate": "시작일 없음",
+      "custom": "날짜 없음"
+    },
+    "allDated": {
+      "dueDate": "모든 이슈에 마감일이 있습니다.",
+      "startDate": "모든 이슈에 시작일이 있습니다.",
+      "custom": "모든 이슈에 날짜가 있습니다."
+    }
+  },
+  "timeline": {
+    "empty": "타임라인에 표시할 이슈가 아직 없습니다.",
+    "expandGroup": "그룹 펼치기",
+    "collapseGroup": "그룹 접기",
+    "inferredStart": "생성일을 기준으로 추정한 시작일",
+    "inferredStartDraggable": "생성일을 기준으로 추정한 시작일 — 드래그하여 설정"
+  },
+  "bulk": {
+    "selected": "{count}개 선택됨",
+    "status": "상태",
+    "priority": "우선순위",
+    "assignee": "담당자",
+    "delegate": "위임 대상",
+    "initiative": "이니셔티브",
+    "cycle": "사이클",
+    "labels": "라벨",
+    "noAssignee": "담당자 없음",
+    "noDelegate": "위임 대상 없음",
+    "noInitiative": "이니셔티브 없음",
+    "noCycle": "사이클 없음",
+    "archive": "보관",
+    "clearSelection": "선택 해제"
+  },
+  "removal": {
+    "archive": {
+      "title": "{count, plural, one {이슈 보관} other {이슈 보관}}",
+      "confirm": "{count, plural, one {이슈 #개 보관} other {이슈 #개 보관}}",
+      "description": "{count, plural, one {선택한 이슈 #개를 보관하시겠습니까? 보드에서 사라지지만 나중에 복원할 수 있습니다.} other {선택한 이슈 #개를 보관하시겠습니까? 보드에서 사라지지만 나중에 복원할 수 있습니다.}}"
+    },
+    "delete": {
+      "title": "{count, plural, one {이슈 삭제} other {이슈 삭제}}",
+      "confirm": "{count, plural, one {이슈 #개 삭제} other {이슈 #개 삭제}}",
+      "description": "{count, plural, one {선택한 이슈 #개를 삭제하시겠습니까?} other {선택한 이슈 #개를 삭제하시겠습니까?}} 댓글, 활동 기록 및 첨부 파일도 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
+    }
+  },
+  "share": {
+    "issueTitle": "이슈",
+    "issueUnavailable": "이 이슈를 사용할 수 없습니다.",
+    "boardUnavailable": "이 공유 보드를 사용할 수 없습니다. 공유 링크가 취소되었을 수 있습니다."
+  },
+  "groups": {
+    "noAssignee": "담당자 없음",
+    "noDelegate": "위임 대상 없음",
+    "noPriority": "우선순위 없음",
+    "noType": "유형 없음",
+    "noInitiative": "이니셔티브 없음",
+    "noCycle": "사이클 없음",
+    "noMember": "값 없음"
+  }
+}

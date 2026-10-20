@@ -5,8 +5,8 @@ import { isProjectAgent } from './service';
 
 // What happens on the issue when an agent takes a queued run of it. Only the first
 // claim counts: a re-claim after an expired lease is the same task handed out again.
-// A status run first makes the agent the issue's delegate, so the issue shows which
-// agent works on it.
+// A schedule's run on an issue first makes the agent the issue's delegate, so the issue
+// shows which agent works on it.
 export async function agentRunStarted(run: {
   issueId: number | null;
   attempts: number;
@@ -14,7 +14,9 @@ export async function agentRunStarted(run: {
   trigger: AgentRunTrigger;
 }): Promise<void> {
   if (run.issueId == null || run.attempts > 1) return;
-  if (run.trigger === 'status') await delegateToAgent(run.issueId, run.agentUserId);
+  if (run.trigger === 'status' || run.trigger === 'event') {
+    await delegateToAgent(run.issueId, run.agentUserId);
+  }
   await recordActivity(run.issueId, [{ action: 'agent_started' }], run.agentUserId);
 }
 

@@ -50,7 +50,16 @@
     "thisDevice": "此设备",
     "deleteWarning": "移除后将无法再使用此通行密钥登录。此操作无法撤销。",
     "passkeyFallback": "通行密钥",
-    "passkeysLoadFailed": "无法加载通行密钥。"
+    "passkeysLoadFailed": "无法加载通行密钥。",
+    "connectedAppsTitle": "已连接的应用",
+    "connectedAppsDescription": "你允许通过 MCP 代表你操作的应用，例如 Claude 或 ChatGPT。它们能看到和执行你能看到和执行的内容。",
+    "connectedAppsEmpty": "你的账户尚未连接任何应用。",
+    "connectedAppUsed": "连接于 {connected} · 最近使用于 {used}",
+    "connectedAppSince": "连接于 {connected}",
+    "disconnectApp": "断开连接",
+    "disconnectAppTitle": "断开 {name}？",
+    "disconnectAppWarning": "它将立即失去访问权限。再次连接时会重新征求你的同意。",
+    "disconnectAppFailed": "无法断开该应用。"
   },
   "accounts": {
     "label": "关联账户",

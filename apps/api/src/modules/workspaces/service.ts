@@ -3,7 +3,6 @@ import {
   aiAgent,
   createWorkspace,
   db,
-  instanceWorkspaceId,
   project,
   team,
   teamMember,
@@ -225,24 +224,19 @@ export async function workspaceHoldsWork(workspaceId: number): Promise<boolean> 
   return row !== undefined;
 }
 
-export type WorkspaceDeletion = 'allowed' | 'instance' | 'work';
+export type WorkspaceDeletion = 'allowed' | 'work';
 
-// Whether the owner may delete the workspace, and if not, why. The instance workspace
-// stays: teams created without a workspace and SCIM on a self-hosted instance land in
-// it. One whose teams hold work keeps it until its projects and AI agents are gone.
+// Whether the owner may delete the workspace, and if not, why: one whose teams hold work
+// keeps it until its projects and AI agents are gone.
 export async function workspaceDeletion(workspaceId: number): Promise<WorkspaceDeletion> {
-  if (workspaceId === (await instanceWorkspaceId(db))) return 'instance';
   return (await workspaceHoldsWork(workspaceId)) ? 'work' : 'allowed';
 }
 
 // Its teams go with it; their people keep their accounts and their other teams. An owner
-// left with no workspace gets a fresh personal one while personal workspaces are on.
+// left with no workspace gets a fresh personal one: the instance owner always, anyone
+// else while personal workspaces are on.
 export async function deleteWorkspace(workspaceId: number, ownerId: string): Promise<void> {
-  const deletion = await workspaceDeletion(workspaceId);
-  if (deletion === 'instance') {
-    throw new HttpError(409, 'The instance workspace cannot be deleted');
-  }
-  if (deletion === 'work') {
+  if ((await workspaceDeletion(workspaceId)) === 'work') {
     throw new HttpError(409, 'Delete the projects and AI agents of its teams first');
   }
   await db.delete(workspace).where(eq(workspace.id, workspaceId));
@@ -302,19 +296,16 @@ export async function updateWorkspace(
 }
 
 // Hands the workspace to one of its admins; the owner stays on as an admin. No core route
-// calls it: an edition that offers handing a workspace over mounts its route here. The instance
-// workspace stays with the instance owner. Nobody takes on more workspaces than one person
-// may own, so handing over is no way around the limit; the instance owner is the
-// exception, as deleted accounts' workspaces pass to them anyway. An owner left with no
-// workspace gets a fresh personal one while personal workspaces are on.
+// calls it: an edition that offers handing a workspace over mounts its route here. Nobody
+// takes on more workspaces than one person may own, so handing over is no way around the
+// limit; the instance owner is the exception, as deleted accounts' workspaces pass to
+// them anyway. An owner left with no workspace gets a fresh personal one: the instance
+// owner always, anyone else while personal workspaces are on.
 export async function transferWorkspace(
   workspaceId: number,
   ownerId: string,
   toUserId: string,
 ): Promise<void> {
-  if (workspaceId === (await instanceWorkspaceId(db))) {
-    throw new HttpError(409, 'The instance workspace stays with the instance owner');
-  }
   if ((await getWorkspaceRole(workspaceId, toUserId)) !== 'admin') {
     throw new HttpError(404, 'This person is not an admin of the workspace');
   }

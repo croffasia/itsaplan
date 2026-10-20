@@ -69,12 +69,13 @@ export const listNotifications = (
   return request<NotificationPage>(`/notifications?${q.toString()}`);
 };
 
-// Unread count for the sidebar badge, refetched when the inbox scope moves.
-// types narrows the badge to the same set the inbox list uses by default.
-export const getUnreadCount = (projectId: number, types?: NotificationType[]) => {
-  const q = new URLSearchParams({ projectId: String(projectId) });
+// Unread count for the sidebar badge. Without a project it counts every project's.
+export const getUnreadCount = (projectId?: number, types?: NotificationType[]) => {
+  const q = new URLSearchParams();
+  if (projectId != null) q.set('projectId', String(projectId));
   if (types?.length) q.set('types', types.join(','));
-  return request<{ unread: number }>(`/notifications/unread?${q.toString()}`);
+  const query = q.toString();
+  return request<{ unread: number }>(`/notifications/unread${query ? `?${query}` : ''}`);
 };
 
 export const setNotificationRead = (id: number, read: boolean) =>
@@ -86,16 +87,28 @@ export const snoozeNotification = (id: number, until: string | null) =>
     body: JSON.stringify({ until }),
   });
 
-export const markAllNotificationsRead = (projectId: number) =>
+export const markAllNotificationsRead = (projectId: number, filters: NotificationFilters) =>
   request<{ count: number }>(`/notifications/read-all`, {
     method: 'POST',
-    body: JSON.stringify({ projectId }),
+    body: JSON.stringify({
+      projectId,
+      ...filters,
+      includeSnoozed: filters.includeSnoozed ?? false,
+    }),
   });
 
 export const deleteNotification = (id: number) =>
   request<void>(`/notifications/${id}`, { method: 'DELETE' });
 
-export const deleteNotifications = (scope: NotificationDeleteScope, projectId: number) =>
-  request<{ count: number }>(`/notifications?scope=${scope}&projectId=${projectId}`, {
-    method: 'DELETE',
-  });
+export const deleteNotifications = (
+  scope: NotificationDeleteScope,
+  projectId: number,
+  filters: NotificationFilters,
+) => {
+  const q = new URLSearchParams({ scope, projectId: String(projectId) });
+  if (filters.types?.length) q.set('types', filters.types.join(','));
+  if (filters.from) q.set('from', filters.from);
+  if (filters.includeRead === false) q.set('includeRead', 'false');
+  q.set('includeSnoozed', String(filters.includeSnoozed ?? false));
+  return request<{ count: number }>(`/notifications?${q.toString()}`, { method: 'DELETE' });
+};

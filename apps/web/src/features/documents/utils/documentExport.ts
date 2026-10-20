@@ -1,6 +1,7 @@
 import { marked } from 'marked';
 import DOMPurify from 'isomorphic-dompurify';
 import JSZip from 'jszip';
+import { transliterate } from '@/utils/transliterate';
 
 export type DocumentExportFormat = 'markdown' | 'html';
 
@@ -59,11 +60,9 @@ function escapeHtml(value: string): string {
 }
 
 export function documentExportFilename(title: string, extension: DocumentExportFormat): string {
-  const base = title
-    .trim()
+  const base = transliterate(title)
     .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[^\p{Letter}\p{Number}]+/gu, '-')
+    .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 80);
   return `${base || 'untitled'}.${extension === 'markdown' ? 'md' : 'html'}`;

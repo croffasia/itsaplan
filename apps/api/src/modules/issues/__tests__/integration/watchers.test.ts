@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { db, issueWatcher } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createRole } from '#tests/helpers/roles';
@@ -24,7 +24,7 @@ interface Member {
 async function setup(): Promise<{ owner: Member; columnId: number }> {
   const u = await signUpTestUser();
   const api = authedApi(u.cookie);
-  await api.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(api, { key: 'MKT', name: 'Marketing' });
   const view = await api.projects({ projectKey: 'MKT' }).get();
   return {
     owner: { api, userId: u.userId, username: u.username },

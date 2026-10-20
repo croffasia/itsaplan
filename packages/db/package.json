@@ -12,19 +12,20 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "lint": "eslint .",
+    "test": "bun test --env-file=../../.env.test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@repo/crypto": "workspace:*",
     "@repo/mailer": "workspace:*",
-    "drizzle-orm": "^0.45.2",
+    "drizzle-orm": "^0.45.4",
     "postgres": "^3.4.9"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@types/bun": "latest",
-    "dotenv": "^17.4.2",
-    "drizzle-kit": "^0.31.10",
+    "dotenv": "^18.0.7",
+    "drizzle-kit": "^0.31.11",
     "eslint": "^9.39.0",
     "typescript": "^6.0.3"
   }

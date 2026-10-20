@@ -2,6 +2,7 @@ import {
   Ban,
   Bot,
   History,
+  Lock,
   MessageSquareText,
   MoreHorizontal,
   Pause,
@@ -24,13 +25,16 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { PRO_URL } from '@/utils/app';
 import SettingsIconButton from '../SettingsIconButton';
 import { useSettingsCan } from '../../context/settingsPermission';
-import { formatUtc, parseScheduleInput } from '../../utils/cronSchedule';
+import { formatUtc } from '../../utils/cronSchedule';
+import { SettingsScheduleWhen } from './SettingsScheduleWhen';
 import { useTranslations } from 'next-intl';
 
 export function SettingsScheduleRow({
   schedule,
+  columnName,
   running,
   onToggle,
   onRun,
@@ -40,6 +44,7 @@ export function SettingsScheduleRow({
   onDelete,
 }: {
   schedule: AgentSchedule;
+  columnName: string | null;
   running: boolean;
   onToggle: () => void;
   onRun: () => void;
@@ -50,38 +55,43 @@ export function SettingsScheduleRow({
 }) {
   const t = useTranslations('settings.schedules');
   const can = useSettingsCan();
-  const parsedSchedule = parseScheduleInput(schedule.cron);
-  const scheduleDescription = parsedSchedule.ok ? parsedSchedule.description : schedule.cron;
+  // An unsupported schedule shows what it was set up to do and can be deleted, nothing more.
+  const canEdit = can('edit') && schedule.supported;
   return (
     <TableRow className="group/item cursor-pointer" onClick={onHistory}>
       <TableCell className="px-3 py-4 align-top whitespace-normal">
         <div className="flex min-w-0 items-start gap-2.5">
           <span
-            className={cn('mt-[7px] size-2 shrink-0 rounded-full', statusDotClass(schedule.status))}
-            title={schedule.status === 'active' ? t('statusActive') : t('statusPaused')}
+            className={cn(
+              'mt-[7px] size-2 shrink-0 rounded-full',
+              statusDotClass(schedule.supported ? schedule.status : 'paused'),
+            )}
+            title={t(statusTitleKey(schedule))}
           />
-          <Popover>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-7 shrink-0 text-muted-foreground hover:text-foreground"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <MessageSquareText className="size-4" />
-                  </Button>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              <TooltipContent>{t('viewTask')}</TooltipContent>
-            </Tooltip>
-            <PopoverContent align="start" className="w-80">
-              <p className="text-xs font-medium text-muted-foreground">{t('task')}</p>
-              <p className="mt-1.5 text-sm whitespace-pre-wrap">{schedule.prompt}</p>
-            </PopoverContent>
-          </Popover>
+          {schedule.prompt && (
+            <Popover>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-7 shrink-0 text-muted-foreground hover:text-foreground"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MessageSquareText className="size-4" />
+                    </Button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent>{t('viewTask')}</TooltipContent>
+              </Tooltip>
+              <PopoverContent align="start" className="w-80">
+                <p className="text-xs font-medium text-muted-foreground">{t('task')}</p>
+                <p className="mt-1.5 text-sm whitespace-pre-wrap">{schedule.prompt}</p>
+              </PopoverContent>
+            </Popover>
+          )}
           <div className="flex min-w-0 flex-col gap-0.5 pt-1">
             <span className="truncate text-sm font-medium">{schedule.name}</span>
             <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
@@ -92,13 +102,23 @@ export function SettingsScheduleRow({
         </div>
       </TableCell>
       <TableCell className="px-3 py-4 align-top whitespace-normal">
-        <p className="text-sm" title={schedule.cron}>
-          {scheduleDescription}
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">UTC</p>
+        <SettingsScheduleWhen schedule={schedule} columnName={columnName} />
+        {!schedule.supported && (
+          <a
+            href={PRO_URL}
+            target="_blank"
+            rel="noreferrer"
+            title={t('unavailableHint')}
+            className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-amber-600 hover:underline dark:text-amber-500"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Lock className="size-3.5" />
+            {t('unavailable')}
+          </a>
+        )}
       </TableCell>
       <TableCell className="px-3 py-4 align-top text-sm whitespace-nowrap tabular-nums">
-        {formatUtc(schedule.nextRunAt)}
+        <NextRun schedule={schedule} />
       </TableCell>
       <TableCell className="px-3 py-4 align-top whitespace-normal">
         {schedule.lastRunStatus ? (
@@ -121,7 +141,7 @@ export function SettingsScheduleRow({
       </TableCell>
       <TableCell className="px-3 py-3 align-top">
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-          {can('edit') && (
+          {canEdit && (
             <SettingsIconButton
               title={schedule.status === 'active' ? t('pause') : t('resume')}
               onClick={onToggle}
@@ -153,7 +173,7 @@ export function SettingsScheduleRow({
                 <TooltipContent>{t('moreActions')}</TooltipContent>
               </Tooltip>
               <DropdownMenuContent align="end">
-                {can('edit') && (
+                {canEdit && schedule.type === 'cron' && (
                   <DropdownMenuItem
                     className="min-h-11 sm:min-h-8"
                     disabled={running}
@@ -169,13 +189,13 @@ export function SettingsScheduleRow({
                     {t('cancelPending', { count: schedule.pendingRuns })}
                   </DropdownMenuItem>
                 )}
-                {can('edit') && (
+                {canEdit && (
                   <DropdownMenuItem className="min-h-11 sm:min-h-8" onSelect={onEdit}>
                     <Pencil />
                     {t('edit')}
                   </DropdownMenuItem>
                 )}
-                {can('delete') && can('edit') && <DropdownMenuSeparator />}
+                {can('delete') && canEdit && <DropdownMenuSeparator />}
                 {can('delete') && (
                   <DropdownMenuItem
                     className="min-h-11 sm:min-h-8"
@@ -193,6 +213,22 @@ export function SettingsScheduleRow({
       </TableCell>
     </TableRow>
   );
+}
+
+function NextRun({ schedule }: { schedule: AgentSchedule }) {
+  const t = useTranslations('settings.schedules');
+  if (!schedule.supported) return <span className="text-xs text-muted-foreground">—</span>;
+  if (schedule.nextRunAt) return formatUtc(schedule.nextRunAt);
+  return (
+    <span className="text-xs whitespace-normal text-muted-foreground">
+      {schedule.type === 'status' ? t('nextRunOnStatus') : t('nextRunOnTrigger')}
+    </span>
+  );
+}
+
+function statusTitleKey(schedule: AgentSchedule) {
+  if (!schedule.supported) return 'unavailableHint';
+  return schedule.status === 'active' ? 'statusActive' : 'statusPaused';
 }
 
 function statusDotClass(status: AgentSchedule['status']): string {

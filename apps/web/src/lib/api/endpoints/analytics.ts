@@ -1,5 +1,5 @@
 import type { BreakdownBy } from '@/utils/dashboardWidgets';
-import type { AgentRunStatus } from '@/lib/api/endpoints/agents';
+import type { AgentRunStatus, AgentRunTrigger } from '@/lib/api/endpoints/agents';
 import { request } from '@/lib/api/core/client';
 import type { ActivityPage, FeedCursor } from '@/lib/api/endpoints/activity';
 
@@ -75,7 +75,7 @@ export interface BurnupParams {
 export interface AgentRunFeedItem {
   id: number;
   status: AgentRunStatus;
-  trigger: 'mention' | 'delegation' | 'field' | 'schedule' | 'manual';
+  trigger: AgentRunTrigger;
   agentId: number;
   agentName: string;
   issueId: number | null;

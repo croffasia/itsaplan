@@ -2,38 +2,60 @@ import { request } from '@/lib/api/core/client';
 import type { AgentRunStatus } from '@/lib/api/endpoints/agents';
 import { pageQuery, type Page, type PageParams } from '@/lib/api/core/paging';
 
+// 'cron' runs on its cron; 'status' runs on an issue each time one enters its column.
+// Any other is a type the hosted build adds, in its own schedule dialog.
+export type AgentScheduleType = string;
+
+// Settings the hosted build keeps on a schedule; {} on a self-hosted instance.
+export type AgentScheduleOptions = Record<string, unknown>;
+
 export interface AgentSchedule {
   id: number;
   agentId: number;
   agentName: string;
   name: string;
+  type: AgentScheduleType;
+  // Empty on a status schedule that sends no task of its own.
   prompt: string;
-  cron: string;
+  // Set on a cron schedule only, as is nextRunAt.
+  cron: string | null;
   timezone: 'UTC';
+  // Set on a status schedule only.
+  columnId: number | null;
+  delaySec: number;
+  options: AgentScheduleOptions;
   status: 'active' | 'paused';
-  nextRunAt: string;
+  nextRunAt: string | null;
   lastRunAt: string | null;
   lastRunStatus: AgentRunStatus | null;
   pendingRuns: number;
   // False when the agent's runner is scoped to another member, who alone may run or
   // stop it.
   canTrigger: boolean;
+  // False for a schedule set up by a build whose type or options this instance lacks:
+  // kept as it is, it starts no run and can only be deleted.
+  supported: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
+// `type` is set on a create only: a schedule keeps the type it was created with.
 export interface AgentScheduleInput {
   agentId: number;
   name: string;
+  type?: AgentScheduleType;
   prompt: string;
-  cron: string;
+  cron?: string;
+  columnId?: number;
+  delaySec?: number;
+  options?: AgentScheduleOptions;
   status?: 'active' | 'paused';
 }
 
 export interface AgentScheduleRun {
   id: number;
   status: AgentRunStatus;
-  trigger: 'schedule' | 'manual';
+  trigger: 'schedule' | 'manual' | 'status' | 'event';
   prompt: string;
   attempts: number;
   lastError: string | null;

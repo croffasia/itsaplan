@@ -40,11 +40,11 @@
     },
     "activity_feed": {
       "label": "Filtro de actividad",
-      "description": "Registo de cambios de todo el proyecto, filtrable por actor y acción"
+      "description": "Registro de cambios de todo el proyecto, filtrable por actor y acción"
     },
     "pulse": {
       "label": "Pulso",
-      "description": "Mapa de caldor de actividad diaria al estilo de GitHub"
+      "description": "Mapa de calor de actividad diaria al estilo de GitHub"
     },
     "throughput": {
       "label": "Rendimiento",
@@ -199,7 +199,9 @@
       "delegation": "se ha ejecutado por una delegación de",
       "field": "se ha ejecutado por un campo de",
       "manual": "se ha ejecutado manualmente",
-      "schedule": "se ha ejecutado por programado"
+      "schedule": "se ha ejecutado por programado",
+      "status": "se ha ejecutado por un cambio de estado de",
+      "event": "se ha ejecutado por un evento de"
     }
   },
   "agentHealth": {

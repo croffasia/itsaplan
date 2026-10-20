@@ -6,7 +6,11 @@ import {
   type ProjectRow,
 } from '#modules/projects/service';
 import { featureLabel, type ProjectFeature } from './features';
-import { getMemberContext, getTeamPermissions } from '#modules/members/service';
+import {
+  getMemberContext,
+  getProjectPermissions,
+  getTeamPermissions,
+} from '#modules/members/service';
 import { getTeamMembership, runsTeam, type TeamStanding } from '#modules/teams/service';
 import { projectWorkspaceGrant, workspaceGrant } from '#modules/workspaces/service';
 import { hasPermission, type PermissionAction, type PermissionResource } from './permissions';
@@ -337,4 +341,21 @@ export async function requireTeamPermission(
     throw new HttpError(403, `You do not have permission to ${action} ${resourceLabel(resource)}`);
   }
   return membership;
+}
+
+// The projects of the team where the member holds the permission, for a team-wide read
+// that shows each member only those. Null is every project: whoever runs the team, or
+// holds the permission through their role in the workspace.
+export async function projectsWithPermission(
+  membership: TeamMembership,
+  resource: PermissionResource,
+  action: PermissionAction,
+): Promise<number[] | null> {
+  if (runsTeam(membership.role)) return null;
+  const access = await getTeamAccess(membership.teamId, membership.userId);
+  if (access?.grant && hasPermission(access.grant, resource, action)) return null;
+  const projects = await getProjectPermissions(membership.teamId, membership.userId);
+  return projects
+    .filter((entry) => hasPermission(entry.permissions, resource, action))
+    .map((entry) => entry.projectId);
 }

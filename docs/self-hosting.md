@@ -2,6 +2,11 @@
 
 Requirements: Docker and a domain behind a TLS-terminating reverse proxy.
 
+The TLS proxy is required. In production the session cookie is marked `Secure`, and
+browsers do not keep a `Secure` cookie that arrives over plain HTTP: over `http://` the sign-in
+request succeeds, but no session is kept and the app stays signed out. `http://localhost` is the
+one exception in Chrome and Firefox; WebKit browsers such as Safari refuse it there too.
+
 ```bash
 git clone https://github.com/croffasia/itsaplan.git
 cd itsaplan
@@ -14,7 +19,7 @@ The stack refuses to start while one of these is missing:
 
 | Variable                | Value                                      |
 | ----------------------- | ------------------------------------------ |
-| `API_URL`               | public origin of the api                   |
+| `API_URL`               | public URL of the api                      |
 | `APP_URL`               | public origin of the web app               |
 | `POSTGRES_PASSWORD`     | `openssl rand -base64 32`                  |
 | `BETTER_AUTH_SECRET`    | `openssl rand -base64 32`                  |
@@ -34,6 +39,81 @@ becomes the instance admin.
 `.env.example` documents every variable, including the optional ones: legal document URLs,
 passkey and cookie settings, telemetry opt-out, and worker tuning.
 
+## Where the api lives
+
+`API_URL` takes one of two forms:
+
+- **Its own subdomain**, such as `https://api.example.com` beside `APP_URL=https://app.example.com`.
+  The session cookie is set on the parent domain (`.example.com`), so every subdomain of it
+  receives the cookie. `COOKIE_DOMAIN` narrows it when the two share a deeper parent. An
+  `APP_URL` on the apex domain (`https://example.com`) has no parent to take, so this form
+  needs `COOKIE_DOMAIN=.example.com`.
+- **A path on the web's host**, such as `https://app.example.com/api` beside
+  `APP_URL=https://app.example.com`. No second hostname or certificate is needed, and the
+  session cookie stays on that one host: it has no `Domain`, and over HTTPS its name carries
+  the `__Host-` prefix, which keeps another subdomain from setting one in its place.
+
+With a path, the reverse proxy sends that path to the api and removes it on the way, so the
+api receives `/projects`, `/api/auth/...` and `/mcp` as it does on its own subdomain:
+
+```
+https://app.example.com/api/*  ->  api:3000/*   (prefix removed)
+https://app.example.com/*      ->  web:3001/*
+```
+
+For MCP clients that sign in with OAuth, the proxy also sends the discovery documents of the
+host to the api: `/.well-known/oauth-authorization-server*`,
+`/.well-known/oauth-protected-resource*` and `/.well-known/openid-configuration*`.
+
+MCP clients sign in with OAuth only over HTTPS. On an `API_URL` that is plain HTTP and not
+`localhost`, MCP takes personal API keys only.
+
+An authorization the api cannot hand back to the client, because it does not know the client
+or its redirect URI, ends on the web's sign-in page, which says what happened. A client that
+keeps a registration the instance no longer has is told to remove the server and add it again.
+
+The OAuth redirect URIs that god mode shows include the path. An api on a different
+registrable domain than the web app (`api.other.com`) does not work: the session cookie
+cannot be shared across sites.
+
+### Git webhooks on a private instance
+
+GitHub, GitLab, Gitea, Forgejo and Bitbucket deliver repository webhooks to
+`<API_URL>/webhooks/git/<id>`. When `API_URL` is reachable only over a VPN or a private
+network, expose that one route on a public hostname at the reverse proxy and set
+`GIT_WEBHOOK_BASE_URL` to its origin:
+
+```
+GIT_WEBHOOK_BASE_URL=https://hooks.example.com
+https://hooks.example.com/webhooks/git/*  ->  api:3000/webhooks/git/*
+```
+
+It changes only the payload URL: the settings page shows it, and the webhooks the instance
+manages through a provider connection are created with it. A connected repository's existing
+webhook is updated in place on the next reconcile: saving the provider token again, or
+regenerating the project's webhook secret. Deliveries are still authenticated by the
+project's secret. Auth, email links, the browser and MCP keep using `API_URL`.
+
+## Mail
+
+The instance sends password resets, address confirmations, sign-in links and invites through
+the mail provider set in god mode under **Integrations → Email provider**: SMTP or Resend.
+
+A Microsoft 365 mailbox refuses a password over SMTP once it has MFA. Set **Authentication**
+to **Microsoft 365 (OAuth)** instead: the instance signs in as an Entra ID app registration
+and sends as the mailbox over XOAUTH2. An empty server is filled with
+`smtp.office365.com:587` and STARTTLS. On the Microsoft side:
+
+1. Register an app in Entra ID, add a client secret, and grant it the Office 365 Exchange
+   Online application permission `SMTP.SendAsApp`, with admin consent.
+2. In Exchange Online PowerShell, register the app's service principal and give it access
+   to the mailbox: `New-ServicePrincipal -AppId <client id> -ObjectId <enterprise app object id>`,
+   then `Add-MailboxPermission -Identity <mailbox> -User <service principal id> -AccessRights FullAccess`.
+3. Turn on SMTP AUTH for that mailbox (`Set-CASMailbox <mailbox> -SmtpClientAuthenticationDisabled $false`).
+
+Then paste the tenant ID, the client ID and the secret into the page and send a test. A
+refused token is reported as rejected credentials and is not retried.
+
 ## Single sign-on
 
 Any provider with an OpenID Connect discovery document works: Keycloak, Authentik, KanIDM,
@@ -47,8 +127,12 @@ nothing here needs a restart.
    client secret back into the page. Name the sign-in button and turn the provider on.
 
 The first sign-in creates the account, and the registration mode under **Authentication**
-decides whether it may: `open` creates it, `invite only` needs a pending project invite,
-`closed` refuses it. On a closed instance, provision people with SCIM.
+decides whether it may: `open` creates it, `invite only` needs a pending invite that has
+not expired, `closed` refuses it. Invites expire after the days set under **Authentication**
+(7 by default, 0 for never); an expired one is renewed from the member list under a new
+link. A refused sign-in returns to the sign-in page, which says why: the instance is
+closed, it needs an invite, or the invite expired. On a closed instance, provision people
+with SCIM.
 
 A sign-in whose address already has an account joins that account instead of creating a
 second one. That needs the provider to report the address as verified and the account to
@@ -66,29 +150,28 @@ instance cannot be left with no way in.
 
 ## Provisioning with SCIM
 
-An identity provider can add people to a workspace and remove them over SCIM 2.0, and grant
-project access through its groups. Provisioning is a setting of the workspace, and only its
-owner can change it.
+An identity provider can create, deactivate and delete the accounts of the instance over
+SCIM 2.0, and grant project access through its groups. Provisioning is set up in god mode by
+the instance owner.
 
-1. In the workspace settings, open **SCIM**, generate a token and copy it — it is shown
-   once — then turn provisioning on.
+1. In god mode, open **SCIM**, generate a token and copy it — it is shown once — then turn
+   provisioning on.
 2. Point your provider's SCIM application at the endpoint the page shows
    (`<API_URL>/scim/v2`), authenticating with `Authorization: Bearer <token>`.
 3. Push users, and groups if you use them.
 
-An account belongs to the person, not to the workspace: one person can be in the teams of
-several workspaces, and each workspace's provider only decides whether they are in its own.
-The provider sees the people it created or linked and the people in the workspace's teams. A
-create for an address that already has an account links that account instead of making a
-second one; a name or address the provider sends is accepted and left as the account has it.
+The provider sees every account of the instance except those of AI agents. A create for an
+address that already has an account links that account instead of making a second one, and a
+name or address the provider sends is written to the account. While provisioning is on, the
+provider decides which accounts are active, and god mode cannot deactivate or reactivate one.
 
-Deactivating someone at the provider (`active: false`) or deleting them takes them out of
-every team and project of the workspace, including the ones they joined through an invite. A
-team or project they were the only owner of passes to the workspace owner. The account, its
-sign-in and the person's other workspaces are not touched. Reactivating gives back the
-projects their groups grant; memberships from invites do not come back. The instance owner and
-the workspace owner are outside SCIM's reach, and a repeated create for an address the
-provider already linked answers "already exists" rather than overwriting the link.
+Deactivating someone at the provider (`active: false`) keeps their teams and projects, but the
+account cannot sign in, and its sessions and API keys are refused until it is reactivated.
+Reactivating gives them the projects their groups grant. Deleting someone deletes the
+account. The delete is refused while they are the only owner of a project outside their own
+workspaces: deactivate them instead, or hand the project to another owner first. The instance
+owner is outside SCIM's reach, and a repeated create for an address the provider already
+linked answers "already exists" rather than overwriting the link.
 
 A pushed group grants nothing until you say what it is for: on the same page, open a group
 and add the projects its members should join, and the role they join on. A project belongs

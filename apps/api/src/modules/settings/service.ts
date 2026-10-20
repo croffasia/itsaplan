@@ -60,6 +60,32 @@ export async function setProjectDefaults(
   return next;
 }
 
+// The instance agent settings (app_setting key 'agents'): what applies to every team's
+// agents.
+
+const AGENT_SETTINGS_KEY = 'agents';
+
+export interface AgentSettings {
+  // Days the traces of an agent run are kept for; the background sweep deletes older
+  // ones (agents/core/runtime/trace-retention.ts). 0 keeps them.
+  traceRetentionDays: number;
+}
+
+function defaultAgentSettings(): AgentSettings {
+  return { traceRetentionDays: 30 };
+}
+
+export async function getAgentSettings(): Promise<AgentSettings> {
+  const stored = await getSetting<Partial<AgentSettings>>(AGENT_SETTINGS_KEY);
+  return { ...defaultAgentSettings(), ...(stored ?? {}) };
+}
+
+export async function setAgentSettings(patch: Partial<AgentSettings>): Promise<AgentSettings> {
+  const next = { ...(await getAgentSettings()), ...patch };
+  await setSetting(AGENT_SETTINGS_KEY, next);
+  return next;
+}
+
 // The instance keyboard shortcuts (app_setting key 'hotkeys'): the combination
 // each command is bound to for everyone on this instance. Only the bindings
 // changed in god mode are stored; the web app fills the rest from its built-in

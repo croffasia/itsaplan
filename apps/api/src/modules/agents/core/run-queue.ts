@@ -2,6 +2,7 @@ import { db, agentRun, issue, project, team } from '@repo/db';
 import { and, desc, eq, gt, inArray, isNotNull, lt, sql } from 'drizzle-orm';
 import { intEnv, iso } from '#shared/lib';
 import type { AgentRunTrigger } from '../model';
+import { equalJitterBackoffMs } from './helpers/backoff';
 
 // The agent_run outbox: data access for triggered runs and run history. The api's
 // run poller claims pending rows, runs them, and records the outcome.
@@ -15,6 +16,27 @@ export const agentRunConfig = {
   maxAttempts: () => intEnv('AGENT_RUN_MAX_ATTEMPTS', 3),
   leaseSeconds: () => intEnv('AGENT_RUN_LEASE_SECONDS', 300),
 };
+
+const RETRY_BASE_MS = 30_000;
+const RETRY_CAP_MS = 30 * 60_000;
+
+// How long a run waits before its next attempt after the given one failed.
+export function runRetryDelayMs(attempts: number): number {
+  return equalJitterBackoffMs(attempts, RETRY_BASE_MS, RETRY_CAP_MS);
+}
+
+// The condition a candidate run `q` of a claim meets when it is its turn. The runs of
+// one agent on one issue share the agent's conversation thread and act on the same
+// issue, so they go one at a time, oldest first: a run waits while another of them
+// holds a slot (claimed and inside its lease, or waiting out a retry), and while an
+// older one is due, which the same claim takes instead.
+export const issueRunTurn = sql`NOT EXISTS (
+  SELECT 1 FROM agent_run o
+  WHERE o.agent_id = q.agent_id AND o.issue_id = q.issue_id AND o.id <> q.id
+    AND o.status = 'pending'
+    AND ((o.started_at IS NOT NULL AND o.next_attempt_at > now())
+      OR (o.next_attempt_at <= now() AND o.id < q.id))
+)`;
 
 // Runs of this workspace's agents that hold a slot and were queued before this one. A claim
 // stamps started_at and pushes next_attempt_at forward, so a pending run that is
@@ -68,7 +90,7 @@ export async function enqueueAgentRun(input: {
 export interface ClaimedRun {
   id: number;
   agentId: number;
-  // Null for a scheduled or manual run, which works on no single issue.
+  // Null for a cron schedule's run or a manual one, which works on no single issue.
   issueId: number | null;
   scheduleId: number | null;
   trigger: AgentRunTrigger;
@@ -88,13 +110,14 @@ export interface ClaimedRun {
   issueIdentifier: string | null;
   issueTitle: string | null;
   // The issue's assignee (the responsible human) and, for a mention run, the author of
-  // the comment that mentioned the agent (from the source activity's name snapshot).
-  // Each carries the handle the agent tags them by. Any may be null: no assignee, a
-  // deleted user, or a run with no source comment.
+  // the comment that mentioned the agent (from the source activity's name snapshot) with
+  // their account. Each carries the handle the agent tags them by. Any may be null: no
+  // assignee, a deleted user, or a run with no source comment.
   assigneeName: string | null;
   assigneeUsername: string | null;
   requesterName: string | null;
   requesterUsername: string | null;
+  requesterUserId: string | null;
   // The comments the source comment replies to, oldest first, when it is a reply.
   // Null for a top-level mention or a delegation.
   threadContext: string | null;
@@ -119,6 +142,7 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
       SELECT id FROM agent_run q
       WHERE q.status = 'pending' AND q.next_attempt_at <= now()
         AND (SELECT kind FROM ai_agent a WHERE a.id = q.agent_id) = 'internal'
+        AND ${issueRunTurn}
       ORDER BY q.next_attempt_at, q.id
       FOR UPDATE SKIP LOCKED
       LIMIT ${batchSize}
@@ -149,7 +173,8 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
       (SELECT COALESCE(u.username, ag.username)
          FROM issue_activity a JOIN "user" u ON u.id = a.actor_user_id
          LEFT JOIN ai_agent ag ON ag.user_id = u.id
-         WHERE a.id = r.source_activity_id) AS "requesterUsername"
+         WHERE a.id = r.source_activity_id) AS "requesterUsername",
+      (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterUserId"
   `);
   const runs = rows as unknown as ClaimedRun[];
   return Promise.all(
@@ -230,14 +255,16 @@ export async function markRunFailed(id: number, error: string): Promise<void> {
 }
 
 // Puts a claimed run back in the queue without spending the attempt, for a run the
-// team has no free slot for. Waiting for a slot is not a failed attempt, and nothing
-// has been recorded on the issue yet, so the run leaves no trace of having been picked
-// up at all.
+// team has no free slot for or one held back by setRunAdmission. Waiting is not a failed
+// attempt, and nothing has been recorded on the issue yet, so the run leaves no trace of
+// having been picked up at all: a first claim's started_at goes too, so the waiting run
+// holds no slot in countRunsAhead and can be canceled as not started.
 export async function deferRun(id: number, delaySeconds: number): Promise<void> {
   await db
     .update(agentRun)
     .set({
       attempts: sql`${agentRun.attempts} - 1`,
+      startedAt: sql`CASE WHEN ${agentRun.attempts} = 1 THEN NULL ELSE ${agentRun.startedAt} END`,
       nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,
     })
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));

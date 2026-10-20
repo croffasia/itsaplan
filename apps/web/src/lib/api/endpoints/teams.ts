@@ -222,6 +222,9 @@ export const createTeam = (input: { name: string; slug: string; workspaceId: num
 export const updateTeam = (teamId: number, input: { name?: string; slug?: string }) =>
   request<Team>(`/teams/${teamId}`, { method: 'PATCH', body: JSON.stringify(input) });
 
+export const deleteTeam = (teamId: number) =>
+  request<void>(`/teams/${teamId}`, { method: 'DELETE' });
+
 export const leaveTeam = (teamId: number) =>
   request<void>(`/teams/${teamId}/leave`, { method: 'POST' });
 

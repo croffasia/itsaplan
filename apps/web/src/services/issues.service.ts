@@ -28,6 +28,7 @@ import {
   searchIssues,
   updateIssue,
   deleteIssue,
+  moveIssue,
   archiveIssue,
   restoreIssue,
   setFieldValue,
@@ -209,6 +210,27 @@ function invalidateGroupings(qc: ReturnType<typeof useQueryClient>) {
   void qc.invalidateQueries({ queryKey: qk.anyInitiatives });
   void qc.invalidateQueries({ queryKey: qk.anyCycle });
   void qc.invalidateQueries({ queryKey: qk.anyCycles });
+}
+
+interface IssueMove {
+  id: number;
+  target: { id: number; ref: string };
+  columnId?: number;
+}
+
+// The issue and its subtasks leave one board and join another, so both are refetched.
+export function useMoveIssue(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, target, columnId }: IssueMove) => moveIssue(id, target.id, columnId),
+    onSuccess: (_data, { id, target }) => {
+      void qc.invalidateQueries({ queryKey: qk.boardIssues(projectKey) });
+      void qc.invalidateQueries({ queryKey: qk.boardIssues(target.ref) });
+      void qc.invalidateQueries({ queryKey: qk.issue(id) });
+      void qc.invalidateQueries({ queryKey: qk.feed(id) });
+      invalidateGroupings(qc);
+    },
+  });
 }
 
 // Deletes an issue. Drops it from the project detail immediately and discards its

@@ -177,16 +177,19 @@ export async function failImportJob(jobId: number, error: string): Promise<void>
 }
 
 // A transient failure (rate limited, a network error, an unreachable
-// instance): reschedule rather than fail the job outright.
+// instance): reschedule rather than fail the job outright. A tick that does not
+// count as an attempt (a rate limit) gives back the bump its claim made.
 export async function retryImportJobLater(
   jobId: number,
   delayMs: number,
   error: string,
+  countsAsAttempt: boolean,
 ): Promise<void> {
   const delaySeconds = Math.max(1, Math.ceil(delayMs / 1000));
   await db
     .update(importJob)
     .set({
+      ...(countsAsAttempt ? {} : { attempts: sql`greatest(${importJob.attempts} - 1, 0)` }),
       nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,
       lastError: error.slice(0, 500),
       updatedAt: new Date(),

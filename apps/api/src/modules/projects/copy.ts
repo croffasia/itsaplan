@@ -31,6 +31,7 @@ import { getProjectDefaults } from '#modules/settings/service';
 import { listAgents, updateAgent } from '#modules/agents/core/service';
 import { listAllAgentSchedules, createAgentSchedule } from '#modules/agents/schedules/service';
 import { nextCronRun } from '#modules/agents/schedules/cron';
+import { checkScheduleOptions } from '#modules/agents/schedules/extension';
 import { generateSecret } from '#modules/webhooks/service';
 import {
   assertAttachmentStorageCapacity,
@@ -98,7 +99,8 @@ const DEFAULT_INCLUDE: CopyProjectInclude = {
 
 // Resolves the selection and force-enables the dependencies each entity needs to be
 // copied correctly. Views/actions remap the ids of states, types, labels and fields,
-// so those must be copied too; a schedule cannot exist without its agent.
+// so those must be copied too; a schedule cannot exist without its agent, and a status
+// schedule without its state.
 function normalizeInclude(raw?: Partial<CopyProjectInclude>): CopyProjectInclude {
   const inc: CopyProjectInclude = raw ? { ...ALL_FALSE, ...raw } : { ...DEFAULT_INCLUDE };
   if (inc.customFields) inc.issueTypes = true;
@@ -113,13 +115,16 @@ function normalizeInclude(raw?: Partial<CopyProjectInclude>): CopyProjectInclude
     inc.issueTypes = true;
     inc.labels = true;
   }
-  if (inc.schedules) inc.agents = true;
+  if (inc.schedules) {
+    inc.agents = true;
+    inc.states = true;
+  }
   return inc;
 }
 
 // Old id → new id maps built while copying, used to rewrite the id references that
 // views and actions hold in their filters.
-interface CopyIdMaps {
+export interface CopyIdMaps {
   column: Map<number, number>;
   labelGroup: Map<number, number>;
   label: Map<number, number>;
@@ -145,7 +150,7 @@ function remapId(map: Map<number, number>, v: unknown): unknown {
 // Non-numeric values (priority/statusType strings, assignee user ids, dates,
 // custom-field text) are left as-is. Values whose id is absent from the map are kept
 // unchanged.
-function remapViewFilters(filters: unknown, maps: CopyIdMaps): unknown {
+export function remapViewFilters(filters: unknown, maps: CopyIdMaps): unknown {
   if (!filters || typeof filters !== 'object') return filters;
   const conditions = (filters as { conditions?: unknown }).conditions;
   if (!Array.isArray(conditions)) return filters;
@@ -228,8 +233,8 @@ export async function copyProject(
   sourceProjectId: number,
   input: { key: string; name: string; description?: string },
   ownerId: string,
+  teamId: number,
   rawInclude?: Partial<CopyProjectInclude>,
-  teamId?: number,
 ): Promise<ProjectRow> {
   const inc = normalizeInclude(rawInclude);
 
@@ -667,7 +672,8 @@ export async function copyProject(
 
   // Schedules: re-created against the same agents, which only work in the copy when it
   // stayed in the team. next_run_at is recomputed from the cron so the copy starts on
-  // its own cadence rather than inheriting a past due time.
+  // its own cadence rather than inheriting a past due time. The options go through the
+  // extension with the id maps, for the ids they hold.
   if (inc.schedules && sameTeam) {
     for (const s of await listAllAgentSchedules(sourceProjectId, ownerId)) {
       await createAgentSchedule({
@@ -675,10 +681,19 @@ export async function copyProject(
         agentId: s.agentId,
         actorUserId: ownerId,
         name: s.name,
+        type: s.type,
         prompt: s.prompt,
         cron: s.cron,
+        nextRunAt: s.cron === null ? null : nextCronRun(s.cron),
+        columnId: s.columnId === null ? null : maps.column.get(s.columnId)!,
+        delaySec: s.delaySec,
+        options: await checkScheduleOptions({
+          type: s.type,
+          options: s.options,
+          projectId: newProject.id,
+          copy: maps,
+        }),
         status: s.status,
-        nextRunAt: nextCronRun(s.cron),
       });
     }
   }

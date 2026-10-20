@@ -131,6 +131,27 @@ export async function getMemberContext(
   return r ? toMemberContext(r.role as MemberRole, r.permissions) : null;
 }
 
+// A user's resolved matrix in each project of the team they are a member of.
+export async function getProjectPermissions(
+  teamId: number,
+  userId: string,
+): Promise<{ projectId: number; permissions: Permissions }[]> {
+  const rows = await db
+    .select({
+      projectId: project.id,
+      role: projectMember.role,
+      permissions: teamRole.permissions,
+    })
+    .from(projectMember)
+    .innerJoin(project, eq(project.id, projectMember.projectId))
+    .leftJoin(teamRole, eq(teamRole.id, projectMember.roleId))
+    .where(and(eq(project.teamId, teamId), eq(projectMember.userId, userId)));
+  return rows.map((row) => ({
+    projectId: row.projectId,
+    permissions: toMemberContext(row.role as MemberRole, row.permissions).permissions,
+  }));
+}
+
 // The access a user has across a team: the permissions of their project memberships
 // in it, merged. Permissions are only ever assigned per project, so this is what a
 // team-scoped resource checks for a member who is neither owner nor manager of the
@@ -138,15 +159,8 @@ export async function getMemberContext(
 // what lets a project owner manage the resources the team holds for all of them.
 // Someone who is a member of no project of the team gets an empty matrix.
 export async function getTeamPermissions(teamId: number, userId: string): Promise<Permissions> {
-  const rows = await db
-    .select({ role: projectMember.role, permissions: teamRole.permissions })
-    .from(projectMember)
-    .innerJoin(project, eq(project.id, projectMember.projectId))
-    .leftJoin(teamRole, eq(teamRole.id, projectMember.roleId))
-    .where(and(eq(project.teamId, teamId), eq(projectMember.userId, userId)));
   const merged = emptyPermissions();
-  for (const row of rows) {
-    const { permissions } = toMemberContext(row.role as MemberRole, row.permissions);
+  for (const { permissions } of await getProjectPermissions(teamId, userId)) {
     for (const resource of PERMISSION_RESOURCES) {
       for (const action of PERMISSION_ACTIONS) {
         merged[resource][action] ||= permissions[resource][action];
@@ -191,6 +205,9 @@ export interface AssigneeCandidate {
   // The user an 'owner'-scoped external agent works for: only their runs reach its
   // runner, so delegating it to anyone else does nothing. Null for everyone else.
   restrictedToUserId: string | null;
+  // Whether @-mentioning this agent starts a run. Null for a person, whom a mention
+  // always reaches as a notification.
+  respondsToMention: boolean | null;
   canReadWorkItems: boolean;
 }
 
@@ -225,6 +242,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
         agentKind: aiAgent.kind,
         ownerUserId: aiAgent.ownerUserId,
         runnerScope: aiAgent.runnerScope,
+        triggerOnMention: aiAgent.triggerOnMention,
       })
       .from(aiAgent)
       .innerJoin(user, eq(user.id, aiAgent.userId))
@@ -248,6 +266,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
       role: r.role as MemberRole,
       description: r.description,
       restrictedToUserId: null,
+      respondsToMention: null,
       canReadWorkItems:
         context.role === 'owner' || hasPermission(context.permissions, 'work_items', 'read'),
     };
@@ -263,6 +282,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
     role: null,
     description: null,
     restrictedToUserId: r.runnerScope === 'owner' ? r.ownerUserId : null,
+    respondsToMention: r.triggerOnMention,
     canReadWorkItems: false,
   }));
   return [...members, ...agents].sort((a, b) => a.name.localeCompare(b.name));

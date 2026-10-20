@@ -1,0 +1,53 @@
+{
+  "none": "부여된 권한 없음",
+  "grantedCount": "{count, plural, one {권한 #개 부여됨} other {권한 #개 부여됨}}",
+  "resources": {
+    "work_items": "작업",
+    "initiatives": "이니셔티브",
+    "cycles": "사이클",
+    "dashboards": "대시보드",
+    "documents": "문서",
+    "views": "작업 보기",
+    "members_invite": "초대",
+    "members_manage": "멤버",
+    "states": "상태",
+    "issue_types": "이슈 유형",
+    "labels": "라벨",
+    "ai_agents": "AI 에이전트",
+    "integrations": "연동",
+    "agent_skills": "AI 에이전트 스킬",
+    "agent_tools": "AI 에이전트 도구",
+    "agent_usage": "AI 에이전트 사용량",
+    "custom_fields": "사용자 지정 필드",
+    "issue_templates": "이슈 템플릿",
+    "workflow_config": "워크플로 설정",
+    "actions": "액션",
+    "webhooks": "웹훅",
+    "repositories": "저장소",
+    "note_boards": "노트 보드",
+    "import_export": "가져오기/내보내기",
+    "danger_zone": "위험 영역"
+  },
+  "actions": {
+    "create": "생성",
+    "edit": "편집",
+    "read": "보기",
+    "delete": "삭제"
+  },
+  "groups": {
+    "workItems": "작업",
+    "dashboards": "대시보드",
+    "documents": "문서",
+    "notes": "노트",
+    "ai": "AI",
+    "configuration": "설정",
+    "members": "멤버",
+    "project": "프로젝트",
+    "other": "기타"
+  },
+  "resourceColumn": "리소스",
+  "allowed": "허용",
+  "notAllowed": "허용 안 함",
+  "accessHeading": "이 프로젝트의 접근 권한",
+  "joined": "{date}에 가입"
+}

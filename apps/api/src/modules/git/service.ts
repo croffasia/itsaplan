@@ -46,6 +46,7 @@ export interface GitRepository {
 export interface GitSettings {
   enabled: boolean;
   webhookId: string;
+  payloadUrl: string;
   secret: string;
   onMergeColumnId: number | null;
   onOpenColumnId: number | null;
@@ -53,10 +54,19 @@ export interface GitSettings {
   repositories: GitRepository[];
 }
 
+// GIT_WEBHOOK_BASE_URL is the public origin for an instance whose API_URL is reachable
+// only from a private network.
+function webhookPayloadUrl(webhookId: string): string {
+  const base = process.env.GIT_WEBHOOK_BASE_URL || process.env.API_URL;
+  if (!base) throw new HttpError(500, 'API_URL is not configured');
+  return `${base.replace(/\/+$/, '')}/webhooks/git/${webhookId}`;
+}
+
 function toDto(stored: StoredGitSettings): GitSettings {
   const { recentDeliveries: _internal, ...rest } = stored;
   return {
     ...rest,
+    payloadUrl: webhookPayloadUrl(stored.webhookId),
     linkbackComments: stored.linkbackComments ?? true,
     secret: decryptSecret(stored.secret),
     repositories: stored.repositories ?? [],

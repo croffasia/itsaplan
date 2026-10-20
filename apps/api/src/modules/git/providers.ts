@@ -227,12 +227,14 @@ function parseGithubBranch(payload: unknown, headers: DeliveryHeaders): BranchEv
   if (!['create', 'delete'].includes(event ?? '') || value.ref_type !== 'branch') return null;
   if (!value.ref || !value.repository?.full_name) return null;
   const base = httpUrl(value.repository.html_url);
+  // Gitea and Forgejo serve a branch under /src/branch/; Forgejo has no /tree/ route.
+  const branchPath = gitea.matches(headers) ? 'src/branch' : 'tree';
   return {
     kind: 'branch',
     action: event === 'delete' ? 'deleted' : 'created',
     repo: value.repository.full_name,
     branch: value.ref,
-    url: base ? `${base}/tree/${refPath(value.ref)}` : null,
+    url: base ? `${base}/${branchPath}/${refPath(value.ref)}` : null,
     headSha: event === 'delete' ? null : (value.sha ?? null),
     defaultBranch: value.repository.default_branch ?? value.master_branch ?? null,
   };

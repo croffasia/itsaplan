@@ -1,0 +1,82 @@
+{
+  "window": "{days, plural, =1 {24 jam terakhir} other {# hari terakhir}}",
+  "retentionNote": "Hanya agen internal. Eksekusi yang lebih lama dari masa simpan trace instance tidak dihitung.",
+  "noComparison": "Tidak ada pembanding",
+  "vsPrevious": "sebelumnya {value}",
+  "deletedAgent": "Agen dihapus",
+  "deletedProject": "Proyek dihapus",
+  "allProjects": "Semua proyek",
+  "totalTokens": "Total token",
+  "totalCost": "Total biaya",
+  "stats": {
+    "cost": "Biaya model",
+    "tokens": "Token",
+    "runs": "Eksekusi",
+    "errors": "Eksekusi gagal"
+  },
+  "unpriced": "{count, plural, other {# model tanpa harga}}",
+  "setPrices": "Tetapkan harga",
+  "measure": {
+    "tokens": "Token",
+    "cost": "Biaya"
+  },
+  "series": {
+    "input": "Input",
+    "output": "Output"
+  },
+  "models": {
+    "title": "Per model",
+    "description": "Token dan biaya tiap model.",
+    "model": "Model",
+    "input": "Input",
+    "output": "Output",
+    "cost": "Biaya",
+    "empty": "Tidak ada panggilan model pada periode ini"
+  },
+  "byAgent": {
+    "title": "Per agen",
+    "description": "Yang dipakai tiap agen.",
+    "empty": "Tidak ada eksekusi agen pada periode ini"
+  },
+  "byProject": {
+    "title": "Per proyek",
+    "description": "Yang dipakai agen di tiap proyek.",
+    "empty": "Tidak ada eksekusi agen pada periode ini"
+  },
+  "byTeam": {
+    "title": "Per tim",
+    "description": "Yang dipakai agen tiap tim.",
+    "empty": "Tidak ada eksekusi agen pada periode ini"
+  },
+  "overTime": {
+    "title": "Dari waktu ke waktu",
+    "description": "Token dan biaya selama periode.",
+    "empty": "Tidak ada penggunaan pada periode ini"
+  },
+  "preview": {
+    "title": "Lebih banyak di Cloud dan Pro",
+    "description": "Biaya per orang dan pemicu, durasi eksekusi, dan panggilan alat. Tersedia di Cloud dan Pro self-hosted.",
+    "hide": "Sembunyikan",
+    "show": "Tampilkan",
+    "byPerson": {
+      "title": "Per orang",
+      "description": "Siapa yang menjalankan agen lewat chat atau mention."
+    },
+    "byTrigger": {
+      "title": "Per pemicu",
+      "description": "Chat, mention, jadwal, atau peristiwa tugas."
+    },
+    "bySchedule": {
+      "title": "Per jadwal",
+      "description": "Biaya tiap jadwal."
+    },
+    "tools": {
+      "title": "Alat",
+      "description": "Panggilan alat dan berapa yang gagal."
+    },
+    "latency": {
+      "title": "Durasi eksekusi",
+      "description": "Median dan persentil ke-95 per hari."
+    }
+  }
+}

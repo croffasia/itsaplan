@@ -1,6 +1,6 @@
 # ── Elysia API (Bun) — built from the monorepo root ──
 # build context in docker-compose = repository root (.)
-FROM oven/bun:1.4.0-alpine AS base
+FROM oven/bun:1.4.3-alpine AS base
 WORKDIR /app
 
 # 1) Install dependencies from manifests (cacheable layer). All workspace
@@ -27,20 +27,33 @@ COPY packages/eslint-config/package.json ./packages/eslint-config/
 # those need their own workspace links and the devDeps the suites import.
 ARG INSTALL_FILTER="--filter api"
 ARG INSTALL_FLAGS="--production"
-RUN bun install --frozen-lockfile $INSTALL_FILTER $INSTALL_FLAGS
+# --production still installs the devDependencies of workspace packages
+# (oven-sh/bun#25804), so drizzle-kit lands in the image with tsx and three esbuild
+# binaries it pulls in, two of them built with a Go release that image scanners flag.
+# Nothing at runtime uses them: migrate.ts goes through drizzle-orm. The test gate
+# keeps them.
+RUN bun install --frozen-lockfile $INSTALL_FILTER $INSTALL_FLAGS \
+ && if [ "$INSTALL_FLAGS" = "--production" ]; then \
+      rm -rf node_modules/.bun/esbuild@* node_modules/.bun/@esbuild+* \
+        node_modules/.bun/@esbuild-kit+* node_modules/.bun/drizzle-kit@* node_modules/.bun/tsx@*; \
+    fi
 
 # 2) Final image. bun keeps some workspace deps in per-package node_modules
 # (packages/db/node_modules, apps/api/node_modules) rather than hoisting them to
 # the root, so copy the whole install tree (manifests + every node_modules), then
 # overlay the source. .dockerignore excludes node_modules, so `COPY . .` does not
 # clobber the copied dependencies.
-FROM base AS release
+#
+# pg_dump, for the backup migrate.ts takes before it applies anything, refuses a server
+# newer than itself. The Railway template runs Postgres 18 and the compose files run 17,
+# so the image ships the 18 client, which dumps both. The bun image is built on Alpine
+# 3.22, which has no 18 client, so this stage is Alpine 3.23 with bun copied in.
+FROM alpine:3.23 AS release
+WORKDIR /app
 ENV NODE_ENV=production
-# pg_dump, for the backup migrate.ts takes before it applies anything. The package
-# tracks the Postgres the compose file runs (17), and a client older than the server
-# refuses to dump, so an instance on a newer server needs a newer image or
-# SKIP_PRE_MIGRATION_BACKUP=1.
-RUN apk add --no-cache postgresql-client
+ENV BUN_RUNTIME_TRANSPILER_CACHE_PATH=0
+RUN apk add --no-cache libgcc libstdc++ postgresql18-client
+COPY --from=base /usr/local/bin/bun /usr/local/bin/
 COPY --from=install /app ./
 COPY . .
 

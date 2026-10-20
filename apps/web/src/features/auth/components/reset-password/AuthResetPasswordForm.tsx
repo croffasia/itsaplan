@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { useAuthConfig } from '@/services/authConfig.service';
 import AuthFormHeader from '../AuthFormHeader';
 import AuthMessagePanel from '../AuthMessagePanel';
 import { setNewPassword } from '../../services/auth.service';
@@ -21,6 +22,9 @@ export default function AuthResetPasswordForm() {
   const token = params.get('token') ?? '';
   const email = params.get('email') ?? '';
   const linkError = params.get('error');
+  // The api refuses /reset-password while the password form is off, so a link issued
+  // before it was turned off must not offer a password field.
+  const passwordEnabled = useAuthConfig()?.emailPassword !== false;
 
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -39,6 +43,20 @@ export default function AuthResetPasswordForm() {
         router.refresh();
       },
       { redirect: false },
+    );
+  }
+
+  if (!passwordEnabled) {
+    return (
+      <AuthMessagePanel
+        title={t('resetPassword.deadLinkTitle')}
+        description={t('errors.passwordDisabled')}
+        footer={
+          <Link href="/login" className="underline underline-offset-4">
+            {t('forgotPassword.backToSignIn')}
+          </Link>
+        }
+      />
     );
   }
 

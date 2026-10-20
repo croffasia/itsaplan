@@ -29,6 +29,9 @@ describe('document export', () => {
       'release-notes-2026.md',
     );
     assert.equal(documentExportFilename('', 'html'), 'untitled.html');
+    assert.equal(documentExportFilename('Заметки к релизу', 'markdown'), 'zametki-k-relizu.md');
+    assert.equal(documentExportFilename('Café São Paulo', 'html'), 'cafe-sao-paulo.html');
+    assert.equal(documentExportFilename('★', 'html'), 'untitled.html');
     assert.equal(documentExportArchiveFilename('Release notes 2026'), 'release-notes-2026.zip');
   });
 

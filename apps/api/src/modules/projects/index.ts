@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
+import { paginate } from '#shared/pagination';
 import { HttpError } from '#shared/lib';
 import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
@@ -20,11 +21,12 @@ import {
   ProjectBoardResponse,
   ProjectListResponse,
   ProjectResponse,
+  ProjectSearchPageResponse,
   ProjectSettingsResponse,
   SubtaskAutomationResponse,
   copyProjectBody,
-  createProjectBody,
   listProjectsQuery,
+  searchProjectsQuery,
   updateAutoArchiveBody,
   updateEstimatesBody,
   updateProjectBody,
@@ -33,7 +35,7 @@ import {
 } from './model';
 import {
   listProjects,
-  createProject,
+  searchProjects,
   updateProject,
   deleteProject,
   projectFeatures,
@@ -75,22 +77,32 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
     },
   )
 
-  .post(
-    '/projects',
-    async ({ body, user, set }) => {
-      set.status = 201;
-      return createProject(body, requireUser(user).id);
-    },
+  .get(
+    '/projects/search',
+    ({ user, query }) =>
+      paginate(query, (window) =>
+        searchProjects(
+          requireUser(user).id,
+          {
+            q: query.q,
+            sort: query.sort,
+            teamId: query.teamId,
+            workspaceId: query.workspaceId,
+            ids: query.ids?.split(',').map(Number),
+            favorite: query.favorite === undefined ? undefined : query.favorite === 'true',
+            hidden: query.hidden === undefined ? undefined : query.hidden === 'true',
+          },
+          window,
+        ),
+      ),
     {
-      body: createProjectBody,
-      response: { 201: ProjectResponse, ...errors(400, 401) },
+      query: searchProjectsQuery,
+      response: { 200: ProjectSearchPageResponse, ...errors(400, 401) },
       detail: {
-        summary: 'Create a project',
+        summary: 'Search projects',
         description:
-          'Create a project you own. `key` is the immutable prefix for issue ids, unique within the team ' +
-          "(e.g. 'MKT' -> 'MKT-1'). Seeds the default columns and the issue types of the " +
-          'chosen `preset`.',
-        ...mcpTool('create_project'),
+          'A page of the projects you can open, filtered like List projects and also by ' +
+          'workspace, by id, and by your star and hidden marks. Starred projects come first.',
       },
     },
   )
@@ -100,7 +112,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
     async ({ project, body, user, set }) => {
       const { include, ...meta } = body;
       set.status = 201;
-      return await copyProject(project.id, meta, requireUser(user).id, include);
+      return await copyProject(project.id, meta, requireUser(user).id, project.teamId, include);
     },
     {
       body: copyProjectBody,
@@ -109,8 +121,8 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       detail: {
         summary: 'Copy a project',
         description:
-          "Copy a project's configuration into a new project you own, without its issues. " +
-          'Only an owner or a manager of the team that owns the source project may copy it. ' +
+          "Copy a project's configuration into a new project you own in the same team, without " +
+          'its issues. Only an owner or a manager of that team may copy it. ' +
           'By default the structure (states, issue types, labels, custom fields, views, ' +
           'dashboards, documents, actions) is copied. Pass `include` to choose sections; the API ' +
           'force-enables dependencies (e.g. a view pulls in the states it references).',

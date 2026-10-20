@@ -21,7 +21,8 @@ export async function enqueueDueSchedules(): Promise<void> {
              s.next_run_at AS "nextRunAt"
       FROM agent_schedule s
       JOIN project p ON p.id = s.project_id
-      WHERE s.status = 'active' AND s.next_run_at <= now() AND p.archived_at IS NULL
+      WHERE s.type = 'cron' AND s.status = 'active' AND s.next_run_at <= now()
+        AND p.archived_at IS NULL
       ORDER BY s.next_run_at, s.id
       FOR UPDATE OF s SKIP LOCKED
       LIMIT 50

@@ -43,8 +43,41 @@ async function resolveActor(actor: ActivityActor): Promise<WebhookActor> {
   return { type: row?.agentId != null ? 'agent' : 'human', id: actor, name: row?.name ?? null };
 }
 
+export interface ProjectEvent {
+  projectId: number;
+  type: WebhookEventType;
+  actor: ActivityActor;
+  // The event's webhook payloads (`data`), one per issue or comment it covers. Built on
+  // the first call and shared with the webhooks.
+  load: () => Promise<unknown[]>;
+}
+
+type ProjectEventListener = (event: ProjectEvent) => Promise<void>;
+
+const listeners: ProjectEventListener[] = [];
+
+// Hands the events the webhooks get to an extension of the api, inside the request
+// that caused them. A listener that throws is logged and does not fail that request.
+// Returns the call that removes the listener.
+export function onProjectEvent(listener: ProjectEventListener): () => void {
+  listeners.push(listener);
+  return () => {
+    const at = listeners.indexOf(listener);
+    if (at >= 0) listeners.splice(at, 1);
+  };
+}
+
+// Whether a listener of onProjectEvent or a subscribed webhook takes eventType, for a
+// caller that has to build the payloads before its write removes what they name.
+export async function projectEventWanted(
+  projectId: number,
+  eventType: WebhookEventType,
+): Promise<boolean> {
+  return listeners.length > 0 || (await subscribedWebhooks(projectId, eventType)).length > 0;
+}
+
 // The active webhooks of the project that subscribe to eventType.
-export function subscribedWebhooks(projectId: number, eventType: WebhookEventType) {
+function subscribedWebhooks(projectId: number, eventType: WebhookEventType) {
   return db
     .select({ id: webhook.id })
     .from(webhook)
@@ -62,8 +95,9 @@ export function subscribedWebhooks(projectId: number, eventType: WebhookEventTyp
 // project that subscribes to eventType, for each payload `load` returns. Each event
 // gets its own eventId, shared by its deliveries and kept across retries so a
 // receiver can deduplicate; the deliveries go in as one insert. Call it right after a
-// domain mutation, next to the activity log. The payloads are built only after a
-// subscribed webhook is found, so a project with no webhooks pays one indexed SELECT.
+// domain mutation, next to the activity log. The payloads are built at most once, when a
+// listener of onProjectEvent or a subscribed webhook needs them, so a project with no
+// webhooks and no listener pays one indexed SELECT.
 //
 // The body follows Linear's webhook envelope: top-level action, type, actor, data,
 // plus createdAt and webhookTimestamp (epoch ms). `event` is our extension, and it
@@ -76,10 +110,20 @@ export async function emitWebhookEvents(
   load: () => Promise<unknown[]>,
   actor: ActivityActor,
 ): Promise<void> {
+  let loaded: Promise<unknown[]> | undefined;
+  const loadOnce = () => (loaded ??= load());
+  for (const listener of listeners) {
+    try {
+      await listener({ projectId, type: eventType, actor, load: loadOnce });
+    } catch (error) {
+      console.error('[webhooks] event listener failed:', error);
+    }
+  }
+
   const matching = await subscribedWebhooks(projectId, eventType);
   if (matching.length === 0) return;
 
-  const payloads = await load();
+  const payloads = await loadOnce();
   if (payloads.length === 0) return;
 
   const { action, type } = EVENT_SHAPE[eventType];

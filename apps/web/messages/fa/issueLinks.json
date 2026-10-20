@@ -1,0 +1,16 @@
+{
+  "relations": {
+    "blocked_by": "مسدود شده توسط",
+    "blocks": "مسدود می‌کند",
+    "duplicates": "تکراری از",
+    "duplicated_by": "تکراری‌شده توسط",
+    "relates": "مرتبط"
+  },
+  "phrases": {
+    "blocked_by": "مسدود شده توسط",
+    "blocks": "در حال مسدود کردن",
+    "duplicates": "یک نسخه تکراری از",
+    "duplicated_by": "تکراری‌شده توسط",
+    "relates": "مرتبط با"
+  }
+}

@@ -40,7 +40,11 @@ export default function EditorLinkPreviewDetails({ preview }: { preview: Resolve
       ))}
       {preview.filters?.length === 0 && <p>{t('previewAllWorkItems')}</p>}
       {updated && Number.isFinite(updated.getTime()) && (
-        <p>{t('previewUpdated', { date: format.dateTime(updated, { dateStyle: 'medium' }) })}</p>
+        <p>
+          {t('previewUpdated', {
+            date: format.dateTime(updated, { dateStyle: 'medium', calendar: 'gregory' }),
+          })}
+        </p>
       )}
     </div>
   );

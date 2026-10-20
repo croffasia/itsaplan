@@ -108,7 +108,8 @@
     "restore": "恢复工作项",
     "archive": "归档工作项",
     "delete": "删除工作项",
-    "shareIssue": "共享工作项"
+    "shareIssue": "共享工作项",
+    "move": "移动到其他项目"
   },
   "actions": {
     "deleteTitle": "删除工作项",
@@ -117,7 +118,16 @@
     "cannotBeUndone": "此操作无法撤销。",
     "deleteDescription": "删除 {issue}？这会删除该工作项及其评论、活动和附件。",
     "archiveDescription": "归档 {issue}？该工作项将离开看板，之后可以恢复。",
-    "applyDescription": "将 <v>{action}</v> 应用于此工作项？"
+    "applyDescription": "将 <v>{action}</v> 应用于此工作项？",
+    "moveTitle": "移动事项",
+    "move": "移动",
+    "moveDescription": "将 {issue} 移动到本团队的其他项目。它会在那里获得新编号，旧链接仍可打开它。",
+    "moveSubtasks": "{count, plural, other {它的 # 个子任务会一起移动。}}",
+    "moveProject": "项目",
+    "moveChooseProject": "选择项目",
+    "moveColumn": "状态",
+    "moveColumnMatching": "匹配的状态",
+    "moveCarriedOver": "目标项目中有同名的类型、标签和自定义字段时会保留。周期、计划以及与本项目事项的关联会被移除。"
   },
   "create": {
     "title": "新建工作项",
@@ -341,7 +351,8 @@
     "worklogChanged": "将 <v>{fromDate}</v> 的 <v>{from}</v> 改为 <v>{date}</v> 的 <v>{to}</v>",
     "worklogRemoved": "删除了 <v>{date}</v> 的 <v>{time}</v>",
     "commentEdited": "编辑了一条评论",
-    "commentDeleted": "删除了一条评论"
+    "commentDeleted": "删除了一条评论",
+    "issueMoved": "将此事项从 <v>{from}</v> 移动到 <v>{to}</v>"
   },
   "development": {
     "title": "开发",

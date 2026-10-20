@@ -1,0 +1,58 @@
+{
+  "add": "필터 추가",
+  "remove": "필터 제거",
+  "valuePlaceholder": "값",
+  "noOptions": "선택할 수 있는 항목이 없습니다",
+  "selected": "{count}개 선택됨",
+  "operators": {
+    "is": "일치",
+    "is_not": "일치하지 않음",
+    "before": "이전",
+    "after": "이후",
+    "is_set": "값 있음",
+    "is_not_set": "값 없음",
+    "contains": "포함",
+    "not_contains": "포함하지 않음",
+    "overdue": "기한이 지남",
+    "today": "오늘",
+    "next_3_days": "향후 3일 이내",
+    "next_7_days": "향후 7일 이내"
+  },
+  "boolean": {
+    "true": "예",
+    "false": "아니요"
+  },
+  "cycleStatus": {
+    "active": "진행 중인 사이클",
+    "upcoming": "예정된 사이클"
+  },
+  "initiativeStatus": {
+    "active": "진행 중인 이니셔티브",
+    "planned": "계획된 이니셔티브",
+    "proposed": "제안된 이니셔티브"
+  },
+  "fields": {
+    "status": "상태",
+    "statusType": "상태 유형",
+    "assignee": "담당자",
+    "delegate": "위임 대상",
+    "priority": "우선순위",
+    "type": "유형",
+    "initiative": "이니셔티브",
+    "cycle": "사이클",
+    "labels": "라벨",
+    "dueDate": "마감일",
+    "startDate": "시작일",
+    "created": "생성일",
+    "updated": "업데이트일"
+  },
+  "unset": {
+    "assignee": "담당자 없음",
+    "delegate": "위임 대상 없음",
+    "type": "유형 없음",
+    "initiative": "이니셔티브 없음",
+    "cycle": "사이클 없음",
+    "member": "값 없음"
+  },
+  "currentUser": "현재 사용자"
+}

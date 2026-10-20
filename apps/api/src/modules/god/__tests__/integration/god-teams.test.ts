@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { resetDb } from '#tests/helpers/db';
 import { addUser, createAgentUser, setup, type Actor } from '../helpers';
+import { ownWorkspaceId, createProject } from '#tests/helpers/app';
 
 // The instance team directory under god mode: listing every team on the instance with
 // what it holds, and reading one with the projects it owns and everyone in it. These
@@ -47,7 +48,7 @@ describe('god teams', () => {
     it('counts what a team holds', async () => {
       const { god } = await setup();
       const teamId = await ownTeamId(god);
-      await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(god.api, { key: 'MKT', name: 'Marketing' });
       const view = await god.api.projects({ projectKey: 'MKT' }).get();
       await god.api.projects({ projectKey: 'MKT' }).issues.post({
         title: 'First',
@@ -71,7 +72,7 @@ describe('god teams', () => {
     it('leaves an archived issue out of the count', async () => {
       const { god } = await setup();
       const teamId = await ownTeamId(god);
-      await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(god.api, { key: 'MKT', name: 'Marketing' });
       const view = await god.api.projects({ projectKey: 'MKT' }).get();
       const created = await god.api.projects({ projectKey: 'MKT' }).issues.post({
         title: 'Old',
@@ -86,8 +87,16 @@ describe('god teams', () => {
 
     it('matches the search term against the name', async () => {
       const { god } = await setup();
-      await god.api.teams.post({ name: 'Marketing', slug: 'marketing' });
-      await god.api.teams.post({ name: 'Engineering', slug: 'engineering' });
+      await god.api.teams.post({
+        name: 'Marketing',
+        slug: 'marketing',
+        workspaceId: await ownWorkspaceId(god.api),
+      });
+      await god.api.teams.post({
+        name: 'Engineering',
+        slug: 'engineering',
+        workspaceId: await ownWorkspaceId(god.api),
+      });
 
       const match = await god.api.god.teams.get({ query: { ...PAGE, search: 'market' } });
       const noMatch = await god.api.god.teams.get({ query: { ...PAGE, search: 'nothing' } });
@@ -100,8 +109,16 @@ describe('god teams', () => {
 
     it('pages with limit and offset while the total stays the full match count', async () => {
       const { god } = await setup();
-      await god.api.teams.post({ name: 'One', slug: 'one' });
-      await god.api.teams.post({ name: 'Two', slug: 'two' });
+      await god.api.teams.post({
+        name: 'One',
+        slug: 'one',
+        workspaceId: await ownWorkspaceId(god.api),
+      });
+      await god.api.teams.post({
+        name: 'Two',
+        slug: 'two',
+        workspaceId: await ownWorkspaceId(god.api),
+      });
 
       const first = await god.api.god.teams.get({ query: { page: 1, pageSize: 2 } });
       const second = await god.api.god.teams.get({ query: { page: 2, pageSize: 2 } });
@@ -127,7 +144,7 @@ describe('god teams', () => {
     it('returns the counts of the team', async () => {
       const { god } = await setup();
       const teamId = await ownTeamId(god);
-      await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(god.api, { key: 'MKT', name: 'Marketing' });
 
       const res = await god.api.god.teams({ teamId }).get();
 
@@ -147,7 +164,7 @@ describe('god teams', () => {
     it('lists the projects the team owns with what each holds', async () => {
       const { god } = await setup();
       const teamId = await ownTeamId(god);
-      await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(god.api, { key: 'MKT', name: 'Marketing' });
       const view = await god.api.projects({ projectKey: 'MKT' }).get();
       await god.api.projects({ projectKey: 'MKT' }).issues.post({
         title: 'First',
@@ -169,8 +186,8 @@ describe('god teams', () => {
     it('matches the search term against the key or the name, and pages', async () => {
       const { god } = await setup();
       const teamId = await ownTeamId(god);
-      await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
-      await god.api.projects.post({ key: 'ENG', name: 'Engineering' });
+      await createProject(god.api, { key: 'MKT', name: 'Marketing' });
+      await createProject(god.api, { key: 'ENG', name: 'Engineering' });
 
       const byKey = await god.api.god
         .teams({ teamId })
@@ -201,7 +218,7 @@ describe('god teams', () => {
     it('lists everyone in the team with their rank, and flags an agent', async () => {
       const { god } = await setup();
       const teamId = await ownTeamId(god);
-      await god.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(god.api, { key: 'MKT', name: 'Marketing' });
       const agentUserId = await createAgentUser(god, 'MKT');
 
       const res = await god.api.god.teams({ teamId }).members.get({ query: PAGE });

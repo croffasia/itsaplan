@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { eq } from 'drizzle-orm';
 import { db, project } from '@repo/db';
-import { authedApi } from '#tests/helpers/app';
+import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
@@ -11,7 +11,7 @@ import { resetDb } from '#tests/helpers/db';
 async function ownerWithProject(key: string) {
   const user = await signUpTestUser();
   const api = authedApi(user.cookie);
-  const created = (await api.projects.post({ key: 'TMP', name: 'Trader' })).data!;
+  const created = (await createProject(api, { key: 'TMP', name: 'Trader' })).data!;
   await db.update(project).set({ key }).where(eq(project.id, created.id));
   return { api, created };
 }
@@ -47,7 +47,7 @@ describe('project key rename', () => {
   it('accepts the unchanged valid key', async () => {
     const user = await signUpTestUser();
     const api = authedApi(user.cookie);
-    const created = (await api.projects.post({ key: 'MKT', name: 'Marketing' })).data!;
+    const created = (await createProject(api, { key: 'MKT', name: 'Marketing' })).data!;
 
     const res = await api.projects({ projectKey: created.ref }).patch({ key: 'MKT', name: 'Ads' });
     expect(res.data).toMatchObject({ key: 'MKT', name: 'Ads' });
@@ -55,7 +55,7 @@ describe('project key rename', () => {
 
   it('refuses a key another project of the team has', async () => {
     const { api, created } = await ownerWithProject('7XTR');
-    await api.projects.post({ key: 'XTR', name: 'Other' });
+    await createProject(api, { key: 'XTR', name: 'Other' });
 
     const res = await api.projects({ projectKey: `${created.teamId}.7XTR` }).patch({ key: 'XTR' });
     expect(res.status).toBe(409);

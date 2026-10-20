@@ -88,8 +88,8 @@ attributed author.
 ## Rate limits are real, and the import waits them out
 
 Plane limits how many requests it will answer per minute. A project of any real size will
-run into that limit, and the job pauses to wait it out — you will see "Plane's rate limit
-was reached, retrying in Ns" in the job list when this happens. This is normal, not a
+run into that limit, and the job pauses to wait it out — you will see "The source's rate
+limit was reached. Retrying in Ns." in the job list when this happens. This is normal, not a
 failure; the import resumes on its own once the wait is over. A large project can take a
 long time to finish for this reason alone.
 
@@ -122,7 +122,7 @@ snapshot, readable on its own, using this project's own identifiers rather than 
 ids. This is a download, not a live sync: it does not write anywhere, including back into
 Plane, and nothing is scheduled or kept running.
 
-## Only Plane, only import
+## Other sources
 
-Plane is the only supported source to import from today — Linear and Jira are not
-available.
+[Importing from Linear](importing-from-linear.md) describes the Linear source. Jira and Trello
+are not available.

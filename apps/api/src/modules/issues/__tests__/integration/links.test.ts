@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { type IssueLinkInputKind } from '../../links';
@@ -20,7 +20,7 @@ interface Setup {
 async function setupProject(): Promise<Setup> {
   const owner = await signUpTestUser();
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
   return { asOwner, columnId: view.data!.columns[0].id };
 }
@@ -52,7 +52,7 @@ function unlink(client: Api, issueId: number, linkId: number) {
 
 // An issue of a second project, which no issue of the first one may link to.
 async function foreignIssue(client: Api) {
-  await client.projects.post({ key: 'OPS', name: 'Operations' });
+  await createProject(client, { key: 'OPS', name: 'Operations' });
   const view = await client.projects({ projectKey: 'OPS' }).get();
   const res = await client
     .projects({ projectKey: 'OPS' })

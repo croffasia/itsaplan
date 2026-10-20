@@ -1,0 +1,37 @@
+{
+  "label": "API 키",
+  "title": "API 키",
+  "description": "개인 API 키를 사용하면 내 계정({email})으로 API 요청을 인증할 수 있습니다. 키 값은 생성할 때 한 번만 표시됩니다.",
+  "sectionTitle": "내 API 키",
+  "create": "API 키 생성",
+  "empty": "아직 API 키가 없습니다. API 요청을 인증하려면 API 키를 생성해 주세요.",
+  "fallbackName": "API 키",
+  "createdAt": "{date}에 생성됨",
+  "expiresAt": "{date}에 만료됨",
+  "noExpiry": "만료되지 않음",
+  "deleteAction": "키 삭제",
+  "createDialog": {
+    "title": "API 키 생성",
+    "nameLabel": "이름",
+    "namePlaceholder": "예: CI 파이프라인",
+    "nameHint": "키를 쉽게 구분할 수 있는 이름을 입력하세요.",
+    "expiryLabel": "유효 기간",
+    "expiresInDays": "{days}일",
+    "expiryHint": "키가 만료되면 더 이상 사용할 수 없습니다. 계속 사용하려면 새 키를 생성하세요.",
+    "submit": "키 생성",
+    "submitPending": "생성 중…",
+    "error": "API 키를 생성할 수 없습니다."
+  },
+  "createdDialog": {
+    "title": "API 키가 생성되었습니다",
+    "description": "API 키를 지금 복사해 두세요. 이 키는 다시 확인할 수 없습니다.",
+    "copy": "복사"
+  },
+  "deleteDialog": {
+    "title": "API 키를 삭제하시겠습니까?",
+    "confirm": "삭제 확인",
+    "description": "삭제하면 이 키를 더 이상 사용할 수 없으며 복구할 수 없습니다.",
+    "error": "API 키를 삭제할 수 없습니다."
+  },
+  "loadFailed": "API 키를 불러올 수 없습니다."
+}

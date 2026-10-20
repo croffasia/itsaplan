@@ -1,10 +1,12 @@
 import { db, teamInvite, teamMember, projectMember, teamRole, team, project, user } from '@repo/db';
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
+import { getAuthSettings, inviteValidSince } from '@repo/auth';
 import { HttpError, iso, pgErrorCode } from '#shared/lib';
 import { getProjectAccess, getTeamAccess } from '#shared/access';
 import { teamRef } from '#modules/teams/ref';
 import { getMembership, type MemberRole } from '#modules/members/service';
 import { assertSeatFree, getTeamMembership, runsTeam, type TeamRole } from '#modules/teams/service';
+import { isInviteEmailAllowed } from './email-policy';
 
 // Data access for invites. An invite is a token-addressed grant of membership in a
 // team, and — when it names a project — in that project too. Creating one requires
@@ -45,6 +47,8 @@ export interface InviteRow {
   roleName: string | null;
   status: InviteStatus;
   createdAt: string;
+  // When a pending invite expires; null once resolved or when invites never expire.
+  expiresAt: string | null;
   respondedAt: string | null;
   invitedByName: string | null;
   invitedByEmail: string | null;
@@ -66,6 +70,8 @@ export interface InviteView {
   roleName: string | null;
   status: InviteStatus;
   createdAt: string;
+  // A pending invite past its validity: the screen says so instead of offering to accept.
+  expired: boolean;
   // Whether the invited email already has an account. Lets the accept screen
   // open in sign-in mode instead of registration. Scoped to the one email bound
   // to this (unguessable) token, so it is not a general existence oracle.
@@ -122,7 +128,16 @@ function selectInvites() {
 
 type InviteSelection = Awaited<ReturnType<ReturnType<typeof selectInvites>['execute']>>[number];
 
-function toRow(r: InviteSelection): InviteRow {
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function expiresAt(createdAt: Date, status: string, ttlDays: number): string | null {
+  if (status !== 'pending' || ttlDays <= 0) return null;
+  return iso(new Date(createdAt.getTime() + ttlDays * DAY_MS));
+}
+
+const inviteTtlDays = async () => (await getAuthSettings()).inviteTtlDays;
+
+function toRow(r: InviteSelection, ttlDays: number): InviteRow {
   return {
     id: r.id,
     token: r.token,
@@ -135,6 +150,7 @@ function toRow(r: InviteSelection): InviteRow {
     roleName: r.roleName,
     status: r.status as InviteStatus,
     createdAt: iso(r.createdAt),
+    expiresAt: expiresAt(r.createdAt, r.status, ttlDays),
     respondedAt: r.respondedAt ? iso(r.respondedAt) : null,
     invitedByName: r.invitedByName,
     invitedByEmail: r.invitedByEmail,
@@ -156,8 +172,15 @@ async function findAccount(email: string): Promise<{ id: string } | undefined> {
 // An address already inside the team takes no invite. Accepting one rewrites the
 // membership the account already holds, which is how a project's last owner would be
 // demoted to member; a team member reaches a project through its member list instead.
-async function assertNotAlreadyMember(input: NewInvite, email: string): Promise<void> {
+async function assertInvitable(input: NewInvite, email: string): Promise<void> {
   const account = await findAccount(email);
+  if (!(await isInviteEmailAllowed(input.teamId, email, account != null))) {
+    throw new HttpError(
+      400,
+      'Addresses at this domain cannot be invited here',
+      'EMAIL_DOMAIN_NOT_ALLOWED',
+    );
+  }
   if (!account) return;
 
   if (input.projectId != null && (await getMembership(input.projectId, account.id))) {
@@ -210,23 +233,43 @@ export async function mayGrantInviteRanks(
 
 export async function createInvite(input: NewInvite): Promise<InviteRow> {
   const email = normalizeEmail(input.email);
-  await assertNotAlreadyMember(input, email);
+  await assertInvitable(input, email);
   // Project owners bypass roles, so an owner invite never carries a role_id.
   const roleId = input.projectRole === 'member' ? input.roleId : null;
+  // An expired invite still holds the one pending slot per address; it gives way to the
+  // new one, so inviting again (or renewing) works without revoking it first.
+  const since = await inviteValidSince();
   let row;
   try {
-    [row] = await db
-      .insert(teamInvite)
-      .values({
-        teamId: input.teamId,
-        projectId: input.projectId,
-        email,
-        teamRole: input.teamRole,
-        projectRole: input.projectRole,
-        roleId,
-        invitedByUserId: input.invitedByUserId,
-      })
-      .returning({ id: teamInvite.id });
+    [row] = await db.transaction(async (tx) => {
+      if (since) {
+        await tx
+          .delete(teamInvite)
+          .where(
+            and(
+              eq(teamInvite.teamId, input.teamId),
+              input.projectId == null
+                ? isNull(teamInvite.projectId)
+                : eq(teamInvite.projectId, input.projectId),
+              eq(teamInvite.email, email),
+              eq(teamInvite.status, 'pending'),
+              lt(teamInvite.createdAt, since),
+            ),
+          );
+      }
+      return tx
+        .insert(teamInvite)
+        .values({
+          teamId: input.teamId,
+          projectId: input.projectId,
+          email,
+          teamRole: input.teamRole,
+          projectRole: input.projectRole,
+          roleId,
+          invitedByUserId: input.invitedByUserId,
+        })
+        .returning({ id: teamInvite.id });
+    });
   } catch (err) {
     if (pgErrorCode(err) === '23505') {
       throw new HttpError(
@@ -242,14 +285,15 @@ export async function createInvite(input: NewInvite): Promise<InviteRow> {
 
 export async function getInviteById(id: number): Promise<InviteRow | null> {
   const rows = await selectInvites().where(eq(teamInvite.id, id));
-  return rows[0] ? toRow(rows[0]) : null;
+  return rows[0] ? toRow(rows[0], await inviteTtlDays()) : null;
 }
 
 export async function listProjectInvites(projectId: number): Promise<InviteRow[]> {
   const rows = await selectInvites()
     .where(eq(teamInvite.projectId, projectId))
     .orderBy(desc(teamInvite.createdAt));
-  return rows.map(toRow);
+  const ttlDays = await inviteTtlDays();
+  return rows.map((r) => toRow(r, ttlDays));
 }
 
 // Every invite of the team, including the ones that also name one of its projects:
@@ -258,7 +302,8 @@ export async function listTeamInvites(teamId: number): Promise<InviteRow[]> {
   const rows = await selectInvites()
     .where(eq(teamInvite.teamId, teamId))
     .orderBy(desc(teamInvite.createdAt));
-  return rows.map(toRow);
+  const ttlDays = await inviteTtlDays();
+  return rows.map((r) => toRow(r, ttlDays));
 }
 
 // Removes an invite of the given project. Returns true when one existed. Used to
@@ -306,6 +351,7 @@ export async function getInviteByToken(token: string): Promise<InviteView | null
   const r = rows[0];
   if (!r) return null;
   const account = await findAccount(r.email);
+  const until = expiresAt(r.createdAt, r.status, await inviteTtlDays());
   return {
     token: r.token,
     teamName: r.teamName,
@@ -319,8 +365,50 @@ export async function getInviteByToken(token: string): Promise<InviteView | null
     roleName: r.roleName,
     status: r.status as InviteStatus,
     createdAt: iso(r.createdAt),
+    expired: until != null && new Date(until) < new Date(),
     hasAccount: account != null,
   };
+}
+
+// The stored fields an expired invite is renewed from: the same grant, under a new
+// link and a fresh validity.
+export async function getInviteGrant(id: number) {
+  const [row] = await db
+    .select({
+      teamId: teamInvite.teamId,
+      projectId: teamInvite.projectId,
+      email: teamInvite.email,
+      teamRole: teamInvite.teamRole,
+      projectRole: teamInvite.projectRole,
+      roleId: teamInvite.roleId,
+      status: teamInvite.status,
+      createdAt: teamInvite.createdAt,
+    })
+    .from(teamInvite)
+    .where(eq(teamInvite.id, id));
+  return row ?? null;
+}
+
+// A link is never handed out twice: renewing creates a new invite for the same grant,
+// which replaces the expired one (see createInvite). A live invite is not renewed.
+export async function renewInvite(
+  grant: NonNullable<Awaited<ReturnType<typeof getInviteGrant>>>,
+  invitedByUserId: string,
+): Promise<InviteRow> {
+  if (grant.status !== 'pending') throw new HttpError(409, 'This invite is no longer pending');
+  const since = await inviteValidSince();
+  if (!since || grant.createdAt >= since) {
+    throw new HttpError(409, 'This invite has not expired');
+  }
+  return createInvite({
+    teamId: grant.teamId,
+    projectId: grant.projectId,
+    email: grant.email,
+    teamRole: grant.teamRole as InviteTeamRole,
+    projectRole: grant.projectRole as MemberRole | null,
+    roleId: grant.roleId,
+    invitedByUserId,
+  });
 }
 
 // The raw invite fields needed to act on it (accept/reject/match email).
@@ -336,6 +424,7 @@ export async function getInviteRowByToken(token: string) {
       roleId: teamInvite.roleId,
       status: teamInvite.status,
       invitedByUserId: teamInvite.invitedByUserId,
+      createdAt: teamInvite.createdAt,
     })
     .from(teamInvite)
     .where(eq(teamInvite.token, token));

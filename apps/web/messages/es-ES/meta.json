@@ -1,4 +1,14 @@
 {
-  "title": "It's a Plan: seguimiento de tickets para personas y agentes",
-  "description": "Un gestor de tickets autogestionado y de código abierto con agentes de IA integrados. Asigna trabajo a personas o agentes, y gestiona todo a través de la API, webhooks y MCP."
+  "description": "Un gestor de tickets autogestionado y de código abierto con agentes de IA integrados. Asigna trabajo a personas o agentes, y gestiona todo a través de la API, webhooks y MCP.",
+  "screens": {
+    "signIn": "Iniciar sesión",
+    "signUp": "Registrarse",
+    "forgotPassword": "Contraseña olvidada",
+    "resetPassword": "Restablecer contraseña",
+    "account": "Cuenta",
+    "settings": "Ajustes",
+    "teamSettings": "Ajustes del equipo",
+    "invitation": "Invitación",
+    "authorizeApp": "Autorizar aplicación"
+  }
 }

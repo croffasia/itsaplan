@@ -17,6 +17,7 @@
     "integrations": "Интеграции",
     "agent_skills": "Навыки агентов",
     "agent_tools": "Инструменты агентов",
+    "agent_usage": "Расходы агентов",
     "custom_fields": "Пользовательские поля",
     "issue_templates": "Шаблоны задач",
     "workflow_config": "Настройки рабочего процесса",

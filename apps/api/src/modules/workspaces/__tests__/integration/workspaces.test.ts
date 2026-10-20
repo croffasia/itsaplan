@@ -4,19 +4,34 @@ import { setAuthSettings, setWorkspaceScim } from '@repo/auth';
 import { db, workspace } from '@repo/db';
 import { deleteAccount } from '#shared/account-deletion';
 import { setOwnedWorkspaceLimit } from '#shared/limits';
-import { apiKeyApi, app, authedApi } from '#tests/helpers/app';
+import { apiKeyApi, app, authedApi, createProject } from '#tests/helpers/app';
 import { createAgent } from '#tests/helpers/agents';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createOwnWorkspace, transferWorkspace } from '../../service';
 
-// The first account is the owner of the instance workspace; every account signed up
-// with a team is a person in it.
+// The first account, the instance owner, and its own workspace with its team.
 async function setup() {
-  const owner = await signUpTestUser();
+  const owner = await signUpTestUser({ name: 'Root' });
   const ownerApi = authedApi(owner.cookie);
-  const [workspace] = (await ownerApi.workspaces.get()).data!;
-  return { owner, ownerApi, workspaceId: workspace!.id };
+  const [team] = (await ownerApi.teams.get()).data!;
+  return { owner, ownerApi, workspaceId: owner.workspaceId!, teamId: team!.id };
+}
+
+async function joinTeam(api: ReturnType<typeof authedApi>, teamId: number, person: TestUser) {
+  const invite = await api.teams({ teamId }).invites.post({ email: person.email, role: 'member' });
+  await authedApi(person.cookie).invites({ token: invite.data!.token }).accept.post();
+}
+
+// Somebody in a team of the workspace, through an invite to the owner's team.
+async function addPerson(
+  ownerApi: ReturnType<typeof authedApi>,
+  teamId: number,
+  overrides: { name?: string } = {},
+) {
+  const person = await signUpTestUser({ ...overrides, team: false });
+  await joinTeam(ownerApi, teamId, person);
+  return person;
 }
 
 async function makeAdmin(
@@ -33,16 +48,16 @@ describe('workspaces', () => {
 
   describe('GET /workspaces', () => {
     it('lists the workspace with the standing of each reader', async () => {
-      const { ownerApi, workspaceId } = await setup();
+      const { ownerApi, workspaceId, teamId } = await setup();
       await setAuthSettings({ personalWorkspaces: false });
-      const member = await signUpTestUser();
+      const member = await addPerson(ownerApi, teamId);
       const outsider = await signUpTestUser({ team: false });
 
       expect((await ownerApi.workspaces.get()).data).toEqual([
-        { id: workspaceId, name: 'Workspace', role: 'owner', color: null, canCreateTeam: true },
+        { id: workspaceId, name: 'Root', role: 'owner', color: null, canCreateTeam: true },
       ]);
       expect((await authedApi(member.cookie).workspaces.get()).data).toEqual([
-        { id: workspaceId, name: 'Workspace', role: null, color: null, canCreateTeam: false },
+        { id: workspaceId, name: 'Root', role: null, color: null, canCreateTeam: false },
       ]);
       expect((await authedApi(outsider.cookie).workspaces.get()).data).toEqual([]);
     });
@@ -59,8 +74,8 @@ describe('workspaces', () => {
     });
 
     it('answers 404 to somebody who does not manage it', async () => {
-      const { workspaceId } = await setup();
-      const member = await signUpTestUser();
+      const { ownerApi, workspaceId, teamId } = await setup();
+      const member = await addPerson(ownerApi, teamId);
 
       expect((await authedApi(member.cookie).workspaces({ workspaceId }).get()).status).toBe(404);
     });
@@ -68,8 +83,8 @@ describe('workspaces', () => {
 
   describe('PATCH /workspaces/:workspaceId', () => {
     it('renames it for an admin', async () => {
-      const { ownerApi, workspaceId } = await setup();
-      const admin = await signUpTestUser();
+      const { ownerApi, workspaceId, teamId } = await setup();
+      const admin = await addPerson(ownerApi, teamId);
       await makeAdmin(ownerApi, workspaceId, admin);
 
       const res = await authedApi(admin.cookie).workspaces({ workspaceId }).patch({ name: 'Acme' });
@@ -92,8 +107,8 @@ describe('workspaces', () => {
 
   describe('settings', () => {
     it('lets a manager recolour it, and refuses a colour that is not #rrggbb', async () => {
-      const { ownerApi, workspaceId } = await setup();
-      const admin = await signUpTestUser();
+      const { ownerApi, workspaceId, teamId } = await setup();
+      const admin = await addPerson(ownerApi, teamId);
       await makeAdmin(ownerApi, workspaceId, admin);
       const ws = authedApi(admin.cookie).workspaces({ workspaceId });
 
@@ -103,9 +118,9 @@ describe('workspaces', () => {
     });
 
     it('leaves who creates teams to the owner, and applies it to POST /teams', async () => {
-      const { ownerApi, workspaceId } = await setup();
-      const admin = await signUpTestUser();
-      const member = await signUpTestUser();
+      const { ownerApi, workspaceId, teamId } = await setup();
+      const admin = await addPerson(ownerApi, teamId);
+      const member = await addPerson(ownerApi, teamId);
       await makeAdmin(ownerApi, workspaceId, admin);
       const adminApi = authedApi(admin.cookie);
       const memberApi = authedApi(member.cookie);
@@ -131,13 +146,6 @@ describe('workspaces', () => {
   });
 
   describe('transferWorkspace', () => {
-    async function joinTeam(api: ReturnType<typeof authedApi>, teamId: number, person: TestUser) {
-      const invite = await api
-        .teams({ teamId })
-        .invites.post({ email: person.email, role: 'member' });
-      await authedApi(person.cookie).invites({ token: invite.data!.token }).accept.post();
-    }
-
     // A person's own workspace with a team, and an admin of it who owns no workspace.
     async function withAdmin() {
       await setup();
@@ -178,22 +186,12 @@ describe('workspaces', () => {
       await personApi.workspaces({ workspaceId }).managers.post({ userId: other.userId });
       await expect(transfer()).rejects.toThrow('already owns as many workspaces');
     });
-
-    it('keeps the instance workspace with the instance owner', async () => {
-      const { owner, ownerApi, workspaceId } = await setup();
-      const admin = await signUpTestUser();
-      await makeAdmin(ownerApi, workspaceId, admin);
-
-      await expect(transferWorkspace(workspaceId, owner.userId, admin.userId)).rejects.toThrow(
-        'The instance workspace stays with the instance owner',
-      );
-    });
   });
 
   describe('managers', () => {
     it('lists the owner first, then the admins', async () => {
-      const { owner, ownerApi, workspaceId } = await setup();
-      const admin = await signUpTestUser();
+      const { owner, ownerApi, workspaceId, teamId } = await setup();
+      const admin = await addPerson(ownerApi, teamId);
       await makeAdmin(ownerApi, workspaceId, admin);
 
       const res = await ownerApi.workspaces({ workspaceId }).managers.get();
@@ -204,8 +202,8 @@ describe('workspaces', () => {
     });
 
     it('offers the people of its teams who do not manage it yet', async () => {
-      const { ownerApi, workspaceId } = await setup();
-      const member = await signUpTestUser({ name: 'Grace Hopper' });
+      const { ownerApi, workspaceId, teamId } = await setup();
+      const member = await addPerson(ownerApi, teamId, { name: 'Grace Hopper' });
       await signUpTestUser({ name: 'Ada Lovelace', team: false });
 
       const all = await ownerApi.workspaces({ workspaceId }).managers.candidates.get();
@@ -226,9 +224,9 @@ describe('workspaces', () => {
     });
 
     it('lets only the owner appoint and remove admins', async () => {
-      const { ownerApi, workspaceId } = await setup();
-      const admin = await signUpTestUser();
-      const other = await signUpTestUser();
+      const { ownerApi, workspaceId, teamId } = await setup();
+      const admin = await addPerson(ownerApi, teamId);
+      const other = await addPerson(ownerApi, teamId);
       await makeAdmin(ownerApi, workspaceId, admin);
       const adminManagers = authedApi(admin.cookie).workspaces({ workspaceId }).managers;
 
@@ -237,8 +235,8 @@ describe('workspaces', () => {
     });
 
     it('removes an admin but never the owner', async () => {
-      const { owner, ownerApi, workspaceId } = await setup();
-      const admin = await signUpTestUser();
+      const { owner, ownerApi, workspaceId, teamId } = await setup();
+      const admin = await addPerson(ownerApi, teamId);
       await makeAdmin(ownerApi, workspaceId, admin);
       const managers = ownerApi.workspaces({ workspaceId }).managers;
 
@@ -252,7 +250,7 @@ describe('workspaces', () => {
   describe('personal workspaces', () => {
     afterEach(() => setWorkspaceScim(false));
 
-    it('gives every account after the first one a workspace only it sees', async () => {
+    it('gives every account a workspace only it sees', async () => {
       const { ownerApi, workspaceId } = await setup();
       const person = await signUpTestUser({ name: 'Jane Doe', team: false });
 
@@ -260,11 +258,11 @@ describe('workspaces', () => {
       expect(own).toMatchObject({ name: 'Jane Doe', role: 'owner' });
       expect(own!.id).not.toBe(workspaceId);
       expect((await ownerApi.workspaces.get()).data).toEqual([
-        { id: workspaceId, name: 'Workspace', role: 'owner', color: null, canCreateTeam: true },
+        { id: workspaceId, name: 'Root', role: 'owner', color: null, canCreateTeam: true },
       ]);
     });
 
-    it('leaves SCIM provisioning to the instance owner', async () => {
+    it('leaves SCIM provisioning to god mode unless a build sets it up per workspace', async () => {
       await setup();
       const person = authedApi((await signUpTestUser({ team: false })).cookie);
       const [own] = (await person.workspaces.get()).data!;
@@ -313,7 +311,7 @@ describe('workspaces', () => {
 
     it('makes none for an AI agent, and no route creates one', async () => {
       const { owner, ownerApi } = await setup();
-      await ownerApi.projects.post({ key: 'MKT', name: 'Marketing' });
+      await createProject(ownerApi, { key: 'MKT', name: 'Marketing' });
       const created = await createAgent(ownerApi, 'MKT', {
         name: 'Bot',
         username: 'bot',
@@ -395,16 +393,20 @@ describe('workspaces', () => {
       expect((await ws.delete()).status).toBe(409);
     });
 
-    it('keeps the instance workspace, and leaves deleting to the owner', async () => {
-      const { ownerApi, workspaceId } = await setup();
-      const admin = await signUpTestUser();
+    it('leaves deleting to the owner, and gives the instance owner a fresh one', async () => {
+      const { ownerApi, workspaceId, teamId } = await setup();
+      const admin = await addPerson(ownerApi, teamId);
       await makeAdmin(ownerApi, workspaceId, admin);
+      await setAuthSettings({ personalWorkspaces: false });
 
       expect((await ownerApi.workspaces({ workspaceId }).get()).data).toMatchObject({
-        deletion: 'instance',
+        deletion: 'allowed',
       });
-      expect((await ownerApi.workspaces({ workspaceId }).delete()).status).toBe(409);
       expect((await authedApi(admin.cookie).workspaces({ workspaceId }).delete()).status).toBe(403);
+      expect((await ownerApi.workspaces({ workspaceId }).delete()).status).toBe(204);
+      const [fresh] = (await ownerApi.workspaces.get()).data!;
+      expect(fresh).toMatchObject({ role: 'owner' });
+      expect(fresh!.id).not.toBe(workspaceId);
     });
   });
 

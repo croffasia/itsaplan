@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach, beforeEach } from 'bun:test';
 import { db, agentRun } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { authedApi } from '#tests/helpers/app';
+import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
@@ -16,37 +16,35 @@ import { processAgentRuns } from '../../run-poller';
 
 // Leaves one run of the team in flight and a second one due, which is the pair the
 // ceiling is read against. Claiming the first stamps it without running it, so it holds
-// a slot for as long as its lease.
+// a slot for as long as its lease. The two work on different issues: a second run on
+// the same issue would wait for the first whatever the ceiling.
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
   const columnId = view.data!.columns[0].id;
   const agent = (
     await createAgent(asOwner, 'MKT', { name: 'Bot', username: 'bot', kind: 'internal' })
   ).data!.agent;
-  const issue = (
-    await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title: 'Task' })
-  ).data!;
   const projectId = agent.projects[0].id;
-  const enqueue = (prompt: string) =>
-    enqueueAgentRun({
+  const enqueue = async (title: string) => {
+    const issue = (await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title }))
+      .data!;
+    await enqueueAgentRun({
       agentId: agent.id,
       projectId,
       issueId: issue.id,
       sourceActivityId: null,
-      prompt,
+      prompt: title,
     });
+    return issue.id;
+  };
 
   await enqueue('first');
   await claimDueRuns();
-  await enqueue('second');
-  const [, second] = await db
-    .select()
-    .from(agentRun)
-    .where(eq(agentRun.issueId, issue.id))
-    .orderBy(agentRun.id);
+  const issueId = await enqueue('second');
+  const [second] = await db.select().from(agentRun).where(eq(agentRun.issueId, issueId));
   return { second };
 }
 

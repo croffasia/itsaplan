@@ -19,7 +19,8 @@
       "signIn": "Login",
       "projects": "Projetos",
       "lastSeen": "Visto por último",
-      "email": "E-mail"
+      "email": "E-mail",
+      "active": "Ativa"
     },
     "registered": "entrou em {date}",
     "roleGod": "God",
@@ -30,7 +31,20 @@
     "verified": "Verificado",
     "notVerified": "Não verificado",
     "open": "Abrir conta",
-    "showAccess": "Mostrar acesso a projetos"
+    "showAccess": "Mostrar acesso a projetos",
+    "activeAria": "Conta ativa: {email}",
+    "activeState": {
+      "on": "Ativa",
+      "off": "Inativa"
+    },
+    "activeLock": {
+      "owner": "O proprietário da instância está sempre ativo.",
+      "agent": "A conta de um agente acompanha o agente.",
+      "scim": "Seu provedor de identidade (SCIM) decide quais contas estão ativas."
+    },
+    "deactivateTitle": "Desativar {email}?",
+    "deactivateBody": "A pessoa é desconectada na hora e não pode entrar nem usar suas chaves de API até você reativar a conta. As conexões MCP e os convites que ela enviou são removidos. Nada mais é excluído.",
+    "deactivateConfirm": "Desativar"
   },
   "userPanel": {
     "instanceOwner": "Dono da instância",
@@ -164,12 +178,24 @@
     "workspacesSaved": "Configurações de workspace salvas",
     "workspaces": "Workspaces",
     "personalWorkspaces": "Um workspace para cada pessoa",
-    "personalWorkspacesHint": "Cada conta recebe um workspace próprio com o nome da pessoa. Desativado, as pessoas trabalham apenas nos workspaces aos quais foram adicionadas."
+    "personalWorkspacesHint": "Cada conta recebe um workspace próprio com o nome da pessoa. Desativado, as pessoas trabalham apenas nos workspaces aos quais foram adicionadas.",
+    "agents": "Agentes",
+    "agentsSaved": "Configurações de agentes salvas",
+    "traceRetention": "Manter rastros de execução",
+    "traceRetentionHint": "Cada execução de agente registra as chamadas ao modelo e às ferramentas. Os painéis de consumo contam só as execuções mantidas.",
+    "traceDays": "{days, plural, one {# dia} other {# dias}}",
+    "traceForever": "Sempre"
   },
   "authentication": {
     "saved": "Configurações de autenticação salvas",
     "registration": "Registro",
     "registrationHint": "Quem pode criar uma conta nesta instância.",
+    "inviteTtlDays": "Validade dos convites (dias)",
+    "inviteTtlDaysHint": "Depois desse prazo, o link do convite deixa de funcionar e, com o cadastro somente por convite, não permite mais criar a conta. Com 0, os convites não expiram.",
+    "inviteTtlDaysInvalid": "Informe um número inteiro de dias entre 0 e {max}.",
+    "allowedEmailDomains": "Domínios de e-mail permitidos",
+    "allowedEmailDomainsHint": "Só endereços desses domínios podem criar uma conta. Separe-os por vírgulas ou deixe vazio para permitir qualquer um. As contas existentes mantêm o acesso.",
+    "allowedEmailDomainsInvalid": "Cada domínio deve ter o formato example.com, até 100 domínios.",
     "modes": {
       "open": {
         "label": "Aberto",
@@ -251,7 +277,18 @@
     "testing": "Enviando…",
     "testHint": "Envie uma mensagem real com as configurações atuais sem salvá-las.",
     "testConfigureFirst": "Ative um provedor e adicione suas credenciais obrigatórias primeiro.",
-    "testSent": "E-mail de teste enviado para {email}"
+    "testSent": "E-mail de teste enviado para {email}",
+    "smtpAuth": "Autenticação",
+    "smtpAuthOptions": {
+      "password": "Senha",
+      "microsoft365": "Microsoft 365 (OAuth)"
+    },
+    "mailbox": "Caixa de correio",
+    "tenantId": "ID do locatário (tenant)",
+    "clientId": "ID do cliente",
+    "clientSecret": "Segredo do cliente",
+    "clientSecretPlaceholder": "Segredo do registro de aplicativo",
+    "microsoft365Hint": "Entra como um registro de aplicativo do Entra ID em vez da senha da caixa de correio, que pode manter o MFA. O aplicativo precisa da permissão de aplicativo SMTP.SendAsApp do Office 365 Exchange Online com consentimento de administrador, acesso a esta caixa no Exchange e SMTP AUTH ativado na caixa."
   },
   "authProvider": {
     "saved": "Provedor de autenticação salvo",

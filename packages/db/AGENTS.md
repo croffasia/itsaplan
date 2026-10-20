@@ -24,7 +24,7 @@ See root `AGENTS.md` for monorepo-wide rules.
   (`@repo/auth`, api, worker), a team's notification providers (api, worker), and the
   instance's upload limits and project-storage-quota accounting (api, worker — an
   imported attachment is checked against the same limits an interactive upload is).
-- `src/migrate.ts` — programmatic migrator (no drizzle-kit in prod), run by the `migrate` compose service, the api pods' init container, and the api image's CMD.
+- `src/migrate.ts` — programmatic migrator (no drizzle-kit in prod), run by the `migrate` compose service, the api pods' init container, and the api image's CMD. With `BUILD_MIGRATIONS_DIR` set, it applies that folder too, after the core's, under the same lock and backup: a build's own tables, recorded in `drizzle.__build_migrations`.
 - `src/wait-for-migrations.ts` — exits once the database holds this release's migrations; the Helm init container of the worker and bot pods.
 - `drizzle/` — generated SQL migrations (committed).
 
@@ -62,7 +62,9 @@ without being a person in it.
 `revision` holds one counter per scope — the change markers the clients poll through
 `GET /sync/rev`. Nothing in the application writes them: the triggers in
 `drizzle/0070_revision_triggers.sql` do, so a write moves the marker whichever
-process it came from.
+process it came from. `rev_issue()` is redefined in `0142_issue_key_alias.sql`: an
+issue moved to another project bumps the board of both projects, and its `issue:`
+scope row takes the new project id.
 
 To make a new table move an existing scope, add one line to a migration:
 

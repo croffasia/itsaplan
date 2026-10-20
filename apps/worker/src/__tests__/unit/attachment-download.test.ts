@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import type { PinnedRequestInit } from '@repo/net';
+import { ResponseTooLargeError, type PinnedRequestInit } from '@repo/net';
 import {
   downloadAttachment,
   AttachmentRejectedError,
@@ -43,6 +43,24 @@ describe('downloadAttachment', () => {
     await expect(
       downloadAttachment({ url: FILE_URL }, 1024, respondWith(redirect)),
     ).rejects.toBeInstanceOf(AttachmentRejectedError);
+  });
+
+  it('rejects a file over the byte limit, which the source did not report a size for', async () => {
+    const fetch: AttachmentFetch = async () => {
+      throw new ResponseTooLargeError('response exceeds the byte limit');
+    };
+    const error = await downloadAttachment({ url: FILE_URL }, 1024, fetch).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(AttachmentRejectedError);
+    expect((error as Error).message).toContain('1024 bytes');
+  });
+
+  it('passes any other download failure through', async () => {
+    const fetch: AttachmentFetch = async () => {
+      throw new Error('request timed out');
+    };
+    const error = await downloadAttachment({ url: FILE_URL }, 1024, fetch).catch((e: unknown) => e);
+    expect(error).not.toBeInstanceOf(AttachmentRejectedError);
+    expect((error as Error).message).toBe('request timed out');
   });
 
   it('downloads with the byte limit and a timeout', async () => {

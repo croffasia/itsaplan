@@ -45,7 +45,6 @@ export default function WorkspaceInfoSection({ workspaceId }: { workspaceId: num
   if (!workspace) return <SectionPageSkeleton rows={2} />;
 
   const isOwner = workspace.role === 'owner';
-  const deletable = isOwner && workspace.deletion !== 'instance';
   const nextName = (name ?? workspace.name).trim();
   const nextColor = color === null ? workspace.color : color.trim() || null;
   const nextTeamCreation = teamCreation ?? workspace.teamCreation;
@@ -144,7 +143,7 @@ export default function WorkspaceInfoSection({ workspaceId }: { workspaceId: num
 
         <WorkspaceSectionExtras slug="general" workspace={workspace} />
 
-        {deletable && <WorkspaceDeleteSection workspace={workspace} />}
+        {isOwner && <WorkspaceDeleteSection workspace={workspace} />}
       </div>
     </SectionPageView>
   );

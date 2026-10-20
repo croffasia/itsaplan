@@ -8,8 +8,10 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// (?<!/) leaves an identifier that is a segment of a URL path alone, so a link's
+// address is never rewritten.
 function crossReferencePattern(sourceProjectKey: string): RegExp {
-  return new RegExp(`\\b${escapeRegExp(sourceProjectKey)}-(\\d+)\\b`, 'g');
+  return new RegExp(`(?<!/)\\b${escapeRegExp(sourceProjectKey)}-(\\d+)\\b`, 'g');
 }
 
 export interface CrossReferenceMatch {

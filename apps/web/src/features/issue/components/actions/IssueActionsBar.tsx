@@ -6,6 +6,7 @@ import {
   ArchiveRestore,
   Check,
   ClipboardCopy,
+  FolderInput,
   GitBranch,
   Globe,
   Share2,
@@ -29,6 +30,7 @@ import { shareIssuePath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import ShareDialog from '@/components/common/share/ShareDialog';
+import MoveIssueDialog from './MoveIssueDialog';
 import { useTranslations } from 'next-intl';
 
 // The issue detail Actions: the manual actions whose condition matches this
@@ -59,6 +61,7 @@ export default function IssueActionsBar({
   const { archive, dialog: archiveDialog } = useArchiveAction(project);
   const restoreIssue = useRestoreIssue(project.project.ref);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [moving, setMoving] = useState(false);
   const [confirmingAction, setConfirmingAction] = useState<ActionDef | null>(null);
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -213,6 +216,21 @@ export default function IssueActionsBar({
             <Button
               variant="ghost"
               size={btnSize}
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => setMoving(true)}
+            >
+              <FolderInput className="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t('move')}</TooltipContent>
+        </Tooltip>
+      )}
+      {canDelete && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size={btnSize}
               className="text-muted-foreground hover:text-destructive"
               onClick={() => setConfirmingDelete(true)}
             >
@@ -236,6 +254,10 @@ export default function IssueActionsBar({
           onClose={() => setConfirmingDelete(false)}
           onDeleted={onDeleted}
         />
+      )}
+
+      {moving && (
+        <MoveIssueDialog project={project} issue={issue} onClose={() => setMoving(false)} />
       )}
 
       {archiveDialog}

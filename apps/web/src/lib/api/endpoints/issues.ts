@@ -310,6 +310,14 @@ export const listIssueCycles = (id: number) => request<IssueCycleEntry[]>(`/issu
 export const updateIssue = (id: number, patch: IssuePatch) =>
   request<Issue>(`/issues/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
 
+// Moves the issue, with its subtasks, to another project of the same team. Left
+// without a column, the server picks the one of the same name or state type.
+export const moveIssue = (id: number, projectId: number, columnId?: number) =>
+  request<Issue>(`/issues/${id}/move`, {
+    method: 'POST',
+    body: JSON.stringify({ projectId, columnId }),
+  });
+
 // An issue that has subtasks needs a disposition saying what happens to them;
 // without one the server rejects the delete with a 409.
 export const deleteIssue = (id: number, subtasks?: SubtaskDisposition) =>

@@ -8,6 +8,7 @@ import { IssueTypeResponse } from '#modules/issue-types/model';
 import { LabelGroupResponse, LabelResponse } from '#modules/labels/model';
 import { PermissionMatrixSchema } from '#shared/permissions';
 import { AccessViaSchema } from '#shared/workspace-roles';
+import { pageQueryFields, pageResponse } from '#shared/pagination';
 import { ISSUE_TYPE_PRESET_KEYS } from './service';
 import { COPY_INCLUDE_KEYS } from './copy';
 
@@ -73,29 +74,59 @@ export const updateProjectPreferencesBody = t.Object(
   { minProperties: 1 },
 );
 
+const projectSearch = t.Optional(
+  t.String({
+    description: 'Case-insensitive literal substring of the project key, name, or description.',
+  }),
+);
+const projectSort = t.Optional(
+  t.UnionEnum(['key', 'name', 'created', 'activity'], {
+    description:
+      'Sort by key (default), name, newest creation, or newest work-item activity/comment. ' +
+      'Activity puts projects without activity last. Ties are ordered by key.',
+  }),
+);
+const projectTeamId = t.Optional(
+  t.Numeric({
+    minimum: 1,
+    multipleOf: 1,
+    description: 'Limit results to projects in this team that you belong to.',
+  }),
+);
+
 export const listProjectsQuery = t.Object({
-  q: t.Optional(
-    t.String({
-      description: 'Case-insensitive literal substring of the project key, name, or description.',
-    }),
-  ),
-  sort: t.Optional(
-    t.UnionEnum(['key', 'name', 'created', 'activity'], {
-      description:
-        'Sort by key (default), name, newest creation, or newest work-item activity/comment. ' +
-        'Activity puts projects without activity last. Ties are ordered by key.',
-    }),
-  ),
-  teamId: t.Optional(
-    t.Numeric({
-      minimum: 1,
-      multipleOf: 1,
-      description: 'Limit results to projects in this team that you belong to.',
-    }),
-  ),
+  q: projectSearch,
+  sort: projectSort,
+  teamId: projectTeamId,
   permissions: t.Optional(
     t.String({ description: "'true' to include the caller's permission matrix per project." }),
   ),
+});
+
+export const searchProjectsQuery = t.Object({
+  q: projectSearch,
+  sort: projectSort,
+  teamId: projectTeamId,
+  workspaceId: t.Optional(
+    t.Numeric({
+      minimum: 1,
+      multipleOf: 1,
+      description: 'Limit results to projects of this workspace.',
+    }),
+  ),
+  ids: t.Optional(
+    t.String({
+      pattern: '^[1-9][0-9]{0,8}(,[1-9][0-9]{0,8}){0,49}$',
+      description: 'Comma-separated project ids, up to 50, to limit results to.',
+    }),
+  ),
+  favorite: t.Optional(
+    t.String({ pattern: '^(true|false)$', description: 'Only the projects you starred, or not.' }),
+  ),
+  hidden: t.Optional(
+    t.String({ pattern: '^(true|false)$', description: 'Only the projects you hid, or not.' }),
+  ),
+  ...pageQueryFields,
 });
 
 // A project DTO (ProjectRow from the service).
@@ -135,25 +166,27 @@ export const ProjectResponse = t.Object({
 // A project in the caller's list (ProjectListItem): ProjectRow plus the caller's
 // own role in it, and the caller's permission matrix when requested with
 // ?permissions=true.
-export const ProjectListResponse = t.Array(
-  t.Composite([
-    ProjectResponse,
-    t.Object({
-      role: t.Union([t.Literal('owner'), t.Literal('member')]),
-      via: AccessViaSchema,
-      lastActivityAt: t.Nullable(
-        t.String({
-          description: 'Newest readable work-item activity or comment timestamp, or null.',
-        }),
-      ),
-      isFavorite: t.Boolean({ description: 'Whether you starred this project.' }),
-      isHidden: t.Boolean({
-        description: 'Whether you hid this project in your navigation. Does not restrict access.',
+const ProjectListItemResponse = t.Composite([
+  ProjectResponse,
+  t.Object({
+    role: t.Union([t.Literal('owner'), t.Literal('member')]),
+    via: AccessViaSchema,
+    lastActivityAt: t.Nullable(
+      t.String({
+        description: 'Newest readable work-item activity or comment timestamp, or null.',
       }),
-      permissions: t.Optional(PermissionMatrixSchema),
+    ),
+    isFavorite: t.Boolean({ description: 'Whether you starred this project.' }),
+    isHidden: t.Boolean({
+      description: 'Whether you hid this project in your navigation. Does not restrict access.',
     }),
-  ]),
-);
+    permissions: t.Optional(PermissionMatrixSchema),
+  }),
+]);
+
+export const ProjectListResponse = t.Array(ProjectListItemResponse);
+
+export const ProjectSearchPageResponse = pageResponse(ProjectListItemResponse);
 
 // An assignable candidate (AssigneeCandidate from members/service): a project
 // member or an AI agent's bot user.
@@ -166,6 +199,7 @@ const AssigneeCandidateResponse = t.Object({
   kind: t.Union([t.Literal('member'), t.Literal('agent')]),
   agentKind: t.Nullable(t.Union([t.Literal('external'), t.Literal('internal')])),
   restrictedToUserId: t.Nullable(t.String()),
+  respondsToMention: t.Nullable(t.Boolean()),
   canReadWorkItems: t.Boolean(),
 });
 

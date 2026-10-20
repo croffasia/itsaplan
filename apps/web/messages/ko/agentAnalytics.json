@@ -1,0 +1,82 @@
+{
+  "window": "{days, plural, =1 {최근 24시간} other {최근 #일}}",
+  "retentionNote": "내부 AI 에이전트만 포함됩니다. 인스턴스의 실행 추적 보관 기간보다 오래된 실행은 집계되지 않습니다.",
+  "noComparison": "비교할 데이터가 없습니다",
+  "vsPrevious": "이전 기간 대비 {value}",
+  "deletedAgent": "삭제된 AI 에이전트",
+  "deletedProject": "삭제된 프로젝트",
+  "allProjects": "모든 프로젝트",
+  "totalTokens": "총 토큰",
+  "totalCost": "총 비용",
+  "stats": {
+    "cost": "모델 비용",
+    "tokens": "토큰",
+    "runs": "실행",
+    "errors": "실패한 실행"
+  },
+  "unpriced": "{count, plural, one {가격이 설정되지 않은 모델 #개} other {가격이 설정되지 않은 모델 #개}}",
+  "setPrices": "가격 설정",
+  "measure": {
+    "tokens": "토큰",
+    "cost": "비용"
+  },
+  "series": {
+    "input": "입력",
+    "output": "출력"
+  },
+  "models": {
+    "title": "모델별",
+    "description": "모델별 토큰 사용량과 비용입니다.",
+    "model": "모델",
+    "input": "입력",
+    "output": "출력",
+    "cost": "비용",
+    "empty": "이 기간에는 모델 호출이 없습니다"
+  },
+  "byAgent": {
+    "title": "AI 에이전트별",
+    "description": "AI 에이전트별 사용량입니다.",
+    "empty": "이 기간에는 AI 에이전트 실행 기록이 없습니다"
+  },
+  "byProject": {
+    "title": "프로젝트별",
+    "description": "프로젝트별 AI 에이전트 사용량입니다.",
+    "empty": "이 기간에는 AI 에이전트 실행 기록이 없습니다"
+  },
+  "byTeam": {
+    "title": "팀별",
+    "description": "팀별 AI 에이전트 사용량입니다.",
+    "empty": "이 기간에는 AI 에이전트 실행 기록이 없습니다"
+  },
+  "overTime": {
+    "title": "기간별 추이",
+    "description": "기간 동안의 토큰 사용량과 비용입니다.",
+    "empty": "이 기간에는 사용 기록이 없습니다"
+  },
+  "preview": {
+    "title": "Cloud 및 Pro에서 더 많은 기능 제공",
+    "description": "사용자 및 트리거별 비용, 실행 시간과 도구 호출을 확인할 수 있습니다. Cloud 및 셀프 호스팅 Pro에서 사용할 수 있습니다.",
+    "hide": "숨기기",
+    "show": "표시",
+    "byPerson": {
+      "title": "사용자별",
+      "description": "채팅이나 멘션을 통해 실행을 시작한 사용자입니다."
+    },
+    "byTrigger": {
+      "title": "트리거별",
+      "description": "채팅, 멘션, 일정 또는 이슈 이벤트별 사용량입니다."
+    },
+    "bySchedule": {
+      "title": "일정별",
+      "description": "일정별 사용 비용입니다."
+    },
+    "tools": {
+      "title": "도구",
+      "description": "도구 호출 횟수와 실패 횟수입니다."
+    },
+    "latency": {
+      "title": "실행 시간",
+      "description": "일별 중앙값 및 95백분위 실행 시간입니다."
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "placeholder": "명령 입력 또는 검색…",
+  "noResults": "검색 결과가 없습니다.",
+  "issues": "이슈",
+  "searching": "검색 중…",
+  "selectAllIssues": "모든 이슈 선택",
+  "newIssue": "새 이슈",
+  "newInitiative": "새 이니셔티브",
+  "newProject": "새 프로젝트",
+  "toggleChat": "AI 채팅 표시 또는 숨기기",
+  "board": "보드",
+  "commands": "명령",
+  "switchProject": "프로젝트 전환"
+}

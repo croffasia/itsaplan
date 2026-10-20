@@ -13,21 +13,21 @@
   "noActivity": "Todavía no hay actividad.",
   "noIssuesLinked": "Todavía no hay tickets enlazados.",
   "inProgress": "En curso",
-  "emptyTitle": "Todavía no hay iniciitivas",
+  "emptyTitle": "Todavía no hay iniciativas",
   "emptyDescription": "Una iniciativa agrupa tickets relacionados bajo un solo objetivo.",
-  "emptyTabDescription": "Las iniciitivas cambian de pestaña según su estado.",
+  "emptyTabDescription": "Las iniciativas cambian de pestaña según su estado.",
   "emptyTab": {
-    "active": "No hay iniciitivas activas",
-    "planned": "No hay iniciitivas planificadas",
-    "proposed": "No hay iniciitivas propuestas",
-    "completed": "No hay iniciitivas completadas"
+    "active": "No hay iniciativas activas",
+    "planned": "No hay iniciativas planificadas",
+    "proposed": "No hay iniciativas propuestas",
+    "completed": "No hay iniciativas completadas"
   },
   "tabs": {
     "active": "Activa",
     "planned": "Planificada",
     "proposed": "Propuesta",
     "completed": "Completada",
-    "all": "Todas las iniciitivas"
+    "all": "Todas las iniciativas"
   },
   "detailTabs": {
     "overview": "Resumen",
@@ -107,9 +107,9 @@
   },
   "select": {
     "label": "Iniciativa",
-    "search": "Enlazar a una iniciitiva…",
-    "empty": "No hay iniciitivas.",
-    "none": "Sin iniciitiva",
+    "search": "Enlazar a una iniciativa…",
+    "empty": "No hay iniciativas.",
+    "none": "Sin iniciativa",
     "create": "Crear iniciativa"
   },
   "feed": {
@@ -140,7 +140,7 @@
     "typeSet": "ha definido el tipo a {type}",
     "typeRemoved": "ha quitado el tipo",
     "linked": "la ha enlazado a {name}",
-    "unlinked": "la ha desenlazado de la iniciitiva"
+    "unlinked": "la ha desenlazado de la iniciativa"
   },
   "attachments": {
     "title": "Adjuntos",

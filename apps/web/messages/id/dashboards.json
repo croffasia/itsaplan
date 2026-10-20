@@ -199,7 +199,9 @@
       "delegation": "berjalan saat pendelegasian",
       "field": "berjalan pada bidang",
       "manual": "dijalankan secara manual",
-      "schedule": "berjalan sesuai jadwal"
+      "schedule": "berjalan sesuai jadwal",
+      "status": "berjalan saat perubahan status",
+      "event": "berjalan saat peristiwa pada"
     }
   },
   "agentHealth": {

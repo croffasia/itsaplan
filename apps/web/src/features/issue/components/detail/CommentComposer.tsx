@@ -5,6 +5,8 @@ import Avatar from '@/components/common/Avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { useSession } from '@/lib/auth-client';
+import { offersMention } from '@/hooks/useMentionCandidates';
 import { useCreateComment, useUpdateComment } from '../../services/comments.service';
 import { useTranslations } from 'next-intl';
 
@@ -63,25 +65,28 @@ export default function CommentComposer({
   const [pendingCaret, setPendingCaret] = useState<number | null>(null);
   const [focused, setFocused] = useState(false);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
+  const { data: session } = useSession();
+  const currentUserId = session?.user.id ?? null;
 
   const isReply = replyToId != null;
   const isEdit = commentId != null;
   const posting = (isEdit ? updateComment : createComment).isPending;
   const cmdKey = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform) ? '⌘' : 'Ctrl';
 
-  // Members and both agent kinds can be mentioned, and only those that have a handle
-  // to be addressed by. An internal agent runs in the built-in runtime; an external
-  // agent is reached over its operator's webhook, which receives the comment.
+  // The same people and agents the markdown editors offer: an agent a mention would
+  // leave silent is not listed. An internal agent runs in the built-in runtime; an
+  // external agent is reached over its operator's webhook, which receives the comment.
   const matches = useMemo(() => {
     if (!menu) return [];
     const q = menu.query.toLowerCase();
     return assignees
       .filter(
         (a) =>
-          a.username && (a.name.toLowerCase().includes(q) || a.username.toLowerCase().includes(q)),
+          offersMention(a, currentUserId) &&
+          (a.name.toLowerCase().includes(q) || a.username!.toLowerCase().includes(q)),
       )
       .slice(0, 8);
-  }, [assignees, menu]);
+  }, [assignees, menu, currentUserId]);
 
   // A reply box or an edit box is opened by a deliberate click, so it takes the
   // caret — at the end of the text being edited.

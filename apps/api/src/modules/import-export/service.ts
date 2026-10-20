@@ -1,14 +1,16 @@
-import { db, importJob, importRecord } from '@repo/db';
+import { db, importJob, importRecord, type ImportSource } from '@repo/db';
 import { desc, eq, sql } from 'drizzle-orm';
 import { encryptSecret } from '@repo/crypto';
 import { HttpError, iso } from '#shared/lib';
 import { pinnedFetch } from '#shared/net';
+import { linearJobFields, type CreateLinearImportJobInput } from './linear';
 
-// Data access and the Plane connection check for import jobs. Creating a job only
-// encrypts and stores the submitted credential and leaves the row 'pending' for the
-// worker (apps/worker/src/import-worker.ts) to pick up and drive through its phases —
-// this module never talks to the worker or reads the credential back. Progress is
-// read from import_record, the worker's own source-id-to-local-id mapping table.
+// Data access and the Plane connection check for import jobs (Linear's is in
+// linear.ts). Creating a job only encrypts and stores the submitted credential and
+// leaves the row 'pending' for the worker (apps/worker/src/import-worker.ts) to pick
+// up and drive through its phases — this module never talks to the worker or reads
+// the credential back. Progress is read from import_record, the worker's own
+// source-id-to-local-id mapping table.
 
 // Mirrors import_record_source_entity_type_check in packages/db/src/schema/app.ts.
 export const IMPORT_ENTITY_TYPES = [
@@ -34,7 +36,7 @@ interface EntityCount {
 export interface ImportJobDto {
   id: number;
   projectId: number;
-  source: 'plane';
+  source: ImportSource;
   phase: ImportJobPhase;
   status: ImportJobStatus;
   counts: Record<ImportEntityType, EntityCount>;
@@ -72,7 +74,7 @@ function toDto(row: ImportJobRow, counts: Record<ImportEntityType, EntityCount>)
   return {
     id: row.id,
     projectId: row.projectId,
-    source: row.source as 'plane',
+    source: row.source as ImportSource,
     phase: row.phase as ImportJobPhase,
     status: row.status as ImportJobStatus,
     counts,
@@ -128,14 +130,39 @@ function normalizePlaneBaseUrl(raw: string): string {
   return url.origin;
 }
 
-export interface CreateImportJobInput {
+interface ImportJobChoices {
+  unmatchedUserPolicy?: UnmatchedUserPolicy;
+  stateOverrides?: Record<string, StateCategory>;
+}
+
+// A body without `source` is a Plane job, as before Linear existed.
+export interface CreatePlaneImportJobInput {
+  source?: 'plane';
   baseUrl: string;
   workspaceSlug: string;
   apiToken: string;
   planeProjectId: string;
   planeProjectKey: string;
-  unmatchedUserPolicy?: UnmatchedUserPolicy;
-  stateOverrides?: Record<string, StateCategory>;
+}
+
+export type CreateImportJobInput = ImportJobChoices &
+  (CreatePlaneImportJobInput | CreateLinearImportJobInput);
+
+function planeJobFields(input: CreatePlaneImportJobInput) {
+  const baseUrl = normalizePlaneBaseUrl(input.baseUrl);
+  const workspaceSlug = input.workspaceSlug.trim();
+  const apiToken = input.apiToken.trim();
+  const planeProjectId = input.planeProjectId.trim();
+  const planeProjectKey = input.planeProjectKey.trim();
+  if (!workspaceSlug) throw new HttpError(400, 'workspaceSlug is required');
+  if (!apiToken) throw new HttpError(400, 'apiToken is required');
+  if (!planeProjectId) throw new HttpError(400, 'planeProjectId is required');
+  if (!planeProjectKey) throw new HttpError(400, 'planeProjectKey is required');
+  return {
+    source: 'plane' as const,
+    credential: { baseUrl, workspaceSlug, apiKey: apiToken },
+    config: { planeProjectId, planeProjectKey },
+  };
 }
 
 // Stores the submitted credential encrypted and leaves the job 'pending' — the
@@ -146,32 +173,22 @@ export async function createImportJob(
   actorUserId: string,
   input: CreateImportJobInput,
 ): Promise<ImportJobDto> {
-  const baseUrl = normalizePlaneBaseUrl(input.baseUrl);
-  const workspaceSlug = input.workspaceSlug.trim();
-  const apiToken = input.apiToken.trim();
-  const planeProjectId = input.planeProjectId.trim();
-  const planeProjectKey = input.planeProjectKey.trim();
-  if (!workspaceSlug) throw new HttpError(400, 'workspaceSlug is required');
-  if (!apiToken) throw new HttpError(400, 'apiToken is required');
-  if (!planeProjectId) throw new HttpError(400, 'planeProjectId is required');
-  if (!planeProjectKey) throw new HttpError(400, 'planeProjectKey is required');
-
-  const encrypted = encryptSecret(JSON.stringify({ baseUrl, workspaceSlug, apiKey: apiToken }));
-  const config = {
-    planeProjectId,
-    planeProjectKey,
-    unmatchedUserPolicy: input.unmatchedUserPolicy ?? 'unassigned',
-    ...(input.stateOverrides && Object.keys(input.stateOverrides).length > 0
-      ? { stateOverrides: input.stateOverrides }
-      : {}),
-  };
+  const { source, credential, config } =
+    input.source === 'linear' ? linearJobFields(input) : planeJobFields(input);
+  const encrypted = encryptSecret(JSON.stringify(credential));
   const [row] = await db
     .insert(importJob)
     .values({
       projectId,
       createdByUserId: actorUserId,
-      source: 'plane',
-      config,
+      source,
+      config: {
+        ...config,
+        unmatchedUserPolicy: input.unmatchedUserPolicy ?? 'unassigned',
+        ...(input.stateOverrides && Object.keys(input.stateOverrides).length > 0
+          ? { stateOverrides: input.stateOverrides }
+          : {}),
+      },
       credentialCiphertext: encrypted.ciphertext,
       credentialIv: encrypted.iv,
       credentialAuthTag: encrypted.authTag,

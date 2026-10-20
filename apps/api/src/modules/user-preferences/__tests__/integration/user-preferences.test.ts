@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { api, authedApi } from '#tests/helpers/app';
+import { api, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
@@ -163,7 +163,7 @@ describe('user preferences', () => {
   it('remembers a project the user belongs to', async () => {
     const u = await signUpTestUser();
     const client = authedApi(u.cookie);
-    const created = await client.projects.post({ key: 'MKT', name: 'Marketing' });
+    const created = await createProject(client, { key: 'MKT', name: 'Marketing' });
     const projectId = created.data!.id;
 
     const res = await client.account.preferences.patch({ lastProjectId: projectId });
@@ -176,7 +176,7 @@ describe('user preferences', () => {
   it('rejects a project the user is not a member of', async () => {
     const owner = await signUpTestUser();
     const outsider = await signUpTestUser();
-    const created = await authedApi(owner.cookie).projects.post({ key: 'MKT', name: 'Marketing' });
+    const created = await createProject(authedApi(owner.cookie), { key: 'MKT', name: 'Marketing' });
 
     const res = await authedApi(outsider.cookie).account.preferences.patch({
       lastProjectId: created.data!.id,

@@ -41,7 +41,10 @@ import {
 } from '@/lib/api/endpoints/git';
 import {
   type CreateImportJobInput,
+  type LinearConnectionInput,
   type PlaneConnectionInput,
+  testLinearConnection,
+  testLinearStatesPreview,
   testPlaneConnection,
   testPlaneStatesPreview,
   createImportJob,
@@ -271,8 +274,8 @@ export function useDisconnectGitRepository(projectKey: string, connectionId: num
   });
 }
 
-// Import/export section: testing a connection to a source Plane instance,
-// starting an import job, and tracking the ones already running.
+// Import/export section: testing a connection to a source Plane instance or a
+// Linear API key, starting an import job, and tracking the ones already running.
 export function useTestPlaneConnection(projectKey: string) {
   return useMutation({
     mutationFn: (input: PlaneConnectionInput) => testPlaneConnection(projectKey, input),
@@ -289,6 +292,24 @@ export function useTestPlaneStatesPreview(
       ? qk.planePreview(projectKey, input.planeProjectId)
       : qk.planePreview(projectKey, 'none'),
     queryFn: () => testPlaneStatesPreview(projectKey, input!),
+    enabled: input != null,
+  });
+}
+
+export function useTestLinearConnection(projectKey: string) {
+  return useMutation({
+    mutationFn: (input: LinearConnectionInput) => testLinearConnection(projectKey, input),
+  });
+}
+
+// Fetched automatically once a Linear team is picked, in the mapping review step.
+export function useTestLinearStatesPreview(
+  projectKey: string,
+  input: (LinearConnectionInput & { teamId: string }) | null,
+) {
+  return useQuery({
+    queryKey: qk.linearPreview(projectKey, input?.teamId ?? 'none'),
+    queryFn: () => testLinearStatesPreview(projectKey, input!),
     enabled: input != null,
   });
 }

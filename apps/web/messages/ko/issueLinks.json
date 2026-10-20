@@ -1,0 +1,16 @@
+{
+  "relations": {
+    "blocked_by": "차단됨",
+    "blocks": "차단함",
+    "duplicates": "중복",
+    "duplicated_by": "중복됨",
+    "relates": "연관됨"
+  },
+  "phrases": {
+    "blocked_by": "차단 관계",
+    "blocks": "차단 관계",
+    "duplicates": "중복 관계",
+    "duplicated_by": "중복 관계",
+    "relates": "연관 관계"
+  }
+}

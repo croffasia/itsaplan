@@ -1,0 +1,58 @@
+{
+  "add": "افزودن فیلتر",
+  "remove": "حذف فیلتر",
+  "valuePlaceholder": "مقدار",
+  "noOptions": "بدون گزینه",
+  "selected": "{count} انتخاب‌شده",
+  "operators": {
+    "is": "هست",
+    "is_not": "نیست",
+    "before": "قبل از",
+    "after": "بعد از",
+    "is_set": "تنظیم شده",
+    "is_not_set": "تنظیم نشده",
+    "contains": "شامل",
+    "not_contains": "شامل نمی‌شود",
+    "overdue": "مهلت گذشته است",
+    "today": "امروز است",
+    "next_3_days": "در ۳ روز آینده است",
+    "next_7_days": "در ۷ روز آینده است"
+  },
+  "boolean": {
+    "true": "درست",
+    "false": "نادرست"
+  },
+  "cycleStatus": {
+    "active": "سیکل فعال",
+    "upcoming": "سیکل‌های پیش‌رو"
+  },
+  "initiativeStatus": {
+    "active": "ابتکارهای فعال",
+    "planned": "ابتکارهای برنامه‌ریزی‌شده",
+    "proposed": "ابتکارهای پیشنهادی"
+  },
+  "fields": {
+    "status": "وضعیت",
+    "statusType": "نوع وضعیت",
+    "assignee": "مسئول",
+    "delegate": "واگذارشده",
+    "priority": "اولویت",
+    "type": "نوع",
+    "initiative": "ابتکار",
+    "cycle": "سیکل",
+    "labels": "برچسب‌ها",
+    "dueDate": "تاریخ سررسید",
+    "startDate": "تاریخ شروع",
+    "created": "ایجادشده",
+    "updated": "به‌روزرسانی‌شده"
+  },
+  "unset": {
+    "assignee": "بدون مسئول",
+    "delegate": "بدون واگذارشده",
+    "type": "بدون نوع",
+    "initiative": "بدون ابتکار",
+    "cycle": "بدون سیکل",
+    "member": "بدون مقدار"
+  },
+  "currentUser": "کاربر فعلی"
+}

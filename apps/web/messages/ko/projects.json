@@ -1,0 +1,29 @@
+{
+  "editAction": "프로젝트 편집",
+  "copyAction": "프로젝트 복사",
+  "deleteAction": "프로젝트 삭제",
+  "leaveAction": "프로젝트 나가기",
+  "archiveAction": "프로젝트 보관",
+  "restoreAction": "프로젝트 복원",
+  "archived": "{name} 프로젝트가 보관되었습니다",
+  "restored": "{name} 프로젝트가 복원되었습니다",
+  "deleteDialog": {
+    "title": "{name} 프로젝트를 삭제하시겠습니까?",
+    "confirm": "영구 삭제",
+    "description": "<strong>{name}</strong> 프로젝트와 그 안의 이슈, 댓글, 첨부 파일 및 설정이 모두 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
+    "typeToConfirm": "확인하려면 <code>{key}</code>을(를) 입력하세요."
+  },
+  "leaveDialog": {
+    "title": "{name} 프로젝트에서 나가시겠습니까?",
+    "confirm": "프로젝트 나가기",
+    "description": "<strong>{name}</strong> 프로젝트와 해당 작업에 더 이상 접근할 수 없습니다. 다시 참여하려면 소유자의 새로운 초대가 필요합니다."
+  },
+  "editDialog": {
+    "title": "프로젝트 편집",
+    "key": "키",
+    "keyHint": "이슈 링크에 사용되는 키는 영문 대문자와 숫자로 구성되어야 하며 영문자로 시작해야 합니다. 저장한 후에는 키를 변경할 수 없습니다.",
+    "name": "이름",
+    "description": "설명",
+    "submit": "저장"
+  }
+}

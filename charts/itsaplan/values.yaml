@@ -40,6 +40,8 @@ api:
     API_URL: ""
     APP_URL: ""
     # COOKIE_DOMAIN: ""
+    # Public origin for incoming Git webhooks when API_URL is private; unset uses API_URL.
+    # GIT_WEBHOOK_BASE_URL: ""
     S3_BUCKET: ""
     S3_REGION: "us-east-1"
     S3_FORCE_PATH_STYLE: "true"

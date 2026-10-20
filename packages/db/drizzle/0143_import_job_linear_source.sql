@@ -1,0 +1,2 @@
+ALTER TABLE "import_job" DROP CONSTRAINT "import_job_source_check";--> statement-breakpoint
+ALTER TABLE "import_job" ADD CONSTRAINT "import_job_source_check" CHECK ("import_job"."source" IN ('plane', 'linear'));

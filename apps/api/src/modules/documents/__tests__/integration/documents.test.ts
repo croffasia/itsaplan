@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { authedApi } from '#tests/helpers/app';
+import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createRole } from '#tests/helpers/roles';
@@ -9,7 +9,7 @@ type Client = ReturnType<typeof authedApi>;
 async function setupOwnerProject(): Promise<{ api: Client; userId: string }> {
   const owner = await signUpTestUser();
   const api = authedApi(owner.cookie);
-  await api.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(api, { key: 'MKT', name: 'Marketing' });
   return { api, userId: owner.userId };
 }
 
@@ -114,7 +114,7 @@ describe('documents', () => {
         .status,
     ).toBe(400);
 
-    await api.projects.post({ key: 'OPS', name: 'Operations' });
+    await createProject(api, { key: 'OPS', name: 'Operations' });
     const other = (await documents(api, 'OPS').post({ title: 'Other' })).data!;
     expect((await documents(api).post({ title: 'Invalid', parentId: other.id })).status).toBe(400);
     expect(
@@ -559,7 +559,7 @@ describe('documents', () => {
     expect((await documents(outsider).get({ query: {} })).status).toBe(403);
     expect((await documents(outsider)({ documentId: document.id }).get()).status).toBe(403);
 
-    await owner.api.projects.post({ key: 'OPS', name: 'Operations' });
+    await createProject(owner.api, { key: 'OPS', name: 'Operations' });
     expect((await documents(owner.api, 'OPS')({ documentId: document.id }).get()).status).toBe(404);
   });
 

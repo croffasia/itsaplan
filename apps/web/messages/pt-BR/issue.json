@@ -108,7 +108,8 @@
     "restore": "Restaurar issue",
     "archive": "Arquivar issue",
     "delete": "Excluir issue",
-    "shareIssue": "Compartilhar issue"
+    "shareIssue": "Compartilhar issue",
+    "move": "Mover para outro projeto"
   },
   "actions": {
     "deleteTitle": "Excluir issue",
@@ -117,7 +118,16 @@
     "cannotBeUndone": "Isso não pode ser desfeito.",
     "deleteDescription": "Excluir {issue}? Isto remove a issue, seus comentários, atividade e anexos.",
     "archiveDescription": "Arquivar {issue}? Ela sai do quadro e pode ser restaurada depois.",
-    "applyDescription": "Aplicar <v>{action}</v> a esta issue?"
+    "applyDescription": "Aplicar <v>{action}</v> a esta issue?",
+    "moveTitle": "Mover issue",
+    "move": "Mover",
+    "moveDescription": "Mover {issue} para outro projeto desta equipe. Ela recebe um novo número lá, e o link antigo continua abrindo-a.",
+    "moveSubtasks": "{count, plural, one {Sua subtarefa é movida junto.} other {Suas # subtarefas são movidas junto.}}",
+    "moveProject": "Projeto",
+    "moveChooseProject": "Escolha um projeto",
+    "moveColumn": "Status",
+    "moveColumnMatching": "Status correspondente",
+    "moveCarriedOver": "Tipo, etiquetas e campos personalizados são mantidos quando o projeto de destino tem um com o mesmo nome. Ciclo, iniciativa e links para issues deste projeto são removidos."
   },
   "create": {
     "title": "Nova issue",
@@ -341,7 +351,8 @@
     "worklogChanged": "alterou o registro de <v>{from}</v> em <v>{fromDate}</v> para <v>{to}</v> em <v>{date}</v>",
     "worklogRemoved": "removeu os <v>{time}</v> registrados em <v>{date}</v>",
     "commentEdited": "editou um comentário",
-    "commentDeleted": "excluiu um comentário"
+    "commentDeleted": "excluiu um comentário",
+    "issueMoved": "moveu esta issue de <v>{from}</v> para <v>{to}</v>"
   },
   "development": {
     "title": "Desenvolvimento",

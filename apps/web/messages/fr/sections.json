@@ -8,7 +8,8 @@
   },
   "godGroups": {
     "management": "Gestion",
-    "instance": "Instance"
+    "instance": "Instance",
+    "security": "Sécurité"
   },
   "god": {
     "users": {
@@ -25,7 +26,7 @@
     },
     "general": {
       "label": "Général",
-      "description": "Les espaces de travail personnels et les valeurs par défaut des nouveaux projets."
+      "description": "Les espaces de travail personnels, les valeurs par défaut des nouveaux projets et les traces des agents."
     },
     "authentication": {
       "label": "Authentification",
@@ -54,6 +55,10 @@
     "scim": {
       "label": "SCIM",
       "description": "Permettez à un fournisseur d'identité de créer, mettre à jour et désactiver des comptes sur cette instance, et d'accorder l'accès aux projets via ses groupes."
+    },
+    "audit-log": {
+      "label": "Journal d'audit",
+      "description": "Qui a fait quoi sur cette instance, quand et depuis où."
     }
   },
   "settings": {
@@ -108,6 +113,76 @@
     "ai-agents": {
       "label": "Agents",
       "description": "Des comptes bots auxquels vous pouvez déléguer des tickets."
+    }
+  },
+  "previews": {
+    "available": "Disponible dans Cloud et dans Pro auto-hébergé.",
+    "dashboard": {
+      "title": "Tableau de bord",
+      "description": "L'activité des équipes et des projets de cet espace de travail.",
+      "summary": {
+        "teams": "Équipes",
+        "projects": "Projets",
+        "people": "Personnes",
+        "agents": "Agents IA",
+        "openIssues": "Tickets ouverts",
+        "storage": "Stockage"
+      },
+      "blocks": {
+        "agents": "Agents IA",
+        "schedules": "Exécutions planifiées",
+        "time": "Temps enregistré",
+        "flow": "Flux de tickets",
+        "projects": "Projets actifs",
+        "teams": "Équipes actives"
+      }
+    },
+    "agentBudgets": {
+      "title": "Budgets IA",
+      "description": "Des limites à ce que les agents dépensent en modèles.",
+      "workspace": "Tout l’espace",
+      "figures": {
+        "spent": "Dépensé",
+        "limit": "Limite",
+        "left": "Reste",
+        "forecast": "Prévision pour la période"
+      },
+      "list": "Budgets",
+      "columns": {
+        "budget": "Budget",
+        "spent": "Dépensé"
+      }
+    },
+    "auditLog": {
+      "title": "Journal d'audit",
+      "description": "Qui a fait quoi dans cet espace de travail, ses équipes et ses projets, et quand ses membres se sont connectés.",
+      "columns": {
+        "time": "Date",
+        "actor": "Qui",
+        "action": "Action",
+        "where": "Où",
+        "from": "Origine"
+      }
+    },
+    "emailDomains": {
+      "title": "Domaines e-mail",
+      "description": "Choisissez les domaines e-mail qui peuvent rejoindre cet espace de travail.",
+      "label": "Domaines e-mail autorisés",
+      "hint": "Seules les adresses de ces domaines peuvent être invitées ou ajoutées par SCIM, et les personnes invitées peuvent s'inscrire avec elles. Laissez vide pour utiliser les domaines de l'instance. Les membres actuels gardent leur accès."
+    },
+    "sso": {
+      "title": "Authentification unique",
+      "description": "Permettez aux membres de cet espace de travail de se connecter avec le fournisseur d'identité de votre entreprise.",
+      "provider": "Fournisseur d'identité",
+      "providerHint": "Saisissez ce que vous donne votre fournisseur d'identité, puis ajoutez-y les adresses ci-dessous.",
+      "fields": {
+        "domains": "Domaines e-mail",
+        "entryPoint": "URL de connexion",
+        "entityId": "Entity ID du fournisseur",
+        "certificate": "Certificat de signature",
+        "acsUrl": "URL ACS",
+        "spEntityId": "Entity ID et métadonnées"
+      }
     }
   }
 }

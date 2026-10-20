@@ -33,6 +33,11 @@ checklists and their items.
 search_issues and list_issues are for finding issues by text or by field, not for
 resolving an identifier.
 
+## You
+
+Your key acts as one user. When a request says "me", "my" or "mine", call
+get_current_user for that user's id rather than matching a name or an email.
+
 ## Teams
 
 A team owns the projects, the AI agents, the skills and the configured tools. It is

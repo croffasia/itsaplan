@@ -4,21 +4,25 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./extensions": "./src/extensions.ts"
   },
   "scripts": {
-    "auth:generate": "dotenv -e ../../.env -- bunx auth@1.6.27 generate --config ./src/index.ts --output ../db/src/schema/auth.ts --yes",
+    "auth:generate": "dotenv -e ../../.env -- bunx auth@1.7.11 generate --config ./src/index.ts --output ../db/src/schema/auth.ts --yes",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@better-auth/api-key": "1.6.27",
-    "@better-auth/passkey": "1.6.27",
+    "@better-auth/api-key": "1.7.11",
+    "@better-auth/mcp": "1.7.11",
+    "@better-auth/oauth-provider": "1.7.11",
+    "@better-auth/passkey": "1.7.11",
     "@repo/crypto": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/mailer": "workspace:*",
-    "better-auth": "1.6.27",
-    "drizzle-orm": "^0.45.2"
+    "better-auth": "1.7.11",
+    "drizzle-orm": "^0.45.4",
+    "jose": "^6.2.3"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { app, apiKeyApi, authedApi, type Api } from '#tests/helpers/app';
+import { app, apiKeyApi, authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
@@ -26,7 +26,7 @@ it('caps configured claim wait below the runner request timeout', () => {
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   const created = await createAgent(asOwner, 'MKT', {
     name: 'Ext Bot',
     username: 'ext',

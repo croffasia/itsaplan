@@ -3,7 +3,7 @@ import type { Assignee } from '@/lib/api/endpoints/projects';
 import { useSession } from '@/lib/auth-client';
 import Avatar from '@/components/common/Avatar';
 import type { PickItem } from '@/components/common/fields/PopoverPick';
-import { isForeignAgent } from '../utils/delegates';
+import { isForeignAgent } from '@/utils/foreignAgent';
 
 // Builds the row one candidate gets in a picker over the project's people and agents,
 // shared by the controls that write such a candidate to an issue. An agent bound to

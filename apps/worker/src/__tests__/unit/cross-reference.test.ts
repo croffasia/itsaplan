@@ -27,6 +27,14 @@ describe('extractCrossReferences', () => {
     expect(extractCrossReferences('see rooms-524', 'ROOMS')).toEqual([]);
   });
 
+  it('does not match an identifier that is a path segment of a URL', () => {
+    const text = '[Spec](https://linear.app/acme/issue/ROOMS-524/the-spec)';
+    expect(extractCrossReferences(text, 'ROOMS')).toEqual([]);
+    expect(applyCrossReferenceReplacements(text, 'ROOMS', new Map([['ROOMS-524', 'X-1']]))).toBe(
+      text,
+    );
+  });
+
   it('finds nothing in text with no mention', () => {
     expect(extractCrossReferences('no references here', 'ROOMS')).toEqual([]);
   });

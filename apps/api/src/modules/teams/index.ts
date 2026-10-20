@@ -45,6 +45,7 @@ import {
 } from './model';
 import {
   createTeam,
+  deleteTeam,
   getTeam,
   getTeamProject,
   leaveTeam,
@@ -311,6 +312,26 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
     },
   )
 
+  .delete(
+    '/teams/:teamId',
+    async ({ membership }) => {
+      await deleteTeam(membership.teamId);
+      return noContent();
+    },
+    {
+      teamOwner: true,
+      params: teamParams,
+      response: { 204: t.Void(), ...errors(401, 403, 404, 409) },
+      detail: {
+        summary: 'Delete a team',
+        description:
+          'Delete a team you own, with its members, roles, invites, skills, tools and ' +
+          'integrations. A team that holds a project or an AI agent is refused until those ' +
+          'are gone. Irreversible.',
+      },
+    },
+  )
+
   .post(
     '/teams/:teamId/projects',
     async ({ body, membership, set }) => {
@@ -323,10 +344,14 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
       body: createProjectBody,
       response: { 201: ProjectResponse, ...errors(400, 401, 403, 404, 409) },
       detail: {
-        summary: 'Create a project in a team',
+        summary: 'Create a project',
         description:
-          'Create a project the team owns and become its owner. Takes the same body as ' +
-          'create_project, which creates in the team you own.',
+          'Create a project in a team you own or manage and become its owner. `key` is the ' +
+          "immutable prefix for issue ids, unique within the team (e.g. 'MKT' -> 'MKT-1'). " +
+          'Seeds the default columns and the issue types of the chosen `preset`. Over MCP, ' +
+          'uses the team from your key when there is one; otherwise call list_teams and pass ' +
+          'teamId.',
+        ...mcpTool('create_project'),
       },
     },
   )
@@ -337,7 +362,7 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
       await requireTeamProject(membership.teamId, params.projectId);
       const { include, ...meta } = body;
       set.status = 201;
-      return copyProject(params.projectId, meta, membership.userId, include, membership.teamId);
+      return copyProject(params.projectId, meta, membership.userId, membership.teamId, include);
     },
     {
       teamManager: true,

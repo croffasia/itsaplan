@@ -1,24 +1,33 @@
-import { db, agentRun, agentSchedule, aiAgent, user } from '@repo/db';
+import { db, agentRun, agentSchedule, aiAgent, projectColumn, user } from '@repo/db';
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { HttpError, iso, rethrowDuplicate } from '#shared/lib';
 import { getTeamLimits } from '#shared/limits';
-import { minCronIntervalSeconds } from './cron';
+import { minCronIntervalSeconds, nextCronRun } from './cron';
+import { isScheduleSupported, type ScheduleOptions } from './extension';
 import { agentWorksInProject, canTriggerAgent, isTriggerableBy } from '../core/service';
 import { contextTokensOf } from '../core/run-queue';
 import { deleteThreadsWhere } from '../core/runtime/memory';
 
 export type AgentScheduleStatus = 'active' | 'paused';
+// 'cron', 'status', or a type an extension adds (./extension).
+export type AgentScheduleType = string;
 
 export interface AgentScheduleRow {
   id: number;
   agentId: number;
   agentName: string;
   name: string;
+  type: AgentScheduleType;
   prompt: string;
-  cron: string;
+  // Set on a 'cron' schedule only, as is nextRunAt.
+  cron: string | null;
   timezone: 'UTC';
+  // Set on a 'status' schedule only.
+  columnId: number | null;
+  delaySec: number;
+  options: ScheduleOptions;
   status: AgentScheduleStatus;
-  nextRunAt: string;
+  nextRunAt: string | null;
   lastRunAt: string | null;
   lastRunStatus: string | null;
   // Runs that have not been picked up yet — the ones cancelPendingScheduleRuns ends.
@@ -26,6 +35,7 @@ export interface AgentScheduleRow {
   // Whether the member reading the schedule may send its agent a task: an 'owner'-scoped
   // runner serves its owner only.
   canTrigger: boolean;
+  supported: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -35,9 +45,13 @@ const columns = {
   agentId: agentSchedule.agentId,
   agentName: user.name,
   name: agentSchedule.name,
+  type: agentSchedule.type,
   prompt: agentSchedule.prompt,
   cron: agentSchedule.cron,
   timezone: agentSchedule.timezone,
+  columnId: agentSchedule.columnId,
+  delaySec: agentSchedule.delaySec,
+  options: agentSchedule.options,
   status: agentSchedule.status,
   nextRunAt: agentSchedule.nextRunAt,
   lastRunAt: agentSchedule.lastRunAt,
@@ -74,9 +88,10 @@ function mapSchedule(row: SelectedSchedule, actorUserId: string): AgentScheduleR
     ...schedule,
     timezone: 'UTC',
     status: schedule.status as AgentScheduleStatus,
-    nextRunAt: iso(schedule.nextRunAt),
+    nextRunAt: schedule.nextRunAt ? iso(schedule.nextRunAt) : null,
     lastRunAt: schedule.lastRunAt ? iso(schedule.lastRunAt) : null,
     canTrigger: isTriggerableBy({ kind, runnerScope, ownerUserId }, actorUserId),
+    supported: isScheduleSupported(schedule),
     createdAt: iso(schedule.createdAt),
     updatedAt: iso(schedule.updatedAt),
   };
@@ -138,7 +153,7 @@ async function assertTriggerable(agentId: number, actorUserId: string): Promise<
 }
 
 // Refuses a cron that fires more often than the workspace's floor allows.
-export async function assertScheduleInterval(teamId: number, cron: string): Promise<void> {
+async function assertScheduleInterval(teamId: number, cron: string): Promise<void> {
   const { minScheduleIntervalSeconds } = await getTeamLimits(teamId);
   if (minScheduleIntervalSeconds === 0) return;
   if (minCronIntervalSeconds(cron) < minScheduleIntervalSeconds) {
@@ -147,16 +162,103 @@ export async function assertScheduleInterval(teamId: number, cron: string): Prom
   }
 }
 
-export async function createAgentSchedule(input: {
-  projectId: number;
-  agentId: number;
-  actorUserId: string;
-  name: string;
+// What starts the schedule's runs, as its columns store it.
+interface ScheduleTrigger {
   prompt: string;
-  cron: string;
-  status: AgentScheduleStatus;
-  nextRunAt: Date;
-}): Promise<AgentScheduleRow | null> {
+  cron: string | null;
+  nextRunAt: Date | null;
+  columnId: number | null;
+  delaySec: number;
+}
+
+interface ScheduleTriggerInput {
+  prompt?: string;
+  cron?: string;
+  columnId?: number;
+  delaySec?: number;
+}
+
+export function requiredText(value: string, field: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) throw new HttpError(400, `${field} is required`);
+  return trimmed;
+}
+
+async function assertProjectColumn(projectId: number, columnId: number): Promise<void> {
+  const [row] = await db
+    .select({ id: projectColumn.id })
+    .from(projectColumn)
+    .where(and(eq(projectColumn.id, columnId), eq(projectColumn.projectId, projectId)));
+  if (!row) throw new HttpError(400, 'Select a column of this project');
+}
+
+// Checks the fields of the given type that a write sets, and returns them as stored. A
+// field of another type is refused rather than ignored, so a caller that mixes them up
+// learns it. An extension's type takes the fields of a 'status' one but the column.
+export async function scheduleTriggerFields(
+  project: { id: number; teamId: number },
+  type: AgentScheduleType,
+  input: ScheduleTriggerInput,
+): Promise<Partial<ScheduleTrigger>> {
+  if (type === 'cron') {
+    if (input.columnId !== undefined || input.delaySec !== undefined) {
+      throw new HttpError(400, 'A cron schedule takes no column and no delay');
+    }
+    const out: Partial<ScheduleTrigger> = {};
+    if (input.prompt !== undefined) out.prompt = requiredText(input.prompt, 'Task');
+    if (input.cron !== undefined) {
+      const cron = input.cron.trim();
+      await assertScheduleInterval(project.teamId, cron);
+      out.cron = cron;
+      out.nextRunAt = nextCronRun(cron);
+    }
+    return out;
+  }
+  if (input.cron !== undefined) throw new HttpError(400, 'Only a cron schedule takes a cron');
+  const out: Partial<ScheduleTrigger> = {};
+  if (input.prompt !== undefined) out.prompt = input.prompt.trim();
+  if (input.columnId !== undefined) {
+    if (type !== 'status') throw new HttpError(400, 'Only a status schedule takes a column');
+    await assertProjectColumn(project.id, input.columnId);
+    out.columnId = input.columnId;
+  }
+  if (input.delaySec !== undefined) out.delaySec = input.delaySec;
+  return out;
+}
+
+// The trigger of a new schedule: the fields its type requires, with the rest left empty.
+export async function newScheduleTrigger(
+  project: { id: number; teamId: number },
+  type: AgentScheduleType,
+  input: ScheduleTriggerInput,
+): Promise<ScheduleTrigger> {
+  if (type === 'cron') {
+    if (input.prompt === undefined) throw new HttpError(400, 'Task is required');
+    if (input.cron === undefined) throw new HttpError(400, 'Cron is required');
+  } else if (type === 'status' && input.columnId === undefined) {
+    throw new HttpError(400, 'Column is required');
+  }
+  const fields = await scheduleTriggerFields(project, type, input);
+  return {
+    prompt: fields.prompt ?? '',
+    cron: fields.cron ?? null,
+    nextRunAt: fields.nextRunAt ?? null,
+    columnId: fields.columnId ?? null,
+    delaySec: fields.delaySec ?? 0,
+  };
+}
+
+export async function createAgentSchedule(
+  input: {
+    projectId: number;
+    agentId: number;
+    actorUserId: string;
+    name: string;
+    type: AgentScheduleType;
+    status: AgentScheduleStatus;
+    options: ScheduleOptions;
+  } & ScheduleTrigger,
+): Promise<AgentScheduleRow | null> {
   if (!(await agentWorksInProject(input.agentId, input.projectId))) return null;
   await assertTriggerable(input.agentId, input.actorUserId);
   const [row] = await db
@@ -165,9 +267,13 @@ export async function createAgentSchedule(input: {
       agentId: input.agentId,
       projectId: input.projectId,
       name: input.name,
+      type: input.type,
       prompt: input.prompt,
       cron: input.cron,
       timezone: 'UTC',
+      columnId: input.columnId,
+      delaySec: input.delaySec,
+      options: input.options,
       status: input.status,
       nextRunAt: input.nextRunAt,
     })
@@ -179,13 +285,11 @@ export async function createAgentSchedule(input: {
 export async function updateAgentSchedule(
   projectId: number,
   scheduleId: number,
-  patch: {
+  patch: Partial<ScheduleTrigger> & {
     agentId?: number;
     name?: string;
-    prompt?: string;
-    cron?: string;
+    options?: ScheduleOptions;
     status?: AgentScheduleStatus;
-    nextRunAt?: Date;
   },
   actorUserId: string,
 ): Promise<AgentScheduleRow | null> {
@@ -224,6 +328,9 @@ export async function enqueueManualScheduleRun(
 ): Promise<number | null> {
   const schedule = await getAgentSchedule(projectId, scheduleId, actorUserId);
   if (!schedule) return null;
+  if (schedule.type !== 'cron') {
+    throw new HttpError(400, 'Only a cron schedule runs on demand');
+  }
   await assertTriggerable(schedule.agentId, actorUserId);
   const [run] = await db
     .insert(agentRun)

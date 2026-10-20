@@ -8,11 +8,15 @@ import {
   ImportJobResponse,
   TestConnectionResponse,
   PlanePreviewResponse,
+  LinearTestConnectionResponse,
+  LinearPreviewResponse,
   ProjectExportResponse,
   createImportJobBody,
   importJobParams,
   testConnectionBody,
   planePreviewBody,
+  linearConnectionBody,
+  linearPreviewBody,
 } from './model';
 import {
   cancelImportJob,
@@ -26,6 +30,7 @@ import {
   testPlaneStatesPreview,
 } from './service';
 import { exportProject } from './export';
+import { previewLinearStates, testLinearConnection } from './linear';
 
 // Import jobs bring issues from an external tracker into a project. Creating one
 // stores an encrypted credential and leaves it 'pending' for the worker
@@ -78,6 +83,38 @@ export const importExportRoutes = new Elysia({
     },
   )
 
+  .post(
+    '/projects/:projectKey/import-jobs/linear-test-connection',
+    ({ body }) => testLinearConnection(body.apiToken),
+    {
+      permission: ['import_export', 'create'],
+      body: linearConnectionBody,
+      response: { 200: LinearTestConnectionResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'Test a Linear API key',
+        description:
+          'Validate a Linear personal API key live, without storing anything. Returns the ' +
+          'teams it can see, each with its projects, to pick what to import from.',
+      },
+    },
+  )
+
+  .post(
+    '/projects/:projectKey/import-jobs/linear-preview',
+    ({ body }) => previewLinearStates(body.apiToken, body.teamId),
+    {
+      permission: ['import_export', 'create'],
+      body: linearPreviewBody,
+      response: { 200: LinearPreviewResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'Preview a Linear team before importing from it',
+        description:
+          "Fetch the team's workflow states, each with the category itsaplan would " +
+          'automatically map it to, for review before a job is created.',
+      },
+    },
+  )
+
   .get('/projects/:projectKey/import-jobs/export', ({ project }) => exportProject(project.id), {
     permission: ['import_export', 'create'],
     response: { 200: ProjectExportResponse, ...accessErrors },
@@ -101,9 +138,10 @@ export const importExportRoutes = new Elysia({
       body: createImportJobBody,
       response: { 201: ImportJobResponse, ...commonErrors },
       detail: {
-        summary: 'Create a Plane import job',
+        summary: 'Create an import job',
         description:
-          "Encrypt and store the submitted credential and leave the job 'pending' for the worker.",
+          "Create a Plane job, or a Linear one with source 'linear'. Encrypt and store the " +
+          "submitted credential and leave the job 'pending' for the worker.",
       },
     },
   )

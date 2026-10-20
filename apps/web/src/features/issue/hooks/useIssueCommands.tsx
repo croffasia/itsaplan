@@ -247,7 +247,12 @@ export function useIssueCommands(
             id: `issue.due-date.${p.key}`,
             label: presetLabel(p.key),
             icon: <CalendarClock />,
-            shortcut: format.dateTime(p.date, { weekday: 'short', month: 'short', day: 'numeric' }),
+            shortcut: format.dateTime(p.date, {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+              calendar: 'gregory',
+            }),
             run: () => patch({ dueDate: toDateStr(p.date) }),
           })),
           ...(issue.dueDate

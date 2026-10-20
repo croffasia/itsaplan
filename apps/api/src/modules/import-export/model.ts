@@ -4,9 +4,25 @@ export const importJobParams = t.Object({ id: t.Numeric() });
 
 const stateCategory = t.UnionEnum(['backlog', 'unstarted', 'started', 'completed', 'canceled']);
 
+const importJobChoices = {
+  unmatchedUserPolicy: t.Optional(
+    t.UnionEnum(['unassigned', 'skip'], {
+      description:
+        'How to handle an assignee or comment author with no matching project member by email. ' +
+        "'unassigned' (default) leaves the field empty; 'skip' drops the assignment or comment.",
+    }),
+  ),
+  stateOverrides: t.Optional(
+    t.Record(t.String(), stateCategory, {
+      description: 'Source state id -> itsaplan state category, overriding the automatic mapping.',
+    }),
+  ),
+};
+
 // The fields Plane needs to reach the source project, plus the mapping choices made
-// at creation time.
-export const createImportJobBody = t.Object({
+// at creation time. A body without `source` is a Plane job.
+const planeImportJobBody = t.Object({
+  source: t.Optional(t.Literal('plane')),
   baseUrl: t.String({ minLength: 1, description: 'Origin of the source Plane instance.' }),
   workspaceSlug: t.String({ minLength: 1 }),
   apiToken: t.String({ minLength: 1, description: 'Plane workspace or personal API key.' }),
@@ -17,19 +33,38 @@ export const createImportJobBody = t.Object({
       'The Plane project\'s own short identifier (e.g. "ROOMS"), used to recognize and ' +
       'rewrite cross-references like "ROOMS-524" in imported text.',
   }),
-  unmatchedUserPolicy: t.Optional(
-    t.UnionEnum(['unassigned', 'skip'], {
-      description:
-        'How to handle an assignee or comment author with no matching project member by email. ' +
-        "'unassigned' (default) leaves the field empty; 'skip' drops the assignment or comment.",
-    }),
-  ),
-  stateOverrides: t.Optional(
-    t.Record(t.String(), stateCategory, {
-      description: 'Plane state id -> itsaplan state category, overriding the automatic mapping.',
-    }),
-  ),
+  ...importJobChoices,
 });
+
+// One Linear team, and one of its projects or its issues with no project.
+const linearImportJobBody = t.Object({
+  source: t.Literal('linear'),
+  apiToken: t.String({
+    minLength: 1,
+    description: 'Linear personal API key; read-only is enough.',
+  }),
+  teamId: t.String({ minLength: 1, description: 'The Linear team id to import from.' }),
+  teamKey: t.String({
+    minLength: 1,
+    description:
+      'The team\'s issue-key prefix (e.g. "ATO"), used to recognize and rewrite ' +
+      'cross-references like "ATO-505" in imported text.',
+  }),
+  projectFilter: t.UnionEnum(['project', 'none'], {
+    description:
+      "'project' imports one project of the team; 'none' imports the team's issues that " +
+      'belong to no project.',
+  }),
+  projectId: t.Optional(
+    t.String({
+      minLength: 1,
+      description: "The Linear project id, when projectFilter is 'project'.",
+    }),
+  ),
+  ...importJobChoices,
+});
+
+export const createImportJobBody = t.Union([planeImportJobBody, linearImportJobBody]);
 
 export const testConnectionBody = t.Object({
   baseUrl: t.String({ minLength: 1 }),
@@ -51,6 +86,28 @@ export const planePreviewBody = t.Object({
 export const PlanePreviewResponse = t.Object({
   states: t.Array(t.Object({ id: t.String(), name: t.String(), category: stateCategory })),
 });
+
+export const linearConnectionBody = t.Object({
+  apiToken: t.String({ minLength: 1, description: 'Linear personal API key.' }),
+});
+
+export const LinearTestConnectionResponse = t.Object({
+  teams: t.Array(
+    t.Object({
+      id: t.String(),
+      key: t.String(),
+      name: t.String(),
+      projects: t.Array(t.Object({ id: t.String(), name: t.String() })),
+    }),
+  ),
+});
+
+export const linearPreviewBody = t.Object({
+  apiToken: t.String({ minLength: 1 }),
+  teamId: t.String({ minLength: 1 }),
+});
+
+export const LinearPreviewResponse = PlanePreviewResponse;
 
 // Mirrors import_record_source_entity_type_check in packages/db/src/schema/app.ts.
 const entityCount = t.Object({ discovered: t.Number(), created: t.Number() });
@@ -103,7 +160,7 @@ export const ProjectExportResponse = t.Object({
 export const ImportJobResponse = t.Object({
   id: t.Number(),
   projectId: t.Number(),
-  source: t.Literal('plane'),
+  source: t.UnionEnum(['plane', 'linear']),
   phase: t.UnionEnum(['discover', 'create', 'link', 'rewrite', 'attachments', 'done']),
   status: t.UnionEnum(['pending', 'running', 'paused', 'completed', 'failed']),
   counts: CountsResponse,

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import type { GitSettings } from '@/lib/api/endpoints/git';
-import { API_URL } from '@/lib/api/core/client';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import { Button } from '@/components/ui/button';
@@ -44,7 +43,6 @@ export default function GitConnectionCard({
   const t = useTranslations('settings.git');
   const regenerate = useRegenerateGitSecret(projectKey);
   const [tab, setTab] = useState<ProviderKey>(() => initialTab(settings.repositories[0]?.provider));
-  const payloadUrl = `${API_URL}/webhooks/git/${settings.webhookId}`;
 
   async function regenerateSecret() {
     await regenerate.mutateAsync();
@@ -77,7 +75,7 @@ export default function GitConnectionCard({
         {/* One URL and one secret serve every host — they sit above the tabs,
             which carry nothing but each host's instructions. */}
         <div className="space-y-4 p-4">
-          <GitCopyField label={t('payloadUrl')} value={payloadUrl} />
+          <GitCopyField label={t('payloadUrl')} value={settings.payloadUrl} />
           <GitCopyField
             label={t('webhookSecret')}
             value={settings.secret}
@@ -105,10 +103,10 @@ export default function GitConnectionCard({
                 <TabsContent key={p.key} value={p.key} className="mt-4 space-y-4">
                   {hint(p.hint)}
                   {p.key === 'github' && (
-                    <GithubCliCommand payloadUrl={payloadUrl} secret={settings.secret} />
+                    <GithubCliCommand payloadUrl={settings.payloadUrl} secret={settings.secret} />
                   )}
                   {p.key === 'gitlab' && (
-                    <GitlabCliCommand payloadUrl={payloadUrl} secret={settings.secret} />
+                    <GitlabCliCommand payloadUrl={settings.payloadUrl} secret={settings.secret} />
                   )}
                 </TabsContent>
               ))}

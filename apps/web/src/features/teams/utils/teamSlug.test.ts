@@ -7,6 +7,10 @@ describe('suggestTeamSlug', () => {
     assert.equal(suggestTeamSlug('Acme Design'), 'acme-design');
     assert.equal(suggestTeamSlug('  42 -- Ops!  '), 'ops');
     assert.equal(suggestTeamSlug('Команда'), 'komanda');
+    assert.equal(suggestTeamSlug('Хлеб и Ґанок'), 'khleb-i-ganok');
+    assert.equal(suggestTeamSlug('Ομάδα πωλήσεων'), 'omada-poliseon');
+    assert.equal(suggestTeamSlug('北京团队'), 'bei-jing-tuan-dui');
+    assert.equal(suggestTeamSlug('Қазақ'), 'kazak');
     const long = suggestTeamSlug(`a${'-b'.repeat(30)}`);
     assert.ok(TEAM_SLUG_PATTERN.test(long), long);
   });

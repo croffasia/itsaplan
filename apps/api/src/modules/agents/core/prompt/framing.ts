@@ -59,38 +59,58 @@ export function framePrompt(run: RunForPrompt): string {
   if (run.trigger === 'schedule' || run.trigger === 'manual') {
     return `Carry out the following task:\n\n${run.prompt}`;
   }
+  if (run.trigger === 'status' || run.trigger === 'event' || run.trigger === 'field') {
+    return frameIssueTask(run);
+  }
   const ref = run.issueIdentifier ?? `#${run.issueId}`;
   const titled = run.issueTitle ? `${ref} "${run.issueTitle}"` : ref;
   return run.trigger === 'delegation' ? frameDelegation(run, titled) : frameMention(run, titled);
 }
 
 function frameDelegation(run: RunForPrompt, titled: string): string {
-  const lines = [
+  return [
     `Issue ${titled} of your project has been delegated to you. Carry it out.`,
     'Read the issue for context, then do the work it needs with your tools. Add a',
     'question comment only when you genuinely cannot proceed without a human answer.',
-  ];
-  if (run.assigneeUsername) {
-    lines.push(
-      '',
-      'Whenever you comment on this issue, tag the responsible assignee',
-      `@${run.assigneeUsername} so they are notified.`,
-    );
-  } else {
-    lines.push(
-      '',
-      'This issue has no assignee. Before you comment, call get_project and read',
-      "the members' descriptions; tag the one member whose role best fits this work. If",
-      'none clearly fits, tag a project owner. Tag exactly one person.',
-    );
-  }
-  lines.push(
+    ...assigneeLines(run),
     '',
     'When you are done, add a comment to the issue with the add_comment tool',
     `(issueId ${run.issueId}) describing what you did, and set the issue's status with`,
     'the update_issue tool. Do not mention yourself.',
-  );
-  return lines.join('\n');
+  ].join('\n');
+}
+
+// The run's prompt already names the issue and what put the agent on it: the member field
+// it was set into, or what happened to the issue followed by the schedule's task.
+// Moving the issue on is left to that task: a status schedule is often one step of
+// several, each started by the column before it.
+function frameIssueTask(run: RunForPrompt): string {
+  return [
+    run.prompt,
+    '',
+    'Read the issue for context, then carry out the task above with your tools. Add a',
+    'question comment only when you genuinely cannot proceed without a human answer.',
+    ...assigneeLines(run),
+    '',
+    'When you are done, add a comment to the issue with the add_comment tool',
+    `(issueId ${run.issueId}) describing what you did. Do not mention yourself.`,
+  ].join('\n');
+}
+
+function assigneeLines(run: RunForPrompt): string[] {
+  if (run.assigneeUsername) {
+    return [
+      '',
+      'Whenever you comment on this issue, tag the responsible assignee',
+      `@${run.assigneeUsername} so they are notified.`,
+    ];
+  }
+  return [
+    '',
+    'This issue has no assignee. Before you comment, call get_project and read',
+    "the members' descriptions; tag the one member whose role best fits this work. If",
+    'none clearly fits, tag a project owner. Tag exactly one person.',
+  ];
 }
 
 function frameMention(run: RunForPrompt, titled: string): string {

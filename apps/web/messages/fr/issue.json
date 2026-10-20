@@ -108,7 +108,8 @@
     "restore": "Restaurer le ticket",
     "archive": "Archiver le ticket",
     "delete": "Supprimer le ticket",
-    "shareIssue": "Partager le ticket"
+    "shareIssue": "Partager le ticket",
+    "move": "Déplacer vers un autre projet"
   },
   "actions": {
     "deleteTitle": "Supprimer le ticket",
@@ -117,7 +118,16 @@
     "cannotBeUndone": "Cette action est irréversible.",
     "deleteDescription": "Supprimer {issue} ? Le ticket, ses commentaires, son activité et ses pièces jointes seront supprimés.",
     "archiveDescription": "Archiver {issue} ? Le ticket quitte le tableau et pourra être restauré plus tard.",
-    "applyDescription": "Appliquer <v>{action}</v> à ce ticket ?"
+    "applyDescription": "Appliquer <v>{action}</v> à ce ticket ?",
+    "moveTitle": "Déplacer le ticket",
+    "move": "Déplacer",
+    "moveDescription": "Déplacer {issue} vers un autre projet de cette équipe. Il y reçoit un nouveau numéro, et l’ancien lien l’ouvre toujours.",
+    "moveSubtasks": "{count, plural, one {Sa sous-tâche est déplacée avec lui.} other {Ses # sous-tâches sont déplacées avec lui.}}",
+    "moveProject": "Projet",
+    "moveChooseProject": "Choisir un projet",
+    "moveColumn": "Statut",
+    "moveColumnMatching": "Statut correspondant",
+    "moveCarriedOver": "Le type, les étiquettes et les champs personnalisés sont conservés si le projet cible en a un du même nom. Le cycle, l’initiative et les liens vers des tickets de ce projet sont supprimés."
   },
   "create": {
     "title": "Nouveau ticket",
@@ -341,7 +351,8 @@
     "worklogChanged": "a remplacé les <v>{from}</v> enregistrées le <v>{fromDate}</v> par <v>{to}</v> le <v>{date}</v>",
     "worklogRemoved": "a supprimé les <v>{time}</v> enregistrées le <v>{date}</v>",
     "commentEdited": "a modifié un commentaire",
-    "commentDeleted": "a supprimé un commentaire"
+    "commentDeleted": "a supprimé un commentaire",
+    "issueMoved": "a déplacé ce ticket de <v>{from}</v> vers <v>{to}</v>"
   },
   "development": {
     "title": "Développement",

@@ -1,0 +1,15 @@
+{
+  "all": "전체",
+  "newView": "새 보기",
+  "switchView": "보기 전환",
+  "searchViews": "보기 검색…",
+  "noViews": "보기를 찾을 수 없습니다.",
+  "options": "보기 옵션",
+  "share": "공유",
+  "shared": "공유됨",
+  "favorite": "즐겨찾기에 추가",
+  "unfavorite": "즐겨찾기에서 제거",
+  "shareBoard": "보드 공유",
+  "newViewHint": "현재 필터와 보기 설정으로 새 보기를 생성합니다",
+  "filter": "필터"
+}

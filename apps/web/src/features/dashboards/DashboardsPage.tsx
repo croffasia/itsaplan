@@ -6,6 +6,7 @@ import { useShellRoute } from '@/hooks/useShellRoute';
 import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { dashboardPath, dashboardsPath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -38,6 +39,12 @@ export default function DashboardsPage() {
       ? parsedRouteId
       : null;
   const activeDashboardId = routeId;
+  useDocumentTitle(
+    titlePath(
+      project?.project.name,
+      isSuccess && list.find((dashboard) => dashboard.id === routeId)?.name,
+    ),
+  );
   const missingDashboard =
     isSuccess &&
     !isFetching &&

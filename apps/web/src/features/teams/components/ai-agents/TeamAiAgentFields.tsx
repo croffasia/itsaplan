@@ -9,6 +9,13 @@ import type {
 } from '@/lib/api/endpoints/integrations';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { AGENT_KIND_ICON } from '../../utils/agentKindIcon';
 import { type AgentFormValue } from '../../utils/agentForm';
 import { AgentFormSection } from './AgentFormSection';
@@ -28,6 +35,10 @@ import { useTranslations } from 'next-intl';
 // until its key is in the operator's hands. A new agent starts with all of them closed:
 // nothing is filled in yet, and the key section opens itself once a key is issued.
 const DEFAULT_OPEN: Record<string, boolean> = { access: true, projects: true, token: true };
+
+// Radix Select forbids an empty-string item value, so the provider's default (a null
+// reasoning effort) uses this sentinel.
+const PROVIDER_DEFAULT = 'default';
 
 // Content width of the full-width editor. The sheet sizes its footer to match, so the
 // two must stay in sync.
@@ -289,6 +300,29 @@ export default function TeamAiAgentFields({
             value={value.temperature}
             onChange={(e) => onChange({ temperature: e.target.value })}
           />
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="agent-reasoning-effort" className="text-sm font-medium">
+            {t('reasoningEffort')}
+          </label>
+          <Select
+            value={value.reasoningEffort ?? PROVIDER_DEFAULT}
+            onValueChange={(v) =>
+              onChange({
+                reasoningEffort: v === 'low' || v === 'medium' || v === 'high' ? v : null,
+              })
+            }
+          >
+            <SelectTrigger id="agent-reasoning-effort" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={PROVIDER_DEFAULT}>{t('reasoningEffortDefault')}</SelectItem>
+              <SelectItem value="low">{t('reasoningEffortLow')}</SelectItem>
+              <SelectItem value="medium">{t('reasoningEffortMedium')}</SelectItem>
+              <SelectItem value="high">{t('reasoningEffortHigh')}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-1.5">
           <label htmlFor="agent-max-steps" className="text-sm font-medium">

@@ -1,0 +1,168 @@
+{
+  "title": "이니셔티브",
+  "newInitiative": "새 이니셔티브",
+  "notFound": "이니셔티브를 찾을 수 없습니다.",
+  "options": "이니셔티브 옵션",
+  "showDescription": "설명 표시",
+  "noDescription": "설명이 없습니다.",
+  "noOwner": "소유자 없음",
+  "startDate": "시작일",
+  "targetDate": "목표일",
+  "progress": "진행률",
+  "activity": "활동",
+  "noActivity": "아직 활동이 없습니다.",
+  "noIssuesLinked": "아직 연결된 이슈가 없습니다.",
+  "inProgress": "진행 중",
+  "emptyTitle": "아직 이니셔티브가 없습니다",
+  "emptyDescription": "이니셔티브는 관련된 이슈를 하나의 목표 아래에 묶어 관리합니다.",
+  "emptyTabDescription": "이니셔티브의 상태가 변경되면 해당 상태의 탭으로 이동합니다.",
+  "emptyTab": {
+    "active": "진행 중인 이니셔티브가 없습니다",
+    "planned": "계획된 이니셔티브가 없습니다",
+    "proposed": "제안된 이니셔티브가 없습니다",
+    "completed": "완료된 이니셔티브가 없습니다"
+  },
+  "tabs": {
+    "active": "진행 중",
+    "planned": "계획됨",
+    "proposed": "제안됨",
+    "completed": "완료",
+    "all": "모든 이니셔티브"
+  },
+  "detailTabs": {
+    "overview": "개요",
+    "progress": "진행률",
+    "issues": "이슈"
+  },
+  "columns": {
+    "name": "이름",
+    "priority": "우선순위",
+    "owner": "소유자",
+    "target": "목표일",
+    "progress": "진행률",
+    "health": "진행 상태"
+  },
+  "status": {
+    "proposed": "제안됨",
+    "planned": "계획됨",
+    "active": "진행 중",
+    "completed": "완료",
+    "canceled": "취소됨"
+  },
+  "stateGroups": {
+    "backlog": "백로그",
+    "unstarted": "할 일",
+    "started": "진행 중",
+    "completed": "완료",
+    "canceled": "취소됨"
+  },
+  "health": {
+    "on_track": "정상 진행",
+    "at_risk": "지연 위험",
+    "off_track": "지연",
+    "unknown": "업데이트 없음"
+  },
+  "healthInfo": {
+    "trigger": "진행 상태는 어떻게 계산되나요?",
+    "title": "진행 상태",
+    "description": "경과 시간과 완료된 작업을 비교하여 자동으로 업데이트합니다.",
+    "legend": {
+      "on_track": "일정에 맞춰 작업이 진행되고 있습니다.",
+      "at_risk": "작업이 일정보다 조금 늦어지고 있습니다.",
+      "off_track": "작업이 일정보다 크게 늦었거나 목표일이 지났습니다.",
+      "unknown": "아직 계산할 정보가 부족합니다. 이슈 또는 목표일이 필요합니다."
+    },
+    "howCalculated": "계산 방법",
+    "workDone": "완료된 작업",
+    "timeElapsed": "경과 시간",
+    "trail": "일정 대비 작업 지연",
+    "trailOnTrack": "최대 10% 지연",
+    "trailAtRisk": "10~25% 지연",
+    "trailOffTrack": "25% 초과 지연"
+  },
+  "timeline": {
+    "title": "타임라인",
+    "started": "시작일",
+    "target": "목표일",
+    "remaining": "남은 기간",
+    "overdue": "{days}일 지연",
+    "dueToday": "오늘이 목표일",
+    "left": "{days}일 남음",
+    "timeElapsed": "경과 시간",
+    "workDone": "완료된 작업",
+    "noTargetDate": "진행 속도를 추적하려면 목표일을 설정하세요."
+  },
+  "form": {
+    "titlePlaceholder": "3분기 출시",
+    "descriptionPlaceholder": "이 이니셔티브의 목표와 내용을 입력하세요.",
+    "create": "이니셔티브 생성",
+    "creating": "생성 중…",
+    "editTitle": "이니셔티브 편집",
+    "save": "변경 사항 저장"
+  },
+  "pagination": {
+    "range": "전체 {total}개 중 {from}–{to}",
+    "previous": "이전 페이지",
+    "next": "다음 페이지"
+  },
+  "select": {
+    "label": "이니셔티브",
+    "search": "연결할 이니셔티브 검색…",
+    "empty": "이니셔티브가 없습니다.",
+    "none": "이니셔티브 없음",
+    "create": "이니셔티브 생성"
+  },
+  "feed": {
+    "system": "시스템",
+    "createdInitiative": "이니셔티브 생성",
+    "createdIssue": "이슈 생성",
+    "renamed": "이름을 “{title}”(으)로 변경",
+    "descriptionUpdated": "설명 업데이트",
+    "descriptionCleared": "설명 삭제",
+    "statusSet": "상태를 {status}(으)로 설정",
+    "statusMoved": "{from}에서 {to}(으)로 상태 변경",
+    "prioritySet": "우선순위를 {priority}(으)로 설정",
+    "priorityRemoved": "우선순위 제거",
+    "ownerSet": "소유자를 {name}(으)로 설정",
+    "ownerRemoved": "소유자 {name} 제거",
+    "assigneeSet": "{name}을(를) 담당자로 지정",
+    "assigneeRemoved": "담당자 {name} 제거",
+    "delegateSet": "{name}에게 위임",
+    "delegateRemoved": "위임 대상 {name} 제거",
+    "targetDateSet": "목표일을 {date}(으)로 설정",
+    "targetDateRemoved": "목표일 제거",
+    "startDateSet": "시작일을 {date}(으)로 설정",
+    "startDateRemoved": "시작일 제거",
+    "dueDateSet": "마감일을 {date}(으)로 설정",
+    "dueDateRemoved": "마감일 제거",
+    "labelAdded": "라벨 {label} 추가",
+    "labelRemoved": "라벨 {label} 제거",
+    "typeSet": "유형을 {type}(으)로 설정",
+    "typeRemoved": "유형 제거",
+    "linked": "{name}에 연결",
+    "unlinked": "이니셔티브 연결 해제"
+  },
+  "attachments": {
+    "title": "첨부 파일",
+    "add": "추가",
+    "uploading": "업로드 중…",
+    "empty": "아직 첨부 파일이 없습니다.",
+    "emptyHint": "파일을 여기에 끌어다 놓거나 추가를 눌러 업로드하세요.",
+    "dropToUpload": "파일을 놓아 업로드",
+    "uploadFailed": "업로드에 실패했습니다.",
+    "open": "{name} 열기",
+    "download": "다운로드",
+    "downloadFile": "{name} 다운로드",
+    "deleteFile": "{name} 삭제",
+    "deleteTitle": "첨부 파일 삭제",
+    "deleteConfirmation": "{name}을(를) 삭제하시겠습니까? 설명에 삽입된 해당 파일도 모두 제거됩니다. 이 작업은 되돌릴 수 없습니다."
+  },
+  "documents": {
+    "title": "문서",
+    "add": "문서 연결",
+    "empty": "아직 연결된 문서가 없습니다.",
+    "loadFailed": "연결된 문서를 불러올 수 없습니다. 다시 시도해 주세요.",
+    "untitled": "제목 없음",
+    "remove": "{title} 연결 해제"
+  }
+}

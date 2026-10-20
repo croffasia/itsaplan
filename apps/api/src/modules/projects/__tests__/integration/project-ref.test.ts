@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi } from '#tests/helpers/app';
+import { authedApi, ownWorkspaceId, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
@@ -16,8 +16,14 @@ async function signUpClient() {
 async function twoTeamsWithMkt() {
   const owner = await signUpClient();
   const first = (await owner.api.teams.get()).data![0];
-  const second = (await owner.api.teams.post({ name: 'Second', slug: 'second' })).data!;
-  const a = (await owner.api.projects.post({ key: 'MKT', name: 'First marketing' })).data!;
+  const second = (
+    await owner.api.teams.post({
+      name: 'Second',
+      slug: 'second',
+      workspaceId: await ownWorkspaceId(owner.api),
+    })
+  ).data!;
+  const a = (await createProject(owner.api, { key: 'MKT', name: 'First marketing' })).data!;
   const b = (
     await owner.api.teams({ teamId: second.id }).projects.post({
       key: 'MKT',
@@ -95,7 +101,7 @@ describe('project ref', () => {
 
   it('resolves a bare key while the instance has one project with it', async () => {
     const owner = await signUpClient();
-    await owner.api.projects.post({ key: 'OPS', name: 'Ops' });
+    await createProject(owner.api, { key: 'OPS', name: 'Ops' });
 
     expect((await owner.api.projects({ projectKey: 'OPS' }).get()).status).toBe(200);
   });
@@ -104,8 +110,8 @@ describe('project ref', () => {
     const { api } = await signUpClient();
 
     for (const key of ['mkt', '1MKT', 'MK-T', 'M.KT', 'ABCDEFGHIJK']) {
-      expect((await api.projects.post({ key, name: 'Marketing' })).status).toBe(400);
+      expect((await createProject(api, { key, name: 'Marketing' })).status).toBe(400);
     }
-    expect((await api.projects.post({ key: 'ABCDEFGHIJ', name: 'Marketing' })).status).toBe(201);
+    expect((await createProject(api, { key: 'ABCDEFGHIJ', name: 'Marketing' })).status).toBe(201);
   });
 });

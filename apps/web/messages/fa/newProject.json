@@ -1,0 +1,51 @@
+{
+  "name": "نام",
+  "key": "کلید (کوتاه، مثلاً MKT)",
+  "copyKey": "کلید",
+  "description": "توضیحات",
+  "issueTypes": "انواع تسک",
+  "typesCreated": "{count, plural, one {# نوع تسک} other {# نوع تسک}} ساخته می‌شود",
+  "defaultType": "تسک‌های جدید به‌طور پیش‌فرض {type} می‌گیرند. انواع در تنظیمات قابل ویرایش هستند.",
+  "presets": {
+    "general": "عمومی",
+    "software": "نرم‌افزار",
+    "product": "محصول",
+    "content": "محتوا",
+    "marketing": "بازاریابی",
+    "design": "طراحی",
+    "sales": "فروش",
+    "operations": "عملیات",
+    "support": "پشتیبانی",
+    "recruiting": "جذب نیرو"
+  },
+  "copyConfiguration": "کپی پیکربندی",
+  "selectAll": "انتخاب همه",
+  "clearAll": "پاک کردن همه",
+  "copyGroups": {
+    "workflow": "گردش کار",
+    "automation": "اتوماسیون",
+    "views": "نماها",
+    "aiTeam": "تیم هوش مصنوعی",
+    "knowledge": "دانش"
+  },
+  "copyItems": {
+    "states": "وضعیت‌ها",
+    "issueTypes": "انواع تسک",
+    "labels": "برچسب‌ها",
+    "customFields": "فیلدهای سفارشی",
+    "views": "نماها",
+    "dashboards": "داشبوردها",
+    "documents": "مستندات",
+    "actions": "اکشن‌ها",
+    "configuration": "پیکربندی",
+    "webhooks": "وب‌هوک‌ها",
+    "agents": "ایجنت‌ها",
+    "schedules": "زمان‌بندی‌ها"
+  },
+  "title": "پروژه جدید",
+  "copyTitle": "کپی پروژه «{name}»",
+  "create": "ایجاد پروژه",
+  "copyAction": "کپی پروژه",
+  "defaultAgents": "ایجنت‌هایی که به این پروژه می‌پیوندند: {names}",
+  "copyName": "کپی {name}"
+}

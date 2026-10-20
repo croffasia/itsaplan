@@ -1,10 +1,12 @@
 import type { AgentSchedule } from '@/lib/api/endpoints/agentSchedules';
+import type { Column } from '@/lib/api/endpoints/columns';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SettingsScheduleRow } from './SettingsScheduleRow';
 import { useTranslations } from 'next-intl';
 
 interface SettingsSchedulesTableProps {
   schedules: AgentSchedule[];
+  columns: Column[];
   runningId: number | null;
   onToggle: (schedule: AgentSchedule) => void;
   onRun: (scheduleId: number) => void;
@@ -16,6 +18,7 @@ interface SettingsSchedulesTableProps {
 
 export function SettingsSchedulesTable({
   schedules,
+  columns,
   runningId,
   onToggle,
   onRun,
@@ -57,6 +60,7 @@ export function SettingsSchedulesTable({
           <SettingsScheduleRow
             key={schedule.id}
             schedule={schedule}
+            columnName={columns.find((column) => column.id === schedule.columnId)?.name ?? null}
             running={runningId === schedule.id}
             onToggle={() => onToggle(schedule)}
             onRun={() => onRun(schedule.id)}

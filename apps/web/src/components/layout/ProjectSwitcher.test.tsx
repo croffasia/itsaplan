@@ -63,6 +63,7 @@ const projects: Project[] = Array.from({ length: 20 }, (_, index) => ({
   timeLoggingEnabled: false,
   archivedAt: null,
   createdAt: '2026-01-01T00:00:00Z',
+  isFavorite: true,
 }));
 
 function team(id: number, workspaceId: number): Team {
@@ -93,6 +94,8 @@ let dom: JSDOM;
 let root: Root;
 let client: QueryClient;
 let selections: string[];
+let listed: Project[];
+let searches: URLSearchParams[];
 let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
 
 function element(selector: string): HTMLElement {
@@ -105,6 +108,40 @@ async function click(selector: string) {
   await act(async () => element(selector).click());
 }
 
+async function settle(ms = 0) {
+  await act(async () => new Promise((resolve) => setTimeout(resolve, ms)));
+}
+
+async function clickButton(text: string) {
+  const button = [...document.querySelectorAll<HTMLElement>('nav button')].find((entry) =>
+    entry.textContent?.includes(text),
+  );
+  assert.ok(button, text);
+  await act(async () => button.click());
+  await settle();
+}
+
+// The search route, answered from the projects the test renders with.
+function searchProjects(url: URL) {
+  const params = url.searchParams;
+  searches.push(params);
+  const flag = (name: string, value?: boolean) =>
+    !params.has(name) || Boolean(value) === (params.get(name) === 'true');
+  const ids = params.get('ids')?.split(',').map(Number);
+  const teams = client.getQueryData<Team[]>(qk.teams) ?? [];
+  const items = listed.filter(
+    (project) =>
+      flag('favorite', project.isFavorite) &&
+      flag('hidden', project.isHidden) &&
+      (!ids || ids.includes(project.id)) &&
+      (!params.has('teamId') || project.teamId === Number(params.get('teamId'))) &&
+      (!params.has('workspaceId') ||
+        teams.find((team) => team.id === project.teamId)?.workspaceId ===
+          Number(params.get('workspaceId'))),
+  );
+  return Response.json({ items, total: items.length, page: 1, pageSize: 30 });
+}
+
 async function key(target: HTMLElement, value: string) {
   await act(async () => {
     target.dispatchEvent(new window.KeyboardEvent('keydown', { key: value, bubbles: true }));
@@ -113,6 +150,7 @@ async function key(target: HTMLElement, value: string) {
 }
 
 async function render(mobile = true, items = projects) {
+  listed = items;
   Object.defineProperty(window, 'innerWidth', { configurable: true, value: mobile ? 390 : 1280 });
   const { Sidebar, SidebarProvider, SidebarTrigger } = await import('@/components/ui/sidebar');
   const { default: ProjectSwitcher } = await import('./ProjectSwitcher');
@@ -139,6 +177,7 @@ async function render(mobile = true, items = projects) {
   );
   if (mobile) await click('[data-slot="sidebar-trigger"]');
   await click('[data-slot="popover-trigger"]');
+  await settle();
 }
 
 function touch(target: HTMLElement, type: 'touchstart' | 'touchmove', y: number) {
@@ -197,7 +236,13 @@ beforeEach(async () => {
         disconnect() {}
       },
     },
-    fetch: { configurable: true, value: async () => Response.json(null) },
+    fetch: {
+      configurable: true,
+      value: async (input: string | URL) => {
+        const url = new URL(String(input));
+        return url.pathname === '/projects/search' ? searchProjects(url) : Response.json(null);
+      },
+    },
     IS_REACT_ACT_ENVIRONMENT: { configurable: true, value: true },
   });
   Object.defineProperty(window, '__ITSAPLAN_ENV__', {
@@ -215,6 +260,7 @@ beforeEach(async () => {
   });
   window.HTMLElement.prototype.scrollIntoView = () => {};
   selections = [];
+  searches = [];
   client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
   client.setQueryData(qk.teams, []);
   client.setQueryData(qk.workspaces, []);
@@ -295,26 +341,60 @@ describe('ProjectSwitcher', () => {
     assert.deepEqual(selections, []);
   });
 
-  it('lists the teams and projects of the workspace picked on the rail', async () => {
+  it('lists the projects of the workspace picked in the list', async () => {
     client.setQueryData(qk.teams, [team(1, 1), team(2, 2)]);
     client.setQueryData(qk.workspaces, [
-      { id: 1, name: 'Alpha', role: 'owner' },
-      { id: 2, name: 'Beta', role: null },
+      { id: 1, name: 'Alpha', role: 'owner', color: null },
+      { id: 2, name: 'Beta', role: null, color: null },
     ]);
-    const other = {
-      ...projects[0]!,
-      id: 21,
-      teamId: 2,
-      key: 'B01',
-      ref: '2.B01',
-      isFavorite: true,
-    };
+    const other = { ...projects[0]!, id: 21, teamId: 2, key: 'B01', ref: '2.B01' };
     await render(false, [...projects, other]);
     assert.ok(document.querySelector('[data-value="project-1"]'));
     assert.equal(document.querySelector('[data-value="project-21"]'), null);
-    await click('[aria-label="Beta"]');
+    await clickButton('Beta');
     assert.ok(document.querySelector('[data-value="project-21"]'));
     assert.equal(document.querySelector('[data-value="project-1"]'), null);
+  });
+
+  it("shows a team's visible projects when the team is picked", async () => {
+    client.setQueryData(qk.teams, [team(1, 1), team(2, 1)]);
+    client.setQueryData(qk.workspaces, [{ id: 1, name: 'Alpha', role: 'owner', color: null }]);
+    const other = { ...projects[0]!, id: 21, teamId: 2, key: 'B01', ref: '1.B01' };
+    await render(false, [...projects, other]);
+    await clickButton('Team 2');
+    assert.equal(searches.at(-1)?.get('teamId'), '2');
+    assert.equal(searches.at(-1)?.get('hidden'), 'false');
+    assert.ok(document.querySelector('[data-value="project-21"]'));
+    assert.equal(document.querySelector('[data-value="project-1"]'), null);
+  });
+
+  it('remembers the open project and asks for it among the recent ones', async () => {
+    await render(
+      false,
+      projects.map((project) => ({ ...project, isFavorite: false })),
+    );
+    assert.equal(localStorage.getItem('project-switcher:anonymous:recent'), '[1]');
+    assert.ok(searches.some((params) => params.get('ids') === '1'));
+    assert.ok(document.querySelector('[data-value="project-1"]'));
+    assert.equal(document.querySelector('[data-value="project-2"]'), null);
+  });
+
+  it('searches on the server once typing pauses', async () => {
+    await render(false);
+    const input = element('[data-slot="command-input"]') as HTMLInputElement;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!.call(
+        input,
+        'Project 1',
+      );
+      input.dispatchEvent(new window.Event('input', { bubbles: true }));
+    });
+    assert.equal(
+      searches.some((params) => params.has('q')),
+      false,
+    );
+    await settle(300);
+    assert.equal(searches.at(-1)?.get('q'), 'Project 1');
   });
 
   it('closes the picker before its sidebar and releases the scroll lock', async () => {

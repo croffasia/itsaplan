@@ -1,0 +1,25 @@
+{
+  "eyebrow": "업데이트됨",
+  "title": "{version}의 새로운 기능",
+  "done": "확인",
+  "backup": {
+    "title": "업데이트 전에 백업이 생성되었습니다",
+    "body": "이번 릴리스의 마이그레이션을 실행하기 전에 데이터베이스를 백업했습니다. 백업 크기는 {size}이며 {expires}까지 보관된 후 자동으로 삭제됩니다. 이전 릴리스로 되돌릴 경우 이 백업을 사용해 복원하세요.",
+    "credentialsHint": "사용자 이름과 데이터베이스 이름은 .env의 POSTGRES_USER와 POSTGRES_DB 값입니다."
+  },
+  "report": {
+    "title": "데이터 변경 사항",
+    "subtitle": "이제 프로젝트는 팀에 속하며, 하나의 팀에서 역할, 스킬, AI 에이전트 및 연동 인증 정보 목록을 공유합니다.",
+    "teamsHeading": "팀 및 프로젝트",
+    "renamedRoles": "이름이 변경된 역할",
+    "renamedSkills": "이름이 변경된 스킬",
+    "renamedAgents": "이름이 변경된 AI 에이전트 사용자 이름",
+    "renamedCredentials": "라벨이 변경된 연동 인증 정보",
+    "mergedHeading": "병합 및 이동",
+    "mergedRoles": "{count, plural, one {중복된 기본 역할 #개가 하나로 병합됨} other {중복된 기본 역할 #개가 하나로 병합됨}}",
+    "mergedTools": "{count, plural, one {중복된 설정 도구 #개가 하나로 병합됨} other {중복된 설정 도구 #개가 하나로 병합됨}}",
+    "movedInvites": "{count, plural, one {대기 중인 초대 #개가 팀으로 이동됨} other {대기 중인 초대 #개가 팀으로 이동됨}}",
+    "notificationsHeading": "알림 서비스",
+    "notificationsBody": "팀은 하나의 알림 서비스 설정을 공유합니다. 따라서 가장 마지막에 저장된 설정이 유지됩니다. 다음 프로젝트의 설정을 다시 입력하세요: {projects}."
+  }
+}

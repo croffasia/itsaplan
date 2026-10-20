@@ -1,0 +1,12 @@
+{
+  "updateAvailable": "업데이트 가능",
+  "releaseHistory": "릴리스 기록",
+  "running": "현재 {current} 버전을 사용 중입니다.",
+  "badgeRunning": "사용 중",
+  "badgeNew": "신규",
+  "check": "업데이트 확인",
+  "checking": "확인 중",
+  "lastChecked": "마지막 확인",
+  "allReleases": "모든 릴리스",
+  "noNotes": "이 릴리스에는 릴리스 노트가 없습니다."
+}

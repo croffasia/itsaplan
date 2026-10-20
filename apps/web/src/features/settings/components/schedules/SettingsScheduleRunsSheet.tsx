@@ -14,6 +14,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { useSettingsCan } from '../../context/settingsPermission';
+import { useScheduleTypeName } from '../../hooks/useScheduleTypeName';
 import { formatUtc, parseScheduleInput } from '../../utils/cronSchedule';
 import { SettingsScheduleRunRow } from './SettingsScheduleRunRow';
 import { useTranslations } from 'next-intl';
@@ -21,10 +22,12 @@ import { useTranslations } from 'next-intl';
 export function SettingsScheduleRunsSheet({
   projectKey,
   schedule,
+  columnName,
   onClose,
 }: {
   projectKey: string;
   schedule: AgentSchedule | null;
+  columnName: string | null;
   onClose: () => void;
 }) {
   const t = useTranslations('settings.schedules');
@@ -33,8 +36,21 @@ export function SettingsScheduleRunsSheet({
   const cancelRuns = useCancelAgentScheduleRuns(projectKey);
   const canCancel = can('edit') && schedule?.canTrigger === true;
   const runs = query.data ?? [];
-  const parsed = schedule ? parseScheduleInput(schedule.cron) : null;
-  const cron = parsed?.ok ? parsed.description : (schedule?.cron ?? '');
+  const typeName = useScheduleTypeName();
+  // A type the hosted build added, which starts when its trigger fires.
+  const addedType = schedule && !schedule.cron && schedule.type !== 'status' ? schedule.type : null;
+  let when = t('entersColumn', { column: columnName ?? '' });
+  if (schedule?.cron) {
+    const parsed = parseScheduleInput(schedule.cron);
+    when = parsed.ok ? parsed.description : schedule.cron;
+  } else if (addedType) {
+    when = typeName(addedType);
+  }
+  const delayMin = Math.round((schedule?.delaySec ?? 0) / 60);
+  let nextRun = t('startsAtOnce');
+  if (schedule?.nextRunAt) nextRun = `${t('nextRun')}: ${formatUtc(schedule.nextRunAt)}`;
+  else if (addedType) nextRun = t('nextRunOnTrigger');
+  else if (delayMin > 0) nextRun = t('startsAfter', { minutes: delayMin });
 
   function cancel(runId?: number) {
     if (schedule) cancelRuns.mutate({ scheduleId: schedule.id, runId });
@@ -72,11 +88,9 @@ export function SettingsScheduleRunsSheet({
             <SheetTitle className="truncate text-base">{schedule?.name}</SheetTitle>
           </div>
           <SheetDescription className="flex flex-wrap items-center gap-x-2 text-xs">
-            <span>{cron}</span>
+            <span>{when}</span>
             <span>·</span>
-            <span className="tabular-nums">
-              {t('nextRun')}: {schedule ? formatUtc(schedule.nextRunAt) : ''}
-            </span>
+            <span className="tabular-nums">{nextRun}</span>
           </SheetDescription>
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-y-auto">

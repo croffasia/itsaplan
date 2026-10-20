@@ -61,7 +61,7 @@
     "archive": "Archivar",
     "noAssignee": "Sin asignar",
     "noDelegate": "Sin delegado",
-    "noInitiative": "Sin iniciitiva",
+    "noInitiative": "Sin iniciativa",
     "noCycle": "Sin ciclo",
     "copyFailed": "No se pudo copiar al portapapeles",
     "promptCopied": "La consigna se ha copiado al portapapeles"
@@ -108,7 +108,8 @@
     "restore": "Restaurar el ticket",
     "archive": "Archivar el ticket",
     "delete": "Eliminar el ticket",
-    "shareIssue": "Compartir el ticket"
+    "shareIssue": "Compartir el ticket",
+    "move": "Mover a otro proyecto"
   },
   "actions": {
     "deleteTitle": "Eliminar el ticket",
@@ -117,7 +118,16 @@
     "cannotBeUndone": "No se puede deshacer.",
     "deleteDescription": "¿Eliminar {issue}? Esto quita el ticket, sus comentarios, actividad y adjuntos.",
     "archiveDescription": "¿Archivar {issue}? Deja el tablero y se puede restaurar más tarde.",
-    "applyDescription": "¿Aplicar <v>{action}</v> a este ticket?"
+    "applyDescription": "¿Aplicar <v>{action}</v> a este ticket?",
+    "moveTitle": "Mover incidencia",
+    "move": "Mover",
+    "moveDescription": "Mover {issue} a otro proyecto de este equipo. Recibirá un número nuevo allí y el enlace anterior seguirá abriéndola.",
+    "moveSubtasks": "{count, plural, one {Su subtarea se mueve con ella.} other {Sus # subtareas se mueven con ella.}}",
+    "moveProject": "Proyecto",
+    "moveChooseProject": "Elige un proyecto",
+    "moveColumn": "Estado",
+    "moveColumnMatching": "Estado equivalente",
+    "moveCarriedOver": "El tipo, las etiquetas y los campos personalizados se conservan si el proyecto de destino tiene uno con el mismo nombre. Se quitan el ciclo, la iniciativa y los enlaces a incidencias de este proyecto."
   },
   "create": {
     "title": "Nuevo ticket",
@@ -204,8 +214,8 @@
     "addExisting": "Añadir un ticket existente como subtarea",
     "empty": "Todavía no hay subtareas.",
     "emptyHint": "Usa Añadir para descomponer este ticket en subtareas.",
-    "detach": "Desvincar {subtask}",
-    "detachFromParent": "Desvincar de {parent}",
+    "detach": "Desvincular {subtask}",
+    "detachFromParent": "Desvincular de {parent}",
     "subtaskOf": "Subtarea de {issue}",
     "existingIssue": "Ticket existente",
     "searchPrompt": "Buscar tickets para añadir como subtarea…",
@@ -235,7 +245,7 @@
     "reply": "Responder",
     "cancel": "Cancelar",
     "toSend": "para enviar",
-    "unknownAuthor": "Desconosido",
+    "unknownAuthor": "Desconocido",
     "goToLastComment": "Ir al último comentario",
     "edit": "Editar",
     "edited": "editado",
@@ -249,7 +259,7 @@
     "timeline": "Cronología",
     "leadTime": "Tiempo de adelanto",
     "cycleTime": "Tiempo de ciclo",
-    "unknownStatus": "Estado desconosido"
+    "unknownStatus": "Estado desconocido"
   },
   "customFields": {
     "noOptions": "Sin opciones.",
@@ -317,7 +327,7 @@
     "labelRemoved": "ha quitado la etiqueta <v>{label}</v>",
     "linkAdded": "ha marcado este ticket como {relation} <v>{issue}</v>",
     "linkRemoved": "ya no es {relation} <v>{issue}</v>",
-    "parentDetached": "la ha desvincado de <v>{parent}</v>",
+    "parentDetached": "la ha desvinculado de <v>{parent}</v>",
     "parentMoved": "la ha movido de <v>{from}</v> a <v>{to}</v>",
     "parentSet": "la ha hecho subtarea de <v>{parent}</v>",
     "subtaskAdded": "ha añadido la subtarea <v>{subtask}</v>",
@@ -341,13 +351,14 @@
     "worklogChanged": "ha cambiado el <v>{from}</v> registrado el <v>{fromDate}</v> a <v>{to}</v> el <v>{date}</v>",
     "worklogRemoved": "ha quitado los <v>{time}</v> registrados el <v>{date}</v>",
     "commentEdited": "editó un comentario",
-    "commentDeleted": "eliminó un comentario"
+    "commentDeleted": "eliminó un comentario",
+    "issueMoved": "movió esta incidencia de <v>{from}</v> a <v>{to}</v>"
   },
   "development": {
     "title": "Desarrollo",
     "builds": "Builds",
     "buildsCount": "{count, plural, one {# build} other {# builds}}",
-    "unlink": "Desvincular",
+    "unlink": "Desenlazar un elemento de desarrollo",
     "branch": "Rama",
     "add": "Añadir",
     "empty": "Enlaza un pull request existente o crea una desde una rama",
@@ -371,7 +382,7 @@
     "linkedSuccess": "El pull request se ha enlazado",
     "linkFailed": "No se ha podido enlazar este pull request",
     "repository": "Repositorio",
-    "sourceBranch": "Rama de orijen",
+    "sourceBranch": "Rama de origen",
     "targetBranch": "Rama de destino",
     "chooseBranch": "Elegir rama",
     "loadingBranches": "Cargando ramas…",
@@ -382,12 +393,12 @@
     "mergeBehavior": "Enlace al ticket",
     "closeOnMerge": "Cerrar al integrar",
     "referenceOnly": "Solo referencia",
-    "createAsDraft": "Crear como borador",
-    "branchesMustDiffer": "Las ramas de orijen y destino tienen que ser diferentes.",
+    "createAsDraft": "Crear como borrador",
+    "branchesMustDiffer": "Las ramas de origen y destino tienen que ser diferentes.",
     "creating": "Creando…",
     "createdSuccess": "El pull request se ha creado y enlazado",
     "createFailed": "No se ha podido crear este pull request",
-    "draft": "Borador",
+    "draft": "Borrador",
     "ready": "Lista",
     "open": "Abierta",
     "merged": "Integrada",

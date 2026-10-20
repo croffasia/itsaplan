@@ -34,8 +34,11 @@
     },
     "security": "OAuth uses PKCE (S256), dynamic client registration, and access tokens scoped to your Itsaplan account.",
     "consent": {
-      "title": "Authorize Itsaplan",
-      "description": "Allow this MCP client to act with the permissions of your Itsaplan account.",
+      "title": "{client} wants to connect to your account",
+      "titleUnnamed": "An MCP client wants to connect to your account",
+      "description": "It will act with your permissions: whatever you can see and change, it can too.",
+      "account": "Signed in as {email}",
+      "redirect": "After you answer, you go back to {host}.",
       "missingCode": "This authorization request is missing its consent code.",
       "cancel": "Cancel",
       "pending": "Authorizing…",

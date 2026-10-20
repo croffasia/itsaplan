@@ -50,7 +50,16 @@
     "thisDevice": "Cet appareil",
     "deleteWarning": "Vous ne pourrez plus vous connecter avec cette clé d'accès. Cette action est irréversible.",
     "passkeyFallback": "Clé d'accès",
-    "passkeysLoadFailed": "Impossible de charger les clés d'accès."
+    "passkeysLoadFailed": "Impossible de charger les clés d'accès.",
+    "connectedAppsTitle": "Applications connectées",
+    "connectedAppsDescription": "Des applications comme Claude ou ChatGPT que vous avez autorisées à agir en votre nom via MCP. Elles voient et font ce que vous pouvez faire.",
+    "connectedAppsEmpty": "Aucune application n’est connectée à votre compte.",
+    "connectedAppUsed": "Connectée le {connected} · dernière utilisation le {used}",
+    "connectedAppSince": "Connectée le {connected}",
+    "disconnectApp": "Déconnecter",
+    "disconnectAppTitle": "Déconnecter {name} ?",
+    "disconnectAppWarning": "Elle perd l’accès immédiatement. La reconnecter demandera à nouveau votre consentement.",
+    "disconnectAppFailed": "Impossible de déconnecter l’application."
   },
   "accounts": {
     "label": "Comptes",

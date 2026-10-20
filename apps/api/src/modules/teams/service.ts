@@ -3,7 +3,6 @@ import {
   agentTool,
   aiAgent,
   db,
-  instanceWorkspaceId,
   teamWorkspaceId,
   integrationCredential,
   issue,
@@ -12,6 +11,7 @@ import {
   projectColumn,
   projectMember,
   team,
+  teamInvite,
   teamMember,
   teamRole,
   user,
@@ -35,6 +35,8 @@ import {
   type MemberSource,
 } from '#modules/members/service';
 import { getStats, type StatsDto } from '#modules/analytics/service';
+import { teamSkillObjectKeys } from '#modules/agents/skills/service';
+import { deleteObjects } from '@repo/storage';
 import {
   assertMayCreateTeam,
   projectWorkspaceGrant,
@@ -824,9 +826,8 @@ export async function createTeam(
   name: string,
   slug: string,
   ownerId: string,
-  requestedWorkspaceId?: number,
+  workspaceId: number,
 ): Promise<TeamRow> {
-  const workspaceId = requestedWorkspaceId ?? (await instanceWorkspaceId(db));
   await assertMayCreateTeam(workspaceId, ownerId);
   const { maxTeams } = await getLimits(workspaceId);
   if (maxTeams > 0 && (await db.$count(team, eq(team.workspaceId, workspaceId))) >= maxTeams) {
@@ -896,6 +897,26 @@ export async function updateTeam(
   }
   const [row] = await loadTeamRows(userId, teamId);
   return row;
+}
+
+// A team holding a project or an AI agent is kept: those are people's work, and the
+// delete cascades to everything the team owns.
+export async function deleteTeam(teamId: number): Promise<void> {
+  const skillKeys = await teamSkillObjectKeys(teamId);
+  const deleted = await db
+    .delete(team)
+    .where(
+      and(
+        eq(team.id, teamId),
+        sql`not exists (select 1 from ${project} where ${project.teamId} = ${team.id})`,
+        sql`not exists (select 1 from ${aiAgent} where ${aiAgent.teamId} = ${team.id})`,
+      ),
+    )
+    .returning({ id: team.id });
+  if (deleted.length === 0) {
+    throw new HttpError(409, 'Delete the projects and AI agents of the team first');
+  }
+  await deleteObjects(skillKeys);
 }
 
 async function membershipInTransaction(
@@ -1004,6 +1025,17 @@ async function dropTeamMembership(tx: Transaction, teamId: number, userId: strin
   await tx
     .delete(projectMember)
     .where(and(eq(projectMember.userId, userId), inArray(projectMember.projectId, teamProjects)));
+  // A pending invite this member created outlives them otherwise, keeping the
+  // registration gate open on their behalf after they were removed.
+  await tx
+    .delete(teamInvite)
+    .where(
+      and(
+        eq(teamInvite.teamId, teamId),
+        eq(teamInvite.invitedByUserId, userId),
+        eq(teamInvite.status, 'pending'),
+      ),
+    );
   // A column cannot keep assigning issues to someone who no longer belongs to the
   // project, the same rule remove_member follows.
   await tx
@@ -1097,15 +1129,12 @@ export async function releaseOwnedWorkspaces(userId: string): Promise<void> {
     .where(and(eq(workspaceManager.userId, userId), eq(workspaceManager.role, 'owner')));
   if (owned.length === 0) return;
   const [instanceOwner] = await db
-    .select({ userId: workspaceManager.userId })
-    .from(workspaceManager)
-    .where(
-      and(
-        eq(workspaceManager.workspaceId, await instanceWorkspaceId(db)),
-        eq(workspaceManager.role, 'owner'),
-      ),
-    );
-  const successor = instanceOwner?.userId;
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.role, 'god'))
+    .orderBy(user.createdAt)
+    .limit(1);
+  const successor = instanceOwner?.id;
   for (const { workspaceId } of owned) {
     if (!(await workspaceHoldsWork(workspaceId))) {
       await db.delete(workspace).where(eq(workspace.id, workspaceId));

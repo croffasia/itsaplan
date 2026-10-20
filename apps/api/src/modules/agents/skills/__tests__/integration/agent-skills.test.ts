@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { authedApi, type Api, ownWorkspaceId, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { untaggedRoutes } from '#tests/helpers/mcp';
@@ -16,7 +16,7 @@ import { createAgent } from '#tests/helpers/agents';
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  const project = await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  const project = await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
   return { owner, asOwner, teamId: project.data!.teamId };
 }
 
@@ -113,6 +113,14 @@ describe('agent skills', () => {
     )({ skillId }).references.content.get({ query: { path } });
     expect(content.status).toBe(200);
     expect(content.data?.content).toBe('# Checklist\n\nItem one');
+
+    const transliterated = await skills(
+      asOwner,
+      teamId,
+    )({ skillId }).references.post({
+      file: new File(['Пункт'], 'Чек-лист релиза.md', { type: 'text/markdown' }),
+    });
+    expect(transliterated.data?.files.map((one) => one.path)).toContain('refs/Chek-list_reliza.md');
   });
 
   it("overwrites a reference file's content and updates its size", async () => {
@@ -229,7 +237,11 @@ describe('agent skills', () => {
   it('ignores a skill of another team when enabling skills on an agent', async () => {
     const { asOwner, teamId } = await setup();
     const mine = await skills(asOwner, teamId).post({ source: 'inline', markdown: SKILL_MD });
-    const otherTeam = await asOwner.teams.post({ name: 'Design', slug: 'design' });
+    const otherTeam = await asOwner.teams.post({
+      name: 'Design',
+      slug: 'design',
+      workspaceId: await ownWorkspaceId(asOwner),
+    });
     const theirs = await skills(asOwner, otherTeam.data!.id).post({
       source: 'inline',
       markdown: SKILL_MD,

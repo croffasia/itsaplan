@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { ShellNotice } from '@/cloud';
 import { Button } from '@/components/ui/button';
 import TeamsPageRail from './TeamsPageRail';
 
@@ -30,6 +31,7 @@ export default function TeamsPageView({
         </Button>
         <span className="text-sm font-medium">{label}</span>
       </header>
+      <ShellNotice />
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
         {rail}
         <TeamsPageRail className="lg:w-64">{list}</TeamsPageRail>

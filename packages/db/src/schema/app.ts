@@ -49,9 +49,8 @@ export const appSecret = pgTable('app_secret', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-// A workspace owns teams; its members are derived from them. The instance workspace was
-// created by the migration that introduced the table and belongs to the instance owner;
-// everyone else gets one of their own at sign-up.
+// A workspace owns teams; its members are derived from them. Every person, the instance
+// owner included, gets one of their own at sign-up, and a team is always created in one.
 export const workspace = pgTable(
   'workspace',
   {
@@ -532,6 +531,8 @@ export const aiAgent = pgTable(
     // that act on the API with the agent's own token are implicit and not listed.
     tools: jsonb('tools').notNull().default([]),
     temperature: doublePrecision('temperature'),
+    // NULL leaves the reasoning effort to the provider's default.
+    reasoningEffort: text('reasoning_effort'),
     maxSteps: integer('max_steps'),
     // Internal-agent run triggers. A mention in a comment enqueues a run when
     // trigger_on_mention is set; being set as an issue's delegate enqueues one when
@@ -570,6 +571,10 @@ export const aiAgent = pgTable(
     check('ai_agent_kind_check', sql`${t.kind} IN ('external', 'internal')`),
     check('ai_agent_runner_scope_check', sql`${t.runnerScope} IN ('owner', 'team')`),
     check(
+      'ai_agent_reasoning_effort_check',
+      sql`${t.reasoningEffort} IN ('low', 'medium', 'high')`,
+    ),
+    check(
       'ai_agent_delegation_delay_check',
       sql`${t.delegationDelaySec} >= 0 AND ${t.delegationDelaySec} <= 86400`,
     ),
@@ -593,28 +598,76 @@ export const agentSchedule = pgTable(
       .notNull()
       .references(() => project.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
+    // Empty on a 'status' schedule that sends no task of its own.
     prompt: text('prompt').notNull(),
-    cron: text('cron').notNull(),
+    // 'cron' runs on `cron` and carries `next_run_at`; 'status' runs on an issue each
+    // time one enters `column_id`, `delay_sec` after it does. Any other type is one an
+    // extension of the api adds (modules/agents/schedules/extension.ts), which queues
+    // its runs itself.
+    type: text('type').notNull().default('cron'),
+    cron: text('cron'),
     timezone: text('timezone').notNull(),
     status: text('status').notNull().default('active'),
-    nextRunAt: timestamp('next_run_at', { withTimezone: true }).notNull(),
+    nextRunAt: timestamp('next_run_at', { withTimezone: true }),
+    columnId: integer('column_id').references(() => projectColumn.id, { onDelete: 'cascade' }),
+    delaySec: integer('delay_sec').notNull().default(0),
+    // Settings an extension of the api keeps on the schedule. The core stores and
+    // copies them and reads none.
+    options: jsonb('options').$type<Record<string, unknown>>().notNull().default({}),
     lastRunAt: timestamp('last_run_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     check('agent_schedule_status_check', sql`${t.status} IN ('active', 'paused')`),
+    check(
+      'agent_schedule_type_check',
+      sql`(${t.type} = 'cron' AND ${t.cron} IS NOT NULL AND ${t.nextRunAt} IS NOT NULL AND ${t.columnId} IS NULL)
+        OR (${t.type} = 'status' AND ${t.columnId} IS NOT NULL AND ${t.cron} IS NULL AND ${t.nextRunAt} IS NULL)
+        OR (${t.type} NOT IN ('cron', 'status') AND ${t.cron} IS NULL AND ${t.nextRunAt} IS NULL AND ${t.columnId} IS NULL)`,
+    ),
+    check('agent_schedule_delay_check', sql`${t.delaySec} >= 0 AND ${t.delaySec} <= 86400`),
     // A schedule works in one project, and one agent works in several projects of
     // its team, so the same name is free again in each of them.
     unique().on(t.projectId, t.agentId, t.name),
     index('agent_schedule_due_idx').on(t.status, t.nextRunAt),
     index('agent_schedule_agent_idx').on(t.agentId),
     index('agent_schedule_project_idx').on(t.projectId),
+    index('agent_schedule_column_idx').on(t.columnId),
   ],
 );
 
-// Queued autonomous runs of an internal agent. Mentions and delegations carry an
-// issue; scheduled and manual runs do not. The worker claims due rows with a lease,
+// A price a workspace set for one model, in USD per million tokens. The agent dashboard
+// reads it before the built-in price table (apps/api/src/modules/agents/core/runtime/
+// model-pricing.ts), so a model the table lacks, or one bought at another rate, is
+// costed as the workspace pays for it. Provider and model are kept lowercased, as the
+// table compares them. A cache rate left null bills those tokens at the input rate.
+export const modelPrice = pgTable(
+  'model_price',
+  {
+    id: serial('id').primaryKey(),
+    workspaceId: integer('workspace_id')
+      .notNull()
+      .references(() => workspace.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull(),
+    model: text('model').notNull(),
+    input: doublePrecision('input').notNull(),
+    output: doublePrecision('output').notNull(),
+    cacheRead: doublePrecision('cache_read'),
+    cacheWrite: doublePrecision('cache_write'),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check(
+      'model_price_rates_check',
+      sql`${t.input} >= 0 AND ${t.output} >= 0 AND coalesce(${t.cacheRead}, 0) >= 0 AND coalesce(${t.cacheWrite}, 0) >= 0`,
+    ),
+    unique().on(t.workspaceId, t.provider, t.model),
+  ],
+);
+
+// Queued autonomous runs of an internal agent. A run triggered on an issue carries it;
+// a cron schedule's run and a manual one do not. The worker claims due rows with a lease,
 // runs the agent, and records the result for history and retries.
 export const agentRun = pgTable(
   'agent_run',
@@ -632,6 +685,7 @@ export const agentRun = pgTable(
       .references(() => project.id, { onDelete: 'cascade' }),
     issueId: integer('issue_id').references(() => issue.id, { onDelete: 'cascade' }),
     scheduleId: integer('schedule_id').references(() => agentSchedule.id, { onDelete: 'cascade' }),
+    // 'event' is a run an extension queued on an issue for a schedule of its own type.
     trigger: text('trigger').notNull().default('delegation'),
     scheduledFor: timestamp('scheduled_for', { withTimezone: true }),
     // The comment that mentioned the agent, kept for traceability. The prompt is
@@ -665,7 +719,7 @@ export const agentRun = pgTable(
     ),
     check(
       'agent_run_trigger_check',
-      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'schedule', 'manual')`,
+      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'schedule', 'manual', 'status', 'event')`,
     ),
     uniqueIndex('agent_run_schedule_fire_uq').on(t.scheduleId, t.scheduledFor),
     index('agent_run_due_idx').on(t.status, t.nextAttemptAt),
@@ -1407,6 +1461,26 @@ export const issue = pgTable(
     index('issue_cycle_idx')
       .on(t.cycleId)
       .where(sql`${t.cycleId} IS NOT NULL`),
+  ],
+);
+
+// The number an issue held in a project it was moved out of, so a link to the old
+// identifier still resolves. project.next_sequence never hands that number out again,
+// so it cannot collide with an issue of that project.
+export const issueKeyAlias = pgTable(
+  'issue_key_alias',
+  {
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    sequenceNumber: integer('sequence_number').notNull(),
+    issueId: integer('issue_id')
+      .notNull()
+      .references(() => issue.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.projectId, t.sequenceNumber] }),
+    index('issue_key_alias_issue_idx').on(t.issueId),
   ],
 );
 
@@ -2209,8 +2283,8 @@ export const webhookDelivery = pgTable(
 // worker claims due rows the same way as webhook_delivery, and cursor is the
 // job's own per-phase resumability checkpoint, not the source API's pagination
 // cursor. The credential columns are cleared once the job reaches a terminal
-// status; only 'plane' is supported as a source today.
-export type ImportSource = 'plane';
+// status. One source adapter per value (apps/worker/src/import-sources.ts).
+export type ImportSource = 'plane' | 'linear';
 
 export const importJob = pgTable(
   'import_job',
@@ -2237,7 +2311,7 @@ export const importJob = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    check('import_job_source_check', sql`${t.source} IN ('plane')`),
+    check('import_job_source_check', sql`${t.source} IN ('plane', 'linear')`),
     check(
       'import_job_phase_check',
       sql`${t.phase} IN ('discover', 'create', 'link', 'rewrite', 'attachments', 'done')`,

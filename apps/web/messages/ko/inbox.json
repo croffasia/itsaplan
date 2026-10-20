@@ -1,0 +1,37 @@
+{
+  "title": "받은 편지함",
+  "empty": "알림이 없습니다",
+  "selectNotification": "알림을 선택하세요",
+  "backToList": "받은 편지함",
+  "filter": "필터",
+  "display": "보기 설정",
+  "notificationType": "알림 유형",
+  "showRead": "읽은 알림 표시",
+  "showSnoozed": "나중에 알림 표시",
+  "markAllRead": "모두 읽음으로 표시",
+  "deleteAllRead": "읽은 알림 모두 삭제",
+  "deleteAllReadCompleted": "완료된 이슈의 읽은 알림 모두 삭제",
+  "types": {
+    "assigned": "담당자로 지정됨",
+    "mentioned": "멘션됨",
+    "commented": "댓글",
+    "state_changed": "상태 변경"
+  },
+  "actions": {
+    "markRead": "읽음으로 표시",
+    "markUnread": "읽지 않음으로 표시",
+    "snooze": "나중에 알림",
+    "unsnooze": "나중에 알림 취소",
+    "tomorrow": "내일",
+    "inAWeek": "일주일 후",
+    "pickDate": "날짜 선택…"
+  },
+  "event": {
+    "someone": "누군가",
+    "assigned": "{who}님이 나를 담당자로 지정했습니다",
+    "mentioned": "{who}님이 나를 멘션했습니다",
+    "commented": "{who}님이 댓글을 작성했습니다",
+    "stateChanged": "{who}님이 상태를 {from}에서 {to}(으)로 변경했습니다",
+    "stateChangedPlain": "{who}님이 상태를 변경했습니다"
+  }
+}

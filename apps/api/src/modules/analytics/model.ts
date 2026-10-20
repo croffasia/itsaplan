@@ -1,5 +1,6 @@
 import { t } from 'elysia';
 import { ActivityPayloadResponse } from '#shared/activity';
+import { agentRunTrigger } from '#modules/agents/model';
 
 export const StatsDto = t.Object({
   open: t.Number(),
@@ -77,13 +78,7 @@ export const ActivityPage = t.Object({
 const AgentRunFeedItem = t.Object({
   id: t.Number(),
   status: t.String(),
-  trigger: t.Union([
-    t.Literal('mention'),
-    t.Literal('delegation'),
-    t.Literal('field'),
-    t.Literal('schedule'),
-    t.Literal('manual'),
-  ]),
+  trigger: agentRunTrigger,
   agentId: t.Number(),
   agentName: t.String(),
   issueId: t.Nullable(t.Number()),

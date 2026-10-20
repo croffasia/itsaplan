@@ -15,7 +15,7 @@ export default function WorkspaceScimTokenDialog({
   workspaceId,
   onClose,
 }: {
-  workspaceId: number;
+  workspaceId: number | null;
   onClose: () => void;
 }) {
   const t = useTranslations('teams.workspace.scim.tokenDialog');

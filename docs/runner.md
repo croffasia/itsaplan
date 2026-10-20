@@ -241,7 +241,8 @@ The extension reads `.mcp.json` from the working directory:
 
 - The preset passes `-p --mode json`. The stream gives the chat answer word by word, the
   tool calls, and the session id on the first line. `--session-id` resumes that session.
-- `--append-system-prompt` gives Pi the context of the run.
+- The preset sends the task on stdin. `--append-system-prompt` gives Pi the context of
+  the run.
 - Print mode does not wait for tool approval. `--approve` is only project-trust for
   `.pi/settings.json`, not tool permission.
 - Sign in once with `pi` interactively so a provider is available.

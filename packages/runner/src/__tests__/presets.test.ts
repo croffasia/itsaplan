@@ -27,10 +27,10 @@ describe('preset arguments', () => {
     expect(resumed.indexOf('--model')).toBeLessThan(resumed.length - 1);
   });
 
-  it('gives opencode the task as the last argument, after the session flag', () => {
+  it('gives opencode the task as the last argument, behind --, after the session flag', () => {
     const argv = presetArgv(PRESETS.opencode, 'ses_1', '', [], 'do it');
     expect(argv).toContain('--session');
-    expect(argv.at(-1)).toBe('do it');
+    expect(argv.slice(-2)).toEqual(['--', 'do it']);
   });
 
   it('resumes an Antigravity conversation and keeps the task behind -p', () => {
@@ -52,22 +52,22 @@ describe('preset arguments', () => {
     expect(resumed.slice(-4)).toEqual(['--session-id', 'c66bf000', '-p', 'do it']);
   });
 
-  it('prints through pi json mode and resumes by session id, task last', () => {
+  it('prints through pi json mode and resumes by session id, task on stdin', () => {
     const fresh = presetArgv(PRESETS.pi, null, 'context', [], 'do it');
     expect(fresh.slice(0, 3)).toEqual(['-p', '--mode', 'json']);
     expect(fresh).not.toContain('--session-id');
     expect(fresh).toContain('--append-system-prompt');
-    expect(fresh.at(-1)).toBe('do it');
+    expect(fresh).not.toContain('do it');
 
     const resumed = presetArgv(PRESETS.pi, 'sess-9', '', [], 'do it');
-    expect(resumed).toEqual(['-p', '--mode', 'json', '--session-id', 'sess-9', 'do it']);
+    expect(resumed).toEqual(['-p', '--mode', 'json', '--session-id', 'sess-9']);
   });
 
   it('prints through omp json mode unattended and resumes with --resume', () => {
     const fresh = presetArgv(PRESETS.omp, null, '', [], 'do it');
     expect(fresh).toContain('--auto-approve');
     expect(fresh).not.toContain('--resume');
-    expect(fresh.at(-1)).toBe('do it');
+    expect(fresh.slice(-2)).toEqual(['--', 'do it']);
 
     const resumed = presetArgv(PRESETS.omp, '01a0c317', 'context', [], 'do it');
     expect(resumed.slice(0, 6)).toEqual([
@@ -79,7 +79,18 @@ describe('preset arguments', () => {
       '01a0c317',
     ]);
     expect(resumed).toContain('--append-system-prompt');
-    expect(resumed.at(-1)).toBe('do it');
+    expect(resumed.slice(-2)).toEqual(['--', 'do it']);
+  });
+
+  // A member's message reaches the CLI on stdin or behind what keeps it from being read as
+  // an option, so one beginning with a hyphen stays the task.
+  it('never leaves a message where the CLI reads it as an option', () => {
+    const message = '--version';
+    for (const preset of Object.values(PRESETS)) {
+      const argv = presetArgv(preset, 'sess', '', [], message);
+      if (preset.promptVia === 'stdin') expect(argv).not.toContain(message);
+      else expect(['--', '-p']).toContain(argv.at(-2) ?? '');
+    }
   });
 
   it("appends the operator's arguments after the preset's, so a repeated flag wins", () => {

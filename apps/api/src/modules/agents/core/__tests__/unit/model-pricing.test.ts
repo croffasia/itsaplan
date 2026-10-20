@@ -28,13 +28,13 @@ describe('estimateCost', () => {
   });
 
   it('falls back to the undated name when the table prices no such release', () => {
-    // anthropic/claude-3-5-haiku is priced; the dated spelling of it is not.
-    const dated = estimateCost('anthropic', 'claude-3-5-haiku-20241022', {
+    // openai/gpt-5-mini is priced; the dated spelling of it is not.
+    const dated = estimateCost('openai', 'gpt-5-mini-2025-08-07', {
       inputTokens: 1_000_000,
       outputTokens: 0,
       ...NO_CACHE,
     });
-    expect(dated).toBeCloseTo(0.8, 6);
+    expect(dated).toBeCloseTo(0.25, 6);
   });
 
   it('bills cached input at the cache rate and the rest at the input rate', () => {

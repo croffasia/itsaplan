@@ -6,35 +6,27 @@ import path from 'node:path';
 //
 // A workspace may set its own price for a model (OwnPrices), which wins over the table.
 // The table is the one @mastra/observability bundles for its own cost metrics
-// (`dist/metrics/pricing-data.jsonl`, one row per provider and model). Those metrics need
-// an analytics store its Postgres adapter does not implement, so the spans reach us
-// carrying raw token counts and the price is applied here instead. The provider ids
-// are the same registry our AI_PROVIDERS list comes from, so a credential's
-// integration key matches the table directly.
+// (`dist/metrics/pricing-data.json`, the models.dev catalog: prices per million tokens by
+// provider and model). Those metrics need an analytics store its Postgres adapter does not
+// implement, so the spans reach us carrying raw token counts and the price is applied here
+// instead. The provider ids are the same registry our AI_PROVIDERS list comes from, so a
+// credential's integration key matches the table directly.
 //
 // The file is not in the package's exports map, so a release that moves it leaves the
 // table empty rather than failing the request: an unpriced call reports no cost, and
 // the dashboard shows its tokens without one.
 
-// The prices of one provider/model pair. Rates are USD per token, keyed by the
-// meter the tokens are billed under; a tier applies once its conditions hold.
-interface Rate {
-  c: number;
+// A model's prices in the models.dev shape, USD per million tokens. `tiers` holds the
+// prices of long inputs, each from `tier.size` input tokens of one call.
+interface Cost {
+  input?: unknown;
+  output?: unknown;
+  cache_read?: unknown;
+  cache_write?: unknown;
+  tiers?: (Cost & { tier?: { type?: string; size?: unknown } })[];
 }
 
-// Only the total input token count ('tit') is used as a condition in the table.
-type Condition = { f: string; op: string; value: number };
-
-interface Tier {
-  w?: Condition[];
-  r: Record<string, Rate | undefined>;
-}
-
-interface PricingRow {
-  p: string;
-  m: string;
-  s: { d: { u: string; t: Tier[] } };
-}
+type PricingData = Record<string, { models: Record<string, { cost: Cost }> }>;
 
 // The token counts of one model call, as the span's `usage` attribute reports them.
 // inputTokens is the whole input, cached tokens included, so the tokens billed at the
@@ -66,8 +58,14 @@ export interface BuiltInPrice {
   price: ModelPrice;
 }
 
+// The base price, and the prices of long inputs from the largest input down.
+interface Priced {
+  base: ModelPrice;
+  long: { fromInput: number; price: ModelPrice }[];
+}
+
 interface Table {
-  byKey: Map<string, Tier[]>;
+  byKey: Map<string, Priced>;
   // In provider, then model order, for a reader paging through them.
   listed: BuiltInPrice[];
 }
@@ -76,22 +74,52 @@ let table: Table | null = null;
 
 function pricingPath(): string {
   const packageJson = createRequire(import.meta.url).resolve('@mastra/observability/package.json');
-  return path.join(path.dirname(packageJson), 'dist', 'metrics', 'pricing-data.jsonl');
+  return path.join(path.dirname(packageJson), 'dist', 'metrics', 'pricing-data.json');
 }
 
 export function priceKey(provider: string, model: string): string {
   return `${provider.trim().toLowerCase()}::${model.trim().toLowerCase()}`;
 }
 
+// A price of zero is left out, as Mastra's own cost metrics leave it out: it marks a
+// free endpoint or a flat-fee plan, not a per-token rate.
+function rate(value: unknown): number | null {
+  return typeof value === 'number' && value > 0 ? value : null;
+}
+
+function priceOf(cost: Cost): ModelPrice | null {
+  const input = rate(cost.input);
+  const output = rate(cost.output);
+  if (input == null || output == null) return null;
+  return { input, output, cacheRead: rate(cost.cache_read), cacheWrite: rate(cost.cache_write) };
+}
+
+function pricedOf(cost: Cost): Priced | null {
+  const base = priceOf(cost);
+  if (!base) return null;
+  const long = (cost.tiers ?? []).flatMap((tier) => {
+    const size = tier.tier?.size;
+    const price = priceOf(tier);
+    return (tier.tier?.type ?? 'context') === 'context' && typeof size === 'number' && price
+      ? [{ fromInput: size, price }]
+      : [];
+  });
+  return { base, long: long.sort((a, b) => b.fromInput - a.fromInput) };
+}
+
 function load(): Table {
   const loaded: Table = { byKey: new Map(), listed: [] };
   try {
-    for (const line of readFileSync(pricingPath(), 'utf-8').split('\n')) {
-      if (!line.trim()) continue;
-      const row = JSON.parse(line) as PricingRow;
-      loaded.byKey.set(priceKey(row.p, row.m), row.s.d.t);
-      const price = basePrice(row.s.d.t);
-      if (price) loaded.listed.push({ provider: row.p, model: row.m, price });
+    const data = JSON.parse(readFileSync(pricingPath(), 'utf-8')) as PricingData;
+    for (const [provider, { models }] of Object.entries(data)) {
+      for (const [model, { cost }] of Object.entries(models)) {
+        const priced = pricedOf(cost);
+        if (!priced) continue;
+        // Keyed with dots as dashes, the spelling modelVariants looks up for either one.
+        const key = priceKey(provider, model.replace(/\./g, '-'));
+        if (!loaded.byKey.has(key)) loaded.byKey.set(key, priced);
+        loaded.listed.push({ provider, model, price: priced.base });
+      }
     }
   } catch (error) {
     console.error('[agent-analytics] model prices unavailable:', error);
@@ -105,21 +133,6 @@ function load(): Table {
 function prices(): Table {
   if (!table) table = load();
   return table;
-}
-
-// USD per token to USD per million tokens, without the float noise of the product.
-function perMillion(rate: Rate | undefined): number | null {
-  return rate ? Number((rate.c * 1e6).toPrecision(12)) : null;
-}
-
-// What the base tier, the one with no conditions, charges: what a person compares
-// their own price with. A tier for long inputs is left out.
-function basePrice(tiers: Tier[]): ModelPrice | null {
-  const rates = tiers[0]?.r;
-  const input = perMillion(rates?.it);
-  const output = perMillion(rates?.ot);
-  if (!rates || input == null || output == null) return null;
-  return { input, output, cacheRead: perMillion(rates.icrt), cacheWrite: perMillion(rates.icwt) };
 }
 
 // A model id as the table may spell it: as reported, with dots normalized to dashes,
@@ -152,10 +165,10 @@ export function findPrice<T>(
 }
 
 // The built-in price of a model as the dashboard reports it, or null when the table
-// prices no such model.
+// prices no such model. The prices of long inputs are left out: a person compares their
+// own price with the base one.
 export function builtInPrice(provider: string, model: string): ModelPrice | null {
-  const tiers = findPrice(prices().byKey, provider, model);
-  return tiers ? basePrice(tiers) : null;
+  return findPrice(prices().byKey, provider, model)?.base ?? null;
 }
 
 // One window of the built-in table, narrowed to the rows whose `provider/model` holds
@@ -171,40 +184,12 @@ export function listBuiltInPrices(
   return { items: rows.slice(window.offset, window.offset + window.limit), total: rows.length };
 }
 
-function holds(condition: Condition, inputTokens: number): boolean {
-  if (condition.f !== 'tit') return false;
-  switch (condition.op) {
-    case 'gt':
-      return inputTokens > condition.value;
-    case 'gte':
-      return inputTokens >= condition.value;
-    case 'lt':
-      return inputTokens < condition.value;
-    case 'lte':
-      return inputTokens <= condition.value;
-    case 'eq':
-      return inputTokens === condition.value;
-    case 'neq':
-      return inputTokens !== condition.value;
-    default:
-      return false;
-  }
-}
-
-// The first tier whose conditions hold, or the base tier, which carries none.
-function tierFor(tiers: Tier[], inputTokens: number): Tier | null {
-  for (const tier of tiers) {
-    if (tier.w?.length && tier.w.every((condition) => holds(condition, inputTokens))) return tier;
-  }
-  return tiers[0] ?? null;
-}
-
 // What model calls cost, or null when neither the workspace's own prices nor the table
-// price such a model. `usage` is the sum of `calls` calls; a tier is chosen by the input
-// of one call, so a sum is priced at the tier of its average call. An own price has one
-// tier. Cached reads and writes are billed at their own rates where the model has them,
-// and at the plain input rate where it does not.
-// Calls of very different sizes in one sum share a tier; pricing each call would need
+// price such a model. `usage` is the sum of `calls` calls; a long-input price is chosen by
+// the input of one call, so a sum is priced as its average call. An own price has no
+// long-input prices. Cached reads and writes are billed at their own rates where the model
+// has them, and at the plain input rate where it does not.
+// Calls of very different sizes in one sum share a price; pricing each call would need
 // one row per call.
 export function estimateCost(
   provider: string,
@@ -214,46 +199,23 @@ export function estimateCost(
   own: OwnPrices = new Map(),
 ): number | null {
   const set = findPrice(own, provider, model);
-  if (set) {
-    const input = set.input / 1e6;
-    return costAt(usage, {
-      input,
-      output: set.output / 1e6,
-      cacheRead: set.cacheRead != null ? set.cacheRead / 1e6 : input,
-      cacheWrite: set.cacheWrite != null ? set.cacheWrite / 1e6 : input,
-    });
-  }
-  const tiers = findPrice(prices().byKey, provider, model);
-  if (!tiers) return null;
-  const tier = tierFor(tiers, usage.inputTokens / Math.max(calls, 1));
-  const input = tier?.r.it?.c;
-  const output = tier?.r.ot?.c;
-  if (!tier || input == null || output == null) return null;
-  return costAt(usage, {
-    input,
-    output,
-    cacheRead: tier.r.icrt?.c ?? input,
-    cacheWrite: tier.r.icwt?.c ?? input,
-  });
+  if (set) return costAt(usage, set);
+  const priced = findPrice(prices().byKey, provider, model);
+  if (!priced) return null;
+  const callInput = usage.inputTokens / Math.max(calls, 1);
+  const long = priced.long.find((band) => callInput >= band.fromInput);
+  return costAt(usage, long?.price ?? priced.base);
 }
 
-// USD per token, by the meter the tokens are billed under.
-interface Rates {
-  input: number;
-  output: number;
-  cacheRead: number;
-  cacheWrite: number;
-}
-
-function costAt(usage: CallUsage, { input, output, cacheRead, cacheWrite }: Rates): number {
+function costAt(usage: CallUsage, price: ModelPrice): number {
   const plainInput = Math.max(
     0,
     usage.inputTokens - usage.cacheReadTokens - usage.cacheWriteTokens,
   );
-  return (
-    plainInput * input +
-    usage.cacheReadTokens * cacheRead +
-    usage.cacheWriteTokens * cacheWrite +
-    usage.outputTokens * output
-  );
+  const perMillion =
+    plainInput * price.input +
+    usage.cacheReadTokens * (price.cacheRead ?? price.input) +
+    usage.cacheWriteTokens * (price.cacheWrite ?? price.input) +
+    usage.outputTokens * price.output;
+  return perMillion / 1e6;
 }

@@ -254,7 +254,7 @@ with the teams compared, for its owner and its admins.
 Cost is applied in the api, not read from a span. Mastra computes it in a metrics
 pipeline that needs an analytics store its Postgres adapter does not implement, so the
 spans arrive with raw token counts and `runtime/model-pricing.ts` prices them from the
-table `@mastra/observability` bundles for that pipeline (`dist/metrics/pricing-data.jsonl`).
+table `@mastra/observability` bundles for that pipeline (`dist/metrics/pricing-data.json`).
 Its provider ids are the registry `AI_PROVIDERS` mirrors, so a credential's integration
 key matches it directly. The file is outside the package's exports map: a release that
 moves it leaves the table empty, an unpriced call reports no cost, and the dashboard shows

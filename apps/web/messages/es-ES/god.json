@@ -184,7 +184,11 @@
     "traceRetention": "Conservar trazas de ejecución",
     "traceRetentionHint": "Cada ejecución de un agente registra sus llamadas al modelo y a las herramientas. Los paneles de consumo solo cuentan las ejecuciones conservadas.",
     "traceDays": "{days, plural, one {# día} other {# días}}",
-    "traceForever": "Siempre"
+    "traceForever": "Siempre",
+    "maxRunTime": "Duración máxima de ejecución",
+    "maxRunTimeHint": "Cuánto puede durar una ejecución de un agente antes de detenerse y guardarse como fallida. El límite propio de un agente no puede superarlo.",
+    "runMinutes": "{minutes, plural, one {# minuto} other {# minutos}}",
+    "runSeconds": "{seconds} s"
   },
   "authentication": {
     "saved": "Los ajustes de autenticación se han guardado",

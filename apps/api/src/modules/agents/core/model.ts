@@ -69,6 +69,15 @@ const configFields = {
     }),
   ),
   maxSteps: t.Optional(t.Nullable(t.Integer({ description: 'Max tool-call steps per run.' }))),
+  runTimeoutSec: t.Optional(
+    t.Nullable(
+      t.Integer({
+        minimum: 1,
+        description:
+          "Seconds one run may take before it is stopped and saved as failed. Null uses the instance's maximum, which also caps this value.",
+      }),
+    ),
+  ),
   memoryEnabled: t.Optional(
     t.Boolean({ description: 'Keep conversation memory across a thread.' }),
   ),
@@ -147,6 +156,7 @@ export const AiAgentResponse = t.Object({
   temperature: t.Nullable(t.Number()),
   reasoningEffort: t.Nullable(reasoningEffort),
   maxSteps: t.Nullable(t.Number()),
+  runTimeoutSec: t.Nullable(t.Number()),
   memoryEnabled: t.Boolean(),
   memoryLastMessages: t.Nullable(t.Number()),
   triggerOnMention: t.Boolean(),

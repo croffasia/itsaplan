@@ -184,7 +184,11 @@
     "traceRetention": "Simpan trace eksekusi",
     "traceRetentionHint": "Setiap eksekusi agen mencatat panggilan ke model dan alat. Dasbor penggunaan hanya menghitung eksekusi yang masih disimpan.",
     "traceDays": "{days} hari",
-    "traceForever": "Selamanya"
+    "traceForever": "Selamanya",
+    "maxRunTime": "Waktu jalan maksimum",
+    "maxRunTimeHint": "Berapa lama satu jalannya agen boleh berlangsung sebelum dihentikan dan disimpan sebagai gagal. Batas milik agen tidak boleh melebihinya.",
+    "runMinutes": "{minutes, plural, other {# menit}}",
+    "runSeconds": "{seconds} dtk"
   },
   "authentication": {
     "saved": "Pengaturan autentikasi disimpan",

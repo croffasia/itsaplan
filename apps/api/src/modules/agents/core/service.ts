@@ -97,6 +97,7 @@ export interface AiAgentRow {
   temperature: number | null;
   reasoningEffort: ReasoningEffort | null;
   maxSteps: number | null;
+  runTimeoutSec: number | null;
   // Conversation memory: recall the last memoryLastMessages messages of a thread.
   memoryEnabled: boolean;
   memoryLastMessages: number | null;
@@ -149,6 +150,7 @@ function mapAgent(row: {
   temperature: number | null;
   reasoningEffort: string | null;
   maxSteps: number | null;
+  runTimeoutSec: number | null;
   memoryEnabled: boolean;
   memoryLastMessages: number | null;
   triggerOnMention: boolean;
@@ -181,6 +183,7 @@ function mapAgent(row: {
     temperature: row.temperature,
     reasoningEffort: row.reasoningEffort as ReasoningEffort | null,
     maxSteps: row.maxSteps,
+    runTimeoutSec: row.runTimeoutSec,
     memoryEnabled: row.memoryEnabled,
     memoryLastMessages: row.memoryLastMessages,
     triggerOnMention: row.triggerOnMention,
@@ -219,6 +222,7 @@ const agentColumns = {
   temperature: aiAgent.temperature,
   reasoningEffort: aiAgent.reasoningEffort,
   maxSteps: aiAgent.maxSteps,
+  runTimeoutSec: aiAgent.runTimeoutSec,
   memoryEnabled: aiAgent.memoryEnabled,
   memoryLastMessages: aiAgent.memoryLastMessages,
   triggerOnMention: aiAgent.triggerOnMention,
@@ -533,6 +537,7 @@ export interface NewAgentInput {
   temperature?: number | null;
   reasoningEffort?: ReasoningEffort | null;
   maxSteps?: number | null;
+  runTimeoutSec?: number | null;
   memoryEnabled?: boolean;
   memoryLastMessages?: number | null;
   // Run triggers. Assign is off by default, and so is mention for an external agent:
@@ -634,6 +639,7 @@ export async function createAgent(
           temperature: isInternal ? (input.temperature ?? null) : null,
           reasoningEffort: isInternal ? (input.reasoningEffort ?? null) : null,
           maxSteps: isInternal ? (input.maxSteps ?? null) : null,
+          runTimeoutSec: isInternal ? (input.runTimeoutSec ?? null) : null,
           memoryEnabled: isInternal ? (input.memoryEnabled ?? false) : false,
           memoryLastMessages: isInternal ? (input.memoryLastMessages ?? null) : null,
           triggerOnMention: input.triggerOnMention ?? isInternal,
@@ -794,6 +800,7 @@ export interface AgentPatch {
   temperature?: number | null;
   reasoningEffort?: ReasoningEffort | null;
   maxSteps?: number | null;
+  runTimeoutSec?: number | null;
   memoryEnabled?: boolean;
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
@@ -835,6 +842,7 @@ export async function updateAgent(
   if (patch.temperature !== undefined) set.temperature = patch.temperature;
   if (patch.reasoningEffort !== undefined) set.reasoningEffort = patch.reasoningEffort;
   if (patch.maxSteps !== undefined) set.maxSteps = patch.maxSteps;
+  if (patch.runTimeoutSec !== undefined) set.runTimeoutSec = patch.runTimeoutSec;
   if (patch.memoryEnabled !== undefined) set.memoryEnabled = patch.memoryEnabled;
   if (patch.memoryLastMessages !== undefined) set.memoryLastMessages = patch.memoryLastMessages;
   if (patch.triggerOnMention !== undefined) set.triggerOnMention = patch.triggerOnMention;

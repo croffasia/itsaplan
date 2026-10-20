@@ -184,7 +184,11 @@
     "traceRetention": "실행 추적 기록 보관",
     "traceRetentionHint": "각 AI 에이전트 실행에는 모델 및 도구 호출 기록이 저장됩니다. 사용량 대시보드에는 현재 보관 중인 실행 기록만 집계됩니다.",
     "traceDays": "{days, plural, one {#일} other {#일}}",
-    "traceForever": "계속 보관"
+    "traceForever": "계속 보관",
+    "maxRunTime": "최대 실행 시간",
+    "maxRunTimeHint": "에이전트 실행 한 번이 중지되고 실패로 저장되기 전까지 걸릴 수 있는 시간입니다. 에이전트 자체 제한은 이 값을 초과할 수 없습니다.",
+    "runMinutes": "{minutes, plural, other {#분}}",
+    "runSeconds": "{seconds}초"
   },
   "authentication": {
     "saved": "인증 설정이 저장되었습니다",

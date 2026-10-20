@@ -184,7 +184,11 @@
     "traceRetention": "Conserver les traces d'exécution",
     "traceRetentionHint": "Chaque exécution d'agent enregistre ses appels au modèle et aux outils. Les tableaux de consommation ne comptent que les exécutions conservées.",
     "traceDays": "{days, plural, one {# jour} other {# jours}}",
-    "traceForever": "Toujours"
+    "traceForever": "Toujours",
+    "maxRunTime": "Durée maximale d'exécution",
+    "maxRunTimeHint": "Durée qu'une exécution d'agent peut prendre avant d'être arrêtée et enregistrée comme échouée. La limite propre d'un agent ne peut pas la dépasser.",
+    "runMinutes": "{minutes, plural, one {# minute} other {# minutes}}",
+    "runSeconds": "{seconds} s"
   },
   "authentication": {
     "saved": "Paramètres d'authentification enregistrés",

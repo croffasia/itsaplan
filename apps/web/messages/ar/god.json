@@ -184,7 +184,11 @@
     "traceRetention": "مدة حفظ تتبّعات التشغيل",
     "traceRetentionHint": "كل تشغيل لوكيل يسجّل استدعاءات النموذج والأدوات. لوحات الاستهلاك تحتسب العمليات المحفوظة فقط.",
     "traceDays": "{days, plural, one {يوم واحد} two {يومان} few {# أيام} many {# يوماً} other {# يوم}}",
-    "traceForever": "دائماً"
+    "traceForever": "دائماً",
+    "maxRunTime": "أقصى وقت للتشغيل",
+    "maxRunTimeHint": "المدة التي يمكن أن يستغرقها تشغيل واحد للوكيل قبل إيقافه وحفظه كفاشل. لا يمكن أن يتجاوزه الحد الخاص بالوكيل.",
+    "runMinutes": "{minutes, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتان} few {# دقائق} many {# دقيقة} other {# دقيقة}}",
+    "runSeconds": "{seconds} ث"
   },
   "authentication": {
     "saved": "تم حفظ إعدادات المصادقة",

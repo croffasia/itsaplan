@@ -26,7 +26,7 @@
     },
     "general": {
       "label": "Genel",
-      "description": "Kişisel çalışma alanları, yeni projeler için varsayılanlar ve ajan izleme kayıtları."
+      "description": "Kişisel çalışma alanları, yeni projeler için varsayılanlar, ajan izleme kayıtları ve çalışma süresi."
     },
     "authentication": {
       "label": "Kimlik Doğrulama",

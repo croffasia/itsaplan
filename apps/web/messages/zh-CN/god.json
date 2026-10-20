@@ -184,7 +184,11 @@
     "traceRetention": "保留运行追踪",
     "traceRetentionHint": "代理的每次运行都会记录模型和工具调用。用量面板只统计仍保留的运行。",
     "traceDays": "{days} 天",
-    "traceForever": "永久"
+    "traceForever": "永久",
+    "maxRunTime": "最长运行时间",
+    "maxRunTimeHint": "单次智能体运行在被停止并记为失败之前可持续的时间。智能体自身的上限不能超过此值。",
+    "runMinutes": "{minutes, plural, other {# 分钟}}",
+    "runSeconds": "{seconds} 秒"
   },
   "authentication": {
     "saved": "身份验证设置已保存",

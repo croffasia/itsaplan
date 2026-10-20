@@ -330,6 +330,20 @@ export default function TeamAiAgentFields({
             onChange={(e) => onChange({ maxSteps: e.target.value })}
           />
         </div>
+        <div className="space-y-1.5">
+          <label htmlFor="agent-run-timeout" className="text-sm font-medium">
+            {t('runTimeout')}
+          </label>
+          <Input
+            id="agent-run-timeout"
+            type="number"
+            step="1"
+            min="1"
+            placeholder={t('runTimeoutDefault')}
+            value={value.runTimeoutSec}
+            onChange={(e) => onChange({ runTimeoutSec: e.target.value })}
+          />
+        </div>
       </div>
 
       <div className="space-y-1.5">

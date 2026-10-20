@@ -1,4 +1,5 @@
 import { t } from 'elysia';
+import { MAX_RUN_SECONDS, MIN_RUN_SECONDS } from './service';
 
 export const StorageSettingsSchema = t.Object({
   maxAttachmentMb: t.Number(),
@@ -17,6 +18,12 @@ export const AgentSettingsSchema = t.Object({
     maximum: 3650,
     description:
       'Days the traces of an agent run are kept for. 0 keeps them until they are deleted by hand.',
+  }),
+  maxRunSeconds: t.Integer({
+    minimum: MIN_RUN_SECONDS,
+    maximum: MAX_RUN_SECONDS,
+    description:
+      "Seconds one agent run may take before it is stopped and saved as failed. An agent's own limit cannot exceed it.",
   }),
 });
 

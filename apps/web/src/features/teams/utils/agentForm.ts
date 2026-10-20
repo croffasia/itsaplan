@@ -8,7 +8,7 @@ import type {
 import { transliterate } from '@/utils/transliterate';
 import { delaySecFromMinutes } from '@/utils/runDelay';
 
-// The editable shape of an agent form. temperature/maxSteps are kept as strings so
+// The editable shape of an agent form. The number inputs are kept as strings so
 // the inputs can be left blank; they are parsed to numbers (or null) on submit.
 export interface AgentFormValue {
   name: string;
@@ -21,6 +21,7 @@ export interface AgentFormValue {
   temperature: string;
   reasoningEffort: ReasoningEffort | null;
   maxSteps: string;
+  runTimeoutSec: string;
   memoryEnabled: boolean;
   memoryLastMessages: string;
   triggerOnMention: boolean;
@@ -90,6 +91,7 @@ export function initialAgentValue(agent?: AiAgent): AgentFormValue {
     temperature: agent?.temperature != null ? String(agent.temperature) : '',
     reasoningEffort: agent?.reasoningEffort ?? null,
     maxSteps: agent?.maxSteps != null ? String(agent.maxSteps) : '',
+    runTimeoutSec: agent?.runTimeoutSec != null ? String(agent.runTimeoutSec) : '',
     memoryEnabled: agent?.memoryEnabled ?? false,
     memoryLastMessages: agent?.memoryLastMessages != null ? String(agent.memoryLastMessages) : '',
     triggerOnMention: agent?.triggerOnMention ?? true,
@@ -146,6 +148,7 @@ function configFields(v: AgentFormValue) {
     temperature: parseNum(v.temperature),
     reasoningEffort: v.reasoningEffort,
     maxSteps: parseNum(v.maxSteps),
+    runTimeoutSec: parseNum(v.runTimeoutSec),
     memoryEnabled: v.memoryEnabled,
     memoryLastMessages: v.memoryEnabled ? parseNum(v.memoryLastMessages) : null,
   };

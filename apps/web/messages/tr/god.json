@@ -184,7 +184,11 @@
     "traceRetention": "Çalıştırma izlerini saklama süresi",
     "traceRetentionHint": "Her ajan çalıştırması model ve araç çağrılarını kaydeder. Kullanım panoları yalnızca saklanan çalıştırmaları sayar.",
     "traceDays": "{days, plural, one {# gün} other {# gün}}",
-    "traceForever": "Süresiz"
+    "traceForever": "Süresiz",
+    "maxRunTime": "Azami çalışma süresi",
+    "maxRunTimeHint": "Bir ajan çalışmasının durdurulup başarısız olarak kaydedilmeden önce ne kadar sürebileceği. Bir ajanın kendi sınırı bunu aşamaz.",
+    "runMinutes": "{minutes, plural, one {# dakika} other {# dakika}}",
+    "runSeconds": "{seconds} sn"
   },
   "authentication": {
     "saved": "Kimlik doğrulama ayarları kaydedildi",

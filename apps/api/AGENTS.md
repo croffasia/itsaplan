@@ -235,7 +235,13 @@ applies it from the api's background loop. The window applies to whole runs: the
 finds the root spans past it and deletes their traces whole, and the same sweep drops
 the traces of a deleted team.
 
-The same traces back the agent dashboard (`runtime/analytics.ts`) at
+The same setting holds the longest one run may take (`maxRunSeconds`). An agent can set a
+shorter limit of its own (`ai_agent.run_timeout_sec`), and a workspace ceiling from
+`setLimitsProvider` lowers both. A run that reaches it is aborted and saved as failed with
+the text it had produced. A claim's lease is kept longer than the instance maximum, so the
+poller does not claim a run again while it is still running.
+
+The run traces also back the agent dashboard (`runtime/analytics.ts`) at
 `GET /teams/:teamId/agent-analytics`: runs, tokens and cost by model, agent, project and
 day, over a window and the same span before it. Its owner and managers read every project
 of the team; anyone else the projects where their role grants `agent_usage` `read`

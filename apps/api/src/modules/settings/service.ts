@@ -5,6 +5,7 @@ import {
   getStorageSettings,
   type StorageSettings,
 } from '@repo/db';
+import { intEnv } from '#shared/lib';
 
 // The instance settings kept in app_setting: the upload limits and the keyboard
 // shortcuts.
@@ -69,10 +70,21 @@ export interface AgentSettings {
   // Days the traces of an agent run are kept for; the background sweep deletes older
   // ones (agents/core/runtime/trace-retention.ts). 0 keeps them.
   traceRetentionDays: number;
+  // The longest one run may take. AGENT_RUN_TIMEOUT_MS sets the value used until one is saved.
+  maxRunSeconds: number;
 }
 
+export const MIN_RUN_SECONDS = 10;
+export const MAX_RUN_SECONDS = 3600;
+
 function defaultAgentSettings(): AgentSettings {
-  return { traceRetentionDays: 30 };
+  return {
+    traceRetentionDays: 30,
+    maxRunSeconds: Math.min(
+      Math.max(Math.round(intEnv('AGENT_RUN_TIMEOUT_MS', 240_000) / 1000), MIN_RUN_SECONDS),
+      MAX_RUN_SECONDS,
+    ),
+  };
 }
 
 export async function getAgentSettings(): Promise<AgentSettings> {

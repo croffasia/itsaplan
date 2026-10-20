@@ -184,7 +184,11 @@
     "traceRetention": "Keep run traces",
     "traceRetentionHint": "Each agent run records its model and tool calls. Usage dashboards count only the runs still kept.",
     "traceDays": "{days, plural, one {# day} other {# days}}",
-    "traceForever": "Forever"
+    "traceForever": "Forever",
+    "maxRunTime": "Max run time",
+    "maxRunTimeHint": "How long one agent run may take before it is stopped and saved as failed. An agent's own limit cannot exceed it.",
+    "runMinutes": "{minutes, plural, one {# minute} other {# minutes}}",
+    "runSeconds": "{seconds} s"
   },
   "authentication": {
     "saved": "Authentication settings saved",

@@ -3,8 +3,8 @@ import { resetDb } from '#tests/helpers/db';
 import { addUser, setup } from '../helpers';
 
 // The instance-wide agent settings under god mode: what applies to every team's
-// agents. Today that is how long the traces of their runs are kept, which the
-// background sweep reads (agents/core/runtime/trace-retention.ts).
+// agents: how long the traces of their runs are kept, which the background sweep reads
+// (agents/core/runtime/trace-retention.ts), and the longest one run may take.
 
 describe('god agent settings', () => {
   beforeEach(async () => {
@@ -56,5 +56,43 @@ describe('god agent settings', () => {
     expect((await god.api.god['agent-settings'].put({ traceRetentionDays: 3651 })).status).toBe(
       400,
     );
+  });
+
+  it('starts the run time maximum at 240 seconds', async () => {
+    const { god } = await setup();
+
+    const res = await god.api.god['agent-settings'].get();
+
+    expect(res.data?.maxRunSeconds).toBe(240);
+  });
+
+  it('keeps a run time maximum taken from the environment within range', async () => {
+    const { god } = await setup();
+    process.env.AGENT_RUN_TIMEOUT_MS = '7200000';
+    try {
+      const res = await god.api.god['agent-settings'].get();
+
+      expect(res.status).toBe(200);
+      expect(res.data?.maxRunSeconds).toBe(3600);
+    } finally {
+      delete process.env.AGENT_RUN_TIMEOUT_MS;
+    }
+  });
+
+  it('changes one setting without touching the other', async () => {
+    const { god } = await setup();
+
+    await god.api.god['agent-settings'].put({ traceRetentionDays: 7 });
+    const res = await god.api.god['agent-settings'].put({ maxRunSeconds: 900 });
+
+    expect(res.status).toBe(200);
+    expect(res.data).toEqual({ traceRetentionDays: 7, maxRunSeconds: 900 });
+  });
+
+  it('refuses a run time maximum under 10 seconds or over an hour', async () => {
+    const { god } = await setup();
+
+    expect((await god.api.god['agent-settings'].put({ maxRunSeconds: 9 })).status).toBe(400);
+    expect((await god.api.god['agent-settings'].put({ maxRunSeconds: 3601 })).status).toBe(400);
   });
 });

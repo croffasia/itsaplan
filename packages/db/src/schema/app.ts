@@ -534,6 +534,8 @@ export const aiAgent = pgTable(
     // NULL leaves the reasoning effort to the provider's default.
     reasoningEffort: text('reasoning_effort'),
     maxSteps: integer('max_steps'),
+    // NULL gives the run the instance's maximum run time.
+    runTimeoutSec: integer('run_timeout_sec'),
     // Internal-agent run triggers. A mention in a comment enqueues a run when
     // trigger_on_mention is set; being set as an issue's delegate enqueues one when
     // trigger_on_assign is set.

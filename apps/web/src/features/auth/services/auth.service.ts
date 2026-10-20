@@ -12,14 +12,33 @@ import {
 const appUrl = (path: string) =>
   typeof window === 'undefined' ? path : `${window.location.origin}${path}`;
 
-// Each call throws with the API message on failure; on success the session cookie
-// is set and the proxy lets the user into the planner. A failure without a
-// message throws an empty one, and the caller (useAuthAction) words it.
+// Each call throws an AuthError on failure; on success the session cookie is set and
+// the proxy lets the user into the planner. The caller words the failure by its code
+// and status, since the server's message is English.
+
+// A refusal from the auth server, with better-auth's code and the HTTP status.
+export class AuthError extends Error {
+  constructor(
+    message: string,
+    readonly code?: string,
+    readonly status?: number,
+  ) {
+    super(message);
+    this.name = 'AuthError';
+  }
+}
 
 // Sign-in was refused because the address is not confirmed yet. The verification gate
 // in @repo/auth answers 403 with this code, as better-auth does; a deactivated account
 // and a disabled password form are 403s too, and must not offer the link again.
-export class EmailNotConfirmedError extends Error {}
+export class EmailNotConfirmedError extends AuthError {}
+
+export function authError(error: { message?: string; code?: string; status?: number }): AuthError {
+  const { message = '', code, status } = error;
+  return code === 'EMAIL_NOT_VERIFIED'
+    ? new EmailNotConfirmedError(message, code, status)
+    : new AuthError(message, code, status);
+}
 
 // The sign-in screen has one field for two identifiers: an address goes to
 // /sign-in/email, anything else to /sign-in/username. An address is the only thing
@@ -36,14 +55,7 @@ export async function signInWithPassword(input: {
   const result = isEmailAddress(identifier)
     ? await signIn.email({ email: identifier, password: input.password })
     : await signIn.username({ username: identifier, password: input.password });
-  if (result.error) throw signInError(result.error);
-}
-
-export function signInError(error: { message?: string; code?: string }): Error {
-  const message = error.message ?? '';
-  return error.code === 'EMAIL_NOT_VERIFIED'
-    ? new EmailNotConfirmedError(message)
-    : new Error(message);
+  if (result.error) throw authError(result.error);
 }
 
 // autoSignIn (set in @repo/auth) signs the user in right after sign-up, unless the
@@ -52,17 +64,14 @@ export function signInError(error: { message?: string; code?: string }): Error {
 // callbackURL is where the confirmation link lands when the instance sends one.
 //
 // On an invite-only instance the API rejects the sign-up unless the address has a
-// pending project invite, and the thrown message says so.
+// pending project invite, with a code the form words.
 export async function signUpWithEmail(input: { email: string; password: string }): Promise<void> {
   const result = await signUp.email({
     ...input,
     name: input.email.split('@')[0] || input.email,
     callbackURL: appUrl('/login?verified=1'),
   });
-  // The code lets the form say why the gate refused the address, in the visitor's language.
-  if (result.error) {
-    throw Object.assign(new Error(result.error.message ?? ''), { code: result.error.code });
-  }
+  if (result.error) throw authError(result.error);
 }
 
 // Sends the password reset link. The address is not confirmed to exist: better-auth
@@ -76,7 +85,7 @@ export async function sendPasswordResetEmail(email: string): Promise<void> {
     email,
     redirectTo: appUrl(`/reset-password?email=${encodeURIComponent(email)}`),
   });
-  if (result.error) throw new Error(result.error.message ?? '');
+  if (result.error) throw authError(result.error);
 }
 
 // Consumes the token from the reset link, sets the new password, and signs the user
@@ -88,7 +97,7 @@ export async function setNewPassword(input: {
   newPassword: string;
 }): Promise<{ signedIn: boolean }> {
   const result = await resetPassword({ token: input.token, newPassword: input.newPassword });
-  if (result.error) throw new Error(result.error.message ?? '');
+  if (result.error) throw authError(result.error);
   if (!input.email) return { signedIn: false };
   const attempt = await signIn.email({ email: input.email, password: input.newPassword });
   return { signedIn: !attempt.error };
@@ -104,7 +113,7 @@ export async function sendMagicLink(email: string): Promise<void> {
     callbackURL: appUrl('/'),
     errorCallbackURL: appUrl('/login'),
   });
-  if (result.error) throw new Error(result.error.message ?? '');
+  if (result.error) throw authError(result.error);
 }
 
 // Sends the address confirmation link again, for someone held back at sign-in.
@@ -113,7 +122,7 @@ export async function resendVerificationEmail(email: string): Promise<void> {
     email,
     callbackURL: appUrl('/login?verified=1'),
   });
-  if (result.error) throw new Error(result.error.message ?? '');
+  if (result.error) throw authError(result.error);
 }
 
 // Starts the Google round trip. Unlike every other call here this one navigates away
@@ -130,7 +139,7 @@ export async function signInWithGoogle(returnTo?: string): Promise<void> {
     callbackURL: appUrl(returnTo ?? '/'),
     errorCallbackURL: appUrl(returnTo ?? '/login'),
   });
-  if (result.error) throw new Error(result.error.message ?? '');
+  if (result.error) throw authError(result.error);
 }
 
 // Starts the round trip through the instance's own OIDC provider. Same shape as the
@@ -142,10 +151,10 @@ export async function signInWithOidc(returnTo?: string): Promise<void> {
     callbackURL: appUrl(returnTo ?? '/'),
     errorCallbackURL: appUrl(returnTo ?? '/login'),
   });
-  if (result.error) throw new Error(result.error.message ?? '');
+  if (result.error) throw authError(result.error);
 }
 
 export async function signInWithPasskey(): Promise<void> {
   const result = await signIn.passkey();
-  if (result?.error) throw new Error(result.error.message ?? '');
+  if (result?.error) throw authError(result.error);
 }

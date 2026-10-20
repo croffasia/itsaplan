@@ -36,7 +36,6 @@
   "switchToRegister": "Buat akun",
   "existingAccountNotice": "Email ini sudah memiliki akun. Masuk dengan kata sandi Anda.",
   "passwordsDoNotMatch": "Kata sandi tidak cocok.",
-  "genericError": "Terjadi kesalahan. Silakan coba lagi.",
   "registerFailed": "Tidak dapat membuat akun Anda.",
   "signInFailed": "Gagal masuk."
 }

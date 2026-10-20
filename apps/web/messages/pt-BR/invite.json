@@ -36,7 +36,6 @@
   "switchToRegister": "Criar uma",
   "existingAccountNotice": "Este e-mail já tem uma conta. Entre com sua senha.",
   "passwordsDoNotMatch": "As senhas não coincidem.",
-  "genericError": "Algo deu errado. Tente novamente.",
   "registerFailed": "Não foi possível criar sua conta.",
   "signInFailed": "Não foi possível conectar você."
 }

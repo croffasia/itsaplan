@@ -36,7 +36,6 @@
   "switchToRegister": "Hesap oluştur",
   "existingAccountNotice": "Bu e-posta adresine kayıtlı bir hesap zaten var. Şifrenizle giriş yapın.",
   "passwordsDoNotMatch": "Şifreler eşleşmiyor.",
-  "genericError": "Bir sorun oluştu. Lütfen tekrar deneyin.",
   "registerFailed": "Hesabınız oluşturulamadı.",
   "signInFailed": "Giriş yapılamadı."
 }

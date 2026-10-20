@@ -22,6 +22,7 @@ export class InviteAuthError extends Error {
   constructor(
     message: string,
     readonly code?: string,
+    readonly status?: number,
   ) {
     super(message);
     this.name = 'InviteAuthError';
@@ -32,7 +33,9 @@ export class InviteAuthError extends Error {
 export function isExistingAccountError(err: unknown): boolean {
   return (
     err instanceof InviteAuthError &&
-    (err.code === 'USER_ALREADY_EXISTS' || /already\s*exist/i.test(err.message))
+    (err.code === 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL' ||
+      err.code === 'USER_ALREADY_EXISTS' ||
+      /already\s*exist/i.test(err.message))
   );
 }
 
@@ -52,7 +55,11 @@ export async function registerAndAccept(input: {
     name: input.email.split('@')[0] || input.email,
   });
   if (result.error) {
-    throw new InviteAuthError(result.error.message ?? input.registerFailed, result.error.code);
+    throw new InviteAuthError(
+      result.error.message ?? input.registerFailed,
+      result.error.code,
+      result.error.status,
+    );
   }
   return acceptInvite(input.token);
 }
@@ -66,6 +73,10 @@ export async function signInForInvite(input: {
 }): Promise<void> {
   const result = await signIn.email({ email: input.email, password: input.password });
   if (result.error) {
-    throw new InviteAuthError(result.error.message ?? input.signInFailed, result.error.code);
+    throw new InviteAuthError(
+      result.error.message ?? input.signInFailed,
+      result.error.code,
+      result.error.status,
+    );
   }
 }

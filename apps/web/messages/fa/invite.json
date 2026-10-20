@@ -36,7 +36,6 @@
   "switchToRegister": "ایجاد کنید",
   "existingAccountNotice": "این ایمیل قبلاً حساب دارد. با رمز عبور خود وارد شوید.",
   "passwordsDoNotMatch": "رمزهای عبور مطابقت ندارند.",
-  "genericError": "مشکلی پیش آمد. لطفاً دوباره تلاش کنید.",
   "registerFailed": "نمی‌توان حساب شما را ایجاد کرد.",
   "signInFailed": "نمی‌توان شما را وارد کرد."
 }

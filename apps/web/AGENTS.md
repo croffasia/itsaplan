@@ -43,8 +43,9 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   invited address as `email`; here it adds nothing, while the hosted build offers a sign-in
   through providers of its own. `SignInPage` is what `/login/<name>` shows, a sign-in page under a
   name of its own; here every name answers 404, while the hosted build can show the sign-in
-  form there under a title of its own (`AuthLoginForm`'s `title`). A sign-in that comes back with a code the core does not
-  know shows the text the build's messages give it under `auth.errors.codes.<code>`.
+  form there under a title of its own (`AuthLoginForm`'s `title`). A sign-in that comes back, or an auth form the server refuses, with
+  a code the core does not know shows the text the build's messages give it under
+  `auth.errors.codes.<code>`.
   `GodSectionExtras` renders at the end of every god section page, by its slug, for settings the hosted build adds to an existing section; `WorkspaceSectionExtras`
   does the same on a workspace's own settings pages (`general`, `managers`), with the
   workspace, and its controls save themselves. `ScheduleDialog` is the dialog that creates

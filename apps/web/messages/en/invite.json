@@ -36,7 +36,6 @@
   "switchToRegister": "Create one",
   "existingAccountNotice": "This email already has an account. Sign in with your password.",
   "passwordsDoNotMatch": "Passwords do not match.",
-  "genericError": "Something went wrong. Please try again.",
   "registerFailed": "Could not create your account.",
   "signInFailed": "Could not sign you in."
 }

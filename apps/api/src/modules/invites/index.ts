@@ -3,7 +3,7 @@ import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
 import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
-import { requireUser, type AuthUser } from '#shared/access';
+import { checkMemberAdmin, requireUser, type AuthUser } from '#shared/access';
 import { inviteValidSince } from '@repo/auth';
 import { hasConfiguredEmailProvider } from '@repo/db';
 import { HttpError } from '#shared/lib';
@@ -219,13 +219,21 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
 
   .get(
     '/projects/:projectKey/invites',
-    async ({ project }) => {
-      return listProjectInvites(project.id);
+    async ({ project, user }) => {
+      const viewer = requireUser(user);
+      const mayInvite = await checkMemberAdmin(project, viewer, 'members_invite', 'create');
+      return listProjectInvites(project.id, mayInvite ? viewer.id : null);
     },
     {
       memberAdmin: ['members_invite', 'read'],
       response: { 200: InviteRowListResponse, ...accessErrors },
-      detail: { summary: "List a project's invites", ...mcpTool('list_invites') },
+      detail: {
+        summary: "List a project's invites",
+        description:
+          'The token is null on an invite the caller could not have sent: without permission ' +
+          'to create invites, or on an owner invite the caller may not grant.',
+        ...mcpTool('list_invites'),
+      },
     },
   )
 
@@ -294,7 +302,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
   .get(
     '/teams/:teamId/invites',
     async ({ membership }) => {
-      return listTeamInvites(membership.teamId);
+      return listTeamInvites(membership.teamId, membership.userId);
     },
     {
       teamManager: true,
@@ -303,7 +311,8 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       detail: {
         summary: "List a team's invites",
         description:
-          'Every invite into the team, including the ones that also name one of its projects.',
+          'Every invite into the team, including the ones that also name one of its projects. ' +
+          'The token is null on an invite granting a rank only a team owner may grant.',
       },
     },
   )

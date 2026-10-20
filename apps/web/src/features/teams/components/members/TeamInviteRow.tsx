@@ -35,6 +35,7 @@ export default function TeamInviteRow({
   const expired = isInviteExpired(invite);
 
   async function copy() {
+    if (!invite.token) return;
     const origin = typeof window === 'undefined' ? '' : window.location.origin;
     try {
       await navigator.clipboard.writeText(inviteLink(origin, invite.token));
@@ -86,15 +87,17 @@ export default function TeamInviteRow({
               <Mail className="size-3.5" />
               {resending ? t('resendingEmail') : t('resendEmail')}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-              onClick={copy}
-            >
-              {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-              {copied ? t('copied') : t('copyLink')}
-            </Button>
+            {invite.token && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                onClick={copy}
+              >
+                {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                {copied ? t('copied') : t('copyLink')}
+              </Button>
+            )}
           </>
         )}
         <Button

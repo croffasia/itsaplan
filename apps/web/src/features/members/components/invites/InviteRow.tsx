@@ -14,9 +14,10 @@ import { Item, ItemActions, ItemContent, ItemTitle } from '@/components/ui/item'
 const STATUS_VARIANT = { pending: 'secondary', accepted: 'default', rejected: 'outline' } as const;
 
 // One invite row: the invited email and role, its status, who sent it, and — for
-// a pending invite — email, copy-link, and revoke actions. Copy reads the link from
-// the current web origin so it works in any deployment. An expired invite offers no
-// link to copy or mail, only a renewal, which sends a new one.
+// a pending invite — email, copy-link (when the API sent its token), and revoke
+// actions. Copy reads the link from the current web origin so it works in any
+// deployment. An expired invite offers no link to copy or mail, only a renewal,
+// which sends a new one.
 export default function InviteRow({
   invite,
   onResend,
@@ -53,6 +54,7 @@ export default function InviteRow({
   }
 
   async function copy() {
+    if (!invite.token) return;
     const origin = typeof window === 'undefined' ? '' : window.location.origin;
     try {
       await navigator.clipboard.writeText(inviteLink(origin, invite.token));
@@ -125,7 +127,7 @@ export default function InviteRow({
             {resending ? t('resendingEmail') : t('resendEmail')}
           </Button>
         )}
-        {pending && (
+        {pending && invite.token && (
           <Button
             variant="ghost"
             size="sm"

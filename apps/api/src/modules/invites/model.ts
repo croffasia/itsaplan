@@ -25,10 +25,10 @@ export const createTeamInviteBody = t.Object({
   role: teamRole,
 });
 
-// The manager-facing invite row (InviteRow from the service).
+// The manager-facing invite row (ListedInvite from the service).
 export const InviteRowResponse = t.Object({
   id: t.Number(),
-  token: t.String(),
+  token: t.Nullable(t.String()),
   email: t.String(),
   teamRole,
   projectKey: t.Nullable(t.String()),
@@ -47,8 +47,8 @@ export const InviteRowResponse = t.Object({
 // emailFailed: a mail provider is set but the invite's email could not go out; the link
 // still works. Without a provider both are false.
 export const InviteCreateResponse = t.Composite([
-  InviteRowResponse,
-  t.Object({ emailQueued: t.Boolean(), emailFailed: t.Boolean() }),
+  t.Omit(InviteRowResponse, ['token']),
+  t.Object({ token: t.String(), emailQueued: t.Boolean(), emailFailed: t.Boolean() }),
 ]);
 
 export const InviteEmailResponse = t.Object({ emailQueued: t.Boolean() });

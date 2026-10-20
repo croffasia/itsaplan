@@ -171,6 +171,17 @@ export async function requireMemberAdmin(
   return project;
 }
 
+// Whether the user passes requireMemberAdmin, without throwing.
+export async function checkMemberAdmin(
+  project: ProjectRow,
+  user: AuthUser,
+  resource: PermissionResource,
+  action: PermissionAction,
+): Promise<boolean> {
+  if (runsTeam((await getTeamAccess(project.teamId, user.id))?.role ?? null)) return true;
+  return checkPermission(project.id, user, resource, action);
+}
+
 // Resolves the :projectKey path param for a route acting on one member's own row.
 // A member acts on themselves — leaving the project, saying what they do in it —
 // without any member permission; anyone else needs what requireMemberAdmin asks

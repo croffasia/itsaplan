@@ -54,6 +54,10 @@ export interface InviteRow {
   invitedByEmail: string | null;
 }
 
+// A row of an invite listing. The token is null where the viewer could not have issued
+// the invite: whoever holds the link can register the invited address and accept it.
+export type ListedInvite = Omit<InviteRow, 'token'> & { token: string | null };
+
 // Row shown to the invitee opening the link, with enough context to decide. Never
 // exposes the internal project id; the team is named by its ref, which the project's
 // own URLs carry.
@@ -107,6 +111,8 @@ function selectInvites() {
     .select({
       id: teamInvite.id,
       token: teamInvite.token,
+      teamId: teamInvite.teamId,
+      projectId: teamInvite.projectId,
       email: teamInvite.email,
       teamRole: teamInvite.teamRole,
       projectKey: project.key,
@@ -288,22 +294,37 @@ export async function getInviteById(id: number): Promise<InviteRow | null> {
   return rows[0] ? toRow(rows[0], await inviteTtlDays()) : null;
 }
 
-export async function listProjectInvites(projectId: number): Promise<InviteRow[]> {
+// issuerId is the viewer when they may send invites here, null when they may only read
+// them; the ranks of each invite are then checked against that standing.
+async function toListed(rows: InviteSelection[], issuerId: string | null): Promise<ListedInvite[]> {
+  const ttlDays = await inviteTtlDays();
+  return Promise.all(
+    rows.map(async (r) => {
+      const row = toRow(r, ttlDays);
+      const grant = { ...r, projectRole: r.role };
+      if (issuerId && (await mayGrantInviteRanks(grant, issuerId))) return row;
+      return { ...row, token: null };
+    }),
+  );
+}
+
+export async function listProjectInvites(
+  projectId: number,
+  issuerId: string | null,
+): Promise<ListedInvite[]> {
   const rows = await selectInvites()
     .where(eq(teamInvite.projectId, projectId))
     .orderBy(desc(teamInvite.createdAt));
-  const ttlDays = await inviteTtlDays();
-  return rows.map((r) => toRow(r, ttlDays));
+  return toListed(rows, issuerId);
 }
 
 // Every invite of the team, including the ones that also name one of its projects:
 // whoever runs the team sees who was invited anywhere in it.
-export async function listTeamInvites(teamId: number): Promise<InviteRow[]> {
+export async function listTeamInvites(teamId: number, issuerId: string): Promise<ListedInvite[]> {
   const rows = await selectInvites()
     .where(eq(teamInvite.teamId, teamId))
     .orderBy(desc(teamInvite.createdAt));
-  const ttlDays = await inviteTtlDays();
-  return rows.map((r) => toRow(r, ttlDays));
+  return toListed(rows, issuerId);
 }
 
 // Removes an invite of the given project. Returns true when one existed. Used to

@@ -743,7 +743,10 @@ function createAuth() {
               ? eq(schema.user.email, (body?.email ?? '').trim().toLowerCase())
               : eq(schema.user.username, (body?.username ?? '').trim().toLowerCase());
           if (await isUnverified(identifier)) {
+            // The code is better-auth's own for this refusal; the sign-in form tells it
+            // apart from the other 403s, such as a deactivated account, by it.
             throw new APIError('FORBIDDEN', {
+              code: 'EMAIL_NOT_VERIFIED',
               message: 'Confirm your email address before signing in',
             });
           }

@@ -68,7 +68,9 @@ describe('email verification', () => {
     expect(res.status).toBe(200);
     expect(((await res.json()) as { token: string | null }).token).toBeNull();
     expect((await authedApi(cookieOf(res)).projects.get()).status).toBe(401);
-    expect((await signIn('new@example.com')).status).toBe(403);
+    const refused = await signIn('new@example.com');
+    expect(refused.status).toBe(403);
+    expect(await refused.json()).toMatchObject({ code: 'EMAIL_NOT_VERIFIED' });
     expect((await api['auth-config'].get()).data).toMatchObject({
       requireEmailVerification: true,
     });

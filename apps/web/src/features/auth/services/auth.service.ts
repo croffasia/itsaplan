@@ -16,9 +16,9 @@ const appUrl = (path: string) =>
 // is set and the proxy lets the user into the planner. A failure without a
 // message throws an empty one, and the caller (useAuthAction) words it.
 
-// Sign-in was refused because the address is not confirmed yet. The only 403 the
-// sign-in endpoint raises is the verification gate in @repo/auth, so the status is
-// enough to tell it apart from wrong credentials and offer the link again.
+// Sign-in was refused because the address is not confirmed yet. The verification gate
+// in @repo/auth answers 403 with this code, as better-auth does; a deactivated account
+// and a disabled password form are 403s too, and must not offer the link again.
 export class EmailNotConfirmedError extends Error {}
 
 // The sign-in screen has one field for two identifiers: an address goes to
@@ -36,10 +36,14 @@ export async function signInWithPassword(input: {
   const result = isEmailAddress(identifier)
     ? await signIn.email({ email: identifier, password: input.password })
     : await signIn.username({ username: identifier, password: input.password });
-  if (!result.error) return;
-  const message = result.error.message ?? '';
-  if (result.error.status === 403) throw new EmailNotConfirmedError(message);
-  throw new Error(message);
+  if (result.error) throw signInError(result.error);
+}
+
+export function signInError(error: { message?: string; code?: string }): Error {
+  const message = error.message ?? '';
+  return error.code === 'EMAIL_NOT_VERIFIED'
+    ? new EmailNotConfirmedError(message)
+    : new Error(message);
 }
 
 // autoSignIn (set in @repo/auth) signs the user in right after sign-up, unless the

@@ -11,5 +11,7 @@ export interface RunnerQueueRun extends IssueAgentRun {
 }
 
 export type RunnerQueuePage = Page<RunnerQueueRun> & { queued: number; running: number };
-export const getRunnerQueue = (params: PageParams) =>
-  request<RunnerQueuePage>(`/agent-runs/queue${pageQuery(params)}`);
+export const getRunnerQueue = (params: PageParams & { runId?: number }) =>
+  request<RunnerQueuePage>(
+    `/agent-runs/queue${pageQuery(params, { runId: params.runId?.toString() })}`,
+  );

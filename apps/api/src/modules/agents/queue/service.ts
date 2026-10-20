@@ -9,7 +9,7 @@ import {
   issue,
   revision,
 } from '@repo/db';
-import { and, asc, eq, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { workspaceGrants } from '#modules/workspaces/service';
 import { toMemberContext, type MemberRole } from '#modules/members/service';
 import { projectAccess } from '#shared/workspace-roles';
@@ -66,12 +66,13 @@ export async function listRunnerQueue(
   userId: string,
   window: { limit: number; offset: number },
   mcpOnly = false,
+  runId?: number,
 ) {
   const ids = await queueProjectIds(userId, mcpOnly);
   if (!ids.length) return { items: [], total: 0, queued: 0, running: 0 };
   const where = and(
     inArray(agentRun.projectId, ids),
-    eq(agentRun.status, 'pending'),
+    runId == null ? undefined : eq(agentRun.id, runId),
     eq(aiAgent.kind, 'external'),
     or(isNull(agentRun.issueId), eq(issue.projectId, agentRun.projectId)),
   );
@@ -109,15 +110,17 @@ export async function listRunnerQueue(
       .leftJoin(issue, eq(issue.id, agentRun.issueId))
       .where(where)
       .orderBy(
-        sql`CASE WHEN ${executionState} = 'running' THEN 0 ELSE 1 END`,
-        asc(agentRun.nextAttemptAt),
-        asc(agentRun.id),
+        sql`CASE WHEN ${executionState} = 'running' THEN 0 WHEN ${agentRun.status} = 'pending' THEN 1 ELSE 2 END`,
+        sql`CASE WHEN ${agentRun.status} = 'pending' THEN ${agentRun.nextAttemptAt} END ASC`,
+        desc(agentRun.createdAt),
+        desc(agentRun.id),
       )
       .limit(window.limit)
       .offset(window.offset),
     db
       .select({
         total: sql<number>`count(*)::int`,
+        queued: sql<number>`count(*) FILTER (WHERE ${executionState} = 'queued')::int`,
         running: sql<number>`count(*) FILTER (WHERE ${executionState} = 'running')::int`,
       })
       .from(agentRun)
@@ -138,7 +141,7 @@ export async function listRunnerQueue(
       finishedAt: row.finishedAt ? iso(row.finishedAt) : null,
     })),
     total,
-    queued: total - running,
+    queued: counted[0]?.queued ?? 0,
     running,
   };
 }

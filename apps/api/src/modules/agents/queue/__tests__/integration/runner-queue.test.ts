@@ -74,10 +74,16 @@ describe('runner queue', () => {
       output: 'Done',
     });
     expect((await api['agent-runs'].queue.get()).data).toMatchObject({
-      items: [],
-      total: 0,
+      total: 1,
       running: 0,
       queued: 0,
+    });
+    expect(
+      (await api['agent-runs'].queue.get({ query: { runId: claimed.id } })).data!.items[0],
+    ).toMatchObject({
+      id: claimed.id,
+      executionState: 'success',
+      output: 'Done',
     });
     expect(
       (await api.issues({ issueId: issue.id })['agent-runs'].get()).data!.items[0].executionState,
@@ -166,6 +172,9 @@ describe('runner queue', () => {
       ).data!;
       const denied = await addProjectMember(api, 'RUN', restricted.id);
       expect((await denied['agent-runs'].queue.get()).data).toMatchObject({ items: [], total: 0 });
+      expect(
+        (await denied['agent-runs'].queue.get({ query: { runId: mine.items[0].id } })).data,
+      ).toMatchObject({ items: [], total: 0 });
       expect((await denied.sync.rev.get(scopes)).data!.revs['runnerQueue:1']).toBe('0');
     }
   });
@@ -181,7 +190,7 @@ describe('runner queue', () => {
     const second = (await api['agent-runs'].queue.get({ query: { page: 2, pageSize: 1 } })).data!;
     expect(first.total).toBe(2);
     expect(second.total).toBe(2);
-    expect(first.items[0].id).toBeLessThan(second.items[0].id);
+    expect(first.items[0].id).not.toBe(second.items[0].id);
     const claimed = (await runner['agent-runs'].claim.post()).data!.run!;
     const activeFirst = (await api['agent-runs'].queue.get({ query: { pageSize: 1 } })).data!;
     expect(activeFirst.items[0]).toMatchObject({ id: claimed.id, executionState: 'running' });

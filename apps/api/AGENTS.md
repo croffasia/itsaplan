@@ -419,7 +419,7 @@ traces stay private.
 External runners reporting run events also retain messages, tool inputs/results and a
 local Codex session link per attempt. `GET /agent-runs/:runId/trace?attempt=N` uses
 both read permissions in the original project and excludes moved issues. It also
-serves scheduled/manual runs without an issue. The latest recorded attempt is the default.
+serves scheduled/manual runs without an issue. The latest recorded attempt is the default. The runner queue lists active and past external runs; `runId` narrows it to one authorized run for the detail pane. External transcripts follow the instance trace retention window after the run finishes; pending runs and final results are retained.
 `POST /agent-runs/:runId/events` accepts only the calling agent's current executing,
 unexpired attempt. Event offsets deduplicate retries and reject gaps. Transcripts
 stop recording after 2,000 events or 1 MB; acknowledgements continue so the runner

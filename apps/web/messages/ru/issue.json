@@ -516,9 +516,9 @@
     "running": "Выполняется",
     "queuedHint": "Ожидает runner, повторной попытки или запланированного времени.",
     "queueTitle": "Очередь runner",
-    "queueDescription": "Задания внешних runner во всех доступных проектах. Сначала выполняющиеся, затем ожидающие по времени запуска.",
+    "queueDescription": "Active and past external agent runs across your projects.",
     "queueCounts": "Ожидают: {queued, number} · Выполняются: {running, number}",
-    "queueEmpty": "Нет ожидающих или выполняющихся заданий.",
+    "queueEmpty": "No runs yet.",
     "presence": {
       "online": "Runner онлайн",
       "offline": "Runner офлайн",
@@ -528,6 +528,8 @@
     "openCodex": "Открыть в Codex",
     "sessionHint": "Открывает локальное приложение Codex. Сессия должна быть доступна на этом компьютере или подключённом хосте.",
     "traceTruncated": "Достигнут лимит записи. Последующие события пропущены; итоговый результат запуска остаётся доступен.",
-    "message": "Сообщение агента"
+    "message": "Сообщение агента",
+    "selectRun": "Select a run to see its details",
+    "backToRuns": "Back to runs"
   }
 }

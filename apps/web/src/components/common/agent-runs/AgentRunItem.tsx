@@ -13,13 +13,15 @@ import AgentRunExternalTrace from './AgentRunExternalTrace';
 export default function AgentRunItem({
   issueId,
   run,
+  defaultOpen = false,
 }: {
   issueId: number | null;
   run: IssueAgentRun;
+  defaultOpen?: boolean;
 }) {
   const t = useTranslations('issue.agentRuns');
   const relativeTime = useRelativeTime();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const Chevron = open ? ChevronDown : ChevronRight;
   return (
     <div className="border-b last:border-b-0">

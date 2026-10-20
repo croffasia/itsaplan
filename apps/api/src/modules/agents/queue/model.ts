@@ -4,6 +4,7 @@ import { IssueAgentRunPageResponse } from '#modules/issues/model';
 
 export const queueQuery = t.Object({
   ...pageQueryFields,
+  runId: t.Optional(t.Numeric({ minimum: 1, multipleOf: 1 })),
   page: t.Optional(t.Numeric({ minimum: 1, multipleOf: 1 })),
   pageSize: t.Optional(t.Numeric({ minimum: 1, maximum: 100, multipleOf: 1 })),
 });

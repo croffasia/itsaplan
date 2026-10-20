@@ -59,6 +59,7 @@ export const runnerQueueRoutes = new Elysia({
           requireUser(user).id,
           window,
           isMcpRequest(request.headers),
+          query.runId,
         );
         counts = { queued: result.queued, running: result.running };
         return result;
@@ -71,8 +72,8 @@ export const runnerQueueRoutes = new Elysia({
       detail: {
         summary: 'Read the runner queue',
         description:
-          'Waiting and executing external runs across projects where the caller may read both ' +
-          'work items and agents. Running leases first, then waiting runs by due time and id.',
+          'Active and past external runs across projects where the caller may read both ' +
+          'work items and agents. Running leases first, waiting runs by due time, then newest past runs.',
       },
     },
   );

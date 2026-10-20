@@ -21,7 +21,7 @@ export default function RunnerQueueRow({ run }: { run: RunnerQueueRun }) {
         )}
         <span>{t(`presence.${run.runnerState}`)}</span>
       </div>
-      <AgentRunItem issueId={run.issueId} run={run} />
+      <AgentRunItem issueId={run.issueId} run={run} defaultOpen />
     </section>
   );
 }

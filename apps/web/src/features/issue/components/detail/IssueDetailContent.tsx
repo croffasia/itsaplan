@@ -14,7 +14,6 @@ import IssueChecklistsPanel from './IssueChecklistsPanel';
 import IssueLinksPanel from './IssueLinksPanel';
 import IssueDevelopmentPanel from './IssueDevelopmentPanel';
 import IssueDocumentsPanel from './IssueDocumentsPanel';
-import IssueAgentRunsPanel from './IssueAgentRunsPanel';
 import IssueWorklogPanel from './IssueWorklogPanel';
 import IssueSubtasksPanel from './IssueSubtasksPanel';
 import IssueActivityFeed from './IssueActivityFeed';
@@ -77,6 +76,12 @@ export default function IssueDetailContent({
     activityView,
   } = useIssueDetail(project, issueId, onIssueLoaded);
   const permissions = usePermissions(project);
+  const canReadAgentRuns =
+    permissions.can('ai_agents', 'read') && permissions.can('work_items', 'read');
+  const effectiveActivityView =
+    activityView.tab === 'agentRuns' && !canReadAgentRuns
+      ? { ...activityView, tab: 'all' as const }
+      : activityView;
   const canEdit = permissions.can('work_items', 'edit');
   const canManageDevelopment = permissions.can('repositories', 'edit');
   const canReadDocuments = permissions.can('documents', 'read');
@@ -209,11 +214,6 @@ export default function IssueDetailContent({
         />
       )}
 
-      <IssueAgentRunsPanel
-        issueId={issue.id}
-        canRead={permissions.can('ai_agents', 'read') && permissions.can('work_items', 'read')}
-      />
-
       <IssueLinksPanel project={project} issue={issue} />
     </>
   );
@@ -277,7 +277,8 @@ export default function IssueDetailContent({
           assignees={project.assignees}
           columns={project.columns}
           imageByUserId={imageByUserId}
-          view={activityView}
+          view={effectiveActivityView}
+          canReadAgentRuns={canReadAgentRuns}
         />
       </div>
       <LastCommentBubble
@@ -285,7 +286,7 @@ export default function IssueDetailContent({
         issueId={issue.id}
         feedRef={feedRef}
         imageByUserId={imageByUserId}
-        view={activityView}
+        view={effectiveActivityView}
       />
     </>
   );

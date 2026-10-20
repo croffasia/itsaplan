@@ -6,9 +6,9 @@ import {
 } from '@/services/preferences.service';
 import type { FeedSlice } from '../services/comments.service';
 
-export type ActivityTab = 'all' | FeedFilter;
+export type ActivityTab = 'all' | 'agentRuns' | FeedFilter;
 
-const TABS: ActivityTab[] = ['all', 'comments', 'history', 'worklog'];
+const TABS: ActivityTab[] = ['all', 'comments', 'history', 'worklog', 'agentRuns'];
 const TAB_KEY = 'issue-activity-tab';
 const ORDER_KEY = 'issue-activity-order';
 
@@ -50,7 +50,7 @@ export function useActivityFeedView() {
 
   const tab = stored?.tab ?? 'all';
   const order = stored?.order ?? 'desc';
-  const slice: FeedSlice = { filter: tab === 'all' ? null : tab, order };
+  const slice: FeedSlice = { filter: tab === 'all' || tab === 'agentRuns' ? null : tab, order };
   return {
     ready: stored != null && preference != null,
     tab,

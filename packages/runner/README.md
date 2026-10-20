@@ -319,7 +319,9 @@ Sessions below.
 ### The result
 
 Exit code `0` is a success. Any other code is a failure. The end of stderr then becomes
-the error. Stdout becomes the run's output in both cases.
+the error. In both cases the run's output is the answer: all of stdout with `outputFormat`
+`text`, and with an event stream format the text the agent wrote after its last tool call
+(see Chat below for the formats).
 
 ## Chat
 

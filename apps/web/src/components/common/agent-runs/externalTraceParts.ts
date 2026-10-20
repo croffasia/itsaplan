@@ -1,8 +1,10 @@
 import type { AiChatPart, AiChatToolPart } from '@/lib/api/endpoints/agentChat';
 import type { ExternalRunTrace } from '@/lib/api/endpoints/agents';
 
+export type ExternalTracePart = AiChatPart & { receivedAt: string };
+
 export function externalTraceParts(events: ExternalRunTrace['events']) {
-  const parts: (AiChatPart & { receivedAt: string })[] = [];
+  const parts: ExternalTracePart[] = [];
   const tools = new Map<string, AiChatToolPart>();
   for (const { event, receivedAt } of events) {
     if (event.type === 'TOOL_CALL_START' && event.toolCallId) {

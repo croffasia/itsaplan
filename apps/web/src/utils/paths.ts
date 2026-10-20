@@ -50,6 +50,11 @@ export const settingsPath = (ref: string, section: string) =>
 // The AI Team destinations listed in the main sidebar (see AI_TEAM_SECTIONS).
 export const aiTeamPath = (ref: string, section: string) => `${projectPath(ref)}/agents/${section}`;
 
+export const runnerQueuePath = (ref: string) => aiTeamPath(ref, 'queue');
+
+export const runnerQueueRunPath = (ref: string, runId: number) =>
+  `${runnerQueuePath(ref)}/${runId}`;
+
 export const inboxPath = (ref: string) => `${projectPath(ref)}/inbox`;
 
 // The member's own notification preferences (which events, by which channel, their

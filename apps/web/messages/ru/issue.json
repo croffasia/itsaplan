@@ -516,11 +516,38 @@
     "running": "Выполняется",
     "queuedHint": "Ожидает runner, повторной попытки или запланированного времени.",
     "queueTitle": "Очередь runner",
-    "queueDescription": "Active and past external agent runs across your projects.",
-    "queueCounts": "Ожидают: {queued, number} · Выполняются: {running, number}",
     "queueEmpty": "No runs yet.",
+    "activeSection": "В работе",
+    "historySection": "История",
+    "waitingForRunner": "Ждёт runner",
+    "offlineHint": "Ожидающие запуски начнутся, когда runner подключится.",
+    "retryAt": "Повтор в {time}",
+    "startsAt": "Старт в {time}",
+    "inDuration": "за {duration}",
+    "afterAttempts": "после {count, plural, one {# попытки} few {# попыток} many {# попыток} other {# попытки}}",
+    "startedAgo": "начат {time}",
+    "stepsSection": "Что делал агент",
+    "outputTail": "Вывод длинный: runner прислал только его конец.",
+    "openWorkItem": "Открыть задачу",
+    "scheduleRun": "Расписание: {name}",
+    "facts": {
+      "agent": "Агент",
+      "trigger": "Триггер",
+      "started": "Начат",
+      "finished": "Завершён",
+      "attempts": "Попытки",
+      "runner": "Runner",
+      "delivery": "Доставка",
+      "context": "Контекст",
+      "run": "Запуск"
+    },
+    "connection": {
+      "push": "URL вызова",
+      "online": "Онлайн",
+      "offline": "Офлайн",
+      "never": "Не подключён"
+    },
     "presence": {
-      "online": "Runner онлайн",
       "offline": "Runner офлайн",
       "never": "Runner не подключён"
     },
@@ -528,8 +555,8 @@
     "openCodex": "Открыть в Codex",
     "sessionHint": "Открывает локальное приложение Codex. Сессия должна быть доступна на этом компьютере или подключённом хосте.",
     "traceTruncated": "Достигнут лимит записи. Последующие события пропущены; итоговый результат запуска остаётся доступен.",
-    "message": "Сообщение агента",
     "selectRun": "Select a run to see its details",
+    "runNotFound": "Этого запуска нет в очереди или к нему нет доступа.",
     "backToRuns": "Back to runs"
   }
 }

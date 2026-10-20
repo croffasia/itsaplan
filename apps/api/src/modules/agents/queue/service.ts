@@ -1,6 +1,7 @@
 import {
   db,
   agentRun,
+  agentSchedule,
   aiAgent,
   project,
   projectMember,
@@ -17,7 +18,10 @@ import { hasPermission } from '#shared/permissions';
 import { iso } from '#shared/lib';
 import { executionState, contextTokensOf } from '../core/run-queue';
 
-const runnerPresence = sql<'online' | 'offline' | 'never'>`CASE
+// An agent with an invocation URL is sent its work and only calls back while it has
+// some, so its last contact says nothing about whether the endpoint is up.
+const runnerPresence = sql<'push' | 'online' | 'offline' | 'never'>`CASE
+  WHEN ${aiAgent.invocationUrl} IS NOT NULL THEN 'push'
   WHEN ${aiAgent.lastSeenAt} IS NULL THEN 'never'
   WHEN ${aiAgent.lastSeenAt} > now() - interval '90 seconds' THEN 'online'
   ELSE 'offline' END`;
@@ -100,6 +104,7 @@ export async function listRunnerQueue(
         issueId: agentRun.issueId,
         sequenceNumber: issue.sequenceNumber,
         issueTitle: issue.title,
+        scheduleName: agentSchedule.name,
         projectKey: project.key,
         teamRef: sql<string>`coalesce(${team.slug}, ${team.id}::text)`,
       })
@@ -108,6 +113,7 @@ export async function listRunnerQueue(
       .innerJoin(project, eq(project.id, agentRun.projectId))
       .innerJoin(team, eq(team.id, project.teamId))
       .leftJoin(issue, eq(issue.id, agentRun.issueId))
+      .leftJoin(agentSchedule, eq(agentSchedule.id, agentRun.scheduleId))
       .where(where)
       .orderBy(
         sql`CASE WHEN ${executionState} = 'running' THEN 0 WHEN ${agentRun.status} = 'pending' THEN 1 ELSE 2 END`,

@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { apiKeyApi, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
-import { createAgent } from '#tests/helpers/agents';
+import { createAgent, teamOf } from '#tests/helpers/agents';
 import { createRole } from '#tests/helpers/roles';
 import { addProjectMember } from '#tests/helpers/members';
 import { setRunAdmission } from '../../../core/run-admission';
@@ -217,10 +217,31 @@ describe('runner queue', () => {
       expect.objectContaining({
         id: queued.data!.runId,
         issueId: null,
+        scheduleName: 'Daily',
         trigger: 'manual',
         executionState: 'queued',
       }),
     );
+  });
+
+  it('reports an agent with an invocation URL as push instead of runner presence', async () => {
+    const { api, agent } = await setup();
+    // The SSRF guard refuses a loopback URL under NODE_ENV=test.
+    const environment = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'development';
+    try {
+      const patched = await api
+        .teams({ teamId: await teamOf(api, 'RUN') })
+        ['ai-agents']({ agentId: agent.id })
+        .patch({ invocationUrl: 'http://127.0.0.1:9/agent' });
+      expect(patched.status).toBe(200);
+    } finally {
+      process.env.NODE_ENV = environment;
+    }
+    expect((await api['agent-runs'].queue.get()).data!.items[0]).toMatchObject({
+      executionState: 'queued',
+      runnerState: 'push',
+    });
   });
 
   it('removes canceled runs after their issue moves', async () => {

@@ -45,12 +45,12 @@ function markup(denied = false) {
   return html;
 }
 
-it('renders the local session link and truncation notice while escaping event text', () => {
+it('renders the local session link and truncation notice while sanitizing event text', () => {
   const html = markup();
   assert.match(html, /href="codex:\/\/threads\/0199a213-81c0-7800-8aa1-bbab2a035a53"/);
   assert.match(html, /recording limit/);
   assert.match(html, /Private trace/);
-  assert.ok(html.includes('Private trace &lt;script&gt;alert(1)&lt;/script&gt;'));
+  assert.doesNotMatch(html, /<script|alert\(1\)/);
 });
 
 it('hides cached external events and session links when access is denied', () => {

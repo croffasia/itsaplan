@@ -1,89 +1,117 @@
 'use client';
 
-import { useState } from 'react';
+import type { ReactNode } from 'react';
+import { useParams } from 'next/navigation';
+import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
-import { usePaging } from '@/hooks/usePaging';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
-import { useRunnerQueueQuery, useRunnerQueueRunQuery } from '@/services/runnerQueue.service';
+import { useShellRoute } from '@/hooks/useShellRoute';
+import { useRunnerQueueQuery } from '@/services/runnerQueue.service';
+import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import { qk } from '@/services/queryKeys';
 import { revScope } from '@/utils/revScopes';
+import { runnerQueueRunPath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
-import ListPager from '@/components/common/ListPager';
-import RunnerQueueRow from './components/RunnerQueueRow';
-import RunnerQueueListItem from './components/RunnerQueueListItem';
+import RunnerQueueActiveCard from './components/RunnerQueueActiveCard';
+import RunnerQueueHistoryRow from './components/RunnerQueueHistoryRow';
+import RunnerQueueOfflineNotice from './components/RunnerQueueOfflineNotice';
 
-export default function RunnerQueuePage() {
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+const isActive = (run: RunnerQueueRun) =>
+  run.executionState === 'queued' || run.executionState === 'running';
+
+export default function RunnerQueuePage({ children }: { children: ReactNode }) {
+  const params = useParams<{ runId?: string }>();
+  const selectedId = params.runId ? Number(params.runId) : null;
+  const projectKey = useShellRoute().projectKey ?? '';
   const t = useTranslations('issue.agentRuns');
-  const paging = usePaging();
-  const query = useRunnerQueueQuery(paging.params);
+  const query = useRunnerQueueQuery();
   useLiveRefresh({ scope: revScope.runnerQueue, targets: [qk.runnerQueue] });
-  const data = query.isError ? null : query.data;
-  const detail = useRunnerQueueRunQuery(selectedId);
-  const selected = detail.isError || query.isError ? null : detail.data?.items[0];
+  const pages = query.isError ? undefined : query.data?.pages;
+  const data = pages?.[0];
+  const runs = pages?.flatMap((page) => page.items) ?? [];
+  const active = runs.filter(isActive);
+  const history = runs.filter((run) => !isActive(run));
   return (
     <div className="flex h-full min-h-0">
       <div
         className={cn(
           'flex w-full min-w-0 flex-col md:max-w-sm md:border-e',
-          selected && 'hidden md:flex',
+          selectedId != null && 'hidden md:flex',
         )}
       >
-        <div className="space-y-4 p-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h1 className="text-lg font-semibold">{t('queueTitle')}</h1>
-              <p className="text-sm text-muted-foreground">{t('queueDescription')}</p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={query.isFetching}
-              onClick={() => void query.refetch()}
-            >
-              {t('refresh')}
-            </Button>
-          </div>
-          {data && (
-            <p className="text-sm">
-              {t('queueCounts', { queued: data.queued, running: data.running })}
-            </p>
-          )}
-          {query.isLoading && <p className="text-sm text-muted-foreground">{t('loading')}</p>}
+        <div className="flex items-center justify-between gap-2 p-4 pb-3">
+          <h1 className="text-base font-semibold">{t('queueTitle')}</h1>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            aria-label={t('refresh')}
+            disabled={query.isFetching}
+            onClick={() => void query.refetch()}
+          >
+            <RefreshCw />
+          </Button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto pb-4">
+          {query.isLoading && <p className="px-4 text-sm text-muted-foreground">{t('loading')}</p>}
           {query.isError && (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="px-4 text-sm text-destructive">
               {t('loadError')}
             </p>
           )}
           {data && data.total === 0 && (
-            <p className="text-sm text-muted-foreground">{t('queueEmpty')}</p>
+            <p className="px-4 text-sm text-muted-foreground">{t('queueEmpty')}</p>
+          )}
+          <RunnerQueueOfflineNotice runs={active} />
+          {data && active.length > 0 && (
+            <section>
+              <h2 className="flex justify-between px-4 pt-3 pb-2 text-xs font-semibold text-muted-foreground">
+                {t('activeSection')}
+                <span className="font-normal">{data.queued + data.running}</span>
+              </h2>
+              <div className="space-y-2 px-4">
+                {active.map((run) => (
+                  <RunnerQueueActiveCard
+                    key={run.id}
+                    run={run}
+                    href={runnerQueueRunPath(projectKey, run.id)}
+                    selected={run.id === selectedId}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+          {history.length > 0 && (
+            <section>
+              <h2 className="px-4 pt-5 pb-1.5 text-xs font-semibold text-muted-foreground">
+                {t('historySection')}
+              </h2>
+              {history.map((run) => (
+                <RunnerQueueHistoryRow
+                  key={run.id}
+                  run={run}
+                  href={runnerQueueRunPath(projectKey, run.id)}
+                  selected={run.id === selectedId}
+                />
+              ))}
+            </section>
+          )}
+          {query.hasNextPage && (
+            <div className="px-4 pt-3">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                disabled={query.isFetchingNextPage}
+                onClick={() => void query.fetchNextPage()}
+              >
+                {t('loadMore')}
+              </Button>
+            </div>
           )}
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          {data?.items.map((run) => (
-            <RunnerQueueListItem
-              key={run.id}
-              run={run}
-              selected={run.id === selectedId}
-              onSelect={() => setSelectedId(run.id)}
-            />
-          ))}
-        </div>
-        {data && data.total > 0 && <ListPager paging={paging} total={data.total} />}
       </div>
-      {selected ? (
-        <div className="min-w-0 flex-1 overflow-y-auto p-4">
-          <Button variant="ghost" className="mb-3 md:hidden" onClick={() => setSelectedId(null)}>
-            {t('backToRuns')}
-          </Button>
-          <RunnerQueueRow key={selected.id} run={selected} />
-        </div>
-      ) : (
-        <p className="hidden flex-1 items-center justify-center p-6 text-sm text-muted-foreground md:flex">
-          {t('selectRun')}
-        </p>
-      )}
+      {children}
     </div>
   );
 }

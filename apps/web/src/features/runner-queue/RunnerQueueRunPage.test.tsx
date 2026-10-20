@@ -11,7 +11,7 @@ import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import issue from '../../../messages/en/issue.json';
 import common from '../../../messages/en/common.json';
 
-it('keeps selected results when the run leaves the list page and hides them after access denial', async () => {
+it('shows the run its URL names and hides it after access denial', async () => {
   const names = [
     'window',
     'document',
@@ -62,6 +62,7 @@ it('keeps selected results when the run leaves the list page and hides them afte
     issueId: null,
     sequenceNumber: null,
     issueTitle: null,
+    scheduleName: null,
     projectRef: 'team.RUN',
     runnerState: 'online',
   };
@@ -101,13 +102,11 @@ it('keeps selected results when the run leaves the list page and hides them afte
   const client = new QueryClient({
     defaultOptions: { queries: { staleTime: Infinity, retry: false } },
   });
-  const listKey = [...qk.runnerQueue, { page: 1, pageSize: 10 }];
   const detailKey = [...qk.runnerQueue, { page: 1, pageSize: 1, runId: 1 }];
   const page = { items: [run], total: 1, page: 1, pageSize: 10, queued: 0, running: 0 };
-  client.setQueryData(listKey, page);
   client.setQueryData(detailKey, page);
   client.setQueryData([...qk.externalRunTrace(1), null], null);
-  const { default: RunnerQueuePage } = await import('./RunnerQueuePage');
+  const { default: RunnerQueueRunPage } = await import('./RunnerQueueRunPage');
   const { createRoot } = await import('react-dom/client');
   const root = createRoot(document.getElementById('root')!);
   try {
@@ -117,21 +116,13 @@ it('keeps selected results when the run leaves the list page and hides them afte
           <SyncProvider>
             <NextIntlClientProvider locale="en" timeZone="UTC" messages={{ issue, common }}>
               <RelativeTimeProvider>
-                <RunnerQueuePage />
+                <RunnerQueueRunPage runId={1} queuePath="/team/RUN/agents/queue" />
               </RelativeTimeProvider>
             </NextIntlClientProvider>
           </SyncProvider>
         </QueryClientProvider>,
       ),
     );
-    const button = document.querySelector('button[aria-pressed="false"]') as HTMLButtonElement;
-    assert.ok(button);
-    await act(async () => button.click());
-    assert.ok(document.body.textContent?.includes('Selected result'));
-    await act(async () => {
-      client.setQueryData(listKey, { ...page, items: [{ ...run, id: 2 }] });
-      await new Promise((resolve) => setTimeout(resolve, 10));
-    });
     assert.ok(document.body.textContent?.includes('Selected result'));
     await act(async () => {
       client

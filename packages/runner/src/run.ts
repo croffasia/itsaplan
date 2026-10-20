@@ -44,18 +44,20 @@ export async function runTask(config: RunnerConfig, client: Client, run: Run) {
       {
         onData: (chunk) => {
           usage.write(chunk);
-          if (run.traceEvents) stream.write(chunk);
+          stream.write(chunk);
         },
       },
     );
     clearInterval(timer);
     usage.end();
-    if (run.traceEvents) {
-      if (outcome.status === 'success') await stream.finish(outcome.output);
-      else await stream.fail(outcome.error ?? 'The command failed', outcome.output);
-    }
+    if (outcome.status === 'success') await stream.finish(outcome.output);
+    else await stream.fail(outcome.error ?? 'The command failed', outcome.output);
+    // A stream format's stdout is its raw event lines; the run reports the answer read out
+    // of them. Plain text is the answer as printed.
+    const output = config.outputFormat === 'text' ? outcome.output : stream.answer();
     await client.report(run.id, {
       ...outcome,
+      output,
       ...(run.traceEvents && { attempt: run.attempts }),
       usage: usage.value(),
     });

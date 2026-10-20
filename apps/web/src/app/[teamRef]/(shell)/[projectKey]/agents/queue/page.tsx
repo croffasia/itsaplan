@@ -1,3 +1,3 @@
-import RunnerQueuePage from '@/features/runner-queue/RunnerQueuePage';
+import RunnerQueueNoRun from '@/features/runner-queue/components/RunnerQueueNoRun';
 
-export default RunnerQueuePage;
+export default RunnerQueueNoRun;

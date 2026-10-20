@@ -109,7 +109,11 @@ it('executes a queued task and reports its session and tool events before the fi
       expect.objectContaining({ type: 'TOOL_CALL_RESULT', content: 'README.md' }),
     );
     expect(posts[posts.length - 1].path).toBe('/agent-runs/1/result');
-    expect(posts[posts.length - 1].body).toMatchObject({ status: 'success', attempt: 2 });
+    expect(posts[posts.length - 1].body).toMatchObject({
+      status: 'success',
+      attempt: 2,
+      output: 'Done',
+    });
   } finally {
     globalThis.fetch = original;
   }

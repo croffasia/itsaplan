@@ -2207,7 +2207,7 @@
 
     "mammoth": ["mammoth@1.13.0", "", { "dependencies": { "@xmldom/xmldom": "^0.8.6", "argparse": "~1.0.3", "base64-js": "^1.5.1", "dingbat-to-unicode": "^1.0.1", "jszip": "^3.7.1", "lop": "^0.4.2", "underscore": "^1.13.1", "xmlbuilder": "^10.0.0" }, "bin": { "mammoth": "bin/mammoth" } }, "sha512-2cawcYFcP7ISfXbBcL9lmVgTNWo88v/52ND1gnywHtVT/pX0//puPnf0iMPV9ZgmuvNOE+zkIhDgZ9M2c2dDDg=="],
 
-    "markdown-it": ["markdown-it@14.3.1", "", { "dependencies": { "argparse": "^2.0.1", "entities": "^4.5.0", "linkify-it": "^5.0.2", "mdurl": "^2.0.0", "punycode.js": "^2.3.1", "uc.micro": "^2.1.0" }, "bin": { "markdown-it": "bin/markdown-it.mjs" } }, "sha512-4Ej49aYTDFIQ+uBkfX8GBvJGccoARxxPep+7aWTs55ozbjQJpW9M26Fe53vnGgvLeVzva/amzjQQaQu9w0vMhA=="],
+    "markdown-it": ["markdown-it@14.3.3", "", { "dependencies": { "argparse": "^2.0.1", "entities": "^4.5.0", "linkify-it": "^5.0.2", "mdurl": "^2.0.0", "punycode.js": "^2.3.1", "uc.micro": "^2.1.0" }, "bin": { "markdown-it": "bin/markdown-it.mjs" } }, "sha512-L//tDAkjTjJCU6pBUSBTgs3Kg4InVaZuUZog/b6V12UKhcDQ7S78877ibbCanRExwPuYP1CZD7Gd2dxSy1GXRg=="],
 
     "markdown-it-task-lists": ["markdown-it-task-lists@2.1.1", "", {}, "sha512-TxFAc76Jnhb2OUu+n3yz9RMu4CwGfaT788br6HhEDlvWfdeJcLUsxk1Hgw2yJio0OXsxv7pyIPmvECY7bMbluA=="],
 

@@ -36,7 +36,8 @@ import { useRedirectError } from '../../hooks/useRedirectError';
 // since they need neither field.
 type Method = 'password' | 'link';
 
-export default function AuthLoginForm() {
+// `title` replaces "Sign in" on a sign-in page under a name of its own (/login/<name>).
+export default function AuthLoginForm({ title }: { title?: string }) {
   const t = useTranslations('auth');
   const [method, setMethod] = useState<Method>('password');
   // With a password this is either an address or a username; a sign-in link can only
@@ -146,7 +147,7 @@ export default function AuthLoginForm() {
   return (
     <form onSubmit={onSubmit} className="p-6 md:p-8">
       <FieldGroup>
-        <AuthFormHeader title={t('login.title')} description={subtitle()} />
+        <AuthFormHeader title={title ?? t('login.title')} description={subtitle()} />
 
         {passwordEnabled && (
           <AuthLoginPasswordFields

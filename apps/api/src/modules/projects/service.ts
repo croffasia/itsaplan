@@ -164,16 +164,49 @@ export async function mapProject(row: ProjectWithTeam): Promise<ProjectRow> {
   };
 }
 
+interface ProjectListOptions {
+  mcpOnly?: boolean;
+  withPermissions?: boolean;
+  q?: string;
+  sort?: 'key' | 'name' | 'created' | 'activity';
+  teamId?: number;
+  workspaceId?: number;
+  ids?: number[];
+  favorite?: boolean;
+  hidden?: boolean;
+  favoritesFirst?: boolean;
+}
+
 export async function listProjects(
   userId: string,
-  opts: {
-    mcpOnly?: boolean;
-    withPermissions?: boolean;
-    q?: string;
-    sort?: 'key' | 'name' | 'created' | 'activity';
-    teamId?: number;
-  } = {},
+  opts: ProjectListOptions = {},
 ): Promise<ProjectListItem[]> {
+  return (await readProjects(userId, opts)).items;
+}
+
+export function searchProjects(
+  userId: string,
+  opts: Omit<ProjectListOptions, 'mcpOnly' | 'withPermissions' | 'favoritesFirst'>,
+  window: { limit: number; offset: number },
+): Promise<{ items: ProjectListItem[]; total: number }> {
+  return readProjects(userId, { ...opts, favoritesFirst: true }, window);
+}
+
+// A project reached through the workspace has no membership row, so its preference
+// columns are null and count as off.
+function preference(
+  column: typeof projectMember.isFavorite | typeof projectMember.isHidden,
+  on?: boolean,
+) {
+  if (on === undefined) return undefined;
+  return on ? eq(column, true) : sql`${column} is not true`;
+}
+
+async function readProjects(
+  userId: string,
+  opts: ProjectListOptions,
+  window?: { limit: number; offset: number },
+): Promise<{ items: ProjectListItem[]; total: number }> {
   const grants = await workspaceGrants(userId);
   const grantedTeams = [...grants.keys()];
   const term = opts.q?.trim().replace(/[\\%_]/g, '\\$&');
@@ -189,6 +222,10 @@ export async function listProjects(
     isNull(project.archivedAt),
     opts.mcpOnly ? and(eq(project.mcpEnabled, true), eq(team.mcpEnabled, true)) : undefined,
     opts.teamId !== undefined ? eq(project.teamId, opts.teamId) : undefined,
+    opts.workspaceId !== undefined ? eq(team.workspaceId, opts.workspaceId) : undefined,
+    opts.ids ? inArray(project.id, opts.ids) : undefined,
+    preference(projectMember.isFavorite, opts.favorite),
+    preference(projectMember.isHidden, opts.hidden),
     term
       ? or(
           ilike(project.key, `%${term}%`),
@@ -230,10 +267,11 @@ export async function listProjects(
     .orderBy(issue.projectId, desc(issueActivity.createdAt))
     .as('latest_activity');
   const order: SQL[] = [];
+  if (opts.favoritesFirst) order.push(sql`${projectMember.isFavorite} is true desc`);
   if (opts.sort === 'activity') order.push(sql`${latestActivity.createdAt} desc nulls last`);
   else if (opts.sort === 'created') order.push(desc(project.createdAt));
   else if (opts.sort === 'name') order.push(sql`lower(${project.name})`);
-  const rows = await db
+  const query = db
     .select({
       ...projectWithTeam,
       memberRole: projectMember.role,
@@ -248,8 +286,20 @@ export async function listProjects(
     .leftJoin(teamRole, eq(teamRole.id, projectMember.roleId))
     .leftJoin(latestActivity, eq(latestActivity.projectId, project.id))
     .where(where)
-    .orderBy(...order, project.key, project.id);
-  return Promise.all(
+    .orderBy(...order, project.key, project.id)
+    .$dynamic();
+  const [rows, counted] = await Promise.all([
+    window ? query.limit(window.limit).offset(window.offset) : query,
+    window
+      ? db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(project)
+          .innerJoin(team, eq(team.id, project.teamId))
+          .leftJoin(projectMember, callerMember)
+          .where(where)
+      : undefined,
+  ]);
+  const items = await Promise.all(
     rows.map(
       async ({ memberRole, rolePermissions, lastActivityAt, isFavorite, isHidden, ...row }) => {
         const member = memberRole
@@ -269,6 +319,7 @@ export async function listProjects(
       },
     ),
   );
+  return { items, total: counted?.[0]?.count ?? items.length };
 }
 
 // Resolves the project a URL names. The full form is "<teamRef>.<key>", where the

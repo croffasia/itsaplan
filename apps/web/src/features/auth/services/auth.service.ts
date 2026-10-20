@@ -115,15 +115,16 @@ export async function resendVerificationEmail(email: string): Promise<void> {
 // Starts the Google round trip. Unlike every other call here this one navigates away
 // instead of returning a result: better-auth redirects to Google, and Google comes
 // back to the API callback, which then sends the browser to one of these two URLs.
-// Both must be on the web origin — the handler runs on the API origin.
+// Both must be on the web origin — the handler runs on the API origin. `returnTo` is a
+// web path both lead to instead, the invite screen for an invitee.
 //
 // It covers sign-up as well: an unknown address gets an account, subject to the
 // instance registration mode, and a known one signs into the account it belongs to.
-export async function signInWithGoogle(): Promise<void> {
+export async function signInWithGoogle(returnTo?: string): Promise<void> {
   const result = await signIn.social({
     provider: 'google',
-    callbackURL: appUrl('/'),
-    errorCallbackURL: appUrl('/login'),
+    callbackURL: appUrl(returnTo ?? '/'),
+    errorCallbackURL: appUrl(returnTo ?? '/login'),
   });
   if (result.error) throw new Error(result.error.message ?? '');
 }
@@ -131,11 +132,11 @@ export async function signInWithGoogle(): Promise<void> {
 // Starts the round trip through the instance's own OIDC provider. Same shape as the
 // Google call above: it navigates away, and both callback URLs must be on the web
 // origin. The provider id is fixed — the instance has exactly one.
-export async function signInWithOidc(): Promise<void> {
+export async function signInWithOidc(returnTo?: string): Promise<void> {
   const result = await signIn.social({
     provider: 'oidc',
-    callbackURL: appUrl('/'),
-    errorCallbackURL: appUrl('/login'),
+    callbackURL: appUrl(returnTo ?? '/'),
+    errorCallbackURL: appUrl(returnTo ?? '/login'),
   });
   if (result.error) throw new Error(result.error.message ?? '');
 }

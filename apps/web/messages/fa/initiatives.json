@@ -1,0 +1,168 @@
+{
+  "title": "ابتکارها",
+  "newInitiative": "ابتکار جدید",
+  "notFound": "ابتکار پیدا نشد.",
+  "options": "گزینه‌های ابتکار",
+  "showDescription": "نمایش توضیحات",
+  "noDescription": "بدون توضیحات.",
+  "noOwner": "بدون مسئول",
+  "startDate": "تاریخ شروع",
+  "targetDate": "تاریخ هدف",
+  "progress": "پیشرفت",
+  "activity": "فعالیت",
+  "noActivity": "هنوز فعالیتی نیست.",
+  "noIssuesLinked": "هنوز تسکی متصل نشده است.",
+  "inProgress": "در حال انجام",
+  "emptyTitle": "هنوز ابتکاری نیست",
+  "emptyDescription": "ابتکار تسک‌های مرتبط را زیر یک هدف گروه‌بندی می‌کند.",
+  "emptyTabDescription": "ابتکارها با تغییر وضعیتشان بین تب‌ها جابه‌جا می‌شوند.",
+  "emptyTab": {
+    "active": "ابتکار فعالی نیست",
+    "planned": "ابتکار برنامه‌ریزی‌شده‌ای نیست",
+    "proposed": "ابتکار پیشنهادی‌ای نیست",
+    "completed": "ابتکار تکمیل‌شده‌ای نیست"
+  },
+  "tabs": {
+    "active": "فعال",
+    "planned": "برنامه‌ریزی‌شده",
+    "proposed": "پیشنهادی",
+    "completed": "تکمیل‌شده",
+    "all": "همه ابتکارها"
+  },
+  "detailTabs": {
+    "overview": "نمای کلی",
+    "progress": "پیشرفت",
+    "issues": "تسک‌ها"
+  },
+  "columns": {
+    "name": "نام",
+    "priority": "اولویت",
+    "owner": "مسئول",
+    "target": "هدف",
+    "progress": "پیشرفت",
+    "health": "سلامت"
+  },
+  "status": {
+    "proposed": "پیشنهادی",
+    "planned": "برنامه‌ریزی‌شده",
+    "active": "فعال",
+    "completed": "تکمیل‌شده",
+    "canceled": "لغو‌شده"
+  },
+  "stateGroups": {
+    "backlog": "بک‌لاگ",
+    "unstarted": "برای انجام",
+    "started": "در حال انجام",
+    "completed": "انجام‌شده",
+    "canceled": "لغو‌شده"
+  },
+  "health": {
+    "on_track": "طبق برنامه",
+    "at_risk": "در معرض خطر",
+    "off_track": "خارج از برنامه",
+    "unknown": "بدون به‌روزرسانی"
+  },
+  "healthInfo": {
+    "trigger": "سلامت چطور محاسبه می‌شود؟",
+    "title": "سلامت",
+    "description": "کار انجام‌شده را با زمان سپری‌شده مقایسه می‌کند. به‌صورت خودکار به‌روزرسانی می‌شود.",
+    "legend": {
+      "on_track": "کار با برنامه هماهنگ پیش می‌رود.",
+      "at_risk": "کار از برنامه عقب افتاده است.",
+      "off_track": "کار خیلی عقب است یا تاریخ هدف گذشته است.",
+      "unknown": "هنوز داده کافی نیست: تسکی نیست یا تاریخ هدفی تعیین نشده است."
+    },
+    "howCalculated": "نحوه محاسبه",
+    "workDone": "کار انجام‌شده",
+    "timeElapsed": "زمان سپری‌شده",
+    "trail": "میزان عقب‌ماندگی کار از زمان",
+    "trailOnTrack": "تا ۱۰% عقب‌ماندگی",
+    "trailAtRisk": "۱۰-۲۵% عقب‌ماندگی",
+    "trailOffTrack": "بیش از ۲۵% عقب‌ماندگی"
+  },
+  "timeline": {
+    "title": "خط زمانی",
+    "started": "شروع‌شده",
+    "target": "هدف",
+    "remaining": "باقی‌مانده",
+    "overdue": "{days} روز تأخیر",
+    "dueToday": "سررسید امروز",
+    "left": "{days} روز باقی‌مانده",
+    "timeElapsed": "زمان سپری‌شده",
+    "workDone": "کار انجام‌شده",
+    "noTargetDate": "برای پیگیری سرعت، تاریخ هدف تعیین کنید."
+  },
+  "form": {
+    "titlePlaceholder": "راه‌اندازی Q3",
+    "descriptionPlaceholder": "این ابتکار درباره چیست؟",
+    "create": "ایجاد ابتکار",
+    "creating": "در حال ایجاد…",
+    "editTitle": "ویرایش ابتکار",
+    "save": "ذخیره تغییرات"
+  },
+  "pagination": {
+    "range": "{from}–{to} از {total}",
+    "previous": "صفحه قبلی",
+    "next": "صفحه بعدی"
+  },
+  "select": {
+    "label": "ابتکار",
+    "search": "اتصال به ابتکار…",
+    "empty": "ابتکاری نیست.",
+    "none": "بدون ابتکار",
+    "create": "ایجاد ابتکار"
+  },
+  "feed": {
+    "system": "سیستم",
+    "createdInitiative": "ابتکار را ایجاد کرد",
+    "createdIssue": "تسک را ایجاد کرد",
+    "renamed": "به «{title}» تغییر نام داد",
+    "descriptionUpdated": "توضیحات را به‌روزرسانی کرد",
+    "descriptionCleared": "توضیحات را پاک کرد",
+    "statusSet": "وضعیت را به {status} تغییر داد",
+    "statusMoved": "از {from} به {to} منتقل کرد",
+    "prioritySet": "اولویت را به {priority} تغییر داد",
+    "priorityRemoved": "اولویت را حذف کرد",
+    "ownerSet": "مسئول را به {name} تغییر داد",
+    "ownerRemoved": "مسئول {name} را حذف کرد",
+    "assigneeSet": "به {name} واگذار کرد",
+    "assigneeRemoved": "مسئول {name} را حذف کرد",
+    "delegateSet": "به {name} تفویض کرد",
+    "delegateRemoved": "نماینده {name} را حذف کرد",
+    "targetDateSet": "تاریخ هدف را به {date} تغییر داد",
+    "targetDateRemoved": "تاریخ هدف را حذف کرد",
+    "startDateSet": "تاریخ شروع را به {date} تغییر داد",
+    "startDateRemoved": "تاریخ شروع را حذف کرد",
+    "dueDateSet": "تاریخ سررسید را به {date} تغییر داد",
+    "dueDateRemoved": "تاریخ سررسید را حذف کرد",
+    "labelAdded": "برچسب {label} را اضافه کرد",
+    "labelRemoved": "برچسب {label} را حذف کرد",
+    "typeSet": "نوع را به {type} تغییر داد",
+    "typeRemoved": "نوع را حذف کرد",
+    "linked": "به {name} متصل کرد",
+    "unlinked": "از ابتکار جدا کرد"
+  },
+  "attachments": {
+    "title": "پیوست‌ها",
+    "add": "افزودن",
+    "uploading": "در حال بارگذاری…",
+    "empty": "هنوز پیوستی نیست.",
+    "emptyHint": "فایل‌ها را اینجا رها کنید یا از افزودن برای بارگذاری استفاده کنید.",
+    "dropToUpload": "فایل‌ها را برای بارگذاری رها کنید",
+    "uploadFailed": "بارگذاری ناموفق بود",
+    "open": "باز کردن {name}",
+    "download": "دانلود",
+    "downloadFile": "دانلود {name}",
+    "deleteFile": "حذف {name}",
+    "deleteTitle": "حذف پیوست",
+    "deleteConfirmation": "{name} حذف شود؟ این فایل از توضیحات نیز در هر جایی که جاسازی شده حذف می‌شود. این عمل قابل بازگشت نیست."
+  },
+  "documents": {
+    "title": "مستندات",
+    "add": "اتصال یک سند",
+    "empty": "هنوز سند متصلی نیست.",
+    "loadFailed": "بارگذاری مستندات متصل ممکن نشد. دوباره تلاش کنید.",
+    "untitled": "بدون عنوان",
+    "remove": "جدا کردن {title}"
+  }
+}

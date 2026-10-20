@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
+import { paginate } from '#shared/pagination';
 import { HttpError } from '#shared/lib';
 import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
@@ -20,10 +21,12 @@ import {
   ProjectBoardResponse,
   ProjectListResponse,
   ProjectResponse,
+  ProjectSearchPageResponse,
   ProjectSettingsResponse,
   SubtaskAutomationResponse,
   copyProjectBody,
   listProjectsQuery,
+  searchProjectsQuery,
   updateAutoArchiveBody,
   updateEstimatesBody,
   updateProjectBody,
@@ -32,6 +35,7 @@ import {
 } from './model';
 import {
   listProjects,
+  searchProjects,
   updateProject,
   deleteProject,
   projectFeatures,
@@ -69,6 +73,36 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
           'Search key, name, and description with q; filter by teamId; sort by key, name, created, ' +
           'or activity. Pass permissions=true to include your permission matrix on each.',
         ...mcpTool('list_projects'),
+      },
+    },
+  )
+
+  .get(
+    '/projects/search',
+    ({ user, query }) =>
+      paginate(query, (window) =>
+        searchProjects(
+          requireUser(user).id,
+          {
+            q: query.q,
+            sort: query.sort,
+            teamId: query.teamId,
+            workspaceId: query.workspaceId,
+            ids: query.ids?.split(',').map(Number),
+            favorite: query.favorite === undefined ? undefined : query.favorite === 'true',
+            hidden: query.hidden === undefined ? undefined : query.hidden === 'true',
+          },
+          window,
+        ),
+      ),
+    {
+      query: searchProjectsQuery,
+      response: { 200: ProjectSearchPageResponse, ...errors(400, 401) },
+      detail: {
+        summary: 'Search projects',
+        description:
+          'A page of the projects you can open, filtered like List projects and also by ' +
+          'workspace, by id, and by your star and hidden marks. Starred projects come first.',
       },
     },
   )

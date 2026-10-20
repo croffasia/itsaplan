@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { removeMember } from '@/lib/api/endpoints/members';
 import {
   type CopyProjectIncludeKey,
@@ -12,16 +12,32 @@ import {
 import {
   type Project,
   type ProjectPreferencePatch,
+  type ProjectSearchFilters,
   listProjects,
+  searchProjects,
   getProject,
   getBoardIssues,
   updateProject,
   updateProjectPreferences,
 } from '@/lib/api/endpoints/projects';
+import { nextPageParam } from '@/lib/api/core/paging';
 import { qk } from '@/services/queryKeys';
 
 export function useProjectsQuery() {
   return useQuery({ queryKey: qk.projects, queryFn: () => listProjects() });
+}
+
+const PROJECT_SEARCH_PAGE = 30;
+
+export function useProjectSearchQuery(filters: ProjectSearchFilters, enabled = true) {
+  return useInfiniteQuery({
+    queryKey: qk.projectSearch(filters),
+    queryFn: ({ pageParam }) =>
+      searchProjects(filters, { page: pageParam, pageSize: PROJECT_SEARCH_PAGE }),
+    initialPageParam: 1,
+    getNextPageParam: nextPageParam,
+    enabled,
+  });
 }
 
 export function useUpdateProjectPreferences() {

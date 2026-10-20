@@ -1,4 +1,4 @@
-import { getDisplayLocale } from '@/utils/dates';
+import { getIntlLocale } from '@/utils/dates';
 import { describeCron } from './cronDescription';
 import { formatCron, parseCron } from './cronFields';
 import { parseCronText } from './cronTextParser';
@@ -37,7 +37,7 @@ function looksLikeCron(value: string): boolean {
 // A schedule's times are stored and shown in UTC, which is the only zone a cron here
 // runs in, so the zone is written out with them.
 export function formatUtc(value: string): string {
-  return `${new Intl.DateTimeFormat(getDisplayLocale(), {
+  return `${new Intl.DateTimeFormat(getIntlLocale(), {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone: 'UTC',

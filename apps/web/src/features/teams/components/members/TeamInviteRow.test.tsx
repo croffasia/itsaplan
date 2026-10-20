@@ -27,6 +27,7 @@ let dom: JSDOM;
 let root: Root;
 let originals: Map<string, PropertyDescriptor | undefined>;
 let renewed: number[] = [];
+let resent: number[] = [];
 
 const DAY = 24 * 60 * 60 * 1000;
 const invite = (expiresInDays: number): InviteRow => ({
@@ -57,6 +58,8 @@ async function render(row: InviteRow, { mayRenew = true } = {}) {
           onRevoke={() => {}}
           onRenew={mayRenew ? (i) => renewed.push(i.id) : undefined}
           renewing={false}
+          onResend={(i) => resent.push(i.id)}
+          resending={false}
         />
       </NextIntlClientProvider>,
     ),
@@ -84,6 +87,7 @@ beforeEach(async () => {
     value: true,
   });
   renewed = [];
+  resent = [];
   const { createRoot } = await import('react-dom/client');
   root = createRoot(document.querySelector('#root')!);
 });
@@ -103,6 +107,7 @@ describe('TeamInviteRow', () => {
 
     assert.ok(document.body.textContent?.includes(teams.invite.expiredAt.split(' ')[0]));
     assert.equal(button(teams.invite.copyLink), undefined);
+    assert.equal(button(teams.invite.resendEmail), undefined);
     await act(async () => button(teams.invite.renew)!.click());
     assert.deepEqual(renewed, [9]);
   });
@@ -120,5 +125,7 @@ describe('TeamInviteRow', () => {
     assert.ok(document.body.textContent?.includes(teams.invite.pending));
     assert.ok(button(teams.invite.copyLink));
     assert.equal(button(teams.invite.renew), undefined);
+    await act(async () => button(teams.invite.resendEmail)!.click());
+    assert.deepEqual(resent, [9]);
   });
 });

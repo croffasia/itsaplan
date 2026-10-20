@@ -3,7 +3,7 @@ import AuthRegisterForm from './components/register/AuthRegisterForm';
 
 export default function AuthRegisterPage() {
   return (
-    <AuthCard>
+    <AuthCard screen="signUp">
       <AuthRegisterForm />
     </AuthCard>
   );

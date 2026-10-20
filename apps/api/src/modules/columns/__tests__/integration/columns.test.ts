@@ -248,14 +248,104 @@ describe('columns', () => {
       expect(gone.status).toBe(404);
     });
 
-    it('rejects deleting a backlog column', async () => {
+    it('deletes an additional backlog column and its issues', async () => {
       const { asOwner } = await setupProject();
       const backlog = await columnByName(asOwner, 'Backlog');
+      const extra = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          .columns.post({ name: 'Triage', stateType: 'backlog' })
+      ).data!;
+      const issue = (await createIssue(asOwner, extra.id)).data!;
+
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .columns({ columnId: extra.id })
+        .delete({ mode: 'delete' });
+      expect(res.status).toBe(204);
+      const cols = await columnsOf(asOwner);
+      expect(cols.map((c) => c.id)).not.toContain(extra.id);
+      expect(cols.map((c) => c.id)).toContain(backlog.id);
+      expect((await asOwner.issues({ issueId: issue.id }).get()).status).toBe(404);
+    });
+
+    it('moves issues when deleting the original backlog if another remains', async () => {
+      const { asOwner } = await setupProject();
+      const backlog = await columnByName(asOwner, 'Backlog');
+      const extra = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          .columns.post({ name: 'Triage', stateType: 'backlog' })
+      ).data!;
+      const issue = (await createIssue(asOwner, backlog.id)).data!;
+
       const res = await asOwner
         .projects({ projectKey: 'MKT' })
         .columns({ columnId: backlog.id })
+        .delete({ mode: 'move', targetColumnId: extra.id });
+      expect(res.status).toBe(204);
+      expect((await columnsOf(asOwner)).map((c) => c.id)).not.toContain(backlog.id);
+      expect((await asOwner.issues({ issueId: issue.id }).get()).data?.columnId).toBe(extra.id);
+      const timeline = await asOwner.issues({ issueId: issue.id }).timeline.get();
+      expect(timeline.data!.map((s) => s.status)).toEqual(['Backlog', 'Triage']);
+    });
+
+    it('deletes an additional backlog in a copied project without changing the source', async () => {
+      const { asOwner } = await setupProject();
+      const extra = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          .columns.post({ name: 'Triage', stateType: 'backlog' })
+      ).data!;
+      const copied = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .copy.post({ key: 'COPY', name: 'Copy' });
+      expect(copied.status).toBe(201);
+      const copyExtra = await columnByName(asOwner, 'Triage', 'COPY');
+
+      const res = await asOwner
+        .projects({ projectKey: 'COPY' })
+        .columns({ columnId: copyExtra.id })
         .delete({ mode: 'delete' });
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(204);
+      expect((await columnsOf(asOwner, 'COPY')).map((c) => c.name)).not.toContain('Triage');
+      expect((await columnsOf(asOwner)).map((c) => c.id)).toContain(extra.id);
+    });
+
+    it.each(['move', 'delete'] as const)(
+      'rejects deleting the last backlog in %s mode',
+      async (mode) => {
+        const { asOwner } = await setupProject();
+        await createProject(asOwner, { key: 'OPS', name: 'Operations' });
+        const backlog = await columnByName(asOwner, 'Backlog');
+        const todo = await columnByName(asOwner, 'Todo');
+        const issue = (await createIssue(asOwner, backlog.id)).data!;
+        const res = await asOwner
+          .projects({ projectKey: 'MKT' })
+          .columns({ columnId: backlog.id })
+          .delete(mode === 'move' ? { mode, targetColumnId: todo.id } : { mode });
+        expect(res.status).toBe(400);
+        expect((await columnsOf(asOwner)).map((c) => c.id)).toContain(backlog.id);
+        expect((await asOwner.issues({ issueId: issue.id }).get()).data?.columnId).toBe(backlog.id);
+      },
+    );
+
+    it('keeps one backlog when two backlog deletions arrive together', async () => {
+      const { asOwner } = await setupProject();
+      const backlog = await columnByName(asOwner, 'Backlog');
+      const extra = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          .columns.post({ name: 'Triage', stateType: 'backlog' })
+      ).data!;
+
+      const results = await Promise.all(
+        [backlog.id, extra.id].map((columnId) =>
+          asOwner.projects({ projectKey: 'MKT' }).columns({ columnId }).delete({ mode: 'delete' }),
+        ),
+      );
+      expect(results.map((r) => r.status).sort()).toEqual([204, 400]);
+      expect((await columnsOf(asOwner)).filter((c) => c.stateType === 'backlog')).toHaveLength(1);
     });
 
     it('rejects a move whose target is in another project', async () => {

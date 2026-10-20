@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { teamPath } from '@/utils/paths';
 import { useTeamsQuery } from '@/services/teams.service';
 import { useWorkspacesQuery } from '@/services/workspaces.service';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import NewTeamModal from './components/NewTeamModal';
 import TeamsPageView from './components/TeamsPageView';
 import TeamsRail from './components/TeamsRail';
@@ -30,6 +31,7 @@ export default function ManageTeamsLayout({ children }: { children: ReactNode })
   const workspace = workspaces.find((entry) => entry.id === routeWorkspaceId) ?? workspaces[0];
   const teams = data ?? [];
   const [creating, setCreating] = useState(false);
+  useDocumentTitle(t('label'), 'section');
 
   return (
     <TeamsPageView

@@ -162,6 +162,25 @@ describe('repository provider events', () => {
     });
   });
 
+  it('links a Forgejo branch under /src/branch/', () => {
+    const headers = { 'x-forgejo-event': 'create', 'x-gitea-event': 'create' };
+    const provider = detectProvider(headers)!;
+    expect(
+      provider.parse(
+        {
+          ref: 'feature/MKT-42-summary',
+          ref_type: 'branch',
+          sha: 'abc123',
+          repository: { full_name: 'acme/site', html_url: 'https://git.example/acme/site' },
+        },
+        headers,
+      ),
+    ).toMatchObject({
+      kind: 'branch',
+      url: 'https://git.example/acme/site/src/branch/feature/MKT-42-summary',
+    });
+  });
+
   it('normalizes a new GitLab branch push', () => {
     const headers = { 'x-gitlab-event': 'Push Hook' };
     const provider = detectProvider(headers)!;

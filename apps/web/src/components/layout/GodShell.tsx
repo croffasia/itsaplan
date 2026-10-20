@@ -2,7 +2,11 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
+import { usePathname } from 'next/navigation';
 import { useSession } from '@/lib/auth-client';
+import { GOD_SECTIONS } from '@/utils/godSections';
+import { useGodSectionText } from '@/hooks/useSectionLabels';
+import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -34,6 +38,10 @@ export default function GodShell({
   useEffect(() => setMounted(true), []);
   const isGod = mounted && session?.user.role === 'god';
   const sessionSettled = mounted && !isPending;
+  const god = useGodSectionText();
+  const slug = usePathname().split('/')[2];
+  const section = GOD_SECTIONS.find((entry) => entry.slug === slug);
+  useDocumentTitle(titlePath(t('godMode'), section && god.section(section.slug).label));
 
   return (
     <SidebarProvider defaultOpen={defaultSidebarOpen} className="h-svh overflow-hidden">

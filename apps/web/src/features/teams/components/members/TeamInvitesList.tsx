@@ -14,12 +14,16 @@ export default function TeamInvitesList({
   onRenew,
   canRenew,
   renewingId,
+  onResend,
+  resendingId,
 }: {
   invites: InviteRow[];
   onRevoke: (invite: InviteRow) => void;
   onRenew: (invite: InviteRow) => void;
   canRenew: (invite: InviteRow) => boolean;
   renewingId: number | null;
+  onResend: (invite: InviteRow) => void;
+  resendingId: number | null;
 }) {
   const tMembers = useTranslations('members.invites');
   const byEmail = new Map<string, InviteRow[]>();
@@ -49,6 +53,8 @@ export default function TeamInvitesList({
                   onRevoke={onRevoke}
                   onRenew={canRenew(invite) ? onRenew : undefined}
                   renewing={renewingId === invite.id}
+                  onResend={onResend}
+                  resending={resendingId === invite.id}
                 />
               ))}
             </div>

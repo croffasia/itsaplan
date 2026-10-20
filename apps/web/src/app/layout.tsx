@@ -6,14 +6,15 @@ import { Providers } from '@/components/providers';
 import RuntimeEnvScript from '@/components/runtime-env-script';
 import WhatsNew from '@/features/whats-new/WhatsNew';
 import { localeDirection, type Locale } from '@/i18n/locales';
+import { APP_NAME } from '@/utils/app';
 import './globals.css';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('meta');
   return {
-    title: t('title'),
+    title: APP_NAME,
     description: t('description'),
-    appleWebApp: { title: "It's a Plan", capable: true, statusBarStyle: 'default' },
+    appleWebApp: { title: APP_NAME, capable: true, statusBarStyle: 'default' },
   };
 }
 

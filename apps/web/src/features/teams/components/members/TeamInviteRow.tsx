@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Copy, RefreshCw, X } from 'lucide-react';
+import { Check, Copy, Mail, RefreshCw, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { InviteRow } from '@/lib/api/endpoints/invites';
 import { isInviteExpired } from '@/utils/invites';
@@ -12,18 +12,22 @@ import { Button } from '@/components/ui/button';
 import { formatShortDate } from '@/utils/dates';
 
 // An expired invite's link no longer works, so it offers a renewal in place of copying
-// that link.
+// or mailing that link.
 export default function TeamInviteRow({
   invite,
   onRevoke,
   onRenew,
   renewing,
+  onResend,
+  resending,
 }: {
   invite: InviteRow;
   onRevoke: (invite: InviteRow) => void;
   // Left out when the viewer may not renew this invite: the API would refuse it.
   onRenew?: (invite: InviteRow) => void;
   renewing: boolean;
+  onResend: (invite: InviteRow) => void;
+  resending: boolean;
 }) {
   const t = useTranslations('teams.invite');
   const tManage = useTranslations('teams.manage');
@@ -71,15 +75,27 @@ export default function TeamInviteRow({
             </Button>
           )
         ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-            onClick={copy}
-          >
-            {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-            {copied ? t('copied') : t('copyLink')}
-          </Button>
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+              disabled={resending}
+              onClick={() => onResend(invite)}
+            >
+              <Mail className="size-3.5" />
+              {resending ? t('resendingEmail') : t('resendEmail')}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+              onClick={copy}
+            >
+              {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+              {copied ? t('copied') : t('copyLink')}
+            </Button>
+          </>
         )}
         <Button
           variant="ghost"

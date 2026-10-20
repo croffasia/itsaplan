@@ -145,10 +145,13 @@ export default function DocumentEditor({
     restoreDocument.isPending ||
     setDocumentFavorite.isPending;
   const actionPending = documentAction.pending || providerActionPending;
+  // A session that failed to open holds no local steps, so an action goes with the
+  // page's own version instead of waiting for a session that may never open.
+  const usesSession = editable && !collaboration.openFailed;
   const busy =
     actionPending ||
     saveState === 'saving' ||
-    (editable && (!collaboration.ready || collaboration.status === 'saving'));
+    (usesSession && (!collaboration.ready || collaboration.status === 'saving'));
 
   useEffect(() => {
     const element = titleRef.current;
@@ -164,8 +167,8 @@ export default function DocumentEditor({
 
   const prepareVersion = async () => {
     if (providerActionPending || saveState === 'conflict' || saveState === 'error') return null;
-    const synchronized = editable ? await collaboration.flush() : null;
-    if (editable && !synchronized) return null;
+    const synchronized = usesSession ? await collaboration.flush() : null;
+    if (usesSession && !synchronized) return null;
     const updatedDraft = await save();
     if (dirty && !updatedDraft) return null;
     return updatedDraft?.version ?? synchronized?.version ?? version;

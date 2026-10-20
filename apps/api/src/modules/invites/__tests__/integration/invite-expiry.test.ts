@@ -18,6 +18,26 @@ async function setup() {
 
 const project = (api: Api) => api.projects({ projectKey: 'MKT' });
 
+// A mail provider is set, but nothing listens on its port: every send fails.
+async function failingProvider(api: Api) {
+  const closed = Bun.listen({ hostname: '127.0.0.1', port: 0, socket: { data() {} } });
+  const port = closed.port;
+  closed.stop(true);
+  const configured = await api.god['email-settings'].put({
+    from: 'Test <noreply@example.com>',
+    smtp: {
+      enabled: true,
+      host: '127.0.0.1',
+      port,
+      encryption: 'none',
+      username: '',
+      timeout: 2,
+    },
+    allowProjects: false,
+  });
+  expect(configured.status).toBe(200);
+}
+
 async function backdate(token: string, days: number) {
   await db
     .update(teamInvite)
@@ -226,9 +246,9 @@ describe('renewing an expired invite', () => {
       .invites({ inviteId: old.data!.id })
       .renew.post();
     expect(renewed.status).toBe(201);
+    // No provider here: nothing was sent, and nothing failed.
+    expect(renewed.data).toMatchObject({ emailQueued: false, emailFailed: false });
     expect(renewed.data!.token).not.toBe(old.data!.token);
-    // A team invite has no email of its own: its new link is returned to share.
-    expect(renewed.data!.emailQueued).toBe(false);
     const pending = (await asOwner.teams({ teamId }).invites.get()).data!.filter(
       (i) => i.status === 'pending',
     );
@@ -341,5 +361,127 @@ describe('invite lifetime setting', () => {
     const asGod = authedApi(owner.cookie);
     expect((await asGod.god['auth-settings'].put({ inviteTtlDays: 3651 })).status).toBe(400);
     expect((await asGod.god['auth-settings'].put({ inviteTtlDays: 30 })).status).toBe(200);
+  });
+});
+
+// A team invite that is still valid can be mailed again, the same link; an expired one
+// is renewed instead.
+describe('mailing a team invite again', () => {
+  beforeEach(resetDb);
+
+  it('mails a valid team invite and a project invite of the team', async () => {
+    const { asOwner, teamId } = await setup();
+    const team = await asOwner
+      .teams({ teamId })
+      .invites.post({ email: 'mail@example.com', role: 'member' });
+    const proj = await project(asOwner).invites.post({
+      email: 'mailp@example.com',
+      role: 'member',
+    });
+
+    for (const id of [team.data!.id, proj.data!.id]) {
+      const sent = await asOwner.teams({ teamId }).invites({ inviteId: id }).email.post();
+      expect(sent.status).toBe(200);
+      // The test instance has no mail provider, so nothing goes out and the caller is told.
+      expect(sent.data).toEqual({ emailQueued: false });
+    }
+  });
+
+  it('refuses to mail an expired team invite', async () => {
+    const { asOwner, teamId } = await setup();
+    const team = await asOwner
+      .teams({ teamId })
+      .invites.post({ email: 'late@example.com', role: 'member' });
+    await backdate(team.data!.token, 8);
+
+    const sent = await asOwner.teams({ teamId }).invites({ inviteId: team.data!.id }).email.post();
+    expect(sent.status).toBe(409);
+  });
+
+  it('does not mail an invite of another team', async () => {
+    const { asOwner, teamId } = await setup();
+    const other = await signUpTestUser({ name: 'Other owner' });
+    const asOther = authedApi(other.cookie);
+    const otherTeamId = (await createProject(asOther, { key: 'OPS', name: 'Ops' })).data!.teamId;
+    const foreign = await asOther
+      .teams({ teamId: otherTeamId })
+      .invites.post({ email: 'foreign@example.com', role: 'member' });
+
+    const sent = await asOwner
+      .teams({ teamId })
+      .invites({ inviteId: foreign.data!.id })
+      .email.post();
+    expect(sent.status).toBe(404);
+  });
+
+  it('leaves mailing team invites to whoever runs the team', async () => {
+    const { asOwner, teamId } = await setup();
+    const member = await signUpTestUser({ team: false });
+    const join = await asOwner
+      .teams({ teamId })
+      .invites.post({ email: member.email, role: 'member' });
+    const asMember = authedApi(member.cookie);
+    await asMember.invites({ token: join.data!.token }).accept.post();
+    const other = await asOwner
+      .teams({ teamId })
+      .invites.post({ email: 'x@example.com', role: 'member' });
+
+    const sent = await asMember
+      .teams({ teamId })
+      .invites({ inviteId: other.data!.id })
+      .email.post();
+    expect(sent.status).toBe(403);
+  });
+
+  it('reports a failed send as an error, not as a missing provider', async () => {
+    const { asOwner, teamId } = await setup();
+    await failingProvider(asOwner);
+    const team = await asOwner
+      .teams({ teamId })
+      .invites.post({ email: 'fail@example.com', role: 'member' });
+
+    const sent = await asOwner.teams({ teamId }).invites({ inviteId: team.data!.id }).email.post();
+    expect(sent.status).toBe(502);
+  });
+});
+
+// A failed email is told apart from a missing provider when an invite is created or
+// renewed: the invite stands, and the person is not sent looking for a configuration.
+describe('reporting an invite email that could not be sent', () => {
+  beforeEach(resetDb);
+
+  it('creates a team invite and reports its failed email', async () => {
+    const { asOwner, teamId } = await setup();
+    await failingProvider(asOwner);
+
+    const created = await asOwner
+      .teams({ teamId })
+      .invites.post({ email: 'f@example.com', role: 'member' });
+    expect(created.status).toBe(201);
+    expect(created.data).toMatchObject({ emailQueued: false, emailFailed: true });
+  });
+
+  it('renews an expired team invite and reports its failed email', async () => {
+    const { asOwner, teamId } = await setup();
+    const old = await asOwner
+      .teams({ teamId })
+      .invites.post({ email: 'r@example.com', role: 'member' });
+    await backdate(old.data!.token, 8);
+    await failingProvider(asOwner);
+
+    const renewed = await asOwner
+      .teams({ teamId })
+      .invites({ inviteId: old.data!.id })
+      .renew.post();
+    expect(renewed.status).toBe(201);
+    expect(renewed.data).toMatchObject({ emailQueued: false, emailFailed: true });
+  });
+
+  it('reports no failure where there is no provider at all', async () => {
+    const { asOwner, teamId } = await setup();
+    const created = await asOwner
+      .teams({ teamId })
+      .invites.post({ email: 'n@example.com', role: 'member' });
+    expect(created.data).toMatchObject({ emailQueued: false, emailFailed: false });
   });
 });

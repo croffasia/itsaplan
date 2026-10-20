@@ -108,6 +108,8 @@
     "joinsProject": "加入团队和 {project}",
     "copyLink": "复制链接",
     "copied": "已复制",
+    "resendEmail": "发送邮件",
+    "resendingEmail": "正在发送…",
     "revokeAction": "撤销邀请",
     "revokeTitle": "撤销 {email} 的邀请？",
     "revokeConfirm": "撤销邀请",

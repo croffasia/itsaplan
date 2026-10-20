@@ -1,6 +1,7 @@
 {
   "title": "Документы",
   "newDocument": "Новая страница",
+  "uploadMarkdown": "Загрузить Markdown",
   "favoritePages": "Избранное",
   "newSubpage": "Добавить страницу в {title}",
   "addSubpage": "Добавить подстраницу",
@@ -79,6 +80,8 @@
   "exporting": "Подготовка…",
   "exportFailed": "Не удалось добавить в экспорт все защищённые файлы. Попробуйте ещё раз.",
   "exportTooLarge": "На странице слишком много защищённых файлов или они слишком велики для одного экспорта (максимум 50 файлов и 100 МБ).",
+  "markdownTooLarge": "Файл Markdown слишком большой для одной страницы.",
+  "markdownReadFailed": "Не удалось прочитать файл Markdown.",
   "cancel": "Отмена",
   "publicPages": "Общие",
   "privatePages": "Личные",

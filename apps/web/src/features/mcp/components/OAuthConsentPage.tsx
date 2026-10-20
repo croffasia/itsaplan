@@ -3,12 +3,15 @@
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { authClient, useSession } from '@/lib/auth-client';
 import { useOAuthClientNameQuery } from '../services/oauthClients.service';
 import { consentRequest } from '../utils/consentRequest';
 
 export default function OAuthConsentPage() {
   const t = useTranslations('mcp');
+  const tScreens = useTranslations('meta.screens');
+  useDocumentTitle(tScreens('authorizeApp'));
   const searchParams = useSearchParams();
   // The signed authorization request the server sent the person here with.
   const signed = searchParams.has('sig');

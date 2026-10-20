@@ -926,6 +926,8 @@ function createAuth() {
               grantTypes: ['authorization_code', 'refresh_token'],
               allowDynamicClientRegistration: true,
               allowUnauthenticatedClientRegistration: true,
+              // Claude Code and Cursor send no application_type; "web" would refuse them.
+              clientRegistrationDefaultApplicationType: 'infer',
             }),
           ]
         : []),

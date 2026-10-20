@@ -6,6 +6,7 @@ export const LOCALES = [
   'ru',
   'zh-CN',
   'ar',
+  'fa',
   'fr',
   'pt-BR',
   'id',
@@ -29,6 +30,7 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   ru: 'Русский',
   'zh-CN': '简体中文',
   ar: 'العربية (المصرية)',
+  fa: 'فارسی',
   fr: 'Français',
   'pt-BR': 'Português (Brasil)',
   id: 'Bahasa Indonesia',
@@ -42,6 +44,7 @@ export const LOCALE_FLAGS: Record<Locale, string> = {
   ru: '🇷🇺',
   'zh-CN': '🇨🇳',
   ar: '🇪🇬',
+  fa: '🇮🇷',
   fr: '🇫🇷',
   'pt-BR': '🇧🇷',
   id: '🇮🇩',
@@ -55,7 +58,7 @@ export function isLocale(value: string | undefined | null): value is Locale {
 
 // The languages written right to left. Listed rather than derived from
 // `Intl.Locale`, so adding a language is a deliberate choice of direction.
-const RTL_LOCALES: readonly Locale[] = ['ar'];
+const RTL_LOCALES: readonly Locale[] = ['ar', 'fa'];
 
 // Set on <html> during the server render, so the first paint is already mirrored
 // and the layout does not flip after hydration.

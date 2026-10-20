@@ -66,6 +66,31 @@ export function rethrowDuplicate(err: unknown, what: string): never {
   throw err;
 }
 
+// The status and the { error } body the planner answers an error with. `code` is the
+// one Elysia hands to onError.
+export function errorAnswer(
+  code: unknown,
+  error: unknown,
+): { status: number; body: { error: string; code?: string } } {
+  if (error instanceof HttpError) {
+    const body = error.code ? { error: error.message, code: error.code } : { error: error.message };
+    return { status: error.status, body };
+  }
+  if (code === 'VALIDATION') {
+    // The validator's first message is enough for the UI; the full report is
+    // large JSON that the client would just show verbatim.
+    const first = (error as { all?: { summary?: string }[] }).all?.[0]?.summary;
+    return { status: 400, body: { error: first ?? 'Invalid request body' } };
+  }
+  if (code === 'NOT_FOUND') return { status: 404, body: { error: 'Not found' } };
+  if (pgErrorCode(error) === '23505') {
+    return { status: 409, body: { error: 'A record with this name already exists.' } };
+  }
+  // drizzle puts the failed statement and its parameters in the message, and the public
+  // routes would hand that to anyone.
+  return { status: 500, body: { error: 'Internal server error' } };
+}
+
 // Reads a positive integer from an environment variable, falling back to the default
 // when unset, empty, or not a positive finite number.
 export function intEnv(name: string, fallback: number): number {

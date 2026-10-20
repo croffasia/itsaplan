@@ -1,0 +1,37 @@
+{
+  "title": "صندوق ورودی",
+  "empty": "اعلانی وجود ندارد",
+  "selectNotification": "یک اعلان انتخاب کنید",
+  "backToList": "صندوق ورودی",
+  "filter": "فیلتر",
+  "display": "نمایش",
+  "notificationType": "نوع اعلان",
+  "showRead": "خوانده‌شده‌ها را نشان بده",
+  "showSnoozed": "به‌تعویق‌افتاده‌ها را نشان بده",
+  "markAllRead": "علامت‌گذاری همه به‌عنوان خوانده‌شده",
+  "deleteAllRead": "حذف همه موارد خوانده‌شده",
+  "deleteAllReadCompleted": "حذف همه موارد خوانده‌شده برای تسک‌های تکمیل‌شده",
+  "types": {
+    "assigned": "ارجاع‌شده",
+    "mentioned": "منشن‌شده",
+    "commented": "دیدگاه داده",
+    "state_changed": "وضعیت تغییر کرد"
+  },
+  "actions": {
+    "markRead": "علامت‌گذاری به‌عنوان خوانده‌شده",
+    "markUnread": "علامت‌گذاری به‌عنوان خوانده‌نشده",
+    "snooze": "به تعویق انداختن",
+    "unsnooze": "لغو تعویق",
+    "tomorrow": "فردا",
+    "inAWeek": "یک هفته دیگر",
+    "pickDate": "یک تاریخ انتخاب کنید…"
+  },
+  "event": {
+    "someone": "یک نفر",
+    "assigned": "{who} تسک را به شما ارجاع داد",
+    "mentioned": "{who} شما را منشن کرد",
+    "commented": "{who} دیدگاه داد",
+    "stateChanged": "{who} وضعیت را از {from} به {to} تغییر داد",
+    "stateChangedPlain": "{who} وضعیت را تغییر داد"
+  }
+}

@@ -44,9 +44,11 @@ export const InviteRowResponse = t.Object({
   invitedByEmail: t.Nullable(t.String()),
 });
 
+// emailFailed: a mail provider is set but the invite's email could not go out; the link
+// still works. Without a provider both are false.
 export const InviteCreateResponse = t.Composite([
   InviteRowResponse,
-  t.Object({ emailQueued: t.Boolean() }),
+  t.Object({ emailQueued: t.Boolean(), emailFailed: t.Boolean() }),
 ]);
 
 export const InviteEmailResponse = t.Object({ emailQueued: t.Boolean() });

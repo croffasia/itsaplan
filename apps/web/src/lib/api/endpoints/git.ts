@@ -1,13 +1,14 @@
 import { request } from '@/lib/api/core/client';
 
 // Per-project repository integration settings, shared by every provider.
-// webhookId is the path segment of the payload URL registered on the repository;
-// secret authenticates its deliveries. onMergeColumnId is where an issue closed by a merged pull
+// payloadUrl is the URL registered on the repository, and webhookId its last path
+// segment; secret authenticates its deliveries. onMergeColumnId is where an issue closed by a merged pull
 // request moves (null = the first completed state); onOpenColumnId is where an
 // issue moves when a linked pull request is opened (null = no action).
 export interface GitSettings {
   enabled: boolean;
   webhookId: string;
+  payloadUrl: string;
   secret: string;
   onMergeColumnId: number | null;
   onOpenColumnId: number | null;

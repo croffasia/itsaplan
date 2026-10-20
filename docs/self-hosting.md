@@ -76,6 +76,24 @@ The OAuth redirect URIs that god mode shows include the path. An api on a differ
 registrable domain than the web app (`api.other.com`) does not work: the session cookie
 cannot be shared across sites.
 
+### Git webhooks on a private instance
+
+GitHub, GitLab, Gitea, Forgejo and Bitbucket deliver repository webhooks to
+`<API_URL>/webhooks/git/<id>`. When `API_URL` is reachable only over a VPN or a private
+network, expose that one route on a public hostname at the reverse proxy and set
+`GIT_WEBHOOK_BASE_URL` to its origin:
+
+```
+GIT_WEBHOOK_BASE_URL=https://hooks.example.com
+https://hooks.example.com/webhooks/git/*  ->  api:3000/webhooks/git/*
+```
+
+It changes only the payload URL: the settings page shows it, and the webhooks the instance
+manages through a provider connection are created with it. A connected repository's existing
+webhook is updated in place on the next reconcile: saving the provider token again, or
+regenerating the project's webhook secret. Deliveries are still authenticated by the
+project's secret. Auth, email links, the browser and MCP keep using `API_URL`.
+
 ## Mail
 
 The instance sends password resets, address confirmations, sign-in links and invites through

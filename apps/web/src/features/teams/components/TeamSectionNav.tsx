@@ -25,6 +25,7 @@ import type { Team } from '@/lib/api/endpoints/teams';
 import { cn } from '@/lib/utils';
 import { teamSectionPath, type TeamSection } from '@/utils/paths';
 import { useTeamQuery } from '@/services/teams.service';
+import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
   SectionNav,
   sectionNavIdleClass,
@@ -54,6 +55,7 @@ export default function TeamSectionNav({
 }) {
   const t = useTranslations('teams.sections');
   const tNav = useTranslations('nav');
+  const tScreens = useTranslations('meta.screens');
   const pathname = usePathname();
   const permissions = useTeamQuery(team.id).data?.permissions;
 
@@ -106,7 +108,9 @@ export default function TeamSectionNav({
     ...(team.role === 'owner' ? [section('notifications', t('notifications.title'), Bell)] : []),
   ];
 
-  const activeId = [...top, ...ai, ...bottom].find((entry) => entry.href === pathname)?.id ?? null;
+  const active = [...top, ...ai, ...bottom].find((entry) => entry.href === pathname);
+  const activeId = active?.id ?? null;
+  useDocumentTitle(titlePath(team.name, tScreens('teamSettings'), active?.label));
   const aiActive = ai.some((entry) => entry.id === activeId);
   // Null until the user opens or closes the group themselves; until then it follows
   // whichever section is open.

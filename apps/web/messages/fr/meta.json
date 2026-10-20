@@ -1,4 +1,14 @@
 {
-  "title": "It's a Plan : le suivi de tickets pour les humains et les agents",
-  "description": "Un gestionnaire de tickets open source et auto-hébergé, avec des agents IA intégrés. Confiez le travail à des humains ou à des agents, et pilotez-le via l'API, les webhooks et MCP."
+  "description": "Un gestionnaire de tickets open source et auto-hébergé, avec des agents IA intégrés. Confiez le travail à des humains ou à des agents, et pilotez-le via l'API, les webhooks et MCP.",
+  "screens": {
+    "signIn": "Connexion",
+    "signUp": "Inscription",
+    "forgotPassword": "Mot de passe oublié",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "account": "Compte",
+    "settings": "Paramètres",
+    "teamSettings": "Paramètres de l’équipe",
+    "invitation": "Invitation",
+    "authorizeApp": "Autoriser l’application"
+  }
 }

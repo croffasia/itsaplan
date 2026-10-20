@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { getSharedView } from '@/lib/api/endpoints/share';
+import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 import PublicShareFrame from '@/components/common/page/PublicShareFrame';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import ReadOnlyBoard from './components/public/ReadOnlyBoard';
@@ -20,6 +21,8 @@ export default function PublicBoardPage({ token }: { token: string }) {
     queryFn: () => getSharedView(token),
     retry: false,
   });
+  const shared = query.isError ? undefined : query.data;
+  useDocumentTitle(titlePath(shared?.project.project.name, shared?.view.name));
 
   if (query.isLoading) {
     return (

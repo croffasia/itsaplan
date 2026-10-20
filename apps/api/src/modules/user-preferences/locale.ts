@@ -4,6 +4,7 @@ export const LOCALES = [
   'ru',
   'zh-CN',
   'ar',
+  'fa',
   'fr',
   'pt-BR',
   'id',

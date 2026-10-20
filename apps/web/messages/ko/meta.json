@@ -1,4 +1,14 @@
 {
-  "title": "It's a Plan: 사람과 에이전트를 위한 이슈 트래킹",
-  "description": "AI 에이전트가 내장된 셀프 호스팅 오픈 소스 이슈 트래커입니다. 사람이나 에이전트에게 작업을 할당하고 API, 웹훅, MCP를 통해 작업을 진행할 수 있습니다."
+  "description": "AI 에이전트가 내장된 셀프 호스팅 오픈 소스 이슈 트래커입니다. 사람이나 에이전트에게 작업을 할당하고 API, 웹훅, MCP를 통해 작업을 진행할 수 있습니다.",
+  "screens": {
+    "signIn": "로그인",
+    "signUp": "회원가입",
+    "forgotPassword": "비밀번호 찾기",
+    "resetPassword": "비밀번호 재설정",
+    "account": "계정",
+    "settings": "설정",
+    "teamSettings": "팀 설정",
+    "invitation": "초대",
+    "authorizeApp": "앱 승인"
+  }
 }

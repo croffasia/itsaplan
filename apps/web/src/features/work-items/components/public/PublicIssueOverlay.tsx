@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { getSharedViewIssue } from '@/lib/api/endpoints/share';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import IssueDetailSkeleton from '@/features/issue/components/detail/IssueDetailSkeleton';
 import ReadOnlyIssueDetail from '@/features/issue/components/detail/ReadOnlyIssueDetail';
@@ -35,6 +36,8 @@ export default function PublicIssueOverlay({
     enabled: issueId != null,
     retry: false,
   });
+  const issue = issueId != null && !query.isError ? query.data?.issue : undefined;
+  useDocumentTitle(issue ? `${issue.identifier} ${issue.title}` : null, 'panel');
 
   return (
     <Dialog open={issueId != null} onOpenChange={(open) => !open && onClose()}>

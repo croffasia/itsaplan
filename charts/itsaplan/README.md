@@ -184,6 +184,7 @@ bot:
 | `api.env.API_URL`                     | Public API origin                                         | `""`                             |
 | `api.env.APP_URL`                     | Public web origin                                         | `""`                             |
 | `api.env.COOKIE_DOMAIN`               | Cookie domain override                                    | (unset)                          |
+| `api.env.GIT_WEBHOOK_BASE_URL`        | Public origin for incoming Git webhooks                   | (unset, uses `API_URL`)          |
 | `api.env.S3_BUCKET`                   | S3 bucket name                                            | `""`                             |
 | `api.env.S3_REGION`                   | S3 region                                                 | `us-east-1`                      |
 | `api.env.S3_FORCE_PATH_STYLE`         | S3 path-style access                                      | `"true"`                         |

@@ -13,6 +13,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useSettingsNavGroups } from '@/hooks/useSettingsNavGroups';
 import { useShellProject } from '@/hooks/useShellProject';
 import { useShellRoute } from '@/hooks/useShellRoute';
+import { useShellTitle } from '@/hooks/useShellTitle';
 import { useAppBadge } from '@/hooks/useAppBadge';
 import { useProjectRouteSync } from '@/hooks/useProjectRouteSync';
 import { projectPath, issuePath } from '@/utils/paths';
@@ -53,6 +54,7 @@ export default function Shell({
     project,
     filteredProject,
     views,
+    viewsFailed,
     editor,
     customFields,
     canCreateIssue,
@@ -60,6 +62,15 @@ export default function Shell({
     forbidden,
   } = useShellProject(projectKey, route.activeViewId);
   useAppBadge(projects.map((item) => item.id));
+  const projectName = project?.project.name ?? t('project');
+  // A failed read keeps the last data, so a project that became unreadable is named
+  // generically.
+  const unreadable = forbidden || !!errorMsg;
+  useShellTitle(
+    route,
+    unreadable ? t('project') : projectName,
+    unreadable || viewsFailed ? [] : views,
+  );
   const teamId = project?.project.teamId;
   const issueRefs = useMemo(
     () => projects.filter((item) => item.teamId === teamId).map((item) => item.ref),
@@ -173,7 +184,7 @@ export default function Shell({
             title={
               <ShellHeaderTitle
                 route={route}
-                projectName={project?.project.name ?? t('project')}
+                projectName={projectName}
                 issueIdentifier={issueQuery.data?.identifier ?? null}
                 issueParent={issueQuery.data?.parent ?? null}
               />

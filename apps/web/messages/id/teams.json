@@ -108,6 +108,8 @@
     "joinsProject": "Bergabung ke tim dan {project}",
     "copyLink": "Salin tautan",
     "copied": "Disalin",
+    "resendEmail": "Kirim email",
+    "resendingEmail": "Mengirim…",
     "revokeAction": "Cabut undangan",
     "revokeTitle": "Cabut undangan untuk {email}?",
     "revokeConfirm": "Cabut undangan",

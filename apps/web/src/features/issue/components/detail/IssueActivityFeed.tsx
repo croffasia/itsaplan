@@ -46,6 +46,32 @@ export default function IssueActivityFeed({
   };
   const emptyText = tIssue(EMPTY_TEXT[view.tab]);
 
+  let content;
+  if (view.tab === 'agentRuns') {
+    content = <IssueAgentRunsPanel issueId={issueId} canRead={canReadAgentRuns} />;
+  } else if (view.grouped) {
+    content = (
+      <IssueGroupedFeed
+        issueId={issueId}
+        slice={view.slice}
+        columns={columns}
+        imageByUserId={imageByUserId}
+        composer={composer}
+        emptyText={emptyText}
+      />
+    );
+  } else {
+    content = (
+      <IssueFeedList
+        issueId={issueId}
+        slice={view.slice}
+        imageByUserId={imageByUserId}
+        composer={composer}
+        emptyText={emptyText}
+      />
+    );
+  }
+
   return (
     <div className="mt-6 border-t pt-5">
       <h3 className="mb-4 text-xs font-medium tracking-wide text-muted-foreground uppercase">
@@ -61,28 +87,7 @@ export default function IssueActivityFeed({
           className="mt-5 gap-3"
         >
           <IssueActivityToolbar issueId={issueId} view={view} canReadAgentRuns={canReadAgentRuns} />
-          <TabsContent value={view.tab}>
-            {view.tab === 'agentRuns' ? (
-              <IssueAgentRunsPanel issueId={issueId} canRead={canReadAgentRuns} />
-            ) : view.grouped ? (
-              <IssueGroupedFeed
-                issueId={issueId}
-                slice={view.slice}
-                columns={columns}
-                imageByUserId={imageByUserId}
-                composer={composer}
-                emptyText={emptyText}
-              />
-            ) : (
-              <IssueFeedList
-                issueId={issueId}
-                slice={view.slice}
-                imageByUserId={imageByUserId}
-                composer={composer}
-                emptyText={emptyText}
-              />
-            )}
-          </TabsContent>
+          <TabsContent value={view.tab}>{content}</TabsContent>
         </Tabs>
       )}
     </div>

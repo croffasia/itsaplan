@@ -16,12 +16,15 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
 - **`@/cloud` is the seam for the hosted edition.** It resolves to `src/ce/index.ts`, which
   exports what a self-hosted instance runs. A cloud-only part is imported from there and
   nowhere else. `useWorkspaceSections(workspace, core)` returns a workspace's settings menu,
-  shown by `WorkspaceSectionNav`: here the core's sections as they are, while the hosted
-  build adds its own at any position or drops some. One it adds carries in `Component` the
+  shown by `WorkspaceSectionNav`: here the core's sections, then previews of the
+  dashboard, the AI budgets and the audit log, and for the owner of email domains, single
+  sign-on and SCIM (`components/common/page/SectionPreview`), while the hosted build adds
+  its own at any position or drops some. One it adds carries in `Component` the
   page `/workspaces/:id/:sectionId` opens; that page answers 404 only once the workspace and
   every query in flight have loaded, so a section that waits on a query of its own opens
   from a direct link. Every section names its group: an `overview` one sits at the top of
-  the menu, a `settings` one in the folding Settings group below, each in the order given.
+  the menu, a `settings` one in the folding Settings group below, a `history` one below that
+  group, each in the order given.
   `/workspaces/:id` names no section and opens the first entry of the menu, so the order
   also decides the page a workspace opens on.
   `NoTeamStart` is the start page of an account with no team and no workspace it owns,
@@ -30,12 +33,17 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   than one workspace per person is available. `ShellNotice` is a strip under the top bar of
   the app shell, god mode and the teams pages; here it shows nothing, while the hosted
   build shows notices about the instance there. `godSections(core)` returns the god mode
-  sections: here the core's as they are, while the hosted build adds, replaces or drops
-  some. One it adds carries in `Component` the page `/god/<slug>` opens. The instance's
+  sections: here the core's and a preview of the audit log, in a `security` group, while
+  the hosted build adds, replaces or drops some. One it adds carries in `Component` the
+  page `/god/<slug>` opens, and may sit in a group of its own: the sidebar lists the groups
+  in the order their first section comes, each named in `sections.godGroups`. The instance's
   SCIM is set up in god mode; the hosted build that also sets it up per workspace adds
   `WorkspaceScimSection` through `useWorkspaceSections`. `SignInExtras` sits among the sign-in methods, after the
-  instance's own provider; here it adds nothing, while the hosted build offers a sign-in
-  through providers of its own. A sign-in that comes back with a code the core does not
+  instance's own provider, on the sign-in screen and on the invite screen, where it gets the
+  invited address as `email`; here it adds nothing, while the hosted build offers a sign-in
+  through providers of its own. `SignInPage` is what `/login/<name>` shows, a sign-in page under a
+  name of its own; here every name answers 404, while the hosted build can show the sign-in
+  form there under a title of its own (`AuthLoginForm`'s `title`). A sign-in that comes back with a code the core does not
   know shows the text the build's messages give it under `auth.errors.codes.<code>`.
   `GodSectionExtras` renders at the end of every god section page, by its slug, for settings the hosted build adds to an existing section; `WorkspaceSectionExtras`
   does the same on a workspace's own settings pages (`general`, `managers`), with the
@@ -123,6 +131,12 @@ next-intl, language from the `NEXT_LOCALE` cookie — no `[locale]` route segmen
 
 - Prefer Server Components and server-side data fetching; reach for client components only for
   interactivity/hooks.
+- **A screen names itself in the browser tab with `useDocumentTitle`.** The shell names the
+  section (`useShellTitle`), a detail page its entity, and an issue side panel its issue over
+  both; `titlePath(...)` builds `Project › Section` and gives null while a part is missing. An
+  entity read that failed passes null, so the tab never names what the screen cannot show.
+  A server-rendered page renders `components/common/DocumentTitle`. Never set `metadata.title`
+  per route: the hook owns `document.title`.
 - A screen that has to stay live calls `useLiveRefresh({ scope, targets })` with a scope from
   `@/utils/revScopes` — never its own polling. `SyncProvider` polls every registered scope in one
   request and invalidates the targets of the ones that moved.

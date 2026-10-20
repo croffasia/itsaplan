@@ -16,7 +16,7 @@ export function CalendarMonthNav({
   return (
     <div className="mb-3 flex items-center gap-2">
       <h2 className="text-sm font-medium text-foreground">
-        {format.dateTime(cursor, { month: 'long', year: 'numeric' })}
+        {format.dateTime(cursor, { month: 'long', year: 'numeric', calendar: 'gregory' })}
       </h2>
       <div className="flex items-center gap-1">
         <Tooltip>

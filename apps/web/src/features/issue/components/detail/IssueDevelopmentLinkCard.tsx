@@ -75,6 +75,7 @@ export default function IssueDevelopmentLinkCard({
               date: format.dateTime(new Date(link.updatedAt), {
                 dateStyle: 'medium',
                 timeStyle: 'short',
+                calendar: 'gregory',
               }),
             })}
           </time>

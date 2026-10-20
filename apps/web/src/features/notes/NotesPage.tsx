@@ -9,6 +9,7 @@ import { ReactFlowProvider } from '@xyflow/react';
 import { useShell } from '@/context/shellContext';
 import { ApiError } from '@/lib/api/core/client';
 import { usePermissions } from '@/hooks/usePermissions';
+import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { notePath, notesPath } from '@/utils/paths';
 import { qk } from '@/services/queryKeys';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -66,6 +67,7 @@ export default function NotesPage() {
   const activeBoardId = routeId ?? tabs[0]?.id ?? null;
 
   const { data: activeBoard, isError, error } = useNoteBoardQuery(projectKey, activeBoardId);
+  useDocumentTitle(titlePath(project?.project.name, !isError && activeBoard?.name));
 
   // Record the opened board as most-recent once it loads. Also refreshes its cached
   // tab label and visibility, healing a stale MRU entry (renamed elsewhere).

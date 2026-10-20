@@ -1,51 +1,6 @@
+import { transliterate } from '@/utils/transliterate';
+
 export const KEY_MAX_LENGTH = 10;
-
-// Cyrillic → Latin transliteration so a Russian/Ukrainian name still yields a
-// Latin key (keys appear in issue identifiers like "IAP-14"). Multi-letter
-// mappings must be applied before the regex that keeps only [A-Z0-9].
-const TRANSLIT: Record<string, string> = {
-  А: 'A',
-  Б: 'B',
-  В: 'V',
-  Г: 'G',
-  Ґ: 'G',
-  Д: 'D',
-  Е: 'E',
-  Ё: 'E',
-  Є: 'E',
-  Ж: 'ZH',
-  З: 'Z',
-  И: 'I',
-  І: 'I',
-  Ї: 'I',
-  Й: 'Y',
-  К: 'K',
-  Л: 'L',
-  М: 'M',
-  Н: 'N',
-  О: 'O',
-  П: 'P',
-  Р: 'R',
-  С: 'S',
-  Т: 'T',
-  У: 'U',
-  Ф: 'F',
-  Х: 'KH',
-  Ц: 'TS',
-  Ч: 'CH',
-  Ш: 'SH',
-  Щ: 'SCH',
-  Ъ: '',
-  Ы: 'Y',
-  Ь: '',
-  Э: 'E',
-  Ю: 'YU',
-  Я: 'YA',
-};
-
-export function transliterate(input: string): string {
-  return input.replace(/[а-яёіїєґ]/gi, (ch) => TRANSLIT[ch.toUpperCase()] ?? ch);
-}
 
 // Suggests a short project key from the name, in the style of Jira/Linear:
 // several words become their initials (e.g. "Marketing Team" → "MT"), a single

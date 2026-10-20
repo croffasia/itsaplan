@@ -5,6 +5,7 @@ import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
 import { requireUser, type AuthUser } from '#shared/access';
 import { inviteValidSince } from '@repo/auth';
+import { hasConfiguredEmailProvider } from '@repo/db';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { getRole } from '#modules/roles/service';
@@ -14,7 +15,6 @@ import {
   InviteCreateResponse,
   InviteEmailResponse,
   InviteRowListResponse,
-  InviteRowResponse,
   InviteViewResponse,
   createInviteBody,
   createTeamInviteBody,
@@ -36,9 +36,8 @@ import {
   renewInvite,
   acceptInvite,
   rejectInvite,
-  type InviteRow,
 } from './service';
-import { enqueueInviteEmail, type InviteProject } from './email';
+import { enqueueInviteEmail, sendTeamInviteEmail } from './email';
 
 // Shared by accept and reject: an invite is actionable only by the account whose
 // email it names, and only while it is still pending.
@@ -73,14 +72,17 @@ async function assertStillGrantable(invite: {
   }
 }
 
-// Creating or renewing the invite link is the primary operation. A transient outbox
-// failure must not discard a valid link that can still be copied.
-async function queueEmail(project: InviteProject, invite: InviteRow): Promise<boolean> {
+// What a created or renewed invite reports about its email. Without a provider nothing
+// was sent and the link is to be shared by hand; a provider whose send fails is told
+// apart, so nobody goes looking for a missing configuration.
+async function mailOutcome(send: () => Promise<boolean>) {
+  if (!(await hasConfiguredEmailProvider())) return { emailQueued: false, emailFailed: false };
   try {
-    return await enqueueInviteEmail(project, invite);
+    const sent = await send();
+    return { emailQueued: sent, emailFailed: !sent };
   } catch (err) {
-    console.error('[invites] email enqueue failed:', err);
-    return false;
+    console.error('[invites] invite email failed:', err);
+    return { emailQueued: false, emailFailed: true };
   }
 }
 
@@ -130,9 +132,11 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
         roleId,
         invitedByUserId: invitedBy,
       });
-      const emailQueued = await queueEmail(project, invite);
+      // Creating the invite link is the primary operation: a failed email must not
+      // discard a valid link that can still be copied.
+      const email = await mailOutcome(() => enqueueInviteEmail(project, invite));
       set.status = 201;
-      return { ...invite, emailQueued };
+      return { ...invite, ...email };
     },
     {
       body: createInviteBody,
@@ -143,7 +147,8 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
         description:
           'Create an invite link for an email and role (owner or member). For a member, roleId ' +
           "picks the custom role, or null for the default role. Accepting it joins the project's " +
-          'team as well. Queues an email when the instance email provider is configured.',
+          'team as well. Queues an email when the instance email provider is configured; ' +
+          'emailFailed reports an email the provider could not send, the link still valid.',
         ...mcpTool('create_invite'),
       },
     },
@@ -193,9 +198,9 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
         );
       }
       const invite = await renewInvite(grant, renewedBy);
-      const emailQueued = await queueEmail(project, invite);
+      const email = await mailOutcome(() => enqueueInviteEmail(project, invite));
       set.status = 201;
-      return { ...invite, emailQueued };
+      return { ...invite, ...email };
     },
     {
       params: inviteParams,
@@ -265,19 +270,23 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
         roleId: null,
         invitedByUserId: membership.userId,
       });
+      // As for a project invite: the link is the primary result and stays valid.
+      const email = await mailOutcome(() => sendTeamInviteEmail(membership.teamId, invite));
       set.status = 201;
-      return invite;
+      return { ...invite, ...email };
     },
     {
       teamManager: true,
       params: teamParams,
       body: createTeamInviteBody,
-      response: { 201: InviteRowResponse, ...errors(400, 401, 403, 404, 409) },
+      response: { 201: InviteCreateResponse, ...errors(400, 401, 403, 404, 409) },
       detail: {
         summary: 'Invite someone to a team',
         description:
           'Create an invite link into the team, as a member, a manager or an owner. Only an ' +
-          'owner can invite a manager or another owner.',
+          'owner can invite a manager or another owner. Emails the link when the instance ' +
+          'email provider is configured; emailFailed reports an email the provider could not ' +
+          'send, the link still valid.',
       },
     },
   )
@@ -299,8 +308,57 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
     },
   )
 
+  // The team list also shows the invites that name one of its projects, so this mails
+  // those too, as their project would.
+  .post(
+    '/teams/:teamId/invites/:inviteId/email',
+    async ({ membership, params }) => {
+      const grant = await getInviteGrant(params.inviteId);
+      if (!grant || grant.teamId !== membership.teamId) {
+        throw new HttpError(404, 'Invite not found');
+      }
+      const invite = await getInviteById(params.inviteId);
+      if (!invite) throw new HttpError(404, 'Invite not found');
+      if (invite.status !== 'pending') {
+        throw new HttpError(409, 'This invite is no longer pending');
+      }
+      if (invite.expiresAt && new Date(invite.expiresAt) < new Date()) {
+        throw new HttpError(409, 'This invite has expired. Renew it to send a new link.');
+      }
+      // Without a provider there is nothing to send, and the caller is told to share the
+      // link; a provider that fails is an error, not that.
+      if (!(await hasConfiguredEmailProvider())) return { emailQueued: false };
+      if (grant.projectId == null) {
+        if (!(await sendTeamInviteEmail(membership.teamId, invite))) {
+          throw new HttpError(502, 'The invite email could not be sent');
+        }
+        return { emailQueued: true };
+      }
+      if (invite.projectName == null) return { emailQueued: false };
+      return {
+        emailQueued: await enqueueInviteEmail(
+          { id: grant.projectId, name: invite.projectName },
+          invite,
+        ),
+      };
+    },
+    {
+      teamManager: true,
+      params: teamInviteParams,
+      response: { 200: InviteEmailResponse, ...errors(401, 403, 404, 409, 502) },
+      detail: {
+        summary: 'Send an invite email of the team',
+        description:
+          'Email a pending invite into the team, or into one of its projects, again: the same ' +
+          'link. Returns false when the instance email provider is not configured, and 502 when ' +
+          'it is configured but the email to the team alone could not be sent. An expired ' +
+          'invite is refused: renew it instead.',
+      },
+    },
+  )
+
   // The team list also shows the invites that name one of its projects, so this renews
-  // those too, queueing their email as their project would. A team invite has no email.
+  // those too, mailing them as their project would.
   .post(
     '/teams/:teamId/invites/:inviteId/renew',
     async ({ membership, params, set }) => {
@@ -314,12 +372,13 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       const invite = await renewInvite(grant, membership.userId);
       const { projectId } = grant;
       const projectName = invite.projectName;
-      const emailQueued =
-        projectId != null && projectName != null
-          ? await queueEmail({ id: projectId, name: projectName }, invite)
-          : false;
+      const email = await mailOutcome(async () => {
+        if (projectId == null) return sendTeamInviteEmail(membership.teamId, invite);
+        if (projectName == null) return false;
+        return enqueueInviteEmail({ id: projectId, name: projectName }, invite);
+      });
       set.status = 201;
-      return { ...invite, emailQueued };
+      return { ...invite, ...email };
     },
     {
       teamManager: true,
@@ -330,8 +389,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
         description:
           'Replace an expired invite into the team, or into one of its projects, with a new one ' +
           'for the same email and rank: a new link, valid again for the instance invite ' +
-          'lifetime. Queues the email of a project invite when the instance email provider is ' +
-          'configured; a team invite returns its link to share.',
+          'lifetime. Emails it when the instance email provider is configured.',
       },
     },
   )

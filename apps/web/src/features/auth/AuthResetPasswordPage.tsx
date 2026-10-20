@@ -3,7 +3,7 @@ import AuthResetPasswordForm from './components/reset-password/AuthResetPassword
 
 export default function AuthResetPasswordPage() {
   return (
-    <AuthCard>
+    <AuthCard screen="resetPassword">
       <AuthResetPasswordForm />
     </AuthCard>
   );

@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Search,
   SlidersHorizontal,
+  Upload,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
@@ -66,6 +67,7 @@ export default function DocumentsIndex({
   onSearchChange,
   onTabChange,
   onCreate,
+  onUpload,
   onRetry,
 }: {
   projectKey: string;
@@ -83,6 +85,7 @@ export default function DocumentsIndex({
   onSearchChange: (value: string) => void;
   onTabChange: (tab: DocumentListTab) => void;
   onCreate: (parentId: number | null) => void;
+  onUpload: (file: File) => void;
   onRetry: () => void;
 }) {
   const t = useTranslations('documents');
@@ -102,6 +105,7 @@ export default function DocumentsIndex({
   const setCreatedRange = (range: typeof defaults.range) =>
     setPreferences((p) => ({ ...p, range }));
   const scrollRef = useRef<HTMLDivElement>(null);
+  const uploadInput = useRef<HTMLInputElement>(null);
   const restored = useRef(false);
   const lastScroll = useRef(preferences.scroll);
   useEffect(() => {
@@ -175,16 +179,42 @@ export default function DocumentsIndex({
             </div>
           </div>
           {canCreate && (
-            <Button
-              type="button"
-              size="sm"
-              className="h-8 px-2.5 shadow-none"
-              disabled={creating}
-              onClick={() => onCreate(null)}
-            >
-              {creating ? <LoaderCircle className="animate-spin" /> : <Plus />}
-              <span className="hidden sm:inline">{t('newDocument')}</span>
-            </Button>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <input
+                ref={uploadInput}
+                className="sr-only"
+                type="file"
+                accept=".md,.markdown,text/markdown"
+                aria-label={t('uploadMarkdown')}
+                disabled={creating}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  event.currentTarget.value = '';
+                  if (file) onUpload(file);
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 px-2.5 shadow-none"
+                disabled={creating}
+                onClick={() => uploadInput.current?.click()}
+              >
+                <Upload />
+                <span className="hidden sm:inline">{t('uploadMarkdown')}</span>
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 px-2.5 shadow-none"
+                disabled={creating}
+                onClick={() => onCreate(null)}
+              >
+                {creating ? <LoaderCircle className="animate-spin" /> : <Plus />}
+                <span className="hidden sm:inline">{t('newDocument')}</span>
+              </Button>
+            </div>
           )}
         </div>
       </header>

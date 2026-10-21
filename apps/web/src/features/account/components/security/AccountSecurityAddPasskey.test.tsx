@@ -59,6 +59,7 @@ let added: number;
 let confirmed: number;
 let addCalls: number;
 let passwordInputs: unknown[];
+let magicLinkInputs: unknown[];
 let redirects: string[];
 let addResult: { data: object | null; error: AuthResult['error'] };
 let passwordResult: AuthResult;
@@ -70,7 +71,7 @@ const labels = account.security;
 const succeeded = (): AuthResult => ({ data: { user: { id: userId } }, error: null });
 
 function providers(
-  config: { emailPassword?: boolean; google?: boolean; oidc?: boolean },
+  config: { emailPassword?: boolean; google?: boolean; oidc?: boolean; magicLink?: boolean },
   accounts = [{ providerId: 'credential' }],
 ) {
   client.setQueryData(qk.authConfig, { emailPassword: true, magicLink: false, ...config });
@@ -166,6 +167,7 @@ beforeEach(async () => {
   confirmed = 0;
   addCalls = 0;
   passwordInputs = [];
+  magicLinkInputs = [];
   redirects = [];
   addResult = { data: { id: 'new-key' }, error: null };
   passwordResult = succeeded();
@@ -197,8 +199,9 @@ beforeEach(async () => {
     social: async () => {
       throw new Error('Unexpected provider request');
     },
-    magicLink: async () => {
-      throw new Error('Unexpected magic-link request');
+    magicLink: async (input: unknown) => {
+      magicLinkInputs.push(input);
+      return { data: { status: true }, error: null };
     },
   });
   spies.push(signIn);
@@ -289,14 +292,38 @@ describe('AccountSecurityAddPasskey', () => {
 
 describe('AccountSecurityConfirmSession', () => {
   it('does not offer a password while instance password sign-in is disabled', async () => {
-    providers({ emailPassword: false, google: true }, [
+    providers({ emailPassword: false, google: true, magicLink: true }, [
       { providerId: 'credential' },
       { providerId: 'google' },
     ]);
     await renderConfirmation();
 
     assert.equal(document.querySelector('input[type="password"]'), null);
+    assert.ok(
+      !document.body.textContent?.includes(labels.confirmWithLink),
+      'Email links are unavailable when password sign-in is disabled',
+    );
     assert.ok(document.body.textContent?.includes('Continue with Google'));
+  });
+
+  it('sends a sign-in link for the current email only when both email policies allow it', async () => {
+    providers({ emailPassword: true, magicLink: true });
+    await renderConfirmation();
+    await click(labels.confirmWithLink);
+
+    assert.deepEqual(magicLinkInputs, [
+      {
+        email,
+        callbackURL: 'https://example.test/account/security',
+        errorCallbackURL: 'https://example.test/login',
+      },
+    ]);
+    assert.ok(
+      document.body.textContent?.includes(labels.confirmLinkSent.replace('{email}', email)),
+    );
+    assert.ok(document.querySelector('[role="dialog"]'));
+    assert.equal(confirmed, 0);
+    assert.equal(addCalls, 0);
   });
 
   it('does not offer a password to an account with only a provider credential', async () => {

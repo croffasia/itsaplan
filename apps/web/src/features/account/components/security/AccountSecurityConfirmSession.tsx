@@ -31,6 +31,7 @@ export default function AccountSecurityConfirmSession({
   const keys = usePasskeysQuery();
   const confirm = useConfirmSession(userId, email, onConfirmed);
   const canPassword = config.data?.emailPassword && hasPasswordCredential(accounts.data ?? []);
+  const canMagicLink = config.data?.emailPassword && config.data?.magicLink;
   const providers = (['google', 'oidc'] as const).filter(
     (provider) => config.data?.[provider] && accounts.data?.some((a) => a.providerId === provider),
   );
@@ -88,7 +89,7 @@ export default function AccountSecurityConfirmSession({
           !canPassword &&
           !keys.data?.length &&
           !providers.length &&
-          !config.data?.magicLink && (
+          !canMagicLink && (
             <p role="status" className="text-sm">
               {t('confirmSessionUnavailable')}
             </p>
@@ -115,7 +116,7 @@ export default function AccountSecurityConfirmSession({
               })}
             </Button>
           ))}
-          {config.data?.magicLink && (
+          {canMagicLink && (
             <Button
               variant="outline"
               disabled={confirm.pending || confirm.linkSent}

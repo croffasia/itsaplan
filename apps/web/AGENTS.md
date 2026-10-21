@@ -32,7 +32,11 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   `WorkspaceRailActions` sits below the workspace tiles of a rail; here it says where more
   than one workspace per person is available. `ShellNotice` is a strip under the top bar of
   the app shell, god mode and the teams pages; here it shows nothing, while the hosted
-  build shows notices about the instance there. `godSections(core)` returns the god mode
+  build shows notices about the instance there. `BrandMark` is the product mark at the top
+  and the bottom of both sidebars; here the core's `ItsAPlanMark`, which the hosted build can
+  mark its edition on. `BrandPanel({ subtitle })` is the panel beside the form on the
+  logged-out screens and the invite screen; here the core's, which the hosted build can
+  replace. `godSections(core)` returns the god mode
   sections: here the core's and a preview of the audit log, in a `security` group, while
   the hosted build adds, replaces or drops some. One it adds carries in `Component` the
   page `/god/<slug>` opens, and may sit in a group of its own: the sidebar lists the groups

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import DocumentTitle from '@/components/common/DocumentTitle';
 import { Card, CardContent } from '@/components/ui/card';
-import BrandPanel from '@/components/common/page/BrandPanel';
+import { BrandPanel } from '@/cloud';
 import AuthLegalNotice from './AuthLegalNotice';
 
 // The card shared by every logged-out screen. The forms read the URL (an invite

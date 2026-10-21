@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { db, agentRun } from '@repo/db';
 import { eq, sql } from 'drizzle-orm';
-import { setAgentSettings } from '#modules/settings/service';
+import { getAgentSettings, setAgentSettings } from '#modules/settings/service';
 import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -11,23 +11,39 @@ import { createCredential } from '#tests/helpers/integrations';
 import { claimDueRuns, enqueueAgentRun } from '../../run-queue';
 import { processAgentRuns } from '../../run-poller';
 import { getMastra } from '../../runtime/observability';
+import { setRunAdmission } from '../../run-admission';
 
-// A run that outlasts its time limit. The model endpoint accepts the request and never
-// answers, so the run ends only because its abort signal fires. The instance maximum is
-// set through the service, which skips the route's 10-second floor.
+// The service sets limits below the route's 10-second floor to keep the tests short.
 
 describe('agent run timeout', () => {
   let endpoint: ReturnType<typeof Bun.serve>;
+  let previousLease: string | undefined;
+  let previousSettings: Awaited<ReturnType<typeof getAgentSettings>>;
+  let releaseModel: (() => void) | undefined;
+  let processing: Promise<void> | undefined;
 
   beforeEach(async () => {
     await resetDb();
+    previousLease = process.env.AGENT_RUN_LEASE_SECONDS;
+    previousSettings = await getAgentSettings();
     endpoint = Bun.serve({ port: 0, fetch: () => new Promise<Response>(() => {}) });
   });
 
   afterEach(async () => {
     clearLimits();
-    await endpoint.stop(true);
-    await getMastra().observability.flush();
+    setRunAdmission();
+    if (previousLease === undefined) delete process.env.AGENT_RUN_LEASE_SECONDS;
+    else process.env.AGENT_RUN_LEASE_SECONDS = previousLease;
+    releaseModel?.();
+    try {
+      if (processing) await processing;
+    } finally {
+      await endpoint.stop(true);
+      await setAgentSettings(previousSettings);
+      await getMastra().observability.flush();
+      releaseModel = undefined;
+      processing = undefined;
+    }
   });
 
   async function queueRun(runTimeoutSec: number | null = null) {
@@ -114,5 +130,81 @@ describe('agent run timeout', () => {
       FROM agent_run WHERE issue_id = ${issueId}
     `)) as unknown as { leaseSeconds: number }[];
     expect(leaseSeconds).toBeGreaterThan(1800);
+  });
+
+  it('keeps a raised instance maximum within the lease already claimed', async () => {
+    await endpoint.stop(true);
+    let modelTimer: ReturnType<typeof setTimeout> | undefined;
+    let finishResponse!: () => void;
+    const responseReady = new Promise<void>((resolve) => {
+      finishResponse = resolve;
+    });
+    releaseModel = () => {
+      clearTimeout(modelTimer);
+      finishResponse();
+    };
+    endpoint = Bun.serve({
+      port: 0,
+      async fetch() {
+        modelTimer = setTimeout(finishResponse, 3000);
+        await responseReady;
+        return Response.json({
+          id: 'timeout-test',
+          object: 'chat.completion',
+          created: 0,
+          model: 'any-model',
+          choices: [
+            {
+              index: 0,
+              message: { role: 'assistant', content: 'Done.' },
+              finish_reason: 'stop',
+            },
+          ],
+        });
+      },
+    });
+    const issueId = await queueRun();
+    process.env.AGENT_RUN_LEASE_SECONDS = '1';
+    await setAgentSettings({ maxRunSeconds: 1 });
+    setRunAdmission(async () => {
+      await setAgentSettings({ maxRunSeconds: 1800 });
+      return 0;
+    });
+
+    processing = processAgentRuns();
+    await processing;
+
+    expect(await runOf(issueId)).toMatchObject({
+      status: 'failed',
+      attempts: 1,
+      lastError: 'Timed out after 1s',
+    });
+  }, 10_000);
+
+  it('does not start a run after admission exhausts the claim execution budget', async () => {
+    let modelCalls = 0;
+    await endpoint.stop(true);
+    endpoint = Bun.serve({
+      port: 0,
+      fetch() {
+        modelCalls++;
+        return new Response(null, { status: 500 });
+      },
+    });
+    const issueId = await queueRun();
+    process.env.AGENT_RUN_LEASE_SECONDS = '1';
+    await setAgentSettings({ maxRunSeconds: 1 });
+    setRunAdmission(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1200));
+      return 0;
+    });
+
+    await processAgentRuns();
+
+    expect(modelCalls).toBe(0);
+    expect(await runOf(issueId)).toMatchObject({
+      status: 'pending',
+      executionStartedAt: null,
+    });
   });
 });

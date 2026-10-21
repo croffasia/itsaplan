@@ -109,6 +109,8 @@ export interface ClaimedRun {
   agentUserId: string;
   // The agent's own run time limit, null when it uses the instance's maximum.
   agentRunTimeoutSec: number | null;
+  // Monotonic deadline that leaves the claim's margin for recording the outcome.
+  executionDeadline: number;
   // The agent's own handle, so the prompt can tell whether the text addressed it.
   agentUsername: string;
   // The issue's human-readable key ("MKT-42") and title, read inline so the poller can
@@ -142,6 +144,7 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
     agentRunConfig.leaseSeconds(),
     (await getAgentSettings()).maxRunSeconds + LEASE_MARGIN_SECONDS,
   );
+  const executionDeadline = performance.now() + (leaseSeconds - LEASE_MARGIN_SECONDS) * 1000;
   const rows = await db.execute(sql`
     UPDATE agent_run r
     SET attempts = r.attempts + 1,
@@ -191,6 +194,7 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
   return Promise.all(
     runs.map(async (run) => ({
       ...run,
+      executionDeadline,
       threadContext: await loadThreadContext(run.sourceActivityId),
     })),
   );

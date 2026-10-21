@@ -62,14 +62,23 @@ async function processRun(run: ClaimedRun): Promise<void> {
   // The issue's timeline entries are written here, where the agent's work actually
   // starts and ends. A failure that will be retried is not the end of the run, so only
   // the last attempt logs one.
-  const timeoutMs = runTimeoutMs(
+  const configuredTimeoutMs = runTimeoutMs(
     run.agentRunTimeoutSec,
     (await getAgentSettings()).maxRunSeconds,
     maxRunSeconds,
   );
+  if (run.executionDeadline <= performance.now()) return;
   try {
     await agentRunStarted(run);
     if (!(await markRunExecuting(run.id, run.attempts))) return;
+    const timeoutMs = Math.floor(
+      Math.min(configuredTimeoutMs, run.executionDeadline - performance.now()),
+    );
+    if (timeoutMs <= 0) {
+      await recordAgentRunFinished(run, 'failed');
+      await markRunFailed(run.id, 'Claim execution budget exhausted');
+      return;
+    }
     const result = await runAgent(run.agentId, run.projectId, framePrompt(run), {
       callerUserId: run.agentUserId,
       threadId: runThreadId(run),

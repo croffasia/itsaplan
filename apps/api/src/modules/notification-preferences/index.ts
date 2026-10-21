@@ -3,7 +3,7 @@ import { guards } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
 import { requireUser } from '#shared/access';
 import { accessErrors, commonErrors } from '#shared/responses';
-import { NotificationPreferenceBody } from './model';
+import { NotificationPreferenceBody, NotificationPreferenceUpdateBody } from './model';
 import { getPreferences, setPreferences } from './service';
 
 // A member's own notification preferences for a project: which issue events they want
@@ -36,7 +36,7 @@ export const notificationPreferenceRoutes = new Elysia({
     '/projects/:projectKey/notification-preferences',
     ({ project, user, body }) => setPreferences(requireUser(user).id, project.id, body),
     {
-      body: NotificationPreferenceBody,
+      body: NotificationPreferenceUpdateBody,
       projectMember: true,
       response: { 200: NotificationPreferenceBody, ...commonErrors },
       detail: {

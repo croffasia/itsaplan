@@ -12,13 +12,14 @@ import {
   type NotificationConfig,
 } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
+import { pinnedFetch, UrlNotAllowedError } from '@repo/net';
 import { sendEmail, emailBody, type EmailConfig, type SendResult } from '@repo/mailer';
 
 // Sends one claimed notification_delivery row over its channel. Email transport lives
 // in @repo/mailer (shared with the authentication mail sent from @repo/auth); Telegram
-// and Apprise are only used here, so they stay in this file. A team that set no bot token of its own
-// sends through the instance bot, the same one members link their Telegram accounts
-// through. Adding a channel is a new branch here plus a compose function in the api's
+// and Apprise are only used here, so they stay in this file. A team that set no bot
+// token of its own sends through the instance bot, the same one members link their
+// Telegram accounts through. Adding a channel is a new branch here plus a compose function in the api's
 // outbound.ts; nothing else changes. The result tells the caller whether a failure is
 // worth retrying (transient: network error, timeout, rate limit, server error) or
 // permanent (bad credentials, rejected recipient, misconfiguration).
@@ -122,10 +123,10 @@ async function sendApprise(input: SendInput): Promise<SendResult> {
     ? `${input.payload.text}\n\n${input.payload.url}`
     : input.payload.text;
   try {
-    const res = await fetch(apprise.url, {
+    const res = await pinnedFetch(apprise.url, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      signal: AbortSignal.timeout(15_000),
+      timeoutMs: 15_000,
       body: JSON.stringify({
         title: input.payload.subject ?? '',
         body,
@@ -142,7 +143,7 @@ async function sendApprise(input: SendInput): Promise<SendResult> {
   } catch (err) {
     return {
       ok: false,
-      retryable: true,
+      retryable: !(err instanceof UrlNotAllowedError),
       error: err instanceof Error ? err.message : 'apprise request failed',
     };
   }

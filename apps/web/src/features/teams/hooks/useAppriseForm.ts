@@ -17,8 +17,6 @@ export interface AppriseForm {
   save: () => Promise<void>;
 }
 
-// Form state for the Apprise notification provider tab. The URL is sent only when
-// changed.
 export function useAppriseForm(teamId: number, settings: NotificationSettings): AppriseForm {
   const t = useTranslations('teams.notifications');
   const update = useUpdateNotificationSettings(teamId);

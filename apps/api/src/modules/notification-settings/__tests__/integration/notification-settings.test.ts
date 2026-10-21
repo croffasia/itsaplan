@@ -74,9 +74,19 @@ describe('notification settings', () => {
     expect(res.status).toBe(400);
   });
 
+  it('rejects an Apprise URL on a private address', async () => {
+    const { api, teamId } = await ownedTeam();
+
+    const res = await api.teams({ teamId })['notification-settings'].put({
+      apprise: { enabled: true, url: 'http://127.0.0.1:8000/notify/key' },
+    });
+
+    expect(res.status).toBe(400);
+  });
+
   it('keeps the stored Apprise URL when the field is left blank', async () => {
     const { api, teamId } = await ownedTeam();
-    const url = 'https://apprise.example.com/notify/key';
+    const url = 'https://93.184.216.34/notify/key';
 
     const saved = await api
       .teams({ teamId })

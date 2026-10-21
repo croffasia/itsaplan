@@ -8,6 +8,7 @@ import {
 import { eq, sql } from 'drizzle-orm';
 import { encryptSecret } from '@repo/crypto';
 import { HttpError } from '#shared/lib';
+import { assertPublicHttpUrl } from '#shared/net';
 
 // The settings UI over a team's notification provider credentials: the outbound
 // channels every project of the team delivers through (SMTP or Resend for email, a
@@ -149,11 +150,8 @@ function assertSendable(config: NotificationConfig): void {
   if (config.resend.enabled && config.resend.apiKey.length === 0) {
     throw new HttpError(400, 'A Resend API key is required');
   }
-  if (config.apprise.enabled) {
-    if (config.apprise.url.length === 0) throw new HttpError(400, 'An Apprise URL is required');
-    if (!/^https?:\/\//i.test(config.apprise.url)) {
-      throw new HttpError(400, 'The Apprise URL must start with http:// or https://');
-    }
+  if (config.apprise.enabled && config.apprise.url.length === 0) {
+    throw new HttpError(400, 'An Apprise URL is required');
   }
 }
 
@@ -172,6 +170,7 @@ export async function setNotificationSettings(
   const current = (await readNotificationConfig(teamId)) ?? defaultNotificationConfig();
   const next = applyPatch(current, patch);
   assertSendable(next);
+  if (next.apprise.enabled) await assertPublicHttpUrl(next.apprise.url);
   const redacted = toDto(next);
   const enc = encryptSecret(JSON.stringify(next));
   await db

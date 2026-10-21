@@ -8,10 +8,11 @@ import type { NotificationPreferencesForm } from '../../hooks/useNotificationPre
 import { useTranslations } from 'next-intl';
 
 // A member's own notification preferences for the project: for each issue event, a
-// checkbox per channel (email, Telegram, Apprise). Visible to every member (each edits only
-// their own). Email is sent to the account address; Telegram to the account connected
-// in the member's profile, shown below; Apprise to the team's Apprise API. Delivery only happens for channels a project
-// owner has configured. Save lives in the page header.
+// checkbox per channel (email, Telegram, Apprise). Visible to every member (each edits
+// only their own). Email is sent to the account address; Telegram to the account
+// connected in the member's profile, shown below; Apprise to the team's Apprise API.
+// Delivery only happens for channels a project owner has configured. Save lives in the
+// page header.
 
 // Shared column template so the header labels line up with every event row.
 const COLS = 'grid grid-cols-[1fr_5rem_5rem_5rem] items-center';

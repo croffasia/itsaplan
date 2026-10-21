@@ -76,21 +76,27 @@ export async function getPreferences(
 export async function setPreferences(
   userId: string,
   projectId: number,
-  input: NotificationPreferenceDto,
+  input: Omit<NotificationPreferenceDto, 'appriseEvents'> &
+    Partial<Pick<NotificationPreferenceDto, 'appriseEvents'>>,
 ): Promise<NotificationPreferenceDto> {
-  const values = {
-    emailEvents: input.emailEvents,
-    telegramEvents: input.telegramEvents,
-    appriseEvents: input.appriseEvents,
-  };
-  await db
+  const values = { emailEvents: input.emailEvents, telegramEvents: input.telegramEvents };
+  const [row] = await db
     .insert(userNotificationPreference)
-    .values({ userId, projectId, ...values })
+    .values({ userId, projectId, ...values, appriseEvents: input.appriseEvents ?? emptyEvents() })
     .onConflictDoUpdate({
       target: [userNotificationPreference.userId, userNotificationPreference.projectId],
-      set: { ...values, updatedAt: sql`now()` },
+      set: {
+        ...values,
+        ...(input.appriseEvents ? { appriseEvents: input.appriseEvents } : {}),
+        updatedAt: sql`now()`,
+      },
+    })
+    .returning({
+      emailEvents: userNotificationPreference.emailEvents,
+      telegramEvents: userNotificationPreference.telegramEvents,
+      appriseEvents: userNotificationPreference.appriseEvents,
     });
-  return toDto(values);
+  return toDto(row!);
 }
 
 // Preferences for a set of members of one project, keyed by user id. Missing members

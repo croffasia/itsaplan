@@ -24,6 +24,7 @@ export default function AppriseSettings({ form }: { form: AppriseForm }) {
           hasStored={settings.apprise.hasUrl}
           placeholder="https://apprise.example.com/notify/your-key"
         />
+        <p className="text-xs text-muted-foreground">{t('appriseUrlHint')}</p>
       </div>
     </SettingsSection>
   );

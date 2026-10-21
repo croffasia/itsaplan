@@ -145,6 +145,22 @@ and sends as the mailbox over XOAUTH2. An empty server is filled with
 Then paste the tenant ID, the client ID and the secret into the page and send a test. A
 refused token is reported as rejected credentials and is not retried.
 
+## Notifications through Apprise
+
+A team owner can send notifications through an [Apprise](https://github.com/caronc/apprise)
+API server, which reaches most chat and push services without a provider of its own here.
+Under the team's **Notifications → Apprise**, set the notify URL of the Apprise API, for
+example `https://apprise.example.com/notify/<key>`. Members then choose the events they want
+through Apprise in their notification preferences.
+
+Each message is posted as JSON (`title`, `body`, `tag`) with the member's user id as the
+`tag`, so the Apprise configuration behind that key decides where each member's messages go.
+
+The URL is checked when it is saved and again at delivery, with the same rules as webhook
+targets: it must use https and must not point to a private address. For an Apprise server on
+your own network, serve it over https and list its host in `SSRF_ALLOWED_HOSTS` on both the
+api and the worker (see `.env.example`).
+
 ## Single sign-on
 
 Any provider with an OpenID Connect discovery document works: Keycloak, Authentik, KanIDM,

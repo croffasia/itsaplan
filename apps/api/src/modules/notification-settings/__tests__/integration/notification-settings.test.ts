@@ -78,7 +78,7 @@ describe('notification settings', () => {
     const { api, teamId } = await ownedTeam();
 
     const res = await api.teams({ teamId })['notification-settings'].put({
-      apprise: { enabled: true, url: 'http://127.0.0.1:8000/notify/key' },
+      apprise: { enabled: true, url: 'https://127.0.0.1:8000/notify/key' },
     });
 
     expect(res.status).toBe(400);

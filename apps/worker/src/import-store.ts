@@ -320,6 +320,26 @@ export interface ImportRecordRow {
   sourceId: string;
 }
 
+export async function listImportRecords(
+  jobId: number,
+  entityType: ImportEntityType,
+  afterId: number,
+  limit: number,
+): Promise<ImportRecordRow[]> {
+  return db
+    .select({ id: importRecord.id, sourceId: importRecord.sourceId })
+    .from(importRecord)
+    .where(
+      and(
+        eq(importRecord.importJobId, jobId),
+        eq(importRecord.sourceEntityType, entityType),
+        gt(importRecord.id, afterId),
+      ),
+    )
+    .orderBy(importRecord.id)
+    .limit(limit);
+}
+
 // The next chunk of this job's snapshot that has not been materialized yet,
 // keyset-paginated on import_record's own id — itsaplan's own position in the
 // snapshot list, not the source's pagination cursor (see the notes file). A

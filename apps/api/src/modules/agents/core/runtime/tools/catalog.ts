@@ -352,6 +352,10 @@ export const ALWAYS_ON_ACTIONS: ToolMeta[] = [
     group: 'project',
     label: 'Read project activity',
     description: 'Read the comments and changes across all issues of the project, by period.',
+    overrides: {
+      description:
+        'Read project comments and changes by period, with cursor pagination. Text values are previews of at most 1000 UTF-16 code units; truncatedFields names shortened values and their original lengths. Read list_issue_activity for full historical entries, or get_issue for the current description.',
+    },
     always: true,
   },
   {

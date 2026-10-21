@@ -1,5 +1,5 @@
 import { AnswerStream, UsageReader } from './agui';
-import type { Client, Run } from './client';
+import { RequestError, type Client, type Run } from './client';
 import type { RunnerConfig } from './config';
 import { execute } from './execute';
 
@@ -50,8 +50,20 @@ export async function runTask(config: RunnerConfig, client: Client, run: Run) {
     );
     clearInterval(timer);
     usage.end();
-    if (outcome.status === 'success') await stream.finish(outcome.output);
-    else await stream.fail(outcome.error ?? 'The command failed', outcome.output);
+    try {
+      if (outcome.status === 'success') await stream.finish(outcome.output);
+      else await stream.fail(outcome.error ?? 'The command failed', outcome.output);
+    } catch (error) {
+      if (!isTransientEventError(error)) throw error;
+      try {
+        await stream.flush();
+      } catch (retryError) {
+        if (!isTransientEventError(retryError)) throw retryError;
+        console.error(
+          `Run ${run.id}: trace upload failed; reporting the command result: ${String(retryError)}`,
+        );
+      }
+    }
     // A stream format's stdout is its raw event lines; the run reports the answer read out
     // of them. Plain text is the answer as printed.
     const output = config.outputFormat === 'text' ? outcome.output : stream.answer();
@@ -65,4 +77,14 @@ export async function runTask(config: RunnerConfig, client: Client, run: Run) {
   } finally {
     clearInterval(timer);
   }
+}
+
+function isTransientEventError(error: unknown): boolean {
+  if (error instanceof RequestError) {
+    return error.status === 408 || error.status === 429 || error.status >= 500;
+  }
+  return (
+    error instanceof TypeError ||
+    (error instanceof Error && ['AbortError', 'TimeoutError'].includes(error.name))
+  );
 }

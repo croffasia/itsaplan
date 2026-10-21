@@ -1,0 +1,76 @@
+{
+  "title": "週期",
+  "newCycle": "新建週期",
+  "status": {
+    "upcoming": "即將開始",
+    "active": "進行中",
+    "completed": "已結束"
+  },
+  "views": {
+    "table": "表格",
+    "timeline": "時間軸"
+  },
+  "columns": {
+    "name": "名稱",
+    "dates": "日期",
+    "length": "時長",
+    "issues": "工作項目",
+    "progress": "進度"
+  },
+  "emptyTitle": "暫無週期",
+  "emptyDescription": "週期是團隊安排工作項目的固定時間段。",
+  "nothingPlannedTitle": "暫無週期計畫",
+  "nothingPlannedDescription": "時間軸顯示目前和即將開始的週期，已結束的週期顯示在表格中。",
+  "options": "週期選項",
+  "transferIssues": "轉移 {count} 個未完成的工作項目",
+  "finishedEarly": "提前結束，原計畫至 {date}",
+  "form": {
+    "editTitle": "編輯週期",
+    "newTitle": "新建週期",
+    "name": "名稱",
+    "goal": "目標",
+    "goalPlaceholder": "此週期應交付什麼？",
+    "length": "時長",
+    "starts": "開始日期",
+    "ends": "結束日期",
+    "create": "新建週期",
+    "saveFailed": "無法儲存週期"
+  },
+  "weeks": "{count, plural, other {# 週}}",
+  "transfer": {
+    "title": "轉移未完成的工作項目",
+    "description": "未完成的工作項目會移至所選週期，已完成和已取消的留在這裡。",
+    "moveTo": "移至",
+    "noCycle": "不屬於任何週期",
+    "submit": "移動工作項目",
+    "moving": "正在移動…",
+    "moved": "{count, plural, other {已移動 # 個工作項目}}",
+    "failed": "無法移動工作項目"
+  },
+  "finish": {
+    "action": "結束週期",
+    "title": "提前結束週期",
+    "description": "{cycle} 將於今天結束，而不是 {date}，且無法重新開啟。{count, plural, =0 {沒有未完成的工作項目。} other {# 個未完成的工作項目會留在這裡。}}",
+    "submit": "結束週期"
+  },
+  "startNext": {
+    "action": "今天開始下一個週期",
+    "title": "今天開始下一個週期",
+    "description": "{cycle} 將於今天結束，且無法重新開啟。{next} 從今天開始，結束日期仍為 {date}。{count, plural, =0 {沒有需要轉移的工作項目。} other {# 個未完成的工作項目會轉移過去。}}已完成和已取消的工作項目留在 {cycle}。",
+    "submit": "開始週期",
+    "started": "{cycle} 已開始。{count, plural, =0 {沒有轉移工作項目。} other {已轉移 # 個工作項目。}}"
+  },
+  "delete": {
+    "title": "刪除週期",
+    "description": "{cycle} 將被永久刪除。{count, plural, =0 {裡面沒有工作項目。} other {# 個工作項目會留在專案中，不屬於任何週期。}}"
+  },
+  "details": "週期詳情",
+  "goal": "目標",
+  "noGoal": "未設定目標。",
+  "progress": "進度",
+  "openCycle": "開啟週期",
+  "dragFailed": "無法移動週期",
+  "notFound": "未找到週期。",
+  "defaultName": "迭代 {n}",
+  "issuesDone": "已完成工作項目"
+}

@@ -36,6 +36,9 @@ export type SlashCommandOptions = {
   tableLabel?: string;
   // Omitted where there is nothing to pick from, which drops the Image item.
   image?: { label: string; onPick: () => void };
+  // For an editor that registers the task-list extensions but has no rich block
+  // menu. An editor that passes `blocks` already has the item there.
+  taskListLabel?: string;
   // Editors that expose a richer block schema opt into these commands. Keeping
   // this optional preserves the compact Issue and agent-instruction menus.
   blocks?: {
@@ -93,6 +96,13 @@ export function buildSlashItems(options: SlashCommandOptions): SlashItem[] {
           editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
       },
     );
+  }
+  if (options.taskListLabel && !options.blocks) {
+    items.push({
+      title: options.taskListLabel,
+      icon: CheckSquare2,
+      run: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleTaskList().run(),
+    });
   }
   items.push({
     title: options.codeBlockLabel,

@@ -122,7 +122,7 @@ release.
 - Outgoing webhooks: subscribe to events, signed payloads, and retries with a delivery log
 - Sign in with an email or a username and a password, a passkey, or Google
 - Notifications by email (SMTP or Resend), Telegram and Apprise, with per-member preferences
-- Interface in English, Ukrainian, Russian, Simplified Chinese, Arabic, Persian, French, Portuguese (Brazil), Bahasa Indonesia, Spanish (Spain), Korean, and Turkish
+- Interface in English, Ukrainian, Russian, Simplified Chinese, Traditional Chinese (Taiwan), Arabic, Persian, French, Portuguese (Brazil), Bahasa Indonesia, Spanish (Spain), Korean, and Turkish
 - Instance administration: storage limits, mail transport, and instance-wide settings
 
 </details>

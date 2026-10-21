@@ -1,0 +1,119 @@
+{
+  "newIssue": "新建工作項目",
+  "pin": "固定",
+  "unpin": "取消固定",
+  "collapse": "摺疊",
+  "expand": "展開",
+  "hide": "隱藏",
+  "show": "顯示",
+  "hiddenColumns": "隱藏欄",
+  "hiddenGroups": "隱藏分組",
+  "selectAll": "全選",
+  "deselectAll": "取消全選",
+  "resizeColumn": "調整欄寬",
+  "viewNamePlaceholder": "所有工作項目",
+  "sortedOrder": "工作項目目前按 {field} 排序。切換為手動排序後才能移動。",
+  "statusSince": "自 {date} 起處於目前狀態",
+  "createdOn": "建立於 {date}",
+  "updatedOn": "更新於 {date}",
+  "subtasksProgress": "子任務 {done}/{total}",
+  "subtasksDone": "已完成 {done}/{total} 個子任務",
+  "wip": {
+    "reached": "「{column}」已達到 {limit} 個工作項目的上限。",
+    "tooltip": "在製品上限：{max}",
+    "count": "{count} / {max}",
+    "filteredCount": "{shown}/{total} / {max}",
+    "filteredTooltip": "目前篩選顯示 {shown} 個。上限 {max} 計入該欄的全部 {total} 個工作項目。"
+  },
+  "columns": {
+    "title": "標題",
+    "status": "狀態",
+    "statusAge": "處於目前狀態",
+    "priority": "優先順序",
+    "type": "類型",
+    "initiative": "計畫",
+    "cycle": "週期",
+    "labels": "標籤",
+    "estimatePoints": "故事點",
+    "estimateTime": "工時",
+    "startDate": "開始",
+    "dueDate": "截止",
+    "created": "建立時間",
+    "updated": "更新時間"
+  },
+  "calendar": {
+    "previousMonth": "上個月",
+    "nextMonth": "下個月",
+    "today": "今天",
+    "moreIssues": "另有 {count} 個",
+    "issueCount": "{count, plural, other {# 個工作項目}}",
+    "weekdays": {
+      "sun": "週日",
+      "mon": "週一",
+      "tue": "週二",
+      "wed": "週三",
+      "thu": "週四",
+      "fri": "週五",
+      "sat": "週六"
+    },
+    "noDate": {
+      "dueDate": "無截止日期",
+      "startDate": "無開始日期",
+      "custom": "無日期"
+    },
+    "allDated": {
+      "dueDate": "所有工作項目都已設定截止日期。",
+      "startDate": "所有工作項目都已設定開始日期。",
+      "custom": "所有工作項目都已設定日期。"
+    }
+  },
+  "timeline": {
+    "empty": "暫無可放入時間軸的工作項目。",
+    "expandGroup": "展開分組",
+    "collapseGroup": "摺疊分組",
+    "inferredStart": "根據建立日期推算開始時間",
+    "inferredStartDraggable": "根據建立日期推算開始時間——拖曳以設定"
+  },
+  "bulk": {
+    "selected": "已選擇 {count} 項",
+    "status": "狀態",
+    "priority": "優先順序",
+    "assignee": "負責人",
+    "delegate": "執行代理",
+    "initiative": "計畫",
+    "cycle": "週期",
+    "labels": "標籤",
+    "noAssignee": "無負責人",
+    "noDelegate": "無執行代理",
+    "noInitiative": "無計畫",
+    "noCycle": "無週期",
+    "archive": "封存",
+    "clearSelection": "清除選擇"
+  },
+  "removal": {
+    "archive": {
+      "title": "{count, plural, other {封存工作項目}}",
+      "confirm": "{count, plural, other {封存 # 個工作項目}}",
+      "description": "{count, plural, other {封存選中的 # 個工作項目？它們將離開看板，之後可以恢復。}}"
+    },
+    "delete": {
+      "title": "{count, plural, other {刪除工作項目}}",
+      "confirm": "{count, plural, other {刪除 # 個工作項目}}",
+      "description": "{count, plural, other {刪除選中的 # 個工作項目？}}這還會刪除留言、活動記錄和附件。此操作無法復原。"
+    }
+  },
+  "share": {
+    "issueTitle": "工作項目",
+    "issueUnavailable": "此工作項目不可用。",
+    "boardUnavailable": "此共享看板不可用，連結可能已撤銷。"
+  },
+  "groups": {
+    "noAssignee": "無負責人",
+    "noDelegate": "無執行代理",
+    "noPriority": "無優先順序",
+    "noType": "無類型",
+    "noInitiative": "無計畫",
+    "noCycle": "無週期",
+    "noMember": "無值"
+  }
+}

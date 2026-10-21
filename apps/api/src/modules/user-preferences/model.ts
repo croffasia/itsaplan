@@ -6,6 +6,7 @@ const Locale = t.Union([
   t.Literal('uk'),
   t.Literal('ru'),
   t.Literal('zh-CN'),
+  t.Literal('zh-TW'),
   t.Literal('ar'),
   t.Literal('fa'),
   t.Literal('fr'),

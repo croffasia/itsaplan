@@ -8,6 +8,7 @@ import {
   projectColumn,
   issue,
   issueAttachment,
+  issueLink,
   importJob,
   user,
   getStorageSettings,
@@ -28,6 +29,7 @@ import {
   createLocalStateAndRecord,
   createLocalIssueAndRecord,
   createLocalAttachmentAndRecord,
+  createIssueLink,
   findImportRecord,
   retryImportJobLater,
   AttachmentRejectedError,
@@ -294,6 +296,22 @@ describe('createLocalStateAndRecord', () => {
     expect(columnId).toBe(existing!.id);
     const [row] = await db.select().from(projectColumn).where(eq(projectColumn.id, columnId));
     expect(row?.stateType).toBe('completed');
+  });
+});
+
+describe('createIssueLink', () => {
+  it('drops the second insert of a pair that already exists', async () => {
+    const { projectId, columnId } = await makeProject();
+    const a = await makeIssue(projectId, columnId, 'A');
+    const b = await makeIssue(projectId, columnId, 'B');
+
+    // Linear returns a "related" relation from both issues, so Link sees the
+    // pair once from each side.
+    await createIssueLink(a, b, 'relates');
+    await createIssueLink(b, a, 'relates');
+
+    const rows = await db.select().from(issueLink).where(eq(issueLink.sourceIssueId, a));
+    expect(rows).toHaveLength(1);
   });
 });
 

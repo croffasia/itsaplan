@@ -1,0 +1,51 @@
+{
+  "name": "名稱",
+  "key": "專案代碼（簡短，例如 MKT）",
+  "copyKey": "專案代碼",
+  "description": "描述",
+  "issueTypes": "工作項目類型",
+  "typesCreated": "將建立 {count, plural, other {# 個工作項目類型}}",
+  "defaultType": "新工作項目預設使用 {type} 類型，可在設定中編輯。",
+  "presets": {
+    "general": "一般",
+    "software": "軟體開發",
+    "product": "產品",
+    "content": "內容",
+    "marketing": "市場行銷",
+    "design": "設計",
+    "sales": "銷售",
+    "operations": "營運",
+    "support": "客戶支援",
+    "recruiting": "招募"
+  },
+  "copyConfiguration": "複製設定",
+  "selectAll": "全選",
+  "clearAll": "全部清除",
+  "copyGroups": {
+    "workflow": "工作流程",
+    "automation": "自動化",
+    "views": "檢視",
+    "aiTeam": "AI 團隊",
+    "knowledge": "知識"
+  },
+  "copyItems": {
+    "states": "狀態",
+    "issueTypes": "工作項目類型",
+    "labels": "標籤",
+    "customFields": "自訂欄位",
+    "views": "檢視",
+    "dashboards": "儀表板",
+    "documents": "文件",
+    "actions": "操作",
+    "configuration": "設定",
+    "webhooks": "Webhook",
+    "agents": "代理",
+    "schedules": "排程"
+  },
+  "title": "新建專案",
+  "copyTitle": "複製專案「{name}」",
+  "create": "新建專案",
+  "copyAction": "複製專案",
+  "defaultAgents": "將加入此專案的代理：{names}",
+  "copyName": "{name} 副本"
+}

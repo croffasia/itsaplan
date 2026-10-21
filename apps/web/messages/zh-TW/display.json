@@ -1,0 +1,95 @@
+{
+  "title": "顯示",
+  "layouts": {
+    "kanban": "看板",
+    "table": "表格",
+    "timeline": "時間軸",
+    "calendar": "日曆"
+  },
+  "sortFields": {
+    "manual": "手動",
+    "title": "標題",
+    "identifier": "工作項目編號",
+    "status": "狀態",
+    "priority": "優先順序",
+    "assignee": "負責人",
+    "type": "類型",
+    "startDate": "開始日期",
+    "dueDate": "截止日期",
+    "created": "建立時間",
+    "updated": "更新時間"
+  },
+  "groupFields": {
+    "none": "不分組",
+    "status": "狀態",
+    "assignee": "負責人",
+    "delegate": "執行代理",
+    "priority": "優先順序",
+    "type": "類型",
+    "initiative": "計畫",
+    "cycle": "週期"
+  },
+  "properties": {
+    "id": "ID",
+    "status": "狀態",
+    "priority": "優先順序",
+    "type": "類型",
+    "assignee": "負責人",
+    "delegate": "執行代理",
+    "initiative": "計畫",
+    "cycle": "週期",
+    "labels": "標籤",
+    "estimatePoints": "故事點",
+    "estimateTime": "工時估算",
+    "startDate": "開始日期",
+    "dueDate": "截止日期",
+    "created": "建立時間",
+    "updated": "更新時間",
+    "statusAge": "處於目前狀態的時間"
+  },
+  "stateTypes": {
+    "backlog": "待辦事項",
+    "unstarted": "未開始",
+    "started": "進行中",
+    "completed": "已完成",
+    "canceled": "已取消"
+  },
+  "timelineScales": {
+    "week": "週",
+    "month": "月",
+    "quarter": "季度"
+  },
+  "weekStart": {
+    "0": "週日",
+    "1": "週一"
+  },
+  "dateFields": {
+    "dueDate": "截止日期",
+    "startDate": "開始日期"
+  },
+  "rows": {
+    "columns": "狀態欄",
+    "grouping": "分組",
+    "swimlanes": "泳道",
+    "subGrouping": "次級分組",
+    "ordering": "排序方式",
+    "ascending": "升序",
+    "descending": "降序",
+    "showEmptyColumns": "顯示空的狀態欄",
+    "showEmptyGroups": "顯示空分組",
+    "showLinks": "顯示關聯",
+    "separateSubtaskCards": "將子任務顯示為單獨卡片",
+    "separateSubtaskRows": "將子任務分列顯示",
+    "startSubtasksCollapsed": "預設摺疊子任務",
+    "showNestedSubtasks": "顯示巢狀子任務",
+    "nestedSubtasks": "巢狀子任務",
+    "displayProperties": "顯示屬性",
+    "placeBy": "定位依據",
+    "startWeekOn": "每週起始日",
+    "startCollapsed": "預設摺疊分組",
+    "scale": "時間刻度",
+    "addCustomField": "新增自訂欄位",
+    "viewIcon": "檢視圖示"
+  },
+  "layoutCommand": "{layout}版面"
+}

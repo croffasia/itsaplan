@@ -198,7 +198,8 @@
     "copiedLink": "Kopyalandı",
     "editLink": "Bağlantıyı düzenle",
     "retryPreview": "Tekrar dene",
-    "copyLinkFailed": "Bağlantı kopyalanamadı. Yukarıdaki URL'yi seçip kopyalayın."
+    "copyLinkFailed": "Bağlantı kopyalanamadı. Yukarıdaki URL'yi seçip kopyalayın.",
+    "todoList": "Yapılacaklar listesi"
   },
   "chart": {
     "download": "Grafiği kaydet",

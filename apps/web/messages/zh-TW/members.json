@@ -1,0 +1,116 @@
+{
+  "title": "成員",
+  "description": "有權存取此專案的人員。",
+  "add": {
+    "action": "新增成員",
+    "title": "新增成員",
+    "personLabel": "團隊成員或電子郵件",
+    "pickPlaceholder": "選擇成員",
+    "searchPlaceholder": "搜尋團隊成員或輸入電子郵件",
+    "searchTeamPlaceholder": "搜尋團隊成員",
+    "fromTeam": "來自團隊",
+    "byEmail": "透過電子郵件邀請",
+    "inviteEmail": "邀請 {email}",
+    "alreadyInvited": "{email} 已被邀請",
+    "domainNotAllowed": "此執行個體不允許 {email} 所在的網域",
+    "alreadyMember": "{email} 已在此專案中",
+    "alreadyInTeam": "{email} 已在團隊中 — 請從上方清單中選擇",
+    "refused": "無法新增 {email}",
+    "typeEmail": "沒有找到成員。輸入完整電子郵件地址即可邀請。",
+    "noCandidates": "團隊成員都已在此專案中。",
+    "willJoinTeam": "將加入團隊 {teamName} 和此專案",
+    "roleLabel": "專案中的角色",
+    "rolePlaceholder": "角色",
+    "submit": "新增到專案",
+    "sendInvite": "傳送邀請"
+  },
+  "columns": {
+    "member": "成員",
+    "role": "角色",
+    "timezone": "時區",
+    "joined": "加入時間",
+    "actions": "操作"
+  },
+  "profileHeading": "資料",
+  "you": "（你）",
+  "aiAgent": "AI 代理",
+  "tabs": {
+    "all": "全部",
+    "people": "人員",
+    "agents": "AI 代理",
+    "label": "顯示"
+  },
+  "leaveProject": "退出專案",
+  "revokeAccess": "撤銷存取權限",
+  "lastOwner": "專案必須至少保留一名所有者",
+  "leaveTitle": "退出此專案",
+  "leaveDescription": "你將失去對此專案及其工作項目的存取權限。專案所有者之後可以重新邀請你。",
+  "revokeTitle": "撤銷 {name} 的存取權限",
+  "revokeDescription": "{name} 將失去對此專案的存取權限，之後可以重新邀請。",
+  "selectRole": "選擇角色",
+  "editDescription": "編輯描述",
+  "descriptionQuestionSelf": "你在此專案中負責什麼？",
+  "descriptionQuestionOther": "此成員在專案中負責什麼？",
+  "descriptionPlaceholder": "例如：後端工程師，負責 API 和整合",
+  "invites": {
+    "pendingCount": "{count, plural, other {# 個待處理邀請}}",
+    "copyLink": "複製連結",
+    "copied": "已複製",
+    "emailQueued": "邀請郵件已加入傳送佇列",
+    "emailUnavailable": "邀請已建立，但郵件未加入傳送佇列。請複製連結進行分享。",
+    "emailFailed": "邀請已建立，但郵件傳送失敗。請複製連結進行分享。",
+    "resendUnavailable": "郵件尚未設定。請複製邀請連結進行分享。",
+    "resendEmail": "傳送郵件",
+    "resendingEmail": "正在加入佇列…",
+    "renew": "續期",
+    "renewing": "正在續期…",
+    "renewed": "邀請已續期：新連結已透過郵件傳送",
+    "renewedNoEmail": "邀請已續期。尚未設定郵件：請複製新連結進行分享。",
+    "renewedEmailFailed": "邀請已續期，但郵件傳送失敗。請複製新連結進行分享。",
+    "revokeAction": "撤銷邀請",
+    "removeAction": "移除邀請",
+    "invitedBy": "由 {name} 邀請 · ",
+    "createdAt": "建立於 {date}",
+    "expiredAt": "已於 {date} 過期",
+    "respondedAt": "{status, select, accepted {已接受} rejected {已拒絕} other {已更新}} {date}",
+    "status": {
+      "pending": "待處理",
+      "accepted": "已接受",
+      "rejected": "已拒絕",
+      "expired": "已過期"
+    },
+    "revokeTitle": "撤銷傳送至 {email} 的邀請",
+    "revokeConfirm": "撤銷邀請",
+    "revokeDescription": "邀請連結將失效，之後仍可再次邀請此電子郵件。"
+  },
+  "promoted": "成員已晉升為所有者",
+  "roleUpdated": "成員角色已更新",
+  "descriptionUpdated": "成員描述已更新",
+  "added": "已新增成員",
+  "provisioned": "由 SCIM 管理",
+  "search": {
+    "all": "搜尋成員",
+    "people": "搜尋人員",
+    "agents": "搜尋 AI 代理"
+  },
+  "empty": {
+    "all": {
+      "title": "暫無成員",
+      "description": "人員和 AI 代理加入後會顯示在這裡。"
+    },
+    "human": {
+      "title": "暫無人員",
+      "description": "人員加入後會顯示在這裡。"
+    },
+    "agent": {
+      "title": "暫無 AI 代理",
+      "description": "AI 代理新增後會顯示在這裡。"
+    },
+    "search": {
+      "title": "沒有找到結果",
+      "all": "沒有符合此搜尋的成員。",
+      "human": "沒有符合此搜尋的人員。",
+      "agent": "沒有符合此搜尋的 AI 代理。"
+    }
+  }
+}

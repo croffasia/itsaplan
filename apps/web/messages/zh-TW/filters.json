@@ -1,0 +1,53 @@
+{
+  "add": "新增篩選條件",
+  "remove": "移除篩選條件",
+  "valuePlaceholder": "值",
+  "noOptions": "無可用選項",
+  "selected": "已選擇 {count} 項",
+  "operators": {
+    "is": "是",
+    "is_not": "不是",
+    "before": "早於",
+    "after": "晚於",
+    "is_set": "已設定",
+    "is_not_set": "未設定",
+    "contains": "包含",
+    "not_contains": "不包含"
+  },
+  "boolean": {
+    "true": "是",
+    "false": "否"
+  },
+  "cycleStatus": {
+    "active": "進行中的週期",
+    "upcoming": "即將開始的週期"
+  },
+  "initiativeStatus": {
+    "active": "進行中的計畫",
+    "planned": "已規劃的計畫",
+    "proposed": "提議中的計畫"
+  },
+  "fields": {
+    "status": "狀態",
+    "statusType": "狀態類型",
+    "assignee": "負責人",
+    "delegate": "執行代理",
+    "priority": "優先順序",
+    "type": "類型",
+    "initiative": "計畫",
+    "cycle": "週期",
+    "labels": "標籤",
+    "dueDate": "截止日期",
+    "startDate": "開始日期",
+    "created": "建立時間",
+    "updated": "更新時間"
+  },
+  "unset": {
+    "assignee": "無負責人",
+    "delegate": "無執行代理",
+    "type": "無類型",
+    "initiative": "無計畫",
+    "cycle": "無週期",
+    "member": "無值"
+  }
+}

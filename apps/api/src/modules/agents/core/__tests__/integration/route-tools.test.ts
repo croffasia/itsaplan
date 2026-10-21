@@ -82,6 +82,85 @@ describe('internal agent route tools', () => {
     expect(tools.update_issue).toBeUndefined();
   });
 
+  it('previews project activity only for the internal agent and retains full history', async () => {
+    const { asOwner } = await setup();
+    const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const columnId = view.data!.columns[0]!.id;
+    const created = await asOwner.projects({ projectKey: 'MKT' }).issues.post({
+      columnId,
+      title: 'Large description',
+    });
+    expect(created.status).toBe(201);
+    const issueId = created.data!.id;
+    const description = 'Description detail. '.repeat(200);
+    const updated = await asOwner.issues({ issueId }).patch({ description });
+    expect(updated.status).toBe(200);
+    const tools = await toolsFor(asOwner, []);
+
+    const result = await run(tools, 'get_project_activity', { action: 'description', limit: 1 });
+    expect(result).toMatchObject({
+      items: [
+        {
+          issueId,
+          action: 'description',
+          payload: { to: { value: description.slice(0, 1000) } },
+          truncatedFields: [{ field: 'payload.to.value', originalLength: description.length }],
+        },
+      ],
+      nextCursor: null,
+    });
+
+    const rest = await asOwner.projects({ projectKey: 'MKT' }).analytics.activity.get({
+      query: { action: 'description' },
+    });
+    expect(rest.data?.items[0]?.payload.to?.value).toBe(description);
+    expect(rest.data?.items[0]).not.toHaveProperty('truncatedFields');
+    expect(await run(tools, 'list_issue_activity', { issueId })).toMatchObject({
+      items: expect.arrayContaining([
+        expect.objectContaining({
+          action: 'description',
+          payload: { to: { value: description } },
+        }),
+      ]),
+    });
+    expect(await run(tools, 'get_issue', { issueId })).toMatchObject({ description });
+  });
+
+  it('keeps project activity cursors and rejects a project supplied by the model', async () => {
+    const { asOwner } = await setup();
+    await createProject(asOwner, { key: 'OPS', name: 'Operations' });
+    const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const columnId = view.data!.columns[0]!.id;
+    for (const title of ['Alpha', 'Beta']) {
+      await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title });
+    }
+    const tools = await toolsFor(asOwner, []);
+    const rest = await asOwner.projects({ projectKey: 'MKT' }).analytics.activity.get({
+      query: { limit: 1 },
+    });
+    const first = await run(tools, 'get_project_activity', { limit: 1, projectKey: 'OPS' });
+    expect(first).toMatchObject({ nextCursor: rest.data!.nextCursor });
+    const second = await run(tools, 'get_project_activity', {
+      limit: 1,
+      cursor: JSON.stringify(rest.data!.nextCursor),
+    });
+    expect(second).toMatchObject({
+      items: [expect.objectContaining({ issueTitle: 'Alpha' })],
+      nextCursor: null,
+    });
+  });
+
+  it('preserves project activity errors for an agent without dashboard read permission', async () => {
+    const { asOwner } = await setup();
+    const role = await createRole(asOwner, 'MKT', {
+      name: 'No dashboards',
+      permissions: { dashboards: { read: false } },
+    });
+    expect(role.status).toBe(201);
+    const tools = await toolsFor(asOwner, [], role.data!.id);
+    expect(await run(tools, 'get_project_activity')).toMatchObject({ error: expect.anything() });
+  });
+
   it('reaches the real route: a create lands in the project, authored by the agent', async () => {
     const { asOwner } = await setup();
     const view = await asOwner.projects({ projectKey: 'MKT' }).get();

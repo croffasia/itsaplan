@@ -102,25 +102,25 @@ export default function AuthRegisterForm() {
         <AuthFormHeader title={t('register.title')} description={subtitle()} />
 
         {passwordEnabled && (
-          <>
-            <AuthRegisterPasswordFields
-              email={email}
-              password={password}
-              confirm={confirm}
-              pending={pending}
-              onEmailChange={setEmail}
-              onPasswordChange={setPassword}
-              onConfirmChange={setConfirm}
-            />
+          <AuthRegisterPasswordFields
+            email={email}
+            password={password}
+            confirm={confirm}
+            pending={pending}
+            onEmailChange={setEmail}
+            onPasswordChange={setPassword}
+            onConfirmChange={setConfirm}
+          />
+        )}
 
-            {error && <FieldError>{error}</FieldError>}
+        {error && <FieldError>{error}</FieldError>}
 
-            <Field>
-              <Button type="submit" disabled={pending}>
-                {pending ? t('register.submitPending') : t('register.submit')}
-              </Button>
-            </Field>
-          </>
+        {passwordEnabled && (
+          <Field>
+            <Button type="submit" disabled={pending}>
+              {pending ? t('register.submitPending') : t('register.submit')}
+            </Button>
+          </Field>
         )}
 
         {hasProvider && (

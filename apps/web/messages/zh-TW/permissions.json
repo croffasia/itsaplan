@@ -1,0 +1,53 @@
+{
+  "none": "未授予任何權限",
+  "grantedCount": "已授予 {count, plural, other {# 項權限}}",
+  "resources": {
+    "work_items": "工作項目",
+    "initiatives": "計畫",
+    "cycles": "週期",
+    "dashboards": "儀表板",
+    "documents": "文件",
+    "views": "工作項目檢視",
+    "members_invite": "邀請",
+    "members_manage": "成員",
+    "states": "狀態",
+    "issue_types": "工作項目類型",
+    "labels": "標籤",
+    "ai_agents": "AI 代理",
+    "integrations": "整合",
+    "agent_skills": "代理技能",
+    "agent_tools": "代理工具",
+    "agent_usage": "代理用量",
+    "custom_fields": "自訂欄位",
+    "issue_templates": "工作項目範本",
+    "workflow_config": "工作流程設定",
+    "actions": "操作",
+    "webhooks": "Webhook",
+    "repositories": "程式碼存放庫",
+    "note_boards": "筆記板",
+    "import_export": "匯入/匯出",
+    "danger_zone": "危險操作"
+  },
+  "actions": {
+    "create": "新建",
+    "edit": "編輯",
+    "read": "檢視",
+    "delete": "刪除"
+  },
+  "groups": {
+    "workItems": "工作項目",
+    "dashboards": "儀表板",
+    "documents": "文件",
+    "notes": "筆記",
+    "ai": "AI",
+    "configuration": "設定",
+    "members": "成員",
+    "project": "專案",
+    "other": "其他"
+  },
+  "resourceColumn": "資源",
+  "allowed": "允許",
+  "notAllowed": "不允許",
+  "accessHeading": "對此專案的存取權限",
+  "joined": "加入於 {date}"
+}

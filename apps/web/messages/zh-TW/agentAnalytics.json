@@ -1,0 +1,82 @@
+{
+  "window": "{days, plural, =1 {最近 24 小時} other {最近 # 天}}",
+  "retentionNote": "僅統計內部代理。早於執行個體追蹤保留期的執行不計入。",
+  "noComparison": "沒有可對比的資料",
+  "vsPrevious": "之前為 {value}",
+  "deletedAgent": "已刪除的代理",
+  "deletedProject": "已刪除的專案",
+  "allProjects": "所有專案",
+  "totalTokens": "Token 總數",
+  "totalCost": "總花費",
+  "stats": {
+    "cost": "模型花費",
+    "tokens": "Token",
+    "runs": "執行",
+    "errors": "失敗的執行"
+  },
+  "unpriced": "{count, plural, other {# 個模型沒有價格}}",
+  "setPrices": "設定價格",
+  "measure": {
+    "tokens": "Token",
+    "cost": "花費"
+  },
+  "series": {
+    "input": "輸入",
+    "output": "輸出"
+  },
+  "models": {
+    "title": "按模型",
+    "description": "每個模型的 Token 與花費。",
+    "model": "模型",
+    "input": "輸入",
+    "output": "輸出",
+    "cost": "花費",
+    "empty": "此期間沒有模型呼叫"
+  },
+  "byAgent": {
+    "title": "按代理",
+    "description": "每個代理的用量。",
+    "empty": "此期間沒有代理執行"
+  },
+  "byProject": {
+    "title": "按專案",
+    "description": "代理在每個專案中的用量。",
+    "empty": "此期間沒有代理執行"
+  },
+  "byTeam": {
+    "title": "按團隊",
+    "description": "每個團隊的代理用量。",
+    "empty": "此期間沒有代理執行"
+  },
+  "overTime": {
+    "title": "隨時間",
+    "description": "此期間的 Token 與花費。",
+    "empty": "此期間沒有用量"
+  },
+  "preview": {
+    "title": "Cloud 和 Pro 中的更多內容",
+    "description": "按人員和觸發方式的花費、執行時長和工具呼叫。可在 Cloud 和自託管 Pro 版中使用。",
+    "hide": "隱藏",
+    "show": "顯示",
+    "byPerson": {
+      "title": "按人員",
+      "description": "誰在聊天中或透過提及啟動了執行。"
+    },
+    "byTrigger": {
+      "title": "按觸發方式",
+      "description": "聊天、提及、排程或工作項目事件。"
+    },
+    "bySchedule": {
+      "title": "按排程",
+      "description": "每個排程的花費。"
+    },
+    "tools": {
+      "title": "工具",
+      "description": "工具呼叫次數及失敗次數。"
+    },
+    "latency": {
+      "title": "執行時長",
+      "description": "每天的中位數和第 95 百分位。"
+    }
+  }
+}

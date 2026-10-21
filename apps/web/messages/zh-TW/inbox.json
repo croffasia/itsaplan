@@ -1,0 +1,37 @@
+{
+  "title": "收件匣",
+  "empty": "暫無通知",
+  "selectNotification": "選擇一則通知",
+  "backToList": "收件匣",
+  "filter": "篩選",
+  "display": "顯示",
+  "notificationType": "通知類型",
+  "showRead": "顯示已讀通知",
+  "showSnoozed": "顯示已稍後提醒的通知",
+  "markAllRead": "全部標為已讀",
+  "deleteAllRead": "刪除所有已讀通知",
+  "deleteAllReadCompleted": "刪除已完成工作項目的所有已讀通知",
+  "types": {
+    "assigned": "已指派",
+    "mentioned": "已提及",
+    "commented": "有新留言",
+    "state_changed": "狀態已變更"
+  },
+  "actions": {
+    "markRead": "標為已讀",
+    "markUnread": "標為未讀",
+    "snooze": "稍後提醒",
+    "unsnooze": "取消稍後提醒",
+    "tomorrow": "明天",
+    "inAWeek": "一週後",
+    "pickDate": "選擇日期…"
+  },
+  "event": {
+    "someone": "某位使用者",
+    "assigned": "{who} 將工作項目指派給你",
+    "mentioned": "{who} 提及了你",
+    "commented": "{who} 發表了留言",
+    "stateChanged": "{who} 將狀態從 {from} 更改為 {to}",
+    "stateChangedPlain": "{who} 更改了狀態"
+  }
+}

@@ -1,4 +1,4 @@
-import { expect, it } from 'bun:test';
+import { expect, it, spyOn } from 'bun:test';
 import { AnswerStream, type AgUiEvent } from '../agui';
 import { Client, type Run } from '../client';
 import type { RunnerConfig } from '../config';
@@ -171,3 +171,110 @@ it('retries a partially accepted stream batch with its original offsets', async 
     globalThis.fetch = original;
   }
 }, 15_000);
+
+const shortTaskConfig: RunnerConfig = {
+  name: '',
+  url: 'http://plan.test',
+  apiKey: 'test',
+  command: "printf 'Done'",
+  args: [],
+  env: {},
+  concurrency: 1,
+  pollIntervalMs: 1000,
+  timeoutMs: 5000,
+  outputFormat: 'text',
+};
+const shortRun: Run = {
+  id: 1,
+  attempts: 2,
+  traceEvents: true,
+  trigger: 'manual',
+  prompt: '',
+  systemPrompt: '',
+  issueId: null,
+  issueIdentifier: null,
+};
+
+function isFinalBatch(body: Record<string, unknown>): boolean {
+  const events = body.events as AgUiEvent[];
+  return events.some((event) => event.type === 'RUN_FINISHED' || event.type === 'RUN_ERROR');
+}
+
+it('retries a transient final event failure before reporting the successful command once', async () => {
+  const original = globalThis.fetch;
+  const reports: Record<string, unknown>[] = [];
+  const finalOffsets: number[] = [];
+  globalThis.fetch = (async (input, init) => {
+    const body = JSON.parse(String(init?.body));
+    if (String(input).endsWith('/events') && isFinalBatch(body)) {
+      finalOffsets.push(body.offset);
+      if (finalOffsets.length === 1) return new Response('Temporary failure', { status: 503 });
+    }
+    if (String(input).endsWith('/result')) reports.push(body);
+    return Response.json({ nextOffset: 100, truncated: false });
+  }) as typeof fetch;
+  try {
+    await handleRun(shortTaskConfig, new Client(shortTaskConfig), () => {}, shortRun);
+    expect(finalOffsets).toHaveLength(2);
+    expect(finalOffsets[1]).toBe(finalOffsets[0]);
+    expect(reports).toEqual([
+      expect.objectContaining({ status: 'success', output: 'Done', attempt: 2 }),
+    ]);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+it('warns about an unavailable final trace without replacing the command outcome', async () => {
+  const original = globalThis.fetch;
+  const warning = spyOn(console, 'error').mockImplementation(() => {});
+  const reports: Record<string, unknown>[] = [];
+  let finalAttempts = 0;
+  globalThis.fetch = (async (input, init) => {
+    const body = JSON.parse(String(init?.body));
+    if (String(input).endsWith('/events') && isFinalBatch(body)) {
+      finalAttempts++;
+      return new Response('Temporary failure', { status: 503 });
+    }
+    if (String(input).endsWith('/result')) reports.push(body);
+    return Response.json({ nextOffset: 100, truncated: false });
+  }) as typeof fetch;
+  try {
+    await handleRun(shortTaskConfig, new Client(shortTaskConfig), () => {}, shortRun);
+    expect(finalAttempts).toBe(2);
+    expect(reports).toEqual([
+      expect.objectContaining({ status: 'success', output: 'Done', attempt: 2 }),
+    ]);
+    expect(warning).toHaveBeenCalledTimes(1);
+    expect(warning.mock.calls[0]?.[0]).toContain('trace upload failed');
+  } finally {
+    globalThis.fetch = original;
+    warning.mockRestore();
+  }
+});
+
+it('does not retry or ignore a final event rejection for a stale attempt', async () => {
+  const original = globalThis.fetch;
+  let finalAttempts = 0;
+  let reports = 0;
+  globalThis.fetch = (async (input, init) => {
+    const body = JSON.parse(String(init?.body));
+    if (String(input).endsWith('/events') && isFinalBatch(body)) {
+      finalAttempts++;
+      return new Response('Active run attempt not found', { status: 404 });
+    }
+    if (String(input).endsWith('/result')) reports++;
+    return Response.json({ nextOffset: 100, truncated: false });
+  }) as typeof fetch;
+  try {
+    await expect(
+      runTask(shortTaskConfig, new Client(shortTaskConfig), shortRun),
+    ).rejects.toMatchObject({
+      status: 404,
+    });
+    expect(finalAttempts).toBe(1);
+    expect(reports).toBe(0);
+  } finally {
+    globalThis.fetch = original;
+  }
+});

@@ -3,6 +3,7 @@ export const LOCALES = [
   'uk',
   'ru',
   'zh-CN',
+  'zh-TW',
   'ar',
   'fa',
   'fr',

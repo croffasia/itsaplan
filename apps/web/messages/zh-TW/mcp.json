@@ -1,0 +1,49 @@
+{
+  "title": "MCP 伺服器",
+  "description": "透過 Model Context Protocol 將 AI 代理連線到本專案。代理能看到的範圍由所用 API 金鑰決定。",
+  "disabled": "已停用",
+  "offForTeam": "團隊 {team} 的 MCP 已關閉。",
+  "offForProject": "團隊 {team} 已開啟 MCP，但本專案未開啟。",
+  "openTeamSettings": "開啟團隊的 MCP 設定",
+  "askManager": "請團隊所有者或管理者開啟：",
+  "keyHint": "在 <link>API 金鑰</link>頁面建立金鑰，然後替換程式碼片段中的 <code>{apiKey}</code>。",
+  "endpoint": "MCP 端點",
+  "clientTabsAria": "用戶端",
+  "addToFile": "新增到 <code>{file}</code>",
+  "notes": {
+    "claudeCode": "在終端中執行此命令。",
+    "vscode": "需要 GitHub Copilot。",
+    "claudeDesktop": "Claude Desktop 透過 mcp-remote 橋接器連線遠端伺服器。需要 Node.js。",
+    "other": "任何支援基於 Streamable HTTP 的 MCP 用戶端都可以使用。將用戶端指向此端點。傳送 Authorization: Bearer {apiKey} 請求標頭。"
+  },
+  "clients": {
+    "other": "其他"
+  },
+  "oauth": {
+    "configuration": "如何連線",
+    "methodTabsAria": "連線方式",
+    "method": "OAuth",
+    "personalKey": "API 金鑰",
+    "description": "適用於任何支援 OAuth 的 MCP 用戶端，例如 ChatGPT 或 Claude。你使用 Itsaplan 帳號登入。用戶端不會收到 API 金鑰。",
+    "discovery": "OAuth 發現",
+    "steps": {
+      "add": "在用戶端中新增 MCP 應用程式。",
+      "paste": "貼上 MCP 端點。",
+      "choose": "當用戶端詢問登入方式時選擇 OAuth。",
+      "signIn": "登入 Itsaplan 並批准存取。"
+    },
+    "security": "OAuth 使用 PKCE (S256)、動態用戶端註冊以及限定到你的 Itsaplan 帳號的存取權杖。",
+    "consent": {
+      "title": "{client} 想要連線到你的帳號",
+      "titleUnnamed": "一個 MCP 用戶端想要連線到你的帳號",
+      "description": "它將以你的權限行事：你能檢視和修改的內容，它也都可以。",
+      "account": "已登入為 {email}",
+      "redirect": "完成後，你將返回 {host}。",
+      "missingCode": "此授權請求缺少同意代碼。",
+      "cancel": "取消",
+      "pending": "正在授權…",
+      "authorize": "授權",
+      "failed": "無法完成 OAuth 授權。"
+    }
+  }
+}

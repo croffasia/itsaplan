@@ -56,12 +56,12 @@ export default function AccountSecurityAddPasskey({ onAdded }: { onAdded: () => 
         {addMutation.isPending ? t('waitingForPasskey') : t('addPasskey')}
       </Button>
       {confirmed && (
-        <p role="status" className="text-sm text-muted-foreground">
+        <p role="status" className="max-w-40 text-end text-sm text-muted-foreground">
           {t('sessionConfirmed')}
         </p>
       )}
       {error && (
-        <p role="alert" className="text-xs text-destructive">
+        <p role="alert" className="max-w-40 text-end text-xs text-destructive">
           {error}
         </p>
       )}

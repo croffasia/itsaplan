@@ -384,6 +384,10 @@ and tool calls at `/agent-runs/:runId/events`. The runner reports numbered batch
 for the claimed attempt before reporting its result. Retries of a batch use the
 same offsets. A server without this capability still receives the final result.
 
+A transient failure of the final event batch is retried once. If it still fails,
+the runner logs a trace-upload warning and reports the command's actual result.
+Authorization, stale-attempt and other permanent rejections are not retried or ignored.
+
 The `codex-jsonl` format records the session UUID from `thread.started`, shell
 commands, MCP calls and file changes. Plan shows an **Open in Codex** link for that
 attempt. The session must be available in the viewer's local Codex app or a

@@ -31,6 +31,7 @@ export interface NotificationSettings {
   };
   resend: { enabled: boolean; hasApiKey: boolean };
   telegram: { enabled: boolean; hasBotToken: boolean };
+  apprise: { enabled: boolean; hasUrl: boolean };
 }
 
 // A partial write. Each section is optional so a provider card saves on its own.
@@ -48,6 +49,7 @@ export interface NotificationSettingsPatch {
   };
   resend?: { enabled: boolean; apiKey?: string };
   telegram?: { enabled: boolean; botToken?: string };
+  apprise?: { enabled: boolean; url?: string };
 }
 
 // The team's notification provider credentials, shared by every project it owns

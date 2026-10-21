@@ -95,6 +95,7 @@
     "description": "Hangi iş olaylarının nereye bildirileceğini seçin.",
     "email": "E-posta",
     "telegram": "Telegram",
+    "apprise": "Apprise",
     "events": {
       "assigned": "Bir işe sorumlu olarak atandığımda",
       "mentioned": "Bir işte benden bahsedildiğinde",

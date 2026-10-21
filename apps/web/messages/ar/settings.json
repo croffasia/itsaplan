@@ -95,6 +95,7 @@
     "description": "اختار أحداث المهام اللي توصلك، وتوصلك فين.",
     "email": "البريد الإلكتروني",
     "telegram": "Telegram",
+    "apprise": "Apprise",
     "events": {
       "assigned": "الإسناد إلى مهمة",
       "mentioned": "الإشارة في مهمة",

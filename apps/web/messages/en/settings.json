@@ -95,6 +95,7 @@
     "description": "Choose which issue events you get and where.",
     "email": "Email",
     "telegram": "Telegram",
+    "apprise": "Apprise",
     "events": {
       "assigned": "Assigned to an issue",
       "mentioned": "Mentioned on an issue",

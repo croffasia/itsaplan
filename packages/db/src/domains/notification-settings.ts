@@ -15,6 +15,11 @@ interface TelegramConfig {
   botToken: string; // secret
 }
 
+interface AppriseConfig {
+  enabled: boolean;
+  url: string; // secret: an Apprise API notify endpoint, often carrying a config key
+}
+
 // The stored, decrypted config. Secret fields carry the plaintext value; read only
 // by the sender, never returned over HTTP.
 export interface NotificationConfig {
@@ -25,6 +30,7 @@ export interface NotificationConfig {
   smtp: SmtpConfig;
   resend: ResendConfig;
   telegram: TelegramConfig;
+  apprise: AppriseConfig;
 }
 
 export function defaultNotificationConfig(): NotificationConfig {
@@ -43,6 +49,7 @@ export function defaultNotificationConfig(): NotificationConfig {
     },
     resend: { enabled: false, apiKey: '' },
     telegram: { enabled: false, botToken: '' },
+    apprise: { enabled: false, url: '' },
   };
 }
 

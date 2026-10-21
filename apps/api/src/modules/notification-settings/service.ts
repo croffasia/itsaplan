@@ -38,6 +38,7 @@ export interface NotificationSettingsDto {
   };
   resend: { enabled: boolean; hasApiKey: boolean };
   telegram: { enabled: boolean; hasBotToken: boolean };
+  apprise: { enabled: boolean; hasUrl: boolean };
 }
 
 // A partial write. Each section, when present, replaces that section's non-secret
@@ -57,6 +58,7 @@ export interface NotificationSettingsPatch {
   };
   resend?: { enabled: boolean; apiKey?: string };
   telegram?: { enabled: boolean; botToken?: string };
+  apprise?: { enabled: boolean; url?: string };
 }
 
 function toDto(config: NotificationConfig): NotificationSettingsDto {
@@ -76,6 +78,7 @@ function toDto(config: NotificationConfig): NotificationSettingsDto {
       enabled: config.telegram.enabled,
       hasBotToken: config.telegram.botToken.length > 0,
     },
+    apprise: { enabled: config.apprise.enabled, hasUrl: config.apprise.url.length > 0 },
   };
 }
 
@@ -96,6 +99,7 @@ function applyPatch(
     smtp: { ...current.smtp },
     resend: { ...current.resend },
     telegram: { ...current.telegram },
+    apprise: { ...current.apprise },
   };
 
   if (patch.system) next.system = { enabled: patch.system.enabled };
@@ -122,6 +126,12 @@ function applyPatch(
       botToken: mergeSecret(current.telegram.botToken, patch.telegram.botToken),
     };
   }
+  if (patch.apprise) {
+    next.apprise = {
+      enabled: patch.apprise.enabled,
+      url: mergeSecret(current.apprise.url, patch.apprise.url?.trim()),
+    };
+  }
 
   return next;
 }
@@ -138,6 +148,12 @@ function assertSendable(config: NotificationConfig): void {
   }
   if (config.resend.enabled && config.resend.apiKey.length === 0) {
     throw new HttpError(400, 'A Resend API key is required');
+  }
+  if (config.apprise.enabled) {
+    if (config.apprise.url.length === 0) throw new HttpError(400, 'An Apprise URL is required');
+    if (!/^https?:\/\//i.test(config.apprise.url)) {
+      throw new HttpError(400, 'The Apprise URL must start with http:// or https://');
+    }
   }
 }
 

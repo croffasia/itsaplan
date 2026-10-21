@@ -243,6 +243,10 @@
     "telegramBot": "Bot do Telegram",
     "telegramBotHint": "O bot que entrega notificações para todos os projetos do time. Membros escolhem seu próprio chat em suas preferências. O token é armazenado criptografado.",
     "botToken": "Token da API do bot (opcional)",
+    "apprise": "Apprise",
+    "appriseHint": "Deliver notifications through an Apprise API server. Each message is tagged with the recipient's user id, so the Apprise configuration decides where it goes. The URL is stored encrypted.",
+    "appriseUrl": "Apprise notify URL",
+    "appriseSaved": "Apprise provider saved",
     "emailSaved": "Provedor de e-mail salvo",
     "telegramSaved": "Provedor do Telegram salvo"
   },

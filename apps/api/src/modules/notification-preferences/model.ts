@@ -11,4 +11,5 @@ const EventToggles = t.Object({
 export const NotificationPreferenceBody = t.Object({
   emailEvents: EventToggles,
   telegramEvents: EventToggles,
+  appriseEvents: EventToggles,
 });

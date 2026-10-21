@@ -243,6 +243,10 @@
     "telegramBot": "Telegram-бот",
     "telegramBotHint": "Бот, який доставляє сповіщення в усіх проєктах команди. Свій чат учасник обирає в налаштуваннях сповіщень. Токен зберігається в зашифрованому вигляді.",
     "botToken": "API-токен бота (необов'язково)",
+    "apprise": "Apprise",
+    "appriseHint": "Deliver notifications through an Apprise API server. Each message is tagged with the recipient's user id, so the Apprise configuration decides where it goes. The URL is stored encrypted.",
+    "appriseUrl": "Apprise notify URL",
+    "appriseSaved": "Apprise provider saved",
     "emailSaved": "Поштового провайдера збережено",
     "telegramSaved": "Telegram-провайдера збережено"
   },

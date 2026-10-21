@@ -23,6 +23,7 @@ export const NotificationSettingsResponse = t.Object({
   }),
   resend: t.Object({ enabled: t.Boolean(), hasApiKey: t.Boolean() }),
   telegram: t.Object({ enabled: t.Boolean(), hasBotToken: t.Boolean() }),
+  apprise: t.Object({ enabled: t.Boolean(), hasUrl: t.Boolean() }),
 });
 
 // Every section optional so each provider card can save on its own. Secret fields
@@ -42,4 +43,5 @@ export const NotificationSettingsBody = t.Object({
   ),
   resend: t.Optional(t.Object({ enabled: t.Boolean(), apiKey: t.Optional(t.String()) })),
   telegram: t.Optional(t.Object({ enabled: t.Boolean(), botToken: t.Optional(t.String()) })),
+  apprise: t.Optional(t.Object({ enabled: t.Boolean(), url: t.Optional(t.String()) })),
 });

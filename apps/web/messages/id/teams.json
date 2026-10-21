@@ -243,6 +243,10 @@
     "telegramBot": "Bot Telegram",
     "telegramBotHint": "Bot yang mengirimkan notifikasi untuk setiap proyek tim. Anggota memilih obrolan masing-masing di preferensi mereka. Token disimpan secara terenkripsi.",
     "botToken": "Token API bot (opsional)",
+    "apprise": "Apprise",
+    "appriseHint": "Deliver notifications through an Apprise API server. Each message is tagged with the recipient's user id, so the Apprise configuration decides where it goes. The URL is stored encrypted.",
+    "appriseUrl": "Apprise notify URL",
+    "appriseSaved": "Apprise provider saved",
     "emailSaved": "Penyedia email disimpan",
     "telegramSaved": "Penyedia Telegram disimpan"
   },

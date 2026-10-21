@@ -1093,6 +1093,13 @@
       "when": 1792536807276,
       "tag": "0155_kimi_code_plan_provider",
       "breakpoints": true
+    },
+    {
+      "idx": 156,
+      "version": "7",
+      "when": 1792585030359,
+      "tag": "0156_tidy_bishop",
+      "breakpoints": true
     }
   ]
 }

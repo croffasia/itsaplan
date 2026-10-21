@@ -243,6 +243,10 @@
     "telegramBot": "Telegram 봇",
     "telegramBotHint": "팀의 모든 프로젝트에서 알림을 전송하는 봇입니다. 멤버는 각자의 환경 설정에서 자신의 채팅을 선택합니다. 토큰은 암호화되어 저장됩니다.",
     "botToken": "봇 API 토큰 (선택 사항)",
+    "apprise": "Apprise",
+    "appriseHint": "Deliver notifications through an Apprise API server. Each message is tagged with the recipient's user id, so the Apprise configuration decides where it goes. The URL is stored encrypted.",
+    "appriseUrl": "Apprise notify URL",
+    "appriseSaved": "Apprise provider saved",
     "emailSaved": "이메일 서비스 공급자가 저장되었습니다",
     "telegramSaved": "Telegram 서비스 공급자가 저장되었습니다"
   },

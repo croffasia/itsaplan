@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { Mail, Send } from 'lucide-react';
+import { Bell, Mail, Send } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import NotificationTelegramAccount from './NotificationTelegramAccount';
@@ -8,17 +8,18 @@ import type { NotificationPreferencesForm } from '../../hooks/useNotificationPre
 import { useTranslations } from 'next-intl';
 
 // A member's own notification preferences for the project: for each issue event, a
-// checkbox per channel (email, Telegram). Visible to every member (each edits only
+// checkbox per channel (email, Telegram, Apprise). Visible to every member (each edits only
 // their own). Email is sent to the account address; Telegram to the account connected
-// in the member's profile, shown below. Delivery only happens for channels a project
+// in the member's profile, shown below; Apprise to the team's Apprise API. Delivery only happens for channels a project
 // owner has configured. Save lives in the page header.
 
 // Shared column template so the header labels line up with every event row.
-const COLS = 'grid grid-cols-[1fr_5rem_5rem] items-center';
+const COLS = 'grid grid-cols-[1fr_5rem_5rem_5rem] items-center';
 
 export default function NotificationPreferences({ form }: { form: NotificationPreferencesForm }) {
   const t = useTranslations('settings.notifications');
   const { emailEvents, setEmailEvents, telegramEvents, setTelegramEvents } = form;
+  const { appriseEvents, setAppriseEvents } = form;
   return (
     <div className="flex flex-col gap-10">
       <SettingsSection title={t('eventsTitle')}>
@@ -27,6 +28,7 @@ export default function NotificationPreferences({ form }: { form: NotificationPr
             <span />
             <ChannelHeader icon={<Mail className="size-3.5" />} label={t('email')} />
             <ChannelHeader icon={<Send className="size-3.5" />} label={t('telegram')} />
+            <ChannelHeader icon={<Bell className="size-3.5" />} label={t('apprise')} />
           </div>
           <div className="flex flex-col">
             {NOTIFICATION_EVENTS.map((event) => (
@@ -35,8 +37,10 @@ export default function NotificationPreferences({ form }: { form: NotificationPr
                 label={t(`events.${event}`)}
                 emailChecked={emailEvents[event]}
                 telegramChecked={telegramEvents[event]}
+                appriseChecked={appriseEvents[event]}
                 onEmail={(v) => setEmailEvents({ ...emailEvents, [event]: v })}
                 onTelegram={(v) => setTelegramEvents({ ...telegramEvents, [event]: v })}
+                onApprise={(v) => setAppriseEvents({ ...appriseEvents, [event]: v })}
               />
             ))}
           </div>
@@ -61,14 +65,18 @@ function ChannelRow({
   label,
   emailChecked,
   telegramChecked,
+  appriseChecked,
   onEmail,
   onTelegram,
+  onApprise,
 }: {
   label: string;
   emailChecked: boolean;
   telegramChecked: boolean;
+  appriseChecked: boolean;
   onEmail: (value: boolean) => void;
   onTelegram: (value: boolean) => void;
+  onApprise: (value: boolean) => void;
 }) {
   return (
     <div className={`${COLS} -mx-3 rounded-md px-3 py-2.5 transition-colors hover:bg-accent`}>
@@ -85,6 +93,13 @@ function ChannelRow({
           checked={telegramChecked}
           onCheckedChange={(v) => onTelegram(v === true)}
           aria-label={`${label} — Telegram`}
+        />
+      </div>
+      <div className="flex justify-center">
+        <Checkbox
+          checked={appriseChecked}
+          onCheckedChange={(v) => onApprise(v === true)}
+          aria-label={`${label} — Apprise`}
         />
       </div>
     </div>

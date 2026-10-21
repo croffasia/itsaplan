@@ -243,6 +243,10 @@
     "telegramBot": "ربات Telegram",
     "telegramBotHint": "رباتی که اعلان‌ها را برای هر پروژه تیم ارسال می‌کند. اعضا چت خود را در تنظیمات شخصی انتخاب می‌کنند. توکن به‌صورت رمزنگاری‌شده ذخیره می‌شود.",
     "botToken": "توکن API ربات (اختیاری)",
+    "apprise": "Apprise",
+    "appriseHint": "Deliver notifications through an Apprise API server. Each message is tagged with the recipient's user id, so the Apprise configuration decides where it goes. The URL is stored encrypted.",
+    "appriseUrl": "Apprise notify URL",
+    "appriseSaved": "Apprise provider saved",
     "emailSaved": "ارائه‌دهنده ایمیل ذخیره شد",
     "telegramSaved": "ارائه‌دهنده Telegram ذخیره شد"
   },

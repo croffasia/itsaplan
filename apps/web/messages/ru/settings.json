@@ -95,6 +95,7 @@
     "description": "Выберите, о каких событиях задач вы получаете уведомления и куда.",
     "email": "Почта",
     "telegram": "Telegram",
+    "apprise": "Apprise",
     "events": {
       "assigned": "Назначен на задачу",
       "mentioned": "Упомянут в задаче",

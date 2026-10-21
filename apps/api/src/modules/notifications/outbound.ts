@@ -34,7 +34,7 @@ import type { NotificationType, NewNotificationRow } from './service';
 
 interface OutboxRow {
   projectId: number;
-  channel: 'email' | 'telegram';
+  channel: 'email' | 'telegram' | 'apprise';
   recipient: string;
   payload: DeliveryPayload;
 }
@@ -159,7 +159,8 @@ export async function enqueueOutbound(
   // set no token, the instance bot.
   const telegramEnabled =
     settings.telegram.enabled && (settings.telegram.hasBotToken || (await hasUsableInstanceBot()));
-  if (!emailEnabled && !telegramEnabled) return;
+  const appriseEnabled = settings.apprise.enabled && settings.apprise.hasUrl;
+  if (!emailEnabled && !telegramEnabled && !appriseEnabled) return;
 
   const issueId = notifications[0].issueId;
   const [issueRow] = await db
@@ -220,6 +221,14 @@ export async function enqueueOutbound(
           payload: telegramPayload(n.type, ref, issueRow.title, actor, url, stateChange),
         });
       }
+    }
+    if (appriseEnabled && prefs.appriseEvents[n.type]) {
+      out.push({
+        projectId,
+        channel: 'apprise',
+        recipient: n.userId,
+        payload: emailPayload(n.type, ref, issueRow.title, actor, url, stateChange),
+      });
     }
   }
 

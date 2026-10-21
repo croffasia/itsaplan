@@ -95,6 +95,7 @@
     "description": "انتخاب کنید کدام رویدادهای تسک را دریافت می‌کنید و کجا.",
     "email": "ایمیل",
     "telegram": "Telegram",
+    "apprise": "Apprise",
     "events": {
       "assigned": "به یک تسک تخصیص داده شدید",
       "mentioned": "در یک تسک منشن شدید",

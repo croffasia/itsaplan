@@ -95,6 +95,7 @@
     "description": "Виберіть, про які події ви дізнаєтесь і куди.",
     "email": "Пошта",
     "telegram": "Telegram",
+    "apprise": "Apprise",
     "events": {
       "assigned": "Призначено на задачу",
       "mentioned": "Згадали в задачі",

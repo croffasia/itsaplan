@@ -243,6 +243,10 @@
     "telegramBot": "Telegram 机器人",
     "telegramBotHint": "为团队的所有项目投递通知的机器人。成员在自己的偏好设置中选择聊天。令牌以加密方式存储。",
     "botToken": "Bot API 令牌（可选）",
+    "apprise": "Apprise",
+    "appriseHint": "Deliver notifications through an Apprise API server. Each message is tagged with the recipient's user id, so the Apprise configuration decides where it goes. The URL is stored encrypted.",
+    "appriseUrl": "Apprise notify URL",
+    "appriseSaved": "Apprise provider saved",
     "emailSaved": "邮件服务商已保存",
     "telegramSaved": "Telegram 服务商已保存"
   },

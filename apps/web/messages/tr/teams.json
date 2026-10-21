@@ -243,6 +243,10 @@
     "telegramBot": "Telegram botu",
     "telegramBotHint": "Takımın her projesi için bildirimleri ileten bot. Üyeler kendi sohbetlerini tercihlerinden seçerler. Jeton şifrelenmiş olarak saklanır.",
     "botToken": "Bot API jetonu (isteğe bağlı)",
+    "apprise": "Apprise",
+    "appriseHint": "Deliver notifications through an Apprise API server. Each message is tagged with the recipient's user id, so the Apprise configuration decides where it goes. The URL is stored encrypted.",
+    "appriseUrl": "Apprise notify URL",
+    "appriseSaved": "Apprise provider saved",
     "emailSaved": "E-posta sağlayıcısı kaydedildi",
     "telegramSaved": "Telegram sağlayıcısı kaydedildi"
   },

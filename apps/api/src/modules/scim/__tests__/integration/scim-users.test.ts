@@ -434,6 +434,7 @@ describe('SCIM users', () => {
       await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
         emailEvents: events,
         telegramEvents: events,
+        appriseEvents: events,
       });
       const columnId = (await god.api.projects({ projectKey: 'MKT' }).get()).data!.columns[0]!.id;
       const assign = () =>

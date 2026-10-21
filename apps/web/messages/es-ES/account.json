@@ -59,7 +59,20 @@
     "disconnectApp": "Desconectar",
     "disconnectAppTitle": "¿Desconectar {name}?",
     "disconnectAppWarning": "Pierde el acceso al momento. Si vuelves a conectarla, se te pedirá de nuevo tu consentimiento.",
-    "disconnectAppFailed": "No se pudo desconectar la aplicación."
+    "disconnectAppFailed": "No se pudo desconectar la aplicación.",
+    "confirmSessionTitle": "Confirm it is you",
+    "confirmSessionDescription": "Adding a passkey gives access to {email}. Confirm your identity to continue. You do not need to sign out.",
+    "confirmSession": "Confirm identity",
+    "confirmSessionLoading": "Loading sign-in methods…",
+    "confirmSessionLoadFailed": "Could not load sign-in methods. Close this dialog and try again.",
+    "confirmSessionFailed": "Could not confirm your identity. Try again.",
+    "confirmWithPasskey": "Use an existing passkey",
+    "confirmWithProvider": "Continue with {provider}",
+    "confirmWithLink": "Email a sign-in link",
+    "confirmLinkSent": "A sign-in link was sent to {email}. Open it to return to Security, then choose Add passkey.",
+    "sessionConfirmed": "Identity confirmed. Choose Add passkey to create your key.",
+    "confirmSessionUnavailable": "No sign-in method is currently available to confirm your identity. Contact your instance administrator.",
+    "confirmSessionPending": "Confirming your identity…"
   },
   "accounts": {
     "label": "Cuentas",

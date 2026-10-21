@@ -59,7 +59,20 @@
     "disconnectApp": "연결 해제",
     "disconnectAppTitle": "{name} 연결을 해제하시겠습니까?",
     "disconnectAppWarning": "즉시 접근 권한을 잃습니다. 다시 연결하면 동의를 다시 요청합니다.",
-    "disconnectAppFailed": "애플리케이션 연결을 해제할 수 없습니다."
+    "disconnectAppFailed": "애플리케이션 연결을 해제할 수 없습니다.",
+    "confirmSessionTitle": "Confirm it is you",
+    "confirmSessionDescription": "Adding a passkey gives access to {email}. Confirm your identity to continue. You do not need to sign out.",
+    "confirmSession": "Confirm identity",
+    "confirmSessionLoading": "Loading sign-in methods…",
+    "confirmSessionLoadFailed": "Could not load sign-in methods. Close this dialog and try again.",
+    "confirmSessionFailed": "Could not confirm your identity. Try again.",
+    "confirmWithPasskey": "Use an existing passkey",
+    "confirmWithProvider": "Continue with {provider}",
+    "confirmWithLink": "Email a sign-in link",
+    "confirmLinkSent": "A sign-in link was sent to {email}. Open it to return to Security, then choose Add passkey.",
+    "sessionConfirmed": "Identity confirmed. Choose Add passkey to create your key.",
+    "confirmSessionUnavailable": "No sign-in method is currently available to confirm your identity. Contact your instance administrator.",
+    "confirmSessionPending": "Confirming your identity…"
   },
   "accounts": {
     "label": "계정",

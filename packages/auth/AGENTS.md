@@ -59,7 +59,8 @@ and holds back `/sign-in/email` for an unconfirmed address while verification is
 confirmation link again; a deactivated account and a disabled password form are 403s too. The requirement never outlives the mail provider: the api
 refuses to turn it on without one, and `setEmailSettings` clears it when the provider
 is removed, so the setting alone is what the gate, the sign-up endpoint and the
-public `/auth-config` read — none of them checks the provider again.
+public `/auth-config` read — none of them checks the provider again. The sign-in links
+(`magicLink`) follow the same rule, so the magic-link sender reads only the setting.
 
 `emailAndPassword.requireEmailVerification` is a getter over a module variable that
 `hooks.before` refreshes from the setting on every password endpoint. better-auth

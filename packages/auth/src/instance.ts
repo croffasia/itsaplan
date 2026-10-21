@@ -272,10 +272,14 @@ export async function setEmailSettings(patch: InstanceEmailPatch): Promise<Insta
   const next = await resolveEmailConfig(patch);
   const redacted = toEmailDto(next);
   await writeSecret(INSTANCE_EMAIL_SECRET_KEY, next, redacted);
-  // Without a provider no confirmation link can be sent, so the requirement goes
-  // with it rather than locking every new account out.
-  if (!hasEmailProvider(next) && (await getAuthSettings()).requireEmailVerification) {
-    await setAuthSettings({ requireEmailVerification: false });
+  // Without a provider no confirmation link or sign-in link can be sent, so both
+  // settings go with it rather than locking every new account out or answering a
+  // magic-link request with a mail that never leaves.
+  if (!hasEmailProvider(next)) {
+    const settings = await getAuthSettings();
+    if (settings.requireEmailVerification || settings.magicLink) {
+      await setAuthSettings({ requireEmailVerification: false, magicLink: false });
+    }
   }
   return redacted;
 }

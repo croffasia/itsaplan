@@ -4,6 +4,7 @@ import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { TableKit } from '@tiptap/extension-table';
+import TaskItem from '@tiptap/extension-task-item';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import { common, createLowlight } from 'lowlight';
@@ -17,6 +18,7 @@ import { IssueRef } from './issueRefDecorations';
 import { refreshDecorations } from './refreshDecorations';
 import { SlashCommand } from '@/lib/tiptap-slash-command';
 import { MarkdownTable } from './tiptap-table';
+import { TightTaskList } from './tiptap-task-list';
 import { Video } from './tiptap-video';
 import { attachmentHtml, type Embeddable } from './attachmentEmbed';
 import { openLinkOnModifierClick } from './modifierClickLink';
@@ -154,8 +156,11 @@ export default function MarkdownEditor({
       // column would be lost the next time the description is read back.
       TableKit.configure({ table: false }),
       MarkdownTable.configure({ resizable: false }),
+      TightTaskList,
+      TaskItem.configure({ nested: true }),
       SlashCommand.configure({
         codeBlockLabel: t('codeBlock'),
+        taskListLabel: t('todoList'),
         tableLabel: t('table'),
         image: imageAttachments
           ? { label: t('image'), onPick: () => setImagePickerOpen(true) }
@@ -237,7 +242,7 @@ export default function MarkdownEditor({
 
   return (
     <div className={className}>
-      {editable && <EditorSelectionMenu editor={editor} />}
+      {editable && <EditorSelectionMenu editor={editor} taskList />}
       {editable && <EditorTableMenu editor={editor} />}
       {/* Grows with the text rather than being pinned to the container's height,
           so a container that scrolls measures the overflow and shows a bar. */}

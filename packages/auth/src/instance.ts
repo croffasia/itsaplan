@@ -50,7 +50,8 @@ export interface AuthSettings {
   // mail provider: the api rejects turning it on while none is configured, and
   // setEmailSettings clears it when the provider is removed.
   requireEmailVerification: boolean;
-  // Offer sign-in by emailed link alongside the password.
+  // Offer sign-in by emailed link alongside the password. Needs a mail provider, under
+  // the same rule as requireEmailVerification.
   magicLink: boolean;
   // Offer the email/password form at all. Turning it off leaves single sign-on (and
   // passkeys, which are added to an account that already exists) as the way in, so

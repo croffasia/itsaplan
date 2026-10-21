@@ -6,6 +6,11 @@ export type Embeddable = { url: string; contentType: string; filename: string };
 
 export const isImage = (a: Embeddable) => a.contentType.startsWith('image/');
 export const isVideo = (a: Embeddable) => a.contentType.startsWith('video/');
+// next/image's optimizer refuses SVG (dangerouslyAllowSVG is off), and an
+// attachment URL (/media/.../raw) has no .svg extension for it to skip the
+// optimizer by, so an SVG has to be shown unoptimized. Shown in an <img>, it
+// runs no script.
+export const isSvg = (a: Embeddable) => a.contentType.split(';')[0].trim() === 'image/svg+xml';
 
 // HTML handed to the tiptap editor (drag from the Attachments panel, file drop
 // on the editor): images become an inline <img>, videos an inline <video>,

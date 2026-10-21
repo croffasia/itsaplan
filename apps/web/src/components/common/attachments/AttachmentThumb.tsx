@@ -1,6 +1,11 @@
 import Image from 'next/image';
 import { FileIcon } from 'lucide-react';
-import { isImage, isVideo, type Embeddable } from '@/components/common/editor/attachmentEmbed';
+import {
+  isImage,
+  isSvg,
+  isVideo,
+  type Embeddable,
+} from '@/components/common/editor/attachmentEmbed';
 
 // An attachment's leading thumbnail: images and videos preview themselves,
 // every other type falls back to a generic file glyph.
@@ -21,8 +26,8 @@ export default function AttachmentThumb({
         fill
         sizes={sizes}
         // A file picked in the new issue modal is previewed from a local blob:
-        // URL, which the image optimizer cannot fetch.
-        unoptimized={attachment.url.startsWith('blob:')}
+        // URL, which the image optimizer cannot fetch; it refuses SVG.
+        unoptimized={attachment.url.startsWith('blob:') || isSvg(attachment)}
         draggable={false}
         className="object-cover"
       />

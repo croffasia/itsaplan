@@ -10,7 +10,8 @@
   "showSnoozed": "Ertelenenleri göster",
   "markAllRead": "Tümünü okundu olarak işaretle",
   "deleteAllRead": "Okunanların tümünü sil",
-  "deleteAllReadCompleted": "Tamamlanan işlerin okunan bildirimlerini sil",
+  "deleteAllCompleted": "Tamamlanan işlerin bildirimlerini sil",
+  "deleteAllCompletedDescription": "Mevcut filtrelerle eşleşen tamamlanan veya iptal edilen işlerin okunmamışlar dahil tüm bildirimleri silinir. Bu işlem geri alınamaz.",
   "types": {
     "assigned": "Atandı",
     "mentioned": "Bahsedildi",

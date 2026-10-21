@@ -10,7 +10,8 @@
   "showSnoozed": "顯示已稍後提醒的通知",
   "markAllRead": "全部標為已讀",
   "deleteAllRead": "刪除所有已讀通知",
-  "deleteAllReadCompleted": "刪除已完成工作項目的所有已讀通知",
+  "deleteAllCompleted": "刪除已完成工作項目的通知",
+  "deleteAllCompletedDescription": "這會刪除符合目前篩選條件的已完成或已取消工作項目通知，包括未讀通知。此操作無法復原。",
   "types": {
     "assigned": "已指派",
     "mentioned": "已提及",

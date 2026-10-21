@@ -10,7 +10,8 @@
   "showSnoozed": "إظهار المؤجّلة",
   "markAllRead": "تعليم الكل كمقروء",
   "deleteAllRead": "حذف كل المقروءة",
-  "deleteAllReadCompleted": "حذف كل المقروءة للمهام المكتملة",
+  "deleteAllCompleted": "حذف إشعارات المهام المكتملة",
+  "deleteAllCompletedDescription": "سيؤدي هذا إلى حذف الإشعارات المطابقة للفلاتر الحالية للمهام المكتملة أو الملغاة، بما في ذلك غير المقروءة. لا يمكن التراجع عن هذا الإجراء.",
   "types": {
     "assigned": "مُسنَدة",
     "mentioned": "إشارة إليك",

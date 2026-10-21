@@ -133,7 +133,13 @@ export const notificationRoutes = new Elysia({
     {
       query: deleteNotificationsQuery,
       response: { 200: AffectedCountResponse, ...errors(400, 401) },
-      detail: { summary: 'Delete inbox notifications' },
+      detail: {
+        summary: 'Delete inbox notifications',
+        description:
+          'Delete the caller’s notifications by scope. completed includes read and unread ' +
+          'notifications on completed or canceled issues; read-completed keeps only read ones. ' +
+          'The type, actor and snooze filters narrow either scope.',
+      },
     },
   )
 

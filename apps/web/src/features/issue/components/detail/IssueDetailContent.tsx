@@ -43,6 +43,7 @@ export default function IssueDetailContent({
   issueId,
   onIssueLoaded,
   onDeleted,
+  onOpenInPanel,
   layout = 'panel',
 }: {
   project: ProjectDetail;
@@ -51,6 +52,7 @@ export default function IssueDetailContent({
   // Called after the issue is deleted, so the surrounding chrome can leave the
   // now-gone issue (close the panel / return to the project).
   onDeleted?: () => void;
+  onOpenInPanel?: () => void;
   // 'panel' stacks everything in one column (side panel). 'page' puts the
   // Properties in a right sidebar fixed to the viewport edge (Linear full-page
   // layout), and stacks them into the column below xl. 'split' is the same
@@ -240,7 +242,14 @@ export default function IssueDetailContent({
   // it than the content block it follows in a single column.
   const sidebarProperties = renderProperties('mt-3 pt-4');
 
-  const actions = <IssueActionsBar project={project} issue={issue} onDeleted={onDeleted} />;
+  const actions = (
+    <IssueActionsBar
+      project={project}
+      issue={issue}
+      onDeleted={onDeleted}
+      onOpenInPanel={onOpenInPanel}
+    />
+  );
 
   // The sidebar grows towards the content, so the pointer moving away from the
   // edge the panel sits on is what widens it.

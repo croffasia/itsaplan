@@ -20,7 +20,7 @@ import { useTranslations } from 'next-intl';
 export default function IssueViewPage() {
   const t = useTranslations('issue');
   const router = useRouter();
-  const { project } = useShell();
+  const { project, onOpenIssue } = useShell();
   const seq = useShellRoute().routeIssueSeq;
 
   const exit = () => project && router.push(projectPath(project.project.ref));
@@ -41,6 +41,10 @@ export default function IssueViewPage() {
   }, [movedTo, issueQuery.data, router]);
   useIssueTitle(moved || issueQuery.isError ? null : (issueQuery.data?.id ?? null), 'page');
 
+  const openInPanel = () => {
+    if (issueQuery.data) onOpenIssue(issueQuery.data.id, 'panel');
+  };
+
   if (!project) return null;
 
   return (
@@ -52,6 +56,7 @@ export default function IssueViewPage() {
             issueId={issueQuery.data.id}
             layout="page"
             onDeleted={exit}
+            onOpenInPanel={openInPanel}
           />
         ) : issueQuery.isLoading || (moved && (!projects || movedTo)) ? (
           <IssueDetailSkeleton />

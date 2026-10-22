@@ -1,0 +1,76 @@
+{
+  "title": "Döngüler",
+  "newCycle": "Yeni döngü",
+  "status": {
+    "upcoming": "Gelecek",
+    "active": "Aktif",
+    "completed": "Tamamlandı"
+  },
+  "views": {
+    "table": "Tablo",
+    "timeline": "Zaman Çizelgesi"
+  },
+  "columns": {
+    "name": "Ad",
+    "dates": "Tarihler",
+    "length": "Süre",
+    "issues": "İşler",
+    "progress": "İlerleme"
+  },
+  "emptyTitle": "Henüz döngü yok",
+  "emptyDescription": "Döngü, takımın işlerini planladığı belirli süreli bir zaman dilimidir (sprint).",
+  "nothingPlannedTitle": "Planlanan bir şey yok",
+  "nothingPlannedDescription": "Zaman çizelgesi aktif ve gelecek döngüleri gösterir. Tamamlanan döngüler tabloda yer alır.",
+  "options": "Döngü seçenekleri",
+  "transferIssues": "{count, plural, one {# tamamlanmamış işi taşı} other {# tamamlanmamış işi taşı}}",
+  "finishedEarly": "Erken tamamlandı, planlanan bitiş: {date}",
+  "form": {
+    "editTitle": "Döngüyü düzenle",
+    "newTitle": "Yeni döngü",
+    "name": "Ad",
+    "goal": "Hedef",
+    "goalPlaceholder": "Bu döngüde ne tamamlanacak?",
+    "length": "Süre",
+    "starts": "Başlangıç",
+    "ends": "Bitiş",
+    "create": "Döngü oluştur",
+    "saveFailed": "Döngü kaydedilemedi"
+  },
+  "weeks": "{count, plural, one {# hafta} other {# hafta}}",
+  "transfer": {
+    "title": "Tamamlanmamış işleri taşı",
+    "description": "Tamamlanmamış işler seçtiğiniz döngüye taşınır. Tamamlanan ve iptal edilen işler bu döngüde kalır.",
+    "moveTo": "Şuraya taşı:",
+    "noCycle": "Döngü yok",
+    "submit": "İşleri taşı",
+    "moving": "Taşınıyor…",
+    "moved": "{count, plural, one {# iş taşındı} other {# iş taşındı}}",
+    "failed": "İşler taşınamadı"
+  },
+  "finish": {
+    "action": "Döngüyü tamamla",
+    "title": "Döngüyü erken tamamla",
+    "description": "{cycle} planlanan {date} tarihi yerine bugün kapatılıyor. Döngüyü tekrar açamazsınız. {count, plural, =0 {Tamamlanmamış iş kalmadı.} one {# tamamlanmamış iş bu döngüde kalır.} other {# tamamlanmamış iş bu döngüde kalır.}}",
+    "submit": "Döngüyü tamamla"
+  },
+  "startNext": {
+    "action": "Sonraki döngüyü bugün başlat",
+    "title": "Sonraki döngüyü bugün başlat",
+    "description": "{cycle} bugün kapatılacak ve tekrar açılamayacak. {next} bugün başlar ve yine {date} tarihinde biter. {count, plural, =0 {Aktarılan iş yok.} one {# tamamlanmamış iş bu döngüye taşınır.} other {# tamamlanmamış iş bu döngüye taşınır.}} Tamamlanan ve iptal edilen işler {cycle} üzerinde kalır.",
+    "submit": "Sonraki döngüyü başlat",
+    "started": "{cycle} başlatıldı. {count, plural, =0 {Aktarılan iş olmadı.} one {# iş aktarıldı.} other {# iş aktarıldı.}}"
+  },
+  "delete": {
+    "title": "Döngüyü sil",
+    "description": "{cycle} kalıcı olarak silinecektir. {count, plural, =0 {İçinde iş bulunmuyor.} one {# iş bir döngüye atanmamış olarak projede kalır.} other {# iş bir döngüye atanmamış olarak projede kalır.}}"
+  },
+  "details": "Döngü detayları",
+  "goal": "Hedef",
+  "noGoal": "Hedef belirlenmemiş.",
+  "progress": "İlerleme",
+  "openCycle": "Döngüyü aç",
+  "dragFailed": "Döngü taşınamadı",
+  "notFound": "Döngü bulunamadı.",
+  "defaultName": "Sprint {n}",
+  "issuesDone": "Tamamlanan işler"
+}

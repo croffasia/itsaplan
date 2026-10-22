@@ -26,7 +26,7 @@
     },
     "general": {
       "label": "Загальне",
-      "description": "Власні воркспейси, налаштування за замовчуванням для нових проєктів і трасування агентів."
+      "description": "Власні воркспейси, налаштування за замовчуванням для нових проєктів, трасування й час запуску агентів."
     },
     "authentication": {
       "label": "Автентифікація",
@@ -113,6 +113,10 @@
     "ai-agents": {
       "label": "ШІ-агенти",
       "description": "ШІ-агенти, які працюють у цьому проєкті."
+    },
+    "queue": {
+      "label": "Runner queue",
+      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
     }
   },
   "previews": {

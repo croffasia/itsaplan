@@ -184,12 +184,17 @@
     "traceRetention": "Simpan trace eksekusi",
     "traceRetentionHint": "Setiap eksekusi agen mencatat panggilan ke model dan alat. Dasbor penggunaan hanya menghitung eksekusi yang masih disimpan.",
     "traceDays": "{days} hari",
-    "traceForever": "Selamanya"
+    "traceForever": "Selamanya",
+    "maxRunTime": "Waktu jalan maksimum",
+    "maxRunTimeHint": "Berapa lama satu jalannya agen boleh berlangsung sebelum dihentikan dan disimpan sebagai gagal. Batas milik agen tidak boleh melebihinya.",
+    "runMinutes": "{minutes, plural, other {# menit}}",
+    "runSeconds": "{seconds} dtk"
   },
   "authentication": {
     "saved": "Pengaturan autentikasi disimpan",
     "registration": "Pendaftaran",
     "registrationHint": "Siapa yang boleh membuat akun di instance ini.",
+    "registrationPasswordlessNote": "Pendaftaran dan pemulihan kata sandi ditangani oleh penyedia masuk.",
     "inviteTtlDays": "Masa berlaku undangan (hari)",
     "inviteTtlDaysHint": "Setelah jangka waktu ini, tautan undangan tidak berfungsi lagi dan, dengan pendaftaran khusus undangan, tidak bisa lagi dipakai untuk mendaftar. Dengan 0, undangan tidak kedaluwarsa.",
     "inviteTtlDaysInvalid": "Masukkan jumlah hari berupa bilangan bulat dari 0 sampai {max}.",
@@ -199,15 +204,18 @@
     "modes": {
       "open": {
         "label": "Terbuka",
-        "description": "Siapa saja yang mengakses halaman pendaftaran dapat membuat akun."
+        "description": "Siapa saja yang mengakses halaman pendaftaran dapat membuat akun.",
+        "descriptionPasswordless": "Siapa pun yang masuk melalui penyedia untuk pertama kali akan mendapatkan akun."
       },
       "invite": {
         "label": "Hanya undangan",
-        "description": "Akun hanya dapat dibuat melalui tautan undangan."
+        "description": "Akun hanya dapat dibuat melalui tautan undangan.",
+        "descriptionPasswordless": "Masuk melalui penyedia hanya membuat akun jika ada undangan yang tertunda untuk alamat tersebut."
       },
       "closed": {
         "label": "Tertutup",
-        "description": "Tidak ada akun baru. Akun yang ada tetap dapat masuk."
+        "description": "Tidak ada akun baru. Akun yang ada tetap dapat masuk.",
+        "descriptionPasswordless": "Tidak ada akun baru, bahkan bagi yang datang dari penyedia. Akun yang ada tetap dapat masuk."
       }
     },
     "signIn": "Opsi masuk",

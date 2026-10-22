@@ -10,7 +10,8 @@
   "showSnoozed": "Tampilkan yang ditunda",
   "markAllRead": "Tandai semua sudah dibaca",
   "deleteAllRead": "Hapus semua yang sudah dibaca",
-  "deleteAllReadCompleted": "Hapus semua yang sudah dibaca untuk issue yang telah selesai",
+  "deleteAllCompleted": "Hapus notifikasi untuk issue yang telah selesai",
+  "deleteAllCompletedDescription": "Notifikasi untuk issue yang selesai atau dibatalkan yang cocok dengan filter saat ini, termasuk yang belum dibaca, akan dihapus. Tindakan ini tidak dapat dibatalkan.",
   "types": {
     "assigned": "Ditetapkan",
     "mentioned": "Disebutkan",

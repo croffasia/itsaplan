@@ -40,6 +40,9 @@ api:
     API_URL: ""
     APP_URL: ""
     # COOKIE_DOMAIN: ""
+    # Where the client IP for the rate limit is read; unset reads X-Forwarded-For.
+    # CLIENT_IP_HEADER: ""
+    # TRUSTED_PROXIES: ""
     # Public origin for incoming Git webhooks when API_URL is private; unset uses API_URL.
     # GIT_WEBHOOK_BASE_URL: ""
     S3_BUCKET: ""

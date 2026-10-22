@@ -590,6 +590,11 @@ a.issue-ref {
 .md-content ul[data-type='taskList'] input[type='checkbox'] {
   cursor: pointer;
 }
+.md-content[contenteditable='false'] ul[data-type='taskList'] li > label,
+.md-content[contenteditable='false'] ul[data-type='taskList'] input[type='checkbox'] {
+  cursor: default;
+  pointer-events: none;
+}
 .md-content table {
   border-collapse: collapse;
 }

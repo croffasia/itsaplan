@@ -14,6 +14,12 @@ data:
   {{- with .Values.api.env.COOKIE_DOMAIN }}
   COOKIE_DOMAIN: {{ . | quote }}
   {{- end }}
+  {{- with .Values.api.env.CLIENT_IP_HEADER }}
+  CLIENT_IP_HEADER: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.api.env.TRUSTED_PROXIES }}
+  TRUSTED_PROXIES: {{ . | quote }}
+  {{- end }}
   {{- with .Values.api.env.GIT_WEBHOOK_BASE_URL }}
   GIT_WEBHOOK_BASE_URL: {{ . | quote }}
   {{- end }}

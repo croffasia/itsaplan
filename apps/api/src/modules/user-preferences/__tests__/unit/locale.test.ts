@@ -30,6 +30,11 @@ describe('localeFromAcceptLanguage', () => {
     expect(localeFromAcceptLanguage('fa-IR,fa;q=0.9,en;q=0.8')).toBe('fa');
   });
 
+  it('tells Traditional Chinese (Taiwan) apart from Simplified Chinese', () => {
+    expect(localeFromAcceptLanguage('zh-TW,zh;q=0.9,en;q=0.8')).toBe('zh-TW');
+    expect(localeFromAcceptLanguage('zh,en;q=0.8')).toBe('zh-CN');
+  });
+
   it('uses the fallback for a preferred wildcard', () => {
     expect(localeFromAcceptLanguage('de-DE,*;q=0.9,zh;q=0.8')).toBe('en');
   });

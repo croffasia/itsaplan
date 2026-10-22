@@ -9,6 +9,7 @@ import { serverRuntimeEnv } from '@/utils/runtimeEnv';
 // request header is forwarded — this must never become a way to reach the rest of the
 // api through the web server.
 const MEDIA_ROOTS = ['avatars', 'attachments', 'chat-attachments', 'initiative-attachments'];
+const PUBLIC_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 // Copied from the api's response, including the headers that keep attacker-controlled
 // bytes inert (nosniff, the disposition that forces a download, the sandbox CSP).
@@ -24,7 +25,13 @@ const PASSTHROUGH_HEADERS = [
 
 export async function GET(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const { path } = await params;
-  if (!MEDIA_ROOTS.includes(path[0]) || path.some((segment) => segment === '..')) {
+  const [root, publicId, raw] = path;
+  if (
+    path.length !== 3 ||
+    !MEDIA_ROOTS.includes(root) ||
+    !PUBLIC_ID.test(publicId) ||
+    raw !== 'raw'
+  ) {
     return new Response(null, { status: 404 });
   }
 
@@ -32,10 +39,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ path
   // reached by service name, which is what SERVICE_URL_API carries (as for the worker).
   const origin = process.env.SERVICE_URL_API || serverRuntimeEnv().apiUrl;
   const { search } = new URL(request.url);
-  const upstream = await fetch(`${origin}/${path.join('/')}${search}`, {
+  const upstream = await fetch(`${origin}/${root}/${publicId}/raw${search}`, {
     // The api answers 304 to it, and passing it on keeps a cached avatar cached.
     headers: forwardedHeaders(request),
     cache: 'no-store',
+    redirect: 'error',
   });
 
   const headers = new Headers();

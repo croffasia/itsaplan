@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { db, agentRun, agentRunTrace } from '@repo/db';
 import { SpanType } from '@mastra/core/observability';
 import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
@@ -247,6 +248,74 @@ describe('agent trace retention', () => {
     await pruneAgentTraces();
 
     expect(await traceIds(asOwner, teamId, agent.id)).toEqual(['trace-recent', 'trace-old']);
+  });
+
+  it('prunes expired external transcripts without deleting results or pending attempts', async () => {
+    const { asOwner } = await setup();
+    const created = await createAgent(asOwner, 'MKT', {
+      name: 'Runner',
+      username: 'runner',
+      kind: 'external',
+    });
+    const projectId = await projectIdOf(asOwner, 'MKT');
+    const rows = await db
+      .insert(agentRun)
+      .values([
+        {
+          agentId: created.data!.agent.id,
+          projectId,
+          prompt: 'Old',
+          status: 'success',
+          output: 'Kept result',
+          createdAt: daysAgo(50),
+          finishedAt: daysAgo(40),
+        },
+        {
+          agentId: created.data!.agent.id,
+          projectId,
+          prompt: 'Recent',
+          status: 'failed',
+          createdAt: daysAgo(50),
+          finishedAt: daysAgo(5),
+        },
+        {
+          agentId: created.data!.agent.id,
+          projectId,
+          prompt: 'Active',
+          status: 'pending',
+          createdAt: daysAgo(50),
+        },
+        {
+          agentId: created.data!.agent.id,
+          projectId,
+          prompt: 'Canceled',
+          status: 'canceled',
+          createdAt: daysAgo(40),
+        },
+      ])
+      .returning();
+    await db.insert(agentRunTrace).values(
+      rows.flatMap((run) =>
+        [1, 2].map((attempt) => ({
+          runId: run.id,
+          attempt,
+          sessionId: 'local-session',
+          events: [{ private: 'trace' }],
+          createdAt: daysAgo(50),
+        })),
+      ),
+    );
+    await setAgentSettings({ traceRetentionDays: 0 });
+    await pruneAgentTraces();
+    expect(await db.select().from(agentRunTrace)).toHaveLength(8);
+    await setAgentSettings({ traceRetentionDays: 30 });
+    await pruneAgentTraces();
+    const kept = await db.select().from(agentRunTrace);
+    expect(kept).toHaveLength(4);
+    expect(kept.every((trace) => [rows[1].id, rows[2].id].includes(trace.runId))).toBe(true);
+    const runs = await db.select().from(agentRun);
+    expect(runs).toHaveLength(4);
+    expect(runs.find((run) => run.id === rows[0].id)?.output).toBe('Kept result');
   });
 
   it('drops the traces of a team that no longer exists', async () => {

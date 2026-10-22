@@ -65,6 +65,7 @@ export default function GodAuthenticationForm({
               value={policy.registration}
               disabled={policy.saving}
               onChange={policy.setRegistration}
+              passwordless={!policy.emailPassword}
             />
             <SettingsRow
               title={t('allowedEmailDomains')}
@@ -107,6 +108,9 @@ export default function GodAuthenticationForm({
               }
             />
           </SettingsCard>
+          {!policy.emailPassword && (
+            <p className="text-xs text-muted-foreground">{t('registrationPasswordlessNote')}</p>
+          )}
         </SettingsSection>
 
         <SettingsSection title={t('signIn')} description={t('signInHint')}>

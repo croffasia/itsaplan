@@ -198,7 +198,8 @@
     "copiedLink": "Copié",
     "editLink": "Modifier le lien",
     "retryPreview": "Réessayer",
-    "copyLinkFailed": "Impossible de copier le lien. Sélectionnez et copiez l’URL ci-dessus."
+    "copyLinkFailed": "Impossible de copier le lien. Sélectionnez et copiez l’URL ci-dessus.",
+    "todoList": "Liste de tâches"
   },
   "chart": {
     "download": "Enregistrer le graphique",

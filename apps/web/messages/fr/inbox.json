@@ -10,7 +10,8 @@
   "showSnoozed": "Afficher les notifications reportées",
   "markAllRead": "Tout marquer comme lu",
   "deleteAllRead": "Supprimer toutes les notifications lues",
-  "deleteAllReadCompleted": "Supprimer les notifications lues des tickets terminés",
+  "deleteAllCompleted": "Supprimer les notifications des tickets terminés",
+  "deleteAllCompletedDescription": "Cela supprime les notifications des tickets terminés ou annulés qui correspondent aux filtres actuels, y compris celles non lues. Cette action est irréversible.",
   "types": {
     "assigned": "Assigné",
     "mentioned": "Mentionné",

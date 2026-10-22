@@ -1,0 +1,14 @@
+{
+  "placeholder": "Bir komut yazın veya arama yapın…",
+  "noResults": "Sonuç bulunamadı.",
+  "issues": "İşler",
+  "searching": "Aranıyor…",
+  "selectAllIssues": "Tüm işleri seç",
+  "newIssue": "Yeni iş",
+  "newInitiative": "Yeni girişim",
+  "newProject": "Yeni proje",
+  "toggleChat": "Yapay zekâ sohbetini göster veya gizle",
+  "board": "Pano",
+  "commands": "Komutlar",
+  "switchProject": "Projeyi değiştir"
+}

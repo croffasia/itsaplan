@@ -1,0 +1,82 @@
+{
+  "window": "{days, plural, =1 {Son 24 saat} other {Son # gün}}",
+  "retentionNote": "Yalnızca dahili ajanlar. Örneklemin iz saklama süresinden eski çalıştırmalar dahil edilmez.",
+  "noComparison": "Karşılaştırılacak veri yok",
+  "vsPrevious": "önceki {value} döneme göre",
+  "deletedAgent": "Silinmiş ajan",
+  "deletedProject": "Silinmiş proje",
+  "allProjects": "Tüm projeler",
+  "totalTokens": "Toplam token",
+  "totalCost": "Toplam maliyet",
+  "stats": {
+    "cost": "Model maliyeti",
+    "tokens": "Token",
+    "runs": "Çalıştırmalar",
+    "errors": "Başarısız çalıştırmalar"
+  },
+  "unpriced": "{count, plural, one {# modelin fiyatı tanımlanmamış} other {# modelin fiyatı tanımlanmamış}}",
+  "setPrices": "Fiyatları belirle",
+  "measure": {
+    "tokens": "Token",
+    "cost": "Maliyet"
+  },
+  "series": {
+    "input": "Girdi",
+    "output": "Çıktı"
+  },
+  "models": {
+    "title": "Modele göre",
+    "description": "Her modelin token kullanımı ve maliyeti.",
+    "model": "Model",
+    "input": "Girdi",
+    "output": "Çıktı",
+    "cost": "Maliyet",
+    "empty": "Bu dönemde model çağrısı bulunmuyor"
+  },
+  "byAgent": {
+    "title": "Ajana göre",
+    "description": "Her ajanın kullandığı kaynaklar.",
+    "empty": "Bu dönemde ajan çalıştırması bulunmuyor"
+  },
+  "byProject": {
+    "title": "Projeye göre",
+    "description": "Ajanların her projede kullandığı kaynaklar.",
+    "empty": "Bu dönemde ajan çalıştırması bulunmuyor"
+  },
+  "byTeam": {
+    "title": "Takıma göre",
+    "description": "Her takımın ajanlarının kullandığı kaynaklar.",
+    "empty": "Bu dönemde ajan çalıştırması bulunmuyor"
+  },
+  "overTime": {
+    "title": "Zaman içindeki değişim",
+    "description": "Dönem boyunca token ve maliyet dağılımı.",
+    "empty": "Bu dönemde kullanım verisi yok"
+  },
+  "preview": {
+    "title": "Cloud ve Pro sürümlerinde daha fazlası",
+    "description": "Kişi ve tetikleyici bazında harcamalar, çalışma süresi ve araç çağrıları. Cloud ve kendi sunucunuzda barındırılan Pro sürümünde mevcuttur.",
+    "hide": "Gizle",
+    "show": "Göster",
+    "byPerson": {
+      "title": "Kişiye göre",
+      "description": "Sohbet veya bahsetme ile çalıştırmaları başlatan kişiler."
+    },
+    "byTrigger": {
+      "title": "Tetikleyiciye göre",
+      "description": "Sohbet, bahsetme, zamanlama veya iş olayı."
+    },
+    "bySchedule": {
+      "title": "Zamanlamaya göre",
+      "description": "Her zamanlamanın yaptığı harcama."
+    },
+    "tools": {
+      "title": "Araçlar",
+      "description": "Araç çağrıları ve başarısız olanların sayısı."
+    },
+    "latency": {
+      "title": "Çalışma süresi",
+      "description": "Günlük medyan ve 95. yüzdelik (p95) süreleri."
+    }
+  }
+}

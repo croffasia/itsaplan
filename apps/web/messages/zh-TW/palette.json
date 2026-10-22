@@ -1,0 +1,14 @@
+{
+  "placeholder": "輸入命令或搜尋…",
+  "noResults": "未找到結果。",
+  "issues": "工作項目",
+  "searching": "正在搜尋…",
+  "selectAllIssues": "選擇所有工作項目",
+  "newIssue": "新建工作項目",
+  "newInitiative": "新建計畫",
+  "newProject": "新建專案",
+  "toggleChat": "顯示或隱藏 AI 聊天",
+  "board": "看板",
+  "commands": "命令",
+  "switchProject": "切換專案"
+}

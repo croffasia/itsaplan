@@ -32,7 +32,11 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   `WorkspaceRailActions` sits below the workspace tiles of a rail; here it says where more
   than one workspace per person is available. `ShellNotice` is a strip under the top bar of
   the app shell, god mode and the teams pages; here it shows nothing, while the hosted
-  build shows notices about the instance there. `godSections(core)` returns the god mode
+  build shows notices about the instance there. `BrandMark` is the product mark at the top
+  and the bottom of both sidebars; here the core's `ItsAPlanMark`, which the hosted build can
+  mark its edition on. `BrandPanel({ subtitle })` is the panel beside the form on the
+  logged-out screens and the invite screen; here the core's, which the hosted build can
+  replace. `godSections(core)` returns the god mode
   sections: here the core's and a preview of the audit log, in a `security` group, while
   the hosted build adds, replaces or drops some. One it adds carries in `Component` the
   page `/god/<slug>` opens, and may sit in a group of its own: the sidebar lists the groups
@@ -43,8 +47,9 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   invited address as `email`; here it adds nothing, while the hosted build offers a sign-in
   through providers of its own. `SignInPage` is what `/login/<name>` shows, a sign-in page under a
   name of its own; here every name answers 404, while the hosted build can show the sign-in
-  form there under a title of its own (`AuthLoginForm`'s `title`). A sign-in that comes back with a code the core does not
-  know shows the text the build's messages give it under `auth.errors.codes.<code>`.
+  form there under a title of its own (`AuthLoginForm`'s `title`). A sign-in that comes back, or an auth form the server refuses, with
+  a code the core does not know shows the text the build's messages give it under
+  `auth.errors.codes.<code>`.
   `GodSectionExtras` renders at the end of every god section page, by its slug, for settings the hosted build adds to an existing section; `WorkspaceSectionExtras`
   does the same on a workspace's own settings pages (`general`, `managers`), with the
   workspace, and its controls save themselves. `ScheduleDialog` is the dialog that creates

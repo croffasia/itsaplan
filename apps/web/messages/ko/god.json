@@ -184,12 +184,17 @@
     "traceRetention": "실행 추적 기록 보관",
     "traceRetentionHint": "각 AI 에이전트 실행에는 모델 및 도구 호출 기록이 저장됩니다. 사용량 대시보드에는 현재 보관 중인 실행 기록만 집계됩니다.",
     "traceDays": "{days, plural, one {#일} other {#일}}",
-    "traceForever": "계속 보관"
+    "traceForever": "계속 보관",
+    "maxRunTime": "최대 실행 시간",
+    "maxRunTimeHint": "에이전트 실행 한 번이 중지되고 실패로 저장되기 전까지 걸릴 수 있는 시간입니다. 에이전트 자체 제한은 이 값을 초과할 수 없습니다.",
+    "runMinutes": "{minutes, plural, other {#분}}",
+    "runSeconds": "{seconds}초"
   },
   "authentication": {
     "saved": "인증 설정이 저장되었습니다",
     "registration": "회원가입",
     "registrationHint": "이 인스턴스에서 계정을 생성할 수 있는 사용자를 설정합니다.",
+    "registrationPasswordlessNote": "회원가입과 비밀번호 복구는 로그인 공급자에서 처리합니다.",
     "inviteTtlDays": "초대 유효 기간(일)",
     "inviteTtlDaysHint": "초대 링크는 이 일수가 지나면 더 이상 작동하지 않으며, 초대 전용 회원가입에서는 해당 주소로 가입할 수 없게 됩니다. 0으로 설정하면 초대에 응답할 때까지 유효합니다.",
     "inviteTtlDaysInvalid": "0에서 {max} 사이의 정수 일수를 입력하세요.",
@@ -199,15 +204,18 @@
     "modes": {
       "open": {
         "label": "공개",
-        "description": "회원가입 페이지에 접근할 수 있는 사람은 누구나 계정을 생성할 수 있습니다."
+        "description": "회원가입 페이지에 접근할 수 있는 사람은 누구나 계정을 생성할 수 있습니다.",
+        "descriptionPasswordless": "공급자로 처음 로그인하는 사용자에게 계정이 생성됩니다."
       },
       "invite": {
         "label": "초대 전용",
-        "description": "초대 링크를 통해서만 계정을 생성할 수 있습니다."
+        "description": "초대 링크를 통해서만 계정을 생성할 수 있습니다.",
+        "descriptionPasswordless": "공급자로 로그인하면 해당 이메일 주소에 대기 중인 초대가 있을 때만 계정이 생성됩니다."
       },
       "closed": {
         "label": "비공개",
-        "description": "새 계정을 생성할 수 없습니다. 기존 계정은 계속 로그인할 수 있습니다."
+        "description": "새 계정을 생성할 수 없습니다. 기존 계정은 계속 로그인할 수 있습니다.",
+        "descriptionPasswordless": "공급자에서 오는 사용자를 포함해 새 계정을 생성하지 않습니다. 기존 계정은 계속 로그인할 수 있습니다."
       }
     },
     "signIn": "로그인 옵션",

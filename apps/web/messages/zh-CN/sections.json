@@ -26,7 +26,7 @@
     },
     "general": {
       "label": "通用",
-      "description": "个人工作区、新建项目的默认设置和代理追踪。"
+      "description": "个人工作区、新建项目的默认设置，以及代理追踪和运行时长。"
     },
     "authentication": {
       "label": "身份验证",
@@ -113,6 +113,10 @@
     "ai-agents": {
       "label": "AI 代理",
       "description": "在该项目中工作的 AI 代理。"
+    },
+    "queue": {
+      "label": "Runner queue",
+      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
     }
   },
   "previews": {

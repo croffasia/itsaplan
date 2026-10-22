@@ -173,13 +173,14 @@ export const agentChatRoutes = new Elysia({ name: 'agent-chat', detail: { tags: 
 
   .post('/agent-chats/claim', async ({ agent }) => ({ message: await claimNextMessage(agent) }), {
     runnerAgent: true,
-    response: { 200: ClaimChatResponse, ...errors(401, 403) },
+    response: { 200: ClaimChatResponse, ...errors(401, 403, 409) },
     detail: {
       summary: 'Claim the next chat message',
       description:
         "Take the calling agent's next chat message to answer. The call waits for one " +
         'and returns message: null when none arrives. It is leased: report events, ' +
-        'heartbeats, or a result, otherwise it is handed out again.',
+        'heartbeats, or a result, otherwise it is handed out again. 409 for an agent ' +
+        'with an invocation URL, whose messages are sent to that URL.',
     },
   })
 

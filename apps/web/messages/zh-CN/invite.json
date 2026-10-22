@@ -36,7 +36,6 @@
   "switchToRegister": "创建账户",
   "existingAccountNotice": "此邮箱已有账户，请使用密码登录。",
   "passwordsDoNotMatch": "两次输入的密码不一致。",
-  "genericError": "出现错误，请重试。",
   "registerFailed": "无法创建账户。",
   "signInFailed": "无法登录。"
 }

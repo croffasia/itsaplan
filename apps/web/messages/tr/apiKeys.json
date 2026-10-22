@@ -1,0 +1,37 @@
+{
+  "label": "API anahtarları",
+  "title": "API anahtarları",
+  "description": "Kişisel API anahtarları, API isteklerini hesabınız ({email}) olarak doğrular. Bir anahtarın değeri yalnızca oluşturulduğu anda bir kez gösterilir.",
+  "sectionTitle": "API anahtarlarınız",
+  "create": "API anahtarı oluştur",
+  "empty": "Henüz API anahtarı yok. API isteklerini doğrulamak için bir anahtar oluşturun.",
+  "fallbackName": "API anahtarı",
+  "createdAt": "{date} tarihinde oluşturuldu",
+  "expiresAt": "Geçerlilik bitişi: {date}",
+  "noExpiry": "Süresiz",
+  "deleteAction": "API anahtarını sil",
+  "createDialog": {
+    "title": "API anahtarı oluştur",
+    "nameLabel": "Ad",
+    "namePlaceholder": "Örn. CI iş akışı",
+    "nameHint": "Bu anahtarı daha sonra tanımanızı sağlayacak bir etiket.",
+    "expiryLabel": "Geçerlilik süresi",
+    "expiresInDays": "{days} gün",
+    "expiryHint": "Anahtar bu tarihte çalışmayı durdurur. Devam etmek için yeni bir anahtar oluşturabilirsiniz.",
+    "submit": "Anahtar oluştur",
+    "submitPending": "Oluşturuluyor…",
+    "error": "API anahtarı oluşturulamadı."
+  },
+  "createdDialog": {
+    "title": "API anahtarı oluşturuldu",
+    "description": "Anahtarınızı şimdi kopyalayın. Güvenlik nedeniyle bu değer yalnızca bir kez gösterilir ve daha sonra tekrar görüntülenemez.",
+    "copy": "Anahtarı kopyala"
+  },
+  "deleteDialog": {
+    "title": "API anahtarı silinsin mi?",
+    "confirm": "Anahtarı sil",
+    "description": "Bu anahtarı kullanan tüm istekler anında çalışmayı durduracaktır. Bu işlem geri alınamaz.",
+    "error": "API anahtarı silinemedi."
+  },
+  "loadFailed": "API anahtarları yüklenemedi."
+}

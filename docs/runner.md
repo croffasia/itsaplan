@@ -13,6 +13,9 @@ This page holds both files for each preset, and the notes that apply to that CLI
 runner's own settings are in its
 [README](https://github.com/croffasia/itsaplan/blob/main/packages/runner/README.md).
 
+The instance can also send the tasks to an endpoint that you run. See
+[Agent endpoint](agent-endpoint.md).
+
 Enable MCP for the project first, in Settings, MCP Server. It is off by default.
 
 ## Claude Code
@@ -238,7 +241,8 @@ The extension reads `.mcp.json` from the working directory:
 
 - The preset passes `-p --mode json`. The stream gives the chat answer word by word, the
   tool calls, and the session id on the first line. `--session-id` resumes that session.
-- `--append-system-prompt` gives Pi the context of the run.
+- The preset sends the task on stdin. `--append-system-prompt` gives Pi the context of
+  the run.
 - Print mode does not wait for tool approval. `--approve` is only project-trust for
   `.pi/settings.json`, not tool permission.
 - Sign in once with `pi` interactively so a provider is available.

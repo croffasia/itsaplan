@@ -26,7 +26,7 @@
     },
     "general": {
       "label": "General",
-      "description": "Personal workspaces, defaults for new projects, and agent traces."
+      "description": "Personal workspaces, defaults for new projects, agent traces, and the agent run time limit."
     },
     "authentication": {
       "label": "Authentication",
@@ -113,6 +113,10 @@
     "ai-agents": {
       "label": "AI Agents",
       "description": "AI agents working in this project."
+    },
+    "queue": {
+      "label": "Runner queue",
+      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
     }
   },
   "previews": {

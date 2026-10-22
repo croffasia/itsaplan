@@ -10,7 +10,8 @@
   "showSnoozed": "Mostrar adiadas",
   "markAllRead": "Marcar todas como lidas",
   "deleteAllRead": "Excluir todas as lidas",
-  "deleteAllReadCompleted": "Excluir todas as lidas de issues concluídas",
+  "deleteAllCompleted": "Excluir notificações de issues concluídas",
+  "deleteAllCompletedDescription": "As notificações de issues concluídas ou canceladas que correspondem aos filtros atuais, incluindo as não lidas, serão excluídas. Esta ação não pode ser desfeita.",
   "types": {
     "assigned": "Atribuído",
     "mentioned": "Mencionado",

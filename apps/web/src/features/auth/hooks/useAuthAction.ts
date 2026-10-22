@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { registrationRefusalKey } from '@/utils/registrationRefusals';
+import { useRefusalMessage } from '@/hooks/useRefusalMessage';
 
 // Runs an auth action while tracking pending + error, and redirects into the
 // planner on success. `setError` is exposed so a form can report client-side
@@ -13,13 +12,11 @@ import { registrationRefusalKey } from '@/utils/registrationRefusals';
 // the same screen with a "check your inbox" message instead, so they pass
 // `redirect: false` and keep `pending` cleared.
 //
-// A failure carries the message the auth server sent, except a refusal of the
-// registration gate, which is shown by its code in the visitor's language; `fallback`
-// covers the ones that arrive without a message and where the generic wording is too
-// vague.
+// A failure is worded by useRefusalMessage; `fallback` is the text for a refusal it
+// cannot name, shown instead of the server's English message.
 export function useAuthAction() {
   const router = useRouter();
-  const t = useTranslations('auth.errors');
+  const refusalMessage = useRefusalMessage();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -38,9 +35,7 @@ export function useAuthAction() {
       router.push('/');
       router.refresh();
     } catch (err) {
-      const message = err instanceof Error ? err.message : '';
-      const refusal = registrationRefusalKey((err as { code?: unknown } | null)?.code);
-      setError(refusal ? t(refusal) : message || options?.fallback || t('generic'));
+      setError(refusalMessage(err, options?.fallback));
       setPending(false);
     }
   }

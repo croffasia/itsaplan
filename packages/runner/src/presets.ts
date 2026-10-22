@@ -22,7 +22,9 @@ export interface Preset {
   systemPromptFlag?: string;
   // The arguments before the operator's own, given null for a fresh session.
   head: (sessionId: string | null) => string[];
-  // The arguments after the operator's own: a stdin marker, or the flag the prompt follows.
+  // The arguments after the operator's own, framing the prompt: a stdin marker, the flag
+  // the prompt follows, or `--` so a prompt beginning with a hyphen is read as the task
+  // and not as an option.
   tail: string[];
 }
 
@@ -76,7 +78,7 @@ export const PRESETS: Record<PresetName, Preset> = {
       'json',
       ...(sessionId ? ['--session', sessionId] : []),
     ],
-    tail: [],
+    tail: ['--'],
   },
 
   // --conversation resumes the conversation the stream names. --print-timeout is raised
@@ -116,11 +118,12 @@ export const PRESETS: Record<PresetName, Preset> = {
   },
 
   // --mode json writes one event per line. The opening `session` line names the id that
-  // --session-id resumes. Print mode does not wait for tool approval.
+  // --session-id resumes. Print mode does not wait for tool approval. The task goes on
+  // stdin: pi reads every argument that begins with a hyphen as an option, `--` included.
   pi: {
     bin: 'pi',
     outputFormat: 'pi-json',
-    promptVia: 'arg',
+    promptVia: 'stdin',
     systemPromptFlag: '--append-system-prompt',
     head: (sessionId) => [
       '-p',
@@ -145,7 +148,7 @@ export const PRESETS: Record<PresetName, Preset> = {
       '--auto-approve',
       ...(sessionId ? ['--resume', sessionId] : []),
     ],
-    tail: [],
+    tail: ['--'],
   },
 };
 

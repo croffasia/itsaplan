@@ -26,7 +26,7 @@
     },
     "general": {
       "label": "Umum",
-      "description": "Workspace pribadi, pengaturan bawaan untuk proyek baru, dan trace agen."
+      "description": "Workspace pribadi, pengaturan bawaan untuk proyek baru, serta trace dan waktu jalan agen."
     },
     "authentication": {
       "label": "Autentikasi",
@@ -113,6 +113,10 @@
     "ai-agents": {
       "label": "Agen AI",
       "description": "Agen AI yang bekerja dalam proyek ini."
+    },
+    "queue": {
+      "label": "Runner queue",
+      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
     }
   },
   "previews": {

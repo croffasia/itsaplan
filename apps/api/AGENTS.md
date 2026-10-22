@@ -192,6 +192,12 @@ Enforced declaratively through macros, never imperative calls in handlers.
   there. An invite is checked against its sender twice, once when it is made and again
   when it is accepted: the sender can be demoted or deleted while the link is out, and
   a link must not outlive the standing that issued it (409 on accept).
+  A custom role is capped the same way: adding, re-roling, inviting or renewing an invite
+  with a `roleId` goes through `assertGrantablePermissions`, which refuses a role that
+  grants more than the granter holds, and the project's invite list hides the link of
+  an invite whose role the viewer could not grant. A project owner, or an owner or
+  manager of the team, is not capped. Demoting or removing an owner needs
+  `assertProjectAdmin`.
 - `project_member.source` says which path a row came from: `modules/scim/reconcile.ts`
   only ever writes, re-roles or removes its own `'scim'` rows, and `members/` refuses to
   edit or remove one (409) because the next sync would undo the change. A project
@@ -235,7 +241,13 @@ applies it from the api's background loop. The window applies to whole runs: the
 finds the root spans past it and deletes their traces whole, and the same sweep drops
 the traces of a deleted team.
 
-The same traces back the agent dashboard (`runtime/analytics.ts`) at
+The same setting holds the longest one run may take (`maxRunSeconds`). An agent can set a
+shorter limit of its own (`ai_agent.run_timeout_sec`), and a workspace ceiling from
+`setLimitsProvider` lowers both. A run that reaches it is aborted and saved as failed with
+the text it had produced. A claim's lease is kept longer than the instance maximum, so the
+poller does not claim a run again while it is still running.
+
+The run traces also back the agent dashboard (`runtime/analytics.ts`) at
 `GET /teams/:teamId/agent-analytics`: runs, tokens and cost by model, agent, project and
 day, over a window and the same span before it. Its owner and managers read every project
 of the team; anyone else the projects where their role grants `agent_usage` `read`
@@ -248,7 +260,7 @@ with the teams compared, for its owner and its admins.
 Cost is applied in the api, not read from a span. Mastra computes it in a metrics
 pipeline that needs an analytics store its Postgres adapter does not implement, so the
 spans arrive with raw token counts and `runtime/model-pricing.ts` prices them from the
-table `@mastra/observability` bundles for that pipeline (`dist/metrics/pricing-data.jsonl`).
+table `@mastra/observability` bundles for that pipeline (`dist/metrics/pricing-data.json`).
 Its provider ids are the registry `AI_PROVIDERS` mirrors, so a credential's integration
 key matches it directly. The file is outside the package's exports map: a release that
 moves it leaves the table empty, an unpriced call reports no cost, and the dashboard shows
@@ -412,6 +424,28 @@ channel and is read only for a claim, not for authentication. Both funnel into
 gets — a name missing from a later sync is never removed by this path, only by an explicit
 `PATCH /Groups/:id` or an unmapping in the workspace settings.
 
+## Issue agent runs
+
+`GET /issues/:issueId/agent-runs` reads triggered runs with cursor pagination. Both
+`work_items read` and `ai_agents read` in the issue's current project are required.
+Runs keep their original project, so a moved issue does not expose its former project's
+prompts or traces. `/issues/:issueId/agent-runs/:runId/trace` reads the latest recorded
+attempt of that run, or the one named by `traceId`. Each trace links to the previous recorded
+attempt. A missing latest trace returns null; an unknown or unrelated `traceId` returns 404.
+Both permission checks and the read use the same resolved project id. Other people's chat
+traces stay private.
+External runners reporting run events also retain messages, tool inputs/results and a
+local Codex session link per attempt. `GET /agent-runs/:runId/trace?attempt=N` uses
+both read permissions in the original project and excludes moved issues. It also
+serves scheduled/manual runs without an issue. The latest recorded attempt is the default. The runner queue lists active and past external runs; `runId` narrows it to one authorized run for the detail pane. External transcripts follow the instance trace retention window after the run finishes; pending runs and final results are retained.
+`POST /agent-runs/:runId/events` accepts only the calling agent's current executing,
+unexpired attempt. Event offsets deduplicate retries and reject gaps. Transcripts
+stop recording after 2,000 events or 1 MB; acknowledgements continue so the runner
+can report its final result. A Codex UUID forms the local `codex://threads/` link;
+no supplied URL is accepted. The event-capable runner also sends the attempt number
+on heartbeat and result calls, so a reclaimed attempt rejects the old process.
+Legacy clients may omit this field for compatibility.
+
 ## Security
 
 - **`GET /attachments/:publicId/raw` is public and unauthenticated** (used in
@@ -476,6 +510,28 @@ directly). Helpers in `src/__tests__/helpers/`: `api` (anonymous client), `authe
   either. The web app never imports these packages; it uses this API over HTTP.
 - CORS `origin` is the `trustedOrigins` list exported by `@repo/auth` — do not re-parse
   `APP_URL` here.
+- A state-changing request that carries the session cookie must come from a trusted
+  origin or the api's own; the `onRequest` guard in `app.ts` refuses the rest with 403
+  `CSRF_ORIGIN_REJECTED`. `/api/auth/*` is left to better-auth's own check, and requests
+  authenticated by api key or bearer token are not checked.
 - swagger `/docs` (planner) is separate from better-auth's `/api/auth/reference`; both
   stay reachable without a session.
 - Dev: `bun run dev`. Prod: the Dockerfile migrates, then starts the server; the compose files and the Helm chart run the migrations as a separate step and start only the server.
+
+## Runner queue and execution state
+
+`GET /agent-runs/queue` pages external runs across the caller's readable projects,
+including archived projects. Both `work_items read` and `ai_agents read` are required
+in each project. Moved issues do not expose their original project's prompt.
+
+The stored `status` keeps the runner protocol's `pending` value. `executionState`
+is `running` only after admission succeeds and while its lease is valid; it is
+`queued` during delays, retry backoff and after lease expiry. Terminal states retain
+their names. `execution_started_at` is cleared on claim, defer, retry and completion,
+and set before execution is handed out. A heartbeat can restore the marker for a
+claimed external run that was already in flight when this column was added.
+
+`runnerQueue:1` is a user-scoped sync marker. It combines the visible projects'
+`runner-queue:` revisions with lease expiry and runner presence, so time-based state
+changes are visible without a write. The queue and issue run panel share this scope.
+A runner being online is separate from a run holding an execution lease.

@@ -36,7 +36,6 @@
   "switchToRegister": "أنشئ واحدًا",
   "existingAccountNotice": "البريد ده له حساب بالفعل. سجّل الدخول بكلمة مرورك.",
   "passwordsDoNotMatch": "كلمتا المرور غير متطابقتين.",
-  "genericError": "حدث خطأ ما. حاول مرة أخرى.",
   "registerFailed": "تعذّر إنشاء حسابك.",
   "signInFailed": "تعذّر تسجيل دخولك."
 }

@@ -184,12 +184,17 @@
     "traceRetention": "Keep run traces",
     "traceRetentionHint": "Each agent run records its model and tool calls. Usage dashboards count only the runs still kept.",
     "traceDays": "{days, plural, one {# day} other {# days}}",
-    "traceForever": "Forever"
+    "traceForever": "Forever",
+    "maxRunTime": "Max run time",
+    "maxRunTimeHint": "How long one agent run may take before it is stopped and saved as failed. An agent's own limit cannot exceed it.",
+    "runMinutes": "{minutes, plural, one {# minute} other {# minutes}}",
+    "runSeconds": "{seconds} s"
   },
   "authentication": {
     "saved": "Authentication settings saved",
     "registration": "Registration",
     "registrationHint": "Who may create an account on this instance.",
+    "registrationPasswordlessNote": "Sign-up and password recovery are handled by the sign-in provider.",
     "inviteTtlDays": "Invite expiry (days)",
     "inviteTtlDaysHint": "After this many days an invite link stops working and, with invite-only registration, no longer lets its address sign up. 0 keeps invites valid until they are answered.",
     "inviteTtlDaysInvalid": "Enter a whole number of days from 0 to {max}.",
@@ -199,15 +204,18 @@
     "modes": {
       "open": {
         "label": "Open",
-        "description": "Anyone who reaches the sign-up page can create an account."
+        "description": "Anyone who reaches the sign-up page can create an account.",
+        "descriptionPasswordless": "Anyone who signs in with the provider for the first time gets an account."
       },
       "invite": {
         "label": "Invite only",
-        "description": "An account can only be created through an invite link."
+        "description": "An account can only be created through an invite link.",
+        "descriptionPasswordless": "Signing in with the provider only creates an account when there is a pending invite for that address."
       },
       "closed": {
         "label": "Closed",
-        "description": "No new accounts. Existing ones keep signing in."
+        "description": "No new accounts. Existing ones keep signing in.",
+        "descriptionPasswordless": "No new accounts, not even for someone arriving from the provider. Existing ones keep signing in."
       }
     },
     "signIn": "Sign-in options",

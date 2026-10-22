@@ -1,0 +1,16 @@
+{
+  "relations": {
+    "blocked_by": "被阻塞",
+    "blocks": "阻塞",
+    "duplicates": "與之重複",
+    "duplicated_by": "有重複項目",
+    "relates": "相關"
+  },
+  "phrases": {
+    "blocked_by": "被以下工作項目阻塞：",
+    "blocks": "阻塞以下工作項目：",
+    "duplicates": "與以下工作項目重複：",
+    "duplicated_by": "有以下重複的工作項目：",
+    "relates": "與以下工作項目相關："
+  }
+}

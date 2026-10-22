@@ -1,4 +1,5 @@
-import { Elysia, t } from 'elysia';
+import { Elysia, t, type DocumentDecoration } from 'elysia';
+import { listIssueAgentRuns, getIssueAgentRunTrace } from './agent-runs';
 import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
 import { guards, entityGuard, assertMcpAllowed, requiresPermission } from '#shared/guards';
@@ -11,7 +12,7 @@ import {
   requireUser,
 } from '#shared/access';
 import { getProjectById } from '#modules/projects/service';
-import { HttpError } from '#shared/lib';
+import { HttpError, instantParam } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { deleteObject } from '@repo/storage';
 import {
@@ -93,6 +94,11 @@ import {
 
 import {
   issueParams,
+  issueAgentRunsQuery,
+  issueAgentRunParams,
+  IssueAgentRunPageResponse,
+  IssueAgentRunTraceResponse,
+  issueAgentTraceQuery,
   issueDevelopmentLinkParams,
   issueDevelopmentRepositoryParams,
   issueDevelopmentListQuery,
@@ -198,6 +204,21 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // entry and a comment belong to the issue that carries them, so they all resolve
   // to the same work_items permission.
   .macro({
+    issueAgentRuns(_enabled: boolean) {
+      return {
+        detail: requiresPermission(['ai_agents', 'read']) as DocumentDecoration,
+        async resolve({ params, user, request }) {
+          const projectId = await getIssueProjectId(
+            Number((params as { issueId: string }).issueId),
+          );
+          if (projectId == null) throw new HttpError(404, 'Issue not found');
+          await assertPermission(projectId, user, 'work_items', 'read');
+          await assertPermission(projectId, user, 'ai_agents', 'read');
+          await assertMcpAllowed(projectId, request.headers);
+          return { projectId };
+        },
+      };
+    },
     workItem: entityGuard('work_items', 'Issue not found', (p) =>
       getIssueProjectId(Number(p.issueId)),
     ),
@@ -451,6 +472,10 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           labelIds: labelIds && labelIds.length ? labelIds : undefined,
           dueFrom: str(query.dueFrom),
           dueTo: str(query.dueTo),
+          createdFrom: instantParam('createdFrom', query.createdFrom),
+          createdTo: instantParam('createdTo', query.createdTo),
+          updatedFrom: instantParam('updatedFrom', query.updatedFrom),
+          updatedTo: instantParam('updatedTo', query.updatedTo),
           limit,
         },
         { includeArchived: query.includeArchived === 'true' },
@@ -463,7 +488,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 200: t.Array(IssueSearchHitResponse), ...commonErrors },
       detail: {
         summary: 'List issues by filters',
-        description: "List a project's issues by field filters.",
+        description:
+          "List a project's issues by field filters, most recently updated first. Each issue carries createdAt, updatedAt and completedAt.",
         ...mcpTool('list_issues'),
       },
     },
@@ -1101,6 +1127,53 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         summary: 'Delete a checklist item',
         description: 'Remove one item from a checklist.',
         ...mcpTool('delete_checklist_item'),
+      },
+    },
+  )
+
+  .get(
+    '/issues/:issueId/agent-runs',
+    async ({ params, query, projectId }) =>
+      listIssueAgentRuns(projectId, params.issueId, query.before, query.limit),
+    {
+      params: issueParams,
+      query: issueAgentRunsQuery,
+      issueAgentRuns: true,
+      response: { 200: IssueAgentRunPageResponse, ...commonErrors },
+      detail: {
+        summary: "List an issue's agent runs",
+        description:
+          'Triggered runs in the current project, newest first, including the prompt, result and error.',
+      },
+    },
+  )
+
+  .get(
+    '/issues/:issueId/agent-runs/:runId/trace',
+    async ({ params, user, query, projectId }) => {
+      const trace = await getIssueAgentRunTrace(
+        projectId,
+        params.issueId,
+        params.runId,
+        requireUser(user).id,
+        query.traceId,
+      );
+      if (trace === undefined) throw new HttpError(404, 'Run not found');
+      return Response.json(trace);
+    },
+    {
+      params: issueAgentRunParams,
+      query: issueAgentTraceQuery,
+      issueAgentRuns: true,
+      response: {
+        200: IssueAgentRunTraceResponse,
+        ...commonErrors,
+      },
+      detail: {
+        summary: "Read an issue run's trace",
+        description:
+          'The selected or latest recorded attempt, with a link to the previous one. ' +
+          'Null when no latest trace is available.',
       },
     },
   )

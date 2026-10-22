@@ -68,9 +68,14 @@ export const markAllReadBody = t.Optional(
 
 export const deleteNotificationsQuery = t.Object({
   scope: t.Optional(
-    t.Union([t.Literal('all'), t.Literal('read'), t.Literal('read-completed')], {
-      description: 'Which notifications to delete. Default read.',
-    }),
+    t.Union(
+      [t.Literal('all'), t.Literal('read'), t.Literal('read-completed'), t.Literal('completed')],
+      {
+        description:
+          'Which notifications to delete. Default read. completed deletes read and unread ' +
+          'notifications on completed or canceled issues; read-completed keeps only read ones.',
+      },
+    ),
   ),
   projectId: t.Optional(t.String({ description: 'Scope the delete to one project.' })),
   types: t.Optional(t.String()),

@@ -26,7 +26,7 @@
     },
     "general": {
       "label": "Geral",
-      "description": "Workspaces pessoais, padrões para novos projetos e rastros de agentes."
+      "description": "Workspaces pessoais, padrões para novos projetos, e rastros e tempo de execução de agentes."
     },
     "authentication": {
       "label": "Autenticação",
@@ -113,6 +113,10 @@
     "ai-agents": {
       "label": "Agentes de IA",
       "description": "Agentes de IA trabalhando neste projeto."
+    },
+    "queue": {
+      "label": "Runner queue",
+      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
     }
   },
   "previews": {

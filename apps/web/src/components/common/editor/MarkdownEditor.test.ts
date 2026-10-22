@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { Editor } from '@tiptap/core';
 import Link from '@tiptap/extension-link';
+import TaskItem from '@tiptap/extension-task-item';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from 'tiptap-markdown';
+import { TightTaskList } from './tiptap-task-list';
 import { JSDOM } from 'jsdom';
 import { editorStarterKitOptions } from './MarkdownEditor';
 import { openLinkOnModifierClick } from './modifierClickLink';
@@ -330,6 +332,42 @@ describe('MarkdownEditor markdown round trip', () => {
     const roundTripped = editor.storage.markdown.getMarkdown();
     assert.equal(roundTripped, 'See <https://example.com/spec> for details.');
     assert.notEqual(roundTripped, 'See https://example.com/spec for details.');
+    editor.destroy();
+  });
+
+  it('round-trips checked and unchecked task list items', () => {
+    const editor = new Editor({
+      extensions: [
+        StarterKit.configure(editorStarterKitOptions),
+        TightTaskList,
+        TaskItem.configure({ nested: true }),
+        Markdown.configure({ html: true, linkify: true, breaks: true }),
+      ],
+      content: '- [ ] first\n- [x] second',
+    });
+
+    assert.equal(editor.storage.markdown.getMarkdown(), '- [ ] first\n- [x] second');
+    editor.destroy();
+  });
+
+  it('reverts a checkbox change in a read-only editor', () => {
+    const editor = new Editor({
+      element: dom.window.document.querySelector('div')!,
+      editable: false,
+      extensions: [
+        StarterKit.configure(editorStarterKitOptions),
+        TightTaskList,
+        TaskItem.configure({ nested: true }),
+        Markdown.configure({ html: true, linkify: true, breaks: true }),
+      ],
+      content: '- [ ] first',
+    });
+    assert.equal(editor.view.dom.getAttribute('contenteditable'), 'false');
+    const checkbox = editor.view.dom.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    checkbox.checked = true;
+    checkbox.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
+
+    assert.equal(checkbox.checked, false);
     editor.destroy();
   });
 });

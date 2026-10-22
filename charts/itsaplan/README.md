@@ -184,6 +184,8 @@ bot:
 | `api.env.API_URL`                     | Public API origin                                         | `""`                             |
 | `api.env.APP_URL`                     | Public web origin                                         | `""`                             |
 | `api.env.COOKIE_DOMAIN`               | Cookie domain override                                    | (unset)                          |
+| `api.env.CLIENT_IP_HEADER`            | Header the client IP for the rate limit is read from      | (unset, `X-Forwarded-For`)       |
+| `api.env.TRUSTED_PROXIES`             | Proxies skipped in an `X-Forwarded-For` chain (CSV)       | (unset)                          |
 | `api.env.GIT_WEBHOOK_BASE_URL`        | Public origin for incoming Git webhooks                   | (unset, uses `API_URL`)          |
 | `api.env.S3_BUCKET`                   | S3 bucket name                                            | `""`                             |
 | `api.env.S3_REGION`                   | S3 region                                                 | `us-east-1`                      |

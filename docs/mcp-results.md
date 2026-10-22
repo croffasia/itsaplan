@@ -6,6 +6,19 @@ contains the original REST response body, including an empty string for HTTP 204
 clients can continue reading that text. The internal agent runtime keeps its existing result
 format.
 
+## Internal agent project activity
+
+The internal agent's `get_project_activity` result preserves the route's event metadata
+and cursor. Comment bodies and `payload.subject/from/to.value` strings longer than
+1000 UTF-16 code units are shortened to a preview. Each affected event includes
+`truncatedFields: [{ field, originalLength }]`, where `field` is the path of a shortened
+value and `originalLength` uses the same units. A preview never ends with half of a
+surrogate pair.
+
+`list_issue_activity` reads the full historical entries when needed. `get_issue` reads
+the current description, which can differ from a historical description. Stored activity,
+REST/UI responses and external MCP results retain the full text.
+
 ## Attachment urls and images
 
 The body is the REST body with one change: the path of an issue or initiative attachment,

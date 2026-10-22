@@ -320,6 +320,26 @@ export interface ImportRecordRow {
   sourceId: string;
 }
 
+export async function listImportRecords(
+  jobId: number,
+  entityType: ImportEntityType,
+  afterId: number,
+  limit: number,
+): Promise<ImportRecordRow[]> {
+  return db
+    .select({ id: importRecord.id, sourceId: importRecord.sourceId })
+    .from(importRecord)
+    .where(
+      and(
+        eq(importRecord.importJobId, jobId),
+        eq(importRecord.sourceEntityType, entityType),
+        gt(importRecord.id, afterId),
+      ),
+    )
+    .orderBy(importRecord.id)
+    .limit(limit);
+}
+
 // The next chunk of this job's snapshot that has not been materialized yet,
 // keyset-paginated on import_record's own id — itsaplan's own position in the
 // snapshot list, not the source's pagination cursor (see the notes file). A
@@ -717,8 +737,16 @@ export async function createIssueLink(
   }
 }
 
+// drizzle wraps the driver error in a DrizzleQueryError and keeps the Postgres
+// error in `cause`, so the code is looked for down the cause chain (the api's
+// pgErrorCode does the same).
 function isUniqueViolation(err: unknown): boolean {
-  return typeof err === 'object' && err !== null && (err as { code?: string }).code === '23505';
+  let current: unknown = err;
+  for (let depth = 0; current && typeof current === 'object' && depth < 5; depth++) {
+    if ((current as { code?: unknown }).code === '23505') return true;
+    current = (current as { cause?: unknown }).cause;
+  }
+  return false;
 }
 
 // Only a user who already belongs to the project is matched: an import never

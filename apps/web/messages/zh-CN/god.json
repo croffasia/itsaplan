@@ -184,12 +184,17 @@
     "traceRetention": "保留运行追踪",
     "traceRetentionHint": "代理的每次运行都会记录模型和工具调用。用量面板只统计仍保留的运行。",
     "traceDays": "{days} 天",
-    "traceForever": "永久"
+    "traceForever": "永久",
+    "maxRunTime": "最长运行时间",
+    "maxRunTimeHint": "单次智能体运行在被停止并记为失败之前可持续的时间。智能体自身的上限不能超过此值。",
+    "runMinutes": "{minutes, plural, other {# 分钟}}",
+    "runSeconds": "{seconds} 秒"
   },
   "authentication": {
     "saved": "身份验证设置已保存",
     "registration": "注册",
     "registrationHint": "设置哪些人可以创建此实例的账户。",
+    "registrationPasswordlessNote": "注册和密码找回由登录提供方负责。",
     "inviteTtlDays": "邀请有效期（天）",
     "inviteTtlDaysHint": "超过此期限后，邀请链接将失效；在仅限邀请注册时，也无法再用它注册。设为 0 则邀请永不过期。",
     "inviteTtlDaysInvalid": "请输入 0 到 {max} 之间的整数天数。",
@@ -199,15 +204,18 @@
     "modes": {
       "open": {
         "label": "开放注册",
-        "description": "任何访问注册页面的人都可以创建账户。"
+        "description": "任何访问注册页面的人都可以创建账户。",
+        "descriptionPasswordless": "任何人首次通过提供方登录即可获得账户。"
       },
       "invite": {
         "label": "仅限邀请",
-        "description": "只有收到项目邀请的邮箱可以创建账户。"
+        "description": "只有收到项目邀请的邮箱可以创建账户。",
+        "descriptionPasswordless": "仅当该地址存在待处理的邀请时，通过提供方登录才会创建账户。"
       },
       "closed": {
         "label": "关闭注册",
-        "description": "不允许创建新账户，现有账户仍可登录。"
+        "description": "不允许创建新账户，现有账户仍可登录。",
+        "descriptionPasswordless": "不创建新账户，即使通过提供方登录也不例外。现有账户可继续登录。"
       }
     },
     "signIn": "登录选项",

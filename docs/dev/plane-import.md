@@ -130,6 +130,10 @@ attachment) are a distinct path, not covered by this — see "Inline images" in
   (`plane-adapter.ts`) has no entry for `start_before`/`start_after`/`finish_before`/
   `finish_after` — itsaplan's `issue_link.kind` has no scheduling-dependency concept, so
   these are filtered out, not a bug.
+- Create advances its local record cursor after the entire batch finishes, including labels,
+  comments and attachment discovery. A retry revisits every issue after that cursor and reuses
+  its existing job/source mapping, then finishes its child records without replacing local
+  issue fields. Completed batches are not fetched again.
 - **Re-running an import against the same source project reuses what a previous run already
   created, by name/content match, not by any record of which import created what.**
   `import_record` makes one job's own retries and resumes safe; across two separate jobs

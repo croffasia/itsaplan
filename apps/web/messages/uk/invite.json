@@ -36,7 +36,6 @@
   "switchToRegister": "Створити",
   "existingAccountNotice": "Для цієї пошти вже є акаунт. Увійдіть зі своїм паролем.",
   "passwordsDoNotMatch": "Паролі не збігаються.",
-  "genericError": "Щось пішло не так. Спробуйте ще раз.",
   "registerFailed": "Не вдалося створити акаунт.",
   "signInFailed": "Не вдалося виконати вхід."
 }

@@ -43,7 +43,7 @@ export async function queueStatusRuns(
   if (issueIds.length === 0) return;
   await db
     .update(agentRun)
-    .set({ status: 'canceled', finishedAt: new Date() })
+    .set({ status: 'canceled', executionStartedAt: null, finishedAt: new Date() })
     .where(
       and(
         inArray(agentRun.issueId, issueIds),

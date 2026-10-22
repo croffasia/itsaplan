@@ -1,10 +1,12 @@
 import { createTool } from '@mastra/core/tools';
 import type { z } from 'zod';
 import type { ProjectRow } from '#modules/projects/service';
+import type { ActivityPage } from '#modules/analytics/service';
 import { routeTools, withoutFields, type McpInputSchema, type McpRouteTool } from '#mcp/generate';
 import type { Permission } from '#shared/guards';
 import { dispatchTool } from '#mcp/dispatch';
 import { getMcpApp } from '#mcp/app-ref';
+import { compactProjectActivity } from './activity-result';
 import {
   AGENT_ACTIONS,
   ALWAYS_ON_ACTIONS,
@@ -121,7 +123,11 @@ function buildOne(
       const body = parseBody(text);
       // A route failure is returned to the model as a result rather than thrown, so
       // it can correct the call instead of the run aborting. Custom tools do the same.
-      return isError ? { error: body } : body;
+      if (isError) return { error: body };
+      if (route.name === 'get_project_activity') {
+        return compactProjectActivity(body as ActivityPage);
+      }
+      return body;
     },
   });
 }

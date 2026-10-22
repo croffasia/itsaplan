@@ -451,7 +451,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
   })
 
   .put('/god/agent-settings', ({ body }) => setAgentSettings(body), {
-    body: AgentSettingsSchema,
+    body: t.Partial(AgentSettingsSchema),
     response: { 200: AgentSettingsSchema, ...errors(400, 401, 403) },
     detail: {
       summary: 'Update instance agent settings',

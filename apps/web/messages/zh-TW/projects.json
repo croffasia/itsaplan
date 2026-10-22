@@ -1,0 +1,29 @@
+{
+  "editAction": "編輯專案",
+  "copyAction": "複製專案",
+  "deleteAction": "刪除專案",
+  "leaveAction": "退出專案",
+  "archiveAction": "封存專案",
+  "restoreAction": "恢復專案",
+  "archived": "已封存 {name}",
+  "restored": "已恢復 {name}",
+  "deleteDialog": {
+    "title": "刪除 {name}？",
+    "confirm": "永久刪除",
+    "description": "這將永久刪除 <strong>{name}</strong> 及其中的所有工作項目、留言、附件和設定。此操作無法復原。",
+    "typeToConfirm": "輸入 <code>{key}</code> 以確認。"
+  },
+  "leaveDialog": {
+    "title": "退出 {name}？",
+    "confirm": "退出專案",
+    "description": "你將失去對 <strong>{name}</strong> 及其工作項目的存取權限。如需重新加入，需要專案所有者重新邀請。"
+  },
+  "editDialog": {
+    "title": "編輯專案",
+    "key": "專案代碼",
+    "keyHint": "工作項目連結需要以字母開頭、由大寫字母和數字組成的專案代碼。儲存後就不能再更改。",
+    "name": "名稱",
+    "description": "描述",
+    "submit": "儲存"
+  }
+}

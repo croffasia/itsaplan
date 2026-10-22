@@ -1,0 +1,29 @@
+{
+  "editAction": "Projeyi düzenle",
+  "copyAction": "Projeyi kopyala",
+  "deleteAction": "Projeyi sil",
+  "leaveAction": "Projeden ayrıl",
+  "archiveAction": "Projeyi arşivle",
+  "restoreAction": "Projeyi geri yükle",
+  "archived": "{name} arşivlendi",
+  "restored": "{name} geri yüklendi",
+  "deleteDialog": {
+    "title": "{name} silinsin mi?",
+    "confirm": "Kalıcı olarak sil",
+    "description": "Bu işlem <strong>{name}</strong> projesini ve içindeki her şeyi (işler, yorumlar, ekler ve ayarlar) kalıcı olarak siler. Bu işlem geri alınamaz.",
+    "typeToConfirm": "Onaylamak için <code>{key}</code> yazın."
+  },
+  "leaveDialog": {
+    "title": "{name} projesinden ayrıl?",
+    "confirm": "Projeden ayrıl",
+    "description": "<strong>{name}</strong> projesine ve işlerine erişiminizi kaybedeceksiniz. Tekrar katılmak için bir proje sahibinden davet almanız gerekir."
+  },
+  "editDialog": {
+    "title": "Projeyi düzenle",
+    "key": "Anahtar",
+    "keyHint": "İş bağlantıları, harfle başlayan ve büyük harf ile rakamlardan oluşan bir anahtar gerektirir. Kaydedildikten sonra anahtar değiştirilemez.",
+    "name": "Ad",
+    "description": "Açıklama",
+    "submit": "Kaydet"
+  }
+}

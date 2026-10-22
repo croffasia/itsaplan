@@ -48,6 +48,7 @@ export interface AiAgent {
   temperature: number | null;
   reasoningEffort: ReasoningEffort | null;
   maxSteps: number | null;
+  runTimeoutSec: number | null;
   memoryEnabled: boolean;
   memoryLastMessages: number | null;
   // Run triggers.
@@ -64,6 +65,9 @@ export interface AiAgent {
   runnerScope: 'owner' | 'team';
   // When the agent's runner last polled, or null while none ever has.
   lastSeenAt: string | null;
+  // Where an external agent's tasks and chat messages are sent instead of being taken
+  // by a runner; null when a runner takes them.
+  invocationUrl: string | null;
   createdAt: string;
   apiKeyStart: string | null;
   // The integration key of the model credential (the provider, e.g. "openai"), or
@@ -88,6 +92,7 @@ export type AgentRunTrigger =
 export interface AgentRun {
   id: number;
   status: AgentRunStatus;
+  executionState: 'queued' | 'running' | 'success' | 'failed' | 'canceled';
   trigger: AgentRunTrigger;
   issueId: number | null;
   issueIdentifier: string | null;
@@ -133,6 +138,7 @@ export interface NewAiAgentInput {
   temperature?: number | null;
   reasoningEffort?: ReasoningEffort | null;
   maxSteps?: number | null;
+  runTimeoutSec?: number | null;
   memoryEnabled?: boolean;
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
@@ -141,6 +147,7 @@ export interface NewAiAgentInput {
   delegationDelaySec?: number;
   projectIds?: number[];
   runnerScope?: 'owner' | 'team';
+  invocationUrl?: string | null;
 }
 
 export interface AiAgentPatch {
@@ -153,6 +160,7 @@ export interface AiAgentPatch {
   temperature?: number | null;
   reasoningEffort?: ReasoningEffort | null;
   maxSteps?: number | null;
+  runTimeoutSec?: number | null;
   memoryEnabled?: boolean;
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
@@ -161,6 +169,7 @@ export interface AiAgentPatch {
   delegationDelaySec?: number;
   projectIds?: number[];
   runnerScope?: 'owner' | 'team';
+  invocationUrl?: string | null;
 }
 
 // One event of a streamed agent run (mirrors the API's AgentRunEvent). `text` is a
@@ -206,10 +215,57 @@ export const regenerateAiAgentKey = (teamId: number, agentId: number) =>
     method: 'POST',
   });
 
+// How the endpoint at the invocation URL answered a test ping. `status` is null when no
+// answer arrived.
+export interface InvocationTestResult {
+  ok: boolean;
+  timedOut: boolean;
+  status: number | null;
+  error: string | null;
+  responseBody: string | null;
+  durationMs: number;
+}
+
+// The key the requests to an external agent's invocation URL are signed with. Null
+// until the agent first gets a URL.
+export const getInvocationSecret = (teamId: number, agentId: number) =>
+  request<{ secret: string | null }>(`/teams/${teamId}/ai-agents/${agentId}/invocation-secret`);
+
+export const rotateInvocationSecret = (teamId: number, agentId: number) =>
+  request<{ secret: string }>(`/teams/${teamId}/ai-agents/${agentId}/invocation-secret`, {
+    method: 'POST',
+  });
+
+export const testInvocation = (teamId: number, agentId: number) =>
+  request<InvocationTestResult>(`/teams/${teamId}/ai-agents/${agentId}/invocation-test`, {
+    method: 'POST',
+  });
+
 export const deleteAiAgent = (teamId: number, agentId: number) =>
   request<void>(`/teams/${teamId}/ai-agents/${agentId}`, { method: 'DELETE' });
 
 export const listAgentRuns = (teamId: number, agentId: number, before?: number) =>
   request<AgentRunPage>(
     `/teams/${teamId}/ai-agents/${agentId}/runs?limit=25${before ? `&before=${before}` : ''}`,
+  );
+
+export interface ExternalRunEvent {
+  type: string;
+  toolCallId?: string;
+  toolCallName?: string;
+  delta?: string;
+  content?: string;
+  message?: string;
+}
+export interface ExternalRunTrace {
+  attempt: number;
+  previousAttempt: number | null;
+  sessionId: string | null;
+  sessionUrl: string | null;
+  truncated: boolean;
+  events: { event: ExternalRunEvent; receivedAt: string }[];
+}
+export const getExternalRunTrace = (runId: number, attempt?: number) =>
+  request<ExternalRunTrace | null>(
+    `/agent-runs/${runId}/trace${attempt == null ? '' : `?attempt=${attempt}`}`,
   );

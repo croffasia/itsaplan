@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { CheckCheck, ListFilter, MoreHorizontal, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { NotificationFilters, NotificationType } from '@/lib/api/endpoints/notifications';
 import { PRIORITY_INBOX_TYPES } from '@/lib/api/endpoints/notifications';
 import { Button } from '@/components/ui/button';
+import InboxDeleteCompletedDialog from './InboxDeleteCompletedDialog';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -17,25 +19,24 @@ import {
 
 const TYPES: NotificationType[] = ['assigned', 'mentioned', 'commented', 'state_changed'];
 
-// The inbox list header: title with unread count, a type filter, display toggles
-// (show read / snoozed), and the bulk-action menu.
 export default function InboxToolbar({
   unread,
   filters,
   onFiltersChange,
   onMarkAllRead,
   onDeleteRead,
-  onDeleteReadCompleted,
+  onDeleteCompleted,
 }: {
   unread: number;
   filters: NotificationFilters;
   onFiltersChange: (next: NotificationFilters) => void;
   onMarkAllRead: () => void;
   onDeleteRead: () => void;
-  onDeleteReadCompleted: () => void;
+  onDeleteCompleted: () => Promise<void>;
 }) {
   const t = useTranslations('inbox');
   const tCommon = useTranslations('common');
+  const [confirmingDeleteCompleted, setConfirmingDeleteCompleted] = useState(false);
   const selectedTypes = filters.types ?? PRIORITY_INBOX_TYPES;
 
   const toggleType = (type: NotificationType) => {
@@ -116,13 +117,20 @@ export default function InboxToolbar({
               <Trash2 />
               {t('deleteAllRead')}
             </DropdownMenuItem>
-            <DropdownMenuItem onSelect={onDeleteReadCompleted}>
+            <DropdownMenuItem onSelect={() => setConfirmingDeleteCompleted(true)}>
               <Trash2 />
-              {t('deleteAllReadCompleted')}
+              {t('deleteAllCompleted')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {confirmingDeleteCompleted && (
+        <InboxDeleteCompletedDialog
+          onConfirm={onDeleteCompleted}
+          onClose={() => setConfirmingDeleteCompleted(false)}
+        />
+      )}
     </div>
   );
 }

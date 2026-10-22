@@ -1,0 +1,238 @@
+{
+  "noAccess": "你無權存取儀表板。",
+  "defaultName": "概覽",
+  "newDashboard": "新建儀表板",
+  "renameDashboard": "重新命名儀表板",
+  "namePlaceholder": "儀表板名稱",
+  "options": "儀表板選項",
+  "rename": "重新命名",
+  "editLayout": "編輯版面",
+  "discard": "放棄更改",
+  "saveDashboard": "儲存儀表板",
+  "saveChanges": "儲存更改",
+  "noWidgets": "暫無元件。新增元件來設定此儀表板。",
+  "addWidget": "新增元件",
+  "addWidgetTitle": "新增元件",
+  "addWidgetDescription": "選擇要新增到此儀表板的元件。",
+  "searchWidgets": "搜尋元件",
+  "clearSearch": "清除搜尋",
+  "noWidgetMatches": "沒有與「{query}」匹配的元件。",
+  "dragToMove": "拖曳以移動",
+  "widgetName": "元件名稱",
+  "widgetSettings": "元件設定",
+  "widgetOptions": "元件選項",
+  "removeWidget": "移除元件",
+  "lastDays": "最近 {days} 天",
+  "showRows": "顯示 {count} 條",
+  "widgetGroups": {
+    "issues": "工作項目",
+    "agents": "AI 代理和 Webhook"
+  },
+  "widgets": {
+    "stat": {
+      "label": "數量",
+      "description": "符合篩選條件的工作項目數量",
+      "viewIssues": "View issues: {title} ({count})"
+    },
+    "recent_issues": {
+      "label": "最近工作項目",
+      "description": "按建立或更新時間顯示最新工作項目"
+    },
+    "activity_feed": {
+      "label": "活動動態",
+      "description": "專案範圍的變更記錄，可按執行者和操作篩選"
+    },
+    "pulse": {
+      "label": "活躍度",
+      "description": "按天顯示活動的 GitHub 風格熱度圖"
+    },
+    "throughput": {
+      "label": "吞吐量",
+      "description": "每週建立和關閉的工作項目數量"
+    },
+    "burnup": {
+      "label": "燃起圖",
+      "description": "按天統計範圍、已開始和已完成的工作項目，並預測完成日期"
+    },
+    "breakdown": {
+      "label": "分類統計",
+      "description": "按狀態、優先順序、類型或負責人統計工作項目"
+    },
+    "agent_runs": {
+      "label": "代理執行",
+      "description": "最近的 AI 代理執行及其結果"
+    },
+    "agent_health": {
+      "label": "代理執行狀況",
+      "description": "指定時間範圍內代理執行的成功率和失敗情況"
+    },
+    "webhook_health": {
+      "label": "Webhook 投遞狀況",
+      "description": "Webhook 投遞結果和已停用端點"
+    },
+    "agent_workload": {
+      "label": "代理工作量",
+      "description": "各代理接收的工作項目及執行結果"
+    }
+  },
+  "breakdown": {
+    "empty": "暫無工作項目。",
+    "by": {
+      "status": "狀態",
+      "priority": "優先順序",
+      "type": "類型",
+      "assignee": "負責人",
+      "delegate": "執行代理"
+    },
+    "caption": {
+      "status": "按狀態",
+      "priority": "按優先順序",
+      "type": "按類型",
+      "assignee": "按負責人",
+      "delegate": "按執行代理"
+    }
+  },
+  "recentIssues": {
+    "empty": "沒有符合此篩選條件的工作項目。",
+    "captionCreated": "最新建立優先",
+    "captionUpdated": "最近更新",
+    "filterCount": "{count, plural, other {# 個篩選條件}}",
+    "sort": {
+      "created": "最新建立",
+      "updated": "最近更新"
+    }
+  },
+  "activityFeed": {
+    "empty": "沒有符合此篩選條件的活動記錄。",
+    "someone": "某位使用者",
+    "filterCount": "{count, plural, other {# 個篩選條件}}",
+    "actions": {
+      "all": "全部活動",
+      "status": "狀態變更",
+      "assignee": "負責人變更",
+      "priority": "優先順序",
+      "created": "建立"
+    },
+    "verbs": {
+      "comment": "留言了",
+      "created": "建立了",
+      "title": "重新命名了",
+      "description": "更新了以下工作項目的描述：",
+      "status": "更改了以下工作項目的狀態：",
+      "assignee": "更改了以下工作項目的負責人：",
+      "priority": "更改了以下工作項目的優先順序：",
+      "type": "更改了以下工作項目的類型：",
+      "start_date": "更改了以下工作項目的開始日期：",
+      "due_date": "更改了以下工作項目的截止日期：",
+      "label_add": "為以下工作項目新增了標籤：",
+      "label_remove": "移除了以下工作項目的標籤：",
+      "field": "更新了以下工作項目的欄位：",
+      "other": "更新了"
+    }
+  },
+  "pulse": {
+    "caption": {
+      "hour": "按小時",
+      "day": "按天",
+      "week": "按週"
+    },
+    "unit": {
+      "hour": "小時",
+      "day": "天",
+      "week": "週"
+    },
+    "events": "{count, plural, other {# 個事件}}",
+    "eventNoun": "{count, plural, one {個事件} other {個事件}}",
+    "active": "{count} 個活躍項",
+    "less": "較少",
+    "more": "較多",
+    "scope": {
+      "project": "整個專案",
+      "me": "我的活動"
+    }
+  },
+  "throughput": {
+    "empty": "此時間段內暫無活動。",
+    "lastWeeks": "最近 {weeks} 週",
+    "created": "已建立",
+    "closed": "已關閉"
+  },
+  "burnup": {
+    "empty": "此期間沒有工作項目。",
+    "scope": "範圍",
+    "started": "已開始",
+    "completed": "已完成",
+    "projection": "預測",
+    "band": "預測區間",
+    "projected": "預計 {date} 完成",
+    "range": "{from} – {to}",
+    "forecastShape": {
+      "line": "預測線",
+      "range": "預測區間"
+    },
+    "noForecast": "最近 {weeks} 週沒有進展",
+    "allDone": "全部完成",
+    "velocity": "{rate}/天",
+    "growth": "新增 {rate}/天",
+    "target": "目標 {date}",
+    "targetLabel": "目標",
+    "today": "今天",
+    "wholeProject": "整個專案",
+    "forecastWeeks": "按最近 {weeks} 週的速度"
+  },
+  "agentRuns": {
+    "empty": "暫無代理執行記錄。",
+    "filters": {
+      "all": "全部執行",
+      "failed": "失敗",
+      "pending": "已排隊",
+      "success": "成功"
+    },
+    "status": {
+      "pending": "已排隊",
+      "success": "成功",
+      "failed": "失敗",
+      "canceled": "已取消"
+    },
+    "trigger": {
+      "mention": "因以下位置的提及而執行：",
+      "delegation": "因以下工作項目的委派而執行：",
+      "field": "因以下工作項目的欄位而執行：",
+      "manual": "手動執行",
+      "schedule": "按排程執行",
+      "status": "因以下工作項目的狀態變更而執行：",
+      "event": "因以下工作項目的事件而執行："
+    }
+  },
+  "agentHealth": {
+    "empty": "暫無代理執行記錄。",
+    "successRate": "成功率",
+    "runs": "{count, plural, other {# 次執行}}",
+    "failed": "{count} 次失敗",
+    "queued": "{count} 次已排隊"
+  },
+  "webhookHealth": {
+    "deliveries": "次投遞",
+    "failed": "{count} 次失敗",
+    "pending": "{count} 次待處理",
+    "allDelivered": "全部投遞成功",
+    "disabled": "{count, plural, other {# 個已停用端點}}"
+  },
+  "agentWorkload": {
+    "empty": "此專案暫無代理。",
+    "agent": "代理",
+    "delegated": "已委派",
+    "runs": "執行次數",
+    "failed": "{count} 次失敗",
+    "kind": {
+      "external": "外部",
+      "internal": "內建"
+    }
+  },
+  "defaultWidgets": {
+    "open": "未關閉",
+    "inProgress": "進行中",
+    "backlog": "待辦事項",
+    "unassigned": "未指派"
+  }
+}

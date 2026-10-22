@@ -3,12 +3,19 @@ import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
 import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
-import { requireUser, type AuthUser } from '#shared/access';
+import {
+  assertGrantablePermissions,
+  checkMemberAdmin,
+  mayGrantPermissions,
+  requireUser,
+  type AuthUser,
+} from '#shared/access';
 import { inviteValidSince } from '@repo/auth';
 import { hasConfiguredEmailProvider } from '@repo/db';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { getRole } from '#modules/roles/service';
+import type { ProjectRow } from '#modules/projects/service';
 import { teamParams } from '#modules/teams/model';
 import {
   AcceptInviteResponse,
@@ -27,6 +34,7 @@ import {
   mayGrantInviteRanks,
   listProjectInvites,
   listTeamInvites,
+  type ListedInvite,
   deleteProjectInvite,
   deleteTeamInvite,
   getInviteById,
@@ -86,6 +94,29 @@ async function mailOutcome(send: () => Promise<boolean>) {
   }
 }
 
+// A link hands out its invite's role to whoever holds it, so a viewer who could not grant
+// that role does not get the link either.
+async function hideLinksBeyondGrant(
+  project: ProjectRow,
+  viewer: AuthUser,
+  invites: ListedInvite[],
+): Promise<ListedInvite[]> {
+  const grantable = new Map<number, boolean>();
+  return Promise.all(
+    invites.map(async (invite) => {
+      if (!invite.token || invite.roleId == null) return invite;
+      if (!grantable.has(invite.roleId)) {
+        const role = await getRole(project.teamId, invite.roleId);
+        grantable.set(
+          invite.roleId,
+          !role || (await mayGrantPermissions(project, viewer, role.permissions)),
+        );
+      }
+      return grantable.get(invite.roleId) ? invite : { ...invite, token: null };
+    }),
+  );
+}
+
 export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invites'] } })
   .use(authContext)
   .use(guards)
@@ -120,6 +151,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       if (roleId != null) {
         const role = await getRole(project.teamId, roleId);
         if (!role) throw new HttpError(400, "roleId does not belong to this project's team");
+        await assertGrantablePermissions(project, user, role.permissions);
       }
       const invite = await createInvite({
         teamId: project.teamId,
@@ -197,6 +229,10 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
           'Only a project owner or a team owner or manager can invite an owner',
         );
       }
+      if (grant.roleId != null) {
+        const role = await getRole(project.teamId, grant.roleId);
+        if (role) await assertGrantablePermissions(project, user, role.permissions);
+      }
       const invite = await renewInvite(grant, renewedBy);
       const email = await mailOutcome(() => enqueueInviteEmail(project, invite));
       set.status = 201;
@@ -219,13 +255,22 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
 
   .get(
     '/projects/:projectKey/invites',
-    async ({ project }) => {
-      return listProjectInvites(project.id);
+    async ({ project, user }) => {
+      const viewer = requireUser(user);
+      const mayInvite = await checkMemberAdmin(project, viewer, 'members_invite', 'create');
+      const invites = await listProjectInvites(project.id, mayInvite ? viewer.id : null);
+      return hideLinksBeyondGrant(project, viewer, invites);
     },
     {
       memberAdmin: ['members_invite', 'read'],
       response: { 200: InviteRowListResponse, ...accessErrors },
-      detail: { summary: "List a project's invites", ...mcpTool('list_invites') },
+      detail: {
+        summary: "List a project's invites",
+        description:
+          'The token is null on an invite the caller could not have sent: without permission ' +
+          'to create invites, or on an owner invite the caller may not grant.',
+        ...mcpTool('list_invites'),
+      },
     },
   )
 
@@ -294,7 +339,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
   .get(
     '/teams/:teamId/invites',
     async ({ membership }) => {
-      return listTeamInvites(membership.teamId);
+      return listTeamInvites(membership.teamId, membership.userId);
     },
     {
       teamManager: true,
@@ -303,7 +348,8 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       detail: {
         summary: "List a team's invites",
         description:
-          'Every invite into the team, including the ones that also name one of its projects.',
+          'Every invite into the team, including the ones that also name one of its projects. ' +
+          'The token is null on an invite granting a rank only a team owner may grant.',
       },
     },
   )

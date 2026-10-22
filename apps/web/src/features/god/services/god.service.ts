@@ -183,7 +183,7 @@ export function useInstanceAgentSettingsQuery() {
 export function useUpdateInstanceAgentSettings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: AgentSettings) => updateInstanceAgentSettings(body),
+    mutationFn: (body: Partial<AgentSettings>) => updateInstanceAgentSettings(body),
     onSuccess: (data) => qc.setQueryData(qk.instanceAgentSettings, data),
   });
 }

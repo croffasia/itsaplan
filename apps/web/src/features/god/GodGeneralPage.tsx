@@ -28,6 +28,8 @@ import type { ProjectDefaults } from '@/lib/api/endpoints/projects';
 
 // The trace windows offered; a window stored through the API outside them is offered too.
 const TRACE_DAYS = [7, 30, 90, 365];
+// The run time maximums offered, in seconds; a stored value outside them is offered too.
+const RUN_SECONDS = [120, 240, 300, 600, 900, 1800, 3600];
 
 export default function GodGeneralPage() {
   const defaults = useInstanceProjectDefaultsQuery().data;
@@ -62,6 +64,7 @@ function GeneralForm({
   const traceDays = [...new Set([...TRACE_DAYS, agents.traceRetentionDays])]
     .filter((days) => days > 0)
     .sort((a, b) => a - b);
+  const runSeconds = [...new Set([...RUN_SECONDS, agents.maxRunSeconds])].sort((a, b) => a - b);
 
   // Single toggles, so each saves on change rather than behind a Save button.
   async function setMcpEnabled(mcpEnabled: boolean) {
@@ -82,9 +85,9 @@ function GeneralForm({
     }
   }
 
-  async function setTraceRetention(traceRetentionDays: number) {
+  async function setAgentSettings(patch: Partial<AgentSettings>) {
     try {
-      await updateAgents.mutateAsync({ traceRetentionDays });
+      await updateAgents.mutateAsync(patch);
       toast.success(t('agentsSaved'));
     } catch {
       // The failure already surfaced through the global mutation error toast.
@@ -135,7 +138,9 @@ function GeneralForm({
                 <Select
                   value={String(agents.traceRetentionDays)}
                   disabled={updateAgents.isPending}
-                  onValueChange={(value) => void setTraceRetention(Number(value))}
+                  onValueChange={(value) =>
+                    void setAgentSettings({ traceRetentionDays: Number(value) })
+                  }
                 >
                   <SelectTrigger className="w-36" size="sm">
                     <SelectValue />
@@ -147,6 +152,30 @@ function GeneralForm({
                       </SelectItem>
                     ))}
                     <SelectItem value="0">{t('traceForever')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              }
+            />
+            <SettingsRow
+              title={t('maxRunTime')}
+              description={t('maxRunTimeHint')}
+              control={
+                <Select
+                  value={String(agents.maxRunSeconds)}
+                  disabled={updateAgents.isPending}
+                  onValueChange={(value) => void setAgentSettings({ maxRunSeconds: Number(value) })}
+                >
+                  <SelectTrigger className="w-36" size="sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {runSeconds.map((seconds) => (
+                      <SelectItem key={seconds} value={String(seconds)}>
+                        {seconds % 60 === 0
+                          ? t('runMinutes', { minutes: seconds / 60 })
+                          : t('runSeconds', { seconds })}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               }

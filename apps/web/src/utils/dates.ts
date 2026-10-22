@@ -189,13 +189,14 @@ export function formatLongDate(value: string): string {
   });
 }
 
-// "2:05 PM" for a moment in time, rendered in the user's zone.
-export function formatTime(value: string): string {
+// "2:05 PM" for a moment in time, rendered in the user's zone; "2:05:09 PM" with seconds.
+export function formatTime(value: string, { seconds = false } = {}): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
   return date.toLocaleTimeString(getIntlLocale(), {
     hour: 'numeric',
     minute: '2-digit',
+    ...(seconds && { second: '2-digit' }),
     ...zoneOption(),
   });
 }

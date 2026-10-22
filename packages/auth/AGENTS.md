@@ -54,7 +54,9 @@ they last.
 
 `hooks.before` gates `/sign-up/email` (closed → 403, an address outside
 `allowedEmailDomains` → 403, invite → no pending, unexpired invite for that address → 403)
-and holds back `/sign-in/email` for an unconfirmed address while verification is required. The requirement never outlives the mail provider: the api
+and holds back `/sign-in/email` for an unconfirmed address while verification is required, with 403
+`EMAIL_NOT_VERIFIED`, better-auth's own code for it. The sign-in form reads that code to offer the
+confirmation link again; a deactivated account and a disabled password form are 403s too. The requirement never outlives the mail provider: the api
 refuses to turn it on without one, and `setEmailSettings` clears it when the provider
 is removed, so the setting alone is what the gate, the sign-up endpoint and the
 public `/auth-config` read — none of them checks the provider again.
@@ -232,12 +234,14 @@ milliseconds but its handler passes the value to `getDate(value, "sec")`, so
 `API_KEY_DEFAULT_EXPIRES_IN_SEC` is in seconds; `maxExpiresIn` is in days, as the plugin
 reads it. Keys issued before this stay `expires_at` NULL and keep working.
 
-The expiry only holds if a key cannot renew itself, and a request carrying one resolves to
-the owner's session on every key endpoint. So `hooks.before` refuses both ways round it: an
-`/api-key/update` that carries `expiresIn`, and an `/api-key/create` sent with an
-`x-api-key` header. Keys are issued from a signed-in session; a longer life is a new key.
-The refusal reads `ctx.request`, which a server-side `auth.api.createApiKey` does not
-carry, so `issueKey` is unaffected.
+The plugin resolves a key to the owner's session on every better-auth endpoint, and what
+that session sets up there outlives the key: a passkey enrolled with it signs in after the
+key is deleted and the password reset, and a new key renews the expiry. So the first check
+in `hooks.before` refuses any request that carries an `x-api-key` header — a key is for the
+planner API, and the account is managed from a signed-in session. It reads `ctx.request`,
+which a server-side `auth.api.*` call does not carry, so `issueKey` and
+`getSessionFromHeaders` are unaffected. `hooks.before` also refuses an `/api-key/update`
+that carries `expiresIn`: a longer life is a new key.
 
 An agent's key is the exception and carries no expiry — an agent replays its stored secret
 with nothing that would renew it, and an external agent's operator rotates it through

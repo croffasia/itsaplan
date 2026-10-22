@@ -1,0 +1,58 @@
+{
+  "add": "Filtre ekle",
+  "remove": "Filtreyi kaldır",
+  "valuePlaceholder": "değer",
+  "noOptions": "Seçenek yok",
+  "selected": "{count} seçildi",
+  "operators": {
+    "is": "şudur:",
+    "is_not": "şu değildir:",
+    "before": "önce",
+    "after": "sonra",
+    "is_set": "belirlenmiş",
+    "is_not_set": "belirlenmemiş",
+    "contains": "içerir",
+    "not_contains": "içermez",
+    "overdue": "is overdue",
+    "today": "is today",
+    "next_3_days": "is in the next 3 days",
+    "next_7_days": "is in the next 7 days"
+  },
+  "boolean": {
+    "true": "Doğru",
+    "false": "Yanlış"
+  },
+  "cycleStatus": {
+    "active": "Aktif döngü",
+    "upcoming": "Gelecek döngüler"
+  },
+  "initiativeStatus": {
+    "active": "Aktif girişimler",
+    "planned": "Planlanan girişimler",
+    "proposed": "Önerilen girişimler"
+  },
+  "fields": {
+    "status": "Durum",
+    "statusType": "Durum türü",
+    "assignee": "Sorumlu",
+    "delegate": "Temsilci",
+    "priority": "Öncelik",
+    "type": "Tür",
+    "initiative": "Girişim",
+    "cycle": "Döngü",
+    "labels": "Etiketler",
+    "dueDate": "Bitiş tarihi",
+    "startDate": "Başlangıç tarihi",
+    "created": "Oluşturulma",
+    "updated": "Güncellenme"
+  },
+  "unset": {
+    "assignee": "Sorumlu atanmamış",
+    "delegate": "Temsilci atanmamış",
+    "type": "Tür yok",
+    "initiative": "Girişim yok",
+    "cycle": "Döngü yok",
+    "member": "Değer yok"
+  },
+  "currentUser": "Current user"
+}

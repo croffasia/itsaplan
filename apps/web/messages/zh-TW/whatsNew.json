@@ -1,0 +1,25 @@
+{
+  "eyebrow": "已更新",
+  "title": "{version} 的新變化",
+  "done": "知道了",
+  "backup": {
+    "title": "更新前已建立備份",
+    "body": "在本次發布的遷移執行之前已匯出資料庫：{size}，保留至 {expires}，之後自動刪除。如果回退到上一個版本，請用它恢復。",
+    "credentialsHint": "使用者名稱和資料庫名就是 .env 中的 POSTGRES_USER 與 POSTGRES_DB。"
+  },
+  "report": {
+    "title": "你的資料發生了什麼變化",
+    "subtitle": "專案現在屬於團隊，團隊共享一份角色、技能、代理和整合認證資訊的清單。",
+    "teamsHeading": "團隊及其專案",
+    "renamedRoles": "已重新命名的角色",
+    "renamedSkills": "已重新命名的技能",
+    "renamedAgents": "已重新命名的代理代號",
+    "renamedCredentials": "已重新命名的整合認證資訊",
+    "mergedHeading": "已合併與遷移",
+    "mergedRoles": "{count, plural, other {# 個重複的預設角色合併為一個}}",
+    "mergedTools": "{count, plural, other {# 個重複的已設定工具合併為一個}}",
+    "movedInvites": "{count, plural, other {# 個待處理邀請已遷移到團隊}}",
+    "notificationsHeading": "通知服務供應商",
+    "notificationsBody": "團隊只保留一份通知服務供應商設定，因此保留了最後儲存的一份。請為以下專案重新填寫設定：{projects}。"
+  }
+}

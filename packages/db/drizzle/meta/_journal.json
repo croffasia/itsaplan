@@ -1058,6 +1058,41 @@
       "when": 1792098421237,
       "tag": "0150_workspace_per_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 151,
+      "version": "7",
+      "when": 1792447270678,
+      "tag": "0151_agent_invocation_url",
+      "breakpoints": true
+    },
+    {
+      "idx": 152,
+      "version": "7",
+      "when": 1792496405688,
+      "tag": "0152_agent_execution_state",
+      "breakpoints": true
+    },
+    {
+      "idx": 153,
+      "version": "7",
+      "when": 1792496411346,
+      "tag": "0153_external_run_traces",
+      "breakpoints": true
+    },
+    {
+      "idx": 154,
+      "version": "7",
+      "when": 1792522419470,
+      "tag": "0154_agent_run_timeout",
+      "breakpoints": true
+    },
+    {
+      "idx": 155,
+      "version": "7",
+      "when": 1792536807276,
+      "tag": "0155_kimi_code_plan_provider",
+      "breakpoints": true
     }
   ]
 }

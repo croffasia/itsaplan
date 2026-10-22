@@ -211,7 +211,7 @@ export async function moveIssue(
       );
     await tx
       .update(agentRun)
-      .set({ status: 'canceled', finishedAt: sql`now()` })
+      .set({ status: 'canceled', executionStartedAt: null, finishedAt: sql`now()` })
       .where(and(inArray(agentRun.issueId, movedIds), eq(agentRun.status, 'pending')));
   });
 

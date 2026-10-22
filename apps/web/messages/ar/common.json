@@ -198,7 +198,8 @@
     "copiedLink": "تم النسخ",
     "editLink": "تعديل الرابط",
     "retryPreview": "إعادة المحاولة",
-    "copyLinkFailed": "تعذّر نسخ الرابط. حدّد عنوان URL أعلاه وانسخه."
+    "copyLinkFailed": "تعذّر نسخ الرابط. حدّد عنوان URL أعلاه وانسخه.",
+    "todoList": "قائمة مهام"
   },
   "chart": {
     "download": "احفظ الرسم البياني",

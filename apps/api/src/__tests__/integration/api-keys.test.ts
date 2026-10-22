@@ -95,6 +95,20 @@ describe('api keys', () => {
     expect(await db.$count(apikey, eq(apikey.referenceId, user.userId))).toBe(1);
   });
 
+  it('refuses enrolling a passkey with a key', async () => {
+    const user = await signUpTestUser();
+    const created = await auth.api.createApiKey({ body: { userId: user.userId, name: 'ci' } });
+    const registerOptions = (headers: Record<string, string>) =>
+      app.handle(
+        new Request('http://localhost/api/auth/passkey/generate-register-options', {
+          headers: { origin, ...headers },
+        }),
+      );
+
+    expect((await registerOptions({ 'x-api-key': created.key })).status).toBe(403);
+    expect((await registerOptions({ cookie: user.cookie })).status).toBe(200);
+  });
+
   it('refuses changing the expiry of a key, with the key itself included', async () => {
     const user = await signUpTestUser();
     const created = await auth.api.createApiKey({ body: { userId: user.userId, name: 'ci' } });

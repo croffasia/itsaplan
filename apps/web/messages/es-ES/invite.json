@@ -36,7 +36,6 @@
   "switchToRegister": "Crear una",
   "existingAccountNotice": "Este correo ya tiene una cuenta. Inicia sesión con tu contraseña.",
   "passwordsDoNotMatch": "Las contraseñas no coinciden.",
-  "genericError": "Algo ha salido mal. Por favor, inténtalo otra vez.",
   "registerFailed": "No se ha podido crear tu cuenta.",
   "signInFailed": "No se ha podido iniciar tu sesión."
 }

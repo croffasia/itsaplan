@@ -4,7 +4,8 @@
     "preferences": "Préférences",
     "accounts": "Comptes",
     "security": "Sécurité",
-    "api-keys": "Clés d'API"
+    "api-keys": "Clés d'API",
+    "invitations": "Invitations"
   },
   "godGroups": {
     "management": "Gestion",

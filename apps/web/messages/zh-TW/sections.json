@@ -4,7 +4,8 @@
     "preferences": "偏好設定",
     "accounts": "關聯帳號",
     "security": "安全",
-    "api-keys": "API 金鑰"
+    "api-keys": "API 金鑰",
+    "invitations": "Invitations"
   },
   "godGroups": {
     "management": "管理",

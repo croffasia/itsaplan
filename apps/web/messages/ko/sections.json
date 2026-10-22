@@ -4,7 +4,8 @@
     "preferences": "환경 설정",
     "accounts": "계정",
     "security": "보안",
-    "api-keys": "API 키"
+    "api-keys": "API 키",
+    "invitations": "Invitations"
   },
   "godGroups": {
     "management": "관리",

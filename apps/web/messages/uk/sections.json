@@ -4,7 +4,8 @@
     "preferences": "Налаштування",
     "accounts": "Акаунти",
     "security": "Безпека",
-    "api-keys": "API-ключі"
+    "api-keys": "API-ключі",
+    "invitations": "Invitations"
   },
   "godGroups": {
     "management": "Керування",

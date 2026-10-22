@@ -45,6 +45,9 @@
     "continue": "Continue without joining",
     "loadFailed": "Invitations could not be loaded. Try again or continue without joining.",
     "retry": "Try again",
-    "loading": "Loading invitations…"
+    "loading": "Loading invitations…",
+    "empty": "No pending invitations. New invitations sent to your verified email will appear here.",
+    "verifyRequired": "Verify your email address to discover invitations automatically. You can still open an invitation link shared with you.",
+    "loadFailedAccount": "Could not load invitations. Please try again."
   }
 }

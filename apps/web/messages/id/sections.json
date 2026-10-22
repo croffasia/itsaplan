@@ -4,7 +4,8 @@
     "preferences": "Preferensi",
     "accounts": "Akun",
     "security": "Keamanan",
-    "api-keys": "Kunci API"
+    "api-keys": "Kunci API",
+    "invitations": "Invitations"
   },
   "godGroups": {
     "management": "Manajemen",

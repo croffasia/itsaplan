@@ -1,12 +1,12 @@
 'use client';
 
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import type { Paging } from '@/hooks/usePaging';
 import type { ReceivedInvite } from '@/lib/api/endpoints/invites';
 import { Button } from '@/components/ui/button';
 import ListPager from '@/components/common/ListPager';
+import ReceivedInvitesList from '@/components/common/invites/ReceivedInvitesList';
 import { LocaleToggle } from '@/components/locale-toggle';
 import { ThemeToggle } from '@/components/theme-toggle';
 import UserMenu from '@/components/layout/UserMenu';
@@ -60,29 +60,7 @@ export default function InviteStartList({
         )}
         {!loading && !failed && (
           <>
-            <ul className="divide-y">
-              {items.map((invite) => (
-                <li
-                  key={invite.token}
-                  className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between"
-                >
-                  <div className="min-w-0 break-words">
-                    <p className="font-medium">{invite.teamName}</p>
-                    {invite.projectName && (
-                      <p className="mt-1 text-sm text-muted-foreground">{invite.projectName}</p>
-                    )}
-                  </div>
-                  <Button asChild variant="outline" className="shrink-0">
-                    <Link
-                      aria-label={`${t('review')}: ${invite.teamName}`}
-                      href={`/invite/${encodeURIComponent(invite.token)}`}
-                    >
-                      {t('review')}
-                    </Link>
-                  </Button>
-                </li>
-              ))}
-            </ul>
+            <ReceivedInvitesList items={items} />
             <ListPager paging={paging} total={total} />
           </>
         )}

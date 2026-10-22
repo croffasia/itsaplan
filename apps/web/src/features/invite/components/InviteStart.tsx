@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { usePaging } from '@/hooks/usePaging';
-import { useReceivedInvitesQuery } from '../services/invite.service';
+import { useReceivedInvitesQuery } from '@/services/invites.service';
 import InviteStartList from './InviteStartList';
 
 export default function InviteStart({ children }: { children: ReactNode }) {

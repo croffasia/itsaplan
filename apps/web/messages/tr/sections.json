@@ -4,7 +4,8 @@
     "preferences": "Tercihler",
     "accounts": "Hesaplar",
     "security": "Güvenlik",
-    "api-keys": "API anahtarları"
+    "api-keys": "API anahtarları",
+    "invitations": "Invitations"
   },
   "godGroups": {
     "management": "Yönetim",

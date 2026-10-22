@@ -4,7 +4,8 @@
     "preferences": "ترجیحات",
     "accounts": "حساب‌ها",
     "security": "امنیت",
-    "api-keys": "کلیدهای API"
+    "api-keys": "کلیدهای API",
+    "invitations": "Invitations"
   },
   "godGroups": {
     "management": "مدیریت",

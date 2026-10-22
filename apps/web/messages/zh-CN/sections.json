@@ -4,7 +4,8 @@
     "preferences": "偏好设置",
     "accounts": "关联账户",
     "security": "安全",
-    "api-keys": "API 密钥"
+    "api-keys": "API 密钥",
+    "invitations": "Invitations"
   },
   "godGroups": {
     "management": "管理",

@@ -284,7 +284,7 @@
     },
     "packages/runner": {
       "name": "@itsaplan/runner",
-      "version": "0.6.0",
+      "version": "0.7.0",
       "bin": {
         "itsaplan-runner": "./dist/cli.js",
       },

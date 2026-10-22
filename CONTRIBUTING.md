@@ -86,15 +86,17 @@ run `bun run auth:generate` first, then generate the migration.
 
    The full list of accepted types is in `.github/workflows/pr-title.yml`.
 
-4. Before pushing, make sure these pass:
+4. If you develop with an AI agent, run the project skills from `.agents/skills/` on
+   the new code, in this order: `tidy`, `code-review`, `security-audit`.
+5. Before pushing, make sure these pass:
 
    ```bash
    bun run format:check && bun run lint && bun run typecheck
    ```
 
-5. Fill in the pull request template, link the issue (`Closes #123`), and add
+6. Fill in the pull request template, link the issue (`Closes #123`), and add
    screenshots for UI changes.
-6. CI must be green before review.
+7. CI must be green before review.
 
 ## Sign the Contributor License Agreement
 

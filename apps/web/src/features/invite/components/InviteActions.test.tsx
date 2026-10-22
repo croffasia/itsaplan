@@ -25,6 +25,7 @@ let dom: JSDOM;
 let root: Root;
 let client: QueryClient;
 let navigated: string[];
+let membershipAtNavigation: unknown[];
 let status: number;
 
 beforeEach(async () => {
@@ -36,6 +37,7 @@ beforeEach(async () => {
   });
   status = 200;
   navigated = [];
+  membershipAtNavigation = [];
   Object.defineProperties(globalThis, {
     window: { configurable: true, value: dom.window },
     document: { configurable: true, value: dom.window.document },
@@ -65,7 +67,12 @@ beforeEach(async () => {
   const { createRoot } = await import('react-dom/client');
   root = createRoot(document.getElementById('root')!);
   const router = {
-    push: (path: string) => navigated.push(path),
+    push: (path: string) => {
+      membershipAtNavigation = [qk.teams, qk.projects, qk.workspaces].map((key) =>
+        client.getQueryData(key),
+      );
+      navigated.push(path);
+    },
     refresh() {},
     replace() {},
     back() {},
@@ -112,6 +119,29 @@ describe('InviteActions membership cache', () => {
       keys.map((key) => client.getQueryState(key)?.isInvalidated),
       [true, true, true, true],
     );
+  });
+
+  it('refreshes inactive membership lists before navigation', async () => {
+    let joined = false;
+    const membershipKeys = [qk.teams, qk.projects, qk.workspaces];
+    for (const queryKey of membershipKeys) {
+      await client.fetchQuery({
+        queryKey,
+        queryFn: async () => (joined ? ['new membership'] : []),
+        staleTime: 0,
+      });
+      assert.equal(client.getQueryCache().find({ queryKey })?.getObserversCount(), 0);
+    }
+    joined = true;
+
+    await click(messages.accept);
+
+    assert.deepEqual(navigated, ['/']);
+    assert.deepEqual(membershipAtNavigation, [
+      ['new membership'],
+      ['new membership'],
+      ['new membership'],
+    ]);
   });
 
   it('invalidates the received list on decline without granting membership', async () => {

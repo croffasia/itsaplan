@@ -38,11 +38,12 @@ export default function InviteActions({
     setBusy('accept');
     try {
       const result = await acceptInvite(token);
-      await Promise.all(
-        [qk.teams, qk.projects, qk.workspaces, qk.receivedInvites].map((queryKey) =>
-          qc.invalidateQueries({ queryKey }),
+      await Promise.all([
+        ...[qk.teams, qk.projects, qk.workspaces].map((queryKey) =>
+          qc.invalidateQueries({ queryKey, refetchType: 'all' }),
         ),
-      );
+        qc.invalidateQueries({ queryKey: qk.receivedInvites }),
+      ]);
       router.push(
         result.projectKey ? projectPath(projectRefOf(result.teamRef, result.projectKey)) : '/',
       );

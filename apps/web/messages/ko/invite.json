@@ -37,5 +37,14 @@
   "existingAccountNotice": "이 이메일로 등록된 계정이 이미 있습니다. 비밀번호로 로그인해 주세요.",
   "passwordsDoNotMatch": "비밀번호가 일치하지 않습니다.",
   "registerFailed": "계정을 생성할 수 없습니다.",
-  "signInFailed": "로그인할 수 없습니다."
+  "signInFailed": "로그인할 수 없습니다.",
+  "received": {
+    "title": "Your invitations",
+    "description": "Review an invitation to see the team, project and role before joining.",
+    "review": "Review invitation",
+    "continue": "Continue without joining",
+    "loadFailed": "Invitations could not be loaded. Try again or continue without joining.",
+    "retry": "Try again",
+    "loading": "Loading invitations…"
+  }
 }

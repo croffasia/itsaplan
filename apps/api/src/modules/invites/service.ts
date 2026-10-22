@@ -1,5 +1,5 @@
 import { db, teamInvite, teamMember, projectMember, teamRole, team, project, user } from '@repo/db';
-import { and, desc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { getAuthSettings, inviteValidSince } from '@repo/auth';
 import { HttpError, iso, pgErrorCode } from '#shared/lib';
 import { getProjectAccess, getTeamAccess } from '#shared/access';
@@ -550,4 +550,32 @@ export async function rejectInvite(inviteId: number): Promise<void> {
     .update(teamInvite)
     .set({ status: 'rejected', respondedAt: new Date() })
     .where(eq(teamInvite.id, inviteId));
+}
+
+export async function listReceivedInvites(
+  email: string,
+  window: { limit: number; offset: number },
+) {
+  const since = await inviteValidSince();
+  const where = and(
+    eq(teamInvite.email, normalizeEmail(email)),
+    eq(teamInvite.status, 'pending'),
+    since ? gte(teamInvite.createdAt, since) : undefined,
+  );
+  const [items, counts] = await Promise.all([
+    db
+      .select({ token: teamInvite.token, teamName: team.name, projectName: project.name })
+      .from(teamInvite)
+      .innerJoin(team, eq(team.id, teamInvite.teamId))
+      .leftJoin(project, eq(project.id, teamInvite.projectId))
+      .where(where)
+      .orderBy(desc(teamInvite.createdAt), desc(teamInvite.id))
+      .limit(window.limit)
+      .offset(window.offset),
+    db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(teamInvite)
+      .where(where),
+  ]);
+  return { items, total: counts[0]?.total ?? 0 };
 }

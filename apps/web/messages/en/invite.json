@@ -37,5 +37,14 @@
   "existingAccountNotice": "This email already has an account. Sign in with your password.",
   "passwordsDoNotMatch": "Passwords do not match.",
   "registerFailed": "Could not create your account.",
-  "signInFailed": "Could not sign you in."
+  "signInFailed": "Could not sign you in.",
+  "received": {
+    "title": "Your invitations",
+    "description": "Review an invitation to see the team, project and role before joining.",
+    "review": "Review invitation",
+    "continue": "Continue without joining",
+    "loadFailed": "Invitations could not be loaded. Try again or continue without joining.",
+    "retry": "Try again",
+    "loading": "Loading invitations…"
+  }
 }

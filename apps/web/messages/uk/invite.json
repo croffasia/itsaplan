@@ -37,5 +37,14 @@
   "existingAccountNotice": "Для цієї пошти вже є акаунт. Увійдіть зі своїм паролем.",
   "passwordsDoNotMatch": "Паролі не збігаються.",
   "registerFailed": "Не вдалося створити акаунт.",
-  "signInFailed": "Не вдалося виконати вхід."
+  "signInFailed": "Не вдалося виконати вхід.",
+  "received": {
+    "title": "Your invitations",
+    "description": "Review an invitation to see the team, project and role before joining.",
+    "review": "Review invitation",
+    "continue": "Continue without joining",
+    "loadFailed": "Invitations could not be loaded. Try again or continue without joining.",
+    "retry": "Try again",
+    "loading": "Loading invitations…"
+  }
 }

@@ -7,6 +7,9 @@ const scimKey = (workspaceId: number | null) =>
 // or key scopes its entry. Kept in one registry so a mutation in one service can
 // invalidate another service's queries by the same key.
 export const qk = {
+  receivedInvites: ['receivedInvites'] as const,
+  receivedInvitesPage: (userId: string, email: string, params: unknown) =>
+    ['receivedInvites', userId, email, params] as const,
   externalRunTrace: (runId: number) => ['externalRunTrace', runId] as const,
   runnerQueue: ['runnerQueue'] as const,
   issueAgentRuns: (issueId: number) => ['issueAgentRuns', issueId] as const,

@@ -14,6 +14,7 @@ import NewProjectModal from '@/components/layout/NewProjectModal';
 import NewTeamModal from '@/features/teams/components/NewTeamModal';
 import ProjectSwitcherHiddenState from '@/components/layout/ProjectSwitcherHiddenState';
 import StartEmpty from '@/components/layout/StartEmpty';
+import InviteStart from '@/features/invite/components/InviteStart';
 
 // The index route: reopen the last-used project if it still exists, otherwise the
 // first visible favorite or project, on the user's preferred start page. Waits for both
@@ -50,23 +51,30 @@ export default function Home() {
     workspaces?.find((one) => one.role === 'owner') ?? workspaces?.find((one) => one.canCreateTeam);
 
   if (teams && workspaces && !managedTeam && projects?.length === 0) {
-    if (teams.length === 0 && !teamWorkspace) return <NoTeamStart />;
+    if (teams.length === 0 && !teamWorkspace)
+      return (
+        <InviteStart>
+          <NoTeamStart />
+        </InviteStart>
+      );
     return (
-      <StartEmpty
-        icon={<Users />}
-        title={teams.length === 0 ? t('noTeamsTitle') : t('noProjectsTitle')}
-        hint={
-          teams.length === 0
-            ? t('noTeamsHint')
-            : t(teamWorkspace ? 'noProjectAccessOwnerHint' : 'noProjectAccessHint')
-        }
-        action={teamWorkspace && t('createTeam')}
-        onAction={() => setCreating(true)}
-      >
-        {creating && teamWorkspace && (
-          <NewTeamModal workspaceId={teamWorkspace.id} onClose={() => setCreating(false)} />
-        )}
-      </StartEmpty>
+      <InviteStart>
+        <StartEmpty
+          icon={<Users />}
+          title={teams.length === 0 ? t('noTeamsTitle') : t('noProjectsTitle')}
+          hint={
+            teams.length === 0
+              ? t('noTeamsHint')
+              : t(teamWorkspace ? 'noProjectAccessOwnerHint' : 'noProjectAccessHint')
+          }
+          action={teamWorkspace && t('createTeam')}
+          onAction={() => setCreating(true)}
+        >
+          {creating && teamWorkspace && (
+            <NewTeamModal workspaceId={teamWorkspace.id} onClose={() => setCreating(false)} />
+          )}
+        </StartEmpty>
+      </InviteStart>
     );
   }
 
@@ -74,24 +82,26 @@ export default function Home() {
   // without a project, so the empty state offers project creation directly.
   if (managedTeam && projects?.length === 0) {
     return (
-      <StartEmpty
-        icon={<SquareKanban />}
-        title={t('noProjectsTitle')}
-        hint={t('noProjectsHint')}
-        action={t('createProject')}
-        onAction={() => setCreating(true)}
-      >
-        {creating && (
-          <NewProjectModal
-            teamId={managedTeam.id}
-            onClose={() => setCreating(false)}
-            onCreated={(key) => {
-              setCreating(false);
-              router.push(projectPath(key));
-            }}
-          />
-        )}
-      </StartEmpty>
+      <InviteStart>
+        <StartEmpty
+          icon={<SquareKanban />}
+          title={t('noProjectsTitle')}
+          hint={t('noProjectsHint')}
+          action={t('createProject')}
+          onAction={() => setCreating(true)}
+        >
+          {creating && (
+            <NewProjectModal
+              teamId={managedTeam.id}
+              onClose={() => setCreating(false)}
+              onCreated={(key) => {
+                setCreating(false);
+                router.push(projectPath(key));
+              }}
+            />
+          )}
+        </StartEmpty>
+      </InviteStart>
     );
   }
 

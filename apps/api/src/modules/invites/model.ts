@@ -1,4 +1,5 @@
 import { t } from 'elysia';
+import { pageQueryFields, pageResponse } from '#shared/pagination';
 
 const projectRole = t.Union([t.Literal('owner'), t.Literal('member')]);
 
@@ -80,3 +81,12 @@ export const AcceptInviteResponse = t.Object({
   projectName: t.Nullable(t.String()),
   role: t.Nullable(projectRole),
 });
+
+export const receivedInvitesQuery = t.Object(pageQueryFields);
+export const ReceivedInvitePageResponse = pageResponse(
+  t.Object({
+    token: t.String(),
+    teamName: t.String(),
+    projectName: t.Nullable(t.String()),
+  }),
+);

@@ -1,4 +1,5 @@
 import { request } from '@/lib/api/core/client';
+import { pageQuery, type Page, type PageParams } from '@/lib/api/core/paging';
 import type { MemberRole } from '@/lib/api/endpoints/members';
 
 export type InviteStatus = 'pending' | 'accepted' | 'rejected';
@@ -132,3 +133,12 @@ export const acceptInvite = (token: string) =>
 
 export const rejectInvite = (token: string) =>
   request<void>(`/invites/${encodeURIComponent(token)}/reject`, { method: 'POST' });
+
+export interface ReceivedInvite {
+  token: string;
+  teamName: string;
+  projectName: string | null;
+}
+
+export const listReceivedInvites = (params: PageParams) =>
+  request<Page<ReceivedInvite>>(`/me/invites${pageQuery(params)}`);

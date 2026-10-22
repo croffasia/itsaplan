@@ -7,6 +7,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { acceptInvite, rejectInvite } from '@/lib/api/endpoints/invites';
 import { ApiError } from '@/lib/api/core/client';
+import { qk } from '@/services/queryKeys';
 import { projectPath, projectRefOf } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import { FieldError } from '@/components/ui/field';
@@ -37,6 +38,11 @@ export default function InviteActions({
     setBusy('accept');
     try {
       const result = await acceptInvite(token);
+      await Promise.all(
+        [qk.teams, qk.projects, qk.workspaces, qk.receivedInvites].map((queryKey) =>
+          qc.invalidateQueries({ queryKey }),
+        ),
+      );
       router.push(
         result.projectKey ? projectPath(projectRefOf(result.teamRef, result.projectKey)) : '/',
       );
@@ -53,7 +59,10 @@ export default function InviteActions({
     setBusy('reject');
     try {
       await rejectInvite(token);
-      await qc.invalidateQueries({ queryKey: ['invite', token] });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['invite', token] }),
+        qc.invalidateQueries({ queryKey: qk.receivedInvites }),
+      ]);
     } catch (err) {
       setError(err instanceof Error ? err.message : t('declineError'));
       setBusy(null);

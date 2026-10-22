@@ -37,5 +37,14 @@
   "existingAccountNotice": "Bu e-posta adresine kayıtlı bir hesap zaten var. Şifrenizle giriş yapın.",
   "passwordsDoNotMatch": "Şifreler eşleşmiyor.",
   "registerFailed": "Hesabınız oluşturulamadı.",
-  "signInFailed": "Giriş yapılamadı."
+  "signInFailed": "Giriş yapılamadı.",
+  "received": {
+    "title": "Your invitations",
+    "description": "Review an invitation to see the team, project and role before joining.",
+    "review": "Review invitation",
+    "continue": "Continue without joining",
+    "loadFailed": "Invitations could not be loaded. Try again or continue without joining.",
+    "retry": "Try again",
+    "loading": "Loading invitations…"
+  }
 }

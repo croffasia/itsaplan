@@ -136,7 +136,9 @@ The redirect URI registered with the identity provider is `OIDC_REDIRECT_URI`,
 Signing out leaves the session at the identity provider alone (`disableProviderLogout`).
 No screen offers linking an OIDC identity to the signed-in account, so `hooks.before`
 refuses `/link-social` for it; better-auth already attaches a sign-in to a matching
-confirmed address on its own.
+confirmed address on its own, when the provider reports the address verified. A provider
+may send `email_verified` as a string, so the OIDC `mapProfileToUser` reads `true` and
+`"true"` as verified and anything else, `"false"` included, as not.
 
 ## Turning password authentication off
 

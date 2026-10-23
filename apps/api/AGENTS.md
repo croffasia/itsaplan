@@ -134,6 +134,10 @@ Enforced declaratively through macros, never imperative calls in handlers.
 /projects/:projectKey/issues/:sequenceNumber` does the same for an old number that
   resolved to an issue now in another project. `POST /issues/:issueId/move` checks the
   target project in the `moveTarget` macro, which reads `projectId` from the body.
+  `entityGuard` calls `assertMcpAllowed`, and so does a route that resolves the project
+  itself: it applies the per-project MCP toggle, and refuses an object outside
+  the project an internal agent's run works in (`x-agent-project`, set by the run's tool
+  dispatch).
 - Every guard publishes the pair it asserts as `x-permission` on the route's OpenAPI
   detail, which is where `mcp/generate.ts` reads it — Elysia deletes a macro's own key
   from the route once it expands the macro, so there is nothing else to read it from.

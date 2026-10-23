@@ -325,6 +325,12 @@ async function refreshOidcProvider(): Promise<boolean> {
           // The `account` rows hold the OIDC subject. genericOAuth reads `id` instead
           // when the discovery document lists no id_token signing algorithms.
           accountSubject: ({ profile }) => String(profile.sub ?? ''),
+          // genericOAuth passes email_verified on as sent, and some providers send a
+          // string (Amazon Cognito's userinfo does): "false" would count as verified.
+          mapProfileToUser: (profile) => {
+            const claim: unknown = profile.email_verified;
+            return { emailVerified: claim === true || claim === 'true' };
+          },
           // Signing out of the app leaves the session at the identity provider alone.
           disableProviderLogout: true,
         },

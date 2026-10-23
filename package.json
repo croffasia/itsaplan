@@ -39,6 +39,7 @@
   ],
   "overrides": {
     "@scalar/types": "0.16.2",
-    "@scalar/themes": "0.16.2"
+    "@scalar/themes": "0.16.2",
+    "body-parser": "^2.4.0"
   }
 }

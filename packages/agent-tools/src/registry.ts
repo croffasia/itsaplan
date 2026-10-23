@@ -16,8 +16,8 @@ import { gitea } from './tools/gitea';
 import { github } from './tools/github';
 import { pdf } from './tools/pdf';
 
-// The registry of tool integrations. Add an integration by creating its folder under
-// tools/ and listing it here.
+// The core's tool integrations. Add an integration by creating its folder under tools/
+// and listing it here.
 export const INTEGRATIONS: Integration[] = [
   jina,
   firecrawl,
@@ -30,30 +30,52 @@ export const INTEGRATIONS: Integration[] = [
   pdf,
 ];
 
-const BY_KEY = new Map(INTEGRATIONS.map((i) => [i.key, i]));
+type ToolIndex = Map<string, { integration: Integration; tool: CustomToolEntry }>;
 
-// Every tool across all integrations, mapped to its integration for credential
-// lookup. Tool keys are unique across integrations; a collision would drop a tool
-// from the index, so it fails at module load instead.
-const TOOL_INDEX = new Map<string, { integration: Integration; tool: CustomToolEntry }>();
-for (const integration of INTEGRATIONS) {
-  for (const tool of integration.tools) {
-    const clash = TOOL_INDEX.get(tool.key);
-    if (clash) {
-      throw new Error(
-        `Duplicate tool key "${tool.key}" in ${integration.key} and ${clash.integration.key}.`,
-      );
+let integrations = INTEGRATIONS;
+let byKey = new Map<string, Integration>();
+let toolIndex: ToolIndex = new Map();
+
+// Integration keys and tool keys are unique across all integrations; a collision
+// would drop one from the index, so it throws and the previous set stays.
+function index(list: Integration[]): void {
+  const keys = new Map<string, Integration>();
+  const tools: ToolIndex = new Map();
+  for (const integration of list) {
+    if (keys.has(integration.key)) {
+      throw new Error(`Duplicate integration key "${integration.key}".`);
     }
-    TOOL_INDEX.set(tool.key, { integration, tool });
+    keys.set(integration.key, integration);
+    for (const tool of integration.tools) {
+      const clash = tools.get(tool.key);
+      if (clash) {
+        throw new Error(
+          `Duplicate tool key "${tool.key}" in ${integration.key} and ${clash.integration.key}.`,
+        );
+      }
+      tools.set(tool.key, { integration, tool });
+    }
   }
+  integrations = list;
+  byKey = keys;
+  toolIndex = tools;
+}
+
+index(INTEGRATIONS);
+
+// Integrations an extension of the api adds beside the core's; each call replaces the
+// previous ones. A self-hosted instance adds none. A configured tool whose integration
+// is removed stays stored, and the runtime skips it.
+export function setExtraIntegrations(extra: Integration[] = []): void {
+  index([...INTEGRATIONS, ...extra]);
 }
 
 export function getIntegration(key: string): Integration | undefined {
-  return BY_KEY.get(key);
+  return byKey.get(key);
 }
 
 export function isKnownIntegration(key: string): boolean {
-  return BY_KEY.has(key);
+  return byKey.has(key);
 }
 
 // The integration a tool belongs to plus the tool itself, or undefined for an unknown
@@ -61,13 +83,13 @@ export function isKnownIntegration(key: string): boolean {
 export function getTool(
   toolKey: string,
 ): { integration: Integration; tool: CustomToolEntry } | undefined {
-  return TOOL_INDEX.get(toolKey);
+  return toolIndex.get(toolKey);
 }
 
 // The serializable catalog for a frontend: the credential form is built from each
 // integration's credentialSchema, and the tool picker from its tools.
 export function integrationDescriptors(): IntegrationDescriptor[] {
-  return INTEGRATIONS.map((i) => ({
+  return integrations.map((i) => ({
     key: i.key,
     label: i.label,
     credentialSchema: i.credentialSchema,

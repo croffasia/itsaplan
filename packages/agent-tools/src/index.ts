@@ -14,6 +14,7 @@ export {
   isKnownIntegration,
   getTool,
   integrationDescriptors,
+  setExtraIntegrations,
   coerceConfig,
   redactConfig,
 } from './registry';

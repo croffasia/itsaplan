@@ -9,6 +9,7 @@ import {
   FolderInput,
   GitBranch,
   Globe,
+  PanelRight,
   Share2,
   Trash2,
 } from 'lucide-react';
@@ -41,6 +42,7 @@ export default function IssueActionsBar({
   issue,
   variant = 'row',
   onDeleted,
+  onOpenInPanel,
 }: {
   project: ProjectDetail;
   issue: IssueDetailRow;
@@ -48,6 +50,7 @@ export default function IssueActionsBar({
   // them bare, at the smaller size the side panel's header row uses.
   variant?: 'row' | 'header';
   onDeleted?: () => void;
+  onOpenInPanel?: () => void;
 }) {
   const t = useTranslations('issue.actionsBar');
   const { can } = usePermissions();
@@ -107,6 +110,21 @@ export default function IssueActionsBar({
 
   const buttons = (
     <div className={variant === 'header' ? 'flex items-center gap-0.5' : 'flex flex-wrap gap-1.5'}>
+      {onOpenInPanel && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size={btnSize}
+              className="text-muted-foreground hover:text-foreground"
+              onClick={onOpenInPanel}
+            >
+              <PanelRight className="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t('openInPanel')}</TooltipContent>
+        </Tooltip>
+      )}
       <Tooltip>
         <TooltipTrigger asChild>
           <Button

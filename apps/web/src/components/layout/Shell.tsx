@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { useIssueBySeqQuery } from '@/services/issues.service';
@@ -80,6 +80,18 @@ export default function Shell({
   const initiativeOptions = useInitiativeOptionsQuery(projectKey).data ?? [];
   const { issueOpenMode, showChatByDefault } = useAccountPreferences();
   const overlays = useOverlays();
+  const setOpenIssueId = overlays.setOpenIssueId;
+  // The issue page returns to the board with `?issue=`; the panel is not
+  // addressed by the URL, so consume the parameter here and drop it from the
+  // address.
+  useEffect(() => {
+    if (!route.onBoard || !projectKey) return;
+    const issueId = new URLSearchParams(window.location.search).get('issue');
+    if (issueId == null) return;
+    router.replace(projectPath(projectKey));
+    const id = Number(issueId);
+    if (Number.isSafeInteger(id) && id > 0) setOpenIssueId(id);
+  }, [route.onBoard, projectKey, router, setOpenIssueId]);
   const chatPanel = useChatPanel(projectKey, showChatByDefault);
   // The agent a page asked to chat with, held until the panel has opened its tab.
   const [chatAgentId, setChatAgentId] = useState<number | null>(null);
@@ -151,6 +163,10 @@ export default function Shell({
         router.push(issuePath(projectKey, seq));
         return;
       }
+    }
+    if (mode === 'panel' && projectKey && route.sub === 'issue') {
+      router.push(`${projectPath(projectKey)}?issue=${id}`);
+      return;
     }
     // The issue the panel already shows closes it, so the card that opened the panel
     // is the one that puts it away.

@@ -97,6 +97,7 @@
     "inOneWeek": "일주일 후"
   },
   "actionsBar": {
+    "openInPanel": "사이드 패널로 열기",
     "shortLinkCopied": "짧은 링크가 복사되었습니다.",
     "branchCopied": "브랜치 이름이 복사되었습니다.",
     "copyShortLink": "짧은 링크 복사",

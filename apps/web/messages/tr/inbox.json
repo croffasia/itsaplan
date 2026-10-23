@@ -34,5 +34,8 @@
     "commented": "{who} bir yorum yaptı",
     "stateChanged": "{who} durumu {from} değerinden {to} değerine değiştirdi",
     "stateChangedPlain": "{who} durumu değiştirdi"
-  }
+  },
+  "thisProject": "Bu proje",
+  "allProjects": "Tüm projeler",
+  "scopeHint": "Bu projenin veya tüm projelerin bildirimlerini göster"
 }

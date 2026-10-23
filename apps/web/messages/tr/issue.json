@@ -205,7 +205,8 @@
     "searchPrompt": "Bu işin {relation} durumunda olduğu işleri arayın…",
     "failed": "İşler birbirine bağlanamadı",
     "noMatches": "Eşleşen iş yok.",
-    "typeToSearch": "Bu projenin işlerinde aramak için yazın."
+    "typeToSearch": "Bu projenin işlerinde aramak için yazın.",
+    "project": "Proje"
   },
   "subtasks": {
     "title": "Alt İşler",

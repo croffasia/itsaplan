@@ -36,6 +36,12 @@ run from the images published on each release. `VERSION` in `.env` pins one rele
 of the newest. The `migrate` service applies migrations before the api starts, and the first account you register
 becomes the instance admin.
 
+For the Pro edition, start the stack with `docker compose -f docker-compose.pro.yml up -d`.
+It takes the same `.env` and runs the Pro images. Without a valid license they run as the core
+does; the license key is entered in god mode, under **License**. The project name and the
+volumes are those of `docker-compose.yml`, so an existing instance moves to Pro on the same
+data.
+
 `.env.example` documents every variable, including the optional ones: legal document URLs,
 passkey and cookie settings, telemetry opt-out, and worker tuning.
 

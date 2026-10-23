@@ -7,7 +7,7 @@ import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { mcpTool } from '#mcp/generate';
 import { paginate } from '#shared/pagination';
 import { teamParams } from '#modules/teams/model';
-import { agentInTeam, agentScopeOf } from '../core/service';
+import { agentInTeam, agentScopeOf, assertFullAgentAccess } from '../core/service';
 import { actionCatalog } from '../core/runtime/tools/route-tools';
 import {
   AgentToolListResponse,
@@ -157,6 +157,7 @@ export const agentToolRoutes = new Elysia({
       if (!(await agentInTeam(params.agentId, membership.teamId, agentScopeOf(membership)))) {
         throw new HttpError(404, 'Agent not found');
       }
+      await assertFullAgentAccess(membership, params.agentId);
       await setAgentTools(params.agentId, membership.teamId, body.agentToolIds);
       return listAgentToolLinks(params.agentId);
     },

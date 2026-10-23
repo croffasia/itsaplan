@@ -32,7 +32,9 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   `WorkspaceRailActions` sits below the workspace tiles of a rail; here it says where more
   than one workspace per person is available. `ShellNotice` is a strip under the top bar of
   the app shell, god mode and the teams pages; here it shows nothing, while the hosted
-  build shows notices about the instance there. `BrandMark` is the product mark at the top
+  build shows notices about the instance there. `AfterSignIn` is mounted over every page,
+  beside the what's new screen; here it shows nothing, while the hosted build can show a
+  screen there once a session starts. `BrandMark` is the product mark at the top
   and the bottom of both sidebars; here the core's `ItsAPlanMark`, which the hosted build can
   mark its edition on. `BrandPanel({ subtitle })` is the panel beside the form on the
   logged-out screens and the invite screen; here the core's, which the hosted build can

@@ -59,7 +59,20 @@
     "disconnectApp": "Отключить",
     "disconnectAppTitle": "Отключить {name}?",
     "disconnectAppWarning": "Приложение сразу потеряет доступ. При повторном подключении ваше согласие будет запрошено снова.",
-    "disconnectAppFailed": "Не удалось отключить приложение."
+    "disconnectAppFailed": "Не удалось отключить приложение.",
+    "confirmSessionTitle": "Подтвердите, что это вы",
+    "confirmSessionDescription": "Новый ключ даст доступ к {email}. Подтвердите свою личность, чтобы продолжить. Выходить из аккаунта не нужно.",
+    "confirmSession": "Подтвердить личность",
+    "confirmSessionLoading": "Загрузка способов входа…",
+    "confirmSessionLoadFailed": "Не удалось загрузить способы входа. Закройте это окно и попробуйте снова.",
+    "confirmSessionFailed": "Не удалось подтвердить личность. Попробуйте снова.",
+    "confirmWithPasskey": "Использовать существующий ключ",
+    "confirmWithProvider": "Продолжить через {provider}",
+    "confirmWithLink": "Получить ссылку для входа",
+    "confirmLinkSent": "Ссылка для входа отправлена на {email}. Откройте её, чтобы вернуться в раздел безопасности, затем нажмите «Добавить passkey».",
+    "sessionConfirmed": "Личность подтверждена. Нажмите «Добавить passkey», чтобы создать ключ.",
+    "confirmSessionUnavailable": "Нет доступного способа подтверждения входа. Обратитесь к администратору сервиса.",
+    "confirmSessionPending": "Подтверждение личности…"
   },
   "accounts": {
     "label": "Аккаунты",

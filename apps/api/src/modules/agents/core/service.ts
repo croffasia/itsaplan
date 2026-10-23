@@ -24,6 +24,7 @@ import { normalizeToolKeys, ALWAYS_ON_ACTIONS } from './runtime/tools/catalog';
 import { deleteThreadsWhere } from './runtime/memory';
 import { listAgentMemberFieldIds } from '#modules/custom-fields/service';
 import { runsTeam, type TeamStanding } from '#modules/teams/service';
+import type { TeamMembership } from '#shared/access';
 import { projectRefSql } from '#modules/teams/ref';
 import { getDefaultRoleId } from '#modules/roles/service';
 import { deleteAccount } from '#shared/account-deletion';
@@ -285,6 +286,42 @@ export async function memberProjectIds(teamId: number, userId: string): Promise<
     .innerJoin(project, eq(project.id, projectMember.projectId))
     .where(and(eq(project.teamId, teamId), eq(projectMember.userId, userId)));
   return rows.map((row) => row.id);
+}
+
+// The agents, each with whether the caller may act on it as a whole, by the rule
+// assertFullAgentAccess applies, so a screen can hide what the caller would be refused.
+export async function withCanManage<T extends { projects: { id: number }[] }>(
+  membership: TeamMembership,
+  agents: T[],
+): Promise<(T & { canManage: boolean })[]> {
+  const runs = runsTeam(membership.role);
+  const mine = new Set(runs ? [] : await memberProjectIds(membership.teamId, membership.userId));
+  return agents.map((agent) => ({
+    ...agent,
+    canManage: runs || agent.projects.every((p) => mine.has(p.id)),
+  }));
+}
+
+// Regenerating the key, editing the agent, changing its tools or skills, deleting it, or
+// reading its invocation secret acts on the agent in every project it works in — the key
+// authenticates as the bot in all of them, and the secret signs the work it runs there.
+// The visibility check only needs one shared project, so a caller who shares just one
+// must not reach the others: these require running the team or being a member of every
+// project the agent is in.
+export async function assertFullAgentAccess(
+  membership: TeamMembership,
+  agentId: number,
+): Promise<void> {
+  if (runsTeam(membership.role)) return;
+  const agent = await getAgentById(agentId, membership.teamId);
+  if (!agent) throw new HttpError(404, 'Agent not found');
+  const [{ canManage }] = await withCanManage(membership, [agent]);
+  if (!canManage) {
+    throw new HttpError(
+      403,
+      'Only a team owner or manager, or a member of every project the agent works in, can do this',
+    );
+  }
 }
 
 // Whether the agent works in a project the user is a member of, as a condition on a

@@ -42,7 +42,7 @@ import {
   listAgentSkills,
   setAgentSkills,
 } from './service';
-import { agentInTeam, agentScopeOf } from '../core/service';
+import { agentInTeam, agentScopeOf, assertFullAgentAccess } from '../core/service';
 
 // Reference-file bytes are capped like the skill markdown.
 const MAX_REF_BYTES = MAX_SKILL_BYTES;
@@ -371,6 +371,7 @@ export const agentSkillRoutes = new Elysia({
       if (!(await agentInTeam(params.agentId, membership.teamId, agentScopeOf(membership)))) {
         throw new HttpError(404, 'Agent not found');
       }
+      await assertFullAgentAccess(membership, params.agentId);
       await setAgentSkills(params.agentId, membership.teamId, body.skillIds);
       return listAgentSkills(params.agentId);
     },

@@ -1,0 +1,17 @@
+# The Pro images. Without a valid license they run as the core does; the instance owner
+# enters the license key in god mode, under License.
+#   helm install itsaplan charts/itsaplan -f charts/itsaplan/values-pro.yaml -f values.yaml
+pro: true
+
+api:
+  image:
+    repository: ghcr.io/croffasia/itsaplan-pro-api
+web:
+  image:
+    repository: ghcr.io/croffasia/itsaplan-pro-web
+worker:
+  image:
+    repository: ghcr.io/croffasia/itsaplan-pro-worker
+bot:
+  image:
+    repository: ghcr.io/croffasia/itsaplan-pro-bot

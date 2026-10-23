@@ -30,7 +30,7 @@ import {
   useSetAgentTools,
 } from '@/services/customTools.service';
 import { Button } from '@/components/ui/button';
-import { useAgentSection } from '../../context/agentSection';
+import { useAgentCan, useAgentSection } from '../../context/agentSection';
 import { AgentCapabilityList } from './AgentCapabilityList';
 import { AgentEmptyNotice } from './AgentEmptyNotice';
 import TeamAiAgentFields, { AGENT_EXPANDED_WIDTH } from './TeamAiAgentFields';
@@ -67,6 +67,9 @@ export function AgentSheetForm({
   const tCommon = useTranslations('common');
   const [value, setValue] = useState<AgentFormValue>(() => initialAgentValue(agent ?? undefined));
   const isCreate = agent == null;
+  // The sheet also opens for the test chat, to a viewer who may not change the agent.
+  const can = useAgentCan();
+  const canSave = isCreate || (can('edit') && agent.canManage);
   // The plaintext key issued in this sheet, by the create or by a regenerate. It is
   // shown once in the API key section and cannot be read back from the server.
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
@@ -325,7 +328,7 @@ export function AgentSheetForm({
       className="flex h-full min-h-0 flex-col"
       onSubmit={(e) => {
         e.preventDefault();
-        void submit();
+        if (canSave) void submit();
       }}
     >
       {expanded ? (
@@ -335,17 +338,19 @@ export function AgentSheetForm({
           <div className={`mx-auto w-full space-y-6 ${contentWidth}`}>{fields}</div>
         </div>
       )}
-      <div className="border-t border-border/60 px-4 py-3 sm:px-6">
-        <div className={`mx-auto flex w-full ${contentWidth} ${expanded ? 'justify-end' : ''}`}>
-          <Button
-            type="submit"
-            className={expanded ? 'min-w-40' : 'w-full'}
-            disabled={!isAgentFormValid(value) || saving}
-          >
-            {saving ? tCommon('saving') : isCreate ? t('create') : t('save')}
-          </Button>
+      {canSave && (
+        <div className="border-t border-border/60 px-4 py-3 sm:px-6">
+          <div className={`mx-auto flex w-full ${contentWidth} ${expanded ? 'justify-end' : ''}`}>
+            <Button
+              type="submit"
+              className={expanded ? 'min-w-40' : 'w-full'}
+              disabled={!isAgentFormValid(value) || saving}
+            >
+              {saving ? tCommon('saving') : isCreate ? t('create') : t('save')}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </form>
   );
 }

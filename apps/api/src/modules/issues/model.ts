@@ -652,6 +652,10 @@ export const checklistTitleBody = t.Object({ title: ChecklistTitleSchema });
 
 export const createChecklistItemBody = t.Object({ content: ChecklistItemContentSchema });
 
+export const createChecklistItemsBody = t.Object({
+  items: t.Array(createChecklistItemBody, { minItems: 1, maxItems: 100 }),
+});
+
 export const updateChecklistItemBody = t.Object({
   content: t.Optional(ChecklistItemContentSchema),
   done: t.Optional(t.Boolean({ description: 'Whether the item is checked off.' })),

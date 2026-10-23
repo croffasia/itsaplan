@@ -81,6 +81,7 @@ import { DevelopmentLinkResponse } from '#modules/git/model';
 import {
   createChecklist,
   createChecklistItem,
+  createChecklistItems,
   deleteChecklist,
   deleteChecklistItem,
   getChecklistIssueId,
@@ -146,6 +147,7 @@ import {
   issueLinkParams,
   checklistTitleBody,
   createChecklistItemBody,
+  createChecklistItemsBody,
   updateChecklistItemBody,
   feedRangeQuery,
   createCommentBody,
@@ -1073,6 +1075,26 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         summary: 'Add a checklist item',
         description: 'Append an item to a checklist.',
         ...mcpTool('create_checklist_item'),
+      },
+    },
+  )
+
+  .post(
+    '/checklists/:checklistId/items/batch',
+    async ({ params, body, user, set }) => {
+      set.status = 201;
+      return createChecklistItems(params.checklistId, body.items, requireUser(user).id);
+    },
+    {
+      body: createChecklistItemsBody,
+      params: checklistParams,
+      checklist: 'edit',
+      response: { 201: t.Array(ChecklistItemResponse), ...commonErrors },
+      detail: {
+        summary: 'Add checklist items in bulk',
+        description:
+          'Append 1–100 items to an existing checklist in input order. Each content is 1–500 characters. The items and their activity entries are saved atomically.',
+        ...mcpTool('create_checklist_items'),
       },
     },
   )

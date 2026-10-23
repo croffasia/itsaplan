@@ -80,6 +80,7 @@ describe('internal agent route tools', () => {
     // ...and an action that was not granted is absent.
     expect(tools.delete_issue).toBeUndefined();
     expect(tools.update_issue).toBeUndefined();
+    expect(tools.create_checklist_items).toBeUndefined();
   });
 
   it('previews project activity only for the internal agent and retains full history', async () => {
@@ -303,6 +304,50 @@ describe('internal agent route tools', () => {
     expect(await run(tools, 'get_project')).toMatchObject({ columns: expect.any(Array) });
   });
 
+  it('appends a checklist batch through the granted route tool', async () => {
+    const { asOwner } = await setup();
+    const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const issue = await asOwner.projects({ projectKey: 'MKT' }).issues.post({
+      columnId: view.data!.columns[0].id,
+      title: 'Release',
+    });
+    const checklist = await asOwner
+      .issues({ issueId: issue.data!.id })
+      .checklists.post({ title: 'Steps' });
+    const tools = await toolsFor(asOwner, ['create_checklist_items']);
+    const items = [{ content: 'Tag release' }, { content: 'Publish notes' }];
+    expect(
+      await run(tools, 'create_checklist_items', { checklistId: checklist.data!.id, items }),
+    ).toMatchObject(items);
+    const read = await asOwner.issues({ issueId: issue.data!.id }).get();
+    expect(read.data!.checklists[0].items).toMatchObject(items);
+  });
+
+  it('denies a checklist batch when the agent role cannot edit work items', async () => {
+    const { asOwner } = await setup();
+    const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const issue = await asOwner.projects({ projectKey: 'MKT' }).issues.post({
+      columnId: view.data!.columns[0].id,
+      title: 'Release',
+    });
+    const checklist = await asOwner
+      .issues({ issueId: issue.data!.id })
+      .checklists.post({ title: 'Steps' });
+    const role = await createRole(asOwner, 'MKT', {
+      name: 'Read only',
+      permissions: { work_items: { read: true, edit: false } },
+    });
+    const tools = await toolsFor(asOwner, ['create_checklist_items'], role.data!.id);
+    expect(
+      await run(tools, 'create_checklist_items', {
+        checklistId: checklist.data!.id,
+        items: [{ content: 'Forbidden' }],
+      }),
+    ).toMatchObject({ error: expect.anything() });
+    const read = await asOwner.issues({ issueId: issue.data!.id }).get();
+    expect(read.data!.checklists[0].items).toEqual([]);
+  });
+
   it("enforces the agent's role: a forbidden action returns the route's error", async () => {
     const { asOwner } = await setup();
     const view = await asOwner.projects({ projectKey: 'MKT' }).get();
@@ -406,7 +451,10 @@ describe('internal agent route tools are bound to the run project', () => {
   });
 
   it('refuses a checklist of an issue of another project', async () => {
-    const { asOwner, tools, opsIssue } = await crossProject(['create_checklist_item']);
+    const { asOwner, tools, opsIssue } = await crossProject([
+      'create_checklist_item',
+      'create_checklist_items',
+    ]);
     const checklist = await asOwner
       .issues({ issueId: opsIssue })
       .checklists.post({ title: 'Steps' });
@@ -414,6 +462,14 @@ describe('internal agent route tools are bound to the run project', () => {
     expect(
       await run(tools, 'create_checklist_item', { checklistId: checklist.data!.id, content: 'x' }),
     ).toEqual(outside);
+    expect(
+      await run(tools, 'create_checklist_items', {
+        checklistId: checklist.data!.id,
+        items: [{ content: 'Forbidden' }],
+      }),
+    ).toEqual(outside);
+    const read = await asOwner.issues({ issueId: opsIssue }).get();
+    expect(read.data!.checklists[0].items).toEqual([]);
   });
 
   it('refuses a cycle and an initiative of another project', async () => {

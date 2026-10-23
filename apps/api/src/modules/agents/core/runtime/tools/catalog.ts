@@ -139,6 +139,13 @@ export const AGENT_ACTIONS: ToolMeta[] = [
     always: false,
   },
   {
+    key: 'create_checklist_items',
+    group: 'issues',
+    label: 'Add checklist items in bulk',
+    description: 'Append up to 100 items to a checklist in one operation.',
+    always: false,
+  },
+  {
     key: 'update_checklist_item',
     group: 'issues',
     label: 'Update checklist items',

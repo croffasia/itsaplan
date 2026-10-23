@@ -38,6 +38,12 @@ function addItem(client: Api, checklistId: number, content: string) {
   return client.checklists({ checklistId }).items.post({ content });
 }
 
+function addItems(client: Api, checklistId: number, contents: string[]) {
+  return client.checklists({ checklistId }).items.batch.post({
+    items: contents.map((content) => ({ content })),
+  });
+}
+
 async function read(client: Api, issueId: number) {
   const res = await client.issues({ issueId }).get();
   return res.data!;
@@ -296,6 +302,118 @@ describe('checklists', () => {
         .checklists({ checklistId: checklist.id })
         .items.reorder.put({ orderedIds: [] });
       expect(res.status).toBe(400);
+    });
+  });
+
+  describe('batch items', () => {
+    it('appends in input order and records each item without changing existing items', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { issue, checklist } = await issueWithChecklist(asOwner, columnId);
+      const previous = (await addItem(asOwner, checklist.id, 'Already done')).data!;
+      await asOwner.checklists.items({ itemId: previous.id }).patch({ done: true });
+
+      const result = await addItems(asOwner, checklist.id, ['Tag release', 'Publish notes']);
+      expect(result.status).toBe(201);
+      expect(result.data).toMatchObject([
+        { content: 'Tag release', done: false, position: previous.position + 1000 },
+        { content: 'Publish notes', done: false, position: previous.position + 2000 },
+      ]);
+      expect((await read(asOwner, issue.id)).checklists[0].items).toEqual([
+        { ...previous, done: true },
+        ...result.data!,
+      ]);
+      const feed = await asOwner.issues({ issueId: issue.id }).feed.get({ query: {} });
+      for (const item of result.data!) {
+        expect(feed.data!.items).toContainEqual(
+          expect.objectContaining({
+            action: 'checklist_item_add',
+            payload: {
+              subject: { value: checklist.title, id: checklist.id },
+              to: { value: item.content, id: item.id },
+            },
+          }),
+        );
+      }
+    });
+
+    it('accepts 100 items and 500-character content, and still supports single-item appends', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { issue, checklist } = await issueWithChecklist(asOwner, columnId);
+      const contents = Array.from({ length: 100 }, (_, i) =>
+        i === 0 ? 'x'.repeat(500) : `Item ${i}`,
+      );
+      const result = await addItems(asOwner, checklist.id, contents);
+      expect(result.status).toBe(201);
+      expect(result.data!.map((item) => item.content)).toEqual(contents);
+      const last = await addItem(asOwner, checklist.id, 'Last');
+      expect(last.status).toBe(201);
+      expect(last.data!.position).toBe(result.data![99].position + 1000);
+      expect((await read(asOwner, issue.id)).checklists[0].items).toHaveLength(101);
+    });
+
+    it.each([0, 101])('rejects a batch of %i items without writing any', async (size) => {
+      const { asOwner, columnId } = await setupProject();
+      const { issue, checklist } = await issueWithChecklist(asOwner, columnId);
+      const before = await feedActions(asOwner, issue.id);
+      const result = await addItems(asOwner, checklist.id, Array(size).fill('Step'));
+      expect(result.status).toBe(400);
+      expect((await read(asOwner, issue.id)).checklists[0].items).toEqual([]);
+      expect(await feedActions(asOwner, issue.id)).toEqual(before);
+    });
+
+    it.each(['', 'x'.repeat(501)])(
+      'rejects invalid content without a partial batch',
+      async (invalid) => {
+        const { asOwner, columnId } = await setupProject();
+        const { issue, checklist } = await issueWithChecklist(asOwner, columnId);
+        const before = await feedActions(asOwner, issue.id);
+        expect((await addItems(asOwner, checklist.id, ['Valid', invalid])).status).toBe(400);
+        expect((await read(asOwner, issue.id)).checklists[0].items).toEqual([]);
+        expect(await feedActions(asOwner, issue.id)).toEqual(before);
+      },
+    );
+
+    it('returns 404 for an unknown checklist', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { checklist } = await issueWithChecklist(asOwner, columnId);
+      expect((await addItems(asOwner, checklist.id + 999, ['Step'])).status).toBe(404);
+    });
+
+    it('denies a non-member without changing the checklist', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { issue, checklist } = await issueWithChecklist(asOwner, columnId);
+      const outsider = await signUpTestUser();
+      const result = await addItems(authedApi(outsider.cookie), checklist.id, ['Forbidden']);
+      expect(result.status).toBe(403);
+      expect((await read(asOwner, issue.id)).checklists[0].items).toEqual([]);
+    });
+
+    it('respects the project checklist switch', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { issue, checklist } = await issueWithChecklist(asOwner, columnId);
+      const settings = await asOwner.projects({ projectKey: 'MKT' }).settings.patch({
+        features: { checklists: false },
+      });
+      expect(settings.status).toBe(200);
+      expect((await addItems(asOwner, checklist.id, ['Forbidden'])).status).toBe(403);
+      expect((await read(asOwner, issue.id)).checklists[0].items).toEqual([]);
+    });
+
+    it('keeps concurrent batches and a single append in separate ordered ranges', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { issue, checklist } = await issueWithChecklist(asOwner, columnId);
+      const [first, second, single] = await Promise.all([
+        addItems(asOwner, checklist.id, ['A1', 'A2']),
+        addItems(asOwner, checklist.id, ['B1', 'B2']),
+        addItem(asOwner, checklist.id, 'Single'),
+      ]);
+      expect([first.status, second.status, single.status]).toEqual([201, 201, 201]);
+      const groups = [first.data!, second.data!, [single.data!]].sort(
+        (a, b) => a[0].position - b[0].position,
+      );
+      const items = (await read(asOwner, issue.id)).checklists[0].items;
+      expect(items.map((item) => item.id)).toEqual(groups.flat().map((item) => item.id));
+      expect(new Set(items.map((item) => item.position)).size).toBe(5);
     });
   });
 

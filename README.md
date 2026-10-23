@@ -50,19 +50,9 @@ release.
    writes code. One link reaches people search never will.
 3. **Contribute.** Issues, bug reports, and pull requests are all welcome — start with
    [CONTRIBUTING.md](CONTRIBUTING.md).
-4. **Donate.** Any amount helps the project grow and keeps the work going. A donation can
-   also move a feature up the roadmap — ask on [Telegram](https://telegram.me/croffasia).
-
-   <details>
-   <summary>Wallet addresses</summary>
-
-   | Network | Address |
-   | ------- | ------- |
-   | USDT (ERC-20) | `0x625d8E7e800E863d1b00D90c8937A10094D9380C` |
-   | USDT (TON) | `UQBTE0qA7ZPKOkjbrCyqVopXFKNbbcDd-RcKeR9wkoyAjNb4` |
-   | USDT (TRC-20) | `TMSdmfoEVkC4sA1ejmhimcZC4eSremmkjV` |
-
-   </details>
+4. **Buy Pro.** The license pays for the work on the free Community edition, and your
+   instance gets the [Pro features](#pro-edition) in return —
+   [pricing and license terms](https://itsaplan.dev/pro).
 
 ## Features
 
@@ -205,6 +195,12 @@ needed. Run it again later to restart the instance; the data stays.
 Issues and pull requests are welcome — bug fixes, features, docs, all of it. Start with
 [CONTRIBUTING.md](CONTRIBUTING.md). It covers the setup, the conventions, and how a change
 gets merged. Be kind; we follow a [Code of Conduct](CODE_OF_CONDUCT.md).
+
+Thank you to everyone who has contributed to It's a Plan:
+
+<a href="https://github.com/croffasia/itsaplan/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=croffasia/itsaplan&columns=20" alt="Contributors" />
+</a>
 
 Not ready to contribute code? [Star the repo](https://github.com/croffasia/itsaplan) and share
 it — it is the simplest way to help the project grow.

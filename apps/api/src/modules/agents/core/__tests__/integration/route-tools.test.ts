@@ -11,7 +11,7 @@ import { AGENT_ACTIONS, ALWAYS_ON_ACTIONS } from '../../runtime/tools/catalog';
 import { routeTools } from '#mcp/generate';
 import { getMcpApp } from '#mcp/app-ref';
 import { createRole } from '#tests/helpers/roles';
-import { createAgent, setAgentProjectRole } from '#tests/helpers/agents';
+import { createAgent, projectIdOf, setAgentProjectRole } from '#tests/helpers/agents';
 
 // The tools an internal agent runs with, built from the routes tagged mcpTool() and
 // dispatched in process with the agent's own API key. What is asserted here is the
@@ -332,5 +332,135 @@ describe('internal agent route tools', () => {
     // A read the role does allow still works.
     const context = await run(tools, 'get_project');
     expect(context).toMatchObject({ columns: expect.any(Array) });
+  });
+});
+
+// A run works in one project, and its tools are bound to it: an object addressed by id
+// that belongs to another project of the agent is refused, although the agent's bot
+// is a member there. Without the bound, whoever may start a run in MKT could make the
+// agent read and write OPS.
+describe('internal agent route tools are bound to the run project', () => {
+  beforeEach(async () => {
+    await resetDb();
+  });
+
+  // An agent that works in MKT and OPS, its tools built for a run in MKT, and an issue
+  // of each project.
+  async function crossProject(tools: string[]) {
+    const { asOwner, teamId } = await setup();
+    await createProject(asOwner, { key: 'OPS', name: 'Operations' });
+    const issueIn = async (projectKey: string, title: string) => {
+      const view = await asOwner.projects({ projectKey }).get();
+      const issue = await asOwner
+        .projects({ projectKey })
+        .issues.post({ columnId: view.data!.columns[0]!.id, title });
+      return issue.data!.id;
+    };
+    const mktIssue = await issueIn('MKT', 'Marketing plan');
+    const opsIssue = await issueIn('OPS', 'Pager rota');
+    const created = await createAgent(asOwner, 'MKT', {
+      name: 'Triage Bot',
+      username: `triage-${++agentSeq}`,
+      kind: 'internal',
+      tools,
+      projectIds: [await projectIdOf(asOwner, 'MKT'), await projectIdOf(asOwner, 'OPS')],
+    });
+    const project = await getProjectByRef('MKT', '');
+    if (!project) throw new Error('Test project was not created');
+    const agent = await getAgentById(created.data!.agent.id, teamId);
+    if (!agent) throw new Error('Test agent was not found');
+    const built = buildRouteTools(project, await getInternalAgentApiKey(agent), agent.tools);
+    return { asOwner, tools: built, mktIssue, opsIssue };
+  }
+
+  const outside = { error: { error: 'Outside the project this run works in' } };
+
+  it('refuses reading an issue of another project', async () => {
+    const { tools, mktIssue, opsIssue } = await crossProject([]);
+
+    expect(await run(tools, 'get_issue', { issueId: opsIssue })).toEqual(outside);
+    expect(await run(tools, 'list_issue_activity', { issueId: opsIssue })).toEqual(outside);
+    expect(await run(tools, 'get_issue', { issueId: mktIssue })).toMatchObject({
+      title: 'Marketing plan',
+    });
+  });
+
+  it('refuses writing to an issue of another project', async () => {
+    const { asOwner, tools, mktIssue, opsIssue } = await crossProject([
+      'add_comment',
+      'update_issue',
+    ]);
+
+    expect(await run(tools, 'add_comment', { issueId: opsIssue, body: 'From MKT' })).toEqual(
+      outside,
+    );
+    expect(await run(tools, 'update_issue', { issueId: opsIssue, title: 'Renamed' })).toEqual(
+      outside,
+    );
+    expect((await asOwner.issues({ issueId: opsIssue }).get()).data).toMatchObject({
+      title: 'Pager rota',
+    });
+    expect(await run(tools, 'add_comment', { issueId: mktIssue, body: 'Here' })).toMatchObject({
+      body: 'Here',
+    });
+  });
+
+  it('refuses a checklist of an issue of another project', async () => {
+    const { asOwner, tools, opsIssue } = await crossProject(['create_checklist_item']);
+    const checklist = await asOwner
+      .issues({ issueId: opsIssue })
+      .checklists.post({ title: 'Steps' });
+
+    expect(
+      await run(tools, 'create_checklist_item', { checklistId: checklist.data!.id, content: 'x' }),
+    ).toEqual(outside);
+  });
+
+  it('refuses a cycle and an initiative of another project', async () => {
+    const { asOwner, tools } = await crossProject(['update_cycle', 'update_initiative']);
+    const today = new Date().toISOString().slice(0, 10);
+    const cycle = await asOwner
+      .projects({ projectKey: 'OPS' })
+      .cycles.post({ name: 'Sprint 1', startDate: today, endDate: today });
+    const initiative = await asOwner
+      .projects({ projectKey: 'OPS' })
+      .initiatives.post({ title: 'Uptime' });
+
+    expect(await run(tools, 'get_cycle', { cycleId: cycle.data!.id })).toEqual(outside);
+    expect(await run(tools, 'update_cycle', { cycleId: cycle.data!.id, name: 'x' })).toEqual(
+      outside,
+    );
+    expect(await run(tools, 'get_initiative', { initiativeId: initiative.data!.id })).toEqual(
+      outside,
+    );
+    expect(
+      await run(tools, 'update_initiative', { initiativeId: initiative.data!.id, title: 'x' }),
+    ).toEqual(outside);
+  });
+
+  it('refuses any request bound to another project, and ignores a malformed bound', async () => {
+    const { owner, asOwner } = await setup();
+    await createProject(asOwner, { key: 'OPS', name: 'Operations' });
+    const view = await asOwner.projects({ projectKey: 'OPS' }).get();
+    const issue = await asOwner
+      .projects({ projectKey: 'OPS' })
+      .issues.post({ columnId: view.data!.columns[0]!.id, title: 'Pager rota' });
+    const issueId = issue.data!.id;
+    const mkt = String(await projectIdOf(asOwner, 'MKT'));
+    const ops = String(await projectIdOf(asOwner, 'OPS'));
+    const read = (bound: string) =>
+      authedApi(owner.cookie, { 'x-agent-project': bound }).issues({ issueId }).get();
+
+    const refused = await read(mkt);
+    expect(refused.status).toBe(403);
+    expect(refused.error!.value).toMatchObject({ error: 'Outside the project this run works in' });
+    expect((await read(ops)).status).toBe(200);
+    expect((await read('MKT')).status).toBe(200);
+  });
+
+  it('leaves a person reading the same issue alone', async () => {
+    const { asOwner, opsIssue } = await crossProject([]);
+
+    expect((await asOwner.issues({ issueId: opsIssue }).get()).status).toBe(200);
   });
 });

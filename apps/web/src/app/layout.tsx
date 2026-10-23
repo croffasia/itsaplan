@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { ThemeProvider } from 'next-themes';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
+import { AfterSignIn } from '@/cloud';
 import { Providers } from '@/components/providers';
 import RuntimeEnvScript from '@/components/runtime-env-script';
 import WhatsNew from '@/features/whats-new/WhatsNew';
@@ -52,6 +53,7 @@ export default async function RootLayout({
             <Providers>
               {children}
               <WhatsNew />
+              <AfterSignIn />
             </Providers>
           </NextIntlClientProvider>
         </ThemeProvider>

@@ -33,6 +33,13 @@ Install the chart:
 helm install itsaplan charts/itsaplan -f values.yaml
 ```
 
+For the Pro edition, pass `charts/itsaplan/values-pro.yaml` before it. Without a valid license
+the Pro images run as the core does; the license key is entered in god mode, under **License**.
+
+```bash
+helm install itsaplan charts/itsaplan -f charts/itsaplan/values-pro.yaml -f values.yaml
+```
+
 Each API pod applies the database migrations in its `migrate` init container before the server starts. With several replicas, one applies them and the others wait on a Postgres advisory lock. Worker and bot pods wait in their own init container until the migrations are applied. The first account registered becomes the instance admin.
 
 ## What gets deployed

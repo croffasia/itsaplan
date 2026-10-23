@@ -78,6 +78,10 @@ export interface AiAgent {
   actionCount: number;
   skillCount: number;
   toolCount: number;
+  // Whether the viewer may act on the agent as a whole (edit, delete, rotate its key,
+  // use its invocation secret): the api refuses a member who shares only some of its
+  // projects.
+  canManage: boolean;
 }
 
 // A run waits as 'pending' until a worker or a runner takes it; 'canceled' is a

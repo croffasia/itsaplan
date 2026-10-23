@@ -13,7 +13,7 @@ If It's a Plan looks useful to you, star the repo ⭐ — it helps other people 
 <a href="docs/coolify.md"><img src="assets/coolify-button.svg" alt="Deploy on Coolify" height="40" /></a>
 <a href="docs/self-hosting.md"><img src="assets/docker-button.svg" alt="Self-host with Docker" height="40" /></a>
 
-[Website](https://itsaplan.dev) · [Discussions](https://github.com/croffasia/itsaplan/discussions) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Leave a review](https://www.producthunt.com/products/it-s-a-plan/reviews/new?utm_source=badge-product_review&utm_medium=badge)
+[Website](https://itsaplan.dev) · [Pro](https://itsaplan.dev/pro) · [Discussions](https://github.com/croffasia/itsaplan/discussions) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Leave a review](https://www.producthunt.com/products/it-s-a-plan/reviews/new?utm_source=badge-product_review&utm_medium=badge)
 
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![CI](https://github.com/croffasia/itsaplan/actions/workflows/ci.yml/badge.svg)](https://github.com/croffasia/itsaplan/actions/workflows/ci.yml)
@@ -105,7 +105,7 @@ release.
 - Or control the run queue through the API and do the work in your own implementation
 - A run starts on an @mention in a comment, on an assignment, or on a schedule
 - Tools for the services outside the tracker: Notion, Telegram, Threads, Instagram, Jina,
-  Firecrawl, and Gitea
+  Firecrawl, Gitea, and GitHub
 - Built-in chat with each agent, with its own conversation history
 - Chat with an external agent too. The runner answers from your machine, streams the reply
   and its tool calls, and resumes the same coding agent session on each message
@@ -126,6 +126,31 @@ release.
 - Instance administration: storage limits, mail transport, and instance-wide settings
 
 </details>
+
+## Pro edition
+
+Buying Pro supports It's a Plan. The license pays for the work on Community, the free edition:
+new features, fixes, and releases for everyone who self-hosts. In return, your instance gets the
+Pro features below, with full control over AI agents and what they spend. One license covers one
+instance, with no limit on seats or workspaces.
+
+| | Community | Pro |
+| --- | --- | --- |
+| Workspaces | One per person | Any number |
+| SSO and SCIM | One OIDC provider and one SCIM for the instance | SAML or OIDC and SCIM per workspace |
+| Audit log | — | Every action, with changes before and after |
+| Workspace dashboard | — | Issues, agent runs, schedules, and logged time for every team |
+| Agent schedules | Timer or state change | Plus issue events, filters, and run limits |
+| Agent analytics | Tokens and cost | Plus cost by person and trigger, run time, and tool calls |
+| AI budgets | — | Limits for the workspace, teams, projects, and each person |
+
+Deploy Pro with [`docker-compose.pro.yml`](docs/self-hosting.md),
+[`docker-compose.coolify-pro.yml`](docs/coolify.md), or [`values-pro.yaml`](docs/helm.md), and
+enter the license key in god mode, under **License**. Without a key, or after the license ends,
+the Pro images run as Community. Both editions use the same database, so an instance moves
+between them with its data.
+
+**[Pricing and license terms →](https://itsaplan.dev/pro)**
 
 ## Getting started
 

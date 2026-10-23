@@ -59,7 +59,8 @@ and holds back `/sign-in/email` for an unconfirmed address while verification is
 confirmation link again; a deactivated account and a disabled password form are 403s too. The requirement never outlives the mail provider: the api
 refuses to turn it on without one, and `setEmailSettings` clears it when the provider
 is removed, so the setting alone is what the gate, the sign-up endpoint and the
-public `/auth-config` read — none of them checks the provider again.
+public `/auth-config` read — none of them checks the provider again. The sign-in links
+(`magicLink`) follow the same rule, so the magic-link sender reads only the setting.
 
 `emailAndPassword.requireEmailVerification` is a getter over a module variable that
 `hooks.before` refreshes from the setting on every password endpoint. better-auth
@@ -135,7 +136,9 @@ The redirect URI registered with the identity provider is `OIDC_REDIRECT_URI`,
 Signing out leaves the session at the identity provider alone (`disableProviderLogout`).
 No screen offers linking an OIDC identity to the signed-in account, so `hooks.before`
 refuses `/link-social` for it; better-auth already attaches a sign-in to a matching
-confirmed address on its own.
+confirmed address on its own, when the provider reports the address verified. A provider
+may send `email_verified` as a string, so the OIDC `mapProfileToUser` reads `true` and
+`"true"` as verified and anything else, `"false"` included, as not.
 
 ## Turning password authentication off
 

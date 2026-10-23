@@ -1,324 +1,237 @@
 # AGENTS.md
 
 Bun + Turborepo monorepo. Backend **Elysia**, frontend **Next.js (SSR)** + **shadcn/ui**,
-auth **better-auth**, ORM **Drizzle** + PostgreSQL. Self-hosted with Docker Compose;
-Coolify is the deploy target of the reference instance.
+auth **better-auth**, ORM **Drizzle** + PostgreSQL. Self-hosted with Docker Compose or the
+Helm chart.
 
-Prefer the most specific `AGENTS.md` for the area being changed: every app and some packages
-have their own, and it wins over this file. The `CLAUDE.md` next to it is a pointer, not a
-second source.
+The most specific `AGENTS.md` for the changed area overrides this file. Every app and some
+packages have one. Each `CLAUDE.md` only points to the `AGENTS.md` next to it.
+
+## Editing this file
+
+This file holds only the core rules that an agent needs on most tasks.
+
+- Do not add a fix, a feature description, or a detail that only one area needs. Put it in a
+  code comment, in `docs/`, or in the `AGENTS.md` of that app or package.
+- Add a rule here only when the user asks.
 
 ## Core Coding Principles
 
-**IMPORTANT — always follow, no exceptions:** Follow KISS and YAGNI. Write the simplest
-thing that works, avoid premature abstractions, and don't add them until multiple concrete
-implementations actually need them. No overengineering.
+- **IMPORTANT — always follow, no exceptions:** KISS and YAGNI. Write the simplest thing that
+  works. Add an abstraction only when several concrete implementations need it. No
+  overengineering.
+- Study the existing code first and follow its sound patterns and conventions. Reuse shared
+  modules, components, and utilities. Extend them instead of adding a parallel solution.
+- Minimum comments. A comment explains why, the code explains what. Hide the comment and
+  read the code: if the code tells the fact, delete the comment.
+  - A comment longer than its code is too long.
+  - A wrong comment is worse than none. Change or delete a comment in the same edit as its code.
+  - Do not copy the comment density of nearby code. This rule wins.
+  - Never comment layout or styling: positioning, sticky or overflow behaviour, spacing, why a
+    class is set.
+  - The full rules and the pass that removes stale comments are in the `tidy` skill.
 
-Before writing new code, study the existing codebase and follow its established patterns and
-conventions when they are sound. Reuse existing shared modules, components, and utilities
-instead of duplicating or reinventing them; extend what's there rather than adding parallel
-solutions.
+## When the work is done
 
-Write a minimum of comments. A comment explains why, the code explains what — cover a comment
-with your hand and read the code under it: if the fact is recoverable from the code alone, the
-comment does not belong there. A comment longer than the code under it is too long. A wrong
-comment is worse than no comment, so change a comment in the same edit as the code it describes,
-or delete it. The comment density of the code around a change is not a pattern to follow: this
-rule wins over matching the neighbours. Layout and styling are never commented:
-no notes on positioning, sticky or overflow behaviour, spacing, or why a class is set. The full
-rules, and the pass that removes comments that no longer hold, are in the `tidy` skill.
+Run on the new code, in this order, without being asked:
+
+1. `tidy`
+2. `code-review`
+3. `security-audit`
+
+Then propose a commit message in chat (format in [Commits](#commits)). Never run
+`git commit` or `git push` unless the user asks.
 
 ## Writing style (docs, comments, chat)
 
-Write plainly and literally. This applies to all prose: documentation, code comments, commit
-messages, and chat replies.
+Applies to all prose: docs, code comments, commit messages, chat replies.
 
-- No metaphors, no personification, no figurative language. Do not write "the parser is the
-  heart of the step", "data lives in Postgres", "self-healing queue", "the ticket flows through
-  the pipeline". State the fact directly: "the parser is the main task of the step", "data is
-  stored in Postgres", "a failed donor is retried on the next run".
-- No rhetorical flourishes or dramatization. Describe what something does, not how important or
-  elegant it is.
-- Technical terms that happen to be metaphors in origin (watermark, backlog, queue, pipeline)
-  are fine — they are standard terminology, not stylistic choices.
-- Prefer short, direct sentences over expressive ones.
+- Write plainly and literally, in short, direct sentences.
+- No metaphors, personification, or figurative language. Bad: "the parser is the heart of the
+  step", "data lives in Postgres", "self-healing queue", "the ticket flows through the
+  pipeline". Good: "the parser is the main task of the step", "data is stored in Postgres",
+  "a failed donor is retried on the next run".
+- No rhetorical flourishes or drama. Say what a thing does, not how important or elegant it is.
+- Standard terms that began as metaphors (watermark, backlog, queue, pipeline) are fine.
 
 **Write the final state, not the edit history.** When the user changes a decision, rewrite
-docs/comments to describe only the current design. Do not record the transformation of their
-thinking.
+docs and comments to describe only the current design.
 
 - Do not write "not X, but Y", "now in the DB instead of in code", "decided", "moved from a
-  separate step", "previously we planned". Just state Y.
-- Do not annotate a choice with why it replaced an earlier idea from this conversation. The
-  reader wants the current requirement, not how we got here.
-- Forward-looking design rationale ("column `project_key` is added now so steps 3–4 need no
-  migration") and cross-references between sections are fine — they explain the current design,
-  not a discarded one.
-- A discarded idea is only worth mentioning if it is a lasting "considered and rejected
-  because…" that a future reader would otherwise re-propose — and then state it once, plainly,
-  not as a correction to a prior draft.
+  separate step", "previously we planned". Write Y.
+- Do not explain why a choice replaced an earlier idea from the conversation.
+- Allowed: forward-looking rationale ("column `project_key` is added now so steps 3–4 need no
+  migration") and cross-references between sections.
+- Mention a discarded idea only as a lasting "considered and rejected because…" that a future
+  reader would otherwise propose again. State it once, plainly.
 
 ## Golden rules
 
-- **Runtime is Bun**, never npm/yarn/pnpm. Install with `bun install`, run scripts with `bun run`.
+- **Runtime is Bun.** Never npm, yarn, or pnpm. Use `bun install` and `bun run`.
 - **All code, comments, and strings are in English.**
 - Cross-package imports use the workspace protocol: `"@repo/db": "workspace:*"`. Packages
-  export raw `.ts` (see each package's `exports`) — Bun and Next transpile them, no build step.
-- Run tasks from the **repo root** via Turborepo: `bun run dev` / `build` / `typecheck`.
+  export raw `.ts` (see each package's `exports`). Bun and Next transpile them. No build step.
+- Run tasks from the **repo root** through Turborepo: `bun run dev` / `build` / `typecheck`.
+- The pre-commit hook (`lefthook.yml`) runs `eslint --fix` and `prettier --write` on the
+  staged files and stages the result again. Never skip it with `--no-verify`.
 
 ## Layout
 
 ```
-apps/api        Elysia (Bun) — better-auth at /api/auth/*, agent runs      :3000
-apps/web        Next.js App Router, SSR (not SPA) + shadcn + TanStack Q :3001
-apps/worker     webhook and notification delivery, agent schedules
-apps/bot        Telegram bot, long polling
-packages/db     @repo/db     — Drizzle client, schema, migrations, permission matrix, shared config readers
-packages/auth   @repo/auth   — better-auth server instance + instance auth settings
-packages/crypto @repo/crypto — AES-256-GCM encryption for secrets at rest
-packages/mailer @repo/mailer — SMTP/Resend transport for outbound email
-packages/net    @repo/net    — SSRF guard for server-side fetches of a supplied URL
-packages/agent-tools @repo/agent-tools — tool definitions for the AI agent runtime
-packages/runner @itsaplan/runner — CLI that runs an external agent's queued tasks on the operator's own machine
+apps/api               Elysia (Bun) — better-auth at /api/auth/*, agent runs         :3000
+apps/web               Next.js App Router, SSR (not SPA) + shadcn + TanStack Query  :3001
+apps/worker            webhook and notification delivery, agent schedules, imports
+apps/bot               Telegram bot, long polling
+packages/db            @repo/db          — Drizzle client, schema, migrations, permission matrix, shared config readers
+packages/auth          @repo/auth        — better-auth server instance + instance auth settings
+packages/crypto        @repo/crypto      — AES-256-GCM encryption for secrets at rest
+packages/storage       @repo/storage     — S3 client (RustFS in Compose) for attachment bytes, used by api and worker
+packages/mailer        @repo/mailer      — SMTP/Resend transport for outbound email
+packages/net           @repo/net         — SSRF guard for server-side fetches of a supplied URL
+packages/agent-tools   @repo/agent-tools — tool definitions for the AI agent runtime
+packages/runner        @itsaplan/runner  — CLI that runs an external agent's queued tasks on the operator's own machine
 packages/eslint-config @repo/eslint-config — shared ESLint config
+charts/itsaplan        Helm chart
+scripts/               `bun run setup` and its tests
+dev-scripts/           dev-stack.sh (switch dev/PR backing services), permission-matrix.sh (permission → route table)
+docs/                  see Docs below
 ```
 
-Dependency graph: `api → @repo/auth → @repo/db → @repo/crypto`. **The web app never
-imports packages directly** — it talks to the API over HTTP (better-auth client + fetch).
+Dependency graph: `api → @repo/auth → @repo/db → @repo/crypto`. **The web app never imports
+packages directly.** It talks to the API over HTTP (better-auth client + fetch).
+
+## Docs
+
+| Doc                                                                                                 | Read when the task touches                                       |
+| --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `docs/development.md`                                                                               | local setup, `bun run setup`, running tests, the Docker test gate |
+| `docs/self-hosting.md`                                                                              | the self-hosting compose stack, `.env` for a domain, TLS proxy   |
+| `docs/coolify.md`                                                                                   | `docker-compose.coolify*.yml`                                    |
+| `docs/railway.md`                                                                                   | the Railway template                                             |
+| `docs/helm.md`, `charts/itsaplan/README.md`                                                         | the Helm chart and its values                                    |
+| `docs/runner.md`                                                                                    | `packages/runner` and its agent presets                          |
+| `docs/agent-endpoint.md`                                                                            | external agents that receive tasks on their own HTTPS endpoint   |
+| `docs/mcp-results.md`                                                                               | the shape of MCP tool results (`structuredContent`)              |
+| `docs/importing-from-linear.md`, `docs/dev/linear-import.md`                                        | the Linear import: user guide, implementation                    |
+| `docs/importing-from-plane.md`, `docs/dev/plane-import.md`, `docs/dev/plane-import-source-notes.md` | the Plane import: user guide, implementation, Plane API facts    |
+| `docs/dev/revision-engine.md`                                                                       | live updates: scopes, counters, refetch                          |
+| `docs/dev/i18n.md`                                                                                  | interface languages, the language cookie                         |
 
 ## Commands (from root)
 
-| Command                   | Purpose                                                          |
-| ------------------------- | ---------------------------------------------------------------- |
-| `bun run dev`             | api + web in watch mode (turbo)                                  |
-| `bun run build`           | build all apps                                                   |
-| `bun run typecheck`       | tsc across the workspace                                         |
-| `bun run lint`            | ESLint across the workspace                                      |
-| `bun run format:check`    | Prettier check (CI runs the same)                                |
-| `bun run test`            | run each app's test suite (turbo)                                |
-| `bun run db:generate`     | generate SQL migrations from Drizzle schema                      |
-| `bun run db:migrate`      | apply migrations                                                 |
-| `bun run db:migrate:test` | apply migrations to the test DB (`.env.test`)                    |
-| `bun run setup`           | interactive setup: try it, develop, or generate env               |
-| `bun run auth:generate`   | regenerate better-auth tables → `packages/db/src/schema/auth.ts` |
+| Command                   | Purpose                                                            |
+| ------------------------- | ------------------------------------------------------------------ |
+| `bun run dev`             | api, web, worker and bot in watch mode (turbo)                     |
+| `bun run build`           | build all apps                                                     |
+| `bun run typecheck`       | tsc in every workspace member, then at the root                    |
+| `bun run lint`            | ESLint across the workspace                                        |
+| `bun run format:check`    | Prettier check (CI runs the same)                                  |
+| `bun run test`            | `scripts/` tests, then every member's suite, one package at a time |
+| `bun run db:generate`     | generate SQL migrations from Drizzle schema                        |
+| `bun run db:migrate`      | apply migrations                                                   |
+| `bun run db:migrate:test` | apply migrations to the test DB (`.env.test`)                      |
+| `bun run db:studio`       | Drizzle Studio on the dev DB                                       |
+| `bun run setup`           | interactive local setup (see `docs/development.md`)                |
+| `bun run auth:generate`   | regenerate better-auth tables → `packages/db/src/schema/auth.ts`   |
 
-## First run
+One test file: `cd apps/api && bun test --env-file=../../.env.test <path>`. worker, bot and
+`packages/db` need the same flag. Packages without a database need no flag.
 
-```bash
-bun install
-bun run setup   # pick "Develop" — see the table below
-bun run dev     # api :3000 + web :3001
-```
-
-`bun run setup` (`scripts/setup.ts`, `@clack/prompts`) asks what to set up and does the rest:
-
-| Answer | What it does |
-| ------- | ---------------------------------------------------------------------------------------- |
-| Try it | generates the secrets, `docker compose up -d`, opens the localhost URL in the browser |
-| Develop | `.env`, `apps/web/.env`, `.env.test`, dev compose, the `*_test` database, both migrations |
-| Generate env | builds `.env` and `apps/web/.env` from the examples, walks every value, then writes both or prints them instead; starts nothing |
-
-Self-hosting behind a domain is a manual `.env` and `docker compose up -d`, documented in
-`docs/self-hosting.md` — the script only covers the local cases.
-
-Running it again on a live instance does not damage it, and the rules that make that true
-are the part to preserve when changing the script:
-
-- Try it and Develop restart what is already up rather than setting up beside it, and each
-  offers to stop the other: they read the same `.env`, so they publish the same api and web
-  ports. Develop also offers to stop the PR stack, whose RustFS ports are fixed in its own
-  compose file. A refusal ends the run and changes nothing.
-- A busy port is offered for change, never forced. The check connects rather than binds, to
-  `127.0.0.1` and `::1`: on macOS a bind on one loopback address succeeds beside a listener
-  on the other, so a native Postgres and a container published on the wildcard both read as
-  free.
-- Postgres reads `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB` once, when it
-  initialises its volume, and the secrets are what the instance stored its data under. So a
-  value is only generated while that volume does not exist, and one that already holds a
-  real value is kept in every case. Generate env, which always produces a fresh set, asks a
-  second time before it overwrites an existing `.env`.
-- Both check that the running database accepts the credentials `.env` holds before starting
-  the api, which would otherwise fail its healthcheck on the mismatch; a refusal is named,
-  and `down -v` offered behind a confirmation that says the data goes with it. Develop also
-  checks from the host that something answers on the Postgres port `.env` names — a
-  container keeps the port it started with, so one that was not recreated publishes the old
-  one and the migrations reach nothing.
-- The setup migrates through `packages/db/src/migrate.ts`, not `bun run db:migrate`:
-  drizzle-kit exits 1 without printing what the database refused.
+CI (`.github/workflows/ci.yml`) runs on every pull request: `format:check`, `lint`,
+`typecheck`, an app build, and the Docker test gate (`docker-compose.test.yml`). Do not add a
+workflow for a job that an existing workflow already runs.
 
 ## Environment
 
-- Root `.env` (copy from `.env.example`) feeds api, drizzle, and docker-compose.
-  Bun apps load it via `--env-file=../../.env`; drizzle via `dotenv` in `drizzle.config.ts`.
-- `apps/web/.env` is **separate** — Next reads env only from its own folder. It holds
-  `API_URL` (same value as the root one) and the legal document URLs. web reads them from
-  its process at **startup**, never through `NEXT_PUBLIC_*`, which `next build` would inline
-  into the bundle and pin the image to one instance.
-- Local dev DB: `docker compose -f docker-compose.dev.yml up -d` (the deploy composes do
-  NOT publish the DB port). Host 5432 is often taken; `bun run setup` finds a free port and
-  writes both `POSTGRES_PORT` and `DATABASE_URL`.
-- A new environment variable belongs in `.env.example` and, if a service needs it, in the
-  compose files.
+- api, worker, bot, drizzle, and docker-compose read the root `.env` (a copy of
+  `.env.example`). Bun apps load it with `--env-file=../../.env`. Drizzle loads it with `dotenv` in
+  `drizzle.config.ts`.
+- `apps/web/.env` is **separate**: Next reads env only from its own folder. It holds
+  `API_URL` (same value as the root one) and the legal document URLs. web reads them from its
+  process at **startup**. Never use `NEXT_PUBLIC_*` for them: `next build` inlines those into
+  the bundle, and the image then works for one instance only.
+- Add a new environment variable to `.env.example`. If a service needs it, also add it to the
+  five deploy compose files and to the Helm chart: `values.yaml`,
+  `templates/configmap.yaml` or `templates/secret.yaml`, and the values table in
+  `charts/itsaplan/README.md`.
 
-## Compose files
+## Deploy stack
 
-| File                         | Purpose                                                                                                                                           |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docker-compose.dev.yml`     | local backing services only: Postgres + RustFS. The apps run on the host.                                                                         |
-| `docker-compose.yml`         | self-hosting stack. Runs the published images (`docker compose pull && up -d`) or builds them from source (`up -d --build`); reads a plain `.env`, requires the secrets via `${VAR:?}`. |
-| `docker-compose.coolify.yml` | the same stack for Coolify: reads its generated `SERVICE_*` variables and builds from source. No `image:` here — with both fields Coolify still builds, and stops creating rollback images. |
-| `docker-compose.coolify-images.yml` | the same stack as a Coolify service (New Resource → Docker Compose Empty): the published images, no `build:`, no `ports:`, and the two domains declared with `SERVICE_URL_API_3000` / `SERVICE_URL_WEB_3001`. |
-| `docker-compose.test.yml`    | test gate against a throwaway Postgres.                                                                                                           |
+- `docker-compose.dev.yml` holds only the local backing services (Postgres + RustFS). The apps
+  run on the host. The deploy composes do NOT publish the DB port.
+- A deploy stack change usually needs an edit in **all five** of `docker-compose.yml`,
+  `docker-compose.pro.yml`, `docker-compose.coolify.yml`, `docker-compose.coolify-images.yml`,
+  `docker-compose.coolify-pro.yml`, and in the Helm chart.
+- `docker-compose.pro.yml` and `docker-compose.coolify-pro.yml` run the published Pro
+  images: migrate from `vendor/itsaplan/packages/db/src/migrate.ts`, start the api with
+  `./pro-api`. The Helm chart does the same when `pro: true` (`values-pro.yaml`).
+- Never add `image:` to `docker-compose.coolify.yml`. With both `image:` and `build:` Coolify
+  still builds and stops making rollback images.
+- Migrations run as a separate step before the apps start:
+  - Compose: the one-shot `migrate` service. api, worker and bot wait for it.
+  - Helm: the `migrate` init container of the api pods. Worker and bot pods wait in a
+    `wait-for-migrations` init container.
+  - Both run `migrate.ts` from the api image and override the api command, so the api
+    container only starts the server.
+- The api image's own CMD also runs the migrations before the server starts. Deploy targets
+  with no separate step (Railway, a plain `docker run`) need this.
+- `migrate.ts` first dumps the database into the `db-backups` volume. A failed dump stops the
+  run, so no migration runs without a backup. Every run takes a Postgres advisory lock, so
+  runs that start together apply each migration only once.
+- Run exactly one `bot` replica: it uses Telegram long polling.
 
-A change to the deploy stack usually has to land in **all three** of `docker-compose.yml`,
-`docker-compose.coolify.yml`, and `docker-compose.coolify-images.yml`. Migrations run as a
-separate step before the apps start: the one-shot `migrate` service in the compose files,
-which api, worker and bot wait for, and the `migrate` init container of the api pods in
-the Helm chart, where worker and bot pods wait in a `wait-for-migrations` init container. Both run `migrate.ts` from the api image and override the api command to
-start only the server. The api image's own CMD still migrates first, for deploy targets
-with no separate step (Railway, a plain `docker run`). `migrate.ts` dumps the database
-into the `db-backups` volume first — a failed dump stops the run, so nothing is migrated
-without a way back. Every run takes a Postgres advisory lock: runs that start together
-apply the migrations once, and the rest wait and then find nothing pending. `bot` runs Telegram long polling and must stay at one replica.
+## Commits
 
-## Test gate (Docker)
+Subject: Conventional Commit, `type(scope): summary`. PRs are squash-merged, so the PR title
+becomes the commit subject on `main` (`pr-title.yml` checks it). release-please reads the
+subjects to pick the next version and write `CHANGELOG.md`.
 
-`docker-compose.test.yml` runs the test suite against a throwaway Postgres, in a
-container built from the same image as production. Integration tests need a live
-database, so they cannot run during `docker build` — this compose file is the
-mechanism instead. Build the images, then run the suite (non-zero exit on any
-failing test):
+Pick the type by what the change gives the user, not by how much code it touches:
 
-```bash
-docker compose -f docker-compose.test.yml build
-docker compose -f docker-compose.test.yml run --rm api-test
-```
-
-`run` starts api-test's dependencies (Postgres healthy, the RustFS bucket init
-completed), runs the suite, and exits with its code. It does not use
-`--abort-on-container-exit`, which tears the stack down the moment the one-shot
-`rustfs-test-init` exits, before api-test starts.
-
-The test database is created by the `postgres-test` service (`POSTGRES_DB=itsaplan_test`,
-tmpfs — nothing persists). The `test` job in `.github/workflows/ci.yml` runs these
-same commands.
-
-## CI
-
-`.github/workflows/ci.yml` runs on every pull request: `format:check` + `lint` +
-`typecheck`, an app build, and the compose test gate. `codeql.yml` scans for security
-issues. Do not add a workflow that duplicates a job an existing one already runs.
-
-`publish-images.yml` pushes the four service images to GHCR
-(`ghcr.io/croffasia/itsaplan-<service>`), one manifest per service covering amd64 and
-arm64, each architecture built on a runner of its own. `release.yml` calls it once a
-release is tagged: a `release: published` event raised by GITHUB_TOKEN starts no workflow
-run, so the trigger has to be chained to the job that cut the release.
-
-## Commits and releases
-
-Versioning is automated by release-please (`release.yml`). It reads the
-Conventional Commit subjects that land on `main` and keeps an open release PR
-that accumulates the next version and `CHANGELOG.md`. Merging the release PR
-tags the commit and publishes the GitHub Release. PR titles are squash-merged
-into `main`, so the PR title is the commit subject release-please reads; it must
-be a valid Conventional Commit (enforced by `pr-title.yml`).
-
-The type in the subject picks the version bump, so pick it by what the change
-gives the user, not by how much code it touches:
-
-- **`feat:` — minor.** A capability that did not exist: a new entity, page,
-  integration, or a setting that unlocks behaviour. Reserve it for what would
-  earn a "Highlights" entry in the release notes.
-- **`improvement:` — patch.** A visible change to something that already exists:
-  a redesign, a reworked layout, a theme, an interaction that got better. Not a
-  bug fix, not a new capability.
+- **`feat:` — minor.** A capability that did not exist: a new entity, page, integration, or a
+  setting that unlocks behaviour. Use it only for a change that earns a "Highlights" entry.
+- **`improvement:` — patch.** A visible change to something that exists: a redesign, a
+  reworked layout, a theme, a better interaction. Not a bug fix, not a new capability.
 - **`fix:` — patch.** Behaviour that was wrong is now right.
-- **everything else (`perf`, `refactor`, `docs`, `build`, `ci`, `test`,
-  `chore`, `revert`) — patch.**
+- **Every other type (`perf`, `refactor`, `docs`, `build`, `ci`, `test`, `chore`, `revert`) —
+  patch.**
 
-The major is never automatic. While the version is `0.x`, `!` (e.g. `feat!:`)
-bumps the minor (`bump-minor-pre-major`), and `1.0.0` is cut deliberately with a
-`Release-As: 1.0.0` footer in the squash commit body. That footer overrides the
-computed version for any release; release-please reads it before the versioning
-strategy runs. After `1.0.0`, `!` bumps the major on its own.
+Scope: the name of one app or package (`api`, `web`, `worker`, `bot`, `db`, `auth`, …). No
+scope when the change spans several.
 
-`improvement` is not in the Conventional Commits standard list. release-please
-bumps the patch for any type it does not recognise, and the entry reaches the
-changelog because `changelog-sections` in `release-please-config.json` maps it to
-an "Improvements" section — a type missing from that list is dropped from the
-notes. Every type in that list gets its own section in the changelog, including
-`chore` and `test`. The list of types a PR title may use lives in
-`pr-title.yml`; the two have to stay in sync.
+While the version is `0.x`, `!` (e.g. `feat!:`) bumps the minor. The major never bumps
+automatically. To cut `1.0.0`, add a `Release-As: 1.0.0` footer to the squash commit body.
 
-The scope is the name of one app or package (`api`, `web`, `worker`, `bot`, `db`,
-`auth`, …). A change spanning several of them carries no scope.
+Release config traps:
 
-`"package-name": ""` in `release-please-config.json` is what lets the release be
-created at all. With `separate-pull-requests: false` release-please names the
-release PR branch `release-please--branches--main`, without a component, while the
-`node` release type otherwise derives the component from the `name` in the root
-`package.json`. The two disagree, release-please skips the release, the merged PR
-keeps its `autorelease: pending` label, and every later run stops at
-`There are untagged, merged release PRs outstanding - aborting`. An empty package
-name makes both sides resolve to no component. Tags stay `vX.Y.Z` — that is
-`include-component-in-tag: false`, a separate setting.
-
-Cutting a release also moves the `release` branch to the released commit, which
-is what the deploy target follows. `main` stays the only branch anyone works in;
-`release` is a mirror with a single writer, so it never needs a merge back. It
-appears with the first published release.
-
-**Agents do not commit.** Do the work, then write the proposed commit message in
-chat as a Conventional Commit (`type(scope): summary`) for the user to run. Do
-not call `git commit` or `git push` unless the user explicitly asks.
-
-## Before pushing a branch (agents)
-
-Run the changed code through two skills, in order:
-
-1. `tidy` — simplify and refine: reuse, dead code, naming, altitude.
-2. `code-review` — find bugs, security issues, and rule violations.
-
-tidy first so review sees the final shape; a review before tidy goes stale when
-tidy moves the code. This is separate from the CI gate (`format:check` + `lint` +
-`typecheck`), which still must pass.
+- Add a new commit type to both `pr-title.yml` and `changelog-sections` in
+  `release-please-config.json`. release-please drops a type that is not in
+  `changelog-sections` from the release notes.
+- Keep `"package-name": ""` in `release-please-config.json`. Without it, release-please skips
+  every release and stops at `There are untagged, merged release PRs outstanding - aborting`.
 
 ## Gotchas
 
-- Don't add a build step for shared packages — they're consumed as source. The one
-  exception is `packages/runner`: it is the only member published to npm, so it bundles
-  to `dist/` (`bun build --target=node`) and its source stays free of Bun APIs — the
-  published CLI runs on plain Node. Release it by hand (`npm publish` after bumping
-  `version`); release-please manages the application's version, not this package's.
-- When adding a new workspace member under `packages/*` or `apps/*`, add a matching
-  `COPY <path>/package.json ./<path>/` line to every Dockerfile that installs deps
-  (`apps/api`, `apps/web`, `apps/worker`, `apps/bot`). The install stage
-  copies manifests by an explicit list, so a missing one fails
+- Shared packages have no build step. Their consumers import the source. The exception is
+  `packages/runner`, the only member published to npm. It bundles to `dist/`
+  (`bun build --target=node`), and its source uses no Bun APIs because the published CLI runs
+  on plain Node. Publish it by hand (`npm publish` after a `version` bump). release-please
+  versions the application, not this package.
+- New workspace member under `packages/*` or `apps/*`: add `COPY <path>/package.json ./<path>/`
+  to every Dockerfile that installs deps (`apps/api`, `apps/web`, `apps/worker`, `apps/bot`).
+  The install stage copies manifests from an explicit list. A missing line fails
   `bun install --frozen-lockfile` in the Docker build with
-  `Workspace dependency "@repo/<name>" not found`, even though local dev works.
-- Changing the better-auth config in `packages/auth` may change its tables → run
-  `bun run auth:generate` then `bun run db:generate` + `db:migrate`.
-- Frontend and backend on different domains in prod: adjust cookie `sameSite`/`secure`
-  and `APP_URL` (see `packages/auth/AGENTS.md`).
-- Tests run on `bun test`. `apps/api` uses Eden Treaty; its setup and the rules for
-  writing tests are in `apps/api/AGENTS.md`. They are integration tests against a real
-  test Postgres (`.env.test`), not mocks. `packages/runner` has plain unit tests that
-  need nothing running. `apps/api`, `apps/bot` and `apps/worker` share one test database and
-  the api suite truncates every table before each test, so `bun run test` passes
-  `--concurrency=1` to turbo: the suites run one package at a time.
-- `bun --filter` needs the `=` form: `bun --filter='@repo/db' run <script>`. The space form
-  `bun --filter <name> run <script>` matches no packages in Bun 1.3.9.
-
-Per-package details are in each package's `AGENTS.md`.
-
-<!-- BEGIN:turborepo-agent-rules -->
-
-# This is NOT the Turborepo you know
-
-Turborepo configuration, task behavior, and CLI commands can vary between installed versions and may differ from your training data. Resolve the `turbo` package from this file's directory or relevant workspace; in monorepos, it may not be visible from the repository root. For example, run `node -p "require.resolve('turbo/package.json')"` from a workspace that depends on `turbo`.
-
-Read `docs/README.md` inside that installed package first, then read the relevant pages from its `docs/` directory before changing Turborepo configuration or commands. Heed deprecation notices. These bundled docs match the installed package version and are available without network access.
-
-This block is written and re-added by `turbo` before repository-scoped commands when an AI agent is detected. In the Turborepo source repository, its template is defined in `crates/turborepo-cli/src/cli/agent_guidance.rs`. Removing the managed block while updates are enabled means a later qualifying invocation will add it again. Set `"agentGuidance": false` in the root `turbo.json` or `turbo.jsonc` to opt out; this does not remove an existing block. Keep the block committed with your work to avoid an uncommitted change on the next agent invocation.
-<!-- END:turborepo-agent-rules -->
+  `Workspace dependency "@repo/<name>" not found`, while local dev still works.
+- A better-auth config change in `packages/auth` can change its tables. Run
+  `bun run auth:generate`, then `bun run db:generate` and `db:migrate`.
+- Frontend and backend on different domains in prod: adjust cookie `sameSite`/`secure` and
+  `APP_URL` (see `packages/auth/AGENTS.md`).
+- Tests use `bun test`. They are integration tests against a real test Postgres
+  (`.env.test`), not mocks. `apps/api` uses Eden Treaty. Its setup and test-writing rules are
+  in `apps/api/AGENTS.md`. api, bot and worker share one test database, and the api suite
+  truncates every table before each test. So the suites never run in parallel
+  (`--concurrency=1`).
+- `bun --filter` needs the `=` form: `bun --filter='@repo/db' run <script>`. With the space
+  form, Bun reads `run` as the script name and fails.
+- Read the comments in `scripts/setup.ts` before you change it. They give the rules that keep
+  the script safe to run again on a live instance.

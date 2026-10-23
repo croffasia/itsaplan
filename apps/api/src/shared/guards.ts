@@ -23,7 +23,7 @@ import type { ProjectFeature } from './features';
 import { getProjectById } from '#modules/projects/service';
 import { runsTeam, teamMcpEnabled } from '#modules/teams/service';
 import { requireWorkspaceManager } from '#modules/workspaces/service';
-import { isMcpRequest } from './mcp-request';
+import { boundProjectId, isMcpRequest } from './mcp-request';
 import { HttpError } from './lib';
 import type { PermissionResource, PermissionAction } from './permissions';
 
@@ -92,10 +92,15 @@ export function entityGuard(
   });
 }
 
-// The per-project MCP toggle, for a route or a guard that resolved the project by
-// its id rather than through one of the :projectKey macros. A plain request passes
-// untouched.
+// What the request carries about the project, for a route or a guard that resolved the
+// project by an object's id rather than through one of the :projectKey macros: an
+// internal agent's run is bound to its own project, and an MCP call obeys the
+// per-project MCP toggle. A plain request passes untouched.
 export async function assertMcpAllowed(projectId: number, headers: Headers): Promise<void> {
+  const bound = boundProjectId(headers);
+  if (bound != null && bound !== projectId) {
+    throw new HttpError(403, 'Outside the project this run works in');
+  }
   if (!isMcpRequest(headers)) return;
   const project = await getProjectById(projectId);
   if (project) assertMcpEnabled(project, true);

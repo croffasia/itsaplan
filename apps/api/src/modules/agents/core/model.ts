@@ -173,6 +173,13 @@ export const AiAgentResponse = t.Object({
   actionCount: t.Number(),
   skillCount: t.Number(),
   toolCount: t.Number(),
+  canManage: t.Boolean({
+    description:
+      'Whether you may act on the agent as a whole: rotate its key, edit or delete it, set its ' +
+      'tools or skills, and read, rotate or test its invocation secret. Takes running the team ' +
+      'or being a member of every project the agent works in; each action also needs its role ' +
+      'permission.',
+  }),
 });
 
 // createAgent's result: the agent plus its one-time API key secret (null for an

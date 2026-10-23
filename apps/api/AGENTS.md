@@ -134,6 +134,10 @@ Enforced declaratively through macros, never imperative calls in handlers.
 /projects/:projectKey/issues/:sequenceNumber` does the same for an old number that
   resolved to an issue now in another project. `POST /issues/:issueId/move` checks the
   target project in the `moveTarget` macro, which reads `projectId` from the body.
+  `entityGuard` calls `assertMcpAllowed`, and so does a route that resolves the project
+  itself: it applies the per-project MCP toggle, and refuses an object outside
+  the project an internal agent's run works in (`x-agent-project`, set by the run's tool
+  dispatch).
 - Every guard publishes the pair it asserts as `x-permission` on the route's OpenAPI
   detail, which is where `mcp/generate.ts` reads it — Elysia deletes a macro's own key
   from the route once it expands the macro, so there is nothing else to read it from.
@@ -222,9 +226,13 @@ Two decisions a reader would otherwise propose again:
   flag on the user. An agent is reachable through its team or not at all.
 - **The `ai_agents` permissions are administrative.** A role granting `create` or `edit`
   can make an agent, attach it to the projects the caller sees, and read its key — so
-  granting either is granting everything an agent of those projects can reach. What the
-  agents spent is a resource of its own, `agent_usage`, read only, so reading it
-  administers nothing.
+  granting either is granting everything an agent of those projects can reach. Rotating
+  the key, editing or deleting the agent, setting its tools or skills, and reading,
+  rotating or testing its invocation secret act on it in every project it works in, so
+  they also take running the team or being a member of all of them
+  (`assertFullAgentAccess`). The agent's `canManage` reports the same rule to the caller,
+  so the web hides what the api would refuse. What the agents spent is a resource of its own,
+  `agent_usage`, read only, so reading it administers nothing.
 - **An agent's role is its `project_member` row**, per project, set from the project's
   member list like a person's. Attaching an agent joins it on the team's default role;
   `members/` refuses to make it an owner, since an owner bypasses the matrix.

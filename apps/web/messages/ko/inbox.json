@@ -10,7 +10,8 @@
   "showSnoozed": "나중에 알림 표시",
   "markAllRead": "모두 읽음으로 표시",
   "deleteAllRead": "읽은 알림 모두 삭제",
-  "deleteAllReadCompleted": "완료된 이슈의 읽은 알림 모두 삭제",
+  "deleteAllCompleted": "완료된 이슈의 알림 삭제",
+  "deleteAllCompletedDescription": "현재 필터와 일치하는 완료되었거나 취소된 이슈의 알림(읽지 않은 알림 포함)이 삭제됩니다. 이 작업은 되돌릴 수 없습니다.",
   "types": {
     "assigned": "담당자로 지정됨",
     "mentioned": "멘션됨",

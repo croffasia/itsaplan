@@ -159,6 +159,30 @@ export interface CredentialPatch {
   credential?: Record<string, unknown>;
 }
 
+// The tools send a credential's secrets to the address in its url fields. A new address
+// has to come with the secrets, or someone who may edit them but never read them could
+// send them to a host of their own.
+function assertSecretsResent(
+  fields: ConfigField[],
+  current: ToolConfig,
+  patch: Record<string, unknown>,
+): void {
+  const moved = fields.some(
+    (f) =>
+      f.type === 'url' &&
+      f.key in patch &&
+      String(patch[f.key] ?? '') !== String(current[f.key] ?? ''),
+  );
+  if (!moved) return;
+  const missing = fields.filter((f) => f.type === 'secret' && f.key in current && !patch[f.key]);
+  if (missing.length > 0) {
+    throw new HttpError(
+      400,
+      `Enter ${missing.map((f) => f.label).join(', ')} again to change the address`,
+    );
+  }
+}
+
 export async function updateCredential(
   id: number,
   teamId: number,
@@ -176,6 +200,7 @@ export async function updateCredential(
     // Merge the submitted fields over the stored credential so unchanged secrets (left
     // out by the form) are preserved, then re-validate the whole credential.
     const current = (await decrypt(id, teamId)) ?? {};
+    assertSecretsResent(schema, current, patch.credential);
     const merged = coerce(schema, { ...current, ...patch.credential });
     const enc = encryptSecret(JSON.stringify(merged));
     set.ciphertext = enc.ciphertext;

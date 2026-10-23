@@ -1,0 +1,119 @@
+{
+  "newIssue": "Yeni iş",
+  "pin": "Sabitle",
+  "unpin": "Sabitlemeyi kaldır",
+  "collapse": "Daralt",
+  "expand": "Genişlet",
+  "hide": "Gizle",
+  "show": "Göster",
+  "hiddenColumns": "Gizli sütunlar",
+  "hiddenGroups": "Gizli gruplar",
+  "selectAll": "Tümünü seç",
+  "deselectAll": "Seçimi temizle",
+  "resizeColumn": "Sütunu yeniden boyutlandır",
+  "viewNamePlaceholder": "Tüm işler",
+  "sortedOrder": "İşler {field} alanına göre sıralanmıştır. Sıralamayı değiştirmek için Manuel seçeneğine geçin.",
+  "statusSince": "{date} tarihinden beri bu durumda",
+  "createdOn": "{date} tarihinde oluşturuldu",
+  "updatedOn": "{date} tarihinde güncellendi",
+  "subtasksProgress": "Alt işler {done}/{total}",
+  "subtasksDone": "{total} alt işten {done} tanesi tamamlandı",
+  "wip": {
+    "reached": "{column} sınırı olan {limit} iş sayısına ulaştı.",
+    "tooltip": "Devam eden iş (WIP) sınırı: {max}",
+    "count": "{count} / {max}",
+    "filteredCount": "{total} işten {shown} gösteriliyor / {max}",
+    "filteredTooltip": "Mevcut filtrelerle {shown} iş gösteriliyor. {max} sınırı sütundaki tüm {total} işi kapsar."
+  },
+  "columns": {
+    "title": "Başlık",
+    "status": "Durum",
+    "statusAge": "Durum süresi",
+    "priority": "Öncelik",
+    "type": "Tür",
+    "initiative": "Girişim",
+    "cycle": "Döngü",
+    "labels": "Etiketler",
+    "estimatePoints": "Hikâye puanı",
+    "estimateTime": "Süre",
+    "startDate": "Başlangıç",
+    "dueDate": "Bitiş",
+    "created": "Oluşturulma",
+    "updated": "Güncellenme"
+  },
+  "calendar": {
+    "previousMonth": "Önceki ay",
+    "nextMonth": "Sonraki ay",
+    "today": "Bugün",
+    "moreIssues": "+{count} daha",
+    "issueCount": "{count, plural, one {# iş} other {# iş}}",
+    "weekdays": {
+      "sun": "Paz",
+      "mon": "Pzt",
+      "tue": "Sal",
+      "wed": "Çar",
+      "thu": "Per",
+      "fri": "Cum",
+      "sat": "Cmt"
+    },
+    "noDate": {
+      "dueDate": "Bitiş tarihi yok",
+      "startDate": "Başlangıç tarihi yok",
+      "custom": "Tarih yok"
+    },
+    "allDated": {
+      "dueDate": "Tüm işlerin bitiş tarihi var.",
+      "startDate": "Tüm işlerin başlangıç tarihi var.",
+      "custom": "Tüm işlerin tarihi var."
+    }
+  },
+  "timeline": {
+    "empty": "Zaman çizelgesine yerleştirilecek henüz iş yok.",
+    "expandGroup": "Grubu genişlet",
+    "collapseGroup": "Grubu daralt",
+    "inferredStart": "Başlangıç oluşturulma tarihine göre belirlendi",
+    "inferredStartDraggable": "Başlangıç oluşturulma tarihine göre belirlendi — ayarlamak için sürükleyin"
+  },
+  "bulk": {
+    "selected": "{count} seçildi",
+    "status": "Durum",
+    "priority": "Öncelik",
+    "assignee": "Sorumlu",
+    "delegate": "Temsilci",
+    "initiative": "Girişim",
+    "cycle": "Döngü",
+    "labels": "Etiketler",
+    "noAssignee": "Sorumlu atanmamış",
+    "noDelegate": "Temsilci atanmamış",
+    "noInitiative": "Girişim yok",
+    "noCycle": "Döngü yok",
+    "archive": "Arşivle",
+    "clearSelection": "Seçimi temizle"
+  },
+  "removal": {
+    "archive": {
+      "title": "{count, plural, one {İşi arşivle} other {İşleri arşivle}}",
+      "confirm": "{count, plural, one {# işi arşivle} other {# işi arşivle}}",
+      "description": "{count, plural, one {Seçilen # iş arşivlensin mi? Panodan kaldırılır ve daha sonra geri yüklenebilir.} other {Seçilen # iş arşivlensin mi? Panodan kaldırılır ve daha sonra geri yüklenebilir.}}"
+    },
+    "delete": {
+      "title": "{count, plural, one {İşi sil} other {İşleri sil}}",
+      "confirm": "{count, plural, one {# işi sil} other {# işi sil}}",
+      "description": "{count, plural, one {Seçilen # iş silinsin mi?} other {Seçilen # iş silinsin mi?}} Bu işlem yorumları, etkinlik geçmişini ve ekleri de kalıcı olarak kaldıracaktır. Bu işlem geri alınamaz."
+    }
+  },
+  "share": {
+    "issueTitle": "İş",
+    "issueUnavailable": "Bu işe ulaşılamıyor.",
+    "boardUnavailable": "Paylaşılan panoya ulaşılamıyor. Bağlantı iptal edilmiş olabilir."
+  },
+  "groups": {
+    "noAssignee": "Sorumlu atanmamış",
+    "noDelegate": "Temsilci atanmamış",
+    "noPriority": "Öncelik yok",
+    "noType": "Tür yok",
+    "noInitiative": "Girişim yok",
+    "noCycle": "Döngü yok",
+    "noMember": "Değer yok"
+  }
+}

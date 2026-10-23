@@ -43,7 +43,7 @@ export interface NotificationFilters {
   includeSnoozed?: boolean;
 }
 
-export type NotificationDeleteScope = 'all' | 'read' | 'read-completed';
+export type NotificationDeleteScope = 'all' | 'read' | 'read-completed' | 'completed';
 
 // Inbox notifications. The list is the session user's own; projectId scopes it to
 // one project (the per-project inbox). cursor is the JSON-encoded keyset from the

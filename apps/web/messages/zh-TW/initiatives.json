@@ -1,0 +1,168 @@
+{
+  "title": "計畫",
+  "newInitiative": "新建計畫",
+  "notFound": "未找到計畫。",
+  "options": "計畫選項",
+  "showDescription": "顯示描述",
+  "noDescription": "暫無描述。",
+  "noOwner": "無負責人",
+  "startDate": "開始日期",
+  "targetDate": "目標日期",
+  "progress": "進度",
+  "activity": "活動記錄",
+  "noActivity": "暫無活動記錄。",
+  "noIssuesLinked": "暫無關聯工作項目。",
+  "inProgress": "進行中",
+  "emptyTitle": "暫無計畫",
+  "emptyDescription": "計畫將相關工作項目歸入同一目標。",
+  "emptyTabDescription": "計畫會隨狀態變更顯示在不同標籤頁中。",
+  "emptyTab": {
+    "active": "暫無進行中的計畫",
+    "planned": "暫無已規劃的計畫",
+    "proposed": "暫無提議中的計畫",
+    "completed": "暫無已完成的計畫"
+  },
+  "tabs": {
+    "active": "進行中",
+    "planned": "已規劃",
+    "proposed": "提議中",
+    "completed": "已完成",
+    "all": "所有計畫"
+  },
+  "detailTabs": {
+    "overview": "概覽",
+    "progress": "進度",
+    "issues": "工作項目"
+  },
+  "columns": {
+    "name": "名稱",
+    "priority": "優先順序",
+    "owner": "負責人",
+    "target": "目標日期",
+    "progress": "進度",
+    "health": "進展狀態"
+  },
+  "status": {
+    "proposed": "提議中",
+    "planned": "已規劃",
+    "active": "進行中",
+    "completed": "已完成",
+    "canceled": "已取消"
+  },
+  "stateGroups": {
+    "backlog": "待辦事項",
+    "unstarted": "待辦",
+    "started": "進行中",
+    "completed": "已完成",
+    "canceled": "已取消"
+  },
+  "health": {
+    "on_track": "進展正常",
+    "at_risk": "存在風險",
+    "off_track": "進度偏離",
+    "unknown": "暫無評估"
+  },
+  "healthInfo": {
+    "trigger": "如何計算進展狀態？",
+    "title": "進展狀態",
+    "description": "比較已完成工作比例和已用時間比例，並自動更新。",
+    "legend": {
+      "on_track": "工作進度與時間計畫基本一致。",
+      "at_risk": "工作進度落後於時間計畫。",
+      "off_track": "工作進度明顯落後，或目標日期已過。",
+      "unknown": "資料不足：沒有工作項目或未設定目標日期。"
+    },
+    "howCalculated": "計算方式",
+    "workDone": "已完成工作",
+    "timeElapsed": "已用時間",
+    "trail": "工作進度落後於時間的比例",
+    "trailOnTrack": "落後不超過 10%",
+    "trailAtRisk": "落後 10%–25%",
+    "trailOffTrack": "落後超過 25%"
+  },
+  "timeline": {
+    "title": "時間軸",
+    "started": "開始日期",
+    "target": "目標日期",
+    "remaining": "剩餘時間",
+    "overdue": "已逾期 {days} 天",
+    "dueToday": "今天到期",
+    "left": "剩餘 {days} 天",
+    "timeElapsed": "已用時間",
+    "workDone": "已完成工作",
+    "noTargetDate": "設定目標日期以追蹤進度。"
+  },
+  "form": {
+    "titlePlaceholder": "第三季度發布",
+    "descriptionPlaceholder": "此計畫的目標是什麼？",
+    "create": "新建計畫",
+    "creating": "正在建立…",
+    "editTitle": "編輯計畫",
+    "save": "儲存更改"
+  },
+  "pagination": {
+    "range": "第 {from}–{to} 項，共 {total} 項",
+    "previous": "上一頁",
+    "next": "下一頁"
+  },
+  "select": {
+    "label": "計畫",
+    "search": "關聯計畫…",
+    "empty": "暫無計畫。",
+    "none": "無計畫",
+    "create": "新建計畫"
+  },
+  "feed": {
+    "system": "系統",
+    "createdInitiative": "建立了計畫",
+    "createdIssue": "建立了工作項目",
+    "renamed": "重新命名為「{title}」",
+    "descriptionUpdated": "更新了描述",
+    "descriptionCleared": "清除了描述",
+    "statusSet": "將狀態設為 {status}",
+    "statusMoved": "從 {from} 移至 {to}",
+    "prioritySet": "將優先順序設為 {priority}",
+    "priorityRemoved": "移除了優先順序",
+    "ownerSet": "將負責人設為 {name}",
+    "ownerRemoved": "移除了負責人 {name}",
+    "assigneeSet": "指派給 {name}",
+    "assigneeRemoved": "移除了負責人 {name}",
+    "delegateSet": "委派給 {name}",
+    "delegateRemoved": "移除了執行代理 {name}",
+    "targetDateSet": "將目標日期設為 {date}",
+    "targetDateRemoved": "移除了目標日期",
+    "startDateSet": "將開始日期設為 {date}",
+    "startDateRemoved": "移除了開始日期",
+    "dueDateSet": "將截止日期設為 {date}",
+    "dueDateRemoved": "移除了截止日期",
+    "labelAdded": "新增了標籤 {label}",
+    "labelRemoved": "移除了標籤 {label}",
+    "typeSet": "將類型設為 {type}",
+    "typeRemoved": "移除了類型",
+    "linked": "關聯至 {name}",
+    "unlinked": "取消了與此計畫的關聯"
+  },
+  "attachments": {
+    "title": "附件",
+    "add": "新增",
+    "uploading": "上傳中…",
+    "empty": "暫無附件。",
+    "emptyHint": "將檔案拖到此處，或點選「新增」上傳。",
+    "dropToUpload": "鬆開以上傳檔案",
+    "uploadFailed": "上傳失敗",
+    "open": "開啟 {name}",
+    "download": "下載",
+    "downloadFile": "下載 {name}",
+    "deleteFile": "刪除 {name}",
+    "deleteTitle": "刪除附件",
+    "deleteConfirmation": "刪除 {name}？它也會從描述中所有嵌入的位置移除。此操作無法復原。"
+  },
+  "documents": {
+    "title": "文件",
+    "add": "關聯文件",
+    "empty": "尚未關聯文件。",
+    "loadFailed": "無法載入關聯的文件，請重試。",
+    "untitled": "未命名",
+    "remove": "取消關聯 {title}"
+  }
+}

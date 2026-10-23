@@ -198,7 +198,8 @@
     "copiedLink": "Copied",
     "editLink": "Edit link",
     "retryPreview": "Try again",
-    "copyLinkFailed": "Could not copy the link. Select and copy the URL above."
+    "copyLinkFailed": "Could not copy the link. Select and copy the URL above.",
+    "todoList": "To-do list"
   },
   "chart": {
     "download": "Save chart",

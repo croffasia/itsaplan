@@ -14,7 +14,7 @@ import {
 import AuthFormHeader from '../AuthFormHeader';
 import AuthMessagePanel from '../AuthMessagePanel';
 import AuthRegisterPasswordFields from './AuthRegisterPasswordFields';
-import AuthRegisterProviders from './AuthRegisterProviders';
+import AuthRegisterProviders from '../AuthRegisterProviders';
 import { signInWithGoogle, signInWithOidc, signUpWithEmail } from '../../services/auth.service';
 import { useAuthAction } from '../../hooks/useAuthAction';
 import { useAuthConfig } from '@/services/authConfig.service';
@@ -102,25 +102,25 @@ export default function AuthRegisterForm() {
         <AuthFormHeader title={t('register.title')} description={subtitle()} />
 
         {passwordEnabled && (
-          <>
-            <AuthRegisterPasswordFields
-              email={email}
-              password={password}
-              confirm={confirm}
-              pending={pending}
-              onEmailChange={setEmail}
-              onPasswordChange={setPassword}
-              onConfirmChange={setConfirm}
-            />
+          <AuthRegisterPasswordFields
+            email={email}
+            password={password}
+            confirm={confirm}
+            pending={pending}
+            onEmailChange={setEmail}
+            onPasswordChange={setPassword}
+            onConfirmChange={setConfirm}
+          />
+        )}
 
-            {error && <FieldError>{error}</FieldError>}
+        {error && <FieldError>{error}</FieldError>}
 
-            <Field>
-              <Button type="submit" disabled={pending}>
-                {pending ? t('register.submitPending') : t('register.submit')}
-              </Button>
-            </Field>
-          </>
+        {passwordEnabled && (
+          <Field>
+            <Button type="submit" disabled={pending}>
+              {pending ? t('register.submitPending') : t('register.submit')}
+            </Button>
+          </Field>
         )}
 
         {hasProvider && (

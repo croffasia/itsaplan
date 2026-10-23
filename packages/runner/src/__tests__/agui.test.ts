@@ -99,6 +99,34 @@ describe('answer stream', () => {
     expect(text(sink.events)).toBe('Checking done.');
   });
 
+  it('answers with the text the agent ended on, after its last tool call', async () => {
+    const stream = new AnswerStream('claude-stream-json', 'run-1', '1', collect().send);
+    const delta = (text: string) =>
+      JSON.stringify({
+        type: 'stream_event',
+        event: { type: 'content_block_delta', delta: { type: 'text_delta', text } },
+      });
+    stream.write(
+      [
+        delta('Reading the issue.'),
+        JSON.stringify({
+          type: 'assistant',
+          message: { content: [{ type: 'tool_use', id: 't1', name: 'get_issue', input: {} }] },
+        }),
+        JSON.stringify({
+          type: 'user',
+          message: { content: [{ type: 'tool_result', tool_use_id: 't1', content: '{}' }] },
+        }),
+        delta('Replied in the '),
+        delta('thread.'),
+        JSON.stringify({ type: 'result', result: 'Replied in the thread.' }),
+        '',
+      ].join('\n'),
+    );
+    await stream.finish('raw stdout');
+    expect(stream.answer()).toBe('Replied in the thread.');
+  });
+
   it('takes the final message when the command reported no partials', async () => {
     const sink = collect();
     const stream = new AnswerStream('claude-stream-json', 'chat:1:u:x', '7', sink.send);

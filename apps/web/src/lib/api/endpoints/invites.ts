@@ -8,10 +8,11 @@ export type InviteStatus = 'pending' | 'accepted' | 'rejected';
 export type InviteTeamRole = 'owner' | 'manager' | 'member';
 
 // An invite as shown to whoever manages a team's or a project's invites: carries the
-// token so they can share the link, and who sent it.
+// token so they can share the link, and who sent it. The token is null where the
+// viewer could not have sent the invite.
 export interface InviteRow {
   id: number;
-  token: string;
+  token: string | null;
   email: string;
   teamRole: InviteTeamRole;
   // The project the invitee joins along with the team, or null for an invite into
@@ -35,6 +36,7 @@ export interface InviteRow {
 }
 
 export interface InviteCreateResult extends InviteRow {
+  token: string;
   emailQueued: boolean;
   // A mail provider is set but the email could not go out; the link still works.
   emailFailed: boolean;

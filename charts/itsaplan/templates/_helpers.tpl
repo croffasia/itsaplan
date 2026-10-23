@@ -89,7 +89,7 @@ initContainers:
   - name: wait-for-migrations
     image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag | default .Chart.AppVersion }}"
     imagePullPolicy: {{ .Values.api.image.pullPolicy }}
-    command: ["bun", "run", "packages/db/src/wait-for-migrations.ts"]
+    command: ["bun", "run", "{{ if .Values.pro }}vendor/itsaplan/{{ end }}packages/db/src/wait-for-migrations.ts"]
     {{- with .Values.securityContext }}
     securityContext:
       {{- toYaml . | nindent 6 }}

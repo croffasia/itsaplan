@@ -89,7 +89,8 @@ export function useUpdateInstanceEmailSettings() {
     mutationFn: (patch: InstanceEmailSettingsPatch) => updateInstanceEmailSettings(patch),
     onSuccess: (data) => {
       qc.setQueryData(qk.instanceEmailSettings, data);
-      // Turning a provider on unlocks the auth options that need outbound mail.
+      // Turning a provider on unlocks the auth options that need outbound mail, and
+      // turning it off clears them.
       void qc.invalidateQueries({ queryKey: qk.instanceAuthSettings });
     },
   });
@@ -183,7 +184,7 @@ export function useInstanceAgentSettingsQuery() {
 export function useUpdateInstanceAgentSettings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: AgentSettings) => updateInstanceAgentSettings(body),
+    mutationFn: (body: Partial<AgentSettings>) => updateInstanceAgentSettings(body),
     onSuccess: (data) => qc.setQueryData(qk.instanceAgentSettings, data),
   });
 }

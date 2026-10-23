@@ -184,12 +184,17 @@
     "traceRetention": "Manter rastros de execução",
     "traceRetentionHint": "Cada execução de agente registra as chamadas ao modelo e às ferramentas. Os painéis de consumo contam só as execuções mantidas.",
     "traceDays": "{days, plural, one {# dia} other {# dias}}",
-    "traceForever": "Sempre"
+    "traceForever": "Sempre",
+    "maxRunTime": "Tempo máximo de execução",
+    "maxRunTimeHint": "Quanto tempo uma execução de agente pode levar antes de ser interrompida e salva como falha. O limite próprio de um agente não pode ultrapassá-lo.",
+    "runMinutes": "{minutes, plural, one {# minuto} other {# minutos}}",
+    "runSeconds": "{seconds} s"
   },
   "authentication": {
     "saved": "Configurações de autenticação salvas",
     "registration": "Registro",
     "registrationHint": "Quem pode criar uma conta nesta instância.",
+    "registrationPasswordlessNote": "O cadastro e a recuperação de senha são feitos pelo provedor de login.",
     "inviteTtlDays": "Validade dos convites (dias)",
     "inviteTtlDaysHint": "Depois desse prazo, o link do convite deixa de funcionar e, com o cadastro somente por convite, não permite mais criar a conta. Com 0, os convites não expiram.",
     "inviteTtlDaysInvalid": "Informe um número inteiro de dias entre 0 e {max}.",
@@ -199,15 +204,18 @@
     "modes": {
       "open": {
         "label": "Aberto",
-        "description": "Qualquer um que chegue à página de registro pode criar uma conta."
+        "description": "Qualquer um que chegue à página de registro pode criar uma conta.",
+        "descriptionPasswordless": "Quem entra pelo provedor pela primeira vez recebe uma conta."
       },
       "invite": {
         "label": "Somente convite",
-        "description": "Uma conta só pode ser criada por um link de convite."
+        "description": "Uma conta só pode ser criada por um link de convite.",
+        "descriptionPasswordless": "Entrar pelo provedor só cria uma conta se houver um convite pendente para esse endereço."
       },
       "closed": {
         "label": "Fechado",
-        "description": "Sem novas contas. As existentes continuam entrando."
+        "description": "Sem novas contas. As existentes continuam entrando.",
+        "descriptionPasswordless": "Nenhuma conta nova, nem para quem chega pelo provedor. As contas existentes continuam entrando."
       }
     },
     "signIn": "Opções de login",

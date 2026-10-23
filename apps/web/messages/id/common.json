@@ -198,7 +198,8 @@
     "copiedLink": "Tersalin",
     "editLink": "Edit tautan",
     "retryPreview": "Coba lagi",
-    "copyLinkFailed": "Tautan tidak dapat disalin. Pilih dan salin URL di atas."
+    "copyLinkFailed": "Tautan tidak dapat disalin. Pilih dan salin URL di atas.",
+    "todoList": "Daftar tugas"
   },
   "chart": {
     "download": "Simpan grafik",

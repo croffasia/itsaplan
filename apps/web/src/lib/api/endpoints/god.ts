@@ -286,11 +286,13 @@ export const updateInstanceProjectDefaults = (body: ProjectDefaults) =>
 export interface AgentSettings {
   // Days a run trace is kept for. 0 keeps traces until they are deleted by hand.
   traceRetentionDays: number;
+  // Seconds one agent run may take; an agent's own limit cannot exceed it.
+  maxRunSeconds: number;
 }
 
 export const getInstanceAgentSettings = () => request<AgentSettings>('/god/agent-settings');
 
-export const updateInstanceAgentSettings = (body: AgentSettings) =>
+export const updateInstanceAgentSettings = (body: Partial<AgentSettings>) =>
   request<AgentSettings>('/god/agent-settings', {
     method: 'PUT',
     body: JSON.stringify(body),

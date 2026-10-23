@@ -20,6 +20,8 @@ import {
   getAgentInProject,
   agentScopeOf,
   memberProjectIds,
+  assertFullAgentAccess,
+  withCanManage,
   type AgentKind,
 } from './service';
 import {
@@ -195,8 +197,11 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
   .use(guards)
   .get(
     '/teams/:teamId/ai-agents',
-    ({ membership, query }) =>
-      listAgents(membership.teamId, query.projectId, agentScopeOf(membership)),
+    async ({ membership, query }) =>
+      withCanManage(
+        membership,
+        await listAgents(membership.teamId, query.projectId, agentScopeOf(membership)),
+      ),
     {
       params: teamParams,
       query: agentListQuery,
@@ -214,7 +219,12 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
 
   .get(
     '/teams/:teamId/ai-agents/:agentId',
-    ({ params, membership }) => requireVisibleAgent(params.agentId, membership),
+    async ({ params, membership }) => {
+      const [agent] = await withCanManage(membership, [
+        await requireVisibleAgent(params.agentId, membership),
+      ]);
+      return agent;
+    },
     {
       params: agentParams,
       teamPermission: ['ai_agents', 'read'],
@@ -235,11 +245,13 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     async ({ membership, body, set, user }) => {
       const projectIds = await resolveAgentProjects(membership, body.projectIds, []);
       set.status = 201;
-      return createAgent(membership.teamId, {
+      const created = await createAgent(membership.teamId, {
         ...body,
         projectIds,
         ownerUserId: requireUser(user).id,
       });
+      const [agent] = await withCanManage(membership, [created.agent]);
+      return { ...created, agent };
     },
     {
       params: teamParams,
@@ -260,6 +272,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     '/teams/:teamId/ai-agents/:agentId',
     async ({ params, membership, body, user }) => {
       const current = await requireVisibleAgent(params.agentId, membership);
+      await assertFullAgentAccess(membership, params.agentId);
       const projectIds = await resolveAgentProjects(membership, body.projectIds, current.projects);
       const agent = await updateAgent(
         params.agentId,
@@ -268,7 +281,8 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
         requireUser(user).id,
       );
       if (!agent) throw new HttpError(404, 'Agent not found');
-      return agent;
+      const [withAccess] = await withCanManage(membership, [agent]);
+      return withAccess;
     },
     {
       body: updateAgentBody,
@@ -297,7 +311,8 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
         requireUser(user).id,
       );
       if (!agent) throw new HttpError(404, 'Agent not found');
-      return agent;
+      const [withAccess] = await withCanManage(membership, [agent]);
+      return withAccess;
     },
     {
       body: setAgentProjectsBody,
@@ -321,6 +336,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     '/teams/:teamId/ai-agents/:agentId/regenerate-key',
     async ({ params, membership }) => {
       const agent = await requireVisibleAgent(params.agentId, membership);
+      await assertFullAgentAccess(membership, params.agentId);
       if (agent.kind !== 'external')
         throw new HttpError(400, 'Internal agents do not use an API key');
       const apiKey = await regenerateKey(params.agentId, membership.teamId);
@@ -480,6 +496,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     '/teams/:teamId/ai-agents/:agentId',
     async ({ params, membership }) => {
       await requireVisibleAgent(params.agentId, membership);
+      await assertFullAgentAccess(membership, params.agentId);
       const ok = await deleteAgent(params.agentId, membership.teamId);
       if (!ok) throw new HttpError(404, 'Agent not found');
       return noContent();

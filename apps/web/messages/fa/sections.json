@@ -26,7 +26,7 @@
     },
     "general": {
       "label": "عمومی",
-      "description": "فضاهای کار شخصی، پیش‌فرض‌های پروژه‌های جدید، و ردپای ایجنت‌ها."
+      "description": "فضاهای کار شخصی، پیش‌فرض‌های پروژه‌های جدید، و ردپا و زمان اجرای ایجنت‌ها."
     },
     "authentication": {
       "label": "احراز هویت",
@@ -113,6 +113,10 @@
     "ai-agents": {
       "label": "ایجنت‌های AI",
       "description": "ایجنت‌های AI که در این پروژه کار می‌کنند."
+    },
+    "queue": {
+      "label": "Runner queue",
+      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
     }
   },
   "previews": {

@@ -1,0 +1,12 @@
+{
+  "updateAvailable": "有可用更新",
+  "releaseHistory": "版本歷史",
+  "running": "目前版本為 {current}。",
+  "badgeRunning": "目前版本",
+  "badgeNew": "新版本",
+  "check": "檢查更新",
+  "checking": "正在檢查",
+  "lastChecked": "上次檢查",
+  "allReleases": "所有版本",
+  "noNotes": "此版本沒有版本說明。"
+}

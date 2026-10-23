@@ -1,0 +1,192 @@
+{
+  "account": {
+    "profile": "個人資料",
+    "preferences": "偏好設定",
+    "accounts": "關聯帳號",
+    "security": "安全",
+    "api-keys": "API 金鑰"
+  },
+  "godGroups": {
+    "management": "管理",
+    "instance": "執行個體",
+    "security": "安全"
+  },
+  "god": {
+    "users": {
+      "label": "使用者",
+      "description": "此執行個體中的所有帳號，包括全域角色、電子郵件驗證狀態和各使用者可存取的專案。"
+    },
+    "teams": {
+      "label": "團隊",
+      "description": "執行個體中的所有團隊：擁有哪些專案，以及誰屬於它。"
+    },
+    "projects": {
+      "label": "專案",
+      "description": "此執行個體中的所有專案，包括專案內容、最近活動時間和存取成員。"
+    },
+    "general": {
+      "label": "一般",
+      "description": "個人工作區、新建專案的預設設定，以及代理追蹤和執行時長。"
+    },
+    "authentication": {
+      "label": "身分驗證",
+      "description": "設定誰可以註冊、如何驗證帳號以及可用的外部登入提供者。"
+    },
+    "hotkeys": {
+      "label": "鍵盤快捷鍵",
+      "description": "設定執行個體中所有使用者的預設快捷鍵。每位使用者可在偏好設定中重新繫結。"
+    },
+    "storage": {
+      "label": "儲存",
+      "description": "設定單個檔案大小、允許的附件類型和每個專案的儲存配額。"
+    },
+    "telegram": {
+      "label": "Telegram",
+      "description": "設定使用者關聯 Telegram 帳號所用的機器人，以及專案未單獨設定時傳送通知的機器人。"
+    },
+    "email": {
+      "label": "郵件服務供應商",
+      "description": "設定執行個體用於傳送密碼重設、電子郵件驗證和登入連結的郵件服務供應商。"
+    },
+    "auth-provider": {
+      "label": "驗證提供者",
+      "description": "設定使用者可以用於登入的外部帳號。"
+    },
+    "scim": {
+      "label": "SCIM",
+      "description": "讓身分提供者在此執行個體上建立、更新和停用帳號，並透過其群組授予專案存取權限。"
+    },
+    "audit-log": {
+      "label": "稽核記錄",
+      "description": "誰在此執行個體上做了什麼、何時以及從何處操作。"
+    }
+  },
+  "settings": {
+    "general": {
+      "label": "一般",
+      "description": "設定專案名稱、描述和啟用的功能區。"
+    },
+    "states": {
+      "label": "狀態",
+      "description": "設定工作項目在工作流程中經過的狀態，每個狀態是看板上的一欄。"
+    },
+    "issue-types": {
+      "label": "工作項目類型",
+      "description": "設定此專案可以包含的工作項目類型及其專屬欄位。"
+    },
+    "labels": {
+      "label": "標籤",
+      "description": "設定用於組織和篩選專案工作項目的標籤。"
+    },
+    "custom-fields": {
+      "label": "自訂欄位",
+      "description": "設定工作項目的額外欄位，可套用於所有類型或指定工作項目類型。"
+    },
+    "issue-templates": {
+      "label": "工作項目範本",
+      "description": "建立新工作項目時可套用的預設：標題、描述和屬性。"
+    },
+    "configuration": {
+      "label": "設定",
+      "description": "設定子任務與父工作項目的聯動方式，以及何時封存長期無活動的工作項目。"
+    },
+    "actions": {
+      "label": "操作",
+      "description": "設定工作項目上的快捷操作，一次點選即可更改欄位。"
+    },
+    "schedules": {
+      "label": "排程",
+      "description": "按固定時間重複執行代理任務。"
+    },
+    "webhooks": {
+      "label": "Webhook",
+      "description": "將專案事件傳送到外部 URL，並使用每個 Webhook 獨立的金鑰簽章。"
+    },
+    "git": {
+      "label": "存放庫",
+      "description": "當關聯的 Pull Request 在 GitHub、GitLab、Gitea、Forgejo 或 Bitbucket 上合併時關閉工作項目。"
+    },
+    "import-export": {
+      "label": "匯入/匯出",
+      "description": "從自託管的 Plane 執行個體匯入工作項目、留言和標籤，或將該專案的資料匯出為 JSON。"
+    },
+    "ai-agents": {
+      "label": "AI 代理",
+      "description": "在該專案中工作的 AI 代理。"
+    },
+    "queue": {
+      "label": "Runner queue",
+      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
+    }
+  },
+  "previews": {
+    "available": "可在 Cloud 和自託管 Pro 版中使用。",
+    "dashboard": {
+      "title": "儀表板",
+      "description": "此工作區中各團隊和專案的動態。",
+      "summary": {
+        "teams": "團隊",
+        "projects": "專案",
+        "people": "人員",
+        "agents": "AI 代理",
+        "openIssues": "未完成工作項目",
+        "storage": "儲存"
+      },
+      "blocks": {
+        "agents": "AI 代理",
+        "schedules": "排程執行",
+        "time": "已記錄工時",
+        "flow": "工作項目流轉",
+        "projects": "活躍專案",
+        "teams": "活躍團隊"
+      }
+    },
+    "agentBudgets": {
+      "title": "AI 預算",
+      "description": "限制代理在模型上的花費。",
+      "workspace": "整個工作區",
+      "figures": {
+        "spent": "已用",
+        "limit": "限額",
+        "left": "剩餘",
+        "forecast": "本週期預計花費"
+      },
+      "list": "預算",
+      "columns": {
+        "budget": "預算",
+        "spent": "已用"
+      }
+    },
+    "auditLog": {
+      "title": "稽核記錄",
+      "description": "此工作區及其團隊和專案中誰做了什麼，以及成員何時登入。",
+      "columns": {
+        "time": "時間",
+        "actor": "操作人",
+        "action": "操作",
+        "where": "位置",
+        "from": "來源"
+      }
+    },
+    "emailDomains": {
+      "title": "電子郵件網域",
+      "description": "選擇哪些電子郵件網域可以加入此工作區。",
+      "label": "允許的電子郵件網域",
+      "hint": "只有這些網域的地址才能被邀請或透過 SCIM 新增，被邀請的人也可以用它們註冊。留空則使用執行個體的網域。現有成員保留存取權限。"
+    },
+    "sso": {
+      "title": "單點登入",
+      "description": "讓此工作區的成員使用你公司的身分提供者登入。",
+      "provider": "身分提供者",
+      "providerHint": "填寫身分提供者給你的資訊，然後把下面的地址新增到身分提供者。",
+      "fields": {
+        "domains": "電子郵件網域",
+        "entryPoint": "登入 URL",
+        "entityId": "身分提供者 Entity ID",
+        "certificate": "簽章憑證",
+        "acsUrl": "ACS URL",
+        "spEntityId": "Entity ID 和中繼資料"
+      }
+    }
+  }
+}

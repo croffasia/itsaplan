@@ -1,10 +1,12 @@
 import { createTool } from '@mastra/core/tools';
 import type { z } from 'zod';
 import type { ProjectRow } from '#modules/projects/service';
+import type { ActivityPage } from '#modules/analytics/service';
 import { routeTools, withoutFields, type McpInputSchema, type McpRouteTool } from '#mcp/generate';
 import type { Permission } from '#shared/guards';
 import { dispatchTool } from '#mcp/dispatch';
 import { getMcpApp } from '#mcp/app-ref';
+import { compactProjectActivity } from './activity-result';
 import {
   AGENT_ACTIONS,
   ALWAYS_ON_ACTIONS,
@@ -19,7 +21,8 @@ import {
 // dispatched as an in-process request against the real route with the agent's API
 // key, so the route's schema, permission guard, and error model apply unchanged.
 // Nothing about an endpoint is restated here: this file only picks which routes an
-// agent gets and binds them to its project.
+// agent gets and binds them to its project: projectKey is filled in, and the guards
+// refuse an object addressed by id that belongs to another project.
 //
 // An agent's rights are therefore the intersection of two things: the actions it was
 // granted (catalog.ts, stored in ai_agent.tools) and what its team role permits.
@@ -116,12 +119,16 @@ function buildOne(
         route,
         args,
         { kind: 'api-key', apiKey },
-        { viaMcpEndpoint: false },
+        { viaMcpEndpoint: false, projectId: project.id },
       );
       const body = parseBody(text);
       // A route failure is returned to the model as a result rather than thrown, so
       // it can correct the call instead of the run aborting. Custom tools do the same.
-      return isError ? { error: body } : body;
+      if (isError) return { error: body };
+      if (route.name === 'get_project_activity') {
+        return compactProjectActivity(body as ActivityPage);
+      }
+      return body;
     },
   });
 }

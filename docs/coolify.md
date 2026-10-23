@@ -61,12 +61,14 @@ worker tuning — go in **Configuration → Environment Variables**.
 
 ## 5. Deploy the published images
 
-A Public Repository resource always builds from source. To run the images published to GHCR on
-each release, create the stack as a service instead:
+A Public Repository resource always builds from source. To run the images published to GHCR
+on each release, create the stack as a service instead.
 
 1. **New Resource → Docker Compose Empty**, then pick the server.
 2. Paste the whole of `docker-compose.coolify-images.yml` into **Docker Compose file** and
-   press **Save**. It carries no `build:` sections — nothing is built.
+   press **Save**. It carries no `build:` sections — nothing is built. For the Pro edition,
+   paste `docker-compose.coolify-pro.yml` instead. Without a valid license the Pro images run
+   as the core does; the license key is entered in god mode, under **License**.
 3. In **Environment Variables**, set `VERSION` to a release (e.g. `0.10.1`); leave it out for
    the newest.
 4. Press **Deploy**. Coolify generates a domain for api and one for web on the first

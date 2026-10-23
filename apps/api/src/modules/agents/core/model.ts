@@ -1,7 +1,7 @@
 import { t } from 'elysia';
 
 import { pageQueryFields, pageResponse } from '#shared/pagination';
-import { agentRunTrigger, runContextTokens } from '../model';
+import { agentRunTrigger, agentExecutionState, runContextTokens } from '../model';
 
 export { agentParams, projectAgentParams } from '../model';
 
@@ -69,6 +69,15 @@ const configFields = {
     }),
   ),
   maxSteps: t.Optional(t.Nullable(t.Integer({ description: 'Max tool-call steps per run.' }))),
+  runTimeoutSec: t.Optional(
+    t.Nullable(
+      t.Integer({
+        minimum: 1,
+        description:
+          "Seconds one run may take before it is stopped and saved as failed. Null uses the instance's maximum, which also caps this value.",
+      }),
+    ),
+  ),
   memoryEnabled: t.Optional(
     t.Boolean({ description: 'Keep conversation memory across a thread.' }),
   ),
@@ -112,6 +121,18 @@ const configFields = {
         "'team' any member's.",
     }),
   ),
+  invocationUrl: t.Optional(
+    t.Nullable(
+      t.String({
+        minLength: 1,
+        maxLength: 2048,
+        description:
+          "HTTPS URL an external agent's runs and chat messages are POSTed to, signed with " +
+          'its invocation secret, instead of being claimed by a runner. Null puts the agent ' +
+          'back on a runner. Ignored for an internal agent.',
+      }),
+    ),
+  ),
 };
 
 // An agent DTO (AiAgentRow from the service).
@@ -135,6 +156,7 @@ export const AiAgentResponse = t.Object({
   temperature: t.Nullable(t.Number()),
   reasoningEffort: t.Nullable(reasoningEffort),
   maxSteps: t.Nullable(t.Number()),
+  runTimeoutSec: t.Nullable(t.Number()),
   memoryEnabled: t.Boolean(),
   memoryLastMessages: t.Nullable(t.Number()),
   triggerOnMention: t.Boolean(),
@@ -144,12 +166,20 @@ export const AiAgentResponse = t.Object({
   ownerUserId: t.Nullable(t.String()),
   runnerScope: t.Union([t.Literal('owner'), t.Literal('team')]),
   lastSeenAt: t.Nullable(t.String()),
+  invocationUrl: t.Nullable(t.String()),
   createdAt: t.String(),
   apiKeyStart: t.Nullable(t.String()),
   modelProvider: t.Nullable(t.String()),
   actionCount: t.Number(),
   skillCount: t.Number(),
   toolCount: t.Number(),
+  canManage: t.Boolean({
+    description:
+      'Whether you may act on the agent as a whole: rotate its key, edit or delete it, set its ' +
+      'tools or skills, and read, rotate or test its invocation secret. Takes running the team ' +
+      'or being a member of every project the agent works in; each action also needs its role ' +
+      'permission.',
+  }),
 });
 
 // createAgent's result: the agent plus its one-time API key secret (null for an
@@ -172,6 +202,7 @@ export const RunAgentResponse = t.Object({
 export const AgentRunResponse = t.Object({
   id: t.Number(),
   status: t.String(),
+  executionState: agentExecutionState,
   trigger: agentRunTrigger,
   issueId: t.Nullable(t.Number()),
   issueIdentifier: t.Nullable(t.String()),

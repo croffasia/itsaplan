@@ -306,6 +306,23 @@ describe('ai agents', () => {
     });
   });
 
+  it('stores the run time limit on an internal agent and clears it with null', async () => {
+    const { asOwner, teamId } = await setup();
+    const res = await createAgent(asOwner, 'MKT', {
+      name: 'Bot',
+      username: 'bot',
+      kind: 'internal',
+      runTimeoutSec: 600,
+    });
+    expect(res.data?.agent).toMatchObject({ runTimeoutSec: 600 });
+    const agent = agents(asOwner, teamId)({ agentId: res.data!.agent.id });
+
+    expect((await agent.patch({ runTimeoutSec: 0 })).status).toBe(400);
+    expect((await agent.patch({ runTimeoutSec: null })).data).toMatchObject({
+      runTimeoutSec: null,
+    });
+  });
+
   it('rejects an unknown reasoning effort with 400 and keeps the stored one', async () => {
     const { asOwner, teamId } = await setup();
     const res = await createAgent(asOwner, 'MKT', {

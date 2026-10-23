@@ -101,6 +101,9 @@ describe('normalizeToolKeys', () => {
       'update_ai_agent',
       'delete_ai_agent',
       'regenerate_ai_agent_key',
+      'get_ai_agent_invocation_secret',
+      'rotate_ai_agent_invocation_secret',
+      'test_ai_agent_invocation',
       'run_ai_agent',
     ];
     expect(normalizeToolKeys(management)).toEqual([]);

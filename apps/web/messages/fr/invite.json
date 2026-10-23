@@ -36,7 +36,6 @@
   "switchToRegister": "En créer un",
   "existingAccountNotice": "Un compte existe déjà pour cette adresse. Connectez-vous avec votre mot de passe.",
   "passwordsDoNotMatch": "Les mots de passe ne correspondent pas.",
-  "genericError": "Une erreur est survenue. Veuillez réessayer.",
   "registerFailed": "Impossible de créer votre compte.",
   "signInFailed": "Impossible de vous connecter."
 }

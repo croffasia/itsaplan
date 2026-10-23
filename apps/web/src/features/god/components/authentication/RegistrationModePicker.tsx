@@ -6,16 +6,20 @@ import { cn } from '@/lib/utils';
 const MODES: RegistrationMode[] = ['open', 'invite', 'closed'];
 
 // Picks how the instance handles registration. One choice of three, each with a
-// sentence explaining what it means for someone opening the sign-up page. Renders bare
+// sentence explaining what it means for someone who has no account yet. Renders bare
 // rows — the caller wraps them in a SettingsCard.
 export default function RegistrationModePicker({
   value,
   onChange,
   disabled,
+  passwordless,
 }: {
   value: RegistrationMode;
   onChange: (value: RegistrationMode) => void;
   disabled?: boolean;
+  // With the password form off, accounts are only created through the provider, which
+  // the sign-up-form wording does not describe.
+  passwordless?: boolean;
 }) {
   const t = useTranslations('god.authentication.modes');
 
@@ -50,7 +54,7 @@ export default function RegistrationModePicker({
             <span className="space-y-0.5">
               <span className="block text-sm font-medium">{t(`${mode}.label`)}</span>
               <span className="block text-xs text-muted-foreground">
-                {t(`${mode}.description`)}
+                {t(`${mode}.${passwordless ? 'descriptionPasswordless' : 'description'}`)}
               </span>
             </span>
           </button>

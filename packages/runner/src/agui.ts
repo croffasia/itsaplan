@@ -58,6 +58,11 @@ export class AnswerStream {
   // that text, and emitting both would say everything twice.
   private sawPartialText = false;
   private sawAnyText = false;
+  // The text since the last tool call, and the last such stretch that held any. A run
+  // reports the stretch the agent ended on as its output: what it wrote before a tool
+  // call is narration on the way to it.
+  private segment = '';
+  private lastSegment = '';
   // The flush in flight, so the next one waits for it instead of racing it.
   private sending: Promise<void> = Promise.resolve();
   private readonly usage: UsageReader;
@@ -87,6 +92,10 @@ export class AnswerStream {
   // Null for a format that reports no session, and for a run that printed nothing.
   startedSession(): string | null {
     return this.sessionId;
+  }
+
+  answer(): string {
+    return (this.segment.trim() ? this.segment : this.lastSegment).trim();
   }
 
   // The size of the conversation's context after this answer, as the reader saw it.
@@ -146,6 +155,7 @@ export class AnswerStream {
     if (!text) return;
     this.sawAnyText = true;
     this.text += text;
+    this.segment += text;
     if (this.text.length >= FLUSH_CHARS) this.drainText();
   }
 
@@ -329,14 +339,42 @@ export class AnswerStream {
       return;
     }
     const item = message.item;
-    if (message.type !== 'item.completed' || !item) return;
-    if (item.type === 'agent_message' && item.text) {
+    if (!item) return;
+    if (message.type === 'item.completed' && item.type === 'agent_message' && item.text) {
       this.appendText(item.text);
       return;
     }
-    if (item.type === 'command_execution' && item.id) {
-      this.pushToolCall(item.id, 'shell', item.command ?? '');
-      this.pushToolResult(item.id, item.aggregated_output ?? '');
+    if (
+      !item.id ||
+      !['command_execution', 'mcp_tool_call', 'file_change', 'web_search'].includes(item.type ?? '')
+    )
+      return;
+    if (!['item.started', 'item.completed'].includes(message.type ?? '')) return;
+    if (!this.openToolCalls.has(item.id)) {
+      this.openToolCalls.add(item.id);
+      const name = item.type === 'command_execution' ? 'shell' : (item.tool ?? item.type ?? 'tool');
+      const args =
+        item.command ?? JSON.stringify(item.arguments ?? item.changes ?? { query: item.query });
+      this.pushToolCall(item.id, name, args);
+    }
+    if (message.type === 'item.completed' && !this.closedToolCalls.has(item.id)) {
+      this.closedToolCalls.add(item.id);
+      let result = item.aggregated_output;
+      if (
+        result == null ||
+        item.status === 'failed' ||
+        (item.exit_code != null && item.exit_code !== 0)
+      ) {
+        result = JSON.stringify({
+          status: item.status,
+          exitCode: item.exit_code,
+          output: item.aggregated_output,
+          result: item.result,
+          error: item.error,
+          changes: item.changes,
+        });
+      }
+      this.pushToolResult(item.id, result);
     }
   }
 
@@ -419,6 +457,7 @@ export class AnswerStream {
   // it and the words said after it.
   private pushToolCall(toolCallId: string, toolCallName: string, args: string): void {
     this.drainText();
+    this.closeSegment();
     this.queued.push(
       { type: 'TOOL_CALL_START', toolCallId, toolCallName, parentMessageId: this.messageId },
       { type: 'TOOL_CALL_ARGS', toolCallId, delta: tail(args, TOOL_TEXT_LIMIT) },
@@ -426,8 +465,14 @@ export class AnswerStream {
     );
   }
 
+  private closeSegment(): void {
+    if (this.segment.trim()) this.lastSegment = this.segment;
+    this.segment = '';
+  }
+
   private pushToolResult(toolCallId: string, content: string): void {
     this.drainText();
+    this.closeSegment();
     this.queued.push({
       type: 'TOOL_CALL_RESULT',
       messageId: this.messageId,
@@ -630,6 +675,14 @@ interface CodexLine {
     text?: string;
     command?: string;
     aggregated_output?: string;
+    exit_code?: number;
+    status?: string;
+    tool?: string;
+    arguments?: unknown;
+    result?: unknown;
+    error?: unknown;
+    changes?: unknown;
+    query?: string;
   };
 }
 

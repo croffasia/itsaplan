@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { type Embeddable } from '@/components/common/editor/attachmentEmbed';
+import { isSvg, type Embeddable } from '@/components/common/editor/attachmentEmbed';
 import { useTranslations } from 'next-intl';
 
 // Nothing here may take focus: blurring the editor saves the description, and the
@@ -48,6 +48,7 @@ export default function EditorImagePicker({
                   fill
                   // A grid cell is at most a third of the dialog's 32rem.
                   sizes="176px"
+                  unoptimized={isSvg(a)}
                   className="object-cover"
                 />
               </button>

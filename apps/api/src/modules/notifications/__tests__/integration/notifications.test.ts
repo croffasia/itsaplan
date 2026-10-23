@@ -89,6 +89,54 @@ describe('notifications', () => {
     expect(remaining.every((item) => item.readAt != null)).toBe(true);
   });
 
+  it('completed deletes unread and read notifications, and leaves active issues alone', async () => {
+    const { owner, columnId, doneColumnId } = await setup();
+    const member = await addMember(owner);
+    const active = (await createIssue(owner.api, columnId, { assigneeUserId: member.userId }))
+      .data!;
+    const completed = (
+      await createIssue(owner.api, doneColumnId, { assigneeUserId: member.userId })
+    ).data!;
+    await owner.api.issues({ issueId: completed.id }).comments.post({ body: 'Done' } as never);
+
+    const before = (await member.api.notifications.get({ query: {} })).data!.items;
+    expect(before).toHaveLength(3);
+    expect(
+      before
+        .filter((item) => item.issueId === completed.id)
+        .map((item) => item.type)
+        .sort(),
+    ).toEqual(['assigned', 'commented']);
+    expect(before.find((item) => item.issueId === active.id)!.type).toBe('assigned');
+    expect(before.every((item) => item.readAt == null)).toBe(true);
+    await member.api.notifications['read-all'].post({ types: ['commented'] });
+
+    const assigned = await member.api.notifications.delete(undefined, {
+      query: {
+        scope: 'completed',
+        types: 'assigned',
+        includeRead: 'false',
+        includeSnoozed: 'false',
+      },
+    });
+    expect(assigned.data!.count).toBe(1);
+    const afterAssigned = (await member.api.notifications.get({ query: {} })).data!.items;
+    expect(afterAssigned.map((item) => item.issueId).sort((a, b) => a - b)).toEqual(
+      [active.id, completed.id].sort((a, b) => a - b),
+    );
+    expect(afterAssigned.find((item) => item.issueId === completed.id)!.readAt).not.toBeNull();
+    expect(afterAssigned.find((item) => item.issueId === active.id)!.readAt).toBeNull();
+
+    const all = await member.api.notifications.delete(undefined, {
+      query: { scope: 'completed', includeRead: 'false', includeSnoozed: 'false' },
+    });
+    expect(all.data!.count).toBe(1);
+    const remaining = (await member.api.notifications.get({ query: {} })).data!.items;
+    expect(remaining).toHaveLength(1);
+    expect(remaining[0].issueId).toBe(active.id);
+    expect(remaining[0].readAt).toBeNull();
+  });
+
   it('bulk actions respect actor and snooze filters', async () => {
     const { owner, columnId } = await setup();
     const member = await addMember(owner);

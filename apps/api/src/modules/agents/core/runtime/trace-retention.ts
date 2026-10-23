@@ -1,17 +1,9 @@
-import { db, team } from '@repo/db';
+import { db, team, agentRun, agentRunTrace } from '@repo/db';
 import { sql, type SQL } from 'drizzle-orm';
 import { getAgentSettings } from '#modules/settings/service';
 import { spansTableExists } from './store';
 
-// The sweep that drops old run traces, run by the api's background loop. The window is
-// the instance setting; 0 days keeps every trace.
-//
-// A window applies to a run, not to each of its spans: the sweep finds the root spans
-// past it and deletes every span of their traces, so a trace is never left half removed.
-
-// Traces deleted per statement, which bounds how long one delete holds its locks.
 const BATCH = 200;
-// Batches one sweep runs per condition before it leaves the rest to the next one.
 const MAX_BATCHES = 50;
 
 async function deleteBatch(where: SQL): Promise<number> {
@@ -40,12 +32,28 @@ async function deleteUntilDone(where: SQL): Promise<number> {
 // other, so a value that is not a number is left for the orphan sweep rather than cast.
 const traceTeamId = sql`(CASE WHEN metadata->>'teamId' ~ '^[0-9]+$' THEN (metadata->>'teamId')::int END)`;
 
-// Deletes every trace past the window and every trace whose team is gone. Returns how
-// many spans it removed.
+// Zero days keeps all traces. Pending external runs are never pruned.
 export async function pruneAgentTraces(): Promise<number> {
-  if (!(await spansTableExists())) return 0;
   const { traceRetentionDays } = await getAgentSettings();
   let deleted = 0;
+  if (traceRetentionDays > 0) {
+    for (let batch = 0; batch < MAX_BATCHES; batch++) {
+      const removed = await db.execute(sql`
+        DELETE FROM ${agentRunTrace}
+        WHERE (run_id, attempt) IN (
+          SELECT t.run_id, t.attempt FROM ${agentRunTrace} t
+          INNER JOIN ${agentRun} r ON r.id = t.run_id
+          WHERE r.status <> 'pending'
+            AND coalesce(r.finished_at, r.created_at) < now() - make_interval(days => ${traceRetentionDays})
+          LIMIT ${BATCH}
+        )
+      `);
+      const count = (removed as unknown as { count?: number }).count ?? 0;
+      deleted += count;
+      if (count === 0) break;
+    }
+  }
+  if (!(await spansTableExists())) return deleted;
   if (traceRetentionDays > 0) {
     deleted += await deleteUntilDone(
       sql`"startedAtZ" < now() - make_interval(days => ${traceRetentionDays})`,

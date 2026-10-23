@@ -198,7 +198,8 @@
     "copiedLink": "복사됨",
     "editLink": "링크 편집",
     "retryPreview": "다시 시도",
-    "copyLinkFailed": "링크를 복사할 수 없습니다. 위의 URL을 직접 선택하여 복사해 주세요."
+    "copyLinkFailed": "링크를 복사할 수 없습니다. 위의 URL을 직접 선택하여 복사해 주세요.",
+    "todoList": "할 일 목록"
   },
   "chart": {
     "download": "차트 저장",

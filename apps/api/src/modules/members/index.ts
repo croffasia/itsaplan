@@ -4,7 +4,12 @@ import { paginate } from '#shared/pagination';
 import { noContent } from '#shared/http';
 import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
-import { assertProjectAdmin, requireUser, type AuthUser } from '#shared/access';
+import {
+  assertProjectAdmin,
+  assertGrantablePermissions,
+  requireUser,
+  type AuthUser,
+} from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { getDefaultRoleId, getRole } from '#modules/roles/service';
@@ -127,6 +132,7 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
         if (body.roleId != null) {
           const role = await getRole(project.teamId, body.roleId);
           if (!role) throw new HttpError(400, "roleId does not belong to this project's team");
+          await assertGrantablePermissions(project, user, role.permissions);
           roleId = role.id;
         } else {
           roleId = await getDefaultRoleId(project.teamId);
@@ -169,6 +175,9 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
       await assertNotProvisioned(project.id, params.userId);
       await assertMayGrantOwner(project, body.role, user);
       await assertAgentNotOwner(params.userId, body.role);
+      // Changing an owner's role (demoting them) is owner business: the member
+      // permission that edits roles must not let a non-owner unseat an owner.
+      if (target === 'owner') await assertProjectAdmin(project, user);
 
       if (body.role === 'owner') {
         await setMembership(project.id, params.userId, 'owner', null);
@@ -179,6 +188,7 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
       if (roleId != null) {
         const role = await getRole(project.teamId, roleId);
         if (!role) throw new HttpError(400, "roleId does not belong to this project's team");
+        await assertGrantablePermissions(project, user, role.permissions);
       }
       // Demoting an owner to a member must keep at least one owner on the project.
       if (target === 'owner' && (await countOwners(project.id)) === 1) {
@@ -229,10 +239,13 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
 
   .delete(
     '/projects/:projectKey/members/:userId',
-    async ({ project, params }) => {
+    async ({ project, params, user }) => {
       const target = await getMembership(project.id, params.userId);
       if (!target) throw new HttpError(404, 'Member not found');
       await assertNotProvisioned(project.id, params.userId);
+      // Removing an owner is owner business (leaving yourself still works: an owner
+      // passes this check). A non-owner cannot expel an owner.
+      if (target === 'owner') await assertProjectAdmin(project, user);
       if (target === 'owner' && (await countOwners(project.id)) === 1) {
         throw new HttpError(400, 'A project must have at least one owner');
       }

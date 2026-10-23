@@ -451,21 +451,23 @@ export async function deleteNotification(userId: string, id: number): Promise<bo
   return rows.length > 0;
 }
 
-export type DeleteScope = 'all' | 'read' | 'read-completed';
+export type DeleteScope = 'all' | 'read' | 'read-completed' | 'completed';
 
-// Bulk-deletes matching notifications: all, read, or read on completed/canceled issues.
-// Returns how many were deleted.
+// Bulk-deletes matching notifications: all, read, read on completed/canceled issues,
+// or all on completed/canceled issues. Returns how many were deleted.
 export async function deleteNotifications(
   userId: string,
   scope: DeleteScope,
   projectId?: number,
   filters: NotificationFilters = { includeSnoozed: true },
 ): Promise<number> {
-  const conds = notificationConditions(userId, { ...filters, projectId });
+  // Completed deletes read and unread by design, so the inbox's show-read
+  // toggle must not narrow it.
+  const bulkFilters = scope === 'completed' ? { ...filters, includeRead: true } : filters;
+  const conds = notificationConditions(userId, { ...bulkFilters, projectId });
   if (scope === 'read' || scope === 'read-completed')
     conds.push(sql`${notification.readAt} is not null`);
-  if (scope === 'read-completed') {
-    // read notifications whose issue sits in a completed/canceled column.
+  if (scope === 'read-completed' || scope === 'completed') {
     const completedIssues = db
       .select({ id: issue.id })
       .from(issue)

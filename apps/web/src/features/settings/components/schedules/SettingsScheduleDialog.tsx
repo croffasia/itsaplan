@@ -139,7 +139,9 @@ export function SettingsScheduleDialog({
           </SettingsScheduleField>
         </div>
 
-        {selectedAgent?.kind === 'external' && <SettingsScheduleRunnerHint agent={selectedAgent} />}
+        {selectedAgent?.kind === 'external' && !selectedAgent.invocationUrl && (
+          <SettingsScheduleRunnerHint agent={selectedAgent} />
+        )}
 
         {!initial && <SettingsScheduleTypeField value={type} onChange={setType} />}
 

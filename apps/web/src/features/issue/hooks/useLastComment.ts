@@ -11,7 +11,7 @@ export function useLastComment(issueId: number, view: ActivityFeedView): FeedIte
   const flatFeed = useFeedQuery(issueId, view.slice, false);
   const groupedFeed = useGroupedFeedQuery(issueId, view.slice, false);
 
-  if (view.order === 'asc') return undefined;
+  if (view.tab === 'agentRuns' || view.order === 'asc') return undefined;
   const items = view.grouped
     ? (groupedFeed.data?.pages ?? []).flatMap((page) => page.groups.flatMap((g) => g.items))
     : (flatFeed.data?.pages ?? []).flatMap((page) => page.items);

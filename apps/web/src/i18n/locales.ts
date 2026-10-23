@@ -5,6 +5,7 @@ export const LOCALES = [
   'uk',
   'ru',
   'zh-CN',
+  'zh-TW',
   'ar',
   'fa',
   'fr',
@@ -12,6 +13,7 @@ export const LOCALES = [
   'id',
   'es-ES',
   'ko',
+  'tr',
 ] as const;
 
 export type Locale = (typeof LOCALES)[number];
@@ -29,6 +31,7 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   uk: 'Українська',
   ru: 'Русский',
   'zh-CN': '简体中文',
+  'zh-TW': '繁體中文（台灣）',
   ar: 'العربية (المصرية)',
   fa: 'فارسی',
   fr: 'Français',
@@ -36,6 +39,7 @@ export const LOCALE_LABELS: Record<Locale, string> = {
   id: 'Bahasa Indonesia',
   'es-ES': 'Español (España)',
   ko: '한국어',
+  tr: 'Türkçe',
 };
 
 export const LOCALE_FLAGS: Record<Locale, string> = {
@@ -43,6 +47,7 @@ export const LOCALE_FLAGS: Record<Locale, string> = {
   uk: '🇺🇦',
   ru: '🇷🇺',
   'zh-CN': '🇨🇳',
+  'zh-TW': '🇹🇼',
   ar: '🇪🇬',
   fa: '🇮🇷',
   fr: '🇫🇷',
@@ -50,6 +55,7 @@ export const LOCALE_FLAGS: Record<Locale, string> = {
   id: '🇮🇩',
   'es-ES': '🇪🇸',
   ko: '🇰🇷',
+  tr: '🇹🇷',
 };
 
 export function isLocale(value: string | undefined | null): value is Locale {

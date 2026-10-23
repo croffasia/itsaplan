@@ -8,16 +8,14 @@ import CommentComposer, { type ComposerContext } from './CommentComposer';
 import IssueActivityToolbar from './IssueActivityToolbar';
 import IssueFeedList from './IssueFeedList';
 import IssueGroupedFeed from './IssueGroupedFeed';
-
-// The issue's activity log: a comment composer over the entries, which the tabs narrow
-// to comments, the change log or the work log. Grouping by status and the order apply
-// to every tab. Both shapes page 25 at a time.
+import IssueAgentRunsPanel from './IssueAgentRunsPanel';
 
 const EMPTY_TEXT = {
   all: 'noActivity',
   comments: 'noComments',
   history: 'noHistory',
   worklog: 'noWorklog',
+  agentRuns: 'agentRuns.empty',
 } as const satisfies Record<ActivityTab, string>;
 
 export default function IssueActivityFeed({
@@ -26,12 +24,14 @@ export default function IssueActivityFeed({
   columns,
   imageByUserId,
   view,
+  canReadAgentRuns,
 }: {
   issueId: number;
   assignees: Assignee[];
   columns: Column[];
   imageByUserId: Map<string, string | null>;
   view: ActivityFeedView;
+  canReadAgentRuns: boolean;
 }) {
   const tIssue = useTranslations('issue');
   const t = useTranslations('issue.comments');
@@ -45,6 +45,32 @@ export default function IssueActivityFeed({
     authorImage: (user as { image?: string | null } | null)?.image ?? null,
   };
   const emptyText = tIssue(EMPTY_TEXT[view.tab]);
+
+  let content;
+  if (view.tab === 'agentRuns') {
+    content = <IssueAgentRunsPanel issueId={issueId} canRead={canReadAgentRuns} />;
+  } else if (view.grouped) {
+    content = (
+      <IssueGroupedFeed
+        issueId={issueId}
+        slice={view.slice}
+        columns={columns}
+        imageByUserId={imageByUserId}
+        composer={composer}
+        emptyText={emptyText}
+      />
+    );
+  } else {
+    content = (
+      <IssueFeedList
+        issueId={issueId}
+        slice={view.slice}
+        imageByUserId={imageByUserId}
+        composer={composer}
+        emptyText={emptyText}
+      />
+    );
+  }
 
   return (
     <div className="mt-6 border-t pt-5">
@@ -60,27 +86,8 @@ export default function IssueActivityFeed({
           onValueChange={(value) => view.setTab(value as ActivityTab)}
           className="mt-5 gap-3"
         >
-          <IssueActivityToolbar issueId={issueId} view={view} />
-          <TabsContent value={view.tab}>
-            {view.grouped ? (
-              <IssueGroupedFeed
-                issueId={issueId}
-                slice={view.slice}
-                columns={columns}
-                imageByUserId={imageByUserId}
-                composer={composer}
-                emptyText={emptyText}
-              />
-            ) : (
-              <IssueFeedList
-                issueId={issueId}
-                slice={view.slice}
-                imageByUserId={imageByUserId}
-                composer={composer}
-                emptyText={emptyText}
-              />
-            )}
-          </TabsContent>
+          <IssueActivityToolbar issueId={issueId} view={view} canReadAgentRuns={canReadAgentRuns} />
+          <TabsContent value={view.tab}>{content}</TabsContent>
         </Tabs>
       )}
     </div>

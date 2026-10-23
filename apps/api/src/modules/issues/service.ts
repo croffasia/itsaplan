@@ -25,6 +25,7 @@ import {
   inArray,
   isNotNull,
   isNull,
+  lt,
   lte,
   ne,
   notInArray,
@@ -274,7 +275,22 @@ export interface IssueSearchHit {
   dueDate: string | null;
   labelIds: number[];
   archived: boolean;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
 }
+
+// When an issue entered the completed state it is still in, read the way the
+// analytics closings() read it: moves between completed columns are one stretch.
+const completedAt = sql<Date | null>`(
+  SELECT min(s.entered_at) FROM ${issueStatus} s
+   WHERE s.issue_id = ${issue}.id
+     AND s.state_type = 'completed'
+     AND NOT EXISTS (
+           SELECT 1 FROM ${issueStatus} p
+            WHERE p.issue_id = s.issue_id
+              AND p.state_type IS DISTINCT FROM 'completed'
+              AND (p.entered_at, p.id) > (s.entered_at, s.id)))`.mapWith(issueStatus.enteredAt);
 
 // Escapes LIKE metacharacters so the query is matched literally (Postgres LIKE uses
 // '\' as the default escape character).
@@ -291,7 +307,12 @@ function escapeLike(value: string): string {
 // sets it; list defaults to active only).
 export async function searchIssues(
   project: ProjectRow,
-  filters: IssueQuery,
+  filters: IssueQuery & {
+    createdFrom?: Date;
+    createdTo?: Date;
+    updatedFrom?: Date;
+    updatedTo?: Date;
+  },
   opts: { includeArchived?: boolean } = {},
 ): Promise<IssueSearchHit[]> {
   const conds: SQL[] = [eq(issue.projectId, project.id)];
@@ -383,6 +404,10 @@ export async function searchIssues(
   // A null due date never falls in a range, so gte/lte alone exclude it.
   if (filters.dueFrom !== undefined) conds.push(gte(issue.dueDate, filters.dueFrom));
   if (filters.dueTo !== undefined) conds.push(lte(issue.dueDate, filters.dueTo));
+  if (filters.createdFrom) conds.push(gte(issue.createdAt, filters.createdFrom));
+  if (filters.createdTo) conds.push(lt(issue.createdAt, filters.createdTo));
+  if (filters.updatedFrom) conds.push(gte(issue.updatedAt, filters.updatedFrom));
+  if (filters.updatedTo) conds.push(lt(issue.updatedAt, filters.updatedTo));
 
   // Exact number match first (if any), then most recently updated.
   const orderBy =
@@ -408,6 +433,9 @@ export async function searchIssues(
       priority: issue.priority,
       dueDate: issue.dueDate,
       archivedAt: issue.archivedAt,
+      createdAt: issue.createdAt,
+      updatedAt: issue.updatedAt,
+      completedAt,
     })
     .from(issue)
     .where(and(...conds))
@@ -430,6 +458,9 @@ export async function searchIssues(
     dueDate: r.dueDate,
     labelIds: [],
     archived: r.archivedAt !== null,
+    createdAt: iso(r.createdAt),
+    updatedAt: iso(r.updatedAt),
+    completedAt: r.completedAt ? iso(r.completedAt) : null,
   }));
   await attachLabels(hits);
   return hits;

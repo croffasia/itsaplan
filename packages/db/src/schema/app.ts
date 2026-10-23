@@ -534,6 +534,8 @@ export const aiAgent = pgTable(
     // NULL leaves the reasoning effort to the provider's default.
     reasoningEffort: text('reasoning_effort'),
     maxSteps: integer('max_steps'),
+    // NULL gives the run the instance's maximum run time.
+    runTimeoutSec: integer('run_timeout_sec'),
     // Internal-agent run triggers. A mention in a comment enqueues a run when
     // trigger_on_mention is set; being set as an issue's delegate enqueues one when
     // trigger_on_assign is set.
@@ -563,6 +565,16 @@ export const aiAgent = pgTable(
     // Last time a runner claimed work or sent a heartbeat for this agent, which is
     // what the UI shows as its presence. NULL for an agent no runner ever polled.
     lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
+    // Where an external agent receives its work instead of from a runner: each of its
+    // runs and chat answers is POSTed here, and the endpoint reports back through the
+    // routes a runner uses. NULL for an agent a runner drains, and for an internal one.
+    invocationUrl: text('invocation_url'),
+    // The key those requests are signed with, encrypted at rest like the API key above
+    // because every request reads it back. It outlives a cleared URL, so pointing the
+    // agent at a URL again needs no change on the receiving side.
+    invocationSecretCiphertext: text('invocation_secret_ciphertext'),
+    invocationSecretIv: text('invocation_secret_iv'),
+    invocationSecretAuthTag: text('invocation_secret_auth_tag'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -709,6 +721,7 @@ export const agentRun = pgTable(
     inputTokens: integer('input_tokens'),
     outputTokens: integer('output_tokens'),
     startedAt: timestamp('started_at', { withTimezone: true }),
+    executionStartedAt: timestamp('execution_started_at', { withTimezone: true }),
     finishedAt: timestamp('finished_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -726,6 +739,23 @@ export const agentRun = pgTable(
     index('agent_run_schedule_idx').on(t.scheduleId),
     index('agent_run_project_idx').on(t.projectId),
   ],
+);
+
+// A bounded execution transcript for one external runner attempt.
+export const agentRunTrace = pgTable(
+  'agent_run_trace',
+  {
+    runId: integer('run_id')
+      .notNull()
+      .references(() => agentRun.id, { onDelete: 'cascade' }),
+    attempt: integer('attempt').notNull(),
+    sessionId: text('session_id'),
+    events: jsonb('events').notNull().default([]),
+    nextOffset: integer('next_offset').notNull().default(0),
+    truncated: boolean('truncated').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.runId, t.attempt] })],
 );
 
 // A conversation between one member and one external agent. The internal agents'

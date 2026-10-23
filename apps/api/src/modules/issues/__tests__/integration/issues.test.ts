@@ -1302,6 +1302,43 @@ describe('issues', () => {
       expect(res.data!.map((i) => i.id)).toContain(one.id);
     });
 
+    it('returns the dates, with completedAt set once the issue is completed', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const one = (await createIssue(asOwner, columnId, { title: 'Dated' })).data!;
+
+      const before = (await list(asOwner)).data!.find((i) => i.id === one.id)!;
+      expect(before.createdAt).toBeInstanceOf(Date);
+      expect(before.updatedAt).toBeInstanceOf(Date);
+      expect(before.completedAt).toBeNull();
+
+      const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+      const done = view.data!.columns.find((c) => c.stateType === 'completed')!.id;
+      await asOwner.issues({ issueId: one.id }).patch({ columnId: done });
+
+      const after = (await list(asOwner)).data!.find((i) => i.id === one.id)!;
+      expect(after.completedAt).toBeInstanceOf(Date);
+    });
+
+    it('filters by created and updated time', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const one = (await createIssue(asOwner, columnId, { title: 'Timed' })).data!;
+      const past = new Date(Date.now() - 60_000).toISOString();
+      const future = new Date(Date.now() + 60_000).toISOString();
+
+      const ids = async (query: Record<string, string>) =>
+        (await list(asOwner, query)).data!.map((i) => i.id);
+      expect(await ids({ createdFrom: past, createdTo: future })).toContain(one.id);
+      expect(await ids({ createdFrom: future })).not.toContain(one.id);
+      expect(await ids({ updatedFrom: past })).toContain(one.id);
+      expect(await ids({ updatedTo: past })).not.toContain(one.id);
+      expect(await ids({ updatedFrom: '' })).toContain(one.id);
+    });
+
+    it('rejects a time filter that does not parse', async () => {
+      const { asOwner } = await setupProject();
+      expect((await list(asOwner, { updatedFrom: 'last week' })).status).toBe(400);
+    });
+
     it('denies a non-member', async () => {
       const { asOwner, columnId } = await setupProject();
       await createIssue(asOwner, columnId, { title: 'Secret' });

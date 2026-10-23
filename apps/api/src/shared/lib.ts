@@ -23,6 +23,15 @@ export class HttpError extends Error {
 // (Drizzle's default mode for date), so no timezone is ever applied to them.
 export const iso = (value: Date): string => value.toISOString();
 
+// A timestamp from a query string. Empty means not set: a tool-calling model fills
+// optional fields with "".
+export function instantParam(name: string, value: string | undefined): Date | undefined {
+  if (!value) return undefined;
+  const at = new Date(value);
+  if (Number.isNaN(at.getTime())) throw new HttpError(400, `${name} is not a valid ISO timestamp`);
+  return at;
+}
+
 // numeric columns come back as strings; coerce to a JS number.
 export const num = (value: unknown): number => (value == null ? 0 : Number(value));
 

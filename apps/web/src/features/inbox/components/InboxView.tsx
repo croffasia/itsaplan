@@ -76,9 +76,9 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
           }}
           onMarkAllRead={() => markAllRead.mutate(filters)}
           onDeleteRead={() => deleteNotifications.mutate({ scope: 'read', filters })}
-          onDeleteReadCompleted={() =>
-            deleteNotifications.mutate({ scope: 'read-completed', filters })
-          }
+          onDeleteCompleted={async () => {
+            await deleteNotifications.mutateAsync({ scope: 'completed', filters });
+          }}
         />
         <InboxList
           items={items}

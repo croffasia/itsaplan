@@ -10,7 +10,8 @@
   "showSnoozed": "Mostrar pospuestas",
   "markAllRead": "Marcar todas como leídas",
   "deleteAllRead": "Eliminar todas las leídas",
-  "deleteAllReadCompleted": "Eliminar las leídas de tickets completados",
+  "deleteAllCompleted": "Eliminar notificaciones de tickets completados",
+  "deleteAllCompletedDescription": "Esto elimina las notificaciones de tickets completados o cancelados que coinciden con los filtros actuales, incluidas las no leídas. No se puede deshacer.",
   "types": {
     "assigned": "Asignación",
     "mentioned": "Mención",

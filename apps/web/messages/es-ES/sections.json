@@ -26,7 +26,7 @@
     },
     "general": {
       "label": "General",
-      "description": "Espacios de trabajo personales, valores por defecto para los proyectos nuevos y trazas de agentes."
+      "description": "Espacios de trabajo personales, valores por defecto para los proyectos nuevos, y trazas y duración de las ejecuciones de agentes."
     },
     "authentication": {
       "label": "Autenticación",
@@ -113,6 +113,10 @@
     "ai-agents": {
       "label": "Agentes de IA",
       "description": "Agentes de IA que trabajan en este proyecto."
+    },
+    "queue": {
+      "label": "Runner queue",
+      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
     }
   },
   "previews": {

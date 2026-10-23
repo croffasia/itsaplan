@@ -1,0 +1,14 @@
+{
+  "noProjectAccess": "你無權存取此專案。",
+  "projectUnavailable": "此專案不可用。",
+  "noProjects": "暫無專案，請先新建一個專案。",
+  "noTeamsTitle": "還沒有團隊",
+  "noTeamsHint": "建立你的團隊。團隊的專案、成員和代理都在其中。",
+  "noTeamsMemberHint": "請工作區所有者將你新增到團隊中。",
+  "noProjectAccessHint": "請團隊所有者或管理者將你新增到專案中。",
+  "noProjectAccessOwnerHint": "請團隊所有者或管理者將你新增到專案中，或建立你自己的團隊。",
+  "createTeam": "建立團隊",
+  "noProjectsTitle": "暫無專案",
+  "noProjectsHint": "新建第一個專案，然後開始在看板中規劃工作項目。",
+  "createProject": "新建專案"
+}

@@ -5,6 +5,8 @@ import type { RunnerConfig } from './config';
 // only ever hands back that agent's work.
 
 export interface Run {
+  attempts: number;
+  traceEvents?: boolean;
   id: number;
   trigger: 'mention' | 'delegation' | 'field' | 'schedule' | 'manual' | 'status' | 'event';
   prompt: string;
@@ -75,8 +77,8 @@ export class Client {
     return body.run;
   }
 
-  async heartbeat(runId: number): Promise<void> {
-    await this.post(`/agent-runs/${runId}/heartbeat`);
+  async heartbeat(runId: number, attempt?: number): Promise<void> {
+    await this.post(`/agent-runs/${runId}/heartbeat`, attempt == null ? undefined : { attempt });
   }
 
   // `usage` is what the last model call of the run read and wrote. Left out where the
@@ -85,12 +87,27 @@ export class Client {
     runId: number,
     result: {
       status: 'success' | 'failed';
+      attempt?: number;
       output?: string;
       error?: string;
       usage?: ContextUsage | null;
     },
   ): Promise<void> {
     await this.post(`/agent-runs/${runId}/result`, result);
+  }
+
+  async runEvents(
+    run: Run,
+    offset: number,
+    events: AgUiEvent[],
+    sessionId?: string,
+  ): Promise<void> {
+    await this.post(`/agent-runs/${run.id}/events`, {
+      attempt: run.attempts,
+      offset,
+      events,
+      ...(sessionId && { sessionId }),
+    });
   }
 
   async claimChat(): Promise<ChatMessage | null> {

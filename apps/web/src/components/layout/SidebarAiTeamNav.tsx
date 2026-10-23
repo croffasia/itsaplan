@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl';
 import { aiAgentsPath, aiTeamPath } from '@/utils/paths';
 import { AI_AGENTS_SECTION, AI_TEAM_SECTIONS } from '@/utils/settingsSections';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useShellRoute } from '@/hooks/useShellRoute';
 import { useSettingsSectionText } from '@/hooks/useSectionLabels';
 import {
   SidebarGroup,
@@ -18,6 +19,7 @@ export default function SidebarAiTeamNav({ projectKey }: { projectKey: string | 
   const t = useTranslations('nav');
   const sectionText = useSettingsSectionText();
   const pathname = usePathname();
+  const { aiTeamSection } = useShellRoute();
   const { can } = usePermissions();
   const disabled = !projectKey;
 
@@ -36,7 +38,7 @@ export default function SidebarAiTeamNav({ projectKey }: { projectKey: string | 
               href={projectKey ? aiTeamPath(projectKey, s.slug) : '#'}
               icon={s.icon}
               label={sectionText(s.slug).label}
-              active={pathname.endsWith(`/agents/${s.slug}`)}
+              active={aiTeamSection === s.slug}
               disabled={disabled}
             />
           ))}

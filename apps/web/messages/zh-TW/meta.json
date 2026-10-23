@@ -1,0 +1,14 @@
+{
+  "description": "自託管的開源專案管理和工作項目追蹤工具，內建 AI 代理。你可以將工作指派給人員或代理，也可以透過 API、Webhook 和 MCP 進行管理。",
+  "screens": {
+    "signIn": "登入",
+    "signUp": "註冊",
+    "forgotPassword": "忘記密碼",
+    "resetPassword": "重設密碼",
+    "account": "帳號",
+    "settings": "設定",
+    "teamSettings": "團隊設定",
+    "invitation": "邀請",
+    "authorizeApp": "授權應用程式"
+  }
+}

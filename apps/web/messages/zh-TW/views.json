@@ -1,0 +1,15 @@
+{
+  "all": "全部",
+  "newView": "新建檢視",
+  "switchView": "切換檢視",
+  "searchViews": "搜尋檢視…",
+  "noViews": "未找到檢視。",
+  "options": "檢視選項",
+  "share": "共享",
+  "shared": "已共享",
+  "favorite": "新增到收藏",
+  "unfavorite": "從收藏移除",
+  "shareBoard": "共享看板",
+  "newViewHint": "根據目前篩選條件和顯示設定建立檢視",
+  "filter": "篩選"
+}

@@ -68,7 +68,9 @@ describe('email verification', () => {
     expect(res.status).toBe(200);
     expect(((await res.json()) as { token: string | null }).token).toBeNull();
     expect((await authedApi(cookieOf(res)).projects.get()).status).toBe(401);
-    expect((await signIn('new@example.com')).status).toBe(403);
+    const refused = await signIn('new@example.com');
+    expect(refused.status).toBe(403);
+    expect(await refused.json()).toMatchObject({ code: 'EMAIL_NOT_VERIFIED' });
     expect((await api['auth-config'].get()).data).toMatchObject({
       requireEmailVerification: true,
     });
@@ -129,5 +131,47 @@ describe('email verification', () => {
     });
     const res = await signUp('new@example.com');
     expect((await authedApi(cookieOf(res)).projects.get()).status).toBe(200);
+  });
+});
+
+describe('magic link without a mail provider', () => {
+  beforeEach(resetDb);
+
+  it('refuses to turn the magic link on before a provider is configured', async () => {
+    const { god } = await setup();
+
+    const res = await god.api.god['auth-settings'].put({ magicLink: true });
+
+    expect(res.status).toBe(400);
+    expect(res.error!.value).toMatchObject({ error: 'Configure an email provider first' });
+  });
+
+  it('drops the magic link when the mail provider is removed', async () => {
+    const { god } = await setup();
+    await god.api.god['email-settings'].put(smtpProvider);
+    expect((await god.api.god['auth-settings'].put({ magicLink: true })).status).toBe(200);
+
+    const removed = await god.api.god['email-settings'].put({
+      ...smtpProvider,
+      smtp: { ...smtpProvider.smtp, enabled: false },
+    });
+
+    expect(removed.status).toBe(200);
+    const stored = (await god.api.god['auth-settings'].get()).data!;
+    expect(stored).toMatchObject({ magicLink: false });
+    expect((await authRequest('/sign-in/magic-link', { email: 'root@example.com' })).status).toBe(
+      403,
+    );
+    // The god form sends every setting back on save.
+    const saved = await god.api.god['auth-settings'].put({
+      registration: 'closed',
+      requireEmailVerification: stored.requireEmailVerification,
+      magicLink: stored.magicLink,
+      emailPassword: stored.emailPassword,
+      trustProviderEmails: stored.trustProviderEmails,
+      inviteTtlDays: stored.inviteTtlDays,
+      allowedEmailDomains: stored.allowedEmailDomains,
+    });
+    expect(saved.status).toBe(200);
   });
 });

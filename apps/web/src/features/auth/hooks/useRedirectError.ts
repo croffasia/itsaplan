@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { REGISTRATION_REFUSAL_KEYS } from '@/utils/registrationRefusals';
+import { AUTH_REFUSAL_KEYS } from '@/utils/authRefusals';
 
 // Some auth failures reach the sign-in screen as a redirect rather than a rejected
 // promise, and carry their reason in ?error=<code> (plus ?error_description=<text>
@@ -22,14 +22,12 @@ const MESSAGE_KEYS = {
   signup_disabled: 'signupDisabled',
   INVITE_EXPIRED: 'inviteExpired',
   OIDC_DISABLED: 'ssoDisabled',
-  PASSWORD_AUTH_DISABLED: 'passwordDisabled',
-  ACCOUNT_DEACTIVATED: 'accountDeactivated',
   email_not_found: 'emailNotFound',
   // The confirmation link failed. better-auth redirects with these uppercase codes.
   TOKEN_EXPIRED: 'tokenExpired',
   INVALID_TOKEN: 'invalidToken',
   USER_NOT_FOUND: 'userNotFound',
-  ...REGISTRATION_REFUSAL_KEYS,
+  ...AUTH_REFUSAL_KEYS,
   // The client or its return address is unknown: a client can keep a registration the
   // instance has since lost, as an upgrade that drops the old ones does.
   invalid_client: 'oauthClientUnknown',

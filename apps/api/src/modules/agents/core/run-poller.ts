@@ -1,6 +1,6 @@
 import { db, teamWorkspaceId } from '@repo/db';
 import { getProjectTeamId } from '#modules/projects/service';
-import { intEnv } from '#shared/lib';
+import { getAgentSettings } from '#modules/settings/service';
 import { getLimits } from '#shared/limits';
 import { framePrompt, peopleContext, runModePreamble } from './prompt/framing';
 import { agentRunStarted, recordAgentRunFinished } from './run-activity';
@@ -12,6 +12,7 @@ import {
   countRunsAhead,
   deferRun,
   markRunFailed,
+  markRunExecuting,
   markRunSuccess,
   runRetryDelayMs,
   scheduleRunRetry,
@@ -61,9 +62,23 @@ async function processRun(run: ClaimedRun): Promise<void> {
   // The issue's timeline entries are written here, where the agent's work actually
   // starts and ends. A failure that will be retried is not the end of the run, so only
   // the last attempt logs one.
-  const timeoutMs = runTimeoutMs(maxRunSeconds);
+  const configuredTimeoutMs = runTimeoutMs(
+    run.agentRunTimeoutSec,
+    (await getAgentSettings()).maxRunSeconds,
+    maxRunSeconds,
+  );
+  if (run.executionDeadline <= performance.now()) return;
   try {
     await agentRunStarted(run);
+    if (!(await markRunExecuting(run.id, run.attempts))) return;
+    const timeoutMs = Math.floor(
+      Math.min(configuredTimeoutMs, run.executionDeadline - performance.now()),
+    );
+    if (timeoutMs <= 0) {
+      await recordAgentRunFinished(run, 'failed');
+      await markRunFailed(run.id, 'Claim execution budget exhausted');
+      return;
+    }
     const result = await runAgent(run.agentId, run.projectId, framePrompt(run), {
       callerUserId: run.agentUserId,
       threadId: runThreadId(run),
@@ -78,7 +93,7 @@ async function processRun(run: ClaimedRun): Promise<void> {
       // Mastra resolves generate() on abort, so the partial text would read as a success.
       // Not retried: a run that hits the time limit will hit it again.
       await recordAgentRunFinished(run, 'failed');
-      await markRunFailed(run.id, `Timed out after ${Math.round(timeoutMs / 1000)}s`);
+      await markRunFailed(run.id, `Timed out after ${Math.round(timeoutMs / 1000)}s`, result.text);
       return;
     }
     if (result.stepLimit) {
@@ -99,10 +114,15 @@ async function processRun(run: ClaimedRun): Promise<void> {
   }
 }
 
-// The wall time a run gets: the workspace's ceiling where it has one, and a cap of its own
-// either way. Without it a run that never returns holds its slot until the claim lease
-// expires and is then started again, having recorded nothing.
-function runTimeoutMs(maxRunSeconds: number): number {
-  const cap = intEnv('AGENT_RUN_TIMEOUT_MS', 240_000);
-  return maxRunSeconds > 0 ? Math.min(maxRunSeconds * 1000, cap) : cap;
+// The wall time a run gets: the agent's own limit or else the instance's maximum, never
+// above that maximum or the workspace's ceiling where it has one. Without a limit a run
+// that never returns holds its slot until the claim lease expires and is then started
+// again, having recorded nothing.
+function runTimeoutMs(
+  agentSeconds: number | null,
+  instanceSeconds: number,
+  workspaceSeconds: number,
+): number {
+  const seconds = Math.min(agentSeconds ?? instanceSeconds, instanceSeconds);
+  return (workspaceSeconds > 0 ? Math.min(seconds, workspaceSeconds) : seconds) * 1000;
 }

@@ -1,7 +1,9 @@
 import { t } from 'elysia';
+import { agentExecutionState } from '#modules/agents/model';
 import { ActivityPayloadResponse } from '#shared/activity';
 import { DevelopmentLinkResponse } from '#modules/git/model';
-import { isoDate } from '#shared/schemas';
+import { AgentTraceDetailResponse } from '#modules/agents/core/model';
+import { instantQuery, isoDate } from '#shared/schemas';
 
 // Ceiling of every markdown text written on an issue: the description, a comment
 // and a custom field value. Each of them is scanned for mentions.
@@ -328,6 +330,9 @@ export const IssueSearchHitResponse = t.Object({
   dueDate: t.Nullable(t.String()),
   labelIds: t.Array(t.Number()),
   archived: t.Boolean(),
+  createdAt: t.String(),
+  updatedAt: t.String(),
+  completedAt: t.Nullable(t.String()),
 });
 
 // FeedItemRow from activity.ts: one timeline entry (comment or change-log).
@@ -541,6 +546,10 @@ export const listIssuesQuery = t.Object({
   labelIds: t.Optional(t.String({ description: 'CSV of label ids; the issue must carry all.' })),
   dueFrom: t.Optional(t.String({ description: "Inclusive earliest due date 'YYYY-MM-DD'." })),
   dueTo: t.Optional(t.String({ description: "Inclusive latest due date 'YYYY-MM-DD'." })),
+  createdFrom: instantQuery('Inclusive earliest creation time.'),
+  createdTo: instantQuery('Exclusive latest creation time.'),
+  updatedFrom: instantQuery('Inclusive earliest last-update time.'),
+  updatedTo: instantQuery('Exclusive latest last-update time.'),
   includeArchived: t.Optional(
     t.String({ description: "'true' to include archived issues. Default false." }),
   ),
@@ -690,3 +699,48 @@ export const BulkDeletedResponse = t.Object({ deleted: t.Number() });
 export const BoardResponse = t.Object({ issues: t.Array(BoardIssueResponse) });
 
 export const WatchStateResponse = t.Object({ ok: t.Boolean() });
+
+export const issueAgentRunsQuery = t.Object({
+  before: t.Optional(t.Numeric({ minimum: 1, multipleOf: 1 })),
+  limit: t.Optional(t.Numeric({ minimum: 1, maximum: 50, multipleOf: 1, default: 25 })),
+});
+
+export const issueAgentRunParams = t.Object({
+  issueId: t.Numeric(),
+  runId: t.Numeric(),
+});
+
+export const IssueAgentRunPageResponse = t.Object({
+  items: t.Array(
+    t.Object({
+      id: t.Number(),
+      agentId: t.Number(),
+      username: t.String(),
+      kind: t.String(),
+      status: t.String(),
+      executionState: agentExecutionState,
+      trigger: t.String(),
+      prompt: t.String(),
+      output: t.Nullable(t.String()),
+      attempts: t.Number(),
+      lastError: t.Nullable(t.String()),
+      contextTokens: t.Optional(t.Number()),
+      createdAt: t.String(),
+      startedAt: t.Nullable(t.String()),
+      finishedAt: t.Nullable(t.String()),
+      nextAttemptAt: t.String(),
+    }),
+  ),
+  nextCursor: t.Nullable(t.Number()),
+});
+
+export const issueAgentTraceQuery = t.Object({
+  traceId: t.Optional(t.String({ minLength: 1, maxLength: 128 })),
+});
+
+export const IssueAgentRunTraceResponse = t.Nullable(
+  t.Object({
+    ...AgentTraceDetailResponse.properties,
+    previousTraceId: t.Nullable(t.String()),
+  }),
+);

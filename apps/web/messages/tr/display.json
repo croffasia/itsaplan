@@ -1,0 +1,95 @@
+{
+  "title": "Görünüm",
+  "layouts": {
+    "kanban": "Kanban",
+    "table": "Tablo",
+    "timeline": "Zaman Çizelgesi",
+    "calendar": "Takvim"
+  },
+  "sortFields": {
+    "manual": "Manuel",
+    "title": "Başlık",
+    "identifier": "İş numarası",
+    "status": "Durum",
+    "priority": "Öncelik",
+    "assignee": "Sorumlu",
+    "type": "Tür",
+    "startDate": "Başlangıç tarihi",
+    "dueDate": "Bitiş tarihi",
+    "created": "Oluşturulma",
+    "updated": "Güncellenme"
+  },
+  "groupFields": {
+    "none": "Gruplama yok",
+    "status": "Durum",
+    "assignee": "Sorumlu",
+    "delegate": "Temsilci",
+    "priority": "Öncelik",
+    "type": "Tür",
+    "initiative": "Girişim",
+    "cycle": "Döngü"
+  },
+  "properties": {
+    "id": "Kimlik",
+    "status": "Durum",
+    "priority": "Öncelik",
+    "type": "Tür",
+    "assignee": "Sorumlu",
+    "delegate": "Temsilci",
+    "initiative": "Girişim",
+    "cycle": "Döngü",
+    "labels": "Etiketler",
+    "estimatePoints": "Hikâye puanı",
+    "estimateTime": "Süre tahmini",
+    "startDate": "Başlangıç tarihi",
+    "dueDate": "Bitiş tarihi",
+    "created": "Oluşturulma",
+    "updated": "Güncellenme",
+    "statusAge": "Durumda geçen süre"
+  },
+  "stateTypes": {
+    "backlog": "İş Havuzu (Backlog)",
+    "unstarted": "Başlanmadı",
+    "started": "Başlandı",
+    "completed": "Tamamlandı",
+    "canceled": "İptal edildi"
+  },
+  "timelineScales": {
+    "week": "Hafta",
+    "month": "Ay",
+    "quarter": "Çeyrek"
+  },
+  "weekStart": {
+    "0": "Pazar",
+    "1": "Pazartesi"
+  },
+  "dateFields": {
+    "dueDate": "Bitiş tarihi",
+    "startDate": "Başlangıç tarihi"
+  },
+  "rows": {
+    "columns": "Sütunlar",
+    "grouping": "Gruplama",
+    "swimlanes": "Kulvarlar (Swimlanes)",
+    "subGrouping": "Alt gruplama",
+    "ordering": "Sıralama",
+    "ascending": "Artan",
+    "descending": "Azalan",
+    "showEmptyColumns": "Boş sütunları göster",
+    "showEmptyGroups": "Boş grupları göster",
+    "showLinks": "Bağlantıları göster",
+    "separateSubtaskCards": "Alt işleri ayrı kartlar olarak göster",
+    "separateSubtaskRows": "Alt işleri ayrı satırlar olarak göster",
+    "startSubtasksCollapsed": "Alt işleri daraltılmış başlat",
+    "showNestedSubtasks": "İç içe geçmiş alt işleri göster",
+    "nestedSubtasks": "İç içe alt işler",
+    "displayProperties": "Görüntüleme özellikleri",
+    "placeBy": "Konumlandırma kriteri",
+    "startWeekOn": "Haftanın başlangıç günü",
+    "startCollapsed": "Grupları daraltılmış başlat",
+    "scale": "Ölçek",
+    "addCustomField": "Özel alan ekle",
+    "viewIcon": "Görünüm simgesi"
+  },
+  "layoutCommand": "{layout} düzeni"
+}

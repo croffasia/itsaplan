@@ -135,6 +135,9 @@ services:
       - APP_URL=${SERVICE_URL_WEB}
       # To override the cookie parent domain (multi-label TLDs / deep subdomains),
       # add a COOKIE_DOMAIN env in Coolify — the code reads it if present.
+      # Where the client IP for the rate limit is read; empty reads X-Forwarded-For.
+      - CLIENT_IP_HEADER=${CLIENT_IP_HEADER:-}
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-}
       # Public origin for incoming Git webhooks when API_URL is private; empty uses API_URL.
       - GIT_WEBHOOK_BASE_URL=${GIT_WEBHOOK_BASE_URL:-}
       - S3_ENDPOINT=http://minio:9000

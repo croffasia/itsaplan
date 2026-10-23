@@ -13,14 +13,14 @@ If It's a Plan looks useful to you, star the repo ⭐ — it helps other people 
 <a href="docs/coolify.md"><img src="assets/coolify-button.svg" alt="Deploy on Coolify" height="40" /></a>
 <a href="docs/self-hosting.md"><img src="assets/docker-button.svg" alt="Self-host with Docker" height="40" /></a>
 
-[Website](https://itsaplan.dev) · [Discussions](https://github.com/croffasia/itsaplan/discussions) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Leave a review](https://www.producthunt.com/products/it-s-a-plan/reviews/new?utm_source=badge-product_review&utm_medium=badge)
+[Website](https://itsaplan.dev) · [Pro](https://itsaplan.dev/pro) · [Discussions](https://github.com/croffasia/itsaplan/discussions) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Leave a review](https://www.producthunt.com/products/it-s-a-plan/reviews/new?utm_source=badge-product_review&utm_medium=badge)
 
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![CI](https://github.com/croffasia/itsaplan/actions/workflows/ci.yml/badge.svg)](https://github.com/croffasia/itsaplan/actions/workflows/ci.yml)
 [![Stars](https://img.shields.io/github/stars/croffasia/itsaplan?style=flat)](https://github.com/croffasia/itsaplan/stargazers)
 [![Last commit](https://img.shields.io/github/last-commit/croffasia/itsaplan)](https://github.com/croffasia/itsaplan/commits/main)
 
-<a href="https://trendshift.io/repositories/95056?utm_source=repository-badge&utm_medium=badge&utm_campaign=badge-repository-95056" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/95056" alt="#15 Repository of the Day on GitHub Trending" width="250" height="55"/></a>
+<a href="https://trendshift.io/repositories/95056?utm_source=repository-badge&utm_medium=badge&utm_campaign=badge-repository-95056" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/95056" alt="#8 Repository of the Day on GitHub Trending" width="250" height="55"/></a>
 <a href="https://trendshift.io/repositories/95056?utm_source=trendshift-badge&utm_medium=badge&utm_campaign=badge-trendshift-95056" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/95056/daily?language=TypeScript" alt="#13 TypeScript Repository of the Day on Trendshift" width="250" height="55"/></a>
 
 <img src="assets/screenshots/tour.gif" alt="Board, AI chat, initiatives, timeline, calendar, and agent schedules" width="100%" />
@@ -70,7 +70,7 @@ release.
 | --------- | ------------------------------------------------------------------------------------- |
 | Product management | Kanban, table, timeline, and calendar views · cycles · custom fields · dashboards · docs · notes boards |
 | AI agents | Agents as project members · internal on any model, or external on your coding CLI · runs start on an @mention, an assignment, or a schedule |
-| Platform | REST API with OpenAPI · MCP server · webhooks · pull requests from 5 forges · passkeys and Google sign-in · 11 languages |
+| Platform | REST API with OpenAPI · MCP server · webhooks · pull requests from 5 forges · passkeys and Google sign-in · 12 languages |
 
 <details>
 <summary><b>Product management</b> — the full list</summary>
@@ -105,7 +105,7 @@ release.
 - Or control the run queue through the API and do the work in your own implementation
 - A run starts on an @mention in a comment, on an assignment, or on a schedule
 - Tools for the services outside the tracker: Notion, Telegram, Threads, Instagram, Jina,
-  Firecrawl, and Gitea
+  Firecrawl, Gitea, and GitHub
 - Built-in chat with each agent, with its own conversation history
 - Chat with an external agent too. The runner answers from your machine, streams the reply
   and its tool calls, and resumes the same coding agent session on each message
@@ -122,10 +122,35 @@ release.
 - Outgoing webhooks: subscribe to events, signed payloads, and retries with a delivery log
 - Sign in with an email or a username and a password, a passkey, or Google
 - Notifications by email (SMTP or Resend) and Telegram, with per-member preferences
-- Interface in English, Ukrainian, Russian, Simplified Chinese, Arabic, Persian, French, Portuguese (Brazil), Bahasa Indonesia, Spanish (Spain), and Korean
+- Interface in English, Ukrainian, Russian, Simplified Chinese, Traditional Chinese (Taiwan), Arabic, Persian, French, Portuguese (Brazil), Bahasa Indonesia, Spanish (Spain), Korean, and Turkish
 - Instance administration: storage limits, mail transport, and instance-wide settings
 
 </details>
+
+## Pro edition
+
+Buying Pro supports It's a Plan. The license pays for the work on Community, the free edition:
+new features, fixes, and releases for everyone who self-hosts. In return, your instance gets the
+Pro features below, with full control over AI agents and what they spend. One license covers one
+instance, with no limit on seats or workspaces.
+
+| | Community | Pro |
+| --- | --- | --- |
+| Workspaces | One per person | Any number |
+| SSO and SCIM | One OIDC provider and one SCIM for the instance | SAML or OIDC and SCIM per workspace |
+| Audit log | — | Every action, with changes before and after |
+| Workspace dashboard | — | Issues, agent runs, schedules, and logged time for every team |
+| Agent schedules | Timer or state change | Plus issue events, filters, and run limits |
+| Agent analytics | Tokens and cost | Plus cost by person and trigger, run time, and tool calls |
+| AI budgets | — | Limits for the workspace, teams, projects, and each person |
+
+Deploy Pro with [`docker-compose.pro.yml`](docs/self-hosting.md),
+[`docker-compose.coolify-pro.yml`](docs/coolify.md), or [`values-pro.yaml`](docs/helm.md), and
+enter the license key in god mode, under **License**. Without a key, or after the license ends,
+the Pro images run as Community. Both editions use the same database, so an instance moves
+between them with its data.
+
+**[Pricing and license terms →](https://itsaplan.dev/pro)**
 
 ## Getting started
 
@@ -160,6 +185,7 @@ needed. Run it again later to restart the instance; the data stays.
 - [Deploy on Kubernetes](docs/helm.md) — Helm chart for any Kubernetes cluster
 - [Local development](docs/development.md) — running the apps on the host, and the tests
 - [Coding agent setup](docs/runner.md) — the config for each CLI that `@itsaplan/runner` runs
+- [Agent endpoint](docs/agent-endpoint.md) — the instance sends an external agent's tasks to a URL that you run, such as an AWS Lambda function
 
 ## Built with
 

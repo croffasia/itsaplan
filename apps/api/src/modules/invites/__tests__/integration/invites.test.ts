@@ -361,7 +361,51 @@ describe('invites', () => {
 
       const res = await owner.api.projects({ projectKey: 'MKT' }).invites.get();
       expect(res.status).toBe(200);
-      expect(res.data?.map((i) => i.email)).toEqual(['b@example.com', 'a@example.com']);
+      expect(res.data?.map((i) => [i.email, i.token !== null])).toEqual([
+        ['b@example.com', true],
+        ['a@example.com', true],
+      ]);
+    });
+
+    it('hides the tokens from a member who may only read the invites', async () => {
+      const owner = await setupOwner();
+      const teamId = await ownTeamId(owner.api);
+      const reader = await addTeamMember(owner, teamId, 'member');
+      await owner.api
+        .projects({ projectKey: 'MKT' })
+        .members.post({ userId: reader.user.userId, role: 'member' });
+      await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: 'cfo@example.com', role: 'owner' });
+
+      const res = await reader.api.projects({ projectKey: 'MKT' }).invites.get();
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject([{ email: 'cfo@example.com', token: null }]);
+    });
+
+    it('hides the token of an owner invite from a member who may not grant ownership', async () => {
+      const owner = await setupOwner();
+      const teamId = await ownTeamId(owner.api);
+      const inviter = await addTeamMember(owner, teamId, 'member');
+      const role = await createRole(owner.api, 'MKT', {
+        name: 'Recruiter',
+        permissions: { members_invite: { create: true, read: true } },
+      });
+      await owner.api
+        .projects({ projectKey: 'MKT' })
+        .members.post({ userId: inviter.user.userId, role: 'member', roleId: role.data!.id });
+      await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: 'a@example.com', role: 'member' });
+      await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: 'b@example.com', role: 'owner' });
+
+      const res = await inviter.api.projects({ projectKey: 'MKT' }).invites.get();
+      expect(res.data?.map((i) => [i.email, i.token !== null])).toEqual([
+        ['b@example.com', false],
+        ['a@example.com', true],
+      ]);
     });
 
     it('denies a non-member with 403', async () => {
@@ -826,6 +870,25 @@ describe('invites', () => {
       expect(res.data?.map((i) => [i.email, i.projectKey])).toEqual([
         ['in-team@example.com', null],
         ['in-project@example.com', 'MKT'],
+      ]);
+    });
+
+    it('hides the token of a manager invite from a manager', async () => {
+      const owner = await setupOwner();
+      const teamId = await ownTeamId(owner.api);
+      const manager = await addTeamMember(owner, teamId, 'manager');
+      await owner.api
+        .teams({ teamId })
+        .invites.post({ email: 'boss@example.com', role: 'manager' });
+      await owner.api
+        .teams({ teamId })
+        .invites.post({ email: 'joiner@example.com', role: 'member' });
+
+      const res = await manager.api.teams({ teamId }).invites.get();
+      const pending = res.data?.filter((i) => i.status === 'pending');
+      expect(pending?.map((i) => [i.email, i.token !== null])).toEqual([
+        ['joiner@example.com', true],
+        ['boss@example.com', false],
       ]);
     });
 

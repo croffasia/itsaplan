@@ -19,6 +19,7 @@ import {
   upsertImportRecord,
   findImportRecord,
   findImportRecordByDisplayId,
+  listImportRecords,
   listUncreatedImportRecords,
   listCreatedImportRecords,
   firstProjectColumnId,
@@ -152,7 +153,7 @@ async function runDiscover(job: ClaimedImportJob, reader: SourceReader): Promise
 }
 
 // --- Create: materialize states/labels/cycles once (cheap, unpaginated),
-// then create one chunk of not-yet-created issues per tick, with their
+// then finish one chunk of issues per tick, with their
 // comments and their attachment metadata (byte download is a later phase).
 
 interface RecordCursor {
@@ -166,7 +167,7 @@ export async function runCreate(job: ClaimedImportJob, reader: SourceReader): Pr
 
   const cursor = job.cursor as Partial<RecordCursor>;
   const afterId = cursor.lastRecordId ?? 0;
-  const pending = await listUncreatedImportRecords(job.id, 'issue', afterId, ISSUES_PER_TICK);
+  const pending = await listImportRecords(job.id, 'issue', afterId, ISSUES_PER_TICK);
   if (pending.length === 0) {
     await advanceImportJobPhase(job.id, 'link', {});
     return;
@@ -227,46 +228,48 @@ async function createOneIssue(
   sourceId: string,
 ): Promise<void> {
   const canonical = await reader.getIssue(sourceId);
-  // Read before the issue and its mapping are written: a failed read then leaves
-  // the issue unmapped, and the next tick retries the whole issue.
+  // Fetch source data before writing local rows; a failed read leaves no partial writes.
   const comments = await reader.listIssueComments(sourceId);
   const attachments = await reader.listIssueAttachments(sourceId);
 
-  const stateRecord = await findImportRecord(job.id, 'state', canonical.stateSourceId);
-  const columnId = stateRecord?.localId ?? (await firstProjectColumnId(job.projectId));
-  if (columnId == null)
-    throw new Error(`project ${job.projectId} has no workflow column to import into`);
+  const existing = await findImportRecord(job.id, 'issue', sourceId);
+  let localId = existing?.localId;
+  if (localId == null) {
+    const stateRecord = await findImportRecord(job.id, 'state', canonical.stateSourceId);
+    const columnId = stateRecord?.localId ?? (await firstProjectColumnId(job.projectId));
+    if (columnId == null)
+      throw new Error(`project ${job.projectId} has no workflow column to import into`);
 
-  const cycleRecord = canonical.cycleSourceId
-    ? await findImportRecord(job.id, 'cycle', canonical.cycleSourceId)
-    : null;
-  const parentRecord = canonical.parentSourceId
-    ? await findImportRecord(job.id, 'issue', canonical.parentSourceId)
-    : null;
-  const assigneeUserId = canonical.assigneeEmail
-    ? await findProjectMemberUserId(job.projectId, canonical.assigneeEmail)
-    : null;
+    const cycleRecord = canonical.cycleSourceId
+      ? await findImportRecord(job.id, 'cycle', canonical.cycleSourceId)
+      : null;
+    const parentRecord = canonical.parentSourceId
+      ? await findImportRecord(job.id, 'issue', canonical.parentSourceId)
+      : null;
+    const assigneeUserId = canonical.assigneeEmail
+      ? await findProjectMemberUserId(job.projectId, canonical.assigneeEmail)
+      : null;
 
+    localId = await createLocalIssueAndRecord(job.id, sourceId, String(canonical.sequenceId), {
+      projectId: job.projectId,
+      columnId,
+      cycleId: cycleRecord?.localId ?? null,
+      parentId: parentRecord?.localId ?? null,
+      assigneeUserId,
+      title: canonical.title,
+      description: canonical.descriptionMarkdown,
+      priority: canonical.priority,
+      startDate: canonical.startDate,
+      dueDate: canonical.dueDate,
+      createdAt: canonical.createdAt,
+      updatedAt: canonical.updatedAt,
+    });
+  }
   const labelIds: number[] = [];
   for (const labelSourceId of canonical.labelSourceIds) {
     const record = await findImportRecord(job.id, 'label', labelSourceId);
     if (record?.localId != null) labelIds.push(record.localId);
   }
-
-  const localId = await createLocalIssueAndRecord(job.id, sourceId, String(canonical.sequenceId), {
-    projectId: job.projectId,
-    columnId,
-    cycleId: cycleRecord?.localId ?? null,
-    parentId: parentRecord?.localId ?? null,
-    assigneeUserId,
-    title: canonical.title,
-    description: canonical.descriptionMarkdown,
-    priority: canonical.priority,
-    startDate: canonical.startDate,
-    dueDate: canonical.dueDate,
-    createdAt: canonical.createdAt,
-    updatedAt: canonical.updatedAt,
-  });
   if (labelIds.length) await setIssueLabels(localId, labelIds);
 
   await createComments(job, localId, comments);

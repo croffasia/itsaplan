@@ -1,11 +1,11 @@
 import { db, agentRun, agentSchedule, aiAgent, projectColumn, user } from '@repo/db';
-import { and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, getTableColumns, isNull, sql } from 'drizzle-orm';
 import { HttpError, iso, rethrowDuplicate } from '#shared/lib';
 import { getTeamLimits } from '#shared/limits';
 import { minCronIntervalSeconds, nextCronRun } from './cron';
 import { isScheduleSupported, type ScheduleOptions } from './extension';
 import { agentWorksInProject, canTriggerAgent, isTriggerableBy } from '../core/service';
-import { contextTokensOf } from '../core/run-queue';
+import { contextTokensOf, executionState } from '../core/run-queue';
 import { deleteThreadsWhere } from '../core/runtime/memory';
 
 export type AgentScheduleStatus = 'active' | 'paused';
@@ -360,7 +360,7 @@ export async function cancelPendingScheduleRuns(
   await assertTriggerable(schedule.agentId, actorUserId);
   const rows = await db
     .update(agentRun)
-    .set({ status: 'canceled', finishedAt: new Date() })
+    .set({ status: 'canceled', executionStartedAt: null, finishedAt: new Date() })
     .where(
       and(
         eq(agentRun.scheduleId, scheduleId),
@@ -374,8 +374,10 @@ export async function cancelPendingScheduleRuns(
 }
 
 export interface ScheduleRunRow {
+  kind: string;
   id: number;
   status: string;
+  executionState: 'queued' | 'running' | 'success' | 'failed' | 'canceled';
   trigger: string;
   prompt: string;
   attempts: number;
@@ -398,14 +400,17 @@ export async function listScheduleRuns(
   const schedule = await getAgentSchedule(projectId, scheduleId, actorUserId);
   if (!schedule) return null;
   const rows = await db
-    .select()
+    .select({ ...getTableColumns(agentRun), executionState, kind: aiAgent.kind })
     .from(agentRun)
+    .innerJoin(aiAgent, eq(aiAgent.id, agentRun.agentId))
     .where(eq(agentRun.scheduleId, scheduleId))
     .orderBy(desc(agentRun.id))
     .limit(50);
   return rows.map((row) => ({
     id: row.id,
+    kind: row.kind,
     status: row.status,
+    executionState: row.executionState,
     trigger: row.trigger,
     prompt: row.prompt,
     attempts: row.attempts,

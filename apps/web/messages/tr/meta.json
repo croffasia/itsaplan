@@ -1,0 +1,14 @@
+{
+  "description": "Yerleşik yapay zekâ ajanlarına sahip, kendi sunucunuzda barındırılabilen açık kaynaklı iş takip sistemi. İşleri kişilere veya ajanlara atayın; API, webhook'lar ve MCP ile yönetin.",
+  "screens": {
+    "signIn": "Giriş yap",
+    "signUp": "Kayıt ol",
+    "forgotPassword": "Şifremi unuttum",
+    "resetPassword": "Şifreyi sıfırla",
+    "account": "Hesap",
+    "settings": "Ayarlar",
+    "teamSettings": "Takım ayarları",
+    "invitation": "Davet",
+    "authorizeApp": "Uygulamayı yetkilendir"
+  }
+}

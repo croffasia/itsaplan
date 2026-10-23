@@ -1,0 +1,37 @@
+{
+  "label": "API 金鑰",
+  "title": "API 金鑰",
+  "description": "個人 API 金鑰以你的帳號（{email}）身分驗證 API 請求。金鑰值只在建立時顯示一次。",
+  "sectionTitle": "你的 API 金鑰",
+  "create": "建立 API 金鑰",
+  "empty": "暫無 API 金鑰。建立金鑰以驗證 API 請求。",
+  "fallbackName": "API 金鑰",
+  "createdAt": "建立於 {date}",
+  "expiresAt": "到期於 {date}",
+  "noExpiry": "永不過期",
+  "deleteAction": "刪除 API 金鑰",
+  "createDialog": {
+    "title": "建立 API 金鑰",
+    "nameLabel": "名稱",
+    "namePlaceholder": "例如：CI 管線",
+    "nameHint": "用於以後識別此金鑰的名稱。",
+    "expiryLabel": "有效期",
+    "expiresInDays": "{days} 天",
+    "expiryHint": "到期當天金鑰將停止工作。如需繼續使用，請建立新金鑰。",
+    "submit": "建立金鑰",
+    "submitPending": "正在建立…",
+    "error": "無法建立 API 金鑰。"
+  },
+  "createdDialog": {
+    "title": "API 金鑰已建立",
+    "description": "請立即複製金鑰。為確保安全，金鑰只顯示一次，之後無法再次取得。",
+    "copy": "複製金鑰"
+  },
+  "deleteDialog": {
+    "title": "刪除 API 金鑰？",
+    "confirm": "刪除金鑰",
+    "description": "使用此金鑰的所有請求會立即失效。此操作無法復原。",
+    "error": "無法刪除 API 金鑰。"
+  },
+  "loadFailed": "無法載入 API 金鑰。"
+}

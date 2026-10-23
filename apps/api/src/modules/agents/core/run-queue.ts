@@ -1,5 +1,6 @@
 import { db, agentRun, issue, project, team } from '@repo/db';
 import { and, desc, eq, gt, inArray, isNotNull, lt, sql } from 'drizzle-orm';
+import { getAgentSettings } from '#modules/settings/service';
 import { intEnv, iso } from '#shared/lib';
 import type { AgentRunTrigger } from '../model';
 import { equalJitterBackoffMs } from './helpers/backoff';
@@ -7,15 +8,18 @@ import { equalJitterBackoffMs } from './helpers/backoff';
 // The agent_run outbox: data access for triggered runs and run history. The api's
 // run poller claims pending rows, runs them, and records the outcome.
 
-// Tuning, env-overridable with defaults. An agent run is an LLM call that can take
-// tens of seconds, so the lease is generous — it must exceed a run's wall time so a
-// row is not re-claimed while its run is still in flight.
+// Tuning, env-overridable with defaults. A claim's lease must exceed a run's wall time
+// so a row is not re-claimed while its run is still in flight: claimDueRuns raises it
+// above the instance's maximum run time when that is longer.
 export const agentRunConfig = {
   pollIntervalMs: () => intEnv('AGENT_RUN_POLL_INTERVAL_MS', 2000),
   batchSize: () => intEnv('AGENT_RUN_BATCH_SIZE', 5),
   maxAttempts: () => intEnv('AGENT_RUN_MAX_ATTEMPTS', 3),
   leaseSeconds: () => intEnv('AGENT_RUN_LEASE_SECONDS', 300),
 };
+
+// Time a claim's lease leaves after the run's time limit, for recording the outcome.
+const LEASE_MARGIN_SECONDS = 60;
 
 const RETRY_BASE_MS = 30_000;
 const RETRY_CAP_MS = 30 * 60_000;
@@ -103,6 +107,10 @@ export interface ClaimedRun {
   // without a second query.
   projectId: number;
   agentUserId: string;
+  // The agent's own run time limit, null when it uses the instance's maximum.
+  agentRunTimeoutSec: number | null;
+  // Monotonic deadline that leaves the claim's margin for recording the outcome.
+  executionDeadline: number;
   // The agent's own handle, so the prompt can tell whether the text addressed it.
   agentUsername: string;
   // The issue's human-readable key ("MKT-42") and title, read inline so the poller can
@@ -132,11 +140,16 @@ export interface ClaimedRun {
 // they are claimed over HTTP by the operator's runner (modules/agents/runner).
 export async function claimDueRuns(): Promise<ClaimedRun[]> {
   const batchSize = agentRunConfig.batchSize();
-  const leaseSeconds = agentRunConfig.leaseSeconds();
+  const leaseSeconds = Math.max(
+    agentRunConfig.leaseSeconds(),
+    (await getAgentSettings()).maxRunSeconds + LEASE_MARGIN_SECONDS,
+  );
+  const executionDeadline = performance.now() + (leaseSeconds - LEASE_MARGIN_SECONDS) * 1000;
   const rows = await db.execute(sql`
     UPDATE agent_run r
     SET attempts = r.attempts + 1,
         started_at = coalesce(r.started_at, now()),
+        execution_started_at = NULL,
         next_attempt_at = now() + make_interval(secs => ${leaseSeconds})
     WHERE r.id IN (
       SELECT id FROM agent_run q
@@ -159,6 +172,7 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
       r.project_id AS "projectId",
       (SELECT user_id FROM ai_agent a WHERE a.id = r.agent_id) AS "agentUserId",
       (SELECT username FROM ai_agent a WHERE a.id = r.agent_id) AS "agentUsername",
+      (SELECT run_timeout_sec FROM ai_agent a WHERE a.id = r.agent_id) AS "agentRunTimeoutSec",
       (SELECT p.key || '-' || i.sequence_number
          FROM issue i JOIN project p ON p.id = i.project_id
          WHERE i.id = r.issue_id) AS "issueIdentifier",
@@ -180,6 +194,7 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
   return Promise.all(
     runs.map(async (run) => ({
       ...run,
+      executionDeadline,
       threadContext: await loadThreadContext(run.sourceActivityId),
     })),
   );
@@ -226,6 +241,7 @@ export async function markRunSuccess(
     .update(agentRun)
     .set({
       status: 'success',
+      executionStartedAt: null,
       output,
       lastError: null,
       inputTokens: usage?.inputTokens ?? null,
@@ -241,16 +257,23 @@ export async function scheduleRunRetry(id: number, delayMs: number, error: strin
     .update(agentRun)
     .set({
       status: 'pending',
+      executionStartedAt: null,
       nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,
       lastError: error.slice(0, 500),
     })
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
 }
 
-export async function markRunFailed(id: number, error: string): Promise<void> {
+export async function markRunFailed(id: number, error: string, output?: string): Promise<void> {
   await db
     .update(agentRun)
-    .set({ status: 'failed', lastError: error.slice(0, 500), finishedAt: new Date() })
+    .set({
+      status: 'failed',
+      executionStartedAt: null,
+      lastError: error.slice(0, 500),
+      ...(output ? { output } : {}),
+      finishedAt: new Date(),
+    })
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
 }
 
@@ -263,6 +286,7 @@ export async function deferRun(id: number, delaySeconds: number): Promise<void> 
   await db
     .update(agentRun)
     .set({
+      executionStartedAt: null,
       attempts: sql`${agentRun.attempts} - 1`,
       startedAt: sql`CASE WHEN ${agentRun.attempts} = 1 THEN NULL ELSE ${agentRun.startedAt} END`,
       nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,
@@ -270,11 +294,32 @@ export async function deferRun(id: number, delaySeconds: number): Promise<void> 
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
 }
 
-// One row of an agent's run history, for the runs sidebar. The issue is joined for
-// its human key and title.
+export const executionState = sql<'queued' | 'running' | 'success' | 'failed' | 'canceled'>`
+  CASE WHEN ${agentRun.status} <> 'pending' THEN ${agentRun.status}
+    WHEN ${agentRun.executionStartedAt} IS NOT NULL AND ${agentRun.nextAttemptAt} > now()
+      THEN 'running'
+    ELSE 'queued' END`;
+
+export async function markRunExecuting(id: number, attempts: number): Promise<boolean> {
+  const rows = await db
+    .update(agentRun)
+    .set({ executionStartedAt: new Date() })
+    .where(
+      and(
+        eq(agentRun.id, id),
+        eq(agentRun.status, 'pending'),
+        eq(agentRun.attempts, attempts),
+        gt(agentRun.nextAttemptAt, sql`now()`),
+      ),
+    )
+    .returning({ id: agentRun.id });
+  return rows.length > 0;
+}
+
 export interface AgentRunRow {
   id: number;
   status: string;
+  executionState: 'queued' | 'running' | 'success' | 'failed' | 'canceled';
   trigger: AgentRunTrigger;
   issueId: number | null;
   issueIdentifier: string | null;
@@ -323,6 +368,7 @@ export async function listAgentRuns(
     .select({
       id: agentRun.id,
       status: agentRun.status,
+      executionState,
       trigger: agentRun.trigger,
       issueId: agentRun.issueId,
       prompt: agentRun.prompt,
@@ -355,6 +401,7 @@ export async function listAgentRuns(
     items: page.map((r) => ({
       id: r.id,
       status: r.status,
+      executionState: r.executionState,
       trigger: r.trigger as AgentRunTrigger,
       issueId: r.issueId,
       issueIdentifier: r.projectKey && r.issueSeq != null ? `${r.projectKey}-${r.issueSeq}` : null,

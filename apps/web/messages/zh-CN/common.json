@@ -198,7 +198,8 @@
     "copiedLink": "已复制",
     "editLink": "编辑链接",
     "retryPreview": "重试",
-    "copyLinkFailed": "无法复制链接。请选择并复制上方的 URL。"
+    "copyLinkFailed": "无法复制链接。请选择并复制上方的 URL。",
+    "todoList": "待办列表"
   },
   "chart": {
     "download": "保存图表",

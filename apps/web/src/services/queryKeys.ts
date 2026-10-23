@@ -7,6 +7,11 @@ const scimKey = (workspaceId: number | null) =>
 // or key scopes its entry. Kept in one registry so a mutation in one service can
 // invalidate another service's queries by the same key.
 export const qk = {
+  externalRunTrace: (runId: number) => ['externalRunTrace', runId] as const,
+  runnerQueue: ['runnerQueue'] as const,
+  issueAgentRuns: (issueId: number) => ['issueAgentRuns', issueId] as const,
+  issueAgentRunTrace: (issueId: number, runId: number, traceId?: string) =>
+    ['issueAgentRuns', issueId, 'trace', runId, traceId ?? null] as const,
   projects: ['projects'] as const,
   // Under projects, so what refreshes the project list refreshes every search with it.
   projectSearch: (filters: unknown) => ['projects', 'search', filters] as const,
@@ -161,6 +166,8 @@ export const qk = {
     ['aiAgents', teamId, agentId, 'skills'] as const,
   // An agent's triggered run history (the runs sidebar).
   agentRuns: (teamId: number, agentId: number) => ['aiAgents', teamId, agentId, 'runs'] as const,
+  invocationSecret: (teamId: number, agentId: number) =>
+    ['aiAgents', teamId, agentId, 'invocationSecret'] as const,
   agentSchedules: (projectKey: string) => ['agentSchedules', projectKey] as const,
   // One page of them: the window scopes the entry.
   agentSchedulePage: (projectKey: string, params: unknown) =>

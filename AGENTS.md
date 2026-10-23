@@ -151,7 +151,7 @@ workflow for a job that an existing workflow already runs.
   process at **startup**. Never use `NEXT_PUBLIC_*` for them: `next build` inlines those into
   the bundle, and the image then works for one instance only.
 - Add a new environment variable to `.env.example`. If a service needs it, also add it to the
-  three deploy compose files and to the Helm chart: `values.yaml`,
+  five deploy compose files and to the Helm chart: `values.yaml`,
   `templates/configmap.yaml` or `templates/secret.yaml`, and the values table in
   `charts/itsaplan/README.md`.
 
@@ -159,8 +159,12 @@ workflow for a job that an existing workflow already runs.
 
 - `docker-compose.dev.yml` holds only the local backing services (Postgres + RustFS). The apps
   run on the host. The deploy composes do NOT publish the DB port.
-- A deploy stack change usually needs an edit in **all three** of `docker-compose.yml`,
-  `docker-compose.coolify.yml`, `docker-compose.coolify-images.yml`, and in the Helm chart.
+- A deploy stack change usually needs an edit in **all five** of `docker-compose.yml`,
+  `docker-compose.pro.yml`, `docker-compose.coolify.yml`, `docker-compose.coolify-images.yml`,
+  `docker-compose.coolify-pro.yml`, and in the Helm chart.
+- `docker-compose.pro.yml` and `docker-compose.coolify-pro.yml` run the published Pro
+  images: migrate from `vendor/itsaplan/packages/db/src/migrate.ts`, start the api with
+  `./pro-api`. The Helm chart does the same when `pro: true` (`values-pro.yaml`).
 - Never add `image:` to `docker-compose.coolify.yml`. With both `image:` and `build:` Coolify
   still builds and stops making rollback images.
 - Migrations run as a separate step before the apps start:

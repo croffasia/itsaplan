@@ -54,6 +54,54 @@ describe('notification settings', () => {
     expect(res.status).toBe(400);
   });
 
+  it('rejects Apprise without a URL', async () => {
+    const { api, teamId } = await ownedTeam();
+
+    const res = await api.teams({ teamId })['notification-settings'].put({
+      apprise: { enabled: true },
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects an Apprise URL that is not http(s)', async () => {
+    const { api, teamId } = await ownedTeam();
+
+    const res = await api.teams({ teamId })['notification-settings'].put({
+      apprise: { enabled: true, url: 'tgram://token/chat' },
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects an Apprise URL on a private address', async () => {
+    const { api, teamId } = await ownedTeam();
+
+    const res = await api.teams({ teamId })['notification-settings'].put({
+      apprise: { enabled: true, url: 'https://127.0.0.1:8000/notify/key' },
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('keeps the stored Apprise URL when the field is left blank', async () => {
+    const { api, teamId } = await ownedTeam();
+    const url = 'https://93.184.216.34/notify/key';
+
+    const saved = await api
+      .teams({ teamId })
+      ['notification-settings'].put({ apprise: { enabled: true, url } });
+    expect(saved.status).toBe(200);
+    expect(saved.data?.apprise).toEqual({ enabled: true, hasUrl: true });
+
+    const again = await api
+      .teams({ teamId })
+      ['notification-settings'].put({ apprise: { enabled: false, url: '' } });
+
+    expect(again.status).toBe(200);
+    expect(again.data?.apprise).toEqual({ enabled: false, hasUrl: true });
+  });
+
   it('keeps the stored password when the field is left blank', async () => {
     const { api, teamId } = await ownedTeam();
     const credentials = { ...smtp, username: 'mailer@example.com', password: 'secret' };

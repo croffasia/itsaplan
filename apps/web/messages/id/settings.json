@@ -95,6 +95,7 @@
     "description": "Pilih peristiwa issue yang ingin Anda terima dan tujuan pengirimannya.",
     "email": "Email",
     "telegram": "Telegram",
+    "apprise": "Apprise",
     "events": {
       "assigned": "Ditugaskan ke suatu issue",
       "mentioned": "Disebutkan dalam suatu issue",

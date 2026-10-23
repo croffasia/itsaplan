@@ -12,6 +12,7 @@ export type EventToggles = Record<EventKey, boolean>;
 export interface NotificationPreferenceDto {
   emailEvents: EventToggles;
   telegramEvents: EventToggles;
+  appriseEvents: EventToggles;
 }
 
 function emptyEvents(): EventToggles {
@@ -19,7 +20,11 @@ function emptyEvents(): EventToggles {
 }
 
 function defaults(): NotificationPreferenceDto {
-  return { emailEvents: emptyEvents(), telegramEvents: emptyEvents() };
+  return {
+    emailEvents: emptyEvents(),
+    telegramEvents: emptyEvents(),
+    appriseEvents: emptyEvents(),
+  };
 }
 
 // Normalizes the stored jsonb (possibly partial or empty {}) into a full EventToggles.
@@ -33,10 +38,15 @@ function toToggles(value: unknown): EventToggles {
   };
 }
 
-function toDto(row: { emailEvents: unknown; telegramEvents: unknown }): NotificationPreferenceDto {
+function toDto(row: {
+  emailEvents: unknown;
+  telegramEvents: unknown;
+  appriseEvents: unknown;
+}): NotificationPreferenceDto {
   return {
     emailEvents: toToggles(row.emailEvents),
     telegramEvents: toToggles(row.telegramEvents),
+    appriseEvents: toToggles(row.appriseEvents),
   };
 }
 
@@ -50,6 +60,7 @@ export async function getPreferences(
     .select({
       emailEvents: userNotificationPreference.emailEvents,
       telegramEvents: userNotificationPreference.telegramEvents,
+      appriseEvents: userNotificationPreference.appriseEvents,
     })
     .from(userNotificationPreference)
     .where(
@@ -65,17 +76,27 @@ export async function getPreferences(
 export async function setPreferences(
   userId: string,
   projectId: number,
-  input: NotificationPreferenceDto,
+  input: Omit<NotificationPreferenceDto, 'appriseEvents'> &
+    Partial<Pick<NotificationPreferenceDto, 'appriseEvents'>>,
 ): Promise<NotificationPreferenceDto> {
   const values = { emailEvents: input.emailEvents, telegramEvents: input.telegramEvents };
-  await db
+  const [row] = await db
     .insert(userNotificationPreference)
-    .values({ userId, projectId, ...values })
+    .values({ userId, projectId, ...values, appriseEvents: input.appriseEvents ?? emptyEvents() })
     .onConflictDoUpdate({
       target: [userNotificationPreference.userId, userNotificationPreference.projectId],
-      set: { ...values, updatedAt: sql`now()` },
+      set: {
+        ...values,
+        ...(input.appriseEvents ? { appriseEvents: input.appriseEvents } : {}),
+        updatedAt: sql`now()`,
+      },
+    })
+    .returning({
+      emailEvents: userNotificationPreference.emailEvents,
+      telegramEvents: userNotificationPreference.telegramEvents,
+      appriseEvents: userNotificationPreference.appriseEvents,
     });
-  return toDto(values);
+  return toDto(row!);
 }
 
 // Preferences for a set of members of one project, keyed by user id. Missing members
@@ -91,6 +112,7 @@ export async function getPreferencesForUsers(
       userId: userNotificationPreference.userId,
       emailEvents: userNotificationPreference.emailEvents,
       telegramEvents: userNotificationPreference.telegramEvents,
+      appriseEvents: userNotificationPreference.appriseEvents,
     })
     .from(userNotificationPreference)
     .where(

@@ -243,6 +243,11 @@
     "telegramBot": "بوت Telegram",
     "telegramBotHint": "البوت الذي يوصّل الإشعارات لكل مشاريع الفريق. يختار كل عضو محادثته في تفضيلاته. يُخزَّن الرمز مشفَّرًا.",
     "botToken": "رمز API للبوت (اختياري)",
+    "apprise": "Apprise",
+    "appriseHint": "Deliver notifications through an Apprise API server. Each message is tagged with the recipient's user id, so the Apprise configuration decides where it goes. The URL is stored encrypted.",
+    "appriseUrl": "Apprise notify URL",
+    "appriseUrlHint": "The URL must use https. An Apprise server on a private network works only when the instance administrator lists its host in SSRF_ALLOWED_HOSTS.",
+    "appriseSaved": "Apprise provider saved",
     "emailSaved": "حُفظ مزوّد البريد الإلكتروني",
     "telegramSaved": "حُفظ مزوّد Telegram"
   },

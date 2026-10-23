@@ -95,6 +95,7 @@
     "description": "Choisissez quels événements de ticket vous recevez, et où.",
     "email": "E-mail",
     "telegram": "Telegram",
+    "apprise": "Apprise",
     "events": {
       "assigned": "Assigné à un ticket",
       "mentioned": "Mentionné sur un ticket",

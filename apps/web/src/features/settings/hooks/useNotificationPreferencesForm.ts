@@ -13,6 +13,8 @@ export interface NotificationPreferencesForm {
   setEmailEvents: (v: NotificationEventToggles) => void;
   telegramEvents: NotificationEventToggles;
   setTelegramEvents: (v: NotificationEventToggles) => void;
+  appriseEvents: NotificationEventToggles;
+  setAppriseEvents: (v: NotificationEventToggles) => void;
   dirty: boolean;
   saving: boolean;
   save: () => Promise<void>;
@@ -30,13 +32,17 @@ export function useNotificationPreferencesForm(
   const [telegramEvents, setTelegramEvents] = useState<NotificationEventToggles>(
     initial.telegramEvents,
   );
+  const [appriseEvents, setAppriseEvents] = useState<NotificationEventToggles>(
+    initial.appriseEvents,
+  );
 
   const dirty =
     !eventsEqual(emailEvents, initial.emailEvents) ||
-    !eventsEqual(telegramEvents, initial.telegramEvents);
+    !eventsEqual(telegramEvents, initial.telegramEvents) ||
+    !eventsEqual(appriseEvents, initial.appriseEvents);
 
   async function save() {
-    await update.mutateAsync({ emailEvents, telegramEvents });
+    await update.mutateAsync({ emailEvents, telegramEvents, appriseEvents });
     toast.success(t('preferencesSaved'));
   }
 
@@ -45,6 +51,8 @@ export function useNotificationPreferencesForm(
     setEmailEvents,
     telegramEvents,
     setTelegramEvents,
+    appriseEvents,
+    setAppriseEvents,
     dirty,
     saving: update.isPending,
     save,

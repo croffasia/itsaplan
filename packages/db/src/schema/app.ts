@@ -994,7 +994,8 @@ export const teamNotificationSetting = pgTable('team_notification_setting', {
 // email_events/telegram_events are EventToggles jsonb keyed by the four inbox
 // notification types (assigned/mentioned/commented/state_changed). Email is sent to
 // the member's account address; Telegram to the chat of the account they linked in
-// user_telegram_account, which is instance-wide rather than per project.
+// user_telegram_account, which is instance-wide rather than per project. Apprise
+// goes to the team's Apprise API, tagged with the member's user id.
 export const userNotificationPreference = pgTable(
   'user_notification_preference',
   {
@@ -1007,6 +1008,7 @@ export const userNotificationPreference = pgTable(
       .references(() => project.id, { onDelete: 'cascade' }),
     emailEvents: jsonb('email_events').notNull().default({}),
     telegramEvents: jsonb('telegram_events').notNull().default({}),
+    appriseEvents: jsonb('apprise_events').notNull().default({}),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1051,7 +1053,7 @@ export const userTelegramAccount = pgTable(
 // apps/api/src/modules/notifications/outbound.ts) and drained by the worker
 // following the same claim/retry pattern as webhook_delivery. The message text is
 // composed at enqueue time and stored in `payload`; the channel credentials are read
-// from team_notification_setting at send time. channel is 'email' | 'telegram'
+// from team_notification_setting at send time. channel is 'email' | 'telegram' | 'apprise'
 // ('email' picks SMTP or Resend from the team config). recipient is the member's
 // email address for email rows, or their Telegram chat id for telegram rows.
 // The stored message on a notification_delivery row, composed at enqueue time by the
@@ -1089,7 +1091,10 @@ export const notificationDelivery = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    check('notification_delivery_channel_check', sql`${t.channel} IN ('email', 'telegram')`),
+    check(
+      'notification_delivery_channel_check',
+      sql`${t.channel} IN ('email', 'telegram', 'apprise')`,
+    ),
     // Backs the worker's claim query: due pending rows ordered by next_attempt_at.
     index('notification_delivery_due_idx')
       .on(t.nextAttemptAt)

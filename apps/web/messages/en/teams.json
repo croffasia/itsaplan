@@ -243,6 +243,11 @@
     "telegramBot": "Telegram bot",
     "telegramBotHint": "The bot that delivers notifications for every project of the team. Members choose their own chat in their preferences. The token is stored encrypted.",
     "botToken": "Bot API token (optional)",
+    "apprise": "Apprise",
+    "appriseHint": "Deliver notifications through an Apprise API server. Each message is tagged with the recipient's user id, so the Apprise configuration decides where it goes. The URL is stored encrypted.",
+    "appriseUrl": "Apprise notify URL",
+    "appriseUrlHint": "The URL must use https. An Apprise server on a private network works only when the instance administrator lists its host in SSRF_ALLOWED_HOSTS.",
+    "appriseSaved": "Apprise provider saved",
     "emailSaved": "Email provider saved",
     "telegramSaved": "Telegram provider saved"
   },

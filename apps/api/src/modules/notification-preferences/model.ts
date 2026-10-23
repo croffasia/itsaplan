@@ -7,8 +7,17 @@ const EventToggles = t.Object({
   state_changed: t.Boolean(),
 });
 
-// Request body of the PUT and the response of both routes.
+// Response of both routes.
 export const NotificationPreferenceBody = t.Object({
   emailEvents: EventToggles,
   telegramEvents: EventToggles,
+  appriseEvents: EventToggles,
+});
+
+// Request body of the PUT. An omitted `appriseEvents` keeps the stored toggles, so a
+// client written before Apprise existed can still save.
+export const NotificationPreferenceUpdateBody = t.Object({
+  emailEvents: EventToggles,
+  telegramEvents: EventToggles,
+  appriseEvents: t.Optional(EventToggles),
 });

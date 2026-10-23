@@ -243,6 +243,11 @@
     "telegramBot": "Bot Telegram",
     "telegramBotHint": "Le bot qui envoie les notifications pour chaque projet de l'équipe. Les membres choisissent leur propre discussion dans leurs préférences. Le jeton est stocké chiffré.",
     "botToken": "Token d'API du bot (facultatif)",
+    "apprise": "Apprise",
+    "appriseHint": "Deliver notifications through an Apprise API server. Each message is tagged with the recipient's user id, so the Apprise configuration decides where it goes. The URL is stored encrypted.",
+    "appriseUrl": "Apprise notify URL",
+    "appriseUrlHint": "The URL must use https. An Apprise server on a private network works only when the instance administrator lists its host in SSRF_ALLOWED_HOSTS.",
+    "appriseSaved": "Apprise provider saved",
     "emailSaved": "Fournisseur d'e-mail enregistré",
     "telegramSaved": "Fournisseur Telegram enregistré"
   },

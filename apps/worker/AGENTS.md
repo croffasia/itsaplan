@@ -16,7 +16,8 @@ scheduling, and source imports. See root `AGENTS.md`.
   backoff up to `WEBHOOK_MAX_ATTEMPTS`; permanent 4xx fail immediately. After
   `WEBHOOK_DISABLE_THRESHOLD` consecutive failures the webhook is auto-disabled.
 - Drains `notification_delivery` and sends each row itself: email through
-  `@repo/mailer`, Telegram through the Bot API. The provider credentials are read
+  `@repo/mailer`, Telegram through the Bot API, Apprise through the team's Apprise API
+  notify URL. The provider credentials are read
   from the database and decrypted here (`notification-send.ts`), so the process
   needs `APP_ENCRYPTION_KEY`.
 - Drives `import_job` rows through Discover -> Create -> Link -> Rewrite ->

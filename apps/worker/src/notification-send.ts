@@ -12,13 +12,14 @@ import {
   type NotificationConfig,
 } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
+import { pinnedFetch, UrlNotAllowedError } from '@repo/net';
 import { sendEmail, emailBody, type EmailConfig, type SendResult } from '@repo/mailer';
 
 // Sends one claimed notification_delivery row over its channel. Email transport lives
 // in @repo/mailer (shared with the authentication mail sent from @repo/auth); Telegram
-// is only used here, so it stays in this file. A team that set no bot token of its own
-// sends through the instance bot, the same one members link their Telegram accounts
-// through. Adding a channel is a new branch here plus a compose function in the api's
+// and Apprise are only used here, so they stay in this file. A team that set no bot
+// token of its own sends through the instance bot, the same one members link their
+// Telegram accounts through. Adding a channel is a new branch here plus a compose function in the api's
 // outbound.ts; nothing else changes. The result tells the caller whether a failure is
 // worth retrying (transient: network error, timeout, rate limit, server error) or
 // permanent (bad credentials, rejected recipient, misconfiguration).
@@ -108,9 +109,50 @@ async function sendTelegram(input: SendInput): Promise<SendResult> {
   }
 }
 
+// Posts to the team's Apprise API notify endpoint. The recipient (the member's user
+// id) goes out as the Apprise tag, so the Apprise configuration decides where each
+// member's messages land. Apprise answers 424 when a target service rejected the
+// message, which can clear on its own.
+async function sendApprise(input: SendInput): Promise<SendResult> {
+  const { apprise } = input.config;
+  if (!apprise.enabled || !apprise.url) {
+    return { ok: false, retryable: false, error: 'apprise not configured' };
+  }
+  if (!input.recipient) return { ok: false, retryable: false, error: 'no recipient' };
+  const body = input.payload.url
+    ? `${input.payload.text}\n\n${input.payload.url}`
+    : input.payload.text;
+  try {
+    const res = await pinnedFetch(apprise.url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      timeoutMs: 15_000,
+      body: JSON.stringify({
+        title: input.payload.subject ?? '',
+        body,
+        tag: input.recipient,
+      }),
+    });
+    if (res.ok) return { ok: true };
+    const text = await res.text().catch(() => '');
+    return {
+      ok: false,
+      retryable: res.status === 429 || res.status === 424 || res.status >= 500,
+      error: `Apprise HTTP ${res.status}: ${text.slice(0, 200)}`,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      retryable: !(err instanceof UrlNotAllowedError),
+      error: err instanceof Error ? err.message : 'apprise request failed',
+    };
+  }
+}
+
 async function sendDelivery(input: SendInput): Promise<SendResult> {
   if (input.channel === 'email') return sendNotificationEmail(input);
   if (input.channel === 'telegram') return sendTelegram(input);
+  if (input.channel === 'apprise') return sendApprise(input);
   return { ok: false, retryable: false, error: `unknown channel: ${input.channel}` };
 }
 

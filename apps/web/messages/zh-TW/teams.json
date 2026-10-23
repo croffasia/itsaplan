@@ -243,6 +243,11 @@
     "telegramBot": "Telegram 機器人",
     "telegramBotHint": "為團隊的所有專案投遞通知的機器人。成員在自己的偏好設定中選擇聊天。權杖以加密方式儲存。",
     "botToken": "Bot API 權杖（可選）",
+    "apprise": "Apprise",
+    "appriseHint": "Deliver notifications through an Apprise API server. Each message is tagged with the recipient's user id, so the Apprise configuration decides where it goes. The URL is stored encrypted.",
+    "appriseUrl": "Apprise notify URL",
+    "appriseUrlHint": "The URL must use https. An Apprise server on a private network works only when the instance administrator lists its host in SSRF_ALLOWED_HOSTS.",
+    "appriseSaved": "Apprise provider saved",
     "emailSaved": "郵件服務供應商已儲存",
     "telegramSaved": "Telegram 服務供應商已儲存"
   },

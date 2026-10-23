@@ -95,6 +95,7 @@
     "description": "Escolha quais eventos de issue você recebe e onde.",
     "email": "E-mail",
     "telegram": "Telegram",
+    "apprise": "Apprise",
     "events": {
       "assigned": "Atribuído a uma issue",
       "mentioned": "Mencionado em uma issue",

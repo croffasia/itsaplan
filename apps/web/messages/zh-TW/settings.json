@@ -95,6 +95,7 @@
     "description": "選擇要接收的工作項目事件及通知管道。",
     "email": "郵件",
     "telegram": "Telegram",
+    "apprise": "Apprise",
     "events": {
       "assigned": "被指派處理某一工作項目",
       "mentioned": "在工作項目中被提及",

@@ -121,7 +121,7 @@ release.
   pull request to the issue, and the issue moves when the pull request opens and merges
 - Outgoing webhooks: subscribe to events, signed payloads, and retries with a delivery log
 - Sign in with an email or a username and a password, a passkey, or Google
-- Notifications by email (SMTP or Resend) and Telegram, with per-member preferences
+- Notifications by email (SMTP or Resend), Telegram and Apprise, with per-member preferences
 - Interface in English, Ukrainian, Russian, Simplified Chinese, Traditional Chinese (Taiwan), Arabic, Persian, French, Portuguese (Brazil), Bahasa Indonesia, Spanish (Spain), Korean, and Turkish
 - Instance administration: storage limits, mail transport, and instance-wide settings
 

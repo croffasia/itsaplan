@@ -136,6 +136,9 @@ export async function createCredential(
 ): Promise<CredentialRow> {
   const schema = credentialSchemaFor(input.integrationKey);
   if (!schema) throw new HttpError(400, `Unknown integration: ${input.integrationKey}`);
+  if (schema.length === 0) {
+    throw new HttpError(400, `The ${input.integrationKey} integration needs no credential.`);
+  }
   const config = coerce(schema, input.credential);
   const enc = encryptSecret(JSON.stringify(config));
   const [row] = await db

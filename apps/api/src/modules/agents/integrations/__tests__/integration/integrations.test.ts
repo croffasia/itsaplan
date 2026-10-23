@@ -106,6 +106,12 @@ describe('integrations', () => {
     expect(res.status).toBe(400);
   });
 
+  it('refuses a credential for an integration that needs none', async () => {
+    const { asOwner, teamId } = await setup();
+    const res = await integrations(asOwner, teamId).post({ integrationKey: 'pdf', credential: {} });
+    expect(res.status).toBe(400);
+  });
+
   it('rejects a missing required field', async () => {
     const { asOwner, teamId } = await setup();
     const res = await integrations(asOwner, teamId).post({

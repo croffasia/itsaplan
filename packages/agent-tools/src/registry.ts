@@ -14,6 +14,7 @@ import { instagram } from './tools/instagram';
 import { notion } from './tools/notion';
 import { gitea } from './tools/gitea';
 import { github } from './tools/github';
+import { pdf } from './tools/pdf';
 
 // The registry of tool integrations. Add an integration by creating its folder under
 // tools/ and listing it here.
@@ -26,6 +27,7 @@ export const INTEGRATIONS: Integration[] = [
   notion,
   gitea,
   github,
+  pdf,
 ];
 
 const BY_KEY = new Map(INTEGRATIONS.map((i) => [i.key, i]));

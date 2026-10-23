@@ -14,11 +14,12 @@ export interface ToolOption {
   scopes: string[];
   integrationKey: string;
   integrationLabel: string;
+  needsCredential: boolean;
 }
 
 // Add configured tools in two steps: pick one or more tools of the same integration from
 // the searchable, grouped catalog (ToolPicker), then pick a credential of that
-// integration to run them on (ToolCredentialStep).
+// integration to run them on (ToolCredentialStep), unless the integration needs none.
 export function ToolConfigDialog({
   teamId,
   teamName,
@@ -43,6 +44,7 @@ export function ToolConfigDialog({
             scopes: tool.scopes ?? [],
             integrationKey: i.key,
             integrationLabel: i.label,
+            needsCredential: i.credentialSchema.length > 0,
           })),
         ),
     [catalog],

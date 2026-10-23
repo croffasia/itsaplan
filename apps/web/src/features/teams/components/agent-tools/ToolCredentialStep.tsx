@@ -28,8 +28,8 @@ const credLabel = (c: IntegrationOption) => c.label ?? `Credential #${c.id}`;
 // one integration, so one credential covers them; the list is narrowed to that
 // integration, and if none exists yet, the user is pointed at the Integrations page.
 // Tools already configured on the chosen credential are skipped, because the API answers
-// 409 for a duplicate and that would abort the rest of the batch. `onBack` returns to the
-// tool picker.
+// 409 for a duplicate and that would abort the rest of the batch. Tools of an integration
+// that needs no credential are added without one. `onBack` returns to the tool picker.
 export function ToolCredentialStep({
   teamId,
   tools,
@@ -43,13 +43,13 @@ export function ToolCredentialStep({
 }) {
   const t = useTranslations('teams.tools');
   const tCommon = useTranslations('common');
-  const { integrationKey, integrationLabel } = tools[0];
+  const { integrationKey, integrationLabel, needsCredential } = tools[0];
   const credentials = useIntegrationOptionsQuery(teamId, 'tool').data ?? [];
   const matching = credentials.filter((c) => c.integrationKey === integrationKey);
   // The credential list arrives with the query, so the choice falls back to the first
   // one rather than being seeded into state.
   const [picked, setPicked] = useState<number | null>(null);
-  const credentialId = picked ?? matching[0]?.id ?? null;
+  const credentialId = needsCredential ? (picked ?? matching[0]?.id ?? null) : null;
   const [busy, setBusy] = useState(false);
 
   const configured = useConfiguredToolOptionsQuery(teamId).data ?? [];
@@ -61,14 +61,17 @@ export function ToolCredentialStep({
   const scopes = [...new Set(tools.flatMap((tool) => tool.scopes))];
 
   const create = useCreateConfiguredTool(teamId);
-  const canSubmit = credentialId != null && pending.length > 0 && !busy;
+  const canSubmit = (!needsCredential || credentialId != null) && pending.length > 0 && !busy;
 
   async function submit() {
-    if (!canSubmit || credentialId == null) return;
+    if (!canSubmit) return;
     setBusy(true);
     try {
       for (const tool of pending) {
-        await create.mutateAsync({ toolKey: tool.toolKey, credentialId });
+        await create.mutateAsync({
+          toolKey: tool.toolKey,
+          credentialId: credentialId ?? undefined,
+        });
       }
       onDone();
     } catch {
@@ -123,27 +126,31 @@ export function ToolCredentialStep({
       )}
 
       <div className="space-y-1.5">
-        <Label>{t('credential')}</Label>
-        {matching.length === 0 ? (
-          <p className="text-xs text-muted-foreground">
-            {t('noCredential', { integration: integrationLabel })}
-          </p>
-        ) : (
-          <Select
-            value={credentialId != null ? String(credentialId) : ''}
-            onValueChange={(v) => setPicked(Number(v))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={t('chooseCredential')} />
-            </SelectTrigger>
-            <SelectContent>
-              {matching.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>
-                  {credLabel(c)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {needsCredential && (
+          <>
+            <Label>{t('credential')}</Label>
+            {matching.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                {t('noCredential', { integration: integrationLabel })}
+              </p>
+            ) : (
+              <Select
+                value={credentialId != null ? String(credentialId) : ''}
+                onValueChange={(v) => setPicked(Number(v))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={t('chooseCredential')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {matching.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {credLabel(c)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </>
         )}
         {skipped > 0 && (
           <p className="text-xs text-muted-foreground">{t('alreadyAdded', { count: skipped })}</p>

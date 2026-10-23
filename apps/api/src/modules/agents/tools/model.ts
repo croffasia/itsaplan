@@ -31,7 +31,8 @@ export const AgentToolResponse = t.Object({
   id: t.Number(),
   teamId: t.Number(),
   toolKey: t.String(),
-  credentialId: t.Number(),
+  // Null for a tool of an integration that needs no credential.
+  credentialId: t.Nullable(t.Number()),
   integrationKey: t.String(),
   credentialLabel: t.Nullable(t.String()),
   createdAt: t.String(),
@@ -45,7 +46,9 @@ export const agentToolListQuery = t.Object(pageQueryFields);
 
 export const createAgentToolBody = t.Object({
   toolKey: t.String({ minLength: 1 }),
-  credentialId: t.Number(),
+  credentialId: t.Optional(
+    t.Number({ description: "Required unless the tool's integration needs no credential." }),
+  ),
 });
 
 export const setAgentToolsBody = t.Object({

@@ -20,6 +20,10 @@ const IMAGE_BLOCK = {
   data: Buffer.from(PNG).toString('base64'),
   mimeType: 'image/png',
 };
+const PDF_FIXTURES = new URL(
+  '../../../modules/chat-attachments/__tests__/fixtures/',
+  import.meta.url,
+).pathname;
 const clients: Client[] = [];
 
 async function callTool(client: Client, params: CallToolRequest['params']) {
@@ -127,7 +131,7 @@ describe('MCP attachments', () => {
     expect(note.content).toHaveLength(1);
     expect(named(note)).toMatchObject({
       images: [],
-      others: [{ id: noteId, url: `${API}/attachments/${noteId}/raw` }],
+      others: [{ id: noteId, url: `${API}/attachments/${noteId}/raw`, text: 'hello' }],
     });
 
     const missing = await callTool(client, {
@@ -136,6 +140,30 @@ describe('MCP attachments', () => {
     });
     expect(missing.isError).toBe(true);
     expect(missing.structuredContent).toMatchObject({ ok: false, status: 404 });
+  });
+
+  it('reads the text of a PDF and refuses a scanned one', async () => {
+    const { asOwner, client, issueId } = await setup();
+    const upload = async (name: string) => {
+      const bytes = await Bun.file(PDF_FIXTURES + name).bytes();
+      const res = await asOwner.issues({ issueId }).attachments.post({
+        file: new File([bytes], name, { type: 'application/pdf' }),
+      });
+      return res.data!.id;
+    };
+
+    const text = await callTool(client, {
+      name: 'view_attachment',
+      arguments: { attachment: await upload('text.pdf') },
+    });
+    expect(named(text).others[0].text).toContain('# Release Notes');
+
+    const scanned = await callTool(client, {
+      name: 'view_attachment',
+      arguments: { attachment: await upload('scanned.pdf') },
+    });
+    expect(scanned.isError).toBe(true);
+    expect(scanned.structuredContent).toMatchObject({ ok: false, status: 400 });
   });
 
   it('does the same for an initiative', async () => {

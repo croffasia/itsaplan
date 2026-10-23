@@ -1150,8 +1150,9 @@ export const agentSkillLink = pgTable(
 // catalog (tool_key) bound to one integration_credential. The tool's integration owns
 // the secret, so the tool holds no secret of its own — it references the credential
 // the runtime decrypts at call time. Different tools of the same integration may be
-// bound to different credentials (e.g. two Jina keys). Enabled on an agent via
-// agent_tool_link.
+// bound to different credentials (e.g. two Jina keys). A tool of an integration with
+// no credential (PDF) has a null credential_id and is configured once per team.
+// Enabled on an agent via agent_tool_link.
 export const agentTool = pgTable(
   'agent_tool',
   {
@@ -1160,13 +1161,16 @@ export const agentTool = pgTable(
       .notNull()
       .references(() => team.id, { onDelete: 'cascade' }),
     toolKey: text('tool_key').notNull(),
-    credentialId: integer('credential_id')
-      .notNull()
-      .references(() => integrationCredential.id, { onDelete: 'cascade' }),
+    credentialId: integer('credential_id').references(() => integrationCredential.id, {
+      onDelete: 'cascade',
+    }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     unique().on(t.teamId, t.toolKey, t.credentialId),
+    uniqueIndex('agent_tool_team_tool_keyless_uq')
+      .on(t.teamId, t.toolKey)
+      .where(sql`${t.credentialId} IS NULL`),
     index('agent_tool_team_idx').on(t.teamId),
     index('agent_tool_credential_idx').on(t.credentialId),
   ],

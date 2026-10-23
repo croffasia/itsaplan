@@ -32,7 +32,11 @@ is. Document assets need a session and keep their paths.
 `view_initiative_images` return images as `image` content blocks: PNG, JPEG, GIF and
 WebP, up to 5 MB each, 8 images and 10 MB per call. A text block comes first and names
 the images in order, `{ images: [{ id, filename, contentType }], others: [...] }`, where
-`others` holds every attachment left out, with its url. These three tools advertise no
+`others` holds every attachment left out, with its url. When `view_attachment` opens a file
+that is not returned as an image, its entry in `others` also carries the content: `text`
+for a PDF or a text file, `table` for a spreadsheet or document. An internal agent gets
+`view_attachment` too, with the images as image parts of the tool result
+(`toModelOutput` in `runtime/tools/route-tools.ts`). These three tools advertise no
 `outputSchema` and a successful call has no `structuredContent`: Claude Code gives the
 model `structuredContent` in place of the text block when it is present, which loses the
 names and the urls of the attachments left out, and earlier versions dropped the images as

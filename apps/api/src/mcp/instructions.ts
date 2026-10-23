@@ -87,10 +87,11 @@ issue.
 
 An image or file in an issue or initiative, and each entry of list_attachments and
 list_initiative_attachments, carries a url that downloads the file without a session.
-A url in a result does not show you the picture. To look at the images of an issue,
-call view_issue_images (view_initiative_images for an initiative); to look at one
-image, call view_attachment with its url. A file can be replaced behind the same url,
-so view it again rather than reusing what you saw earlier.
+A url in a result does not show you the file. To look at the images of an issue,
+call view_issue_images (view_initiative_images for an initiative); to open one
+attachment, call view_attachment with its url: it shows an image and returns the text
+of a PDF or a text file and the rows of a spreadsheet. A file can be replaced behind
+the same url, so view it again rather than reusing what you saw earlier.
 
 ## Mentions
 

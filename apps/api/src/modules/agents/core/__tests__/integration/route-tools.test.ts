@@ -83,6 +83,43 @@ describe('internal agent route tools', () => {
     expect(tools.create_checklist_items).toBeUndefined();
   });
 
+  it('opens an attachment: a text file as its text, an image as an image part', async () => {
+    const { asOwner } = await setup();
+    const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const issue = await asOwner
+      .projects({ projectKey: 'MKT' })
+      .issues.post({ columnId: view.data!.columns[0]!.id, title: 'Task' });
+    const issueId = issue.data!.id;
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    const image = await asOwner.issues({ issueId }).attachments.post({
+      file: new File([png], 'shot.png', { type: 'image/png' }),
+    });
+    const note = await asOwner.issues({ issueId }).attachments.post({
+      file: new File(['hello'], 'note.txt', { type: 'text/plain' }),
+    });
+    const tools = await toolsFor(asOwner, []);
+
+    expect(await run(tools, 'view_attachment', { attachment: note.data!.id })).toMatchObject({
+      images: [],
+      others: [{ id: note.data!.id, text: 'hello' }],
+    });
+
+    const viewed = await run(tools, 'view_attachment', { attachment: image.data!.id });
+    expect(await tools.view_attachment!.toModelOutput!(viewed)).toEqual({
+      type: 'content',
+      value: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            images: [{ id: image.data!.id, filename: 'shot.png', contentType: 'image/png' }],
+            others: [],
+          }),
+        },
+        { type: 'image-data', data: Buffer.from(png).toString('base64'), mediaType: 'image/png' },
+      ],
+    });
+  });
+
   it('previews project activity only for the internal agent and retains full history', async () => {
     const { asOwner } = await setup();
     const view = await asOwner.projects({ projectKey: 'MKT' }).get();
@@ -253,12 +290,14 @@ describe('internal agent route tools', () => {
     expect(catalog.get('get_issue')).toEqual(['work_items', 'read']);
 
     // Everything else has one. prepare_issue_import and get_current_date have no
-    // route; charts and the project itself are open to any member of the project.
+    // route; charts and the project itself are open to any member of the project;
+    // view_attachment reads work_items or initiatives, by whose attachment it opens.
     expect([...catalog].filter(([, permission]) => !permission).map(([key]) => key)).toEqual([
       'prepare_issue_import',
       'create_chart',
       'get_current_date',
       'get_project',
+      'view_attachment',
     ]);
   });
 

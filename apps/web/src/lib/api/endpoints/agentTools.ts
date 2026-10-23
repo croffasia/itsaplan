@@ -1,14 +1,15 @@
 import { request } from '@/lib/api/core/client';
 import { pageQuery, type Page, type PageParams } from '@/lib/api/core/paging';
 
-// A configured tool: a catalog tool (toolKey) bound to an integration credential,
-// enriched with the credential's integration and label for display. (Distinct from
-// AgentTool, which is a built-in capability tool in the agent's Actions list.)
+// A configured tool: a catalog tool (toolKey) bound to an integration credential, or
+// to none when its integration needs no credential, enriched with its integration and
+// the credential's label for display. (Distinct from AgentTool, which is a built-in
+// capability tool in the agent's Actions list.)
 export interface ConfiguredTool {
   id: number;
   teamId: number;
   toolKey: string;
-  credentialId: number;
+  credentialId: number | null;
   integrationKey: string;
   credentialLabel: string | null;
   createdAt: string;
@@ -16,7 +17,7 @@ export interface ConfiguredTool {
 
 export interface NewConfiguredToolInput {
   toolKey: string;
-  credentialId: number;
+  credentialId?: number;
 }
 
 // Configured tools: a team's tools bound to a credential, and the tools enabled on

@@ -2,7 +2,13 @@ import { createTool } from '@mastra/core/tools';
 import type { z } from 'zod';
 import type { ProjectRow } from '#modules/projects/service';
 import type { ActivityPage } from '#modules/analytics/service';
-import { routeTools, withoutFields, type McpInputSchema, type McpRouteTool } from '#mcp/generate';
+import {
+  routeTools,
+  withoutFields,
+  type McpInputSchema,
+  type McpRouteTool,
+  type ViewedAttachments,
+} from '#mcp/generate';
 import type { Permission } from '#shared/guards';
 import { dispatchTool } from '#mcp/dispatch';
 import { getMcpApp } from '#mcp/app-ref';
@@ -59,6 +65,26 @@ function parseBody(text: string): unknown {
   }
 }
 
+// The images of an image tool reach the model as image parts, not as base64 text, the
+// way the MCP endpoint hands them to a client (imageContent in mcp/server.ts). A failed
+// call carries no images and goes to the model unchanged.
+function imageModelOutput(output: unknown) {
+  const { images, others } = output as Partial<ViewedAttachments>;
+  if (!Array.isArray(images)) return undefined;
+  const named = images.map(({ id, filename, contentType }) => ({ id, filename, contentType }));
+  return {
+    type: 'content',
+    value: [
+      { type: 'text', text: JSON.stringify({ images: named, others }) },
+      ...images.map((image) => ({
+        type: 'image-data',
+        data: image.data,
+        mediaType: image.contentType,
+      })),
+    ],
+  };
+}
+
 // The catalog list_ai_agent_tools returns: each action with the permission its route
 // asserts, so a caller can tell which role an action needs. An action with no route
 // behind it, or one whose route asks only for project membership, has none.
@@ -110,6 +136,7 @@ function buildOne(
     id: route.name,
     description: overrides?.description ?? route.description,
     inputSchema: jsonSchemaInput(schema),
+    toModelOutput: route.images ? imageModelOutput : undefined,
     execute: async (input) => {
       const args: Record<string, unknown> = { ...input };
       for (const name of hidden) delete args[name];

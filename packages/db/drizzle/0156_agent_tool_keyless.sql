@@ -1,0 +1,2 @@
+ALTER TABLE "agent_tool" ALTER COLUMN "credential_id" DROP NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "agent_tool_team_tool_keyless_uq" ON "agent_tool" USING btree ("team_id","tool_key") WHERE "agent_tool"."credential_id" IS NULL;

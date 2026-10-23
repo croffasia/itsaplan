@@ -3,6 +3,7 @@ import { eq, sql } from 'drizzle-orm';
 import { HttpError, iso, num } from '#shared/lib';
 import { getObject } from '@repo/storage';
 import { isTableFilename, parseImportFile } from './parse';
+import { pdfToMarkdown } from './pdf';
 import {
   assertAttachmentStorageCapacity,
   lockAttachmentStorage,
@@ -86,24 +87,33 @@ export async function readAttachmentBytes(s3Key: string): Promise<Buffer> {
   return Buffer.from(await new Response(obj.body).arrayBuffer());
 }
 
-export interface ChatAttachmentContent {
+export interface AttachmentContent {
   table?: { headers: string[]; sampleRows: string[][]; totalRows: number };
   text?: string;
 }
 
-function isTextLike(row: ChatAttachmentRow): boolean {
+type StoredFile = Pick<ChatAttachmentRow, 's3Key' | 'filename' | 'contentType'>;
+
+function isTextLike(row: StoredFile): boolean {
   if (/^(text\/|application\/(json|xml))/.test(row.contentType)) return true;
   return /\.(txt|md|log|json|xml|ya?ml)$/i.test(row.filename);
 }
 
-// The content of a stored file in the shape the read route answers with: a table
-// for a spreadsheet or document, the full text for a text file, nothing for a
-// binary one (its download url is in the metadata either way). A text file is
-// returned whole: what it costs in context is the user's call, and the chat
-// shows the conversation's context size.
-export async function readChatAttachmentContent(
-  row: ChatAttachmentRow,
-): Promise<ChatAttachmentContent> {
+function isPdf(row: StoredFile): boolean {
+  return row.contentType === 'application/pdf' || /\.pdf$/i.test(row.filename);
+}
+
+function isReadableFile(row: StoredFile): boolean {
+  return isTableFilename(row.filename) || isTextLike(row) || isPdf(row);
+}
+
+// The content of a stored file, chat or issue attachment alike: a table for a
+// spreadsheet or document, the full text for a text file or a PDF, nothing for any
+// other file (its download url is in the metadata either way). A text is returned
+// whole: what it costs in context is the user's call, and the chat shows the
+// conversation's context size.
+export async function readAttachmentContent(row: StoredFile): Promise<AttachmentContent> {
+  if (!isReadableFile(row)) return {};
   const bytes = await readAttachmentBytes(row.s3Key);
   if (isTableFilename(row.filename)) {
     const parsed = await parseImportFile(bytes, row.filename);
@@ -115,6 +125,6 @@ export async function readChatAttachmentContent(
       },
     };
   }
-  if (isTextLike(row)) return { text: bytes.toString('utf8') };
-  return {};
+  if (isPdf(row)) return { text: await pdfToMarkdown(bytes) };
+  return { text: bytes.toString('utf8') };
 }

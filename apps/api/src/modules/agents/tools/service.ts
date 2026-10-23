@@ -7,15 +7,16 @@ import { getCredentialById } from '../integrations/service';
 
 // Data access for configured tools, shared by every project the team owns. A
 // configured tool binds a catalog tool (tool_key) to one integration_credential of the
-// team. The secret lives on the credential, so a row here carries no secret; the
-// runtime decrypts the bound credential at call time. The list DTO enriches a row with
-// its credential's integration and label for display.
+// team, or to none when its integration needs no credential. The secret lives on the
+// credential, so a row here carries no secret; the runtime decrypts the bound
+// credential at call time. The list DTO enriches a row with its integration and its
+// credential's label for display.
 
 export interface AgentToolRow {
   id: number;
   teamId: number;
   toolKey: string;
-  credentialId: number;
+  credentialId: number | null;
   integrationKey: string;
   credentialLabel: string | null;
   createdAt: string;
@@ -26,20 +27,31 @@ const dtoColumns = {
   teamId: agentTool.teamId,
   toolKey: agentTool.toolKey,
   credentialId: agentTool.credentialId,
-  integrationKey: integrationCredential.integrationKey,
+  credentialIntegrationKey: integrationCredential.integrationKey,
   credentialLabel: integrationCredential.label,
   createdAt: agentTool.createdAt,
 };
 
-function mapRow(row: Omit<AgentToolRow, 'createdAt'> & { createdAt: Date }): AgentToolRow {
-  return { ...row, createdAt: iso(row.createdAt) };
+// A tool bound to no credential takes its integration from the catalog.
+function mapRow({
+  credentialIntegrationKey,
+  ...row
+}: Omit<AgentToolRow, 'integrationKey' | 'createdAt'> & {
+  credentialIntegrationKey: string | null;
+  createdAt: Date;
+}): AgentToolRow {
+  return {
+    ...row,
+    integrationKey: credentialIntegrationKey ?? getTool(row.toolKey)?.integration.key ?? '',
+    createdAt: iso(row.createdAt),
+  };
 }
 
 function selectTools() {
   return db
     .select(dtoColumns)
     .from(agentTool)
-    .innerJoin(integrationCredential, eq(integrationCredential.id, agentTool.credentialId));
+    .leftJoin(integrationCredential, eq(integrationCredential.id, agentTool.credentialId));
 }
 
 // One page of the team's configured tools, by tool key, with how many it holds in
@@ -73,7 +85,7 @@ async function getAgentToolById(id: number, teamId: number): Promise<AgentToolRo
 
 export interface NewAgentToolInput {
   toolKey: string;
-  credentialId: number;
+  credentialId?: number;
 }
 
 export async function createAgentTool(
@@ -82,18 +94,27 @@ export async function createAgentTool(
 ): Promise<AgentToolRow> {
   const tool = getTool(input.toolKey);
   if (!tool) throw new HttpError(400, `Unknown tool: ${input.toolKey}`);
-  const credential = await getCredentialById(input.credentialId, teamId);
-  if (!credential) throw new HttpError(400, 'Credential not found');
-  if (credential.integrationKey !== tool.integration.key) {
-    throw new HttpError(
-      400,
-      `This tool needs a ${tool.integration.label} credential, not ${credential.integrationKey}.`,
-    );
+  const credentialId = input.credentialId ?? null;
+  if (tool.integration.credentialSchema.length === 0) {
+    if (credentialId !== null) {
+      throw new HttpError(400, `${tool.integration.label} tools take no credential.`);
+    }
+  } else if (credentialId === null) {
+    throw new HttpError(400, `This tool needs a ${tool.integration.label} credential.`);
+  } else {
+    const credential = await getCredentialById(credentialId, teamId);
+    if (!credential) throw new HttpError(400, 'Credential not found');
+    if (credential.integrationKey !== tool.integration.key) {
+      throw new HttpError(
+        400,
+        `This tool needs a ${tool.integration.label} credential, not ${credential.integrationKey}.`,
+      );
+    }
   }
   try {
     const [row] = await db
       .insert(agentTool)
-      .values({ teamId, toolKey: input.toolKey, credentialId: input.credentialId })
+      .values({ teamId, toolKey: input.toolKey, credentialId })
       .returning({ id: agentTool.id });
     return (await getAgentToolById(row.id, teamId))!;
   } catch (err) {
@@ -117,7 +138,7 @@ export async function listAgentToolLinks(agentId: number): Promise<AgentToolRow[
     .select(dtoColumns)
     .from(agentToolLink)
     .innerJoin(agentTool, eq(agentTool.id, agentToolLink.agentToolId))
-    .innerJoin(integrationCredential, eq(integrationCredential.id, agentTool.credentialId))
+    .leftJoin(integrationCredential, eq(integrationCredential.id, agentTool.credentialId))
     .where(eq(agentToolLink.agentId, agentId))
     .orderBy(agentTool.toolKey);
   return rows.map(mapRow);
@@ -138,14 +159,15 @@ export async function listAgentToolsForRun(
     })
     .from(agentToolLink)
     .innerJoin(agentTool, eq(agentTool.id, agentToolLink.agentToolId))
-    .innerJoin(integrationCredential, eq(integrationCredential.id, agentTool.credentialId))
+    .leftJoin(integrationCredential, eq(integrationCredential.id, agentTool.credentialId))
     .where(eq(agentToolLink.agentId, agentId));
-  return rows.map((r) => ({
-    id: r.id,
-    toolKey: r.toolKey,
-    credential: JSON.parse(
-      decryptSecret({ ciphertext: r.ciphertext, iv: r.iv, authTag: r.authTag }),
-    ) as ToolConfig,
+  return rows.map(({ id, toolKey, ciphertext, iv, authTag }) => ({
+    id,
+    toolKey,
+    credential:
+      ciphertext && iv && authTag
+        ? (JSON.parse(decryptSecret({ ciphertext, iv, authTag })) as ToolConfig)
+        : {},
   }));
 }
 

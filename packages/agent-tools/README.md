@@ -70,6 +70,13 @@ Everything downstream reads from that array: the tool index, the
 `integrationDescriptors()` catalog for the UI, and `coerceConfig`/`redactConfig`. No
 other file needs editing.
 
+## An integration without a credential
+
+An integration whose tools need no account with an external service (PDF downloads
+the file and parses it in the api process) declares `credentialSchema: []`. Its tools are configured without a
+credential, its `execute` receives `{}`, and the API refuses to store a credential for
+it.
+
 ## Rules
 
 - **A tool `key` is unique across all integrations.** The tool index is a flat map by

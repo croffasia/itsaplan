@@ -111,7 +111,9 @@ export const agentToolRoutes = new Elysia({
       response: { 201: AgentToolResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Configure a tool',
-        description: 'Bind a tool to an integration credential.',
+        description:
+          'Bind a tool to an integration credential. A tool whose integration needs no ' +
+          'credential is configured without one.',
       },
     },
   )

@@ -11,7 +11,9 @@ import type { z } from 'zod';
 //     (inputSchema) and how to run it (execute); the credential is passed in.
 //
 // A configured tool binds one tool to one credential, so different tools of the same
-// integration can use different credentials (e.g. two Jina keys).
+// integration can use different credentials (e.g. two Jina keys). An integration with an
+// empty credentialSchema needs no account with an external service (PDF), and its
+// configured tools are bound to no credential.
 
 // A field of an integration's credential form. `type` "secret" marks a value stored
 // encrypted and masked in the redacted view; other types are stored in plaintext.

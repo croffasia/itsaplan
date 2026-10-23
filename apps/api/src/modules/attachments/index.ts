@@ -8,6 +8,7 @@ import { pinnedFetch } from '#shared/net';
 import { mcpImageTool, mcpTool } from '#mcp/generate';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { getIssueProjectId } from '#modules/issues/service';
+import { readAttachmentContent } from '#modules/chat-attachments/service';
 import {
   getInitiativeAttachment,
   getInitiativeAttachmentProjectId,
@@ -316,19 +317,32 @@ export const attachmentRoutes = new Elysia({
     },
   )
 
-  .get('/attachments/view', ({ viewed }) => viewAttachments([viewed.row], () => viewed.dto), {
-    query: viewAttachmentQuery,
-    viewableAttachment: true,
-    response: { 200: ViewAttachmentsResponse, ...commonErrors },
-    detail: {
-      summary: 'View an attachment',
-      description:
-        'Look at one image of an issue or an initiative, given the url a result carries ' +
-        `for it or its id. Returns ${VIEWABLE_IMAGES}; any other file comes back in ` +
-        '`others` with its url.',
-      ...mcpImageTool('view_attachment'),
+  .get(
+    '/attachments/view',
+    async ({ viewed }) => {
+      const asImage = await viewAttachments([viewed.row], () => viewed.dto);
+      if (asImage.images.length > 0) return asImage;
+      return {
+        images: [],
+        others: [{ ...viewed.dto, ...(await readAttachmentContent(viewed.row)) }],
+      };
     },
-  })
+    {
+      query: viewAttachmentQuery,
+      viewableAttachment: true,
+      response: { 200: ViewAttachmentsResponse, ...commonErrors },
+      detail: {
+        summary: 'View an attachment',
+        description:
+          'Open one attachment of an issue or an initiative, given the url a result carries ' +
+          `for it or its id. An image comes back as the image itself (${VIEWABLE_IMAGES}). ` +
+          'Any other file comes back in `others` with its url and, for a PDF or a text file, ' +
+          'its full text; for a spreadsheet or document (.xlsx, .csv, .docx), its column ' +
+          'headers and first rows. A scanned PDF has no text to read.',
+        ...mcpImageTool('view_attachment'),
+      },
+    },
+  )
 
   .get(
     '/issues/:issueId/images',

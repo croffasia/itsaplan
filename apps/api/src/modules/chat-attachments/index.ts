@@ -27,7 +27,7 @@ import {
   createChatAttachment,
   getChatAttachmentByPublicId,
   getChatAttachmentProjectId,
-  readChatAttachmentContent,
+  readAttachmentContent,
   type ChatAttachmentRow,
 } from './service';
 
@@ -141,7 +141,7 @@ export const chatAttachmentRoutes = new Elysia({
     async ({ params }) => {
       const row = await getChatAttachmentByPublicId(params.publicId);
       if (!row) throw new HttpError(404, 'Attachment not found');
-      return { ...chatAttachmentDto(row), ...(await readChatAttachmentContent(row)) };
+      return { ...chatAttachmentDto(row), ...(await readAttachmentContent(row)) };
     },
     {
       params: publicIdParams,

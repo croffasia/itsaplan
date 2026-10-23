@@ -373,6 +373,14 @@ export const ALWAYS_ON_ACTIONS: ToolMeta[] = [
     always: true,
   },
   {
+    key: 'view_attachment',
+    group: 'issues',
+    label: 'View attachments',
+    description:
+      'Open an attachment of an issue or an initiative: an image, a PDF, a text file or a spreadsheet.',
+    always: true,
+  },
+  {
     key: 'upload_chat_attachment',
     group: 'issues',
     label: 'Upload chat attachments',

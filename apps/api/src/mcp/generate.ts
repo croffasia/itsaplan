@@ -75,6 +75,11 @@ export function mcpImageTool(tool: string): { 'x-mcp': { tool: string; images: t
   return { 'x-mcp': { tool, images: true } };
 }
 
+export interface ViewedAttachments {
+  images: { id: string; filename: string; contentType: string; data: string }[];
+  others: unknown[];
+}
+
 // What the HTTP method alone says about a route. A GET only reads; a DELETE
 // removes and repeats harmlessly; PUT/PATCH replace in place, so repeating one
 // lands on the same state; POST creates, so it does not.

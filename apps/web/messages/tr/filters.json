@@ -12,7 +12,11 @@
     "is_set": "belirlenmiş",
     "is_not_set": "belirlenmemiş",
     "contains": "içerir",
-    "not_contains": "içermez"
+    "not_contains": "içermez",
+    "overdue": "is overdue",
+    "today": "is today",
+    "next_3_days": "is in the next 3 days",
+    "next_7_days": "is in the next 7 days"
   },
   "boolean": {
     "true": "Doğru",
@@ -49,5 +53,6 @@
     "initiative": "Girişim yok",
     "cycle": "Döngü yok",
     "member": "Değer yok"
-  }
+  },
+  "currentUser": "Current user"
 }

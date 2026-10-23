@@ -12,7 +12,11 @@
     "is_set": "已設定",
     "is_not_set": "未設定",
     "contains": "包含",
-    "not_contains": "不包含"
+    "not_contains": "不包含",
+    "overdue": "is overdue",
+    "today": "is today",
+    "next_3_days": "is in the next 3 days",
+    "next_7_days": "is in the next 7 days"
   },
   "boolean": {
     "true": "是",
@@ -49,5 +53,6 @@
     "initiative": "無計畫",
     "cycle": "無週期",
     "member": "無值"
-  }
+  },
+  "currentUser": "Current user"
 }

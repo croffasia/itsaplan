@@ -5,6 +5,8 @@ import type { StateType } from '@/lib/api/endpoints/columns';
 // so the list renders without extra calls.
 export type NotificationType = 'assigned' | 'mentioned' | 'commented' | 'state_changed';
 
+export const PRIORITY_INBOX_TYPES: NotificationType[] = ['assigned', 'mentioned', 'commented'];
+
 export interface Notification {
   id: number;
   type: NotificationType;
@@ -67,12 +69,14 @@ export const listNotifications = (
   return request<NotificationPage>(`/notifications?${q.toString()}`);
 };
 
-// Unread count for the sidebar badge, refetched when the inbox scope moves. Without a
-// project it counts every project's, for the app icon badge.
-export const getUnreadCount = (projectId?: number) =>
-  request<{ unread: number }>(
-    projectId == null ? '/notifications/unread' : `/notifications/unread?projectId=${projectId}`,
-  );
+// Unread count for the sidebar badge. Without a project it counts every project's.
+export const getUnreadCount = (projectId?: number, types?: NotificationType[]) => {
+  const q = new URLSearchParams();
+  if (projectId != null) q.set('projectId', String(projectId));
+  if (types?.length) q.set('types', types.join(','));
+  const query = q.toString();
+  return request<{ unread: number }>(`/notifications/unread${query ? `?${query}` : ''}`);
+};
 
 export const setNotificationRead = (id: number, read: boolean) =>
   request<void>(`/notifications/${id}/read`, { method: 'POST', body: JSON.stringify({ read }) });

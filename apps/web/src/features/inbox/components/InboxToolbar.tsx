@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CheckCheck, ListFilter, MoreHorizontal, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { NotificationFilters, NotificationType } from '@/lib/api/endpoints/notifications';
+import { PRIORITY_INBOX_TYPES } from '@/lib/api/endpoints/notifications';
 import { Button } from '@/components/ui/button';
 import InboxDeleteCompletedDialog from './InboxDeleteCompletedDialog';
 import {
@@ -18,8 +19,6 @@ import {
 
 const TYPES: NotificationType[] = ['assigned', 'mentioned', 'commented', 'state_changed'];
 
-// The inbox list header: title with unread count, a type filter, display toggles
-// (show read / snoozed), and the bulk-action menu.
 export default function InboxToolbar({
   unread,
   filters,
@@ -38,13 +37,16 @@ export default function InboxToolbar({
   const t = useTranslations('inbox');
   const tCommon = useTranslations('common');
   const [confirmingDeleteCompleted, setConfirmingDeleteCompleted] = useState(false);
-  const selectedTypes = filters.types ?? [];
+  const selectedTypes = filters.types ?? PRIORITY_INBOX_TYPES;
 
   const toggleType = (type: NotificationType) => {
     const next = selectedTypes.includes(type)
       ? selectedTypes.filter((t) => t !== type)
       : [...selectedTypes, type];
-    onFiltersChange({ ...filters, types: next.length ? next : undefined });
+    onFiltersChange({
+      ...filters,
+      types: next.length ? next : [...PRIORITY_INBOX_TYPES],
+    });
   };
 
   return (

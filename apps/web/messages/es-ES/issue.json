@@ -356,6 +356,8 @@
   },
   "development": {
     "title": "Desarrollo",
+    "builds": "Builds",
+    "buildsCount": "{count, plural, one {# build} other {# builds}}",
     "unlink": "Desenlazar un elemento de desarrollo",
     "branch": "Rama",
     "add": "Añadir",

@@ -31,7 +31,8 @@
   "widgets": {
     "stat": {
       "label": "개수",
-      "description": "필터 조건과 일치하는 이슈 수"
+      "description": "필터 조건과 일치하는 이슈 수",
+      "viewIssues": "이슈 보기: {title} ({count})"
     },
     "recent_issues": {
       "label": "최근 이슈",

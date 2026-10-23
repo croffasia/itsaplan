@@ -4,6 +4,7 @@
   "valuePlaceholder": "значення",
   "noOptions": "Немає варіантів",
   "selected": "Вибрано: {count}",
+  "currentUser": "Поточний користувач",
   "operators": {
     "is": "дорівнює",
     "is_not": "не дорівнює",
@@ -12,7 +13,11 @@
     "is_set": "задано",
     "is_not_set": "не задано",
     "contains": "містить",
-    "not_contains": "не містить"
+    "not_contains": "не містить",
+    "overdue": "прострочено",
+    "today": "сьогодні",
+    "next_3_days": "у наступні 3 дні",
+    "next_7_days": "у наступні 7 днів"
   },
   "boolean": {
     "true": "Так",

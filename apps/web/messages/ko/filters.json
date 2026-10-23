@@ -12,7 +12,11 @@
     "is_set": "값 있음",
     "is_not_set": "값 없음",
     "contains": "포함",
-    "not_contains": "포함하지 않음"
+    "not_contains": "포함하지 않음",
+    "overdue": "기한이 지남",
+    "today": "오늘",
+    "next_3_days": "향후 3일 이내",
+    "next_7_days": "향후 7일 이내"
   },
   "boolean": {
     "true": "예",
@@ -49,5 +53,6 @@
     "initiative": "이니셔티브 없음",
     "cycle": "사이클 없음",
     "member": "값 없음"
-  }
+  },
+  "currentUser": "현재 사용자"
 }

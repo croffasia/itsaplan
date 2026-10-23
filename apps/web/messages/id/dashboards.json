@@ -31,7 +31,8 @@
   "widgets": {
     "stat": {
       "label": "Statistik",
-      "description": "Jumlah issue yang cocok dengan filter"
+      "description": "Jumlah issue yang cocok dengan filter",
+      "viewIssues": "Lihat isu: {title} ({count})"
     },
     "recent_issues": {
       "label": "Issue terbaru",

@@ -31,7 +31,8 @@
   "widgets": {
     "stat": {
       "label": "Número",
-      "description": "Contagem de issues que correspondem a um filtro"
+      "description": "Contagem de issues que correspondem a um filtro",
+      "viewIssues": "Ver tarefas: {title} ({count})"
     },
     "recent_issues": {
       "label": "Issues recentes",

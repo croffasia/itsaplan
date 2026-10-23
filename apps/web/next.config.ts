@@ -43,6 +43,13 @@ const nextConfig: NextConfig = {
   // next dev otherwise appends a block of its own to apps/web/AGENTS.md on every
   // start, which leaves the working tree dirty for anyone running the dev server.
   agentRules: false,
+  // React Compiler (stable in Next 16) memoizes components automatically. The
+  // Rust port runs inside Turbopack so the extra Babel pass is not on the
+  // critical path for this app.
+  reactCompiler: true,
+  experimental: {
+    turbopackRustReactCompiler: true,
+  },
   // Every local image is served by app/media. Next 16 refuses a query string on
   // a local image unless its path is listed here; the attachments panel stamps a
   // replaced attachment's URL with one so the optimizer refetches it.

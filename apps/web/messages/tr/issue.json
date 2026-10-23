@@ -411,7 +411,9 @@
       "failed": "Başarısız",
       "canceled": "İptal edildi",
       "skipped": "Atlandı"
-    }
+    },
+    "builds": "Builds",
+    "buildsCount": "{count, plural, one {# build} other {# builds}}"
   },
   "documents": {
     "title": "Belgeler",

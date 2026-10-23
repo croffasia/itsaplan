@@ -411,7 +411,9 @@
       "failed": "ناموفق",
       "canceled": "لغو شده",
       "skipped": "رد شده"
-    }
+    },
+    "builds": "بیلدها",
+    "buildsCount": "{count, plural, one {# بیلد} other {# بیلد}}"
   },
   "documents": {
     "title": "مستندات",

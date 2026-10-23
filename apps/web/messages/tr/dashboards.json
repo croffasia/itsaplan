@@ -31,7 +31,8 @@
   "widgets": {
     "stat": {
       "label": "Sayı",
-      "description": "Belirli bir filtreyle eşleşen işlerin sayısı"
+      "description": "Belirli bir filtreyle eşleşen işlerin sayısı",
+      "viewIssues": "View issues: {title} ({count})"
     },
     "recent_issues": {
       "label": "Son işler",

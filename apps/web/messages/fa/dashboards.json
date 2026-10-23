@@ -31,7 +31,8 @@
   "widgets": {
     "stat": {
       "label": "عدد",
-      "description": "تعداد تسک‌های مطابق با یک فیلتر"
+      "description": "تعداد تسک‌های مطابق با یک فیلتر",
+      "viewIssues": "مشاهدهٔ تسک‌ها: {title} ({count})"
     },
     "recent_issues": {
       "label": "تسک‌های اخیر",

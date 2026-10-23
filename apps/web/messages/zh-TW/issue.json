@@ -411,7 +411,9 @@
       "failed": "失敗",
       "canceled": "已取消",
       "skipped": "已跳過"
-    }
+    },
+    "builds": "Builds",
+    "buildsCount": "{count, plural, one {# build} other {# builds}}"
   },
   "documents": {
     "title": "文件",

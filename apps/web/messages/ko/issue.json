@@ -411,7 +411,9 @@
       "failed": "실패",
       "canceled": "취소됨",
       "skipped": "건너뜀"
-    }
+    },
+    "builds": "빌드",
+    "buildsCount": "{count, plural, other {#개 빌드}}"
   },
   "documents": {
     "title": "문서",

@@ -31,7 +31,8 @@
   "widgets": {
     "stat": {
       "label": "数量",
-      "description": "符合筛选条件的工作项数量"
+      "description": "符合筛选条件的工作项数量",
+      "viewIssues": "查看工作项：{title}（{count}）"
     },
     "recent_issues": {
       "label": "最近工作项",

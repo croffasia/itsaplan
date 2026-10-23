@@ -31,7 +31,8 @@
   "widgets": {
     "stat": {
       "label": "數量",
-      "description": "符合篩選條件的工作項目數量"
+      "description": "符合篩選條件的工作項目數量",
+      "viewIssues": "View issues: {title} ({count})"
     },
     "recent_issues": {
       "label": "最近工作項目",

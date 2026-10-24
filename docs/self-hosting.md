@@ -269,5 +269,6 @@ docker compose up -d --build
 That builds every service from this checkout and runs those images. Nothing else changes, and
 the same command picks up local edits.
 
+For Unraid with Compose Manager, see [unraid.md](unraid.md).
 For a Coolify instance, see [coolify.md](coolify.md). For Kubernetes, see [helm.md](helm.md).
 For a hosted deploy without a server of your own, see [railway.md](railway.md).

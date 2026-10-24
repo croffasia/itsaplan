@@ -582,7 +582,7 @@ describe('agent chat history', () => {
     const { asOwner } = await setup();
     const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
 
-    for (const threadId of [`issue:1:${agent.id}`, 'schedule:1', 'run:1']) {
+    for (const threadId of [`issue:1:${agent.id}`, `schedule:1:${agent.id}`, 'run:1']) {
       const res = await agents(asOwner)({ agentId: agent.id }).run.post({
         prompt: 'what did you do?',
         threadId,

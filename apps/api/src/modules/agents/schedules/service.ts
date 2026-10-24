@@ -307,8 +307,8 @@ export async function updateAgentSchedule(
   return getAgentSchedule(projectId, scheduleId, actorUserId);
 }
 
-// Deletes a schedule and the conversation thread its runs shared, which lives outside
-// the database cascades (see ../core/runtime/memory).
+// Deletes a schedule and the conversation threads its runs shared, one per agent that
+// ran it, which live outside the database cascades (see ../core/runtime/memory).
 export async function deleteAgentSchedule(
   projectId: number,
   scheduleId: number,

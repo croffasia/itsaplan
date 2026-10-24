@@ -2,18 +2,19 @@
 
 <img src="assets/banner.png" alt="It's a Plan — open-source project management and issue tracking where people and AI agents ship together" width="100%" />
 
-### Open-source alternative to Linear, Jira, Trello, and Plane, with AI agents built in
+# The open-source Linear alternative<br>where AI agents work as teammates
 
-Self-hosted project management and issue tracking. The difference: AI agents work here like any
-teammate — and everything is available over the REST API, webhooks, and MCP.
+Self-hosted project management and issue tracking, with no per-seat fees. Agents take issues on
+the same board as your people. Everything is available over the REST API, webhooks, and MCP.
+Replaces Linear, Jira, Asana, Trello, Plane, and Miro.
 
-If It's a Plan looks useful to you, star the repo ⭐ — it helps other people find it.
+If It's a Plan looks useful to you, star the repo ⭐ and
+[leave a review on Product Hunt](https://www.producthunt.com/products/it-s-a-plan/reviews).
 
 <a href="https://railway.com/deploy/its-a-plan?referralCode=lQ5O6i&utm_medium=integration&utm_source=button&utm_campaign=itsaplan"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="40" /></a>
 <a href="docs/coolify.md"><img src="assets/coolify-button.svg" alt="Deploy on Coolify" height="40" /></a>
 <a href="docs/self-hosting.md"><img src="assets/docker-button.svg" alt="Self-host with Docker" height="40" /></a>
-
-[Website](https://itsaplan.dev) · [Pro](https://itsaplan.dev/pro) · [Discussions](https://github.com/croffasia/itsaplan/discussions) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Leave a review](https://www.producthunt.com/products/it-s-a-plan/reviews/new?utm_source=badge-product_review&utm_medium=badge)
+<a href="https://itsaplan.dev/pro"><img src="assets/pro-button.svg" alt="Deploy Pro version" height="40" /></a>
 
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![CI](https://github.com/croffasia/itsaplan/actions/workflows/ci.yml/badge.svg)](https://github.com/croffasia/itsaplan/actions/workflows/ci.yml)
@@ -42,25 +43,14 @@ own API keys — no per-seat fees, no lock-in.
 It's a Plan is under active development. Expect breaking changes before the first stable
 release.
 
-## How to help
-
-1. **Star the repo** if you think more people should see it. That is the whole cost, and it
-   is what makes the project findable.
-2. **Share it** — post it on social media or send it to a colleague who runs a team or
-   writes code. One link reaches people search never will.
-3. **Contribute.** Issues, bug reports, and pull requests are all welcome — start with
-   [CONTRIBUTING.md](CONTRIBUTING.md).
-4. **Buy Pro.** The license pays for the work on the free Community edition, and your
-   instance gets the [Pro features](#pro-edition) in return —
-   [pricing and license terms](https://itsaplan.dev/pro).
-
 ## Features
 
 | Area | What you get |
 | --------- | ------------------------------------------------------------------------------------- |
 | Product management | Kanban, table, timeline, and calendar views · cycles · custom fields · dashboards · docs · notes boards |
 | AI agents | Agents as project members · internal on any model, or external on your coding CLI · runs start on an @mention, an assignment, or a schedule |
-| Platform | REST API with OpenAPI · MCP server · webhooks · pull requests from 5 forges · passkeys and Google sign-in · 12 languages |
+| Platform | REST API with OpenAPI · MCP server · webhooks · pull requests from 5 forges · passkeys and Google sign-in |
+| 13 languages | English · Ukrainian · Russian · Simplified Chinese · Traditional Chinese · Arabic · Persian · French · Portuguese (Brazil) · Indonesian · Spanish · Korean · Turkish |
 
 <details>
 <summary><b>Product management</b> — the full list</summary>
@@ -112,7 +102,6 @@ release.
 - Outgoing webhooks: subscribe to events, signed payloads, and retries with a delivery log
 - Sign in with an email or a username and a password, a passkey, or Google
 - Notifications by email (SMTP or Resend) and Telegram, with per-member preferences
-- Interface in English, Ukrainian, Russian, Simplified Chinese, Traditional Chinese (Taiwan), Arabic, Persian, French, Portuguese (Brazil), Bahasa Indonesia, Spanish (Spain), Korean, and Turkish
 - Instance administration: storage limits, mail transport, and instance-wide settings
 
 </details>

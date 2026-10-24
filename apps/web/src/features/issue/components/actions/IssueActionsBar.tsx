@@ -24,6 +24,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useArchiveAction } from '../../hooks/useArchiveAction';
 import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueActions';
 import { buildIssueBranchName, buildIssuePrompt } from '../../utils/issuePrompt';
+import { writeClipboardText } from '../../utils/clipboard';
 import { useSession } from '@/lib/auth-client';
 import { shareIssuePath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
@@ -84,7 +85,7 @@ export default function IssueActionsBar({
   const issueActions = canEdit ? matchedActions(actionsQuery.data ?? [], project, issue) : [];
 
   async function copyPrompt() {
-    await navigator.clipboard.writeText(buildIssuePrompt(issue, project, session?.user));
+    await writeClipboardText(buildIssuePrompt(issue, project, session?.user));
     setCopied(true);
     if (copiedTimer.current) clearTimeout(copiedTimer.current);
     copiedTimer.current = setTimeout(() => setCopied(false), 1500);
@@ -97,7 +98,7 @@ export default function IssueActionsBar({
   }
 
   async function copyBranch() {
-    await navigator.clipboard.writeText(buildIssueBranchName(issue, session?.user));
+    await writeClipboardText(buildIssueBranchName(issue, session?.user));
     toast.success(t('branchCopied'));
   }
 

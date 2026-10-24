@@ -212,7 +212,7 @@
     "error": "Değişiklikler eşitlenemedi. Taslağınız bu sekmede tutuluyor.",
     "conflict": "Belge geri yüklendi, değiştirildi veya erişim hakları güncellendi. Yeniden katılmadan önce taslağınızı saklayın.",
     "retry": "Tekrar dene",
-    "recoveryConflict": "Sunucudaki belge değiştirildi. Kaydedilmemiş metniniz burada gösterilmektedir. Mevcut sürümü açmadan önce metninizi dışa aktarın.",
+    "recoveryConflict": "Kaydedilmemiş değişiklikleriniz mevcut sürümle uyuşmuyor. Burada gösterilen metni dışa aktarın, ardından mevcut sürümü açın.",
     "exportRecovery": "Metnimi dışa aktar",
     "discardRecovery": "Mevcut sürümü aç",
     "discardConfirm": "Kaydedilmemiş bu kopya silinip mevcut sunucu sürümü açılsın mı? İhtiyacınız varsa önce metninizi dışa aktarın."

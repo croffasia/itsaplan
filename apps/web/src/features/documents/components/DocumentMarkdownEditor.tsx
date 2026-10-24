@@ -87,6 +87,8 @@ export function documentEditorExtensions(labels: EditorLabels) {
       codeBlock: false,
       link: false,
       heading: { levels: [1, 2, 3, 4, 5, 6] },
+      // Its paragraph is added before collab starts, so the server copy never gets it.
+      trailingNode: false,
     }),
     CodeBlockLowlight.configure({ lowlight }),
     Placeholder.configure({ placeholder: labels.placeholder }),

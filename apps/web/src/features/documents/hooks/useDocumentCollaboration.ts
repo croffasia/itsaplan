@@ -203,9 +203,16 @@ export function useDocumentCollaboration({
           .run();
         editor.unregisterPlugin('history');
         editor.registerPlugin(history());
-        if (recovery && !canRecover) {
-          const tr = editor.state.tr;
-          for (const json of recovery.steps) tr.step(Step.fromJSON(editor.schema, json));
+        const tr = editor.state.tr;
+        // A stored step that no longer applies can never be saved: the steps before it go to export.
+        const replayed = (recovery?.steps ?? []).every((json) => {
+          try {
+            return !tr.maybeStep(Step.fromJSON(editor.schema, json)).failed;
+          } catch {
+            return false;
+          }
+        });
+        if (recovery && (!canRecover || !replayed)) {
           editor.view.dispatch(tr);
           setRecoveryConflict(true);
           setStatus('conflict');
@@ -217,8 +224,6 @@ export function useDocumentCollaboration({
         );
         state.current = { epoch: session.epoch, clientId, confirmed: base, snapshot: editor.state };
         if (recovery) {
-          const tr = editor.state.tr;
-          for (const json of recovery.steps) tr.step(Step.fromJSON(editor.schema, json));
           editor.view.dispatch(tr);
           state.current.snapshot = editor.state;
         }
@@ -244,8 +249,10 @@ export function useDocumentCollaboration({
   useEffect(() => {
     if (!editor || !ready) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    // A menu or selection update must not retry a refused save.
     const changed = () => {
-      if (!state.current || editor.isDestroyed) return;
+      if (!state.current || editor.isDestroyed || editor.state.doc === state.current.snapshot.doc)
+        return;
       state.current.snapshot = editor.state;
       if (!sendableSteps(editor.state)) return;
       setStatus('saving');

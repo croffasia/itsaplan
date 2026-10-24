@@ -212,7 +212,7 @@
     "error": "Los cambios no se han sincronizado. Tu borrador se conserva en esta pestaña.",
     "conflict": "El documento se restauró, se reemplazó o cambió el acceso. Guarda tu borrador antes de volver a unirte.",
     "retry": "Reintentar",
-    "recoveryConflict": "El documento del servidor fue reemplazado. Aquí se muestra tu texto sin guardar. Expórtalo antes de abrir la versión actual.",
+    "recoveryConflict": "Tus cambios sin guardar no encajan con la versión actual. Exporta el texto que se muestra aquí y luego abre la versión actual.",
     "exportRecovery": "Exportar mi texto",
     "discardRecovery": "Abrir la versión actual",
     "discardConfirm": "¿Descartar esta copia sin guardar y abrir la versión actual del servidor? Exporta tu texto primero si lo necesitas."

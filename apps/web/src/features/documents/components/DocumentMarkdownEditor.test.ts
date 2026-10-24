@@ -485,6 +485,52 @@ describe('collaborative editor convergence', () => {
     assert.equal(editor.getText(), 'One\n\nFirst\n\nTwo\n\nSecond');
     editor.destroy();
   });
+
+  it('sends every change to a document that ends with a list', async () => {
+    const { collab, sendableSteps } = await import('prosemirror-collab');
+    const editor = new Editor({
+      element: document.querySelector('#one') as HTMLElement,
+      extensions: documentEditorExtensions({
+        placeholder: '',
+        codeBlockLabel: 'Code',
+        tableLabel: 'Table',
+      }),
+    });
+    const served: JSONContent = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          attrs: { blockId: 'intro' },
+          content: [{ type: 'text', text: 'Intro' }],
+        },
+        {
+          type: 'bulletList',
+          attrs: { blockId: 'list' },
+          content: [
+            {
+              type: 'listItem',
+              content: [
+                {
+                  type: 'paragraph',
+                  attrs: { blockId: 'last' },
+                  content: [{ type: 'text', text: 'Last' }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    editor.commands.setContent(served, { emitUpdate: false });
+    let server = editor.schema.nodeFromJSON(served);
+    editor.registerPlugin(collab({ clientID: 'one' }));
+    editor.commands.setTextSelection(server.content.size - 3);
+    editor.commands.splitListItem('listItem');
+    for (const step of sendableSteps(editor.state)!.steps) server = step.apply(server).doc!;
+    assert.ok(server.eq(editor.state.doc));
+    editor.destroy();
+  });
 });
 
 describe('collaborative block anchors', () => {

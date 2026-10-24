@@ -298,7 +298,7 @@ export async function deleteColumn(
     await emitIssueEvents(projectId, 'issue.state_changed', moved, actorUserId);
     await queueStatusRuns(columnIssueIds, target.id, actorUserId);
   } else {
-    await emitWebhookEvents(projectId, 'issue.deleted', async () => deletedPayloads, actorUserId);
     for (const issueId of columnIssueIds) await deleteThreadsWhere({ issueId });
+    await emitWebhookEvents(projectId, 'issue.deleted', async () => deletedPayloads, actorUserId);
   }
 }

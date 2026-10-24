@@ -23,6 +23,8 @@ const TYPES: NotificationType[] = ['assigned', 'mentioned', 'commented', 'state_
 export default function InboxToolbar({
   unread,
   filters,
+  allProjects,
+  onAllProjectsChange,
   onFiltersChange,
   onMarkAllRead,
   onDeleteRead,
@@ -30,6 +32,8 @@ export default function InboxToolbar({
 }: {
   unread: number;
   filters: NotificationFilters;
+  allProjects: boolean;
+  onAllProjectsChange: (enabled: boolean) => void;
   onFiltersChange: (next: NotificationFilters) => void;
   onMarkAllRead: () => void;
   onDeleteRead: () => void;
@@ -52,6 +56,15 @@ export default function InboxToolbar({
       <div className="flex items-center gap-2">
         <span className="text-sm font-semibold">{t('title')}</span>
         {unread > 0 && <span className="text-xs text-muted-foreground">{unread}</span>}
+        <button
+          type="button"
+          className="ms-2 rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+          onClick={() => onAllProjectsChange(!allProjects)}
+          aria-pressed={allProjects}
+          title={t('scopeHint')}
+        >
+          {allProjects ? t('allProjects') : t('thisProject')}
+        </button>
       </div>
       <div className="flex items-center gap-1">
         <DropdownMenu>

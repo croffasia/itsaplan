@@ -205,7 +205,8 @@
     "searchPrompt": "{relation} 이슈 검색…",
     "failed": "이슈를 연결할 수 없습니다.",
     "noMatches": "일치하는 이슈가 없습니다.",
-    "typeToSearch": "이 프로젝트의 이슈를 검색하세요."
+    "typeToSearch": "이 프로젝트의 이슈를 검색하세요.",
+    "project": "프로젝트"
   },
   "subtasks": {
     "title": "하위 이슈",

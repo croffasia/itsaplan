@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { startOfDay } from 'date-fns';
 import { daysBetween } from '@/utils/dates';
 import { type MonthLabel } from '@/utils/timelineTrack';
@@ -11,20 +12,22 @@ export function TimelineHeader({
   dayW,
   months,
   days,
+  corner,
 }: {
   labelW: number;
   trackWidth: number;
   dayW: number;
   months: MonthLabel[];
   days: Date[];
+  // What the corner over the label column shows; empty when absent.
+  corner?: ReactNode;
 }) {
   const today = startOfDay(new Date());
   return (
     <div className="sticky top-0 z-20 flex border-b bg-background">
-      <div
-        className="sticky left-0 z-10 shrink-0 border-r bg-background"
-        style={{ width: labelW }}
-      />
+      <div className="sticky left-0 z-10 shrink-0 border-r bg-background" style={{ width: labelW }}>
+        {corner}
+      </div>
       <div className="relative" style={{ width: trackWidth, height: 44 }}>
         <div className="relative h-5 border-b">
           {months.map((m) => (

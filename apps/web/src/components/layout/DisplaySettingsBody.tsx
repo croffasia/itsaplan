@@ -46,7 +46,7 @@ export default function DisplaySettingsBody({
         <DisplayCalendarRows settings={settings} customFields={customFields} onChange={set} />
       )}
 
-      {(view === 'kanban' || view === 'table') && (
+      {(view === 'kanban' || view === 'table' || view === 'timeline') && (
         <DisplayPropertiesSection
           view={view}
           settings={settings}

@@ -137,7 +137,7 @@ export interface WorkItemsViewProps {
   // same thing to every viewer whatever they have filtered.
   columnCounts: Map<number, number>;
   // Custom field definitions applicable to this project (global + the project's
-  // type-scoped fields). The Table view renders enabled ones as columns.
+  // type-scoped fields). The Table and the Timeline render enabled ones as columns.
   customFields: CustomField[];
   settings: ViewSettings;
   // Persist a settings change (used by the flat project to store hidden columns in

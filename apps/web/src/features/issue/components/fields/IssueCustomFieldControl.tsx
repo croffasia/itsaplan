@@ -1,6 +1,6 @@
 import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { Assignee } from '@/lib/api/endpoints/projects';
-import type { IssueFieldValue, IssueFieldValueInput } from '@/lib/api/endpoints/issues';
+import type { IssueFieldValueEntry, IssueFieldValueInput } from '@/lib/api/endpoints/issues';
 import { formatDate, formatDateTimeRange } from '@/utils/dates';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -36,7 +36,7 @@ export default function IssueCustomFieldControl({
   readOnly,
 }: {
   def: CustomField;
-  current: IssueFieldValue | undefined;
+  current: IssueFieldValueEntry | undefined;
   assignees: Assignee[];
   saveKey: string;
   onChange: (value: IssueFieldValueInput) => void;

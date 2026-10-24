@@ -19,7 +19,9 @@ export default function SortablePropertyChip({
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
   });
-  const style = { transform: CSS.Transform.toString(transform), transition };
+  // Translate only: the grid strategy also scales a chip to the size of the one it
+  // takes the place of, which stretches chips of different widths.
+  const style = { transform: CSS.Translate.toString(transform), transition };
   return (
     <span
       ref={setNodeRef}

@@ -7,10 +7,10 @@ import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { IssueType } from '@/lib/api/endpoints/issueTypes';
 import { useDndSensors } from '@/lib/dnd';
 import {
-  DISPLAY_PROPERTIES,
   customFieldId,
   isCustomFieldKey,
-  offeredDisplayProperties,
+  isFieldEnabled,
+  type DisplayProperty,
   type PropertyKey,
 } from '@/utils/viewSettings';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
@@ -18,19 +18,25 @@ import CustomFieldMenu from '@/components/layout/CustomFieldMenu';
 import PropertyChip from '@/components/layout/PropertyChip';
 import SortablePropertyChip from '@/components/layout/SortablePropertyChip';
 
-// The Table view's Display-properties chips: enabled properties first as a
-// horizontal sortable list (drag to reorder — this is the column order), then
-// the not-yet-shown built-in properties, then the "…" custom-field picker.
-// Clicking an enabled chip removes it; clicking a disabled one adds it (to the
-// end). onChange receives the new ordered `properties` list.
-export default function TableProperties({
+// The Display-properties chips of a layout that shows properties as columns (Table,
+// Timeline): enabled properties first as a horizontal sortable list (drag to
+// reorder — this is the column order), then the not-yet-shown built-in properties,
+// then the "…" custom-field picker. Clicking an enabled chip removes it; clicking a
+// disabled one adds it (to the end). onChange receives the new ordered `properties`
+// list. A stored key the layout does not render gets no chip.
+export default function ColumnProperties({
   properties,
+  builtins,
   customFields,
   issueTypes,
   onChange,
   trailing,
 }: {
   properties: PropertyKey[];
+  // The built-in properties the layout renders; `customFields` holds only the fields
+  // it renders. One whose section is off is not offered, but keeps its chip while
+  // enabled, so it can still be removed.
+  builtins: DisplayProperty[];
   customFields: CustomField[];
   issueTypes: IssueType[];
   onChange: (properties: PropertyKey[]) => void;
@@ -41,17 +47,18 @@ export default function TableProperties({
   const t = byKey(useTranslations('display.properties'));
   const sensors = useDndSensors();
   const fieldById = new Map(customFields.map((f) => [f.id, f]));
-  const builtins = new Set<PropertyKey>(DISPLAY_PROPERTIES);
+  const rendered = new Set<PropertyKey>(builtins);
   const labelFor = (key: PropertyKey): string | null => {
     if (isCustomFieldKey(key)) return fieldById.get(customFieldId(key))?.name ?? null;
-    return builtins.has(key) ? t(key) : null;
+    return rendered.has(key) ? t(key) : null;
   };
 
-  // Enabled keys in display order, dropping any stale (deleted custom field) key.
   const enabled = properties.filter((k) => labelFor(k) != null);
   const enabledSet = new Set(properties);
   const features = useProjectFeatures();
-  const disabledBuiltins = offeredDisplayProperties(features).filter((p) => !enabledSet.has(p));
+  const disabledBuiltins = builtins.filter(
+    (p) => !enabledSet.has(p) && isFieldEnabled(p, features),
+  );
 
   const toggle = (key: PropertyKey) =>
     onChange(enabledSet.has(key) ? properties.filter((p) => p !== key) : [...properties, key]);

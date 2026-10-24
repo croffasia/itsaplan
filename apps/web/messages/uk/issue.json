@@ -267,7 +267,9 @@
     "no": "Ні",
     "time": "Час",
     "startTime": "Початок",
-    "endTime": "Завершення"
+    "endTime": "Завершення",
+    "pickOption": "Виберіть варіант…",
+    "noOption": "Не вибрано"
   },
   "editor": {
     "descriptionPlaceholder": "Додайте опис…"

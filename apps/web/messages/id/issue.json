@@ -267,7 +267,9 @@
     "no": "Tidak",
     "time": "Waktu",
     "startTime": "Waktu mulai",
-    "endTime": "Waktu selesai"
+    "endTime": "Waktu selesai",
+    "pickOption": "Pilih opsi…",
+    "noOption": "Tanpa opsi"
   },
   "editor": {
     "descriptionPlaceholder": "Tambah deskripsi…"

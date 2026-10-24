@@ -267,7 +267,9 @@
     "no": "خیر",
     "time": "زمان",
     "startTime": "زمان شروع",
-    "endTime": "زمان پایان"
+    "endTime": "زمان پایان",
+    "pickOption": "یک گزینه انتخاب کنید…",
+    "noOption": "بدون گزینه"
   },
   "editor": {
     "descriptionPlaceholder": "افزودن توضیحات…"

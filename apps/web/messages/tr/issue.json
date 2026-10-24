@@ -267,7 +267,9 @@
     "no": "Hayır",
     "time": "Saat",
     "startTime": "Başlangıç saati",
-    "endTime": "Bitiş saati"
+    "endTime": "Bitiş saati",
+    "pickOption": "Bir seçenek seçin…",
+    "noOption": "Seçenek yok"
   },
   "editor": {
     "descriptionPlaceholder": "Açıklama ekleyin…"

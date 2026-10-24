@@ -267,7 +267,9 @@
     "no": "لا",
     "time": "الوقت",
     "startTime": "وقت البدء",
-    "endTime": "وقت الانتهاء"
+    "endTime": "وقت الانتهاء",
+    "pickOption": "اختار خيار…",
+    "noOption": "من غير اختيار"
   },
   "editor": {
     "descriptionPlaceholder": "إضافة وصف…"

@@ -221,6 +221,10 @@ function trackFloor(w: string): number {
   return (minmax ? Number(minmax[1]) : parseInt(w, 10)) || 0;
 }
 
+// The floor of a column's default track, which the Timeline uses as the column's
+// fixed width.
+export const columnFloor = (c: OrderedColumn): number => trackFloor(defaultColumnWidth(c));
+
 // Minimum outer width (px) the table needs for every track to sit at its floor:
 // the row's horizontal padding (px-4) + the inter-column gaps (gap-3) + each
 // track's floor. Applied as a min-width so a narrow (phone) viewport scrolls
@@ -246,20 +250,29 @@ interface TableLayout {
   alignTop: boolean;
 }
 
-export function resolveColumns(
+// The columns `properties` names, in its order: each built-in but 'id', and each
+// custom field found in `customFields`. Any other key is dropped.
+export function orderedColumns(
   properties: PropertyKey[],
   customFields: CustomField[],
-  widths: ColumnWidths,
-): TableLayout {
+): OrderedColumn[] {
   const builtins = new Set<string>(Object.keys(COLUMN_META));
   const fieldById = new Map(customFields.map((f) => [f.id, f]));
-  const columns: OrderedColumn[] = properties.flatMap((p): OrderedColumn[] => {
+  return properties.flatMap((p): OrderedColumn[] => {
     if (isCustomFieldKey(p)) {
       const field = fieldById.get(customFieldId(p));
       return field ? [{ kind: 'custom', field }] : [];
     }
     return builtins.has(p) ? [{ kind: 'builtin', col: p as TableColumn }] : [];
   });
+}
+
+export function resolveColumns(
+  properties: PropertyKey[],
+  customFields: CustomField[],
+  widths: ColumnWidths,
+): TableLayout {
+  const columns = orderedColumns(properties, customFields);
   const tracks = [
     trackWidth(TITLE_COLUMN_KEY, TITLE_COLUMN_WIDTH, widths),
     ...columns.map((c) => trackWidth(columnKey(c), defaultColumnWidth(c), widths)),

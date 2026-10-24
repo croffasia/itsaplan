@@ -4,6 +4,7 @@
 // shows only the controls that apply to the active view. Missing fields fall
 // back to per-view defaults, so the store grows new options without a migration.
 
+import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { ProjectFeatureSet } from '@/utils/projectFeatures';
 import type { Sort, WorkItemsView } from '@/utils/viewTypes';
 
@@ -16,7 +17,8 @@ export type BuiltinGroupField =
   'none' | 'status' | 'assignee' | 'delegate' | 'priority' | 'type' | 'initiative' | 'cycle';
 export type GroupField = BuiltinGroupField | CustomFieldKey;
 
-// Issue properties that can be shown on a Project card or as a Table column.
+// Issue properties that can be shown on a Project card or as a Table or Timeline
+// column.
 // 'id' is the issue identifier; 'status' the state; the rest map to issue
 // fields directly.
 export type DisplayProperty =
@@ -37,9 +39,10 @@ export type DisplayProperty =
   | 'updated'
   | 'statusAge';
 
-// A custom field shown as a Table column, keyed by its id as `cf:<id>`. Kept
-// distinct from the built-in DisplayProperty union so both can live in the same
-// `properties` list. Stale keys (a since-deleted field) are ignored at render.
+// A custom field shown as a Table or Timeline column, keyed by its id as
+// `cf:<id>`. Kept distinct from the built-in DisplayProperty union so both can live
+// in the same `properties` list. Stale keys (a since-deleted field) are ignored at
+// render.
 export type CustomFieldKey = `cf:${number}`;
 export type PropertyKey = DisplayProperty | CustomFieldKey;
 
@@ -99,6 +102,11 @@ export function offeredDisplayProperties(features: ProjectFeatureSet): DisplayPr
   return DISPLAY_PROPERTIES.filter((p) => isFieldEnabled(p, features));
 }
 
+// The custom fields the Timeline offers as columns. A text or markdown value does
+// not fit a Timeline row.
+export const isTimelineField = (field: CustomField): boolean =>
+  field.fieldType !== 'text' && field.fieldType !== 'markdown';
+
 // Timeline zoom: how much horizontal space one day gets, which sets whether day
 // numbers or only week/month ticks are legible.
 export type TimelineScale = 'week' | 'month' | 'quarter';
@@ -126,8 +134,8 @@ export interface ViewSettings {
   // boards do not use them.
   showLinks: boolean;
   // The issues' subtasks, rendered the same way under their parent. Toggled by the
-  // Nested subtasks chip in Display properties, and by a row of its own on the
-  // Timeline, which has no chips.
+  // Nested subtasks chip in Display properties, and on the Timeline by a row of its
+  // own.
   showSubtasks: boolean;
   // Whether a subtask also gets a card or row of its own next to the other issues.
   // Independent of showSubtasks: with both on it shows in both places, with both

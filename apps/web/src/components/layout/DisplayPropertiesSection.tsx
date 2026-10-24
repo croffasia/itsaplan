@@ -3,6 +3,8 @@ import { byKey } from '@/utils/messageKey';
 import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { IssueType } from '@/lib/api/endpoints/issueTypes';
 import {
+  DISPLAY_PROPERTIES,
+  isTimelineField,
   offeredDisplayProperties,
   type PropertyKey,
   type ViewSettings,
@@ -10,10 +12,10 @@ import {
 import type { WorkItemsView } from '@/utils/viewTypes';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import PropertyChip from '@/components/layout/PropertyChip';
-import TableProperties from '@/components/layout/TableProperties';
+import ColumnProperties from '@/components/layout/ColumnProperties';
 
-// The Display properties block. On the Table layout the chips are the column
-// list, sortable and extendable with custom fields; on Project they are plain
+// The Display properties block. On the Table and the Timeline the chips are the
+// column list, sortable and extendable with custom fields; on Project they are plain
 // on/off chips for the built-in properties. The Nested subtasks chip is neither a
 // column nor a property — it toggles the subtask rows under a card or row — so it
 // sits after the property chips.
@@ -51,6 +53,9 @@ export default function DisplayPropertiesSection({
       onClick={() => onChange({ showSubtasks: !settings.showSubtasks })}
     />
   ) : null;
+  // The Timeline offers neither the identifier, which its title column always
+  // shows, nor a text or markdown field, and toggles the subtasks in a row of its own.
+  const timeline = view === 'timeline';
 
   return (
     <div className="space-y-3 border-t pt-2">
@@ -58,13 +63,14 @@ export default function DisplayPropertiesSection({
         {t('rows.displayProperties')}
       </p>
       <div className="flex flex-wrap items-center gap-1 px-1">
-        {view === 'table' ? (
-          <TableProperties
+        {view === 'table' || timeline ? (
+          <ColumnProperties
             properties={settings.properties}
-            customFields={customFields}
+            builtins={timeline ? DISPLAY_PROPERTIES.filter((p) => p !== 'id') : DISPLAY_PROPERTIES}
+            customFields={timeline ? customFields.filter(isTimelineField) : customFields}
             issueTypes={issueTypes}
             onChange={(properties) => onChange({ properties })}
-            trailing={subtasksChip}
+            trailing={timeline ? null : subtasksChip}
           />
         ) : (
           <>

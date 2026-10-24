@@ -267,7 +267,9 @@
     "no": "否",
     "time": "时间",
     "startTime": "开始时间",
-    "endTime": "结束时间"
+    "endTime": "结束时间",
+    "pickOption": "选择选项…",
+    "noOption": "无选项"
   },
   "editor": {
     "descriptionPlaceholder": "添加描述…"

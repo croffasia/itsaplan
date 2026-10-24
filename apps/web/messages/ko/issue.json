@@ -267,7 +267,9 @@
     "no": "아니요",
     "time": "시간",
     "startTime": "시작 시간",
-    "endTime": "종료 시간"
+    "endTime": "종료 시간",
+    "pickOption": "옵션 선택…",
+    "noOption": "옵션 없음"
   },
   "editor": {
     "descriptionPlaceholder": "설명 추가…"

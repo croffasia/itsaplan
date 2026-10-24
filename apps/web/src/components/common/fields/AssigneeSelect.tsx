@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { CircleDashed } from 'lucide-react';
 import type { Assignee } from '@/lib/api/endpoints/projects';
 import { useSession } from '@/lib/auth-client';
@@ -16,12 +17,15 @@ export default function AssigneeSelect({
   onChange,
   placeholder,
   readOnly,
+  trigger,
 }: {
   assignees: Assignee[];
   value: string | null;
   onChange: (userId: string | null) => void;
   placeholder?: string;
   readOnly?: boolean;
+  // Replaces the pill where a caller needs its own (a Timeline cell).
+  trigger?: ReactNode;
 }) {
   const t = useTranslations('issue.fieldSelects');
   const none = t('noAssignee');
@@ -45,14 +49,16 @@ export default function AssigneeSelect({
     <PopoverPick
       readOnly={readOnly}
       trigger={
-        <Pill active={!!assignee}>
-          {assignee ? (
-            <Avatar name={assignee.name} image={assignee.image} className="size-4 text-[8px]" />
-          ) : (
-            <CircleDashed />
-          )}
-          <span className="truncate">{assignee?.name ?? placeholder ?? none}</span>
-        </Pill>
+        trigger ?? (
+          <Pill active={!!assignee}>
+            {assignee ? (
+              <Avatar name={assignee.name} image={assignee.image} className="size-4 text-[8px]" />
+            ) : (
+              <CircleDashed />
+            )}
+            <span className="truncate">{assignee?.name ?? placeholder ?? none}</span>
+          </Pill>
+        )
       }
       inputPlaceholder={t('assignTo')}
       emptyText={t('noMembers')}

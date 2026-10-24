@@ -267,7 +267,9 @@
     "no": "No",
     "time": "Time",
     "startTime": "Start time",
-    "endTime": "End time"
+    "endTime": "End time",
+    "pickOption": "Pick an option…",
+    "noOption": "No option"
   },
   "editor": {
     "descriptionPlaceholder": "Add description…"

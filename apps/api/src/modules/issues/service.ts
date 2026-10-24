@@ -71,6 +71,7 @@ import { getInitiativeProjectId } from '#modules/initiatives/service';
 import { cycleStatus, getCycleRef, type CycleStatus } from '#modules/cycles/service';
 import { getMembership } from '#modules/members/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
+import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 import { queueStatusRuns } from '#modules/agents/schedules/issue-runs';
 import { applySubtaskAutomation } from './automation';
 import { assertWipLimit, columnAutoAssignee, wipLimitBreach } from '#modules/columns/service';
@@ -1167,9 +1168,11 @@ async function enqueueDelegateRun(after: IssueRow, actor?: ActivityActor): Promi
 }
 
 // Deletes an issue and everything attached to it. Field options/values, labels,
-// attachments, and activity all go by their ON DELETE CASCADE on issue_id. Returns
-// the deleted attachment rows so the caller can remove their objects from the store.
-// Returns null if the issue did not exist.
+// attachments, and activity all go by their ON DELETE CASCADE on issue_id; the agents'
+// conversation threads about it live outside the cascades and are deleted after. Unlike
+// archiving, this cannot be undone, so nothing would ever read those threads again.
+// Returns the deleted attachment rows so the caller can remove their objects from the
+// store. Returns null if the issue did not exist.
 export async function deleteIssue(
   issueId: number,
   actorUserId?: string | null,
@@ -1186,6 +1189,7 @@ export async function deleteIssue(
     return removed.length ? attachmentRows.map(mapAttachment) : null;
   });
   if (!attachments) return null;
+  await deleteThreadsWhere({ issueId });
   await emitIssueEvent('issue.deleted', deleted, actorUserId);
   return attachments;
 }

@@ -1,6 +1,7 @@
 import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { Assignee } from '@/lib/api/endpoints/projects';
 import type { IssueFieldValueInput } from '@/lib/api/endpoints/issues';
+import { fieldLabel } from '../../utils/fieldDefs';
 import IssueCustomFieldPill from '../fields/IssueCustomFieldPill';
 
 // The body fields that are not markdown, gathered in the "Other" section: a pill
@@ -21,7 +22,7 @@ export default function NewIssueBodyFields({
       {defs.map((def) => (
         <div key={def.id}>
           <h3 className="mb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            {def.name}
+            {fieldLabel(def)}
           </h3>
           <IssueCustomFieldPill
             def={def}

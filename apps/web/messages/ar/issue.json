@@ -137,6 +137,7 @@
     "description": "الوصف",
     "other": "أخرى",
     "submit": "إنشاء مهمة",
+    "requiredFieldsMissing": "املأ الحقول الإلزامية: {names}",
     "template": "قالب",
     "applyTemplate": "تطبيق قالب…",
     "noTemplates": "لا توجد قوالب."

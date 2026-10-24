@@ -137,6 +137,7 @@
     "description": "Açıklama",
     "other": "Diğer",
     "submit": "İş oluştur",
+    "requiredFieldsMissing": "Zorunlu alanları doldurun: {names}",
     "template": "Şablon",
     "applyTemplate": "Şablon uygula…",
     "noTemplates": "Şablon yok."

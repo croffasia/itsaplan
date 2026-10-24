@@ -1215,6 +1215,9 @@ export const customField = pgTable(
     // When true the field renders in the issue body (under the description),
     // like a second description; when false it renders as a Properties row.
     showInBody: boolean('show_in_body').notNull().default(false),
+    // A new issue is created with a value in the field, and the value cannot be cleared
+    // later. The create route and a value write check it; an import does not.
+    required: boolean('required').notNull().default(false),
     position: integer('position').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },

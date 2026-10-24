@@ -310,6 +310,8 @@
     },
     "mainInfo": "주요 정보",
     "mainInfoTooltip": "속성이 아닌 이슈 본문에 표시됩니다",
+    "required": "필수",
+    "requiredTooltip": "새 이슈에는 값이 필요하며, 값을 지울 수 없습니다",
     "mainInfoMeta": "주요 정보",
     "menu": "사용자 지정 필드 가져오기 및 내보내기",
     "copy": "사용자 지정 필드 복사",

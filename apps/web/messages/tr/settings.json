@@ -310,6 +310,8 @@
     },
     "mainInfo": "Ana bilgi",
     "mainInfoTooltip": "Özellikler panelinde değil, iş gövdesinde gösterilir",
+    "required": "Zorunlu",
+    "requiredTooltip": "Yeni bir iş bu alana değer girilmeden oluşturulamaz ve değer temizlenemez",
     "mainInfoMeta": "Ana bilgi",
     "menu": "Özel alan içe ve dışa aktarma",
     "copy": "Özel alanları kopyala",

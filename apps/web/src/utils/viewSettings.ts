@@ -133,9 +133,7 @@ export interface ViewSettings {
   // Timeline row. Off by default — the relations are an extra load, and most
   // boards do not use them.
   showLinks: boolean;
-  // The issues' subtasks, rendered the same way under their parent. Toggled by the
-  // Nested subtasks chip in Display properties, and on the Timeline by a row of its
-  // own.
+  // The issues' subtasks, rendered the same way under their parent.
   showSubtasks: boolean;
   // Whether a subtask also gets a card or row of its own next to the other issues.
   // Independent of showSubtasks: with both on it shows in both places, with both

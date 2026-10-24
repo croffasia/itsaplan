@@ -1,7 +1,9 @@
+import { GripVerticalIcon } from '@animateicons/react/lucide/grip-vertical-icon';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import type { PropertyKey } from '@/utils/viewSettings';
+import PropertyChip from '@/components/layout/PropertyChip';
 
 // An enabled, draggable property chip. A drag reorders it (the sensors require a
 // small move first, so a plain click still fires onClick to remove it). The drag
@@ -28,14 +30,15 @@ export default function SortablePropertyChip({
       style={style}
       {...attributes}
       {...listeners}
-      className={cn(
-        'flex cursor-grab items-center rounded-full border border-primary bg-primary text-xs text-primary-foreground transition-colors',
-        isDragging && 'opacity-40',
-      )}
+      className={cn('flex rounded-full *:cursor-grab', isDragging && 'opacity-40')}
     >
-      <button type="button" onClick={onClick} className="px-2 py-0.5">
-        {label}
-      </button>
+      <PropertyChip
+        label={label}
+        on
+        onClick={onClick}
+        icon={GripVerticalIcon}
+        iconClassName="text-muted-foreground"
+      />
     </span>
   );
 }

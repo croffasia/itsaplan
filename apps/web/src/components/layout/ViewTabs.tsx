@@ -7,7 +7,8 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
-import { Filter, Plus } from 'lucide-react';
+import { FilterIcon } from '@animateicons/react/lucide/filter-icon';
+import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { View } from '@/lib/api/endpoints/views';
 import { useDndSensors } from '@/lib/dnd';
@@ -15,6 +16,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import AllViewTab, { ALL_DROP_ID } from '@/components/layout/AllViewTab';
 import MobileViewSwitcher from '@/components/layout/MobileViewSwitcher';
 import SavedViewTab from '@/components/layout/SavedViewTab';
+import ToolbarIconButton from '@/components/layout/ToolbarIconButton';
 import ViewTabChrome from '@/components/layout/ViewTabChrome';
 import ViewTabLabel from '@/components/layout/ViewTabLabel';
 
@@ -140,14 +142,7 @@ export default function ViewTabs({
       </div>
 
       <div className="flex shrink-0 items-center gap-0.5 pl-2">
-        <button
-          type="button"
-          onClick={onToggleFilter}
-          title={t('filter')}
-          className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
-        >
-          <Filter className="size-4" />
-        </button>
+        <ToolbarIconButton icon={FilterIcon} title={t('filter')} onClick={onToggleFilter} />
         {displayControl}
       </div>
     </div>

@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import { closestCenter, DndContext, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, rectSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import { useTranslations } from 'next-intl';
@@ -18,19 +17,18 @@ import CustomFieldMenu from '@/components/layout/CustomFieldMenu';
 import PropertyChip from '@/components/layout/PropertyChip';
 import SortablePropertyChip from '@/components/layout/SortablePropertyChip';
 
-// The Display-properties chips of a layout that shows properties as columns (Table,
-// Timeline): enabled properties first as a horizontal sortable list (drag to
-// reorder — this is the column order), then the not-yet-shown built-in properties,
-// then the "…" custom-field picker. Clicking an enabled chip removes it; clicking a
-// disabled one adds it (to the end). onChange receives the new ordered `properties`
-// list. A stored key the layout does not render gets no chip.
+// The column chips of a layout that shows properties as columns (Table, Timeline):
+// the enabled properties as a sortable list (drag to reorder — this is the column
+// order), then on a line of their own the not-yet-shown built-in properties and the
+// custom-field picker. Clicking an enabled chip removes it; clicking a disabled one
+// adds it (to the end). onChange receives the new ordered `properties` list. A
+// stored key the layout does not render gets no chip.
 export default function ColumnProperties({
   properties,
   builtins,
   customFields,
   issueTypes,
   onChange,
-  trailing,
 }: {
   properties: PropertyKey[];
   // The built-in properties the layout renders; `customFields` holds only the fields
@@ -40,9 +38,6 @@ export default function ColumnProperties({
   customFields: CustomField[];
   issueTypes: IssueType[];
   onChange: (properties: PropertyKey[]) => void;
-  // Chips that are not columns, rendered after the property list and before the
-  // custom-field picker, which stays last.
-  trailing?: ReactNode;
 }) {
   const t = byKey(useTranslations('display.properties'));
   const sensors = useDndSensors();
@@ -73,29 +68,38 @@ export default function ColumnProperties({
   }
 
   return (
-    <>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={enabled} strategy={rectSortingStrategy}>
-          {enabled.map((key) => (
-            <SortablePropertyChip
-              key={key}
-              id={key}
-              label={labelFor(key)!}
-              onClick={() => toggle(key)}
-            />
-          ))}
-        </SortableContext>
-      </DndContext>
-      {disabledBuiltins.map((p) => (
-        <PropertyChip key={p} label={t(p)} on={false} onClick={() => toggle(p)} />
-      ))}
-      {trailing}
-      <CustomFieldMenu
-        customFields={customFields}
-        issueTypes={issueTypes}
-        selected={enabledSet}
-        onToggle={toggle}
-      />
-    </>
+    <div className="space-y-2.5 px-2 pt-1">
+      {enabled.length > 0 && (
+        <div className="flex flex-wrap gap-x-1 gap-y-1.5">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={enabled} strategy={rectSortingStrategy}>
+              {enabled.map((key) => (
+                <SortablePropertyChip
+                  key={key}
+                  id={key}
+                  label={labelFor(key)!}
+                  onClick={() => toggle(key)}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+        </div>
+      )}
+      <div className="flex flex-wrap gap-x-1 gap-y-1.5">
+        {disabledBuiltins.map((p) => (
+          <PropertyChip key={p} label={t(p)} on={false} onClick={() => toggle(p)} />
+        ))}
+        <CustomFieldMenu
+          customFields={customFields}
+          issueTypes={issueTypes}
+          selected={enabledSet}
+          onToggle={toggle}
+        />
+      </div>
+    </div>
   );
 }

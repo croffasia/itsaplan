@@ -6,12 +6,12 @@ import DisplayCalendarRows from '@/components/layout/DisplayCalendarRows';
 import DisplayGroupingRows from '@/components/layout/DisplayGroupingRows';
 import DisplayLayoutTabs from '@/components/layout/DisplayLayoutTabs';
 import DisplayPropertiesSection from '@/components/layout/DisplayPropertiesSection';
+import DisplayShowRows from '@/components/layout/DisplayShowRows';
+import DisplaySubtaskRows from '@/components/layout/DisplaySubtaskRows';
 import DisplayTimelineRows from '@/components/layout/DisplayTimelineRows';
 
-// The body of the Display settings: a tabbed layout switcher (Project/Table/
-// Timeline/Calendar) and the settings for the selected layout. Rendered inside
-// the DisplayPopover. Settings belong to the active project+view or saved view
-// (see the view editor and lib/viewSettings).
+// Settings belong to the active project+view or saved view (see the view editor and
+// utils/viewSettings).
 export default function DisplaySettingsBody({
   view,
   onViewChange,
@@ -30,31 +30,33 @@ export default function DisplaySettingsBody({
   const set = (patch: Partial<ViewSettings>) => onSettingsChange({ ...settings, ...patch });
 
   return (
-    <div className="space-y-2">
+    <>
       <DisplayLayoutTabs view={view} onViewChange={onViewChange} />
 
-      <DisplayGroupingRows
-        view={view}
-        settings={settings}
-        customFields={customFields}
-        onChange={set}
-      />
-
-      {view === 'timeline' && <DisplayTimelineRows settings={settings} onChange={set} />}
-
-      {view === 'calendar' && (
-        <DisplayCalendarRows settings={settings} customFields={customFields} onChange={set} />
-      )}
-
-      {(view === 'kanban' || view === 'table' || view === 'timeline') && (
-        <DisplayPropertiesSection
-          view={view}
-          settings={settings}
-          onChange={set}
-          customFields={customFields}
-          issueTypes={issueTypes}
-        />
-      )}
-    </div>
+      <div>
+        {view === 'calendar' ? (
+          <DisplayCalendarRows settings={settings} customFields={customFields} onChange={set} />
+        ) : (
+          <>
+            {view === 'timeline' && <DisplayTimelineRows settings={settings} onChange={set} />}
+            <DisplayGroupingRows
+              view={view}
+              settings={settings}
+              customFields={customFields}
+              onChange={set}
+            />
+            <DisplayShowRows view={view} settings={settings} onChange={set} />
+            <DisplaySubtaskRows view={view} settings={settings} onChange={set} />
+            <DisplayPropertiesSection
+              view={view}
+              settings={settings}
+              onChange={set}
+              customFields={customFields}
+              issueTypes={issueTypes}
+            />
+          </>
+        )}
+      </div>
+    </>
   );
 }

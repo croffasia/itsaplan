@@ -9,13 +9,14 @@ import {
 } from '@/utils/viewSettings';
 import { isCalendarField } from '@/utils/calendarFields';
 import { byKey } from '@/utils/messageKey';
+import DisplaySection from '@/components/layout/DisplaySection';
+import DisplaySegmented from '@/components/layout/DisplaySegmented';
 import DisplaySettingsRow from '@/components/layout/DisplaySettingsRow';
 import DisplaySettingsSelect from '@/components/layout/DisplaySettingsSelect';
 
 const DATE_FIELDS: BuiltinDateField[] = ['dueDate', 'startDate'];
 const WEEK_STARTS = ['0', '1'] as const;
 
-// The Display settings rows that only apply to the Calendar layout.
 export default function DisplayCalendarRows({
   settings,
   customFields,
@@ -35,7 +36,7 @@ export default function DisplayCalendarRows({
       .map((f) => ({ value: customFieldKey(f.id), label: f.name })),
   ];
   return (
-    <>
+    <DisplaySection>
       <DisplaySettingsRow label={t('placeBy')}>
         <DisplaySettingsSelect
           value={settings.calendarDateField}
@@ -43,13 +44,13 @@ export default function DisplayCalendarRows({
           options={options}
         />
       </DisplaySettingsRow>
-      <DisplaySettingsRow label={t('startWeekOn')}>
-        <DisplaySettingsSelect
+      <DisplaySettingsRow label={t('weekStartsOn')}>
+        <DisplaySegmented
           value={String(settings.weekStart)}
           onChange={(v) => onChange({ weekStart: Number(v) as WeekStart })}
           options={WEEK_STARTS.map((value) => ({ value, label: weekStart(value) }))}
         />
       </DisplaySettingsRow>
-    </>
+    </DisplaySection>
   );
 }

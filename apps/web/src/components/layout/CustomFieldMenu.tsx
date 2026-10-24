@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { useIconHover } from '@animateicons/react';
+import { PlusIcon } from '@animateicons/react/lucide/plus-icon';
 import { useTranslations } from 'next-intl';
 import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { IssueType } from '@/lib/api/endpoints/issueTypes';
 import type { PropertyKey } from '@/utils/viewSettings';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import CustomFieldRow from '@/components/layout/CustomFieldRow';
+import CustomFieldTypeGroup from '@/components/layout/CustomFieldTypeGroup';
 
-// The "…" picker that adds custom fields to the display: global fields at the top
+// The picker that adds custom fields to the display: global fields at the top
 // level, each issue type an expandable sub-list of its type-scoped fields.
 // Nothing renders when the project has no custom fields.
 export default function CustomFieldMenu({
@@ -24,6 +26,7 @@ export default function CustomFieldMenu({
   const t = useTranslations('display.rows');
   const [open, setOpen] = useState(false);
   const [expandedType, setExpandedType] = useState<number | null>(null);
+  const { ref, triggerProps } = useIconHover();
 
   const globalFields = customFields.filter((f) => f.issueTypeId == null);
   const typeGroups = issueTypes
@@ -36,11 +39,12 @@ export default function CustomFieldMenu({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
+          {...triggerProps}
           type="button"
-          title={t('addCustomField')}
-          className="flex items-center rounded-full border px-2 py-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          className="inline-flex h-6 items-center gap-1 rounded-full border border-dashed ps-1.5 pe-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
-          <MoreHorizontal className="size-3.5" />
+          <PlusIcon ref={ref} size={12} />
+          {t('customField')}
         </button>
       </PopoverTrigger>
       <PopoverContent side="left" align="start" className="w-56 p-1">
@@ -49,31 +53,15 @@ export default function CustomFieldMenu({
             <CustomFieldRow key={f.id} field={f} selected={selected} onToggle={onToggle} />
           ))}
           {typeGroups.map(({ type, fields }) => (
-            <div key={type.id}>
-              <button
-                type="button"
-                onClick={() => setExpandedType((id) => (id === type.id ? null : type.id))}
-                className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-sm hover:bg-accent"
-              >
-                {expandedType === type.id ? (
-                  <ChevronDown className="size-3.5 shrink-0" />
-                ) : (
-                  <ChevronRight className="size-3.5 shrink-0" />
-                )}
-                <span
-                  className="inline-block size-2 shrink-0 rounded-full"
-                  style={{ backgroundColor: type.color }}
-                />
-                <span className="flex-1 truncate">{type.name}</span>
-              </button>
-              {expandedType === type.id && (
-                <div className="pl-4">
-                  {fields.map((f) => (
-                    <CustomFieldRow key={f.id} field={f} selected={selected} onToggle={onToggle} />
-                  ))}
-                </div>
-              )}
-            </div>
+            <CustomFieldTypeGroup
+              key={type.id}
+              type={type}
+              fields={fields}
+              expanded={expandedType === type.id}
+              onToggleExpanded={() => setExpandedType((id) => (id === type.id ? null : type.id))}
+              selected={selected}
+              onToggle={onToggle}
+            />
           ))}
         </div>
       </PopoverContent>

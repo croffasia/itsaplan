@@ -375,13 +375,19 @@ Without a session the server sends the last 20 messages of the conversation as p
 macOS and Linux need nothing else. The runner starts a preset directly, so its arguments
 need no quotes. Your own `command` goes to `sh -c`, so write it as POSIX shell.
 
-Windows needs WSL2, because `cmd.exe` and PowerShell have no `sh`:
+On Windows, the runner also starts a preset directly, including a CLI that npm installed.
+The timeout and a stopped chat answer end the command and the processes that it started. A
+process that still runs after its parent process stopped is not ended.
+
+Your own `command` on Windows needs WSL2. The timeout cannot stop a command that an `sh` on
+Windows starts.
 
 ```powershell
 wsl --install     # installs Ubuntu, then reboot
 ```
 
-Do everything else in WSL: Node, the coding agent, the config file, and the runner.
+If you use WSL, keep all the other parts in WSL: Node, the coding agent, the config file,
+and the runner.
 
 - Keep the working directory in the WSL file system (`~/work/repo`), not under
   `/mnt/c/...`. Access between the two file systems is slow.

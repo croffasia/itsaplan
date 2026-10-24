@@ -1,6 +1,7 @@
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { presetOf, type RunnerConfig } from './config';
 import { presetArgv, presetPrompt, type Preset } from './presets';
+import { resolveCommand } from './windows';
 
 // Runs one task: the command the preset builds, or the operator's own in a shell, with the
 // task on stdin and its context in the environment. Everything the agent needs beyond the
@@ -29,6 +30,9 @@ export interface Outcome {
 const OUTPUT_LIMIT = 8000;
 const ERROR_LIMIT = 400;
 
+// How long the output of a command that was ended on Windows is still read after it exits.
+const OUTPUT_GRACE_MS = 1000;
+
 // Applied as the output arrives, so a command that prints for half an hour does not buffer
 // all of it to have everything but the last few kilobytes thrown away.
 function tail(text: string, limit: number): string {
@@ -46,11 +50,21 @@ function childEnv(config: RunnerConfig, task: Task): Record<string, string> {
   };
 }
 
-// The command gets its own process group, so the Ctrl-C that stops the runner does not
-// reach it — the runner promises to finish what is in flight. The timeout and the
-// member's stop then have to kill that group themselves, or a command that is a
-// pipeline leaves its children behind.
+// The command gets its own process group (on Windows, its own hidden console), so the
+// Ctrl-C that stops the runner does not reach it — the runner promises to finish what is
+// in flight. The timeout and the member's stop then have to kill that group themselves,
+// or a command that is a pipeline leaves its children behind. Windows cannot signal a
+// group, so taskkill ends the process tree instead.
 function killGroup(pid: number): void {
+  if (process.platform === 'win32') {
+    // A bare name is looked up in the current directory first, and the agent can write there.
+    const taskkill = `${process.env.SystemRoot ?? 'C:\\Windows'}\\System32\\taskkill.exe`;
+    spawnSync(taskkill, ['/pid', String(pid), '/t', '/f'], {
+      stdio: 'ignore',
+      windowsHide: true,
+    });
+    return;
+  }
   try {
     process.kill(-pid, 'SIGKILL');
   } catch {
@@ -65,12 +79,14 @@ function spawnArgs(
   config: RunnerConfig,
   preset: Preset | undefined,
   task: Task,
+  env: Record<string, string>,
 ): [string, string[]] {
   if (!preset) return ['sh', ['-c', config.command ?? '']];
-  return [
+  return resolveCommand(
     preset.bin,
     presetArgv(preset, task.sessionId ?? null, task.systemPrompt, config.args, task.prompt),
-  ];
+    env,
+  );
 }
 
 // A CLI that took the task as an argument would read it twice if it also arrived here.
@@ -89,15 +105,38 @@ export async function execute(
   opts: { onData?: (chunk: string) => void; signal?: AbortSignal } = {},
 ): Promise<Outcome> {
   const preset = presetOf(config);
-  const [bin, args] = spawnArgs(config, preset, task);
+  const env = childEnv(config, task);
+  const [bin, args] = spawnArgs(config, preset, task, env);
+  // On Windows `detached` would drop the hidden console that windowsHide gives the
+  // command, and every console program it starts would open a window.
   const child = spawn(bin, args, {
     cwd: config.cwd,
-    env: childEnv(config, task),
-    detached: true,
+    env,
+    detached: process.platform !== 'win32',
+    windowsHide: true,
   });
 
+  // Windows frees the pid when the command exits, and taskkill would then reach whatever
+  // process got it next. taskkill also finds a tree through the parents that still run, so
+  // a process that outlived its parent is out of its reach and can hold stdout open for as
+  // long as it runs. After a timeout or a stop on Windows, the runner therefore stops
+  // reading the output shortly after the command exits.
+  const stopReading = () => {
+    setTimeout(() => {
+      child.stdout.destroy();
+      child.stderr.destroy();
+    }, OUTPUT_GRACE_MS).unref();
+  };
   const kill = () => {
-    if (child.pid !== undefined) killGroup(child.pid);
+    if (child.pid === undefined) return;
+    if (process.platform !== 'win32') {
+      killGroup(child.pid);
+    } else if (child.exitCode === null && child.signalCode === null) {
+      killGroup(child.pid);
+      child.once('exit', stopReading);
+    } else {
+      stopReading();
+    }
   };
   let timedOut = false;
   const timer = setTimeout(() => {

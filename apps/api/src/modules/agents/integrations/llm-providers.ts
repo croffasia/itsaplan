@@ -82,6 +82,7 @@ export const AI_PROVIDERS: ProviderMeta[] = [
   { key: 'nova', label: 'Nova', requiresBaseUrl: false },
   { key: 'nvidia', label: 'Nvidia', requiresBaseUrl: false },
   { key: 'opencode', label: 'OpenCode Zen', requiresBaseUrl: false },
+  { key: 'opper', label: 'Opper', requiresBaseUrl: false },
   { key: 'orcarouter', label: 'OrcaRouter', requiresBaseUrl: false },
   { key: 'ovhcloud', label: 'OVHcloud AI Endpoints', requiresBaseUrl: false },
   { key: 'poe', label: 'Poe', requiresBaseUrl: false },

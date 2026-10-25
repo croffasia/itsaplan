@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { useIssueBySeqQuery } from '@/services/issues.service';
 import { useTeamsQuery } from '@/services/teams.service';
@@ -16,7 +16,7 @@ import { useShellRoute } from '@/hooks/useShellRoute';
 import { useShellTitle } from '@/hooks/useShellTitle';
 import { useAppBadge } from '@/hooks/useAppBadge';
 import { useProjectRouteSync } from '@/hooks/useProjectRouteSync';
-import { projectPath, issuePath } from '@/utils/paths';
+import { currentPathWithoutIssue, issuePagePath, issuePanelPath, projectPath } from '@/utils/paths';
 import { defaultsFromFilters, type NewIssueDefaults } from '@/utils/project';
 import { IssueRefsProvider } from '@/context/issueRefs';
 import { ShellCtx, type ShellContext } from '@/context/shellContext';
@@ -45,6 +45,7 @@ export default function Shell({
 }) {
   const t = useTranslations('nav');
   const router = useRouter();
+  const pathname = usePathname();
   const route = useShellRoute();
   const { projectKey, routeIssueSeq } = route;
 
@@ -81,17 +82,19 @@ export default function Shell({
   const { issueOpenMode, showChatByDefault } = useAccountPreferences();
   const overlays = useOverlays();
   const setOpenIssueId = overlays.setOpenIssueId;
-  // The issue page returns to the board with `?issue=`; the panel is not
-  // addressed by the URL, so consume the parameter here and drop it from the
-  // address.
+  // The issue page returns to its origin with `?issue=`; the panel is not
+  // addressed by the URL, so consume the parameter here, keep the rest of the
+  // address, and open the panel.
   useEffect(() => {
-    if (!route.onBoard || !projectKey) return;
-    const issueId = new URLSearchParams(window.location.search).get('issue');
+    if (!projectKey || route.sub === 'issue') return;
+    const url = new URL(window.location.href);
+    const issueId = url.searchParams.get('issue');
     if (issueId == null) return;
-    router.replace(projectPath(projectKey));
+    url.searchParams.delete('issue');
+    router.replace(`${url.pathname}${url.search}${url.hash}`);
     const id = Number(issueId);
     if (Number.isSafeInteger(id) && id > 0) setOpenIssueId(id);
-  }, [route.onBoard, projectKey, router, setOpenIssueId]);
+  }, [pathname, projectKey, route.sub, router, setOpenIssueId]);
   const chatPanel = useChatPanel(projectKey, showChatByDefault);
   // The agent a page asked to chat with, held until the panel has opened its tab.
   const [chatAgentId, setChatAgentId] = useState<number | null>(null);
@@ -160,12 +163,18 @@ export default function Shell({
     if (mode === 'page' && projectKey) {
       const seq = project?.issues.find((i) => i.id === id)?.sequenceNumber;
       if (seq != null) {
-        router.push(issuePath(projectKey, seq));
+        const from = route.sub === 'issue' ? null : currentPathWithoutIssue();
+        router.push(issuePagePath(projectKey, seq, from));
         return;
       }
     }
     if (mode === 'panel' && projectKey && route.sub === 'issue') {
-      router.push(`${projectPath(projectKey)}?issue=${id}`);
+      const path = issuePanelPath(
+        projectKey,
+        new URLSearchParams(window.location.search).get('from'),
+        id,
+      );
+      router.push(path ?? `${projectPath(projectKey)}?issue=${id}`);
       return;
     }
     // The issue the panel already shows closes it, so the card that opened the panel
@@ -264,7 +273,16 @@ export default function Shell({
           onNewInitiative={() => overlays.setShowNewInitiative(true)}
           onNewProject={openNewProject}
           onSelectProject={(key) => router.push(projectPath(key))}
-          onOpenIssue={(seq) => projectKey && router.push(issuePath(projectKey, seq))}
+          onOpenIssue={(seq) =>
+            projectKey &&
+            router.push(
+              issuePagePath(
+                projectKey,
+                seq,
+                route.sub === 'issue' ? null : currentPathWithoutIssue(),
+              ),
+            )
+          }
           onIssueDeleted={onIssueDeleted}
           onToggleChat={chatPanel.toggle}
         />

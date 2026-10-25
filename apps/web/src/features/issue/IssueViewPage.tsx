@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useShell } from '@/context/shellContext';
-import { issuePath, projectPath } from '@/utils/paths';
+import { issuePanelPath, issuePath, issueReturnPath, projectPath } from '@/utils/paths';
 import { useExitOnEscape } from '@/hooks/useExitOnEscape';
 import { useShellRoute } from '@/hooks/useShellRoute';
 import { useHistoryScrollRestoration } from '@/hooks/useHistoryScrollRestoration';
@@ -16,15 +16,13 @@ import { useTranslations } from 'next-intl';
 
 // The full-page issue view (/:team/issue/:identifier), rendered inside the Shell
 // layout. The URL carries the issue identifier, resolved to the issue here; the
-// project comes from the Shell. Escape returns to the work items view.
+// project comes from the Shell. Escape returns to the page the issue was opened
+// from, when that page is known.
 export default function IssueViewPage() {
   const t = useTranslations('issue');
   const router = useRouter();
   const { project, onOpenIssue } = useShell();
   const seq = useShellRoute().routeIssueSeq;
-
-  const exit = () => project && router.push(projectPath(project.project.ref));
-  useExitOnEscape(exit);
 
   const issueQuery = useIssueBySeqQuery(project?.project.ref ?? null, seq);
   const currentIssuePath = project && seq != null ? issuePath(project.project.ref, seq) : null;
@@ -40,6 +38,19 @@ export default function IssueViewPage() {
       router.replace(issuePath(movedTo.ref, issueQuery.data.sequenceNumber));
   }, [movedTo, issueQuery.data, router]);
   useIssueTitle(moved || issueQuery.isError ? null : (issueQuery.data?.id ?? null), 'page');
+
+  const returnToOrigin = (openPanel: boolean) => {
+    if (!project) return;
+    const ref = project.project.ref;
+    const from = new URLSearchParams(window.location.search).get('from');
+    const path =
+      openPanel && issueQuery.data
+        ? issuePanelPath(ref, from, issueQuery.data.id)
+        : issueReturnPath(ref, from);
+    router.push(path ?? projectPath(ref));
+  };
+  useExitOnEscape(() => returnToOrigin(true));
+  const exit = () => returnToOrigin(false);
 
   const openInPanel = () => {
     if (issueQuery.data) onOpenIssue(issueQuery.data.id, 'panel');

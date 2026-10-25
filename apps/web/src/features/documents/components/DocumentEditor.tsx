@@ -36,6 +36,7 @@ export default function DocumentEditor({
   projectName,
   document,
   ancestors,
+  documents,
   authorName,
   authorNames,
   canEdit,
@@ -45,7 +46,7 @@ export default function DocumentEditor({
   canCreate,
   canDelete,
   onBack,
-  onCreateChild,
+  onCreate,
   onDuplicate,
   onDelete,
   onReload,
@@ -54,6 +55,7 @@ export default function DocumentEditor({
   projectName: string;
   document: ProjectDocument;
   ancestors: ProjectDocumentSummary[];
+  documents: ProjectDocumentSummary[];
   authorName: string | null;
   authorNames: Record<string, string>;
   canEdit: boolean;
@@ -63,7 +65,7 @@ export default function DocumentEditor({
   canCreate: boolean;
   canDelete: boolean;
   onBack: () => void;
-  onCreateChild: () => void;
+  onCreate: (parentId: number | null, isPrivate: boolean) => void;
   onDuplicate: (title: string, version: number) => Promise<void>;
   onDelete: (version: number) => Promise<void>;
   onReload: () => Promise<ProjectDocument | null>;
@@ -205,6 +207,7 @@ export default function DocumentEditor({
           projectName={projectName}
           document={document}
           ancestors={ancestors}
+          documents={documents}
           title={title}
           content={() => editor?.storage.markdown.getMarkdown() ?? content}
           richHtml={() => editor?.getHTML() ?? ''}
@@ -237,7 +240,7 @@ export default function DocumentEditor({
             );
           }}
           onStickyToolbarChange={setStickyToolbar}
-          onCreateChild={onCreateChild}
+          onCreate={onCreate}
           onDuplicate={() => {
             void documentAction.run(async () => {
               const baseVersion = await prepareVersion();

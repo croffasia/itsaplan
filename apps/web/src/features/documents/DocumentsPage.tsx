@@ -251,6 +251,7 @@ export default function DocumentsPage() {
       projectName={project.project.name}
       document={activeDocument}
       ancestors={ancestors}
+      documents={allDocumentsQuery.data ?? []}
       authorName={author?.name ?? null}
       authorNames={Object.fromEntries(
         project.assignees.map((candidate) => [candidate.userId, candidate.name]),
@@ -262,7 +263,7 @@ export default function DocumentsPage() {
       canCreate={canCreate}
       canDelete={canDelete}
       onBack={() => router.push(documentsPath(projectKey))}
-      onCreateChild={() => void create(activeDocument.id, activeDocument.isPrivate)}
+      onCreate={(parentId, isPrivate) => void create(parentId, isPrivate)}
       onDuplicate={duplicate}
       onDelete={remove}
       onReload={async () => {

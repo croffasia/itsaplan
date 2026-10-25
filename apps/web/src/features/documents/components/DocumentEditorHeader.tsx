@@ -23,6 +23,7 @@ export default function DocumentEditorHeader({
   projectName,
   document,
   ancestors,
+  documents,
   title,
   content,
   richHtml,
@@ -39,7 +40,7 @@ export default function DocumentEditorHeader({
   onRetrySave,
   onFullWidthChange,
   onStickyToolbarChange,
-  onCreateChild,
+  onCreate,
   onDuplicate,
   onFavoriteChange,
   onLockChange,
@@ -57,6 +58,7 @@ export default function DocumentEditorHeader({
   projectName: string;
   document: ProjectDocument;
   ancestors: ProjectDocumentSummary[];
+  documents: ProjectDocumentSummary[];
   title: string;
   content: () => string;
   richHtml: () => string;
@@ -73,7 +75,7 @@ export default function DocumentEditorHeader({
   onRetrySave: () => void;
   onFullWidthChange: (value: boolean) => void;
   onStickyToolbarChange: (value: boolean) => void;
-  onCreateChild: () => void;
+  onCreate: (parentId: number | null, isPrivate: boolean) => void;
   onDuplicate: () => void;
   onFavoriteChange: (favorite: boolean) => void;
   onLockChange: (locked: boolean) => void;
@@ -128,6 +130,9 @@ export default function DocumentEditorHeader({
         projectName={projectName}
         ancestors={ancestors}
         document={document}
+        documents={documents}
+        canCreate={canCreate}
+        onCreate={onCreate}
       />
 
       <div className="ms-auto flex shrink-0 items-center gap-0.5">
@@ -210,7 +215,7 @@ export default function DocumentEditorHeader({
           onFullWidthChange={onFullWidthChange}
           onStickyToolbarChange={onStickyToolbarChange}
           onPrivacyChange={onPrivacyChange}
-          onCreateChild={onCreateChild}
+          onCreateChild={() => onCreate(document.id, document.isPrivate)}
           onDuplicate={onDuplicate}
           onArchive={onArchive}
           onRestore={onRestore}

@@ -18,6 +18,7 @@ export interface Notification {
   issueTitle: string;
   issueStateType: StateType;
   projectId: number;
+  // Team-scoped project ref (for example, "acme.MKT").
   projectKey: string;
   projectName: string;
   // Only a 'state_changed' notification has them.
@@ -48,7 +49,7 @@ export type NotificationDeleteScope = 'all' | 'read' | 'read-completed' | 'compl
 // one project (the per-project inbox). cursor is the JSON-encoded keyset from the
 // previous page.
 export const listNotifications = (
-  projectId: number,
+  projectId: number | null,
   params: {
     cursor?: NotificationCursor | null;
     limit?: number;
@@ -56,7 +57,7 @@ export const listNotifications = (
   } = {},
 ) => {
   const q = new URLSearchParams();
-  q.set('projectId', String(projectId));
+  if (projectId != null) q.set('projectId', String(projectId));
   if (params.limit) q.set('limit', String(params.limit));
   if (params.cursor) q.set('cursor', JSON.stringify(params.cursor));
   const f = params.filters ?? {};
@@ -67,9 +68,8 @@ export const listNotifications = (
   return request<NotificationPage>(`/notifications?${q.toString()}`);
 };
 
-// Unread count for the sidebar badge, refetched when the inbox scope moves. Without a
-// project it counts every project's, for the app icon badge.
-export const getUnreadCount = (projectId?: number) =>
+// Unread count for the sidebar badge. Without a project it counts every project's.
+export const getUnreadCount = (projectId?: number | null) =>
   request<{ unread: number }>(
     projectId == null ? '/notifications/unread' : `/notifications/unread?projectId=${projectId}`,
   );
@@ -83,11 +83,11 @@ export const snoozeNotification = (id: number, until: string | null) =>
     body: JSON.stringify({ until }),
   });
 
-export const markAllNotificationsRead = (projectId: number, filters: NotificationFilters) =>
+export const markAllNotificationsRead = (projectId: number | null, filters: NotificationFilters) =>
   request<{ count: number }>(`/notifications/read-all`, {
     method: 'POST',
     body: JSON.stringify({
-      projectId,
+      ...(projectId == null ? {} : { projectId }),
       ...filters,
       includeSnoozed: filters.includeSnoozed ?? false,
     }),
@@ -98,10 +98,11 @@ export const deleteNotification = (id: number) =>
 
 export const deleteNotifications = (
   scope: NotificationDeleteScope,
-  projectId: number,
+  projectId: number | null,
   filters: NotificationFilters,
 ) => {
-  const q = new URLSearchParams({ scope, projectId: String(projectId) });
+  const q = new URLSearchParams({ scope });
+  if (projectId != null) q.set('projectId', String(projectId));
   if (filters.types?.length) q.set('types', filters.types.join(','));
   if (filters.from) q.set('from', filters.from);
   if (filters.includeRead === false) q.set('includeRead', 'false');

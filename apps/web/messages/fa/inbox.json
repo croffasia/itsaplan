@@ -34,5 +34,8 @@
     "commented": "{who} دیدگاه داد",
     "stateChanged": "{who} وضعیت را از {from} به {to} تغییر داد",
     "stateChangedPlain": "{who} وضعیت را تغییر داد"
-  }
+  },
+  "thisProject": "این پروژه",
+  "allProjects": "همهٔ پروژه‌ها",
+  "scopeHint": "نمایش اعلان‌های این پروژه یا همهٔ پروژه‌ها"
 }

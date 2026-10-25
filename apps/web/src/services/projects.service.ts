@@ -23,8 +23,8 @@ import {
 import { nextPageParam } from '@/lib/api/core/paging';
 import { qk } from '@/services/queryKeys';
 
-export function useProjectsQuery() {
-  return useQuery({ queryKey: qk.projects, queryFn: () => listProjects() });
+export function useProjectsQuery(enabled = true) {
+  return useQuery({ queryKey: qk.projects, queryFn: () => listProjects(), enabled });
 }
 
 const PROJECT_SEARCH_PAGE = 30;

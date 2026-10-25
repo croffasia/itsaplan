@@ -13,6 +13,7 @@ import {
 import { useTranslations } from 'next-intl';
 import type { Notification, NotificationType } from '@/lib/api/endpoints/notifications';
 import { formatDurationShort } from '@/utils/dates';
+import { splitProjectRef } from '@/utils/paths';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -132,7 +133,7 @@ export default function InboxListItem({
                 unread ? 'font-medium text-foreground' : 'text-muted-foreground',
               )}
             >
-              {n.projectKey}-{n.issueSeq} {n.issueTitle}
+              {splitProjectRef(n.projectKey).key}-{n.issueSeq} {n.issueTitle}
             </span>
             <span className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
               {snoozed && <Clock className="size-3 shrink-0" />}

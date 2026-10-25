@@ -134,7 +134,9 @@
     "stopSharing": "停止共享",
     "createLink": "建立連結",
     "copy": "複製",
-    "copied": "已複製"
+    "copied": "已複製",
+    "calendarFeed": "行事曆訂閱",
+    "calendarFeedHint": "將此連結複製到行事曆應用程式，以訂閱此檢視。"
   },
   "actions": "操作",
   "clearSearch": "清除搜尋",

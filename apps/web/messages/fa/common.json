@@ -134,7 +134,9 @@
     "stopSharing": "توقف اشتراک‌گذاری",
     "createLink": "ایجاد لینک",
     "copy": "کپی",
-    "copied": "کپی شد"
+    "copied": "کپی شد",
+    "calendarFeed": "فید تقویم",
+    "calendarFeedHint": "این پیوند را در برنامه تقویم خود کپی کنید تا در این نما مشترک شوید."
   },
   "actions": "اقدامات",
   "clearSearch": "پاک کردن جستجو",

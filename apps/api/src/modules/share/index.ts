@@ -15,6 +15,7 @@ import {
   shareViewParams,
   sharedViewIssueParams,
 } from './model';
+import { getSharedViewCalendar } from './calendar';
 import {
   enableIssueShare,
   disableIssueShare,
@@ -132,6 +133,22 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
       params: shareTokenParams,
       response: { 200: BundleResponse, ...errors(400, 404) },
       detail: { summary: 'Get a shared view' },
+    },
+  )
+
+  .get(
+    '/share/view/:token/calendar.ics',
+    async ({ params, set }) => {
+      const feed = await getSharedViewCalendar(params.token);
+      if (!feed) throw new HttpError(404, 'Not found');
+      set.headers['content-type'] = 'text/calendar; charset=utf-8';
+      set.headers['cache-control'] = 'no-store';
+      return feed;
+    },
+    {
+      params: shareTokenParams,
+      response: { 200: t.String(), ...errors(400, 404) },
+      detail: { summary: 'Get a shared view calendar feed' },
     },
   )
 

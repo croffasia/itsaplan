@@ -134,7 +134,9 @@
     "stopSharing": "إيقاف المشاركة",
     "createLink": "إنشاء رابط",
     "copy": "نسخ",
-    "copied": "تم النسخ"
+    "copied": "تم النسخ",
+    "calendarFeed": "خلاصة التقويم",
+    "calendarFeedHint": "انسخ الرابط ده في تطبيق التقويم عشان تشترك في العرض ده."
   },
   "actions": "الإجراءات",
   "clearSearch": "مسح البحث",

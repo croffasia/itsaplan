@@ -134,7 +134,9 @@
     "stopSharing": "Paylaşımı durdur",
     "createLink": "Bağlantı oluştur",
     "copy": "Kopyala",
-    "copied": "Kopyalandı"
+    "copied": "Kopyalandı",
+    "calendarFeed": "Takvim akışı",
+    "calendarFeedHint": "Bu görünüme abone olmak için bu bağlantıyı takvim uygulamanıza kopyalayın."
   },
   "actions": "İşlemler",
   "clearSearch": "Aramayı temizle",

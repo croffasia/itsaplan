@@ -31,6 +31,7 @@ export default function ShareDialog({
   enable,
   disable,
   pathForToken,
+  calendarPathForToken,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -42,11 +43,14 @@ export default function ShareDialog({
   enable: (extended: boolean) => Promise<string>;
   disable: () => Promise<void>;
   pathForToken: (token: string) => string;
+  // The calendar feed path, for a shared view. Omitted by an issue share.
+  calendarPathForToken?: (token: string) => string;
 }) {
   const t = useTranslations('common.share');
   const [current, setCurrent] = useState<string | null>(token);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [copiedCalendar, setCopiedCalendar] = useState(false);
 
   // Seed from the latest token when the dialog opens; the prop can change while it
   // is mounted (the issue/view query refetched).
@@ -57,6 +61,8 @@ export default function ShareDialog({
   }
 
   const url = current ? shareUrl(pathForToken(current)) : '';
+  const calendarUrl =
+    current && calendarPathForToken ? shareUrl(calendarPathForToken(current)) : '';
 
   async function run(operation: () => Promise<void>, failure: string) {
     setBusy(true);
@@ -80,11 +86,11 @@ export default function ShareDialog({
       setCurrent(null);
     }, t('stopFailed'));
 
-  async function copy() {
+  async function copyText(value: string, mark: (copied: boolean) => void) {
     try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      await navigator.clipboard.writeText(value);
+      mark(true);
+      setTimeout(() => mark(false), 1500);
     } catch {
       toast.error(t('copyFailed'));
     }
@@ -108,11 +114,43 @@ export default function ShareDialog({
                 className="h-9 flex-1 bg-muted/40 font-mono text-xs"
                 onFocus={(e) => e.target.select()}
               />
-              <Button type="button" variant="secondary" size="sm" className="h-9" onClick={copy}>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="h-9"
+                onClick={() => copyText(url, setCopied)}
+              >
                 {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
                 {copied ? t('copied') : t('copy')}
               </Button>
             </div>
+
+            {calendarUrl && (
+              <div className="flex flex-col gap-1.5">
+                <span className="text-sm">{t('calendarFeed')}</span>
+                <div className="flex items-center gap-2">
+                  <Input
+                    readOnly
+                    value={calendarUrl}
+                    aria-label={t('calendarFeed')}
+                    className="h-9 flex-1 bg-muted/40 font-mono text-xs"
+                    onFocus={(e) => e.target.select()}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="h-9"
+                    onClick={() => copyText(calendarUrl, setCopiedCalendar)}
+                  >
+                    {copiedCalendar ? <Check className="size-4" /> : <Copy className="size-4" />}
+                    {copiedCalendar ? t('copied') : t('copy')}
+                  </Button>
+                </div>
+                <span className="text-xs text-muted-foreground">{t('calendarFeedHint')}</span>
+              </div>
+            )}
 
             <label className="flex items-center justify-between gap-4 rounded-md border px-3 py-2.5">
               <span className="min-w-0">

@@ -134,7 +134,9 @@
     "stopSharing": "Dejar de compartir",
     "createLink": "Crear enlace",
     "copy": "Copiar",
-    "copied": "Copiado"
+    "copied": "Copiado",
+    "calendarFeed": "Feed de calendario",
+    "calendarFeedHint": "Copia este enlace en tu aplicación de calendario para suscribirte a esta vista."
   },
   "actions": "Acciones",
   "clearSearch": "Limpiar la búsqueda",

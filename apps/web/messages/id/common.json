@@ -134,7 +134,9 @@
     "stopSharing": "Hentikan pembagian",
     "createLink": "Buat tautan",
     "copy": "Salin",
-    "copied": "Disalin"
+    "copied": "Disalin",
+    "calendarFeed": "Feed kalender",
+    "calendarFeedHint": "Salin tautan ini ke aplikasi kalender Anda untuk berlangganan tampilan ini."
   },
   "actions": "Tindakan",
   "clearSearch": "Bersihkan pencarian",

@@ -27,6 +27,7 @@ export const dashboardsPath = (ref: string) => `${projectPath(ref)}/dashboards`;
 // Public read-only share pages (no auth). The token is the unguessable share key.
 export const shareIssuePath = (token: string) => `/share/issue/${token}`;
 export const shareViewPath = (token: string) => `/share/view/${token}`;
+export const shareViewCalendarPath = (token: string) => `/share/view/${token}/calendar.ics`;
 
 // The absolute share URL to copy, built from the current origin at call time.
 export const shareUrl = (path: string) =>

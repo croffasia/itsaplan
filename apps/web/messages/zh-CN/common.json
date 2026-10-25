@@ -134,7 +134,9 @@
     "stopSharing": "停止共享",
     "createLink": "创建链接",
     "copy": "复制",
-    "copied": "已复制"
+    "copied": "已复制",
+    "calendarFeed": "日历订阅",
+    "calendarFeedHint": "将此链接复制到日历应用，以订阅此视图。"
   },
   "actions": "操作",
   "clearSearch": "清除搜索",

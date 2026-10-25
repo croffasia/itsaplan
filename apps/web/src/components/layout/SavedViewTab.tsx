@@ -9,7 +9,7 @@ import { enableViewShare, disableViewShare } from '@/lib/api/endpoints/share';
 import { qk } from '@/services/queryKeys';
 import { useSetViewFavorite } from '@/services/views.service';
 import { cn } from '@/lib/utils';
-import { shareViewPath } from '@/utils/paths';
+import { shareViewCalendarPath, shareViewPath } from '@/utils/paths';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import ViewTabChrome from '@/components/layout/ViewTabChrome';
 import ViewTabLabel from '@/components/layout/ViewTabLabel';
@@ -150,6 +150,7 @@ export default function SavedViewTab({
         enable={share}
         disable={disableShare}
         pathForToken={shareViewPath}
+        calendarPathForToken={shareViewCalendarPath}
       />
     </ViewTabChrome>
   );

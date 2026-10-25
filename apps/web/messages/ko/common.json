@@ -134,7 +134,9 @@
     "stopSharing": "공유 중지",
     "createLink": "링크 생성",
     "copy": "복사",
-    "copied": "복사됨"
+    "copied": "복사됨",
+    "calendarFeed": "캘린더 피드",
+    "calendarFeedHint": "이 링크를 캘린더 앱에 복사하여 이 보기를 구독하세요."
   },
   "actions": "작업",
   "clearSearch": "검색어 지우기",

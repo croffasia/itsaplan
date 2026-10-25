@@ -1,5 +1,28 @@
-import { db, agentRun, issue, project, team } from '@repo/db';
-import { and, desc, eq, gt, inArray, isNotNull, lt, sql } from 'drizzle-orm';
+import {
+  db,
+  agentRun,
+  aiAgent,
+  documentComment,
+  issue,
+  project,
+  projectDocument,
+  team,
+  user,
+} from '@repo/db';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  exists,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  lt,
+  or,
+  sql,
+} from 'drizzle-orm';
 import { getAgentSettings } from '#modules/settings/service';
 import { intEnv, iso } from '#shared/lib';
 import type { AgentRunTrigger } from '../model';
@@ -30,17 +53,37 @@ export function runRetryDelayMs(attempts: number): number {
 }
 
 // The condition a candidate run `q` of a claim meets when it is its turn. The runs of
-// one agent on one issue share the agent's conversation thread and act on the same
-// issue, so they go one at a time, oldest first: a run waits while another of them
-// holds a slot (claimed and inside its lease, or waiting out a retry), and while an
-// older one is due, which the same claim takes instead.
-export const issueRunTurn = sql`NOT EXISTS (
+// one agent on one issue, or on one document, share the agent's conversation thread and
+// act on the same issue or document, so they go one at a time, oldest first: a run waits
+// while another of them holds a slot (claimed and inside its lease, or waiting out a
+// retry), and while an older one is due, which the same claim takes instead.
+export const runTurn = sql`NOT EXISTS (
   SELECT 1 FROM agent_run o
-  WHERE o.agent_id = q.agent_id AND o.issue_id = q.issue_id AND o.id <> q.id
+  WHERE o.agent_id = q.agent_id AND o.id <> q.id
+    AND (o.issue_id = q.issue_id OR o.document_id = q.document_id)
     AND o.status = 'pending'
     AND ((o.started_at IS NOT NULL AND o.next_attempt_at > now())
       OR (o.next_attempt_at <= now() AND o.id < q.id))
 )`;
+
+// A run started in a document reads as missing to a viewer the document is now private
+// from, as the run of an issue that moved to another project does.
+export function runDocumentVisibleTo(viewerId: string) {
+  return or(
+    isNull(agentRun.documentId),
+    exists(
+      db
+        .select({ id: projectDocument.id })
+        .from(projectDocument)
+        .where(
+          and(
+            eq(projectDocument.id, agentRun.documentId),
+            or(eq(projectDocument.isPrivate, false), eq(projectDocument.ownerUserId, viewerId)),
+          ),
+        ),
+    ),
+  );
+}
 
 // Runs of this workspace's agents that hold a slot and were queued before this one. A claim
 // stamps started_at and pushes next_attempt_at forward, so a pending run that is
@@ -68,11 +111,14 @@ export async function countRunsAhead(workspaceId: number, runId: number): Promis
 
 export async function enqueueAgentRun(input: {
   agentId: number;
-  // The project the run works in, which is the issue's. An agent works in several
-  // projects, so the run carries its own rather than reading the agent's.
+  // The project the run works in, which is the issue's or the document's. An agent works
+  // in several projects, so the run carries its own rather than reading the agent's.
   projectId: number;
-  issueId: number;
+  issueId: number | null;
   sourceActivityId: number | null;
+  // A mention in a document comment: the document and the comment, with no issue.
+  documentId?: number;
+  sourceDocumentCommentId?: string;
   prompt: string;
   trigger?: 'mention' | 'delegation' | 'field';
   // Seconds the run stays unclaimable after it is queued, so the issue can still be
@@ -85,6 +131,8 @@ export async function enqueueAgentRun(input: {
     projectId: input.projectId,
     issueId: input.issueId,
     sourceActivityId: input.sourceActivityId,
+    documentId: input.documentId,
+    sourceDocumentCommentId: input.sourceDocumentCommentId,
     prompt: input.prompt,
     trigger: input.trigger ?? (input.sourceActivityId == null ? 'delegation' : 'mention'),
     nextAttemptAt: delay > 0 ? sql`now() + make_interval(secs => ${delay})` : undefined,
@@ -129,6 +177,15 @@ export interface ClaimedRun {
   // The comments the source comment replies to, oldest first, when it is a reply.
   // Null for a top-level mention or a delegation.
   threadContext: string | null;
+  // A mention in a document comment: the document, the comment, and the thread it is in.
+  // All null for any other run.
+  documentId: number | null;
+  sourceDocumentCommentId: string | null;
+  documentTitle: string | null;
+  // The text of the document the thread is about.
+  documentQuote: string | null;
+  // The first comment of the thread, which a reply is posted under.
+  threadRootId: string | null;
 }
 
 // Atomically claims up to batchSize due runs of internal agents. FOR UPDATE SKIP
@@ -155,7 +212,7 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
       SELECT id FROM agent_run q
       WHERE q.status = 'pending' AND q.next_attempt_at <= now()
         AND (SELECT kind FROM ai_agent a WHERE a.id = q.agent_id) = 'internal'
-        AND ${issueRunTurn}
+        AND ${runTurn}
       ORDER BY q.next_attempt_at, q.id
       FOR UPDATE SKIP LOCKED
       LIMIT ${batchSize}
@@ -169,6 +226,8 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
       r.prompt,
       r.attempts,
       r.source_activity_id AS "sourceActivityId",
+      r.document_id AS "documentId",
+      r.source_document_comment_id AS "sourceDocumentCommentId",
       r.project_id AS "projectId",
       (SELECT user_id FROM ai_agent a WHERE a.id = r.agent_id) AS "agentUserId",
       (SELECT username FROM ai_agent a WHERE a.id = r.agent_id) AS "agentUsername",
@@ -190,13 +249,9 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
          WHERE a.id = r.source_activity_id) AS "requesterUsername",
       (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterUserId"
   `);
-  const runs = rows as unknown as ClaimedRun[];
+  const runs = rows as unknown as Omit<ClaimedRun, ThreadField | 'executionDeadline'>[];
   return Promise.all(
-    runs.map(async (run) => ({
-      ...run,
-      executionDeadline,
-      threadContext: await loadThreadContext(run.sourceActivityId),
-    })),
+    runs.map(async (run) => ({ ...run, executionDeadline, ...(await loadRunThread(run)) })),
   );
 }
 
@@ -204,10 +259,90 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
 // the question to pay for the tokens it costs.
 const THREAD_CONTEXT_DEPTH = 5;
 
+type ThreadField = 'threadContext' | 'documentTitle' | 'documentQuote' | 'threadRootId';
+
+// What a run is told about the conversation it answers, read once it is claimed. A
+// document run also names its requester here.
+type RunThread = Pick<ClaimedRun, ThreadField> &
+  Partial<Pick<ClaimedRun, 'requesterName' | 'requesterUsername' | 'requesterUserId'>>;
+
+export async function loadRunThread(run: {
+  sourceActivityId: number | null;
+  documentId: number | null;
+  sourceDocumentCommentId: string | null;
+}): Promise<RunThread> {
+  if (run.documentId != null)
+    return loadDocumentThread(run.documentId, run.sourceDocumentCommentId);
+  return {
+    threadContext: await loadThreadContext(run.sourceActivityId),
+    documentTitle: null,
+    documentQuote: null,
+    threadRootId: null,
+  };
+}
+
+// A document comment's thread: the document's title, the text the thread is about, its
+// first comment, and the comments before the given one, oldest first and at most
+// THREAD_CONTEXT_DEPTH of them. The comment's author is the requester, read here because
+// a document comment keeps no name of its own.
+async function loadDocumentThread(
+  documentId: number,
+  commentId: string | null,
+): Promise<RunThread> {
+  const [document] = await db
+    .select({ title: projectDocument.title })
+    .from(projectDocument)
+    .where(eq(projectDocument.id, documentId));
+  const thread: RunThread = {
+    threadContext: null,
+    documentTitle: document?.title ?? null,
+    documentQuote: null,
+    threadRootId: null,
+  };
+  if (commentId == null) return thread;
+  const [source] = await db
+    .select({
+      parentId: documentComment.parentId,
+      authorId: documentComment.authorId,
+      authorName: user.name,
+      authorUsername: sql<string | null>`coalesce(${user.username}, ${aiAgent.username})`,
+    })
+    .from(documentComment)
+    .leftJoin(user, eq(user.id, documentComment.authorId))
+    .leftJoin(aiAgent, eq(aiAgent.userId, documentComment.authorId))
+    .where(eq(documentComment.id, commentId));
+  if (!source) return thread;
+  const rootId = source.parentId ?? commentId;
+  const comments = await db
+    .select({
+      id: documentComment.id,
+      quote: documentComment.quote,
+      body: documentComment.body,
+      authorName: user.name,
+    })
+    .from(documentComment)
+    .leftJoin(user, eq(user.id, documentComment.authorId))
+    .where(or(eq(documentComment.id, rootId), eq(documentComment.parentId, rootId)))
+    .orderBy(asc(documentComment.createdAt), asc(documentComment.id));
+  const at = comments.findIndex((comment) => comment.id === commentId);
+  const before = comments.slice(Math.max(0, at - THREAD_CONTEXT_DEPTH), Math.max(0, at));
+  return {
+    ...thread,
+    threadContext: before.length
+      ? before.map((c) => `${c.authorName ?? 'Unknown'}: ${c.body}`).join('\n\n')
+      : null,
+    documentQuote: comments.find((comment) => comment.id === rootId)?.quote || null,
+    threadRootId: rootId,
+    requesterName: source.authorName,
+    requesterUsername: source.authorUsername,
+    requesterUserId: source.authorId,
+  };
+}
+
 // The comments the given one replies to, oldest first and at most
 // THREAD_CONTEXT_DEPTH of them, as the text a prompt carries. Null when the comment
 // is not a reply.
-export async function loadThreadContext(sourceActivityId: number | null): Promise<string | null> {
+async function loadThreadContext(sourceActivityId: number | null): Promise<string | null> {
   if (sourceActivityId == null) return null;
   const rows = await db.execute(sql`
     WITH RECURSIVE chain AS (
@@ -324,6 +459,9 @@ export interface AgentRunRow {
   issueId: number | null;
   issueIdentifier: string | null;
   issueTitle: string | null;
+  documentId: number | null;
+  // Null for a document that is private now, whose title is its owner's alone.
+  documentTitle: string | null;
   prompt: string;
   attempts: number;
   lastError: string | null;
@@ -371,6 +509,8 @@ export async function listAgentRuns(
       executionState,
       trigger: agentRun.trigger,
       issueId: agentRun.issueId,
+      documentId: agentRun.documentId,
+      documentTitle: projectDocument.title,
       prompt: agentRun.prompt,
       attempts: agentRun.attempts,
       lastError: agentRun.lastError,
@@ -386,6 +526,10 @@ export async function listAgentRuns(
     .from(agentRun)
     .leftJoin(issue, eq(issue.id, agentRun.issueId))
     .leftJoin(project, eq(project.id, issue.projectId))
+    .leftJoin(
+      projectDocument,
+      and(eq(projectDocument.id, agentRun.documentId), eq(projectDocument.isPrivate, false)),
+    )
     .where(
       and(
         eq(agentRun.agentId, agentId),
@@ -406,6 +550,8 @@ export async function listAgentRuns(
       issueId: r.issueId,
       issueIdentifier: r.projectKey && r.issueSeq != null ? `${r.projectKey}-${r.issueSeq}` : null,
       issueTitle: r.issueTitle ?? null,
+      documentId: r.documentId,
+      documentTitle: r.documentTitle,
       prompt: r.prompt,
       attempts: r.attempts,
       lastError: r.lastError,

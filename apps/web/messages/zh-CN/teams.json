@@ -545,6 +545,7 @@
     "endOfHistory": "已显示全部记录",
     "manualTask": "手动任务",
     "scheduledTask": "定时任务",
+    "documentTask": "文档评论",
     "failed": "失败",
     "task": "任务",
     "error": "错误",

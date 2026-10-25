@@ -705,6 +705,15 @@ export const agentRun = pgTable(
     sourceActivityId: integer('source_activity_id').references(() => issueActivity.id, {
       onDelete: 'set null',
     }),
+    // A mention in a document comment: the document and the comment. Such a run has no
+    // issue.
+    documentId: integer('document_id').references(() => projectDocument.id, {
+      onDelete: 'cascade',
+    }),
+    sourceDocumentCommentId: uuid('source_document_comment_id').references(
+      () => documentComment.id,
+      { onDelete: 'set null' },
+    ),
     // The mention comment body at enqueue time, framed into the agent's prompt.
     prompt: text('prompt').notNull(),
     // pending -> success | failed | canceled. Like webhook_delivery, a claim keeps the row
@@ -2402,10 +2411,12 @@ export const importRecord = pgTable(
 
 // Per-user inbox notifications. One row per (recipient, event): a user is notified
 // about an issue they are involved in (assigned to them, mentioned, or watching it
-// when it is commented on or moved). The actor's own actions never notify the actor.
-// project_id is denormalized from the issue so the inbox can filter and scope by
-// project. source_activity_id points at the issue_activity row that produced the
-// notification (set null if that entry is later removed). type selects the kind.
+// when it is commented on or moved), or about a document that mentions them in its
+// text or in a comment. A row points at either an issue or a document. The actor's own
+// actions never notify the actor. project_id is denormalized from the issue or the
+// document so the inbox can filter and scope by project. source_activity_id points at
+// the issue_activity row that produced the notification, document_comment_id at the
+// document comment (each set null if that entry is later removed). type selects the kind.
 // read_at NULL means unread; snoozed_until, when set and still in the future, hides
 // the row from the default inbox until then.
 export const notification = pgTable(
@@ -2418,10 +2429,14 @@ export const notification = pgTable(
     projectId: integer('project_id')
       .notNull()
       .references(() => project.id, { onDelete: 'cascade' }),
-    issueId: integer('issue_id')
-      .notNull()
-      .references(() => issue.id, { onDelete: 'cascade' }),
+    issueId: integer('issue_id').references(() => issue.id, { onDelete: 'cascade' }),
     sourceActivityId: integer('source_activity_id').references(() => issueActivity.id, {
+      onDelete: 'set null',
+    }),
+    documentId: integer('document_id').references(() => projectDocument.id, {
+      onDelete: 'cascade',
+    }),
+    documentCommentId: uuid('document_comment_id').references(() => documentComment.id, {
       onDelete: 'set null',
     }),
     type: text('type').notNull(),
@@ -2438,6 +2453,7 @@ export const notification = pgTable(
       'notification_type_check',
       sql`${t.type} IN ('assigned', 'mentioned', 'commented', 'state_changed')`,
     ),
+    check('notification_target_check', sql`(${t.issueId} IS NULL) <> (${t.documentId} IS NULL)`),
     // Backs the inbox list: a user's notifications newest first.
     index('notification_user_idx').on(t.userId, t.createdAt.desc(), t.id.desc()),
     // Backs the unread count and the unread-only inbox view.

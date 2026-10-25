@@ -101,6 +101,10 @@ export interface AgentRun {
   issueId: number | null;
   issueIdentifier: string | null;
   issueTitle: string | null;
+  // A run started by a mention in a document comment. The title is null for a document
+  // that is private now.
+  documentId: number | null;
+  documentTitle: string | null;
   prompt: string;
   attempts: number;
   lastError: string | null;

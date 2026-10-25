@@ -545,6 +545,7 @@
     "endOfHistory": "نهاية السجل",
     "manualTask": "مهمة يدوية",
     "scheduledTask": "مهمة مجدولة",
+    "documentTask": "تعليق في مستند",
     "failed": "فشل",
     "task": "المهمة",
     "error": "خطأ",

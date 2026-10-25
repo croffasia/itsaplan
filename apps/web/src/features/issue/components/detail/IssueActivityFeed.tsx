@@ -1,6 +1,5 @@
 import { useTranslations } from 'next-intl';
 import type { Column } from '@/lib/api/endpoints/columns';
-import type { Assignee } from '@/lib/api/endpoints/projects';
 import { useSession } from '@/lib/auth-client';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { type ActivityFeedView, type ActivityTab } from '../../hooks/useActivityFeedView';
@@ -20,14 +19,14 @@ const EMPTY_TEXT = {
 
 export default function IssueActivityFeed({
   issueId,
-  assignees,
+  projectKey,
   columns,
   imageByUserId,
   view,
   canReadAgentRuns,
 }: {
   issueId: number;
-  assignees: Assignee[];
+  projectKey: string;
   columns: Column[];
   imageByUserId: Map<string, string | null>;
   view: ActivityFeedView;
@@ -40,7 +39,7 @@ export default function IssueActivityFeed({
   const user = session?.user ?? null;
   const composer: ComposerContext = {
     issueId,
-    assignees,
+    projectKey,
     authorName: user?.name || user?.email || t('you'),
     authorImage: (user as { image?: string | null } | null)?.image ?? null,
   };

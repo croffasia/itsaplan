@@ -253,4 +253,62 @@ describe('runner queue', () => {
     expect(moved.status).toBe(200);
     expect((await api['agent-runs'].queue.get()).data!.total).toBe(0);
   });
+
+  it('shows a run started in a document only to whoever may read the document', async () => {
+    const { api } = await setup();
+    const documents = api.projects({ projectKey: 'RUN' }).documents;
+    const created = (
+      await documents.post({
+        title: 'Plan',
+        content: 'Hello world',
+        contentJson: {
+          type: 'doc',
+          content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hello world' }] }],
+        },
+      })
+    ).data!;
+    const doc = documents({ documentId: created.id });
+    const root = (
+      await doc.comments.post({
+        body: 'Why?',
+        quote: 'Hello',
+        from: 1,
+        to: 6,
+        version: created.version,
+      })
+    ).data!;
+    await doc.comments.post({ parentId: root.id, body: '@runner summarise' });
+    const documentRuns = async (viewer: typeof api) =>
+      (await viewer['agent-runs'].queue.get()).data!.items.filter(
+        (item) => item.prompt === '@runner summarise',
+      );
+    const [run] = await documentRuns(api);
+    expect(run).toBeDefined();
+
+    const blindRole = await createRole(api, 'RUN', {
+      name: 'No documents',
+      permissions: { work_items: { read: true }, ai_agents: { read: true } },
+    });
+    const readerRole = await createRole(api, 'RUN', {
+      name: 'Documents too',
+      permissions: {
+        work_items: { read: true },
+        ai_agents: { read: true },
+        documents: { read: true },
+      },
+    });
+    const blind = await addProjectMember(api, 'RUN', blindRole.data!.id);
+    const reader = await addProjectMember(api, 'RUN', readerRole.data!.id);
+
+    expect(await documentRuns(blind)).toHaveLength(0);
+    expect((await blind['agent-runs']({ runId: run.id }).trace.get()).status).toBe(403);
+    expect(await documentRuns(reader)).toHaveLength(1);
+    expect((await reader['agent-runs']({ runId: run.id }).trace.get()).status).toBe(200);
+
+    const { version } = (await doc.get()).data!;
+    expect((await doc.access.post({ version, isPrivate: true })).status).toBe(200);
+    expect(await documentRuns(reader)).toHaveLength(0);
+    expect((await reader['agent-runs']({ runId: run.id }).trace.get()).status).toBe(404);
+    expect(await documentRuns(api)).toHaveLength(1);
+  });
 });

@@ -52,6 +52,7 @@
   "saveFailed": "No se ha podido guardar",
   "retrySave": "Reintentar el guardado",
   "loadFailed": "No se han podido cargar los documentos",
+  "pageNotFound": "Esta página se ha eliminado o ya no está disponible para ti.",
   "conflict": "Existe una versión más nueva",
   "reload": "Recargar",
   "reviewConflict": "Revisar",

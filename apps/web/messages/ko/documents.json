@@ -52,6 +52,7 @@
   "saveFailed": "저장할 수 없습니다.",
   "retrySave": "다시 저장",
   "loadFailed": "문서를 불러올 수 없습니다.",
+  "pageNotFound": "이 페이지는 삭제되었거나 더 이상 볼 수 없습니다.",
   "conflict": "새 버전이 있습니다.",
   "reload": "새로고침",
   "reviewConflict": "확인",

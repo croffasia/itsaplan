@@ -207,6 +207,8 @@ export const AgentRunResponse = t.Object({
   issueId: t.Nullable(t.Number()),
   issueIdentifier: t.Nullable(t.String()),
   issueTitle: t.Nullable(t.String()),
+  documentId: t.Nullable(t.Number()),
+  documentTitle: t.Nullable(t.String()),
   prompt: t.String(),
   attempts: t.Number(),
   lastError: t.Nullable(t.String()),

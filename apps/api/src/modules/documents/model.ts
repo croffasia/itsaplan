@@ -246,12 +246,26 @@ export const documentCommentParams = t.Object({
   commentId: t.String({ format: 'uuid' }),
 });
 export const documentCommentBody = t.Object({
-  body: t.String({ minLength: 1, maxLength: 10_000 }),
-  parentId: t.Optional(t.String({ format: 'uuid' })),
+  body: t.String({
+    minLength: 1,
+    maxLength: 10_000,
+    description: 'The comment. Tag a project member or an AI agent with @username.',
+  }),
+  parentId: t.Optional(
+    t.String({
+      format: 'uuid',
+      description: 'The first comment of the thread to reply in. Omit to start a thread.',
+    }),
+  ),
   quote: t.Optional(t.String({ maxLength: 2000 })),
   from: t.Optional(t.Integer({ minimum: 0 })),
   to: t.Optional(t.Integer({ minimum: 1 })),
-  version: t.Integer({ minimum: 1 }),
+  version: t.Optional(
+    t.Integer({
+      minimum: 1,
+      description: 'The document version the text was selected in. Required to start a thread.',
+    }),
+  ),
 });
 export const documentCommentUpdateBody = t.Object({
   body: t.Optional(t.String({ minLength: 1, maxLength: 10_000 })),

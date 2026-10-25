@@ -96,11 +96,12 @@ the same url, so view it again rather than reusing what you saw earlier.
 
 ## Mentions
 
-A comment or an issue description tags someone by writing @handle inline, which
-notifies them. The handle is the username of a person in get_project.assignees, which
-lists members and AI agents alike; a handle nobody in the project answers to tags
-nobody. An AI agent tagged in a comment starts a run on that issue, so tag one only
-when you want it to act.
+A comment, an issue description, a document or a comment on a document tags someone
+by writing @handle inline, which notifies them. The handle is the username of a person
+in get_project.assignees, which lists members and AI agents alike; a handle nobody in
+the project answers to tags nobody. An AI agent tagged in a comment starts a run on
+that issue or document, so tag one only when you want it to act. An agent tagged in
+the text of an issue or a document is not run.
 
 ## Restraint
 

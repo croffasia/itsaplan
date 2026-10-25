@@ -52,6 +52,7 @@
   "saveFailed": "Gagal menyimpan",
   "retrySave": "Coba simpan lagi",
   "loadFailed": "Gagal memuat Dokumen",
+  "pageNotFound": "Halaman ini telah dihapus atau tidak lagi tersedia untuk Anda.",
   "conflict": "Versi yang lebih baru tersedia",
   "reload": "Muat ulang",
   "reviewConflict": "Tinjau",

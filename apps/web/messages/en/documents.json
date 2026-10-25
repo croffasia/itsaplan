@@ -52,6 +52,7 @@
   "saveFailed": "Could not save",
   "retrySave": "Retry save",
   "loadFailed": "Could not load Docs",
+  "pageNotFound": "This page was deleted or is no longer available to you.",
   "conflict": "A newer version exists",
   "reload": "Reload",
   "reviewConflict": "Review",

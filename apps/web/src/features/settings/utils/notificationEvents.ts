@@ -1,6 +1,6 @@
 import type { NotificationEventToggles } from '@/lib/api/endpoints/notificationSettings';
 
-// The issue events a channel can send, matching the inbox notification types.
+// The events a channel can send, matching the inbox notification types.
 // Shared by the email and telegram event sections; the label of an event is a
 // message under `settings.notifications.events`.
 export const NOTIFICATION_EVENTS: (keyof NotificationEventToggles)[] = [

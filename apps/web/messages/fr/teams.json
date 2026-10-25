@@ -545,6 +545,7 @@
     "endOfHistory": "Fin de l'historique",
     "manualTask": "Tâche manuelle",
     "scheduledTask": "Tâche planifiée",
+    "documentTask": "Commentaire dans un document",
     "failed": "En échec",
     "task": "Tâche",
     "error": "Erreur",

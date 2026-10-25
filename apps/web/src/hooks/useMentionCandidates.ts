@@ -1,37 +1,39 @@
 import { useContext, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ShellCtx } from '@/context/shellContext';
-import { useSession } from '@/lib/auth-client';
-import type { Assignee } from '@/lib/api/endpoints/projects';
-import { type MentionCandidate } from '@/lib/tiptap-mention';
-import { isForeignAgent } from '@/utils/foreignAgent';
+import {
+  listMentionCandidates,
+  type MentionCandidate,
+  type MentionSource,
+} from '@/lib/api/endpoints/mentions';
+import { qk } from '@/services/queryKeys';
 
-// An agent is offered only when a mention by this user would start a run: one that
-// does not answer mentions, or works only for another member, would stay silent.
-export function offersMention(a: Assignee, currentUserId: string | null): boolean {
-  if (!a.username) return false;
-  return a.kind !== 'agent' || (!!a.respondsToMention && !isForeignAgent(a, currentUserId));
+const NONE: MentionCandidate[] = [];
+
+// Who the "@" menu offers where a mention is written. The api builds the list with the
+// rule that then decides whom the mention reaches, so the menu offers nobody a mention
+// would leave silent. Empty without a source, for a text no mention reaches, and while
+// the list loads.
+export function useMentionCandidates(source: MentionSource | null): MentionCandidate[] {
+  const query = useQuery({
+    queryKey: source ? qk.mentionCandidates(source) : ['mentionCandidates'],
+    queryFn: () => listMentionCandidates(source!),
+    enabled: source != null,
+  });
+  return query.data ?? NONE;
 }
 
-export function mentionCandidatesFrom(
-  assignees: Assignee[],
-  currentUserId: string | null,
-): MentionCandidate[] {
-  return assignees.flatMap((a) =>
-    offersMention(a, currentUserId)
-      ? [{ userId: a.userId, name: a.name, username: a.username!, kind: a.kind }]
-      : [],
-  );
-}
-
-// Who the editors offer after an "@": the active project's members and agents that
-// have a handle. Read from the payload the Shell loads, so an editor needs no props
-// for it. Empty outside a project (the public share pages), where nothing is written.
-export function useMentionCandidates(): MentionCandidate[] {
+// The name behind each handle of the active project, lowercased, for the tooltip of a
+// mention chip. Empty outside a project (the public share pages).
+export function useMentionNames(): Map<string, string> {
   const assignees = useContext(ShellCtx)?.project?.assignees;
-  const { data: session } = useSession();
-  const currentUserId = session?.user.id ?? null;
   return useMemo(
-    () => mentionCandidatesFrom(assignees ?? [], currentUserId),
-    [assignees, currentUserId],
+    () =>
+      new Map(
+        (assignees ?? []).flatMap((a) =>
+          a.username ? [[a.username.toLowerCase(), a.name] as const] : [],
+        ),
+      ),
+    [assignees],
   );
 }

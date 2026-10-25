@@ -84,6 +84,7 @@ describe('normalizeToolKeys', () => {
       'create_document',
       'update_document',
       'delete_document',
+      'add_document_comment',
     ];
     expect(normalizeToolKeys(keys)).toEqual(keys);
   });

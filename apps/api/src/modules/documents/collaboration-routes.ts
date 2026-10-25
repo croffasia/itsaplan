@@ -3,6 +3,7 @@ import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
 import { requireUser } from '#shared/access';
 import { commonErrors, errors } from '#shared/responses';
+import { mcpTool } from '#mcp/generate';
 import { openDocumentSession, getDocumentSteps, saveDocumentSteps } from './collaboration';
 import { addDocumentComment, listDocumentComments, updateDocumentComment } from './comments';
 import {
@@ -89,7 +90,12 @@ export const documentCollaborationRoutes = new Elysia({
       params: documentParams,
       body: documentCommentBody,
       response: { 201: t.Object({ id: t.String() }), ...commonErrors, ...errors(409) },
-      detail: { summary: 'Comment on selected document text or reply' },
+      detail: {
+        summary: 'Comment on selected document text or reply',
+        description:
+          'Reply in a comment thread of a document with parentId. Starting a thread takes the selected text: quote, from, to and the document version.',
+        ...mcpTool('add_document_comment'),
+      },
     },
   )
   .patch(

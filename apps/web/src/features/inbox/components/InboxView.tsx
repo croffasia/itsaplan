@@ -91,10 +91,11 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
 
       {selected ? (
         <InboxDetail
-          key={selected.issueId}
+          // A document is keyed by the notification: whether its comments open is read
+          // when it mounts.
+          key={selected.documentId != null ? `notification-${selected.id}` : selected.issueId}
           project={project}
-          issueId={selected.issueId}
-          issueSeq={selected.issueSeq}
+          notification={selected}
           isMobile={isMobile}
           onBack={() => setSelected(null)}
           onDeleted={() => setSelected(null)}

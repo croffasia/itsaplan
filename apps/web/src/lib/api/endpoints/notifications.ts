@@ -1,10 +1,12 @@
 import { request } from '@/lib/api/core/client';
 import type { StateType } from '@/lib/api/endpoints/columns';
 
-// Inbox notifications. Each row is enriched with the issue and project it points at
-// so the list renders without extra calls.
+// Inbox notifications. Each row is enriched with the issue or the document and the
+// project it points at, so the list renders without extra calls.
 export type NotificationType = 'assigned' | 'mentioned' | 'commented' | 'state_changed';
 
+// The issue fields are set on an issue's notification, the document fields on a
+// document's.
 export interface Notification {
   id: number;
   type: NotificationType;
@@ -13,10 +15,15 @@ export interface Notification {
   readAt: string | null;
   snoozedUntil: string | null;
   createdAt: string;
-  issueId: number;
-  issueSeq: number;
-  issueTitle: string;
-  issueStateType: StateType;
+  issueId: number | null;
+  issueSeq: number | null;
+  issueTitle: string | null;
+  issueStateType: StateType | null;
+  documentId: number | null;
+  documentTitle: string | null;
+  documentIcon: string | null;
+  // Set when the mention is in a comment on the document.
+  documentCommentId: string | null;
   projectId: number;
   projectKey: string;
   projectName: string;

@@ -97,7 +97,7 @@
     "telegram": "Telegram",
     "events": {
       "assigned": "이슈 담당자로 지정됨",
-      "mentioned": "이슈에서 멘션됨",
+      "mentioned": "이슈 또는 문서에서 멘션됨",
       "commented": "구독 중인 이슈에 새 댓글",
       "state_changed": "구독 중인 이슈의 상태 변경"
     },

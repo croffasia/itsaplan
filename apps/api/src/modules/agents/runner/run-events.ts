@@ -1,6 +1,7 @@
 import { db, agentRun, agentRunTrace, issue } from '@repo/db';
 import { and, desc, eq, isNull, lt, or, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
+import { runDocumentVisibleTo } from '../core/run-queue';
 import type { AgUiEventBody } from '../model';
 
 const MAX_EVENTS = 2000;
@@ -70,18 +71,21 @@ export async function appendRunEvents(
   });
 }
 
-export async function runProjectId(runId: number) {
+// The project of a run whose transcript the viewer asks for, and the document it was
+// started in, if any.
+export async function visibleRun(runId: number, viewerId: string) {
   const [row] = await db
-    .select({ projectId: agentRun.projectId })
+    .select({ projectId: agentRun.projectId, documentId: agentRun.documentId })
     .from(agentRun)
     .leftJoin(issue, eq(issue.id, agentRun.issueId))
     .where(
       and(
         eq(agentRun.id, runId),
         or(isNull(agentRun.issueId), eq(issue.projectId, agentRun.projectId)),
+        runDocumentVisibleTo(viewerId),
       ),
     );
-  return row?.projectId;
+  return row;
 }
 
 export async function readRunTrace(projectId: number, runId: number, attempt?: number) {

@@ -545,6 +545,7 @@
     "endOfHistory": "Geçmişin sonu",
     "manualTask": "Manuel görev",
     "scheduledTask": "Zamanlanmış görev",
+    "documentTask": "Belge yorumu",
     "failed": "Başarısız",
     "task": "Görev",
     "error": "Hata",

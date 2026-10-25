@@ -9,12 +9,15 @@ import { listDocumentComments } from '@/lib/api/endpoints/documents';
 import { qk } from '@/services/queryKeys';
 
 const commentMarks = new PluginKey<DecorationSet>('documentCommentMarks');
+// A collaborative session replaces the editor's content when it opens, which drops the
+// marks, so they are drawn again once sessionReady turns true.
 export function useDocumentCommentMarks(
   editor: Editor | null,
   projectKey: string,
   documentId: number,
   onOpen: () => void,
   version: number,
+  sessionReady: boolean,
 ) {
   const open = useRef(onOpen);
   open.current = onOpen;
@@ -85,5 +88,5 @@ export function useDocumentCommentMarks(
     editor.view.dispatch(
       editor.state.tr.setMeta(commentMarks, DecorationSet.create(editor.state.doc, decorations)),
     );
-  }, [data, editor, version]);
+  }, [data, editor, version, sessionReady]);
 }

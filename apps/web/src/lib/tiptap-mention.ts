@@ -5,24 +5,18 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { ReactRenderer } from '@tiptap/react';
 import { REFRESH_DECORATIONS } from '@/components/common/editor/refreshDecorations';
 import Suggestion from '@tiptap/suggestion';
-import EditorMentionMenu, {
-  type MentionMenuRef,
-} from '@/components/common/editor/EditorMentionMenu';
-
-// Who can be mentioned: a project member or an agent, addressed by their handle.
-export interface MentionCandidate {
-  userId: string;
-  name: string;
-  username: string;
-  kind: 'member' | 'agent';
-}
+import MentionMenu, { type MentionMenuHandle } from '@/components/common/inputs/MentionMenu';
+import type { MentionCandidate } from '@/lib/api/endpoints/mentions';
+import { matchMentionCandidates } from '@/utils/mentions';
 
 export type MentionOptions = {
-  // Read on every keystroke rather than captured once, so a roster that arrives
-  // after the editor was built is still offered.
+  // Who the "@" menu offers. Read on every keystroke rather than captured once, so a
+  // list that arrives after the editor was built is still offered.
   items: () => MentionCandidate[];
   // The viewer's own handle. A mention of it is painted in a second colour.
   self: () => string;
+  // The name behind a lowercased handle, shown as the chip's tooltip.
+  name: (handle: string) => string | undefined;
 };
 
 // Its own key, so this suggestion plugin and the slash command's can both run in
@@ -95,7 +89,7 @@ export const Mention = Node.create<MentionOptions>({
   selectable: false,
 
   addOptions() {
-    return { items: () => [], self: () => '' };
+    return { items: () => [], self: () => '', name: () => undefined };
   },
 
   addAttributes() {
@@ -116,9 +110,7 @@ export const Mention = Node.create<MentionOptions>({
     const username = String(node.attrs.username);
     // The name behind the handle is only known while the roster is loaded, so it is
     // a tooltip rather than part of the chip.
-    const name = this.options
-      .items()
-      .find((c) => c.username.toLowerCase() === username.toLowerCase())?.name;
+    const name = this.options.name(username.toLowerCase());
     return [
       'span',
       mergeAttributes(HTMLAttributes, { class: 'mention', ...(name ? { title: name } : {}) }),
@@ -165,15 +157,7 @@ export const Mention = Node.create<MentionOptions>({
         // Radix makes everything outside an open overlay inert, so the list mounts
         // inside the dialog the editor sits in.
         container: '[data-slot="dialog-content"]',
-        items: ({ query }) => {
-          const needle = query.toLowerCase();
-          return items()
-            .filter(
-              (c) =>
-                c.name.toLowerCase().includes(needle) || c.username.toLowerCase().includes(needle),
-            )
-            .slice(0, 8);
-        },
+        items: ({ query }) => matchMentionCandidates(items(), query),
         command: ({ editor, range, props }) => {
           editor
             .chain()
@@ -185,20 +169,21 @@ export const Mention = Node.create<MentionOptions>({
             .run();
         },
         render: () => {
-          let component: ReactRenderer<MentionMenuRef> | null = null;
+          let component: ReactRenderer<MentionMenuHandle> | null = null;
           let unmount: (() => void) | null = null;
 
           return {
             onStart: (props) => {
-              component = new ReactRenderer(EditorMentionMenu, {
-                props,
+              component = new ReactRenderer(MentionMenu, {
+                props: { items: props.items, onPick: props.command },
                 editor: props.editor,
                 className: 'z-50',
               });
               unmount = props.mount(component.element);
             },
-            onUpdate: (props) => component?.updateProps(props),
-            onKeyDown: (props) => component?.ref?.onKeyDown(props) ?? false,
+            onUpdate: (props) =>
+              component?.updateProps({ items: props.items, onPick: props.command }),
+            onKeyDown: (props) => component?.ref?.onKeyDown(props.event) ?? false,
             onExit: () => {
               unmount?.();
               component?.destroy();

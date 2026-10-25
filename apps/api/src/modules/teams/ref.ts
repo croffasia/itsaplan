@@ -53,3 +53,10 @@ export function issueUrl(teamRef: string, key: string, seq: number): string | un
   const base = process.env.APP_URL;
   return base ? `${base}${issueWebPath(teamRef, key, seq)}` : undefined;
 }
+
+// The full URL of a document's page, e.g. "/acme/MKT/docs/12" on the web origin, or
+// undefined as for issueUrl.
+export function documentUrl(teamRef: string, key: string, documentId: number): string | undefined {
+  const base = process.env.APP_URL;
+  return base ? `${base}/${teamRef}/${key}/docs/${documentId}` : undefined;
+}

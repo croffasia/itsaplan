@@ -39,6 +39,7 @@
   "saveFailed": "تعذر الحفظ",
   "retrySave": "إعادة محاولة الحفظ",
   "loadFailed": "تعذر تحميل المستندات",
+  "pageNotFound": "حُذفت هذه الصفحة أو لم تعد متاحة لك.",
   "conflict": "توجد نسخة أحدث",
   "reload": "إعادة التحميل",
   "reviewConflict": "مراجعة",

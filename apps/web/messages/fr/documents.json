@@ -52,6 +52,7 @@
   "saveFailed": "Impossible d'enregistrer",
   "retrySave": "Réessayer",
   "loadFailed": "Impossible de charger les documents",
+  "pageNotFound": "Cette page a été supprimée ou ne vous est plus accessible.",
   "conflict": "Une version plus récente existe",
   "reload": "Recharger",
   "reviewConflict": "Examiner",

@@ -1,7 +1,7 @@
 import { assertMcpAllowed, requiresPermission } from '#shared/guards';
 import { HttpError } from '#shared/lib';
 import { externalTraceQuery, ExternalTraceResponse, runParams } from '../runner/model';
-import { runProjectId, readRunTrace } from '../runner/run-events';
+import { visibleRun, readRunTrace } from '../runner/run-events';
 import { Elysia, type DocumentDecoration } from 'elysia';
 import { authContext } from '#shared/auth-context';
 import { assertPermission, requireUser } from '#shared/access';
@@ -21,10 +21,15 @@ export const runnerQueueRoutes = new Elysia({
       return {
         detail: requiresPermission(['ai_agents', 'read']) as DocumentDecoration,
         async resolve({ params, user, request }) {
-          const projectId = await runProjectId(Number((params as { runId: string }).runId));
-          if (projectId == null) throw new HttpError(404, 'Run not found');
+          const run = await visibleRun(
+            Number((params as { runId: string }).runId),
+            requireUser(user).id,
+          );
+          if (!run) throw new HttpError(404, 'Run not found');
+          const { projectId } = run;
           await assertPermission(projectId, user, 'work_items', 'read');
           await assertPermission(projectId, user, 'ai_agents', 'read');
+          if (run.documentId != null) await assertPermission(projectId, user, 'documents', 'read');
           await assertMcpAllowed(projectId, request.headers);
           return { projectId };
         },
@@ -46,7 +51,7 @@ export const runnerQueueRoutes = new Elysia({
       detail: {
         summary: 'Read an external run transcript',
         description:
-          'Recorded events and local Codex session of the selected or latest attempt. Requires both agent and work item read permission in the original project.',
+          'Recorded events and local Codex session of the selected or latest attempt. Requires both agent and work item read permission in the original project, and document read permission for a run started in a document.',
       },
     },
   )
@@ -73,7 +78,8 @@ export const runnerQueueRoutes = new Elysia({
         summary: 'Read the runner queue',
         description:
           'Active and past external runs across projects where the caller may read both ' +
-          'work items and agents. Running leases first, waiting runs by due time, then newest past runs.',
+          'work items and agents. A run started in a document also takes document read permission. ' +
+          'Running leases first, waiting runs by due time, then newest past runs.',
       },
     },
   );

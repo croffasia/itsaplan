@@ -545,6 +545,7 @@
     "endOfHistory": "پایان تاریخچه",
     "manualTask": "وظیفه دستی",
     "scheduledTask": "وظیفه زمان‌بندی‌شده",
+    "documentTask": "نظر در سند",
     "failed": "ناموفق",
     "task": "وظیفه",
     "error": "خطا",

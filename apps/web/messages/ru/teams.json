@@ -545,6 +545,7 @@
     "endOfHistory": "Конец истории",
     "manualTask": "Ручная задача",
     "scheduledTask": "Задача по расписанию",
+    "documentTask": "Комментарий в документе",
     "failed": "Сбой",
     "task": "Задача",
     "error": "Ошибка",

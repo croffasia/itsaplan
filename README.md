@@ -65,7 +65,8 @@ release.
   completion date, breakdown, pulse
 - Quick actions that run on an issue, and auto-assignment when an issue moves into a state
 - Docs: shared Markdown pages in a tree, with revision history, private and locked pages,
-  favorites, embedded files, and links to the issues they describe
+  favorites, embedded files, comment threads, @username mentions of people and agents,
+  and links to the issues they describe
 - Freeform notes boards: sticky notes on a canvas, with colors, checklists, and connections
 - Share a view or an issue by public link, read-only and without sign-in
 - Initiatives that group and track related work inside a project
@@ -83,7 +84,8 @@ release.
   [`@itsaplan/runner`](packages/runner) and it gives every task to Claude Code, Codex,
   Antigravity CLI, GitHub Copilot CLI, opencode, or any command that reads stdin
 - Or control the run queue through the API and do the work in your own implementation
-- A run starts on an @mention in a comment, on an assignment, or on a schedule
+- A run starts on an @mention in a comment on an issue or a document, on an assignment, or
+  on a schedule
 - Tools for the services outside the tracker: Notion, Telegram, Threads, Instagram, Jina,
   Firecrawl, Gitea, and GitHub
 - Built-in chat with each agent, with its own conversation history

@@ -4,7 +4,7 @@ import { JSDOM } from 'jsdom';
 import { importedMarkdownJson, markdownTitle } from './documentImport';
 
 describe('importedMarkdownJson', () => {
-  const globals = ['window', 'document', 'navigator', 'Node'] as const;
+  const globals = ['window', 'document', 'navigator', 'Node', 'NodeFilter'] as const;
   const previous = globals.map((name) => Object.getOwnPropertyDescriptor(globalThis, name));
   before(() => {
     const { window } = new JSDOM('<!doctype html>');

@@ -243,6 +243,19 @@ export const AGENT_ACTIONS: ToolMeta[] = [
     description: 'Permanently delete shared project documents.',
     always: false,
   },
+  // A new thread is anchored to text the agent cannot select, so its copy only replies.
+  {
+    key: 'add_document_comment',
+    group: 'documents',
+    label: 'Comment on documents',
+    description: 'Reply in the comment threads of documents as this agent.',
+    always: false,
+    overrides: {
+      hide: ['quote', 'from', 'to', 'version'],
+      description:
+        'Reply in a comment thread of a document. `parentId` is the id of the first comment of the thread.',
+    },
+  },
   {
     key: 'list_note_boards',
     group: 'notes',

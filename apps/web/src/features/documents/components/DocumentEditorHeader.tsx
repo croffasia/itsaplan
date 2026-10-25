@@ -71,7 +71,7 @@ export default function DocumentEditorHeader({
   canManageLifecycle: boolean;
   canDelete: boolean;
   busy: boolean;
-  onBack: () => void;
+  onBack?: () => void;
   onRetrySave: () => void;
   onFullWidthChange: (value: boolean) => void;
   onStickyToolbarChange: (value: boolean) => void;
@@ -114,16 +114,18 @@ export default function DocumentEditorHeader({
 
   return (
     <header className="flex h-12 shrink-0 items-center gap-2 border-b bg-background/90 px-2.5 backdrop-blur-md md:px-4">
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        className="shrink-0 md:hidden"
-        aria-label={t('backToDocuments')}
-        onClick={onBack}
-      >
-        <ArrowLeft className="rtl:rotate-180" />
-      </Button>
+      {onBack && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="shrink-0 md:hidden"
+          aria-label={t('backToDocuments')}
+          onClick={onBack}
+        >
+          <ArrowLeft className="rtl:rotate-180" />
+        </Button>
+      )}
 
       <DocumentBreadcrumbs
         projectKey={projectKey}

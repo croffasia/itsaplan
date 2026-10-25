@@ -11,7 +11,7 @@ import {
 import { qk } from '@/services/queryKeys';
 import { useSession } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import DocumentCommentInput from './DocumentCommentInput';
 import DocumentCommentThread from './DocumentCommentThread';
 import type { DocumentSelection } from './DocumentSelectionActions';
 
@@ -100,13 +100,14 @@ export default function DocumentCommentsPanel({
             <blockquote className="line-clamp-3 border-s-2 border-primary/40 ps-3 text-xs leading-5 text-muted-foreground">
               {selection.quote}
             </blockquote>
-            <Textarea
+            <DocumentCommentInput
+              projectKey={projectKey}
+              documentId={documentId}
               autoFocus
               aria-label={t('add')}
               placeholder={t('placeholder')}
               value={body}
-              maxLength={10000}
-              onChange={(event) => setBody(event.target.value)}
+              onValueChange={setBody}
               onKeyDown={(event) => {
                 if ((event.metaKey || event.ctrlKey) && event.key === 'Enter')
                   event.currentTarget.form?.requestSubmit();
@@ -148,6 +149,8 @@ export default function DocumentCommentsPanel({
           roots.map((comment) => (
             <DocumentCommentThread
               key={comment.id}
+              projectKey={projectKey}
+              documentId={documentId}
               comment={comment}
               replies={comments.filter((item) => item.parentId === comment.id)}
               userId={session?.user.id ?? null}

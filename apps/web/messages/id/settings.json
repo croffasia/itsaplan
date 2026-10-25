@@ -97,7 +97,7 @@
     "telegram": "Telegram",
     "events": {
       "assigned": "Ditugaskan ke suatu issue",
-      "mentioned": "Disebutkan dalam suatu issue",
+      "mentioned": "Disebutkan dalam suatu issue atau dokumen",
       "commented": "Komentar baru pada issue yang Anda pantau",
       "state_changed": "Perubahan status pada issue yang Anda pantau"
     },

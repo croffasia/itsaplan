@@ -9,7 +9,9 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 // A handle holds letters, digits and . _ -, and never ends on . or -, so a mention
 // that closes a sentence keeps the punctuation out of the handle. The lookbehind
 // keeps an email address (name@example.com) and a doubled @ from reading as one.
-const MENTION_RE = /(?<![\w@.-])@([a-zA-Z0-9_](?:[a-zA-Z0-9._-]*[a-zA-Z0-9_])?)/g;
+const HANDLE = '[a-zA-Z0-9_](?:[a-zA-Z0-9._-]*[a-zA-Z0-9_])?';
+const MENTION_RE = new RegExp(`(?<![\\w@.-])@(${HANDLE})`, 'g');
+export const MENTION_HANDLE_RE = new RegExp(`^${HANDLE}$`);
 
 // Markup an @ belongs to rather than addressing anyone: a fenced block, an inline
 // span of code, a link or an image, and a bare URL. The editor skips the same

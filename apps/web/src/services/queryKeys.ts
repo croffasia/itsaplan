@@ -1,4 +1,5 @@
 import type { FeedFilter, FeedOrder } from '@/lib/api/endpoints/activity';
+import type { MentionSource } from '@/lib/api/endpoints/mentions';
 
 const scimKey = (workspaceId: number | null) =>
   workspaceId === null ? (['god', 'scim'] as const) : (['workspace', workspaceId, 'scim'] as const);
@@ -108,6 +109,19 @@ export const qk = {
     ['documents', projectKey, 'document', documentId, 'assets'] as const,
   documentIssueLinks: (projectKey: string, documentId: number) =>
     ['documents', projectKey, 'document', documentId, 'issues'] as const,
+  // Who the "@" menu offers where a mention is written. A document's sits under the
+  // document, so what refreshes the document refreshes it too.
+  mentionCandidates: (source: MentionSource) =>
+    source.on === 'document'
+      ? ([
+          'documents',
+          source.projectKey,
+          'document',
+          source.documentId,
+          'mentions',
+          source.place,
+        ] as const)
+      : (['mentionCandidates', source.projectKey, source.place] as const),
   issueDocumentLinks: (projectKey: string, issueId: number) =>
     ['documents', projectKey, 'issue', issueId] as const,
   initiativeDocumentLinks: (projectKey: string, initiativeId: number) =>

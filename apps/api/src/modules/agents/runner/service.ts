@@ -5,8 +5,8 @@ import { type ContextUsage } from '../chat-usage';
 import {
   agentRunConfig,
   deferRun,
-  issueRunTurn,
-  loadThreadContext,
+  runTurn,
+  loadRunThread,
   markRunExecuting,
   runRetryDelayMs,
   scheduleRunRetry,
@@ -114,6 +114,8 @@ type ClaimedRow = Omit<RunnerRun, 'systemPrompt' | 'traceEvents'> & {
   requesterName: string | null;
   requesterUsername: string | null;
   sourceActivityId: number | null;
+  documentId: number | null;
+  sourceDocumentCommentId: string | null;
   scheduleId: number | null;
 };
 
@@ -178,7 +180,7 @@ export async function takeNextRun(agent: RunnerAgent): Promise<RunnerRun | null>
     WHERE r.id = (
       SELECT id FROM agent_run q
       WHERE q.agent_id = ${agentId} AND q.status = 'pending' AND q.next_attempt_at <= now()
-        AND ${issueRunTurn}
+        AND ${runTurn}
       ORDER BY q.next_attempt_at, q.id
       FOR UPDATE SKIP LOCKED
       LIMIT 1
@@ -205,6 +207,8 @@ export async function takeNextRun(agent: RunnerAgent): Promise<RunnerRun | null>
          LEFT JOIN ai_agent ag ON ag.user_id = u.id
          WHERE i.id = r.issue_id) AS "assigneeUsername",
       r.source_activity_id AS "sourceActivityId",
+      r.document_id AS "documentId",
+      r.source_document_comment_id AS "sourceDocumentCommentId",
       (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterName",
       (SELECT COALESCE(u.username, ag.username)
          FROM issue_activity a JOIN "user" u ON u.id = a.actor_user_id
@@ -218,12 +222,11 @@ export async function takeNextRun(agent: RunnerAgent): Promise<RunnerRun | null>
     await deferRun(row.id, wait);
     return null;
   }
-  const threadContext = await loadThreadContext(row.sourceActivityId);
   const forPrompt = {
     ...row,
     agentUserId: agent.userId,
     agentUsername: agent.username,
-    threadContext,
+    ...(await loadRunThread(row)),
   };
   // A start that fails is a failed attempt: the run comes back after the retry delay,
   // with the error on it, rather than being handed out half started.
@@ -260,7 +263,7 @@ function buildSystemPrompt(agent: RunnerAgent, project: RunnerProject, run: RunF
   const instructions = agent.instructions?.trim();
   return (
     projectPreamble(project) +
-    runModePreamble(run.trigger) +
+    runModePreamble(run) +
     peopleContext(run) +
     (instructions ? `## Instructions\n${instructions}\n` : '')
   );

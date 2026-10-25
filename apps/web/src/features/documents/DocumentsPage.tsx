@@ -14,18 +14,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ApiError } from '@/lib/api/core/client';
 import {
   useCreateDocument,
-  useDeleteDocument,
-  useDuplicateDocument,
   useDocumentQuery,
   useDocumentsQuery,
 } from './services/documents.service';
-import DocumentEditor from './components/DocumentEditor';
-import DocumentLoadError from './components/DocumentLoadError';
-import DocumentLoadingState from './components/DocumentLoadingState';
+import DocumentView from './components/DocumentView';
 import DocumentsIndex from './components/DocumentsIndex';
 import { importedMarkdownJson, markdownTitle } from './utils/documentImport';
 import { documentBelongsToTab, type DocumentListTab } from './utils/documentList';
-import { documentAncestors } from './utils/documentTree';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useDocumentNavigation, useRecentDocuments } from '@/hooks/useDocumentNavigation';
@@ -38,7 +33,7 @@ export default function DocumentsPage() {
   const params = useParams<{ documentId?: string }>();
   const router = useRouter();
   const t = useTranslations('documents');
-  const { can, isOwner } = usePermissions();
+  const { can } = usePermissions();
   const projectKey = useShellRoute().projectKey ?? '';
   const routeId = params.documentId ? Number(params.documentId) : null;
   const documentId = routeId && Number.isFinite(routeId) ? routeId : null;
@@ -54,13 +49,6 @@ export default function DocumentsPage() {
   useEffect(() => {
     if (documentId !== null) visit(documentId);
   }, [documentId, visit]);
-  const allDocumentsQuery = useDocumentsQuery(projectKey);
-  const allArchivedDocumentsQuery = useDocumentsQuery(
-    projectKey,
-    '',
-    true,
-    documentId !== null || listTab === 'archived',
-  );
   const activeDocumentsQuery = useDocumentsQuery(
     projectKey,
     deferredSearch,
@@ -94,29 +82,13 @@ export default function DocumentsPage() {
     (documentQuery.data.title.trim() || t('untitled'));
   useDocumentTitle(titlePath(project?.project.name, documentTitle));
   const createDocument = useCreateDocument(projectKey);
-  const deleteDocument = useDeleteDocument(projectKey);
-  const duplicateDocument = useDuplicateDocument(projectKey);
   const canRead = can('documents', 'read');
   const canCreate = can('documents', 'create');
   const canEdit = can('documents', 'edit');
-  const canDelete = can('documents', 'delete');
-  const canReadWorkItems = can('work_items', 'read');
-  const canLinkWorkItems = canEdit && can('work_items', 'edit');
 
   useLiveRefresh({
     scope: project ? revScope.documents(project.project.id) : null,
-    targets: [
-      qk.documentListsForProject(projectKey),
-      ...(documentId === null
-        ? []
-        : [
-            qk.document(projectKey, documentId),
-            qk.documentRevisions(projectKey, documentId),
-            qk.documentAssets(projectKey, documentId),
-            qk.documentComments(projectKey, documentId),
-            qk.documentIssueLinks(projectKey, documentId),
-          ]),
-    ],
+    targets: [qk.documentListsForProject(projectKey)],
   });
 
   useEffect(() => {
@@ -142,7 +114,7 @@ export default function DocumentsPage() {
     );
   }
 
-  const create = async (parentId: number | null, isPrivate = false) => {
+  const create = async (parentId: number | null, isPrivate: boolean) => {
     try {
       setSearch('');
       const newDocument = await createDocument.mutateAsync({ parentId, isPrivate });
@@ -179,42 +151,6 @@ export default function DocumentsPage() {
     }
   };
 
-  const remove = async (version: number) => {
-    if (documentId === null) return;
-    await deleteDocument.mutateAsync({ documentId, version });
-    router.push(documentsPath(projectKey));
-  };
-
-  const duplicate = async (title: string, version: number) => {
-    if (!activeDocument) return;
-    try {
-      const copy = await duplicateDocument.mutateAsync({
-        documentId: activeDocument.id,
-        version,
-        title: t('copyTitle', { title: title.trim() || t('untitled') }),
-        parentId: activeDocument.parentId,
-      });
-      router.push(documentPath(projectKey, copy.id));
-    } catch {
-      // Mutation errors are reported by the shared query client.
-    }
-  };
-
-  const activeDocument = documentQuery.data;
-  const author = activeDocument?.updatedByUserId
-    ? project.assignees.find((candidate) => candidate.userId === activeDocument.updatedByUserId)
-    : null;
-  const ancestors = activeDocument
-    ? documentAncestors(activeDocument, [
-        ...(allDocumentsQuery.data ?? []),
-        ...(allArchivedDocumentsQuery.data ?? []),
-      ])
-    : [];
-  const detailFailed =
-    documentId !== null &&
-    documentQuery.isError &&
-    !(documentQuery.error instanceof ApiError && documentQuery.error.status === 404);
-
   if (documentId === null) {
     return (
       <DocumentsIndex
@@ -241,36 +177,14 @@ export default function DocumentsPage() {
     );
   }
 
-  if (detailFailed) return <DocumentLoadError onRetry={() => void documentQuery.refetch()} />;
-  if (!activeDocument) return <DocumentLoadingState />;
-
   return (
-    <DocumentEditor
-      key={activeDocument.id}
+    <DocumentView
+      key={documentId}
       projectKey={projectKey}
-      projectName={project.project.name}
-      document={activeDocument}
-      ancestors={ancestors}
-      documents={allDocumentsQuery.data ?? []}
-      authorName={author?.name ?? null}
-      authorNames={Object.fromEntries(
-        project.assignees.map((candidate) => [candidate.userId, candidate.name]),
-      )}
-      canEdit={canEdit}
-      canReadWorkItems={canReadWorkItems}
-      canLinkWorkItems={canLinkWorkItems}
-      isProjectOwner={isOwner}
-      canCreate={canCreate}
-      canDelete={canDelete}
+      documentId={documentId}
       onBack={() => router.push(documentsPath(projectKey))}
-      onCreate={(parentId, isPrivate) => void create(parentId, isPrivate)}
-      onDuplicate={duplicate}
-      onDelete={remove}
-      onReload={async () => {
-        const result = await documentQuery.refetch();
-        if (result.isError) throw result.error;
-        return result.data ?? null;
-      }}
+      onCreated={() => setSearch('')}
+      onDeleted={() => router.push(documentsPath(projectKey))}
     />
   );
 }

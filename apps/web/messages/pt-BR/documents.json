@@ -52,6 +52,7 @@
   "saveFailed": "Não foi possível salvar",
   "retrySave": "Tentar salvar novamente",
   "loadFailed": "Não foi possível carregar os documentos",
+  "pageNotFound": "Esta página foi excluída ou não está mais disponível para você.",
   "conflict": "Existe uma versão mais nova",
   "reload": "Recarregar",
   "reviewConflict": "Revisar",

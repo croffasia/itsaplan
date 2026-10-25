@@ -545,6 +545,7 @@
     "endOfHistory": "End of history",
     "manualTask": "Manual task",
     "scheduledTask": "Scheduled task",
+    "documentTask": "Document comment",
     "failed": "Failed",
     "task": "Task",
     "error": "Error",

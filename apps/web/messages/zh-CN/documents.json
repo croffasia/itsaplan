@@ -39,6 +39,7 @@
   "saveFailed": "保存失败",
   "retrySave": "重试保存",
   "loadFailed": "无法加载文档",
+  "pageNotFound": "此页面已被删除，或你已无法访问。",
   "conflict": "存在更新版本",
   "reload": "重新加载",
   "reviewConflict": "查看",

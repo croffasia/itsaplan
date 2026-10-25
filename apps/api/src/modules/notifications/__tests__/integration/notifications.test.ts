@@ -115,7 +115,7 @@ describe('notifications', () => {
     });
     expect(assigned.data!.count).toBe(1);
     const afterAssigned = (await member.api.notifications.get({ query: {} })).data!.items;
-    expect(afterAssigned.map((item) => item.issueId).sort((a, b) => a - b)).toEqual(
+    expect(afterAssigned.map((item) => item.issueId!).sort((a, b) => a - b)).toEqual(
       [active.id, completed.id].sort((a, b) => a - b),
     );
     expect(afterAssigned.find((item) => item.issueId === completed.id)!.readAt).not.toBeNull();

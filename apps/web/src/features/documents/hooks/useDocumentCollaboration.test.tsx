@@ -16,6 +16,7 @@ const replacedGlobals = [
   'document',
   'navigator',
   'Node',
+  'NodeFilter',
   'HTMLElement',
   'requestAnimationFrame',
   'IS_REACT_ACT_ENVIRONMENT',
@@ -88,6 +89,7 @@ beforeEach(async () => {
     document: { configurable: true, value: dom.window.document },
     navigator: { configurable: true, value: dom.window.navigator },
     Node: { configurable: true, value: dom.window.Node },
+    NodeFilter: { configurable: true, value: dom.window.NodeFilter },
     HTMLElement: { configurable: true, value: dom.window.HTMLElement },
     requestAnimationFrame: {
       configurable: true,

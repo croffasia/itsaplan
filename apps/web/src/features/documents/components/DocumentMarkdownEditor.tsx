@@ -34,6 +34,9 @@ import { DocumentBlockId } from '../extensions/documentBlockId';
 import DocumentBlockMenu from './DocumentBlockMenu';
 import DocumentSelectionActions, { type DocumentSelection } from './DocumentSelectionActions';
 import { SlashCommand } from '@/lib/tiptap-slash-command';
+import { Mention, type MentionOptions } from '@/lib/tiptap-mention';
+import { useMentionCandidates, useMentionNames } from '@/hooks/useMentionCandidates';
+import { useSession } from '@/lib/auth-client';
 
 const lowlight = createLowlight(common);
 const DOCUMENT_ASSET_PATH =
@@ -80,7 +83,9 @@ type EditorLabels = {
 
 type EditorValue = { markdown: string; json: JSONContent };
 
-export function documentEditorExtensions(labels: EditorLabels) {
+// Without `mentions` the mention node is still known, so a page that holds one parses,
+// but typing "@" offers nobody.
+export function documentEditorExtensions(labels: EditorLabels, mentions?: MentionOptions) {
   return [
     DocumentBlockId,
     StarterKit.configure({
@@ -108,6 +113,7 @@ export function documentEditorExtensions(labels: EditorLabels) {
     Color,
     Highlight.configure({ multicolor: true }),
     TextAlign.configure({ types: ['heading', 'paragraph'] }),
+    mentions ? Mention.configure(mentions) : Mention,
     SlashCommand.configure({
       codeBlockLabel: labels.codeBlockLabel,
       tableLabel: labels.tableLabel,
@@ -168,32 +174,51 @@ export default function DocumentMarkdownEditor({
   issueRefsRef.current = issueRefs;
   const openIssueRefRef = useRef(router.push);
   openIssueRefRef.current = (href: string) => router.push(href);
+  const mentionCandidates = useMentionCandidates(
+    projectKey && documentId ? { projectKey, on: 'document', documentId, place: 'text' } : null,
+  );
+  const mentionCandidatesRef = useRef(mentionCandidates);
+  mentionCandidatesRef.current = mentionCandidates;
+  const mentionNames = useMentionNames();
+  const mentionNamesRef = useRef(mentionNames);
+  mentionNamesRef.current = mentionNames;
+  const { data: session } = useSession();
+  const selfHandle = session?.user.username ?? '';
+  const selfHandleRef = useRef(selfHandle);
+  selfHandleRef.current = selfHandle;
 
   const editor = useEditor({
     immediatelyRender: false,
     editable,
-    extensions: documentEditorExtensions({
-      placeholder,
-      codeBlockLabel: t('codeBlock'),
-      tableLabel: t('table'),
-      blocks: {
-        paragraph: t('text'),
-        headings: [
-          t('heading1'),
-          t('heading2'),
-          t('heading3'),
-          t('heading4'),
-          t('heading5'),
-          t('heading6'),
-        ],
-        bulletList: t('bulletList'),
-        orderedList: t('numberedList'),
-        taskList: t('todoList'),
-        quote: t('quote'),
-        divider: t('divider'),
+    extensions: documentEditorExtensions(
+      {
+        placeholder,
+        codeBlockLabel: t('codeBlock'),
+        tableLabel: t('table'),
+        blocks: {
+          paragraph: t('text'),
+          headings: [
+            t('heading1'),
+            t('heading2'),
+            t('heading3'),
+            t('heading4'),
+            t('heading5'),
+            t('heading6'),
+          ],
+          bulletList: t('bulletList'),
+          orderedList: t('numberedList'),
+          taskList: t('todoList'),
+          quote: t('quote'),
+          divider: t('divider'),
+        },
+        image: onPickImage ? { label: t('uploadImage'), onPick: onPickImage } : undefined,
       },
-      image: onPickImage ? { label: t('uploadImage'), onPick: onPickImage } : undefined,
-    }).concat(
+      {
+        items: () => mentionCandidatesRef.current,
+        self: () => selfHandleRef.current,
+        name: (handle) => mentionNamesRef.current.get(handle),
+      },
+    ).concat(
       IssueRef.configure({
         refs: () => issueRefsRef.current.refs,
         open: (href) => openIssueRefRef.current(href),
@@ -275,7 +300,7 @@ export default function DocumentMarkdownEditor({
   useEffect(() => {
     const frame = requestAnimationFrame(() => refreshDecorations(editor));
     return () => cancelAnimationFrame(frame);
-  }, [editor, issueRefList, issueRefs.resolve, editable, focused]);
+  }, [editor, issueRefList, issueRefs.resolve, selfHandle, editable, focused]);
 
   useLayoutEffect(() => {
     syncDocumentEditorEditable(editor, editable);

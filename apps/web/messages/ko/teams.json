@@ -545,6 +545,7 @@
     "endOfHistory": "기록의 끝",
     "manualTask": "수동 작업",
     "scheduledTask": "예약 작업",
+    "documentTask": "문서 댓글",
     "failed": "실패",
     "task": "작업",
     "error": "오류",

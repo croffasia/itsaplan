@@ -2,7 +2,7 @@ import { db, agentRun, agentSchedule, aiAgent, project, team, issue, revision } 
 import { and, desc, eq, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { readableProjectIds } from '#shared/access';
 import { iso } from '#shared/lib';
-import { executionState, contextTokensOf } from '../core/run-queue';
+import { executionState, contextTokensOf, runDocumentVisibleTo } from '../core/run-queue';
 
 // An agent with an invocation URL is sent its work and only calls back while it has
 // some, so its last contact says nothing about whether the endpoint is up.
@@ -31,11 +31,18 @@ export async function listRunnerQueue(
 ) {
   const ids = await queueProjectIds(userId, mcpOnly);
   if (!ids.length) return { items: [], total: 0, queued: 0, running: 0 };
+  // A run started in a document carries its comment, so it also takes reading documents.
+  const documentIds = await readableProjectIds(userId, [['documents', 'read']], {
+    mcpOnly,
+    includeArchived: true,
+  });
   const where = and(
     inArray(agentRun.projectId, ids),
     runId == null ? undefined : eq(agentRun.id, runId),
     eq(aiAgent.kind, 'external'),
     or(isNull(agentRun.issueId), eq(issue.projectId, agentRun.projectId)),
+    or(isNull(agentRun.documentId), inArray(agentRun.projectId, documentIds)),
+    runDocumentVisibleTo(userId),
   );
   const [rows, counted] = await Promise.all([
     db

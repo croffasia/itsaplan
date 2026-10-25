@@ -23,6 +23,8 @@ import {
   sql,
 } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
+import { MENTION_HANDLE_RE } from '#shared/mentions';
+import { documentMentionHandles, fanOutTextMentions } from './mentions';
 import {
   assertAttachmentStorageCapacity,
   assertAttachmentFileAllowed,
@@ -594,7 +596,7 @@ export async function createDocument(input: {
   assertValidDocumentContentJson(input.contentJson);
   assertValidMetadata(input.metadata);
   const parentId = input.parentId ?? null;
-  return db.transaction(async (tx) => {
+  const document = await db.transaction(async (tx) => {
     await lockDocumentActor(tx, input.userId);
     await tx.execute(
       sql`select pg_advisory_xact_lock(${DOCUMENT_TREE_LOCK_NAMESPACE}, ${input.projectId})`,
@@ -620,6 +622,14 @@ export async function createDocument(input: {
       .returning();
     return mapDocumentForUser(tx, row, input.userId);
   });
+  await fanOutTextMentions({
+    projectId: input.projectId,
+    documentId: document.id,
+    before: [],
+    after: documentMentionHandles(document),
+    actorUserId: input.userId,
+  });
+  return document;
 }
 
 function assertExpectedVersion(row: { version: number }, expected: number): void {
@@ -655,6 +665,7 @@ const DOCUMENT_NODE_TYPES = new Set([
   'heading',
   'horizontalRule',
   'hardBreak',
+  'mention',
   'codeBlock',
   'image',
   'table',
@@ -891,6 +902,16 @@ function assertDocumentNodeAttributes(node: Record<string, unknown>): void {
       assertAllowedAttributes(attrs, ['language'], 'A code block');
       assertOptionalBoundedString(attrs.language, 100, 'Code-block language');
       return;
+    case 'mention':
+      assertAllowedAttributes(attrs, ['username'], 'A mention');
+      if (
+        typeof attrs.username !== 'string' ||
+        attrs.username.length > 100 ||
+        !MENTION_HANDLE_RE.test(attrs.username)
+      ) {
+        throw new HttpError(400, 'A mention must name a handle.');
+      }
+      return;
     default:
       assertAllowedAttributes(attrs, [], `A ${String(node.type)} node`);
   }
@@ -991,7 +1012,8 @@ export async function updateDocument(
 ): Promise<DocumentRow | null> {
   assertValidDocumentContentJson(input.contentJson);
   assertValidMetadata(input.metadata);
-  return db.transaction(async (tx) => {
+  let mentionedBefore: string[] = [];
+  const document = await db.transaction(async (tx) => {
     const anchoredMove = input.previousSiblingId !== undefined || input.nextSiblingId !== undefined;
     if (anchoredMove && (input.parentId === undefined || input.position === undefined)) {
       throw new HttpError(400, 'An anchored move requires parentId and position.');
@@ -1001,6 +1023,7 @@ export async function updateDocument(
     }
     const current = await selectDocument(tx, projectId, documentId, userId);
     if (!current) return null;
+    mentionedBefore = documentMentionHandles(current);
     await lockDocumentActors(tx, [userId, current.ownerUserId]);
     if (input.parentId !== undefined || input.position !== undefined) {
       await tx.execute(
@@ -1093,6 +1116,16 @@ export async function updateDocument(
     }
     return mapDocumentForUser(tx, row, userId);
   });
+  if (document && (input.content !== undefined || input.contentJson !== undefined)) {
+    await fanOutTextMentions({
+      projectId,
+      documentId,
+      before: mentionedBefore,
+      after: documentMentionHandles(document),
+      actorUserId: userId,
+    });
+  }
+  return document;
 }
 
 async function ownedDocument(

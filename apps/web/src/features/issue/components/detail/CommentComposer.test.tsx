@@ -5,7 +5,6 @@ import type { Root } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NextIntlClientProvider } from 'next-intl';
 import { JSDOM } from 'jsdom';
-import type { Assignee } from '@/lib/api/endpoints/projects';
 import common from '../../../../../messages/en/common.json';
 import issue from '../../../../../messages/en/issue.json';
 
@@ -20,21 +19,12 @@ const replacedGlobals = [
   'IS_REACT_ACT_ENVIRONMENT',
 ] as const;
 
-function assignee(over: Partial<Assignee>): Assignee {
-  return {
-    userId: over.username ?? 'u',
-    name: over.username ?? 'u',
-    email: '',
-    username: null,
-    image: null,
-    kind: 'member',
-    agentKind: null,
-    restrictedToUserId: null,
-    respondsToMention: null,
-    canReadWorkItems: true,
-    ...over,
-  };
-}
+// The candidates the api returns for a comment on the project's issues.
+const candidates = [
+  { userId: 'u-ana', name: 'Ana', username: 'ana', kind: 'member' },
+  { userId: 'u-triage', name: 'Triage', username: 'triage', kind: 'agent' },
+];
+let requested: string[];
 
 let dom: JSDOM;
 let root: Root;
@@ -42,6 +32,7 @@ let client: QueryClient;
 let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
 
 beforeEach(async () => {
+  requested = [];
   originalGlobalDescriptors = new Map(
     replacedGlobals.map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]),
   );
@@ -55,7 +46,14 @@ beforeEach(async () => {
     }
   }
   Object.defineProperties(globalThis, {
-    fetch: { configurable: true, value: async () => Response.json(null) },
+    fetch: {
+      configurable: true,
+      value: async (input: RequestInfo | URL) => {
+        const url = String(input);
+        requested.push(url);
+        return Response.json(url.includes('/mention-candidates') ? candidates : null);
+      },
+    },
     IS_REACT_ACT_ENVIRONMENT: { configurable: true, value: true },
   });
   Object.defineProperty(window, '__ITSAPLAN_ENV__', {
@@ -79,7 +77,7 @@ afterEach(async () => {
 });
 
 describe('CommentComposer', () => {
-  it('leaves an agent that does not answer mentions out of the @ menu', async () => {
+  it('offers in the @ menu who the api says a comment on the project reaches', async () => {
     const { default: CommentComposer } = await import('./CommentComposer');
     await act(async () => {
       root.render(
@@ -87,11 +85,7 @@ describe('CommentComposer', () => {
           <NextIntlClientProvider locale="en" messages={{ common, issue }} timeZone="UTC">
             <CommentComposer
               issueId={1}
-              assignees={[
-                assignee({ username: 'ana' }),
-                assignee({ username: 'triage', kind: 'agent', respondsToMention: true }),
-                assignee({ username: 'cleanup', kind: 'agent', respondsToMention: false }),
-              ]}
+              projectKey="acme.TEST"
               authorName="Ana"
               authorImage={null}
             />
@@ -110,7 +104,10 @@ describe('CommentComposer', () => {
       textarea.dispatchEvent(new Event('input', { bubbles: true }));
     });
 
-    const offered = [...document.querySelectorAll('li button span')]
+    assert.ok(
+      requested.some((url) => url.endsWith('/projects/acme.TEST/mention-candidates?place=comment')),
+    );
+    const offered = [...document.querySelectorAll('button span')]
       .map((span) => span.textContent!)
       .filter((text) => text.startsWith('@'));
     assert.deepEqual(offered, ['@ana', '@triage']);

@@ -545,6 +545,7 @@
     "endOfHistory": "Akhir riwayat",
     "manualTask": "Tugas manual",
     "scheduledTask": "Tugas terjadwal",
+    "documentTask": "Komentar di dokumen",
     "failed": "Gagal",
     "task": "Tugas",
     "error": "Kesalahan",

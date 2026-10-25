@@ -52,6 +52,7 @@
   "saveFailed": "Kaydedilemedi",
   "retrySave": "Kaydetmeyi tekrar dene",
   "loadFailed": "Belgeler yüklenemedi",
+  "pageNotFound": "Bu sayfa silindi veya artık erişiminize açık değil.",
   "conflict": "Daha yeni bir sürüm mevcut",
   "reload": "Yeniden yükle",
   "reviewConflict": "İncele",

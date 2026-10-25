@@ -82,3 +82,18 @@ jobs:
     uses: ./.github/workflows/publish-images.yml
     with:
       tag: ${{ needs.move-release-branch.outputs.tag }}
+
+  # The chart as an OCI artifact for self-hosters: `helm install oci://…` instead
+  # of cloning the repository. Runs beside publish-images because the chart it
+  # publishes is the one that deploys those images.
+  publish-chart:
+    name: Publish chart
+    needs: move-release-branch
+    if: ${{ needs.move-release-branch.outputs.tag != '' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/publish-chart.yml
+    with:
+      tag: ${{ needs.move-release-branch.outputs.tag }}
+

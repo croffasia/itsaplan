@@ -1,0 +1,128 @@
+name: Publish chart
+
+# Packages charts/itsaplan and pushes it to GHCR as an OCI artifact, so the chart
+# installs without cloning the repository:
+#
+#   helm install itsaplan oci://ghcr.io/croffasia/charts/itsaplan --version 1.9.0
+#
+# Called by release.yml once a release is tagged, next to publish-images, so the
+# published chart is always the one that deploys that release's images. The manual
+# trigger republishes an existing tag, or the checked-out ref's chart version.
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: The release tag to publish, e.g. v1.9.0
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The release tag to publish, e.g. v1.9.0. Empty publishes the checked-out ref's chart version.
+        required: false
+        type: string
+
+env:
+  REGISTRY: ghcr.io
+  CHART_DIR: charts/itsaplan
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Package and push to OCI
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # GITHUB_TOKEN may create the package even though the repository default is
+      # read-only, because this job asks for the permission explicitly.
+      packages: write
+    steps:
+      # A release publishes the tagged commit; a manual run publishes the ref it
+      # was dispatched on.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      # helm ships with the ubuntu runner image; printing the version keeps a
+      # packaging difference traceable, and the documented floor is 3.10.
+      - name: Helm version
+        run: helm version --short
+
+      # The chart version has to be the release: release-please bumps both fields
+      # of Chart.yaml (each carries the x-release-please-version annotation), so a
+      # mismatch means a release PR carried only one of them. Failing here beats
+      # publishing 0.1.0 over every previous release forever.
+      - name: Check the chart version against the tag
+        id: chart
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          chart_version=$(helm show chart "$CHART_DIR" | awk '/^version:/ {print $2}')
+          app_version=$(helm show chart "$CHART_DIR" | awk '/^appVersion:/ {print $2}')
+          echo "Chart.yaml ships version $chart_version (appVersion $app_version)."
+          if [ -n "$TAG" ] && [ "v$chart_version" != "$TAG" ]; then
+            echo "::error file=$CHART_DIR/Chart.yaml::Chart.yaml is at $chart_version but the release is $TAG."
+            exit 1
+          fi
+          echo "version=$chart_version" >> "$GITHUB_OUTPUT"
+          echo "app_version=$app_version" >> "$GITHUB_OUTPUT"
+
+      - name: Lint
+        run: helm lint "$CHART_DIR"
+
+      - name: Package
+        run: helm package "$CHART_DIR" --destination dist
+
+      - name: Log in to the registry
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" \
+            | helm registry login "$REGISTRY" --username "${{ github.actor }}" --password-stdin
+
+      - name: Push
+        id: push
+        run: |
+          set -euo pipefail
+          helm push "dist/itsaplan-${{ steps.chart.outputs.version }}.tgz" \
+            "oci://$REGISTRY/${{ github.repository_owner }}/charts" | tee push.log
+          digest=$(awk '/^Digest:/ {print $2}' push.log)
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "ref=oci://$REGISTRY/${{ github.repository_owner }}/charts/itsaplan:${{ steps.chart.outputs.version }}" >> "$GITHUB_OUTPUT"
+
+      # A push that reported a digest still proves nothing about what a consumer
+      # gets back: pull it and render it as helm would. helm rewrites Chart.yaml
+      # on package (key order, comment and quote normalisation), so the manifests
+      # are what to compare, not the file bytes.
+      - name: Read the artifact back
+        run: |
+          set -euo pipefail
+          ref="${{ steps.push.outputs.ref }}"
+          helm show chart "$ref"
+          pulled_version=$(helm show chart "$ref" | awk '/^version:/ {print $2}')
+          if [ "$pulled_version" != "${{ steps.chart.outputs.version }}" ]; then
+            echo "::error::Published $ref reports version $pulled_version."
+            exit 1
+          fi
+          helm pull "$ref" --untar --untardir /tmp/pulled
+          diff -r "$CHART_DIR/templates" /tmp/pulled/itsaplan/templates
+          helm template verify "$CHART_DIR" > /tmp/source.yaml
+          helm template verify "$ref" > /tmp/pulled.yaml
+          diff /tmp/source.yaml /tmp/pulled.yaml
+          resources=$(grep -c '^kind:' /tmp/pulled.yaml || true)
+          echo "The artifact renders the same $resources resources as the source chart."
+
+      - name: Summary
+        run: |
+          {
+            echo "### Chart published"
+            echo
+            echo '```'
+            echo "helm install itsaplan ${{ steps.push.outputs.ref }} --version ${{ steps.chart.outputs.version }}"
+            echo '```'
+            echo
+            echo "- digest: \`${{ steps.push.outputs.digest }}\`"
+            echo "- appVersion, the default image tag: \`${{ steps.chart.outputs.app_version }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"

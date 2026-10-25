@@ -137,6 +137,7 @@
     "description": "描述",
     "other": "其他",
     "submit": "新建工作项",
+    "requiredFieldsMissing": "请填写必填字段：{names}",
     "template": "模板",
     "applyTemplate": "套用模板…",
     "noTemplates": "没有模板。"

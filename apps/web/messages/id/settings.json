@@ -310,6 +310,8 @@
     },
     "mainInfo": "Info utama",
     "mainInfoTooltip": "Ditampilkan di badan issue, bukan di Properti",
+    "required": "Wajib",
+    "requiredTooltip": "Issue baru memerlukan nilai, dan nilainya tidak dapat dihapus",
     "mainInfoMeta": "Info utama",
     "menu": "Impor dan ekspor bidang kustom",
     "copy": "Salin bidang kustom",

@@ -63,6 +63,7 @@ export default function SettingsCustomFields({ project }: { project: ProjectDeta
       fieldType: values.fieldType,
       memberScope: values.memberScope,
       showInBody: values.showInBody,
+      required: values.required,
       options: values.options.map((o) => o.value),
       issueTypeId: scope === 'global' ? null : scope,
     });
@@ -75,6 +76,7 @@ export default function SettingsCustomFields({ project }: { project: ProjectDeta
       patch: {
         name: values.name,
         showInBody: values.showInBody,
+        required: values.required,
         fieldType: values.fieldType,
         memberScope: values.memberScope,
         options: values.options,

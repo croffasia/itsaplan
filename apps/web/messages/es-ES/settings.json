@@ -310,6 +310,8 @@
     },
     "mainInfo": "Información principal",
     "mainInfoTooltip": "Se muestra en el cuerpo del ticket, no en Propiedades",
+    "required": "Obligatorio",
+    "requiredTooltip": "Un ticket nuevo necesita un valor, y el valor no se puede borrar",
     "mainInfoMeta": "Información principal",
     "menu": "Importación y exportación de campos personalizados",
     "copy": "Copiar los campos personalizados",

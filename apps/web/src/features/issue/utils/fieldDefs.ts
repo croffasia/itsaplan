@@ -5,3 +5,7 @@ import type { CustomField } from '@/lib/api/endpoints/customFields';
 export function fieldDefsForType(fields: CustomField[], typeId: number | null): CustomField[] {
   return fields.filter((f) => f.issueTypeId == null || f.issueTypeId === typeId);
 }
+
+export function fieldLabel(def: CustomField): string {
+  return def.required ? `${def.name} *` : def.name;
+}

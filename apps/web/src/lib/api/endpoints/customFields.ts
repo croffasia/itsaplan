@@ -33,6 +33,8 @@ export interface CustomField {
   // When true the field renders in the issue body (under the description);
   // when false it renders as a Properties row.
   showInBody: boolean;
+  // A new issue is created with a value in the field, and the value cannot be cleared.
+  required: boolean;
   position: number;
   options: CustomFieldOption[];
 }
@@ -43,6 +45,7 @@ export interface CustomField {
 export interface CustomFieldPatch {
   name?: string;
   showInBody?: boolean;
+  required?: boolean;
   fieldType?: CustomFieldType;
   memberScope?: MemberScope;
   // The full option list of a select field, in display order. An entry with an id
@@ -56,6 +59,7 @@ export interface NewCustomFieldInput {
   fieldType: CustomFieldType;
   memberScope?: MemberScope;
   showInBody?: boolean;
+  required?: boolean;
   options?: string[];
 }
 

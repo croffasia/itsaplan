@@ -137,6 +137,7 @@
     "description": "Описание",
     "other": "Другое",
     "submit": "Создать задачу",
+    "requiredFieldsMissing": "Заполните обязательные поля: {names}",
     "template": "Шаблон",
     "applyTemplate": "Применить шаблон…",
     "noTemplates": "Шаблонов нет."

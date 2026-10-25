@@ -137,6 +137,7 @@
     "description": "Descripción",
     "other": "Otro",
     "submit": "Crear ticket",
+    "requiredFieldsMissing": "Rellena los campos obligatorios: {names}",
     "template": "Plantilla",
     "applyTemplate": "Aplicar la plantilla…",
     "noTemplates": "Sin plantillas."

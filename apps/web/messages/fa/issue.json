@@ -137,6 +137,7 @@
     "description": "توضیحات",
     "other": "سایر",
     "submit": "ایجاد تسک",
+    "requiredFieldsMissing": "فیلدهای الزامی را پر کنید: {names}",
     "template": "قالب",
     "applyTemplate": "اعمال قالب…",
     "noTemplates": "قالبی نیست."

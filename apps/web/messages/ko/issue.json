@@ -137,6 +137,7 @@
     "description": "설명",
     "other": "기타",
     "submit": "이슈 생성",
+    "requiredFieldsMissing": "필수 필드를 입력하세요: {names}",
     "template": "템플릿",
     "applyTemplate": "템플릿 적용…",
     "noTemplates": "템플릿이 없습니다."

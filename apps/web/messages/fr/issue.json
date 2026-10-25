@@ -137,6 +137,7 @@
     "description": "Description",
     "other": "Autre",
     "submit": "Créer le ticket",
+    "requiredFieldsMissing": "Remplissez les champs obligatoires : {names}",
     "template": "Modèle",
     "applyTemplate": "Appliquer un modèle…",
     "noTemplates": "Aucun modèle."

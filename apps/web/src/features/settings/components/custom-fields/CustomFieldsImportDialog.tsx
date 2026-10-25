@@ -55,6 +55,7 @@ export default function CustomFieldsImportDialog({
           fieldType: field.fieldType,
           memberScope: field.memberScope ?? undefined,
           showInBody: field.showInBody,
+          required: field.required,
           options: field.options,
         });
       }

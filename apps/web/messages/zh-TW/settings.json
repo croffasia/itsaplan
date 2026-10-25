@@ -310,6 +310,8 @@
     },
     "mainInfo": "主要資訊",
     "mainInfoTooltip": "顯示在工作項目正文中，而不是「屬性」區域",
+    "required": "必填",
+    "requiredTooltip": "新建工作項目時必須填寫此欄位，之後也無法清空",
     "mainInfoMeta": "主要資訊",
     "menu": "自訂欄位匯入和匯出",
     "copy": "複製自訂欄位",

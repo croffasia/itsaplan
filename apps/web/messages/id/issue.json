@@ -137,6 +137,7 @@
     "description": "Deskripsi",
     "other": "Lainnya",
     "submit": "Buat issue",
+    "requiredFieldsMissing": "Isi kolom wajib: {names}",
     "template": "Templat",
     "applyTemplate": "Terapkan templat…",
     "noTemplates": "Tidak ada templat."

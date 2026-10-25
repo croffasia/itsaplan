@@ -310,6 +310,8 @@
     },
     "mainInfo": "主要信息",
     "mainInfoTooltip": "显示在工作项正文中，而不是“属性”区域",
+    "required": "必填",
+    "requiredTooltip": "新建事项时必须填写该字段，且之后不能清空",
     "mainInfoMeta": "主要信息",
     "menu": "自定义字段导入和导出",
     "copy": "复制自定义字段",

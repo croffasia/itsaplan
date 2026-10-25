@@ -7,7 +7,7 @@ name: Publish chart
 #
 # Called by release.yml once a release is tagged, next to publish-images, so the
 # published chart is always the one that deploys that release's images. The manual
-# trigger republishes an existing tag, or the checked-out ref's chart version.
+# trigger republishes an existing tag.
 
 on:
   workflow_call:
@@ -19,8 +19,8 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: The release tag to publish, e.g. v1.9.0. Empty publishes the checked-out ref's chart version.
-        required: false
+        description: The release tag to publish, e.g. v1.9.0
+        required: true
         type: string
 
 env:
@@ -40,11 +40,9 @@ jobs:
       # read-only, because this job asks for the permission explicitly.
       packages: write
     steps:
-      # A release publishes the tagged commit; a manual run publishes the ref it
-      # was dispatched on.
       - uses: actions/checkout@v7
         with:
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{ inputs.tag }}
 
       # helm ships with the ubuntu runner image; printing the version keeps a
       # packaging difference traceable, and the documented floor is 3.10.
@@ -64,7 +62,7 @@ jobs:
           chart_version=$(helm show chart "$CHART_DIR" | awk '/^version:/ {print $2}')
           app_version=$(helm show chart "$CHART_DIR" | awk '/^appVersion:/ {print $2}')
           echo "Chart.yaml ships version $chart_version (appVersion $app_version)."
-          if [ -n "$TAG" ] && [ "v$chart_version" != "$TAG" ]; then
+          if [ "v$chart_version" != "$TAG" ]; then
             echo "::error file=$CHART_DIR/Chart.yaml::Chart.yaml is at $chart_version but the release is $TAG."
             exit 1
           fi

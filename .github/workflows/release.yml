@@ -96,4 +96,3 @@ jobs:
     uses: ./.github/workflows/publish-chart.yml
     with:
       tag: ${{ needs.move-release-branch.outputs.tag }}
-

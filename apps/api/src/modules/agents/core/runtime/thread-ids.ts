@@ -20,10 +20,12 @@ export function isOwnChatThread(threadId: string, agentId: number, userId: strin
 }
 
 // The thread an autonomous run continues: one per (agent, issue) for an issue run, one
-// per schedule for a scheduled run (a schedule belongs to a single agent, so its id
-// already names the agent). Repeated runs then build on what the agent did before, and
-// a retry sees how the failed attempt ended. The run-scoped id is the fallback for a
-// run with neither, which nothing enqueues today — both columns are nullable.
+// per (agent, schedule) for a scheduled run. The memory hands a thread only to the bot
+// user that created it, and a schedule's agent can change, so the new agent starts its
+// own thread while a run the previous one still has queued finishes in its. Repeated
+// runs then build on what the agent did before, and a retry sees how the failed attempt
+// ended. The run-scoped id is the fallback for a run with neither, which nothing
+// enqueues today — both columns are nullable.
 export function runThreadId(run: {
   id: number;
   agentId: number;
@@ -31,6 +33,6 @@ export function runThreadId(run: {
   scheduleId: number | null;
 }): string {
   if (run.issueId != null) return `issue:${run.issueId}:${run.agentId}`;
-  if (run.scheduleId != null) return `schedule:${run.scheduleId}`;
+  if (run.scheduleId != null) return `schedule:${run.scheduleId}:${run.agentId}`;
   return `run:${run.id}`;
 }

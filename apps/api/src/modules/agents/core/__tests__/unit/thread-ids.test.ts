@@ -19,8 +19,14 @@ describe('runThreadId', () => {
     );
   });
 
-  it('scopes a scheduled run to its schedule, whatever triggered it', () => {
-    expect(runThreadId({ ...base, scheduleId: 9 })).toBe('schedule:9');
+  it('scopes a scheduled run to the (schedule, agent) pair, whatever triggered it', () => {
+    expect(runThreadId({ ...base, scheduleId: 9 })).toBe('schedule:9:3');
+  });
+
+  it('keeps two agents on the same schedule apart', () => {
+    expect(runThreadId({ ...base, scheduleId: 9, agentId: 4 })).not.toBe(
+      runThreadId({ ...base, scheduleId: 9 }),
+    );
   });
 
   it('prefers the issue over the schedule', () => {
@@ -45,13 +51,13 @@ describe('chat thread ids', () => {
     expect(isOwnChatThread(mine, 4, 'user-1')).toBe(false);
     expect(isOwnChatThread(mine, 3, 'user-2')).toBe(false);
     expect(isOwnChatThread('issue:42:3', 3, 'user-1')).toBe(false);
-    expect(isOwnChatThread('schedule:9', 3, 'user-1')).toBe(false);
+    expect(isOwnChatThread('schedule:9:3', 3, 'user-1')).toBe(false);
   });
 
   it('separates a chat thread from a run thread', () => {
     expect(isChatThreadId(newChatThreadId(3, 'user-1'))).toBe(true);
     expect(isChatThreadId('issue:42:3')).toBe(false);
-    expect(isChatThreadId('schedule:9')).toBe(false);
+    expect(isChatThreadId('schedule:9:3')).toBe(false);
     expect(isChatThreadId('run:7')).toBe(false);
   });
 });

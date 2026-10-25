@@ -66,7 +66,7 @@ async function seedScheduleThread(
   agent: { id: number; projects: { id: number }[] },
   scheduleId: number,
 ) {
-  const threadId = `schedule:${scheduleId}`;
+  const threadId = `schedule:${scheduleId}:${agent.id}`;
   await ensureThread(
     threadId,
     'agent-bot',

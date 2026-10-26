@@ -16,7 +16,6 @@ const cloudUiEntry = process.env.CLOUD_UI_ENTRY;
 // unaffected and one behind TLS gets it without a second setting.
 const SECURITY_HEADERS = [
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
-  { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   // Passkeys are the one powerful feature the app uses; the rest is switched off for
@@ -33,7 +32,15 @@ const nextConfig: NextConfig = {
   // standalone build for a lean docker image.
   output: 'standalone',
   poweredByHeader: false,
-  headers: async () => [{ source: '/(.*)', headers: SECURITY_HEADERS }],
+  // No page may be framed, except the public ones (/share, /p) on the sites the instance
+  // owner trusts: src/proxy.ts decides those per request.
+  headers: async () => [
+    { source: '/(.*)', headers: SECURITY_HEADERS },
+    {
+      source: '/:path((?!(?:share|p)(?:/|$)).*)',
+      headers: [{ key: 'X-Frame-Options', value: 'DENY' }],
+    },
+  ],
   // Monorepo: include the repo root in file tracing for standalone.
   outputFileTracingRoot: tracingRoot,
   // isomorphic-dompurify loads jsdom on the server, and jsdom reads its own data

@@ -20,6 +20,8 @@ import { setMcpApp } from './mcp/app-ref';
 import { gitWebhookRoutes } from './modules/git/webhook';
 import { scimRoutes } from './modules/scim';
 import { currentUserRoutes } from './modules/current-user';
+import { EmbedSitesSchema } from './modules/settings/model';
+import { getEmbedSites } from './modules/settings/service';
 import { syncOidcGroupsAfterCallback } from './modules/scim/oidc-sync';
 import { normalizeOpenApiResponse } from './openapi';
 import { requestTracking } from './shared/request-tracker';
@@ -336,6 +338,19 @@ export const app = new Elysia()
       },
     },
   )
+  // The sites the instance owner lets show the public pages in a frame, which the web app
+  // writes into frame-ancestors on those pages. Public on purpose: the web app's proxy
+  // reads it with no session, and every public page names the same sites in its header.
+  .get('/embed-sites', () => getEmbedSites(), {
+    response: { 200: EmbedSitesSchema },
+    detail: {
+      tags: ['System'],
+      summary: 'Get the sites that may embed public pages',
+      description:
+        'Report the sites that may show the shared work items and views, and the public ' +
+        'pages, in a frame. Public.',
+    },
+  })
   // Root doubles as the liveness/health endpoint.
   .get('/', () => ({ name: "It's a Plan api", status: 'ok' }), {
     detail: {

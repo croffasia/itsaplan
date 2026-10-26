@@ -5,10 +5,10 @@ import {
   getStorageSettings,
   type StorageSettings,
 } from '@repo/db';
-import { intEnv } from '#shared/lib';
+import { HttpError, intEnv } from '#shared/lib';
 
-// The instance settings kept in app_setting: the upload limits and the keyboard
-// shortcuts.
+// The instance settings kept in app_setting: the upload limits, the keyboard
+// shortcuts and the sites that may frame the public pages.
 
 // Instance-wide upload limits (app_setting key 'storage'). getStorageSettings/
 // mimeAllowed/MB/StorageSettings live in @repo/db (packages/db/src/domains/storage.ts) —
@@ -116,4 +116,39 @@ export async function getHotkeySettings(): Promise<HotkeyCombos> {
 export async function setHotkeySettings(combos: HotkeyCombos): Promise<HotkeyCombos> {
   await setSetting(HOTKEYS_SETTING_KEY, combos);
   return combos;
+}
+
+// The sites that may show the public pages in a frame (app_setting key 'embedSites'): the
+// shared work items and views, and what a build serves under /p. Kept as origins, the way the
+// web app writes them into frame-ancestors. Empty, no site may.
+const EMBED_SITES_KEY = 'embedSites';
+
+export async function getEmbedSites(): Promise<{ origins: string[] }> {
+  return { origins: (await getSetting<string[]>(EMBED_SITES_KEY)) ?? [] };
+}
+
+export async function setEmbedSites(origins: string[]): Promise<{ origins: string[] }> {
+  const sites = [...new Set(origins.map(siteOrigin))];
+  await setSetting(EMBED_SITES_KEY, sites);
+  return { origins: sites };
+}
+
+// The origins a site may be: a scheme, a host of letters, digits, dots and hyphens (an
+// international name is in its ASCII form by then), and a port. Nothing else reaches the
+// header, where a `;` or a space would start another directive.
+const SITE_ORIGIN = /^https?:\/\/[a-z0-9.-]+(:\d+)?$/;
+
+// A site as the browser names it in a frame check, from what the owner typed.
+function siteOrigin(text: string): string {
+  const invalid = () =>
+    new HttpError(400, `${text} is not a site address, such as https://example.com`);
+  let url: URL;
+  try {
+    url = new URL(text.trim());
+  } catch {
+    throw invalid();
+  }
+  const bare = url.pathname === '/' && !url.search && !url.hash && !url.username && !url.password;
+  if (!bare || !SITE_ORIGIN.test(url.origin)) throw invalid();
+  return url.origin;
 }

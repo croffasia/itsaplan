@@ -89,6 +89,8 @@ import {
   setStorageSettings,
   getHotkeySettings,
   setHotkeySettings,
+  getEmbedSites,
+  setEmbedSites,
   getProjectDefaults,
   setProjectDefaults,
   getAgentSettings,
@@ -97,6 +99,7 @@ import {
 import { getUpdateStatus } from '#modules/settings/updates';
 import {
   AgentSettingsSchema,
+  EmbedSitesSchema,
   HotkeyCombosSchema,
   ProjectDefaultsSchema,
   StorageSettingsSchema,
@@ -477,6 +480,26 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       summary: 'Update instance keyboard shortcuts',
       description:
         'Replace the instance keyboard shortcut overrides. Each user may still rebind a shortcut for their own account.',
+    },
+  })
+
+  .get('/god/embed-sites', () => getEmbedSites(), {
+    response: { 200: EmbedSitesSchema, ...errors(401, 403) },
+    detail: {
+      summary: 'Get the sites that may embed public pages',
+      description:
+        'Get the sites that may show the shared work items and views, and the public pages, in a frame.',
+    },
+  })
+
+  .put('/god/embed-sites', ({ body }) => setEmbedSites(body.origins), {
+    body: EmbedSitesSchema,
+    response: { 200: EmbedSitesSchema, ...errors(400, 401, 403) },
+    detail: {
+      summary: 'Set the sites that may embed public pages',
+      description:
+        'Replace the list. Each entry is a site address with no path; it is stored as its ' +
+        'origin. Every other site, and every other page, is refused a frame.',
     },
   })
 

@@ -338,6 +338,10 @@ Functions with no setter, for the routes such a build adds:
   model calls cost, with `own` from `ownPrices(scope)` (`analytics.ts`) so a workspace's
   prices count.
 - `projectsWithPermission` (`shared/access.ts`): the projects a member may read.
+- `createIssue(project, input, null)` (`modules/issues/service.ts`): an issue no account
+  created, such as one a person files through a page the build serves to anyone.
+- `createComment({ issueId, body, authorName })` (`modules/issues/activity.ts`): a comment
+  from someone without an account, named `authorName`. Its mentions reach nobody.
 
 ## SCIM
 

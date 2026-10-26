@@ -298,6 +298,19 @@ export const updateInstanceAgentSettings = (body: Partial<AgentSettings>) =>
     body: JSON.stringify(body),
   });
 
+// The sites that may show the shared work items and views, and the public pages, in a frame.
+export interface EmbedSites {
+  origins: string[];
+}
+
+export const getInstanceEmbedSites = () => request<EmbedSites>('/god/embed-sites');
+
+export const updateInstanceEmbedSites = (origins: string[]) =>
+  request<EmbedSites>('/god/embed-sites', {
+    method: 'PUT',
+    body: JSON.stringify({ origins }),
+  });
+
 export const getInstanceStorageSettings = () => request<StorageSettings>('/god/storage-settings');
 
 export const updateInstanceStorageSettings = (patch: StorageSettingsPatch) =>

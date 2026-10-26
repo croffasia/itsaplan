@@ -27,6 +27,12 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   group, each in the order given.
   `/workspaces/:id` names no section and opens the first entry of the menu, so the order
   also decides the page a workspace opens on.
+  `useProjectSettingsSections(project, core)` returns the project settings sidebar: here the
+  core's sections, while the hosted build adds its own at any position or drops some. The
+  sidebar lists the groups in the order their first section comes, each named in
+  `nav.groups.<group>`, so a section can open a group of its own. One the build adds
+  carries in `Component` the page `/:team/:projectKey/settings/<slug>` opens, which answers
+  404 only once the project and every query in flight have loaded.
   `NoTeamStart` is the start page of an account with no team and no workspace it owns,
   which happens while personal workspaces are off; here it says who adds them.
   `WorkspaceRailActions` sits below the workspace tiles of a rail; here it says where more
@@ -49,7 +55,12 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   invited address as `email`; here it adds nothing, while the hosted build offers a sign-in
   through providers of its own. `SignInPage` is what `/login/<name>` shows, a sign-in page under a
   name of its own; here every name answers 404, while the hosted build can show the sign-in
-  form there under a title of its own (`AuthLoginForm`'s `title`). A sign-in that comes back, or an auth form the server refuses, with
+  form there under a title of its own (`AuthLoginForm`'s `title`). `PublicPage({ path })` is what `/p/<path>` shows to
+  anyone, signed in or not, never indexed; here every path answers 404, while the hosted build
+  serves pages of its own there. Those pages and the share pages may be shown in a frame on
+  the sites the instance owner trusts (god mode, General; `GET /embed-sites`), which
+  `src/proxy.ts` writes into `frame-ancestors` beside the app itself; `next.config.ts` refuses a
+  frame to every other page. A sign-in that comes back, or an auth form the server refuses, with
   a code the core does not know shows the text the build's messages give it under
   `auth.errors.codes.<code>`.
   `GodSectionExtras` renders at the end of every god section page, by its slug, for settings the hosted build adds to an existing section; `WorkspaceSectionExtras`

@@ -35,6 +35,14 @@ export const HotkeyCombosSchema = t.Record(
   t.String({ pattern: '^(mod\\+|shift\\+|alt\\+)*[a-z0-9]{1,10}$' }),
 );
 
+export const EmbedSitesSchema = t.Object({
+  origins: t.Array(t.String({ maxLength: 300 }), {
+    maxItems: 50,
+    description:
+      'Sites that may show the public pages in a frame, as origins such as https://example.com.',
+  }),
+});
+
 const ReleaseSchema = t.Object({
   tag: t.String(),
   version: t.String(),

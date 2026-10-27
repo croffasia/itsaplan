@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { PlaneConnection } from './SettingsImportExport';
+import type { PlaneConnection } from './SettingsImportExportPlane';
 import type { PlaneProjectOption } from '@/lib/api/endpoints/importExport';
 
 // The projects of the tested workspace. Selecting one is reported to the parent,

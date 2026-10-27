@@ -124,5 +124,5 @@ Plane, and nothing is scheduled or kept running.
 
 ## Other sources
 
-[Importing from Linear](importing-from-linear.md) describes the Linear source. Jira and Trello
-are not available.
+[Importing from Linear](importing-from-linear.md) and
+[Importing from Trello](importing-from-trello.md) describe the other sources.

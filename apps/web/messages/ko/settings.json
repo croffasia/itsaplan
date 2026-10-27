@@ -498,7 +498,8 @@
     "import": "가져오기",
     "source": "가져올 위치",
     "sourceHint": "데이터를 가져올 위치를 선택하세요.",
-    "comingSoon": "출시 예정",
+    "moreSources": "Cloud와 Pro에서 더 보기",
+    "moreSourcesHint": "더 많은 가져오기 소스는 Cloud와 자체 호스팅 Pro에서 사용할 수 있습니다.",
     "connect": "Plane에 연결",
     "connectHint": "셀프 호스팅 Plane 인스턴스를 입력하여 연결을 확인하고 프로젝트를 불러옵니다.",
     "baseUrl": "Plane URL",
@@ -550,6 +551,29 @@
       "noProject": "프로젝트가 없는 이슈",
       "noTeams": "이 API 키로 접근할 수 있는 팀이 없습니다."
     },
+    "trello": {
+      "connect": "Trello 연결",
+      "connectHint": "Trello API 키를 입력하고 Trello에서 권한을 허용하면 볼 수 있는 보드를 불러옵니다.",
+      "apiKey": "API 키",
+      "apiKeyHint": "<link>Trello Power-Up 관리 페이지</link>에서 Power-Up을 만들고 API key 탭에서 API 키를 생성하세요. 같은 탭에서 <code>{origin}</code>을(를) 허용된 출처(allowed origins)에 추가하세요. Trello는 허용된 주소로만 토큰을 보냅니다.",
+      "authorize": "Trello에서 권한 허용",
+      "authorizing": "Trello 응답 대기 중…",
+      "popupBlocked": "브라우저가 Trello 창을 차단했습니다. 이 사이트의 팝업을 허용한 뒤 다시 시도하세요.",
+      "scope": "가져올 항목",
+      "scopeHint": "가져올 보드를 선택하세요. 열린 리스트는 열(column)이 됩니다.",
+      "board": "보드",
+      "boardPlaceholder": "보드 선택",
+      "closedBoard": "{name} (닫힘)",
+      "noBoards": "이 키와 토큰으로 볼 수 있는 보드가 없습니다.",
+      "archivedCards": "보관된 카드",
+      "archivedCardsArchive": "보관된 이슈로 가져오기",
+      "archivedCardsSkip": "가져오지 않기",
+      "members": "Trello 멤버",
+      "membersSkip": "연결하지 않기",
+      "membersMatch": "직접 연결",
+      "membersHint": "Trello는 멤버의 이메일을 공유하지 않으므로 직접 연결하세요. 카드에서 처음 연결된 멤버가 담당자가 되고, 나머지는 이슈를 지켜봅니다.",
+      "memberNotMatched": "연결 안 됨"
+    },
     "statuses": {
       "pending": "대기 중",
       "running": "실행 중",
@@ -571,7 +595,9 @@
       "label": "라벨",
       "state": "상태",
       "cycle": "사이클",
-      "attachment": "첨부 파일"
+      "attachment": "첨부 파일",
+      "checklist": "체크리스트",
+      "custom_field": "사용자 지정 필드"
     }
   },
   "issueTemplates": {

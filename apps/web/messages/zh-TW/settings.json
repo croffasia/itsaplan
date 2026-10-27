@@ -498,7 +498,8 @@
     "import": "匯入",
     "source": "來源",
     "sourceHint": "選擇匯入來源。",
-    "comingSoon": "即將推出",
+    "moreSources": "Cloud 和 Pro 中有更多",
+    "moreSourcesHint": "Cloud 和自架 Pro 支援更多匯入來源。",
     "connect": "連線 Plane",
     "connectHint": "輸入自託管的 Plane 執行個體地址以檢查連線並載入其專案。",
     "baseUrl": "Plane 地址",
@@ -550,6 +551,29 @@
       "noProject": "無專案的工作項目",
       "noTeams": "此 API 金鑰看不到任何團隊。"
     },
+    "trello": {
+      "connect": "連接 Trello",
+      "connectHint": "輸入你的 Trello API 金鑰並在 Trello 中授權，以載入你能看到的看板。",
+      "apiKey": "API 金鑰",
+      "apiKeyHint": "在 <link>Trello Power-Up 管理頁</link> 建立一個 Power-Up，並在它的 API key 分頁產生 API 金鑰。在同一分頁把 <code>{origin}</code> 加入允許的來源（allowed origins）：Trello 只會把權杖傳送到允許的位址。",
+      "authorize": "在 Trello 中授權",
+      "authorizing": "正在等待 Trello…",
+      "popupBlocked": "瀏覽器封鎖了 Trello 視窗。請允許此網站的彈出式視窗後重試。",
+      "scope": "匯入內容",
+      "scopeHint": "選擇要匯入的看板。它的未封存列表會成為欄。",
+      "board": "看板",
+      "boardPlaceholder": "選擇一個看板",
+      "closedBoard": "{name}（已關閉）",
+      "noBoards": "此金鑰和權杖看不到任何看板。",
+      "archivedCards": "已封存的卡片",
+      "archivedCardsArchive": "匯入為已封存的工作項",
+      "archivedCardsSkip": "不匯入",
+      "members": "Trello 成員",
+      "membersSkip": "不配對",
+      "membersMatch": "手動配對",
+      "membersHint": "Trello 不提供成員的電子郵件，請手動配對。卡片上第一個配對的成員成為負責人，其餘成員關注該工作項。",
+      "memberNotMatched": "未配對"
+    },
     "statuses": {
       "pending": "待處理",
       "running": "執行中",
@@ -571,7 +595,9 @@
       "label": "標籤",
       "state": "狀態",
       "cycle": "週期",
-      "attachment": "附件"
+      "attachment": "附件",
+      "checklist": "檢查清單",
+      "custom_field": "自訂欄位"
     }
   },
   "issueTemplates": {

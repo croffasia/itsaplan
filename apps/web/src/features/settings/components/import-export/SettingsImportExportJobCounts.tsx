@@ -9,9 +9,11 @@ const ENTITY_ORDER: ImportEntityType[] = [
   'state',
   'cycle',
   'attachment',
+  'checklist',
+  'custom_field',
 ];
 
-// Per-entity progress: how many the discover phase found in Plane against how many
+// Per-entity progress: how many the discover phase found in the source against how many
 // exist here so far. Attachment counts are metadata captured during create, not
 // downloaded bytes — the job never transfers attachment content.
 export default function SettingsImportExportJobCounts({ counts }: { counts: ImportJob['counts'] }) {

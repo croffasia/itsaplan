@@ -498,7 +498,8 @@
     "import": "导入",
     "source": "来源",
     "sourceHint": "选择导入来源。",
-    "comingSoon": "即将推出",
+    "moreSources": "Cloud 和 Pro 中有更多",
+    "moreSourcesHint": "Cloud 和自托管 Pro 支持更多导入来源。",
     "connect": "连接 Plane",
     "connectHint": "输入自托管的 Plane 实例地址以检查连接并加载其项目。",
     "baseUrl": "Plane 地址",
@@ -550,6 +551,29 @@
       "noProject": "无项目的工作项",
       "noTeams": "此 API 密钥看不到任何团队。"
     },
+    "trello": {
+      "connect": "连接 Trello",
+      "connectHint": "输入你的 Trello API 密钥并在 Trello 中授权，以加载你能看到的看板。",
+      "apiKey": "API 密钥",
+      "apiKeyHint": "在 <link>Trello Power-Up 管理页</link> 创建一个 Power-Up，并在它的 API key 标签页生成 API 密钥。在同一标签页把 <code>{origin}</code> 添加到允许的来源（allowed origins）：Trello 只会把令牌发送到允许的地址。",
+      "authorize": "在 Trello 中授权",
+      "authorizing": "正在等待 Trello…",
+      "popupBlocked": "浏览器拦截了 Trello 窗口。请允许此网站弹出窗口后重试。",
+      "scope": "导入内容",
+      "scopeHint": "选择要导入的看板。它的未归档列表会成为列。",
+      "board": "看板",
+      "boardPlaceholder": "选择一个看板",
+      "closedBoard": "{name}（已关闭）",
+      "noBoards": "此密钥和令牌看不到任何看板。",
+      "archivedCards": "已归档的卡片",
+      "archivedCardsArchive": "作为已归档工作项导入",
+      "archivedCardsSkip": "不导入",
+      "members": "Trello 成员",
+      "membersSkip": "不匹配",
+      "membersMatch": "手动匹配",
+      "membersHint": "Trello 不提供成员的邮箱，请手动匹配。卡片上第一个匹配的成员成为负责人，其余成员关注该工作项。",
+      "memberNotMatched": "未匹配"
+    },
     "statuses": {
       "pending": "待处理",
       "running": "运行中",
@@ -571,7 +595,9 @@
       "label": "标签",
       "state": "状态",
       "cycle": "周期",
-      "attachment": "附件"
+      "attachment": "附件",
+      "checklist": "检查清单",
+      "custom_field": "自定义字段"
     }
   },
   "issueTemplates": {

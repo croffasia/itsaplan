@@ -498,7 +498,8 @@
     "import": "Импорт",
     "source": "Источник",
     "sourceHint": "Выберите, откуда импортировать.",
-    "comingSoon": "Скоро",
+    "moreSources": "Больше в Cloud и Pro",
+    "moreSourcesHint": "Больше источников для импорта доступно в Cloud и self-hosted Pro.",
     "connect": "Подключение к Plane",
     "connectHint": "Укажите self-hosted инстанс Plane, чтобы проверить соединение и загрузить его проекты.",
     "baseUrl": "URL Plane",
@@ -550,6 +551,29 @@
       "noProject": "Задачи без проекта",
       "noTeams": "Этот API-ключ не видит ни одной команды."
     },
+    "trello": {
+      "connect": "Подключение к Trello",
+      "connectHint": "Укажите свой API-ключ Trello и разрешите доступ в Trello, чтобы загрузить доступные вам доски.",
+      "apiKey": "API-ключ",
+      "apiKeyHint": "Создайте Power-Up в <link>админке Power-Up Trello</link> и сгенерируйте API-ключ на его вкладке API key. На той же вкладке добавьте <code>{origin}</code> в разрешённые адреса (allowed origins): Trello отправляет токен только на разрешённый адрес.",
+      "authorize": "Авторизоваться в Trello",
+      "authorizing": "Ожидание Trello…",
+      "popupBlocked": "Браузер заблокировал окно Trello. Разрешите всплывающие окна для этого сайта и попробуйте снова.",
+      "scope": "Что импортировать",
+      "scopeHint": "Выберите доску для импорта. Её открытые списки станут колонками.",
+      "board": "Доска",
+      "boardPlaceholder": "Выберите доску",
+      "closedBoard": "{name} (закрыта)",
+      "noBoards": "Этот ключ и токен не видят ни одной доски.",
+      "archivedCards": "Архивные карточки",
+      "archivedCardsArchive": "Импортировать как архивные задачи",
+      "archivedCardsSkip": "Не импортировать",
+      "members": "Участники Trello",
+      "membersSkip": "Не сопоставлять",
+      "membersMatch": "Сопоставить вручную",
+      "membersHint": "Trello не передаёт email участников, поэтому сопоставьте их вручную. Первый сопоставленный участник карточки станет исполнителем, остальные будут наблюдателями задачи.",
+      "memberNotMatched": "Не сопоставлен"
+    },
     "statuses": {
       "pending": "В ожидании",
       "running": "Выполняется",
@@ -571,7 +595,9 @@
       "label": "Метки",
       "state": "Статусы",
       "cycle": "Циклы",
-      "attachment": "Вложения"
+      "attachment": "Вложения",
+      "checklist": "Чек-листы",
+      "custom_field": "Пользовательские поля"
     }
   },
   "issueTemplates": {

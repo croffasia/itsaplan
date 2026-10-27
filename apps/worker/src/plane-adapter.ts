@@ -10,6 +10,8 @@ import type {
   CanonicalStateCategory,
   CanonicalLabel,
   CanonicalCycle,
+  CanonicalCustomField,
+  CanonicalChecklist,
   CanonicalIssue,
   CanonicalRelation,
   CanonicalComment,
@@ -308,6 +310,14 @@ export class PlaneReader implements SourceReader {
     });
   }
 
+  async listCustomFields(): Promise<CanonicalCustomField[]> {
+    return [];
+  }
+
+  async listIssueChecklists(): Promise<CanonicalChecklist[]> {
+    return [];
+  }
+
   async listIssueAttachments(issueSourceId: string): Promise<CanonicalAttachment[]> {
     const rows = await this.getJson<
       { id: string; attributes: { name: string; type: string; size: number } }[]
@@ -432,6 +442,7 @@ function mapWorkItem(raw: PlaneWorkItem): CanonicalIssue {
     descriptionMarkdown: htmlToMarkdown(raw.description_html),
     stateSourceId: typeof raw.state === 'string' ? raw.state : (raw.state?.id ?? ''),
     assigneeEmail: firstAssigneeEmail(raw.assignees),
+    watcherEmails: [],
     labelSourceIds: (raw.labels ?? []).map((l) => (typeof l === 'string' ? l : l.id)),
     cycleSourceId: raw.cycle_id ?? raw.cycle ?? null,
     parentSourceId: raw.parent_id ?? raw.parent ?? null,
@@ -444,6 +455,7 @@ function mapWorkItem(raw: PlaneWorkItem): CanonicalIssue {
     customFields: [],
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
+    archivedAt: null,
   };
 }
 

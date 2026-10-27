@@ -150,5 +150,5 @@ title stay two issues, and two comments with the same text and time stay two com
 
 ## Other sources
 
-[Importing from Plane](importing-from-plane.md) describes the Plane source. Jira and Trello
-are not available.
+[Importing from Plane](importing-from-plane.md) and
+[Importing from Trello](importing-from-trello.md) describe the other sources.

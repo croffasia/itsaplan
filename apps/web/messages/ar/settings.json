@@ -498,7 +498,8 @@
     "import": "استيراد",
     "source": "المصدر",
     "sourceHint": "اختر مصدر الاستيراد.",
-    "comingSoon": "قريبًا",
+    "moreSources": "المزيد في Cloud وPro",
+    "moreSourcesHint": "تتوفر مصادر استيراد أخرى في Cloud وفي Pro المستضاف ذاتيًا.",
     "connect": "الاتصال بـ Plane",
     "connectHint": "حط بيانات نسخة Plane المستضافة ذاتيًا عشان نتأكد من الاتصال ونجيب مشاريعها.",
     "baseUrl": "رابط Plane",
@@ -550,6 +551,29 @@
       "noProject": "مهام بلا مشروع",
       "noTeams": "لا يمكن لمفتاح API هذا الوصول إلى أي فريق."
     },
+    "trello": {
+      "connect": "الاتصال بـ Trello",
+      "connectHint": "أدخل مفتاح API الخاص بك في Trello ووافق عليه في Trello لتحميل اللوحات التي يمكنك رؤيتها.",
+      "apiKey": "مفتاح API",
+      "apiKeyHint": "أنشئ Power-Up في <link>إدارة Power-Ups في Trello</link> وأنشئ مفتاح API من تبويب API key الخاص به. في التبويب نفسه، أضف <code>{origin}</code> إلى المصادر المسموح بها (allowed origins): لا يرسل Trello الرمز إلا إلى عنوان مسموح به.",
+      "authorize": "التفويض في Trello",
+      "authorizing": "بانتظار Trello…",
+      "popupBlocked": "حظر المتصفح نافذة Trello. اسمح بالنوافذ المنبثقة لهذا الموقع ثم حاول مرة أخرى.",
+      "scope": "ما الذي تريد استيراده",
+      "scopeHint": "اختر اللوحة التي تريد استيرادها. تصبح قوائمها المفتوحة أعمدة.",
+      "board": "اللوحة",
+      "boardPlaceholder": "اختر لوحة",
+      "closedBoard": "{name} (مغلقة)",
+      "noBoards": "لا يمكن لهذا المفتاح والرمز رؤية أي لوحة.",
+      "archivedCards": "البطاقات المؤرشفة",
+      "archivedCardsArchive": "استيرادها كمهام مؤرشفة",
+      "archivedCardsSkip": "عدم الاستيراد",
+      "members": "أعضاء Trello",
+      "membersSkip": "عدم المطابقة",
+      "membersMatch": "المطابقة يدويًا",
+      "membersHint": "لا يشارك Trello البريد الإلكتروني للأعضاء، لذا طابقهم يدويًا. يصبح أول عضو مُطابَق في البطاقة مسؤولًا عن المهمة، ويتابعها الباقون.",
+      "memberNotMatched": "غير مُطابَق"
+    },
     "statuses": {
       "pending": "قيد الانتظار",
       "running": "شغّال",
@@ -571,7 +595,9 @@
       "label": "الوسوم",
       "state": "الحالات",
       "cycle": "الدورات",
-      "attachment": "المرفقات"
+      "attachment": "المرفقات",
+      "checklist": "قوائم التحقق",
+      "custom_field": "الحقول المخصصة"
     }
   },
   "issueTemplates": {

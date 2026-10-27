@@ -1,14 +1,14 @@
 import { request } from '@/lib/api/core/client';
 
-// Import jobs bring issues in from a Plane instance or a Linear workspace (mirrors
-// apps/api modules/import-export/service.ts and linear.ts). Creating one stores an
-// encrypted credential and leaves the job 'pending' for the worker to drive through
-// its phases.
+// Import jobs bring issues in from a Plane instance, a Linear workspace or a Trello
+// board (mirrors apps/api modules/import-export/service.ts, linear.ts and trello.ts).
+// Creating one stores an encrypted credential and leaves the job 'pending' for the
+// worker to drive through its phases.
 
 export type ImportJobPhase = 'discover' | 'create' | 'link' | 'rewrite' | 'attachments' | 'done';
 export type ImportJobStatus = 'pending' | 'running' | 'paused' | 'completed' | 'failed';
-export type ImportEntityType = 'issue' | 'comment' | 'label' | 'state' | 'cycle' | 'attachment';
-export type ImportSource = 'plane' | 'linear';
+export type ImportEntityType =
+  'issue' | 'comment' | 'label' | 'state' | 'cycle' | 'attachment' | 'checklist' | 'custom_field';
 
 export interface ImportEntityCount {
   discovered: number;
@@ -18,7 +18,7 @@ export interface ImportEntityCount {
 export interface ImportJob {
   id: number;
   projectId: number;
-  source: ImportSource;
+  source: string;
   phase: ImportJobPhase;
   status: ImportJobStatus;
   counts: Record<ImportEntityType, ImportEntityCount>;
@@ -65,6 +65,25 @@ export interface LinearConnectionInput {
   apiToken: string;
 }
 
+export interface TrelloConnectionInput {
+  apiKey: string;
+  apiToken: string;
+}
+
+export interface TrelloBoardOption {
+  id: string;
+  name: string;
+  closed: boolean;
+}
+
+export interface TrelloMemberOption {
+  id: string;
+  fullName: string;
+  username: string;
+}
+
+export type TrelloArchivedCards = 'archive' | 'skip';
+
 export interface ImportJobChoices {
   unmatchedUserPolicy?: UnmatchedUserPolicy;
   stateOverrides?: Record<string, StateCategory>;
@@ -84,8 +103,16 @@ export interface LinearImportJobFields extends LinearConnectionInput {
   projectId?: string;
 }
 
+export interface TrelloImportJobFields extends TrelloConnectionInput {
+  source: 'trello';
+  boardId: string;
+  archivedCards: TrelloArchivedCards;
+  // Trello member id -> the user id of the project member it is matched with.
+  memberMap?: Record<string, string>;
+}
+
 export type CreateImportJobInput = ImportJobChoices &
-  (PlaneImportJobFields | LinearImportJobFields);
+  (PlaneImportJobFields | LinearImportJobFields | TrelloImportJobFields);
 
 export const testPlaneConnection = (projectKey: string, input: PlaneConnectionInput) =>
   request<{ projects: PlaneProjectOption[] }>(
@@ -116,6 +143,21 @@ export const testLinearStatesPreview = (
     method: 'POST',
     body: JSON.stringify(input),
   });
+
+export const testTrelloConnection = (projectKey: string, input: TrelloConnectionInput) =>
+  request<{ boards: TrelloBoardOption[] }>(
+    `/projects/${projectKey}/import-jobs/trello-test-connection`,
+    { method: 'POST', body: JSON.stringify(input) },
+  );
+
+export const previewTrelloBoard = (
+  projectKey: string,
+  input: TrelloConnectionInput & { boardId: string },
+) =>
+  request<{ states: PlaneStateOption[]; members: TrelloMemberOption[] }>(
+    `/projects/${projectKey}/import-jobs/trello-preview`,
+    { method: 'POST', body: JSON.stringify(input) },
+  );
 
 export const createImportJob = (projectKey: string, input: CreateImportJobInput) =>
   request<ImportJob>(`/projects/${projectKey}/import-jobs`, {

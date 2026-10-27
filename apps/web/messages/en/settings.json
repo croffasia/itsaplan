@@ -498,7 +498,8 @@
     "import": "Import",
     "source": "Source",
     "sourceHint": "Choose where to import from.",
-    "comingSoon": "Soon",
+    "moreSources": "More in Cloud and Pro",
+    "moreSourcesHint": "More sources to import from are available in Cloud and self-hosted Pro.",
     "connect": "Connect to Plane",
     "connectHint": "Enter a self-hosted Plane instance to check the connection and load its projects.",
     "baseUrl": "Plane URL",
@@ -550,6 +551,29 @@
       "noProject": "Issues with no project",
       "noTeams": "This API key can't see any teams."
     },
+    "trello": {
+      "connect": "Connect to Trello",
+      "connectHint": "Enter your Trello API key and authorize it in Trello to load the boards you can see.",
+      "apiKey": "API key",
+      "apiKeyHint": "Create a Power-Up in the <link>Trello Power-Up admin</link> and generate an API key on its API key tab. On the same tab, add <code>{origin}</code> to the allowed origins: Trello sends the token only to an allowed address.",
+      "authorize": "Authorize in Trello",
+      "authorizing": "Waiting for Trello…",
+      "popupBlocked": "The browser blocked the Trello window. Allow pop-ups for this site and try again.",
+      "scope": "What to import",
+      "scopeHint": "Pick the board to import. Its open lists become columns.",
+      "board": "Board",
+      "boardPlaceholder": "Select a board",
+      "closedBoard": "{name} (closed)",
+      "noBoards": "This key and token can't see any boards.",
+      "archivedCards": "Archived cards",
+      "archivedCardsArchive": "Import as archived issues",
+      "archivedCardsSkip": "Don't import",
+      "members": "Trello members",
+      "membersSkip": "Don't match",
+      "membersMatch": "Match by hand",
+      "membersHint": "Trello doesn't share members' emails, so match them by hand. A card's first matched member becomes its assignee, the others watch the issue.",
+      "memberNotMatched": "Not matched"
+    },
     "statuses": {
       "pending": "Pending",
       "running": "Running",
@@ -571,7 +595,9 @@
       "label": "Labels",
       "state": "States",
       "cycle": "Cycles",
-      "attachment": "Attachments"
+      "attachment": "Attachments",
+      "checklist": "Checklists",
+      "custom_field": "Custom fields"
     }
   },
   "issueTemplates": {

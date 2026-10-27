@@ -2326,8 +2326,8 @@ export const webhookDelivery = pgTable(
 // worker claims due rows the same way as webhook_delivery, and cursor is the
 // job's own per-phase resumability checkpoint, not the source API's pagination
 // cursor. The credential columns are cleared once the job reaches a terminal
-// status. One source adapter per value (apps/worker/src/import-sources.ts).
-export type ImportSource = 'plane' | 'linear';
+// status. `source` names a source adapter of the worker (apps/worker/src/import-sources.ts);
+// the database takes any name, so a build can add sources of its own.
 
 export const importJob = pgTable(
   'import_job',
@@ -2354,7 +2354,6 @@ export const importJob = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    check('import_job_source_check', sql`${t.source} IN ('plane', 'linear')`),
     check(
       'import_job_phase_check',
       sql`${t.phase} IN ('discover', 'create', 'link', 'rewrite', 'attachments', 'done')`,
@@ -2396,11 +2395,11 @@ export const importRecord = pgTable(
   (t) => [
     check(
       'import_record_source_entity_type_check',
-      sql`${t.sourceEntityType} IN ('issue', 'comment', 'label', 'state', 'cycle', 'attachment')`,
+      sql`${t.sourceEntityType} IN ('issue', 'comment', 'label', 'state', 'cycle', 'attachment', 'checklist', 'custom_field')`,
     ),
     check(
       'import_record_local_entity_type_check',
-      sql`${t.localEntityType} IS NULL OR ${t.localEntityType} IN ('issue', 'comment', 'label', 'state', 'cycle', 'attachment')`,
+      sql`${t.localEntityType} IS NULL OR ${t.localEntityType} IN ('issue', 'comment', 'label', 'state', 'cycle', 'attachment', 'checklist', 'custom_field')`,
     ),
     uniqueIndex('import_record_job_source_uq').on(t.importJobId, t.sourceEntityType, t.sourceId),
     index('import_record_job_local_idx').on(t.importJobId, t.localEntityType, t.localId),

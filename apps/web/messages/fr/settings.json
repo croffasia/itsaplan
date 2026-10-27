@@ -498,7 +498,8 @@
     "import": "Importer",
     "source": "Source",
     "sourceHint": "Choisissez la source de l’import.",
-    "comingSoon": "Bientôt",
+    "moreSources": "Plus avec Cloud et Pro",
+    "moreSourcesHint": "D'autres sources d'import sont disponibles dans Cloud et Pro auto-hébergé.",
     "connect": "Se connecter à Plane",
     "connectHint": "Indiquez une instance Plane auto-hébergée pour vérifier la connexion et charger ses projets.",
     "baseUrl": "URL de Plane",
@@ -550,6 +551,29 @@
       "noProject": "Tickets sans projet",
       "noTeams": "Cette clé API ne voit aucune équipe."
     },
+    "trello": {
+      "connect": "Se connecter à Trello",
+      "connectHint": "Indiquez votre clé API Trello et autorisez-la dans Trello pour charger les tableaux auxquels vous avez accès.",
+      "apiKey": "Clé API",
+      "apiKeyHint": "Créez un Power-Up dans l'<link>administration des Power-Ups Trello</link> et générez une clé API dans son onglet API key. Dans le même onglet, ajoutez <code>{origin}</code> aux origines autorisées : Trello n'envoie le jeton qu'à une adresse autorisée.",
+      "authorize": "Autoriser dans Trello",
+      "authorizing": "En attente de Trello…",
+      "popupBlocked": "Le navigateur a bloqué la fenêtre Trello. Autorisez les fenêtres pop-up pour ce site et réessayez.",
+      "scope": "Contenu à importer",
+      "scopeHint": "Choisissez le tableau à importer. Ses listes ouvertes deviennent des colonnes.",
+      "board": "Tableau",
+      "boardPlaceholder": "Sélectionner un tableau",
+      "closedBoard": "{name} (fermé)",
+      "noBoards": "Cette clé et ce jeton ne voient aucun tableau.",
+      "archivedCards": "Cartes archivées",
+      "archivedCardsArchive": "Importer comme tickets archivés",
+      "archivedCardsSkip": "Ne pas importer",
+      "members": "Membres Trello",
+      "membersSkip": "Ne pas associer",
+      "membersMatch": "Associer à la main",
+      "membersHint": "Trello ne partage pas l'e-mail des membres : associez-les à la main. Le premier membre associé d'une carte devient le responsable du ticket, les autres le suivent.",
+      "memberNotMatched": "Non associé"
+    },
     "statuses": {
       "pending": "En attente",
       "running": "En cours",
@@ -571,7 +595,9 @@
       "label": "Étiquettes",
       "state": "États",
       "cycle": "Cycles",
-      "attachment": "Pièces jointes"
+      "attachment": "Pièces jointes",
+      "checklist": "Checklists",
+      "custom_field": "Champs personnalisés"
     }
   },
   "issueTemplates": {

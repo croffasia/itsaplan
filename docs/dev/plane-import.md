@@ -23,7 +23,8 @@ returns.
 - `apps/api/src/modules/import-export/` — create/test-connection/plane-preview/export/status/
   pause/resume/cancel routes, and linear-test-connection/linear-preview.
 - The Linear source (`linear-adapter.ts`, `linear-mapping.ts`, the api's `linear.ts`, the
-  Linear tab) has its own notes: [linear-import.md](linear-import.md).
+  Linear tab) has its own notes: [linear-import.md](linear-import.md). So does the Trello
+  source: [trello-import.md](trello-import.md).
 - `apps/web/src/features/settings/components/import-export/` — the Settings page.
 
 ## Export: a JSON snapshot, not a live sync

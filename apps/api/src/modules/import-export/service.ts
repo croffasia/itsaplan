@@ -1,16 +1,17 @@
-import { db, importJob, importRecord, type ImportSource } from '@repo/db';
+import { db, importJob, importRecord } from '@repo/db';
 import { desc, eq, sql } from 'drizzle-orm';
 import { encryptSecret } from '@repo/crypto';
 import { HttpError, iso } from '#shared/lib';
 import { pinnedFetch } from '#shared/net';
 import { linearJobFields, type CreateLinearImportJobInput } from './linear';
+import { trelloJobFields, type CreateTrelloImportJobInput } from './trello';
 
 // Data access and the Plane connection check for import jobs (Linear's is in
-// linear.ts). Creating a job only encrypts and stores the submitted credential and
-// leaves the row 'pending' for the worker (apps/worker/src/import-worker.ts) to pick
-// up and drive through its phases — this module never talks to the worker or reads
-// the credential back. Progress is read from import_record, the worker's own
-// source-id-to-local-id mapping table.
+// linear.ts, Trello's in trello.ts). Creating a job only encrypts and stores the
+// submitted credential and leaves the row 'pending' for the worker
+// (apps/worker/src/import-worker.ts) to pick up and drive through its phases — this
+// module never talks to the worker or reads the credential back. Progress is read
+// from import_record, the worker's own source-id-to-local-id mapping table.
 
 // Mirrors import_record_source_entity_type_check in packages/db/src/schema/app.ts.
 export const IMPORT_ENTITY_TYPES = [
@@ -20,6 +21,8 @@ export const IMPORT_ENTITY_TYPES = [
   'state',
   'cycle',
   'attachment',
+  'checklist',
+  'custom_field',
 ] as const;
 export type ImportEntityType = (typeof IMPORT_ENTITY_TYPES)[number];
 
@@ -36,7 +39,7 @@ interface EntityCount {
 export interface ImportJobDto {
   id: number;
   projectId: number;
-  source: ImportSource;
+  source: string;
   phase: ImportJobPhase;
   status: ImportJobStatus;
   counts: Record<ImportEntityType, EntityCount>;
@@ -74,7 +77,7 @@ function toDto(row: ImportJobRow, counts: Record<ImportEntityType, EntityCount>)
   return {
     id: row.id,
     projectId: row.projectId,
-    source: row.source as ImportSource,
+    source: row.source,
     phase: row.phase as ImportJobPhase,
     status: row.status as ImportJobStatus,
     counts,
@@ -130,7 +133,7 @@ function normalizePlaneBaseUrl(raw: string): string {
   return url.origin;
 }
 
-interface ImportJobChoices {
+export interface ImportJobChoices {
   unmatchedUserPolicy?: UnmatchedUserPolicy;
   stateOverrides?: Record<string, StateCategory>;
 }
@@ -146,7 +149,7 @@ export interface CreatePlaneImportJobInput {
 }
 
 export type CreateImportJobInput = ImportJobChoices &
-  (CreatePlaneImportJobInput | CreateLinearImportJobInput);
+  (CreatePlaneImportJobInput | CreateLinearImportJobInput | CreateTrelloImportJobInput);
 
 function planeJobFields(input: CreatePlaneImportJobInput) {
   const baseUrl = normalizePlaneBaseUrl(input.baseUrl);
@@ -165,28 +168,48 @@ function planeJobFields(input: CreatePlaneImportJobInput) {
   };
 }
 
-// Stores the submitted credential encrypted and leaves the job 'pending' — the
-// worker picks it up on its next poll. The plaintext token exists only in this
-// function's local variables; it is never persisted or logged.
 export async function createImportJob(
   projectId: number,
   actorUserId: string,
   input: CreateImportJobInput,
 ): Promise<ImportJobDto> {
-  const { source, credential, config } =
-    input.source === 'linear' ? linearJobFields(input) : planeJobFields(input);
-  const encrypted = encryptSecret(JSON.stringify(credential));
+  switch (input.source) {
+    case 'linear':
+      return insertImportJob(projectId, actorUserId, linearJobFields(input), input);
+    case 'trello':
+      return insertImportJob(
+        projectId,
+        actorUserId,
+        await trelloJobFields(projectId, input),
+        input,
+      );
+    default:
+      return insertImportJob(projectId, actorUserId, planeJobFields(input), input);
+  }
+}
+
+// Stores the credential encrypted and leaves the job 'pending' — the worker picks it up
+// on its next poll and reads `source` to pick its adapter. The plaintext token exists
+// only in local variables; it is never persisted or logged. A build's own import routes
+// call this for a source they add.
+export async function insertImportJob(
+  projectId: number,
+  actorUserId: string,
+  fields: { source: string; credential: object; config: object },
+  choices: ImportJobChoices,
+): Promise<ImportJobDto> {
+  const encrypted = encryptSecret(JSON.stringify(fields.credential));
   const [row] = await db
     .insert(importJob)
     .values({
       projectId,
       createdByUserId: actorUserId,
-      source,
+      source: fields.source,
       config: {
-        ...config,
-        unmatchedUserPolicy: input.unmatchedUserPolicy ?? 'unassigned',
-        ...(input.stateOverrides && Object.keys(input.stateOverrides).length > 0
-          ? { stateOverrides: input.stateOverrides }
+        ...fields.config,
+        unmatchedUserPolicy: choices.unmatchedUserPolicy ?? 'unassigned',
+        ...(choices.stateOverrides && Object.keys(choices.stateOverrides).length > 0
+          ? { stateOverrides: choices.stateOverrides }
           : {}),
       },
       credentialCiphertext: encrypted.ciphertext,

@@ -498,7 +498,8 @@
     "import": "İçe Aktar",
     "source": "Kaynak",
     "sourceHint": "Nereden içe aktarılacağını seçin.",
-    "comingSoon": "Yakında",
+    "moreSources": "Cloud ve Pro'da daha fazlası",
+    "moreSourcesHint": "Daha fazla içe aktarma kaynağı Cloud ve kendi sunucunuzda çalışan Pro'da mevcut.",
     "connect": "Plane'e bağlan",
     "connectHint": "Bağlantıyı test etmek ve projelerini yüklemek için kendi barındırdığınız bir Plane örneklemini girin.",
     "baseUrl": "Plane URL'si",
@@ -550,6 +551,29 @@
       "noProject": "Projesiz işler",
       "noTeams": "Bu API anahtarı hiçbir takımı göremiyor."
     },
+    "trello": {
+      "connect": "Trello'ya bağlan",
+      "connectHint": "Trello API anahtarınızı girin ve görebildiğiniz panoları yüklemek için Trello'da yetkilendirin.",
+      "apiKey": "API anahtarı",
+      "apiKeyHint": "<link>Trello Power-Up yönetiminde</link> bir Power-Up oluşturun ve API key sekmesinde bir API anahtarı üretin. Aynı sekmede <code>{origin}</code> adresini izin verilen kaynaklara (allowed origins) ekleyin: Trello token'ı yalnızca izin verilen bir adrese gönderir.",
+      "authorize": "Trello'da yetkilendir",
+      "authorizing": "Trello bekleniyor…",
+      "popupBlocked": "Tarayıcı Trello penceresini engelledi. Bu site için açılır pencerelere izin verin ve tekrar deneyin.",
+      "scope": "Neyi içe aktaracağınız",
+      "scopeHint": "İçe aktarılacak panoyu seçin. Açık listeleri sütun olur.",
+      "board": "Pano",
+      "boardPlaceholder": "Bir pano seçin",
+      "closedBoard": "{name} (kapalı)",
+      "noBoards": "Bu anahtar ve token hiçbir panoyu göremiyor.",
+      "archivedCards": "Arşivlenmiş kartlar",
+      "archivedCardsArchive": "Arşivlenmiş iş olarak içe aktar",
+      "archivedCardsSkip": "İçe aktarma",
+      "members": "Trello üyeleri",
+      "membersSkip": "Eşleştirme",
+      "membersMatch": "Elle eşleştir",
+      "membersHint": "Trello üyelerin e-postasını paylaşmaz, bu yüzden onları elle eşleştirin. Bir kartın ilk eşleşen üyesi atanan kişi olur, diğerleri işi izler.",
+      "memberNotMatched": "Eşleştirilmedi"
+    },
     "statuses": {
       "pending": "Bekliyor",
       "running": "Çalışıyor",
@@ -571,7 +595,9 @@
       "label": "Etiketler",
       "state": "Durumlar",
       "cycle": "Döngüler",
-      "attachment": "Ekler"
+      "attachment": "Ekler",
+      "checklist": "Kontrol listeleri",
+      "custom_field": "Özel alanlar"
     }
   },
   "issueTemplates": {

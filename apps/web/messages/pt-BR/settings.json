@@ -498,7 +498,8 @@
     "import": "Importar",
     "source": "Origem",
     "sourceHint": "Escolha de onde importar.",
-    "comingSoon": "Em breve",
+    "moreSources": "Mais no Cloud e no Pro",
+    "moreSourcesHint": "Mais fontes de importação estão disponíveis no Cloud e no Pro auto-hospedado.",
     "connect": "Conectar ao Plane",
     "connectHint": "Informe uma instância Plane auto-hospedada para verificar a conexão e carregar seus projetos.",
     "baseUrl": "URL do Plane",
@@ -550,6 +551,29 @@
       "noProject": "Issues sem projeto",
       "noTeams": "Esta chave de API não vê nenhum time."
     },
+    "trello": {
+      "connect": "Conectar ao Trello",
+      "connectHint": "Informe sua chave de API do Trello e autorize-a no Trello para carregar os quadros que você pode ver.",
+      "apiKey": "Chave de API",
+      "apiKeyHint": "Crie um Power-Up na <link>administração de Power-Ups do Trello</link> e gere uma chave de API na aba API key. Na mesma aba, adicione <code>{origin}</code> às origens permitidas: o Trello só envia o token para um endereço permitido.",
+      "authorize": "Autorizar no Trello",
+      "authorizing": "Aguardando o Trello…",
+      "popupBlocked": "O navegador bloqueou a janela do Trello. Permita pop-ups para este site e tente novamente.",
+      "scope": "O que importar",
+      "scopeHint": "Escolha o quadro a importar. As listas abertas dele viram colunas.",
+      "board": "Quadro",
+      "boardPlaceholder": "Selecione um quadro",
+      "closedBoard": "{name} (fechado)",
+      "noBoards": "Esta chave e este token não veem nenhum quadro.",
+      "archivedCards": "Cartões arquivados",
+      "archivedCardsArchive": "Importar como itens arquivados",
+      "archivedCardsSkip": "Não importar",
+      "members": "Membros do Trello",
+      "membersSkip": "Não associar",
+      "membersMatch": "Associar manualmente",
+      "membersHint": "O Trello não compartilha o e-mail dos membros, então associe-os manualmente. O primeiro membro associado de um cartão vira o responsável, e os outros acompanham o item.",
+      "memberNotMatched": "Não associado"
+    },
     "statuses": {
       "pending": "Pendente",
       "running": "Em execução",
@@ -571,7 +595,9 @@
       "label": "Etiquetas",
       "state": "Estados",
       "cycle": "Ciclos",
-      "attachment": "Anexos"
+      "attachment": "Anexos",
+      "checklist": "Checklists",
+      "custom_field": "Campos personalizados"
     }
   },
   "issueTemplates": {

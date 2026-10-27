@@ -4,7 +4,7 @@ import { useTestPlaneConnection } from '../../services/settings.service';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { PlaneConnection } from './SettingsImportExport';
+import type { PlaneConnection } from './SettingsImportExportPlane';
 
 // baseUrl/workspaceSlug/apiToken for a source Plane instance, checked live
 // against it. Nothing is stored until an import is actually started.

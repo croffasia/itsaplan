@@ -54,13 +54,20 @@ running to completion in one.
   `resolveAttachmentDownload` follows `uploads.linear.app`'s redirects itself
   and sends the key to that host only. `docs/dev/linear-import.md` has the
   queries, limits and mapping.
+- `trello-adapter.ts` and `trello-mapping.ts` — the Trello implementation: its
+  REST API at the fixed `https://api.trello.com/1` with the job's API key and
+  token, and the pure mapping from Trello's shapes. Lists become states, cards
+  issues with their checklists and custom field values; the board's members
+  reach the job already matched with project members' emails.
+  `docs/dev/trello-import.md` has the requests, limits and mapping.
 - `cross-reference.ts` — pure text matching for a source's own "KEY-123"-style
   issue identifier: no `@repo/db`, no network, unit-tested directly. What
   the Rewrite phase resolves into itsaplan's own issue ids.
 - `import-store.ts` — all `@repo/db` access for imports: claiming due jobs,
   reading/writing a job's phase/cursor/status, the `import_record`
   source-id-to-local-id upsert, and creating the local rows (states, labels,
-  cycles, issues, comments, issue links) an import produces.
+  cycles, custom fields, issues, checklists, comments, watchers, issue links)
+  an import produces.
 - `import-worker.ts` — the phase state machine. Discover snapshots every
   source id up front (`import_record` rows with no local id yet) before Create
   begins, rather than treating the source's own pagination cursor as the
@@ -113,11 +120,11 @@ running to completion in one.
   `isRetryableStatus` import nothing from `@repo/db`, so unit tests run without a
   database. Keep DB access in `store.ts`. Same split for imports: `canonical.ts`,
   `reader.ts`, `plane-adapter.ts`, `linear-adapter.ts`, `linear-mapping.ts`,
-  `cross-reference.ts`, `attachment-download.ts`, `import-sources.ts`, and
-  `import-retry.ts` import nothing from `@repo/db` (their state-category
-  normalization, markdown conversion, cursor/rate-limit, and cross-reference
-  matching logic are unit-tested directly); `@repo/db` access stays in
-  `import-store.ts`.
+  `trello-adapter.ts`, `trello-mapping.ts`, `cross-reference.ts`,
+  `attachment-download.ts`, `import-sources.ts`, and `import-retry.ts` import
+  nothing from `@repo/db` (their state-category normalization, markdown
+  conversion, cursor/rate-limit, and cross-reference matching logic are
+  unit-tested directly); `@repo/db` access stays in `import-store.ts`.
 - **An import job's credential is decrypted here, never routed through
   `packages/db/src/domains/`.** That directory is for config more than one
   process reads; only the worker ever decrypts a stored import credential (the

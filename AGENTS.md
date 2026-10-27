@@ -113,6 +113,7 @@ packages directly.** It talks to the API over HTTP (better-auth client + fetch).
 | `docs/agent-endpoint.md`                                                                            | external agents that receive tasks on their own HTTPS endpoint   |
 | `docs/mcp-results.md`                                                                               | the shape of MCP tool results (`structuredContent`)              |
 | `docs/importing-from-linear.md`, `docs/dev/linear-import.md`                                        | the Linear import: user guide, implementation                    |
+| `docs/importing-from-trello.md`, `docs/dev/trello-import.md`                                        | the Trello import: user guide, implementation                    |
 | `docs/importing-from-plane.md`, `docs/dev/plane-import.md`, `docs/dev/plane-import-source-notes.md` | the Plane import: user guide, implementation, Plane API facts    |
 | `docs/dev/revision-engine.md`                                                                       | live updates: scopes, counters, refetch                          |
 | `docs/dev/i18n.md`                                                                                  | interface languages, the language cookie                         |

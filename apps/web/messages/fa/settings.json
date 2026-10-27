@@ -498,7 +498,8 @@
     "import": "ورود",
     "source": "منبع",
     "sourceHint": "انتخاب کنید از کجا وارد شود.",
-    "comingSoon": "به‌زودی",
+    "moreSources": "موارد بیشتر در Cloud و Pro",
+    "moreSourcesHint": "منابع بیشتری برای وارد کردن در Cloud و Pro خودمیزبان در دسترس است.",
     "connect": "اتصال به Plane",
     "connectHint": "یک سامانهٔ خودمیزبان Plane وارد کنید تا اتصال بررسی و پروژه‌هایش بارگذاری شود.",
     "baseUrl": "نشانی Plane",
@@ -550,6 +551,29 @@
       "noProject": "تسک‌های بدون پروژه",
       "noTeams": "این کلید API هیچ تیمی را نمی‌بیند."
     },
+    "trello": {
+      "connect": "اتصال به Trello",
+      "connectHint": "کلید API خود در Trello را وارد کنید و در Trello مجوز بدهید تا بردهایی که می‌بینید بارگذاری شوند.",
+      "apiKey": "کلید API",
+      "apiKeyHint": "در <link>مدیریت Power-Upهای Trello</link> یک Power-Up بسازید و در زبانه API key آن یک کلید API بسازید. در همان زبانه، <code>{origin}</code> را به مبدأهای مجاز (allowed origins) اضافه کنید: Trello توکن را فقط به نشانی مجاز می‌فرستد.",
+      "authorize": "مجوز در Trello",
+      "authorizing": "در انتظار Trello…",
+      "popupBlocked": "مرورگر پنجره Trello را مسدود کرد. پنجره‌های بازشو را برای این سایت مجاز کنید و دوباره تلاش کنید.",
+      "scope": "چه چیزی وارد شود",
+      "scopeHint": "بردی را که می‌خواهید وارد کنید انتخاب کنید. فهرست‌های باز آن ستون می‌شوند.",
+      "board": "برد",
+      "boardPlaceholder": "یک برد انتخاب کنید",
+      "closedBoard": "{name} (بسته)",
+      "noBoards": "این کلید و توکن هیچ بردی را نمی‌بینند.",
+      "archivedCards": "کارت‌های بایگانی‌شده",
+      "archivedCardsArchive": "وارد کردن به‌عنوان کارهای بایگانی‌شده",
+      "archivedCardsSkip": "وارد نشوند",
+      "members": "اعضای Trello",
+      "membersSkip": "تطبیق داده نشوند",
+      "membersMatch": "تطبیق دستی",
+      "membersHint": "Trello ایمیل اعضا را در اختیار نمی‌گذارد، پس آن‌ها را دستی تطبیق دهید. نخستین عضو تطبیق‌یافته کارت مسئول کار می‌شود و بقیه آن را دنبال می‌کنند.",
+      "memberNotMatched": "تطبیق داده نشده"
+    },
     "statuses": {
       "pending": "در انتظار",
       "running": "در حال اجرا",
@@ -571,7 +595,9 @@
       "label": "برچسب‌ها",
       "state": "وضعیت‌ها",
       "cycle": "سیکل‌ها",
-      "attachment": "پیوست‌ها"
+      "attachment": "پیوست‌ها",
+      "checklist": "چک‌لیست‌ها",
+      "custom_field": "فیلدهای سفارشی"
     }
   },
   "issueTemplates": {

@@ -160,13 +160,13 @@ describe('import_job source', () => {
     expect(job?.source).toBe('linear');
   });
 
-  it('still refuses a source that has no adapter', async () => {
+  it('stores a source the core has no adapter for, which a build can register', async () => {
     const { projectId, userId } = await makeProject();
-    const error = await db
+    const [row] = await db
       .insert(importJob)
-      .values({ projectId, createdByUserId: userId, source: 'jira' })
-      .catch((e: unknown) => e);
-    expect((error as { cause?: Error }).cause?.message).toContain('import_job_source_check');
+      .values({ projectId, createdByUserId: userId, source: 'jira', status: 'paused' })
+      .returning({ source: importJob.source });
+    expect(row!.source).toBe('jira');
   });
 });
 

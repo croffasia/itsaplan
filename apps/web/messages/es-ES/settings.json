@@ -498,7 +498,8 @@
     "import": "Importar",
     "source": "Origen",
     "sourceHint": "Elige desde dónde importar.",
-    "comingSoon": "Pronto",
+    "moreSources": "Más en Cloud y Pro",
+    "moreSourcesHint": "Hay más fuentes de importación en Cloud y en Pro autoalojado.",
     "connect": "Conectar con Plane",
     "connectHint": "Introduce una instancia autoalojada de Plane para comprobar la conexión y cargar sus proyectos.",
     "baseUrl": "URL de Plane",
@@ -550,6 +551,29 @@
       "noProject": "Tickets sin proyecto",
       "noTeams": "Esta clave de API no ve ningún equipo."
     },
+    "trello": {
+      "connect": "Conectar con Trello",
+      "connectHint": "Introduce tu clave API de Trello y autorízala en Trello para cargar los tableros a los que tienes acceso.",
+      "apiKey": "Clave API",
+      "apiKeyHint": "Crea un Power-Up en la <link>administración de Power-Ups de Trello</link> y genera una clave API en su pestaña API key. En la misma pestaña, añade <code>{origin}</code> a los orígenes permitidos: Trello solo envía el token a una dirección permitida.",
+      "authorize": "Autorizar en Trello",
+      "authorizing": "Esperando a Trello…",
+      "popupBlocked": "El navegador ha bloqueado la ventana de Trello. Permite las ventanas emergentes para este sitio y vuelve a intentarlo.",
+      "scope": "Qué importar",
+      "scopeHint": "Elige el tablero que quieres importar. Sus listas abiertas pasan a ser columnas.",
+      "board": "Tablero",
+      "boardPlaceholder": "Selecciona un tablero",
+      "closedBoard": "{name} (cerrado)",
+      "noBoards": "Esta clave y este token no ven ningún tablero.",
+      "archivedCards": "Tarjetas archivadas",
+      "archivedCardsArchive": "Importar como incidencias archivadas",
+      "archivedCardsSkip": "No importar",
+      "members": "Miembros de Trello",
+      "membersSkip": "No asociar",
+      "membersMatch": "Asociar a mano",
+      "membersHint": "Trello no comparte el correo de los miembros, así que asócialos a mano. El primer miembro asociado de una tarjeta será el responsable y los demás seguirán la incidencia.",
+      "memberNotMatched": "Sin asociar"
+    },
     "statuses": {
       "pending": "Pendiente",
       "running": "En ejecución",
@@ -571,7 +595,9 @@
       "label": "Etiquetas",
       "state": "Estados",
       "cycle": "Ciclos",
-      "attachment": "Adjuntos"
+      "attachment": "Adjuntos",
+      "checklist": "Listas de comprobación",
+      "custom_field": "Campos personalizados"
     }
   },
   "issueTemplates": {

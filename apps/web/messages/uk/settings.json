@@ -498,7 +498,8 @@
     "import": "Імпорт",
     "source": "Джерело",
     "sourceHint": "Виберіть, звідки імпортувати.",
-    "comingSoon": "Незабаром",
+    "moreSources": "Більше в Cloud і Pro",
+    "moreSourcesHint": "Більше джерел для імпорту доступно в Cloud і self-hosted Pro.",
     "connect": "Підключення до Plane",
     "connectHint": "Вкажіть самостійно розміщений інстанс Plane, щоб перевірити з'єднання та завантажити його проєкти.",
     "baseUrl": "URL Plane",
@@ -550,6 +551,29 @@
       "noProject": "Задачі без проєкту",
       "noTeams": "Цей API-ключ не бачить жодної команди."
     },
+    "trello": {
+      "connect": "Підключення до Trello",
+      "connectHint": "Вкажіть свій API-ключ Trello і дозвольте доступ у Trello, щоб завантажити доступні вам дошки.",
+      "apiKey": "API-ключ",
+      "apiKeyHint": "Створіть Power-Up в <link>адмінці Power-Up Trello</link> і згенеруйте API-ключ на його вкладці API key. На тій самій вкладці додайте <code>{origin}</code> до дозволених адрес (allowed origins): Trello надсилає токен лише на дозволену адресу.",
+      "authorize": "Авторизуватися в Trello",
+      "authorizing": "Очікування Trello…",
+      "popupBlocked": "Браузер заблокував вікно Trello. Дозвольте спливні вікна для цього сайту і спробуйте ще раз.",
+      "scope": "Що імпортувати",
+      "scopeHint": "Виберіть дошку для імпорту. Її відкриті списки стануть колонками.",
+      "board": "Дошка",
+      "boardPlaceholder": "Виберіть дошку",
+      "closedBoard": "{name} (закрита)",
+      "noBoards": "Цей ключ і токен не бачать жодної дошки.",
+      "archivedCards": "Архівні картки",
+      "archivedCardsArchive": "Імпортувати як архівні задачі",
+      "archivedCardsSkip": "Не імпортувати",
+      "members": "Учасники Trello",
+      "membersSkip": "Не зіставляти",
+      "membersMatch": "Зіставити вручну",
+      "membersHint": "Trello не передає email учасників, тому зіставте їх вручну. Перший зіставлений учасник картки стане виконавцем, інші стежитимуть за задачею.",
+      "memberNotMatched": "Не зіставлено"
+    },
     "statuses": {
       "pending": "В очікуванні",
       "running": "Виконується",
@@ -571,7 +595,9 @@
       "label": "Мітки",
       "state": "Статуси",
       "cycle": "Цикли",
-      "attachment": "Вкладення"
+      "attachment": "Вкладення",
+      "checklist": "Чек-листи",
+      "custom_field": "Користувацькі поля"
     }
   },
   "issueTemplates": {

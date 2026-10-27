@@ -13,6 +13,7 @@ export { default as ScheduleDialog } from './ScheduleDialog';
 export { default as ShellNotice } from './ShellNotice';
 export { default as SignInExtras } from './SignInExtras';
 export { default as SignInPage } from './SignInPage';
+export { default as useImportSources } from './useImportSources';
 export { default as useWorkspaceSections } from './useWorkspaceSections';
 export { default as WorkspaceRailActions } from './WorkspaceRailActions';
 export { default as WorkspaceSectionExtras } from './WorkspaceSectionExtras';

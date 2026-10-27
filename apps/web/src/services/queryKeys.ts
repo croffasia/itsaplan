@@ -92,6 +92,9 @@ export const qk = {
   // The same preview for one Linear team's workflow states.
   linearPreview: (projectKey: string, teamId: string) =>
     ['linearPreview', projectKey, teamId] as const,
+  // The same preview for one Trello board's lists and members.
+  trelloPreview: (projectKey: string, boardId: string) =>
+    ['trelloPreview', projectKey, boardId] as const,
   // Saved dashboards (the analytics tabs) and the read-only metrics behind their
   // widgets. `kind` names the metric (stats/pulse/throughput/breakdown/...) and
   // `params` scopes it to the widget's query (window, filters).

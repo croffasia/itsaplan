@@ -4,7 +4,7 @@ import { intEnv } from './env';
 import { tickErrorOutcome } from './import-retry';
 import { readerForJob, sourceProjectKeyForJob, type CommonImportConfig } from './import-sources';
 import type { SourceReader } from './reader';
-import type { CanonicalComment } from './canonical';
+import type { CanonicalChecklist, CanonicalComment, CanonicalIssue } from './canonical';
 import { extractCrossReferences, applyCrossReferenceReplacements } from './cross-reference';
 import { downloadAttachment } from './attachment-download';
 import {
@@ -33,6 +33,10 @@ import {
   createLocalCycleAndRecord,
   createLocalIssueAndRecord,
   setIssueLabels,
+  addIssueWatchers,
+  createLocalCustomFieldAndRecord,
+  setIssueCustomFieldValue,
+  createLocalChecklistAndRecord,
   setIssueParentIfUnset,
   createLocalComment,
   createIssueLink,
@@ -113,10 +117,11 @@ interface DiscoverCursor {
 async function runDiscover(job: ClaimedImportJob, reader: SourceReader): Promise<void> {
   const cursor = job.cursor as Partial<DiscoverCursor>;
   if (cursor.subphase !== 'issues') {
-    const [states, labels, cycles] = await Promise.all([
+    const [states, labels, cycles, customFields] = await Promise.all([
       reader.listStates(),
       reader.listLabels(),
       reader.listCycles(),
+      reader.listCustomFields(),
     ]);
     await insertDiscoveredIds(
       job.id,
@@ -132,6 +137,11 @@ async function runDiscover(job: ClaimedImportJob, reader: SourceReader): Promise
       job.id,
       'cycle',
       cycles.map((c) => c.sourceId),
+    );
+    await insertDiscoveredIds(
+      job.id,
+      'custom_field',
+      customFields.map((f) => f.sourceId),
     );
     const next: DiscoverCursor = { subphase: 'issues', planeCursor: null };
     await saveImportJobCursor(job.id, next);
@@ -152,7 +162,7 @@ async function runDiscover(job: ClaimedImportJob, reader: SourceReader): Promise
   await saveImportJobCursor(job.id, next);
 }
 
-// --- Create: materialize states/labels/cycles once (cheap, unpaginated),
+// --- Create: materialize states/labels/cycles/custom fields once (cheap, unpaginated),
 // then finish one chunk of issues per tick, with their
 // comments and their attachment metadata (byte download is a later phase).
 
@@ -164,6 +174,7 @@ export async function runCreate(job: ClaimedImportJob, reader: SourceReader): Pr
   await materializeStates(job, reader);
   await materializeLabels(job, reader);
   await materializeCycles(job, reader);
+  await materializeCustomFields(job, reader);
 
   const cursor = job.cursor as Partial<RecordCursor>;
   const afterId = cursor.lastRecordId ?? 0;
@@ -222,6 +233,17 @@ async function materializeCycles(job: ClaimedImportJob, reader: SourceReader): P
   }
 }
 
+async function materializeCustomFields(job: ClaimedImportJob, reader: SourceReader): Promise<void> {
+  const pending = await listUncreatedImportRecords(job.id, 'custom_field', 0, 1000);
+  if (pending.length === 0) return;
+  const fields = new Map((await reader.listCustomFields()).map((f) => [f.sourceId, f]));
+  for (const record of pending) {
+    const field = fields.get(record.sourceId);
+    if (!field) continue;
+    await createLocalCustomFieldAndRecord(job.id, record.sourceId, job.projectId, field);
+  }
+}
+
 async function createOneIssue(
   job: ClaimedImportJob,
   reader: SourceReader,
@@ -231,6 +253,7 @@ async function createOneIssue(
   // Fetch source data before writing local rows; a failed read leaves no partial writes.
   const comments = await reader.listIssueComments(sourceId);
   const attachments = await reader.listIssueAttachments(sourceId);
+  const checklists = await reader.listIssueChecklists(sourceId);
 
   const existing = await findImportRecord(job.id, 'issue', sourceId);
   let localId = existing?.localId;
@@ -263,6 +286,7 @@ async function createOneIssue(
       dueDate: canonical.dueDate,
       createdAt: canonical.createdAt,
       updatedAt: canonical.updatedAt,
+      archivedAt: canonical.archivedAt,
     });
   }
   const labelIds: number[] = [];
@@ -272,6 +296,9 @@ async function createOneIssue(
   }
   if (labelIds.length) await setIssueLabels(localId, labelIds);
 
+  await addWatchers(job, localId, canonical.watcherEmails);
+  await setCustomFieldValues(job, localId, canonical.customFields);
+  await createChecklists(job, localId, checklists);
   await createComments(job, localId, comments);
 
   if (attachments.length) {
@@ -280,6 +307,44 @@ async function createOneIssue(
       'attachment',
       attachments.map((a) => a.sourceId),
     );
+  }
+}
+
+async function addWatchers(
+  job: ClaimedImportJob,
+  issueLocalId: number,
+  emails: string[],
+): Promise<void> {
+  const userIds: string[] = [];
+  for (const email of emails) {
+    const userId = await findProjectMemberUserId(job.projectId, email);
+    if (userId) userIds.push(userId);
+  }
+  await addIssueWatchers(issueLocalId, userIds);
+}
+
+async function setCustomFieldValues(
+  job: ClaimedImportJob,
+  issueLocalId: number,
+  values: CanonicalIssue['customFields'],
+): Promise<void> {
+  for (const { fieldSourceId, value } of values) {
+    if (value === null || value === '') continue;
+    const record = await findImportRecord(job.id, 'custom_field', fieldSourceId);
+    if (record?.localId == null) continue;
+    await setIssueCustomFieldValue(issueLocalId, record.localId, value);
+  }
+}
+
+async function createChecklists(
+  job: ClaimedImportJob,
+  issueLocalId: number,
+  checklists: CanonicalChecklist[],
+): Promise<void> {
+  for (const checklist of checklists) {
+    if ((await findImportRecord(job.id, 'checklist', checklist.sourceId))?.localId != null)
+      continue;
+    await createLocalChecklistAndRecord(job.id, issueLocalId, checklist);
   }
 }
 

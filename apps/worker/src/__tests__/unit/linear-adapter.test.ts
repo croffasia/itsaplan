@@ -1,12 +1,11 @@
 import { describe, it, expect } from 'bun:test';
 import type { PinnedRequestInit } from '@repo/net';
-import { AttachmentRejectedError } from '../../attachment-download';
+import { AttachmentRejectedError, nextDownloadHop } from '../../attachment-download';
 import {
   LINEAR_GRAPHQL_URL,
   LinearReader,
   linearRateLimitBackoffMs,
   linearUploadHeaders,
-  nextUploadHop,
 } from '../../linear-adapter';
 import type { LinearIssueNode, LinearScope } from '../../linear-mapping';
 import { SourceRateLimitedError } from '../../reader';
@@ -426,11 +425,11 @@ describe('upload helpers', () => {
   });
 
   it('reads a redirect without a location as a refusal', () => {
-    expect(() => nextUploadHop(UPLOAD, 302, null)).toThrow(
+    expect(() => nextDownloadHop('Linear', UPLOAD, 302, null)).toThrow(
       'Linear file storage redirected nowhere',
     );
-    expect(nextUploadHop(UPLOAD, 204, null)).toEqual({ kind: 'download' });
-    expect(nextUploadHop(UPLOAD, 410, null)).toEqual({ kind: 'refused' });
+    expect(nextDownloadHop('Linear', UPLOAD, 204, null)).toEqual({ kind: 'download' });
+    expect(nextDownloadHop('Linear', UPLOAD, 410, null)).toEqual({ kind: 'refused' });
   });
 });
 

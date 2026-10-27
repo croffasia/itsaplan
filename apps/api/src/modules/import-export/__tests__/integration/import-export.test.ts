@@ -57,6 +57,8 @@ const zeroedCounts = {
   state: zeroCounts,
   cycle: zeroCounts,
   attachment: zeroCounts,
+  checklist: zeroCounts,
+  custom_field: zeroCounts,
 };
 
 describe('import jobs', () => {
@@ -436,6 +438,114 @@ describe('import jobs', () => {
         ).status,
       ).toBe(403);
       expect((await jobs(member).post(linearBody)).status).toBe(403);
+    });
+  });
+
+  describe('trello', () => {
+    const trelloBody = {
+      source: 'trello' as const,
+      apiKey: 'trellokey1',
+      apiToken: 'ATTAtoken1',
+      boardId: 'board1',
+      archivedCards: 'archive' as const,
+    };
+
+    it('creates a pending Trello job and stores the matched members by email', async () => {
+      const owner = await signUpTestUser();
+      const api = authedApi(owner.cookie);
+      await createProject(api, { key: 'MKT', name: 'Marketing' });
+
+      const res = await jobs(api).post({
+        ...trelloBody,
+        memberMap: { member1: owner.userId, member2: '' },
+        stateOverrides: { list1: 'started' },
+      });
+
+      expect(res.status).toBe(201);
+      expect(res.data).toMatchObject({
+        source: 'trello',
+        phase: 'discover',
+        status: 'pending',
+        counts: zeroedCounts,
+      });
+      const [row] = await db.select().from(importJob).where(eq(importJob.id, res.data!.id));
+      expect(row!.config).toEqual({
+        boardId: 'board1',
+        archivedCards: 'archive',
+        memberEmails: { member1: owner.email },
+        unmatchedUserPolicy: 'unassigned',
+        stateOverrides: { list1: 'started' },
+      });
+      const credential = decryptSecret({
+        ciphertext: row!.credentialCiphertext!,
+        iv: row!.credentialIv!,
+        authTag: row!.credentialAuthTag!,
+      });
+      expect(JSON.parse(credential)).toEqual({ apiKey: 'trellokey1', token: 'ATTAtoken1' });
+    });
+
+    it('stores no members when none are matched', async () => {
+      const { api } = await setupOwnerProject();
+      const res = await jobs(api).post({ ...trelloBody, archivedCards: 'skip' as const });
+      expect(res.status).toBe(201);
+      const [row] = await db.select().from(importJob).where(eq(importJob.id, res.data!.id));
+      expect(row!.config).toEqual({
+        boardId: 'board1',
+        archivedCards: 'skip',
+        unmatchedUserPolicy: 'unassigned',
+      });
+    });
+
+    it('refuses to match a Trello member with someone outside the project', async () => {
+      const { api } = await setupOwnerProject();
+      const outsider = await signUpTestUser();
+      const res = await jobs(api).post({ ...trelloBody, memberMap: { member1: outsider.userId } });
+      expect(res.status).toBe(400);
+    });
+
+    it.each([
+      ['a missing archivedCards', { archivedCards: undefined }],
+      ['an unknown archivedCards', { archivedCards: 'keep' }],
+      ['a blank boardId', { boardId: '  ' }],
+      ['a key that would break the header', { apiKey: 'key", oauth_token="x' }],
+      ['a blank token', { apiToken: ' ' }],
+    ])('rejects %s', async (_case, change) => {
+      const { api } = await setupOwnerProject();
+      const res = await jobs(api).post({ ...trelloBody, ...change } as never);
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a missing or malformed field on the Trello endpoints before calling Trello', async () => {
+      const { api } = await setupOwnerProject();
+      expect((await jobs(api)['trello-test-connection'].post({} as never)).status).toBe(400);
+      expect(
+        (await jobs(api)['trello-test-connection'].post({ apiKey: 'key"', apiToken: 'token' }))
+          .status,
+      ).toBe(400);
+      expect(
+        (await jobs(api)['trello-preview'].post({ apiKey: 'key', apiToken: 'token' } as never))
+          .status,
+      ).toBe(400);
+      expect(
+        (
+          await jobs(api)['trello-preview'].post({
+            apiKey: 'key',
+            apiToken: 'token',
+            boardId: '../x',
+          })
+        ).status,
+      ).toBe(400);
+    });
+
+    it('denies a member whose role lacks the import_export permission', async () => {
+      const { api } = await setupOwnerProject();
+      const member = await addMember(api);
+      const credential = { apiKey: 'trellokey1', apiToken: 'ATTAtoken1' };
+      expect((await jobs(member)['trello-test-connection'].post(credential)).status).toBe(403);
+      expect(
+        (await jobs(member)['trello-preview'].post({ ...credential, boardId: 'board1' })).status,
+      ).toBe(403);
+      expect((await jobs(member).post(trelloBody)).status).toBe(403);
     });
   });
 

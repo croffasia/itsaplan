@@ -3,60 +3,26 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { useCreateImportJob } from '../../services/settings.service';
+import { useImportReviewPreview } from '../../hooks/useImportReviewPreview';
 import {
-  useCreateImportJob,
-  useTestLinearStatesPreview,
-  useTestPlaneStatesPreview,
-} from '../../services/settings.service';
+  importJobFields,
+  type ImportReviewTarget,
+  type TrelloImportChoices,
+} from '../../utils/importJobFields';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import SettingsImportExportStateOverrideRow from './SettingsImportExportStateOverrideRow';
-import type {
-  LinearImportJobFields,
-  LinearTeamOption,
-  PlaneConnectionInput,
-  PlaneImportJobFields,
-  PlaneProjectOption,
-  StateCategory,
-  UnmatchedUserPolicy,
-} from '@/lib/api/endpoints/importExport';
-
-// What is about to be imported: one Plane project, or one Linear team's project
-// (projectId) or its issues with no project (projectId null).
-export type ImportReviewTarget =
-  | { source: 'plane'; connection: PlaneConnectionInput; project: PlaneProjectOption }
-  | { source: 'linear'; apiToken: string; team: LinearTeamOption; projectId: string | null };
-
-function jobFields(target: ImportReviewTarget): PlaneImportJobFields | LinearImportJobFields {
-  if (target.source === 'plane') {
-    return {
-      source: 'plane',
-      baseUrl: target.connection.baseUrl,
-      workspaceSlug: target.connection.workspaceSlug,
-      apiToken: target.connection.apiToken,
-      planeProjectId: target.project.id,
-      planeProjectKey: target.project.identifier,
-    };
-  }
-  const team = { apiToken: target.apiToken, teamId: target.team.id, teamKey: target.team.key };
-  return target.projectId
-    ? { source: 'linear', ...team, projectFilter: 'project', projectId: target.projectId }
-    : { source: 'linear', ...team, projectFilter: 'none' };
-}
+import SettingsImportExportUnmatchedUserPolicy from './SettingsImportExportUnmatchedUserPolicy';
+import SettingsImportExportTrelloOptions from './SettingsImportExportTrelloOptions';
+import type { StateCategory, UnmatchedUserPolicy } from '@/lib/api/endpoints/importExport';
 
 // Shown once a source project is picked, before the job is created: the states
 // the source reports for it, each pre-filled with the category itsaplan would map it
-// to automatically, and the unmatched-assignee/comment-author policy. Only a state
-// row the user actually changes from its default is sent as an override.
+// to automatically, and how people are matched. Only a state row the user actually
+// changes from its default is sent as an override.
 export default function SettingsImportExportMappingReview({
   projectKey,
   target,
@@ -67,30 +33,19 @@ export default function SettingsImportExportMappingReview({
   onImported: () => void;
 }) {
   const t = useTranslations('settings.importExport');
-  const planePreview = useTestPlaneStatesPreview(
-    projectKey,
-    target.source === 'plane'
-      ? {
-          baseUrl: target.connection.baseUrl,
-          workspaceSlug: target.connection.workspaceSlug,
-          apiToken: target.connection.apiToken,
-          planeProjectId: target.project.id,
-        }
-      : null,
-  );
-  const linearPreview = useTestLinearStatesPreview(
-    projectKey,
-    target.source === 'linear' ? { apiToken: target.apiToken, teamId: target.team.id } : null,
-  );
-  const preview = target.source === 'plane' ? planePreview : linearPreview;
+  const preview = useImportReviewPreview(projectKey, target);
   const createJob = useCreateImportJob(projectKey);
   const [overrides, setOverrides] = useState<Record<string, StateCategory>>({});
   const [unmatchedUserPolicy, setUnmatchedUserPolicy] = useState<UnmatchedUserPolicy>('unassigned');
+  const [trello, setTrello] = useState<TrelloImportChoices>({
+    archivedCards: 'archive',
+    memberMap: null,
+  });
 
   async function start() {
     try {
       await createJob.mutateAsync({
-        ...jobFields(target),
+        ...importJobFields(target, trello),
         unmatchedUserPolicy,
         stateOverrides: overrides,
       });
@@ -144,21 +99,19 @@ export default function SettingsImportExportMappingReview({
         </div>
       )}
 
-      <div className="w-64 space-y-1.5">
-        <Label htmlFor="unmatched-user-policy">{t('unmatchedUserPolicyLabel')}</Label>
-        <Select
+      {target.source === 'trello' ? (
+        <SettingsImportExportTrelloOptions
+          members={preview.data?.members ?? []}
+          people={target.people}
+          value={trello}
+          onChange={setTrello}
+        />
+      ) : (
+        <SettingsImportExportUnmatchedUserPolicy
           value={unmatchedUserPolicy}
-          onValueChange={(value) => setUnmatchedUserPolicy(value as UnmatchedUserPolicy)}
-        >
-          <SelectTrigger id="unmatched-user-policy" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="unassigned">{t('unmatchedUserPolicyUnassigned')}</SelectItem>
-            <SelectItem value="skip">{t('unmatchedUserPolicySkip')}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          onChange={setUnmatchedUserPolicy}
+        />
+      )}
 
       <Button disabled={createJob.isPending} onClick={() => void start()}>
         {createJob.isPending ? t('starting') : t('startImport')}

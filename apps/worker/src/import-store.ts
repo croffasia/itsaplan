@@ -9,6 +9,13 @@ import {
   issueActivity,
   issueLink,
   issueAttachment,
+  issueWatcher,
+  issueChecklist,
+  issueChecklistItem,
+  customField,
+  customFieldOption,
+  issueFieldValue,
+  issueFieldOption,
   user,
   projectMember,
   importJob,
@@ -18,7 +25,6 @@ import {
   MB,
   projectStoredBytes,
   lockAttachmentStorage,
-  type ImportSource,
 } from '@repo/db';
 import { and, eq, gt, isNull, isNotNull, sql, type Column } from 'drizzle-orm';
 import { decryptSecret, type EncryptedSecret } from '@repo/crypto';
@@ -28,8 +34,13 @@ import {
   safeAttachmentFilename,
   attachmentObjectKey,
 } from '@repo/storage';
-import type { CanonicalState, CanonicalLabel, CanonicalCycle } from './canonical';
-import type { ImportCredential } from './import-sources';
+import type {
+  CanonicalState,
+  CanonicalLabel,
+  CanonicalCycle,
+  CanonicalCustomField,
+  CanonicalChecklist,
+} from './canonical';
 import { AttachmentRejectedError } from './attachment-download';
 
 export { AttachmentRejectedError };
@@ -48,7 +59,7 @@ const LEASE_SECONDS = 120;
 export interface ClaimedImportJob {
   id: number;
   projectId: number;
-  source: ImportSource;
+  source: string;
   phase: string;
   status: string;
   config: Record<string, unknown>;
@@ -101,7 +112,7 @@ export async function claimDueImportJobs(limit = 1): Promise<ClaimedImportJob[]>
   return rows as unknown as ClaimedImportJob[];
 }
 
-export function decryptImportCredential(job: ClaimedImportJob): ImportCredential {
+export function decryptImportCredential(job: ClaimedImportJob): unknown {
   if (!job.credentialCiphertext || !job.credentialIv || !job.credentialAuthTag) {
     throw new Error(`import job ${job.id} has no stored credential`);
   }
@@ -110,7 +121,7 @@ export function decryptImportCredential(job: ClaimedImportJob): ImportCredential
     iv: job.credentialIv,
     authTag: job.credentialAuthTag,
   };
-  return JSON.parse(decryptSecret(encrypted)) as ImportCredential;
+  return JSON.parse(decryptSecret(encrypted));
 }
 
 // A successful tick clears the claim lease (nextAttemptAt) and lastError, and
@@ -197,7 +208,8 @@ export async function retryImportJobLater(
     .where(eq(importJob.id, jobId));
 }
 
-export type ImportEntityType = 'issue' | 'comment' | 'label' | 'state' | 'cycle' | 'attachment';
+export type ImportEntityType =
+  'issue' | 'comment' | 'label' | 'state' | 'cycle' | 'attachment' | 'checklist' | 'custom_field';
 
 // Bulk id-only snapshot write for the Discover phase: rows start with no local
 // mapping. Idempotent — a source id already recorded (from an earlier attempt
@@ -560,6 +572,7 @@ export interface NewLocalIssue {
   // The source's own ISO timestamps. Absent or unparseable leaves the column default, now().
   createdAt?: string;
   updatedAt?: string;
+  archivedAt?: string | null;
 }
 
 function sourceTimestamp(value: string | undefined): Date | undefined {
@@ -646,6 +659,7 @@ export async function createLocalIssueAndRecord(
         position: Number(posRow!.pos),
         createdAt: sourceTimestamp(input.createdAt),
         updatedAt: sourceTimestamp(input.updatedAt),
+        archivedAt: input.archivedAt ? (sourceTimestamp(input.archivedAt) ?? new Date()) : null,
       })
       .returning({ id: issue.id });
     await upsertImportRecordWith(tx, jobId, 'issue', sourceId, 'issue', row!.id, sourceDisplayId);
@@ -659,6 +673,186 @@ export async function setIssueLabels(issueId: number, labelIds: number[]): Promi
     .insert(issueLabel)
     .values(labelIds.map((labelId) => ({ issueId, labelId })))
     .onConflictDoNothing();
+}
+
+export async function addIssueWatchers(issueId: number, userIds: string[]): Promise<void> {
+  if (userIds.length === 0) return;
+  await db
+    .insert(issueWatcher)
+    .values(userIds.map((userId) => ({ issueId, userId })))
+    .onConflictDoNothing();
+}
+
+// A project-wide field with the same name and type is reused, and a select field
+// gets the options it lacks. One with the same name and another type is not: the
+// imported values would land in columns that field never reads.
+export async function createLocalCustomFieldAndRecord(
+  jobId: number,
+  sourceId: string,
+  projectId: number,
+  field: CanonicalCustomField,
+): Promise<number> {
+  return db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select({ id: customField.id })
+      .from(customField)
+      .where(
+        and(
+          eq(customField.projectId, projectId),
+          isNull(customField.issueTypeId),
+          eq(customField.name, field.name),
+          eq(customField.fieldType, field.fieldType),
+        ),
+      )
+      .orderBy(customField.id)
+      .limit(1);
+    let fieldId = existing?.id;
+    if (fieldId == null) {
+      const [posRow] = await tx
+        .select({ pos: sql<number>`COALESCE(MAX(${customField.position}), -1) + 1` })
+        .from(customField)
+        .where(and(eq(customField.projectId, projectId), isNull(customField.issueTypeId)));
+      const [row] = await tx
+        .insert(customField)
+        .values({
+          projectId,
+          name: field.name,
+          fieldType: field.fieldType,
+          position: Number(posRow!.pos),
+        })
+        .returning({ id: customField.id });
+      fieldId = row!.id;
+    }
+    if (field.options.length > 0) {
+      const [posRow] = await tx
+        .select({ pos: sql<number>`COALESCE(MAX(${customFieldOption.position}), -1) + 1` })
+        .from(customFieldOption)
+        .where(eq(customFieldOption.fieldId, fieldId));
+      await tx
+        .insert(customFieldOption)
+        .values(
+          field.options.map((value, index) => ({
+            fieldId: fieldId!,
+            value,
+            position: Number(posRow!.pos) + index,
+          })),
+        )
+        .onConflictDoNothing();
+    }
+    await upsertImportRecordWith(tx, jobId, 'custom_field', sourceId, 'custom_field', fieldId);
+    return fieldId;
+  });
+}
+
+// Written in the column of the field's own type. A value the issue already holds is
+// kept, the way a reused issue keeps its title.
+export async function setIssueCustomFieldValue(
+  issueId: number,
+  fieldId: number,
+  value: string | number | boolean,
+): Promise<void> {
+  const [field] = await db
+    .select({ fieldType: customField.fieldType })
+    .from(customField)
+    .where(eq(customField.id, fieldId));
+  if (!field) return;
+  if (field.fieldType === 'select') {
+    const [option] = await db
+      .select({ id: customFieldOption.id })
+      .from(customFieldOption)
+      .where(
+        and(eq(customFieldOption.fieldId, fieldId), eq(customFieldOption.value, String(value))),
+      );
+    if (!option) return;
+    const [held] = await db
+      .select({ optionId: issueFieldOption.optionId })
+      .from(issueFieldOption)
+      .where(and(eq(issueFieldOption.issueId, issueId), eq(issueFieldOption.fieldId, fieldId)))
+      .limit(1);
+    if (held) return;
+    await db
+      .insert(issueFieldOption)
+      .values({ issueId, fieldId, optionId: option.id })
+      .onConflictDoNothing();
+    return;
+  }
+  let column: Partial<typeof issueFieldValue.$inferInsert>;
+  switch (field.fieldType) {
+    case 'number':
+      column = { valueNumber: String(value) };
+      break;
+    case 'boolean':
+      column = { valueBool: Boolean(value) };
+      break;
+    case 'datetime': {
+      const at = sourceTimestamp(String(value));
+      if (!at) return;
+      column = { valueDatetime: at };
+      break;
+    }
+    default:
+      column = { valueText: String(value) };
+  }
+  await db
+    .insert(issueFieldValue)
+    .values({ issueId, fieldId, ...column })
+    .onConflictDoNothing();
+}
+
+// A checklist already on the issue with the same title, and not mapped by this job,
+// is reused: a second import of the same source issue lands on the issue the first
+// one created. The checklist, its items and the mapping are written together, so a
+// retry never finds half of one.
+export async function createLocalChecklistAndRecord(
+  jobId: number,
+  issueId: number,
+  checklist: CanonicalChecklist,
+): Promise<number> {
+  return db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select({ id: issueChecklist.id })
+      .from(issueChecklist)
+      .where(
+        and(
+          eq(issueChecklist.issueId, issueId),
+          eq(issueChecklist.title, checklist.title),
+          notMappedByJob(jobId, 'checklist', issueChecklist.id),
+        ),
+      )
+      .orderBy(issueChecklist.id)
+      .limit(1);
+    if (existing) {
+      await upsertImportRecordWith(
+        tx,
+        jobId,
+        'checklist',
+        checklist.sourceId,
+        'checklist',
+        existing.id,
+      );
+      return existing.id;
+    }
+    const [row] = await tx
+      .insert(issueChecklist)
+      .values({
+        issueId,
+        title: checklist.title,
+        position: sql<number>`(select coalesce(max(${issueChecklist.position}), 0) + 1000 from ${issueChecklist} where ${eq(issueChecklist.issueId, issueId)})`,
+      })
+      .returning({ id: issueChecklist.id });
+    if (checklist.items.length > 0) {
+      await tx.insert(issueChecklistItem).values(
+        checklist.items.map((item, index) => ({
+          checklistId: row!.id,
+          content: item.content,
+          done: item.done,
+          position: (index + 1) * 1000,
+        })),
+      );
+    }
+    await upsertImportRecordWith(tx, jobId, 'checklist', checklist.sourceId, 'checklist', row!.id);
+    return row!.id;
+  });
 }
 
 // A comment already on the issue with the same body and createdAt (the two

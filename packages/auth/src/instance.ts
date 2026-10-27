@@ -70,6 +70,9 @@ export interface AuthSettings {
   // pending invite older than this neither gates registration nor can be accepted.
   // 0 disables the limit (invites never expire).
   inviteTtlDays: number;
+  // Let whoever may invite to a team find accounts of the instance by name or address.
+  // Off by default: the search reaches accounts in every workspace.
+  inviteSearch: boolean;
   // The domains a new account's address must be at, lowercase. Empty admits any address.
   // Accounts that already exist keep signing in.
   allowedEmailDomains: string[];
@@ -84,6 +87,7 @@ function defaultAuthSettings(): AuthSettings {
     trustProviderEmails: false,
     personalWorkspaces: true,
     inviteTtlDays: 7,
+    inviteSearch: false,
     allowedEmailDomains: [],
   };
 }

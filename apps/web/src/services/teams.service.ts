@@ -17,6 +17,7 @@ import {
   deleteTeamInvite,
 } from '@/lib/api/endpoints/invites';
 import type { MemberKind, MemberListParams } from '@/lib/api/endpoints/members';
+import { getInviteSearch } from '@/lib/api/endpoints/settings';
 import {
   type TeamProjectListParams,
   type Team,
@@ -256,6 +257,10 @@ export function useTeamInvitesQuery(teamId: number, enabled = true) {
     queryFn: () => listTeamInvites(teamId),
     enabled,
   });
+}
+
+export function useInviteSearchQuery() {
+  return useQuery({ queryKey: qk.inviteSearch, queryFn: () => getInviteSearch() });
 }
 
 // The API answers only a search of at least 2 characters.

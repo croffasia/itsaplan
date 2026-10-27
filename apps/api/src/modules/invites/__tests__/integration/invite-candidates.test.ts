@@ -9,9 +9,11 @@ async function ownTeamId(api: Api): Promise<number> {
   return teams.data!.find((one) => one.role === 'owner')!.id;
 }
 
-async function setupOwner() {
+// The first account is the instance owner, so it may set the search in god mode.
+async function setupOwner(inviteSearch = true) {
   const owner = await signUpTestUser({ name: 'Olivia Owner', email: 'olivia@owner.test' });
   const api = authedApi(owner.cookie);
+  await api.god['auth-settings'].put({ inviteSearch });
   return { api, teamId: await ownTeamId(api) };
 }
 
@@ -37,6 +39,18 @@ const emails = (items: { email: string }[] | null) => (items ?? []).map((one) =>
 describe('invite candidates — GET /teams/:teamId/invites/candidates', () => {
   beforeEach(async () => {
     await resetDb();
+  });
+
+  it('is refused while the instance has the search off, which is the default', async () => {
+    const owner = await setupOwner(false);
+    await signUpTestUser({ name: 'Nina New', email: 'nina@new.test' });
+
+    expect((await search(owner.api, owner.teamId, 'nina')).status).toBe(403);
+    expect((await owner.api.settings['invite-search'].get()).data).toEqual({ enabled: false });
+
+    await owner.api.god['auth-settings'].put({ inviteSearch: true });
+    expect((await owner.api.settings['invite-search'].get()).data).toEqual({ enabled: true });
+    expect(emails((await search(owner.api, owner.teamId, 'nina')).data)).toEqual(['nina@new.test']);
   });
 
   it('matches part of the name or the address, ignoring case', async () => {

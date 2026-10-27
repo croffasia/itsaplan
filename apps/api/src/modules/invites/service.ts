@@ -354,6 +354,9 @@ const INVITE_CANDIDATE_LIMIT = 8;
 
 // The whole instance is searched: an invitee is not in the team yet.
 export async function listInviteCandidates(teamId: number, search: string) {
+  if (!(await getAuthSettings()).inviteSearch) {
+    throw new HttpError(403, 'Searching people is turned off on this instance');
+  }
   const pattern = likePattern(search);
   return db
     .select({ userId: user.id, name: user.name, email: user.email, image: user.image })

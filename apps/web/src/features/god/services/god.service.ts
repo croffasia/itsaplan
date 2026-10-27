@@ -74,7 +74,10 @@ export function useUpdateInstanceAuthSettings() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (patch: InstanceAuthSettingsPatch) => updateInstanceAuthSettings(patch),
-    onSuccess: (data) => qc.setQueryData(qk.instanceAuthSettings, data),
+    onSuccess: (data) => {
+      qc.setQueryData(qk.instanceAuthSettings, data);
+      qc.setQueryData(qk.inviteSearch, { enabled: data.inviteSearch });
+    },
   });
 }
 

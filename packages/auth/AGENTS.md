@@ -33,7 +33,7 @@ workspace settings can change them without a restart. Read them
 through this module — never inline a query on `app_setting` / `app_secret` elsewhere.
 
 - `app_setting` key `auth` → `{ registration, requireEmailVerification, magicLink,
-  emailPassword, trustProviderEmails, personalWorkspaces, inviteTtlDays,
+  emailPassword, trustProviderEmails, personalWorkspaces, inviteTtlDays, inviteSearch,
   allowedEmailDomains }`.
 - `app_secret` keys `auth.email`, `auth.google`, `auth.oidc` and `auth.scim` → the mail
   provider, Google, the OIDC provider and the instance's SCIM token, set in god mode;

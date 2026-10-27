@@ -90,6 +90,15 @@ function GeneralForm({
     }
   }
 
+  async function setInviteSearch(inviteSearch: boolean) {
+    try {
+      await updateAuth.mutateAsync({ inviteSearch });
+      toast.success(t('invitesSaved'));
+    } catch {
+      // The failure already surfaced through the global mutation error toast.
+    }
+  }
+
   async function setAgentSettings(patch: Partial<AgentSettings>) {
     try {
       await updateAgents.mutateAsync(patch);
@@ -112,6 +121,22 @@ function GeneralForm({
                   checked={auth.personalWorkspaces}
                   disabled={updateAuth.isPending}
                   onCheckedChange={(checked) => void setPersonalWorkspaces(checked)}
+                />
+              }
+            />
+          </SettingsCard>
+        </SettingsSection>
+
+        <SettingsSection title={t('invites')}>
+          <SettingsCard>
+            <SettingsRow
+              title={t('inviteSearch')}
+              description={t('inviteSearchHint')}
+              control={
+                <Switch
+                  checked={auth.inviteSearch}
+                  disabled={updateAuth.isPending}
+                  onCheckedChange={(checked) => void setInviteSearch(checked)}
                 />
               }
             />

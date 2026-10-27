@@ -3,11 +3,13 @@ import { requireUser } from '#shared/access';
 import { authContext } from '#shared/auth-context';
 import { errors } from '#shared/responses';
 import { getStorageSettings } from '@repo/db';
+import { getAuthSettings } from '@repo/auth';
 import { getHotkeySettings } from './service';
 import { getAppVersion } from './updates';
 import { getWhatsNew, markWhatsNewSeen } from './whats-new';
 import {
   HotkeyCombosSchema,
+  InviteSearchSchema,
   StorageSettingsSchema,
   VersionResponse,
   WhatsNewSchema,
@@ -39,6 +41,19 @@ export const settingsRoutes = new Elysia({
         'Get the keyboard shortcut overrides that apply to everyone on this instance. Every signed-in user reads them; changing them is god mode.',
     },
   })
+
+  .get(
+    '/settings/invite-search',
+    async () => ({ enabled: (await getAuthSettings()).inviteSearch }),
+    {
+      response: { 200: InviteSearchSchema, ...errors(401) },
+      detail: {
+        summary: 'Get whether people can be searched when inviting',
+        description:
+          'Get whether the invite dialog of a team may look up accounts of this instance by name or address. Changing it is god mode.',
+      },
+    },
+  )
 
   // The running version, shown in the sidebar to everyone. Whether a newer one
   // exists is god mode (/god/updates), and so is the release history. A session is

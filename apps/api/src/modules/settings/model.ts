@@ -8,6 +8,8 @@ export const StorageSettingsSchema = t.Object({
   projectQuotaMb: t.Number(),
 });
 
+export const InviteSearchSchema = t.Object({ enabled: t.Boolean() });
+
 export const ProjectDefaultsSchema = t.Object({
   mcpEnabled: t.Boolean(),
 });

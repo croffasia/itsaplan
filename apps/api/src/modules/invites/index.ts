@@ -399,7 +399,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
         description:
           'Up to 8 accounts of the instance whose name or address contains the search, ' +
           'leaving out the members of the team and the AI agents. Whoever may invite to the ' +
-          'team may search.',
+          'team may search, while the instance owner has the search turned on.',
       },
     },
   )

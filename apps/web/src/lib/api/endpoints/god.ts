@@ -25,6 +25,7 @@ export interface InstanceAuthSettings {
   personalWorkspaces: boolean;
   // Days an invite link stays valid; 0 means invites never expire.
   inviteTtlDays: number;
+  inviteSearch: boolean;
   // The domains a new account's address must be at; empty admits any address.
   allowedEmailDomains: string[];
   hasEmailProvider: boolean;
@@ -41,6 +42,7 @@ export interface InstanceAuthSettingsPatch {
   trustProviderEmails?: boolean;
   personalWorkspaces?: boolean;
   inviteTtlDays?: number;
+  inviteSearch?: boolean;
   allowedEmailDomains?: string[];
 }
 

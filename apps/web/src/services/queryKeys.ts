@@ -169,6 +169,7 @@ export const qk = {
   anyTeamInvites: ['teamInvites'] as const,
   inviteCandidates: (teamId: number, search: string) =>
     ['teamInvites', teamId, 'candidates', search] as const,
+  inviteSearch: ['inviteSearch'] as const,
   // The roles a team offers, which is what every project of it assigns from. The
   // permission catalog is app-static, so it is scoped to no team.
   teamRoles: (teamId: number, params: unknown) => ['teamRoles', teamId, params] as const,

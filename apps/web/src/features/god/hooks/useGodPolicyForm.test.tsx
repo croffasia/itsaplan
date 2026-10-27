@@ -35,6 +35,7 @@ const settings = {
   trustProviderEmails: false,
   personalWorkspaces: true,
   inviteTtlDays: 7,
+  inviteSearch: false,
   allowedEmailDomains: ['company.com'],
   hasEmailProvider: true,
   hasSsoProvider: true,

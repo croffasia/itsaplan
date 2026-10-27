@@ -84,6 +84,7 @@ const input: PulseInput = {
   day: '2026-07-27',
   installedDay: '2026-07-10',
   version: '0.5.0',
+  build: 'community',
   bunVersion: '1.3.14',
   docker: true,
   platform: 'linux/arm64',

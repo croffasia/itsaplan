@@ -31,6 +31,9 @@ RUN bun install --frozen-lockfile --filter worker $INSTALL_FLAGS
 # does not clobber the copied dependencies.
 FROM base AS release
 ENV NODE_ENV=production
+# The build telemetry reports. An extending build passes its own name.
+ARG BUILD_NAME=community
+ENV BUILD_NAME=$BUILD_NAME
 COPY --from=install /app ./
 COPY . .
 

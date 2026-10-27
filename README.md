@@ -110,26 +110,30 @@ release.
 
 ## Pro edition
 
-Buying Pro supports It's a Plan. The license pays for the work on Community, the free edition:
-new features, fixes, and releases for everyone who self-hosts. In return, your instance gets the
-Pro features below, with full control over AI agents and what they spend. One license covers one
-instance, with no limit on seats or workspaces.
+Buying Pro funds the work on Community, the free edition. Pro has everything in Community, plus
+the features below. One license covers one domain, with no limit on seats or workspaces.
 
-| | Community | Pro |
-| --- | --- | --- |
-| Workspaces | One per person | Any number |
-| SSO and SCIM | One OIDC provider and one SCIM for the instance | SAML or OIDC and SCIM per workspace |
-| Audit log | — | Every action, with changes before and after |
-| Workspace dashboard | — | Issues, agent runs, schedules, and logged time for every team |
-| Agent schedules | Timer or state change | Plus issue events, filters, and run limits |
-| Agent analytics | Tokens and cost | Plus cost by person and trigger, run time, and tool calls |
-| AI budgets | — | Limits for the workspace, teams, projects, and each person |
+| Features | Community | Pro |
+| --- | :---: | :---: |
+| SSO and SCIM for the instance | ✓ | ✓ |
+| Scheduled agent runs | ✓ | ✓ |
+| Agent tokens and cost | ✓ | ✓ |
+| Workspaces per person | 1 | Unlimited |
+| SSO and SCIM per workspace | — | ✓ |
+| Require SSO | — | ✓ |
+| Email domains per workspace | — | ✓ |
+| Audit log | — | ✓ |
+| Workspace dashboard | — | ✓ |
+| Schedules on issue events | — | ✓ |
+| Schedule filters and run limits | — | ✓ |
+| Agent analytics by person and trigger | — | ✓ |
+| AI budgets | — | ✓ |
+| Help desk with public forms | — | ✓ |
 
-Deploy Pro with [`docker-compose.pro.yml`](docs/self-hosting.md),
-[`docker-compose.coolify-pro.yml`](docs/coolify.md), or [`values-pro.yaml`](docs/helm.md), and
-enter the license key in god mode, under **License**. Without a key, or after the license ends,
-the Pro images run as Community. Both editions use the same database, so an instance moves
-between them with its data.
+To run Pro, deploy with [`docker-compose.pro.yml`](docs/self-hosting.md),
+[`docker-compose.coolify-pro.yml`](docs/coolify.md), or [`values-pro.yaml`](docs/helm.md), then
+enter the key in god mode under **License**. Without a valid key, Pro runs as Community. Your
+data stays when you switch between editions.
 
 **[Pricing and license terms →](https://itsaplan.dev/pro)**
 

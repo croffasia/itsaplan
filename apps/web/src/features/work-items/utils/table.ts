@@ -17,17 +17,15 @@ import {
 } from '@/utils/viewSettings';
 
 // The grid columns after the (always-present) title cell. 'id' is not here — the
-// identifier renders inside the title cell. The header label of a column is a
-// message under `workItems.columns`; assignee and delegate head their avatars
-// with an icon and have none.
+// identifier renders inside the title cell.
 export type TableColumn = Exclude<DisplayProperty, 'id'>;
 export const COLUMN_META: Record<TableColumn, { width: string }> = {
   status: { width: '130px' },
   statusAge: { width: '88px' },
   priority: { width: '88px' },
   type: { width: '120px' },
-  assignee: { width: '56px' },
-  delegate: { width: '56px' },
+  assignee: { width: '88px' },
+  delegate: { width: '88px' },
   initiative: { width: 'minmax(140px,220px)' },
   cycle: { width: 'minmax(120px,180px)' },
   labels: { width: 'minmax(120px,220px)' },

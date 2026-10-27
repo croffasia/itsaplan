@@ -81,7 +81,7 @@ export function TableBuiltinCell({
       const assignee =
         issue.assigneeUserId != null ? maps.assigneeById.get(issue.assigneeUserId) : undefined;
       return (
-        <div className="flex justify-end">
+        <div className="flex">
           {assignee ? <AssigneeAvatar name={assignee.name} image={assignee.image} /> : DASH}
         </div>
       );
@@ -90,7 +90,7 @@ export function TableBuiltinCell({
       const delegate =
         issue.delegateUserId != null ? maps.assigneeById.get(issue.delegateUserId) : undefined;
       return (
-        <div className="flex justify-end">
+        <div className="flex">
           {delegate ? <DelegateAvatar name={delegate.name} image={delegate.image} /> : DASH}
         </div>
       );

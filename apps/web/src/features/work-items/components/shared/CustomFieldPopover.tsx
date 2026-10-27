@@ -6,8 +6,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import IssueCustomFieldControl from '@/features/issue/components/fields/IssueCustomFieldControl';
 
 // The editor of a custom field that the issue panel edits in place (a url, a
-// number), opened from a timeline cell. It closes once a value is saved.
-export function TimelineFieldPopover({
+// number, a text), opened from a cell. It closes once a value is saved.
+export function CustomFieldPopover({
   trigger,
   field,
   entry,

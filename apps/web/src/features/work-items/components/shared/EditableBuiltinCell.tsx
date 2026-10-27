@@ -1,6 +1,6 @@
+import type { ReactNode } from 'react';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue, IssuePatch } from '@/lib/api/endpoints/issues';
-import { type Maps } from '@/utils/project';
 import { parseDate } from '@/utils/dates';
 import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
 import DatePill from '@/components/common/fields/DatePill';
@@ -12,39 +12,40 @@ import CycleSelect from '@/features/issue/components/fields/CycleSelect';
 import DelegateSelect from '@/features/issue/components/fields/DelegateSelect';
 import InitiativeSelect from '@/features/issue/components/fields/InitiativeSelect';
 import { type TableColumn } from '../../utils/table';
-import { PersonValue } from '../shared/PersonValue';
-import { TableBuiltinCell } from '../table/TableBuiltinCell';
-import { TimelineCellButton } from './TimelineCellButton';
+import { CellButton } from './CellButton';
+import { CellEditor } from './CellEditor';
 
-// One built-in property cell on a timeline row. It reads like a Table cell, except
-// that the assignee and the delegate are named; when the issue can be edited, a
-// click opens the picker the issue panel uses for that field. The estimates and the
-// times are shown only.
-export function TimelineBuiltinCell({
+// One built-in property cell showing `children` as its value. When the issue can be
+// edited, a click opens the picker the issue panel uses for that field. The
+// estimates and the times are shown only.
+export function EditableBuiltinCell({
   column,
   issue,
   project,
-  maps,
   readOnly,
   onPatch,
+  children,
 }: {
   column: TableColumn;
   issue: Issue;
   project: ProjectDetail;
-  maps: Maps;
   readOnly: boolean;
   onPatch: (patch: IssuePatch) => void;
+  children: ReactNode;
 }) {
-  const isPerson = column === 'assignee' || column === 'delegate';
-  const personId = column === 'assignee' ? issue.assigneeUserId : issue.delegateUserId;
-  const value = isPerson ? (
-    <PersonValue person={personId != null ? maps.assigneeById.get(personId) : undefined} />
-  ) : (
-    <TableBuiltinCell column={column} issue={issue} maps={maps} />
-  );
-  if (readOnly) return value;
-  const trigger = <TimelineCellButton>{value}</TimelineCellButton>;
+  const editor = readOnly
+    ? null
+    : builtinEditor(column, issue, project, onPatch, <CellButton>{children}</CellButton>);
+  return editor ? <CellEditor>{editor}</CellEditor> : children;
+}
 
+function builtinEditor(
+  column: TableColumn,
+  issue: Issue,
+  project: ProjectDetail,
+  onPatch: (patch: IssuePatch) => void,
+  trigger: ReactNode,
+): ReactNode {
   switch (column) {
     case 'status':
       return (
@@ -147,6 +148,6 @@ export function TimelineBuiltinCell({
       );
     }
     default:
-      return value;
+      return null;
   }
 }

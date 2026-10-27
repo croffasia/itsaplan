@@ -1,5 +1,6 @@
 import { CircleDashed } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import type { ReactNode } from 'react';
 import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { Issue, IssueFieldValueInput } from '@/lib/api/endpoints/issues';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
@@ -11,13 +12,15 @@ import DateTimePill from '@/components/common/fields/DateTimePill';
 import PopoverPick from '@/components/common/fields/PopoverPick';
 import MemberSelect from '@/features/issue/components/fields/MemberSelect';
 import { TableCustomCell } from '../table/TableCustomCell';
-import { TimelineCellButton } from './TimelineCellButton';
-import { TimelineFieldPopover } from './TimelineFieldPopover';
+import { CellButton } from './CellButton';
+import { CellEditor } from './CellEditor';
+import { CustomFieldPopover } from './CustomFieldPopover';
 
-// One custom field cell on a timeline row. It reads like a Table cell; when the
-// issue can be edited and its type holds the field, a click opens the field's
-// editor: the issue panel's own, or for a select the picker the other fields use.
-export function TimelineCustomCell({
+// One custom field cell. It reads like a Table cell; when the issue can be edited
+// and its type holds the field, a click opens the field's editor: the issue
+// panel's own, or for a select the picker the other fields use. A markdown field
+// is shown only.
+export function EditableCustomCell({
   field,
   issue,
   project,
@@ -32,13 +35,43 @@ export function TimelineCustomCell({
   readOnly: boolean;
   onChange: (value: IssueFieldValueInput) => void;
 }) {
-  const t = useTranslations('issue.customFields');
   const value = <TableCustomCell field={field} issue={issue} maps={maps} />;
-  if (readOnly || (field.issueTypeId != null && field.issueTypeId !== issue.typeId)) return value;
+  if (
+    readOnly ||
+    field.fieldType === 'markdown' ||
+    (field.issueTypeId != null && field.issueTypeId !== issue.typeId)
+  ) {
+    return value;
+  }
+  return (
+    <CellEditor>
+      <CustomFieldEditor
+        field={field}
+        issue={issue}
+        project={project}
+        trigger={<CellButton>{value}</CellButton>}
+        onChange={onChange}
+      />
+    </CellEditor>
+  );
+}
 
+function CustomFieldEditor({
+  field,
+  issue,
+  project,
+  trigger,
+  onChange,
+}: {
+  field: CustomField;
+  issue: Issue;
+  project: ProjectDetail;
+  trigger: ReactNode;
+  onChange: (value: IssueFieldValueInput) => void;
+}) {
+  const t = useTranslations('issue.customFields');
   const entry = issue.fieldValues.find((v) => v.fieldId === field.id);
   const raw = entry?.value ?? null;
-  const trigger = <TimelineCellButton>{value}</TimelineCellButton>;
 
   switch (field.fieldType) {
     case 'boolean':
@@ -123,12 +156,12 @@ export function TimelineCustomCell({
       // A url cell shows its address as text: the link to open it is in the
       // editor, since a link cannot sit inside the button.
       return (
-        <TimelineFieldPopover
+        <CustomFieldPopover
           trigger={
             field.fieldType === 'url' && typeof raw === 'string' && raw !== '' ? (
-              <TimelineCellButton>
+              <CellButton>
                 <span className="truncate text-xs text-muted-foreground">{raw}</span>
-              </TimelineCellButton>
+              </CellButton>
             ) : (
               trigger
             )

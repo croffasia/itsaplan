@@ -8,6 +8,7 @@ import {
   sortIssues,
   type WorkItemsViewProps,
 } from '@/utils/project';
+import { usePermissions } from '@/hooks/usePermissions';
 import { usePersistedSet } from '@/hooks/usePersistedSet';
 import { useTableColumnWidths } from '../../hooks/useTableColumnWidths';
 import { useIssueReorder } from '../../hooks/useIssueReorder';
@@ -42,6 +43,8 @@ export default function TableView({
   widthScope,
 }: TableViewProps) {
   const groupLabels = useGroupLabels();
+  const { can } = usePermissions();
+  const cellsReadOnly = !!readOnly || !can('work_items', 'edit');
   const reorder = useIssueReorder({ project, sort: settings.sort, readOnly });
   const collapsed = usePersistedSet(
     collapsedKey(project.project.id, settings.group, settings.subgroup),
@@ -128,6 +131,7 @@ export default function TableView({
             indented={subgrouped}
             gridTemplate={gridTemplate}
             dropDisabled={!reorder.manualOrder && grouped}
+            readOnly={cellsReadOnly}
             onDrop={(draggedId) =>
               reorder.moveIssue(draggedId, item.assign, item.bucket, item.index)
             }

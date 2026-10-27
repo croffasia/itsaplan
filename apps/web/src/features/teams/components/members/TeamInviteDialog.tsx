@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCreateTeamInvite } from '@/services/teams.service';
+import TeamInviteSuggestions from './TeamInviteSuggestions';
 
 // The message for each refusal the API can answer with; any other error falls back
 // to 'refused'.
@@ -98,6 +99,16 @@ export default function TeamInviteDialog({
               disabled={createInvite.isPending}
             />
             {refusal && <p className="text-xs text-destructive">{refusal}</p>}
+            {!createInvite.isPending && (
+              <TeamInviteSuggestions
+                teamId={teamId}
+                address={address}
+                onPick={(picked) => {
+                  setEmail(picked);
+                  setRefusal(null);
+                }}
+              />
+            )}
           </div>
 
           <div className="space-y-2">

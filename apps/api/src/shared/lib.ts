@@ -51,6 +51,12 @@ export function escapeHtml(s: string): string {
     .replace(/'/g, '&#39;');
 }
 
+// The ILIKE pattern for the term. The wildcards a member types are escaped, so a query
+// with a % in it looks for that character.
+export function likePattern(term: string): string {
+  return `%${term.replace(/([\\%_])/g, '\\$1')}%`;
+}
+
 // The Postgres SQLSTATE of a driver error. Drizzle wraps the driver error in a
 // DrizzleQueryError with the original as `.cause`, so the code may be one level
 // down; unwrap the cause chain to find it.

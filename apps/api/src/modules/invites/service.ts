@@ -1,7 +1,30 @@
-import { db, teamInvite, teamMember, projectMember, teamRole, team, project, user } from '@repo/db';
-import { and, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
+import {
+  db,
+  aiAgent,
+  teamInvite,
+  teamMember,
+  projectMember,
+  teamRole,
+  team,
+  project,
+  user,
+} from '@repo/db';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  isNull,
+  lt,
+  notExists,
+  or,
+  sql,
+} from 'drizzle-orm';
 import { getAuthSettings, inviteValidSince } from '@repo/auth';
-import { HttpError, iso, pgErrorCode } from '#shared/lib';
+import { HttpError, iso, likePattern, pgErrorCode } from '#shared/lib';
 import { getProjectAccess, getTeamAccess } from '#shared/access';
 import { teamRef } from '#modules/teams/ref';
 import { getMembership, type MemberRole } from '#modules/members/service';
@@ -325,6 +348,35 @@ export async function listTeamInvites(teamId: number, issuerId: string): Promise
     .where(eq(teamInvite.teamId, teamId))
     .orderBy(desc(teamInvite.createdAt));
   return toListed(rows, issuerId);
+}
+
+const INVITE_CANDIDATE_LIMIT = 8;
+
+// The whole instance is searched: an invitee is not in the team yet.
+export async function listInviteCandidates(teamId: number, search: string) {
+  const pattern = likePattern(search);
+  return db
+    .select({ userId: user.id, name: user.name, email: user.email, image: user.image })
+    .from(user)
+    .where(
+      and(
+        or(ilike(user.name, pattern), ilike(user.email, pattern)),
+        notExists(
+          db
+            .select({ one: sql`1` })
+            .from(teamMember)
+            .where(and(eq(teamMember.teamId, teamId), eq(teamMember.userId, user.id))),
+        ),
+        notExists(
+          db
+            .select({ one: sql`1` })
+            .from(aiAgent)
+            .where(eq(aiAgent.userId, user.id)),
+        ),
+      ),
+    )
+    .orderBy(asc(user.name), asc(user.email))
+    .limit(INVITE_CANDIDATE_LIMIT);
 }
 
 // Removes an invite of the given project. Returns true when one existed. Used to

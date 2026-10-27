@@ -28,6 +28,8 @@ import {
   InviteViewResponse,
   createInviteBody,
   createTeamInviteBody,
+  inviteCandidatesQuery,
+  InviteCandidateListResponse,
   inviteParams,
   teamInviteParams,
   tokenParams,
@@ -38,6 +40,7 @@ import {
   mayGrantInviteRanks,
   listProjectInvites,
   listTeamInvites,
+  listInviteCandidates,
   type ListedInvite,
   deleteProjectInvite,
   deleteTeamInvite,
@@ -379,6 +382,24 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
         description:
           'Every invite into the team, including the ones that also name one of its projects. ' +
           'The token is null on an invite granting a rank only a team owner may grant.',
+      },
+    },
+  )
+
+  .get(
+    '/teams/:teamId/invites/candidates',
+    ({ membership, query }) => listInviteCandidates(membership.teamId, query.search),
+    {
+      teamManager: true,
+      params: teamParams,
+      query: inviteCandidatesQuery,
+      response: { 200: InviteCandidateListResponse, ...commonErrors },
+      detail: {
+        summary: 'Search people to invite to a team',
+        description:
+          'Up to 8 accounts of the instance whose name or address contains the search, ' +
+          'leaving out the members of the team and the AI agents. Whoever may invite to the ' +
+          'team may search.',
       },
     },
   )

@@ -1,6 +1,7 @@
 import { Memory } from '@mastra/memory';
 import { db } from '@repo/db';
 import { sql } from 'drizzle-orm';
+import { likePattern } from '#shared/lib';
 import { appendTextPart, toolArgsText, toolText } from '../../chat-parts';
 import { deleteContextUsage } from '../../chat-usage';
 import {
@@ -10,7 +11,6 @@ import {
   FAVORITES_LIMIT,
 } from '../../chat-favorites';
 import {
-  likePattern,
   searchTerm,
   snippetOf,
   summarize,

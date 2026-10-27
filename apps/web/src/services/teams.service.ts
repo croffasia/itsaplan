@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl';
 import {
   type InviteTeamRole,
   listTeamInvites,
+  listInviteCandidates,
   createTeamInvite,
   renewTeamInvite,
   sendTeamInviteEmail,
@@ -254,6 +255,16 @@ export function useTeamInvitesQuery(teamId: number, enabled = true) {
     queryKey: qk.teamInvites(teamId),
     queryFn: () => listTeamInvites(teamId),
     enabled,
+  });
+}
+
+// The API answers only a search of at least 2 characters.
+export function useInviteCandidatesQuery(teamId: number, search: string) {
+  return useQuery({
+    queryKey: qk.inviteCandidates(teamId, search),
+    queryFn: () => listInviteCandidates(teamId, search),
+    enabled: search.length >= 2,
+    placeholderData: keepPreviousData,
   });
 }
 

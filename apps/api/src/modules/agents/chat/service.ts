@@ -1,11 +1,10 @@
 import { db, agentChatEvent, agentChatFavorite, agentChatMessage, agentChatThread } from '@repo/db';
 import { and, asc, desc, eq, gt, inArray, notExists, sql } from 'drizzle-orm';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { intEnv, iso } from '#shared/lib';
+import { intEnv, iso, likePattern } from '#shared/lib';
 import { deleteContextUsage, recordContextUsage, type ContextUsage } from '../chat-usage';
 import { deleteFavorite, FAVORITES_LIMIT } from '../chat-favorites';
 import {
-  likePattern,
   searchTerm,
   snippetOf,
   summarize,

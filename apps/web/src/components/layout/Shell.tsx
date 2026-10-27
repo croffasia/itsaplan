@@ -70,6 +70,7 @@ export default function Shell({
     route,
     unreadable ? t('project') : projectName,
     unreadable || viewsFailed ? [] : views,
+    project,
   );
   const teamId = project?.project.teamId;
   const issueRefs = useMemo(

@@ -1,8 +1,10 @@
 import { useTranslations } from 'next-intl';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { View } from '@/lib/api/endpoints/views';
-import { AI_AGENTS_SECTION, SETTINGS_SECTIONS } from '@/utils/settingsSections';
+import { AI_AGENTS_SECTION, AI_TEAM_SECTIONS } from '@/utils/settingsSections';
 import type { ShellRoute } from '@/hooks/useShellRoute';
 import { useSettingsSectionText } from '@/hooks/useSectionLabels';
+import { useSettingsSections } from '@/hooks/useSettingsNavGroups';
 import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const SECTION_LABELS = {
@@ -21,12 +23,17 @@ const SECTION_LABELS = {
 // The tab title of a project route: the project and the section the route opens. A
 // detail page names its entity over it, so this is also what the tab shows while that
 // entity loads or when it cannot be read.
-export function useShellTitle(route: ShellRoute, projectName: string, views: View[]) {
+export function useShellTitle(
+  route: ShellRoute,
+  projectName: string,
+  views: View[],
+  project: ProjectDetail | null,
+) {
   const t = useTranslations('nav');
   const tScreens = useTranslations('meta.screens');
   const sectionText = useSettingsSectionText();
-  const known = (slug: string | null): slug is string =>
-    SETTINGS_SECTIONS.some((s) => s.slug === slug);
+  const sections = [...useSettingsSections(project), ...AI_TEAM_SECTIONS];
+  const known = (slug: string | null): slug is string => sections.some((s) => s.slug === slug);
 
   function sectionParts(): string[] {
     const { sub, section, aiTeamSection } = route;

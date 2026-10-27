@@ -34,6 +34,8 @@ import {
   updateInstanceProjectDefaults,
   getInstanceAgentSettings,
   updateInstanceAgentSettings,
+  getInstanceEmbedSites,
+  updateInstanceEmbedSites,
   getInstanceStorageSettings,
   updateInstanceStorageSettings,
   listInstanceUsers,
@@ -186,6 +188,22 @@ export function useUpdateInstanceAgentSettings() {
   return useMutation({
     mutationFn: (body: Partial<AgentSettings>) => updateInstanceAgentSettings(body),
     onSuccess: (data) => qc.setQueryData(qk.instanceAgentSettings, data),
+  });
+}
+
+// The sites that may frame the public pages.
+export function useInstanceEmbedSitesQuery() {
+  return useQuery({
+    queryKey: qk.instanceEmbedSites,
+    queryFn: () => getInstanceEmbedSites(),
+  });
+}
+
+export function useUpdateInstanceEmbedSites() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (origins: string[]) => updateInstanceEmbedSites(origins),
+    onSuccess: (data) => qc.setQueryData(qk.instanceEmbedSites, data),
   });
 }
 

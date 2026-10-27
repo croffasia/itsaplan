@@ -15,15 +15,17 @@ import {
 import { Switch } from '@/components/ui/switch';
 import GodSectionPage from './components/GodSectionPage';
 import GodSettingsGate from './components/GodSettingsGate';
+import GodEmbedSitesSection from './components/general/GodEmbedSitesSection';
 import {
   useInstanceAgentSettingsQuery,
   useInstanceAuthSettingsQuery,
+  useInstanceEmbedSitesQuery,
   useInstanceProjectDefaultsQuery,
   useUpdateInstanceAgentSettings,
   useUpdateInstanceAuthSettings,
   useUpdateInstanceProjectDefaults,
 } from './services/god.service';
-import type { AgentSettings, InstanceAuthSettings } from '@/lib/api/endpoints/god';
+import type { AgentSettings, EmbedSites, InstanceAuthSettings } from '@/lib/api/endpoints/god';
 import type { ProjectDefaults } from '@/lib/api/endpoints/projects';
 
 // The trace windows offered; a window stored through the API outside them is offered too.
@@ -35,11 +37,12 @@ export default function GodGeneralPage() {
   const defaults = useInstanceProjectDefaultsQuery().data;
   const auth = useInstanceAuthSettingsQuery().data;
   const agents = useInstanceAgentSettingsQuery().data;
+  const embed = useInstanceEmbedSitesQuery().data;
 
   return (
     <GodSettingsGate
       slug="general"
-      data={defaults && auth && agents ? { defaults, auth, agents } : undefined}
+      data={defaults && auth && agents && embed ? { defaults, auth, agents, embed } : undefined}
     >
       {(data) => <GeneralForm {...data} />}
     </GodSettingsGate>
@@ -52,10 +55,12 @@ function GeneralForm({
   defaults,
   auth,
   agents,
+  embed,
 }: {
   defaults: ProjectDefaults;
   auth: InstanceAuthSettings;
   agents: AgentSettings;
+  embed: EmbedSites;
 }) {
   const t = useTranslations('god.general');
   const update = useUpdateInstanceProjectDefaults();
@@ -182,6 +187,8 @@ function GeneralForm({
             />
           </SettingsCard>
         </SettingsSection>
+
+        <GodEmbedSitesSection sites={embed} />
       </div>
     </GodSectionPage>
   );

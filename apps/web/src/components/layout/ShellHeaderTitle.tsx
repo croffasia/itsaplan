@@ -1,8 +1,9 @@
 import { useTranslations } from 'next-intl';
-import { SETTINGS_SECTIONS } from '@/utils/settingsSections';
+import { AI_TEAM_SECTIONS } from '@/utils/settingsSections';
 import type { IssueRef } from '@/lib/api/endpoints/issues';
 import type { ShellRoute } from '@/hooks/useShellRoute';
 import { useSettingsSectionText } from '@/hooks/useSectionLabels';
+import { useSettingsSections } from '@/hooks/useSettingsNavGroups';
 import CycleBreadcrumb from '@/components/layout/CycleBreadcrumb';
 import InitiativeBreadcrumb from '@/components/layout/InitiativeBreadcrumb';
 import IssueBreadcrumb from '@/components/layout/IssueBreadcrumb';
@@ -22,12 +23,13 @@ export default function ShellHeaderTitle({
 }) {
   const t = useTranslations('nav');
   const sectionText = useSettingsSectionText();
+  const sections = [...useSettingsSections(), ...AI_TEAM_SECTIONS];
 
   // The label on the pages that are not an issue, initiative or cycle detail. An
   // /agents/:section route names its section.
   function pageLabel(): string {
     const { sub, section, aiTeamSection } = route;
-    const known = (slug: string) => SETTINGS_SECTIONS.some((s) => s.slug === slug);
+    const known = (slug: string) => sections.some((s) => s.slug === slug);
     if (section) return known(section) ? sectionText(section).label : t('projectSettings');
     if (sub === 'members') return t('members');
     if (sub === 'dashboards') return t('dashboards');

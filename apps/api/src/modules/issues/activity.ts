@@ -326,9 +326,12 @@ export async function createComment(input: {
   body: string;
   // The comment being replied to. It has to be a comment on the same issue.
   replyToId?: number | null;
+  // The name of an author without an account, such as someone writing in through a
+  // build's public page. Their mentions reach nobody: they are not in the team.
+  authorName?: string;
 }): Promise<FeedItemRow> {
   const actorUserId = input.actorUserId ?? null;
-  const actorName = await userName(actorUserId);
+  const actorName = input.authorName ?? (await userName(actorUserId));
   const replyToId = input.replyToId ?? null;
   if (replyToId != null) {
     const [parent] = await db
@@ -361,7 +364,7 @@ export async function createComment(input: {
     // Resolved once: the agent halves start runs, the member half is notified.
     const mentioned = await resolveMentionHandles(
       projectId,
-      parseMentionHandles(comment.body ?? ''),
+      input.authorName === undefined ? parseMentionHandles(comment.body ?? '') : [],
     );
     await enqueueMentionRuns(projectId, comment, mentioned.agentUserIds);
     await notifyComment(projectId, comment, mentioned);

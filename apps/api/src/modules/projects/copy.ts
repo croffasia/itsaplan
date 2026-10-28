@@ -296,6 +296,7 @@ export async function copyProject(
       teamName: ownerTeam.name,
       teamSlug: ownerTeam.slug,
       teamMcpEnabled: ownerTeam.mcpEnabled,
+      workspaceId: ownerTeam.workspaceId,
     });
     await joinTeamAsCreator(tx, ownerTeam.id, ownerId);
     await tx.insert(projectMember).values({ projectId: proj.id, userId: ownerId, role: 'owner' });

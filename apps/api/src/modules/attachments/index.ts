@@ -1,8 +1,8 @@
 import { Elysia, t } from 'elysia';
 import { noContent } from '#shared/http';
 import { authContext } from '#shared/auth-context';
-import { assertMcpAllowed, entityGuard } from '#shared/guards';
-import { assertPermission, assertProjectFeature } from '#shared/access';
+import { assertMcpAllowed, assertProjectReachable, entityGuard } from '#shared/guards';
+import { assertPermission } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { pinnedFetch } from '#shared/net';
 import { mcpImageTool, mcpTool } from '#mcp/generate';
@@ -96,8 +96,7 @@ export const attachmentRoutes = new Elysia({
         const projectId = await getInitiativeAttachmentProjectId(id);
         if (!row || projectId == null) throw new HttpError(404, 'Attachment not found');
         await assertPermission(projectId, user, 'initiatives', 'read');
-        await assertProjectFeature(projectId, 'initiatives');
-        await assertMcpAllowed(projectId, request.headers);
+        await assertProjectReachable(projectId, request, 'initiatives');
         const dto = { ...attachmentDto(row), url: `/initiative-attachments/${id}/raw` };
         return { viewed: { row, dto } };
       },

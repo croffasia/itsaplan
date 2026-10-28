@@ -37,7 +37,7 @@ import { PROJECT_KEY_PATTERN } from './key';
 import type { Permissions } from '#shared/permissions';
 import { getProjectSetting, setProjectSetting } from '#shared/project-settings';
 import { PROJECT_FEATURES, featureLabel, type ProjectFeature } from '#shared/features';
-import { getTeamLimits } from '#shared/limits';
+import { getLimits, getTeamLimits } from '#shared/limits';
 import { projectAccess, type AccessVia } from '#shared/workspace-roles';
 import { toMemberContext, type MemberRole } from '#modules/members/service';
 import { workspaceGrants } from '#modules/workspaces/service';
@@ -120,6 +120,7 @@ type ProjectWithTeam = typeof project.$inferSelect & {
   teamName: string;
   teamSlug: string | null;
   teamMcpEnabled: boolean;
+  workspaceId: number;
 };
 
 const projectWithTeam = {
@@ -127,13 +128,14 @@ const projectWithTeam = {
   teamName: team.name,
   teamSlug: team.slug,
   teamMcpEnabled: team.mcpEnabled,
+  workspaceId: team.workspaceId,
 };
 
 // A blocked section reads as off whatever the project has stored, so masking here is
 // what turns a feature off everywhere: the web app reads the flags off this DTO, and
 // the route guards read them off the project the guard resolved.
 export async function mapProject(row: ProjectWithTeam): Promise<ProjectRow> {
-  const { blockedFeatures } = await getTeamLimits(row.teamId);
+  const { blockedFeatures } = await getLimits(row.workspaceId);
   const on = (feature: ProjectFeature, stored: boolean) =>
     stored && !blockedFeatures.includes(feature);
   return {
@@ -407,6 +409,7 @@ export async function targetTeam(userId: string, teamId: number): Promise<Target
       slug: team.slug,
       mcpEnabled: team.mcpEnabled,
       defaultAgentIds: team.defaultAgentIds,
+      workspaceId: team.workspaceId,
     })
     .from(team)
     .where(eq(team.id, teamId));
@@ -433,6 +436,7 @@ export interface TargetTeam {
   slug: string | null;
   mcpEnabled: boolean;
   defaultAgentIds: number[];
+  workspaceId: number;
 }
 
 // Every new project starts with one column per state type, so it's usable (has
@@ -587,6 +591,7 @@ export async function createProject(
       teamName: ownerTeam.name,
       teamSlug: ownerTeam.slug,
       teamMcpEnabled: ownerTeam.mcpEnabled,
+      workspaceId: ownerTeam.workspaceId,
     });
   });
 }

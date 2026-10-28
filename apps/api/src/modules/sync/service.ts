@@ -1,9 +1,9 @@
 import { db, project, projectMember, teamRole, revision } from '@repo/db';
 import { and, eq, inArray, isNotNull, or, sql } from 'drizzle-orm';
 import { toMemberContext, type MemberRole } from '#modules/members/service';
-import { workspaceGrants } from '#modules/workspaces/service';
+import { reachedProjectIds } from '#shared/access';
 import { hasPermission, type PermissionResource } from '#shared/permissions';
-import { projectAccess } from '#shared/workspace-roles';
+import { projectAccess, type WorkspaceGrant } from '#shared/workspace-roles';
 
 // The revision engine's read side. The counters themselves are written by the
 // triggers in migration 0070 — no application code bumps them, so a write moves
@@ -53,9 +53,9 @@ function memberOrGranted(grantedTeams: number[]) {
 export async function readRevs(
   wanted: ScopeRead[],
   userId: string,
+  grants: Map<number, WorkspaceGrant>,
 ): Promise<Record<string, string>> {
   if (wanted.length === 0) return {};
-  const grants = await workspaceGrants(userId);
   const grantedTeams = [...grants.keys()];
   const rows = await db
     .select({
@@ -99,17 +99,15 @@ export async function readRevs(
 // One marker for the session user's inbox in every project they can read, so the app
 // badge watches a single scope however many projects there are. It lists each
 // project's marker, so it moves when any inbox moves and when a project is gained or lost.
-export async function inboxAllRevision(userId: string): Promise<string> {
-  const grantedTeams = [...(await workspaceGrants(userId)).keys()];
+export async function inboxAllRevision(
+  userId: string,
+  grants: Map<number, WorkspaceGrant>,
+): Promise<string> {
   const rows = await db
     .select({ projectId: project.id, rev: revision.rev })
     .from(project)
     .innerJoin(revision, eq(revision.scope, sql`'inbox:' || ${project.id} || ':' || ${userId}`))
-    .leftJoin(
-      projectMember,
-      and(eq(projectMember.projectId, project.id), eq(projectMember.userId, userId)),
-    )
-    .where(memberOrGranted(grantedTeams))
+    .where(inArray(project.id, reachedProjectIds(userId, [...grants.keys()])))
     .orderBy(project.id);
   if (rows.length === 0) return NO_REV;
   return rows.map((row) => `${row.projectId}=${row.rev}`).join(',');

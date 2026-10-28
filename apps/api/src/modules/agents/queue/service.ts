@@ -12,6 +12,7 @@ import {
 } from '@repo/db';
 import { and, desc, eq, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { getTeamAccess, readableProjectIds } from '#shared/access';
+import type { WorkspaceGrant } from '#shared/workspace-roles';
 import { runsTeam } from '#modules/teams/service';
 import { iso } from '#shared/lib';
 import { getLimits, getRunLimit } from '#shared/limits';
@@ -33,14 +34,14 @@ const runnerPresence = sql<'push' | 'online' | 'offline' | 'never' | null>`CASE
   WHEN ${aiAgent.lastSeenAt} > now() - interval '90 seconds' THEN 'online'
   ELSE 'offline' END`;
 
-function queueProjectIds(userId: string, mcpOnly = false) {
+function queueProjectIds(userId: string, mcpOnly = false, grants?: Map<number, WorkspaceGrant>) {
   return readableProjectIds(
     userId,
     [
       ['work_items', 'read'],
       ['ai_agents', 'read'],
     ],
-    { mcpOnly, includeArchived: true },
+    { mcpOnly, includeArchived: true, grants },
   );
 }
 
@@ -193,11 +194,16 @@ async function runTeamProjectIds(userId: string): Promise<number[]> {
 // as whoever runs its team also moves the marker. The runs in flight in those projects'
 // workspaces are counted too: the queue's header shows them, projects the user does not
 // read included.
-export async function runnerQueueRevision(userId: string, mcpOnly = false) {
-  const readable = await queueProjectIds(userId, mcpOnly);
-  const ids = mcpOnly
-    ? readable
-    : [...new Set([...readable, ...(await runTeamProjectIds(userId))])].sort((a, b) => a - b);
+export async function runnerQueueRevision(
+  userId: string,
+  grants: Map<number, WorkspaceGrant>,
+  mcpOnly = false,
+) {
+  const [readable, runTeam] = await Promise.all([
+    queueProjectIds(userId, mcpOnly, grants),
+    mcpOnly ? [] : runTeamProjectIds(userId),
+  ]);
+  const ids = mcpOnly ? readable : [...new Set([...readable, ...runTeam])].sort((a, b) => a - b);
   if (!ids.length) return '0';
   const workspaceIds = db
     .selectDistinct({ id: team.workspaceId })

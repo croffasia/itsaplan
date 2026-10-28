@@ -1,5 +1,5 @@
 import { db, project, projectMember, team, teamRole } from '@repo/db';
-import { and, eq, inArray, isNotNull, isNull, or } from 'drizzle-orm';
+import { and, eq, inArray, isNull, type SQLWrapper } from 'drizzle-orm';
 import { HttpError } from './lib';
 import {
   getProjectById,
@@ -36,6 +36,7 @@ import {
   teamAccess,
   type ProjectAccess,
   type TeamAccess,
+  type WorkspaceGrant,
 } from './workspace-roles';
 
 // The authenticated user carried on the request context. Populated by the
@@ -423,15 +424,33 @@ export async function projectsWithPermission(
     .map((entry) => entry.projectId);
 }
 
+// The ids of the projects the user is a member of or reaches through a workspace role,
+// as a subquery. It starts from the user's own memberships and the granted teams, so it
+// reads indexes rather than every project of the instance.
+export function reachedProjectIds(userId: string, grantedTeams: number[]): SQLWrapper {
+  const member = db
+    .select({ id: projectMember.projectId })
+    .from(projectMember)
+    .where(eq(projectMember.userId, userId));
+  if (grantedTeams.length === 0) return member;
+  return member.union(
+    db.select({ id: project.id }).from(project).where(inArray(project.teamId, grantedTeams)),
+  );
+}
+
 // Every project the user reaches, as a member or through their workspace role, where
 // their access holds each permission. mcpOnly keeps the projects open to MCP clients.
+// A caller that already read the user's workspace grants passes them.
 export async function readableProjectIds(
   userId: string,
   required: [PermissionResource, PermissionAction][],
-  opts: { mcpOnly?: boolean; includeArchived?: boolean } = {},
+  opts: {
+    mcpOnly?: boolean;
+    includeArchived?: boolean;
+    grants?: Map<number, WorkspaceGrant>;
+  } = {},
 ): Promise<number[]> {
-  const grants = await workspaceGrants(userId);
-  const grantedTeams = [...grants.keys()];
+  const grants = opts.grants ?? (await workspaceGrants(userId));
   const rows = await db
     .select({
       id: project.id,
@@ -450,10 +469,7 @@ export async function readableProjectIds(
       and(
         opts.includeArchived ? undefined : isNull(project.archivedAt),
         opts.mcpOnly ? and(eq(project.mcpEnabled, true), eq(team.mcpEnabled, true)) : undefined,
-        or(
-          isNotNull(projectMember.userId),
-          grantedTeams.length ? inArray(project.teamId, grantedTeams) : undefined,
-        ),
+        inArray(project.id, reachedProjectIds(userId, [...grants.keys()])),
       ),
     );
   return rows

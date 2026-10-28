@@ -1,5 +1,6 @@
 import { isMcpRequest } from '#shared/mcp-request';
 import { runnerQueueRevision } from '#modules/agents/queue/service';
+import { workspaceGrants } from '#modules/workspaces/service';
 import { Elysia } from 'elysia';
 import { authContext } from '#shared/auth-context';
 import { requireUser } from '#shared/access';
@@ -44,16 +45,19 @@ export const syncRoutes = new Elysia({ name: 'sync', detail: { tags: ['Sync'] } 
         reads.set(scope, { key: spec.key(id, userId), resource: spec.resource });
       }
 
-      const found = await readRevs([...reads.values()], userId);
+      const grants = await workspaceGrants(userId);
+      const [found, runnerQueue, inboxAll] = await Promise.all([
+        readRevs([...reads.values()], userId, grants),
+        requested.includes('runnerQueue:1')
+          ? runnerQueueRevision(userId, grants, isMcpRequest(request.headers))
+          : null,
+        requested.includes('inbox:all') ? inboxAllRevision(userId, grants) : null,
+      ]);
       const revs = Object.fromEntries(
         [...reads].map(([scope, read]) => [scope, found[read.key] ?? NO_REV]),
       );
-      if (requested.includes('runnerQueue:1')) {
-        revs['runnerQueue:1'] = await runnerQueueRevision(userId, isMcpRequest(request.headers));
-      }
-      if (requested.includes('inbox:all')) {
-        revs['inbox:all'] = await inboxAllRevision(userId);
-      }
+      if (runnerQueue !== null) revs['runnerQueue:1'] = runnerQueue;
+      if (inboxAll !== null) revs['inbox:all'] = inboxAll;
       return { revs };
     },
     {

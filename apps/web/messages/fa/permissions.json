@@ -49,5 +49,16 @@
   "allowed": "مجاز",
   "notAllowed": "غیرمجاز",
   "accessHeading": "دسترسی به این پروژه",
-  "joined": "پیوستن {date}"
+  "joined": "پیوستن {date}",
+  "editor": {
+    "titleEdit": "ویرایش نقش",
+    "titleNew": "نقش جدید",
+    "namePlaceholder": "مثلاً مشارکت‌کننده",
+    "toggleActionAll": "تغییر {action} برای همه منابع",
+    "toggleGroupAll": "تغییر همه مجوزهای {group}",
+    "toggleActionGroup": "تغییر {action} برای {group}",
+    "cellAria": "{resource}: {action}",
+    "saveRole": "ذخیره نقش",
+    "createRole": "ایجاد نقش"
+  }
 }

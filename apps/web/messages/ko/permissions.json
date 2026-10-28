@@ -49,5 +49,16 @@
   "allowed": "허용",
   "notAllowed": "허용 안 함",
   "accessHeading": "이 프로젝트의 접근 권한",
-  "joined": "{date}에 가입"
+  "joined": "{date}에 가입",
+  "editor": {
+    "titleEdit": "역할 편집",
+    "titleNew": "새 역할",
+    "namePlaceholder": "예: 기여자",
+    "toggleActionAll": "모든 리소스의 {action} 권한 전환",
+    "toggleGroupAll": "{group}의 모든 권한 전환",
+    "toggleActionGroup": "{group}의 {action} 권한 전환",
+    "cellAria": "{resource}: {action}",
+    "saveRole": "역할 저장",
+    "createRole": "역할 생성"
+  }
 }

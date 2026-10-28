@@ -281,22 +281,21 @@ export const userPreference = pgTable(
   ],
 );
 
-// Custom roles per team, shared by every project the team owns. A role carries a
-// permission matrix: for each resource (work_items, dashboards, ...) the
-// create/edit/read/delete flags. The matrix is a jsonb blob owned and enforced by
-// the API (see apps/api/src/shared/permissions.ts). Exactly one role per team is
-// the default ("Member"): it is assigned to members that join through an invite
-// and is the fallback for a member row with no explicit role. Owners bypass roles
-// entirely (they always have full access), so their project_member.role_id stays
-// NULL. A member of a project may only be put on a role of that project's team;
-// the API checks it, no foreign key can.
+// The roles a project member is put on. A role carries a permission matrix: for each
+// resource (work_items, dashboards, ...) the create/edit/read/delete flags. The matrix
+// is a jsonb blob owned and enforced by the API (see apps/api/src/shared/permissions.ts).
+// A row with a team_id is a custom role of that team, shared by every project the team
+// owns. A row with a NULL team_id is a system role: every team assigns it, and only the
+// instance owner edits it, in god mode. The one system role marked default ("Member")
+// is assigned to members that join without a chosen role. Owners bypass roles entirely
+// (they always have full access), so their project_member.role_id stays NULL. A member
+// of a project may only be put on a role of that project's team or a system role; the
+// API checks it, no foreign key can.
 export const teamRole = pgTable(
   'team_role',
   {
     id: serial('id').primaryKey(),
-    teamId: integer('team_id')
-      .notNull()
-      .references(() => team.id, { onDelete: 'cascade' }),
+    teamId: integer('team_id').references(() => team.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     isDefault: boolean('is_default').notNull().default(false),
     permissions: jsonb('permissions').notNull().default({}),
@@ -304,10 +303,13 @@ export const teamRole = pgTable(
   },
   (t) => [
     unique().on(t.teamId, t.name),
-    // At most one default role per team.
-    uniqueIndex('team_role_default_uq')
-      .on(t.teamId)
-      .where(sql`${t.isDefault}`),
+    check('team_role_default_system_check', sql`${t.teamId} IS NULL OR NOT ${t.isDefault}`),
+    uniqueIndex('team_role_system_name_uq')
+      .on(t.name)
+      .where(sql`${t.teamId} IS NULL`),
+    uniqueIndex('team_role_system_default_uq')
+      .on(t.isDefault)
+      .where(sql`${t.teamId} IS NULL AND ${t.isDefault}`),
     index('team_role_team_idx').on(t.teamId),
   ],
 );
@@ -317,9 +319,10 @@ export const teamRole = pgTable(
 // project-scoped entity only through a row here. The creator is inserted as
 // "owner"; a project can have several owners. Owners always have full access and
 // manage the member list. A "member" row carries role_id pointing at a
-// team_role of the project's team, whose permission matrix decides what that member
-// may do; a NULL role_id falls back to the team's default role. Access checks resolve
-// the owning project of any entity and look for the current user here.
+// team_role of the project's team or a system role, whose permission matrix decides
+// what that member may do; a NULL role_id falls back to the built-in member matrix
+// (defaultMemberPermissions). Access checks resolve the owning project of any entity
+// and look for the current user here.
 export const projectMember = pgTable(
   'project_member',
   {
@@ -377,8 +380,8 @@ export const teamInvite = pgTable(
     // plain member; a rank above that is granted by an invite into the team itself.
     teamRole: text('team_role').notNull().default('member'),
     projectRole: text('project_role'),
-    // The team role the invitee joins the project on when project_role is "member".
-    // NULL falls back to the team's default role. Project owners bypass roles, so an
+    // The role the invitee joins the project on when project_role is "member".
+    // NULL falls back to the default system role. Project owners bypass roles, so an
     // owner invite keeps this NULL.
     roleId: integer('role_id').references(() => teamRole.id, {
       onDelete: 'set null',

@@ -49,5 +49,16 @@
   "allowed": "允許",
   "notAllowed": "不允許",
   "accessHeading": "對此專案的存取權限",
-  "joined": "加入於 {date}"
+  "joined": "加入於 {date}",
+  "editor": {
+    "titleEdit": "編輯角色",
+    "titleNew": "新建角色",
+    "namePlaceholder": "例如：貢獻者",
+    "toggleActionAll": "切換所有資源的「{action}」權限",
+    "toggleGroupAll": "切換「{group}」的所有權限",
+    "toggleActionGroup": "切換「{group}」的「{action}」權限",
+    "cellAria": "{resource}：{action}",
+    "saveRole": "儲存角色",
+    "createRole": "新建角色"
+  }
 }

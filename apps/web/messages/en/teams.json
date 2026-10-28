@@ -138,9 +138,9 @@
     "search": "Search roles",
     "noMatches": "No role matches “{query}”.",
     "default": "Default",
+    "system": "System",
     "editAction": "Edit role",
     "deleteAction": "Delete role",
-    "defaultUndeletable": "The default role cannot be deleted",
     "deleteTitle": "Delete role \"{name}\"",
     "deleteDescription": "Nothing is on this role. This cannot be undone.",
     "deleteInUse": "This role is still in use. Pick the role everything on it is moved to.",
@@ -154,16 +154,6 @@
     "moveAndDelete": "Move and delete",
     "noTargetRole": "There is no other role to move them to. Create one first.",
     "newRole": "New role",
-    "editorTitleEdit": "Edit role",
-    "editorTitleNew": "New role",
-    "namePlaceholder": "e.g. Contributor",
-    "resourceColumn": "Resource",
-    "toggleActionAll": "Toggle {action} for all resources",
-    "toggleGroupAll": "Toggle all {group} permissions",
-    "toggleActionGroup": "Toggle {action} for {group}",
-    "cellAria": "{resource}: {action}",
-    "saveRole": "Save role",
-    "createRole": "Create role",
     "copyRoles": "Copy roles",
     "pasteRoles": "Paste roles",
     "nothingToCopy": "No custom roles to copy.",
@@ -180,7 +170,7 @@
       "actions": {
         "create": "New",
         "update": "Overwrite",
-        "skip": "Skip (default)"
+        "skip": "Skip (system role)"
       }
     },
     "transferErrors": {

@@ -338,6 +338,7 @@ export const qk = {
   instanceAgentSettings: ['instanceAgentSettings'] as const,
   instanceEmbedSites: ['instanceEmbedSites'] as const,
   instanceStorageSettings: ['instanceStorageSettings'] as const,
+  systemRoles: ['systemRoles'] as const,
   // The upload limits as read by the upload UI (open to any signed-in user).
   storageSettings: ['storageSettings'] as const,
   // The running version (any signed-in user) and the upstream release check (god).

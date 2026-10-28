@@ -170,6 +170,20 @@
     },
     "joined": "вступил {date}"
   },
+  "roles": {
+    "newRole": "Новая роль",
+    "empty": "Системных ролей пока нет.",
+    "default": "По умолчанию",
+    "defaultUndeletable": "Роль по умолчанию удалить нельзя",
+    "columns": {
+      "role": "Роль",
+      "permissions": "Права"
+    },
+    "edit": "Редактировать роль",
+    "delete": "Удалить роль",
+    "deleteTitle": "Удалить роль «{name}»",
+    "deleteDescription": "Это действие нельзя отменить."
+  },
   "general": {
     "saved": "Настройки по умолчанию сохранены",
     "projectDefaults": "Настройки по умолчанию",

@@ -170,6 +170,20 @@
     },
     "joined": "{date} tarihinde katıldı"
   },
+  "roles": {
+    "newRole": "Yeni rol",
+    "empty": "Henüz sistem rolü yok.",
+    "default": "Varsayılan",
+    "defaultUndeletable": "Varsayılan rol silinemez",
+    "columns": {
+      "role": "Rol",
+      "permissions": "İzinler"
+    },
+    "edit": "Rolü düzenle",
+    "delete": "Rolü sil",
+    "deleteTitle": "\"{name}\" rolünü sil",
+    "deleteDescription": "Bu işlem geri alınamaz."
+  },
   "general": {
     "saved": "Proje varsayılanları kaydedildi",
     "projectDefaults": "Proje varsayılanları",

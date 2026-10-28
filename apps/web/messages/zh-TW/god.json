@@ -170,6 +170,20 @@
     },
     "joined": "加入於 {date}"
   },
+  "roles": {
+    "newRole": "新建角色",
+    "empty": "尚無系統角色。",
+    "default": "預設",
+    "defaultUndeletable": "無法刪除預設角色",
+    "columns": {
+      "role": "角色",
+      "permissions": "權限"
+    },
+    "edit": "編輯角色",
+    "delete": "刪除角色",
+    "deleteTitle": "刪除角色「{name}」",
+    "deleteDescription": "此操作無法復原。"
+  },
   "general": {
     "saved": "專案預設設定已儲存",
     "projectDefaults": "專案預設設定",

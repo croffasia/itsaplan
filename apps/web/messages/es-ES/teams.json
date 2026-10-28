@@ -138,9 +138,9 @@
     "search": "Buscar roles",
     "noMatches": "Ningún rol coincide con «{query}».",
     "default": "Por defecto",
+    "system": "Del sistema",
     "editAction": "Editar el rol",
     "deleteAction": "Eliminar el rol",
-    "defaultUndeletable": "El rol por defecto no se puede eliminar",
     "deleteTitle": "Eliminar el rol «{name}»",
     "deleteDescription": "Nada está en este rol. No se puede deshacer.",
     "deleteInUse": "Este rol todavía está en uso. Elige el rol al que se mueve todo lo que está en él.",
@@ -154,16 +154,6 @@
     "moveAndDelete": "Mover y eliminar",
     "noTargetRole": "No hay otro rol al que moverlos. Crea uno primero.",
     "newRole": "Nuevo rol",
-    "editorTitleEdit": "Editar el rol",
-    "editorTitleNew": "Nuevo rol",
-    "namePlaceholder": "p. ej. Colaborador",
-    "resourceColumn": "Recurso",
-    "toggleActionAll": "Alternar {action} para todos los recursos",
-    "toggleGroupAll": "Alternar todos los permisos de {group}",
-    "toggleActionGroup": "Alternar {action} para {group}",
-    "cellAria": "{resource}: {action}",
-    "saveRole": "Guardar el rol",
-    "createRole": "Crear el rol",
     "copyRoles": "Copiar los roles",
     "pasteRoles": "Pegar los roles",
     "nothingToCopy": "No hay roles personalizados que copiar.",
@@ -180,7 +170,7 @@
       "actions": {
         "create": "Nuevo",
         "update": "Sobrescribir",
-        "skip": "Saltar (por defecto)"
+        "skip": "Saltar (rol del sistema)"
       }
     },
     "transferErrors": {

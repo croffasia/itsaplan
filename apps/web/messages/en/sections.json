@@ -25,6 +25,10 @@
       "label": "Projects",
       "description": "Every project on this instance: what each one holds, when it was last active, and who can reach it."
     },
+    "roles": {
+      "label": "System roles",
+      "description": "Default roles available to every team on this instance."
+    },
     "general": {
       "label": "General",
       "description": "Personal workspaces, defaults for new projects, agent traces, and the agent run time limit."

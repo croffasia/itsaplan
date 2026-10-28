@@ -170,6 +170,20 @@
     },
     "joined": "entrou em {date}"
   },
+  "roles": {
+    "newRole": "Nova função",
+    "empty": "Ainda não há funções do sistema.",
+    "default": "Padrão",
+    "defaultUndeletable": "A função padrão não pode ser excluída",
+    "columns": {
+      "role": "Função",
+      "permissions": "Permissões"
+    },
+    "edit": "Editar função",
+    "delete": "Excluir função",
+    "deleteTitle": "Excluir a função \"{name}\"",
+    "deleteDescription": "Esta ação não pode ser desfeita."
+  },
   "general": {
     "saved": "Padrões de projeto salvos",
     "projectDefaults": "Padrões de projeto",

@@ -138,9 +138,9 @@
     "search": "搜尋角色",
     "noMatches": "沒有與「{query}」匹配的角色。",
     "default": "預設",
+    "system": "系統",
     "editAction": "編輯角色",
     "deleteAction": "刪除角色",
-    "defaultUndeletable": "無法刪除預設角色",
     "deleteTitle": "刪除角色「{name}」",
     "deleteDescription": "此角色上沒有任何成員。此操作無法復原。",
     "deleteInUse": "此角色仍在使用中。請選擇要把角色上的所有成員遷移到的角色。",
@@ -154,16 +154,6 @@
     "moveAndDelete": "遷移並刪除",
     "noTargetRole": "沒有其他角色可供遷移。請先建立一個。",
     "newRole": "新建角色",
-    "editorTitleEdit": "編輯角色",
-    "editorTitleNew": "新建角色",
-    "namePlaceholder": "例如：貢獻者",
-    "resourceColumn": "資源",
-    "toggleActionAll": "切換所有資源的「{action}」權限",
-    "toggleGroupAll": "切換「{group}」的所有權限",
-    "toggleActionGroup": "切換「{group}」的「{action}」權限",
-    "cellAria": "{resource}：{action}",
-    "saveRole": "儲存角色",
-    "createRole": "新建角色",
     "copyRoles": "複製角色",
     "pasteRoles": "貼上角色",
     "nothingToCopy": "沒有可複製的自訂角色。",
@@ -180,7 +170,7 @@
       "actions": {
         "create": "新建",
         "update": "覆蓋",
-        "skip": "跳過（預設）"
+        "skip": "跳過（系統角色）"
       }
     },
     "transferErrors": {

@@ -7,6 +7,7 @@ import {
   KeyRound,
   Mail,
   Send,
+  ShieldCheck,
   SlidersHorizontal,
   Users,
   UsersRound,
@@ -50,6 +51,11 @@ export const GOD_SECTIONS: GodSection[] = godSections([
     slug: 'projects',
     group: 'management',
     icon: FolderKanban,
+  },
+  {
+    slug: 'roles',
+    group: 'management',
+    icon: ShieldCheck,
   },
   {
     slug: 'general',

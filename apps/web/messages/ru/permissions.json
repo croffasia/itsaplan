@@ -49,5 +49,16 @@
   "allowed": "разрешено",
   "notAllowed": "не разрешено",
   "accessHeading": "Доступ к этому проекту",
-  "joined": "присоединился {date}"
+  "joined": "присоединился {date}",
+  "editor": {
+    "titleEdit": "Редактировать роль",
+    "titleNew": "Новая роль",
+    "namePlaceholder": "напр. Contributor",
+    "toggleActionAll": "Переключить «{action}» для всех ресурсов",
+    "toggleGroupAll": "Переключить все права группы {group}",
+    "toggleActionGroup": "Переключить «{action}» для {group}",
+    "cellAria": "{resource}: {action}",
+    "saveRole": "Сохранить роль",
+    "createRole": "Создать роль"
+  }
 }

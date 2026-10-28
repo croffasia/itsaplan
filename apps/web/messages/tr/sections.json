@@ -25,6 +25,10 @@
       "label": "Projeler",
       "description": "Bu örneklemdeki her proje: içerdiği varlıklar, son etkinlik zamanı ve erişebilen kişiler."
     },
+    "roles": {
+      "label": "Sistem rolleri",
+      "description": "Bu örneklemdeki her takımın kullanabileceği varsayılan roller."
+    },
     "general": {
       "label": "Genel",
       "description": "Kişisel çalışma alanları, yeni projeler için varsayılanlar, ajan izleme kayıtları ve çalışma süresi."

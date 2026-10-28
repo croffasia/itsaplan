@@ -138,9 +138,9 @@
     "search": "Rechercher des rôles",
     "noMatches": "Aucun rôle ne correspond à « {query} ».",
     "default": "Par défaut",
+    "system": "Système",
     "editAction": "Modifier le rôle",
     "deleteAction": "Supprimer le rôle",
-    "defaultUndeletable": "Le rôle par défaut ne peut pas être supprimé",
     "deleteTitle": "Supprimer le rôle « {name} »",
     "deleteDescription": "Rien n'est rattaché à ce rôle. Cette action est irréversible.",
     "deleteInUse": "Ce rôle est encore utilisé. Choisissez le rôle vers lequel tout est déplacé.",
@@ -154,16 +154,6 @@
     "moveAndDelete": "Déplacer et supprimer",
     "noTargetRole": "Il n'y a aucun autre rôle vers lequel les déplacer. Créez-en un d'abord.",
     "newRole": "Nouveau rôle",
-    "editorTitleEdit": "Modifier le rôle",
-    "editorTitleNew": "Nouveau rôle",
-    "namePlaceholder": "ex. Contributeur",
-    "resourceColumn": "Ressource",
-    "toggleActionAll": "Basculer {action} pour toutes les ressources",
-    "toggleGroupAll": "Basculer toutes les permissions de {group}",
-    "toggleActionGroup": "Basculer {action} pour {group}",
-    "cellAria": "{resource} : {action}",
-    "saveRole": "Enregistrer le rôle",
-    "createRole": "Créer le rôle",
     "copyRoles": "Copier les rôles",
     "pasteRoles": "Coller des rôles",
     "nothingToCopy": "Aucun rôle personnalisé à copier.",
@@ -180,7 +170,7 @@
       "actions": {
         "create": "Nouveau",
         "update": "Écraser",
-        "skip": "Ignorer (par défaut)"
+        "skip": "Ignorer (rôle système)"
       }
     },
     "transferErrors": {

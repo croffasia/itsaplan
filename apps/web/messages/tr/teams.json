@@ -138,9 +138,9 @@
     "search": "Rolleri ara",
     "noMatches": "“{query}” ile eşleşen rol bulunamadı.",
     "default": "Varsayılan",
+    "system": "Sistem",
     "editAction": "Rolü düzenle",
     "deleteAction": "Rolü sil",
-    "defaultUndeletable": "Varsayılan rol silinemez",
     "deleteTitle": "\"{name}\" rolünü sil",
     "deleteDescription": "Bu role bağlı hiçbir varlık yok. Bu işlem geri alınamaz.",
     "deleteInUse": "Bu rol hala kullanımda. Bu roldeki her şeyin taşınacağı yeni rolü seçin.",
@@ -154,16 +154,6 @@
     "moveAndDelete": "Taşı ve sil",
     "noTargetRole": "Taşınabilecek başka bir rol bulunmuyor. Önce yeni bir rol oluşturun.",
     "newRole": "Yeni rol",
-    "editorTitleEdit": "Rolü düzenle",
-    "editorTitleNew": "Yeni rol",
-    "namePlaceholder": "Örn. Katkıda Bulunan (Contributor)",
-    "resourceColumn": "Kaynak",
-    "toggleActionAll": "Tüm kaynaklar için {action} iznini aç/kapat",
-    "toggleGroupAll": "Tüm {group} izinlerini aç/kapat",
-    "toggleActionGroup": "{group} için {action} iznini aç/kapat",
-    "cellAria": "{resource}: {action}",
-    "saveRole": "Rolü kaydet",
-    "createRole": "Rol oluştur",
     "copyRoles": "Rolleri kopyala",
     "pasteRoles": "Rolleri yapıştır",
     "nothingToCopy": "Kopyalanacak özel rol yok.",
@@ -180,7 +170,7 @@
       "actions": {
         "create": "Yeni",
         "update": "Üzerine yaz",
-        "skip": "Atla (varsayılan)"
+        "skip": "Atla (sistem rolü)"
       }
     },
     "transferErrors": {

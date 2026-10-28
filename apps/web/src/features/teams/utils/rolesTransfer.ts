@@ -29,13 +29,13 @@ export interface PlannedRole extends RoleTransfer {
   existingId?: number;
 }
 
-// The clipboard text for the team's non-default roles.
+// The clipboard text for the team's own roles.
 export function serializeRoles(roles: Role[]): string {
   const envelope: RolesEnvelope = {
     type: PAYLOAD_TYPE,
     version: PAYLOAD_VERSION,
     roles: roles
-      .filter((r) => !r.isDefault)
+      .filter((r) => !r.system)
       .map((r) => ({ name: r.name, permissions: r.permissions })),
   };
   return JSON.stringify(envelope, null, 2);
@@ -68,13 +68,13 @@ export function parseRolesText(text: string, catalog: PermissionCatalog): RoleTr
 }
 
 // Decides what applying each incoming role does against the current roles, matching
-// by name (case-insensitive). A default role with the same name is skipped.
+// by name (case-insensitive). A system role with the same name is skipped.
 export function planRolesImport(incoming: RoleTransfer[], existing: Role[]): PlannedRole[] {
   const byName = new Map(existing.map((r) => [r.name.toLowerCase(), r]));
   return incoming.map((role) => {
     const match = byName.get(role.name.toLowerCase());
     if (!match) return { ...role, action: 'create' };
-    if (match.isDefault) return { ...role, action: 'skip', existingId: match.id };
+    if (match.system) return { ...role, action: 'skip', existingId: match.id };
     return { ...role, action: 'update', existingId: match.id };
   });
 }

@@ -10,6 +10,7 @@ import {
   listRoles,
   listRolesPage,
   getRole,
+  getAssignableRole,
   getRoleUsage,
   isRoleInUse,
   createRole,
@@ -29,11 +30,12 @@ import {
   updateRoleBody,
 } from './model';
 
-// Roles CRUD. A role belongs to a team and every project the team owns assigns from
-// that one list. Who may write one is the team's own ranks, not the permission
-// matrix: a member with members_manage could otherwise grant itself a more powerful
-// role. An owner or a manager creates and edits; deleting stays with the owner,
-// since a deletion moves every member, agent and invite on the role to another one.
+// Roles CRUD. Every project of a team assigns from one list: the system roles and the
+// team's own. The team writes only its own; the system roles are god mode's. Who may
+// write one is the team's own ranks, not the permission matrix: a member with
+// members_manage could otherwise grant itself a more powerful role. An owner or a
+// manager creates and edits; deleting stays with the owner, since a deletion moves
+// every member, agent and invite on the role to another one.
 export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] } })
   .use(guards)
 
@@ -73,8 +75,9 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
       detail: {
         summary: "List a team's roles",
         description:
-          'One page of the roles a team offers, oldest first. `search` matches the name. ' +
-          'Use list_role_options to read every one of them.',
+          'One page of the roles a team offers: the system roles first, then its own, each ' +
+          'oldest first. `search` matches the name. A system role (system: true) is edited ' +
+          'only by the instance owner. Use list_role_options to read every one of them.',
         ...mcpTool('list_roles'),
       },
     },
@@ -90,8 +93,8 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
     detail: {
       summary: "List a team's role options",
       description:
-        'Every role of the team, with its permission matrix, for the pickers that assign one. ' +
-        'Use list_roles to read them a page at a time.',
+        'Every role the team assigns, system roles included, with its permission matrix, for ' +
+        'the pickers that assign one. Use list_roles to read them a page at a time.',
       ...mcpTool('list_role_options'),
     },
   })
@@ -162,15 +165,14 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
     },
   )
 
-  // Deletes a custom role. The default role cannot be deleted. A role that members,
-  // agents, pending invites or provisioned group mappings are on is deleted only
-  // together with targetRoleId, the role they are all moved to.
+  // Deletes a custom role. A role that members, agents, pending invites or provisioned
+  // group mappings are on is deleted only together with targetRoleId, the role they are
+  // all moved to: another of the team's roles or a system role.
   .delete(
     '/teams/:teamId/roles/:roleId',
     async ({ membership, params, query }) => {
       const role = await getRole(membership.teamId, params.roleId);
       if (!role) throw new HttpError(404, 'Role not found');
-      if (role.isDefault) throw new HttpError(400, 'The default role cannot be deleted');
 
       let targetRoleId: number | null = null;
       if (isRoleInUse(await getRoleUsage(params.roleId))) {
@@ -183,7 +185,7 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
         if (query.targetRoleId === params.roleId) {
           throw new HttpError(400, 'Move to a role other than the one being deleted');
         }
-        const target = await getRole(membership.teamId, query.targetRoleId);
+        const target = await getAssignableRole(membership.teamId, query.targetRoleId);
         if (!target) throw new HttpError(404, 'Target role not found');
         targetRoleId = target.id;
       }
@@ -199,7 +201,7 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
       detail: {
         summary: 'Delete a role',
         description:
-          'Delete a custom role. The default role cannot be deleted. A role in use requires targetRoleId, the role its members, agents, pending invites and group mappings are moved to.',
+          'Delete a custom role of the team. A role in use requires targetRoleId, the role its members, agents, pending invites and group mappings are moved to: another role of the team or a system role.',
         ...mcpTool('delete_role'),
       },
     },

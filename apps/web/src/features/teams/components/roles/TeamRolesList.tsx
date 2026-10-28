@@ -15,15 +15,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { PermissionsPopover } from '@/components/common/permissions/PermissionsPopover';
 import DeleteRoleDialog from './DeleteRoleDialog';
 
-// The team's roles, one row each: what it grants, and the actions to edit or delete
-// it. Deleting is the owner's, so a manager gets the row without that action. The
-// default role cannot be deleted; deleting any other one moves what is on it to a
-// role the dialog asks for, which is why it is handed every role of the team and not
-// only the page on screen.
+// The roles the team assigns, one row each: what it grants, and the actions to edit or
+// delete it. A system role is god mode's, so its row has neither. Deleting is the
+// owner's, so a manager gets the row without that action. Deleting a role moves what is
+// on it to a role the dialog asks for, which is why it is handed every role the team
+// assigns and not only the page on screen.
 export default function TeamRolesList({
   teamId,
   roles,
@@ -80,12 +79,20 @@ export default function TeamRolesList({
           {roles.map((role) => (
             <TableRow
               key={role.id}
-              className={canEdit ? 'cursor-pointer' : undefined}
-              onClick={() => canEdit && onEdit(role)}
+              className={canEdit && !role.system ? 'cursor-pointer' : undefined}
+              onClick={() => canEdit && !role.system && onEdit(role)}
             >
               <TableCell className="px-3 py-3">
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="truncate text-sm font-medium">{role.name}</span>
+                  {role.system && (
+                    <Badge
+                      variant="outline"
+                      className="shrink-0 px-1.5 py-0 text-[10px] font-normal"
+                    >
+                      {t('roles.system')}
+                    </Badge>
+                  )}
                   {role.isDefault && (
                     <Badge
                       variant="secondary"
@@ -102,40 +109,33 @@ export default function TeamRolesList({
               </TableCell>
 
               <TableCell className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-end gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 text-muted-foreground hover:text-foreground"
-                    disabled={!canEdit}
-                    aria-label={t('roles.editAction')}
-                    title={t('roles.editAction')}
-                    onClick={() => onEdit(role)}
-                  >
-                    <Pencil className="size-4" />
-                  </Button>
-                  {canDelete && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="inline-flex">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-8 text-muted-foreground hover:text-destructive"
-                            disabled={role.isDefault}
-                            aria-label={t('roles.deleteAction')}
-                            onClick={() => setDeleting(role)}
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {role.isDefault ? t('roles.defaultUndeletable') : t('roles.deleteAction')}
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                </div>
+                {!role.system && (
+                  <div className="flex items-center justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-muted-foreground hover:text-foreground"
+                      disabled={!canEdit}
+                      aria-label={t('roles.editAction')}
+                      title={t('roles.editAction')}
+                      onClick={() => onEdit(role)}
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
+                    {canDelete && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 text-muted-foreground hover:text-destructive"
+                        aria-label={t('roles.deleteAction')}
+                        title={t('roles.deleteAction')}
+                        onClick={() => setDeleting(role)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    )}
+                  </div>
+                )}
               </TableCell>
             </TableRow>
           ))}

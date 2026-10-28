@@ -1,4 +1,4 @@
-import { db } from '@repo/db';
+import { db, defaultMemberPermissions, teamRole } from '@repo/db';
 import { sql } from 'drizzle-orm';
 
 // Empties every table in the test database so each test starts clean. Two
@@ -43,4 +43,9 @@ export async function resetDb(): Promise<void> {
         AND c.relname NOT IN ('__drizzle_migrations', 'oauth_resource');
     END $$
   `);
+  // Migration 0160 seeds the default system role; every member without a chosen role
+  // joins on it.
+  await db
+    .insert(teamRole)
+    .values({ name: 'Member', isDefault: true, permissions: defaultMemberPermissions() });
 }

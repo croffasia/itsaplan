@@ -25,6 +25,10 @@
       "label": "Proyek",
       "description": "Setiap proyek di instance ini: apa yang dimuatnya, waktu aktif terakhir, dan siapa yang dapat mengaksesnya."
     },
+    "roles": {
+      "label": "Peran sistem",
+      "description": "Peran bawaan yang tersedia untuk setiap tim di instance ini."
+    },
     "general": {
       "label": "Umum",
       "description": "Workspace pribadi, pengaturan bawaan untuk proyek baru, serta trace dan waktu jalan agen."

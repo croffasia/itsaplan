@@ -25,6 +25,10 @@
       "label": "Proyectos",
       "description": "Todos los proyectos de esta instancia: lo que contiene cada uno, cuando fue la última actividad, y quién puede acceder."
     },
+    "roles": {
+      "label": "Roles del sistema",
+      "description": "Roles por defecto disponibles para todos los equipos de esta instancia."
+    },
     "general": {
       "label": "General",
       "description": "Espacios de trabajo personales, valores por defecto para los proyectos nuevos, y trazas y duración de las ejecuciones de agentes."

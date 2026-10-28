@@ -36,9 +36,9 @@ export default function TeamRolesToolbar({
   const [importing, setImporting] = useState<PlannedRole[] | null>(null);
   const { hasRoles: clipboardHasRoles, recheck } = useClipboardHasRoles();
 
-  const customRoleCount = roles.filter((r) => !r.isDefault).length;
+  const customRoleCount = roles.filter((r) => !r.system).length;
 
-  // Copies the team's non-default roles to the clipboard as JSON.
+  // Copies the team's own roles to the clipboard as JSON.
   const copyRoles = useCallback(async () => {
     if (customRoleCount === 0) {
       toast.info(t('nothingToCopy'));

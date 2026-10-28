@@ -49,5 +49,16 @@
   "allowed": "مسموح",
   "notAllowed": "غير مسموح",
   "accessHeading": "الوصول للمشروع ده",
-  "joined": "انضم في {date}"
+  "joined": "انضم في {date}",
+  "editor": {
+    "titleEdit": "تعديل الدور",
+    "titleNew": "دور جديد",
+    "namePlaceholder": "مثال: مساهم",
+    "toggleActionAll": "تبديل {action} لكل الموارد",
+    "toggleGroupAll": "تبديل كل صلاحيات {group}",
+    "toggleActionGroup": "تبديل {action} لـ {group}",
+    "cellAria": "{resource}: {action}",
+    "saveRole": "حفظ الدور",
+    "createRole": "إنشاء دور"
+  }
 }

@@ -81,14 +81,14 @@ describe('roles', () => {
   });
 
   describe('list — GET /teams/:teamId/roles', () => {
-    it('returns the default Member role on a fresh team', async () => {
+    it('offers the default system Member role on a fresh team', async () => {
       const owner = await setupOwner();
 
       const res = await owner.api.teams({ teamId: owner.teamId }).roles.get();
 
       expect(res.status).toBe(200);
       expect(res.data?.items).toHaveLength(1);
-      expect(res.data?.items[0]).toMatchObject({ name: 'Member', isDefault: true });
+      expect(res.data?.items[0]).toMatchObject({ name: 'Member', isDefault: true, system: true });
       // The default role carries a normalized matrix: full work_items, the member
       // list readable, no member management.
       expect(res.data?.items[0].permissions.work_items.create).toBe(true);
@@ -322,18 +322,17 @@ describe('roles', () => {
       expect(res.data).toMatchObject({ id: roleId, name: 'Editor' });
     });
 
-    it('can rename the default role', async () => {
+    it('returns 404 for a system role, which only god mode edits', async () => {
       const owner = await setupOwner();
       const list = await owner.api.teams({ teamId: owner.teamId }).roles.get();
-      const defaultId = list.data!.items.find((r) => r.isDefault)!.id;
+      const systemId = list.data!.items.find((r) => r.system)!.id;
 
       const res = await owner.api
         .teams({ teamId: owner.teamId })
-        .roles({ roleId: defaultId })
+        .roles({ roleId: systemId })
         .patch({ name: 'Contributor' });
 
-      expect(res.status).toBe(200);
-      expect(res.data).toMatchObject({ name: 'Contributor', isDefault: true });
+      expect(res.status).toBe(404);
     });
 
     it('returns 404 for a role that does not exist', async () => {
@@ -546,20 +545,19 @@ describe('roles', () => {
       expect(res.status).toBe(404);
     });
 
-    it('returns 400 when deleting the default role', async () => {
+    it('returns 404 when deleting a system role', async () => {
       const owner = await setupOwner();
       const list = await owner.api.teams({ teamId: owner.teamId }).roles.get();
-      const defaultId = list.data!.items.find((r) => r.isDefault)!.id;
+      const systemId = list.data!.items.find((r) => r.system)!.id;
 
       const res = await owner.api
         .teams({ teamId: owner.teamId })
-        .roles({ roleId: defaultId })
+        .roles({ roleId: systemId })
         .delete();
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(404);
 
-      // The default role is still there.
       const after = await owner.api.teams({ teamId: owner.teamId }).roles.get();
-      expect(after.data?.items.map((r) => r.id)).toContain(defaultId);
+      expect(after.data?.items.map((r) => r.id)).toContain(systemId);
     });
 
     it('returns 404 for a role that does not exist', async () => {

@@ -536,7 +536,7 @@ export async function createProject(
           and(eq(aiAgent.teamId, ownerTeam.id), inArray(aiAgent.id, ownerTeam.defaultAgentIds)),
         )
     : [];
-  const defaultRoleId = defaultAgents.length ? await getDefaultRoleId(ownerTeam.id) : null;
+  const defaultRoleId = defaultAgents.length ? await getDefaultRoleId() : null;
   return db.transaction(async (tx) => {
     const [row] = await tx
       .insert(project)

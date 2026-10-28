@@ -138,9 +138,9 @@
     "search": "Поиск ролей",
     "noMatches": "Нет ролей по запросу «{query}».",
     "default": "По умолчанию",
+    "system": "Системная",
     "editAction": "Редактировать роль",
     "deleteAction": "Удалить роль",
-    "defaultUndeletable": "Роль по умолчанию удалить нельзя",
     "deleteTitle": "Удалить роль «{name}»",
     "deleteDescription": "На этой роли никого нет. Действие нельзя отменить.",
     "deleteInUse": "Роль ещё используется. Выберите роль, на которую перенести всех с неё.",
@@ -154,16 +154,6 @@
     "moveAndDelete": "Перенести и удалить",
     "noTargetRole": "Нет другой роли для переноса. Сначала создайте её.",
     "newRole": "Новая роль",
-    "editorTitleEdit": "Редактировать роль",
-    "editorTitleNew": "Новая роль",
-    "namePlaceholder": "напр. Contributor",
-    "resourceColumn": "Ресурс",
-    "toggleActionAll": "Переключить «{action}» для всех ресурсов",
-    "toggleGroupAll": "Переключить все права группы {group}",
-    "toggleActionGroup": "Переключить «{action}» для {group}",
-    "cellAria": "{resource}: {action}",
-    "saveRole": "Сохранить роль",
-    "createRole": "Создать роль",
     "copyRoles": "Скопировать роли",
     "pasteRoles": "Вставить роли",
     "nothingToCopy": "Нет своих ролей для копирования.",
@@ -180,7 +170,7 @@
       "actions": {
         "create": "Новая",
         "update": "Перезаписать",
-        "skip": "Пропустить (по умолчанию)"
+        "skip": "Пропустить (системная роль)"
       }
     },
     "transferErrors": {

@@ -92,7 +92,7 @@ export const scimGroupMember = pgTable(
 // map to projects of that workspace only. One group may map to several projects; at
 // most one mapping per pair.
 // `role_id` names the team_role a "member" joins on, and is NULL for an owner (an
-// owner bypasses the permission matrix) or when the team's default role applies.
+// owner bypasses the permission matrix) or when the default system role applies.
 export const scimGroupMapping = pgTable(
   'scim_group_mapping',
   {

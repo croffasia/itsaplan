@@ -138,9 +138,9 @@
     "search": "Buscar funções",
     "noMatches": "Nenhuma função corresponde a “{query}”.",
     "default": "Padrão",
+    "system": "Do sistema",
     "editAction": "Editar função",
     "deleteAction": "Excluir função",
-    "defaultUndeletable": "A função padrão não pode ser excluída",
     "deleteTitle": "Excluir função \"{name}\"",
     "deleteDescription": "Nada está nesta função. Isso não pode ser desfeito.",
     "deleteInUse": "Esta função ainda está em uso. Escolha a função para a qual tudo nela será movido.",
@@ -154,16 +154,6 @@
     "moveAndDelete": "Mover e excluir",
     "noTargetRole": "Não há outra função para a qual movê-los. Crie uma primeiro.",
     "newRole": "Nova função",
-    "editorTitleEdit": "Editar função",
-    "editorTitleNew": "Nova função",
-    "namePlaceholder": "ex. Colaborador",
-    "resourceColumn": "Recurso",
-    "toggleActionAll": "Alternar {action} para todos os recursos",
-    "toggleGroupAll": "Alternar todas as permissões de {group}",
-    "toggleActionGroup": "Alternar {action} para {group}",
-    "cellAria": "{resource}: {action}",
-    "saveRole": "Salvar função",
-    "createRole": "Criar função",
     "copyRoles": "Copiar funções",
     "pasteRoles": "Colar funções",
     "nothingToCopy": "Nenhuma função personalizada para copiar.",
@@ -180,7 +170,7 @@
       "actions": {
         "create": "Nova",
         "update": "Sobrescrever",
-        "skip": "Ignorar (padrão)"
+        "skip": "Ignorar (função do sistema)"
       }
     },
     "transferErrors": {

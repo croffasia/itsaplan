@@ -170,6 +170,20 @@
     },
     "joined": "عضو شده در {date}"
   },
+  "roles": {
+    "newRole": "نقش جدید",
+    "empty": "هنوز نقش سیستمی وجود ندارد.",
+    "default": "پیش‌فرض",
+    "defaultUndeletable": "نقش پیش‌فرض قابل حذف نیست",
+    "columns": {
+      "role": "نقش",
+      "permissions": "مجوزها"
+    },
+    "edit": "ویرایش نقش",
+    "delete": "حذف نقش",
+    "deleteTitle": "حذف نقش «{name}»",
+    "deleteDescription": "این کار قابل بازگشت نیست."
+  },
   "general": {
     "saved": "پیش‌فرض‌های پروژه ذخیره شد",
     "projectDefaults": "پیش‌فرض‌های پروژه",

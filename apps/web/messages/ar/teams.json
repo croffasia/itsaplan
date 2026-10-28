@@ -138,9 +138,9 @@
     "search": "البحث عن الأدوار",
     "noMatches": "لا توجد أدوار تطابق “{query}”.",
     "default": "افتراضي",
+    "system": "النظام",
     "editAction": "تعديل الدور",
     "deleteAction": "حذف الدور",
-    "defaultUndeletable": "لا يمكن حذف الدور الافتراضي",
     "deleteTitle": "حذف الدور \"{name}\"",
     "deleteDescription": "مفيش حد على الدور ده. ده مش هينفع ترجع فيه.",
     "deleteInUse": "الدور ده لسه مستخدم. اختار الدور اللي هينتقلوا ليه.",
@@ -154,16 +154,6 @@
     "moveAndDelete": "انقل واحذف",
     "noTargetRole": "مفيش دور تاني تنقلهم ليه. اعمل واحد الأول.",
     "newRole": "دور جديد",
-    "editorTitleEdit": "تعديل الدور",
-    "editorTitleNew": "دور جديد",
-    "namePlaceholder": "مثال: مساهم",
-    "resourceColumn": "المورد",
-    "toggleActionAll": "تبديل {action} لكل الموارد",
-    "toggleGroupAll": "تبديل كل صلاحيات {group}",
-    "toggleActionGroup": "تبديل {action} لـ {group}",
-    "cellAria": "{resource}: {action}",
-    "saveRole": "حفظ الدور",
-    "createRole": "إنشاء دور",
     "copyRoles": "نسخ الأدوار",
     "pasteRoles": "لصق الأدوار",
     "nothingToCopy": "لا توجد أدوار مخصّصة لنسخها.",
@@ -180,7 +170,7 @@
       "actions": {
         "create": "جديد",
         "update": "استبدال",
-        "skip": "تخطٍّ (افتراضي)"
+        "skip": "تخطٍّ (دور النظام)"
       }
     },
     "transferErrors": {

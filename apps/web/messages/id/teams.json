@@ -138,9 +138,9 @@
     "search": "Cari peran",
     "noMatches": "Tidak ada peran yang cocok dengan “{query}”.",
     "default": "Bawaan",
+    "system": "Sistem",
     "editAction": "Ubah peran",
     "deleteAction": "Hapus peran",
-    "defaultUndeletable": "Peran bawaan tidak dapat dihapus",
     "deleteTitle": "Hapus peran \"{name}\"",
     "deleteDescription": "Tidak ada yang menggunakan peran ini. Tindakan ini tidak dapat dibatalkan.",
     "deleteInUse": "Peran ini masih digunakan. Pilih peran tujuan untuk memindahkan semua yang menggunakannya.",
@@ -154,16 +154,6 @@
     "moveAndDelete": "Pindahkan dan hapus",
     "noTargetRole": "Tidak ada peran lain untuk tujuan pemindahan. Buat peran baru terlebih dahulu.",
     "newRole": "Peran baru",
-    "editorTitleEdit": "Ubah peran",
-    "editorTitleNew": "Peran baru",
-    "namePlaceholder": "cth. Kontributor",
-    "resourceColumn": "Sumber daya",
-    "toggleActionAll": "Aktifkan atau nonaktifkan {action} untuk semua sumber daya",
-    "toggleGroupAll": "Aktifkan atau nonaktifkan semua izin {group}",
-    "toggleActionGroup": "Aktifkan atau nonaktifkan {action} untuk {group}",
-    "cellAria": "{resource}: {action}",
-    "saveRole": "Simpan peran",
-    "createRole": "Buat peran",
     "copyRoles": "Salin peran",
     "pasteRoles": "Tempel peran",
     "nothingToCopy": "Tidak ada peran kustom untuk disalin.",
@@ -180,7 +170,7 @@
       "actions": {
         "create": "Baru",
         "update": "Timpa",
-        "skip": "Lewati (bawaan)"
+        "skip": "Lewati (peran sistem)"
       }
     },
     "transferErrors": {

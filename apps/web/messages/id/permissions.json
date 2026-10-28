@@ -49,5 +49,16 @@
   "allowed": "diizinkan",
   "notAllowed": "tidak diizinkan",
   "accessHeading": "Akses ke proyek ini",
-  "joined": "bergabung {date}"
+  "joined": "bergabung {date}",
+  "editor": {
+    "titleEdit": "Ubah peran",
+    "titleNew": "Peran baru",
+    "namePlaceholder": "cth. Kontributor",
+    "toggleActionAll": "Aktifkan atau nonaktifkan {action} untuk semua sumber daya",
+    "toggleGroupAll": "Aktifkan atau nonaktifkan semua izin {group}",
+    "toggleActionGroup": "Aktifkan atau nonaktifkan {action} untuk {group}",
+    "cellAria": "{resource}: {action}",
+    "saveRole": "Simpan peran",
+    "createRole": "Buat peran"
+  }
 }

@@ -49,5 +49,16 @@
   "allowed": "autorisé",
   "notAllowed": "non autorisé",
   "accessHeading": "Accès à ce projet",
-  "joined": "arrivé {date}"
+  "joined": "arrivé {date}",
+  "editor": {
+    "titleEdit": "Modifier le rôle",
+    "titleNew": "Nouveau rôle",
+    "namePlaceholder": "ex. Contributeur",
+    "toggleActionAll": "Basculer {action} pour toutes les ressources",
+    "toggleGroupAll": "Basculer toutes les permissions de {group}",
+    "toggleActionGroup": "Basculer {action} pour {group}",
+    "cellAria": "{resource} : {action}",
+    "saveRole": "Enregistrer le rôle",
+    "createRole": "Créer le rôle"
+  }
 }

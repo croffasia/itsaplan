@@ -170,6 +170,20 @@
     },
     "joined": "bergabung {date}"
   },
+  "roles": {
+    "newRole": "Peran baru",
+    "empty": "Belum ada peran sistem.",
+    "default": "Bawaan",
+    "defaultUndeletable": "Peran bawaan tidak dapat dihapus",
+    "columns": {
+      "role": "Peran",
+      "permissions": "Izin"
+    },
+    "edit": "Ubah peran",
+    "delete": "Hapus peran",
+    "deleteTitle": "Hapus peran \"{name}\"",
+    "deleteDescription": "Tindakan ini tidak dapat dibatalkan."
+  },
   "general": {
     "saved": "Pengaturan bawaan proyek disimpan",
     "projectDefaults": "Pengaturan bawaan proyek",

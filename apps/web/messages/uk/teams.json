@@ -138,9 +138,9 @@
     "search": "Пошук ролей",
     "noMatches": "Немає ролей за запитом «{query}».",
     "default": "За замовчуванням",
+    "system": "Системна",
     "editAction": "Редагувати роль",
     "deleteAction": "Видалити роль",
-    "defaultUndeletable": "Роль за замовчуванням видалити не можна",
     "deleteTitle": "Видалити роль «{name}»",
     "deleteDescription": "На цій ролі нікого немає. Дію не можна скасувати.",
     "deleteInUse": "Роль ще використовується. Виберіть роль, на яку перенести всіх із неї.",
@@ -154,16 +154,6 @@
     "moveAndDelete": "Перенести та видалити",
     "noTargetRole": "Немає іншої ролі для перенесення. Спершу створіть її.",
     "newRole": "Нова роль",
-    "editorTitleEdit": "Редагувати роль",
-    "editorTitleNew": "Нова роль",
-    "namePlaceholder": "напр. Contributor",
-    "resourceColumn": "Ресурс",
-    "toggleActionAll": "Перемкнути «{action}» для всіх ресурсів",
-    "toggleGroupAll": "Перемкнути всі права групи {group}",
-    "toggleActionGroup": "Перемкнути «{action}» для {group}",
-    "cellAria": "{resource}: {action}",
-    "saveRole": "Зберегти роль",
-    "createRole": "Створити роль",
     "copyRoles": "Скопіювати ролі",
     "pasteRoles": "Вставити ролі",
     "nothingToCopy": "Немає власних ролей для копіювання.",
@@ -180,7 +170,7 @@
       "actions": {
         "create": "Нова",
         "update": "Перезаписати",
-        "skip": "Пропустити (за замовчуванням)"
+        "skip": "Пропустити (системна роль)"
       }
     },
     "transferErrors": {

@@ -7,7 +7,7 @@ import {
   team,
   teamRole,
 } from '@repo/db';
-import { and, asc, eq, inArray, notInArray, or, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, notInArray, or, sql } from 'drizzle-orm';
 import { workspacesWithOwnScim } from '@repo/auth';
 import { HttpError } from '#shared/lib';
 import { mappedProjectIds, reconcileProjects } from './reconcile';
@@ -109,8 +109,8 @@ export async function setGroupMappings(
       .innerJoin(team, eq(team.id, project.teamId))
       .where(and(inArray(project.id, projectIds), where && or(where, inArray(project.id, before))));
     if (known.length !== projectIds.length) throw new HttpError(400, 'Unknown project');
-    // A role belongs to one team, so a mapping that names another team's role would
-    // silently grant the wrong permissions.
+    // A custom role belongs to one team, so a mapping that names another team's role
+    // would silently grant the wrong permissions. A system role fits every team.
     const roleIds = mappings.map((m) => m.roleId).filter((id): id is number => id !== null);
     if (roleIds.length > 0) {
       const roles = await db
@@ -121,7 +121,7 @@ export async function setGroupMappings(
         if (mapping.roleId === null) continue;
         const role = roles.find((r) => r.id === mapping.roleId);
         const teamId = known.find((p) => p.id === mapping.projectId)?.teamId;
-        if (!role || role.teamId !== teamId) {
+        if (!role || (role.teamId !== null && role.teamId !== teamId)) {
           throw new HttpError(400, 'The role does not belong to that project');
         }
       }
@@ -148,11 +148,11 @@ export async function setGroupMappings(
   return groups.find((g) => g.id === groupId)!;
 }
 
-// Every project a group may grant, with the roles of the team that owns it. What the
-// group mapping form fills its project and role selects from.
+// Every project a group may grant, with the system roles and the roles of the team that
+// owns it. What the group mapping form fills its project and role selects from.
 export async function listMappableProjects(workspaceId: number | null) {
   const where = await grantable(workspaceId);
-  const [projects, roles] = await Promise.all([
+  const [projects, roles, system] = await Promise.all([
     db
       .select({ id: project.id, key: project.key, name: project.name, teamId: project.teamId })
       .from(project)
@@ -165,10 +165,18 @@ export async function listMappableProjects(workspaceId: number | null) {
       .innerJoin(team, eq(team.id, teamRole.teamId))
       .where(where)
       .orderBy(asc(teamRole.id)),
+    db
+      .select({ id: teamRole.id, name: teamRole.name })
+      .from(teamRole)
+      .where(isNull(teamRole.teamId))
+      .orderBy(asc(teamRole.id)),
   ]);
   return projects.map(({ teamId, ...entry }) => ({
     ...entry,
-    roles: roles.filter((role) => role.teamId === teamId).map(({ id, name }) => ({ id, name })),
+    roles: [
+      ...system,
+      ...roles.filter((role) => role.teamId === teamId).map(({ id, name }) => ({ id, name })),
+    ],
   }));
 }
 

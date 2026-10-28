@@ -25,6 +25,10 @@
       "label": "Projetos",
       "description": "Todo projeto nesta instância: o que cada um contém, quando esteve ativo pela última vez e quem pode alcançá-lo."
     },
+    "roles": {
+      "label": "Funções do sistema",
+      "description": "Funções padrão disponíveis para todas as equipes desta instância."
+    },
     "general": {
       "label": "Geral",
       "description": "Workspaces pessoais, padrões para novos projetos, e rastros e tempo de execução de agentes."

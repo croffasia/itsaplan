@@ -170,6 +170,20 @@
     },
     "joined": "joined {date}"
   },
+  "roles": {
+    "newRole": "New role",
+    "empty": "No system roles yet.",
+    "default": "Default",
+    "defaultUndeletable": "The default role cannot be deleted",
+    "columns": {
+      "role": "Role",
+      "permissions": "Permissions"
+    },
+    "edit": "Edit role",
+    "delete": "Delete role",
+    "deleteTitle": "Delete role \"{name}\"",
+    "deleteDescription": "This cannot be undone."
+  },
   "general": {
     "saved": "Project defaults saved",
     "projectDefaults": "Project defaults",

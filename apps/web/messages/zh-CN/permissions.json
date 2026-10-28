@@ -49,5 +49,16 @@
   "allowed": "允许",
   "notAllowed": "不允许",
   "accessHeading": "对此项目的访问权限",
-  "joined": "加入于 {date}"
+  "joined": "加入于 {date}",
+  "editor": {
+    "titleEdit": "编辑角色",
+    "titleNew": "新建角色",
+    "namePlaceholder": "例如：贡献者",
+    "toggleActionAll": "切换所有资源的“{action}”权限",
+    "toggleGroupAll": "切换“{group}”的所有权限",
+    "toggleActionGroup": "切换“{group}”的“{action}”权限",
+    "cellAria": "{resource}：{action}",
+    "saveRole": "保存角色",
+    "createRole": "新建角色"
+  }
 }

@@ -170,6 +170,20 @@
     },
     "joined": "加入于 {date}"
   },
+  "roles": {
+    "newRole": "新建角色",
+    "empty": "还没有系统角色。",
+    "default": "默认",
+    "defaultUndeletable": "无法删除默认角色",
+    "columns": {
+      "role": "角色",
+      "permissions": "权限"
+    },
+    "edit": "编辑角色",
+    "delete": "删除角色",
+    "deleteTitle": "删除角色“{name}”",
+    "deleteDescription": "此操作无法撤销。"
+  },
   "general": {
     "saved": "项目默认设置已保存",
     "projectDefaults": "项目默认设置",

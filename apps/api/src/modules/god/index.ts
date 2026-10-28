@@ -21,7 +21,7 @@ import { hasConfiguredEmailProvider, getStorageSettings } from '@repo/db';
 import { emailBody, hasEmailProvider, sendEmail } from '@repo/mailer';
 import { authContext } from '#shared/auth-context';
 import { requireGod } from '#shared/access';
-import { HttpError } from '#shared/lib';
+import { HttpError, rethrowDuplicate } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { paginate } from '#shared/pagination';
 import { noContent } from '#shared/http';
@@ -78,6 +78,7 @@ import {
   deleteUserQuery,
   listUsersQuery,
   projectParams,
+  roleParams,
   scimGroupParams,
   searchPageQuery,
   teamParams,
@@ -97,6 +98,16 @@ import {
   setAgentSettings,
 } from '#modules/settings/service';
 import { getUpdateStatus } from '#modules/settings/updates';
+import { RoleResponse, createRoleBody, updateRoleBody } from '#modules/roles/model';
+import {
+  createRole,
+  deleteRole,
+  getRole,
+  getRoleUsage,
+  isRoleInUse,
+  listRoles,
+  updateRole,
+} from '#modules/roles/service';
 import {
   AgentSettingsSchema,
   EmbedSitesSchema,
@@ -797,6 +808,75 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       detail: {
         summary: "List a team's members",
         description: 'One page of the team members, people and agents alike, with their rank.',
+      },
+    },
+  )
+
+  // System roles: permission matrices that belong to no team. Only god mode writes them.
+  .get('/god/roles', () => listRoles(null), {
+    response: { 200: t.Array(RoleResponse), ...errors(401, 403) },
+    detail: { summary: 'List system roles', description: 'Every system role, oldest first.' },
+  })
+
+  .post(
+    '/god/roles',
+    async ({ body, set }) => {
+      try {
+        set.status = 201;
+        return await createRole(null, body);
+      } catch (err) {
+        rethrowDuplicate(err, 'role');
+      }
+    },
+    {
+      body: createRoleBody,
+      response: { 201: RoleResponse, ...errors(400, 401, 403, 409) },
+      detail: { summary: 'Create a system role', description: 'Create a system role.' },
+    },
+  )
+
+  .patch(
+    '/god/roles/:roleId',
+    async ({ params, body }) => {
+      let role;
+      try {
+        role = await updateRole(null, params.roleId, body);
+      } catch (err) {
+        rethrowDuplicate(err, 'role');
+      }
+      if (!role) throw new HttpError(404, 'Role not found');
+      return role;
+    },
+    {
+      params: roleParams,
+      body: updateRoleBody,
+      response: { 200: RoleResponse, ...commonErrors, ...errors(409) },
+      detail: {
+        summary: 'Update a system role',
+        description: 'Update the name or the permission matrix of a system role.',
+      },
+    },
+  )
+
+  .delete(
+    '/god/roles/:roleId',
+    async ({ params }) => {
+      const role = await getRole(null, params.roleId);
+      if (!role) throw new HttpError(404, 'Role not found');
+      if (role.isDefault) throw new HttpError(400, 'The default role cannot be deleted');
+      // Deleting a role in use would drop its holders onto the default matrix.
+      if (isRoleInUse(await getRoleUsage(params.roleId))) {
+        throw new HttpError(409, 'This role is in use');
+      }
+      await deleteRole(null, params.roleId, null);
+      return noContent();
+    },
+    {
+      params: roleParams,
+      response: { 204: t.Void(), ...commonErrors, ...errors(409) },
+      detail: {
+        summary: 'Delete a system role',
+        description: 'Delete a system role. The default role cannot be deleted.',
       },
     },
   );

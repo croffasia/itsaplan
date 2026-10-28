@@ -21,6 +21,8 @@ export const projectParams = t.Object({ projectId: t.Numeric() });
 
 export const scimGroupParams = t.Object({ groupId: t.String() });
 
+export const roleParams = t.Object({ roleId: t.Numeric() });
+
 export const listUsersQuery = t.Object({
   search: t.Optional(t.String()),
   // Agent bot users are accounts too, but they are managed on a project's AI

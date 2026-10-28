@@ -170,6 +170,20 @@
     },
     "joined": "{date}에 가입"
   },
+  "roles": {
+    "newRole": "새 역할",
+    "empty": "아직 시스템 역할이 없습니다.",
+    "default": "기본값",
+    "defaultUndeletable": "기본 역할은 삭제할 수 없습니다",
+    "columns": {
+      "role": "역할",
+      "permissions": "권한"
+    },
+    "edit": "역할 편집",
+    "delete": "역할 삭제",
+    "deleteTitle": "\"{name}\" 역할 삭제",
+    "deleteDescription": "이 작업은 되돌릴 수 없습니다."
+  },
   "general": {
     "saved": "프로젝트 기본값이 저장되었습니다",
     "projectDefaults": "프로젝트 기본값",

@@ -428,7 +428,7 @@ describe('ai agents', () => {
     expect(project.data!.assignees.find((a) => a.kind === 'member')?.respondsToMention).toBeNull();
   });
 
-  it("attaches an agent to a project on the team's default role", async () => {
+  it('attaches an agent to a project on the default role', async () => {
     const { asOwner } = await setup();
     const roles = await listProjectRoles(asOwner, 'MKT');
     const defaultRole = roles.data!.find((r) => r.isDefault)!;

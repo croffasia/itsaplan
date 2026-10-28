@@ -111,7 +111,7 @@ const configFields = {
       description:
         'Projects of the team the agent works in, from list_projects. Replaces the set: a ' +
         'project left out is detached. A project of another team is rejected. The agent ' +
-        "joins on the team's default role; set_member_role changes it per project.",
+        'joins on the default role; set_member_role changes it per project.',
     }),
   ),
   runnerScope: t.Optional(
@@ -319,7 +319,7 @@ export const setAgentProjectsBody = t.Object({
   projectIds: t.Array(t.Integer(), {
     description:
       'Projects of the team the agent works in. Replaces the set: a project left out is ' +
-      "detached. The agent joins on the team's default role; set_member_role changes it per " +
+      'detached. The agent joins on the default role; set_member_role changes it per ' +
       'project.',
   }),
 });

@@ -170,6 +170,20 @@
     },
     "joined": "a rejoint le {date}"
   },
+  "roles": {
+    "newRole": "Nouveau rôle",
+    "empty": "Aucun rôle système pour l’instant.",
+    "default": "Par défaut",
+    "defaultUndeletable": "Le rôle par défaut ne peut pas être supprimé",
+    "columns": {
+      "role": "Rôle",
+      "permissions": "Autorisations"
+    },
+    "edit": "Modifier le rôle",
+    "delete": "Supprimer le rôle",
+    "deleteTitle": "Supprimer le rôle « {name} »",
+    "deleteDescription": "Cette action est irréversible."
+  },
   "general": {
     "saved": "Valeurs par défaut des projets enregistrées",
     "projectDefaults": "Valeurs par défaut des projets",

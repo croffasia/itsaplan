@@ -28,6 +28,7 @@ import { HttpError, iso, likePattern, pgErrorCode } from '#shared/lib';
 import { getProjectAccess, getTeamAccess } from '#shared/access';
 import { teamRef } from '#modules/teams/ref';
 import { getMembership, type MemberRole } from '#modules/members/service';
+import { getDefaultRoleId } from '#modules/roles/service';
 import { assertSeatFree, getTeamMembership, runsTeam, type TeamRole } from '#modules/teams/service';
 import { isInviteEmailAllowed } from './email-policy';
 
@@ -64,7 +65,7 @@ export interface InviteRow {
   // The role in that project. Null when the invite names no project.
   role: MemberRole | null;
   // The custom role a project member joins on. roleId is null when the invite falls
-  // back to the team's default role; roleName resolves it for display. A project
+  // back to the default role; roleName resolves it for display. A project
   // owner has both null.
   roleId: number | null;
   roleName: string | null;
@@ -557,20 +558,10 @@ export async function acceptInvite(
       });
 
     if (invite.projectId != null) {
-      // A member joins on the invite's chosen role, falling back to the team's
-      // default role when none was set; a project owner bypasses roles.
-      let roleId: number | null = null;
-      if (invite.projectRole === 'member') {
-        if (invite.roleId != null) {
-          roleId = invite.roleId;
-        } else {
-          const [def] = await tx
-            .select({ id: teamRole.id })
-            .from(teamRole)
-            .where(and(eq(teamRole.teamId, invite.teamId), eq(teamRole.isDefault, true)));
-          roleId = def?.id ?? null;
-        }
-      }
+      // A member joins on the invite's chosen role, falling back to the default role
+      // when none was set; a project owner bypasses roles.
+      const roleId =
+        invite.projectRole === 'member' ? (invite.roleId ?? (await getDefaultRoleId())) : null;
       await tx
         .insert(projectMember)
         .values({

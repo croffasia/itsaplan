@@ -235,7 +235,7 @@ Two decisions a reader would otherwise propose again:
   so the web hides what the api would refuse. What the agents spent is a resource of its own,
   `agent_usage`, read only, so reading it administers nothing.
 - **An agent's role is its `project_member` row**, per project, set from the project's
-  member list like a person's. Attaching an agent joins it on the team's default role;
+  member list like a person's. Attaching an agent joins it on the default system role;
   `members/` refuses to make it an owner, since an owner bypasses the matrix.
 
 Runs of an internal agent are traced. `runtime/observability.ts` holds the one Mastra

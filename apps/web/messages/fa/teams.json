@@ -138,9 +138,9 @@
     "search": "جستجوی نقش‌ها",
     "noMatches": "هیچ نقشی با «{query}» مطابقت ندارد.",
     "default": "پیش‌فرض",
+    "system": "سیستمی",
     "editAction": "ویرایش نقش",
     "deleteAction": "حذف نقش",
-    "defaultUndeletable": "نقش پیش‌فرض قابل حذف نیست",
     "deleteTitle": "حذف نقش \"{name}\"",
     "deleteDescription": "چیزی روی این نقش نیست. این عمل قابل بازگشت نیست.",
     "deleteInUse": "این نقش هنوز در استفاده است. نقشی را انتخاب کنید که همه‌چیز روی آن به آن منتقل شود.",
@@ -154,16 +154,6 @@
     "moveAndDelete": "انتقال و حذف",
     "noTargetRole": "نقش دیگری برای انتقال آن‌ها وجود ندارد. ابتدا یکی بسازید.",
     "newRole": "نقش جدید",
-    "editorTitleEdit": "ویرایش نقش",
-    "editorTitleNew": "نقش جدید",
-    "namePlaceholder": "مثلاً مشارکت‌کننده",
-    "resourceColumn": "منبع",
-    "toggleActionAll": "تغییر {action} برای همه منابع",
-    "toggleGroupAll": "تغییر همه مجوزهای {group}",
-    "toggleActionGroup": "تغییر {action} برای {group}",
-    "cellAria": "{resource}: {action}",
-    "saveRole": "ذخیره نقش",
-    "createRole": "ایجاد نقش",
     "copyRoles": "کپی نقش‌ها",
     "pasteRoles": "چسباندن نقش‌ها",
     "nothingToCopy": "نقش سفارشی برای کپی وجود ندارد.",
@@ -180,7 +170,7 @@
       "actions": {
         "create": "جدید",
         "update": "بازنویسی",
-        "skip": "رد کردن (پیش‌فرض)"
+        "skip": "رد کردن (نقش سیستمی)"
       }
     },
     "transferErrors": {

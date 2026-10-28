@@ -30,6 +30,9 @@ export const RoleResponse = t.Object({
   id: t.Number(),
   name: t.String(),
   isDefault: t.Boolean(),
+  system: t.Boolean({
+    description: 'A system role: every team assigns it, only god mode edits it.',
+  }),
   permissions: PermissionMatrixSchema,
   createdAt: t.String(),
 });

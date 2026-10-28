@@ -1114,6 +1114,34 @@
       "when": 1793058294770,
       "tag": "0158_trello_import",
       "breakpoints": true
+    },
+    {
+      "idx": 159,
+      "version": "7",
+      "when": 1793194811096,
+      "tag": "0159_system_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 160,
+      "version": "7",
+      "when": 1793196902562,
+      "tag": "0160_system_member_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 161,
+      "version": "7",
+      "when": 1793198488881,
+      "tag": "0161_system_default_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 162,
+      "version": "7",
+      "when": 1793204184815,
+      "tag": "0162_system_member_config_reads",
+      "breakpoints": true
     }
   ]
 }

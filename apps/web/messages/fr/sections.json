@@ -25,6 +25,10 @@
       "label": "Projets",
       "description": "Tous les projets de cette instance : ce que chacun contient, sa dernière activité, et qui peut y accéder."
     },
+    "roles": {
+      "label": "Rôles système",
+      "description": "Des rôles par défaut disponibles pour toutes les équipes de cette instance."
+    },
     "general": {
       "label": "Général",
       "description": "Les espaces de travail personnels, les valeurs par défaut des nouveaux projets, ainsi que les traces et la durée d'exécution des agents."

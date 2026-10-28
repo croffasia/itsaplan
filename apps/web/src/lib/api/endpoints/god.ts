@@ -2,7 +2,7 @@ import { request } from '@/lib/api/core/client';
 import type { MemberRole } from '@/lib/api/endpoints/members';
 import type { TeamRole } from '@/lib/api/endpoints/teams';
 import type { NotificationEncryption } from '@/lib/api/endpoints/notificationSettings';
-import type { Permissions } from '@/lib/api/endpoints/roles';
+import type { Permissions, Role } from '@/lib/api/endpoints/roles';
 import type { ProjectDefaults } from '@/lib/api/endpoints/projects';
 import type {
   HotkeyOverrides,
@@ -432,3 +432,17 @@ export const listInstanceTeamMembers = (teamId: number, params: PageParams & { s
   request<Page<InstanceTeamMember>>(
     `/god/teams/${teamId}/members${pageQuery(params, { search: params.search })}`,
   );
+
+// System roles: permission matrices that belong to no team, written only in god mode.
+export const listSystemRoles = () => request<Role[]>('/god/roles');
+
+export const createSystemRole = (input: { name: string; permissions: Permissions }) =>
+  request<Role>('/god/roles', { method: 'POST', body: JSON.stringify(input) });
+
+export const updateSystemRole = (
+  roleId: number,
+  patch: { name?: string; permissions?: Permissions },
+) => request<Role>(`/god/roles/${roleId}`, { method: 'PATCH', body: JSON.stringify(patch) });
+
+export const deleteSystemRole = (roleId: number) =>
+  request<void>(`/god/roles/${roleId}`, { method: 'DELETE' });

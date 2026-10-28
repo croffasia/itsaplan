@@ -170,6 +170,20 @@
     },
     "joined": "انضم في {date}"
   },
+  "roles": {
+    "newRole": "دور جديد",
+    "empty": "لا توجد أدوار نظام بعد.",
+    "default": "افتراضي",
+    "defaultUndeletable": "لا يمكن حذف الدور الافتراضي",
+    "columns": {
+      "role": "الدور",
+      "permissions": "الصلاحيات"
+    },
+    "edit": "تعديل الدور",
+    "delete": "حذف الدور",
+    "deleteTitle": "حذف الدور \"{name}\"",
+    "deleteDescription": "لا يمكن التراجع عن هذا الإجراء."
+  },
   "general": {
     "saved": "تم حفظ الإعدادات الافتراضية",
     "projectDefaults": "الإعدادات الافتراضية",

@@ -653,9 +653,9 @@ export async function createAgent(
   if (isInternal) await assertModelCredential(teamId, input.modelCredentialId);
   if (invocationUrl) await assertPublicHttpUrl(invocationUrl);
   const projectIds = await resolveTeamProjectIds(teamId, input.projectIds ?? []);
-  // An agent joins a project the way a person accepting an invite does: on the team's
-  // default role, changed per project from the project's member list afterwards.
-  const roleId = await getDefaultRoleId(teamId);
+  // An agent joins a project the way a person accepting an invite does: on the default
+  // role, changed per project from the project's member list afterwards.
+  const roleId = await getDefaultRoleId();
 
   const agentId = await db.transaction(async (tx) => {
     await tx
@@ -721,7 +721,7 @@ export async function createAgent(
 // works in keeps the role that membership carries.
 async function setAgentProjects(agent: AiAgentRow, projectIds: number[]): Promise<number[]> {
   const wanted = await resolveTeamProjectIds(agent.teamId, projectIds);
-  const roleId = await getDefaultRoleId(agent.teamId);
+  const roleId = await getDefaultRoleId();
   await db.transaction(async (tx) => {
     await tx
       .delete(projectMember)

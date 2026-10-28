@@ -170,6 +170,20 @@
     },
     "joined": "Se unió {date}"
   },
+  "roles": {
+    "newRole": "Nuevo rol",
+    "empty": "Aún no hay roles del sistema.",
+    "default": "Por defecto",
+    "defaultUndeletable": "El rol por defecto no se puede eliminar",
+    "columns": {
+      "role": "Rol",
+      "permissions": "Permisos"
+    },
+    "edit": "Editar el rol",
+    "delete": "Eliminar el rol",
+    "deleteTitle": "Eliminar el rol \"{name}\"",
+    "deleteDescription": "Esta acción no se puede deshacer."
+  },
   "general": {
     "saved": "Los valores por defecto del proyecto se han guardado",
     "projectDefaults": "Valores por defecto del proyecto",

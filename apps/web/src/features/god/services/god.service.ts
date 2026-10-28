@@ -49,7 +49,12 @@ import {
   listInstanceTeamProjects,
   listInstanceTeamMembers,
   verifyInstanceUserEmail,
+  listSystemRoles,
+  createSystemRole,
+  updateSystemRole,
+  deleteSystemRole,
 } from '@/lib/api/endpoints/god';
+import type { Permissions } from '@/lib/api/endpoints/roles';
 import { qk } from '@/services/queryKeys';
 
 // Data hooks for god mode. Every write returns the new state, which replaces the
@@ -360,4 +365,31 @@ export function useInstanceTeamMembersQuery(teamId: number, search: string | und
     initialPageParam: 1,
     getNextPageParam: nextPageParam,
   });
+}
+
+export function useSystemRolesQuery() {
+  return useQuery({ queryKey: qk.systemRoles, queryFn: listSystemRoles });
+}
+
+function useSystemRoleMutation<TInput, TResult>(mutationFn: (input: TInput) => Promise<TResult>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => void qc.invalidateQueries({ queryKey: qk.systemRoles }),
+  });
+}
+
+export function useCreateSystemRole() {
+  return useSystemRoleMutation(createSystemRole);
+}
+
+export function useUpdateSystemRole() {
+  return useSystemRoleMutation(
+    ({ roleId, patch }: { roleId: number; patch: { name?: string; permissions?: Permissions } }) =>
+      updateSystemRole(roleId, patch),
+  );
+}
+
+export function useDeleteSystemRole() {
+  return useSystemRoleMutation(deleteSystemRole);
 }

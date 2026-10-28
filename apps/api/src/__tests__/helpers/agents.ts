@@ -32,7 +32,7 @@ export async function createAgent(api: Api, projectKey: string, body: CreateAgen
 }
 
 // Puts the agent's membership of a project on a role, the way the project's member
-// list does. An agent joins on the team's default role, so this is how a test gives
+// list does. An agent joins on the default role, so this is how a test gives
 // it the role its calls are then checked against.
 export async function setAgentProjectRole(
   api: Api,

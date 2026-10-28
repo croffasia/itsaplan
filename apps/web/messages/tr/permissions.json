@@ -49,5 +49,16 @@
   "allowed": "izin verildi",
   "notAllowed": "izin verilmedi",
   "accessHeading": "Bu projeye erişim",
-  "joined": "katılma tarihi: {date}"
+  "joined": "katılma tarihi: {date}",
+  "editor": {
+    "titleEdit": "Rolü düzenle",
+    "titleNew": "Yeni rol",
+    "namePlaceholder": "Örn. Katkıda Bulunan (Contributor)",
+    "toggleActionAll": "Tüm kaynaklar için {action} iznini aç/kapat",
+    "toggleGroupAll": "Tüm {group} izinlerini aç/kapat",
+    "toggleActionGroup": "{group} için {action} iznini aç/kapat",
+    "cellAria": "{resource}: {action}",
+    "saveRole": "Rolü kaydet",
+    "createRole": "Rol oluştur"
+  }
 }

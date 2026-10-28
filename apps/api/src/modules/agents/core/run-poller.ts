@@ -1,7 +1,7 @@
 import { db, teamWorkspaceId } from '@repo/db';
 import { getProjectTeamId } from '#modules/projects/service';
 import { getAgentSettings } from '#modules/settings/service';
-import { getLimits } from '#shared/limits';
+import { getLimits, getRunLimit } from '#shared/limits';
 import { framePrompt, peopleContext, runModePreamble } from './prompt/framing';
 import { agentRunStarted, recordAgentRunFinished } from './run-activity';
 import { runAdmissionDelay } from './run-admission';
@@ -37,8 +37,9 @@ export async function processAgentRuns(): Promise<void> {
 async function processRun(run: ClaimedRun): Promise<void> {
   const teamId = await getProjectTeamId(run.projectId);
   const workspaceId = await teamWorkspaceId(teamId, db);
-  const { maxConcurrentRuns, maxRunSeconds } = await getLimits(workspaceId);
-  if (maxConcurrentRuns > 0 && (await countRunsAhead(workspaceId, run.id)) >= maxConcurrentRuns) {
+  const limits = await getLimits(workspaceId);
+  const runLimit = await getRunLimit(workspaceId, limits);
+  if (runLimit > 0 && (await countRunsAhead(workspaceId, run.id)) >= runLimit) {
     await deferRun(run.id, DEFERRED_RETRY_SECONDS);
     return;
   }
@@ -65,7 +66,7 @@ async function processRun(run: ClaimedRun): Promise<void> {
   const configuredTimeoutMs = runTimeoutMs(
     run.agentRunTimeoutSec,
     (await getAgentSettings()).maxRunSeconds,
-    maxRunSeconds,
+    limits.maxRunSeconds,
   );
   if (run.executionDeadline <= performance.now()) return;
   try {

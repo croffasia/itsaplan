@@ -26,7 +26,8 @@ import {
 } from 'drizzle-orm';
 import { requireUser, type AuthUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
-import { getOwnedWorkspaceLimit } from '#shared/limits';
+import { getLimits, getOwnedWorkspaceLimit, tightestLimit } from '#shared/limits';
+import { getAgentSettings } from '#modules/settings/service';
 import { workspaceRoleGrant, type WorkspaceGrant } from '#shared/workspace-roles';
 
 export type WorkspaceRole = 'owner' | 'admin';
@@ -183,6 +184,7 @@ export async function getWorkspace(workspaceId: number, role: WorkspaceRole) {
       managerCount: db.$count(workspaceManager, eq(workspaceManager.workspaceId, workspace.id)),
       color: workspace.color,
       teamCreation: workspace.teamCreation,
+      maxConcurrentRuns: workspace.maxConcurrentRuns,
     })
     .from(workspace)
     .where(eq(workspace.id, workspaceId));
@@ -190,9 +192,17 @@ export async function getWorkspace(workspaceId: number, role: WorkspaceRole) {
   return {
     ...row,
     teamCreation: row.teamCreation as TeamCreation,
+    maxConcurrentRunsCap: await runLimitCap(workspaceId),
     role,
     deletion: await workspaceDeletion(workspaceId),
   };
+}
+
+// The highest run limit its owner may set: the instance's, or the provider's where that
+// is lower. 0 when neither sets one.
+async function runLimitCap(workspaceId: number): Promise<number> {
+  const [settings, limits] = await Promise.all([getAgentSettings(), getLimits(workspaceId)]);
+  return tightestLimit(settings.maxConcurrentRuns, limits.maxConcurrentRuns);
 }
 
 // Whether a team of the workspace has a project or an AI agent: people's work, which a
@@ -281,15 +291,29 @@ export async function createOwnWorkspace(current: AuthUser, name: string): Promi
   });
 }
 
-// A manager renames and recolours it; who creates teams is the owner's to decide, so an
-// admin cannot let themselves create teams.
+// A manager renames and recolours it; who creates teams and how many agents run at once
+// are the owner's to decide, so an admin cannot let themselves create teams.
 export async function updateWorkspace(
   workspaceId: number,
   role: WorkspaceRole,
-  patch: { name?: string; color?: string | null; teamCreation?: TeamCreation },
+  patch: {
+    name?: string;
+    color?: string | null;
+    teamCreation?: TeamCreation;
+    maxConcurrentRuns?: number;
+  },
 ): Promise<void> {
   if (patch.teamCreation !== undefined && role !== 'owner') {
     throw new HttpError(403, 'Only the workspace owner decides who creates teams');
+  }
+  if (patch.maxConcurrentRuns !== undefined) {
+    if (role !== 'owner') {
+      throw new HttpError(403, 'Only the workspace owner sets how many agents run at once');
+    }
+    const cap = await runLimitCap(workspaceId);
+    if (cap > 0 && patch.maxConcurrentRuns > cap) {
+      throw new HttpError(400, `This workspace may run at most ${cap} agents at once`);
+    }
   }
   if (Object.keys(patch).length === 0) return;
   await db.update(workspace).set(patch).where(eq(workspace.id, workspaceId));

@@ -120,8 +120,8 @@
       "description": "Agentes de IA que trabajan en este proyecto."
     },
     "queue": {
-      "label": "Runner queue",
-      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
+      "label": "Ejecuciones de agentes",
+      "description": "Ejecuciones de los agentes internos y externos del proyecto: en curso, en espera y pasadas."
     }
   },
   "previews": {

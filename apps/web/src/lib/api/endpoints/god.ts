@@ -290,6 +290,8 @@ export interface AgentSettings {
   traceRetentionDays: number;
   // Seconds one agent run may take; an agent's own limit cannot exceed it.
   maxRunSeconds: number;
+  // Runs of internal agents in flight at once across the instance. 0 sets no limit.
+  maxConcurrentRuns: number;
 }
 
 export const getInstanceAgentSettings = () => request<AgentSettings>('/god/agent-settings');

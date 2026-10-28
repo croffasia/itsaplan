@@ -162,12 +162,13 @@ export async function getAgentTrace(
   return { trace: toSummary(root), spans };
 }
 
-// Retries share a queued run id. Each trace links to the previous recorded attempt.
+// Retries share a queued run id. Each trace links to the previous recorded attempt. A
+// run on no issue, such as a cron schedule's, records no issue id.
 export async function getRunTrace(
   agentId: number,
   runId: number,
   projectId: number,
-  issueId: number,
+  issueId: number | null,
   viewerId: string,
   traceId?: string,
 ) {
@@ -176,7 +177,7 @@ export async function getRunTrace(
     AND r.metadata->>'agentId' = ${String(agentId)}
     AND r.metadata->>'runId' = ${String(runId)}
     AND r.metadata->>'projectId' = ${String(projectId)}
-    AND r.metadata->>'issueId' = ${String(issueId)}
+    AND ${issueId == null ? sql`r.metadata->>'issueId' IS NULL` : sql`r.metadata->>'issueId' = ${String(issueId)}`}
     AND (r.metadata->>'userId' IS NULL OR r.metadata->>'userId' = ${viewerId})`;
   const rows = await db.execute<{ traceId: string }>(sql`
     SELECT r."traceId" FROM mastra_ai_spans r

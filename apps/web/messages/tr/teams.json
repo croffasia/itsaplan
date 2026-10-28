@@ -55,6 +55,9 @@
     "analytics": {
       "title": "Kullanım",
       "description": "Takım ajanlarının modellere harcadığı miktar (ajan, proje ve gün bazında)."
+    },
+    "queue": {
+      "title": "Ajan çalıştırmaları"
     }
   },
   "info": {
@@ -630,6 +633,13 @@
       "managers": "Sahip ve yöneticiler",
       "members": "Takımlardaki herkes"
     },
+    "runLimit": {
+      "title": "Aynı anda ajan çalıştırma",
+      "description": "Ajanlarının kaç çalıştırmasının aynı anda yürüyeceği. Diğerleri sırada bekler. 0 kendi sınırı yok demektir.",
+      "descriptionCapped": "Ajanlarının kaç çalıştırmasının aynı anda yürüyeceği, en fazla {max}. Diğerleri sırada bekler. 0 olursa sınır {max} olur.",
+      "ownerOnly": "Aynı anda kaç ajan çalıştırması yürüyeceğini yalnızca sahip değiştirir.",
+      "none": "Sınır yok"
+    },
     "managers": {
       "title": "Yöneticiler",
       "description": "Çalışma alanını sahip ve yöneticiler yönetir.",
@@ -748,6 +758,9 @@
       "useBuiltIn": "Yerleşik fiyatı kullan",
       "removePrice": "Fiyatı kaldır",
       "save": "Fiyatı kaydet"
+    },
+    "queue": {
+      "title": "Ajan çalıştırmaları"
     }
   }
 }

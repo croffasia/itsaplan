@@ -179,18 +179,62 @@ describe('runner queue', () => {
     }
   });
 
-  it('paginates with stable id ordering and excludes internal agents', async () => {
+  it('narrows the queue to the project it is read in', async () => {
+    const { api, project, agent } = await setup();
+    const other = (
+      await api.teams({ teamId: project.teamId }).projects.post({ key: 'OTH', name: 'Other' })
+    ).data!;
+    await api
+      .teams({ teamId: project.teamId })
+      ['ai-agents']({ agentId: agent.id })
+      .projects.put({ projectIds: [project.id, other.id] });
+    const columnId = (await api.projects({ projectKey: 'OTH' }).get()).data!.columns[0].id;
+    const issue = (
+      await api.projects({ projectKey: 'OTH' }).issues.post({ columnId, title: 'Elsewhere' })
+    ).data!;
+    await api.issues({ issueId: issue.id }).comments.post({ body: '@runner other work' });
+    const projectQueue = api.projects({ projectKey: 'RUN' })['agent-runs'].queue;
+
+    const all = (await api['agent-runs'].queue.get()).data!;
+    const own = (await projectQueue.get()).data!;
+    expect(all.total).toBe(2);
+    expect(own).toMatchObject({ total: 1, queued: 1 });
+    expect(own.items[0].issueTitle).toBe('Run this');
+    const elsewhere = all.items.find((run) => run.issueTitle === 'Elsewhere')!;
+    expect((await projectQueue.get({ query: { runId: elsewhere.id } })).data!.total).toBe(0);
+
+    const role = (
+      await createRole(api, 'RUN', { name: 'Items', permissions: { work_items: { read: true } } })
+    ).data!;
+    const member = await addProjectMember(api, 'RUN', role.id);
+    expect((await member.projects({ projectKey: 'RUN' })['agent-runs'].queue.get()).status).toBe(
+      403,
+    );
+  });
+
+  it('paginates with stable id ordering and lists internal agents without a runner', async () => {
     const { api, issue, runner } = await setup();
     await api.issues({ issueId: issue.id }).comments.post({ body: '@runner second run' });
-    await createAgent(api, 'RUN', { name: 'Internal', username: 'internal', kind: 'internal' });
-    await api
-      .issues({ issueId: issue.id })
-      .comments.post({ body: '@internal private internal work' });
+    await createAgent(api, 'RUN', {
+      name: 'Internal',
+      username: 'internal',
+      kind: 'internal',
+      triggerOnMention: true,
+    });
+    await api.issues({ issueId: issue.id }).comments.post({ body: '@internal internal work' });
     const first = (await api['agent-runs'].queue.get({ query: { page: 1, pageSize: 1 } })).data!;
     const second = (await api['agent-runs'].queue.get({ query: { page: 2, pageSize: 1 } })).data!;
-    expect(first.total).toBe(2);
-    expect(second.total).toBe(2);
+    expect(first.total).toBe(3);
+    expect(second.total).toBe(3);
     expect(first.items[0].id).not.toBe(second.items[0].id);
+    expect((await api['agent-runs'].queue.get()).data!.items).toContainEqual(
+      expect.objectContaining({
+        kind: 'internal',
+        username: 'internal',
+        runnerState: null,
+        executionState: 'queued',
+      }),
+    );
     const claimed = (await runner['agent-runs'].claim.post()).data!.run!;
     const activeFirst = (await api['agent-runs'].queue.get({ query: { pageSize: 1 } })).data!;
     expect(activeFirst.items[0]).toMatchObject({ id: claimed.id, executionState: 'running' });

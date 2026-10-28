@@ -16,6 +16,7 @@ export const qk = {
   issueAgentRuns: (issueId: number) => ['issueAgentRuns', issueId] as const,
   issueAgentRunTrace: (issueId: number, runId: number, traceId?: string) =>
     ['issueAgentRuns', issueId, 'trace', runId, traceId ?? null] as const,
+  internalRunTrace: (runId: number) => ['internalRunTrace', runId] as const,
   projects: ['projects'] as const,
   // Under projects, so what refreshes the project list refreshes every search with it.
   projectSearch: (filters: unknown) => ['projects', 'search', filters] as const,

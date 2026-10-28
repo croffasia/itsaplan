@@ -480,7 +480,7 @@
     "noLabels": "无标签"
   },
   "agentRuns": {
-    "title": "Agent runs",
+    "title": "代理运行",
     "refresh": "Refresh",
     "loading": "Loading runs…",
     "loadError": "Could not load run history. Try refreshing.",
@@ -519,7 +519,9 @@
     "queued": "Waiting",
     "running": "Running",
     "queuedHint": "Waiting for a runner, a retry or its scheduled start.",
-    "queueTitle": "Runner queue",
+    "queueTitle": "代理运行",
+    "internalInFlight": "工作区内部代理：{running}/{limit} 运行中",
+    "internalInFlightNoLimit": "工作区内部代理：{running} 个运行中",
     "queueEmpty": "No runs yet.",
     "activeSection": "In progress",
     "historySection": "History",

@@ -72,10 +72,14 @@ export interface AgentSettings {
   traceRetentionDays: number;
   // The longest one run may take. AGENT_RUN_TIMEOUT_MS sets the value used until one is saved.
   maxRunSeconds: number;
+  // Runs of internal agents in flight at once across the instance; the rest wait in the
+  // queue. 0 sets no limit.
+  maxConcurrentRuns: number;
 }
 
 export const MIN_RUN_SECONDS = 10;
 export const MAX_RUN_SECONDS = 3600;
+export const MAX_CONCURRENT_RUNS = 1000;
 
 function defaultAgentSettings(): AgentSettings {
   return {
@@ -84,6 +88,7 @@ function defaultAgentSettings(): AgentSettings {
       Math.max(Math.round(intEnv('AGENT_RUN_TIMEOUT_MS', 240_000) / 1000), MIN_RUN_SECONDS),
       MAX_RUN_SECONDS,
     ),
+    maxConcurrentRuns: 5,
   };
 }
 

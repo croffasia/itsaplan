@@ -55,6 +55,9 @@
     "analytics": {
       "title": "Consommation",
       "description": "Ce que les agents de l'équipe ont dépensé en modèles, par agent, projet et jour."
+    },
+    "queue": {
+      "title": "Exécutions d'agents"
     }
   },
   "info": {
@@ -630,6 +633,13 @@
       "managers": "Le propriétaire et les administrateurs",
       "members": "Tous les membres de ses équipes"
     },
+    "runLimit": {
+      "title": "Exécutions d'agents simultanées",
+      "description": "Nombre d'exécutions de ses agents en même temps. Les autres attendent en file d'attente. 0 signifie aucune limite propre.",
+      "descriptionCapped": "Nombre d'exécutions de ses agents en même temps, jusqu'à {max}. Les autres attendent en file d'attente. Avec 0, la limite est de {max}.",
+      "ownerOnly": "Seul le propriétaire modifie le nombre d'exécutions d'agents simultanées.",
+      "none": "Aucune limite"
+    },
     "managers": {
       "title": "Responsables",
       "description": "Le propriétaire et les administrateurs gèrent l'espace de travail.",
@@ -748,6 +758,9 @@
       "useBuiltIn": "Revenir au prix intégré",
       "removePrice": "Supprimer le prix",
       "save": "Enregistrer le prix"
+    },
+    "queue": {
+      "title": "Exécutions d'agents"
     }
   }
 }

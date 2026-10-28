@@ -4,8 +4,9 @@ import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import { cn } from '@/lib/utils';
 import { useRelativeTime } from '@/context/relativeTimeContext';
 import { formatTime } from '@/utils/dates';
-import { runIssueKey } from '../utils/runIssueKey';
+import { runPlace } from '../utils/runIssueKey';
 import { waitsForRunner } from '../utils/waitsForRunner';
+import RunnerQueueKindBadge from './RunnerQueueKindBadge';
 import RunnerQueueStateIcon from './RunnerQueueStateIcon';
 
 type Translate = ReturnType<typeof useTranslations<'issue.agentRuns'>>;
@@ -31,16 +32,18 @@ export default function RunnerQueueActiveCard({
   run,
   href,
   selected,
+  acrossProjects,
 }: {
   run: RunnerQueueRun;
   href: string;
   selected: boolean;
+  acrossProjects: boolean;
 }) {
   const t = useTranslations('issue.agentRuns');
   const relativeTime = useRelativeTime();
   const [label, aside] = runStatus(run, t, relativeTime);
   const meta = [
-    runIssueKey(run),
+    runPlace(run, acrossProjects),
     `@${run.username}`,
     t(`triggers.${run.trigger}`),
     run.attempts > 1 ? t('attempts', { count: run.attempts }) : null,
@@ -71,7 +74,10 @@ export default function RunnerQueueActiveCard({
       <span className="line-clamp-2 text-sm font-medium" dir="auto">
         {run.issueTitle ?? run.scheduleName ?? run.prompt}
       </span>
-      <span className="text-xs text-muted-foreground">{meta}</span>
+      <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+        <RunnerQueueKindBadge kind={run.kind} />
+        <span className="truncate">{meta}</span>
+      </span>
     </Link>
   );
 }

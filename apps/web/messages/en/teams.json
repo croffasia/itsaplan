@@ -55,6 +55,9 @@
     "analytics": {
       "title": "Usage",
       "description": "What the team's agents spent on models, by agent, project and day."
+    },
+    "queue": {
+      "title": "Agent runs"
     }
   },
   "info": {
@@ -630,6 +633,13 @@
       "managers": "The owner and admins",
       "members": "Everyone in its teams"
     },
+    "runLimit": {
+      "title": "Agent runs at once",
+      "description": "How many runs of its agents work at once. The rest wait in the queue. 0 sets no limit of its own.",
+      "descriptionCapped": "How many runs of its agents work at once, up to {max}. The rest wait in the queue. 0 leaves the limit at {max}.",
+      "ownerOnly": "Only the owner changes how many agent runs work at once.",
+      "none": "No limit"
+    },
     "managers": {
       "title": "Managers",
       "description": "The owner and admins manage the workspace.",
@@ -748,6 +758,9 @@
       "useBuiltIn": "Use built-in price",
       "removePrice": "Remove price",
       "save": "Save price"
+    },
+    "queue": {
+      "title": "Agent runs"
     }
   }
 }

@@ -15,7 +15,7 @@ import { sweepStaleIssues } from '#modules/issues/auto-archive';
 // can carry thousands of issues, so sharing one loop would let either hold the other
 // back for that long.
 export function startBackgroundJobs(): void {
-  startLoop('agent-runs', processAgentRuns, agentRunConfig.pollIntervalMs);
+  startLoop('agent-runs', runAgents, agentRunConfig.pollIntervalMs);
   // An external agent with an invocation URL is sent its work from a loop of its own, so
   // a slow endpoint holds back neither the runs of internal agents nor the other way.
   startLoop('agent-invocations', sendInvocations, agentInvocationConfig.pollIntervalMs);
@@ -28,6 +28,14 @@ export function startBackgroundJobs(): void {
 async function autoArchive(): Promise<void> {
   const archived = await sweepStaleIssues();
   if (archived > 0) console.log(`[background] auto-archived ${archived} stale issues`);
+}
+
+// Not awaited: a slot that frees is filled on the next tick, not once the slowest run
+// claimed beside it ends. The claim counts the runs still in flight.
+async function runAgents(): Promise<void> {
+  void processAgentRuns().catch((error: unknown) =>
+    console.error('[background] agent-runs failed:', error),
+  );
 }
 
 // Not awaited: the next tick does not wait for a slow endpoint, so the other agents are

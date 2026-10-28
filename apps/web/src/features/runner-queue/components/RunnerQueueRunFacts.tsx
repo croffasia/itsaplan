@@ -6,19 +6,20 @@ import { AgentContextSize } from '@/components/common/agent-chat/AgentContextSiz
 
 export default function RunnerQueueRunFacts({ run }: { run: RunnerQueueRun }) {
   const t = useTranslations('issue.agentRuns');
+  const tKind = useTranslations('teams.agents.kindLabel');
   const facts: [string, ReactNode][] = [
-    [t('facts.agent'), `@${run.username}`],
+    [t('facts.agent'), `@${run.username} · ${tKind(run.kind)}`],
     [t('facts.trigger'), t(`triggers.${run.trigger}`)],
   ];
   if (run.startedAt) facts.push([t('facts.started'), formatDateTime(run.startedAt)]);
   if (run.finishedAt) facts.push([t('facts.finished'), formatDateTime(run.finishedAt)]);
-  facts.push(
-    [t('facts.attempts'), run.attempts],
-    [
+  facts.push([t('facts.attempts'), run.attempts]);
+  if (run.runnerState) {
+    facts.push([
       run.runnerState === 'push' ? t('facts.delivery') : t('facts.runner'),
       t(`connection.${run.runnerState}`),
-    ],
-  );
+    ]);
+  }
   if (run.contextTokens != null) {
     facts.push([t('facts.context'), <AgentContextSize key="context" tokens={run.contextTokens} />]);
   }

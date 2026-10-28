@@ -1,4 +1,5 @@
 import { t } from 'elysia';
+import { MAX_CONCURRENT_RUNS } from '#modules/settings/service';
 import { TEAM_CREATION } from './service';
 
 export const workspaceParams = t.Object({ workspaceId: t.Numeric() });
@@ -16,6 +17,15 @@ export const updateWorkspaceBody = t.Object({
       description:
         'Who creates teams: the owner alone, the owner and admins, or anyone in its teams. ' +
         'Only the owner changes it.',
+    }),
+  ),
+  maxConcurrentRuns: t.Optional(
+    t.Integer({
+      minimum: 0,
+      maximum: MAX_CONCURRENT_RUNS,
+      description:
+        'Runs of its internal agents in flight at once; the rest wait in the queue. 0 sets ' +
+        'no limit of its own. At most maxConcurrentRunsCap. Only the owner changes it.',
     }),
   ),
 });
@@ -47,6 +57,10 @@ export const WorkspaceResponse = t.Object({
   managerCount: t.Number(),
   color: t.Nullable(t.String()),
   teamCreation: t.UnionEnum([...TEAM_CREATION]),
+  maxConcurrentRuns: t.Number(),
+  maxConcurrentRunsCap: t.Number({
+    description: 'The highest maxConcurrentRuns the instance allows it; 0 when it sets none.',
+  }),
   deletion: t.UnionEnum(['allowed', 'work'], {
     description:
       'Whether the owner may delete it: work while a team of it holds a project or an AI agent.',

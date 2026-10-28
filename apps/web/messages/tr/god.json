@@ -211,7 +211,10 @@
     "maxRunTime": "Azami çalışma süresi",
     "maxRunTimeHint": "Bir ajan çalışmasının durdurulup başarısız olarak kaydedilmeden önce ne kadar sürebileceği. Bir ajanın kendi sınırı bunu aşamaz.",
     "runMinutes": "{minutes, plural, one {# dakika} other {# dakika}}",
-    "runSeconds": "{seconds} sn"
+    "runSeconds": "{seconds} sn",
+    "concurrentRuns": "Aynı anda çalıştırma",
+    "concurrentRunsHint": "Bu örneklemde aynı anda kaç ajan çalıştırmasının yürüyeceği. Diğerleri sırada bekler. Sohbetler ve harici ajanlar sayılmaz. 0 sınırsız demektir.",
+    "concurrentRunsInvalid": "0 ile {max} arasında bir tam sayı girin."
   },
   "authentication": {
     "saved": "Kimlik doğrulama ayarları kaydedildi",

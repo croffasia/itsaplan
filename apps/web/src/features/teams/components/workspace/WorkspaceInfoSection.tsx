@@ -31,6 +31,8 @@ import WorkspaceDeleteSection from './WorkspaceDeleteSection';
 
 const TEAM_CREATION: TeamCreation[] = ['owner', 'managers', 'members'];
 const HEX = /^#[0-9a-f]{6}$/i;
+// The highest run limit the api takes where the instance sets no ceiling.
+const MAX_RUN_LIMIT = 1000;
 
 export default function WorkspaceInfoSection({ workspaceId }: { workspaceId: number }) {
   const t = useTranslations('teams.workspace');
@@ -41,6 +43,7 @@ export default function WorkspaceInfoSection({ workspaceId }: { workspaceId: num
   // An empty field clears the colour back to the neutral tile.
   const [color, setColor] = useState<string | null>(null);
   const [teamCreation, setTeamCreation] = useState<TeamCreation | null>(null);
+  const [runLimit, setRunLimit] = useState<string | null>(null);
 
   if (!workspace) return <SectionPageSkeleton rows={2} />;
 
@@ -48,12 +51,24 @@ export default function WorkspaceInfoSection({ workspaceId }: { workspaceId: num
   const nextName = (name ?? workspace.name).trim();
   const nextColor = color === null ? workspace.color : color.trim() || null;
   const nextTeamCreation = teamCreation ?? workspace.teamCreation;
+  const cap = workspace.maxConcurrentRunsCap;
+  const maxRunLimit = cap > 0 ? cap : MAX_RUN_LIMIT;
+  // Checked only once edited, so a stored limit above a ceiling lowered since does not
+  // block saving the other fields.
+  const runLimitValid =
+    runLimit === null || (/^\d+$/.test(runLimit.trim()) && Number(runLimit) <= maxRunLimit);
+  const nextRunLimit = runLimit === null ? workspace.maxConcurrentRuns : Number(runLimit);
+  let runLimitHint = t('runLimit.description');
+  if (!isOwner) runLimitHint = t('runLimit.ownerOnly');
+  else if (cap > 0) runLimitHint = t('runLimit.descriptionCapped', { max: cap });
   const patch: WorkspacePatch = {
     ...(nextName !== workspace.name && { name: nextName }),
     ...(nextColor !== workspace.color && { color: nextColor }),
     ...(nextTeamCreation !== workspace.teamCreation && { teamCreation: nextTeamCreation }),
+    ...(runLimitValid &&
+      nextRunLimit !== workspace.maxConcurrentRuns && { maxConcurrentRuns: nextRunLimit }),
   };
-  const valid = nextName !== '' && (nextColor === null || HEX.test(nextColor));
+  const valid = nextName !== '' && (nextColor === null || HEX.test(nextColor)) && runLimitValid;
   const canSave = valid && Object.keys(patch).length > 0 && !update.isPending;
 
   async function save() {
@@ -61,6 +76,7 @@ export default function WorkspaceInfoSection({ workspaceId }: { workspaceId: num
     setName(null);
     setColor(null);
     setTeamCreation(null);
+    setRunLimit(null);
     toast.success(t('info.saved'));
   }
 
@@ -138,6 +154,31 @@ export default function WorkspaceInfoSection({ workspaceId }: { workspaceId: num
                 ))}
               </SelectContent>
             </Select>
+          }
+        />
+
+        <SettingsSection
+          title={t('runLimit.title')}
+          description={runLimitHint}
+          action={
+            isOwner ? (
+              <Input
+                type="number"
+                min={0}
+                max={maxRunLimit}
+                step={1}
+                inputMode="numeric"
+                className="h-8 w-24"
+                aria-label={t('runLimit.title')}
+                aria-invalid={!runLimitValid}
+                value={runLimit ?? String(workspace.maxConcurrentRuns)}
+                onChange={(e) => setRunLimit(e.target.value)}
+              />
+            ) : (
+              <span className="text-sm">
+                {workspace.maxConcurrentRuns > 0 ? workspace.maxConcurrentRuns : t('runLimit.none')}
+              </span>
+            )
           }
         />
 

@@ -1,4 +1,4 @@
-import { BadgeDollarSign, Coins, Info, ShieldCheck } from 'lucide-react';
+import { BadgeDollarSign, Clock3, Coins, Info, ShieldCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useWorkspaceSections } from '@/cloud';
 import type { WorkspaceSummary } from '@/lib/api/endpoints/workspaces';
@@ -13,6 +13,7 @@ export function useWorkspaceSettingsSections(workspace: WorkspaceSummary): Works
   const t = useTranslations('teams.workspace');
   const detail = useWorkspaceQuery(workspace.id).data;
   const sections = useWorkspaceSections(workspace, [
+    { id: 'queue', label: t('queue.title'), icon: Clock3, group: 'overview' },
     { id: 'agent-usage', label: t('agentUsage.title'), icon: Coins, group: 'overview' },
     { id: 'info', label: t('general'), icon: Info, group: 'settings' },
     {

@@ -7,6 +7,7 @@ import {
   BookText,
   Bot,
   ChevronRight,
+  Clock3,
   Coins,
   FolderKanban,
   GitBranch,
@@ -25,8 +26,10 @@ import type { Team } from '@/lib/api/endpoints/teams';
 import { cn } from '@/lib/utils';
 import { teamSectionPath, type TeamSection } from '@/utils/paths';
 import { useTeamQuery } from '@/services/teams.service';
+import { useWorkspacesQuery } from '@/services/workspaces.service';
 import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
+  activeNavItem,
   SectionNav,
   sectionNavIdleClass,
   sectionNavItemClass,
@@ -75,6 +78,8 @@ export default function TeamSectionNav({
   }
 
   const runsTeam = team.role === 'owner' || team.role === 'manager';
+  const managesWorkspace =
+    useWorkspacesQuery().data?.some((w) => w.id === team.workspaceId && w.role !== null) ?? false;
   const top = [
     section('info', t('info.title'), Info),
     section('projects', t('projects.title'), FolderKanban, team.projectCount),
@@ -95,6 +100,9 @@ export default function TeamSectionNav({
     ...(permissions?.agent_tools.read
       ? [section('agent-tools', t('agentTools.title'), Wrench, team.toolCount)]
       : []),
+    // The runs of every project, for whoever runs the team or its workspace; everyone else
+    // reads them in each project.
+    ...(runsTeam || managesWorkspace ? [section('queue', t('queue.title'), Clock3)] : []),
     // Whoever runs the team reads every project there, anyone else the projects where
     // their role grants agent_usage.
     ...(runsTeam || permissions?.agent_usage.read
@@ -108,7 +116,7 @@ export default function TeamSectionNav({
     ...(team.role === 'owner' ? [section('notifications', t('notifications.title'), Bell)] : []),
   ];
 
-  const active = [...top, ...ai, ...bottom].find((entry) => entry.href === pathname);
+  const active = activeNavItem([...top, ...ai, ...bottom], pathname);
   const activeId = active?.id ?? null;
   useDocumentTitle(titlePath(team.name, tScreens('teamSettings'), active?.label));
   const aiActive = ai.some((entry) => entry.id === activeId);

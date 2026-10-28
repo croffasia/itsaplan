@@ -120,8 +120,8 @@
       "description": "ایجنت‌های AI که در این پروژه کار می‌کنند."
     },
     "queue": {
-      "label": "Runner queue",
-      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
+      "label": "اجراهای ایجنت",
+      "description": "اجراهای ایجنت‌های داخلی و خارجی پروژه: در حال اجرا، در انتظار و گذشته."
     }
   },
   "previews": {

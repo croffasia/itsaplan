@@ -435,7 +435,7 @@ export interface IssueAgentRun {
   id: number;
   agentId: number;
   username: string;
-  kind: string;
+  kind: 'internal' | 'external';
   status: 'pending' | 'success' | 'failed' | 'canceled';
   executionState: 'queued' | 'running' | 'success' | 'failed' | 'canceled';
   trigger: AgentRunTrigger;

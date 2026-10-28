@@ -211,7 +211,10 @@
     "maxRunTime": "최대 실행 시간",
     "maxRunTimeHint": "에이전트 실행 한 번이 중지되고 실패로 저장되기 전까지 걸릴 수 있는 시간입니다. 에이전트 자체 제한은 이 값을 초과할 수 없습니다.",
     "runMinutes": "{minutes, plural, other {#분}}",
-    "runSeconds": "{seconds}초"
+    "runSeconds": "{seconds}초",
+    "concurrentRuns": "동시 실행 수",
+    "concurrentRunsHint": "이 서버에서 동시에 진행되는 에이전트 실행 수입니다. 나머지는 대기열에서 기다립니다. 채팅과 외부 에이전트는 포함되지 않습니다. 0이면 제한이 없습니다.",
+    "concurrentRunsInvalid": "0에서 {max} 사이의 정수를 입력하세요."
   },
   "authentication": {
     "saved": "인증 설정이 저장되었습니다",

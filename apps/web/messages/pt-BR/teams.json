@@ -55,6 +55,9 @@
     "analytics": {
       "title": "Consumo",
       "description": "Quanto os agentes da equipe gastaram com modelos, por agente, projeto e dia."
+    },
+    "queue": {
+      "title": "Execuções de agentes"
     }
   },
   "info": {
@@ -630,6 +633,13 @@
       "managers": "O dono e os admins",
       "members": "Todos dos times dele"
     },
+    "runLimit": {
+      "title": "Execuções de agentes simultâneas",
+      "description": "Quantas execuções dos seus agentes rodam ao mesmo tempo. As demais esperam na fila. 0 significa sem limite próprio.",
+      "descriptionCapped": "Quantas execuções dos seus agentes rodam ao mesmo tempo, até {max}. As demais esperam na fila. Com 0, o limite é {max}.",
+      "ownerOnly": "Só o proprietário muda quantas execuções de agentes rodam ao mesmo tempo.",
+      "none": "Sem limite"
+    },
     "managers": {
       "title": "Gestores",
       "description": "O proprietário e os administradores gerenciam o workspace.",
@@ -748,6 +758,9 @@
       "useBuiltIn": "Usar o preço embutido",
       "removePrice": "Remover preço",
       "save": "Salvar preço"
+    },
+    "queue": {
+      "title": "Execuções de agentes"
     }
   }
 }

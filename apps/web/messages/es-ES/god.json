@@ -211,7 +211,10 @@
     "maxRunTime": "Duración máxima de ejecución",
     "maxRunTimeHint": "Cuánto puede durar una ejecución de un agente antes de detenerse y guardarse como fallida. El límite propio de un agente no puede superarlo.",
     "runMinutes": "{minutes, plural, one {# minuto} other {# minutos}}",
-    "runSeconds": "{seconds} s"
+    "runSeconds": "{seconds} s",
+    "concurrentRuns": "Ejecuciones a la vez",
+    "concurrentRunsHint": "Cuántas ejecuciones de agentes van a la vez en esta instancia. El resto espera en cola. Los chats y los agentes externos no cuentan. 0 es sin límite.",
+    "concurrentRunsInvalid": "Escribe un número entero entre 0 y {max}."
   },
   "authentication": {
     "saved": "Los ajustes de autenticación se han guardado",

@@ -61,6 +61,8 @@ export const workspace = pgTable(
     // Who creates teams in it: the owner alone, the owner and admins (managers), or
     // anyone in one of its teams (members).
     teamCreation: text('team_creation').notNull().default('owner'),
+    // Runs of its internal agents in flight at once; 0 sets no limit of its own.
+    maxConcurrentRuns: integer('max_concurrent_runs').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -68,6 +70,7 @@ export const workspace = pgTable(
       'workspace_team_creation_check',
       sql`${t.teamCreation} IN ('owner', 'managers', 'members')`,
     ),
+    check('workspace_max_concurrent_runs_check', sql`${t.maxConcurrentRuns} >= 0`),
   ],
 );
 
@@ -734,6 +737,9 @@ export const agentRun = pgTable(
     outputTokens: integer('output_tokens'),
     startedAt: timestamp('started_at', { withTimezone: true }),
     executionStartedAt: timestamp('execution_started_at', { withTimezone: true }),
+    // The api's current claim of an internal agent's run; null while the run waits,
+    // deferred or in retry backoff. The instance's run limit counts the claimed runs.
+    claimedAt: timestamp('claimed_at', { withTimezone: true }),
     finishedAt: timestamp('finished_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },

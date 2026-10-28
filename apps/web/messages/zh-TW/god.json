@@ -211,7 +211,10 @@
     "maxRunTime": "最長執行時間",
     "maxRunTimeHint": "單次代理執行在被停止並記為失敗之前可持續的時間。代理自身的上限不能超過此值。",
     "runMinutes": "{minutes, plural, other {# 分鐘}}",
-    "runSeconds": "{seconds} 秒"
+    "runSeconds": "{seconds} 秒",
+    "concurrentRuns": "同時執行數",
+    "concurrentRunsHint": "此執行個體上可同時進行的代理執行數。其餘的在佇列中等待。聊天和外部代理不計入。0 表示不限。",
+    "concurrentRunsInvalid": "請輸入 0 到 {max} 之間的整數。"
   },
   "authentication": {
     "saved": "身分驗證設定已儲存",

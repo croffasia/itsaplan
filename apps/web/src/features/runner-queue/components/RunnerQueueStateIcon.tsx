@@ -1,13 +1,13 @@
-import { Ban, CircleCheck, CircleX, Clock, LoaderCircle, Send } from 'lucide-react';
+import { Check, Clock, LoaderCircle, Minus, Send, X } from 'lucide-react';
 import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import { cn } from '@/lib/utils';
 
 const STATE_ICON = {
   running: [LoaderCircle, 'animate-spin'],
   queued: [Clock, 'text-warning'],
-  success: [CircleCheck, 'text-muted-foreground'],
-  failed: [CircleX, 'text-destructive'],
-  canceled: [Ban, 'text-muted-foreground'],
+  success: [Check, 'text-green-500'],
+  failed: [X, 'text-destructive'],
+  canceled: [Minus, 'text-muted-foreground'],
 } as const;
 
 export default function RunnerQueueStateIcon({

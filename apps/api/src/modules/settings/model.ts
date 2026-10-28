@@ -1,5 +1,5 @@
 import { t } from 'elysia';
-import { MAX_RUN_SECONDS, MIN_RUN_SECONDS } from './service';
+import { MAX_CONCURRENT_RUNS, MAX_RUN_SECONDS, MIN_RUN_SECONDS } from './service';
 
 export const StorageSettingsSchema = t.Object({
   maxAttachmentMb: t.Number(),
@@ -26,6 +26,13 @@ export const AgentSettingsSchema = t.Object({
     maximum: MAX_RUN_SECONDS,
     description:
       "Seconds one agent run may take before it is stopped and saved as failed. An agent's own limit cannot exceed it.",
+  }),
+  maxConcurrentRuns: t.Integer({
+    minimum: 0,
+    maximum: MAX_CONCURRENT_RUNS,
+    description:
+      'Runs of internal agents in flight at once across the instance; the rest wait in the ' +
+      "queue. 0 sets no limit. A workspace's own limit cannot exceed it.",
   }),
 });
 

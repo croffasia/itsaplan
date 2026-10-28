@@ -18,14 +18,25 @@ export const RunnerQueueResponse = t.Object({
       issueTitle: t.Nullable(t.String()),
       scheduleName: t.Nullable(t.String()),
       projectRef: t.String(),
-      runnerState: t.Union([
-        t.Literal('push'),
-        t.Literal('online'),
-        t.Literal('offline'),
-        t.Literal('never'),
-      ]),
+      runnerState: t.Nullable(
+        t.Union([t.Literal('push'), t.Literal('online'), t.Literal('offline'), t.Literal('never')]),
+        {
+          description:
+            'How the run reaches its runner; null for an internal agent, which has none.',
+        },
+      ),
     }),
   ).properties,
   queued: t.Number(),
   running: t.Number(),
+});
+
+export const RunsInFlightResponse = t.Object({
+  running: t.Number({
+    description: "Runs of the workspace's internal agents in flight; the rest wait in the queue.",
+  }),
+  limit: t.Number({
+    description:
+      "The lower of the workspace's own limit and its plan's; 0 when neither is set. The instance's limit, over every workspace, is not in it.",
+  }),
 });

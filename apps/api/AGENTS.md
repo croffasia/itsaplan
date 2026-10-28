@@ -450,7 +450,7 @@ traces stay private.
 External runners reporting run events also retain messages, tool inputs/results and a
 local Codex session link per attempt. `GET /agent-runs/:runId/trace?attempt=N` uses
 both read permissions in the original project and excludes moved issues. It also
-serves scheduled/manual runs without an issue. The latest recorded attempt is the default. The runner queue lists active and past external runs; `runId` narrows it to one authorized run for the detail pane. External transcripts follow the instance trace retention window after the run finishes; pending runs and final results are retained.
+serves scheduled/manual runs without an issue. The latest recorded attempt is the default. `GET /agent-runs/:runId/internal-trace` is its counterpart for an internal run: the Mastra trace of the run, read by the run alone, with the same permissions. The runner queue lists active and past runs of internal and external agents; `runId` narrows it to one authorized run for the detail pane. External transcripts follow the instance trace retention window after the run finishes; pending runs and final results are retained.
 `POST /agent-runs/:runId/events` accepts only the calling agent's current executing,
 unexpired attempt. Event offsets deduplicate retries and reject gaps. Transcripts
 stop recording after 2,000 events or 1 MB; acknowledgements continue so the runner
@@ -539,9 +539,25 @@ directly). Helpers in `src/__tests__/helpers/`: `api` (anonymous client), `authe
 
 ## Runner queue and execution state
 
-`GET /agent-runs/queue` pages external runs across the caller's readable projects,
-including archived projects. Both `work_items read` and `ai_agents read` are required
-in each project. Moved issues do not expose their original project's prompt.
+`GET /agent-runs/queue` pages the runs of internal and external agents across the
+caller's readable projects, including archived projects. Both `work_items read` and
+`ai_agents read` are required in each project. Moved issues do not expose their original
+project's prompt. The same queue is narrowed to one project
+(`/projects/:projectKey/agent-runs/queue`), a team (`/teams/:teamId/...`) or a workspace
+(`/workspaces/:workspaceId/...`). Whoever runs the team reads every run of its projects
+there and in the run traces without a role in the project; the team's queue is theirs and
+the workspace managers', the workspace's its owner's and admins'. Each scope also answers
+`.../agent-runs/in-flight`: the internal runs in flight in the workspace and the
+workspace's limit on them.
+
+Two limits hold the runs of internal agents in flight; an external agent's run counts
+against neither. The instance's (`maxConcurrentRuns` in the god mode agent settings, 5 by
+default, 0 for none) is applied in `claimDueRuns`, which claims under an advisory lock so
+api replicas take only the free slots between them. It counts only the runs the api has
+claimed (`claimed_at`): a deferred run and one in retry backoff leave their slot to the
+other workspaces. A workspace's (`workspace.max_concurrent_runs`, set by its owner, lowered
+by `setLimitsProvider`) is applied in the poller, which defers a claimed run past it; there
+a run in retry backoff keeps its slot, so the older runs keep their turn.
 
 The stored `status` keeps the runner protocol's `pending` value. `executionState`
 is `running` only after admission succeeds and while its lease is valid; it is
@@ -550,7 +566,8 @@ their names. `execution_started_at` is cleared on claim, defer, retry and comple
 and set before execution is handed out. A heartbeat can restore the marker for a
 claimed external run that was already in flight when this column was added.
 
-`runnerQueue:1` is a user-scoped sync marker. It combines the visible projects'
-`runner-queue:` revisions with lease expiry and runner presence, so time-based state
-changes are visible without a write. The queue and issue run panel share this scope.
+`runnerQueue:1` is a user-scoped sync marker. It combines the `runner-queue:` revisions
+of the projects a queue may list to the user, those of the teams they run included, with
+lease expiry, runner presence and the internal runs in flight in those projects'
+workspaces, so time-based state changes are visible without a write. The queue and issue run panel share this scope.
 A runner being online is separate from a run holding an execution lease.

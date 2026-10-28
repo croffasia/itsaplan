@@ -16,7 +16,7 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
 - **`@/cloud` is the seam for the hosted edition.** It resolves to `src/ce/index.ts`, which
   exports what a self-hosted instance runs. A cloud-only part is imported from there and
   nowhere else. `useWorkspaceSections(workspace, core)` returns a workspace's settings menu,
-  shown by `WorkspaceSectionNav`: here the core's sections, then previews of the
+  shown by `WorkspaceSectionNav`: here the core's sections and previews of the
   dashboard, the AI budgets and the audit log, and for the owner of email domains, single
   sign-on and SCIM (`components/common/page/SectionPreview`), while the hosted build adds
   its own at any position or drops some. One it adds carries in `Component` the

@@ -8,6 +8,7 @@ import { apiKeyApi, app, authedApi, createProject } from '#tests/helpers/app';
 import { createAgent } from '#tests/helpers/agents';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { clearLimits, setLimits } from '#tests/helpers/limits';
 import { createOwnWorkspace, transferWorkspace } from '../../service';
 
 // The first account, the instance owner, and its own workspace with its team.
@@ -142,6 +143,40 @@ describe('workspaces', () => {
       await ownerApi.workspaces({ workspaceId }).patch({ teamCreation: 'members' });
       expect(await memberMay()).toBe(true);
       expect((await team(memberApi, 'by-member')).status).toBe(201);
+    });
+
+    it('leaves the run limit to the owner, at most what the instance allows', async () => {
+      const { ownerApi, workspaceId, teamId } = await setup();
+      const admin = await addPerson(ownerApi, teamId);
+      await makeAdmin(ownerApi, workspaceId, admin);
+      const ws = ownerApi.workspaces({ workspaceId });
+
+      expect((await ws.get()).data).toMatchObject({
+        maxConcurrentRuns: 0,
+        maxConcurrentRunsCap: 5,
+      });
+      expect(
+        (await authedApi(admin.cookie).workspaces({ workspaceId }).patch({ maxConcurrentRuns: 2 }))
+          .status,
+      ).toBe(403);
+      expect((await ws.patch({ maxConcurrentRuns: 6 })).status).toBe(400);
+      expect((await ws.patch({ maxConcurrentRuns: 5 })).data).toMatchObject({
+        maxConcurrentRuns: 5,
+      });
+
+      setLimits({ maxConcurrentRuns: 3 });
+      try {
+        expect((await ws.get()).data).toMatchObject({ maxConcurrentRunsCap: 3 });
+        expect((await ws.patch({ maxConcurrentRuns: 4 })).status).toBe(400);
+      } finally {
+        clearLimits();
+      }
+
+      await ownerApi.god['agent-settings'].put({ maxConcurrentRuns: 0 });
+      expect((await ws.patch({ maxConcurrentRuns: 50 })).data).toMatchObject({
+        maxConcurrentRuns: 50,
+        maxConcurrentRunsCap: 0,
+      });
     });
   });
 

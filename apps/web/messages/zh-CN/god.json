@@ -211,7 +211,10 @@
     "maxRunTime": "最长运行时间",
     "maxRunTimeHint": "单次智能体运行在被停止并记为失败之前可持续的时间。智能体自身的上限不能超过此值。",
     "runMinutes": "{minutes, plural, other {# 分钟}}",
-    "runSeconds": "{seconds} 秒"
+    "runSeconds": "{seconds} 秒",
+    "concurrentRuns": "同时运行数",
+    "concurrentRunsHint": "此实例上可同时进行的代理运行数。其余的在队列中等待。聊天和外部代理不计入。0 表示不限。",
+    "concurrentRunsInvalid": "请输入 0 到 {max} 之间的整数。"
   },
   "authentication": {
     "saved": "身份验证设置已保存",

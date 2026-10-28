@@ -211,7 +211,10 @@
     "maxRunTime": "Max run time",
     "maxRunTimeHint": "How long one agent run may take before it is stopped and saved as failed. An agent's own limit cannot exceed it.",
     "runMinutes": "{minutes, plural, one {# minute} other {# minutes}}",
-    "runSeconds": "{seconds} s"
+    "runSeconds": "{seconds} s",
+    "concurrentRuns": "Runs at once",
+    "concurrentRunsHint": "How many agent runs work at once on this instance. The rest wait in the queue. Chats and external agents don't count. 0 sets no limit.",
+    "concurrentRunsInvalid": "Enter a whole number from 0 to {max}."
   },
   "authentication": {
     "saved": "Authentication settings saved",

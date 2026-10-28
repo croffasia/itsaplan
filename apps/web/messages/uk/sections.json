@@ -120,8 +120,8 @@
       "description": "ШІ-агенти, які працюють у цьому проєкті."
     },
     "queue": {
-      "label": "Runner queue",
-      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
+      "label": "Запуски агентів",
+      "description": "Запуски внутрішніх і зовнішніх агентів проєкту: у роботі, в очікуванні та завершені."
     }
   },
   "previews": {

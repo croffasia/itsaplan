@@ -14,34 +14,38 @@ import {
 import SidebarNavItem from '@/components/layout/SidebarNavItem';
 
 // The AI Team sidebar group: the AI Team sections the viewer may read, then the
-// agents of the project. Renders nothing when none of them are readable.
+// agents of the project, then their runs. Renders nothing when none of them are readable.
 export default function SidebarAiTeamNav({ projectKey }: { projectKey: string | null }) {
   const t = useTranslations('nav');
   const sectionText = useSettingsSectionText();
   const pathname = usePathname();
   const { aiTeamSection } = useShellRoute();
-  const { can } = usePermissions();
+  const { can, isAdmin } = usePermissions();
   const disabled = !projectKey;
 
-  const sections = AI_TEAM_SECTIONS.filter((s) => can(s.resource, 'read'));
+  // The run list also opens to whoever runs the team, as its route does.
+  const sections = AI_TEAM_SECTIONS.filter(
+    (s) => can(s.resource, 'read') || (s.slug === 'queue' && isAdmin),
+  );
   const showAgents = can(AI_AGENTS_SECTION.resource, 'read');
   if (sections.length === 0 && !showAgents) return null;
+  const sectionItem = (s: (typeof sections)[number]) => (
+    <SidebarNavItem
+      key={s.slug}
+      href={projectKey ? aiTeamPath(projectKey, s.slug) : '#'}
+      icon={s.icon}
+      label={sectionText(s.slug).label}
+      active={aiTeamSection === s.slug}
+      disabled={disabled}
+    />
+  );
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{t('aiTeam')}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {sections.map((s) => (
-            <SidebarNavItem
-              key={s.slug}
-              href={projectKey ? aiTeamPath(projectKey, s.slug) : '#'}
-              icon={s.icon}
-              label={sectionText(s.slug).label}
-              active={aiTeamSection === s.slug}
-              disabled={disabled}
-            />
-          ))}
+          {sections.filter((s) => s.slug !== 'queue').map(sectionItem)}
           {showAgents && (
             <SidebarNavItem
               href={projectKey ? aiAgentsPath(projectKey) : '#'}
@@ -51,6 +55,7 @@ export default function SidebarAiTeamNav({ projectKey }: { projectKey: string | 
               disabled={disabled}
             />
           )}
+          {sections.filter((s) => s.slug === 'queue').map(sectionItem)}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

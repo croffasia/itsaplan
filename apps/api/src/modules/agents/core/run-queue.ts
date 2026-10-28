@@ -1,5 +1,6 @@
 import {
   db,
+  type DbExecutor,
   agentRun,
   aiAgent,
   documentComment,
@@ -36,7 +37,6 @@ import { equalJitterBackoffMs } from './helpers/backoff';
 // above the instance's maximum run time when that is longer.
 export const agentRunConfig = {
   pollIntervalMs: () => intEnv('AGENT_RUN_POLL_INTERVAL_MS', 2000),
-  batchSize: () => intEnv('AGENT_RUN_BATCH_SIZE', 5),
   maxAttempts: () => intEnv('AGENT_RUN_MAX_ATTEMPTS', 3),
   leaseSeconds: () => intEnv('AGENT_RUN_LEASE_SECONDS', 300),
 };
@@ -85,25 +85,59 @@ export function runDocumentVisibleTo(viewerId: string) {
   );
 }
 
-// Runs of this workspace's agents that hold a slot and were queued before this one. A claim
-// stamps started_at and pushes next_attempt_at forward, so a pending run that is
-// stamped and still inside that window is one of them — as is a run waiting out its
-// retry backoff, which holds a slot it is not using. Counting only the older runs is
-// what keeps a ceiling from turning away every run of a burst at once: each yields to
-// the ones ahead of it and the rest come back on their next attempt.
+// A run of an internal agent that holds a slot of its workspace's limit. A claim stamps
+// started_at and pushes next_attempt_at forward, so a pending run that is stamped and
+// still inside that window is one — as is a run waiting out its retry backoff, which
+// holds a slot it is not using, so the older runs keep their turn. An external agent's
+// runs are executed on the operator's machine and hold none.
+export const holdsSlot = and(
+  eq(agentRun.status, 'pending'),
+  isNotNull(agentRun.startedAt),
+  gt(agentRun.nextAttemptAt, sql`now()`),
+  eq(aiAgent.kind, 'internal'),
+);
+
+// Runs of this workspace's agents that hold a slot and were queued before this one.
+// Counting only the older runs is what keeps a ceiling from turning away every run of a
+// burst at once: each yields to the ones ahead of it and the rest come back on their next
+// attempt.
 export async function countRunsAhead(workspaceId: number, runId: number): Promise<number> {
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(agentRun)
+    .innerJoin(aiAgent, eq(aiAgent.id, agentRun.agentId))
     .innerJoin(project, eq(project.id, agentRun.projectId))
     .innerJoin(team, eq(team.id, project.teamId))
+    .where(and(eq(team.workspaceId, workspaceId), holdsSlot, lt(agentRun.id, runId)));
+  return row?.count ?? 0;
+}
+
+export async function countRunsInFlight(workspaceId: number): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(agentRun)
+    .innerJoin(aiAgent, eq(aiAgent.id, agentRun.agentId))
+    .innerJoin(project, eq(project.id, agentRun.projectId))
+    .innerJoin(team, eq(team.id, project.teamId))
+    .where(and(eq(team.workspaceId, workspaceId), holdsSlot));
+  return row?.count ?? 0;
+}
+
+// The runs of internal agents the api has claimed and works on, which the instance's
+// limit counts. A deferred run and one in retry backoff are not claimed, so they leave
+// their slot to the other workspaces; past the lease, the run of a crashed poller holds
+// none either.
+async function countClaimedRuns(executor: DbExecutor): Promise<number> {
+  const [row] = await executor
+    .select({ count: sql<number>`count(*)::int` })
+    .from(agentRun)
+    .innerJoin(aiAgent, eq(aiAgent.id, agentRun.agentId))
     .where(
       and(
-        eq(team.workspaceId, workspaceId),
         eq(agentRun.status, 'pending'),
-        isNotNull(agentRun.startedAt),
+        isNotNull(agentRun.claimedAt),
         gt(agentRun.nextAttemptAt, sql`now()`),
-        lt(agentRun.id, runId),
+        eq(aiAgent.kind, 'internal'),
       ),
     );
   return row?.count ?? 0;
@@ -188,67 +222,78 @@ export interface ClaimedRun {
   threadRootId: string | null;
 }
 
-// Atomically claims up to batchSize due runs of internal agents. FOR UPDATE SKIP
-// LOCKED lets more than one API replica run without ever claiming the same row.
+// Every api replica claims under this lock, so two claims never count the same free slot.
+const RUN_CLAIM_LOCK_NS = 8243;
+
+// Atomically claims the due runs of internal agents, as many as the instance has free
+// slots for, or every due one when it sets no limit. FOR UPDATE SKIP LOCKED lets more
+// than one API replica run without ever claiming the same row.
 // Claiming bumps attempts and pushes next_attempt_at forward by the lease while
 // keeping status 'pending', so a run whose poller crashes mid-flight becomes
 // claimable again after the lease — no separate recovery pass. The run's project and
 // the agent's user_id are read inline. An external agent's runs are left alone:
 // they are claimed over HTTP by the operator's runner (modules/agents/runner).
 export async function claimDueRuns(): Promise<ClaimedRun[]> {
-  const batchSize = agentRunConfig.batchSize();
+  const { maxRunSeconds, maxConcurrentRuns } = await getAgentSettings();
   const leaseSeconds = Math.max(
     agentRunConfig.leaseSeconds(),
-    (await getAgentSettings()).maxRunSeconds + LEASE_MARGIN_SECONDS,
+    maxRunSeconds + LEASE_MARGIN_SECONDS,
   );
   const executionDeadline = performance.now() + (leaseSeconds - LEASE_MARGIN_SECONDS) * 1000;
-  const rows = await db.execute(sql`
-    UPDATE agent_run r
-    SET attempts = r.attempts + 1,
-        started_at = coalesce(r.started_at, now()),
-        execution_started_at = NULL,
-        next_attempt_at = now() + make_interval(secs => ${leaseSeconds})
-    WHERE r.id IN (
-      SELECT id FROM agent_run q
-      WHERE q.status = 'pending' AND q.next_attempt_at <= now()
-        AND (SELECT kind FROM ai_agent a WHERE a.id = q.agent_id) = 'internal'
-        AND ${runTurn}
-      ORDER BY q.next_attempt_at, q.id
-      FOR UPDATE SKIP LOCKED
-      LIMIT ${batchSize}
-    )
-    RETURNING
-      r.id,
-      r.agent_id AS "agentId",
-      r.issue_id AS "issueId",
-      r.schedule_id AS "scheduleId",
-      r.trigger,
-      r.prompt,
-      r.attempts,
-      r.source_activity_id AS "sourceActivityId",
-      r.document_id AS "documentId",
-      r.source_document_comment_id AS "sourceDocumentCommentId",
-      r.project_id AS "projectId",
-      (SELECT user_id FROM ai_agent a WHERE a.id = r.agent_id) AS "agentUserId",
-      (SELECT username FROM ai_agent a WHERE a.id = r.agent_id) AS "agentUsername",
-      (SELECT run_timeout_sec FROM ai_agent a WHERE a.id = r.agent_id) AS "agentRunTimeoutSec",
-      (SELECT p.key || '-' || i.sequence_number
-         FROM issue i JOIN project p ON p.id = i.project_id
-         WHERE i.id = r.issue_id) AS "issueIdentifier",
-      (SELECT title FROM issue i WHERE i.id = r.issue_id) AS "issueTitle",
-      (SELECT u.name FROM issue i JOIN "user" u ON u.id = i.assignee_user_id
-         WHERE i.id = r.issue_id) AS "assigneeName",
-      (SELECT COALESCE(u.username, ag.username)
-         FROM issue i JOIN "user" u ON u.id = i.assignee_user_id
-         LEFT JOIN ai_agent ag ON ag.user_id = u.id
-         WHERE i.id = r.issue_id) AS "assigneeUsername",
-      (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterName",
-      (SELECT COALESCE(u.username, ag.username)
-         FROM issue_activity a JOIN "user" u ON u.id = a.actor_user_id
-         LEFT JOIN ai_agent ag ON ag.user_id = u.id
-         WHERE a.id = r.source_activity_id) AS "requesterUsername",
-      (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterUserId"
-  `);
+  const rows = await db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(${RUN_CLAIM_LOCK_NS}, 0)`);
+    // LIMIT NULL claims every due run.
+    const free = maxConcurrentRuns > 0 ? maxConcurrentRuns - (await countClaimedRuns(tx)) : null;
+    if (free !== null && free <= 0) return [];
+    return tx.execute(sql`
+      UPDATE agent_run r
+      SET attempts = r.attempts + 1,
+          started_at = coalesce(r.started_at, now()),
+          execution_started_at = NULL,
+          claimed_at = now(),
+          next_attempt_at = now() + make_interval(secs => ${leaseSeconds})
+      WHERE r.id IN (
+        SELECT id FROM agent_run q
+        WHERE q.status = 'pending' AND q.next_attempt_at <= now()
+          AND (SELECT kind FROM ai_agent a WHERE a.id = q.agent_id) = 'internal'
+          AND ${runTurn}
+        ORDER BY q.next_attempt_at, q.id
+        FOR UPDATE SKIP LOCKED
+        LIMIT ${free}
+      )
+      RETURNING
+        r.id,
+        r.agent_id AS "agentId",
+        r.issue_id AS "issueId",
+        r.schedule_id AS "scheduleId",
+        r.trigger,
+        r.prompt,
+        r.attempts,
+        r.source_activity_id AS "sourceActivityId",
+        r.document_id AS "documentId",
+        r.source_document_comment_id AS "sourceDocumentCommentId",
+        r.project_id AS "projectId",
+        (SELECT user_id FROM ai_agent a WHERE a.id = r.agent_id) AS "agentUserId",
+        (SELECT username FROM ai_agent a WHERE a.id = r.agent_id) AS "agentUsername",
+        (SELECT run_timeout_sec FROM ai_agent a WHERE a.id = r.agent_id) AS "agentRunTimeoutSec",
+        (SELECT p.key || '-' || i.sequence_number
+           FROM issue i JOIN project p ON p.id = i.project_id
+           WHERE i.id = r.issue_id) AS "issueIdentifier",
+        (SELECT title FROM issue i WHERE i.id = r.issue_id) AS "issueTitle",
+        (SELECT u.name FROM issue i JOIN "user" u ON u.id = i.assignee_user_id
+           WHERE i.id = r.issue_id) AS "assigneeName",
+        (SELECT COALESCE(u.username, ag.username)
+           FROM issue i JOIN "user" u ON u.id = i.assignee_user_id
+           LEFT JOIN ai_agent ag ON ag.user_id = u.id
+           WHERE i.id = r.issue_id) AS "assigneeUsername",
+        (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterName",
+        (SELECT COALESCE(u.username, ag.username)
+           FROM issue_activity a JOIN "user" u ON u.id = a.actor_user_id
+           LEFT JOIN ai_agent ag ON ag.user_id = u.id
+           WHERE a.id = r.source_activity_id) AS "requesterUsername",
+        (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterUserId"
+    `);
+  });
   const runs = rows as unknown as Omit<ClaimedRun, ThreadField | 'executionDeadline'>[];
   return Promise.all(
     runs.map(async (run) => ({ ...run, executionDeadline, ...(await loadRunThread(run)) })),
@@ -393,6 +438,7 @@ export async function scheduleRunRetry(id: number, delayMs: number, error: strin
     .set({
       status: 'pending',
       executionStartedAt: null,
+      claimedAt: null,
       nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,
       lastError: error.slice(0, 500),
     })
@@ -422,6 +468,7 @@ export async function deferRun(id: number, delaySeconds: number): Promise<void> 
     .update(agentRun)
     .set({
       executionStartedAt: null,
+      claimedAt: null,
       attempts: sql`${agentRun.attempts} - 1`,
       startedAt: sql`CASE WHEN ${agentRun.attempts} = 1 THEN NULL ELSE ${agentRun.startedAt} END`,
       nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,

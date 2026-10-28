@@ -10,6 +10,7 @@ import { qk } from '@/services/queryKeys';
 import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import issue from '../../../messages/en/issue.json';
 import common from '../../../messages/en/common.json';
+import teams from '../../../messages/en/teams.json';
 
 it('shows the run its URL names and hides it after access denial', async () => {
   const names = [
@@ -102,7 +103,7 @@ it('shows the run its URL names and hides it after access denial', async () => {
   const client = new QueryClient({
     defaultOptions: { queries: { staleTime: Infinity, retry: false } },
   });
-  const detailKey = [...qk.runnerQueue, { page: 1, pageSize: 1, runId: 1 }];
+  const detailKey = [...qk.runnerQueue, '/projects/team.RUN', { page: 1, pageSize: 1, runId: 1 }];
   const page = { items: [run], total: 1, page: 1, pageSize: 10, queued: 0, running: 0 };
   client.setQueryData(detailKey, page);
   client.setQueryData([...qk.externalRunTrace(1), null], null);
@@ -114,9 +115,12 @@ it('shows the run its URL names and hides it after access denial', async () => {
       root.render(
         <QueryClientProvider client={client}>
           <SyncProvider>
-            <NextIntlClientProvider locale="en" timeZone="UTC" messages={{ issue, common }}>
+            <NextIntlClientProvider locale="en" timeZone="UTC" messages={{ issue, common, teams }}>
               <RelativeTimeProvider>
-                <RunnerQueueRunPage runId={1} queuePath="/team/RUN/agents/queue" />
+                <RunnerQueueRunPage
+                  scope={{ api: '/projects/team.RUN', path: '/team/RUN/agents/queue' }}
+                  runId={1}
+                />
               </RelativeTimeProvider>
             </NextIntlClientProvider>
           </SyncProvider>

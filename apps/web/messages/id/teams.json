@@ -55,6 +55,9 @@
     "analytics": {
       "title": "Penggunaan",
       "description": "Biaya model yang dipakai agen tim, per agen, proyek, dan hari."
+    },
+    "queue": {
+      "title": "Eksekusi agen"
     }
   },
   "info": {
@@ -630,6 +633,13 @@
       "managers": "Pemilik dan admin",
       "members": "Semua orang di timnya"
     },
+    "runLimit": {
+      "title": "Eksekusi agen bersamaan",
+      "description": "Berapa banyak eksekusi agennya yang berjalan bersamaan. Sisanya menunggu dalam antrean. 0 berarti tanpa batas sendiri.",
+      "descriptionCapped": "Berapa banyak eksekusi agennya yang berjalan bersamaan, paling banyak {max}. Sisanya menunggu dalam antrean. Dengan 0, batasnya {max}.",
+      "ownerOnly": "Hanya pemilik yang mengubah berapa banyak eksekusi agen yang berjalan bersamaan.",
+      "none": "Tanpa batas"
+    },
     "managers": {
       "title": "Pengelola",
       "description": "Pemilik dan admin mengelola workspace.",
@@ -748,6 +758,9 @@
       "useBuiltIn": "Pakai harga bawaan",
       "removePrice": "Hapus harga",
       "save": "Simpan harga"
+    },
+    "queue": {
+      "title": "Eksekusi agen"
     }
   }
 }

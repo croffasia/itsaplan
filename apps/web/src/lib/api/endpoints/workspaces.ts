@@ -16,7 +16,8 @@ export interface WorkspaceSummary {
 export type TeamCreation = 'owner' | 'managers' | 'members';
 
 // `deletion` says whether the owner may delete it: `work` while a team of it holds a
-// project or an AI agent.
+// project or an AI agent. `maxConcurrentRuns` is its own run limit, 0 for none, and
+// `maxConcurrentRunsCap` the highest the instance allows it, 0 for no ceiling.
 export interface Workspace {
   id: number;
   name: string;
@@ -24,6 +25,8 @@ export interface Workspace {
   managerCount: number;
   color: string | null;
   teamCreation: TeamCreation;
+  maxConcurrentRuns: number;
+  maxConcurrentRunsCap: number;
   deletion: 'allowed' | 'work';
 }
 
@@ -31,6 +34,7 @@ export interface WorkspacePatch {
   name?: string;
   color?: string | null;
   teamCreation?: TeamCreation;
+  maxConcurrentRuns?: number;
 }
 
 export interface WorkspacePerson {

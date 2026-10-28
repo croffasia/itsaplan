@@ -55,6 +55,9 @@
     "analytics": {
       "title": "用量",
       "description": "团队代理在模型上的花费，按代理、项目和日期统计。"
+    },
+    "queue": {
+      "title": "代理运行"
     }
   },
   "info": {
@@ -630,6 +633,13 @@
       "managers": "所有者和管理员",
       "members": "其团队中的所有人"
     },
+    "runLimit": {
+      "title": "代理同时运行数",
+      "description": "其代理可同时进行的运行数。其余的在队列中等待。0 表示不设自身上限。",
+      "descriptionCapped": "其代理可同时进行的运行数，最多 {max}。其余的在队列中等待。为 0 时上限为 {max}。",
+      "ownerOnly": "只有所有者可以更改代理同时运行数。",
+      "none": "不限制"
+    },
     "managers": {
       "title": "管理者",
       "description": "所有者和管理员管理工作区。",
@@ -748,6 +758,9 @@
       "useBuiltIn": "使用内置价格",
       "removePrice": "删除价格",
       "save": "保存价格"
+    },
+    "queue": {
+      "title": "代理运行"
     }
   }
 }

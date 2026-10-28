@@ -33,6 +33,7 @@ import {
   or,
   sql,
   type SQL,
+  type SQLWrapper,
 } from 'drizzle-orm';
 import type { IssueQuery } from '#modules/agents/core/issue-query';
 import { iso, num, numOrNull, HttpError } from '#shared/lib';
@@ -188,20 +189,12 @@ function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow 
 // Sets each issue's statusSince to when it entered the column it is in now, leaving
 // the createdAt default (set by mapIssue) for an issue with no open stretch. One
 // query for the whole set. Mutates the passed issues in place.
-async function attachStatusSince(issues: IssueRow[]): Promise<void> {
+async function attachStatusSince(issues: IssueRow[], ids: number[] | SQLWrapper): Promise<void> {
   if (issues.length === 0) return;
   const rows = await db
     .select({ issueId: issueStatus.issueId, enteredAt: issueStatus.enteredAt })
     .from(issueStatus)
-    .where(
-      and(
-        inArray(
-          issueStatus.issueId,
-          issues.map((i) => i.id),
-        ),
-        isNull(issueStatus.leftAt),
-      ),
-    );
+    .where(and(inArray(issueStatus.issueId, ids), isNull(issueStatus.leftAt)));
   const byIssue = new Map(rows.map((r) => [r.issueId, iso(r.enteredAt)]));
   for (const i of issues) i.statusSince = byIssue.get(i.id) ?? i.statusSince;
 }
@@ -233,11 +226,7 @@ export async function listIssues(project: ProjectRow): Promise<IssueRow[]> {
     .where(and(eq(issue.projectId, project.id), isNull(issue.archivedAt)))
     .orderBy(issue.columnId, issue.position);
   const issues = rows.map((row) => mapIssue(row, project.key));
-  await attachLabels(issues);
-  await attachFieldValues(issues);
-  await attachStatusSince(issues);
-  await attachGroupings(issues);
-  await attachLoggedMinutes(issues);
+  await attachDetails(issues, { fieldValues: true, ids: projectIssueIds(project.id, false) });
   return issues;
 }
 
@@ -250,11 +239,7 @@ export async function listArchivedIssues(project: ProjectRow): Promise<IssueRow[
     .where(and(eq(issue.projectId, project.id), isNotNull(issue.archivedAt)))
     .orderBy(sql`${issue.archivedAt} desc`);
   const issues = rows.map((row) => mapIssue(row, project.key));
-  await attachLabels(issues);
-  await attachFieldValues(issues);
-  await attachStatusSince(issues);
-  await attachGroupings(issues);
-  await attachLoggedMinutes(issues);
+  await attachDetails(issues, { fieldValues: true, ids: projectIssueIds(project.id, true) });
   return issues;
 }
 
@@ -588,7 +573,7 @@ export async function restoreIssue(
 // { id, title, status } / { id, name, status } in place. Both hang off the same issue rows, so one
 // query carries them; an issue linked to neither keeps the nulls mapIssue set.
 // Rendering those names on a board card needs no separate scaffold lookup this way.
-async function attachGroupings(issues: IssueRow[]): Promise<void> {
+async function attachGroupings(issues: IssueRow[], ids: number[] | SQLWrapper): Promise<void> {
   if (issues.length === 0) return;
   const rows = await db
     .select({
@@ -606,13 +591,7 @@ async function attachGroupings(issues: IssueRow[]): Promise<void> {
     .leftJoin(initiative, eq(initiative.id, issue.initiativeId))
     .leftJoin(cycle, eq(cycle.id, issue.cycleId))
     .where(
-      and(
-        inArray(
-          issue.id,
-          issues.map((i) => i.id),
-        ),
-        or(isNotNull(issue.initiativeId), isNotNull(issue.cycleId)),
-      ),
+      and(inArray(issue.id, ids), or(isNotNull(issue.initiativeId), isNotNull(issue.cycleId))),
     );
   const byIssue = new Map(rows.map((r) => [r.issueId, r]));
   for (const i of issues) {
@@ -632,21 +611,49 @@ async function attachGroupings(issues: IssueRow[]): Promise<void> {
   }
 }
 
+// The ids of a project's active or archived issues, as a subquery. A whole board
+// selects its rows by it rather than by a parameter per issue.
+function projectIssueIds(projectId: number, archived: boolean): SQLWrapper {
+  return db
+    .select({ id: issue.id })
+    .from(issue)
+    .where(
+      and(
+        eq(issue.projectId, projectId),
+        archived ? isNotNull(issue.archivedAt) : isNull(issue.archivedAt),
+      ),
+    );
+}
+
+// Fills in what an issue row leaves out: its labels, when it entered its column, its
+// initiative and cycle, the time logged on it, and its field values when asked for.
+// The reads do not depend on each other, so they run at once. `ids` selects the same
+// issues as the list does.
+async function attachDetails(
+  issues: IssueRow[],
+  opts: { fieldValues?: boolean; ids?: SQLWrapper } = {},
+) {
+  const ids = opts.ids ?? issues.map((i) => i.id);
+  await Promise.all([
+    attachLabels(issues, ids),
+    opts.fieldValues ? attachFieldValues(issues, ids) : undefined,
+    attachStatusSince(issues, ids),
+    attachGroupings(issues, ids),
+    attachLoggedMinutes(issues, ids),
+  ]);
+}
+
 // Loads every issue's label ids and merges them onto the issues in place. Generic
 // so it also enriches the lighter IssueSearchHit rows, which carry id + labelIds.
 async function attachLabels<T extends { id: number; labelIds: number[] }>(
   issues: T[],
+  ids: number[] | SQLWrapper = issues.map((i) => i.id),
 ): Promise<void> {
   if (issues.length === 0) return;
   const rows = await db
     .select({ issueId: issueLabel.issueId, labelId: issueLabel.labelId })
     .from(issueLabel)
-    .where(
-      inArray(
-        issueLabel.issueId,
-        issues.map((i) => i.id),
-      ),
-    );
+    .where(inArray(issueLabel.issueId, ids));
   const byIssue = new Map<number, number[]>();
   for (const r of rows) {
     let list = byIssue.get(r.issueId);
@@ -660,9 +667,11 @@ async function attachLabels<T extends { id: number; labelIds: number[] }>(
 // selected option ids) and merges them onto the issues. A field with no scalar
 // value and no options is omitted, so unset fields add nothing to the payload.
 // Mutates the passed issues in place.
-async function attachFieldValues(issues: IssueRow[]): Promise<void> {
+async function attachFieldValues(
+  issues: IssueRow[],
+  issueIds: number[] | SQLWrapper,
+): Promise<void> {
   if (issues.length === 0) return;
-  const issueIds = issues.map((i) => i.id);
   const [scalarRows, optionRows] = await Promise.all([
     db
       .select({
@@ -760,10 +769,7 @@ export async function getIssues(ids: number[]): Promise<IssueRow[]> {
     .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
     .where(inArray(issue.id, ids));
   const issues = rows.map((row) => mapIssue(row.issue, row.projectKey));
-  await attachLabels(issues);
-  await attachStatusSince(issues);
-  await attachGroupings(issues);
-  await attachLoggedMinutes(issues);
+  await attachDetails(issues);
   return issues;
 }
 
@@ -799,10 +805,7 @@ export async function getIssueBySequence(
     );
   if (!rows[0]) return null;
   const mapped = mapIssue(rows[0].issue, rows[0].projectKey);
-  await attachLabels([mapped]);
-  await attachStatusSince([mapped]);
-  await attachGroupings([mapped]);
-  await attachLoggedMinutes([mapped]);
+  await attachDetails([mapped]);
   return mapped;
 }
 

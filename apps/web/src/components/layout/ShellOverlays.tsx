@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
-import { issuePath, projectPath } from '@/utils/paths';
+import { currentPathWithoutIssue, issuePagePath, projectPath } from '@/utils/paths';
 import type { useOverlays } from '@/hooks/useOverlays';
 
 // Every project page mounts the Shell, so these load on first open: a page that opens
@@ -68,7 +68,9 @@ export default function ShellOverlays({
               seq ??
               project.issues.find((i) => i.id === overlays.openIssueId)?.sequenceNumber ??
               null;
-            if (projectKey && n != null) router.push(issuePath(projectKey, n));
+            if (projectKey && n != null) {
+              router.push(issuePagePath(projectKey, n, currentPathWithoutIssue()));
+            }
             overlays.setOpenIssueId(null);
           }}
         />

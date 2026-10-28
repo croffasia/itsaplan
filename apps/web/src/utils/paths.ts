@@ -77,6 +77,50 @@ export const issuePath = (ref: string, sequenceNumber: number) => {
   return `/${encodeURIComponent(teamRef)}/issue/${encodeURIComponent(key)}-${sequenceNumber}`;
 };
 
+// A full-page issue carries the project page it was opened from, so its side
+// panel can return there. `from` is a path in this app, never an origin.
+export function issuePagePath(ref: string, sequenceNumber: number, from?: string | null): string {
+  const path = issuePath(ref, sequenceNumber);
+  return from ? `${path}?${new URLSearchParams({ from }).toString()}` : path;
+}
+
+// The current page as a return path, without the panel's `issue` parameter.
+export function currentPathWithoutIssue(): string | null {
+  if (typeof window === 'undefined') return null;
+  const url = new URL(window.location.href);
+  url.searchParams.delete('issue');
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+const RETURN_ORIGIN = 'http://app.invalid';
+
+// The return path for a page in the issue's own project, or null when `from`
+// names another site, another project, or no path at all.
+export function issueReturnPath(ref: string, from: string | null): string | null {
+  if (!from || !from.startsWith('/') || from.startsWith('//')) return null;
+  let url: URL;
+  try {
+    url = new URL(from, RETURN_ORIGIN);
+  } catch {
+    return null;
+  }
+  if (url.origin !== RETURN_ORIGIN) return null;
+  const base = projectPath(ref);
+  if (url.pathname !== base && !url.pathname.startsWith(`${base}/`)) return null;
+  url.searchParams.delete('issue');
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+// The return path with the issue the side panel shows. Null falls back to the
+// project board.
+export function issuePanelPath(ref: string, from: string | null, issueId: number): string | null {
+  const path = issueReturnPath(ref, from);
+  if (!path) return null;
+  const url = new URL(path, RETURN_ORIGIN);
+  url.searchParams.set('issue', String(issueId));
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
 // "MKT-42" -> { key: 'MKT', sequenceNumber: 42 }, or null for anything else.
 export function parseIssueIdentifier(
   identifier: string,

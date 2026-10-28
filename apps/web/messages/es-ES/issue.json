@@ -97,6 +97,7 @@
     "inOneWeek": "En una semana"
   },
   "actionsBar": {
+    "openInPanel": "Abrir en el panel lateral",
     "shortLinkCopied": "El enlace corto se ha copiado",
     "branchCopied": "El nombre de la rama se ha copiado",
     "copyShortLink": "Copiar el enlace corto",

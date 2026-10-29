@@ -15,6 +15,7 @@ import { notion } from './tools/notion';
 import { gitea } from './tools/gitea';
 import { github } from './tools/github';
 import { pdf } from './tools/pdf';
+import { keenable } from './tools/keenable';
 
 // The core's tool integrations. Add an integration by creating its folder under tools/
 // and listing it here.
@@ -28,6 +29,7 @@ export const INTEGRATIONS: Integration[] = [
   gitea,
   github,
   pdf,
+  keenable,
 ];
 
 type ToolIndex = Map<string, { integration: Integration; tool: CustomToolEntry }>;

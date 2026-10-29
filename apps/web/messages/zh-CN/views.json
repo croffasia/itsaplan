@@ -11,5 +11,12 @@
   "unfavorite": "从收藏移除",
   "shareBoard": "共享看板",
   "newViewHint": "根据当前筛选条件和显示设置创建视图",
-  "filter": "筛选"
+  "filter": "筛选",
+  "private": "私有",
+  "privateHint": "只有你能看到此视图",
+  "duplicate": "复制",
+  "copyName": "{name}（副本）",
+  "publish": "添加到项目",
+  "publishHint": "项目中的所有人都能看到它。之后无法再设为私有。",
+  "published": "{name} 现在是项目视图"
 }

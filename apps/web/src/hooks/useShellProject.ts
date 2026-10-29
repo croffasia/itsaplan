@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   useBoardIssuesQuery,
@@ -61,6 +61,28 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
     activeViewId,
     (id) => projectKey && router.push(viewPath(projectKey, id)),
   );
+
+  // An address naming a view the caller cannot see (deleted, or someone else's
+  // private view) falls back to All instead of waiting for it, once a fetch started
+  // after the address arrived has answered, or failed: the cached list may predate a
+  // view just made.
+  const missingView =
+    activeViewId != null &&
+    viewsQuery.data !== undefined &&
+    !viewsQuery.isFetching &&
+    !views.some((v) => v.id === activeViewId);
+  const [checked, setChecked] = useState<{ viewId: number; at: number } | null>(null);
+  const { refetch: refetchViews, dataUpdatedAt, errorUpdatedAt } = viewsQuery;
+  const viewsUpdatedAt = Math.max(dataUpdatedAt, errorUpdatedAt);
+  useEffect(() => {
+    if (!missingView || !projectKey || activeViewId == null) return;
+    if (checked?.viewId !== activeViewId) {
+      setChecked({ viewId: activeViewId, at: Date.now() });
+      void refetchViews();
+    } else if (viewsUpdatedAt >= checked.at) {
+      router.replace(viewPath(projectKey, null));
+    }
+  }, [missingView, projectKey, activeViewId, checked, refetchViews, viewsUpdatedAt, router]);
 
   // The project with the active filters applied to its issues: the active view's
   // own conditions plus any ad-hoc ones. Subtasks are then left out of every

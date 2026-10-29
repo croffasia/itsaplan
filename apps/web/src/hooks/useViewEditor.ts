@@ -80,6 +80,9 @@ export function useViewEditor(
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState('');
   const [draftIcon, setDraftIcon] = useState<string | null>(null);
+  // Whether Save creates a private view. New views start private: making one the
+  // project's is the deliberate choice.
+  const [draftPrivate, setDraftPrivate] = useState(true);
   // Whether the filter row is shown. It is also shown once the live filters differ
   // from the selection's own filters, so ad-hoc filters can never be hidden.
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -122,9 +125,10 @@ export function useViewEditor(
   // Apply the selection's display whenever the routed view or the project changes,
   // or once the selected view's data arrives. loadedRef keys on project+view so an
   // unrelated views refetch (e.g. after Save) does not clobber the live edit.
-  // openEditNext lets beginNewView/beginEditView keep the edit bar open across the
-  // navigation that changes the selection; keepLiveNext lets beginNewView carry the
-  // live filters and display into the draft instead of reloading the selection.
+  // openEditNext lets beginNewView/beginEditView/beginDuplicate keep the edit bar open
+  // across the navigation that changes the selection; keepLiveNext lets beginNewView and
+  // beginDuplicate carry the drafted filters and display into the draft instead of
+  // reloading the selection.
   const loadedRef = useRef<string | null>(null);
   const openEditNext = useRef(false);
   const keepLiveNext = useRef(false);
@@ -146,6 +150,7 @@ export function useViewEditor(
     setEditing(true);
     setDraftName(from?.name ?? '');
     setDraftIcon(from?.icon ?? null);
+    setDraftPrivate(true);
   }
 
   // Enter edit mode for a new view, drafted from what is on screen: the active
@@ -211,7 +216,9 @@ export function useViewEditor(
     } else {
       if (!name) return; // Save is disabled without a name for a new view.
       const created = normalizeView(
-        await createView.mutateAsync({ input: { name, icon: draftIcon, filters, display } }),
+        await createView.mutateAsync({
+          input: { name, icon: draftIcon, filters, display, isPrivate: draftPrivate },
+        }),
       );
       setFilters(EMPTY_FILTER_SET);
       setEditing(false);
@@ -232,6 +239,22 @@ export function useViewEditor(
     beginEdit(target);
   }
 
+  // A new-view draft seeded with the target as it is stored (its own conditions and
+  // display, not what is on screen beyond them), saved from the edit bar like any new view.
+  function beginDuplicate(target: View, name: string) {
+    setFilters(mergeFilters(target.filters, EMPTY_FILTER_SET));
+    setView(target.display.layout);
+    const { layout: _layout, ...s } = target.display;
+    setSettings(s);
+    if (activeViewId != null) {
+      openEditNext.current = true;
+      keepLiveNext.current = true;
+      onSelectView(null);
+    }
+    beginEdit(target);
+    setDraftName(name);
+  }
+
   async function deleteView(target: View) {
     await deleteViewMutation.mutateAsync(target.id);
     if (activeViewId === target.id) onSelectView(null);
@@ -240,7 +263,8 @@ export function useViewEditor(
   // Moves the dragged view to the dropped-on view's slot and persists the full
   // order; a null target means the front (the drop on the fixed All tab). The move
   // applies to the stored order, not to the tab row — favorites are pinned to the
-  // front for the caller only, while position is shared by the project.
+  // front for the caller only, while position is shared by the project. Private views
+  // are ordered among themselves, after the project's: a view moves within its group.
   function reorderView(draggedId: number, targetId: number | null) {
     const next = reorderedViews(views, draggedId, targetId);
     if (next) reorderViewsMutation.mutate(next.map((v) => v.id));
@@ -261,6 +285,8 @@ export function useViewEditor(
     setDraftName,
     draftIcon,
     setDraftIcon,
+    draftPrivate,
+    setDraftPrivate,
     beginNewView,
     changeView,
     changeSettings,
@@ -273,6 +299,7 @@ export function useViewEditor(
     saveEdits,
     beginEditView,
     deleteView,
+    beginDuplicate,
     reorderView,
   };
 }

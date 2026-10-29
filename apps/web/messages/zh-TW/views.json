@@ -11,5 +11,12 @@
   "unfavorite": "從收藏移除",
   "shareBoard": "共享看板",
   "newViewHint": "根據目前篩選條件和顯示設定建立檢視",
-  "filter": "篩選"
+  "filter": "篩選",
+  "private": "私人",
+  "privateHint": "只有你看得到此檢視",
+  "duplicate": "複製",
+  "copyName": "{name}（副本）",
+  "publish": "新增到專案",
+  "publishHint": "專案中的所有人都看得到它。之後無法再設為私人。",
+  "published": "{name} 現在是專案檢視"
 }

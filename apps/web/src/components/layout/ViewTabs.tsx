@@ -3,6 +3,7 @@ import {
   closestCenter,
   DndContext,
   DragOverlay,
+  type CollisionDetection,
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
@@ -12,8 +13,8 @@ import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { View } from '@/lib/api/endpoints/views';
 import { useDndSensors, useDroppedOrder } from '@/lib/dnd';
-import { reorderedViews, tabOrder } from '@/services/views.service';
 import { usePermissions } from '@/hooks/usePermissions';
+import { reorderedViews, tabOrder } from '@/services/views.service';
 import AllViewTab, { ALL_DROP_ID } from '@/components/layout/AllViewTab';
 import MobileViewSwitcher from '@/components/layout/MobileViewSwitcher';
 import SavedViewTab from '@/components/layout/SavedViewTab';
@@ -35,6 +36,7 @@ export default function ViewTabs({
   onNewView,
   onEdit,
   onDelete,
+  onDuplicate,
   onReorder,
   onToggleFilter,
   displayControl,
@@ -46,26 +48,44 @@ export default function ViewTabs({
   onNewView: () => void;
   onEdit: (view: View) => void;
   onDelete: (view: View) => void;
+  onDuplicate: (view: View) => void;
   onReorder: (draggedId: number, targetId: number | null) => void;
   onToggleFilter: () => void;
   displayControl: ReactNode;
 }) {
   const t = useTranslations('views');
   const { can } = usePermissions();
-  const canCreateView = can('views', 'create');
+  // Anyone who reads the project's views may save a private one.
+  const canCreateView = can('views', 'read');
   const canEditView = can('views', 'edit');
   const canDeleteView = can('views', 'delete');
+  const canPublishView = can('views', 'create');
   const sensors = useDndSensors();
   // The view being dragged, used to render the DragOverlay preview.
   const [activeId, setActiveId] = useState<number | null>(null);
-  const activeView = activeId != null ? (views.find((v) => v.id === activeId) ?? null) : null;
   const { items: shown, drop } = useDroppedOrder(views);
+  const byId = new Map(views.map((v) => [v.id, v]));
+  const activeView = activeId != null ? (byId.get(activeId) ?? null) : null;
+  // The project's views and the caller's private ones are ordered apart, so each is
+  // its own sortable list and a tab only meets the tabs of its own list (or All).
+  const projectViews = shown.filter((v) => !v.isPrivate);
+  const ownViews = shown.filter((v) => v.isPrivate);
+  const collisionDetection: CollisionDetection = (args) => {
+    const dragged = byId.get(Number(args.active.id));
+    return closestCenter({
+      ...args,
+      droppableContainers: args.droppableContainers.filter(
+        (c) => c.id === ALL_DROP_ID || byId.get(Number(c.id))?.isPrivate === dragged?.isPrivate,
+      ),
+    });
+  };
 
-  // Shows at once the tab row the server will answer with once the move is stored.
+  // Shows at once the tab row the server will answer with once the drop is stored.
   function reorder(draggedId: number, targetId: number | null) {
     const moved = reorderedViews(views, draggedId, targetId);
     if (!moved) return;
-    drop(tabOrder(moved).map((v) => v.id));
+    const rest = views.filter((v) => v.isPrivate !== moved[0].isPrivate);
+    drop(tabOrder([...rest, ...moved]).map((v) => v.id));
     onReorder(draggedId, targetId);
   }
 
@@ -100,7 +120,7 @@ export default function ViewTabs({
       <div className="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto sm:flex">
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCenter}
+          collisionDetection={collisionDetection}
           onDragStart={(e: DragStartEvent) => setActiveId(Number(e.active.id))}
           onDragCancel={() => setActiveId(null)}
           onDragEnd={handleDragEnd}
@@ -111,25 +131,38 @@ export default function ViewTabs({
             onClick={() => onSelect(null)}
           />
 
-          <SortableContext items={shown.map((v) => v.id)} strategy={horizontalListSortingStrategy}>
-            {shown.map((view) => (
-              <SavedViewTab
-                key={view.id}
-                view={view}
-                projectKey={projectKey}
-                active={activeViewId === view.id}
-                canEdit={canEditView}
-                canDelete={canDeleteView}
-                onSelect={() => onSelect(view.id)}
-                onEdit={() => onEdit(view)}
-                onDelete={() => onDelete(view)}
-              />
-            ))}
-          </SortableContext>
+          {[projectViews, ownViews].map((group, i) => (
+            <SortableContext
+              key={i}
+              items={group.map((v) => v.id)}
+              strategy={horizontalListSortingStrategy}
+            >
+              {group.map((view) => (
+                <SavedViewTab
+                  key={view.id}
+                  view={view}
+                  projectKey={projectKey}
+                  active={activeViewId === view.id}
+                  canEdit={view.isPrivate || canEditView}
+                  canDelete={view.isPrivate || canDeleteView}
+                  canReorder={view.isPrivate || canEditView}
+                  canPublish={view.isPrivate && canPublishView}
+                  onSelect={() => onSelect(view.id)}
+                  onEdit={() => onEdit(view)}
+                  onDelete={() => onDelete(view)}
+                  onDuplicate={() => onDuplicate(view)}
+                />
+              ))}
+            </SortableContext>
+          ))}
 
           <DragOverlay>
             {activeView ? (
-              <ViewTabChrome active className="cursor-grabbing shadow-md">
+              <ViewTabChrome
+                active
+                own={activeView.isPrivate}
+                className="cursor-grabbing shadow-md"
+              >
                 <span className="flex items-center gap-1.5 py-1 pr-2 pl-2">
                   <ViewTabLabel view={activeView} />
                 </span>

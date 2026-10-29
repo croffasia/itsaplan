@@ -2012,9 +2012,18 @@ export const projectView = pgTable(
     // subtasks and links; true adds the assignees, labels, custom fields and
     // activity the members see.
     shareExtended: boolean('share_extended').notNull().default(false),
+    // A private view is seen only by its owner, not even by a project owner. The owner
+    // is set only on private views, so deleting an account takes its private views and
+    // never a project's.
+    isPrivate: boolean('is_private').notNull().default(false),
+    ownerUserId: text('owner_user_id').references(() => user.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index('project_view_project_idx').on(t.projectId, t.position)],
+  (t) => [
+    index('project_view_project_idx').on(t.projectId, t.position),
+    index('project_view_owner_idx').on(t.ownerUserId),
+    check('project_view_private_owner_check', sql`${t.isPrivate} = (${t.ownerUserId} is not null)`),
+  ],
 );
 
 // The saved views a user marked as favorite. Favorites are personal: they pin the

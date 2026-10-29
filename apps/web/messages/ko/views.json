@@ -11,5 +11,12 @@
   "unfavorite": "즐겨찾기에서 제거",
   "shareBoard": "보드 공유",
   "newViewHint": "현재 필터와 보기 설정으로 새 보기를 생성합니다",
-  "filter": "필터"
+  "filter": "필터",
+  "private": "비공개",
+  "privateHint": "이 보기는 나만 볼 수 있습니다",
+  "duplicate": "복제",
+  "copyName": "{name} (사본)",
+  "publish": "프로젝트에 추가",
+  "publishHint": "프로젝트의 모든 사람이 보게 됩니다. 다시 비공개로 바꿀 수 없습니다.",
+  "published": "{name}이(가) 이제 프로젝트 보기입니다"
 }

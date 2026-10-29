@@ -19,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import ViewTabs from '@/components/layout/ViewTabs';
 import ViewIconPicker from '@/components/layout/ViewIconPicker';
 import FilterBar from '@/components/layout/FilterBar';
@@ -40,6 +41,7 @@ interface TimelineCollapseState {
 // the project data and the view editor come from the Shell through React context.
 export default function WorkItemsPage() {
   const t = useTranslations('workItems');
+  const tViews = useTranslations('views');
   const tCommon = useTranslations('common');
   const { project, filteredProject, views, editor, customFields, onOpenIssue, onAddIssue } =
     useShell();
@@ -61,10 +63,12 @@ export default function WorkItemsPage() {
 
   if (!project || !filteredProject) return null;
 
-  // Saving persists the view: editing an existing one is a views edit, a brand-new
-  // one is a views create. Filtering/display stay available to everyone (transient,
+  // Saving persists the view: a project's view is a views edit, a private view is its
+  // owner's to save, and anyone may save a new one, private unless they may create the
+  // project's views. Filtering/display stay available to everyone (transient,
   // client-side); only persisting is gated.
-  const canSaveView = can('views', editor.activeView ? 'edit' : 'create');
+  const canCreateProjectView = can('views', 'create');
+  const canSaveView = !editor.activeView || editor.activeView.isPrivate || can('views', 'edit');
 
   // With an optional section off, its property and grouping are left out of what
   // the layouts and the Display panel work with, and put back on the way out so the
@@ -172,6 +176,7 @@ export default function WorkItemsPage() {
         onNewView={editor.beginNewView}
         onEdit={editor.beginEditView}
         onDelete={(v) => void editor.deleteView(v)}
+        onDuplicate={(v) => editor.beginDuplicate(v, tViews('copyName', { name: v.name }))}
         onReorder={editor.reorderView}
         onToggleFilter={editor.toggleFilters}
         displayControl={<DisplayPopover {...displayProps} />}
@@ -198,6 +203,20 @@ export default function WorkItemsPage() {
                 }
                 className="h-8 flex-1 border-0 bg-transparent px-1 text-sm font-medium shadow-none focus-visible:ring-0"
               />
+              {/* A private view can be added to the project later; a project's view never
+                  turns private. */}
+              {!editor.activeView && canCreateProjectView && (
+                <label
+                  className="flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground"
+                  title={tViews('privateHint')}
+                >
+                  <Checkbox
+                    checked={editor.draftPrivate}
+                    onCheckedChange={(value) => editor.setDraftPrivate(value === true)}
+                  />
+                  {tViews('private')}
+                </label>
+              )}
               <Button variant="ghost" size="sm" onClick={editor.cancelEdits}>
                 {tCommon('cancel')}
               </Button>

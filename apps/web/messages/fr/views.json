@@ -11,5 +11,12 @@
   "unfavorite": "Retirer des favoris",
   "shareBoard": "Partager le tableau",
   "newViewHint": "Créer une vue à partir des filtres et de l'affichage actuels",
-  "filter": "Filtrer"
+  "filter": "Filtrer",
+  "private": "Privée",
+  "privateHint": "Vous seul voyez cette vue",
+  "duplicate": "Dupliquer",
+  "copyName": "{name} (copie)",
+  "publish": "Ajouter au projet",
+  "publishHint": "Tout le projet la verra. Elle ne pourra plus redevenir privée.",
+  "published": "{name} est désormais une vue du projet"
 }

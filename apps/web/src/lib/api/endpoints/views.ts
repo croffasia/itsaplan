@@ -3,8 +3,9 @@ import type { SavedViewDisplay } from '@/utils/viewSettings';
 import { request } from '@/lib/api/core/client';
 
 // A saved view (a tab above the work items view): a named filter set plus a display
-// snapshot (layout + that layout's settings). The view itself is shared by the
-// project; only `favorite` is per user. filters/display are stored as jsonb.
+// snapshot (layout + that layout's settings). A project's view is shared by the
+// project, a private one is seen only by its creator; `favorite` is per user.
+// filters/display are stored as jsonb.
 export interface View {
   id: number;
   projectId: number;
@@ -19,6 +20,9 @@ export interface View {
   // fields, activity) or only their title, description, state, type, priority,
   // dates, subtasks and links.
   shareExtended: boolean;
+  // Seen only by the current user, who created it. It is never shared or reordered
+  // with the project's views, and follows them in the tab row.
+  isPrivate: boolean;
   // Whether the current user marked the view as a favorite: it pins the tab to the
   // front and lists the view under Work items in the sidebar.
   favorite: boolean;
@@ -30,6 +34,7 @@ export interface NewViewInput {
   icon?: string | null;
   filters?: FilterSet;
   display?: SavedViewDisplay;
+  isPrivate?: boolean;
 }
 
 export interface ViewPatch {
@@ -50,6 +55,9 @@ export const updateView = (viewId: number, patch: ViewPatch) =>
 
 export const deleteView = (viewId: number) =>
   request<void>(`/views/${viewId}`, { method: 'DELETE' });
+
+export const publishView = (viewId: number) =>
+  request<View>(`/views/${viewId}/publish`, { method: 'POST' });
 
 export const setViewFavorite = (viewId: number, favorite: boolean) =>
   request<void>(`/views/${viewId}/favorite`, { method: favorite ? 'PUT' : 'DELETE' });

@@ -374,6 +374,8 @@
     "username": "Username",
     "usernamePlaceholder": "e.g. triage-bot",
     "usernameHint": "Letters, digits, dots, dashes, and underscores. Up to 64 characters.",
+    "chat": "Chat",
+    "chatHint": "Lets a member open or continue a chat with this agent. Off, it drops out of the chat selector; mentions, delegations, and schedules still run it.",
     "access": "Availability",
     "accessHint": "Who can give this agent tasks",
     "model": "Model",

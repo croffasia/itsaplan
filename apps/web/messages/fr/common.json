@@ -101,6 +101,8 @@
     "unreachable": "Impossible de joindre l'agent. Réessayez.",
     "runnerOffline": "Runner hors ligne",
     "runnerOfflineHint": "Démarrez le runner sur votre machine pour discuter avec cet agent.",
+    "chatDisabled": "Cet agent n'est pas disponible dans le chat",
+    "chatDisabledHint": "Le chat est désactivé pour cet agent. Les mentions, délégations et tâches planifiées fonctionnent toujours.",
     "attachFile": "Joindre un tableur, un document, un PDF ou un fichier texte à faire lire à l'agent",
     "removeAttachment": "Supprimer la pièce jointe",
     "uploadFailed": "Impossible d'envoyer le fichier.",

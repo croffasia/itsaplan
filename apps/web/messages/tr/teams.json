@@ -374,6 +374,8 @@
     "username": "Kullanıcı adı",
     "usernamePlaceholder": "Örn. triyaj-botu",
     "usernameHint": "Harfler, rakamlar, noktalar, tireler ve alt çizgiler. 64 karaktere kadar.",
+    "chat": "Sohbet",
+    "chatHint": "Bir üyenin bu ajanla sohbet açmasına veya sürdürmesine izin verir. Kapalıyken sohbet seçicisinden çıkar; bahsetmeler, devretmeler ve zamanlamalar onu çalıştırmaya devam eder.",
     "access": "Erişilebilirlik",
     "accessHint": "Bu ajana kimlerin görev verebileceği",
     "model": "Model",

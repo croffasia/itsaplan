@@ -374,6 +374,8 @@
     "username": "使用者名稱",
     "usernamePlaceholder": "例如：triage-bot",
     "usernameHint": "可使用字母、數字、點、連字元和底線，最多 64 個字元。",
+    "chat": "聊天",
+    "chatHint": "讓成員可以開啟或繼續與此代理的聊天。關閉後，它會從聊天選擇器中移除；提及、委派和排程仍會執行它。",
     "access": "可用範圍",
     "accessHint": "誰可以給該代理分配任務",
     "model": "模型",

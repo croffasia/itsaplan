@@ -374,6 +374,8 @@
     "username": "Nom d'utilisateur",
     "usernamePlaceholder": "ex. bot-triage",
     "usernameHint": "Lettres, chiffres, points, tirets et tirets bas. Jusqu'à 64 caractères.",
+    "chat": "Chat",
+    "chatHint": "Permet à un membre d'ouvrir ou de poursuivre un chat avec cet agent. Désactivé, il disparaît du sélecteur de chat ; les mentions, délégations et tâches planifiées continuent de l'exécuter.",
     "access": "Disponibilité",
     "accessHint": "Qui peut confier des tâches à cet agent",
     "model": "Modèle",

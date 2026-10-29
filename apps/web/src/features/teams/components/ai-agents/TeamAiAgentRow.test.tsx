@@ -72,6 +72,7 @@ const agent = (canManage: boolean): AiAgent => ({
   skillCount: 0,
   toolCount: 0,
   canManage,
+  chatEnabled: true,
 });
 
 async function render(row: AiAgent) {
@@ -165,5 +166,17 @@ describe('TeamAiAgentRow', () => {
     assert.ok(items.some((i) => i.includes(teams.agents.runHistory)));
     assert.ok(!items.some((i) => i.includes(common.edit)));
     assert.ok(!items.some((i) => i.includes(common.delete)));
+  });
+
+  it('offers the test chat of an agent with chat on', async () => {
+    await render(agent(true));
+
+    assert.ok((await menuItems()).some((i) => i.includes(teams.agents.testChat)));
+  });
+
+  it('does not offer the test chat of an agent with chat off', async () => {
+    await render({ ...agent(true), chatEnabled: false });
+
+    assert.ok(!(await menuItems()).some((i) => i.includes(teams.agents.testChat)));
   });
 });

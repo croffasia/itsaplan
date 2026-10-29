@@ -1163,6 +1163,13 @@
       "when": 1793232167646,
       "tag": "0165_issue_link_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 166,
+      "version": "7",
+      "when": 1793305025083,
+      "tag": "0166_agent_chat_enabled",
+      "breakpoints": true
     }
   ]
 }

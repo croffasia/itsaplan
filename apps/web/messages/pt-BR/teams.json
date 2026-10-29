@@ -374,6 +374,8 @@
     "username": "Nome de usuário",
     "usernamePlaceholder": "ex. bot-triagem",
     "usernameHint": "Letras, dígitos, pontos, hífens e sublinhados. Até 64 caracteres.",
+    "chat": "Chat",
+    "chatHint": "Permite que um membro abra ou continue um chat com este agente. Desativado, ele some do seletor de chat; menções, delegações e agendamentos continuam executando-o.",
     "access": "Disponibilidade",
     "accessHint": "Quem pode dar tarefas a este agente",
     "model": "Modelo",

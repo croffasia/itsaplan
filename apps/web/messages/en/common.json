@@ -101,6 +101,8 @@
     "unreachable": "Could not reach the agent. Try again.",
     "runnerOffline": "Runner offline",
     "runnerOfflineHint": "Start the runner on your machine to chat with this agent.",
+    "chatDisabled": "This agent is not available in chat",
+    "chatDisabledHint": "Chat is turned off for this agent. Mentions, delegations, and schedules still work.",
     "attachFile": "Attach a spreadsheet, document, PDF, or text file for the agent to read",
     "removeAttachment": "Remove attachment",
     "uploadFailed": "Could not upload the file.",

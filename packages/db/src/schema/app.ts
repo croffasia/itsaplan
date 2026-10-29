@@ -547,6 +547,9 @@ export const aiAgent = pgTable(
     // trigger_on_assign is set.
     triggerOnMention: boolean('trigger_on_mention').notNull().default(true),
     triggerOnAssign: boolean('trigger_on_assign').notNull().default(false),
+    // Gates the test chat and the external-agent chat only; the triggers above and
+    // schedules still run an agent with chat off.
+    chatEnabled: boolean('chat_enabled').notNull().default(true),
     // How long a delegation run waits before it becomes claimable, which leaves time
     // to keep editing the issue after delegating it. Applies to delegation only: a
     // mention is a question already asked, and its author waits for the reply.

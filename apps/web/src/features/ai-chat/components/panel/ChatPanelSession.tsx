@@ -35,6 +35,8 @@ export function ChatPanelSession({
   onThreadDeleted,
 }: {
   projectKey: string;
+  // The agents offered by the switcher: chat-enabled only, so `agent` (the session's
+  // own, possibly chat-disabled) need not be among them.
   agents: AiAgent[];
   agent: AiAgent;
   session: ChatSession;

@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { Agent, type AgentExecutionOptions } from '@mastra/core/agent';
 import type { TracingOptions } from '@mastra/core/observability';
 import {
+  assertChatEnabled,
   getAgentInProject,
   getInternalAgentApiKey,
   type AiAgentRow,
@@ -294,6 +295,7 @@ async function prepareRun(
   }
   // A queued run was asked about in the poller, before it was recorded as started.
   if (opts.runId == null) {
+    assertChatEnabled(row);
     const refused = await runRefusal({
       agentId: row.id,
       teamId: row.teamId,

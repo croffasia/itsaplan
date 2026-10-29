@@ -374,6 +374,8 @@
     "username": "Nombre de usuario",
     "usernamePlaceholder": "p. ej. bot-triaje",
     "usernameHint": "Letras, dígitos, puntos, guiones y barras bajas. Hasta 64 caracteres.",
+    "chat": "Chat",
+    "chatHint": "Deja que el equipo abra o siga un chat con este agente. Si se apaga, desaparece del selector del chat; las menciones, delegaciones y tareas programadas lo siguen ejecutando.",
     "access": "Disponibilidad",
     "accessHint": "Quién le puede dar tareas a este agente",
     "model": "Modelo",

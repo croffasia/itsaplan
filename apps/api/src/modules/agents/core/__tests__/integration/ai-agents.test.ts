@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { apikey, db } from '@repo/db';
+import { agentRun, apikey, db } from '@repo/db';
 import { eq } from 'drizzle-orm';
 import { apiKeyApi, authedApi, type Api, ownWorkspaceId, createProject } from '#tests/helpers/app';
 import { createRole, listProjectRoles } from '#tests/helpers/roles';
@@ -9,7 +9,9 @@ import { resetDb } from '#tests/helpers/db';
 import { createAgent, projectIdOf } from '#tests/helpers/agents';
 import { createCredential } from '#tests/helpers/integrations';
 import { untaggedRoutes } from '#tests/helpers/mcp';
+import { streamAgent, type AgentRunEvent } from '../../runtime';
 import { getMastra } from '../../runtime/observability';
+import { processAgentRuns } from '../../run-poller';
 
 // AI agents owned by a team. Each agent is backed by a hidden bot user, owns a
 // better-auth API key, and is a member of the projects it is attached to, acting under
@@ -426,6 +428,55 @@ describe('ai agents', () => {
     expect(byHandle.get('listens')?.respondsToMention).toBe(true);
     expect(byHandle.get('deaf')?.respondsToMention).toBe(false);
     expect(project.data!.assignees.find((a) => a.kind === 'member')?.respondsToMention).toBeNull();
+  });
+
+  it('defaults chatEnabled to true and turns it off with a patch', async () => {
+    const { asOwner, teamId } = await setup();
+    const def = await createAgent(asOwner, 'MKT', { name: 'C1', username: 'c1', kind: 'internal' });
+    const agentId = def.data!.agent.id;
+    expect(def.data?.agent).toMatchObject({ chatEnabled: true });
+
+    const upd = await agents(asOwner, teamId)({ agentId }).patch({ chatEnabled: false });
+    expect(upd.data).toMatchObject({ chatEnabled: false });
+    const read = await agents(asOwner, teamId)({ agentId }).get();
+    expect(read.data).toMatchObject({ chatEnabled: false });
+  });
+
+  it('refuses the chat of an agent with chat off, while a mention still runs it', async () => {
+    const { owner, asOwner } = await setup();
+    const agent = (
+      await createAgent(asOwner, 'MKT', {
+        name: 'Bot',
+        username: 'bot',
+        kind: 'internal',
+        chatEnabled: false,
+      })
+    ).data!.agent;
+    expect(agent).toMatchObject({ chatEnabled: false });
+
+    const run = await asOwner
+      .projects({ projectKey: 'MKT' })
+      ['ai-agents']({ agentId: agent.id })
+      .run.post({ prompt: 'hi' });
+    expect(run.status).toBe(403);
+    expect(run.error?.value).toMatchObject({ code: 'AGENT_CHAT_DISABLED' });
+    const events: AgentRunEvent[] = [];
+    for await (const event of streamAgent(agent.id, agent.projects[0].id, 'hi', {
+      callerUserId: owner.userId,
+    })) {
+      events.push(event);
+    }
+    expect(events[0]).toEqual({ type: 'error', message: 'This agent is not available in chat' });
+
+    const columnId = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!.columns[0].id;
+    const issue = (
+      await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title: 'Task' })
+    ).data!;
+    await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'please review @bot' });
+    await processAgentRuns();
+    // The agent has no model credential, so a run that got past every gate fails on it.
+    const [queued] = await db.select().from(agentRun).where(eq(agentRun.issueId, issue.id));
+    expect(queued).toMatchObject({ attempts: 1, lastError: 'Agent has no model credential set' });
   });
 
   it('attaches an agent to a project on the default role', async () => {

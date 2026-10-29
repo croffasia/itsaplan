@@ -22,6 +22,8 @@ const replacedGlobals = [
   'Element',
   'HTMLElement',
   'HTMLButtonElement',
+  'HTMLFormElement',
+  'ResizeObserver',
   'SVGElement',
   'ShadowRoot',
   'Event',
@@ -73,6 +75,7 @@ const agent = (canManage: boolean): AiAgent => ({
   skillCount: 0,
   toolCount: 0,
   canManage,
+  chatEnabled: true,
 });
 
 async function render(row: AiAgent, edit = true) {
@@ -121,6 +124,15 @@ beforeEach(async () => {
   Object.defineProperty(globalThis, 'IS_REACT_ACT_ENVIRONMENT', {
     configurable: true,
     value: true,
+  });
+  // The agent form's switches measure themselves; jsdom has no ResizeObserver.
+  Object.defineProperty(globalThis, 'ResizeObserver', {
+    configurable: true,
+    value: class {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
   });
   Object.defineProperty(globalThis, 'fetch', {
     configurable: true,

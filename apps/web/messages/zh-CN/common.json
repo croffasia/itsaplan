@@ -101,6 +101,8 @@
     "unreachable": "无法连接代理，请重试。",
     "runnerOffline": "运行器未连接",
     "runnerOfflineHint": "在你的机器上启动运行器，才能与该智能体聊天。",
+    "chatDisabled": "此代理在聊天中不可用",
+    "chatDisabledHint": "此代理的聊天功能已关闭。提及、委派和定时任务仍然有效。",
     "attachFile": "附加表格、文档、PDF 或文本文件供智能体读取",
     "removeAttachment": "移除附件",
     "uploadFailed": "文件上传失败。",

@@ -101,6 +101,8 @@
     "unreachable": "Tidak dapat menjangkau agen. Coba lagi.",
     "runnerOffline": "Runner offline",
     "runnerOfflineHint": "Jalankan runner di mesin Anda untuk mengobrol dengan agen ini.",
+    "chatDisabled": "Agen ini tidak tersedia di obrolan",
+    "chatDisabledHint": "Obrolan untuk agen ini dinonaktifkan. Sebutan, delegasi, dan jadwal tetap berfungsi.",
     "attachFile": "Lampirkan spreadsheet, dokumen, PDF, atau file teks untuk dibaca agen",
     "removeAttachment": "Hapus lampiran",
     "uploadFailed": "Gagal mengunggah file.",

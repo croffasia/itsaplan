@@ -101,6 +101,8 @@
     "unreachable": "Ajana ulaşılamadı. Tekrar deneyin.",
     "runnerOffline": "Runner çevrimdışı",
     "runnerOfflineHint": "Bu ajanla sohbet etmek için makinenizde runner'ı başlatın.",
+    "chatDisabled": "Bu ajan sohbette kullanılamıyor",
+    "chatDisabledHint": "Bu ajanın sohbeti kapalı. Bahsetmeler, devretmeler ve zamanlamalar çalışmaya devam eder.",
     "attachFile": "Ajanın okuması için bir tablo, belge, PDF veya metin dosyası ekleyin",
     "removeAttachment": "Eki kaldır",
     "uploadFailed": "Dosya yüklenemedi.",

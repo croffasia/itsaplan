@@ -101,6 +101,8 @@
     "unreachable": "AI 에이전트에 연결할 수 없습니다. 다시 시도해 주세요.",
     "runnerOffline": "러너 오프라인",
     "runnerOfflineHint": "이 AI 에이전트와 대화하려면 머신에서 러너를 실행하세요.",
+    "chatDisabled": "이 에이전트는 채팅에서 사용할 수 없습니다",
+    "chatDisabledHint": "이 에이전트의 채팅이 비활성화되어 있습니다. 멘션, 위임 및 예약 작업은 계속 실행됩니다.",
     "attachFile": "AI 에이전트가 읽을 스프레드시트, 문서, PDF 또는 텍스트 파일 첨부",
     "removeAttachment": "첨부 파일 제거",
     "uploadFailed": "파일을 업로드할 수 없습니다.",

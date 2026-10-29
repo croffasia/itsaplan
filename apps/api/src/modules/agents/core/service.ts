@@ -105,6 +105,8 @@ export interface AiAgentRow {
   // Run triggers.
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  // Whether the agent may be chatted with; a mention, a delegation and a schedule ignore it.
+  chatEnabled: boolean;
   // The member custom fields the agent also reacts to: being set into one of them
   // starts a run the way being made an issue's delegate does. Each field carries its
   // own delay, so a field can start at once while another leaves time to edit.
@@ -156,6 +158,7 @@ function mapAgent(row: {
   memoryLastMessages: number | null;
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  chatEnabled: boolean;
   fieldTriggers: FieldTriggerRead[];
   delegationDelaySec: number;
   ownerUserId: string | null;
@@ -189,6 +192,7 @@ function mapAgent(row: {
     memoryLastMessages: row.memoryLastMessages,
     triggerOnMention: row.triggerOnMention,
     triggerOnAssign: row.triggerOnAssign,
+    chatEnabled: row.chatEnabled,
     fieldTriggers: row.fieldTriggers,
     delegationDelaySec: row.delegationDelaySec,
     ownerUserId: row.ownerUserId,
@@ -228,6 +232,7 @@ const agentColumns = {
   memoryLastMessages: aiAgent.memoryLastMessages,
   triggerOnMention: aiAgent.triggerOnMention,
   triggerOnAssign: aiAgent.triggerOnAssign,
+  chatEnabled: aiAgent.chatEnabled,
   fieldTriggers: sql<
     FieldTriggerRead[]
   >`(select coalesce(json_agg(json_build_object('fieldId', ${agentFieldTrigger.fieldId}, 'name', ${customField.name}, 'delaySec', ${agentFieldTrigger.delaySec}) order by ${customField.name}), '[]'::json) from ${agentFieldTrigger} join ${customField} on ${customField.id} = ${agentFieldTrigger.fieldId} where ${agentFieldTrigger.agentId} = ${aiAgent.id})`,
@@ -387,6 +392,14 @@ export function isTriggerableBy(
 ): boolean {
   if (agent.kind === 'internal' || agent.runnerScope !== 'owner' || !agent.ownerUserId) return true;
   return agent.ownerUserId === actorUserId;
+}
+
+// Asked for a chat message only: a queued run (a mention, a delegation, a schedule)
+// ignores chatEnabled.
+export function assertChatEnabled(agent: { chatEnabled: boolean }): void {
+  if (!agent.chatEnabled) {
+    throw new HttpError(403, 'This agent is not available in chat', 'AGENT_CHAT_DISABLED');
+  }
 }
 
 const triggerScopeColumns = {
@@ -582,6 +595,8 @@ export interface NewAgentInput {
   // for its API key alone must not collect runs no one drains.
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  // Whether the agent may be chatted with. Defaults on.
+  chatEnabled?: boolean;
   // The member custom fields that start a run when the agent is set into one.
   fieldTriggers?: FieldTrigger[];
   delegationDelaySec?: number;
@@ -681,6 +696,7 @@ export async function createAgent(
           memoryLastMessages: isInternal ? (input.memoryLastMessages ?? null) : null,
           triggerOnMention: input.triggerOnMention ?? isInternal,
           triggerOnAssign: input.triggerOnAssign ?? false,
+          chatEnabled: input.chatEnabled ?? true,
           delegationDelaySec: input.delegationDelaySec,
           ownerUserId: input.ownerUserId ?? null,
           runnerScope: input.runnerScope ?? 'team',
@@ -842,6 +858,7 @@ export interface AgentPatch {
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  chatEnabled?: boolean;
   fieldTriggers?: FieldTrigger[];
   delegationDelaySec?: number;
   runnerScope?: RunnerScope;
@@ -884,6 +901,7 @@ export async function updateAgent(
   if (patch.memoryLastMessages !== undefined) set.memoryLastMessages = patch.memoryLastMessages;
   if (patch.triggerOnMention !== undefined) set.triggerOnMention = patch.triggerOnMention;
   if (patch.triggerOnAssign !== undefined) set.triggerOnAssign = patch.triggerOnAssign;
+  if (patch.chatEnabled !== undefined) set.chatEnabled = patch.chatEnabled;
   if (patch.delegationDelaySec !== undefined) set.delegationDelaySec = patch.delegationDelaySec;
   // The scope and its owner are one setting: 'owner' means the runs of the member who
   // chose it, so switching to it hands the agent to them.

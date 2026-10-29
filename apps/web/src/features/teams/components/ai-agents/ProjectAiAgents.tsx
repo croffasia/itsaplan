@@ -112,19 +112,21 @@ export default function ProjectAiAgents() {
                 </TableCell>
                 <TableCell className="px-3 py-2 align-middle">
                   <div className="flex items-center justify-end">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          size="icon"
-                          className="size-8"
-                          aria-label={tChat('newChat')}
-                          onClick={() => onChatWithAgent(agent.id)}
-                        >
-                          <MessageSquarePlus className="size-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>{tChat('newChat')}</TooltipContent>
-                    </Tooltip>
+                    {agent.chatEnabled && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            size="icon"
+                            className="size-8"
+                            aria-label={tChat('newChat')}
+                            onClick={() => onChatWithAgent(agent.id)}
+                          >
+                            <MessageSquarePlus className="size-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>{tChat('newChat')}</TooltipContent>
+                      </Tooltip>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

@@ -101,6 +101,8 @@
     "unreachable": "無法連線代理，請重試。",
     "runnerOffline": "執行器未連線",
     "runnerOfflineHint": "在你的機器上啟動執行器，才能與該代理聊天。",
+    "chatDisabled": "此代理無法在聊天中使用",
+    "chatDisabledHint": "此代理的聊天已關閉。提及、委派和排程仍可正常運作。",
     "attachFile": "附加表格、文件、PDF 或文字檔案供代理讀取",
     "removeAttachment": "移除附件",
     "uploadFailed": "檔案上傳失敗。",

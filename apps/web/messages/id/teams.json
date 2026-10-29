@@ -374,6 +374,8 @@
     "username": "Nama pengguna",
     "usernamePlaceholder": "cth. triage-bot",
     "usernameHint": "Huruf, angka, titik, tanda hubung, dan garis bawah. Hingga 64 karakter.",
+    "chat": "Obrolan",
+    "chatHint": "Memungkinkan anggota membuka atau melanjutkan obrolan dengan agen ini. Jika dimatikan, agen hilang dari pemilih obrolan; sebutan, delegasi, dan jadwal tetap menjalankannya.",
     "access": "Ketersediaan",
     "accessHint": "Siapa yang dapat memberi tugas kepada agen ini",
     "model": "Model",

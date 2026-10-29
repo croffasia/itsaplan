@@ -101,6 +101,8 @@
     "unreachable": "No se ha podido contactar al agente. Inténtalo otra vez.",
     "runnerOffline": "Ejecutor fuera de línea",
     "runnerOfflineHint": "Arranca el ejecutor en tu máquina para chatear con este agente.",
+    "chatDisabled": "Este agente no está disponible en el chat",
+    "chatDisabledHint": "El chat de este agente está apagado. Las menciones, delegaciones y tareas programadas lo siguen ejecutando.",
     "attachFile": "Adjunta una hoja de cálculo, un documento, un PDF o un fichero de texto para que el agente lo lea",
     "removeAttachment": "Quitar adjunto",
     "uploadFailed": "No se ha podido subir el fichero.",

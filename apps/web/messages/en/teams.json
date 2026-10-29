@@ -233,6 +233,8 @@
     "timeout": "Timeout (s)",
     "optional": "Optional",
     "apiKey": "API key",
+    "from": "From address",
+    "fromHint": "Required for Resend. With SMTP it defaults to the username.",
     "telegramBot": "Telegram bot",
     "telegramBotHint": "The bot that delivers notifications for every project of the team. Members choose their own chat in their preferences. The token is stored encrypted.",
     "botToken": "Bot API token (optional)",

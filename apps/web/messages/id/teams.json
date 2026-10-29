@@ -233,6 +233,8 @@
     "timeout": "Batas waktu (dtk)",
     "optional": "Opsional",
     "apiKey": "Kunci API",
+    "from": "Alamat pengirim (From)",
+    "fromHint": "Wajib untuk Resend. Dengan SMTP, nilai bawaannya adalah nama pengguna.",
     "telegramBot": "Bot Telegram",
     "telegramBotHint": "Bot yang mengirimkan notifikasi untuk setiap proyek tim. Anggota memilih obrolan masing-masing di preferensi mereka. Token disimpan secara terenkripsi.",
     "botToken": "Token API bot (opsional)",

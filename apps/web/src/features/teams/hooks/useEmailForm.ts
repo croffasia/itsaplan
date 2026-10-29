@@ -30,6 +30,8 @@ export interface EmailForm {
   setTimeout: (v: string) => void;
   apiKey: string;
   setApiKey: (v: string) => void;
+  from: string;
+  setFrom: (v: string) => void;
   settings: NotificationSettings;
   dirty: boolean;
   saving: boolean;
@@ -64,6 +66,7 @@ export function useEmailForm(teamId: number, settings: NotificationSettings): Em
   const [password, setPassword] = useState('');
   const [timeout, setTimeout] = useState(initialTimeout);
   const [apiKey, setApiKey] = useState('');
+  const [from, setFrom] = useState(settings.from);
 
   const smtpDirty =
     host !== settings.smtp.host ||
@@ -75,6 +78,7 @@ export function useEmailForm(teamId: number, settings: NotificationSettings): Em
   const dirty =
     provider !== initialProvider ||
     enabled !== initialEnabled ||
+    (provider !== 'system' && from !== settings.from) ||
     (provider === 'smtp' ? smtpDirty : provider === 'resend' ? apiKey.length > 0 : false);
 
   async function save() {
@@ -93,6 +97,7 @@ export function useEmailForm(teamId: number, settings: NotificationSettings): Em
         enabled: provider === 'resend' && enabled,
         ...(apiKey.length > 0 ? { apiKey } : {}),
       },
+      from: from.trim(),
     });
     setPassword('');
     setApiKey('');
@@ -118,6 +123,8 @@ export function useEmailForm(teamId: number, settings: NotificationSettings): Em
     setTimeout,
     apiKey,
     setApiKey,
+    from,
+    setFrom,
     settings,
     dirty,
     saving: update.isPending,

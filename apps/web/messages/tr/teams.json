@@ -233,6 +233,8 @@
     "timeout": "Zaman aşımı (sn)",
     "optional": "İsteğe bağlı",
     "apiKey": "API anahtarı",
+    "from": "Gönderen adresi",
+    "fromHint": "Resend için zorunludur. SMTP ile varsayılan olarak kullanıcı adını kullanır.",
     "telegramBot": "Telegram botu",
     "telegramBotHint": "Takımın her projesi için bildirimleri ileten bot. Üyeler kendi sohbetlerini tercihlerinden seçerler. Jeton şifrelenmiş olarak saklanır.",
     "botToken": "Bot API jetonu (isteğe bağlı)",

@@ -233,6 +233,8 @@
     "timeout": "시간 제한 (초)",
     "optional": "선택 사항",
     "apiKey": "API 키",
+    "from": "발신 주소",
+    "fromHint": "Resend에서는 필수입니다. SMTP에서는 기본적으로 사용자 이름이 사용됩니다.",
     "telegramBot": "Telegram 봇",
     "telegramBotHint": "팀의 모든 프로젝트에서 알림을 전송하는 봇입니다. 멤버는 각자의 환경 설정에서 자신의 채팅을 선택합니다. 토큰은 암호화되어 저장됩니다.",
     "botToken": "봇 API 토큰 (선택 사항)",

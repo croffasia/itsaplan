@@ -233,6 +233,8 @@
     "timeout": "逾時（秒）",
     "optional": "可選",
     "apiKey": "API 金鑰",
+    "from": "寄件者地址",
+    "fromHint": "Resend 必填；SMTP 預設使用使用者名稱。",
     "telegramBot": "Telegram 機器人",
     "telegramBotHint": "為團隊的所有專案投遞通知的機器人。成員在自己的偏好設定中選擇聊天。權杖以加密方式儲存。",
     "botToken": "Bot API 權杖（可選）",

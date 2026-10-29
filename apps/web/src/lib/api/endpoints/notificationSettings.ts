@@ -30,6 +30,7 @@ export interface NotificationSettings {
     timeout: number | null;
   };
   resend: { enabled: boolean; hasApiKey: boolean };
+  from: string;
   telegram: { enabled: boolean; hasBotToken: boolean };
 }
 
@@ -47,6 +48,7 @@ export interface NotificationSettingsPatch {
     timeout: number | null;
   };
   resend?: { enabled: boolean; apiKey?: string };
+  from?: string;
   telegram?: { enabled: boolean; botToken?: string };
 }
 

@@ -233,6 +233,8 @@
     "timeout": "超时（秒）",
     "optional": "可选",
     "apiKey": "API 密钥",
+    "from": "发件地址",
+    "fromHint": "Resend 必填；SMTP 默认使用用户名。",
     "telegramBot": "Telegram 机器人",
     "telegramBotHint": "为团队的所有项目投递通知的机器人。成员在自己的偏好设置中选择聊天。令牌以加密方式存储。",
     "botToken": "Bot API 令牌（可选）",

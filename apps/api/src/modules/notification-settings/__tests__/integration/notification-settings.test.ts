@@ -80,4 +80,18 @@ describe('notification settings', () => {
     expect(res.status).toBe(200);
     expect(res.data?.smtp).toMatchObject({ enabled: true, host: 'smtp.example.com' });
   });
+
+  it('stores the From address and keeps it when a later save leaves it out', async () => {
+    const { api, teamId } = await ownedTeam();
+
+    const saved = await api.teams({ teamId })['notification-settings'].put({
+      smtp,
+      from: ' Parsec <noreply@example.com> ',
+    });
+    expect(saved.status).toBe(200);
+    expect(saved.data?.from).toBe('Parsec <noreply@example.com>');
+
+    const again = await api.teams({ teamId })['notification-settings'].put({ smtp });
+    expect(again.data?.from).toBe('Parsec <noreply@example.com>');
+  });
 });

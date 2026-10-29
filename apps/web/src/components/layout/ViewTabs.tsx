@@ -11,7 +11,8 @@ import { FilterIcon } from '@animateicons/react/lucide/filter-icon';
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { View } from '@/lib/api/endpoints/views';
-import { useDndSensors } from '@/lib/dnd';
+import { useDndSensors, useDroppedOrder } from '@/lib/dnd';
+import { reorderedViews, tabOrder } from '@/services/views.service';
 import { usePermissions } from '@/hooks/usePermissions';
 import AllViewTab, { ALL_DROP_ID } from '@/components/layout/AllViewTab';
 import MobileViewSwitcher from '@/components/layout/MobileViewSwitcher';
@@ -58,6 +59,15 @@ export default function ViewTabs({
   // The view being dragged, used to render the DragOverlay preview.
   const [activeId, setActiveId] = useState<number | null>(null);
   const activeView = activeId != null ? (views.find((v) => v.id === activeId) ?? null) : null;
+  const { items: shown, drop } = useDroppedOrder(views);
+
+  // Shows at once the tab row the server will answer with once the move is stored.
+  function reorder(draggedId: number, targetId: number | null) {
+    const moved = reorderedViews(views, draggedId, targetId);
+    if (!moved) return;
+    drop(tabOrder(moved).map((v) => v.id));
+    onReorder(draggedId, targetId);
+  }
 
   function handleDragEnd(e: DragEndEvent) {
     setActiveId(null);
@@ -67,10 +77,10 @@ export default function ViewTabs({
     if (over.id === ALL_DROP_ID) {
       // Move to the front of the stored order. The tab row is not that order —
       // favorites are pinned ahead of it — so the front cannot be named by a tab.
-      onReorder(draggedId, null);
+      reorder(draggedId, null);
       return;
     }
-    if (over.id !== active.id) onReorder(draggedId, Number(over.id));
+    if (over.id !== active.id) reorder(draggedId, Number(over.id));
   }
 
   return (
@@ -101,8 +111,8 @@ export default function ViewTabs({
             onClick={() => onSelect(null)}
           />
 
-          <SortableContext items={views.map((v) => v.id)} strategy={horizontalListSortingStrategy}>
-            {views.map((view) => (
+          <SortableContext items={shown.map((v) => v.id)} strategy={horizontalListSortingStrategy}>
+            {shown.map((view) => (
               <SavedViewTab
                 key={view.id}
                 view={view}

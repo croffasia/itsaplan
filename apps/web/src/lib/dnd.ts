@@ -1,6 +1,6 @@
 import { KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import type { SyntheticEvent } from 'react';
+import { useEffect, useState, type SyntheticEvent } from 'react';
 
 // How far the pointer must move before a press becomes a drag. Also the threshold
 // a draggable uses to tell a click apart from the click the browser fires after a
@@ -27,6 +27,21 @@ export function useDndSensors(inert = false) {
   );
   const inertSensors = useSensors();
   return inert ? inertSensors : sensors;
+}
+
+// A sortable list's order from a drop until the reordered data reaches the list. A query
+// cache tells React a task after the drop, and by then a DragOverlay has measured the
+// dragged item in its old slot and flies back there before the list moves. Call drop in
+// onDragEnd with every id in the new order, so the list moves in the same render.
+export function useDroppedOrder<T extends { id: number }>(items: T[]) {
+  const [dropped, setDropped] = useState<{ from: string; ids: number[] } | null>(null);
+  const key = items.map((item) => item.id).join();
+  useEffect(() => setDropped(null), [key]);
+  const byId = new Map(items.map((item) => [item.id, item]));
+  return {
+    items: dropped?.from === key ? dropped.ids.flatMap((id) => byId.get(id) ?? []) : items,
+    drop: (ids: number[]) => setDropped({ from: key, ids }),
+  };
 }
 
 const stopPropagation = (e: SyntheticEvent) => e.stopPropagation();

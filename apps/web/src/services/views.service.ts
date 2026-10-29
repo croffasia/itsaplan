@@ -25,15 +25,35 @@ export function normalizeView(v: View): View {
   };
 }
 
+// The tab row: the caller's favorites are pinned to the front; the rest keep their
+// stored order.
+export function tabOrder(views: View[]): View[] {
+  return [...views].sort((a, b) => Number(b.favorite) - Number(a.favorite));
+}
+
+// The stored order with the dragged view moved to the target's place, or to the front
+// for a null target; null when nothing moves.
+export function reorderedViews(
+  views: View[],
+  draggedId: number,
+  targetId: number | null,
+): View[] | null {
+  if (draggedId === targetId) return null;
+  const next = [...views].sort((a, b) => a.position - b.position || a.id - b.id);
+  const from = next.findIndex((v) => v.id === draggedId);
+  const to = targetId == null ? 0 : next.findIndex((v) => v.id === targetId);
+  if (from < 0 || to < 0 || from === to) return null;
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+  return next;
+}
+
 export function useViewsQuery(projectKey: string | null) {
   return useQuery({
     queryKey: qk.views(projectKey ?? ''),
     queryFn: () => listViews(projectKey!),
     enabled: projectKey != null,
-    // The caller's favorites are pinned to the front of the tab row; the rest keep
-    // their stored order.
-    select: (rows) =>
-      rows.map(normalizeView).sort((a, b) => Number(b.favorite) - Number(a.favorite)),
+    select: (rows) => tabOrder(rows.map(normalizeView)),
   });
 }
 

@@ -3,6 +3,7 @@ import type { View } from '@/lib/api/endpoints/views';
 import type { WorkItemsView } from '@/utils/viewTypes';
 import {
   normalizeView,
+  reorderedViews,
   useCreateView,
   useDeleteView,
   useReorderViews,
@@ -241,14 +242,8 @@ export function useViewEditor(
   // applies to the stored order, not to the tab row — favorites are pinned to the
   // front for the caller only, while position is shared by the project.
   function reorderView(draggedId: number, targetId: number | null) {
-    if (draggedId === targetId) return;
-    const next = [...views].sort((a, b) => a.position - b.position || a.id - b.id);
-    const from = next.findIndex((v) => v.id === draggedId);
-    const to = targetId == null ? 0 : next.findIndex((v) => v.id === targetId);
-    if (from < 0 || to < 0 || from === to) return;
-    const [moved] = next.splice(from, 1);
-    next.splice(to, 0, moved);
-    reorderViewsMutation.mutate(next.map((v) => v.id));
+    const next = reorderedViews(views, draggedId, targetId);
+    if (next) reorderViewsMutation.mutate(next.map((v) => v.id));
   }
 
   return {

@@ -42,7 +42,7 @@ export function useDocumentCollaboration({
   const qc = useQueryClient();
   const [status, setStatus] = useState<DocumentSyncState>('connecting');
   const [ready, setReady] = useState(false);
-  const state = useRef<DocumentSessionState | null>(null);
+  const state = useRef<(DocumentSessionState & { recovering: boolean }) | null>(null);
   const saving = useRef<Promise<ProjectDocument | null> | null>(null);
   const latest = useRef({ document, onSaved });
   latest.current = { document, onSaved };
@@ -68,8 +68,20 @@ export function useDocumentCollaboration({
         getVersion(editor.state),
       );
       if (editor.isDestroyed || state.current !== activeSession) return;
-      confirmedVersion.current = result.documentVersion;
       const steps = result.steps.map((item) => Step.fromJSON(editor.schema, item.step));
+      const pending = sendableSteps(editor.state);
+      // A cloned recovery can share an id, but different steps are never our acknowledgement.
+      for (
+        let i = 0;
+        i < steps.length && result.steps[i].clientId === activeSession.clientId;
+        i++
+      ) {
+        const expected = pending?.steps[i];
+        if (!expected && activeSession.recovering) continue;
+        if (!expected || !sameStepJson(expected.toJSON(), steps[i].toJSON()))
+          throw new ApiError(409, 'Document acknowledgement does not match the local changes');
+      }
+      confirmedVersion.current = result.documentVersion;
       for (const step of steps) {
         const applied = step.apply(state.current.confirmed);
         if (!applied.doc) throw new Error('Invalid remote document change');
@@ -222,12 +234,41 @@ export function useDocumentCollaboration({
         editor.registerPlugin(
           collab({ version: recovery?.version ?? session.version, clientID: clientId }),
         );
-        state.current = { epoch: session.epoch, clientId, confirmed: base, snapshot: editor.state };
+        state.current = {
+          epoch: session.epoch,
+          clientId,
+          confirmed: base,
+          snapshot: editor.state,
+          recovering: Boolean(recovery),
+        };
         if (recovery) {
           editor.view.dispatch(tr);
           state.current.snapshot = editor.state;
         }
         setRecoveryConflict(false);
+        if (recovery) {
+          const activeSession = state.current;
+          const saved = await flush();
+          if (cancelled || editor.isDestroyed || state.current !== activeSession || !saved) return;
+          if (sendableSteps(editor.state)) {
+            setStatus('error');
+            return;
+          }
+          // Drain the restored identity before accepting edits under a fresh one.
+          const version = getVersion(editor.state);
+          editor.unregisterPlugin('collab');
+          editor
+            .chain()
+            .setContent(activeSession.confirmed.toJSON(), { emitUpdate: false })
+            .setMeta('addToHistory', false)
+            .run();
+          editor.unregisterPlugin('history');
+          editor.registerPlugin(history());
+          activeSession.clientId = uuid();
+          activeSession.recovering = false;
+          editor.registerPlugin(collab({ version, clientID: activeSession.clientId }));
+          activeSession.snapshot = editor.state;
+        }
         setReady(true);
         setStatus('saved');
       } catch (error) {
@@ -244,7 +285,7 @@ export function useDocumentCollaboration({
       setReady(false);
       if (!editor.isDestroyed) editor.unregisterPlugin('collab');
     };
-  }, [attempt, document.id, editor, enabled, persist, projectKey, storageKey, userId]);
+  }, [attempt, document.id, editor, enabled, flush, persist, projectKey, storageKey, userId]);
 
   useEffect(() => {
     if (!editor || !ready) return;
@@ -316,4 +357,23 @@ export function useDocumentCollaboration({
       else setAttempt((value) => value + 1);
     },
   };
+}
+
+function sameStepJson(left: unknown, right: unknown): boolean {
+  if (left === right) return true;
+  if (left === null || right === null || typeof left !== 'object' || typeof right !== 'object')
+    return false;
+  if (Array.isArray(left) !== Array.isArray(right)) return false;
+  const keys = Object.keys(left);
+  return (
+    keys.length === Object.keys(right).length &&
+    keys.every(
+      (key) =>
+        Object.hasOwn(right, key) &&
+        sameStepJson(
+          (left as Record<string, unknown>)[key],
+          (right as Record<string, unknown>)[key],
+        ),
+    )
+  );
 }

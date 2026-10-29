@@ -6,6 +6,7 @@ import { Editor } from '@tiptap/core';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { JSDOM } from 'jsdom';
 import type { ProjectDocument } from '@/lib/api/endpoints/documents';
+import { sendableSteps } from 'prosemirror-collab';
 import { documentEditorExtensions } from '../components/DocumentMarkdownEditor';
 
 type UseDocumentCollaboration =
@@ -148,6 +149,73 @@ afterEach(() => {
   }
 });
 
+const recoveryKey = 'document-steps:user-1:SEKTA:42';
+
+function storedRecovery(text = '!') {
+  const base = {
+    type: 'doc',
+    content: [
+      {
+        type: 'paragraph',
+        attrs: { blockId: 'saved' },
+        content: [{ type: 'text', text: 'Saved' }],
+      },
+    ],
+  };
+  const step = {
+    stepType: 'replace',
+    from: 6,
+    to: 6,
+    slice: { content: [{ type: 'text', text }] },
+  };
+  window.sessionStorage.setItem(
+    recoveryKey,
+    JSON.stringify({ epoch: 'e1', version: 0, clientId: 'restored-client', base, steps: [step] }),
+  );
+  return step;
+}
+
+type SavedStep = { clientId: string; step: Record<string, unknown> };
+
+function stepServer(existing: SavedStep[] = [], gate = Promise.resolve(), content = 'Saved!') {
+  const fallback = globalThis.fetch;
+  const accepted = [...existing];
+  const writes: { clientId: string; steps: Record<string, unknown>[] }[] = [];
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = new URL(String(input));
+    if (url.pathname.endsWith('/steps')) {
+      if (init?.method === 'POST') {
+        const body = JSON.parse(String(init.body)) as (typeof writes)[number];
+        writes.push(body);
+        await gate;
+        accepted.push(...body.steps.map((step) => ({ step, clientId: body.clientId })));
+        return Response.json(projectDocument(3, content));
+      }
+      const version = Number(url.searchParams.get('version') ?? 0);
+      return Response.json({
+        epoch: 'e1',
+        version: accepted.length,
+        steps: accepted.slice(version),
+        hasMore: false,
+        documentVersion: accepted.length ? 3 : 2,
+      });
+    }
+    if (url.pathname.endsWith('/documents/42')) return Response.json(projectDocument(3, content));
+    return fallback(input, init);
+  }) as typeof fetch;
+  return writes;
+}
+
+async function mountDocument() {
+  await act(async () => {
+    root.render(
+      <QueryClientProvider client={queryClient}>
+        <Probe document={projectDocument(2, 'Saved')} />
+      </QueryClientProvider>,
+    );
+  });
+}
+
 describe('useDocumentCollaboration', () => {
   it('seeds a session from the document Markdown, not from a stale editor body', async () => {
     await act(async () => {
@@ -227,5 +295,74 @@ describe('useDocumentCollaboration', () => {
     assert.equal(collaboration.recoveryConflict, true);
     assert.equal(collaboration.status, 'conflict');
     assert.equal(editor.getText(), 'Saved!');
+  });
+  it('keeps a restored client read-only until its old steps are acknowledged', async () => {
+    storedRecovery();
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const writes = stepServer([], gate);
+    await mountDocument();
+    assert.equal(collaboration.ready, false);
+    assert.equal(writes[0].clientId, 'restored-client');
+    assert.ok(window.sessionStorage.getItem(recoveryKey));
+    await act(async () => {
+      release();
+      await collaboration.flush();
+    });
+    assert.equal(collaboration.ready, true);
+    assert.equal(editor.getText(), 'Saved!');
+    act(() => {
+      editor.commands.insertContentAt(editor.state.doc.content.size - 1, '?');
+    });
+    assert.notEqual(sendableSteps(editor.state)?.clientID, 'restored-client');
+  });
+
+  it('reconciles an accepted batch without resending it and includes the source tabs later steps', async () => {
+    const step = storedRecovery();
+    const later = {
+      stepType: 'replace',
+      from: 7,
+      to: 7,
+      slice: { content: [{ type: 'text', text: 'A' }] },
+    };
+    const writes = stepServer(
+      [
+        { clientId: 'restored-client', step },
+        { clientId: 'restored-client', step: later },
+      ],
+      Promise.resolve(),
+      'Saved!A',
+    );
+    await mountDocument();
+    assert.equal(collaboration.ready, true);
+    assert.equal(editor.getText(), 'Saved!A');
+    assert.equal(writes.length, 0);
+    assert.equal(window.sessionStorage.getItem(recoveryKey), null);
+    assert.equal(editor.commands.undo(), false);
+    act(() => {
+      editor.commands.insertContentAt(editor.state.doc.content.size - 1, 'B');
+    });
+    assert.notEqual(sendableSteps(editor.state)?.clientID, 'restored-client');
+  });
+
+  it('keeps divergent legacy recovery for export instead of acknowledging another tabs text', async () => {
+    storedRecovery('B');
+    const step = {
+      stepType: 'replace',
+      from: 6,
+      to: 6,
+      slice: { content: [{ type: 'text', text: 'A' }] },
+    };
+    const writes = stepServer([{ clientId: 'restored-client', step }], Promise.resolve(), 'SavedA');
+    await mountDocument();
+    assert.equal(collaboration.ready, false);
+    assert.equal(collaboration.recoveryConflict, true);
+    assert.equal(collaboration.status, 'conflict');
+    assert.equal(editor.getText(), 'SavedB');
+    assert.equal(writes.length, 0);
+    assert.ok(window.sessionStorage.getItem(recoveryKey));
+    assert.equal(sendableSteps(editor.state)?.steps.length, 1);
   });
 });

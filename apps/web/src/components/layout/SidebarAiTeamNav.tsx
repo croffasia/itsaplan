@@ -1,7 +1,8 @@
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { aiAgentsPath, aiTeamPath } from '@/utils/paths';
-import { AI_AGENTS_SECTION, AI_TEAM_SECTIONS } from '@/utils/settingsSections';
+import { AI_AGENTS_SECTION } from '@/utils/settingsSections';
+import { useAiTeamSections } from '@/hooks/useSettingsNavGroups';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useShellRoute } from '@/hooks/useShellRoute';
 import { useSettingsSectionText } from '@/hooks/useSectionLabels';
@@ -24,7 +25,7 @@ export default function SidebarAiTeamNav({ projectKey }: { projectKey: string | 
   const disabled = !projectKey;
 
   // The run list also opens to whoever runs the team, as its route does.
-  const sections = AI_TEAM_SECTIONS.filter(
+  const sections = useAiTeamSections().filter(
     (s) => can(s.resource, 'read') || (s.slug === 'queue' && isAdmin),
   );
   const showAgents = can(AI_AGENTS_SECTION.resource, 'read');

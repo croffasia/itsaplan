@@ -317,8 +317,10 @@ undoes one.
 - `setRunRefusal` (`modules/agents/core/run-refusal.ts`): whether an internal agent works
   at all, asked in the poller before a queued run starts and in `prepareRun` before a chat
   answer. A reason fails the run without a retry, and answers the chat with 403.
-- `onProjectEvent` (`modules/webhooks/emit.ts`): every issue and comment event the
-  webhooks get, inside the request that caused it.
+- `onProjectEvent` (`modules/webhooks/emit.ts`): every event the webhooks get, inside the
+  request or the run that caused it: the issues and comments, and `agent_run.finished`
+  once a run ends, whose `emitRunsCanceled` (`modules/agents/core/run-finished.ts`)
+  serves a build that cancels runs of its own.
 - `setRequestTracker` (`shared/request-tracker.ts`): every request, with its declared
   route, params and body, before the guards run; a request it follows gets its status,
   its account and the handler's value back after the handler, before the answer is sent,

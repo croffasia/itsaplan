@@ -28,6 +28,7 @@ import { getAgentSettings } from '#modules/settings/service';
 import { intEnv, iso } from '#shared/lib';
 import type { AgentRunTrigger } from '../model';
 import { equalJitterBackoffMs } from './helpers/backoff';
+import { emitRunsFinished } from './run-finished';
 
 // The agent_run outbox: data access for triggered runs and run history. The api's
 // run poller claims pending rows, runs them, and records the outcome.
@@ -417,7 +418,7 @@ export async function markRunSuccess(
   output: string,
   usage: { inputTokens: number; outputTokens: number } | null,
 ): Promise<void> {
-  await db
+  const rows = await db
     .update(agentRun)
     .set({
       status: 'success',
@@ -428,7 +429,9 @@ export async function markRunSuccess(
       outputTokens: usage?.outputTokens ?? null,
       finishedAt: new Date(),
     })
-    .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
+    .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')))
+    .returning({ id: agentRun.id });
+  await emitRunsFinished(rows.map((row) => row.id));
 }
 
 export async function scheduleRunRetry(id: number, delayMs: number, error: string): Promise<void> {
@@ -446,7 +449,7 @@ export async function scheduleRunRetry(id: number, delayMs: number, error: strin
 }
 
 export async function markRunFailed(id: number, error: string, output?: string): Promise<void> {
-  await db
+  const rows = await db
     .update(agentRun)
     .set({
       status: 'failed',
@@ -455,7 +458,9 @@ export async function markRunFailed(id: number, error: string, output?: string):
       ...(output ? { output } : {}),
       finishedAt: new Date(),
     })
-    .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
+    .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')))
+    .returning({ id: agentRun.id });
+  await emitRunsFinished(rows.map((row) => row.id));
 }
 
 // Puts a claimed run back in the queue without spending the attempt, for a run the

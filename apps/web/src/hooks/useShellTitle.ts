@@ -1,10 +1,10 @@
 import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { View } from '@/lib/api/endpoints/views';
-import { AI_AGENTS_SECTION, AI_TEAM_SECTIONS } from '@/utils/settingsSections';
+import { AI_AGENTS_SECTION } from '@/utils/settingsSections';
 import type { ShellRoute } from '@/hooks/useShellRoute';
 import { useSettingsSectionText } from '@/hooks/useSectionLabels';
-import { useSettingsSections } from '@/hooks/useSettingsNavGroups';
+import { useProjectSections } from '@/hooks/useSettingsNavGroups';
 import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const SECTION_LABELS = {
@@ -32,7 +32,7 @@ export function useShellTitle(
   const t = useTranslations('nav');
   const tScreens = useTranslations('meta.screens');
   const sectionText = useSettingsSectionText();
-  const sections = [...useSettingsSections(project), ...AI_TEAM_SECTIONS];
+  const sections = useProjectSections(project);
   const known = (slug: string | null): slug is string => sections.some((s) => s.slug === slug);
 
   function sectionParts(): string[] {

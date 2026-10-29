@@ -6,7 +6,7 @@ import { useProjectSettingsSections } from '@/cloud';
 import { ShellCtx } from '@/context/shellContext';
 import { settingsPath } from '@/utils/paths';
 import { byKey } from '@/utils/messageKey';
-import { SETTINGS_MENU_SECTIONS, type SettingsSection } from '@/utils/settingsSections';
+import { SETTINGS_SECTIONS, type SettingsSection } from '@/utils/settingsSections';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useSettingsSectionText } from '@/hooks/useSectionLabels';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
@@ -31,12 +31,17 @@ export type SettingsNavGroup = {
   items: SettingsNavItem[];
 };
 
-// The sections of the settings sidebar, the hosted build's included. `project` is
-// only passed by the Shell, which calls this above its own context provider;
-// everything else reads the project from the context.
-export function useSettingsSections(project?: ProjectDetail | null): SettingsSection[] {
+// Every section of the project, the hosted build's included: those of the settings
+// sidebar and those of the AI Team group. `project` is only passed by the Shell, which
+// calls this above its own context provider; everything else reads the project from the
+// context.
+export function useProjectSections(project?: ProjectDetail | null): SettingsSection[] {
   const ctx = useContext(ShellCtx);
-  return useProjectSettingsSections(project ?? ctx?.project ?? null, SETTINGS_MENU_SECTIONS);
+  return useProjectSettingsSections(project ?? ctx?.project ?? null, SETTINGS_SECTIONS);
+}
+
+export function useAiTeamSections(): SettingsSection[] {
+  return useProjectSections().filter((s) => s.group === 'ai-team');
 }
 
 export function useSettingsNavGroups(
@@ -50,8 +55,8 @@ export function useSettingsNavGroups(
   const sectionText = useSettingsSectionText();
   const pathname = usePathname();
   const { can } = usePermissions(project);
-  const sections = useSettingsSections(project).filter((s) =>
-    can(s.resource, s.viewAction ?? 'read'),
+  const sections = useProjectSections(project).filter(
+    (s) => s.group !== 'ai-team' && can(s.resource, s.viewAction ?? 'read'),
   );
 
   const groups: SettingsNavGroup[] = [...new Set(sections.map((s) => s.group))].map((group) => ({

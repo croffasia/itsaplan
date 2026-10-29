@@ -48,7 +48,7 @@ export const documentPath = (ref: string, documentId: number) =>
 export const settingsPath = (ref: string, section: string) =>
   `${projectPath(ref)}/settings/${section}`;
 
-// The AI Team destinations listed in the main sidebar (see AI_TEAM_SECTIONS).
+// The AI Team destinations listed in the main sidebar (see useAiTeamSections).
 export const aiTeamPath = (ref: string, section: string) => `${projectPath(ref)}/agents/${section}`;
 
 export const runnerQueuePath = (ref: string) => aiTeamPath(ref, 'queue');

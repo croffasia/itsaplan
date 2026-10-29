@@ -128,8 +128,7 @@ export const AI_AGENTS_SECTION: SettingsSection = {
   group: 'ai',
 };
 
-// The sections the project settings sidebar lists.
-export const SETTINGS_MENU_SECTIONS = SETTINGS_SECTIONS.filter((s) => s.group !== 'ai-team');
+// The core's AI Team sections; useAiTeamSections adds the hosted build's.
 export const AI_TEAM_SECTIONS = SETTINGS_SECTIONS.filter((s) => s.group === 'ai-team');
 
 const BY_SLUG = new Map(SETTINGS_SECTIONS.map((s) => [s.slug, s]));

@@ -9,8 +9,8 @@ import { iso } from '#shared/lib';
 // The delivery side is separate.
 
 // The event types a subscription can select. Keep this list in sync with the events
-// emitted through modules/issues/webhook-payload.ts and with the frontend list
-// (apps/web src/lib/api/endpoints/webhooks.ts).
+// emitted through modules/issues/webhook-payload.ts and modules/agents/core/run-finished.ts,
+// and with the frontend list (apps/web src/lib/api/endpoints/webhooks.ts).
 //
 // issue.updated fires on any field change, archiving and restoring included. The
 // granular issue.assigned, issue.state_changed, and issue.label_changed fire in
@@ -32,6 +32,9 @@ export const WEBHOOK_EVENT_TYPES = [
   // again for the replies a delete takes with it.
   'comment.updated',
   'comment.deleted',
+  // A run of an agent in the project ended: success, failed or canceled. Its payload is
+  // the run (modules/agents/core/run-finished.ts).
+  'agent_run.finished',
 ] as const;
 export type WebhookEventType = (typeof WEBHOOK_EVENT_TYPES)[number];
 

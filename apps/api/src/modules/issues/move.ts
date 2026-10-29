@@ -27,6 +27,7 @@ import { recordStatusChange } from './status-history';
 import { recordCycleChange } from './cycle-history';
 import { emitIssueEvent } from './webhook-payload';
 import { queueStatusRuns } from '#modules/agents/schedules/issue-runs';
+import { emitRunsCanceled } from '#modules/agents/core/run-finished';
 
 // Moves an issue, with its subtasks, to another project of the same team. Column,
 // type, labels and custom fields belong to one project, so they are matched by name
@@ -116,7 +117,7 @@ export async function moveIssue(
   const labels = await mapLabels(movedIds, target.id);
   const fields = await mapFields(movedIds, target.id);
 
-  await db.transaction(async (tx) => {
+  const canceledRuns = await db.transaction(async (tx) => {
     // Everything above was read without a lock. A concurrent move of the same issue, or
     // a subtask added since, would otherwise write over that state.
     const [locked] = await tx
@@ -209,11 +210,16 @@ export async function moveIssue(
       .where(
         and(inArray(issueWatcher.issueId, movedIds), notInArray(issueWatcher.userId, [...members])),
       );
-    await tx
+    return tx
       .update(agentRun)
       .set({ status: 'canceled', executionStartedAt: null, finishedAt: sql`now()` })
-      .where(and(inArray(agentRun.issueId, movedIds), eq(agentRun.status, 'pending')));
+      .where(and(inArray(agentRun.issueId, movedIds), eq(agentRun.status, 'pending')))
+      .returning({ id: agentRun.id });
   });
+  await emitRunsCanceled(
+    canceledRuns.map((run) => run.id),
+    actorUserId,
+  );
 
   for (const p of plans) {
     await recordStatusChange([p.id], p.newColumnId);

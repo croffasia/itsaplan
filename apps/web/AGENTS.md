@@ -27,12 +27,14 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   group, each in the order given.
   `/workspaces/:id` names no section and opens the first entry of the menu, so the order
   also decides the page a workspace opens on.
-  `useProjectSettingsSections(project, core)` returns the project settings sidebar: here the
-  core's sections, while the hosted build adds its own at any position or drops some. The
-  sidebar lists the groups in the order their first section comes, each named in
+  `useProjectSettingsSections(project, core)` returns the project's sections: here the
+  core's, while the hosted build adds its own at any position or drops some. Those of the
+  `ai-team` group are listed in the main sidebar's AI Team group, the others in the settings
+  sidebar, which lists the groups in the order their first section comes, each named in
   `nav.groups.<group>`, so a section can open a group of its own. One the build adds
-  carries in `Component` the page `/:team/:projectKey/settings/<slug>` opens, which answers
-  404 only once the project and every query in flight have loaded.
+  carries in `Component` the page `/:team/:projectKey/settings/<slug>` opens, or
+  `/:team/:projectKey/agents/<slug>` in the AI Team group, which answers 404 only once the
+  project and every query in flight have loaded.
   `NoTeamStart` is the start page of an account with no team and no workspace it owns,
   which happens while personal workspaces are off; here it says who adds them.
   `WorkspaceRailActions` sits below the workspace tiles of a rail; here it says where more

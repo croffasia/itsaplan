@@ -12,6 +12,7 @@ import {
   scheduleRunRetry,
 } from '../core/run-queue';
 import { agentRunStarted, recordAgentRunFinished } from '../core/run-activity';
+import { emitRunsFinished } from '../core/run-finished';
 import { runAdmissionDelay } from '../core/run-admission';
 import type { AgentKind } from '../core/service';
 import type { AgentRunTrigger } from '../model';
@@ -146,9 +147,10 @@ async function expireExhaustedRuns(agent: RunnerAgent): Promise<void> {
         sql`${agentRun.nextAttemptAt} <= now()`,
       ),
     )
-    .returning({ issueId: agentRun.issueId });
+    .returning({ id: agentRun.id, issueId: agentRun.issueId });
   for (const row of rows)
     await recordAgentRunFinished({ ...row, agentUserId: agent.userId }, 'failed');
+  await emitRunsFinished(rows.map((row) => row.id));
 }
 
 // An agent with an invocation URL is sent its work, so a runner that claims as well
@@ -333,9 +335,10 @@ export async function finishRun(
         result.attempt == null ? undefined : eq(agentRun.attempts, result.attempt),
       ),
     )
-    .returning({ issueId: agentRun.issueId });
+    .returning({ id: agentRun.id, issueId: agentRun.issueId });
   const row = rows[0];
   if (!row) return false;
   await recordAgentRunFinished({ ...row, agentUserId: agent.userId }, result.status);
+  await emitRunsFinished([row.id]);
   return true;
 }

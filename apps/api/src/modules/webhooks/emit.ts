@@ -20,6 +20,7 @@ const EVENT_SHAPE: Record<WebhookEventType, { action: string; type: string }> = 
   'comment.created': { action: 'create', type: 'Comment' },
   'comment.updated': { action: 'update', type: 'Comment' },
   'comment.deleted': { action: 'remove', type: 'Comment' },
+  'agent_run.finished': { action: 'update', type: 'AgentRun' },
 };
 
 // Who caused the event. An agent acts through its own bot user, so a user id is an
@@ -47,7 +48,7 @@ export interface ProjectEvent {
   projectId: number;
   type: WebhookEventType;
   actor: ActivityActor;
-  // The event's webhook payloads (`data`), one per issue or comment it covers. Built on
+  // The event's webhook payloads (`data`), one per issue, comment or run it covers. Built on
   // the first call and shared with the webhooks.
   load: () => Promise<unknown[]>;
 }
@@ -56,8 +57,8 @@ type ProjectEventListener = (event: ProjectEvent) => Promise<void>;
 
 const listeners: ProjectEventListener[] = [];
 
-// Hands the events the webhooks get to an extension of the api, inside the request
-// that caused them. A listener that throws is logged and does not fail that request.
+// Hands the events the webhooks get to an extension of the api, inside the request or
+// the run that caused them. A listener that throws is logged and does not fail it.
 // Returns the call that removes the listener.
 export function onProjectEvent(listener: ProjectEventListener): () => void {
   listeners.push(listener);

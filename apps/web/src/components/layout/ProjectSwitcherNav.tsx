@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { WorkspaceRailActions } from '@/cloud';
 import type { Team } from '@/lib/api/endpoints/teams';
 import type { WorkspaceSummary } from '@/lib/api/endpoints/workspaces';
-import { manageTeamsPath, workspacePath } from '@/utils/paths';
+import { manageTeamsPath, teamPath, workspacePath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import type { ProjectSwitcherScope } from './ProjectSwitcher';
 import ProjectSwitcherNavScopes from './ProjectSwitcherNavScopes';
@@ -15,6 +15,7 @@ export default function ProjectSwitcherNav({
   workspaces,
   workspace,
   teams,
+  currentTeam,
   scope,
   onScopeChange,
   onPickWorkspace,
@@ -23,6 +24,7 @@ export default function ProjectSwitcherNav({
   workspaces: WorkspaceSummary[];
   workspace?: WorkspaceSummary;
   teams: Team[];
+  currentTeam?: Team;
   scope: ProjectSwitcherScope;
   onScopeChange: (scope: ProjectSwitcherScope) => void;
   onPickWorkspace: (workspaceId: number) => void;
@@ -60,14 +62,17 @@ export default function ProjectSwitcherNav({
       )}
       <div className="mt-auto flex flex-col gap-0.5 border-t pt-2">
         <Button asChild variant="ghost" size="sm" className="justify-start font-normal">
-          <Link href={manageTeamsPath()} onClick={onClose}>
+          <Link
+            href={currentTeam ? teamPath(currentTeam.ref) : manageTeamsPath()}
+            onClick={onClose}
+          >
             <Users />
             {t('manageTeams')}
           </Link>
         </Button>
         {workspace?.role && (
           <Button asChild variant="ghost" size="sm" className="justify-start font-normal">
-            <Link href={workspacePath(workspace.id)} onClick={onClose}>
+            <Link href={workspacePath(workspace.id, 'info')} onClick={onClose}>
               <Settings2 />
               {t('projectPicker.workspaceSettings')}
             </Link>

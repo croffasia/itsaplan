@@ -6,7 +6,14 @@ import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
 import { createAgent } from '#tests/helpers/agents';
-import { claimDueRuns, deferRun, enqueueAgentRun, scheduleRunRetry } from '../../run-queue';
+import {
+  admitWorkspaceRun,
+  claimDueRuns,
+  deferRun,
+  enqueueAgentRun,
+  scheduleRunRetry,
+  type ClaimedRun,
+} from '../../run-queue';
 import { processAgentRuns } from '../../run-poller';
 
 // The ceilings on the runs in flight at once: the instance's, counted where the poller
@@ -43,6 +50,7 @@ async function setup({ external = false } = {}) {
     return issue.id;
   };
 
+  let firstClaim: ClaimedRun | undefined;
   if (external) {
     const runner = (
       await createAgent(asOwner, 'MKT', { name: 'Runner', username: 'runner', kind: 'external' })
@@ -54,11 +62,11 @@ async function setup({ external = false } = {}) {
       .where(eq(agentRun.issueId, issueId));
   } else {
     await enqueue('first');
-    await claimDueRuns();
+    [firstClaim] = await claimDueRuns();
   }
   const issueId = await enqueue('second');
   const [second] = await db.select().from(agentRun).where(eq(agentRun.issueId, issueId));
-  return { second, asOwner, workspaceId: owner.workspaceId!, enqueue };
+  return { second, asOwner, workspaceId: owner.workspaceId!, enqueue, firstClaim };
 }
 
 // Reads the second run back after one poll. A run turned away for a full queue keeps
@@ -148,6 +156,23 @@ describe('agent run limits', () => {
     await deferRun(second.id, 30);
     await makeDue(first.id);
     expect((await claimDueRuns()).map((run) => run.id)).toEqual([first.id]);
+  });
+
+  it('admits only one run when replicas race for a workspace slot', async () => {
+    const { second, workspaceId, firstClaim, asOwner } = await setup();
+    await asOwner.workspaces({ workspaceId }).patch({ maxConcurrentRuns: 1 });
+    const [later] = await claimDueRuns();
+    // Both runs are claimed before either replica tries to start execution.
+    const claims = [later, firstClaim!];
+    const admitted = await Promise.all(claims.map((run) => admitWorkspaceRun(run, workspaceId, 1)));
+    expect(admitted).toEqual([false, true]);
+    const queue = await asOwner['agent-runs'].queue.get({ query: {} });
+    expect(queue.status).toBe(200);
+    expect(queue.data!.items.filter((run) => run.executionState === 'running')).toHaveLength(1);
+    expect(queue.data!.items.find((run) => run.id === second.id)).toMatchObject({
+      attempts: 0,
+      lastError: null,
+    });
   });
 
   it('leaves the runs of external agents out of both limits', async () => {

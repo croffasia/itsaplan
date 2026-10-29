@@ -13,7 +13,7 @@
     "turbo": "^2.11.7",
     "typescript": "^6.0.3"
   },
-  "packageManager": "bun@1.4.3",
+  "packageManager": "bun@1.4.4",
   "private": true,
   "scripts": {
     "setup": "bun scripts/setup.ts",

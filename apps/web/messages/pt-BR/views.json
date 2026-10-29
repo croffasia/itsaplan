@@ -16,7 +16,16 @@
   "privateHint": "Só você vê esta visão",
   "duplicate": "Duplicar",
   "copyName": "{name} (cópia)",
+  "hide": "Ocultar",
+  "show": "Mostrar",
+  "hiddenViews": "Visões ocultas ({count})",
+  "tabRow": "Barra de abas",
+  "resetTabRow": "Restaurar barra",
+  "resetTabRowHint": "A ordem do projeto, suas visões privadas depois e nada oculto",
+  "pinProjectOrder": "Definir como ordem do projeto",
+  "pinProjectOrderHint": "Quem não organizou a própria barra vê as visões do projeto nesta ordem",
   "publish": "Adicionar ao projeto",
   "publishHint": "Todo o projeto vai vê-la. Ela não poderá voltar a ser privada.",
-  "published": "{name} agora é uma visão do projeto"
+  "published": "{name} agora é uma visão do projeto",
+  "projectOrderSet": "As visões do projeto agora seguem esta ordem"
 }

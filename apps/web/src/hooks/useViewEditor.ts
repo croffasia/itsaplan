@@ -3,7 +3,10 @@ import type { View } from '@/lib/api/endpoints/views';
 import type { WorkItemsView } from '@/utils/viewTypes';
 import {
   normalizeView,
-  reorderedViews,
+  movedInRow,
+  useArrangeTabRow,
+  useResetTabRow,
+  useSetViewHidden,
   useCreateView,
   useDeleteView,
   useReorderViews,
@@ -93,6 +96,9 @@ export function useViewEditor(
   const updateView = useUpdateView(projectKey);
   const deleteViewMutation = useDeleteView(projectKey);
   const reorderViewsMutation = useReorderViews(projectKey);
+  const arrangeTabRowMutation = useArrangeTabRow(projectKey);
+  const resetTabRowMutation = useResetTabRow(projectKey);
+  const setViewHiddenMutation = useSetViewHidden(projectKey);
 
   const activeView =
     activeViewId != null ? (views.find((v) => v.id === activeViewId) ?? null) : null;
@@ -262,14 +268,40 @@ export function useViewEditor(
     if (activeViewId === target.id) onSelectView(null);
   }
 
-  // Moves the dragged view to the dropped-on view's slot and persists the full
-  // order; a null target means the front (the drop on the fixed All tab). The move
-  // applies to the stored order, not to the tab row — favorites are pinned to the
-  // front for the caller only, while position is shared by the project. Private views
-  // are ordered among themselves, after the project's: a view moves within its group.
+  // Moves the dragged view to the dropped-on view's slot of the caller's own tab row;
+  // a null target means the front (the drop on the fixed All tab). Nobody else's row
+  // changes, whatever the caller may do to the project's order.
   function reorderView(draggedId: number, targetId: number | null) {
-    const next = reorderedViews(views, draggedId, targetId);
-    if (next) reorderViewsMutation.mutate(next.map((v) => v.id));
+    const next = movedInRow(
+      views.filter((v) => !v.hidden),
+      draggedId,
+      targetId,
+    );
+    if (next) arrangeTabRowMutation.mutate(next.map((v) => v.id));
+  }
+
+  async function hideView(target: View) {
+    await setViewHiddenMutation.mutateAsync({ id: target.id, hidden: true });
+    if (activeViewId === target.id) onSelectView(null);
+  }
+
+  function showView(target: View) {
+    setViewHiddenMutation.mutate({ id: target.id, hidden: false });
+  }
+
+  function resetTabRow() {
+    resetTabRowMutation.mutate();
+  }
+
+  // The project's views in the order of the caller's row become everyone's order; the
+  // ones the caller hid go last.
+  function pinProjectOrder() {
+    const projectViews = views.filter((v) => !v.isPrivate);
+    reorderViewsMutation.mutate(
+      [...projectViews.filter((v) => !v.hidden), ...projectViews.filter((v) => v.hidden)].map(
+        (v) => v.id,
+      ),
+    );
   }
 
   return {
@@ -303,5 +335,9 @@ export function useViewEditor(
     deleteView,
     beginDuplicate,
     reorderView,
+    hideView,
+    showView,
+    resetTabRow,
+    pinProjectOrder,
   };
 }

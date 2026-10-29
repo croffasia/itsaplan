@@ -3,8 +3,8 @@ import { useMutation, useQueryClient, type QueryKey } from '@tanstack/react-quer
 // Reorder mutation for a project's ordered lists (views, dashboards, actions).
 // Optimistically reorders the cached list so the drag lands immediately, rolls
 // back on error, and refetches on settle to reconcile with the server's
-// renumbered positions. Items the order leaves out keep theirs after it (views order
-// their project's and their private ones apart). Pass a null key to disable the cache
+// renumbered positions. Items the order leaves out (the views a caller hid from their
+// tab row) follow it in their cached order. Pass a null key to disable the cache
 // work when there is no project.
 export function useOptimisticReorder<T extends { id: number }>(
   queryKey: QueryKey | null,

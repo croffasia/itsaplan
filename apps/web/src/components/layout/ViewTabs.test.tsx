@@ -36,7 +36,7 @@ const replacedGlobals = [
   'IS_REACT_ACT_ENVIRONMENT',
 ] as const;
 
-function view(id: number, name: string, isPrivate: boolean): View {
+function view(id: number, name: string, isPrivate: boolean, hidden = false): View {
   return {
     id,
     projectId: 1,
@@ -49,21 +49,32 @@ function view(id: number, name: string, isPrivate: boolean): View {
     shareExtended: false,
     isPrivate,
     favorite: false,
+    hidden,
     createdAt: '2026-01-01T00:00:00Z',
   };
 }
 
 const board = view(1, 'Board', false);
 const mine = view(2, 'Mine', true);
+const roadmap = view(3, 'Roadmap', false, true);
 
 let dom: JSDOM;
 let root: Root;
 let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
 let duplicated: View[];
+let shown: View[];
 
 // A member whose role only reads views.
 const reader = {
   project: { viewer: { role: 'member', via: 'member' }, permissions: { views: { read: true } } },
+} as unknown as ShellContext;
+
+// A member whose role edits the project's views.
+const editor = {
+  project: {
+    viewer: { role: 'member' },
+    permissions: { views: { read: true, create: true, edit: true, delete: true } },
+  },
 } as unknown as ShellContext;
 
 async function render(activeViewId: number, shell = reader) {
@@ -74,7 +85,7 @@ async function render(activeViewId: number, shell = reader) {
         <NextIntlClientProvider locale="en" messages={{ common, views }} timeZone="UTC">
           <ShellCtx.Provider value={shell}>
             <ViewTabs
-              views={[board, mine]}
+              views={[mine, board, roadmap]}
               projectKey="eng.P01"
               activeViewId={activeViewId}
               onSelect={() => {}}
@@ -83,6 +94,10 @@ async function render(activeViewId: number, shell = reader) {
               onDelete={() => {}}
               onDuplicate={(v) => duplicated.push(v)}
               onReorder={() => {}}
+              onHide={() => {}}
+              onShow={(v) => shown.push(v)}
+              onResetRow={() => {}}
+              onPinProjectOrder={() => {}}
               onToggleFilter={() => {}}
               displayControl={null}
             />
@@ -139,6 +154,7 @@ beforeEach(async () => {
     value: { apiUrl: 'https://api.test', privacyUrl: '', termsUrl: '' },
   });
   duplicated = [];
+  shown = [];
   const { createRoot } = await import('react-dom/client');
   root = createRoot(document.querySelector('#root')!);
 });
@@ -165,16 +181,20 @@ describe('ViewTabs', () => {
     assert.ok(!buttons.includes(views.newView));
   });
 
-  it('lets a member who only reads views save one, and tints their own views', async () => {
+  it('lets a member who only reads views save one, and shows their own row, own views tinted', async () => {
     await render(board.id);
     const buttons = [...document.querySelectorAll('button')].map((b) => b.textContent?.trim());
     assert.ok(buttons.includes(views.newView));
     const tabs = [...document.querySelectorAll('[aria-roledescription="sortable"]')];
     assert.deepEqual(
-      tabs.map((tab) => [tab.textContent?.trim(), tab.className.includes('text-primary')]),
+      tabs.map((tab) => [
+        tab.textContent?.trim(),
+        tab.className.includes('text-primary'),
+        tab.getAttribute('aria-disabled'),
+      ]),
       [
-        [board.name, false],
-        [mine.name, true],
+        [mine.name, true, 'false'],
+        [board.name, false, 'false'],
       ],
     );
   });
@@ -189,7 +209,8 @@ describe('ViewTabs', () => {
     await render(board.id, admin);
     const buttons = [...document.querySelectorAll('button')].map((b) => b.textContent?.trim());
     assert.ok(!buttons.includes(views.newView));
-    assert.deepEqual(await openMenu(), [views.favorite]);
+    assert.ok(buttons.includes(views.hiddenViews.replace('{count}', '1')));
+    assert.deepEqual(await openMenu(), [views.favorite, views.hide]);
   });
 
   it("offers a new project's view to the workspace owner", async () => {
@@ -201,22 +222,10 @@ describe('ViewTabs', () => {
     assert.ok(buttons.includes(views.newView));
   });
 
-  it("lets them drag their own private view, and not the project's", async () => {
-    await render(board.id);
-    const tabs = [...document.querySelectorAll('[aria-roledescription="sortable"]')];
-    assert.deepEqual(
-      tabs.map((tab) => [tab.textContent?.trim(), tab.getAttribute('aria-disabled')]),
-      [
-        [board.name, 'true'],
-        [mine.name, 'false'],
-      ],
-    );
-  });
-
-  it("offers to duplicate the project's view, without its share, edit or delete", async () => {
+  it("offers to duplicate and hide the project's view, without its share, edit or delete", async () => {
     await render(board.id);
     const items = await openMenu();
-    assert.deepEqual(items, [views.favorite, views.duplicate]);
+    assert.deepEqual(items, [views.favorite, views.duplicate, views.hide]);
 
     const duplicate = [...document.querySelectorAll<HTMLElement>('button')].find(
       (b) => b.textContent?.trim() === views.duplicate,
@@ -228,9 +237,41 @@ describe('ViewTabs', () => {
     );
   });
 
-  it('lets the owner of a private view duplicate, edit and delete it, with no share link', async () => {
+  it('lets the owner of a private view duplicate, edit and delete it, with no share link or hide', async () => {
     await render(mine.id);
     const items = await openMenu();
     assert.deepEqual(items, [views.favorite, views.duplicate, common.edit, common.delete]);
+  });
+
+  it('keeps the hidden views at the end of the row, to show again', async () => {
+    await render(board.id);
+    const label = views.hiddenViews.replace('{count}', '1');
+    const trigger = [...document.querySelectorAll<HTMLElement>('button')].find(
+      (b) => b.textContent?.trim() === label,
+    );
+    assert.ok(trigger);
+    await act(async () => trigger.click());
+    const items = [
+      ...document.querySelectorAll<HTMLElement>('[data-slot="popover-content"] button'),
+    ];
+    assert.deepEqual(
+      items.map((b) => b.textContent?.trim()),
+      [views.show, views.resetTabRow],
+    );
+    await act(async () => items[0].click());
+    assert.deepEqual(
+      shown.map((v) => v.id),
+      [roadmap.id],
+    );
+  });
+
+  it("offers whoever edits views to make their row the project's order", async () => {
+    await render(board.id, editor);
+    const trigger = document.querySelector<HTMLElement>(`[title="${views.tabRow}"]`);
+    await act(async () => trigger!.click());
+    const items = [
+      ...document.querySelectorAll<HTMLElement>('[data-slot="popover-content"] button'),
+    ];
+    assert.ok(items.map((b) => b.textContent?.trim()).includes(views.pinProjectOrder));
   });
 });

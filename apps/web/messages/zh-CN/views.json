@@ -16,7 +16,16 @@
   "privateHint": "只有你能看到此视图",
   "duplicate": "复制",
   "copyName": "{name}（副本）",
+  "hide": "隐藏",
+  "show": "显示",
+  "hiddenViews": "已隐藏的视图（{count}）",
+  "tabRow": "标签栏",
+  "resetTabRow": "重置标签栏",
+  "resetTabRowHint": "项目顺序，其后是你的私有视图，不隐藏任何视图",
+  "pinProjectOrder": "设为项目顺序",
+  "pinProjectOrderHint": "尚未整理自己标签栏的人都会按此顺序看到项目视图",
   "publish": "添加到项目",
   "publishHint": "项目中的所有人都能看到它。之后无法再设为私有。",
-  "published": "{name} 现在是项目视图"
+  "published": "{name} 现在是项目视图",
+  "projectOrderSet": "项目视图现在按此顺序排列"
 }

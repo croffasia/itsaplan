@@ -16,7 +16,16 @@
   "privateHint": "이 보기는 나만 볼 수 있습니다",
   "duplicate": "복제",
   "copyName": "{name} (사본)",
+  "hide": "숨기기",
+  "show": "표시",
+  "hiddenViews": "숨긴 보기 ({count})",
+  "tabRow": "탭 표시줄",
+  "resetTabRow": "표시줄 초기화",
+  "resetTabRowHint": "프로젝트 순서, 그 뒤에 내 비공개 보기, 숨긴 항목 없음",
+  "pinProjectOrder": "프로젝트 순서로 지정",
+  "pinProjectOrderHint": "자신의 탭 표시줄을 정렬하지 않은 모든 사람은 프로젝트 보기를 이 순서로 봅니다",
   "publish": "프로젝트에 추가",
   "publishHint": "프로젝트의 모든 사람이 보게 됩니다. 다시 비공개로 바꿀 수 없습니다.",
-  "published": "{name}이(가) 이제 프로젝트 보기입니다"
+  "published": "{name}이(가) 이제 프로젝트 보기입니다",
+  "projectOrderSet": "이제 프로젝트 보기가 이 순서를 따릅니다"
 }

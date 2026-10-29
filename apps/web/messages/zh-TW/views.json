@@ -16,7 +16,16 @@
   "privateHint": "只有你看得到此檢視",
   "duplicate": "複製",
   "copyName": "{name}（副本）",
+  "hide": "隱藏",
+  "show": "顯示",
+  "hiddenViews": "已隱藏的檢視（{count}）",
+  "tabRow": "分頁列",
+  "resetTabRow": "重設分頁列",
+  "resetTabRowHint": "專案順序，其後是你的私人檢視，不隱藏任何檢視",
+  "pinProjectOrder": "設為專案順序",
+  "pinProjectOrderHint": "尚未整理自己分頁列的人都會依此順序看到專案檢視",
   "publish": "新增到專案",
   "publishHint": "專案中的所有人都看得到它。之後無法再設為私人。",
-  "published": "{name} 現在是專案檢視"
+  "published": "{name} 現在是專案檢視",
+  "projectOrderSet": "專案檢視現在依此順序排列"
 }

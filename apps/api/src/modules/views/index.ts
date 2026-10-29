@@ -24,6 +24,10 @@ import {
   reorderViews,
   includesProjectViews,
   isFavoriteView,
+  isHiddenView,
+  arrangeTabRow,
+  resetTabRow,
+  setViewHidden,
   addFavoriteView,
   removeFavoriteView,
 } from './service';
@@ -88,6 +92,7 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
           ownerUserId: isPrivate ? userId : null,
         })),
         favorite: false,
+        hidden: false,
       };
     },
     {
@@ -126,13 +131,49 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
     },
   )
 
+  // The tab row is the caller's own: reading the views is enough to arrange it.
+  .put(
+    '/projects/:projectKey/views/tab-row',
+    async ({ project, body, user }) =>
+      arrangeTabRow(project.id, body.orderedIds, requireUser(user).id),
+    {
+      body: reorderViewsBody,
+      permission: ['views', 'read'],
+      response: { 200: t.Array(ViewResponse), ...commonErrors },
+      detail: {
+        summary: 'Arrange your tab row',
+        description:
+          "Set the order of the caller's own tab row, where the project's views and the caller's private ones mix. Nobody else's row changes.",
+      },
+    },
+  )
+
+  .delete(
+    '/projects/:projectKey/views/tab-row',
+    async ({ project, user }) => resetTabRow(project.id, requireUser(user).id),
+    {
+      permission: ['views', 'read'],
+      response: { 200: t.Array(ViewResponse), ...accessErrors },
+      detail: {
+        summary: 'Reset your tab row',
+        description:
+          "Return the caller's tab row to the project's order, with their private views after it and nothing hidden.",
+      },
+    },
+  )
+
   .patch(
     '/views/:viewId',
     async ({ params, body, user, request }) => {
       await resolveView(params.viewId, user, request, 'edit');
       const view = await updateView(params.viewId, body);
       if (!view) throw new HttpError(404, 'View not found');
-      return { ...view, favorite: await isFavoriteView(view.id, requireUser(user).id) };
+      const userId = requireUser(user).id;
+      const [favorite, hidden] = await Promise.all([
+        isFavoriteView(view.id, userId),
+        isHiddenView(view.id, userId),
+      ]);
+      return { ...view, favorite, hidden };
     },
     {
       body: updateViewBody,
@@ -190,7 +231,11 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
       await assertPermission(current.projectId, user, 'views', 'create');
       const view = await publishView(current.id, current.projectId);
       if (!view) throw new HttpError(404, 'View not found');
-      return { ...view, favorite: await isFavoriteView(view.id, requireUser(user).id) };
+      return {
+        ...view,
+        favorite: await isFavoriteView(view.id, requireUser(user).id),
+        hidden: false,
+      };
     },
     {
       params: viewParams,
@@ -201,6 +246,46 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
           "Turn one of your private views into a view of the project, at the end of the project's order. It cannot be made private again.",
         ...requiresPermission(['views', 'create']),
         ...mcpTool('publish_view'),
+      },
+    },
+  )
+
+  .put(
+    '/views/:viewId/hidden',
+    async ({ params, user }) => {
+      const userId = requireUser(user).id;
+      const view = await getView(params.viewId, userId);
+      if (view?.isPrivate) throw new HttpError(400, 'A private view is deleted, not hidden');
+      await setViewHidden(params.viewId, userId, true);
+      return noContent();
+    },
+    {
+      params: viewParams,
+      savedView: 'read',
+      response: { 204: t.Void(), ...commonErrors },
+      detail: {
+        summary: 'Hide a saved view',
+        description: "Hide a project's saved view from the caller's tab row.",
+      },
+    },
+  )
+
+  .delete(
+    '/views/:viewId/hidden',
+    async ({ params, user }) => {
+      const userId = requireUser(user).id;
+      const view = await getView(params.viewId, userId);
+      if (view?.isPrivate) throw new HttpError(400, 'A private view is deleted, not hidden');
+      await setViewHidden(params.viewId, userId, false);
+      return noContent();
+    },
+    {
+      params: viewParams,
+      savedView: 'read',
+      response: { 204: t.Void(), ...commonErrors },
+      detail: {
+        summary: 'Show a hidden saved view',
+        description: "Show a hidden saved view in the caller's tab row again.",
       },
     },
   )

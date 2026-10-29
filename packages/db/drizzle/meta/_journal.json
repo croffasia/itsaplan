@@ -1177,6 +1177,13 @@
       "when": 1793317662313,
       "tag": "0167_private_views",
       "breakpoints": true
+    },
+    {
+      "idx": 168,
+      "version": "7",
+      "when": 1793317804099,
+      "tag": "0168_view_preferences",
+      "breakpoints": true
     }
   ]
 }

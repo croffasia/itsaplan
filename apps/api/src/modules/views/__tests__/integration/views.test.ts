@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { eq } from 'drizzle-orm';
-import { db, projectView } from '@repo/db';
+import { db, projectView, projectViewPreference } from '@repo/db';
 import { deleteAccount } from '#shared/account-deletion';
 import { reorderViews } from '#modules/views/service';
 import { app, authedApi, createProject } from '#tests/helpers/app';
@@ -379,6 +379,12 @@ describe('views', () => {
 
       expect((await outsider.views({ viewId }).publish.post()).status).toBe(403);
 
+      const tabRow = outsider.projects({ projectKey: 'MKT' }).views['tab-row'];
+      expect((await tabRow.put({ orderedIds: [viewId] })).status).toBe(403);
+      expect((await tabRow.delete()).status).toBe(403);
+      expect((await outsider.views({ viewId }).hidden.put()).status).toBe(403);
+      expect((await outsider.views({ viewId }).hidden.delete()).status).toBe(403);
+
       const del = await outsider.views({ viewId }).delete();
       expect(del.status).toBe(403);
     });
@@ -425,6 +431,8 @@ describe('views', () => {
         expect((await api.views({ viewId }).share.post()).status).toBe(404);
         expect((await api.views({ viewId }).share.delete()).status).toBe(404);
         expect((await api.views({ viewId }).publish.post()).status).toBe(404);
+        expect((await api.views({ viewId }).hidden.put()).status).toBe(404);
+        expect((await api.views({ viewId }).hidden.delete()).status).toBe(404);
         expect((await api.views({ viewId }).delete()).status).toBe(404);
       }
       expect((await member.api.projects({ projectKey: 'MKT' }).views.get()).data).toMatchObject([
@@ -657,6 +665,161 @@ describe('views', () => {
       await expect(
         db.insert(projectView).values({ projectId, name: 'Orphan', isPrivate: true }).execute(),
       ).rejects.toThrow();
+    });
+  });
+
+  describe('personal tab row', () => {
+    // Board, Bugs and Roadmap in the project's order, and a reader's private view.
+    async function setupTabRow() {
+      const { asOwner, projectId } = await setupOwnerProject();
+      const member = await addViewReader(asOwner);
+      const views = asOwner.projects({ projectKey: 'MKT' }).views;
+      const board = (await views.post({ name: 'Board' })).data!.id;
+      const bugs = (await views.post({ name: 'Bugs' })).data!.id;
+      const roadmap = (await views.post({ name: 'Roadmap' })).data!.id;
+      const mine = (
+        await member.api
+          .projects({ projectKey: 'MKT' })
+          .views.post({ name: 'Mine', isPrivate: true })
+      ).data!.id;
+      return { asOwner, projectId, member, board, bugs, roadmap, mine };
+    }
+
+    const names = async (api: Client) =>
+      ((await api.projects({ projectKey: 'MKT' }).views.get()).data ?? []).map((v) => v.name);
+
+    it("starts as the project's order, with one's private views after it", async () => {
+      const { member } = await setupTabRow();
+      expect(await names(member.api)).toEqual(['Board', 'Bugs', 'Roadmap', 'Mine']);
+    });
+
+    it('lets a member who only reads views mix their row, and nobody else sees it', async () => {
+      const { asOwner, member, board, bugs, roadmap, mine } = await setupTabRow();
+      const res = await member.api
+        .projects({ projectKey: 'MKT' })
+        .views['tab-row'].put({ orderedIds: [mine, roadmap, board, bugs] });
+      expect(res.status).toBe(200);
+      expect(res.data!.map((v) => v.name)).toEqual(['Mine', 'Roadmap', 'Board', 'Bugs']);
+      expect(await names(member.api)).toEqual(['Mine', 'Roadmap', 'Board', 'Bugs']);
+      expect(await names(asOwner)).toEqual(['Board', 'Bugs', 'Roadmap']);
+      const stored = await db
+        .select({ name: projectView.name, position: projectView.position })
+        .from(projectView)
+        .where(eq(projectView.isPrivate, false));
+      expect(stored.sort((a, b) => a.position - b.position).map((v) => v.name)).toEqual([
+        'Board',
+        'Bugs',
+        'Roadmap',
+      ]);
+    });
+
+    it("ignores views in the order that are not the caller's to see", async () => {
+      const { asOwner, member, board, mine } = await setupTabRow();
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .views['tab-row'].put({ orderedIds: [mine, board] });
+      expect(res.status).toBe(200);
+      expect(res.data!.map((v) => v.name)).toEqual(['Board', 'Bugs', 'Roadmap']);
+      expect(await names(member.api)).toEqual(['Board', 'Bugs', 'Roadmap', 'Mine']);
+    });
+
+    it('places a view given twice once, where it first appears', async () => {
+      const { member, board, bugs, roadmap } = await setupTabRow();
+      const res = await member.api
+        .projects({ projectKey: 'MKT' })
+        .views['tab-row'].put({ orderedIds: [roadmap, board, roadmap, bugs] });
+      expect(res.status).toBe(200);
+      expect(res.data!.map((v) => v.name)).toEqual(['Roadmap', 'Board', 'Bugs', 'Mine']);
+    });
+
+    it("puts a new project view after the project's views of a row already arranged", async () => {
+      const { asOwner, member, board, bugs, roadmap, mine } = await setupTabRow();
+      await member.api
+        .projects({ projectKey: 'MKT' })
+        .views['tab-row'].put({ orderedIds: [roadmap, mine, board, bugs] });
+      await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'Releases' });
+      expect(await names(member.api)).toEqual(['Roadmap', 'Mine', 'Board', 'Bugs', 'Releases']);
+    });
+
+    it('hides and shows a project view for the caller alone, and refuses to hide a private one', async () => {
+      const { asOwner, member, bugs, mine } = await setupTabRow();
+      expect((await member.api.views({ viewId: bugs }).hidden.put()).status).toBe(204);
+      const listed = (await member.api.projects({ projectKey: 'MKT' }).views.get()).data!;
+      expect(listed.filter((v) => v.hidden).map((v) => v.name)).toEqual(['Bugs']);
+      const ownerRow = (await asOwner.projects({ projectKey: 'MKT' }).views.get()).data!;
+      expect(ownerRow.some((v) => v.hidden)).toBe(false);
+
+      expect((await member.api.views({ viewId: mine }).hidden.put()).status).toBe(400);
+      expect((await member.api.views({ viewId: mine }).hidden.delete()).status).toBe(400);
+
+      expect((await member.api.views({ viewId: bugs }).hidden.delete()).status).toBe(204);
+      const shown = (await member.api.projects({ projectKey: 'MKT' }).views.get()).data!;
+      expect(shown.some((v) => v.hidden)).toBe(false);
+    });
+
+    it("lets an owner hide a view from their own row and nobody else's", async () => {
+      const { asOwner, member, roadmap } = await setupTabRow();
+      expect((await asOwner.views({ viewId: roadmap }).hidden.put()).status).toBe(204);
+      const ownerRow = (await asOwner.projects({ projectKey: 'MKT' }).views.get()).data!;
+      expect(ownerRow.find((v) => v.id === roadmap)?.hidden).toBe(true);
+      const memberRow = (await member.api.projects({ projectKey: 'MKT' }).views.get()).data!;
+      expect(memberRow.find((v) => v.id === roadmap)?.hidden).toBe(false);
+    });
+
+    it("resets the row to the project's order, private views after it and nothing hidden", async () => {
+      const { member, board, bugs, roadmap, mine } = await setupTabRow();
+      await member.api
+        .projects({ projectKey: 'MKT' })
+        .views['tab-row'].put({ orderedIds: [mine, roadmap, board, bugs] });
+      await member.api.views({ viewId: board }).hidden.put();
+      const res = await member.api.projects({ projectKey: 'MKT' }).views['tab-row'].delete();
+      expect(res.status).toBe(200);
+      expect(res.data!.map((v) => [v.name, v.hidden])).toEqual([
+        ['Board', false],
+        ['Bugs', false],
+        ['Roadmap', false],
+        ['Mine', false],
+      ]);
+    });
+
+    it("changes the project's order for rows not arranged only with views edit", async () => {
+      const { asOwner, member, board, bugs, roadmap } = await setupTabRow();
+      const third = await addViewReader(asOwner);
+      await member.api
+        .projects({ projectKey: 'MKT' })
+        .views['tab-row'].put({ orderedIds: [bugs, board, roadmap] });
+
+      const refused = await member.api
+        .projects({ projectKey: 'MKT' })
+        .views.reorder.put({ orderedIds: [roadmap, bugs, board] });
+      expect(refused.status).toBe(403);
+
+      const pinned = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .views.reorder.put({ orderedIds: [roadmap, bugs, board] });
+      expect(pinned.status).toBe(200);
+      expect(await names(third.api)).toEqual(['Roadmap', 'Bugs', 'Board']);
+      expect((await names(member.api)).slice(0, 3)).toEqual(['Bugs', 'Board', 'Roadmap']);
+    });
+
+    it("goes with the view and with the caller's account", async () => {
+      const { asOwner, member, bugs, mine } = await setupTabRow();
+      await member.api
+        .projects({ projectKey: 'MKT' })
+        .views['tab-row'].put({ orderedIds: [mine, bugs] });
+      await member.api.views({ viewId: bugs }).hidden.put();
+      await asOwner.views({ viewId: bugs }).delete();
+      expect(
+        await db.select().from(projectViewPreference).where(eq(projectViewPreference.viewId, bugs)),
+      ).toEqual([]);
+
+      await deleteAccount(member.userId);
+      expect(
+        await db
+          .select()
+          .from(projectViewPreference)
+          .where(eq(projectViewPreference.userId, member.userId)),
+      ).toEqual([]);
     });
   });
 });

@@ -57,7 +57,8 @@ release.
 
 - Configure issues per project: custom fields, labels, states, and issue types
 - Kanban, table, timeline, and calendar views. Save each one as a tab with its own filters,
-  display fields, and two-level grouping, for the whole project or as a private view only you see
+  display fields, and two-level grouping, for the whole project or as a private view only you see.
+  Each person arranges and hides the tabs of their own row
 - Cycles that time-box the work. Unfinished issues move to the next cycle
 - Subtasks, checklists, attachments, and links between issues: blocks, relates, duplicates
 - Comment threads with replies, and @username mentions of people and agents

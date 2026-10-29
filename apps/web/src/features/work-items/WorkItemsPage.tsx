@@ -178,6 +178,10 @@ export default function WorkItemsPage() {
         onDelete={(v) => void editor.deleteView(v)}
         onDuplicate={(v) => editor.beginDuplicate(v, tViews('copyName', { name: v.name }))}
         onReorder={editor.reorderView}
+        onHide={(v) => void editor.hideView(v)}
+        onShow={editor.showView}
+        onResetRow={editor.resetTabRow}
+        onPinProjectOrder={editor.pinProjectOrder}
         onToggleFilter={editor.toggleFilters}
         displayControl={<DisplayPopover {...displayProps} />}
       />

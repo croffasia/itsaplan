@@ -756,6 +756,13 @@ export const agentRun = pgTable(
     index('agent_run_due_idx').on(t.status, t.nextAttemptAt),
     index('agent_run_schedule_idx').on(t.scheduleId),
     index('agent_run_project_idx').on(t.projectId),
+    // Back an issue's run list and the cascades of an issue or comment delete.
+    index('agent_run_issue_idx')
+      .on(t.issueId, t.id.desc())
+      .where(sql`${t.issueId} IS NOT NULL`),
+    index('agent_run_source_activity_idx')
+      .on(t.sourceActivityId)
+      .where(sql`${t.sourceActivityId} IS NOT NULL`),
   ],
 );
 
@@ -1513,6 +1520,11 @@ export const issue = pgTable(
     index('issue_cycle_idx')
       .on(t.cycleId)
       .where(sql`${t.cycleId} IS NOT NULL`),
+    // Backs the progress counts of the initiatives list and of one initiative, and the
+    // ON DELETE SET NULL an initiative delete runs.
+    index('issue_initiative_idx')
+      .on(t.initiativeId)
+      .where(sql`${t.initiativeId} IS NOT NULL`),
   ],
 );
 
@@ -2468,6 +2480,13 @@ export const notification = pgTable(
     index('notification_user_unread_idx')
       .on(t.userId, t.id.desc())
       .where(sql`${t.readAt} IS NULL`),
+    // Back the cascades of an issue or comment delete.
+    index('notification_issue_idx')
+      .on(t.issueId)
+      .where(sql`${t.issueId} IS NOT NULL`),
+    index('notification_source_activity_idx')
+      .on(t.sourceActivityId)
+      .where(sql`${t.sourceActivityId} IS NOT NULL`),
   ],
 );
 

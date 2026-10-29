@@ -47,12 +47,12 @@ export function Providers({ children }: { children: ReactNode }) {
           },
         }),
         defaultOptions: {
-          // A short stale time avoids redundant refetches on tab switches while
-          // edits still show immediately (mutations invalidate). Window-focus
-          // refetch picks up changes made by other clients on return to the tab.
+          // Mutations invalidate what they change. Changes made by other clients
+          // arrive through the sync poll (SyncProvider): it refetches on window focus
+          // and invalidates only the scopes that moved, so nothing else does.
           queries: {
             staleTime: 15_000,
-            refetchOnWindowFocus: true,
+            refetchOnWindowFocus: false,
             retry: 1,
           },
         },

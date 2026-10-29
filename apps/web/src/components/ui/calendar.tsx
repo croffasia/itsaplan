@@ -9,7 +9,7 @@ import {
   type DayButton,
 } from '@daypicker/react';
 
-import { DayPicker as PersianDayPicker, faIR } from '@daypicker/persian';
+import { DayPicker as PersianDayPicker, faIR } from '@daypicker/persian'; //ADDED for persian calender
 
 import { cn } from '@/lib/utils';
 import { useDateFnsLocale } from '@/hooks/useDateFnsLocale';

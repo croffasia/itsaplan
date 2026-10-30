@@ -133,9 +133,8 @@ const callerPreferences = (projectId: number, userId: string) =>
     ),
   );
 
-// Places the listed views of the caller's tab row in that order. The views it leaves out
-// (the hidden ones the web does not send) lose their place, so one shown again after this
-// joins the end of its kind.
+// Places the listed views of the caller's tab row in that order. A view it leaves out loses its
+// place and joins the end of its kind.
 export async function arrangeTabRow(
   projectId: number,
   orderedIds: number[],

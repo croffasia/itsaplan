@@ -54,9 +54,9 @@ export default function ViewTabs({
   displayControl: ReactNode;
 }) {
   const t = useTranslations('views');
-  const { can } = usePermissions();
-  // Anyone who reads the project's views may save a private one.
-  const canCreateView = can('views', 'read');
+  const { can, isMember } = usePermissions();
+  // A member who reads the project's views may save a private one.
+  const canCreateView = can('views', 'create') || (isMember && can('views', 'read'));
   const canEditView = can('views', 'edit');
   const canDeleteView = can('views', 'delete');
   const canPublishView = can('views', 'create');
@@ -150,6 +150,7 @@ export default function ViewTabs({
                   onSelect={() => onSelect(view.id)}
                   onEdit={() => onEdit(view)}
                   onDelete={() => onDelete(view)}
+                  canDuplicate={canCreateView}
                   onDuplicate={() => onDuplicate(view)}
                 />
               ))}

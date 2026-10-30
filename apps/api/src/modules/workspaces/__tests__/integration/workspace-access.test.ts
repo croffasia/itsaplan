@@ -105,6 +105,32 @@ describe('workspace access', () => {
     ).toBe(403);
   });
 
+  it('keeps private views for the members of a project, and hides them from one who left', async () => {
+    const { asOwner, asAdmin, asLead, owner } = await setup();
+    const views = (api: Api) => api.projects({ projectKey: 'MKT' }).views;
+
+    expect((await views(asAdmin).post({ name: 'Mine', isPrivate: true })).status).toBe(403);
+    expect((await views(asOwner).post({ name: 'Mine', isPrivate: true })).status).toBe(403);
+    expect((await views(asOwner).post({ name: 'Board' })).status).toBe(201);
+
+    const invite = await asLead
+      .projects({ projectKey: 'MKT' })
+      .invites.post({ email: owner.email, role: 'member' });
+    await asOwner.invites({ token: invite.data!.token }).accept.post();
+    const created = await views(asOwner).post({ name: 'Mine', isPrivate: true });
+    expect(created.status).toBe(201);
+    const viewId = created.data!.id;
+
+    await asLead.projects({ projectKey: 'MKT' }).members({ userId: owner.userId }).delete();
+    expect((await views(asOwner).get()).data!.map((v) => v.name)).toEqual(['Board']);
+    expect((await asOwner.views({ viewId }).patch({ name: 'Taken' })).status).toBe(404);
+
+    await asLead
+      .projects({ projectKey: 'MKT' })
+      .members.post({ userId: owner.userId, role: 'member' });
+    expect((await views(asOwner).get()).data!.map((v) => v.name)).toEqual(['Board', 'Mine']);
+  });
+
   it('shows a workspace admin every project of a team', async () => {
     const { asAdmin, teamId } = await setup();
     const page = (await asAdmin.teams({ teamId }).projects.get({ query: {} })).data!;

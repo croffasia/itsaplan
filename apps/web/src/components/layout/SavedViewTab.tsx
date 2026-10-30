@@ -25,6 +25,7 @@ export default function SavedViewTab({
   canDelete,
   canReorder,
   canPublish,
+  canDuplicate,
   onSelect,
   onEdit,
   onDelete,
@@ -37,6 +38,7 @@ export default function SavedViewTab({
   canDelete: boolean;
   canReorder: boolean;
   canPublish: boolean;
+  canDuplicate: boolean;
   onSelect: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -108,16 +110,18 @@ export default function SavedViewTab({
               />
               {view.favorite ? t('unfavorite') : t('favorite')}
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMenuOpen(false);
-                onDuplicate();
-              }}
-              className="flex w-full items-center gap-2 rounded px-2 py-1 text-start text-sm hover:bg-accent"
-            >
-              <Copy className="size-3.5 shrink-0" /> {t('duplicate')}
-            </button>
+            {canDuplicate && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onDuplicate();
+                }}
+                className="flex w-full items-center gap-2 rounded px-2 py-1 text-start text-sm hover:bg-accent"
+              >
+                <Copy className="size-3.5 shrink-0" /> {t('duplicate')}
+              </button>
+            )}
             {/* Only a project's view has a public link. */}
             {canEdit && !view.isPrivate && (
               <button

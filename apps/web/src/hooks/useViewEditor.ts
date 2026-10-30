@@ -71,6 +71,7 @@ export function useViewEditor(
   views: View[],
   activeViewId: number | null,
   onSelectView: (id: number | null) => void,
+  keepsPrivateViews: boolean,
 ) {
   const [view, setView] = useState<WorkItemsView>(loadView);
   const [settings, setSettings] = useState<ViewSettings>(() => defaultViewSettings(loadView()));
@@ -80,8 +81,9 @@ export function useViewEditor(
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState('');
   const [draftIcon, setDraftIcon] = useState<string | null>(null);
-  // Whether Save creates a private view. New views start private: making one the
-  // project's is the deliberate choice.
+  // Whether Save creates a private view. New views start private for whoever may keep one,
+  // a member of the project who reads its views: making one the project's is the
+  // deliberate choice.
   const [draftPrivate, setDraftPrivate] = useState(true);
   // Whether the filter row is shown. It is also shown once the live filters differ
   // from the selection's own filters, so ad-hoc filters can never be hidden.
@@ -150,7 +152,7 @@ export function useViewEditor(
     setEditing(true);
     setDraftName(from?.name ?? '');
     setDraftIcon(from?.icon ?? null);
-    setDraftPrivate(true);
+    setDraftPrivate(keepsPrivateViews);
   }
 
   // Enter edit mode for a new view, drafted from what is on screen: the active

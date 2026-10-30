@@ -45,7 +45,7 @@ export default function WorkItemsPage() {
   const tCommon = useTranslations('common');
   const { project, filteredProject, views, editor, customFields, onOpenIssue, onAddIssue } =
     useShell();
-  const { can } = usePermissions();
+  const { can, isMember } = usePermissions();
   const groupLabels = useGroupLabels();
   const features = useProjectFeatures();
   const [timelineCollapseState, setTimelineCollapseState] = useState<TimelineCollapseState>({
@@ -65,7 +65,7 @@ export default function WorkItemsPage() {
 
   // Saving persists the view: a project's view is a views edit, a private view is its
   // owner's to save, and anyone may save a new one, private unless they may create the
-  // project's views. Filtering/display stay available to everyone (transient,
+  // project's views. Only a member of the project keeps private views. Filtering/display stay available to everyone (transient,
   // client-side); only persisting is gated.
   const canCreateProjectView = can('views', 'create');
   const canSaveView = !editor.activeView || editor.activeView.isPrivate || can('views', 'edit');
@@ -205,7 +205,7 @@ export default function WorkItemsPage() {
               />
               {/* A private view can be added to the project later; a project's view never
                   turns private. */}
-              {!editor.activeView && canCreateProjectView && (
+              {!editor.activeView && canCreateProjectView && isMember && can('views', 'read') && (
                 <label
                   className="flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground"
                   title={tViews('privateHint')}

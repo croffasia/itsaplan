@@ -11,6 +11,7 @@ import { ApiError } from '@/lib/api/core/client';
 import { applyFilters } from '@/utils/filters';
 import { withoutShownSubtasks } from '@/utils/subtasks';
 import { viewPath } from '@/utils/paths';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useViewEditor } from '@/hooks/useViewEditor';
 
 function errorMessage(error: unknown): string | null {
@@ -55,11 +56,13 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
 
   // Saved-views, layout, display and filter editing for the current project. The
   // active view is the route param; selecting a view navigates.
+  const { can, isMember } = usePermissions(project);
   const editor = useViewEditor(
     projectKey,
     views,
     activeViewId,
     (id) => projectKey && router.push(viewPath(projectKey, id)),
+    isMember && can('views', 'read'),
   );
 
   // An address naming a view the caller cannot see (deleted, or someone else's
@@ -102,12 +105,9 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
   // filter by issueTypeId locally.
   const customFields = useMemo(() => project?.customFields ?? [], [project]);
 
-  // The Shell provides the permission context, so the viewer is read directly
-  // rather than through usePermissions. Gates the create-issue keyboard shortcut;
-  // the header and command palette gate their own controls via usePermissions.
-  const viewer = project?.viewer ?? null;
-  const canCreateIssue =
-    !!viewer && (viewer.role === 'owner' || project?.permissions.work_items?.create === true);
+  // Gates the create-issue keyboard shortcut; the header and command palette gate their
+  // own controls via usePermissions.
+  const canCreateIssue = can('work_items', 'create');
 
   // The scaffold is the membership check; the issues and the views carry their own
   // resource. A 403 on one of those is a role that does not grant it, not a project

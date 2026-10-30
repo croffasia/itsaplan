@@ -1,5 +1,5 @@
-import { db, projectView, projectViewFavorite } from '@repo/db';
-import { and, eq, inArray, or, sql, type SQL } from 'drizzle-orm';
+import { db, projectMember, projectView, projectViewFavorite } from '@repo/db';
+import { and, eq, exists, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { iso, num } from '#shared/lib';
 
 export interface ViewRow {
@@ -41,8 +41,22 @@ export interface UserViewRow extends ViewRow {
   favorite: boolean;
 }
 
-const visibleTo = (userId: string) =>
-  or(eq(projectView.isPrivate, false), eq(projectView.ownerUserId, userId));
+// Private views are kept by members of the project only. Someone who left it keeps their
+// rows, out of sight, until they are a member again or their account is deleted.
+const ownPrivate = (userId: string) =>
+  and(
+    eq(projectView.ownerUserId, userId),
+    exists(
+      db
+        .select({ one: sql`1` })
+        .from(projectMember)
+        .where(
+          and(eq(projectMember.projectId, projectView.projectId), eq(projectMember.userId, userId)),
+        ),
+    ),
+  );
+
+const visibleTo = (userId: string) => or(eq(projectView.isPrivate, false), ownPrivate(userId));
 
 export async function listViews(projectId: number, userId: string): Promise<UserViewRow[]> {
   const rows = await db
@@ -176,7 +190,7 @@ export async function reorderViews(
   userId: string,
   withProjectViews: boolean,
 ): Promise<UserViewRow[]> {
-  const movable = withProjectViews ? visibleTo(userId) : eq(projectView.ownerUserId, userId);
+  const movable = withProjectViews ? visibleTo(userId) : ownPrivate(userId);
   await db.transaction(async (tx) => {
     for (const [position, id] of orderedIds.entries()) {
       await tx

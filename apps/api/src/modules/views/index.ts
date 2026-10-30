@@ -2,7 +2,7 @@ import { Elysia, t } from 'elysia';
 import { noContent } from '#shared/http';
 import { guards, entityGuard, requiresPermission, assertProjectReachable } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
-import { assertPermission, requireUser, type AuthUser } from '#shared/access';
+import { assertPermission, getProjectAccess, requireUser, type AuthUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors } from '#shared/responses';
 import { mcpTool } from '#mcp/generate';
@@ -76,12 +76,16 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
     async ({ project, body, set, user }) => {
       const { isPrivate, ...view } = body;
       await assertPermission(project.id, user, 'views', isPrivate ? 'read' : 'create');
+      const userId = requireUser(user).id;
+      if (isPrivate && (await getProjectAccess(project.id, userId))?.via !== 'member') {
+        throw new HttpError(403, 'Only a member of the project keeps private views');
+      }
       set.status = 201;
       return {
         ...(await createView({
           projectId: project.id,
           ...view,
-          ownerUserId: isPrivate ? requireUser(user).id : null,
+          ownerUserId: isPrivate ? userId : null,
         })),
         favorite: false,
       };
@@ -92,7 +96,8 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
       response: { 201: ViewResponse, ...commonErrors },
       detail: {
         summary: 'Create a saved view',
-        description: 'Create a saved view in a project, or a private one of your own.',
+        description:
+          'Create a saved view in a project, or, as a member of the project, a private one of your own.',
         ...requiresPermission(['views', 'create']),
         ...mcpTool('create_view'),
       },

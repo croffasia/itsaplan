@@ -63,7 +63,7 @@ let duplicated: View[];
 
 // A member whose role only reads views.
 const reader = {
-  project: { viewer: { role: 'member' }, permissions: { views: { read: true } } },
+  project: { viewer: { role: 'member', via: 'member' }, permissions: { views: { read: true } } },
 } as unknown as ShellContext;
 
 async function render(activeViewId: number, shell = reader) {
@@ -155,7 +155,10 @@ afterEach(async () => {
 describe('ViewTabs', () => {
   it('offers no new view to a member who cannot read views, whose save would be refused', async () => {
     const blind = {
-      project: { viewer: { role: 'member' }, permissions: { views: { read: false } } },
+      project: {
+        viewer: { role: 'member', via: 'member' },
+        permissions: { views: { read: false } },
+      },
     } as unknown as ShellContext;
     await render(board.id, blind);
     const buttons = [...document.querySelectorAll('button')].map((b) => b.textContent?.trim());
@@ -174,6 +177,28 @@ describe('ViewTabs', () => {
         [mine.name, true],
       ],
     );
+  });
+
+  it('offers no new view and no duplicate to a workspace admin, who keeps no private views', async () => {
+    const admin = {
+      project: {
+        viewer: { role: 'member', via: 'workspace' },
+        permissions: { views: { read: true } },
+      },
+    } as unknown as ShellContext;
+    await render(board.id, admin);
+    const buttons = [...document.querySelectorAll('button')].map((b) => b.textContent?.trim());
+    assert.ok(!buttons.includes(views.newView));
+    assert.deepEqual(await openMenu(), [views.favorite]);
+  });
+
+  it("offers a new project's view to the workspace owner", async () => {
+    const owner = {
+      project: { viewer: { role: 'owner', via: 'workspace' }, permissions: {} },
+    } as unknown as ShellContext;
+    await render(board.id, owner);
+    const buttons = [...document.querySelectorAll('button')].map((b) => b.textContent?.trim());
+    assert.ok(buttons.includes(views.newView));
   });
 
   it("lets them drag their own private view, and not the project's", async () => {

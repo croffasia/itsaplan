@@ -486,6 +486,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           createdTo: instantParam('createdTo', query.createdTo),
           updatedFrom: instantParam('updatedFrom', query.updatedFrom),
           updatedTo: instantParam('updatedTo', query.updatedTo),
+          blocked: query.blocked === 'true',
           limit,
         },
         { includeArchived: query.includeArchived === 'true' },
@@ -499,7 +500,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'List issues by filters',
         description:
-          "List a project's issues by field filters, most recently updated first. Each issue carries createdAt, updatedAt and completedAt.",
+          "List a project's issues by field filters, most recently updated first. Each issue carries createdAt, updatedAt and completedAt. blocked=true lists the issues held up by an issue still open, through a blocks relation.",
         ...mcpTool('list_issues'),
       },
     },

@@ -87,12 +87,14 @@ export default function ViewTabs({
     />
   );
 
-  // Shows at once the tab row the server will answer with once the drop is stored.
+  // Shows at once the tab row the server will answer with once the drop is stored. The hidden
+  // views move with the row, so each one keeps its place for when it is shown again.
   function reorder(draggedId: number, targetId: number | null) {
-    const moved = movedInRow(row, draggedId, targetId);
+    const moved = movedInRow(shown, draggedId, targetId);
     if (!moved) return;
-    drop([...moved, ...hidden].map((v) => v.id));
-    onArrangeRow(moved.map((v) => v.id));
+    const orderedIds = moved.map((v) => v.id);
+    drop(orderedIds);
+    onArrangeRow(orderedIds);
   }
 
   function handleDragEnd(e: DragEndEvent) {

@@ -37,6 +37,11 @@ describe('movedInRow', () => {
     assert.deepEqual(ids(movedInRow(row, 3, null)), [3, 1, 2, 4]);
   });
 
+  it('keeps a hidden view between the same neighbours', () => {
+    const withHidden = [view(1), view(2, { hidden: true }), view(3), view(4)];
+    assert.deepEqual(ids(movedInRow(withHidden, 4, 1)), [4, 1, 2, 3]);
+  });
+
   it('moves nothing when the view stays where it is', () => {
     assert.equal(movedInRow(row, 1, null), null);
     assert.equal(movedInRow(row, 2, 2), null);

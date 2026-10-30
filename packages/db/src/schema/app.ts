@@ -2043,7 +2043,7 @@ export const projectViewFavorite = pgTable(
 );
 
 // Each user's own tab row: where they placed a view and whether they hid it. A view
-// without a position takes its place from the project's order, so a view added to the
+// without a position follows the last view of its kind in the row, so a view added to the
 // project shows up in rows already arranged. Only a project's view can be hidden.
 export const projectViewPreference = pgTable(
   'project_view_preference',

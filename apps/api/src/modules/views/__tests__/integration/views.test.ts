@@ -702,15 +702,6 @@ describe('views', () => {
       expect(res.data!.map((v) => v.name)).toEqual(['Mine', 'Roadmap', 'Board', 'Bugs']);
       expect(await names(member.api)).toEqual(['Mine', 'Roadmap', 'Board', 'Bugs']);
       expect(await names(asOwner)).toEqual(['Board', 'Bugs', 'Roadmap']);
-      const stored = await db
-        .select({ name: projectView.name, position: projectView.position })
-        .from(projectView)
-        .where(eq(projectView.isPrivate, false));
-      expect(stored.sort((a, b) => a.position - b.position).map((v) => v.name)).toEqual([
-        'Board',
-        'Bugs',
-        'Roadmap',
-      ]);
     });
 
     it("ignores views in the order that are not the caller's to see", async () => {

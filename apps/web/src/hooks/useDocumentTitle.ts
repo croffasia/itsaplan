@@ -18,9 +18,9 @@ let observedHead: HTMLHeadElement | null = null;
 function apply() {
   let top: Entry | null = null;
   for (const entry of entries) if (!top || entry.rank >= top.rank) top = entry;
-  // The browser trims and collapses whitespace in document.title; match it, or the
-  // comparison below never holds and the head observer loops forever.
-  const title = (top?.title ?? APP_NAME).replace(/[\t\n\f\r ]+/g, ' ').trim();
+  // The browser trims and collapses ASCII whitespace; match it, or the comparison
+  // with document.title never holds and the head observer loops forever.
+  const title = (top?.title ?? APP_NAME).replace(/[\t\n\f\r ]+/g, ' ').replace(/^ | $/g, '');
   if (window.document.title !== title) window.document.title = title;
   // Next streams the metadata, and React can insert its <title> into the head after
   // a page has set its own; the browser shows the first one, so the title is set again.

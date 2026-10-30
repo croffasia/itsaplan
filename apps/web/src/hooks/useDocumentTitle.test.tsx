@@ -95,8 +95,33 @@ describe('useDocumentTitle', () => {
   });
 
   it('settles on a title with extra whitespace', async () => {
-    await render({ section: 'Acme', page: ' ACME-1  Fix ' });
-    assert.equal(document.title, 'ACME-1 Fix');
+    const NativeObserver = window.MutationObserver;
+    let batches = 0;
+    // Bound the broken implementation so this regression fails instead of hanging the runner.
+    window.MutationObserver = class extends NativeObserver {
+      constructor(callback: MutationCallback) {
+        super((records, observer) => {
+          if (++batches > 3) {
+            observer.disconnect();
+            return;
+          }
+          callback(records, observer);
+        });
+      }
+    };
+
+    await render({ section: 'Acme', page: '\t ACME-1  Fix\r\n\f next\t ' });
+    await act(async () => {
+      document.head.append(document.createElement('meta'));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    assert.equal(document.title, 'ACME-1 Fix next');
+    assert.equal(batches, 1);
+  });
+
+  it('preserves non-breaking spaces that document.title does not trim', async () => {
+    await render({ section: 'Acme', page: '\u00a0ACME-1 Fix\u00a0' });
+    assert.equal(document.title, '\u00a0ACME-1 Fix\u00a0');
   });
 });
 

@@ -267,8 +267,7 @@ export function useViewEditor(
     if (activeViewId === target.id) onSelectView(null);
   }
 
-  // Stores the caller's own tab row. Nobody else's row changes, whatever the caller may
-  // do to the project's order.
+  // Stores the caller's own tab row. Nobody else's row changes.
   function arrangeTabRow(orderedIds: number[]) {
     arrangeTabRowMutation.mutate(orderedIds);
   }
@@ -286,8 +285,8 @@ export function useViewEditor(
     resetTabRowMutation.mutate();
   }
 
-  // The project's views in the order of the caller's row become everyone's order; the
-  // ones the caller hid go last.
+  // The project's views in the order of the caller's row become the project's order, which
+  // whoever has not placed them in their own row sees; the ones the caller hid go last.
   function pinProjectOrder() {
     const projectViews = views.filter((v) => !v.isPrivate);
     reorderViewsMutation.mutate(

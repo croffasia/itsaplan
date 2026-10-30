@@ -134,8 +134,9 @@ export function useResetTabRow(projectKey: string | null) {
   });
 }
 
-// Sets the project's order for everyone. The caller's own row keeps its order, so the
-// cache waits for the server instead of moving the project's views ahead of it.
+// Sets the project's order, which applies to the views a person has not placed in their own
+// row. The caller's own row keeps its order, so the cache waits for the server instead of
+// moving the project's views ahead of it.
 export function useReorderViews(projectKey: string | null) {
   const t = useTranslations('views');
   const qc = useQueryClient();

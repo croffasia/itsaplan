@@ -68,7 +68,7 @@ const visibleTo = (userId: string) => or(eq(projectView.isPrivate, false), ownPr
 // The caller's tab row: the views they placed, in their order. A view they never placed
 // follows the last one of its kind, so a new project view joins the project's and a new
 // private one goes last; with nothing placed, the row is the project's views in the
-// project's order, then the caller's private ones in the order they were made.
+// project's order, then the caller's private ones in their stored order.
 export async function listViews(projectId: number, userId: string): Promise<UserViewRow[]> {
   const rows = await db
     .select({

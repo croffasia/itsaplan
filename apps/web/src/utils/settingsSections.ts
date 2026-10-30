@@ -27,12 +27,16 @@ import type { PermissionAction, PermissionResource } from '@/lib/api/endpoints/r
 // and 'ai' sections are listed in the main sidebar's AI Team group instead. The name and
 // the blurb of a section are messages under `sections.settings`. A section the hosted
 // build adds (`useProjectSettingsSections` in `@/cloud`) carries its page in `Component`.
+// AI Team sections naming the same `menu` are listed as one entry that opens to them, named
+// by the `sections.settings` messages of the menu, with the icon of its first section; each
+// keeps its own page.
 export type SettingsSection = {
   slug: string;
   icon: LucideIcon;
   resource: PermissionResource;
   viewAction?: PermissionAction;
   group: string;
+  menu?: string;
   Component?: ComponentType;
 };
 
@@ -127,6 +131,31 @@ export const AI_AGENTS_SECTION: SettingsSection = {
   resource: 'ai_agents',
   group: 'ai',
 };
+
+// The entries of the main sidebar's AI Team group: a section, or the sections of one `menu`,
+// listed where the first of them is.
+export type AiTeamEntry =
+  { section: SettingsSection } | { menu: string; sections: SettingsSection[] };
+
+export function aiTeamEntries(sections: SettingsSection[]): AiTeamEntry[] {
+  const entries: AiTeamEntry[] = [];
+  const menus = new Map<string, SettingsSection[]>();
+  for (const section of sections) {
+    if (!section.menu) {
+      entries.push({ section });
+      continue;
+    }
+    const listed = menus.get(section.menu);
+    if (listed) {
+      listed.push(section);
+    } else {
+      const grouped = [section];
+      menus.set(section.menu, grouped);
+      entries.push({ menu: section.menu, sections: grouped });
+    }
+  }
+  return entries;
+}
 
 // The core's AI Team sections; useAiTeamSections adds the hosted build's.
 export const AI_TEAM_SECTIONS = SETTINGS_SECTIONS.filter((s) => s.group === 'ai-team');

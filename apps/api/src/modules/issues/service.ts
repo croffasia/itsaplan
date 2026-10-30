@@ -17,7 +17,9 @@ import {
   initiative,
   cycle,
   team,
+  issueLink,
 } from '@repo/db';
+import { alias } from 'drizzle-orm/pg-core';
 import {
   and,
   eq,
@@ -500,6 +502,28 @@ export async function searchIssues(
   if (filters.createdTo) conds.push(lt(issue.createdAt, filters.createdTo));
   if (filters.updatedFrom) conds.push(gte(issue.updatedAt, filters.updatedFrom));
   if (filters.updatedTo) conds.push(lt(issue.updatedAt, filters.updatedTo));
+
+  if (filters.blocked) {
+    const blocker = alias(issue, 'blocker');
+    const blockerColumn = alias(projectColumn, 'blocker_column');
+    conds.push(
+      exists(
+        db
+          .select({ one: sql`1` })
+          .from(issueLink)
+          .innerJoin(blocker, eq(blocker.id, issueLink.sourceIssueId))
+          .innerJoin(blockerColumn, eq(blockerColumn.id, blocker.columnId))
+          .where(
+            and(
+              eq(issueLink.targetIssueId, issue.id),
+              eq(issueLink.kind, 'blocks'),
+              isNull(blocker.archivedAt),
+              notInArray(blockerColumn.stateType, ['completed', 'canceled']),
+            ),
+          ),
+      ),
+    );
+  }
 
   const base = db
     .select(hitColumns)

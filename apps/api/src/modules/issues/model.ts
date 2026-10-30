@@ -578,6 +578,13 @@ export const listIssuesQuery = t.Object({
   createdTo: instantQuery('Exclusive latest creation time.'),
   updatedFrom: instantQuery('Inclusive earliest last-update time.'),
   updatedTo: instantQuery('Exclusive latest last-update time.'),
+  blocked: t.Optional(
+    t.String({
+      description:
+        "'true' for issues another issue is blocking while it is still open (not in a " +
+        'completed or canceled column, not archived).',
+    }),
+  ),
   includeArchived: t.Optional(
     t.String({ description: "'true' to include archived issues. Default false." }),
   ),

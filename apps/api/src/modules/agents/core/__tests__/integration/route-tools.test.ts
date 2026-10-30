@@ -417,6 +417,33 @@ describe('internal agent route tools', () => {
     const context = await run(tools, 'get_project');
     expect(context).toMatchObject({ columns: expect.any(Array) });
   });
+
+  // A block is a relation, not text, so search_issues cannot find it.
+  it('blocked lists the issues an open issue is blocking, not those of a closed one', async () => {
+    const { asOwner } = await setup();
+    const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const columns = view.data?.columns ?? [];
+    const openId = columns.find((c) => c.stateType === 'backlog')?.id;
+    const doneId = columns.find((c) => c.stateType === 'completed')?.id;
+    if (openId === undefined || doneId === undefined) throw new Error('Missing columns');
+    const tools = await toolsFor(asOwner, ['create_issue', 'link_issues']);
+    const make = async (title: string, columnId: number) =>
+      ((await run(tools, 'create_issue', { columnId, title })) as { id: number }).id;
+    const openBlocker = await make('Open blocker', openId);
+    const held = await make('Held up', openId);
+    const doneBlocker = await make('Done blocker', doneId);
+    const freed = await make('No longer held up', openId);
+    await run(tools, 'link_issues', {
+      issueId: held,
+      targetIssueId: openBlocker,
+      kind: 'blocked_by',
+    });
+    await run(tools, 'link_issues', { issueId: doneBlocker, targetIssueId: freed, kind: 'blocks' });
+
+    const result = (await run(tools, 'list_issues', { blocked: 'true' })) as { title: string }[];
+
+    expect(result.map((i) => i.title)).toEqual(['Held up']);
+  });
 });
 
 // A run works in one project, and its tools are bound to it: an object addressed by id

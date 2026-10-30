@@ -259,14 +259,11 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
     // LIMIT NULL claims every due run.
     const free = maxConcurrentRuns > 0 ? maxConcurrentRuns - (await countClaimedRuns(tx)) : null;
     if (free !== null && free <= 0) return [];
+    // MATERIALIZED picks the runs once. As `r.id IN (...)` the planner may rescan the
+    // pick for every row it updates, and each rescan skips the rows already claimed and
+    // hands out the next ones, past the free slots.
     return tx.execute(sql`
-      UPDATE agent_run r
-      SET attempts = r.attempts + 1,
-          started_at = coalesce(r.started_at, now()),
-          execution_started_at = NULL,
-          claimed_at = now(),
-          next_attempt_at = now() + make_interval(secs => ${leaseSeconds})
-      WHERE r.id IN (
+      WITH due AS MATERIALIZED (
         SELECT id FROM agent_run q
         WHERE q.status = 'pending' AND q.next_attempt_at <= now()
           AND (SELECT kind FROM ai_agent a WHERE a.id = q.agent_id) = 'internal'
@@ -275,6 +272,14 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
         FOR UPDATE SKIP LOCKED
         LIMIT ${free}
       )
+      UPDATE agent_run r
+      SET attempts = r.attempts + 1,
+          started_at = coalesce(r.started_at, now()),
+          execution_started_at = NULL,
+          claimed_at = now(),
+          next_attempt_at = now() + make_interval(secs => ${leaseSeconds})
+      FROM due
+      WHERE r.id = due.id
       RETURNING
         r.id,
         r.agent_id AS "agentId",

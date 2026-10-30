@@ -1,5 +1,45 @@
 # Changelog
 
+## [1.10.0](https://github.com/croffasia/itsaplan/compare/v1.9.0...v1.10.0) (2026-10-30)
+
+
+### Features
+
+* agent run queues for teams and workspaces, with limits on concurrent runs ([#727](https://github.com/croffasia/itsaplan/issues/727)) ([62646c3](https://github.com/croffasia/itsaplan/commit/62646c340072ca2147bf3f42797e000356d4fdcb))
+* agent_run.finished webhook event when an agent run ends ([#741](https://github.com/croffasia/itsaplan/issues/741)) ([30e31d5](https://github.com/croffasia/itsaplan/commit/30e31d5cc9234c9c46f3e4b980e3e5ff13644b9d))
+* **agent-tools:** add Keenable web search and fetch tools for AI agents ([#738](https://github.com/croffasia/itsaplan/issues/738)) ([9e1e704](https://github.com/croffasia/itsaplan/commit/9e1e704335009f405c9f74d9bc709b374f09a38d))
+* chat can be turned off per agent ([#749](https://github.com/croffasia/itsaplan/issues/749)) ([11f1ba9](https://github.com/croffasia/itsaplan/commit/11f1ba94644466bad8ff22bcb128b278a295c75f))
+* each person arranges their own tab row ([#757](https://github.com/croffasia/itsaplan/issues/757)) ([0a9961f](https://github.com/croffasia/itsaplan/commit/0a9961f2c9ff6db42bd7706b65050c0648fe4d23))
+* from address for a team's own email provider ([#740](https://github.com/croffasia/itsaplan/issues/740)) ([87e2759](https://github.com/croffasia/itsaplan/commit/87e2759c7ac8334166315b78ffb2d5aa2e197bc7))
+* link directly to a comment ([#724](https://github.com/croffasia/itsaplan/issues/724)) ([6c43b36](https://github.com/croffasia/itsaplan/commit/6c43b368b6ebf042be53e5ba0ff1f9b6eaf547fe))
+* private views ([#756](https://github.com/croffasia/itsaplan/issues/756)) ([49aa801](https://github.com/croffasia/itsaplan/commit/49aa8019927f1a21f45b443711f2960907197dde))
+* save projects as team templates and create projects from them ([#763](https://github.com/croffasia/itsaplan/issues/763)) ([c7ef550](https://github.com/croffasia/itsaplan/commit/c7ef550b636349b6dfa6c6c52cdb7061d6faf4b7))
+* system roles that the instance owner manages in god mode ([#726](https://github.com/croffasia/itsaplan/issues/726)) ([e6e7f77](https://github.com/croffasia/itsaplan/commit/e6e7f775c44a9275bd38c543c23a2f55b9cc9b2a))
+
+
+### Bug Fixes
+
+* **api:** a run claim takes no more runs than the free slots ([#761](https://github.com/croffasia/itsaplan/issues/761)) ([15cee22](https://github.com/croffasia/itsaplan/commit/15cee223664bbb2b909ea653f39055e536cfa2f4))
+* **api:** enforce workspace run admission atomically ([#747](https://github.com/croffasia/itsaplan/issues/747)) ([0b0558b](https://github.com/croffasia/itsaplan/commit/0b0558b2b854c831dceb00feedda762681f46d09))
+* update Bun runtime to 1.4.4 ([#750](https://github.com/croffasia/itsaplan/issues/750)) ([5405cb3](https://github.com/croffasia/itsaplan/commit/5405cb3280445234bda7260b867edcbc03611d34))
+* **web:** a dropped tab lands in its new place ([#753](https://github.com/croffasia/itsaplan/issues/753)) ([4fe810e](https://github.com/croffasia/itsaplan/commit/4fe810e7a6fa076aa4c7b89c23c83bf1418c94a8))
+* **web:** open General and the current project's team from the project switcher ([#743](https://github.com/croffasia/itsaplan/issues/743)) ([96a8e2b](https://github.com/croffasia/itsaplan/commit/96a8e2ba87cbb66709a10ee834dcb2948ec1e4b1))
+* **web:** prevent document recovery tabs from acknowledging each other ([#751](https://github.com/croffasia/itsaplan/issues/751)) ([e86102b](https://github.com/croffasia/itsaplan/commit/e86102b8f33885f6e41bdec0081b5d1faf177d1e))
+* **web:** stop the tab title loop on titles with extra whitespace ([#722](https://github.com/croffasia/itsaplan/issues/722)) ([73aadf9](https://github.com/croffasia/itsaplan/commit/73aadf9945ec4c8a23c749fb4f4dee25b036acb3))
+
+
+### Performance
+
+* **api:** load the board's issue details in parallel and by project ([#730](https://github.com/croffasia/itsaplan/issues/730)) ([d972e4e](https://github.com/croffasia/itsaplan/commit/d972e4e1b412a0204da2e0dde43fbf3a7dfad11d))
+* **api:** read each project once in the access guards ([#728](https://github.com/croffasia/itsaplan/issues/728)) ([d54d0e2](https://github.com/croffasia/itsaplan/commit/d54d0e2c1ee4ce706e17a16abf47d4297c5cc397))
+* **api:** read the sync markers without scanning every project ([#729](https://github.com/croffasia/itsaplan/issues/729)) ([e39c198](https://github.com/croffasia/itsaplan/commit/e39c19819d8b1aaf6ce7a2787dc660713f8106ff))
+* refetch on tab focus only through the sync poll, index issue links ([#731](https://github.com/croffasia/itsaplan/issues/731)) ([911df91](https://github.com/croffasia/itsaplan/commit/911df91cba60f9ef876219c61cce3128a1383e6c))
+
+
+### Refactoring
+
+* **web:** let an extending build fold AI Team sections into one menu entry ([#764](https://github.com/croffasia/itsaplan/issues/764)) ([55e323e](https://github.com/croffasia/itsaplan/commit/55e323ee40cd769718cac3de483930887a48c13a))
+
 ## [1.9.0](https://github.com/croffasia/itsaplan/compare/v1.8.0...v1.9.0) (2026-10-27)
 
 

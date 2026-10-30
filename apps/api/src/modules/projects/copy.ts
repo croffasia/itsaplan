@@ -515,7 +515,8 @@ export async function copyProject(
       const viewRows = await tx
         .select()
         .from(projectView)
-        .where(eq(projectView.projectId, sourceProjectId))
+        // A private view is its owner's alone and stays behind.
+        .where(and(eq(projectView.projectId, sourceProjectId), eq(projectView.isPrivate, false)))
         .orderBy(projectView.position, projectView.id);
       for (const v of viewRows) {
         await tx.insert(projectView).values({

@@ -59,7 +59,8 @@ function permissionDetail(permission: Permission) {
 
 // Builds a feature-local macro for routes that address an entity by its own id
 // (no :projectKey in the path). resolveProjectId maps the route params to the
-// entity's owning project id (null means the entity was not found). The macro
+// entity's owning project id (null means the entity was not found); it is handed the
+// caller too, for an entity that only some members may see. The macro
 // asserts the given action on `resource` and injects the resolved `projectId` into
 // the handler context, so a handler that needs it does not resolve it again. `feature`
 // names the optional section the entity belongs to, closing every route of the macro
@@ -73,13 +74,16 @@ function permissionDetail(permission: Permission) {
 export function entityGuard(
   resource: PermissionResource,
   notFound: string,
-  resolveProjectId: (params: Record<string, string>) => Promise<number | null>,
+  resolveProjectId: (
+    params: Record<string, string>,
+    user: AuthUser | null | undefined,
+  ) => Promise<number | null>,
   feature?: ProjectFeature,
 ) {
   return (action: PermissionAction) => ({
     ...permissionDetail([resource, action]),
     async resolve({ params, user, request }: EntityGuardCtx) {
-      const projectId = await resolveProjectId(params as Record<string, string>);
+      const projectId = await resolveProjectId(params as Record<string, string>, user);
       if (projectId == null) throw new HttpError(404, notFound);
       await assertPermission(projectId, user, resource, action);
       await assertProjectReachable(projectId, request, feature);

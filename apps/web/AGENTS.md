@@ -29,9 +29,10 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   also decides the page a workspace opens on.
   `useProjectSettingsSections(project, core)` returns the project's sections: here the
   core's, while the hosted build adds its own at any position or drops some. Those of the
-  `ai-team` group are listed in the main sidebar's AI Team group, the others in the settings
-  sidebar, which lists the groups in the order their first section comes, each named in
-  `nav.groups.<group>`, so a section can open a group of its own. One the build adds
+  `ai-team` group are listed in the main sidebar's AI Team group, those naming the same `menu`
+  as one entry that opens to them, named by the menu's `sections.settings` messages; the others
+  in the settings sidebar, which lists the groups in the order their first section comes, each
+  named in `nav.groups.<group>`, so a section can open a group of its own. One the build adds
   carries in `Component` the page `/:team/:projectKey/settings/<slug>` opens, or
   `/:team/:projectKey/agents/<slug>` in the AI Team group, which answers 404 only once the
   project and every query in flight have loaded.

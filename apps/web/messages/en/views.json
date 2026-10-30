@@ -11,5 +11,12 @@
   "unfavorite": "Remove from favorites",
   "shareBoard": "Share board",
   "newViewHint": "Create a view from the current filters and display",
-  "filter": "Filter"
+  "filter": "Filter",
+  "private": "Private",
+  "privateHint": "Only you can see this view",
+  "duplicate": "Duplicate",
+  "copyName": "{name} (copy)",
+  "publish": "Add to the project",
+  "publishHint": "Everyone in the project will see it. It cannot be made private again.",
+  "published": "{name} is now a view of the project"
 }

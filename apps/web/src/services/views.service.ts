@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import {
   type View,
   listViews,
@@ -6,6 +8,7 @@ import {
   updateView,
   deleteView,
   setViewFavorite,
+  publishView,
   reorderViews,
 } from '@/lib/api/endpoints/views';
 import { EMPTY_FILTER_SET, type FilterSet } from '@/utils/filters';
@@ -25,26 +28,32 @@ export function normalizeView(v: View): View {
   };
 }
 
-// The tab row: the caller's favorites are pinned to the front; the rest keep their
-// stored order.
+// The tab row: the project's views come first and the caller's private ones after; in
+// each, the caller's favorites are pinned to the front and the rest keep their stored order.
 export function tabOrder(views: View[]): View[] {
-  return [...views].sort((a, b) => Number(b.favorite) - Number(a.favorite));
+  return [...views].sort(
+    (a, b) => Number(a.isPrivate) - Number(b.isPrivate) || Number(b.favorite) - Number(a.favorite),
+  );
 }
 
-// The stored order with the dragged view moved to the target's place, or to the front
-// for a null target; null when nothing moves.
+// The stored order of the dragged view's list (the project's or the caller's private
+// ones) with it moved to the target's place, or to the front for a null target; null
+// when nothing moves.
 export function reorderedViews(
   views: View[],
   draggedId: number,
   targetId: number | null,
 ): View[] | null {
-  if (draggedId === targetId) return null;
-  const next = [...views].sort((a, b) => a.position - b.position || a.id - b.id);
-  const from = next.findIndex((v) => v.id === draggedId);
+  const dragged = views.find((v) => v.id === draggedId);
+  if (!dragged || draggedId === targetId) return null;
+  const next = views
+    .filter((v) => v.isPrivate === dragged.isPrivate)
+    .sort((a, b) => a.position - b.position || a.id - b.id);
+  const from = next.indexOf(dragged);
   const to = targetId == null ? 0 : next.findIndex((v) => v.id === targetId);
-  if (from < 0 || to < 0 || from === to) return null;
-  const [moved] = next.splice(from, 1);
-  next.splice(to, 0, moved);
+  if (to < 0 || from === to) return null;
+  next.splice(from, 1);
+  next.splice(to, 0, dragged);
   return next;
 }
 
@@ -95,6 +104,18 @@ export function useSetViewFavorite(projectKey: string | null) {
     mutationFn: ({ id, favorite }: { id: number; favorite: boolean }) =>
       setViewFavorite(id, favorite),
     onSuccess: () => {
+      if (projectKey) void qc.invalidateQueries({ queryKey: qk.views(projectKey) });
+    },
+  });
+}
+
+export function usePublishView(projectKey: string | null) {
+  const t = useTranslations('views');
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => publishView(id),
+    onSuccess: (view) => {
+      toast.success(t('published', { name: view.name }));
       if (projectKey) void qc.invalidateQueries({ queryKey: qk.views(projectKey) });
     },
   });

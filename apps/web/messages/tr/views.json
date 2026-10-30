@@ -11,5 +11,12 @@
   "unfavorite": "Favorilerden çıkar",
   "shareBoard": "Panoyu paylaş",
   "newViewHint": "Mevcut filtrelerden ve görüntüleme ayarlarından yeni bir görünüm oluşturun",
-  "filter": "Filtrele"
+  "filter": "Filtrele",
+  "private": "Özel",
+  "privateHint": "Bu görünümü yalnızca siz görebilirsiniz",
+  "duplicate": "Çoğalt",
+  "copyName": "{name} (kopya)",
+  "publish": "Projeye ekle",
+  "publishHint": "Projedeki herkes görecek. Yeniden özel yapılamaz.",
+  "published": "{name} artık projenin bir görünümü"
 }

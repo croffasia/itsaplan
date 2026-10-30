@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { db, issue, projectView } from '@repo/db';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { getProjectById, type ProjectRow } from '#modules/projects/service';
 import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '#modules/issue-types/service';
@@ -233,9 +233,13 @@ export async function getSharedIssue(token: string): Promise<SharedIssueBundle |
   });
 }
 
+// A private view has no public link, whatever token it carries.
+const sharedViewByToken = (token: string) =>
+  and(eq(projectView.shareToken, token), eq(projectView.isPrivate, false));
+
 // The bundle for a shared view link, or null if no view carries the token.
 export async function getSharedView(token: string): Promise<SharedViewBundle | null> {
-  const rows = await db.select().from(projectView).where(eq(projectView.shareToken, token));
+  const rows = await db.select().from(projectView).where(sharedViewByToken(token));
   const view = rows[0];
   if (!view) return null;
   const project = await getProjectById(view.projectId);
@@ -294,7 +298,7 @@ export async function getSharedViewIssue(
       extended: projectView.shareExtended,
     })
     .from(projectView)
-    .where(eq(projectView.shareToken, token));
+    .where(sharedViewByToken(token));
   if (rows.length === 0) return null;
   const project = await getProjectById(rows[0].projectId);
   if (!project) return null;

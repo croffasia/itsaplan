@@ -11,5 +11,12 @@
   "unfavorite": "Hapus dari favorit",
   "shareBoard": "Bagikan papan",
   "newViewHint": "Buat tampilan berdasarkan filter dan tampilan saat ini",
-  "filter": "Filter"
+  "filter": "Filter",
+  "private": "Pribadi",
+  "privateHint": "Hanya Anda yang dapat melihat tampilan ini",
+  "duplicate": "Gandakan",
+  "copyName": "{name} (salinan)",
+  "publish": "Tambahkan ke proyek",
+  "publishHint": "Semua orang di proyek akan melihatnya. Tampilan ini tidak dapat dijadikan pribadi lagi.",
+  "published": "{name} kini menjadi tampilan proyek"
 }

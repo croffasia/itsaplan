@@ -11,5 +11,12 @@
   "unfavorite": "Remover dos favoritos",
   "shareBoard": "Compartilhar quadro",
   "newViewHint": "Criar uma visão a partir dos filtros e da exibição atuais",
-  "filter": "Filtro"
+  "filter": "Filtro",
+  "private": "Privada",
+  "privateHint": "Só você vê esta visão",
+  "duplicate": "Duplicar",
+  "copyName": "{name} (cópia)",
+  "publish": "Adicionar ao projeto",
+  "publishHint": "Todo o projeto vai vê-la. Ela não poderá voltar a ser privada.",
+  "published": "{name} agora é uma visão do projeto"
 }

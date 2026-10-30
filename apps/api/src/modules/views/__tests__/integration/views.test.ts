@@ -1,7 +1,41 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, createProject } from '#tests/helpers/app';
+import { eq } from 'drizzle-orm';
+import { db, projectView } from '@repo/db';
+import { deleteAccount } from '#shared/account-deletion';
+import { reorderViews } from '#modules/views/service';
+import { app, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { createRole } from '#tests/helpers/roles';
+
+type Client = ReturnType<typeof authedApi>;
+
+// A member whose role has these views permissions, none of the others for views.
+async function addMemberWithViews(
+  asOwner: Client,
+  views: { read?: boolean; edit?: boolean },
+): Promise<{ api: Client; userId: string }> {
+  const user = await signUpTestUser();
+  const role = await createRole(asOwner, 'MKT', {
+    name: `Views ${user.userId}`,
+    permissions: {
+      views: { read: !!views.read, create: false, edit: !!views.edit, delete: false },
+    },
+  });
+  const invite = await asOwner
+    .projects({ projectKey: 'MKT' })
+    .invites.post({ email: user.email, role: 'member' });
+  const api = authedApi(user.cookie);
+  await api.invites({ token: invite.data!.token }).accept.post();
+  await asOwner
+    .projects({ projectKey: 'MKT' })
+    .members({ userId: user.userId })
+    .patch({ role: 'member', roleId: role.data!.id });
+  return { api, userId: user.userId };
+}
+
+// A member whose role reads the project's views and may not create, edit or delete them.
+const addViewReader = (asOwner: Client) => addMemberWithViews(asOwner, { read: true });
 
 async function setupOwnerProject() {
   const owner = await signUpTestUser();
@@ -330,6 +364,10 @@ describe('views', () => {
         .projects({ projectKey: 'MKT' })
         .views.post({ name: 'Intruder' });
       expect(create.status).toBe(403);
+      const createPrivate = await outsider
+        .projects({ projectKey: 'MKT' })
+        .views.post({ name: 'Intruder', isPrivate: true });
+      expect(createPrivate.status).toBe(403);
 
       const patch = await outsider.views({ viewId }).patch({ name: 'Hacked' });
       expect(patch.status).toBe(403);
@@ -339,8 +377,286 @@ describe('views', () => {
         .views.reorder.put({ orderedIds: [viewId] });
       expect(reorder.status).toBe(403);
 
+      expect((await outsider.views({ viewId }).publish.post()).status).toBe(403);
+
       const del = await outsider.views({ viewId }).delete();
       expect(del.status).toBe(403);
+    });
+  });
+
+  describe('private views', () => {
+    it('lets a member who only reads views create, edit, favorite and delete a private one', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const member = await addViewReader(asOwner);
+      const scope = member.api.projects({ projectKey: 'MKT' }).views;
+
+      expect((await scope.post({ name: 'Shared' })).status).toBe(403);
+
+      const created = await scope.post({ name: 'Mine', isPrivate: true });
+      expect(created.status).toBe(201);
+      expect(created.data).toMatchObject({ name: 'Mine', isPrivate: true, favorite: false });
+      const viewId = created.data!.id;
+
+      expect(
+        (await member.api.views({ viewId }).patch({ name: 'Mine, renamed' })).data,
+      ).toMatchObject({ name: 'Mine, renamed', isPrivate: true });
+      expect((await member.api.views({ viewId }).favorite.put()).status).toBe(204);
+      expect((await scope.get()).data).toMatchObject([{ id: viewId, favorite: true }]);
+      expect((await member.api.views({ viewId }).favorite.delete()).status).toBe(204);
+      expect((await member.api.views({ viewId }).delete()).status).toBe(204);
+      expect((await scope.get()).data).toEqual([]);
+    });
+
+    it('hides a private view from another member and from an owner, as not found', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const member = await addViewReader(asOwner);
+      const other = await addViewReader(asOwner);
+      const viewId = (
+        await member.api
+          .projects({ projectKey: 'MKT' })
+          .views.post({ name: 'Mine', isPrivate: true })
+      ).data!.id;
+
+      for (const api of [asOwner, other.api]) {
+        expect((await api.projects({ projectKey: 'MKT' }).views.get()).data).toEqual([]);
+        expect((await api.views({ viewId }).patch({ name: 'Taken' })).status).toBe(404);
+        expect((await api.views({ viewId }).favorite.put()).status).toBe(404);
+        expect((await api.views({ viewId }).favorite.delete()).status).toBe(404);
+        expect((await api.views({ viewId }).share.post()).status).toBe(404);
+        expect((await api.views({ viewId }).share.delete()).status).toBe(404);
+        expect((await api.views({ viewId }).publish.post()).status).toBe(404);
+        expect((await api.views({ viewId }).delete()).status).toBe(404);
+      }
+      expect((await member.api.projects({ projectKey: 'MKT' }).views.get()).data).toMatchObject([
+        { id: viewId, name: 'Mine' },
+      ]);
+    });
+
+    it('makes a project view when isPrivate is left out', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const member = await addViewReader(asOwner);
+      const created = await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'Board' });
+      expect(created.data).toMatchObject({ isPrivate: false });
+      expect((await member.api.projects({ projectKey: 'MKT' }).views.get()).data).toMatchObject([
+        { name: 'Board', isPrivate: false },
+      ]);
+    });
+
+    it("keeps a view private or the project's through an update", async () => {
+      const { asOwner } = await setupOwnerProject();
+      const member = await addViewReader(asOwner);
+      const shared = (await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'Board' }))
+        .data!.id;
+      const mine = (
+        await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'Mine', isPrivate: true })
+      ).data!.id;
+
+      // isPrivate is not part of the update body, so it is dropped before the handler.
+      const patch = (viewId: number) =>
+        asOwner.views({ viewId }).patch({ isPrivate: true } as { name?: string });
+      await patch(shared);
+      await asOwner.views({ viewId: mine }).patch({ isPrivate: false } as { name?: string });
+      await patch(mine);
+
+      expect((await member.api.projects({ projectKey: 'MKT' }).views.get()).data).toMatchObject([
+        { id: shared, isPrivate: false },
+      ]);
+      expect((await asOwner.projects({ projectKey: 'MKT' }).views.get()).data).toMatchObject([
+        { id: shared, isPrivate: false },
+        { id: mine, isPrivate: true },
+      ]);
+    });
+
+    it("publishes a private view at the end of the project's order, and only once", async () => {
+      const { asOwner } = await setupOwnerProject();
+      const member = await addViewReader(asOwner);
+      const scope = asOwner.projects({ projectKey: 'MKT' }).views;
+      const mine = (await scope.post({ name: 'Mine', isPrivate: true })).data!.id;
+      const board = (await scope.post({ name: 'Board' })).data!.id;
+      await asOwner.views({ viewId: mine }).favorite.put();
+
+      const published = await asOwner.views({ viewId: mine }).publish.post();
+      expect(published.status).toBe(200);
+      expect(published.data).toMatchObject({ id: mine, isPrivate: false, favorite: true });
+      expect((await member.api.projects({ projectKey: 'MKT' }).views.get()).data).toMatchObject([
+        { id: board },
+        { id: mine, name: 'Mine', isPrivate: false, favorite: false },
+      ]);
+
+      expect((await asOwner.views({ viewId: mine }).publish.post()).status).toBe(400);
+      expect((await asOwner.views({ viewId: board }).publish.post()).status).toBe(400);
+    });
+
+    it('refuses to publish for a member who may not create views, and for a non-member', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const member = await addViewReader(asOwner);
+      const mine = (
+        await member.api
+          .projects({ projectKey: 'MKT' })
+          .views.post({ name: 'Mine', isPrivate: true })
+      ).data!.id;
+      const outsider = authedApi((await signUpTestUser()).cookie);
+
+      expect((await member.api.views({ viewId: mine }).publish.post()).status).toBe(403);
+      expect((await outsider.views({ viewId: mine }).publish.post()).status).toBe(404);
+      expect((await member.api.projects({ projectKey: 'MKT' }).views.get()).data).toMatchObject([
+        { id: mine, isPrivate: true },
+      ]);
+    });
+
+    it("lists the project's views first and private ones after, in their own order", async () => {
+      const { asOwner } = await setupOwnerProject();
+      const scope = asOwner.projects({ projectKey: 'MKT' }).views;
+      const mine = (await scope.post({ name: 'Mine', isPrivate: true })).data!.id;
+      const a = (await scope.post({ name: 'A' })).data!.id;
+      const b = (await scope.post({ name: 'B' })).data!.id;
+
+      expect((await scope.get()).data?.map((v) => v.id)).toEqual([a, b, mine]);
+
+      const reordered = await scope.reorder.put({ orderedIds: [mine, b, a] });
+      expect(reordered.data?.map((v) => v.id)).toEqual([b, a, mine]);
+    });
+
+    it('refuses the reorder route to a member who does not read views, and leaks no share link', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const shared = (await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'Board' }))
+        .data!.id;
+      const { data: link } = await asOwner.views({ viewId: shared }).share.post();
+      for (const role of [{ read: false }, { read: false, edit: true }]) {
+        const member = await addMemberWithViews(asOwner, role);
+        for (const orderedIds of [[-1], [shared]]) {
+          const res = await member.api
+            .projects({ projectKey: 'MKT' })
+            .views.reorder.put({ orderedIds });
+          expect(res.status).toBe(403);
+          expect(JSON.stringify(res.error?.value ?? null)).not.toContain(link!.token);
+        }
+      }
+    });
+
+    it('lets anyone reorder their own private views, and only a views edit the project order', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const member = await addViewReader(asOwner);
+      const board = (await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'Board' }))
+        .data!.id;
+      const theirs = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          .views.post({ name: 'Theirs', isPrivate: true })
+      ).data!.id;
+      const scope = member.api.projects({ projectKey: 'MKT' }).views;
+      const first = (await scope.post({ name: 'First', isPrivate: true })).data!.id;
+      const second = (await scope.post({ name: 'Second', isPrivate: true })).data!.id;
+
+      const reordered = await scope.reorder.put({ orderedIds: [second, first] });
+      expect(reordered.status).toBe(200);
+      expect(reordered.data?.map((v) => v.id)).toEqual([board, second, first]);
+
+      expect((await scope.reorder.put({ orderedIds: [board, second] })).status).toBe(403);
+      // Someone else's private view is not moved, even through its id.
+      await scope.reorder.put({ orderedIds: [theirs, first, second] });
+      expect((await asOwner.projects({ projectKey: 'MKT' }).views.get()).data).toMatchObject([
+        { id: board },
+        { id: theirs, position: 1 },
+      ]);
+    });
+
+    it("moves no one else's view: not a private one through the project order, not a project one without views edit", async () => {
+      const { asOwner, projectId } = await setupOwnerProject();
+      const member = await addViewReader(asOwner);
+      const project = asOwner.projects({ projectKey: 'MKT' }).views;
+      const scope = member.api.projects({ projectKey: 'MKT' }).views;
+      const board = (await project.post({ name: 'Board' })).data!.id;
+      const roadmap = (await project.post({ name: 'Roadmap' })).data!.id;
+      const mine = (await scope.post({ name: 'Mine', isPrivate: true })).data!.id;
+      const { position } = (await scope.get()).data!.find((v) => v.id === mine)!;
+
+      expect((await project.reorder.put({ orderedIds: [roadmap, mine, board] })).status).toBe(200);
+      expect((await scope.get()).data).toMatchObject([
+        { id: roadmap },
+        { id: board },
+        { id: mine, position },
+      ]);
+
+      // What the route writes for a list it found free of project views, as it does when a
+      // private view in the list is published before the write.
+      await reorderViews(projectId, [board, roadmap], member.userId, false);
+      expect((await scope.get()).data?.map((v) => v.id)).toEqual([roadmap, board, mine]);
+    });
+
+    it('has no share link: sharing a private view is not found, even for its owner', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const viewId = (
+        await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'Mine', isPrivate: true })
+      ).data!.id;
+      expect((await asOwner.views({ viewId }).share.post()).status).toBe(404);
+      expect((await asOwner.projects({ projectKey: 'MKT' }).views.get()).data).toMatchObject([
+        { id: viewId, shareToken: null },
+      ]);
+    });
+
+    it('serves neither the page, an issue nor the calendar feed of a private view that carries a token', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const viewId = (
+        await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'Mine', isPrivate: true })
+      ).data!.id;
+      const board = await asOwner.projects({ projectKey: 'MKT' }).get();
+      const issueId = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          .issues.post({ columnId: board.data!.columns[0].id, title: 'Shared thing' })
+      ).data!.id;
+      const token = crypto.randomUUID();
+      await db.update(projectView).set({ shareToken: token }).where(eq(projectView.id, viewId));
+      for (const path of [
+        `/share/view/${token}`,
+        `/share/view/${token}/issues/${issueId}`,
+        `/share/view/${token}/calendar.ics`,
+      ]) {
+        const res = await app.handle(new Request(`http://localhost${path}`));
+        expect(res.status).toBe(404);
+      }
+    });
+
+    it('leaves private views behind when the project is copied', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const scope = asOwner.projects({ projectKey: 'MKT' }).views;
+      await scope.post({ name: 'Board' });
+      await scope.post({ name: 'Mine', isPrivate: true });
+
+      const copied = await asOwner.projects({ projectKey: 'MKT' }).copy.post({
+        key: 'DST',
+        name: 'Destination',
+      });
+      expect(copied.status).toBe(201);
+      expect((await asOwner.projects({ projectKey: 'DST' }).views.get()).data).toMatchObject([
+        { name: 'Board', isPrivate: false },
+      ]);
+    });
+
+    it("deletes a deleted account's private views and keeps the project's", async () => {
+      const { asOwner } = await setupOwnerProject();
+      const member = await addViewReader(asOwner);
+      await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'Board' });
+      const mine = (
+        await member.api
+          .projects({ projectKey: 'MKT' })
+          .views.post({ name: 'Mine', isPrivate: true })
+      ).data!.id;
+
+      await deleteAccount(member.userId);
+
+      // No route shows someone else's private view, so its row is read directly.
+      expect(await db.select().from(projectView).where(eq(projectView.id, mine))).toEqual([]);
+      const left = await asOwner.projects({ projectKey: 'MKT' }).views.get();
+      expect(left.data!.map((v) => v.name)).toEqual(['Board']);
+    });
+
+    it('refuses a private view without an owner at the database', async () => {
+      const { projectId } = await setupOwnerProject();
+      await expect(
+        db.insert(projectView).values({ projectId, name: 'Orphan', isPrivate: true }).execute(),
+      ).rejects.toThrow();
     });
   });
 });

@@ -125,7 +125,7 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
       detail: {
         summary: 'Reorder saved views',
         description:
-          "Set the display order of a project's saved views, which also takes editing views, or of your own private ones, which follow them.",
+          "Set the project's order of its saved views, which also takes editing views, or the order of your own private ones. Each person's tab row follows it for the views they have not placed in it themselves.",
         ...mcpTool('reorder_views'),
       },
     },

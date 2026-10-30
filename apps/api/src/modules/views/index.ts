@@ -104,10 +104,9 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
     async ({ project, body, user }) => {
       // The project's order is shared by everyone in it, so moving its views also takes
       // editing them; one's own private views need reading alone.
-      if (await includesProjectViews(project.id, body.orderedIds)) {
-        await assertPermission(project.id, user, 'views', 'edit');
-      }
-      return reorderViews(project.id, body.orderedIds, requireUser(user).id);
+      const withProjectViews = await includesProjectViews(project.id, body.orderedIds);
+      if (withProjectViews) await assertPermission(project.id, user, 'views', 'edit');
+      return reorderViews(project.id, body.orderedIds, requireUser(user).id, withProjectViews);
     },
     {
       body: reorderViewsBody,

@@ -168,20 +168,21 @@ export async function includesProjectViews(projectId: number, ids: number[]): Pr
 }
 
 // Private views are ordered among themselves, after the project's: a list may hold
-// both, and only the caller's own private views move.
+// both, and only the caller's own private views move. Without `withProjectViews` only
+// those move, so a private view published while the list is applied keeps its place.
 export async function reorderViews(
   projectId: number,
   orderedIds: number[],
   userId: string,
+  withProjectViews: boolean,
 ): Promise<UserViewRow[]> {
+  const movable = withProjectViews ? visibleTo(userId) : eq(projectView.ownerUserId, userId);
   await db.transaction(async (tx) => {
     for (const [position, id] of orderedIds.entries()) {
       await tx
         .update(projectView)
         .set({ position })
-        .where(
-          and(eq(projectView.id, id), eq(projectView.projectId, projectId), visibleTo(userId)),
-        );
+        .where(and(eq(projectView.id, id), eq(projectView.projectId, projectId), movable));
     }
   });
   return listViews(projectId, userId);

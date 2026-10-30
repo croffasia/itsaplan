@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { eq } from 'drizzle-orm';
 import { db, projectView } from '@repo/db';
 import { deleteAccount } from '#shared/account-deletion';
+import { reorderViews } from '#modules/views/service';
 import { app, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -558,6 +559,29 @@ describe('views', () => {
         { id: board },
         { id: theirs, position: 1 },
       ]);
+    });
+
+    it("moves no one else's view: not a private one through the project order, not a project one without views edit", async () => {
+      const { asOwner, projectId } = await setupOwnerProject();
+      const member = await addViewReader(asOwner);
+      const project = asOwner.projects({ projectKey: 'MKT' }).views;
+      const scope = member.api.projects({ projectKey: 'MKT' }).views;
+      const board = (await project.post({ name: 'Board' })).data!.id;
+      const roadmap = (await project.post({ name: 'Roadmap' })).data!.id;
+      const mine = (await scope.post({ name: 'Mine', isPrivate: true })).data!.id;
+      const { position } = (await scope.get()).data!.find((v) => v.id === mine)!;
+
+      expect((await project.reorder.put({ orderedIds: [roadmap, mine, board] })).status).toBe(200);
+      expect((await scope.get()).data).toMatchObject([
+        { id: roadmap },
+        { id: board },
+        { id: mine, position },
+      ]);
+
+      // What the route writes for a list it found free of project views, as it does when a
+      // private view in the list is published before the write.
+      await reorderViews(projectId, [board, roadmap], member.userId, false);
+      expect((await scope.get()).data?.map((v) => v.id)).toEqual([roadmap, board, mine]);
     });
 
     it('has no share link: sharing a private view is not found, even for its owner', async () => {

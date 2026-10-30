@@ -79,6 +79,7 @@ function team(id: number, workspaceId: number): Team {
     source: 'invite',
     joinedAt: '2026-01-01T00:00:00Z',
     projectCount: 0,
+    templateCount: 0,
     memberCount: 1,
     ownerCount: 1,
     roleCount: 0,

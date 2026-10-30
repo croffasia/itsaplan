@@ -1,6 +1,13 @@
 {
   "editAction": "Modifier le projet",
   "copyAction": "Copier le projet",
+  "saveTemplateAction": "Enregistrer comme modèle",
+  "saveTemplate": {
+    "title": "Enregistrer « {name} » comme modèle",
+    "hint": "Le modèle garde une copie des paramètres choisis. Les modifications ultérieures du projet ne le changent pas. Les documents, les agents, les planifications et les webhooks ne sont pas enregistrés.",
+    "save": "Enregistrer le modèle",
+    "saved": "Modèle « {name} » enregistré"
+  },
   "deleteAction": "Supprimer le projet",
   "leaveAction": "Quitter le projet",
   "archiveAction": "Archiver le projet",

@@ -20,6 +20,10 @@
       "title": "Projects",
       "description": "The projects this team owns."
     },
+    "templates": {
+      "title": "Project templates",
+      "description": "Saved project settings that new projects start from."
+    },
     "members": {
       "title": "Team members",
       "description": "Everyone in the team, and the invites that are still open."
@@ -74,15 +78,16 @@
     "leaveHint": "You keep the projects you are a member of. To join again an owner has to add you back.",
     "delete": {
       "action": "Delete team",
-      "hint": "Its members, roles, invites, skills, tools and integrations are deleted with it. People keep their accounts and their other teams.",
+      "hint": "Its members, roles, project templates, invites, skills, tools and integrations are deleted with it. People keep their accounts and their other teams.",
       "blocked": "Delete the projects and AI agents of the team first.",
       "title": "Delete {name}?",
-      "description": "<strong>{name}</strong> is deleted with its members, roles, invites, skills, tools and integrations. People keep their accounts and their other teams. This cannot be undone.",
+      "description": "<strong>{name}</strong> is deleted with its members, roles, project templates, invites, skills, tools and integrations. People keep their accounts and their other teams. This cannot be undone.",
       "deleted": "Team deleted"
     }
   },
   "columns": {
     "project": "Project",
+    "template": "Template",
     "owners": "Owners",
     "members": "Members",
     "created": "Created",
@@ -180,6 +185,22 @@
       "invalidJson": "Clipboard does not contain valid JSON.",
       "notAnExport": "Clipboard does not contain a roles export.",
       "empty": "The roles export is empty."
+    }
+  },
+  "templates": {
+    "ownerOnly": "Only a team owner or manager can manage project templates.",
+    "empty": "No project templates yet",
+    "emptyHint": "Save a project as a template, then start new projects from it.",
+    "openProjects": "Go to projects",
+    "deleteAction": "Delete template",
+    "deleteDialog": {
+      "title": "Delete template \"{name}\"?",
+      "description": "Projects created from it stay as they are.",
+      "confirm": "Delete template"
+    },
+    "panel": {
+      "saved": "Saved {date}",
+      "none": "None"
     }
   },
   "panel": {

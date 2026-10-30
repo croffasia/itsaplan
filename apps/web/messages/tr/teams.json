@@ -20,6 +20,10 @@
       "title": "Projeler",
       "description": "Bu takımın sahip olduğu projeler."
     },
+    "templates": {
+      "title": "Proje şablonları",
+      "description": "Yeni projelerin başladığı kayıtlı proje ayarları."
+    },
     "members": {
       "title": "Takım üyeleri",
       "description": "Takımdaki herkes ve bekleyen açık davetler."
@@ -74,15 +78,16 @@
     "leaveHint": "Üyesi olduğunuz projelerdeki erişiminiz kalır. Takıma tekrar katılmak için bir sahibin sizi eklemesi gerekir.",
     "delete": {
       "action": "Takımı sil",
-      "hint": "Üyeleri, rolleri, davetleri, yetenekleri, araçları ve entegrasyonları takımla birlikte silinir. Kişilerin hesapları ve diğer takımları korunur.",
+      "hint": "Üyeleri, rolleri, proje şablonları, davetleri, yetenekleri, araçları ve entegrasyonları takımla birlikte silinir. Kişilerin hesapları ve diğer takımları korunur.",
       "blocked": "Önce takımın projelerini ve yapay zekâ ajanlarını silin.",
       "title": "{name} silinsin mi?",
-      "description": "<strong>{name}</strong> takımı; üyeleri, rolleri, davetleri, yetenekleri, araçları ve entegrasyonlarıyla birlikte silinecektir. Kişilerin hesapları ve diğer takımları korunur. Bu işlem geri alınamaz.",
+      "description": "<strong>{name}</strong> takımı; üyeleri, rolleri, proje şablonları, davetleri, yetenekleri, araçları ve entegrasyonlarıyla birlikte silinecektir. Kişilerin hesapları ve diğer takımları korunur. Bu işlem geri alınamaz.",
       "deleted": "Takım silindi"
     }
   },
   "columns": {
     "project": "Proje",
+    "template": "Şablon",
     "owners": "Sahipler",
     "members": "Üyeler",
     "created": "Oluşturulma",
@@ -180,6 +185,22 @@
       "invalidJson": "Pano geçerli bir JSON içermiyor.",
       "notAnExport": "Pano bir rol dışa aktarma verisi içermiyor.",
       "empty": "Rol dışa aktarma verisi boş."
+    }
+  },
+  "templates": {
+    "ownerOnly": "Proje şablonlarını yalnızca bir takım sahibi veya yöneticisi yönetebilir.",
+    "empty": "Henüz proje şablonu yok",
+    "emptyHint": "Yeni projeleri bir şablondan başlatmak için bir projeyi şablon olarak kaydedin.",
+    "openProjects": "Projelere git",
+    "deleteAction": "Şablonu sil",
+    "deleteDialog": {
+      "title": "\"{name}\" şablonu silinsin mi?",
+      "description": "Bu şablondan oluşturulan projeler değişmez.",
+      "confirm": "Şablonu sil"
+    },
+    "panel": {
+      "saved": "{date} tarihinde kaydedildi",
+      "none": "Yok"
     }
   },
   "panel": {

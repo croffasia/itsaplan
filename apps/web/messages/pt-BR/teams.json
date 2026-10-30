@@ -20,6 +20,10 @@
       "title": "Projetos",
       "description": "Os projetos que este time possui."
     },
+    "templates": {
+      "title": "Modelos de projeto",
+      "description": "Configurações salvas a partir das quais novos projetos começam."
+    },
     "members": {
       "title": "Membros do time",
       "description": "Todos no time e os convites ainda abertos."
@@ -74,15 +78,16 @@
     "leaveHint": "Você mantém os projetos de que é membro. Para entrar de novo, um dono precisa readicioná-lo.",
     "delete": {
       "action": "Excluir equipe",
-      "hint": "Seus membros, funções, convites, habilidades, ferramentas e integrações são excluídos com ela. As pessoas mantêm suas contas e suas outras equipes.",
+      "hint": "Seus membros, funções, modelos de projeto, convites, habilidades, ferramentas e integrações são excluídos com ela. As pessoas mantêm suas contas e suas outras equipes.",
       "blocked": "Exclua primeiro os projetos e os agentes de IA da equipe.",
       "title": "Excluir {name}?",
-      "description": "<strong>{name}</strong> é excluída com seus membros, funções, convites, habilidades, ferramentas e integrações. As pessoas mantêm suas contas e suas outras equipes. Isso não pode ser desfeito.",
+      "description": "<strong>{name}</strong> é excluída com seus membros, funções, modelos de projeto, convites, habilidades, ferramentas e integrações. As pessoas mantêm suas contas e suas outras equipes. Isso não pode ser desfeito.",
       "deleted": "Equipe excluída"
     }
   },
   "columns": {
     "project": "Projeto",
+    "template": "Modelo",
     "owners": "Donos",
     "members": "Membros",
     "created": "Criado",
@@ -180,6 +185,22 @@
       "invalidJson": "A área de transferência não contém JSON válido.",
       "notAnExport": "A área de transferência não contém uma exportação de funções.",
       "empty": "A exportação de funções está vazia."
+    }
+  },
+  "templates": {
+    "ownerOnly": "Só um dono ou gerente do time pode gerenciar modelos de projeto.",
+    "empty": "Nenhum modelo de projeto ainda",
+    "emptyHint": "Salve um projeto como modelo para criar novos projetos a partir dele.",
+    "openProjects": "Ir para projetos",
+    "deleteAction": "Excluir modelo",
+    "deleteDialog": {
+      "title": "Excluir o modelo \"{name}\"?",
+      "description": "Os projetos criados a partir dele continuam iguais.",
+      "confirm": "Excluir modelo"
+    },
+    "panel": {
+      "saved": "Salvo em {date}",
+      "none": "Nenhum"
     }
   },
   "panel": {

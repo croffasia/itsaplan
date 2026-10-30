@@ -1,6 +1,13 @@
 {
   "editAction": "Projeyi düzenle",
   "copyAction": "Projeyi kopyala",
+  "saveTemplateAction": "Şablon olarak kaydet",
+  "saveTemplate": {
+    "title": "\"{name}\" projesini şablon olarak kaydet",
+    "hint": "Şablon, seçilen ayarların bir kopyasını saklar. Projede sonradan yapılan değişiklikler şablonu değiştirmez. Belgeler, ajanlar, zamanlamalar ve webhook'lar kaydedilmez.",
+    "save": "Şablonu kaydet",
+    "saved": "\"{name}\" şablonu kaydedildi"
+  },
   "deleteAction": "Projeyi sil",
   "leaveAction": "Projeden ayrıl",
   "archiveAction": "Projeyi arşivle",

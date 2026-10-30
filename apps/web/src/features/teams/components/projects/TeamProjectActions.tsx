@@ -2,7 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Archive, ArchiveRestore, Copy, LogOut, Pencil, Trash2 } from 'lucide-react';
+import {
+  Archive,
+  ArchiveRestore,
+  Copy,
+  LayoutTemplate,
+  LogOut,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { MemberRole } from '@/lib/api/endpoints/members';
@@ -16,12 +24,13 @@ import NewProjectModal from '@/components/layout/NewProjectModal';
 import TeamProjectDeleteDialog from './TeamProjectDeleteDialog';
 import TeamProjectEditModal from './TeamProjectEditModal';
 import TeamProjectLeaveDialog from './TeamProjectLeaveDialog';
+import TeamProjectTemplateModal from './TeamProjectTemplateModal';
 
 // What the reader may do with one project of the team, as the actions of the panel
-// header. Editing, copying and archiving follow their rank in the team — a manager
-// does all three, an owner also deletes — while leaving follows their membership in
-// the project, which its last owner, and anyone a provisioned group put there, cannot
-// give up.
+// header. Editing, copying, saving as a template and archiving follow their rank in the
+// team — a manager does all four, an owner also deletes — while leaving follows their
+// membership in the project, which its last owner, and anyone a provisioned group put
+// there, cannot give up.
 export default function TeamProjectActions({
   teamId,
   teamRole,
@@ -38,6 +47,7 @@ export default function TeamProjectActions({
   const { data: session } = useSession();
   const [editing, setEditing] = useState(false);
   const [copying, setCopying] = useState(false);
+  const [templating, setTemplating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const setArchived = useSetTeamProjectArchived();
@@ -66,6 +76,11 @@ export default function TeamProjectActions({
         <>
           <RowAction icon={Pencil} label={t('editAction')} onClick={() => setEditing(true)} />
           <RowAction icon={Copy} label={t('copyAction')} onClick={() => setCopying(true)} />
+          <RowAction
+            icon={LayoutTemplate}
+            label={t('saveTemplateAction')}
+            onClick={() => setTemplating(true)}
+          />
           <RowAction
             icon={archived ? ArchiveRestore : Archive}
             label={t(archived ? 'restoreAction' : 'archiveAction')}
@@ -98,6 +113,14 @@ export default function TeamProjectActions({
             setCopying(false);
             router.push(projectPath(key));
           }}
+        />
+      )}
+
+      {templating && (
+        <TeamProjectTemplateModal
+          teamId={teamId}
+          project={project}
+          onClose={() => setTemplating(false)}
         />
       )}
 

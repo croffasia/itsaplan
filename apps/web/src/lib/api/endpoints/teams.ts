@@ -32,6 +32,7 @@ export interface Team {
   source: 'invite' | 'scim';
   joinedAt: string;
   projectCount: number;
+  templateCount: number;
   memberCount: number;
   // How many of those members are owners: the last one cannot leave.
   ownerCount: number;
@@ -164,24 +165,6 @@ export interface TeamProjectDefaults {
   defaultAgentIds: number[];
 }
 
-// Parts of a source project the copy can carry over, one key per project settings
-// section. Passed to copyTeamProject as an include map; omitted keys are not
-// copied. The API force-enables dependencies (a view needs its
-// states/types/labels/fields).
-export type CopyProjectIncludeKey =
-  | 'states'
-  | 'issueTypes'
-  | 'labels'
-  | 'customFields'
-  | 'views'
-  | 'dashboards'
-  | 'documents'
-  | 'actions'
-  | 'configuration'
-  | 'webhooks'
-  | 'agents'
-  | 'schedules';
-
 export const listTeams = () => request<Team[]>('/teams');
 
 export const getTeam = (teamId: number) => request<TeamDetail>(`/teams/${teamId}`);
@@ -257,9 +240,16 @@ export const updateTeamProjectDefaults = (teamId: number, defaultAgentIds: numbe
 
 // The projects a team owns: created, copied, and deleted by the team's own ranks
 // (owner/manager create and copy, owner deletes) rather than by project membership.
+// With templateId the project starts with what that project template holds.
 export const createTeamProject = (
   teamId: number,
-  input: { key: string; name: string; description?: string; preset?: string },
+  input: {
+    key: string;
+    name: string;
+    description?: string;
+    preset?: string;
+    templateId?: number;
+  },
 ) =>
   request<Project>(`/teams/${teamId}/projects`, {
     method: 'POST',
@@ -273,7 +263,9 @@ export const copyTeamProject = (
     key: string;
     name: string;
     description?: string;
-    include?: Partial<Record<CopyProjectIncludeKey, boolean>>;
+    // One key per part (useCopyColumns); an omitted key is not copied. The API
+    // force-enables dependencies (a view needs its states/types/labels/fields).
+    include?: Record<string, boolean>;
   },
 ) =>
   request<Project>(`/teams/${teamId}/projects/${projectId}/copy`, {

@@ -20,6 +20,10 @@
       "title": "專案",
       "description": "該團隊擁有的專案。"
     },
+    "templates": {
+      "title": "專案範本",
+      "description": "新專案所使用的已儲存專案設定。"
+    },
     "members": {
       "title": "團隊成員",
       "description": "團隊裡的所有成員，以及尚未回應的邀請。"
@@ -74,15 +78,16 @@
     "leaveHint": "你仍保留你參與的專案。若要重新加入，需由所有者再次新增你。",
     "delete": {
       "action": "刪除團隊",
-      "hint": "其成員、角色、邀請、技能、工具和整合會一併刪除。成員會保留自己的帳號和其他團隊。",
+      "hint": "其成員、角色、專案範本、邀請、技能、工具和整合會一併刪除。成員會保留自己的帳號和其他團隊。",
       "blocked": "請先刪除該團隊的專案和 AI 代理。",
       "title": "刪除 {name}？",
-      "description": "<strong>{name}</strong> 及其成員、角色、邀請、技能、工具和整合將被刪除。成員會保留自己的帳號和其他團隊。此操作無法復原。",
+      "description": "<strong>{name}</strong> 及其成員、角色、專案範本、邀請、技能、工具和整合將被刪除。成員會保留自己的帳號和其他團隊。此操作無法復原。",
       "deleted": "團隊已刪除"
     }
   },
   "columns": {
     "project": "專案",
+    "template": "範本",
     "owners": "所有者",
     "members": "成員",
     "created": "建立時間",
@@ -180,6 +185,22 @@
       "invalidJson": "剪貼簿中不是有效的 JSON。",
       "notAnExport": "剪貼簿中不是角色匯出資料。",
       "empty": "角色匯出資料為空。"
+    }
+  },
+  "templates": {
+    "ownerOnly": "只有團隊所有者或管理者可以管理專案範本。",
+    "empty": "暫無專案範本",
+    "emptyHint": "將專案另存為範本，即可依據它建立新專案。",
+    "openProjects": "前往專案",
+    "deleteAction": "刪除範本",
+    "deleteDialog": {
+      "title": "刪除範本「{name}」？",
+      "description": "以此範本建立的專案不受影響。",
+      "confirm": "刪除範本"
+    },
+    "panel": {
+      "saved": "儲存於 {date}",
+      "none": "無"
     }
   },
   "panel": {

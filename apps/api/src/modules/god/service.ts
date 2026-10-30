@@ -546,9 +546,10 @@ export async function listInstanceProjects(options: {
   offset: number;
 }): Promise<InstanceProjectPage> {
   const term = options.search?.trim();
-  const where = term
-    ? or(ilike(project.key, `%${term}%`), ilike(project.name, `%${term}%`))
-    : undefined;
+  const where = and(
+    eq(project.isTemplate, false),
+    term ? or(ilike(project.key, `%${term}%`), ilike(project.name, `%${term}%`)) : undefined,
+  );
 
   const [rows, totals] = await Promise.all([
     db
@@ -685,7 +686,7 @@ async function loadTeamCounts(teamIds: number[]): Promise<(id: number) => Instan
 
   const [members, projects, issues, agents, skills, tools, roles] = await Promise.all([
     countByOwner(teamMember, teamMember.teamId, teamIds),
-    countByOwner(project, project.teamId, teamIds),
+    countByOwner(project, project.teamId, teamIds, eq(project.isTemplate, false)),
     // Issues have no team column; they reach one through their project.
     db
       .select({ teamId: project.teamId, count: sql<number>`count(*)::int` })
@@ -770,6 +771,7 @@ export async function listInstanceTeamProjects(
   const term = options.search?.trim();
   const where = and(
     eq(project.teamId, teamId),
+    eq(project.isTemplate, false),
     term ? or(ilike(project.key, `%${term}%`), ilike(project.name, `%${term}%`)) : undefined,
   );
 

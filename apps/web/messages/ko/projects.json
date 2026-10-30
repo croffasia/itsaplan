@@ -1,6 +1,13 @@
 {
   "editAction": "프로젝트 편집",
   "copyAction": "프로젝트 복사",
+  "saveTemplateAction": "템플릿으로 저장",
+  "saveTemplate": {
+    "title": "\"{name}\"을(를) 템플릿으로 저장",
+    "hint": "템플릿은 선택한 설정의 사본을 보관합니다. 이후 프로젝트를 변경해도 템플릿은 바뀌지 않습니다. 문서, AI 에이전트, 일정, 웹훅은 저장되지 않습니다.",
+    "save": "템플릿 저장",
+    "saved": "\"{name}\" 템플릿이 저장되었습니다"
+  },
   "deleteAction": "프로젝트 삭제",
   "leaveAction": "프로젝트 나가기",
   "archiveAction": "프로젝트 보관",

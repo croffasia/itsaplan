@@ -107,7 +107,13 @@ export async function setGroupMappings(
       .select({ id: project.id, teamId: project.teamId })
       .from(project)
       .innerJoin(team, eq(team.id, project.teamId))
-      .where(and(inArray(project.id, projectIds), where && or(where, inArray(project.id, before))));
+      .where(
+        and(
+          inArray(project.id, projectIds),
+          eq(project.isTemplate, false),
+          where && or(where, inArray(project.id, before)),
+        ),
+      );
     if (known.length !== projectIds.length) throw new HttpError(400, 'Unknown project');
     // A custom role belongs to one team, so a mapping that names another team's role
     // would silently grant the wrong permissions. A system role fits every team.
@@ -157,7 +163,7 @@ export async function listMappableProjects(workspaceId: number | null) {
       .select({ id: project.id, key: project.key, name: project.name, teamId: project.teamId })
       .from(project)
       .innerJoin(team, eq(team.id, project.teamId))
-      .where(where)
+      .where(and(where, eq(project.isTemplate, false)))
       .orderBy(asc(project.key)),
     db
       .select({ id: teamRole.id, name: teamRole.name, teamId: teamRole.teamId })

@@ -1,7 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { removeMember } from '@/lib/api/endpoints/members';
 import {
-  type CopyProjectIncludeKey,
   createTeamProject,
   copyTeamProject,
   updateTeamProject,
@@ -110,8 +109,9 @@ export function useCreateProject() {
         key: string;
         name: string;
         description?: string;
-        include?: Partial<Record<CopyProjectIncludeKey, boolean>>;
+        include?: Record<string, boolean>;
         preset?: string;
+        templateId?: number;
       };
     }) =>
       copyFromId == null

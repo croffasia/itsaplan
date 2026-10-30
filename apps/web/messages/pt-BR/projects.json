@@ -1,6 +1,13 @@
 {
   "editAction": "Editar projeto",
   "copyAction": "Copiar projeto",
+  "saveTemplateAction": "Salvar como modelo",
+  "saveTemplate": {
+    "title": "Salvar \"{name}\" como modelo",
+    "hint": "O modelo guarda uma cópia das configurações escolhidas. Mudanças posteriores no projeto não o alteram. Documentos, agentes, agendamentos e webhooks não são salvos.",
+    "save": "Salvar modelo",
+    "saved": "Modelo \"{name}\" salvo"
+  },
   "deleteAction": "Excluir projeto",
   "leaveAction": "Sair do projeto",
   "archiveAction": "Arquivar projeto",

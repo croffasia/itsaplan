@@ -1,6 +1,13 @@
 {
   "editAction": "Edit project",
   "copyAction": "Copy project",
+  "saveTemplateAction": "Save as template",
+  "saveTemplate": {
+    "title": "Save \"{name}\" as a template",
+    "hint": "The template keeps a copy of the chosen settings. Later changes to this project don't change it. Docs, agents, schedules and webhooks aren't saved.",
+    "save": "Save template",
+    "saved": "Template \"{name}\" saved"
+  },
   "deleteAction": "Delete project",
   "leaveAction": "Leave project",
   "archiveAction": "Archive project",

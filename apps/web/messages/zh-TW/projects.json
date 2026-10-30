@@ -1,6 +1,13 @@
 {
   "editAction": "編輯專案",
   "copyAction": "複製專案",
+  "saveTemplateAction": "另存為範本",
+  "saveTemplate": {
+    "title": "將「{name}」另存為範本",
+    "hint": "範本會保存所選設定的副本。之後對專案的變更不會影響範本。文件、代理、排程和 Webhook 不會儲存。",
+    "save": "儲存範本",
+    "saved": "範本「{name}」已儲存"
+  },
   "deleteAction": "刪除專案",
   "leaveAction": "退出專案",
   "archiveAction": "封存專案",

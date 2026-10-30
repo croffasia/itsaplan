@@ -1170,6 +1170,13 @@
       "when": 1793305025083,
       "tag": "0166_agent_chat_enabled",
       "breakpoints": true
+    },
+    {
+      "idx": 167,
+      "version": "7",
+      "when": 1793369569050,
+      "tag": "0167_project_template",
+      "breakpoints": true
     }
   ]
 }

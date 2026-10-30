@@ -20,6 +20,10 @@
       "title": "Proyek",
       "description": "Proyek yang dimiliki tim ini."
     },
+    "templates": {
+      "title": "Templat proyek",
+      "description": "Pengaturan tersimpan yang menjadi awal proyek baru."
+    },
     "members": {
       "title": "Anggota tim",
       "description": "Semua orang di tim, dan undangan yang masih terbuka."
@@ -74,15 +78,16 @@
     "leaveHint": "Anda tetap menjadi anggota proyek yang Anda ikuti. Untuk bergabung kembali, pemilik harus menambahkan Anda lagi.",
     "delete": {
       "action": "Hapus tim",
-      "hint": "Anggota, peran, undangan, keterampilan, alat, dan integrasinya ikut dihapus. Orang-orang tetap memiliki akun dan tim lain mereka.",
+      "hint": "Anggota, peran, templat proyek, undangan, keterampilan, alat, dan integrasinya ikut dihapus. Orang-orang tetap memiliki akun dan tim lain mereka.",
       "blocked": "Hapus dulu proyek dan agen AI milik tim.",
       "title": "Hapus {name}?",
-      "description": "<strong>{name}</strong> dihapus beserta anggota, peran, undangan, keterampilan, alat, dan integrasinya. Orang-orang tetap memiliki akun dan tim lain mereka. Tindakan ini tidak dapat dibatalkan.",
+      "description": "<strong>{name}</strong> dihapus beserta anggota, peran, templat proyek, undangan, keterampilan, alat, dan integrasinya. Orang-orang tetap memiliki akun dan tim lain mereka. Tindakan ini tidak dapat dibatalkan.",
       "deleted": "Tim dihapus"
     }
   },
   "columns": {
     "project": "Proyek",
+    "template": "Templat",
     "owners": "Pemilik",
     "members": "Anggota",
     "created": "Dibuat",
@@ -180,6 +185,22 @@
       "invalidJson": "Papan klip tidak berisi JSON yang valid.",
       "notAnExport": "Papan klip tidak berisi ekspor peran.",
       "empty": "Ekspor peran kosong."
+    }
+  },
+  "templates": {
+    "ownerOnly": "Hanya pemilik atau manajer tim yang dapat mengelola templat proyek.",
+    "empty": "Belum ada templat proyek",
+    "emptyHint": "Simpan proyek sebagai templat untuk membuat proyek baru darinya.",
+    "openProjects": "Buka proyek",
+    "deleteAction": "Hapus templat",
+    "deleteDialog": {
+      "title": "Hapus templat \"{name}\"?",
+      "description": "Proyek yang dibuat dari templat ini tidak berubah.",
+      "confirm": "Hapus templat"
+    },
+    "panel": {
+      "saved": "Disimpan {date}",
+      "none": "Tidak ada"
     }
   },
   "panel": {

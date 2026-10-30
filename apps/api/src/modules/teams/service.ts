@@ -86,6 +86,7 @@ export interface TeamRow {
   source: MemberSource;
   joinedAt: string;
   projectCount: number;
+  templateCount: number;
   memberCount: number;
   // How many of those members are owners: the last one cannot leave.
   ownerCount: number;
@@ -264,8 +265,9 @@ async function loadTeamRows(userId: string, teamId?: number): Promise<TeamRow[]>
     db
       .select({
         teamId: project.teamId,
-        count: sql<number>`count(*)::int`,
-        joined: sql<number>`count(${projectMember.userId})::int`,
+        count: sql<number>`count(*) filter (where not ${project.isTemplate})::int`,
+        joined: sql<number>`count(${projectMember.userId}) filter (where not ${project.isTemplate})::int`,
+        templates: sql<number>`count(*) filter (where ${project.isTemplate})::int`,
       })
       .from(project)
       .leftJoin(
@@ -334,6 +336,7 @@ async function loadTeamRows(userId: string, teamId?: number): Promise<TeamRow[]>
       source: (row.source as MemberSource | null) ?? 'invite',
       joinedAt: iso(row.joinedAt ?? row.createdAt),
       projectCount: (runsTeam(standing) || grant ? projectCount?.count : projectCount?.joined) ?? 0,
+      templateCount: projectCount?.templates ?? 0,
       memberCount: members.get(row.id)?.count ?? 0,
       ownerCount: members.get(row.id)?.owners ?? 0,
       roleCount: roles.get(row.id) ?? 0,
@@ -412,7 +415,7 @@ async function getTeamMcp(teamId: number): Promise<TeamMcpSettings> {
     db
       .select({ projectId: project.id, enabled: project.mcpEnabled })
       .from(project)
-      .where(eq(project.teamId, teamId))
+      .where(and(eq(project.teamId, teamId), eq(project.isTemplate, false)))
       .orderBy(project.key),
   ]);
   return { enabled: rows[0]?.mcpEnabled ?? false, projects };
@@ -559,6 +562,7 @@ async function visibleTeamProjects(
   const term = search?.trim();
   return and(
     eq(project.teamId, teamId),
+    eq(project.isTemplate, false),
     seesAll
       ? undefined
       : sql`exists (select 1 from ${projectMember} where ${projectMember.projectId} = ${project.id}
@@ -687,12 +691,14 @@ async function lastActivityAt(projectId: number): Promise<string | null> {
 }
 
 // Whether the project is one the team owns. The team-scoped project routes check it
-// so a project of another team answers 404 rather than being acted on.
+// so a project of another team, or a template, answers 404 rather than being acted on.
 export async function teamOwnsProject(teamId: number, projectId: number): Promise<boolean> {
   const rows = await db
     .select({ id: project.id })
     .from(project)
-    .where(and(eq(project.id, projectId), eq(project.teamId, teamId)));
+    .where(
+      and(eq(project.id, projectId), eq(project.teamId, teamId), eq(project.isTemplate, false)),
+    );
   return rows.length > 0;
 }
 
@@ -842,6 +848,7 @@ export async function createTeam(
         source: 'invite',
         joinedAt: iso(membership.createdAt),
         projectCount: 0,
+        templateCount: 0,
         memberCount: 1,
         ownerCount: 1,
         roleCount: 1,
@@ -901,7 +908,7 @@ export async function deleteTeam(teamId: number): Promise<void> {
     .where(
       and(
         eq(team.id, teamId),
-        sql`not exists (select 1 from ${project} where ${project.teamId} = ${team.id})`,
+        sql`not exists (select 1 from ${project} where ${project.teamId} = ${team.id} and not ${project.isTemplate})`,
         sql`not exists (select 1 from ${aiAgent} where ${aiAgent.teamId} = ${team.id})`,
       ),
     )

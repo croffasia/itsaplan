@@ -1,6 +1,13 @@
 {
   "editAction": "Editar proyecto",
   "copyAction": "Duplicar proyecto",
+  "saveTemplateAction": "Guardar como plantilla",
+  "saveTemplate": {
+    "title": "Guardar «{name}» como plantilla",
+    "hint": "La plantilla guarda una copia de los ajustes elegidos. Los cambios posteriores en el proyecto no la modifican. Los documentos, los agentes, las tareas programadas y los webhooks no se guardan.",
+    "save": "Guardar plantilla",
+    "saved": "Plantilla «{name}» guardada"
+  },
   "deleteAction": "Eliminar proyecto",
   "leaveAction": "Abandonar proyecto",
   "archiveAction": "Archivar proyecto",

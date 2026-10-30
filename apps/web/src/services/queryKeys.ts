@@ -34,6 +34,9 @@ export const qk = {
   scimGroups: (workspaceId: number | null) => [...scimKey(workspaceId), 'groups'] as const,
   scimProjects: (workspaceId: number | null) => [...scimKey(workspaceId), 'projects'] as const,
   teamProjectDefaults: (teamId: number) => ['team', teamId, 'project-defaults'] as const,
+  projectTemplates: (teamId: number) => ['team', teamId, 'project-templates'] as const,
+  projectTemplate: (teamId: number, templateId: number) =>
+    ['team', teamId, 'project-templates', templateId] as const,
   // The members of a team and the projects it owns, each read by its own section. A
   // page is scoped by the search term and the window it was read with.
   teamMembers: (teamId: number, params: unknown) => ['team', teamId, 'members', params] as const,

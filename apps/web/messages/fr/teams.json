@@ -20,6 +20,10 @@
       "title": "Projets",
       "description": "Les projets que cette équipe détient."
     },
+    "templates": {
+      "title": "Modèles de projet",
+      "description": "Paramètres enregistrés à partir desquels les nouveaux projets démarrent."
+    },
     "members": {
       "title": "Membres de l'équipe",
       "description": "Tous les membres de l'équipe, et les invitations encore ouvertes."
@@ -74,15 +78,16 @@
     "leaveHint": "Vous conservez les projets dont vous êtes membre. Pour revenir, un propriétaire doit vous ajouter à nouveau.",
     "delete": {
       "action": "Supprimer l'équipe",
-      "hint": "Ses membres, rôles, invitations, compétences, outils et intégrations sont supprimés avec elle. Les personnes conservent leur compte et leurs autres équipes.",
+      "hint": "Ses membres, rôles, modèles de projet, invitations, compétences, outils et intégrations sont supprimés avec elle. Les personnes conservent leur compte et leurs autres équipes.",
       "blocked": "Supprimez d'abord les projets et les agents IA de l'équipe.",
       "title": "Supprimer {name} ?",
-      "description": "<strong>{name}</strong> est supprimée avec ses membres, rôles, invitations, compétences, outils et intégrations. Les personnes conservent leur compte et leurs autres équipes. Cette action est irréversible.",
+      "description": "<strong>{name}</strong> est supprimée avec ses membres, rôles, modèles de projet, invitations, compétences, outils et intégrations. Les personnes conservent leur compte et leurs autres équipes. Cette action est irréversible.",
       "deleted": "Équipe supprimée"
     }
   },
   "columns": {
     "project": "Projet",
+    "template": "Modèle",
     "owners": "Propriétaires",
     "members": "Membres",
     "created": "Créé le",
@@ -180,6 +185,22 @@
       "invalidJson": "Le presse-papiers ne contient pas de JSON valide.",
       "notAnExport": "Le presse-papiers ne contient pas d'export de rôles.",
       "empty": "L'export de rôles est vide."
+    }
+  },
+  "templates": {
+    "ownerOnly": "Seul un propriétaire ou un responsable de l'équipe peut gérer les modèles de projet.",
+    "empty": "Aucun modèle de projet pour l'instant",
+    "emptyHint": "Enregistrez un projet comme modèle pour créer de nouveaux projets à partir de celui-ci.",
+    "openProjects": "Voir les projets",
+    "deleteAction": "Supprimer le modèle",
+    "deleteDialog": {
+      "title": "Supprimer le modèle « {name} » ?",
+      "description": "Les projets créés à partir de ce modèle restent inchangés.",
+      "confirm": "Supprimer le modèle"
+    },
+    "panel": {
+      "saved": "Enregistré le {date}",
+      "none": "Aucun"
     }
   },
   "panel": {

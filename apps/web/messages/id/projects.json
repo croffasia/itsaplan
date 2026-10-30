@@ -1,6 +1,13 @@
 {
   "editAction": "Ubah proyek",
   "copyAction": "Salin proyek",
+  "saveTemplateAction": "Simpan sebagai templat",
+  "saveTemplate": {
+    "title": "Simpan \"{name}\" sebagai templat",
+    "hint": "Templat menyimpan salinan pengaturan yang dipilih. Perubahan proyek setelahnya tidak mengubah templat. Dokumen, agen, jadwal, dan webhook tidak disimpan.",
+    "save": "Simpan templat",
+    "saved": "Templat \"{name}\" disimpan"
+  },
   "deleteAction": "Hapus proyek",
   "leaveAction": "Tinggalkan proyek",
   "archiveAction": "Arsipkan proyek",

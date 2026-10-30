@@ -194,6 +194,10 @@ export const project = pgTable(
     // When set, the project is archived: read-only, left out of the members' project
     // lists, and its agent schedules do not run. Its rows are kept and it can be restored.
     archivedAt: timestamp('archived_at', { withTimezone: true }),
+    // A project template of the team: a saved copy of a project's configuration that new
+    // projects are created from. It has no members and is left out of every project list,
+    // so nobody works in it.
+    isTemplate: boolean('is_template').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique('project_team_key_uq').on(t.teamId, t.key)],

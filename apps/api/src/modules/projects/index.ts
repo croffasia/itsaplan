@@ -123,8 +123,8 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         description:
           "Copy a project's configuration into a new project you own in the same team, without " +
           'its issues. Only an owner or a manager of that team may copy it. ' +
-          'By default the structure (states, issue types, labels, custom fields, views, ' +
-          'dashboards, documents, actions) is copied. Pass `include` to choose sections; the API ' +
+          'By default the structure (states, issue types, labels, custom fields, issue ' +
+          'templates, views, dashboards, documents, actions) is copied. Pass `include` to choose sections; the API ' +
           'force-enables dependencies (e.g. a view pulls in the states it references).',
         ...mcpTool('copy_project'),
       },

@@ -20,6 +20,10 @@
       "title": "Proyectos",
       "description": "Los proyectos que este equipo posee."
     },
+    "templates": {
+      "title": "Plantillas de proyecto",
+      "description": "Ajustes guardados con los que empiezan los proyectos nuevos."
+    },
     "members": {
       "title": "Miembros del equipo",
       "description": "Todo el mundo del equipo, y las invitaciones que siguen abiertas."
@@ -74,15 +78,16 @@
     "leaveHint": "Conservas los proyectos de los que eres miembro. Para volver a unirte, un propietario tiene que añadirte de vuelta.",
     "delete": {
       "action": "Eliminar equipo",
-      "hint": "Se eliminan con él sus miembros, roles, invitaciones, habilidades, herramientas e integraciones. Las personas conservan sus cuentas y sus otros equipos.",
+      "hint": "Se eliminan con él sus miembros, roles, plantillas de proyecto, invitaciones, habilidades, herramientas e integraciones. Las personas conservan sus cuentas y sus otros equipos.",
       "blocked": "Elimina primero los proyectos y los agentes de IA del equipo.",
       "title": "¿Eliminar {name}?",
-      "description": "<strong>{name}</strong> se elimina junto con sus miembros, roles, invitaciones, habilidades, herramientas e integraciones. Las personas conservan sus cuentas y sus otros equipos. No se puede deshacer.",
+      "description": "<strong>{name}</strong> se elimina junto con sus miembros, roles, plantillas de proyecto, invitaciones, habilidades, herramientas e integraciones. Las personas conservan sus cuentas y sus otros equipos. No se puede deshacer.",
       "deleted": "Equipo eliminado"
     }
   },
   "columns": {
     "project": "Proyecto",
+    "template": "Plantilla",
     "owners": "Propietarios",
     "members": "Miembros",
     "created": "Creada",
@@ -180,6 +185,22 @@
       "invalidJson": "El portapapeles no contiene un JSON válido.",
       "notAnExport": "El portapapeles no contiene una exportación de roles.",
       "empty": "La exportación de roles está vacía."
+    }
+  },
+  "templates": {
+    "ownerOnly": "Solo un propietario o administrador del equipo puede gestionar las plantillas de proyecto.",
+    "empty": "Todavía no hay plantillas de proyecto",
+    "emptyHint": "Guarda un proyecto como plantilla para crear proyectos nuevos a partir de ella.",
+    "openProjects": "Ir a proyectos",
+    "deleteAction": "Eliminar plantilla",
+    "deleteDialog": {
+      "title": "¿Eliminar la plantilla «{name}»?",
+      "description": "Los proyectos creados con ella no cambian.",
+      "confirm": "Eliminar plantilla"
+    },
+    "panel": {
+      "saved": "Guardada el {date}",
+      "none": "Ninguno"
     }
   },
   "panel": {

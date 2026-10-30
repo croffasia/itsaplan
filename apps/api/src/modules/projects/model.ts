@@ -29,7 +29,8 @@ const projectBody = t.Object({
 
 // Create adds the issue-type preset: which set of types the new project starts with.
 // Omitted → "general" (a single Task). Copy takes its types from the source project,
-// so the preset applies to create only.
+// and a project created from a template from the template, so the preset applies to
+// neither.
 export const createProjectBody = t.Composite([
   projectBody,
   t.Object({
@@ -39,21 +40,29 @@ export const createProjectBody = t.Composite([
         { description: `Issue-type preset: ${ISSUE_TYPE_PRESET_KEYS.join(', ')}.` },
       ),
     ),
-  }),
-]);
-
-// Copy adds an optional selection of which parts of the source project to carry over.
-// Omitted → the source project's structure (states, types, labels, custom fields,
-// views, dashboards, documents, actions). Each flag maps to a project section
-// menu; the service force-enables dependencies.
-export const copyProjectBody = t.Composite([
-  projectBody,
-  t.Object({
-    include: t.Optional(
-      t.Object(Object.fromEntries(COPY_INCLUDE_KEYS.map((k) => [k, t.Optional(t.Boolean())]))),
+    templateId: t.Optional(
+      t.Integer({
+        description:
+          'A project template of the team (list_project_templates) to create the project ' +
+          'from. The project then starts with what the template holds, and preset is not used.',
+      }),
     ),
   }),
 ]);
+
+// Which parts of a source project a copy carries over. A key the core does not name
+// selects a section an extension of the api adds.
+export const copyInclude = t.Optional(
+  t.Object(Object.fromEntries(COPY_INCLUDE_KEYS.map((k) => [k, t.Optional(t.Boolean())])), {
+    additionalProperties: t.Boolean(),
+  }),
+);
+
+// Copy adds an optional selection of which parts of the source project to carry over.
+// Omitted → the source project's structure (states, types, labels, custom fields,
+// issue templates, views, dashboards, documents, actions). Each flag maps to a project
+// section menu; the service force-enables dependencies.
+export const copyProjectBody = t.Composite([projectBody, t.Object({ include: copyInclude })]);
 
 export const updateProjectBody = t.Object({
   key: t.Optional(projectKey),
@@ -238,7 +247,7 @@ export const ProjectBoardResponse = t.Object({
 });
 
 // Which optional sections the project shows (ProjectFeatures from the service).
-const FeaturesResponse = t.Object({
+export const FeaturesResponse = t.Object({
   initiatives: t.Boolean(),
   dashboards: t.Boolean(),
   documents: t.Boolean(),

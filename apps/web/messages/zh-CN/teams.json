@@ -20,6 +20,10 @@
       "title": "项目",
       "description": "该团队拥有的项目。"
     },
+    "templates": {
+      "title": "项目模板",
+      "description": "新项目所使用的已保存项目设置。"
+    },
     "members": {
       "title": "团队成员",
       "description": "团队里的所有成员，以及尚未回应的邀请。"
@@ -74,15 +78,16 @@
     "leaveHint": "你仍保留你参与的项目。若要重新加入，需由所有者再次添加你。",
     "delete": {
       "action": "删除团队",
-      "hint": "其成员、角色、邀请、技能、工具和集成会一并删除。成员会保留自己的账户和其他团队。",
+      "hint": "其成员、角色、项目模板、邀请、技能、工具和集成会一并删除。成员会保留自己的账户和其他团队。",
       "blocked": "请先删除该团队的项目和 AI 代理。",
       "title": "删除 {name}？",
-      "description": "<strong>{name}</strong> 及其成员、角色、邀请、技能、工具和集成将被删除。成员会保留自己的账户和其他团队。此操作无法撤销。",
+      "description": "<strong>{name}</strong> 及其成员、角色、项目模板、邀请、技能、工具和集成将被删除。成员会保留自己的账户和其他团队。此操作无法撤销。",
       "deleted": "团队已删除"
     }
   },
   "columns": {
     "project": "项目",
+    "template": "模板",
     "owners": "所有者",
     "members": "成员",
     "created": "创建时间",
@@ -180,6 +185,22 @@
       "invalidJson": "剪贴板中不是有效的 JSON。",
       "notAnExport": "剪贴板中不是角色导出数据。",
       "empty": "角色导出数据为空。"
+    }
+  },
+  "templates": {
+    "ownerOnly": "只有团队所有者或管理者可以管理项目模板。",
+    "empty": "暂无项目模板",
+    "emptyHint": "将项目另存为模板，即可基于它创建新项目。",
+    "openProjects": "前往项目",
+    "deleteAction": "删除模板",
+    "deleteDialog": {
+      "title": "删除模板“{name}”？",
+      "description": "基于该模板创建的项目不受影响。",
+      "confirm": "删除模板"
+    },
+    "panel": {
+      "saved": "保存于 {date}",
+      "none": "无"
     }
   },
   "panel": {

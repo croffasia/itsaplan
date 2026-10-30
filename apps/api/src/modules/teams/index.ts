@@ -21,6 +21,7 @@ import {
   updateProject,
 } from '#modules/projects/service';
 import { copyProject } from '#modules/projects/copy';
+import { createProjectFromTemplate } from '#modules/project-templates/service';
 import {
   TeamDetailResponse,
   TeamListResponse,
@@ -325,9 +326,9 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
       detail: {
         summary: 'Delete a team',
         description:
-          'Delete a team you own, with its members, roles, invites, skills, tools and ' +
-          'integrations. A team that holds a project or an AI agent is refused until those ' +
-          'are gone. Irreversible.',
+          'Delete a team you own, with its members, roles, project templates, invites, skills, ' +
+          'tools and integrations. A team that holds a project or an AI agent is refused ' +
+          'until those are gone. Irreversible.',
       },
     },
   )
@@ -336,7 +337,10 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
     '/teams/:teamId/projects',
     async ({ body, membership, set }) => {
       set.status = 201;
-      return createProject(body, membership.userId, membership.teamId);
+      const { templateId, ...input } = body;
+      return templateId === undefined
+        ? createProject(input, membership.userId, membership.teamId)
+        : createProjectFromTemplate(membership.teamId, templateId, input, membership.userId);
     },
     {
       teamManager: true,
@@ -348,7 +352,8 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
         description:
           'Create a project in a team you own or manage and become its owner. `key` is the ' +
           "immutable prefix for issue ids, unique within the team (e.g. 'MKT' -> 'MKT-1'). " +
-          'Seeds the default columns and the issue types of the chosen `preset`. Over MCP, ' +
+          'Seeds the default columns and the issue types of the chosen `preset`, or copies ' +
+          'what the project template `templateId` holds. Over MCP, ' +
           'uses the team from your key when there is one; otherwise call list_teams and pass ' +
           'teamId.',
         ...mcpTool('create_project'),

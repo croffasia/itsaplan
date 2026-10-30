@@ -1,6 +1,13 @@
 {
   "editAction": "编辑项目",
   "copyAction": "复制项目",
+  "saveTemplateAction": "另存为模板",
+  "saveTemplate": {
+    "title": "将“{name}”另存为模板",
+    "hint": "模板会保存所选设置的副本。之后对项目的更改不会影响模板。文档、代理、定时任务和 Webhook 不会保存。",
+    "save": "保存模板",
+    "saved": "模板“{name}”已保存"
+  },
   "deleteAction": "删除项目",
   "leaveAction": "退出项目",
   "archiveAction": "归档项目",

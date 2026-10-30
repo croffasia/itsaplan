@@ -9,6 +9,9 @@ import {
   deleteView,
   setViewFavorite,
   publishView,
+  setViewHidden,
+  arrangeTabRow,
+  resetTabRow,
   reorderViews,
 } from '@/lib/api/endpoints/views';
 import { EMPTY_FILTER_SET, type FilterSet } from '@/utils/filters';
@@ -28,32 +31,15 @@ export function normalizeView(v: View): View {
   };
 }
 
-// The tab row: the project's views come first and the caller's private ones after; in
-// each, the caller's favorites are pinned to the front and the rest keep their stored order.
-export function tabOrder(views: View[]): View[] {
-  return [...views].sort(
-    (a, b) => Number(a.isPrivate) - Number(b.isPrivate) || Number(b.favorite) - Number(a.favorite),
-  );
-}
-
-// The stored order of the dragged view's list (the project's or the caller's private
-// ones) with it moved to the target's place, or to the front for a null target; null
-// when nothing moves.
-export function reorderedViews(
-  views: View[],
-  draggedId: number,
-  targetId: number | null,
-): View[] | null {
-  const dragged = views.find((v) => v.id === draggedId);
-  if (!dragged || draggedId === targetId) return null;
-  const next = views
-    .filter((v) => v.isPrivate === dragged.isPrivate)
-    .sort((a, b) => a.position - b.position || a.id - b.id);
-  const from = next.indexOf(dragged);
-  const to = targetId == null ? 0 : next.findIndex((v) => v.id === targetId);
-  if (to < 0 || from === to) return null;
-  next.splice(from, 1);
-  next.splice(to, 0, dragged);
+// The caller's tab row with the dragged view moved to the target's place, or to the
+// front for a null target; null when nothing moves.
+export function movedInRow(row: View[], draggedId: number, targetId: number | null): View[] | null {
+  const from = row.findIndex((v) => v.id === draggedId);
+  const to = targetId == null ? 0 : row.findIndex((v) => v.id === targetId);
+  if (from < 0 || to < 0 || from === to) return null;
+  const next = [...row];
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
   return next;
 }
 
@@ -62,7 +48,8 @@ export function useViewsQuery(projectKey: string | null) {
     queryKey: qk.views(projectKey ?? ''),
     queryFn: () => listViews(projectKey!),
     enabled: projectKey != null,
-    select: (rows) => tabOrder(rows.map(normalizeView)),
+    // The server answers in the order of the caller's own tab row.
+    select: (rows) => rows.map(normalizeView),
   });
 }
 
@@ -121,8 +108,43 @@ export function usePublishView(projectKey: string | null) {
   });
 }
 
-export function useReorderViews(projectKey: string | null) {
+export function useSetViewHidden(projectKey: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, hidden }: { id: number; hidden: boolean }) => setViewHidden(id, hidden),
+    onSuccess: () => {
+      if (projectKey) void qc.invalidateQueries({ queryKey: qk.views(projectKey) });
+    },
+  });
+}
+
+export function useArrangeTabRow(projectKey: string | null) {
   return useOptimisticReorder<View>(projectKey ? qk.views(projectKey) : null, (orderedIds) =>
-    reorderViews(projectKey!, orderedIds),
+    arrangeTabRow(projectKey!, orderedIds),
   );
+}
+
+export function useResetTabRow(projectKey: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => resetTabRow(projectKey!),
+    onSuccess: () => {
+      if (projectKey) void qc.invalidateQueries({ queryKey: qk.views(projectKey) });
+    },
+  });
+}
+
+// Sets the project's order, which applies to the views a person has not placed in their own
+// row. The caller's own row keeps its order, so the cache waits for the server instead of
+// moving the project's views ahead of it.
+export function useReorderViews(projectKey: string | null) {
+  const t = useTranslations('views');
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (orderedIds: number[]) => reorderViews(projectKey!, orderedIds),
+    onSuccess: () => {
+      toast.success(t('projectOrderSet'));
+      if (projectKey) void qc.invalidateQueries({ queryKey: qk.views(projectKey) });
+    },
+  });
 }

@@ -3,7 +3,6 @@ import {
   closestCenter,
   DndContext,
   DragOverlay,
-  type CollisionDetection,
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
@@ -14,18 +13,20 @@ import { useTranslations } from 'next-intl';
 import type { View } from '@/lib/api/endpoints/views';
 import { useDndSensors, useDroppedOrder } from '@/lib/dnd';
 import { usePermissions } from '@/hooks/usePermissions';
-import { reorderedViews, tabOrder } from '@/services/views.service';
+import { movedInRow } from '@/services/views.service';
 import AllViewTab, { ALL_DROP_ID } from '@/components/layout/AllViewTab';
 import MobileViewSwitcher from '@/components/layout/MobileViewSwitcher';
 import SavedViewTab from '@/components/layout/SavedViewTab';
+import TabRowMenu from '@/components/layout/TabRowMenu';
 import ToolbarIconButton from '@/components/layout/ToolbarIconButton';
 import ViewTabChrome from '@/components/layout/ViewTabChrome';
 import ViewTabLabel from '@/components/layout/ViewTabLabel';
 
 // The row of saved-view tabs above a project, plus a New view button and, on the
 // right, the filter and display toggles. The leading "All" tab is implicit and
-// has no filters; it cannot be deleted. The saved tabs are a horizontal sortable
-// list — dragging one reorders it and persists via onReorder. The filter toggle
+// has no filters; it cannot be deleted. The saved tabs are the caller's own tab row, a
+// horizontal sortable list — dragging one rearranges it and persists via onArrangeRow, and
+// the views the caller hid are listed in the menu at its end. The filter toggle
 // shows the filter row, which filters the current screen only; onEdit opens the
 // edit bar for a view (see WorkItemsPage).
 export default function ViewTabs({
@@ -37,7 +38,11 @@ export default function ViewTabs({
   onEdit,
   onDelete,
   onDuplicate,
-  onReorder,
+  onArrangeRow,
+  onHide,
+  onShow,
+  onResetRow,
+  onPinProjectOrder,
   onToggleFilter,
   displayControl,
 }: {
@@ -49,7 +54,11 @@ export default function ViewTabs({
   onEdit: (view: View) => void;
   onDelete: (view: View) => void;
   onDuplicate: (view: View) => void;
-  onReorder: (draggedId: number, targetId: number | null) => void;
+  onArrangeRow: (orderedIds: number[]) => void;
+  onHide: (view: View) => void;
+  onShow: (view: View) => void;
+  onResetRow: () => void;
+  onPinProjectOrder: () => void;
   onToggleFilter: () => void;
   displayControl: ReactNode;
 }) {
@@ -64,29 +73,28 @@ export default function ViewTabs({
   // The view being dragged, used to render the DragOverlay preview.
   const [activeId, setActiveId] = useState<number | null>(null);
   const { items: shown, drop } = useDroppedOrder(views);
-  const byId = new Map(views.map((v) => [v.id, v]));
-  const activeView = activeId != null ? (byId.get(activeId) ?? null) : null;
-  // The project's views and the caller's private ones are ordered apart, so each is
-  // its own sortable list and a tab only meets the tabs of its own list (or All).
-  const projectViews = shown.filter((v) => !v.isPrivate);
-  const ownViews = shown.filter((v) => v.isPrivate);
-  const collisionDetection: CollisionDetection = (args) => {
-    const dragged = byId.get(Number(args.active.id));
-    return closestCenter({
-      ...args,
-      droppableContainers: args.droppableContainers.filter(
-        (c) => c.id === ALL_DROP_ID || byId.get(Number(c.id))?.isPrivate === dragged?.isPrivate,
-      ),
-    });
-  };
+  const activeView = activeId != null ? (views.find((v) => v.id === activeId) ?? null) : null;
+  const row = shown.filter((v) => !v.hidden);
+  const hidden = views.filter((v) => v.hidden);
+  // The tab row is kept by anyone who reads the views, members or not.
+  const tabRowMenu = can('views', 'read') && (
+    <TabRowMenu
+      hidden={hidden}
+      canPinProjectOrder={canEditView && views.some((v) => !v.isPrivate)}
+      onShow={onShow}
+      onReset={onResetRow}
+      onPinProjectOrder={onPinProjectOrder}
+    />
+  );
 
-  // Shows at once the tab row the server will answer with once the drop is stored.
+  // Shows at once the tab row the server will answer with once the drop is stored. The hidden
+  // views move with the row, so each one keeps its place for when it is shown again.
   function reorder(draggedId: number, targetId: number | null) {
-    const moved = reorderedViews(views, draggedId, targetId);
+    const moved = movedInRow(shown, draggedId, targetId);
     if (!moved) return;
-    const rest = views.filter((v) => v.isPrivate !== moved[0].isPrivate);
-    drop(tabOrder([...rest, ...moved]).map((v) => v.id));
-    onReorder(draggedId, targetId);
+    const orderedIds = moved.map((v) => v.id);
+    drop(orderedIds);
+    onArrangeRow(orderedIds);
   }
 
   function handleDragEnd(e: DragEndEvent) {
@@ -95,8 +103,7 @@ export default function ViewTabs({
     if (!over) return;
     const draggedId = Number(active.id);
     if (over.id === ALL_DROP_ID) {
-      // Move to the front of the stored order. The tab row is not that order —
-      // favorites are pinned ahead of it — so the front cannot be named by a tab.
+      // The fixed All tab stands for the front of the caller's row.
       reorder(draggedId, null);
       return;
     }
@@ -108,19 +115,21 @@ export default function ViewTabs({
       {/* Mobile: views collapse into a dropdown (no drag reorder there). */}
       <div className="flex min-w-0 flex-1 items-center sm:hidden">
         <MobileViewSwitcher
-          views={views}
+          views={row}
           activeViewId={activeViewId}
           canCreate={canCreateView}
           onSelect={onSelect}
           onNewView={onNewView}
         />
+        {/* A phone does not drag, but it shows the hidden views and resets the row. */}
+        {tabRowMenu}
       </div>
 
       {/* Desktop: the scrollable, reorderable tab strip. */}
       <div className="hidden min-w-0 flex-1 items-center gap-1 overflow-x-auto sm:flex">
         <DndContext
           sensors={sensors}
-          collisionDetection={collisionDetection}
+          collisionDetection={closestCenter}
           onDragStart={(e: DragStartEvent) => setActiveId(Number(e.active.id))}
           onDragCancel={() => setActiveId(null)}
           onDragEnd={handleDragEnd}
@@ -131,31 +140,25 @@ export default function ViewTabs({
             onClick={() => onSelect(null)}
           />
 
-          {[projectViews, ownViews].map((group, i) => (
-            <SortableContext
-              key={i}
-              items={group.map((v) => v.id)}
-              strategy={horizontalListSortingStrategy}
-            >
-              {group.map((view) => (
-                <SavedViewTab
-                  key={view.id}
-                  view={view}
-                  projectKey={projectKey}
-                  active={activeViewId === view.id}
-                  canEdit={view.isPrivate || canEditView}
-                  canDelete={view.isPrivate || canDeleteView}
-                  canReorder={view.isPrivate || canEditView}
-                  canPublish={view.isPrivate && canPublishView}
-                  onSelect={() => onSelect(view.id)}
-                  onEdit={() => onEdit(view)}
-                  onDelete={() => onDelete(view)}
-                  canDuplicate={canCreateView}
-                  onDuplicate={() => onDuplicate(view)}
-                />
-              ))}
-            </SortableContext>
-          ))}
+          <SortableContext items={row.map((v) => v.id)} strategy={horizontalListSortingStrategy}>
+            {row.map((view) => (
+              <SavedViewTab
+                key={view.id}
+                view={view}
+                projectKey={projectKey}
+                active={activeViewId === view.id}
+                canEdit={view.isPrivate || canEditView}
+                canDelete={view.isPrivate || canDeleteView}
+                canPublish={view.isPrivate && canPublishView}
+                onSelect={() => onSelect(view.id)}
+                onEdit={() => onEdit(view)}
+                onDelete={() => onDelete(view)}
+                canDuplicate={canCreateView}
+                onDuplicate={() => onDuplicate(view)}
+                onHide={() => onHide(view)}
+              />
+            ))}
+          </SortableContext>
 
           <DragOverlay>
             {activeView ? (
@@ -183,6 +186,7 @@ export default function ViewTabs({
             {t('newView')}
           </button>
         )}
+        {tabRowMenu}
       </div>
 
       <div className="flex shrink-0 items-center gap-0.5 pl-2">

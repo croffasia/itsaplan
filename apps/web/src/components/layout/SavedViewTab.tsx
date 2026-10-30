@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Copy, Globe, MoreHorizontal, Pencil, Star, Trash2, Users } from 'lucide-react';
+import { Copy, EyeOff, Globe, MoreHorizontal, Pencil, Star, Trash2, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { View } from '@/lib/api/endpoints/views';
 import { enableViewShare, disableViewShare } from '@/lib/api/endpoints/share';
@@ -15,34 +15,34 @@ import ViewTabChrome from '@/components/layout/ViewTabChrome';
 import ViewTabLabel from '@/components/layout/ViewTabLabel';
 import ShareDialog from '@/components/common/share/ShareDialog';
 
-// A saved view tab. Sortable (drag to reorder); when active it shows a "…" menu
-// with Favorite / Duplicate / Share / Add to the project / Edit / Delete.
+// A saved view tab. Sortable (drag to arrange one's own tab row); when active it shows a
+// "…" menu with Favorite / Duplicate / Hide / Share / Add to the project / Edit / Delete.
 export default function SavedViewTab({
   view,
   projectKey,
   active,
   canEdit,
   canDelete,
-  canReorder,
   canPublish,
   canDuplicate,
   onSelect,
   onEdit,
   onDelete,
   onDuplicate,
+  onHide,
 }: {
   view: View;
   projectKey: string;
   active: boolean;
   canEdit: boolean;
   canDelete: boolean;
-  canReorder: boolean;
   canPublish: boolean;
   canDuplicate: boolean;
   onSelect: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
+  onHide: () => void;
 }) {
   const t = useTranslations('views');
   const tCommon = useTranslations('common');
@@ -64,10 +64,9 @@ export default function SavedViewTab({
     await disableViewShare(view.id);
     await qc.invalidateQueries({ queryKey: qk.views(projectKey) });
   }
-  // Reordering the project's views is a views edit; one's own private views need none.
+  // The tab row is the caller's own, so anyone who sees the views arranges it.
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: view.id,
-    disabled: !canReorder,
   });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
@@ -79,7 +78,7 @@ export default function SavedViewTab({
       style={style}
       {...attributes}
       {...listeners}
-      className={cn(canReorder ? 'cursor-grab' : 'cursor-default', isDragging && 'opacity-40')}
+      className={cn('cursor-grab', isDragging && 'opacity-40')}
     >
       <button type="button" onClick={onSelect} className="flex items-center gap-1.5 py-1 pr-1 pl-2">
         <ViewTabLabel view={view} />
@@ -120,6 +119,19 @@ export default function SavedViewTab({
                 className="flex w-full items-center gap-2 rounded px-2 py-1 text-start text-sm hover:bg-accent"
               >
                 <Copy className="size-3.5 shrink-0" /> {t('duplicate')}
+              </button>
+            )}
+            {/* One's own private view that is not wanted is deleted, not hidden. */}
+            {!view.isPrivate && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onHide();
+                }}
+                className="flex w-full items-center gap-2 rounded px-2 py-1 text-start text-sm hover:bg-accent"
+              >
+                <EyeOff className="size-3.5 shrink-0" /> {t('hide')}
               </button>
             )}
             {/* Only a project's view has a public link. */}

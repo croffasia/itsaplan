@@ -1,4 +1,10 @@
-import { db, projectMember, projectView, projectViewFavorite } from '@repo/db';
+import {
+  db,
+  projectMember,
+  projectView,
+  projectViewFavorite,
+  projectViewPreference,
+} from '@repo/db';
 import { and, eq, exists, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { iso, num } from '#shared/lib';
 
@@ -39,6 +45,7 @@ function mapView(row: typeof projectView.$inferSelect): ViewRow {
 
 export interface UserViewRow extends ViewRow {
   favorite: boolean;
+  hidden: boolean;
 }
 
 // Private views are kept by members of the project only. Someone who left it keeps their
@@ -58,21 +65,126 @@ const ownPrivate = (userId: string) =>
 
 const visibleTo = (userId: string) => or(eq(projectView.isPrivate, false), ownPrivate(userId));
 
+// The caller's tab row: the views they placed, in their order. A view they never placed
+// follows the last one of its kind, so a new project view joins the project's and a new
+// private one goes last; with nothing placed, the row is the project's views in the
+// project's order, then the caller's private ones in their stored order.
 export async function listViews(projectId: number, userId: string): Promise<UserViewRow[]> {
   const rows = await db
-    .select({ row: projectView, favoriteUserId: projectViewFavorite.userId })
+    .select({
+      row: projectView,
+      favoriteUserId: projectViewFavorite.userId,
+      placedAt: projectViewPreference.position,
+      hidden: projectViewPreference.isHidden,
+    })
     .from(projectView)
     .leftJoin(
       projectViewFavorite,
       and(eq(projectViewFavorite.viewId, projectView.id), eq(projectViewFavorite.userId, userId)),
     )
+    .leftJoin(
+      projectViewPreference,
+      and(
+        eq(projectViewPreference.viewId, projectView.id),
+        eq(projectViewPreference.userId, userId),
+      ),
+    )
     .where(and(eq(projectView.projectId, projectId), visibleTo(userId)))
-    // The project's views keep their order; private ones follow, in the order their owner gave them.
     .orderBy(projectView.isPrivate, projectView.position, projectView.id);
-  return rows.map(({ row, favoriteUserId }) => ({
-    ...mapView(row),
-    favorite: favoriteUserId !== null,
+  const views = rows.map(({ row, favoriteUserId, placedAt, hidden }) => ({
+    view: { ...mapView(row), favorite: favoriteUserId !== null, hidden: hidden ?? false },
+    placedAt,
   }));
+  const tabRow = views
+    .filter((v) => v.placedAt !== null)
+    .sort((a, b) => a.placedAt! - b.placedAt!)
+    .map((v) => v.view);
+  for (const { view, placedAt } of views) {
+    if (placedAt !== null) continue;
+    let at = tabRow.length;
+    if (!view.isPrivate) {
+      at = 0;
+      tabRow.forEach((v, i) => {
+        if (!v.isPrivate) at = i + 1;
+      });
+    }
+    tabRow.splice(at, 0, view);
+  }
+  return tabRow;
+}
+
+export async function isHiddenView(viewId: number, userId: string): Promise<boolean> {
+  const rows = await db
+    .select({ hidden: projectViewPreference.isHidden })
+    .from(projectViewPreference)
+    .where(and(eq(projectViewPreference.viewId, viewId), eq(projectViewPreference.userId, userId)));
+  return rows[0]?.hidden ?? false;
+}
+
+const callerPreferences = (projectId: number, userId: string) =>
+  and(
+    eq(projectViewPreference.userId, userId),
+    inArray(
+      projectViewPreference.viewId,
+      db
+        .select({ id: projectView.id })
+        .from(projectView)
+        .where(eq(projectView.projectId, projectId)),
+    ),
+  );
+
+// Places the listed views of the caller's tab row in that order. A view it leaves out loses its
+// place and joins the end of its kind.
+export async function arrangeTabRow(
+  projectId: number,
+  orderedIds: number[],
+  userId: string,
+): Promise<UserViewRow[]> {
+  const known = new Set(
+    (
+      await db
+        .select({ id: projectView.id })
+        .from(projectView)
+        .where(
+          and(
+            eq(projectView.projectId, projectId),
+            visibleTo(userId),
+            inArray(projectView.id, orderedIds),
+          ),
+        )
+    ).map((r) => r.id),
+  );
+  const placed = [...new Set(orderedIds)].filter((id) => known.has(id));
+  await db.transaction(async (tx) => {
+    await tx
+      .update(projectViewPreference)
+      .set({ position: null })
+      .where(callerPreferences(projectId, userId));
+    if (placed.length === 0) return;
+    await tx
+      .insert(projectViewPreference)
+      .values(placed.map((viewId, position) => ({ viewId, userId, position })))
+      .onConflictDoUpdate({
+        target: [projectViewPreference.viewId, projectViewPreference.userId],
+        set: { position: sql`excluded.position` },
+      });
+  });
+  return listViews(projectId, userId);
+}
+
+export async function resetTabRow(projectId: number, userId: string): Promise<UserViewRow[]> {
+  await db.delete(projectViewPreference).where(callerPreferences(projectId, userId));
+  return listViews(projectId, userId);
+}
+
+export async function setViewHidden(viewId: number, userId: string, hidden: boolean) {
+  await db
+    .insert(projectViewPreference)
+    .values({ viewId, userId, isHidden: hidden })
+    .onConflictDoUpdate({
+      target: [projectViewPreference.viewId, projectViewPreference.userId],
+      set: { isHidden: hidden },
+    });
 }
 
 export async function isFavoriteView(viewId: number, userId: string): Promise<boolean> {

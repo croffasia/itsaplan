@@ -2030,9 +2030,9 @@ export const projectView = pgTable(
   ],
 );
 
-// The saved views a user marked as favorite. Favorites are personal: they pin the
-// view's tab to the front of the tab row and list it under Work items in the
-// sidebar, for that user only.
+// The saved views a user marked as favorite. Favorites are personal: they mark the
+// view's tab with a star and list it under Work items in the sidebar, for that user
+// only.
 export const projectViewFavorite = pgTable(
   'project_view_favorite',
   {
@@ -2042,6 +2042,24 @@ export const projectViewFavorite = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
+  },
+  (t) => [primaryKey({ columns: [t.viewId, t.userId] })],
+);
+
+// Each user's own tab row: where they placed a view and whether they hid it. A view
+// without a position follows the last view of its kind in the row, so a view added to the
+// project shows up in rows already arranged. Only a project's view can be hidden.
+export const projectViewPreference = pgTable(
+  'project_view_preference',
+  {
+    viewId: integer('view_id')
+      .notNull()
+      .references(() => projectView.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    position: integer('position'),
+    isHidden: boolean('is_hidden').notNull().default(false),
   },
   (t) => [primaryKey({ columns: [t.viewId, t.userId] })],
 );

@@ -16,7 +16,16 @@
   "privateHint": "Only you can see this view",
   "duplicate": "Duplicate",
   "copyName": "{name} (copy)",
+  "hide": "Hide",
+  "show": "Show",
+  "hiddenViews": "Hidden views ({count})",
+  "tabRow": "Tab row",
+  "resetTabRow": "Reset tab row",
+  "resetTabRowHint": "The project's order, your private views after it, nothing hidden",
+  "pinProjectOrder": "Set as project order",
+  "pinProjectOrderHint": "Everyone who has not arranged their own tab row sees the project's views in this order",
   "publish": "Add to the project",
   "publishHint": "Everyone in the project will see it. It cannot be made private again.",
-  "published": "{name} is now a view of the project"
+  "published": "{name} is now a view of the project",
+  "projectOrderSet": "The project's views now follow this order"
 }

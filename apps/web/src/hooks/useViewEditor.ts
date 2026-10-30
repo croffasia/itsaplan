@@ -3,7 +3,6 @@ import type { View } from '@/lib/api/endpoints/views';
 import type { WorkItemsView } from '@/utils/viewTypes';
 import {
   normalizeView,
-  movedInRow,
   useArrangeTabRow,
   useResetTabRow,
   useSetViewHidden,
@@ -268,16 +267,10 @@ export function useViewEditor(
     if (activeViewId === target.id) onSelectView(null);
   }
 
-  // Moves the dragged view to the dropped-on view's slot of the caller's own tab row;
-  // a null target means the front (the drop on the fixed All tab). Nobody else's row
-  // changes, whatever the caller may do to the project's order.
-  function reorderView(draggedId: number, targetId: number | null) {
-    const next = movedInRow(
-      views.filter((v) => !v.hidden),
-      draggedId,
-      targetId,
-    );
-    if (next) arrangeTabRowMutation.mutate(next.map((v) => v.id));
+  // Stores the caller's own tab row. Nobody else's row changes, whatever the caller may
+  // do to the project's order.
+  function arrangeTabRow(orderedIds: number[]) {
+    arrangeTabRowMutation.mutate(orderedIds);
   }
 
   async function hideView(target: View) {
@@ -334,7 +327,7 @@ export function useViewEditor(
     beginEditView,
     deleteView,
     beginDuplicate,
-    reorderView,
+    arrangeTabRow,
     hideView,
     showView,
     resetTabRow,

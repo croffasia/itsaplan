@@ -177,7 +177,7 @@ export default function WorkItemsPage() {
         onEdit={editor.beginEditView}
         onDelete={(v) => void editor.deleteView(v)}
         onDuplicate={(v) => editor.beginDuplicate(v, tViews('copyName', { name: v.name }))}
-        onReorder={editor.reorderView}
+        onArrangeRow={editor.arrangeTabRow}
         onHide={(v) => void editor.hideView(v)}
         onShow={editor.showView}
         onResetRow={editor.resetTabRow}

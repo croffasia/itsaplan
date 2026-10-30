@@ -93,7 +93,7 @@ async function render(activeViewId: number, shell = reader) {
               onEdit={() => {}}
               onDelete={() => {}}
               onDuplicate={(v) => duplicated.push(v)}
-              onReorder={() => {}}
+              onArrangeRow={() => {}}
               onHide={() => {}}
               onShow={(v) => shown.push(v)}
               onResetRow={() => {}}

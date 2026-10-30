@@ -25,7 +25,7 @@ import ViewTabLabel from '@/components/layout/ViewTabLabel';
 // The row of saved-view tabs above a project, plus a New view button and, on the
 // right, the filter and display toggles. The leading "All" tab is implicit and
 // has no filters; it cannot be deleted. The saved tabs are the caller's own tab row, a
-// horizontal sortable list — dragging one rearranges it and persists via onReorder, and
+// horizontal sortable list — dragging one rearranges it and persists via onArrangeRow, and
 // the views the caller hid are listed in the menu at its end. The filter toggle
 // shows the filter row, which filters the current screen only; onEdit opens the
 // edit bar for a view (see WorkItemsPage).
@@ -38,7 +38,7 @@ export default function ViewTabs({
   onEdit,
   onDelete,
   onDuplicate,
-  onReorder,
+  onArrangeRow,
   onHide,
   onShow,
   onResetRow,
@@ -54,7 +54,7 @@ export default function ViewTabs({
   onEdit: (view: View) => void;
   onDelete: (view: View) => void;
   onDuplicate: (view: View) => void;
-  onReorder: (draggedId: number, targetId: number | null) => void;
+  onArrangeRow: (orderedIds: number[]) => void;
   onHide: (view: View) => void;
   onShow: (view: View) => void;
   onResetRow: () => void;
@@ -92,7 +92,7 @@ export default function ViewTabs({
     const moved = movedInRow(row, draggedId, targetId);
     if (!moved) return;
     drop([...moved, ...hidden].map((v) => v.id));
-    onReorder(draggedId, targetId);
+    onArrangeRow(moved.map((v) => v.id));
   }
 
   function handleDragEnd(e: DragEndEvent) {

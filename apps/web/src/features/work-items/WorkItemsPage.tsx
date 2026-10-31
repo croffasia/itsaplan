@@ -247,7 +247,11 @@ export default function WorkItemsPage() {
       )}
 
       <div className="relative flex-1 overflow-hidden">
-        <IssueLinksProvider issues={project.issues} enabled={settings.showLinks}>
+        <IssueLinksProvider
+          issues={project.issues}
+          columns={project.columns}
+          enabled={settings.showLinks}
+        >
           <SubtasksProvider
             issues={project.issues}
             enabled={settings.showSubtasks}

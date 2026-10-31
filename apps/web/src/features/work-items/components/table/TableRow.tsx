@@ -6,7 +6,6 @@ import { type Maps } from '@/utils/project';
 import { useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
 import { useIsPhone } from '@/hooks/useIsPhone';
 import { usePermissions } from '@/hooks/usePermissions';
-import { isBlocked } from '@/utils/issueLinks';
 import { cn } from '@/lib/utils';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
 import { DropLine } from '../shared/DropLine';
@@ -14,6 +13,7 @@ import { EditableBuiltinCell } from '../shared/EditableBuiltinCell';
 import { EditableCustomCell } from '../shared/EditableCustomCell';
 import { IssueIdentifier } from '../shared/IssueIdentifier';
 import { SubtaskProgress } from '../shared/SubtaskProgress';
+import { useIsBlocked } from '../../context/useIssueLinks';
 import { useSubtaskFold } from '../../context/useSubtasks';
 import { columnKey, type OrderedColumn } from '../../utils/table';
 import { TableBuiltinCell } from './TableBuiltinCell';
@@ -63,6 +63,7 @@ export function TableRow({
   // issue edit).
   const { can } = usePermissions();
   const subtasks = useSubtaskFold();
+  const blocked = useIsBlocked(issue);
   const updateIssue = useUpdateIssue(project.project.ref);
   const setFieldValue = useSetFieldValue(project.project.ref);
   const patch = (fields: IssuePatch) => updateIssue.mutate({ id: issue.id, patch: fields });
@@ -100,7 +101,7 @@ export function TableRow({
         }}
         className={cn(
           'relative grid cursor-grab gap-3 border-b py-2 pr-4 text-sm transition-colors',
-          isBlocked(issue) ? 'row-blocked' : 'hover:bg-accent/40',
+          blocked ? 'row-blocked' : 'hover:bg-accent/40',
           alignTop ? 'items-start' : 'items-center',
           indented ? 'pl-9' : 'pl-4',
           isDragging && 'opacity-40',

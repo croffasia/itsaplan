@@ -6,10 +6,10 @@ import type { BoardIssue } from '@/lib/api/endpoints/issues';
 import { type Maps } from '@/utils/project';
 import { useIsPhone } from '@/hooks/useIsPhone';
 import { usePermissions } from '@/hooks/usePermissions';
-import { isBlocked } from '@/utils/issueLinks';
 import { cn } from '@/lib/utils';
 import type { PropertyKey } from '@/utils/viewSettings';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
+import { useIsBlocked } from '../../context/useIssueLinks';
 import { useSelection } from '../../context/useSelection';
 import { draggedIds } from '../../utils/kanban';
 import { IssueCardBody } from './IssueCardBody';
@@ -40,6 +40,7 @@ export function BoardCard({
   const { can } = usePermissions();
   const selection = useSelection();
   const selected = selection.isSelected(issue.id);
+  const blocked = useIsBlocked(issue);
   const { setNodeRef, attributes, listeners } = useDraggable({
     id: issue.id,
     data: { issueIds: selected ? [...selection.selected] : [issue.id] },
@@ -94,7 +95,7 @@ export function BoardCard({
           // also starting a native text selection across cards.
           'kanban-card cursor-grab rounded-md p-2 select-none',
           isDragging && 'opacity-40',
-          isBlocked(issue) && 'kanban-card-blocked',
+          blocked && 'kanban-card-blocked',
           // Selected cards read as a primary-tinted fill, like Linear — no border,
           // no checkbox (see .kanban-card-selected in globals.css).
           selected && 'kanban-card-selected',

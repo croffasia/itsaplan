@@ -62,6 +62,7 @@ let dom: JSDOM;
 let root: Root;
 let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
 let duplicated: View[];
+let selected: (number | null)[];
 let shown: View[];
 
 // A member whose role only reads views.
@@ -88,7 +89,7 @@ async function render(activeViewId: number, shell = reader) {
               views={[mine, board, roadmap]}
               projectKey="eng.P01"
               activeViewId={activeViewId}
-              onSelect={() => {}}
+              onSelect={(id) => selected.push(id)}
               onNewView={() => {}}
               onEdit={() => {}}
               onDelete={() => {}}
@@ -106,6 +107,18 @@ async function render(activeViewId: number, shell = reader) {
       </QueryClientProvider>,
     ),
   );
+}
+
+const hiddenLabel = views.hiddenViews.replace('{count}', '1');
+
+function hiddenViewsButton() {
+  return [...document.querySelectorAll<HTMLElement>('button')].find(
+    (b) => b.textContent?.trim() === hiddenLabel,
+  );
+}
+
+function pickerItems() {
+  return [...document.querySelectorAll<HTMLElement>('[cmdk-item]')];
 }
 
 async function openMenu(): Promise<string[]> {
@@ -153,7 +166,9 @@ beforeEach(async () => {
   Object.defineProperty(window, '__ITSAPLAN_ENV__', {
     value: { apiUrl: 'https://api.test', privacyUrl: '', termsUrl: '' },
   });
+  window.HTMLElement.prototype.scrollIntoView = () => {};
   duplicated = [];
+  selected = [];
   shown = [];
   const { createRoot } = await import('react-dom/client');
   root = createRoot(document.querySelector('#root')!);
@@ -209,7 +224,7 @@ describe('ViewTabs', () => {
     await render(board.id, admin);
     const buttons = [...document.querySelectorAll('button')].map((b) => b.textContent?.trim());
     assert.ok(!buttons.includes(views.newView));
-    assert.ok(buttons.includes(views.hiddenViews.replace('{count}', '1')));
+    assert.ok(buttons.includes(hiddenLabel));
     assert.deepEqual(await openMenu(), [views.favorite, views.hide]);
   });
 
@@ -243,26 +258,82 @@ describe('ViewTabs', () => {
     assert.deepEqual(items, [views.favorite, views.duplicate, common.edit, common.delete]);
   });
 
-  it('keeps the hidden views at the end of the row, to show again', async () => {
+  it('lists the hidden views before New view, to open or to show again', async () => {
     await render(board.id);
-    const label = views.hiddenViews.replace('{count}', '1');
-    const trigger = [...document.querySelectorAll<HTMLElement>('button')].find(
-      (b) => b.textContent?.trim() === label,
-    );
-    assert.ok(trigger);
+    const buttons = [...document.querySelectorAll<HTMLElement>('button')];
+    const trigger = hiddenViewsButton();
+    const newView = buttons.find((b) => b.textContent?.trim() === views.newView);
+    const rowMenu = buttons.find((b) => b.title === views.tabRow);
+    assert.ok(trigger && newView && rowMenu);
+    assert.ok(buttons.indexOf(trigger) < buttons.indexOf(newView));
+    assert.ok(buttons.indexOf(newView) < buttons.indexOf(rowMenu));
+    assert.ok(!trigger.className.includes('bg-secondary'));
+
     await act(async () => trigger.click());
     const items = [
       ...document.querySelectorAll<HTMLElement>('[data-slot="popover-content"] button'),
     ];
     assert.deepEqual(
       items.map((b) => b.textContent?.trim()),
-      [views.show, views.resetTabRow],
+      [roadmap.name, views.show],
     );
-    await act(async () => items[0].click());
+    await act(async () => items[1].click());
     assert.deepEqual(
       shown.map((v) => v.id),
       [roadmap.id],
     );
+    await act(async () => items[0].click());
+    assert.deepEqual(selected, [roadmap.id]);
+  });
+
+  it('marks the hidden views button and the view in its menu while a hidden view is open', async () => {
+    await render(roadmap.id);
+    const trigger = hiddenViewsButton();
+    assert.ok(trigger?.className.includes('bg-secondary'));
+    await act(async () => trigger!.click());
+    const content = document.querySelector('[data-slot="popover-content"]');
+    assert.ok(content?.textContent?.includes(roadmap.name));
+    assert.ok(content?.querySelector('svg.lucide-check'));
+  });
+
+  it('folds the hidden views into the mobile picker, which names one opened by its link', async () => {
+    await render(roadmap.id);
+    assert.equal(document.querySelectorAll(`[title="${views.tabRow}"]`).length, 1);
+    const picker = document.querySelector<HTMLElement>(`[title="${views.switchView}"]`);
+    assert.equal(picker?.textContent?.trim(), roadmap.name);
+    await act(async () => picker!.click());
+    assert.deepEqual(
+      pickerItems().map((item) => item.textContent?.trim()),
+      [views.all, mine.name, board.name, hiddenLabel, views.newView],
+    );
+    await act(async () => pickerItems()[3].click());
+    assert.deepEqual(
+      pickerItems().map((item) => item.textContent?.trim()),
+      [views.all, mine.name, board.name, hiddenLabel, roadmap.name, views.newView],
+    );
+    await act(async () => pickerItems()[4].click());
+    assert.deepEqual(selected, [roadmap.id]);
+  });
+
+  it('finds a hidden view in the mobile picker search, under its own heading', async () => {
+    await render(board.id);
+    await act(async () =>
+      document.querySelector<HTMLElement>(`[title="${views.switchView}"]`)!.click(),
+    );
+    const input = document.querySelector<HTMLInputElement>('[cmdk-input]')!;
+    const setter = Object.getOwnPropertyDescriptor(
+      window.HTMLInputElement.prototype,
+      'value',
+    )!.set!;
+    await act(async () => {
+      setter.call(input, 'road');
+      input.dispatchEvent(new window.Event('input', { bubbles: true }));
+    });
+    assert.deepEqual(
+      pickerItems().map((item) => item.textContent?.trim()),
+      [roadmap.name],
+    );
+    assert.equal(document.querySelector('[cmdk-group-heading]')?.textContent, hiddenLabel);
   });
 
   it("offers whoever edits views to make their row the project's order", async () => {
@@ -272,6 +343,9 @@ describe('ViewTabs', () => {
     const items = [
       ...document.querySelectorAll<HTMLElement>('[data-slot="popover-content"] button'),
     ];
-    assert.ok(items.map((b) => b.textContent?.trim()).includes(views.pinProjectOrder));
+    assert.deepEqual(
+      items.map((b) => b.textContent?.trim()),
+      [views.resetTabRow, views.pinProjectOrder],
+    );
   });
 });

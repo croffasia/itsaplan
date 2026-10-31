@@ -15,6 +15,7 @@ import { useDndSensors, useDroppedOrder } from '@/lib/dnd';
 import { usePermissions } from '@/hooks/usePermissions';
 import { movedInRow } from '@/services/views.service';
 import AllViewTab, { ALL_DROP_ID } from '@/components/layout/AllViewTab';
+import HiddenViewsMenu from '@/components/layout/HiddenViewsMenu';
 import MobileViewSwitcher from '@/components/layout/MobileViewSwitcher';
 import SavedViewTab from '@/components/layout/SavedViewTab';
 import TabRowMenu from '@/components/layout/TabRowMenu';
@@ -26,7 +27,7 @@ import ViewTabLabel from '@/components/layout/ViewTabLabel';
 // right, the filter and display toggles. The leading "All" tab is implicit and
 // has no filters; it cannot be deleted. The saved tabs are the caller's own tab row, a
 // horizontal sortable list — dragging one rearranges it and persists via onArrangeRow, and
-// the views the caller hid are listed in the menu at its end. The filter toggle
+// the views the caller hid are listed in their own menu. The filter toggle
 // shows the filter row, which filters the current screen only; onEdit opens the
 // edit bar for a view (see WorkItemsPage).
 export default function ViewTabs({
@@ -79,9 +80,7 @@ export default function ViewTabs({
   // The tab row is kept by anyone who reads the views, members or not.
   const tabRowMenu = can('views', 'read') && (
     <TabRowMenu
-      hidden={hidden}
       canPinProjectOrder={canEditView && views.some((v) => !v.isPrivate)}
-      onShow={onShow}
       onReset={onResetRow}
       onPinProjectOrder={onPinProjectOrder}
     />
@@ -115,14 +114,12 @@ export default function ViewTabs({
       {/* Mobile: views collapse into a dropdown (no drag reorder there). */}
       <div className="flex min-w-0 flex-1 items-center sm:hidden">
         <MobileViewSwitcher
-          views={row}
+          views={shown}
           activeViewId={activeViewId}
           canCreate={canCreateView}
           onSelect={onSelect}
           onNewView={onNewView}
         />
-        {/* A phone does not drag, but it shows the hidden views and resets the row. */}
-        {tabRowMenu}
       </div>
 
       {/* Desktop: the scrollable, reorderable tab strip. */}
@@ -175,6 +172,14 @@ export default function ViewTabs({
           </DragOverlay>
         </DndContext>
 
+        {hidden.length > 0 && (
+          <HiddenViewsMenu
+            hidden={hidden}
+            activeViewId={activeViewId}
+            onSelect={onSelect}
+            onShow={onShow}
+          />
+        )}
         {canCreateView && (
           <button
             type="button"

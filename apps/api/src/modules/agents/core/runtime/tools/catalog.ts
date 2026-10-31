@@ -350,7 +350,7 @@ export const ALWAYS_ON_ACTIONS: ToolMeta[] = [
     group: 'issues',
     label: 'List issues by filters',
     description:
-      'List issues filtered by state, type, assignee, priority, label, due date, or when they were created or updated.',
+      'List issues filtered by state, type, assignee, priority, label, due date, when they were created or updated, or blocked.',
     always: true,
   },
   {

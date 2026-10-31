@@ -579,11 +579,48 @@ export const listIssuesQuery = t.Object({
   createdTo: instantQuery('Exclusive latest creation time.'),
   updatedFrom: instantQuery('Inclusive earliest last-update time.'),
   updatedTo: instantQuery('Exclusive latest last-update time.'),
+  blocked: t.Optional(
+    t.String({
+      description:
+        "'true' for issues another issue is blocking while it is still open (not in a " +
+        'completed or canceled column, not archived).',
+    }),
+  ),
   includeArchived: t.Optional(
     t.String({ description: "'true' to include archived issues. Default false." }),
   ),
   limit: t.Optional(t.Numeric({ description: 'Max results (1-500). Default 50.' })),
 });
+
+export const listAllIssuesQuery = t.Composite([
+  t.Pick(listIssuesQuery, [
+    'assigneeUserId',
+    'delegateUserId',
+    'priority',
+    'dueFrom',
+    'dueTo',
+    'createdFrom',
+    'createdTo',
+    'updatedFrom',
+    'updatedTo',
+    'includeArchived',
+    'limit',
+  ]),
+  t.Object({
+    cycleIds: t.Optional(
+      t.String({ description: 'CSV of cycle ids; the issue must be in one of them.' }),
+    ),
+    parentIds: t.Optional(
+      t.String({ description: 'CSV of parent issue ids, to list their subtasks.' }),
+    ),
+    stateTypes: t.Optional(
+      t.String({
+        description:
+          "CSV of column state types: backlog, unstarted, started, completed, canceled. 'backlog,unstarted,started' lists the open issues.",
+      }),
+    ),
+  }),
+]);
 
 export const issueSequenceParams = t.Object({
   projectKey: t.String(),

@@ -46,8 +46,7 @@ export default function SidebarWorkNav({
   const disabled = !projectKey;
   const { data: inboxUnread } = useInboxUnread(projectKey, projectId);
   const { data: views } = useViewsQuery(projectKey);
-  // A view hidden from the tab row would open with no tab to show it.
-  const favorites = views?.filter((v) => v.favorite && !v.hidden) ?? [];
+  const favorites = views?.filter((v) => v.favorite) ?? [];
 
   // "Work items" is the default view: active on the project root and any segment
   // that is not one of the other top-level destinations.

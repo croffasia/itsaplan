@@ -53,7 +53,7 @@ export default function BoardLayout({
   }
 
   return (
-    <IssueLinksProvider issues={allIssues} enabled={settings.showLinks}>
+    <IssueLinksProvider issues={allIssues} columns={project.columns} enabled={settings.showLinks}>
       <SubtasksProvider
         issues={allIssues}
         enabled={subtasksEnabled && settings.showSubtasks}

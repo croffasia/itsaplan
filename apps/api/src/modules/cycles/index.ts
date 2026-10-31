@@ -1,14 +1,16 @@
 import { Elysia, t } from 'elysia';
 import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
-import { guards, entityGuard } from '#shared/guards';
+import { guards, entityGuard, requiresPermission } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
-import { requireUser } from '#shared/access';
+import { readableProjectIds, requireUser } from '#shared/access';
+import { boundProjectId, isMcpRequest } from '#shared/mcp-request';
 import { HttpError } from '#shared/lib';
-import { accessErrors, commonErrors } from '#shared/responses';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { paginate } from '#shared/pagination';
 import { transferCycleIssues } from '#modules/issues/service';
 import {
+  CrossProjectCycleListResponse,
   CycleListResponse,
   CycleOptionListResponse,
   CyclePageResponse,
@@ -24,6 +26,7 @@ import {
 } from './model';
 import {
   listCycles,
+  listCyclesInProjects,
   listPlannedCycles,
   listCompletedCycles,
   getCycle,
@@ -120,6 +123,33 @@ export const cycleRoutes = new Elysia({
         description:
           'Create a cycle in a project. Its dates must not overlap another cycle of the same project.',
         ...mcpTool('create_cycle'),
+      },
+    },
+  )
+
+  .get(
+    '/cycles',
+    async ({ user, query, request }) => {
+      const ids = await readableProjectIds(requireUser(user).id, [['cycles', 'read']], {
+        mcpOnly: isMcpRequest(request.headers),
+      });
+      const bound = boundProjectId(request.headers);
+      return listCyclesInProjects(
+        ids.filter((id) => bound == null || id === bound),
+        query.status === 'planned',
+      );
+    },
+    {
+      query: listCyclesQuery,
+      response: { 200: CrossProjectCycleListResponse, ...errors(400, 401) },
+      detail: {
+        summary: 'List cycles in all projects',
+        description:
+          'The cycles of every project you can read cycles in, oldest first. Each cycle names ' +
+          'its project (projectKey, projectRef, projectName, teamName); use list_cycles for one ' +
+          'project. An agent run lists only the project it works in.',
+        ...requiresPermission(['cycles', 'read']),
+        ...mcpTool('list_cycles_all_projects'),
       },
     },
   )

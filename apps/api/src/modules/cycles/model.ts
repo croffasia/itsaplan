@@ -35,6 +35,18 @@ export const CycleResponse = t.Object({
 
 export const CycleListResponse = t.Array(CycleResponse);
 
+export const CrossProjectCycleListResponse = t.Array(
+  t.Composite([
+    CycleResponse,
+    t.Object({
+      projectRef: t.String(),
+      projectKey: t.String(),
+      projectName: t.String(),
+      teamName: t.String(),
+    }),
+  ]),
+);
+
 export const CyclePageResponse = pageResponse(CycleResponse);
 
 export const CycleOptionListResponse = t.Array(

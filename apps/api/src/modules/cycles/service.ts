@@ -1,6 +1,7 @@
-import { db, cycle, issue, projectColumn } from '@repo/db';
-import { and, asc, desc, eq, isNull, ne, sql, type SQL } from 'drizzle-orm';
+import { db, cycle, issue, project, projectColumn, team } from '@repo/db';
+import { and, asc, desc, eq, inArray, isNull, ne, sql, type SQL } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
+import { projectRefSql } from '#modules/teams/ref';
 
 // Data access for cycles: a time-boxed period of work inside a project (a sprint).
 // Issues link to a cycle through issue.cycle_id. The status is derived from the
@@ -123,6 +124,48 @@ export async function listPlannedCycles(projectId: number): Promise<CycleRow[]> 
     and(eq(cycle.projectId, projectId), sql`not ${FINISHED}`),
   ).orderBy(asc(cycle.startDate), asc(cycle.id));
   return rows.map(mapCycle);
+}
+
+export interface CrossProjectCycleRow extends CycleRow {
+  projectRef: string;
+  projectKey: string;
+  projectName: string;
+  teamName: string;
+}
+
+// The cycles of the given projects that have cycles turned on, oldest first, each
+// with its project. planned keeps only the active and upcoming ones.
+export async function listCyclesInProjects(
+  projectIds: number[],
+  planned: boolean,
+): Promise<CrossProjectCycleRow[]> {
+  if (projectIds.length === 0) return [];
+  const projects = await db
+    .select({
+      id: project.id,
+      ref: projectRefSql,
+      key: project.key,
+      name: project.name,
+      teamName: team.name,
+    })
+    .from(project)
+    .innerJoin(team, eq(team.id, project.teamId))
+    .where(and(inArray(project.id, projectIds), eq(project.cyclesEnabled, true)));
+  if (projects.length === 0) return [];
+  const byId = new Map(projects.map((p) => [p.id, p]));
+  const rows = await selectCycles(
+    and(inArray(cycle.projectId, [...byId.keys()]), planned ? sql`not ${FINISHED}` : undefined),
+  ).orderBy(asc(cycle.startDate), asc(cycle.id));
+  return rows.map((r) => {
+    const p = byId.get(r.row.projectId)!;
+    return {
+      ...mapCycle(r),
+      projectRef: p.ref,
+      projectKey: p.key,
+      projectName: p.name,
+      teamName: p.teamName,
+    };
+  });
 }
 
 export interface CyclePage {

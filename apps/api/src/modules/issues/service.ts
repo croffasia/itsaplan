@@ -11,6 +11,7 @@ import {
   issueFieldOption,
   issueAttachment,
   issueKeyAlias,
+  issueWorklog,
   customField,
   customFieldOption,
   initiative,
@@ -257,14 +258,18 @@ export interface IssueSearchHit {
   initiativeId: number | null;
   cycleId: number | null;
   parentId: number | null;
+  parent: { id: number; identifier: string; title: string } | null;
   assigneeUserId: string | null;
   delegateUserId: string | null;
   priority: string | null;
   dueDate: string | null;
+  estimateMinutes: number | null;
+  loggedMinutes: number;
   labelIds: number[];
   archived: boolean;
   createdAt: string;
   updatedAt: string;
+  statusSince: string;
   completedAt: string | null;
 }
 
@@ -279,6 +284,17 @@ const completedAt = sql<Date | null>`(
             WHERE p.issue_id = s.issue_id
               AND p.state_type IS DISTINCT FROM 'completed'
               AND (p.entered_at, p.id) > (s.entered_at, s.id)))`.mapWith(issueStatus.enteredAt);
+
+// The same values attachStatusSince and attachLoggedMinutes give a full IssueRow.
+const statusSince = sql<Date>`coalesce(
+  (SELECT s.entered_at FROM ${issueStatus} s WHERE s.issue_id = ${issue}.id AND s.left_at IS NULL),
+  ${issue}.created_at)`.mapWith(issueStatus.enteredAt);
+const loggedMinutes = sql<number>`(
+  SELECT coalesce(sum(w.minutes), 0)::int FROM ${issueWorklog} w WHERE w.issue_id = ${issue}.id)`;
+const parentSequenceNumber = sql<number | null>`(
+  SELECT p.sequence_number FROM ${issue} p WHERE p.id = ${issue}.parent_id)`;
+const parentTitle = sql<string | null>`(
+  SELECT p.title FROM ${issue} p WHERE p.id = ${issue}.parent_id)`;
 
 // Escapes LIKE metacharacters so the query is matched literally (Postgres LIKE uses
 // '\' as the default escape character).
@@ -339,28 +355,67 @@ const hitColumns = {
   title: issue.title,
   priority: issue.priority,
   dueDate: issue.dueDate,
+  estimateMinutes: issue.estimateMinutes,
+  loggedMinutes,
   archivedAt: issue.archivedAt,
   createdAt: issue.createdAt,
   updatedAt: issue.updatedAt,
+  statusSince,
   completedAt,
+  parentSequenceNumber,
+  parentTitle,
 };
 
 type HitRow = Omit<
   IssueSearchHit,
-  'identifier' | 'labelIds' | 'archived' | 'createdAt' | 'updatedAt' | 'completedAt'
-> & { archivedAt: Date | null; createdAt: Date; updatedAt: Date; completedAt: Date | null };
+  | 'identifier'
+  | 'parent'
+  | 'labelIds'
+  | 'archived'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'statusSince'
+  | 'completedAt'
+> & {
+  archivedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  statusSince: Date;
+  completedAt: Date | null;
+  parentSequenceNumber: number | null;
+  parentTitle: string | null;
+};
 
 function toHit(
-  { archivedAt, createdAt, updatedAt, completedAt, ...r }: HitRow,
+  {
+    archivedAt,
+    createdAt,
+    updatedAt,
+    statusSince,
+    completedAt,
+    parentSequenceNumber,
+    parentTitle,
+    ...r
+  }: HitRow,
   projectKey: string,
 ): IssueSearchHit {
   return {
     ...r,
     identifier: `${projectKey}-${r.sequenceNumber}`,
+    // A parent is always in the issue's own project, so it carries the same key.
+    parent:
+      r.parentId !== null && parentSequenceNumber !== null && parentTitle !== null
+        ? {
+            id: r.parentId,
+            identifier: `${projectKey}-${parentSequenceNumber}`,
+            title: parentTitle,
+          }
+        : null,
     labelIds: [],
     archived: archivedAt !== null,
     createdAt: iso(createdAt),
     updatedAt: iso(updatedAt),
+    statusSince: iso(statusSince),
     completedAt: completedAt ? iso(completedAt) : null,
   };
 }

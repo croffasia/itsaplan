@@ -499,7 +499,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'List issues by filters',
         description:
-          "List a project's issues by field filters, most recently updated first. Each issue carries createdAt, updatedAt and completedAt.",
+          "List a project's issues by field filters, most recently updated first. Each issue carries createdAt, updatedAt, completedAt, statusSince (when it entered its current column), estimateMinutes, loggedMinutes and its parent's identifier and title.",
         ...mcpTool('list_issues'),
       },
     },

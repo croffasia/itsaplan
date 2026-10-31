@@ -324,14 +324,18 @@ export const IssueSearchHitResponse = t.Object({
   initiativeId: t.Nullable(t.Number()),
   cycleId: t.Nullable(t.Number()),
   parentId: t.Nullable(t.Number()),
+  parent: t.Nullable(t.Object({ id: t.Number(), identifier: t.String(), title: t.String() })),
   assigneeUserId: t.Nullable(t.String()),
   delegateUserId: t.Nullable(t.String()),
   priority: t.Nullable(t.String()),
   dueDate: t.Nullable(t.String()),
+  estimateMinutes: t.Nullable(t.Number()),
+  loggedMinutes: t.Number(),
   labelIds: t.Array(t.Number()),
   archived: t.Boolean(),
   createdAt: t.String(),
   updatedAt: t.String(),
+  statusSince: t.String(),
   completedAt: t.Nullable(t.String()),
 });
 

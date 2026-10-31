@@ -1101,6 +1101,14 @@ describe('issues', () => {
       return client.projects({ projectKey }).issues.search.get({ query });
     }
 
+    it('returns the estimate in points', async () => {
+      const { asOwner, columnId } = await setupProject();
+      await createIssue(asOwner, columnId, { title: 'Zephyr rollout', estimatePoints: 3 });
+
+      const res = await search(asOwner, { q: 'zephyr' });
+      expect(res.data![0]).toMatchObject({ title: 'Zephyr rollout', estimatePoints: 3 });
+    });
+
     it('matches by title and excludes non-matching issues', async () => {
       const { asOwner, columnId } = await setupProject();
       const hit = (await createIssue(asOwner, columnId, { title: 'Zephyr rollout' })).data!;
@@ -1352,6 +1360,17 @@ describe('issues', () => {
       const moved = (await list(asOwner)).data!.find((i) => i.id === child.id)!;
       expect(moved.statusSince).toEqual((await full()).statusSince);
       expect(moved.statusSince).not.toEqual(fresh.statusSince);
+    });
+
+    it('returns the estimate in points, a fraction too', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const sized = (await createIssue(asOwner, columnId, { title: 'Sized', estimatePoints: 0.5 }))
+        .data!;
+      const bare = (await createIssue(asOwner, columnId, { title: 'Bare' })).data!;
+
+      const rows = (await list(asOwner)).data!;
+      expect(rows.find((i) => i.id === sized.id)).toMatchObject({ estimatePoints: 0.5 });
+      expect(rows.find((i) => i.id === bare.id)).toMatchObject({ estimatePoints: null });
     });
 
     it('filters by created and updated time', async () => {

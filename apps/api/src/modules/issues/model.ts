@@ -329,6 +329,7 @@ export const IssueSearchHitResponse = t.Object({
   delegateUserId: t.Nullable(t.String()),
   priority: t.Nullable(t.String()),
   dueDate: t.Nullable(t.String()),
+  estimatePoints: t.Nullable(t.Number()),
   estimateMinutes: t.Nullable(t.Number()),
   loggedMinutes: t.Number(),
   labelIds: t.Array(t.Number()),

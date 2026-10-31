@@ -67,8 +67,13 @@
       "custom": "Tüm işlerin tarihi var."
     }
   },
+  "empty": {
+    "title": "İş yok",
+    "description": "İşler burada görünecek.",
+    "filteredTitle": "Eşleşen iş yok",
+    "filteredDescription": "Daha fazlasını görmek için filtreleri değiştirin."
+  },
   "timeline": {
-    "empty": "Zaman çizelgesine yerleştirilecek henüz iş yok.",
     "expandGroup": "Grubu genişlet",
     "collapseGroup": "Grubu daralt",
     "inferredStart": "Başlangıç oluşturulma tarihine göre belirlendi",

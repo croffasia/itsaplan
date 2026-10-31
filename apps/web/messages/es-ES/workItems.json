@@ -67,8 +67,13 @@
       "custom": "Todo el mundo tiene fecha."
     }
   },
+  "empty": {
+    "title": "No hay tickets",
+    "description": "Los tickets aparecerán aquí.",
+    "filteredTitle": "Ningún ticket coincide",
+    "filteredDescription": "Cambia los filtros para ver más."
+  },
   "timeline": {
-    "empty": "Todavía no hay tickets para situar en la cronología.",
     "expandGroup": "Expandir grupo",
     "collapseGroup": "Contraír grupo",
     "inferredStart": "Inicio inferido de la fecha de creación",

@@ -67,8 +67,13 @@
       "custom": "모든 이슈에 날짜가 있습니다."
     }
   },
+  "empty": {
+    "title": "이슈가 없습니다",
+    "description": "이슈가 여기에 표시됩니다.",
+    "filteredTitle": "일치하는 이슈가 없습니다",
+    "filteredDescription": "더 보려면 필터를 변경하세요."
+  },
   "timeline": {
-    "empty": "타임라인에 표시할 이슈가 아직 없습니다.",
     "expandGroup": "그룹 펼치기",
     "collapseGroup": "그룹 접기",
     "inferredStart": "생성일을 기준으로 추정한 시작일",

@@ -30,6 +30,7 @@ import KanbanBoard from './components/kanban/KanbanBoard';
 import TableView from './components/table/TableView';
 import TimelineView from './components/timeline/TimelineView';
 import CalendarView from './components/calendar/CalendarView';
+import { WorkItemsEmpty } from './components/shared/WorkItemsEmpty';
 
 interface TimelineCollapseState {
   scope: string;
@@ -142,6 +143,9 @@ export default function WorkItemsPage() {
           />
         );
       case 'timeline':
+        if (viewProps.project.issues.length === 0) {
+          return <WorkItemsEmpty filters={editor.effectiveFilters} />;
+        }
         return (
           <TimelineView
             {...viewProps}

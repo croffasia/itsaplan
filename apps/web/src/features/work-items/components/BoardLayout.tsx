@@ -8,6 +8,7 @@ import KanbanBoard from './kanban/KanbanBoard';
 import TableView from './table/TableView';
 import TimelineView from './timeline/TimelineView';
 import CalendarView from './calendar/CalendarView';
+import { WorkItemsEmpty } from './shared/WorkItemsEmpty';
 
 interface BoardLayoutProps extends WorkItemsViewProps {
   view: WorkItemsView;
@@ -44,6 +45,9 @@ export default function BoardLayout({
       case 'table':
         return <TableView {...layoutProps} widthScope={widthScope} />;
       case 'timeline':
+        if (layoutProps.project.issues.length === 0) {
+          return <WorkItemsEmpty filters={layoutProps.filters} />;
+        }
         return <TimelineView {...layoutProps} />;
       case 'calendar':
         return <CalendarView {...layoutProps} />;

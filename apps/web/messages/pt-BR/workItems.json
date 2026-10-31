@@ -67,8 +67,13 @@
       "custom": "Tudo tem data."
     }
   },
+  "empty": {
+    "title": "Nenhuma issue",
+    "description": "As issues aparecerão aqui.",
+    "filteredTitle": "Nenhuma issue corresponde",
+    "filteredDescription": "Altere os filtros para ver mais."
+  },
   "timeline": {
-    "empty": "Nenhuma issue para colocar na linha do tempo ainda.",
     "expandGroup": "Expandir grupo",
     "collapseGroup": "Recolher grupo",
     "inferredStart": "Início inferido da data de criação",

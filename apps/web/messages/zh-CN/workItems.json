@@ -67,8 +67,13 @@
       "custom": "所有工作项都已设置日期。"
     }
   },
+  "empty": {
+    "title": "暂无工作项",
+    "description": "工作项会显示在这里。",
+    "filteredTitle": "没有匹配的工作项",
+    "filteredDescription": "修改筛选条件以查看更多。"
+  },
   "timeline": {
-    "empty": "暂无可放入时间线的工作项。",
     "expandGroup": "展开分组",
     "collapseGroup": "折叠分组",
     "inferredStart": "根据创建日期推算开始时间",

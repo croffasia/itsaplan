@@ -21,6 +21,7 @@ import {
   type FlatItem,
 } from '../../utils/table';
 import { IssueDragOverlay } from '../shared/IssueDragOverlay';
+import { WorkItemsEmpty } from '../shared/WorkItemsEmpty';
 import { TableColumnHeader } from './TableColumnHeader';
 import { TableSectionHeader } from './TableSectionHeader';
 import { TableSubHeader } from './TableSubHeader';
@@ -141,6 +142,8 @@ export default function TableView({
         );
     }
   }
+
+  if (items.length === 0) return <WorkItemsEmpty filters={filters} />;
 
   return (
     <DndContext

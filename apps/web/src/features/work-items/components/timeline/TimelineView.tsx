@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react';
 import { DndContext } from '@dnd-kit/core';
-import { useTranslations } from 'next-intl';
 import { buildMaps, issueColor, type WorkItemsViewProps } from '@/utils/project';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useGroupLabels } from '@/hooks/useGroupLabels';
@@ -40,7 +39,6 @@ export default function TimelineView({
   viewId,
   readOnly,
 }: TimelineViewProps) {
-  const t = useTranslations('workItems.timeline');
   const { can } = usePermissions(project);
   const groupLabels = useGroupLabels();
   const barsReadOnly = readOnly || !can('work_items', 'edit');
@@ -116,10 +114,6 @@ export default function TimelineView({
             corner={columns.length > 0 && <TimelineColumnHeader columns={columns} />}
           />
           {!narrow && <TimelineLabelResizer labelW={titleW} onResize={setTitleWidth} />}
-
-          {rows.length === 0 && (
-            <div className="p-8 text-center text-sm text-muted-foreground">{t('empty')}</div>
-          )}
 
           {rows.map((row) => {
             if (row.kind === 'group') {

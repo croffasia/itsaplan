@@ -67,8 +67,13 @@
       "custom": "Tout a une date."
     }
   },
+  "empty": {
+    "title": "Aucun ticket",
+    "description": "Les tickets apparaîtront ici.",
+    "filteredTitle": "Aucun ticket correspondant",
+    "filteredDescription": "Modifiez les filtres pour en voir plus."
+  },
   "timeline": {
-    "empty": "Aucun ticket à placer sur la chronologie pour l'instant.",
     "expandGroup": "Développer le groupe",
     "collapseGroup": "Réduire le groupe",
     "inferredStart": "Début déduit de la date de création",

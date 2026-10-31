@@ -67,8 +67,13 @@
       "custom": "所有工作項目都已設定日期。"
     }
   },
+  "empty": {
+    "title": "暫無工作項目",
+    "description": "工作項目會顯示在這裡。",
+    "filteredTitle": "沒有符合的工作項目",
+    "filteredDescription": "修改篩選條件以查看更多。"
+  },
   "timeline": {
-    "empty": "暫無可放入時間軸的工作項目。",
     "expandGroup": "展開分組",
     "collapseGroup": "摺疊分組",
     "inferredStart": "根據建立日期推算開始時間",

@@ -67,8 +67,13 @@
       "custom": "Semua memiliki tanggal."
     }
   },
+  "empty": {
+    "title": "Tidak ada issue",
+    "description": "Issue akan muncul di sini.",
+    "filteredTitle": "Tidak ada issue yang cocok",
+    "filteredDescription": "Ubah filter untuk melihat lebih banyak."
+  },
   "timeline": {
-    "empty": "Belum ada issue untuk ditempatkan di linimasa.",
     "expandGroup": "Bentangkan grup",
     "collapseGroup": "Ciutkan grup",
     "inferredStart": "Tanggal mulai ditentukan dari tanggal dibuat",

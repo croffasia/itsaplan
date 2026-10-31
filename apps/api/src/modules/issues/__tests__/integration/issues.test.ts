@@ -1319,6 +1319,41 @@ describe('issues', () => {
       expect(after.completedAt).toBeInstanceOf(Date);
     });
 
+    it('returns the time, the status time and the parent', async () => {
+      const { asOwner, columnId, columnIds } = await setupProject();
+      const parent = (await createIssue(asOwner, columnId, { title: 'Parent' })).data!;
+      const child = (
+        await createIssue(asOwner, columnId, {
+          title: 'Child',
+          parentId: parent.id,
+          estimateMinutes: 120,
+        })
+      ).data!;
+      const spentOn = new Date().toISOString().slice(0, 10);
+      await asOwner.issues({ issueId: child.id }).worklogs.post({ minutes: 30, spentOn });
+      await asOwner.issues({ issueId: child.id }).worklogs.post({ minutes: 15, spentOn });
+
+      const before = (await list(asOwner)).data!;
+      expect(before.find((i) => i.id === parent.id)).toMatchObject({
+        parent: null,
+        estimateMinutes: null,
+        loggedMinutes: 0,
+      });
+      const fresh = before.find((i) => i.id === child.id)!;
+      expect(fresh).toMatchObject({
+        parent: { id: parent.id, identifier: parent.identifier, title: 'Parent' },
+        estimateMinutes: 120,
+        loggedMinutes: 45,
+      });
+      const full = async () => (await asOwner.issues({ issueId: child.id }).get()).data!;
+      expect(fresh.statusSince).toEqual((await full()).statusSince);
+
+      await asOwner.issues({ issueId: child.id }).patch({ columnId: columnIds[1] });
+      const moved = (await list(asOwner)).data!.find((i) => i.id === child.id)!;
+      expect(moved.statusSince).toEqual((await full()).statusSince);
+      expect(moved.statusSince).not.toEqual(fresh.statusSince);
+    });
+
     it('filters by created and updated time', async () => {
       const { asOwner, columnId } = await setupProject();
       const one = (await createIssue(asOwner, columnId, { title: 'Timed' })).data!;

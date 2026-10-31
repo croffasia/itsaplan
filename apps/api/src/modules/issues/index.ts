@@ -26,6 +26,9 @@ import {
   createIssue,
   searchIssues,
   searchIssuesInProjects,
+  listIssuesInProjects,
+  ISSUE_STATE_TYPES,
+  type IssueStateType,
   listIssues,
   listArchivedIssues,
   getIssue,
@@ -148,6 +151,7 @@ import {
   searchIssuesQuery,
   searchAllIssuesQuery,
   listIssuesQuery,
+  listAllIssuesQuery,
   issueSequenceParams,
   updateIssueBody,
   subtaskDispositionQuery,
@@ -604,6 +608,67 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           'An agent run searches only the project it works in.',
         ...requiresPermission(['work_items', 'read']),
         ...mcpTool('search_issues_all_projects'),
+      },
+    },
+  )
+
+  // The list_issues filters that mean the same in every project, over every project the
+  // caller may read work items in. Empty values mean "any", as on list_issues.
+  .get(
+    '/issues',
+    async ({ user, query, request }) => {
+      const ids = await readableProjectIds(requireUser(user).id, [['work_items', 'read']], {
+        mcpOnly: isMcpRequest(request.headers),
+      });
+      const bound = boundProjectId(request.headers);
+      const str = (v: string | undefined) => (v ? v : undefined);
+      const csvIds = (v: string | undefined) => {
+        const list = v
+          ?.split(',')
+          .map(Number)
+          .filter((n) => Number.isInteger(n) && n > 0);
+        return list?.length ? list : undefined;
+      };
+      const stateTypes = query.stateTypes
+        ?.split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const unknown = stateTypes?.find(
+        (s) => !(ISSUE_STATE_TYPES as readonly string[]).includes(s),
+      );
+      if (unknown) throw new HttpError(400, `Unknown state type: ${unknown}`);
+      return listIssuesInProjects(
+        ids.filter((id) => bound == null || id === bound),
+        {
+          assigneeUserId: str(query.assigneeUserId),
+          delegateUserId: str(query.delegateUserId),
+          priority: str(query.priority),
+          dueFrom: str(query.dueFrom),
+          dueTo: str(query.dueTo),
+          createdFrom: instantParam('createdFrom', query.createdFrom),
+          createdTo: instantParam('createdTo', query.createdTo),
+          updatedFrom: instantParam('updatedFrom', query.updatedFrom),
+          updatedTo: instantParam('updatedTo', query.updatedTo),
+          cycleIds: csvIds(query.cycleIds),
+          parentIds: csvIds(query.parentIds),
+          stateTypes: stateTypes?.length ? (stateTypes as IssueStateType[]) : undefined,
+          limit: Math.min(Math.max(query.limit ?? 50, 1), 500),
+        },
+        { includeArchived: query.includeArchived === 'true' },
+      );
+    },
+    {
+      query: listAllIssuesQuery,
+      response: { 200: t.Array(CrossProjectIssueHitResponse), ...errors(400, 401) },
+      detail: {
+        summary: 'List issues in all projects',
+        description:
+          'List the issues of every project you can read by field filters, most recently ' +
+          'updated first. Each issue names its project (projectKey, projectRef, projectName, ' +
+          'teamName); use list_issues for one project and its project-scoped filters. An agent ' +
+          'run lists only the project it works in.',
+        ...requiresPermission(['work_items', 'read']),
+        ...mcpTool('list_issues_all_projects'),
       },
     },
   )

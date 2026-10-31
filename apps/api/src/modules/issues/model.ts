@@ -580,6 +580,36 @@ export const listIssuesQuery = t.Object({
   limit: t.Optional(t.Numeric({ description: 'Max results (1-500). Default 50.' })),
 });
 
+export const listAllIssuesQuery = t.Composite([
+  t.Pick(listIssuesQuery, [
+    'assigneeUserId',
+    'delegateUserId',
+    'priority',
+    'dueFrom',
+    'dueTo',
+    'createdFrom',
+    'createdTo',
+    'updatedFrom',
+    'updatedTo',
+    'includeArchived',
+    'limit',
+  ]),
+  t.Object({
+    cycleIds: t.Optional(
+      t.String({ description: 'CSV of cycle ids; the issue must be in one of them.' }),
+    ),
+    parentIds: t.Optional(
+      t.String({ description: 'CSV of parent issue ids, to list their subtasks.' }),
+    ),
+    stateTypes: t.Optional(
+      t.String({
+        description:
+          "CSV of column state types: backlog, unstarted, started, completed, canceled. 'backlog,unstarted,started' lists the open issues.",
+      }),
+    ),
+  }),
+]);
+
 export const issueSequenceParams = t.Object({
   projectKey: t.String(),
   sequenceNumber: t.Numeric(),

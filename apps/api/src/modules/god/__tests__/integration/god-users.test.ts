@@ -108,9 +108,9 @@ describe('god users', () => {
       const person = await signUpTestUser();
       const { key } = await auth.api.createApiKey({ body: { userId: person.userId, name: 'ci' } });
       const api = apiKeyApi(key);
-      expect(await lastSeenOf(god, person.userId)).toBeNull();
       const before = (await api.me.get()).data;
       expect(before).toMatchObject({ authenticated: true });
+      expect(await lastSeenOf(god, person.userId)).toBeNull();
 
       expect((await api.teams.get()).status).toBe(200);
 

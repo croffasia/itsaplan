@@ -18,13 +18,13 @@ import StartEmpty from '@/components/layout/StartEmpty';
 import InviteStart from '@/features/invite/components/InviteStart';
 
 // The index route: reopen the last-used project if it still exists, otherwise the
-// first visible favorite or project, on the user's preferred start page. Waits for both
-// the project list and the preferences before deciding so it does not flash the
-// wrong destination, and says so when a list it needs cannot be read. With no projects
-// at all, an account that owns or manages a team is offered to create the first one
-// there. An account that may create a team in a workspace, its own first, is offered
-// to; one with no team and nowhere to create one gets `NoTeamStart`, and a team member
-// is told who adds them to a project.
+// first visible favorite or project, on the user's preferred start page. Waits for the
+// project list and, when the client has a session, the preferences before deciding so
+// it does not flash the wrong destination, and says so when a list it needs cannot be
+// read. With no projects at all, an account that owns or manages a team is offered to
+// create the first one there. An account that may create a team in a workspace, its own
+// first, is offered to; one with no team and nowhere to create one gets `NoTeamStart`,
+// and a team member is told who adds them to a project.
 export default function Home() {
   const t = useTranslations('shell');
   const tCommon = useTranslations('common');

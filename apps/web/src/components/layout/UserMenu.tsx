@@ -22,8 +22,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 // Signed-in user control in the header: shows the account avatar and a menu with
 // the email, the role, links to preferences, connected accounts, account security
 // (passkeys) and API keys, and sign out.
-// Signing out clears the session and the proxy sends the browser back to
-// the login page.
+// Signing out clears the session and loads the sign-in page itself.
 export default function UserMenu() {
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');

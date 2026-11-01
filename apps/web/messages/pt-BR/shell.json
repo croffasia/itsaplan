@@ -10,5 +10,7 @@
   "createTeam": "Criar equipe",
   "noProjectsTitle": "Nenhum projeto ainda",
   "noProjectsHint": "Crie seu primeiro projeto para começar a planejar issues em um quadro.",
-  "createProject": "Criar projeto"
+  "createProject": "Criar projeto",
+  "loadFailedTitle": "Não foi possível carregar seus projetos",
+  "loadFailedHint": "Verifique sua conexão e recarregue a página."
 }

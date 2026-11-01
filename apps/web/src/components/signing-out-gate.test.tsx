@@ -4,6 +4,7 @@ import { act } from 'react';
 import type { Root } from 'react-dom/client';
 import { NextIntlClientProvider } from 'next-intl';
 import { JSDOM, VirtualConsole } from 'jsdom';
+import { markSignedIn } from '@/lib/api/core/client';
 import { signOut } from '@/lib/auth-client';
 import common from '../../messages/en/common.json';
 import SigningOutGate from './signing-out-gate';
@@ -45,6 +46,8 @@ beforeEach(async () => {
 
 afterEach(() => {
   act(() => root.unmount());
+  // signOut marks lib/api as signing out, which would mute its 401 handling in later files.
+  markSignedIn();
   dom.window.close();
   for (const [name, descriptor] of descriptors) {
     if (descriptor) Object.defineProperty(globalThis, name, descriptor);

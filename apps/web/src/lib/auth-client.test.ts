@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, before, beforeEach, describe, it } from 'node:test';
 import { JSDOM, VirtualConsole } from 'jsdom';
+import { markSignedIn } from '@/lib/api/core/client';
 import { authBaseURL } from './auth-client';
 
 describe('authBaseURL', () => {
@@ -72,6 +73,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  // signOut marks lib/api as signing out, which would mute its 401 handling in later files.
+  markSignedIn();
   for (const [name, descriptor] of originals) {
     if (descriptor) Object.defineProperty(globalThis, name, descriptor);
     else delete (globalThis as Record<string, unknown>)[name];

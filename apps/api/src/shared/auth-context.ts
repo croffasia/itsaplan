@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia';
 import { db } from '@repo/db';
 import { user as users } from '@repo/db/schema';
-import { and, eq, isNull, lt, or } from 'drizzle-orm';
+import { and, eq, isNull, lt, or, sql } from 'drizzle-orm';
 import {
   auth,
   ensurePersonalWorkspace,
@@ -87,7 +87,9 @@ async function noteSeen(userId: string): Promise<void> {
   try {
     await db
       .update(users)
-      .set({ lastSeenAt: new Date(now) })
+      // updatedAt has an $onUpdate, and SCIM shows it as meta.lastModified: using the app is
+      // no change to the account.
+      .set({ lastSeenAt: new Date(now), updatedAt: sql`${users.updatedAt}` })
       .where(and(eq(users.id, userId), or(isNull(users.lastSeenAt), lt(users.lastSeenAt, due))));
   } catch (error) {
     // Forgotten so the next request tries again, rather than an hour later.

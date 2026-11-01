@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { eq } from 'drizzle-orm';
 import { auth } from '@repo/auth';
-import { db, session, team } from '@repo/db';
+import { db, session, team, user } from '@repo/db';
 import { resetDb } from '#tests/helpers/db';
-import { authedApi, ownWorkspaceId, createProject } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, ownWorkspaceId, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { addUser, createAgentUser, joinProject, setup, type Actor } from '../helpers';
 
@@ -96,6 +96,30 @@ describe('god users', () => {
 
       const res = await god.api.god.users.get({ query: ALL });
       expect(res.data?.items.find((u) => u.id === person.userId)?.lastSeenAt).not.toBeNull();
+    });
+
+    it('notes a request made with an API key and leaves updatedAt alone', async () => {
+      const person = await signUpTestUser();
+      const { key } = await auth.api.createApiKey({ body: { userId: person.userId, name: 'ci' } });
+      const [before] = await db.select().from(user).where(eq(user.id, person.userId));
+      expect(before.lastSeenAt).toBeNull();
+
+      expect((await apiKeyApi(key).teams.get()).status).toBe(200);
+
+      const [after] = await db.select().from(user).where(eq(user.id, person.userId));
+      expect(after.lastSeenAt).not.toBeNull();
+      expect(after.updatedAt).toEqual(before.updatedAt);
+    });
+
+    it('writes it once an hour, not on every request', async () => {
+      const person = await signUpTestUser();
+      const api = authedApi(person.cookie);
+      expect((await api.teams.get()).status).toBe(200);
+      const [first] = await db.select().from(user).where(eq(user.id, person.userId));
+
+      expect((await api.teams.get()).status).toBe(200);
+      const [second] = await db.select().from(user).where(eq(user.id, person.userId));
+      expect(second.lastSeenAt).toEqual(first.lastSeenAt);
     });
 
     it('lists people by default and agent bot users only when asked', async () => {

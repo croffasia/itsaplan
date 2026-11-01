@@ -10,5 +10,7 @@
   "createTeam": "팀 생성",
   "noProjectsTitle": "아직 프로젝트가 없습니다",
   "noProjectsHint": "첫 프로젝트를 생성하고 보드에서 이슈 계획을 시작하세요.",
-  "createProject": "프로젝트 생성"
+  "createProject": "프로젝트 생성",
+  "loadFailedTitle": "프로젝트를 불러올 수 없습니다",
+  "loadFailedHint": "연결을 확인하고 페이지를 새로고침하세요."
 }

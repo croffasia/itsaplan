@@ -10,5 +10,7 @@
   "createTeam": "إنشاء فريق",
   "noProjectsTitle": "لا توجد مشاريع بعد",
   "noProjectsHint": "اعمل أول مشروع ليك وابدأ تخطّط مهامك على لوحة.",
-  "createProject": "إنشاء مشروع"
+  "createProject": "إنشاء مشروع",
+  "loadFailedTitle": "تعذّر تحميل مشاريعك",
+  "loadFailedHint": "تأكد من الاتصال وأعد تحميل الصفحة."
 }

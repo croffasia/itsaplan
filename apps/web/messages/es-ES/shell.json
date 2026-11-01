@@ -10,5 +10,7 @@
   "createTeam": "Crear equipo",
   "noProjectsTitle": "Todavía no hay proyectos",
   "noProjectsHint": "Crea tu primer proyecto para empezar a planificar tickets en un tablero.",
-  "createProject": "Crear proyecto"
+  "createProject": "Crear proyecto",
+  "loadFailedTitle": "No se pudieron cargar tus proyectos",
+  "loadFailedHint": "Comprueba tu conexión y vuelve a cargar la página."
 }

@@ -8,8 +8,7 @@ import { useSigningOut } from '@/lib/auth-client';
 
 // Swaps the app for a neutral screen while a sign-out leaves it: left mounted, the app
 // would draw empty pages and ask the api for data the gone session can no longer read
-// until the next page loads. It uses the logged-out screens' frame, since the sign-in
-// page comes next.
+// until the next page loads.
 export default function SigningOutGate({ children }: { children: ReactNode }) {
   const t = useTranslations('common');
   const signingOut = useSigningOut();

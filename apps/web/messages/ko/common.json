@@ -217,5 +217,6 @@
     "perPage": "개씩 보기",
     "range": "전체 {total}개 중 {first}-{last}"
   },
-  "aboutCloudAndPro": "Cloud 및 Pro 알아보기"
+  "aboutCloudAndPro": "Cloud 및 Pro 알아보기",
+  "signingOut": "로그아웃하는 중…"
 }

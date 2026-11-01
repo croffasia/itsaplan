@@ -217,5 +217,6 @@
     "perPage": "در هر صفحه",
     "range": "{first}-{last} از {total}"
   },
-  "aboutCloudAndPro": "درباره Cloud و Pro"
+  "aboutCloudAndPro": "درباره Cloud و Pro",
+  "signingOut": "در حال خروج…"
 }

@@ -13,6 +13,7 @@ import { RelativeTimeProvider } from '@/context/relativeTimeContext';
 import { Toaster } from '@/components/ui/sonner';
 import PreferencesSync from '@/components/preferences-sync';
 import SessionScope from '@/components/session-scope';
+import SigningOutGate from '@/components/signing-out-gate';
 
 // The message shown for a failed mutation: the API's `{ error }` text (carried by
 // ApiError) when present, otherwise a generic fallback.
@@ -66,7 +67,9 @@ export function Providers({ children }: { children: ReactNode }) {
         <PreferencesSync />
         <SyncProvider>
           <RelativeTimeProvider>
-            <HotkeysProvider>{children}</HotkeysProvider>
+            <HotkeysProvider>
+              <SigningOutGate>{children}</SigningOutGate>
+            </HotkeysProvider>
           </RelativeTimeProvider>
         </SyncProvider>
         <Toaster position={dir === 'rtl' ? 'bottom-left' : 'bottom-right'} dir={dir} richColors />

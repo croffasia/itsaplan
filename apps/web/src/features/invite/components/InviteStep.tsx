@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import type { InviteView } from '@/lib/api/endpoints/invites';
 import { signOut, useSession } from '@/lib/auth-client';
@@ -17,12 +16,10 @@ import InviteNotice from './InviteNotice';
 export default function InviteStep({ token, invite }: { token: string; invite: InviteView }) {
   const t = useTranslations('invite');
   const tCommon = useTranslations('common');
-  const router = useRouter();
   const { data: session, isPending: sessionPending } = useSession();
 
-  async function switchAccount() {
-    await signOut();
-    router.refresh();
+  function switchAccount() {
+    void signOut('here');
   }
 
   if (invite.status !== 'pending' || invite.expired) {

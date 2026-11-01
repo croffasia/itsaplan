@@ -217,5 +217,6 @@
     "perPage": "par page",
     "range": "{first}-{last} sur {total}"
   },
-  "aboutCloudAndPro": "En savoir plus sur Cloud et Pro"
+  "aboutCloudAndPro": "En savoir plus sur Cloud et Pro",
+  "signingOut": "Déconnexion…"
 }

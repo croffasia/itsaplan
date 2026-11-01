@@ -94,4 +94,14 @@ describe('signOut', () => {
     await signOut('here');
     assert.equal(navigations, 2);
   });
+
+  it('leaves even when the sign-out request fails', async () => {
+    answer = () => {
+      throw new TypeError('Failed to fetch');
+    };
+
+    await signOut();
+
+    assert.equal(navigations, 1);
+  });
 });

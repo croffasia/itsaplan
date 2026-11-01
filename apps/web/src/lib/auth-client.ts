@@ -95,7 +95,9 @@ export async function signOut(then: 'login' | 'here' = 'login'): Promise<void> {
   for (const listener of signingOutListeners) listener();
   // Lets React take the app down before the session goes.
   await new Promise((resolve) => setTimeout(resolve, 0));
-  await authClient.signOut();
+  // Leaves whatever the sign-out answered, as lib/api's endSession does: a failed
+  // request must not hold the browser on the signing-out screen.
+  await authClient.signOut().catch(() => {});
   if (then === 'here') window.location.reload();
   else window.location.replace('/login');
 }

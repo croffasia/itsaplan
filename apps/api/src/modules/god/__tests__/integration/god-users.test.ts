@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { eq } from 'drizzle-orm';
-import { db, team } from '@repo/db';
+import { auth } from '@repo/auth';
+import { db, session, team } from '@repo/db';
 import { resetDb } from '#tests/helpers/db';
-import { ownWorkspaceId, createProject } from '#tests/helpers/app';
+import { authedApi, ownWorkspaceId, createProject } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
 import { addUser, createAgentUser, joinProject, setup, type Actor } from '../helpers';
 
 // The instance user directory under god mode: listing every account on the instance,
@@ -76,6 +78,24 @@ describe('god users', () => {
         projectCount: 1,
       });
       expect(res.data?.items[0].lastSeenAt).not.toBeNull();
+    });
+
+    it('keeps when a person was last seen after they sign out', async () => {
+      const { god } = await setup();
+      const person = await signUpTestUser({ name: 'Ann', email: 'ann@example.com' });
+      expect((await authedApi(person.cookie).teams.get()).status).toBe(200);
+
+      const signOut = await auth.handler(
+        new Request(new URL(process.env.API_URL!).origin + '/api/auth/sign-out', {
+          method: 'POST',
+          headers: { cookie: person.cookie, origin: new URL(process.env.APP_URL!).origin },
+        }),
+      );
+      expect(signOut.status).toBe(200);
+      expect(await db.select().from(session).where(eq(session.userId, person.userId))).toEqual([]);
+
+      const res = await god.api.god.users.get({ query: ALL });
+      expect(res.data?.items.find((u) => u.id === person.userId)?.lastSeenAt).not.toBeNull();
     });
 
     it('lists people by default and agent bot users only when asked', async () => {

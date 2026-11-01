@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia';
 import { db } from '@repo/db';
 import { user as users } from '@repo/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull, lt, or } from 'drizzle-orm';
 import {
   auth,
   ensurePersonalWorkspace,
@@ -69,5 +69,29 @@ export async function requestUser(request: Request): Promise<SessionUser | null>
 async function signedIn(user: SessionUser): Promise<SessionUser> {
   if (isAccountDeactivated(user)) throw new HttpError(401, 'This account is deactivated');
   await ensurePersonalWorkspace(user);
+  await noteSeen(user.id);
   return user;
+}
+
+// god's "Last seen" is good to the hour, so a person's use is written at most once an
+// hour: the memo spares the query, and the condition keeps several api replicas from
+// writing it each.
+const SEEN_EVERY_MS = 60 * 60 * 1000;
+const lastNoted = new Map<string, number>();
+
+async function noteSeen(userId: string): Promise<void> {
+  const now = Date.now();
+  if ((lastNoted.get(userId) ?? 0) > now - SEEN_EVERY_MS) return;
+  lastNoted.set(userId, now);
+  const due = new Date(now - SEEN_EVERY_MS);
+  try {
+    await db
+      .update(users)
+      .set({ lastSeenAt: new Date(now) })
+      .where(and(eq(users.id, userId), or(isNull(users.lastSeenAt), lt(users.lastSeenAt, due))));
+  } catch (error) {
+    // Forgotten so the next request tries again, rather than an hour later.
+    lastNoted.delete(userId);
+    console.error('[auth] could not note when a person was last seen:', error);
+  }
 }

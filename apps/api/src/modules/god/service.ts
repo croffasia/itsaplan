@@ -76,7 +76,8 @@ export interface InstanceUserRow {
   active: boolean;
   // Why god cannot switch `active` here, or null when it can.
   activeLock: ActiveLock | null;
-  // The start of the most recent session, or null when the user never signed in.
+  // When the person last used the app, to the hour; null when they have not used it since
+  // the column was added.
   lastSeenAt: string | null;
   createdAt: string;
 }
@@ -122,7 +123,6 @@ interface UserFacts {
   agents: Set<string>;
   providers: Map<string, string[]>;
   projectCounts: Map<string, number>;
-  lastSeen: Map<string, Date>;
 }
 
 async function loadUserFacts(userIds: string[]): Promise<UserFacts> {
@@ -131,10 +131,9 @@ async function loadUserFacts(userIds: string[]): Promise<UserFacts> {
       agents: new Set(),
       providers: new Map(),
       projectCounts: new Map(),
-      lastSeen: new Map(),
     };
   }
-  const [agentRows, accountRows, memberRows, sessionRows] = await Promise.all([
+  const [agentRows, accountRows, memberRows] = await Promise.all([
     db.select({ userId: aiAgent.userId }).from(aiAgent).where(inArray(aiAgent.userId, userIds)),
     db
       .select({ userId: account.userId, providerId: account.providerId })
@@ -145,12 +144,6 @@ async function loadUserFacts(userIds: string[]): Promise<UserFacts> {
       .from(projectMember)
       .where(inArray(projectMember.userId, userIds))
       .groupBy(projectMember.userId),
-    // Session start times, reduced to the latest per user below. Aggregating in
-    // SQL would return the max as a driver-formatted string, not a Date.
-    db
-      .select({ userId: session.userId, createdAt: session.createdAt })
-      .from(session)
-      .where(inArray(session.userId, userIds)),
   ]);
 
   const providers = new Map<string, string[]>();
@@ -160,17 +153,10 @@ async function loadUserFacts(userIds: string[]): Promise<UserFacts> {
     providers.set(r.userId, list);
   }
 
-  const lastSeen = new Map<string, Date>();
-  for (const r of sessionRows) {
-    const current = lastSeen.get(r.userId);
-    if (!current || r.createdAt > current) lastSeen.set(r.userId, r.createdAt);
-  }
-
   return {
     agents: new Set(agentRows.map((r) => r.userId)),
     providers,
     projectCounts: new Map(memberRows.map((r) => [r.userId, r.count])),
-    lastSeen,
   };
 }
 
@@ -181,7 +167,7 @@ function activeLockOf(role: string, isAgent: boolean, scim: boolean): ActiveLock
 }
 
 function toRow(r: UserRow, facts: UserFacts, scim: boolean): InstanceUserRow {
-  const lastSeen = facts.lastSeen.get(r.id) ?? null;
+  const lastSeen = r.lastSeenAt ?? null;
   const role = r.role ?? 'user';
   const isAgent = facts.agents.has(r.id);
   return {

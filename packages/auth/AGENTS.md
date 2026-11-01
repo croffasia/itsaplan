@@ -25,6 +25,12 @@ insert, which passes no hook) or while the setting was off gets its own on its n
 request. It remembers per process who needs nothing, so a request costs a lookup; an
 agent's bot user never gets one.
 
+`lastSeenAt` is one more `additionalField`, with `input: false` and `returned: false`, so
+the session does not carry it. apps/api writes it from the same per-request step, at most
+once an hour per account, whether the request came with a session, an API key or an MCP
+OAuth token; god's users list shows it as "Last seen". Sessions are deleted on sign-out,
+so they are no record of when someone last used the app.
+
 ## Instance settings (`src/instance.ts`)
 
 Registration mode, which sign-in methods are offered, the mail provider, the OAuth

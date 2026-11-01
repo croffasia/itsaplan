@@ -217,5 +217,6 @@
     "perPage": "每頁",
     "range": "第 {first}-{last} 項，共 {total} 項"
   },
-  "aboutCloudAndPro": "瞭解 Cloud 和 Pro"
+  "aboutCloudAndPro": "瞭解 Cloud 和 Pro",
+  "signingOut": "正在登出…"
 }

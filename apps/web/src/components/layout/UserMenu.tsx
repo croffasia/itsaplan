@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { signOut, useSession } from '@/lib/auth-client';
@@ -29,7 +28,6 @@ export default function UserMenu() {
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
   const sectionLabel = useAccountSectionLabel();
-  const router = useRouter();
   const { data: session, isPending } = useSession();
 
   // better-auth reads the session on the client, so the server renders no user and
@@ -45,10 +43,8 @@ export default function UserMenu() {
   const role = (user as { role?: string }).role ?? 'user';
   const image = (user as { image?: string | null }).image ?? null;
 
-  async function onSignOut() {
-    await signOut();
-    router.push('/login');
-    router.refresh();
+  function onSignOut() {
+    void signOut();
   }
 
   return (

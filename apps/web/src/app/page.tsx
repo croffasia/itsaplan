@@ -115,7 +115,9 @@ export default function Home() {
     ? projects.length === 0 && (teamsFailed || workspacesFailed)
     : projectsFailed;
   if (loadFailed) {
-    return <StartEmpty icon={<CloudOff />} title={t('loadFailedTitle')} hint={t('loadFailedHint')} />;
+    return (
+      <StartEmpty icon={<CloudOff />} title={t('loadFailedTitle')} hint={t('loadFailedHint')} />
+    );
   }
 
   return (

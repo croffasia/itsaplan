@@ -115,7 +115,9 @@ it('opens the project when the client has no session to read the preferences wit
 
 it('says the projects could not be loaded instead of loading forever', async () => {
   answer = (path) =>
-    path === '/projects' ? Response.json({ error: 'Unavailable' }, { status: 500 }) : Response.json([]);
+    path === '/projects'
+      ? Response.json({ error: 'Unavailable' }, { status: 500 })
+      : Response.json([]);
 
   await renderHome();
 

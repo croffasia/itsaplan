@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { api, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { db, issue as issueTable, projectView } from '@repo/db';
+import { eq } from 'drizzle-orm';
+import { sweepExpiredShares } from '#modules/share/service';
 
 // Public read-only sharing. Enabling sharing on an issue or a saved view sets an
 // unguessable token; the /share/* GET routes then return a self-contained bundle
@@ -433,6 +436,124 @@ describe('share', () => {
       const outsider = authedApi((await signUpTestUser()).cookie);
       const res = await outsider.views({ viewId }).share.post();
       expect(res.status).toBe(403);
+    });
+  });
+  // A link can carry an expiry. Past it the link is dead everywhere: the public read
+  // 404s, the issue reports itself as not shared, the sweep clears the token, and
+  // enabling sharing again hands out a new link instead of reviving the old one.
+  describe('link expiry', () => {
+    const inDays = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString();
+
+    async function expireIssueShare(issueId: number) {
+      await db
+        .update(issueTable)
+        .set({ shareExpiresAt: new Date(Date.now() - 1000) })
+        .where(eq(issueTable.id, issueId));
+    }
+
+    it('stores the expiry and reports it on the issue', async () => {
+      const { asOwner, issueId } = await setup();
+      const expiresAt = inDays(3);
+      const enabled = await asOwner.issues({ issueId }).share.post({ expiresAt });
+      expect(enabled.status).toBe(200);
+      expect(new Date(enabled.data!.expiresAt!).getTime()).toBe(new Date(expiresAt).getTime());
+
+      const read = await asOwner.issues({ issueId }).get();
+      expect(read.data!.shareToken).toBe(enabled.data!.token);
+      expect(new Date(read.data!.shareExpiresAt!).getTime()).toBe(new Date(expiresAt).getTime());
+
+      const shared = await api.share.issue({ token: enabled.data!.token }).get();
+      expect(shared.status).toBe(200);
+    });
+
+    it('keeps the expiry when another change omits it, and clears it with null', async () => {
+      const { asOwner, issueId } = await setup();
+      const first = await asOwner.issues({ issueId }).share.post({ expiresAt: inDays(1) });
+      const flipped = await asOwner.issues({ issueId }).share.post({ extended: true });
+      expect(flipped.data!.token).toBe(first.data!.token);
+      expect(flipped.data!.expiresAt).toEqual(first.data!.expiresAt);
+
+      const never = await asOwner.issues({ issueId }).share.post({ expiresAt: null });
+      expect(never.data!.token).toBe(first.data!.token);
+      expect(never.data!.expiresAt).toBeNull();
+    });
+
+    it('rejects an expiry in the past', async () => {
+      const { asOwner, issueId } = await setup();
+      const res = await asOwner
+        .issues({ issueId })
+        .share.post({ expiresAt: new Date(Date.now() - 60_000).toISOString() });
+      expect(res.status).toBe(400);
+    });
+
+    it('stops serving an expired link and reports the issue as not shared', async () => {
+      const { asOwner, issueId } = await setup();
+      const { token } = (await asOwner.issues({ issueId }).share.post({ expiresAt: inDays(1) }))
+        .data!;
+      await expireIssueShare(issueId);
+
+      const gone = await api.share.issue({ token }).get();
+      expect(gone.status).toBe(404);
+
+      const read = await asOwner.issues({ issueId }).get();
+      expect(read.data!.shareToken).toBeNull();
+      expect(read.data!.shareExtended).toBe(false);
+      expect(read.data!.shareExpiresAt).toBeNull();
+    });
+
+    it('issues a new token when an expired link is shared again', async () => {
+      const { asOwner, issueId } = await setup();
+      const first = (
+        await asOwner.issues({ issueId }).share.post({ extended: true, expiresAt: inDays(1) })
+      ).data!;
+      await expireIssueShare(issueId);
+
+      const again = (await asOwner.issues({ issueId }).share.post()).data!;
+      expect(again.token).not.toBe(first.token);
+      expect(again.expiresAt).toBeNull();
+      const read = await asOwner.issues({ issueId }).get();
+      expect(read.data!.shareExtended).toBe(false);
+      expect((await api.share.issue({ token: first.token }).get()).status).toBe(404);
+      expect((await api.share.issue({ token: again.token }).get()).status).toBe(200);
+    });
+
+    it('the sweep clears expired tokens and leaves live ones', async () => {
+      const { asOwner, issueId, columnId } = await setup();
+      const other = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.post({ columnId, title: 'Still shared' });
+      const otherId = other.data!.id;
+      await asOwner.issues({ issueId }).share.post({ expiresAt: inDays(1) });
+      const live = (await asOwner.issues({ issueId: otherId }).share.post({ expiresAt: inDays(7) }))
+        .data!;
+      await expireIssueShare(issueId);
+
+      expect(await sweepExpiredShares()).toBe(1);
+      const [row] = await db.select().from(issueTable).where(eq(issueTable.id, issueId));
+      expect(row.shareToken).toBeNull();
+      expect(row.shareExpiresAt).toBeNull();
+      expect((await api.share.issue({ token: live.token }).get()).status).toBe(200);
+    });
+
+    it('expires a shared view the same way', async () => {
+      const { asOwner } = await setup();
+      const view = await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'Board' });
+      const viewId = view.data!.id;
+      const { token } = (await asOwner.views({ viewId }).share.post({ expiresAt: inDays(3) }))
+        .data!;
+      expect((await api.share.view({ token }).get()).status).toBe(200);
+
+      await db
+        .update(projectView)
+        .set({ shareExpiresAt: new Date(Date.now() - 1000) })
+        .where(eq(projectView.id, viewId));
+      expect((await api.share.view({ token }).get()).status).toBe(404);
+
+      const views = await asOwner.projects({ projectKey: 'MKT' }).views.get();
+      const listed = views.data!.find((v: { id: number }) => v.id === viewId)!;
+      expect(listed.shareToken).toBeNull();
+
+      expect(await sweepExpiredShares()).toBe(1);
     });
   });
 });

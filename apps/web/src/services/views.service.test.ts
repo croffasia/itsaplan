@@ -14,6 +14,7 @@ function view(id: number, flags: Partial<View> = {}): View {
     position: id,
     shareToken: null,
     shareExtended: false,
+    shareExpiresAt: null,
     isPrivate: false,
     favorite: false,
     hidden: false,

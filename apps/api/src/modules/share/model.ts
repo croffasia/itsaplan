@@ -9,8 +9,11 @@ export const shareViewParams = t.Object({ viewId: t.Numeric() });
 export const shareTokenParams = t.Object({ token });
 export const sharedViewIssueParams = t.Object({ token, issueId: t.Numeric() });
 
-// The share link's token, returned when sharing is enabled.
-export const ShareTokenResponse = t.Object({ token: t.String() });
+// The share link's token and expiry, returned when sharing is enabled.
+export const ShareTokenResponse = t.Object({
+  token: t.String(),
+  expiresAt: t.Nullable(t.String({ format: 'date-time' })),
+});
 
 // How much the link exposes, sent when enabling it. Enabling an already-shared
 // entity keeps its token and only changes this; leaving the field out keeps that
@@ -22,6 +25,15 @@ export const shareExtendedBody = t.Optional(
         description:
           'Expose the full issues (assignees, labels, custom fields, activity) instead of their title, description, state, type, priority, dates, subtasks and links. Omit to leave it unchanged.',
       }),
+    ),
+    expiresAt: t.Optional(
+      t.Nullable(
+        t.String({
+          format: 'date-time',
+          description:
+            'When the link stops working, as an ISO 8601 timestamp in the future. null makes it never expire; omit to leave it unchanged. An expired link is revoked and enabling sharing again issues a new link.',
+        }),
+      ),
     ),
   }),
 );

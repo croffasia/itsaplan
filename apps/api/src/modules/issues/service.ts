@@ -148,6 +148,9 @@ export interface IssueRow {
   // activity) or only its title, description, state, type, priority, dates,
   // subtasks and links.
   shareExtended: boolean;
+  // When the share link stops working, or null when it never does. A link past
+  // its expiry reads as not shared (shareToken null) even before the sweep clears it.
+  shareExpiresAt: string | null;
   labelIds: number[];
   // Custom field values set on this issue, one entry per field that has a scalar
   // value or selected options (unset fields are omitted). Included so the planner
@@ -156,7 +159,14 @@ export interface IssueRow {
   fieldValues: IssueFieldValueEntry[];
 }
 
+// Whether a share link with this expiry still works. The same rule as shareActive
+// in modules/share, kept here so mapping an issue does not import the share module.
+function liveShare(expiresAt: Date | null): boolean {
+  return expiresAt === null || expiresAt.getTime() > Date.now();
+}
+
 function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow {
+  const shared = row.shareToken !== null && liveShare(row.shareExpiresAt);
   return {
     id: row.id,
     projectId: row.projectId,
@@ -182,8 +192,9 @@ function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow 
     updatedAt: iso(row.updatedAt),
     archivedAt: row.archivedAt ? iso(row.archivedAt) : null,
     statusSince: iso(row.createdAt),
-    shareToken: row.shareToken,
-    shareExtended: row.shareExtended,
+    shareToken: shared ? row.shareToken : null,
+    shareExtended: shared && row.shareExtended,
+    shareExpiresAt: shared && row.shareExpiresAt ? iso(row.shareExpiresAt) : null,
     labelIds: [],
     fieldValues: [],
   };

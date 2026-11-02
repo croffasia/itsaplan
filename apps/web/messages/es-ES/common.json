@@ -138,7 +138,14 @@
     "copy": "Copiar",
     "copied": "Copiado",
     "calendarFeed": "Feed de calendario",
-    "calendarFeedHint": "Copia este enlace en tu aplicación de calendario para suscribirte a esta vista."
+    "calendarFeedHint": "Copia este enlace en tu aplicación de calendario para suscribirte a esta vista.",
+    "expiry": "Caducidad",
+    "expiryHint": "El enlace deja de funcionar después.",
+    "neverExpires": "No caduca nunca",
+    "expiresInDays": "{count, plural, one {En # día} other {En # días}}",
+    "expiresOn": "Hasta {date}",
+    "expiryPickDate": "O elige el último día:",
+    "expiryFailed": "No se pudo cambiar cuándo caduca el enlace. Inténtalo de nuevo."
   },
   "actions": "Acciones",
   "clearSearch": "Limpiar la búsqueda",

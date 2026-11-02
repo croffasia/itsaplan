@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { db, issue, projectView } from '@repo/db';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, gt, isNotNull, isNull, lte, or, type AnyColumn, type SQL } from 'drizzle-orm';
 import { getProjectById, type ProjectRow } from '#modules/projects/service';
 import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '#modules/issue-types/service';
@@ -164,58 +164,130 @@ async function issueBundle(
   };
 }
 
+// --- Expiry ---------------------------------------------------------------------
+
+// A link can carry an expiry. Past it the link is dead: the public reads no longer
+// match its token, the issue and the view report themselves as not shared, and the
+// expiry sweep clears the token for good. Enabling it again issues a fresh token, so
+// a link that has expired never comes back to life.
+
+// How the enable call changes the expiry: a moment, null for never, or undefined to
+// leave it as it stands (the same convention as `extended`).
+export type ShareExpiry = Date | null | undefined;
+
+// True while a share with this expiry still works.
+export function shareActive(expiresAt: Date | null, now = new Date()): boolean {
+  return expiresAt === null || expiresAt.getTime() > now.getTime();
+}
+
+// The SQL form of shareActive for a token lookup.
+function activeShare(expiresAt: AnyColumn): SQL {
+  return or(isNull(expiresAt), gt(expiresAt, new Date()))!;
+}
+
+// Clears the token of every share whose expiry has passed. Returns how many links
+// it revoked. Runs from the api's background loop.
+export async function sweepExpiredShares(): Promise<number> {
+  const now = new Date();
+  const [issues, views] = await Promise.all([
+    db
+      .update(issue)
+      .set({ shareToken: null, shareExtended: false, shareExpiresAt: null })
+      .where(and(isNotNull(issue.shareToken), lte(issue.shareExpiresAt, now)))
+      .returning({ id: issue.id }),
+    db
+      .update(projectView)
+      .set({ shareToken: null, shareExtended: false, shareExpiresAt: null })
+      .where(and(isNotNull(projectView.shareToken), lte(projectView.shareExpiresAt, now)))
+      .returning({ id: projectView.id }),
+  ]);
+  return issues.length + views.length;
+}
+
 // --- Enable / revoke ------------------------------------------------------------
 
+export interface ShareState {
+  token: string;
+  expiresAt: string | null;
+}
+
 // Enables sharing for an issue. An already-shared issue keeps its token, so the
-// same call also flips `extended` on a live link; omitting `extended` leaves how
-// much the link exposes as it stands. Returns the token, or null if the issue does
-// not exist.
+// same call also flips `extended` or moves the expiry of a live link; omitting
+// either leaves it as it stands. An expired link is replaced by a fresh token and
+// starts without an expiry unless one is given. Returns the token and expiry, or
+// null if the issue does not exist.
 export async function enableIssueShare(
   issueId: number,
   extended?: boolean,
-): Promise<string | null> {
+  expiresAt?: ShareExpiry,
+): Promise<ShareState | null> {
   const rows = await db
-    .select({ token: issue.shareToken })
+    .select({ token: issue.shareToken, expiresAt: issue.shareExpiresAt })
     .from(issue)
     .where(eq(issue.id, issueId));
   if (rows.length === 0) return null;
-  const token = rows[0].token ?? randomUUID();
-  await db
-    .update(issue)
-    .set({ shareToken: token, ...(extended === undefined ? {} : { shareExtended: extended }) })
-    .where(eq(issue.id, issueId));
-  return token;
+  const next = nextShare(rows[0], extended, expiresAt);
+  await db.update(issue).set(next.set).where(eq(issue.id, issueId));
+  return next.state;
+}
+
+// The token and the column values an enable call writes, shared by issues and views.
+function nextShare(
+  current: { token: string | null; expiresAt: Date | null },
+  extended: boolean | undefined,
+  expiresAt: ShareExpiry,
+): {
+  set: { shareToken: string; shareExtended?: boolean; shareExpiresAt: Date | null };
+  state: ShareState;
+} {
+  const live = current.token !== null && shareActive(current.expiresAt);
+  const token = live ? current.token! : randomUUID();
+  const expiry = expiresAt !== undefined ? expiresAt : live ? current.expiresAt : null;
+  return {
+    set: {
+      shareToken: token,
+      // A fresh link starts reduced unless the caller asks for more.
+      ...(extended !== undefined
+        ? { shareExtended: extended }
+        : live
+          ? {}
+          : { shareExtended: false }),
+      shareExpiresAt: expiry,
+    },
+    state: { token, expiresAt: expiry ? expiry.toISOString() : null },
+  };
 }
 
 // Revokes sharing for an issue. Returns false if the issue does not exist.
 export async function disableIssueShare(issueId: number): Promise<boolean> {
   const rows = await db
     .update(issue)
-    .set({ shareToken: null, shareExtended: false })
+    .set({ shareToken: null, shareExtended: false, shareExpiresAt: null })
     .where(eq(issue.id, issueId))
     .returning({ id: issue.id });
   return rows.length > 0;
 }
 
 // Enables sharing for a view, the same way enableIssueShare does for an issue.
-export async function enableViewShare(viewId: number, extended?: boolean): Promise<string | null> {
+export async function enableViewShare(
+  viewId: number,
+  extended?: boolean,
+  expiresAt?: ShareExpiry,
+): Promise<ShareState | null> {
   const rows = await db
-    .select({ token: projectView.shareToken })
+    .select({ token: projectView.shareToken, expiresAt: projectView.shareExpiresAt })
     .from(projectView)
     .where(eq(projectView.id, viewId));
   if (rows.length === 0) return null;
-  const token = rows[0].token ?? randomUUID();
-  await db
-    .update(projectView)
-    .set({ shareToken: token, ...(extended === undefined ? {} : { shareExtended: extended }) })
-    .where(eq(projectView.id, viewId));
-  return token;
+  const next = nextShare(rows[0], extended, expiresAt);
+  await db.update(projectView).set(next.set).where(eq(projectView.id, viewId));
+  return next.state;
 }
 
 export async function disableViewShare(viewId: number): Promise<boolean> {
   const rows = await db
     .update(projectView)
-    .set({ shareToken: null, shareExtended: false })
+    .set({ shareToken: null, shareExtended: false, shareExpiresAt: null })
     .where(eq(projectView.id, viewId))
     .returning({ id: projectView.id });
   return rows.length > 0;
@@ -235,7 +307,11 @@ export async function getSharedIssue(token: string): Promise<SharedIssueBundle |
 
 // A private view has no public link, whatever token it carries.
 const sharedViewByToken = (token: string) =>
-  and(eq(projectView.shareToken, token), eq(projectView.isPrivate, false));
+  and(
+    eq(projectView.shareToken, token),
+    eq(projectView.isPrivate, false),
+    activeShare(projectView.shareExpiresAt),
+  );
 
 // The bundle for a shared view link, or null if no view carries the token.
 export async function getSharedView(token: string): Promise<SharedViewBundle | null> {
@@ -314,8 +390,11 @@ export async function getSharedViewIssue(
 }
 
 // Resolves an issue share token to its issue id, or 0 (never a real id) when
-// unknown, so getIssue then returns null.
+// unknown or expired, so getIssue then returns null.
 async function issueIdByToken(token: string): Promise<number> {
-  const rows = await db.select({ id: issue.id }).from(issue).where(eq(issue.shareToken, token));
+  const rows = await db
+    .select({ id: issue.id })
+    .from(issue)
+    .where(and(eq(issue.shareToken, token), activeShare(issue.shareExpiresAt)));
   return rows[0]?.id ?? 0;
 }

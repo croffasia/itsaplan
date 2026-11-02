@@ -24,6 +24,8 @@ export interface View {
   // Seen only by the current user, who created it, until they add it to the project. It
   // has no share link, and mixes with the project's views only in the user's own tab row.
   isPrivate: boolean;
+  // When the share link stops working, or null when it never does.
+  shareExpiresAt: string | null;
   // Whether the current user marked the view as a favorite: its tab carries a star and
   // the view is listed under Work items in the sidebar.
   favorite: boolean;

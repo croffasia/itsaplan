@@ -1502,6 +1502,10 @@ export const issue = pgTable(
     shareToken: uuid('share_token').unique(),
     // How much the share link exposes, the same choice a shared view carries.
     shareExtended: boolean('share_extended').notNull().default(false),
+    // When the share link stops working. NULL means it never expires. Past this
+    // moment the link reads as revoked everywhere, and the api's share-expiry sweep
+    // clears the token.
+    shareExpiresAt: timestamp('share_expires_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -2016,6 +2020,8 @@ export const projectView = pgTable(
     // subtasks and links; true adds the assignees, labels, custom fields and
     // activity the members see.
     shareExtended: boolean('share_extended').notNull().default(false),
+    // When the share link stops working; NULL means never. See issue.shareExpiresAt.
+    shareExpiresAt: timestamp('share_expires_at', { withTimezone: true }),
     // A private view is seen only by its owner, not even by a project owner. The owner
     // is set only on private views, so deleting an account takes its private views and
     // never a project's.

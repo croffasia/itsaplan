@@ -138,7 +138,14 @@
     "copy": "Salin",
     "copied": "Disalin",
     "calendarFeed": "Feed kalender",
-    "calendarFeedHint": "Salin tautan ini ke aplikasi kalender Anda untuk berlangganan tampilan ini."
+    "calendarFeedHint": "Salin tautan ini ke aplikasi kalender Anda untuk berlangganan tampilan ini.",
+    "expiry": "Kedaluwarsa",
+    "expiryHint": "Tautan berhenti berfungsi setelah ini.",
+    "neverExpires": "Tidak pernah kedaluwarsa",
+    "expiresInDays": "{count, plural, other {Dalam # hari}}",
+    "expiresOn": "Hingga {date}",
+    "expiryPickDate": "Atau pilih hari terakhir:",
+    "expiryFailed": "Tidak dapat mengubah waktu kedaluwarsa tautan. Coba lagi."
   },
   "actions": "Tindakan",
   "clearSearch": "Bersihkan pencarian",

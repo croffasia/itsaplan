@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Check, Copy, Globe, Loader2 } from 'lucide-react';
+import { CalendarClock, Check, ChevronDown, Copy, Globe, Loader2 } from 'lucide-react';
+import type { ShareOptions, ShareState } from '@/lib/api/endpoints/share';
 import { shareUrl } from '@/utils/paths';
 import {
   Dialog,
@@ -15,7 +16,24 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { useTranslations } from 'next-intl';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useFormatter, useTranslations } from 'next-intl';
+
+// The quick expiry choices, in days from now.
+const EXPIRY_PRESETS = [1, 3, 7] as const;
+
+// A link set to expire after `days` stops working that many days from now.
+function inDays(days: number): string {
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+}
+
+// A link set to expire on a picked day works through the end of that day.
+function endOfDay(day: Date): string {
+  const at = new Date(day);
+  at.setHours(23, 59, 59, 0);
+  return at.toISOString();
+}
 
 // A generic public-share dialog for an issue or a saved view. It shows the current
 // state (shared with a copyable link, or not shared) and toggles it through the
@@ -28,6 +46,7 @@ export default function ShareDialog({
   title,
   token,
   extended,
+  expiresAt,
   enable,
   disable,
   pathForToken,
@@ -39,25 +58,32 @@ export default function ShareDialog({
   token: string | null;
   // How much the current link exposes.
   extended: boolean;
-  // Creates the link, or changes how much a live one exposes; returns its token.
-  enable: (extended: boolean) => Promise<string>;
+  // When the current link stops working, or null when it never does.
+  expiresAt: string | null;
+  // Creates the link, or changes how much a live one exposes or when it expires;
+  // returns its token and expiry.
+  enable: (options: ShareOptions) => Promise<ShareState>;
   disable: () => Promise<void>;
   pathForToken: (token: string) => string;
   // The calendar feed path, for a shared view. Omitted by an issue share.
   calendarPathForToken?: (token: string) => string;
 }) {
   const t = useTranslations('common.share');
+  const format = useFormatter();
   const [current, setCurrent] = useState<string | null>(token);
+  const [expiry, setExpiry] = useState<string | null>(expiresAt);
+  const [expiryOpen, setExpiryOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedCalendar, setCopiedCalendar] = useState(false);
 
   // Seed from the latest token when the dialog opens; the prop can change while it
   // is mounted (the issue/view query refetched).
-  const [seed, setSeed] = useState(token);
-  if (seed !== token && !busy) {
-    setSeed(token);
+  const [seed, setSeed] = useState({ token, expiresAt });
+  if ((seed.token !== token || seed.expiresAt !== expiresAt) && !busy) {
+    setSeed({ token, expiresAt });
     setCurrent(token);
+    setExpiry(expiresAt);
   }
 
   const url = current ? shareUrl(pathForToken(current)) : '';
@@ -75,16 +101,34 @@ export default function ShareDialog({
     }
   }
 
-  const onEnable = () => run(async () => setCurrent(await enable(false)), t('createFailed'));
+  function apply(state: ShareState) {
+    setCurrent(state.token);
+    setExpiry(state.expiresAt);
+  }
+
+  const onEnable = () =>
+    run(async () => apply(await enable({ extended: false })), t('createFailed'));
 
   const onSetExtended = (next: boolean) =>
-    run(async () => setCurrent(await enable(next)), t('changeFailed'));
+    run(async () => apply(await enable({ extended: next })), t('changeFailed'));
+
+  const onSetExpiry = (next: string | null) => {
+    setExpiryOpen(false);
+    return run(async () => apply(await enable({ expiresAt: next })), t('expiryFailed'));
+  };
 
   const onDisable = () =>
     run(async () => {
       await disable();
       setCurrent(null);
+      setExpiry(null);
     }, t('stopFailed'));
+
+  const expiryLabel = expiry
+    ? t('expiresOn', {
+        date: format.dateTime(new Date(expiry), { dateStyle: 'medium', timeStyle: 'short' }),
+      })
+    : t('neverExpires');
 
   async function copyText(value: string, mark: (copied: boolean) => void) {
     try {
@@ -164,6 +208,54 @@ export default function ShareDialog({
               />
             </label>
 
+            <div className="flex items-center justify-between gap-4 rounded-md border px-3 py-2.5">
+              <span className="min-w-0">
+                <span className="block text-sm">{t('expiry')}</span>
+                <span className="block text-xs text-muted-foreground">{t('expiryHint')}</span>
+              </span>
+              <Popover open={expiryOpen} onOpenChange={setExpiryOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={busy}
+                    className="h-8 shrink-0 gap-1.5 font-normal"
+                  >
+                    <CalendarClock className="size-4" />
+                    {expiryLabel}
+                    <ChevronDown className="size-3.5 opacity-60" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <div className="flex flex-col p-1">
+                    <ExpiryOption
+                      label={t('neverExpires')}
+                      onSelect={() => void onSetExpiry(null)}
+                    />
+                    {EXPIRY_PRESETS.map((days) => (
+                      <ExpiryOption
+                        key={days}
+                        label={t('expiresInDays', { count: days })}
+                        onSelect={() => void onSetExpiry(inDays(days))}
+                      />
+                    ))}
+                  </div>
+                  <div className="border-t">
+                    <p className="px-3 pt-2 text-xs text-muted-foreground">{t('expiryPickDate')}</p>
+                    <Calendar
+                      mode="single"
+                      selected={expiry ? new Date(expiry) : undefined}
+                      disabled={{ before: new Date() }}
+                      onSelect={(day) => {
+                        if (day) void onSetExpiry(endOfDay(day));
+                      }}
+                    />
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+
             <DialogFooter className="mt-1 sm:justify-start">
               <Button
                 type="button"
@@ -188,5 +280,17 @@ export default function ShareDialog({
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ExpiryOption({ label, onSelect }: { label: string; onSelect: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className="rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
+    >
+      {label}
+    </button>
   );
 }

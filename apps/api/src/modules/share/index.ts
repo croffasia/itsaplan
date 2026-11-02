@@ -24,7 +24,19 @@ import {
   getSharedIssue,
   getSharedView,
   getSharedViewIssue,
+  type ShareExpiry,
 } from './service';
+
+// The expiry an enable call asks for: undefined leaves it, null clears it, and a
+// timestamp must lie in the future, since a link that is already dead on creation
+// is a mistake rather than a choice.
+function parseExpiry(value: string | null | undefined): ShareExpiry {
+  if (value === undefined || value === null) return value;
+  const at = new Date(value);
+  if (Number.isNaN(at.getTime())) throw new HttpError(400, 'expiresAt is not a valid timestamp');
+  if (at.getTime() <= Date.now()) throw new HttpError(400, 'expiresAt must be in the future');
+  return at;
+}
 
 export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share'] } })
   .use(authContext)
@@ -47,9 +59,13 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
   .post(
     '/issues/:issueId/share',
     async ({ params, body }) => {
-      const token = await enableIssueShare(params.issueId, body?.extended);
-      if (!token) throw new HttpError(404, 'Issue not found');
-      return { token };
+      const share = await enableIssueShare(
+        params.issueId,
+        body?.extended,
+        parseExpiry(body?.expiresAt),
+      );
+      if (!share) throw new HttpError(404, 'Issue not found');
+      return share;
     },
     {
       params: shareIssueParams,
@@ -78,9 +94,13 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
   .post(
     '/views/:viewId/share',
     async ({ params, body }) => {
-      const token = await enableViewShare(params.viewId, body?.extended);
-      if (!token) throw new HttpError(404, 'View not found');
-      return { token };
+      const share = await enableViewShare(
+        params.viewId,
+        body?.extended,
+        parseExpiry(body?.expiresAt),
+      );
+      if (!share) throw new HttpError(404, 'View not found');
+      return share;
     },
     {
       params: shareViewParams,

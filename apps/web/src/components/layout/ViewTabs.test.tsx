@@ -47,6 +47,7 @@ function view(id: number, name: string, isPrivate: boolean, hidden = false): Vie
     position: id,
     shareToken: null,
     shareExtended: false,
+    shareExpiresAt: null,
     isPrivate,
     favorite: false,
     hidden,

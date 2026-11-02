@@ -119,6 +119,7 @@ export const IssueResponse = t.Object({
   statusSince: t.String(),
   shareToken: t.Nullable(t.String()),
   shareExtended: t.Boolean(),
+  shareExpiresAt: t.Nullable(t.String()),
   labelIds: t.Array(t.Number()),
   fieldValues: t.Array(IssueFieldValueEntry),
 });

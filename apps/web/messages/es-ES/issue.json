@@ -437,7 +437,7 @@
   "feedOldest": "Más antiguos",
   "feedChangeOrder": "Cambiar orden",
   "feedRunToggle": "Mostrar cambios similares",
-  "shareUnavailable": "Este ticket compartida no está disponible. Puede que el enlace haya sido revocado.",
+  "shareUnavailable": "Este ticket compartida no está disponible. Puede que el enlace haya sido revocado o haya caducado.",
   "fieldSelects": {
     "changeState": "Cambiar el estado…",
     "changeType": "Cambiar el tipo…",

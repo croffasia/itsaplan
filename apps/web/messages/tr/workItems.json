@@ -110,7 +110,7 @@
   "share": {
     "issueTitle": "İş",
     "issueUnavailable": "Bu işe ulaşılamıyor.",
-    "boardUnavailable": "Paylaşılan panoya ulaşılamıyor. Bağlantı iptal edilmiş olabilir."
+    "boardUnavailable": "Paylaşılan panoya ulaşılamıyor. Bağlantı iptal edilmiş ya da süresi dolmuş olabilir."
   },
   "groups": {
     "noAssignee": "Sorumlu atanmamış",

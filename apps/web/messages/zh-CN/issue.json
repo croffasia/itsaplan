@@ -437,7 +437,7 @@
   "feedOldest": "最早优先",
   "feedChangeOrder": "切换顺序",
   "feedRunToggle": "显示类似的变更",
-  "shareUnavailable": "此共享工作项不可用，链接可能已撤销。",
+  "shareUnavailable": "此共享工作项不可用，链接可能已撤销或已过期。",
   "fieldSelects": {
     "changeState": "更改状态…",
     "changeType": "更改类型…",

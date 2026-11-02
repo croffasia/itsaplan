@@ -437,7 +437,7 @@
   "feedOldest": "Mais antigos",
   "feedChangeOrder": "Alterar ordem",
   "feedRunToggle": "Mostrar alterações semelhantes",
-  "shareUnavailable": "Esta issue compartilhada não está disponível. O link pode ter sido revogado.",
+  "shareUnavailable": "Esta issue compartilhada não está disponível. O link pode ter sido revogado ou expirado.",
   "fieldSelects": {
     "changeState": "Alterar estado…",
     "changeType": "Alterar tipo…",

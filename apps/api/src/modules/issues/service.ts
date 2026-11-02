@@ -39,7 +39,7 @@ import {
   type SQLWrapper,
 } from 'drizzle-orm';
 import type { IssueQuery } from '#modules/agents/core/issue-query';
-import { iso, num, numOrNull, HttpError } from '#shared/lib';
+import { iso, num, numOrNull, shareLive, HttpError } from '#shared/lib';
 import type { ProjectRow } from '#modules/projects/service';
 import { projectRefSql } from '#modules/teams/ref';
 import { assertProjectFeature } from '#shared/access';
@@ -159,14 +159,8 @@ export interface IssueRow {
   fieldValues: IssueFieldValueEntry[];
 }
 
-// Whether a share link with this expiry still works. The same rule as shareActive
-// in modules/share, kept here so mapping an issue does not import the share module.
-function liveShare(expiresAt: Date | null): boolean {
-  return expiresAt === null || expiresAt.getTime() > Date.now();
-}
-
 function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow {
-  const shared = row.shareToken !== null && liveShare(row.shareExpiresAt);
+  const shared = row.shareToken !== null && shareLive(row.shareExpiresAt);
   return {
     id: row.id,
     projectId: row.projectId,

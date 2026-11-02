@@ -103,7 +103,7 @@
   "share": {
     "issueTitle": "المهمة",
     "issueUnavailable": "هذه المهمة غير متاحة.",
-    "boardUnavailable": "اللوحة المشاركة دي مش متاحة. يمكن الرابط اتلغى."
+    "boardUnavailable": "اللوحة المشاركة دي مش متاحة. يمكن الرابط اتلغى أو انتهت صلاحيته."
   },
   "groups": {
     "noAssignee": "بلا مسؤول",

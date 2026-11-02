@@ -20,10 +20,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useFormatter, useTranslations } from 'next-intl';
 
-// The quick expiry choices, in days from now.
 const EXPIRY_PRESETS = [1, 3, 7] as const;
 
-// A link set to expire after `days` stops working that many days from now.
 function inDays(days: number): string {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 }

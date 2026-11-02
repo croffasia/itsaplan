@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { db, issue, projectView } from '@repo/db';
 import { and, eq, gt, isNotNull, isNull, lte, or, type AnyColumn, type SQL } from 'drizzle-orm';
+import { iso, shareLive } from '#shared/lib';
 import { getProjectById, type ProjectRow } from '#modules/projects/service';
 import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '#modules/issue-types/service';
@@ -175,12 +176,7 @@ async function issueBundle(
 // leave it as it stands (the same convention as `extended`).
 export type ShareExpiry = Date | null | undefined;
 
-// True while a share with this expiry still works.
-export function shareActive(expiresAt: Date | null, now = new Date()): boolean {
-  return expiresAt === null || expiresAt.getTime() > now.getTime();
-}
-
-// The SQL form of shareActive for a token lookup.
+// The SQL form of shareLive for a token lookup.
 function activeShare(expiresAt: AnyColumn): SQL {
   return or(isNull(expiresAt), gt(expiresAt, new Date()))!;
 }
@@ -240,22 +236,19 @@ function nextShare(
   set: { shareToken: string; shareExtended?: boolean; shareExpiresAt: Date | null };
   state: ShareState;
 } {
-  const live = current.token !== null && shareActive(current.expiresAt);
+  const live = current.token !== null && shareLive(current.expiresAt);
   const token = live ? current.token! : randomUUID();
-  const expiry = expiresAt !== undefined ? expiresAt : live ? current.expiresAt : null;
-  return {
-    set: {
-      shareToken: token,
-      // A fresh link starts reduced unless the caller asks for more.
-      ...(extended !== undefined
-        ? { shareExtended: extended }
-        : live
-          ? {}
-          : { shareExtended: false }),
-      shareExpiresAt: expiry,
-    },
-    state: { token, expiresAt: expiry ? expiry.toISOString() : null },
+  let expiry: Date | null = null;
+  if (expiresAt !== undefined) expiry = expiresAt;
+  else if (live) expiry = current.expiresAt;
+  const set: { shareToken: string; shareExtended?: boolean; shareExpiresAt: Date | null } = {
+    shareToken: token,
+    shareExpiresAt: expiry,
   };
+  // A fresh link starts reduced unless the caller asks for more.
+  if (extended !== undefined) set.shareExtended = extended;
+  else if (!live) set.shareExtended = false;
+  return { set, state: { token, expiresAt: expiry ? iso(expiry) : null } };
 }
 
 // Revokes sharing for an issue. Returns false if the issue does not exist.

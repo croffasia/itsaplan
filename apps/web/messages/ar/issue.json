@@ -437,7 +437,7 @@
   "feedOldest": "الأقدم أولاً",
   "feedChangeOrder": "تغيير الترتيب",
   "feedRunToggle": "عرض التغييرات المشابهة",
-  "shareUnavailable": "المهمة المشاركة دي مش متاحة. يمكن الرابط اتلغى.",
+  "shareUnavailable": "المهمة المشاركة دي مش متاحة. يمكن الرابط اتلغى أو انتهت صلاحيته.",
   "fieldSelects": {
     "changeState": "تغيير الحالة…",
     "changeType": "تغيير النوع…",

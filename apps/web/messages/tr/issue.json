@@ -437,7 +437,7 @@
   "feedOldest": "En eski",
   "feedChangeOrder": "Sıralamayı değiştir",
   "feedRunToggle": "Benzer değişiklikleri göster",
-  "shareUnavailable": "Paylaşılan bu işe ulaşılamıyor. Bağlantı iptal edilmiş olabilir.",
+  "shareUnavailable": "Paylaşılan bu işe ulaşılamıyor. Bağlantı iptal edilmiş ya da süresi dolmuş olabilir.",
   "fieldSelects": {
     "changeState": "Durumu değiştir…",
     "changeType": "Türü değiştir…",

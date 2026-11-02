@@ -6,7 +6,7 @@ import {
   projectViewPreference,
 } from '@repo/db';
 import { and, eq, exists, inArray, or, sql, type SQL } from 'drizzle-orm';
-import { iso, num } from '#shared/lib';
+import { iso, num, shareLive } from '#shared/lib';
 
 export interface ViewRow {
   id: number;
@@ -31,9 +31,7 @@ export interface ViewRow {
 }
 
 function mapView(row: typeof projectView.$inferSelect): ViewRow {
-  const shared =
-    row.shareToken !== null &&
-    (row.shareExpiresAt === null || row.shareExpiresAt.getTime() > Date.now());
+  const shared = row.shareToken !== null && shareLive(row.shareExpiresAt);
   return {
     id: row.id,
     projectId: row.projectId,

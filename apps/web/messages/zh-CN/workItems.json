@@ -110,7 +110,7 @@
   "share": {
     "issueTitle": "工作项",
     "issueUnavailable": "此工作项不可用。",
-    "boardUnavailable": "此共享看板不可用，链接可能已撤销。"
+    "boardUnavailable": "此共享看板不可用，链接可能已撤销或已过期。"
   },
   "groups": {
     "noAssignee": "无负责人",

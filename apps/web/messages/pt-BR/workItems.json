@@ -110,7 +110,7 @@
   "share": {
     "issueTitle": "Issue",
     "issueUnavailable": "Esta issue não está disponível.",
-    "boardUnavailable": "Este quadro compartilhado não está disponível. O link pode ter sido revogado."
+    "boardUnavailable": "Este quadro compartilhado não está disponível. O link pode ter sido revogado ou expirado."
   },
   "groups": {
     "noAssignee": "Sem responsável",

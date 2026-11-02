@@ -110,7 +110,7 @@
   "share": {
     "issueTitle": "Ticket",
     "issueUnavailable": "Este ticket no está disponible.",
-    "boardUnavailable": "Este tablero compartido no está disponible. Puede que el enlace haya sido revocado."
+    "boardUnavailable": "Este tablero compartido no está disponible. Puede que el enlace haya sido revocado o haya caducado."
   },
   "groups": {
     "noAssignee": "Sin asignar",

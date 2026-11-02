@@ -437,7 +437,7 @@
   "feedOldest": "Terlama",
   "feedChangeOrder": "Ubah urutan",
   "feedRunToggle": "Tampilkan perubahan serupa",
-  "shareUnavailable": "Issue yang dibagikan ini tidak tersedia. Tautan mungkin telah dicabut.",
+  "shareUnavailable": "Issue yang dibagikan ini tidak tersedia. Tautan mungkin telah dicabut atau kedaluwarsa.",
   "fieldSelects": {
     "changeState": "Ubah status…",
     "changeType": "Ubah tipe…",

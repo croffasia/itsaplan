@@ -110,7 +110,7 @@
   "share": {
     "issueTitle": "Issue",
     "issueUnavailable": "This issue is not available.",
-    "boardUnavailable": "This shared board is not available. The link may have been revoked."
+    "boardUnavailable": "This shared board is not available. The link may have been revoked or may have expired."
   },
   "groups": {
     "noAssignee": "No assignee",

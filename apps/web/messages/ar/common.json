@@ -138,7 +138,14 @@
     "copy": "نسخ",
     "copied": "تم النسخ",
     "calendarFeed": "خلاصة التقويم",
-    "calendarFeedHint": "انسخ الرابط ده في تطبيق التقويم عشان تشترك في العرض ده."
+    "calendarFeedHint": "انسخ الرابط ده في تطبيق التقويم عشان تشترك في العرض ده.",
+    "expiry": "انتهاء الصلاحية",
+    "expiryHint": "يتوقف الرابط عن العمل بعد ذلك.",
+    "neverExpires": "لا تنتهي الصلاحية",
+    "expiresInDays": "{count, plural, one {بعد يوم واحد} other {بعد # أيام}}",
+    "expiresOn": "حتى {date}",
+    "expiryPickDate": "أو اختر اليوم الأخير:",
+    "expiryFailed": "تعذّر تغيير موعد انتهاء صلاحية الرابط. حاول مرة أخرى."
   },
   "actions": "الإجراءات",
   "clearSearch": "مسح البحث",

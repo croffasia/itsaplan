@@ -138,7 +138,14 @@
     "copy": "Copy",
     "copied": "Copied",
     "calendarFeed": "Calendar feed",
-    "calendarFeedHint": "Copy this link into your calendar app to subscribe to this view."
+    "calendarFeedHint": "Copy this link into your calendar app to subscribe to this view.",
+    "expiry": "Expiry",
+    "expiryHint": "The link stops working after this.",
+    "neverExpires": "Never expires",
+    "expiresInDays": "{count, plural, one {In # day} other {In # days}}",
+    "expiresOn": "Until {date}",
+    "expiryPickDate": "Or pick the last day:",
+    "expiryFailed": "Could not change when the link expires. Try again."
   },
   "actions": "Actions",
   "clearSearch": "Clear search",

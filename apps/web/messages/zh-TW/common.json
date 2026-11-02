@@ -138,7 +138,14 @@
     "copy": "複製",
     "copied": "已複製",
     "calendarFeed": "行事曆訂閱",
-    "calendarFeedHint": "將此連結複製到行事曆應用程式，以訂閱此檢視。"
+    "calendarFeedHint": "將此連結複製到行事曆應用程式，以訂閱此檢視。",
+    "expiry": "有效期限",
+    "expiryHint": "此後連結將失效。",
+    "neverExpires": "永不過期",
+    "expiresInDays": "{count, plural, other {# 天後}}",
+    "expiresOn": "有效至 {date}",
+    "expiryPickDate": "或選擇最後一天：",
+    "expiryFailed": "無法變更連結的有效期限，請再試一次。"
   },
   "actions": "操作",
   "clearSearch": "清除搜尋",

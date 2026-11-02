@@ -110,7 +110,7 @@
   "share": {
     "issueTitle": "Issue",
     "issueUnavailable": "Issue ini tidak tersedia.",
-    "boardUnavailable": "Papan bersama ini tidak tersedia. Tautan mungkin telah dicabut."
+    "boardUnavailable": "Papan bersama ini tidak tersedia. Tautan mungkin telah dicabut atau kedaluwarsa."
   },
   "groups": {
     "noAssignee": "Tanpa penerima tugas",

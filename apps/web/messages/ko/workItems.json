@@ -110,7 +110,7 @@
   "share": {
     "issueTitle": "이슈",
     "issueUnavailable": "이 이슈를 사용할 수 없습니다.",
-    "boardUnavailable": "이 공유 보드를 사용할 수 없습니다. 공유 링크가 취소되었을 수 있습니다."
+    "boardUnavailable": "이 공유 보드를 사용할 수 없습니다. 공유 링크가 취소되었거나 만료되었을 수 있습니다."
   },
   "groups": {
     "noAssignee": "담당자 없음",

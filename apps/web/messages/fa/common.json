@@ -138,7 +138,14 @@
     "copy": "کپی",
     "copied": "کپی شد",
     "calendarFeed": "فید تقویم",
-    "calendarFeedHint": "این پیوند را در برنامه تقویم خود کپی کنید تا در این نما مشترک شوید."
+    "calendarFeedHint": "این پیوند را در برنامه تقویم خود کپی کنید تا در این نما مشترک شوید.",
+    "expiry": "انقضا",
+    "expiryHint": "پیوند پس از این زمان کار نمی‌کند.",
+    "neverExpires": "هرگز منقضی نمی‌شود",
+    "expiresInDays": "{count, plural, one {تا # روز دیگر} other {تا # روز دیگر}}",
+    "expiresOn": "تا {date}",
+    "expiryPickDate": "یا آخرین روز را انتخاب کنید:",
+    "expiryFailed": "تغییر زمان انقضای پیوند ممکن نشد. دوباره تلاش کنید."
   },
   "actions": "اقدامات",
   "clearSearch": "پاک کردن جستجو",

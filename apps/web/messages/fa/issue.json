@@ -437,7 +437,7 @@
   "feedOldest": "قدیمی‌ترین",
   "feedChangeOrder": "تغییر ترتیب",
   "feedRunToggle": "نمایش تغییرات مشابه",
-  "shareUnavailable": "این تسک اشتراکی در دسترس نیست. ممکن است لینک لغو شده باشد.",
+  "shareUnavailable": "این تسک اشتراکی در دسترس نیست. ممکن است لینک لغو شده یا منقضی شده باشد.",
   "fieldSelects": {
     "changeState": "تغییر وضعیت…",
     "changeType": "تغییر نوع…",

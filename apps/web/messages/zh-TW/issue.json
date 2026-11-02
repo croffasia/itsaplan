@@ -437,7 +437,7 @@
   "feedOldest": "最早優先",
   "feedChangeOrder": "切換順序",
   "feedRunToggle": "顯示類似的變更",
-  "shareUnavailable": "此共享工作項目不可用，連結可能已撤銷。",
+  "shareUnavailable": "此共享工作項目不可用，連結可能已撤銷或已過期。",
   "fieldSelects": {
     "changeState": "更改狀態…",
     "changeType": "更改類型…",

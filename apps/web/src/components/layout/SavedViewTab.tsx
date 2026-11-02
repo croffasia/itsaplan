@@ -5,7 +5,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Copy, EyeOff, Globe, MoreHorizontal, Pencil, Star, Trash2, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { View } from '@/lib/api/endpoints/views';
-import { enableViewShare, disableViewShare } from '@/lib/api/endpoints/share';
+import { enableViewShare, disableViewShare, type ShareOptions } from '@/lib/api/endpoints/share';
 import { qk } from '@/services/queryKeys';
 import { usePublishView, useSetViewFavorite } from '@/services/views.service';
 import { cn } from '@/lib/utils';
@@ -52,13 +52,13 @@ export default function SavedViewTab({
   const setFavorite = useSetViewFavorite(projectKey);
   const publish = usePublishView(projectKey);
 
-  // Enabling/revoking the public link refetches the views so the tab's shareToken
-  // and shareExtended (which the dialog reads) stay in sync. The same call creates
-  // the link and flips how much a live one exposes.
-  async function share(extended: boolean) {
-    const { token } = await enableViewShare(view.id, extended);
+  // Enabling/revoking the public link refetches the views so the tab's shareToken,
+  // shareExtended and shareExpiresAt (which the dialog reads) stay in sync. The same
+  // call creates the link and changes how much a live one exposes or when it expires.
+  async function share(options: ShareOptions) {
+    const state = await enableViewShare(view.id, options);
     await qc.invalidateQueries({ queryKey: qk.views(projectKey) });
-    return token;
+    return state;
   }
   async function disableShare() {
     await disableViewShare(view.id);
@@ -198,6 +198,7 @@ export default function SavedViewTab({
         title={t('shareBoard')}
         token={view.shareToken}
         extended={view.shareExtended}
+        expiresAt={view.shareExpiresAt}
         enable={share}
         disable={disableShare}
         pathForToken={shareViewPath}

@@ -1198,6 +1198,13 @@
       "when": 1793532812084,
       "tag": "0170_user_last_seen",
       "breakpoints": true
+    },
+    {
+      "idx": 171,
+      "version": "7",
+      "when": 1793626954039,
+      "tag": "0171_share_expiry",
+      "breakpoints": true
     }
   ]
 }

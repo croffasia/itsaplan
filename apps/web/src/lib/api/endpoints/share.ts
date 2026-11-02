@@ -33,23 +33,34 @@ export interface SharedViewBundle {
   issues: BoardIssue[];
 }
 
-// Public read-only sharing. Enabling returns the link token and sets how much it
-// exposes; calling it again on a shared entity keeps the link and only changes
-// that. Disable revokes it. The getShared* reads need no session (public
-// /share/* routes).
-export const enableIssueShare = (id: number, extended: boolean) =>
-  request<{ token: string }>(`/issues/${id}/share`, {
+// Public read-only sharing. Enabling returns the link token and its expiry and sets
+// how much it exposes and when it stops working; calling it again on a shared
+// entity keeps the link and only changes what is sent (an omitted field stays as
+// it is, expiresAt null means never). An expired link is replaced by a new one.
+// Disable revokes it. The getShared* reads need no session (public /share/* routes).
+export interface ShareOptions {
+  extended?: boolean;
+  expiresAt?: string | null;
+}
+
+export interface ShareState {
+  token: string;
+  expiresAt: string | null;
+}
+
+export const enableIssueShare = (id: number, options: ShareOptions) =>
+  request<ShareState>(`/issues/${id}/share`, {
     method: 'POST',
-    body: JSON.stringify({ extended }),
+    body: JSON.stringify(options),
   });
 
 export const disableIssueShare = (id: number) =>
   request<void>(`/issues/${id}/share`, { method: 'DELETE' });
 
-export const enableViewShare = (id: number, extended: boolean) =>
-  request<{ token: string }>(`/views/${id}/share`, {
+export const enableViewShare = (id: number, options: ShareOptions) =>
+  request<ShareState>(`/views/${id}/share`, {
     method: 'POST',
-    body: JSON.stringify({ extended }),
+    body: JSON.stringify(options),
   });
 
 export const disableViewShare = (id: number) =>

@@ -138,7 +138,14 @@
     "copy": "Kopyala",
     "copied": "Kopyalandı",
     "calendarFeed": "Takvim akışı",
-    "calendarFeedHint": "Bu görünüme abone olmak için bu bağlantıyı takvim uygulamanıza kopyalayın."
+    "calendarFeedHint": "Bu görünüme abone olmak için bu bağlantıyı takvim uygulamanıza kopyalayın.",
+    "expiry": "Süre sonu",
+    "expiryHint": "Bağlantı bundan sonra çalışmaz.",
+    "neverExpires": "Süresi dolmaz",
+    "expiresInDays": "{count, plural, other {# gün içinde}}",
+    "expiresOn": "{date} tarihine kadar",
+    "expiryPickDate": "Ya da son günü seçin:",
+    "expiryFailed": "Bağlantının süre sonu değiştirilemedi. Tekrar deneyin."
   },
   "actions": "İşlemler",
   "clearSearch": "Aramayı temizle",

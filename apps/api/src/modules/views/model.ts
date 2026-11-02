@@ -33,6 +33,7 @@ export const ViewResponse = t.Object({
   position: t.Number(),
   shareToken: t.Nullable(t.String()),
   shareExtended: t.Boolean(),
+  shareExpiresAt: t.Nullable(t.String()),
   isPrivate: t.Boolean(),
   favorite: t.Boolean(),
   // Whether the caller hid it from their own tab row.

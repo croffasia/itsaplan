@@ -138,7 +138,14 @@
     "copy": "복사",
     "copied": "복사됨",
     "calendarFeed": "캘린더 피드",
-    "calendarFeedHint": "이 링크를 캘린더 앱에 복사하여 이 보기를 구독하세요."
+    "calendarFeedHint": "이 링크를 캘린더 앱에 복사하여 이 보기를 구독하세요.",
+    "expiry": "만료",
+    "expiryHint": "이 시점 이후 링크가 작동하지 않습니다.",
+    "neverExpires": "만료 없음",
+    "expiresInDays": "{count, plural, other {#일 후}}",
+    "expiresOn": "{date}까지",
+    "expiryPickDate": "또는 마지막 날짜 선택:",
+    "expiryFailed": "링크 만료 시점을 변경하지 못했습니다. 다시 시도하세요."
   },
   "actions": "작업",
   "clearSearch": "검색어 지우기",

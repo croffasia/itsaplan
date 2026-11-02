@@ -110,7 +110,7 @@
   "share": {
     "issueTitle": "Ticket",
     "issueUnavailable": "Ce ticket n'est pas disponible.",
-    "boardUnavailable": "Ce tableau partagé n'est pas disponible. Le lien a peut-être été révoqué."
+    "boardUnavailable": "Ce tableau partagé n'est pas disponible. Le lien a peut-être été révoqué ou a expiré."
   },
   "groups": {
     "noAssignee": "Aucun responsable",

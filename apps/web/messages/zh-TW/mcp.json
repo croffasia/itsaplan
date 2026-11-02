@@ -24,15 +24,15 @@
     "methodTabsAria": "連線方式",
     "method": "OAuth",
     "personalKey": "API 金鑰",
-    "description": "適用於任何支援 OAuth 的 MCP 用戶端，例如 ChatGPT 或 Claude。你使用 Itsaplan 帳號登入。用戶端不會收到 API 金鑰。",
+    "description": "適用於任何支援 OAuth 的 MCP 用戶端，例如 ChatGPT 或 Claude。你使用 {app} 帳號登入。用戶端不會收到 API 金鑰。",
     "discovery": "OAuth 發現",
     "steps": {
       "add": "在用戶端中新增 MCP 應用程式。",
       "paste": "貼上 MCP 端點。",
       "choose": "當用戶端詢問登入方式時選擇 OAuth。",
-      "signIn": "登入 Itsaplan 並批准存取。"
+      "signIn": "登入 {app} 並批准存取。"
     },
-    "security": "OAuth 使用 PKCE (S256)、動態用戶端註冊以及限定到你的 Itsaplan 帳號的存取權杖。",
+    "security": "OAuth 使用 PKCE (S256)、動態用戶端註冊以及限定到你的 {app} 帳號的存取權杖。",
     "consent": {
       "title": "{client} 想要連線到你的帳號",
       "titleUnnamed": "一個 MCP 用戶端想要連線到你的帳號",

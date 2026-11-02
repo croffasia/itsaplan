@@ -1,7 +1,7 @@
 # Coding agent setup
 
 [`@itsaplan/runner`](https://www.npmjs.com/package/@itsaplan/runner) runs an external agent
-on your own machine. It has a preset for each of seven coding agent CLIs. A preset builds
+on your own machine. It has a preset for each of eight coding agent CLIs. A preset builds
 the command itself: the flags for an unattended run, and the session resume.
 
 Each preset needs two files in the working directory:
@@ -285,3 +285,40 @@ Oh My Pi reads `.mcp.json` from the working directory:
 - `--append-system-prompt` gives Oh My Pi the context of the run.
 - Headers in `.mcp.json` expand `${ITSAPLAN_API_KEY}` only if your Oh My Pi build does.
   If they stay literal, write the key in the file the way Copilot's config does.
+
+## Mastra Code
+
+Mastra Code reads `.mcp.json` from the working directory. It expands `${ITSAPLAN_API_KEY}`
+in the headers, so the key stays out of the file:
+
+```json
+{
+  "mcpServers": {
+    "itsaplan": {
+      "type": "http",
+      "url": "http://localhost:3000/mcp",
+      "headers": { "Authorization": "Bearer ${ITSAPLAN_API_KEY}" }
+    }
+  }
+}
+```
+
+`itsaplan-runner.json`:
+
+```json
+{
+  "url": "http://localhost:3000",
+  "apiKey": "the key you copied on creation",
+  "agent": "mastracode",
+  "cwd": "/path/to/working-dir"
+}
+```
+
+- The binary is `mastracode`. Sign in to a model provider once by running it interactively.
+- The preset passes `--prompt -` and sends the task on stdin. Mastra Code has no
+  system-prompt flag. The preset thus puts the context of the run before the task.
+- The preset passes `--permission-mode auto`. Mastra Code then approves each tool and does
+  not wait for a person.
+- The preset passes `--output jsonl`. The stream gives the chat answer as it is written,
+  includes the tool calls, and names the thread that `--thread` resumes.
+- Add `--model provider/model` to `args` to choose the model of the run.

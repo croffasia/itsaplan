@@ -105,6 +105,35 @@ describe('analytics', () => {
       expect(res.data?.unassigned).toBe(1);
     });
 
+    it('leaves archived issues out of the current figures', async () => {
+      const { asOwner, col } = await setupProject();
+      await createIssue(asOwner, col.backlog);
+      for (const columnId of [col.backlog, col.started]) {
+        const archived = await createIssue(asOwner, columnId, { dueDate: '2000-01-01' });
+        await asOwner.issues({ issueId: archived.id }).archive.post();
+      }
+
+      const res = await asOwner.projects({ projectKey: 'MKT' }).analytics.stats.get();
+      expect(res.data).toMatchObject({
+        open: 1,
+        inProgress: 0,
+        backlog: 1,
+        overdue: 0,
+        unassigned: 1,
+      });
+    });
+
+    it('keeps counting a closing after the issue is archived', async () => {
+      const { asOwner, col } = await setupProject();
+      const closed = await createIssue(asOwner, col.started);
+      await moveIssue(asOwner, closed.id, col.completed);
+      const archived = await asOwner.issues({ issueId: closed.id }).archive.post();
+      expect(archived.data?.archivedAt).toBeTruthy();
+
+      const res = await asOwner.projects({ projectKey: 'MKT' }).analytics.stats.get();
+      expect(res.data?.closedLast7d).toBe(1);
+    });
+
     it('counts issues moved to a completed column as closedLast7d', async () => {
       const { asOwner, col } = await setupProject();
       const issue = await createIssue(asOwner, col.started);
@@ -279,6 +308,31 @@ describe('analytics', () => {
         label: 'Not delegated',
         count: 1,
       });
+    });
+
+    it('leaves archived issues out of every grouping', async () => {
+      const { asOwner, col } = await setupProject();
+      await createIssue(asOwner, col.started, { priority: 'high' });
+      const archived = await createIssue(asOwner, col.started, { priority: 'high' });
+      await asOwner.issues({ issueId: archived.id }).archive.post();
+
+      for (const by of ['status', 'priority', 'type', 'assignee', 'delegate'] as const) {
+        const res = await asOwner.projects({ projectKey: 'MKT' }).analytics.breakdown.get({
+          query: { by },
+        });
+        expect(res.data?.reduce((total, item) => total + item.count, 0)).toBe(1);
+      }
+    });
+
+    it('keeps a column with only archived issues at zero', async () => {
+      const { asOwner, col } = await setupProject();
+      const archived = await createIssue(asOwner, col.started);
+      await asOwner.issues({ issueId: archived.id }).archive.post();
+
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .analytics.breakdown.get({ query: { by: 'status' } });
+      expect(res.data?.find((i) => i.key === String(col.started))?.count).toBe(0);
     });
 
     it('rejects an unknown group-by value', async () => {
@@ -764,6 +818,22 @@ describe('analytics', () => {
       const done = await createIssue(asOwner, col.completed);
       await asOwner.issues({ issueId: open.id }).patch({ delegateUserId: agent.userId });
       await asOwner.issues({ issueId: done.id }).patch({ delegateUserId: agent.userId });
+
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        ['analytics']['agent-workload'].get();
+      const row = res.data?.find((r) => r.agentId === agent.id);
+      expect(row?.delegatedOpen).toBe(1);
+    });
+
+    it('leaves archived issues out of the delegated count', async () => {
+      const { asOwner, col } = await setupProject();
+      const agent = await makeAgent(asOwner, 'helperbot');
+      const open = await createIssue(asOwner, col.started);
+      const archived = await createIssue(asOwner, col.started);
+      await asOwner.issues({ issueId: open.id }).patch({ delegateUserId: agent.userId });
+      await asOwner.issues({ issueId: archived.id }).patch({ delegateUserId: agent.userId });
+      await asOwner.issues({ issueId: archived.id }).archive.post();
 
       const res = await asOwner
         .projects({ projectKey: 'MKT' })

@@ -673,6 +673,14 @@ function createAuth() {
           defaultValue: true,
           input: false,
         },
+        // When the person last used the app by any means (the web, an API key, MCP),
+        // to the hour; written by the api's auth context, read by god's user list.
+        lastSeenAt: {
+          type: 'date',
+          required: false,
+          input: false,
+          returned: false,
+        },
       },
     },
 

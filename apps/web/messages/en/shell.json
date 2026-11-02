@@ -10,5 +10,7 @@
   "createTeam": "Create team",
   "noProjectsTitle": "No projects yet",
   "noProjectsHint": "Create your first project to start planning issues on a board.",
-  "createProject": "Create project"
+  "createProject": "Create project",
+  "loadFailedTitle": "Could not load your projects",
+  "loadFailedHint": "Check your connection and reload the page."
 }

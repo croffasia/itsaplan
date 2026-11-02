@@ -10,5 +10,7 @@
   "createTeam": "创建团队",
   "noProjectsTitle": "暂无项目",
   "noProjectsHint": "新建第一个项目，然后开始在看板中规划工作项。",
-  "createProject": "新建项目"
+  "createProject": "新建项目",
+  "loadFailedTitle": "无法加载项目",
+  "loadFailedHint": "请检查网络连接并刷新页面。"
 }

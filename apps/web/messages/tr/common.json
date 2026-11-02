@@ -217,5 +217,6 @@
     "perPage": "/ sayfa",
     "range": "{total} kayıttan {first}-{last} arası"
   },
-  "aboutCloudAndPro": "Cloud ve Pro hakkında bilgi edinin"
+  "aboutCloudAndPro": "Cloud ve Pro hakkında bilgi edinin",
+  "signingOut": "Oturum kapatılıyor…"
 }

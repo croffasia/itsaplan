@@ -217,5 +217,6 @@
     "perPage": "на странице",
     "range": "{first}-{last} из {total}"
   },
-  "aboutCloudAndPro": "Подробнее о Cloud и Pro"
+  "aboutCloudAndPro": "Подробнее о Cloud и Pro",
+  "signingOut": "Выход…"
 }

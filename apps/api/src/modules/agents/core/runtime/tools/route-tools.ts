@@ -21,6 +21,7 @@ import {
   toolMeta,
   type ToolMeta,
 } from './catalog';
+import { collapseNumericSchema } from './numeric-schema';
 
 // The tools an internal agent uses to work in its project, built from the routes
 // tagged with mcpTool() — the same table the MCP endpoint serves. A tool call is
@@ -49,7 +50,7 @@ function jsonSchemaInput(schema: McpInputSchema): z.ZodType<Record<string, unkno
   return {
     [AI_SDK_SCHEMA]: true,
     _type: undefined,
-    jsonSchema: schema,
+    jsonSchema: collapseNumericSchema(schema),
     validate: undefined,
   } as unknown as z.ZodType<Record<string, unknown>>;
 }

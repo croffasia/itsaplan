@@ -277,6 +277,30 @@ describe('internal agent route tools', () => {
     }
   });
 
+  // The tool definitions go to the model on every step; a numeric argument written as a
+  // numeric string or a number would be paid for twice.
+  it('gives the model every numeric argument as a number only', async () => {
+    const { asOwner } = await setup();
+    const tools = await toolsFor(
+      asOwner,
+      AGENT_ACTIONS.map((tool) => tool.key),
+    );
+    const schemas = Object.entries(tools).map(([key, tool]) => {
+      const input = tool.inputSchema as unknown as { getJsonSchema(): unknown };
+      return [key, JSON.stringify(input.getJsonSchema())] as const;
+    });
+    expect(schemas.length).toBeGreaterThan(0);
+
+    for (const [key, schema] of schemas) {
+      expect({ key, numericString: /"format":"(numeric|integer)"/.test(schema) }).toEqual({
+        key,
+        numericString: false,
+      });
+    }
+    const getIssue = schemas.find(([key]) => key === 'get_issue')?.[1];
+    expect(JSON.parse(getIssue!).properties.issueId).toEqual({ type: 'number' });
+  });
+
   // The catalog states which role an action needs, which it can only do when it
   // carries the permission the route behind the action asserts.
   it('reports the permission of the route behind each action', () => {

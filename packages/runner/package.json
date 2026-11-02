@@ -20,7 +20,8 @@
     "antigravity",
     "opencode",
     "pi",
-    "omp"
+    "omp",
+    "mastracode"
   ],
   "homepage": "https://github.com/croffasia/itsaplan/tree/main/packages/runner#readme",
   "repository": {

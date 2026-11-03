@@ -99,7 +99,7 @@ export async function getWebhook(id: number): Promise<WebhookRow | null> {
   return rows[0] ? mapWebhook(rows[0]) : null;
 }
 
-// Updates only the fields the patch provides. A caller cannot change the secret.
+// Updates only the fields the patch provides. The secret changes only through rotation.
 export async function updateWebhook(
   id: number,
   patch: { url?: string; events?: WebhookEventType[]; isActive?: boolean },
@@ -115,6 +115,17 @@ export async function updateWebhook(
   if (patch.isActive === true) set.consecutiveFailures = 0;
   if (Object.keys(set).length === 0) return getWebhook(id);
   const [row] = await db.update(webhook).set(set).where(eq(webhook.id, id)).returning();
+  return row ? mapWebhook(row) : null;
+}
+
+// Deliveries are signed when they are sent, so a retry queued before the rotation is
+// signed with the new secret too.
+export async function rotateWebhookSecret(id: number): Promise<WebhookRow | null> {
+  const [row] = await db
+    .update(webhook)
+    .set({ secret: generateSecret() })
+    .where(eq(webhook.id, id))
+    .returning();
   return row ? mapWebhook(row) : null;
 }
 

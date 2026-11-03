@@ -171,6 +171,8 @@ export function attachmentEtag(s3Key: string): string {
   return `"${createHash('sha256').update(s3Key).digest('base64url').slice(0, 22)}"`;
 }
 
+const INLINE_TYPE = /^(image\/(png|jpe?g|gif|webp|avif|bmp)|(video|audio)\/[\w.+-]+)$/i;
+
 export function attachmentResponseHeaders(input: {
   contentType: string;
   filename: string;
@@ -178,12 +180,12 @@ export function attachmentResponseHeaders(input: {
   etag: string;
   download: boolean;
 }): Record<string, string> {
-  const inlineSafe = /^(image\/(png|jpe?g|gif|webp|avif|bmp)|video\/|audio\/)/i.test(
-    input.contentType,
-  );
-  const inline = inlineSafe && !input.download;
+  // An inline file is sent with its bare media type: a browser reads the last type of
+  // a comma-separated value, so a stored `image/png, text/html` would render as HTML.
+  const mediaType = input.contentType.split(';')[0]?.trim() ?? '';
+  const inline = INLINE_TYPE.test(mediaType) && !input.download;
   const headers: Record<string, string> = {
-    'Content-Type': input.contentType,
+    'Content-Type': inline ? mediaType : input.contentType,
     'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(input.filename)}`,
     'X-Content-Type-Options': 'nosniff',
     'Cache-Control': 'private, no-cache',

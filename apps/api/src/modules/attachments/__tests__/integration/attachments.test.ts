@@ -354,6 +354,16 @@ describe('attachments', () => {
       expect(String(raw.data)).toBe('hello');
     });
 
+    it('rejects a content type that carries a second type', async () => {
+      const { asOwner, issueId } = await setupIssue();
+      const res = await asOwner.issues({ issueId }).attachments.import.post({
+        filename: 'x.html',
+        contentBase64: Buffer.from('<script>alert(1)</script>').toString('base64'),
+        contentType: 'video/mp4,text/html',
+      });
+      expect(res.status).toBe(400);
+    });
+
     it('rejects a request with neither url nor contentBase64', async () => {
       const { asOwner, issueId } = await setupIssue();
       const res = await asOwner.issues({ issueId }).attachments.import.post({ filename: 'x.txt' });

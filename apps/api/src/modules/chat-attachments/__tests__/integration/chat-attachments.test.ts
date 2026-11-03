@@ -131,6 +131,16 @@ describe('chat attachments', () => {
     expect(garbage.status).toBe(400);
   });
 
+  it('rejects a content type that carries a second type', async () => {
+    const { asOwner } = await setup();
+    const res = await asOwner.projects({ projectKey: 'MKT' })['chat-attachments'].post({
+      filename: 'poc.html',
+      contentBase64: Buffer.from('<script>alert(1)</script>').toString('base64'),
+      contentType: 'image/png, text/html',
+    });
+    expect(res.status).toBe(400);
+  });
+
   it('denies a non-member uploading or reading', async () => {
     const { asOwner } = await setup();
     const uploaded = await upload(asOwner, 'tasks.csv', 'Task\nOnly');

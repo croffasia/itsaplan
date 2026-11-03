@@ -107,6 +107,10 @@
       "label": "Webhooks",
       "description": "Envoyez les événements du projet vers des URL externes, signés avec un secret propre à chaque webhook."
     },
+    "forms": {
+      "label": "Formulaires",
+      "description": "Toute personne disposant du lien crée ici un ticket."
+    },
     "git": {
       "label": "Dépôts",
       "description": "Fermez les tickets quand leurs pull requests sont fusionnées sur GitHub, GitLab, Gitea, Forgejo ou Bitbucket."
@@ -192,6 +196,40 @@
         "acsUrl": "URL ACS",
         "spEntityId": "Entity ID et métadonnées"
       }
+    },
+    "forms": {
+      "new": "Nouveau formulaire",
+      "columns": {
+        "form": "Formulaire",
+        "link": "Lien"
+      },
+      "enabled": "Accepte les demandes",
+      "tabs": {
+        "form": "Formulaire",
+        "questions": "Questions",
+        "issue": "Ticket",
+        "design": "Apparence"
+      },
+      "questionsHint": "Le nom et l'e-mail sont toujours demandés.",
+      "preview": "Aperçu",
+      "name": "Votre nom",
+      "email": "E-mail"
+    },
+    "portal": {
+      "title": "Portail",
+      "description": "La page où chacun envoie des demandes aux projets de l'espace de travail et les suit.",
+      "general": "Général",
+      "forms": "Formulaires publics",
+      "formsHint": "Les projets de l'espace de travail peuvent publier des formulaires que toute personne avec le lien remplit. Désactivé, leurs formulaires et portails ne s'ouvrent plus et les projets perdent leur section Formulaires ; rien n'est supprimé.",
+      "name": "Nom",
+      "nameHint": "Ce que les gens voient sur le portail et dans ses e-mails à la place du nom de l'espace de travail. Vide, c'est le nom de l'espace de travail.",
+      "address": "Adresse",
+      "addressHint": "Le portail s'ouvre à cette adresse. Tant qu'elle n'est pas définie, il s'ouvre au numéro de l'espace de travail.",
+      "link": "Lien du portail",
+      "logo": "Logo",
+      "logoHint": "Affiché sur le portail et sur les formulaires à la place du nom du portail. Un seul logo sert aux deux thèmes.",
+      "light": "Thème clair",
+      "dark": "Thème sombre"
     }
   }
 }

@@ -107,6 +107,10 @@
       "label": "Webhook",
       "description": "將專案事件傳送到外部 URL，並使用每個 Webhook 獨立的金鑰簽章。"
     },
+    "forms": {
+      "label": "表單",
+      "description": "任何持有連結的人都能在這裡建立工作項目。"
+    },
     "git": {
       "label": "存放庫",
       "description": "當關聯的 Pull Request 在 GitHub、GitLab、Gitea、Forgejo 或 Bitbucket 上合併時關閉工作項目。"
@@ -192,6 +196,40 @@
         "acsUrl": "ACS URL",
         "spEntityId": "Entity ID 和中繼資料"
       }
+    },
+    "forms": {
+      "new": "新增表單",
+      "columns": {
+        "form": "表單",
+        "link": "連結"
+      },
+      "enabled": "接收請求",
+      "tabs": {
+        "form": "表單",
+        "questions": "問題",
+        "issue": "工作項目",
+        "design": "外觀"
+      },
+      "questionsHint": "一律會詢問姓名和電子郵件。",
+      "preview": "預覽",
+      "name": "你的姓名",
+      "email": "電子郵件"
+    },
+    "portal": {
+      "title": "入口網站",
+      "description": "讓人向此工作區的專案提出請求並追蹤的頁面。",
+      "general": "一般",
+      "forms": "公開表單",
+      "formsHint": "此工作區的專案可以發布任何持有連結的人都能填寫的表單。關閉後，這些表單和入口網站將無法開啟，專案設定中的表單區段也會隱藏；不會刪除任何內容。",
+      "name": "名稱",
+      "nameHint": "人們在入口網站及其郵件中看到的名稱，代替工作區名稱。留空則顯示工作區名稱。",
+      "address": "網址",
+      "addressHint": "入口網站在此網址開啟。設定之前，會以工作區編號開啟。",
+      "link": "入口網站連結",
+      "logo": "標誌",
+      "logoHint": "在入口網站和表單上代替入口網站名稱顯示。一個標誌可用於兩種主題。",
+      "light": "淺色主題",
+      "dark": "深色主題"
     }
   }
 }

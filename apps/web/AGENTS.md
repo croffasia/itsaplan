@@ -18,7 +18,8 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   nowhere else. `useWorkspaceSections(workspace, core)` returns a workspace's settings menu,
   shown by `WorkspaceSectionNav`: here the core's sections and previews of the
   dashboard, the AI budgets and the audit log, and for the owner of email domains, single
-  sign-on and SCIM (`components/common/page/SectionPreview`), while the hosted build adds
+  sign-on, the requests portal and SCIM (`components/common/page/SectionPreview`), while the
+  hosted build adds
   its own at any position or drops some. One it adds carries in `Component` the
   page `/workspaces/:id/:sectionId` opens; that page answers 404 only once the workspace and
   every query in flight have loaded, so a section that waits on a query of its own opens
@@ -28,7 +29,8 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   `/workspaces/:id` names no section and opens the first entry of the menu, so the order
   also decides the page a workspace opens on.
   `useProjectSettingsSections(project, core)` returns the project's sections: here the
-  core's, while the hosted build adds its own at any position or drops some. Those of the
+  core's and, for the people who govern the project's settings, a preview of the forms after
+  the webhooks, while the hosted build adds its own at any position or drops some. Those of the
   `ai-team` group are listed in the main sidebar's AI Team group, those naming the same `menu`
   as one entry that opens to them, named by the menu's `sections.settings` messages; the others
   in the settings sidebar, which lists the groups in the order their first section comes, each

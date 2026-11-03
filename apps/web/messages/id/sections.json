@@ -107,6 +107,10 @@
       "label": "Webhook",
       "description": "Kirim peristiwa proyek ke URL eksternal, ditandatangani dengan rahasia per-webhook."
     },
+    "forms": {
+      "label": "Formulir",
+      "description": "Siapa saja yang punya tautan bisa membuat issue di sini."
+    },
     "git": {
       "label": "Repositori",
       "description": "Tutup issue saat pull request digabungkan di GitHub, GitLab, Gitea, Forgejo, atau Bitbucket."
@@ -192,6 +196,40 @@
         "acsUrl": "URL ACS",
         "spEntityId": "Entity ID dan metadata"
       }
+    },
+    "forms": {
+      "new": "Formulir baru",
+      "columns": {
+        "form": "Formulir",
+        "link": "Tautan"
+      },
+      "enabled": "Menerima permintaan",
+      "tabs": {
+        "form": "Formulir",
+        "questions": "Pertanyaan",
+        "issue": "Issue",
+        "design": "Tampilan"
+      },
+      "questionsHint": "Nama dan email selalu ditanyakan.",
+      "preview": "Pratinjau",
+      "name": "Nama Anda",
+      "email": "Email"
+    },
+    "portal": {
+      "title": "Portal",
+      "description": "Halaman tempat orang mengirim permintaan ke proyek ruang kerja ini dan mengikutinya.",
+      "general": "Umum",
+      "forms": "Formulir publik",
+      "formsHint": "Proyek di ruang kerja ini bisa menerbitkan formulir yang diisi siapa saja yang punya tautan. Jika dimatikan, formulir dan portalnya tidak lagi terbuka dan bagian Formulir hilang dari pengaturan proyek; tidak ada yang dihapus.",
+      "name": "Nama",
+      "nameHint": "Yang dilihat orang di portal dan emailnya sebagai pengganti nama ruang kerja. Kosong menampilkan nama ruang kerja.",
+      "address": "Alamat",
+      "addressHint": "Portal dibuka di alamat ini. Sebelum Anda menetapkannya, portal dibuka dengan nomor ruang kerja.",
+      "link": "Tautan portal",
+      "logo": "Logo",
+      "logoHint": "Ditampilkan di portal dan formulir sebagai pengganti nama portal. Satu logo berlaku untuk kedua tema.",
+      "light": "Tema terang",
+      "dark": "Tema gelap"
     }
   }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -62,6 +62,19 @@ export default function WorkItemsPage() {
     targets: [qk.boardIssues(projectKey)],
   });
 
+  // With an optional section off, its property and grouping are left out of what
+  // the layouts and the Display panel work with, and put back on the way out so the
+  // stored display keeps them for when the section is on again. Memoized: the
+  // layouts memoize their cards, and a new properties list renders every card again.
+  const settings = useMemo(
+    () => withoutHiddenSections(editor.settings, features),
+    [editor.settings, features],
+  );
+
+  // From the unfiltered project, so a column's WIP limit is measured against every
+  // issue in it rather than the ones the active filters leave on screen.
+  const columnCounts = useMemo(() => countIssuesByColumn(project?.issues ?? []), [project?.issues]);
+
   if (!project || !filteredProject) return null;
 
   // Saving persists the view: a project's view is a views edit, a private view is its
@@ -71,16 +84,8 @@ export default function WorkItemsPage() {
   const canCreateProjectView = can('views', 'create');
   const canSaveView = !editor.activeView || editor.activeView.isPrivate || can('views', 'edit');
 
-  // With an optional section off, its property and grouping are left out of what
-  // the layouts and the Display panel work with, and put back on the way out so the
-  // stored display keeps them for when the section is on again.
-  const settings = withoutHiddenSections(editor.settings, features);
   const changeSettings = (next: ViewSettings) =>
     editor.changeSettings(restoreHiddenSections(next, editor.settings, features));
-
-  // From the unfiltered project, so a column's WIP limit is measured against every
-  // issue in it rather than the ones the active filters leave on screen.
-  const columnCounts = countIssuesByColumn(project.issues);
 
   const timelineGroups = buildGroups(
     filteredProject,

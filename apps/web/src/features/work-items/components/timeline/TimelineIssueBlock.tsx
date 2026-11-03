@@ -1,4 +1,4 @@
-import { useDndContext, useDroppable } from '@dnd-kit/core';
+import { useDroppable } from '@dnd-kit/core';
 import { DropLine } from '../shared/DropLine';
 import { SubtaskFoldProvider, useSubtaskFold } from '../../context/useSubtasks';
 
@@ -20,14 +20,13 @@ export function TimelineIssueBlock({
   onDrop: (draggedId: number) => void;
   children: React.ReactNode;
 }) {
-  // Dropping an issue on itself is a no-op: it neither moves nor gets a marker.
-  const { active } = useDndContext();
-  const self = Number(active?.id) === issueId;
-  const { setNodeRef, isOver } = useDroppable({
+  const { setNodeRef, isOver, active } = useDroppable({
     id: `row:${issueId}`,
     disabled,
     data: { onDrop: (draggedId: number) => draggedId !== issueId && onDrop(draggedId) },
   });
+  // Dropping an issue on itself is a no-op: it neither moves nor gets a marker.
+  const self = Number(active?.id) === issueId;
   // The subtask fold belongs to the block rather than to either row: the chevron is
   // on the issue row and the rows it folds are its siblings.
   const fold = useSubtaskFold();

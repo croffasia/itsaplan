@@ -10,7 +10,13 @@ import { TimelineHeader } from '@/components/common/timeline/TimelineHeader';
 import { TimelineLabelResizer } from '@/components/common/timeline/TimelineLabelResizer';
 import { useTimelineDrag } from '../../hooks/useTimelineDrag';
 import { useIssueReorder } from '../../hooks/useIssueReorder';
-import { buildTimeline, labelWidthKey, SCALE_DAY_W, timelineColumns } from '../../utils/timeline';
+import {
+  buildTimeline,
+  labelWidthKey,
+  SCALE_DAY_W,
+  timelineColumns,
+  type TimelineRow,
+} from '../../utils/timeline';
 import { IssueDragOverlay } from '../shared/IssueDragOverlay';
 import { TimelineColumnHeader } from './TimelineColumnHeader';
 import { TimelineGroupRow } from './TimelineGroupRow';
@@ -18,6 +24,7 @@ import { TimelineSubgroupRow } from './TimelineSubgroupRow';
 import { TimelineIssueBlock } from './TimelineIssueBlock';
 import { TimelineIssueRow } from './TimelineIssueRow';
 import { TimelineLinkRows } from './TimelineLinkRows';
+import { TimelineRows } from './TimelineRows';
 import { TimelineSubtaskRows } from './TimelineSubtaskRows';
 
 interface TimelineViewProps extends WorkItemsViewProps {
@@ -92,6 +99,105 @@ export default function TimelineView({
       dayW: DAY_W,
     });
 
+  function renderRow(row: TimelineRow) {
+    if (row.kind === 'group') {
+      return (
+        <TimelineGroupRow
+          group={row.group}
+          count={row.count}
+          collapsed={row.collapsed}
+          aggregateRect={
+            row.aggregateSpan ? spanToRect(row.aggregateSpan.start, row.aggregateSpan.end) : null
+          }
+          labelW={labelW}
+          trackWidth={trackWidth}
+          disabled={subgrouped && !row.collapsed}
+          onDrop={(id) => reorder.moveIssue(id, row.assign, row.bucket, row.bucket.length)}
+          onToggle={() => toggleGroup(row.group.key)}
+        />
+      );
+    }
+
+    if (row.kind === 'subgroup') {
+      return (
+        <TimelineSubgroupRow
+          sub={row.sub}
+          groupKey={row.groupKey}
+          count={row.count}
+          collapsed={row.collapsed}
+          aggregateRect={
+            row.aggregateSpan ? spanToRect(row.aggregateSpan.start, row.aggregateSpan.end) : null
+          }
+          labelW={labelW}
+          trackWidth={trackWidth}
+          onDrop={(id) => reorder.moveIssue(id, row.assign, row.bucket, row.bucket.length)}
+          onToggle={() => toggleGroup(row.groupKey)}
+        />
+      );
+    }
+
+    const { issue, span } = row;
+    const active = preview?.issueId === issue.id;
+    const rect = spanToRect(active ? preview!.start : span.start, active ? preview!.end : span.end);
+    return (
+      <TimelineIssueBlock
+        issueId={issue.id}
+        disabled={!reorder.manualOrder}
+        onDrop={(draggedId) => reorder.moveIssue(draggedId, row.assign, row.bucket, row.index)}
+      >
+        <TimelineIssueRow
+          project={project}
+          issue={issue}
+          maps={maps}
+          span={span}
+          rect={rect}
+          color={issueColor(issue, maps)}
+          active={active}
+          indented={subgrouped}
+          labelW={labelW}
+          columns={columns}
+          trackWidth={trackWidth}
+          dayLines={dayLines}
+          todayInRange={todayInRange}
+          todayLeft={todayLeft}
+          readOnly={barsReadOnly}
+          onBeginDrag={beginDrag}
+          onOpen={onOpenIssue}
+        />
+        <TimelineSubtaskRows
+          project={project}
+          issueId={issue.id}
+          indented={subgrouped}
+          maps={maps}
+          labelW={labelW}
+          columns={columns}
+          readOnly={barsReadOnly}
+          trackWidth={trackWidth}
+          dayLines={dayLines}
+          todayInRange={todayInRange}
+          todayLeft={todayLeft}
+          spanToRect={spanToRect}
+          onOpen={onOpenIssue}
+        />
+        <TimelineLinkRows
+          project={project}
+          links={issue.links}
+          indented={subgrouped}
+          maps={maps}
+          labelW={labelW}
+          columns={columns}
+          readOnly={barsReadOnly}
+          trackWidth={trackWidth}
+          dayLines={dayLines}
+          todayInRange={todayInRange}
+          todayLeft={todayLeft}
+          spanToRect={spanToRect}
+          onOpen={onOpenIssue}
+        />
+      </TimelineIssueBlock>
+    );
+  }
+
   return (
     <DndContext
       sensors={reorder.sensors}
@@ -115,116 +221,7 @@ export default function TimelineView({
           />
           {!narrow && <TimelineLabelResizer labelW={titleW} onResize={setTitleWidth} />}
 
-          {rows.map((row) => {
-            if (row.kind === 'group') {
-              return (
-                <TimelineGroupRow
-                  key={`g-${row.group.key}`}
-                  group={row.group}
-                  count={row.count}
-                  collapsed={row.collapsed}
-                  aggregateRect={
-                    row.aggregateSpan
-                      ? spanToRect(row.aggregateSpan.start, row.aggregateSpan.end)
-                      : null
-                  }
-                  labelW={labelW}
-                  trackWidth={trackWidth}
-                  disabled={subgrouped && !row.collapsed}
-                  onDrop={(id) => reorder.moveIssue(id, row.assign, row.bucket, row.bucket.length)}
-                  onToggle={() => toggleGroup(row.group.key)}
-                />
-              );
-            }
-
-            if (row.kind === 'subgroup') {
-              return (
-                <TimelineSubgroupRow
-                  key={`s-${row.groupKey}`}
-                  sub={row.sub}
-                  groupKey={row.groupKey}
-                  count={row.count}
-                  collapsed={row.collapsed}
-                  aggregateRect={
-                    row.aggregateSpan
-                      ? spanToRect(row.aggregateSpan.start, row.aggregateSpan.end)
-                      : null
-                  }
-                  labelW={labelW}
-                  trackWidth={trackWidth}
-                  onDrop={(id) => reorder.moveIssue(id, row.assign, row.bucket, row.bucket.length)}
-                  onToggle={() => toggleGroup(row.groupKey)}
-                />
-              );
-            }
-
-            const { issue, span } = row;
-            const active = preview?.issueId === issue.id;
-            const rect = spanToRect(
-              active ? preview!.start : span.start,
-              active ? preview!.end : span.end,
-            );
-            return (
-              <TimelineIssueBlock
-                key={issue.id}
-                issueId={issue.id}
-                disabled={!reorder.manualOrder}
-                onDrop={(draggedId) =>
-                  reorder.moveIssue(draggedId, row.assign, row.bucket, row.index)
-                }
-              >
-                <TimelineIssueRow
-                  project={project}
-                  issue={issue}
-                  maps={maps}
-                  span={span}
-                  rect={rect}
-                  color={issueColor(issue, maps)}
-                  active={active}
-                  indented={subgrouped}
-                  labelW={labelW}
-                  columns={columns}
-                  trackWidth={trackWidth}
-                  dayLines={dayLines}
-                  todayInRange={todayInRange}
-                  todayLeft={todayLeft}
-                  readOnly={barsReadOnly}
-                  onBeginDrag={beginDrag}
-                  onOpen={onOpenIssue}
-                />
-                <TimelineSubtaskRows
-                  project={project}
-                  issueId={issue.id}
-                  indented={subgrouped}
-                  maps={maps}
-                  labelW={labelW}
-                  columns={columns}
-                  readOnly={barsReadOnly}
-                  trackWidth={trackWidth}
-                  dayLines={dayLines}
-                  todayInRange={todayInRange}
-                  todayLeft={todayLeft}
-                  spanToRect={spanToRect}
-                  onOpen={onOpenIssue}
-                />
-                <TimelineLinkRows
-                  project={project}
-                  links={issue.links}
-                  indented={subgrouped}
-                  maps={maps}
-                  labelW={labelW}
-                  columns={columns}
-                  readOnly={barsReadOnly}
-                  trackWidth={trackWidth}
-                  dayLines={dayLines}
-                  todayInRange={todayInRange}
-                  todayLeft={todayLeft}
-                  spanToRect={spanToRect}
-                  onOpen={onOpenIssue}
-                />
-              </TimelineIssueBlock>
-            );
-          })}
+          <TimelineRows rows={rows} scrollRef={scrollRef} renderRow={renderRow} />
         </div>
       </div>
 

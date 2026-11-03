@@ -34,9 +34,21 @@ export const qk = {
   scimGroups: (workspaceId: number | null) => [...scimKey(workspaceId), 'groups'] as const,
   scimProjects: (workspaceId: number | null) => [...scimKey(workspaceId), 'projects'] as const,
   teamProjectDefaults: (teamId: number) => ['team', teamId, 'project-defaults'] as const,
-  projectTemplates: (teamId: number) => ['team', teamId, 'project-templates'] as const,
-  projectTemplate: (teamId: number, templateId: number) =>
-    ['team', teamId, 'project-templates', templateId] as const,
+  // The project templates of a workspace and those its teams see share one root, since
+  // saving or deleting one changes the lists of every team.
+  projectTemplates: ['project-templates'] as const,
+  teamProjectTemplates: (teamId: number) => ['project-templates', 'team', teamId] as const,
+  teamProjectTemplate: (teamId: number, templateId: number) =>
+    ['project-templates', 'team', teamId, templateId] as const,
+  workspaceProjectTemplates: (workspaceId: number) =>
+    ['project-templates', 'workspace', workspaceId] as const,
+  workspaceProjectTemplate: (workspaceId: number, templateId: number) =>
+    ['project-templates', 'workspace', workspaceId, templateId] as const,
+  importedTemplatePreview: (workspaceId: number, template: unknown) =>
+    ['project-templates', 'workspace', workspaceId, 'import', template] as const,
+  projectTemplatePreview: (workspaceId: number, projectId: number, include: unknown) =>
+    ['project-templates', 'workspace', workspaceId, 'preview', projectId, include] as const,
+  templatePublisher: (workspaceId: number) => ['template-publisher', workspaceId] as const,
   // The members of a team and the projects it owns, each read by its own section. A
   // page is scoped by the search term and the window it was read with.
   teamMembers: (teamId: number, params: unknown) => ['team', teamId, 'members', params] as const,

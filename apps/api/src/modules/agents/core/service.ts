@@ -571,9 +571,7 @@ async function resolveTeamProjectIds(teamId: number, projectIds: number[]): Prom
   const rows = await db
     .select({ id: project.id })
     .from(project)
-    .where(
-      and(eq(project.teamId, teamId), inArray(project.id, wanted), eq(project.isTemplate, false)),
-    );
+    .where(and(eq(project.teamId, teamId), inArray(project.id, wanted)));
   if (rows.length !== wanted.length) throw new HttpError(400, 'Project not found in this team');
   return rows.map((row) => row.id);
 }

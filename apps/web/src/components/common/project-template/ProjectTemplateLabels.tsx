@@ -1,8 +1,10 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { Label, LabelGroup } from '@/lib/api/endpoints/labels';
+import type { TemplateContents } from '@/lib/api/endpoints/project-templates';
 import ProjectTemplateItems from './ProjectTemplateItems';
+
+type Label = TemplateContents['labels'][number];
 
 // The labels of a template under their groups, the ungrouped ones last.
 export default function ProjectTemplateLabels({
@@ -10,7 +12,7 @@ export default function ProjectTemplateLabels({
   groups,
 }: {
   labels: Label[];
-  groups: LabelGroup[];
+  groups: TemplateContents['labelGroups'];
 }) {
   const t = useTranslations('settings.labels');
   const items = (list: Label[]) => list.map((l) => ({ key: l.id, name: l.name, color: l.color }));

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
-import type { ProjectTemplateDetail } from '@/lib/api/endpoints/project-templates';
+import type { TemplateContents } from '@/lib/api/endpoints/project-templates';
 import { useCopyColumns } from '@/hooks/useCopyColumns';
 import ProjectTemplateConfiguration from './ProjectTemplateConfiguration';
 import ProjectTemplateItems, { type TemplateItem } from './ProjectTemplateItems';
@@ -12,14 +12,14 @@ import ProjectTemplateStates from './ProjectTemplateStates';
 
 // What a template holds, in the groups and the order "Save as template" offers them,
 // the hosted build's parts included.
-export default function ProjectTemplateContents({ template }: { template: ProjectTemplateDetail }) {
+export default function ProjectTemplateContents({ template }: { template: TemplateContents }) {
   const t = useTranslations('teams.templates.panel');
   const tFieldTypes = useTranslations('settings.customFields.fieldTypes');
   const columns = useCopyColumns(true);
 
   const typeName = (id: number | null) => template.issueTypes.find((type) => type.id === id)?.name;
-  const named = (items: { id: number; name: string }[]) =>
-    items.map((item) => ({ key: item.id, name: item.name }));
+  const named = (items: { name: string }[]) =>
+    items.map((item, i) => ({ key: i, name: item.name }));
 
   const lists: Record<string, TemplateItem[]> = {
     issueTypes: template.issueTypes.map((x) => ({ key: x.id, name: x.name, color: x.color })),

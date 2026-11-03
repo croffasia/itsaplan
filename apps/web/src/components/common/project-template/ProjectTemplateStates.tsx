@@ -1,7 +1,9 @@
 import { Fragment } from 'react';
 import { ChevronRight } from 'lucide-react';
-import type { Column } from '@/lib/api/endpoints/columns';
+import type { TemplateContents } from '@/lib/api/endpoints/project-templates';
 import { colorDot } from '@/components/common/fields/colorDot';
+
+type Column = TemplateContents['columns'][number];
 
 // The states of a template in board order, the canceled ones set apart after the flow.
 export default function ProjectTemplateStates({ columns }: { columns: Column[] }) {

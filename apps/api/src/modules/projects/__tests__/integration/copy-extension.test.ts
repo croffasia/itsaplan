@@ -9,33 +9,43 @@ import {
   type CopySectionContext,
 } from '#modules/projects/copy-extension';
 
-let calls: CopySectionContext[] = [];
+let reads: number[] = [];
+let applies: { context: CopySectionContext; data: unknown }[] = [];
 
-// A section that records each run and adds a label to the copy inside its transaction,
-// named after how many labels the copy re-created before it.
+// A section that holds the id of the project it was read from, and adds a label to the new
+// project inside its transaction, named after how many labels were re-created before it.
 function section(overrides: Partial<CopySection> = {}): CopySection {
   return {
     key: 'extra',
     requires: ['labels'],
     template: true,
-    copy: async (context) => {
-      calls.push(context);
+    read: async (projectId) => {
+      reads.push(projectId);
+      return { from: projectId };
+    },
+    apply: async (context, data) => {
+      applies.push({ context, data });
       await context.tx
         .insert(label)
         .values({ projectId: context.projectId, name: `extra ${context.maps.label.size}` });
     },
-    contents: async (projectId) => [`held by ${projectId}`],
+    contents: (data) => [`held from ${(data as { from: number }).from}`],
     ...overrides,
   };
 }
 
 // The project SRC with the label "bug".
-async function setup(): Promise<{ api: Api; teamId: number; sourceId: number }> {
+async function setup(): Promise<{
+  api: Api;
+  teamId: number;
+  workspaceId: number;
+  sourceId: number;
+}> {
   const user = await signUpTestUser();
   const api = authedApi(user.cookie);
   const source = (await createProject(api, { key: 'SRC', name: 'Source' })).data!;
   await api.projects({ projectKey: 'SRC' }).labels.post({ name: 'bug', color: '#ff0000' });
-  return { api, teamId: source.teamId, sourceId: source.id };
+  return { api, teamId: source.teamId, workspaceId: user.workspaceId!, sourceId: source.id };
 }
 
 async function labelNames(api: Api, projectKey: string) {
@@ -45,12 +55,13 @@ async function labelNames(api: Api, projectKey: string) {
 describe('copy sections of an extension', () => {
   beforeEach(async () => {
     await resetDb();
-    calls = [];
+    reads = [];
+    applies = [];
   });
   afterEach(() => setCopySections());
 
   it('copies a selected section with what it requires', async () => {
-    const { api } = await setup();
+    const { api, sourceId } = await setup();
     setCopySections([section()]);
 
     const copied = await api
@@ -59,7 +70,9 @@ describe('copy sections of an extension', () => {
     expect(copied.status).toBe(201);
 
     expect(await labelNames(api, 'DST')).toEqual(['bug', 'extra 1']);
-    expect(calls).toMatchObject([{ template: false, sameTeam: true }]);
+    expect(applies).toMatchObject([
+      { context: { projectId: copied.data!.id, sameTeam: true }, data: { from: sourceId } },
+    ]);
   });
 
   it('leaves a section out unless it is selected', async () => {
@@ -71,37 +84,42 @@ describe('copy sections of an extension', () => {
       .copy.post({ key: 'DST', name: 'Destination', include: { labels: true } });
 
     expect(await labelNames(api, 'DST')).toEqual(['bug']);
-    expect(calls).toHaveLength(0);
+    expect(reads).toHaveLength(0);
+    expect(applies).toHaveLength(0);
   });
 
-  it('saves a section into a template and copies it into a project made from it', async () => {
-    const { api, teamId, sourceId } = await setup();
+  it('saves a section into a template and applies it to a project made from it', async () => {
+    const { api, teamId, workspaceId, sourceId } = await setup();
     setCopySections([section()]);
 
     const saved = await api
-      .teams({ teamId })
+      .workspaces({ workspaceId })
       ['project-templates'].post({ projectId: sourceId, name: 'Kanban', include: { extra: true } });
-    await api
+    const created = await api
       .teams({ teamId })
       .projects.post({ key: 'NEW', name: 'New', templateId: saved.data!.id });
 
-    expect(calls.map((call) => call.template)).toEqual([true, false]);
+    expect(reads).toEqual([sourceId]);
+    expect(applies).toMatchObject([
+      { context: { projectId: created.data!.id, sameTeam: false }, data: { from: sourceId } },
+    ]);
+    expect(await labelNames(api, 'NEW')).toEqual(['bug', 'extra 1']);
     const detail = await api
       .teams({ teamId })
       ['project-templates']({ templateId: saved.data!.id })
       .get();
-    expect(detail.data?.sections).toEqual([{ key: 'extra', items: [`held by ${saved.data!.id}`] }]);
+    expect(detail.data?.sections).toEqual([{ key: 'extra', items: [`held from ${sourceId}`] }]);
   });
 
   it('leaves a section a template does not carry out of the template', async () => {
-    const { api, teamId, sourceId } = await setup();
+    const { api, workspaceId, sourceId } = await setup();
     setCopySections([section({ template: false })]);
 
     await api
-      .teams({ teamId })
+      .workspaces({ workspaceId })
       ['project-templates'].post({ projectId: sourceId, name: 'Kanban', include: { extra: true } });
 
-    expect(calls).toHaveLength(0);
+    expect(reads).toHaveLength(0);
   });
 
   it('refuses a key the core or another section uses', () => {

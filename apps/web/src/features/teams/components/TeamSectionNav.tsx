@@ -12,7 +12,6 @@ import {
   FolderKanban,
   GitBranch,
   Info,
-  LayoutTemplate,
   PanelLeftClose,
   PanelLeftOpen,
   Plug,
@@ -41,13 +40,13 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 // The sections of the open team, as the page's last rail: the team itself, its
-// projects and the templates they are created from, the roles they assign from and its
-// members, then the AI group — the integration credentials the agents run on, the
-// agents themselves, the skills they load, the tools they can call and what they spent — with what MCP clients reach and
-// the notification providers last. The counts come with the team list, so each is shown
-// before its section is opened. A section the caller may not read is left out, and the
-// AI group with it once none of them is readable. Collapsed, the rail shows the icons of
-// every section, the AI group's included, without the group.
+// projects, the roles they assign from and its members, then the AI group — the
+// integration credentials the agents run on, the agents themselves, the skills they
+// load, the tools they can call, the run queue and what they spent — with Git, what MCP
+// clients reach and the notification providers last. The counts come with the team
+// list, so each is shown before its section is opened. A section the caller may not read
+// is left out, and the AI group with it once none of them is readable. Collapsed, the
+// rail shows the icons of every section, the AI group's included, without the group.
 export default function TeamSectionNav({
   team,
   collapsed,
@@ -84,14 +83,8 @@ export default function TeamSectionNav({
   const top = [
     section('info', t('info.title'), Info),
     section('projects', t('projects.title'), FolderKanban, team.projectCount),
-    // The project templates and the roles are managed by the team's owner and managers,
-    // so the sections are theirs.
-    ...(runsTeam
-      ? [
-          section('templates', t('templates.title'), LayoutTemplate, team.templateCount),
-          section('roles', t('roles.title'), ShieldCheck, team.roleCount),
-        ]
-      : []),
+    // The roles are managed by the team's owner and managers, so the section is theirs.
+    ...(runsTeam ? [section('roles', t('roles.title'), ShieldCheck, team.roleCount)] : []),
     section('members', t('members.title'), Users, team.memberCount),
   ];
   const ai = [

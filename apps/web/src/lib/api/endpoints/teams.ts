@@ -32,7 +32,6 @@ export interface Team {
   source: 'invite' | 'scim';
   joinedAt: string;
   projectCount: number;
-  templateCount: number;
   memberCount: number;
   // How many of those members are owners: the last one cannot leave.
   ownerCount: number;

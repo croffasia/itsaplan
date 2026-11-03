@@ -3,20 +3,20 @@
 import { useTranslations } from 'next-intl';
 import type { ProjectTemplate } from '@/lib/api/endpoints/project-templates';
 import { formatDate } from '@/utils/dates';
-import { useProjectTemplateQuery } from '@/services/projectTemplates.service';
+import { useProjectTemplateQuery, type TemplateScope } from '@/services/projectTemplates.service';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import ProjectTemplateContents from './ProjectTemplateContents';
 
 // What a template is, then what a project created from it starts with.
 export default function ProjectTemplateDetails({
-  teamId,
+  scope,
   template,
 }: {
-  teamId: number;
+  scope: TemplateScope;
   template: ProjectTemplate;
 }) {
   const t = useTranslations('teams.templates.panel');
-  const { data: detail } = useProjectTemplateQuery(teamId, template.id);
+  const { data: detail } = useProjectTemplateQuery(scope, template.id);
 
   return (
     <div className="space-y-8">

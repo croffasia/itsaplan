@@ -155,7 +155,6 @@ export const manageTeamsPath = () => '/account/teams';
 export type TeamSection =
   | 'info'
   | 'projects'
-  | 'templates'
   | 'members'
   | 'roles'
   | 'integrations'

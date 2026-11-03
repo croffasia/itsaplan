@@ -65,7 +65,6 @@ export const TeamResponse = t.Object({
   }),
   joinedAt: t.String(),
   projectCount: t.Number(),
-  templateCount: t.Number({ description: 'How many project templates the team holds.' }),
   memberCount: t.Number(),
   ownerCount: t.Number({ description: 'How many members are owners; the last one cannot leave.' }),
   roleCount: t.Number({ description: "How many roles the team's projects assign from." }),

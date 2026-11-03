@@ -1,4 +1,4 @@
-import { BadgeDollarSign, Clock3, Coins, Info, ShieldCheck } from 'lucide-react';
+import { BadgeDollarSign, Clock3, Coins, Info, LayoutTemplate, ShieldCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useWorkspaceSections } from '@/cloud';
 import type { WorkspaceSummary } from '@/lib/api/endpoints/workspaces';
@@ -8,13 +8,20 @@ import { useWorkspaceQuery } from '@/services/workspaces.service';
 // Grouped in menu order, so the first entry, the page a workspace opens on
 // (WorkspaceFirstSection), is the first of the top group.
 // Only the workspace's owner and its admins open them (WorkspaceLayout), and both read
-// what the agents spent and set the model prices it is costed at.
+// what the agents spent, keep its project templates and set the model prices it is costed at.
 export function useWorkspaceSettingsSections(workspace: WorkspaceSummary): WorkspaceSection[] {
   const t = useTranslations('teams.workspace');
+  const tSections = useTranslations('teams.sections');
   const detail = useWorkspaceQuery(workspace.id).data;
   const sections = useWorkspaceSections(workspace, [
     { id: 'queue', label: t('queue.title'), icon: Clock3, group: 'overview' },
     { id: 'agent-usage', label: t('agentUsage.title'), icon: Coins, group: 'overview' },
+    {
+      id: 'templates',
+      label: tSections('templates.title'),
+      icon: LayoutTemplate,
+      group: 'overview',
+    },
     { id: 'info', label: t('general'), icon: Info, group: 'settings' },
     {
       id: 'managers',

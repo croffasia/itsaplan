@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { db, issue, issueStatus } from '@repo/db';
+import { eq, sql } from 'drizzle-orm';
 import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -531,6 +533,42 @@ describe('analytics', () => {
       expect(res.status).toBe(200);
       expect(res.data?.days.at(-1)).toMatchObject({ scope: 1, started: 0, completed: 0 });
       expect(res.data?.forecast).toMatchObject({ remaining: 1, projectedDate: null });
+    });
+
+    it('drops an issue archived unfinished from the scope and keeps an archived closed one', async () => {
+      const { asOwner, col } = await setupProject();
+      await createIssue(asOwner, col.backlog);
+      const open = await createIssue(asOwner, col.started);
+      const done = await createIssue(asOwner, col.started);
+      await moveIssue(asOwner, done.id, col.completed);
+      await asOwner.issues({ issueId: open.id }).archive.post();
+      await asOwner.issues({ issueId: done.id }).archive.post();
+
+      const res = await burnup(asOwner);
+      expect(res.status).toBe(200);
+      expect(res.data?.days.at(-1)).toMatchObject({ scope: 2, started: 1, completed: 1 });
+      expect(res.data?.forecast.remaining).toBe(1);
+    });
+
+    it('keeps an issue archived unfinished in the scope of the days before it was archived', async () => {
+      const { asOwner, col } = await setupProject();
+      const open = await createIssue(asOwner, col.started);
+      await asOwner.issues({ issueId: open.id }).archive.post();
+      // No route moves a status stretch or an archive into the past, so both are set
+      // directly.
+      await db
+        .update(issueStatus)
+        .set({ enteredAt: sql`now() - interval '3 days'` })
+        .where(eq(issueStatus.issueId, open.id));
+      await db
+        .update(issue)
+        .set({ archivedAt: sql`now() - interval '1 day'` })
+        .where(eq(issue.id, open.id));
+
+      const days = (await burnup(asOwner)).data!.days;
+      expect(days.at(-3)).toMatchObject({ scope: 1, started: 1, completed: 0 });
+      expect(days.at(-2)).toMatchObject({ scope: 0, started: 0 });
+      expect(days.at(-1)).toMatchObject({ scope: 0, started: 0 });
     });
 
     it('limits the series to one initiative and returns its target date', async () => {

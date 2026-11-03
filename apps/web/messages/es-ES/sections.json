@@ -107,6 +107,10 @@
       "label": "Webhooks",
       "description": "Enviar eventos del proyecto a URLs externas, firmados con un secreto para cada webhook."
     },
+    "forms": {
+      "label": "Formularios",
+      "description": "Cualquiera con el enlace crea aquí un ticket."
+    },
     "git": {
       "label": "Repositorios",
       "description": "Cerrar tickets cuando sus pull requests se integran en GitHub, GitLab, Gitea, Forgejo o Bitbucket."
@@ -192,6 +196,40 @@
         "acsUrl": "URL de ACS",
         "spEntityId": "Entity ID y metadatos"
       }
+    },
+    "forms": {
+      "new": "Nuevo formulario",
+      "columns": {
+        "form": "Formulario",
+        "link": "Enlace"
+      },
+      "enabled": "Acepta solicitudes",
+      "tabs": {
+        "form": "Formulario",
+        "questions": "Preguntas",
+        "issue": "Ticket",
+        "design": "Diseño"
+      },
+      "questionsHint": "El nombre y el correo se piden siempre.",
+      "preview": "Vista previa",
+      "name": "Tu nombre",
+      "email": "Correo"
+    },
+    "portal": {
+      "title": "Portal",
+      "description": "La página donde las personas envían solicitudes a los proyectos del espacio de trabajo y las siguen.",
+      "general": "General",
+      "forms": "Formularios públicos",
+      "formsHint": "Los proyectos del espacio de trabajo pueden publicar formularios que rellena cualquiera con el enlace. Desactivado, sus formularios y portales dejan de abrirse y los proyectos pierden su sección Formularios; no se borra nada.",
+      "name": "Nombre",
+      "nameHint": "Lo que ven las personas en el portal y en sus correos en lugar del nombre del espacio de trabajo. Vacío muestra el nombre del espacio de trabajo.",
+      "address": "Dirección",
+      "addressHint": "El portal se abre en esta dirección. Mientras no la definas, se abre con el número del espacio de trabajo.",
+      "link": "Enlace del portal",
+      "logo": "Logotipo",
+      "logoHint": "Se muestra en el portal y en los formularios en lugar del nombre del portal. Un logotipo sirve para ambos temas.",
+      "light": "Tema claro",
+      "dark": "Tema oscuro"
     }
   }
 }

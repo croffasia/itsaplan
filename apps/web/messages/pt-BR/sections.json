@@ -107,6 +107,10 @@
       "label": "Webhooks",
       "description": "Envie eventos do projeto para URLs externas, assinados com um segredo por webhook."
     },
+    "forms": {
+      "label": "Formulários",
+      "description": "Qualquer pessoa com o link cria uma issue aqui."
+    },
     "git": {
       "label": "Repositórios",
       "description": "Feche issues quando seus pull requests mesclam no GitHub, GitLab, Gitea, Forgejo ou Bitbucket."
@@ -192,6 +196,40 @@
         "acsUrl": "URL de ACS",
         "spEntityId": "Entity ID e metadados"
       }
+    },
+    "forms": {
+      "new": "Novo formulário",
+      "columns": {
+        "form": "Formulário",
+        "link": "Link"
+      },
+      "enabled": "Aceita solicitações",
+      "tabs": {
+        "form": "Formulário",
+        "questions": "Perguntas",
+        "issue": "Issue",
+        "design": "Design"
+      },
+      "questionsHint": "Nome e e-mail são sempre pedidos.",
+      "preview": "Pré-visualização",
+      "name": "Seu nome",
+      "email": "E-mail"
+    },
+    "portal": {
+      "title": "Portal",
+      "description": "A página onde as pessoas enviam solicitações aos projetos do espaço de trabalho e as acompanham.",
+      "general": "Geral",
+      "forms": "Formulários públicos",
+      "formsHint": "Os projetos do espaço de trabalho podem publicar formulários que qualquer pessoa com o link preenche. Desativado, seus formulários e portais deixam de abrir e os projetos perdem a seção Formulários; nada é apagado.",
+      "name": "Nome",
+      "nameHint": "O que as pessoas veem no portal e nos e-mails dele no lugar do nome do espaço de trabalho. Vazio mostra o nome do espaço de trabalho.",
+      "address": "Endereço",
+      "addressHint": "O portal abre neste endereço. Enquanto você não definir um, ele abre pelo número do espaço de trabalho.",
+      "link": "Link do portal",
+      "logo": "Logotipo",
+      "logoHint": "Aparece no portal e nos formulários no lugar do nome do portal. Um logotipo serve para os dois temas.",
+      "light": "Tema claro",
+      "dark": "Tema escuro"
     }
   }
 }

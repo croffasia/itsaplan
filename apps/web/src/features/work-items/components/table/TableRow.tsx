@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useDndContext, useDraggable, useDroppable } from '@dnd-kit/core';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { BoardIssue, IssuePatch } from '@/lib/api/endpoints/issues';
 import { type Maps } from '@/utils/project';
@@ -73,14 +73,17 @@ export function TableRow({
     listeners,
     isDragging,
   } = useDraggable({ id: issue.id, disabled: useIsPhone() || !can('work_items', 'edit') });
-  const { setNodeRef: dropRef, isOver } = useDroppable({
+  const {
+    setNodeRef: dropRef,
+    isOver,
+    active,
+  } = useDroppable({
     id: `row:${issue.id}`,
     disabled: dropDisabled,
     data: { onDrop: (draggedId: number) => draggedId !== issue.id && onDrop(draggedId) },
   });
   // The insertion marker sits at this row's top edge: a drop inserts before it.
   // Dropping a row on itself is a no-op, so it gets no marker.
-  const { active } = useDndContext();
   const showDropLine = isOver && Number(active?.id) !== issue.id;
   const mergedRef = useCallback(
     (el: HTMLElement | null) => {

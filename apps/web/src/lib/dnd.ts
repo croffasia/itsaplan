@@ -19,11 +19,18 @@ export const DRAG_ACTIVATION_DISTANCE = 4;
 // share: the board keeps its DndContext (cards call useDraggable/useDroppable and
 // need the ancestor), but nothing is draggable. `inert` is fixed per component
 // instance, so the sensor-array length still never changes between its renders.
+// The options are module constants because useSensor memoizes on the options object.
+// A new object on each render gives the DndContext new sensors, and every draggable
+// and droppable of the board renders again.
+const MOUSE_OPTIONS = { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } };
+const TOUCH_OPTIONS = { activationConstraint: { delay: 250, tolerance: 8 } };
+const KEYBOARD_OPTIONS = { coordinateGetter: sortableKeyboardCoordinates };
+
 export function useDndSensors(inert = false) {
   const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(MouseSensor, MOUSE_OPTIONS),
+    useSensor(TouchSensor, TOUCH_OPTIONS),
+    useSensor(KeyboardSensor, KEYBOARD_OPTIONS),
   );
   const inertSensors = useSensors();
   return inert ? inertSensors : sensors;

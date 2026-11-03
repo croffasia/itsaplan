@@ -1,11 +1,10 @@
-import { useRef } from 'react';
-import { useDndContext, useDraggable } from '@dnd-kit/core';
+import { memo, useRef } from 'react';
+import { useDraggable } from '@dnd-kit/core';
 import { DRAG_ACTIVATION_DISTANCE } from '@/lib/dnd';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { BoardIssue } from '@/lib/api/endpoints/issues';
 import { type Maps } from '@/utils/project';
 import { useIsPhone } from '@/hooks/useIsPhone';
-import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import type { PropertyKey } from '@/utils/viewSettings';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
@@ -19,12 +18,14 @@ import { IssueCardBody } from './IssueCardBody';
 // selection, so the drag carries those ids. A plain click opens it, but with a
 // selection active (or a Shift/Cmd-click) the click toggles the card's selection
 // instead — the board's multi-select for bulk actions.
-export function BoardCard({
+// Memoized because a column renders again on every scroll step.
+export const BoardCard = memo(function BoardCard({
   project,
   issue,
   maps,
   properties,
   onOpen,
+  canEdit,
   readOnly,
 }: {
   project: ProjectDetail;
@@ -32,22 +33,25 @@ export function BoardCard({
   maps: Maps;
   properties: PropertyKey[];
   onOpen: (id: number) => void;
+  // Passed in rather than read with usePermissions: that reads the Shell context,
+  // which changes on every Shell render, and the card would render with it.
+  canEdit: boolean;
   // In a read-only share a click always opens the issue; multi-select is off.
   readOnly?: boolean;
 }) {
-  // Drag is disabled on phones, and without work_items edit (moving a card is an
-  // issue edit).
-  const { can } = usePermissions();
   const selection = useSelection();
   const selected = selection.isSelected(issue.id);
   const blocked = useIsBlocked(issue);
-  const { setNodeRef, attributes, listeners } = useDraggable({
+  // `active` comes from useDraggable, not useDndContext: the dnd-kit context changes
+  // each time a scrolled column mounts a card, and every card reading it renders again.
+  const { setNodeRef, attributes, listeners, active } = useDraggable({
     id: issue.id,
     data: { issueIds: selected ? [...selection.selected] : [issue.id] },
-    disabled: useIsPhone() || !can('work_items', 'edit'),
+    // Drag is disabled on phones, and without work_items edit (moving a card is an
+    // issue edit).
+    disabled: useIsPhone() || !canEdit,
   });
   // Every card that moves with the drag dims, not just the grabbed one.
-  const { active } = useDndContext();
   const isDragging = draggedIds(active).includes(issue.id);
 
   // The browser still fires a click after a drag ends, which would open the issue
@@ -105,4 +109,4 @@ export function BoardCard({
       </div>
     </IssueContextMenu>
   );
-}
+});

@@ -105,15 +105,23 @@ export function buildRouteTools(
   apiKey: string,
   enabledActions: string[] = [],
 ): Record<string, ReturnType<typeof createTool>> {
-  const app = getMcpApp();
   const granted = new Set([...ALWAYS_ON_KEYS, ...normalizeToolKeys(enabledActions)]);
   // An update replaces the board's canvas as a whole, so without the read the agent
   // would send a canvas built from nothing and delete every card already on the board.
   if (granted.has('update_note_board')) granted.add('get_note_board');
+  return buildNamedRouteTools(project, apiKey, granted);
+}
 
+// The tools of the routes with these names, whatever the catalog grants.
+export function buildNamedRouteTools(
+  project: ProjectRow,
+  apiKey: string,
+  names: Iterable<string>,
+): Record<string, ReturnType<typeof createTool>> {
+  const wanted = new Set(names);
   const tools: Record<string, ReturnType<typeof createTool>> = {};
-  for (const route of routeTools(app)) {
-    if (!granted.has(route.name)) continue;
+  for (const route of routeTools(getMcpApp())) {
+    if (!wanted.has(route.name)) continue;
     tools[route.name] = buildOne(route, project, apiKey);
   }
   return tools;

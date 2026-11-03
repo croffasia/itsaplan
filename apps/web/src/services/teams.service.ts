@@ -87,12 +87,13 @@ export function useTeamProjectsQuery(teamId: number, params: TeamProjectListPara
   });
 }
 
-// Every project the reader has in the team: the projects an agent is attached to,
-// and the MCP switches, both of which act on all of them rather than on a page.
-export function useTeamProjectOptionsQuery(teamId: number) {
+// Every project the reader has in the team, for the pickers and switches that act on all
+// of them rather than on a page. Null skips the request.
+export function useTeamProjectOptionsQuery(teamId: number | null) {
   return useQuery({
-    queryKey: qk.teamProjectOptions(teamId),
-    queryFn: () => listTeamProjectOptions(teamId),
+    queryKey: qk.teamProjectOptions(teamId ?? 0),
+    queryFn: () => listTeamProjectOptions(teamId!),
+    enabled: teamId != null,
   });
 }
 

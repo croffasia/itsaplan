@@ -71,7 +71,7 @@ export async function projectWorkspaceGrant(
       workspaceManager,
       and(eq(workspaceManager.workspaceId, team.workspaceId), eq(workspaceManager.userId, userId)),
     )
-    .where(and(eq(project.id, projectId), eq(project.isTemplate, false)));
+    .where(eq(project.id, projectId));
   return row ? workspaceRoleGrant(row.role) : null;
 }
 
@@ -206,8 +206,7 @@ async function runLimitCap(workspaceId: number): Promise<number> {
 }
 
 // Whether a team of the workspace has a project or an AI agent: people's work, which a
-// deleted workspace would take with it. A project template is the team's configuration,
-// not work, and goes with the workspace.
+// deleted workspace would take with it.
 export async function workspaceHoldsWork(workspaceId: number): Promise<boolean> {
   const [row] = await db
     .select({ id: team.id })
@@ -220,7 +219,7 @@ export async function workspaceHoldsWork(workspaceId: number): Promise<boolean> 
             db
               .select({ n: sql`1` })
               .from(project)
-              .where(and(eq(project.teamId, team.id), eq(project.isTemplate, false))),
+              .where(eq(project.teamId, team.id)),
           ),
           exists(
             db

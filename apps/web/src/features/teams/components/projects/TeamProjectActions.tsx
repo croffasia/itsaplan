@@ -18,19 +18,22 @@ import type { AccessVia } from '@/lib/api/endpoints/projects';
 import type { TeamProject, TeamRole } from '@/lib/api/endpoints/teams';
 import { useSession } from '@/lib/auth-client';
 import { useSetTeamProjectArchived } from '@/services/projects.service';
+import { useTeam } from '@/services/teams.service';
+import { useWorkspacesQuery } from '@/services/workspaces.service';
 import { projectPath } from '@/utils/paths';
 import RowAction from '@/components/common/RowAction';
 import NewProjectModal from '@/components/layout/NewProjectModal';
 import TeamProjectDeleteDialog from './TeamProjectDeleteDialog';
 import TeamProjectEditModal from './TeamProjectEditModal';
 import TeamProjectLeaveDialog from './TeamProjectLeaveDialog';
-import TeamProjectTemplateModal from './TeamProjectTemplateModal';
+import WorkspaceTemplateSaveModal from '../WorkspaceTemplateSaveModal';
 
 // What the reader may do with one project of the team, as the actions of the panel
-// header. Editing, copying, saving as a template and archiving follow their rank in the
-// team — a manager does all four, an owner also deletes — while leaving follows their
-// membership in the project, which its last owner, and anyone a provisioned group put
-// there, cannot give up.
+// header. Editing, copying and archiving follow their rank in the team — a manager does
+// all three, an owner also deletes — and saving as a template their role in the
+// workspace, whose owner and admins keep its templates. Leaving follows their membership
+// in the project, which its last owner, and anyone a provisioned group put there, cannot
+// give up.
 export default function TeamProjectActions({
   teamId,
   teamRole,
@@ -51,6 +54,9 @@ export default function TeamProjectActions({
   const [deleting, setDeleting] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const setArchived = useSetTeamProjectArchived();
+  const workspaceId = useTeam(teamId)?.workspaceId;
+  const managesWorkspace =
+    useWorkspacesQuery().data?.some((w) => w.id === workspaceId && w.role !== null) ?? false;
 
   const userId = session?.user.id;
   const isLastOwner = viewer?.role === 'owner' && project.owners.length === 1;
@@ -77,16 +83,18 @@ export default function TeamProjectActions({
           <RowAction icon={Pencil} label={t('editAction')} onClick={() => setEditing(true)} />
           <RowAction icon={Copy} label={t('copyAction')} onClick={() => setCopying(true)} />
           <RowAction
-            icon={LayoutTemplate}
-            label={t('saveTemplateAction')}
-            onClick={() => setTemplating(true)}
-          />
-          <RowAction
             icon={archived ? ArchiveRestore : Archive}
             label={t(archived ? 'restoreAction' : 'archiveAction')}
             onClick={toggleArchived}
           />
         </>
+      )}
+      {managesWorkspace && (
+        <RowAction
+          icon={LayoutTemplate}
+          label={t('saveTemplateAction')}
+          onClick={() => setTemplating(true)}
+        />
       )}
       {canLeave && (
         <RowAction icon={LogOut} label={t('leaveAction')} onClick={() => setLeaving(true)} />
@@ -116,9 +124,9 @@ export default function TeamProjectActions({
         />
       )}
 
-      {templating && (
-        <TeamProjectTemplateModal
-          teamId={teamId}
+      {templating && workspaceId !== undefined && (
+        <WorkspaceTemplateSaveModal
+          workspaceId={workspaceId}
           project={project}
           onClose={() => setTemplating(false)}
         />

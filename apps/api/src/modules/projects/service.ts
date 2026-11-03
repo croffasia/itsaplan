@@ -222,7 +222,6 @@ async function readProjects(
       grantedTeams.length > 0 ? inArray(project.teamId, grantedTeams) : undefined,
     ),
     isNull(project.archivedAt),
-    eq(project.isTemplate, false),
     opts.mcpOnly ? and(eq(project.mcpEnabled, true), eq(team.mcpEnabled, true)) : undefined,
     opts.teamId !== undefined ? eq(project.teamId, opts.teamId) : undefined,
     opts.workspaceId !== undefined ? eq(team.workspaceId, opts.workspaceId) : undefined,
@@ -636,7 +635,9 @@ export async function setProjectArchived(
 }
 
 // The project's feature toggles, read from the project row.
-export function projectFeatures(row: ProjectRow): ProjectFeatures {
+export function projectFeatures(
+  row: Pick<ProjectRow, `${keyof ProjectFeatures}Enabled`>,
+): ProjectFeatures {
   return {
     initiatives: row.initiativesEnabled,
     dashboards: row.dashboardsEnabled,

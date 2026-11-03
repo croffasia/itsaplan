@@ -434,10 +434,7 @@ export function reachedProjectIds(userId: string, grantedTeams: number[]): SQLWr
     .where(eq(projectMember.userId, userId));
   if (grantedTeams.length === 0) return member;
   return member.union(
-    db
-      .select({ id: project.id })
-      .from(project)
-      .where(and(inArray(project.teamId, grantedTeams), eq(project.isTemplate, false))),
+    db.select({ id: project.id }).from(project).where(inArray(project.teamId, grantedTeams)),
   );
 }
 

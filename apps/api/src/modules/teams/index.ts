@@ -326,9 +326,9 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
       detail: {
         summary: 'Delete a team',
         description:
-          'Delete a team you own, with its members, roles, project templates, invites, skills, ' +
-          'tools and integrations. A team that holds a project or an AI agent is refused ' +
-          'until those are gone. Irreversible.',
+          'Delete a team you own, with its members, roles, invites, skills, tools and ' +
+          'integrations. A team that holds a project or an AI agent is refused until those ' +
+          'are gone. Irreversible.',
       },
     },
   )

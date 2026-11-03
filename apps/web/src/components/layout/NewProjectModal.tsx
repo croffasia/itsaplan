@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useCreateProject } from '@/services/projects.service';
 import { useTeamsQuery, useTeamProjectDefaultsQuery } from '@/services/teams.service';
 import { useAiAgentsQuery } from '@/services/aiAgents.service';
-import { useProjectTemplatesQuery } from '@/services/projectTemplates.service';
+import { useTeamProjectTemplatesQuery } from '@/services/projectTemplates.service';
 import { useCopyColumns } from '@/hooks/useCopyColumns';
 import { includeOf, type CopyInclude } from '@/utils/copyOptions';
 import { normalizeKey, suggestKey } from '@/utils/projectKey';
@@ -18,24 +18,21 @@ import NewProjectFields from '@/components/layout/NewProjectFields';
 import NewProjectPreset from '@/components/layout/NewProjectPreset';
 import NewProjectStart from '@/components/layout/NewProjectStart';
 
-// Creates a project, from scratch or from one of the team's templates, or — when
+// Creates a project, from scratch or from one of the templates the team sees, or — when
 // `copyFrom` is set — copies that project's structure (states, issue types, labels,
 // custom fields) into a new project without its issues. `teamId` is the team the project
-// belongs to; a copy is always made within the source project's team. While the team has
-// templates, creating takes two steps: what the project starts from, then its fields;
-// `initialTemplateId` opens the second step with that template picked.
+// belongs to; a copy is always made within the source project's team. While the team sees
+// templates, creating takes two steps: what the project starts from, then its fields.
 export default function NewProjectModal({
   onClose,
   onCreated,
   teamId,
   copyFrom,
-  initialTemplateId,
 }: {
   onClose: () => void;
   onCreated: (projectKey: string) => void;
   teamId: number;
   copyFrom?: { id: number; name: string; description: string };
-  initialTemplateId?: number;
 }) {
   const t = useTranslations('newProject');
   const tCommon = useTranslations('common');
@@ -54,11 +51,9 @@ export default function NewProjectModal({
   // source project, and a project from a template from the template, so the preset
   // applies only when creating from scratch.
   const [preset, setPreset] = useState<PresetKey>('general');
-  const [templateId, setTemplateId] = useState<number | null>(initialTemplateId ?? null);
-  const [step, setStep] = useState<'start' | 'details'>(
-    initialTemplateId != null ? 'details' : 'start',
-  );
-  const templatesQuery = useProjectTemplatesQuery(copyFrom ? null : teamId);
+  const [templateId, setTemplateId] = useState<number | null>(null);
+  const [step, setStep] = useState<'start' | 'details'>('start');
+  const templatesQuery = useTeamProjectTemplatesQuery(copyFrom ? null : teamId);
   // The list is for the team's owners and managers; anyone it is refused to starts
   // from scratch.
   const templates = templatesQuery.isError ? [] : templatesQuery.data;

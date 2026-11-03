@@ -1205,6 +1205,20 @@
       "when": 1793626954039,
       "tag": "0171_share_expiry",
       "breakpoints": true
+    },
+    {
+      "idx": 172,
+      "version": "7",
+      "when": 1793703498898,
+      "tag": "0172_workspace_project_templates",
+      "breakpoints": true
+    },
+    {
+      "idx": 173,
+      "version": "7",
+      "when": 1793713887371,
+      "tag": "0173_template_gallery",
+      "breakpoints": true
     }
   ]
 }

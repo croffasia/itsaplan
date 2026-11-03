@@ -5,7 +5,7 @@ import { formatDate } from '@/utils/dates';
 import ProjectTemplateDetails from '@/components/common/project-template/ProjectTemplateDetails';
 import NewProjectOption from '@/components/layout/NewProjectOption';
 
-// The first step while the team has templates: a blank project or one of the templates,
+// The first step while the team sees templates: a blank project or one of the templates,
 // and beside the list what the choice starts the project with. A blank project shows
 // `blank`, the issue-type picker.
 export default function NewProjectStart({
@@ -63,7 +63,7 @@ export default function NewProjectStart({
             <h3 className="text-base font-semibold" dir="auto">
               {template.name}
             </h3>
-            <ProjectTemplateDetails teamId={teamId} template={template} />
+            <ProjectTemplateDetails scope={{ teamId }} template={template} />
           </>
         ) : (
           <>

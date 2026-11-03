@@ -41,6 +41,7 @@ export default function Modal({
   title,
   crumb,
   headerAction,
+  controls,
   description,
   scope,
   onClose,
@@ -58,6 +59,8 @@ export default function Modal({
   // caller that passes one has to focus its own first field through
   // onOpenAutoFocus.
   headerAction?: ReactNode;
+  // Icon buttons in the corner, before the close button.
+  controls?: ReactNode;
   description?: string;
   // Leading breadcrumb naming what the dialog acts in: a project key, a team.
   scope?: ReactNode;
@@ -134,6 +137,7 @@ export default function Modal({
         {/* After the body: Radix focuses the first tabbable node on open, which
             should be a field of the body, not a control. */}
         <div className="absolute end-3 top-3 flex items-center gap-1">
+          {controls}
           {onToggleFullscreen && (
             <Button
               variant="ghost"

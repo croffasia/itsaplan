@@ -43,8 +43,9 @@ export const createProjectBody = t.Composite([
     templateId: t.Optional(
       t.Integer({
         description:
-          'A project template of the team (list_project_templates) to create the project ' +
-          'from. The project then starts with what the template holds, and preset is not used.',
+          'A project template open to the team (list_project_templates) to create the ' +
+          'project from. The project then starts with what the template holds, and preset ' +
+          'is not used.',
       }),
     ),
   }),

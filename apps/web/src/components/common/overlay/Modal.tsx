@@ -59,7 +59,7 @@ export default function Modal({
   // caller that passes one has to focus its own first field through
   // onOpenAutoFocus.
   headerAction?: ReactNode;
-  // Icon buttons in the corner, before the close button.
+  // Icon buttons shown before the fullscreen and close buttons.
   controls?: ReactNode;
   description?: string;
   // Leading breadcrumb naming what the dialog acts in: a project key, a team.

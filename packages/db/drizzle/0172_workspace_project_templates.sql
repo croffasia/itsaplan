@@ -21,9 +21,9 @@ CREATE INDEX "project_template_workspace_idx" ON "project_template" USING btree 
 CREATE INDEX "project_template_team_team_idx" ON "project_template_team" USING btree ("team_id");--> statement-breakpoint
 -- Moves each template stored as a project into a snapshot of the workspace, limited to the
 -- team that held it. The snapshot has the shape of ProjectSnapshot (apps/api
--- modules/projects/copy.ts); the template project held only what was saved, so it all goes.
--- Templates of different teams now share the workspace's list, so where two teams of one
--- workspace hold a template of the same name, each takes its team's name after it.
+-- modules/projects/copy.ts), without the sections an extension adds; the template project is
+-- deleted below with everything it held. A workspace has one list of templates, so where two
+-- teams of one workspace hold a template of the same name, each takes its team's name after it.
 DO $$
 DECLARE
   source record;

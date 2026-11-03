@@ -62,9 +62,9 @@ async function gallery<T>(
   throw new GalleryRefusal(response.status, message);
 }
 
-// What the gallery refused, as this api answers it: a wrong code, a blocked address or
-// too many tries are the caller's to fix; a key it no longer takes means linking again;
-// anything else is the gallery's failure.
+// What the gallery refused, as this api answers it: a wrong code, a blocked address, too
+// many tries or a template too large are the caller's to fix; a key it no longer takes
+// means linking again; anything else is the gallery's failure.
 function answer(refusal: unknown): never {
   if (!(refusal instanceof GalleryRefusal)) throw refusal;
   switch (refusal.status) {

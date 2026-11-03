@@ -144,8 +144,7 @@ function assertUnique(values: unknown[], what: string): void {
 }
 
 // The schema checks each value; this checks what the rows of one project must hold
-// together, which the database would otherwise refuse only when a project is created
-// from the template.
+// together, before the template is stored and projects are created from it.
 function importedSnapshot(template: SharedProjectTemplate): ProjectSnapshot {
   const { snapshot } = template;
   assertUnique(

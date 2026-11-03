@@ -182,9 +182,10 @@ export function remapViewFilters(filters: unknown, maps: CopyIdMaps): unknown {
   return mapFilters(filters, copyReferences(maps));
 }
 
-// The project flags a copy carries: the optional sections the project shows and the
-// estimate kinds its issues carry. mcpEnabled is not among them: a new project enters its
-// team's MCP reach on the instance default, the same way a created one does.
+// The project flags a copy carries: the optional sections the project shows, the
+// estimate kinds its issues carry and whether time is logged. mcpEnabled is not among
+// them: a new project enters its team's MCP reach on the instance default, the same way a
+// created one does.
 const PROJECT_FLAGS = {
   initiativesEnabled: project.initiativesEnabled,
   dashboardsEnabled: project.dashboardsEnabled,
@@ -256,8 +257,8 @@ async function readProjectSnapshot(projectId: number, inc: Include): Promise<Pro
     settings,
   ] = await Promise.all([
     db.select(PROJECT_FLAGS).from(project).where(eq(project.id, projectId)),
-    // autoAssignUserId is left out: the copy starts with only its owner as a member, so a
-    // carried-over member would not be one there.
+    // autoAssignUserId is left out: a member of the source project need not be a member
+    // of the new one.
     inc.states
       ? db
           .select({

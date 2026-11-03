@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia';
 import { noContent } from '#shared/http';
-import { guards } from '#shared/guards';
+import { assertMcpAllowed, guards } from '#shared/guards';
 import { errors } from '#shared/responses';
 import { mcpTool } from '#mcp/generate';
 import { teamParams } from '#modules/teams/model';
@@ -32,6 +32,7 @@ import {
   listTeamTemplates,
   listWorkspaceTemplates,
   previewProjectTemplate,
+  requireWorkspaceProject,
   saveProjectTemplate,
   updateProjectTemplate,
 } from './service';
@@ -66,7 +67,9 @@ export const projectTemplateRoutes = new Elysia({
       detail: {
         summary: 'List the project templates of a workspace',
         description:
-          'Every project template of the workspace, by name, with the teams it is limited to.',
+          'Every project template of the workspace, by name, with the teams it is limited to. ' +
+          'The workspaceId of a team comes from list_teams.',
+        ...mcpTool('list_workspace_project_templates'),
       },
     },
   )
@@ -107,7 +110,9 @@ export const projectTemplateRoutes = new Elysia({
 
   .post(
     '/workspaces/:workspaceId/project-templates',
-    async ({ body, standing, set }) => {
+    async ({ body, standing, set, request }) => {
+      await requireWorkspaceProject(standing.workspaceId, body.projectId);
+      await assertMcpAllowed(body.projectId, request.headers);
       set.status = 201;
       return saveProjectTemplate(standing.workspaceId, body);
     },
@@ -115,7 +120,7 @@ export const projectTemplateRoutes = new Elysia({
       workspaceManager: true,
       params: workspaceParams,
       body: saveProjectTemplateBody,
-      response: { 201: ProjectTemplateResponse, ...errors(400, 401, 404) },
+      response: { 201: ProjectTemplateResponse, ...errors(400, 401, 403, 404) },
       detail: {
         summary: 'Save a project as a template',
         description:
@@ -123,6 +128,7 @@ export const projectTemplateRoutes = new Elysia({
           'issues, as a project template. Later changes to the project do not change the ' +
           'template. `include` chooses the sections as for a copy; docs, webhooks, agents ' +
           'and schedules are never saved. `teamIds` limits the template to those teams.',
+        ...mcpTool('create_project_template'),
       },
     },
   )
@@ -138,8 +144,11 @@ export const projectTemplateRoutes = new Elysia({
         summary: 'Export a project template',
         description:
           'The template as a document another workspace imports, on this instance or ' +
-          'another one. The people it names, the settings other than auto-archive and ' +
-          'the subtask automations, and the sections an extension adds are left out.',
+          'another one. The people, initiatives and cycles it names, the settings other ' +
+          'than auto-archive and the subtask automations, and the sections an extension ' +
+          'adds are left out. ' +
+          'import_project_template takes it as `template`.',
+        ...mcpTool('export_project_template'),
       },
     },
   )
@@ -232,7 +241,8 @@ export const projectTemplateRoutes = new Elysia({
         summary: 'Unlink a workspace from the gallery',
         description:
           'The published templates stay in the gallery. Linking the same address again ' +
-          'manages them.',
+          'manages them. Until then they cannot be unpublished, and the templates they ' +
+          'came from cannot be deleted.',
       },
     },
   )
@@ -302,9 +312,10 @@ export const projectTemplateRoutes = new Elysia({
       detail: {
         summary: 'Import a project template',
         description:
-          'Save an exported template as a template of the workspace, under its own name ' +
-          'and description. `teamIds` limits it to those teams. The people it names are ' +
-          'dropped.',
+          'Save an exported template as a template of the workspace, under the `name` and ' +
+          '`description` given here. `teamIds` limits it to those teams. The people, ' +
+          'initiatives and cycles it names are dropped.',
+        ...mcpTool('import_project_template'),
       },
     },
   )
@@ -324,6 +335,7 @@ export const projectTemplateRoutes = new Elysia({
           'Rename a project template, change its description or the teams it is open to. ' +
           'What it holds stays as saved. `teamIds` null opens it to every team of the ' +
           'workspace.',
+        ...mcpTool('update_project_template'),
       },
     },
   )
@@ -343,7 +355,9 @@ export const projectTemplateRoutes = new Elysia({
         summary: 'Delete a project template',
         description:
           'Delete a project template, after taking its page in the gallery down. Projects ' +
-          'created from it are not changed.',
+          'created from it are not changed. A published template is deleted only while the ' +
+          'workspace is linked to the gallery and the gallery answers.',
+        ...mcpTool('delete_project_template', { openWorldHint: true }),
       },
     },
   )

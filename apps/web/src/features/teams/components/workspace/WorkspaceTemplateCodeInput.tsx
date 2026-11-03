@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils';
 
 export const CODE_LENGTH = 6;
 
-// The gallery's confirmation code as six cells. One transparent input covers them, so
-// typing, pasting and the one-time-code autofill work as in a plain field.
+// The gallery's confirmation code as six cells. One input holds the whole code, so typing,
+// pasting and the one-time-code autofill work as in a plain field.
 export default function WorkspaceTemplateCodeInput({
   value,
   label,

@@ -15,7 +15,7 @@ export interface CopySectionContext {
 // A part of a project an extension of the api adds to a project copy and to a project
 // template: the include key that selects it, the keys it needs copied with it, whether a
 // template carries it, what it holds in a project (stored in the snapshot as JSON), how
-// that is written into a new project inside the copy's transaction, and the names of
+// that is written into a new project inside the transaction that creates it, and the names of
 // what it holds, which a template's detail lists.
 export interface CopySection {
   key: string;

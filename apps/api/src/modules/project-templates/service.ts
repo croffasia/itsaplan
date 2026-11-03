@@ -105,7 +105,8 @@ export function requireWorkspaceTemplate(
   return requireTemplate(eq(projectTemplate.workspaceId, workspaceId), templateId);
 }
 
-// What a template holds, with the sections and estimates it turns on read off its flags.
+// What a template holds: the project sections and the estimates its flags turn on, and what
+// each extension section holds.
 export interface ProjectTemplateContents extends Omit<ProjectSnapshot, 'flags' | 'sections'> {
   features: ProjectFeatures;
   estimates: EstimateSettings;
@@ -159,7 +160,10 @@ async function assertWorkspaceTeams(workspaceId: number, teamIds: number[]): Pro
   }
 }
 
-async function requireWorkspaceProject(workspaceId: number, projectId: number): Promise<void> {
+export async function requireWorkspaceProject(
+  workspaceId: number,
+  projectId: number,
+): Promise<void> {
   const [source] = await db
     .select({ workspaceId: team.workspaceId })
     .from(project)

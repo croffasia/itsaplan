@@ -3,9 +3,9 @@ import { ChevronRight } from 'lucide-react';
 import type { TemplateContents } from '@/lib/api/endpoints/project-templates';
 import { colorDot } from '@/components/common/fields/colorDot';
 
-// The states of a template in board order, the canceled ones set apart after the flow.
 type Column = TemplateContents['columns'][number];
 
+// The states of a template in board order, the canceled ones set apart after the flow.
 export default function ProjectTemplateStates({ columns }: { columns: Column[] }) {
   const flow = columns.filter((column) => column.stateType !== 'canceled');
   const canceled = columns.filter((column) => column.stateType === 'canceled');

@@ -83,8 +83,9 @@ export const WorkspaceProjectTemplateListResponse = t.Array(
   ]),
 );
 
-// What a template holds. Every entity keeps the id it had in the project the template was
-// saved from: the others reference it by that id.
+// What a template holds. The states, issue types, label groups, labels, fields and options
+// carry an id, which the other parts reference them by: the row id in the project the
+// template was saved from, or the number an imported template gave them.
 export const ProjectTemplateContentsResponse = t.Object({
   columns: t.Array(
     t.Object({

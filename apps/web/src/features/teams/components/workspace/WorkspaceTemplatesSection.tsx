@@ -13,7 +13,8 @@ import WorkspaceTemplateImportModal from './WorkspaceTemplateImportModal';
 import WorkspaceTemplatesTable from './WorkspaceTemplatesTable';
 
 // The project templates of the workspace, which its owner and admins save here or from a
-// project's row in a team's Projects, and the teams pick when they create a project.
+// project's panel in a team's Projects, and a team's owners and managers pick when they
+// create a project.
 export default function WorkspaceTemplatesSection({ workspaceId }: { workspaceId: number }) {
   const t = useTranslations('teams');
   const { data: templates } = useWorkspaceProjectTemplatesQuery(workspaceId);
@@ -21,7 +22,7 @@ export default function WorkspaceTemplatesSection({ workspaceId }: { workspaceId
   const [importing, setImporting] = useState(false);
   const actions = (
     <div className="flex items-center gap-2">
-      <Button size="sm" variant="outline" onClick={() => setImporting(true)}>
+      <Button size="sm" variant="ghost" onClick={() => setImporting(true)}>
         <Import />
         {t('templates.importAction')}
       </Button>

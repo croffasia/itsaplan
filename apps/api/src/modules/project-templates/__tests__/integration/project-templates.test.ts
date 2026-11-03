@@ -171,6 +171,23 @@ describe('project templates', () => {
       expect(saved.status).toBe(400);
     });
 
+    it('refuses an MCP client a project closed to MCP', async () => {
+      const { api, teamId, source, templates } = await setup();
+      // The header the MCP endpoint sets on its tool calls.
+      const asMcp = { headers: { 'x-mcp-loopback': '1' } };
+      expect((await templates.post({ projectId: source.id, name: 'Open' }, asMcp)).status).toBe(
+        201,
+      );
+
+      await api
+        .teams({ teamId })
+        .mcp.patch({ projects: [{ projectId: source.id, enabled: false }] });
+      expect((await templates.post({ projectId: source.id, name: 'Closed' }, asMcp)).status).toBe(
+        403,
+      );
+      expect((await templates.post({ projectId: source.id, name: 'Web' })).status).toBe(201);
+    });
+
     it('is left to the owner and the admins of the workspace', async () => {
       const { api, workspaceId, teamId, source, template } = await setup();
       const manager = await addTeamMember(api, teamId, 'manager');
@@ -978,7 +995,7 @@ describe('project templates', () => {
       expect(gallery.author).toEqual({ name: 'Ann', url: 'https://x.com/ann' });
       expect((await one.publication.post()).status).toBe(200);
 
-      // Another workspace linking the same address shows the author the gallery keeps.
+      // Linking the address again shows the author the gallery keeps.
       const relinked = await publisher.post({ email: 'ann@example.com', code: '123456' });
       expect(relinked.data).toMatchObject({ authorName: 'Ann', authorUrl: 'https://x.com/ann' });
     });

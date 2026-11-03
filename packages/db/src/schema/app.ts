@@ -243,8 +243,9 @@ export const projectTemplateTeam = pgTable(
 
 // The gallery publisher a workspace publishes its project templates under: the email it
 // confirmed with a code, and the key the gallery issued for it. The key is read back for
-// every publish, so it is kept encrypted rather than hashed. The author is what the
-// gallery shows on each template, kept to fill the next publish.
+// every publish, so it is kept encrypted rather than hashed. The author is the name the
+// gallery shows on every template of the address; the workspace keeps a copy to show in
+// its dialogs and refuses a publish until it is set.
 export const templatePublisher = pgTable('template_publisher', {
   workspaceId: integer('workspace_id')
     .primaryKey()

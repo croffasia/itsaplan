@@ -42,11 +42,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 // The sections of the open team, as the page's last rail: the team itself, its
 // projects, the roles they assign from and its members, then the AI group — the
 // integration credentials the agents run on, the agents themselves, the skills they
-// load, the tools they can call and what they spent — with what MCP clients reach and
-// the notification providers last. The counts come with the team list, so each is shown
-// before its section is opened. A section the caller may not read is left out, and the
-// AI group with it once none of them is readable. Collapsed, the rail shows the icons of
-// every section, the AI group's included, without the group.
+// load, the tools they can call, the run queue and what they spent — with Git, what MCP
+// clients reach and the notification providers last. The counts come with the team
+// list, so each is shown before its section is opened. A section the caller may not read
+// is left out, and the AI group with it once none of them is readable. Collapsed, the
+// rail shows the icons of every section, the AI group's included, without the group.
 export default function TeamSectionNav({
   team,
   collapsed,

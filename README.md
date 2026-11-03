@@ -112,6 +112,8 @@ release.
 
 ## Pro edition
 
+<a href="https://itsaplan.dev/pro"><img src="assets/pro-banner.svg" alt="It's a Plan Pro: run your issue tracker up to 91% cheaper than Linear, Jira, Asana and Plane. $240 a year for the whole instance, any number of people." width="100%" /></a>
+
 Buying Pro funds the work on Community, the free edition. Pro has everything in Community, plus
 the features below. One license covers one domain, with no limit on seats or workspaces.
 

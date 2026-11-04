@@ -3,7 +3,7 @@
 // enforced by the API (apps/api/src/shared/access.ts). Owners bypass the matrix
 // entirely (full access).
 
-export const PERMISSION_RESOURCES = [
+const CORE_RESOURCES = [
   'work_items',
   'initiatives',
   'cycles',
@@ -16,6 +16,7 @@ export const PERMISSION_RESOURCES = [
   'issue_types',
   'labels',
   'ai_agents',
+  'agent_schedules',
   'integrations',
   'agent_skills',
   'agent_tools',
@@ -30,7 +31,10 @@ export const PERMISSION_RESOURCES = [
   'import_export',
   'danger_zone',
 ] as const;
-export type PermissionResource = (typeof PERMISSION_RESOURCES)[number];
+export type PermissionResource = (typeof CORE_RESOURCES)[number];
+
+// The resources in the order a matrix lists them, with those setPermissionExtensions added.
+export const PERMISSION_RESOURCES: PermissionResource[] = [...CORE_RESOURCES];
 
 export const PERMISSION_ACTIONS = ['create', 'edit', 'read', 'delete'] as const;
 export type PermissionAction = (typeof PERMISSION_ACTIONS)[number];
@@ -52,8 +56,40 @@ const RESOURCE_ACTIONS: Partial<Record<PermissionResource, readonly PermissionAc
   members_invite: ['read', 'create', 'delete'],
 };
 
+// A resource a build splits out of one the core has.
+export interface PermissionExtension {
+  resource: string;
+  // It is listed after this resource, supports the same actions unless `actions` says
+  // otherwise, and a role saved before it existed holds here what it holds there.
+  from: PermissionResource;
+  actions?: readonly PermissionAction[];
+}
+
+const extensions = new Map<string, PermissionExtension>();
+
+// For a build that extends the matrix: called at startup, before any request. Called with
+// no argument it puts the core's matrix back, which is how a test undoes one.
+export function setPermissionExtensions(list: PermissionExtension[] = []): void {
+  extensions.clear();
+  PERMISSION_RESOURCES.splice(0, PERMISSION_RESOURCES.length, ...CORE_RESOURCES);
+  // In reverse, since each goes right after `from`: the list keeps its order.
+  for (const extension of [...list].reverse()) {
+    extensions.set(extension.resource, extension);
+    PERMISSION_RESOURCES.splice(
+      PERMISSION_RESOURCES.indexOf(extension.from) + 1,
+      0,
+      extension.resource as PermissionResource,
+    );
+  }
+}
+
+export function extendedFrom(resource: PermissionResource): PermissionResource | undefined {
+  return extensions.get(resource)?.from;
+}
+
 export function resourceActions(resource: PermissionResource): readonly PermissionAction[] {
-  return RESOURCE_ACTIONS[resource] ?? PERMISSION_ACTIONS;
+  const extension = extensions.get(resource);
+  return extension?.actions ?? RESOURCE_ACTIONS[extension?.from ?? resource] ?? PERMISSION_ACTIONS;
 }
 
 function allowAll(resource: PermissionResource): ResourcePermissions {
@@ -78,7 +114,8 @@ export function fullPermissions(): Permissions {
   return Object.fromEntries(PERMISSION_RESOURCES.map((r) => [r, allowAll(r)])) as Permissions;
 }
 
-// The matrix of the default system role ("Member") as migrations 0160 and 0162 leave it.
+// The matrix of the default system role ("Member") as migrations 0160, 0162 and 0174 leave
+// it.
 // A member with no role resolves to it.
 export function defaultMemberPermissions(): Permissions {
   const p = emptyPermissions();
@@ -88,8 +125,14 @@ export function defaultMemberPermissions(): Permissions {
   p.dashboards.read = true;
   p.views.read = true;
   p.ai_agents.read = true;
+  p.agent_schedules.read = true;
   p.members_manage.read = true;
   p.members_invite.read = true;
+  for (const { resource, from } of extensions.values()) {
+    for (const action of resourceActions(resource as PermissionResource)) {
+      p[resource as PermissionResource][action] = p[from][action];
+    }
+  }
   return p;
 }
 
@@ -102,7 +145,8 @@ export function normalizePermissions(input: unknown): Permissions {
   if (!input || typeof input !== 'object') return out;
   const src = input as Record<string, unknown>;
   for (const resource of PERMISSION_RESOURCES) {
-    const entry = src[resource];
+    const from = extendedFrom(resource);
+    const entry = src[resource] ?? (from && src[from]);
     if (!entry || typeof entry !== 'object') continue;
     const e = entry as Record<string, unknown>;
     for (const action of resourceActions(resource)) {

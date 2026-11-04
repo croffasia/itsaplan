@@ -58,7 +58,10 @@ export default function RoleEditorPanel({
 
   const supports = useMemo(() => catalogSupport(catalog), [catalog]);
   const resourceKeys = useMemo(() => catalog.resources.map((r) => r.key), [catalog.resources]);
-  const groups = useMemo(() => groupResources(resourceKeys), [resourceKeys]);
+  const groups = useMemo(
+    () => groupResources(resourceKeys, catalog.resources),
+    [resourceKeys, catalog.resources],
+  );
   const actions = useMemo(() => orderActions(catalog.actions), [catalog.actions]);
 
   // Set `value` on every supported (resource, action) pair in the given sets.

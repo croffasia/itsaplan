@@ -207,6 +207,12 @@ export const listAiAgents = (teamId: number, projectId?: number) =>
     `/teams/${teamId}/ai-agents${projectId != null ? `?projectId=${projectId}` : ''}`,
   );
 
+// What a screen needs to name an agent; any member of the project reads it.
+export type ProjectAgent = Pick<AiAgent, 'id' | 'name' | 'kind' | 'model'>;
+
+export const listProjectAgents = (projectKey: string) =>
+  request<ProjectAgent[]>(`/projects/${projectKey}/ai-agents/options`);
+
 export const listAgentTools = (teamId: number) =>
   request<AgentTool[]>(`/teams/${teamId}/ai-agents/tools`);
 

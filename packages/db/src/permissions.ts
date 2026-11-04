@@ -115,25 +115,32 @@ export function fullPermissions(): Permissions {
 }
 
 // The matrix of the default system role ("Member") as migrations 0160, 0162 and 0174 leave
-// it.
-// A member with no role resolves to it.
+// it. A member with no role resolves to it.
 export function defaultMemberPermissions(): Permissions {
-  const p = emptyPermissions();
-  for (const r of ['work_items', 'initiatives', 'cycles', 'documents', 'note_boards'] as const) {
-    p[r] = allowAll(r);
-  }
-  p.dashboards.read = true;
-  p.views.read = true;
-  p.ai_agents.read = true;
-  p.agent_schedules.read = true;
-  p.members_manage.read = true;
-  p.members_invite.read = true;
-  for (const { resource, from } of extensions.values()) {
-    for (const action of resourceActions(resource as PermissionResource)) {
-      p[resource as PermissionResource][action] = p[from][action];
-    }
-  }
-  return p;
+  const all = { create: true, edit: true, read: true, delete: true };
+  const read = { read: true };
+  const member: Partial<Record<PermissionResource, Partial<ResourcePermissions>>> = {
+    work_items: all,
+    initiatives: all,
+    cycles: all,
+    documents: all,
+    note_boards: all,
+    dashboards: read,
+    views: read,
+    ai_agents: read,
+    agent_schedules: read,
+    members_manage: read,
+    members_invite: read,
+  };
+  return normalizePermissions(member);
+}
+
+function normalizeResource(resource: PermissionResource, entry: unknown): ResourcePermissions {
+  const e = (entry && typeof entry === 'object' ? entry : {}) as Record<string, unknown>;
+  const allowed = resourceActions(resource);
+  return Object.fromEntries(
+    PERMISSION_ACTIONS.map((a) => [a, allowed.includes(a) && e[a] === true]),
+  ) as ResourcePermissions;
 }
 
 // Coerces arbitrary input (a jsonb blob or a request body) into the canonical
@@ -141,19 +148,13 @@ export function defaultMemberPermissions(): Permissions {
 // keys dropped, missing entries and actions the resource does not support
 // defaulted to false.
 export function normalizePermissions(input: unknown): Permissions {
-  const out = emptyPermissions();
-  if (!input || typeof input !== 'object') return out;
-  const src = input as Record<string, unknown>;
-  for (const resource of PERMISSION_RESOURCES) {
-    const from = extendedFrom(resource);
-    const entry = src[resource] ?? (from && src[from]);
-    if (!entry || typeof entry !== 'object') continue;
-    const e = entry as Record<string, unknown>;
-    for (const action of resourceActions(resource)) {
-      out[resource][action] = e[action] === true;
-    }
-  }
-  return out;
+  const src = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
+  return Object.fromEntries(
+    PERMISSION_RESOURCES.map((resource) => {
+      const from = extendedFrom(resource);
+      return [resource, normalizeResource(resource, src[resource] ?? (from && src[from]))];
+    }),
+  ) as Permissions;
 }
 
 export function hasPermission(

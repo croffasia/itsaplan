@@ -88,7 +88,7 @@ release.
 - A run starts on an @mention in a comment on an issue or a document, on an assignment, or
   on a schedule
 - Tools for the services outside the tracker: Notion, Telegram, Threads, Instagram, Jina,
-  Firecrawl, Keenable, Gitea, and GitHub
+  Firecrawl, Keenable, Gitea, Forgejo, and GitHub
 - Built-in chat with each agent, with its own conversation history. Chat can be turned off
   for an agent that only works on mentions, assignments, and schedules
 - Chat with an external agent too. The runner answers from your machine, streams the reply

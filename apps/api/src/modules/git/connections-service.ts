@@ -3,6 +3,12 @@ import { decryptSecret, encryptSecret } from '@repo/crypto';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
 import {
+  GithubAppRefusedError,
+  getGithubAppInstallation,
+  githubInstallationToken,
+} from './github-app';
+import {
+  apiBase,
   createProviderPullRequest,
   deleteProviderWebhook,
   createPullRequestComment,
@@ -15,6 +21,7 @@ import {
   listProviderRepositories,
   normalizeProviderBaseUrl,
   type CreateProviderPullRequestInput,
+  type GitAuthType,
   type GitProvider,
   type ProviderBranchPage,
   type ProviderConnectionInput,
@@ -27,6 +34,7 @@ import { getOrCreateGitSettings, type GitSettings } from './service';
 export interface GitProviderConnectionDto {
   id: number;
   provider: GitProvider;
+  authType: GitAuthType;
   baseUrl: string;
   accountLogin: string;
   repositories: GitManagedRepositoryDto[];
@@ -50,11 +58,44 @@ export interface DevelopmentRepositoryDto {
   webUrl: string;
 }
 
-interface ConnectionSecret {
-  provider: GitProvider;
-  baseUrl: string;
-  token: string;
+type ConnectionRow = Pick<
+  typeof gitProviderConnection.$inferSelect,
+  'baseUrl' | 'authType' | 'appId' | 'installationId' | 'ciphertext' | 'iv' | 'authTag'
+>;
+
+async function connectionInput<P extends GitProvider>(
+  row: ConnectionRow,
+  provider: P,
+  { fresh = false }: { fresh?: boolean } = {},
+): Promise<ProviderConnectionInput & { provider: P }> {
+  if (row.authType !== 'github_app') {
+    return { provider, baseUrl: row.baseUrl, token: decryptSecret(row), authType: 'token' };
+  }
+  if (!row.appId || !row.installationId) {
+    throw new HttpError(500, 'GitHub App connection is incomplete');
+  }
+  const token = await githubInstallationToken(
+    {
+      apiBase: apiBase('github', row.baseUrl),
+      appId: row.appId,
+      installationId: row.installationId,
+      privateKey: decryptSecret(row),
+    },
+    { fresh },
+  );
+  return { provider, baseUrl: row.baseUrl, token, authType: 'github_app' };
 }
+
+const connectionColumns = {
+  provider: gitProviderConnection.provider,
+  baseUrl: gitProviderConnection.baseUrl,
+  authType: gitProviderConnection.authType,
+  appId: gitProviderConnection.appId,
+  installationId: gitProviderConnection.installationId,
+  ciphertext: gitProviderConnection.ciphertext,
+  iv: gitProviderConnection.iv,
+  authTag: gitProviderConnection.authTag,
+};
 
 const repositoryColumns = {
   id: gitManagedRepository.id,
@@ -87,11 +128,7 @@ async function managedDevelopmentRepository(
 ): Promise<ManagedDevelopmentRepository> {
   const [row] = await db
     .select({
-      provider: gitProviderConnection.provider,
-      baseUrl: gitProviderConnection.baseUrl,
-      ciphertext: gitProviderConnection.ciphertext,
-      iv: gitProviderConnection.iv,
-      authTag: gitProviderConnection.authTag,
+      ...connectionColumns,
       externalId: gitManagedRepository.externalId,
       fullName: gitManagedRepository.fullName,
       webUrl: gitManagedRepository.webUrl,
@@ -113,7 +150,7 @@ async function managedDevelopmentRepository(
   if (row.provider !== 'github' && row.provider !== 'gitlab')
     throw new HttpError(400, 'Creating and linking pull requests supports GitHub and GitLab');
   return {
-    input: { provider: row.provider, baseUrl: row.baseUrl, token: decryptSecret(row) },
+    input: await connectionInput(row, row.provider),
     repository: {
       externalId: row.externalId,
       fullName: row.fullName,
@@ -247,6 +284,7 @@ export async function listTeamGitProviderConnections(
     .select({
       id: gitProviderConnection.id,
       provider: gitProviderConnection.provider,
+      authType: gitProviderConnection.authType,
       baseUrl: gitProviderConnection.baseUrl,
       accountLogin: gitProviderConnection.accountLogin,
       createdAt: gitProviderConnection.createdAt,
@@ -262,6 +300,7 @@ export async function listTeamGitProviderConnections(
   return rows.map((row) => ({
     id: row.id,
     provider: row.provider as GitProvider,
+    authType: row.authType as GitAuthType,
     baseUrl: row.baseUrl,
     accountLogin: row.accountLogin,
     repositories: repositories.get(row.id) ?? [],
@@ -270,11 +309,15 @@ export async function listTeamGitProviderConnections(
   }));
 }
 
-async function connectionSecret(id: number, projectId: number): Promise<ConnectionSecret> {
-  return teamConnectionSecret(id, await projectTeamId(projectId));
+async function connectionInputForProject(
+  id: number,
+  projectId: number,
+): Promise<ProviderConnectionInput> {
+  const row = await teamConnectionRow(id, await projectTeamId(projectId));
+  return connectionInput(row, row.provider);
 }
 
-async function teamConnectionSecret(id: number, teamId: number): Promise<ConnectionSecret> {
+async function teamConnectionRow(id: number, teamId: number) {
   const rows = await db
     .select()
     .from(gitProviderConnection)
@@ -285,19 +328,7 @@ async function teamConnectionSecret(id: number, teamId: number): Promise<Connect
   if (!['github', 'gitlab', 'gitea', 'forgejo', 'bitbucket'].includes(row.provider)) {
     throw new HttpError(400, 'Unknown Git provider');
   }
-  return {
-    provider: row.provider as GitProvider,
-    baseUrl: row.baseUrl,
-    token: decryptSecret(row),
-  };
-}
-
-function providerInput(connection: ConnectionSecret): ProviderConnectionInput {
-  return {
-    provider: connection.provider,
-    baseUrl: connection.baseUrl,
-    token: connection.token,
-  };
+  return { ...row, provider: row.provider as GitProvider };
 }
 
 export async function connectGitProvider(
@@ -307,7 +338,12 @@ export async function connectGitProvider(
   const token = input.token.trim();
   if (!token) throw new HttpError(400, 'token is required');
   const baseUrl = await normalizeProviderBaseUrl(input.provider, input.baseUrl);
-  const accountLogin = await getProviderAccount({ provider: input.provider, baseUrl, token });
+  const accountLogin = await getProviderAccount({
+    provider: input.provider,
+    baseUrl,
+    token,
+    authType: 'token',
+  });
   const encrypted = encryptSecret(token);
   // A team can hold several connections of one account: the migration from
   // project-owned connections keeps each project's token. Saving the account
@@ -320,6 +356,7 @@ export async function connectGitProvider(
         eq(gitProviderConnection.teamId, teamId),
         eq(gitProviderConnection.provider, input.provider),
         eq(gitProviderConnection.baseUrl, baseUrl),
+        eq(gitProviderConnection.authType, 'token'),
         eq(gitProviderConnection.accountLogin, accountLogin),
       ),
     )
@@ -330,11 +367,73 @@ export async function connectGitProvider(
       .values({ teamId, provider: input.provider, baseUrl, accountLogin, ...encrypted })
       .returning({ id: gitProviderConnection.id });
   }
+  return reconcileStoredConnection(teamId, rows, {
+    provider: input.provider,
+    baseUrl,
+    token,
+    authType: 'token',
+  });
+}
+
+export async function connectGithubApp(
+  teamId: number,
+  input: { baseUrl?: string; appId: string; installationId: string; privateKey: string },
+): Promise<GitProviderConnectionDto> {
+  const privateKey = input.privateKey.trim();
+  const baseUrl = await normalizeProviderBaseUrl('github', input.baseUrl);
+  const app = {
+    apiBase: apiBase('github', baseUrl),
+    appId: input.appId,
+    installationId: input.installationId,
+    privateKey,
+  };
+  const { accountLogin } = await getGithubAppInstallation(app);
+  const token = await githubInstallationToken(app);
+  const encrypted = encryptSecret(privateKey);
+  let rows = await db
+    .update(gitProviderConnection)
+    .set({ ...encrypted, appId: input.appId, accountLogin, updatedAt: new Date() })
+    .where(
+      and(
+        eq(gitProviderConnection.teamId, teamId),
+        eq(gitProviderConnection.provider, 'github'),
+        eq(gitProviderConnection.baseUrl, baseUrl),
+        eq(gitProviderConnection.authType, 'github_app'),
+        eq(gitProviderConnection.installationId, input.installationId),
+      ),
+    )
+    .returning({ id: gitProviderConnection.id });
+  if (rows.length === 0) {
+    rows = await db
+      .insert(gitProviderConnection)
+      .values({
+        teamId,
+        provider: 'github',
+        baseUrl,
+        accountLogin,
+        authType: 'github_app',
+        appId: input.appId,
+        installationId: input.installationId,
+        ...encrypted,
+      })
+      .returning({ id: gitProviderConnection.id });
+  }
+  return reconcileStoredConnection(teamId, rows, {
+    provider: 'github',
+    baseUrl,
+    token,
+    authType: 'github_app',
+  });
+}
+
+async function reconcileStoredConnection(
+  teamId: number,
+  rows: { id: number }[],
+  input: ProviderConnectionInput,
+): Promise<GitProviderConnectionDto> {
   const connectionId = rows[0]?.id;
   if (!connectionId) throw new HttpError(500, 'Provider connection was not stored');
-  for (const row of rows) {
-    await reconcileConnectionWebhooks(row.id, { provider: input.provider, baseUrl, token });
-  }
+  for (const row of rows) await reconcileConnectionWebhooks(row.id, input);
   const connections = await listTeamGitProviderConnections(teamId);
   const connection = connections.find((item) => item.id === connectionId);
   if (!connection) throw new HttpError(500, 'Provider connection was not stored');
@@ -383,15 +482,19 @@ async function reconcileRepositoryWebhook(
       .set({ webhookExternalId, status: 'connected', lastError: null, updatedAt: new Date() })
       .where(eq(gitManagedRepository.id, repository.id));
   } catch (error) {
-    await db
-      .update(gitManagedRepository)
-      .set({
-        status: 'error',
-        lastError: error instanceof Error ? error.message : 'Webhook update failed',
-        updatedAt: new Date(),
-      })
-      .where(eq(gitManagedRepository.id, repository.id));
+    await markRepositoryFailed(repository.id, error);
   }
+}
+
+async function markRepositoryFailed(repositoryId: number, error: unknown): Promise<void> {
+  await db
+    .update(gitManagedRepository)
+    .set({
+      status: 'error',
+      lastError: error instanceof Error ? error.message : 'Webhook update failed',
+      updatedAt: new Date(),
+    })
+    .where(eq(gitManagedRepository.id, repositoryId));
 }
 
 export async function listAvailableRepositories(
@@ -400,8 +503,8 @@ export async function listAvailableRepositories(
   page: number,
   search: string,
 ) {
-  const connection = await connectionSecret(connectionId, projectId);
-  const result = await listProviderRepositories(providerInput(connection), page, search.trim());
+  const input = await connectionInputForProject(connectionId, projectId);
+  const result = await listProviderRepositories(input, page, search.trim());
   const managed = await db
     .select({ id: gitManagedRepository.id, externalId: gitManagedRepository.externalId })
     .from(gitManagedRepository)
@@ -429,7 +532,7 @@ export async function connectRepositories(
   const ids = [...new Set(externalIds.map((id) => id.trim()).filter(Boolean))];
   if (ids.length === 0) throw new HttpError(400, 'Select at least one repository');
   if (ids.length > 50) throw new HttpError(400, 'Select at most 50 repositories');
-  const connection = await connectionSecret(connectionId, projectId);
+  const input = await connectionInputForProject(connectionId, projectId);
   const existing = await db
     .select({ externalId: gitManagedRepository.externalId })
     .from(gitManagedRepository)
@@ -444,9 +547,9 @@ export async function connectRepositories(
   const settings = await getOrCreateGitSettings(projectId);
   for (const externalId of ids) {
     if (existingIds.has(externalId)) continue;
-    const repository = await getProviderRepository(providerInput(connection), externalId);
+    const repository = await getProviderRepository(input, externalId);
     const webhookExternalId = await installProviderWebhook(
-      providerInput(connection),
+      input,
       repository,
       settings.payloadUrl,
       settings.secret,
@@ -476,7 +579,7 @@ export async function disconnectRepository(
   connectionId: number,
   repositoryId: number,
 ): Promise<void> {
-  const connection = await connectionSecret(connectionId, projectId);
+  const input = await connectionInputForProject(connectionId, projectId);
   const rows = await db
     .select()
     .from(gitManagedRepository)
@@ -491,7 +594,7 @@ export async function disconnectRepository(
   const row = rows[0];
   if (!row) throw new HttpError(404, 'Managed repository not found');
   await deleteProviderWebhook(
-    providerInput(connection),
+    input,
     { externalId: row.externalId, fullName: row.fullName, webUrl: row.webUrl, private: false },
     row.webhookExternalId,
   );
@@ -499,22 +602,32 @@ export async function disconnectRepository(
 }
 
 export async function disconnectGitProvider(teamId: number, connectionId: number): Promise<void> {
-  const connection = await teamConnectionSecret(connectionId, teamId);
-  const repositories = await db
-    .select()
-    .from(gitManagedRepository)
-    .where(eq(gitManagedRepository.connectionId, connectionId));
-  for (const repository of repositories) {
-    await deleteProviderWebhook(
-      providerInput(connection),
-      {
-        externalId: repository.externalId,
-        fullName: repository.fullName,
-        webUrl: repository.webUrl,
-        private: false,
-      },
-      repository.webhookExternalId,
-    );
+  const row = await teamConnectionRow(connectionId, teamId);
+  // A fresh mint shows whether GitHub still accepts the App: only a refusal lets the
+  // connection go without removing its webhooks. Any other failure keeps it for a retry.
+  const input = await connectionInput(row, row.provider, { fresh: true }).catch(
+    (error: unknown) => {
+      if (error instanceof GithubAppRefusedError) return null;
+      throw error;
+    },
+  );
+  if (input) {
+    const repositories = await db
+      .select()
+      .from(gitManagedRepository)
+      .where(eq(gitManagedRepository.connectionId, connectionId));
+    for (const repository of repositories) {
+      await deleteProviderWebhook(
+        input,
+        {
+          externalId: repository.externalId,
+          fullName: repository.fullName,
+          webUrl: repository.webUrl,
+          private: false,
+        },
+        repository.webhookExternalId,
+      );
+    }
   }
   await db
     .delete(gitProviderConnection)
@@ -529,7 +642,6 @@ export async function reconcileManagedWebhooks(
 ): Promise<void> {
   const connections = await listGitProviderConnections(projectId);
   for (const item of connections) {
-    const input = providerInput(await connectionSecret(item.id, projectId));
     const repositories = await db
       .select()
       .from(gitManagedRepository)
@@ -539,6 +651,15 @@ export async function reconcileManagedWebhooks(
           eq(gitManagedRepository.connectionId, item.id),
         ),
       );
+    let input: ProviderConnectionInput;
+    try {
+      input = await connectionInputForProject(item.id, projectId);
+    } catch (error) {
+      // The new secret is already stored: a connection whose credentials are refused
+      // must not leave the webhooks of the connections after it on the old one.
+      for (const repository of repositories) await markRepositoryFailed(repository.id, error);
+      continue;
+    }
     for (const repository of repositories) {
       await reconcileRepositoryWebhook(input, repository, settings);
     }
@@ -554,11 +675,7 @@ export async function postPullRequestLinkback(
 ): Promise<boolean> {
   const [row] = await db
     .select({
-      provider: gitProviderConnection.provider,
-      baseUrl: gitProviderConnection.baseUrl,
-      ciphertext: gitProviderConnection.ciphertext,
-      iv: gitProviderConnection.iv,
-      authTag: gitProviderConnection.authTag,
+      ...connectionColumns,
       externalId: gitManagedRepository.externalId,
       fullName: gitManagedRepository.fullName,
       webUrl: gitManagedRepository.webUrl,
@@ -578,11 +695,7 @@ export async function postPullRequestLinkback(
     .limit(1);
   if (!row) return false;
   await createPullRequestComment(
-    {
-      provider,
-      baseUrl: row.baseUrl,
-      token: decryptSecret(row),
-    },
+    await connectionInput(row, provider),
     {
       externalId: row.externalId,
       fullName: row.fullName,

@@ -18,10 +18,13 @@ export interface ProviderRepositoryPage {
   nextPage: number | null;
 }
 
+export type GitAuthType = 'token' | 'github_app';
+
 export interface ProviderConnectionInput {
   provider: GitProvider;
   baseUrl: string;
   token: string;
+  authType: GitAuthType;
 }
 
 export interface ProviderPullRequest {
@@ -109,7 +112,7 @@ export async function normalizeProviderBaseUrl(
   return url.origin;
 }
 
-function apiBase(provider: GitProvider, baseUrl: string): string {
+export function apiBase(provider: GitProvider, baseUrl: string): string {
   if (provider === 'github') {
     return baseUrl === 'https://github.com' ? 'https://api.github.com' : `${baseUrl}/api/v3`;
   }
@@ -235,14 +238,14 @@ export async function getProviderAccount(input: ProviderConnectionInput): Promis
   return login;
 }
 
-export function githubRepository(value: unknown): ProviderRepository | null {
+export function githubRepository(value: unknown, requireAdmin = true): ProviderRepository | null {
   const row = record(value);
   const id = row?.id;
   const fullName = text(row?.full_name);
   const webUrl = httpUrl(row?.html_url);
   const permissions = record(row?.permissions);
   if ((typeof id !== 'number' && typeof id !== 'string') || !fullName || !webUrl) return null;
-  if (!bool(permissions?.admin)) return null;
+  if (requireAdmin && !bool(permissions?.admin)) return null;
   const defaultBranch = text(row?.default_branch);
   return {
     externalId: String(id),
@@ -346,6 +349,7 @@ export async function listProviderRepositories(
   const perPage = 30;
   if (input.provider === 'bitbucket')
     return listBitbucketRepositories(input, page, search, perPage);
+  const installation = input.authType === 'github_app';
   const params = new URLSearchParams({ page: String(page) });
   if (input.provider === 'gitlab') {
     params.set('per_page', String(perPage));
@@ -357,22 +361,26 @@ export async function listProviderRepositories(
     if (search) params.set('search', search);
   } else if (input.provider === 'github') {
     params.set('per_page', String(perPage));
-    params.set('affiliation', 'owner,collaborator,organization_member');
-    params.set('sort', 'pushed');
-    params.set('direction', 'desc');
+    if (!installation) {
+      params.set('affiliation', 'owner,collaborator,organization_member');
+      params.set('sort', 'pushed');
+      params.set('direction', 'desc');
+    }
   } else if (input.provider === 'gitea' || input.provider === 'forgejo') {
     params.set('limit', String(perPage));
     if (search) params.set('q', search);
   }
-  const endpoint = input.provider === 'gitlab' ? '/projects' : '/user/repos';
+  let endpoint = '/user/repos';
+  if (input.provider === 'gitlab') endpoint = '/projects';
+  else if (installation) endpoint = '/installation/repositories';
   const response = await providerRequest(input, `${endpoint}?${params}`);
   const responseBody: unknown = await response.json();
-  const body = responseBody;
+  const body = installation ? record(responseBody)?.repositories : responseBody;
   if (!Array.isArray(body))
     throw new HttpError(502, `${input.provider} returned an invalid repository list`);
   const map =
     input.provider === 'github'
-      ? githubRepository
+      ? (row: unknown) => githubRepository(row, !installation)
       : input.provider === 'gitlab'
         ? gitlabRepository
         : giteaRepository;
@@ -407,7 +415,7 @@ export async function getProviderRepository(
   const body = await response.json();
   const repository =
     input.provider === 'github'
-      ? githubRepository(body)
+      ? githubRepository(body, input.authType !== 'github_app')
       : input.provider === 'gitlab'
         ? gitlabRepository(body)
         : input.provider === 'bitbucket'

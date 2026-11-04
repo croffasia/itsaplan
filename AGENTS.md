@@ -112,6 +112,7 @@ packages directly.** It talks to the API over HTTP (better-auth client + fetch).
 | `docs/runner.md`                                                                                    | `packages/runner` and its agent presets                          |
 | `docs/agent-endpoint.md`                                                                            | external agents that receive tasks on their own HTTPS endpoint   |
 | `docs/mcp-results.md`                                                                               | the shape of MCP tool results (`structuredContent`)              |
+| `docs/github-app.md`                                                                                | a team Git connection through a GitHub App                       |
 | `docs/importing-from-linear.md`, `docs/dev/linear-import.md`                                        | the Linear import: user guide, implementation                    |
 | `docs/importing-from-trello.md`, `docs/dev/trello-import.md`                                        | the Trello import: user guide, implementation                    |
 | `docs/importing-from-plane.md`, `docs/dev/plane-import.md`, `docs/dev/plane-import-source-notes.md` | the Plane import: user guide, implementation, Plane API facts    |

@@ -10,6 +10,7 @@ import {
   GitSettingsResponse,
   availableRepositoriesQuery,
   connectRepositoriesBody,
+  createGithubAppConnectionBody,
   createGitProviderConnectionBody,
   gitManagedRepositoryParams,
   gitProviderConnectionParams,
@@ -18,6 +19,7 @@ import {
 } from './model';
 import { getOrCreateGitSettings, regenerateGitSecret, updateGitSettings } from './service';
 import {
+  connectGithubApp,
   connectGitProvider,
   connectRepositories,
   disconnectGitProvider,
@@ -55,6 +57,20 @@ export const gitSettingsRoutes = new Elysia({
       body: createGitProviderConnectionBody,
       response: { 201: GitProviderConnectionResponse, ...commonErrors, ...errors(502) },
       detail: { summary: 'Connect or rotate a team Git provider account' },
+    },
+  )
+  .post(
+    '/teams/:teamId/settings/git/connections/github-app',
+    async ({ membership, body, set }) => {
+      const connection = await connectGithubApp(membership.teamId, body);
+      set.status = 201;
+      return connection;
+    },
+    {
+      teamManager: true,
+      body: createGithubAppConnectionBody,
+      response: { 201: GitProviderConnectionResponse, ...commonErrors, ...errors(502) },
+      detail: { summary: 'Connect or rotate a team GitHub App installation' },
     },
   )
   .delete(

@@ -43,6 +43,7 @@ export interface AvailableGitRepositoryPage {
 export interface GitProviderConnection {
   id: number;
   provider: GitConnectionProvider;
+  authType: 'token' | 'github_app';
   baseUrl: string;
   accountLogin: string;
   repositories: GitManagedRepository[];
@@ -166,6 +167,15 @@ export const connectGitProvider = (
   input: { provider: GitConnectionProvider; baseUrl?: string; token: string },
 ) =>
   request<GitProviderConnection>(`/teams/${teamId}/settings/git/connections`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+
+export const connectGithubApp = (
+  teamId: number,
+  input: { baseUrl?: string; appId: string; installationId: string; privateKey: string },
+) =>
+  request<GitProviderConnection>(`/teams/${teamId}/settings/git/connections/github-app`, {
     method: 'POST',
     body: JSON.stringify(input),
   });

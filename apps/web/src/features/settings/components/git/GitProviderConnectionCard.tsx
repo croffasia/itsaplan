@@ -20,7 +20,10 @@ export default function GitProviderConnectionCard({
   const t = useTranslations('settings.git');
   const [pickerOpen, setPickerOpen] = useState(false);
   const disconnectRepository = useDisconnectGitRepository(projectKey, connection.id);
-  const providerLabel = GIT_PROVIDER_CONFIG[connection.provider].label;
+  const providerLabel =
+    connection.authType === 'github_app'
+      ? t('nativeGithubApp')
+      : GIT_PROVIDER_CONFIG[connection.provider].label;
 
   async function removeRepository(repositoryId: number) {
     try {

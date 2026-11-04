@@ -87,9 +87,12 @@ export const GitManagedRepositoryResponse = t.Object({
   lastError: t.Nullable(t.String()),
 });
 
+const GitAuthType = t.Union([t.Literal('token'), t.Literal('github_app')]);
+
 export const GitProviderConnectionResponse = t.Object({
   id: t.Number(),
   provider: GitProvider,
+  authType: GitAuthType,
   baseUrl: t.String(),
   accountLogin: t.String(),
   repositories: t.Array(GitManagedRepositoryResponse),
@@ -103,6 +106,13 @@ export const createGitProviderConnectionBody = t.Object({
   provider: GitProvider,
   baseUrl: t.Optional(t.String({ maxLength: 2048 })),
   token: t.String({ minLength: 1, maxLength: 8192 }),
+});
+
+export const createGithubAppConnectionBody = t.Object({
+  baseUrl: t.Optional(t.String({ maxLength: 2048 })),
+  appId: t.String({ minLength: 1, maxLength: 64, pattern: '^[A-Za-z0-9.]+$' }),
+  installationId: t.String({ minLength: 1, maxLength: 20, pattern: '^[0-9]+$' }),
+  privateKey: t.String({ minLength: 1, maxLength: 8192 }),
 });
 
 export const gitProviderConnectionParams = t.Object({

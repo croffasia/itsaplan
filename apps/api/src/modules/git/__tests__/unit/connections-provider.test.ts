@@ -35,6 +35,23 @@ describe('Git provider repository responses', () => {
     ).toBeNull();
   });
 
+  it('accepts a GitHub repository without admin permission when admin is not required', () => {
+    const row = {
+      id: 7,
+      full_name: 'acme/app',
+      html_url: 'https://github.com/acme/app',
+      default_branch: 'main',
+    };
+    expect(githubRepository(row, false)).toEqual({
+      externalId: '7',
+      fullName: 'acme/app',
+      webUrl: 'https://github.com/acme/app',
+      private: false,
+      defaultBranch: 'main',
+    });
+    expect(githubRepository(row)).toBeNull();
+  });
+
   it('normalizes a GitLab project', () => {
     expect(
       gitlabRepository({

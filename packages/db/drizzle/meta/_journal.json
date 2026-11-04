@@ -1219,6 +1219,13 @@
       "when": 1793713887371,
       "tag": "0173_template_gallery",
       "breakpoints": true
+    },
+    {
+      "idx": 174,
+      "version": "7",
+      "when": 1793803637472,
+      "tag": "0174_github_app_connections",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  connectGithubApp,
   connectGitProvider,
   disconnectGitProvider,
   listTeamGitProviderConnections,
@@ -19,6 +20,17 @@ export function useConnectGitProvider(teamId: number) {
   return useMutation({
     mutationFn: (input: Parameters<typeof connectGitProvider>[1]) =>
       connectGitProvider(teamId, input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: teamConnectionsKey(teamId) });
+      qc.invalidateQueries({ queryKey: ['gitConnections'] });
+    },
+  });
+}
+
+export function useConnectGithubApp(teamId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof connectGithubApp>[1]) => connectGithubApp(teamId, input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: teamConnectionsKey(teamId) });
       qc.invalidateQueries({ queryKey: ['gitConnections'] });

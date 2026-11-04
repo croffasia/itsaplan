@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { GitBranch, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import type { GitConnectionProvider } from '@/lib/api/endpoints/git';
+import type { GitConnectionProvider, GitProviderConnection } from '@/lib/api/endpoints/git';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import {
   useTeamGitProviderConnectionsQuery,
 } from '@/services/gitConnections.service';
 import { GIT_CONNECTION_PROVIDERS, GIT_PROVIDER_CONFIG } from '@/utils/gitProviderConfig';
+import TeamGitHubAppConnectDialog from './TeamGitHubAppConnectDialog';
 import TeamGitProviderConnectDialog from './TeamGitProviderConnectDialog';
 
 export default function TeamGitConnections({ teamId }: { teamId: number }) {
@@ -21,6 +22,12 @@ export default function TeamGitConnections({ teamId }: { teamId: number }) {
   const disconnect = useDisconnectGitProvider(teamId);
   const [provider, setProvider] = useState<GitConnectionProvider>('gitlab');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [appDialogOpen, setAppDialogOpen] = useState(false);
+
+  const connectionLabel = (connection: GitProviderConnection) =>
+    connection.authType === 'github_app'
+      ? t('nativeGithubApp')
+      : GIT_PROVIDER_CONFIG[connection.provider].label;
 
   async function remove(connectionId: number, label: string) {
     if (!window.confirm(t('nativeDisconnectConfirm', { provider: label }))) return;
@@ -50,6 +57,10 @@ export default function TeamGitConnections({ teamId }: { teamId: number }) {
               {t('nativeConnectProvider', { provider: GIT_PROVIDER_CONFIG[key].label })}
             </Button>
           ))}
+          <Button type="button" variant="outline" onClick={() => setAppDialogOpen(true)}>
+            <GitBranch className="size-4" />
+            {t('nativeConnectProvider', { provider: t('nativeGithubApp') })}
+          </Button>
         </div>
         {connections.isPending ? (
           <ListSkeleton rows={2} rowClassName="h-16" />
@@ -60,7 +71,7 @@ export default function TeamGitConnections({ teamId }: { teamId: number }) {
               className="flex items-center justify-between gap-4 rounded-md border p-4"
             >
               <div className="min-w-0">
-                <p className="font-medium">{GIT_PROVIDER_CONFIG[connection.provider].label}</p>
+                <p className="font-medium">{connectionLabel(connection)}</p>
                 <p className="truncate text-sm text-muted-foreground">
                   {connection.accountLogin} · {connection.baseUrl}
                 </p>
@@ -78,9 +89,7 @@ export default function TeamGitConnections({ teamId }: { teamId: number }) {
                 size="icon-sm"
                 aria-label={t('nativeDisconnectProvider')}
                 disabled={disconnect.isPending}
-                onClick={() =>
-                  void remove(connection.id, GIT_PROVIDER_CONFIG[connection.provider].label)
-                }
+                onClick={() => void remove(connection.id, connectionLabel(connection))}
               >
                 <Trash2 className="size-4" />
               </Button>
@@ -93,6 +102,11 @@ export default function TeamGitConnections({ teamId }: { teamId: number }) {
         provider={provider}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
+      />
+      <TeamGitHubAppConnectDialog
+        teamId={teamId}
+        open={appDialogOpen}
+        onOpenChange={setAppDialogOpen}
       />
     </SettingsSection>
   );

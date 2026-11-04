@@ -199,6 +199,8 @@ export const qk = {
   // API, so it hangs off the same key with a 'tools' tail.
   aiAgents: (teamId: number, projectId?: number) =>
     ['aiAgents', teamId, projectId ?? 'all'] as const,
+  agentDirectory: (teamId: number, projectId: number) =>
+    ['aiAgents', teamId, projectId, 'directory'] as const,
   anyAiAgents: ['aiAgents'] as const,
   teamAiAgents: (teamId: number) => ['aiAgents', teamId] as const,
   agentTools: (teamId: number) => ['aiAgents', teamId, 'tools'] as const,

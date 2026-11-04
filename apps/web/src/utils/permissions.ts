@@ -1,6 +1,7 @@
 import type {
   PermissionAction,
   PermissionCatalog,
+  PermissionCatalogResource,
   PermissionResource,
   Permissions,
 } from '@/lib/api/endpoints/roles';
@@ -35,9 +36,10 @@ export function matrixFromCatalog(catalog: PermissionCatalog, source: unknown): 
   >;
   const out = {} as Permissions;
   for (const resource of catalog.resources) {
+    const entry = src[resource.key] ?? (resource.from && src[resource.from]);
     const row = {} as Record<PermissionAction, boolean>;
     for (const action of catalog.actions) {
-      row[action] = resource.actions.includes(action) && src[resource.key]?.[action] === true;
+      row[action] = resource.actions.includes(action) && entry?.[action] === true;
     }
     out[resource.key] = row;
   }
@@ -86,7 +88,14 @@ const GROUP_DEFS: PermissionGroup[] = [
   { key: 'notes', resources: ['note_boards'] },
   {
     key: 'ai',
-    resources: ['ai_agents', 'integrations', 'agent_skills', 'agent_tools', 'agent_usage'],
+    resources: [
+      'ai_agents',
+      'agent_schedules',
+      'integrations',
+      'agent_skills',
+      'agent_tools',
+      'agent_usage',
+    ],
   },
   {
     key: 'configuration',
@@ -106,17 +115,23 @@ const GROUP_DEFS: PermissionGroup[] = [
   { key: 'project', resources: ['danger_zone'] },
 ];
 
-// Order the catalog's resources into display groups. A resource not covered by
-// GROUP_DEFS (e.g. one added on the API) falls into a trailing "Other" group, so
-// nothing silently disappears from the editor.
-export function groupResources(resources: PermissionResource[]): PermissionGroup[] {
+// Order the catalog's resources into display groups. A resource split out of another
+// sits right after it. Any other resource not covered by GROUP_DEFS (e.g. one added on
+// the API) falls into a trailing "Other" group, so nothing silently disappears from the
+// editor.
+export function groupResources(
+  resources: PermissionResource[],
+  catalog: PermissionCatalogResource[] = [],
+): PermissionGroup[] {
   const present = new Set(resources);
-  const known = new Set(GROUP_DEFS.flatMap((g) => g.resources));
   const groups = GROUP_DEFS.map((g) => ({
     key: g.key,
-    resources: g.resources.filter((r) => present.has(r)),
+    resources: g.resources
+      .flatMap((r) => [r, ...catalog.filter((one) => one.from === r).map((one) => one.key)])
+      .filter((r) => present.has(r)),
   })).filter((g) => g.resources.length > 0);
-  const other = resources.filter((r) => !known.has(r));
+  const placed = new Set(groups.flatMap((g) => g.resources));
+  const other = resources.filter((r) => !placed.has(r));
   if (other.length) groups.push({ key: 'other', resources: other });
   return groups;
 }

@@ -17,7 +17,7 @@ import {
   useRunAgentSchedule,
   useUpdateAgentSchedule,
 } from '@/services/agentSchedules.service';
-import { useProjectAgents } from '@/hooks/useProjectAgents';
+import { useAgentDirectory } from '@/hooks/useProjectAgents';
 import { useSettingsCan } from '../../context/settingsPermission';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
 import { SettingsScheduleRunsSheet } from './SettingsScheduleRunsSheet';
@@ -38,7 +38,7 @@ export default function SettingsSchedules({
   const can = useSettingsCan();
   const paging = usePaging();
   const schedulesQuery = useAgentSchedules(projectKey, paging.params);
-  const agentsQuery = useProjectAgents();
+  const agentsQuery = useAgentDirectory();
   const schedules = schedulesQuery.data?.items ?? [];
   const total = schedulesQuery.data?.total ?? 0;
   const agents = agentsQuery.data ?? [];

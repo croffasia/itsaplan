@@ -14,7 +14,7 @@ import {
   customField,
   integrationCredential,
 } from '@repo/db';
-import { and, eq, inArray, ne, notInArray, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, ne, notInArray, sql } from 'drizzle-orm';
 import { auth } from '@repo/auth';
 import { iso, HttpError, rethrowDuplicate } from '#shared/lib';
 import { getCredentialById } from '../integrations/service';
@@ -334,6 +334,16 @@ export async function assertFullAgentAccess(
 // the user themselves.
 function sharesProjectWith(userId: string) {
   return sql`exists (select 1 from ${projectMember} pm join ${projectMember} mine on mine.project_id = pm.project_id and mine.user_id = ${userId} where pm.user_id = ${aiAgent.userId})`;
+}
+
+export async function listProjectAgents(projectId: number) {
+  const rows = await db
+    .select({ id: aiAgent.id, name: user.name, kind: aiAgent.kind, model: aiAgent.model })
+    .from(aiAgent)
+    .innerJoin(user, eq(user.id, aiAgent.userId))
+    .where(inProject(projectId))
+    .orderBy(asc(user.name));
+  return rows.map((row) => ({ ...row, kind: row.kind as AgentKind }));
 }
 
 // The agents of the team, or only the ones working in one of its projects when

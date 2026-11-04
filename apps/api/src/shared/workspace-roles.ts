@@ -29,9 +29,10 @@ export function readOnlyPermissions(): Permissions {
   return matrix;
 }
 
-const grants = new Map<string, WorkspaceGrant>([
+// The admin's matrix is built when it is read, so it holds the resources a build adds.
+const grants = new Map<string, WorkspaceGrant | (() => Permissions)>([
   ['owner', 'owner'],
-  ['admin', readOnlyPermissions()],
+  ['admin', readOnlyPermissions],
 ]);
 
 // Sets what a workspace role grants, or with null that it grants nothing. A build that
@@ -42,7 +43,8 @@ export function setWorkspaceRoleGrant(role: string, grant: WorkspaceGrant | null
 }
 
 export function workspaceRoleGrant(role: string): WorkspaceGrant | null {
-  return grants.get(role) ?? null;
+  const grant = grants.get(role) ?? null;
+  return typeof grant === 'function' ? grant() : grant;
 }
 
 export function mergePermissions(...matrices: (Permissions | null | undefined)[]): Permissions {

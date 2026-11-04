@@ -12,6 +12,7 @@ import { runsTeam } from '#modules/teams/service';
 import { paginate } from '#shared/pagination';
 import {
   listAgents,
+  listProjectAgents,
   createAgent,
   updateAgent,
   deleteAgent,
@@ -31,6 +32,7 @@ import {
   AgentTraceDetailResponse,
   AgentTracePageResponse,
   AiAgentListResponse,
+  ProjectAgentListResponse,
   AiAgentResponse,
   ChatMessagesResponse,
   ChatThreadListResponse,
@@ -512,6 +514,15 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       },
     },
   )
+
+  .get('/projects/:projectKey/ai-agents/options', ({ project }) => listProjectAgents(project.id), {
+    projectMember: true,
+    response: { 200: ProjectAgentListResponse, ...accessErrors },
+    detail: {
+      summary: "List a project's agents",
+      description: 'Their id, name, kind and model, for any member of the project.',
+    },
+  })
 
   // The agent is built from its stored model configuration (Mastra) and works in the
   // project of this path, which it has to be a member of.

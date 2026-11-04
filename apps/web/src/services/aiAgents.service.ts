@@ -25,6 +25,7 @@ import {
 } from '@/lib/api/endpoints/agentChat';
 import {
   listAiAgents,
+  listProjectAgents,
   listAgentRuns,
   listAgentTools,
   createAiAgent,
@@ -49,6 +50,16 @@ export function useAiAgentsQuery(teamId: number | null, projectId?: number) {
     queryFn: () => listAiAgents(teamId!, projectId),
     enabled: teamId != null,
     refetchInterval: RUNNER_PRESENCE_REFRESH_MS,
+  });
+}
+
+export function useAgentDirectoryQuery(
+  project: { id: number; ref: string; teamId: number } | null,
+) {
+  return useQuery({
+    queryKey: qk.agentDirectory(project?.teamId ?? 0, project?.id ?? 0),
+    queryFn: () => listProjectAgents(project!.ref),
+    enabled: project != null,
   });
 }
 

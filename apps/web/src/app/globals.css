@@ -389,6 +389,21 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+/* A link on a public share page that needs a session (features/documents/utils/sharedLinks). */
+.md-content a.share-link-locked {
+  color: var(--muted-foreground);
+}
+.md-content a.share-link-locked::after {
+  content: '';
+  display: inline-block;
+  width: 0.8em;
+  height: 0.8em;
+  margin-inline-start: 0.2em;
+  vertical-align: -0.05em;
+  background-color: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='11' x='3' y='11' rx='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
 /* Mention chips: an @username in the text is rendered as its own node (see
    lib/tiptap-mention.ts) and styled as a pill. */
 .md-content .mention {

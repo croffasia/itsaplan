@@ -65,6 +65,7 @@
   "sharePage": "共享页面",
   "sharedPages": "共享的页面",
   "shareUnavailable": "此共享页面不可用，链接可能已撤销或已过期。",
+  "lockedLink": "仅限已登录的成员",
   "versionHistory": "版本历史",
   "versionHistoryDescription": "此页面当前保存的版本。",
   "currentVersion": "当前版本 · v{version}",

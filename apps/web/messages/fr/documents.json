@@ -78,6 +78,7 @@
   "sharePage": "Partager la page",
   "sharedPages": "Pages partagées",
   "shareUnavailable": "Cette page partagée n'est pas disponible. Le lien a peut-être été révoqué ou a expiré.",
+  "lockedLink": "Réservé aux membres connectés",
   "addFavorite": "Ajouter aux favoris",
   "removeFavorite": "Retirer des favoris",
   "lock": "Verrouiller la page",

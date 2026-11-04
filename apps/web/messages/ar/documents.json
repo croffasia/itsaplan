@@ -65,6 +65,7 @@
   "sharePage": "مشاركة الصفحة",
   "sharedPages": "الصفحات المُشارَكة",
   "shareUnavailable": "الصفحة المشاركة دي مش متاحة. يمكن الرابط اتلغى أو انتهت صلاحيته.",
+  "lockedLink": "للأعضاء المسجلين فقط",
   "versionHistory": "سجل الإصدارات",
   "versionHistoryDescription": "الإصدار الحالي المحفوظ من هذه الصفحة.",
   "currentVersion": "الإصدار الحالي · v{version}",

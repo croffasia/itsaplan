@@ -78,6 +78,7 @@
   "sharePage": "Share page",
   "sharedPages": "Shared pages",
   "shareUnavailable": "This shared page is not available. The link may have been revoked or may have expired.",
+  "lockedLink": "Only for signed-in members",
   "addFavorite": "Add to favorites",
   "removeFavorite": "Remove from favorites",
   "lock": "Lock page",

@@ -78,6 +78,7 @@
   "sharePage": "Compartir la página",
   "sharedPages": "Páginas compartidas",
   "shareUnavailable": "Esta página compartida no está disponible. Puede que el enlace haya sido revocado o haya caducado.",
+  "lockedLink": "Solo para miembros con sesión iniciada",
   "addFavorite": "Añadir a favoritos",
   "removeFavorite": "Quitar de favoritos",
   "lock": "Bloquear la página",

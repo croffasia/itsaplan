@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { getSharedDocument } from '@/lib/api/endpoints/share';
@@ -10,13 +10,16 @@ import PublicShareHeader from '@/components/common/page/PublicShareHeader';
 import DocumentLoadingState from './components/DocumentLoadingState';
 import DocumentShareArticle from './components/DocumentShareArticle';
 import DocumentShareTree from './components/DocumentShareTree';
+import { parsePageParam, sharedPageHref } from './utils/sharedLinks';
 
 // The public read-only page for a shared document (/share/document/:token). Fetches the
 // bundle by token and renders it with no session. A link that includes the subpages
-// lists them beside the page, and opening one reads it under the same token.
+// lists them beside the page, and opening one reads it under the same token. The open
+// subpage is in `?page`, so it survives a reload and can be linked to.
 export default function PublicDocumentPage({ token }: { token: string }) {
   const t = useTranslations('documents');
-  const [pageId, setPageId] = useState<number | null>(null);
+  const router = useRouter();
+  const pageId = parsePageParam(useSearchParams().get('page'));
   const query = useQuery({
     queryKey: ['share', 'document', token, pageId],
     queryFn: () => getSharedDocument(token, pageId ?? undefined),
@@ -44,9 +47,9 @@ export default function PublicDocumentPage({ token }: { token: string }) {
     );
   }
 
-  const open = (id: number) => {
-    setPageId(id);
-    window.scrollTo({ top: 0 });
+  const rootId = shared.pages[0].id;
+  const open = (id: number | null) => {
+    router.push(sharedPageHref(token, id ?? rootId, rootId));
   };
 
   return (
@@ -56,7 +59,12 @@ export default function PublicDocumentPage({ token }: { token: string }) {
         {shared.pages.length > 1 && (
           <DocumentShareTree pages={shared.pages} currentId={shared.document.id} onOpen={open} />
         )}
-        <DocumentShareArticle document={shared.document} />
+        <DocumentShareArticle
+          token={token}
+          document={shared.document}
+          pages={shared.pages}
+          onOpen={open}
+        />
       </div>
     </PublicShareFrame>
   );

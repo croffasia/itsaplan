@@ -78,6 +78,7 @@
   "sharePage": "Sayfayı paylaş",
   "sharedPages": "Paylaşılan sayfalar",
   "shareUnavailable": "Paylaşılan bu sayfaya ulaşılamıyor. Bağlantı iptal edilmiş ya da süresi dolmuş olabilir.",
+  "lockedLink": "Yalnızca oturum açmış üyeler için",
   "addFavorite": "Favorilere ekle",
   "removeFavorite": "Favorilerden çıkar",
   "lock": "Sayfayı kilitle",

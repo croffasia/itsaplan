@@ -85,8 +85,9 @@ Enforced through macros in the route options.
 - **Team-owned resources** (agents, skills, tools, integrations) are under `:teamId` with the
   `teamPermission` guard. What happens in one project (chat, runs, schedules) stays under
   `:projectKey`.
-- A route that resolves the project itself calls `assertMcpAllowed`, as `entityGuard` does. A
-  handler that checks a permission itself spreads `requiresPermission([...])` into its `detail`,
+- A route that resolves the project itself calls `assertProjectReachable`, as `entityGuard` does.
+  `assertMcpAllowed` alone neither refuses a write to an archived project nor checks the section.
+- A handler that checks a permission itself spreads `requiresPermission([...])` into its `detail`,
   so the MCP tool table still reports what it requires.
 - A feature also `.use(authContext)` when its handlers or macros reference `user`. Handlers that
   still need `user` call `requireUser(user)`. An `x-api-key` header resolves through `getSession`,

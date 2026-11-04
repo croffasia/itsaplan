@@ -386,7 +386,9 @@ export interface BurnupParams {
 // burnup asks what state every issue was in at the end of each day: the status row
 // whose stretch covers that midnight. So an issue that was reopened leaves the
 // completed line for the days it was open again, and a canceled issue leaves the
-// scope line — the chart is a history of the project, not of the events.
+// scope line — the chart is a history of the project, not of the events. An issue
+// archived unfinished leaves the scope from the day it was archived, as a canceled
+// one does; an archived finished one stays completed.
 export async function getBurnup(projectId: number, params: BurnupParams): Promise<BurnupDto> {
   const targetDate = await initiativeTargetDate(projectId, params.initiativeId);
   const initiativeFilter =
@@ -401,12 +403,13 @@ export async function getBurnup(projectId: number, params: BurnupParams): Promis
            (count(s.issue_id) FILTER (WHERE s.state_type = 'completed'))::int AS completed
       FROM d
       LEFT JOIN (
-        SELECT s.issue_id, s.state_type, s.entered_at, s.left_at
+        SELECT s.issue_id, s.state_type, s.entered_at, s.left_at, i.archived_at
           FROM issue_status s
           JOIN issue i ON i.id = s.issue_id
          WHERE i.project_id = ${projectId} ${initiativeFilter}
       ) s ON s.entered_at < d.day + 1
          AND (s.left_at IS NULL OR s.left_at >= d.day + 1)
+         AND (s.archived_at IS NULL OR s.archived_at >= d.day + 1 OR s.state_type = 'completed')
      GROUP BY d.day
      ORDER BY d.day`)) as unknown as BurnupDay[];
   const days = rows.map((r) => ({

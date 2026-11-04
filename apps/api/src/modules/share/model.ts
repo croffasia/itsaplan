@@ -15,6 +15,15 @@ export const sharedDocumentAssetParams = t.Object({
   publicId: t.String({ format: 'uuid' }),
 });
 
+// The shared documents whose links show an issue.
+export const IssueDocumentSharesResponse = t.Array(
+  t.Object({
+    documentId: t.Number(),
+    title: t.String(),
+    expiresAt: t.Nullable(t.String({ format: 'date-time' })),
+  }),
+);
+
 // The share link's token and expiry, returned when sharing is enabled.
 export const ShareTokenResponse = t.Object({
   token: t.String(),

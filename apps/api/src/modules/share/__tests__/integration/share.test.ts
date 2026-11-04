@@ -613,10 +613,8 @@ describe('share', () => {
         .update(issueTable)
         .set({ archivedAt: new Date() })
         .where(eq(issueTable.id, archived.id));
-      const linked = (await issues.post({ columnId, title: 'Public thing' })).data!;
-      const issueToken = (await asOwner.issues({ issueId: linked.id }).share.post()).data!.token;
       await createProject(asOwner, { key: 'OPS', name: 'Operations' });
-      const content = `See MKT-1, MKT-${archived.sequenceNumber}, MKT-${linked.sequenceNumber}, MKT-99, OPS-1 and XMKT-1.`;
+      const content = `See MKT-1, MKT-${archived.sequenceNumber}, MKT-99, OPS-1 and XMKT-1.`;
       const doc = (await documents(asOwner).post({ title: 'Notes', content })).data!;
 
       const share = asOwner.documents({ documentId: doc.id }).share;
@@ -626,26 +624,51 @@ describe('share', () => {
       await share.post({ includeIssues: true });
       const read = await documents(asOwner)({ documentId: doc.id }).get();
       expect(read.data).toMatchObject({ shareIncludeIssues: true, shareIncludeChildren: false });
+      const state = { name: expect.any(String), color: expect.any(String) };
       const shared = await api.share.document({ token }).get();
       expect(shared.data.issues).toEqual([
-        {
-          sequence: 1,
-          title: 'Shared thing',
-          state: { name: expect.any(String), color: expect.any(String) },
-          shareToken: null,
-        },
-        {
-          sequence: linked.sequenceNumber,
-          title: 'Public thing',
-          state: { name: expect.any(String), color: expect.any(String) },
-          shareToken: issueToken,
-        },
+        { id: issueId, sequence: 1, title: 'Shared thing', state },
+        { id: archived.id, sequence: archived.sequenceNumber, title: 'Old thing', state },
       ]);
-      expect(issueId).toBeGreaterThan(0);
 
       await asOwner.documents({ documentId: doc.id }).share.delete();
       const again = (await share.post()).data!;
       expect((await api.share.document({ token: again.token }).get()).data.issues).toEqual([]);
+    });
+
+    it('opens a named issue through the link, reduced, and nothing else', async () => {
+      const { asOwner, issueId, columnId } = await setup();
+      const issues = asOwner.projects({ projectKey: 'MKT' }).issues;
+      const other = (await issues.post({ columnId, title: 'Not named' })).data!;
+      const root = await page(asOwner, 'Root');
+      const child = (
+        await documents(asOwner).post({ title: 'Child', parentId: root.id, content: 'See MKT-1.' })
+      ).data!;
+      const share = asOwner.documents({ documentId: root.id }).share;
+      const { token } = (await share.post({ includeChildren: true })).data!;
+      const open = (id: number) => api.share.document({ token }).issues({ issueId: id }).get();
+
+      expect((await open(issueId)).status).toBe(404);
+      await share.post({ includeIssues: true });
+      const opened = await open(issueId);
+      expect(opened.status).toBe(200);
+      expect(opened.data.issue).toMatchObject({
+        id: issueId,
+        title: 'Shared thing',
+        shareToken: null,
+      });
+      expect(opened.data.issue.labelIds).toEqual([]);
+      expect(opened.data.feed).toEqual([]);
+      expect((await open(other.id)).status).toBe(404);
+
+      const listed = await asOwner.issues({ issueId }).share.documents.get();
+      expect(listed.data).toEqual([{ documentId: root.id, title: 'Root', expiresAt: null }]);
+      expect((await asOwner.issues({ issueId: other.id }).share.documents.get()).data).toEqual([]);
+
+      await share.post({ includeChildren: false });
+      expect((await open(issueId)).status).toBe(404);
+      expect((await asOwner.issues({ issueId }).share.documents.get()).data).toEqual([]);
+      expect(child.id).toBeGreaterThan(0);
     });
 
     it('opens the subpages only when the link includes them, never the parent or a sibling', async () => {

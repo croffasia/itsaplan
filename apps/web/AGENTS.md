@@ -8,9 +8,9 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   (`./`, `../`); imports of the **shared layer or another feature** use the `@/` alias.
 - A feature imports the shared layer (`@/utils`, `@/lib`, `@/hooks`, `@/context`, `@/services`,
   `@/components/*`), never another feature —
-  one accepted one-way exception: `work-items` may compose `issue` presentational components. Keep it
-  one-directional, no cycles; if a second such need appears, move the shared piece to
-  `components/common`.
+  one accepted one-way exception: `work-items` and `documents` may compose `issue` presentational
+  components (the read-only issue a public board or document opens). Keep it one-directional, no
+  cycles; if another feature needs them, move the shared piece to `components/common`.
 - The shared layer never imports a feature. `app/` routes stay thin: mount the feature page and
   providers only.
 - **`@/cloud` is the seam for the hosted edition.** It resolves to `src/ce/index.ts`, which

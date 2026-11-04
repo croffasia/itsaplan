@@ -42,6 +42,17 @@ export function sharedPageHref(token: string, pageId: number, rootId: number): s
   return pageId === rootId ? path : `${path}?page=${pageId}`;
 }
 
+// The address of a page with one of the issues it names open over it.
+export function sharedIssueHref(
+  token: string,
+  pageId: number,
+  rootId: number,
+  issueId: number,
+): string {
+  const page = sharedPageHref(token, pageId, rootId);
+  return `${page}${page.includes('?') ? '&' : '?'}issue=${issueId}`;
+}
+
 // The page a share address opens: the shared page (null) or the one in `?page`, or
 // undefined when the address is not this share.
 export function sharedPageOf(

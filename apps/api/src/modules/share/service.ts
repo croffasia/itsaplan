@@ -456,13 +456,13 @@ export interface SharedDocumentBundle {
   issues: SharedDocumentIssue[];
 }
 
-// An issue a shared page names: what its chip shows, and its own share token while the
-// issue itself has a live public link.
+// An issue a shared page names: what its chip shows. It opens through the same link
+// (getSharedDocumentIssue).
 export interface SharedDocumentIssue {
+  id: number;
   sequence: number;
   title: string;
   state: { name: string; color: string };
-  shareToken: string | null;
 }
 
 // The project of a document that may be shared, for the enable/revoke guard. A private
@@ -602,21 +602,16 @@ export async function getSharedDocument(
     },
     pages: shared.pages,
     issues: shared.includeIssues
-      ? await namedIssues(project.id, project.key, [row.content, JSON.stringify(row.contentJson)])
+      ? await issuesBySequence(project.id, namedSequences(project.key, pageTexts(row)))
       : [],
   };
 }
 
-// The most issues one shared page resolves.
-const MAX_NAMED_ISSUES = 200;
+// The most issue identifiers one shared link resolves.
+const MAX_NAMED_ISSUES = 500;
 
-// The issues of a project that a page's text names by identifier (KEY-123), archived
-// ones left out.
-async function namedIssues(
-  projectId: number,
-  key: string,
-  texts: string[],
-): Promise<SharedDocumentIssue[]> {
+// The issue numbers that some text names by identifier (KEY-123).
+function namedSequences(key: string, texts: string[]): number[] {
   if (!/^[A-Z0-9]+$/.test(key)) return [];
   const pattern = new RegExp(`(?<![A-Za-z0-9])${key}-([1-9]\\d{0,8})(?![A-Za-z0-9])`, 'g');
   const sequences = new Set<number>();
@@ -626,32 +621,124 @@ async function namedIssues(
       sequences.add(Number(match[1]));
     }
   }
-  if (sequences.size === 0) return [];
+  return [...sequences];
+}
+
+const pageTexts = (page: { content: string; contentJson: unknown }) => [
+  page.content,
+  JSON.stringify(page.contentJson),
+];
+
+// The issues of a project with these numbers, archived ones included.
+async function issuesBySequence(
+  projectId: number,
+  sequences: number[],
+): Promise<SharedDocumentIssue[]> {
+  if (sequences.length === 0) return [];
   const rows = await db
     .select({
+      id: issue.id,
       sequence: issue.sequenceNumber,
       title: issue.title,
       stateName: projectColumn.name,
       stateColor: projectColumn.color,
-      shareToken: issue.shareToken,
-      shareExpiresAt: issue.shareExpiresAt,
     })
     .from(issue)
     .innerJoin(projectColumn, eq(projectColumn.id, issue.columnId))
-    .where(
-      and(
-        eq(issue.projectId, projectId),
-        inArray(issue.sequenceNumber, [...sequences]),
-        isNull(issue.archivedAt),
-      ),
-    )
+    .where(and(eq(issue.projectId, projectId), inArray(issue.sequenceNumber, sequences)))
     .orderBy(asc(issue.sequenceNumber));
   return rows.map((row) => ({
+    id: row.id,
     sequence: row.sequence,
     title: row.title,
     state: { name: row.stateName, color: row.stateColor },
-    shareToken: row.shareToken && shareLive(row.shareExpiresAt) ? row.shareToken : null,
   }));
+}
+
+// The issue numbers named on any page a link opens.
+async function sequencesOfShare(key: string, pageIds: number[]): Promise<number[]> {
+  const pages = await db
+    .select({ content: projectDocument.content, contentJson: projectDocument.contentJson })
+    .from(projectDocument)
+    .where(inArray(projectDocument.id, pageIds));
+  return namedSequences(key, pages.flatMap(pageTexts));
+}
+
+// An issue that a page of a shared document names, read through the document's link
+// when the link shows linked issues. It carries what a view shared without full details
+// carries: no people, labels, custom fields or activity. Its subtasks and relations
+// list only issues the link also names. Null when the link does not name the issue.
+export async function getSharedDocumentIssue(
+  token: string,
+  issueId: number,
+): Promise<SharedIssueBundle | null> {
+  const shared = await sharedDocumentPages(token);
+  if (!shared?.includeIssues) return null;
+  const project = await getProjectById(shared.projectId);
+  if (!project) return null;
+  const sequences = await sequencesOfShare(
+    project.key,
+    shared.pages.map((page) => page.id),
+  );
+  const named = await issuesBySequence(project.id, sequences);
+  if (!named.some((row) => row.id === issueId)) return null;
+  const issueRow = await getIssue(issueId);
+  if (!issueRow) return null;
+  return issueBundle(issueRow, {
+    keepShareToken: false,
+    extended: false,
+    onlyIssueIds: new Set(named.map((row) => row.id)),
+  });
+}
+
+// A shared document whose link shows an issue, for the issue's own share dialog.
+export interface IssueDocumentShare {
+  documentId: number;
+  title: string;
+  expiresAt: string | null;
+}
+
+// The live document links that show this issue: the shared page or one of the subpages
+// its link opens names the issue, and the link shows linked issues.
+export async function listIssueDocumentShares(issueId: number): Promise<IssueDocumentShare[]> {
+  const issueRow = await getIssue(issueId);
+  if (!issueRow) return [];
+  const project = await getProjectById(issueRow.projectId);
+  if (!project) return [];
+  const roots = await db
+    .select({
+      id: projectDocument.id,
+      title: projectDocument.title,
+      token: projectDocument.shareToken,
+      expiresAt: projectDocument.shareExpiresAt,
+    })
+    .from(projectDocument)
+    .where(
+      and(
+        eq(projectDocument.projectId, project.id),
+        isNotNull(projectDocument.shareToken),
+        eq(projectDocument.shareIncludeIssues, true),
+        activeShare(projectDocument.shareExpiresAt),
+        readablePage,
+      ),
+    )
+    .orderBy(asc(projectDocument.title));
+  const shares: IssueDocumentShare[] = [];
+  for (const root of roots) {
+    const shared = await sharedDocumentPages(root.token!);
+    if (!shared) continue;
+    const sequences = await sequencesOfShare(
+      project.key,
+      shared.pages.map((page) => page.id),
+    );
+    if (!sequences.includes(issueRow.sequenceNumber)) continue;
+    shares.push({
+      documentId: root.id,
+      title: root.title,
+      expiresAt: root.expiresAt ? iso(root.expiresAt) : null,
+    });
+  }
+  return shares;
 }
 
 // An asset of a page the link opens, or null. An asset of any other page is not

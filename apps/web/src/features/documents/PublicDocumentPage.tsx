@@ -4,24 +4,28 @@ import { useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { getSharedDocument } from '@/lib/api/endpoints/share';
+import { getSharedDocument, getSharedDocumentIssue } from '@/lib/api/endpoints/share';
 import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { IssueRefsProvider } from '@/context/issueRefs';
 import PublicShareFrame from '@/components/common/page/PublicShareFrame';
 import PublicShareHeader from '@/components/common/page/PublicShareHeader';
+import PublicIssueOverlay from '@/features/issue/components/public/PublicIssueOverlay';
 import DocumentLoadingState from './components/DocumentLoadingState';
 import DocumentShareArticle from './components/DocumentShareArticle';
 import DocumentShareTree from './components/DocumentShareTree';
-import { parsePageParam, sharedPageHref } from './utils/sharedLinks';
+import { parsePageParam, sharedIssueHref, sharedPageHref } from './utils/sharedLinks';
 
 // The public read-only page for a shared document (/share/document/:token). Fetches the
 // bundle by token and renders it with no session. A link that includes the subpages
 // lists them beside the page, and opening one reads it under the same token. The open
-// subpage is in `?page`, so it survives a reload and can be linked to.
+// subpage is in `?page`, so it survives a reload and can be linked to. With linked issues
+// shown, an issue the page names opens over it, read under the same token (`?issue`).
 export default function PublicDocumentPage({ token }: { token: string }) {
   const t = useTranslations('documents');
   const router = useRouter();
-  const pageId = parsePageParam(useSearchParams().get('page'));
+  const searchParams = useSearchParams();
+  const pageId = parsePageParam(searchParams.get('page'));
+  const issueId = parsePageParam(searchParams.get('issue'));
   const query = useQuery({
     queryKey: ['share', 'document', token, pageId],
     queryFn: () => getSharedDocument(token, pageId ?? undefined),
@@ -29,9 +33,13 @@ export default function PublicDocumentPage({ token }: { token: string }) {
     placeholderData: keepPreviousData,
   });
   const shared = query.isError ? undefined : query.data;
-  const issues = useMemo(
-    () => new Map((shared?.issues ?? []).map((issue) => [issue.sequence, issue])),
-    [shared?.issues],
+  const rootId = shared?.pages[0].id ?? 0;
+  const issueRefs = useMemo(
+    () => ({
+      issues: new Map((shared?.issues ?? []).map((issue) => [issue.sequence, issue])),
+      href: (id: number) => sharedIssueHref(token, pageId ?? rootId, rootId, id),
+    }),
+    [shared?.issues, token, pageId, rootId],
   );
   useDocumentTitle(
     titlePath(shared?.project.name, shared && (shared.document.title || t('untitled'))),
@@ -53,7 +61,6 @@ export default function PublicDocumentPage({ token }: { token: string }) {
     );
   }
 
-  const rootId = shared.pages[0].id;
   const open = (id: number | null) => {
     router.push(sharedPageHref(token, id ?? rootId, rootId));
   };
@@ -66,8 +73,8 @@ export default function PublicDocumentPage({ token }: { token: string }) {
           <DocumentShareTree pages={shared.pages} currentId={shared.document.id} onOpen={open} />
         )}
         <IssueRefsProvider
-          refs={issues.size > 0 ? [`share.${shared.project.key}`] : []}
-          shared={issues}
+          refs={issueRefs.issues.size > 0 ? [`share.${shared.project.key}`] : []}
+          shared={issueRefs}
         >
           <DocumentShareArticle
             token={token}
@@ -77,6 +84,14 @@ export default function PublicDocumentPage({ token }: { token: string }) {
           />
         </IssueRefsProvider>
       </div>
+      <PublicIssueOverlay
+        queryKey={['share', 'document', token, 'issue']}
+        load={(id) => getSharedDocumentIssue(token, id)}
+        issueId={issueId}
+        extended={false}
+        onOpenIssue={(id) => router.push(issueRefs.href(id))}
+        onClose={() => router.push(sharedPageHref(token, pageId ?? rootId, rootId))}
+      />
     </PublicShareFrame>
   );
 }

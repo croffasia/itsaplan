@@ -59,12 +59,19 @@ export interface SharedDocumentBundle {
   issues: SharedDocumentIssue[];
 }
 
-// An issue a shared page names. shareToken is set while the issue has its own live link.
+// An issue a shared page names. It opens through the same link (getSharedDocumentIssue).
 export interface SharedDocumentIssue {
+  id: number;
   sequence: number;
   title: string;
   state: { name: string; color: string };
-  shareToken: string | null;
+}
+
+// A shared document whose link shows an issue.
+export interface IssueDocumentShare {
+  documentId: number;
+  title: string;
+  expiresAt: string | null;
 }
 
 // Public read-only sharing. Enabling returns the link token and its expiry and sets
@@ -118,6 +125,12 @@ export const enableDocumentShare = (id: number, options: ShareOptions) =>
 
 export const disableDocumentShare = (id: number) =>
   request<void>(`/documents/${id}/share`, { method: 'DELETE' });
+
+export const getSharedDocumentIssue = (token: string, issueId: number) =>
+  request<SharedIssueBundle>(`/share/document/${token}/issues/${issueId}`);
+
+export const listIssueDocumentShares = (issueId: number) =>
+  request<IssueDocumentShare[]>(`/issues/${issueId}/share/documents`);
 
 export const getSharedDocument = (token: string, documentId?: number) =>
   request<SharedDocumentBundle>(

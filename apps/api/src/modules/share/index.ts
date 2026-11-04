@@ -10,6 +10,7 @@ import { rawAttachmentQuery } from '#modules/attachments/model';
 import { attachmentObjectResponse } from '#modules/attachments/storage';
 import {
   BundleResponse,
+  IssueDocumentSharesResponse,
   ShareTokenResponse,
   shareDocumentBody,
   shareDocumentParams,
@@ -34,6 +35,8 @@ import {
   disableDocumentShare,
   getSharedDocument,
   getSharedDocumentAsset,
+  getSharedDocumentIssue,
+  listIssueDocumentShares,
   shareableDocumentProjectId,
   type ShareExpiry,
 } from './service';
@@ -87,6 +90,17 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
       workItem: 'edit',
       response: { 200: ShareTokenResponse, ...commonErrors },
       detail: { summary: 'Enable issue sharing' },
+    },
+  )
+
+  .get(
+    '/issues/:issueId/share/documents',
+    async ({ params }) => listIssueDocumentShares(params.issueId),
+    {
+      params: shareIssueParams,
+      workItem: 'read',
+      response: { 200: IssueDocumentSharesResponse, ...commonErrors },
+      detail: { summary: 'List the shared documents that show an issue' },
     },
   )
 
@@ -246,6 +260,20 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
       params: shareTokenParams,
       response: { 200: BundleResponse, ...errors(400, 404) },
       detail: { summary: 'Get a shared document' },
+    },
+  )
+
+  .get(
+    '/share/document/:token/issues/:issueId',
+    async ({ params }) => {
+      const bundle = await getSharedDocumentIssue(params.token, params.issueId);
+      if (!bundle) throw new HttpError(404, 'Not found');
+      return bundle;
+    },
+    {
+      params: sharedViewIssueParams,
+      response: { 200: BundleResponse, ...errors(400, 404) },
+      detail: { summary: 'Get an issue a shared document names' },
     },
   )
 

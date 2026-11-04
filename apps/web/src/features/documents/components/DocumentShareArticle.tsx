@@ -39,7 +39,8 @@ export default function DocumentShareArticle({
   const onClick = (event: MouseEvent<HTMLElement>) => {
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
       return;
-    const link = (event.target as Element).closest?.('a[href]');
+    // An issue chip opens its issue through the IssueRef extension.
+    const link = (event.target as Element).closest?.('a[href]:not(.issue-ref)');
     if (!(link instanceof HTMLAnchorElement)) return;
     const pageId = sharedPageOf(link.href, window.location.origin, token);
     if (pageId === undefined) return;

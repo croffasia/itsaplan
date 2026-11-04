@@ -2,37 +2,38 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { getSharedViewIssue } from '@/lib/api/endpoints/share';
+import type { SharedIssueBundle } from '@/lib/api/endpoints/share';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import IssueDetailSkeleton from '@/features/issue/components/detail/IssueDetailSkeleton';
-import ReadOnlyIssueDetail from '@/features/issue/components/detail/ReadOnlyIssueDetail';
+import IssueDetailSkeleton from '../detail/IssueDetailSkeleton';
+import ReadOnlyIssueDetail from '../detail/ReadOnlyIssueDetail';
 
-// The read-only issue detail opened from a shared board card. It fetches the issue
-// under the board's own share token (the API checks the issue belongs to the shared
-// view's project) and renders it in a dialog. Composing the issue feature's
-// read-only detail is the allowed work-items → issue direction.
+// The read-only issue detail opened from a public share: a card of a shared board, or
+// an issue a shared document names. `load` reads the issue under that share's token
+// (the API checks the share reaches it) and the dialog renders it.
 export default function PublicIssueOverlay({
-  token,
+  queryKey,
+  load,
   issueId,
   extended,
   onOpenIssue,
   onClose,
 }: {
-  token: string;
+  queryKey: readonly unknown[];
+  load: (issueId: number) => Promise<SharedIssueBundle>;
   issueId: number | null;
   // Whether the board's link exposes the full issues; without it the bundle
   // carries no activity and no custom fields.
   extended: boolean;
-  // Swaps the open issue for another one of the same board, so a subtask or the
+  // Swaps the open issue for another one of the same share, so a subtask or the
   // other end of a relation opens in place.
   onOpenIssue: (id: number) => void;
   onClose: () => void;
 }) {
   const t = useTranslations('workItems.share');
   const query = useQuery({
-    queryKey: ['share', 'view', token, 'issue', issueId],
-    queryFn: () => getSharedViewIssue(token, issueId as number),
+    queryKey: [...queryKey, issueId],
+    queryFn: () => load(issueId as number),
     enabled: issueId != null,
     retry: false,
   });

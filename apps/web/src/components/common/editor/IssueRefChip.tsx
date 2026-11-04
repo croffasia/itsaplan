@@ -1,12 +1,12 @@
 import { useRef } from 'react';
 import { useIssueRefs } from '@/context/issueRefs';
-import { issuePath, shareIssuePath, splitProjectRef } from '@/utils/paths';
+import { issuePath, splitProjectRef } from '@/utils/paths';
 import type { ResolvedLinkPreview } from './resolveLinkPreview';
 import { useLinkPreviewQuery } from './useLinkPreviewQuery';
 
 // The link an issue identifier is drawn as in read-only text: the state colour, the
 // identifier and the title, read through the same query as the hover card. On a public share page they come
-// from the share, and the chip links only to an issue that has a public link itself.
+// from the share, and the chip opens the issue under it.
 export default function IssueRefChip({
   projectRef,
   sequence,
@@ -28,7 +28,7 @@ export default function IssueRefChip({
   const id = `${splitProjectRef(projectRef).key}-${sequence}`;
 
   if (shared) {
-    const issue = shared.get(sequence);
+    const issue = shared.issues.get(sequence);
     const content = (
       <>
         {issue && <span className="issue-ref-dot" style={{ backgroundColor: issue.state.color }} />}
@@ -36,14 +36,12 @@ export default function IssueRefChip({
         {issue && <span className="issue-ref-title">{issue.title}</span>}
       </>
     );
-    return issue?.shareToken ? (
-      <a href={shareIssuePath(issue.shareToken)} className="issue-ref" title={issue.state.name}>
+    return issue ? (
+      <a href={shared.href(issue.id)} className="issue-ref" title={issue.state.name}>
         {content}
       </a>
     ) : (
-      <span className="issue-ref" title={issue?.state.name}>
-        {content}
-      </span>
+      <span className="issue-ref">{content}</span>
     );
   }
 

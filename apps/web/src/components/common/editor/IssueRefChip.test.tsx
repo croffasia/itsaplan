@@ -22,11 +22,11 @@ let originalFetch: typeof fetch;
 let requests: string[];
 let IssueRefChip: (typeof import('./IssueRefChip'))['default'];
 
-const issue = (sequence: number, shareToken: string | null): SharedDocumentIssue => ({
+const issue = (sequence: number): SharedDocumentIssue => ({
+  id: sequence + 100,
   sequence,
   title: `Issue ${sequence}`,
   state: { name: 'In Progress', color: '#22c55e' },
-  shareToken,
 });
 
 beforeEach(async () => {
@@ -73,11 +73,14 @@ afterEach(() => {
 });
 
 describe('IssueRefChip on a share page', () => {
-  it('shows the shared issues and links only one with a public link of its own', async () => {
-    const shared = new Map([
-      [1, issue(1, 'issue-token')],
-      [2, issue(2, null)],
-    ]);
+  it('shows the issues the share names and opens them under it', async () => {
+    const shared = {
+      issues: new Map([
+        [1, issue(1)],
+        [2, issue(2)],
+      ]),
+      href: (id: number) => `/share/document/tok?issue=${id}`,
+    };
     const client = new QueryClient();
     await act(() =>
       root.render(
@@ -97,8 +100,8 @@ describe('IssueRefChip on a share page', () => {
       text: chip.textContent,
     }));
     assert.deepEqual(chips, [
-      { tag: 'A', href: '/share/issue/issue-token', text: 'MKT-1Issue 1' },
-      { tag: 'SPAN', href: null, text: 'MKT-2Issue 2' },
+      { tag: 'A', href: '/share/document/tok?issue=101', text: 'MKT-1Issue 1' },
+      { tag: 'A', href: '/share/document/tok?issue=102', text: 'MKT-2Issue 2' },
       { tag: 'SPAN', href: null, text: 'MKT-3' },
     ]);
     assert.deepEqual(requests, []);

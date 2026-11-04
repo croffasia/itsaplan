@@ -7,6 +7,7 @@ import {
   LOCKED_LINK_CLASS,
   parsePageParam,
   rewriteSharedLinks,
+  sharedIssueHref,
   sharedLinkTarget,
   sharedPageHref,
   sharedPageOf,
@@ -51,6 +52,11 @@ describe('share page addresses', () => {
     assert.equal(sharedPageOf(`${origin}/share/document/tok`, origin, 'tok'), null);
     assert.equal(sharedPageOf(`${origin}/share/document/other?page=11`, origin, 'tok'), undefined);
     assert.equal(sharedPageOf('https://example.com/share/document/tok', origin, 'tok'), undefined);
+  });
+
+  it('adds the open issue to the page address', () => {
+    assert.equal(sharedIssueHref('tok', 10, 10, 5), '/share/document/tok?issue=5');
+    assert.equal(sharedIssueHref('tok', 11, 10, 5), '/share/document/tok?page=11&issue=5');
   });
 
   it('accepts only a positive page id', () => {

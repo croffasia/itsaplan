@@ -15,6 +15,38 @@ export const sharedDocumentAssetParams = t.Object({
   publicId: t.String({ format: 'uuid' }),
 });
 
+export const projectSharesParams = t.Object({ projectKey: t.String() });
+
+const shareExpiry = t.Nullable(t.String({ format: 'date-time' }));
+
+// The live public links of a project, and which kinds the reader may revoke.
+export const ProjectSharesResponse = t.Object({
+  issues: t.Array(
+    t.Object({
+      id: t.Number(),
+      sequence: t.Number(),
+      title: t.String(),
+      extended: t.Boolean(),
+      expiresAt: shareExpiry,
+    }),
+  ),
+  views: t.Array(
+    t.Object({ id: t.Number(), name: t.String(), extended: t.Boolean(), expiresAt: shareExpiry }),
+  ),
+  documents: t.Array(
+    t.Object({
+      id: t.Number(),
+      title: t.String(),
+      includeChildren: t.Boolean(),
+      includeIssues: t.Boolean(),
+      expiresAt: shareExpiry,
+    }),
+  ),
+  canRevoke: t.Object({ issues: t.Boolean(), views: t.Boolean(), documents: t.Boolean() }),
+});
+
+export const RevokedSharesResponse = t.Object({ revoked: t.Number() });
+
 // The shared documents whose links show an issue.
 export const IssueDocumentSharesResponse = t.Array(
   t.Object({

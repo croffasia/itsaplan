@@ -558,6 +558,71 @@ describe('share', () => {
     });
   });
 
+  describe('project overview', () => {
+    it('lists the live links of a project and revokes the ones the caller may edit', async () => {
+      const { asOwner, issueId } = await setup();
+      const project = asOwner.projects({ projectKey: 'MKT' });
+      const view = (await project.views.post({ name: 'Board' })).data!;
+      const doc = (await project.documents.post({ title: 'Guide', content: 'MKT-1' })).data!;
+      const expiresAt = new Date(Date.now() + 86_400_000).toISOString();
+      await asOwner.issues({ issueId }).share.post({ expiresAt });
+      await asOwner.views({ viewId: view.id }).share.post();
+      await asOwner.documents({ documentId: doc.id }).share.post({ includeIssues: true });
+
+      const listed = await project.shares.get();
+      expect(listed.status).toBe(200);
+      expect(listed.data!.issues).toEqual([
+        {
+          id: issueId,
+          sequence: 1,
+          title: 'Shared thing',
+          extended: false,
+          expiresAt: expect.anything(),
+        },
+      ]);
+      expect(listed.data!.views).toEqual([
+        { id: view.id, name: 'Board', extended: false, expiresAt: null },
+      ]);
+      expect(listed.data!.documents).toEqual([
+        {
+          id: doc.id,
+          title: 'Guide',
+          includeChildren: false,
+          includeIssues: true,
+          expiresAt: null,
+        },
+      ]);
+      expect(listed.data!.canRevoke).toEqual({ issues: true, views: true, documents: true });
+
+      const reader = await signUpTestUser();
+      const readerRole = await createRole(asOwner, 'MKT', {
+        name: 'Reader',
+        permissions: { work_items: { read: true } },
+      });
+      const invite = await project.invites.post({ email: reader.email, role: 'member' });
+      const asReader = authedApi(reader.cookie);
+      await asReader.invites({ token: invite.data!.token }).accept.post();
+      await project
+        .members({ userId: reader.userId })
+        .patch({ role: 'member', roleId: readerRole.data!.id });
+      const seen = await asReader.projects({ projectKey: 'MKT' }).shares.get();
+      expect(seen.data!.issues).toHaveLength(1);
+      expect(seen.data!.views).toEqual([]);
+      expect(seen.data!.documents).toEqual([]);
+      expect(seen.data!.canRevoke).toEqual({ issues: false, views: false, documents: false });
+      expect((await asReader.projects({ projectKey: 'MKT' }).shares.delete()).data).toEqual({
+        revoked: 0,
+      });
+
+      expect((await project.shares.delete()).data).toEqual({ revoked: 3 });
+      const after = await project.shares.get();
+      expect(after.data).toMatchObject({ issues: [], views: [], documents: [] });
+
+      const outsider = authedApi((await signUpTestUser()).cookie);
+      expect((await outsider.projects({ projectKey: 'MKT' }).shares.get()).status).toBe(403);
+    });
+  });
+
   // A shared page is read without a session, and with includeChildren its subpages too.
   // Its assets load through the token, and only those of the pages the link opens.
   describe('document sharing', () => {

@@ -3,6 +3,8 @@ import { noContent } from '#shared/http';
 import { guards, entityGuard } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
 import { HttpError } from '#shared/lib';
+import { assertPermission } from '#shared/access';
+import type { PermissionResource, PermissionAction } from '#shared/permissions';
 import { commonErrors, errors } from '#shared/responses';
 import { getIssueProjectId } from '#modules/issues/service';
 import { getView } from '#modules/views/service';
@@ -11,6 +13,9 @@ import { attachmentObjectResponse } from '#modules/attachments/storage';
 import {
   BundleResponse,
   IssueDocumentSharesResponse,
+  ProjectSharesResponse,
+  RevokedSharesResponse,
+  projectSharesParams,
   ShareTokenResponse,
   shareDocumentBody,
   shareDocumentParams,
@@ -37,6 +42,8 @@ import {
   getSharedDocumentAsset,
   getSharedDocumentIssue,
   listIssueDocumentShares,
+  listProjectShares,
+  revokeProjectShares,
   shareableDocumentProjectId,
   type ShareExpiry,
 } from './service';
@@ -190,6 +197,43 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
     },
   )
 
+  // --- Project overview (session-gated) -----------------------------------------
+
+  .get(
+    '/projects/:projectKey/shares',
+    async ({ project, user }) => {
+      const [issues, views, documents] = await Promise.all([
+        allows(project.id, user, 'work_items', 'read'),
+        allows(project.id, user, 'views', 'read'),
+        allows(project.id, user, 'documents', 'read'),
+      ]);
+      const [canRevoke, shares] = await Promise.all([
+        revocableKinds(project.id, user),
+        listProjectShares(project.id, { issues, views, documents }),
+      ]);
+      return { ...shares, canRevoke };
+    },
+    {
+      params: projectSharesParams,
+      projectMember: true,
+      response: { 200: ProjectSharesResponse, ...commonErrors },
+      detail: { summary: 'List the public links of a project' },
+    },
+  )
+
+  .delete(
+    '/projects/:projectKey/shares',
+    async ({ project, user }) => ({
+      revoked: await revokeProjectShares(project.id, await revocableKinds(project.id, user)),
+    }),
+    {
+      params: projectSharesParams,
+      projectMember: true,
+      response: { 200: RevokedSharesResponse, ...commonErrors },
+      detail: { summary: 'Revoke every public link of a project the caller may revoke' },
+    },
+  )
+
   // --- Public reads (no session; matched by PUBLIC_GET in auth-context) ----------
 
   .get(
@@ -306,3 +350,26 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
       detail: { summary: 'Download an asset of a shared document' },
     },
   );
+
+type GuardUser = Parameters<typeof assertPermission>[1];
+
+const allows = (
+  projectId: number,
+  user: GuardUser,
+  resource: PermissionResource,
+  action: PermissionAction,
+) =>
+  assertPermission(projectId, user, resource, action).then(
+    () => true,
+    () => false,
+  );
+
+// Revoking a link is an edit of what it shares, as on the per-entity routes.
+async function revocableKinds(projectId: number, user: GuardUser) {
+  const [issues, views, documents] = await Promise.all([
+    allows(projectId, user, 'work_items', 'edit'),
+    allows(projectId, user, 'views', 'edit'),
+    allows(projectId, user, 'documents', 'edit'),
+  ]);
+  return { issues, views, documents };
+}

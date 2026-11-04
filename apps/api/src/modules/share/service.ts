@@ -767,3 +767,130 @@ export async function getSharedDocumentAsset(
     );
   return rows[0] ?? null;
 }
+
+// --- Project overview ------------------------------------------------------------
+
+export interface ProjectShares {
+  issues: {
+    id: number;
+    sequence: number;
+    title: string;
+    extended: boolean;
+    expiresAt: string | null;
+  }[];
+  views: { id: number; name: string; extended: boolean; expiresAt: string | null }[];
+  documents: {
+    id: number;
+    title: string;
+    includeChildren: boolean;
+    includeIssues: boolean;
+    expiresAt: string | null;
+  }[];
+}
+
+const expiryOf = (expiresAt: Date | null) => (expiresAt ? iso(expiresAt) : null);
+
+// The live public links of a project, for the kinds the reader may see.
+export async function listProjectShares(
+  projectId: number,
+  readable: { issues: boolean; views: boolean; documents: boolean },
+): Promise<ProjectShares> {
+  const [issues, views, documents] = await Promise.all([
+    readable.issues
+      ? db
+          .select({
+            id: issue.id,
+            sequence: issue.sequenceNumber,
+            title: issue.title,
+            extended: issue.shareExtended,
+            expiresAt: issue.shareExpiresAt,
+          })
+          .from(issue)
+          .where(
+            and(
+              eq(issue.projectId, projectId),
+              isNotNull(issue.shareToken),
+              activeShare(issue.shareExpiresAt),
+            ),
+          )
+          .orderBy(asc(issue.sequenceNumber))
+      : [],
+    readable.views
+      ? db
+          .select({
+            id: projectView.id,
+            name: projectView.name,
+            extended: projectView.shareExtended,
+            expiresAt: projectView.shareExpiresAt,
+          })
+          .from(projectView)
+          .where(
+            and(
+              eq(projectView.projectId, projectId),
+              isNotNull(projectView.shareToken),
+              activeShare(projectView.shareExpiresAt),
+            ),
+          )
+          .orderBy(asc(projectView.name))
+      : [],
+    readable.documents
+      ? db
+          .select({
+            id: projectDocument.id,
+            title: projectDocument.title,
+            includeChildren: projectDocument.shareIncludeChildren,
+            includeIssues: projectDocument.shareIncludeIssues,
+            expiresAt: projectDocument.shareExpiresAt,
+          })
+          .from(projectDocument)
+          .where(
+            and(
+              eq(projectDocument.projectId, projectId),
+              isNotNull(projectDocument.shareToken),
+              activeShare(projectDocument.shareExpiresAt),
+              readablePage,
+            ),
+          )
+          .orderBy(asc(projectDocument.title))
+      : [],
+  ]);
+  return {
+    issues: issues.map((row) => ({ ...row, expiresAt: expiryOf(row.expiresAt) })),
+    views: views.map((row) => ({ ...row, expiresAt: expiryOf(row.expiresAt) })),
+    documents: documents.map((row) => ({ ...row, expiresAt: expiryOf(row.expiresAt) })),
+  };
+}
+
+// Revokes every public link of the project of the kinds given. Returns how many it
+// revoked.
+export async function revokeProjectShares(
+  projectId: number,
+  kinds: { issues: boolean; views: boolean; documents: boolean },
+): Promise<number> {
+  const [issues, views, documents] = await Promise.all([
+    kinds.issues
+      ? db
+          .update(issue)
+          .set({ shareToken: null, shareExtended: false, shareExpiresAt: null })
+          .where(and(eq(issue.projectId, projectId), isNotNull(issue.shareToken)))
+          .returning({ id: issue.id })
+      : [],
+    kinds.views
+      ? db
+          .update(projectView)
+          .set({ shareToken: null, shareExtended: false, shareExpiresAt: null })
+          .where(and(eq(projectView.projectId, projectId), isNotNull(projectView.shareToken)))
+          .returning({ id: projectView.id })
+      : [],
+    kinds.documents
+      ? db
+          .update(projectDocument)
+          .set(revokedDocumentShare)
+          .where(
+            and(eq(projectDocument.projectId, projectId), isNotNull(projectDocument.shareToken)),
+          )
+          .returning({ id: projectDocument.id })
+      : [],
+  ]);
+  return issues.length + views.length + documents.length;
+}

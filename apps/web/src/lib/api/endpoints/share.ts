@@ -132,6 +132,34 @@ export const getSharedDocumentIssue = (token: string, issueId: number) =>
 export const listIssueDocumentShares = (issueId: number) =>
   request<IssueDocumentShare[]>(`/issues/${issueId}/share/documents`);
 
+// The live public links of a project, of the kinds the caller may read, and which kinds
+// the caller may revoke.
+export interface ProjectShares {
+  issues: {
+    id: number;
+    sequence: number;
+    title: string;
+    extended: boolean;
+    expiresAt: string | null;
+  }[];
+  views: { id: number; name: string; extended: boolean; expiresAt: string | null }[];
+  documents: {
+    id: number;
+    title: string;
+    includeChildren: boolean;
+    includeIssues: boolean;
+    expiresAt: string | null;
+  }[];
+  canRevoke: { issues: boolean; views: boolean; documents: boolean };
+}
+
+export const listProjectShares = (projectKey: string) =>
+  request<ProjectShares>(`/projects/${projectKey}/shares`);
+
+// Revokes every link of the kinds the caller may revoke.
+export const revokeProjectShares = (projectKey: string) =>
+  request<{ revoked: number }>(`/projects/${projectKey}/shares`, { method: 'DELETE' });
+
 export const getSharedDocument = (token: string, documentId?: number) =>
   request<SharedDocumentBundle>(
     documentId ? `/share/document/${token}/documents/${documentId}` : `/share/document/${token}`,

@@ -135,6 +135,8 @@
     "fullDetailsHint": "Assignees, labels, custom fields and activity.",
     "includeSubpages": "Include subpages",
     "includeSubpagesHint": "Anyone with the link can also read the pages below this one.",
+    "includeIssues": "Show linked issues",
+    "includeIssuesHint": "The issues of this project that the pages name show their title and state. An issue opens only if it has its own public link.",
     "stopSharing": "Stop sharing",
     "createLink": "Create link",
     "copy": "Copy",

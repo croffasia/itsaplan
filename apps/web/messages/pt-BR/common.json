@@ -135,6 +135,8 @@
     "fullDetailsHint": "Responsáveis, etiquetas, campos personalizados e atividade.",
     "includeSubpages": "Incluir subpáginas",
     "includeSubpagesHint": "Quem tiver o link também pode ler as páginas abaixo desta.",
+    "includeIssues": "Mostrar issues vinculadas",
+    "includeIssuesHint": "As issues deste projeto citadas nas páginas mostram título e status. Uma issue só abre se tiver o próprio link público.",
     "stopSharing": "Parar compartilhamento",
     "createLink": "Criar link",
     "copy": "Copiar",

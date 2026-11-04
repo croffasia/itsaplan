@@ -605,6 +605,49 @@ describe('share', () => {
       expect(after.data!.shareToken).toBeNull();
     });
 
+    it('names the issues of the project the page mentions only when the link shows them', async () => {
+      const { asOwner, issueId, columnId } = await setup();
+      const issues = asOwner.projects({ projectKey: 'MKT' }).issues;
+      const archived = (await issues.post({ columnId, title: 'Old thing' })).data!;
+      await db
+        .update(issueTable)
+        .set({ archivedAt: new Date() })
+        .where(eq(issueTable.id, archived.id));
+      const linked = (await issues.post({ columnId, title: 'Public thing' })).data!;
+      const issueToken = (await asOwner.issues({ issueId: linked.id }).share.post()).data!.token;
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
+      const content = `See MKT-1, MKT-${archived.sequenceNumber}, MKT-${linked.sequenceNumber}, MKT-99, OPS-1 and XMKT-1.`;
+      const doc = (await documents(asOwner).post({ title: 'Notes', content })).data!;
+
+      const share = asOwner.documents({ documentId: doc.id }).share;
+      const { token } = (await share.post()).data!;
+      expect((await api.share.document({ token }).get()).data.issues).toEqual([]);
+
+      await share.post({ includeIssues: true });
+      const read = await documents(asOwner)({ documentId: doc.id }).get();
+      expect(read.data).toMatchObject({ shareIncludeIssues: true, shareIncludeChildren: false });
+      const shared = await api.share.document({ token }).get();
+      expect(shared.data.issues).toEqual([
+        {
+          sequence: 1,
+          title: 'Shared thing',
+          state: { name: expect.any(String), color: expect.any(String) },
+          shareToken: null,
+        },
+        {
+          sequence: linked.sequenceNumber,
+          title: 'Public thing',
+          state: { name: expect.any(String), color: expect.any(String) },
+          shareToken: issueToken,
+        },
+      ]);
+      expect(issueId).toBeGreaterThan(0);
+
+      await asOwner.documents({ documentId: doc.id }).share.delete();
+      const again = (await share.post()).data!;
+      expect((await api.share.document({ token: again.token }).get()).data.issues).toEqual([]);
+    });
+
     it('opens the subpages only when the link includes them, never the parent or a sibling', async () => {
       const { asOwner, parent, root, sibling, child, grandchild } = await tree();
       const { token } = (await asOwner.documents({ documentId: root.id }).share.post()).data!;

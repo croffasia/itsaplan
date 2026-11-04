@@ -146,6 +146,7 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
       const share = await enableDocumentShare(
         params.documentId,
         body?.includeChildren,
+        body?.includeIssues,
         parseExpiry(body?.expiresAt),
       );
       if (!share) throw new HttpError(404, 'Document not found');

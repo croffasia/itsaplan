@@ -55,16 +55,27 @@ export interface SharedDocumentBundle {
   };
   // The pages the link opens, the shared page first with no parent.
   pages: SharedDocumentPage[];
+  // The issues of the project the page names, when the link shows them.
+  issues: SharedDocumentIssue[];
+}
+
+// An issue a shared page names. shareToken is set while the issue has its own live link.
+export interface SharedDocumentIssue {
+  sequence: number;
+  title: string;
+  state: { name: string; color: string };
+  shareToken: string | null;
 }
 
 // Public read-only sharing. Enabling returns the link token and its expiry and sets
-// what it exposes (`extended`, or a document's `includeChildren`) and when it stops working; calling it again on a shared
+// what it exposes (`extended`, or a document's `includeChildren` and `includeIssues`) and when it stops working; calling it again on a shared
 // entity keeps the link and only changes what is sent (an omitted field stays as
 // it is, expiresAt null means never). An expired link is replaced by a new one.
 // Disable revokes it. The getShared* reads need no session (public /share/* routes).
 export interface ShareOptions {
   extended?: boolean;
   includeChildren?: boolean;
+  includeIssues?: boolean;
   expiresAt?: string | null;
 }
 

@@ -135,6 +135,8 @@
     "fullDetailsHint": "담당자, 라벨, 사용자 지정 필드 및 활동을 포함합니다.",
     "includeSubpages": "하위 페이지 포함",
     "includeSubpagesHint": "링크가 있는 사람은 이 페이지 아래의 페이지도 읽을 수 있습니다.",
+    "includeIssues": "연결된 이슈 표시",
+    "includeIssuesHint": "페이지에 언급된 이 프로젝트의 이슈는 제목과 상태가 표시됩니다. 이슈는 자체 공개 링크가 있을 때만 열립니다.",
     "stopSharing": "공유 중지",
     "createLink": "링크 생성",
     "copy": "복사",

@@ -57,6 +57,7 @@ function projectDocument(version: number, content: string): ProjectDocument {
     shareToken: null,
     shareExpiresAt: null,
     shareIncludeChildren: false,
+    shareIncludeIssues: false,
   };
 }
 

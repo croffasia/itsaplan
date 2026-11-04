@@ -135,6 +135,8 @@
     "fullDetailsHint": "負責人、標籤、自訂欄位和活動記錄。",
     "includeSubpages": "包含子頁面",
     "includeSubpagesHint": "擁有連結的任何人也可以閱讀此頁面下的頁面。",
+    "includeIssues": "顯示關聯的項目",
+    "includeIssuesHint": "頁面中提到的本專案項目會顯示標題與狀態。只有項目本身有公開連結時才能開啟。",
     "stopSharing": "停止共享",
     "createLink": "建立連結",
     "copy": "複製",

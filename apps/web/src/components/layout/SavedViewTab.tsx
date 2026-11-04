@@ -197,7 +197,7 @@ export default function SavedViewTab({
         onOpenChange={setSharing}
         title={t('shareBoard')}
         token={view.shareToken}
-        option={{ name: 'extended', checked: view.shareExtended }}
+        options={[{ name: 'extended', checked: view.shareExtended }]}
         expiresAt={view.shareExpiresAt}
         enable={share}
         disable={disableShare}

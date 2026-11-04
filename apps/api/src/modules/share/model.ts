@@ -53,6 +53,12 @@ export const shareDocumentBody = t.Optional(
         description: "Also open the page's subpages through the link. Omit to leave it unchanged.",
       }),
     ),
+    includeIssues: t.Optional(
+      t.Boolean({
+        description:
+          'Show the identifier, title and state of the issues of this project that the shared pages name. Omit to leave it unchanged.',
+      }),
+    ),
     expiresAt,
   }),
 );

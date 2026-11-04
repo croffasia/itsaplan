@@ -46,6 +46,7 @@ export const DocumentResponse = t.Composite([
     shareToken: t.Nullable(t.String()),
     shareExpiresAt: t.Nullable(t.String()),
     shareIncludeChildren: t.Boolean(),
+    shareIncludeIssues: t.Boolean(),
   }),
 ]);
 

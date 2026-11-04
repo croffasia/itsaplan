@@ -135,6 +135,8 @@
     "fullDetailsHint": "Penerima tugas, label, bidang khusus, dan aktivitas.",
     "includeSubpages": "Sertakan subhalaman",
     "includeSubpagesHint": "Siapa pun yang memiliki tautan juga dapat membaca halaman di bawah halaman ini.",
+    "includeIssues": "Tampilkan isu tertaut",
+    "includeIssuesHint": "Isu proyek ini yang disebut di halaman menampilkan judul dan statusnya. Isu hanya terbuka jika punya tautan publiknya sendiri.",
     "stopSharing": "Hentikan pembagian",
     "createLink": "Buat tautan",
     "copy": "Salin",

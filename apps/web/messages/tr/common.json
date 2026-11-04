@@ -135,6 +135,8 @@
     "fullDetailsHint": "Sorumlular, etiketler, özel alanlar ve etkinlikler.",
     "includeSubpages": "Alt sayfaları dahil et",
     "includeSubpagesHint": "Bağlantıya sahip olan herkes bu sayfanın altındaki sayfaları da okuyabilir.",
+    "includeIssues": "Bağlantılı işleri göster",
+    "includeIssuesHint": "Sayfalarda adı geçen bu projenin işleri başlık ve durumlarıyla gösterilir. Bir iş yalnızca kendi genel bağlantısı varsa açılır.",
     "stopSharing": "Paylaşımı durdur",
     "createLink": "Bağlantı oluştur",
     "copy": "Kopyala",

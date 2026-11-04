@@ -1,10 +1,12 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { getSharedDocument } from '@/lib/api/endpoints/share';
 import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { IssueRefsProvider } from '@/context/issueRefs';
 import PublicShareFrame from '@/components/common/page/PublicShareFrame';
 import PublicShareHeader from '@/components/common/page/PublicShareHeader';
 import DocumentLoadingState from './components/DocumentLoadingState';
@@ -27,6 +29,10 @@ export default function PublicDocumentPage({ token }: { token: string }) {
     placeholderData: keepPreviousData,
   });
   const shared = query.isError ? undefined : query.data;
+  const issues = useMemo(
+    () => new Map((shared?.issues ?? []).map((issue) => [issue.sequence, issue])),
+    [shared?.issues],
+  );
   useDocumentTitle(
     titlePath(shared?.project.name, shared && (shared.document.title || t('untitled'))),
   );
@@ -59,12 +65,17 @@ export default function PublicDocumentPage({ token }: { token: string }) {
         {shared.pages.length > 1 && (
           <DocumentShareTree pages={shared.pages} currentId={shared.document.id} onOpen={open} />
         )}
-        <DocumentShareArticle
-          token={token}
-          document={shared.document}
-          pages={shared.pages}
-          onOpen={open}
-        />
+        <IssueRefsProvider
+          refs={issues.size > 0 ? [`share.${shared.project.key}`] : []}
+          shared={issues}
+        >
+          <DocumentShareArticle
+            token={token}
+            document={shared.document}
+            pages={shared.pages}
+            onOpen={open}
+          />
+        </IssueRefsProvider>
       </div>
     </PublicShareFrame>
   );

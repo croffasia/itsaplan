@@ -39,6 +39,7 @@ export interface ProjectDocument extends ProjectDocumentSummary {
   shareToken: string | null;
   shareExpiresAt: string | null;
   shareIncludeChildren: boolean;
+  shareIncludeIssues: boolean;
 }
 
 export interface DocumentIssueLink {

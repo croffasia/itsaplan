@@ -1,5 +1,5 @@
 {
-  "id": "d84ac2b4-9e18-49c1-bffe-33db595f573a",
+  "id": "a04de379-844f-4991-8ec7-1b18321f3d25",
   "prevId": "3dec5873-79d6-437e-8e01-6cfc581b1999",
   "version": "7",
   "dialect": "postgresql",
@@ -9797,6 +9797,13 @@
         },
         "share_include_children": {
           "name": "share_include_children",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "share_include_issues": {
+          "name": "share_include_issues",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,

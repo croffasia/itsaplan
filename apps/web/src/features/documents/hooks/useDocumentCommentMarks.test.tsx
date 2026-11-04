@@ -69,6 +69,7 @@ const projectDocument: ProjectDocument = {
   shareToken: null,
   shareExpiresAt: null,
   shareIncludeChildren: false,
+  shareIncludeIssues: false,
 };
 
 let dom: JSDOM;

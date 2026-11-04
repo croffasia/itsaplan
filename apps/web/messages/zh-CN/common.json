@@ -135,6 +135,8 @@
     "fullDetailsHint": "负责人、标签、自定义字段和活动记录。",
     "includeSubpages": "包含子页面",
     "includeSubpagesHint": "拥有链接的任何人也可以阅读此页面下的页面。",
+    "includeIssues": "显示关联的事项",
+    "includeIssuesHint": "页面中提到的本项目事项会显示标题和状态。只有事项本身有公开链接时才能打开。",
     "stopSharing": "停止共享",
     "createLink": "创建链接",
     "copy": "复制",

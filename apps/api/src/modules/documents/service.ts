@@ -94,6 +94,7 @@ export interface DocumentRow extends DocumentSummaryRow {
   shareToken: string | null;
   shareExpiresAt: string | null;
   shareIncludeChildren: boolean;
+  shareIncludeIssues: boolean;
 }
 
 export interface DocumentRevisionSummaryRow {
@@ -139,6 +140,7 @@ export const revokedDocumentShare = {
   shareToken: null,
   shareExpiresAt: null,
   shareIncludeChildren: false,
+  shareIncludeIssues: false,
 };
 
 function mapDocument(row: typeof projectDocument.$inferSelect, isFavorite = false): DocumentRow {
@@ -151,6 +153,7 @@ function mapDocument(row: typeof projectDocument.$inferSelect, isFavorite = fals
     shareToken: shared ? row.shareToken : null,
     shareExpiresAt: shared && row.shareExpiresAt ? iso(row.shareExpiresAt) : null,
     shareIncludeChildren: shared && row.shareIncludeChildren,
+    shareIncludeIssues: shared && row.shareIncludeIssues,
     createdAt: iso(row.createdAt),
     updatedAt: iso(row.updatedAt),
   };
@@ -166,6 +169,7 @@ function summaryOf(
     shareToken: _shareToken,
     shareExpiresAt: _shareExpiresAt,
     shareIncludeChildren: _shareIncludeChildren,
+    shareIncludeIssues: _shareIncludeIssues,
     ...summary
   } = mapDocument(row, isFavorite);
   return summary;

@@ -418,7 +418,8 @@
   color: var(--foreground);
   background: color-mix(in oklab, var(--warning) 45%, transparent);
 }
-a.issue-ref {
+a.issue-ref,
+span.issue-ref {
   display: inline-flex;
   align-items: baseline;
   gap: 0.35em;
@@ -436,6 +437,9 @@ a.issue-ref {
 }
 .md-content a.issue-ref {
   text-decoration: none;
+}
+span.issue-ref {
+  cursor: default;
 }
 .issue-ref-dot {
   display: inline-block;

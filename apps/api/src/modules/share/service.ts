@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { db, documentAsset, issue, projectDocument, projectView } from '@repo/db';
+import { db, documentAsset, issue, projectColumn, projectDocument, projectView } from '@repo/db';
 import {
   and,
   asc,
@@ -249,13 +249,20 @@ export async function enableIssueShare(
 }
 
 // What an enable call writes, shared by issues, views and documents: the token, the
-// expiry, and the link's one choice (`extended`, or a document's `includeChildren`).
-// An undefined choice leaves the column as it stands.
+// expiry, and the link's choice (`extended`, or a document's `includeChildren`).
+// An undefined choice leaves the column as it stands. `live` tells a caller with a
+// second choice whether the link is new (see nextChoice).
 function nextShare(
   current: { token: string | null; expiresAt: Date | null },
   choice: boolean | undefined,
   expiresAt: ShareExpiry,
-): { token: string; expiresAt: Date | null; choice: boolean | undefined; state: ShareState } {
+): {
+  token: string;
+  expiresAt: Date | null;
+  choice: boolean | undefined;
+  live: boolean;
+  state: ShareState;
+} {
   const live = current.token !== null && shareLive(current.expiresAt);
   const token = live ? current.token! : randomUUID();
   let expiry: Date | null = null;
@@ -264,10 +271,15 @@ function nextShare(
   return {
     token,
     expiresAt: expiry,
-    // A fresh link starts with the choice off unless the caller turns it on.
-    choice: choice ?? (live ? undefined : false),
+    choice: nextChoice(choice, live),
+    live,
     state: { token, expiresAt: expiry ? iso(expiry) : null },
   };
+}
+
+// A fresh link starts with a choice off unless the caller turns it on.
+function nextChoice(choice: boolean | undefined, live: boolean): boolean | undefined {
+  return choice ?? (live ? undefined : false);
 }
 
 // Revokes sharing for an issue. Returns false if the issue does not exist.
@@ -440,6 +452,17 @@ export interface SharedDocumentBundle {
   };
   // The pages the link opens, the shared page first with no parent.
   pages: SharedDocumentPage[];
+  // The issues of the project this page names, when the link shows them.
+  issues: SharedDocumentIssue[];
+}
+
+// An issue a shared page names: what its chip shows, and its own share token while the
+// issue itself has a live public link.
+export interface SharedDocumentIssue {
+  sequence: number;
+  title: string;
+  state: { name: string; color: string };
+  shareToken: string | null;
 }
 
 // The project of a document that may be shared, for the enable/revoke guard. A private
@@ -458,6 +481,7 @@ const readablePage = and(eq(projectDocument.isPrivate, false), isNull(projectDoc
 export async function enableDocumentShare(
   documentId: number,
   includeChildren?: boolean,
+  includeIssues?: boolean,
   expiresAt?: ShareExpiry,
 ): Promise<ShareState | null> {
   const rows = await db
@@ -478,6 +502,7 @@ export async function enableDocumentShare(
       shareToken: next.token,
       shareExpiresAt: next.expiresAt,
       shareIncludeChildren: next.choice,
+      shareIncludeIssues: nextChoice(includeIssues, next.live),
     })
     .where(and(eq(projectDocument.id, documentId), readablePage))
     .returning({ id: projectDocument.id });
@@ -498,7 +523,7 @@ export async function disableDocumentShare(documentId: number): Promise<boolean>
 // carries the token.
 async function sharedDocumentPages(
   token: string,
-): Promise<{ projectId: number; pages: SharedDocumentPage[] } | null> {
+): Promise<{ projectId: number; includeIssues: boolean; pages: SharedDocumentPage[] } | null> {
   const [root] = await db
     .select({
       id: projectDocument.id,
@@ -506,6 +531,7 @@ async function sharedDocumentPages(
       title: projectDocument.title,
       icon: projectDocument.icon,
       includeChildren: projectDocument.shareIncludeChildren,
+      includeIssues: projectDocument.shareIncludeIssues,
     })
     .from(projectDocument)
     .where(
@@ -519,7 +545,8 @@ async function sharedDocumentPages(
   const pages: SharedDocumentPage[] = [
     { id: root.id, parentId: null, title: root.title, icon: root.icon },
   ];
-  if (!root.includeChildren) return { projectId: root.projectId, pages };
+  const shared = { projectId: root.projectId, includeIssues: root.includeIssues, pages };
+  if (!root.includeChildren) return shared;
   const rows = await db
     .select({
       id: projectDocument.id,
@@ -540,7 +567,7 @@ async function sharedDocumentPages(
   // Walk down from the shared page. A private or archived page is not among the rows,
   // so its subtree is never reached.
   for (let i = 0; i < pages.length; i++) pages.push(...(children.get(pages[i].id) ?? []));
-  return { projectId: root.projectId, pages };
+  return shared;
 }
 
 // The bundle for a shared document link: the shared page, or one of the subpages its
@@ -574,7 +601,57 @@ export async function getSharedDocument(
       updatedAt: iso(row.updatedAt),
     },
     pages: shared.pages,
+    issues: shared.includeIssues
+      ? await namedIssues(project.id, project.key, [row.content, JSON.stringify(row.contentJson)])
+      : [],
   };
+}
+
+// The most issues one shared page resolves.
+const MAX_NAMED_ISSUES = 200;
+
+// The issues of a project that a page's text names by identifier (KEY-123), archived
+// ones left out.
+async function namedIssues(
+  projectId: number,
+  key: string,
+  texts: string[],
+): Promise<SharedDocumentIssue[]> {
+  if (!/^[A-Z0-9]+$/.test(key)) return [];
+  const pattern = new RegExp(`(?<![A-Za-z0-9])${key}-([1-9]\\d{0,8})(?![A-Za-z0-9])`, 'g');
+  const sequences = new Set<number>();
+  for (const text of texts) {
+    for (const match of text.matchAll(pattern)) {
+      if (sequences.size >= MAX_NAMED_ISSUES) break;
+      sequences.add(Number(match[1]));
+    }
+  }
+  if (sequences.size === 0) return [];
+  const rows = await db
+    .select({
+      sequence: issue.sequenceNumber,
+      title: issue.title,
+      stateName: projectColumn.name,
+      stateColor: projectColumn.color,
+      shareToken: issue.shareToken,
+      shareExpiresAt: issue.shareExpiresAt,
+    })
+    .from(issue)
+    .innerJoin(projectColumn, eq(projectColumn.id, issue.columnId))
+    .where(
+      and(
+        eq(issue.projectId, projectId),
+        inArray(issue.sequenceNumber, [...sequences]),
+        isNull(issue.archivedAt),
+      ),
+    )
+    .orderBy(asc(issue.sequenceNumber));
+  return rows.map((row) => ({
+    sequence: row.sequence,
+    title: row.title,
+    state: { name: row.stateName, color: row.stateColor },
+    shareToken: row.shareToken && shareLive(row.shareExpiresAt) ? row.shareToken : null,
+  }));
 }
 
 // An asset of a page the link opens, or null. An asset of any other page is not

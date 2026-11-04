@@ -135,6 +135,8 @@
     "fullDetailsHint": "Asignatarios, etiquetas, campos personalizados y actividad.",
     "includeSubpages": "Incluir subpáginas",
     "includeSubpagesHint": "Quien tenga el enlace también puede leer las páginas que hay debajo de esta.",
+    "includeIssues": "Mostrar incidencias vinculadas",
+    "includeIssuesHint": "Las incidencias de este proyecto que nombran las páginas muestran su título y estado. Una incidencia solo se abre si tiene su propio enlace público.",
     "stopSharing": "Dejar de compartir",
     "createLink": "Crear enlace",
     "copy": "Copiar",

@@ -135,6 +135,8 @@
     "fullDetailsHint": "Responsables, étiquettes, champs personnalisés et activité.",
     "includeSubpages": "Inclure les sous-pages",
     "includeSubpagesHint": "Toute personne disposant du lien peut aussi lire les pages situées sous celle-ci.",
+    "includeIssues": "Afficher les tickets liés",
+    "includeIssuesHint": "Les tickets de ce projet cités dans les pages affichent leur titre et leur statut. Un ticket ne s’ouvre que s’il a son propre lien public.",
     "stopSharing": "Arrêter le partage",
     "createLink": "Créer un lien",
     "copy": "Copier",

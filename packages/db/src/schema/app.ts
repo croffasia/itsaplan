@@ -2190,6 +2190,8 @@ export const projectDocument = pgTable(
     shareExpiresAt: timestamp('share_expires_at', { withTimezone: true }),
     // Whether the share link also opens the page's subpages.
     shareIncludeChildren: boolean('share_include_children').notNull().default(false),
+    // Whether the shared pages show the title and state of the issues they name.
+    shareIncludeIssues: boolean('share_include_issues').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

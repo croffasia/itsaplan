@@ -28,8 +28,7 @@ export default function DocumentShareButton({
   const [open, setOpen] = useState(false);
   const label = document.shareToken ? t('sharedPublicly') : t('sharePublicly');
 
-  // Refetches the page so the shareToken, shareIncludeChildren and shareExpiresAt the
-  // dialog reads stay in sync.
+  // Refetches the page so the share fields the dialog reads stay in sync.
   async function share(options: ShareOptions) {
     const state = await enableDocumentShare(document.id, options);
     await qc.invalidateQueries({ queryKey: qk.document(projectKey, document.id) });
@@ -66,7 +65,10 @@ export default function DocumentShareButton({
         onOpenChange={setOpen}
         title={t('sharePage')}
         token={document.shareToken}
-        option={{ name: 'includeChildren', checked: document.shareIncludeChildren }}
+        options={[
+          { name: 'includeChildren', checked: document.shareIncludeChildren },
+          { name: 'includeIssues', checked: document.shareIncludeIssues },
+        ]}
         expiresAt={document.shareExpiresAt}
         enable={share}
         disable={disable}

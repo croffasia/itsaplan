@@ -33,13 +33,38 @@ export interface SharedViewBundle {
   issues: BoardIssue[];
 }
 
+export interface SharedDocumentPage {
+  id: number;
+  parentId: number | null;
+  title: string;
+  icon: string | null;
+}
+
+// A shared page, or one of its subpages. Asset URLs in the content already point at
+// the token-scoped media route.
+export interface SharedDocumentBundle {
+  project: { name: string; key: string };
+  document: {
+    id: number;
+    title: string;
+    icon: string | null;
+    content: string;
+    contentJson: Record<string, unknown> | null;
+    fullWidth: boolean;
+    updatedAt: string;
+  };
+  // The pages the link opens, the shared page first with no parent.
+  pages: SharedDocumentPage[];
+}
+
 // Public read-only sharing. Enabling returns the link token and its expiry and sets
-// how much it exposes and when it stops working; calling it again on a shared
+// what it exposes (`extended`, or a document's `includeChildren`) and when it stops working; calling it again on a shared
 // entity keeps the link and only changes what is sent (an omitted field stays as
 // it is, expiresAt null means never). An expired link is replaced by a new one.
 // Disable revokes it. The getShared* reads need no session (public /share/* routes).
 export interface ShareOptions {
   extended?: boolean;
+  includeChildren?: boolean;
   expiresAt?: string | null;
 }
 
@@ -73,3 +98,17 @@ export const getSharedView = (token: string) => request<SharedViewBundle>(`/shar
 
 export const getSharedViewIssue = (token: string, issueId: number) =>
   request<SharedIssueBundle>(`/share/view/${token}/issues/${issueId}`);
+
+export const enableDocumentShare = (id: number, options: ShareOptions) =>
+  request<ShareState>(`/documents/${id}/share`, {
+    method: 'POST',
+    body: JSON.stringify(options),
+  });
+
+export const disableDocumentShare = (id: number) =>
+  request<void>(`/documents/${id}/share`, { method: 'DELETE' });
+
+export const getSharedDocument = (token: string, documentId?: number) =>
+  request<SharedDocumentBundle>(
+    documentId ? `/share/document/${token}/documents/${documentId}` : `/share/document/${token}`,
+  );

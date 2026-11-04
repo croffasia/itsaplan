@@ -133,6 +133,8 @@
     "shareLink": "Link de compartilhamento",
     "fullDetails": "Detalhes completos da issue",
     "fullDetailsHint": "Responsáveis, etiquetas, campos personalizados e atividade.",
+    "includeSubpages": "Incluir subpáginas",
+    "includeSubpagesHint": "Quem tiver o link também pode ler as páginas abaixo desta.",
     "stopSharing": "Parar compartilhamento",
     "createLink": "Criar link",
     "copy": "Copiar",

@@ -133,6 +133,8 @@
     "shareLink": "Compartir enlace",
     "fullDetails": "Detalles completos del ticket",
     "fullDetailsHint": "Asignatarios, etiquetas, campos personalizados y actividad.",
+    "includeSubpages": "Incluir subpáginas",
+    "includeSubpagesHint": "Quien tenga el enlace también puede leer las páginas que hay debajo de esta.",
     "stopSharing": "Dejar de compartir",
     "createLink": "Crear enlace",
     "copy": "Copiar",

@@ -1,7 +1,19 @@
 import { randomUUID } from 'node:crypto';
-import { db, issue, projectView } from '@repo/db';
-import { and, eq, gt, isNotNull, isNull, lte, or, type AnyColumn, type SQL } from 'drizzle-orm';
-import { iso, shareLive } from '#shared/lib';
+import { db, documentAsset, issue, projectDocument, projectView } from '@repo/db';
+import {
+  and,
+  asc,
+  eq,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  or,
+  type AnyColumn,
+  type SQL,
+} from 'drizzle-orm';
+import { HttpError, iso, shareLive } from '#shared/lib';
 import { getProjectById, type ProjectRow } from '#modules/projects/service';
 import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '#modules/issue-types/service';
@@ -18,8 +30,9 @@ import {
 } from '#modules/issues/links';
 import { getParentRef, listSubtasks, type IssueRef } from '#modules/issues/subtasks';
 import { applyFilters } from '#modules/views/filters';
+import { revokedDocumentShare, rewriteAssetUrls } from '#modules/documents/service';
 
-// Public read-only sharing: an issue or a saved view carries an unguessable
+// Public read-only sharing: an issue, a saved view or a document carries an unguessable
 // share_token that, when set, makes it readable without a session through the
 // /share/* routes. Enabling sets the token; revoking clears it. The public reads
 // return a self-contained bundle (project scaffold + the entity) so the read-only
@@ -185,7 +198,7 @@ function activeShare(expiresAt: AnyColumn): SQL {
 // it revoked. Runs from the api's background loop.
 export async function sweepExpiredShares(): Promise<number> {
   const now = new Date();
-  const [issues, views] = await Promise.all([
+  const [issues, views, documents] = await Promise.all([
     db
       .update(issue)
       .set({ shareToken: null, shareExtended: false, shareExpiresAt: null })
@@ -196,8 +209,13 @@ export async function sweepExpiredShares(): Promise<number> {
       .set({ shareToken: null, shareExtended: false, shareExpiresAt: null })
       .where(and(isNotNull(projectView.shareToken), lte(projectView.shareExpiresAt, now)))
       .returning({ id: projectView.id }),
+    db
+      .update(projectDocument)
+      .set(revokedDocumentShare)
+      .where(and(isNotNull(projectDocument.shareToken), lte(projectDocument.shareExpiresAt, now)))
+      .returning({ id: projectDocument.id }),
   ]);
-  return issues.length + views.length;
+  return issues.length + views.length + documents.length;
 }
 
 // --- Enable / revoke ------------------------------------------------------------
@@ -223,32 +241,33 @@ export async function enableIssueShare(
     .where(eq(issue.id, issueId));
   if (rows.length === 0) return null;
   const next = nextShare(rows[0], extended, expiresAt);
-  await db.update(issue).set(next.set).where(eq(issue.id, issueId));
+  await db
+    .update(issue)
+    .set({ shareToken: next.token, shareExpiresAt: next.expiresAt, shareExtended: next.choice })
+    .where(eq(issue.id, issueId));
   return next.state;
 }
 
-// The token and the column values an enable call writes, shared by issues and views.
+// What an enable call writes, shared by issues, views and documents: the token, the
+// expiry, and the link's one choice (`extended`, or a document's `includeChildren`).
+// An undefined choice leaves the column as it stands.
 function nextShare(
   current: { token: string | null; expiresAt: Date | null },
-  extended: boolean | undefined,
+  choice: boolean | undefined,
   expiresAt: ShareExpiry,
-): {
-  set: { shareToken: string; shareExtended?: boolean; shareExpiresAt: Date | null };
-  state: ShareState;
-} {
+): { token: string; expiresAt: Date | null; choice: boolean | undefined; state: ShareState } {
   const live = current.token !== null && shareLive(current.expiresAt);
   const token = live ? current.token! : randomUUID();
   let expiry: Date | null = null;
   if (expiresAt !== undefined) expiry = expiresAt;
   else if (live) expiry = current.expiresAt;
-  const set: { shareToken: string; shareExtended?: boolean; shareExpiresAt: Date | null } = {
-    shareToken: token,
-    shareExpiresAt: expiry,
+  return {
+    token,
+    expiresAt: expiry,
+    // A fresh link starts with the choice off unless the caller turns it on.
+    choice: choice ?? (live ? undefined : false),
+    state: { token, expiresAt: expiry ? iso(expiry) : null },
   };
-  // A fresh link starts reduced unless the caller asks for more.
-  if (extended !== undefined) set.shareExtended = extended;
-  else if (!live) set.shareExtended = false;
-  return { set, state: { token, expiresAt: expiry ? iso(expiry) : null } };
 }
 
 // Revokes sharing for an issue. Returns false if the issue does not exist.
@@ -273,7 +292,10 @@ export async function enableViewShare(
     .where(eq(projectView.id, viewId));
   if (rows.length === 0) return null;
   const next = nextShare(rows[0], extended, expiresAt);
-  await db.update(projectView).set(next.set).where(eq(projectView.id, viewId));
+  await db
+    .update(projectView)
+    .set({ shareToken: next.token, shareExpiresAt: next.expiresAt, shareExtended: next.choice })
+    .where(eq(projectView.id, viewId));
   return next.state;
 }
 
@@ -390,4 +412,194 @@ async function issueIdByToken(token: string): Promise<number> {
     .from(issue)
     .where(and(eq(issue.shareToken, token), activeShare(issue.shareExpiresAt)));
   return rows[0]?.id ?? 0;
+}
+
+// --- Documents ------------------------------------------------------------------
+
+// A shared page, and with `includeChildren` its subpages, read without a session. A
+// private or archived page is never readable through a link, and neither is anything
+// below it.
+
+export interface SharedDocumentPage {
+  id: number;
+  parentId: number | null;
+  title: string;
+  icon: string | null;
+}
+
+export interface SharedDocumentBundle {
+  project: { name: string; key: string };
+  document: {
+    id: number;
+    title: string;
+    icon: string | null;
+    content: string;
+    contentJson: Record<string, unknown> | null;
+    fullWidth: boolean;
+    updatedAt: string;
+  };
+  // The pages the link opens, the shared page first with no parent.
+  pages: SharedDocumentPage[];
+}
+
+// The project of a document that may be shared, for the enable/revoke guard. A private
+// page has no public link, so it is not found here.
+export async function shareableDocumentProjectId(documentId: number): Promise<number | null> {
+  const rows = await db
+    .select({ projectId: projectDocument.projectId })
+    .from(projectDocument)
+    .where(and(eq(projectDocument.id, documentId), eq(projectDocument.isPrivate, false)));
+  return rows[0]?.projectId ?? null;
+}
+
+const readablePage = and(eq(projectDocument.isPrivate, false), isNull(projectDocument.archivedAt));
+
+// Enables sharing for a document, the same way enableIssueShare does for an issue.
+export async function enableDocumentShare(
+  documentId: number,
+  includeChildren?: boolean,
+  expiresAt?: ShareExpiry,
+): Promise<ShareState | null> {
+  const rows = await db
+    .select({
+      token: projectDocument.shareToken,
+      expiresAt: projectDocument.shareExpiresAt,
+      archivedAt: projectDocument.archivedAt,
+    })
+    .from(projectDocument)
+    .where(eq(projectDocument.id, documentId));
+  if (rows.length === 0) return null;
+  if (rows[0].archivedAt) throw new HttpError(409, 'Restore this document before sharing it.');
+  const next = nextShare(rows[0], includeChildren, expiresAt);
+  // Checked again in the write: a page made private meanwhile must not get a token.
+  const written = await db
+    .update(projectDocument)
+    .set({
+      shareToken: next.token,
+      shareExpiresAt: next.expiresAt,
+      shareIncludeChildren: next.choice,
+    })
+    .where(and(eq(projectDocument.id, documentId), readablePage))
+    .returning({ id: projectDocument.id });
+  if (written.length === 0) return null;
+  return next.state;
+}
+
+export async function disableDocumentShare(documentId: number): Promise<boolean> {
+  const rows = await db
+    .update(projectDocument)
+    .set(revokedDocumentShare)
+    .where(eq(projectDocument.id, documentId))
+    .returning({ id: projectDocument.id });
+  return rows.length > 0;
+}
+
+// The shared page of a token and the pages its link opens, or null when no live link
+// carries the token.
+async function sharedDocumentPages(
+  token: string,
+): Promise<{ projectId: number; pages: SharedDocumentPage[] } | null> {
+  const [root] = await db
+    .select({
+      id: projectDocument.id,
+      projectId: projectDocument.projectId,
+      title: projectDocument.title,
+      icon: projectDocument.icon,
+      includeChildren: projectDocument.shareIncludeChildren,
+    })
+    .from(projectDocument)
+    .where(
+      and(
+        eq(projectDocument.shareToken, token),
+        activeShare(projectDocument.shareExpiresAt),
+        readablePage,
+      ),
+    );
+  if (!root) return null;
+  const pages: SharedDocumentPage[] = [
+    { id: root.id, parentId: null, title: root.title, icon: root.icon },
+  ];
+  if (!root.includeChildren) return { projectId: root.projectId, pages };
+  const rows = await db
+    .select({
+      id: projectDocument.id,
+      parentId: projectDocument.parentId,
+      title: projectDocument.title,
+      icon: projectDocument.icon,
+    })
+    .from(projectDocument)
+    .where(and(eq(projectDocument.projectId, root.projectId), readablePage))
+    .orderBy(asc(projectDocument.position), asc(projectDocument.id));
+  const children = new Map<number, SharedDocumentPage[]>();
+  for (const row of rows) {
+    if (row.parentId === null) continue;
+    const siblings = children.get(row.parentId);
+    if (siblings) siblings.push(row);
+    else children.set(row.parentId, [row]);
+  }
+  // Walk down from the shared page. A private or archived page is not among the rows,
+  // so its subtree is never reached.
+  for (let i = 0; i < pages.length; i++) pages.push(...(children.get(pages[i].id) ?? []));
+  return { projectId: root.projectId, pages };
+}
+
+// The bundle for a shared document link: the shared page, or one of the subpages its
+// link opens. Null when the token is unknown or the page is not one the link opens.
+export async function getSharedDocument(
+  token: string,
+  documentId?: number,
+): Promise<SharedDocumentBundle | null> {
+  const shared = await sharedDocumentPages(token);
+  if (!shared) return null;
+  const id = documentId ?? shared.pages[0].id;
+  if (!shared.pages.some((page) => page.id === id)) return null;
+  const [[row], project] = await Promise.all([
+    db.select().from(projectDocument).where(eq(projectDocument.id, id)),
+    getProjectById(shared.projectId),
+  ]);
+  if (!row || !project) return null;
+  // Asset URLs need a session. The page reads them through the token instead, from
+  // the web's public /media route.
+  const assetUrl = (_match: string, _prefix: string | undefined, publicId: string) =>
+    `/media/share/document/${token}/assets/${publicId}/raw`;
+  return {
+    project: { name: project.name, key: project.key },
+    document: {
+      id: row.id,
+      title: row.title,
+      icon: row.icon,
+      content: rewriteAssetUrls(row.content, null, assetUrl),
+      contentJson: rewriteAssetUrls(row.contentJson, null, assetUrl),
+      fullWidth: row.fullWidth,
+      updatedAt: iso(row.updatedAt),
+    },
+    pages: shared.pages,
+  };
+}
+
+// An asset of a page the link opens, or null. An asset of any other page is not
+// found, even when another page embeds it.
+export async function getSharedDocumentAsset(
+  token: string,
+  publicId: string,
+): Promise<{ s3Key: string; contentType: string; filename: string } | null> {
+  const shared = await sharedDocumentPages(token);
+  if (!shared) return null;
+  const rows = await db
+    .select({
+      s3Key: documentAsset.s3Key,
+      contentType: documentAsset.contentType,
+      filename: documentAsset.filename,
+    })
+    .from(documentAsset)
+    .where(
+      and(
+        eq(documentAsset.publicId, publicId),
+        inArray(
+          documentAsset.documentId,
+          shared.pages.map((page) => page.id),
+        ),
+      ),
+    );
+  return rows[0] ?? null;
 }

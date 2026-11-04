@@ -54,6 +54,9 @@ function projectDocument(version: number, content: string): ProjectDocument {
     updatedByUserId: 'user-1',
     createdAt: '2026-09-01T00:00:00.000Z',
     updatedAt: '2026-09-01T00:00:00.000Z',
+    shareToken: null,
+    shareExpiresAt: null,
+    shareIncludeChildren: false,
   };
 }
 

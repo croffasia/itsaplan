@@ -2,11 +2,12 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { api, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
-import { db, issue as issueTable, projectView } from '@repo/db';
+import { createRole } from '#tests/helpers/roles';
+import { db, issue as issueTable, projectDocument, projectView } from '@repo/db';
 import { eq } from 'drizzle-orm';
 import { sweepExpiredShares } from '#modules/share/service';
 
-// Public read-only sharing. Enabling sharing on an issue or a saved view sets an
+// Public read-only sharing. Enabling sharing on an issue, a saved view or a document sets an
 // unguessable token; the /share/* GET routes then return a self-contained bundle
 // (project scaffold + entity) with no session. Revoking clears the token, so the
 // link stops working. The enable/revoke routes are gated by the same permission as
@@ -554,6 +555,216 @@ describe('share', () => {
       expect(listed.shareToken).toBeNull();
 
       expect(await sweepExpiredShares()).toBe(1);
+    });
+  });
+
+  // A shared page is read without a session, and with includeChildren its subpages too.
+  // Its assets load through the token, and only those of the pages the link opens.
+  describe('document sharing', () => {
+    type Client = ReturnType<typeof authedApi>;
+    const documents = (client: Client) => client.projects({ projectKey: 'MKT' }).documents;
+
+    async function page(client: Client, title: string, parentId: number | null = null) {
+      return (await documents(client).post({ title, parentId, content: `# ${title}` })).data!;
+    }
+
+    // Root > Child > Grandchild, with Parent above Root and Sibling beside it.
+    async function tree() {
+      const { asOwner } = await setup();
+      const parent = await page(asOwner, 'Parent');
+      const root = await page(asOwner, 'Root', parent.id);
+      const sibling = await page(asOwner, 'Sibling', parent.id);
+      const child = await page(asOwner, 'Child', root.id);
+      const grandchild = await page(asOwner, 'Grandchild', child.id);
+      return { asOwner, parent, root, sibling, child, grandchild };
+    }
+
+    const subpage = (token: string, documentId: number) =>
+      api.share.document({ token }).documents({ documentId }).get();
+
+    it('enables a link, serves the page, reports it on the document, then revokes it', async () => {
+      const { asOwner, root } = await tree();
+      const enabled = await asOwner.documents({ documentId: root.id }).share.post();
+      expect(enabled.status).toBe(200);
+      const { token } = enabled.data!;
+
+      const shared = await api.share.document({ token }).get();
+      expect(shared.status).toBe(200);
+      expect(shared.data.document).toMatchObject({ id: root.id, title: 'Root', content: '# Root' });
+      expect(shared.data.project).toEqual({ name: 'Marketing', key: 'MKT' });
+      expect(shared.data.pages).toEqual([
+        { id: root.id, parentId: null, title: 'Root', icon: null },
+      ]);
+
+      const read = await documents(asOwner)({ documentId: root.id }).get();
+      expect(read.data).toMatchObject({ shareToken: token, shareIncludeChildren: false });
+
+      expect((await asOwner.documents({ documentId: root.id }).share.delete()).status).toBe(204);
+      expect((await api.share.document({ token }).get()).status).toBe(404);
+      const after = await documents(asOwner)({ documentId: root.id }).get();
+      expect(after.data!.shareToken).toBeNull();
+    });
+
+    it('opens the subpages only when the link includes them, never the parent or a sibling', async () => {
+      const { asOwner, parent, root, sibling, child, grandchild } = await tree();
+      const { token } = (await asOwner.documents({ documentId: root.id }).share.post()).data!;
+      expect((await subpage(token, child.id)).status).toBe(404);
+
+      const same = await asOwner
+        .documents({ documentId: root.id })
+        .share.post({ includeChildren: true });
+      expect(same.data!.token).toBe(token);
+      const shared = await api.share.document({ token }).get();
+      expect(shared.data.pages.map((p: { id: number }) => p.id)).toEqual([
+        root.id,
+        child.id,
+        grandchild.id,
+      ]);
+      const opened = await subpage(token, grandchild.id);
+      expect(opened.status).toBe(200);
+      expect(opened.data.document).toMatchObject({ id: grandchild.id, title: 'Grandchild' });
+      expect((await subpage(token, parent.id)).status).toBe(404);
+      expect((await subpage(token, sibling.id)).status).toBe(404);
+
+      await asOwner.documents({ documentId: root.id }).share.post({ includeChildren: false });
+      expect((await subpage(token, child.id)).status).toBe(404);
+    });
+
+    it('leaves private and archived subpages and everything below them out', async () => {
+      const { asOwner, root, child, grandchild } = await tree();
+      const secret = (
+        await documents(asOwner).post({ title: 'Secret', parentId: root.id, isPrivate: true })
+      ).data!;
+      const { token } = (
+        await asOwner.documents({ documentId: root.id }).share.post({ includeChildren: true })
+      ).data!;
+      expect((await subpage(token, secret.id)).status).toBe(404);
+
+      await documents(asOwner)({ documentId: child.id }).archive.post({ version: child.version });
+      const shared = await api.share.document({ token }).get();
+      expect(shared.data.pages.map((p: { id: number }) => p.id)).toEqual([root.id]);
+      expect((await subpage(token, child.id)).status).toBe(404);
+      expect((await subpage(token, grandchild.id)).status).toBe(404);
+    });
+
+    it('serves no archived page, and refuses to share one', async () => {
+      const { asOwner, root, sibling } = await tree();
+      const { token } = (await asOwner.documents({ documentId: root.id }).share.post()).data!;
+      await documents(asOwner)({ documentId: root.id }).archive.post({ version: root.version });
+      expect((await api.share.document({ token }).get()).status).toBe(404);
+
+      await documents(asOwner)({ documentId: sibling.id }).archive.post({
+        version: sibling.version,
+      });
+      const res = await asOwner.documents({ documentId: sibling.id }).share.post();
+      expect(res.status).toBe(409);
+    });
+
+    it('has no link for a private page, and making a page private revokes it', async () => {
+      const { asOwner, root } = await tree();
+      const secret = (await documents(asOwner).post({ title: 'Secret', isPrivate: true })).data!;
+      expect((await asOwner.documents({ documentId: secret.id }).share.post()).status).toBe(404);
+
+      const { token } = (await asOwner.documents({ documentId: root.id }).share.post()).data!;
+      const made = await documents(asOwner)({ documentId: root.id }).access.post({
+        version: root.version,
+        isPrivate: true,
+      });
+      expect(made.data).toMatchObject({ isPrivate: true, shareToken: null });
+      await documents(asOwner)({ documentId: root.id }).access.post({
+        version: made.data!.version,
+        isPrivate: false,
+      });
+      expect((await api.share.document({ token }).get()).status).toBe(404);
+    });
+
+    it('expires like an issue link and starts a new one without the subpages', async () => {
+      const { asOwner, root } = await tree();
+      const first = (
+        await asOwner.documents({ documentId: root.id }).share.post({
+          includeChildren: true,
+          expiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+        })
+      ).data!;
+      await db
+        .update(projectDocument)
+        .set({ shareExpiresAt: new Date(Date.now() - 1000) })
+        .where(eq(projectDocument.id, root.id));
+      expect((await api.share.document({ token: first.token }).get()).status).toBe(404);
+      const read = await documents(asOwner)({ documentId: root.id }).get();
+      expect(read.data).toMatchObject({ shareToken: null, shareExpiresAt: null });
+
+      expect(await sweepExpiredShares()).toBe(1);
+      const again = (await asOwner.documents({ documentId: root.id }).share.post()).data!;
+      expect(again.token).not.toBe(first.token);
+      expect(again.expiresAt).toBeNull();
+      const reread = await documents(asOwner)({ documentId: root.id }).get();
+      expect(reread.data!.shareIncludeChildren).toBe(false);
+      expect((await api.share.document({ token: first.token }).get()).status).toBe(404);
+    });
+
+    it('takes the permission to edit documents', async () => {
+      const { asOwner, root } = await tree();
+      const readerRole = await createRole(asOwner, 'MKT', {
+        name: 'Reader',
+        permissions: { documents: { read: true } },
+      });
+      const user = await signUpTestUser();
+      const invite = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: user.email, role: 'member' });
+      const reader = authedApi(user.cookie);
+      await reader.invites({ token: invite.data!.token }).accept.post();
+      await asOwner
+        .projects({ projectKey: 'MKT' })
+        .members({ userId: user.userId })
+        .patch({ role: 'member', roleId: readerRole.data!.id });
+      expect((await reader.documents({ documentId: root.id }).share.post()).status).toBe(403);
+      expect((await reader.documents({ documentId: root.id }).share.delete()).status).toBe(403);
+
+      const outsider = authedApi((await signUpTestUser()).cookie);
+      expect((await outsider.documents({ documentId: root.id }).share.post()).status).toBe(403);
+      expect((await asOwner.documents({ documentId: 999999 }).share.post()).status).toBe(404);
+    });
+
+    it('serves the assets of the pages the link opens and no others', async () => {
+      const { asOwner, root, sibling, child } = await tree();
+      const upload = async (documentId: number) =>
+        (
+          await documents(asOwner)({ documentId }).assets.post({
+            file: new File([`bytes of ${documentId}`], 'shot.png', { type: 'image/png' }),
+          })
+        ).data!;
+      const own = await upload(root.id);
+      const below = await upload(child.id);
+      const beside = await upload(sibling.id);
+      await documents(asOwner)({ documentId: root.id }).patch({
+        version: root.version,
+        content: `![own](/protected-media${own.url})\n\n![beside](/protected-media${beside.url})`,
+      });
+
+      const { token } = (await asOwner.documents({ documentId: root.id }).share.post()).data!;
+      const shared = await api.share.document({ token }).get();
+      expect(shared.data.document.content).toBe(
+        `![own](/media/share/document/${token}/assets/${own.id}/raw)\n\n` +
+          `![beside](/media/share/document/${token}/assets/${beside.id}/raw)`,
+      );
+
+      const asset = (publicId: string) =>
+        api.share.document({ token }).assets({ publicId }).raw.get();
+      const served = await asset(own.id);
+      expect(served.status).toBe(200);
+      expect(String(served.data)).toBe(`bytes of ${root.id}`);
+      expect(served.response.headers.get('x-content-type-options')).toBe('nosniff');
+      expect((await asset(beside.id)).status).toBe(404);
+      expect((await asset(below.id)).status).toBe(404);
+
+      await asOwner.documents({ documentId: root.id }).share.post({ includeChildren: true });
+      expect((await asset(below.id)).status).toBe(200);
+      expect((await asset(beside.id)).status).toBe(404);
+
+      await asOwner.documents({ documentId: root.id }).share.delete();
+      expect((await asset(own.id)).status).toBe(404);
     });
   });
 });

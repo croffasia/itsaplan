@@ -133,6 +133,8 @@
     "shareLink": "Share link",
     "fullDetails": "Full issue details",
     "fullDetailsHint": "Assignees, labels, custom fields and activity.",
+    "includeSubpages": "Include subpages",
+    "includeSubpagesHint": "Anyone with the link can also read the pages below this one.",
     "stopSharing": "Stop sharing",
     "createLink": "Create link",
     "copy": "Copy",

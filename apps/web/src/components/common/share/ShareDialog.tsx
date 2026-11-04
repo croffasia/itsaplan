@@ -33,7 +33,7 @@ function endOfDay(day: Date): string {
   return at.toISOString();
 }
 
-// A generic public-share dialog for an issue or a saved view. It shows the current
+// A generic public-share dialog for an issue, a saved view or a document. It shows the current
 // state (shared with a copyable link, or not shared) and toggles it through the
 // enable/disable callbacks. The caller supplies the current token, the enable
 // (returns the new token) and disable operations, and the path builder that turns a
@@ -43,7 +43,7 @@ export default function ShareDialog({
   onOpenChange,
   title,
   token,
-  extended,
+  option,
   expiresAt,
   enable,
   disable,
@@ -54,11 +54,12 @@ export default function ShareDialog({
   onOpenChange: (open: boolean) => void;
   title: string;
   token: string | null;
-  // How much the current link exposes.
-  extended: boolean;
+  // The current link's one setting: whether an issue or a view shows its full details,
+  // or whether a document's subpages come with it.
+  option: { name: 'extended' | 'includeChildren'; checked: boolean };
   // When the current link stops working, or null when it never does.
   expiresAt: string | null;
-  // Creates the link, or changes how much a live one exposes or when it expires;
+  // Creates the link, or changes the setting of a live one or when it expires;
   // returns its token and expiry.
   enable: (options: ShareOptions) => Promise<ShareState>;
   disable: () => Promise<void>;
@@ -105,10 +106,10 @@ export default function ShareDialog({
   }
 
   const onEnable = () =>
-    run(async () => apply(await enable({ extended: false })), t('createFailed'));
+    run(async () => apply(await enable({ [option.name]: false })), t('createFailed'));
 
-  const onSetExtended = (next: boolean) =>
-    run(async () => apply(await enable({ extended: next })), t('changeFailed'));
+  const onSetOption = (next: boolean) =>
+    run(async () => apply(await enable({ [option.name]: next })), t('changeFailed'));
 
   const onSetExpiry = (next: string | null) => {
     setExpiryOpen(false);
@@ -196,13 +197,17 @@ export default function ShareDialog({
 
             <label className="flex items-center justify-between gap-4 rounded-md border px-3 py-2.5">
               <span className="min-w-0">
-                <span className="block text-sm">{t('fullDetails')}</span>
-                <span className="block text-xs text-muted-foreground">{t('fullDetailsHint')}</span>
+                <span className="block text-sm">
+                  {option.name === 'extended' ? t('fullDetails') : t('includeSubpages')}
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  {option.name === 'extended' ? t('fullDetailsHint') : t('includeSubpagesHint')}
+                </span>
               </span>
               <Switch
-                checked={extended}
+                checked={option.checked}
                 disabled={busy}
-                onCheckedChange={(next) => void onSetExtended(next)}
+                onCheckedChange={(next) => void onSetOption(next)}
               />
             </label>
 

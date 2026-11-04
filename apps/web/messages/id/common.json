@@ -133,6 +133,8 @@
     "shareLink": "Bagikan tautan",
     "fullDetails": "Detail issue lengkap",
     "fullDetailsHint": "Penerima tugas, label, bidang khusus, dan aktivitas.",
+    "includeSubpages": "Sertakan subhalaman",
+    "includeSubpagesHint": "Siapa pun yang memiliki tautan juga dapat membaca halaman di bawah halaman ini.",
     "stopSharing": "Hentikan pembagian",
     "createLink": "Buat tautan",
     "copy": "Salin",

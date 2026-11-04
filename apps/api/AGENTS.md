@@ -468,6 +468,9 @@ Legacy clients may omit this field for compatibility.
 - **`GET /attachments/:publicId/raw` is public and unauthenticated** (used in
   `<img>`/`<video>`). Preserve its defenses if you touch it: `X-Content-Type-Options:
 nosniff`, forced download outside a strict media allowlist, locked-down CSP.
+- **`GET /share/document/:token/assets/:publicId/raw`** serves a Docs asset without a
+  session, only while the token is a live link to the page that holds it or to an
+  ancestor that shares its subpages. It sends the same response as the route above.
 
 ## Tests
 

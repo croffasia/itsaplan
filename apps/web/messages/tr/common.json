@@ -133,6 +133,8 @@
     "shareLink": "Paylaşım bağlantısı",
     "fullDetails": "Tüm iş ayrıntıları",
     "fullDetailsHint": "Sorumlular, etiketler, özel alanlar ve etkinlikler.",
+    "includeSubpages": "Alt sayfaları dahil et",
+    "includeSubpagesHint": "Bağlantıya sahip olan herkes bu sayfanın altındaki sayfaları da okuyabilir.",
     "stopSharing": "Paylaşımı durdur",
     "createLink": "Bağlantı oluştur",
     "copy": "Kopyala",

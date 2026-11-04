@@ -24,7 +24,7 @@ export class HttpError extends Error {
 export const iso = (value: Date): string => value.toISOString();
 
 // Whether a share link with this expiry still works: no expiry, or one still ahead.
-// Issues, views and the share module all read a link's state through it.
+// Issues, views, documents and the share module all read a link's state through it.
 export const shareLive = (expiresAt: Date | null): boolean =>
   expiresAt === null || expiresAt.getTime() > Date.now();
 

@@ -43,6 +43,9 @@ export const DocumentResponse = t.Composite([
   t.Object({
     content: t.String(),
     contentJson: t.Nullable(t.Record(t.String(), t.Any())),
+    shareToken: t.Nullable(t.String()),
+    shareExpiresAt: t.Nullable(t.String()),
+    shareIncludeChildren: t.Boolean(),
   }),
 ]);
 

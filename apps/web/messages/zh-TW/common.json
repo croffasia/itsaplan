@@ -133,6 +133,8 @@
     "shareLink": "共享連結",
     "fullDetails": "完整工作項目詳情",
     "fullDetailsHint": "負責人、標籤、自訂欄位和活動記錄。",
+    "includeSubpages": "包含子頁面",
+    "includeSubpagesHint": "擁有連結的任何人也可以閱讀此頁面下的頁面。",
     "stopSharing": "停止共享",
     "createLink": "建立連結",
     "copy": "複製",

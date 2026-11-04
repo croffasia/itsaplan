@@ -22,7 +22,7 @@ import {
   or,
   sql,
 } from 'drizzle-orm';
-import { HttpError, iso } from '#shared/lib';
+import { HttpError, iso, shareLive } from '#shared/lib';
 import { MENTION_HANDLE_RE } from '#shared/mentions';
 import { documentMentionHandles, fanOutTextMentions } from './mentions';
 import {
@@ -89,6 +89,11 @@ export interface DocumentSummaryRow {
 export interface DocumentRow extends DocumentSummaryRow {
   content: string;
   contentJson: Record<string, unknown> | null;
+  // The public share link. A link past its expiry reads as not shared even before
+  // the sweep clears it.
+  shareToken: string | null;
+  shareExpiresAt: string | null;
+  shareIncludeChildren: boolean;
 }
 
 export interface DocumentRevisionSummaryRow {
@@ -128,12 +133,24 @@ function documentAccess(userId: string) {
   return or(eq(projectDocument.isPrivate, false), eq(projectDocument.ownerUserId, userId));
 }
 
+// The columns that revoke a page's share link. A private page has no public link, so
+// making a page private writes them too.
+export const revokedDocumentShare = {
+  shareToken: null,
+  shareExpiresAt: null,
+  shareIncludeChildren: false,
+};
+
 function mapDocument(row: typeof projectDocument.$inferSelect, isFavorite = false): DocumentRow {
   const { archivedByAncestorId: _archivedByAncestorId, ...publicRow } = row;
+  const shared = row.shareToken !== null && shareLive(row.shareExpiresAt);
   return {
     ...publicRow,
     isFavorite,
     archivedAt: row.archivedAt ? iso(row.archivedAt) : null,
+    shareToken: shared ? row.shareToken : null,
+    shareExpiresAt: shared && row.shareExpiresAt ? iso(row.shareExpiresAt) : null,
+    shareIncludeChildren: shared && row.shareIncludeChildren,
     createdAt: iso(row.createdAt),
     updatedAt: iso(row.updatedAt),
   };
@@ -143,7 +160,14 @@ function summaryOf(
   row: typeof projectDocument.$inferSelect,
   isFavorite = false,
 ): DocumentSummaryRow {
-  const { content: _content, contentJson: _contentJson, ...summary } = mapDocument(row, isFavorite);
+  const {
+    content: _content,
+    contentJson: _contentJson,
+    shareToken: _shareToken,
+    shareExpiresAt: _shareExpiresAt,
+    shareIncludeChildren: _shareIncludeChildren,
+    ...summary
+  } = mapDocument(row, isFavorite);
   return summary;
 }
 
@@ -178,31 +202,38 @@ export function replaceAssetReferences<T>(
   targetDocumentId: number,
   publicIds: Map<string, string>,
 ): T {
+  return rewriteAssetUrls(value, sourceDocumentId, (match, mediaPrefix, publicId) => {
+    const targetPublicId = publicIds.get(publicId.toLowerCase());
+    return targetPublicId
+      ? `${mediaPrefix ?? ''}${documentAssetPath(targetProject, targetDocumentId, targetPublicId)}`
+      : match;
+  });
+}
+
+// Rewrites every asset URL in a document body, its Markdown or its Tiptap JSON: those
+// of one document, or of any document when documentId is null.
+export function rewriteAssetUrls<T>(
+  value: T,
+  documentId: number | null,
+  replace: (match: string, mediaPrefix: string | undefined, publicId: string) => string,
+): T {
   if (typeof value === 'string') {
-    const replaced = value.replace(
+    return value.replace(
       new RegExp(
-        `(/(?:protected-)?media)?/projects/[^/\\s"']+/documents/${sourceDocumentId}/assets/([0-9a-f-]{36})/raw`,
+        `(/(?:protected-)?media)?/projects/[^/\\s"']+/documents/${documentId ?? '\\d+'}/assets/([0-9a-f-]{36})/raw`,
         'gi',
       ),
-      (match, mediaPrefix: string | undefined, publicId: string) => {
-        const targetPublicId = publicIds.get(publicId.toLowerCase());
-        return targetPublicId
-          ? `${mediaPrefix ?? ''}${documentAssetPath(targetProject, targetDocumentId, targetPublicId)}`
-          : match;
-      },
-    );
-    return replaced as T;
+      replace,
+    ) as T;
   }
   if (Array.isArray(value)) {
-    return value.map((item) =>
-      replaceAssetReferences(item, sourceDocumentId, targetProject, targetDocumentId, publicIds),
-    ) as T;
+    return value.map((item) => rewriteAssetUrls(item, documentId, replace)) as T;
   }
   if (value && typeof value === 'object') {
     return Object.fromEntries(
       Object.entries(value).map(([key, item]) => [
         key,
-        replaceAssetReferences(item, sourceDocumentId, targetProject, targetDocumentId, publicIds),
+        rewriteAssetUrls(item, documentId, replace),
       ]),
     ) as T;
   }
@@ -1166,6 +1197,7 @@ export async function setDocumentAccess(
       .update(projectDocument)
       .set({
         isPrivate,
+        ...(isPrivate ? revokedDocumentShare : {}),
         updatedByUserId: userId,
         updatedAt: sql`now()`,
         version: sql`${projectDocument.version} + 1`,
@@ -1658,7 +1690,7 @@ export async function restoreDocumentRevision(
         // A historical secret may never be restored into a public current row.
         // Restoring a public snapshot into a private page keeps the safer current
         // access level instead of unexpectedly publishing it.
-        ...(revision.isPrivate ? { isPrivate: true } : {}),
+        ...(revision.isPrivate ? { isPrivate: true, ...revokedDocumentShare } : {}),
         updatedByUserId: userId,
         updatedAt: sql`now()`,
         version: sql`${projectDocument.version} + 1`,

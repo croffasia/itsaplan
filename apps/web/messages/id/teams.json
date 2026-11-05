@@ -723,6 +723,19 @@
       "ownerOnly": "Hanya pemilik yang mengubah berapa banyak eksekusi agen yang berjalan bersamaan.",
       "none": "Tanpa batas"
     },
+    "sharing": {
+      "title": "Tautan publik",
+      "description": "Apakah dokumen, isu, dan tampilan di workspace ini bisa dibagikan lewat tautan.",
+      "enabled": "Izinkan tautan publik",
+      "enabledHint": "Jika dimatikan, tidak ada yang bisa berbagi di sini dan tautan yang ada berhenti terbuka sampai dinyalakan lagi.",
+      "instanceOff": "Tautan publik dimatikan untuk instance ini.",
+      "teamsOnly": "Hanya tim terpilih",
+      "teamsOnlyHint": "Hanya tim di bawah ini yang bisa berbagi. Tautan tim lain berhenti terbuka.",
+      "statusOn": "Aktif",
+      "statusOff": "Nonaktif",
+      "ownerOnly": "Hanya pemilik yang memilih tim mana yang bisa berbagi.",
+      "saved": "Pengaturan tautan publik disimpan"
+    },
     "managers": {
       "title": "Pengelola",
       "description": "Pemilik dan admin mengelola workspace.",

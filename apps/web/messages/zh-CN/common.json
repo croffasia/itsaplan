@@ -142,6 +142,7 @@
     "overviewTitle": "公开",
     "overviewDescription": "本项目中任何持有链接的人都能阅读的内容，以及每个链接何时失效。",
     "overviewEmpty": "本项目中没有公开分享的内容。",
+    "overviewClosed": "此项目已关闭公开链接。这些链接在重新开启前无法打开。你仍可以撤销它们。",
     "overviewDocuments": "文档",
     "overviewIssues": "事项",
     "overviewViews": "视图",

@@ -64,7 +64,8 @@ function permissionDetail(permission: Permission) {
 // asserts the given action on `resource` and injects the resolved `projectId` into
 // the handler context, so a handler that needs it does not resolve it again. `feature`
 // names the optional section the entity belongs to, closing every route of the macro
-// while the project has that section off. Used like:
+// while the project has that section off. `check` is one more rule on the resolved
+// project, run last. Used like:
 //
 //   .macro({
 //     workItem: entityGuard("work_items", "Issue not found",
@@ -79,6 +80,7 @@ export function entityGuard(
     user: AuthUser | null | undefined,
   ) => Promise<number | null>,
   feature?: ProjectFeature,
+  check?: (projectId: number) => Promise<void>,
 ) {
   return (action: PermissionAction) => ({
     ...permissionDetail([resource, action]),
@@ -87,6 +89,7 @@ export function entityGuard(
       if (projectId == null) throw new HttpError(404, notFound);
       await assertPermission(projectId, user, resource, action);
       await assertProjectReachable(projectId, request, feature);
+      await check?.(projectId);
       return { projectId };
     },
   });

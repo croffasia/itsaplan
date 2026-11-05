@@ -22,6 +22,7 @@ export default function SavedViewTab({
   projectKey,
   active,
   canEdit,
+  canShare,
   canDelete,
   canPublish,
   canDuplicate,
@@ -35,6 +36,7 @@ export default function SavedViewTab({
   projectKey: string;
   active: boolean;
   canEdit: boolean;
+  canShare: boolean;
   canDelete: boolean;
   canPublish: boolean;
   canDuplicate: boolean;
@@ -135,7 +137,7 @@ export default function SavedViewTab({
               </button>
             )}
             {/* Only a project's view has a public link. */}
-            {canEdit && !view.isPrivate && (
+            {canShare && !view.isPrivate && (
               <button
                 type="button"
                 onClick={() => {

@@ -142,6 +142,7 @@
     "overviewTitle": "Public",
     "overviewDescription": "Tout ce que ce projet permet de lire à quiconque a le lien, et quand chaque lien cesse de fonctionner.",
     "overviewEmpty": "Rien dans ce projet n’est partagé publiquement.",
+    "overviewClosed": "Les liens publics sont désactivés pour ce projet. Ces liens ne s'ouvrent plus tant qu'ils ne sont pas réactivés. Vous pouvez toujours les révoquer.",
     "overviewDocuments": "Documents",
     "overviewIssues": "Tickets",
     "overviewViews": "Vues",

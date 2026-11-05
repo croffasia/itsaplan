@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import WorkspaceDeleteSection from './WorkspaceDeleteSection';
+import WorkspaceSharingSection from './WorkspaceSharingSection';
 
 const TEAM_CREATION: TeamCreation[] = ['owner', 'managers', 'members'];
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -181,6 +182,8 @@ export default function WorkspaceInfoSection({ workspaceId }: { workspaceId: num
             )
           }
         />
+
+        <WorkspaceSharingSection workspace={workspace} />
 
         <WorkspaceSectionExtras slug="general" workspace={workspace} />
 

@@ -97,6 +97,12 @@ or on the request body is checked in the handler or the service.
   its teams. An agent's bot user never creates one. Anyone else gets 403, god included.
 - A team is in the workspace named when it was created. Its creator is its team owner and need not
   own the workspace. Everyone in a workspace's teams shares that workspace.
+- **Public links** (`projectSharingEnabled` in `modules/workspaces/service.ts`): three settings
+  decide whether a project's links open and a new one can be made. God sets the instance's
+  (`/god/sharing-settings`). The workspace's owner and admins set `sharingEnabled`. Only its owner
+  sets `sharingTeamsOnly` and the chosen teams. While any of them closes a project, its links
+  answer 404 and a new link gets 403. Revoking still works. The tokens stay, so the same links open
+  when sharing is on again.
 - **Personal workspaces:** no route creates a workspace. While `personalWorkspaces` is on in the
   auth settings (the default), a person who owns none gets one at sign-up, or on the next request
   through `ensurePersonalWorkspace` in `authContext`. While it is off, only the instance owner gets

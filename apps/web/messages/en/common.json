@@ -142,6 +142,7 @@
     "overviewTitle": "Public",
     "overviewDescription": "Everything in this project that anyone with the link can read, and when each link stops working.",
     "overviewEmpty": "Nothing in this project is shared publicly.",
+    "overviewClosed": "Public links are turned off for this project. These links do not open until they are on again. You can still revoke them.",
     "overviewDocuments": "Documents",
     "overviewIssues": "Issues",
     "overviewViews": "Views",

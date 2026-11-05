@@ -253,6 +253,20 @@ describe('ViewTabs', () => {
     );
   });
 
+  it('offers the share link of a project view while the project may share', async () => {
+    await render(board.id, {
+      project: { ...editor.project, sharingEnabled: true },
+    } as ShellContext);
+    assert.ok((await openMenu()).includes(views.share));
+  });
+
+  it('drops the share link of a project view while the project may not share', async () => {
+    await render(board.id, {
+      project: { ...editor.project, sharingEnabled: false },
+    } as ShellContext);
+    assert.ok(!(await openMenu()).includes(views.share));
+  });
+
   it('lets the owner of a private view duplicate, edit and delete it, with no share link or hide', async () => {
     await render(mine.id);
     const items = await openMenu();

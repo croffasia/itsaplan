@@ -117,6 +117,7 @@ export default function DocumentView({
       }
       authorNames={authorNames}
       canEdit={canEdit}
+      canShare={canEdit && project.sharingEnabled}
       canReadWorkItems={can('work_items', 'read')}
       canLinkWorkItems={canEdit && can('work_items', 'edit')}
       isProjectOwner={isOwner}

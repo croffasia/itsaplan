@@ -723,6 +723,19 @@
       "ownerOnly": "只有所有者可以更改代理同时运行数。",
       "none": "不限制"
     },
+    "sharing": {
+      "title": "公开链接",
+      "description": "此工作区的文档、事项和视图是否可以通过链接分享。",
+      "enabled": "允许公开链接",
+      "enabledHint": "关闭后，此处任何人都无法分享，现有链接在重新开启前无法打开。",
+      "instanceOff": "此实例已关闭公开链接。",
+      "teamsOnly": "仅限所选团队",
+      "teamsOnlyHint": "只有下方的团队可以分享。其他团队的链接将无法打开。",
+      "statusOn": "已开启",
+      "statusOff": "已关闭",
+      "ownerOnly": "只有所有者可以选择哪些团队能分享。",
+      "saved": "公开链接设置已保存"
+    },
     "managers": {
       "title": "管理者",
       "description": "所有者和管理员管理工作区。",

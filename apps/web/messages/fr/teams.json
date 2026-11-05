@@ -723,6 +723,19 @@
       "ownerOnly": "Seul le propriétaire modifie le nombre d'exécutions d'agents simultanées.",
       "none": "Aucune limite"
     },
+    "sharing": {
+      "title": "Liens publics",
+      "description": "Si les documents, les tickets et les vues de cet espace de travail peuvent être partagés par lien.",
+      "enabled": "Autoriser les liens publics",
+      "enabledHint": "Désactivé, personne ne peut partager ici et les liens existants ne s'ouvrent plus tant que l'option n'est pas réactivée.",
+      "instanceOff": "Les liens publics sont désactivés sur cette instance.",
+      "teamsOnly": "Équipes sélectionnées uniquement",
+      "teamsOnlyHint": "Seules les équipes ci-dessous peuvent partager. Les liens des autres équipes ne s'ouvrent plus.",
+      "statusOn": "Activé",
+      "statusOff": "Désactivé",
+      "ownerOnly": "Seul le propriétaire choisit les équipes qui peuvent partager.",
+      "saved": "Paramètres des liens publics enregistrés"
+    },
     "managers": {
       "title": "Responsables",
       "description": "Le propriétaire et les administrateurs gèrent l'espace de travail.",

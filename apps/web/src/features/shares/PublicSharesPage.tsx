@@ -1,17 +1,18 @@
 'use client';
 
-import { FileText, LayoutGrid, SquareCheck } from 'lucide-react';
+import { FileText, Info, LayoutGrid, SquareCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { documentPath, issuePath, viewPath } from '@/utils/paths';
 import SectionPageView from '@/components/common/page/SectionPageView';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import PublicSharesSection from './components/PublicSharesSection';
 import PublicSharesRevokeAll from './components/PublicSharesRevokeAll';
 import { useProjectSharesQuery } from './services/shares.service';
 
 // The project's public links (/:team/:projectKey/public): every issue, saved view and
-// document that has a live share link, with its expiry. Each can be revoked here, and
+// document that has an unexpired share link, with its expiry. Each can be revoked here, and
 // the header action revokes all of them at once.
 export default function PublicSharesPage() {
   const t = useTranslations('common.share');
@@ -41,6 +42,12 @@ export default function PublicSharesPage() {
         <p className="text-sm text-muted-foreground">{t('overviewEmpty')}</p>
       ) : (
         <div className="flex flex-col gap-8">
+          {!project.sharingEnabled && (
+            <Alert className="bg-amber-500/10 text-amber-700 dark:text-amber-300">
+              <Info />
+              <AlertDescription className="text-current">{t('overviewClosed')}</AlertDescription>
+            </Alert>
+          )}
           <PublicSharesSection
             projectKey={projectRef}
             kind="documents"

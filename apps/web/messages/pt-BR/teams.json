@@ -723,6 +723,19 @@
       "ownerOnly": "Só o proprietário muda quantas execuções de agentes rodam ao mesmo tempo.",
       "none": "Sem limite"
     },
+    "sharing": {
+      "title": "Links públicos",
+      "description": "Se documentos, issues e visualizações deste workspace podem ser compartilhados por link.",
+      "enabled": "Permitir links públicos",
+      "enabledHint": "Desativado, ninguém aqui pode compartilhar e os links existentes deixam de abrir até ser ativado de novo.",
+      "instanceOff": "Os links públicos estão desativados nesta instância.",
+      "teamsOnly": "Somente equipes selecionadas",
+      "teamsOnlyHint": "Somente as equipes abaixo podem compartilhar. Os links das demais equipes deixam de abrir.",
+      "statusOn": "Ligado",
+      "statusOff": "Desligado",
+      "ownerOnly": "Somente o proprietário escolhe quais equipes podem compartilhar.",
+      "saved": "Configurações de links públicos salvas"
+    },
     "managers": {
       "title": "Gestores",
       "description": "O proprietário e os administradores gerenciam o workspace.",

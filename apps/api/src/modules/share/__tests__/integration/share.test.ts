@@ -30,6 +30,115 @@ describe('share', () => {
     await resetDb();
   });
 
+  describe('sharing switches', () => {
+    // A link of each kind, read with no session, and the calls that make or change one.
+    async function links() {
+      const { asOwner, issueId } = await setup();
+      const project = asOwner.projects({ projectKey: 'MKT' });
+      const view = (await project.views.post({ name: 'Board', filters: {} })).data!;
+      const doc = (await project.documents.post({ title: 'Notes', content: 'See MKT-1.' })).data!;
+      const issueToken = (await asOwner.issues({ issueId }).share.post()).data!.token;
+      const viewToken = (await asOwner.views({ viewId: view.id }).share.post()).data!.token;
+      const documentToken = (await asOwner.documents({ documentId: doc.id }).share.post()).data!
+        .token;
+      return {
+        asOwner,
+        issueId,
+        project,
+        documentId: doc.id,
+        workspaceId: (await asOwner.workspaces.get()).data![0].id,
+        reads: async () => [
+          (await api.share.issue({ token: issueToken }).get()).status,
+          (await api.share.view({ token: viewToken }).get()).status,
+          (await api.share.view({ token: viewToken }).issues({ issueId }).get()).status,
+          (await api.share.view({ token: viewToken })['calendar.ics'].get()).status,
+          (await api.share.document({ token: documentToken }).get()).status,
+        ],
+        enables: async () => [
+          (await asOwner.issues({ issueId }).share.post()).status,
+          (await asOwner.views({ viewId: view.id }).share.post()).status,
+          (await asOwner.documents({ documentId: doc.id }).share.post()).status,
+        ],
+      };
+    }
+    const OPEN = [200, 200, 200, 200, 200];
+    const CLOSED = [404, 404, 404, 404, 404];
+
+    it('closes every link while the instance has sharing off, and opens the same links again', async () => {
+      const { asOwner, project, reads, enables } = await links();
+      expect(await reads()).toEqual(OPEN);
+
+      await asOwner.god['sharing-settings'].put({ enabled: false });
+      expect(await reads()).toEqual(CLOSED);
+      expect(await enables()).toEqual([403, 403, 403]);
+      expect((await project.get()).data!.sharingEnabled).toBe(false);
+
+      await asOwner.god['sharing-settings'].put({ enabled: true });
+      expect(await reads()).toEqual(OPEN);
+      expect((await project.get()).data!.sharingEnabled).toBe(true);
+    });
+
+    it('leaves the instance switch to god', async () => {
+      await signUpTestUser();
+      const { asOwner } = await setup();
+      const settings = asOwner.god['sharing-settings'];
+      expect((await settings.get()).status).toBe(403);
+      expect((await settings.put({ enabled: false })).status).toBe(403);
+    });
+
+    it('takes only a boolean for the instance switch', async () => {
+      const { asOwner } = await setup();
+      const settings = asOwner.god['sharing-settings'];
+      const enabled = 'nonsense' as unknown as boolean;
+      expect((await settings.put({ enabled })).status).toBe(400);
+      expect((await settings.get()).data).toEqual({ enabled: true });
+    });
+
+    it('closes the links of a workspace with sharing off', async () => {
+      const { asOwner, workspaceId, reads, enables } = await links();
+      await asOwner.workspaces({ workspaceId }).patch({ sharingEnabled: false });
+      expect(await reads()).toEqual(CLOSED);
+      expect(await enables()).toEqual([403, 403, 403]);
+
+      await asOwner.workspaces({ workspaceId }).patch({ sharingEnabled: true });
+      expect(await reads()).toEqual(OPEN);
+    });
+
+    it('keeps the links of the chosen teams only', async () => {
+      const { asOwner, project, workspaceId, reads, enables } = await links();
+      const { teamId } = (await project.get()).data!.project;
+      await asOwner.workspaces({ workspaceId }).patch({ sharingTeamsOnly: true });
+      expect(await reads()).toEqual(CLOSED);
+      expect(await enables()).toEqual([403, 403, 403]);
+
+      await asOwner.workspaces({ workspaceId }).patch({ sharingTeamIds: [teamId] });
+      expect(await reads()).toEqual(OPEN);
+      expect(await enables()).toEqual([200, 200, 200]);
+
+      await asOwner.workspaces({ workspaceId }).patch({ sharingTeamIds: [] });
+      expect(await reads()).toEqual(CLOSED);
+    });
+
+    it('still revokes a closed link and lists it', async () => {
+      const { asOwner, issueId, project, reads } = await links();
+      await asOwner.god['sharing-settings'].put({ enabled: false });
+      expect((await project.shares.get()).data!.issues.map((row) => row.id)).toEqual([issueId]);
+      expect((await asOwner.issues({ issueId }).share.delete()).status).toBe(204);
+
+      await asOwner.god['sharing-settings'].put({ enabled: true });
+      expect(await reads()).toEqual([404, 200, 200, 200, 200]);
+    });
+
+    it('keeps the issues of a closed document link out of the issue dialog', async () => {
+      const { asOwner, issueId, documentId } = await links();
+      await asOwner.documents({ documentId }).share.post({ includeIssues: true });
+      expect((await asOwner.issues({ issueId }).share.documents.get()).data).toHaveLength(1);
+
+      await asOwner.god['sharing-settings'].put({ enabled: false });
+      expect((await asOwner.issues({ issueId }).share.documents.get()).data).toEqual([]);
+    });
+  });
+
   describe('issue sharing', () => {
     it('enables a link, serves the public bundle, then revokes it', async () => {
       const { asOwner, issueId } = await setup();

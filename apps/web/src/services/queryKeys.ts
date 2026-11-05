@@ -354,6 +354,7 @@ export const qk = {
   instanceTelegramSettings: ['instanceTelegramSettings'] as const,
   instanceProjectDefaults: ['instanceProjectDefaults'] as const,
   instanceAgentSettings: ['instanceAgentSettings'] as const,
+  instanceSharingSettings: ['instanceSharingSettings'] as const,
   instanceEmbedSites: ['instanceEmbedSites'] as const,
   instanceStorageSettings: ['instanceStorageSettings'] as const,
   systemRoles: ['systemRoles'] as const,

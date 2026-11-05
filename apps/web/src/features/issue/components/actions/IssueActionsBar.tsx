@@ -62,6 +62,7 @@ export default function IssueActionsBar({
   const qc = useQueryClient();
   const canEdit = can('work_items', 'edit');
   const canDelete = can('work_items', 'delete');
+  const canShare = canEdit && project.sharingEnabled;
   const actionsQuery = useActionsQuery(project.project.ref);
   const { archive, dialog: archiveDialog } = useArchiveAction(project);
   const restoreIssue = useRestoreIssue(project.project.ref);
@@ -74,7 +75,7 @@ export default function IssueActionsBar({
     useQuery({
       queryKey: [...qk.issue(issue.id), 'document-shares'],
       queryFn: () => listIssueDocumentShares(issue.id),
-      enabled: canEdit,
+      enabled: canShare,
     }).data ?? [];
   const shared = !!issue.shareToken || documentShares.length > 0;
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -164,7 +165,7 @@ export default function IssueActionsBar({
         </TooltipTrigger>
         <TooltipContent>{copied ? t('copied') : t('copyPrompt')}</TooltipContent>
       </Tooltip>
-      {canEdit && (
+      {canShare && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

@@ -7,7 +7,10 @@ import type { Assignee, ProjectScaffold } from '@/lib/api/endpoints/projects';
 // Public read-only share bundles, returned by the /share/* routes with no session.
 // The scaffold mirrors ProjectScaffold minus the caller's viewer/permissions and
 // member emails and handles (a public page shows names and avatars only).
-export type PublicScaffold = Omit<ProjectScaffold, 'viewer' | 'permissions' | 'assignees'> & {
+export type PublicScaffold = Omit<
+  ProjectScaffold,
+  'viewer' | 'permissions' | 'assignees' | 'sharingEnabled'
+> & {
   assignees: Omit<Assignee, 'email' | 'username' | 'canReadWorkItems'>[];
 };
 

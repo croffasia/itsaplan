@@ -12,6 +12,7 @@ import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { View } from '@/lib/api/endpoints/views';
 import { useDndSensors, useDroppedOrder } from '@/lib/dnd';
+import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { movedInRow } from '@/services/views.service';
 import AllViewTab, { ALL_DROP_ID } from '@/components/layout/AllViewTab';
@@ -65,11 +66,13 @@ export default function ViewTabs({
 }) {
   const t = useTranslations('views');
   const { can, isMember } = usePermissions();
+  const sharingEnabled = useShell().project?.sharingEnabled ?? false;
   // A member who reads the project's views may save a private one.
   const canCreateView = can('views', 'create') || (isMember && can('views', 'read'));
   const canEditView = can('views', 'edit');
   const canDeleteView = can('views', 'delete');
   const canPublishView = can('views', 'create');
+  const canShareView = canEditView && sharingEnabled;
   const sensors = useDndSensors();
   // The view being dragged, used to render the DragOverlay preview.
   const [activeId, setActiveId] = useState<number | null>(null);
@@ -145,6 +148,7 @@ export default function ViewTabs({
                 projectKey={projectKey}
                 active={activeViewId === view.id}
                 canEdit={view.isPrivate || canEditView}
+                canShare={canShareView}
                 canDelete={view.isPrivate || canDeleteView}
                 canPublish={view.isPrivate && canPublishView}
                 onSelect={() => onSelect(view.id)}

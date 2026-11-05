@@ -723,6 +723,19 @@
       "ownerOnly": "Aynı anda kaç ajan çalıştırması yürüyeceğini yalnızca sahip değiştirir.",
       "none": "Sınır yok"
     },
+    "sharing": {
+      "title": "Herkese açık bağlantılar",
+      "description": "Bu çalışma alanındaki belgelerin, işlerin ve görünümlerin bağlantıyla paylaşılıp paylaşılamayacağı.",
+      "enabled": "Herkese açık bağlantılara izin ver",
+      "enabledHint": "Kapalıyken burada kimse paylaşamaz ve mevcut bağlantılar yeniden açılana kadar çalışmaz.",
+      "instanceOff": "Herkese açık bağlantılar bu örnekte kapalı.",
+      "teamsOnly": "Yalnızca seçili ekipler",
+      "teamsOnlyHint": "Yalnızca aşağıdaki ekipler paylaşabilir. Diğer ekiplerin bağlantıları çalışmaz.",
+      "statusOn": "Açık",
+      "statusOff": "Kapalı",
+      "ownerOnly": "Hangi ekiplerin paylaşabileceğini yalnızca sahip seçer.",
+      "saved": "Herkese açık bağlantı ayarları kaydedildi"
+    },
     "managers": {
       "title": "Yöneticiler",
       "description": "Çalışma alanını sahip ve yöneticiler yönetir.",

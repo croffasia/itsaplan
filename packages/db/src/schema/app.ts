@@ -63,6 +63,10 @@ export const workspace = pgTable(
     teamCreation: text('team_creation').notNull().default('owner'),
     // Runs of its internal agents in flight at once; 0 sets no limit of its own.
     maxConcurrentRuns: integer('max_concurrent_runs').notNull().default(0),
+    // Whether its projects may have public links. Its owner and admins set it.
+    sharingEnabled: boolean('sharing_enabled').notNull().default(true),
+    // Whether only the teams with team.sharing_selected may. Its owner sets it.
+    sharingTeamsOnly: boolean('sharing_teams_only').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -115,6 +119,9 @@ export const team = pgTable(
     // team's own resources (agents, skills, tools, roles, integrations) and every
     // project it owns, whatever each project's own flag says.
     mcpEnabled: boolean('mcp_enabled').notNull().default(true),
+    // Whether the workspace owner chose this team for sharing. Read only while
+    // workspace.sharing_teams_only is on.
+    sharingSelected: boolean('sharing_selected').notNull().default(false),
     defaultAgentIds: jsonb('default_agent_ids').$type<number[]>().notNull().default([]),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },

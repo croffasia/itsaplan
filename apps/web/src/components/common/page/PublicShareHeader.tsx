@@ -1,7 +1,7 @@
 import ItsAPlanMark from '@/components/brand/ItsAPlanMark';
 import { APP_NAME, APP_SITE_URL } from '@/utils/app';
 
-// The header over a public shared page (a board or an issue). It shows the project
+// The header over a public shared page (a board, an issue or a document). It shows the project
 // name, the ticker, and an optional trailing label. On a board that label is the
 // shared view's name. The product mark links to the product site. The header shows
 // identity only, with no app navigation and no session.

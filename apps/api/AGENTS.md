@@ -108,6 +108,9 @@ Enforced through macros in the route options.
   role is `member`. Its rank can be changed, and the sync then leaves the row alone.
 - `GET /attachments/:publicId/raw` is public. Keep `X-Content-Type-Options: nosniff`, forced
   download outside a strict media allowlist, and the locked-down CSP.
+- `GET /share/document/:token/assets/:publicId/raw` serves a Docs asset without a session, only
+  while the token is a live link to the page that holds it or to an ancestor that shares its
+  subpages. It sends the same response as the route above.
 
 ## Tests
 

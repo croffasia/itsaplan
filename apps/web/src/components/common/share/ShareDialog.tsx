@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { toast } from 'sonner';
 import { CalendarClock, Check, ChevronDown, Copy, Globe, Loader2 } from 'lucide-react';
 import type { ShareOptions, ShareState } from '@/lib/api/endpoints/share';
@@ -22,6 +22,14 @@ import { useFormatter, useTranslations } from 'next-intl';
 
 const EXPIRY_PRESETS = [1, 3, 7] as const;
 
+type ShareOptionName = 'extended' | 'includeChildren' | 'includeIssues';
+
+const OPTION_TEXT = {
+  extended: { label: 'fullDetails', hint: 'fullDetailsHint' },
+  includeChildren: { label: 'includeSubpages', hint: 'includeSubpagesHint' },
+  includeIssues: { label: 'includeIssues', hint: 'includeIssuesHint' },
+} as const;
+
 function inDays(days: number): string {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 }
@@ -33,7 +41,7 @@ function endOfDay(day: Date): string {
   return at.toISOString();
 }
 
-// A generic public-share dialog for an issue or a saved view. It shows the current
+// A generic public-share dialog for an issue, a saved view or a document. It shows the current
 // state (shared with a copyable link, or not shared) and toggles it through the
 // enable/disable callbacks. The caller supplies the current token, the enable
 // (returns the new token) and disable operations, and the path builder that turns a
@@ -43,28 +51,32 @@ export default function ShareDialog({
   onOpenChange,
   title,
   token,
-  extended,
+  options,
   expiresAt,
   enable,
   disable,
   pathForToken,
   calendarPathForToken,
+  notice,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   token: string | null;
-  // How much the current link exposes.
-  extended: boolean;
+  // The current link's settings: whether an issue or a view shows its full details, or
+  // whether a document's subpages and the issues it names come with it.
+  options: { name: ShareOptionName; checked: boolean }[];
   // When the current link stops working, or null when it never does.
   expiresAt: string | null;
-  // Creates the link, or changes how much a live one exposes or when it expires;
+  // Creates the link, or changes the setting of a live one or when it expires;
   // returns its token and expiry.
   enable: (options: ShareOptions) => Promise<ShareState>;
   disable: () => Promise<void>;
   pathForToken: (token: string) => string;
   // The calendar feed path, for a shared view. Omitted by an issue share.
   calendarPathForToken?: (token: string) => string;
+  // Shown under the dialog's description, whether or not the entity has a link.
+  notice?: ReactNode;
 }) {
   const t = useTranslations('common.share');
   const format = useFormatter();
@@ -105,10 +117,14 @@ export default function ShareDialog({
   }
 
   const onEnable = () =>
-    run(async () => apply(await enable({ extended: false })), t('createFailed'));
+    run(
+      async () =>
+        apply(await enable(Object.fromEntries(options.map((option) => [option.name, false])))),
+      t('createFailed'),
+    );
 
-  const onSetExtended = (next: boolean) =>
-    run(async () => apply(await enable({ extended: next })), t('changeFailed'));
+  const onSetOption = (name: ShareOptionName, next: boolean) =>
+    run(async () => apply(await enable({ [name]: next })), t('changeFailed'));
 
   const onSetExpiry = (next: string | null) => {
     setExpiryOpen(false);
@@ -145,6 +161,7 @@ export default function ShareDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{t('hint')}</DialogDescription>
         </DialogHeader>
+        {notice}
 
         {current ? (
           <div className="flex flex-col gap-3">
@@ -194,17 +211,24 @@ export default function ShareDialog({
               </div>
             )}
 
-            <label className="flex items-center justify-between gap-4 rounded-md border px-3 py-2.5">
-              <span className="min-w-0">
-                <span className="block text-sm">{t('fullDetails')}</span>
-                <span className="block text-xs text-muted-foreground">{t('fullDetailsHint')}</span>
-              </span>
-              <Switch
-                checked={extended}
-                disabled={busy}
-                onCheckedChange={(next) => void onSetExtended(next)}
-              />
-            </label>
+            {options.map((option) => (
+              <label
+                key={option.name}
+                className="flex items-center justify-between gap-4 rounded-md border px-3 py-2.5"
+              >
+                <span className="min-w-0">
+                  <span className="block text-sm">{t(OPTION_TEXT[option.name].label)}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    {t(OPTION_TEXT[option.name].hint)}
+                  </span>
+                </span>
+                <Switch
+                  checked={option.checked}
+                  disabled={busy}
+                  onCheckedChange={(next) => void onSetOption(option.name, next)}
+                />
+              </label>
+            ))}
 
             <div className="flex items-center justify-between gap-4 rounded-md border px-3 py-2.5">
               <span className="min-w-0">

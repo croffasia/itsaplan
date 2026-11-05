@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
   Archive,
@@ -15,7 +15,12 @@ import {
 import type { ActionDef } from '@/lib/api/endpoints/actions';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { IssueDetail as IssueDetailRow } from '@/lib/api/endpoints/issues';
-import { enableIssueShare, disableIssueShare, type ShareOptions } from '@/lib/api/endpoints/share';
+import {
+  enableIssueShare,
+  disableIssueShare,
+  listIssueDocumentShares,
+  type ShareOptions,
+} from '@/lib/api/endpoints/share';
 import { actionIcon } from '@/utils/actionIcons';
 import { useActionsQuery } from '@/services/actions.service';
 import { useRestoreIssue } from '@/services/issues.service';
@@ -31,6 +36,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import ShareDialog from '@/components/common/share/ShareDialog';
 import MoveIssueDialog from './MoveIssueDialog';
+import IssueDocumentSharesNotice from './IssueDocumentSharesNotice';
 import { useTranslations } from 'next-intl';
 
 // The issue detail Actions: the manual actions whose condition matches this
@@ -64,6 +70,13 @@ export default function IssueActionsBar({
   const [confirmingAction, setConfirmingAction] = useState<ActionDef | null>(null);
   const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const documentShares =
+    useQuery({
+      queryKey: [...qk.issue(issue.id), 'document-shares'],
+      queryFn: () => listIssueDocumentShares(issue.id),
+      enabled: canEdit,
+    }).data ?? [];
+  const shared = !!issue.shareToken || documentShares.length > 0;
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Enabling/revoking the public link refetches the issue so its shareToken,
@@ -158,7 +171,9 @@ export default function IssueActionsBar({
               variant="ghost"
               size={btnSize}
               className={
-                issue.shareToken ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+                shared
+                  ? 'bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300'
+                  : 'text-muted-foreground hover:text-foreground'
               }
               onClick={() => setSharing(true)}
             >
@@ -166,7 +181,11 @@ export default function IssueActionsBar({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            {issue.shareToken ? t('sharedPublicly') : t('sharePublicly')}
+            {issue.shareToken
+              ? t('sharedPublicly')
+              : documentShares.length > 0
+                ? t('sharedThroughDocument')
+                : t('sharePublicly')}
           </TooltipContent>
         </Tooltip>
       )}
@@ -273,11 +292,14 @@ export default function IssueActionsBar({
         onOpenChange={setSharing}
         title={t('shareIssue')}
         token={issue.shareToken}
-        extended={issue.shareExtended}
+        options={[{ name: 'extended', checked: issue.shareExtended }]}
         expiresAt={issue.shareExpiresAt}
         enable={share}
         disable={disableShare}
         pathForToken={shareIssuePath}
+        notice={
+          <IssueDocumentSharesNotice projectRef={project.project.ref} shares={documentShares} />
+        }
       />
     </>
   );

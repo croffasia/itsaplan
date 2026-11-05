@@ -104,6 +104,7 @@
     "copied": "복사됨",
     "copyPrompt": "프롬프트 복사",
     "sharedPublicly": "공개 공유 중",
+    "sharedThroughDocument": "문서를 통해 공개됨",
     "sharePublicly": "공개 공유",
     "restore": "이슈 복원",
     "archive": "이슈 보관",

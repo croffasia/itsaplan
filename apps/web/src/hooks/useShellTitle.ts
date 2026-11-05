@@ -16,6 +16,7 @@ const SECTION_LABELS = {
   notes: 'notes',
   members: 'members',
   notifications: 'notifications',
+  public: 'public',
   api: 'apiDocs',
   mcp: 'mcpServer',
 } as const;

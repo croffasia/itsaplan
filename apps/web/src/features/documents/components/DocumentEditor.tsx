@@ -229,6 +229,7 @@ export default function DocumentEditor({
           canManage={canManage}
           canManageLifecycle={canManageLifecycle}
           canDelete={canManageLifecycle}
+          canShare={canEdit && !document.isPrivate && document.archivedAt === null}
           busy={busy}
           onBack={onBack}
           onRetrySave={() => {

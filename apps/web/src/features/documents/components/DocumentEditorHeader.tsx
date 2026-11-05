@@ -17,6 +17,7 @@ import DocumentCopyLinkButton from './DocumentCopyLinkButton';
 import DocumentFavoriteButton from './DocumentFavoriteButton';
 import DocumentLockButton from './DocumentLockButton';
 import DocumentOptionsMenu from './DocumentOptionsMenu';
+import DocumentShareButton from './DocumentShareButton';
 
 export default function DocumentEditorHeader({
   projectKey,
@@ -35,6 +36,7 @@ export default function DocumentEditorHeader({
   canManage,
   canManageLifecycle,
   canDelete,
+  canShare,
   busy,
   onBack,
   onRetrySave,
@@ -70,6 +72,7 @@ export default function DocumentEditorHeader({
   canManage: boolean;
   canManageLifecycle: boolean;
   canDelete: boolean;
+  canShare: boolean;
   busy: boolean;
   onBack?: () => void;
   onRetrySave: () => void;
@@ -189,6 +192,7 @@ export default function DocumentEditorHeader({
           disabled={!canManage || document.archivedAt !== null || busy}
           onChange={onLockChange}
         />
+        {canShare && <DocumentShareButton projectKey={projectKey} document={document} />}
         <DocumentCopyLinkButton />
         <div className="mx-1 hidden h-4 w-px bg-border sm:block" aria-hidden />
         <Button

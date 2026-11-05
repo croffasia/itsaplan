@@ -2183,6 +2183,15 @@ export const projectDocument = pgTable(
     updatedByUserId: text('updated_by_user_id').references(() => user.id, {
       onDelete: 'set null',
     }),
+    // Unguessable token for the public read-only share link of this page. NULL
+    // means not shared; setting it enables the link, clearing it revokes access.
+    shareToken: uuid('share_token').unique(),
+    // When the share link stops working; NULL means never. See issue.shareExpiresAt.
+    shareExpiresAt: timestamp('share_expires_at', { withTimezone: true }),
+    // Whether the share link also opens the page's subpages.
+    shareIncludeChildren: boolean('share_include_children').notNull().default(false),
+    // Whether the shared pages show the title and state of the issues they name.
+    shareIncludeIssues: boolean('share_include_issues').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -2297,8 +2306,9 @@ export const projectDocumentInitiative = pgTable(
 );
 
 // Files embedded in Docs pages. Bytes use the same S3-compatible object store as
-// issue/chat attachments; only authenticated document routes expose them, so a
-// private page's unguessable asset id never acts as a public capability URL.
+// issue/chat attachments; only authenticated document routes and the live share link
+// of a page expose them, so an unguessable asset id alone never acts as a public
+// capability URL.
 export const documentAsset = pgTable(
   'document_asset',
   {

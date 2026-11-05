@@ -8,7 +8,8 @@ Next.js App Router. Pages server-render, API data loads in the browser. Tailwind
   use the `@/` alias.
 - A feature imports the shared layer (`@/utils`, `@/lib`, `@/hooks`, `@/context`, `@/services`,
   `@/i18n`, `@/components/*`), never another feature. One accepted one-way exception: `work-items`
-  may compose `issue` components. A second such need moves the piece to `components/common`.
+  and `documents` may compose `issue` components (the read-only issue a public board or document
+  opens). A second such need moves the piece to `components/common`.
 - The shared layer never imports a feature. `app/` pages stay thin: mount the feature page and
   providers, or redirect.
 

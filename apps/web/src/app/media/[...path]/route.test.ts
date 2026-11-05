@@ -29,6 +29,11 @@ describe('public media proxy', () => {
       ['avatars', PUBLIC_ID],
       ['avatars', PUBLIC_ID, 'meta'],
       ['avatars', PUBLIC_ID, 'raw', 'extra'],
+      ['share', 'document', PUBLIC_ID, 'assets', 'not-an-id', 'raw'],
+      ['share', 'document', 'not-a-token', 'assets', PUBLIC_ID, 'raw'],
+      ['share', 'view', PUBLIC_ID, 'assets', PUBLIC_ID, 'raw'],
+      ['share', 'document', PUBLIC_ID, 'documents', PUBLIC_ID, 'raw'],
+      ['share', 'document', PUBLIC_ID, 'assets', PUBLIC_ID],
     ]) {
       const response = await get(path);
       assert.equal(response.status, 404, path.join('/'));
@@ -71,6 +76,19 @@ describe('public media proxy', () => {
       targets,
       roots.map((root) => 'http://api:3000/' + root + '/' + PUBLIC_ID + '/raw'),
     );
+  });
+
+  it('serves an asset of a shared document through its token', async () => {
+    process.env.SERVICE_URL_API = 'http://api:3000';
+    let target = '';
+    globalThis.fetch = (async (input: string | URL | Request) => {
+      target = String(input);
+      return new Response('asset');
+    }) as typeof fetch;
+    const TOKEN = '0f8b8c1e-2d3a-4b5c-9d6e-7f8091a2b3c4';
+    const response = await get(['share', 'document', TOKEN, 'assets', PUBLIC_ID, 'raw']);
+    assert.equal(response.status, 200);
+    assert.equal(target, `http://api:3000/share/document/${TOKEN}/assets/${PUBLIC_ID}/raw`);
   });
 
   it('streams the exact media endpoint with the query and the cache validator', async () => {

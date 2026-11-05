@@ -723,6 +723,19 @@
       "ownerOnly": "只有擁有者可以變更代理同時執行數。",
       "none": "不限制"
     },
+    "sharing": {
+      "title": "公開連結",
+      "description": "此工作區的文件、項目和檢視是否可以透過連結分享。",
+      "enabled": "允許公開連結",
+      "enabledHint": "關閉後，此處任何人都無法分享，現有連結在重新開啟前無法開啟。",
+      "instanceOff": "此執行個體已關閉公開連結。",
+      "teamsOnly": "僅限所選團隊",
+      "teamsOnlyHint": "只有下方的團隊可以分享。其他團隊的連結將無法開啟。",
+      "statusOn": "已開啟",
+      "statusOff": "已關閉",
+      "ownerOnly": "只有擁有者可以選擇哪些團隊能分享。",
+      "saved": "公開連結設定已儲存"
+    },
     "managers": {
       "title": "管理者",
       "description": "所有者和管理員管理工作區。",

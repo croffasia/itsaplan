@@ -723,6 +723,19 @@
       "ownerOnly": "Solo el propietario cambia cuántas ejecuciones de agentes van a la vez.",
       "none": "Sin límite"
     },
+    "sharing": {
+      "title": "Enlaces públicos",
+      "description": "Si los documentos, las incidencias y las vistas de este espacio de trabajo se pueden compartir por enlace.",
+      "enabled": "Permitir enlaces públicos",
+      "enabledHint": "Desactivado, nadie puede compartir aquí y los enlaces existentes dejan de abrirse hasta que se active de nuevo.",
+      "instanceOff": "Los enlaces públicos están desactivados en esta instancia.",
+      "teamsOnly": "Solo los equipos seleccionados",
+      "teamsOnlyHint": "Solo pueden compartir los equipos de abajo. Los enlaces de los demás equipos dejan de abrirse.",
+      "statusOn": "Activado",
+      "statusOff": "Apagado",
+      "ownerOnly": "Solo el propietario elige qué equipos pueden compartir.",
+      "saved": "Ajustes de enlaces públicos guardados"
+    },
     "managers": {
       "title": "Responsables",
       "description": "El propietario y los administradores gestionan el espacio de trabajo.",

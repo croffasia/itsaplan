@@ -28,6 +28,25 @@ export const updateWorkspaceBody = t.Object({
         'no limit of its own. At most maxConcurrentRunsCap. Only the owner changes it.',
     }),
   ),
+  sharingEnabled: t.Optional(
+    t.Boolean({
+      description:
+        'Whether its projects may have public links. Off closes the links it has until it ' +
+        'is on again. Refused while the instance has sharing off.',
+    }),
+  ),
+  sharingTeamsOnly: t.Optional(
+    t.Boolean({
+      description: 'Whether only the teams in sharingTeamIds may share. Only the owner changes it.',
+    }),
+  ),
+  sharingTeamIds: t.Optional(
+    t.Array(t.Integer(), {
+      description:
+        'The teams of this workspace that may share while sharingTeamsOnly is on. Replaces ' +
+        'the list. Only the owner changes it.',
+    }),
+  ),
 });
 
 export const addManagerBody = t.Object({ userId: t.String() });
@@ -61,6 +80,12 @@ export const WorkspaceResponse = t.Object({
   maxConcurrentRunsCap: t.Number({
     description: 'The highest maxConcurrentRuns the instance allows it; 0 when it sets none.',
   }),
+  sharingAvailable: t.Boolean({
+    description: 'Whether the instance allows public links. Off, the settings below do not apply.',
+  }),
+  sharingEnabled: t.Boolean(),
+  sharingTeamsOnly: t.Boolean(),
+  sharingTeams: t.Array(t.Object({ id: t.Number(), name: t.String(), selected: t.Boolean() })),
   deletion: t.UnionEnum(['allowed', 'work'], {
     description:
       'Whether the owner may delete it: work while a team of it holds a project or an AI agent.',

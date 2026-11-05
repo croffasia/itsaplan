@@ -19,6 +19,7 @@ import {
   type InstanceOidcSettingsPatch,
   type InstanceTelegramSettingsPatch,
   type InstanceUserKind,
+  type SharingSettings,
   getInstanceAuthSettings,
   updateInstanceAuthSettings,
   getInstanceEmailSettings,
@@ -34,6 +35,8 @@ import {
   updateInstanceProjectDefaults,
   getInstanceAgentSettings,
   updateInstanceAgentSettings,
+  getInstanceSharingSettings,
+  updateInstanceSharingSettings,
   getInstanceEmbedSites,
   updateInstanceEmbedSites,
   getInstanceStorageSettings,
@@ -180,6 +183,21 @@ export function useUpdateInstanceProjectDefaults() {
   return useMutation({
     mutationFn: (body: ProjectDefaults) => updateInstanceProjectDefaults(body),
     onSuccess: (data) => qc.setQueryData(qk.instanceProjectDefaults, data),
+  });
+}
+
+export function useInstanceSharingSettingsQuery() {
+  return useQuery({
+    queryKey: qk.instanceSharingSettings,
+    queryFn: () => getInstanceSharingSettings(),
+  });
+}
+
+export function useUpdateInstanceSharingSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SharingSettings) => updateInstanceSharingSettings(body),
+    onSuccess: (data) => qc.setQueryData(qk.instanceSharingSettings, data),
   });
 }
 

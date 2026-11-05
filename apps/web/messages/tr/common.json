@@ -142,6 +142,7 @@
     "overviewTitle": "Herkese açık",
     "overviewDescription": "Bu projede bağlantıya sahip herkesin okuyabildiği her şey ve her bağlantının ne zaman çalışmayı bırakacağı.",
     "overviewEmpty": "Bu projede herkese açık paylaşılan bir şey yok.",
+    "overviewClosed": "Herkese açık bağlantılar bu projede kapalı. Bu bağlantılar yeniden açılana kadar çalışmaz. Yine de iptal edebilirsiniz.",
     "overviewDocuments": "Belgeler",
     "overviewIssues": "İşler",
     "overviewViews": "Görünümler",

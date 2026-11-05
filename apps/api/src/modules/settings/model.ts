@@ -14,6 +14,13 @@ export const ProjectDefaultsSchema = t.Object({
   mcpEnabled: t.Boolean(),
 });
 
+export const SharingSettingsSchema = t.Object({
+  enabled: t.Boolean({
+    description:
+      'Whether public links work on this instance. Off closes every link until it is on again.',
+  }),
+});
+
 export const AgentSettingsSchema = t.Object({
   traceRetentionDays: t.Integer({
     minimum: 0,

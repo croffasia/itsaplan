@@ -8,6 +8,7 @@ import type { PermissionResource, PermissionAction } from '#shared/permissions';
 import { commonErrors, errors } from '#shared/responses';
 import { getIssueProjectId } from '#modules/issues/service';
 import { getView } from '#modules/views/service';
+import { projectSharingEnabled } from '#modules/workspaces/service';
 import { rawAttachmentQuery } from '#modules/attachments/model';
 import { attachmentObjectResponse } from '#modules/attachments/storage';
 import {
@@ -59,6 +60,20 @@ function parseExpiry(value: string | null | undefined): ShareExpiry {
   return at;
 }
 
+async function assertSharingEnabled(projectId: number): Promise<void> {
+  if (!(await projectSharingEnabled(projectId))) {
+    throw new HttpError(403, 'Sharing is turned off for this project');
+  }
+}
+
+const issueProjectId = (params: Record<string, string>) =>
+  getIssueProjectId(Number(params.issueId));
+
+const viewProjectId = async (params: Record<string, string>, user: GuardUser) => {
+  const view = await getView(Number(params.viewId), user?.id ?? null);
+  return view && !view.isPrivate ? view.projectId : null;
+};
+
 const documentProjectId = (params: Record<string, string>) =>
   shareableDocumentProjectId(Number(params.documentId));
 
@@ -69,21 +84,31 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
   // by its own id. Sharing one is an edit of it. Only a project's view and a page that
   // is not private have a share link: a private one is not found here.
   .macro({
-    workItem: entityGuard('work_items', 'Issue not found', (p) =>
-      getIssueProjectId(Number(p.issueId)),
-    ),
-    savedView: entityGuard('views', 'View not found', async (p, user) => {
-      const view = await getView(Number(p.viewId), user?.id ?? null);
-      return view && !view.isPrivate ? view.projectId : null;
-    }),
+    workItem: entityGuard('work_items', 'Issue not found', issueProjectId),
+    savedView: entityGuard('views', 'View not found', viewProjectId),
     sharedDocument: entityGuard('documents', 'Document not found', documentProjectId),
-    // A new link takes the Docs section. Revoking does not, so a link can still be removed
-    // while Docs is off.
+    // A new link takes sharing on for the project and, for a document, the Docs section.
+    // Revoking takes neither, so a closed link can still be removed.
+    newIssueShare: entityGuard(
+      'work_items',
+      'Issue not found',
+      issueProjectId,
+      undefined,
+      assertSharingEnabled,
+    ),
+    newViewShare: entityGuard(
+      'views',
+      'View not found',
+      viewProjectId,
+      undefined,
+      assertSharingEnabled,
+    ),
     newDocumentShare: entityGuard(
       'documents',
       'Document not found',
       documentProjectId,
       'documents',
+      assertSharingEnabled,
     ),
   })
 
@@ -103,7 +128,7 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
     {
       params: shareIssueParams,
       body: shareExtendedBody,
-      workItem: 'edit',
+      newIssueShare: 'edit',
       response: { 200: ShareTokenResponse, ...commonErrors },
       detail: { summary: 'Enable issue sharing' },
     },
@@ -149,7 +174,7 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
     {
       params: shareViewParams,
       body: shareExtendedBody,
-      savedView: 'edit',
+      newViewShare: 'edit',
       response: { 200: ShareTokenResponse, ...commonErrors },
       detail: { summary: 'Enable view sharing' },
     },

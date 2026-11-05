@@ -31,12 +31,17 @@ import {
 import { getParentRef, listSubtasks, type IssueRef } from '#modules/issues/subtasks';
 import { applyFilters } from '#modules/views/filters';
 import { revokedDocumentShare, rewriteAssetUrls } from '#modules/documents/service';
+import { projectSharingEnabled } from '#modules/workspaces/service';
 
 // Public read-only sharing: an issue, a saved view or a document carries an unguessable
 // share_token that, when set, makes it readable without a session through the
 // /share/* routes. Enabling sets the token; revoking clears it. The public reads
 // return a self-contained bundle (project scaffold + the entity) so the read-only
 // page needs no other authenticated call.
+//
+// Turning sharing off for the instance, the workspace or the team closes the links it
+// covers: they answer as unknown and a new one is refused, while revoking still works.
+// The tokens stay, so turning it on again opens the same links.
 
 // The project scaffold a read-only page needs to render issues: the same shape as
 // GET /projects/:projectKey minus the caller's viewer/permissions. Member emails
@@ -322,10 +327,11 @@ export async function disableViewShare(viewId: number): Promise<boolean> {
 
 // --- Public reads ---------------------------------------------------------------
 
-// The bundle for a shared issue link, or null if no issue carries the token.
+// The bundle for a shared issue link, or null if no issue carries the token or the link
+// is closed.
 export async function getSharedIssue(token: string): Promise<SharedIssueBundle | null> {
   const issueRow = await getIssue(await issueIdByToken(token));
-  if (!issueRow) return null;
+  if (!issueRow || !(await projectSharingEnabled(issueRow.projectId))) return null;
   return issueBundle(issueRow, {
     keepShareToken: true,
     extended: issueRow.shareExtended,
@@ -340,11 +346,12 @@ const sharedViewByToken = (token: string) =>
     activeShare(projectView.shareExpiresAt),
   );
 
-// The bundle for a shared view link, or null if no view carries the token.
+// The bundle for a shared view link, or null if no view carries the token or the link
+// is closed.
 export async function getSharedView(token: string): Promise<SharedViewBundle | null> {
   const rows = await db.select().from(projectView).where(sharedViewByToken(token));
   const view = rows[0];
-  if (!view) return null;
+  if (!view || !(await projectSharingEnabled(view.projectId))) return null;
   const project = await getProjectById(view.projectId);
   if (!project) return null;
   const [scaffold, issues] = await Promise.all([
@@ -389,7 +396,7 @@ export async function getSharedView(token: string): Promise<SharedViewBundle | n
 // issue is one the shared view actually shows: it must belong to the view's project
 // and pass the view's filters, so the board token cannot open issues the filter
 // excludes (nor archived issues, which listIssues omits). Null if the token is
-// unknown or the issue is not on the shared board.
+// unknown, the link is closed or the issue is not on the shared board.
 export async function getSharedViewIssue(
   token: string,
   issueId: number,
@@ -402,7 +409,7 @@ export async function getSharedViewIssue(
     })
     .from(projectView)
     .where(sharedViewByToken(token));
-  if (rows.length === 0) return null;
+  if (rows.length === 0 || !(await projectSharingEnabled(rows[0].projectId))) return null;
   const project = await getProjectById(rows[0].projectId);
   if (!project) return null;
   const [columns, issues] = await Promise.all([listColumns(project.id), listIssues(project)]);
@@ -520,7 +527,7 @@ export async function disableDocumentShare(documentId: number): Promise<boolean>
 }
 
 // The shared page of a token and the pages its link opens, or null when no live link
-// carries the token.
+// carries the token or the link is closed.
 async function sharedDocumentPages(
   token: string,
 ): Promise<{ project: ProjectRow; includeIssues: boolean; pages: SharedDocumentPage[] } | null> {
@@ -541,7 +548,7 @@ async function sharedDocumentPages(
         readablePage,
       ),
     );
-  if (!root) return null;
+  if (!root || !(await projectSharingEnabled(root.projectId))) return null;
   // Turning Docs off closes the project's links. Turning it on opens the same links again.
   const project = await getProjectById(root.projectId);
   if (!project || !projectFeatures(project).documents) return null;
@@ -574,7 +581,8 @@ async function sharedDocumentPages(
 }
 
 // The bundle for a shared document link: the shared page, or one of the subpages its
-// link opens. Null when the token is unknown or the page is not one the link opens.
+// link opens. Null when the token is unknown, the link is closed or the page is not one
+// the link opens.
 export async function getSharedDocument(
   token: string,
   documentId?: number,

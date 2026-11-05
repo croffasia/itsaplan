@@ -142,6 +142,7 @@
     "overviewTitle": "Publik",
     "overviewDescription": "Semua isi proyek ini yang bisa dibaca siapa pun yang punya tautan, dan kapan tiap tautan berhenti berfungsi.",
     "overviewEmpty": "Tidak ada isi proyek ini yang dibagikan secara publik.",
+    "overviewClosed": "Tautan publik dimatikan untuk proyek ini. Tautan ini tidak terbuka sampai dinyalakan lagi. Anda tetap bisa mencabutnya.",
     "overviewDocuments": "Dokumen",
     "overviewIssues": "Isu",
     "overviewViews": "Tampilan",

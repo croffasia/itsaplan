@@ -245,6 +245,11 @@ export const ProjectBoardResponse = t.Object({
   viewer: ViewerResponse,
   // The caller's resolved permission matrix (owners get every flag).
   permissions: PermissionMatrixSchema,
+  sharingEnabled: t.Boolean({
+    description:
+      'Whether this project may have public links. Off, its links are closed and a new one ' +
+      'is refused.',
+  }),
 });
 
 // Which optional sections the project shows (ProjectFeatures from the service).

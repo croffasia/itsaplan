@@ -96,6 +96,8 @@ import {
   setProjectDefaults,
   getAgentSettings,
   setAgentSettings,
+  getSharingSettings,
+  setSharingSettings,
 } from '#modules/settings/service';
 import { getUpdateStatus } from '#modules/settings/updates';
 import { RoleResponse, createRoleBody, updateRoleBody } from '#modules/roles/model';
@@ -113,6 +115,7 @@ import {
   EmbedSitesSchema,
   HotkeyCombosSchema,
   ProjectDefaultsSchema,
+  SharingSettingsSchema,
   StorageSettingsSchema,
   UpdateStatusSchema,
 } from '#modules/settings/model';
@@ -472,6 +475,25 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       description:
         "Update what applies to every team's agents. A shorter trace retention takes effect " +
         'on the next sweep, which deletes the traces already past it.',
+    },
+  })
+
+  .get('/god/sharing-settings', () => getSharingSettings(), {
+    response: { 200: SharingSettingsSchema, ...errors(401, 403) },
+    detail: {
+      summary: 'Get instance sharing settings',
+      description: 'Get whether public links work on this instance.',
+    },
+  })
+
+  .put('/god/sharing-settings', ({ body }) => setSharingSettings(body), {
+    body: SharingSettingsSchema,
+    response: { 200: SharingSettingsSchema, ...errors(400, 401, 403) },
+    detail: {
+      summary: 'Update instance sharing settings',
+      description:
+        'Turn public links on or off for the whole instance. Off closes every link and ' +
+        'refuses a new one; on opens the same links again, as each workspace allows.',
     },
   })
 

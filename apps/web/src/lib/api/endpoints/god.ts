@@ -302,6 +302,19 @@ export const updateInstanceAgentSettings = (body: Partial<AgentSettings>) =>
     body: JSON.stringify(body),
   });
 
+// Whether public links work on this instance.
+export interface SharingSettings {
+  enabled: boolean;
+}
+
+export const getInstanceSharingSettings = () => request<SharingSettings>('/god/sharing-settings');
+
+export const updateInstanceSharingSettings = (body: SharingSettings) =>
+  request<SharingSettings>('/god/sharing-settings', {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
+
 // The sites that may show the shared work items and views, and the public pages, in a frame.
 export interface EmbedSites {
   origins: string[];

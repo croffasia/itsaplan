@@ -57,7 +57,7 @@ or on the request body is checked in the handler or the service.
   - `teamRunsProject: true`: an owner or manager of its team.
   - `memberAdmin`, `memberSelfOrAdmin`: see [Member lists](#member-lists).
   - `feature: "<section>"` goes beside them and closes the route while the project has that
-    section off.
+    section off. A route that belongs to two sections takes both in an array.
 - **Team routes:** `teamMember`, `teamManager`, `teamOwner` and `teamPermission` inject
   `membership`.
 - **Workspace routes:** `workspaceManager`, `workspaceOwner` and `workspaceScim` inject `standing`.

@@ -41,6 +41,7 @@ describe('MCP structured results through the SDK client', () => {
     const withoutSchema = listed.tools.filter((tool) => tool.outputSchema === undefined);
     expect(withoutSchema.map((tool) => tool.name).sort()).toEqual([
       'view_attachment',
+      'view_document_asset',
       'view_initiative_images',
       'view_issue_images',
     ]);

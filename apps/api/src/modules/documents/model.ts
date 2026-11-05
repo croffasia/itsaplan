@@ -1,4 +1,5 @@
 import { t } from 'elysia';
+import { AttachmentContent, ViewAttachmentsResponse } from '#modules/attachments/model';
 
 export const documentParams = t.Object({
   projectKey: t.String(),
@@ -14,7 +15,10 @@ export const documentRevisionParams = t.Object({
 export const documentAssetParams = t.Object({
   projectKey: t.String(),
   documentId: t.Numeric(),
-  publicId: t.String({ format: 'uuid' }),
+  publicId: t.String({
+    format: 'uuid',
+    description: "The asset's id, from list_document_assets or from its url in the page text.",
+  }),
 });
 
 const DocumentSummaryResponse = t.Object({
@@ -159,6 +163,14 @@ export const IssueDocumentLinkResponse = t.Object({
 
 export const IssueDocumentLinkListResponse = t.Array(IssueDocumentLinkResponse);
 
+export const DocumentInitiativeLinkListResponse = t.Array(
+  t.Object({
+    initiativeId: t.Number(),
+    title: t.String(),
+    createdAt: t.String(),
+  }),
+);
+
 const DocumentRevisionSummaryResponse = t.Object({
   id: t.Number(),
   documentId: t.Number(),
@@ -196,6 +208,13 @@ export const DocumentExportResponse = t.Object({
 
 export const uploadDocumentAssetBody = t.Object({ file: t.File() });
 
+export const documentAssetFromChatBody = t.Object({
+  chatAttachmentId: t.String({
+    format: 'uuid',
+    description: 'The attachment id of the file in the chat.',
+  }),
+});
+
 export const DocumentAssetResponse = t.Object({
   id: t.String({ format: 'uuid' }),
   filename: t.String(),
@@ -204,9 +223,15 @@ export const DocumentAssetResponse = t.Object({
   uploadedByUserId: t.Nullable(t.String()),
   createdAt: t.String(),
   url: t.String(),
+  embedUrl: t.String({ description: 'The address to use in the page text to show this file.' }),
 });
 
 export const DocumentAssetListResponse = t.Array(DocumentAssetResponse);
+
+export const ViewDocumentAssetResponse = t.Object({
+  images: ViewAttachmentsResponse.properties.images,
+  others: t.Array(t.Composite([DocumentAssetResponse, AttachmentContent])),
+});
 
 export const deleteDocumentQuery = t.Object({
   version: t.Integer({ minimum: 1 }),

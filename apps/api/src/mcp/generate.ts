@@ -70,7 +70,7 @@ export function mcpTool(
   return { 'x-mcp': { tool, annotations } };
 }
 
-// Marks a route answering with ViewAttachmentsResponse as an MCP tool whose images
+// Marks a route answering in the shape of ViewAttachmentsResponse as an MCP tool whose images
 // reach the model as image content, not as base64 text.
 export function mcpImageTool(tool: string): { 'x-mcp': { tool: string; images: true } } {
   return { 'x-mcp': { tool, images: true } };

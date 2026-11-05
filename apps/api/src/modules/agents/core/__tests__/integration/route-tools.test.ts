@@ -325,6 +325,145 @@ describe('internal agent route tools', () => {
     ]);
   });
 
+  it('links a document to an issue and an initiative, and reads each link from both sides', async () => {
+    const { asOwner } = await setup();
+    const project = asOwner.projects({ projectKey: 'MKT' });
+    const view = await project.get();
+    const issueId = (
+      await project.issues.post({ columnId: view.data!.columns[0]!.id, title: 'Task' })
+    ).data!.id;
+    const initiativeId = (await project.initiatives.post({ title: 'Launch' })).data!.id;
+    const documentId = (await project.documents.post({ title: 'Spec' })).data!.id;
+    const tools = await toolsFor(asOwner, [
+      'link_document_issue',
+      'unlink_document_issue',
+      'list_document_issues',
+      'list_issue_documents',
+      'link_document_initiative',
+      'unlink_document_initiative',
+      'list_initiative_documents',
+      'list_document_initiatives',
+    ]);
+
+    expect(await run(tools, 'link_document_issue', { documentId, issueId })).toMatchObject({
+      issueId,
+    });
+    expect(await run(tools, 'list_document_issues', { documentId })).toMatchObject([{ issueId }]);
+    expect(await run(tools, 'list_issue_documents', { issueId })).toMatchObject([{ documentId }]);
+    await run(tools, 'unlink_document_issue', { documentId, issueId });
+    expect(await run(tools, 'list_issue_documents', { issueId })).toEqual([]);
+
+    await run(tools, 'link_document_initiative', { documentId, initiativeId });
+    expect(await run(tools, 'list_initiative_documents', { initiativeId })).toMatchObject([
+      { documentId },
+    ]);
+    expect(await run(tools, 'list_document_initiatives', { documentId })).toMatchObject([
+      { initiativeId },
+    ]);
+    await run(tools, 'unlink_document_initiative', { documentId, initiativeId });
+    expect(await run(tools, 'list_document_initiatives', { documentId })).toEqual([]);
+  });
+
+  it('reads a comment thread of a document, replies in it and resolves it', async () => {
+    const { asOwner } = await setup();
+    const documents = asOwner.projects({ projectKey: 'MKT' }).documents;
+    const page = (
+      await documents.post({
+        title: 'Plan',
+        content: 'Hello world',
+        contentJson: {
+          type: 'doc',
+          content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hello world' }] }],
+        },
+      })
+    ).data!;
+    const documentId = page.id;
+    const root = await documents({ documentId }).comments.post({
+      body: 'Is this right?',
+      quote: 'Hello',
+      from: 1,
+      to: 6,
+      version: page.version,
+    });
+    const commentId = root.data!.id;
+    const tools = await toolsFor(asOwner, [
+      'list_document_comments',
+      'add_document_comment',
+      'update_document_comment',
+    ]);
+
+    expect(await run(tools, 'list_document_comments', { documentId })).toMatchObject([
+      { id: commentId, parentId: null, quote: 'Hello', body: 'Is this right?' },
+    ]);
+    await run(tools, 'add_document_comment', { documentId, parentId: commentId, body: 'Yes' });
+    await run(tools, 'update_document_comment', { documentId, commentId, resolved: true });
+
+    const thread = (await run(tools, 'list_document_comments', { documentId })) as {
+      parentId: string | null;
+      body: string;
+      resolvedAt: string | null;
+    }[];
+    expect(thread.map((comment) => comment.body)).toEqual(['Is this right?', 'Yes']);
+    expect(thread[1]!.parentId).toBe(commentId);
+    expect(thread[0]!.resolvedAt).not.toBeNull();
+  });
+
+  it('adds a file to a document, opens it and deletes it', async () => {
+    const { asOwner } = await setup();
+    const tools = await toolsFor(asOwner, [
+      'create_document',
+      'add_document_asset',
+      'list_document_assets',
+      'view_document_asset',
+      'delete_document_asset',
+    ]);
+    // Deleting a file takes owning its page, so the agent makes the page.
+    const { id: documentId } = (await run(tools, 'create_document', { title: 'Spec' })) as {
+      id: number;
+    };
+
+    const added = (await run(tools, 'add_document_asset', {
+      documentId,
+      filename: 'note.txt',
+      contentBase64: Buffer.from('hello').toString('base64'),
+      contentType: 'text/plain',
+    })) as { id: string; embedUrl: string };
+    expect(added.embedUrl).toStartWith('/protected-media/projects/');
+    expect(await run(tools, 'list_document_assets', { documentId })).toMatchObject([
+      { id: added.id },
+    ]);
+    expect(
+      await run(tools, 'view_document_asset', { documentId, publicId: added.id }),
+    ).toMatchObject({ images: [], others: [{ id: added.id, text: 'hello' }] });
+
+    await run(tools, 'delete_document_asset', { documentId, publicId: added.id });
+    expect(await run(tools, 'list_document_assets', { documentId })).toEqual([]);
+  });
+
+  it('copies a file attached in the chat into a document', async () => {
+    const { asOwner } = await setup();
+    const tools = await toolsFor(asOwner, [
+      'create_document',
+      'add_document_asset_from_chat',
+      'view_document_asset',
+    ]);
+    const { id: documentId } = (await run(tools, 'create_document', { title: 'Spec' })) as {
+      id: number;
+    };
+    const { id: chatAttachmentId } = (await run(tools, 'upload_chat_attachment', {
+      filename: 'note.txt',
+      contentBase64: Buffer.from('hello').toString('base64'),
+    })) as { id: string };
+
+    const copied = (await run(tools, 'add_document_asset_from_chat', {
+      documentId,
+      chatAttachmentId,
+    })) as { id: string };
+    expect(
+      await run(tools, 'view_document_asset', { documentId, publicId: copied.id }),
+    ).toMatchObject({ images: [], others: [{ filename: 'note.txt', text: 'hello' }] });
+  });
+
   it("provisions a legacy agent's key once, even when two runs start together", async () => {
     const { asOwner, teamId } = await setup();
     const created = await createAgent(asOwner, 'MKT', {

@@ -7,6 +7,7 @@ import { pdfToMarkdown } from './pdf';
 import {
   assertAttachmentStorageCapacity,
   lockAttachmentStorage,
+  viewAttachments,
 } from '#modules/attachments/storage';
 
 // Data access for chat attachments. File bytes live in the S3-compatible object
@@ -107,7 +108,7 @@ function isReadableFile(row: StoredFile): boolean {
   return isTableFilename(row.filename) || isTextLike(row) || isPdf(row);
 }
 
-// The content of a stored file, chat or issue attachment alike: a table for a
+// The content of a stored file, whichever feature owns it: a table for a
 // spreadsheet or document, the full text for a text file or a PDF, nothing for any
 // other file (its download url is in the metadata either way). A text is returned
 // whole: what it costs in context is the user's call, and the chat shows the
@@ -127,4 +128,15 @@ export async function readAttachmentContent(row: StoredFile): Promise<Attachment
   }
   if (isPdf(row)) return { text: await pdfToMarkdown(bytes) };
   return { text: bytes.toString('utf8') };
+}
+
+// One stored file opened for an assistant: an image as the image itself, any other file
+// as its DTO plus what readAttachmentContent finds in it.
+export async function viewFile<Dto extends object>(
+  row: StoredFile & { publicId: string; sizeBytes: number },
+  dto: Dto,
+) {
+  const asImage = await viewAttachments([row], () => dto);
+  if (asImage.images.length > 0) return asImage;
+  return { images: [], others: [{ ...dto, ...(await readAttachmentContent(row)) }] };
 }

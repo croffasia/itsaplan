@@ -28,10 +28,12 @@ import { documentMentionHandles, fanOutTextMentions } from './mentions';
 import {
   assertAttachmentStorageCapacity,
   assertAttachmentFileAllowed,
+  assertAttachmentUploadAllowed,
   attachmentObjectKey,
   cloneAttachmentObject,
   deleteAttachmentObject,
   lockAttachmentStorage,
+  storeAttachmentObject,
 } from '#modules/attachments/storage';
 
 type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -340,7 +342,37 @@ export async function assertDocumentAssetUploadTarget(
   return true;
 }
 
-export async function createDocumentAsset(input: {
+export async function storeDocumentAsset(input: {
+  projectId: number;
+  documentId: number;
+  userId: string;
+  filename: string;
+  contentType: string;
+  bytes: Buffer;
+}): Promise<DocumentAssetRow> {
+  const { projectId, documentId, userId, filename, contentType, bytes } = input;
+  await assertAttachmentUploadAllowed(projectId, bytes.length, contentType);
+  const key = attachmentObjectKey(projectId, 'documents', documentId, filename);
+  await storeAttachmentObject(key, bytes, contentType);
+  try {
+    const asset = await createDocumentAsset({
+      projectId,
+      documentId,
+      userId,
+      s3Key: key,
+      filename,
+      contentType,
+      sizeBytes: bytes.length,
+    });
+    if (!asset) throw new HttpError(404, 'Document not found');
+    return asset;
+  } catch (error) {
+    await deleteAttachmentObject(key);
+    throw error;
+  }
+}
+
+async function createDocumentAsset(input: {
   projectId: number;
   documentId: number;
   userId: string;

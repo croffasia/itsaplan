@@ -1,11 +1,11 @@
 import { Elysia } from 'elysia';
+import { localeFromAcceptLanguage } from '@repo/mailer';
 import { getProjectAccess, requireUser } from '#shared/access';
 import { authContext } from '#shared/auth-context';
 import { HttpError } from '#shared/lib';
 import { errors } from '#shared/responses';
 import { PreferencePatch, PreferenceResponse } from './model';
 import { getPreferences, isValidTimezone, updatePreferences } from './service';
-import { localeFromAcceptLanguage } from './locale';
 
 // The session user's own interface preferences: timezone, language, theme, how a clicked issue
 // opens, which section the app root lands on, whether the floating AI chat starts

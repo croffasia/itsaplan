@@ -328,6 +328,117 @@
     "clientSecretPlaceholder": "Secreto del registro de aplicación",
     "microsoft365Hint": "Inicia sesión como un registro de aplicación de Entra ID en lugar de con la contraseña del buzón, así el buzón puede mantener el MFA. La aplicación necesita el permiso de aplicación SMTP.SendAsApp de Office 365 Exchange Online con consentimiento de administrador, acceso a este buzón en Exchange y SMTP AUTH activado en el buzón."
   },
+  "emailTemplates": {
+    "saved": "Plantillas de correo guardadas",
+    "unsaved": "Cambios sin guardar",
+    "blankText": "Añade el asunto o el texto que falta para guardar",
+    "emails": "Correos",
+    "layout": "Diseño",
+    "edited": "Editado",
+    "subject": "Asunto",
+    "text": "Texto",
+    "button": "Botón",
+    "formatting": "Formato",
+    "heading1": "Título 1",
+    "heading2": "Título 2",
+    "bold": "Negrita",
+    "italic": "Cursiva",
+    "strikethrough": "Tachado",
+    "link": "Enlace",
+    "bulletedList": "Lista con viñetas",
+    "numberedList": "Lista numerada",
+    "quote": "Cita",
+    "boldSample": "negrita",
+    "italicSample": "cursiva",
+    "strikeSample": "texto",
+    "linkSample": "texto del enlace",
+    "unknownVariables": "{count, plural, one {Variable desconocida: {names}} other {Variables desconocidas: {names}}}",
+    "removeUnknownVariables": "Quita las variables desconocidas para guardar",
+    "reset": "Volver al original",
+    "test": "Enviar prueba",
+    "testing": "Enviando…",
+    "testSent": "Enviado a {email}",
+    "testNeedsProvider": "Configura primero el proveedor de correo",
+    "layoutHtml": "HTML del diseño",
+    "layoutCss": "CSS del diseño",
+    "placeholders": "Marcadores",
+    "variables": "Variables",
+    "required": "Obligatorio",
+    "requiredPlaceholders": "Añade {names} al diseño para guardar",
+    "preview": "Vista previa",
+    "previewEmail": "Correo",
+    "previewText": "Texto sin formato",
+    "previewFailed": "La vista previa no se ha cargado. Recarga la página para volver a intentarlo.",
+    "from": "De",
+    "to": "Para",
+    "groups": {
+      "signIn": "Inicio de sesión",
+      "invitations": "Invitaciones",
+      "notifications": "Notificaciones",
+      "service": "Otros"
+    },
+    "templates": {
+      "reset": {
+        "name": "Restablecimiento de contraseña"
+      },
+      "verify": {
+        "name": "Confirmación de dirección"
+      },
+      "magic": {
+        "name": "Enlace de inicio de sesión"
+      },
+      "inviteProject": {
+        "name": "Invitación a un proyecto"
+      },
+      "inviteTeam": {
+        "name": "Invitación a un equipo"
+      },
+      "assigned": {
+        "name": "Ticket asignado"
+      },
+      "mentioned": {
+        "name": "Mención en un ticket"
+      },
+      "commented": {
+        "name": "Comentario nuevo"
+      },
+      "stateChanged": {
+        "name": "Estado cambiado"
+      },
+      "documentMentioned": {
+        "name": "Mención en un documento"
+      },
+      "documentCommentMentioned": {
+        "name": "Mención en un comentario de documento"
+      },
+      "test": {
+        "name": "Correo de prueba",
+        "hint": "Lo envía el botón de prueba de la página del proveedor de correo."
+      }
+    },
+    "placeholderText": {
+      "content": "Texto del correo",
+      "button": "Botón con el enlace",
+      "subject": "Asunto",
+      "lang": "Código de idioma",
+      "dir": "Dirección del texto",
+      "site_name": "Nombre de la instancia",
+      "site_url": "Dirección de la instancia",
+      "logo_url": "Dirección del logotipo"
+    },
+    "variableText": {
+      "actor": "Quién lo hizo",
+      "ref": "Número del ticket",
+      "title": "Título del ticket",
+      "from": "Estado anterior",
+      "to": "Estado nuevo",
+      "document": "Título del documento",
+      "inviter": "Quién envió la invitación",
+      "project": "Nombre del proyecto",
+      "team": "Nombre del equipo",
+      "role": "Rol al unirse"
+    }
+  },
   "authProvider": {
     "saved": "El proveedor de autenticación se ha guardado",
     "google": "Google",

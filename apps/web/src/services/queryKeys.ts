@@ -356,6 +356,8 @@ export const qk = {
   instanceAgentSettings: ['instanceAgentSettings'] as const,
   instanceSharingSettings: ['instanceSharingSettings'] as const,
   instanceEmbedSites: ['instanceEmbedSites'] as const,
+  instanceEmailTemplates: ['instanceEmailTemplates'] as const,
+  instanceEmailPreview: (draft: unknown) => ['instanceEmailPreview', draft] as const,
   instanceStorageSettings: ['instanceStorageSettings'] as const,
   systemRoles: ['systemRoles'] as const,
   // The upload limits as read by the upload UI (open to any signed-in user).

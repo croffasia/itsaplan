@@ -6,6 +6,7 @@ import {
   Keyboard,
   KeyRound,
   Mail,
+  Mails,
   Send,
   ShieldCheck,
   SlidersHorizontal,
@@ -76,6 +77,11 @@ export const GOD_SECTIONS: GodSection[] = godSections([
     slug: 'storage',
     group: 'instance',
     icon: HardDrive,
+  },
+  {
+    slug: 'email-templates',
+    group: 'instance',
+    icon: Mails,
   },
   {
     slug: 'telegram',

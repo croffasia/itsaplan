@@ -328,6 +328,117 @@
     "clientSecretPlaceholder": "Secret de l’inscription d’application",
     "microsoft365Hint": "Se connecte en tant qu’inscription d’application Entra ID au lieu du mot de passe de la boîte, qui peut ainsi garder la MFA. L’application a besoin de l’autorisation d’application SMTP.SendAsApp d’Office 365 Exchange Online avec consentement administrateur, d’un accès à cette boîte dans Exchange et de SMTP AUTH activé sur la boîte."
   },
+  "emailTemplates": {
+    "saved": "Modèles d'e-mails enregistrés",
+    "unsaved": "Modifications non enregistrées",
+    "blankText": "Ajoutez l'objet ou le texte manquant pour enregistrer",
+    "emails": "E-mails",
+    "layout": "Mise en page",
+    "edited": "Modifié",
+    "subject": "Objet",
+    "text": "Texte",
+    "button": "Bouton",
+    "formatting": "Mise en forme",
+    "heading1": "Titre 1",
+    "heading2": "Titre 2",
+    "bold": "Gras",
+    "italic": "Italique",
+    "strikethrough": "Barré",
+    "link": "Lien",
+    "bulletedList": "Liste à puces",
+    "numberedList": "Liste numérotée",
+    "quote": "Citation",
+    "boldSample": "gras",
+    "italicSample": "italique",
+    "strikeSample": "texte",
+    "linkSample": "texte du lien",
+    "unknownVariables": "{count, plural, one {Variable inconnue : {names}} other {Variables inconnues : {names}}}",
+    "removeUnknownVariables": "Retirez les variables inconnues pour enregistrer",
+    "reset": "Rétablir l'original",
+    "test": "Envoyer un test",
+    "testing": "Envoi…",
+    "testSent": "Envoyé à {email}",
+    "testNeedsProvider": "Configurez d'abord le fournisseur d'e-mails",
+    "layoutHtml": "HTML de la mise en page",
+    "layoutCss": "CSS de la mise en page",
+    "placeholders": "Espaces réservés",
+    "variables": "Variables",
+    "required": "Requis",
+    "requiredPlaceholders": "Ajoutez {names} à la mise en page pour enregistrer",
+    "preview": "Aperçu",
+    "previewEmail": "E-mail",
+    "previewText": "Texte brut",
+    "previewFailed": "L'aperçu ne s'est pas chargé. Rechargez la page pour réessayer.",
+    "from": "De",
+    "to": "À",
+    "groups": {
+      "signIn": "Connexion",
+      "invitations": "Invitations",
+      "notifications": "Notifications",
+      "service": "Autres"
+    },
+    "templates": {
+      "reset": {
+        "name": "Réinitialisation du mot de passe"
+      },
+      "verify": {
+        "name": "Confirmation de l'adresse"
+      },
+      "magic": {
+        "name": "Lien de connexion"
+      },
+      "inviteProject": {
+        "name": "Invitation à un projet"
+      },
+      "inviteTeam": {
+        "name": "Invitation à une équipe"
+      },
+      "assigned": {
+        "name": "Ticket assigné"
+      },
+      "mentioned": {
+        "name": "Mention sur un ticket"
+      },
+      "commented": {
+        "name": "Nouveau commentaire"
+      },
+      "stateChanged": {
+        "name": "État modifié"
+      },
+      "documentMentioned": {
+        "name": "Mention dans un document"
+      },
+      "documentCommentMentioned": {
+        "name": "Mention dans un commentaire de document"
+      },
+      "test": {
+        "name": "E-mail de test",
+        "hint": "Envoyé par le bouton de test de la page du fournisseur d'e-mail."
+      }
+    },
+    "placeholderText": {
+      "content": "Texte de l'e-mail",
+      "button": "Bouton avec le lien",
+      "subject": "Objet",
+      "lang": "Code de langue",
+      "dir": "Sens du texte",
+      "site_name": "Nom de l'instance",
+      "site_url": "Adresse de l'instance",
+      "logo_url": "Adresse du logo"
+    },
+    "variableText": {
+      "actor": "Auteur de l'action",
+      "ref": "Numéro du ticket",
+      "title": "Titre du ticket",
+      "from": "État précédent",
+      "to": "Nouvel état",
+      "document": "Titre du document",
+      "inviter": "Auteur de l'invitation",
+      "project": "Nom du projet",
+      "team": "Nom de l'équipe",
+      "role": "Rôle après l'arrivée"
+    }
+  },
   "authProvider": {
     "saved": "Fournisseur d'authentification enregistré",
     "google": "Google",

@@ -328,6 +328,117 @@
     "clientSecretPlaceholder": "Segredo do registro de aplicativo",
     "microsoft365Hint": "Entra como um registro de aplicativo do Entra ID em vez da senha da caixa de correio, que pode manter o MFA. O aplicativo precisa da permissão de aplicativo SMTP.SendAsApp do Office 365 Exchange Online com consentimento de administrador, acesso a esta caixa no Exchange e SMTP AUTH ativado na caixa."
   },
+  "emailTemplates": {
+    "saved": "Modelos de e-mail salvos",
+    "unsaved": "Alterações não salvas",
+    "blankText": "Preencha o assunto ou o texto que falta para salvar",
+    "emails": "E-mails",
+    "layout": "Layout",
+    "edited": "Editado",
+    "subject": "Assunto",
+    "text": "Texto",
+    "button": "Botão",
+    "formatting": "Formatação",
+    "heading1": "Título 1",
+    "heading2": "Título 2",
+    "bold": "Negrito",
+    "italic": "Itálico",
+    "strikethrough": "Tachado",
+    "link": "Link",
+    "bulletedList": "Lista com marcadores",
+    "numberedList": "Lista numerada",
+    "quote": "Citação",
+    "boldSample": "negrito",
+    "italicSample": "itálico",
+    "strikeSample": "texto",
+    "linkSample": "texto do link",
+    "unknownVariables": "{count, plural, one {Variável desconhecida: {names}} other {Variáveis desconhecidas: {names}}}",
+    "removeUnknownVariables": "Remova as variáveis desconhecidas para salvar",
+    "reset": "Voltar ao padrão",
+    "test": "Enviar teste",
+    "testing": "Enviando…",
+    "testSent": "Enviado para {email}",
+    "testNeedsProvider": "Configure o provedor de e-mail primeiro",
+    "layoutHtml": "HTML do layout",
+    "layoutCss": "CSS do layout",
+    "placeholders": "Marcadores",
+    "variables": "Variáveis",
+    "required": "Obrigatório",
+    "requiredPlaceholders": "Adicione {names} ao layout para salvar",
+    "preview": "Pré-visualização",
+    "previewEmail": "E-mail",
+    "previewText": "Texto simples",
+    "previewFailed": "A pré-visualização não carregou. Recarregue a página para tentar de novo.",
+    "from": "De",
+    "to": "Para",
+    "groups": {
+      "signIn": "Login",
+      "invitations": "Convites",
+      "notifications": "Notificações",
+      "service": "Outros"
+    },
+    "templates": {
+      "reset": {
+        "name": "Redefinição de senha"
+      },
+      "verify": {
+        "name": "Confirmação de endereço"
+      },
+      "magic": {
+        "name": "Link de login"
+      },
+      "inviteProject": {
+        "name": "Convite para projeto"
+      },
+      "inviteTeam": {
+        "name": "Convite para equipe"
+      },
+      "assigned": {
+        "name": "Issue atribuída"
+      },
+      "mentioned": {
+        "name": "Menção em issue"
+      },
+      "commented": {
+        "name": "Novo comentário"
+      },
+      "stateChanged": {
+        "name": "Status alterado"
+      },
+      "documentMentioned": {
+        "name": "Menção em documento"
+      },
+      "documentCommentMentioned": {
+        "name": "Menção em comentário de documento"
+      },
+      "test": {
+        "name": "E-mail de teste",
+        "hint": "Enviado pelo botão de teste da página do provedor de e-mail."
+      }
+    },
+    "placeholderText": {
+      "content": "Texto do e-mail",
+      "button": "Botão com o link",
+      "subject": "Assunto",
+      "lang": "Código do idioma",
+      "dir": "Direção do texto",
+      "site_name": "Nome da instância",
+      "site_url": "Endereço da instância",
+      "logo_url": "Endereço do logo"
+    },
+    "variableText": {
+      "actor": "Quem fez a ação",
+      "ref": "Número da issue",
+      "title": "Título da issue",
+      "from": "Status anterior",
+      "to": "Novo status",
+      "document": "Título do documento",
+      "inviter": "Quem enviou o convite",
+      "project": "Nome do projeto",
+      "team": "Nome da equipe",
+      "role": "Papel ao entrar"
+    }
+  },
   "authProvider": {
     "saved": "Provedor de autenticação salvo",
     "google": "Google",

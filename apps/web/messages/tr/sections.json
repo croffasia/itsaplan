@@ -45,6 +45,10 @@
       "label": "Depolama",
       "description": "Yükleme limitleri: tek dosya boyutu, kabul edilen ek türleri ve projelere tanınan depolama alanı."
     },
+    "email-templates": {
+      "label": "E-posta şablonları",
+      "description": "Sistem e-postası şablonlarını yönetin."
+    },
     "telegram": {
       "label": "Telegram",
       "description": "Kullanıcıların Telegram hesaplarını bağladığı ve kendi botunu ayarlamayan projeler için bildirim gönderen bot."

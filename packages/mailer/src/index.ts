@@ -1,9 +1,16 @@
 import nodemailer from 'nodemailer';
+import { escapeHtml } from './templates/render';
+
+export * from './locale';
+export * from './templates/catalog';
+export * from './templates/layout';
+export * from './templates/render';
+export type { CoreEmailKey, EmailText, EmailWords } from './templates/types';
 
 // Outbound email transport, shared by the two senders in the app: project
 // notifications (credentials per project) and authentication mail (credentials per
-// instance). Only the transport lives here. Where the credentials come from, how
-// they are stored, and what the message says belong to the caller.
+// instance). Where the credentials come from and how they are stored belong to the
+// caller. ./templates holds what the emails say and how they look.
 
 const HTTP_TIMEOUT_MS = 15_000;
 
@@ -69,6 +76,15 @@ function fromAddress(config: EmailConfig, provider: 'smtp' | 'resend'): string |
   if (env && env.length > 0) return env;
   if (provider === 'smtp' && config.smtp.username.length > 0) return config.smtp.username;
   return null;
+}
+
+function smtpReady(smtp: SmtpConfig): boolean {
+  return smtp.enabled && smtp.host.length > 0;
+}
+
+// The address an email goes out from, with the provider sendEmail would pick.
+export function senderAddress(config: EmailConfig): string | null {
+  return fromAddress(config, smtpReady(config.smtp) ? 'smtp' : 'resend');
 }
 
 class TokenError extends Error {
@@ -229,10 +245,7 @@ async function sendResend(
 // True when the config has a usable provider. Callers use it to disable features
 // that depend on outbound email instead of queuing mail that cannot be sent.
 export function hasEmailProvider(config: EmailConfig): boolean {
-  return (
-    (config.smtp.enabled && config.smtp.host.length > 0) ||
-    (config.resend.enabled && config.resend.apiKey.length > 0)
-  );
+  return smtpReady(config.smtp) || (config.resend.enabled && config.resend.apiKey.length > 0);
 }
 
 // Sends one message with the first enabled provider: SMTP wins over Resend when
@@ -240,7 +253,7 @@ export function hasEmailProvider(config: EmailConfig): boolean {
 export async function sendEmail(config: EmailConfig, message: EmailMessage): Promise<SendResult> {
   if (!message.to) return { ok: false, retryable: false, error: 'no recipient' };
   const { smtp, resend } = config;
-  if (smtp.enabled && smtp.host.length > 0) {
+  if (smtpReady(smtp)) {
     const from = fromAddress(config, 'smtp');
     if (!from) return { ok: false, retryable: false, error: 'no From address for SMTP' };
     return sendSmtp(smtp, message, from);
@@ -253,19 +266,11 @@ export async function sendEmail(config: EmailConfig, message: EmailMessage): Pro
   return { ok: false, retryable: false, error: 'no email provider enabled' };
 }
 
-function escape(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
 // Wraps a plain-text body (and an optional link) into the text/html pair the
-// transport needs. Shared so every message in the app looks the same.
+// transport needs, for a message that has no template.
 export function emailBody(text: string, url?: string | null): { text: string; html: string } {
   const plain = url ? `${text}\n\n${url}` : text;
-  const body = escape(text).replace(/\n/g, '<br>');
-  const link = url ? `<p><a href="${escape(url)}">${escape(url)}</a></p>` : '';
+  const body = escapeHtml(text).replace(/\n/g, '<br>');
+  const link = url ? `<p><a href="${escapeHtml(url)}">${escapeHtml(url)}</a></p>` : '';
   return { text: plain, html: `<p>${body}</p>${link}` };
 }

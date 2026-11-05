@@ -328,6 +328,117 @@
     "clientSecretPlaceholder": "Секрет реєстрації застосунку",
     "microsoft365Hint": "Входить як реєстрація застосунку в Entra ID замість пароля скриньки, тож скринька може залишити MFA. Застосунку потрібен дозвіл застосунку SMTP.SendAsApp з Office 365 Exchange Online зі згодою адміністратора, доступ до цієї скриньки в Exchange і ввімкнений SMTP AUTH для скриньки."
   },
+  "emailTemplates": {
+    "saved": "Шаблони листів збережено",
+    "unsaved": "Є незбережені зміни",
+    "blankText": "Заповніть порожню тему або текст, щоб зберегти",
+    "emails": "Листи",
+    "layout": "Макет",
+    "edited": "Змінено",
+    "subject": "Тема",
+    "text": "Текст",
+    "button": "Кнопка",
+    "formatting": "Форматування",
+    "heading1": "Заголовок 1",
+    "heading2": "Заголовок 2",
+    "bold": "Жирний",
+    "italic": "Курсив",
+    "strikethrough": "Закреслений",
+    "link": "Посилання",
+    "bulletedList": "Маркований список",
+    "numberedList": "Нумерований список",
+    "quote": "Цитата",
+    "boldSample": "жирний",
+    "italicSample": "курсив",
+    "strikeSample": "текст",
+    "linkSample": "текст посилання",
+    "unknownVariables": "{count, plural, one {Невідома змінна: {names}} other {Невідомі змінні: {names}}}",
+    "removeUnknownVariables": "Приберіть невідомі змінні, щоб зберегти",
+    "reset": "Повернути стандартний",
+    "test": "Надіслати тест",
+    "testing": "Надсилання…",
+    "testSent": "Надіслано на {email}",
+    "testNeedsProvider": "Спочатку налаштуйте поштового провайдера",
+    "layoutHtml": "HTML макета",
+    "layoutCss": "CSS макета",
+    "placeholders": "Підстановки",
+    "variables": "Змінні",
+    "required": "Обов'язково",
+    "requiredPlaceholders": "Додайте в макет {names}, щоб зберегти",
+    "preview": "Попередній перегляд",
+    "previewEmail": "Лист",
+    "previewText": "Звичайний текст",
+    "previewFailed": "Попередній перегляд не завантажився. Оновіть сторінку й спробуйте ще раз.",
+    "from": "Від",
+    "to": "Кому",
+    "groups": {
+      "signIn": "Вхід",
+      "invitations": "Запрошення",
+      "notifications": "Сповіщення",
+      "service": "Інше"
+    },
+    "templates": {
+      "reset": {
+        "name": "Скидання пароля"
+      },
+      "verify": {
+        "name": "Підтвердження адреси"
+      },
+      "magic": {
+        "name": "Посилання для входу"
+      },
+      "inviteProject": {
+        "name": "Запрошення до проєкту"
+      },
+      "inviteTeam": {
+        "name": "Запрошення до команди"
+      },
+      "assigned": {
+        "name": "Задачу призначено"
+      },
+      "mentioned": {
+        "name": "Згадка в задачі"
+      },
+      "commented": {
+        "name": "Новий коментар"
+      },
+      "stateChanged": {
+        "name": "Статус змінено"
+      },
+      "documentMentioned": {
+        "name": "Згадка в документі"
+      },
+      "documentCommentMentioned": {
+        "name": "Згадка в коментарі до документа"
+      },
+      "test": {
+        "name": "Тестовий лист",
+        "hint": "Надсилається кнопкою тесту на сторінці поштового провайдера."
+      }
+    },
+    "placeholderText": {
+      "content": "Текст листа",
+      "button": "Кнопка з посиланням",
+      "subject": "Тема",
+      "lang": "Код мови",
+      "dir": "Напрямок тексту",
+      "site_name": "Назва інстансу",
+      "site_url": "Адреса інстансу",
+      "logo_url": "Адреса логотипа"
+    },
+    "variableText": {
+      "actor": "Хто це зробив",
+      "ref": "Номер задачі",
+      "title": "Назва задачі",
+      "from": "Попередній статус",
+      "to": "Новий статус",
+      "document": "Назва документа",
+      "inviter": "Хто надіслав запрошення",
+      "project": "Назва проєкту",
+      "team": "Назва команди",
+      "role": "Роль після приєднання"
+    }
+  },
   "authProvider": {
     "saved": "Провайдера входу збережено",
     "google": "Google",

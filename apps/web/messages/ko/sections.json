@@ -45,6 +45,10 @@
       "label": "저장소",
       "description": "업로드할 수 있는 개별 파일 크기, 허용되는 첨부 파일 유형 및 프로젝트별 저장 용량을 설정합니다."
     },
+    "email-templates": {
+      "label": "이메일 템플릿",
+      "description": "시스템 이메일 템플릿을 관리합니다."
+    },
     "telegram": {
       "label": "Telegram",
       "description": "사용자가 Telegram 계정을 연결할 봇과 자체 봇을 설정하지 않은 프로젝트에서 알림을 전송할 봇을 설정합니다."

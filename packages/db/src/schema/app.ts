@@ -1150,12 +1150,11 @@ export const userTelegramAccount = pgTable(
 // ('email' picks SMTP or Resend from the team config). recipient is the member's
 // email address for email rows, or their Telegram chat id for telegram rows.
 // The stored message on a notification_delivery row, composed at enqueue time by the
-// api and read by the worker that sends it. `subject`/`html` are channel-specific:
-// email uses `subject` and builds its own HTML from `text`; Telegram sends `html`
-// (parse_mode HTML) and falls back to `text`. The sender appends `url` to plain-text
-// bodies. `dedupeKey` is what the enqueue side matches to avoid queuing the same
-// message twice; `projectInviteId` ties an invite email to its invite, so a delivery
-// whose invite is no longer pending is dropped instead of sent.
+// api and read by the worker that sends it. Email uses `subject` and sends `html` as composed;
+// for a row without `html` the sender appends `url` to `text` and wraps it. Telegram sends
+// `html` (parse_mode HTML) and falls back to `text`. `dedupeKey` is what the enqueue side
+// matches to avoid queuing the same message twice; `projectInviteId` ties an invite email to
+// its invite, so a delivery whose invite is no longer pending is dropped instead of sent.
 export interface DeliveryPayload {
   subject?: string;
   text: string;

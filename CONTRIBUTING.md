@@ -29,7 +29,7 @@ apps/bot        Telegram bot, long polling
 packages/db     Drizzle client, schema, migrations
 packages/auth   better-auth server instance
 packages/crypto AES-256-GCM encryption for secrets at rest
-packages/mailer SMTP and Resend transport
+packages/mailer SMTP and Resend transport, email templates
 ```
 
 Dependency direction is `api → @repo/auth → @repo/db`. The web app never imports the

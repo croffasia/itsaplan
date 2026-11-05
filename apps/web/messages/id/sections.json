@@ -45,6 +45,10 @@
       "label": "Penyimpanan",
       "description": "Batas unggahan pengguna: ukuran file tunggal, jenis lampiran yang diterima, dan ruang penyimpanan untuk setiap proyek."
     },
+    "email-templates": {
+      "label": "Template email",
+      "description": "Kelola template email sistem."
+    },
     "telegram": {
       "label": "Telegram",
       "description": "Bot yang dihubungkan pengguna ke akun Telegram mereka, dan bot yang mengirimkan notifikasi Telegram untuk proyek yang tidak menetapkan bot sendiri."

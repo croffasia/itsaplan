@@ -47,7 +47,7 @@
     },
     "email-templates": {
       "label": "Plantillas de correo",
-      "description": "Los correos que envía la instancia, en el idioma de cada usuario."
+      "description": "Gestiona las plantillas de los correos del sistema."
     },
     "telegram": {
       "label": "Telegram",

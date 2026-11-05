@@ -70,7 +70,7 @@ export const ru: EmailLocaleTexts = {
     },
     test: {
       subject: "Проверка почты It's a Plan",
-      body: "Это тестовое письмо: It's a Plan может отправлять почту через настроенного провайдера.",
+      body: "Если вы это читаете, почта из It's a Plan работает.",
       button: '',
     },
   },

@@ -70,7 +70,7 @@ export const ptBR: EmailLocaleTexts = {
     },
     test: {
       subject: "Teste de e-mail do It's a Plan",
-      body: "Este teste confirma que o It's a Plan consegue enviar e-mails pelo provedor configurado.",
+      body: "Se você consegue ler isto, o e-mail do It's a Plan está funcionando.",
       button: '',
     },
   },

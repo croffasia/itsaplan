@@ -331,7 +331,7 @@
   "emailTemplates": {
     "saved": "Template email disimpan",
     "unsaved": "Ada perubahan yang belum disimpan",
-    "blankText": "Setiap email memerlukan subjek dan teks",
+    "blankText": "Lengkapi subjek atau teks yang kosong untuk menyimpan",
     "emails": "Email",
     "layout": "Tata letak",
     "edited": "Diedit",
@@ -354,7 +354,7 @@
     "linkSample": "teks tautan",
     "unknownVariables": "Variabel tidak dikenal: {names}",
     "removeUnknownVariables": "Hapus variabel yang tidak dikenal untuk menyimpan",
-    "reset": "Atur ulang",
+    "reset": "Kembalikan ke bawaan",
     "test": "Kirim tes",
     "testing": "Mengirim…",
     "testSent": "Terkirim ke {email}",
@@ -364,26 +364,25 @@
     "placeholders": "Placeholder",
     "variables": "Variabel",
     "required": "Wajib",
-    "requiredPlaceholders": "Wajib: {names}",
+    "requiredPlaceholders": "Tambahkan {names} ke tata letak untuk menyimpan",
     "preview": "Pratinjau",
     "previewEmail": "Email",
     "previewText": "Teks biasa",
-    "previewFailed": "Pratinjau tidak dapat dibuat",
+    "previewFailed": "Pratinjau tidak termuat. Muat ulang halaman untuk mencoba lagi.",
     "from": "Dari",
     "to": "Kepada",
     "groups": {
       "signIn": "Masuk",
       "invitations": "Undangan",
       "notifications": "Notifikasi",
-      "service": "Layanan"
+      "service": "Lainnya"
     },
     "templates": {
       "reset": {
         "name": "Atur ulang kata sandi"
       },
       "verify": {
-        "name": "Konfirmasi alamat email",
-        "hint": "Hanya jika konfirmasi email diwajibkan."
+        "name": "Konfirmasi alamat email"
       },
       "magic": {
         "name": "Tautan masuk"
@@ -414,7 +413,7 @@
       },
       "test": {
         "name": "Email tes",
-        "hint": "Dikirim dari halaman penyedia email."
+        "hint": "Dikirim oleh tombol tes di halaman penyedia email."
       }
     },
     "placeholderText": {
@@ -425,7 +424,7 @@
       "dir": "Arah teks",
       "site_name": "Nama instance",
       "site_url": "Alamat instance",
-      "logo_url": "Logo"
+      "logo_url": "Alamat logo"
     },
     "variableText": {
       "actor": "Pelaku tindakan",

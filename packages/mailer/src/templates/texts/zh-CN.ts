@@ -69,7 +69,7 @@ export const zhCN: EmailLocaleTexts = {
     },
     test: {
       subject: "It's a Plan 邮件测试",
-      body: "此测试确认 It's a Plan 可以通过已配置的服务商发送邮件。",
+      body: "如果你能看到这封邮件，说明 It's a Plan 的邮件功能正常。",
       button: '',
     },
   },

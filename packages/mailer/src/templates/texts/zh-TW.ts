@@ -69,7 +69,7 @@ export const zhTW: EmailLocaleTexts = {
     },
     test: {
       subject: "It's a Plan 電子郵件測試",
-      body: "此測試確認 It's a Plan 可以透過已設定的服務供應商傳送電子郵件。",
+      body: "如果你看得到這封信，表示 It's a Plan 的電子郵件功能正常。",
       button: '',
     },
   },

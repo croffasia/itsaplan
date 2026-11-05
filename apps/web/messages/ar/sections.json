@@ -47,7 +47,7 @@
     },
     "email-templates": {
       "label": "قوالب البريد",
-      "description": "الرسائل اللي بتبعتها النسخة، بلغة كل مستخدم."
+      "description": "إدارة قوالب رسائل النظام."
     },
     "telegram": {
       "label": "Telegram",

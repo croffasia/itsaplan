@@ -47,7 +47,7 @@
     },
     "email-templates": {
       "label": "E-posta şablonları",
-      "description": "Örneklemin gönderdiği e-postalar, her kullanıcının dilinde."
+      "description": "Sistem e-postası şablonlarını yönetin."
     },
     "telegram": {
       "label": "Telegram",

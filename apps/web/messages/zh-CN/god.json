@@ -331,7 +331,7 @@
   "emailTemplates": {
     "saved": "邮件模板已保存",
     "unsaved": "有未保存的更改",
-    "blankText": "每封邮件都需要主题和正文",
+    "blankText": "请填写缺少的主题或正文后再保存",
     "emails": "邮件",
     "layout": "布局",
     "edited": "已修改",
@@ -354,7 +354,7 @@
     "linkSample": "链接文本",
     "unknownVariables": "未知变量：{names}",
     "removeUnknownVariables": "请移除未知变量后再保存",
-    "reset": "重置",
+    "reset": "恢复默认",
     "test": "发送测试",
     "testing": "正在发送…",
     "testSent": "已发送至 {email}",
@@ -364,26 +364,25 @@
     "placeholders": "占位符",
     "variables": "变量",
     "required": "必需",
-    "requiredPlaceholders": "必需：{names}",
+    "requiredPlaceholders": "请将 {names} 添加到布局后再保存",
     "preview": "预览",
     "previewEmail": "邮件",
     "previewText": "纯文本",
-    "previewFailed": "无法生成预览",
+    "previewFailed": "预览未能加载。请刷新页面后重试。",
     "from": "发件人",
     "to": "收件人",
     "groups": {
       "signIn": "登录",
       "invitations": "邀请",
       "notifications": "通知",
-      "service": "服务"
+      "service": "其他"
     },
     "templates": {
       "reset": {
         "name": "重置密码"
       },
       "verify": {
-        "name": "验证邮箱地址",
-        "hint": "仅在要求验证邮箱时发送。"
+        "name": "验证邮箱地址"
       },
       "magic": {
         "name": "登录链接"
@@ -414,7 +413,7 @@
       },
       "test": {
         "name": "测试邮件",
-        "hint": "从邮件服务商页面发送。"
+        "hint": "由邮件服务商页面的测试按钮发送。"
       }
     },
     "placeholderText": {
@@ -425,7 +424,7 @@
       "dir": "文字方向",
       "site_name": "实例名称",
       "site_url": "实例地址",
-      "logo_url": "徽标"
+      "logo_url": "徽标地址"
     },
     "variableText": {
       "actor": "执行操作的人",

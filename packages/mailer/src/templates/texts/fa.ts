@@ -70,7 +70,7 @@ export const fa: EmailLocaleTexts = {
     },
     test: {
       subject: "آزمایش ایمیل It's a Plan",
-      body: "این آزمایش تأیید می‌کند که It's a Plan می‌تواند از طریق ارائه‌دهنده تنظیم‌شده ایمیل بفرستد.",
+      body: "اگر این را می‌خوانید، ایمیل It's a Plan کار می‌کند.",
       button: '',
     },
   },

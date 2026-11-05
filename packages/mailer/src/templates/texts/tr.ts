@@ -70,7 +70,7 @@ export const tr: EmailLocaleTexts = {
     },
     test: {
       subject: "It's a Plan e-posta testi",
-      body: "Bu test, It's a Plan uygulamasının yapılandırılmış sağlayıcı üzerinden e-posta gönderebildiğini doğrular.",
+      body: "Bunu okuyabiliyorsanız It's a Plan e-postaları çalışıyor.",
       button: '',
     },
   },

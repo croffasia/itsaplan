@@ -70,7 +70,7 @@ export const ko: EmailLocaleTexts = {
     },
     test: {
       subject: "It's a Plan 이메일 테스트",
-      body: "이 테스트는 It's a Plan이 구성된 공급자를 통해 이메일을 보낼 수 있음을 확인합니다.",
+      body: "이 메일이 보인다면 It's a Plan의 이메일 발송이 정상입니다.",
       button: '',
     },
   },

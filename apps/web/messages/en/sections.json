@@ -47,7 +47,7 @@
     },
     "email-templates": {
       "label": "Email templates",
-      "description": "Emails the instance sends, in each user's language."
+      "description": "Manage system email templates."
     },
     "telegram": {
       "label": "Telegram",

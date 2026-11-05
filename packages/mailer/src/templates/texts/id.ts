@@ -70,7 +70,7 @@ export const id: EmailLocaleTexts = {
     },
     test: {
       subject: "Tes email It's a Plan",
-      body: "Tes ini memastikan It's a Plan dapat mengirim email melalui penyedia yang dikonfigurasi.",
+      body: "Jika Anda bisa membaca ini, email dari It's a Plan berfungsi.",
       button: '',
     },
   },

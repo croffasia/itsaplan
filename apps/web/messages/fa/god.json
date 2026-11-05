@@ -331,7 +331,7 @@
   "emailTemplates": {
     "saved": "قالب‌های ایمیل ذخیره شد",
     "unsaved": "تغییرات ذخیره‌نشده",
-    "blankText": "هر ایمیل به موضوع و متن نیاز دارد",
+    "blankText": "برای ذخیره، موضوع یا متن خالی را کامل کنید",
     "emails": "ایمیل‌ها",
     "layout": "چیدمان",
     "edited": "ویرایش‌شده",
@@ -354,7 +354,7 @@
     "linkSample": "متن لینک",
     "unknownVariables": "متغیر ناشناخته: {names}",
     "removeUnknownVariables": "برای ذخیره، متغیرهای ناشناخته را حذف کنید",
-    "reset": "بازنشانی",
+    "reset": "بازگشت به پیش‌فرض",
     "test": "ارسال آزمایشی",
     "testing": "در حال ارسال…",
     "testSent": "به {email} ارسال شد",
@@ -364,26 +364,25 @@
     "placeholders": "جای‌نگهدارها",
     "variables": "متغیرها",
     "required": "الزامی",
-    "requiredPlaceholders": "الزامی: {names}",
+    "requiredPlaceholders": "برای ذخیره، {names} را به چیدمان اضافه کنید",
     "preview": "پیش‌نمایش",
     "previewEmail": "ایمیل",
     "previewText": "متن ساده",
-    "previewFailed": "پیش‌نمایش ساخته نشد",
+    "previewFailed": "پیش‌نمایش بارگیری نشد. برای تلاش دوباره صفحه را تازه کنید.",
     "from": "از",
     "to": "به",
     "groups": {
       "signIn": "ورود",
       "invitations": "دعوت‌ها",
       "notifications": "اعلان‌ها",
-      "service": "سرویس"
+      "service": "سایر"
     },
     "templates": {
       "reset": {
         "name": "بازنشانی گذرواژه"
       },
       "verify": {
-        "name": "تأیید نشانی ایمیل",
-        "hint": "فقط وقتی تأیید ایمیل الزامی باشد."
+        "name": "تأیید نشانی ایمیل"
       },
       "magic": {
         "name": "لینک ورود"
@@ -414,7 +413,7 @@
       },
       "test": {
         "name": "ایمیل آزمایشی",
-        "hint": "از صفحه ارائه‌دهنده ایمیل ارسال می‌شود."
+        "hint": "با دکمه آزمایش در صفحه ارائه‌دهنده ایمیل ارسال می‌شود."
       }
     },
     "placeholderText": {
@@ -425,7 +424,7 @@
       "dir": "جهت متن",
       "site_name": "نام سامانه",
       "site_url": "نشانی سامانه",
-      "logo_url": "لوگو"
+      "logo_url": "نشانی لوگو"
     },
     "variableText": {
       "actor": "انجام‌دهنده کار",

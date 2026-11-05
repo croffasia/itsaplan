@@ -331,7 +331,7 @@
   "emailTemplates": {
     "saved": "Modelos de e-mail salvos",
     "unsaved": "Alterações não salvas",
-    "blankText": "Todo e-mail precisa de assunto e texto",
+    "blankText": "Preencha o assunto ou o texto que falta para salvar",
     "emails": "E-mails",
     "layout": "Layout",
     "edited": "Editado",
@@ -354,7 +354,7 @@
     "linkSample": "texto do link",
     "unknownVariables": "{count, plural, one {Variável desconhecida: {names}} other {Variáveis desconhecidas: {names}}}",
     "removeUnknownVariables": "Remova as variáveis desconhecidas para salvar",
-    "reset": "Redefinir",
+    "reset": "Voltar ao padrão",
     "test": "Enviar teste",
     "testing": "Enviando…",
     "testSent": "Enviado para {email}",
@@ -364,26 +364,25 @@
     "placeholders": "Marcadores",
     "variables": "Variáveis",
     "required": "Obrigatório",
-    "requiredPlaceholders": "Obrigatório: {names}",
+    "requiredPlaceholders": "Adicione {names} ao layout para salvar",
     "preview": "Pré-visualização",
     "previewEmail": "E-mail",
     "previewText": "Texto simples",
-    "previewFailed": "Não foi possível gerar a pré-visualização",
+    "previewFailed": "A pré-visualização não carregou. Recarregue a página para tentar de novo.",
     "from": "De",
     "to": "Para",
     "groups": {
       "signIn": "Login",
       "invitations": "Convites",
       "notifications": "Notificações",
-      "service": "Serviço"
+      "service": "Outros"
     },
     "templates": {
       "reset": {
         "name": "Redefinição de senha"
       },
       "verify": {
-        "name": "Confirmação de endereço",
-        "hint": "Somente quando a confirmação de e-mail é obrigatória."
+        "name": "Confirmação de endereço"
       },
       "magic": {
         "name": "Link de login"
@@ -414,7 +413,7 @@
       },
       "test": {
         "name": "E-mail de teste",
-        "hint": "Enviado pela página do provedor de e-mail."
+        "hint": "Enviado pelo botão de teste da página do provedor de e-mail."
       }
     },
     "placeholderText": {
@@ -425,7 +424,7 @@
       "dir": "Direção do texto",
       "site_name": "Nome da instância",
       "site_url": "Endereço da instância",
-      "logo_url": "Logo"
+      "logo_url": "Endereço do logo"
     },
     "variableText": {
       "actor": "Quem fez a ação",

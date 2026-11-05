@@ -331,7 +331,7 @@
   "emailTemplates": {
     "saved": "Email templates saved",
     "unsaved": "Unsaved changes",
-    "blankText": "Every email needs a subject and a text",
+    "blankText": "Add the missing subject or text to save",
     "emails": "Emails",
     "layout": "Layout",
     "edited": "Edited",
@@ -354,7 +354,7 @@
     "linkSample": "link text",
     "unknownVariables": "{count, plural, one {Unknown variable: {names}} other {Unknown variables: {names}}}",
     "removeUnknownVariables": "Remove the unknown variables to save",
-    "reset": "Reset",
+    "reset": "Reset to default",
     "test": "Send test",
     "testing": "Sending…",
     "testSent": "Sent to {email}",
@@ -364,26 +364,25 @@
     "placeholders": "Placeholders",
     "variables": "Variables",
     "required": "Required",
-    "requiredPlaceholders": "Required: {names}",
+    "requiredPlaceholders": "Add {names} to the layout to save",
     "preview": "Preview",
     "previewEmail": "Email",
     "previewText": "Plain text",
-    "previewFailed": "The preview could not be built",
+    "previewFailed": "The preview didn't load. Reload the page to try again.",
     "from": "From",
     "to": "To",
     "groups": {
       "signIn": "Sign-in",
       "invitations": "Invitations",
       "notifications": "Notifications",
-      "service": "Service"
+      "service": "Other"
     },
     "templates": {
       "reset": {
         "name": "Password reset"
       },
       "verify": {
-        "name": "Confirm email address",
-        "hint": "Only when email confirmation is required."
+        "name": "Confirm email address"
       },
       "magic": {
         "name": "Sign-in link"
@@ -414,7 +413,7 @@
       },
       "test": {
         "name": "Test email",
-        "hint": "Sent from the Email provider page."
+        "hint": "Sent by the test button on the Email provider page."
       }
     },
     "placeholderText": {
@@ -425,7 +424,7 @@
       "dir": "Text direction",
       "site_name": "Instance name",
       "site_url": "Instance address",
-      "logo_url": "Logo"
+      "logo_url": "Logo address"
     },
     "variableText": {
       "actor": "Who did it",

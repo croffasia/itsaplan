@@ -70,7 +70,7 @@ export const uk: EmailLocaleTexts = {
     },
     test: {
       subject: "Перевірка пошти It's a Plan",
-      body: "Це тестовий лист: It's a Plan може надсилати пошту через налаштованого провайдера.",
+      body: "Якщо ви це читаєте, пошта з It's a Plan працює.",
       button: '',
     },
   },

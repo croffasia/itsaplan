@@ -331,7 +331,7 @@
   "emailTemplates": {
     "saved": "اتحفظت قوالب البريد",
     "unsaved": "فيه تغييرات مش محفوظة",
-    "blankText": "كل رسالة لازم يكون ليها موضوع ونص",
+    "blankText": "كمّل الموضوع أو النص الناقص عشان تحفظ",
     "emails": "الرسائل",
     "layout": "التخطيط",
     "edited": "متعدّل",
@@ -354,7 +354,7 @@
     "linkSample": "نص الرابط",
     "unknownVariables": "متغيّرات مش معروفة: {names}",
     "removeUnknownVariables": "شيل المتغيّرات المش معروفة عشان تحفظ",
-    "reset": "إعادة تعيين",
+    "reset": "رجّع الافتراضي",
     "test": "إرسال اختبار",
     "testing": "جاري الإرسال…",
     "testSent": "اتبعت لـ {email}",
@@ -364,26 +364,25 @@
     "placeholders": "العناصر النائبة",
     "variables": "المتغيّرات",
     "required": "مطلوب",
-    "requiredPlaceholders": "مطلوب: {names}",
+    "requiredPlaceholders": "ضيف {names} للتخطيط عشان تحفظ",
     "preview": "معاينة",
     "previewEmail": "الرسالة",
     "previewText": "نص عادي",
-    "previewFailed": "ماقدرناش نجهّز المعاينة",
+    "previewFailed": "المعاينة ماحمّلتش. حدّث الصفحة وجرّب تاني.",
     "from": "من",
     "to": "إلى",
     "groups": {
       "signIn": "تسجيل الدخول",
       "invitations": "الدعوات",
       "notifications": "الإشعارات",
-      "service": "الخدمة"
+      "service": "أخرى"
     },
     "templates": {
       "reset": {
         "name": "إعادة تعيين كلمة المرور"
       },
       "verify": {
-        "name": "تأكيد عنوان البريد",
-        "hint": "بس لما يكون تأكيد البريد مطلوب."
+        "name": "تأكيد عنوان البريد"
       },
       "magic": {
         "name": "رابط تسجيل الدخول"
@@ -414,7 +413,7 @@
       },
       "test": {
         "name": "رسالة اختبار",
-        "hint": "بتتبعت من صفحة مزوّد البريد."
+        "hint": "بتتبعت من زر الاختبار في صفحة مزوّد البريد."
       }
     },
     "placeholderText": {
@@ -425,7 +424,7 @@
       "dir": "اتجاه النص",
       "site_name": "اسم النسخة",
       "site_url": "عنوان النسخة",
-      "logo_url": "الشعار"
+      "logo_url": "عنوان الشعار"
     },
     "variableText": {
       "actor": "اللي عمل الإجراء",

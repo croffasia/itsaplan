@@ -47,7 +47,7 @@
     },
     "email-templates": {
       "label": "電子郵件範本",
-      "description": "執行個體傳送的電子郵件，使用每位使用者的語言。"
+      "description": "管理系統電子郵件範本。"
     },
     "telegram": {
       "label": "Telegram",

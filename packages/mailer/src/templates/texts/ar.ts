@@ -70,7 +70,7 @@ export const ar: EmailLocaleTexts = {
     },
     test: {
       subject: "اختبار بريد It's a Plan",
-      body: "الاختبار ده بيأكد إن It's a Plan يقدر يبعت بريد من خلال المزوّد المضبوط.",
+      body: "لو قريت الرسالة دي، يبقى البريد من It's a Plan شغّال.",
       button: '',
     },
   },

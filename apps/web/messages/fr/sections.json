@@ -47,7 +47,7 @@
     },
     "email-templates": {
       "label": "Modèles d'e-mails",
-      "description": "Les e-mails envoyés par l'instance, dans la langue de chaque utilisateur."
+      "description": "Gérez les modèles des e-mails système."
     },
     "telegram": {
       "label": "Telegram",

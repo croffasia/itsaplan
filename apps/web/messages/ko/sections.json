@@ -47,7 +47,7 @@
     },
     "email-templates": {
       "label": "이메일 템플릿",
-      "description": "인스턴스가 보내는 이메일을 각 사용자의 언어로 관리합니다."
+      "description": "시스템 이메일 템플릿을 관리합니다."
     },
     "telegram": {
       "label": "Telegram",

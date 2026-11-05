@@ -331,7 +331,7 @@
   "emailTemplates": {
     "saved": "E-posta şablonları kaydedildi",
     "unsaved": "Kaydedilmemiş değişiklikler",
-    "blankText": "Her e-postanın bir konusu ve metni olmalıdır",
+    "blankText": "Kaydetmek için eksik konuyu veya metni doldurun",
     "emails": "E-postalar",
     "layout": "Düzen",
     "edited": "Düzenlendi",
@@ -354,7 +354,7 @@
     "linkSample": "bağlantı metni",
     "unknownVariables": "Bilinmeyen değişken: {names}",
     "removeUnknownVariables": "Kaydetmek için bilinmeyen değişkenleri kaldırın",
-    "reset": "Sıfırla",
+    "reset": "Varsayılana dön",
     "test": "Test gönder",
     "testing": "Gönderiliyor…",
     "testSent": "{email} adresine gönderildi",
@@ -364,26 +364,25 @@
     "placeholders": "Yer tutucular",
     "variables": "Değişkenler",
     "required": "Zorunlu",
-    "requiredPlaceholders": "Zorunlu: {names}",
+    "requiredPlaceholders": "Kaydetmek için düzene {names} ekleyin",
     "preview": "Önizleme",
     "previewEmail": "E-posta",
     "previewText": "Düz metin",
-    "previewFailed": "Önizleme oluşturulamadı",
+    "previewFailed": "Önizleme yüklenmedi. Yeniden denemek için sayfayı yenileyin.",
     "from": "Kimden",
     "to": "Kime",
     "groups": {
       "signIn": "Giriş",
       "invitations": "Davetler",
       "notifications": "Bildirimler",
-      "service": "Hizmet"
+      "service": "Diğer"
     },
     "templates": {
       "reset": {
         "name": "Şifre sıfırlama"
       },
       "verify": {
-        "name": "E-posta adresi onayı",
-        "hint": "Yalnızca e-posta onayı gerektiğinde gönderilir."
+        "name": "E-posta adresi onayı"
       },
       "magic": {
         "name": "Giriş bağlantısı"
@@ -414,7 +413,7 @@
       },
       "test": {
         "name": "Test e-postası",
-        "hint": "E-posta sağlayıcısı sayfasından gönderilir."
+        "hint": "E-posta Sağlayıcısı sayfasındaki test düğmesiyle gönderilir."
       }
     },
     "placeholderText": {
@@ -425,7 +424,7 @@
       "dir": "Metin yönü",
       "site_name": "Örneklem adı",
       "site_url": "Örneklem adresi",
-      "logo_url": "Logo"
+      "logo_url": "Logo adresi"
     },
     "variableText": {
       "actor": "İşlemi yapan",

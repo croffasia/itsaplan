@@ -331,7 +331,7 @@
   "emailTemplates": {
     "saved": "電子郵件範本已儲存",
     "unsaved": "有未儲存的變更",
-    "blankText": "每封電子郵件都需要主旨和內文",
+    "blankText": "請填寫缺少的主旨或內文後再儲存",
     "emails": "電子郵件",
     "layout": "版面",
     "edited": "已修改",
@@ -354,7 +354,7 @@
     "linkSample": "連結文字",
     "unknownVariables": "未知變數：{names}",
     "removeUnknownVariables": "請移除未知變數後再儲存",
-    "reset": "重設",
+    "reset": "還原預設值",
     "test": "傳送測試",
     "testing": "正在傳送…",
     "testSent": "已傳送至 {email}",
@@ -364,26 +364,25 @@
     "placeholders": "預留位置",
     "variables": "變數",
     "required": "必要",
-    "requiredPlaceholders": "必要：{names}",
+    "requiredPlaceholders": "請將 {names} 加入版面後再儲存",
     "preview": "預覽",
     "previewEmail": "電子郵件",
     "previewText": "純文字",
-    "previewFailed": "無法產生預覽",
+    "previewFailed": "預覽未能載入。請重新整理頁面後再試一次。",
     "from": "寄件者",
     "to": "收件者",
     "groups": {
       "signIn": "登入",
       "invitations": "邀請",
       "notifications": "通知",
-      "service": "服務"
+      "service": "其他"
     },
     "templates": {
       "reset": {
         "name": "重設密碼"
       },
       "verify": {
-        "name": "驗證電子郵件地址",
-        "hint": "僅在要求驗證電子郵件時傳送。"
+        "name": "驗證電子郵件地址"
       },
       "magic": {
         "name": "登入連結"
@@ -414,7 +413,7 @@
       },
       "test": {
         "name": "測試電子郵件",
-        "hint": "從電子郵件服務供應商頁面傳送。"
+        "hint": "由郵件服務供應商頁面的測試按鈕傳送。"
       }
     },
     "placeholderText": {
@@ -425,7 +424,7 @@
       "dir": "文字方向",
       "site_name": "執行個體名稱",
       "site_url": "執行個體網址",
-      "logo_url": "標誌"
+      "logo_url": "標誌網址"
     },
     "variableText": {
       "actor": "執行操作的人",

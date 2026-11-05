@@ -331,7 +331,7 @@
   "emailTemplates": {
     "saved": "Modèles d'e-mails enregistrés",
     "unsaved": "Modifications non enregistrées",
-    "blankText": "Chaque e-mail a besoin d'un objet et d'un texte",
+    "blankText": "Ajoutez l'objet ou le texte manquant pour enregistrer",
     "emails": "E-mails",
     "layout": "Mise en page",
     "edited": "Modifié",
@@ -354,7 +354,7 @@
     "linkSample": "texte du lien",
     "unknownVariables": "{count, plural, one {Variable inconnue : {names}} other {Variables inconnues : {names}}}",
     "removeUnknownVariables": "Retirez les variables inconnues pour enregistrer",
-    "reset": "Réinitialiser",
+    "reset": "Rétablir l'original",
     "test": "Envoyer un test",
     "testing": "Envoi…",
     "testSent": "Envoyé à {email}",
@@ -364,26 +364,25 @@
     "placeholders": "Espaces réservés",
     "variables": "Variables",
     "required": "Requis",
-    "requiredPlaceholders": "Requis : {names}",
+    "requiredPlaceholders": "Ajoutez {names} à la mise en page pour enregistrer",
     "preview": "Aperçu",
     "previewEmail": "E-mail",
     "previewText": "Texte brut",
-    "previewFailed": "Impossible de créer l'aperçu",
+    "previewFailed": "L'aperçu ne s'est pas chargé. Rechargez la page pour réessayer.",
     "from": "De",
     "to": "À",
     "groups": {
       "signIn": "Connexion",
       "invitations": "Invitations",
       "notifications": "Notifications",
-      "service": "Service"
+      "service": "Autres"
     },
     "templates": {
       "reset": {
         "name": "Réinitialisation du mot de passe"
       },
       "verify": {
-        "name": "Confirmation de l'adresse",
-        "hint": "Uniquement si la confirmation de l'e-mail est requise."
+        "name": "Confirmation de l'adresse"
       },
       "magic": {
         "name": "Lien de connexion"
@@ -414,7 +413,7 @@
       },
       "test": {
         "name": "E-mail de test",
-        "hint": "Envoyé depuis la page du fournisseur d'e-mails."
+        "hint": "Envoyé par le bouton de test de la page du fournisseur d'e-mail."
       }
     },
     "placeholderText": {
@@ -425,7 +424,7 @@
       "dir": "Sens du texte",
       "site_name": "Nom de l'instance",
       "site_url": "Adresse de l'instance",
-      "logo_url": "Logo"
+      "logo_url": "Adresse du logo"
     },
     "variableText": {
       "actor": "Auteur de l'action",

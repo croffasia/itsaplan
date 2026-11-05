@@ -47,7 +47,7 @@
     },
     "email-templates": {
       "label": "Template email",
-      "description": "Email yang dikirim instance, dalam bahasa setiap pengguna."
+      "description": "Kelola template email sistem."
     },
     "telegram": {
       "label": "Telegram",

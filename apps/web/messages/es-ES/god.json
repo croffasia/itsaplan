@@ -331,7 +331,7 @@
   "emailTemplates": {
     "saved": "Plantillas de correo guardadas",
     "unsaved": "Cambios sin guardar",
-    "blankText": "Cada correo necesita un asunto y un texto",
+    "blankText": "Añade el asunto o el texto que falta para guardar",
     "emails": "Correos",
     "layout": "Diseño",
     "edited": "Editado",
@@ -354,7 +354,7 @@
     "linkSample": "texto del enlace",
     "unknownVariables": "{count, plural, one {Variable desconocida: {names}} other {Variables desconocidas: {names}}}",
     "removeUnknownVariables": "Quita las variables desconocidas para guardar",
-    "reset": "Restablecer",
+    "reset": "Volver al original",
     "test": "Enviar prueba",
     "testing": "Enviando…",
     "testSent": "Enviado a {email}",
@@ -364,26 +364,25 @@
     "placeholders": "Marcadores",
     "variables": "Variables",
     "required": "Obligatorio",
-    "requiredPlaceholders": "Obligatorio: {names}",
+    "requiredPlaceholders": "Añade {names} al diseño para guardar",
     "preview": "Vista previa",
     "previewEmail": "Correo",
     "previewText": "Texto sin formato",
-    "previewFailed": "No se ha podido crear la vista previa",
+    "previewFailed": "La vista previa no se ha cargado. Recarga la página para volver a intentarlo.",
     "from": "De",
     "to": "Para",
     "groups": {
       "signIn": "Inicio de sesión",
       "invitations": "Invitaciones",
       "notifications": "Notificaciones",
-      "service": "Servicio"
+      "service": "Otros"
     },
     "templates": {
       "reset": {
         "name": "Restablecimiento de contraseña"
       },
       "verify": {
-        "name": "Confirmación de dirección",
-        "hint": "Solo cuando se exige confirmar el correo."
+        "name": "Confirmación de dirección"
       },
       "magic": {
         "name": "Enlace de inicio de sesión"
@@ -414,7 +413,7 @@
       },
       "test": {
         "name": "Correo de prueba",
-        "hint": "Se envía desde la página del proveedor de correo."
+        "hint": "Lo envía el botón de prueba de la página del proveedor de correo."
       }
     },
     "placeholderText": {
@@ -425,7 +424,7 @@
       "dir": "Dirección del texto",
       "site_name": "Nombre de la instancia",
       "site_url": "Dirección de la instancia",
-      "logo_url": "Logotipo"
+      "logo_url": "Dirección del logotipo"
     },
     "variableText": {
       "actor": "Quién lo hizo",

@@ -47,7 +47,7 @@
     },
     "email-templates": {
       "label": "قالب‌های ایمیل",
-      "description": "ایمیل‌هایی که سامانه می‌فرستد، به زبان هر کاربر."
+      "description": "مدیریت قالب‌های ایمیل سیستمی."
     },
     "telegram": {
       "label": "Telegram",

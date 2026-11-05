@@ -6,6 +6,8 @@ import {
 } from '@repo/net';
 import { HttpError } from './lib';
 
+export { ResponseTooLargeError } from '@repo/net';
+
 function as400<T>(run: () => Promise<T>): Promise<T> {
   return run().catch((err: unknown) => {
     if (err instanceof UrlNotAllowedError) throw new HttpError(400, err.message);

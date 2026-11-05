@@ -32,6 +32,7 @@ export const documentCollaborationRoutes = new Elysia({
       openDocumentSession(project.id, params.documentId, requireUser(user).id, body),
     {
       permission: ['documents', 'edit'],
+      feature: 'documents',
       params: documentParams,
       body: collaborationOpenBody,
       response: { 200: collaborationSessionResponse, ...commonErrors, ...errors(409) },
@@ -50,6 +51,7 @@ export const documentCollaborationRoutes = new Elysia({
       ),
     {
       permission: ['documents', 'read'],
+      feature: 'documents',
       params: documentParams,
       query: collaborationQuery,
       response: { 200: collaborationStepsResponse, ...commonErrors, ...errors(409) },
@@ -62,6 +64,7 @@ export const documentCollaborationRoutes = new Elysia({
       saveDocumentSteps(project.id, params.documentId, requireUser(user).id, body),
     {
       permission: ['documents', 'edit'],
+      feature: 'documents',
       params: documentParams,
       body: collaborationSaveBody,
       response: { 200: t.Nullable(DocumentResponse), ...commonErrors, ...errors(409) },
@@ -74,9 +77,15 @@ export const documentCollaborationRoutes = new Elysia({
       listDocumentComments(project.id, params.documentId, requireUser(user).id),
     {
       permission: ['documents', 'read'],
+      feature: 'documents',
       params: documentParams,
       response: { 200: t.Array(documentCommentResponse), ...commonErrors },
-      detail: { summary: 'Read document comment threads' },
+      detail: {
+        summary: 'Read document comment threads',
+        description:
+          "List a document's comments, oldest first. A reply has the id of the first comment of its thread in `parentId`. `quote` is the text a thread is about, and `resolvedAt` is set on a resolved thread.",
+        ...mcpTool('list_document_comments'),
+      },
     },
   )
   .post(
@@ -87,6 +96,7 @@ export const documentCollaborationRoutes = new Elysia({
     },
     {
       permission: ['documents', 'edit'],
+      feature: 'documents',
       params: documentParams,
       body: documentCommentBody,
       response: { 201: t.Object({ id: t.String() }), ...commonErrors, ...errors(409) },
@@ -110,9 +120,15 @@ export const documentCollaborationRoutes = new Elysia({
       ),
     {
       permission: ['documents', 'edit'],
+      feature: 'documents',
       params: documentCommentParams,
       body: documentCommentUpdateBody,
       response: { 200: t.Object({ ok: t.Boolean() }), ...commonErrors },
-      detail: { summary: 'Edit a document comment or resolve a thread' },
+      detail: {
+        summary: 'Edit a document comment or resolve a thread',
+        description:
+          'Change the `body` of your own comment, or set `resolved` on the first comment of a thread to resolve or reopen the thread.',
+        ...mcpTool('update_document_comment'),
+      },
     },
   );

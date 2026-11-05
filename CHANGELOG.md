@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.11.0](https://github.com/croffasia/itsaplan/compare/v1.10.0...v1.11.0) (2026-11-05)
+
+
+### Features
+
+* control public links per instance, workspace and team ([#818](https://github.com/croffasia/itsaplan/issues/818)) ([782491c](https://github.com/croffasia/itsaplan/commit/782491c2bf69a943bd8cc90cf266e91bff4a30e6))
+* edit email templates and send emails in the reader's language ([#823](https://github.com/croffasia/itsaplan/issues/823)) ([96c9656](https://github.com/croffasia/itsaplan/commit/96c965682c8ac06b05c6f0841da6fd4376d7e251))
+* share documents with links that expire ([#803](https://github.com/croffasia/itsaplan/issues/803)) ([61a5dcb](https://github.com/croffasia/itsaplan/commit/61a5dcb353d1f47ef13941d5c65b24d314a04a1b))
+
+
+### Improvements
+
+* **web:** show a schedule in UTC or in your own time ([#820](https://github.com/croffasia/itsaplan/issues/820)) ([904812c](https://github.com/croffasia/itsaplan/commit/904812cdea4c1edb28d7d8d275c9f4b892112220))
+
+
+### Documentation
+
+* list agent workflows in the Pro table ([#816](https://github.com/croffasia/itsaplan/issues/816)) ([690551a](https://github.com/croffasia/itsaplan/commit/690551aca59ebee075472810d9f6ce26c4e75b89))
+
 ## [1.10.0](https://github.com/croffasia/itsaplan/compare/v1.9.0...v1.10.0) (2026-11-05)
 
 

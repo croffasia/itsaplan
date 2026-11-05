@@ -45,6 +45,10 @@
       "label": "Armazenamento",
       "description": "Quanto as pessoas podem enviar: o tamanho de um único arquivo, os tipos de anexo aceitos e o armazenamento que cada projeto recebe."
     },
+    "email-templates": {
+      "label": "Modelos de e-mail",
+      "description": "Os e-mails que a instância envia, no idioma de cada usuário."
+    },
     "telegram": {
       "label": "Telegram",
       "description": "O bot ao qual as pessoas conectam sua conta do Telegram, e o que entrega notificações do Telegram para projetos que não definem seu próprio bot."

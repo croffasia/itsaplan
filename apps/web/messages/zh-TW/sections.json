@@ -45,6 +45,10 @@
       "label": "儲存",
       "description": "設定單個檔案大小、允許的附件類型和每個專案的儲存配額。"
     },
+    "email-templates": {
+      "label": "電子郵件範本",
+      "description": "執行個體傳送的電子郵件，使用每位使用者的語言。"
+    },
     "telegram": {
       "label": "Telegram",
       "description": "設定使用者關聯 Telegram 帳號所用的機器人，以及專案未單獨設定時傳送通知的機器人。"

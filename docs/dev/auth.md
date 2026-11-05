@@ -97,7 +97,9 @@ working session.
 Authentication email (`src/mail.ts`) goes out through `@repo/mailer` and is best effort: with no
 provider configured, or when the provider rejects the message, it logs and returns false, and the
 endpoint answers as if the mail went out. Three kinds are sent: password reset, address
-confirmation, and the magic link. The handler runs on the API origin, so the web app passes
+confirmation, and the magic link. Each goes out in the language the address saved, or the
+browser's while it has none. God edits the texts and the layout at `/god/email-templates`. The
+handler runs on the API origin, so the web app passes
 `callbackURL`, `redirectTo` and, for a magic link, `errorCallbackURL` in `features/auth/services`.
 The session confirmation on the Security page sends its own magic link from
 `features/account/hooks/useConfirmSession.ts`.

@@ -328,6 +328,118 @@
     "clientSecretPlaceholder": "Секрет регистрации приложения",
     "microsoft365Hint": "Входит как регистрация приложения в Entra ID вместо пароля ящика, поэтому у ящика может оставаться MFA. Приложению нужно разрешение приложения SMTP.SendAsApp из Office 365 Exchange Online с согласием администратора, доступ к этому ящику в Exchange и включённый SMTP AUTH для ящика."
   },
+  "emailTemplates": {
+    "saved": "Шаблоны писем сохранены",
+    "unsaved": "Есть несохранённые изменения",
+    "blankText": "В каждом письме нужны тема и текст",
+    "emails": "Письма",
+    "layout": "Макет",
+    "edited": "Изменено",
+    "subject": "Тема",
+    "text": "Текст",
+    "button": "Кнопка",
+    "formatting": "Форматирование",
+    "heading1": "Заголовок 1",
+    "heading2": "Заголовок 2",
+    "bold": "Жирный",
+    "italic": "Курсив",
+    "strikethrough": "Зачёркнутый",
+    "link": "Ссылка",
+    "bulletedList": "Маркированный список",
+    "numberedList": "Нумерованный список",
+    "quote": "Цитата",
+    "boldSample": "жирный",
+    "italicSample": "курсив",
+    "strikeSample": "текст",
+    "linkSample": "текст ссылки",
+    "unknownVariables": "{count, plural, one {Неизвестная переменная: {names}} other {Неизвестные переменные: {names}}}",
+    "removeUnknownVariables": "Уберите неизвестные переменные, чтобы сохранить",
+    "reset": "Сбросить",
+    "test": "Отправить тест",
+    "testing": "Отправка…",
+    "testSent": "Отправлено на {email}",
+    "testNeedsProvider": "Сначала настройте почтового провайдера",
+    "layoutHtml": "HTML макета",
+    "layoutCss": "CSS макета",
+    "placeholders": "Подстановки",
+    "variables": "Переменные",
+    "required": "Обязательно",
+    "requiredPlaceholders": "Обязательно: {names}",
+    "preview": "Предпросмотр",
+    "previewEmail": "Письмо",
+    "previewText": "Обычный текст",
+    "previewFailed": "Не удалось собрать предпросмотр",
+    "from": "От",
+    "to": "Кому",
+    "groups": {
+      "signIn": "Вход",
+      "invitations": "Приглашения",
+      "notifications": "Уведомления",
+      "service": "Служебные"
+    },
+    "templates": {
+      "reset": {
+        "name": "Сброс пароля"
+      },
+      "verify": {
+        "name": "Подтверждение адреса",
+        "hint": "Только если требуется подтверждение почты."
+      },
+      "magic": {
+        "name": "Ссылка для входа"
+      },
+      "inviteProject": {
+        "name": "Приглашение в проект"
+      },
+      "inviteTeam": {
+        "name": "Приглашение в команду"
+      },
+      "assigned": {
+        "name": "Задача назначена"
+      },
+      "mentioned": {
+        "name": "Упоминание в задаче"
+      },
+      "commented": {
+        "name": "Новый комментарий"
+      },
+      "stateChanged": {
+        "name": "Статус изменён"
+      },
+      "documentMentioned": {
+        "name": "Упоминание в документе"
+      },
+      "documentCommentMentioned": {
+        "name": "Упоминание в комментарии к документу"
+      },
+      "test": {
+        "name": "Тестовое письмо",
+        "hint": "Отправляется со страницы почтового провайдера."
+      }
+    },
+    "placeholderText": {
+      "content": "Текст письма",
+      "button": "Кнопка со ссылкой",
+      "subject": "Тема",
+      "lang": "Код языка",
+      "dir": "Направление текста",
+      "site_name": "Название инстанса",
+      "site_url": "Адрес инстанса",
+      "logo_url": "Логотип"
+    },
+    "variableText": {
+      "actor": "Кто это сделал",
+      "ref": "Номер задачи",
+      "title": "Название задачи",
+      "from": "Прежний статус",
+      "to": "Новый статус",
+      "document": "Название документа",
+      "inviter": "Кто отправил приглашение",
+      "project": "Название проекта",
+      "team": "Название команды",
+      "role": "Роль после вступления"
+    }
+  },
   "authProvider": {
     "saved": "Провайдер входа сохранён",
     "google": "Google",

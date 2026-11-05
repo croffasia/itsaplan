@@ -328,6 +328,118 @@
     "clientSecretPlaceholder": "Rahasia pendaftaran aplikasi",
     "microsoft365Hint": "Masuk sebagai pendaftaran aplikasi Entra ID, bukan dengan kata sandi kotak surat, sehingga kotak surat tetap bisa memakai MFA. Aplikasi memerlukan izin aplikasi SMTP.SendAsApp dari Office 365 Exchange Online dengan persetujuan admin, akses ke kotak surat ini di Exchange, dan SMTP AUTH aktif untuk kotak surat."
   },
+  "emailTemplates": {
+    "saved": "Template email disimpan",
+    "unsaved": "Ada perubahan yang belum disimpan",
+    "blankText": "Setiap email memerlukan subjek dan teks",
+    "emails": "Email",
+    "layout": "Tata letak",
+    "edited": "Diedit",
+    "subject": "Subjek",
+    "text": "Teks",
+    "button": "Tombol",
+    "formatting": "Pemformatan",
+    "heading1": "Judul 1",
+    "heading2": "Judul 2",
+    "bold": "Tebal",
+    "italic": "Miring",
+    "strikethrough": "Coret",
+    "link": "Tautan",
+    "bulletedList": "Daftar poin",
+    "numberedList": "Daftar bernomor",
+    "quote": "Kutipan",
+    "boldSample": "tebal",
+    "italicSample": "miring",
+    "strikeSample": "teks",
+    "linkSample": "teks tautan",
+    "unknownVariables": "Variabel tidak dikenal: {names}",
+    "removeUnknownVariables": "Hapus variabel yang tidak dikenal untuk menyimpan",
+    "reset": "Atur ulang",
+    "test": "Kirim tes",
+    "testing": "Mengirim…",
+    "testSent": "Terkirim ke {email}",
+    "testNeedsProvider": "Siapkan penyedia email terlebih dahulu",
+    "layoutHtml": "HTML tata letak",
+    "layoutCss": "CSS tata letak",
+    "placeholders": "Placeholder",
+    "variables": "Variabel",
+    "required": "Wajib",
+    "requiredPlaceholders": "Wajib: {names}",
+    "preview": "Pratinjau",
+    "previewEmail": "Email",
+    "previewText": "Teks biasa",
+    "previewFailed": "Pratinjau tidak dapat dibuat",
+    "from": "Dari",
+    "to": "Kepada",
+    "groups": {
+      "signIn": "Masuk",
+      "invitations": "Undangan",
+      "notifications": "Notifikasi",
+      "service": "Layanan"
+    },
+    "templates": {
+      "reset": {
+        "name": "Atur ulang kata sandi"
+      },
+      "verify": {
+        "name": "Konfirmasi alamat email",
+        "hint": "Hanya jika konfirmasi email diwajibkan."
+      },
+      "magic": {
+        "name": "Tautan masuk"
+      },
+      "inviteProject": {
+        "name": "Undangan proyek"
+      },
+      "inviteTeam": {
+        "name": "Undangan tim"
+      },
+      "assigned": {
+        "name": "Issue ditugaskan"
+      },
+      "mentioned": {
+        "name": "Disebut di issue"
+      },
+      "commented": {
+        "name": "Komentar baru"
+      },
+      "stateChanged": {
+        "name": "Status berubah"
+      },
+      "documentMentioned": {
+        "name": "Disebut di dokumen"
+      },
+      "documentCommentMentioned": {
+        "name": "Disebut di komentar dokumen"
+      },
+      "test": {
+        "name": "Email tes",
+        "hint": "Dikirim dari halaman penyedia email."
+      }
+    },
+    "placeholderText": {
+      "content": "Teks email",
+      "button": "Tombol dengan tautan",
+      "subject": "Subjek",
+      "lang": "Kode bahasa",
+      "dir": "Arah teks",
+      "site_name": "Nama instance",
+      "site_url": "Alamat instance",
+      "logo_url": "Logo"
+    },
+    "variableText": {
+      "actor": "Pelaku tindakan",
+      "ref": "Nomor issue",
+      "title": "Judul issue",
+      "from": "Status sebelumnya",
+      "to": "Status baru",
+      "document": "Judul dokumen",
+      "inviter": "Pengirim undangan",
+      "project": "Nama proyek",
+      "team": "Nama tim",
+      "role": "Peran setelah bergabung"
+    }
+  },
   "authProvider": {
     "saved": "Penyedia autentikasi disimpan",
     "google": "Google",

@@ -19,6 +19,8 @@ import {
   type InstanceOidcSettingsPatch,
   type InstanceTelegramSettingsPatch,
   type InstanceUserKind,
+  type EmailDraft,
+  type EmailTemplatesBody,
   type SharingSettings,
   getInstanceAuthSettings,
   updateInstanceAuthSettings,
@@ -35,6 +37,10 @@ import {
   updateInstanceProjectDefaults,
   getInstanceAgentSettings,
   updateInstanceAgentSettings,
+  getEmailTemplates,
+  previewEmailDraft,
+  testEmailDraft,
+  updateEmailTemplates,
   getInstanceSharingSettings,
   updateInstanceSharingSettings,
   getInstanceEmbedSites,
@@ -199,6 +205,35 @@ export function useUpdateInstanceSharingSettings() {
     mutationFn: (body: SharingSettings) => updateInstanceSharingSettings(body),
     onSuccess: (data) => qc.setQueryData(qk.instanceSharingSettings, data),
   });
+}
+
+export function useEmailTemplatesQuery() {
+  return useQuery({
+    queryKey: qk.instanceEmailTemplates,
+    queryFn: () => getEmailTemplates(),
+  });
+}
+
+export function useUpdateEmailTemplates() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: EmailTemplatesBody) => updateEmailTemplates(body),
+    onSuccess: (data) => qc.setQueryData(qk.instanceEmailTemplates, data),
+  });
+}
+
+// The email as the api renders it, so the preview is what goes out.
+export function useEmailPreviewQuery(draft: EmailDraft) {
+  return useQuery({
+    queryKey: qk.instanceEmailPreview(draft),
+    queryFn: () => previewEmailDraft(draft),
+    placeholderData: keepPreviousData,
+    retry: false,
+  });
+}
+
+export function useTestEmailDraft() {
+  return useMutation({ mutationFn: (draft: EmailDraft) => testEmailDraft(draft) });
 }
 
 // What applies to every team's agents: how long their run traces are kept.

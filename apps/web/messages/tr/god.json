@@ -328,6 +328,118 @@
     "clientSecretPlaceholder": "Uygulama kayıt parolası",
     "microsoft365Hint": "Posta kutusu şifresi yerine Entra ID içindeki bir uygulama kaydı olarak oturum açar, böylece posta kutusunda çok faktörlü kimlik doğrulama (MFA) açık kalabilir. Uygulama; yönetici onayıyla Office 365 Exchange Online SMTP.SendAsApp iznine, Exchange içinde bu posta kutusuna erişim yetkisine ve posta kutusu için SMTP AUTH özelliğinin açık olmasına ihtiyaç duyar."
   },
+  "emailTemplates": {
+    "saved": "E-posta şablonları kaydedildi",
+    "unsaved": "Kaydedilmemiş değişiklikler",
+    "blankText": "Her e-postanın bir konusu ve metni olmalıdır",
+    "emails": "E-postalar",
+    "layout": "Düzen",
+    "edited": "Düzenlendi",
+    "subject": "Konu",
+    "text": "Metin",
+    "button": "Düğme",
+    "formatting": "Biçimlendirme",
+    "heading1": "Başlık 1",
+    "heading2": "Başlık 2",
+    "bold": "Kalın",
+    "italic": "İtalik",
+    "strikethrough": "Üstü çizili",
+    "link": "Bağlantı",
+    "bulletedList": "Madde işaretli liste",
+    "numberedList": "Numaralı liste",
+    "quote": "Alıntı",
+    "boldSample": "kalın",
+    "italicSample": "italik",
+    "strikeSample": "metin",
+    "linkSample": "bağlantı metni",
+    "unknownVariables": "Bilinmeyen değişken: {names}",
+    "removeUnknownVariables": "Kaydetmek için bilinmeyen değişkenleri kaldırın",
+    "reset": "Sıfırla",
+    "test": "Test gönder",
+    "testing": "Gönderiliyor…",
+    "testSent": "{email} adresine gönderildi",
+    "testNeedsProvider": "Önce e-posta sağlayıcısını ayarlayın",
+    "layoutHtml": "Düzen HTML'i",
+    "layoutCss": "Düzen CSS'i",
+    "placeholders": "Yer tutucular",
+    "variables": "Değişkenler",
+    "required": "Zorunlu",
+    "requiredPlaceholders": "Zorunlu: {names}",
+    "preview": "Önizleme",
+    "previewEmail": "E-posta",
+    "previewText": "Düz metin",
+    "previewFailed": "Önizleme oluşturulamadı",
+    "from": "Kimden",
+    "to": "Kime",
+    "groups": {
+      "signIn": "Giriş",
+      "invitations": "Davetler",
+      "notifications": "Bildirimler",
+      "service": "Hizmet"
+    },
+    "templates": {
+      "reset": {
+        "name": "Şifre sıfırlama"
+      },
+      "verify": {
+        "name": "E-posta adresi onayı",
+        "hint": "Yalnızca e-posta onayı gerektiğinde gönderilir."
+      },
+      "magic": {
+        "name": "Giriş bağlantısı"
+      },
+      "inviteProject": {
+        "name": "Proje daveti"
+      },
+      "inviteTeam": {
+        "name": "Ekip daveti"
+      },
+      "assigned": {
+        "name": "İş atandı"
+      },
+      "mentioned": {
+        "name": "İşte bahsedildi"
+      },
+      "commented": {
+        "name": "Yeni yorum"
+      },
+      "stateChanged": {
+        "name": "Durum değişti"
+      },
+      "documentMentioned": {
+        "name": "Belgede bahsedildi"
+      },
+      "documentCommentMentioned": {
+        "name": "Belge yorumunda bahsedildi"
+      },
+      "test": {
+        "name": "Test e-postası",
+        "hint": "E-posta sağlayıcısı sayfasından gönderilir."
+      }
+    },
+    "placeholderText": {
+      "content": "E-posta metni",
+      "button": "Bağlantılı düğme",
+      "subject": "Konu",
+      "lang": "Dil kodu",
+      "dir": "Metin yönü",
+      "site_name": "Örneklem adı",
+      "site_url": "Örneklem adresi",
+      "logo_url": "Logo"
+    },
+    "variableText": {
+      "actor": "İşlemi yapan",
+      "ref": "İş numarası",
+      "title": "İş başlığı",
+      "from": "Önceki durum",
+      "to": "Yeni durum",
+      "document": "Belge başlığı",
+      "inviter": "Daveti gönderen",
+      "project": "Proje adı",
+      "team": "Ekip adı",
+      "role": "Katılım sonrası rol"
+    }
+  },
   "authProvider": {
     "saved": "Giriş sağlayıcısı kaydedildi",
     "google": "Google",

@@ -328,6 +328,118 @@
     "clientSecretPlaceholder": "앱 등록 시크릿",
     "microsoft365Hint": "메일함 비밀번호 대신 Entra ID의 앱 등록으로 로그인하므로 메일함에 MFA를 유지할 수 있습니다. 앱에는 관리자 동의를 받은 Office 365 Exchange Online 애플리케이션 권한 SMTP.SendAsApp, Exchange에서 이 메일함에 대한 접근 권한, 메일함에서 활성화된 SMTP AUTH가 필요합니다."
   },
+  "emailTemplates": {
+    "saved": "이메일 템플릿을 저장했습니다",
+    "unsaved": "저장되지 않은 변경 사항",
+    "blankText": "모든 이메일에는 제목과 본문이 필요합니다",
+    "emails": "이메일",
+    "layout": "레이아웃",
+    "edited": "수정됨",
+    "subject": "제목",
+    "text": "본문",
+    "button": "버튼",
+    "formatting": "서식",
+    "heading1": "제목 1",
+    "heading2": "제목 2",
+    "bold": "굵게",
+    "italic": "기울임꼴",
+    "strikethrough": "취소선",
+    "link": "링크",
+    "bulletedList": "글머리 기호 목록",
+    "numberedList": "번호 매기기 목록",
+    "quote": "인용",
+    "boldSample": "굵게",
+    "italicSample": "기울임꼴",
+    "strikeSample": "텍스트",
+    "linkSample": "링크 텍스트",
+    "unknownVariables": "알 수 없는 변수: {names}",
+    "removeUnknownVariables": "저장하려면 알 수 없는 변수를 제거하세요",
+    "reset": "재설정",
+    "test": "테스트 보내기",
+    "testing": "보내는 중…",
+    "testSent": "{email}(으)로 보냈습니다",
+    "testNeedsProvider": "먼저 이메일 공급자를 설정하세요",
+    "layoutHtml": "레이아웃 HTML",
+    "layoutCss": "레이아웃 CSS",
+    "placeholders": "자리표시자",
+    "variables": "변수",
+    "required": "필수",
+    "requiredPlaceholders": "필수: {names}",
+    "preview": "미리 보기",
+    "previewEmail": "이메일",
+    "previewText": "일반 텍스트",
+    "previewFailed": "미리 보기를 만들 수 없습니다",
+    "from": "보낸 사람",
+    "to": "받는 사람",
+    "groups": {
+      "signIn": "로그인",
+      "invitations": "초대",
+      "notifications": "알림",
+      "service": "서비스"
+    },
+    "templates": {
+      "reset": {
+        "name": "비밀번호 재설정"
+      },
+      "verify": {
+        "name": "이메일 주소 인증",
+        "hint": "이메일 인증이 필요한 경우에만 보냅니다."
+      },
+      "magic": {
+        "name": "로그인 링크"
+      },
+      "inviteProject": {
+        "name": "프로젝트 초대"
+      },
+      "inviteTeam": {
+        "name": "팀 초대"
+      },
+      "assigned": {
+        "name": "이슈 배정"
+      },
+      "mentioned": {
+        "name": "이슈에서 멘션"
+      },
+      "commented": {
+        "name": "새 댓글"
+      },
+      "stateChanged": {
+        "name": "상태 변경"
+      },
+      "documentMentioned": {
+        "name": "문서에서 멘션"
+      },
+      "documentCommentMentioned": {
+        "name": "문서 댓글에서 멘션"
+      },
+      "test": {
+        "name": "테스트 이메일",
+        "hint": "이메일 공급자 페이지에서 보냅니다."
+      }
+    },
+    "placeholderText": {
+      "content": "이메일 본문",
+      "button": "링크가 있는 버튼",
+      "subject": "제목",
+      "lang": "언어 코드",
+      "dir": "텍스트 방향",
+      "site_name": "인스턴스 이름",
+      "site_url": "인스턴스 주소",
+      "logo_url": "로고"
+    },
+    "variableText": {
+      "actor": "작업한 사람",
+      "ref": "이슈 번호",
+      "title": "이슈 제목",
+      "from": "이전 상태",
+      "to": "새 상태",
+      "document": "문서 제목",
+      "inviter": "초대한 사람",
+      "project": "프로젝트 이름",
+      "team": "팀 이름",
+      "role": "참여 후 역할"
+    }
+  },
   "authProvider": {
     "saved": "인증 공급자 설정이 저장되었습니다",
     "google": "Google",

@@ -328,6 +328,118 @@
     "clientSecretPlaceholder": "App registration secret",
     "microsoft365Hint": "Signs in as an app registration in Entra ID instead of with the mailbox password, so the mailbox can keep MFA on. The app needs the Office 365 Exchange Online application permission SMTP.SendAsApp with admin consent, access to this mailbox in Exchange, and SMTP AUTH turned on for the mailbox."
   },
+  "emailTemplates": {
+    "saved": "Email templates saved",
+    "unsaved": "Unsaved changes",
+    "blankText": "Every email needs a subject and a text",
+    "emails": "Emails",
+    "layout": "Layout",
+    "edited": "Edited",
+    "subject": "Subject",
+    "text": "Text",
+    "button": "Button",
+    "formatting": "Formatting",
+    "heading1": "Heading 1",
+    "heading2": "Heading 2",
+    "bold": "Bold",
+    "italic": "Italic",
+    "strikethrough": "Strikethrough",
+    "link": "Link",
+    "bulletedList": "Bulleted list",
+    "numberedList": "Numbered list",
+    "quote": "Quote",
+    "boldSample": "bold",
+    "italicSample": "italic",
+    "strikeSample": "text",
+    "linkSample": "link text",
+    "unknownVariables": "{count, plural, one {Unknown variable: {names}} other {Unknown variables: {names}}}",
+    "removeUnknownVariables": "Remove the unknown variables to save",
+    "reset": "Reset",
+    "test": "Send test",
+    "testing": "Sending…",
+    "testSent": "Sent to {email}",
+    "testNeedsProvider": "Set up the email provider first",
+    "layoutHtml": "Layout HTML",
+    "layoutCss": "Layout CSS",
+    "placeholders": "Placeholders",
+    "variables": "Variables",
+    "required": "Required",
+    "requiredPlaceholders": "Required: {names}",
+    "preview": "Preview",
+    "previewEmail": "Email",
+    "previewText": "Plain text",
+    "previewFailed": "The preview could not be built",
+    "from": "From",
+    "to": "To",
+    "groups": {
+      "signIn": "Sign-in",
+      "invitations": "Invitations",
+      "notifications": "Notifications",
+      "service": "Service"
+    },
+    "templates": {
+      "reset": {
+        "name": "Password reset"
+      },
+      "verify": {
+        "name": "Confirm email address",
+        "hint": "Only when email confirmation is required."
+      },
+      "magic": {
+        "name": "Sign-in link"
+      },
+      "inviteProject": {
+        "name": "Project invitation"
+      },
+      "inviteTeam": {
+        "name": "Team invitation"
+      },
+      "assigned": {
+        "name": "Issue assigned"
+      },
+      "mentioned": {
+        "name": "Mentioned on an issue"
+      },
+      "commented": {
+        "name": "New comment"
+      },
+      "stateChanged": {
+        "name": "Status changed"
+      },
+      "documentMentioned": {
+        "name": "Mentioned in a document"
+      },
+      "documentCommentMentioned": {
+        "name": "Mentioned in a document comment"
+      },
+      "test": {
+        "name": "Test email",
+        "hint": "Sent from the Email provider page."
+      }
+    },
+    "placeholderText": {
+      "content": "Email text",
+      "button": "Button with the link",
+      "subject": "Subject",
+      "lang": "Language code",
+      "dir": "Text direction",
+      "site_name": "Instance name",
+      "site_url": "Instance address",
+      "logo_url": "Logo"
+    },
+    "variableText": {
+      "actor": "Who did it",
+      "ref": "Issue number",
+      "title": "Issue title",
+      "from": "Previous status",
+      "to": "New status",
+      "document": "Document title",
+      "inviter": "Who sent the invitation",
+      "project": "Project name",
+      "team": "Team name",
+      "role": "Role after joining"
+    }
+  },
   "authProvider": {
     "saved": "Auth provider saved",
     "google": "Google",

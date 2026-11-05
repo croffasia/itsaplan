@@ -328,6 +328,118 @@
     "clientSecretPlaceholder": "رمز ثبت برنامه",
     "microsoft365Hint": "به‌جای گذرواژهٔ صندوق پستی، به‌عنوان یک ثبت برنامه (app registration) در Entra ID وارد می‌شود تا MFA صندوق پستی روشن بماند. برنامه به مجوز برنامه‌ای SMTP.SendAsApp از Office 365 Exchange Online با تأیید مدیر، دسترسی به این صندوق پستی در Exchange و روشن بودن SMTP AUTH برای صندوق پستی نیاز دارد."
   },
+  "emailTemplates": {
+    "saved": "قالب‌های ایمیل ذخیره شد",
+    "unsaved": "تغییرات ذخیره‌نشده",
+    "blankText": "هر ایمیل به موضوع و متن نیاز دارد",
+    "emails": "ایمیل‌ها",
+    "layout": "چیدمان",
+    "edited": "ویرایش‌شده",
+    "subject": "موضوع",
+    "text": "متن",
+    "button": "دکمه",
+    "formatting": "قالب‌بندی",
+    "heading1": "عنوان ۱",
+    "heading2": "عنوان ۲",
+    "bold": "پررنگ",
+    "italic": "کج",
+    "strikethrough": "خط‌خورده",
+    "link": "لینک",
+    "bulletedList": "فهرست نقطه‌ای",
+    "numberedList": "فهرست شماره‌دار",
+    "quote": "نقل‌قول",
+    "boldSample": "پررنگ",
+    "italicSample": "کج",
+    "strikeSample": "متن",
+    "linkSample": "متن لینک",
+    "unknownVariables": "متغیر ناشناخته: {names}",
+    "removeUnknownVariables": "برای ذخیره، متغیرهای ناشناخته را حذف کنید",
+    "reset": "بازنشانی",
+    "test": "ارسال آزمایشی",
+    "testing": "در حال ارسال…",
+    "testSent": "به {email} ارسال شد",
+    "testNeedsProvider": "ابتدا ارائه‌دهنده ایمیل را تنظیم کنید",
+    "layoutHtml": "HTML چیدمان",
+    "layoutCss": "CSS چیدمان",
+    "placeholders": "جای‌نگهدارها",
+    "variables": "متغیرها",
+    "required": "الزامی",
+    "requiredPlaceholders": "الزامی: {names}",
+    "preview": "پیش‌نمایش",
+    "previewEmail": "ایمیل",
+    "previewText": "متن ساده",
+    "previewFailed": "پیش‌نمایش ساخته نشد",
+    "from": "از",
+    "to": "به",
+    "groups": {
+      "signIn": "ورود",
+      "invitations": "دعوت‌ها",
+      "notifications": "اعلان‌ها",
+      "service": "سرویس"
+    },
+    "templates": {
+      "reset": {
+        "name": "بازنشانی گذرواژه"
+      },
+      "verify": {
+        "name": "تأیید نشانی ایمیل",
+        "hint": "فقط وقتی تأیید ایمیل الزامی باشد."
+      },
+      "magic": {
+        "name": "لینک ورود"
+      },
+      "inviteProject": {
+        "name": "دعوت به پروژه"
+      },
+      "inviteTeam": {
+        "name": "دعوت به تیم"
+      },
+      "assigned": {
+        "name": "واگذاری تسک"
+      },
+      "mentioned": {
+        "name": "نام‌بردن در تسک"
+      },
+      "commented": {
+        "name": "دیدگاه جدید"
+      },
+      "stateChanged": {
+        "name": "تغییر وضعیت"
+      },
+      "documentMentioned": {
+        "name": "نام‌بردن در سند"
+      },
+      "documentCommentMentioned": {
+        "name": "نام‌بردن در دیدگاه سند"
+      },
+      "test": {
+        "name": "ایمیل آزمایشی",
+        "hint": "از صفحه ارائه‌دهنده ایمیل ارسال می‌شود."
+      }
+    },
+    "placeholderText": {
+      "content": "متن ایمیل",
+      "button": "دکمه با لینک",
+      "subject": "موضوع",
+      "lang": "کد زبان",
+      "dir": "جهت متن",
+      "site_name": "نام سامانه",
+      "site_url": "نشانی سامانه",
+      "logo_url": "لوگو"
+    },
+    "variableText": {
+      "actor": "انجام‌دهنده کار",
+      "ref": "شماره تسک",
+      "title": "عنوان تسک",
+      "from": "وضعیت قبلی",
+      "to": "وضعیت جدید",
+      "document": "عنوان سند",
+      "inviter": "فرستنده دعوت",
+      "project": "نام پروژه",
+      "team": "نام تیم",
+      "role": "نقش پس از پیوستن"
+    }
+  },
   "authProvider": {
     "saved": "ارائه‌دهنده احراز هویت ذخیره شد",
     "google": "Google",

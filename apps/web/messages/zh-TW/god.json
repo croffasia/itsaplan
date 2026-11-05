@@ -328,6 +328,118 @@
     "clientSecretPlaceholder": "應用程式註冊的金鑰",
     "microsoft365Hint": "以 Entra ID 的應用程式註冊登入，而不是用信箱密碼，所以信箱可以維持開啟 MFA。該應用程式需要 Office 365 Exchange Online 的應用程式權限 SMTP.SendAsApp 並經管理員同意、在 Exchange 中有此信箱的存取權，並為該信箱開啟 SMTP AUTH。"
   },
+  "emailTemplates": {
+    "saved": "電子郵件範本已儲存",
+    "unsaved": "有未儲存的變更",
+    "blankText": "每封電子郵件都需要主旨和內文",
+    "emails": "電子郵件",
+    "layout": "版面",
+    "edited": "已修改",
+    "subject": "主旨",
+    "text": "內文",
+    "button": "按鈕",
+    "formatting": "格式",
+    "heading1": "標題 1",
+    "heading2": "標題 2",
+    "bold": "粗體",
+    "italic": "斜體",
+    "strikethrough": "刪除線",
+    "link": "連結",
+    "bulletedList": "項目符號清單",
+    "numberedList": "編號清單",
+    "quote": "引用",
+    "boldSample": "粗體",
+    "italicSample": "斜體",
+    "strikeSample": "文字",
+    "linkSample": "連結文字",
+    "unknownVariables": "未知變數：{names}",
+    "removeUnknownVariables": "請移除未知變數後再儲存",
+    "reset": "重設",
+    "test": "傳送測試",
+    "testing": "正在傳送…",
+    "testSent": "已傳送至 {email}",
+    "testNeedsProvider": "請先設定電子郵件服務供應商",
+    "layoutHtml": "版面 HTML",
+    "layoutCss": "版面 CSS",
+    "placeholders": "預留位置",
+    "variables": "變數",
+    "required": "必要",
+    "requiredPlaceholders": "必要：{names}",
+    "preview": "預覽",
+    "previewEmail": "電子郵件",
+    "previewText": "純文字",
+    "previewFailed": "無法產生預覽",
+    "from": "寄件者",
+    "to": "收件者",
+    "groups": {
+      "signIn": "登入",
+      "invitations": "邀請",
+      "notifications": "通知",
+      "service": "服務"
+    },
+    "templates": {
+      "reset": {
+        "name": "重設密碼"
+      },
+      "verify": {
+        "name": "驗證電子郵件地址",
+        "hint": "僅在要求驗證電子郵件時傳送。"
+      },
+      "magic": {
+        "name": "登入連結"
+      },
+      "inviteProject": {
+        "name": "專案邀請"
+      },
+      "inviteTeam": {
+        "name": "團隊邀請"
+      },
+      "assigned": {
+        "name": "工作項目已指派"
+      },
+      "mentioned": {
+        "name": "在工作項目中被提及"
+      },
+      "commented": {
+        "name": "新留言"
+      },
+      "stateChanged": {
+        "name": "狀態已更改"
+      },
+      "documentMentioned": {
+        "name": "在文件中被提及"
+      },
+      "documentCommentMentioned": {
+        "name": "在文件留言中被提及"
+      },
+      "test": {
+        "name": "測試電子郵件",
+        "hint": "從電子郵件服務供應商頁面傳送。"
+      }
+    },
+    "placeholderText": {
+      "content": "電子郵件內文",
+      "button": "含連結的按鈕",
+      "subject": "主旨",
+      "lang": "語言代碼",
+      "dir": "文字方向",
+      "site_name": "執行個體名稱",
+      "site_url": "執行個體網址",
+      "logo_url": "標誌"
+    },
+    "variableText": {
+      "actor": "執行操作的人",
+      "ref": "工作項目編號",
+      "title": "工作項目標題",
+      "from": "原狀態",
+      "to": "新狀態",
+      "document": "文件標題",
+      "inviter": "傳送邀請的人",
+      "project": "專案名稱",
+      "team": "團隊名稱",
+      "role": "加入後的角色"
+    }
+  },
   "authProvider": {
     "saved": "驗證提供者已儲存",
     "google": "Google",

@@ -1,5 +1,6 @@
 import { t } from 'elysia';
 import { REGISTRATION_MODES } from '@repo/auth';
+import { LOCALES } from '@repo/mailer';
 import { pageQueryFields, pageResponse } from '#shared/pagination';
 import { PermissionMatrixSchema } from '#shared/permissions';
 import { USER_KINDS } from './service';
@@ -122,6 +123,55 @@ export const EmailSettingsBody = t.Object({
 });
 
 export const EmailTestResponse = t.Object({ recipient: t.String() });
+
+const EmailText = t.Object({
+  subject: t.String({ maxLength: 500 }),
+  body: t.String({ maxLength: 20_000 }),
+  button: t.String({ maxLength: 200 }),
+});
+
+const EmailLayout = t.Object({
+  html: t.String({ maxLength: 200_000 }),
+  css: t.String({ maxLength: 100_000 }),
+});
+
+const EmailTextByLocale = t.Record(t.String(), EmailText);
+
+export const EmailTemplatesBody = t.Object({
+  edits: t.Record(t.String(), EmailTextByLocale),
+  layout: t.Nullable(EmailLayout),
+});
+
+export const EmailDraftBody = t.Object({
+  key: t.String(),
+  locale: t.UnionEnum([...LOCALES]),
+  text: EmailText,
+  layout: EmailLayout,
+});
+
+export const EmailTemplatesResponse = t.Object({
+  templates: t.Array(
+    t.Object({
+      key: t.String(),
+      group: t.String(),
+      variables: t.Array(t.String()),
+      hasLink: t.Boolean(),
+      defaults: EmailTextByLocale,
+      edits: EmailTextByLocale,
+    }),
+  ),
+  layout: EmailLayout,
+  defaultLayout: EmailLayout,
+  placeholders: t.Array(t.Object({ name: t.String(), required: t.Boolean() })),
+  canSend: t.Boolean(),
+});
+
+export const EmailPreviewResponse = t.Object({
+  subject: t.String(),
+  text: t.String(),
+  html: t.String(),
+  from: t.Nullable(t.String()),
+});
 
 export const GoogleSettingsResponse = t.Object({
   enabled: t.Boolean(),

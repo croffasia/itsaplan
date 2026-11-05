@@ -12,7 +12,8 @@ import {
   type DeliveryPayload,
 } from '@repo/db';
 import { eq, inArray } from 'drizzle-orm';
-import { isAccountDeactivated } from '@repo/auth';
+import { composeEmail, isAccountDeactivated, savedLocales } from '@repo/auth';
+import { DEFAULT_LOCALE, emailWords, type CoreEmailKey, type Locale } from '@repo/mailer';
 import { readRedactedSettings } from '#modules/notification-settings/service';
 import { getPreferencesForUsers } from '#modules/notification-preferences/service';
 import { getTelegramChatIds, hasUsableInstanceBot } from '#modules/telegram/service';
@@ -62,34 +63,12 @@ async function readStateChange(activityId: number): Promise<StateChange | null> 
   return { from, to };
 }
 
-// Email copy, addressed to the recipient in the second person.
-function emailPayload(
-  type: NotificationType,
-  ref: string,
-  title: string,
-  actor: string,
-  url: string | undefined,
-  stateChange: StateChange | null,
-): DeliveryPayload {
-  const line: Record<NotificationType, { subject: string; text: string }> = {
-    assigned: { subject: `${ref}: assigned to you`, text: `${actor} assigned this issue to you.` },
-    mentioned: {
-      subject: `${ref}: you were mentioned`,
-      text: `${actor} mentioned you on this issue.`,
-    },
-    commented: { subject: `${ref}: new comment`, text: `${actor} commented on this issue.` },
-    state_changed: {
-      subject: stateChange
-        ? `${ref}: status changed to ${stateChange.to}`
-        : `${ref}: status changed`,
-      text: stateChange
-        ? `${actor} changed the status of this issue from ${stateChange.from} to ${stateChange.to}.`
-        : `${actor} changed the status of this issue.`,
-    },
-  };
-  const { subject, text } = line[type];
-  return { subject, text: `${text}\n\n${ref}: ${title}`, url };
-}
+const EMAIL_TEMPLATE: Record<NotificationType, CoreEmailKey> = {
+  assigned: 'assigned',
+  mentioned: 'mentioned',
+  commented: 'commented',
+  state_changed: 'stateChanged',
+};
 
 // Telegram copy. Rendered as HTML (parse_mode HTML) with the issue reference as a
 // clickable link, plus a plain-text fallback. Issue-centric third person, matching
@@ -126,22 +105,8 @@ function telegramPayload(
   return { text, html, url };
 }
 
-// A document only sends 'mentioned', so its copy has no per-type table. The title is
-// the link in Telegram, as the issue reference is.
-function documentEmailPayload(
-  title: string,
-  actor: string,
-  url: string | undefined,
-  inComment: boolean,
-): DeliveryPayload {
-  const where = inComment ? 'in a comment on this document' : 'in this document';
-  return {
-    subject: `${title}: you were mentioned`,
-    text: `${actor} mentioned you ${where}.\n\n${title}`,
-    url,
-  };
-}
-
+// A document only sends 'mentioned'. The title is the link in Telegram, as the issue
+// reference is.
 function documentTelegramPayload(
   title: string,
   actor: string,
@@ -159,7 +124,7 @@ function documentTelegramPayload(
 }
 
 interface Messages {
-  email: (type: NotificationType) => DeliveryPayload;
+  email: (type: NotificationType, locale: Locale) => Promise<DeliveryPayload>;
   telegram: (type: NotificationType) => DeliveryPayload;
 }
 
@@ -168,9 +133,10 @@ interface Messages {
 async function composeMessages(
   notifications: NewNotificationRow[],
   projectRow: { key: string; teamId: number; teamSlug: string | null },
-  actor: string,
+  actorName: string | null,
   commentId: number | null,
 ): Promise<Messages | null> {
+  const actor = actorName ?? 'Someone';
   const first = notifications[0];
   const ref = teamRef({ id: projectRow.teamId, slug: projectRow.teamSlug });
   if (first.documentId != null) {
@@ -180,12 +146,17 @@ async function composeMessages(
       .from(projectDocument)
       .where(eq(projectDocument.id, documentId));
     if (!documentRow) return null;
-    const title = documentRow.title.trim() || 'Untitled';
+    const title = documentRow.title.trim();
     const url = documentUrl(ref, projectRow.key, documentId);
-    const inComment = first.documentCommentId != null;
+    const template =
+      first.documentCommentId != null ? 'documentCommentMentioned' : 'documentMentioned';
     return {
-      email: () => documentEmailPayload(title, actor, url, inComment),
-      telegram: () => documentTelegramPayload(title, actor, url),
+      email: async (_type, locale) => {
+        const words = emailWords(locale);
+        const vars = { actor: actorName ?? words.someone, document: title || words.untitled };
+        return { ...(await composeEmail(template, locale, vars, url)), url };
+      },
+      telegram: () => documentTelegramPayload(title || 'Untitled', actor, url),
     };
   }
   if (first.issueId == null) return null;
@@ -204,7 +175,16 @@ async function composeMessages(
     notifications.find((n) => n.type === 'state_changed')?.sourceActivityId ?? null;
   const stateChange = statusActivityId != null ? await readStateChange(statusActivityId) : null;
   return {
-    email: (type) => emailPayload(type, issueKey, issueRow.title, actor, url, stateChange),
+    email: async (type, locale) => {
+      const vars = {
+        actor: actorName ?? emailWords(locale).someone,
+        ref: issueKey,
+        title: issueRow.title,
+        from: stateChange?.from ?? '—',
+        to: stateChange?.to ?? '—',
+      };
+      return { ...(await composeEmail(EMAIL_TEMPLATE[type], locale, vars, url)), url };
+    },
     telegram: (type) => telegramPayload(type, issueKey, issueRow.title, actor, url, stateChange),
   };
 }
@@ -247,27 +227,32 @@ export async function enqueueOutbound(
     settings.telegram.enabled && (settings.telegram.hasBotToken || (await hasUsableInstanceBot()));
   if (!emailEnabled && !telegramEnabled) return;
 
-  const messages = await composeMessages(
-    notifications,
-    projectRow,
-    actorName ?? 'Someone',
-    commentId,
-  );
+  const messages = await composeMessages(notifications, projectRow, actorName, commentId);
   if (!messages) return;
 
   const userIds = [...new Set(notifications.map((n) => n.userId))];
-  const [users, prefsByUser, chatIdByUser] = await Promise.all([
+  const [users, prefsByUser, chatIdByUser, localeByUser] = await Promise.all([
     db
       .select({ id: user.id, email: user.email, active: user.active })
       .from(user)
       .where(inArray(user.id, userIds)),
     getPreferencesForUsers(projectId, userIds),
     telegramEnabled ? getTelegramChatIds(userIds) : Promise.resolve(new Map<string, string>()),
+    savedLocales(userIds),
   ]);
   // A deactivated account keeps its projects, but nothing from them reaches it.
   const emailById = new Map(
     users.filter((u) => !isAccountDeactivated(u)).map((u) => [u.id, u.email]),
   );
+
+  // Everyone told the same thing in one language gets the same email, composed once.
+  const emails = new Map<string, Promise<DeliveryPayload>>();
+  const emailFor = (type: NotificationType, locale: Locale) => {
+    const key = `${type}:${locale}`;
+    const email = emails.get(key) ?? messages.email(type, locale);
+    emails.set(key, email);
+    return email;
+  };
 
   const out: OutboxRow[] = [];
   for (const n of notifications) {
@@ -280,7 +265,7 @@ export async function enqueueOutbound(
         projectId,
         channel: 'email',
         recipient: email,
-        payload: messages.email(n.type),
+        payload: await emailFor(n.type, localeByUser.get(n.userId) ?? DEFAULT_LOCALE),
       });
     }
     if (telegramEnabled && prefs.telegramEvents[n.type]) {

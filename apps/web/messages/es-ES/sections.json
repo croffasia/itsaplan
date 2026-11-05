@@ -45,6 +45,10 @@
       "label": "Almacenamiento",
       "description": "Cuánto pueden subir las personas: el tamaño de un fichero solo, los tipos de adjunto aceptados, y el almacenamiento que recibe cada proyecto."
     },
+    "email-templates": {
+      "label": "Plantillas de correo",
+      "description": "Los correos que envía la instancia, en el idioma de cada usuario."
+    },
     "telegram": {
       "label": "Telegram",
       "description": "El bot al que las personas conectan su cuenta de Telegram, y el que entrega las notificaciones de Telegram para los proyectos que no definen un bot propio."

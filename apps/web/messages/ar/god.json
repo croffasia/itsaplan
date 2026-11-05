@@ -328,6 +328,118 @@
     "clientSecretPlaceholder": "سرّ تسجيل التطبيق",
     "microsoft365Hint": "يسجّل الدخول كتسجيل تطبيق في Entra ID بدلًا من كلمة مرور صندوق البريد، فيمكن أن يبقى التحقق متعدد العوامل مفعّلًا. يحتاج التطبيق إلى إذن التطبيق SMTP.SendAsApp من Office 365 Exchange Online بموافقة المسؤول، وإلى الوصول إلى هذا الصندوق في Exchange، وتفعيل SMTP AUTH للصندوق."
   },
+  "emailTemplates": {
+    "saved": "اتحفظت قوالب البريد",
+    "unsaved": "فيه تغييرات مش محفوظة",
+    "blankText": "كل رسالة لازم يكون ليها موضوع ونص",
+    "emails": "الرسائل",
+    "layout": "التخطيط",
+    "edited": "متعدّل",
+    "subject": "الموضوع",
+    "text": "النص",
+    "button": "الزرار",
+    "formatting": "التنسيق",
+    "heading1": "عنوان 1",
+    "heading2": "عنوان 2",
+    "bold": "عريض",
+    "italic": "مائل",
+    "strikethrough": "يتوسطه خط",
+    "link": "رابط",
+    "bulletedList": "قائمة نقطية",
+    "numberedList": "قائمة مرقّمة",
+    "quote": "اقتباس",
+    "boldSample": "عريض",
+    "italicSample": "مائل",
+    "strikeSample": "نص",
+    "linkSample": "نص الرابط",
+    "unknownVariables": "متغيّرات مش معروفة: {names}",
+    "removeUnknownVariables": "شيل المتغيّرات المش معروفة عشان تحفظ",
+    "reset": "إعادة تعيين",
+    "test": "إرسال اختبار",
+    "testing": "جاري الإرسال…",
+    "testSent": "اتبعت لـ {email}",
+    "testNeedsProvider": "اضبط مزوّد البريد الأول",
+    "layoutHtml": "HTML التخطيط",
+    "layoutCss": "CSS التخطيط",
+    "placeholders": "العناصر النائبة",
+    "variables": "المتغيّرات",
+    "required": "مطلوب",
+    "requiredPlaceholders": "مطلوب: {names}",
+    "preview": "معاينة",
+    "previewEmail": "الرسالة",
+    "previewText": "نص عادي",
+    "previewFailed": "ماقدرناش نجهّز المعاينة",
+    "from": "من",
+    "to": "إلى",
+    "groups": {
+      "signIn": "تسجيل الدخول",
+      "invitations": "الدعوات",
+      "notifications": "الإشعارات",
+      "service": "الخدمة"
+    },
+    "templates": {
+      "reset": {
+        "name": "إعادة تعيين كلمة المرور"
+      },
+      "verify": {
+        "name": "تأكيد عنوان البريد",
+        "hint": "بس لما يكون تأكيد البريد مطلوب."
+      },
+      "magic": {
+        "name": "رابط تسجيل الدخول"
+      },
+      "inviteProject": {
+        "name": "دعوة لمشروع"
+      },
+      "inviteTeam": {
+        "name": "دعوة لفريق"
+      },
+      "assigned": {
+        "name": "تعيين مهمة"
+      },
+      "mentioned": {
+        "name": "إشارة في مهمة"
+      },
+      "commented": {
+        "name": "تعليق جديد"
+      },
+      "stateChanged": {
+        "name": "تغيير الحالة"
+      },
+      "documentMentioned": {
+        "name": "إشارة في مستند"
+      },
+      "documentCommentMentioned": {
+        "name": "إشارة في تعليق على مستند"
+      },
+      "test": {
+        "name": "رسالة اختبار",
+        "hint": "بتتبعت من صفحة مزوّد البريد."
+      }
+    },
+    "placeholderText": {
+      "content": "نص الرسالة",
+      "button": "زرار فيه الرابط",
+      "subject": "الموضوع",
+      "lang": "كود اللغة",
+      "dir": "اتجاه النص",
+      "site_name": "اسم النسخة",
+      "site_url": "عنوان النسخة",
+      "logo_url": "الشعار"
+    },
+    "variableText": {
+      "actor": "اللي عمل الإجراء",
+      "ref": "رقم المهمة",
+      "title": "عنوان المهمة",
+      "from": "الحالة السابقة",
+      "to": "الحالة الجديدة",
+      "document": "عنوان المستند",
+      "inviter": "اللي بعت الدعوة",
+      "project": "اسم المشروع",
+      "team": "اسم الفريق",
+      "role": "الدور بعد الانضمام"
+    }
+  },
   "authProvider": {
     "saved": "تم حفظ مزوّد المصادقة",
     "google": "Google",

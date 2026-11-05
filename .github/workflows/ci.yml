@@ -54,6 +54,9 @@ jobs:
       - name: Script tests
         run: bun test scripts/
 
+      - name: Mailer tests
+        run: bun test packages/mailer/
+
   build:
     name: Build apps
     runs-on: ubuntu-latest

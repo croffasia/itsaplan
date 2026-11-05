@@ -45,6 +45,10 @@
       "label": "存储",
       "description": "设置单个文件大小、允许的附件类型和每个项目的存储配额。"
     },
+    "email-templates": {
+      "label": "邮件模板",
+      "description": "实例发送的邮件，使用每位用户的语言。"
+    },
     "telegram": {
       "label": "Telegram",
       "description": "设置用户关联 Telegram 账户所用的机器人，以及项目未单独配置时发送通知的机器人。"

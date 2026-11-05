@@ -259,6 +259,73 @@ export const testInstanceEmailSettings = (patch: InstanceEmailSettingsPatch) =>
     body: JSON.stringify(patch),
   });
 
+export interface EmailText {
+  subject: string;
+  body: string;
+  button: string;
+}
+
+export interface EmailLayout {
+  html: string;
+  css: string;
+}
+
+export interface EmailTemplateEntry {
+  key: string;
+  group: string;
+  variables: string[];
+  hasLink: boolean;
+  defaults: Record<string, EmailText>;
+  edits: Record<string, EmailText>;
+}
+
+export interface EmailTemplatesSettings {
+  templates: EmailTemplateEntry[];
+  layout: EmailLayout;
+  defaultLayout: EmailLayout;
+  placeholders: { name: string; required: boolean }[];
+  canSend: boolean;
+}
+
+export interface EmailTemplatesBody {
+  edits: Record<string, Record<string, EmailText>>;
+  layout: EmailLayout | null;
+}
+
+export interface EmailDraft {
+  key: string;
+  locale: string;
+  text: EmailText;
+  layout: EmailLayout;
+}
+
+export interface EmailPreview {
+  subject: string;
+  text: string;
+  html: string;
+  from: string | null;
+}
+
+export const getEmailTemplates = () => request<EmailTemplatesSettings>('/god/email-templates');
+
+export const updateEmailTemplates = (body: EmailTemplatesBody) =>
+  request<EmailTemplatesSettings>('/god/email-templates', {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
+
+export const previewEmailDraft = (draft: EmailDraft) =>
+  request<EmailPreview>('/god/email-templates/preview', {
+    method: 'POST',
+    body: JSON.stringify(draft),
+  });
+
+export const testEmailDraft = (draft: EmailDraft) =>
+  request<InstanceEmailTestResult>('/god/email-templates/test', {
+    method: 'POST',
+    body: JSON.stringify(draft),
+  });
+
 export const getInstanceTelegramSettings = () =>
   request<InstanceTelegramSettings>('/god/telegram-settings');
 

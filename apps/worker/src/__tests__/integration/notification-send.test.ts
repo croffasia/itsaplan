@@ -1,6 +1,16 @@
 import { beforeEach, describe, it, expect } from 'bun:test';
 import { randomUUID } from 'node:crypto';
-import { appSecret, db, project, team, teamInvite, workspace } from '@repo/db';
+import {
+  INSTANCE_EMAIL_SECRET_KEY,
+  appSecret,
+  db,
+  defaultInstanceEmailConfig,
+  project,
+  team,
+  teamInvite,
+  workspace,
+  writeSecret,
+} from '@repo/db';
 import { deliverNotification } from '../../notification-send';
 
 // The send reads the credentials itself, so these cover the two decisions it makes
@@ -52,6 +62,47 @@ describe('deliverNotification', () => {
     });
 
     expect(result).toEqual({ ok: true });
+  });
+
+  it('sends an email the api composed as it is', async () => {
+    const { projectId } = await makeProject();
+    await writeSecret(
+      INSTANCE_EMAIL_SECRET_KEY,
+      {
+        ...defaultInstanceEmailConfig(),
+        resend: { enabled: true, apiKey: 're_test' },
+        from: 'noreply@example.test',
+      },
+      {},
+    );
+    const realFetch = globalThis.fetch;
+    let sent: { text: string; html: string } | undefined;
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      if (!String(input).startsWith('https://api.resend.com/')) return realFetch(input, init);
+      sent = JSON.parse(String(init?.body));
+      return Response.json({ id: 'sent' });
+    }) as typeof fetch;
+
+    const result = await deliverNotification({
+      projectId,
+      channel: 'email',
+      recipient: 'member@example.com',
+      payload: {
+        subject: 'Hello',
+        text: 'Plain\n\nhttps://plan.test/a',
+        html: '<table>Composed</table>',
+        url: 'https://plan.test/a',
+        emailSource: 'instance',
+      },
+    }).finally(() => {
+      globalThis.fetch = realFetch;
+    });
+
+    expect(result).toEqual({ ok: true });
+    expect(sent).toMatchObject({
+      text: 'Plain\n\nhttps://plan.test/a',
+      html: '<table>Composed</table>',
+    });
   });
 
   it('fails permanently when the team has no email provider', async () => {

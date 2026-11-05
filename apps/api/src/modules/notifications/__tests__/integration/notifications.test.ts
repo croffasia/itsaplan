@@ -355,6 +355,57 @@ describe('notifications', () => {
     ]);
   });
 
+  it('sends each recipient the email in their language, with what god changed', async () => {
+    const { owner, project, columnId, doneColumnId } = await setup();
+    const member = await addMember(owner);
+    await owner.api.teams({ teamId: project.teamId })['notification-settings'].put({
+      smtp: {
+        enabled: true,
+        host: 'smtp.example.com',
+        port: 587,
+        encryption: 'none',
+        username: 'mailer@example.com',
+        password: 'secret',
+        timeout: null,
+      },
+    });
+    const events = { assigned: true, mentioned: true, commented: true, state_changed: true };
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: events,
+      telegramEvents: events,
+    });
+    await member.api.account.preferences.patch({ locale: 'ru' });
+    await owner.api.god['email-templates'].put({
+      edits: {
+        stateChanged: {
+          ru: {
+            subject: 'Статус {ref}: {to}',
+            body: '**{title}** {from} → {to}',
+            button: 'Открыть',
+          },
+        },
+      },
+      layout: null,
+    });
+    const issue = (
+      await createIssue(owner.api, columnId, {
+        title: '<b>Loud</b> title',
+        assigneeUserId: member.userId,
+      })
+    ).data!;
+    await db.delete(notificationDelivery);
+
+    await owner.api.issues({ issueId: issue.id }).patch({ columnId: doneColumnId });
+
+    const [queued] = await db
+      .select({ payload: notificationDelivery.payload })
+      .from(notificationDelivery);
+    expect(queued!.payload.subject).toStartWith(`Статус ${issue.identifier}:`);
+    expect(queued!.payload.text).toContain('<b>Loud</b> title');
+    expect(queued!.payload.html).toContain('&lt;b&gt;Loud&lt;/b&gt; title');
+    expect(queued!.payload.html).toContain('class="button"');
+  });
+
   it('a status change notification names the states it moved between', async () => {
     const { owner, columnId, doneColumnId } = await setup();
     const member = await addMember(owner);

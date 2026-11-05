@@ -328,6 +328,118 @@
     "clientSecretPlaceholder": "应用注册的密钥",
     "microsoft365Hint": "以 Entra ID 应用注册的身份登录，而不是使用邮箱密码，因此邮箱可以保持开启 MFA。该应用需要 Office 365 Exchange Online 的应用程序权限 SMTP.SendAsApp 并经过管理员同意，在 Exchange 中拥有此邮箱的访问权限，并为该邮箱开启 SMTP AUTH。"
   },
+  "emailTemplates": {
+    "saved": "邮件模板已保存",
+    "unsaved": "有未保存的更改",
+    "blankText": "每封邮件都需要主题和正文",
+    "emails": "邮件",
+    "layout": "布局",
+    "edited": "已修改",
+    "subject": "主题",
+    "text": "正文",
+    "button": "按钮",
+    "formatting": "格式",
+    "heading1": "标题 1",
+    "heading2": "标题 2",
+    "bold": "粗体",
+    "italic": "斜体",
+    "strikethrough": "删除线",
+    "link": "链接",
+    "bulletedList": "项目符号列表",
+    "numberedList": "编号列表",
+    "quote": "引用",
+    "boldSample": "粗体",
+    "italicSample": "斜体",
+    "strikeSample": "文本",
+    "linkSample": "链接文本",
+    "unknownVariables": "未知变量：{names}",
+    "removeUnknownVariables": "请移除未知变量后再保存",
+    "reset": "重置",
+    "test": "发送测试",
+    "testing": "正在发送…",
+    "testSent": "已发送至 {email}",
+    "testNeedsProvider": "请先设置邮件服务商",
+    "layoutHtml": "布局 HTML",
+    "layoutCss": "布局 CSS",
+    "placeholders": "占位符",
+    "variables": "变量",
+    "required": "必需",
+    "requiredPlaceholders": "必需：{names}",
+    "preview": "预览",
+    "previewEmail": "邮件",
+    "previewText": "纯文本",
+    "previewFailed": "无法生成预览",
+    "from": "发件人",
+    "to": "收件人",
+    "groups": {
+      "signIn": "登录",
+      "invitations": "邀请",
+      "notifications": "通知",
+      "service": "服务"
+    },
+    "templates": {
+      "reset": {
+        "name": "重置密码"
+      },
+      "verify": {
+        "name": "验证邮箱地址",
+        "hint": "仅在要求验证邮箱时发送。"
+      },
+      "magic": {
+        "name": "登录链接"
+      },
+      "inviteProject": {
+        "name": "项目邀请"
+      },
+      "inviteTeam": {
+        "name": "团队邀请"
+      },
+      "assigned": {
+        "name": "工作项已分配"
+      },
+      "mentioned": {
+        "name": "在工作项中被提及"
+      },
+      "commented": {
+        "name": "新评论"
+      },
+      "stateChanged": {
+        "name": "状态已更改"
+      },
+      "documentMentioned": {
+        "name": "在文档中被提及"
+      },
+      "documentCommentMentioned": {
+        "name": "在文档评论中被提及"
+      },
+      "test": {
+        "name": "测试邮件",
+        "hint": "从邮件服务商页面发送。"
+      }
+    },
+    "placeholderText": {
+      "content": "邮件正文",
+      "button": "带链接的按钮",
+      "subject": "主题",
+      "lang": "语言代码",
+      "dir": "文字方向",
+      "site_name": "实例名称",
+      "site_url": "实例地址",
+      "logo_url": "徽标"
+    },
+    "variableText": {
+      "actor": "执行操作的人",
+      "ref": "工作项编号",
+      "title": "工作项标题",
+      "from": "原状态",
+      "to": "新状态",
+      "document": "文档标题",
+      "inviter": "发送邀请的人",
+      "project": "项目名称",
+      "team": "团队名称",
+      "role": "加入后的角色"
+    }
+  },
   "authProvider": {
     "saved": "身份验证提供商已保存",
     "google": "Google",

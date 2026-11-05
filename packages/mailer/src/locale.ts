@@ -1,3 +1,5 @@
+// The languages the interface and the emails ship with. The web app keeps its own copy of
+// this list and of the matcher below: it never imports a package.
 export const LOCALES = [
   'en',
   'uk',
@@ -17,6 +19,16 @@ export const LOCALES = [
 export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = 'en';
+
+export function isLocale(value: string | null | undefined): value is Locale {
+  return value != null && (LOCALES as readonly string[]).includes(value);
+}
+
+const RTL_LOCALES: readonly Locale[] = ['ar', 'fa'];
+
+export function localeDirection(locale: Locale): 'ltr' | 'rtl' {
+  return RTL_LOCALES.includes(locale) ? 'rtl' : 'ltr';
+}
 
 // Keep this matcher aligned with the Web copy so the first server render and
 // an account without saved preferences resolve to the same language.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { localeFromAcceptLanguage } from '../../locale';
+import { localeFromAcceptLanguage } from '../locale';
 
 describe('localeFromAcceptLanguage', () => {
   it('uses the preferred supported language', () => {

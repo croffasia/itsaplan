@@ -13,7 +13,14 @@ import {
   type InstanceEmailConfig,
 } from '@repo/db';
 import { and, eq, gte, like, lt, sql } from 'drizzle-orm';
-import { hasEmailProvider, type SmtpAuth, type SmtpConfig } from '@repo/mailer';
+import {
+  hasEmailProvider,
+  type EmailLayout,
+  type EmailText,
+  type Locale,
+  type SmtpAuth,
+  type SmtpConfig,
+} from '@repo/mailer';
 import type { GenericEndpointContext } from 'better-auth';
 
 // Authentication settings: who may register, whether email has to be confirmed,
@@ -33,6 +40,7 @@ import type { GenericEndpointContext } from 'better-auth';
 const AUTH_SETTING_KEY = 'auth';
 const GOOGLE_SECRET_KEY = 'auth.google';
 const OIDC_SECRET_KEY = 'auth.oidc';
+const EMAIL_TEMPLATES_SETTING_KEY = 'email_templates';
 
 const scimSecretKey = (workspaceId: number | null) =>
   workspaceId === null ? 'auth.scim' : `workspace.${workspaceId}.scim`;
@@ -287,6 +295,28 @@ export async function setEmailSettings(patch: InstanceEmailPatch): Promise<Insta
     }
   }
   return redacted;
+}
+
+// ── Email templates ───────────────────────────────────────────────────────────
+
+// What god changed in the emails. Only the changes are stored: a template and language with no
+// entry, and a null layout, send the built-in ones from @repo/mailer.
+export interface EmailTemplateSettings {
+  texts: Record<string, Partial<Record<Locale, EmailText>>>;
+  layout: EmailLayout | null;
+}
+
+export async function getEmailTemplateSettings(): Promise<EmailTemplateSettings> {
+  return (
+    (await getSetting<EmailTemplateSettings>(EMAIL_TEMPLATES_SETTING_KEY)) ?? {
+      texts: {},
+      layout: null,
+    }
+  );
+}
+
+export async function setEmailTemplateSettings(settings: EmailTemplateSettings): Promise<void> {
+  await setSetting(EMAIL_TEMPLATES_SETTING_KEY, settings);
 }
 
 // ── Google OAuth ──────────────────────────────────────────────────────────────

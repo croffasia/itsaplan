@@ -11,6 +11,7 @@ import {
   type ShareOptions,
 } from '@/lib/api/endpoints/share';
 import { qk } from '@/services/queryKeys';
+import { usePermissions } from '@/hooks/usePermissions';
 import { shareDocumentPath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -26,6 +27,8 @@ export default function DocumentShareButton({
   const t = useTranslations('documents');
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  // Linked issues open through the link, so the switch takes the right to share an issue.
+  const canShareIssues = usePermissions().can('work_items', 'edit');
   const label = document.shareToken ? t('sharedPublicly') : t('sharePublicly');
 
   // Refetches the page so the share fields the dialog reads stay in sync.
@@ -67,7 +70,9 @@ export default function DocumentShareButton({
         token={document.shareToken}
         options={[
           { name: 'includeChildren', checked: document.shareIncludeChildren },
-          { name: 'includeIssues', checked: document.shareIncludeIssues },
+          ...(canShareIssues
+            ? [{ name: 'includeIssues' as const, checked: document.shareIncludeIssues }]
+            : []),
         ]}
         expiresAt={document.shareExpiresAt}
         enable={share}

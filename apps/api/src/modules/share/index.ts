@@ -163,7 +163,10 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
 
   .post(
     '/documents/:documentId/share',
-    async ({ params, body }) => {
+    async ({ params, body, projectId, user }) => {
+      // Linked issues open through the link, so turning them on takes the right to share
+      // an issue.
+      if (body?.includeIssues) await assertPermission(projectId, user, 'work_items', 'edit');
       const share = await enableDocumentShare(
         params.documentId,
         body?.includeChildren,

@@ -791,6 +791,32 @@ describe('share', () => {
       expect(res.status).toBe(409);
     });
 
+    it('revokes the link of an archived page and of the subpages archived with it', async () => {
+      const { asOwner, root, child } = await tree();
+      const rootShare = asOwner.documents({ documentId: root.id }).share;
+      const childShare = asOwner.documents({ documentId: child.id }).share;
+      const { token } = (await rootShare.post({ includeChildren: true })).data!;
+      const { token: childToken } = (await childShare.post()).data!;
+
+      await documents(asOwner)({ documentId: root.id }).archive.post({ version: root.version });
+      const [rootRow, childRow] = await Promise.all(
+        [root.id, child.id].map(
+          async (id) => (await documents(asOwner)({ documentId: id }).get()).data!,
+        ),
+      );
+      expect(rootRow).toMatchObject({ shareToken: null, shareIncludeChildren: false });
+      expect(childRow.shareToken).toBeNull();
+      expect((await api.share.document({ token }).get()).status).toBe(404);
+      expect((await api.share.document({ token: childToken }).get()).status).toBe(404);
+
+      await documents(asOwner)({ documentId: root.id }).restore.post({ version: rootRow.version });
+      const restored = (await documents(asOwner)({ documentId: root.id }).get()).data!;
+      expect(restored.shareToken).toBeNull();
+      expect((await api.share.document({ token }).get()).status).toBe(404);
+      const again = (await rootShare.post()).data!;
+      expect(again.token).not.toBe(token);
+    });
+
     it('has no link for a private page, and making a page private revokes it', async () => {
       const { asOwner, root } = await tree();
       const secret = (await documents(asOwner).post({ title: 'Secret', isPrivate: true })).data!;
@@ -852,6 +878,20 @@ describe('share', () => {
         .patch({ role: 'member', roleId: readerRole.data!.id });
       expect((await reader.documents({ documentId: root.id }).share.post()).status).toBe(403);
       expect((await reader.documents({ documentId: root.id }).share.delete()).status).toBe(403);
+
+      // Documents edit shares the page; turning on linked issues also takes work_items edit.
+      const editorRole = await createRole(asOwner, 'MKT', {
+        name: 'Doc editor',
+        permissions: { documents: { read: true, edit: true }, work_items: { read: true } },
+      });
+      await asOwner
+        .projects({ projectKey: 'MKT' })
+        .members({ userId: user.userId })
+        .patch({ role: 'member', roleId: editorRole.data!.id });
+      const share = reader.documents({ documentId: root.id }).share;
+      expect((await share.post({ includeChildren: true })).status).toBe(200);
+      expect((await share.post({ includeIssues: true })).status).toBe(403);
+      expect((await share.post({ includeIssues: false })).status).toBe(200);
 
       const outsider = authedApi((await signUpTestUser()).cookie);
       expect((await outsider.documents({ documentId: root.id }).share.post()).status).toBe(403);

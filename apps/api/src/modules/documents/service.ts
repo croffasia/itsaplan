@@ -1369,6 +1369,8 @@ export async function archiveDocument(
       .set({
         archivedAt: sql`now()`,
         archivedByAncestorId: null,
+        // An archived page has no public link, and restoring it does not bring the link back.
+        ...revokedDocumentShare,
         updatedByUserId: userId,
         updatedAt: sql`now()`,
         version: sql`${projectDocument.version} + 1`,
@@ -1391,6 +1393,7 @@ export async function archiveDocument(
         .set({
           archivedAt: sql`now()`,
           archivedByAncestorId: documentId,
+          ...revokedDocumentShare,
           updatedByUserId: userId,
           updatedAt: sql`now()`,
           version: sql`${projectDocument.version} + 1`,

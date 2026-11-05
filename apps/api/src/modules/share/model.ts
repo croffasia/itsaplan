@@ -97,7 +97,7 @@ export const shareDocumentBody = t.Optional(
     includeIssues: t.Optional(
       t.Boolean({
         description:
-          'Show the identifier, title and state of the issues of this project that the shared pages name. Omit to leave it unchanged.',
+          'Show the issues of this project that the shared pages name, and open them read-only through the link. Turning it on takes work_items edit. Omit to leave it unchanged.',
       }),
     ),
     expiresAt,

@@ -59,6 +59,9 @@ function parseExpiry(value: string | null | undefined): ShareExpiry {
   return at;
 }
 
+const documentProjectId = (params: Record<string, string>) =>
+  shareableDocumentProjectId(Number(params.documentId));
+
 export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share'] } })
   .use(authContext)
   .use(guards)
@@ -73,8 +76,14 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
       const view = await getView(Number(p.viewId), user?.id ?? null);
       return view && !view.isPrivate ? view.projectId : null;
     }),
-    sharedDocument: entityGuard('documents', 'Document not found', (p) =>
-      shareableDocumentProjectId(Number(p.documentId)),
+    sharedDocument: entityGuard('documents', 'Document not found', documentProjectId),
+    // A new link takes the Docs section. Revoking does not, so a link can still be removed
+    // while Docs is off.
+    newDocumentShare: entityGuard(
+      'documents',
+      'Document not found',
+      documentProjectId,
+      'documents',
     ),
   })
 
@@ -179,7 +188,7 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
     {
       params: shareDocumentParams,
       body: shareDocumentBody,
-      sharedDocument: 'edit',
+      newDocumentShare: 'edit',
       response: { 200: ShareTokenResponse, ...commonErrors, ...errors(409) },
       detail: { summary: 'Enable document sharing' },
     },

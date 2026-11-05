@@ -14,7 +14,7 @@ import {
   type SQL,
 } from 'drizzle-orm';
 import { HttpError, iso, shareLive } from '#shared/lib';
-import { getProjectById, type ProjectRow } from '#modules/projects/service';
+import { getProjectById, projectFeatures, type ProjectRow } from '#modules/projects/service';
 import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '#modules/issue-types/service';
 import { listLabels, listLabelGroups } from '#modules/labels/service';
@@ -523,7 +523,7 @@ export async function disableDocumentShare(documentId: number): Promise<boolean>
 // carries the token.
 async function sharedDocumentPages(
   token: string,
-): Promise<{ projectId: number; includeIssues: boolean; pages: SharedDocumentPage[] } | null> {
+): Promise<{ project: ProjectRow; includeIssues: boolean; pages: SharedDocumentPage[] } | null> {
   const [root] = await db
     .select({
       id: projectDocument.id,
@@ -542,10 +542,13 @@ async function sharedDocumentPages(
       ),
     );
   if (!root) return null;
+  // Turning Docs off closes the project's links. Turning it on opens the same links again.
+  const project = await getProjectById(root.projectId);
+  if (!project || !projectFeatures(project).documents) return null;
   const pages: SharedDocumentPage[] = [
     { id: root.id, parentId: null, title: root.title, icon: root.icon },
   ];
-  const shared = { projectId: root.projectId, includeIssues: root.includeIssues, pages };
+  const shared = { project, includeIssues: root.includeIssues, pages };
   if (!root.includeChildren) return shared;
   const rows = await db
     .select({
@@ -580,11 +583,9 @@ export async function getSharedDocument(
   if (!shared) return null;
   const id = documentId ?? shared.pages[0].id;
   if (!shared.pages.some((page) => page.id === id)) return null;
-  const [[row], project] = await Promise.all([
-    db.select().from(projectDocument).where(eq(projectDocument.id, id)),
-    getProjectById(shared.projectId),
-  ]);
-  if (!row || !project) return null;
+  const [row] = await db.select().from(projectDocument).where(eq(projectDocument.id, id));
+  if (!row) return null;
+  const { project } = shared;
   // Asset URLs need a session. The page reads them through the token instead, from
   // the web's public /media route.
   const assetUrl = (_match: string, _prefix: string | undefined, publicId: string) =>
@@ -674,8 +675,7 @@ export async function getSharedDocumentIssue(
 ): Promise<SharedIssueBundle | null> {
   const shared = await sharedDocumentPages(token);
   if (!shared?.includeIssues) return null;
-  const project = await getProjectById(shared.projectId);
-  if (!project) return null;
+  const { project } = shared;
   const sequences = await sequencesOfShare(
     project.key,
     shared.pages.map((page) => page.id),

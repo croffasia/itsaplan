@@ -736,6 +736,42 @@ describe('share', () => {
       expect(child.id).toBeGreaterThan(0);
     });
 
+    it('closes its links while the project has Docs turned off, and keeps them', async () => {
+      const { asOwner, issueId } = await setup();
+      const project = asOwner.projects({ projectKey: 'MKT' });
+      const doc = (await documents(asOwner).post({ title: 'Notes', content: 'See MKT-1.' })).data!;
+      const other = (await documents(asOwner).post({ title: 'Other' })).data!;
+      const asset = (
+        await documents(asOwner)({ documentId: doc.id }).assets.post({
+          file: new File(['bytes'], 'shot.png', { type: 'image/png' }),
+        })
+      ).data!;
+      const share = asOwner.documents({ documentId: doc.id }).share;
+      const { token } = (await share.post({ includeIssues: true })).data!;
+      const link = api.share.document({ token });
+      const reads = async () => [
+        (await link.get()).status,
+        (await link.assets({ publicId: asset.id }).raw.get()).status,
+        (await link.issues({ issueId }).get()).status,
+      ];
+      expect(await reads()).toEqual([200, 200, 200]);
+
+      await project.settings.patch({ features: { documents: false } });
+      expect(await reads()).toEqual([404, 404, 404]);
+      expect((await asOwner.issues({ issueId }).share.documents.get()).data).toEqual([]);
+      expect((await asOwner.documents({ documentId: other.id }).share.post()).status).toBe(403);
+      const listed = await project.shares.get();
+      expect(listed.data!.documents.map((row) => row.id)).toEqual([doc.id]);
+
+      await project.settings.patch({ features: { documents: true } });
+      expect(await reads()).toEqual([200, 200, 200]);
+
+      await project.settings.patch({ features: { documents: false } });
+      expect((await share.delete()).status).toBe(204);
+      await project.settings.patch({ features: { documents: true } });
+      expect((await link.get()).status).toBe(404);
+    });
+
     it('opens the subpages only when the link includes them, never the parent or a sibling', async () => {
       const { asOwner, parent, root, sibling, child, grandchild } = await tree();
       const { token } = (await asOwner.documents({ documentId: root.id }).share.post()).data!;

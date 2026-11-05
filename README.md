@@ -130,6 +130,7 @@ the features below. One license covers one domain, with no limit on seats or wor
 | Workspace dashboard | — | ✓ |
 | Schedules on issue events | — | ✓ |
 | Schedule filters and run limits | — | ✓ |
+| Agent workflows | — | ✓ |
 | Agent analytics by person and trigger | — | ✓ |
 | AI budgets | — | ✓ |
 | Help desk with public forms | — | ✓ |

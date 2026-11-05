@@ -324,6 +324,22 @@ describe('initiatives', () => {
       expect(typeof got.data?.health).toBe('string');
     });
 
+    it('leaves out an issue archived unfinished and keeps an archived finished one', async () => {
+      const { asOwner, columnId, doneColumnId } = await setup();
+      const initiative = (await createInitiative(asOwner, { title: 'Q3' })).data!;
+      const scope = asOwner.projects({ projectKey: 'MKT' }).issues;
+      await scope.post({ columnId, title: 'A', initiativeId: initiative.id });
+      const open = (await scope.post({ columnId, title: 'B', initiativeId: initiative.id })).data!;
+      const done = (
+        await scope.post({ columnId: doneColumnId, title: 'C', initiativeId: initiative.id })
+      ).data!;
+      await asOwner.issues({ issueId: open.id }).archive.post();
+      await asOwner.issues({ issueId: done.id }).archive.post();
+
+      const got = await asOwner.initiatives({ initiativeId: initiative.id }).get();
+      expect(got.data?.progress).toMatchObject({ completed: 1, total: 2, canceled: 0 });
+    });
+
     it('links and unlinks an issue through update_issue', async () => {
       const { asOwner, columnId } = await setup();
       const initiative = (await createInitiative(asOwner, { title: 'Q3' })).data!;

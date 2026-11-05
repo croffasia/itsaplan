@@ -182,19 +182,19 @@ export const guards = new Elysia({ name: 'guards' }).use(authContext).macro({
     };
   },
 
-  // The optional section a route belongs to, set beside the permission the route
+  // The optional section or sections a route belongs to, set beside the permission the route
   // asserts. A section its project has turned off closes its routes, so what the
   // settings page hides cannot be reached through the API either. It reads the project
   // the route's guard resolved when that guard is set before it in the route options;
   // otherwise it resolves the project through the membership check itself, so it
   // belongs on a route that already requires membership.
-  feature(name: ProjectFeature) {
+  feature(name: ProjectFeature | ProjectFeature[]) {
     return {
       async resolve(ctx) {
         const project =
           (ctx as { project?: ProjectRow }).project ??
           (await requireProjectAccess((ctx.params as ProjectKeyParams).projectKey, ctx.user));
-        assertFeatureEnabled(project, name);
+        for (const feature of [name].flat()) assertFeatureEnabled(project, feature);
       },
     };
   },

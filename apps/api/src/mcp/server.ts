@@ -35,6 +35,7 @@ export async function buildMcpServer(
   app: McpApp,
   credential: McpCredential,
   userId: string,
+  clientRequest?: Request,
 ): Promise<Server> {
   const server = new Server(
     // `name` is the stable programmatic identifier; `title` is the human-readable
@@ -91,6 +92,7 @@ export async function buildMcpServer(
     }
     const { text, isError, structuredContent } = await dispatchTool(app, tool, args, credential, {
       viaMcpEndpoint: true,
+      clientRequest,
     });
     if (tool.images && !isError) return { content: imageContent(text) };
     return { content: [{ type: 'text', text }], isError, structuredContent };

@@ -44,6 +44,15 @@ describe('integrations', () => {
     );
   });
 
+  // The tool and integration pickers search the label, so a search for Forgejo finds the
+  // Gitea tools that serve it.
+  it('names Forgejo in the Gitea integration label', async () => {
+    const { asOwner, teamId } = await setup();
+    const res = await integrations(asOwner, teamId).catalog.get();
+    const gitea = res.data?.find((integration) => integration.key === 'gitea');
+    expect(gitea?.label.toLowerCase()).toContain('forgejo');
+  });
+
   it('lists a tool integration an extension adds after start', async () => {
     const { asOwner, teamId } = await setup();
     setExtraIntegrations([{ key: 'extra', label: 'Extra', credentialSchema: [], tools: [] }]);

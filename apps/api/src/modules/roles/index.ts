@@ -4,7 +4,12 @@ import { noContent } from '#shared/http';
 import { guards } from '#shared/guards';
 import { paginate } from '#shared/pagination';
 import { HttpError, rethrowDuplicate } from '#shared/lib';
-import { PERMISSION_RESOURCES, PERMISSION_ACTIONS, resourceActions } from '#shared/permissions';
+import {
+  PERMISSION_RESOURCES,
+  PERMISSION_ACTIONS,
+  extendedFrom,
+  resourceActions,
+} from '#shared/permissions';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import {
   listRoles,
@@ -43,7 +48,11 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
   .get(
     '/permission-catalog',
     () => ({
-      resources: PERMISSION_RESOURCES.map((key) => ({ key, actions: [...resourceActions(key)] })),
+      resources: PERMISSION_RESOURCES.map((key) => ({
+        key,
+        actions: [...resourceActions(key)],
+        from: extendedFrom(key),
+      })),
       actions: [...PERMISSION_ACTIONS],
     }),
     {

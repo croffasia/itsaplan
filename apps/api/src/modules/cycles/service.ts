@@ -71,7 +71,9 @@ function selectCycles(where: SQL | undefined) {
   return db
     .select({
       row: cycle,
-      total: sql<number>`count(${issue.id})`,
+      // An archived issue left unfinished is off the board and is not carried over,
+      // so it is not work the cycle still has to do; a finished one still counts.
+      total: sql<number>`count(${issue.id}) filter (where ${issue.archivedAt} is null or ${projectColumn.stateType} in ('completed', 'canceled'))`,
       completed: sql<number>`count(*) filter (where ${projectColumn.stateType} = 'completed')`,
       canceled: sql<number>`count(*) filter (where ${projectColumn.stateType} = 'canceled')`,
     })

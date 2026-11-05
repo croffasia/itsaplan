@@ -8,7 +8,7 @@ import { clearLimits, setLimits } from '#tests/helpers/limits';
 
 // A schedule sends a fixed task to an internal agent on a cron, in UTC. The worker
 // picks up the queued runs, so a run created here stays pending. Access is the
-// ai_agents permission resource.
+// agent_schedules permission resource.
 
 const schedules = (api: Api, projectKey = 'MKT') => api.projects({ projectKey })['agent-schedules'];
 

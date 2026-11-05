@@ -298,6 +298,11 @@ export const ChatMessagesResponse = t.Object({
 
 export const AiAgentListResponse = t.Array(AiAgentResponse);
 
+// What a screen needs to name an agent, for a member who may not read its configuration.
+export const ProjectAgentListResponse = t.Array(
+  t.Pick(AiAgentResponse, ['id', 'name', 'kind', 'model']),
+);
+
 // One page of a caller's chat threads with an agent (ChatThreadPage).
 export const ChatThreadListResponse = t.Object({
   items: t.Array(ChatThreadResponse),

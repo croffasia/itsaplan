@@ -40,6 +40,7 @@ export const mentionRoutes = new Elysia({ name: 'mentions', detail: { tags: ['Me
       }),
     {
       permission: ['documents', 'read'],
+      feature: 'documents',
       params: documentMentionParams,
       query: mentionCandidatesQuery,
       response: { 200: t.Array(MentionCandidateResponse), ...commonErrors },

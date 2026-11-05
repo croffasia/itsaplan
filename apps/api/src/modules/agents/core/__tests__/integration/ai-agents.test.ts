@@ -1130,6 +1130,7 @@ describe('ai agents', () => {
       'GET /teams/:teamId/ai-agents/:agentId/runs',
       'GET /teams/:teamId/ai-agents/:agentId/traces',
       'GET /teams/:teamId/ai-agents/:agentId/traces/:traceId',
+      'GET /projects/:projectKey/ai-agents/options',
       'POST /projects/:projectKey/ai-agents/:agentId/run/stream',
       'GET /projects/:projectKey/ai-agents/:agentId/threads',
       'PUT /projects/:projectKey/ai-agents/:agentId/threads/:threadId/favorite',

@@ -40,6 +40,7 @@ export default function DocumentEditor({
   authorName,
   authorNames,
   canEdit,
+  canShare,
   canReadWorkItems,
   canLinkWorkItems,
   isProjectOwner,
@@ -60,6 +61,7 @@ export default function DocumentEditor({
   authorName: string | null;
   authorNames: Record<string, string>;
   canEdit: boolean;
+  canShare: boolean;
   canReadWorkItems: boolean;
   canLinkWorkItems: boolean;
   isProjectOwner: boolean;
@@ -229,6 +231,7 @@ export default function DocumentEditor({
           canManage={canManage}
           canManageLifecycle={canManageLifecycle}
           canDelete={canManageLifecycle}
+          canShare={canShare && !document.isPrivate && document.archivedAt === null}
           busy={busy}
           onBack={onBack}
           onRetrySave={() => {

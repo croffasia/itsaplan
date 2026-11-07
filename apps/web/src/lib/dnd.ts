@@ -1,6 +1,6 @@
 import { KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import type { SyntheticEvent } from 'react';
+import { useEffect, useState, type SyntheticEvent } from 'react';
 
 // How far the pointer must move before a press becomes a drag. Also the threshold
 // a draggable uses to tell a click apart from the click the browser fires after a
@@ -19,14 +19,36 @@ export const DRAG_ACTIVATION_DISTANCE = 4;
 // share: the board keeps its DndContext (cards call useDraggable/useDroppable and
 // need the ancestor), but nothing is draggable. `inert` is fixed per component
 // instance, so the sensor-array length still never changes between its renders.
+// The options are module constants because useSensor memoizes on the options object.
+// A new object on each render gives the DndContext new sensors, and every draggable
+// and droppable of the board renders again.
+const MOUSE_OPTIONS = { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } };
+const TOUCH_OPTIONS = { activationConstraint: { delay: 250, tolerance: 8 } };
+const KEYBOARD_OPTIONS = { coordinateGetter: sortableKeyboardCoordinates };
+
 export function useDndSensors(inert = false) {
   const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    useSensor(MouseSensor, MOUSE_OPTIONS),
+    useSensor(TouchSensor, TOUCH_OPTIONS),
+    useSensor(KeyboardSensor, KEYBOARD_OPTIONS),
   );
   const inertSensors = useSensors();
   return inert ? inertSensors : sensors;
+}
+
+// A sortable list's order from a drop until the reordered data reaches the list. A query
+// cache tells React a task after the drop, and by then a DragOverlay has measured the
+// dragged item in its old slot and flies back there before the list moves. Call drop in
+// onDragEnd with every id in the new order, so the list moves in the same render.
+export function useDroppedOrder<T extends { id: number }>(items: T[]) {
+  const [dropped, setDropped] = useState<{ from: string; ids: number[] } | null>(null);
+  const key = items.map((item) => item.id).join();
+  useEffect(() => setDropped(null), [key]);
+  const byId = new Map(items.map((item) => [item.id, item]));
+  return {
+    items: dropped?.from === key ? dropped.ids.flatMap((id) => byId.get(id) ?? []) : items,
+    drop: (ids: number[]) => setDropped({ from: key, ids }),
+  };
 }
 
 const stopPropagation = (e: SyntheticEvent) => e.stopPropagation();

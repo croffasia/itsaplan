@@ -518,6 +518,22 @@ export const ISSUE_TYPE_PRESET_KEYS = Object.keys(ISSUE_TYPE_PRESETS);
 
 export type IssueTypePreset = keyof typeof ISSUE_TYPE_PRESETS;
 
+// The team's default agents as the member rows a new project starts with, on the
+// default role.
+export async function defaultAgentMembers(ownerTeam: {
+  id: number;
+  defaultAgentIds: number[];
+}): Promise<{ userId: string; role: 'member'; roleId: number | null }[]> {
+  if (ownerTeam.defaultAgentIds.length === 0) return [];
+  const agents = await db
+    .select({ userId: aiAgent.userId })
+    .from(aiAgent)
+    .where(and(eq(aiAgent.teamId, ownerTeam.id), inArray(aiAgent.id, ownerTeam.defaultAgentIds)));
+  if (agents.length === 0) return [];
+  const roleId = await getDefaultRoleId();
+  return agents.map((agent) => ({ userId: agent.userId, role: 'member', roleId }));
+}
+
 export async function createProject(
   input: {
     key: string;
@@ -532,15 +548,7 @@ export async function createProject(
   // What a new project starts with, set instance-wide in god mode. Read before the
   // transaction opens so the settings lookup is not part of it.
   const defaults = await getProjectDefaults();
-  const defaultAgents = ownerTeam.defaultAgentIds.length
-    ? await db
-        .select({ userId: aiAgent.userId })
-        .from(aiAgent)
-        .where(
-          and(eq(aiAgent.teamId, ownerTeam.id), inArray(aiAgent.id, ownerTeam.defaultAgentIds)),
-        )
-    : [];
-  const defaultRoleId = defaultAgents.length ? await getDefaultRoleId() : null;
+  const agentMembers = await defaultAgentMembers(ownerTeam);
   return db.transaction(async (tx) => {
     const [row] = await tx
       .insert(project)
@@ -554,15 +562,10 @@ export async function createProject(
       .returning();
     await joinTeamAsCreator(tx, ownerTeam.id, ownerId);
     await tx.insert(projectMember).values({ projectId: row.id, userId: ownerId, role: 'owner' });
-    if (defaultAgents.length) {
-      await tx.insert(projectMember).values(
-        defaultAgents.map((agent) => ({
-          projectId: row.id,
-          userId: agent.userId,
-          role: 'member',
-          roleId: defaultRoleId,
-        })),
-      );
+    if (agentMembers.length > 0) {
+      await tx
+        .insert(projectMember)
+        .values(agentMembers.map((member) => ({ projectId: row.id, ...member })));
     }
     for (const [position, column] of DEFAULT_COLUMNS.entries()) {
       await tx.insert(projectColumn).values({
@@ -632,7 +635,9 @@ export async function setProjectArchived(
 }
 
 // The project's feature toggles, read from the project row.
-export function projectFeatures(row: ProjectRow): ProjectFeatures {
+export function projectFeatures(
+  row: Pick<ProjectRow, `${keyof ProjectFeatures}Enabled`>,
+): ProjectFeatures {
   return {
     initiatives: row.initiativesEnabled,
     dashboards: row.dashboardsEnabled,

@@ -18,6 +18,7 @@ export type PermissionResource =
   | 'issue_types'
   | 'labels'
   | 'ai_agents'
+  | 'agent_schedules'
   | 'integrations'
   | 'agent_skills'
   | 'agent_tools'
@@ -70,6 +71,7 @@ export interface RoleUsage {
 export interface PermissionCatalogResource {
   key: PermissionResource;
   actions: PermissionAction[];
+  from?: PermissionResource;
 }
 
 export interface PermissionCatalog {

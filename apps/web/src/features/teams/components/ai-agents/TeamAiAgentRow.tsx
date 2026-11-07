@@ -145,7 +145,7 @@ export function TeamAiAgentRow({
                     {t('runHistory')}
                   </DropdownMenuItem>
                 )}
-                {canHistory && (
+                {canHistory && agent.chatEnabled && (
                   <DropdownMenuItem className="min-h-11 sm:min-h-8" onSelect={onChat}>
                     <MessageSquare />
                     {t('testChat')}

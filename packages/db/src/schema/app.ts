@@ -63,6 +63,10 @@ export const workspace = pgTable(
     teamCreation: text('team_creation').notNull().default('owner'),
     // Runs of its internal agents in flight at once; 0 sets no limit of its own.
     maxConcurrentRuns: integer('max_concurrent_runs').notNull().default(0),
+    // Whether its projects may have public links. Its owner and admins set it.
+    sharingEnabled: boolean('sharing_enabled').notNull().default(true),
+    // Whether only the teams with team.sharing_selected may. Its owner sets it.
+    sharingTeamsOnly: boolean('sharing_teams_only').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -115,6 +119,9 @@ export const team = pgTable(
     // team's own resources (agents, skills, tools, roles, integrations) and every
     // project it owns, whatever each project's own flag says.
     mcpEnabled: boolean('mcp_enabled').notNull().default(true),
+    // Whether the workspace owner chose this team for sharing. Read only while
+    // workspace.sharing_teams_only is on.
+    sharingSelected: boolean('sharing_selected').notNull().default(false),
     defaultAgentIds: jsonb('default_agent_ids').$type<number[]>().notNull().default([]),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -198,6 +205,66 @@ export const project = pgTable(
   },
   (t) => [unique('project_team_key_uq').on(t.teamId, t.key)],
 );
+
+// A project template of a workspace: a snapshot of a project's configuration, without
+// its issues, that new projects of its teams are created from. The snapshot's shape is
+// ProjectSnapshot in the api (modules/projects/copy.ts). With all_teams off, only the
+// teams in project_template_team see it. The flag is explicit so that a deleted team
+// does not open a limited template to the whole workspace.
+export const projectTemplate = pgTable(
+  'project_template',
+  {
+    id: serial('id').primaryKey(),
+    workspaceId: integer('workspace_id')
+      .notNull()
+      .references(() => workspace.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    description: text('description').notNull().default(''),
+    snapshot: jsonb('snapshot').notNull(),
+    allTeams: boolean('all_teams').notNull().default(true),
+    // The template's page in the gallery at itsaplan.dev, NULL while it is not published.
+    publicationId: text('publication_id'),
+    publicationUrl: text('publication_url'),
+    publishedAt: timestamp('published_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('project_template_workspace_idx').on(t.workspaceId)],
+);
+
+// The teams a project template is limited to when its all_teams is off.
+export const projectTemplateTeam = pgTable(
+  'project_template_team',
+  {
+    templateId: integer('template_id')
+      .notNull()
+      .references(() => projectTemplate.id, { onDelete: 'cascade' }),
+    teamId: integer('team_id')
+      .notNull()
+      .references(() => team.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.templateId, t.teamId] }),
+    index('project_template_team_team_idx').on(t.teamId),
+  ],
+);
+
+// The gallery publisher a workspace publishes its project templates under: the email it
+// confirmed with a code, and the key the gallery issued for it. The key is read back for
+// every publish, so it is kept encrypted rather than hashed. The author is the name the
+// gallery shows on every template of the address; the workspace keeps a copy to show in
+// its dialogs and refuses a publish until it is set.
+export const templatePublisher = pgTable('template_publisher', {
+  workspaceId: integer('workspace_id')
+    .primaryKey()
+    .references(() => workspace.id, { onDelete: 'cascade' }),
+  email: text('email').notNull(),
+  keyCiphertext: text('key_ciphertext').notNull(),
+  keyIv: text('key_iv').notNull(),
+  keyAuthTag: text('key_auth_tag').notNull(),
+  authorName: text('author_name').notNull().default(''),
+  authorUrl: text('author_url'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
 
 // Per-project key-value settings, mirroring app_setting but scoped to a project.
 // The value is a jsonb blob owned by whatever feature reads the key, so one table
@@ -547,6 +614,9 @@ export const aiAgent = pgTable(
     // trigger_on_assign is set.
     triggerOnMention: boolean('trigger_on_mention').notNull().default(true),
     triggerOnAssign: boolean('trigger_on_assign').notNull().default(false),
+    // Gates the test chat and the external-agent chat only; the triggers above and
+    // schedules still run an agent with chat off.
+    chatEnabled: boolean('chat_enabled').notNull().default(true),
     // How long a delegation run waits before it becomes claimable, which leaves time
     // to keep editing the issue after delegating it. Applies to delegation only: a
     // mention is a question already asked, and its author waits for the reply.
@@ -1495,6 +1565,10 @@ export const issue = pgTable(
     shareToken: uuid('share_token').unique(),
     // How much the share link exposes, the same choice a shared view carries.
     shareExtended: boolean('share_extended').notNull().default(false),
+    // When the share link stops working. NULL means it never expires. Past this
+    // moment the link reads as revoked everywhere, and the api's share-expiry sweep
+    // clears the token.
+    shareExpiresAt: timestamp('share_expires_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -2009,14 +2083,25 @@ export const projectView = pgTable(
     // subtasks and links; true adds the assignees, labels, custom fields and
     // activity the members see.
     shareExtended: boolean('share_extended').notNull().default(false),
+    // When the share link stops working; NULL means never. See issue.shareExpiresAt.
+    shareExpiresAt: timestamp('share_expires_at', { withTimezone: true }),
+    // A private view is seen only by its owner, not even by a project owner. The owner
+    // is set only on private views, so deleting an account takes its private views and
+    // never a project's.
+    isPrivate: boolean('is_private').notNull().default(false),
+    ownerUserId: text('owner_user_id').references(() => user.id, { onDelete: 'cascade' }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [index('project_view_project_idx').on(t.projectId, t.position)],
+  (t) => [
+    index('project_view_project_idx').on(t.projectId, t.position),
+    index('project_view_owner_idx').on(t.ownerUserId),
+    check('project_view_private_owner_check', sql`${t.isPrivate} = (${t.ownerUserId} is not null)`),
+  ],
 );
 
-// The saved views a user marked as favorite. Favorites are personal: they pin the
-// view's tab to the front of the tab row and list it under Work items in the
-// sidebar, for that user only.
+// The saved views a user marked as favorite. Favorites are personal: they mark the
+// view's tab with a star and list it under Work items in the sidebar, for that user
+// only.
 export const projectViewFavorite = pgTable(
   'project_view_favorite',
   {
@@ -2026,6 +2111,24 @@ export const projectViewFavorite = pgTable(
     userId: text('user_id')
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
+  },
+  (t) => [primaryKey({ columns: [t.viewId, t.userId] })],
+);
+
+// Each user's own tab row: where they placed a view and whether they hid it. A view
+// without a position follows the last view of its kind in the row, so a view added to the
+// project shows up in rows already arranged. Only a project's view can be hidden.
+export const projectViewPreference = pgTable(
+  'project_view_preference',
+  {
+    viewId: integer('view_id')
+      .notNull()
+      .references(() => projectView.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    position: integer('position'),
+    isHidden: boolean('is_hidden').notNull().default(false),
   },
   (t) => [primaryKey({ columns: [t.viewId, t.userId] })],
 );
@@ -2087,6 +2190,15 @@ export const projectDocument = pgTable(
     updatedByUserId: text('updated_by_user_id').references(() => user.id, {
       onDelete: 'set null',
     }),
+    // Unguessable token for the public read-only share link of this page. NULL
+    // means not shared; setting it enables the link, clearing it revokes access.
+    shareToken: uuid('share_token').unique(),
+    // When the share link stops working; NULL means never. See issue.shareExpiresAt.
+    shareExpiresAt: timestamp('share_expires_at', { withTimezone: true }),
+    // Whether the share link also opens the page's subpages.
+    shareIncludeChildren: boolean('share_include_children').notNull().default(false),
+    // Whether the shared pages show the title and state of the issues they name.
+    shareIncludeIssues: boolean('share_include_issues').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -2201,8 +2313,9 @@ export const projectDocumentInitiative = pgTable(
 );
 
 // Files embedded in Docs pages. Bytes use the same S3-compatible object store as
-// issue/chat attachments; only authenticated document routes expose them, so a
-// private page's unguessable asset id never acts as a public capability URL.
+// issue/chat attachments; only authenticated document routes and the live share link
+// of a page expose them, so an unguessable asset id alone never acts as a public
+// capability URL.
 export const documentAsset = pgTable(
   'document_asset',
   {

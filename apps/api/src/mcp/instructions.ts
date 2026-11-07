@@ -94,6 +94,9 @@ attachment, call view_attachment with its url: it shows an image and returns the
 of a PDF or a text file and the rows of a spreadsheet. A file can be replaced behind
 the same url, so view it again rather than reusing what you saw earlier.
 
+A file of a document is different: its url needs a session. Open it with
+view_document_asset.
+
 ## Mentions
 
 A comment, an issue description, a document or a comment on a document tags someone

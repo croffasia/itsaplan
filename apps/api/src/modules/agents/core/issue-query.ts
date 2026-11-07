@@ -56,6 +56,7 @@ export const issueQuerySchema = z.object({
     .describe('Label ids from get_project. An issue must contain every supplied label.'),
   dueFrom: date.optional().describe('Inclusive earliest due date in YYYY-MM-DD format.'),
   dueTo: date.optional().describe('Inclusive latest due date in YYYY-MM-DD format.'),
+  blocked: z.boolean().optional().describe('Only issues that an issue still open is blocking.'),
   limit: z
     .number()
     .int()

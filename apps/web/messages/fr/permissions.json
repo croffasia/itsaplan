@@ -14,6 +14,7 @@
     "issue_types": "Types de tickets",
     "labels": "Étiquettes",
     "ai_agents": "Agents IA",
+    "agent_schedules": "Planifications des agents",
     "integrations": "Intégrations",
     "agent_skills": "Compétences des agents",
     "agent_tools": "Outils des agents",

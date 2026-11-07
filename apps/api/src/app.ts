@@ -126,6 +126,10 @@ export const app = new Elysia()
         tags: [
           { name: 'Projects', description: 'Projects and the full work items view' },
           { name: 'Teams', description: 'Teams that own projects' },
+          {
+            name: 'Project Templates',
+            description: 'Saved project configurations new projects are created from',
+          },
           { name: 'Workspaces', description: 'Workspaces that own teams, and who manages them' },
           { name: 'Members', description: 'Project membership and roles' },
           { name: 'Roles', description: 'Project roles and their permissions' },

@@ -24,15 +24,15 @@
     "methodTabsAria": "Método de conexão",
     "method": "OAuth",
     "personalKey": "Chave de API",
-    "description": "Use isto para qualquer cliente MCP que suporte OAuth, como ChatGPT ou Claude. Você entra com sua conta Itsaplan. O cliente nunca recebe uma chave de API.",
+    "description": "Use isto para qualquer cliente MCP que suporte OAuth, como ChatGPT ou Claude. Você entra com sua conta {app}. O cliente nunca recebe uma chave de API.",
     "discovery": "Descoberta OAuth",
     "steps": {
       "add": "Adicione um app MCP no seu cliente.",
       "paste": "Cole o endpoint MCP.",
       "choose": "Escolha OAuth quando o cliente perguntar como entrar.",
-      "signIn": "Entre no Itsaplan e aprove o acesso."
+      "signIn": "Entre no {app} e aprove o acesso."
     },
-    "security": "O OAuth usa PKCE (S256), registro dinâmico de cliente e tokens de acesso com escopo limitado à sua conta Itsaplan.",
+    "security": "O OAuth usa PKCE (S256), registro dinâmico de cliente e tokens de acesso com escopo limitado à sua conta {app}.",
     "consent": {
       "title": "{client} quer se conectar à sua conta",
       "titleUnnamed": "Um cliente MCP quer se conectar à sua conta",

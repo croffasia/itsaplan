@@ -86,6 +86,14 @@ const configFields = {
   ),
   triggerOnMention: t.Optional(t.Boolean({ description: 'Run when @-mentioned in a comment.' })),
   triggerOnAssign: t.Optional(t.Boolean({ description: 'Run when assigned to an issue.' })),
+  chatEnabled: t.Optional(
+    t.Boolean({
+      description:
+        'Whether the agent may be chatted with (the chat selector and the chat routes). ' +
+        'Off, it keeps running through a mention, a delegation, or a schedule. Defaults ' +
+        'to true.',
+    }),
+  ),
   fieldTriggers: t.Optional(
     t.Array(
       t.Object({
@@ -161,6 +169,7 @@ export const AiAgentResponse = t.Object({
   memoryLastMessages: t.Nullable(t.Number()),
   triggerOnMention: t.Boolean(),
   triggerOnAssign: t.Boolean(),
+  chatEnabled: t.Boolean(),
   fieldTriggers: t.Array(t.Object({ fieldId: t.Number(), name: t.String(), delaySec: t.Number() })),
   delegationDelaySec: t.Number(),
   ownerUserId: t.Nullable(t.String()),
@@ -288,6 +297,11 @@ export const ChatMessagesResponse = t.Object({
 });
 
 export const AiAgentListResponse = t.Array(AiAgentResponse);
+
+// What a screen needs to name an agent, for a member who may not read its configuration.
+export const ProjectAgentListResponse = t.Array(
+  t.Pick(AiAgentResponse, ['id', 'name', 'kind', 'model']),
+);
 
 // One page of a caller's chat threads with an agent (ChatThreadPage).
 export const ChatThreadListResponse = t.Object({

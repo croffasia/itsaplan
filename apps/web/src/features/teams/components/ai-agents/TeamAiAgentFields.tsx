@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { AGENT_KIND_ICON } from '../../utils/agentKindIcon';
 import { type AgentFormValue } from '../../utils/agentForm';
 import { AgentFormSection } from './AgentFormSection';
@@ -158,6 +159,14 @@ export default function TeamAiAgentFields({
         />
         <p className="text-xs text-muted-foreground">{t('usernameHint')}</p>
       </div>
+
+      <label className="flex cursor-pointer items-center justify-between gap-2">
+        <span>
+          <span className="text-sm font-medium">{t('chat')}</span>
+          <span className="block text-xs text-muted-foreground">{t('chatHint')}</span>
+        </span>
+        <Switch checked={value.chatEnabled} onCheckedChange={(v) => onChange({ chatEnabled: v })} />
+      </label>
 
       <AgentInstructionsField
         value={value.instructions}

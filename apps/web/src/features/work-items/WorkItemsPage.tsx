@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -19,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import ViewTabs from '@/components/layout/ViewTabs';
 import ViewIconPicker from '@/components/layout/ViewIconPicker';
 import FilterBar from '@/components/layout/FilterBar';
@@ -29,6 +30,7 @@ import KanbanBoard from './components/kanban/KanbanBoard';
 import TableView from './components/table/TableView';
 import TimelineView from './components/timeline/TimelineView';
 import CalendarView from './components/calendar/CalendarView';
+import { WorkItemsEmpty } from './components/shared/WorkItemsEmpty';
 
 interface TimelineCollapseState {
   scope: string;
@@ -40,10 +42,11 @@ interface TimelineCollapseState {
 // the project data and the view editor come from the Shell through React context.
 export default function WorkItemsPage() {
   const t = useTranslations('workItems');
+  const tViews = useTranslations('views');
   const tCommon = useTranslations('common');
   const { project, filteredProject, views, editor, customFields, onOpenIssue, onAddIssue } =
     useShell();
-  const { can } = usePermissions();
+  const { can, isMember } = usePermissions();
   const groupLabels = useGroupLabels();
   const features = useProjectFeatures();
   const [timelineCollapseState, setTimelineCollapseState] = useState<TimelineCollapseState>({
@@ -59,23 +62,30 @@ export default function WorkItemsPage() {
     targets: [qk.boardIssues(projectKey)],
   });
 
-  if (!project || !filteredProject) return null;
-
-  // Saving persists the view: editing an existing one is a views edit, a brand-new
-  // one is a views create. Filtering/display stay available to everyone (transient,
-  // client-side); only persisting is gated.
-  const canSaveView = can('views', editor.activeView ? 'edit' : 'create');
-
   // With an optional section off, its property and grouping are left out of what
   // the layouts and the Display panel work with, and put back on the way out so the
-  // stored display keeps them for when the section is on again.
-  const settings = withoutHiddenSections(editor.settings, features);
-  const changeSettings = (next: ViewSettings) =>
-    editor.changeSettings(restoreHiddenSections(next, editor.settings, features));
+  // stored display keeps them for when the section is on again. Memoized: the
+  // layouts memoize their cards, and a new properties list renders every card again.
+  const settings = useMemo(
+    () => withoutHiddenSections(editor.settings, features),
+    [editor.settings, features],
+  );
 
   // From the unfiltered project, so a column's WIP limit is measured against every
   // issue in it rather than the ones the active filters leave on screen.
-  const columnCounts = countIssuesByColumn(project.issues);
+  const columnCounts = useMemo(() => countIssuesByColumn(project?.issues ?? []), [project?.issues]);
+
+  if (!project || !filteredProject) return null;
+
+  // Saving persists the view: a project's view is a views edit, a private view is its
+  // owner's to save, and anyone may save a new one, private unless they may create the
+  // project's views. Only a member of the project keeps private views. Filtering/display stay available to everyone (transient,
+  // client-side); only persisting is gated.
+  const canCreateProjectView = can('views', 'create');
+  const canSaveView = !editor.activeView || editor.activeView.isPrivate || can('views', 'edit');
+
+  const changeSettings = (next: ViewSettings) =>
+    editor.changeSettings(restoreHiddenSections(next, editor.settings, features));
 
   const timelineGroups = buildGroups(
     filteredProject,
@@ -138,6 +148,9 @@ export default function WorkItemsPage() {
           />
         );
       case 'timeline':
+        if (viewProps.project.issues.length === 0) {
+          return <WorkItemsEmpty filters={editor.effectiveFilters} />;
+        }
         return (
           <TimelineView
             {...viewProps}
@@ -172,7 +185,12 @@ export default function WorkItemsPage() {
         onNewView={editor.beginNewView}
         onEdit={editor.beginEditView}
         onDelete={(v) => void editor.deleteView(v)}
-        onReorder={editor.reorderView}
+        onDuplicate={(v) => editor.beginDuplicate(v, tViews('copyName', { name: v.name }))}
+        onArrangeRow={editor.arrangeTabRow}
+        onHide={(v) => void editor.hideView(v)}
+        onShow={editor.showView}
+        onResetRow={editor.resetTabRow}
+        onPinProjectOrder={editor.pinProjectOrder}
         onToggleFilter={editor.toggleFilters}
         displayControl={<DisplayPopover {...displayProps} />}
       />
@@ -198,6 +216,20 @@ export default function WorkItemsPage() {
                 }
                 className="h-8 flex-1 border-0 bg-transparent px-1 text-sm font-medium shadow-none focus-visible:ring-0"
               />
+              {/* A private view can be added to the project later; a project's view never
+                  turns private. */}
+              {!editor.activeView && canCreateProjectView && isMember && can('views', 'read') && (
+                <label
+                  className="flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground"
+                  title={tViews('privateHint')}
+                >
+                  <Checkbox
+                    checked={editor.draftPrivate}
+                    onCheckedChange={(value) => editor.setDraftPrivate(value === true)}
+                  />
+                  {tViews('private')}
+                </label>
+              )}
               <Button variant="ghost" size="sm" onClick={editor.cancelEdits}>
                 {tCommon('cancel')}
               </Button>
@@ -224,7 +256,11 @@ export default function WorkItemsPage() {
       )}
 
       <div className="relative flex-1 overflow-hidden">
-        <IssueLinksProvider issues={project.issues} enabled={settings.showLinks}>
+        <IssueLinksProvider
+          issues={project.issues}
+          columns={project.columns}
+          enabled={settings.showLinks}
+        >
           <SubtasksProvider
             issues={project.issues}
             enabled={settings.showSubtasks}

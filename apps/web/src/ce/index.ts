@@ -14,6 +14,7 @@ export { default as ScheduleDialog } from './ScheduleDialog';
 export { default as ShellNotice } from './ShellNotice';
 export { default as SignInExtras } from './SignInExtras';
 export { default as SignInPage } from './SignInPage';
+export { default as useCopySections } from './useCopySections';
 export { default as useImportSources } from './useImportSources';
 export { default as useProjectSettingsSections } from './useProjectSettingsSections';
 export { default as useWorkspaceSections } from './useWorkspaceSections';

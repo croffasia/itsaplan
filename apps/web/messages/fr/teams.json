@@ -20,6 +20,10 @@
       "title": "Projets",
       "description": "Les projets que cette équipe détient."
     },
+    "templates": {
+      "title": "Modèles de projet",
+      "description": "Paramètres enregistrés à partir desquels les nouveaux projets démarrent."
+    },
     "members": {
       "title": "Membres de l'équipe",
       "description": "Tous les membres de l'équipe, et les invitations encore ouvertes."
@@ -74,15 +78,16 @@
     "leaveHint": "Vous conservez les projets dont vous êtes membre. Pour revenir, un propriétaire doit vous ajouter à nouveau.",
     "delete": {
       "action": "Supprimer l'équipe",
-      "hint": "Ses membres, rôles, invitations, compétences, outils et intégrations sont supprimés avec elle. Les personnes conservent leur compte et leurs autres équipes.",
+      "hint": "Ses membres, rôles, modèles de projet, invitations, compétences, outils et intégrations sont supprimés avec elle. Les personnes conservent leur compte et leurs autres équipes.",
       "blocked": "Supprimez d'abord les projets et les agents IA de l'équipe.",
       "title": "Supprimer {name} ?",
-      "description": "<strong>{name}</strong> est supprimée avec ses membres, rôles, invitations, compétences, outils et intégrations. Les personnes conservent leur compte et leurs autres équipes. Cette action est irréversible.",
+      "description": "<strong>{name}</strong> est supprimée avec ses membres, rôles, modèles de projet, invitations, compétences, outils et intégrations. Les personnes conservent leur compte et leurs autres équipes. Cette action est irréversible.",
       "deleted": "Équipe supprimée"
     }
   },
   "columns": {
     "project": "Projet",
+    "template": "Modèle",
     "owners": "Propriétaires",
     "members": "Membres",
     "created": "Créé le",
@@ -180,6 +185,80 @@
       "invalidJson": "Le presse-papiers ne contient pas de JSON valide.",
       "notAnExport": "Le presse-papiers ne contient pas d'export de rôles.",
       "empty": "L'export de rôles est vide."
+    }
+  },
+  "templates": {
+    "empty": "Aucun modèle de projet pour l'instant",
+    "emptyHint": "Enregistrez un projet comme modèle pour créer de nouveaux projets à partir de celui-ci.",
+    "newAction": "Nouveau modèle",
+    "teams": "Équipes",
+    "allTeams": "Toutes les équipes",
+    "noTeams": "Aucune équipe",
+    "editAction": "Modifier le modèle",
+    "editHint": "Le contenu du modèle reste tel qu'il a été enregistré.",
+    "copyAction": "Copier le modèle",
+    "copied": "Modèle « {name} » copié. Collez-le dans un autre espace de travail pour l'importer.",
+    "downloadAction": "Télécharger",
+    "downloadFailed": "Impossible de télécharger le modèle.",
+    "importAction": "Importer un modèle",
+    "deleteAction": "Supprimer le modèle",
+    "deleteDialog": {
+      "title": "Supprimer le modèle « {name} » ?",
+      "description": "Les projets créés à partir de ce modèle restent inchangés.",
+      "confirm": "Supprimer le modèle",
+      "galleryNote": "Sa page dans la galerie est aussi retirée."
+    },
+    "panel": {
+      "saved": "Enregistré le {date}",
+      "none": "Aucun",
+      "teams": "Équipes : {teams}"
+    },
+    "publish": {
+      "action": "Publier",
+      "published": "Publié",
+      "account": "Compte de la galerie",
+      "publishingAs": "Publication en tant que",
+      "authorProfile": "Profil de l’auteur",
+      "changeEmail": "Changer d’e-mail",
+      "rules": "Règles de la galerie",
+      "unlink": "Dissocier l’espace de travail",
+      "downloadable": "Tout le monde peut le télécharger",
+      "private": "Ni tickets ni personnes",
+      "counts": "{states, plural, one {# état} other {# états}} · {types, plural, one {# type} other {# types}} · {fields, plural, one {# champ} other {# champs}}",
+      "by": "par <b>{name}</b>",
+      "authorHint": "Affiché sur chaque modèle publié depuis {email}.",
+      "authorName": "Auteur",
+      "authorUrl": "Lien vers le profil",
+      "optional": "Facultatif",
+      "authorUrlInvalid": "Doit commencer par https://",
+      "submit": "Publier",
+      "update": "Mettre à jour la page",
+      "live": "En ligne",
+      "since": "depuis le {date}",
+      "openPage": "Ouvrir la page",
+      "copyLink": "Copier le lien",
+      "linkCopied": "Lien copié",
+      "copyFailed": "Impossible de copier le lien",
+      "unpublish": "Dépublier",
+      "unpublishConfirm": "Retirer la page ?",
+      "unpublishHint": "Son lien ne fonctionnera plus.",
+      "keep": "Garder",
+      "publishedToast": "Publié",
+      "updatedToast": "Page mise à jour",
+      "badge": "Public",
+      "badgeHint": "Dans la galerie depuis le {date}",
+      "link": {
+        "intro": "Confirmez une adresse e-mail une seule fois pour cet espace de travail.",
+        "email": "E-mail",
+        "emailHint": "Non affichée publiquement",
+        "agree": "En envoyant le code, vous acceptez les <rules>règles de la galerie</rules>.",
+        "sendCode": "Envoyer le code",
+        "codeSent": "Saisissez le code envoyé à {email}",
+        "code": "Code",
+        "confirm": "Confirmer",
+        "resend": "Renvoyer",
+        "resent": "Nouveau code envoyé"
+      }
     }
   },
   "panel": {
@@ -374,6 +453,8 @@
     "username": "Nom d'utilisateur",
     "usernamePlaceholder": "ex. bot-triage",
     "usernameHint": "Lettres, chiffres, points, tirets et tirets bas. Jusqu'à 64 caractères.",
+    "chat": "Chat",
+    "chatHint": "Permet à un membre d'ouvrir ou de poursuivre un chat avec cet agent. Désactivé, il disparaît du sélecteur de chat ; les mentions, délégations et tâches planifiées continuent de l'exécuter.",
     "access": "Disponibilité",
     "accessHint": "Qui peut confier des tâches à cet agent",
     "model": "Modèle",
@@ -641,6 +722,19 @@
       "descriptionCapped": "Nombre d'exécutions de ses agents en même temps, jusqu'à {max}. Les autres attendent en file d'attente. Avec 0, la limite est de {max}.",
       "ownerOnly": "Seul le propriétaire modifie le nombre d'exécutions d'agents simultanées.",
       "none": "Aucune limite"
+    },
+    "sharing": {
+      "title": "Liens publics",
+      "description": "Si les documents, les tickets et les vues de cet espace de travail peuvent être partagés par lien.",
+      "enabled": "Autoriser les liens publics",
+      "enabledHint": "Désactivé, personne ne peut partager ici et les liens existants ne s'ouvrent plus tant que l'option n'est pas réactivée.",
+      "instanceOff": "Les liens publics sont désactivés sur cette instance.",
+      "teamsOnly": "Équipes sélectionnées uniquement",
+      "teamsOnlyHint": "Seules les équipes ci-dessous peuvent partager. Les liens des autres équipes ne s'ouvrent plus.",
+      "statusOn": "Activé",
+      "statusOff": "Désactivé",
+      "ownerOnly": "Seul le propriétaire choisit les équipes qui peuvent partager.",
+      "saved": "Paramètres des liens publics enregistrés"
     },
     "managers": {
       "title": "Responsables",

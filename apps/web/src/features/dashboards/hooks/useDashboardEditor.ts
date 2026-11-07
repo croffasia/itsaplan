@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { arrayMove } from '@dnd-kit/sortable';
 import { useTranslations } from 'next-intl';
 import type { Dashboard } from '@/lib/api/endpoints/dashboards';
 import {
@@ -115,13 +114,7 @@ export function useDashboardEditor(
     }
   };
 
-  const reorderDashboards = (draggedId: number, targetId: number) => {
-    const ids = dashboards.map((d) => d.id);
-    const from = ids.indexOf(draggedId);
-    const to = ids.indexOf(targetId);
-    if (from === -1 || to === -1 || from === to) return;
-    reorderM.mutate(arrayMove(ids, from, to));
-  };
+  const reorderDashboards = (ids: number[]) => reorderM.mutate(ids);
 
   return {
     active,

@@ -104,6 +104,7 @@
     "copied": "تم النسخ!",
     "copyPrompt": "نسخ التوجيه",
     "sharedPublicly": "مُشارَكة علنًا",
+    "sharedThroughDocument": "عامة عن طريق مستند",
     "sharePublicly": "مشاركة علنًا",
     "restore": "استعادة المهمة",
     "archive": "أرشفة المهمة",
@@ -437,7 +438,7 @@
   "feedOldest": "الأقدم أولاً",
   "feedChangeOrder": "تغيير الترتيب",
   "feedRunToggle": "عرض التغييرات المشابهة",
-  "shareUnavailable": "المهمة المشاركة دي مش متاحة. يمكن الرابط اتلغى.",
+  "shareUnavailable": "المهمة المشاركة دي مش متاحة. يمكن الرابط اتلغى أو انتهت صلاحيته.",
   "fieldSelects": {
     "changeState": "تغيير الحالة…",
     "changeType": "تغيير النوع…",

@@ -36,6 +36,10 @@ export interface ProjectDocumentSummary {
 export interface ProjectDocument extends ProjectDocumentSummary {
   content: string;
   contentJson: Record<string, unknown> | null;
+  shareToken: string | null;
+  shareExpiresAt: string | null;
+  shareIncludeChildren: boolean;
+  shareIncludeIssues: boolean;
 }
 
 export interface DocumentIssueLink {

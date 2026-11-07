@@ -103,6 +103,24 @@ export async function setAgentSettings(patch: Partial<AgentSettings>): Promise<A
   return next;
 }
 
+// Whether public links work on this instance (app_setting key 'sharing'). Off closes every
+// link and takes the choice away from the workspaces; on leaves it to each of them.
+
+const SHARING_SETTINGS_KEY = 'sharing';
+
+export interface SharingSettings {
+  enabled: boolean;
+}
+
+export async function getSharingSettings(): Promise<SharingSettings> {
+  return (await getSetting<SharingSettings>(SHARING_SETTINGS_KEY)) ?? { enabled: true };
+}
+
+export async function setSharingSettings(settings: SharingSettings): Promise<SharingSettings> {
+  await setSetting(SHARING_SETTINGS_KEY, settings);
+  return settings;
+}
+
 // The instance keyboard shortcuts (app_setting key 'hotkeys'): the combination
 // each command is bound to for everyone on this instance. Only the bindings
 // changed in god mode are stored; the web app fills the rest from its built-in

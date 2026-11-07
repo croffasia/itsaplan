@@ -64,6 +64,17 @@ describe('cross-project issue search', () => {
     });
   });
 
+  it('returns the estimate in points with each hit', async () => {
+    const { api } = await setup();
+    const sized = await createIssue(api, 'MKT', 'Zephyr launch');
+    await api.issues({ issueId: sized.id }).patch({ estimatePoints: 1.5 });
+    const bare = await createIssue(api, 'OPS', 'Zephyr rollout');
+
+    const res = await search(api, { q: 'zephyr' });
+    expect(res.data!.find((hit) => hit.id === sized.id)).toMatchObject({ estimatePoints: 1.5 });
+    expect(res.data!.find((hit) => hit.id === bare.id)).toMatchObject({ estimatePoints: null });
+  });
+
   it("leaves out another person's projects", async () => {
     const { api } = await setup();
     await createIssue(api, 'MKT', 'Secret plan');

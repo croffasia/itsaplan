@@ -21,6 +21,7 @@ import {
   type FlatItem,
 } from '../../utils/table';
 import { IssueDragOverlay } from '../shared/IssueDragOverlay';
+import { WorkItemsEmpty } from '../shared/WorkItemsEmpty';
 import { TableColumnHeader } from './TableColumnHeader';
 import { TableSectionHeader } from './TableSectionHeader';
 import { TableSubHeader } from './TableSubHeader';
@@ -80,6 +81,9 @@ export default function TableView({
     getScrollElement: () => scrollRef.current,
     estimateSize: () => 40,
     overscan: 12,
+    // A scroll step renders in a normal React update, not in flushSync inside the
+    // scroll event, which blocks every scroll event on a slow CPU.
+    useFlushSync: false,
     getItemKey: (index) => {
       const it = items[index];
       if (it.kind === 'header') return `h${it.group.key}`;
@@ -141,6 +145,8 @@ export default function TableView({
         );
     }
   }
+
+  if (items.length === 0) return <WorkItemsEmpty filters={filters} />;
 
   return (
     <DndContext

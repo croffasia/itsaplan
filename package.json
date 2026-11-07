@@ -1,6 +1,6 @@
 {
   "name": "itsaplan",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "license": "AGPL-3.0-only",
   "devDependencies": {
     "@clack/prompts": "^1.8.1",
@@ -13,7 +13,7 @@
     "turbo": "^2.11.7",
     "typescript": "^6.0.3"
   },
-  "packageManager": "bun@1.4.3",
+  "packageManager": "bun@1.4.4",
   "private": true,
   "scripts": {
     "setup": "bun scripts/setup.ts",

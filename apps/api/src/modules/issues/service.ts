@@ -11,12 +11,15 @@ import {
   issueFieldOption,
   issueAttachment,
   issueKeyAlias,
+  issueWorklog,
   customField,
   customFieldOption,
   initiative,
   cycle,
   team,
+  issueLink,
 } from '@repo/db';
+import { alias } from 'drizzle-orm/pg-core';
 import {
   and,
   eq,
@@ -36,7 +39,7 @@ import {
   type SQLWrapper,
 } from 'drizzle-orm';
 import type { IssueQuery } from '#modules/agents/core/issue-query';
-import { iso, num, numOrNull, HttpError } from '#shared/lib';
+import { iso, num, numOrNull, shareLive, HttpError } from '#shared/lib';
 import type { ProjectRow } from '#modules/projects/service';
 import { projectRefSql } from '#modules/teams/ref';
 import { assertProjectFeature } from '#shared/access';
@@ -145,6 +148,9 @@ export interface IssueRow {
   // activity) or only its title, description, state, type, priority, dates,
   // subtasks and links.
   shareExtended: boolean;
+  // When the share link stops working, or null when it never does. A link past
+  // its expiry reads as not shared (shareToken null) even before the sweep clears it.
+  shareExpiresAt: string | null;
   labelIds: number[];
   // Custom field values set on this issue, one entry per field that has a scalar
   // value or selected options (unset fields are omitted). Included so the planner
@@ -154,6 +160,7 @@ export interface IssueRow {
 }
 
 function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow {
+  const shared = row.shareToken !== null && shareLive(row.shareExpiresAt);
   return {
     id: row.id,
     projectId: row.projectId,
@@ -179,8 +186,9 @@ function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow 
     updatedAt: iso(row.updatedAt),
     archivedAt: row.archivedAt ? iso(row.archivedAt) : null,
     statusSince: iso(row.createdAt),
-    shareToken: row.shareToken,
-    shareExtended: row.shareExtended,
+    shareToken: shared ? row.shareToken : null,
+    shareExtended: shared && row.shareExtended,
+    shareExpiresAt: shared && row.shareExpiresAt ? iso(row.shareExpiresAt) : null,
     labelIds: [],
     fieldValues: [],
   };
@@ -257,14 +265,19 @@ export interface IssueSearchHit {
   initiativeId: number | null;
   cycleId: number | null;
   parentId: number | null;
+  parent: { id: number; identifier: string; title: string } | null;
   assigneeUserId: string | null;
   delegateUserId: string | null;
   priority: string | null;
   dueDate: string | null;
+  estimatePoints: number | null;
+  estimateMinutes: number | null;
+  loggedMinutes: number;
   labelIds: number[];
   archived: boolean;
   createdAt: string;
   updatedAt: string;
+  statusSince: string;
   completedAt: string | null;
 }
 
@@ -279,6 +292,17 @@ const completedAt = sql<Date | null>`(
             WHERE p.issue_id = s.issue_id
               AND p.state_type IS DISTINCT FROM 'completed'
               AND (p.entered_at, p.id) > (s.entered_at, s.id)))`.mapWith(issueStatus.enteredAt);
+
+// The same values attachStatusSince and attachLoggedMinutes give a full IssueRow.
+const statusSince = sql<Date>`coalesce(
+  (SELECT s.entered_at FROM ${issueStatus} s WHERE s.issue_id = ${issue}.id AND s.left_at IS NULL),
+  ${issue}.created_at)`.mapWith(issueStatus.enteredAt);
+const loggedMinutes = sql<number>`(
+  SELECT coalesce(sum(w.minutes), 0)::int FROM ${issueWorklog} w WHERE w.issue_id = ${issue}.id)`;
+const parentSequenceNumber = sql<number | null>`(
+  SELECT p.sequence_number FROM ${issue} p WHERE p.id = ${issue}.parent_id)`;
+const parentTitle = sql<string | null>`(
+  SELECT p.title FROM ${issue} p WHERE p.id = ${issue}.parent_id)`;
 
 // Escapes LIKE metacharacters so the query is matched literally (Postgres LIKE uses
 // '\' as the default escape character).
@@ -339,30 +363,113 @@ const hitColumns = {
   title: issue.title,
   priority: issue.priority,
   dueDate: issue.dueDate,
+  estimatePoints: issue.estimatePoints,
+  estimateMinutes: issue.estimateMinutes,
+  loggedMinutes,
   archivedAt: issue.archivedAt,
   createdAt: issue.createdAt,
   updatedAt: issue.updatedAt,
+  statusSince,
   completedAt,
+  parentSequenceNumber,
+  parentTitle,
 };
 
 type HitRow = Omit<
   IssueSearchHit,
-  'identifier' | 'labelIds' | 'archived' | 'createdAt' | 'updatedAt' | 'completedAt'
-> & { archivedAt: Date | null; createdAt: Date; updatedAt: Date; completedAt: Date | null };
+  | 'identifier'
+  | 'parent'
+  | 'labelIds'
+  | 'archived'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'statusSince'
+  | 'completedAt'
+  | 'estimatePoints'
+> & {
+  archivedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  statusSince: Date;
+  completedAt: Date | null;
+  parentSequenceNumber: number | null;
+  parentTitle: string | null;
+  estimatePoints: string | null;
+};
 
 function toHit(
-  { archivedAt, createdAt, updatedAt, completedAt, ...r }: HitRow,
+  {
+    archivedAt,
+    createdAt,
+    updatedAt,
+    statusSince,
+    completedAt,
+    parentSequenceNumber,
+    parentTitle,
+    estimatePoints,
+    ...r
+  }: HitRow,
   projectKey: string,
 ): IssueSearchHit {
   return {
     ...r,
     identifier: `${projectKey}-${r.sequenceNumber}`,
+    // A parent is always in the issue's own project, so it carries the same key.
+    parent:
+      r.parentId !== null && parentSequenceNumber !== null && parentTitle !== null
+        ? {
+            id: r.parentId,
+            identifier: `${projectKey}-${parentSequenceNumber}`,
+            title: parentTitle,
+          }
+        : null,
     labelIds: [],
     archived: archivedAt !== null,
     createdAt: iso(createdAt),
     updatedAt: iso(updatedAt),
+    statusSince: iso(statusSince),
     completedAt: completedAt ? iso(completedAt) : null,
+    estimatePoints: numOrNull(estimatePoints),
   };
+}
+
+type FieldFilters = Pick<
+  IssueQuery,
+  'assigneeUserId' | 'delegateUserId' | 'priority' | 'dueFrom' | 'dueTo'
+> & {
+  createdFrom?: Date;
+  createdTo?: Date;
+  updatedFrom?: Date;
+  updatedTo?: Date;
+};
+
+// The exact filters list_issues and the cross-project list share.
+function fieldConds(filters: FieldFilters): SQL[] {
+  const conds: SQL[] = [];
+  if (filters.assigneeUserId !== undefined)
+    conds.push(
+      filters.assigneeUserId === null
+        ? isNull(issue.assigneeUserId)
+        : eq(issue.assigneeUserId, filters.assigneeUserId),
+    );
+  if (filters.delegateUserId !== undefined)
+    conds.push(
+      filters.delegateUserId === null
+        ? isNull(issue.delegateUserId)
+        : eq(issue.delegateUserId, filters.delegateUserId),
+    );
+  if (filters.priority !== undefined)
+    conds.push(
+      filters.priority === null ? isNull(issue.priority) : eq(issue.priority, filters.priority),
+    );
+  // A null due date never falls in a range, so gte/lte alone exclude it.
+  if (filters.dueFrom !== undefined) conds.push(gte(issue.dueDate, filters.dueFrom));
+  if (filters.dueTo !== undefined) conds.push(lte(issue.dueDate, filters.dueTo));
+  if (filters.createdFrom) conds.push(gte(issue.createdAt, filters.createdFrom));
+  if (filters.createdTo) conds.push(lt(issue.createdAt, filters.createdTo));
+  if (filters.updatedFrom) conds.push(gte(issue.updatedAt, filters.updatedFrom));
+  if (filters.updatedTo) conds.push(lt(issue.updatedAt, filters.updatedTo));
+  return conds;
 }
 
 // Server-side issue read backing two routes: text search (search_issues) and the
@@ -411,22 +518,7 @@ export async function searchIssues(
     conds.push(
       filters.parentId === null ? isNull(issue.parentId) : eq(issue.parentId, filters.parentId),
     );
-  if (filters.assigneeUserId !== undefined)
-    conds.push(
-      filters.assigneeUserId === null
-        ? isNull(issue.assigneeUserId)
-        : eq(issue.assigneeUserId, filters.assigneeUserId),
-    );
-  if (filters.delegateUserId !== undefined)
-    conds.push(
-      filters.delegateUserId === null
-        ? isNull(issue.delegateUserId)
-        : eq(issue.delegateUserId, filters.delegateUserId),
-    );
-  if (filters.priority !== undefined)
-    conds.push(
-      filters.priority === null ? isNull(issue.priority) : eq(issue.priority, filters.priority),
-    );
+  conds.push(...fieldConds(filters));
   // labelIds is AND: the issue must carry every supplied label.
   for (const labelId of filters.labelIds ?? []) {
     conds.push(
@@ -438,13 +530,28 @@ export async function searchIssues(
       ),
     );
   }
-  // A null due date never falls in a range, so gte/lte alone exclude it.
-  if (filters.dueFrom !== undefined) conds.push(gte(issue.dueDate, filters.dueFrom));
-  if (filters.dueTo !== undefined) conds.push(lte(issue.dueDate, filters.dueTo));
-  if (filters.createdFrom) conds.push(gte(issue.createdAt, filters.createdFrom));
-  if (filters.createdTo) conds.push(lt(issue.createdAt, filters.createdTo));
-  if (filters.updatedFrom) conds.push(gte(issue.updatedAt, filters.updatedFrom));
-  if (filters.updatedTo) conds.push(lt(issue.updatedAt, filters.updatedTo));
+
+  if (filters.blocked) {
+    const blocker = alias(issue, 'blocker');
+    const blockerColumn = alias(projectColumn, 'blocker_column');
+    conds.push(
+      exists(
+        db
+          .select({ one: sql`1` })
+          .from(issueLink)
+          .innerJoin(blocker, eq(blocker.id, issueLink.sourceIssueId))
+          .innerJoin(blockerColumn, eq(blockerColumn.id, blocker.columnId))
+          .where(
+            and(
+              eq(issueLink.targetIssueId, issue.id),
+              eq(issueLink.kind, 'blocks'),
+              isNull(blocker.archivedAt),
+              notInArray(blockerColumn.stateType, ['completed', 'canceled']),
+            ),
+          ),
+      ),
+    );
+  }
 
   const base = db
     .select(hitColumns)
@@ -464,6 +571,26 @@ export interface CrossProjectIssueHit extends IssueSearchHit {
   projectKey: string;
   projectName: string;
   teamName: string;
+}
+
+const crossProjectHitColumns = {
+  ...hitColumns,
+  projectId: projectTable.id,
+  projectRef: projectRefSql,
+  projectKey: projectTable.key,
+  projectName: projectTable.name,
+  teamName: team.name,
+};
+
+function toCrossProjectHit({
+  projectId,
+  projectRef,
+  projectKey,
+  projectName,
+  teamName,
+  ...r
+}: HitRow & Omit<CrossProjectIssueHit, keyof IssueSearchHit>): CrossProjectIssueHit {
+  return { ...toHit(r, projectKey), projectId, projectRef, projectKey, projectName, teamName };
 }
 
 // Text search across the given projects, archived issues included, at most
@@ -500,14 +627,7 @@ export async function searchIssuesInProjects(
     .where(and(inArray(issue.projectId, projectIds), textMatch(raw, numberMatch)))
     .as('ranked');
   const rows = await db
-    .select({
-      ...hitColumns,
-      projectId: projectTable.id,
-      projectRef: projectRefSql,
-      projectKey: projectTable.key,
-      projectName: projectTable.name,
-      teamName: team.name,
-    })
+    .select(crossProjectHitColumns)
     .from(issue)
     .innerJoin(ranked, eq(ranked.id, issue.id))
     .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
@@ -515,14 +635,56 @@ export async function searchIssuesInProjects(
     .where(lte(ranked.rank, perProjectLimit))
     .orderBy(...order)
     .limit(limit);
-  const hits = rows.map(({ projectId, projectRef, projectKey, projectName, teamName, ...r }) => ({
-    ...toHit(r, projectKey),
-    projectId,
-    projectRef,
-    projectKey,
-    projectName,
-    teamName,
-  }));
+  const hits = rows.map(toCrossProjectHit);
+  await attachLabels(hits);
+  return hits;
+}
+
+export const ISSUE_STATE_TYPES = [
+  'backlog',
+  'unstarted',
+  'started',
+  'completed',
+  'canceled',
+] as const;
+export type IssueStateType = (typeof ISSUE_STATE_TYPES)[number];
+
+// The filtered list over the given projects, most recently updated first. The ids it
+// takes (cycles, parents) are global, so they need no project to resolve against.
+export async function listIssuesInProjects(
+  projectIds: number[],
+  filters: FieldFilters & {
+    cycleIds?: number[];
+    parentIds?: number[];
+    stateTypes?: IssueStateType[];
+    limit: number;
+  },
+  opts: { includeArchived?: boolean } = {},
+): Promise<CrossProjectIssueHit[]> {
+  if (!projectIds.length) return [];
+  const conds: SQL[] = [inArray(issue.projectId, projectIds), ...fieldConds(filters)];
+  if (!opts.includeArchived) conds.push(isNull(issue.archivedAt));
+  if (filters.cycleIds) conds.push(inArray(issue.cycleId, filters.cycleIds));
+  if (filters.parentIds) conds.push(inArray(issue.parentId, filters.parentIds));
+  if (filters.stateTypes)
+    conds.push(
+      inArray(
+        issue.columnId,
+        db
+          .select({ id: projectColumn.id })
+          .from(projectColumn)
+          .where(inArray(projectColumn.stateType, filters.stateTypes)),
+      ),
+    );
+  const rows = await db
+    .select(crossProjectHitColumns)
+    .from(issue)
+    .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
+    .innerJoin(team, eq(team.id, projectTable.teamId))
+    .where(and(...conds))
+    .orderBy(...hitOrder(undefined))
+    .limit(filters.limit);
+  const hits = rows.map(toCrossProjectHit);
   await attachLabels(hits);
   return hits;
 }

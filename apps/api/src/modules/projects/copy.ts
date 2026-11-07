@@ -8,6 +8,8 @@ import {
   label,
   customField,
   customFieldOption,
+  issueTemplate,
+  issueTemplateLabel,
   projectView,
   projectDashboard,
   projectDocument,
@@ -15,8 +17,9 @@ import {
   projectAction,
   webhook,
   projectSetting,
+  type DbExecutor,
 } from '@repo/db';
-import { and, eq, inArray, or } from 'drizzle-orm';
+import { and, eq, inArray, ne, or } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
 import {
   DEFAULT_COLUMNS,
@@ -25,6 +28,7 @@ import {
   mapProject,
   targetTeam,
   type ProjectRow,
+  type TargetTeam,
 } from './service';
 import { GIT_SETTING_KEY } from '#modules/git/service';
 import { getProjectDefaults } from '#modules/settings/service';
@@ -41,12 +45,14 @@ import {
   deleteAttachmentObject,
 } from '#modules/attachments/storage';
 import { assertValidDocumentContentJson, replaceAssetReferences } from '#modules/documents/service';
+import { copySections } from './copy-extension';
+import { mapDisplay, mapEffect, mapFilters, mapLayout, type References } from './references';
 
 // Which parts of a source project the copy carries over. A key set false skips that
-// entity. Some sections depend on others (a view's filters reference
-// states/types/labels/fields); those dependencies are force-enabled in
-// normalizeInclude so a partial selection can never leave an id pointing at the
-// source project. Agents, their skills and their configured tools are not among them:
+// entity, and a section an extension adds (copy-extension.ts) has a key of its own.
+// Some sections depend on others (a view's filters reference states/types/labels/fields);
+// those dependencies are force-enabled in normalizeInclude so a partial selection can
+// never leave an id pointing at the source project. Agents, their skills and their configured tools are not among them:
 // all three belong to the team, so a copy inside it reuses the same agents, and a copy
 // into another team carries none.
 export interface CopyProjectInclude {
@@ -54,6 +60,7 @@ export interface CopyProjectInclude {
   issueTypes: boolean;
   labels: boolean;
   customFields: boolean;
+  issueTemplates: boolean;
   views: boolean;
   dashboards: boolean;
   documents: boolean;
@@ -69,6 +76,7 @@ export const COPY_INCLUDE_KEYS: (keyof CopyProjectInclude)[] = [
   'issueTypes',
   'labels',
   'customFields',
+  'issueTemplates',
   'views',
   'dashboards',
   'documents',
@@ -77,6 +85,17 @@ export const COPY_INCLUDE_KEYS: (keyof CopyProjectInclude)[] = [
   'webhooks',
   'agents',
   'schedules',
+];
+
+type Include = CopyProjectInclude & Record<string, boolean>;
+
+// What a project template never carries: the agents and their schedules work in a
+// project, a webhook delivers one project's events, and docs are its content.
+const NOT_IN_TEMPLATE: (keyof CopyProjectInclude)[] = [
+  'agents',
+  'schedules',
+  'webhooks',
+  'documents',
 ];
 
 const ALL_FALSE = Object.fromEntries(
@@ -91,6 +110,7 @@ const DEFAULT_INCLUDE: CopyProjectInclude = {
   issueTypes: true,
   labels: true,
   customFields: true,
+  issueTemplates: true,
   views: true,
   dashboards: true,
   documents: true,
@@ -98,11 +118,20 @@ const DEFAULT_INCLUDE: CopyProjectInclude = {
 };
 
 // Resolves the selection and force-enables the dependencies each entity needs to be
-// copied correctly. Views/actions remap the ids of states, types, labels and fields,
-// so those must be copied too; a schedule cannot exist without its agent, and a status
-// schedule without its state.
-function normalizeInclude(raw?: Partial<CopyProjectInclude>): CopyProjectInclude {
-  const inc: CopyProjectInclude = raw ? { ...ALL_FALSE, ...raw } : { ...DEFAULT_INCLUDE };
+// copied correctly. Views, actions and issue templates remap the ids of states, types,
+// labels and fields, so those must be copied too; a schedule cannot exist without its
+// agent, and a status schedule without its state. A template leaves out what it never
+// carries.
+function normalizeInclude(
+  raw: Record<string, boolean | undefined> | undefined,
+  template: boolean,
+): Include {
+  const inc: Include = raw ? { ...ALL_FALSE, ...raw } : { ...DEFAULT_INCLUDE };
+  for (const section of copySections()) {
+    if (template && !section.template) inc[section.key] = false;
+    if (inc[section.key]) for (const key of section.requires) inc[key] = true;
+  }
+  if (template) for (const key of NOT_IN_TEMPLATE) inc[key] = false;
   if (inc.customFields) inc.issueTypes = true;
   if (inc.views) {
     inc.states = true;
@@ -110,7 +139,7 @@ function normalizeInclude(raw?: Partial<CopyProjectInclude>): CopyProjectInclude
     inc.labels = true;
     inc.customFields = true;
   }
-  if (inc.actions) {
+  if (inc.actions || inc.issueTemplates) {
     inc.states = true;
     inc.issueTypes = true;
     inc.labels = true;
@@ -123,7 +152,8 @@ function normalizeInclude(raw?: Partial<CopyProjectInclude>): CopyProjectInclude
 }
 
 // Old id → new id maps built while copying, used to rewrite the id references that
-// views and actions hold in their filters.
+// views, actions and dashboards hold. fieldType is the type of each field of the
+// snapshot, by its old id.
 export interface CopyIdMaps {
   column: Map<number, number>;
   labelGroup: Map<number, number>;
@@ -131,113 +161,302 @@ export interface CopyIdMaps {
   type: Map<number, number>;
   field: Map<number, number>;
   option: Map<number, number>;
+  fieldType: Map<number, string>;
 }
 
-// Returns the mapped id for a numeric value present in the map; any other value
-// passes through unchanged.
-function remapId(map: Map<number, number>, v: unknown): unknown {
-  return typeof v === 'number' && map.has(v) ? map.get(v) : v;
-}
-
-// Rewrites the entity ids a view's filter set references so they point at the copied
-// project's entities. The display blob's ids (hiddenGroups) are remapped separately
-// by remapViewDisplay.
-//
-// The filter shape is owned by the UI: a FilterSet is { conditions: [{ field, op,
-// values }] }. Which map a condition's numeric values use is decided by its field:
-// status → column, type → type, labels → label, cf:<fieldId> → the field id is
-// remapped in the key, and select values are option ids, so they use the option map.
-// Non-numeric values (priority/statusType strings, assignee user ids, dates,
-// custom-field text) are left as-is. Values whose id is absent from the map are kept
-// unchanged.
-export function remapViewFilters(filters: unknown, maps: CopyIdMaps): unknown {
-  if (!filters || typeof filters !== 'object') return filters;
-  const conditions = (filters as { conditions?: unknown }).conditions;
-  if (!Array.isArray(conditions)) return filters;
-
-  const newConditions = conditions.map((cond: Record<string, unknown>) => {
-    if (!cond || typeof cond !== 'object') return cond;
-    const field: unknown = cond.field;
-    let newField = field;
-    let valueMap: Map<number, number> | null = null;
-
-    if (field === 'status') valueMap = maps.column;
-    else if (field === 'type') valueMap = maps.type;
-    else if (field === 'labels') valueMap = maps.label;
-    else if (typeof field === 'string' && field.startsWith('cf:')) {
-      const newFieldId = maps.field.get(Number(field.slice(3)));
-      if (newFieldId != null) newField = `cf:${newFieldId}`;
-      valueMap = maps.option;
-    }
-
-    const values =
-      valueMap && Array.isArray(cond.values)
-        ? cond.values.map((v: unknown) => remapId(valueMap!, v))
-        : cond.values;
-    return { ...cond, field: newField, values };
-  });
-
-  return { ...(filters as object), conditions: newConditions };
-}
-
-// Remaps one work items group key to the copied project's entities. Group keys are
-// namespaced by grouping field: c<columnId> and t<typeId> carry a numeric id and are
-// remapped; a<userId> (assignee), p<priority>, the *-none buckets and 'all' carry no
-// project-scoped numeric id and pass through.
-function remapGroupKey(key: string, maps: CopyIdMaps): string {
-  const m = /^([ct])(\d+)$/.exec(key);
-  if (!m) return key;
-  const id = Number(m[2]);
-  const map = m[1] === 'c' ? maps.column : maps.type;
-  const newId = map.get(id);
-  return newId != null ? `${m[1]}${newId}` : key;
-}
-
-// Rewrites the id-bearing parts of a view's display blob. Only hiddenGroups holds ids
-// (group keys of the flat work items view's hidden columns); the rest of the display
-// (layout, sort, group/subgroup, properties) is field-kind enums, copied as-is.
-function remapViewDisplay(display: unknown, maps: CopyIdMaps): unknown {
-  if (!display || typeof display !== 'object') return display;
-  const hidden = (display as { hiddenGroups?: unknown }).hiddenGroups;
-  if (!Array.isArray(hidden)) return display;
+// People stay, since the copy is on the same instance. A reference the copy has no new
+// row for (an initiative, a cycle, a deleted state) keeps its old id, which no row of the
+// new project has, so a condition on it still matches no issue rather than every one.
+function copyReferences(maps: CopyIdMaps): References {
   return {
-    ...(display as object),
-    hiddenGroups: hidden.map((k: unknown) => (typeof k === 'string' ? remapGroupKey(k, maps) : k)),
+    map: (kind, id) => {
+      if (kind === 'person' || kind === 'initiative' || kind === 'cycle') return id;
+      return maps[kind].get(id as number) ?? id;
+    },
+    fieldType: (id) => maps.fieldType.get(id),
   };
 }
 
-// Rewrites the entity ids an action's effect holds so they point at the copied
-// project's entities. The effect is a partial issue patch; columnId/typeId and each
-// labelId are remapped, while assigneeUserId (a global user id), priority and dates
-// are left as-is.
-function remapActionEffect(effect: unknown, maps: CopyIdMaps): unknown {
-  if (!effect || typeof effect !== 'object') return effect;
-  const src = effect as Record<string, unknown>;
-  const out: Record<string, unknown> = { ...src };
-  if ('columnId' in src) out.columnId = remapId(maps.column, src.columnId);
-  if ('typeId' in src) out.typeId = remapId(maps.type, src.typeId);
-  if (Array.isArray(src.labelIds)) out.labelIds = src.labelIds.map((v) => remapId(maps.label, v));
-  return out;
+// A filter set an extension copies with the project, such as a schedule's conditions.
+export function remapViewFilters(filters: unknown, maps: CopyIdMaps): unknown {
+  return mapFilters(filters, copyReferences(maps));
 }
 
-// Creates a new project that copies the selected parts of the source project's
-// configuration, but none of its issues. The creator becomes the new project's owner.
-//
-// Pure-database entities (states, types, labels, custom fields, views, dashboards,
-// documents, actions, settings, webhooks) are copied in one transaction, recording
-// old id → new id so the ids that views and actions reference are remapped to the
-// copied entities. A document's assets are cloned in the object store inside that
-// transaction and removed again if it rolls back. The team's agents are attached to
-// the new project after it commits, through the same service function the UI uses.
-export async function copyProject(
-  sourceProjectId: number,
-  input: { key: string; name: string; description?: string },
-  ownerId: string,
-  teamId: number,
-  rawInclude?: Partial<CopyProjectInclude>,
-): Promise<ProjectRow> {
-  const inc = normalizeInclude(rawInclude);
+// The project flags a copy carries: the optional sections the project shows, the
+// estimate kinds its issues carry and whether time is logged. mcpEnabled is not among
+// them: a new project enters its team's MCP reach on the instance default, the same way a
+// created one does.
+const PROJECT_FLAGS = {
+  initiativesEnabled: project.initiativesEnabled,
+  dashboardsEnabled: project.dashboardsEnabled,
+  documentsEnabled: project.documentsEnabled,
+  notesEnabled: project.notesEnabled,
+  cyclesEnabled: project.cyclesEnabled,
+  subtasksEnabled: project.subtasksEnabled,
+  checklistsEnabled: project.checklistsEnabled,
+  issueStatsEnabled: project.issueStatsEnabled,
+  pointsEstimateEnabled: project.pointsEstimateEnabled,
+  timeEstimateEnabled: project.timeEstimateEnabled,
+  timeLoggingEnabled: project.timeLoggingEnabled,
+};
 
+type Row<T extends { $inferSelect: object }, K extends keyof T['$inferSelect']> = Pick<
+  T['$inferSelect'],
+  K
+>;
+
+// A project's configuration without its issues: what a copy carries over and what a
+// project template stores as jsonb. The states, types, label groups, labels, fields and
+// options keep the id they were read with, the row's own or the number an imported
+// template gives them, because the other parts reference them by it (a field's issue type,
+// a view's filters, an action's effect). applyProjectSnapshot maps the ids to the new rows.
+// A part the selection left out is empty.
+export interface ProjectSnapshot {
+  flags: { [K in keyof typeof PROJECT_FLAGS]: boolean };
+  columns: Row<
+    typeof projectColumn,
+    'id' | 'name' | 'stateType' | 'color' | 'position' | 'wipLimit' | 'wipMode'
+  >[];
+  issueTypes: Row<typeof issueType, 'id' | 'name' | 'icon' | 'color' | 'isDefault' | 'position'>[];
+  labelGroups: Row<typeof labelGroup, 'id' | 'name' | 'color'>[];
+  labels: Row<typeof label, 'id' | 'groupId' | 'name' | 'color'>[];
+  customFields: (Row<
+    typeof customField,
+    'id' | 'issueTypeId' | 'name' | 'fieldType' | 'memberScope' | 'showInBody' | 'position'
+  > & { options: Row<typeof customFieldOption, 'id' | 'value' | 'color' | 'position'>[] })[];
+  issueTemplates: (Row<
+    typeof issueTemplate,
+    | 'name'
+    | 'description'
+    | 'titleTemplate'
+    | 'descriptionTemplate'
+    | 'typeId'
+    | 'columnId'
+    | 'priority'
+  > & { labelIds: number[] })[];
+  views: Row<typeof projectView, 'name' | 'icon' | 'filters' | 'display' | 'position'>[];
+  dashboards: Row<typeof projectDashboard, 'name' | 'icon' | 'layout' | 'position'>[];
+  actions: Row<typeof projectAction, 'name' | 'icon' | 'condition' | 'effect' | 'position'>[];
+  settings: Row<typeof projectSetting, 'key' | 'value'>[];
+  // What each section an extension adds holds, by its key.
+  sections: Record<string, unknown>;
+}
+
+async function readProjectSnapshot(projectId: number, inc: Include): Promise<ProjectSnapshot> {
+  const [
+    [flags],
+    columns,
+    issueTypes,
+    labelGroups,
+    labels,
+    fields,
+    issueTemplates,
+    views,
+    dashboards,
+    actions,
+    settings,
+  ] = await Promise.all([
+    db.select(PROJECT_FLAGS).from(project).where(eq(project.id, projectId)),
+    // autoAssignUserId is left out: a member of the source project need not be a member
+    // of the new one.
+    inc.states
+      ? db
+          .select({
+            id: projectColumn.id,
+            name: projectColumn.name,
+            stateType: projectColumn.stateType,
+            color: projectColumn.color,
+            position: projectColumn.position,
+            wipLimit: projectColumn.wipLimit,
+            wipMode: projectColumn.wipMode,
+          })
+          .from(projectColumn)
+          .where(eq(projectColumn.projectId, projectId))
+          .orderBy(projectColumn.position)
+      : [],
+    inc.issueTypes
+      ? db
+          .select({
+            id: issueType.id,
+            name: issueType.name,
+            icon: issueType.icon,
+            color: issueType.color,
+            isDefault: issueType.isDefault,
+            position: issueType.position,
+          })
+          .from(issueType)
+          .where(eq(issueType.projectId, projectId))
+          .orderBy(issueType.position)
+      : [],
+    inc.labels
+      ? db
+          .select({ id: labelGroup.id, name: labelGroup.name, color: labelGroup.color })
+          .from(labelGroup)
+          .where(eq(labelGroup.projectId, projectId))
+      : [],
+    inc.labels
+      ? db
+          .select({ id: label.id, groupId: label.groupId, name: label.name, color: label.color })
+          .from(label)
+          .where(eq(label.projectId, projectId))
+      : [],
+    inc.customFields
+      ? db
+          .select({
+            id: customField.id,
+            issueTypeId: customField.issueTypeId,
+            name: customField.name,
+            fieldType: customField.fieldType,
+            memberScope: customField.memberScope,
+            showInBody: customField.showInBody,
+            position: customField.position,
+          })
+          .from(customField)
+          .where(eq(customField.projectId, projectId))
+          .orderBy(customField.position)
+      : [],
+    // The assignee is left out, as a column's auto-assignee is.
+    inc.issueTemplates
+      ? db
+          .select({
+            id: issueTemplate.id,
+            name: issueTemplate.name,
+            description: issueTemplate.description,
+            titleTemplate: issueTemplate.titleTemplate,
+            descriptionTemplate: issueTemplate.descriptionTemplate,
+            typeId: issueTemplate.typeId,
+            columnId: issueTemplate.columnId,
+            priority: issueTemplate.priority,
+          })
+          .from(issueTemplate)
+          .where(eq(issueTemplate.projectId, projectId))
+          .orderBy(issueTemplate.id)
+      : [],
+    // A private view is its owner's alone and stays behind.
+    inc.views
+      ? db
+          .select({
+            name: projectView.name,
+            icon: projectView.icon,
+            filters: projectView.filters,
+            display: projectView.display,
+            position: projectView.position,
+          })
+          .from(projectView)
+          .where(and(eq(projectView.projectId, projectId), eq(projectView.isPrivate, false)))
+          .orderBy(projectView.position, projectView.id)
+      : [],
+    inc.dashboards
+      ? db
+          .select({
+            name: projectDashboard.name,
+            icon: projectDashboard.icon,
+            layout: projectDashboard.layout,
+            position: projectDashboard.position,
+          })
+          .from(projectDashboard)
+          .where(eq(projectDashboard.projectId, projectId))
+          .orderBy(projectDashboard.position, projectDashboard.id)
+      : [],
+    inc.actions
+      ? db
+          .select({
+            name: projectAction.name,
+            icon: projectAction.icon,
+            condition: projectAction.condition,
+            effect: projectAction.effect,
+            position: projectAction.position,
+          })
+          .from(projectAction)
+          .where(eq(projectAction.projectId, projectId))
+          .orderBy(projectAction.position, projectAction.id)
+      : [],
+    // The repository integration is left out: its value holds the webhook secret and
+    // routing id (the copy's owner must not receive the source's credential, and a
+    // duplicated id would make inbound routing ambiguous) plus column ids of the source
+    // project. The copy starts unconfigured instead.
+    inc.configuration
+      ? db
+          .select({ key: projectSetting.key, value: projectSetting.value })
+          .from(projectSetting)
+          .where(
+            and(eq(projectSetting.projectId, projectId), ne(projectSetting.key, GIT_SETTING_KEY)),
+          )
+      : [],
+  ]);
+  if (!flags) throw new HttpError(404, 'Project not found');
+
+  const fieldIds = fields.map((field) => field.id);
+  const options = fieldIds.length
+    ? await db
+        .select({
+          id: customFieldOption.id,
+          fieldId: customFieldOption.fieldId,
+          value: customFieldOption.value,
+          color: customFieldOption.color,
+          position: customFieldOption.position,
+        })
+        .from(customFieldOption)
+        .where(inArray(customFieldOption.fieldId, fieldIds))
+        .orderBy(customFieldOption.position)
+    : [];
+  const templateIds = issueTemplates.map((tpl) => tpl.id);
+  const templateLabels = templateIds.length
+    ? await db
+        .select({ templateId: issueTemplateLabel.templateId, labelId: issueTemplateLabel.labelId })
+        .from(issueTemplateLabel)
+        .where(inArray(issueTemplateLabel.templateId, templateIds))
+    : [];
+
+  const sections = await Promise.all(
+    copySections()
+      .filter((section) => inc[section.key])
+      .map(async (section) => [section.key, await section.read(projectId)] as const),
+  );
+
+  return {
+    flags,
+    columns,
+    issueTypes,
+    labelGroups,
+    labels,
+    customFields: fields.map((field) => ({
+      ...field,
+      options: options
+        .filter((option) => option.fieldId === field.id)
+        .map(({ fieldId: _, ...option }) => option),
+    })),
+    issueTemplates: issueTemplates.map(({ id, ...tpl }) => ({
+      ...tpl,
+      labelIds: templateLabels.filter((row) => row.templateId === id).map((row) => row.labelId),
+    })),
+    views,
+    dashboards,
+    actions,
+    settings,
+    sections: Object.fromEntries(sections),
+  };
+}
+
+// The configuration a project template stores: the selected parts of the project, less
+// what a template never carries.
+export function readTemplateSnapshot(
+  projectId: number,
+  rawInclude?: Record<string, boolean | undefined>,
+): Promise<ProjectSnapshot> {
+  return readProjectSnapshot(projectId, normalizeInclude(rawInclude, true));
+}
+
+// Writes what the snapshot holds into the project and returns the old id -> new id maps.
+// Without states the project starts on the default columns, so it has somewhere to put an
+// issue. Each insert sets the new project's ids after the snapshot's fields, so a field an
+// imported snapshot carries never points a row at another project.
+async function applyProjectSnapshot(
+  tx: DbExecutor,
+  projectId: number,
+  snapshot: ProjectSnapshot,
+  context: { ownerId: string; sameTeam: boolean },
+): Promise<CopyIdMaps> {
   const maps: CopyIdMaps = {
     column: new Map(),
     labelGroup: new Map(),
@@ -245,230 +464,203 @@ export async function copyProject(
     type: new Map(),
     field: new Map(),
     option: new Map(),
+    fieldType: new Map(snapshot.customFields.map((field) => [field.id, field.fieldType])),
   };
+  const mapped = (map: Map<number, number>, id: number | null) =>
+    id == null ? null : (map.get(id) ?? null);
 
-  const copiedDocumentAssetKeys: string[] = [];
+  const columns = snapshot.columns.length
+    ? snapshot.columns
+    : DEFAULT_COLUMNS.map((column, position) => ({ ...column, id: null, position }));
+  for (const { id, ...column } of columns) {
+    const [created] = await tx
+      .insert(projectColumn)
+      .values({ ...column, projectId })
+      .returning({ id: projectColumn.id });
+    if (id != null) maps.column.set(id, created.id);
+  }
 
+  for (const { id, ...type } of snapshot.issueTypes) {
+    const [created] = await tx
+      .insert(issueType)
+      .values({ ...type, projectId })
+      .returning({ id: issueType.id });
+    maps.type.set(id, created.id);
+  }
+
+  // Label groups go first so each label's group maps to the new one.
+  for (const { id, ...group } of snapshot.labelGroups) {
+    const [created] = await tx
+      .insert(labelGroup)
+      .values({ ...group, projectId })
+      .returning({ id: labelGroup.id });
+    maps.labelGroup.set(id, created.id);
+  }
+  for (const { id, groupId, ...rest } of snapshot.labels) {
+    const [created] = await tx
+      .insert(label)
+      .values({ ...rest, projectId, groupId: mapped(maps.labelGroup, groupId) })
+      .returning({ id: label.id });
+    maps.label.set(id, created.id);
+  }
+
+  for (const { id, issueTypeId, options, ...field } of snapshot.customFields) {
+    const [created] = await tx
+      .insert(customField)
+      .values({ ...field, projectId, issueTypeId: mapped(maps.type, issueTypeId) })
+      .returning({ id: customField.id });
+    maps.field.set(id, created.id);
+    for (const { id: optionId, ...option } of options) {
+      const [newOption] = await tx
+        .insert(customFieldOption)
+        .values({ ...option, fieldId: created.id })
+        .returning({ id: customFieldOption.id });
+      maps.option.set(optionId, newOption.id);
+    }
+  }
+
+  for (const { typeId, columnId, labelIds, ...tpl } of snapshot.issueTemplates) {
+    const [created] = await tx
+      .insert(issueTemplate)
+      .values({
+        ...tpl,
+        projectId,
+        typeId: mapped(maps.type, typeId),
+        columnId: mapped(maps.column, columnId),
+      })
+      .returning({ id: issueTemplate.id });
+    const newLabelIds = labelIds.flatMap((labelId) => maps.label.get(labelId) ?? []);
+    if (newLabelIds.length > 0) {
+      await tx
+        .insert(issueTemplateLabel)
+        .values(newLabelIds.map((labelId) => ({ templateId: created.id, labelId })));
+    }
+  }
+
+  const refs = copyReferences(maps);
+  for (const view of snapshot.views) {
+    await tx.insert(projectView).values({
+      ...view,
+      projectId,
+      filters: mapFilters(view.filters, refs) ?? {},
+      display: mapDisplay(view.display, refs) ?? {},
+    });
+  }
+
+  for (const dashboard of snapshot.dashboards) {
+    await tx
+      .insert(projectDashboard)
+      .values({ ...dashboard, projectId, layout: mapLayout(dashboard.layout, refs) });
+  }
+
+  for (const action of snapshot.actions) {
+    await tx.insert(projectAction).values({
+      ...action,
+      projectId,
+      condition: mapFilters(action.condition, refs) ?? {},
+      effect: mapEffect(action.effect, refs) ?? {},
+    });
+  }
+
+  if (snapshot.settings.length > 0) {
+    await tx
+      .insert(projectSetting)
+      .values(snapshot.settings.map((setting) => ({ ...setting, projectId })));
+  }
+
+  for (const section of copySections()) {
+    if (!(section.key in snapshot.sections)) continue;
+    await section.apply({ tx, projectId, maps, ...context }, snapshot.sections[section.key]);
+  }
+
+  return maps;
+}
+
+// Creates a project in the team that starts with what the snapshot holds, inside the
+// caller's transaction. The creator becomes its owner and joins the team with it.
+export async function insertSnapshotProject(
+  tx: DbExecutor,
+  snapshot: ProjectSnapshot,
+  options: {
+    team: TargetTeam;
+    input: { key: string; name: string; description?: string };
+    ownerId: string;
+    // From getProjectDefaults, read before the transaction opens.
+    mcpEnabled: boolean;
+    agentMembers: { userId: string; role: 'member'; roleId: number | null }[];
+    // The snapshot was read from a project of the same team.
+    sameTeam: boolean;
+  },
+): Promise<{ project: ProjectRow; maps: CopyIdMaps }> {
+  const { team, input, ownerId } = options;
+  const [row] = await tx
+    .insert(project)
+    .values({
+      ...snapshot.flags,
+      teamId: team.id,
+      key: input.key,
+      name: input.name,
+      description: input.description ?? '',
+      mcpEnabled: options.mcpEnabled,
+    })
+    .returning();
+  await joinTeamAsCreator(tx, team.id, ownerId);
+  await tx.insert(projectMember).values({ projectId: row.id, userId: ownerId, role: 'owner' });
+  if (options.agentMembers.length > 0) {
+    await tx
+      .insert(projectMember)
+      .values(options.agentMembers.map((member) => ({ projectId: row.id, ...member })));
+  }
+  const maps = await applyProjectSnapshot(tx, row.id, snapshot, {
+    ownerId,
+    sameTeam: options.sameTeam,
+  });
+  const created = await mapProject({
+    ...row,
+    teamName: team.name,
+    teamSlug: team.slug,
+    teamMcpEnabled: team.mcpEnabled,
+    workspaceId: team.workspaceId,
+  });
+  return { project: created, maps };
+}
+
+// Creates a new project that copies the selected parts of the source project's
+// configuration, but none of its issues. The creator becomes the new project's owner.
+//
+// The configuration is read into a snapshot and written in one transaction, with the
+// documents and webhooks, which only a copy carries. A document's assets are cloned in
+// the object store inside that transaction and removed again if it rolls back. The
+// team's agents are attached to the new project after it commits, through the same
+// service function the UI uses.
+export async function copyProject(
+  sourceProjectId: number,
+  input: { key: string; name: string; description?: string },
+  ownerId: string,
+  teamId: number,
+  rawInclude?: Record<string, boolean | undefined>,
+): Promise<ProjectRow> {
+  const inc = normalizeInclude(rawInclude, false);
   const source = await getProjectById(sourceProjectId);
   if (!source) throw new HttpError(404, 'Project not found');
   const ownerTeam = await targetTeam(ownerId, teamId);
-  // What a new project starts with, set instance-wide in god mode. Read before the
-  // transaction opens so the settings lookup is not part of it.
-  const defaults = await getProjectDefaults();
   // Agents, integration credentials and roles belong to the team, so what references
   // them survives the copy only when it stays in the same team.
   const sameTeam = ownerTeam.id === source.teamId;
+  const snapshot = await readProjectSnapshot(sourceProjectId, inc);
+  const defaults = await getProjectDefaults();
+  const copiedDocumentAssetKeys: string[] = [];
+
   const copyTransaction = db.transaction(async (tx) => {
-    // The optional sections the source project shows and the estimate kinds it
-    // carries are part of its configuration, so the copy starts with the same ones.
-    // mcpEnabled is not carried: a new project enters its team's MCP reach on the
-    // instance default, the same way a created one does.
-    const [sourceFeatures] = await tx
-      .select({
-        initiativesEnabled: project.initiativesEnabled,
-        dashboardsEnabled: project.dashboardsEnabled,
-        documentsEnabled: project.documentsEnabled,
-        notesEnabled: project.notesEnabled,
-        cyclesEnabled: project.cyclesEnabled,
-        subtasksEnabled: project.subtasksEnabled,
-        checklistsEnabled: project.checklistsEnabled,
-        issueStatsEnabled: project.issueStatsEnabled,
-        pointsEstimateEnabled: project.pointsEstimateEnabled,
-        timeEstimateEnabled: project.timeEstimateEnabled,
-        timeLoggingEnabled: project.timeLoggingEnabled,
-      })
-      .from(project)
-      .where(eq(project.id, sourceProjectId));
-
-    const [row] = await tx
-      .insert(project)
-      .values({
-        teamId: ownerTeam.id,
-        key: input.key,
-        name: input.name,
-        description: input.description ?? '',
-        mcpEnabled: defaults.mcpEnabled,
-        ...sourceFeatures,
-      })
-      .returning();
-    const proj = await mapProject({
-      ...row,
-      teamName: ownerTeam.name,
-      teamSlug: ownerTeam.slug,
-      teamMcpEnabled: ownerTeam.mcpEnabled,
-      workspaceId: ownerTeam.workspaceId,
+    const inserted = await insertSnapshotProject(tx, snapshot, {
+      team: ownerTeam,
+      input,
+      ownerId,
+      mcpEnabled: defaults.mcpEnabled,
+      agentMembers: [],
+      sameTeam,
     });
-    await joinTeamAsCreator(tx, ownerTeam.id, ownerId);
-    await tx.insert(projectMember).values({ projectId: proj.id, userId: ownerId, role: 'owner' });
-
-    // States (columns). When copied, every source column is carried over so views,
-    // actions and issues have somewhere to map to. When not copied, the project is
-    // seeded with the default columns instead, so it is still usable (a project with
-    // no state has nowhere to put an issue).
-    if (inc.states) {
-      const columnRows = await tx
-        .select()
-        .from(projectColumn)
-        .where(eq(projectColumn.projectId, sourceProjectId))
-        .orderBy(projectColumn.position);
-      // autoAssignUserId is left unset: the copy starts with only its owner as a
-      // member, so a carried-over member would not be one there.
-      for (const col of columnRows) {
-        const [created] = await tx
-          .insert(projectColumn)
-          .values({
-            projectId: proj.id,
-            name: col.name,
-            stateType: col.stateType,
-            color: col.color,
-            position: col.position,
-            wipLimit: col.wipLimit,
-            wipMode: col.wipMode,
-          })
-          .returning({ id: projectColumn.id });
-        maps.column.set(col.id, created.id);
-      }
-    } else {
-      for (const [position, column] of DEFAULT_COLUMNS.entries()) {
-        await tx.insert(projectColumn).values({
-          projectId: proj.id,
-          name: column.name,
-          stateType: column.stateType,
-          color: column.color,
-          position,
-        });
-      }
-    }
-
-    if (inc.issueTypes) {
-      const typeRows = await tx
-        .select()
-        .from(issueType)
-        .where(eq(issueType.projectId, sourceProjectId))
-        .orderBy(issueType.position);
-      for (const t of typeRows) {
-        const [created] = await tx
-          .insert(issueType)
-          .values({
-            projectId: proj.id,
-            name: t.name,
-            icon: t.icon,
-            color: t.color,
-            isDefault: t.isDefault,
-            position: t.position,
-          })
-          .returning({ id: issueType.id });
-        maps.type.set(t.id, created.id);
-      }
-    }
-
-    if (inc.labels) {
-      // Label groups are copied before labels so each copied label's group_id can be
-      // remapped to the new group.
-      const labelGroupRows = await tx
-        .select()
-        .from(labelGroup)
-        .where(eq(labelGroup.projectId, sourceProjectId));
-      for (const g of labelGroupRows) {
-        const [created] = await tx
-          .insert(labelGroup)
-          .values({ projectId: proj.id, name: g.name, color: g.color })
-          .returning({ id: labelGroup.id });
-        maps.labelGroup.set(g.id, created.id);
-      }
-
-      const labelRows = await tx.select().from(label).where(eq(label.projectId, sourceProjectId));
-      for (const l of labelRows) {
-        const [created] = await tx
-          .insert(label)
-          .values({
-            projectId: proj.id,
-            groupId: l.groupId != null ? (maps.labelGroup.get(l.groupId) ?? null) : null,
-            name: l.name,
-            color: l.color,
-          })
-          .returning({ id: label.id });
-        maps.label.set(l.id, created.id);
-      }
-    }
-
-    // Type-scoped custom fields (with their options). Project-wide fields
-    // (issue_type_id NULL) are not copied.
-    if (inc.customFields && maps.type.size > 0) {
-      const fieldRows = await tx
-        .select()
-        .from(customField)
-        .where(inArray(customField.issueTypeId, Array.from(maps.type.keys())))
-        .orderBy(customField.position);
-      for (const f of fieldRows) {
-        const [created] = await tx
-          .insert(customField)
-          .values({
-            projectId: proj.id,
-            issueTypeId: f.issueTypeId != null ? (maps.type.get(f.issueTypeId) ?? null) : null,
-            name: f.name,
-            fieldType: f.fieldType,
-            memberScope: f.memberScope,
-            position: f.position,
-          })
-          .returning({ id: customField.id });
-        maps.field.set(f.id, created.id);
-
-        const optionRows = await tx
-          .select()
-          .from(customFieldOption)
-          .where(eq(customFieldOption.fieldId, f.id))
-          .orderBy(customFieldOption.position);
-        for (const o of optionRows) {
-          const [newOption] = await tx
-            .insert(customFieldOption)
-            .values({ fieldId: created.id, value: o.value, color: o.color, position: o.position })
-            .returning({ id: customFieldOption.id });
-          maps.option.set(o.id, newOption.id);
-        }
-      }
-    }
-
-    // Views: their filters reference the ids captured above.
-    if (inc.views) {
-      const viewRows = await tx
-        .select()
-        .from(projectView)
-        .where(eq(projectView.projectId, sourceProjectId))
-        .orderBy(projectView.position, projectView.id);
-      for (const v of viewRows) {
-        await tx.insert(projectView).values({
-          projectId: proj.id,
-          name: v.name,
-          icon: v.icon,
-          filters: remapViewFilters(v.filters, maps) ?? {},
-          display: remapViewDisplay(v.display, maps) ?? {},
-          position: v.position,
-        });
-      }
-    }
-
-    // Dashboards: the layout blob is copied verbatim. Widget filters that reference
-    // assignee/type/label ids are not remapped (those filters just match nothing until
-    // re-set); the metric widgets, which are project-scoped and id-agnostic, work
-    // unchanged.
-    if (inc.dashboards) {
-      const dashboardRows = await tx
-        .select()
-        .from(projectDashboard)
-        .where(eq(projectDashboard.projectId, sourceProjectId))
-        .orderBy(projectDashboard.position, projectDashboard.id);
-      for (const d of dashboardRows) {
-        await tx.insert(projectDashboard).values({
-          projectId: proj.id,
-          name: d.name,
-          icon: d.icon,
-          layout: d.layout ?? [],
-          position: d.position,
-        });
-      }
-    }
-
+    const proj = inserted.project;
     if (inc.documents) {
       const documentRows = await tx
         .select()
@@ -575,44 +767,6 @@ export async function copyProject(
       }
     }
 
-    // Actions: their condition (a FilterSet) and effect (a partial patch) hold ids
-    // captured above, so they are remapped to the copied entities.
-    if (inc.actions) {
-      const actionRows = await tx
-        .select()
-        .from(projectAction)
-        .where(eq(projectAction.projectId, sourceProjectId))
-        .orderBy(projectAction.position, projectAction.id);
-      for (const a of actionRows) {
-        await tx.insert(projectAction).values({
-          projectId: proj.id,
-          name: a.name,
-          icon: a.icon,
-          condition: remapViewFilters(a.condition, maps) ?? {},
-          effect: remapActionEffect(a.effect, maps) ?? {},
-          position: a.position,
-        });
-      }
-    }
-
-    // Project settings key/value rows (the Configuration section's subtask
-    // automations and auto-archive thresholds, and any other project-scoped
-    // setting). Copied verbatim, except the repository integration: its value holds
-    // the webhook secret and routing id (the copy's owner must not receive the
-    // source's credential, and a duplicated id would make inbound routing
-    // ambiguous) plus column ids of the source project. The copy starts
-    // unconfigured instead.
-    if (inc.configuration) {
-      const settingRows = await tx
-        .select()
-        .from(projectSetting)
-        .where(eq(projectSetting.projectId, sourceProjectId));
-      for (const s of settingRows) {
-        if (s.key === GIT_SETTING_KEY) continue;
-        await tx.insert(projectSetting).values({ projectId: proj.id, key: s.key, value: s.value });
-      }
-    }
-
     // Webhook subscriptions: the URL and the event selection, with a signing secret of
     // their own — the copy's owner must not receive the source's. The receiver cannot
     // verify that signature until it is given the new secret, so the copy starts
@@ -634,15 +788,16 @@ export async function copyProject(
       }
     }
 
-    return proj;
+    return inserted;
   });
-  let newProject: ProjectRow;
+  let created: Awaited<typeof copyTransaction>;
   try {
-    newProject = await copyTransaction;
+    created = await copyTransaction;
   } catch (error) {
     await Promise.all(copiedDocumentAssetKeys.map(deleteAttachmentObject));
     throw error;
   }
+  const { project: newProject, maps } = created;
 
   // Agents: the ones working in the source project, attached to the new one as well.
   // The team owns them and one handle is unique in it, so a second copy of the same

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue } from '@/lib/api/endpoints/issues';
@@ -6,8 +7,9 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
 
-// A draggable card in the unscheduled panel.
-export function CalendarUnscheduledCard({
+// A draggable card in the unscheduled panel. Memoized because the panel renders
+// again on every scroll step.
+export const CalendarUnscheduledCard = memo(function CalendarUnscheduledCard({
   project,
   issue,
   color,
@@ -49,4 +51,4 @@ export function CalendarUnscheduledCard({
       </div>
     </IssueContextMenu>
   );
-}
+});

@@ -1,8 +1,8 @@
 import { useTranslations } from 'next-intl';
 import type { BoardIssue, Issue } from '@/lib/api/endpoints/issues';
-import { isBlocked } from '@/utils/issueLinks';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useIsBlocked } from '../../context/useIssueLinks';
 import { type TimelineDragMode } from '../../hooks/useTimelineDrag';
 import { type Span } from '../../utils/timeline';
 
@@ -35,7 +35,7 @@ export function TimelineBar({
   onOpen: (id: number) => void;
 }) {
   const t = useTranslations('workItems.timeline');
-  const blocked = isBlocked(issue);
+  const blocked = useIsBlocked(issue);
   let cursor = 'cursor-ew-resize';
   if (readOnly) cursor = 'cursor-pointer';
   else if (active) cursor = 'cursor-grabbing';

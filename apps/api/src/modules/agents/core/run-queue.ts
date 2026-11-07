@@ -98,18 +98,31 @@ export const holdsSlot = and(
   eq(aiAgent.kind, 'internal'),
 );
 
-// Runs of this workspace's agents that hold a slot and were queued before this one.
-// Counting only the older runs is what keeps a ceiling from turning away every run of a
-// burst at once: each yields to the ones ahead of it and the rest come back on their next
-// attempt.
-export async function countRunsAhead(workspaceId: number, runId: number): Promise<number> {
-  const [row] = await db
+// Active runs and retry backoff keep their slots regardless of queue order. Among
+// claims awaiting admission, lower ids take precedence so a burst can make progress.
+export async function countRunsAhead(
+  workspaceId: number,
+  runId: number,
+  executor: DbExecutor = db,
+): Promise<number> {
+  const [row] = await executor
     .select({ count: sql<number>`count(*)::int` })
     .from(agentRun)
     .innerJoin(aiAgent, eq(aiAgent.id, agentRun.agentId))
     .innerJoin(project, eq(project.id, agentRun.projectId))
     .innerJoin(team, eq(team.id, project.teamId))
-    .where(and(eq(team.workspaceId, workspaceId), holdsSlot, lt(agentRun.id, runId)));
+    .where(
+      and(
+        eq(team.workspaceId, workspaceId),
+        holdsSlot,
+        sql`${agentRun.id} <> ${runId}`,
+        or(
+          lt(agentRun.id, runId),
+          isNotNull(agentRun.executionStartedAt),
+          isNull(agentRun.claimedAt),
+        ),
+      ),
+    );
   return row?.count ?? 0;
 }
 
@@ -246,14 +259,11 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
     // LIMIT NULL claims every due run.
     const free = maxConcurrentRuns > 0 ? maxConcurrentRuns - (await countClaimedRuns(tx)) : null;
     if (free !== null && free <= 0) return [];
+    // MATERIALIZED picks the runs once. As `r.id IN (...)` the planner may rescan the
+    // pick for every row it updates, and each rescan skips the rows already claimed and
+    // hands out the next ones, past the free slots.
     return tx.execute(sql`
-      UPDATE agent_run r
-      SET attempts = r.attempts + 1,
-          started_at = coalesce(r.started_at, now()),
-          execution_started_at = NULL,
-          claimed_at = now(),
-          next_attempt_at = now() + make_interval(secs => ${leaseSeconds})
-      WHERE r.id IN (
+      WITH due AS MATERIALIZED (
         SELECT id FROM agent_run q
         WHERE q.status = 'pending' AND q.next_attempt_at <= now()
           AND (SELECT kind FROM ai_agent a WHERE a.id = q.agent_id) = 'internal'
@@ -262,6 +272,14 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
         FOR UPDATE SKIP LOCKED
         LIMIT ${free}
       )
+      UPDATE agent_run r
+      SET attempts = r.attempts + 1,
+          started_at = coalesce(r.started_at, now()),
+          execution_started_at = NULL,
+          claimed_at = now(),
+          next_attempt_at = now() + make_interval(secs => ${leaseSeconds})
+      FROM due
+      WHERE r.id = due.id
       RETURNING
         r.id,
         r.agent_id AS "agentId",
@@ -468,8 +486,13 @@ export async function markRunFailed(id: number, error: string, output?: string):
 // attempt, and nothing has been recorded on the issue yet, so the run leaves no trace of
 // having been picked up at all: a first claim's started_at goes too, so the waiting run
 // holds no slot in countRunsAhead and can be canceled as not started.
-export async function deferRun(id: number, delaySeconds: number): Promise<void> {
-  await db
+export async function deferRun(
+  id: number,
+  delaySeconds: number,
+  executor: DbExecutor = db,
+  attempts?: number,
+): Promise<void> {
+  await executor
     .update(agentRun)
     .set({
       executionStartedAt: null,
@@ -478,7 +501,19 @@ export async function deferRun(id: number, delaySeconds: number): Promise<void> 
       startedAt: sql`CASE WHEN ${agentRun.attempts} = 1 THEN NULL ELSE ${agentRun.startedAt} END`,
       nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,
     })
-    .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
+    .where(
+      and(
+        eq(agentRun.id, id),
+        eq(agentRun.status, 'pending'),
+        attempts === undefined
+          ? undefined
+          : and(
+              eq(agentRun.attempts, attempts),
+              isNotNull(agentRun.claimedAt),
+              gt(agentRun.nextAttemptAt, sql`now()`),
+            ),
+      ),
+    );
 }
 
 export const executionState = sql<'queued' | 'running' | 'success' | 'failed' | 'canceled'>`
@@ -487,8 +522,12 @@ export const executionState = sql<'queued' | 'running' | 'success' | 'failed' | 
       THEN 'running'
     ELSE 'queued' END`;
 
-export async function markRunExecuting(id: number, attempts: number): Promise<boolean> {
-  const rows = await db
+export async function markRunExecuting(
+  id: number,
+  attempts: number,
+  executor: DbExecutor = db,
+): Promise<boolean> {
+  const rows = await executor
     .update(agentRun)
     .set({ executionStartedAt: new Date() })
     .where(
@@ -501,6 +540,23 @@ export async function markRunExecuting(id: number, attempts: number): Promise<bo
     )
     .returning({ id: agentRun.id });
   return rows.length > 0;
+}
+
+// Share the claim lock: another replica cannot admit a later claim between the
+// workspace count and this run reserving its execution slot.
+export async function admitWorkspaceRun(
+  run: ClaimedRun,
+  workspaceId: number,
+  limit: number,
+): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(${RUN_CLAIM_LOCK_NS}, 0)`);
+    if (limit > 0 && (await countRunsAhead(workspaceId, run.id, tx)) >= limit) {
+      await deferRun(run.id, 30, tx, run.attempts);
+      return false;
+    }
+    return markRunExecuting(run.id, run.attempts, tx);
+  });
 }
 
 export interface AgentRunRow {

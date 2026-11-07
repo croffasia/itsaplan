@@ -20,6 +20,10 @@
       "title": "Projeler",
       "description": "Bu takımın sahip olduğu projeler."
     },
+    "templates": {
+      "title": "Proje şablonları",
+      "description": "Yeni projelerin başladığı kayıtlı proje ayarları."
+    },
     "members": {
       "title": "Takım üyeleri",
       "description": "Takımdaki herkes ve bekleyen açık davetler."
@@ -74,15 +78,16 @@
     "leaveHint": "Üyesi olduğunuz projelerdeki erişiminiz kalır. Takıma tekrar katılmak için bir sahibin sizi eklemesi gerekir.",
     "delete": {
       "action": "Takımı sil",
-      "hint": "Üyeleri, rolleri, davetleri, yetenekleri, araçları ve entegrasyonları takımla birlikte silinir. Kişilerin hesapları ve diğer takımları korunur.",
+      "hint": "Üyeleri, rolleri, proje şablonları, davetleri, yetenekleri, araçları ve entegrasyonları takımla birlikte silinir. Kişilerin hesapları ve diğer takımları korunur.",
       "blocked": "Önce takımın projelerini ve yapay zekâ ajanlarını silin.",
       "title": "{name} silinsin mi?",
-      "description": "<strong>{name}</strong> takımı; üyeleri, rolleri, davetleri, yetenekleri, araçları ve entegrasyonlarıyla birlikte silinecektir. Kişilerin hesapları ve diğer takımları korunur. Bu işlem geri alınamaz.",
+      "description": "<strong>{name}</strong> takımı; üyeleri, rolleri, proje şablonları, davetleri, yetenekleri, araçları ve entegrasyonlarıyla birlikte silinecektir. Kişilerin hesapları ve diğer takımları korunur. Bu işlem geri alınamaz.",
       "deleted": "Takım silindi"
     }
   },
   "columns": {
     "project": "Proje",
+    "template": "Şablon",
     "owners": "Sahipler",
     "members": "Üyeler",
     "created": "Oluşturulma",
@@ -180,6 +185,80 @@
       "invalidJson": "Pano geçerli bir JSON içermiyor.",
       "notAnExport": "Pano bir rol dışa aktarma verisi içermiyor.",
       "empty": "Rol dışa aktarma verisi boş."
+    }
+  },
+  "templates": {
+    "empty": "Henüz proje şablonu yok",
+    "emptyHint": "Yeni projeleri bir şablondan başlatmak için bir projeyi şablon olarak kaydedin.",
+    "newAction": "Yeni şablon",
+    "teams": "Takımlar",
+    "allTeams": "Tüm takımlar",
+    "noTeams": "Hiçbir takım",
+    "editAction": "Şablonu düzenle",
+    "editHint": "Şablonun içeriği kaydedildiği gibi kalır.",
+    "copyAction": "Şablonu kopyala",
+    "copied": "\"{name}\" şablonu kopyalandı. İçe aktarmak için başka bir çalışma alanına yapıştırın.",
+    "downloadAction": "İndir",
+    "downloadFailed": "Şablon indirilemedi.",
+    "importAction": "Şablonu içe aktar",
+    "deleteAction": "Şablonu sil",
+    "deleteDialog": {
+      "title": "\"{name}\" şablonu silinsin mi?",
+      "description": "Bu şablondan oluşturulan projeler değişmez.",
+      "confirm": "Şablonu sil",
+      "galleryNote": "Galerideki sayfası da kaldırılır."
+    },
+    "panel": {
+      "saved": "{date} tarihinde kaydedildi",
+      "none": "Yok",
+      "teams": "Takımlar: {teams}"
+    },
+    "publish": {
+      "action": "Yayınla",
+      "published": "Yayında",
+      "account": "Galeri hesabı",
+      "publishingAs": "Yayınlayan",
+      "authorProfile": "Yazar profili",
+      "changeEmail": "E-postayı değiştir",
+      "rules": "Galeri kuralları",
+      "unlink": "Çalışma alanının bağlantısını kaldır",
+      "downloadable": "Herkes indirebilir",
+      "private": "İş ve kişi içermez",
+      "counts": "{states, plural, other {# durum}} · {types, plural, other {# tür}} · {fields, plural, other {# alan}}",
+      "by": "<b>{name}</b> tarafından",
+      "authorHint": "{email} adresinden yayınlanan her şablonda gösterilir.",
+      "authorName": "Yazar",
+      "authorUrl": "Profil bağlantısı",
+      "optional": "İsteğe bağlı",
+      "authorUrlInvalid": "https:// ile başlamalı",
+      "submit": "Yayınla",
+      "update": "Sayfayı güncelle",
+      "live": "Yayında",
+      "since": "{date} tarihinden beri",
+      "openPage": "Sayfayı aç",
+      "copyLink": "Bağlantıyı kopyala",
+      "linkCopied": "Bağlantı kopyalandı",
+      "copyFailed": "Bağlantı kopyalanamadı",
+      "unpublish": "Yayından kaldır",
+      "unpublishConfirm": "Sayfa kaldırılsın mı?",
+      "unpublishHint": "Bağlantısı artık çalışmaz.",
+      "keep": "Kalsın",
+      "publishedToast": "Yayınlandı",
+      "updatedToast": "Sayfa güncellendi",
+      "badge": "Herkese açık",
+      "badgeHint": "{date} tarihinden beri galeride",
+      "link": {
+        "intro": "Bu çalışma alanı için bir e-postayı bir kez doğrulayın.",
+        "email": "E-posta",
+        "emailHint": "Herkese gösterilmez",
+        "agree": "Kodu göndererek <rules>galeri kurallarını</rules> kabul etmiş olursunuz.",
+        "sendCode": "Kod gönder",
+        "codeSent": "{email} adresine gönderilen kodu girin",
+        "code": "Kod",
+        "confirm": "Doğrula",
+        "resend": "Yeniden gönder",
+        "resent": "Yeni kod gönderildi"
+      }
     }
   },
   "panel": {
@@ -374,6 +453,8 @@
     "username": "Kullanıcı adı",
     "usernamePlaceholder": "Örn. triyaj-botu",
     "usernameHint": "Harfler, rakamlar, noktalar, tireler ve alt çizgiler. 64 karaktere kadar.",
+    "chat": "Sohbet",
+    "chatHint": "Bir üyenin bu ajanla sohbet açmasına veya sürdürmesine izin verir. Kapalıyken sohbet seçicisinden çıkar; bahsetmeler, devretmeler ve zamanlamalar onu çalıştırmaya devam eder.",
     "access": "Erişilebilirlik",
     "accessHint": "Bu ajana kimlerin görev verebileceği",
     "model": "Model",
@@ -641,6 +722,19 @@
       "descriptionCapped": "Ajanlarının kaç çalıştırmasının aynı anda yürüyeceği, en fazla {max}. Diğerleri sırada bekler. 0 olursa sınır {max} olur.",
       "ownerOnly": "Aynı anda kaç ajan çalıştırması yürüyeceğini yalnızca sahip değiştirir.",
       "none": "Sınır yok"
+    },
+    "sharing": {
+      "title": "Herkese açık bağlantılar",
+      "description": "Bu çalışma alanındaki belgelerin, işlerin ve görünümlerin bağlantıyla paylaşılıp paylaşılamayacağı.",
+      "enabled": "Herkese açık bağlantılara izin ver",
+      "enabledHint": "Kapalıyken burada kimse paylaşamaz ve mevcut bağlantılar yeniden açılana kadar çalışmaz.",
+      "instanceOff": "Herkese açık bağlantılar bu örnekte kapalı.",
+      "teamsOnly": "Yalnızca seçili ekipler",
+      "teamsOnlyHint": "Yalnızca aşağıdaki ekipler paylaşabilir. Diğer ekiplerin bağlantıları çalışmaz.",
+      "statusOn": "Açık",
+      "statusOff": "Kapalı",
+      "ownerOnly": "Hangi ekiplerin paylaşabileceğini yalnızca sahip seçer.",
+      "saved": "Herkese açık bağlantı ayarları kaydedildi"
     },
     "managers": {
       "title": "Yöneticiler",

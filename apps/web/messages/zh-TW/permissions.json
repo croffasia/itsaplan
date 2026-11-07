@@ -14,6 +14,7 @@
     "issue_types": "工作項目類型",
     "labels": "標籤",
     "ai_agents": "AI 代理",
+    "agent_schedules": "代理排程",
     "integrations": "整合",
     "agent_skills": "代理技能",
     "agent_tools": "代理工具",

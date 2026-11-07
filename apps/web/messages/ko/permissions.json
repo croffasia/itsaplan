@@ -14,6 +14,7 @@
     "issue_types": "이슈 유형",
     "labels": "라벨",
     "ai_agents": "AI 에이전트",
+    "agent_schedules": "AI 에이전트 일정",
     "integrations": "연동",
     "agent_skills": "AI 에이전트 스킬",
     "agent_tools": "AI 에이전트 도구",

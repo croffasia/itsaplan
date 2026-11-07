@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Globe, MoreHorizontal, Pencil, Star, Trash2 } from 'lucide-react';
+import { Copy, EyeOff, Globe, MoreHorizontal, Pencil, Star, Trash2, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { View } from '@/lib/api/endpoints/views';
-import { enableViewShare, disableViewShare } from '@/lib/api/endpoints/share';
+import { enableViewShare, disableViewShare, type ShareOptions } from '@/lib/api/endpoints/share';
 import { qk } from '@/services/queryKeys';
-import { useSetViewFavorite } from '@/services/views.service';
+import { usePublishView, useSetViewFavorite } from '@/services/views.service';
 import { cn } from '@/lib/utils';
 import { shareViewCalendarPath, shareViewPath } from '@/utils/paths';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -15,26 +15,36 @@ import ViewTabChrome from '@/components/layout/ViewTabChrome';
 import ViewTabLabel from '@/components/layout/ViewTabLabel';
 import ShareDialog from '@/components/common/share/ShareDialog';
 
-// A saved view tab. Sortable (drag to reorder); when active it shows a "…" menu
-// with Favorite / Share / Edit / Delete.
+// A saved view tab. Sortable (drag to arrange one's own tab row); when active it shows a
+// "…" menu with Favorite / Duplicate / Hide / Share / Add to the project / Edit / Delete.
 export default function SavedViewTab({
   view,
   projectKey,
   active,
   canEdit,
+  canShare,
   canDelete,
+  canPublish,
+  canDuplicate,
   onSelect,
   onEdit,
   onDelete,
+  onDuplicate,
+  onHide,
 }: {
   view: View;
   projectKey: string;
   active: boolean;
   canEdit: boolean;
+  canShare: boolean;
   canDelete: boolean;
+  canPublish: boolean;
+  canDuplicate: boolean;
   onSelect: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onDuplicate: () => void;
+  onHide: () => void;
 }) {
   const t = useTranslations('views');
   const tCommon = useTranslations('common');
@@ -42,34 +52,35 @@ export default function SavedViewTab({
   const [sharing, setSharing] = useState(false);
   const qc = useQueryClient();
   const setFavorite = useSetViewFavorite(projectKey);
+  const publish = usePublishView(projectKey);
 
-  // Enabling/revoking the public link refetches the views so the tab's shareToken
-  // and shareExtended (which the dialog reads) stay in sync. The same call creates
-  // the link and flips how much a live one exposes.
-  async function share(extended: boolean) {
-    const { token } = await enableViewShare(view.id, extended);
+  // Enabling/revoking the public link refetches the views so the tab's shareToken,
+  // shareExtended and shareExpiresAt (which the dialog reads) stay in sync. The same
+  // call creates the link and changes how much a live one exposes or when it expires.
+  async function share(options: ShareOptions) {
+    const state = await enableViewShare(view.id, options);
     await qc.invalidateQueries({ queryKey: qk.views(projectKey) });
-    return token;
+    return state;
   }
   async function disableShare() {
     await disableViewShare(view.id);
     await qc.invalidateQueries({ queryKey: qk.views(projectKey) });
   }
-  // Reordering views is a views edit; disable dragging without it.
+  // The tab row is the caller's own, so anyone who sees the views arranges it.
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: view.id,
-    disabled: !canEdit,
   });
   const style = { transform: CSS.Transform.toString(transform), transition };
 
   return (
     <ViewTabChrome
       active={active}
+      own={view.isPrivate}
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
-      className={cn(canEdit ? 'cursor-grab' : 'cursor-default', isDragging && 'opacity-40')}
+      className={cn('cursor-grab', isDragging && 'opacity-40')}
     >
       <button type="button" onClick={onSelect} className="flex items-center gap-1.5 py-1 pr-1 pl-2">
         <ViewTabLabel view={view} />
@@ -100,7 +111,33 @@ export default function SavedViewTab({
               />
               {view.favorite ? t('unfavorite') : t('favorite')}
             </button>
-            {canEdit && (
+            {canDuplicate && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onDuplicate();
+                }}
+                className="flex w-full items-center gap-2 rounded px-2 py-1 text-start text-sm hover:bg-accent"
+              >
+                <Copy className="size-3.5 shrink-0" /> {t('duplicate')}
+              </button>
+            )}
+            {/* One's own private view that is not wanted is deleted, not hidden. */}
+            {!view.isPrivate && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onHide();
+                }}
+                className="flex w-full items-center gap-2 rounded px-2 py-1 text-start text-sm hover:bg-accent"
+              >
+                <EyeOff className="size-3.5 shrink-0" /> {t('hide')}
+              </button>
+            )}
+            {/* Only a project's view has a public link. */}
+            {canShare && !view.isPrivate && (
               <button
                 type="button"
                 onClick={() => {
@@ -110,6 +147,22 @@ export default function SavedViewTab({
                 className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-accent"
               >
                 <Globe className="size-3.5 shrink-0" /> {view.shareToken ? t('shared') : t('share')}
+              </button>
+            )}
+            {canPublish && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  publish.mutate(view.id);
+                }}
+                className="flex w-full items-start gap-2 rounded px-2 py-1 text-start text-sm hover:bg-accent"
+              >
+                <Users className="mt-0.5 size-3.5 shrink-0" />
+                <span>
+                  {t('publish')}
+                  <span className="block text-xs text-muted-foreground">{t('publishHint')}</span>
+                </span>
               </button>
             )}
             {canEdit && (
@@ -146,7 +199,8 @@ export default function SavedViewTab({
         onOpenChange={setSharing}
         title={t('shareBoard')}
         token={view.shareToken}
-        extended={view.shareExtended}
+        options={[{ name: 'extended', checked: view.shareExtended }]}
+        expiresAt={view.shareExpiresAt}
         enable={share}
         disable={disableShare}
         pathForToken={shareViewPath}

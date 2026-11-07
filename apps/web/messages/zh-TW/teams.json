@@ -20,6 +20,10 @@
       "title": "專案",
       "description": "該團隊擁有的專案。"
     },
+    "templates": {
+      "title": "專案範本",
+      "description": "新專案所使用的已儲存專案設定。"
+    },
     "members": {
       "title": "團隊成員",
       "description": "團隊裡的所有成員，以及尚未回應的邀請。"
@@ -74,15 +78,16 @@
     "leaveHint": "你仍保留你參與的專案。若要重新加入，需由所有者再次新增你。",
     "delete": {
       "action": "刪除團隊",
-      "hint": "其成員、角色、邀請、技能、工具和整合會一併刪除。成員會保留自己的帳號和其他團隊。",
+      "hint": "其成員、角色、專案範本、邀請、技能、工具和整合會一併刪除。成員會保留自己的帳號和其他團隊。",
       "blocked": "請先刪除該團隊的專案和 AI 代理。",
       "title": "刪除 {name}？",
-      "description": "<strong>{name}</strong> 及其成員、角色、邀請、技能、工具和整合將被刪除。成員會保留自己的帳號和其他團隊。此操作無法復原。",
+      "description": "<strong>{name}</strong> 及其成員、角色、專案範本、邀請、技能、工具和整合將被刪除。成員會保留自己的帳號和其他團隊。此操作無法復原。",
       "deleted": "團隊已刪除"
     }
   },
   "columns": {
     "project": "專案",
+    "template": "範本",
     "owners": "所有者",
     "members": "成員",
     "created": "建立時間",
@@ -180,6 +185,80 @@
       "invalidJson": "剪貼簿中不是有效的 JSON。",
       "notAnExport": "剪貼簿中不是角色匯出資料。",
       "empty": "角色匯出資料為空。"
+    }
+  },
+  "templates": {
+    "empty": "暫無專案範本",
+    "emptyHint": "將專案另存為範本，即可依據它建立新專案。",
+    "newAction": "新增範本",
+    "teams": "團隊",
+    "allTeams": "所有團隊",
+    "noTeams": "無團隊",
+    "editAction": "編輯範本",
+    "editHint": "範本內容維持儲存時的樣子。",
+    "copyAction": "複製範本",
+    "copied": "已複製範本「{name}」。將其貼到另一個工作區即可匯入。",
+    "downloadAction": "下載",
+    "downloadFailed": "無法下載範本。",
+    "importAction": "匯入範本",
+    "deleteAction": "刪除範本",
+    "deleteDialog": {
+      "title": "刪除範本「{name}」？",
+      "description": "以此範本建立的專案不受影響。",
+      "confirm": "刪除範本",
+      "galleryNote": "它在圖庫中的頁面也會下架。"
+    },
+    "panel": {
+      "saved": "儲存於 {date}",
+      "none": "無",
+      "teams": "團隊：{teams}"
+    },
+    "publish": {
+      "action": "發布",
+      "published": "已發布",
+      "account": "圖庫帳號",
+      "publishingAs": "發布身分",
+      "authorProfile": "作者資料",
+      "changeEmail": "變更電子郵件",
+      "rules": "圖庫規則",
+      "unlink": "解除工作區連結",
+      "downloadable": "任何人都能下載",
+      "private": "不含工作項目和成員",
+      "counts": "{states, plural, other {# 個狀態}} · {types, plural, other {# 種類型}} · {fields, plural, other {# 個欄位}}",
+      "by": "作者 <b>{name}</b>",
+      "authorHint": "顯示在從 {email} 發布的每個範本上。",
+      "authorName": "作者",
+      "authorUrl": "個人檔案連結",
+      "optional": "選填",
+      "authorUrlInvalid": "必須以 https:// 開頭",
+      "submit": "發布",
+      "update": "更新頁面",
+      "live": "已上線",
+      "since": "自 {date}",
+      "openPage": "開啟頁面",
+      "copyLink": "複製連結",
+      "linkCopied": "已複製連結",
+      "copyFailed": "無法複製連結",
+      "unpublish": "取消發布",
+      "unpublishConfirm": "下架頁面？",
+      "unpublishHint": "它的連結將失效。",
+      "keep": "保留",
+      "publishedToast": "已發布",
+      "updatedToast": "頁面已更新",
+      "badge": "公開",
+      "badgeHint": "自 {date} 起在圖庫中",
+      "link": {
+        "intro": "為這個工作區確認一次電子郵件。",
+        "email": "電子郵件",
+        "emailHint": "不會公開顯示",
+        "agree": "傳送驗證碼即表示你接受<rules>圖庫規則</rules>。",
+        "sendCode": "傳送驗證碼",
+        "codeSent": "輸入傳送到 {email} 的驗證碼",
+        "code": "驗證碼",
+        "confirm": "確認",
+        "resend": "重新傳送",
+        "resent": "已傳送新驗證碼"
+      }
     }
   },
   "panel": {
@@ -374,6 +453,8 @@
     "username": "使用者名稱",
     "usernamePlaceholder": "例如：triage-bot",
     "usernameHint": "可使用字母、數字、點、連字元和底線，最多 64 個字元。",
+    "chat": "聊天",
+    "chatHint": "讓成員可以開啟或繼續與此代理的聊天。關閉後，它會從聊天選擇器中移除；提及、委派和排程仍會執行它。",
     "access": "可用範圍",
     "accessHint": "誰可以給該代理分配任務",
     "model": "模型",
@@ -641,6 +722,19 @@
       "descriptionCapped": "其代理可同時進行的執行數，最多 {max}。其餘的在佇列中等待。為 0 時上限為 {max}。",
       "ownerOnly": "只有擁有者可以變更代理同時執行數。",
       "none": "不限制"
+    },
+    "sharing": {
+      "title": "公開連結",
+      "description": "此工作區的文件、項目和檢視是否可以透過連結分享。",
+      "enabled": "允許公開連結",
+      "enabledHint": "關閉後，此處任何人都無法分享，現有連結在重新開啟前無法開啟。",
+      "instanceOff": "此執行個體已關閉公開連結。",
+      "teamsOnly": "僅限所選團隊",
+      "teamsOnlyHint": "只有下方的團隊可以分享。其他團隊的連結將無法開啟。",
+      "statusOn": "已開啟",
+      "statusOff": "已關閉",
+      "ownerOnly": "只有擁有者可以選擇哪些團隊能分享。",
+      "saved": "公開連結設定已儲存"
     },
     "managers": {
       "title": "管理者",

@@ -104,6 +104,7 @@
     "copied": "Disalin!",
     "copyPrompt": "Salin prompt",
     "sharedPublicly": "Dibagikan secara publik",
+    "sharedThroughDocument": "Publik melalui dokumen",
     "sharePublicly": "Bagikan secara publik",
     "restore": "Pulihkan issue",
     "archive": "Arsipkan issue",
@@ -437,7 +438,7 @@
   "feedOldest": "Terlama",
   "feedChangeOrder": "Ubah urutan",
   "feedRunToggle": "Tampilkan perubahan serupa",
-  "shareUnavailable": "Issue yang dibagikan ini tidak tersedia. Tautan mungkin telah dicabut.",
+  "shareUnavailable": "Issue yang dibagikan ini tidak tersedia. Tautan mungkin telah dicabut atau kedaluwarsa.",
   "fieldSelects": {
     "changeState": "Ubah status…",
     "changeType": "Ubah tipe…",

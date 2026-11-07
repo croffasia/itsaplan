@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  BUN_VERSION: 1.4.3
+  BUN_VERSION: 1.4.4
 
 permissions:
   contents: read

@@ -87,8 +87,9 @@ export const workspaceRoutes = new Elysia({ name: 'workspaces', detail: { tags: 
       detail: {
         summary: 'Update a workspace',
         description:
-          'Rename or recolour a workspace you manage. Who creates teams in it and how many of ' +
-          'its agents run at once are set by its owner only.',
+          'Rename or recolour a workspace you manage, or turn sharing on or off. Who creates ' +
+          'teams in it, how many of its agents run at once and which teams may share are set ' +
+          'by its owner only.',
       },
     },
   )

@@ -21,6 +21,7 @@ import {
   toolMeta,
   type ToolMeta,
 } from './catalog';
+import { collapseNumericSchema } from './numeric-schema';
 
 // The tools an internal agent uses to work in its project, built from the routes
 // tagged with mcpTool() — the same table the MCP endpoint serves. A tool call is
@@ -49,7 +50,7 @@ function jsonSchemaInput(schema: McpInputSchema): z.ZodType<Record<string, unkno
   return {
     [AI_SDK_SCHEMA]: true,
     _type: undefined,
-    jsonSchema: schema,
+    jsonSchema: collapseNumericSchema(schema),
     validate: undefined,
   } as unknown as z.ZodType<Record<string, unknown>>;
 }
@@ -104,15 +105,23 @@ export function buildRouteTools(
   apiKey: string,
   enabledActions: string[] = [],
 ): Record<string, ReturnType<typeof createTool>> {
-  const app = getMcpApp();
   const granted = new Set([...ALWAYS_ON_KEYS, ...normalizeToolKeys(enabledActions)]);
   // An update replaces the board's canvas as a whole, so without the read the agent
   // would send a canvas built from nothing and delete every card already on the board.
   if (granted.has('update_note_board')) granted.add('get_note_board');
+  return buildNamedRouteTools(project, apiKey, granted);
+}
 
+// The tools of the routes with these names, whatever the catalog grants.
+export function buildNamedRouteTools(
+  project: ProjectRow,
+  apiKey: string,
+  names: Iterable<string>,
+): Record<string, ReturnType<typeof createTool>> {
+  const wanted = new Set(names);
   const tools: Record<string, ReturnType<typeof createTool>> = {};
-  for (const route of routeTools(app)) {
-    if (!granted.has(route.name)) continue;
+  for (const route of routeTools(getMcpApp())) {
+    if (!wanted.has(route.name)) continue;
     tools[route.name] = buildOne(route, project, apiKey);
   }
   return tools;

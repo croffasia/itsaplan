@@ -59,11 +59,13 @@ function permissionDetail(permission: Permission) {
 
 // Builds a feature-local macro for routes that address an entity by its own id
 // (no :projectKey in the path). resolveProjectId maps the route params to the
-// entity's owning project id (null means the entity was not found). The macro
+// entity's owning project id (null means the entity was not found); it is handed the
+// caller too, for an entity that only some members may see. The macro
 // asserts the given action on `resource` and injects the resolved `projectId` into
 // the handler context, so a handler that needs it does not resolve it again. `feature`
 // names the optional section the entity belongs to, closing every route of the macro
-// while the project has that section off. Used like:
+// while the project has that section off. `check` is one more rule on the resolved
+// project, run last. Used like:
 //
 //   .macro({
 //     workItem: entityGuard("work_items", "Issue not found",
@@ -73,16 +75,21 @@ function permissionDetail(permission: Permission) {
 export function entityGuard(
   resource: PermissionResource,
   notFound: string,
-  resolveProjectId: (params: Record<string, string>) => Promise<number | null>,
+  resolveProjectId: (
+    params: Record<string, string>,
+    user: AuthUser | null | undefined,
+  ) => Promise<number | null>,
   feature?: ProjectFeature,
+  check?: (projectId: number) => Promise<void>,
 ) {
   return (action: PermissionAction) => ({
     ...permissionDetail([resource, action]),
     async resolve({ params, user, request }: EntityGuardCtx) {
-      const projectId = await resolveProjectId(params as Record<string, string>);
+      const projectId = await resolveProjectId(params as Record<string, string>, user);
       if (projectId == null) throw new HttpError(404, notFound);
       await assertPermission(projectId, user, resource, action);
       await assertProjectReachable(projectId, request, feature);
+      await check?.(projectId);
       return { projectId };
     },
   });
@@ -178,19 +185,19 @@ export const guards = new Elysia({ name: 'guards' }).use(authContext).macro({
     };
   },
 
-  // The optional section a route belongs to, set beside the permission the route
+  // The optional section or sections a route belongs to, set beside the permission the route
   // asserts. A section its project has turned off closes its routes, so what the
   // settings page hides cannot be reached through the API either. It reads the project
   // the route's guard resolved when that guard is set before it in the route options;
   // otherwise it resolves the project through the membership check itself, so it
   // belongs on a route that already requires membership.
-  feature(name: ProjectFeature) {
+  feature(name: ProjectFeature | ProjectFeature[]) {
     return {
       async resolve(ctx) {
         const project =
           (ctx as { project?: ProjectRow }).project ??
           (await requireProjectAccess((ctx.params as ProjectKeyParams).projectKey, ctx.user));
-        assertFeatureEnabled(project, name);
+        for (const feature of [name].flat()) assertFeatureEnabled(project, feature);
       },
     };
   },

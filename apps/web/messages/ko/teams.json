@@ -20,6 +20,10 @@
       "title": "프로젝트",
       "description": "이 팀이 소유한 프로젝트를 관리합니다."
     },
+    "templates": {
+      "title": "프로젝트 템플릿",
+      "description": "새 프로젝트가 시작할 때 쓰는 저장된 프로젝트 설정입니다."
+    },
     "members": {
       "title": "팀 멤버",
       "description": "팀의 모든 멤버와 아직 수락되지 않은 초대를 관리합니다."
@@ -74,15 +78,16 @@
     "leaveHint": "내가 멤버로 참여 중인 프로젝트는 계속 유지됩니다. 팀에 다시 참여하려면 소유자가 나를 다시 추가해야 합니다.",
     "delete": {
       "action": "팀 삭제",
-      "hint": "팀을 삭제하면 멤버, 역할, 초대, 스킬, 도구 및 연동도 함께 삭제됩니다. 사용자의 계정과 다른 팀은 유지됩니다.",
+      "hint": "팀을 삭제하면 멤버, 역할, 프로젝트 템플릿, 초대, 스킬, 도구 및 연동도 함께 삭제됩니다. 사용자의 계정과 다른 팀은 유지됩니다.",
       "blocked": "먼저 이 팀의 프로젝트와 AI 에이전트를 삭제하세요.",
       "title": "{name} 팀을 삭제하시겠습니까?",
-      "description": "<strong>{name}</strong> 팀과 멤버, 역할, 초대, 스킬, 도구 및 연동이 삭제됩니다. 사용자의 계정과 다른 팀은 유지됩니다. 이 작업은 되돌릴 수 없습니다.",
+      "description": "<strong>{name}</strong> 팀과 멤버, 역할, 프로젝트 템플릿, 초대, 스킬, 도구 및 연동이 삭제됩니다. 사용자의 계정과 다른 팀은 유지됩니다. 이 작업은 되돌릴 수 없습니다.",
       "deleted": "팀이 삭제되었습니다"
     }
   },
   "columns": {
     "project": "프로젝트",
+    "template": "템플릿",
     "owners": "소유자",
     "members": "멤버",
     "created": "생성일",
@@ -180,6 +185,80 @@
       "invalidJson": "클립보드에 유효한 JSON이 없습니다.",
       "notAnExport": "클립보드에 올바른 역할 내보내기 데이터가 없습니다.",
       "empty": "역할 내보내기 데이터가 비어 있습니다."
+    }
+  },
+  "templates": {
+    "empty": "아직 프로젝트 템플릿이 없습니다",
+    "emptyHint": "프로젝트를 템플릿으로 저장하면 그 템플릿으로 새 프로젝트를 만들 수 있습니다.",
+    "newAction": "새 템플릿",
+    "teams": "팀",
+    "allTeams": "모든 팀",
+    "noTeams": "팀 없음",
+    "editAction": "템플릿 편집",
+    "editHint": "템플릿에 담긴 내용은 저장된 그대로 유지됩니다.",
+    "copyAction": "템플릿 복사",
+    "copied": "템플릿 \"{name}\"을(를) 복사했습니다. 다른 워크스페이스에 붙여넣어 가져오세요.",
+    "downloadAction": "다운로드",
+    "downloadFailed": "템플릿을 다운로드하지 못했습니다.",
+    "importAction": "템플릿 가져오기",
+    "deleteAction": "템플릿 삭제",
+    "deleteDialog": {
+      "title": "\"{name}\" 템플릿을 삭제할까요?",
+      "description": "이 템플릿으로 만든 프로젝트는 그대로 유지됩니다.",
+      "confirm": "템플릿 삭제",
+      "galleryNote": "갤러리 페이지도 내려갑니다."
+    },
+    "panel": {
+      "saved": "{date}에 저장됨",
+      "none": "없음",
+      "teams": "팀: {teams}"
+    },
+    "publish": {
+      "action": "게시",
+      "published": "게시됨",
+      "account": "갤러리 계정",
+      "publishingAs": "게시 계정",
+      "authorProfile": "작성자 프로필",
+      "changeEmail": "이메일 변경",
+      "rules": "갤러리 규칙",
+      "unlink": "워크스페이스 연결 해제",
+      "downloadable": "누구나 다운로드할 수 있음",
+      "private": "이슈와 사람은 포함되지 않음",
+      "counts": "{states, plural, other {상태 #개}} · {types, plural, other {유형 #개}} · {fields, plural, other {필드 #개}}",
+      "by": "작성자 <b>{name}</b>",
+      "authorHint": "{email}(으)로 게시한 모든 템플릿에 표시됩니다.",
+      "authorName": "작성자",
+      "authorUrl": "프로필 링크",
+      "optional": "선택 사항",
+      "authorUrlInvalid": "https://로 시작해야 합니다",
+      "submit": "게시",
+      "update": "페이지 업데이트",
+      "live": "게시 중",
+      "since": "{date}부터",
+      "openPage": "페이지 열기",
+      "copyLink": "링크 복사",
+      "linkCopied": "링크를 복사했습니다",
+      "copyFailed": "링크를 복사하지 못했습니다",
+      "unpublish": "게시 취소",
+      "unpublishConfirm": "페이지를 내릴까요?",
+      "unpublishHint": "링크가 더 이상 작동하지 않습니다.",
+      "keep": "유지",
+      "publishedToast": "게시됨",
+      "updatedToast": "페이지가 업데이트됨",
+      "badge": "공개",
+      "badgeHint": "{date}부터 갤러리에 게시됨",
+      "link": {
+        "intro": "이 워크스페이스에 대해 이메일을 한 번만 확인하세요.",
+        "email": "이메일",
+        "emailHint": "공개되지 않음",
+        "agree": "코드를 보내면 <rules>갤러리 규칙</rules>에 동의하는 것입니다.",
+        "sendCode": "코드 보내기",
+        "codeSent": "{email}(으)로 보낸 코드를 입력하세요",
+        "code": "코드",
+        "confirm": "확인",
+        "resend": "다시 보내기",
+        "resent": "새 코드를 보냈습니다"
+      }
     }
   },
   "panel": {
@@ -374,6 +453,8 @@
     "username": "사용자 이름",
     "usernamePlaceholder": "예: triage-bot",
     "usernameHint": "영문자, 숫자, 마침표, 하이픈 및 밑줄을 사용할 수 있으며 최대 64자까지 입력할 수 있습니다.",
+    "chat": "채팅",
+    "chatHint": "멤버가 이 에이전트와 채팅을 열거나 이어갈 수 있게 합니다. 비활성화하면 채팅 선택 목록에서 사라지지만 멘션, 위임 및 예약 작업으로는 계속 실행됩니다.",
     "access": "사용 범위",
     "accessHint": "이 AI 에이전트에게 작업을 요청할 수 있는 사용자를 설정합니다",
     "model": "모델",
@@ -641,6 +722,19 @@
       "descriptionCapped": "이 워크스페이스 에이전트의 동시 실행 수이며 최대 {max}입니다. 나머지는 대기열에서 기다립니다. 0이면 제한은 {max}입니다.",
       "ownerOnly": "에이전트 동시 실행 수는 소유자만 바꿀 수 있습니다.",
       "none": "제한 없음"
+    },
+    "sharing": {
+      "title": "공개 링크",
+      "description": "이 워크스페이스의 문서, 이슈, 보기를 링크로 공유할 수 있는지 설정합니다.",
+      "enabled": "공개 링크 허용",
+      "enabledHint": "끄면 여기서 아무도 공유할 수 없고 기존 링크는 다시 켤 때까지 열리지 않습니다.",
+      "instanceOff": "이 인스턴스에서 공개 링크가 꺼져 있습니다.",
+      "teamsOnly": "선택한 팀만",
+      "teamsOnlyHint": "아래 팀만 공유할 수 있습니다. 다른 팀의 링크는 열리지 않습니다.",
+      "statusOn": "사용",
+      "statusOff": "사용 안 함",
+      "ownerOnly": "공유할 수 있는 팀은 소유자만 선택합니다.",
+      "saved": "공개 링크 설정이 저장되었습니다"
     },
     "managers": {
       "title": "관리자",

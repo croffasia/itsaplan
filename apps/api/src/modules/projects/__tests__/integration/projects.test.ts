@@ -359,6 +359,65 @@ describe('projects', () => {
       expect(view.data?.issueTypes.map((t) => t.name)).toEqual(['Task', 'Bug']);
     });
 
+    it('copies every custom field, the project-wide ones too', async () => {
+      const { api } = await signUpClient();
+      await createProject(api, { key: 'SRC', name: 'Source' });
+      const source = api.projects({ projectKey: 'SRC' });
+      const type = (await source['issue-types'].post({ name: 'Bug' })).data!;
+      await source['custom-fields'].post({ name: 'Severity', fieldType: 'text', showInBody: true });
+      await source['custom-fields'].post({
+        name: 'Steps',
+        fieldType: 'text',
+        issueTypeId: type.id,
+      });
+
+      await source.copy.post({ key: 'DST', name: 'Destination' });
+
+      const view = (await viewOf(api, 'DST')).data!;
+      const bug = view.issueTypes.find((t) => t.name === 'Bug')!;
+      expect(
+        view.customFields.map((f) => ({
+          name: f.name,
+          issueTypeId: f.issueTypeId,
+          showInBody: f.showInBody,
+        })),
+      ).toEqual(
+        expect.arrayContaining([
+          { name: 'Severity', issueTypeId: null, showInBody: true },
+          { name: 'Steps', issueTypeId: bug.id, showInBody: false },
+        ]),
+      );
+    });
+
+    it('copies issue templates onto the copied type, state and labels', async () => {
+      const { api } = await signUpClient();
+      await createProject(api, { key: 'SRC', name: 'Source' });
+      const source = api.projects({ projectKey: 'SRC' });
+      const type = (await source['issue-types'].post({ name: 'Bug' })).data!;
+      const label = (await source.labels.post({ name: 'urgent', color: '#ff0000' })).data!;
+      const todo = (await viewOf(api, 'SRC')).data!.columns.find((c) => c.name === 'Todo')!;
+      await source['issue-templates'].post({
+        name: 'Bug report',
+        titleTemplate: 'Bug: ',
+        typeId: type.id,
+        columnId: todo.id,
+        labelIds: [label.id],
+      });
+
+      await source.copy.post({ key: 'DST', name: 'Destination' });
+
+      const view = (await viewOf(api, 'DST')).data!;
+      expect(view.issueTemplates).toMatchObject([
+        {
+          name: 'Bug report',
+          titleTemplate: 'Bug: ',
+          typeId: view.issueTypes.find((t) => t.name === 'Bug')!.id,
+          columnId: view.columns.find((c) => c.name === 'Todo')!.id,
+          labelIds: [view.labels.find((l) => l.name === 'urgent')!.id],
+        },
+      ]);
+    });
+
     it('copies which optional sections the source project shows', async () => {
       const { api } = await signUpClient();
       await createProject(api, { key: 'SRC', name: 'Source' });

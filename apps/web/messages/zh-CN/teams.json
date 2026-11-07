@@ -20,6 +20,10 @@
       "title": "项目",
       "description": "该团队拥有的项目。"
     },
+    "templates": {
+      "title": "项目模板",
+      "description": "新项目所使用的已保存项目设置。"
+    },
     "members": {
       "title": "团队成员",
       "description": "团队里的所有成员，以及尚未回应的邀请。"
@@ -74,15 +78,16 @@
     "leaveHint": "你仍保留你参与的项目。若要重新加入，需由所有者再次添加你。",
     "delete": {
       "action": "删除团队",
-      "hint": "其成员、角色、邀请、技能、工具和集成会一并删除。成员会保留自己的账户和其他团队。",
+      "hint": "其成员、角色、项目模板、邀请、技能、工具和集成会一并删除。成员会保留自己的账户和其他团队。",
       "blocked": "请先删除该团队的项目和 AI 代理。",
       "title": "删除 {name}？",
-      "description": "<strong>{name}</strong> 及其成员、角色、邀请、技能、工具和集成将被删除。成员会保留自己的账户和其他团队。此操作无法撤销。",
+      "description": "<strong>{name}</strong> 及其成员、角色、项目模板、邀请、技能、工具和集成将被删除。成员会保留自己的账户和其他团队。此操作无法撤销。",
       "deleted": "团队已删除"
     }
   },
   "columns": {
     "project": "项目",
+    "template": "模板",
     "owners": "所有者",
     "members": "成员",
     "created": "创建时间",
@@ -180,6 +185,80 @@
       "invalidJson": "剪贴板中不是有效的 JSON。",
       "notAnExport": "剪贴板中不是角色导出数据。",
       "empty": "角色导出数据为空。"
+    }
+  },
+  "templates": {
+    "empty": "暂无项目模板",
+    "emptyHint": "将项目另存为模板，即可基于它创建新项目。",
+    "newAction": "新建模板",
+    "teams": "团队",
+    "allTeams": "所有团队",
+    "noTeams": "无团队",
+    "editAction": "编辑模板",
+    "editHint": "模板内容保持保存时的样子。",
+    "copyAction": "复制模板",
+    "copied": "已复制模板“{name}”。将其粘贴到另一个工作区即可导入。",
+    "downloadAction": "下载",
+    "downloadFailed": "无法下载模板。",
+    "importAction": "导入模板",
+    "deleteAction": "删除模板",
+    "deleteDialog": {
+      "title": "删除模板“{name}”？",
+      "description": "基于该模板创建的项目不受影响。",
+      "confirm": "删除模板",
+      "galleryNote": "它在图库中的页面也会下架。"
+    },
+    "panel": {
+      "saved": "保存于 {date}",
+      "none": "无",
+      "teams": "团队：{teams}"
+    },
+    "publish": {
+      "action": "发布",
+      "published": "已发布",
+      "account": "图库账号",
+      "publishingAs": "发布身份",
+      "authorProfile": "作者资料",
+      "changeEmail": "更换邮箱",
+      "rules": "图库规则",
+      "unlink": "解除工作区关联",
+      "downloadable": "任何人都可下载",
+      "private": "不含工作项和成员",
+      "counts": "{states, plural, other {# 个状态}} · {types, plural, other {# 种类型}} · {fields, plural, other {# 个字段}}",
+      "by": "作者 <b>{name}</b>",
+      "authorHint": "显示在从 {email} 发布的每个模板上。",
+      "authorName": "作者",
+      "authorUrl": "个人主页链接",
+      "optional": "可选",
+      "authorUrlInvalid": "必须以 https:// 开头",
+      "submit": "发布",
+      "update": "更新页面",
+      "live": "已上线",
+      "since": "自 {date}",
+      "openPage": "打开页面",
+      "copyLink": "复制链接",
+      "linkCopied": "链接已复制",
+      "copyFailed": "无法复制链接",
+      "unpublish": "取消发布",
+      "unpublishConfirm": "下架页面？",
+      "unpublishHint": "它的链接将失效。",
+      "keep": "保留",
+      "publishedToast": "已发布",
+      "updatedToast": "页面已更新",
+      "badge": "公开",
+      "badgeHint": "自 {date} 起在图库中",
+      "link": {
+        "intro": "为这个工作区确认一次邮箱。",
+        "email": "邮箱",
+        "emailHint": "不会公开显示",
+        "agree": "发送验证码即表示你接受<rules>图库规则</rules>。",
+        "sendCode": "发送验证码",
+        "codeSent": "输入发送到 {email} 的验证码",
+        "code": "验证码",
+        "confirm": "确认",
+        "resend": "重新发送",
+        "resent": "已发送新验证码"
+      }
     }
   },
   "panel": {
@@ -374,6 +453,8 @@
     "username": "用户名",
     "usernamePlaceholder": "例如：triage-bot",
     "usernameHint": "可使用字母、数字、点、连字符和下划线，最多 64 个字符。",
+    "chat": "聊天",
+    "chatHint": "允许成员打开或继续与此代理的聊天。关闭后，它将不再出现在聊天选择器中；提及、委派和定时任务仍会运行它。",
     "access": "可用范围",
     "accessHint": "谁可以给该代理分配任务",
     "model": "模型",
@@ -641,6 +722,19 @@
       "descriptionCapped": "其代理可同时进行的运行数，最多 {max}。其余的在队列中等待。为 0 时上限为 {max}。",
       "ownerOnly": "只有所有者可以更改代理同时运行数。",
       "none": "不限制"
+    },
+    "sharing": {
+      "title": "公开链接",
+      "description": "此工作区的文档、事项和视图是否可以通过链接分享。",
+      "enabled": "允许公开链接",
+      "enabledHint": "关闭后，此处任何人都无法分享，现有链接在重新开启前无法打开。",
+      "instanceOff": "此实例已关闭公开链接。",
+      "teamsOnly": "仅限所选团队",
+      "teamsOnlyHint": "只有下方的团队可以分享。其他团队的链接将无法打开。",
+      "statusOn": "已开启",
+      "statusOff": "已关闭",
+      "ownerOnly": "只有所有者可以选择哪些团队能分享。",
+      "saved": "公开链接设置已保存"
     },
     "managers": {
       "title": "管理者",

@@ -16,6 +16,7 @@ import { agentSkillRoutes } from './modules/agents/skills';
 import { agentToolRoutes } from './modules/agents/tools';
 import { customFieldRoutes } from './modules/custom-fields';
 import { issueTemplateRoutes } from './modules/issue-templates';
+import { projectTemplateRoutes } from './modules/project-templates';
 import { issueRoutes } from './modules/issues';
 import { initiativeRoutes } from './modules/initiatives';
 import { cycleRoutes } from './modules/cycles';
@@ -73,6 +74,7 @@ export const planner = new Elysia({ name: 'planner' })
   })
   .use(projectRoutes)
   .use(teamRoutes)
+  .use(projectTemplateRoutes)
   .use(workspaceRoutes)
   .use(memberRoutes)
   .use(roleRoutes)

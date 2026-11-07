@@ -23,6 +23,11 @@ export class HttpError extends Error {
 // (Drizzle's default mode for date), so no timezone is ever applied to them.
 export const iso = (value: Date): string => value.toISOString();
 
+// Whether a share link with this expiry still works: no expiry, or one still ahead.
+// Issues, views, documents and the share module all read a link's state through it.
+export const shareLive = (expiresAt: Date | null): boolean =>
+  expiresAt === null || expiresAt.getTime() > Date.now();
+
 // A timestamp from a query string. Empty means not set: a tool-calling model fills
 // optional fields with "".
 export function instantParam(name: string, value: string | undefined): Date | undefined {

@@ -132,7 +132,7 @@ export default function DashboardsPage() {
         onNewDashboard={(name) => void editor.createDashboard(name)}
         onRename={(d, name) => void editor.renameDashboard(d, name)}
         onDelete={(d) => void editor.deleteDashboard(d)}
-        onReorder={(dragged, target) => editor.reorderDashboards(dragged, target)}
+        onReorder={editor.reorderDashboards}
         actions={layoutActions()}
       />
 

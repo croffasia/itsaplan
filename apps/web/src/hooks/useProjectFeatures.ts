@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useMemo } from 'react';
 import { ShellCtx } from '@/context/shellContext';
 import { projectFeatures, type ProjectFeatureSet } from '@/utils/projectFeatures';
 
@@ -10,5 +10,6 @@ import { projectFeatures, type ProjectFeatureSet } from '@/utils/projectFeatures
 // again once it is turned back on. Without a project every section reads as off,
 // the same way usePermissions grants nothing until the project is there.
 export function useProjectFeatures(): ProjectFeatureSet {
-  return projectFeatures(useContext(ShellCtx)?.project?.project ?? null);
+  const project = useContext(ShellCtx)?.project?.project ?? null;
+  return useMemo(() => projectFeatures(project), [project]);
 }

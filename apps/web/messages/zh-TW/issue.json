@@ -104,6 +104,7 @@
     "copied": "已複製！",
     "copyPrompt": "複製提示詞",
     "sharedPublicly": "已公開共享",
+    "sharedThroughDocument": "透過文件公開",
     "sharePublicly": "公開共享",
     "restore": "恢復工作項目",
     "archive": "封存工作項目",
@@ -437,7 +438,7 @@
   "feedOldest": "最早優先",
   "feedChangeOrder": "切換順序",
   "feedRunToggle": "顯示類似的變更",
-  "shareUnavailable": "此共享工作項目不可用，連結可能已撤銷。",
+  "shareUnavailable": "此共享工作項目不可用，連結可能已撤銷或已過期。",
   "fieldSelects": {
     "changeState": "更改狀態…",
     "changeType": "更改類型…",

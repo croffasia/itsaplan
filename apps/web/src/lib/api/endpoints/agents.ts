@@ -54,6 +54,8 @@ export interface AiAgent {
   // Run triggers.
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  // Off gates only the chat; mentions, delegations and schedules still run the agent.
+  chatEnabled: boolean;
   // The member custom fields that start a run when the agent is set into one, each
   // with the seconds its run waits before the agent may pick it up.
   fieldTriggers: AgentFieldTriggerRead[];
@@ -151,6 +153,7 @@ export interface NewAiAgentInput {
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  chatEnabled?: boolean;
   fieldTriggers?: AgentFieldTrigger[];
   delegationDelaySec?: number;
   projectIds?: number[];
@@ -173,6 +176,7 @@ export interface AiAgentPatch {
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  chatEnabled?: boolean;
   fieldTriggers?: AgentFieldTrigger[];
   delegationDelaySec?: number;
   projectIds?: number[];
@@ -202,6 +206,12 @@ export const listAiAgents = (teamId: number, projectId?: number) =>
   request<AiAgent[]>(
     `/teams/${teamId}/ai-agents${projectId != null ? `?projectId=${projectId}` : ''}`,
   );
+
+// What a screen needs to name an agent; any member of the project reads it.
+export type ProjectAgent = Pick<AiAgent, 'id' | 'name' | 'kind' | 'model'>;
+
+export const listProjectAgents = (projectKey: string) =>
+  request<ProjectAgent[]>(`/projects/${projectKey}/ai-agents/options`);
 
 export const listAgentTools = (teamId: number) =>
   request<AgentTool[]>(`/teams/${teamId}/ai-agents/tools`);

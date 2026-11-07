@@ -107,6 +107,10 @@
       "label": "Webhook",
       "description": "将项目事件发送到外部 URL，并使用每个 Webhook 独立的密钥签名。"
     },
+    "forms": {
+      "label": "表单",
+      "description": "任何拿到链接的人都能在这里创建问题。"
+    },
     "git": {
       "label": "仓库",
       "description": "当关联的拉取请求在 GitHub、GitLab、Gitea、Forgejo 或 Bitbucket 上合并时关闭工作项。"
@@ -192,6 +196,40 @@
         "acsUrl": "ACS URL",
         "spEntityId": "Entity ID 和元数据"
       }
+    },
+    "forms": {
+      "new": "新建表单",
+      "columns": {
+        "form": "表单",
+        "link": "链接"
+      },
+      "enabled": "接收请求",
+      "tabs": {
+        "form": "表单",
+        "questions": "题目",
+        "issue": "问题",
+        "design": "外观"
+      },
+      "questionsHint": "始终会询问姓名和邮箱。",
+      "preview": "预览",
+      "name": "你的姓名",
+      "email": "邮箱"
+    },
+    "portal": {
+      "title": "门户",
+      "description": "人们向此工作区的项目提交请求并跟进的页面。",
+      "general": "常规",
+      "forms": "公开表单",
+      "formsHint": "此工作区的项目可以发布任何拿到链接的人都能填写的表单。关闭后，这些表单和门户将无法打开，项目设置中的表单部分也会隐藏；不会删除任何内容。",
+      "name": "名称",
+      "nameHint": "人们在门户及其邮件中看到的名称，代替工作区名称。留空则显示工作区名称。",
+      "address": "地址",
+      "addressHint": "门户在此地址打开。设置之前，它通过工作区编号打开。",
+      "link": "门户链接",
+      "logo": "标志",
+      "logoHint": "在门户和表单上代替门户名称显示。一个标志可用于两种主题。",
+      "light": "浅色主题",
+      "dark": "深色主题"
     }
   }
 }

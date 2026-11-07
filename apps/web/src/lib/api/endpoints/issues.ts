@@ -73,6 +73,8 @@ export interface Issue {
   // activity) or only its title, description, state, type, priority, dates,
   // subtasks and links.
   shareExtended: boolean;
+  // When the share link stops working, or null when it never does.
+  shareExpiresAt: string | null;
   labelIds: number[];
   fieldValues: IssueFieldValueEntry[];
 }

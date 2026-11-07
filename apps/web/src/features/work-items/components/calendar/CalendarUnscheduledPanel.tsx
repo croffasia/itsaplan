@@ -1,4 +1,6 @@
+import { useRef } from 'react';
 import { useDroppable } from '@dnd-kit/core';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue } from '@/lib/api/endpoints/issues';
@@ -8,6 +10,9 @@ import { CalendarUnscheduledCard } from './CalendarUnscheduledCard';
 
 // Droppable id for the unscheduled panel; day cells use `day:<YYYY-MM-DD>`.
 export const UNSCHEDULED_ID = 'unscheduled';
+
+// A card plus the gap under it.
+const CARD_H = 38;
 
 // The unscheduled panel — a drop target that clears an issue's date.
 export function CalendarUnscheduledPanel({
@@ -27,6 +32,19 @@ export function CalendarUnscheduledPanel({
   const { setNodeRef, isOver } = useDroppable({ id: UNSCHEDULED_ID });
   // A custom field placement has no wording of its own; it reads as a plain date.
   const key = isCustomFieldKey(dateField) ? 'custom' : dateField;
+  // Only the cards in and near the viewport are rendered: without dates, most of a
+  // large project lands here, and the calendar renders the panel on every change.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: issues.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => CARD_H,
+    overscan: 10,
+    // A scroll step renders in a normal React update, not in flushSync inside the
+    // scroll event, which blocks every scroll event on a slow CPU.
+    useFlushSync: false,
+    getItemKey: (index) => issues[index].id,
+  });
   return (
     <div
       ref={setNodeRef}
@@ -39,16 +57,28 @@ export function CalendarUnscheduledPanel({
         {t(`noDate.${key}`)}
         <span className="text-muted-foreground">{issues.length}</span>
       </div>
-      <div className="flex flex-col gap-1 overflow-y-auto">
-        {issues.map((issue) => (
-          <CalendarUnscheduledCard
-            key={issue.id}
-            project={project}
-            issue={issue}
-            color={dot(issue)}
-            onOpen={onOpen}
-          />
-        ))}
+      <div ref={scrollRef} className="overflow-y-auto">
+        <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
+          {virtualizer.getVirtualItems().map((vi) => {
+            const issue = issues[vi.index];
+            return (
+              <div
+                key={vi.key}
+                data-index={vi.index}
+                ref={virtualizer.measureElement}
+                className="absolute start-0 top-0 w-full pb-1"
+                style={{ transform: `translateY(${vi.start}px)` }}
+              >
+                <CalendarUnscheduledCard
+                  project={project}
+                  issue={issue}
+                  color={dot(issue)}
+                  onOpen={onOpen}
+                />
+              </div>
+            );
+          })}
+        </div>
         {issues.length === 0 && (
           <span className="text-xs text-muted-foreground/50">{t(`allDated.${key}`)}</span>
         )}

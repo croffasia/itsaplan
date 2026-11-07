@@ -3,6 +3,8 @@ import { apiKeyApi, authedApi, type Api, createProject } from '#tests/helpers/ap
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent } from '#tests/helpers/agents';
+import { addProjectMember } from '#tests/helpers/members';
+import { createRole } from '#tests/helpers/roles';
 import type { WebhookEventType } from '../../service';
 import { onProjectEvent, type ProjectEvent } from '../../emit';
 
@@ -193,6 +195,31 @@ describe('webhooks', () => {
     it('returns 404 when patching a missing webhook', async () => {
       const { asOwner } = await setupOwnerProject();
       const res = await asOwner.webhooks({ webhookId: 999999 }).patch({ isActive: false });
+      expect(res.status).toBe(404);
+    });
+  });
+
+  describe('rotate secret', () => {
+    it('replaces the secret and lists the new one', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const created = await asOwner.projects({ projectKey: 'MKT' }).webhooks.post({
+        url: 'https://example.com/hook',
+        events: ['issue.created'],
+      });
+      const webhookId = created.data!.id;
+
+      const rotated = await asOwner.webhooks({ webhookId }).secret.post();
+      expect(rotated.status).toBe(200);
+      expect(rotated.data?.secret).toMatch(/^whsec_/);
+      expect(rotated.data?.secret).not.toBe(created.data!.secret);
+
+      const list = await asOwner.projects({ projectKey: 'MKT' }).webhooks.get();
+      expect(list.data?.[0].secret).toBe(rotated.data!.secret);
+    });
+
+    it('returns 404 for a missing webhook', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const res = await asOwner.webhooks({ webhookId: 999999 }).secret.post();
       expect(res.status).toBe(404);
     });
   });
@@ -673,8 +700,42 @@ describe('webhooks', () => {
       const del = await outsider.webhooks({ webhookId }).delete();
       expect(del.status).toBe(403);
 
+      const rotate = await outsider.webhooks({ webhookId }).secret.post();
+      expect(rotate.status).toBe(403);
+
       const deliveries = await outsider.webhooks({ webhookId }).deliveries.get();
       expect(deliveries.status).toBe(403);
+    });
+
+    it('returns the secret only to a caller who may create or edit webhooks', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const webhookId = await createWebhook(asOwner, ['issue.created']);
+
+      const readRole = await createRole(asOwner, 'MKT', {
+        name: 'Webhook reader',
+        permissions: { webhooks: { read: true } },
+      });
+      const asReader = await addProjectMember(asOwner, 'MKT', readRole.data!.id);
+      const read = await asReader.projects({ projectKey: 'MKT' }).webhooks.get();
+      expect(read.status).toBe(200);
+      expect(read.data?.[0]).toMatchObject({ id: webhookId, secret: null });
+      expect((await asReader.webhooks({ webhookId }).secret.post()).status).toBe(403);
+
+      const editRole = await createRole(asOwner, 'MKT', {
+        name: 'Webhook editor',
+        permissions: { webhooks: { read: true, edit: true } },
+      });
+      const asEditor = await addProjectMember(asOwner, 'MKT', editRole.data!.id);
+      const edited = await asEditor.projects({ projectKey: 'MKT' }).webhooks.get();
+      expect(edited.data?.[0].secret).toMatch(/^whsec_/);
+
+      const creatorRole = await createRole(asOwner, 'MKT', {
+        name: 'Webhook creator',
+        permissions: { webhooks: { read: true, create: true } },
+      });
+      const asCreator = await addProjectMember(asOwner, 'MKT', creatorRole.data!.id);
+      const created = await asCreator.projects({ projectKey: 'MKT' }).webhooks.get();
+      expect(created.data?.[0].secret).toMatch(/^whsec_/);
     });
   });
 });

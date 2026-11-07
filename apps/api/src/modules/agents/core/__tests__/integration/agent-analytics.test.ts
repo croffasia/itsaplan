@@ -48,6 +48,7 @@ async function seedRun(
   startedAt: Date,
   usage: { inputTokens: number; outputTokens: number },
   failed = false,
+  call = { provider: 'openai', model: 'gpt-5-mini' },
 ): Promise<void> {
   await getStore().init();
   const store = (await getStore().getStore('observability'))!;
@@ -75,7 +76,7 @@ async function seedRun(
       isEvent: false,
       startedAt,
       endedAt: new Date(startedAt.getTime() + 1500),
-      attributes: { provider: 'openai', model: 'gpt-5-mini', usage },
+      attributes: { ...call, usage },
     },
   });
   await store.createSpan({
@@ -138,6 +139,45 @@ describe('agent analytics', () => {
     expect(body.projects).toMatchObject([{ projectId, name: 'Marketing', runs: 2, errors: 1 }]);
     expect(body.teams).toMatchObject([{ teamId, runs: 2, errors: 1 }]);
     expect(body.tokensPerDay).toHaveLength(2);
+  });
+
+  it('prices each call at the long-input price its own input reaches', async () => {
+    const { asOwner, teamId } = await setup();
+    const agentId = await createScout(asOwner);
+    const projectId = await projectIdOf(asOwner, 'MKT');
+    const meta = { agentId, teamId, projectId };
+    const gemini = { provider: 'google', model: 'gemini-2.5-pro' };
+    // Two calls of one agent on the same day: one long, one short.
+    const at = daysAgo(1);
+    await seedRun('an-long', meta, at, { inputTokens: 300_000, outputTokens: 0 }, false, gemini);
+    await seedRun('an-short', meta, at, { inputTokens: 10_000, outputTokens: 0 }, false, gemini);
+
+    const res = await teamDashboard(asOwner, teamId).get({ query: { days: 30 } });
+    expect(res.status).toBe(200);
+    const body = res.data!;
+    // google/gemini-2-5-pro: 1.25e-6 in up to 200K input tokens, 2.5e-6 above. Their
+    // average call is under 200K, which must not price the long one at the short rate.
+    expect(body.totals.cost).toBeCloseTo(0.3 * 2.5 + 0.01 * 1.25, 6);
+    expect(body.models).toMatchObject([{ model: 'gemini-2.5-pro', calls: 2 }]);
+    expect(body.models[0]!.cost).toBeCloseTo(body.totals.cost!, 6);
+    expect(body.tokensPerDay).toHaveLength(1);
+    expect(body.tokensPerDay[0]!.cost).toBeCloseTo(body.totals.cost!, 6);
+  });
+
+  it('prices a short call at the short-input price when longer calls share its day', async () => {
+    const { asOwner, teamId } = await setup();
+    const agentId = await createScout(asOwner);
+    const projectId = await projectIdOf(asOwner, 'MKT');
+    const meta = { agentId, teamId, projectId };
+    const gemini = { provider: 'google', model: 'gemini-2.5-pro' };
+    const at = daysAgo(1);
+    await seedRun('an-long', meta, at, { inputTokens: 500_000, outputTokens: 0 }, false, gemini);
+    await seedRun('an-short', meta, at, { inputTokens: 10_000, outputTokens: 0 }, false, gemini);
+
+    const res = await teamDashboard(asOwner, teamId).get({ query: { days: 30 } });
+    expect(res.status).toBe(200);
+    // Their average call is over 200K, which must not price the short one at the long rate.
+    expect(res.data!.totals.cost).toBeCloseTo(0.5 * 2.5 + 0.01 * 1.25, 6);
   });
 
   it('splits the window by project', async () => {

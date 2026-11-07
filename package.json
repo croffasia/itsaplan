@@ -1,6 +1,6 @@
 {
   "name": "itsaplan",
-  "version": "1.7.0",
+  "version": "1.10.0",
   "license": "AGPL-3.0-only",
   "devDependencies": {
     "@clack/prompts": "^1.8.1",
@@ -13,7 +13,7 @@
     "turbo": "^2.11.7",
     "typescript": "^6.0.3"
   },
-  "packageManager": "bun@1.4.3",
+  "packageManager": "bun@1.4.4",
   "private": true,
   "scripts": {
     "setup": "bun scripts/setup.ts",
@@ -24,7 +24,9 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "typecheck": "turbo run typecheck && tsc --noEmit",
-    "test": "bun test scripts/ && turbo run test --concurrency=1",
+    "test": "bun test scripts/ && bun run --parallel test:database test:standalone",
+    "test:database": "turbo run test --concurrency=1 --filter=api --filter=bot --filter=worker --filter=@repo/db",
+    "test:standalone": "turbo run test --filter='!api' --filter='!bot' --filter='!worker' --filter='!@repo/db'",
     "test:coverage": "cd apps/api && bun run test:coverage",
     "db:generate": "bun --filter='@repo/db' run db:generate",
     "db:migrate": "bun --filter='@repo/db' run db:migrate",
@@ -39,6 +41,7 @@
   ],
   "overrides": {
     "@scalar/types": "0.16.2",
-    "@scalar/themes": "0.16.2"
+    "@scalar/themes": "0.16.2",
+    "body-parser": "^2.4.0"
   }
 }

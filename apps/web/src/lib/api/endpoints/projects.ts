@@ -116,6 +116,8 @@ export interface ProjectScaffold {
   viewer: ProjectViewer;
   // The caller's resolved permission matrix (owners get every flag).
   permissions: Permissions;
+  // Whether this project may have public links. Off, its links are closed.
+  sharingEnabled: boolean;
 }
 
 // The scaffold composed with its issues and the project's unfinished cycles, as

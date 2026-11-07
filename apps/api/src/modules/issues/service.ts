@@ -11,11 +11,15 @@ import {
   issueFieldOption,
   issueAttachment,
   issueKeyAlias,
+  issueWorklog,
   customField,
   customFieldOption,
   initiative,
   cycle,
+  team,
+  issueLink,
 } from '@repo/db';
+import { alias } from 'drizzle-orm/pg-core';
 import {
   and,
   eq,
@@ -32,10 +36,12 @@ import {
   or,
   sql,
   type SQL,
+  type SQLWrapper,
 } from 'drizzle-orm';
 import type { IssueQuery } from '#modules/agents/core/issue-query';
-import { iso, num, numOrNull, HttpError } from '#shared/lib';
+import { iso, num, numOrNull, shareLive, HttpError } from '#shared/lib';
 import type { ProjectRow } from '#modules/projects/service';
+import { projectRefSql } from '#modules/teams/ref';
 import { assertProjectFeature } from '#shared/access';
 import {
   getCustomFieldById,
@@ -71,6 +77,7 @@ import { getInitiativeProjectId } from '#modules/initiatives/service';
 import { cycleStatus, getCycleRef, type CycleStatus } from '#modules/cycles/service';
 import { getMembership } from '#modules/members/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
+import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 import { queueStatusRuns } from '#modules/agents/schedules/issue-runs';
 import { applySubtaskAutomation } from './automation';
 import { assertWipLimit, columnAutoAssignee, wipLimitBreach } from '#modules/columns/service';
@@ -141,6 +148,9 @@ export interface IssueRow {
   // activity) or only its title, description, state, type, priority, dates,
   // subtasks and links.
   shareExtended: boolean;
+  // When the share link stops working, or null when it never does. A link past
+  // its expiry reads as not shared (shareToken null) even before the sweep clears it.
+  shareExpiresAt: string | null;
   labelIds: number[];
   // Custom field values set on this issue, one entry per field that has a scalar
   // value or selected options (unset fields are omitted). Included so the planner
@@ -150,6 +160,7 @@ export interface IssueRow {
 }
 
 function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow {
+  const shared = row.shareToken !== null && shareLive(row.shareExpiresAt);
   return {
     id: row.id,
     projectId: row.projectId,
@@ -175,8 +186,9 @@ function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow 
     updatedAt: iso(row.updatedAt),
     archivedAt: row.archivedAt ? iso(row.archivedAt) : null,
     statusSince: iso(row.createdAt),
-    shareToken: row.shareToken,
-    shareExtended: row.shareExtended,
+    shareToken: shared ? row.shareToken : null,
+    shareExtended: shared && row.shareExtended,
+    shareExpiresAt: shared && row.shareExpiresAt ? iso(row.shareExpiresAt) : null,
     labelIds: [],
     fieldValues: [],
   };
@@ -185,20 +197,12 @@ function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow 
 // Sets each issue's statusSince to when it entered the column it is in now, leaving
 // the createdAt default (set by mapIssue) for an issue with no open stretch. One
 // query for the whole set. Mutates the passed issues in place.
-async function attachStatusSince(issues: IssueRow[]): Promise<void> {
+async function attachStatusSince(issues: IssueRow[], ids: number[] | SQLWrapper): Promise<void> {
   if (issues.length === 0) return;
   const rows = await db
     .select({ issueId: issueStatus.issueId, enteredAt: issueStatus.enteredAt })
     .from(issueStatus)
-    .where(
-      and(
-        inArray(
-          issueStatus.issueId,
-          issues.map((i) => i.id),
-        ),
-        isNull(issueStatus.leftAt),
-      ),
-    );
+    .where(and(inArray(issueStatus.issueId, ids), isNull(issueStatus.leftAt)));
   const byIssue = new Map(rows.map((r) => [r.issueId, iso(r.enteredAt)]));
   for (const i of issues) i.statusSince = byIssue.get(i.id) ?? i.statusSince;
 }
@@ -230,11 +234,7 @@ export async function listIssues(project: ProjectRow): Promise<IssueRow[]> {
     .where(and(eq(issue.projectId, project.id), isNull(issue.archivedAt)))
     .orderBy(issue.columnId, issue.position);
   const issues = rows.map((row) => mapIssue(row, project.key));
-  await attachLabels(issues);
-  await attachFieldValues(issues);
-  await attachStatusSince(issues);
-  await attachGroupings(issues);
-  await attachLoggedMinutes(issues);
+  await attachDetails(issues, { fieldValues: true, ids: projectIssueIds(project.id, false) });
   return issues;
 }
 
@@ -247,11 +247,7 @@ export async function listArchivedIssues(project: ProjectRow): Promise<IssueRow[
     .where(and(eq(issue.projectId, project.id), isNotNull(issue.archivedAt)))
     .orderBy(sql`${issue.archivedAt} desc`);
   const issues = rows.map((row) => mapIssue(row, project.key));
-  await attachLabels(issues);
-  await attachFieldValues(issues);
-  await attachStatusSince(issues);
-  await attachGroupings(issues);
-  await attachLoggedMinutes(issues);
+  await attachDetails(issues, { fieldValues: true, ids: projectIssueIds(project.id, true) });
   return issues;
 }
 
@@ -269,14 +265,19 @@ export interface IssueSearchHit {
   initiativeId: number | null;
   cycleId: number | null;
   parentId: number | null;
+  parent: { id: number; identifier: string; title: string } | null;
   assigneeUserId: string | null;
   delegateUserId: string | null;
   priority: string | null;
   dueDate: string | null;
+  estimatePoints: number | null;
+  estimateMinutes: number | null;
+  loggedMinutes: number;
   labelIds: number[];
   archived: boolean;
   createdAt: string;
   updatedAt: string;
+  statusSince: string;
   completedAt: string | null;
 }
 
@@ -292,19 +293,190 @@ const completedAt = sql<Date | null>`(
               AND p.state_type IS DISTINCT FROM 'completed'
               AND (p.entered_at, p.id) > (s.entered_at, s.id)))`.mapWith(issueStatus.enteredAt);
 
+// The same values attachStatusSince and attachLoggedMinutes give a full IssueRow.
+const statusSince = sql<Date>`coalesce(
+  (SELECT s.entered_at FROM ${issueStatus} s WHERE s.issue_id = ${issue}.id AND s.left_at IS NULL),
+  ${issue}.created_at)`.mapWith(issueStatus.enteredAt);
+const loggedMinutes = sql<number>`(
+  SELECT coalesce(sum(w.minutes), 0)::int FROM ${issueWorklog} w WHERE w.issue_id = ${issue}.id)`;
+const parentSequenceNumber = sql<number | null>`(
+  SELECT p.sequence_number FROM ${issue} p WHERE p.id = ${issue}.parent_id)`;
+const parentTitle = sql<string | null>`(
+  SELECT p.title FROM ${issue} p WHERE p.id = ${issue}.parent_id)`;
+
 // Escapes LIKE metacharacters so the query is matched literally (Postgres LIKE uses
 // '\' as the default escape character).
 function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, (c) => `\\${c}`);
 }
 
+// The issue number in a text query: a bare number, or "KEY-42".
+function parseIssueNumber(raw: string): { key: string | null; seq: number } | null {
+  if (/^\d+$/.test(raw)) return { key: null, seq: Number(raw) };
+  const m = raw.match(/^([A-Za-z][A-Za-z0-9]*)-(\d+)$/);
+  return m ? { key: m[1], seq: Number(m[2]) } : null;
+}
+
+// Text search: raw matches, case-insensitively, the title, description, scalar custom
+// field text values and select/multi_select option labels, or numberMatch.
+function textMatch(raw: string, numberMatch: SQL | undefined): SQL {
+  const pattern = `%${escapeLike(raw)}%`;
+  return or(
+    ilike(issue.title, pattern),
+    ilike(issue.description, pattern),
+    exists(
+      db
+        .select({ one: sql`1` })
+        .from(issueFieldValue)
+        .where(
+          and(eq(issueFieldValue.issueId, issue.id), ilike(issueFieldValue.valueText, pattern)),
+        ),
+    ),
+    exists(
+      db
+        .select({ one: sql`1` })
+        .from(issueFieldOption)
+        .innerJoin(customFieldOption, eq(customFieldOption.id, issueFieldOption.optionId))
+        .where(
+          and(eq(issueFieldOption.issueId, issue.id), ilike(customFieldOption.value, pattern)),
+        ),
+    ),
+    numberMatch,
+  )!;
+}
+
+function hitOrder(numberMatch: SQL | undefined): SQL[] {
+  const recent = sql`${issue.updatedAt} desc`;
+  return numberMatch ? [sql`case when ${numberMatch} then 0 else 1 end`, recent] : [recent];
+}
+
+const hitColumns = {
+  id: issue.id,
+  sequenceNumber: issue.sequenceNumber,
+  typeId: issue.typeId,
+  initiativeId: issue.initiativeId,
+  cycleId: issue.cycleId,
+  parentId: issue.parentId,
+  assigneeUserId: issue.assigneeUserId,
+  delegateUserId: issue.delegateUserId,
+  columnId: issue.columnId,
+  title: issue.title,
+  priority: issue.priority,
+  dueDate: issue.dueDate,
+  estimatePoints: issue.estimatePoints,
+  estimateMinutes: issue.estimateMinutes,
+  loggedMinutes,
+  archivedAt: issue.archivedAt,
+  createdAt: issue.createdAt,
+  updatedAt: issue.updatedAt,
+  statusSince,
+  completedAt,
+  parentSequenceNumber,
+  parentTitle,
+};
+
+type HitRow = Omit<
+  IssueSearchHit,
+  | 'identifier'
+  | 'parent'
+  | 'labelIds'
+  | 'archived'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'statusSince'
+  | 'completedAt'
+  | 'estimatePoints'
+> & {
+  archivedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  statusSince: Date;
+  completedAt: Date | null;
+  parentSequenceNumber: number | null;
+  parentTitle: string | null;
+  estimatePoints: string | null;
+};
+
+function toHit(
+  {
+    archivedAt,
+    createdAt,
+    updatedAt,
+    statusSince,
+    completedAt,
+    parentSequenceNumber,
+    parentTitle,
+    estimatePoints,
+    ...r
+  }: HitRow,
+  projectKey: string,
+): IssueSearchHit {
+  return {
+    ...r,
+    identifier: `${projectKey}-${r.sequenceNumber}`,
+    // A parent is always in the issue's own project, so it carries the same key.
+    parent:
+      r.parentId !== null && parentSequenceNumber !== null && parentTitle !== null
+        ? {
+            id: r.parentId,
+            identifier: `${projectKey}-${parentSequenceNumber}`,
+            title: parentTitle,
+          }
+        : null,
+    labelIds: [],
+    archived: archivedAt !== null,
+    createdAt: iso(createdAt),
+    updatedAt: iso(updatedAt),
+    statusSince: iso(statusSince),
+    completedAt: completedAt ? iso(completedAt) : null,
+    estimatePoints: numOrNull(estimatePoints),
+  };
+}
+
+type FieldFilters = Pick<
+  IssueQuery,
+  'assigneeUserId' | 'delegateUserId' | 'priority' | 'dueFrom' | 'dueTo'
+> & {
+  createdFrom?: Date;
+  createdTo?: Date;
+  updatedFrom?: Date;
+  updatedTo?: Date;
+};
+
+// The exact filters list_issues and the cross-project list share.
+function fieldConds(filters: FieldFilters): SQL[] {
+  const conds: SQL[] = [];
+  if (filters.assigneeUserId !== undefined)
+    conds.push(
+      filters.assigneeUserId === null
+        ? isNull(issue.assigneeUserId)
+        : eq(issue.assigneeUserId, filters.assigneeUserId),
+    );
+  if (filters.delegateUserId !== undefined)
+    conds.push(
+      filters.delegateUserId === null
+        ? isNull(issue.delegateUserId)
+        : eq(issue.delegateUserId, filters.delegateUserId),
+    );
+  if (filters.priority !== undefined)
+    conds.push(
+      filters.priority === null ? isNull(issue.priority) : eq(issue.priority, filters.priority),
+    );
+  // A null due date never falls in a range, so gte/lte alone exclude it.
+  if (filters.dueFrom !== undefined) conds.push(gte(issue.dueDate, filters.dueFrom));
+  if (filters.dueTo !== undefined) conds.push(lte(issue.dueDate, filters.dueTo));
+  if (filters.createdFrom) conds.push(gte(issue.createdAt, filters.createdFrom));
+  if (filters.createdTo) conds.push(lt(issue.createdAt, filters.createdTo));
+  if (filters.updatedFrom) conds.push(gte(issue.updatedAt, filters.updatedFrom));
+  if (filters.updatedTo) conds.push(lt(issue.updatedAt, filters.updatedTo));
+  return conds;
+}
+
 // Server-side issue read backing two routes: text search (search_issues) and the
-// filtered list (list_issues). Text search (filters.query) matches, case-
-// insensitively, the title, description, the issue number (a bare number, or
-// "KEY-42" for this project), scalar custom field text values, and
-// select/multi_select option labels. The other fields apply as exact filters (used
-// by list_issues). includeArchived adds archived issues to the result (search always
-// sets it; list defaults to active only).
+// filtered list (list_issues). Text search (filters.query) is textMatch, and also
+// matches the issue number: a bare number, or "KEY-42" for this project. The other
+// fields apply as exact filters (used by list_issues). includeArchived adds archived
+// issues to the result (search always sets it; list defaults to active only).
 export async function searchIssues(
   project: ProjectRow,
   filters: IssueQuery & {
@@ -319,40 +491,12 @@ export async function searchIssues(
   if (!opts.includeArchived) conds.push(isNull(issue.archivedAt));
 
   const raw = filters.query?.trim();
-  let seqMatch: number | null = null;
+  let numberMatch: SQL | undefined;
   if (raw) {
-    const pattern = `%${escapeLike(raw)}%`;
-    // Recognise the issue number: a bare number, or "KEY-42" whose key matches this
-    // project. Matched against sequence_number (the identifier is not a column).
-    if (/^\d+$/.test(raw)) {
-      seqMatch = Number(raw);
-    } else {
-      const m = raw.match(/^([A-Za-z][A-Za-z0-9]*)-(\d+)$/);
-      if (m && m[1].toLowerCase() === project.key.toLowerCase()) seqMatch = Number(m[2]);
-    }
-    const textConds: SQL[] = [
-      ilike(issue.title, pattern),
-      ilike(issue.description, pattern),
-      exists(
-        db
-          .select({ one: sql`1` })
-          .from(issueFieldValue)
-          .where(
-            and(eq(issueFieldValue.issueId, issue.id), ilike(issueFieldValue.valueText, pattern)),
-          ),
-      ),
-      exists(
-        db
-          .select({ one: sql`1` })
-          .from(issueFieldOption)
-          .innerJoin(customFieldOption, eq(customFieldOption.id, issueFieldOption.optionId))
-          .where(
-            and(eq(issueFieldOption.issueId, issue.id), ilike(customFieldOption.value, pattern)),
-          ),
-      ),
-    ];
-    if (seqMatch !== null) textConds.push(eq(issue.sequenceNumber, seqMatch));
-    conds.push(or(...textConds)!);
+    const number = parseIssueNumber(raw);
+    if (number && (number.key === null || number.key.toLowerCase() === project.key.toLowerCase()))
+      numberMatch = eq(issue.sequenceNumber, number.seq);
+    conds.push(textMatch(raw, numberMatch));
   }
 
   // Exact filters, mirroring matchesIssue: undefined skips the filter, null matches
@@ -374,22 +518,7 @@ export async function searchIssues(
     conds.push(
       filters.parentId === null ? isNull(issue.parentId) : eq(issue.parentId, filters.parentId),
     );
-  if (filters.assigneeUserId !== undefined)
-    conds.push(
-      filters.assigneeUserId === null
-        ? isNull(issue.assigneeUserId)
-        : eq(issue.assigneeUserId, filters.assigneeUserId),
-    );
-  if (filters.delegateUserId !== undefined)
-    conds.push(
-      filters.delegateUserId === null
-        ? isNull(issue.delegateUserId)
-        : eq(issue.delegateUserId, filters.delegateUserId),
-    );
-  if (filters.priority !== undefined)
-    conds.push(
-      filters.priority === null ? isNull(issue.priority) : eq(issue.priority, filters.priority),
-    );
+  conds.push(...fieldConds(filters));
   // labelIds is AND: the issue must carry every supplied label.
   for (const labelId of filters.labelIds ?? []) {
     conds.push(
@@ -401,67 +530,161 @@ export async function searchIssues(
       ),
     );
   }
-  // A null due date never falls in a range, so gte/lte alone exclude it.
-  if (filters.dueFrom !== undefined) conds.push(gte(issue.dueDate, filters.dueFrom));
-  if (filters.dueTo !== undefined) conds.push(lte(issue.dueDate, filters.dueTo));
-  if (filters.createdFrom) conds.push(gte(issue.createdAt, filters.createdFrom));
-  if (filters.createdTo) conds.push(lt(issue.createdAt, filters.createdTo));
-  if (filters.updatedFrom) conds.push(gte(issue.updatedAt, filters.updatedFrom));
-  if (filters.updatedTo) conds.push(lt(issue.updatedAt, filters.updatedTo));
 
-  // Exact number match first (if any), then most recently updated.
-  const orderBy =
-    seqMatch !== null
-      ? [
-          sql`case when ${issue.sequenceNumber} = ${seqMatch} then 0 else 1 end`,
-          sql`${issue.updatedAt} desc`,
-        ]
-      : [sql`${issue.updatedAt} desc`];
+  if (filters.blocked) {
+    const blocker = alias(issue, 'blocker');
+    const blockerColumn = alias(projectColumn, 'blocker_column');
+    conds.push(
+      exists(
+        db
+          .select({ one: sql`1` })
+          .from(issueLink)
+          .innerJoin(blocker, eq(blocker.id, issueLink.sourceIssueId))
+          .innerJoin(blockerColumn, eq(blockerColumn.id, blocker.columnId))
+          .where(
+            and(
+              eq(issueLink.targetIssueId, issue.id),
+              eq(issueLink.kind, 'blocks'),
+              isNull(blocker.archivedAt),
+              notInArray(blockerColumn.stateType, ['completed', 'canceled']),
+            ),
+          ),
+      ),
+    );
+  }
 
   const base = db
-    .select({
-      id: issue.id,
-      sequenceNumber: issue.sequenceNumber,
-      typeId: issue.typeId,
-      initiativeId: issue.initiativeId,
-      cycleId: issue.cycleId,
-      parentId: issue.parentId,
-      assigneeUserId: issue.assigneeUserId,
-      delegateUserId: issue.delegateUserId,
-      columnId: issue.columnId,
-      title: issue.title,
-      priority: issue.priority,
-      dueDate: issue.dueDate,
-      archivedAt: issue.archivedAt,
-      createdAt: issue.createdAt,
-      updatedAt: issue.updatedAt,
-      completedAt,
-    })
+    .select(hitColumns)
     .from(issue)
     .where(and(...conds))
-    .orderBy(...orderBy);
+    .orderBy(...hitOrder(numberMatch));
   const rows = filters.limit !== undefined ? await base.limit(filters.limit) : await base;
 
-  const hits: IssueSearchHit[] = rows.map((r) => ({
-    id: r.id,
-    sequenceNumber: r.sequenceNumber,
-    identifier: `${project.key}-${r.sequenceNumber}`,
-    title: r.title,
-    columnId: r.columnId,
-    typeId: r.typeId,
-    initiativeId: r.initiativeId,
-    cycleId: r.cycleId,
-    parentId: r.parentId,
-    assigneeUserId: r.assigneeUserId,
-    delegateUserId: r.delegateUserId,
-    priority: r.priority,
-    dueDate: r.dueDate,
-    labelIds: [],
-    archived: r.archivedAt !== null,
-    createdAt: iso(r.createdAt),
-    updatedAt: iso(r.updatedAt),
-    completedAt: r.completedAt ? iso(r.completedAt) : null,
-  }));
+  const hits = rows.map((r) => toHit(r, project.key));
+  await attachLabels(hits);
+  return hits;
+}
+
+export interface CrossProjectIssueHit extends IssueSearchHit {
+  projectId: number;
+  projectRef: string;
+  projectKey: string;
+  projectName: string;
+  teamName: string;
+}
+
+const crossProjectHitColumns = {
+  ...hitColumns,
+  projectId: projectTable.id,
+  projectRef: projectRefSql,
+  projectKey: projectTable.key,
+  projectName: projectTable.name,
+  teamName: team.name,
+};
+
+function toCrossProjectHit({
+  projectId,
+  projectRef,
+  projectKey,
+  projectName,
+  teamName,
+  ...r
+}: HitRow & Omit<CrossProjectIssueHit, keyof IssueSearchHit>): CrossProjectIssueHit {
+  return { ...toHit(r, projectKey), projectId, projectRef, projectKey, projectName, teamName };
+}
+
+// Text search across the given projects, archived issues included, at most
+// perProjectLimit hits from each project. "KEY-42" matches issue 42 of every listed
+// project whose key is KEY, since a key is unique only within its team.
+export async function searchIssuesInProjects(
+  projectIds: number[],
+  query: string,
+  { limit, perProjectLimit }: { limit: number; perProjectLimit: number },
+): Promise<CrossProjectIssueHit[]> {
+  const raw = query.trim();
+  if (!projectIds.length || !raw) return [];
+  const number = parseIssueNumber(raw);
+  const numberMatch = number
+    ? and(
+        eq(issue.sequenceNumber, number.seq),
+        number.key === null
+          ? undefined
+          : sql`lower(${projectTable.key}) = ${number.key.toLowerCase()}`,
+      )
+    : undefined;
+  const order = hitOrder(numberMatch);
+  // Only the id and the rank: the window sees every match, the hit columns are read
+  // for the rows that pass the cap.
+  const ranked = db
+    .select({
+      id: issue.id,
+      rank: sql<number>`row_number() over (partition by ${issue.projectId} order by ${sql.join(order, sql`, `)})`.as(
+        'rank',
+      ),
+    })
+    .from(issue)
+    .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
+    .where(and(inArray(issue.projectId, projectIds), textMatch(raw, numberMatch)))
+    .as('ranked');
+  const rows = await db
+    .select(crossProjectHitColumns)
+    .from(issue)
+    .innerJoin(ranked, eq(ranked.id, issue.id))
+    .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
+    .innerJoin(team, eq(team.id, projectTable.teamId))
+    .where(lte(ranked.rank, perProjectLimit))
+    .orderBy(...order)
+    .limit(limit);
+  const hits = rows.map(toCrossProjectHit);
+  await attachLabels(hits);
+  return hits;
+}
+
+export const ISSUE_STATE_TYPES = [
+  'backlog',
+  'unstarted',
+  'started',
+  'completed',
+  'canceled',
+] as const;
+export type IssueStateType = (typeof ISSUE_STATE_TYPES)[number];
+
+// The filtered list over the given projects, most recently updated first. The ids it
+// takes (cycles, parents) are global, so they need no project to resolve against.
+export async function listIssuesInProjects(
+  projectIds: number[],
+  filters: FieldFilters & {
+    cycleIds?: number[];
+    parentIds?: number[];
+    stateTypes?: IssueStateType[];
+    limit: number;
+  },
+  opts: { includeArchived?: boolean } = {},
+): Promise<CrossProjectIssueHit[]> {
+  if (!projectIds.length) return [];
+  const conds: SQL[] = [inArray(issue.projectId, projectIds), ...fieldConds(filters)];
+  if (!opts.includeArchived) conds.push(isNull(issue.archivedAt));
+  if (filters.cycleIds) conds.push(inArray(issue.cycleId, filters.cycleIds));
+  if (filters.parentIds) conds.push(inArray(issue.parentId, filters.parentIds));
+  if (filters.stateTypes)
+    conds.push(
+      inArray(
+        issue.columnId,
+        db
+          .select({ id: projectColumn.id })
+          .from(projectColumn)
+          .where(inArray(projectColumn.stateType, filters.stateTypes)),
+      ),
+    );
+  const rows = await db
+    .select(crossProjectHitColumns)
+    .from(issue)
+    .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
+    .innerJoin(team, eq(team.id, projectTable.teamId))
+    .where(and(...conds))
+    .orderBy(...hitOrder(undefined))
+    .limit(filters.limit);
+  const hits = rows.map(toCrossProjectHit);
   await attachLabels(hits);
   return hits;
 }
@@ -512,7 +735,7 @@ export async function restoreIssue(
 // { id, title, status } / { id, name, status } in place. Both hang off the same issue rows, so one
 // query carries them; an issue linked to neither keeps the nulls mapIssue set.
 // Rendering those names on a board card needs no separate scaffold lookup this way.
-async function attachGroupings(issues: IssueRow[]): Promise<void> {
+async function attachGroupings(issues: IssueRow[], ids: number[] | SQLWrapper): Promise<void> {
   if (issues.length === 0) return;
   const rows = await db
     .select({
@@ -530,13 +753,7 @@ async function attachGroupings(issues: IssueRow[]): Promise<void> {
     .leftJoin(initiative, eq(initiative.id, issue.initiativeId))
     .leftJoin(cycle, eq(cycle.id, issue.cycleId))
     .where(
-      and(
-        inArray(
-          issue.id,
-          issues.map((i) => i.id),
-        ),
-        or(isNotNull(issue.initiativeId), isNotNull(issue.cycleId)),
-      ),
+      and(inArray(issue.id, ids), or(isNotNull(issue.initiativeId), isNotNull(issue.cycleId))),
     );
   const byIssue = new Map(rows.map((r) => [r.issueId, r]));
   for (const i of issues) {
@@ -556,21 +773,49 @@ async function attachGroupings(issues: IssueRow[]): Promise<void> {
   }
 }
 
+// The ids of a project's active or archived issues, as a subquery. A whole board
+// selects its rows by it rather than by a parameter per issue.
+function projectIssueIds(projectId: number, archived: boolean): SQLWrapper {
+  return db
+    .select({ id: issue.id })
+    .from(issue)
+    .where(
+      and(
+        eq(issue.projectId, projectId),
+        archived ? isNotNull(issue.archivedAt) : isNull(issue.archivedAt),
+      ),
+    );
+}
+
+// Fills in what an issue row leaves out: its labels, when it entered its column, its
+// initiative and cycle, the time logged on it, and its field values when asked for.
+// The reads do not depend on each other, so they run at once. `ids` selects the same
+// issues as the list does.
+async function attachDetails(
+  issues: IssueRow[],
+  opts: { fieldValues?: boolean; ids?: SQLWrapper } = {},
+) {
+  const ids = opts.ids ?? issues.map((i) => i.id);
+  await Promise.all([
+    attachLabels(issues, ids),
+    opts.fieldValues ? attachFieldValues(issues, ids) : undefined,
+    attachStatusSince(issues, ids),
+    attachGroupings(issues, ids),
+    attachLoggedMinutes(issues, ids),
+  ]);
+}
+
 // Loads every issue's label ids and merges them onto the issues in place. Generic
 // so it also enriches the lighter IssueSearchHit rows, which carry id + labelIds.
 async function attachLabels<T extends { id: number; labelIds: number[] }>(
   issues: T[],
+  ids: number[] | SQLWrapper = issues.map((i) => i.id),
 ): Promise<void> {
   if (issues.length === 0) return;
   const rows = await db
     .select({ issueId: issueLabel.issueId, labelId: issueLabel.labelId })
     .from(issueLabel)
-    .where(
-      inArray(
-        issueLabel.issueId,
-        issues.map((i) => i.id),
-      ),
-    );
+    .where(inArray(issueLabel.issueId, ids));
   const byIssue = new Map<number, number[]>();
   for (const r of rows) {
     let list = byIssue.get(r.issueId);
@@ -584,9 +829,11 @@ async function attachLabels<T extends { id: number; labelIds: number[] }>(
 // selected option ids) and merges them onto the issues. A field with no scalar
 // value and no options is omitted, so unset fields add nothing to the payload.
 // Mutates the passed issues in place.
-async function attachFieldValues(issues: IssueRow[]): Promise<void> {
+async function attachFieldValues(
+  issues: IssueRow[],
+  issueIds: number[] | SQLWrapper,
+): Promise<void> {
   if (issues.length === 0) return;
-  const issueIds = issues.map((i) => i.id);
   const [scalarRows, optionRows] = await Promise.all([
     db
       .select({
@@ -684,10 +931,7 @@ export async function getIssues(ids: number[]): Promise<IssueRow[]> {
     .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
     .where(inArray(issue.id, ids));
   const issues = rows.map((row) => mapIssue(row.issue, row.projectKey));
-  await attachLabels(issues);
-  await attachStatusSince(issues);
-  await attachGroupings(issues);
-  await attachLoggedMinutes(issues);
+  await attachDetails(issues);
   return issues;
 }
 
@@ -723,10 +967,7 @@ export async function getIssueBySequence(
     );
   if (!rows[0]) return null;
   const mapped = mapIssue(rows[0].issue, rows[0].projectKey);
-  await attachLabels([mapped]);
-  await attachStatusSince([mapped]);
-  await attachGroupings([mapped]);
-  await attachLoggedMinutes([mapped]);
+  await attachDetails([mapped]);
   return mapped;
 }
 
@@ -1167,9 +1408,11 @@ async function enqueueDelegateRun(after: IssueRow, actor?: ActivityActor): Promi
 }
 
 // Deletes an issue and everything attached to it. Field options/values, labels,
-// attachments, and activity all go by their ON DELETE CASCADE on issue_id. Returns
-// the deleted attachment rows so the caller can remove their objects from the store.
-// Returns null if the issue did not exist.
+// attachments, and activity all go by their ON DELETE CASCADE on issue_id; the agents'
+// conversation threads about it live outside the cascades and are deleted after. Unlike
+// archiving, this cannot be undone, so nothing would ever read those threads again.
+// Returns the deleted attachment rows so the caller can remove their objects from the
+// store. Returns null if the issue did not exist.
 export async function deleteIssue(
   issueId: number,
   actorUserId?: string | null,
@@ -1186,6 +1429,7 @@ export async function deleteIssue(
     return removed.length ? attachmentRows.map(mapAttachment) : null;
   });
   if (!attachments) return null;
+  await deleteThreadsWhere({ issueId });
   await emitIssueEvent('issue.deleted', deleted, actorUserId);
   return attachments;
 }

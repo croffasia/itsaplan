@@ -486,9 +486,8 @@ export async function listMemberCandidates(
 }
 
 // Sets a member's owner/member flag and custom role in one update. Promoting to
-// owner clears the role (owners bypass roles), so callers pass roleId null there;
-// a member keeps roleId (null falls back to the default role). Returns false when
-// the user is not a member of the project.
+// owner clears the role (owners bypass roles), so callers pass roleId null there.
+// Returns false when the user is not a member of the project.
 export async function setMembership(
   projectId: number,
   userId: string,

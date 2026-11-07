@@ -30,6 +30,9 @@ type InvocationEvent = 'agent.run' | 'agent.chat' | 'ping';
 // The receiver's response body, cut to what the test result shows.
 const MAX_RESPONSE_CHARS = 2000;
 
+// Runs, and chat answers, sent to one endpoint in one pass.
+const BATCH_SIZE = 5;
+
 export interface InvocationOutcome {
   ok: boolean;
   // No answer in time. The endpoint may still be working on the request, so the work
@@ -165,7 +168,7 @@ async function agentsWithDueWork(): Promise<string[]> {
 // together.
 async function takeBatch<T>(take: () => Promise<T | null>): Promise<T[]> {
   const items: T[] = [];
-  for (let i = 0; i < agentRunConfig.batchSize(); i++) {
+  for (let i = 0; i < BATCH_SIZE; i++) {
     const item = await take();
     if (!item) break;
     items.push(item);

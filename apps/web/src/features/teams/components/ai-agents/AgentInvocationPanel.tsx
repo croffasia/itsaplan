@@ -48,7 +48,8 @@ export default function AgentInvocationPanel({
       {!agent || !saved ? (
         <p className="text-xs text-muted-foreground">{t('invocationSecretOnSave')}</p>
       ) : (
-        can('edit') && (
+        can('edit') &&
+        agent.canManage && (
           <>
             <AgentInvocationSecret agent={agent} />
             <AgentInvocationTest agentId={agent.id} />

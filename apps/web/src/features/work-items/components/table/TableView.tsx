@@ -8,6 +8,7 @@ import {
   sortIssues,
   type WorkItemsViewProps,
 } from '@/utils/project';
+import { usePermissions } from '@/hooks/usePermissions';
 import { usePersistedSet } from '@/hooks/usePersistedSet';
 import { useTableColumnWidths } from '../../hooks/useTableColumnWidths';
 import { useIssueReorder } from '../../hooks/useIssueReorder';
@@ -20,6 +21,7 @@ import {
   type FlatItem,
 } from '../../utils/table';
 import { IssueDragOverlay } from '../shared/IssueDragOverlay';
+import { WorkItemsEmpty } from '../shared/WorkItemsEmpty';
 import { TableColumnHeader } from './TableColumnHeader';
 import { TableSectionHeader } from './TableSectionHeader';
 import { TableSubHeader } from './TableSubHeader';
@@ -42,6 +44,8 @@ export default function TableView({
   widthScope,
 }: TableViewProps) {
   const groupLabels = useGroupLabels();
+  const { can } = usePermissions();
+  const cellsReadOnly = !!readOnly || !can('work_items', 'edit');
   const reorder = useIssueReorder({ project, sort: settings.sort, readOnly });
   const collapsed = usePersistedSet(
     collapsedKey(project.project.id, settings.group, settings.subgroup),
@@ -77,6 +81,9 @@ export default function TableView({
     getScrollElement: () => scrollRef.current,
     estimateSize: () => 40,
     overscan: 12,
+    // A scroll step renders in a normal React update, not in flushSync inside the
+    // scroll event, which blocks every scroll event on a slow CPU.
+    useFlushSync: false,
     getItemKey: (index) => {
       const it = items[index];
       if (it.kind === 'header') return `h${it.group.key}`;
@@ -128,6 +135,7 @@ export default function TableView({
             indented={subgrouped}
             gridTemplate={gridTemplate}
             dropDisabled={!reorder.manualOrder && grouped}
+            readOnly={cellsReadOnly}
             onDrop={(draggedId) =>
               reorder.moveIssue(draggedId, item.assign, item.bucket, item.index)
             }
@@ -137,6 +145,8 @@ export default function TableView({
         );
     }
   }
+
+  if (items.length === 0) return <WorkItemsEmpty filters={filters} />;
 
   return (
     <DndContext

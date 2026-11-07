@@ -6,12 +6,10 @@ import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
-import { useShellRoute } from '@/hooks/useShellRoute';
-import { useRunnerQueueQuery } from '@/services/runnerQueue.service';
-import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
+import { useRunnerQueueQuery, useRunsInFlightQuery } from '@/services/runnerQueue.service';
+import type { RunnerQueueRun, RunnerQueueScope } from '@/lib/api/endpoints/runnerQueue';
 import { qk } from '@/services/queryKeys';
 import { revScope } from '@/utils/revScopes';
-import { runnerQueueRunPath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import RunnerQueueActiveCard from './components/RunnerQueueActiveCard';
 import RunnerQueueHistoryRow from './components/RunnerQueueHistoryRow';
@@ -20,12 +18,19 @@ import RunnerQueueOfflineNotice from './components/RunnerQueueOfflineNotice';
 const isActive = (run: RunnerQueueRun) =>
   run.executionState === 'queued' || run.executionState === 'running';
 
-export default function RunnerQueuePage({ children }: { children: ReactNode }) {
+export default function RunnerQueuePage({
+  scope,
+  children,
+}: {
+  scope: RunnerQueueScope;
+  children: ReactNode;
+}) {
   const params = useParams<{ runId?: string }>();
   const selectedId = params.runId ? Number(params.runId) : null;
-  const projectKey = useShellRoute().projectKey ?? '';
   const t = useTranslations('issue.agentRuns');
-  const query = useRunnerQueueQuery();
+  const query = useRunnerQueueQuery(scope.api);
+  const inFlight = useRunsInFlightQuery(scope.api).data;
+  const acrossProjects = scope.acrossProjects ?? false;
   useLiveRefresh({ scope: revScope.runnerQueue, targets: [qk.runnerQueue] });
   const pages = query.isError ? undefined : query.data?.pages;
   const data = pages?.[0];
@@ -41,7 +46,16 @@ export default function RunnerQueuePage({ children }: { children: ReactNode }) {
         )}
       >
         <div className="flex items-center justify-between gap-2 p-4 pb-3">
-          <h1 className="text-base font-semibold">{t('queueTitle')}</h1>
+          <div className="min-w-0">
+            <h1 className="text-base font-semibold">{t('queueTitle')}</h1>
+            {inFlight && (
+              <p className="text-xs text-muted-foreground">
+                {inFlight.limit > 0
+                  ? t('internalInFlight', { running: inFlight.running, limit: inFlight.limit })
+                  : t('internalInFlightNoLimit', { running: inFlight.running })}
+              </p>
+            )}
+          </div>
           <Button
             variant="outline"
             size="icon-sm"
@@ -74,8 +88,9 @@ export default function RunnerQueuePage({ children }: { children: ReactNode }) {
                   <RunnerQueueActiveCard
                     key={run.id}
                     run={run}
-                    href={runnerQueueRunPath(projectKey, run.id)}
+                    href={`${scope.path}/${run.id}`}
                     selected={run.id === selectedId}
+                    acrossProjects={acrossProjects}
                   />
                 ))}
               </div>
@@ -90,8 +105,9 @@ export default function RunnerQueuePage({ children }: { children: ReactNode }) {
                 <RunnerQueueHistoryRow
                   key={run.id}
                   run={run}
-                  href={runnerQueueRunPath(projectKey, run.id)}
+                  href={`${scope.path}/${run.id}`}
                   selected={run.id === selectedId}
+                  acrossProjects={acrossProjects}
                 />
               ))}
             </section>

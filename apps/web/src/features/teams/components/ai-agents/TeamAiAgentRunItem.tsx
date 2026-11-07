@@ -11,6 +11,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import TeamAiAgentRunStatus from './TeamAiAgentRunStatus';
 
 function runSubject(r: AgentRun, t: ReturnType<typeof useTranslations<'teams.agents'>>): string {
+  if (r.documentId != null) {
+    return [t('documentTask'), r.documentTitle?.trim()].filter(Boolean).join(' · ');
+  }
   if (r.issueId == null) return r.trigger === 'manual' ? t('manualTask') : t('scheduledTask');
   if (!r.issueIdentifier) return `issue #${r.issueId}`;
   return `${r.issueIdentifier}${r.issueTitle ? ` · ${r.issueTitle}` : ''}`;

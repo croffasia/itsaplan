@@ -105,6 +105,7 @@
     "copied": "복사됨",
     "copyPrompt": "프롬프트 복사",
     "sharedPublicly": "공개 공유 중",
+    "sharedThroughDocument": "문서를 통해 공개됨",
     "sharePublicly": "공개 공유",
     "restore": "이슈 복원",
     "archive": "이슈 보관",
@@ -248,6 +249,8 @@
     "toSend": "전송",
     "unknownAuthor": "알 수 없음",
     "goToLastComment": "마지막 댓글로 이동",
+    "copyLink": "링크 복사",
+    "linkCopied": "링크 복사됨",
     "edit": "편집",
     "edited": "편집됨",
     "deleteComment": "댓글 삭제",
@@ -268,7 +271,9 @@
     "no": "아니요",
     "time": "시간",
     "startTime": "시작 시간",
-    "endTime": "종료 시간"
+    "endTime": "종료 시간",
+    "pickOption": "옵션 선택…",
+    "noOption": "옵션 없음"
   },
   "editor": {
     "descriptionPlaceholder": "설명 추가…"
@@ -434,7 +439,7 @@
   "feedOldest": "오래된순",
   "feedChangeOrder": "정렬 순서 변경",
   "feedRunToggle": "유사한 변경 사항 표시",
-  "shareUnavailable": "공유된 이슈를 사용할 수 없습니다. 공유 링크가 취소되었을 수 있습니다.",
+  "shareUnavailable": "공유된 이슈를 사용할 수 없습니다. 공유 링크가 취소되었거나 만료되었을 수 있습니다.",
   "fieldSelects": {
     "changeState": "상태 변경…",
     "changeType": "유형 변경…",
@@ -477,7 +482,7 @@
     "noLabels": "없음"
   },
   "agentRuns": {
-    "title": "Agent runs",
+    "title": "에이전트 실행",
     "refresh": "Refresh",
     "loading": "Loading runs…",
     "loadError": "Could not load run history. Try refreshing.",
@@ -516,7 +521,9 @@
     "queued": "Waiting",
     "running": "Running",
     "queuedHint": "Waiting for a runner, a retry or its scheduled start.",
-    "queueTitle": "Runner queue",
+    "queueTitle": "에이전트 실행",
+    "internalInFlight": "워크스페이스 내부 에이전트: {limit}개 중 {running}개 실행 중",
+    "internalInFlightNoLimit": "워크스페이스 내부 에이전트: {running}개 실행 중",
     "queueEmpty": "No runs yet.",
     "activeSection": "In progress",
     "historySection": "History",

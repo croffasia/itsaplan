@@ -66,7 +66,7 @@ export default function AuthLoginForm({ title }: { title?: string }) {
   // complete comes back here as a redirect rather than as a rejected promise, so its
   // reason arrives in the query string.
   const redirectErrorMessage = useRedirectError();
-  const redirectError = redirectErrorMessage(params.get('error'), params.get('error_description'));
+  const redirectError = redirectErrorMessage(params.get('error'));
   // The confirmation link carries ?verified=1 and adds ?error=… when it failed, so
   // the success line only stands while there is no error next to it.
   const justVerified = params.get('verified') === '1' && !redirectError;

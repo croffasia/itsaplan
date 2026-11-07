@@ -43,7 +43,9 @@ async function countsFor(initiativeIds: number[]): Promise<Map<number, Initiativ
   const rows = await db
     .select({
       initiativeId: issue.initiativeId,
-      total: sql<number>`count(*)`,
+      // An archived issue left unfinished is off the board, so it is not work the
+      // initiative still has to do; a finished one still counts.
+      total: sql<number>`count(*) filter (where ${issue.archivedAt} is null or ${projectColumn.stateType} in ('completed', 'canceled'))`,
       completed: sql<number>`count(*) filter (where ${projectColumn.stateType} = 'completed')`,
       canceled: sql<number>`count(*) filter (where ${projectColumn.stateType} = 'canceled')`,
     })

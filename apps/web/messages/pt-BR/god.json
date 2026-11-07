@@ -170,6 +170,20 @@
     },
     "joined": "entrou em {date}"
   },
+  "roles": {
+    "newRole": "Nova função",
+    "empty": "Ainda não há funções do sistema.",
+    "default": "Padrão",
+    "defaultUndeletable": "A função padrão não pode ser excluída",
+    "columns": {
+      "role": "Função",
+      "permissions": "Permissões"
+    },
+    "edit": "Editar função",
+    "delete": "Excluir função",
+    "deleteTitle": "Excluir a função \"{name}\"",
+    "deleteDescription": "Esta ação não pode ser desfeita."
+  },
   "general": {
     "saved": "Padrões de projeto salvos",
     "projectDefaults": "Padrões de projeto",
@@ -179,8 +193,21 @@
     "workspaces": "Workspaces",
     "personalWorkspaces": "Um workspace para cada pessoa",
     "personalWorkspacesHint": "Cada conta recebe um workspace próprio com o nome da pessoa. Desativado, as pessoas trabalham apenas nos workspaces aos quais foram adicionadas.",
+    "invites": "Convites",
+    "inviteSearch": "Sugerir pessoas ao convidar",
+    "inviteSearchHint": "Quando um proprietário ou gerente de equipe digita um endereço na janela de convite, as contas correspondentes de todos os workspaces desta instância aparecem com nome e email. Desativado, é preciso digitar o endereço completo.",
+    "invitesSaved": "Configurações de convites salvas",
+    "sharing": "Links públicos",
+    "sharingEnabled": "Permitir links públicos",
+    "sharingEnabledHint": "Documentos, issues e visualizações podem ser compartilhados por link, conforme cada workspace permitir. Desativado, ninguém pode compartilhar e os links existentes deixam de abrir até ser ativado de novo.",
+    "sharingSaved": "Configurações de links públicos salvas",
     "agents": "Agentes",
     "agentsSaved": "Configurações de agentes salvas",
+    "embedding": "Incorporação",
+    "embedSites": "Sites confiáveis",
+    "embedSitesHint": "Issues e quadros compartilhados publicamente abrem em um frame só nesses sites. Separe os sites com vírgulas.",
+    "embedSitesInvalid": "Digite cada site como https://example.com, sem caminho.",
+    "embedSaved": "Sites confiáveis salvos",
     "traceRetention": "Manter rastros de execução",
     "traceRetentionHint": "Cada execução de agente registra as chamadas ao modelo e às ferramentas. Os painéis de consumo contam só as execuções mantidas.",
     "traceDays": "{days, plural, one {# dia} other {# dias}}",
@@ -188,7 +215,10 @@
     "maxRunTime": "Tempo máximo de execução",
     "maxRunTimeHint": "Quanto tempo uma execução de agente pode levar antes de ser interrompida e salva como falha. O limite próprio de um agente não pode ultrapassá-lo.",
     "runMinutes": "{minutes, plural, one {# minuto} other {# minutos}}",
-    "runSeconds": "{seconds} s"
+    "runSeconds": "{seconds} s",
+    "concurrentRuns": "Execuções simultâneas",
+    "concurrentRunsHint": "Quantas execuções de agentes rodam ao mesmo tempo nesta instância. As demais esperam na fila. Chats e agentes externos não contam. 0 significa sem limite.",
+    "concurrentRunsInvalid": "Informe um número inteiro entre 0 e {max}."
   },
   "authentication": {
     "saved": "Configurações de autenticação salvas",
@@ -297,6 +327,117 @@
     "clientSecret": "Segredo do cliente",
     "clientSecretPlaceholder": "Segredo do registro de aplicativo",
     "microsoft365Hint": "Entra como um registro de aplicativo do Entra ID em vez da senha da caixa de correio, que pode manter o MFA. O aplicativo precisa da permissão de aplicativo SMTP.SendAsApp do Office 365 Exchange Online com consentimento de administrador, acesso a esta caixa no Exchange e SMTP AUTH ativado na caixa."
+  },
+  "emailTemplates": {
+    "saved": "Modelos de e-mail salvos",
+    "unsaved": "Alterações não salvas",
+    "blankText": "Preencha o assunto ou o texto que falta para salvar",
+    "emails": "E-mails",
+    "layout": "Layout",
+    "edited": "Editado",
+    "subject": "Assunto",
+    "text": "Texto",
+    "button": "Botão",
+    "formatting": "Formatação",
+    "heading1": "Título 1",
+    "heading2": "Título 2",
+    "bold": "Negrito",
+    "italic": "Itálico",
+    "strikethrough": "Tachado",
+    "link": "Link",
+    "bulletedList": "Lista com marcadores",
+    "numberedList": "Lista numerada",
+    "quote": "Citação",
+    "boldSample": "negrito",
+    "italicSample": "itálico",
+    "strikeSample": "texto",
+    "linkSample": "texto do link",
+    "unknownVariables": "{count, plural, one {Variável desconhecida: {names}} other {Variáveis desconhecidas: {names}}}",
+    "removeUnknownVariables": "Remova as variáveis desconhecidas para salvar",
+    "reset": "Voltar ao padrão",
+    "test": "Enviar teste",
+    "testing": "Enviando…",
+    "testSent": "Enviado para {email}",
+    "testNeedsProvider": "Configure o provedor de e-mail primeiro",
+    "layoutHtml": "HTML do layout",
+    "layoutCss": "CSS do layout",
+    "placeholders": "Marcadores",
+    "variables": "Variáveis",
+    "required": "Obrigatório",
+    "requiredPlaceholders": "Adicione {names} ao layout para salvar",
+    "preview": "Pré-visualização",
+    "previewEmail": "E-mail",
+    "previewText": "Texto simples",
+    "previewFailed": "A pré-visualização não carregou. Recarregue a página para tentar de novo.",
+    "from": "De",
+    "to": "Para",
+    "groups": {
+      "signIn": "Login",
+      "invitations": "Convites",
+      "notifications": "Notificações",
+      "service": "Outros"
+    },
+    "templates": {
+      "reset": {
+        "name": "Redefinição de senha"
+      },
+      "verify": {
+        "name": "Confirmação de endereço"
+      },
+      "magic": {
+        "name": "Link de login"
+      },
+      "inviteProject": {
+        "name": "Convite para projeto"
+      },
+      "inviteTeam": {
+        "name": "Convite para equipe"
+      },
+      "assigned": {
+        "name": "Issue atribuída"
+      },
+      "mentioned": {
+        "name": "Menção em issue"
+      },
+      "commented": {
+        "name": "Novo comentário"
+      },
+      "stateChanged": {
+        "name": "Status alterado"
+      },
+      "documentMentioned": {
+        "name": "Menção em documento"
+      },
+      "documentCommentMentioned": {
+        "name": "Menção em comentário de documento"
+      },
+      "test": {
+        "name": "E-mail de teste",
+        "hint": "Enviado pelo botão de teste da página do provedor de e-mail."
+      }
+    },
+    "placeholderText": {
+      "content": "Texto do e-mail",
+      "button": "Botão com o link",
+      "subject": "Assunto",
+      "lang": "Código do idioma",
+      "dir": "Direção do texto",
+      "site_name": "Nome da instância",
+      "site_url": "Endereço da instância",
+      "logo_url": "Endereço do logo"
+    },
+    "variableText": {
+      "actor": "Quem fez a ação",
+      "ref": "Número da issue",
+      "title": "Título da issue",
+      "from": "Status anterior",
+      "to": "Novo status",
+      "document": "Título do documento",
+      "inviter": "Quem enviou o convite",
+      "project": "Nome do projeto",
+      "team": "Nome da equipe",
+      "role": "Papel ao entrar"
+    }
   },
   "authProvider": {
     "saved": "Provedor de autenticação salvo",

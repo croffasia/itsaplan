@@ -37,5 +37,17 @@
   "existingAccountNotice": "此邮箱已有账户，请使用密码登录。",
   "passwordsDoNotMatch": "两次输入的密码不一致。",
   "registerFailed": "无法创建账户。",
-  "signInFailed": "无法登录。"
+  "signInFailed": "无法登录。",
+  "received": {
+    "title": "Your invitations",
+    "description": "Review an invitation to see the team, project and role before joining.",
+    "review": "Review invitation",
+    "continue": "Continue without joining",
+    "loadFailed": "Invitations could not be loaded. Try again or continue without joining.",
+    "retry": "Try again",
+    "loading": "Loading invitations…",
+    "empty": "No pending invitations. New invitations sent to your verified email will appear here.",
+    "verifyRequired": "Verify your email address to discover invitations automatically. You can still open an invitation link shared with you.",
+    "loadFailedAccount": "Could not load invitations. Please try again."
+  }
 }

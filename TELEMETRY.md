@@ -43,6 +43,8 @@ The worker logs the exact body before each send.
 - The day the instance was installed, taken from the timestamp of its first database
   migration.
 - The running version.
+- The build: which edition the images come from, `community` or `pro`. Not whether a
+  license is active, and nothing from the license.
 - The runtime: Bun version, OS and architecture, Postgres major version, whether it
   runs in Docker.
 - How many users, projects and issues there are, plus how many users signed in and how

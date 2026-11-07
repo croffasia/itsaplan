@@ -81,7 +81,12 @@ export function AgentChatPanel({
   // A message typed while the agent is answering is not refused — it waits its turn. An
   // agent with an endpoint is sent the message, so nothing has to be online.
   const runnerOffline = agent.kind === 'external' && !agent.invocationUrl && !isRunnerOnline(agent);
-  const canSend = input.trim().length > 0 && !runnerOffline;
+  // Mirrors the api refusing new messages to an agent out of chat; old threads stay readable.
+  const chatDisabled = !agent.chatEnabled;
+  const canSend = input.trim().length > 0 && !runnerOffline && !chatDisabled;
+  let placeholder = t('messagePlaceholder', { agent: agent.name });
+  if (chatDisabled) placeholder = t('chatDisabled');
+  else if (runnerOffline) placeholder = t('runnerOffline');
 
   function submit() {
     const text = input.trim();
@@ -158,11 +163,17 @@ export function AgentChatPanel({
         </div>
 
         <div className="chat-composer px-3 pt-2 pb-3">
-          {runnerOffline && (
+          {chatDisabled ? (
             <div className="mx-auto mb-2 flex w-full max-w-3xl flex-wrap items-center gap-x-2 gap-y-0.5">
-              <AgentRunnerStatus agent={agent} />
-              <span className="text-xs text-muted-foreground">{t('runnerOfflineHint')}</span>
+              <span className="text-xs text-muted-foreground">{t('chatDisabledHint')}</span>
             </div>
+          ) : (
+            runnerOffline && (
+              <div className="mx-auto mb-2 flex w-full max-w-3xl flex-wrap items-center gap-x-2 gap-y-0.5">
+                <AgentRunnerStatus agent={agent} />
+                <span className="text-xs text-muted-foreground">{t('runnerOfflineHint')}</span>
+              </div>
+            )
           )}
           <form
             className="mx-auto w-full max-w-3xl"
@@ -229,12 +240,8 @@ export function AgentChatPanel({
                   e.preventDefault();
                   submit();
                 }}
-                placeholder={
-                  runnerOffline
-                    ? t('runnerOffline')
-                    : t('messagePlaceholder', { agent: agent.name })
-                }
-                disabled={runnerOffline}
+                placeholder={placeholder}
+                disabled={chatDisabled || runnerOffline}
                 rows={1}
               />
               <InputGroupAddon

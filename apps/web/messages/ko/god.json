@@ -170,6 +170,20 @@
     },
     "joined": "{date}에 가입"
   },
+  "roles": {
+    "newRole": "새 역할",
+    "empty": "아직 시스템 역할이 없습니다.",
+    "default": "기본값",
+    "defaultUndeletable": "기본 역할은 삭제할 수 없습니다",
+    "columns": {
+      "role": "역할",
+      "permissions": "권한"
+    },
+    "edit": "역할 편집",
+    "delete": "역할 삭제",
+    "deleteTitle": "\"{name}\" 역할 삭제",
+    "deleteDescription": "이 작업은 되돌릴 수 없습니다."
+  },
   "general": {
     "saved": "프로젝트 기본값이 저장되었습니다",
     "projectDefaults": "프로젝트 기본값",
@@ -179,8 +193,21 @@
     "workspaces": "워크스페이스",
     "personalWorkspaces": "모든 사용자에게 워크스페이스 제공",
     "personalWorkspacesHint": "각 계정에 사용자 이름을 딴 개인 워크스페이스가 하나씩 생성됩니다. 끄면 사용자는 자신이 추가된 워크스페이스에서만 작업할 수 있습니다.",
+    "invites": "초대",
+    "inviteSearch": "초대할 때 사용자 추천",
+    "inviteSearchHint": "팀 소유자나 관리자가 초대 창에 주소를 입력하면 이 인스턴스의 모든 워크스페이스에서 일치하는 계정이 이름과 이메일로 표시됩니다. 끄면 전체 주소를 입력해야 합니다.",
+    "invitesSaved": "초대 설정이 저장되었습니다",
+    "sharing": "공개 링크",
+    "sharingEnabled": "공개 링크 허용",
+    "sharingEnabledHint": "각 워크스페이스가 허용하는 범위에서 문서, 이슈, 보기를 링크로 공유할 수 있습니다. 끄면 아무도 공유할 수 없고 기존 링크는 다시 켤 때까지 열리지 않습니다.",
+    "sharingSaved": "공개 링크 설정이 저장되었습니다",
     "agents": "AI 에이전트",
     "agentsSaved": "AI 에이전트 설정이 저장되었습니다",
+    "embedding": "임베드",
+    "embedSites": "신뢰하는 사이트",
+    "embedSitesHint": "공개 공유된 이슈와 보드는 이 사이트에서만 프레임으로 열립니다. 사이트는 쉼표로 구분하세요.",
+    "embedSitesInvalid": "각 사이트를 경로 없이 https://example.com 형식으로 입력하세요.",
+    "embedSaved": "신뢰하는 사이트가 저장되었습니다",
     "traceRetention": "실행 추적 기록 보관",
     "traceRetentionHint": "각 AI 에이전트 실행에는 모델 및 도구 호출 기록이 저장됩니다. 사용량 대시보드에는 현재 보관 중인 실행 기록만 집계됩니다.",
     "traceDays": "{days, plural, one {#일} other {#일}}",
@@ -188,7 +215,10 @@
     "maxRunTime": "최대 실행 시간",
     "maxRunTimeHint": "에이전트 실행 한 번이 중지되고 실패로 저장되기 전까지 걸릴 수 있는 시간입니다. 에이전트 자체 제한은 이 값을 초과할 수 없습니다.",
     "runMinutes": "{minutes, plural, other {#분}}",
-    "runSeconds": "{seconds}초"
+    "runSeconds": "{seconds}초",
+    "concurrentRuns": "동시 실행 수",
+    "concurrentRunsHint": "이 서버에서 동시에 진행되는 에이전트 실행 수입니다. 나머지는 대기열에서 기다립니다. 채팅과 외부 에이전트는 포함되지 않습니다. 0이면 제한이 없습니다.",
+    "concurrentRunsInvalid": "0에서 {max} 사이의 정수를 입력하세요."
   },
   "authentication": {
     "saved": "인증 설정이 저장되었습니다",
@@ -297,6 +327,117 @@
     "clientSecret": "클라이언트 시크릿",
     "clientSecretPlaceholder": "앱 등록 시크릿",
     "microsoft365Hint": "메일함 비밀번호 대신 Entra ID의 앱 등록으로 로그인하므로 메일함에 MFA를 유지할 수 있습니다. 앱에는 관리자 동의를 받은 Office 365 Exchange Online 애플리케이션 권한 SMTP.SendAsApp, Exchange에서 이 메일함에 대한 접근 권한, 메일함에서 활성화된 SMTP AUTH가 필요합니다."
+  },
+  "emailTemplates": {
+    "saved": "이메일 템플릿을 저장했습니다",
+    "unsaved": "저장되지 않은 변경 사항",
+    "blankText": "저장하려면 비어 있는 제목이나 본문을 입력하세요",
+    "emails": "이메일",
+    "layout": "레이아웃",
+    "edited": "수정됨",
+    "subject": "제목",
+    "text": "본문",
+    "button": "버튼",
+    "formatting": "서식",
+    "heading1": "제목 1",
+    "heading2": "제목 2",
+    "bold": "굵게",
+    "italic": "기울임꼴",
+    "strikethrough": "취소선",
+    "link": "링크",
+    "bulletedList": "글머리 기호 목록",
+    "numberedList": "번호 매기기 목록",
+    "quote": "인용",
+    "boldSample": "굵게",
+    "italicSample": "기울임꼴",
+    "strikeSample": "텍스트",
+    "linkSample": "링크 텍스트",
+    "unknownVariables": "알 수 없는 변수: {names}",
+    "removeUnknownVariables": "저장하려면 알 수 없는 변수를 제거하세요",
+    "reset": "기본값으로 되돌리기",
+    "test": "테스트 보내기",
+    "testing": "보내는 중…",
+    "testSent": "{email}(으)로 보냈습니다",
+    "testNeedsProvider": "먼저 이메일 공급자를 설정하세요",
+    "layoutHtml": "레이아웃 HTML",
+    "layoutCss": "레이아웃 CSS",
+    "placeholders": "자리표시자",
+    "variables": "변수",
+    "required": "필수",
+    "requiredPlaceholders": "저장하려면 레이아웃에 {names}을(를) 추가하세요",
+    "preview": "미리 보기",
+    "previewEmail": "이메일",
+    "previewText": "일반 텍스트",
+    "previewFailed": "미리 보기를 불러오지 못했습니다. 페이지를 새로고침하고 다시 시도하세요.",
+    "from": "보낸 사람",
+    "to": "받는 사람",
+    "groups": {
+      "signIn": "로그인",
+      "invitations": "초대",
+      "notifications": "알림",
+      "service": "기타"
+    },
+    "templates": {
+      "reset": {
+        "name": "비밀번호 재설정"
+      },
+      "verify": {
+        "name": "이메일 주소 인증"
+      },
+      "magic": {
+        "name": "로그인 링크"
+      },
+      "inviteProject": {
+        "name": "프로젝트 초대"
+      },
+      "inviteTeam": {
+        "name": "팀 초대"
+      },
+      "assigned": {
+        "name": "이슈 배정"
+      },
+      "mentioned": {
+        "name": "이슈에서 멘션"
+      },
+      "commented": {
+        "name": "새 댓글"
+      },
+      "stateChanged": {
+        "name": "상태 변경"
+      },
+      "documentMentioned": {
+        "name": "문서에서 멘션"
+      },
+      "documentCommentMentioned": {
+        "name": "문서 댓글에서 멘션"
+      },
+      "test": {
+        "name": "테스트 이메일",
+        "hint": "이메일 서비스 공급자 페이지의 테스트 버튼으로 보냅니다."
+      }
+    },
+    "placeholderText": {
+      "content": "이메일 본문",
+      "button": "링크가 있는 버튼",
+      "subject": "제목",
+      "lang": "언어 코드",
+      "dir": "텍스트 방향",
+      "site_name": "인스턴스 이름",
+      "site_url": "인스턴스 주소",
+      "logo_url": "로고 주소"
+    },
+    "variableText": {
+      "actor": "작업한 사람",
+      "ref": "이슈 번호",
+      "title": "이슈 제목",
+      "from": "이전 상태",
+      "to": "새 상태",
+      "document": "문서 제목",
+      "inviter": "초대한 사람",
+      "project": "프로젝트 이름",
+      "team": "팀 이름",
+      "role": "참여 후 역할"
+    }
   },
   "authProvider": {
     "saved": "인증 공급자 설정이 저장되었습니다",

@@ -2,7 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Archive, ArchiveRestore, Copy, LogOut, Pencil, Trash2 } from 'lucide-react';
+import {
+  Archive,
+  ArchiveRestore,
+  Copy,
+  LayoutTemplate,
+  LogOut,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { MemberRole } from '@/lib/api/endpoints/members';
@@ -10,17 +18,21 @@ import type { AccessVia } from '@/lib/api/endpoints/projects';
 import type { TeamProject, TeamRole } from '@/lib/api/endpoints/teams';
 import { useSession } from '@/lib/auth-client';
 import { useSetTeamProjectArchived } from '@/services/projects.service';
+import { useTeam } from '@/services/teams.service';
+import { useWorkspacesQuery } from '@/services/workspaces.service';
 import { projectPath } from '@/utils/paths';
 import RowAction from '@/components/common/RowAction';
 import NewProjectModal from '@/components/layout/NewProjectModal';
 import TeamProjectDeleteDialog from './TeamProjectDeleteDialog';
 import TeamProjectEditModal from './TeamProjectEditModal';
 import TeamProjectLeaveDialog from './TeamProjectLeaveDialog';
+import WorkspaceTemplateSaveModal from '../WorkspaceTemplateSaveModal';
 
 // What the reader may do with one project of the team, as the actions of the panel
-// header. Editing, copying and archiving follow their rank in the team — a manager
-// does all three, an owner also deletes — while leaving follows their membership in
-// the project, which its last owner, and anyone a provisioned group put there, cannot
+// header. Editing, copying and archiving follow their rank in the team — a manager does
+// all three, an owner also deletes — and saving as a template their role in the
+// workspace, whose owner and admins keep its templates. Leaving follows their membership
+// in the project, which its last owner, and anyone a provisioned group put there, cannot
 // give up.
 export default function TeamProjectActions({
   teamId,
@@ -38,9 +50,13 @@ export default function TeamProjectActions({
   const { data: session } = useSession();
   const [editing, setEditing] = useState(false);
   const [copying, setCopying] = useState(false);
+  const [templating, setTemplating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const setArchived = useSetTeamProjectArchived();
+  const workspaceId = useTeam(teamId)?.workspaceId;
+  const managesWorkspace =
+    useWorkspacesQuery().data?.some((w) => w.id === workspaceId && w.role !== null) ?? false;
 
   const userId = session?.user.id;
   const isLastOwner = viewer?.role === 'owner' && project.owners.length === 1;
@@ -73,6 +89,13 @@ export default function TeamProjectActions({
           />
         </>
       )}
+      {managesWorkspace && (
+        <RowAction
+          icon={LayoutTemplate}
+          label={t('saveTemplateAction')}
+          onClick={() => setTemplating(true)}
+        />
+      )}
       {canLeave && (
         <RowAction icon={LogOut} label={t('leaveAction')} onClick={() => setLeaving(true)} />
       )}
@@ -98,6 +121,14 @@ export default function TeamProjectActions({
             setCopying(false);
             router.push(projectPath(key));
           }}
+        />
+      )}
+
+      {templating && workspaceId !== undefined && (
+        <WorkspaceTemplateSaveModal
+          workspaceId={workspaceId}
+          project={project}
+          onClose={() => setTemplating(false)}
         />
       )}
 

@@ -101,6 +101,17 @@ describe('external agent chat', () => {
     expect(claimed.data!.message!.systemPrompt).toContain('Marketing');
   });
 
+  it('rejects sending a message to a chat-disabled agent with 403', async () => {
+    const { asOwner, agent } = await setup();
+    await asOwner
+      .teams({ teamId: await teamOf(asOwner, 'MKT') })
+      ['ai-agents']({ agentId: agent.id })
+      .patch({ chatEnabled: false });
+    const res = await send(asOwner, agent.id, 'Status?');
+    expect(res.status).toBe(403);
+    expect(res.error?.value).toMatchObject({ code: 'AGENT_CHAT_DISABLED' });
+  });
+
   it("mixes the agent's own instructions into the system prompt", async () => {
     const { asOwner, asRunner, agent } = await setup();
     await asOwner

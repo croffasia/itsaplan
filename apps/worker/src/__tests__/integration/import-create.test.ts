@@ -11,6 +11,14 @@ import {
   importJob,
   importRecord,
   issueLabel,
+  issueWatcher,
+  issueChecklist,
+  issueChecklistItem,
+  customField,
+  issueFieldValue,
+  issueFieldOption,
+  customFieldOption,
+  projectMember,
   user,
 } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
@@ -80,6 +88,7 @@ const ISSUE: CanonicalIssue = {
   descriptionMarkdown: '',
   stateSourceId: 'state-1',
   assigneeEmail: null,
+  watcherEmails: [],
   labelSourceIds: [],
   cycleSourceId: null,
   parentSourceId: null,
@@ -89,6 +98,7 @@ const ISSUE: CanonicalIssue = {
   customFields: [],
   createdAt: '2026-01-01T00:00:00Z',
   updatedAt: '2026-01-01T00:00:00Z',
+  archivedAt: null,
 };
 
 const COMMENTS: CanonicalComment[] = [
@@ -116,11 +126,13 @@ type CreateReader = Pick<
   | 'listStates'
   | 'listLabels'
   | 'listCycles'
+  | 'listCustomFields'
   | 'listIssues'
   | 'getIssue'
   | 'listIssueRelations'
   | 'listIssueComments'
   | 'listIssueAttachments'
+  | 'listIssueChecklists'
 >;
 
 function readerWithFlakyComments(): SourceReader {
@@ -129,6 +141,7 @@ function readerWithFlakyComments(): SourceReader {
     listStates: async () => [],
     listLabels: async () => [],
     listCycles: async () => [],
+    listCustomFields: async () => [],
     listIssues: async () => ({ items: [ISSUE], cursor: null }),
     getIssue: async () => ISSUE,
     listIssueRelations: async () => [],
@@ -138,6 +151,7 @@ function readerWithFlakyComments(): SourceReader {
       return COMMENTS;
     },
     listIssueAttachments: async () => [],
+    listIssueChecklists: async () => [],
   };
   return reader as SourceReader;
 }
@@ -147,11 +161,13 @@ function readerForIssues(issues: CanonicalIssue[]): SourceReader {
     listStates: async () => [],
     listLabels: async () => [],
     listCycles: async () => [],
+    listCustomFields: async () => [],
     listIssues: async () => ({ items: issues, cursor: null }),
     getIssue: async (id) => issues.find((item) => item.sourceId === id)!,
     listIssueRelations: async () => [],
     listIssueComments: async () => COMMENTS,
     listIssueAttachments: async () => [],
+    listIssueChecklists: async () => [],
     resolveAttachmentDownload: async () => {
       throw new Error('Create must not download attachments');
     },
@@ -177,7 +193,141 @@ async function seedMappedIssue(job: ClaimedImportJob): Promise<number> {
   });
 }
 
+async function addProjectMember(projectId: number, email: string): Promise<string> {
+  const userId = randomUUID();
+  await db.insert(user).values({ id: userId, name: email, email });
+  await db.insert(projectMember).values({ projectId, userId, role: 'member' });
+  return userId;
+}
+
 describe('runCreate', () => {
+  it('creates custom fields, checklists, watchers and an archived issue, once across a retry', async () => {
+    const job = await makeCreateJob();
+    const ada = await addProjectMember(job.projectId, `ada-${job.id}@example.test`);
+    const bob = await addProjectMember(job.projectId, `bob-${job.id}@example.test`);
+    const archived: CanonicalIssue = {
+      ...ISSUE,
+      assigneeEmail: `ada-${job.id}@example.test`,
+      watcherEmails: [`bob-${job.id}@example.test`, 'stranger@example.test'],
+      customFields: [
+        { fieldSourceId: 'field-size', value: 'L' },
+        { fieldSourceId: 'field-points', value: 3 },
+        { fieldSourceId: 'field-missing', value: 'lost' },
+      ],
+      archivedAt: '2026-01-05T00:00:00Z',
+    };
+    await insertDiscoveredIds(job.id, 'issue', [archived.sourceId]);
+    await insertDiscoveredIds(job.id, 'custom_field', ['field-size', 'field-points']);
+    const reader = readerForIssues([archived]);
+    reader.listIssueComments = async () => [];
+    reader.listCustomFields = async () => [
+      { sourceId: 'field-size', name: 'Size', fieldType: 'select', options: ['S', 'L'] },
+      { sourceId: 'field-points', name: 'Points', fieldType: 'number', options: [] },
+    ];
+    reader.listIssueChecklists = async () => [
+      {
+        sourceId: 'checklist-1',
+        title: 'Checklist',
+        items: [
+          { content: 'First', done: true },
+          { content: 'Second', done: false },
+        ],
+      },
+      { sourceId: 'checklist-2', title: 'Checklist', items: [] },
+    ];
+
+    await runCreate(job, reader);
+    await runCreate(job, reader);
+
+    const [created] = await db.select().from(issue).where(eq(issue.projectId, job.projectId));
+    expect(created!.assigneeUserId).toBe(ada);
+    expect(created!.archivedAt).toEqual(new Date('2026-01-05T00:00:00Z'));
+    const watchers = await db
+      .select({ userId: issueWatcher.userId })
+      .from(issueWatcher)
+      .where(eq(issueWatcher.issueId, created!.id));
+    expect(watchers).toEqual([{ userId: bob }]);
+
+    const fields = await db
+      .select({ id: customField.id, name: customField.name, fieldType: customField.fieldType })
+      .from(customField)
+      .where(eq(customField.projectId, job.projectId))
+      .orderBy(customField.position);
+    expect(fields.map(({ name, fieldType }) => [name, fieldType])).toEqual([
+      ['Size', 'select'],
+      ['Points', 'number'],
+    ]);
+    const options = await db
+      .select({ value: customFieldOption.value })
+      .from(customFieldOption)
+      .where(eq(customFieldOption.fieldId, fields[0]!.id))
+      .orderBy(customFieldOption.position);
+    expect(options.map((o) => o.value)).toEqual(['S', 'L']);
+    const [picked] = await db
+      .select({ value: customFieldOption.value })
+      .from(issueFieldOption)
+      .innerJoin(customFieldOption, eq(customFieldOption.id, issueFieldOption.optionId))
+      .where(eq(issueFieldOption.issueId, created!.id));
+    expect(picked!.value).toBe('L');
+    const values = await db
+      .select({ valueNumber: issueFieldValue.valueNumber })
+      .from(issueFieldValue)
+      .where(eq(issueFieldValue.issueId, created!.id));
+    expect(values.map((v) => Number(v.valueNumber))).toEqual([3]);
+
+    const checklists = await db
+      .select()
+      .from(issueChecklist)
+      .where(eq(issueChecklist.issueId, created!.id))
+      .orderBy(issueChecklist.position);
+    expect(checklists.map((c) => c.title)).toEqual(['Checklist', 'Checklist']);
+    const items = await db
+      .select({ content: issueChecklistItem.content, done: issueChecklistItem.done })
+      .from(issueChecklistItem)
+      .where(eq(issueChecklistItem.checklistId, checklists[0]!.id))
+      .orderBy(issueChecklistItem.position);
+    expect(items).toEqual([
+      { content: 'First', done: true },
+      { content: 'Second', done: false },
+    ]);
+  });
+
+  it('reuses a field of the same name and type and adds the options it lacks', async () => {
+    const job = await makeCreateJob();
+    const [existing] = await db
+      .insert(customField)
+      .values({ projectId: job.projectId, name: 'Size', fieldType: 'select' })
+      .returning({ id: customField.id });
+    await db.insert(customFieldOption).values({ fieldId: existing!.id, value: 'S' });
+    await db
+      .insert(customField)
+      .values({ projectId: job.projectId, name: 'Points', fieldType: 'text' });
+    await insertDiscoveredIds(job.id, 'custom_field', ['field-size', 'field-points']);
+    const reader = readerForIssues([]);
+    reader.listCustomFields = async () => [
+      { sourceId: 'field-size', name: 'Size', fieldType: 'select', options: ['S', 'L'] },
+      { sourceId: 'field-points', name: 'Points', fieldType: 'number', options: [] },
+    ];
+
+    await runCreate(job, reader);
+
+    expect(await findImportRecord(job.id, 'custom_field', 'field-size')).toEqual({
+      localId: existing!.id,
+    });
+    const options = await db
+      .select({ value: customFieldOption.value })
+      .from(customFieldOption)
+      .where(eq(customFieldOption.fieldId, existing!.id))
+      .orderBy(customFieldOption.position);
+    expect(options.map((o) => o.value)).toEqual(['S', 'L']);
+    const points = await db
+      .select({ fieldType: customField.fieldType })
+      .from(customField)
+      .where(and(eq(customField.projectId, job.projectId), eq(customField.name, 'Points')))
+      .orderBy(customField.id);
+    expect(points.map((p) => p.fieldType)).toEqual(['text', 'number']);
+  });
+
   it("creates an issue's comments on the retry after its comment read failed", async () => {
     const job = await makeCreateJob();
     await insertDiscoveredIds(job.id, 'issue', [ISSUE.sourceId]);

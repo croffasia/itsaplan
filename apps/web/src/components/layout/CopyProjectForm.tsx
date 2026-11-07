@@ -3,7 +3,8 @@ import { KEY_MAX_LENGTH } from '@/utils/projectKey';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import CopyProjectOptions, { type CopyInclude } from '@/components/layout/CopyProjectOptions';
+import type { CopyGroup, CopyInclude } from '@/utils/copyOptions';
+import CopyProjectOptions from '@/components/layout/CopyProjectOptions';
 
 // The copy-a-project form. The fields are few and the sections to carry over are
 // many, so everything stacks full width instead of leaving one short column next
@@ -12,6 +13,7 @@ export default function CopyProjectForm({
   name,
   projectKey,
   description,
+  columns,
   include,
   onNameChange,
   onKeyChange,
@@ -21,6 +23,7 @@ export default function CopyProjectForm({
   name: string;
   projectKey: string;
   description: string;
+  columns: CopyGroup[][];
   include: CopyInclude;
   onNameChange: (value: string) => void;
   onKeyChange: (value: string) => void;
@@ -54,7 +57,7 @@ export default function CopyProjectForm({
           onChange={(e) => onDescriptionChange(e.target.value)}
         />
       </div>
-      <CopyProjectOptions value={include} onChange={onIncludeChange} />
+      <CopyProjectOptions columns={columns} value={include} onChange={onIncludeChange} />
     </div>
   );
 }

@@ -105,6 +105,7 @@
     "copied": "Disalin!",
     "copyPrompt": "Salin prompt",
     "sharedPublicly": "Dibagikan secara publik",
+    "sharedThroughDocument": "Publik melalui dokumen",
     "sharePublicly": "Bagikan secara publik",
     "restore": "Pulihkan issue",
     "archive": "Arsipkan issue",
@@ -248,6 +249,8 @@
     "toSend": "untuk mengirim",
     "unknownAuthor": "Tidak diketahui",
     "goToLastComment": "Buka komentar terakhir",
+    "copyLink": "Salin tautan",
+    "linkCopied": "Tautan disalin",
     "edit": "Ubah",
     "edited": "diedit",
     "deleteComment": "Hapus komentar",
@@ -268,7 +271,9 @@
     "no": "Tidak",
     "time": "Waktu",
     "startTime": "Waktu mulai",
-    "endTime": "Waktu selesai"
+    "endTime": "Waktu selesai",
+    "pickOption": "Pilih opsi…",
+    "noOption": "Tanpa opsi"
   },
   "editor": {
     "descriptionPlaceholder": "Tambah deskripsi…"
@@ -434,7 +439,7 @@
   "feedOldest": "Terlama",
   "feedChangeOrder": "Ubah urutan",
   "feedRunToggle": "Tampilkan perubahan serupa",
-  "shareUnavailable": "Issue yang dibagikan ini tidak tersedia. Tautan mungkin telah dicabut.",
+  "shareUnavailable": "Issue yang dibagikan ini tidak tersedia. Tautan mungkin telah dicabut atau kedaluwarsa.",
   "fieldSelects": {
     "changeState": "Ubah status…",
     "changeType": "Ubah tipe…",
@@ -477,7 +482,7 @@
     "noLabels": "Tidak ada"
   },
   "agentRuns": {
-    "title": "Agent runs",
+    "title": "Eksekusi agen",
     "refresh": "Refresh",
     "loading": "Loading runs…",
     "loadError": "Could not load run history. Try refreshing.",
@@ -516,7 +521,9 @@
     "queued": "Waiting",
     "running": "Running",
     "queuedHint": "Waiting for a runner, a retry or its scheduled start.",
-    "queueTitle": "Runner queue",
+    "queueTitle": "Eksekusi agen",
+    "internalInFlight": "Agen internal workspace: {running} dari {limit} berjalan",
+    "internalInFlightNoLimit": "Agen internal workspace: {running} berjalan",
     "queueEmpty": "No runs yet.",
     "activeSection": "In progress",
     "historySection": "History",

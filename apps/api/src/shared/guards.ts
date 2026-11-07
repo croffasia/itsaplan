@@ -14,16 +14,14 @@ import {
   assertPermission,
   assertMcpEnabled,
   assertWritable,
-  assertProjectWritable,
   assertFeatureEnabled,
-  assertProjectFeature,
   type AuthUser,
 } from './access';
 import type { ProjectFeature } from './features';
-import { getProjectById } from '#modules/projects/service';
+import { getProjectById, type ProjectRow } from '#modules/projects/service';
 import { runsTeam, teamMcpEnabled } from '#modules/teams/service';
 import { requireWorkspaceManager } from '#modules/workspaces/service';
-import { isMcpRequest } from './mcp-request';
+import { boundProjectId, isMcpRequest } from './mcp-request';
 import { HttpError } from './lib';
 import type { PermissionResource, PermissionAction } from './permissions';
 
@@ -61,11 +59,13 @@ function permissionDetail(permission: Permission) {
 
 // Builds a feature-local macro for routes that address an entity by its own id
 // (no :projectKey in the path). resolveProjectId maps the route params to the
-// entity's owning project id (null means the entity was not found). The macro
+// entity's owning project id (null means the entity was not found); it is handed the
+// caller too, for an entity that only some members may see. The macro
 // asserts the given action on `resource` and injects the resolved `projectId` into
 // the handler context, so a handler that needs it does not resolve it again. `feature`
 // names the optional section the entity belongs to, closing every route of the macro
-// while the project has that section off. Used like:
+// while the project has that section off. `check` is one more rule on the resolved
+// project, run last. Used like:
 //
 //   .macro({
 //     workItem: entityGuard("work_items", "Issue not found",
@@ -75,30 +75,61 @@ function permissionDetail(permission: Permission) {
 export function entityGuard(
   resource: PermissionResource,
   notFound: string,
-  resolveProjectId: (params: Record<string, string>) => Promise<number | null>,
+  resolveProjectId: (
+    params: Record<string, string>,
+    user: AuthUser | null | undefined,
+  ) => Promise<number | null>,
   feature?: ProjectFeature,
+  check?: (projectId: number) => Promise<void>,
 ) {
   return (action: PermissionAction) => ({
     ...permissionDetail([resource, action]),
     async resolve({ params, user, request }: EntityGuardCtx) {
-      const projectId = await resolveProjectId(params as Record<string, string>);
+      const projectId = await resolveProjectId(params as Record<string, string>, user);
       if (projectId == null) throw new HttpError(404, notFound);
       await assertPermission(projectId, user, resource, action);
-      if (feature) await assertProjectFeature(projectId, feature);
-      await assertMcpAllowed(projectId, request.headers);
-      await assertProjectWritable(projectId, request.method);
+      await assertProjectReachable(projectId, request, feature);
+      await check?.(projectId);
       return { projectId };
     },
   });
 }
 
-// The per-project MCP toggle, for a route or a guard that resolved the project by
-// its id rather than through one of the :projectKey macros. A plain request passes
-// untouched.
+// What a route that resolved its project by an object's id checks on it: the section
+// it belongs to, the run binding and the MCP toggle (see assertMcpAllowed), and that an
+// archived project is not written to. The project is read once, and only when a check
+// needs it.
+export async function assertProjectReachable(
+  projectId: number,
+  request: Request,
+  feature?: ProjectFeature,
+): Promise<void> {
+  const mcp = isMcpRequest(request.headers);
+  const reads = request.method === 'GET' || request.method === 'HEAD';
+  const project = feature || mcp || !reads ? await getProjectById(projectId) : null;
+  if (project && feature) assertFeatureEnabled(project, feature);
+  assertBoundProject(projectId, request.headers);
+  if (!project) return;
+  assertMcpEnabled(project, mcp);
+  assertWritable(project, request.method);
+}
+
+// What the request carries about the project, for a route or a guard that resolved the
+// project by an object's id rather than through one of the :projectKey macros: an
+// internal agent's run is bound to its own project, and an MCP call obeys the
+// per-project MCP toggle. A plain request passes untouched.
 export async function assertMcpAllowed(projectId: number, headers: Headers): Promise<void> {
+  assertBoundProject(projectId, headers);
   if (!isMcpRequest(headers)) return;
   const project = await getProjectById(projectId);
   if (project) assertMcpEnabled(project, true);
+}
+
+function assertBoundProject(projectId: number, headers: Headers): void {
+  const bound = boundProjectId(headers);
+  if (bound != null && bound !== projectId) {
+    throw new HttpError(403, 'Outside the project this run works in');
+  }
 }
 
 // The path param carried by every project-scoped route. The macros read it off
@@ -154,16 +185,19 @@ export const guards = new Elysia({ name: 'guards' }).use(authContext).macro({
     };
   },
 
-  // The optional section a route belongs to, set beside the permission the route
+  // The optional section or sections a route belongs to, set beside the permission the route
   // asserts. A section its project has turned off closes its routes, so what the
-  // settings page hides cannot be reached through the API either. It resolves the
-  // project through the membership check as well, so it belongs on a route that
-  // already requires membership — not on one a team owner reaches without it.
-  feature(name: ProjectFeature) {
+  // settings page hides cannot be reached through the API either. It reads the project
+  // the route's guard resolved when that guard is set before it in the route options;
+  // otherwise it resolves the project through the membership check itself, so it
+  // belongs on a route that already requires membership.
+  feature(name: ProjectFeature | ProjectFeature[]) {
     return {
-      async resolve({ params, user }) {
-        const project = await requireProjectAccess((params as ProjectKeyParams).projectKey, user);
-        assertFeatureEnabled(project, name);
+      async resolve(ctx) {
+        const project =
+          (ctx as { project?: ProjectRow }).project ??
+          (await requireProjectAccess((ctx.params as ProjectKeyParams).projectKey, ctx.user));
+        for (const feature of [name].flat()) assertFeatureEnabled(project, feature);
       },
     };
   },

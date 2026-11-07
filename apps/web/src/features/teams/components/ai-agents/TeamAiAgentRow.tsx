@@ -51,8 +51,9 @@ export function TeamAiAgentRow({
   const can = useAgentCan();
   const canHistory = can('read');
   const KindIcon = AGENT_KIND_ICON[agent.kind];
-  const canEdit = can('edit');
-  const hasMenu = canEdit || canHistory || can('delete');
+  const canEdit = can('edit') && agent.canManage;
+  const canDelete = can('delete') && agent.canManage;
+  const hasMenu = canEdit || canHistory || canDelete;
 
   return (
     <TableRow
@@ -144,14 +145,14 @@ export function TeamAiAgentRow({
                     {t('runHistory')}
                   </DropdownMenuItem>
                 )}
-                {canHistory && (
+                {canHistory && agent.chatEnabled && (
                   <DropdownMenuItem className="min-h-11 sm:min-h-8" onSelect={onChat}>
                     <MessageSquare />
                     {t('testChat')}
                   </DropdownMenuItem>
                 )}
-                {can('delete') && (canEdit || canHistory) && <DropdownMenuSeparator />}
-                {can('delete') && (
+                {canDelete && (canEdit || canHistory) && <DropdownMenuSeparator />}
+                {canDelete && (
                   <DropdownMenuItem
                     className="min-h-11 sm:min-h-8"
                     variant="destructive"

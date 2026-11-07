@@ -148,6 +148,17 @@ bot:
   enabled: false
 ```
 
+## Pro edition
+
+`values-pro.yaml` runs the Pro images. Pass it before your own values file:
+
+```bash
+helm install itsaplan charts/itsaplan -f charts/itsaplan/values-pro.yaml -f values.yaml
+```
+
+Without a valid license the Pro images run as the core does. The license key is entered in
+god mode, under **License**.
+
 ## Values reference
 
 ### Global
@@ -159,6 +170,7 @@ bot:
 | `nodeSelector`       | Global node selector (per-component overrides take precedence) | `{}`    |
 | `tolerations`        | Global tolerations                                             | `[]`    |
 | `affinity`           | Global affinity                                                | `{}`    |
+| `pro`                | Run the Pro images (set by `values-pro.yaml`)                  | `false` |
 | `imagePullSecrets`   | Image pull secrets for private registries                      | `[]`    |
 | `podSecurityContext` | Pod-level security context                                     | `{}`    |
 | `securityContext`    | Container-level security context                               | `{}`    |

@@ -26,6 +26,11 @@ export type ShellContext = {
 
 export const ShellCtx = createContext<ShellContext | null>(null);
 
+// The Shell's onOpenIssue on its own. ShellCtx changes on every Shell render, while
+// this changes only with the project and the open-mode preference, so a component
+// that every card mounts reads this one.
+export const IssueOpenerCtx = createContext<ShellContext['onOpenIssue'] | null>(null);
+
 export function useShell(): ShellContext {
   const ctx = useContext(ShellCtx);
   if (!ctx) throw new Error('useShell must be used within the project Shell');

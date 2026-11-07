@@ -105,6 +105,7 @@
     "copied": "Скопировано!",
     "copyPrompt": "Скопировать промпт",
     "sharedPublicly": "В общем доступе",
+    "sharedThroughDocument": "Публична через документ",
     "sharePublicly": "Открыть доступ",
     "restore": "Восстановить задачу",
     "archive": "Архивировать задачу",
@@ -248,6 +249,8 @@
     "toSend": "чтобы отправить",
     "unknownAuthor": "Неизвестный",
     "goToLastComment": "Перейти к последнему комментарию",
+    "copyLink": "Копировать ссылку",
+    "linkCopied": "Ссылка скопирована",
     "edit": "Редактировать",
     "edited": "изменено",
     "deleteComment": "Удалить комментарий",
@@ -268,7 +271,9 @@
     "no": "Нет",
     "time": "Время",
     "startTime": "Начало",
-    "endTime": "Окончание"
+    "endTime": "Окончание",
+    "pickOption": "Выберите вариант…",
+    "noOption": "Не выбрано"
   },
   "editor": {
     "descriptionPlaceholder": "Добавьте описание…"
@@ -434,7 +439,7 @@
   "feedOldest": "Сначала старые",
   "feedChangeOrder": "Изменить порядок",
   "feedRunToggle": "Показать похожие изменения",
-  "shareUnavailable": "Эта общая задача недоступна. Возможно, ссылку отозвали.",
+  "shareUnavailable": "Эта общая задача недоступна. Возможно, ссылку отозвали или срок её действия истёк.",
   "fieldSelects": {
     "changeState": "Изменить статус…",
     "changeType": "Изменить тип…",
@@ -516,7 +521,9 @@
     "queued": "Ожидает",
     "running": "Выполняется",
     "queuedHint": "Ожидает runner, повторной попытки или запланированного времени.",
-    "queueTitle": "Очередь runner",
+    "queueTitle": "Запуски агентов",
+    "internalInFlight": "Внутренние агенты воркспейса: в работе {running} из {limit}",
+    "internalInFlightNoLimit": "Внутренние агенты воркспейса: в работе {running}",
     "queueEmpty": "No runs yet.",
     "activeSection": "В работе",
     "historySection": "История",

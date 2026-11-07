@@ -47,7 +47,7 @@ export function wipFullColor(state: WipState): WipFullColor {
 // Tailwind matches class names as literal strings, so the two variants are spelled
 // out rather than built from the colour name.
 export const WIP_FULL_TEXT: Record<WipFullColor, string> = {
-  destructive: 'text-destructive',
+  destructive: 'text-destructive-text',
   warning: 'text-warning',
 };
 

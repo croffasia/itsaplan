@@ -1093,6 +1093,153 @@
       "when": 1792536807276,
       "tag": "0155_kimi_code_plan_provider",
       "breakpoints": true
+    },
+    {
+      "idx": 156,
+      "version": "7",
+      "when": 1792788993549,
+      "tag": "0156_agent_tool_keyless",
+      "breakpoints": true
+    },
+    {
+      "idx": 157,
+      "version": "7",
+      "when": 1792948521460,
+      "tag": "0157_document_mentions",
+      "breakpoints": true
+    },
+    {
+      "idx": 158,
+      "version": "7",
+      "when": 1793058294770,
+      "tag": "0158_trello_import",
+      "breakpoints": true
+    },
+    {
+      "idx": 159,
+      "version": "7",
+      "when": 1793194811096,
+      "tag": "0159_system_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 160,
+      "version": "7",
+      "when": 1793196902562,
+      "tag": "0160_system_member_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 161,
+      "version": "7",
+      "when": 1793198488881,
+      "tag": "0161_system_default_role",
+      "breakpoints": true
+    },
+    {
+      "idx": 162,
+      "version": "7",
+      "when": 1793204184815,
+      "tag": "0162_system_member_config_reads",
+      "breakpoints": true
+    },
+    {
+      "idx": 163,
+      "version": "7",
+      "when": 1793211028915,
+      "tag": "0163_workspace_max_concurrent_runs",
+      "breakpoints": true
+    },
+    {
+      "idx": 164,
+      "version": "7",
+      "when": 1793220634451,
+      "tag": "0164_agent_run_claimed_at",
+      "breakpoints": true
+    },
+    {
+      "idx": 165,
+      "version": "7",
+      "when": 1793232167646,
+      "tag": "0165_issue_link_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 166,
+      "version": "7",
+      "when": 1793305025083,
+      "tag": "0166_agent_chat_enabled",
+      "breakpoints": true
+    },
+    {
+      "idx": 167,
+      "version": "7",
+      "when": 1793317662313,
+      "tag": "0167_private_views",
+      "breakpoints": true
+    },
+    {
+      "idx": 168,
+      "version": "7",
+      "when": 1793317804099,
+      "tag": "0168_view_preferences",
+      "breakpoints": true
+    },
+    {
+      "idx": 169,
+      "version": "7",
+      "when": 1793390367322,
+      "tag": "0169_project_template",
+      "breakpoints": true
+    },
+    {
+      "idx": 170,
+      "version": "7",
+      "when": 1793532812084,
+      "tag": "0170_user_last_seen",
+      "breakpoints": true
+    },
+    {
+      "idx": 171,
+      "version": "7",
+      "when": 1793626954039,
+      "tag": "0171_share_expiry",
+      "breakpoints": true
+    },
+    {
+      "idx": 172,
+      "version": "7",
+      "when": 1793703498898,
+      "tag": "0172_workspace_project_templates",
+      "breakpoints": true
+    },
+    {
+      "idx": 173,
+      "version": "7",
+      "when": 1793713887371,
+      "tag": "0173_template_gallery",
+      "breakpoints": true
+    },
+    {
+      "idx": 174,
+      "version": "7",
+      "when": 1793804244937,
+      "tag": "0174_agent_schedules_permission",
+      "breakpoints": true
+    },
+    {
+      "idx": 175,
+      "version": "7",
+      "when": 1793861642060,
+      "tag": "0175_document_share",
+      "breakpoints": true
+    },
+    {
+      "idx": 176,
+      "version": "7",
+      "when": 1793880321208,
+      "tag": "0176_sharing_controls",
+      "breakpoints": true
     }
   ]
 }

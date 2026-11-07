@@ -13,6 +13,7 @@ import {
 import { and, eq, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { workspacesWithOwnScim } from '@repo/auth';
 import { removeMember, setMembership, type MemberRole } from '#modules/members/service';
+import { getDefaultRoleId } from '#modules/roles/service';
 import { listSeatHolderIds } from '#modules/teams/service';
 import { getLimits } from '#shared/limits';
 
@@ -76,13 +77,17 @@ async function desiredMembers(
     .where(and(eq(scimGroupMapping.projectId, projectId), granting))
     .orderBy(scimGroupMapping.id);
 
+  const defaultRoleId = await getDefaultRoleId();
   const desired = new Map<string, Desired>();
   for (const row of rows) {
     const role = row.role as MemberRole;
     const current = desired.get(row.userId);
     if (current && (current.role === 'owner' || role !== 'owner')) continue;
     // Owners bypass the permission matrix, so they carry no custom role.
-    desired.set(row.userId, { role, roleId: role === 'owner' ? null : row.roleId });
+    desired.set(row.userId, {
+      role,
+      roleId: role === 'owner' ? null : (row.roleId ?? defaultRoleId),
+    });
   }
   return desired;
 }

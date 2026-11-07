@@ -64,7 +64,35 @@ const linearImportJobBody = t.Object({
   ...importJobChoices,
 });
 
-export const createImportJobBody = t.Union([planeImportJobBody, linearImportJobBody]);
+// One Trello board, with the choices only Trello needs.
+const trelloImportJobBody = t.Object({
+  source: t.Literal('trello'),
+  apiKey: t.String({ minLength: 1, description: 'Trello API key.' }),
+  apiToken: t.String({
+    minLength: 1,
+    description: 'A Trello token made for that key; read access is enough.',
+  }),
+  boardId: t.String({ minLength: 1, description: 'The Trello board id to import from.' }),
+  archivedCards: t.UnionEnum(['archive', 'skip'], {
+    description:
+      "'archive' imports archived cards, and the cards of archived lists, as archived " +
+      "issues; 'skip' leaves them out.",
+  }),
+  memberMap: t.Optional(
+    t.Record(t.String(), t.String(), {
+      description:
+        'Trello member id -> the user id of a project member. The first matched member of ' +
+        'a card is its assignee, the others watch it. A member left out is not matched.',
+    }),
+  ),
+  ...importJobChoices,
+});
+
+export const createImportJobBody = t.Union([
+  planeImportJobBody,
+  linearImportJobBody,
+  trelloImportJobBody,
+]);
 
 export const testConnectionBody = t.Object({
   baseUrl: t.String({ minLength: 1 }),
@@ -109,6 +137,26 @@ export const linearPreviewBody = t.Object({
 
 export const LinearPreviewResponse = PlanePreviewResponse;
 
+export const trelloConnectionBody = t.Object({
+  apiKey: t.String({ minLength: 1, description: 'Trello API key.' }),
+  apiToken: t.String({ minLength: 1, description: 'A Trello token made for that key.' }),
+});
+
+export const TrelloTestConnectionResponse = t.Object({
+  boards: t.Array(t.Object({ id: t.String(), name: t.String(), closed: t.Boolean() })),
+});
+
+export const trelloPreviewBody = t.Object({
+  apiKey: t.String({ minLength: 1 }),
+  apiToken: t.String({ minLength: 1 }),
+  boardId: t.String({ minLength: 1 }),
+});
+
+export const TrelloPreviewResponse = t.Object({
+  states: PlanePreviewResponse.properties.states,
+  members: t.Array(t.Object({ id: t.String(), fullName: t.String(), username: t.String() })),
+});
+
 // Mirrors import_record_source_entity_type_check in packages/db/src/schema/app.ts.
 const entityCount = t.Object({ discovered: t.Number(), created: t.Number() });
 const CountsResponse = t.Object({
@@ -118,6 +166,8 @@ const CountsResponse = t.Object({
   state: entityCount,
   cycle: entityCount,
   attachment: entityCount,
+  checklist: entityCount,
+  custom_field: entityCount,
 });
 
 const ExportedComment = t.Object({
@@ -160,7 +210,7 @@ export const ProjectExportResponse = t.Object({
 export const ImportJobResponse = t.Object({
   id: t.Number(),
   projectId: t.Number(),
-  source: t.UnionEnum(['plane', 'linear']),
+  source: t.String(),
   phase: t.UnionEnum(['discover', 'create', 'link', 'rewrite', 'attachments', 'done']),
   status: t.UnionEnum(['pending', 'running', 'paused', 'completed', 'failed']),
   counts: CountsResponse,

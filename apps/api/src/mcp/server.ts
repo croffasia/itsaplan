@@ -3,7 +3,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { agentTeam } from '#modules/agents/core/service';
 import { listTeams } from '#modules/teams/service';
 import type { McpApp } from './types';
-import { routeTools, withoutFields, type McpRouteTool } from './generate';
+import { routeTools, withoutFields, type McpRouteTool, type ViewedAttachments } from './generate';
 import { dispatchTool } from './dispatch';
 import { SERVER_INSTRUCTIONS } from './instructions';
 import type { McpCredential } from './credential';
@@ -35,6 +35,7 @@ export async function buildMcpServer(
   app: McpApp,
   credential: McpCredential,
   userId: string,
+  clientRequest?: Request,
 ): Promise<Server> {
   const server = new Server(
     // `name` is the stable programmatic identifier; `title` is the human-readable
@@ -91,17 +92,13 @@ export async function buildMcpServer(
     }
     const { text, isError, structuredContent } = await dispatchTool(app, tool, args, credential, {
       viaMcpEndpoint: true,
+      clientRequest,
     });
     if (tool.images && !isError) return { content: imageContent(text) };
     return { content: [{ type: 'text', text }], isError, structuredContent };
   });
 
   return server;
-}
-
-interface ViewedAttachments {
-  images: { id: string; filename: string; contentType: string; data: string }[];
-  others: unknown[];
 }
 
 // The images of an image tool follow a text block that names them in the same order and

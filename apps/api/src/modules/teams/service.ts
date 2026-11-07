@@ -22,7 +22,7 @@ import { and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql } from 'drizz
 import { HttpError, iso, pgErrorCode } from '#shared/lib';
 import { isReservedSlug, projectRefSql, teamRef } from './ref';
 import { getLimits } from '#shared/limits';
-import { defaultMemberPermissions, fullPermissions, type Permissions } from '#shared/permissions';
+import { fullPermissions, type Permissions } from '#shared/permissions';
 import {
   getMemberContext,
   getMembership,
@@ -777,7 +777,6 @@ export async function listTeamProjectMembers(
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// Writes a team owned by one account, with the default role its projects assign.
 export async function insertOwnedTeam(
   tx: Transaction,
   workspaceId: number,
@@ -790,12 +789,6 @@ export async function insertOwnedTeam(
     .insert(teamMember)
     .values({ teamId: row.id, userId: ownerId, role: 'owner' })
     .returning();
-  await tx.insert(teamRole).values({
-    teamId: row.id,
-    name: 'Member',
-    isDefault: true,
-    permissions: defaultMemberPermissions(),
-  });
   return { team: row, membership };
 }
 

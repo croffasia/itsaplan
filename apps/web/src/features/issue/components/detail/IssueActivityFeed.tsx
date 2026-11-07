@@ -1,9 +1,10 @@
 import { useTranslations } from 'next-intl';
 import type { Column } from '@/lib/api/endpoints/columns';
-import type { Assignee } from '@/lib/api/endpoints/projects';
 import { useSession } from '@/lib/auth-client';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { type ActivityFeedView, type ActivityTab } from '../../hooks/useActivityFeedView';
+import { useCommentAnchor } from '../../hooks/useCommentAnchor';
+import { CommentLinkProvider } from '../../context/commentLink';
 import CommentComposer, { type ComposerContext } from './CommentComposer';
 import IssueActivityToolbar from './IssueActivityToolbar';
 import IssueFeedList from './IssueFeedList';
@@ -20,27 +21,32 @@ const EMPTY_TEXT = {
 
 export default function IssueActivityFeed({
   issueId,
-  assignees,
+  projectKey,
+  sequenceNumber,
   columns,
   imageByUserId,
   view,
   canReadAgentRuns,
+  commentId,
 }: {
   issueId: number;
-  assignees: Assignee[];
+  projectKey: string;
+  sequenceNumber: number;
   columns: Column[];
   imageByUserId: Map<string, string | null>;
   view: ActivityFeedView;
   canReadAgentRuns: boolean;
+  commentId: number | null;
 }) {
   const tIssue = useTranslations('issue');
   const t = useTranslations('issue.comments');
   const { data: session } = useSession();
+  const highlightedId = useCommentAnchor(issueId, view, commentId);
 
   const user = session?.user ?? null;
   const composer: ComposerContext = {
     issueId,
-    assignees,
+    projectKey,
     authorName: user?.name || user?.email || t('you'),
     authorImage: (user as { image?: string | null } | null)?.image ?? null,
   };
@@ -87,7 +93,15 @@ export default function IssueActivityFeed({
           className="mt-5 gap-3"
         >
           <IssueActivityToolbar issueId={issueId} view={view} canReadAgentRuns={canReadAgentRuns} />
-          <TabsContent value={view.tab}>{content}</TabsContent>
+          <TabsContent value={view.tab}>
+            <CommentLinkProvider
+              projectKey={projectKey}
+              sequenceNumber={sequenceNumber}
+              highlightedId={highlightedId}
+            >
+              {content}
+            </CommentLinkProvider>
+          </TabsContent>
         </Tabs>
       )}
     </div>

@@ -4,7 +4,8 @@
     "preferences": "Preferences",
     "accounts": "Accounts",
     "security": "Security",
-    "api-keys": "API keys"
+    "api-keys": "API keys",
+    "invitations": "Invitations"
   },
   "godGroups": {
     "management": "Management",
@@ -24,6 +25,10 @@
       "label": "Projects",
       "description": "Every project on this instance: what each one holds, when it was last active, and who can reach it."
     },
+    "roles": {
+      "label": "System roles",
+      "description": "Default roles available to every team on this instance."
+    },
     "general": {
       "label": "General",
       "description": "Personal workspaces, defaults for new projects, agent traces, and the agent run time limit."
@@ -39,6 +44,10 @@
     "storage": {
       "label": "Storage",
       "description": "How much people may upload: the size of a single file, the attachment types accepted, and the storage each project gets."
+    },
+    "email-templates": {
+      "label": "Email templates",
+      "description": "Manage system email templates."
     },
     "telegram": {
       "label": "Telegram",
@@ -102,6 +111,10 @@
       "label": "Webhooks",
       "description": "Send project events to external URLs, signed with a per-webhook secret."
     },
+    "forms": {
+      "label": "Forms",
+      "description": "Let anyone with a link file an issue here."
+    },
     "git": {
       "label": "Repositories",
       "description": "Close issues when their pull requests merge on GitHub, GitLab, Gitea, Forgejo, or Bitbucket."
@@ -115,8 +128,8 @@
       "description": "AI agents working in this project."
     },
     "queue": {
-      "label": "Runner queue",
-      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
+      "label": "Agent runs",
+      "description": "Runs of the project's internal and external agents: in progress, waiting and past."
     }
   },
   "previews": {
@@ -187,6 +200,40 @@
         "acsUrl": "ACS URL",
         "spEntityId": "Entity ID and metadata"
       }
+    },
+    "forms": {
+      "new": "New form",
+      "columns": {
+        "form": "Form",
+        "link": "Link"
+      },
+      "enabled": "Takes requests",
+      "tabs": {
+        "form": "Form",
+        "questions": "Questions",
+        "issue": "Issue",
+        "design": "Design"
+      },
+      "questionsHint": "Name and email are always asked.",
+      "preview": "Preview",
+      "name": "Your name",
+      "email": "Email"
+    },
+    "portal": {
+      "title": "Portal",
+      "description": "The page where people send requests to the workspace's projects and follow them.",
+      "general": "General",
+      "forms": "Public forms",
+      "formsHint": "The workspace's projects can publish forms anyone with the link fills in. Off, their forms and portals stop opening and the projects lose their Forms settings; nothing is deleted.",
+      "name": "Name",
+      "nameHint": "What people see on the portal and in its emails in place of the workspace's name. Empty shows the workspace's name.",
+      "address": "Address",
+      "addressHint": "The portal opens at this address. Until you set one, it opens at the workspace's number.",
+      "link": "Portal link",
+      "logo": "Logo",
+      "logoHint": "Shown on the portal and on the forms in place of the portal's name. One logo serves both themes.",
+      "light": "Light theme",
+      "dark": "Dark theme"
     }
   }
 }

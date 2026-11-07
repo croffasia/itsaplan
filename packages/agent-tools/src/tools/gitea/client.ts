@@ -1,3 +1,4 @@
+import { pinnedFetch, UrlNotAllowedError } from '@repo/net';
 import type { ToolConfig } from '../../types';
 
 // Gitea REST API client, addressed at whatever instance the credential points at, so
@@ -62,7 +63,8 @@ export function issueRef(raw: unknown): number {
 }
 
 // Calls a Gitea endpoint and returns its parsed body. `path` is everything after
-// /api/v1/, query string included.
+// /api/v1/, query string included. The address is the credential's, so the call goes
+// through the SSRF guard; redirects are not followed.
 export async function giteaRequest<T = Record<string, unknown>>(
   credential: ToolConfig,
   method: 'GET' | 'POST' | 'PATCH',
@@ -70,14 +72,25 @@ export async function giteaRequest<T = Record<string, unknown>>(
   body?: Record<string, unknown>,
 ): Promise<T> {
   const { baseUrl, token } = giteaCredential(credential);
-  const res = await fetch(`${baseUrl}/api/v1/${path}`, {
-    method,
-    headers: {
-      Authorization: `token ${token}`,
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let res: Response;
+  try {
+    res = await pinnedFetch(`${baseUrl}/api/v1/${path}`, {
+      method,
+      headers: {
+        Authorization: `token ${token}`,
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      timeoutMs: 15_000,
+    });
+  } catch (err) {
+    if (err instanceof UrlNotAllowedError) {
+      throw new Error(
+        `The Gitea address is not allowed (${err.message}). An instance on a private network has to be named in SSRF_ALLOWED_HOSTS on the instance.`,
+      );
+    }
+    throw err;
+  }
   const raw = await res.text();
   let parsed: GiteaResponse = {};
   try {

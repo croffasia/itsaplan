@@ -20,6 +20,8 @@ import { setMcpApp } from './mcp/app-ref';
 import { gitWebhookRoutes } from './modules/git/webhook';
 import { scimRoutes } from './modules/scim';
 import { currentUserRoutes } from './modules/current-user';
+import { EmbedSitesSchema } from './modules/settings/model';
+import { getEmbedSites } from './modules/settings/service';
 import { syncOidcGroupsAfterCallback } from './modules/scim/oidc-sync';
 import { normalizeOpenApiResponse } from './openapi';
 import { requestTracking } from './shared/request-tracker';
@@ -124,6 +126,10 @@ export const app = new Elysia()
         tags: [
           { name: 'Projects', description: 'Projects and the full work items view' },
           { name: 'Teams', description: 'Teams that own projects' },
+          {
+            name: 'Project Templates',
+            description: 'Saved project configurations new projects are created from',
+          },
           { name: 'Workspaces', description: 'Workspaces that own teams, and who manages them' },
           { name: 'Members', description: 'Project membership and roles' },
           { name: 'Roles', description: 'Project roles and their permissions' },
@@ -184,6 +190,7 @@ export const app = new Elysia()
           { name: 'Dashboards', description: 'Saved analytics dashboards' },
           { name: 'Documents', description: 'Shared project Docs pages' },
           { name: 'Link previews', description: 'Public web link metadata' },
+          { name: 'Mentions', description: 'Who an @username reaches where it is written' },
           { name: 'Note boards', description: 'Freeform canvases of sticky notes' },
           { name: 'Notifications', description: "The session user's inbox notifications" },
           { name: 'Sync', description: 'Change markers a client polls for live refresh' },
@@ -335,6 +342,19 @@ export const app = new Elysia()
       },
     },
   )
+  // The sites the instance owner lets show the public pages in a frame, which the web app
+  // writes into frame-ancestors on those pages. Public on purpose: the web app's proxy
+  // reads it with no session, and every public page names the same sites in its header.
+  .get('/embed-sites', () => getEmbedSites(), {
+    response: { 200: EmbedSitesSchema },
+    detail: {
+      tags: ['System'],
+      summary: 'Get the sites that may embed public pages',
+      description:
+        'Report the sites that may show the shared work items and views, and the public ' +
+        'pages, in a frame. Public.',
+    },
+  })
   // Root doubles as the liveness/health endpoint.
   .get('/', () => ({ name: "It's a Plan api", status: 'ok' }), {
     detail: {

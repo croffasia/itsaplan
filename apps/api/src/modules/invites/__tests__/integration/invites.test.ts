@@ -1,4 +1,5 @@
 import { describe, it, expect, afterAll, afterEach, beforeAll, beforeEach } from 'bun:test';
+import { db, notificationDelivery } from '@repo/db';
 import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -255,7 +256,32 @@ describe('invites', () => {
       expect(res.status).toBe(201);
       expect(res.data?.emailQueued).toBe(true);
       const sent = received.find((m) => m.to.some((to) => to.includes('newcomer@example.com')));
-      expect(sent?.body).toContain(`/invite/${res.data!.token}`);
+      // Quoted-printable breaks a long line with "=" at its end.
+      expect(sent?.body.replace(/=\r?\n/g, '')).toContain(`/invite/${res.data!.token}`);
+    });
+
+    it('writes a queued invite in the language of the address, or of its sender', async () => {
+      const { api } = await setupOwner();
+      await configureEmail(api);
+      await api.account.preferences.patch({ locale: 'ru' });
+      const known = await signUpTestUser();
+      await authedApi(known.cookie).account.preferences.patch({ locale: 'fr' });
+      const invites = api.projects({ projectKey: 'MKT' }).invites;
+
+      await invites.post({ email: 'newcomer@example.com', role: 'owner' });
+      await invites.post({ email: known.email, role: 'member' });
+
+      const queued = await db
+        .select({
+          recipient: notificationDelivery.recipient,
+          payload: notificationDelivery.payload,
+        })
+        .from(notificationDelivery);
+      const email = (to: string) => queued.find((row) => row.recipient === to)!.payload;
+      expect(email('newcomer@example.com').subject).toBe("Приглашение в Marketing в It's a Plan");
+      expect(email('newcomer@example.com').text).toContain('с ролью владелец');
+      expect(email('newcomer@example.com').html).toContain('class="button"');
+      expect(email(known.email).subject).toBe("Vous êtes invité à Marketing sur It's a Plan");
     });
 
     it('still creates the link when no email provider is configured', async () => {

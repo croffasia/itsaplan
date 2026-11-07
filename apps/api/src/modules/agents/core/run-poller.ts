@@ -1,7 +1,7 @@
 import { db, teamWorkspaceId } from '@repo/db';
 import { getProjectTeamId } from '#modules/projects/service';
 import { getAgentSettings } from '#modules/settings/service';
-import { getLimits } from '#shared/limits';
+import { getLimits, getRunLimit } from '#shared/limits';
 import { framePrompt, peopleContext, runModePreamble } from './prompt/framing';
 import { agentRunStarted, recordAgentRunFinished } from './run-activity';
 import { runAdmissionDelay } from './run-admission';
@@ -9,10 +9,10 @@ import { runRefusal } from './run-refusal';
 import {
   agentRunConfig,
   claimDueRuns,
+  admitWorkspaceRun,
   countRunsAhead,
   deferRun,
   markRunFailed,
-  markRunExecuting,
   markRunSuccess,
   runRetryDelayMs,
   scheduleRunRetry,
@@ -26,9 +26,6 @@ import { runThreadId } from './runtime/thread-ids';
 // the only thing a run is built from, so nothing about which project or which bot user
 // it acts as can be handed in from outside.
 
-// How long a run waits when its workspace has no free slot.
-const DEFERRED_RETRY_SECONDS = 30;
-
 export async function processAgentRuns(): Promise<void> {
   const runs = await claimDueRuns();
   await Promise.all(runs.map(processRun));
@@ -37,9 +34,10 @@ export async function processAgentRuns(): Promise<void> {
 async function processRun(run: ClaimedRun): Promise<void> {
   const teamId = await getProjectTeamId(run.projectId);
   const workspaceId = await teamWorkspaceId(teamId, db);
-  const { maxConcurrentRuns, maxRunSeconds } = await getLimits(workspaceId);
-  if (maxConcurrentRuns > 0 && (await countRunsAhead(workspaceId, run.id)) >= maxConcurrentRuns) {
-    await deferRun(run.id, DEFERRED_RETRY_SECONDS);
+  const limits = await getLimits(workspaceId);
+  const runLimit = await getRunLimit(workspaceId, limits);
+  if (runLimit > 0 && (await countRunsAhead(workspaceId, run.id)) >= runLimit) {
+    await deferRun(run.id, 30);
     return;
   }
   const wait = await runAdmissionDelay(run);
@@ -65,12 +63,12 @@ async function processRun(run: ClaimedRun): Promise<void> {
   const configuredTimeoutMs = runTimeoutMs(
     run.agentRunTimeoutSec,
     (await getAgentSettings()).maxRunSeconds,
-    maxRunSeconds,
+    limits.maxRunSeconds,
   );
   if (run.executionDeadline <= performance.now()) return;
   try {
+    if (!(await admitWorkspaceRun(run, workspaceId, runLimit))) return;
     await agentRunStarted(run);
-    if (!(await markRunExecuting(run.id, run.attempts))) return;
     const timeoutMs = Math.floor(
       Math.min(configuredTimeoutMs, run.executionDeadline - performance.now()),
     );
@@ -86,7 +84,7 @@ async function processRun(run: ClaimedRun): Promise<void> {
       scheduleId: run.scheduleId,
       runId: run.id,
       trigger: run.trigger,
-      contextPreamble: runModePreamble(run.trigger) + peopleContext(run),
+      contextPreamble: runModePreamble(run) + peopleContext(run),
       abortSignal: AbortSignal.timeout(timeoutMs),
     });
     if (result.aborted) {

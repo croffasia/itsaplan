@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
+import dynamic from 'next/dynamic';
 import { Maximize2, Minimize2, Pin, PinOff, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Direction } from 'radix-ui';
@@ -9,8 +10,10 @@ import { usePersistedWidth } from '@/hooks/usePersistedWidth';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import ResizeGrip from '@/components/common/ResizeGrip';
-import { ChatPanelBody } from './ChatPanelBody';
 import { chatPanelWidthKey, type ChatPanelMode } from '../../hooks/useChatPanel';
+
+// Its code, like its data, waits for the first open.
+const ChatPanelBody = dynamic(() => import('./ChatPanelBody').then((mod) => mod.ChatPanelBody));
 
 const DEFAULT_WIDTH = 400;
 const MIN_WIDTH = 320;

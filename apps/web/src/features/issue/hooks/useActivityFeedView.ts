@@ -14,7 +14,8 @@ const ORDER_KEY = 'issue-activity-order';
 
 // How the activity log of every issue is shown: the tab and the order are the last
 // ones picked in this browser, and grouping by status is the account preference, so
-// switching it here changes it on the preferences page too.
+// switching it here changes it on the preferences page too. showAll does not save the
+// tab, so following a link to a comment keeps the saved one.
 //
 // The stored values are read in an effect, not in the state initializer: the
 // initializer also runs during the server render, where there is no localStorage.
@@ -43,6 +44,8 @@ export function useActivityFeedView() {
     setStored((prev) => prev && { ...prev, order });
   }, []);
 
+  const showAll = useCallback(() => setStored((prev) => prev && { ...prev, tab: 'all' }), []);
+
   const setGrouped = useCallback(
     (grouped: boolean) => mutate({ issueActivityView: grouped ? 'grouped' : 'flat' }),
     [mutate],
@@ -60,6 +63,7 @@ export function useActivityFeedView() {
     setTab,
     setOrder,
     setGrouped,
+    showAll,
   };
 }
 

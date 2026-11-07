@@ -4,7 +4,8 @@ import { addUser, setup } from '../helpers';
 
 // The instance-wide agent settings under god mode: what applies to every team's
 // agents: how long the traces of their runs are kept, which the background sweep reads
-// (agents/core/runtime/trace-retention.ts), and the longest one run may take.
+// (agents/core/runtime/trace-retention.ts), the longest one run may take, and how many
+// runs are in flight at once.
 
 describe('god agent settings', () => {
   beforeEach(async () => {
@@ -86,7 +87,7 @@ describe('god agent settings', () => {
     const res = await god.api.god['agent-settings'].put({ maxRunSeconds: 900 });
 
     expect(res.status).toBe(200);
-    expect(res.data).toEqual({ traceRetentionDays: 7, maxRunSeconds: 900 });
+    expect(res.data).toEqual({ traceRetentionDays: 7, maxRunSeconds: 900, maxConcurrentRuns: 5 });
   });
 
   it('refuses a run time maximum under 10 seconds or over an hour', async () => {
@@ -94,5 +95,22 @@ describe('god agent settings', () => {
 
     expect((await god.api.god['agent-settings'].put({ maxRunSeconds: 9 })).status).toBe(400);
     expect((await god.api.god['agent-settings'].put({ maxRunSeconds: 3601 })).status).toBe(400);
+  });
+
+  it('starts at 5 runs at once and takes 0, which sets no limit', async () => {
+    const { god } = await setup();
+
+    expect((await god.api.god['agent-settings'].get()).data?.maxConcurrentRuns).toBe(5);
+    const res = await god.api.god['agent-settings'].put({ maxConcurrentRuns: 0 });
+
+    expect(res.status).toBe(200);
+    expect(res.data?.maxConcurrentRuns).toBe(0);
+  });
+
+  it('refuses a negative run limit and one over 1000', async () => {
+    const { god } = await setup();
+
+    expect((await god.api.god['agent-settings'].put({ maxConcurrentRuns: -1 })).status).toBe(400);
+    expect((await god.api.god['agent-settings'].put({ maxConcurrentRuns: 1001 })).status).toBe(400);
   });
 });

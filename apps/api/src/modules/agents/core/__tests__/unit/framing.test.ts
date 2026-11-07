@@ -36,9 +36,53 @@ const run: RunForPrompt = {
   agentUsername: 'bot',
   threadContext: null,
   sourceActivityId: null,
+  documentId: null,
+  documentTitle: null,
+  documentQuote: null,
+  threadRootId: null,
 };
 
 describe('framePrompt', () => {
+  it('frames a document mention as a reply in its thread, with the thread for context', () => {
+    const text = framePrompt({
+      ...run,
+      trigger: 'mention',
+      prompt: '@bot can you check this?',
+      issueId: null,
+      issueIdentifier: null,
+      issueTitle: null,
+      documentId: 12,
+      documentTitle: 'Onboarding',
+      documentQuote: 'Ship on Friday',
+      threadRootId: 'root-id',
+      threadContext: 'Ann: Is Friday realistic?',
+    });
+    expect(text).toContain('"Onboarding" (documentId 12)');
+    expect(text).toContain('add_document_comment tool (documentId 12, parentId root-id)');
+    expect(text).toContain('Ship on Friday');
+    expect(text).toContain('Ann: Is Friday realistic?');
+    expect(text.endsWith('@bot can you check this?')).toBe(true);
+    expect(text).not.toContain('issueId');
+  });
+
+  it('frames an answer to the agent in a document thread as one, not as a mention', () => {
+    const text = framePrompt({
+      ...run,
+      trigger: 'mention',
+      prompt: 'Thanks, now the summary',
+      issueId: null,
+      issueIdentifier: null,
+      issueTitle: null,
+      documentId: 12,
+      documentTitle: 'Onboarding',
+      threadRootId: 'root-id',
+    });
+    expect(text.startsWith('Someone answered your comment on the document "Onboarding"')).toBe(
+      true,
+    );
+    expect(text).toContain('The answer to your comment:');
+  });
+
   it('frames a field run as work on the issue, not as an answer to a comment', () => {
     const text = framePrompt(run);
     expect(text.startsWith(run.prompt)).toBe(true);

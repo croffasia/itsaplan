@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { LinearTeamOption } from '@/lib/api/endpoints/importExport';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import SettingsImportExportLinearConnectForm from './SettingsImportExportLinearConnectForm';
@@ -16,8 +17,9 @@ export interface LinearConnection {
 
 // The Linear source on the Import tab: check an API key, pick a team and one of its
 // projects (or its issues with no project), review the state mapping, start the job.
-export default function SettingsImportExportLinear({ projectKey }: { projectKey: string }) {
+export default function SettingsImportExportLinear({ project }: { project: ProjectDetail }) {
   const t = useTranslations('settings.importExport');
+  const projectKey = project.project.ref;
   const [connection, setConnection] = useState<LinearConnection | null>(null);
   const [team, setTeam] = useState<LinearTeamOption | null>(null);
   const [projectChoice, setProjectChoice] = useState<string | null>(null);

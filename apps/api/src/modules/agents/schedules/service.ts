@@ -6,6 +6,7 @@ import { minCronIntervalSeconds, nextCronRun } from './cron';
 import { isScheduleSupported, type ScheduleOptions } from './extension';
 import { agentWorksInProject, canTriggerAgent, isTriggerableBy } from '../core/service';
 import { contextTokensOf, executionState } from '../core/run-queue';
+import { emitRunsCanceled } from '../core/run-finished';
 import { deleteThreadsWhere } from '../core/runtime/memory';
 
 export type AgentScheduleStatus = 'active' | 'paused';
@@ -370,6 +371,10 @@ export async function cancelPendingScheduleRuns(
       ),
     )
     .returning({ id: agentRun.id });
+  await emitRunsCanceled(
+    rows.map((row) => row.id),
+    actorUserId,
+  );
   return rows.length;
 }
 

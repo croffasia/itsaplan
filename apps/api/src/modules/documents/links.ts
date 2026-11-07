@@ -18,6 +18,12 @@ export interface DocumentIssueLinkRow {
   createdAt: string;
 }
 
+export interface DocumentInitiativeLinkRow {
+  initiativeId: number;
+  title: string;
+  createdAt: string;
+}
+
 // The same shape serves both owners: a Docs page linked to an issue and one
 // linked to an initiative are rendered by the same list.
 export interface IssueDocumentLinkRow {
@@ -213,6 +219,30 @@ export async function removeDocumentIssueLink(input: {
       .returning({ issueId: projectDocumentIssue.issueId });
     return removed.length > 0;
   });
+}
+
+export async function listDocumentInitiativeLinks(
+  projectId: number,
+  documentId: number,
+  userId: string,
+): Promise<DocumentInitiativeLinkRow[] | null> {
+  if (!(await visibleDocument(projectId, documentId, userId))) return null;
+  const rows = await db
+    .select({
+      initiativeId: initiative.id,
+      title: initiative.title,
+      createdAt: projectDocumentInitiative.createdAt,
+    })
+    .from(projectDocumentInitiative)
+    .innerJoin(initiative, eq(initiative.id, projectDocumentInitiative.initiativeId))
+    .where(
+      and(
+        eq(projectDocumentInitiative.documentId, documentId),
+        eq(initiative.projectId, projectId),
+      ),
+    )
+    .orderBy(asc(initiative.title), asc(initiative.id));
+  return rows.map((row) => ({ ...row, createdAt: row.createdAt.toISOString() }));
 }
 
 export async function listInitiativeDocumentLinks(

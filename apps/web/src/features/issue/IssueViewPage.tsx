@@ -12,6 +12,7 @@ import { useProjectsQuery } from '@/services/projects.service';
 import IssueDetailContent from './components/detail/IssueDetailContent';
 import IssueDetailSkeleton from './components/detail/IssueDetailSkeleton';
 import { useIssueTitle } from './hooks/useIssueTitle';
+import { useCommentHash } from './hooks/useCommentHash';
 import { useTranslations } from 'next-intl';
 
 // The full-page issue view (/:team/issue/:identifier), rendered inside the Shell
@@ -23,6 +24,7 @@ export default function IssueViewPage() {
   const router = useRouter();
   const { project, onOpenIssue } = useShell();
   const seq = useShellRoute().routeIssueSeq;
+  const commentId = useCommentHash();
 
   const issueQuery = useIssueBySeqQuery(project?.project.ref ?? null, seq);
   const currentIssuePath = project && seq != null ? issuePath(project.project.ref, seq) : null;
@@ -35,7 +37,7 @@ export default function IssueViewPage() {
   const movedTo = moved ? projects?.find((p) => p.id === issueQuery.data!.projectId) : undefined;
   useEffect(() => {
     if (movedTo && issueQuery.data)
-      router.replace(issuePath(movedTo.ref, issueQuery.data.sequenceNumber));
+      router.replace(issuePath(movedTo.ref, issueQuery.data.sequenceNumber) + window.location.hash);
   }, [movedTo, issueQuery.data, router]);
   useIssueTitle(moved || issueQuery.isError ? null : (issueQuery.data?.id ?? null), 'page');
 
@@ -68,6 +70,7 @@ export default function IssueViewPage() {
             layout="page"
             onDeleted={exit}
             onOpenInPanel={openInPanel}
+            commentId={commentId}
           />
         ) : issueQuery.isLoading || (moved && (!projects || movedTo)) ? (
           <IssueDetailSkeleton />

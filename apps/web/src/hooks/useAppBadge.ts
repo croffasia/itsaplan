@@ -7,22 +7,16 @@ import { revScope } from '@/utils/revScopes';
 
 // Shows the signed-in user's unread notifications, across every project, on the app
 // icon through the Badging API: the Dock or taskbar badge of the installed web app, or
-// of a desktop shell that forwards it. Refetched when any project's inbox scope moves.
+// of a desktop shell that forwards it. Refetched when the inbox of any project moves.
 // Where the browser has no Badging API it does nothing and fetches nothing.
-export function useAppBadge(projectIds: number[]) {
+export function useAppBadge() {
   const supported = typeof navigator !== 'undefined' && 'setAppBadge' in navigator;
   const subscribe = useSyncSubscribe();
-  const ids = projectIds.join(',');
 
   useEffect(() => {
-    if (!supported || !ids) return;
-    const unsubscribe = ids
-      .split(',')
-      .map((id) =>
-        subscribe({ scope: revScope.inbox(Number(id)), targets: [qk.notificationsUnreadTotal] }),
-      );
-    return () => unsubscribe.forEach((off) => off());
-  }, [supported, ids, subscribe]);
+    if (!supported) return;
+    return subscribe({ scope: revScope.inboxAll, targets: [qk.notificationsUnreadTotal] });
+  }, [supported, subscribe]);
 
   const { data: unread } = useQuery({
     queryKey: qk.notificationsUnreadTotal,

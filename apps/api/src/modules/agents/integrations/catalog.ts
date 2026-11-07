@@ -49,27 +49,29 @@ const LLM_INTEGRATIONS: UnifiedIntegration[] = AI_PROVIDERS.map((p) => ({
   tools: [],
 }));
 
-const TOOL_INTEGRATIONS: UnifiedIntegration[] = integrationDescriptors().map((d) => ({
-  key: d.key,
-  label: d.label,
-  kind: 'tool',
-  credentialSchema: d.credentialSchema,
-  tools: d.tools,
-}));
+// Built on each call: an extension of the api adds tool integrations after this module
+// loads (setExtraIntegrations in @repo/agent-tools).
+export function integrationCatalog(): UnifiedIntegration[] {
+  const tools: UnifiedIntegration[] = integrationDescriptors().map((d) => ({
+    key: d.key,
+    label: d.label,
+    kind: 'tool',
+    credentialSchema: d.credentialSchema,
+    tools: d.tools,
+  }));
+  return [...LLM_INTEGRATIONS, ...tools];
+}
 
-export const INTEGRATION_CATALOG: UnifiedIntegration[] = [
-  ...LLM_INTEGRATIONS,
-  ...TOOL_INTEGRATIONS,
-];
-
-const BY_KEY = new Map(INTEGRATION_CATALOG.map((i) => [i.key, i]));
+function findIntegration(key: string): UnifiedIntegration | undefined {
+  return integrationCatalog().find((i) => i.key === key);
+}
 
 // The credential schema for an integration, or undefined for an unknown key.
 export function credentialSchemaFor(key: string): ConfigField[] | undefined {
-  return BY_KEY.get(key)?.credentialSchema;
+  return findIntegration(key)?.credentialSchema;
 }
 
 // The kind of an integration, or undefined for a key the catalog no longer carries.
 export function integrationKind(key: string): IntegrationKind | undefined {
-  return BY_KEY.get(key)?.kind;
+  return findIntegration(key)?.kind;
 }

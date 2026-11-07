@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import {
   Clipboard,
@@ -36,8 +36,6 @@ import {
   useUploadDocumentAsset,
 } from '../services/documents.service';
 
-type OutlineItem = { level: number; position: number; text: string };
-
 export default function DocumentSidePanel({
   projectKey,
   document,
@@ -61,7 +59,6 @@ export default function DocumentSidePanel({
 }) {
   const t = useTranslations('documents');
   const fileInput = useRef<HTMLInputElement>(null);
-  const [outlineRevision, setOutlineRevision] = useState(0);
   const [issuePickerOpen, setIssuePickerOpen] = useState(false);
   const assets = useDocumentAssetsQuery(projectKey, document.id);
   const issueLinks = useDocumentIssueLinksQuery(projectKey, document.id, canReadWorkItems);
@@ -70,43 +67,6 @@ export default function DocumentSidePanel({
   const linkIssue = useLinkDocumentIssue(projectKey);
   const unlinkIssue = useUnlinkDocumentIssue(projectKey);
   const linkedIssueIds = new Set((issueLinks.data ?? []).map((link) => link.issueId));
-
-  useEffect(() => {
-    if (!editor) return;
-    let timer: ReturnType<typeof setTimeout>;
-    const refreshOutline = ({ transaction }: { transaction: { docChanged: boolean } }) => {
-      if (transaction.docChanged) {
-        clearTimeout(timer);
-        timer = setTimeout(() => setOutlineRevision((value) => value + 1), 300);
-      }
-    };
-    editor.on('transaction', refreshOutline);
-    return () => {
-      clearTimeout(timer);
-      editor.off('transaction', refreshOutline);
-    };
-  }, [editor]);
-
-  const outline = useMemo(() => {
-    void outlineRevision;
-    const items: OutlineItem[] = [];
-    editor?.state.doc.descendants((node, position) => {
-      if (node.type.name !== 'heading') return;
-      items.push({
-        level: Number(node.attrs.level) || 1,
-        position: position + 1,
-        text: node.textContent.trim(),
-      });
-    });
-    return items;
-  }, [editor, outlineRevision]);
-
-  const jumpToHeading = (position: number) => {
-    if (!editor || editor.isDestroyed) return;
-    const chain = editor.chain().setTextSelection(position).scrollIntoView();
-    if (editor.isEditable) chain.focus();
-    chain.run();
-  };
 
   const insertAsset = (asset: { contentType: string; filename: string; url: string }) => {
     if (!canUpload || !editor || editor.isDestroyed || !editor.isEditable) return;
@@ -131,9 +91,8 @@ export default function DocumentSidePanel({
   };
 
   return (
-    <Tabs defaultValue="outline" className="min-h-0 flex-1 gap-0">
+    <Tabs defaultValue="info" className="min-h-0 flex-1 gap-0">
       <TabsList variant="line" className="h-11 w-full shrink-0 justify-start overflow-x-auto px-3">
-        <TabsTrigger value="outline">{t('outline')}</TabsTrigger>
         <TabsTrigger value="info">{t('info')}</TabsTrigger>
         {canReadWorkItems && (
           <TabsTrigger value="workItems">
@@ -145,32 +104,6 @@ export default function DocumentSidePanel({
         )}
         <TabsTrigger value="assets">{t('assets')}</TabsTrigger>
       </TabsList>
-
-      <TabsContent value="outline" className="min-h-0 overflow-y-auto p-3">
-        {outline.length === 0 ? (
-          <p className="px-4 py-10 text-center text-xs leading-5 text-muted-foreground">
-            {t('outlineEmpty')}
-          </p>
-        ) : (
-          <nav aria-label={t('outline')}>
-            <ol className="space-y-0.5">
-              {outline.map((item) => (
-                <li key={item.position}>
-                  <button
-                    type="button"
-                    className="w-full truncate rounded-md py-1.5 pe-2 text-start text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                    style={{ paddingInlineStart: `${8 + (item.level - 1) * 12}px` }}
-                    dir="auto"
-                    onClick={() => jumpToHeading(item.position)}
-                  >
-                    {item.text || t('untitledHeading')}
-                  </button>
-                </li>
-              ))}
-            </ol>
-          </nav>
-        )}
-      </TabsContent>
 
       <TabsContent value="info" className="min-h-0 overflow-y-auto px-4 py-5">
         <dl className="divide-y text-xs">

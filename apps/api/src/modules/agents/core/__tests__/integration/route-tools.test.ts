@@ -11,7 +11,7 @@ import { AGENT_ACTIONS, ALWAYS_ON_ACTIONS } from '../../runtime/tools/catalog';
 import { routeTools } from '#mcp/generate';
 import { getMcpApp } from '#mcp/app-ref';
 import { createRole } from '#tests/helpers/roles';
-import { createAgent, setAgentProjectRole } from '#tests/helpers/agents';
+import { createAgent, projectIdOf, setAgentProjectRole } from '#tests/helpers/agents';
 
 // The tools an internal agent runs with, built from the routes tagged mcpTool() and
 // dispatched in process with the agent's own API key. What is asserted here is the
@@ -80,6 +80,44 @@ describe('internal agent route tools', () => {
     // ...and an action that was not granted is absent.
     expect(tools.delete_issue).toBeUndefined();
     expect(tools.update_issue).toBeUndefined();
+    expect(tools.create_checklist_items).toBeUndefined();
+  });
+
+  it('opens an attachment: a text file as its text, an image as an image part', async () => {
+    const { asOwner } = await setup();
+    const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const issue = await asOwner
+      .projects({ projectKey: 'MKT' })
+      .issues.post({ columnId: view.data!.columns[0]!.id, title: 'Task' });
+    const issueId = issue.data!.id;
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    const image = await asOwner.issues({ issueId }).attachments.post({
+      file: new File([png], 'shot.png', { type: 'image/png' }),
+    });
+    const note = await asOwner.issues({ issueId }).attachments.post({
+      file: new File(['hello'], 'note.txt', { type: 'text/plain' }),
+    });
+    const tools = await toolsFor(asOwner, []);
+
+    expect(await run(tools, 'view_attachment', { attachment: note.data!.id })).toMatchObject({
+      images: [],
+      others: [{ id: note.data!.id, text: 'hello' }],
+    });
+
+    const viewed = await run(tools, 'view_attachment', { attachment: image.data!.id });
+    expect(await tools.view_attachment!.toModelOutput!(viewed)).toEqual({
+      type: 'content',
+      value: [
+        {
+          type: 'text',
+          text: JSON.stringify({
+            images: [{ id: image.data!.id, filename: 'shot.png', contentType: 'image/png' }],
+            others: [],
+          }),
+        },
+        { type: 'image-data', data: Buffer.from(png).toString('base64'), mediaType: 'image/png' },
+      ],
+    });
   });
 
   it('previews project activity only for the internal agent and retains full history', async () => {
@@ -239,6 +277,30 @@ describe('internal agent route tools', () => {
     }
   });
 
+  // The tool definitions go to the model on every step; a numeric argument written as a
+  // numeric string or a number would be paid for twice.
+  it('gives the model every numeric argument as a number only', async () => {
+    const { asOwner } = await setup();
+    const tools = await toolsFor(
+      asOwner,
+      AGENT_ACTIONS.map((tool) => tool.key),
+    );
+    const schemas = Object.entries(tools).map(([key, tool]) => {
+      const input = tool.inputSchema as unknown as { getJsonSchema(): unknown };
+      return [key, JSON.stringify(input.getJsonSchema())] as const;
+    });
+    expect(schemas.length).toBeGreaterThan(0);
+
+    for (const [key, schema] of schemas) {
+      expect({ key, numericString: /"format":"(numeric|integer)"/.test(schema) }).toEqual({
+        key,
+        numericString: false,
+      });
+    }
+    const getIssue = schemas.find(([key]) => key === 'get_issue')?.[1];
+    expect(JSON.parse(getIssue!).properties.issueId).toEqual({ type: 'number' });
+  });
+
   // The catalog states which role an action needs, which it can only do when it
   // carries the permission the route behind the action asserts.
   it('reports the permission of the route behind each action', () => {
@@ -252,13 +314,154 @@ describe('internal agent route tools', () => {
     expect(catalog.get('get_issue')).toEqual(['work_items', 'read']);
 
     // Everything else has one. prepare_issue_import and get_current_date have no
-    // route; charts and the project itself are open to any member of the project.
+    // route; charts and the project itself are open to any member of the project;
+    // view_attachment reads work_items or initiatives, by whose attachment it opens.
     expect([...catalog].filter(([, permission]) => !permission).map(([key]) => key)).toEqual([
       'prepare_issue_import',
       'create_chart',
       'get_current_date',
       'get_project',
+      'view_attachment',
     ]);
+  });
+
+  it('links a document to an issue and an initiative, and reads each link from both sides', async () => {
+    const { asOwner } = await setup();
+    const project = asOwner.projects({ projectKey: 'MKT' });
+    const view = await project.get();
+    const issueId = (
+      await project.issues.post({ columnId: view.data!.columns[0]!.id, title: 'Task' })
+    ).data!.id;
+    const initiativeId = (await project.initiatives.post({ title: 'Launch' })).data!.id;
+    const documentId = (await project.documents.post({ title: 'Spec' })).data!.id;
+    const tools = await toolsFor(asOwner, [
+      'link_document_issue',
+      'unlink_document_issue',
+      'list_document_issues',
+      'list_issue_documents',
+      'link_document_initiative',
+      'unlink_document_initiative',
+      'list_initiative_documents',
+      'list_document_initiatives',
+    ]);
+
+    expect(await run(tools, 'link_document_issue', { documentId, issueId })).toMatchObject({
+      issueId,
+    });
+    expect(await run(tools, 'list_document_issues', { documentId })).toMatchObject([{ issueId }]);
+    expect(await run(tools, 'list_issue_documents', { issueId })).toMatchObject([{ documentId }]);
+    await run(tools, 'unlink_document_issue', { documentId, issueId });
+    expect(await run(tools, 'list_issue_documents', { issueId })).toEqual([]);
+
+    await run(tools, 'link_document_initiative', { documentId, initiativeId });
+    expect(await run(tools, 'list_initiative_documents', { initiativeId })).toMatchObject([
+      { documentId },
+    ]);
+    expect(await run(tools, 'list_document_initiatives', { documentId })).toMatchObject([
+      { initiativeId },
+    ]);
+    await run(tools, 'unlink_document_initiative', { documentId, initiativeId });
+    expect(await run(tools, 'list_document_initiatives', { documentId })).toEqual([]);
+  });
+
+  it('reads a comment thread of a document, replies in it and resolves it', async () => {
+    const { asOwner } = await setup();
+    const documents = asOwner.projects({ projectKey: 'MKT' }).documents;
+    const page = (
+      await documents.post({
+        title: 'Plan',
+        content: 'Hello world',
+        contentJson: {
+          type: 'doc',
+          content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hello world' }] }],
+        },
+      })
+    ).data!;
+    const documentId = page.id;
+    const root = await documents({ documentId }).comments.post({
+      body: 'Is this right?',
+      quote: 'Hello',
+      from: 1,
+      to: 6,
+      version: page.version,
+    });
+    const commentId = root.data!.id;
+    const tools = await toolsFor(asOwner, [
+      'list_document_comments',
+      'add_document_comment',
+      'update_document_comment',
+    ]);
+
+    expect(await run(tools, 'list_document_comments', { documentId })).toMatchObject([
+      { id: commentId, parentId: null, quote: 'Hello', body: 'Is this right?' },
+    ]);
+    await run(tools, 'add_document_comment', { documentId, parentId: commentId, body: 'Yes' });
+    await run(tools, 'update_document_comment', { documentId, commentId, resolved: true });
+
+    const thread = (await run(tools, 'list_document_comments', { documentId })) as {
+      parentId: string | null;
+      body: string;
+      resolvedAt: string | null;
+    }[];
+    expect(thread.map((comment) => comment.body)).toEqual(['Is this right?', 'Yes']);
+    expect(thread[1]!.parentId).toBe(commentId);
+    expect(thread[0]!.resolvedAt).not.toBeNull();
+  });
+
+  it('adds a file to a document, opens it and deletes it', async () => {
+    const { asOwner } = await setup();
+    const tools = await toolsFor(asOwner, [
+      'create_document',
+      'add_document_asset',
+      'list_document_assets',
+      'view_document_asset',
+      'delete_document_asset',
+    ]);
+    // Deleting a file takes owning its page, so the agent makes the page.
+    const { id: documentId } = (await run(tools, 'create_document', { title: 'Spec' })) as {
+      id: number;
+    };
+
+    const added = (await run(tools, 'add_document_asset', {
+      documentId,
+      filename: 'note.txt',
+      contentBase64: Buffer.from('hello').toString('base64'),
+      contentType: 'text/plain',
+    })) as { id: string; embedUrl: string };
+    expect(added.embedUrl).toStartWith('/protected-media/projects/');
+    expect(await run(tools, 'list_document_assets', { documentId })).toMatchObject([
+      { id: added.id },
+    ]);
+    expect(
+      await run(tools, 'view_document_asset', { documentId, publicId: added.id }),
+    ).toMatchObject({ images: [], others: [{ id: added.id, text: 'hello' }] });
+
+    await run(tools, 'delete_document_asset', { documentId, publicId: added.id });
+    expect(await run(tools, 'list_document_assets', { documentId })).toEqual([]);
+  });
+
+  it('copies a file attached in the chat into a document', async () => {
+    const { asOwner } = await setup();
+    const tools = await toolsFor(asOwner, [
+      'create_document',
+      'add_document_asset_from_chat',
+      'view_document_asset',
+    ]);
+    const { id: documentId } = (await run(tools, 'create_document', { title: 'Spec' })) as {
+      id: number;
+    };
+    const { id: chatAttachmentId } = (await run(tools, 'upload_chat_attachment', {
+      filename: 'note.txt',
+      contentBase64: Buffer.from('hello').toString('base64'),
+    })) as { id: string };
+
+    const copied = (await run(tools, 'add_document_asset_from_chat', {
+      documentId,
+      chatAttachmentId,
+    })) as { id: string };
+    expect(
+      await run(tools, 'view_document_asset', { documentId, publicId: copied.id }),
+    ).toMatchObject({ images: [], others: [{ filename: 'note.txt', text: 'hello' }] });
   });
 
   it("provisions a legacy agent's key once, even when two runs start together", async () => {
@@ -303,6 +506,50 @@ describe('internal agent route tools', () => {
     expect(await run(tools, 'get_project')).toMatchObject({ columns: expect.any(Array) });
   });
 
+  it('appends a checklist batch through the granted route tool', async () => {
+    const { asOwner } = await setup();
+    const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const issue = await asOwner.projects({ projectKey: 'MKT' }).issues.post({
+      columnId: view.data!.columns[0].id,
+      title: 'Release',
+    });
+    const checklist = await asOwner
+      .issues({ issueId: issue.data!.id })
+      .checklists.post({ title: 'Steps' });
+    const tools = await toolsFor(asOwner, ['create_checklist_items']);
+    const items = [{ content: 'Tag release' }, { content: 'Publish notes' }];
+    expect(
+      await run(tools, 'create_checklist_items', { checklistId: checklist.data!.id, items }),
+    ).toMatchObject(items);
+    const read = await asOwner.issues({ issueId: issue.data!.id }).get();
+    expect(read.data!.checklists[0].items).toMatchObject(items);
+  });
+
+  it('denies a checklist batch when the agent role cannot edit work items', async () => {
+    const { asOwner } = await setup();
+    const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const issue = await asOwner.projects({ projectKey: 'MKT' }).issues.post({
+      columnId: view.data!.columns[0].id,
+      title: 'Release',
+    });
+    const checklist = await asOwner
+      .issues({ issueId: issue.data!.id })
+      .checklists.post({ title: 'Steps' });
+    const role = await createRole(asOwner, 'MKT', {
+      name: 'Read only',
+      permissions: { work_items: { read: true, edit: false } },
+    });
+    const tools = await toolsFor(asOwner, ['create_checklist_items'], role.data!.id);
+    expect(
+      await run(tools, 'create_checklist_items', {
+        checklistId: checklist.data!.id,
+        items: [{ content: 'Forbidden' }],
+      }),
+    ).toMatchObject({ error: expect.anything() });
+    const read = await asOwner.issues({ issueId: issue.data!.id }).get();
+    expect(read.data!.checklists[0].items).toEqual([]);
+  });
+
   it("enforces the agent's role: a forbidden action returns the route's error", async () => {
     const { asOwner } = await setup();
     const view = await asOwner.projects({ projectKey: 'MKT' }).get();
@@ -332,5 +579,173 @@ describe('internal agent route tools', () => {
     // A read the role does allow still works.
     const context = await run(tools, 'get_project');
     expect(context).toMatchObject({ columns: expect.any(Array) });
+  });
+
+  // A block is a relation, not text, so search_issues cannot find it.
+  it('blocked lists the issues an open issue is blocking, not those of a closed one', async () => {
+    const { asOwner } = await setup();
+    const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const columns = view.data?.columns ?? [];
+    const openId = columns.find((c) => c.stateType === 'backlog')?.id;
+    const doneId = columns.find((c) => c.stateType === 'completed')?.id;
+    if (openId === undefined || doneId === undefined) throw new Error('Missing columns');
+    const tools = await toolsFor(asOwner, ['create_issue', 'link_issues']);
+    const make = async (title: string, columnId: number) =>
+      ((await run(tools, 'create_issue', { columnId, title })) as { id: number }).id;
+    const openBlocker = await make('Open blocker', openId);
+    const held = await make('Held up', openId);
+    const doneBlocker = await make('Done blocker', doneId);
+    const freed = await make('No longer held up', openId);
+    await run(tools, 'link_issues', {
+      issueId: held,
+      targetIssueId: openBlocker,
+      kind: 'blocked_by',
+    });
+    await run(tools, 'link_issues', { issueId: doneBlocker, targetIssueId: freed, kind: 'blocks' });
+
+    const result = (await run(tools, 'list_issues', { blocked: 'true' })) as { title: string }[];
+
+    expect(result.map((i) => i.title)).toEqual(['Held up']);
+  });
+});
+
+// A run works in one project, and its tools are bound to it: an object addressed by id
+// that belongs to another project of the agent is refused, although the agent's bot
+// is a member there. Without the bound, whoever may start a run in MKT could make the
+// agent read and write OPS.
+describe('internal agent route tools are bound to the run project', () => {
+  beforeEach(async () => {
+    await resetDb();
+  });
+
+  // An agent that works in MKT and OPS, its tools built for a run in MKT, and an issue
+  // of each project.
+  async function crossProject(tools: string[]) {
+    const { asOwner, teamId } = await setup();
+    await createProject(asOwner, { key: 'OPS', name: 'Operations' });
+    const issueIn = async (projectKey: string, title: string) => {
+      const view = await asOwner.projects({ projectKey }).get();
+      const issue = await asOwner
+        .projects({ projectKey })
+        .issues.post({ columnId: view.data!.columns[0]!.id, title });
+      return issue.data!.id;
+    };
+    const mktIssue = await issueIn('MKT', 'Marketing plan');
+    const opsIssue = await issueIn('OPS', 'Pager rota');
+    const created = await createAgent(asOwner, 'MKT', {
+      name: 'Triage Bot',
+      username: `triage-${++agentSeq}`,
+      kind: 'internal',
+      tools,
+      projectIds: [await projectIdOf(asOwner, 'MKT'), await projectIdOf(asOwner, 'OPS')],
+    });
+    const project = await getProjectByRef('MKT', '');
+    if (!project) throw new Error('Test project was not created');
+    const agent = await getAgentById(created.data!.agent.id, teamId);
+    if (!agent) throw new Error('Test agent was not found');
+    const built = buildRouteTools(project, await getInternalAgentApiKey(agent), agent.tools);
+    return { asOwner, tools: built, mktIssue, opsIssue };
+  }
+
+  const outside = { error: { error: 'Outside the project this run works in' } };
+
+  it('refuses reading an issue of another project', async () => {
+    const { tools, mktIssue, opsIssue } = await crossProject([]);
+
+    expect(await run(tools, 'get_issue', { issueId: opsIssue })).toEqual(outside);
+    expect(await run(tools, 'list_issue_activity', { issueId: opsIssue })).toEqual(outside);
+    expect(await run(tools, 'get_issue', { issueId: mktIssue })).toMatchObject({
+      title: 'Marketing plan',
+    });
+  });
+
+  it('refuses writing to an issue of another project', async () => {
+    const { asOwner, tools, mktIssue, opsIssue } = await crossProject([
+      'add_comment',
+      'update_issue',
+    ]);
+
+    expect(await run(tools, 'add_comment', { issueId: opsIssue, body: 'From MKT' })).toEqual(
+      outside,
+    );
+    expect(await run(tools, 'update_issue', { issueId: opsIssue, title: 'Renamed' })).toEqual(
+      outside,
+    );
+    expect((await asOwner.issues({ issueId: opsIssue }).get()).data).toMatchObject({
+      title: 'Pager rota',
+    });
+    expect(await run(tools, 'add_comment', { issueId: mktIssue, body: 'Here' })).toMatchObject({
+      body: 'Here',
+    });
+  });
+
+  it('refuses a checklist of an issue of another project', async () => {
+    const { asOwner, tools, opsIssue } = await crossProject([
+      'create_checklist_item',
+      'create_checklist_items',
+    ]);
+    const checklist = await asOwner
+      .issues({ issueId: opsIssue })
+      .checklists.post({ title: 'Steps' });
+
+    expect(
+      await run(tools, 'create_checklist_item', { checklistId: checklist.data!.id, content: 'x' }),
+    ).toEqual(outside);
+    expect(
+      await run(tools, 'create_checklist_items', {
+        checklistId: checklist.data!.id,
+        items: [{ content: 'Forbidden' }],
+      }),
+    ).toEqual(outside);
+    const read = await asOwner.issues({ issueId: opsIssue }).get();
+    expect(read.data!.checklists[0].items).toEqual([]);
+  });
+
+  it('refuses a cycle and an initiative of another project', async () => {
+    const { asOwner, tools } = await crossProject(['update_cycle', 'update_initiative']);
+    const today = new Date().toISOString().slice(0, 10);
+    const cycle = await asOwner
+      .projects({ projectKey: 'OPS' })
+      .cycles.post({ name: 'Sprint 1', startDate: today, endDate: today });
+    const initiative = await asOwner
+      .projects({ projectKey: 'OPS' })
+      .initiatives.post({ title: 'Uptime' });
+
+    expect(await run(tools, 'get_cycle', { cycleId: cycle.data!.id })).toEqual(outside);
+    expect(await run(tools, 'update_cycle', { cycleId: cycle.data!.id, name: 'x' })).toEqual(
+      outside,
+    );
+    expect(await run(tools, 'get_initiative', { initiativeId: initiative.data!.id })).toEqual(
+      outside,
+    );
+    expect(
+      await run(tools, 'update_initiative', { initiativeId: initiative.data!.id, title: 'x' }),
+    ).toEqual(outside);
+  });
+
+  it('refuses any request bound to another project, and ignores a malformed bound', async () => {
+    const { owner, asOwner } = await setup();
+    await createProject(asOwner, { key: 'OPS', name: 'Operations' });
+    const view = await asOwner.projects({ projectKey: 'OPS' }).get();
+    const issue = await asOwner
+      .projects({ projectKey: 'OPS' })
+      .issues.post({ columnId: view.data!.columns[0]!.id, title: 'Pager rota' });
+    const issueId = issue.data!.id;
+    const mkt = String(await projectIdOf(asOwner, 'MKT'));
+    const ops = String(await projectIdOf(asOwner, 'OPS'));
+    const read = (bound: string) =>
+      authedApi(owner.cookie, { 'x-agent-project': bound }).issues({ issueId }).get();
+
+    const refused = await read(mkt);
+    expect(refused.status).toBe(403);
+    expect(refused.error!.value).toMatchObject({ error: 'Outside the project this run works in' });
+    expect((await read(ops)).status).toBe(200);
+    expect((await read('MKT')).status).toBe(200);
+  });
+
+  it('leaves a person reading the same issue alone', async () => {
+    const { asOwner, opsIssue } = await crossProject([]);
+
+    expect((await asOwner.issues({ issueId: opsIssue }).get()).status).toBe(200);
   });
 });

@@ -6,11 +6,11 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
-import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { arrayMove, SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { LayoutDashboard, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Dashboard } from '@/lib/api/endpoints/dashboards';
-import { useDndSensors } from '@/lib/dnd';
+import { useDndSensors, useDroppedOrder } from '@/lib/dnd';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import DashboardTab from './DashboardTab';
@@ -38,7 +38,7 @@ export default function DashboardTabs({
   onNewDashboard: (name: string) => void;
   onRename: (d: Dashboard, name: string) => void;
   onDelete: (d: Dashboard) => void;
-  onReorder: (draggedId: number, targetId: number) => void;
+  onReorder: (ids: number[]) => void;
 }) {
   const t = useTranslations('dashboards');
   const { can } = usePermissions();
@@ -48,6 +48,7 @@ export default function DashboardTabs({
   const sensors = useDndSensors();
   const [activeId, setActiveId] = useState<number | null>(null);
   const dragged = activeId != null ? dashboards.find((d) => d.id === activeId) : null;
+  const { items: shown, drop } = useDroppedOrder(dashboards);
   // Name dialog state: 'new' to create, a dashboard to rename, or null (closed).
   const [dialog, setDialog] = useState<'new' | Dashboard | null>(null);
   const renaming = dialog && dialog !== 'new' ? dialog : null;
@@ -55,7 +56,14 @@ export default function DashboardTabs({
   function handleDragEnd(e: DragEndEvent) {
     setActiveId(null);
     const { active, over } = e;
-    if (over && active.id !== over.id) onReorder(Number(active.id), Number(over.id));
+    if (!over || active.id === over.id) return;
+    const ids = dashboards.map((d) => d.id);
+    const from = ids.indexOf(Number(active.id));
+    const to = ids.indexOf(Number(over.id));
+    if (from === -1 || to === -1) return;
+    const next = arrayMove(ids, from, to);
+    drop(next);
+    onReorder(next);
   }
 
   return (
@@ -85,10 +93,10 @@ export default function DashboardTabs({
             onDragEnd={handleDragEnd}
           >
             <SortableContext
-              items={dashboards.map((d) => d.id)}
+              items={shown.map((d) => d.id)}
               strategy={horizontalListSortingStrategy}
             >
-              {dashboards.map((d) => (
+              {shown.map((d) => (
                 <DashboardTab
                   key={d.id}
                   dashboard={d}

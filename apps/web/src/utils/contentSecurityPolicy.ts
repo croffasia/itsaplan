@@ -19,7 +19,8 @@ function apiOrigin(): string {
 // pictures, and the /media proxy on this origin. blob: is fetched too: the image
 // annotator reads a file picked in the new issue modal through its blob: URL. React
 // evals in development only, to rebuild server error stacks in the browser.
-export function contentSecurityPolicy(): string {
+// `frameAncestors` are the sites that may show the page in a frame; none by default.
+export function contentSecurityPolicy(frameAncestors: string[] = []): string {
   const scriptSources =
     process.env.NODE_ENV === 'development'
       ? "'self' 'unsafe-inline' 'unsafe-eval'"
@@ -35,6 +36,6 @@ export function contentSecurityPolicy(): string {
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    "frame-ancestors 'none'",
+    `frame-ancestors ${frameAncestors.length > 0 ? frameAncestors.join(' ') : "'none'"}`,
   ].join('; ');
 }

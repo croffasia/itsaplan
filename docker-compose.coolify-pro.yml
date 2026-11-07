@@ -1,0 +1,252 @@
+# ─────────────────────────────────────────────────────────────
+# Coolify stack of the Pro edition: postgres + rustfs + api + worker + bot + web.
+# In Coolify: New Resource → Docker Compose Empty → paste this file. Nothing is built;
+# the four services run the Pro images published to GHCR on each release, and VERSION
+# picks one (unset means the newest). Without a valid license the Pro images run as the
+# core does; the instance owner enters the license key in god mode, under License.
+#
+# The core images are in docker-compose.coolify-images.yml.
+#
+# SERVICE_PASSWORD_* / SERVICE_URL_* are Coolify magic variables: generated and
+# persisted on first deploy, stable across deploys. api and web each declare their own
+# domain by listing SERVICE_URL_API_3000 / SERVICE_URL_WEB_3001 without a value; everything
+# else reads them back. A SERVICE_URL_* key in any other service declares a domain there
+# too, which is why worker and bot address the api through API_URL instead.
+#
+# No host port is published: Coolify's proxy reaches the containers over the internal
+# network, and a `ports:` entry here turns into a second, malformed domain.
+#
+# Coolify reports the worst container health as the resource status, so a service
+# without a healthcheck holds the whole stack at "running (unknown)". Services that
+# answer no requests are taken out of that aggregate with `exclude_from_hc: true`
+# (a Coolify key, stripped before compose runs) or, for one-shot containers, by
+# `restart: 'no'`, which it treats the same way.
+# ─────────────────────────────────────────────────────────────
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-itsaplan}
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_POSTGRES}
+      POSTGRES_DB: ${POSTGRES_DB:-itsaplan}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-itsaplan} -d ${POSTGRES_DB:-itsaplan}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # S3-compatible object store for issue attachments (RustFS).
+  # Both the S3 API (:9000) and the console (:9001) are internal only — the api
+  # streams attachment bytes over the internal network, so no port is published.
+  # Administer through an S3 client from inside the network or an SSH tunnel.
+  #
+  # The service, its volume and the SERVICE_*_MINIO credentials keep the names of the
+  # MinIO stack this replaced: a renamed service would leave the old MinIO container
+  # running on the same volume, a renamed volume would start empty, and renamed
+  # credentials would be generated anew. RustFS reads the files MinIO wrote in place;
+  # MinIO wrote them as root, so the container runs as root to keep them writable.
+  minio:
+    image: rustfs/rustfs:1.0.0
+    restart: unless-stopped
+    user: '0:0'
+    environment:
+      RUSTFS_ACCESS_KEY: ${SERVICE_USER_MINIO}
+      RUSTFS_SECRET_KEY: ${SERVICE_PASSWORD_MINIO}
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', '-o', '/dev/null', 'http://127.0.0.1:9000/health']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # One-shot: creates the attachments bucket, then exits. A PUT on a bucket that
+  # already exists succeeds, so it runs on every start.
+  # restart "no" is explicit: it exits 0 by design, and platforms that inject
+  # restart: unless-stopped (e.g. Coolify) would otherwise loop it forever and
+  # trip their restart-count limit, tearing the whole stack down.
+  minio-init:
+    image: rustfs/rustfs:1.0.0
+    restart: 'no'
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      S3_ACCESS_KEY_ID: ${SERVICE_USER_MINIO}
+      S3_SECRET_ACCESS_KEY: ${SERVICE_PASSWORD_MINIO}
+      S3_BUCKET: ${S3_BUCKET:-planner-attachments}
+    entrypoint: >
+      /bin/sh -c "
+      curl -fsS -X PUT --aws-sigv4 aws:amz:us-east-1:s3 --user \"$$S3_ACCESS_KEY_ID:$$S3_SECRET_ACCESS_KEY\" http://minio:9000/\"$$S3_BUCKET\" &&
+      echo 'bucket ready: '\"$$S3_BUCKET\"
+      "
+
+  # One-shot: dumps the database and applies the migrations, then exits. api, worker
+  # and bot start only after it succeeds, so none of them runs against an old schema.
+  # restart 'no' keeps a finished run from being started again.
+  migrate:
+    image: ghcr.io/croffasia/itsaplan-pro-api:${VERSION:-latest}
+    restart: 'no'
+    exclude_from_hc: true
+    command: ['bun', 'run', 'vendor/itsaplan/packages/db/src/migrate.ts']
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
+      # How long the dumps are kept, and the switch that upgrades without one.
+      # BACKUP_DIR is not among them: the volume below pins it.
+      - BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS:-}
+      - SKIP_PRE_MIGRATION_BACKUP=${SKIP_PRE_MIGRATION_BACKUP:-}
+    # Holds the dump taken before a release's migrations, kept for
+    # BACKUP_RETENTION_DAYS (30) so a downgrade has something to restore.
+    volumes:
+      - db-backups:/backups
+
+  api:
+    image: ghcr.io/croffasia/itsaplan-pro-api:${VERSION:-latest}
+    restart: unless-stopped
+    # The image's own CMD migrates first; here the migrate service has done that.
+    command: ['./pro-api']
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+      minio:
+        condition: service_started
+    environment:
+      # Listed without a value, this asks Coolify for the public domain of this
+      # service on port 3000. The port belongs to the declaration only — the value read
+      # back below is SERVICE_URL_API, which Coolify derives from it without the port.
+      - SERVICE_URL_API_3000
+      - NODE_ENV=production
+      - API_PORT=3000
+      - DATABASE_URL=postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
+      - BETTER_AUTH_SECRET=${SERVICE_PASSWORD_64_BETTERAUTH}
+      # Encrypts stored AI provider API keys at rest (AES-256-GCM). Changing it makes
+      # existing stored credentials undecryptable.
+      - APP_ENCRYPTION_KEY=${SERVICE_PASSWORD_64_ENCRYPTION}
+      # API_URL is the api origin; APP_URL is the web origin.
+      - API_URL=${SERVICE_URL_API}
+      - APP_URL=${SERVICE_URL_WEB}
+      # To override the cookie parent domain (multi-label TLDs / deep subdomains),
+      # add a COOKIE_DOMAIN env in Coolify — the code reads it if present.
+      # Where the client IP for the rate limit is read; empty reads X-Forwarded-For.
+      - CLIENT_IP_HEADER=${CLIENT_IP_HEADER:-}
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-}
+      # Public origin for incoming Git webhooks when API_URL is private; empty uses API_URL.
+      - GIT_WEBHOOK_BASE_URL=${GIT_WEBHOOK_BASE_URL:-}
+      - S3_ENDPOINT=http://minio:9000
+      - S3_BUCKET=${S3_BUCKET:-planner-attachments}
+      - S3_ACCESS_KEY_ID=${SERVICE_USER_MINIO}
+      - S3_SECRET_ACCESS_KEY=${SERVICE_PASSWORD_MINIO}
+      - S3_REGION=${S3_REGION:-us-east-1}
+      - S3_FORCE_PATH_STYLE=${S3_FORCE_PATH_STYLE:-}
+      # Hosts trusted even though they resolve privately. Also governs webhook URL
+      # validation and attachment import.
+      - SSRF_ALLOWED_HOSTS=${SSRF_ALLOWED_HOSTS:-}
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Background worker for webhook delivery, agent schedules, and autonomous agent
+  # runs. Shares the database with the api. No public ports, so nothing to probe.
+  worker:
+    image: ghcr.io/croffasia/itsaplan-pro-worker:${VERSION:-latest}
+    restart: unless-stopped
+    exclude_from_hc: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
+      # Notification delivery sends email and Telegram messages itself, with the
+      # provider credentials stored in the database — encrypted with this key, the
+      # same value the api uses.
+      APP_ENCRYPTION_KEY: ${SERVICE_PASSWORD_64_ENCRYPTION}
+      # Anonymous telemetry (TELEMETRY.md). Either variable, set to anything but 0,
+      # turns it off.
+      TELEMETRY_DISABLED: ${TELEMETRY_DISABLED:-}
+      DO_NOT_TRACK: ${DO_NOT_TRACK:-}
+      TELEMETRY_DEBUG: ${TELEMETRY_DEBUG:-}
+      # The same list the api reads. This process delivers webhooks to those hosts.
+      SSRF_ALLOWED_HOSTS: ${SSRF_ALLOWED_HOSTS:-}
+      # A downloaded Plane import attachment is stored here, the same bucket the
+      # api's own uploads use.
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: ${S3_BUCKET:-planner-attachments}
+      S3_ACCESS_KEY_ID: ${SERVICE_USER_MINIO}
+      S3_SECRET_ACCESS_KEY: ${SERVICE_PASSWORD_MINIO}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
+      # Optional tuning — defaults live in apps/worker/src/config.ts:
+      # WEBHOOK_POLL_INTERVAL_MS, WEBHOOK_BATCH_SIZE, WEBHOOK_TIMEOUT_MS,
+      # WEBHOOK_MAX_ATTEMPTS, WEBHOOK_DISABLE_THRESHOLD, WEBHOOK_LEASE_SECONDS,
+      # WEBHOOK_CLEANUP_DAYS, WEBHOOK_CLEANUP_EVERY_TICKS.
+      # Agent schedules: AGENT_RUN_POLL_INTERVAL_MS. The api runs the queued runs
+      # and reads the other AGENT_RUN_* values.
+
+  # Telegram bot: long polling for the instance bot, completing the account links
+  # users start from their profile. It reads the bot token and writes the links in the
+  # database, and holds no api credential — no public ports either.
+  #
+  # Must stay at one replica: Telegram hands each getUpdates call to a single caller,
+  # so a second instance would take updates away from the first.
+  bot:
+    image: ghcr.io/croffasia/itsaplan-pro-bot:${VERSION:-latest}
+    restart: unless-stopped
+    exclude_from_hc: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
+      APP_ENCRYPTION_KEY: ${SERVICE_PASSWORD_64_ENCRYPTION}
+      # The bot token itself is not set here: it is stored in the database and edited
+      # in god mode, so the service picks up a change without a redeploy.
+      # Optional tuning — defaults live in apps/bot/src/config.ts:
+      # BOT_CONFIG_POLL_INTERVAL_MS, BOT_CONFIG_RETRY_INTERVAL_MS.
+
+  web:
+    image: ghcr.io/croffasia/itsaplan-pro-web:${VERSION:-latest}
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      # Declares this service's public domain on port 3001; see the api service.
+      - SERVICE_URL_WEB_3001
+      - NODE_ENV=production
+      - PORT=3001
+      - HOSTNAME=0.0.0.0
+      # The api origin the browser uses. web streams avatars and attachments from the
+      # same origin (/media), so they are served from the web origin.
+      - API_URL=${SERVICE_URL_API}
+      # Legal document URLs shown on the logged-out screens; empty hides the notice.
+      - PRIVACY_URL=${PRIVACY_URL:-}
+      - TERMS_URL=${TERMS_URL:-}
+    # /login renders without a session, and without reaching the api.
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3001/login']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  postgres-data:
+  minio-data:
+  db-backups:

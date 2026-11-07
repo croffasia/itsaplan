@@ -31,7 +31,7 @@ export function mountMcp(app: any): void {
     '/mcp',
     async ({ request, body }: { request: Request; body: unknown }) => {
       const serve = async (credential: McpCredential, userId: string) => {
-        const server = await buildMcpServer(mcpApp, credential, userId);
+        const server = await buildMcpServer(mcpApp, credential, userId, request);
         const transport = new WebStandardStreamableHTTPServerTransport({
           sessionIdGenerator: undefined,
         });

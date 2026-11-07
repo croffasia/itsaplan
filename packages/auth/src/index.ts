@@ -26,19 +26,12 @@ import {
   isOidcUsable,
   isAccountDeactivated,
 } from './instance';
-import { sendAuthEmail } from './mail';
+import { emailLocale, sendAuthEmail } from './mail';
 import { readAuthExtensions } from './extensions';
+import { trustedOrigins } from './origins';
 
-// Frontend origins allowed to call the auth handler. Mandatory config: cookies, the
-// WebAuthn relying party and the cookie domain are all derived from it, so a deploy
-// that misses it has to fail at startup instead of running on a localhost default.
-export const trustedOrigins = (process.env.APP_URL ?? '')
-  .split(',')
-  .map((origin) => origin.trim().replace(/\/+$/, ''))
-  .filter(Boolean);
-if (trustedOrigins.length === 0) {
-  throw new Error('APP_URL is not set: public origin(s) of the web app.');
-}
+export { trustedOrigins };
+export { composeEmail, composeEmailDraft, emailLocale, savedLocaleOf, savedLocales } from './mail';
 
 // Parent domain for a cross-subdomain session cookie (".example.com" from
 // "app.example.com"). Returns undefined for localhost, IPs, or apex domains, where
@@ -325,6 +318,12 @@ async function refreshOidcProvider(): Promise<boolean> {
           // The `account` rows hold the OIDC subject. genericOAuth reads `id` instead
           // when the discovery document lists no id_token signing algorithms.
           accountSubject: ({ profile }) => String(profile.sub ?? ''),
+          // Only the standard email_verified claim, true or "true", says the address is
+          // verified.
+          mapProfileToUser: (profile) => {
+            const claim: unknown = profile.email_verified;
+            return { emailVerified: claim === true || claim === 'true' };
+          },
           // Signing out of the app leaves the session at the identity provider alone.
           disableProviderLogout: true,
         },
@@ -592,11 +591,12 @@ function createAuth() {
       // the old one ends with it. The signed-in change-password form sends
       // revokeOtherSessions for the same reason.
       revokeSessionsOnPasswordReset: true,
-      sendResetPassword: async ({ user, url }) => {
+      password: extensions.password,
+      sendResetPassword: async ({ user, url }, request) => {
         await sendAuthEmail({
           to: user.email,
-          subject: 'Reset your password',
-          text: 'Use the link below to set a new password. Ignore this email if you did not ask for it.',
+          template: 'reset',
+          locale: await emailLocale(user.email, request),
           url: withPublicOrigin(url),
         });
       },
@@ -607,13 +607,13 @@ function createAuth() {
       // the instance does not require verification.
       sendOnSignUp: true,
       autoSignInAfterVerification: true,
-      sendVerificationEmail: async ({ user, url }) => {
+      sendVerificationEmail: async ({ user, url }, request) => {
         const settings = await getAuthSettings();
         if (!settings.requireEmailVerification) return;
         await sendAuthEmail({
           to: user.email,
-          subject: 'Confirm your email address',
-          text: 'Use the link below to confirm this address and finish signing up.',
+          template: 'verify',
+          locale: await emailLocale(user.email, request),
           url: withPublicOrigin(url),
         });
       },
@@ -665,6 +665,14 @@ function createAuth() {
           required: false,
           defaultValue: true,
           input: false,
+        },
+        // When the person last used the app by any means (the web, an API key, MCP),
+        // to the hour; written by the api's auth context, read by god's user list.
+        lastSeenAt: {
+          type: 'date',
+          required: false,
+          input: false,
+          returned: false,
         },
       },
     },
@@ -895,7 +903,7 @@ function createAuth() {
       magicLink({
         // Stored plain, an OAuth state also passes as a token (GHSA-965c-763c-88jm).
         storeToken: 'hashed',
-        sendMagicLink: async ({ email, url }) => {
+        sendMagicLink: async ({ email, url }, ctx) => {
           const settings = await getAuthSettings();
           if (!settings.magicLink) {
             throw new APIError('FORBIDDEN', {
@@ -904,8 +912,8 @@ function createAuth() {
           }
           await sendAuthEmail({
             to: email,
-            subject: 'Your sign-in link',
-            text: 'Use the link below to sign in. It works once and expires shortly.',
+            template: 'magic',
+            locale: await emailLocale(email, ctx?.request),
             url: withPublicOrigin(url),
           });
         },
@@ -1044,6 +1052,8 @@ export {
   inviteValidSince,
   getEmailSettings,
   setEmailSettings,
+  getEmailTemplateSettings,
+  setEmailTemplateSettings,
   resolveEmailConfig,
   getGoogleSettings,
   setGoogleSettings,
@@ -1069,6 +1079,7 @@ export type {
   AuthSettings,
   InstanceEmailDto,
   InstanceEmailPatch,
+  EmailTemplateSettings,
   InstanceGoogleDto,
   InstanceGooglePatch,
   InstanceGoogleConfig,

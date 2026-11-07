@@ -11,6 +11,7 @@ import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useWorkspaceSettingsSections } from '../../hooks/useWorkspaceSettingsSections';
 import type { WorkspaceSectionGroup } from '../../types/workspaceSection';
 import {
+  activeNavItem,
   SectionNav,
   sectionNavIdleClass,
   sectionNavItemClass,
@@ -39,7 +40,7 @@ export default function WorkspaceSectionNav({ workspace }: { workspace: Workspac
   const settings = items('settings');
   const history = items('history');
   const entries = [...overview, ...settings, ...history];
-  const active = entries.find((entry) => entry.href === pathname);
+  const active = activeNavItem(entries, pathname);
   const activeId = active?.id ?? null;
   // The workspace's own path opens the first entry of the menu.
   const shown = active ?? (pathname === workspacePath(workspace.id) ? entries[0] : undefined);

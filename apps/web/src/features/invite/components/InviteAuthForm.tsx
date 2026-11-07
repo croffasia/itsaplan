@@ -53,7 +53,7 @@ export default function InviteAuthForm({
   const router = useRouter();
   const passwordEnabled = useAuthConfig()?.emailPassword !== false;
   const params = useSearchParams();
-  const redirectError = useRedirectError()(params.get('error'), params.get('error_description'));
+  const redirectError = useRedirectError()(params.get('error'));
   const returnTo = `/invite/${token}`;
   const [mode, setMode] = useState<Mode>(hasAccount ? 'signin' : 'register');
   const [password, setPassword] = useState('');

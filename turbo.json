@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "agentGuidance": false,
   "globalEnv": ["NODE_ENV", "DATABASE_URL", "BETTER_AUTH_SECRET", "API_URL", "APP_URL", "API_PORT"],
   "tasks": {
     "dev": {

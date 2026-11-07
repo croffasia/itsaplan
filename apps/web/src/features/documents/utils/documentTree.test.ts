@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
-import { documentAncestors } from './documentTree';
+import { documentAncestors, documentChildren } from './documentTree';
 
 function document(id: number, parentId: number | null, title: string): ProjectDocumentSummary {
   return {
@@ -40,5 +40,23 @@ describe('documentAncestors', () => {
     const second = document(2, 1, 'Second');
 
     assert.deepEqual(documentAncestors(first, [first, second]), [second]);
+  });
+});
+
+describe('documentChildren', () => {
+  it('returns the direct children of a page in manual order', () => {
+    const root = document(1, null, 'Root');
+    const second = { ...document(2, 1, 'Second'), position: 2 };
+    const first = { ...document(3, 1, 'First'), position: 1 };
+    const grandchild = document(4, 3, 'Grandchild');
+
+    assert.deepEqual(documentChildren(1, [root, second, first, grandchild]), [first, second]);
+  });
+
+  it('lists a page whose parent is not visible as a top-level page', () => {
+    const root = document(1, null, 'Root');
+    const orphan = document(2, 99, 'Orphan');
+
+    assert.deepEqual(documentChildren(null, [orphan, root]), [root, orphan]);
   });
 });

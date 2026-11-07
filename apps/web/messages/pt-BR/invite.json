@@ -37,5 +37,17 @@
   "existingAccountNotice": "Este e-mail já tem uma conta. Entre com sua senha.",
   "passwordsDoNotMatch": "As senhas não coincidem.",
   "registerFailed": "Não foi possível criar sua conta.",
-  "signInFailed": "Não foi possível conectar você."
+  "signInFailed": "Não foi possível conectar você.",
+  "received": {
+    "title": "Your invitations",
+    "description": "Review an invitation to see the team, project and role before joining.",
+    "review": "Review invitation",
+    "continue": "Continue without joining",
+    "loadFailed": "Invitations could not be loaded. Try again or continue without joining.",
+    "retry": "Try again",
+    "loading": "Loading invitations…",
+    "empty": "No pending invitations. New invitations sent to your verified email will appear here.",
+    "verifyRequired": "Verify your email address to discover invitations automatically. You can still open an invitation link shared with you.",
+    "loadFailedAccount": "Could not load invitations. Please try again."
+  }
 }

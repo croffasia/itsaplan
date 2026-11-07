@@ -179,18 +179,62 @@ describe('runner queue', () => {
     }
   });
 
-  it('paginates with stable id ordering and excludes internal agents', async () => {
+  it('narrows the queue to the project it is read in', async () => {
+    const { api, project, agent } = await setup();
+    const other = (
+      await api.teams({ teamId: project.teamId }).projects.post({ key: 'OTH', name: 'Other' })
+    ).data!;
+    await api
+      .teams({ teamId: project.teamId })
+      ['ai-agents']({ agentId: agent.id })
+      .projects.put({ projectIds: [project.id, other.id] });
+    const columnId = (await api.projects({ projectKey: 'OTH' }).get()).data!.columns[0].id;
+    const issue = (
+      await api.projects({ projectKey: 'OTH' }).issues.post({ columnId, title: 'Elsewhere' })
+    ).data!;
+    await api.issues({ issueId: issue.id }).comments.post({ body: '@runner other work' });
+    const projectQueue = api.projects({ projectKey: 'RUN' })['agent-runs'].queue;
+
+    const all = (await api['agent-runs'].queue.get()).data!;
+    const own = (await projectQueue.get()).data!;
+    expect(all.total).toBe(2);
+    expect(own).toMatchObject({ total: 1, queued: 1 });
+    expect(own.items[0].issueTitle).toBe('Run this');
+    const elsewhere = all.items.find((run) => run.issueTitle === 'Elsewhere')!;
+    expect((await projectQueue.get({ query: { runId: elsewhere.id } })).data!.total).toBe(0);
+
+    const role = (
+      await createRole(api, 'RUN', { name: 'Items', permissions: { work_items: { read: true } } })
+    ).data!;
+    const member = await addProjectMember(api, 'RUN', role.id);
+    expect((await member.projects({ projectKey: 'RUN' })['agent-runs'].queue.get()).status).toBe(
+      403,
+    );
+  });
+
+  it('paginates with stable id ordering and lists internal agents without a runner', async () => {
     const { api, issue, runner } = await setup();
     await api.issues({ issueId: issue.id }).comments.post({ body: '@runner second run' });
-    await createAgent(api, 'RUN', { name: 'Internal', username: 'internal', kind: 'internal' });
-    await api
-      .issues({ issueId: issue.id })
-      .comments.post({ body: '@internal private internal work' });
+    await createAgent(api, 'RUN', {
+      name: 'Internal',
+      username: 'internal',
+      kind: 'internal',
+      triggerOnMention: true,
+    });
+    await api.issues({ issueId: issue.id }).comments.post({ body: '@internal internal work' });
     const first = (await api['agent-runs'].queue.get({ query: { page: 1, pageSize: 1 } })).data!;
     const second = (await api['agent-runs'].queue.get({ query: { page: 2, pageSize: 1 } })).data!;
-    expect(first.total).toBe(2);
-    expect(second.total).toBe(2);
+    expect(first.total).toBe(3);
+    expect(second.total).toBe(3);
     expect(first.items[0].id).not.toBe(second.items[0].id);
+    expect((await api['agent-runs'].queue.get()).data!.items).toContainEqual(
+      expect.objectContaining({
+        kind: 'internal',
+        username: 'internal',
+        runnerState: null,
+        executionState: 'queued',
+      }),
+    );
     const claimed = (await runner['agent-runs'].claim.post()).data!.run!;
     const activeFirst = (await api['agent-runs'].queue.get({ query: { pageSize: 1 } })).data!;
     expect(activeFirst.items[0]).toMatchObject({ id: claimed.id, executionState: 'running' });
@@ -252,5 +296,63 @@ describe('runner queue', () => {
     const moved = await api.issues({ issueId: issue.id }).move.post({ projectId: other.id });
     expect(moved.status).toBe(200);
     expect((await api['agent-runs'].queue.get()).data!.total).toBe(0);
+  });
+
+  it('shows a run started in a document only to whoever may read the document', async () => {
+    const { api } = await setup();
+    const documents = api.projects({ projectKey: 'RUN' }).documents;
+    const created = (
+      await documents.post({
+        title: 'Plan',
+        content: 'Hello world',
+        contentJson: {
+          type: 'doc',
+          content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hello world' }] }],
+        },
+      })
+    ).data!;
+    const doc = documents({ documentId: created.id });
+    const root = (
+      await doc.comments.post({
+        body: 'Why?',
+        quote: 'Hello',
+        from: 1,
+        to: 6,
+        version: created.version,
+      })
+    ).data!;
+    await doc.comments.post({ parentId: root.id, body: '@runner summarise' });
+    const documentRuns = async (viewer: typeof api) =>
+      (await viewer['agent-runs'].queue.get()).data!.items.filter(
+        (item) => item.prompt === '@runner summarise',
+      );
+    const [run] = await documentRuns(api);
+    expect(run).toBeDefined();
+
+    const blindRole = await createRole(api, 'RUN', {
+      name: 'No documents',
+      permissions: { work_items: { read: true }, ai_agents: { read: true } },
+    });
+    const readerRole = await createRole(api, 'RUN', {
+      name: 'Documents too',
+      permissions: {
+        work_items: { read: true },
+        ai_agents: { read: true },
+        documents: { read: true },
+      },
+    });
+    const blind = await addProjectMember(api, 'RUN', blindRole.data!.id);
+    const reader = await addProjectMember(api, 'RUN', readerRole.data!.id);
+
+    expect(await documentRuns(blind)).toHaveLength(0);
+    expect((await blind['agent-runs']({ runId: run.id }).trace.get()).status).toBe(403);
+    expect(await documentRuns(reader)).toHaveLength(1);
+    expect((await reader['agent-runs']({ runId: run.id }).trace.get()).status).toBe(200);
+
+    const { version } = (await doc.get()).data!;
+    expect((await doc.access.post({ version, isPrivate: true })).status).toBe(200);
+    expect(await documentRuns(reader)).toHaveLength(0);
+    expect((await reader['agent-runs']({ runId: run.id }).trace.get()).status).toBe(404);
+    expect(await documentRuns(api)).toHaveLength(1);
   });
 });

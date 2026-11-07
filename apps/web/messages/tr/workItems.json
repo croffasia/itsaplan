@@ -67,8 +67,13 @@
       "custom": "Tüm işlerin tarihi var."
     }
   },
+  "empty": {
+    "title": "İş yok",
+    "description": "İşler burada görünecek.",
+    "filteredTitle": "Eşleşen iş yok",
+    "filteredDescription": "Daha fazlasını görmek için filtreleri değiştirin."
+  },
   "timeline": {
-    "empty": "Zaman çizelgesine yerleştirilecek henüz iş yok.",
     "expandGroup": "Grubu genişlet",
     "collapseGroup": "Grubu daralt",
     "inferredStart": "Başlangıç oluşturulma tarihine göre belirlendi",
@@ -105,7 +110,7 @@
   "share": {
     "issueTitle": "İş",
     "issueUnavailable": "Bu işe ulaşılamıyor.",
-    "boardUnavailable": "Paylaşılan panoya ulaşılamıyor. Bağlantı iptal edilmiş olabilir."
+    "boardUnavailable": "Paylaşılan panoya ulaşılamıyor. Bağlantı iptal edilmiş ya da süresi dolmuş olabilir."
   },
   "groups": {
     "noAssignee": "Sorumlu atanmamış",

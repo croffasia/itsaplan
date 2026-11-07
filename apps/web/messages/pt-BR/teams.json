@@ -20,6 +20,10 @@
       "title": "Projetos",
       "description": "Os projetos que este time possui."
     },
+    "templates": {
+      "title": "Modelos de projeto",
+      "description": "Configurações salvas a partir das quais novos projetos começam."
+    },
     "members": {
       "title": "Membros do time",
       "description": "Todos no time e os convites ainda abertos."
@@ -55,6 +59,9 @@
     "analytics": {
       "title": "Consumo",
       "description": "Quanto os agentes da equipe gastaram com modelos, por agente, projeto e dia."
+    },
+    "queue": {
+      "title": "Execuções de agentes"
     }
   },
   "info": {
@@ -71,15 +78,16 @@
     "leaveHint": "Você mantém os projetos de que é membro. Para entrar de novo, um dono precisa readicioná-lo.",
     "delete": {
       "action": "Excluir equipe",
-      "hint": "Seus membros, funções, convites, habilidades, ferramentas e integrações são excluídos com ela. As pessoas mantêm suas contas e suas outras equipes.",
+      "hint": "Seus membros, funções, modelos de projeto, convites, habilidades, ferramentas e integrações são excluídos com ela. As pessoas mantêm suas contas e suas outras equipes.",
       "blocked": "Exclua primeiro os projetos e os agentes de IA da equipe.",
       "title": "Excluir {name}?",
-      "description": "<strong>{name}</strong> é excluída com seus membros, funções, convites, habilidades, ferramentas e integrações. As pessoas mantêm suas contas e suas outras equipes. Isso não pode ser desfeito.",
+      "description": "<strong>{name}</strong> é excluída com seus membros, funções, modelos de projeto, convites, habilidades, ferramentas e integrações. As pessoas mantêm suas contas e suas outras equipes. Isso não pode ser desfeito.",
       "deleted": "Equipe excluída"
     }
   },
   "columns": {
     "project": "Projeto",
+    "template": "Modelo",
     "owners": "Donos",
     "members": "Membros",
     "created": "Criado",
@@ -138,9 +146,9 @@
     "search": "Buscar funções",
     "noMatches": "Nenhuma função corresponde a “{query}”.",
     "default": "Padrão",
+    "system": "Do sistema",
     "editAction": "Editar função",
     "deleteAction": "Excluir função",
-    "defaultUndeletable": "A função padrão não pode ser excluída",
     "deleteTitle": "Excluir função \"{name}\"",
     "deleteDescription": "Nada está nesta função. Isso não pode ser desfeito.",
     "deleteInUse": "Esta função ainda está em uso. Escolha a função para a qual tudo nela será movido.",
@@ -154,16 +162,6 @@
     "moveAndDelete": "Mover e excluir",
     "noTargetRole": "Não há outra função para a qual movê-los. Crie uma primeiro.",
     "newRole": "Nova função",
-    "editorTitleEdit": "Editar função",
-    "editorTitleNew": "Nova função",
-    "namePlaceholder": "ex. Colaborador",
-    "resourceColumn": "Recurso",
-    "toggleActionAll": "Alternar {action} para todos os recursos",
-    "toggleGroupAll": "Alternar todas as permissões de {group}",
-    "toggleActionGroup": "Alternar {action} para {group}",
-    "cellAria": "{resource}: {action}",
-    "saveRole": "Salvar função",
-    "createRole": "Criar função",
     "copyRoles": "Copiar funções",
     "pasteRoles": "Colar funções",
     "nothingToCopy": "Nenhuma função personalizada para copiar.",
@@ -180,13 +178,87 @@
       "actions": {
         "create": "Nova",
         "update": "Sobrescrever",
-        "skip": "Ignorar (padrão)"
+        "skip": "Ignorar (função do sistema)"
       }
     },
     "transferErrors": {
       "invalidJson": "A área de transferência não contém JSON válido.",
       "notAnExport": "A área de transferência não contém uma exportação de funções.",
       "empty": "A exportação de funções está vazia."
+    }
+  },
+  "templates": {
+    "empty": "Nenhum modelo de projeto ainda",
+    "emptyHint": "Salve um projeto como modelo para criar novos projetos a partir dele.",
+    "newAction": "Novo modelo",
+    "teams": "Equipes",
+    "allTeams": "Todas as equipes",
+    "noTeams": "Nenhuma equipe",
+    "editAction": "Editar modelo",
+    "editHint": "O conteúdo do modelo continua como foi salvo.",
+    "copyAction": "Copiar modelo",
+    "copied": "Modelo \"{name}\" copiado. Cole-o em outro espaço de trabalho para importá-lo.",
+    "downloadAction": "Baixar",
+    "downloadFailed": "Não foi possível baixar o modelo.",
+    "importAction": "Importar modelo",
+    "deleteAction": "Excluir modelo",
+    "deleteDialog": {
+      "title": "Excluir o modelo \"{name}\"?",
+      "description": "Os projetos criados a partir dele continuam iguais.",
+      "confirm": "Excluir modelo",
+      "galleryNote": "A página dele na galeria também sai do ar."
+    },
+    "panel": {
+      "saved": "Salvo em {date}",
+      "none": "Nenhum",
+      "teams": "Equipes: {teams}"
+    },
+    "publish": {
+      "action": "Publicar",
+      "published": "Publicado",
+      "account": "Conta da galeria",
+      "publishingAs": "Publicando como",
+      "authorProfile": "Perfil do autor",
+      "changeEmail": "Trocar e-mail",
+      "rules": "Regras da galeria",
+      "unlink": "Desvincular workspace",
+      "downloadable": "Qualquer pessoa pode baixar",
+      "private": "Sem issues nem pessoas",
+      "counts": "{states, plural, one {# estado} other {# estados}} · {types, plural, one {# tipo} other {# tipos}} · {fields, plural, one {# campo} other {# campos}}",
+      "by": "por <b>{name}</b>",
+      "authorHint": "Aparece em todos os modelos publicados a partir de {email}.",
+      "authorName": "Autor",
+      "authorUrl": "Link do perfil",
+      "optional": "Opcional",
+      "authorUrlInvalid": "Deve começar com https://",
+      "submit": "Publicar",
+      "update": "Atualizar página",
+      "live": "No ar",
+      "since": "desde {date}",
+      "openPage": "Abrir página",
+      "copyLink": "Copiar link",
+      "linkCopied": "Link copiado",
+      "copyFailed": "Não foi possível copiar o link",
+      "unpublish": "Despublicar",
+      "unpublishConfirm": "Tirar a página do ar?",
+      "unpublishHint": "O link dela vai parar de funcionar.",
+      "keep": "Manter",
+      "publishedToast": "Publicado",
+      "updatedToast": "Página atualizada",
+      "badge": "Público",
+      "badgeHint": "Na galeria desde {date}",
+      "link": {
+        "intro": "Confirme um e-mail uma única vez para este workspace.",
+        "email": "E-mail",
+        "emailHint": "Não aparece publicamente",
+        "agree": "Ao enviar o código, você aceita as <rules>regras da galeria</rules>.",
+        "sendCode": "Enviar código",
+        "codeSent": "Digite o código enviado para {email}",
+        "code": "Código",
+        "confirm": "Confirmar",
+        "resend": "Enviar de novo",
+        "resent": "Novo código enviado"
+      }
     }
   },
   "panel": {
@@ -240,6 +312,8 @@
     "timeout": "Timeout (s)",
     "optional": "Opcional",
     "apiKey": "Chave de API",
+    "from": "Endereço de remetente",
+    "fromHint": "Obrigatório para Resend. Com SMTP, o padrão é o nome de usuário.",
     "telegramBot": "Bot do Telegram",
     "telegramBotHint": "O bot que entrega notificações para todos os projetos do time. Membros escolhem seu próprio chat em suas preferências. O token é armazenado criptografado.",
     "botToken": "Token da API do bot (opcional)",
@@ -379,6 +453,8 @@
     "username": "Nome de usuário",
     "usernamePlaceholder": "ex. bot-triagem",
     "usernameHint": "Letras, dígitos, pontos, hífens e sublinhados. Até 64 caracteres.",
+    "chat": "Chat",
+    "chatHint": "Permite que um membro abra ou continue um chat com este agente. Desativado, ele some do seletor de chat; menções, delegações e agendamentos continuam executando-o.",
     "access": "Disponibilidade",
     "accessHint": "Quem pode dar tarefas a este agente",
     "model": "Modelo",
@@ -545,6 +621,7 @@
     "endOfHistory": "Fim do histórico",
     "manualTask": "Tarefa manual",
     "scheduledTask": "Tarefa agendada",
+    "documentTask": "Comentário em um documento",
     "failed": "Com falha",
     "task": "Tarefa",
     "error": "Erro",
@@ -638,6 +715,26 @@
       "owner": "Só o dono",
       "managers": "O dono e os admins",
       "members": "Todos dos times dele"
+    },
+    "runLimit": {
+      "title": "Execuções de agentes simultâneas",
+      "description": "Quantas execuções dos seus agentes rodam ao mesmo tempo. As demais esperam na fila. 0 significa sem limite próprio.",
+      "descriptionCapped": "Quantas execuções dos seus agentes rodam ao mesmo tempo, até {max}. As demais esperam na fila. Com 0, o limite é {max}.",
+      "ownerOnly": "Só o proprietário muda quantas execuções de agentes rodam ao mesmo tempo.",
+      "none": "Sem limite"
+    },
+    "sharing": {
+      "title": "Links públicos",
+      "description": "Se documentos, issues e visualizações deste workspace podem ser compartilhados por link.",
+      "enabled": "Permitir links públicos",
+      "enabledHint": "Desativado, ninguém aqui pode compartilhar e os links existentes deixam de abrir até ser ativado de novo.",
+      "instanceOff": "Os links públicos estão desativados nesta instância.",
+      "teamsOnly": "Somente equipes selecionadas",
+      "teamsOnlyHint": "Somente as equipes abaixo podem compartilhar. Os links das demais equipes deixam de abrir.",
+      "statusOn": "Ligado",
+      "statusOff": "Desligado",
+      "ownerOnly": "Somente o proprietário escolhe quais equipes podem compartilhar.",
+      "saved": "Configurações de links públicos salvas"
     },
     "managers": {
       "title": "Gestores",
@@ -757,6 +854,9 @@
       "useBuiltIn": "Usar o preço embutido",
       "removePrice": "Remover preço",
       "save": "Salvar preço"
+    },
+    "queue": {
+      "title": "Execuções de agentes"
     }
   }
 }

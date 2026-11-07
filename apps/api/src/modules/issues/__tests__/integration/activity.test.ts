@@ -725,7 +725,11 @@ describe('issue activity', () => {
 
       const inbox = await member.api.notifications.get({ query: { types: 'mentioned' } });
       expect(inbox.data!.items).toHaveLength(1);
-      expect(inbox.data!.items[0]).toMatchObject({ type: 'mentioned', issueId: issue.id });
+      expect(inbox.data!.items[0]).toMatchObject({
+        type: 'mentioned',
+        issueId: issue.id,
+        issueCommentId: comment.id,
+      });
     });
 
     it('lets a project owner edit another member’s comment', async () => {

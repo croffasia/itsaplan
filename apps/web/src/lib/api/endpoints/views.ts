@@ -3,8 +3,10 @@ import type { SavedViewDisplay } from '@/utils/viewSettings';
 import { request } from '@/lib/api/core/client';
 
 // A saved view (a tab above the work items view): a named filter set plus a display
-// snapshot (layout + that layout's settings). The view itself is shared by the
-// project; only `favorite` is per user. filters/display are stored as jsonb.
+// snapshot (layout + that layout's settings). A project's view is shared by the
+// project, a private one is seen only by its creator; `favorite` and `hidden` are per
+// user, and the list comes in the order of the user's own tab row.
+// filters/display are stored as jsonb.
 export interface View {
   id: number;
   projectId: number;
@@ -19,9 +21,16 @@ export interface View {
   // fields, activity) or only their title, description, state, type, priority,
   // dates, subtasks and links.
   shareExtended: boolean;
-  // Whether the current user marked the view as a favorite: it pins the tab to the
-  // front and lists the view under Work items in the sidebar.
+  // Seen only by the current user, who created it, until they add it to the project. It
+  // has no share link, and mixes with the project's views only in the user's own tab row.
+  isPrivate: boolean;
+  // When the share link stops working, or null when it never does.
+  shareExpiresAt: string | null;
+  // Whether the current user marked the view as a favorite: its tab carries a star and
+  // the view is listed under Work items in the sidebar.
   favorite: boolean;
+  // Whether the current user hid this project's view from their tab row.
+  hidden: boolean;
   createdAt: string;
 }
 
@@ -30,6 +39,7 @@ export interface NewViewInput {
   icon?: string | null;
   filters?: FilterSet;
   display?: SavedViewDisplay;
+  isPrivate?: boolean;
 }
 
 export interface ViewPatch {
@@ -51,8 +61,23 @@ export const updateView = (viewId: number, patch: ViewPatch) =>
 export const deleteView = (viewId: number) =>
   request<void>(`/views/${viewId}`, { method: 'DELETE' });
 
+export const publishView = (viewId: number) =>
+  request<View>(`/views/${viewId}/publish`, { method: 'POST' });
+
 export const setViewFavorite = (viewId: number, favorite: boolean) =>
   request<void>(`/views/${viewId}/favorite`, { method: favorite ? 'PUT' : 'DELETE' });
+
+export const setViewHidden = (viewId: number, hidden: boolean) =>
+  request<void>(`/views/${viewId}/hidden`, { method: hidden ? 'PUT' : 'DELETE' });
+
+export const arrangeTabRow = (projectKey: string, orderedIds: number[]) =>
+  request<View[]>(`/projects/${projectKey}/views/tab-row`, {
+    method: 'PUT',
+    body: JSON.stringify({ orderedIds }),
+  });
+
+export const resetTabRow = (projectKey: string) =>
+  request<View[]>(`/projects/${projectKey}/views/tab-row`, { method: 'DELETE' });
 
 export const reorderViews = (projectKey: string, orderedIds: number[]) =>
   request<View[]>(`/projects/${projectKey}/views/reorder`, {

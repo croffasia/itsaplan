@@ -7,6 +7,10 @@ nodeSelector: {}
 tolerations: []
 affinity: {}
 
+# -- Runs the Pro images, which keep the core's source under vendor/itsaplan and start
+# the api with ./pro-api. values-pro.yaml sets it with the Pro image repositories.
+pro: false
+
 # -- Image pull secrets for private registries
 imagePullSecrets: []
 

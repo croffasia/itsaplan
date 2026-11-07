@@ -4,7 +4,7 @@ import { formatDateTime, formatTime } from '@/utils/dates';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import AgentChatToolBlock from '@/components/common/agent-chat/AgentChatToolBlock';
 import Markdown from '@/components/common/Markdown';
-import type { ExternalTracePart } from './externalTraceParts';
+import type { TracePart } from './externalTraceParts';
 
 // An MCP tool reaches the agent as `mcp__<server>__<tool>`; the server adds nothing here.
 function toolLabel(name: string): string {
@@ -13,7 +13,7 @@ function toolLabel(name: string): string {
   return end === -1 ? name : name.slice(end + 2);
 }
 
-export default function AgentRunStep({ part }: { part: ExternalTracePart }) {
+export default function AgentRunStep({ part }: { part: TracePart }) {
   const t = useTranslations('common.agentChat');
   const time = (
     <time

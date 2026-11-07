@@ -117,7 +117,7 @@ export function formatDateTime(value: string): string {
 }
 
 // The display zone's offset at a given moment, in ms (zone time minus UTC).
-function zoneOffsetMs(date: Date): number {
+export function zoneOffsetMs(date: Date): number {
   const parts = new Intl.DateTimeFormat('en-US', {
     hourCycle: 'h23',
     year: 'numeric',

@@ -5,7 +5,7 @@ import type { TeamMembership } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { commonErrors } from '#shared/responses';
 import { mcpTool } from '#mcp/generate';
-import { agentScopeOf, getAgentById } from '../core/service';
+import { agentScopeOf, assertFullAgentAccess, getAgentById } from '../core/service';
 import {
   agentParams,
   InvocationSecretResponse,
@@ -19,6 +19,7 @@ import { testInvocation } from './service';
 async function requireExternalAgent(agentId: number, membership: TeamMembership) {
   const agent = await getAgentById(agentId, membership.teamId, agentScopeOf(membership));
   if (!agent) throw new HttpError(404, 'Agent not found');
+  await assertFullAgentAccess(membership, agentId);
   if (agent.kind !== 'external') {
     throw new HttpError(400, 'Only an external agent is sent its work');
   }
@@ -26,8 +27,9 @@ async function requireExternalAgent(agentId: number, membership: TeamMembership)
 }
 
 // What is needed to set up the endpoint at an external agent's invocation URL. Each
-// route requires `edit` on the agents: the secret lets its holder sign work for the
-// agent, and whoever may edit the agent can already point its URL anywhere.
+// route requires `edit` on the agents and the access editing the agent takes: the secret
+// lets its holder sign work the agent runs in every project it works in, and whoever may
+// edit the agent can already point its URL anywhere.
 export const agentInvocationRoutes = new Elysia({
   name: 'agent-invocation',
   detail: { tags: ['AI Agents'] },

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { setExtraIntegrations } from '@repo/agent-tools';
 import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -43,6 +44,28 @@ describe('integrations', () => {
     );
   });
 
+  // The tool and integration pickers search the label, so a search for Forgejo finds the
+  // Gitea tools that serve it.
+  it('names Forgejo in the Gitea integration label', async () => {
+    const { asOwner, teamId } = await setup();
+    const res = await integrations(asOwner, teamId).catalog.get();
+    const gitea = res.data?.find((integration) => integration.key === 'gitea');
+    expect(gitea?.label.toLowerCase()).toContain('forgejo');
+  });
+
+  it('lists a tool integration an extension adds after start', async () => {
+    const { asOwner, teamId } = await setup();
+    setExtraIntegrations([{ key: 'extra', label: 'Extra', credentialSchema: [], tools: [] }]);
+    try {
+      const res = await integrations(asOwner, teamId).catalog.get();
+      expect(res.data).toEqual(
+        expect.arrayContaining([expect.objectContaining({ key: 'extra', kind: 'tool' })]),
+      );
+    } finally {
+      setExtraIntegrations();
+    }
+  });
+
   it('stores an LLM credential, masks the secret, and never returns the raw value', async () => {
     const { asOwner, teamId } = await setup();
     const res = await integrations(asOwner, teamId).post({
@@ -83,12 +106,32 @@ describe('integrations', () => {
     });
   });
 
+  it('stores a GitHub credential, showing the URL and masking the token', async () => {
+    const { asOwner, teamId } = await setup();
+    const res = await integrations(asOwner, teamId).post({
+      integrationKey: 'github',
+      credential: { baseUrl: 'https://github.example.com', token: 'github_pat_secret-abcd' },
+    });
+    expect(res.status).toBe(201);
+    expect(res.data!.redacted).toMatchObject({
+      baseUrl: 'https://github.example.com',
+      token: '••••abcd',
+    });
+    expect(JSON.stringify(res.data)).not.toContain('github_pat_secret');
+  });
+
   it('rejects an unknown integration', async () => {
     const { asOwner, teamId } = await setup();
     const res = await integrations(asOwner, teamId).post({
       integrationKey: 'not-an-integration',
       credential: {},
     });
+    expect(res.status).toBe(400);
+  });
+
+  it('refuses a credential for an integration that needs none', async () => {
+    const { asOwner, teamId } = await setup();
+    const res = await integrations(asOwner, teamId).post({ integrationKey: 'pdf', credential: {} });
     expect(res.status).toBe(400);
   });
 
@@ -157,6 +200,52 @@ describe('integrations', () => {
     });
     expect(upd.status).toBe(200);
     expect(upd.data!.redacted).toMatchObject({ botToken: '••••aaaa', defaultChatId: '99' });
+  });
+
+  // The tools send the stored token to baseUrl, so an edit that kept the token under a
+  // new address would hand it to whoever can edit but never read it.
+  it('refuses a new address that keeps the stored token', async () => {
+    const { asOwner, teamId } = await setup();
+    const created = await integrations(asOwner, teamId).post({
+      integrationKey: 'github',
+      credential: { token: 'github_pat_secret-abcd' },
+    });
+    const role = await createRole(asOwner, 'MKT', {
+      name: 'Integrator',
+      permissions: { integrations: { read: true, edit: true } },
+    });
+    const asMember = await addProjectMember(asOwner, 'MKT', role.data!.id);
+
+    const upd = await integrations(
+      asMember,
+      teamId,
+    )({ credentialId: created.data!.id }).patch({
+      credential: { baseUrl: 'https://collector.example' },
+    });
+    expect(upd.status).toBe(400);
+    const list = await integrations(asOwner, teamId).get();
+    expect(list.data!.items[0]!.redacted).not.toHaveProperty('baseUrl');
+  });
+
+  it('takes a new address with the token, and the same address without it', async () => {
+    const { asOwner, teamId } = await setup();
+    const created = await integrations(asOwner, teamId).post({
+      integrationKey: 'gitea',
+      credential: { baseUrl: 'https://git.example.com', token: 'token-secret-abcd' },
+    });
+    const credential = integrations(asOwner, teamId)({ credentialId: created.data!.id });
+
+    const same = await credential.patch({ credential: { baseUrl: 'https://git.example.com' } });
+    expect(same.status).toBe(200);
+
+    const moved = await credential.patch({
+      credential: { baseUrl: 'https://git2.example.com', token: 'token-secret-efgh' },
+    });
+    expect(moved.status).toBe(200);
+    expect(moved.data!.redacted).toMatchObject({
+      baseUrl: 'https://git2.example.com',
+      token: '••••efgh',
+    });
   });
 
   it('deletes a credential', async () => {

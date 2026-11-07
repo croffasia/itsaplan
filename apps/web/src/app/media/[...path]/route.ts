@@ -11,6 +11,27 @@ import { serverRuntimeEnv } from '@/utils/runtimeEnv';
 const MEDIA_ROOTS = ['avatars', 'attachments', 'chat-attachments', 'initiative-attachments'];
 const PUBLIC_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+// The api path a media path names, or null for any other shape: `<root>/<id>/raw`, or
+// the asset of a shared document, `share/document/<token>/assets/<id>/raw`, which the
+// share token alone opens.
+function upstreamPath(path: string[]): string | null {
+  const [root, publicId, raw] = path;
+  if (path.length === 3 && MEDIA_ROOTS.includes(root) && PUBLIC_ID.test(publicId) && raw === 'raw')
+    return path.join('/');
+  const [share, kind, token, assets, assetId, last] = path;
+  if (
+    path.length === 6 &&
+    share === 'share' &&
+    kind === 'document' &&
+    PUBLIC_ID.test(token) &&
+    assets === 'assets' &&
+    PUBLIC_ID.test(assetId) &&
+    last === 'raw'
+  )
+    return path.join('/');
+  return null;
+}
+
 // Copied from the api's response, including the headers that keep attacker-controlled
 // bytes inert (nosniff, the disposition that forces a download, the sandbox CSP).
 const PASSTHROUGH_HEADERS = [
@@ -24,22 +45,14 @@ const PASSTHROUGH_HEADERS = [
 ];
 
 export async function GET(request: Request, { params }: { params: Promise<{ path: string[] }> }) {
-  const { path } = await params;
-  const [root, publicId, raw] = path;
-  if (
-    path.length !== 3 ||
-    !MEDIA_ROOTS.includes(root) ||
-    !PUBLIC_ID.test(publicId) ||
-    raw !== 'raw'
-  ) {
-    return new Response(null, { status: 404 });
-  }
+  const upstream = upstreamPath((await params).path);
+  if (!upstream) return new Response(null, { status: 404 });
 
   // The public origin is what the browser uses; inside a compose network the api is
   // reached by service name, which is what SERVICE_URL_API carries (as for the worker).
   const origin = process.env.SERVICE_URL_API || serverRuntimeEnv().apiUrl;
   const { search } = new URL(request.url);
-  const upstream = await fetch(`${origin}/${root}/${publicId}/raw${search}`, {
+  const response = await fetch(`${origin}/${upstream}${search}`, {
     // The api answers 304 to it, and passing it on keeps a cached avatar cached.
     headers: forwardedHeaders(request),
     cache: 'no-store',
@@ -48,10 +61,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ path
 
   const headers = new Headers();
   for (const name of PASSTHROUGH_HEADERS) {
-    const value = upstream.headers.get(name);
+    const value = response.headers.get(name);
     if (value) headers.set(name, value);
   }
-  return new Response(upstream.body, { status: upstream.status, headers });
+  return new Response(response.body, { status: response.status, headers });
 }
 
 function forwardedHeaders(request: Request): HeadersInit {

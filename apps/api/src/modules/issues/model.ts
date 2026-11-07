@@ -119,6 +119,7 @@ export const IssueResponse = t.Object({
   statusSince: t.String(),
   shareToken: t.Nullable(t.String()),
   shareExtended: t.Boolean(),
+  shareExpiresAt: t.Nullable(t.String()),
   labelIds: t.Array(t.Number()),
   fieldValues: t.Array(IssueFieldValueEntry),
 });
@@ -324,16 +325,32 @@ export const IssueSearchHitResponse = t.Object({
   initiativeId: t.Nullable(t.Number()),
   cycleId: t.Nullable(t.Number()),
   parentId: t.Nullable(t.Number()),
+  parent: t.Nullable(t.Object({ id: t.Number(), identifier: t.String(), title: t.String() })),
   assigneeUserId: t.Nullable(t.String()),
   delegateUserId: t.Nullable(t.String()),
   priority: t.Nullable(t.String()),
   dueDate: t.Nullable(t.String()),
+  estimatePoints: t.Nullable(t.Number()),
+  estimateMinutes: t.Nullable(t.Number()),
+  loggedMinutes: t.Number(),
   labelIds: t.Array(t.Number()),
   archived: t.Boolean(),
   createdAt: t.String(),
   updatedAt: t.String(),
+  statusSince: t.String(),
   completedAt: t.Nullable(t.String()),
 });
+
+export const CrossProjectIssueHitResponse = t.Composite([
+  IssueSearchHitResponse,
+  t.Object({
+    projectId: t.Number(),
+    projectRef: t.String(),
+    projectKey: t.String(),
+    projectName: t.String(),
+    teamName: t.String(),
+  }),
+]);
 
 // FeedItemRow from activity.ts: one timeline entry (comment or change-log).
 // kind is the FeedKind union (a string).
@@ -532,6 +549,19 @@ export const searchIssuesQuery = t.Object({
   limit: t.Optional(t.Numeric({ description: 'Max results (1-500). Default 50.' })),
 });
 
+export const searchAllIssuesQuery = t.Object({
+  q: t.String({
+    minLength: 1,
+    description:
+      'Case-insensitive substring, matched against the title, description, issue number ("KEY-42" or a bare number), and custom field text.',
+  }),
+  limit: t.Optional(t.Numeric({ description: 'Max results (1-50). Default 20.' })),
+  perProjectLimit: t.Optional(
+    t.Numeric({ description: 'Max results from one project (1-50). Default 5.' }),
+  ),
+  excludeProjectId: t.Optional(t.Numeric({ description: "Leave out this project's issues." })),
+});
+
 export const listIssuesQuery = t.Object({
   columnId: t.Optional(t.Numeric({ description: 'Exact column (state) id.' })),
   typeId: t.Optional(t.Numeric({ description: 'Exact issue type id.' })),
@@ -550,11 +580,48 @@ export const listIssuesQuery = t.Object({
   createdTo: instantQuery('Exclusive latest creation time.'),
   updatedFrom: instantQuery('Inclusive earliest last-update time.'),
   updatedTo: instantQuery('Exclusive latest last-update time.'),
+  blocked: t.Optional(
+    t.String({
+      description:
+        "'true' for issues another issue is blocking while it is still open (not in a " +
+        'completed or canceled column, not archived).',
+    }),
+  ),
   includeArchived: t.Optional(
     t.String({ description: "'true' to include archived issues. Default false." }),
   ),
   limit: t.Optional(t.Numeric({ description: 'Max results (1-500). Default 50.' })),
 });
+
+export const listAllIssuesQuery = t.Composite([
+  t.Pick(listIssuesQuery, [
+    'assigneeUserId',
+    'delegateUserId',
+    'priority',
+    'dueFrom',
+    'dueTo',
+    'createdFrom',
+    'createdTo',
+    'updatedFrom',
+    'updatedTo',
+    'includeArchived',
+    'limit',
+  ]),
+  t.Object({
+    cycleIds: t.Optional(
+      t.String({ description: 'CSV of cycle ids; the issue must be in one of them.' }),
+    ),
+    parentIds: t.Optional(
+      t.String({ description: 'CSV of parent issue ids, to list their subtasks.' }),
+    ),
+    stateTypes: t.Optional(
+      t.String({
+        description:
+          "CSV of column state types: backlog, unstarted, started, completed, canceled. 'backlog,unstarted,started' lists the open issues.",
+      }),
+    ),
+  }),
+]);
 
 export const issueSequenceParams = t.Object({
   projectKey: t.String(),
@@ -651,6 +718,10 @@ export const issueLinkParams = t.Object({ issueId: t.Numeric(), linkId: t.Numeri
 export const checklistTitleBody = t.Object({ title: ChecklistTitleSchema });
 
 export const createChecklistItemBody = t.Object({ content: ChecklistItemContentSchema });
+
+export const createChecklistItemsBody = t.Object({
+  items: t.Array(createChecklistItemBody, { minItems: 1, maxItems: 100 }),
+});
 
 export const updateChecklistItemBody = t.Object({
   content: t.Optional(ChecklistItemContentSchema),

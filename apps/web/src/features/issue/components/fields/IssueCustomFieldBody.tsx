@@ -1,6 +1,7 @@
 import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { Assignee } from '@/lib/api/endpoints/projects';
 import type { IssueFieldValue, IssueFieldValueInput } from '@/lib/api/endpoints/issues';
+import type { MentionSource } from '@/lib/api/endpoints/mentions';
 import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import { type Embeddable } from '@/components/common/editor/attachmentEmbed';
 import IssueCustomFieldControl from './IssueCustomFieldControl';
@@ -19,6 +20,7 @@ export default function IssueCustomFieldBody({
   imageAttachments,
   onSetField,
   readOnly,
+  mentions,
 }: {
   def: CustomField;
   current: IssueFieldValue | undefined;
@@ -28,6 +30,7 @@ export default function IssueCustomFieldBody({
   imageAttachments?: Embeddable[];
   onSetField: (fieldId: number, value: IssueFieldValueInput) => void;
   readOnly?: boolean;
+  mentions?: MentionSource;
 }) {
   const t = useTranslations('issue.fields');
   return (
@@ -43,6 +46,7 @@ export default function IssueCustomFieldBody({
           editable={!readOnly}
           uploadFile={uploadFile}
           imageAttachments={imageAttachments}
+          mentions={mentions}
           onBlur={(md) => {
             const next = md.trim() === '' ? null : md;
             if (next !== ((current?.value as string | null) ?? null))

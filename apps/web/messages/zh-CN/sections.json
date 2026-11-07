@@ -4,7 +4,8 @@
     "preferences": "偏好设置",
     "accounts": "关联账户",
     "security": "安全",
-    "api-keys": "API 密钥"
+    "api-keys": "API 密钥",
+    "invitations": "Invitations"
   },
   "godGroups": {
     "management": "管理",
@@ -24,6 +25,10 @@
       "label": "项目",
       "description": "此实例中的所有项目，包括项目内容、最近活动时间和访问成员。"
     },
+    "roles": {
+      "label": "系统角色",
+      "description": "实例中所有团队都可使用的默认角色。"
+    },
     "general": {
       "label": "通用",
       "description": "个人工作区、新建项目的默认设置，以及代理追踪和运行时长。"
@@ -39,6 +44,10 @@
     "storage": {
       "label": "存储",
       "description": "设置单个文件大小、允许的附件类型和每个项目的存储配额。"
+    },
+    "email-templates": {
+      "label": "邮件模板",
+      "description": "管理系统邮件模板。"
     },
     "telegram": {
       "label": "Telegram",
@@ -102,6 +111,10 @@
       "label": "Webhook",
       "description": "将项目事件发送到外部 URL，并使用每个 Webhook 独立的密钥签名。"
     },
+    "forms": {
+      "label": "表单",
+      "description": "任何拿到链接的人都能在这里创建问题。"
+    },
     "git": {
       "label": "仓库",
       "description": "当关联的拉取请求在 GitHub、GitLab、Gitea、Forgejo 或 Bitbucket 上合并时关闭工作项。"
@@ -115,8 +128,8 @@
       "description": "在该项目中工作的 AI 代理。"
     },
     "queue": {
-      "label": "Runner queue",
-      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
+      "label": "代理运行",
+      "description": "项目内部与外部代理的运行：进行中、等待中和已结束的。"
     }
   },
   "previews": {
@@ -187,6 +200,40 @@
         "acsUrl": "ACS URL",
         "spEntityId": "Entity ID 和元数据"
       }
+    },
+    "forms": {
+      "new": "新建表单",
+      "columns": {
+        "form": "表单",
+        "link": "链接"
+      },
+      "enabled": "接收请求",
+      "tabs": {
+        "form": "表单",
+        "questions": "题目",
+        "issue": "问题",
+        "design": "外观"
+      },
+      "questionsHint": "始终会询问姓名和邮箱。",
+      "preview": "预览",
+      "name": "你的姓名",
+      "email": "邮箱"
+    },
+    "portal": {
+      "title": "门户",
+      "description": "人们向此工作区的项目提交请求并跟进的页面。",
+      "general": "常规",
+      "forms": "公开表单",
+      "formsHint": "此工作区的项目可以发布任何拿到链接的人都能填写的表单。关闭后，这些表单和门户将无法打开，项目设置中的表单部分也会隐藏；不会删除任何内容。",
+      "name": "名称",
+      "nameHint": "人们在门户及其邮件中看到的名称，代替工作区名称。留空则显示工作区名称。",
+      "address": "地址",
+      "addressHint": "门户在此地址打开。设置之前，它通过工作区编号打开。",
+      "link": "门户链接",
+      "logo": "标志",
+      "logoHint": "在门户和表单上代替门户名称显示。一个标志可用于两种主题。",
+      "light": "浅色主题",
+      "dark": "深色主题"
     }
   }
 }

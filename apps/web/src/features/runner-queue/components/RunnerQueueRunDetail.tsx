@@ -1,6 +1,7 @@
 import { useTranslations } from 'next-intl';
 import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import AgentRunExternalTrace from '@/components/common/agent-runs/AgentRunExternalTrace';
+import AgentRunInternalTrace from '@/components/common/agent-runs/AgentRunInternalTrace';
 import RunnerQueueRunHeader from './RunnerQueueRunHeader';
 import RunnerQueueRunFacts from './RunnerQueueRunFacts';
 import RunnerQueueRunResult from './RunnerQueueRunResult';
@@ -10,7 +11,7 @@ export default function RunnerQueueRunDetail({ run }: { run: RunnerQueueRun }) {
   const t = useTranslations('issue.agentRuns');
   const failing = run.executionState === 'failed' || run.executionState === 'queued';
   return (
-    <article className="max-w-3xl space-y-8">
+    <article className="space-y-8">
       <div className="space-y-6">
         <RunnerQueueRunHeader run={run} />
         <RunnerQueueRunFacts run={run} />
@@ -29,7 +30,11 @@ export default function RunnerQueueRunDetail({ run }: { run: RunnerQueueRun }) {
         </p>
       </RunnerQueueRunSection>
       <RunnerQueueRunSection title={t('stepsSection')}>
-        <AgentRunExternalTrace runId={run.id} />
+        {run.kind === 'internal' ? (
+          <AgentRunInternalTrace runId={run.id} />
+        ) : (
+          <AgentRunExternalTrace runId={run.id} />
+        )}
       </RunnerQueueRunSection>
     </article>
   );

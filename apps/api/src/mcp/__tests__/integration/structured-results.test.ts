@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { CallToolResultSchema, type CallToolRequest } from '@modelcontextprotocol/sdk/types.js';
+import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
+import type { JsonSchemaType } from '@modelcontextprotocol/sdk/validation/types.js';
 import { auth } from '@repo/auth';
 import { app, authedApi, ownWorkspaceId, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
@@ -39,6 +41,7 @@ describe('MCP structured results through the SDK client', () => {
     const withoutSchema = listed.tools.filter((tool) => tool.outputSchema === undefined);
     expect(withoutSchema.map((tool) => tool.name).sort()).toEqual([
       'view_attachment',
+      'view_document_asset',
       'view_initiative_images',
       'view_issue_images',
     ]);
@@ -75,6 +78,61 @@ describe('MCP structured results through the SDK client', () => {
     expect(deleted.isError).toBe(false);
     expect(deleted.content).toEqual([{ type: 'text', text: '' }]);
     expect(deleted.structuredContent).toEqual({ ok: true, status: 204, data: null });
+  });
+
+  // A client that checks arguments with Ajv refuses a tool whose schema it cannot compile,
+  // even for a call with no arguments (#805).
+  it('compiles every advertised input schema in the SDK validator', async () => {
+    const user = await signUpTestUser();
+    const client = await connect(user.userId);
+    const validator = new AjvJsonSchemaValidator();
+    const refused: string[] = [];
+    for (const tool of (await client.listTools()).tools) {
+      try {
+        validator.getValidator(tool.inputSchema as JsonSchemaType);
+      } catch {
+        refused.push(tool.name);
+      }
+    }
+    expect(refused).toEqual([]);
+  });
+
+  it('creates a checklist batch through the SDK and returns a validated array result', async () => {
+    const owner = await signUpTestUser();
+    const api = authedApi(owner.cookie);
+    await createProject(api, { key: 'MKT', name: 'Marketing' });
+    const view = await api.projects({ projectKey: 'MKT' }).get();
+    const issue = await api.projects({ projectKey: 'MKT' }).issues.post({
+      columnId: view.data!.columns[0].id,
+      title: 'Release',
+    });
+    const checklist = await api
+      .issues({ issueId: issue.data!.id })
+      .checklists.post({ title: 'Steps' });
+    const client = await connect(owner.userId);
+    const listed = await client.listTools();
+    const tool = listed.tools.find((entry) => entry.name === 'create_checklist_items');
+    expect(tool?.inputSchema.properties?.items).toMatchObject({
+      type: 'array',
+      minItems: 1,
+      maxItems: 100,
+    });
+    const items = [{ content: 'Tag release' }, { content: 'Publish notes' }];
+    const result = await callTool(client, {
+      name: 'create_checklist_items',
+      arguments: { checklistId: checklist.data!.id, items },
+    });
+    expect(result.isError).toBe(false);
+    expect(result.structuredContent).toMatchObject({ ok: true, status: 201, data: items });
+    const invalid = await callTool(client, {
+      name: 'create_checklist_items',
+      arguments: { checklistId: checklist.data!.id, items: [] },
+    });
+    expect(invalid.isError).toBe(true);
+    expect(invalid.structuredContent).toMatchObject({ ok: false, status: 400 });
+    const read = await api.issues({ issueId: issue.data!.id }).get();
+    expect(read.data!.checklists[0].items).toMatchObject(items);
+    expect(read.data!.checklists[0].items).toHaveLength(2);
   });
 
   it('validates structured validation, conflict, and permission errors without changing their text', async () => {

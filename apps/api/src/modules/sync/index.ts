@@ -1,11 +1,12 @@
 import { isMcpRequest } from '#shared/mcp-request';
 import { runnerQueueRevision } from '#modules/agents/queue/service';
+import { workspaceGrants } from '#modules/workspaces/service';
 import { Elysia } from 'elysia';
 import { authContext } from '#shared/auth-context';
 import { requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { errors } from '#shared/responses';
-import { NO_REV, readRevs, scopeKind, type ScopeRead } from './service';
+import { inboxAllRevision, NO_REV, readRevs, scopeKind, type ScopeRead } from './service';
 import { RevResponse, revQuery } from './model';
 
 const MAX_SCOPES = 20;
@@ -33,7 +34,7 @@ export const syncRoutes = new Elysia({ name: 'sync', detail: { tags: ['Sync'] } 
       // knowing how a scope is stored.
       const reads = new Map<string, ScopeRead>();
       for (const scope of requested) {
-        if (scope === 'runnerQueue:1') continue;
+        if (scope === 'runnerQueue:1' || scope === 'inbox:all') continue;
         const [kind, rawId] = scope.split(':');
         // Own properties only: an inherited name like '__proto__' is not a kind.
         const spec = kind && Object.hasOwn(scopeKind, kind) ? scopeKind[kind] : undefined;
@@ -44,13 +45,19 @@ export const syncRoutes = new Elysia({ name: 'sync', detail: { tags: ['Sync'] } 
         reads.set(scope, { key: spec.key(id, userId), resource: spec.resource });
       }
 
-      const found = await readRevs([...reads.values()], userId);
+      const grants = await workspaceGrants(userId);
+      const [found, runnerQueue, inboxAll] = await Promise.all([
+        readRevs([...reads.values()], userId, grants),
+        requested.includes('runnerQueue:1')
+          ? runnerQueueRevision(userId, grants, isMcpRequest(request.headers))
+          : null,
+        requested.includes('inbox:all') ? inboxAllRevision(userId, grants) : null,
+      ]);
       const revs = Object.fromEntries(
         [...reads].map(([scope, read]) => [scope, found[read.key] ?? NO_REV]),
       );
-      if (requested.includes('runnerQueue:1')) {
-        revs['runnerQueue:1'] = await runnerQueueRevision(userId, isMcpRequest(request.headers));
-      }
+      if (runnerQueue !== null) revs['runnerQueue:1'] = runnerQueue;
+      if (inboxAll !== null) revs['inbox:all'] = inboxAll;
       return { revs };
     },
     {

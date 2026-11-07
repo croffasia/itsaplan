@@ -45,6 +45,9 @@ import {
   type PlaneConnectionInput,
   testLinearConnection,
   testLinearStatesPreview,
+  type TrelloConnectionInput,
+  testTrelloConnection,
+  previewTrelloBoard,
   testPlaneConnection,
   testPlaneStatesPreview,
   createImportJob,
@@ -274,8 +277,9 @@ export function useDisconnectGitRepository(projectKey: string, connectionId: num
   });
 }
 
-// Import/export section: testing a connection to a source Plane instance or a
-// Linear API key, starting an import job, and tracking the ones already running.
+// Import/export section: testing a connection to a source Plane instance, a Linear
+// API key or a Trello key and token, starting an import job, and tracking the ones
+// already running.
 export function useTestPlaneConnection(projectKey: string) {
   return useMutation({
     mutationFn: (input: PlaneConnectionInput) => testPlaneConnection(projectKey, input),
@@ -310,6 +314,24 @@ export function useTestLinearStatesPreview(
   return useQuery({
     queryKey: qk.linearPreview(projectKey, input?.teamId ?? 'none'),
     queryFn: () => testLinearStatesPreview(projectKey, input!),
+    enabled: input != null,
+  });
+}
+
+export function useTestTrelloConnection(projectKey: string) {
+  return useMutation({
+    mutationFn: (input: TrelloConnectionInput) => testTrelloConnection(projectKey, input),
+  });
+}
+
+// Fetched automatically once a Trello board is picked, in the mapping review step.
+export function useTrelloBoardPreview(
+  projectKey: string,
+  input: (TrelloConnectionInput & { boardId: string }) | null,
+) {
+  return useQuery({
+    queryKey: qk.trelloPreview(projectKey, input?.boardId ?? 'none'),
+    queryFn: () => previewTrelloBoard(projectKey, input!),
     enabled: input != null,
   });
 }

@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach } from 'bun:test';
+import { getStorageSettings } from '@repo/db';
 import { api, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -354,6 +355,16 @@ describe('attachments', () => {
       expect(String(raw.data)).toBe('hello');
     });
 
+    it('rejects a content type that carries a second type', async () => {
+      const { asOwner, issueId } = await setupIssue();
+      const res = await asOwner.issues({ issueId }).attachments.import.post({
+        filename: 'x.html',
+        contentBase64: Buffer.from('<script>alert(1)</script>').toString('base64'),
+        contentType: 'video/mp4,text/html',
+      });
+      expect(res.status).toBe(400);
+    });
+
     it('rejects a request with neither url nor contentBase64', async () => {
       const { asOwner, issueId } = await setupIssue();
       const res = await asOwner.issues({ issueId }).attachments.import.post({ filename: 'x.txt' });
@@ -368,6 +379,41 @@ describe('attachments', () => {
         contentBase64: Buffer.from('x').toString('base64'),
       });
       expect(res.status).toBe(400);
+    });
+
+    it('stops reading a url at the size limit, whatever the server declares', async () => {
+      const { asOwner, issueId } = await setupIssue();
+      const { maxAttachmentMb } = await getStorageSettings();
+      const chunk = new Uint8Array(1024 * 1024);
+      let chunksLeft = maxAttachmentMb * 4;
+      const { promise: cancelled, resolve: onCancel } = Promise.withResolvers<void>();
+      const server = Bun.serve({
+        hostname: '127.0.0.1',
+        port: 0,
+        fetch: () =>
+          new Response(
+            new ReadableStream({
+              pull(controller) {
+                if (chunksLeft-- > 0) controller.enqueue(chunk);
+                else controller.close();
+              },
+              cancel: onCancel,
+            }),
+          ),
+      });
+      // Outside production and test, the SSRF guard lets a local http url through.
+      const nodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
+      try {
+        const res = await asOwner
+          .issues({ issueId })
+          .attachments.import.post({ filename: 'big.bin', url: server.url.href });
+        expect(res.status).toBe(413);
+        await cancelled;
+      } finally {
+        process.env.NODE_ENV = nodeEnv;
+        await server.stop(true);
+      }
     });
 
     it('rejects a url that points at a private address (SSRF)', async () => {

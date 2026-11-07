@@ -97,6 +97,7 @@
     "inOneWeek": "一周后"
   },
   "actionsBar": {
+    "openInPanel": "在侧边面板中打开",
     "shortLinkCopied": "短链接已复制",
     "branchCopied": "分支名称已复制",
     "copyShortLink": "复制短链接",

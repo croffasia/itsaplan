@@ -97,6 +97,7 @@
     "inOneWeek": "Через неделю"
   },
   "actionsBar": {
+    "openInPanel": "Открыть в боковой панели",
     "shortLinkCopied": "Короткая ссылка скопирована",
     "branchCopied": "Название ветки скопировано",
     "copyShortLink": "Скопировать короткую ссылку",

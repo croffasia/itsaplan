@@ -51,6 +51,24 @@ describe('cronInDisplayZone', () => {
     assert.equal(inZone('Europe/Kyiv', '0 23 * * */2'), null);
   });
 
+  it('keeps wildcard steps when the selected times do not change', () => {
+    assert.equal(inZone('UTC', '0 */5 * * *'), '0 */5 * * *');
+    assert.equal(inZone('Europe/Kyiv', '0 */2 * * *'), '0 */2 * * *');
+    assert.equal(inZone('America/New_York', '0 */2 * * *', summer), '0 */2 * * *');
+  });
+
+  it('falls back when a zone changes the hours selected by a wildcard step', () => {
+    assert.equal(inZone('America/New_York', '0 */2 * * *'), null);
+    assert.equal(inZone('Asia/Dubai', '0 */5 * * *'), null);
+    assert.equal(inZone('Asia/Kolkata', '* */2 * * *'), null);
+  });
+
+  it('falls back when a fractional-hour zone changes the wildcard minute pattern', () => {
+    assert.equal(inZone('Asia/Kolkata', '*/20 * * * *'), null);
+    assert.equal(inZone('Asia/Kolkata', '*/40 * * * *'), null);
+    assert.equal(inZone('Asia/Kolkata', '*/15 * * * *'), '*/15 * * * *');
+  });
+
   it('is null for a schedule with no hours of its own that names a day', () => {
     assert.equal(inZone('Europe/Kyiv', '*/15 * * * 1-5'), null);
     assert.equal(inZone('Europe/Kyiv', '0 */6 1 * *'), null);

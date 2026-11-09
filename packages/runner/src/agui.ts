@@ -44,6 +44,10 @@ const TERMINAL_CODES = /\x1b\[[0-?]*[ -/]*[@-~]/g;
 export class AnswerStream {
   private readonly messageId: string;
   private queued: AgUiEvent[] = [];
+  // The batch a send failed on. The server may have stored it before the answer was lost,
+  // and it takes a stored batch back only as a replay of the same events, so this goes out
+  // again unchanged, ahead of anything newer.
+  private unsent: AgUiEvent[] = [];
   private text = '';
   private started = false;
   private line = '';
@@ -108,8 +112,8 @@ export class AnswerStream {
   }
 
   // Two flushes can overlap — the timer and the close — so they are chained to keep the
-  // events in the order they were produced. A batch that fails to send goes back to the
-  // front of the queue for the next flush to carry.
+  // events in the order they were produced. A batch that fails to send is held for the
+  // next flush to send again.
   async flush(): Promise<void> {
     const sending = this.sending.catch(() => {}).then(() => this.sendQueued());
     this.sending = sending.catch(() => {});
@@ -118,14 +122,13 @@ export class AnswerStream {
 
   private async sendQueued(): Promise<void> {
     this.drainText();
-    if (this.queued.length === 0) return;
-    const batch = this.queued;
-    this.queued = [];
-    try {
-      await this.send(batch);
-    } catch (err) {
-      this.queued.unshift(...batch);
-      throw err;
+    while (this.unsent.length > 0 || this.queued.length > 0) {
+      if (this.unsent.length === 0) {
+        this.unsent = this.queued;
+        this.queued = [];
+      }
+      await this.send(this.unsent);
+      this.unsent = [];
     }
   }
 

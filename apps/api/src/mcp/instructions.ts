@@ -31,7 +31,8 @@ A checklistId and a checklist item's id come from get_issue: an issue carries it
 checklists and their items.
 
 search_issues and list_issues are for finding issues by text or by field, not for
-resolving an identifier.
+resolving an identifier. search_issues_all_projects searches by text in every
+project you can read, for when you do not know the project.
 
 ## You
 
@@ -87,18 +88,23 @@ issue.
 
 An image or file in an issue or initiative, and each entry of list_attachments and
 list_initiative_attachments, carries a url that downloads the file without a session.
-A url in a result does not show you the picture. To look at the images of an issue,
-call view_issue_images (view_initiative_images for an initiative); to look at one
-image, call view_attachment with its url. A file can be replaced behind the same url,
-so view it again rather than reusing what you saw earlier.
+A url in a result does not show you the file. To look at the images of an issue,
+call view_issue_images (view_initiative_images for an initiative); to open one
+attachment, call view_attachment with its url: it shows an image and returns the text
+of a PDF or a text file and the rows of a spreadsheet. A file can be replaced behind
+the same url, so view it again rather than reusing what you saw earlier.
+
+A file of a document is different: its url needs a session. Open it with
+view_document_asset.
 
 ## Mentions
 
-A comment or an issue description tags someone by writing @handle inline, which
-notifies them. The handle is the username of a person in get_project.assignees, which
-lists members and AI agents alike; a handle nobody in the project answers to tags
-nobody. An AI agent tagged in a comment starts a run on that issue, so tag one only
-when you want it to act.
+A comment, an issue description, a document or a comment on a document tags someone
+by writing @handle inline, which notifies them. The handle is the username of a person
+in get_project.assignees, which lists members and AI agents alike; a handle nobody in
+the project answers to tags nobody. An AI agent tagged in a comment starts a run on
+that issue or document, so tag one only when you want it to act. An agent tagged in
+the text of an issue or a document is not run.
 
 ## Restraint
 

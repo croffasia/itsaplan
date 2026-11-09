@@ -4,7 +4,8 @@
     "preferences": "Preferências",
     "accounts": "Contas",
     "security": "Segurança",
-    "api-keys": "Chaves de API"
+    "api-keys": "Chaves de API",
+    "invitations": "Invitations"
   },
   "godGroups": {
     "management": "Gerenciamento",
@@ -24,6 +25,10 @@
       "label": "Projetos",
       "description": "Todo projeto nesta instância: o que cada um contém, quando esteve ativo pela última vez e quem pode alcançá-lo."
     },
+    "roles": {
+      "label": "Funções do sistema",
+      "description": "Funções padrão disponíveis para todas as equipes desta instância."
+    },
     "general": {
       "label": "Geral",
       "description": "Workspaces pessoais, padrões para novos projetos, e rastros e tempo de execução de agentes."
@@ -39,6 +44,10 @@
     "storage": {
       "label": "Armazenamento",
       "description": "Quanto as pessoas podem enviar: o tamanho de um único arquivo, os tipos de anexo aceitos e o armazenamento que cada projeto recebe."
+    },
+    "email-templates": {
+      "label": "Modelos de e-mail",
+      "description": "Gerencie os modelos de e-mails do sistema."
     },
     "telegram": {
       "label": "Telegram",
@@ -102,6 +111,10 @@
       "label": "Webhooks",
       "description": "Envie eventos do projeto para URLs externas, assinados com um segredo por webhook."
     },
+    "forms": {
+      "label": "Formulários",
+      "description": "Qualquer pessoa com o link cria uma issue aqui."
+    },
     "git": {
       "label": "Repositórios",
       "description": "Feche issues quando seus pull requests mesclam no GitHub, GitLab, Gitea, Forgejo ou Bitbucket."
@@ -115,8 +128,8 @@
       "description": "Agentes de IA trabalhando neste projeto."
     },
     "queue": {
-      "label": "Runner queue",
-      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
+      "label": "Execuções de agentes",
+      "description": "Execuções dos agentes internos e externos do projeto: em andamento, aguardando e anteriores."
     }
   },
   "previews": {
@@ -187,6 +200,40 @@
         "acsUrl": "URL de ACS",
         "spEntityId": "Entity ID e metadados"
       }
+    },
+    "forms": {
+      "new": "Novo formulário",
+      "columns": {
+        "form": "Formulário",
+        "link": "Link"
+      },
+      "enabled": "Aceita solicitações",
+      "tabs": {
+        "form": "Formulário",
+        "questions": "Perguntas",
+        "issue": "Issue",
+        "design": "Design"
+      },
+      "questionsHint": "Nome e e-mail são sempre pedidos.",
+      "preview": "Pré-visualização",
+      "name": "Seu nome",
+      "email": "E-mail"
+    },
+    "portal": {
+      "title": "Portal",
+      "description": "A página onde as pessoas enviam solicitações aos projetos do espaço de trabalho e as acompanham.",
+      "general": "Geral",
+      "forms": "Formulários públicos",
+      "formsHint": "Os projetos do espaço de trabalho podem publicar formulários que qualquer pessoa com o link preenche. Desativado, seus formulários e portais deixam de abrir e os projetos perdem a seção Formulários; nada é apagado.",
+      "name": "Nome",
+      "nameHint": "O que as pessoas veem no portal e nos e-mails dele no lugar do nome do espaço de trabalho. Vazio mostra o nome do espaço de trabalho.",
+      "address": "Endereço",
+      "addressHint": "O portal abre neste endereço. Enquanto você não definir um, ele abre pelo número do espaço de trabalho.",
+      "link": "Link do portal",
+      "logo": "Logotipo",
+      "logoHint": "Aparece no portal e nos formulários no lugar do nome do portal. Um logotipo serve para os dois temas.",
+      "light": "Tema claro",
+      "dark": "Tema escuro"
     }
   }
 }

@@ -1,6 +1,5 @@
-import { User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { cn } from '@/lib/utils';
+import { useColumnLabel } from '../../hooks/useColumnLabel';
 import { columnKey, TITLE_COLUMN_KEY, type OrderedColumn } from '../../utils/table';
 import { TableColumnResizer } from './TableColumnResizer';
 
@@ -22,6 +21,7 @@ export function TableColumnHeader({
   onResizeEnd: () => void;
 }) {
   const t = useTranslations('workItems');
+  const columnLabel = useColumnLabel();
   return (
     <div
       className="sticky top-0 z-10 grid items-center gap-3 border-b bg-background px-4 py-2 text-xs font-medium text-muted-foreground"
@@ -35,24 +35,10 @@ export function TableColumnHeader({
         />
       </span>
       {columns.map((c) => {
-        // The assignee column shows avatars, so its header is a right-aligned icon
-        // rather than a label; the delegate column beside it stays blank.
-        const isAssignee = c.kind === 'builtin' && c.col === 'assignee';
         const key = columnKey(c);
         return (
-          <span
-            key={key}
-            className={cn('relative flex min-w-0 items-center', isAssignee && 'justify-end')}
-          >
-            {c.kind === 'custom' ? (
-              <span className="truncate">{c.field.name}</span>
-            ) : c.col === 'assignee' ? (
-              <User className="size-3.5" />
-            ) : c.col === 'delegate' ? (
-              <span />
-            ) : (
-              <span className="truncate">{t(`columns.${c.col}`)}</span>
-            )}
+          <span key={key} className="relative flex min-w-0 items-center">
+            <span className="truncate">{columnLabel(c)}</span>
             <TableColumnResizer
               onResize={(width) => onResize(key, width)}
               onResizeEnd={onResizeEnd}

@@ -3,11 +3,14 @@ import { requireUser } from '#shared/access';
 import { authContext } from '#shared/auth-context';
 import { errors } from '#shared/responses';
 import { getStorageSettings } from '@repo/db';
+import { getAuthSettings } from '@repo/auth';
+import { localeFromAcceptLanguage } from '@repo/mailer';
 import { getHotkeySettings } from './service';
 import { getAppVersion } from './updates';
 import { getWhatsNew, markWhatsNewSeen } from './whats-new';
 import {
   HotkeyCombosSchema,
+  InviteSearchSchema,
   StorageSettingsSchema,
   VersionResponse,
   WhatsNewSchema,
@@ -40,6 +43,19 @@ export const settingsRoutes = new Elysia({
     },
   })
 
+  .get(
+    '/settings/invite-search',
+    async () => ({ enabled: (await getAuthSettings()).inviteSearch }),
+    {
+      response: { 200: InviteSearchSchema, ...errors(401) },
+      detail: {
+        summary: 'Get whether people can be searched when inviting',
+        description:
+          'Get whether the invite dialog of a team may look up accounts of this instance by name or address. Changing it is god mode.',
+      },
+    },
+  )
+
   // The running version, shown in the sidebar to everyone. Whether a newer one
   // exists is god mode (/god/updates), and so is the release history. A session is
   // required: the version tells an anonymous visitor which release to look up
@@ -67,8 +83,11 @@ export const settingsRoutes = new Elysia({
 
   .post(
     '/settings/whats-new/seen',
-    async ({ user }) => {
-      await markWhatsNewSeen(requireUser(user).id);
+    async ({ user, request }) => {
+      await markWhatsNewSeen(
+        requireUser(user).id,
+        localeFromAcceptLanguage(request.headers.get('accept-language')),
+      );
       return { version: getAppVersion() };
     },
     {

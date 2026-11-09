@@ -1,6 +1,6 @@
 import { db, userPreference } from '@repo/db';
+import { DEFAULT_LOCALE, type Locale } from '@repo/mailer';
 import { eq, sql } from 'drizzle-orm';
-import { DEFAULT_LOCALE, type Locale } from './locale';
 
 // A user's own interface preferences, held per account so the same choices apply on
 // every device. One row per user; absent means nothing was changed yet and the

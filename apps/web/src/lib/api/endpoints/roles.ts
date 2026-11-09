@@ -18,6 +18,7 @@ export type PermissionResource =
   | 'issue_types'
   | 'labels'
   | 'ai_agents'
+  | 'agent_schedules'
   | 'integrations'
   | 'agent_skills'
   | 'agent_tools'
@@ -36,12 +37,14 @@ export type ResourcePermissions = Record<PermissionAction, boolean>;
 
 export type Permissions = Record<PermissionResource, ResourcePermissions>;
 
-// A project's custom role: a named permission matrix that can be assigned to a
-// member. `isDefault` marks the fallback role new members get; it cannot be deleted.
+// A named permission matrix a project member is put on: a custom role of the team, or
+// a system role (`system`), which every team assigns and only god mode edits.
+// `isDefault` marks the system role new members get when none is chosen.
 export interface Role {
   id: number;
   name: string;
   isDefault: boolean;
+  system: boolean;
   permissions: Permissions;
   createdAt: string;
 }
@@ -68,6 +71,7 @@ export interface RoleUsage {
 export interface PermissionCatalogResource {
   key: PermissionResource;
   actions: PermissionAction[];
+  from?: PermissionResource;
 }
 
 export interface PermissionCatalog {

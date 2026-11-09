@@ -374,6 +374,7 @@ export default function NewIssueModal({
             onDescriptionReady={setDescEditor}
             bodyDefs={bodyDefs}
             fieldValues={fieldValues}
+            projectKey={project.project.ref}
             assignees={project.assignees}
             onFieldValue={setFieldValue}
             onFieldEditorReady={(id, editor) => {

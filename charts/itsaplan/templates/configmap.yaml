@@ -23,6 +23,9 @@ data:
   {{- with .Values.api.env.GIT_WEBHOOK_BASE_URL }}
   GIT_WEBHOOK_BASE_URL: {{ . | quote }}
   {{- end }}
+  {{- with .Values.api.env.SKIP_PRE_MIGRATION_BACKUP }}
+  SKIP_PRE_MIGRATION_BACKUP: {{ . | quote }}
+  {{- end }}
   S3_BUCKET: {{ .Values.api.env.S3_BUCKET | quote }}
   S3_REGION: {{ .Values.api.env.S3_REGION | quote }}
   S3_ENDPOINT: {{ include "itsaplan.s3Endpoint" . | quote }}

@@ -33,7 +33,8 @@ and never do arithmetic on it, so gaps in the numbers are harmless.
 | `board:<projectId>`          | the work items board          | any issue, label, relation, initiative or cycle in the project changes |
 | `issue:<issueId>`            | the issue screen              | the issue, its comments, checklists, attachments or field values change |
 | `initiative:<initiativeId>`  | the initiative screen         | the initiative or any issue inside it changes                     |
-| `inbox:<projectId>:<userId>` | the inbox and the badge       | that user gets a notification, reads one, or deletes one          |
+| `inbox:<projectId>:<userId>` | the inbox                     | that user gets a notification, reads one, or deletes one          |
+| `inbox:all`                  | the app icon badge            | any `inbox:<projectId>:<userId>` of a project the user can read moves, or such a project is gained or lost |
 
 Comments deliberately do not move the board: the board does not show them, so refetching it
 would be wasted work.
@@ -41,13 +42,18 @@ would be wasted work.
 The inbox is the one scope that belongs to a person rather than an entity. Clients ask for
 `inbox:12` and the API fills in the session user, so one person can never watch another's inbox.
 
+`inbox:all` has no row of its own. The API reads the session user's inbox row of every project
+they can read and answers with the list of `<projectId>=<rev>` pairs, so the badge watches one
+scope however many projects the user sees. A sum of the counters would be shorter, but it can
+come back to an earlier value when a project is lost while another inbox moves.
+
 ## Where the code lives
 
 | File                                   | What it holds                                            |
 | -------------------------------------- | -------------------------------------------------------- |
 | `packages/db/drizzle/0070_*.sql`       | `bump_rev`, the trigger functions, and their triggers    |
-| `apps/api/src/sync/store.ts`           | the scope names and the read query                       |
-| `apps/api/src/sync/routes.ts`          | `GET /sync/rev`                                          |
+| `apps/api/src/modules/sync/service.ts` | the scope names and the read queries                     |
+| `apps/api/src/modules/sync/index.ts`   | `GET /sync/rev`                                          |
 | `apps/web/src/context/syncContext.tsx` | the one poll every screen shares                         |
 | `apps/web/src/hooks/useLiveRefresh.ts` | what a screen calls                                      |
 | `apps/web/src/utils/revScopes.ts`      | the scope names on the client                            |
@@ -67,8 +73,9 @@ useLiveRefresh({
 
 That is the whole integration. No screen runs its own timer: `SyncProvider` collects the scopes
 of everything currently mounted, asks for them in one request, and invalidates the targets of
-the scopes that moved. The poll stops while the tab sits in the background, and while nothing is
-registered.
+the scopes that moved. The API takes at most 20 scopes per request; `getRevs` splits a longer
+list into requests of 20 and merges the answers. The poll stops while the tab sits in the
+background, and while nothing is registered.
 
 ## Reading the counters
 
@@ -109,7 +116,7 @@ the migration. `rev_checklist_item()` is the example to copy: it goes from
 ## Adding a new scope
 
 A new kind of scope touches two more places: the entry in `scopeKind` in
-`apps/api/src/sync/store.ts`, which names it, makes the API accept it, and says which resource a
+`apps/api/src/modules/sync/service.ts`, which names it, makes the API accept it, and says which resource a
 watcher must be allowed to read, and the mirror in `apps/web/src/utils/revScopes.ts`.
 `packages/db/AGENTS.md` keeps the same recipe next to the schema.
 

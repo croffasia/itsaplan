@@ -45,9 +45,11 @@ async function sendNotificationEmail(input: SendInput): Promise<SendResult> {
         ? await getProjectEmailConfig()
         : source === 'none'
           ? null
-          : { smtp: input.config.smtp, resend: input.config.resend };
+          : { smtp: input.config.smtp, resend: input.config.resend, from: input.config.from };
   if (!config) return { ok: false, retryable: false, error: 'email not configured' };
-  const { text, html } = emailBody(input.payload.text, input.payload.url);
+  const { text, html } = input.payload.html
+    ? { text: input.payload.text, html: input.payload.html }
+    : emailBody(input.payload.text, input.payload.url);
   return sendEmail(config, {
     to: input.recipient,
     subject: input.payload.subject ?? '',

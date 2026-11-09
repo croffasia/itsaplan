@@ -170,6 +170,20 @@
     },
     "joined": "عضو شده در {date}"
   },
+  "roles": {
+    "newRole": "نقش جدید",
+    "empty": "هنوز نقش سیستمی وجود ندارد.",
+    "default": "پیش‌فرض",
+    "defaultUndeletable": "نقش پیش‌فرض قابل حذف نیست",
+    "columns": {
+      "role": "نقش",
+      "permissions": "مجوزها"
+    },
+    "edit": "ویرایش نقش",
+    "delete": "حذف نقش",
+    "deleteTitle": "حذف نقش «{name}»",
+    "deleteDescription": "این کار قابل بازگشت نیست."
+  },
   "general": {
     "saved": "پیش‌فرض‌های پروژه ذخیره شد",
     "projectDefaults": "پیش‌فرض‌های پروژه",
@@ -179,8 +193,21 @@
     "workspaces": "فضاهای کار",
     "personalWorkspaces": "فضای کار برای همه",
     "personalWorkspacesHint": "هر حساب یک فضای کار اختصاصی به نام خود فرد می‌گیرد. در حالت خاموش، افراد فقط در فضاهای کاری که به آن‌ها اضافه شده‌اند کار می‌کنند.",
+    "invites": "دعوت‌ها",
+    "inviteSearch": "پیشنهاد افراد هنگام دعوت",
+    "inviteSearchHint": "وقتی مالک یا مدیر تیم نشانی را در پنجره دعوت تایپ می‌کند، حساب‌های منطبق از همه فضاهای کاری این نمونه با نام و ایمیل نمایش داده می‌شوند. در حالت خاموش، باید نشانی کامل را تایپ کرد.",
+    "invitesSaved": "تنظیمات دعوت ذخیره شد",
+    "sharing": "پیوندهای عمومی",
+    "sharingEnabled": "اجازهٔ پیوندهای عمومی",
+    "sharingEnabledHint": "اسناد، مسائل و نماها را می‌توان تا جایی که هر فضای کار اجازه می‌دهد با پیوند به اشتراک گذاشت. اگر خاموش باشد، هیچ‌کس نمی‌تواند به اشتراک بگذارد و پیوندهای موجود تا روشن شدن دوباره باز نمی‌شوند.",
+    "sharingSaved": "تنظیمات پیوندهای عمومی ذخیره شد",
     "agents": "ایجنت‌ها",
     "agentsSaved": "تنظیمات ایجنت ذخیره شد",
+    "embedding": "جاسازی",
+    "embedSites": "سایت‌های مورد اعتماد",
+    "embedSitesHint": "تسک‌ها و بردهایی که به‌صورت عمومی به اشتراک گذاشته شده‌اند فقط در این سایت‌ها داخل فریم باز می‌شوند. سایت‌ها را با کاما جدا کنید.",
+    "embedSitesInvalid": "هر سایت را به شکل https://example.com و بدون مسیر وارد کنید.",
+    "embedSaved": "سایت‌های مورد اعتماد ذخیره شد",
     "traceRetention": "نگهداری ردهای اجرا",
     "traceRetentionHint": "هر اجرای ایجنت، فراخوانی‌های مدل و ابزار خود را ثبت می‌کند. داشبوردهای مصرف فقط اجراهایی را می‌شمارند که هنوز نگهداری می‌شوند.",
     "traceDays": "{days, plural, one {# روز} other {# روز}}",
@@ -188,7 +215,10 @@
     "maxRunTime": "حداکثر زمان اجرا",
     "maxRunTimeHint": "مدتی که یک اجرای عامل می‌تواند طول بکشد پیش از آنکه متوقف و به‌عنوان ناموفق ذخیره شود. محدودیت خود عامل نمی‌تواند از آن بیشتر باشد.",
     "runMinutes": "{minutes, plural, one {# دقیقه} other {# دقیقه}}",
-    "runSeconds": "{seconds} ثانیه"
+    "runSeconds": "{seconds} ثانیه",
+    "concurrentRuns": "اجراهای هم‌زمان",
+    "concurrentRunsHint": "تعداد اجراهای عامل که هم‌زمان روی این سامانه انجام می‌شوند. بقیه در صف منتظر می‌مانند. گفتگوها و عامل‌های خارجی حساب نمی‌شوند. ۰ یعنی بدون محدودیت.",
+    "concurrentRunsInvalid": "یک عدد صحیح از ۰ تا {max} وارد کنید."
   },
   "authentication": {
     "saved": "تنظیمات احراز هویت ذخیره شد",
@@ -297,6 +327,117 @@
     "clientSecret": "Client secret",
     "clientSecretPlaceholder": "رمز ثبت برنامه",
     "microsoft365Hint": "به‌جای گذرواژهٔ صندوق پستی، به‌عنوان یک ثبت برنامه (app registration) در Entra ID وارد می‌شود تا MFA صندوق پستی روشن بماند. برنامه به مجوز برنامه‌ای SMTP.SendAsApp از Office 365 Exchange Online با تأیید مدیر، دسترسی به این صندوق پستی در Exchange و روشن بودن SMTP AUTH برای صندوق پستی نیاز دارد."
+  },
+  "emailTemplates": {
+    "saved": "قالب‌های ایمیل ذخیره شد",
+    "unsaved": "تغییرات ذخیره‌نشده",
+    "blankText": "برای ذخیره، موضوع یا متن خالی را کامل کنید",
+    "emails": "ایمیل‌ها",
+    "layout": "چیدمان",
+    "edited": "ویرایش‌شده",
+    "subject": "موضوع",
+    "text": "متن",
+    "button": "دکمه",
+    "formatting": "قالب‌بندی",
+    "heading1": "عنوان ۱",
+    "heading2": "عنوان ۲",
+    "bold": "پررنگ",
+    "italic": "کج",
+    "strikethrough": "خط‌خورده",
+    "link": "لینک",
+    "bulletedList": "فهرست نقطه‌ای",
+    "numberedList": "فهرست شماره‌دار",
+    "quote": "نقل‌قول",
+    "boldSample": "پررنگ",
+    "italicSample": "کج",
+    "strikeSample": "متن",
+    "linkSample": "متن لینک",
+    "unknownVariables": "متغیر ناشناخته: {names}",
+    "removeUnknownVariables": "برای ذخیره، متغیرهای ناشناخته را حذف کنید",
+    "reset": "بازگشت به پیش‌فرض",
+    "test": "ارسال آزمایشی",
+    "testing": "در حال ارسال…",
+    "testSent": "به {email} ارسال شد",
+    "testNeedsProvider": "ابتدا ارائه‌دهنده ایمیل را تنظیم کنید",
+    "layoutHtml": "HTML چیدمان",
+    "layoutCss": "CSS چیدمان",
+    "placeholders": "جای‌نگهدارها",
+    "variables": "متغیرها",
+    "required": "الزامی",
+    "requiredPlaceholders": "برای ذخیره، {names} را به چیدمان اضافه کنید",
+    "preview": "پیش‌نمایش",
+    "previewEmail": "ایمیل",
+    "previewText": "متن ساده",
+    "previewFailed": "پیش‌نمایش بارگیری نشد. برای تلاش دوباره صفحه را تازه کنید.",
+    "from": "از",
+    "to": "به",
+    "groups": {
+      "signIn": "ورود",
+      "invitations": "دعوت‌ها",
+      "notifications": "اعلان‌ها",
+      "service": "سایر"
+    },
+    "templates": {
+      "reset": {
+        "name": "بازنشانی گذرواژه"
+      },
+      "verify": {
+        "name": "تأیید نشانی ایمیل"
+      },
+      "magic": {
+        "name": "لینک ورود"
+      },
+      "inviteProject": {
+        "name": "دعوت به پروژه"
+      },
+      "inviteTeam": {
+        "name": "دعوت به تیم"
+      },
+      "assigned": {
+        "name": "واگذاری تسک"
+      },
+      "mentioned": {
+        "name": "نام‌بردن در تسک"
+      },
+      "commented": {
+        "name": "دیدگاه جدید"
+      },
+      "stateChanged": {
+        "name": "تغییر وضعیت"
+      },
+      "documentMentioned": {
+        "name": "نام‌بردن در سند"
+      },
+      "documentCommentMentioned": {
+        "name": "نام‌بردن در دیدگاه سند"
+      },
+      "test": {
+        "name": "ایمیل آزمایشی",
+        "hint": "با دکمه آزمایش در صفحه ارائه‌دهنده ایمیل ارسال می‌شود."
+      }
+    },
+    "placeholderText": {
+      "content": "متن ایمیل",
+      "button": "دکمه با لینک",
+      "subject": "موضوع",
+      "lang": "کد زبان",
+      "dir": "جهت متن",
+      "site_name": "نام سامانه",
+      "site_url": "نشانی سامانه",
+      "logo_url": "نشانی لوگو"
+    },
+    "variableText": {
+      "actor": "انجام‌دهنده کار",
+      "ref": "شماره تسک",
+      "title": "عنوان تسک",
+      "from": "وضعیت قبلی",
+      "to": "وضعیت جدید",
+      "document": "عنوان سند",
+      "inviter": "فرستنده دعوت",
+      "project": "نام پروژه",
+      "team": "نام تیم",
+      "role": "نقش پس از پیوستن"
+    }
   },
   "authProvider": {
     "saved": "ارائه‌دهنده احراز هویت ذخیره شد",

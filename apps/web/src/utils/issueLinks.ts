@@ -1,6 +1,8 @@
 import { Ban, CircleSlash, Copy, Link2, type LucideIcon } from 'lucide-react';
+import type { Column } from '@/lib/api/endpoints/columns';
 import type {
   BoardIssue,
+  Issue,
   IssueLink,
   IssueLinkInputKind,
   IssueLinkKind,
@@ -55,10 +57,19 @@ export function linkRelation(link: IssueLink): IssueLinkInputKind {
 }
 
 // Whether another issue holds this one up, which the board views tint the card
-// or row for. Read off the issue's own relations, so it holds whether or not the
-// Links display property is showing them.
-export function isBlocked(issue: BoardIssue): boolean {
-  return issue.links.some((link) => link.relation === 'blocked_by');
+// or row for. A blocker in a completed or canceled column no longer does; one the
+// board cannot find still counts, since the relation stands.
+export function isBlocked(
+  issue: BoardIssue,
+  issueById: Map<number, Issue>,
+  columnById: Map<number, Column>,
+): boolean {
+  return issue.links.some((link) => {
+    if (link.relation !== 'blocked_by') return false;
+    const blocker = issueById.get(link.issueId);
+    const stateType = blocker && columnById.get(blocker.columnId)?.stateType;
+    return stateType !== 'completed' && stateType !== 'canceled';
+  });
 }
 
 // The same relation read from the other end, for naming it on the issue on that

@@ -1,0 +1,2 @@
+ALTER TABLE "workspace" ADD COLUMN "max_concurrent_runs" integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE "workspace" ADD CONSTRAINT "workspace_max_concurrent_runs_check" CHECK ("workspace"."max_concurrent_runs" >= 0);

@@ -7,7 +7,7 @@ import { accessErrors, commonErrors } from '#shared/responses';
 import { mcpTool } from '#mcp/generate';
 import { paginate } from '#shared/pagination';
 import { teamParams } from '#modules/teams/model';
-import { INTEGRATION_CATALOG, integrationKind } from './catalog';
+import { integrationCatalog, integrationKind } from './catalog';
 import { listModelsForProvider } from './provider-models';
 import {
   CredentialPageResponse,
@@ -46,8 +46,8 @@ export const integrationRoutes = new Elysia({
   .use(guards)
 
   // The frontend builds the credential form from credentialSchema. Open to any team
-  // member: the catalog is a constant in this codebase, not team data.
-  .get('/teams/:teamId/integrations/catalog', () => INTEGRATION_CATALOG, {
+  // member: the catalog holds no team data.
+  .get('/teams/:teamId/integrations/catalog', () => integrationCatalog(), {
     params: teamParams,
     teamMember: true,
     response: { 200: IntegrationCatalogResponse, ...accessErrors },

@@ -79,7 +79,7 @@ export default function MemberAddDialog({
 
   const candidates = candidatesQuery.data ?? [];
   const roles = rolesQuery.data ?? [];
-  // Default to the team's default role until another option is picked. Empty until
+  // Start on the default role until another option is picked. Empty until
   // the roles load, so a submit before that cannot fall back to Owner.
   const defaultRoleId = roles.find((r) => r.isDefault)?.id ?? roles[0]?.id;
   const offerOwner = ownerOffered(canGrantOwner, target);

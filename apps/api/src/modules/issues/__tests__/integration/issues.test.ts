@@ -1101,6 +1101,14 @@ describe('issues', () => {
       return client.projects({ projectKey }).issues.search.get({ query });
     }
 
+    it('returns the estimate in points', async () => {
+      const { asOwner, columnId } = await setupProject();
+      await createIssue(asOwner, columnId, { title: 'Zephyr rollout', estimatePoints: 3 });
+
+      const res = await search(asOwner, { q: 'zephyr' });
+      expect(res.data![0]).toMatchObject({ title: 'Zephyr rollout', estimatePoints: 3 });
+    });
+
     it('matches by title and excludes non-matching issues', async () => {
       const { asOwner, columnId } = await setupProject();
       const hit = (await createIssue(asOwner, columnId, { title: 'Zephyr rollout' })).data!;
@@ -1286,6 +1294,83 @@ describe('issues', () => {
       expect(ids).not.toContain(onlyA.id);
     });
 
+    // A block is a relation between two issues, which no text search reaches.
+    describe('blocked', () => {
+      async function blockedSetup() {
+        const { asOwner } = await setupProject();
+        const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+        const column = (stateType: string) =>
+          view.data!.columns.find((c) => c.stateType === stateType)!.id;
+        const make = async (title: string, stateType = 'backlog', patch = {}) =>
+          (await createIssue(asOwner, column(stateType), { title, ...patch })).data!.id;
+        const block = (blocker: number, held: number) =>
+          asOwner.issues({ issueId: blocker }).links.post({ targetIssueId: held, kind: 'blocks' });
+        const blockedTitles = async (query: Record<string, string> = { blocked: 'true' }) =>
+          (await list(asOwner, query)).data!.map((i) => i.title);
+        return { asOwner, make, block, blockedTitles };
+      }
+
+      it('lists the issues an open issue blocks, not the blocker or an unlinked issue', async () => {
+        const { make, block, blockedTitles } = await blockedSetup();
+        const blocker = await make('Blocker', 'started');
+        await block(blocker, await make('Held up'));
+        await make('Free');
+
+        expect(await blockedTitles()).toEqual(['Held up']);
+      });
+
+      it('reads the relation from either side', async () => {
+        const { asOwner, make, blockedTitles } = await blockedSetup();
+        const blocker = await make('Blocker');
+        const held = await make('Held up');
+        await asOwner
+          .issues({ issueId: held })
+          .links.post({ targetIssueId: blocker, kind: 'blocked_by' });
+
+        expect(await blockedTitles()).toEqual(['Held up']);
+      });
+
+      it('leaves out an issue whose blocker is completed, canceled or archived', async () => {
+        const { asOwner, make, block, blockedTitles } = await blockedSetup();
+        await block(await make('Done', 'completed'), await make('After done'));
+        await block(await make('Dropped', 'canceled'), await make('After dropped'));
+        const archived = await make('Archived');
+        await block(archived, await make('After archived'));
+        await asOwner.issues({ issueId: archived }).archive.post();
+
+        expect(await blockedTitles()).toEqual([]);
+      });
+
+      it('keeps an issue that one of its blockers still holds up', async () => {
+        const { make, block, blockedTitles } = await blockedSetup();
+        const held = await make('Held up');
+        await block(await make('Done', 'completed'), held);
+        await block(await make('Open'), held);
+
+        expect(await blockedTitles()).toEqual(['Held up']);
+      });
+
+      it('combines with the other filters', async () => {
+        const { make, block, blockedTitles } = await blockedSetup();
+        const blocker = await make('Blocker');
+        await block(blocker, await make('Held up'));
+        const urgent = await make('Held up, urgent', 'backlog', { priority: 'urgent' });
+        await block(blocker, urgent);
+
+        expect(await blockedTitles({ blocked: 'true', priority: 'urgent' })).toEqual([
+          'Held up, urgent',
+        ]);
+      });
+
+      it('does not filter for any other value', async () => {
+        const { make, block, blockedTitles } = await blockedSetup();
+        await block(await make('Blocker'), await make('Held up'));
+
+        expect((await blockedTitles({ blocked: 'false' })).sort()).toEqual(['Blocker', 'Held up']);
+        expect((await blockedTitles({ blocked: '' })).sort()).toEqual(['Blocker', 'Held up']);
+      });
+    });
+
     it('ignores placeholder 0 ids and empty strings (LLM-filled defaults)', async () => {
       const { asOwner, columnId } = await setupProject();
       const one = (await createIssue(asOwner, columnId, { title: 'Real one' })).data!;
@@ -1317,6 +1402,52 @@ describe('issues', () => {
 
       const after = (await list(asOwner)).data!.find((i) => i.id === one.id)!;
       expect(after.completedAt).toBeInstanceOf(Date);
+    });
+
+    it('returns the time, the status time and the parent', async () => {
+      const { asOwner, columnId, columnIds } = await setupProject();
+      const parent = (await createIssue(asOwner, columnId, { title: 'Parent' })).data!;
+      const child = (
+        await createIssue(asOwner, columnId, {
+          title: 'Child',
+          parentId: parent.id,
+          estimateMinutes: 120,
+        })
+      ).data!;
+      const spentOn = new Date().toISOString().slice(0, 10);
+      await asOwner.issues({ issueId: child.id }).worklogs.post({ minutes: 30, spentOn });
+      await asOwner.issues({ issueId: child.id }).worklogs.post({ minutes: 15, spentOn });
+
+      const before = (await list(asOwner)).data!;
+      expect(before.find((i) => i.id === parent.id)).toMatchObject({
+        parent: null,
+        estimateMinutes: null,
+        loggedMinutes: 0,
+      });
+      const fresh = before.find((i) => i.id === child.id)!;
+      expect(fresh).toMatchObject({
+        parent: { id: parent.id, identifier: parent.identifier, title: 'Parent' },
+        estimateMinutes: 120,
+        loggedMinutes: 45,
+      });
+      const full = async () => (await asOwner.issues({ issueId: child.id }).get()).data!;
+      expect(fresh.statusSince).toEqual((await full()).statusSince);
+
+      await asOwner.issues({ issueId: child.id }).patch({ columnId: columnIds[1] });
+      const moved = (await list(asOwner)).data!.find((i) => i.id === child.id)!;
+      expect(moved.statusSince).toEqual((await full()).statusSince);
+      expect(moved.statusSince).not.toEqual(fresh.statusSince);
+    });
+
+    it('returns the estimate in points, a fraction too', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const sized = (await createIssue(asOwner, columnId, { title: 'Sized', estimatePoints: 0.5 }))
+        .data!;
+      const bare = (await createIssue(asOwner, columnId, { title: 'Bare' })).data!;
+
+      const rows = (await list(asOwner)).data!;
+      expect(rows.find((i) => i.id === sized.id)).toMatchObject({ estimatePoints: 0.5 });
+      expect(rows.find((i) => i.id === bare.id)).toMatchObject({ estimatePoints: null });
     });
 
     it('filters by created and updated time', async () => {

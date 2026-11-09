@@ -49,6 +49,18 @@ describe('whats-new', () => {
     expect(second.data?.pending).toBe(false);
   });
 
+  it('keeps the language of the browser for a user with no preferences yet', async () => {
+    const user = await signUpTestUser();
+    const api = authedApi(user.cookie, { 'accept-language': 'ru' });
+
+    await api.settings['whats-new'].seen.post();
+
+    const stored = await authedApi(user.cookie, {
+      'accept-language': 'en',
+    }).account.preferences.get();
+    expect(stored.data?.locale).toBe('ru');
+  });
+
   it('carries the running release, from the changelog when the feed is unreachable', async () => {
     const { api } = await signUpClient();
 

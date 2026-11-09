@@ -24,6 +24,9 @@ export interface NotificationConfig {
   system: { enabled: boolean };
   smtp: SmtpConfig;
   resend: ResendConfig;
+  // The From address of the team's own SMTP or Resend provider. Empty falls back to
+  // EMAIL_FROM, then to the SMTP username.
+  from: string;
   telegram: TelegramConfig;
 }
 
@@ -42,6 +45,7 @@ export function defaultNotificationConfig(): NotificationConfig {
       timeout: null,
     },
     resend: { enabled: false, apiKey: '' },
+    from: '',
     telegram: { enabled: false, botToken: '' },
   };
 }

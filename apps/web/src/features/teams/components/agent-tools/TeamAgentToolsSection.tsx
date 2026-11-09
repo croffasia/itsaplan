@@ -49,6 +49,7 @@ export default function TeamAgentToolsSection({ teamId }: { teamId: number }) {
         <ToolConfigDialog
           teamId={teamId}
           teamName={team.name}
+          canAddCredential={team.permissions.integrations.create}
           catalog={catalog}
           onClose={() => setCreating(false)}
         />

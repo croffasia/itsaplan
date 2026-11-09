@@ -14,6 +14,7 @@ import { listIssueTypes } from '#modules/issue-types/service';
 import { listLabels, listLabelGroups } from '#modules/labels/service';
 import { listCustomFields } from '#modules/custom-fields/service';
 import { listIssueTemplates } from '#modules/issue-templates/service';
+import { projectSharingEnabled } from '#modules/workspaces/service';
 import {
   AutoArchiveResponse,
   EstimatesResponse,
@@ -123,8 +124,8 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         description:
           "Copy a project's configuration into a new project you own in the same team, without " +
           'its issues. Only an owner or a manager of that team may copy it. ' +
-          'By default the structure (states, issue types, labels, custom fields, views, ' +
-          'dashboards, documents, actions) is copied. Pass `include` to choose sections; the API ' +
+          'By default the structure (states, issue types, labels, custom fields, issue ' +
+          'templates, views, dashboards, documents, actions) is copied. Pass `include` to choose sections; the API ' +
           'force-enables dependencies (e.g. a view pulls in the states it references).',
         ...mcpTool('copy_project'),
       },
@@ -154,6 +155,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         issueTemplates,
         viewer,
         teamAccess,
+        sharingEnabled,
       ] = await Promise.all([
         listColumns(project.id),
         listIssueTypes(project.id),
@@ -164,6 +166,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         listIssueTemplates(project.id),
         getProjectAccess(project.id, userId),
         getTeamAccess(project.teamId, userId),
+        projectSharingEnabled(project.id),
       ]);
       // The permission guard already asserted access, so it always exists here; guard
       // against a race (access revoked mid-request).
@@ -179,6 +182,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         issueTemplates,
         viewer: { role: viewer.role, teamRole: teamAccess?.role ?? null, via: viewer.via },
         permissions: viewer.permissions,
+        sharingEnabled,
       };
     },
     {

@@ -23,6 +23,11 @@ export class HttpError extends Error {
 // (Drizzle's default mode for date), so no timezone is ever applied to them.
 export const iso = (value: Date): string => value.toISOString();
 
+// Whether a share link with this expiry still works: no expiry, or one still ahead.
+// Issues, views, documents and the share module all read a link's state through it.
+export const shareLive = (expiresAt: Date | null): boolean =>
+  expiresAt === null || expiresAt.getTime() > Date.now();
+
 // A timestamp from a query string. Empty means not set: a tool-calling model fills
 // optional fields with "".
 export function instantParam(name: string, value: string | undefined): Date | undefined {
@@ -49,6 +54,12 @@ export function escapeHtml(s: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+// The ILIKE pattern for the term. The wildcards a member types are escaped, so a query
+// with a % in it looks for that character.
+export function likePattern(term: string): string {
+  return `%${term.replace(/([\\%_])/g, '\\$1')}%`;
 }
 
 // The Postgres SQLSTATE of a driver error. Drizzle wraps the driver error in a

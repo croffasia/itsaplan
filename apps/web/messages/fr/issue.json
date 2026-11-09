@@ -104,6 +104,7 @@
     "copied": "Copié !",
     "copyPrompt": "Copier le prompt",
     "sharedPublicly": "Partagé publiquement",
+    "sharedThroughDocument": "Public via un document",
     "sharePublicly": "Partager publiquement",
     "restore": "Restaurer le ticket",
     "archive": "Archiver le ticket",
@@ -248,6 +249,8 @@
     "toSend": "pour envoyer",
     "unknownAuthor": "Inconnu",
     "goToLastComment": "Aller au dernier commentaire",
+    "copyLink": "Copier le lien",
+    "linkCopied": "Lien copié",
     "edit": "Modifier",
     "edited": "modifié",
     "deleteComment": "Supprimer le commentaire",
@@ -268,7 +271,9 @@
     "no": "Non",
     "time": "Heure",
     "startTime": "Heure de début",
-    "endTime": "Heure de fin"
+    "endTime": "Heure de fin",
+    "pickOption": "Choisir une option…",
+    "noOption": "Aucune option"
   },
   "editor": {
     "descriptionPlaceholder": "Ajouter une description…"
@@ -434,7 +439,7 @@
   "feedOldest": "Plus anciens",
   "feedChangeOrder": "Changer l'ordre",
   "feedRunToggle": "Afficher les changements similaires",
-  "shareUnavailable": "Ce ticket partagé n'est pas disponible. Le lien a peut-être été révoqué.",
+  "shareUnavailable": "Ce ticket partagé n'est pas disponible. Le lien a peut-être été révoqué ou a expiré.",
   "fieldSelects": {
     "changeState": "Changer l'état…",
     "changeType": "Changer le type…",
@@ -477,7 +482,7 @@
     "noLabels": "Aucune"
   },
   "agentRuns": {
-    "title": "Agent runs",
+    "title": "Exécutions d'agents",
     "refresh": "Refresh",
     "loading": "Loading runs…",
     "loadError": "Could not load run history. Try refreshing.",
@@ -516,7 +521,9 @@
     "queued": "Waiting",
     "running": "Running",
     "queuedHint": "Waiting for a runner, a retry or its scheduled start.",
-    "queueTitle": "Runner queue",
+    "queueTitle": "Exécutions d'agents",
+    "internalInFlight": "Agents internes de l'espace de travail : {running} sur {limit} en cours",
+    "internalInFlightNoLimit": "Agents internes de l'espace de travail : {running} en cours",
     "queueEmpty": "No runs yet.",
     "activeSection": "In progress",
     "historySection": "History",

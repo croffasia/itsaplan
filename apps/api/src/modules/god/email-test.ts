@@ -1,3 +1,6 @@
+import { sendEmail, type EmailConfig, type EmailMessage } from '@repo/mailer';
+import { HttpError } from '#shared/lib';
+
 // Provider errors can contain host names and transport details that should stay
 // in the server log. Map only recognizable categories to actionable, stable API
 // messages and use a generic fallback for everything else.
@@ -29,4 +32,15 @@ export function emailTestError(error: string | undefined): string {
     return 'The email provider rejected the credentials';
   }
   return 'The email provider rejected the test message';
+}
+
+export async function deliverTestEmail(config: EmailConfig, message: EmailMessage): Promise<void> {
+  const result = await sendEmail(
+    { ...config, smtp: { ...config.smtp, timeout: config.smtp.timeout ?? 15 } },
+    message,
+  );
+  if (!result.ok) {
+    console.error('[god] test email failed:', result.error);
+    throw new HttpError(502, emailTestError(result.error));
+  }
 }

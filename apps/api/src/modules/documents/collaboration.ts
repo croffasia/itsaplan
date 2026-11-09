@@ -10,6 +10,7 @@ import { Step, Mapping } from '@tiptap/pm/transform';
 import { HttpError } from '#shared/lib';
 import { assertValidDocumentContentJson, getDocument } from './service';
 import { collaborationSchema } from './collaboration-schema';
+import { documentMentionHandles, fanOutTextMentions } from './mentions';
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export async function lockVisibleDocument(
@@ -165,7 +166,7 @@ export async function saveDocumentSteps(
     content: string;
   },
 ) {
-  await db.transaction(async (tx) => {
+  const { document, contentJson } = await db.transaction(async (tx) => {
     const document = await lockVisibleDocument(tx, projectId, documentId, userId, true);
     const [session] = await tx
       .select()
@@ -240,6 +241,14 @@ export async function saveDocumentSteps(
         .set({ from: Math.min(from, to), to: Math.max(from, to), orphaned: from >= to })
         .where(eq(documentComment.id, comment.id));
     }
+    return { document, contentJson };
+  });
+  await fanOutTextMentions({
+    projectId,
+    documentId,
+    before: documentMentionHandles(document),
+    after: documentMentionHandles({ content: input.content, contentJson }),
+    actorUserId: userId,
   });
   return getDocument(projectId, documentId, userId);
 }

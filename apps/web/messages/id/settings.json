@@ -43,7 +43,10 @@
     "presetEveryWeekdayAt9": "Setiap hari kerja pukul 09.00",
     "presetEveryDayAt9": "Setiap hari pukul 09.00",
     "inputPlaceholder": "Setiap hari kerja pukul 09.00 atau 0 9 * * 1-5",
-    "runs": "Eksekusi: {description} UTC",
+    "runs": "Eksekusi: {description}",
+    "clockLabel": "Zona waktu",
+    "clockUtc": "UTC",
+    "clockLocal": "Waktu saya",
     "cronLabel": "Cron:",
     "runsSuffix": "{description} UTC",
     "statusActive": "Aktif",
@@ -97,7 +100,7 @@
     "telegram": "Telegram",
     "events": {
       "assigned": "Ditugaskan ke suatu issue",
-      "mentioned": "Disebutkan dalam suatu issue",
+      "mentioned": "Disebutkan dalam suatu issue atau dokumen",
       "commented": "Komentar baru pada issue yang Anda pantau",
       "state_changed": "Perubahan status pada issue yang Anda pantau"
     },
@@ -381,6 +384,10 @@
     "hideSecret": "Sembunyikan rahasia",
     "revealSecret": "Tampilkan rahasia",
     "copySecret": "Salin rahasia",
+    "rotateSecret": "Buat ulang rahasia",
+    "rotateSecretTitle": "Buat ulang rahasia tanda tangan?",
+    "rotateSecretMessage": "Pengiriman ke <v>{url}</v> langsung ditandatangani dengan rahasia baru. Perbarui di penerima, atau penerima akan menolak pengiriman berikutnya.",
+    "secretRotated": "Rahasia tanda tangan dibuat ulang",
     "deliveryHistory": "Riwayat pengiriman",
     "moreActions": "Tindakan lainnya",
     "edit": "Ubah webhook",
@@ -498,7 +505,8 @@
     "import": "Impor",
     "source": "Sumber",
     "sourceHint": "Pilih sumber impor.",
-    "comingSoon": "Segera",
+    "moreSources": "Lebih banyak di Cloud dan Pro",
+    "moreSourcesHint": "Sumber impor lainnya tersedia di Cloud dan Pro self-hosted.",
     "connect": "Hubungkan ke Plane",
     "connectHint": "Masukkan instans Plane self-hosted untuk memeriksa koneksi dan memuat proyeknya.",
     "baseUrl": "URL Plane",
@@ -550,6 +558,29 @@
       "noProject": "Issue tanpa proyek",
       "noTeams": "Kunci API ini tidak dapat melihat tim mana pun."
     },
+    "trello": {
+      "connect": "Hubungkan ke Trello",
+      "connectHint": "Masukkan API key Trello Anda dan otorisasi di Trello untuk memuat board yang bisa Anda lihat.",
+      "apiKey": "API key",
+      "apiKeyHint": "Buat Power-Up di <link>admin Power-Up Trello</link> lalu buat API key di tab API key-nya. Di tab yang sama, tambahkan <code>{origin}</code> ke allowed origins: Trello hanya mengirim token ke alamat yang diizinkan.",
+      "authorize": "Otorisasi di Trello",
+      "authorizing": "Menunggu Trello…",
+      "popupBlocked": "Browser memblokir jendela Trello. Izinkan pop-up untuk situs ini lalu coba lagi.",
+      "scope": "Yang diimpor",
+      "scopeHint": "Pilih board yang akan diimpor. Daftar yang terbuka menjadi kolom.",
+      "board": "Board",
+      "boardPlaceholder": "Pilih board",
+      "closedBoard": "{name} (ditutup)",
+      "noBoards": "Key dan token ini tidak bisa melihat board apa pun.",
+      "archivedCards": "Kartu yang diarsipkan",
+      "archivedCardsArchive": "Impor sebagai isu yang diarsipkan",
+      "archivedCardsSkip": "Jangan impor",
+      "members": "Anggota Trello",
+      "membersSkip": "Jangan cocokkan",
+      "membersMatch": "Cocokkan manual",
+      "membersHint": "Trello tidak membagikan email anggota, jadi cocokkan secara manual. Anggota pertama yang dicocokkan pada kartu menjadi penanggung jawab, yang lain mengikuti isu.",
+      "memberNotMatched": "Tidak dicocokkan"
+    },
     "statuses": {
       "pending": "Tertunda",
       "running": "Berjalan",
@@ -571,7 +602,9 @@
       "label": "Label",
       "state": "Status",
       "cycle": "Cycle",
-      "attachment": "Lampiran"
+      "attachment": "Lampiran",
+      "checklist": "Checklist",
+      "custom_field": "Kolom kustom"
     }
   },
   "issueTemplates": {

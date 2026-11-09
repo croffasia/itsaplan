@@ -68,6 +68,7 @@ let previousDocument: PropertyDescriptor | undefined;
 let previousNavigator: PropertyDescriptor | undefined;
 let previousAnimationFrame: PropertyDescriptor | undefined;
 let previousNode: PropertyDescriptor | undefined;
+let previousNodeFilter: PropertyDescriptor | undefined;
 
 beforeEach(() => {
   previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
@@ -75,6 +76,7 @@ beforeEach(() => {
   previousNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
   previousAnimationFrame = Object.getOwnPropertyDescriptor(globalThis, 'requestAnimationFrame');
   previousNode = Object.getOwnPropertyDescriptor(globalThis, 'Node');
+  previousNodeFilter = Object.getOwnPropertyDescriptor(globalThis, 'NodeFilter');
   dom = new JSDOM('<!doctype html><div id="one"></div><div id="two"></div>');
   dom.window.Range.prototype.getClientRects = () => [] as unknown as DOMRectList;
   dom.window.Range.prototype.getBoundingClientRect = () => new dom.window.DOMRect();
@@ -83,6 +85,7 @@ beforeEach(() => {
     document: { configurable: true, value: dom.window.document },
     navigator: { configurable: true, value: dom.window.navigator },
     Node: { configurable: true, value: dom.window.Node },
+    NodeFilter: { configurable: true, value: dom.window.NodeFilter },
     requestAnimationFrame: {
       configurable: true,
       value: (callback: FrameRequestCallback) => setTimeout(callback, 0),
@@ -98,6 +101,7 @@ afterEach(() => {
     ['navigator', previousNavigator],
     ['requestAnimationFrame', previousAnimationFrame],
     ['Node', previousNode],
+    ['NodeFilter', previousNodeFilter],
   ] as const) {
     if (descriptor) Object.defineProperty(globalThis, name, descriptor);
     else Reflect.deleteProperty(globalThis, name);
@@ -371,6 +375,7 @@ describe('DocumentMarkdownEditor schema attrs', () => {
       heading: ['blockId', 'level', 'textAlign'],
       horizontalRule: ['blockId'],
       hardBreak: [],
+      mention: ['username'],
       codeBlock: ['blockId', 'language'],
       image: ['alt', 'blockId', 'src', 'style', 'title', 'width'],
       table: ['blockId'],
@@ -483,6 +488,52 @@ describe('collaborative editor convergence', () => {
     assert.equal(editor.getText(), 'Two\n\nSecond\n\nOne\n\nFirst');
     changeDocumentBlock(editor, editor.state.selection.from, 'up');
     assert.equal(editor.getText(), 'One\n\nFirst\n\nTwo\n\nSecond');
+    editor.destroy();
+  });
+
+  it('sends every change to a document that ends with a list', async () => {
+    const { collab, sendableSteps } = await import('prosemirror-collab');
+    const editor = new Editor({
+      element: document.querySelector('#one') as HTMLElement,
+      extensions: documentEditorExtensions({
+        placeholder: '',
+        codeBlockLabel: 'Code',
+        tableLabel: 'Table',
+      }),
+    });
+    const served: JSONContent = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          attrs: { blockId: 'intro' },
+          content: [{ type: 'text', text: 'Intro' }],
+        },
+        {
+          type: 'bulletList',
+          attrs: { blockId: 'list' },
+          content: [
+            {
+              type: 'listItem',
+              content: [
+                {
+                  type: 'paragraph',
+                  attrs: { blockId: 'last' },
+                  content: [{ type: 'text', text: 'Last' }],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    editor.commands.setContent(served, { emitUpdate: false });
+    let server = editor.schema.nodeFromJSON(served);
+    editor.registerPlugin(collab({ clientID: 'one' }));
+    editor.commands.setTextSelection(server.content.size - 3);
+    editor.commands.splitListItem('listItem');
+    for (const step of sendableSteps(editor.state)!.steps) server = step.apply(server).doc!;
+    assert.ok(server.eq(editor.state.doc));
     editor.destroy();
   });
 });

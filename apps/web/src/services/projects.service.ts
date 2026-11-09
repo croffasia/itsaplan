@@ -1,7 +1,6 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { removeMember } from '@/lib/api/endpoints/members';
 import {
-  type CopyProjectIncludeKey,
   createTeamProject,
   copyTeamProject,
   updateTeamProject,
@@ -23,8 +22,12 @@ import {
 import { nextPageParam } from '@/lib/api/core/paging';
 import { qk } from '@/services/queryKeys';
 
-export function useProjectsQuery(enabled = true) {
-  return useQuery({ queryKey: qk.projects, queryFn: () => listProjects(), enabled });
+export function useProjectsQuery(enabled = true, permissions = false) {
+  return useQuery({
+    queryKey: permissions ? [...qk.projects, 'permissions'] : qk.projects,
+    queryFn: () => listProjects(permissions),
+    enabled,
+  });
 }
 
 const PROJECT_SEARCH_PAGE = 30;
@@ -110,8 +113,9 @@ export function useCreateProject() {
         key: string;
         name: string;
         description?: string;
-        include?: Partial<Record<CopyProjectIncludeKey, boolean>>;
+        include?: Record<string, boolean>;
         preset?: string;
+        templateId?: number;
       };
     }) =>
       copyFromId == null

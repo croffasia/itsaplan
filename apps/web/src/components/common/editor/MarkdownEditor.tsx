@@ -27,7 +27,8 @@ import EditorImagePicker from './EditorImagePicker';
 import EditorSelectionMenu from './EditorSelectionMenu';
 import EditorTableMenu from './EditorTableMenu';
 import EditorLinkPreview from './EditorLinkPreview';
-import { useMentionCandidates } from '@/hooks/useMentionCandidates';
+import { useMentionCandidates, useMentionNames } from '@/hooks/useMentionCandidates';
+import type { MentionSource } from '@/lib/api/endpoints/mentions';
 import { useTranslations } from 'next-intl';
 
 // Shared by every editor instance. A block with no language is detected by
@@ -54,6 +55,7 @@ export default function MarkdownEditor({
   uploadFile,
   imageAttachments,
   readingLinks = true,
+  mentions,
 }: {
   defaultValue: string;
   onChange?: (markdown: string) => void;
@@ -73,6 +75,9 @@ export default function MarkdownEditor({
   // stored to read them from yet (a create dialog), which drops the picker.
   imageAttachments?: Embeddable[];
   readingLinks?: boolean;
+  // Where the text is written, which decides who the "@" menu offers. Without it the
+  // menu offers nobody: a mention in the text would reach no one.
+  mentions?: MentionSource;
 }) {
   const t = useTranslations('common.editor');
   const editorRef = useRef<Editor | null>(null);
@@ -82,9 +87,12 @@ export default function MarkdownEditor({
   const router = useRouter();
   const { data: session } = useSession();
   const issueRefs = useIssueRefs();
-  const mentionCandidates = useMentionCandidates();
+  const mentionCandidates = useMentionCandidates(mentions ?? null);
   const mentionCandidatesRef = useRef(mentionCandidates);
   mentionCandidatesRef.current = mentionCandidates;
+  const mentionNames = useMentionNames();
+  const mentionNamesRef = useRef(mentionNames);
+  mentionNamesRef.current = mentionNames;
   const issueRefsRef = useRef(issueRefs);
   issueRefsRef.current = issueRefs;
   const openIssueRefRef = useRef(router.push);
@@ -137,11 +145,12 @@ export default function MarkdownEditor({
       }),
       // Renders ![](url) markdown inline.
       ResizableImage,
-      // Renders an @username in the text as a mention chip, and offers the project's
-      // members and agents while one is typed.
+      // Renders an @username in the text as a mention chip, and offers who a mention
+      // written here reaches while one is typed.
       Mention.configure({
         items: () => mentionCandidatesRef.current,
         self: () => selfHandleRef.current,
+        name: (handle) => mentionNamesRef.current.get(handle),
       }),
       // Paints KEY-123 as a link without writing the link into the markdown.
       IssueRef.configure({

@@ -1,4 +1,8 @@
-import { CalendarDays, Columns3, GanttChart, Table2, type LucideIcon } from 'lucide-react';
+import { CalendarDaysIcon } from '@animateicons/react/lucide/calendar-days-icon';
+import { ChartGanttIcon } from '@animateicons/react/lucide/chart-gantt-icon';
+import { Columns3Icon } from '@animateicons/react/lucide/columns-3-icon';
+import { TableIcon } from '@animateicons/react/lucide/table-icon';
+import type { AnimatedIcon } from '@/lib/animatedIcon';
 import type { HotkeyId } from '@/utils/hotkeys';
 
 // Shared view-domain types used by both project.ts (sorting) and viewSettings.ts
@@ -34,11 +38,11 @@ export type WorkItemsView = 'kanban' | 'table' | 'timeline' | 'calendar';
 // Each layout names its hotkey id rather than a key, so the switcher, the global
 // key layer and the command palette all read the same binding (see lib/hotkeys).
 // The name of a layout is a message under `display.layouts`.
-export const VIEWS: { value: WorkItemsView; icon: LucideIcon; hotkey: HotkeyId }[] = [
-  { value: 'kanban', icon: Columns3, hotkey: 'view.kanban' },
-  { value: 'table', icon: Table2, hotkey: 'view.table' },
-  { value: 'timeline', icon: GanttChart, hotkey: 'view.timeline' },
-  { value: 'calendar', icon: CalendarDays, hotkey: 'view.calendar' },
+export const VIEWS: { value: WorkItemsView; icon: AnimatedIcon; hotkey: HotkeyId }[] = [
+  { value: 'kanban', icon: Columns3Icon, hotkey: 'view.kanban' },
+  { value: 'table', icon: TableIcon, hotkey: 'view.table' },
+  { value: 'timeline', icon: ChartGanttIcon, hotkey: 'view.timeline' },
+  { value: 'calendar', icon: CalendarDaysIcon, hotkey: 'view.calendar' },
 ];
 
 // Fields the project can be ordered by, in the order shown in the menu. The name

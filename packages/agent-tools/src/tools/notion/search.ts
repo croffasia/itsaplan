@@ -6,6 +6,7 @@ import { pageTitle } from './page';
 // Finds pages by title among those shared with the integration.
 export const notionSearch: CustomToolEntry = {
   key: 'notion_search',
+  group: 'Pages',
   label: 'Notion Search',
   scopes: ['Read content'],
   description:

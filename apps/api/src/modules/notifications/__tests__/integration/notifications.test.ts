@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { db, notificationDelivery } from '@repo/db';
+import { asc } from 'drizzle-orm';
 import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -14,12 +16,7 @@ interface Member {
   username: string;
 }
 
-async function setup(): Promise<{
-  owner: Member;
-  columnId: number;
-  doneColumnId: number;
-  projectRef: string;
-}> {
+async function setup() {
   const u = await signUpTestUser();
   const api = authedApi(u.cookie);
   await createProject(api, { key: 'MKT', name: 'Marketing' });
@@ -28,6 +25,7 @@ async function setup(): Promise<{
   const done = columns.find((c) => c.stateType === 'completed') ?? columns[columns.length - 1];
   return {
     owner: { api, userId: u.userId, username: u.username },
+    project: view.data!.project,
     columnId: columns[0].id,
     doneColumnId: done.id,
     projectRef: view.data!.project.ref,
@@ -121,7 +119,7 @@ describe('notifications', () => {
     });
     expect(assigned.data!.count).toBe(1);
     const afterAssigned = (await member.api.notifications.get({ query: {} })).data!.items;
-    expect(afterAssigned.map((item) => item.issueId).sort((a, b) => a - b)).toEqual(
+    expect(afterAssigned.map((item) => item.issueId!).sort((a, b) => a - b)).toEqual(
       [active.id, completed.id].sort((a, b) => a - b),
     );
     expect(afterAssigned.find((item) => item.issueId === completed.id)!.readAt).not.toBeNull();
@@ -191,7 +189,11 @@ describe('notifications', () => {
 
     const inbox = await member.api.notifications.get({ query: { types: 'mentioned' } });
     expect(inbox.data!.items).toHaveLength(1);
-    expect(inbox.data!.items[0]).toMatchObject({ type: 'mentioned', actorUserId: owner.userId });
+    expect(inbox.data!.items[0]).toMatchObject({
+      type: 'mentioned',
+      actorUserId: owner.userId,
+      issueCommentId: null,
+    });
   });
 
   it('notifies a member mentioned in a markdown custom field', async () => {
@@ -242,7 +244,8 @@ describe('notifications', () => {
       type: 'assigned',
       actorUserId: owner.userId,
       issueTitle: 'Ship it',
-      projectKey: projectRef,
+      projectKey: 'MKT',
+      projectRef,
       readAt: null,
     });
 
@@ -286,14 +289,123 @@ describe('notifications', () => {
 
     // Member comments -> owner (a watcher) gets a 'commented' notification.
     await owner.api.issues({ issueId }).comments.post({ body: 'looking into it' } as never);
-    await member.api.issues({ issueId }).comments.post({ body: 'done' } as never);
+    const comment = (await member.api.issues({ issueId }).comments.post({ body: 'done' })).data!;
 
     const ownerInbox = await owner.api.notifications.get({ query: { types: 'commented' } });
     expect(ownerInbox.data!.items).toHaveLength(1);
     expect(ownerInbox.data!.items[0]).toMatchObject({
       type: 'commented',
       actorUserId: member.userId,
+      issueCommentId: comment.id,
     });
+  });
+
+  it('keeps the notification of a deleted comment, pointing at the issue only', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    const issue = (await createIssue(owner.api, columnId)).data!;
+    const comment = (
+      await owner.api
+        .issues({ issueId: issue.id })
+        .comments.post({ body: `@${member.username} look` })
+    ).data!;
+
+    await owner.api.comments({ commentId: comment.id }).delete();
+
+    const inbox = await member.api.notifications.get({ query: {} });
+    expect(inbox.data!.items).toHaveLength(1);
+    expect(inbox.data!.items[0]).toMatchObject({
+      type: 'mentioned',
+      issueId: issue.id,
+      issueCommentId: null,
+    });
+  });
+
+  it('links the email about a comment to the comment, and about a description to the issue', async () => {
+    const { owner, project, columnId } = await setup();
+    const member = await addMember(owner);
+    await owner.api.teams({ teamId: project.teamId })['notification-settings'].put({
+      smtp: {
+        enabled: true,
+        host: 'smtp.example.com',
+        port: 587,
+        encryption: 'none',
+        username: 'mailer@example.com',
+        password: 'secret',
+        timeout: null,
+      },
+    });
+    const events = { assigned: true, mentioned: true, commented: true, state_changed: true };
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: events,
+      telegramEvents: events,
+    });
+    const issue = (await createIssue(owner.api, columnId)).data!;
+    const client = owner.api.issues({ issueId: issue.id });
+    const comment = (await client.comments.post({ body: `@${member.username} have a look` })).data!;
+    await client.patch({ description: `@${member.username} size this` });
+
+    // No route reads the outbox, and its rows are what the worker sends.
+    const queued = await db
+      .select({ payload: notificationDelivery.payload })
+      .from(notificationDelivery)
+      .orderBy(asc(notificationDelivery.id));
+    const issueLink = `${process.env.APP_URL}/${project.teamRef}/issue/${issue.identifier}`;
+    expect(queued.map((row) => row.payload.url)).toEqual([
+      `${issueLink}#comment-${comment.id}`,
+      issueLink,
+    ]);
+  });
+
+  it('sends each recipient the email in their language, with what god changed', async () => {
+    const { owner, project, columnId, doneColumnId } = await setup();
+    const member = await addMember(owner);
+    await owner.api.teams({ teamId: project.teamId })['notification-settings'].put({
+      smtp: {
+        enabled: true,
+        host: 'smtp.example.com',
+        port: 587,
+        encryption: 'none',
+        username: 'mailer@example.com',
+        password: 'secret',
+        timeout: null,
+      },
+    });
+    const events = { assigned: true, mentioned: true, commented: true, state_changed: true };
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: events,
+      telegramEvents: events,
+    });
+    await member.api.account.preferences.patch({ locale: 'ru' });
+    await owner.api.god['email-templates'].put({
+      edits: {
+        stateChanged: {
+          ru: {
+            subject: 'Статус {ref}: {to}',
+            body: '**{title}** {from} → {to}',
+            button: 'Открыть',
+          },
+        },
+      },
+      layout: null,
+    });
+    const issue = (
+      await createIssue(owner.api, columnId, {
+        title: '<b>Loud</b> title',
+        assigneeUserId: member.userId,
+      })
+    ).data!;
+    await db.delete(notificationDelivery);
+
+    await owner.api.issues({ issueId: issue.id }).patch({ columnId: doneColumnId });
+
+    const [queued] = await db
+      .select({ payload: notificationDelivery.payload })
+      .from(notificationDelivery);
+    expect(queued!.payload.subject).toStartWith(`Статус ${issue.identifier}:`);
+    expect(queued!.payload.text).toContain('<b>Loud</b> title');
+    expect(queued!.payload.html).toContain('&lt;b&gt;Loud&lt;/b&gt; title');
+    expect(queued!.payload.html).toContain('class="button"');
   });
 
   it('a status change notification names the states it moved between', async () => {

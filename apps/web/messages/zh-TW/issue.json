@@ -104,6 +104,7 @@
     "copied": "已複製！",
     "copyPrompt": "複製提示詞",
     "sharedPublicly": "已公開共享",
+    "sharedThroughDocument": "透過文件公開",
     "sharePublicly": "公開共享",
     "restore": "恢復工作項目",
     "archive": "封存工作項目",
@@ -248,6 +249,8 @@
     "toSend": "傳送",
     "unknownAuthor": "未知使用者",
     "goToLastComment": "跳轉到最新留言",
+    "copyLink": "複製連結",
+    "linkCopied": "連結已複製",
     "edit": "編輯",
     "edited": "已編輯",
     "deleteComment": "刪除留言",
@@ -268,7 +271,9 @@
     "no": "否",
     "time": "時間",
     "startTime": "開始時間",
-    "endTime": "結束時間"
+    "endTime": "結束時間",
+    "pickOption": "選擇選項…",
+    "noOption": "無選項"
   },
   "editor": {
     "descriptionPlaceholder": "新增描述…"
@@ -434,7 +439,7 @@
   "feedOldest": "最早優先",
   "feedChangeOrder": "切換順序",
   "feedRunToggle": "顯示類似的變更",
-  "shareUnavailable": "此共享工作項目不可用，連結可能已撤銷。",
+  "shareUnavailable": "此共享工作項目不可用，連結可能已撤銷或已過期。",
   "fieldSelects": {
     "changeState": "更改狀態…",
     "changeType": "更改類型…",
@@ -477,7 +482,7 @@
     "noLabels": "無標籤"
   },
   "agentRuns": {
-    "title": "Agent runs",
+    "title": "代理執行",
     "refresh": "Refresh",
     "loading": "Loading runs…",
     "loadError": "Could not load run history. Try refreshing.",
@@ -516,7 +521,9 @@
     "queued": "Waiting",
     "running": "Running",
     "queuedHint": "Waiting for a runner, a retry or its scheduled start.",
-    "queueTitle": "Runner queue",
+    "queueTitle": "代理執行",
+    "internalInFlight": "工作區內部代理：{running}/{limit} 執行中",
+    "internalInFlightNoLimit": "工作區內部代理：{running} 個執行中",
     "queueEmpty": "No runs yet.",
     "activeSection": "In progress",
     "historySection": "History",

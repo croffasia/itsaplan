@@ -12,6 +12,7 @@
   "configuration": "Configuration",
   "members": "Members",
   "notifications": "Notifications",
+  "public": "Public",
   "notificationPreferences": "Notification preferences",
   "projectSettings": "Project settings",
   "backToProject": "Back to project",

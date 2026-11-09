@@ -54,6 +54,7 @@ export default function ProjectSwitcher({
   const workspaceTeams = workspace
     ? teams.filter((team) => team.workspaceId === workspace.id)
     : teams;
+  const currentTeam = workspaceTeams.find((team) => team.id === current?.teamId);
 
   return (
     <SidebarMenu>
@@ -76,6 +77,7 @@ export default function ProjectSwitcher({
             workspaces={workspaces}
             workspace={workspace}
             teams={workspaceTeams}
+            currentTeam={currentTeam}
             scope={scope}
             onScopeChange={setScope}
             onPickWorkspace={(workspaceId) => {

@@ -1,7 +1,7 @@
 import { db, issueChecklist, issueChecklistItem } from '@repo/db';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
-import { recordActivity, rowSide } from './activity';
+import { recordActivity, recordActivityEntries, rowSide } from './activity';
 
 // Checklists on an issue: a list of steps too small to be subtasks of their own.
 // An issue holds several checklists, each holding its items; both are ordered by
@@ -210,28 +210,54 @@ export async function createChecklistItem(
   content: string,
   actorUserId?: string | null,
 ): Promise<ChecklistItemRow> {
-  const checklist = await checklistContext(checklistId);
-  const [row] = await db
-    .insert(issueChecklistItem)
-    .values({
-      checklistId,
-      content,
-      position: sql<number>`(select coalesce(max(${issueChecklistItem.position}), 0) + 1000 from ${issueChecklistItem} where ${eq(issueChecklistItem.checklistId, checklistId)})`,
-    })
-    .returning(itemColumns);
-
-  await recordActivity(
-    checklist.issueId,
-    [
-      {
-        action: 'checklist_item_add',
-        subject: rowSide(checklist.title, checklistId),
-        to: rowSide(content, row.id),
-      },
-    ],
-    actorUserId,
-  );
+  const [row] = await createChecklistItems(checklistId, [{ content }], actorUserId);
   return row;
+}
+
+export async function createChecklistItems(
+  checklistId: number,
+  items: { content: string }[],
+  actorUserId?: string | null,
+): Promise<ChecklistItemRow[]> {
+  return db.transaction(async (tx) => {
+    // Serialize appends so concurrent batches occupy separate ordered ranges.
+    const [checklist] = await tx
+      .select({ issueId: issueChecklist.issueId, title: issueChecklist.title })
+      .from(issueChecklist)
+      .where(eq(issueChecklist.id, checklistId))
+      .for('update');
+    if (!checklist) throw new HttpError(404, 'Checklist not found');
+
+    const [last] = await tx
+      .select({ position: sql<number>`coalesce(max(${issueChecklistItem.position}), 0)` })
+      .from(issueChecklistItem)
+      .where(eq(issueChecklistItem.checklistId, checklistId));
+    const rows = await tx
+      .insert(issueChecklistItem)
+      .values(
+        items.map(({ content }, index) => ({
+          checklistId,
+          content,
+          position: last.position + (index + 1) * 1000,
+        })),
+      )
+      .returning(itemColumns);
+
+    rows.sort((a, b) => a.position - b.position);
+    await recordActivityEntries(
+      rows.map((row) => ({
+        issueId: checklist.issueId,
+        event: {
+          action: 'checklist_item_add',
+          subject: rowSide(checklist.title, checklistId),
+          to: rowSide(row.content, row.id),
+        },
+      })),
+      actorUserId,
+      tx,
+    );
+    return rows;
+  });
 }
 
 export async function updateChecklistItem(

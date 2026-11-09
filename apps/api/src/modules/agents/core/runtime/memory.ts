@@ -1,6 +1,7 @@
 import { Memory } from '@mastra/memory';
 import { db } from '@repo/db';
 import { sql } from 'drizzle-orm';
+import { likePattern } from '#shared/lib';
 import { appendTextPart, toolArgsText, toolText } from '../../chat-parts';
 import { deleteContextUsage } from '../../chat-usage';
 import {
@@ -10,7 +11,6 @@ import {
   FAVORITES_LIMIT,
 } from '../../chat-favorites';
 import {
-  likePattern,
   searchTerm,
   snippetOf,
   summarize,
@@ -117,10 +117,11 @@ export async function deleteChatThread(threadId: string, resourceId: string): Pr
   return true;
 }
 
-// Deletes every thread bound to the given agent, project or schedule, with its
+// Deletes every thread bound to the given agent, project, issue or schedule, with its
 // messages, and returns how many were deleted. Called when that binding goes away.
 export async function deleteThreadsWhere(
-  binding: { agentId: number } | { projectId: number } | { scheduleId: number },
+  binding:
+    { agentId: number } | { projectId: number } | { issueId: number } | { scheduleId: number },
 ): Promise<number> {
   const memory = getReadMemory();
   const { threads } = await memory.listThreads({ filter: { metadata: binding }, perPage: false });

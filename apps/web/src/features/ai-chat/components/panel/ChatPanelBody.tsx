@@ -23,6 +23,9 @@ export const ChatPanelBody = memo(function ChatPanelBody({
 }) {
   const agentsQuery = useProjectAgents();
   const agents = agentsQuery.data ?? [];
+  // Only these are offered; `agents` stays whole so a session already open on a disabled
+  // one keeps its transcript.
+  const chatAgents = agents.filter((agent) => agent.chatEnabled);
   const providerLabel = useProviderLabel();
   const {
     sessions,
@@ -37,7 +40,7 @@ export const ChatPanelBody = memo(function ChatPanelBody({
     setThread,
     setAgent,
     setState,
-  } = useChatSessions(projectKey, agents[0]?.id ?? null);
+  } = useChatSessions(projectKey, chatAgents[0]?.id ?? null);
 
   // A page asked for a chat with one agent: it opens as a tab of its own, so whatever
   // is already open stays.
@@ -69,7 +72,9 @@ export const ChatPanelBody = memo(function ChatPanelBody({
     );
   }
 
-  if (agents.length === 0) {
+  // Nothing to chat with: no agent works here at all, or every one of them has chat
+  // turned off and there is no already-open session (an old tab) left to show instead.
+  if (agents.length === 0 || (chatAgents.length === 0 && sessions.length === 0)) {
     return (
       <div className="min-h-0 flex-1">
         <ChatPanelEmpty projectKey={projectKey} />
@@ -98,7 +103,7 @@ export const ChatPanelBody = memo(function ChatPanelBody({
             <ChatPanelSession
               key={session.id}
               projectKey={projectKey}
-              agents={agents}
+              agents={chatAgents}
               agent={agent}
               session={session}
               active={session.id === active?.id}

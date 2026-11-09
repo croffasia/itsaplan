@@ -31,11 +31,19 @@ switch).
   in dark.
 - `destructive` — error / overdue / delete only. It serves two roles at once: `text-destructive`
   on the page, and a fill under the white label of a destructive button or badge.
+- `destructive-text` — the board's small red text: a full hard-limit count and an overdue
+  date. Equal to `destructive` in light; in dark a lighter red, Lc 62–65 where `destructive`
+  gives 53.
+- `overdue` — the fill of an overdue date pill: `destructive` mixed into the card.
 - `warning` — a state that needs attention but has refused nothing, where `destructive` would
   overstate it: a soft WIP limit is at its maximum while a hard one has blocked the move. Text
-  and low-opacity tint only; there is no warning button, so it is tuned for the page background
-  alone. An amber rather than a bright yellow — yellow at a legible chroma has to drop this far
-  in lightness to hold contrast against the light page.
+  and low-opacity tint only; there is no warning button, so it is tuned for the page and board
+  backgrounds alone. An amber rather than a bright yellow — yellow at a legible chroma has to
+  drop this far in lightness to hold contrast against the light page.
+- `kanban-column-wip-*`, `kanban-card-blocked`, `row-blocked` — state tints. A tint keeps the
+  lightness of the surface it replaces and changes only hue and chroma, so cards keep their
+  contrast against a full column. Blocked is rose (10–15°), not the 25° red of `destructive`,
+  which turns brown on dark surfaces.
 - `ring` — focus ring (keyboard a11y).
 - `chart-1…5` — a neutral grayscale ramp for charts. For categorical series that need
   to be told apart (priority, assignee), widgets use their own small hue palette; for
@@ -69,7 +77,7 @@ switch).
   non-text UI `≥ 30`. `destructive` in dark reaches only ~53 in each of its two roles: as it
   lightens it reads better as text on the near-black page and worse under the white label of
   a destructive button, so it sits where those two curves cross. Both roles are above the
-  large/bold threshold; red at that chroma cannot do better without splitting the token.
+  large/bold threshold. Small red text on the board uses `destructive-text` instead.
 - **Motion is restrained.** Hover 120–200ms, entrance 250–400ms; animate only
   `transform`/`opacity`; honor `prefers-reduced-motion`.
 

@@ -1,0 +1,2 @@
+ALTER TABLE "team_role" ALTER COLUMN "team_id" DROP NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "team_role_system_name_uq" ON "team_role" USING btree ("name") WHERE "team_role"."team_id" IS NULL;

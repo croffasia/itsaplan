@@ -53,9 +53,19 @@ export default function IssueLinkDialog({
 
   // One request per burst of keystrokes, as in the command palette.
   const debounced = useDebouncedValue(query, 250);
-  const projects = useProjectsQuery();
-  const choices = (projects.data ?? [project.project]).filter(
-    (p) => p.teamId === project.project.teamId,
+  const projects = useProjectsQuery(true, true);
+  const choices = (
+    projects.data ?? [
+      {
+        ...project.project,
+        role: project.viewer.role,
+        permissions: project.permissions,
+      },
+    ]
+  ).filter(
+    (p) =>
+      p.teamId === project.project.teamId &&
+      (p.role === 'owner' || p.permissions?.work_items?.edit === true),
   );
   const search = useIssueSearchQuery(targetProjectRef, debounced, {
     enabled: query.trim().length > 0 && query.trim() === debounced.trim(),
@@ -115,7 +125,7 @@ export default function IssueLinkDialog({
       {error && <p className="px-3 py-2 text-xs text-destructive">{error}</p>}
 
       <CommandList>
-        <CommandEmpty>{query.trim() ? t('noMatches') : t('typeToSearch')}</CommandEmpty>
+        <CommandEmpty>{query.trim() ? t('noMatches') : prompt}</CommandEmpty>
         <CommandGroup>
           {hits.map((hit) => (
             <CommandItem key={hit.id} value={String(hit.id)} onSelect={() => void pick(hit.id)}>

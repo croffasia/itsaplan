@@ -73,6 +73,8 @@ export interface Issue {
   // activity) or only its title, description, state, type, priority, dates,
   // subtasks and links.
   shareExtended: boolean;
+  // When the share link stops working, or null when it never does.
+  shareExpiresAt: string | null;
   labelIds: number[];
   fieldValues: IssueFieldValueEntry[];
 }
@@ -95,6 +97,14 @@ export interface IssueSearchHit {
   dueDate: string | null;
   labelIds: number[];
   archived: boolean;
+}
+
+export interface CrossProjectIssueHit extends IssueSearchHit {
+  projectId: number;
+  projectRef: string;
+  projectKey: string;
+  projectName: string;
+  teamName: string;
 }
 
 export interface IssueFieldValue {
@@ -378,6 +388,19 @@ export const searchIssues = (projectKey: string, params: { q?: string; limit?: n
   return request<IssueSearchHit[]>(`/projects/${projectKey}/issues/search?${qs.toString()}`);
 };
 
+export const searchAllIssues = (params: {
+  q: string;
+  limit?: number;
+  perProjectLimit?: number;
+  excludeProjectId?: number;
+}) => {
+  const qs = new URLSearchParams({ q: params.q });
+  if (params.limit != null) qs.set('limit', String(params.limit));
+  if (params.perProjectLimit != null) qs.set('perProjectLimit', String(params.perProjectLimit));
+  if (params.excludeProjectId != null) qs.set('excludeProjectId', String(params.excludeProjectId));
+  return request<CrossProjectIssueHit[]>(`/issues/search?${qs.toString()}`);
+};
+
 // Relations between issues. The relation reads from the issue in the path: it
 // blocks / relates to / duplicates targetIssueId. Both ends show it.
 export const linkIssues = (issueId: number, targetIssueId: number, kind: IssueLinkInputKind) =>
@@ -414,7 +437,7 @@ export interface IssueAgentRun {
   id: number;
   agentId: number;
   username: string;
-  kind: string;
+  kind: 'internal' | 'external';
   status: 'pending' | 'success' | 'failed' | 'canceled';
   executionState: 'queued' | 'running' | 'success' | 'failed' | 'canceled';
   trigger: AgentRunTrigger;

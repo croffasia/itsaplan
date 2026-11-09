@@ -29,14 +29,17 @@ apps/bot        Telegram bot, long polling
 packages/db     Drizzle client, schema, migrations
 packages/auth   better-auth server instance
 packages/crypto AES-256-GCM encryption for secrets at rest
-packages/mailer SMTP and Resend transport
+packages/mailer SMTP and Resend transport, email templates
 ```
 
 Dependency direction is `api → @repo/auth → @repo/db`. The web app never imports the
 packages directly, it talks to the API over HTTP.
 
-Each app and package has a `AGENTS.md` with the rules that apply inside it. Read the one
-for the area you are changing.
+Each app, plus `packages/auth` and `packages/db`, has an `AGENTS.md` with the rules that
+apply inside it. Read the one for the area you are changing.
+
+Do not add to an `AGENTS.md` to record a fix or a feature. `docs/dev/agents-md.md` says what
+belongs there.
 
 ## Code conventions
 

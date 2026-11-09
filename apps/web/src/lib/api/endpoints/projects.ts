@@ -62,6 +62,7 @@ export interface Project {
   // response; absent on the create/copy responses.
   role?: MemberRole;
   via?: AccessVia;
+  permissions?: Permissions;
 }
 
 export interface Assignee {
@@ -116,6 +117,8 @@ export interface ProjectScaffold {
   viewer: ProjectViewer;
   // The caller's resolved permission matrix (owners get every flag).
   permissions: Permissions;
+  // Whether this project may have public links. Off, its links are closed.
+  sharingEnabled: boolean;
 }
 
 // The scaffold composed with its issues and the project's unfinished cycles, as
@@ -130,7 +133,8 @@ export interface ProjectDefaults {
   mcpEnabled: boolean;
 }
 
-export const listProjects = () => request<Project[]>('/projects');
+export const listProjects = (permissions = false) =>
+  request<Project[]>(permissions ? '/projects?permissions=true' : '/projects');
 
 export type ProjectSort = 'key' | 'name' | 'created' | 'activity';
 

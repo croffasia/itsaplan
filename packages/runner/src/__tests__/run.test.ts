@@ -253,6 +253,45 @@ it('warns about an unavailable final trace without replacing the command outcome
   }
 });
 
+it('keeps a run whose stored batch was answered as a failure', async () => {
+  const original = globalThis.fetch;
+  const stored: AgUiEvent[] = [];
+  const reports: Record<string, unknown>[] = [];
+  let answeredAsFailure = false;
+  // The offset rule of appendRunEvents: an exact replay is fine, an overlap is refused.
+  globalThis.fetch = (async (input, init) => {
+    const body = JSON.parse(String(init?.body));
+    if (String(input).endsWith('/result')) reports.push(body);
+    if (!String(input).endsWith('/events')) return Response.json({});
+    const { offset, events } = body as { offset: number; events: AgUiEvent[] };
+    if (offset < stored.length && offset + events.length <= stored.length) {
+      return Response.json({ nextOffset: stored.length, truncated: false });
+    }
+    if (offset !== stored.length) {
+      return Response.json({ error: 'Unexpected trace offset' }, { status: 409 });
+    }
+    stored.push(...events);
+    if (answeredAsFailure) return Response.json({ nextOffset: stored.length, truncated: false });
+    answeredAsFailure = true;
+    return new Response('Bad gateway', { status: 502 });
+  }) as typeof fetch;
+  const config: RunnerConfig = {
+    ...shortTaskConfig,
+    command: 'printf one; sleep 0.7; printf two; sleep 0.7; printf three',
+  };
+  try {
+    await handleRun(config, new Client(config), () => {}, shortRun);
+    expect(answeredAsFailure).toBe(true);
+    expect(reports).toEqual([expect.objectContaining({ status: 'success', attempt: 2 })]);
+    expect(stored.filter((event) => event.type === 'RUN_STARTED')).toHaveLength(1);
+    expect(stored[stored.length - 1].type).toBe('RUN_FINISHED');
+    const deltas = stored.filter((event) => event.type === 'TEXT_MESSAGE_CONTENT');
+    expect(deltas.map((event) => event.delta).join('')).toBe('onetwothree');
+  } finally {
+    globalThis.fetch = original;
+  }
+}, 15_000);
+
 it('does not retry or ignore a final event rejection for a stale attempt', async () => {
   const original = globalThis.fetch;
   let finalAttempts = 0;

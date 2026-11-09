@@ -12,6 +12,7 @@ import { runsTeam } from '#modules/teams/service';
 import { paginate } from '#shared/pagination';
 import {
   listAgents,
+  listProjectAgents,
   createAgent,
   updateAgent,
   deleteAgent,
@@ -31,6 +32,7 @@ import {
   AgentTraceDetailResponse,
   AgentTracePageResponse,
   AiAgentListResponse,
+  ProjectAgentListResponse,
   AiAgentResponse,
   ChatMessagesResponse,
   ChatThreadListResponse,
@@ -513,6 +515,15 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     },
   )
 
+  .get('/projects/:projectKey/ai-agents/options', ({ project }) => listProjectAgents(project.id), {
+    projectMember: true,
+    response: { 200: ProjectAgentListResponse, ...accessErrors },
+    detail: {
+      summary: "List a project's agents",
+      description: 'Their id, name, kind and model, for any member of the project.',
+    },
+  })
+
   // The agent is built from its stored model configuration (Mastra) and works in the
   // project of this path, which it has to be a member of.
   .post(
@@ -533,7 +544,8 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
         summary: 'Run an AI agent',
         description:
           'Send a prompt to an internal AI agent and return its answer. Only an internal agent ' +
-          'runs here; an external one has no model config and returns 400.',
+          'runs here; an external one has no model config and returns 400. An agent with chat ' +
+          'turned off returns 403.',
         ...mcpTool('run_ai_agent'),
       },
     },
@@ -573,7 +585,9 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       },
       detail: {
         summary: 'Run an AI agent (stream)',
-        description: "Stream an internal AI agent's response as it is generated.",
+        description:
+          "Stream an internal AI agent's response as it is generated. An agent with chat " +
+          'turned off answers with an `error` event.',
       },
     },
   )

@@ -12,7 +12,21 @@ export const AttachmentResponse = t.Object({
 
 export const AttachmentListResponse = t.Array(AttachmentResponse);
 
+// What a readable file holds: a parsed table for a spreadsheet or document, the full
+// text for a text file or a PDF.
+export const AttachmentContent = t.Object({
+  table: t.Optional(
+    t.Object({
+      headers: t.Array(t.String()),
+      sampleRows: t.Array(t.Array(t.String())),
+      totalRows: t.Number(),
+    }),
+  ),
+  text: t.Optional(t.String()),
+});
+
 // `others` are the attachments not returned as an image, each with the url to fetch it.
+// view_attachment also reads the content of the one it opens.
 export const ViewAttachmentsResponse = t.Object({
   images: t.Array(
     t.Object({
@@ -22,7 +36,7 @@ export const ViewAttachmentsResponse = t.Object({
       data: t.String({ description: 'The bytes, base64-encoded.' }),
     }),
   ),
-  others: AttachmentListResponse,
+  others: t.Array(t.Composite([AttachmentResponse, AttachmentContent])),
 });
 
 export const viewAttachmentQuery = t.Object({

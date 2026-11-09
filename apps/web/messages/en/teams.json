@@ -20,6 +20,10 @@
       "title": "Projects",
       "description": "The projects this team owns."
     },
+    "templates": {
+      "title": "Project templates",
+      "description": "Saved project settings that new projects start from."
+    },
     "members": {
       "title": "Team members",
       "description": "Everyone in the team, and the invites that are still open."
@@ -55,6 +59,9 @@
     "analytics": {
       "title": "Usage",
       "description": "What the team's agents spent on models, by agent, project and day."
+    },
+    "queue": {
+      "title": "Agent runs"
     }
   },
   "info": {
@@ -71,15 +78,16 @@
     "leaveHint": "You keep the projects you are a member of. To join again an owner has to add you back.",
     "delete": {
       "action": "Delete team",
-      "hint": "Its members, roles, invites, skills, tools and integrations are deleted with it. People keep their accounts and their other teams.",
+      "hint": "Its members, roles, project templates, invites, skills, tools and integrations are deleted with it. People keep their accounts and their other teams.",
       "blocked": "Delete the projects and AI agents of the team first.",
       "title": "Delete {name}?",
-      "description": "<strong>{name}</strong> is deleted with its members, roles, invites, skills, tools and integrations. People keep their accounts and their other teams. This cannot be undone.",
+      "description": "<strong>{name}</strong> is deleted with its members, roles, project templates, invites, skills, tools and integrations. People keep their accounts and their other teams. This cannot be undone.",
       "deleted": "Team deleted"
     }
   },
   "columns": {
     "project": "Project",
+    "template": "Template",
     "owners": "Owners",
     "members": "Members",
     "created": "Created",
@@ -138,9 +146,9 @@
     "search": "Search roles",
     "noMatches": "No role matches “{query}”.",
     "default": "Default",
+    "system": "System",
     "editAction": "Edit role",
     "deleteAction": "Delete role",
-    "defaultUndeletable": "The default role cannot be deleted",
     "deleteTitle": "Delete role \"{name}\"",
     "deleteDescription": "Nothing is on this role. This cannot be undone.",
     "deleteInUse": "This role is still in use. Pick the role everything on it is moved to.",
@@ -154,16 +162,6 @@
     "moveAndDelete": "Move and delete",
     "noTargetRole": "There is no other role to move them to. Create one first.",
     "newRole": "New role",
-    "editorTitleEdit": "Edit role",
-    "editorTitleNew": "New role",
-    "namePlaceholder": "e.g. Contributor",
-    "resourceColumn": "Resource",
-    "toggleActionAll": "Toggle {action} for all resources",
-    "toggleGroupAll": "Toggle all {group} permissions",
-    "toggleActionGroup": "Toggle {action} for {group}",
-    "cellAria": "{resource}: {action}",
-    "saveRole": "Save role",
-    "createRole": "Create role",
     "copyRoles": "Copy roles",
     "pasteRoles": "Paste roles",
     "nothingToCopy": "No custom roles to copy.",
@@ -180,13 +178,87 @@
       "actions": {
         "create": "New",
         "update": "Overwrite",
-        "skip": "Skip (default)"
+        "skip": "Skip (system role)"
       }
     },
     "transferErrors": {
       "invalidJson": "Clipboard does not contain valid JSON.",
       "notAnExport": "Clipboard does not contain a roles export.",
       "empty": "The roles export is empty."
+    }
+  },
+  "templates": {
+    "empty": "No project templates yet",
+    "emptyHint": "Save a project as a template, then start new projects from it.",
+    "newAction": "New template",
+    "teams": "Teams",
+    "allTeams": "All teams",
+    "noTeams": "No team",
+    "editAction": "Edit template",
+    "editHint": "What the template holds stays as saved.",
+    "copyAction": "Copy template",
+    "copied": "Template \"{name}\" copied. Paste it into another workspace to import it.",
+    "downloadAction": "Download",
+    "downloadFailed": "Couldn't download the template.",
+    "importAction": "Import template",
+    "deleteAction": "Delete template",
+    "deleteDialog": {
+      "title": "Delete template \"{name}\"?",
+      "description": "Projects created from it stay as they are.",
+      "confirm": "Delete template",
+      "galleryNote": "Its gallery page goes offline too."
+    },
+    "panel": {
+      "saved": "Saved {date}",
+      "none": "None",
+      "teams": "Teams: {teams}"
+    },
+    "publish": {
+      "action": "Publish",
+      "published": "Published",
+      "account": "Gallery account",
+      "publishingAs": "Publishing as",
+      "authorProfile": "Author profile",
+      "changeEmail": "Change email",
+      "rules": "Gallery rules",
+      "unlink": "Unlink workspace",
+      "downloadable": "Anyone can download it",
+      "private": "No issues or people",
+      "counts": "{states, plural, one {# state} other {# states}} · {types, plural, one {# type} other {# types}} · {fields, plural, one {# field} other {# fields}}",
+      "by": "by <b>{name}</b>",
+      "authorHint": "Shown on every template published from {email}.",
+      "authorName": "Author",
+      "authorUrl": "Profile link",
+      "optional": "Optional",
+      "authorUrlInvalid": "Must start with https://",
+      "submit": "Publish",
+      "update": "Update page",
+      "live": "Live",
+      "since": "since {date}",
+      "openPage": "Open page",
+      "copyLink": "Copy link",
+      "linkCopied": "Link copied",
+      "copyFailed": "Couldn't copy the link",
+      "unpublish": "Unpublish",
+      "unpublishConfirm": "Take the page down?",
+      "unpublishHint": "Its link stops working.",
+      "keep": "Keep",
+      "publishedToast": "Published",
+      "updatedToast": "Page updated",
+      "badge": "Public",
+      "badgeHint": "In the gallery since {date}",
+      "link": {
+        "intro": "Confirm an email once for this workspace.",
+        "email": "Email",
+        "emailHint": "Not shown publicly",
+        "agree": "By sending the code you accept the <rules>gallery rules</rules>.",
+        "sendCode": "Send code",
+        "codeSent": "Enter the code sent to {email}",
+        "code": "Code",
+        "confirm": "Confirm",
+        "resend": "Send again",
+        "resent": "New code sent"
+      }
     }
   },
   "panel": {
@@ -240,6 +312,8 @@
     "timeout": "Timeout (s)",
     "optional": "Optional",
     "apiKey": "API key",
+    "from": "From address",
+    "fromHint": "Required for Resend. With SMTP it defaults to the username.",
     "telegramBot": "Telegram bot",
     "telegramBotHint": "The bot that delivers notifications for every project of the team. Members choose their own chat in their preferences. The token is stored encrypted.",
     "botToken": "Bot API token (optional)",
@@ -323,7 +397,6 @@
   "tools": {
     "add": "Add tool",
     "delete": "Delete tool",
-    "back": "Back to tools",
     "tool": "Tool",
     "scopes": "Scopes",
     "noScopes": "No scopes",
@@ -334,15 +407,20 @@
     "scopesLabel": "Required token permissions",
     "credential": "Credential",
     "chooseCredential": "Choose a credential",
-    "noCredential": "No {integration} credential yet. Add one in the team's integrations first.",
+    "credentialFallback": "Credential #{id}",
+    "noCredential": "No {integration} credential yet",
+    "noCredentialHint": "Add one in the team's integrations to select these tools.",
     "deleteMessage": "Remove {tool}? Agents using it will lose access to this tool.",
-    "scopesUpper": "Scopes",
     "selectGroup": "Select all",
     "clearGroup": "Clear",
     "selectedCount": "{count, plural, one {# tool selected} other {# tools selected}}",
-    "oneIntegration": "Pick tools of one integration — they run on one credential.",
-    "continue": "Continue",
-    "alreadyAdded": "{count, plural, one {# tool is already on this credential and is skipped.} other {# tools are already on this credential and are skipped.}}",
+    "readyToUse": "Ready to use",
+    "needsCredential": "Needs a credential",
+    "toolCount": "{count, plural, one {# tool} other {# tools}}",
+    "matchCount": "{shown} of {total, plural, one {# tool} other {# tools}} match",
+    "added": "Already added",
+    "noCredentialNeeded": "{integration} tools need no credential.",
+    "addCount": "{count, plural, =0 {Add tools} one {Add # tool} other {Add # tools}}",
     "noAccess": "You do not have access to the tools of this team."
   },
   "agents": {
@@ -379,6 +457,8 @@
     "username": "Username",
     "usernamePlaceholder": "e.g. triage-bot",
     "usernameHint": "Letters, digits, dots, dashes, and underscores. Up to 64 characters.",
+    "chat": "Chat",
+    "chatHint": "Lets a member open or continue a chat with this agent. Off, it drops out of the chat selector; mentions, delegations, and schedules still run it.",
     "access": "Availability",
     "accessHint": "Who can give this agent tasks",
     "model": "Model",
@@ -510,6 +590,8 @@
     "noToolsHint": "Configure a tool, then enable it here.",
     "goToTools": "Go to Tools",
     "searchTools": "Search tools",
+    "enabled": "Enabled",
+    "available": "Available",
     "advanced": "Advanced",
     "advancedHint": "Sampling, reasoning, step and time limits, and memory",
     "temperature": "Temperature",
@@ -545,6 +627,7 @@
     "endOfHistory": "End of history",
     "manualTask": "Manual task",
     "scheduledTask": "Scheduled task",
+    "documentTask": "Document comment",
     "failed": "Failed",
     "task": "Task",
     "error": "Error",
@@ -638,6 +721,26 @@
       "owner": "Only the owner",
       "managers": "The owner and admins",
       "members": "Everyone in its teams"
+    },
+    "runLimit": {
+      "title": "Agent runs at once",
+      "description": "How many runs of its agents work at once. The rest wait in the queue. 0 sets no limit of its own.",
+      "descriptionCapped": "How many runs of its agents work at once, up to {max}. The rest wait in the queue. 0 leaves the limit at {max}.",
+      "ownerOnly": "Only the owner changes how many agent runs work at once.",
+      "none": "No limit"
+    },
+    "sharing": {
+      "title": "Public links",
+      "description": "Whether documents, issues and views of this workspace can be shared by link.",
+      "enabled": "Allow public links",
+      "enabledHint": "Off, nobody here can share and existing links stop opening until it is on again.",
+      "instanceOff": "Public links are turned off for this instance.",
+      "teamsOnly": "Only selected teams",
+      "teamsOnlyHint": "Only the teams below can share. Links of the other teams stop opening.",
+      "statusOn": "On",
+      "statusOff": "Off",
+      "ownerOnly": "Only the owner chooses which teams can share.",
+      "saved": "Sharing settings saved"
     },
     "managers": {
       "title": "Managers",
@@ -757,6 +860,9 @@
       "useBuiltIn": "Use built-in price",
       "removePrice": "Remove price",
       "save": "Save price"
+    },
+    "queue": {
+      "title": "Agent runs"
     }
   }
 }

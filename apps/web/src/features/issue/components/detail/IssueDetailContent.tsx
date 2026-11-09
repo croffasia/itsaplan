@@ -2,6 +2,7 @@ import { type CSSProperties, useRef, useState } from 'react';
 import { Direction } from 'radix-ui';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { IssueDetail as IssueDetailRow } from '@/lib/api/endpoints/issues';
+import type { MentionSource } from '@/lib/api/endpoints/mentions';
 import { usePermissions } from '@/hooks/usePermissions';
 import { usePersistedWidth } from '@/hooks/usePersistedWidth';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
@@ -44,6 +45,7 @@ export default function IssueDetailContent({
   onIssueLoaded,
   onDeleted,
   layout = 'panel',
+  commentId = null,
 }: {
   project: ProjectDetail;
   issueId: number;
@@ -57,6 +59,8 @@ export default function IssueDetailContent({
   // two-column shape but in normal flow (no fixed positioning), so it fits
   // inside a narrower container like the inbox pane.
   layout?: 'panel' | 'page' | 'split';
+  // The comment to bring into view: the one a link or a notification points at.
+  commentId?: number | null;
 }) {
   const t = useTranslations('issue');
   const tCommon = useTranslations('common');
@@ -100,6 +104,11 @@ export default function IssueDetailContent({
   // never requested again. Counting the replacements remounts the editors, which
   // builds the element anew and lets the raw route revalidate it.
   const [replacements, setReplacements] = useState(0);
+  const textMentions: MentionSource = {
+    projectKey: project.project.ref,
+    on: 'issue',
+    place: 'text',
+  };
   const feedRef = useRef<HTMLDivElement>(null);
 
   if (!issue) return <IssueDetailSkeleton />;
@@ -154,6 +163,7 @@ export default function IssueDetailContent({
           onReady={setDescEditor}
           uploadFile={uploadFile}
           imageAttachments={imageAttachments}
+          mentions={textMentions}
           onBlur={(md) => {
             if (md !== issue.description) patch({ description: md });
           }}
@@ -173,6 +183,7 @@ export default function IssueDetailContent({
             imageAttachments={imageAttachments}
             onSetField={setField}
             readOnly={!canEdit}
+            mentions={textMentions}
           />
         ))}
     </>
@@ -274,20 +285,26 @@ export default function IssueDetailContent({
       <div ref={feedRef}>
         <IssueActivityFeed
           issueId={issue.id}
-          assignees={project.assignees}
+          projectKey={project.project.ref}
+          sequenceNumber={issue.sequenceNumber}
           columns={project.columns}
           imageByUserId={imageByUserId}
           view={effectiveActivityView}
           canReadAgentRuns={canReadAgentRuns}
+          commentId={commentId}
         />
       </div>
-      <LastCommentBubble
-        key={issue.id}
-        issueId={issue.id}
-        feedRef={feedRef}
-        imageByUserId={imageByUserId}
-        view={effectiveActivityView}
-      />
+      {/* The reader came for that comment, and the bubble would rise while the feed
+          loads the pages before it. */}
+      {commentId == null && (
+        <LastCommentBubble
+          key={issue.id}
+          issueId={issue.id}
+          feedRef={feedRef}
+          imageByUserId={imageByUserId}
+          view={effectiveActivityView}
+        />
+      )}
     </>
   );
 

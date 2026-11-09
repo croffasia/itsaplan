@@ -14,6 +14,7 @@ const FIELDS = 'discussion { number closed url }';
 // call that does both sends two.
 export const githubUpdateDiscussion: CustomToolEntry = {
   key: 'github_update_discussion',
+  group: 'Discussions',
   label: 'GitHub Update Discussion',
   description:
     'Update a discussion in a GitHub repository: change its title or markdown body, or close and reopen it. Give at least one of title, body or state.',

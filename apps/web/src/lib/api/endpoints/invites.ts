@@ -1,4 +1,5 @@
 import { request } from '@/lib/api/core/client';
+import { pageQuery, type Page, type PageParams } from '@/lib/api/core/paging';
 import type { MemberRole } from '@/lib/api/endpoints/members';
 
 export type InviteStatus = 'pending' | 'accepted' | 'rejected';
@@ -107,6 +108,20 @@ export const deleteInvite = (projectKey: string, inviteId: number) =>
 
 export const listTeamInvites = (teamId: number) => request<InviteRow[]>(`/teams/${teamId}/invites`);
 
+// Someone an invite into the team can be addressed to: an account of the instance
+// outside the team.
+export interface InviteCandidate {
+  userId: string;
+  name: string;
+  email: string;
+  image: string | null;
+}
+
+export const listInviteCandidates = (teamId: number, search: string) =>
+  request<InviteCandidate[]>(
+    `/teams/${teamId}/invites/candidates?${new URLSearchParams({ search })}`,
+  );
+
 export const createTeamInvite = (teamId: number, input: { email: string; role: InviteTeamRole }) =>
   request<InviteCreateResult>(`/teams/${teamId}/invites`, {
     method: 'POST',
@@ -132,3 +147,12 @@ export const acceptInvite = (token: string) =>
 
 export const rejectInvite = (token: string) =>
   request<void>(`/invites/${encodeURIComponent(token)}/reject`, { method: 'POST' });
+
+export interface ReceivedInvite {
+  token: string;
+  teamName: string;
+  projectName: string | null;
+}
+
+export const listReceivedInvites = (params: PageParams) =>
+  request<Page<ReceivedInvite>>(`/me/invites${pageQuery(params)}`);

@@ -11,12 +11,15 @@ export {
   normalizePermissions,
   hasPermission,
   resourceActions,
+  extendedFrom,
+  setPermissionExtensions,
 } from '@repo/db';
 export type {
   PermissionResource,
   PermissionAction,
   ResourcePermissions,
   Permissions,
+  PermissionExtension,
 } from '@repo/db';
 
 // The matrix as it crosses the API. Kept as an open record rather than a schema

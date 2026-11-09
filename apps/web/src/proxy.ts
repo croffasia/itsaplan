@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSessionCookie } from 'better-auth/cookies';
 import { contentSecurityPolicy } from '@/utils/contentSecurityPolicy';
+import { readEmbedSites } from '@/utils/embedSites';
 
 // Routes reachable without a session, and that bounce a signed-in user back to
 // the app. Everything else requires one.
@@ -14,14 +15,19 @@ const PUBLIC_PATHS = ['/login', '/register'];
 // anyone with the link, signed in or not.
 // `/media` streams avatars and attachments from the api, which serves them without
 // a session — a share page opened by a logged-out visitor shows them too.
+// `/p` holds the pages a build serves to anyone (`PublicPage` in `@/cloud`).
 // `/protected-media` is intentionally absent: document assets carry private project
 // content and must pass this session gate before their route forwards the cookie.
-const OPEN_PATHS = ['/invite', '/forgot-password', '/reset-password', '/share', '/media'];
+const OPEN_PATHS = ['/invite', '/forgot-password', '/reset-password', '/share', '/media', '/p'];
 
 // Routes that stream bytes from the api and pass its headers through, including the
 // sandbox policy it puts on a download. The document policy is for html only, and set
 // here it would replace the api's.
 const MEDIA_PATHS = ['/media', '/protected-media'];
+
+// The public pages a site the instance owner trusts may show in a frame, and the app itself,
+// which previews them that way. next.config.ts refuses a frame to every other page.
+const EMBEDDABLE_PATHS = ['/share', '/p'];
 
 function matcher(pathname: string) {
   return (path: string) => pathname === path || pathname.startsWith(`${path}/`);
@@ -40,11 +46,18 @@ function clearSession(request: NextRequest): NextResponse {
   return response;
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const response = gate(request);
-  if (!MEDIA_PATHS.some(matcher(request.nextUrl.pathname))) {
+  const matches = matcher(request.nextUrl.pathname);
+  if (MEDIA_PATHS.some(matches)) return response;
+  if (!EMBEDDABLE_PATHS.some(matches)) {
     response.headers.set('Content-Security-Policy', contentSecurityPolicy());
+    return response;
   }
+  const sites = await readEmbedSites();
+  response.headers.set('Content-Security-Policy', contentSecurityPolicy(["'self'", ...sites]));
+  // X-Frame-Options names one origin at most; with other sites the policy above decides.
+  if (sites.length === 0) response.headers.set('X-Frame-Options', 'SAMEORIGIN');
   return response;
 }
 

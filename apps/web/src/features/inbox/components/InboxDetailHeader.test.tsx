@@ -4,6 +4,7 @@ import { act } from 'react';
 import type { Root } from 'react-dom/client';
 import { NextIntlClientProvider } from 'next-intl';
 import { JSDOM } from 'jsdom';
+import documents from '../../../../messages/en/documents.json';
 import inbox from '../../../../messages/en/inbox.json';
 import issue from '../../../../messages/en/issue.json';
 import InboxDetailHeader from './InboxDetailHeader';
@@ -20,13 +21,20 @@ let root: Root;
 let backCalls: number;
 let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
 
-function render({ projectKey = 'acme.TEST', issueSeq = 42, isMobile = false } = {}) {
+function render({
+  projectKey = 'acme.TEST',
+  issueSeq = 42 as number | null,
+  issueCommentId = null as number | null,
+  documentId = null as number | null,
+  documentTitle = null as string | null,
+  isMobile = false,
+} = {}) {
   act(() =>
     root.render(
-      <NextIntlClientProvider locale="en" messages={{ inbox, issue }} timeZone="UTC">
+      <NextIntlClientProvider locale="en" messages={{ documents, inbox, issue }} timeZone="UTC">
         <InboxDetailHeader
           projectKey={projectKey}
-          issueSeq={issueSeq}
+          notification={{ issueSeq, issueCommentId, documentId, documentTitle }}
           isMobile={isMobile}
           onBack={() => {
             backCalls += 1;
@@ -99,8 +107,25 @@ describe('InboxDetailHeader', () => {
     assert.equal(backCalls, 0);
   });
 
+  it('opens the page of a comment notification at the comment', () => {
+    render({ issueCommentId: 7 });
+    assert.equal(
+      document.querySelector('a')?.getAttribute('href'),
+      '/acme/issue/TEST-42#comment-7',
+    );
+    assert.ok(document.querySelector('#root')?.textContent?.includes('TEST-42'));
+  });
+
   it('uses the canonical route builder for project keys', () => {
     render({ projectKey: '12.R&D', issueSeq: 9 });
     assert.equal(document.querySelector('a')?.getAttribute('href'), '/12/issue/R%26D-9');
+  });
+
+  it('names a document by its title and links to its page', () => {
+    render({ issueSeq: null, documentId: 12, documentTitle: 'Plan' });
+    assert.equal(document.querySelector('a')?.getAttribute('href'), '/acme/TEST/docs/12');
+    assert.ok(document.querySelector('#root')?.textContent?.includes('Plan'));
+    render({ issueSeq: null, documentId: 12, documentTitle: ' ' });
+    assert.ok(document.querySelector('#root')?.textContent?.includes(documents.untitled));
   });
 });

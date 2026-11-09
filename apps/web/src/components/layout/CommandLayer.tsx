@@ -83,7 +83,7 @@ export default function CommandLayer({
         onOpenChange={onOpenChange}
         sections={sections}
         currentProjectKey={currentProjectKey}
-        hasProject={hasProject}
+        currentProjectId={project?.project.id ?? null}
         onOpenIssue={onOpenIssue}
       />
       {issue.dialogs}

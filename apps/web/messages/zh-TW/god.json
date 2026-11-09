@@ -170,6 +170,20 @@
     },
     "joined": "加入於 {date}"
   },
+  "roles": {
+    "newRole": "新建角色",
+    "empty": "尚無系統角色。",
+    "default": "預設",
+    "defaultUndeletable": "無法刪除預設角色",
+    "columns": {
+      "role": "角色",
+      "permissions": "權限"
+    },
+    "edit": "編輯角色",
+    "delete": "刪除角色",
+    "deleteTitle": "刪除角色「{name}」",
+    "deleteDescription": "此操作無法復原。"
+  },
   "general": {
     "saved": "專案預設設定已儲存",
     "projectDefaults": "專案預設設定",
@@ -179,8 +193,21 @@
     "workspaces": "工作區",
     "personalWorkspaces": "每人一個工作區",
     "personalWorkspacesHint": "每個帳號都會獲得一個以其姓名命名的專屬工作區。關閉後，成員只能在被新增到的工作區中工作。",
+    "invites": "邀請",
+    "inviteSearch": "邀請時推薦成員",
+    "inviteSearchHint": "團隊擁有者或管理員在邀請對話框中輸入地址時，會依姓名和電子郵件列出本執行個體所有工作區中相符的帳號。關閉後，需要輸入完整地址。",
+    "invitesSaved": "邀請設定已儲存",
+    "sharing": "公開連結",
+    "sharingEnabled": "允許公開連結",
+    "sharingEnabledHint": "在各工作區允許的範圍內，可透過連結分享文件、項目和檢視。關閉後，任何人都無法分享，現有連結在重新開啟前無法開啟。",
+    "sharingSaved": "公開連結設定已儲存",
     "agents": "代理",
     "agentsSaved": "代理設定已儲存",
+    "embedding": "嵌入",
+    "embedSites": "受信任的網站",
+    "embedSitesHint": "公開共享的工作項目和看板只能在這些網站的框架中開啟。以逗號分隔網站。",
+    "embedSitesInvalid": "依 https://example.com 的格式輸入每個網站，不含路徑。",
+    "embedSaved": "受信任的網站已儲存",
     "traceRetention": "保留執行追蹤",
     "traceRetentionHint": "代理的每次執行都會記錄模型和工具呼叫。用量面板只統計仍保留的執行。",
     "traceDays": "{days} 天",
@@ -188,7 +215,10 @@
     "maxRunTime": "最長執行時間",
     "maxRunTimeHint": "單次代理執行在被停止並記為失敗之前可持續的時間。代理自身的上限不能超過此值。",
     "runMinutes": "{minutes, plural, other {# 分鐘}}",
-    "runSeconds": "{seconds} 秒"
+    "runSeconds": "{seconds} 秒",
+    "concurrentRuns": "同時執行數",
+    "concurrentRunsHint": "此執行個體上可同時進行的代理執行數。其餘的在佇列中等待。聊天和外部代理不計入。0 表示不限。",
+    "concurrentRunsInvalid": "請輸入 0 到 {max} 之間的整數。"
   },
   "authentication": {
     "saved": "身分驗證設定已儲存",
@@ -297,6 +327,117 @@
     "clientSecret": "用戶端金鑰",
     "clientSecretPlaceholder": "應用程式註冊的金鑰",
     "microsoft365Hint": "以 Entra ID 的應用程式註冊登入，而不是用信箱密碼，所以信箱可以維持開啟 MFA。該應用程式需要 Office 365 Exchange Online 的應用程式權限 SMTP.SendAsApp 並經管理員同意、在 Exchange 中有此信箱的存取權，並為該信箱開啟 SMTP AUTH。"
+  },
+  "emailTemplates": {
+    "saved": "電子郵件範本已儲存",
+    "unsaved": "有未儲存的變更",
+    "blankText": "請填寫缺少的主旨或內文後再儲存",
+    "emails": "電子郵件",
+    "layout": "版面",
+    "edited": "已修改",
+    "subject": "主旨",
+    "text": "內文",
+    "button": "按鈕",
+    "formatting": "格式",
+    "heading1": "標題 1",
+    "heading2": "標題 2",
+    "bold": "粗體",
+    "italic": "斜體",
+    "strikethrough": "刪除線",
+    "link": "連結",
+    "bulletedList": "項目符號清單",
+    "numberedList": "編號清單",
+    "quote": "引用",
+    "boldSample": "粗體",
+    "italicSample": "斜體",
+    "strikeSample": "文字",
+    "linkSample": "連結文字",
+    "unknownVariables": "未知變數：{names}",
+    "removeUnknownVariables": "請移除未知變數後再儲存",
+    "reset": "還原預設值",
+    "test": "傳送測試",
+    "testing": "正在傳送…",
+    "testSent": "已傳送至 {email}",
+    "testNeedsProvider": "請先設定電子郵件服務供應商",
+    "layoutHtml": "版面 HTML",
+    "layoutCss": "版面 CSS",
+    "placeholders": "預留位置",
+    "variables": "變數",
+    "required": "必要",
+    "requiredPlaceholders": "請將 {names} 加入版面後再儲存",
+    "preview": "預覽",
+    "previewEmail": "電子郵件",
+    "previewText": "純文字",
+    "previewFailed": "預覽未能載入。請重新整理頁面後再試一次。",
+    "from": "寄件者",
+    "to": "收件者",
+    "groups": {
+      "signIn": "登入",
+      "invitations": "邀請",
+      "notifications": "通知",
+      "service": "其他"
+    },
+    "templates": {
+      "reset": {
+        "name": "重設密碼"
+      },
+      "verify": {
+        "name": "驗證電子郵件地址"
+      },
+      "magic": {
+        "name": "登入連結"
+      },
+      "inviteProject": {
+        "name": "專案邀請"
+      },
+      "inviteTeam": {
+        "name": "團隊邀請"
+      },
+      "assigned": {
+        "name": "工作項目已指派"
+      },
+      "mentioned": {
+        "name": "在工作項目中被提及"
+      },
+      "commented": {
+        "name": "新留言"
+      },
+      "stateChanged": {
+        "name": "狀態已更改"
+      },
+      "documentMentioned": {
+        "name": "在文件中被提及"
+      },
+      "documentCommentMentioned": {
+        "name": "在文件留言中被提及"
+      },
+      "test": {
+        "name": "測試電子郵件",
+        "hint": "由郵件服務供應商頁面的測試按鈕傳送。"
+      }
+    },
+    "placeholderText": {
+      "content": "電子郵件內文",
+      "button": "含連結的按鈕",
+      "subject": "主旨",
+      "lang": "語言代碼",
+      "dir": "文字方向",
+      "site_name": "執行個體名稱",
+      "site_url": "執行個體網址",
+      "logo_url": "標誌網址"
+    },
+    "variableText": {
+      "actor": "執行操作的人",
+      "ref": "工作項目編號",
+      "title": "工作項目標題",
+      "from": "原狀態",
+      "to": "新狀態",
+      "document": "文件標題",
+      "inviter": "傳送邀請的人",
+      "project": "專案名稱",
+      "team": "團隊名稱",
+      "role": "加入後的角色"
+    }
   },
   "authProvider": {
     "saved": "驗證提供者已儲存",

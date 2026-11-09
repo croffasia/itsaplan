@@ -357,7 +357,7 @@ describe('teams', () => {
         role: 'owner',
         projectCount: 1,
         memberCount: 1,
-        roleCount: 1,
+        roleCount: 0,
         integrationCount: 0,
       });
       expect(detail.data?.permissions).toBeDefined();

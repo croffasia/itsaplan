@@ -10,6 +10,8 @@ import {
   PlanePreviewResponse,
   LinearTestConnectionResponse,
   LinearPreviewResponse,
+  TrelloTestConnectionResponse,
+  TrelloPreviewResponse,
   ProjectExportResponse,
   createImportJobBody,
   importJobParams,
@@ -17,6 +19,8 @@ import {
   planePreviewBody,
   linearConnectionBody,
   linearPreviewBody,
+  trelloConnectionBody,
+  trelloPreviewBody,
 } from './model';
 import {
   cancelImportJob,
@@ -31,6 +35,7 @@ import {
 } from './service';
 import { exportProject } from './export';
 import { previewLinearStates, testLinearConnection } from './linear';
+import { previewTrelloBoard, testTrelloConnection } from './trello';
 
 // Import jobs bring issues from an external tracker into a project. Creating one
 // stores an encrypted credential and leaves it 'pending' for the worker
@@ -115,6 +120,38 @@ export const importExportRoutes = new Elysia({
     },
   )
 
+  .post(
+    '/projects/:projectKey/import-jobs/trello-test-connection',
+    ({ body }) => testTrelloConnection(body),
+    {
+      permission: ['import_export', 'create'],
+      body: trelloConnectionBody,
+      response: { 200: TrelloTestConnectionResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'Test a Trello API key and token',
+        description:
+          'Validate a Trello API key and token live, without storing anything. Returns the ' +
+          'boards they can see, to pick one to import from.',
+      },
+    },
+  )
+
+  .post(
+    '/projects/:projectKey/import-jobs/trello-preview',
+    ({ body }) => previewTrelloBoard(body),
+    {
+      permission: ['import_export', 'create'],
+      body: trelloPreviewBody,
+      response: { 200: TrelloPreviewResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'Preview a Trello board before importing it',
+        description:
+          "Fetch the board's open lists, each with the category itsaplan would automatically " +
+          'map it to, and its members, for review before a job is created.',
+      },
+    },
+  )
+
   .get('/projects/:projectKey/import-jobs/export', ({ project }) => exportProject(project.id), {
     permission: ['import_export', 'create'],
     response: { 200: ProjectExportResponse, ...accessErrors },
@@ -140,8 +177,9 @@ export const importExportRoutes = new Elysia({
       detail: {
         summary: 'Create an import job',
         description:
-          "Create a Plane job, or a Linear one with source 'linear'. Encrypt and store the " +
-          "submitted credential and leave the job 'pending' for the worker.",
+          "Create a Plane job, a Linear one with source 'linear', or a Trello one with source " +
+          "'trello'. Encrypt and store the submitted credential and leave the job 'pending' " +
+          'for the worker.',
       },
     },
   )

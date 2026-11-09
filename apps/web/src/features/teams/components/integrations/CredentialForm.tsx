@@ -43,7 +43,8 @@ function seedValues(
 
 // Step two of adding a credential (and the whole flow on edit): the credential form for
 // a chosen integration, built from its credentialSchema. Secret fields left blank on
-// edit keep their stored value. `onBack` returns to the picker (create only).
+// edit keep their stored value. `onBack` returns to the picker (create only). `onDone`
+// gets the new credential on create.
 export function CredentialForm({
   teamId,
   meta,
@@ -55,7 +56,7 @@ export function CredentialForm({
   meta: IntegrationMeta;
   existing: IntegrationCredential | null;
   onBack?: () => void;
-  onDone: () => void;
+  onDone: (created?: IntegrationCredential) => void;
 }) {
   const t = useTranslations('teams.integrations');
   const tCommon = useTranslations('common');
@@ -105,14 +106,16 @@ export function CredentialForm({
           id: existing.id,
           patch: { label: label.trim() || null, credential: buildCredential() },
         });
+        onDone();
       } else {
-        await create.mutateAsync({
-          integrationKey: meta.key,
-          label: label.trim() || null,
-          credential: buildCredential(),
-        });
+        onDone(
+          await create.mutateAsync({
+            integrationKey: meta.key,
+            label: label.trim() || null,
+            credential: buildCredential(),
+          }),
+        );
       }
-      onDone();
     } catch {
       setBusy(false);
     }
@@ -154,7 +157,9 @@ export function CredentialForm({
               </Label>
               <Input
                 type={INPUT_TYPES[field.type] ?? 'text'}
-                autoComplete="off"
+                // A browser ignores "off" on a password field: it fills a saved login
+                // there and the account's email into the text field before it.
+                autoComplete={field.type === 'secret' ? 'new-password' : 'off'}
                 value={typeof values[field.key] === 'string' ? (values[field.key] as string) : ''}
                 onChange={(e) => setField(field.key, e.target.value)}
                 placeholder={
@@ -180,7 +185,7 @@ export function CredentialForm({
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onDone} disabled={busy}>
+        <Button variant="outline" onClick={() => onDone()} disabled={busy}>
           {tCommon('cancel')}
         </Button>
         <Button onClick={submit} disabled={!canSubmit}>

@@ -45,12 +45,6 @@ export function searchTerm(q: string | undefined): string | null {
   return trimmed.length >= MIN_QUERY ? trimmed : null;
 }
 
-// The ILIKE pattern for the term. The wildcards a member types are escaped, so a query
-// with a % in it looks for that character.
-export function likePattern(term: string): string {
-  return `%${term.replace(/([\\%_])/g, '\\$1')}%`;
-}
-
 // The stretch of text around the first match, cut in the database: an answer can be
 // 100,000 characters and must not be read into the app to show 160 of them.
 export function snippetOf(text: SQL, term: string): SQL {

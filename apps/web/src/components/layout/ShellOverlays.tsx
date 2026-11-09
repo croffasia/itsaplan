@@ -1,13 +1,17 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { issuePath, projectPath } from '@/utils/paths';
 import type { useOverlays } from '@/hooks/useOverlays';
-import NewProjectModal from '@/components/layout/NewProjectModal';
-import InitiativeDialog from '@/components/common/overlay/InitiativeDialog';
-import NewIssueModal from '@/features/issue/components/create/NewIssueModal';
-import IssueDetail from '@/features/issue/components/detail/IssueDetail';
+
+// Every project page mounts the Shell, so these load on first open: a page that opens
+// none of them does not download the editor and the pickers they carry.
+const NewProjectModal = dynamic(() => import('@/components/layout/NewProjectModal'));
+const InitiativeDialog = dynamic(() => import('@/components/common/overlay/InitiativeDialog'));
+const NewIssueModal = dynamic(() => import('@/features/issue/components/create/NewIssueModal'));
+const IssueDetail = dynamic(() => import('@/features/issue/components/detail/IssueDetail'));
 
 // The project-level overlays the Shell mounts above its content. Each renders only
 // while its overlay state says it is open.

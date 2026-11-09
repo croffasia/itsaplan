@@ -8,6 +8,7 @@ import { apiKeyApi, app, authedApi, createProject } from '#tests/helpers/app';
 import { createAgent } from '#tests/helpers/agents';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { clearLimits, setLimits } from '#tests/helpers/limits';
 import { createOwnWorkspace, transferWorkspace } from '../../service';
 
 // The first account, the instance owner, and its own workspace with its team.
@@ -142,6 +143,106 @@ describe('workspaces', () => {
       await ownerApi.workspaces({ workspaceId }).patch({ teamCreation: 'members' });
       expect(await memberMay()).toBe(true);
       expect((await team(memberApi, 'by-member')).status).toBe(201);
+    });
+
+    it('lets a manager turn sharing on or off and leaves the teams to the owner', async () => {
+      const { ownerApi, workspaceId, teamId } = await setup();
+      const admin = await addPerson(ownerApi, teamId);
+      await makeAdmin(ownerApi, workspaceId, admin);
+      const adminApi = authedApi(admin.cookie).workspaces({ workspaceId });
+      const ownerSide = ownerApi.workspaces({ workspaceId });
+
+      const off = await adminApi.patch({ sharingEnabled: false });
+      expect(off.status).toBe(200);
+      expect(off.data).toMatchObject({ sharingAvailable: true, sharingEnabled: false });
+      await adminApi.patch({ sharingEnabled: true });
+      expect((await adminApi.patch({ sharingTeamsOnly: true })).status).toBe(403);
+      expect((await adminApi.patch({ sharingTeamIds: [teamId] })).status).toBe(403);
+
+      const limited = await ownerSide.patch({ sharingTeamsOnly: true, sharingTeamIds: [teamId] });
+      expect(limited.data).toMatchObject({
+        sharingTeamsOnly: true,
+        sharingTeams: [{ id: teamId, selected: true }],
+      });
+      await ownerApi.teams.post({ name: 'Later', slug: 'later', workspaceId });
+      const teams = (await ownerSide.get()).data!.sharingTeams;
+      expect(teams.find((team) => team.name === 'Later')!.selected).toBe(false);
+
+      const cleared = await ownerSide.patch({ sharingTeamIds: [] });
+      expect(cleared.data!.sharingTeams.every((team) => !team.selected)).toBe(true);
+    });
+
+    it('takes only teams of the workspace for sharing', async () => {
+      const { ownerApi, workspaceId, teamId } = await setup();
+      const stranger = await signUpTestUser();
+      const [theirTeam] = (await authedApi(stranger.cookie).teams.get()).data!;
+
+      const refused = await ownerApi
+        .workspaces({ workspaceId })
+        .patch({ sharingTeamIds: [teamId, theirTeam!.id] });
+      expect(refused.status).toBe(400);
+      const teams = (await ownerApi.workspaces({ workspaceId }).get()).data!.sharingTeams;
+      expect(teams.map((team) => team.selected)).toEqual([false]);
+    });
+
+    it('refuses sharing settings while the instance has sharing off', async () => {
+      const { ownerApi, workspaceId, teamId } = await setup();
+      await ownerApi.god['sharing-settings'].put({ enabled: false });
+      const side = ownerApi.workspaces({ workspaceId });
+
+      expect((await side.get()).data).toMatchObject({ sharingAvailable: false });
+      expect((await side.patch({ sharingEnabled: false })).status).toBe(403);
+      expect((await side.patch({ sharingTeamsOnly: true })).status).toBe(403);
+      expect((await side.patch({ sharingTeamIds: [teamId] })).status).toBe(403);
+      expect((await side.patch({ name: 'Renamed' })).status).toBe(200);
+    });
+
+    it('takes only booleans for the sharing switches and whole numbers for the teams', async () => {
+      const { ownerApi, workspaceId } = await setup();
+      const side = ownerApi.workspaces({ workspaceId });
+      const nonsense = 'nonsense' as unknown as boolean;
+
+      expect((await side.patch({ sharingEnabled: nonsense })).status).toBe(400);
+      expect((await side.patch({ sharingTeamsOnly: nonsense })).status).toBe(400);
+      expect((await side.patch({ sharingTeamIds: [1.5] })).status).toBe(400);
+      expect((await side.get()).data).toMatchObject({
+        sharingEnabled: true,
+        sharingTeamsOnly: false,
+      });
+    });
+
+    it('leaves the run limit to the owner, at most what the instance allows', async () => {
+      const { ownerApi, workspaceId, teamId } = await setup();
+      const admin = await addPerson(ownerApi, teamId);
+      await makeAdmin(ownerApi, workspaceId, admin);
+      const ws = ownerApi.workspaces({ workspaceId });
+
+      expect((await ws.get()).data).toMatchObject({
+        maxConcurrentRuns: 0,
+        maxConcurrentRunsCap: 5,
+      });
+      expect(
+        (await authedApi(admin.cookie).workspaces({ workspaceId }).patch({ maxConcurrentRuns: 2 }))
+          .status,
+      ).toBe(403);
+      expect((await ws.patch({ maxConcurrentRuns: 6 })).status).toBe(400);
+      expect((await ws.patch({ maxConcurrentRuns: 5 })).data).toMatchObject({
+        maxConcurrentRuns: 5,
+      });
+
+      setLimits({ maxConcurrentRuns: 3 });
+      try {
+        expect((await ws.get()).data).toMatchObject({ maxConcurrentRunsCap: 3 });
+        expect((await ws.patch({ maxConcurrentRuns: 4 })).status).toBe(400);
+      } finally {
+        clearLimits();
+      }
+
+      await ownerApi.god['agent-settings'].put({ maxConcurrentRuns: 0 });
+      expect((await ws.patch({ maxConcurrentRuns: 50 })).data).toMatchObject({
+        maxConcurrentRuns: 50,
+        maxConcurrentRunsCap: 0,
+      });
     });
   });
 

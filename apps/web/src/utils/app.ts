@@ -7,6 +7,9 @@ export const APP_NAME = "It's a Plan";
 // The product site. The product mark on the public share pages links to it.
 export const APP_SITE_URL = 'https://itsaplan.dev/';
 
+// The rules a template published to the gallery at itsaplan.dev must follow.
+export const TEMPLATE_GALLERY_RULES_URL = 'https://itsaplan.dev/terms#template-gallery';
+
 // The page about the other editions, linked wherever the app names what they add.
 export const PRO_URL = 'https://itsaplan.dev/pro';
 

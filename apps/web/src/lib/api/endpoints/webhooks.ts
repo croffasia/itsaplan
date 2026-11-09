@@ -12,7 +12,8 @@ export type WebhookEventType =
   | 'issue.link_changed'
   | 'comment.created'
   | 'comment.updated'
-  | 'comment.deleted';
+  | 'comment.deleted'
+  | 'agent_run.finished';
 
 export const WEBHOOK_EVENT_TYPES: WebhookEventType[] = [
   'issue.created',
@@ -25,13 +26,15 @@ export const WEBHOOK_EVENT_TYPES: WebhookEventType[] = [
   'comment.created',
   'comment.updated',
   'comment.deleted',
+  'agent_run.finished',
 ];
 
 export interface Webhook {
   id: number;
   projectId: number;
   url: string;
-  secret: string;
+  // Null in the list for a caller who may neither create nor edit webhooks.
+  secret: string | null;
   events: WebhookEventType[];
   isActive: boolean;
   createdAt: string;
@@ -82,6 +85,9 @@ export const createWebhook = (projectKey: string, input: NewWebhookInput) =>
 
 export const updateWebhook = (webhookId: number, patch: WebhookPatch) =>
   request<Webhook>(`/webhooks/${webhookId}`, { method: 'PATCH', body: JSON.stringify(patch) });
+
+export const rotateWebhookSecret = (webhookId: number) =>
+  request<Webhook>(`/webhooks/${webhookId}/secret`, { method: 'POST' });
 
 export const deleteWebhook = (webhookId: number) =>
   request<void>(`/webhooks/${webhookId}`, { method: 'DELETE' });

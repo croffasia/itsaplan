@@ -1,9 +1,9 @@
 import { db, project, projectMember, teamRole, revision } from '@repo/db';
-import { and, eq, inArray, isNotNull, or } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, or, sql } from 'drizzle-orm';
 import { toMemberContext, type MemberRole } from '#modules/members/service';
-import { workspaceGrants } from '#modules/workspaces/service';
+import { reachedProjectIds } from '#shared/access';
 import { hasPermission, type PermissionResource } from '#shared/permissions';
-import { projectAccess } from '#shared/workspace-roles';
+import { projectAccess, type WorkspaceGrant } from '#shared/workspace-roles';
 
 // The revision engine's read side. The counters themselves are written by the
 // triggers in migration 0070 — no application code bumps them, so a write moves
@@ -39,6 +39,13 @@ export interface ScopeRead {
   resource: PermissionResource | null;
 }
 
+function memberOrGranted(grantedTeams: number[]) {
+  return or(
+    isNotNull(projectMember.userId),
+    grantedTeams.length > 0 ? inArray(project.teamId, grantedTeams) : undefined,
+  );
+}
+
 // The markers a client is watching, in one query. A scope of a project the user neither
 // belongs to nor reaches through their workspace role returns no row and reads as
 // unchanged. A scope whose resource their access may not read is dropped the same way,
@@ -46,9 +53,9 @@ export interface ScopeRead {
 export async function readRevs(
   wanted: ScopeRead[],
   userId: string,
+  grants: Map<number, WorkspaceGrant>,
 ): Promise<Record<string, string>> {
   if (wanted.length === 0) return {};
-  const grants = await workspaceGrants(userId);
   const grantedTeams = [...grants.keys()];
   const rows = await db
     .select({
@@ -71,10 +78,7 @@ export async function readRevs(
           revision.scope,
           wanted.map((w) => w.key),
         ),
-        or(
-          isNotNull(projectMember.userId),
-          grantedTeams.length > 0 ? inArray(project.teamId, grantedTeams) : undefined,
-        ),
+        memberOrGranted(grantedTeams),
       ),
     );
 
@@ -90,4 +94,21 @@ export async function readRevs(
     out[row.scope] = String(row.rev);
   }
   return out;
+}
+
+// One marker for the session user's inbox in every project they can read, so the app
+// badge watches a single scope however many projects there are. It lists each
+// project's marker, so it moves when any inbox moves and when a project is gained or lost.
+export async function inboxAllRevision(
+  userId: string,
+  grants: Map<number, WorkspaceGrant>,
+): Promise<string> {
+  const rows = await db
+    .select({ projectId: project.id, rev: revision.rev })
+    .from(project)
+    .innerJoin(revision, eq(revision.scope, sql`'inbox:' || ${project.id} || ':' || ${userId}`))
+    .where(inArray(project.id, reachedProjectIds(userId, [...grants.keys()])))
+    .orderBy(project.id);
+  if (rows.length === 0) return NO_REV;
+  return rows.map((row) => `${row.projectId}=${row.rev}`).join(',');
 }

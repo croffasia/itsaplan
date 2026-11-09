@@ -1,7 +1,20 @@
 import { randomUUID } from 'node:crypto';
-import { db, issue, projectView } from '@repo/db';
-import { eq, inArray } from 'drizzle-orm';
-import { getProjectById, type ProjectRow } from '#modules/projects/service';
+import { db, documentAsset, issue, projectColumn, projectDocument, projectView } from '@repo/db';
+import {
+  and,
+  asc,
+  eq,
+  gt,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  or,
+  type AnyColumn,
+  type SQL,
+} from 'drizzle-orm';
+import { HttpError, iso, shareLive } from '#shared/lib';
+import { getProjectById, projectFeatures, type ProjectRow } from '#modules/projects/service';
 import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '#modules/issue-types/service';
 import { listLabels, listLabelGroups } from '#modules/labels/service';
@@ -17,12 +30,18 @@ import {
 } from '#modules/issues/links';
 import { getParentRef, listSubtasks, type IssueRef } from '#modules/issues/subtasks';
 import { applyFilters } from '#modules/views/filters';
+import { revokedDocumentShare, rewriteAssetUrls } from '#modules/documents/service';
+import { projectSharingEnabled } from '#modules/workspaces/service';
 
-// Public read-only sharing: an issue or a saved view carries an unguessable
+// Public read-only sharing: an issue, a saved view or a document carries an unguessable
 // share_token that, when set, makes it readable without a session through the
 // /share/* routes. Enabling sets the token; revoking clears it. The public reads
 // return a self-contained bundle (project scaffold + the entity) so the read-only
 // page needs no other authenticated call.
+//
+// Turning sharing off for the instance, the workspace or the team closes the links it
+// covers: they answer as unknown and a new one is refused, while revoking still works.
+// The tokens stay, so turning it on again opens the same links.
 
 // The project scaffold a read-only page needs to render issues: the same shape as
 // GET /projects/:projectKey minus the caller's viewer/permissions. Member emails
@@ -130,13 +149,13 @@ async function issueFeed(issueId: number, projectId: number): Promise<FeedItemRo
         .from(issue)
         .where(inArray(issue.id, targets))
     : [];
-  const visibleTargets = new Set(
-    targetProjects.filter((row) => row.projectId === projectId).map((row) => row.id),
+  const hiddenTargets = new Set(
+    targetProjects.filter((row) => row.projectId !== projectId).map((row) => row.id),
   );
   return page.items.filter((item) => {
     if (item.action !== 'link_add' && item.action !== 'link_remove') return true;
     const targetId = item.payload.to?.id;
-    return typeof targetId === 'number' && visibleTargets.has(targetId);
+    return typeof targetId === 'number' && !hiddenTargets.has(targetId);
   });
 }
 
@@ -181,58 +200,143 @@ async function issueBundle(
   };
 }
 
+// --- Expiry ---------------------------------------------------------------------
+
+// A link can carry an expiry. Past it the link is dead: the public reads no longer
+// match its token, the issue and the view report themselves as not shared, and the
+// expiry sweep clears the token for good. Enabling it again issues a fresh token, so
+// a link that has expired never comes back to life.
+
+// How the enable call changes the expiry: a moment, null for never, or undefined to
+// leave it as it stands (the same convention as `extended`).
+export type ShareExpiry = Date | null | undefined;
+
+// The SQL form of shareLive for a token lookup.
+function activeShare(expiresAt: AnyColumn): SQL {
+  return or(isNull(expiresAt), gt(expiresAt, new Date()))!;
+}
+
+// Clears the token of every share whose expiry has passed. Returns how many links
+// it revoked. Runs from the api's background loop.
+export async function sweepExpiredShares(): Promise<number> {
+  const now = new Date();
+  const [issues, views, documents] = await Promise.all([
+    db
+      .update(issue)
+      .set({ shareToken: null, shareExtended: false, shareExpiresAt: null })
+      .where(and(isNotNull(issue.shareToken), lte(issue.shareExpiresAt, now)))
+      .returning({ id: issue.id }),
+    db
+      .update(projectView)
+      .set({ shareToken: null, shareExtended: false, shareExpiresAt: null })
+      .where(and(isNotNull(projectView.shareToken), lte(projectView.shareExpiresAt, now)))
+      .returning({ id: projectView.id }),
+    db
+      .update(projectDocument)
+      .set(revokedDocumentShare)
+      .where(and(isNotNull(projectDocument.shareToken), lte(projectDocument.shareExpiresAt, now)))
+      .returning({ id: projectDocument.id }),
+  ]);
+  return issues.length + views.length + documents.length;
+}
+
 // --- Enable / revoke ------------------------------------------------------------
 
+export interface ShareState {
+  token: string;
+  expiresAt: string | null;
+}
+
 // Enables sharing for an issue. An already-shared issue keeps its token, so the
-// same call also flips `extended` on a live link; omitting `extended` leaves how
-// much the link exposes as it stands. Returns the token, or null if the issue does
-// not exist.
+// same call also flips `extended` or moves the expiry of a live link; omitting
+// either leaves it as it stands. An expired link is replaced by a fresh token and
+// starts without an expiry unless one is given. Returns the token and expiry, or
+// null if the issue does not exist.
 export async function enableIssueShare(
   issueId: number,
   extended?: boolean,
-): Promise<string | null> {
+  expiresAt?: ShareExpiry,
+): Promise<ShareState | null> {
   const rows = await db
-    .select({ token: issue.shareToken })
+    .select({ token: issue.shareToken, expiresAt: issue.shareExpiresAt })
     .from(issue)
     .where(eq(issue.id, issueId));
   if (rows.length === 0) return null;
-  const token = rows[0].token ?? randomUUID();
+  const next = nextShare(rows[0], extended, expiresAt);
   await db
     .update(issue)
-    .set({ shareToken: token, ...(extended === undefined ? {} : { shareExtended: extended }) })
+    .set({ shareToken: next.token, shareExpiresAt: next.expiresAt, shareExtended: next.choice })
     .where(eq(issue.id, issueId));
-  return token;
+  return next.state;
+}
+
+// What an enable call writes, shared by issues, views and documents: the token, the
+// expiry, and the link's choice (`extended`, or a document's `includeChildren`).
+// An undefined choice leaves the column as it stands. `live` tells a caller with a
+// second choice whether the link is new (see nextChoice).
+function nextShare(
+  current: { token: string | null; expiresAt: Date | null },
+  choice: boolean | undefined,
+  expiresAt: ShareExpiry,
+): {
+  token: string;
+  expiresAt: Date | null;
+  choice: boolean | undefined;
+  live: boolean;
+  state: ShareState;
+} {
+  const live = current.token !== null && shareLive(current.expiresAt);
+  const token = live ? current.token! : randomUUID();
+  let expiry: Date | null = null;
+  if (expiresAt !== undefined) expiry = expiresAt;
+  else if (live) expiry = current.expiresAt;
+  return {
+    token,
+    expiresAt: expiry,
+    choice: nextChoice(choice, live),
+    live,
+    state: { token, expiresAt: expiry ? iso(expiry) : null },
+  };
+}
+
+// A fresh link starts with a choice off unless the caller turns it on.
+function nextChoice(choice: boolean | undefined, live: boolean): boolean | undefined {
+  return choice ?? (live ? undefined : false);
 }
 
 // Revokes sharing for an issue. Returns false if the issue does not exist.
 export async function disableIssueShare(issueId: number): Promise<boolean> {
   const rows = await db
     .update(issue)
-    .set({ shareToken: null, shareExtended: false })
+    .set({ shareToken: null, shareExtended: false, shareExpiresAt: null })
     .where(eq(issue.id, issueId))
     .returning({ id: issue.id });
   return rows.length > 0;
 }
 
 // Enables sharing for a view, the same way enableIssueShare does for an issue.
-export async function enableViewShare(viewId: number, extended?: boolean): Promise<string | null> {
+export async function enableViewShare(
+  viewId: number,
+  extended?: boolean,
+  expiresAt?: ShareExpiry,
+): Promise<ShareState | null> {
   const rows = await db
-    .select({ token: projectView.shareToken })
+    .select({ token: projectView.shareToken, expiresAt: projectView.shareExpiresAt })
     .from(projectView)
     .where(eq(projectView.id, viewId));
   if (rows.length === 0) return null;
-  const token = rows[0].token ?? randomUUID();
+  const next = nextShare(rows[0], extended, expiresAt);
   await db
     .update(projectView)
-    .set({ shareToken: token, ...(extended === undefined ? {} : { shareExtended: extended }) })
+    .set({ shareToken: next.token, shareExpiresAt: next.expiresAt, shareExtended: next.choice })
     .where(eq(projectView.id, viewId));
-  return token;
+  return next.state;
 }
 
 export async function disableViewShare(viewId: number): Promise<boolean> {
   const rows = await db
     .update(projectView)
-    .set({ shareToken: null, shareExtended: false })
+    .set({ shareToken: null, shareExtended: false, shareExpiresAt: null })
     .where(eq(projectView.id, viewId))
     .returning({ id: projectView.id });
   return rows.length > 0;
@@ -240,21 +344,31 @@ export async function disableViewShare(viewId: number): Promise<boolean> {
 
 // --- Public reads ---------------------------------------------------------------
 
-// The bundle for a shared issue link, or null if no issue carries the token.
+// The bundle for a shared issue link, or null if no issue carries the token or the link
+// is closed.
 export async function getSharedIssue(token: string): Promise<SharedIssueBundle | null> {
   const issueRow = await getIssue(await issueIdByToken(token));
-  if (!issueRow) return null;
+  if (!issueRow || !(await projectSharingEnabled(issueRow.projectId))) return null;
   return issueBundle(issueRow, {
     keepShareToken: true,
     extended: issueRow.shareExtended,
   });
 }
 
-// The bundle for a shared view link, or null if no view carries the token.
+// A private view has no public link, whatever token it carries.
+const sharedViewByToken = (token: string) =>
+  and(
+    eq(projectView.shareToken, token),
+    eq(projectView.isPrivate, false),
+    activeShare(projectView.shareExpiresAt),
+  );
+
+// The bundle for a shared view link, or null if no view carries the token or the link
+// is closed.
 export async function getSharedView(token: string): Promise<SharedViewBundle | null> {
-  const rows = await db.select().from(projectView).where(eq(projectView.shareToken, token));
+  const rows = await db.select().from(projectView).where(sharedViewByToken(token));
   const view = rows[0];
-  if (!view) return null;
+  if (!view || !(await projectSharingEnabled(view.projectId))) return null;
   const project = await getProjectById(view.projectId);
   if (!project) return null;
   const [scaffold, issues] = await Promise.all([
@@ -299,7 +413,7 @@ export async function getSharedView(token: string): Promise<SharedViewBundle | n
 // issue is one the shared view actually shows: it must belong to the view's project
 // and pass the view's filters, so the board token cannot open issues the filter
 // excludes (nor archived issues, which listIssues omits). Null if the token is
-// unknown or the issue is not on the shared board.
+// unknown, the link is closed or the issue is not on the shared board.
 export async function getSharedViewIssue(
   token: string,
   issueId: number,
@@ -311,8 +425,8 @@ export async function getSharedViewIssue(
       extended: projectView.shareExtended,
     })
     .from(projectView)
-    .where(eq(projectView.shareToken, token));
-  if (rows.length === 0) return null;
+    .where(sharedViewByToken(token));
+  if (rows.length === 0 || !(await projectSharingEnabled(rows[0].projectId))) return null;
   const project = await getProjectById(rows[0].projectId);
   if (!project) return null;
   const [columns, issues] = await Promise.all([listColumns(project.id), listIssues(project)]);
@@ -327,8 +441,481 @@ export async function getSharedViewIssue(
 }
 
 // Resolves an issue share token to its issue id, or 0 (never a real id) when
-// unknown, so getIssue then returns null.
+// unknown or expired, so getIssue then returns null.
 async function issueIdByToken(token: string): Promise<number> {
-  const rows = await db.select({ id: issue.id }).from(issue).where(eq(issue.shareToken, token));
+  const rows = await db
+    .select({ id: issue.id })
+    .from(issue)
+    .where(and(eq(issue.shareToken, token), activeShare(issue.shareExpiresAt)));
   return rows[0]?.id ?? 0;
+}
+
+// --- Documents ------------------------------------------------------------------
+
+// A shared page, and with `includeChildren` its subpages, read without a session. A
+// private or archived page is never readable through a link, and neither is anything
+// below it.
+
+export interface SharedDocumentPage {
+  id: number;
+  parentId: number | null;
+  title: string;
+  icon: string | null;
+}
+
+export interface SharedDocumentBundle {
+  project: { name: string; key: string };
+  document: {
+    id: number;
+    title: string;
+    icon: string | null;
+    content: string;
+    contentJson: Record<string, unknown> | null;
+    fullWidth: boolean;
+    updatedAt: string;
+  };
+  // The pages the link opens, the shared page first with no parent.
+  pages: SharedDocumentPage[];
+  // The issues of the project this page names, when the link shows them.
+  issues: SharedDocumentIssue[];
+}
+
+// An issue a shared page names: what its chip shows. It opens through the same link
+// (getSharedDocumentIssue).
+export interface SharedDocumentIssue {
+  id: number;
+  sequence: number;
+  title: string;
+  state: { name: string; color: string };
+}
+
+// The project of a document that may be shared, for the enable/revoke guard. A private
+// page has no public link, so it is not found here.
+export async function shareableDocumentProjectId(documentId: number): Promise<number | null> {
+  const rows = await db
+    .select({ projectId: projectDocument.projectId })
+    .from(projectDocument)
+    .where(and(eq(projectDocument.id, documentId), eq(projectDocument.isPrivate, false)));
+  return rows[0]?.projectId ?? null;
+}
+
+const readablePage = and(eq(projectDocument.isPrivate, false), isNull(projectDocument.archivedAt));
+
+// Enables sharing for a document, the same way enableIssueShare does for an issue.
+export async function enableDocumentShare(
+  documentId: number,
+  includeChildren?: boolean,
+  includeIssues?: boolean,
+  expiresAt?: ShareExpiry,
+): Promise<ShareState | null> {
+  const rows = await db
+    .select({
+      token: projectDocument.shareToken,
+      expiresAt: projectDocument.shareExpiresAt,
+      archivedAt: projectDocument.archivedAt,
+    })
+    .from(projectDocument)
+    .where(eq(projectDocument.id, documentId));
+  if (rows.length === 0) return null;
+  if (rows[0].archivedAt) throw new HttpError(409, 'Restore this document before sharing it.');
+  const next = nextShare(rows[0], includeChildren, expiresAt);
+  // Checked again in the write: a page made private meanwhile must not get a token.
+  const written = await db
+    .update(projectDocument)
+    .set({
+      shareToken: next.token,
+      shareExpiresAt: next.expiresAt,
+      shareIncludeChildren: next.choice,
+      shareIncludeIssues: nextChoice(includeIssues, next.live),
+    })
+    .where(and(eq(projectDocument.id, documentId), readablePage))
+    .returning({ id: projectDocument.id });
+  if (written.length === 0) return null;
+  return next.state;
+}
+
+export async function disableDocumentShare(documentId: number): Promise<boolean> {
+  const rows = await db
+    .update(projectDocument)
+    .set(revokedDocumentShare)
+    .where(eq(projectDocument.id, documentId))
+    .returning({ id: projectDocument.id });
+  return rows.length > 0;
+}
+
+// The shared page of a token and the pages its link opens, or null when no live link
+// carries the token or the link is closed.
+async function sharedDocumentPages(
+  token: string,
+): Promise<{ project: ProjectRow; includeIssues: boolean; pages: SharedDocumentPage[] } | null> {
+  const [root] = await db
+    .select({
+      id: projectDocument.id,
+      projectId: projectDocument.projectId,
+      title: projectDocument.title,
+      icon: projectDocument.icon,
+      includeChildren: projectDocument.shareIncludeChildren,
+      includeIssues: projectDocument.shareIncludeIssues,
+    })
+    .from(projectDocument)
+    .where(
+      and(
+        eq(projectDocument.shareToken, token),
+        activeShare(projectDocument.shareExpiresAt),
+        readablePage,
+      ),
+    );
+  if (!root || !(await projectSharingEnabled(root.projectId))) return null;
+  // Turning Docs off closes the project's links. Turning it on opens the same links again.
+  const project = await getProjectById(root.projectId);
+  if (!project || !projectFeatures(project).documents) return null;
+  const pages: SharedDocumentPage[] = [
+    { id: root.id, parentId: null, title: root.title, icon: root.icon },
+  ];
+  const shared = { project, includeIssues: root.includeIssues, pages };
+  if (!root.includeChildren) return shared;
+  const rows = await db
+    .select({
+      id: projectDocument.id,
+      parentId: projectDocument.parentId,
+      title: projectDocument.title,
+      icon: projectDocument.icon,
+    })
+    .from(projectDocument)
+    .where(and(eq(projectDocument.projectId, root.projectId), readablePage))
+    .orderBy(asc(projectDocument.position), asc(projectDocument.id));
+  const children = new Map<number, SharedDocumentPage[]>();
+  for (const row of rows) {
+    if (row.parentId === null) continue;
+    const siblings = children.get(row.parentId);
+    if (siblings) siblings.push(row);
+    else children.set(row.parentId, [row]);
+  }
+  // Walk down from the shared page. A private or archived page is not among the rows,
+  // so its subtree is never reached.
+  for (let i = 0; i < pages.length; i++) pages.push(...(children.get(pages[i].id) ?? []));
+  return shared;
+}
+
+// The bundle for a shared document link: the shared page, or one of the subpages its
+// link opens. Null when the token is unknown, the link is closed or the page is not one
+// the link opens.
+export async function getSharedDocument(
+  token: string,
+  documentId?: number,
+): Promise<SharedDocumentBundle | null> {
+  const shared = await sharedDocumentPages(token);
+  if (!shared) return null;
+  const id = documentId ?? shared.pages[0].id;
+  if (!shared.pages.some((page) => page.id === id)) return null;
+  const [row] = await db.select().from(projectDocument).where(eq(projectDocument.id, id));
+  if (!row) return null;
+  const { project } = shared;
+  // Asset URLs need a session. The page reads them through the token instead, from
+  // the web's public /media route.
+  const assetUrl = (_match: string, _prefix: string | undefined, publicId: string) =>
+    `/media/share/document/${token}/assets/${publicId}/raw`;
+  return {
+    project: { name: project.name, key: project.key },
+    document: {
+      id: row.id,
+      title: row.title,
+      icon: row.icon,
+      content: rewriteAssetUrls(row.content, null, assetUrl),
+      contentJson: rewriteAssetUrls(row.contentJson, null, assetUrl),
+      fullWidth: row.fullWidth,
+      updatedAt: iso(row.updatedAt),
+    },
+    pages: shared.pages,
+    issues: shared.includeIssues
+      ? await issuesBySequence(project.id, namedSequences(project.key, pageTexts(row)))
+      : [],
+  };
+}
+
+// The most issue identifiers one shared link resolves.
+const MAX_NAMED_ISSUES = 500;
+
+// The issue numbers that some text names by identifier (KEY-123).
+function namedSequences(key: string, texts: string[]): number[] {
+  if (!/^[A-Z0-9]+$/.test(key)) return [];
+  const pattern = new RegExp(`(?<![A-Za-z0-9])${key}-([1-9]\\d{0,8})(?![A-Za-z0-9])`, 'g');
+  const sequences = new Set<number>();
+  for (const text of texts) {
+    for (const match of text.matchAll(pattern)) {
+      if (sequences.size >= MAX_NAMED_ISSUES) break;
+      sequences.add(Number(match[1]));
+    }
+  }
+  return [...sequences];
+}
+
+const pageTexts = (page: { content: string; contentJson: unknown }) => [
+  page.content,
+  JSON.stringify(page.contentJson),
+];
+
+// The issues of a project with these numbers, archived ones included.
+async function issuesBySequence(
+  projectId: number,
+  sequences: number[],
+): Promise<SharedDocumentIssue[]> {
+  if (sequences.length === 0) return [];
+  const rows = await db
+    .select({
+      id: issue.id,
+      sequence: issue.sequenceNumber,
+      title: issue.title,
+      stateName: projectColumn.name,
+      stateColor: projectColumn.color,
+    })
+    .from(issue)
+    .innerJoin(projectColumn, eq(projectColumn.id, issue.columnId))
+    .where(and(eq(issue.projectId, projectId), inArray(issue.sequenceNumber, sequences)))
+    .orderBy(asc(issue.sequenceNumber));
+  return rows.map((row) => ({
+    id: row.id,
+    sequence: row.sequence,
+    title: row.title,
+    state: { name: row.stateName, color: row.stateColor },
+  }));
+}
+
+// The issue numbers named on any page a link opens.
+async function sequencesOfShare(key: string, pageIds: number[]): Promise<number[]> {
+  const pages = await db
+    .select({ content: projectDocument.content, contentJson: projectDocument.contentJson })
+    .from(projectDocument)
+    .where(inArray(projectDocument.id, pageIds));
+  return namedSequences(key, pages.flatMap(pageTexts));
+}
+
+// An issue that a page of a shared document names, read through the document's link
+// when the link shows linked issues. It carries what a view shared without full details
+// carries: no people, labels, custom fields or activity. Its subtasks and relations
+// list only issues the link also names. Null when the link does not name the issue.
+export async function getSharedDocumentIssue(
+  token: string,
+  issueId: number,
+): Promise<SharedIssueBundle | null> {
+  const shared = await sharedDocumentPages(token);
+  if (!shared?.includeIssues) return null;
+  const { project } = shared;
+  const sequences = await sequencesOfShare(
+    project.key,
+    shared.pages.map((page) => page.id),
+  );
+  const named = await issuesBySequence(project.id, sequences);
+  if (!named.some((row) => row.id === issueId)) return null;
+  const issueRow = await getIssue(issueId);
+  if (!issueRow) return null;
+  return issueBundle(issueRow, {
+    keepShareToken: false,
+    extended: false,
+    onlyIssueIds: new Set(named.map((row) => row.id)),
+  });
+}
+
+// A shared document whose link shows an issue, for the issue's own share dialog.
+export interface IssueDocumentShare {
+  documentId: number;
+  title: string;
+  expiresAt: string | null;
+}
+
+// The live document links that show this issue: the shared page or one of the subpages
+// its link opens names the issue, and the link shows linked issues.
+export async function listIssueDocumentShares(issueId: number): Promise<IssueDocumentShare[]> {
+  const issueRow = await getIssue(issueId);
+  if (!issueRow) return [];
+  const project = await getProjectById(issueRow.projectId);
+  if (!project) return [];
+  const roots = await db
+    .select({
+      id: projectDocument.id,
+      title: projectDocument.title,
+      token: projectDocument.shareToken,
+      expiresAt: projectDocument.shareExpiresAt,
+    })
+    .from(projectDocument)
+    .where(
+      and(
+        eq(projectDocument.projectId, project.id),
+        isNotNull(projectDocument.shareToken),
+        eq(projectDocument.shareIncludeIssues, true),
+        activeShare(projectDocument.shareExpiresAt),
+        readablePage,
+      ),
+    )
+    .orderBy(asc(projectDocument.title));
+  const shares: IssueDocumentShare[] = [];
+  for (const root of roots) {
+    const shared = await sharedDocumentPages(root.token!);
+    if (!shared) continue;
+    const sequences = await sequencesOfShare(
+      project.key,
+      shared.pages.map((page) => page.id),
+    );
+    if (!sequences.includes(issueRow.sequenceNumber)) continue;
+    shares.push({
+      documentId: root.id,
+      title: root.title,
+      expiresAt: root.expiresAt ? iso(root.expiresAt) : null,
+    });
+  }
+  return shares;
+}
+
+// An asset of a page the link opens, or null. An asset of any other page is not
+// found, even when another page embeds it.
+export async function getSharedDocumentAsset(
+  token: string,
+  publicId: string,
+): Promise<{ s3Key: string; contentType: string; filename: string } | null> {
+  const shared = await sharedDocumentPages(token);
+  if (!shared) return null;
+  const rows = await db
+    .select({
+      s3Key: documentAsset.s3Key,
+      contentType: documentAsset.contentType,
+      filename: documentAsset.filename,
+    })
+    .from(documentAsset)
+    .where(
+      and(
+        eq(documentAsset.publicId, publicId),
+        inArray(
+          documentAsset.documentId,
+          shared.pages.map((page) => page.id),
+        ),
+      ),
+    );
+  return rows[0] ?? null;
+}
+
+// --- Project overview ------------------------------------------------------------
+
+export interface ProjectShares {
+  issues: {
+    id: number;
+    sequence: number;
+    title: string;
+    extended: boolean;
+    expiresAt: string | null;
+  }[];
+  views: { id: number; name: string; extended: boolean; expiresAt: string | null }[];
+  documents: {
+    id: number;
+    title: string;
+    includeChildren: boolean;
+    includeIssues: boolean;
+    expiresAt: string | null;
+  }[];
+}
+
+const expiryOf = (expiresAt: Date | null) => (expiresAt ? iso(expiresAt) : null);
+
+// The live public links of a project, for the kinds the reader may see.
+export async function listProjectShares(
+  projectId: number,
+  readable: { issues: boolean; views: boolean; documents: boolean },
+): Promise<ProjectShares> {
+  const [issues, views, documents] = await Promise.all([
+    readable.issues
+      ? db
+          .select({
+            id: issue.id,
+            sequence: issue.sequenceNumber,
+            title: issue.title,
+            extended: issue.shareExtended,
+            expiresAt: issue.shareExpiresAt,
+          })
+          .from(issue)
+          .where(
+            and(
+              eq(issue.projectId, projectId),
+              isNotNull(issue.shareToken),
+              activeShare(issue.shareExpiresAt),
+            ),
+          )
+          .orderBy(asc(issue.sequenceNumber))
+      : [],
+    readable.views
+      ? db
+          .select({
+            id: projectView.id,
+            name: projectView.name,
+            extended: projectView.shareExtended,
+            expiresAt: projectView.shareExpiresAt,
+          })
+          .from(projectView)
+          .where(
+            and(
+              eq(projectView.projectId, projectId),
+              isNotNull(projectView.shareToken),
+              activeShare(projectView.shareExpiresAt),
+            ),
+          )
+          .orderBy(asc(projectView.name))
+      : [],
+    readable.documents
+      ? db
+          .select({
+            id: projectDocument.id,
+            title: projectDocument.title,
+            includeChildren: projectDocument.shareIncludeChildren,
+            includeIssues: projectDocument.shareIncludeIssues,
+            expiresAt: projectDocument.shareExpiresAt,
+          })
+          .from(projectDocument)
+          .where(
+            and(
+              eq(projectDocument.projectId, projectId),
+              isNotNull(projectDocument.shareToken),
+              activeShare(projectDocument.shareExpiresAt),
+              readablePage,
+            ),
+          )
+          .orderBy(asc(projectDocument.title))
+      : [],
+  ]);
+  return {
+    issues: issues.map((row) => ({ ...row, expiresAt: expiryOf(row.expiresAt) })),
+    views: views.map((row) => ({ ...row, expiresAt: expiryOf(row.expiresAt) })),
+    documents: documents.map((row) => ({ ...row, expiresAt: expiryOf(row.expiresAt) })),
+  };
+}
+
+// Revokes every public link of the project of the kinds given. Returns how many it
+// revoked.
+export async function revokeProjectShares(
+  projectId: number,
+  kinds: { issues: boolean; views: boolean; documents: boolean },
+): Promise<number> {
+  const [issues, views, documents] = await Promise.all([
+    kinds.issues
+      ? db
+          .update(issue)
+          .set({ shareToken: null, shareExtended: false, shareExpiresAt: null })
+          .where(and(eq(issue.projectId, projectId), isNotNull(issue.shareToken)))
+          .returning({ id: issue.id })
+      : [],
+    kinds.views
+      ? db
+          .update(projectView)
+          .set({ shareToken: null, shareExtended: false, shareExpiresAt: null })
+          .where(and(eq(projectView.projectId, projectId), isNotNull(projectView.shareToken)))
+          .returning({ id: projectView.id })
+      : [],
+    kinds.documents
+      ? db
+          .update(projectDocument)
+          .set(revokedDocumentShare)
+          .where(
+            and(eq(projectDocument.projectId, projectId), isNotNull(projectDocument.shareToken)),
+          )
+          .returning({ id: projectDocument.id })
+      : [],
+  ]);
+  return issues.length + views.length + documents.length;
 }

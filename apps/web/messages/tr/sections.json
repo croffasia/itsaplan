@@ -4,7 +4,8 @@
     "preferences": "Tercihler",
     "accounts": "Hesaplar",
     "security": "Güvenlik",
-    "api-keys": "API anahtarları"
+    "api-keys": "API anahtarları",
+    "invitations": "Invitations"
   },
   "godGroups": {
     "management": "Yönetim",
@@ -24,6 +25,10 @@
       "label": "Projeler",
       "description": "Bu örneklemdeki her proje: içerdiği varlıklar, son etkinlik zamanı ve erişebilen kişiler."
     },
+    "roles": {
+      "label": "Sistem rolleri",
+      "description": "Bu örneklemdeki her takımın kullanabileceği varsayılan roller."
+    },
     "general": {
       "label": "Genel",
       "description": "Kişisel çalışma alanları, yeni projeler için varsayılanlar, ajan izleme kayıtları ve çalışma süresi."
@@ -39,6 +44,10 @@
     "storage": {
       "label": "Depolama",
       "description": "Yükleme limitleri: tek dosya boyutu, kabul edilen ek türleri ve projelere tanınan depolama alanı."
+    },
+    "email-templates": {
+      "label": "E-posta şablonları",
+      "description": "Sistem e-postası şablonlarını yönetin."
     },
     "telegram": {
       "label": "Telegram",
@@ -102,6 +111,10 @@
       "label": "Webhook'lar",
       "description": "Proje olaylarını harici URL'lere gönderin (her webhook özel bir anahtarla imzalanır)."
     },
+    "forms": {
+      "label": "Formlar",
+      "description": "Bağlantıya sahip herkes burada iş oluşturur."
+    },
     "git": {
       "label": "Kod Depoları",
       "description": "GitHub, GitLab, Gitea, Forgejo veya Bitbucket üzerinde pull request birleştiğinde işleri kapatın."
@@ -115,8 +128,8 @@
       "description": "Bu projede çalışan yapay zekâ ajanları."
     },
     "queue": {
-      "label": "Runner queue",
-      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
+      "label": "Ajan çalıştırmaları",
+      "description": "Projenin dahili ve harici ajanlarının çalıştırmaları: süren, bekleyen ve geçmiş."
     }
   },
   "previews": {
@@ -187,6 +200,40 @@
         "acsUrl": "ACS URL'si",
         "spEntityId": "Varlık kimliği ve meta veri"
       }
+    },
+    "forms": {
+      "new": "Yeni form",
+      "columns": {
+        "form": "Form",
+        "link": "Bağlantı"
+      },
+      "enabled": "Talep alıyor",
+      "tabs": {
+        "form": "Form",
+        "questions": "Sorular",
+        "issue": "İş",
+        "design": "Görünüm"
+      },
+      "questionsHint": "Ad ve e-posta her zaman sorulur.",
+      "preview": "Önizleme",
+      "name": "Adınız",
+      "email": "E-posta"
+    },
+    "portal": {
+      "title": "Portal",
+      "description": "İnsanların çalışma alanının projelerine talep gönderdiği ve takip ettiği sayfa.",
+      "general": "Genel",
+      "forms": "Herkese açık formlar",
+      "formsHint": "Çalışma alanının projeleri, bağlantıya sahip herkesin doldurabileceği formlar yayınlayabilir. Kapatıldığında formları ve portalları açılmaz, projelerin ayarlarındaki Formlar bölümü gizlenir; hiçbir şey silinmez.",
+      "name": "Ad",
+      "nameHint": "İnsanların portalda ve e-postalarında çalışma alanının adı yerine gördüğü ad. Boş bırakılırsa çalışma alanının adı görünür.",
+      "address": "Adres",
+      "addressHint": "Portal bu adreste açılır. Adres belirlenene kadar çalışma alanının numarasıyla açılır.",
+      "link": "Portal bağlantısı",
+      "logo": "Logo",
+      "logoHint": "Portalda ve formlarda portalın adı yerine gösterilir. Tek logo iki temada da kullanılır.",
+      "light": "Açık tema",
+      "dark": "Koyu tema"
     }
   }
 }

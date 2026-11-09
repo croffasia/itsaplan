@@ -8,7 +8,6 @@ import {
   issueFieldValue,
   issueKeyAlias,
   issueLabel,
-  issueLink,
   issueType,
   issueWatcher,
   label,
@@ -27,11 +26,12 @@ import { recordStatusChange } from './status-history';
 import { recordCycleChange } from './cycle-history';
 import { emitIssueEvent } from './webhook-payload';
 import { queueStatusRuns } from '#modules/agents/schedules/issue-runs';
+import { emitRunsCanceled } from '#modules/agents/core/run-finished';
 
 // Moves an issue, with its subtasks, to another project of the same team. Column,
 // type, labels and custom fields belong to one project, so they are matched by name
-// in the target and dropped when there is no match. Links and documents must stay
-// inside one project, so those that reach an issue left behind are removed.
+// in the target and dropped when there is no match. Issue links stay within the team;
+// document links are removed because documents belong to one project.
 export async function moveIssue(
   issueId: number,
   target: ProjectRow,
@@ -116,7 +116,7 @@ export async function moveIssue(
   const labels = await mapLabels(movedIds, target.id);
   const fields = await mapFields(movedIds, target.id);
 
-  await db.transaction(async (tx) => {
+  const canceledRuns = await db.transaction(async (tx) => {
     // Everything above was read without a lock. A concurrent move of the same issue, or
     // a subtask added since, would otherwise write over that state.
     const [locked] = await tx
@@ -189,31 +189,22 @@ export async function moveIssue(
       }
     }
 
-    await tx
-      .delete(issueLink)
-      .where(
-        or(
-          and(
-            inArray(issueLink.sourceIssueId, movedIds),
-            notInArray(issueLink.targetIssueId, movedIds),
-          ),
-          and(
-            inArray(issueLink.targetIssueId, movedIds),
-            notInArray(issueLink.sourceIssueId, movedIds),
-          ),
-        ),
-      );
     await tx.delete(projectDocumentIssue).where(inArray(projectDocumentIssue.issueId, movedIds));
     await tx
       .delete(issueWatcher)
       .where(
         and(inArray(issueWatcher.issueId, movedIds), notInArray(issueWatcher.userId, [...members])),
       );
-    await tx
+    return tx
       .update(agentRun)
       .set({ status: 'canceled', executionStartedAt: null, finishedAt: sql`now()` })
-      .where(and(inArray(agentRun.issueId, movedIds), eq(agentRun.status, 'pending')));
+      .where(and(inArray(agentRun.issueId, movedIds), eq(agentRun.status, 'pending')))
+      .returning({ id: agentRun.id });
   });
+  await emitRunsCanceled(
+    canceledRuns.map((run) => run.id),
+    actorUserId,
+  );
 
   for (const p of plans) {
     await recordStatusChange([p.id], p.newColumnId);

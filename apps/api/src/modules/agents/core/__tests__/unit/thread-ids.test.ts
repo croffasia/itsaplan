@@ -7,10 +7,14 @@ import {
 } from '../../runtime/thread-ids';
 
 describe('runThreadId', () => {
-  const base = { id: 7, agentId: 3, issueId: null, scheduleId: null };
+  const base = { id: 7, agentId: 3, issueId: null, documentId: null, scheduleId: null };
 
   it('scopes an issue run to the (issue, agent) pair', () => {
     expect(runThreadId({ ...base, issueId: 42 })).toBe('issue:42:3');
+  });
+
+  it('scopes a document run to the (document, agent) pair', () => {
+    expect(runThreadId({ ...base, documentId: 12 })).toBe('document:12:3');
   });
 
   it('keeps two agents on the same issue apart', () => {

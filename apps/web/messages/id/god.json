@@ -170,6 +170,20 @@
     },
     "joined": "bergabung {date}"
   },
+  "roles": {
+    "newRole": "Peran baru",
+    "empty": "Belum ada peran sistem.",
+    "default": "Bawaan",
+    "defaultUndeletable": "Peran bawaan tidak dapat dihapus",
+    "columns": {
+      "role": "Peran",
+      "permissions": "Izin"
+    },
+    "edit": "Ubah peran",
+    "delete": "Hapus peran",
+    "deleteTitle": "Hapus peran \"{name}\"",
+    "deleteDescription": "Tindakan ini tidak dapat dibatalkan."
+  },
   "general": {
     "saved": "Pengaturan bawaan proyek disimpan",
     "projectDefaults": "Pengaturan bawaan proyek",
@@ -179,8 +193,21 @@
     "workspaces": "Workspace",
     "personalWorkspaces": "Workspace untuk setiap orang",
     "personalWorkspacesHint": "Setiap akun mendapat workspace sendiri dengan nama pemiliknya. Jika nonaktif, orang hanya bekerja di workspace tempat mereka ditambahkan.",
+    "invites": "Undangan",
+    "inviteSearch": "Sarankan orang saat mengundang",
+    "inviteSearchHint": "Saat pemilik atau manajer tim mengetik alamat di dialog undangan, akun yang cocok dari semua workspace di instance ini ditampilkan dengan nama dan email. Jika nonaktif, alamat harus diketik lengkap.",
+    "invitesSaved": "Pengaturan undangan disimpan",
+    "sharing": "Tautan publik",
+    "sharingEnabled": "Izinkan tautan publik",
+    "sharingEnabledHint": "Dokumen, isu, dan tampilan bisa dibagikan lewat tautan, sesuai izin tiap workspace. Jika dimatikan, tidak ada yang bisa berbagi dan tautan yang ada berhenti terbuka sampai dinyalakan lagi.",
+    "sharingSaved": "Pengaturan tautan publik disimpan",
     "agents": "Agen",
     "agentsSaved": "Pengaturan agen disimpan",
+    "embedding": "Penyematan",
+    "embedSites": "Situs tepercaya",
+    "embedSitesHint": "Issue dan papan yang dibagikan secara publik hanya terbuka dalam frame di situs ini. Pisahkan situs dengan koma.",
+    "embedSitesInvalid": "Tulis setiap situs seperti https://example.com, tanpa path.",
+    "embedSaved": "Situs tepercaya disimpan",
     "traceRetention": "Simpan trace eksekusi",
     "traceRetentionHint": "Setiap eksekusi agen mencatat panggilan ke model dan alat. Dasbor penggunaan hanya menghitung eksekusi yang masih disimpan.",
     "traceDays": "{days} hari",
@@ -188,7 +215,10 @@
     "maxRunTime": "Waktu jalan maksimum",
     "maxRunTimeHint": "Berapa lama satu jalannya agen boleh berlangsung sebelum dihentikan dan disimpan sebagai gagal. Batas milik agen tidak boleh melebihinya.",
     "runMinutes": "{minutes, plural, other {# menit}}",
-    "runSeconds": "{seconds} dtk"
+    "runSeconds": "{seconds} dtk",
+    "concurrentRuns": "Eksekusi bersamaan",
+    "concurrentRunsHint": "Berapa banyak eksekusi agen yang berjalan bersamaan di instance ini. Sisanya menunggu dalam antrean. Obrolan dan agen eksternal tidak dihitung. 0 berarti tanpa batas.",
+    "concurrentRunsInvalid": "Masukkan bilangan bulat dari 0 sampai {max}."
   },
   "authentication": {
     "saved": "Pengaturan autentikasi disimpan",
@@ -297,6 +327,117 @@
     "clientSecret": "Rahasia klien",
     "clientSecretPlaceholder": "Rahasia pendaftaran aplikasi",
     "microsoft365Hint": "Masuk sebagai pendaftaran aplikasi Entra ID, bukan dengan kata sandi kotak surat, sehingga kotak surat tetap bisa memakai MFA. Aplikasi memerlukan izin aplikasi SMTP.SendAsApp dari Office 365 Exchange Online dengan persetujuan admin, akses ke kotak surat ini di Exchange, dan SMTP AUTH aktif untuk kotak surat."
+  },
+  "emailTemplates": {
+    "saved": "Template email disimpan",
+    "unsaved": "Ada perubahan yang belum disimpan",
+    "blankText": "Lengkapi subjek atau teks yang kosong untuk menyimpan",
+    "emails": "Email",
+    "layout": "Tata letak",
+    "edited": "Diedit",
+    "subject": "Subjek",
+    "text": "Teks",
+    "button": "Tombol",
+    "formatting": "Pemformatan",
+    "heading1": "Judul 1",
+    "heading2": "Judul 2",
+    "bold": "Tebal",
+    "italic": "Miring",
+    "strikethrough": "Coret",
+    "link": "Tautan",
+    "bulletedList": "Daftar poin",
+    "numberedList": "Daftar bernomor",
+    "quote": "Kutipan",
+    "boldSample": "tebal",
+    "italicSample": "miring",
+    "strikeSample": "teks",
+    "linkSample": "teks tautan",
+    "unknownVariables": "Variabel tidak dikenal: {names}",
+    "removeUnknownVariables": "Hapus variabel yang tidak dikenal untuk menyimpan",
+    "reset": "Kembalikan ke bawaan",
+    "test": "Kirim tes",
+    "testing": "Mengirim…",
+    "testSent": "Terkirim ke {email}",
+    "testNeedsProvider": "Siapkan penyedia email terlebih dahulu",
+    "layoutHtml": "HTML tata letak",
+    "layoutCss": "CSS tata letak",
+    "placeholders": "Placeholder",
+    "variables": "Variabel",
+    "required": "Wajib",
+    "requiredPlaceholders": "Tambahkan {names} ke tata letak untuk menyimpan",
+    "preview": "Pratinjau",
+    "previewEmail": "Email",
+    "previewText": "Teks biasa",
+    "previewFailed": "Pratinjau tidak termuat. Muat ulang halaman untuk mencoba lagi.",
+    "from": "Dari",
+    "to": "Kepada",
+    "groups": {
+      "signIn": "Masuk",
+      "invitations": "Undangan",
+      "notifications": "Notifikasi",
+      "service": "Lainnya"
+    },
+    "templates": {
+      "reset": {
+        "name": "Atur ulang kata sandi"
+      },
+      "verify": {
+        "name": "Konfirmasi alamat email"
+      },
+      "magic": {
+        "name": "Tautan masuk"
+      },
+      "inviteProject": {
+        "name": "Undangan proyek"
+      },
+      "inviteTeam": {
+        "name": "Undangan tim"
+      },
+      "assigned": {
+        "name": "Issue ditugaskan"
+      },
+      "mentioned": {
+        "name": "Disebut di issue"
+      },
+      "commented": {
+        "name": "Komentar baru"
+      },
+      "stateChanged": {
+        "name": "Status berubah"
+      },
+      "documentMentioned": {
+        "name": "Disebut di dokumen"
+      },
+      "documentCommentMentioned": {
+        "name": "Disebut di komentar dokumen"
+      },
+      "test": {
+        "name": "Email tes",
+        "hint": "Dikirim oleh tombol tes di halaman penyedia email."
+      }
+    },
+    "placeholderText": {
+      "content": "Teks email",
+      "button": "Tombol dengan tautan",
+      "subject": "Subjek",
+      "lang": "Kode bahasa",
+      "dir": "Arah teks",
+      "site_name": "Nama instance",
+      "site_url": "Alamat instance",
+      "logo_url": "Alamat logo"
+    },
+    "variableText": {
+      "actor": "Pelaku tindakan",
+      "ref": "Nomor issue",
+      "title": "Judul issue",
+      "from": "Status sebelumnya",
+      "to": "Status baru",
+      "document": "Judul dokumen",
+      "inviter": "Pengirim undangan",
+      "project": "Nama proyek",
+      "team": "Nama tim",
+      "role": "Peran setelah bergabung"
+    }
   },
   "authProvider": {
     "saved": "Penyedia autentikasi disimpan",

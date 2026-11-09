@@ -37,5 +37,17 @@
   "existingAccountNotice": "البريد ده له حساب بالفعل. سجّل الدخول بكلمة مرورك.",
   "passwordsDoNotMatch": "كلمتا المرور غير متطابقتين.",
   "registerFailed": "تعذّر إنشاء حسابك.",
-  "signInFailed": "تعذّر تسجيل دخولك."
+  "signInFailed": "تعذّر تسجيل دخولك.",
+  "received": {
+    "title": "Your invitations",
+    "description": "Review an invitation to see the team, project and role before joining.",
+    "review": "Review invitation",
+    "continue": "Continue without joining",
+    "loadFailed": "Invitations could not be loaded. Try again or continue without joining.",
+    "retry": "Try again",
+    "loading": "Loading invitations…",
+    "empty": "No pending invitations. New invitations sent to your verified email will appear here.",
+    "verifyRequired": "Verify your email address to discover invitations automatically. You can still open an invitation link shared with you.",
+    "loadFailedAccount": "Could not load invitations. Please try again."
+  }
 }

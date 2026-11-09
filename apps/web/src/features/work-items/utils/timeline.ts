@@ -1,4 +1,5 @@
 import { startOfDay } from 'date-fns';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { BoardIssue, Issue } from '@/lib/api/endpoints/issues';
 import { parseDate } from '@/utils/dates';
@@ -16,7 +17,13 @@ import {
   type IssueGroup,
 } from '@/utils/project';
 import type { Sort } from '@/utils/viewTypes';
-import type { GroupField, TimelineScale } from '@/utils/viewSettings';
+import {
+  isTimelineField,
+  type GroupField,
+  type PropertyKey,
+  type TimelineScale,
+} from '@/utils/viewSettings';
+import { columnFloor, orderedColumns, type OrderedColumn } from './table';
 
 // px per day at each zoom level. Wider days keep the per-day numbers legible;
 // narrower days fit longer ranges and fall back to weekly gridlines.
@@ -31,6 +38,30 @@ export const SUBGROUP_H = 28; // px, a sub-group header row under a group
 // room its titles need. `null` is the project's unsaved "All" tab.
 export function labelWidthKey(projectKey: string, viewId: number | null): string {
   return `timeline-label-width:${projectKey}:${viewId ?? 'all'}`;
+}
+
+export interface TimelineColumn {
+  column: OrderedColumn;
+  width: number;
+}
+const CELL_PADDING = 12; // px-1.5 on both sides of a cell
+
+// The Table shows the assignee and the delegate as avatars only. The Timeline names
+// them, as it does a member field, so their columns get a member field's width.
+const isPersonColumn = (c: OrderedColumn): boolean =>
+  c.kind === 'builtin' && (c.col === 'assignee' || c.col === 'delegate');
+const PERSON_COLUMN_WIDTH = 120;
+
+// The property columns a row shows after its title, in the display's order. The
+// identifier, a text or markdown field and a stale key are left out.
+export function timelineColumns(
+  properties: PropertyKey[],
+  customFields: CustomField[],
+): TimelineColumn[] {
+  return orderedColumns(properties, customFields.filter(isTimelineField)).map((column) => ({
+    column,
+    width: (isPersonColumn(column) ? PERSON_COLUMN_WIDTH : columnFloor(column)) + CELL_PADDING,
+  }));
 }
 
 // An issue's bar span. Effective start is its start date, or its creation date

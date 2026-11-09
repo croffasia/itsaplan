@@ -18,15 +18,15 @@ let dom: JSDOM;
 let root: Root;
 let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
 
-function Message({ error, description }: { error: string; description: string | null }) {
-  return <p>{useRedirectError()(error, description)}</p>;
+function Message({ error }: { error: string }) {
+  return <p>{useRedirectError()(error)}</p>;
 }
 
-function render(error: string, description: string | null = null, messages = { auth }): string {
+function render(error: string, messages = { auth }): string {
   act(() =>
     root.render(
       <NextIntlClientProvider locale="en" messages={messages} timeZone="UTC">
-        <Message error={error} description={description} />
+        <Message error={error} />
       </NextIntlClientProvider>,
     ),
   );
@@ -66,14 +66,6 @@ describe('useRedirectError', () => {
     assert.equal(render('REGISTRATION_CLOSED'), auth.errors.registrationClosed);
   });
 
-  // better-auth sends the gate's English message along; the code wins over it.
-  it('names a refusal by its code, not by the description sent with it', () => {
-    assert.equal(
-      render('REGISTRATION_CLOSED', 'Registration is closed on this instance'),
-      auth.errors.registrationClosed,
-    );
-  });
-
   it('names an invite-only instance', () => {
     assert.equal(render('INVITE_ONLY'), auth.errors.inviteOnly);
   });
@@ -81,16 +73,20 @@ describe('useRedirectError', () => {
   it("names a build's own code by the text the build gives it", () => {
     const text = 'Sign out at your identity provider, then try again.';
     const messages = { auth: { ...auth, errors: { ...auth.errors, codes: { BUILD_CODE: text } } } };
-    assert.equal(render('BUILD_CODE', 'English description', messages), text);
+    assert.equal(render('BUILD_CODE', messages), text);
   });
 
-  it('falls back to the description, then to the generic text, for an unknown error', () => {
-    assert.equal(render('something_else', 'Provider said no'), 'Provider said no');
+  it('shows the generic text for an unknown error', () => {
     assert.equal(render('something_else'), auth.errors.generic);
   });
 
+  it('shows the generic text for a code named like an object property', () => {
+    assert.equal(render('toString'), auth.errors.generic);
+    assert.equal(render('constructor'), auth.errors.generic);
+  });
+
   it('names an MCP authorization for a client the instance does not know', () => {
-    assert.equal(render('invalid_client', 'client_id is required'), auth.errors.oauthClientUnknown);
+    assert.equal(render('invalid_client'), auth.errors.oauthClientUnknown);
     assert.equal(render('invalid_redirect'), auth.errors.oauthRedirectUnknown);
     assert.equal(render('client_disabled'), auth.errors.oauthClientRefused);
     assert.equal(render('unauthorized_client'), auth.errors.oauthClientRefused);

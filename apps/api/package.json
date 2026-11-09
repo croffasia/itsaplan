@@ -14,7 +14,7 @@
     "start": "bun run src/index.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "bun test --env-file=../../.env.test",
+    "test": "bun test --env-file=../../.env.test --parallel=5 --no-isolate",
     "test:coverage": "bun test --env-file=../../.env.test --coverage; bun scripts/coverage-report.ts"
   },
   "dependencies": {

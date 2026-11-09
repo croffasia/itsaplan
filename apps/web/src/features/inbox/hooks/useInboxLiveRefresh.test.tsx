@@ -111,13 +111,13 @@ afterEach(async () => {
 describe('Inbox live refresh', () => {
   it('refreshes the global list and badge when another project changes', async () => {
     await render(null);
-    assert.equal(latestScopes(), 'inbox:1,inbox:2');
+    assert.equal(latestScopes(), 'inbox:all');
     const lists = readCount('/notifications');
     const badges = readCount('/notifications/unread');
 
     act(() => {
-      client.setQueryData(['sync', 'rev', ['inbox:1', 'inbox:2']], {
-        revs: { 'inbox:1': '0', 'inbox:2': '1' },
+      client.setQueryData(['sync', 'rev', ['inbox:all']], {
+        revs: { 'inbox:all': '1' },
       });
     });
     await settle();
@@ -158,7 +158,7 @@ describe('Inbox live refresh', () => {
     await render(null);
     act(() => client.setQueryData(qk.projects, [{ id: 2 }, { id: 3 }]));
     await settle();
-    assert.equal(latestScopes(), 'inbox:2,inbox:3');
+    assert.equal(latestScopes(), 'inbox:all');
 
     act(() => root.render(null));
     assert.equal(

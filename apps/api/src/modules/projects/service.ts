@@ -37,7 +37,7 @@ import { PROJECT_KEY_PATTERN } from './key';
 import type { Permissions } from '#shared/permissions';
 import { getProjectSetting, setProjectSetting } from '#shared/project-settings';
 import { PROJECT_FEATURES, featureLabel, type ProjectFeature } from '#shared/features';
-import { getTeamLimits } from '#shared/limits';
+import { getLimits, getTeamLimits } from '#shared/limits';
 import { projectAccess, type AccessVia } from '#shared/workspace-roles';
 import { toMemberContext, type MemberRole } from '#modules/members/service';
 import { workspaceGrants } from '#modules/workspaces/service';
@@ -120,6 +120,7 @@ type ProjectWithTeam = typeof project.$inferSelect & {
   teamName: string;
   teamSlug: string | null;
   teamMcpEnabled: boolean;
+  workspaceId: number;
 };
 
 const projectWithTeam = {
@@ -127,13 +128,14 @@ const projectWithTeam = {
   teamName: team.name,
   teamSlug: team.slug,
   teamMcpEnabled: team.mcpEnabled,
+  workspaceId: team.workspaceId,
 };
 
 // A blocked section reads as off whatever the project has stored, so masking here is
 // what turns a feature off everywhere: the web app reads the flags off this DTO, and
 // the route guards read them off the project the guard resolved.
 export async function mapProject(row: ProjectWithTeam): Promise<ProjectRow> {
-  const { blockedFeatures } = await getTeamLimits(row.teamId);
+  const { blockedFeatures } = await getLimits(row.workspaceId);
   const on = (feature: ProjectFeature, stored: boolean) =>
     stored && !blockedFeatures.includes(feature);
   return {
@@ -407,6 +409,7 @@ export async function targetTeam(userId: string, teamId: number): Promise<Target
       slug: team.slug,
       mcpEnabled: team.mcpEnabled,
       defaultAgentIds: team.defaultAgentIds,
+      workspaceId: team.workspaceId,
     })
     .from(team)
     .where(eq(team.id, teamId));
@@ -433,6 +436,7 @@ export interface TargetTeam {
   slug: string | null;
   mcpEnabled: boolean;
   defaultAgentIds: number[];
+  workspaceId: number;
 }
 
 // Every new project starts with one column per state type, so it's usable (has
@@ -514,6 +518,22 @@ export const ISSUE_TYPE_PRESET_KEYS = Object.keys(ISSUE_TYPE_PRESETS);
 
 export type IssueTypePreset = keyof typeof ISSUE_TYPE_PRESETS;
 
+// The team's default agents as the member rows a new project starts with, on the
+// default role.
+export async function defaultAgentMembers(ownerTeam: {
+  id: number;
+  defaultAgentIds: number[];
+}): Promise<{ userId: string; role: 'member'; roleId: number | null }[]> {
+  if (ownerTeam.defaultAgentIds.length === 0) return [];
+  const agents = await db
+    .select({ userId: aiAgent.userId })
+    .from(aiAgent)
+    .where(and(eq(aiAgent.teamId, ownerTeam.id), inArray(aiAgent.id, ownerTeam.defaultAgentIds)));
+  if (agents.length === 0) return [];
+  const roleId = await getDefaultRoleId();
+  return agents.map((agent) => ({ userId: agent.userId, role: 'member', roleId }));
+}
+
 export async function createProject(
   input: {
     key: string;
@@ -528,15 +548,7 @@ export async function createProject(
   // What a new project starts with, set instance-wide in god mode. Read before the
   // transaction opens so the settings lookup is not part of it.
   const defaults = await getProjectDefaults();
-  const defaultAgents = ownerTeam.defaultAgentIds.length
-    ? await db
-        .select({ userId: aiAgent.userId })
-        .from(aiAgent)
-        .where(
-          and(eq(aiAgent.teamId, ownerTeam.id), inArray(aiAgent.id, ownerTeam.defaultAgentIds)),
-        )
-    : [];
-  const defaultRoleId = defaultAgents.length ? await getDefaultRoleId(ownerTeam.id) : null;
+  const agentMembers = await defaultAgentMembers(ownerTeam);
   return db.transaction(async (tx) => {
     const [row] = await tx
       .insert(project)
@@ -550,15 +562,10 @@ export async function createProject(
       .returning();
     await joinTeamAsCreator(tx, ownerTeam.id, ownerId);
     await tx.insert(projectMember).values({ projectId: row.id, userId: ownerId, role: 'owner' });
-    if (defaultAgents.length) {
-      await tx.insert(projectMember).values(
-        defaultAgents.map((agent) => ({
-          projectId: row.id,
-          userId: agent.userId,
-          role: 'member',
-          roleId: defaultRoleId,
-        })),
-      );
+    if (agentMembers.length > 0) {
+      await tx
+        .insert(projectMember)
+        .values(agentMembers.map((member) => ({ projectId: row.id, ...member })));
     }
     for (const [position, column] of DEFAULT_COLUMNS.entries()) {
       await tx.insert(projectColumn).values({
@@ -587,6 +594,7 @@ export async function createProject(
       teamName: ownerTeam.name,
       teamSlug: ownerTeam.slug,
       teamMcpEnabled: ownerTeam.mcpEnabled,
+      workspaceId: ownerTeam.workspaceId,
     });
   });
 }
@@ -627,7 +635,9 @@ export async function setProjectArchived(
 }
 
 // The project's feature toggles, read from the project row.
-export function projectFeatures(row: ProjectRow): ProjectFeatures {
+export function projectFeatures(
+  row: Pick<ProjectRow, `${keyof ProjectFeatures}Enabled`>,
+): ProjectFeatures {
   return {
     initiatives: row.initiativesEnabled,
     dashboards: row.dashboardsEnabled,

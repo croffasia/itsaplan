@@ -4,7 +4,8 @@
     "preferences": "환경 설정",
     "accounts": "계정",
     "security": "보안",
-    "api-keys": "API 키"
+    "api-keys": "API 키",
+    "invitations": "Invitations"
   },
   "godGroups": {
     "management": "관리",
@@ -24,6 +25,10 @@
       "label": "프로젝트",
       "description": "이 인스턴스의 모든 프로젝트를 관리합니다. 각 프로젝트의 구성, 최근 활동 및 접근 가능한 사용자를 확인할 수 있습니다."
     },
+    "roles": {
+      "label": "시스템 역할",
+      "description": "이 인스턴스의 모든 팀이 사용할 수 있는 기본 역할입니다."
+    },
     "general": {
       "label": "일반",
       "description": "개인 워크스페이스, 새 프로젝트 기본값, AI 에이전트 추적 및 실행 시간 설정을 관리합니다."
@@ -39,6 +44,10 @@
     "storage": {
       "label": "저장소",
       "description": "업로드할 수 있는 개별 파일 크기, 허용되는 첨부 파일 유형 및 프로젝트별 저장 용량을 설정합니다."
+    },
+    "email-templates": {
+      "label": "이메일 템플릿",
+      "description": "시스템 이메일 템플릿을 관리합니다."
     },
     "telegram": {
       "label": "Telegram",
@@ -102,6 +111,10 @@
       "label": "웹훅",
       "description": "프로젝트 이벤트를 외부 URL로 전송하고 웹훅별 시크릿으로 서명합니다."
     },
+    "forms": {
+      "label": "양식",
+      "description": "링크가 있는 누구나 여기에 이슈를 만듭니다."
+    },
     "git": {
       "label": "저장소",
       "description": "GitHub, GitLab, Gitea, Forgejo 또는 Bitbucket에서 Pull Request가 병합되면 연결된 이슈를 종료합니다."
@@ -115,8 +128,8 @@
       "description": "이 프로젝트에서 작업하는 AI 에이전트를 관리합니다."
     },
     "queue": {
-      "label": "Runner queue",
-      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
+      "label": "에이전트 실행",
+      "description": "프로젝트의 내부·외부 에이전트 실행: 진행 중, 대기 중, 지난 실행."
     }
   },
   "previews": {
@@ -187,6 +200,40 @@
         "acsUrl": "ACS URL",
         "spEntityId": "Entity ID 및 메타데이터"
       }
+    },
+    "forms": {
+      "new": "새 양식",
+      "columns": {
+        "form": "양식",
+        "link": "링크"
+      },
+      "enabled": "요청 받기",
+      "tabs": {
+        "form": "양식",
+        "questions": "질문",
+        "issue": "이슈",
+        "design": "디자인"
+      },
+      "questionsHint": "이름과 이메일은 항상 묻습니다.",
+      "preview": "미리 보기",
+      "name": "이름",
+      "email": "이메일"
+    },
+    "portal": {
+      "title": "포털",
+      "description": "워크스페이스 프로젝트에 요청을 보내고 확인하는 페이지입니다.",
+      "general": "일반",
+      "forms": "공개 양식",
+      "formsHint": "워크스페이스의 프로젝트가 링크를 가진 누구나 작성하는 양식을 게시할 수 있습니다. 끄면 해당 양식과 포털이 열리지 않고 프로젝트 설정에서 양식 섹션이 사라집니다. 삭제되는 것은 없습니다.",
+      "name": "이름",
+      "nameHint": "포털과 포털 이메일에서 워크스페이스 이름 대신 보이는 이름입니다. 비워 두면 워크스페이스 이름이 보입니다.",
+      "address": "주소",
+      "addressHint": "포털은 이 주소에서 열립니다. 주소를 정하기 전에는 워크스페이스 번호로 열립니다.",
+      "link": "포털 링크",
+      "logo": "로고",
+      "logoHint": "포털과 양식에서 포털 이름 대신 표시됩니다. 로고 하나로 두 테마에 모두 쓸 수 있습니다.",
+      "light": "라이트 테마",
+      "dark": "다크 테마"
     }
   }
 }

@@ -22,11 +22,13 @@ export function IntegrationPicker({
   const t = useTranslations('teams.integrations');
   const [query, setQuery] = useState('');
 
+  // An integration with no credential fields (PDF) has nothing to store.
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return catalog;
     return catalog.filter(
-      (c) => c.label.toLowerCase().includes(q) || c.key.toLowerCase().includes(q),
+      (c) =>
+        c.credentialSchema.length > 0 &&
+        (!q || c.label.toLowerCase().includes(q) || c.key.toLowerCase().includes(q)),
     );
   }, [catalog, query]);
 

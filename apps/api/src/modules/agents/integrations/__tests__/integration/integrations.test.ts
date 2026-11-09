@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { setExtraIntegrations } from '@repo/agent-tools';
 import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -39,8 +40,36 @@ describe('integrations', () => {
           kind: 'tool',
           tools: expect.arrayContaining([expect.objectContaining({ key: 'jina_reader' })]),
         }),
+        expect.objectContaining({
+          key: 'github',
+          tools: expect.arrayContaining([
+            expect.objectContaining({ key: 'github_list_issues', group: 'Issues' }),
+          ]),
+        }),
       ]),
     );
+  });
+
+  // The tool and integration pickers search the label, so a search for Forgejo finds the
+  // Gitea tools that serve it.
+  it('names Forgejo in the Gitea integration label', async () => {
+    const { asOwner, teamId } = await setup();
+    const res = await integrations(asOwner, teamId).catalog.get();
+    const gitea = res.data?.find((integration) => integration.key === 'gitea');
+    expect(gitea?.label.toLowerCase()).toContain('forgejo');
+  });
+
+  it('lists a tool integration an extension adds after start', async () => {
+    const { asOwner, teamId } = await setup();
+    setExtraIntegrations([{ key: 'extra', label: 'Extra', credentialSchema: [], tools: [] }]);
+    try {
+      const res = await integrations(asOwner, teamId).catalog.get();
+      expect(res.data).toEqual(
+        expect.arrayContaining([expect.objectContaining({ key: 'extra', kind: 'tool' })]),
+      );
+    } finally {
+      setExtraIntegrations();
+    }
   });
 
   it('stores an LLM credential, masks the secret, and never returns the raw value', async () => {
@@ -103,6 +132,12 @@ describe('integrations', () => {
       integrationKey: 'not-an-integration',
       credential: {},
     });
+    expect(res.status).toBe(400);
+  });
+
+  it('refuses a credential for an integration that needs none', async () => {
+    const { asOwner, teamId } = await setup();
+    const res = await integrations(asOwner, teamId).post({ integrationKey: 'pdf', credential: {} });
     expect(res.status).toBe(400);
   });
 

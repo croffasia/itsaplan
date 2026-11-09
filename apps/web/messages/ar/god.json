@@ -170,6 +170,20 @@
     },
     "joined": "انضم في {date}"
   },
+  "roles": {
+    "newRole": "دور جديد",
+    "empty": "لا توجد أدوار نظام بعد.",
+    "default": "افتراضي",
+    "defaultUndeletable": "لا يمكن حذف الدور الافتراضي",
+    "columns": {
+      "role": "الدور",
+      "permissions": "الصلاحيات"
+    },
+    "edit": "تعديل الدور",
+    "delete": "حذف الدور",
+    "deleteTitle": "حذف الدور \"{name}\"",
+    "deleteDescription": "لا يمكن التراجع عن هذا الإجراء."
+  },
   "general": {
     "saved": "تم حفظ الإعدادات الافتراضية",
     "projectDefaults": "الإعدادات الافتراضية",
@@ -179,8 +193,21 @@
     "workspaces": "مساحات العمل",
     "personalWorkspaces": "مساحة عمل لكل شخص",
     "personalWorkspacesHint": "كل حساب بياخد مساحة عمل خاصة بيه باسم صاحبه. لو اتقفل، الناس بيشتغلوا بس في مساحات العمل اللي اتضافوا ليها.",
+    "invites": "الدعوات",
+    "inviteSearch": "اقتراح أشخاص عند الدعوة",
+    "inviteSearchHint": "لما مالك الفريق أو مديره يكتب عنوان في نافذة الدعوة، بتظهر الحسابات المطابقة من كل مساحات العمل على النسخة دي بالاسم والإيميل. لو اتقفل، لازم يكتب العنوان كامل.",
+    "invitesSaved": "اتحفظت إعدادات الدعوات",
+    "sharing": "الروابط العامة",
+    "sharingEnabled": "اسمح بالروابط العامة",
+    "sharingEnabledHint": "المستندات والمهام والعروض ممكن تتشارك برابط، حسب اللي كل مساحة عمل تسمح بيه. لو اتقفل، محدش يقدر يشارك والروابط الموجودة مش هتفتح لحد ما يتفتح تاني.",
+    "sharingSaved": "اتحفظت إعدادات الروابط العامة",
     "agents": "الوكلاء",
     "agentsSaved": "تم حفظ إعدادات الوكلاء",
+    "embedding": "التضمين",
+    "embedSites": "المواقع الموثوقة",
+    "embedSitesHint": "تُفتح المهام واللوحات المُشارَكة علنًا داخل إطار على هذه المواقع فقط. افصل بين المواقع بفواصل.",
+    "embedSitesInvalid": "اكتب كل موقع بالشكل https://example.com، دون مسار.",
+    "embedSaved": "تم حفظ المواقع الموثوقة",
     "traceRetention": "مدة حفظ تتبّعات التشغيل",
     "traceRetentionHint": "كل تشغيل لوكيل يسجّل استدعاءات النموذج والأدوات. لوحات الاستهلاك تحتسب العمليات المحفوظة فقط.",
     "traceDays": "{days, plural, one {يوم واحد} two {يومان} few {# أيام} many {# يوماً} other {# يوم}}",
@@ -188,7 +215,10 @@
     "maxRunTime": "أقصى وقت للتشغيل",
     "maxRunTimeHint": "المدة التي يمكن أن يستغرقها تشغيل واحد للوكيل قبل إيقافه وحفظه كفاشل. لا يمكن أن يتجاوزه الحد الخاص بالوكيل.",
     "runMinutes": "{minutes, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتان} few {# دقائق} many {# دقيقة} other {# دقيقة}}",
-    "runSeconds": "{seconds} ث"
+    "runSeconds": "{seconds} ث",
+    "concurrentRuns": "التشغيلات المتزامنة",
+    "concurrentRunsHint": "عدد تشغيلات الوكلاء التي تعمل في الوقت نفسه على هذه النسخة. ينتظر الباقي في قائمة الانتظار. لا تُحتسب المحادثات والوكلاء الخارجيون. 0 يعني بلا حد.",
+    "concurrentRunsInvalid": "أدخل عددًا صحيحًا من 0 إلى {max}."
   },
   "authentication": {
     "saved": "تم حفظ إعدادات المصادقة",
@@ -297,6 +327,117 @@
     "clientSecret": "سرّ العميل",
     "clientSecretPlaceholder": "سرّ تسجيل التطبيق",
     "microsoft365Hint": "يسجّل الدخول كتسجيل تطبيق في Entra ID بدلًا من كلمة مرور صندوق البريد، فيمكن أن يبقى التحقق متعدد العوامل مفعّلًا. يحتاج التطبيق إلى إذن التطبيق SMTP.SendAsApp من Office 365 Exchange Online بموافقة المسؤول، وإلى الوصول إلى هذا الصندوق في Exchange، وتفعيل SMTP AUTH للصندوق."
+  },
+  "emailTemplates": {
+    "saved": "اتحفظت قوالب البريد",
+    "unsaved": "فيه تغييرات مش محفوظة",
+    "blankText": "كمّل الموضوع أو النص الناقص عشان تحفظ",
+    "emails": "الرسائل",
+    "layout": "التخطيط",
+    "edited": "متعدّل",
+    "subject": "الموضوع",
+    "text": "النص",
+    "button": "الزرار",
+    "formatting": "التنسيق",
+    "heading1": "عنوان 1",
+    "heading2": "عنوان 2",
+    "bold": "عريض",
+    "italic": "مائل",
+    "strikethrough": "يتوسطه خط",
+    "link": "رابط",
+    "bulletedList": "قائمة نقطية",
+    "numberedList": "قائمة مرقّمة",
+    "quote": "اقتباس",
+    "boldSample": "عريض",
+    "italicSample": "مائل",
+    "strikeSample": "نص",
+    "linkSample": "نص الرابط",
+    "unknownVariables": "متغيّرات مش معروفة: {names}",
+    "removeUnknownVariables": "شيل المتغيّرات المش معروفة عشان تحفظ",
+    "reset": "رجّع الافتراضي",
+    "test": "إرسال اختبار",
+    "testing": "جاري الإرسال…",
+    "testSent": "اتبعت لـ {email}",
+    "testNeedsProvider": "اضبط مزوّد البريد الأول",
+    "layoutHtml": "HTML التخطيط",
+    "layoutCss": "CSS التخطيط",
+    "placeholders": "العناصر النائبة",
+    "variables": "المتغيّرات",
+    "required": "مطلوب",
+    "requiredPlaceholders": "ضيف {names} للتخطيط عشان تحفظ",
+    "preview": "معاينة",
+    "previewEmail": "الرسالة",
+    "previewText": "نص عادي",
+    "previewFailed": "المعاينة ماحمّلتش. حدّث الصفحة وجرّب تاني.",
+    "from": "من",
+    "to": "إلى",
+    "groups": {
+      "signIn": "تسجيل الدخول",
+      "invitations": "الدعوات",
+      "notifications": "الإشعارات",
+      "service": "أخرى"
+    },
+    "templates": {
+      "reset": {
+        "name": "إعادة تعيين كلمة المرور"
+      },
+      "verify": {
+        "name": "تأكيد عنوان البريد"
+      },
+      "magic": {
+        "name": "رابط تسجيل الدخول"
+      },
+      "inviteProject": {
+        "name": "دعوة لمشروع"
+      },
+      "inviteTeam": {
+        "name": "دعوة لفريق"
+      },
+      "assigned": {
+        "name": "تعيين مهمة"
+      },
+      "mentioned": {
+        "name": "إشارة في مهمة"
+      },
+      "commented": {
+        "name": "تعليق جديد"
+      },
+      "stateChanged": {
+        "name": "تغيير الحالة"
+      },
+      "documentMentioned": {
+        "name": "إشارة في مستند"
+      },
+      "documentCommentMentioned": {
+        "name": "إشارة في تعليق على مستند"
+      },
+      "test": {
+        "name": "رسالة اختبار",
+        "hint": "بتتبعت من زر الاختبار في صفحة مزوّد البريد."
+      }
+    },
+    "placeholderText": {
+      "content": "نص الرسالة",
+      "button": "زرار فيه الرابط",
+      "subject": "الموضوع",
+      "lang": "كود اللغة",
+      "dir": "اتجاه النص",
+      "site_name": "اسم النسخة",
+      "site_url": "عنوان النسخة",
+      "logo_url": "عنوان الشعار"
+    },
+    "variableText": {
+      "actor": "اللي عمل الإجراء",
+      "ref": "رقم المهمة",
+      "title": "عنوان المهمة",
+      "from": "الحالة السابقة",
+      "to": "الحالة الجديدة",
+      "document": "عنوان المستند",
+      "inviter": "اللي بعت الدعوة",
+      "project": "اسم المشروع",
+      "team": "اسم الفريق",
+      "role": "الدور بعد الانضمام"
+    }
   },
   "authProvider": {
     "saved": "تم حفظ مزوّد المصادقة",

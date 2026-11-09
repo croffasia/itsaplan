@@ -170,6 +170,20 @@
     },
     "joined": "joined {date}"
   },
+  "roles": {
+    "newRole": "New role",
+    "empty": "No system roles yet.",
+    "default": "Default",
+    "defaultUndeletable": "The default role cannot be deleted",
+    "columns": {
+      "role": "Role",
+      "permissions": "Permissions"
+    },
+    "edit": "Edit role",
+    "delete": "Delete role",
+    "deleteTitle": "Delete role \"{name}\"",
+    "deleteDescription": "This cannot be undone."
+  },
   "general": {
     "saved": "Project defaults saved",
     "projectDefaults": "Project defaults",
@@ -179,8 +193,21 @@
     "workspaces": "Workspaces",
     "personalWorkspaces": "A workspace for everyone",
     "personalWorkspacesHint": "Every account gets a workspace of its own, named after the person. Off, people work only in the workspaces they are added to.",
+    "invites": "Invites",
+    "inviteSearch": "Suggest people when inviting",
+    "inviteSearchHint": "As a team owner or manager types an address in the invite dialog, matching accounts from every workspace on this instance are listed by name and email. Off, they type the full address.",
+    "invitesSaved": "Invite settings saved",
+    "sharing": "Public links",
+    "sharingEnabled": "Allow public links",
+    "sharingEnabledHint": "Documents, issues and views can be shared by link, as each workspace allows. Off, nobody can share and existing links stop opening until it is on again.",
+    "sharingSaved": "Sharing settings saved",
     "agents": "Agents",
     "agentsSaved": "Agent settings saved",
+    "embedding": "Embedding",
+    "embedSites": "Trusted sites",
+    "embedSitesHint": "Issues and boards shared publicly open in a frame on these sites only. Separate sites with commas.",
+    "embedSitesInvalid": "Enter each site as https://example.com, without a path.",
+    "embedSaved": "Trusted sites saved",
     "traceRetention": "Keep run traces",
     "traceRetentionHint": "Each agent run records its model and tool calls. Usage dashboards count only the runs still kept.",
     "traceDays": "{days, plural, one {# day} other {# days}}",
@@ -188,7 +215,10 @@
     "maxRunTime": "Max run time",
     "maxRunTimeHint": "How long one agent run may take before it is stopped and saved as failed. An agent's own limit cannot exceed it.",
     "runMinutes": "{minutes, plural, one {# minute} other {# minutes}}",
-    "runSeconds": "{seconds} s"
+    "runSeconds": "{seconds} s",
+    "concurrentRuns": "Runs at once",
+    "concurrentRunsHint": "How many agent runs work at once on this instance. The rest wait in the queue. Chats and external agents don't count. 0 sets no limit.",
+    "concurrentRunsInvalid": "Enter a whole number from 0 to {max}."
   },
   "authentication": {
     "saved": "Authentication settings saved",
@@ -297,6 +327,117 @@
     "clientSecret": "Client secret",
     "clientSecretPlaceholder": "App registration secret",
     "microsoft365Hint": "Signs in as an app registration in Entra ID instead of with the mailbox password, so the mailbox can keep MFA on. The app needs the Office 365 Exchange Online application permission SMTP.SendAsApp with admin consent, access to this mailbox in Exchange, and SMTP AUTH turned on for the mailbox."
+  },
+  "emailTemplates": {
+    "saved": "Email templates saved",
+    "unsaved": "Unsaved changes",
+    "blankText": "Add the missing subject or text to save",
+    "emails": "Emails",
+    "layout": "Layout",
+    "edited": "Edited",
+    "subject": "Subject",
+    "text": "Text",
+    "button": "Button",
+    "formatting": "Formatting",
+    "heading1": "Heading 1",
+    "heading2": "Heading 2",
+    "bold": "Bold",
+    "italic": "Italic",
+    "strikethrough": "Strikethrough",
+    "link": "Link",
+    "bulletedList": "Bulleted list",
+    "numberedList": "Numbered list",
+    "quote": "Quote",
+    "boldSample": "bold",
+    "italicSample": "italic",
+    "strikeSample": "text",
+    "linkSample": "link text",
+    "unknownVariables": "{count, plural, one {Unknown variable: {names}} other {Unknown variables: {names}}}",
+    "removeUnknownVariables": "Remove the unknown variables to save",
+    "reset": "Reset to default",
+    "test": "Send test",
+    "testing": "Sending…",
+    "testSent": "Sent to {email}",
+    "testNeedsProvider": "Set up the email provider first",
+    "layoutHtml": "Layout HTML",
+    "layoutCss": "Layout CSS",
+    "placeholders": "Placeholders",
+    "variables": "Variables",
+    "required": "Required",
+    "requiredPlaceholders": "Add {names} to the layout to save",
+    "preview": "Preview",
+    "previewEmail": "Email",
+    "previewText": "Plain text",
+    "previewFailed": "The preview didn't load. Reload the page to try again.",
+    "from": "From",
+    "to": "To",
+    "groups": {
+      "signIn": "Sign-in",
+      "invitations": "Invitations",
+      "notifications": "Notifications",
+      "service": "Other"
+    },
+    "templates": {
+      "reset": {
+        "name": "Password reset"
+      },
+      "verify": {
+        "name": "Confirm email address"
+      },
+      "magic": {
+        "name": "Sign-in link"
+      },
+      "inviteProject": {
+        "name": "Project invitation"
+      },
+      "inviteTeam": {
+        "name": "Team invitation"
+      },
+      "assigned": {
+        "name": "Issue assigned"
+      },
+      "mentioned": {
+        "name": "Mentioned on an issue"
+      },
+      "commented": {
+        "name": "New comment"
+      },
+      "stateChanged": {
+        "name": "Status changed"
+      },
+      "documentMentioned": {
+        "name": "Mentioned in a document"
+      },
+      "documentCommentMentioned": {
+        "name": "Mentioned in a document comment"
+      },
+      "test": {
+        "name": "Test email",
+        "hint": "Sent by the test button on the Email provider page."
+      }
+    },
+    "placeholderText": {
+      "content": "Email text",
+      "button": "Button with the link",
+      "subject": "Subject",
+      "lang": "Language code",
+      "dir": "Text direction",
+      "site_name": "Instance name",
+      "site_url": "Instance address",
+      "logo_url": "Logo address"
+    },
+    "variableText": {
+      "actor": "Who did it",
+      "ref": "Issue number",
+      "title": "Issue title",
+      "from": "Previous status",
+      "to": "New status",
+      "document": "Document title",
+      "inviter": "Who sent the invitation",
+      "project": "Project name",
+      "team": "Team name",
+      "role": "Role after joining"
+    }
   },
   "authProvider": {
     "saved": "Auth provider saved",

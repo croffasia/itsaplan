@@ -104,6 +104,7 @@
     "copied": "¡Copiado!",
     "copyPrompt": "Copiar la consigna",
     "sharedPublicly": "Compartida públicamente",
+    "sharedThroughDocument": "Pública a través de un documento",
     "sharePublicly": "Compartir públicamente",
     "restore": "Restaurar el ticket",
     "archive": "Archivar el ticket",
@@ -248,6 +249,8 @@
     "toSend": "para enviar",
     "unknownAuthor": "Desconocido",
     "goToLastComment": "Ir al último comentario",
+    "copyLink": "Copiar el enlace",
+    "linkCopied": "Enlace copiado",
     "edit": "Editar",
     "edited": "editado",
     "deleteComment": "Eliminar comentario",
@@ -268,7 +271,9 @@
     "no": "No",
     "time": "Tiempo",
     "startTime": "Hora de inicio",
-    "endTime": "Hora de fin"
+    "endTime": "Hora de fin",
+    "pickOption": "Elige una opción…",
+    "noOption": "Sin opción"
   },
   "editor": {
     "descriptionPlaceholder": "Añadir descripción…"
@@ -434,7 +439,7 @@
   "feedOldest": "Más antiguos",
   "feedChangeOrder": "Cambiar orden",
   "feedRunToggle": "Mostrar cambios similares",
-  "shareUnavailable": "Este ticket compartida no está disponible. Puede que el enlace haya sido revocado.",
+  "shareUnavailable": "Este ticket compartida no está disponible. Puede que el enlace haya sido revocado o haya caducado.",
   "fieldSelects": {
     "changeState": "Cambiar el estado…",
     "changeType": "Cambiar el tipo…",
@@ -477,7 +482,7 @@
     "noLabels": "Ninguna"
   },
   "agentRuns": {
-    "title": "Agent runs",
+    "title": "Ejecuciones de agentes",
     "refresh": "Refresh",
     "loading": "Loading runs…",
     "loadError": "Could not load run history. Try refreshing.",
@@ -516,7 +521,9 @@
     "queued": "Waiting",
     "running": "Running",
     "queuedHint": "Waiting for a runner, a retry or its scheduled start.",
-    "queueTitle": "Runner queue",
+    "queueTitle": "Ejecuciones de agentes",
+    "internalInFlight": "Agentes internos del espacio de trabajo: {running} de {limit} en curso",
+    "internalInFlightNoLimit": "Agentes internos del espacio de trabajo: {running} en curso",
     "queueEmpty": "No runs yet.",
     "activeSection": "In progress",
     "historySection": "History",

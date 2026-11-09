@@ -10,12 +10,14 @@ import { useTranslations } from 'next-intl';
 import {
   type InviteTeamRole,
   listTeamInvites,
+  listInviteCandidates,
   createTeamInvite,
   renewTeamInvite,
   sendTeamInviteEmail,
   deleteTeamInvite,
 } from '@/lib/api/endpoints/invites';
 import type { MemberKind, MemberListParams } from '@/lib/api/endpoints/members';
+import { getInviteSearch } from '@/lib/api/endpoints/settings';
 import {
   type TeamProjectListParams,
   type Team,
@@ -85,12 +87,13 @@ export function useTeamProjectsQuery(teamId: number, params: TeamProjectListPara
   });
 }
 
-// Every project the reader has in the team: the projects an agent is attached to,
-// and the MCP switches, both of which act on all of them rather than on a page.
-export function useTeamProjectOptionsQuery(teamId: number) {
+// Every project the reader has in the team, for the pickers and switches that act on all
+// of them rather than on a page. Null skips the request.
+export function useTeamProjectOptionsQuery(teamId: number | null) {
   return useQuery({
-    queryKey: qk.teamProjectOptions(teamId),
-    queryFn: () => listTeamProjectOptions(teamId),
+    queryKey: qk.teamProjectOptions(teamId ?? 0),
+    queryFn: () => listTeamProjectOptions(teamId!),
+    enabled: teamId != null,
   });
 }
 
@@ -254,6 +257,20 @@ export function useTeamInvitesQuery(teamId: number, enabled = true) {
     queryKey: qk.teamInvites(teamId),
     queryFn: () => listTeamInvites(teamId),
     enabled,
+  });
+}
+
+export function useInviteSearchQuery() {
+  return useQuery({ queryKey: qk.inviteSearch, queryFn: () => getInviteSearch() });
+}
+
+// The API answers only a search of at least 2 characters.
+export function useInviteCandidatesQuery(teamId: number, search: string) {
+  return useQuery({
+    queryKey: qk.inviteCandidates(teamId, search),
+    queryFn: () => listInviteCandidates(teamId, search),
+    enabled: search.length >= 2,
+    placeholderData: keepPreviousData,
   });
 }
 

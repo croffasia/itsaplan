@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import {
   Bot,
   Clock3,
@@ -16,26 +17,27 @@ import {
 } from 'lucide-react';
 import type { PermissionAction, PermissionResource } from '@/lib/api/endpoints/roles';
 
-// The sidebar group a section is listed under: the project-level general settings,
-// workflow configuration, automation/integrations, or the AI section. 'ai-team' and
-// 'ai' sections are listed in the main sidebar's AI Team group, not in the project
-// settings sidebar.
-export type SettingsGroup = 'general' | 'configuration' | 'automation' | 'ai' | 'ai-team';
-
 // The project settings sections, each mounted as its own page at
 // /:team/:projectKey/settings/:section, except the 'ai-team' group, which is
 // mounted at /:team/:projectKey/agents/:section. The slug is the route param; the tab
 // components live in features/settings/components and take { project }. `resource`
 // is the permission resource that gates the section: `viewAction` (read unless set)
-// to view it, and the create/edit/delete actions gate the controls inside. `group` places it in the
-// sidebar (see CONFIGURATION_SECTIONS / AUTOMATION_SECTIONS). The name and the
-// blurb of a section are messages under `sections.settings`.
+// to view it, and the create/edit/delete actions gate the controls inside. `group` is
+// the heading the settings sidebar lists it under, named in `nav.groups`; the 'ai-team'
+// and 'ai' sections are listed in the main sidebar's AI Team group instead. The name and
+// the blurb of a section are messages under `sections.settings`. A section the hosted
+// build adds (`useProjectSettingsSections` in `@/cloud`) carries its page in `Component`.
+// AI Team sections naming the same `menu` are listed as one entry that opens to them, named
+// by the `sections.settings` messages of the menu, with the icon of its first section; each
+// keeps its own page.
 export type SettingsSection = {
   slug: string;
   icon: LucideIcon;
   resource: PermissionResource;
   viewAction?: PermissionAction;
-  group: SettingsGroup;
+  group: string;
+  menu?: string;
+  Component?: ComponentType;
 };
 
 export const SETTINGS_SECTIONS: SettingsSection[] = [
@@ -43,43 +45,43 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     slug: 'general',
     icon: Info,
     resource: 'danger_zone',
-    group: 'general',
+    group: 'project',
   },
   {
     slug: 'states',
     icon: Columns3,
     resource: 'states',
-    group: 'configuration',
+    group: 'workflow',
   },
   {
     slug: 'issue-types',
     icon: Shapes,
     resource: 'issue_types',
-    group: 'configuration',
+    group: 'workflow',
   },
   {
     slug: 'labels',
     icon: Tags,
     resource: 'labels',
-    group: 'configuration',
+    group: 'workflow',
   },
   {
     slug: 'custom-fields',
     icon: ListPlus,
     resource: 'custom_fields',
-    group: 'configuration',
+    group: 'workflow',
   },
   {
     slug: 'issue-templates',
     icon: FileText,
     resource: 'issue_templates',
-    group: 'configuration',
+    group: 'workflow',
   },
   {
     slug: 'configuration',
     icon: SlidersHorizontal,
     resource: 'workflow_config',
-    group: 'configuration',
+    group: 'workflow',
   },
   {
     slug: 'actions',
@@ -96,7 +98,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     slug: 'schedules',
     icon: Clock3,
-    resource: 'ai_agents',
+    resource: 'agent_schedules',
     group: 'ai-team',
   },
   {
@@ -130,10 +132,32 @@ export const AI_AGENTS_SECTION: SettingsSection = {
   group: 'ai',
 };
 
-// The settings sections split by sidebar group.
-export const GENERAL_SECTIONS = SETTINGS_SECTIONS.filter((s) => s.group === 'general');
-export const CONFIGURATION_SECTIONS = SETTINGS_SECTIONS.filter((s) => s.group === 'configuration');
-export const AUTOMATION_SECTIONS = SETTINGS_SECTIONS.filter((s) => s.group === 'automation');
+// The entries of the main sidebar's AI Team group: a section, or the sections of one `menu`,
+// listed where the first of them is.
+export type AiTeamEntry =
+  { section: SettingsSection } | { menu: string; sections: SettingsSection[] };
+
+export function aiTeamEntries(sections: SettingsSection[]): AiTeamEntry[] {
+  const entries: AiTeamEntry[] = [];
+  const menus = new Map<string, SettingsSection[]>();
+  for (const section of sections) {
+    if (!section.menu) {
+      entries.push({ section });
+      continue;
+    }
+    const listed = menus.get(section.menu);
+    if (listed) {
+      listed.push(section);
+    } else {
+      const grouped = [section];
+      menus.set(section.menu, grouped);
+      entries.push({ menu: section.menu, sections: grouped });
+    }
+  }
+  return entries;
+}
+
+// The core's AI Team sections; useAiTeamSections adds the hosted build's.
 export const AI_TEAM_SECTIONS = SETTINGS_SECTIONS.filter((s) => s.group === 'ai-team');
 
 const BY_SLUG = new Map(SETTINGS_SECTIONS.map((s) => [s.slug, s]));

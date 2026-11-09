@@ -104,6 +104,7 @@
     "copied": "Скопійовано!",
     "copyPrompt": "Скопіювати промпт",
     "sharedPublicly": "У спільному доступі",
+    "sharedThroughDocument": "Публічна через документ",
     "sharePublicly": "Відкрити доступ",
     "restore": "Відновити задачу",
     "archive": "Архівувати задачу",
@@ -248,6 +249,8 @@
     "toSend": "щоб надіслати",
     "unknownAuthor": "Невідомий",
     "goToLastComment": "Перейти до останнього коментаря",
+    "copyLink": "Копіювати посилання",
+    "linkCopied": "Посилання скопійовано",
     "edit": "Редагувати",
     "edited": "змінено",
     "deleteComment": "Видалити коментар",
@@ -268,7 +271,9 @@
     "no": "Ні",
     "time": "Час",
     "startTime": "Початок",
-    "endTime": "Завершення"
+    "endTime": "Завершення",
+    "pickOption": "Виберіть варіант…",
+    "noOption": "Не вибрано"
   },
   "editor": {
     "descriptionPlaceholder": "Додайте опис…"
@@ -434,7 +439,7 @@
   "feedOldest": "Спочатку старі",
   "feedChangeOrder": "Змінити порядок",
   "feedRunToggle": "Показати схожі зміни",
-  "shareUnavailable": "Ця спільна задача недоступна. Можливо, посилання відкликали.",
+  "shareUnavailable": "Ця спільна задача недоступна. Можливо, посилання відкликали або його термін дії минув.",
   "fieldSelects": {
     "changeState": "Змінити статус…",
     "changeType": "Змінити тип…",
@@ -477,7 +482,7 @@
     "noLabels": "Немає"
   },
   "agentRuns": {
-    "title": "Agent runs",
+    "title": "Запуски агентів",
     "refresh": "Refresh",
     "loading": "Loading runs…",
     "loadError": "Could not load run history. Try refreshing.",
@@ -516,7 +521,9 @@
     "queued": "Waiting",
     "running": "Running",
     "queuedHint": "Waiting for a runner, a retry or its scheduled start.",
-    "queueTitle": "Runner queue",
+    "queueTitle": "Запуски агентів",
+    "internalInFlight": "Внутрішні агенти воркспейсу: у роботі {running} з {limit}",
+    "internalInFlightNoLimit": "Внутрішні агенти воркспейсу: у роботі {running}",
     "queueEmpty": "No runs yet.",
     "activeSection": "In progress",
     "historySection": "History",

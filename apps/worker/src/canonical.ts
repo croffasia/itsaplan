@@ -28,9 +28,27 @@ export interface CanonicalCycle {
   goal?: string;
 }
 
+// itsaplan's own custom_field.field_type values that an import creates.
+export type CanonicalCustomFieldType = 'text' | 'number' | 'boolean' | 'datetime' | 'select';
+
+export interface CanonicalCustomField {
+  sourceId: string;
+  name: string;
+  fieldType: CanonicalCustomFieldType;
+  // The option values of a 'select' field, in the source's order.
+  options: string[];
+}
+
+// A 'select' value is the option's text; a 'datetime' value is an ISO timestamp.
 export interface CanonicalCustomFieldValue {
   fieldSourceId: string;
   value: string | number | boolean | null;
+}
+
+export interface CanonicalChecklist {
+  sourceId: string;
+  title: string;
+  items: { content: string; done: boolean }[];
 }
 
 // No URL field: an attachment's download URL is a presigned link that expires
@@ -74,6 +92,7 @@ export interface CanonicalIssue {
   descriptionMarkdown: string;
   stateSourceId: string;
   assigneeEmail: string | null;
+  watcherEmails: string[];
   labelSourceIds: string[];
   cycleSourceId: string | null;
   parentSourceId: string | null;
@@ -83,4 +102,6 @@ export interface CanonicalIssue {
   customFields: CanonicalCustomFieldValue[];
   createdAt: string;
   updatedAt: string;
+  // Set when the source has the issue archived; the issue is created archived.
+  archivedAt: string | null;
 }

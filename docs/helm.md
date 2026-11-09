@@ -33,6 +33,19 @@ Install the chart:
 helm install itsaplan charts/itsaplan -f values.yaml
 ```
 
+### Install from the OCI registry
+
+Every release publishes the chart to GHCR, so a clone is optional. The chart version is the release
+version, and `appVersion` inside it is the image tag it deploys:
+
+```bash
+helm install itsaplan oci://ghcr.io/croffasia/charts/itsaplan --version 1.9.0 -f values.yaml
+```
+
+`helm show values oci://ghcr.io/croffasia/charts/itsaplan --version 1.9.0` prints the defaults to start a
+values file from. Only released versions are published, so pin `--version` where the deployment has to
+stay put: in the values file of a GitOps app spec, or in the install command.
+
 For the Pro edition, pass `charts/itsaplan/values-pro.yaml` before it. Without a valid license
 the Pro images run as the core does; the license key is entered in god mode, under **License**.
 

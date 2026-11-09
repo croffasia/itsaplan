@@ -100,6 +100,7 @@ export function integrationDescriptors(): IntegrationDescriptor[] {
       label: t.label,
       description: t.description,
       scopes: t.scopes,
+      group: t.group,
     })),
   }));
 }

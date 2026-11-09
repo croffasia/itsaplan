@@ -6,6 +6,7 @@ import { githubRequest, repoInput, repoPath, type GithubIssue } from './client';
 // page can hold fewer issues than the limit.
 export const githubListIssues: CustomToolEntry = {
   key: 'github_list_issues',
+  group: 'Issues',
   label: 'GitHub List Issues',
   description:
     'List issues in a GitHub repository, most recently created first. Returns each issue with its number, which the other GitHub tools take. Pull requests are not included, so a page can hold fewer issues than the limit; ask for the next page to see more.',

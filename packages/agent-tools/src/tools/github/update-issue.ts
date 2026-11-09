@@ -11,6 +11,7 @@ import {
 
 export const githubUpdateIssue: CustomToolEntry = {
   key: 'github_update_issue',
+  group: 'Issues',
   label: 'GitHub Update Issue',
   description:
     'Update an issue in a GitHub repository: change its title or markdown body, or close and reopen it. Give at least one of title, body or state.',

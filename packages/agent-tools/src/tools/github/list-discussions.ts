@@ -17,6 +17,7 @@ const STATES = { open: ['OPEN'], closed: ['CLOSED'], all: [] };
 
 export const githubListDiscussions: CustomToolEntry = {
   key: 'github_list_discussions',
+  group: 'Discussions',
   label: 'GitHub List Discussions',
   description:
     'List discussions in a GitHub repository, most recently updated first. Returns each discussion with its number, which the other GitHub discussion tools take, and nextCursor when there are more; pass it as cursor to get the next page.',

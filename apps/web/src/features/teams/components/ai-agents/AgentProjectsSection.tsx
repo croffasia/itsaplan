@@ -31,11 +31,11 @@ export default function AgentProjectsSection({
 }) {
   const t = useTranslations('teams.agents');
 
-  function toggle(id: number, on: boolean) {
+  function toggle(ids: number[], on: boolean) {
     onChange({
       projectIds: on
-        ? [...new Set([...value.projectIds, id])]
-        : value.projectIds.filter((x) => x !== id),
+        ? [...new Set([...value.projectIds, ...ids])]
+        : value.projectIds.filter((x) => !ids.includes(x)),
     });
   }
 

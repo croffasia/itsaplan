@@ -1279,6 +1279,7 @@ export interface IssuePatch {
   cycleId?: number | null;
   assigneeUserId?: string | null;
   delegateUserId?: string | null;
+  triggerSelfDelegation?: boolean;
   title?: string;
   description?: string;
   priority?: string | null;
@@ -1377,7 +1378,8 @@ export async function updateIssue(
       // Granular events fire in addition to issue.updated when their field changed.
       if (before.assigneeUserId !== after.assigneeUserId)
         await emitIssueEvent('issue.assigned', after, actor);
-      if (before.delegateUserId !== after.delegateUserId) await enqueueDelegateRun(after, actor);
+      if (before.delegateUserId !== after.delegateUserId)
+        await enqueueDelegateRun(after, actor, patch.triggerSelfDelegation);
       if (before.columnId !== after.columnId) {
         await emitIssueEvent('issue.state_changed', after, actor);
         await queueStatusRuns([id], after.columnId, actorId(actor));
@@ -1388,14 +1390,20 @@ export async function updateIssue(
   return after;
 }
 
-// If an issue's new delegate is an agent that reacts to delegation, queue a run so it
-// can act on the issue. Skipped when the agent delegated to itself (an agent setting
-// itself off). The run is executed later — by the poller or by the agent's runner —
-// so the write is never blocked on it.
-async function enqueueDelegateRun(after: IssueRow, actor?: ActivityActor): Promise<void> {
+// Self-delegation needs explicit opt-in so routine agent updates cannot restart themselves.
+async function enqueueDelegateRun(
+  after: IssueRow,
+  actor?: ActivityActor,
+  triggerSelfDelegation = false,
+): Promise<void> {
   const delegate = after.delegateUserId;
-  if (!delegate || delegate === actorId(actor)) return;
-  const agent = await getAssignTriggerAgent(after.projectId, delegate, actorId(actor));
+  if (!delegate || (delegate === actorId(actor) && !triggerSelfDelegation)) return;
+  const agent = await getAssignTriggerAgent(
+    after.projectId,
+    delegate,
+    actorId(actor),
+    triggerSelfDelegation,
+  );
   if (!agent) return;
   await enqueueAgentRun({
     agentId: agent.id,

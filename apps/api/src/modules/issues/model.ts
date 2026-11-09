@@ -675,6 +675,12 @@ export const updateIssueBody = t.Object({
   delegateUserId: t.Optional(
     t.Nullable(t.String({ description: 'New delegate user id (an AI agent), or null.' })),
   ),
+  triggerSelfDelegation: t.Optional(
+    t.Boolean({
+      description:
+        'Queue a run when an external agent explicitly changes the delegate to itself. Defaults to false; saving the same delegate does not queue another run.',
+    }),
+  ),
   title: t.Optional(t.String({ minLength: 1, description: 'New title.' })),
   description: t.Optional(
     t.String({ maxLength: ISSUE_TEXT_LIMIT, description: 'New description.' }),

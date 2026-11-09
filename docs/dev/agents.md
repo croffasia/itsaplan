@@ -73,6 +73,18 @@ through `assertTeamMcpAllowed`, which covers what no project flag reaches, such 
 skills, the tools, the roles and the credentials. An internal agent's tool calls do not count as
 MCP access (`viaMcpEndpoint: false`), so neither switch stops them.
 
+## Explicit self-delegation
+
+`PATCH /issues/:issueId` (MCP `update_issue`) accepts `triggerSelfDelegation: true`.
+An external agent can send it together with its own `delegateUserId` to queue a delegation
+run. The delegate must change; saving the same delegate again does not restart it. The default
+is to suppress self-delegation runs, including on issue creation. Internal agents cannot opt in.
+
+The issue route still requires `work_items` edit and project access. The agent must work in
+that project and have `triggerOnAssign` enabled. An owner-scoped external agent may explicitly
+trigger itself; other callers still need to match its owner. The normal delegation delay applies.
+This flag does not cancel pending runs or provide concurrent-request deduplication.
+
 ## Traces
 
 Runs of an internal agent are traced. `runtime/observability.ts` holds the one Mastra container of

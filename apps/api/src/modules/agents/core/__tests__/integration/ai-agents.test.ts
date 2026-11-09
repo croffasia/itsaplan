@@ -1028,6 +1028,68 @@ describe('ai agents', () => {
   });
 
   describe('visibility', () => {
+    it('keeps an agent created without projectIds reachable by its member creator', async () => {
+      const { asOwner, teamId } = await setup();
+      await asOwner.teams({ teamId }).projects.post({ key: 'OPS', name: 'Operations' });
+      const mkt = await projectIdOf(asOwner, 'MKT');
+      const role = await createRole(asOwner, 'MKT', {
+        name: 'Agent creator',
+        permissions: { ai_agents: { read: true, create: true, edit: true, delete: true } },
+      });
+      const asMember = await addProjectMember(asOwner, 'MKT', role.data!.id);
+      const body = { name: 'Member bot', username: 'member-bot', kind: 'external' as const };
+      const created = await agents(asMember, teamId).post(body);
+      expect(created.status).toBe(201);
+      expect(created.data!.agent.projects.map((p) => p.id)).toEqual([mkt]);
+      expect(created.data!.agent.canManage).toBe(true);
+      const agentId = created.data!.agent.id;
+      const agent = agents(asMember, teamId)({ agentId });
+      expect((await agents(asMember, teamId).get()).data!.map((a) => a.id)).toContain(agentId);
+      expect((await agent.get()).status).toBe(200);
+      expect((await agent.projects.put({ projectIds: [mkt] })).status).toBe(200);
+      expect(
+        (await apiKeyApi(created.data!.apiKey!).projects.get()).data!.map((p) => p.key),
+      ).toEqual(['MKT']);
+      expect((await agent.delete()).status).toBe(204);
+      expect((await agent.get()).status).toBe(404);
+      expect((await agents(asMember, teamId).post(body)).status).toBe(201);
+    });
+
+    it('defaults a team owners agent to this teams projects only', async () => {
+      const { asOwner, teamId } = await setup();
+      await asOwner.teams({ teamId }).projects.post({ key: 'OPS', name: 'Operations' });
+      const otherTeam = await asOwner.teams.post({
+        name: 'Other team',
+        slug: 'other-team',
+        workspaceId: await ownWorkspaceId(asOwner),
+      });
+      await asOwner
+        .teams({ teamId: otherTeam.data!.id })
+        .projects.post({ key: 'OTHER', name: 'Other' });
+      const created = await agents(asOwner, teamId).post({
+        name: 'Team bot',
+        username: 'team-bot',
+        kind: 'external',
+      });
+      expect(created.status).toBe(201);
+      expect(created.data!.agent.projects.map((p) => p.key).sort()).toEqual(['MKT', 'OPS']);
+    });
+
+    it('preserves an explicitly empty project set on create', async () => {
+      const { asOwner, teamId } = await setup();
+      const created = await agents(asOwner, teamId).post({
+        name: 'Unattached bot',
+        username: 'unattached-bot',
+        kind: 'external',
+        projectIds: [],
+      });
+      expect(created.status).toBe(201);
+      expect(created.data!.agent.projects).toEqual([]);
+      expect(
+        (await agents(asOwner, teamId)({ agentId: created.data!.agent.id }).get()).status,
+      ).toBe(200);
+    });
+
     // The ai_agents permission is merged from every project role the caller holds in
     // the team, so it says what they may do, not to which agents. A member reaches only
     // the agents working in a project they are in; the team's owner reaches them all.

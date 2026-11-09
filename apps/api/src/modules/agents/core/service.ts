@@ -293,6 +293,15 @@ export async function memberProjectIds(teamId: number, userId: string): Promise<
   return rows.map((row) => row.id);
 }
 
+export async function defaultAgentProjectIds(membership: TeamMembership): Promise<number[]> {
+  if (!runsTeam(membership.role)) return memberProjectIds(membership.teamId, membership.userId);
+  const rows = await db
+    .select({ id: project.id })
+    .from(project)
+    .where(eq(project.teamId, membership.teamId));
+  return rows.map((row) => row.id);
+}
+
 // The agents, each with whether the caller may act on it as a whole, by the rule
 // assertFullAgentAccess applies, so a screen can hide what the caller would be refused.
 export async function withCanManage<T extends { projects: { id: number }[] }>(

@@ -51,6 +51,9 @@ export interface CustomToolEntry {
   // catalog UI so a human knows what the token needs. Omit for tools with no scope
   // requirement (e.g. an API-key integration).
   scopes?: string[];
+  // The section the tool is listed under in its integration's catalog. Tools without
+  // one are listed first, under no heading.
+  group?: string;
   // What the model passes at call time.
   inputSchema: z.ZodTypeAny;
   // Runs the tool with the integration's decrypted credential and the model input.
@@ -71,6 +74,7 @@ export interface ToolDescriptor {
   description: string;
   // The scopes/permissions the token needs for this tool (see CustomToolEntry.scopes).
   scopes?: string[];
+  group?: string;
 }
 
 // The serializable form of an integration, returned by the API catalog endpoint so a

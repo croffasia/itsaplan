@@ -184,17 +184,17 @@ export function AgentSheetForm({
     if ('username' in patch) setUsernameEdited((patch.username ?? '').trim() !== '');
   }
 
-  function toggleSkill(id: number, on: boolean) {
+  function toggleSkill(ids: number[], on: boolean) {
     setSkillIds((prev) => {
       const base = prev ?? [];
-      return on ? [...new Set([...base, id])] : base.filter((x) => x !== id);
+      return on ? [...new Set([...base, ...ids])] : base.filter((x) => !ids.includes(x));
     });
   }
 
-  function toggleTool(id: number, on: boolean) {
+  function toggleTool(ids: number[], on: boolean) {
     setToolIds((prev) => {
       const base = prev ?? [];
-      return on ? [...new Set([...base, id])] : base.filter((x) => x !== id);
+      return on ? [...new Set([...base, ...ids])] : base.filter((x) => !ids.includes(x));
     });
   }
 

@@ -48,6 +48,7 @@ function reply(r: Reply) {
 // page DiscussionComment.replies if long threads turn up.
 export const githubGetDiscussion: CustomToolEntry = {
   key: 'github_get_discussion',
+  group: 'Discussions',
   label: 'GitHub Get Discussion',
   description:
     'Read a discussion in a GitHub repository: its markdown body, category and state, and its comments with the replies under each. Returns nextCursor when there are more comments; pass it as cursor to get the next page.',

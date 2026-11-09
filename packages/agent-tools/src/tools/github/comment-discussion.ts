@@ -4,6 +4,7 @@ import { discussionId, discussionInput, githubGraphql, repoInput } from './clien
 
 export const githubCommentDiscussion: CustomToolEntry = {
   key: 'github_comment_discussion',
+  group: 'Discussions',
   label: 'GitHub Comment Discussion',
   description:
     'Comment on a discussion in a GitHub repository. The text is markdown. Returns the id and the URL of the new comment.',

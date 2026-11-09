@@ -53,6 +53,7 @@ const IntegrationResponse = t.Object({
       label: t.String(),
       description: t.String(),
       scopes: t.Optional(t.Array(t.String())),
+      group: t.Optional(t.String()),
     }),
   ),
 });

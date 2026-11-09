@@ -40,6 +40,12 @@ describe('integrations', () => {
           kind: 'tool',
           tools: expect.arrayContaining([expect.objectContaining({ key: 'jina_reader' })]),
         }),
+        expect.objectContaining({
+          key: 'github',
+          tools: expect.arrayContaining([
+            expect.objectContaining({ key: 'github_list_issues', group: 'Issues' }),
+          ]),
+        }),
       ]),
     );
   });

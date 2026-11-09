@@ -22,7 +22,14 @@ export interface IntegrationMeta {
   label: string;
   kind: IntegrationKind;
   credentialSchema: ConfigField[];
-  tools: { key: string; label: string; description: string; scopes?: string[] }[];
+  tools: {
+    key: string;
+    label: string;
+    description: string;
+    scopes?: string[];
+    // The section the tool is listed under in its integration.
+    group?: string;
+  }[];
 }
 
 // A model an LLM provider offers, from the models.dev registry.

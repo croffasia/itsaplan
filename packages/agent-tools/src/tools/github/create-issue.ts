@@ -4,6 +4,7 @@ import { githubRequest, repoInput, repoPath, type GithubIssue } from './client';
 
 export const githubCreateIssue: CustomToolEntry = {
   key: 'github_create_issue',
+  group: 'Issues',
   label: 'GitHub Create Issue',
   description:
     'Create an issue in a GitHub repository. The body is markdown. Returns the new issue with its number, which the other GitHub tools take.',

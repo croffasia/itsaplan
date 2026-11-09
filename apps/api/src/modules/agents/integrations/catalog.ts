@@ -20,7 +20,13 @@ export interface UnifiedIntegration {
   label: string;
   kind: IntegrationKind;
   credentialSchema: ConfigField[];
-  tools: { key: string; label: string; description: string; scopes?: string[] }[];
+  tools: {
+    key: string;
+    label: string;
+    description: string;
+    scopes?: string[];
+    group?: string;
+  }[];
 }
 
 // The credential fields of an LLM provider: an API key, plus a base URL for the

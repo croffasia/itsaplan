@@ -67,7 +67,7 @@ describe('external run events', () => {
     expect(
       (await runner['agent-runs']({ runId: run.id }).events.post({ attempt: 1, offset: 3, events }))
         .status,
-    ).toBe(404);
+    ).toBe(409);
   }, 20_000);
 
   it('deduplicates accepted batches and rejects gaps and changed session ids', async () => {
@@ -95,12 +95,13 @@ describe('external run events', () => {
       .update(agentRun)
       .set({ nextAttemptAt: new Date(0) })
       .where(eq(agentRun.id, run.id));
-    expect((await write.post({ attempt: 1, offset: 3, events })).status).toBe(404);
+    expect((await write.post({ attempt: 1, offset: 3, events })).status).toBe(409);
     expect((await runner['agent-runs'].claim.post()).data!.run!.attempts).toBe(2);
-    expect((await write.post({ attempt: 1, offset: 3, events })).status).toBe(404);
+    expect((await write.post({ attempt: 1, offset: 3, events })).status).toBe(409);
+    expect((await write.post({ attempt: 1, offset: 0, events })).status).toBe(409);
     expect(
       (await runner['agent-runs']({ runId: run.id }).heartbeat.post({ attempt: 1 })).status,
-    ).toBe(404);
+    ).toBe(409);
     expect(
       (await runner['agent-runs']({ runId: run.id }).result.post({ status: 'success', attempt: 1 }))
         .status,

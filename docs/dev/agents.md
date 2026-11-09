@@ -180,9 +180,14 @@ attempt. Event offsets deduplicate retries and reject gaps with 409. An attempt'
 recording after 2,000 events or 1 MB. Acknowledgements continue, so the runner can still report its
 final result. A Codex UUID forms the local `codex://threads/` link, and no supplied URL is accepted.
 
-The runner sends the attempt number on heartbeat and result calls. The api answers 404 to the
-process of a reclaimed attempt, and its command keeps running until it ends. `attempt` is optional
-on both calls: a custom invocation endpoint can leave it out, and the api then does not check it.
+The runner sends the attempt number on heartbeat and result calls. Heartbeats extend only a live
+lease. Expired or superseded heartbeats and events return 409; unknown runs and another agent's
+runs return 404. Events and claim polling do not extend an executing lease. A reclaimed run gets a
+new attempt number, and delayed admission or start failures cannot change that newer attempt.
+
+A heartbeat without `attempt` is accepted only on the first attempt. Custom invocation endpoints
+must send the attempt number after a retry. The result route still allows an omitted attempt for
+compatibility and returns 404 when an explicit attempt no longer matches.
 
 ## Runner queue
 

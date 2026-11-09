@@ -105,7 +105,7 @@ describe('runner queue', () => {
       .where(eq(agentRun.id, queued.id));
     const claimed = (await runner['agent-runs'].claim.post()).data!.run!;
     await scheduleRunRetry(claimed.id, 60_000, 'Temporary failure');
-    expect((await runner['agent-runs']({ runId: claimed.id }).heartbeat.post()).status).toBe(404);
+    expect((await runner['agent-runs']({ runId: claimed.id }).heartbeat.post()).status).toBe(409);
     expect((await api['agent-runs'].queue.get()).data!.items[0]).toMatchObject({
       executionState: 'queued',
       lastError: 'Temporary failure',

@@ -63,14 +63,35 @@ const otherHit = {
   teamName: 'Engineering',
 };
 
+const otherInitiative = {
+  id: 7,
+  title: 'Launch in Europe',
+  projectId: 2,
+  projectRef: 'eng.OPS',
+  projectKey: 'OPS',
+};
+const currentInitiative = {
+  id: 8,
+  title: 'Launch week',
+  projectId: 1,
+  projectRef: 'eng.MKT',
+  projectKey: 'MKT',
+};
+
 let dom: JSDOM;
 let root: Root;
 let client: QueryClient;
 let requests: URL[];
+let initiativeHits: unknown[];
 let held: Promise<void> | null;
 let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
 
 const allProjectRequests = () => requests.filter((url) => url.pathname === '/issues/search');
+const initiativeRequests = () => requests.filter((url) => url.pathname === '/initiatives/search');
+const initiativeRows = () =>
+  [...document.querySelectorAll('[cmdk-item][data-value^="initiative-hit:"]')].map(
+    (el) => el.textContent,
+  );
 const headings = () =>
   [...document.querySelectorAll('[cmdk-group-heading]')].map((el) => el.textContent);
 const tabs = () => [...document.querySelectorAll<HTMLElement>('[role="tab"]')];
@@ -137,6 +158,7 @@ beforeEach(async () => {
   }
   requests = [];
   held = null;
+  initiativeHits = [];
   Object.defineProperties(globalThis, {
     getComputedStyle: { configurable: true, value: dom.window.getComputedStyle.bind(dom.window) },
     requestAnimationFrame: {
@@ -165,6 +187,7 @@ beforeEach(async () => {
           return Response.json([otherHit]);
         }
         if (url.pathname.endsWith('/issues/search')) return Response.json([currentHit]);
+        if (url.pathname === '/initiatives/search') return Response.json(initiativeHits);
         return Response.json(null);
       },
     },
@@ -236,5 +259,45 @@ describe('CommandPalette search scope', () => {
     await act(async () => tabs()[0]!.click());
     await settle();
     assert.deepEqual(headings(), ['Issues']);
+  });
+});
+
+describe('CommandPalette initiative search', () => {
+  it("lists every project's initiatives, the open project's first, between the issue groups", async () => {
+    initiativeHits = [otherInitiative, currentInitiative];
+    await render({ key: 'eng.MKT', id: 1 });
+    await type('launch');
+
+    assert.equal(initiativeRequests()[0]!.searchParams.get('q'), 'launch');
+    assert.equal(initiativeRequests()[0]!.searchParams.has('projectId'), false);
+    assert.deepEqual(headings(), ['Issues', 'Initiatives', 'Engineering / OperationsOPS']);
+    assert.deepEqual(initiativeRows(), ['Launch weekMKT', 'Launch in EuropeOPS']);
+  });
+
+  it('searches only the open project once narrowed', async () => {
+    initiativeHits = [currentInitiative];
+    await render({ key: 'eng.MKT', id: 1 });
+    await act(async () => tabs()[0]!.click());
+    await type('launch');
+
+    assert.equal(initiativeRequests()[0]!.searchParams.get('projectId'), '1');
+    assert.deepEqual(headings(), ['Issues', 'Initiatives']);
+  });
+
+  it('searches every project when no project is open', async () => {
+    initiativeHits = [otherInitiative];
+    await render(null);
+    await type('launch');
+
+    assert.equal(initiativeRequests()[0]!.searchParams.has('projectId'), false);
+    assert.deepEqual(headings(), ['Initiatives', 'Engineering / OperationsOPS']);
+  });
+
+  it('shows no group when nothing matches', async () => {
+    await render({ key: 'eng.MKT', id: 1 });
+    await type('launch');
+
+    assert.equal(initiativeRequests().length, 1);
+    assert.deepEqual(headings(), ['Issues', 'Engineering / OperationsOPS']);
   });
 });

@@ -655,8 +655,9 @@ async function assertUsernameFree(
 // stored secret with nothing that would renew it, and an external agent's key is
 // rotated by its operator through regenerate-key. The plugin puts its default on
 // every key it creates, so the expiry is cleared on the row afterwards.
-async function issueKey(userId: string, name: string): Promise<string> {
-  const created = await auth.api.createApiKey({ body: { userId, name: `agent:${name}` } });
+// The name is constant: the plugin refuses one over 32 characters, and nothing reads it.
+async function issueKey(userId: string): Promise<string> {
+  const created = await auth.api.createApiKey({ body: { userId, name: 'agent' } });
   await db.update(apikey).set({ expiresAt: null }).where(eq(apikey.id, created.id));
   return created.key;
 }
@@ -737,7 +738,7 @@ export async function createAgent(
 
   // Issued outside the transaction: better-auth writes the key through its own
   // connection, so it cannot join this one.
-  const apiKey = await issueKey(userId, input.name);
+  const apiKey = await issueKey(userId);
   if (isInternal) await storeAgentKey(agentId, apiKey);
   const agent = (await getAgentById(agentId, teamId))!;
   return { agent, apiKey: isInternal ? null : apiKey };
@@ -846,7 +847,7 @@ export async function getInternalAgentApiKey(agent: AiAgentRow): Promise<string>
     // Clears any key row left without a stored secret, so the bot user ends with
     // exactly the one issued here.
     await db.delete(apikey).where(eq(apikey.referenceId, agent.userId));
-    const apiKey = await issueKey(agent.userId, agent.name);
+    const apiKey = await issueKey(agent.userId);
     await storeAgentKey(agent.id, apiKey);
     return apiKey;
   });
@@ -955,7 +956,7 @@ export async function regenerateKey(id: number, teamId: number): Promise<string 
   const agent = await getAgentById(id, teamId);
   if (!agent) return null;
   await db.delete(apikey).where(eq(apikey.referenceId, agent.userId));
-  const apiKey = await issueKey(agent.userId, agent.name);
+  const apiKey = await issueKey(agent.userId);
   if (agent.kind === 'internal') await storeAgentKey(agent.id, apiKey);
   return apiKey;
 }

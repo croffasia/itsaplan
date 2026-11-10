@@ -21,7 +21,6 @@ import {
   getAgentInProject,
   agentScopeOf,
   memberProjectIds,
-  defaultAgentProjectIds,
   assertFullAgentAccess,
   withCanManage,
   type AgentKind,
@@ -246,11 +245,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
   .post(
     '/teams/:teamId/ai-agents',
     async ({ membership, body, set, user }) => {
-      const projectIds = await resolveAgentProjects(
-        membership,
-        body.projectIds ?? (await defaultAgentProjectIds(membership)),
-        [],
-      );
+      const projectIds = await resolveAgentProjects(membership, body.projectIds, []);
       set.status = 201;
       const created = await createAgent(membership.teamId, {
         ...body,
@@ -269,9 +264,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
         summary: 'Create an AI agent',
         description:
           "Create an AI agent. kind 'external' returns an API key once; kind 'internal' runs " +
-          'in-process from a model config and has no key. Omit projectIds to attach it to ' +
-          "the caller's projects, or every project of the team for its owner or manager. " +
-          'An explicit empty list attaches it to none.',
+          'in-process from a model config and has no key.',
         ...mcpTool('create_ai_agent'),
       },
     },

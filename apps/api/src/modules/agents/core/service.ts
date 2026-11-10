@@ -14,7 +14,7 @@ import {
   customField,
   integrationCredential,
 } from '@repo/db';
-import { and, asc, eq, inArray, ne, notInArray, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, ne, notInArray, or, sql } from 'drizzle-orm';
 import { auth } from '@repo/auth';
 import { iso, HttpError, rethrowDuplicate } from '#shared/lib';
 import { getCredentialById } from '../integrations/service';
@@ -272,7 +272,7 @@ function inProject(projectId: number) {
 }
 
 // The agents a caller may reach: an owner or a manager of the team reaches every agent
-// it has, anyone else only the ones working in a project they are a member of. The
+// it has, anyone else their own agents and those sharing a project with them. The
 // reads below take the id it returns, or nothing when the whole team is theirs.
 export function agentScopeOf(membership: {
   role: TeamStanding;
@@ -290,15 +290,6 @@ export async function memberProjectIds(teamId: number, userId: string): Promise<
     .from(projectMember)
     .innerJoin(project, eq(project.id, projectMember.projectId))
     .where(and(eq(project.teamId, teamId), eq(projectMember.userId, userId)));
-  return rows.map((row) => row.id);
-}
-
-export async function defaultAgentProjectIds(membership: TeamMembership): Promise<number[]> {
-  if (!runsTeam(membership.role)) return memberProjectIds(membership.teamId, membership.userId);
-  const rows = await db
-    .select({ id: project.id })
-    .from(project)
-    .where(eq(project.teamId, membership.teamId));
   return rows.map((row) => row.id);
 }
 
@@ -338,11 +329,13 @@ export async function assertFullAgentAccess(
   }
 }
 
-// Whether the agent works in a project the user is a member of, as a condition on a
-// query over ai_agent. Both sides are project_member rows: the agent's bot user and
-// the user themselves.
-function sharesProjectWith(userId: string) {
-  return sql`exists (select 1 from ${projectMember} pm join ${projectMember} mine on mine.project_id = pm.project_id and mine.user_id = ${userId} where pm.user_id = ${aiAgent.userId})`;
+// The stored owner can see an agent without sharing a project. Other members need
+// a project membership in common with its bot user.
+function visibleToUser(userId: string) {
+  return or(
+    eq(aiAgent.ownerUserId, userId),
+    sql`exists (select 1 from ${projectMember} pm join ${projectMember} mine on mine.project_id = pm.project_id and mine.user_id = ${userId} where pm.user_id = ${aiAgent.userId})`,
+  );
 }
 
 export async function listProjectAgents(projectId: number) {
@@ -356,8 +349,8 @@ export async function listProjectAgents(projectId: number) {
 }
 
 // The agents of the team, or only the ones working in one of its projects when
-// projectId is given. visibleTo narrows the list to the agents working in a project
-// that user belongs to; the callers who run the team pass nothing and see them all.
+// projectId is given. visibleTo narrows the list to agents owned by that user or
+// sharing a project with them; callers who run the team pass nothing and see them all.
 export async function listAgents(
   teamId: number,
   projectId?: number,
@@ -368,7 +361,7 @@ export async function listAgents(
       and(
         eq(aiAgent.teamId, teamId),
         projectId == null ? undefined : inProject(projectId),
-        visibleTo == null ? undefined : sharesProjectWith(visibleTo),
+        visibleTo == null ? undefined : visibleToUser(visibleTo),
       ),
     )
     .orderBy(user.name);
@@ -376,7 +369,7 @@ export async function listAgents(
 }
 
 // Scoped to teamId so an id from another team resolves to null, and to visibleTo the
-// same way the list is: an agent of a project that user is not in reads as missing.
+// same way the list is: ownership or a shared project makes the agent visible.
 export async function getAgentById(
   id: number,
   teamId: number,
@@ -386,7 +379,7 @@ export async function getAgentById(
     and(
       eq(aiAgent.id, id),
       eq(aiAgent.teamId, teamId),
-      visibleTo == null ? undefined : sharesProjectWith(visibleTo),
+      visibleTo == null ? undefined : visibleToUser(visibleTo),
     ),
   );
   return rows[0] ? mapAgent(rows[0]) : null;
@@ -993,7 +986,7 @@ export async function agentInTeam(
       and(
         eq(aiAgent.id, agentId),
         eq(aiAgent.teamId, teamId),
-        visibleTo == null ? undefined : sharesProjectWith(visibleTo),
+        visibleTo == null ? undefined : visibleToUser(visibleTo),
       ),
     )
     .limit(1);

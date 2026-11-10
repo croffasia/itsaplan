@@ -63,16 +63,17 @@ export const agentToolRoutes = new Elysia({
   .get(
     '/teams/:teamId/agent-tools',
     ({ membership, query }) =>
-      paginate(query, (window) => listAgentTools(membership.teamId, window)),
+      paginate(query, (window) => listAgentTools(membership.teamId, window, query.search)),
     {
       params: teamParams,
       query: agentToolListQuery,
       teamPermission: ['agent_tools', 'read'],
-      response: { 200: AgentToolPageResponse, ...accessErrors },
+      response: { 200: AgentToolPageResponse, ...commonErrors },
       detail: {
         summary: 'List configured tools',
         description:
-          "One page of a team's tools configured on integration credentials. An id here is " +
+          "One page of a team's tools configured on integration credentials, optionally " +
+          'narrowed by a search on the tool name, its group or its integration. An id here is ' +
           'what set_ai_agent_configured_tools takes to enable a tool on an agent. Separate ' +
           'from the built-in actions in list_ai_agent_tools. The whole list, for a picker, ' +
           'comes from list_configured_tool_options.',

@@ -1,6 +1,6 @@
 import { db, agentTool, agentToolLink, integrationCredential } from '@repo/db';
 import { and, eq, inArray, sql } from 'drizzle-orm';
-import { getTool, type ToolConfig } from '@repo/agent-tools';
+import { getTool, integrationDescriptors, type ToolConfig } from '@repo/agent-tools';
 import { iso, HttpError, rethrowDuplicate } from '#shared/lib';
 import { decryptSecret } from '@repo/crypto';
 import { getCredentialById } from '../integrations/service';
@@ -54,13 +54,27 @@ function selectTools() {
     .leftJoin(integrationCredential, eq(integrationCredential.id, agentTool.credentialId));
 }
 
-// One page of the team's configured tools, by tool key, with how many it holds in
-// total.
+// Names are stored in the catalog, not in the table, so a search resolves to tool keys.
+function toolKeysMatching(search: string): string[] {
+  const q = search.toLowerCase();
+  return integrationDescriptors().flatMap((i) =>
+    i.tools
+      .filter((tool) => [tool.label, tool.group, i.label].some((s) => s?.toLowerCase().includes(q)))
+      .map((tool) => tool.key),
+  );
+}
+
+// One page of the team's configured tools, by tool key, with how many match in all.
 export async function listAgentTools(
   teamId: number,
   window: { limit: number; offset: number },
+  search?: string,
 ): Promise<{ items: AgentToolRow[]; total: number }> {
-  const where = eq(agentTool.teamId, teamId);
+  const term = search?.trim();
+  const where = and(
+    eq(agentTool.teamId, teamId),
+    term ? inArray(agentTool.toolKey, toolKeysMatching(term)) : undefined,
+  );
   const [rows, counted] = await Promise.all([
     selectTools().where(where).orderBy(agentTool.toolKey).limit(window.limit).offset(window.offset),
     db

@@ -351,4 +351,25 @@ describe('repository provider events', () => {
       ),
     ).toMatchObject({ kind: 'pull_request_review', state: 'changes_requested', url: null });
   });
+  it('names who opened and who merged a GitHub pull request', () => {
+    const headers = { 'x-github-event': 'pull_request' };
+    const provider = detectProvider(headers)!;
+    expect(
+      provider.parse(
+        {
+          action: 'closed',
+          pull_request: {
+            number: 42,
+            merged: true,
+            user: { login: 'bot' },
+            merged_by: { login: 'ann' },
+            base: { ref: 'main' },
+            head: { ref: 'feature', sha: 'abc' },
+          },
+          repository: { full_name: 'acme/site', default_branch: 'main' },
+        },
+        headers,
+      ),
+    ).toMatchObject({ action: 'merged', author: 'bot', mergedBy: 'ann' });
+  });
 });

@@ -51,12 +51,16 @@ function prPayload(overrides: {
   body?: string;
   headSha?: string;
   headRef?: string;
+  author?: string;
+  mergedBy?: string;
 }) {
   const number = overrides.number ?? 42;
   return {
     action: overrides.action ?? 'closed',
     pull_request: {
       number,
+      ...(overrides.author ? { user: { login: overrides.author } } : {}),
+      ...(overrides.mergedBy ? { merged_by: { login: overrides.mergedBy } } : {}),
       title: overrides.title ?? 'Some change',
       body: overrides.body ?? null,
       html_url: `https://github.com/acme/site/pull/${number}`,
@@ -1406,5 +1410,68 @@ describe('Pull request reviews', () => {
     expect(runs).toHaveLength(1);
     expect(runs[0]).toMatchObject({ agentId: agent.id, trigger: 'review' });
     expect(runs[0]!.prompt).toContain('ann requested changes on pull request acme/site#42');
+  });
+});
+
+describe('Pull request entries by the repository login', () => {
+  beforeEach(async () => {
+    await resetDb();
+  });
+
+  it('is by the agent whose handle is the login that opened the pull request', async () => {
+    const setup = await setupProject();
+    const agent = (
+      await createAgent(setup.asOwner, 'MKT', { name: 'Bot', username: 'bot', kind: 'external' })
+    ).data!.agent;
+    const issue = (await createIssue(setup.asOwner, setup.columns[0].id)).data!;
+    await deliver(
+      setup.webhookId,
+      setup.secret,
+      prPayload({
+        action: 'opened',
+        merged: false,
+        author: 'Bot',
+        body: `Refs MKT-${issue.sequenceNumber}`,
+      }),
+    );
+    expect(await prActor(setup.asOwner, issue.id)).toMatchObject({
+      actorUserId: agent.userId,
+      actorName: 'Bot',
+      payload: { subject: { value: 'opened' } },
+    });
+  });
+
+  it('is by the bare login when nobody in the project has it, and by the merger on a merge', async () => {
+    const setup = await setupProject();
+    const issue = (await createIssue(setup.asOwner, setup.columns[0].id)).data!;
+    await deliver(
+      setup.webhookId,
+      setup.secret,
+      prPayload({
+        action: 'opened',
+        merged: false,
+        author: 'carol',
+        body: `Closes MKT-${issue.sequenceNumber}`,
+      }),
+    );
+    expect(await prActor(setup.asOwner, issue.id)).toMatchObject({
+      actorUserId: null,
+      actorName: 'carol',
+    });
+    await deliver(
+      setup.webhookId,
+      setup.secret,
+      prPayload({
+        action: 'closed',
+        merged: true,
+        author: 'carol',
+        mergedBy: 'dave',
+        body: `Closes MKT-${issue.sequenceNumber}`,
+      }),
+    );
+    expect(await prActor(setup.asOwner, issue.id)).toMatchObject({
+      actorName: 'dave',
+      payload: { subject: { value: 'merged' } },
+    });
   });
 });

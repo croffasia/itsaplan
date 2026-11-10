@@ -505,8 +505,12 @@ function pullRequestEvent(
     headSha: pullRequest.headSha,
     defaultBranch: repository.defaultBranch ?? null,
     draft: pullRequest.draft,
+    author: text(record(provider === 'gitlab' ? row.author : row.user)?.[loginKey(provider)]),
+    mergedBy: text(record(row.merged_by)?.[loginKey(provider)]),
   };
 }
+
+const loginKey = (provider: GitProvider) => (provider === 'gitlab' ? 'username' : 'login');
 
 function gitlabPipeline(
   value: unknown,

@@ -180,9 +180,12 @@ messages, tool inputs and results, and a local Codex session link. Transcripts f
 trace retention window after the run finishes. Pending runs and final results are retained.
 
 `POST /agent-runs/:runId/events` accepts only the calling agent's current executing, unexpired
-attempt. Event offsets deduplicate retries and reject gaps with 409. An attempt's transcript stops
-recording after 2,000 events or 1 MB. Acknowledgements continue, so the runner can still report its
-final result. A Codex UUID forms the local `codex://threads/` link, and no supplied URL is accepted.
+attempt. Event offsets deduplicate retries: a fully accepted batch is acknowledged without changes,
+and a batch overlapping the accepted prefix appends only its unseen suffix. An offset beyond the
+next expected offset is a gap and returns 409. A different session ID is rejected even for a
+replayed batch. An attempt's transcript stops recording after 2,000 events or 1 MB. Acknowledgements
+continue, so the runner can still report its final result. A Codex UUID forms the local
+`codex://threads/` link, and no supplied URL is accepted.
 
 The runner sends the attempt number on heartbeat and result calls. The api answers 404 to the
 process of a reclaimed attempt, and its command keeps running until it ends. `attempt` is optional

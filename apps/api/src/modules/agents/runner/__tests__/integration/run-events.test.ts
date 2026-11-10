@@ -87,6 +87,62 @@ describe('external run events', () => {
     expect((await api['agent-runs']({ runId: run.id }).trace.get()).data!.events).toHaveLength(3);
   }, 20_000);
 
+  it('appends only unseen events from overlapping batches', async () => {
+    const { api, runner, run } = await setup();
+    const route = runner['agent-runs']({ runId: run.id }).events;
+    const batch = { attempt: 1, offset: 0, events, sessionId };
+    expect((await route.post({ ...batch, events: events.slice(0, 2) })).data).toEqual({
+      nextOffset: 2,
+      truncated: false,
+    });
+    expect(
+      (
+        await route.post({
+          ...batch,
+          offset: 1,
+          events: events.slice(1),
+          sessionId: '0199a213-81c0-7800-8aa1-bbab2a035a54',
+        })
+      ).status,
+    ).toBe(409);
+    expect((await route.post({ ...batch, offset: 1, events: events.slice(1) })).data).toEqual({
+      nextOffset: 3,
+      truncated: false,
+    });
+    const trace = (await api['agent-runs']({ runId: run.id }).trace.get()).data!;
+    expect(trace.events.map((e) => e.event)).toEqual(events);
+    expect((await route.post(batch)).data).toEqual({ nextOffset: 3, truncated: false });
+    expect(
+      (await route.post({ ...batch, sessionId: '0199a213-81c0-7800-8aa1-bbab2a035a54' })).status,
+    ).toBe(409);
+    expect((await api['agent-runs']({ runId: run.id }).trace.get()).data).toEqual(trace);
+  }, 20_000);
+
+  it('acknowledges overlapping batches after truncation without storing more events', async () => {
+    const { api, runner, run } = await setup();
+    const route = runner['agent-runs']({ runId: run.id }).events;
+    const large = Array.from({ length: 40 }, () => ({
+      type: 'TOOL_CALL_ARGS' as const,
+      toolCallId: 'tool',
+      delta: 'x'.repeat(32000),
+    }));
+    expect((await route.post({ attempt: 1, offset: 0, events: large })).data).toEqual({
+      nextOffset: 40,
+      truncated: true,
+    });
+    const trace = (await api['agent-runs']({ runId: run.id }).trace.get()).data!;
+    expect((await route.post({ attempt: 1, offset: 39, events })).data).toEqual({
+      nextOffset: 42,
+      truncated: true,
+    });
+    expect((await route.post({ attempt: 1, offset: 39, events })).data).toEqual({
+      nextOffset: 42,
+      truncated: true,
+    });
+    expect((await route.post({ attempt: 1, offset: 43, events })).status).toBe(409);
+    expect((await api['agent-runs']({ runId: run.id }).trace.get()).data).toEqual(trace);
+  }, 20_000);
+
   it('separates retries and refuses events from an expired or older attempt', async () => {
     const { api, runner, run } = await setup();
     const write = runner['agent-runs']({ runId: run.id }).events;

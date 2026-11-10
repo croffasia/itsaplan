@@ -37,7 +37,7 @@ or on the request body is checked in the handler or the service.
   take the reached teams the same way. `listProjects` and `listTeams` answer `via: 'workspace'`
   for what the caller reaches only through the workspace.
 - Two caller checks use the rows. `agentScopeOf` gives every agent of a team only to someone who
-  runs the team; anyone else, a workspace admin included, reaches the agents that share a
+  runs the team; anyone else, a workspace admin included, reaches agents they own and those that share a
   `project_member` row with them. A private view takes a project membership of their own
   (`via: 'member'`).
 - **Whether someone else is a member:** assignees, mentions, watchers, notification recipients,

@@ -16,10 +16,14 @@ Three decisions a reader would otherwise propose again:
 
 - **The team is the boundary.** There is no instance-level agent and no non-human flag on `user`.
 - **`ai_agents` `create` and `edit` are administrative.** `create` makes an agent, attaches it to
-  the caller's projects and returns an external agent's key once. That key reaches those projects
+  the supplied projects and returns an external agent's key once. An omitted or empty list
+  attaches it to none. Its stored owner can still list and read it. That key reaches those projects
   on the default role. `edit` attaches an existing agent to the caller's projects
   (`PUT /teams/:teamId/ai-agents/:agentId/projects`). The caller's projects are the ones they are
   a member of, or every project of the team for whoever runs it.
+
+  `owner_user_id` starts as the creator and changes to the caller when they choose an
+  owner-scoped runner. Visibility follows this stored owner; it grants no management bypass.
 
   An action that reaches every project the agent works in also takes running the team or being a
   member of all of them (`assertFullAgentAccess`): rotating the key, editing or deleting the

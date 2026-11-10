@@ -40,7 +40,8 @@ For the Pro edition, start the stack with `docker compose -f docker-compose.pro.
 It takes the same `.env` and runs the Pro images. Without a valid license they run as the core
 does; the license key is entered in god mode, under **License**. The project name and the
 volumes are those of `docker-compose.yml`, so an existing instance moves to Pro on the same
-data.
+data. [Fast Deploy](https://itsaplan.dev/pro#fast-deploy) in your Pro account installs this
+stack with Caddy for HTTPS on a new server in your Hetzner, Vultr or DigitalOcean account.
 
 `.env.example` documents every variable, including the optional ones: legal document URLs,
 passkey and cookie settings, telemetry opt-out, and worker tuning.

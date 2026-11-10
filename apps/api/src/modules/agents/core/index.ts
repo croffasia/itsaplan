@@ -272,16 +272,11 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
 
   .patch(
     '/teams/:teamId/ai-agents/:agentId',
-    async ({ params, membership, body, user }) => {
+    async ({ params, membership, body }) => {
       const current = await requireVisibleAgent(params.agentId, membership);
       await assertFullAgentAccess(membership, params.agentId);
       const projectIds = await resolveAgentProjects(membership, body.projectIds, current.projects);
-      const agent = await updateAgent(
-        params.agentId,
-        membership.teamId,
-        { ...body, projectIds },
-        requireUser(user).id,
-      );
+      const agent = await updateAgent(params.agentId, membership.teamId, { ...body, projectIds });
       if (!agent) throw new HttpError(404, 'Agent not found');
       const [withAccess] = await withCanManage(membership, [agent]);
       return withAccess;
@@ -303,15 +298,10 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
   // a project, so this is both the attach and the detach: the set is replaced.
   .put(
     '/teams/:teamId/ai-agents/:agentId/projects',
-    async ({ params, membership, body, user }) => {
+    async ({ params, membership, body }) => {
       const current = await requireVisibleAgent(params.agentId, membership);
       const projectIds = await resolveAgentProjects(membership, body.projectIds, current.projects);
-      const agent = await updateAgent(
-        params.agentId,
-        membership.teamId,
-        { projectIds },
-        requireUser(user).id,
-      );
+      const agent = await updateAgent(params.agentId, membership.teamId, { projectIds });
       if (!agent) throw new HttpError(404, 'Agent not found');
       const [withAccess] = await withCanManage(membership, [agent]);
       return withAccess;

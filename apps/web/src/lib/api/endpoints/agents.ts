@@ -64,6 +64,7 @@ export interface AiAgent {
   // The member who created the agent, and whose runs an 'owner'-scoped runner is
   // limited to; 'team' scope serves any member's runs.
   ownerUserId: string | null;
+  ownerName: string | null;
   runnerScope: 'owner' | 'team';
   // When the agent's runner last polled, or null while none ever has.
   lastSeenAt: string | null;

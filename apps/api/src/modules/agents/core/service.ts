@@ -116,6 +116,7 @@ export interface AiAgentRow {
   // The member who created the agent, and whose runs an 'owner'-scoped runner is
   // limited to. 'team' scope lets the runner take any member's runs.
   ownerUserId: string | null;
+  ownerName: string | null;
   runnerScope: RunnerScope;
   // When a runner last polled for this agent, which is what presence is derived
   // from. Null until a runner connects.
@@ -162,6 +163,7 @@ function mapAgent(row: {
   fieldTriggers: FieldTriggerRead[];
   delegationDelaySec: number;
   ownerUserId: string | null;
+  ownerName: string | null;
   runnerScope: string;
   lastSeenAt: Date | null;
   invocationUrl: string | null;
@@ -196,6 +198,7 @@ function mapAgent(row: {
     fieldTriggers: row.fieldTriggers,
     delegationDelaySec: row.delegationDelaySec,
     ownerUserId: row.ownerUserId,
+    ownerName: row.ownerName,
     runnerScope: row.runnerScope as RunnerScope,
     lastSeenAt: row.lastSeenAt ? iso(row.lastSeenAt) : null,
     invocationUrl: row.invocationUrl,
@@ -238,6 +241,7 @@ const agentColumns = {
   >`(select coalesce(json_agg(json_build_object('fieldId', ${agentFieldTrigger.fieldId}, 'name', ${customField.name}, 'delaySec', ${agentFieldTrigger.delaySec}) order by ${customField.name}), '[]'::json) from ${agentFieldTrigger} join ${customField} on ${customField.id} = ${agentFieldTrigger.fieldId} where ${agentFieldTrigger.agentId} = ${aiAgent.id})`,
   delegationDelaySec: aiAgent.delegationDelaySec,
   ownerUserId: aiAgent.ownerUserId,
+  ownerName: sql<string | null>`(select o.name from ${user} o where o.id = ${aiAgent.ownerUserId})`,
   runnerScope: aiAgent.runnerScope,
   lastSeenAt: aiAgent.lastSeenAt,
   invocationUrl: aiAgent.invocationUrl,
@@ -882,8 +886,6 @@ export async function updateAgent(
   id: number,
   teamId: number,
   patch: AgentPatch,
-  // The member making the change: choosing the 'owner' scope means their own runs.
-  actorUserId: string,
 ): Promise<AiAgentRow | null> {
   const agent = await getAgentById(id, teamId);
   if (!agent) return null;
@@ -916,12 +918,7 @@ export async function updateAgent(
   if (patch.triggerOnAssign !== undefined) set.triggerOnAssign = patch.triggerOnAssign;
   if (patch.chatEnabled !== undefined) set.chatEnabled = patch.chatEnabled;
   if (patch.delegationDelaySec !== undefined) set.delegationDelaySec = patch.delegationDelaySec;
-  // The scope and its owner are one setting: 'owner' means the runs of the member who
-  // chose it, so switching to it hands the agent to them.
-  if (patch.runnerScope !== undefined) {
-    set.runnerScope = patch.runnerScope;
-    if (patch.runnerScope === 'owner') set.ownerUserId = actorUserId;
-  }
+  if (patch.runnerScope !== undefined) set.runnerScope = patch.runnerScope;
   if (invocationUrl !== undefined) set.invocationUrl = invocationUrl;
   if (Object.keys(set).length > 0) {
     try {

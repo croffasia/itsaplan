@@ -181,6 +181,7 @@ export default function TeamAiAgentFields({
       {...sectionProps('access')}
       value={value}
       onChange={onChange}
+      agent={agent}
     />
   );
 

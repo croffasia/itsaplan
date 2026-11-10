@@ -811,18 +811,13 @@ export async function copyProject(
         const fieldId = maps.field.get(trigger.fieldId);
         return fieldId == null ? [] : [{ fieldId, delaySec: trigger.delaySec }];
       });
-      await updateAgent(
-        a.id,
-        ownerTeam.id,
-        {
-          projectIds: [...a.projects.map((p) => p.id), newProject.id],
-          fieldTriggers: [
-            ...a.fieldTriggers.map(({ fieldId, delaySec }) => ({ fieldId, delaySec })),
-            ...fieldTriggers,
-          ],
-        },
-        ownerId,
-      );
+      await updateAgent(a.id, ownerTeam.id, {
+        projectIds: [...a.projects.map((p) => p.id), newProject.id],
+        fieldTriggers: [
+          ...a.fieldTriggers.map(({ fieldId, delaySec }) => ({ fieldId, delaySec })),
+          ...fieldTriggers,
+        ],
+      });
     }
   }
 

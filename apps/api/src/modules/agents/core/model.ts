@@ -173,6 +173,7 @@ export const AiAgentResponse = t.Object({
   fieldTriggers: t.Array(t.Object({ fieldId: t.Number(), name: t.String(), delaySec: t.Number() })),
   delegationDelaySec: t.Number(),
   ownerUserId: t.Nullable(t.String()),
+  ownerName: t.Nullable(t.String()),
   runnerScope: t.Union([t.Literal('owner'), t.Literal('team')]),
   lastSeenAt: t.Nullable(t.String()),
   invocationUrl: t.Nullable(t.String()),

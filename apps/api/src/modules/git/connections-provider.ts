@@ -884,6 +884,25 @@ export async function deleteProviderWebhook(
   await providerRequest(input, path, { method: 'DELETE' });
 }
 
+// Whether a login may write to the repository, asked of the provider with the
+// connection's token. GitHub, Gitea and Forgejo answer the same route; the others
+// are not asked (null).
+export async function hasRepositoryWriteAccess(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  login: string,
+): Promise<boolean | null> {
+  if (input.provider === 'gitlab' || input.provider === 'bitbucket') return null;
+  const response = await providerRequest(
+    input,
+    `${githubRepoPath(repository.fullName)}/collaborators/${encodeURIComponent(login)}/permission`,
+    { allowMissing: true },
+  );
+  if (response.status === 404) return false;
+  const permission = text(record(await response.json())?.permission);
+  return permission === 'admin' || permission === 'write';
+}
+
 export async function createPullRequestComment(
   input: ProviderConnectionInput,
   repository: ProviderRepository,

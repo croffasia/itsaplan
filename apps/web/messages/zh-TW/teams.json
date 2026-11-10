@@ -485,6 +485,8 @@
     "onMentionHint": "在留言中被 @ 提及時執行。",
     "onDelegation": "回應委派",
     "onDelegationHint": "設為工作項目的執行代理時執行。",
+    "onReview": "回應審閱",
+    "onReviewHint": "當協作者審閱其開啟的拉取請求時執行。",
     "onFieldSet": "回應「{field}」",
     "onFieldSetHint": "在工作項目中被設為該欄位的值時執行。",
     "runDelay": "啟動前等待",

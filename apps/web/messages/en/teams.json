@@ -485,6 +485,8 @@
     "onMentionHint": "Run when @-mentioned in a comment.",
     "onDelegation": "React to delegation",
     "onDelegationHint": "Run when set as an issue's delegate.",
+    "onReview": "React to reviews",
+    "onReviewHint": "Run when a collaborator reviews a pull request it opened.",
     "onFieldSet": "React to \"{field}\"",
     "onFieldSetHint": "Run when set as the value of this field on an issue.",
     "runDelay": "Wait before starting",

@@ -1,5 +1,5 @@
 {
-  "id": "2882e8af-224e-4465-adbe-8ac09e050f97",
+  "id": "64c1b60e-9abe-4edd-aafb-c025ae399b35",
   "prevId": "de8948e6-92ce-4dcd-af09-4c3b15a762f4",
   "version": "7",
   "dialect": "postgresql",
@@ -3670,6 +3670,13 @@
         },
         "trigger_on_assign": {
           "name": "trigger_on_assign",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "trigger_on_review": {
+          "name": "trigger_on_review",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,

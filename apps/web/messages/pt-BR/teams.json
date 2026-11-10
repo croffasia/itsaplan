@@ -485,6 +485,8 @@
     "onMentionHint": "Executa quando mencionado com @ em um comentário.",
     "onDelegation": "Reagir a delegação",
     "onDelegationHint": "Executa quando definido como delegado de uma issue.",
+    "onReview": "Reagir a revisões",
+    "onReviewHint": "Executa quando um colaborador revisa um pull request que ele abriu.",
     "onFieldSet": "Reagir a \"{field}\"",
     "onFieldSetHint": "Executa quando definido como o valor deste campo em uma issue.",
     "runDelay": "Esperar antes de começar",

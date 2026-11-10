@@ -485,6 +485,8 @@
     "onMentionHint": "Bir yorumda @-bahsedildiğinde çalışır.",
     "onDelegation": "İş devredilmesine tepki ver",
     "onDelegationHint": "Bir işin temsilcisi olarak atandığında çalışır.",
+    "onReview": "İncelemelere tepki ver",
+    "onReviewHint": "Açtığı bir pull request’i bir katkıcı incelediğinde çalışır.",
     "onFieldSet": "\"{field}\" alanına tepki ver",
     "onFieldSetHint": "Bir işte bu alanın değeri olarak seçildiğinde çalışır.",
     "runDelay": "Başlamadan önce bekle",

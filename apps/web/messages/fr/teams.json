@@ -485,6 +485,8 @@
     "onMentionHint": "S'exécute lorsqu'il est mentionné avec @ dans un commentaire.",
     "onDelegation": "Réagir à la délégation",
     "onDelegationHint": "S'exécute lorsqu'il est défini comme délégué d'un ticket.",
+    "onReview": "Réagir aux relectures",
+    "onReviewHint": "S'exécute quand un collaborateur relit une pull request qu'il a ouverte.",
     "onFieldSet": "Réagir à « {field} »",
     "onFieldSetHint": "S'exécute lorsqu'il est défini comme valeur de ce champ sur un ticket.",
     "runDelay": "Attendre avant de démarrer",

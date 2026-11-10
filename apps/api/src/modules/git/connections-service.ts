@@ -6,6 +6,7 @@ import {
   createProviderPullRequest,
   deleteProviderWebhook,
   createPullRequestComment,
+  hasRepositoryWriteAccess,
   getProviderAccount,
   getProviderPullRequest,
   getProviderRepository,
@@ -545,13 +546,31 @@ export async function reconcileManagedWebhooks(
   }
 }
 
-export async function postPullRequestLinkback(
+// Whether the login may write to the repository, through the connection the project
+// manages it with. No connection means nobody vouches for the login.
+export async function reviewerHasWriteAccess(
   projectId: number,
   provider: GitProvider,
   repository: string,
-  number: number,
-  body: string,
+  login: string,
 ): Promise<boolean> {
+  const row = await managedRepositoryConnection(projectId, provider, repository);
+  if (!row) return false;
+  const allowed = await hasRepositoryWriteAccess(
+    { provider, baseUrl: row.baseUrl, token: decryptSecret(row) },
+    { externalId: row.externalId, fullName: row.fullName, webUrl: row.webUrl, private: false },
+    login,
+  );
+  return allowed === true;
+}
+
+// The connection a project manages the repository through, with what a provider call
+// on its behalf needs, or undefined when the repository is not connected.
+async function managedRepositoryConnection(
+  projectId: number,
+  provider: GitProvider,
+  repository: string,
+): Promise<ManagedRepositoryConnection | undefined> {
   const [row] = await db
     .select({
       provider: gitProviderConnection.provider,
@@ -576,6 +595,23 @@ export async function postPullRequestLinkback(
       ),
     )
     .limit(1);
+  return row;
+}
+
+type ManagedRepositoryConnection = Pick<
+  typeof gitProviderConnection.$inferSelect,
+  'provider' | 'baseUrl' | 'ciphertext' | 'iv' | 'authTag'
+> &
+  Pick<typeof gitManagedRepository.$inferSelect, 'externalId' | 'fullName' | 'webUrl'>;
+
+export async function postPullRequestLinkback(
+  projectId: number,
+  provider: GitProvider,
+  repository: string,
+  number: number,
+  body: string,
+): Promise<boolean> {
+  const row = await managedRepositoryConnection(projectId, provider, repository);
   if (!row) return false;
   await createPullRequestComment(
     {

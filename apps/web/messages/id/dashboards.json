@@ -206,6 +206,7 @@
       "mention": "berjalan saat disebutkan dalam",
       "delegation": "berjalan saat pendelegasian",
       "field": "berjalan pada bidang",
+      "review": "berjalan karena tinjauan pada",
       "manual": "dijalankan secara manual",
       "api": "dijalankan lewat API",
       "schedule": "berjalan sesuai jadwal",

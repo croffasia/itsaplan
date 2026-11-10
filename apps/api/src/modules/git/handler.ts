@@ -1,5 +1,7 @@
 import { getIssueBySequence, updateIssue } from '#modules/issues/service';
 import { recordActivity, textSide, type ActivityActor } from '#modules/issues/activity';
+import { getReviewTriggerAgent } from '#modules/agents/core/service';
+import { enqueueAgentRun } from '#modules/agents/core/run-queue';
 import {
   parseIssueIdentifiers,
   parseMagicWords,
@@ -8,6 +10,7 @@ import {
 } from './magic-words';
 import {
   hasOpenDevelopmentLinks,
+  listPullRequestIssueIds,
   promoteBranchLinksToPullRequest,
   removeBranchLinks,
   removePullRequestLinks,
@@ -17,7 +20,13 @@ import {
   upsertBranchLinks,
   upsertPullRequestLinks,
 } from './development';
-import type { GitEvent, GitProviderKey, PullRequestEvent } from './providers';
+import type {
+  GitEvent,
+  GitProviderKey,
+  PullRequestEvent,
+  PullRequestReviewEvent,
+  PullRequestReviewState,
+} from './providers';
 import { columnStateTypes, firstCompletedColumnId, type GitSettings } from './service';
 import { postPullRequestLinkback } from './connections-service';
 import { issueWebPath } from '#modules/teams/ref';
@@ -33,7 +42,7 @@ import { issueWebPath } from '#modules/teams/ref';
 
 const CLOSED_STATE_TYPES = ['completed', 'canceled'];
 
-export type PullRequestOutcome = 'merged' | 'opened' | 'ignored';
+export type PullRequestOutcome = 'merged' | 'opened' | 'reviewed' | 'ignored';
 
 const refId = (ref: IssueRef) => `${ref.key}-${ref.sequenceNumber}`;
 
@@ -70,6 +79,9 @@ export async function handleGitEvent(
   if (event.kind === 'pipeline') {
     await updatePipelineLinks(project.id, providerKey, event);
     return 'pipeline';
+  }
+  if (event.kind === 'pull_request_review') {
+    return handlePullRequestReview(project.id, providerKey, event);
   }
 
   if (event.kind === 'branch') {
@@ -233,4 +245,51 @@ async function openTargetColumnId(settings: GitSettings): Promise<number | null>
   if (configured != null && (await columnStateTypes([configured])).has(configured))
     return configured;
   return null;
+}
+
+const REVIEW_VERBS: Record<PullRequestReviewState, string> = {
+  approved: 'approved',
+  changes_requested: 'requested changes on',
+  commented: 'commented on',
+};
+
+// A review of a linked pull request is recorded on each issue the pull request is
+// linked to, with the reviewer as the actor. When the pull request was opened by an
+// agent of the project, the review is handed to it as a run on the first of those
+// issues, once, however many issues the pull request names. A review the author
+// wrote on its own pull request starts nothing.
+async function handlePullRequestReview(
+  projectId: number,
+  providerKey: GitProviderKey,
+  event: PullRequestReviewEvent,
+): Promise<PullRequestOutcome> {
+  const issueIds = await listPullRequestIssueIds(projectId, providerKey, event.repo, event.number);
+  if (issueIds.length === 0) return 'ignored';
+  const entry = {
+    action: 'git_pr',
+    subject: textSide(event.state),
+    from: { value: `${event.repo}#${event.number}`, repo: event.repo, number: event.number },
+    to: textSide(event.url),
+  };
+  for (const issueId of issueIds) {
+    await recordActivity(issueId, [entry], { system: event.reviewer });
+  }
+  if (!event.author || event.author.toLowerCase() === event.reviewer.toLowerCase()) {
+    return 'reviewed';
+  }
+  const agent = await getReviewTriggerAgent(projectId, event.author);
+  if (!agent) return 'reviewed';
+  const where = event.url ? ` (${event.url})` : '';
+  const text = event.body.trim();
+  await enqueueAgentRun({
+    agentId: agent.id,
+    projectId,
+    issueId: issueIds[0]!,
+    sourceActivityId: null,
+    trigger: 'review',
+    prompt:
+      `${event.reviewer} ${REVIEW_VERBS[event.state]} pull request ${event.repo}#${event.number}${where}.` +
+      (text ? `\n\n${text}` : ''),
+  });
+  return 'reviewed';
 }

@@ -206,6 +206,7 @@
       "mention": "ran on mention in",
       "delegation": "ran on delegation of",
       "field": "ran on a field of",
+      "review": "ran on a review of",
       "manual": "ran manually",
       "api": "ran through the API",
       "schedule": "ran on schedule",

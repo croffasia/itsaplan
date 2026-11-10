@@ -842,7 +842,7 @@ export const agentRun = pgTable(
     ),
     check(
       'agent_run_trigger_check',
-      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'schedule', 'manual', 'status', 'event', 'api')`,
+      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'review', 'schedule', 'manual', 'status', 'event', 'api')`,
     ),
     uniqueIndex('agent_run_schedule_fire_uq').on(t.scheduleId, t.scheduledFor),
     index('agent_run_due_idx').on(t.status, t.nextAttemptAt),

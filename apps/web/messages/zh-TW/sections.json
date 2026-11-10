@@ -31,7 +31,7 @@
     },
     "general": {
       "label": "一般",
-      "description": "個人工作區、新建專案的預設設定，以及代理追蹤和執行時長。"
+      "description": "適用於本執行個體所有工作區的設定。"
     },
     "authentication": {
       "label": "身分驗證",

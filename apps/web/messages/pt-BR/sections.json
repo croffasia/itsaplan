@@ -31,7 +31,7 @@
     },
     "general": {
       "label": "Geral",
-      "description": "Workspaces pessoais, padrões para novos projetos, e rastros e tempo de execução de agentes."
+      "description": "Configurações que valem para todos os workspaces desta instância."
     },
     "authentication": {
       "label": "Autenticação",

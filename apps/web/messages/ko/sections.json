@@ -31,7 +31,7 @@
     },
     "general": {
       "label": "일반",
-      "description": "개인 워크스페이스, 새 프로젝트 기본값, AI 에이전트 추적 및 실행 시간 설정을 관리합니다."
+      "description": "이 인스턴스의 모든 워크스페이스에 적용되는 설정입니다."
     },
     "authentication": {
       "label": "인증",

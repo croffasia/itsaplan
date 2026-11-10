@@ -31,7 +31,7 @@
     },
     "general": {
       "label": "Général",
-      "description": "Les espaces de travail personnels, les valeurs par défaut des nouveaux projets, ainsi que les traces et la durée d'exécution des agents."
+      "description": "Les paramètres qui s'appliquent à tous les espaces de travail de cette instance."
     },
     "authentication": {
       "label": "Authentification",

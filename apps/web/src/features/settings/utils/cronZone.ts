@@ -13,6 +13,12 @@ function ascending(values: number[]): number[] {
   return [...new Set(values)].sort((a, b) => a - b);
 }
 
+function unchangedWildcard(field: string, cycle: number, shift: number): boolean {
+  if (field === '*' || shift % cycle === 0) return true;
+  const step = /^\*\/(\d+)$/.exec(field)?.[1];
+  return step != null && cycle % Number(step) === 0 && shift % Number(step) === 0;
+}
+
 // The values a field of numbers, ranges and steps stands for. Null for a field with a star.
 function valuesOf(field: string, max: number): number[] | null {
   if (field.includes('*')) return null;
@@ -49,7 +55,11 @@ export function cronInDisplayZone(cron: string, at = new Date()): string | null 
   const everyDay = dayOfMonth === '*' && dayOfWeek === '*';
   const hours = valuesOf(hour, 23);
   if (!hours) {
-    return everyDay && (onTheHour || minute.includes('*')) ? formatCron(parsed.value) : null;
+    return everyDay &&
+      unchangedWildcard(hour, 24, offset / 60) &&
+      (onTheHour || unchangedWildcard(minute, 60, offset))
+      ? formatCron(parsed.value)
+      : null;
   }
   const oneMinute = /^\d+$/.test(minute);
   if (!oneMinute && !onTheHour) return null;

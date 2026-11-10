@@ -598,8 +598,8 @@ describe('ai agents', () => {
     ).toBeNull();
   });
 
-  it("hands an 'owner'-scoped agent to the member who chose the scope", async () => {
-    const { asOwner, teamId } = await setup();
+  it("keeps the creator as owner when another member chooses the 'owner' scope", async () => {
+    const { asOwner, owner, teamId } = await setup();
     const created = await createAgent(asOwner, 'MKT', {
       name: 'Ext',
       username: 'ext',
@@ -618,7 +618,11 @@ describe('ai agents', () => {
     )({ agentId: created.data!.agent.id }).patch({
       runnerScope: 'owner',
     });
-    expect(res.data).toMatchObject({ runnerScope: 'owner', ownerUserId: second.userId });
+    expect(res.data).toMatchObject({
+      runnerScope: 'owner',
+      ownerUserId: owner.userId,
+      ownerName: 'Owner',
+    });
   });
 
   it('regenerates the key with a new secret', async () => {

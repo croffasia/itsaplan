@@ -65,6 +65,7 @@ const agent = (canManage: boolean): AiAgent => ({
   fieldTriggers: [],
   delegationDelaySec: 0,
   ownerUserId: null,
+  ownerName: null,
   runnerScope: 'team',
   lastSeenAt: null,
   invocationUrl: null,

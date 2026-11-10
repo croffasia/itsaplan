@@ -22,8 +22,9 @@ Three decisions a reader would otherwise propose again:
   (`PUT /teams/:teamId/ai-agents/:agentId/projects`). The caller's projects are the ones they are
   a member of, or every project of the team for whoever runs it.
 
-  `owner_user_id` starts as the creator and changes to the caller when they choose an
-  owner-scoped runner. Visibility follows this stored owner; it grants no management bypass.
+  `owner_user_id` is the creator and no edit changes it. The `owner` runner scope limits who may
+  give the agent work to this owner, whoever chooses the scope. The owner always sees the agent;
+  it grants no management bypass.
 
   An action that reaches every project the agent works in also takes running the team or being a
   member of all of them (`assertFullAgentAccess`): rotating the key, editing or deleting the

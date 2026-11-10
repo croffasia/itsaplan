@@ -133,7 +133,7 @@ describe('agent owner visibility', () => {
     );
   });
 
-  it('follows stored runner ownership rather than an immutable creator identity', async () => {
+  it("keeps the agent visible to its creator after an admin chooses the 'owner' scope", async () => {
     const { admin, member, person, teamId } = await setup();
     const created = (
       await member
@@ -146,10 +146,10 @@ describe('agent owner visibility', () => {
       ['ai-agents']({ agentId: created.agent.id })
       .patch({ runnerScope: 'owner' });
     expect(changed.status).toBe(200);
-    expect(changed.data!.ownerUserId).not.toBe(person.userId);
+    expect(changed.data!.ownerUserId).toBe(person.userId);
     expect(
       (await member.teams({ teamId })['ai-agents']({ agentId: created.agent.id }).get()).status,
-    ).toBe(404);
+    ).toBe(200);
   });
 
   it('applies ownership visibility to personal API keys and MCP without leaking to a peer', async () => {
@@ -204,8 +204,8 @@ describe('agent owner visibility', () => {
     expect(
       (await member.teams({ teamId })['ai-agents']({ agentId: created.agent.id }).get()).status,
     ).toBe(404);
-    expect(
-      (await admin.teams({ teamId })['ai-agents']({ agentId: created.agent.id }).get()).status,
-    ).toBe(200);
+    const legacy = await admin.teams({ teamId })['ai-agents']({ agentId: created.agent.id }).get();
+    expect(legacy.status).toBe(200);
+    expect(legacy.data).toMatchObject({ ownerUserId: null, ownerName: null });
   });
 });

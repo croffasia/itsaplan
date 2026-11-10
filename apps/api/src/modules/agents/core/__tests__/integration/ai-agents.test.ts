@@ -635,6 +635,26 @@ describe('ai agents', () => {
     expect(res.data?.apiKey).not.toBe(created.data?.apiKey);
   });
 
+  it('issues keys for agents whose name is over 32 characters', async () => {
+    const { asOwner, teamId } = await setup();
+    const name = 'Inside Architecture Guardian of the Backlog';
+    const internal = await createAgent(asOwner, 'MKT', {
+      name,
+      username: 'guardian',
+      kind: 'internal',
+    });
+    expect(internal.status).toBe(201);
+    const external = await createAgent(asOwner, 'MKT', {
+      name,
+      username: 'guardian-ext',
+      kind: 'external',
+    });
+    expect(external.status).toBe(201);
+    expect((await apiKeyApi(external.data!.apiKey!).teams({ teamId }).get()).status).toBe(200);
+    const agentId = external.data!.agent.id;
+    expect((await agents(asOwner, teamId)({ agentId })['regenerate-key'].post()).status).toBe(200);
+  });
+
   // A personal key expires; an agent replays its key with nothing that would renew
   // it, so the one issued at creation and the one regenerate-key issues carry none.
   it('issues the agent key without an expiry', async () => {

@@ -35,18 +35,19 @@ export async function appendRunEvents(
     await tx.insert(agentRunTrace).values({ runId, attempt: input.attempt }).onConflictDoNothing();
     const key = and(eq(agentRunTrace.runId, runId), eq(agentRunTrace.attempt, input.attempt));
     const [trace] = await tx.select().from(agentRunTrace).where(key);
-    if (input.offset < trace.nextOffset && input.offset + input.events.length <= trace.nextOffset) {
-      return { nextOffset: trace.nextOffset, truncated: trace.truncated };
-    }
-    if (input.offset !== trace.nextOffset) throw new HttpError(409, 'Unexpected trace offset');
     if (trace.sessionId && input.sessionId && trace.sessionId !== input.sessionId) {
       throw new HttpError(409, 'Session is already bound to this attempt');
+    }
+    if (input.offset > trace.nextOffset) throw new HttpError(409, 'Unexpected trace offset');
+    const unseen = input.events.slice(trace.nextOffset - input.offset);
+    if (unseen.length === 0) {
+      return { nextOffset: trace.nextOffset, truncated: trace.truncated };
     }
     const events = trace.events as { event: AgUiEventBody; receivedAt: string }[];
     let bytes = Buffer.byteLength(JSON.stringify(events));
     let truncated = trace.truncated;
     const receivedAt = new Date().toISOString();
-    for (const event of input.events) {
+    for (const event of unseen) {
       const stored = { event, receivedAt };
       const size = Buffer.byteLength(JSON.stringify(stored)) + 1;
       if (truncated || events.length >= MAX_EVENTS || bytes + size > MAX_BYTES) {

@@ -505,8 +505,12 @@ function pullRequestEvent(
     headSha: pullRequest.headSha,
     defaultBranch: repository.defaultBranch ?? null,
     draft: pullRequest.draft,
+    author: text(record(provider === 'gitlab' ? row.author : row.user)?.[loginKey(provider)]),
+    mergedBy: text(record(row.merged_by)?.[loginKey(provider)]),
   };
 }
+
+const loginKey = (provider: GitProvider) => (provider === 'gitlab' ? 'username' : 'login');
 
 function gitlabPipeline(
   value: unknown,
@@ -773,7 +777,14 @@ function providerWebhookApi(
       body: (create) => ({
         ...(create ? { type: 'gitea' } : {}),
         active: true,
-        events: ['pull_request', 'create', 'delete'],
+        events: [
+          'pull_request',
+          'pull_request_review_approved',
+          'pull_request_review_rejected',
+          'pull_request_review_comment',
+          'create',
+          'delete',
+        ],
         config: { url: payloadUrl, content_type: 'json', secret },
       }),
     };
@@ -812,7 +823,7 @@ function providerWebhookApi(
     body: (create) => ({
       ...(create ? { name: 'web' } : {}),
       active: true,
-      events: ['pull_request', 'check_run', 'create', 'delete'],
+      events: ['pull_request', 'pull_request_review', 'check_run', 'create', 'delete'],
       config: { url: payloadUrl, content_type: 'json', insecure_ssl: '0', secret },
     }),
   };
@@ -871,6 +882,32 @@ export async function deleteProviderWebhook(
             : githubRepoPath(repository.fullName)
         }/hooks/${encodeURIComponent(webhookExternalId)}`;
   await providerRequest(input, path, { method: 'DELETE' });
+}
+
+// Whether a login may write to the repository, asked of the provider with the
+// connection's token. GitHub, Gitea and Forgejo answer the same route; the others
+// are not asked (null).
+export async function hasRepositoryWriteAccess(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  login: string,
+): Promise<boolean | null> {
+  if (input.provider === 'gitlab' || input.provider === 'bitbucket') return null;
+  const response = await providerRequest(
+    input,
+    `${githubRepoPath(repository.fullName)}/collaborators/${encodeURIComponent(login)}/permission`,
+    { allowMissing: true },
+  );
+  if (response.status === 404) return false;
+  // GitHub answers admin, maintain, write, triage, read or none; Gitea and Forgejo
+  // answer admin, write, read or none, and owner for an owner of the organization.
+  const permission = text(record(await response.json())?.permission);
+  return (
+    permission === 'owner' ||
+    permission === 'admin' ||
+    permission === 'maintain' ||
+    permission === 'write'
+  );
 }
 
 export async function createPullRequestComment(

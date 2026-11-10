@@ -485,6 +485,8 @@
     "onMentionHint": "댓글에서 @멘션되면 실행합니다.",
     "onDelegation": "위임에 반응",
     "onDelegationHint": "이슈의 위임 대상으로 지정되면 실행합니다.",
+    "onReview": "리뷰에 반응",
+    "onReviewHint": "자신이 연 풀 리퀘스트를 협업자가 리뷰하면 실행됩니다.",
     "onFieldSet": "\"{field}\" 설정 시 실행",
     "onFieldSetHint": "이슈에서 이 필드의 값으로 지정되면 실행합니다.",
     "runDelay": "실행 전 대기",

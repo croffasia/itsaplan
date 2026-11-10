@@ -485,6 +485,8 @@
     "onMentionHint": "在评论中被 @ 提及时运行。",
     "onDelegation": "响应委派",
     "onDelegationHint": "设为工作项的执行代理时运行。",
+    "onReview": "响应评审",
+    "onReviewHint": "当协作者评审其打开的拉取请求时运行。",
     "onFieldSet": "响应“{field}”",
     "onFieldSetHint": "在工作项中被设为该字段的值时运行。",
     "runDelay": "启动前等待",

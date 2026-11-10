@@ -251,6 +251,28 @@ function pullRequestUpdateValues(event: PullRequestEvent, updatedAt: Date) {
   };
 }
 
+// The issues of the project a pull request is linked to, oldest link first.
+export async function listPullRequestIssueIds(
+  projectId: number,
+  provider: GitProviderKey,
+  repo: string,
+  number: number,
+): Promise<number[]> {
+  const rows = await db
+    .select({ issueId: issueDevelopmentLink.issueId })
+    .from(issueDevelopmentLink)
+    .where(
+      and(
+        eq(issueDevelopmentLink.provider, provider),
+        eq(issueDevelopmentLink.repository, repo),
+        eq(issueDevelopmentLink.externalKey, `pull_request:${number}`),
+        projectIssue(projectId),
+      ),
+    )
+    .orderBy(issueDevelopmentLink.id);
+  return rows.map((row) => row.issueId);
+}
+
 export async function updatePullRequestLinks(
   projectId: number,
   provider: GitProviderKey,

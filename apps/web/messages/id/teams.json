@@ -485,6 +485,8 @@
     "onMentionHint": "Berjalan saat disebut dengan @ dalam komentar.",
     "onDelegation": "Bereaksi terhadap delegasi",
     "onDelegationHint": "Berjalan saat ditetapkan sebagai delegasi issue.",
+    "onReview": "Bereaksi terhadap tinjauan",
+    "onReviewHint": "Berjalan saat kolaborator meninjau pull request yang dibukanya.",
     "onFieldSet": "Bereaksi terhadap \"{field}\"",
     "onFieldSetHint": "Berjalan saat ditetapkan sebagai nilai bidang ini pada issue.",
     "runDelay": "Tunggu sebelum memulai",

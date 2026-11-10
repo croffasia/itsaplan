@@ -86,6 +86,12 @@ const configFields = {
   ),
   triggerOnMention: t.Optional(t.Boolean({ description: 'Run when @-mentioned in a comment.' })),
   triggerOnAssign: t.Optional(t.Boolean({ description: 'Run when assigned to an issue.' })),
+  triggerOnReview: t.Optional(
+    t.Boolean({
+      description:
+        'Run when a collaborator of the repository reviews a pull request the agent opened.',
+    }),
+  ),
   chatEnabled: t.Optional(
     t.Boolean({
       description:
@@ -169,6 +175,7 @@ export const AiAgentResponse = t.Object({
   memoryLastMessages: t.Nullable(t.Number()),
   triggerOnMention: t.Boolean(),
   triggerOnAssign: t.Boolean(),
+  triggerOnReview: t.Boolean(),
   chatEnabled: t.Boolean(),
   fieldTriggers: t.Array(t.Object({ fieldId: t.Number(), name: t.String(), delaySec: t.Number() })),
   delegationDelaySec: t.Number(),

@@ -611,9 +611,11 @@ export const aiAgent = pgTable(
     runTimeoutSec: integer('run_timeout_sec'),
     // Internal-agent run triggers. A mention in a comment enqueues a run when
     // trigger_on_mention is set; being set as an issue's delegate enqueues one when
-    // trigger_on_assign is set.
+    // trigger_on_assign is set; a review of a pull request the agent opened, by someone
+    // with write access to the repository, enqueues one when trigger_on_review is set.
     triggerOnMention: boolean('trigger_on_mention').notNull().default(true),
     triggerOnAssign: boolean('trigger_on_assign').notNull().default(false),
+    triggerOnReview: boolean('trigger_on_review').notNull().default(false),
     // Gates the test chat and the external-agent chat only; the triggers above and
     // schedules still run an agent with chat off.
     chatEnabled: boolean('chat_enabled').notNull().default(true),
@@ -820,7 +822,7 @@ export const agentRun = pgTable(
     ),
     check(
       'agent_run_trigger_check',
-      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'schedule', 'manual', 'status', 'event')`,
+      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'review', 'schedule', 'manual', 'status', 'event')`,
     ),
     uniqueIndex('agent_run_schedule_fire_uq').on(t.scheduleId, t.scheduledFor),
     index('agent_run_due_idx').on(t.status, t.nextAttemptAt),

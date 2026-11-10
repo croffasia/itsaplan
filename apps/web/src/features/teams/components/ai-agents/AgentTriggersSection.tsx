@@ -52,7 +52,7 @@ export default function AgentTriggersSection({
   );
 
   const enabled =
-    [value.triggerOnMention, value.triggerOnAssign].filter(Boolean).length +
+    [value.triggerOnMention, value.triggerOnAssign, value.triggerOnReview].filter(Boolean).length +
     memberFields.filter((f) => value.fieldTriggers.some((tr) => tr.fieldId === f.field.id)).length;
 
   function toggleField(id: number, on: boolean) {
@@ -78,7 +78,7 @@ export default function AgentTriggersSection({
       icon={Zap}
       title={t('triggers')}
       hint={t('triggersHint')}
-      headerRight={`${enabled} / ${2 + memberFields.length}`}
+      headerRight={`${enabled} / ${3 + memberFields.length}`}
     >
       <label className="flex cursor-pointer items-center justify-between gap-2">
         <span>
@@ -107,6 +107,16 @@ export default function AgentTriggersSection({
           onChange={(v) => onChange({ delegationDelayMin: v })}
         />
       )}
+      <label className="flex cursor-pointer items-center justify-between gap-2">
+        <span>
+          <span className="text-sm">{t('onReview')}</span>
+          <span className="block text-xs text-muted-foreground">{t('onReviewHint')}</span>
+        </span>
+        <Switch
+          checked={value.triggerOnReview}
+          onCheckedChange={(v) => onChange({ triggerOnReview: v })}
+        />
+      </label>
       {memberFields.map(({ field, project }) => {
         const trigger = value.fieldTriggers.find((tr) => tr.fieldId === field.id);
         return (

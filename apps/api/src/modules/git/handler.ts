@@ -1,5 +1,7 @@
 import { getIssueBySequence, updateIssue } from '#modules/issues/service';
 import { recordActivity, textSide, type ActivityActor } from '#modules/issues/activity';
+import { getReviewTriggerAgent } from '#modules/agents/core/service';
+import { enqueueAgentRun } from '#modules/agents/core/run-queue';
 import {
   parseIssueIdentifiers,
   parseMagicWords,
@@ -8,6 +10,7 @@ import {
 } from './magic-words';
 import {
   hasOpenDevelopmentLinks,
+  listPullRequestIssueIds,
   promoteBranchLinksToPullRequest,
   removeBranchLinks,
   removePullRequestLinks,
@@ -17,9 +20,15 @@ import {
   upsertBranchLinks,
   upsertPullRequestLinks,
 } from './development';
-import type { GitEvent, GitProviderKey, PullRequestEvent } from './providers';
+import type {
+  GitEvent,
+  GitProviderKey,
+  PullRequestEvent,
+  PullRequestReviewEvent,
+  PullRequestReviewState,
+} from './providers';
 import { columnStateTypes, firstCompletedColumnId, type GitSettings } from './service';
-import { postPullRequestLinkback } from './connections-service';
+import { postPullRequestLinkback, reviewerHasWriteAccess } from './connections-service';
 import { issueWebPath } from '#modules/teams/ref';
 
 // Stores normalized repository events and applies pull request automation:
@@ -33,7 +42,7 @@ import { issueWebPath } from '#modules/teams/ref';
 
 const CLOSED_STATE_TYPES = ['completed', 'canceled'];
 
-export type PullRequestOutcome = 'merged' | 'opened' | 'ignored';
+export type PullRequestOutcome = 'merged' | 'opened' | 'reviewed' | 'ignored';
 
 const refId = (ref: IssueRef) => `${ref.key}-${ref.sequenceNumber}`;
 
@@ -70,6 +79,9 @@ export async function handleGitEvent(
   if (event.kind === 'pipeline') {
     await updatePipelineLinks(project.id, providerKey, event);
     return 'pipeline';
+  }
+  if (event.kind === 'pull_request_review') {
+    return handlePullRequestReview(project.id, providerKey, providerLabel, event);
   }
 
   if (event.kind === 'branch') {
@@ -153,6 +165,13 @@ export async function handleGitEvent(
   return handlePullRequestEvent(project, settings, providerLabel, event, refs);
 }
 
+// Who an entry is by: the repository login that acted, shown as it is, or the provider
+// when the payload names nobody. A login is never matched to a member or an agent: the
+// two accounts are not linked, and a login is free to register on a public host.
+const repositoryActor = (login: string | null, providerLabel: string): ActivityActor => ({
+  system: login ?? providerLabel,
+});
+
 export async function handlePullRequestEvent(
   project: { id: number; key: string },
   settings: GitSettings,
@@ -160,7 +179,10 @@ export async function handlePullRequestEvent(
   event: PullRequestEvent,
   parsed = parseMagicWords(`${event.title}\n${event.body}`),
 ): Promise<PullRequestOutcome> {
-  const actor: ActivityActor = { system: providerLabel };
+  const actor = repositoryActor(
+    event.action === 'merged' ? event.mergedBy : event.author,
+    providerLabel,
+  );
   const projectKey = project.key.toUpperCase();
   const inProject = (refs: IssueRef[]) => refs.filter((r) => r.key === projectKey);
   const prEntry = (outcome: string) => ({
@@ -233,4 +255,60 @@ async function openTargetColumnId(settings: GitSettings): Promise<number | null>
   if (configured != null && (await columnStateTypes([configured])).has(configured))
     return configured;
   return null;
+}
+
+const REVIEW_VERBS: Record<PullRequestReviewState, string> = {
+  approved: 'approved',
+  changes_requested: 'requested changes on',
+  commented: 'commented on',
+};
+
+// A review of a linked pull request is recorded on each issue the pull request is
+// linked to, by the reviewer. When the pull request was opened by an agent of the
+// project that reacts to reviews, and the reviewer may write to the repository, the
+// review is handed to the agent as a run on the first of those issues, once, however
+// many issues the pull request names. The write-access check is what keeps a stranger
+// on a public repository from giving the agent a task; the provider either says so in
+// the delivery or is asked through the project's connection. A review the author wrote
+// on its own pull request starts nothing.
+async function handlePullRequestReview(
+  projectId: number,
+  providerKey: GitProviderKey,
+  providerLabel: string,
+  event: PullRequestReviewEvent,
+): Promise<PullRequestOutcome> {
+  const issueIds = await listPullRequestIssueIds(projectId, providerKey, event.repo, event.number);
+  if (issueIds.length === 0) return 'ignored';
+  const entry = {
+    action: 'git_pr',
+    subject: textSide(event.state),
+    from: { value: `${event.repo}#${event.number}`, repo: event.repo, number: event.number },
+    to: textSide(event.url),
+  };
+  const actor = repositoryActor(event.reviewer, providerLabel);
+  for (const issueId of issueIds) {
+    await recordActivity(issueId, [entry], actor);
+  }
+  if (!event.author || event.author.toLowerCase() === event.reviewer.toLowerCase()) {
+    return 'reviewed';
+  }
+  const agent = await getReviewTriggerAgent(projectId, event.author);
+  if (!agent) return 'reviewed';
+  const trusted =
+    event.reviewerTrusted ??
+    (await reviewerHasWriteAccess(projectId, providerKey, event.repo, event.reviewer));
+  if (!trusted) return 'reviewed';
+  const where = event.url ? ` (${event.url})` : '';
+  const text = event.body.trim();
+  await enqueueAgentRun({
+    agentId: agent.id,
+    projectId,
+    issueId: issueIds[0]!,
+    sourceActivityId: null,
+    trigger: 'review',
+    prompt:
+      `${event.reviewer} ${REVIEW_VERBS[event.state]} pull request ${event.repo}#${event.number}${where}.` +
+      (text ? `\n\n${text}` : ''),
+  });
+  return 'reviewed';
 }

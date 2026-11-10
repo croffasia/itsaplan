@@ -26,6 +26,7 @@ export interface AgentFormValue {
   memoryLastMessages: string;
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  triggerOnReview: boolean;
   // Whether the agent may be chatted with. Off, it drops out of the chat selector and
   // the chat routes reject it; a mention, a delegation, and a schedule are unaffected.
   chatEnabled: boolean;
@@ -99,6 +100,7 @@ export function initialAgentValue(agent?: AiAgent): AgentFormValue {
     memoryLastMessages: agent?.memoryLastMessages != null ? String(agent.memoryLastMessages) : '',
     triggerOnMention: agent?.triggerOnMention ?? true,
     triggerOnAssign: agent?.triggerOnAssign ?? false,
+    triggerOnReview: agent?.triggerOnReview ?? false,
     chatEnabled: agent?.chatEnabled ?? true,
     fieldTriggers: (agent?.fieldTriggers ?? []).map((trigger) => ({
       fieldId: trigger.fieldId,
@@ -131,6 +133,7 @@ function configFields(v: AgentFormValue) {
     instructions: v.instructions.trim() || null,
     triggerOnMention: v.triggerOnMention,
     triggerOnAssign: v.triggerOnAssign,
+    triggerOnReview: v.triggerOnReview,
     chatEnabled: v.chatEnabled,
     fieldTriggers: v.fieldTriggers.map((trigger) => ({
       fieldId: trigger.fieldId,

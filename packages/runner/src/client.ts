@@ -8,7 +8,8 @@ export interface Run {
   attempts: number;
   traceEvents?: boolean;
   id: number;
-  trigger: 'mention' | 'delegation' | 'field' | 'schedule' | 'manual' | 'status' | 'event';
+  trigger:
+    'mention' | 'delegation' | 'field' | 'review' | 'schedule' | 'manual' | 'status' | 'event';
   prompt: string;
   systemPrompt: string;
   issueId: number | null;

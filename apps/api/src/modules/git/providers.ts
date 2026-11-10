@@ -24,6 +24,10 @@ export interface PullRequestEvent {
   headSha: string | null;
   defaultBranch: string | null;
   draft: boolean;
+  // Repository logins: who opened the pull request, and who merged it on a merge. Null
+  // when the payload does not say.
+  author: string | null;
+  mergedBy: string | null;
 }
 
 export interface BranchEvent {
@@ -57,7 +61,26 @@ export interface CheckEvent {
   url: string | null;
 }
 
-export type GitEvent = PullRequestEvent | BranchEvent | PipelineEvent | CheckEvent;
+// A review submitted on a pull request: who reviewed, what they decided, and who
+// opened the pull request, so the agent that did can be told.
+export type PullRequestReviewState = 'approved' | 'changes_requested' | 'commented';
+
+export interface PullRequestReviewEvent {
+  kind: 'pull_request_review';
+  repo: string;
+  number: number;
+  url: string | null;
+  state: PullRequestReviewState;
+  body: string;
+  reviewer: string;
+  author: string | null;
+  // Whether the reviewer has write access to the repository: GitHub says so in the
+  // delivery, the others do not (null), and the handler asks them.
+  reviewerTrusted: boolean | null;
+}
+
+export type GitEvent =
+  PullRequestEvent | PullRequestReviewEvent | BranchEvent | PipelineEvent | CheckEvent;
 
 export type DeliveryHeaders = Record<string, string | undefined>;
 
@@ -125,7 +148,21 @@ interface GithubPayload {
     draft?: boolean;
     base?: { ref?: string };
     head?: { ref?: string; sha?: string };
+    user?: { login?: string };
+    merged_by?: { login?: string } | null;
   };
+  // GitHub sends state, body and user; Gitea and Forgejo send type and content, with
+  // the reviewer as the sender.
+  review?: {
+    state?: string;
+    body?: string | null;
+    html_url?: string;
+    user?: { login?: string };
+    author_association?: string;
+    type?: string;
+    content?: string | null;
+  };
+  sender?: { login?: string };
   check_run?: {
     id?: number;
     name?: string;
@@ -174,7 +211,7 @@ export function pipelineStatus(status: string | undefined): PipelineStatus | nul
 }
 
 function parseGithubPullRequest(payload: unknown): PullRequestEvent | null {
-  const { action, pull_request: pr, repository } = payload as GithubPayload;
+  const { action, pull_request: pr, repository, sender } = payload as GithubPayload;
   if (!pr?.number || !repository?.full_name) return null;
   const merged = action === 'closed' && pr.merged === true;
   const closed = action === 'closed' && !merged;
@@ -195,6 +232,8 @@ function parseGithubPullRequest(payload: unknown): PullRequestEvent | null {
     headSha: pr.head?.sha ?? null,
     defaultBranch: repository.default_branch ?? null,
     draft: pr.draft === true,
+    author: pr.user?.login ?? null,
+    mergedBy: merged ? (pr.merged_by?.login ?? sender?.login ?? null) : null,
   };
 }
 
@@ -221,6 +260,53 @@ function parseGithubCheck(payload: unknown): CheckEvent | null {
   };
 }
 
+// Gitea and Forgejo send a review as one event per decision.
+const GITEA_REVIEW_EVENTS: Record<string, PullRequestReviewState> = {
+  pull_request_approved: 'approved',
+  pull_request_rejected: 'changes_requested',
+  pull_request_comment: 'commented',
+};
+
+function isReviewEvent(event: string | undefined): event is string {
+  return event === 'pull_request_review' || (!!event && event in GITEA_REVIEW_EVENTS);
+}
+
+function githubReviewState(state: string | undefined): PullRequestReviewState | null {
+  const value = state?.toLowerCase();
+  if (value === 'approved' || value === 'changes_requested' || value === 'commented') return value;
+  return null;
+}
+
+// A review as GitHub sends it (one pull_request_review event with the decision in
+// review.state and the text in review.body) or as Gitea and Forgejo send it (the text
+// in review.content, the reviewer as the sender). A comment-only review with no text
+// says nothing to act on.
+function parseGithubReview(payload: unknown, event: string): PullRequestReviewEvent | null {
+  const { action, pull_request: pr, repository, review, sender } = payload as GithubPayload;
+  if (!pr?.number || !repository?.full_name) return null;
+  const fromGithub = event === 'pull_request_review';
+  if (fromGithub && action !== 'submitted') return null;
+  const state = fromGithub ? githubReviewState(review?.state) : GITEA_REVIEW_EVENTS[event];
+  if (!state) return null;
+  const body = (fromGithub ? review?.body : review?.content) ?? '';
+  const reviewer = fromGithub ? review?.user?.login : sender?.login;
+  if (!reviewer) return null;
+  if (state === 'commented' && body.trim() === '') return null;
+  return {
+    kind: 'pull_request_review',
+    repo: repository.full_name,
+    number: pr.number,
+    url: httpUrl(review?.html_url) ?? httpUrl(pr.html_url),
+    state,
+    body,
+    reviewer,
+    author: pr.user?.login ?? null,
+    reviewerTrusted: fromGithub
+      ? ['OWNER', 'MEMBER', 'COLLABORATOR'].includes(review?.author_association ?? '')
+      : null,
+  };
+}
+
 function parseGithubBranch(payload: unknown, headers: DeliveryHeaders): BranchEvent | null {
   const value = payload as GithubPayload;
   const event = headers['x-github-event'] ?? headers['x-gitea-event'] ?? headers['x-forgejo-event'];
@@ -244,6 +330,7 @@ function parseGithubPayload(payload: unknown, headers: DeliveryHeaders): GitEven
   const event = headers['x-github-event'] ?? headers['x-gitea-event'] ?? headers['x-forgejo-event'];
   if (event === 'check_run') return parseGithubCheck(payload);
   if (event === 'create' || event === 'delete') return parseGithubBranch(payload, headers);
+  if (isReviewEvent(event)) return parseGithubReview(payload, event);
   return parseGithubPullRequest(payload);
 }
 
@@ -302,6 +389,8 @@ interface GitlabPayload {
     work_in_progress?: boolean;
   };
   project?: { path_with_namespace?: string; default_branch?: string; web_url?: string };
+  // The member whose action sent the hook.
+  user?: { username?: string };
   merge_request?: { iid?: number; source_branch?: string };
   changes?: { draft?: { previous?: boolean; current?: boolean } };
 }
@@ -384,6 +473,9 @@ const gitlab: GitProvider = {
         null,
       defaultBranch: project.default_branch ?? null,
       draft: mr.draft === true || mr.work_in_progress === true,
+      // The hook names only who acted: the author on an open, the merger on a merge.
+      author: opened ? ((payload as GitlabPayload).user?.username ?? null) : null,
+      mergedBy: merged ? ((payload as GitlabPayload).user?.username ?? null) : null,
     };
   },
 };
@@ -412,10 +504,12 @@ interface BitbucketPayload {
       } | null;
     }[];
   };
+  actor?: { nickname?: string };
   pullrequest?: {
     id?: number;
     title?: string;
     description?: string | null;
+    author?: { nickname?: string };
     draft?: boolean;
     destination?: { branch?: { name?: string } };
     source?: { branch?: { name?: string }; commit?: { hash?: string } };
@@ -456,7 +550,7 @@ const bitbucket: GitProvider = {
     const closed = key === 'pullrequest:rejected';
     const updated = key === 'pullrequest:updated';
     if (!opened && !merged && !closed && !updated) return null;
-    const { pullrequest: pr, repository } = payload as BitbucketPayload;
+    const { pullrequest: pr, repository, actor } = payload as BitbucketPayload;
     if (!pr?.id || !repository?.full_name) return null;
     return {
       kind: 'pull_request',
@@ -473,6 +567,8 @@ const bitbucket: GitProvider = {
       // the merged-into-default-branch check is off for Bitbucket.
       defaultBranch: repository.mainbranch?.name ?? null,
       draft: pr.draft === true,
+      author: pr.author?.nickname ?? null,
+      mergedBy: merged ? (actor?.nickname ?? null) : null,
     };
   },
 };

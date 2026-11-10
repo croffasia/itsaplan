@@ -899,8 +899,15 @@ export async function hasRepositoryWriteAccess(
     { allowMissing: true },
   );
   if (response.status === 404) return false;
+  // GitHub answers admin, maintain, write, triage, read or none; Gitea and Forgejo
+  // answer admin, write, read or none, and owner for an owner of the organization.
   const permission = text(record(await response.json())?.permission);
-  return permission === 'admin' || permission === 'write';
+  return (
+    permission === 'owner' ||
+    permission === 'admin' ||
+    permission === 'maintain' ||
+    permission === 'write'
+  );
 }
 
 export async function createPullRequestComment(

@@ -42,7 +42,15 @@ export const AgentToolListResponse = t.Array(AgentToolResponse);
 
 export const AgentToolPageResponse = pageResponse(AgentToolResponse);
 
-export const agentToolListQuery = t.Object(pageQueryFields);
+export const agentToolListQuery = t.Object({
+  search: t.Optional(
+    t.String({
+      maxLength: 200,
+      description: 'Case-insensitive match on the tool name, its group or its integration.',
+    }),
+  ),
+  ...pageQueryFields,
+});
 
 export const createAgentToolBody = t.Object({
   toolKey: t.String({ minLength: 1 }),

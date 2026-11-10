@@ -1,46 +1,46 @@
-import { Trash2, Wrench } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import type { ConfiguredTool } from '@/lib/api/endpoints/agentTools';
+import type { IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { useTranslations } from 'next-intl';
 
-// One configured tool as a table row: the tool name with the integration and
-// credential it runs on below, the token permissions it needs as badges, and a
-// delete action gated by permission.
 export function ToolConfigRow({
   tool,
-  toolLabel,
+  meta,
   integrationLabel,
-  scopes,
   canDelete,
   onDelete,
 }: {
   tool: ConfiguredTool;
-  toolLabel: string;
+  // Absent when the catalog no longer has the tool; the row then shows its key.
+  meta: IntegrationMeta['tools'][number] | undefined;
   integrationLabel: string;
-  scopes: string[];
   canDelete: boolean;
   onDelete: () => void;
 }) {
   const t = useTranslations('teams.tools');
+  const scopes = meta?.scopes ?? [];
   const on = tool.credentialLabel
     ? `${integrationLabel} · ${tool.credentialLabel}`
     : integrationLabel;
   return (
     <TableRow className="group/item">
       <TableCell className="px-3 py-3 align-top whitespace-normal">
-        <div className="flex min-w-0 items-start gap-2.5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-            <Wrench className="size-4" />
-          </div>
-          <div className="flex min-w-0 flex-col gap-0.5 pt-0.5">
-            <span className="truncate text-sm font-medium text-foreground">{toolLabel}</span>
-            <span className="truncate text-xs text-muted-foreground">{on}</span>
-          </div>
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="truncate text-sm font-medium text-foreground">
+            {meta?.label ?? tool.toolKey}
+          </span>
+          {meta?.description && (
+            <p className="line-clamp-2 text-xs text-muted-foreground" title={meta.description}>
+              {meta.description}
+            </p>
+          )}
+          <span className="truncate text-xs text-muted-foreground/70">{on}</span>
         </div>
       </TableCell>
-      <TableCell className="px-3 py-3 pt-4 align-top whitespace-normal">
+      <TableCell className="px-3 py-3 align-top whitespace-normal">
         {scopes.length > 0 ? (
           <div className="flex flex-wrap gap-1">
             {scopes.map((s) => (
@@ -50,10 +50,10 @@ export function ToolConfigRow({
             ))}
           </div>
         ) : (
-          <span className="text-xs text-muted-foreground">{t('noScopes')}</span>
+          <span className="text-xs leading-5 text-muted-foreground">{t('noScopes')}</span>
         )}
       </TableCell>
-      <TableCell className="px-3 py-2 pt-3 align-top">
+      <TableCell className="px-3 py-2 align-top">
         <div className="flex items-center justify-end gap-1">
           {canDelete && (
             <Button

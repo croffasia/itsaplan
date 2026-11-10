@@ -157,6 +157,30 @@ describe('agent tools', () => {
     expect((await tools(asOwner, teamId).options.get()).data).toHaveLength(2);
   });
 
+  it('searches the list by tool name, integration and group', async () => {
+    const { asOwner, teamId } = await setup();
+    const credentialId = await jinaCredential(asOwner);
+    await tools(asOwner, teamId).post({ toolKey: 'jina_reader', credentialId });
+    await tools(asOwner, teamId).post({ toolKey: 'jina_search', credentialId });
+    await tools(asOwner, teamId).post({ toolKey: 'pdf_read' });
+
+    const keys = async (search: string) =>
+      (await tools(asOwner, teamId).get({ query: { search } })).data?.items.map((i) => i.toolKey);
+    expect(await keys('reader')).toEqual(['jina_reader']);
+    expect(await keys('JINA AI')).toEqual(['jina_reader', 'jina_search']);
+    expect(await keys(' pdf ')).toEqual(['pdf_read']);
+    expect(await keys('discussions')).toEqual([]);
+
+    const page = await tools(asOwner, teamId).get({ query: { search: 'jina', pageSize: 1 } });
+    expect(page.data).toMatchObject({ total: 2 });
+    expect(page.data?.items).toHaveLength(1);
+
+    const longest = await tools(asOwner, teamId).get({ query: { search: 'x'.repeat(200) } });
+    expect(longest.status).toBe(200);
+    const tooLong = await tools(asOwner, teamId).get({ query: { search: 'x'.repeat(201) } });
+    expect(tooLong.status).toBe(400);
+  });
+
   it('serves one configured tool to every project of the team', async () => {
     const { asOwner, teamId } = await setup();
     await asOwner.teams({ teamId }).projects.post({ key: 'SUP', name: 'Support' });

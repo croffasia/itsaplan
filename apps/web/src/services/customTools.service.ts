@@ -4,6 +4,7 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  type ConfiguredToolListParams,
   type NewConfiguredToolInput,
   listConfiguredToolOptions,
   listConfiguredTools,
@@ -12,7 +13,6 @@ import {
   listAgentToolLinks,
   setAgentTools,
 } from '@/lib/api/endpoints/agentTools';
-import type { PageParams } from '@/lib/api/core/paging';
 import { qk } from '@/services/queryKeys';
 
 // The whole list, which the agent editor's tool picker and the tool dialog need
@@ -26,7 +26,10 @@ export function useConfiguredToolOptionsQuery(teamId: number | null) {
 }
 
 // One page of the list, for the section that shows it.
-export function useConfiguredToolsPageQuery(teamId: number | null, params: PageParams) {
+export function useConfiguredToolsPageQuery(
+  teamId: number | null,
+  params: ConfiguredToolListParams,
+) {
   return useQuery({
     queryKey: qk.configuredToolPage(teamId ?? 0, params),
     queryFn: () => listConfiguredTools(teamId!, params),

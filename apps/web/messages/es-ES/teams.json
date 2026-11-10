@@ -530,6 +530,8 @@
     "onDelegationHint": "Se inicia cuando lo hacen delegado de un ticket.",
     "onFieldSet": "Reaccionar al campo «{field}»",
     "onFieldSetHint": "Se inicia cuando lo eligen en este campo de un ticket.",
+    "onReview": "Reaccionar a revisiones",
+    "onReviewHint": "Se ejecuta cuando un colaborador revisa un pull request que abrió.",
     "runDelay": "Esperar antes de empezar",
     "runDelayHint": "Tiempo para seguir editando el ticket antes de que el agente empiece. 0 empieza de inmediato.",
     "minutes": "min",

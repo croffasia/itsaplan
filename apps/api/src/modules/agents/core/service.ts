@@ -107,6 +107,7 @@ export interface AiAgentRow {
   // Run triggers.
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  triggerOnReview: boolean;
   // Whether the agent may be chatted with; a mention, a delegation and a schedule ignore it.
   chatEnabled: boolean;
   // The member custom fields the agent also reacts to: being set into one of them
@@ -161,6 +162,7 @@ function mapAgent(row: {
   memoryLastMessages: number | null;
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  triggerOnReview: boolean;
   chatEnabled: boolean;
   fieldTriggers: FieldTriggerRead[];
   delegationDelaySec: number;
@@ -196,6 +198,7 @@ function mapAgent(row: {
     memoryLastMessages: row.memoryLastMessages,
     triggerOnMention: row.triggerOnMention,
     triggerOnAssign: row.triggerOnAssign,
+    triggerOnReview: row.triggerOnReview,
     chatEnabled: row.chatEnabled,
     fieldTriggers: row.fieldTriggers,
     delegationDelaySec: row.delegationDelaySec,
@@ -237,6 +240,7 @@ const agentColumns = {
   memoryLastMessages: aiAgent.memoryLastMessages,
   triggerOnMention: aiAgent.triggerOnMention,
   triggerOnAssign: aiAgent.triggerOnAssign,
+  triggerOnReview: aiAgent.triggerOnReview,
   chatEnabled: aiAgent.chatEnabled,
   fieldTriggers: sql<
     FieldTriggerRead[]
@@ -499,9 +503,9 @@ export async function listMentionTriggerAgents(
     .map((row) => ({ id: row.id, userId: row.userId }));
 }
 
-// The agent working in the project whose handle is the given repository login, or
-// null. Turns the author of a pull request into the agent a review of it is handed to:
-// an agent opens pull requests under the same name it has here.
+// The agent working in the project whose handle is the given repository login and that
+// reacts to reviews, or null. Turns the author of a pull request into the agent a review
+// of it is handed to: an agent opens pull requests under the same name it has here.
 export async function getReviewTriggerAgent(
   projectId: number,
   login: string,
@@ -509,7 +513,13 @@ export async function getReviewTriggerAgent(
   const rows = await db
     .select({ id: aiAgent.id, ...triggerScopeColumns })
     .from(aiAgent)
-    .where(and(sql`lower(${aiAgent.username}) = lower(${login})`, inProject(projectId)))
+    .where(
+      and(
+        sql`lower(${aiAgent.username}) = lower(${login})`,
+        eq(aiAgent.triggerOnReview, true),
+        inProject(projectId),
+      ),
+    )
     .limit(1);
   const row = rows[0];
   return row && isTriggerableBy(row, null) ? { id: row.id } : null;
@@ -669,6 +679,7 @@ export interface NewAgentInput {
   // for its API key alone must not collect runs no one drains.
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  triggerOnReview?: boolean;
   // Whether the agent may be chatted with. Defaults on.
   chatEnabled?: boolean;
   // The member custom fields that start a run when the agent is set into one.
@@ -771,6 +782,7 @@ export async function createAgent(
           memoryLastMessages: isInternal ? (input.memoryLastMessages ?? null) : null,
           triggerOnMention: input.triggerOnMention ?? isInternal,
           triggerOnAssign: input.triggerOnAssign ?? false,
+          triggerOnReview: input.triggerOnReview ?? false,
           chatEnabled: input.chatEnabled ?? true,
           delegationDelaySec: input.delegationDelaySec,
           ownerUserId: input.ownerUserId ?? null,
@@ -933,6 +945,7 @@ export interface AgentPatch {
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  triggerOnReview?: boolean;
   chatEnabled?: boolean;
   fieldTriggers?: FieldTrigger[];
   delegationDelaySec?: number;
@@ -974,6 +987,7 @@ export async function updateAgent(
   if (patch.memoryLastMessages !== undefined) set.memoryLastMessages = patch.memoryLastMessages;
   if (patch.triggerOnMention !== undefined) set.triggerOnMention = patch.triggerOnMention;
   if (patch.triggerOnAssign !== undefined) set.triggerOnAssign = patch.triggerOnAssign;
+  if (patch.triggerOnReview !== undefined) set.triggerOnReview = patch.triggerOnReview;
   if (patch.chatEnabled !== undefined) set.chatEnabled = patch.chatEnabled;
   if (patch.delegationDelaySec !== undefined) set.delegationDelaySec = patch.delegationDelaySec;
   if (patch.runnerScope !== undefined) set.runnerScope = patch.runnerScope;

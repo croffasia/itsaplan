@@ -530,6 +530,8 @@
     "onDelegationHint": "被设为工作项的执行代理时启动。",
     "onFieldSet": "响应“{field}”字段",
     "onFieldSetHint": "在工作项的该字段中被选中时启动。",
+    "onReview": "响应评审",
+    "onReviewHint": "当协作者评审其打开的拉取请求时运行。",
     "runDelay": "启动前等待",
     "runDelayHint": "代理启动前继续编辑事项的时间。0 表示立即开始。",
     "minutes": "分钟",

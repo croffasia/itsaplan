@@ -530,6 +530,8 @@
     "onDelegationHint": "Inicia quando ele vira delegado de uma issue.",
     "onFieldSet": "Reagir ao campo \"{field}\"",
     "onFieldSetHint": "Inicia quando ele é escolhido neste campo de uma issue.",
+    "onReview": "Reagir a revisões",
+    "onReviewHint": "Executa quando um colaborador revisa um pull request que ele abriu.",
     "runDelay": "Esperar antes de começar",
     "runDelayHint": "Tempo para continuar editando a issue antes do agente começar. 0 começa na hora.",
     "minutes": "min",

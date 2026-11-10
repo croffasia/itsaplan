@@ -530,6 +530,8 @@
     "onDelegationHint": "Starts when it's made an issue's delegate.",
     "onFieldSet": "React to the \"{field}\" field",
     "onFieldSetHint": "Starts when it's picked in this field on an issue.",
+    "onReview": "React to reviews",
+    "onReviewHint": "Run when a collaborator reviews a pull request it opened.",
     "runDelay": "Wait before starting",
     "runDelayHint": "Time to keep editing the issue before the agent starts. 0 starts at once.",
     "minutes": "min",

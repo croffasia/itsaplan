@@ -51,7 +51,7 @@ export default function AgentTriggersSection({
       .map((field) => ({ field, project: attached[index] })),
   );
 
-  const switches = [value.chatEnabled, value.triggerOnMention, value.triggerOnAssign];
+  const switches = [value.chatEnabled, value.triggerOnMention, value.triggerOnAssign, value.triggerOnReview];
   const enabled =
     switches.filter(Boolean).length +
     memberFields.filter((f) => value.fieldTriggers.some((tr) => tr.fieldId === f.field.id)).length;
@@ -115,6 +115,16 @@ export default function AgentTriggersSection({
           onChange={(v) => onChange({ delegationDelayMin: v })}
         />
       )}
+      <label className="flex cursor-pointer items-center justify-between gap-2">
+        <span>
+          <span className="text-sm">{t('onReview')}</span>
+          <span className="block text-xs text-muted-foreground">{t('onReviewHint')}</span>
+        </span>
+        <Switch
+          checked={value.triggerOnReview}
+          onCheckedChange={(v) => onChange({ triggerOnReview: v })}
+        />
+      </label>
       {memberFields.map(({ field, project }) => {
         const trigger = value.fieldTriggers.find((tr) => tr.fieldId === field.id);
         return (

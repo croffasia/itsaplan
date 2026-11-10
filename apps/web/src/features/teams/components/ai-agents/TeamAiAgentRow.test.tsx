@@ -59,6 +59,7 @@ const agent = (canManage: boolean): AiAgent => ({
   memoryLastMessages: null,
   triggerOnMention: false,
   triggerOnAssign: false,
+  triggerOnReview: false,
   fieldTriggers: [],
   delegationDelaySec: 0,
   ownerUserId: null,

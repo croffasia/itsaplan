@@ -530,6 +530,8 @@
     "onDelegationHint": "Berjalan saat agen dijadikan delegasi issue.",
     "onFieldSet": "Bereaksi terhadap bidang \"{field}\"",
     "onFieldSetHint": "Berjalan saat agen dipilih di bidang ini pada issue.",
+    "onReview": "Bereaksi terhadap tinjauan",
+    "onReviewHint": "Berjalan saat kolaborator meninjau pull request yang dibukanya.",
     "runDelay": "Tunggu sebelum memulai",
     "runDelayHint": "Waktu untuk terus mengedit issue sebelum agen dimulai. 0 langsung memulai.",
     "minutes": "mnt",

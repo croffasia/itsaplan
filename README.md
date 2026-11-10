@@ -2,11 +2,15 @@
 
 <img src="assets/banner.png" alt="It's a Plan — open-source project management and issue tracking where people and AI agents ship together" width="100%" />
 
-# The open-source Linear alternative<br>where AI agents work as teammates
+# The open-source Linear alternative<br>where AI agents take issues like teammates
 
-Self-hosted project management and issue tracking, with no per-seat fees. Agents take issues on
-the same board as your people. Everything is available over the REST API, webhooks, and MCP.
-Replaces Linear, Jira, Asana, Trello, Plane, and Miro.
+Use it as a regular issue tracker from day one. When you are ready, give an agent an issue the
+way you give it to a colleague, and review the result yourself or let another agent check it.
+Put agents on a schedule, or build a workflow that passes an issue from agent to agent.
+Self-hosted, on your own server.
+
+<a href="https://trendshift.io/repositories/95056?utm_source=repository-badge&utm_medium=badge&utm_campaign=badge-repository-95056" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/95056" alt="#8 Repository of the Day on GitHub Trending" width="250" height="55"/></a>
+<a href="https://trendshift.io/repositories/95056?utm_source=trendshift-badge&utm_medium=badge&utm_campaign=badge-trendshift-95056" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/95056/daily?language=TypeScript" alt="#13 TypeScript Repository of the Day on Trendshift" width="250" height="55"/></a>
 
 If It's a Plan looks useful to you, star the repo ⭐ and
 [leave a review on Product Hunt](https://www.producthunt.com/products/it-s-a-plan/reviews).
@@ -16,97 +20,89 @@ If It's a Plan looks useful to you, star the repo ⭐ and
 <a href="docs/self-hosting.md"><img src="assets/docker-button.svg" alt="Self-host with Docker" height="40" /></a>
 <a href="https://itsaplan.dev/pro"><img src="assets/pro-button.svg" alt="Deploy Pro version" height="40" /></a>
 
-[![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
-[![CI](https://github.com/croffasia/itsaplan/actions/workflows/ci.yml/badge.svg)](https://github.com/croffasia/itsaplan/actions/workflows/ci.yml)
-[![Stars](https://img.shields.io/github/stars/croffasia/itsaplan?style=flat)](https://github.com/croffasia/itsaplan/stargazers)
-[![Last commit](https://img.shields.io/github/last-commit/croffasia/itsaplan)](https://github.com/croffasia/itsaplan/commits/main)
-
-<a href="https://trendshift.io/repositories/95056?utm_source=repository-badge&utm_medium=badge&utm_campaign=badge-repository-95056" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/repositories/95056" alt="#8 Repository of the Day on GitHub Trending" width="250" height="55"/></a>
-<a href="https://trendshift.io/repositories/95056?utm_source=trendshift-badge&utm_medium=badge&utm_campaign=badge-trendshift-95056" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/95056/daily?language=TypeScript" alt="#13 TypeScript Repository of the Day on Trendshift" width="250" height="55"/></a>
-
 <img src="assets/screenshots/tour.gif" alt="Board, AI chat, initiatives, timeline, calendar, and agent schedules" width="100%" />
 
 </div>
 
-## About
+## Why It's a Plan
 
-It's a Plan is a full issue tracker on its own: projects, boards, cycles, custom fields,
-and dashboards. Use it that way and never turn on a single agent.
+- **Agents as project members.** Each gets a role, permissions and an assignee slot, and works
+  on the same board as your people.
+- **Two kinds of agents.** Internal agents run on your server, on any model with your API key.
+  External agents run on your machine through [`@itsaplan/runner`](packages/runner), under your
+  own Claude Code, Codex, Copilot CLI or opencode account.
+- **Any kind of work.** Software, marketing, design, support, sales, operations, research.
+- **Yours to run.** Your server and your database.
 
-**The difference: AI agents work here like any teammate.** An agent gets a role,
-permissions, and an assignee slot, and takes issues on the same board as your people.
-
-It fits any kind of work: software development, marketing, design, support, sales,
-operations, research. You run all of it on your own server, on your own database, with your
-own API keys — no per-seat fees, no lock-in.
-
-It's a Plan is under active development. Expect breaking changes before the first stable
-release.
-
-## Features
+## Community features
 
 | Area | What you get |
 | --------- | ------------------------------------------------------------------------------------- |
-| Product management | Kanban, table, timeline, and calendar views · cycles · custom fields · dashboards · docs · notes boards |
+| Product management | Kanban, table, timeline, and calendar views · cycles · custom fields · dashboards · docs · notes boards · project templates · import from Linear, Trello, and Plane |
 | AI agents | Agents as project members · internal on any model, or external on your coding CLI · runs start on an @mention, an assignment, or a schedule |
-| Platform | REST API with OpenAPI · MCP server · webhooks · pull requests from 5 forges · passkeys and Google sign-in |
-| 13 languages | English · Ukrainian · Russian · Simplified Chinese · Traditional Chinese · Arabic · Persian · French · Portuguese (Brazil) · Indonesian · Spanish · Korean · Turkish |
+| Platform | REST API with OpenAPI · MCP server · webhooks · pull requests from 5 forges · SSO over OIDC and SCIM · passkeys and Google sign-in |
+| 13 languages | English · Українська · Русский · 简体中文 · 繁體中文 · العربية · Français · فارسی · Português (Brasil) · Bahasa Indonesia · Español · 한국어 · Türkçe |
 
 <details>
-<summary><b>Product management</b> — the full list</summary>
+<summary><b>Product management</b>: the full list</summary>
 
 - Configure issues per project: custom fields, labels, states, and issue types
-- Kanban, table, timeline, and calendar views. Save each one as a tab with its own filters,
-  display fields, and two-level grouping, for the whole project or as a private view only you see.
-  Each person arranges and hides the tabs of their own row
+- Kanban, table, timeline, and calendar views. Save a view as a tab with its own filters,
+  fields, and two-level grouping, for the whole project or only for you. Each person orders and
+  hides their own tabs
 - Cycles that time-box the work. Unfinished issues move to the next cycle
 - Subtasks, checklists, attachments, and links between issues: blocks, relates, duplicates
-- Comment threads with replies, and @username mentions of people and agents
-- Configurable dashboards for project analytics: throughput, burnup with a projected
-  completion date, breakdown, pulse
-- Quick actions that run on an issue, and auto-assignment when an issue moves into a state
-- Docs: shared Markdown pages in a tree, with revision history, private and locked pages,
-  favorites, embedded files, comment threads, @username mentions of people and agents,
-  and links to the issues they describe
-- Freeform notes boards: sticky notes on a canvas, with colors, checklists, and connections
-- Share a view or an issue by public link, read-only and without sign-in
+- Comment threads with replies, and @mentions of people and agents
+- Project dashboards: throughput, burnup with a projected completion date, breakdown, and pulse
+- Quick actions on an issue, and automatic assignment when an issue moves to a state
+- Docs: Markdown pages in a tree, with revision history, private and locked pages, embedded
+  files, comments, @mentions, and links to issues
+- Notes boards: sticky notes on a canvas, with colors, checklists, and connections
+- Share a view, an issue, or a document by public link, read-only and without sign-in
 - Initiatives that group and track related work inside a project
-- Auto-archive, a notification inbox, role-based access control, and more
+- Project templates: save a project as a template for your team, or publish it to the gallery
+  at itsaplan.dev
+- Import projects from [Linear](docs/importing-from-linear.md),
+  [Trello](docs/importing-from-trello.md), and [Plane](docs/importing-from-plane.md)
+- Auto-archive, a notification inbox, and role-based access control
 
 </details>
 
 <details>
-<summary><b>AI agents</b> — the full list</summary>
+<summary><b>AI agents</b>: the full list</summary>
 
 - Agents as project members, with their own permissions and assigned issues
 - Internal agents run on the instance. Configure the model, system prompt, tools, and
   reusable skills, written inline or imported from a GitHub repository
-- External agents run on your own machine, under your own account. Install
-  [`@itsaplan/runner`](packages/runner) and it gives every task to Claude Code, Codex,
-  Antigravity CLI, GitHub Copilot CLI, opencode, or any command that reads stdin
-- Or control the run queue through the API and do the work in your own implementation
-- A run starts on an @mention in a comment on an issue or a document, on an assignment, or
-  on a schedule
-- Tools for the services outside the tracker: Notion, Telegram, Threads, Instagram, Jina,
-  Firecrawl, Keenable, Gitea, Forgejo, and GitHub
-- Built-in chat with each agent, with its own conversation history. Chat can be turned off
-  for an agent that only works on mentions, assignments, and schedules
-- Chat with an external agent too. The runner answers from your machine, streams the reply
-  and its tool calls, and resumes the same coding agent session on each message
+- External agents run on your machine, under your own account.
+  [`@itsaplan/runner`](packages/runner) gives each task to Claude Code, Codex, Antigravity CLI,
+  GitHub Copilot CLI, opencode, Pi, Oh My Pi, Mastra Code, or any command that reads stdin
+- Your own code can also take tasks from the run queue through the API
+- A run starts on an @mention in a comment on an issue or a document, on an assignment, or on a
+  schedule. A schedule starts on a timer or when an issue moves to a state
+- Tokens and cost of every run, by agent, project, and model
+- Tools for other services: Notion, Telegram, Threads, Instagram, Jina, Firecrawl, Keenable,
+  Gitea, Forgejo, and GitHub
+- Chat with each agent, with its own history. Turn chat off for an agent that only works on
+  mentions, assignments, and schedules
+- Chat with an external agent too. The runner answers from your machine, streams the reply and
+  its tool calls, and resumes the same coding agent session on each message
 
 </details>
 
 <details>
-<summary><b>Platform</b> — the full list</summary>
+<summary><b>Platform</b>: the full list</summary>
 
 - REST API with an OpenAPI reference and API keys
 - MCP server, so an external assistant can read and change issues through the same API
 - Pull requests from GitHub, GitLab, Gitea, Forgejo, and Bitbucket. "Fixes KEY-42" links the
   pull request to the issue, and the issue moves when the pull request opens and merges
-- Outgoing webhooks: subscribe to events, signed payloads, and retries with a delivery log
-- Sign in with an email or a username and a password, a passkey, or Google
-- Notifications by email (SMTP or Resend) and Telegram, with per-member preferences
-- Instance administration: storage limits, mail transport, and instance-wide settings
+- Outgoing webhooks for the events you pick, with signed payloads, retries, and a delivery log
+- Sign-in with an email or username and a password, a passkey, Google, or your identity provider
+  over OIDC. SCIM keeps accounts in sync with your directory
+- Notifications by email (SMTP, Resend, or Microsoft 365) and Telegram, with preferences for
+  each member
+- Instance administration: storage limits, the mail provider, and instance-wide settings
 
 </details>
 
@@ -114,33 +110,40 @@ release.
 
 <a href="https://itsaplan.dev/pro"><img src="assets/pro-banner.svg" alt="It's a Plan Pro: run your issue tracker up to 91% cheaper than Linear, Jira, Asana and Plane. $240 a year for the whole instance, any number of people." width="100%" /></a>
 
-Buying Pro funds the work on Community, the free edition. Pro has everything in Community, plus
-the features below. One license covers one domain, with no limit on seats or workspaces.
+Bring the whole team. Pro adds full control over workspaces, agents and spend.
 
-| Features | Community | Pro |
-| --- | :---: | :---: |
-| SSO and SCIM for the instance | ✓ | ✓ |
-| Scheduled agent runs | ✓ | ✓ |
-| Agent tokens and cost | ✓ | ✓ |
-| Workspaces per person | 1 | Unlimited |
-| SSO and SCIM per workspace | — | ✓ |
-| Require SSO | — | ✓ |
-| Email domains per workspace | — | ✓ |
-| Audit log | — | ✓ |
-| Workspace dashboard | — | ✓ |
-| Schedules on issue events | — | ✓ |
-| Schedule filters and run limits | — | ✓ |
-| Agent workflows | — | ✓ |
-| Agent analytics by person and trigger | — | ✓ |
-| AI budgets | — | ✓ |
-| Help desk with public forms | — | ✓ |
+> [!TIP]
+> **$240 a year for the whole instance, 1 person or 500.** Fast Deploy installs Pro on your own
+> server in about 5 minutes.
 
-To run Pro, deploy with [`docker-compose.pro.yml`](docs/self-hosting.md),
-[`docker-compose.coolify-pro.yml`](docs/coolify.md), or [`values-pro.yaml`](docs/helm.md), then
-enter the key in god mode under **License**. Without a valid key, Pro runs as Community. Your
-data stays when you switch between editions.
+Everything in Community, plus:
 
-**[Pricing and license terms →](https://itsaplan.dev/pro)**
+- Fast Deploy
+- Unlimited workspaces
+- SAML or OIDC per workspace
+- SCIM per workspace
+- Workspace dashboard
+- Audit log
+- Agent workflows
+- Schedules on issue events
+- Agent cost by person, trigger and workflow
+- AI budgets
+- Public forms
+
+[See what each feature does →](https://itsaplan.dev/pro)
+
+Three ways to run Pro:
+
+- **[Fast Deploy](https://itsaplan.dev/pro#fast-deploy)** installs Pro on your own Hetzner,
+  Vultr or DigitalOcean server in about 5 minutes. Updates take one click.
+- **[Railway](docs/railway.md):** the template runs Pro in one click.
+- **By hand:** deploy on [Docker](docs/self-hosting.md), [Coolify](docs/coolify.md) or
+  [Kubernetes](docs/helm.md).
+
+On Railway and by hand, enter the key in god mode under **License**. Without a valid key, Pro
+runs as Community. Your data stays when you switch editions.
+
+<a href="https://itsaplan.dev/pro#buy"><img src="assets/buy-pro-button.svg" alt="Get more with Pro: $24 a month or $240 a year" height="56" /></a>
 
 ## Getting started
 
@@ -151,6 +154,11 @@ data stays when you switch between editions.
 The whole stack in one click, with no server to maintain. You give Railway two hostnames,
 and it generates every secret. You need a domain of your own: [the guide](docs/railway.md)
 explains why, and what to do after the deploy.
+
+### Fast Deploy for Pro
+
+With a Pro license, [Fast Deploy](https://itsaplan.dev/account/hosting) installs Pro on a new
+server in your Hetzner, Vultr or DigitalOcean account. See [Pro edition](#pro-edition).
 
 ### Try it on your machine
 

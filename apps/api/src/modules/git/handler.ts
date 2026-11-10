@@ -1,6 +1,7 @@
 import { getIssueBySequence, updateIssue } from '#modules/issues/service';
 import { recordActivity, textSide, type ActivityActor } from '#modules/issues/activity';
 import { getReviewTriggerAgent } from '#modules/agents/core/service';
+import { resolveMentionHandles } from '#shared/mentions';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
 import {
   parseIssueIdentifiers,
@@ -81,7 +82,7 @@ export async function handleGitEvent(
     return 'pipeline';
   }
   if (event.kind === 'pull_request_review') {
-    return handlePullRequestReview(project.id, providerKey, event);
+    return handlePullRequestReview(project.id, providerKey, providerLabel, event);
   }
 
   if (event.kind === 'branch') {
@@ -165,6 +166,20 @@ export async function handleGitEvent(
   return handlePullRequestEvent(project, settings, providerLabel, event, refs);
 }
 
+// Who an entry is by: the tracker user whose handle is the repository login, when the
+// login is one of the project's agents or members, else the login itself, else the
+// provider when the payload names nobody. An agent that opened the pull request thus
+// appears as itself on the issue.
+async function repositoryActor(
+  projectId: number,
+  login: string | null,
+  providerLabel: string,
+): Promise<ActivityActor> {
+  if (!login) return { system: providerLabel };
+  const found = await resolveMentionHandles(projectId, [login.toLowerCase()]);
+  return found.agentUserIds[0] ?? found.memberIds[0] ?? { system: login };
+}
+
 export async function handlePullRequestEvent(
   project: { id: number; key: string },
   settings: GitSettings,
@@ -172,7 +187,11 @@ export async function handlePullRequestEvent(
   event: PullRequestEvent,
   parsed = parseMagicWords(`${event.title}\n${event.body}`),
 ): Promise<PullRequestOutcome> {
-  const actor: ActivityActor = { system: providerLabel };
+  const actor = await repositoryActor(
+    project.id,
+    event.action === 'merged' ? event.mergedBy : event.author,
+    providerLabel,
+  );
   const projectKey = project.key.toUpperCase();
   const inProject = (refs: IssueRef[]) => refs.filter((r) => r.key === projectKey);
   const prEntry = (outcome: string) => ({
@@ -254,13 +273,14 @@ const REVIEW_VERBS: Record<PullRequestReviewState, string> = {
 };
 
 // A review of a linked pull request is recorded on each issue the pull request is
-// linked to, with the reviewer as the actor. When the pull request was opened by an
+// linked to, by the reviewer. When the pull request was opened by an
 // agent of the project, the review is handed to it as a run on the first of those
 // issues, once, however many issues the pull request names. A review the author
 // wrote on its own pull request starts nothing.
 async function handlePullRequestReview(
   projectId: number,
   providerKey: GitProviderKey,
+  providerLabel: string,
   event: PullRequestReviewEvent,
 ): Promise<PullRequestOutcome> {
   const issueIds = await listPullRequestIssueIds(projectId, providerKey, event.repo, event.number);
@@ -271,8 +291,9 @@ async function handlePullRequestReview(
     from: { value: `${event.repo}#${event.number}`, repo: event.repo, number: event.number },
     to: textSide(event.url),
   };
+  const actor = await repositoryActor(projectId, event.reviewer, providerLabel);
   for (const issueId of issueIds) {
-    await recordActivity(issueId, [entry], { system: event.reviewer });
+    await recordActivity(issueId, [entry], actor);
   }
   if (!event.author || event.author.toLowerCase() === event.reviewer.toLowerCase()) {
     return 'reviewed';

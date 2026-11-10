@@ -31,7 +31,7 @@
     },
     "general": {
       "label": "Umum",
-      "description": "Workspace pribadi, pengaturan bawaan untuk proyek baru, serta trace dan waktu jalan agen."
+      "description": "Pengaturan yang berlaku untuk semua workspace di instance ini."
     },
     "authentication": {
       "label": "Autentikasi",

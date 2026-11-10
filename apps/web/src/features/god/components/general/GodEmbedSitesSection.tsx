@@ -45,7 +45,6 @@ export default function GodEmbedSitesSection({ sites }: { sites: EmbedSites }) {
             <div className="flex shrink-0 items-center gap-2">
               <Input
                 className="w-40 sm:w-72"
-                placeholder="https://example.com"
                 aria-label={t('embedSites')}
                 aria-invalid={!valid}
                 value={shown}

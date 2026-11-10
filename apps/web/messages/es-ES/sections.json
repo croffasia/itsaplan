@@ -31,7 +31,7 @@
     },
     "general": {
       "label": "General",
-      "description": "Espacios de trabajo personales, valores por defecto para los proyectos nuevos, y trazas y duración de las ejecuciones de agentes."
+      "description": "Ajustes que se aplican a todos los espacios de trabajo de esta instancia."
     },
     "authentication": {
       "label": "Autenticación",

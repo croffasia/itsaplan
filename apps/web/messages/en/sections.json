@@ -31,7 +31,7 @@
     },
     "general": {
       "label": "General",
-      "description": "Personal workspaces, defaults for new projects, agent traces, and the agent run time limit."
+      "description": "Settings that apply to every workspace on this instance."
     },
     "authentication": {
       "label": "Authentication",

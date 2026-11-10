@@ -21,6 +21,7 @@ export const agentRunTrigger = t.Union([
   t.Literal('mention'),
   t.Literal('delegation'),
   t.Literal('field'),
+  t.Literal('review'),
   t.Literal('schedule'),
   t.Literal('manual'),
   t.Literal('status'),

@@ -1,6 +1,9 @@
 import { createHmac } from 'node:crypto';
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { db, agentRun } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import { app } from '../../../../app';
+import { createAgent } from '#tests/helpers/agents';
 import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -1245,5 +1248,163 @@ describe('Repository webhook', () => {
     );
     expect(res.status).toBe(200);
     expect((await issueState(asOwner, issue.id)).columnId).toBe(done.id);
+  });
+});
+
+// A review of a linked pull request: recorded on the issue with the reviewer as the
+// actor, and handed as a run to the agent of the project that opened the pull request.
+function reviewPayload(overrides: {
+  state?: string;
+  body?: string;
+  reviewer?: string;
+  author?: string;
+  number?: number;
+}) {
+  const number = overrides.number ?? 42;
+  return {
+    action: 'submitted',
+    review: {
+      state: overrides.state ?? 'changes_requested',
+      body: overrides.body ?? 'The retry swallows the error.',
+      html_url: `https://github.com/acme/site/pull/${number}#pullrequestreview-7`,
+      user: { login: overrides.reviewer ?? 'ann' },
+    },
+    pull_request: {
+      number,
+      html_url: `https://github.com/acme/site/pull/${number}`,
+      user: { login: overrides.author ?? 'bot' },
+    },
+    repository: { full_name: 'acme/site', default_branch: 'main' },
+  };
+}
+
+describe('Pull request reviews', () => {
+  beforeEach(async () => {
+    await resetDb();
+  });
+
+  async function linkedIssue(setup: Setup) {
+    const issue = (await createIssue(setup.asOwner, setup.columns[0].id)).data!;
+    await deliver(
+      setup.webhookId,
+      setup.secret,
+      prPayload({ action: 'opened', merged: false, body: `Closes MKT-${issue.sequenceNumber}` }),
+    );
+    return issue;
+  }
+
+  it('records the review on the linked issue and queues a run for the agent that opened the PR', async () => {
+    const setup = await setupProject();
+    const agent = (
+      await createAgent(setup.asOwner, 'MKT', { name: 'Bot', username: 'bot', kind: 'external' })
+    ).data!.agent;
+    const issue = await linkedIssue(setup);
+
+    const res = await deliver(setup.webhookId, setup.secret, reviewPayload({}), {
+      event: 'pull_request_review',
+    });
+    expect(res.data).toMatchObject({ handled: 'reviewed' });
+
+    const feed = await setup.asOwner.issues({ issueId: issue.id }).feed.get({ query: {} });
+    const entries = feed.data!.items.filter(
+      (i: { action: string | null }) => i.action === 'git_pr',
+    );
+    expect(entries[0]).toMatchObject({
+      actorName: 'ann',
+      payload: {
+        subject: { value: 'changes_requested' },
+        from: { value: 'acme/site#42', repo: 'acme/site', number: 42 },
+        to: { value: 'https://github.com/acme/site/pull/42#pullrequestreview-7' },
+      },
+    });
+
+    const runs = await db.select().from(agentRun).where(eq(agentRun.issueId, issue.id));
+    expect(runs).toHaveLength(1);
+    expect(runs[0]).toMatchObject({ agentId: agent.id, trigger: 'review', status: 'pending' });
+    expect(runs[0]!.prompt).toBe(
+      'ann requested changes on pull request acme/site#42 (https://github.com/acme/site/pull/42#pullrequestreview-7).\n\nThe retry swallows the error.',
+    );
+  });
+
+  it('records a review by a person whose pull request has no agent behind it, without a run', async () => {
+    const setup = await setupProject();
+    const issue = await linkedIssue(setup);
+
+    const res = await deliver(
+      setup.webhookId,
+      setup.secret,
+      reviewPayload({ state: 'approved', author: 'carol' }),
+      { event: 'pull_request_review' },
+    );
+    expect(res.data).toMatchObject({ handled: 'reviewed' });
+    expect(await prActor(setup.asOwner, issue.id)).toMatchObject({
+      payload: { subject: { value: 'approved' } },
+    });
+    expect(await db.select().from(agentRun).where(eq(agentRun.issueId, issue.id))).toHaveLength(0);
+  });
+
+  it('starts nothing for an agent reviewing its own pull request, and ignores an unlinked one', async () => {
+    const setup = await setupProject();
+    await createAgent(setup.asOwner, 'MKT', { name: 'Bot', username: 'bot', kind: 'external' });
+    const issue = await linkedIssue(setup);
+
+    await deliver(setup.webhookId, setup.secret, reviewPayload({ reviewer: 'bot' }), {
+      event: 'pull_request_review',
+    });
+    expect(await db.select().from(agentRun).where(eq(agentRun.issueId, issue.id))).toHaveLength(0);
+
+    const res = await deliver(setup.webhookId, setup.secret, reviewPayload({ number: 43 }), {
+      event: 'pull_request_review',
+    });
+    expect(res.data).toMatchObject({ handled: 'ignored' });
+  });
+
+  it('takes a Forgejo review from its per-decision event', async () => {
+    const setup = await setupProject();
+    const agent = (
+      await createAgent(setup.asOwner, 'MKT', { name: 'Bot', username: 'bot', kind: 'external' })
+    ).data!.agent;
+    const issue = (await createIssue(setup.asOwner, setup.columns[0].id)).data!;
+    const opened = prPayload({
+      action: 'opened',
+      merged: false,
+      body: `Closes MKT-${issue.sequenceNumber}`,
+    });
+    const forgejoHeaders = (event: string, payload: unknown) => ({
+      'x-forgejo-event': event,
+      'x-gitea-event': event,
+      'x-forgejo-signature': createHmac('sha256', setup.secret)
+        .update(JSON.stringify(payload))
+        .digest('hex'),
+      'x-forgejo-delivery': crypto.randomUUID(),
+    });
+    await deliverRaw(setup.webhookId, opened, forgejoHeaders('pull_request', opened));
+
+    const review = {
+      action: 'reviewed',
+      number: 42,
+      pull_request: {
+        number: 42,
+        html_url: 'https://forgejo.example/acme/site/pulls/42',
+        user: { login: 'bot' },
+      },
+      review: { type: 'pull_request_review_rejected', content: 'Not yet.' },
+      sender: { login: 'ann' },
+      repository: { full_name: 'acme/site', default_branch: 'main' },
+    };
+    const res = await deliverRaw(
+      setup.webhookId,
+      review,
+      forgejoHeaders('pull_request_rejected', review),
+    );
+    expect(res.data).toMatchObject({ handled: 'reviewed' });
+    expect(await prActor(setup.asOwner, issue.id)).toMatchObject({
+      actorName: 'ann',
+      payload: { subject: { value: 'changes_requested' } },
+    });
+    const runs = await db.select().from(agentRun).where(eq(agentRun.issueId, issue.id));
+    expect(runs).toHaveLength(1);
+    expect(runs[0]).toMatchObject({ agentId: agent.id, trigger: 'review' });
+    expect(runs[0]!.prompt).toContain('ann requested changes on pull request acme/site#42');
   });
 });

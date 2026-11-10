@@ -458,6 +458,22 @@ export async function listMentionTriggerAgents(
     .map((row) => ({ id: row.id, userId: row.userId }));
 }
 
+// The agent working in the project whose handle is the given repository login, or
+// null. Turns the author of a pull request into the agent a review of it is handed to:
+// an agent opens pull requests under the same name it has here.
+export async function getReviewTriggerAgent(
+  projectId: number,
+  login: string,
+): Promise<{ id: number } | null> {
+  const rows = await db
+    .select({ id: aiAgent.id, ...triggerScopeColumns })
+    .from(aiAgent)
+    .where(and(sql`lower(${aiAgent.username}) = lower(${login})`, inProject(projectId)))
+    .limit(1);
+  const row = rows[0];
+  return row && isTriggerableBy(row, null) ? { id: row.id } : null;
+}
+
 // The agent working in the project whose bot user is userId and that reacts to being
 // delegated to, or null. Turns a new delegate into the agent that should run on
 // delegation.

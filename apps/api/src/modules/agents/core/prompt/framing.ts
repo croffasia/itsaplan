@@ -72,7 +72,29 @@ export function framePrompt(run: RunForPrompt): string {
   }
   const ref = run.issueIdentifier ?? `#${run.issueId}`;
   const titled = run.issueTitle ? `${ref} "${run.issueTitle}"` : ref;
+  if (run.trigger === 'review') return frameReview(run, titled);
   return run.trigger === 'delegation' ? frameDelegation(run, titled) : frameMention(run, titled);
+}
+
+// The prompt names the reviewer, the decision and the pull request, then carries the
+// review text. The agent addresses it on the pull request itself; the issue only gets
+// its report.
+function frameReview(run: RunForPrompt, titled: string): string {
+  return [
+    `Your pull request for issue ${titled} of your project was reviewed.`,
+    'Read the review below and address it with your tools: change the pull request where',
+    'the review is right, and say in your reply where it is not and why. Add a question',
+    'comment only when you genuinely cannot proceed without a human answer.',
+    ...assigneeLines(run),
+    '',
+    'When you are done, add a comment to the issue with the add_comment tool',
+    `(issueId ${run.issueId}) saying what you changed in the pull request. Do not mention`,
+    'yourself.',
+    '',
+    'The review:',
+    '',
+    run.prompt,
+  ].join('\n');
 }
 
 function frameDelegation(run: RunForPrompt, titled: string): string {

@@ -254,4 +254,101 @@ describe('repository provider events', () => {
       headSha: null,
     });
   });
+  it('normalizes a GitHub pull request review', () => {
+    const headers = { 'x-github-event': 'pull_request_review' };
+    const provider = detectProvider(headers)!;
+    expect(
+      provider.parse(
+        {
+          action: 'submitted',
+          review: {
+            state: 'changes_requested',
+            body: 'The retry swallows the error.',
+            html_url: 'https://github.com/acme/site/pull/42#pullrequestreview-7',
+            user: { login: 'ann' },
+          },
+          pull_request: {
+            number: 42,
+            html_url: 'https://github.com/acme/site/pull/42',
+            user: { login: 'bot' },
+          },
+          repository: { full_name: 'acme/site', default_branch: 'main' },
+        },
+        headers,
+      ),
+    ).toEqual({
+      kind: 'pull_request_review',
+      repo: 'acme/site',
+      number: 42,
+      url: 'https://github.com/acme/site/pull/42#pullrequestreview-7',
+      state: 'changes_requested',
+      body: 'The retry swallows the error.',
+      reviewer: 'ann',
+      author: 'bot',
+    });
+  });
+
+  it('ignores a GitHub review that is edited or dismissed, and a comment-only review with no text', () => {
+    const headers = { 'x-github-event': 'pull_request_review' };
+    const provider = detectProvider(headers)!;
+    const base = {
+      review: { state: 'commented', body: '', user: { login: 'ann' } },
+      pull_request: { number: 42, user: { login: 'bot' } },
+      repository: { full_name: 'acme/site' },
+    };
+    expect(provider.parse({ ...base, action: 'submitted' }, headers)).toBeNull();
+    expect(
+      provider.parse(
+        { ...base, action: 'dismissed', review: { ...base.review, state: 'approved' } },
+        headers,
+      ),
+    ).toBeNull();
+  });
+
+  it('normalizes a Forgejo review from its per-decision event', () => {
+    const headers = {
+      'x-forgejo-event': 'pull_request_approved',
+      'x-gitea-event': 'pull_request_approved',
+    };
+    const provider = detectProvider(headers)!;
+    expect(provider.key(headers)).toBe('forgejo');
+    expect(
+      provider.parse(
+        {
+          action: 'reviewed',
+          number: 42,
+          pull_request: {
+            number: 42,
+            html_url: 'https://forgejo.example/acme/site/pulls/42',
+            user: { login: 'bot' },
+          },
+          review: { type: 'pull_request_review_approved', content: 'Looks good.' },
+          sender: { login: 'ann' },
+          repository: { full_name: 'acme/site', default_branch: 'main' },
+        },
+        headers,
+      ),
+    ).toEqual({
+      kind: 'pull_request_review',
+      repo: 'acme/site',
+      number: 42,
+      url: 'https://forgejo.example/acme/site/pulls/42',
+      state: 'approved',
+      body: 'Looks good.',
+      reviewer: 'ann',
+      author: 'bot',
+    });
+    expect(
+      provider.parse(
+        {
+          action: 'reviewed',
+          pull_request: { number: 42 },
+          review: { type: 'pull_request_review_rejected', content: 'No.' },
+          sender: { login: 'ann' },
+          repository: { full_name: 'acme/site' },
+        },
+        { 'x-gitea-event': 'pull_request_rejected' },
+      ),
+    ).toMatchObject({ kind: 'pull_request_review', state: 'changes_requested', url: null });
+  });
 });

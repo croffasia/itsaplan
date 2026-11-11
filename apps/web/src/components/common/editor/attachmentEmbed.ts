@@ -5,7 +5,10 @@ import { type Editor } from '@tiptap/react';
 export type Embeddable = { url: string; contentType: string; filename: string };
 
 export const isImage = (a: Embeddable) => a.contentType.startsWith('image/');
-export const isVideo = (a: Embeddable) => a.contentType.startsWith('video/');
+// Browsers report a TypeScript file as an MPEG transport stream, a video no
+// browser plays.
+export const isVideo = (a: Embeddable) =>
+  a.contentType.startsWith('video/') && !a.filename.toLowerCase().endsWith('.ts');
 // next/image's optimizer refuses SVG (dangerouslyAllowSVG is off), and an
 // attachment URL (/media/.../raw) has no .svg extension for it to skip the
 // optimizer by, so an SVG has to be shown unoptimized. Shown in an <img>, it

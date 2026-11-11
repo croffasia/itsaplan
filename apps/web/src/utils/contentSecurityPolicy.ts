@@ -19,19 +19,23 @@ function apiOrigin(): string {
 // pictures, and the /media proxy on this origin. blob: is fetched too: the image
 // annotator reads a file picked in the new issue modal through its blob: URL. React
 // evals in development only, to rebuild server error stacks in the browser.
+// The attachment previews run WebAssembly engines: 'wasm-unsafe-eval' lets them
+// compile and allows no JavaScript eval. The PDF engine starts its worker from a
+// blob: URL, and a document's embedded fonts are loaded from blob: URLs.
 // `frameAncestors` are the sites that may show the page in a frame; none by default.
 export function contentSecurityPolicy(frameAncestors: string[] = []): string {
   const scriptSources =
     process.env.NODE_ENV === 'development'
       ? "'self' 'unsafe-inline' 'unsafe-eval'"
-      : "'self' 'unsafe-inline'";
+      : "'self' 'unsafe-inline' 'wasm-unsafe-eval'";
   return [
     "default-src 'self'",
     `script-src ${scriptSources}`,
+    "worker-src 'self' blob:",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https: http:",
     "media-src 'self' data: blob: https: http:",
-    "font-src 'self' data:",
+    "font-src 'self' data: blob:",
     `connect-src 'self' blob: ${apiOrigin()}`.trimEnd(),
     "object-src 'none'",
     "base-uri 'self'",

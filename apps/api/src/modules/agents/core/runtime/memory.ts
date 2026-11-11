@@ -141,6 +141,9 @@ export async function listChatThreads(
   agentId: number,
   opts: ThreadListOpts = {},
 ): Promise<ChatThreadPage> {
+  // The queries below read Mastra's tables in raw SQL, which skips its lazy init: an
+  // instance whose agents never ran has no tables yet.
+  await getStore().init();
   if (opts.favorites) return favoriteChatThreads(resourceId, agentId);
   const term = searchTerm(opts.q);
   const page = opts.page ?? 0;

@@ -24,13 +24,12 @@ import IssueSubtasksFilterChip from './IssueSubtasksFilterChip';
 import IssueSubtasksFilterMenu from './IssueSubtasksFilterMenu';
 import { useTranslations } from 'next-intl';
 
-// The issue's place in the subtask hierarchy: the parent it hangs under, and the
-// subtasks it has with how many of them are done. The hierarchy is one level deep,
-// so a subtask gets no Add menu, but an import keeps a deeper nesting from the
-// source tracker, and then both lists show. A new subtask opens the ordinary
-// create modal with the parent's properties prefilled; an existing issue is
-// attached through the search dialog. On a public share the section lists the
-// hierarchy and stays off the page when the issue has none.
+// The issue's parent, and its subtasks with how many of them are done. The API
+// keeps the hierarchy one level deep, so a subtask gets no Add menu. An import can
+// keep deeper nesting from the source tracker, and then both lists show. A new
+// subtask opens the ordinary create modal with the parent's properties prefilled;
+// an existing issue is attached through the search dialog. On a public share the
+// section lists the hierarchy and stays off the page when the issue has none.
 export default function IssueSubtasksPanel({
   project,
   issue,
@@ -131,8 +130,6 @@ export default function IssueSubtasksPanel({
 
       {showSubtasks && (
         <>
-          {/* Fixed height: the buttons only render while the section is open, and
-              without it the row would shrink to the height of the heading text. */}
           <div
             className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''} ${parent ? 'mt-4' : ''}`}
           >

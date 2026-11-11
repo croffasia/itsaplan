@@ -31,6 +31,13 @@ export function highlight(value: string): ReactNode | null {
   return render(auto);
 }
 
+// The value highlighted as a known language (a name or an alias such as a file
+// extension: "ts", "py", "yml"), or null when lowlight does not carry it.
+export function highlightAs(language: string, value: string): ReactNode | null {
+  if (!lowlight.registered(language)) return null;
+  return render(lowlight.highlight(language, value));
+}
+
 function indentJson(value: string): string | null {
   try {
     return JSON.stringify(JSON.parse(value), null, 2);

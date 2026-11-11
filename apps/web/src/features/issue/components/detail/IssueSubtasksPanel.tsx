@@ -24,12 +24,13 @@ import IssueSubtasksFilterChip from './IssueSubtasksFilterChip';
 import IssueSubtasksFilterMenu from './IssueSubtasksFilterMenu';
 import { useTranslations } from 'next-intl';
 
-// The issue's place in the subtask hierarchy: the parent it hangs under, or the
-// subtasks it has with how many of them are done. The two never show together —
-// the hierarchy is one level deep, so a subtask has no subtasks of its own. A new
-// subtask opens the ordinary create modal with the parent's properties prefilled;
-// an existing issue is attached through the search dialog. On a public share the
-// section lists the hierarchy and stays off the page when the issue has none.
+// The issue's place in the subtask hierarchy: the parent it hangs under, and the
+// subtasks it has with how many of them are done. The hierarchy is one level deep,
+// so a subtask gets no Add menu, but an import keeps a deeper nesting from the
+// source tracker, and then both lists show. A new subtask opens the ordinary
+// create modal with the parent's properties prefilled; an existing issue is
+// attached through the search dialog. On a public share the section lists the
+// hierarchy and stays off the page when the issue has none.
 export default function IssueSubtasksPanel({
   project,
   issue,
@@ -57,6 +58,7 @@ export default function IssueSubtasksPanel({
 
   const parent = issue.parent;
   if (readOnly && !parent && issue.subtasks.length === 0) return null;
+  const showSubtasks = !parent || issue.subtasks.length > 0;
 
   const progress = subtaskProgress(issue.subtasks, new Map(project.columns.map((c) => [c.id, c])));
   const done = progress.total > 0 ? `${progress.done}/${progress.total}` : undefined;
@@ -69,22 +71,7 @@ export default function IssueSubtasksPanel({
       previousParentId: parentId,
     });
 
-  function body() {
-    if (parent)
-      return (
-        <IssueRefList>
-          <IssueRefRow
-            project={project}
-            issue={parent}
-            scrollAnchorKey={`parent:${parent.id}`}
-            removeLabel={t('detachFromParent', { parent: parent.identifier })}
-            readOnly={readOnly}
-            onOpen={onOpenIssue && (() => onOpenIssue(parent.id))}
-            onRemove={canEdit ? () => detach(issue.id, parent.id) : undefined}
-            onChangeState={canEdit ? (columnId) => setState(parent.id, columnId) : undefined}
-          />
-        </IssueRefList>
-      );
+  function subtasksBody() {
     if (issue.subtasks.length === 0)
       return (
         <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
@@ -120,49 +107,72 @@ export default function IssueSubtasksPanel({
     // Collapsed, the heading row is all there is, so the section pulls itself up
     // against the section below it.
     <div className={`mt-6 border-t pt-5 ${open ? '' : '-mb-2'}`}>
-      {/* Fixed height: the buttons only render while the section is open, and
-          without it the row would shrink to the height of the heading text. */}
-      <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
-        <div className="flex min-w-0 items-center gap-2">
-          <IssueSectionHeading
-            label={parent ? t('parent') : t('title')}
-            open={open}
-            onToggle={toggle}
-            tally={done}
-          />
-          {open && !parent && <IssueSubtasksFilterChip filter={filter} />}
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
-          {open && !parent && <IssueSubtasksFilterMenu filter={filter} />}
-          {open && !parent && canEdit && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-7"
-                  title={tCommon('add')}
-                  aria-label={tCommon('add')}
-                >
-                  <Plus className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                {canCreate && (
-                  <DropdownMenuItem onSelect={() => setCreating(true)}>
-                    {t('newSubtask')}
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem onSelect={() => setAttaching(true)}>
-                  {t('existingIssue')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+      {parent && (
+        <>
+          <div className={`flex h-7 items-center ${open ? 'mb-3' : ''}`}>
+            <IssueSectionHeading label={t('parent')} open={open} onToggle={toggle} />
+          </div>
+          {open && (
+            <IssueRefList>
+              <IssueRefRow
+                project={project}
+                issue={parent}
+                scrollAnchorKey={`parent:${parent.id}`}
+                removeLabel={t('detachFromParent', { parent: parent.identifier })}
+                readOnly={readOnly}
+                onOpen={onOpenIssue && (() => onOpenIssue(parent.id))}
+                onRemove={canEdit ? () => detach(issue.id, parent.id) : undefined}
+                onChangeState={canEdit ? (columnId) => setState(parent.id, columnId) : undefined}
+              />
+            </IssueRefList>
           )}
-        </div>
-      </div>
+        </>
+      )}
 
-      {open && body()}
+      {showSubtasks && (
+        <>
+          {/* Fixed height: the buttons only render while the section is open, and
+              without it the row would shrink to the height of the heading text. */}
+          <div
+            className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''} ${parent ? 'mt-4' : ''}`}
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              <IssueSectionHeading label={t('title')} open={open} onToggle={toggle} tally={done} />
+              {open && <IssueSubtasksFilterChip filter={filter} />}
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              {open && <IssueSubtasksFilterMenu filter={filter} />}
+              {open && !parent && canEdit && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-7"
+                      title={tCommon('add')}
+                      aria-label={tCommon('add')}
+                    >
+                      <Plus className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    {canCreate && (
+                      <DropdownMenuItem onSelect={() => setCreating(true)}>
+                        {t('newSubtask')}
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onSelect={() => setAttaching(true)}>
+                      {t('existingIssue')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </div>
+
+          {open && subtasksBody()}
+        </>
+      )}
 
       {attaching && (
         <IssuePickerDialog

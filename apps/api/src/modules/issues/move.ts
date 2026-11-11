@@ -8,7 +8,6 @@ import {
   issueFieldValue,
   issueKeyAlias,
   issueLabel,
-  issueLink,
   issueType,
   issueWatcher,
   label,
@@ -31,8 +30,8 @@ import { emitRunsCanceled } from '#modules/agents/core/run-finished';
 
 // Moves an issue, with its subtasks, to another project of the same team. Column,
 // type, labels and custom fields belong to one project, so they are matched by name
-// in the target and dropped when there is no match. Links and documents must stay
-// inside one project, so those that reach an issue left behind are removed.
+// in the target and dropped when there is no match. Issue links stay within the team;
+// document links are removed because documents belong to one project.
 export async function moveIssue(
   issueId: number,
   target: ProjectRow,
@@ -190,20 +189,6 @@ export async function moveIssue(
       }
     }
 
-    await tx
-      .delete(issueLink)
-      .where(
-        or(
-          and(
-            inArray(issueLink.sourceIssueId, movedIds),
-            notInArray(issueLink.targetIssueId, movedIds),
-          ),
-          and(
-            inArray(issueLink.targetIssueId, movedIds),
-            notInArray(issueLink.sourceIssueId, movedIds),
-          ),
-        ),
-      );
     await tx.delete(projectDocumentIssue).where(inArray(projectDocumentIssue.issueId, movedIds));
     await tx
       .delete(issueWatcher)

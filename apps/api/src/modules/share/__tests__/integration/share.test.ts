@@ -5,6 +5,7 @@ import { resetDb } from '#tests/helpers/db';
 import { createRole } from '#tests/helpers/roles';
 import { db, issue as issueTable, projectDocument, projectView } from '@repo/db';
 import { eq } from 'drizzle-orm';
+import type { FeedItemRow } from '#modules/issues/activity';
 import { sweepExpiredShares } from '#modules/share/service';
 
 // Public read-only sharing. Enabling sharing on an issue, a saved view or a document sets an
@@ -28,6 +29,26 @@ async function setup() {
 describe('share', () => {
   beforeEach(async () => {
     await resetDb();
+  });
+
+  it('keeps same-project link history after the other issue is deleted', async () => {
+    const { asOwner, issueId, columnId } = await setup();
+    const other = (
+      await asOwner.projects({ projectKey: 'MKT' }).issues.post({
+        columnId,
+        title: 'Deleted linked issue',
+      })
+    ).data!;
+    await asOwner.issues({ issueId }).links.post({ targetIssueId: other.id, kind: 'relates' });
+    const token = (await asOwner.issues({ issueId }).share.post({ extended: true })).data!.token;
+    expect((await asOwner.issues({ issueId: other.id }).delete()).status).toBe(204);
+    const shared = await api.share.issue({ token }).get();
+    expect(shared.status).toBe(200);
+    expect(
+      shared.data!.feed.some(
+        (item: FeedItemRow) => item.action === 'link_add' && item.payload.to?.id === other.id,
+      ),
+    ).toBe(true);
   });
 
   describe('sharing switches', () => {
@@ -247,6 +268,28 @@ describe('share', () => {
       ]);
       expect(shared.data.issue.links).toEqual([]);
       expect(shared.data.issue.parent).toBeNull();
+    });
+
+    it('does not expose another project through a public issue link or feed', async () => {
+      const { asOwner, issueId } = await setup();
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
+      const otherProject = await asOwner.projects({ projectKey: 'OPS' }).get();
+      const secret = await asOwner.projects({ projectKey: 'OPS' }).issues.post({
+        columnId: otherProject.data!.columns[0].id,
+        title: 'Private planning',
+      });
+      const linked = await asOwner.issues({ issueId }).links.post({
+        targetIssueId: secret.data!.id,
+        kind: 'relates',
+      });
+      expect(linked.status).toBe(201);
+
+      const token = (await asOwner.issues({ issueId }).share.post({ extended: true })).data!.token;
+      const shared = await api.share.issue({ token }).get();
+      expect(shared.data.issue.links).toEqual([]);
+      expect(
+        shared.data.feed.some((item: { action: string | null }) => item.action === 'link_add'),
+      ).toBe(false);
     });
 
     it('rejects a malformed token', async () => {

@@ -137,9 +137,26 @@ function redactIssue<T extends IssueRow>(row: T): T {
 // The read-only feed shows the newest activity; a public share never paginates,
 // so it is capped at listFeed's max page (100). An issue with more than that
 // shows its latest 100 entries.
-async function issueFeed(issueId: number): Promise<FeedItemRow[]> {
+async function issueFeed(issueId: number, projectId: number): Promise<FeedItemRow[]> {
   const page = await listFeed(issueId, { limit: 100 });
-  return page.items;
+  const targets = page.items
+    .filter((item) => item.action === 'link_add' || item.action === 'link_remove')
+    .map((item) => item.payload.to?.id)
+    .filter((id): id is number => typeof id === 'number');
+  const targetProjects = targets.length
+    ? await db
+        .select({ id: issue.id, projectId: issue.projectId })
+        .from(issue)
+        .where(inArray(issue.id, targets))
+    : [];
+  const hiddenTargets = new Set(
+    targetProjects.filter((row) => row.projectId !== projectId).map((row) => row.id),
+  );
+  return page.items.filter((item) => {
+    if (item.action !== 'link_add' && item.action !== 'link_remove') return true;
+    const targetId = item.payload.to?.id;
+    return typeof targetId === 'number' && !hiddenTargets.has(targetId);
+  });
 }
 
 // Builds the read-only bundle for one issue, shared by the shared-issue page and
@@ -161,8 +178,8 @@ async function issueBundle(
   const [scaffold, fields, feed, links, parent, subtasks] = await Promise.all([
     buildScaffold(project, extended),
     extended ? getIssueFieldValues(issueRow.id) : [],
-    extended ? issueFeed(issueRow.id) : [],
-    listIssueLinks(issueRow.id),
+    extended ? issueFeed(issueRow.id, issueRow.projectId) : [],
+    listIssueLinks(issueRow.id, issueRow.projectId),
     getParentRef(issueRow.parentId),
     listSubtasks(issueRow.id),
   ]);

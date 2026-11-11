@@ -21,6 +21,7 @@ const NotificationResponse = t.Object({
   documentCommentId: t.Nullable(t.String()),
   projectId: t.Number(),
   projectKey: t.String(),
+  projectRef: t.String(),
   projectName: t.String(),
   fromState: t.Nullable(t.String()),
   toState: t.Nullable(t.String()),

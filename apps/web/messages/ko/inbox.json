@@ -34,5 +34,8 @@
     "commented": "{who}님이 댓글을 작성했습니다",
     "stateChanged": "{who}님이 상태를 {from}에서 {to}(으)로 변경했습니다",
     "stateChangedPlain": "{who}님이 상태를 변경했습니다"
-  }
+  },
+  "thisProject": "이 프로젝트",
+  "allProjects": "모든 프로젝트",
+  "scopeHint": "이 프로젝트 또는 모든 프로젝트의 알림 표시"
 }

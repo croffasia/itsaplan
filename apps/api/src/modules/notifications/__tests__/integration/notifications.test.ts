@@ -28,6 +28,7 @@ async function setup() {
     project: view.data!.project,
     columnId: columns[0].id,
     doneColumnId: done.id,
+    projectRef: view.data!.project.ref,
   };
 }
 
@@ -228,7 +229,7 @@ describe('notifications', () => {
   });
 
   it('notifies the new assignee, not the actor', async () => {
-    const { owner, columnId } = await setup();
+    const { owner, columnId, projectRef } = await setup();
     const member = await addMember(owner);
 
     await createIssue(owner.api, columnId, {
@@ -244,6 +245,7 @@ describe('notifications', () => {
       actorUserId: owner.userId,
       issueTitle: 'Ship it',
       projectKey: 'MKT',
+      projectRef,
       readAt: null,
     });
 

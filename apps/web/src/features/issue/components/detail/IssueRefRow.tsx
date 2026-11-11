@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { X } from 'lucide-react';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { IssueRef } from '@/lib/api/endpoints/issues';
-import { issuePath } from '@/utils/paths';
+import { issuePath, projectRefOf, splitProjectRef } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import PopoverPick from '@/components/common/fields/PopoverPick';
 import ArchivedBadge from '@/components/common/ArchivedBadge';
@@ -41,6 +41,12 @@ export default function IssueRefRow({
 }) {
   const t = useTranslations('issue.fieldSelects');
   const column = project.columns.find((c) => c.id === issue.columnId);
+  const targetProjectKey = issue.identifier.slice(0, -String(issue.sequenceNumber).length - 1);
+  const sameProject = targetProjectKey === project.project.key;
+  const targetProjectRef = projectRefOf(
+    splitProjectRef(project.project.ref).teamRef,
+    targetProjectKey,
+  );
   const label = (
     <>
       <span className="font-mono text-xs text-muted-foreground">{issue.identifier}</span>
@@ -64,7 +70,7 @@ export default function IssueRefRow({
       <Link
         {...historyScrollRestorationLinkProps}
         {...historyScrollRestorationAnchorProps(scrollAnchorKey)}
-        href={issuePath(project.project.ref, issue.sequenceNumber)}
+        href={issuePath(targetProjectRef, issue.sequenceNumber)}
         className={labelClass}
       >
         {label}
@@ -74,11 +80,12 @@ export default function IssueRefRow({
 
   return (
     <div className="group col-span-full grid grid-cols-subgrid items-center rounded-md px-2 py-1.5 hover:bg-accent/50">
-      {column && (
+      {sameProject && column && (
         <StateIcon className="col-start-1" stateType={column.stateType} color={column.color} />
       )}
       {renderName()}
-      {column &&
+      {sameProject &&
+        column &&
         (onChangeState ? (
           <PopoverPick
             align="end"

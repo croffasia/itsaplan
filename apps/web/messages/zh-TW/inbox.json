@@ -34,5 +34,8 @@
     "commented": "{who} 發表了留言",
     "stateChanged": "{who} 將狀態從 {from} 更改為 {to}",
     "stateChangedPlain": "{who} 更改了狀態"
-  }
+  },
+  "thisProject": "此專案",
+  "allProjects": "所有專案",
+  "scopeHint": "顯示此專案或所有專案的通知"
 }

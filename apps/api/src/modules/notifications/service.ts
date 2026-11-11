@@ -8,12 +8,14 @@ import {
   project,
   team,
   projectColumn,
+  team,
   projectDocument,
   type ActivityPayload,
 } from '@repo/db';
 import { and, desc, eq, inArray, isNotNull, lt, or, sql, isNull } from 'drizzle-orm';
 import { addedMentionHandles, resolveMentionHandles, type MentionedUsers } from '#shared/mentions';
 import { autoWatchIssue, watcherUserIds } from '#modules/issues/watchers';
+import { projectRefSql } from '#modules/teams/ref';
 import { mentionReach } from '#modules/mentions/service';
 import { iso } from '#shared/lib';
 import { enqueueOutbound } from './outbound';
@@ -288,6 +290,7 @@ export interface NotificationRow {
   documentCommentId: string | null;
   projectId: number;
   projectKey: string;
+  projectRef: string;
   projectName: string;
   // Only a 'state_changed' event has them, and only while its activity row lives.
   fromState: string | null;
@@ -357,6 +360,7 @@ function mapRow(r: {
   documentCommentId: string | null;
   projectId: number;
   projectKey: string;
+  projectRef: string;
   projectName: string;
   payload: ActivityPayload | null;
 }): NotificationRow {
@@ -380,6 +384,7 @@ function mapRow(r: {
     documentCommentId: r.documentCommentId,
     projectId: r.projectId,
     projectKey: r.projectKey,
+    projectRef: r.projectRef,
     projectName: r.projectName,
     fromState: stateChange ? (r.payload?.from?.value ?? null) : null,
     toState: stateChange ? (r.payload?.to?.value ?? null) : null,
@@ -439,6 +444,7 @@ export async function listNotifications(
       documentCommentId: notification.documentCommentId,
       projectId: project.id,
       projectKey: project.key,
+      projectRef: projectRefSql,
       projectName: project.name,
       payload: issueActivity.payload,
     })
@@ -448,6 +454,7 @@ export async function listNotifications(
       and(eq(projectMember.projectId, notification.projectId), eq(projectMember.userId, userId)),
     )
     .innerJoin(project, eq(project.id, notification.projectId))
+    .innerJoin(team, eq(team.id, project.teamId))
     .leftJoin(issue, eq(issue.id, notification.issueId))
     .leftJoin(projectColumn, eq(projectColumn.id, issue.columnId))
     .leftJoin(projectDocument, visibleDocument(userId))

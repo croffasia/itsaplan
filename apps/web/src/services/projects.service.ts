@@ -22,8 +22,12 @@ import {
 import { nextPageParam } from '@/lib/api/core/paging';
 import { qk } from '@/services/queryKeys';
 
-export function useProjectsQuery() {
-  return useQuery({ queryKey: qk.projects, queryFn: () => listProjects() });
+export function useProjectsQuery(enabled = true, permissions = false) {
+  return useQuery({
+    queryKey: permissions ? [...qk.projects, 'permissions'] : qk.projects,
+    queryFn: () => listProjects(permissions),
+    enabled,
+  });
 }
 
 const PROJECT_SEARCH_PAGE = 30;

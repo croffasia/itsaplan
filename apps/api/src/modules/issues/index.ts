@@ -10,10 +10,12 @@ import {
   requiresPermission,
 } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
+import type { PermissionAction } from '#shared/permissions';
 import {
   assertPermission,
   assertProjectOwner,
   assertWritable,
+  assertProjectWritable,
   readableProjectIds,
   requireUser,
 } from '#shared/access';
@@ -60,7 +62,13 @@ import {
   type FeedCursor,
 } from './activity';
 import { listStatusTimeline } from './status-history';
-import { addIssueLink, attachBoardLinks, listIssueLinks, removeIssueLink } from './links';
+import {
+  addIssueLink,
+  attachBoardLinks,
+  getOtherLinkedIssueId,
+  listIssueLinks,
+  removeIssueLink,
+} from './links';
 import {
   attachSubtaskCounts,
   disposeSubtasksOf,
@@ -238,6 +246,27 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     workItem: entityGuard('work_items', 'Issue not found', (p) =>
       getIssueProjectId(Number(p.issueId)),
     ),
+    linkedWorkItem(action: PermissionAction) {
+      const guard = entityGuard('work_items', 'Link not found', async (p) => {
+        const issueId = await getOtherLinkedIssueId(Number(p.issueId), Number(p.linkId));
+        return issueId == null ? null : getIssueProjectId(issueId);
+      })(action);
+      // workItem already declares the permission; both guards enforce it.
+      return { resolve: guard.resolve };
+    },
+    linkTarget(_enabled: boolean) {
+      return {
+        async resolve({ body, user, request }) {
+          const targetIssueId = (body as { targetIssueId: number }).targetIssueId;
+          const targetProjectId = await getIssueProjectId(targetIssueId);
+          if (targetProjectId == null) throw new HttpError(404, 'Linked issue not found');
+          await assertPermission(targetProjectId, user, 'work_items', 'edit');
+          await assertMcpAllowed(targetProjectId, request.headers);
+          await assertProjectWritable(targetProjectId, request.method);
+          return {};
+        },
+      };
+    },
     // The checklist and stats routes carry the section they belong to, so turning it
     // off in the project's settings closes them.
     issueChecklist: entityGuard(
@@ -559,7 +588,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         await assertMcpAllowed(issue.projectId, request.headers);
       }
       const fields = await getIssueFieldValues(issue.id);
-      const links = await listIssueLinks(issue.id);
+      const links = await listIssueLinks(issue.id, issue.projectId, user, request.headers);
       const watchers = await listIssueWatchers(issue.projectId, issue.id);
       const parent = await getParentRef(issue.parentId);
       const subtasks = await listSubtasks(issue.id);
@@ -687,7 +716,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       // MCP toggle itself (it does not run through the workItem guard).
       await assertMcpAllowed(issue.projectId, request.headers);
       const fields = await getIssueFieldValues(issue.id);
-      const links = await listIssueLinks(issue.id);
+      const links = await listIssueLinks(issue.id, issue.projectId, user, request.headers);
       const watchers = await listIssueWatchers(issue.projectId, issue.id);
       const parent = await getParentRef(issue.parentId);
       const subtasks = await listSubtasks(issue.id);
@@ -1035,7 +1064,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     },
   )
 
-  // Links the issue in the path to another issue of the same project. The
+  // Links the issue in the path to another issue of the same team. The
   // relation reads from the issue in the path (it blocks / relates to /
   // duplicates the target); both issues show it, each from its own side. Reading
   // the relations is part of the issue read, so there is no list route.
@@ -1049,11 +1078,12 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       body: addIssueLinkBody,
       params: issueParams,
       workItem: 'edit',
+      linkTarget: true,
       response: { 201: IssueLinkResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Link two issues',
         description:
-          'Link an issue to another issue of the same project. kind states the relation as read from the issue in the path: it blocks, is blocked by, relates to, duplicates, or is duplicated by the target. Both issue ids are the internal numeric ids.',
+          'Link an issue to another issue in the same team. The caller must be able to edit both issues. kind states the relation as read from the issue in the path.',
         ...mcpTool('link_issues'),
       },
     },
@@ -1071,10 +1101,12 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       params: issueLinkParams,
       workItem: 'edit',
+      linkedWorkItem: 'edit',
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Unlink two issues',
-        description: "Remove one of an issue's relations by the link id.",
+        description:
+          "Remove one of an issue's relations by the link id. The caller must be able to edit both issues.",
         ...mcpTool('unlink_issues'),
       },
     },

@@ -140,6 +140,9 @@ export default function InboxListItem({
               )}
             >
               {subject}
+              <span className="ms-2 text-xs text-muted-foreground">
+                {n.projectName} · {n.projectRef}
+              </span>
             </span>
             <span className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
               {snoozed && <Clock className="size-3 shrink-0" />}

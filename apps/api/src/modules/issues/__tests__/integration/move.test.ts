@@ -139,7 +139,7 @@ describe('move issue', () => {
     expect(old.data?.watchers.map((w) => w.userId)).toContain(user.userId);
   });
 
-  it('drops the links to issues that stay behind', async () => {
+  it('keeps the links to issues that stay behind in the same team', async () => {
     const { asOwner, ops, mktColumns } = await setup();
     const issue = (await createIssue(asOwner, mktColumns[0].id)).data!;
     const other = (await createIssue(asOwner, mktColumns[0].id, 'Other')).data!;
@@ -148,7 +148,29 @@ describe('move issue', () => {
       .links.post({ targetIssueId: other.id, kind: 'relates' });
 
     await asOwner.issues({ issueId: issue.id }).move.post({ projectId: ops.id });
-    expect((await read(asOwner, other.id)).links).toEqual([]);
+    expect((await read(asOwner, other.id)).links).toHaveLength(1);
+    expect((await read(asOwner, issue.id)).links).toHaveLength(1);
+  });
+
+  it('keeps a cross-project link when one end moves to a third project', async () => {
+    const { asOwner, mktColumns, opsColumns } = await setup();
+    const dev = (await createProject(asOwner, { key: 'DEV', name: 'Development' })).data!;
+    const source = (await createIssue(asOwner, mktColumns[0].id)).data!;
+    const target = (
+      await asOwner.projects({ projectKey: 'OPS' }).issues.post({
+        columnId: opsColumns[0].id,
+        title: 'Target',
+      })
+    ).data!;
+    const linked = await asOwner.issues({ issueId: source.id }).links.post({
+      targetIssueId: target.id,
+      kind: 'blocks',
+    });
+    expect(linked.status).toBe(201);
+    const moved = await asOwner.issues({ issueId: source.id }).move.post({ projectId: dev.id });
+    expect(moved.status).toBe(200);
+    expect((await read(asOwner, source.id)).links).toHaveLength(1);
+    expect((await read(asOwner, target.id)).links).toHaveLength(1);
   });
 
   it('refuses the project the issue is in and a project of another team', async () => {

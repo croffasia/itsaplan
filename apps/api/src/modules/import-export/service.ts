@@ -23,6 +23,9 @@ export const IMPORT_ENTITY_TYPES = [
   'attachment',
   'checklist',
   'custom_field',
+  'issue_type',
+  'initiative',
+  'worklog',
 ] as const;
 export type ImportEntityType = (typeof IMPORT_ENTITY_TYPES)[number];
 
@@ -40,6 +43,7 @@ export interface ImportJobDto {
   id: number;
   projectId: number;
   source: string;
+  sourceProject: { name: string; url: string | null } | null;
   phase: ImportJobPhase;
   status: ImportJobStatus;
   counts: Record<ImportEntityType, EntityCount>;
@@ -78,6 +82,9 @@ function toDto(row: ImportJobRow, counts: Record<ImportEntityType, EntityCount>)
     id: row.id,
     projectId: row.projectId,
     source: row.source,
+    sourceProject: row.sourceProjectName
+      ? { name: row.sourceProjectName, url: row.sourceProjectUrl }
+      : null,
     phase: row.phase as ImportJobPhase,
     status: row.status as ImportJobStatus,
     counts,

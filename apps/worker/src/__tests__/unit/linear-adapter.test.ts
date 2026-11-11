@@ -64,6 +64,41 @@ function issueNode(overrides: Partial<LinearIssueNode> = {}): LinearIssueNode {
   };
 }
 
+describe('LinearReader describeSource', () => {
+  it("names a project by Linear's own name and address", async () => {
+    const sent: SentRequest[] = [];
+    const reader = readerAnswering(
+      [
+        Response.json({
+          data: { project: { name: 'Tooling', url: 'https://linear.app/acme/project/tooling-1' } },
+        }),
+      ],
+      sent,
+    );
+    expect(await reader.describeSource()).toEqual({
+      name: 'Tooling',
+      url: 'https://linear.app/acme/project/tooling-1',
+    });
+    expect(graphqlCall(sent[0]!).variables).toEqual({ id: 'proj-tool' });
+  });
+
+  it('names the team, by its workspace and key, for its issues with no project', async () => {
+    const reader = readerAnswering(
+      [
+        Response.json({
+          data: { team: { name: 'Automation', key: 'ATO', organization: { urlKey: 'acme' } } },
+        }),
+      ],
+      [],
+      { teamId: 'team-ato', projectFilter: 'none', projectId: null },
+    );
+    expect(await reader.describeSource()).toEqual({
+      name: 'Automation',
+      url: 'https://linear.app/acme/team/ATO/all',
+    });
+  });
+});
+
 describe('LinearReader requests', () => {
   it('posts the query with the bare API key to Linear and pages until hasNextPage is false', async () => {
     const sent: SentRequest[] = [];

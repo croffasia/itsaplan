@@ -1,16 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useState, type ComponentType } from 'react';
 import { useTranslations } from 'next-intl';
-import type { ImportJob } from '@/lib/api/endpoints/importExport';
+import { Download, ExternalLink } from 'lucide-react';
+import type { ImportEntityType, ImportJob } from '@/lib/api/endpoints/importExport';
 import { formatDateTime } from '@/utils/dates';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  usePauseImportJob,
-  useResumeImportJob,
-  useCancelImportJob,
-} from '../../services/settings.service';
-import SettingsWarningBanner from '../SettingsWarningBanner';
 import SettingsImportExportJobCounts from './SettingsImportExportJobCounts';
+import SettingsImportExportJobActions from './SettingsImportExportJobActions';
+import SettingsImportExportJobRetryBanner from './SettingsImportExportJobRetryBanner';
+
+export interface JobSource {
+  label: string;
+  Logo: ComponentType<{ className?: string }> | null;
+}
 
 const STATUS_VARIANT: Record<
   ImportJob['status'],
@@ -23,54 +24,74 @@ const STATUS_VARIANT: Record<
   failed: 'destructive',
 };
 
-// One import job: its status, phase, per-entity progress, and the actions its
-// current status allows. Pause/resume/cancel are shown only when the status lets
-// them succeed, matching what the API accepts (409 otherwise).
+// What a folded card sums up in a line.
+const SUMMARY_ENTITIES: ImportEntityType[] = ['issue', 'comment', 'attachment'];
+
 export default function SettingsImportExportJobRow({
   job,
+  source,
   projectKey,
   editable,
 }: {
   job: ImportJob;
+  source: JobSource;
   projectKey: string;
   editable: boolean;
 }) {
   const t = useTranslations('settings.importExport');
-  const pause = usePauseImportJob(projectKey);
-  const resume = useResumeImportJob(projectKey);
-  const cancel = useCancelImportJob(projectKey);
-
-  const canPause = editable && (job.status === 'pending' || job.status === 'running');
-  const canResume = editable && job.status === 'paused';
-  const canCancel =
-    editable && (job.status === 'pending' || job.status === 'running' || job.status === 'paused');
+  const [open, setOpen] = useState(false);
+  const foldable = job.status === 'completed' || job.status === 'failed';
+  const expanded = !foldable || open;
 
   // lastError is cleared on every successful tick, so seeing one while still
   // 'pending' means the job is currently waiting out a retry, not stalled —
   // 'failed' is the only terminal, non-retrying error state.
-  const isRetrying = job.status === 'pending' && job.lastError != null;
+  const retryError = job.status === 'pending' ? job.lastError : null;
   const isWorking = job.status === 'pending' && job.lastError == null;
+  const failure = job.status === 'failed' ? job.lastError : null;
 
-  // The 2s poll (useImportJobsQuery) only refreshes nextAttemptAt itself; without
-  // this, the displayed countdown would only move in those 2s jumps instead of
-  // ticking down in real time between polls.
-  const [, forceTick] = useState(0);
-  useEffect(() => {
-    if (!isRetrying) return;
-    const id = setInterval(() => forceTick((n) => n + 1), 1000);
-    return () => clearInterval(id);
-  }, [isRetrying]);
-
-  const retrySeconds = isRetrying
-    ? Math.max(0, Math.round((new Date(job.nextAttemptAt).getTime() - Date.now()) / 1000))
-    : 0;
+  const { Logo } = source;
+  const project = job.sourceProject;
+  const date = formatDateTime(job.createdAt);
+  const summary = SUMMARY_ENTITIES.filter((type) => job.counts[type].discovered > 0)
+    .map((type) => {
+      const { created, discovered } = job.counts[type];
+      return `${t(`entities.${type}`)} ${created === discovered ? created : `${created}/${discovered}`}`;
+    })
+    .join(' · ');
 
   return (
     <div className="space-y-3 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Badge variant={STATUS_VARIANT[job.status]}>{t(`statuses.${job.status}`)}</Badge>
-          {(isWorking || isRetrying) && (
+      <div className="flex flex-wrap items-start gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-background">
+          {Logo ? (
+            <Logo className="size-5" />
+          ) : (
+            <Download className="size-4 text-muted-foreground" aria-hidden />
+          )}
+        </span>
+        <div className="min-w-0 flex-1 space-y-0.5">
+          {project?.url ? (
+            <a
+              href={project.url}
+              target="_blank"
+              rel="noreferrer"
+              title={t('openInSource', { source: source.label })}
+              className="inline-flex max-w-full items-center gap-1 text-[15px] font-medium hover:underline"
+            >
+              <span className="truncate">{project.name}</span>
+              <ExternalLink className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+            </a>
+          ) : (
+            <p className="truncate text-[15px] font-medium">{project?.name ?? source.label}</p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            {project ? `${source.label} · ${date}` : date}
+          </p>
+          {!expanded && summary && <p className="pt-1 text-sm">{summary}</p>}
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          {(isWorking || retryError) && (
             <>
               {isWorking && (
                 <span className="size-1.5 animate-pulse rounded-full bg-primary" aria-hidden />
@@ -78,52 +99,29 @@ export default function SettingsImportExportJobRow({
               <span className="text-sm font-medium">{t(`phases.${job.phase}`)}</span>
             </>
           )}
-          <span className="text-xs text-muted-foreground">{formatDateTime(job.createdAt)}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {canPause && (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={pause.isPending}
-              onClick={() => pause.mutate(job.id)}
-            >
-              {t('pause')}
-            </Button>
-          )}
-          {canResume && (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={resume.isPending}
-              onClick={() => resume.mutate(job.id)}
-            >
-              {t('resume')}
-            </Button>
-          )}
-          {canCancel && (
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={cancel.isPending}
-              onClick={() => cancel.mutate(job.id)}
-            >
-              {t('cancel')}
-            </Button>
-          )}
+          <Badge variant={STATUS_VARIANT[job.status]}>{t(`statuses.${job.status}`)}</Badge>
+          <SettingsImportExportJobActions
+            job={job}
+            projectKey={projectKey}
+            editable={editable}
+            foldable={foldable}
+            open={open}
+            onToggle={() => setOpen((value) => !value)}
+          />
         </div>
       </div>
-      {isRetrying && job.lastError && (
-        <SettingsWarningBanner>
-          {job.lastError === 'rate limited'
-            ? t('rateLimitedRetrying', { seconds: retrySeconds })
-            : t('transientErrorRetrying', { error: job.lastError, seconds: retrySeconds })}
-        </SettingsWarningBanner>
+      {(retryError || failure || expanded) && (
+        <div className="space-y-3 sm:ps-12">
+          {retryError && (
+            <SettingsImportExportJobRetryBanner
+              error={retryError}
+              nextAttemptAt={job.nextAttemptAt}
+            />
+          )}
+          {failure && <p className="text-xs text-destructive">{failure}</p>}
+          {expanded && <SettingsImportExportJobCounts counts={job.counts} />}
+        </div>
       )}
-      {job.status === 'failed' && job.lastError && (
-        <p className="text-xs text-destructive">{job.lastError}</p>
-      )}
-      <SettingsImportExportJobCounts counts={job.counts} />
     </div>
   );
 }

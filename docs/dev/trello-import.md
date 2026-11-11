@@ -57,6 +57,7 @@ an attachment; see Uploads.
 
 | Reader method          | Request                                                                       |
 | ---------------------- | ----------------------------------------------------------------------------- |
+| `describeSource`       | `GET /boards/{id}?fields=name,url`                                            |
 | `listStates`           | `GET /boards/{id}/lists?filter=all`; the open lists become states             |
 | `listLabels`           | `GET /boards/{id}/labels?limit=1000`                                          |
 | `listCustomFields`     | `GET /boards/{id}/customFields`                                               |

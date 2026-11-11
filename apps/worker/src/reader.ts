@@ -1,6 +1,9 @@
 import type {
   CanonicalState,
   CanonicalLabel,
+  CanonicalIssueType,
+  CanonicalInitiative,
+  CanonicalWorklog,
   CanonicalCycle,
   CanonicalCustomField,
   CanonicalChecklist,
@@ -9,14 +12,6 @@ import type {
   CanonicalComment,
   CanonicalAttachment,
 } from './canonical';
-
-// Thrown when a job's source has no entry in the import source registry. No retry
-// can fix it, so the worker fails the job at once instead of retrying it.
-export class UnsupportedImportSourceError extends Error {
-  constructor(jobId: number, source: string) {
-    super(`import job ${jobId} has unsupported source "${source}"`);
-  }
-}
 
 // Thrown by a source adapter when the source's rate limit is reached. The worker
 // reschedules the job after retryAfterMs; a rate limit is waited out and does not
@@ -47,6 +42,13 @@ export interface Page<T> {
   cursor: string | null;
 }
 
+// What the job reads (a board, a team or a project), as the job's card names it, and
+// the address that opens it in the source, or null for none.
+export interface SourceProject {
+  name: string;
+  url: string | null;
+}
+
 // The port a source-specific adapter implements (plane-adapter.ts,
 // linear-adapter.ts, trello-adapter.ts). Shaped from what import-worker.ts
 // actually needs to drive the Discover/Create/Link phases, not speculatively:
@@ -61,23 +63,32 @@ export interface Page<T> {
 // - relations, comments and attachments are not part of the main issue
 //   payload for Plane, and are unpaginated per-issue lists there too, so they
 //   are fetched one issue at a time rather than walked as their own pages.
+// - issue types, initiatives and worklogs are read only from a source that has
+//   them; the others leave the methods out.
+// - describeSource is read once, as Discover starts.
 export interface SourceReader {
+  describeSource(): Promise<SourceProject>;
   listStates(): Promise<CanonicalState[]>;
   listLabels(): Promise<CanonicalLabel[]>;
   listCycles(): Promise<CanonicalCycle[]>;
   listCustomFields(): Promise<CanonicalCustomField[]>;
+  listIssueTypes?(): Promise<CanonicalIssueType[]>;
+  listInitiatives?(): Promise<CanonicalInitiative[]>;
   listIssues(cursor: string | null): Promise<Page<CanonicalIssue>>;
   getIssue(sourceId: string): Promise<CanonicalIssue>;
   listIssueRelations(issueSourceId: string): Promise<CanonicalRelation[]>;
   listIssueComments(issueSourceId: string): Promise<CanonicalComment[]>;
   listIssueAttachments(issueSourceId: string): Promise<CanonicalAttachment[]>;
   listIssueChecklists(issueSourceId: string): Promise<CanonicalChecklist[]>;
+  listIssueWorklogs?(issueSourceId: string): Promise<CanonicalWorklog[]>;
+  listInitiativeAttachments?(initiativeSourceId: string): Promise<CanonicalAttachment[]>;
   // Resolves how to download one attachment, fresh each call: the source's own
   // resolved URL is a presigned link that expires (Plane's lasts exactly an
   // hour), so this is called at the moment of download, never cached or
-  // resolved ahead of time.
+  // resolved ahead of time. ownerSourceId is the issue's, or the initiative's for a
+  // file listInitiativeAttachments returned.
   resolveAttachmentDownload(
-    issueSourceId: string,
+    ownerSourceId: string,
     attachmentSourceId: string,
   ): Promise<AttachmentDownload>;
 }

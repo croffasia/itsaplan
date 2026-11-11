@@ -199,5 +199,5 @@ so resuming into "now" regardless would have sent an immediate, still-doomed req
 back rate-limited again right away with a new, unrelated countdown. Only a job paused for no
 real reason (`last_error` null, or a stored deadline that already elapsed by itself) resumes
 immediately. The Settings page's countdown also now ticks every second on its own
-(`SettingsImportExportJobRow.tsx`) instead of only moving in the 2s jumps of the job list's
+(`SettingsImportExportJobRetryBanner.tsx`) instead of only moving in the 2s jumps of the job list's
 own poll.

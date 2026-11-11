@@ -121,7 +121,7 @@
     },
     "import-export": {
       "label": "İçe/Dışa Aktarma",
-      "description": "Kendi barındırdığınız bir Plane örnekleminden işleri, yorumları ve etiketleri içe aktarın veya bu projenin verilerini JSON olarak dışa aktarın."
+      "description": "Başka bir takip aracından işleri içe aktarın veya bu projenin verilerini JSON olarak dışa aktarın."
     },
     "ai-agents": {
       "label": "Yapay Zekâ Ajanları",

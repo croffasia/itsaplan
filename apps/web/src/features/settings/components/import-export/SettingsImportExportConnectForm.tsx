@@ -63,6 +63,7 @@ export default function SettingsImportExportConnectForm({
           onChange={(event) => setWorkspaceSlug(event.target.value)}
           required
         />
+        <p className="text-xs text-muted-foreground">{t('workspaceSlugHint')}</p>
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="plane-token">{t('apiToken')}</Label>

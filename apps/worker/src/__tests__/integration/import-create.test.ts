@@ -20,6 +20,12 @@ import {
   customFieldOption,
   projectMember,
   user,
+  issueType,
+  initiative,
+  initiativeLabel,
+  issueWorklog,
+  label,
+  labelGroup,
 } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
 import {
@@ -32,7 +38,7 @@ import {
 } from '../../import-store';
 import { runCreate } from '../../import-worker';
 import type { SourceReader } from '../../reader';
-import type { CanonicalComment, CanonicalIssue } from '../../canonical';
+import type { CanonicalComment, CanonicalInitiative, CanonicalIssue } from '../../canonical';
 
 // Like import-rewrite's tests: the job row is 'paused' so no other test's
 // claimDueImportJobs picks it up, and runCreate is called directly with the job
@@ -158,6 +164,7 @@ function readerWithFlakyComments(): SourceReader {
 
 function readerForIssues(issues: CanonicalIssue[]): SourceReader {
   return {
+    describeSource: async () => ({ name: 'Source project', url: null }),
     listStates: async () => [],
     listLabels: async () => [],
     listCycles: async () => [],
@@ -289,6 +296,153 @@ describe('runCreate', () => {
     expect(items).toEqual([
       { content: 'First', done: true },
       { content: 'Second', done: false },
+    ]);
+  });
+
+  it('creates issue types, initiatives, estimates, time entries and the other field types', async () => {
+    const job = await makeCreateJob();
+    const adaEmail = `ada-${job.id}@example.test`;
+    const ada = await addProjectMember(job.projectId, adaEmail);
+    const epic: CanonicalInitiative = {
+      sourceId: 'epic-1',
+      title: 'Checkout',
+      descriptionMarkdown: 'Epic text',
+      status: 'active',
+      ownerEmail: adaEmail,
+      priority: 'high',
+      startDate: '2026-01-01',
+      targetDate: '2026-02-01',
+      labelSourceIds: ['label-web'],
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-02T00:00:00Z',
+    };
+    const story: CanonicalIssue = {
+      ...ISSUE,
+      typeSourceId: 'type-story',
+      initiativeSourceId: 'epic-1',
+      estimatePoints: 5,
+      estimateMinutes: 90.4,
+      labelSourceIds: ['label-web'],
+      customFields: [
+        { fieldSourceId: 'f-platforms', value: ['iOS', 'Web'] },
+        { fieldSourceId: 'f-review', value: '2026-03-04' },
+        { fieldSourceId: 'f-reviewer', value: adaEmail.toUpperCase() },
+        { fieldSourceId: 'f-spec', value: 'https://example.com/spec' },
+      ],
+    };
+    await insertDiscoveredIds(job.id, 'issue', [story.sourceId]);
+    await insertDiscoveredIds(job.id, 'label', ['label-web']);
+    await insertDiscoveredIds(job.id, 'issue_type', ['type-story']);
+    await insertDiscoveredIds(job.id, 'initiative', ['epic-1']);
+    await insertDiscoveredIds(job.id, 'custom_field', [
+      'f-platforms',
+      'f-review',
+      'f-reviewer',
+      'f-spec',
+    ]);
+    const reader = readerForIssues([story]);
+    reader.listIssueComments = async () => [];
+    reader.listLabels = async () => [{ sourceId: 'label-web', name: 'web', group: 'Components' }];
+    reader.listIssueTypes = async () => [{ sourceId: 'type-story', name: 'Story' }];
+    reader.listInitiatives = async () => [epic];
+    reader.listCustomFields = async () => [
+      {
+        sourceId: 'f-platforms',
+        name: 'Platforms',
+        fieldType: 'multi_select',
+        options: ['Android', 'iOS', 'Web'],
+      },
+      { sourceId: 'f-review', name: 'Review on', fieldType: 'date', options: [] },
+      { sourceId: 'f-reviewer', name: 'Reviewer', fieldType: 'member', options: [] },
+      { sourceId: 'f-spec', name: 'Spec', fieldType: 'url', options: [] },
+    ];
+    reader.listIssueWorklogs = async () => [
+      {
+        sourceId: 'w-1',
+        authorEmail: adaEmail,
+        minutes: 30,
+        spentOn: '2026-01-03',
+        note: 'Review',
+      },
+      {
+        sourceId: 'w-2',
+        authorEmail: 'stranger@example.test',
+        minutes: 60,
+        spentOn: '2026-01-03',
+        note: null,
+      },
+    ];
+
+    await runCreate(job, reader);
+    await runCreate(job, reader);
+
+    const [created] = await db.select().from(issue).where(eq(issue.projectId, job.projectId));
+    const [type] = await db.select().from(issueType).where(eq(issueType.id, created!.typeId!));
+    expect(type!.name).toBe('Story');
+    expect(Number(created!.estimatePoints)).toBe(5);
+    expect(created!.estimateMinutes).toBe(90);
+
+    const made = await db.select().from(initiative).where(eq(initiative.projectId, job.projectId));
+    expect(made).toHaveLength(1);
+    expect(created!.initiativeId).toBe(made[0]!.id);
+    expect(made[0]).toMatchObject({
+      title: 'Checkout',
+      description: 'Epic text',
+      status: 'active',
+      ownerUserId: ada,
+      priority: 'high',
+      startDate: '2026-01-01',
+      targetDate: '2026-02-01',
+    });
+    const [labelled] = await db
+      .select({ group: labelGroup.name })
+      .from(initiativeLabel)
+      .innerJoin(label, eq(label.id, initiativeLabel.labelId))
+      .innerJoin(labelGroup, eq(labelGroup.id, label.groupId))
+      .where(eq(initiativeLabel.initiativeId, made[0]!.id));
+    expect(labelled!.group).toBe('Components');
+
+    const worklogs = await db
+      .select({
+        userId: issueWorklog.userId,
+        minutes: issueWorklog.minutes,
+        note: issueWorklog.note,
+      })
+      .from(issueWorklog)
+      .where(eq(issueWorklog.issueId, created!.id));
+    expect(worklogs).toEqual([{ userId: ada, minutes: 30, note: 'Review' }]);
+    const [tracking] = await db
+      .select({
+        points: project.pointsEstimateEnabled,
+        time: project.timeEstimateEnabled,
+        logging: project.timeLoggingEnabled,
+      })
+      .from(project)
+      .where(eq(project.id, job.projectId));
+    expect(tracking).toEqual({ points: true, time: true, logging: true });
+
+    const picked = await db
+      .select({ value: customFieldOption.value })
+      .from(issueFieldOption)
+      .innerJoin(customFieldOption, eq(customFieldOption.id, issueFieldOption.optionId))
+      .where(eq(issueFieldOption.issueId, created!.id))
+      .orderBy(customFieldOption.position);
+    expect(picked.map((p) => p.value)).toEqual(['iOS', 'Web']);
+    const values = await db
+      .select({
+        name: customField.name,
+        date: issueFieldValue.valueDate,
+        userId: issueFieldValue.valueUserId,
+        text: issueFieldValue.valueText,
+      })
+      .from(issueFieldValue)
+      .innerJoin(customField, eq(customField.id, issueFieldValue.fieldId))
+      .where(eq(issueFieldValue.issueId, created!.id))
+      .orderBy(customField.position);
+    expect(values).toEqual([
+      { name: 'Review on', date: '2026-03-04', userId: null, text: null },
+      { name: 'Reviewer', date: null, userId: ada, text: null },
+      { name: 'Spec', date: null, userId: null, text: 'https://example.com/spec' },
     ]);
   });
 

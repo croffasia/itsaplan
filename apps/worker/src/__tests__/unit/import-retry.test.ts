@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import { tickErrorOutcome, MAX_ATTEMPTS } from '../../import-retry';
-import { SourceRateLimitedError, UnsupportedImportSourceError } from '../../reader';
+import { SourceRateLimitedError } from '../../reader';
 
 describe('tickErrorOutcome', () => {
   it('waits out a rate limit with the exact last_error the Settings page matches', () => {
@@ -39,12 +39,5 @@ describe('tickErrorOutcome', () => {
 
   it('records a thrown non-Error as its string form', () => {
     expect(tickErrorOutcome('boom', MAX_ATTEMPTS)).toEqual({ action: 'fail', lastError: 'boom' });
-  });
-
-  it('fails at once for an unsupported source, on the first attempt', () => {
-    expect(tickErrorOutcome(new UnsupportedImportSourceError(7, 'jira'), 0)).toEqual({
-      action: 'fail',
-      lastError: 'import job 7 has unsupported source "jira"',
-    });
   });
 });

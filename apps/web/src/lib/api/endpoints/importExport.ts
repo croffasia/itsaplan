@@ -8,7 +8,17 @@ import { request } from '@/lib/api/core/client';
 export type ImportJobPhase = 'discover' | 'create' | 'link' | 'rewrite' | 'attachments' | 'done';
 export type ImportJobStatus = 'pending' | 'running' | 'paused' | 'completed' | 'failed';
 export type ImportEntityType =
-  'issue' | 'comment' | 'label' | 'state' | 'cycle' | 'attachment' | 'checklist' | 'custom_field';
+  | 'issue'
+  | 'comment'
+  | 'label'
+  | 'state'
+  | 'cycle'
+  | 'attachment'
+  | 'checklist'
+  | 'custom_field'
+  | 'issue_type'
+  | 'initiative'
+  | 'worklog';
 
 export interface ImportEntityCount {
   discovered: number;
@@ -19,6 +29,8 @@ export interface ImportJob {
   id: number;
   projectId: number;
   source: string;
+  // The board, team or project the job reads; null until the job starts reading.
+  sourceProject: { name: string; url: string | null } | null;
   phase: ImportJobPhase;
   status: ImportJobStatus;
   counts: Record<ImportEntityType, ImportEntityCount>;

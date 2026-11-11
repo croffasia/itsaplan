@@ -41,6 +41,7 @@ import {
 } from '@/lib/api/endpoints/git';
 import {
   type CreateImportJobInput,
+  type ImportJob,
   type LinearConnectionInput,
   type PlaneConnectionInput,
   testLinearConnection,
@@ -347,9 +348,22 @@ export function useCreateImportJob(projectKey: string) {
 // Polled while a job is still pending or running, the same shape as
 // useAgentScheduleRuns.
 export function useImportJobsQuery(projectKey: string) {
+  const qc = useQueryClient();
   return useQuery({
     queryKey: qk.importJobs(projectKey),
-    queryFn: () => listImportJobs(projectKey),
+    queryFn: async () => {
+      const before = qc.getQueryData<ImportJob[]>(qk.importJobs(projectKey));
+      const jobs = await listImportJobs(projectKey);
+      // A job that finished since the last poll changed the project: its issues, and settings
+      // it turned on, such as estimates and time logging.
+      const finished = jobs.some(
+        (job) =>
+          job.status === 'completed' &&
+          before?.some((was) => was.id === job.id && was.status !== 'completed'),
+      );
+      if (finished) void qc.invalidateQueries({ queryKey: qk.project(projectKey) });
+      return jobs;
+    },
     refetchInterval: (query) =>
       query.state.data?.some((job) => job.status === 'running' || job.status === 'pending')
         ? 2000

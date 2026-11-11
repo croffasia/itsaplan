@@ -152,6 +152,22 @@ describe('import jobs', () => {
       expect(res.data?.map((j) => j.id)).toEqual([second.id, first.id]);
     });
 
+    it('names what a job reads once its reader has, and nothing before', async () => {
+      const { api } = await setupOwnerProject();
+      const created = (await jobs(api).post(validBody)).data!;
+      expect(created.sourceProject).toBeNull();
+
+      await db
+        .update(importJob)
+        .set({ sourceProjectName: 'Website', sourceProjectUrl: 'https://plane.example.com/acme' })
+        .where(eq(importJob.id, created.id));
+      const [listed] = (await jobs(api).get()).data!;
+      expect(listed!.sourceProject).toEqual({
+        name: 'Website',
+        url: 'https://plane.example.com/acme',
+      });
+    });
+
     it('returns an empty list for a project with no import jobs', async () => {
       const { api } = await setupOwnerProject();
       const res = await jobs(api).get();

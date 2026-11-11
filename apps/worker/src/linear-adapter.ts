@@ -4,6 +4,7 @@ import {
   SourceRateLimitedError,
   type AttachmentDownload,
   type Page,
+  type SourceProject,
   type SourceReader,
 } from './reader';
 import type {
@@ -110,6 +111,14 @@ const ISSUE_QUERY = `query Issue($id: String!) {
   issue(id: $id) { ${ISSUE_FIELDS} }
 }`;
 
+const PROJECT_QUERY = `query Project($id: String!) {
+  project(id: $id) { name url }
+}`;
+
+const TEAM_QUERY = `query Team($id: String!) {
+  team(id: $id) { name key organization { urlKey } }
+}`;
+
 const RELATIONS_QUERY = `query Relations($id: String!, $after: String) {
   issue(id: $id) {
     connection: relations(first: ${PAGE_SIZE}, after: $after) {
@@ -200,6 +209,25 @@ export class LinearReader implements SourceReader {
     if (scope.projectFilter === 'project' && !scope.projectId) {
       throw new Error('Linear scope needs a projectId when projectFilter is "project"');
     }
+  }
+
+  // The project the job reads, or the team for its issues with no project.
+  async describeSource(): Promise<SourceProject> {
+    if (this.scope.projectFilter === 'project') {
+      const { project } = await this.graphql<{ project: { name: string; url: string } }>(
+        PROJECT_QUERY,
+        { id: this.scope.projectId },
+      );
+      return { name: project.name, url: project.url };
+    }
+    const { team } = await this.graphql<{
+      team: { name: string; key: string; organization: { urlKey: string } };
+    }>(TEAM_QUERY, { id: this.scope.teamId });
+    const workspace = encodeURIComponent(team.organization.urlKey);
+    return {
+      name: team.name,
+      url: `https://linear.app/${workspace}/team/${encodeURIComponent(team.key)}/all`,
+    };
   }
 
   async listStates(): Promise<CanonicalState[]> {

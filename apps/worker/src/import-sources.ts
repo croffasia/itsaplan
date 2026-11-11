@@ -2,7 +2,7 @@ import type { CanonicalStateCategory } from './canonical';
 import { LinearReader, type LinearCredential } from './linear-adapter';
 import { PlaneReader, type PlaneCredential } from './plane-adapter';
 import { TrelloReader, type TrelloCredential } from './trello-adapter';
-import { UnsupportedImportSourceError, type SourceReader } from './reader';
+import type { SourceReader } from './reader';
 
 // The import_job.config fields every source shares; the phases read them directly.
 export interface CommonImportConfig {
@@ -110,6 +110,11 @@ registerImportSource<TrelloCredential, TrelloImportConfig>('trello', {
   projectKey: () => null,
 });
 
+// The sources this build reads.
+export function importSourceNames(): string[] {
+  return [...IMPORT_SOURCES.keys()];
+}
+
 export interface ImportJobSource {
   id: number;
   source: string;
@@ -118,7 +123,7 @@ export interface ImportJobSource {
 
 function definitionOf(job: ImportJobSource): StoredSourceDefinition {
   const definition = IMPORT_SOURCES.get(job.source);
-  if (!definition) throw new UnsupportedImportSourceError(job.id, job.source);
+  if (!definition) throw new Error(`import job ${job.id} has unsupported source "${job.source}"`);
   return definition;
 }
 

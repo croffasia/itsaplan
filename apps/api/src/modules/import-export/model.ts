@@ -168,6 +168,9 @@ const CountsResponse = t.Object({
   attachment: entityCount,
   checklist: entityCount,
   custom_field: entityCount,
+  issue_type: entityCount,
+  initiative: entityCount,
+  worklog: entityCount,
 });
 
 const ExportedComment = t.Object({
@@ -211,6 +214,21 @@ export const ImportJobResponse = t.Object({
   id: t.Number(),
   projectId: t.Number(),
   source: t.String(),
+  sourceProject: t.Nullable(
+    t.Object(
+      {
+        name: t.String(),
+        url: t.Nullable(
+          t.String({ description: 'An http(s) address that opens it in the source.' }),
+        ),
+      },
+      {
+        description:
+          'The board, team or project the job reads, as its source names it. Null until the ' +
+          'job starts reading.',
+      },
+    ),
+  ),
   phase: t.UnionEnum(['discover', 'create', 'link', 'rewrite', 'attachments', 'done']),
   status: t.UnionEnum(['pending', 'running', 'paused', 'completed', 'failed']),
   counts: CountsResponse,

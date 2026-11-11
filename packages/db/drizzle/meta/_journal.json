@@ -1240,6 +1240,20 @@
       "when": 1793880321208,
       "tag": "0176_sharing_controls",
       "breakpoints": true
+    },
+    {
+      "idx": 177,
+      "version": "7",
+      "when": 1794345923633,
+      "tag": "0177_import_record_more_entities",
+      "breakpoints": true
+    },
+    {
+      "idx": 178,
+      "version": "7",
+      "when": 1794352831398,
+      "tag": "0178_import_job_source_project",
+      "breakpoints": true
     }
   ]
 }

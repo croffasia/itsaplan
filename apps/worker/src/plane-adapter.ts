@@ -3,6 +3,7 @@ import {
   SourceRateLimitedError,
   type AttachmentDownload,
   type Page,
+  type SourceProject,
   type SourceReader,
 } from './reader';
 import type {
@@ -217,6 +218,19 @@ export class PlaneReader implements SourceReader {
     private readonly projectId: string,
     private readonly fetch: typeof pinnedFetch = pinnedFetch,
   ) {}
+
+  async describeSource(): Promise<SourceProject> {
+    const project = await this.getJson<{ name: string }>('/');
+    // Plane Cloud serves its API and its app on two hosts; a self-hosted instance on one.
+    const app = new URL(this.credential.baseUrl);
+    if (app.host === 'api.plane.so') app.host = 'app.plane.so';
+    const base = app.href.replace(/\/$/, '');
+    const slug = encodeURIComponent(this.credential.workspaceSlug);
+    return {
+      name: project.name,
+      url: `${base}/${slug}/projects/${encodeURIComponent(this.projectId)}/issues/`,
+    };
+  }
 
   async listStates(): Promise<CanonicalState[]> {
     const rows = await this.getResults<{ id: string; name: string; group: string }>('/states/');

@@ -121,7 +121,7 @@
     },
     "import-export": {
       "label": "匯入/匯出",
-      "description": "從自託管的 Plane 執行個體匯入工作項目、留言和標籤，或將該專案的資料匯出為 JSON。"
+      "description": "從其他專案管理工具匯入工作項目，或將該專案的資料匯出為 JSON。"
     },
     "ai-agents": {
       "label": "AI 代理",

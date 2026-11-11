@@ -175,6 +175,8 @@ services:
       # provider credentials stored in the database — encrypted with this key, the
       # same value the api uses.
       APP_ENCRYPTION_KEY: ${SERVICE_PASSWORD_64_ENCRYPTION}
+      # The Pro license is checked against the host of this origin, as the api does.
+      APP_URL: ${SERVICE_URL_WEB}
       # Anonymous telemetry (TELEMETRY.md). Either variable, set to anything but 0,
       # turns it off.
       TELEMETRY_DISABLED: ${TELEMETRY_DISABLED:-}

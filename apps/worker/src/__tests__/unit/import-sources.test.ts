@@ -3,7 +3,7 @@ import { readerForJob, registerImportSource, sourceProjectKeyForJob } from '../.
 import { LinearReader } from '../../linear-adapter';
 import { PlaneReader } from '../../plane-adapter';
 import { TrelloReader } from '../../trello-adapter';
-import { UnsupportedImportSourceError, type SourceReader } from '../../reader';
+import type { SourceReader } from '../../reader';
 
 const planeCredential = {
   baseUrl: 'https://plane.example.test',
@@ -95,11 +95,6 @@ describe('readerForJob', () => {
     expect(() => readerForJob(job, credential as never)).toThrow(
       'import job 9 has a credential that is not a Trello key and token',
     );
-  });
-
-  it('marks an unsupported source as a permanent error', () => {
-    const job = { id: 7, source: 'jira', config: {} };
-    expect(() => readerForJob(job, planeCredential)).toThrow(UnsupportedImportSourceError);
   });
 
   it.each(['jira', 'toString', ''])('refuses the unsupported source "%s"', (source) => {

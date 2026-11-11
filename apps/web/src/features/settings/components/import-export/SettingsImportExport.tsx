@@ -4,14 +4,13 @@ import { Lock } from 'lucide-react';
 import { useImportSources } from '@/cloud';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { usePermissions } from '@/hooks/usePermissions';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import type { ImportSourceEntry } from '../../types/importSource';
 import SettingsImportExportPlane from './SettingsImportExportPlane';
 import SettingsImportExportLinear from './SettingsImportExportLinear';
 import SettingsImportExportTrello from './SettingsImportExportTrello';
 import SettingsImportExportJobList from './SettingsImportExportJobList';
-import SettingsImportExportDownloadButton from './SettingsImportExportDownloadButton';
 import SettingsImportExportPlaneLogo from './SettingsImportExportPlaneLogo';
 import SettingsImportExportLinearLogo from './SettingsImportExportLinearLogo';
 import SettingsImportExportTrelloLogo from './SettingsImportExportTrelloLogo';
@@ -40,11 +39,10 @@ const CORE_SOURCES: ImportSourceEntry[] = [
   },
 ];
 
-// Import and export on two tabs. Import: pick a source, connect to it, pick what to
-// import, and watch the jobs already started. A member who cannot start an import
-// (import_export: create) still sees the job list, since reading it needs only
-// import_export: read, which the page itself already requires; the export tab needs
-// create too.
+// Pick a source, connect to it, pick what to import, and watch the jobs already started.
+// A member who cannot start an import (import_export: create) still sees the job list,
+// since reading it needs only import_export: read, which the page itself already
+// requires. The export is a button in the page header.
 export default function SettingsImportExport({ project }: { project: ProjectDetail }) {
   const t = useTranslations('settings.importExport');
   const projectKey = project.project.ref;
@@ -56,45 +54,26 @@ export default function SettingsImportExport({ project }: { project: ProjectDeta
   const source = entries.find((e) => e.key === sourceKey);
 
   return (
-    <Tabs defaultValue="import">
-      <TabsList variant="line">
-        <TabsTrigger value="import">{t('import')}</TabsTrigger>
-        {canCreate && <TabsTrigger value="export">{t('export')}</TabsTrigger>}
-      </TabsList>
-      <TabsContent value="import" className="mt-4 space-y-10">
-        {canCreate && (
-          <>
-            <SettingsSection title={t('source')} description={t('sourceHint')}>
-              <Tabs value={sourceKey} onValueChange={setSourceKey}>
-                <TabsList variant="line">
-                  {entries.map((entry) => (
-                    <TabsTrigger key={entry.key} value={entry.key}>
-                      {entry.kind === 'locked' && <Lock aria-hidden />}
-                      {entry.label}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </Tabs>
-            </SettingsSection>
-            {source?.kind === 'source' && <source.Component key={source.key} project={project} />}
-            {source?.kind === 'locked' && <source.Component key={source.key} />}
-          </>
-        )}
-        <SettingsSection title={t('jobs')} description={t('jobsHint')}>
-          <SettingsImportExportJobList
-            projectKey={projectKey}
-            editable={canEdit}
-            sources={entries}
-          />
-        </SettingsSection>
-      </TabsContent>
+    <div className="space-y-10">
       {canCreate && (
-        <TabsContent value="export" className="mt-4">
-          <SettingsSection title={t('export')} description={t('exportHint')}>
-            <SettingsImportExportDownloadButton projectKey={projectKey} />
-          </SettingsSection>
-        </TabsContent>
+        <>
+          <Tabs value={sourceKey} onValueChange={setSourceKey}>
+            <TabsList variant="line">
+              {entries.map((entry) => (
+                <TabsTrigger key={entry.key} value={entry.key}>
+                  {entry.kind === 'locked' && <Lock aria-hidden />}
+                  {entry.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+          {source?.kind === 'source' && <source.Component key={source.key} project={project} />}
+          {source?.kind === 'locked' && <source.Component key={source.key} />}
+        </>
       )}
-    </Tabs>
+      <SettingsSection title={t('jobs')} description={t('jobsHint')}>
+        <SettingsImportExportJobList projectKey={projectKey} editable={canEdit} sources={entries} />
+      </SettingsSection>
+    </div>
   );
 }

@@ -1,16 +1,14 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { ExternalLink, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Button } from '@/components/ui/button';
-import { PRO_URL } from '@/utils/app';
+import UpgradeToProButton from '../UpgradeToProButton';
 
 // A section the hosted build and Pro add: where it is available, over the page laid out
 // as it is there, with skeletons in place of the figures.
 export default function SectionPreview({ children }: { children: ReactNode }) {
   const t = useTranslations('sections.previews');
-  const tCommon = useTranslations('common');
 
   return (
     <div className="flex flex-col gap-8 pb-10">
@@ -19,12 +17,7 @@ export default function SectionPreview({ children }: { children: ReactNode }) {
           <Lock className="size-4 shrink-0" />
           {t('available')}
         </p>
-        <Button variant="ghost" size="sm" asChild>
-          <a href={PRO_URL} target="_blank" rel="noreferrer">
-            {tCommon('aboutCloudAndPro')}
-            <ExternalLink />
-          </a>
-        </Button>
+        <UpgradeToProButton />
       </div>
       <div
         className="pointer-events-none select-none [&_[data-slot=skeleton]]:animate-none"

@@ -502,9 +502,6 @@
     "noState": "無狀態。"
   },
   "importExport": {
-    "import": "匯入",
-    "source": "來源",
-    "sourceHint": "選擇要從哪個工具匯入。",
     "jiraPreview": {
       "title": "從 Jira 匯入",
       "description": "遷移 Jira Cloud 或 Data Center 專案及其歷史記錄。可在 Cloud 和自託管 Pro 版中使用。",
@@ -545,9 +542,7 @@
     "jobsHint": "每個匯入都在背景執行，完成前可以暫停、繼續或取消。",
     "emptyTitle": "暫無匯入記錄",
     "emptyHint": "在上方連線一個來源並開始匯入，進度會顯示在這裡。",
-    "export": "匯出",
-    "exportHint": "將該專案的狀態、標籤、週期和工作項目（含留言）下載為一個 JSON 檔案。",
-    "exportProjectData": "匯出專案資料",
+    "exportJson": "匯出為 JSON",
     "exportFailed": "無法匯出該專案。",
     "pause": "暫停",
     "resume": "繼續",

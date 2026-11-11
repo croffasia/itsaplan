@@ -241,6 +241,6 @@
     "perPage": "por página",
     "range": "{first}-{last} de {total}"
   },
-  "aboutCloudAndPro": "Más sobre Cloud y Pro",
+  "upgradeToPro": "Pasar a Pro",
   "signingOut": "Cerrando sesión…"
 }

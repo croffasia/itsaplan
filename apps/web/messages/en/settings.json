@@ -502,9 +502,6 @@
     "noState": "No state."
   },
   "importExport": {
-    "import": "Import",
-    "source": "Source",
-    "sourceHint": "Pick the tracker to import from.",
     "jiraPreview": {
       "title": "Import from Jira",
       "description": "Move a Jira Cloud or Data Center project with its history. Available in Cloud and self-hosted Pro.",
@@ -545,9 +542,7 @@
     "jobsHint": "Each import runs in the background. You can pause, resume, or cancel it until it finishes.",
     "emptyTitle": "No imports yet",
     "emptyHint": "Connect to a source above and start an import. Its progress shows here.",
-    "export": "Export",
-    "exportHint": "Download this project's states, labels, cycles, and issues with their comments as a JSON file.",
-    "exportProjectData": "Export project data",
+    "exportJson": "Export as JSON",
     "exportFailed": "Couldn't export the project.",
     "pause": "Pause",
     "resume": "Resume",

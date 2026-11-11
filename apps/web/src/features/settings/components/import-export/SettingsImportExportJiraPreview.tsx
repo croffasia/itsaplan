@@ -1,9 +1,8 @@
 import { useTranslations } from 'next-intl';
-import { Check, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Check } from 'lucide-react';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import SettingsSection from '@/components/common/page/SettingsSection';
-import { PRO_URL } from '@/utils/app';
+import UpgradeToProButton from '@/components/common/UpgradeToProButton';
 
 const ITEMS = [
   'hierarchy',
@@ -18,7 +17,6 @@ const ITEMS = [
 // The Jira tab of an edition without the Jira import: what that import brings.
 export default function SettingsImportExportJiraPreview() {
   const t = useTranslations('settings.importExport.jiraPreview');
-  const tCommon = useTranslations('common');
 
   return (
     <SettingsSection title={t('title')} description={t('description')}>
@@ -31,12 +29,7 @@ export default function SettingsImportExportJiraPreview() {
             </li>
           ))}
         </ul>
-        <Button variant="outline" size="sm" asChild>
-          <a href={PRO_URL} target="_blank" rel="noreferrer">
-            {tCommon('aboutCloudAndPro')}
-            <ExternalLink />
-          </a>
-        </Button>
+        <UpgradeToProButton />
       </SettingsCard>
     </SettingsSection>
   );

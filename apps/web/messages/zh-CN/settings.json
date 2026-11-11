@@ -502,9 +502,6 @@
     "noState": "无状态。"
   },
   "importExport": {
-    "import": "导入",
-    "source": "来源",
-    "sourceHint": "选择要从哪个工具导入。",
     "jiraPreview": {
       "title": "从 Jira 导入",
       "description": "迁移 Jira Cloud 或 Data Center 项目及其历史记录。可在 Cloud 和自托管 Pro 版中使用。",
@@ -545,9 +542,7 @@
     "jobsHint": "每个导入都在后台运行，完成前可以暂停、继续或取消。",
     "emptyTitle": "暂无导入记录",
     "emptyHint": "在上方连接一个来源并开始导入，进度会显示在这里。",
-    "export": "导出",
-    "exportHint": "将该项目的状态、标签、周期和工作项（含评论）下载为一个 JSON 文件。",
-    "exportProjectData": "导出项目数据",
+    "exportJson": "导出为 JSON",
     "exportFailed": "无法导出该项目。",
     "pause": "暂停",
     "resume": "继续",

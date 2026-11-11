@@ -40,6 +40,8 @@ switch).
   and low-opacity tint only; there is no warning button, so it is tuned for the page and board
   backgrounds alone. An amber rather than a bright yellow — yellow at a legible chroma has to
   drop this far in lightness to hold contrast against the light page.
+- `pro` / `pro-foreground` — the yellow fill and dark label of the Upgrade to Pro button. One
+  pair serves both themes; the label is Lc 78 on the fill.
 - `kanban-column-wip-*`, `kanban-card-blocked`, `row-blocked` — state tints. A tint keeps the
   lightness of the surface it replaces and changes only hue and chroma, so cards keep their
   contrast against a full column. Blocked is rose (10–15°), not the 25° red of `destructive`,

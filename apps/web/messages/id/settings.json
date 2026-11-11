@@ -502,9 +502,6 @@
     "noState": "Tidak ada status."
   },
   "importExport": {
-    "import": "Impor",
-    "source": "Sumber",
-    "sourceHint": "Pilih tracker sumber impor.",
     "jiraPreview": {
       "title": "Impor dari Jira",
       "description": "Pindahkan proyek Jira Cloud atau Data Center beserta riwayatnya. Tersedia di Cloud dan Pro self-hosted.",
@@ -545,9 +542,7 @@
     "jobsHint": "Setiap impor berjalan di latar belakang. Anda bisa menjeda, melanjutkan, atau membatalkannya sampai selesai.",
     "emptyTitle": "Belum ada impor",
     "emptyHint": "Hubungkan ke sumber di atas dan mulai impor. Progresnya muncul di sini.",
-    "export": "Ekspor",
-    "exportHint": "Unduh status, label, siklus, dan issue proyek ini beserta komentarnya dalam satu file JSON.",
-    "exportProjectData": "Ekspor data proyek",
+    "exportJson": "Ekspor sebagai JSON",
     "exportFailed": "Tidak dapat mengekspor proyek.",
     "pause": "Jeda",
     "resume": "Lanjutkan",

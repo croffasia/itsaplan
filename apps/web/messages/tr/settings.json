@@ -502,9 +502,6 @@
     "noState": "Durum yok."
   },
   "importExport": {
-    "import": "İçe Aktar",
-    "source": "Kaynak",
-    "sourceHint": "İçe aktarılacak aracı seçin.",
     "jiraPreview": {
       "title": "Jira'dan içe aktar",
       "description": "Bir Jira Cloud veya Data Center projesini geçmişiyle birlikte taşıyın. Cloud ve kendi sunucunuzda barındırılan Pro sürümünde mevcuttur.",
@@ -545,9 +542,7 @@
     "jobsHint": "Her içe aktarma arka planda çalışır. Bitene kadar duraklatabilir, sürdürebilir veya iptal edebilirsiniz.",
     "emptyTitle": "Henüz içe aktarma yok",
     "emptyHint": "Yukarıdan bir kaynağa bağlanın ve içe aktarmayı başlatın. İlerlemesi burada görünür.",
-    "export": "Dışa Aktar",
-    "exportHint": "Bu projenin durumlarını, etiketlerini, döngülerini ve işlerini yorumlarıyla birlikte tek bir JSON dosyası olarak indirin.",
-    "exportProjectData": "Proje verilerini dışa aktar",
+    "exportJson": "JSON olarak dışa aktar",
     "exportFailed": "Proje dışa aktarılamadı.",
     "pause": "Duraklat",
     "resume": "Devam ettir",

@@ -502,9 +502,6 @@
     "noState": "Aucun état."
   },
   "importExport": {
-    "import": "Importer",
-    "source": "Source",
-    "sourceHint": "Choisissez l'outil depuis lequel importer.",
     "jiraPreview": {
       "title": "Importer depuis Jira",
       "description": "Transférez un projet Jira Cloud ou Data Center avec son historique. Disponible dans Cloud et dans Pro auto-hébergé.",
@@ -545,9 +542,7 @@
     "jobsHint": "Chaque import s'exécute en arrière-plan. Vous pouvez le mettre en pause, le reprendre ou l'annuler tant qu'il n'est pas terminé.",
     "emptyTitle": "Aucun import pour l'instant",
     "emptyHint": "Connectez-vous à une source ci-dessus et démarrez un import. Sa progression s'affichera ici.",
-    "export": "Export",
-    "exportHint": "Téléchargez les états, étiquettes, cycles et tickets de ce projet, avec leurs commentaires, dans un fichier JSON.",
-    "exportProjectData": "Exporter les données du projet",
+    "exportJson": "Exporter en JSON",
     "exportFailed": "Impossible d'exporter le projet.",
     "pause": "Mettre en pause",
     "resume": "Reprendre",

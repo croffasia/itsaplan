@@ -1,17 +1,16 @@
-import { ExternalLink, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import UpgradeToProButton from '@/components/common/UpgradeToProButton';
 import { workspaceRowClass, workspaceTileClass } from '@/components/layout/utils/workspaceTile';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { PRO_URL } from '@/utils/app';
 
 // Below the workspaces of a rail of tiles or of a list of rows. On a self-hosted
 // instance a person owns one workspace, made at sign-up, so the button says where more
 // are available; the hosted build creates a workspace instead.
 export default function WorkspaceRailActions({ variant = 'tile' }: { variant?: 'tile' | 'row' }) {
   const t = useTranslations('teams.workspace');
-  const tCommon = useTranslations('common');
 
   return (
     <Popover>
@@ -46,15 +45,7 @@ export default function WorkspaceRailActions({ variant = 'tile' }: { variant?: '
       >
         <p className="font-medium">{t('createUnavailableTitle')}</p>
         <p className="mt-1 text-xs text-muted-foreground">{t('createUnavailableHint')}</p>
-        <a
-          href={PRO_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-3 inline-flex items-center gap-1 text-xs font-medium hover:underline"
-        >
-          {tCommon('aboutCloudAndPro')}
-          <ExternalLink className="size-3.5" />
-        </a>
+        <UpgradeToProButton className="mt-3" />
       </PopoverContent>
     </Popover>
   );

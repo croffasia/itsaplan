@@ -4,6 +4,7 @@ import {
   SourceRateLimitedError,
   type AttachmentDownload,
   type Page,
+  type SourceProject,
   type SourceReader,
 } from './reader';
 import type {
@@ -95,6 +96,13 @@ export class TrelloReader implements SourceReader {
     private readonly scope: TrelloScope,
     private readonly fetch: typeof pinnedFetch = pinnedFetch,
   ) {}
+
+  async describeSource(): Promise<SourceProject> {
+    const board = await this.get<{ name: string; url: string }>(this.boardPath(), {
+      fields: 'name,url',
+    });
+    return { name: board.name, url: board.url };
+  }
 
   async listStates(): Promise<CanonicalState[]> {
     return mapTrelloStates(await this.lists());

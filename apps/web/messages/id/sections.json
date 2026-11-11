@@ -121,7 +121,7 @@
     },
     "import-export": {
       "label": "Impor/Ekspor",
-      "description": "Impor issue, komentar, dan label dari instans Plane self-hosted, atau ekspor data proyek ini sebagai JSON."
+      "description": "Impor issue dari tracker lain, atau ekspor data proyek ini sebagai JSON."
     },
     "ai-agents": {
       "label": "Agen AI",

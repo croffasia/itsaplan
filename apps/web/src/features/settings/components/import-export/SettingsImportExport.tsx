@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { Lock } from 'lucide-react';
 import { useImportSources } from '@/cloud';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -9,14 +10,34 @@ import type { ImportSourceEntry } from '../../types/importSource';
 import SettingsImportExportPlane from './SettingsImportExportPlane';
 import SettingsImportExportLinear from './SettingsImportExportLinear';
 import SettingsImportExportTrello from './SettingsImportExportTrello';
-import SettingsImportExportMoreSources from './SettingsImportExportMoreSources';
 import SettingsImportExportJobList from './SettingsImportExportJobList';
 import SettingsImportExportDownloadButton from './SettingsImportExportDownloadButton';
+import SettingsImportExportPlaneLogo from './SettingsImportExportPlaneLogo';
+import SettingsImportExportLinearLogo from './SettingsImportExportLinearLogo';
+import SettingsImportExportTrelloLogo from './SettingsImportExportTrelloLogo';
 
 const CORE_SOURCES: ImportSourceEntry[] = [
-  { kind: 'source', key: 'plane', label: 'Plane', Component: SettingsImportExportPlane },
-  { kind: 'source', key: 'linear', label: 'Linear', Component: SettingsImportExportLinear },
-  { kind: 'source', key: 'trello', label: 'Trello', Component: SettingsImportExportTrello },
+  {
+    kind: 'source',
+    key: 'plane',
+    label: 'Plane',
+    Logo: SettingsImportExportPlaneLogo,
+    Component: SettingsImportExportPlane,
+  },
+  {
+    kind: 'source',
+    key: 'linear',
+    label: 'Linear',
+    Logo: SettingsImportExportLinearLogo,
+    Component: SettingsImportExportLinear,
+  },
+  {
+    kind: 'source',
+    key: 'trello',
+    label: 'Trello',
+    Logo: SettingsImportExportTrelloLogo,
+    Component: SettingsImportExportTrello,
+  },
 ];
 
 // Import and export on two tabs. Import: pick a source, connect to it, pick what to
@@ -32,7 +53,7 @@ export default function SettingsImportExport({ project }: { project: ProjectDeta
   const canEdit = can('import_export', 'edit');
   const entries = useImportSources(CORE_SOURCES);
   const [sourceKey, setSourceKey] = useState(CORE_SOURCES[0]!.key);
-  const source = entries.find((e) => e.kind === 'source' && e.key === sourceKey);
+  const source = entries.find((e) => e.key === sourceKey);
 
   return (
     <Tabs defaultValue="import">
@@ -46,27 +67,25 @@ export default function SettingsImportExport({ project }: { project: ProjectDeta
             <SettingsSection title={t('source')} description={t('sourceHint')}>
               <Tabs value={sourceKey} onValueChange={setSourceKey}>
                 <TabsList variant="line">
-                  {entries.map((entry) =>
-                    entry.kind === 'more' ? (
-                      <SettingsImportExportMoreSources
-                        key={entry.key}
-                        label={entry.label}
-                        hint={entry.hint}
-                      />
-                    ) : (
-                      <TabsTrigger key={entry.key} value={entry.key}>
-                        {entry.label}
-                      </TabsTrigger>
-                    ),
-                  )}
+                  {entries.map((entry) => (
+                    <TabsTrigger key={entry.key} value={entry.key}>
+                      {entry.kind === 'locked' && <Lock aria-hidden />}
+                      {entry.label}
+                    </TabsTrigger>
+                  ))}
                 </TabsList>
               </Tabs>
             </SettingsSection>
             {source?.kind === 'source' && <source.Component key={source.key} project={project} />}
+            {source?.kind === 'locked' && <source.Component key={source.key} />}
           </>
         )}
         <SettingsSection title={t('jobs')} description={t('jobsHint')}>
-          <SettingsImportExportJobList projectKey={projectKey} editable={canEdit} />
+          <SettingsImportExportJobList
+            projectKey={projectKey}
+            editable={canEdit}
+            sources={entries}
+          />
         </SettingsSection>
       </TabsContent>
       {canCreate && (

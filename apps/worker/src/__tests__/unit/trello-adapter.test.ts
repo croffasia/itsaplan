@@ -54,6 +54,19 @@ function card(id: string, overrides: Partial<TrelloCard> = {}): TrelloCard {
 const LISTS = [{ id: 'list-1', name: 'To Do', closed: false, pos: 1 }];
 
 describe('TrelloReader requests', () => {
+  it('names the board by its name and address', async () => {
+    const sent: SentRequest[] = [];
+    const reader = readerAnswering(
+      [Response.json({ name: 'Marketing', url: 'https://trello.com/b/x8Yk2Qa/marketing' })],
+      sent,
+    );
+    expect(await reader.describeSource()).toEqual({
+      name: 'Marketing',
+      url: 'https://trello.com/b/x8Yk2Qa/marketing',
+    });
+    expect(sent[0]!.url).toBe('https://api.trello.com/1/boards/board-1?fields=name%2Curl');
+  });
+
   it('sends the key and token in the Authorization header to the Trello API only', async () => {
     const sent: SentRequest[] = [];
     const reader = readerAnswering(

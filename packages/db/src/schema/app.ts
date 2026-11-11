@@ -2473,6 +2473,10 @@ export const importJob = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: 'cascade' }),
     source: text('source').notNull(),
+    // The board, team or project the job reads and the address that opens it in the
+    // source, as its reader names them once Discover starts; null until then.
+    sourceProjectName: text('source_project_name'),
+    sourceProjectUrl: text('source_project_url'),
     phase: text('phase').notNull().default('discover'),
     status: text('status').notNull().default('pending'),
     config: jsonb('config').notNull().default({}),
@@ -2528,11 +2532,11 @@ export const importRecord = pgTable(
   (t) => [
     check(
       'import_record_source_entity_type_check',
-      sql`${t.sourceEntityType} IN ('issue', 'comment', 'label', 'state', 'cycle', 'attachment', 'checklist', 'custom_field')`,
+      sql`${t.sourceEntityType} IN ('issue', 'comment', 'label', 'state', 'cycle', 'attachment', 'checklist', 'custom_field', 'issue_type', 'initiative', 'worklog')`,
     ),
     check(
       'import_record_local_entity_type_check',
-      sql`${t.localEntityType} IS NULL OR ${t.localEntityType} IN ('issue', 'comment', 'label', 'state', 'cycle', 'attachment', 'checklist', 'custom_field')`,
+      sql`${t.localEntityType} IS NULL OR ${t.localEntityType} IN ('issue', 'comment', 'label', 'state', 'cycle', 'attachment', 'checklist', 'custom_field', 'issue_type', 'initiative', 'worklog', 'initiative_attachment')`,
     ),
     uniqueIndex('import_record_job_source_uq').on(t.importJobId, t.sourceEntityType, t.sourceId),
     index('import_record_job_local_idx').on(t.importJobId, t.localEntityType, t.localId),

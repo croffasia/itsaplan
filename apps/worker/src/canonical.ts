@@ -17,6 +17,13 @@ export interface CanonicalLabel {
   sourceId: string;
   name: string;
   color?: string;
+  // The label group it belongs to, made by name when the project lacks it.
+  group?: string;
+}
+
+export interface CanonicalIssueType {
+  sourceId: string;
+  name: string;
 }
 
 export interface CanonicalCycle {
@@ -29,7 +36,17 @@ export interface CanonicalCycle {
 }
 
 // itsaplan's own custom_field.field_type values that an import creates.
-export type CanonicalCustomFieldType = 'text' | 'number' | 'boolean' | 'datetime' | 'select';
+export type CanonicalCustomFieldType =
+  | 'text'
+  | 'markdown'
+  | 'url'
+  | 'number'
+  | 'boolean'
+  | 'date'
+  | 'datetime'
+  | 'select'
+  | 'multi_select'
+  | 'member';
 
 export interface CanonicalCustomField {
   sourceId: string;
@@ -39,10 +56,12 @@ export interface CanonicalCustomField {
   options: string[];
 }
 
-// A 'select' value is the option's text; a 'datetime' value is an ISO timestamp.
+// A 'select' value is the option's text, a 'multi_select' value the texts of its
+// options; a 'date' value is 'YYYY-MM-DD', a 'datetime' value an ISO timestamp; a
+// 'member' value is the person's email, matched with a project member.
 export interface CanonicalCustomFieldValue {
   fieldSourceId: string;
-  value: string | number | boolean | null;
+  value: string | number | boolean | string[] | null;
 }
 
 export interface CanonicalChecklist {
@@ -64,6 +83,36 @@ export interface CanonicalAttachment {
   sizeBytes: number;
 }
 
+// Time a person spent on an issue. Only an author matched with a project member is
+// imported: an entry belongs to the member who logged it.
+export interface CanonicalWorklog {
+  sourceId: string;
+  authorEmail: string | null;
+  minutes: number;
+  // 'YYYY-MM-DD'
+  spentOn: string;
+  note: string | null;
+}
+
+export type CanonicalInitiativeStatus =
+  'proposed' | 'planned' | 'active' | 'completed' | 'canceled';
+
+// A group of issues above them: Jira's epic, for one. Issues join it through
+// CanonicalIssue.initiativeSourceId.
+export interface CanonicalInitiative {
+  sourceId: string;
+  title: string;
+  descriptionMarkdown: string;
+  status: CanonicalInitiativeStatus;
+  ownerEmail: string | null;
+  priority: string | null;
+  startDate: string | null;
+  targetDate: string | null;
+  labelSourceIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CanonicalComment {
   sourceId: string;
   authorEmail: string | null;
@@ -79,6 +128,10 @@ export interface CanonicalRelation {
   targetIssueSourceId: string;
 }
 
+// descriptionMarkdown and a comment's bodyMarkdown may embed one of the issue's own
+// attachments by attachmentLink (inline-attachments.ts); the Attachments phase points
+// it at the stored file. An initiative's description may do the same with its own.
+//
 // Comments and attachments are fetched and written per-issue during the Create
 // phase, not nested here: keeping this flat means one issue's payload does not
 // grow with however many comments or attachments it happens to carry.
@@ -91,6 +144,9 @@ export interface CanonicalIssue {
   title: string;
   descriptionMarkdown: string;
   stateSourceId: string;
+  // Absent for a source without issue types or initiatives.
+  typeSourceId?: string | null;
+  initiativeSourceId?: string | null;
   assigneeEmail: string | null;
   watcherEmails: string[];
   labelSourceIds: string[];
@@ -99,6 +155,9 @@ export interface CanonicalIssue {
   priority: string | null;
   startDate: string | null;
   dueDate: string | null;
+  // Create turns on the project's estimate kind the first time an issue brings one.
+  estimatePoints?: number | null;
+  estimateMinutes?: number | null;
   customFields: CanonicalCustomFieldValue[];
   createdAt: string;
   updatedAt: string;

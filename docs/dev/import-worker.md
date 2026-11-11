@@ -3,23 +3,41 @@
 `import-worker.ts` polls `import_job` for a due `pending` row (`import-store.ts`,
 same claim-with-lease shape as `webhook_delivery`) and advances it by one bounded
 chunk of work per tick — a large import interleaves across many ticks rather than
-running to completion in one.
+running to completion in one. It claims only a job of a source its build registered
+(`importSourceNames`), so a worker of another build with other sources can share the
+database: each job waits for a worker that reads it.
 
 - `canonical.ts` — the source-independent shape an adapter produces
-  (`CanonicalIssue`, `CanonicalState`, ...). Plain types, no logic.
+  (`CanonicalIssue`, `CanonicalState`, ...). Plain types, no logic. Besides the
+  states, labels (with an optional group), cycles, custom fields of every type a
+  project has, issues, checklists, comments, relations and attachments, a source
+  may bring issue types, initiatives (with their own attachments) and time
+  entries through the optional `SourceReader` methods, and an issue's estimate in
+  points or minutes. Create makes or reuses each by name, joins an issue to its
+  type and initiative, keeps a time entry only for an author matched with a
+  project member, and turns on the project's estimate kinds and time log once an
+  issue brings them.
+- `inline-attachments.ts` — a file embedded in a description, a comment or a
+  markdown custom field is written by a mapping as a link to
+  `attachmentLink(<attachment source id>)`. Once the Attachments phase has stored
+  an issue's or an initiative's files, it points those links at them; the link of a
+  file that was not stored keeps its text.
 - `reader.ts` — the `SourceReader` port a source adapter implements, and the
   `SourceRateLimitedError` an adapter throws when the source's rate limit is
-  reached.
+  reached. Its `describeSource` names the board, team or project the job reads and
+  the address that opens it in the source; Discover stores both on the job as it
+  starts (`source_project_name`, `source_project_url`, an http(s) address only),
+  and the job's card shows them.
 - `import-sources.ts` — one entry per `import_job.source`: its credential and
   config types, how to build its reader, and its issue-key prefix for Rewrite. A
   new source needs an entry here and a `SourceReader` adapter; the phases do not
   change. It also needs a job type and routes in
-  `apps/api/src/modules/import-export`, and a connect form with its strings in
-  the web settings.
+  `apps/api/src/modules/import-export`, and a connect form with its strings and
+  its mark (`Logo` of its `ImportSourceEntry`, shown on its job cards) in the web
+  settings.
 - `import-retry.ts` — what a failed tick does: a rate limit is waited out and
-  does not count toward the attempt limit (the claim's bump is undone), a job whose
-  source has no registry entry fails at once, any other error retries with backoff
-  until `MAX_ATTEMPTS` in a row.
+  does not count toward the attempt limit (the claim's bump is undone), any other
+  error retries with backoff until `MAX_ATTEMPTS` in a row.
 - `plane-adapter.ts` — the Plane implementation. HTTP against a Plane
   instance via `pinnedFetch`, using the credential decrypted from the job row
   (base URL, workspace slug, API key — never from env, since this has to work
@@ -54,11 +72,12 @@ running to completion in one.
   section for why. Create/Link/Rewrite resume from `import_record`'s own id,
   not the source's cursor. Link also gives every issue's parent link a second
   chance to resolve, the same way it already does for relations. Rewrite scans
-  every created issue's description and comments for a mention of the
-  source's own identifier and rewrites it to this project's, purely from
+  every created issue's description, comments and markdown custom fields for a
+  mention of the source's own identifier and rewrites it to this project's, purely from
   already-local data — it makes no further requests to the source. An issue's
   mention of itself stays as written (the Linear footer relies on it), and so
   does an identifier that is a segment of a URL path.
+- Rewrite and Attachments go through the issues, then the initiatives.
 - The Attachments phase re-lists each issue's attachments (metadata alone,
   captured during Create, is not reused — a download needs a fresh resolve of
   the two-hop, hour-lived URL right before it happens) and downloads the

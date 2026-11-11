@@ -121,7 +121,7 @@
     },
     "import-export": {
       "label": "Import/Export",
-      "description": "Importez les tickets, commentaires et étiquettes depuis une instance Plane auto-hébergée, ou exportez les données du projet au format JSON."
+      "description": "Importez des tickets depuis un autre outil de suivi, ou exportez les données de ce projet en JSON."
     },
     "ai-agents": {
       "label": "Agents",

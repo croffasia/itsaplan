@@ -53,7 +53,7 @@ async function setup() {
       .projects({ projectKey: 'MKT' })
       .issues.post({ columnId, title: 'Task', assigneeUserId: assignee.userId });
   }
-  return { member, other, client: await connect(member.userId) };
+  return { asOwner, view, member, other, client: await connect(member.userId) };
 }
 
 describe('MCP inbox notifications', () => {
@@ -122,5 +122,28 @@ describe('MCP inbox notifications', () => {
     });
     expect(result.isError).toBe(true);
     expect(result.structuredContent).toMatchObject({ ok: false, status: 404 });
+  });
+
+  it('hides the notifications of a project that has MCP turned off', async () => {
+    const { asOwner, view, member, client } = await setup();
+    const project = view.data!.project;
+    await asOwner.teams({ teamId: project.teamId }).mcp.patch({
+      projects: [{ projectId: project.id, enabled: false }],
+    });
+
+    const listed = await callTool(client, { name: 'list_notifications' });
+    expect((listed.structuredContent as { data: { items: unknown[] } }).data.items).toEqual([]);
+    const count = await callTool(client, { name: 'get_unread_notification_count' });
+    expect(count.structuredContent).toMatchObject({ data: { unread: 0 } });
+    const all = await callTool(client, { name: 'mark_all_notifications_read' });
+    expect(all.structuredContent).toMatchObject({ data: { count: 0 } });
+
+    const own = await authedApi(member.cookie).notifications.get({ query: {} });
+    expect(own.data!.items).toHaveLength(2);
+    const blocked = await callTool(client, {
+      name: 'mark_notification_read',
+      arguments: { id: own.data!.items[0].id },
+    });
+    expect(blocked.structuredContent).toMatchObject({ ok: false, status: 404 });
   });
 });

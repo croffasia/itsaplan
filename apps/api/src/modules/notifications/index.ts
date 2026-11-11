@@ -5,6 +5,7 @@ import { requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { errors } from '#shared/responses';
 import { mcpTool } from '#mcp/generate';
+import { isMcpRequest } from '#shared/mcp-request';
 import {
   AffectedCountResponse,
   NotificationPageResponse,
@@ -43,7 +44,7 @@ export const notificationRoutes = new Elysia({
 
   .get(
     '/notifications',
-    async ({ user, query }) => {
+    async ({ user, query, request }) => {
       const userId = requireUser(user).id;
       const limit = query.limit != null ? Number(query.limit) : 30;
       let before = null;
@@ -67,6 +68,7 @@ export const notificationRoutes = new Elysia({
       if (query.projectId) filters.projectId = Number(query.projectId);
       filters.includeRead = query.includeRead !== 'false';
       filters.includeSnoozed = query.includeSnoozed === 'true';
+      filters.mcpOnly = isMcpRequest(request.headers);
       return listNotifications(userId, { before, limit, filters });
     },
     {
@@ -85,10 +87,10 @@ export const notificationRoutes = new Elysia({
   // The badge count. Refetched when the inbox scope of GET /sync/rev moves.
   .get(
     '/notifications/unread',
-    async ({ user, query }) => {
+    async ({ user, query, request }) => {
       const userId = requireUser(user).id;
       const projectId = query.projectId ? Number(query.projectId) : undefined;
-      return { unread: await unreadCount(userId, projectId) };
+      return { unread: await unreadCount(userId, projectId, isMcpRequest(request.headers)) };
     },
     {
       query: unreadCountQuery,
@@ -103,13 +105,14 @@ export const notificationRoutes = new Elysia({
 
   .post(
     '/notifications/read-all',
-    async ({ user, body }) => {
+    async ({ user, body, request }) => {
       const userId = requireUser(user).id;
       const count = await markAllRead(userId, body?.projectId, {
         types: body?.types,
         fromUserId: body?.from,
         includeRead: body?.includeRead,
         includeSnoozed: body?.includeSnoozed ?? true,
+        mcpOnly: isMcpRequest(request.headers),
       });
       return { count };
     },
@@ -162,10 +165,10 @@ export const notificationRoutes = new Elysia({
 
   .post(
     '/notifications/:id/read',
-    async ({ user, params, body }) => {
+    async ({ user, params, body, request }) => {
       const userId = requireUser(user).id;
       const read = body?.read ?? true;
-      const ok = await setNotificationRead(userId, params.id, read);
+      const ok = await setNotificationRead(userId, params.id, read, isMcpRequest(request.headers));
       if (!ok) throw new HttpError(404, 'Notification not found');
       return noContent();
     },

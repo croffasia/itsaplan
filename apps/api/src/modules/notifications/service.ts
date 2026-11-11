@@ -6,6 +6,7 @@ import {
   issue,
   issueActivity,
   project,
+  team,
   projectColumn,
   projectDocument,
   type ActivityPayload,
@@ -309,6 +310,19 @@ export interface NotificationFilters {
   projectId?: number;
   includeRead?: boolean;
   includeSnoozed?: boolean;
+  // Keeps only projects an MCP call may reach: the project and its team both have MCP on.
+  mcpOnly?: boolean;
+}
+
+function mcpReachable() {
+  return inArray(
+    notification.projectId,
+    db
+      .select({ id: project.id })
+      .from(project)
+      .innerJoin(team, eq(team.id, project.teamId))
+      .where(and(eq(project.mcpEnabled, true), eq(team.mcpEnabled, true))),
+  );
 }
 
 function notificationConditions(userId: string, f: NotificationFilters) {
@@ -317,6 +331,7 @@ function notificationConditions(userId: string, f: NotificationFilters) {
   if (f.fromUserId) conds.push(eq(notification.actorUserId, f.fromUserId));
   if (f.projectId != null) conds.push(eq(notification.projectId, f.projectId));
   if (f.includeRead === false) conds.push(isNull(notification.readAt));
+  if (f.mcpOnly) conds.push(mcpReachable());
   if (!f.includeSnoozed)
     conds.push(or(isNull(notification.snoozedUntil), lt(notification.snoozedUntil, sql`now()`))!);
   return conds;
@@ -452,13 +467,18 @@ export async function listNotifications(
 
 // The number of unread, non-snoozed notifications for the inbox badge, optionally
 // scoped to one project. Counts only what listNotifications shows.
-export async function unreadCount(userId: string, projectId?: number): Promise<number> {
+export async function unreadCount(
+  userId: string,
+  projectId?: number,
+  mcpOnly = false,
+): Promise<number> {
   const conds = [
     eq(notification.userId, userId),
     isNull(notification.readAt),
     or(isNull(notification.snoozedUntil), lt(notification.snoozedUntil, sql`now()`)),
   ];
   if (projectId != null) conds.push(eq(notification.projectId, projectId));
+  if (mcpOnly) conds.push(mcpReachable());
   const [row] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(notification)
@@ -477,11 +497,18 @@ export async function setNotificationRead(
   userId: string,
   id: number,
   read: boolean,
+  mcpOnly = false,
 ): Promise<boolean> {
   const rows = await db
     .update(notification)
     .set({ readAt: read ? sql`now()` : null })
-    .where(and(eq(notification.id, id), eq(notification.userId, userId)))
+    .where(
+      and(
+        eq(notification.id, id),
+        eq(notification.userId, userId),
+        mcpOnly ? mcpReachable() : undefined,
+      ),
+    )
     .returning({ id: notification.id });
   return rows.length > 0;
 }

@@ -1527,8 +1527,8 @@ export const issue = pgTable(
     columnId: integer('column_id')
       .notNull()
       .references(() => projectColumn.id),
-    // The issue this one is a subtask of (same project). One level deep: an issue
-    // with a parent cannot itself be a parent, which the API enforces. Deleting or
+    // The issue this one is a subtask of (same project). Nesting stops at
+    // MAX_SUBTASK_DEPTH levels (issue-tree.ts). Deleting or
     // archiving a parent asks what to do with its subtasks, so the ON DELETE here
     // only covers the paths that bypass that choice (a deleted project).
     parentId: integer('parent_id').references((): AnyPgColumn => issue.id, {

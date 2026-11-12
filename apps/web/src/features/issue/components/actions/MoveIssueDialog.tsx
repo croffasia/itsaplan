@@ -3,10 +3,11 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue } from '@/lib/api/endpoints/issues';
-import { useIssueQuery, useMoveIssue } from '@/services/issues.service';
+import { useIssueSubtreeQuery, useMoveIssue } from '@/services/issues.service';
 import { useProjectQuery, useProjectsQuery } from '@/services/projects.service';
 import { issuePath } from '@/utils/paths';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
+import IssueSubtaskTree from './IssueSubtaskTree';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -18,8 +19,8 @@ import {
 
 const MATCHING = 'matching';
 
-// Moves the issue, with its subtasks, to another project of the same team and opens
-// it under its new identifier.
+// Moves the issue, with its subtasks on every level, to another project of the same
+// team and opens it under its new identifier.
 export default function MoveIssueDialog({
   project,
   issue,
@@ -40,13 +41,14 @@ export default function MoveIssueDialog({
   const target = targets.find((p) => p.ref === targetRef);
   const { data: targetDetail } = useProjectQuery(targetRef);
   const moveIssue = useMoveIssue(project.project.ref);
-  const subtasks = useIssueQuery(issue.id).data?.subtasks.length ?? 0;
+  const subtree = useIssueSubtreeQuery(project.project.ref, [issue.id]).data ?? [];
 
   return (
     <ConfirmDialog
       title={t('moveTitle')}
       confirmLabel={t('move')}
       confirmDisabled={!target}
+      wide={subtree.length > 0}
       onConfirm={async () => {
         if (!target) return;
         const moved = await moveIssue.mutateAsync({
@@ -61,8 +63,16 @@ export default function MoveIssueDialog({
     >
       <p className="text-sm text-muted-foreground">
         {t('moveDescription', { issue: issue.identifier })}{' '}
-        {subtasks > 0 && t('moveSubtasks', { count: subtasks })}
+        {subtree.length > 0 && t('moveSubtasks', { count: subtree.length })}
       </p>
+      {subtree.length > 0 && (
+        <IssueSubtaskTree
+          projectKey={project.project.ref}
+          rootIds={[issue.id]}
+          issues={subtree}
+          outcome={null}
+        />
+      )}
       <div className="space-y-1.5">
         <Label>{t('moveProject')}</Label>
         <Select

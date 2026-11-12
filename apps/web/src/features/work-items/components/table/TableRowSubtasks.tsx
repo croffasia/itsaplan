@@ -3,6 +3,7 @@ import { type Maps } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import { StateIcon } from '@/features/issue/components/shared/IssueIcons';
 import { useSubtasks } from '../../context/useSubtasks';
+import { SubtaskProgress } from '../shared/SubtaskProgress';
 
 // The row's subtasks, as sub-rows under it behind a nesting mark: each subtask's
 // state, identifier and title. How many are done is on the row itself
@@ -50,6 +51,7 @@ export function TableRowSubtasks({
             <span className={cn('truncate', done && 'text-muted-foreground/60 line-through')}>
               {subtask.title}
             </span>
+            <SubtaskProgress issueId={subtask.id} maps={maps} />
           </button>
         );
       })}

@@ -117,8 +117,8 @@
     "archiveTitle": "Archivar el ticket",
     "apply": "Aplicar",
     "cannotBeUndone": "No se puede deshacer.",
-    "deleteDescription": "¿Eliminar {issue}? Esto quita el ticket, sus comentarios, actividad y adjuntos.",
-    "archiveDescription": "¿Archivar {issue}? Deja el tablero y se puede restaurar más tarde.",
+    "deleteDescription": "Se eliminarán el ticket, sus comentarios, actividad y adjuntos.",
+    "archiveDescription": "Deja el tablero y se puede restaurar más tarde.",
     "applyDescription": "¿Aplicar <v>{action}</v> a este ticket?",
     "moveTitle": "Mover incidencia",
     "move": "Mover",
@@ -128,7 +128,9 @@
     "moveChooseProject": "Elige un proyecto",
     "moveColumn": "Estado",
     "moveColumnMatching": "Estado equivalente",
-    "moveCarriedOver": "El tipo, las etiquetas y los campos personalizados se conservan si el proyecto de destino tiene uno con el mismo nombre. Se quitan el ciclo, la iniciativa y los enlaces a incidencias de este proyecto."
+    "moveCarriedOver": "El tipo, las etiquetas y los campos personalizados se conservan si el proyecto de destino tiene uno con el mismo nombre. Se quitan el ciclo, la iniciativa y los enlaces a incidencias de este proyecto.",
+    "deleteQuestion": "¿Eliminar {issue}?",
+    "archiveQuestion": "¿Archivar {issue}?"
   },
   "create": {
     "title": "Nuevo ticket",
@@ -226,14 +228,26 @@
     "allHidden": "El filtro oculta todas las subtareas."
   },
   "subtaskDisposal": {
-    "intro": "{issues, plural, one {Este ticket tiene} other {Estos tickets tienen}} {count, plural, one {# subtarea} other {# subtareas}}.",
     "deleteToo": "{count, plural, one {Eliminarla también} other {Eliminarlas también}}",
     "archiveToo": "{count, plural, one {Archivarla también} other {Archivarlas también}}",
     "detach": "{count, plural, one {Mantenerla sin padre} other {Mantenerlas sin padre}}",
     "reassign": "{count, plural, one {Moverla a otro ticket} other {Moverlas a otro ticket}}",
     "reassignTitle": "Mover las subtareas a otro ticket",
     "change": "Cambiar",
-    "searchParent": "Buscar la nuevo ticket madre…"
+    "searchParent": "Buscar la nuevo ticket madre…",
+    "newParent": "Nuevo padre:",
+    "nestedGoAlong": "{count, plural, one {Sus propias subtareas siguen debajo de ella.} other {Sus propias subtareas siguen debajo de ellas.}}",
+    "question": "{count, plural, one {¿Qué pasa con su subtarea?} other {¿Qué pasa con sus # subtareas?}}",
+    "cascadeDeleteHint": "{count, plural, one {La subtarea también se elimina.} other {Las # subtareas también se eliminan.}}",
+    "cascadeArchiveHint": "{count, plural, one {La subtarea también se archiva.} other {Las # subtareas también se archivan.}}",
+    "detachHint": "{count, plural, one {# subtarea pasa a ser un ticket independiente.} other {# subtareas pasan a ser tickets independientes.}}",
+    "reassignHint": "{count, plural, one {# subtarea pasa al ticket que elijas.} other {# subtareas pasan al ticket que elijas.}}",
+    "tagDeleted": "Se elimina",
+    "tagArchived": "Se archiva",
+    "tagNoParent": "Sin padre",
+    "tagStaysUnder": "Sigue bajo {issue}",
+    "tagMovesTo": "Pasa a {issue}",
+    "tagMovesAlong": "Pasa con ella"
   },
   "comments": {
     "you": "Tú",

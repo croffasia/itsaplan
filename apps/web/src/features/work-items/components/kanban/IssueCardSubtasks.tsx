@@ -8,12 +8,13 @@ import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { StateIcon } from '@/features/issue/components/shared/IssueIcons';
 import { useSubtasks, useSubtasksCollapsed } from '../../context/useSubtasks';
+import { SubtaskProgress } from '../shared/SubtaskProgress';
 
 // The issue's subtasks under its card, headed by how many of them are done. Each
 // row names the subtask — state, identifier, title — since a subtask has no card
 // of its own and these rows are where it shows on the board; clicking one opens
-// it. Without onOpen (the drag preview) the rows are inert. Renders nothing for
-// an issue with no subtasks.
+// it. A subtask's own subtasks are listed on the subtask itself. Without onOpen (the
+// drag preview) the rows are inert. Renders nothing for an issue with no subtasks.
 export function IssueCardSubtasks({
   issueId,
   maps,
@@ -100,6 +101,7 @@ export function IssueCardSubtasks({
                   >
                     {subtask.title}
                   </span>
+                  <SubtaskProgress issueId={subtask.id} maps={maps} />
                 </button>
               </TooltipTrigger>
               <TooltipContent>

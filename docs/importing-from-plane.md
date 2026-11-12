@@ -34,7 +34,8 @@ of them affect data you may not notice is missing until later.
   the dates the issue was created and last updated in Plane. If the project automatically
   archives issues in completed or canceled columns, an imported issue in a completed or
   canceled column whose last update in Plane is older than that threshold is archived on
-  the next sweep.
+  the next sweep. Subtasks nest at most 8 levels deep here: a sub-issue whose parent link
+  would go past that is imported without a parent, together with its own sub-issues.
 - **Assignees and comment authors** — matched to an existing project member by email. It is
   never assigned to the wrong person, and no placeholder account is created; what happens
   when no member has that email is a choice you make in the mapping review step below.

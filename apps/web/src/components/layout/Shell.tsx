@@ -194,7 +194,7 @@ export default function Shell({
                   route={route}
                   projectName={projectName}
                   issueIdentifier={issueQuery.data?.identifier ?? null}
-                  issueParent={issueQuery.data?.parent ?? null}
+                  issueAncestors={issueQuery.data?.ancestors ?? []}
                 />
               }
               hasProject={!!project}

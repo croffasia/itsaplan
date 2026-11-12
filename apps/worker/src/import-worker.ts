@@ -546,7 +546,7 @@ async function runLink(job: ClaimedImportJob, reader: SourceReader): Promise<voi
     if (canonical.parentSourceId) {
       const parentRecord = await findImportRecord(job.id, 'issue', canonical.parentSourceId);
       if (parentRecord?.localId != null) {
-        await setIssueParentIfUnset(record.localId, parentRecord.localId);
+        await setIssueParentIfUnset(job.projectId, record.localId, parentRecord.localId);
       }
     }
     const relations = await reader.listIssueRelations(record.sourceId);

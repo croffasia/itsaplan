@@ -97,14 +97,14 @@
   },
   "removal": {
     "archive": {
-      "title": "{count, plural, one {Archive issue} other {Archive issues}}",
+      "title": "{count, plural, one {Archive # issue?} other {Archive # issues?}}",
       "confirm": "{count, plural, one {Archive # issue} other {Archive # issues}}",
-      "description": "{count, plural, one {Archive # selected issue? It leaves the board and can be restored later.} other {Archive # selected issues? They leave the board and can be restored later.}}"
+      "description": "{count, plural, one {It leaves the board and can be restored later.} other {They leave the board and can be restored later.}}"
     },
     "delete": {
-      "title": "{count, plural, one {Delete issue} other {Delete issues}}",
+      "title": "{count, plural, one {Delete # issue?} other {Delete # issues?}}",
       "confirm": "{count, plural, one {Delete # issue} other {Delete # issues}}",
-      "description": "{count, plural, one {Delete # selected issue?} other {Delete # selected issues?}} This also removes comments, activity and attachments. This cannot be undone."
+      "description": "{count, plural, one {Its comments, activity and attachments will be deleted too.} other {Their comments, activity and attachments will be deleted too.}} This cannot be undone."
     }
   },
   "share": {

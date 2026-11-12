@@ -117,8 +117,8 @@
     "archiveTitle": "이슈 보관",
     "apply": "적용",
     "cannotBeUndone": "이 작업은 되돌릴 수 없습니다.",
-    "deleteDescription": "{issue} 이슈를 삭제하시겠습니까? 이슈와 댓글, 활동 및 첨부 파일이 모두 삭제됩니다.",
-    "archiveDescription": "{issue} 이슈를 보관하시겠습니까? 보드에서 제거되며 나중에 복원할 수 있습니다.",
+    "deleteDescription": "이슈와 댓글, 활동 및 첨부 파일이 모두 삭제됩니다.",
+    "archiveDescription": "보드에서 제거되며 나중에 복원할 수 있습니다.",
     "applyDescription": "이 이슈에 <v>{action}</v> 작업을 적용하시겠습니까?",
     "moveTitle": "이슈 이동",
     "move": "이동",
@@ -128,7 +128,9 @@
     "moveChooseProject": "프로젝트 선택",
     "moveColumn": "상태",
     "moveColumnMatching": "일치하는 상태",
-    "moveCarriedOver": "대상 프로젝트에 같은 이름의 유형, 라벨 또는 사용자 지정 필드가 있으면 해당 값이 유지됩니다. 사이클, 이니셔티브 및 현재 프로젝트의 이슈와 연결된 링크는 제거됩니다."
+    "moveCarriedOver": "대상 프로젝트에 같은 이름의 유형, 라벨 또는 사용자 지정 필드가 있으면 해당 값이 유지됩니다. 사이클, 이니셔티브 및 현재 프로젝트의 이슈와 연결된 링크는 제거됩니다.",
+    "deleteQuestion": "{issue} 이슈를 삭제하시겠습니까?",
+    "archiveQuestion": "{issue} 이슈를 보관하시겠습니까?"
   },
   "create": {
     "title": "새 이슈",
@@ -226,14 +228,26 @@
     "allHidden": "필터로 인해 모든 하위 이슈가 숨겨져 있습니다."
   },
   "subtaskDisposal": {
-    "intro": "{issues, plural, one {이 이슈에는} other {이 이슈들에는}} {count, plural, one {하위 이슈 #개가 있습니다.} other {하위 이슈 #개가 있습니다.}}",
     "deleteToo": "{count, plural, one {함께 삭제} other {함께 삭제}}",
     "archiveToo": "{count, plural, one {함께 보관} other {함께 보관}}",
     "detach": "{count, plural, one {상위 이슈 없이 유지} other {상위 이슈 없이 유지}}",
     "reassign": "{count, plural, one {다른 이슈로 이동} other {다른 이슈로 이동}}",
     "reassignTitle": "하위 이슈를 다른 이슈로 이동",
     "change": "변경",
-    "searchParent": "새 상위 이슈 검색…"
+    "searchParent": "새 상위 이슈 검색…",
+    "newParent": "새 상위 이슈:",
+    "nestedGoAlong": "그 아래의 하위 이슈는 그대로 남습니다.",
+    "question": "{count, plural, other {하위 이슈 #개를 어떻게 할까요?}}",
+    "cascadeDeleteHint": "{count, plural, other {하위 이슈 #개도 모두 삭제됩니다.}}",
+    "cascadeArchiveHint": "{count, plural, other {하위 이슈 #개도 모두 보관됩니다.}}",
+    "detachHint": "{count, plural, other {하위 이슈 #개가 독립된 이슈가 됩니다.}}",
+    "reassignHint": "{count, plural, other {하위 이슈 #개가 선택한 이슈 아래로 이동합니다.}}",
+    "tagDeleted": "삭제됨",
+    "tagArchived": "보관됨",
+    "tagNoParent": "상위 이슈 없음",
+    "tagStaysUnder": "{issue} 아래 유지",
+    "tagMovesTo": "{issue} 아래로 이동",
+    "tagMovesAlong": "함께 이동"
   },
   "comments": {
     "you": "나",

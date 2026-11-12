@@ -117,8 +117,8 @@
     "archiveTitle": "بایگانی تسک",
     "apply": "اعمال",
     "cannotBeUndone": "این عمل قابل بازگشت نیست.",
-    "deleteDescription": "حذف {issue}؟ این کار تسک، دیدگاه‌ها، فعالیت و پیوست‌های آن را حذف می‌کند.",
-    "archiveDescription": "بایگانی {issue}؟ از برد خارج می‌شود و بعداً قابل بازگردانی است.",
+    "deleteDescription": "تسک همراه با دیدگاه‌ها، فعالیت و پیوست‌هایش حذف می‌شود.",
+    "archiveDescription": "از برد خارج می‌شود و بعداً قابل بازگردانی است.",
     "applyDescription": "اعمال <v>{action}</v> روی این تسک؟",
     "moveTitle": "انتقال تسک",
     "move": "انتقال",
@@ -128,7 +128,9 @@
     "moveChooseProject": "انتخاب یک پروژه",
     "moveColumn": "وضعیت",
     "moveColumnMatching": "وضعیت منطبق",
-    "moveCarriedOver": "نوع، برچسب‌ها و فیلدهای سفارشی در جایی که پروژه مقصد موردی با همان نام داشته باشد حفظ می‌شوند. سیکل، ابتکار و لینک‌های تسک‌های این پروژه حذف می‌شوند."
+    "moveCarriedOver": "نوع، برچسب‌ها و فیلدهای سفارشی در جایی که پروژه مقصد موردی با همان نام داشته باشد حفظ می‌شوند. سیکل، ابتکار و لینک‌های تسک‌های این پروژه حذف می‌شوند.",
+    "deleteQuestion": "حذف {issue}؟",
+    "archiveQuestion": "بایگانی {issue}؟"
   },
   "create": {
     "title": "تسک جدید",
@@ -226,14 +228,26 @@
     "allHidden": "همه زیرتسک‌ها با فیلتر پنهان شده‌اند."
   },
   "subtaskDisposal": {
-    "intro": "{issues, plural, one {این تسک} other {این تسک‌ها}} {count, plural, one {# زیرتسک} other {# زیرتسک}} دارد.",
     "deleteToo": "{count, plural, one {آن را هم حذف کن} other {آن‌ها را هم حذف کن}}",
     "archiveToo": "{count, plural, one {آن را هم بایگانی کن} other {آن‌ها را هم بایگانی کن}}",
     "detach": "{count, plural, one {آن را بدون والد نگه دار} other {آن‌ها را بدون والد نگه دار}}",
     "reassign": "{count, plural, one {آن را به تسک دیگری منتقل کن} other {آن‌ها را به تسک دیگری منتقل کن}}",
     "reassignTitle": "انتقال زیرتسک‌ها به تسک دیگر",
     "change": "تغییر",
-    "searchParent": "جستجوی تسک والد جدید…"
+    "searchParent": "جستجوی تسک والد جدید…",
+    "newParent": "والد جدید:",
+    "nestedGoAlong": "{count, plural, one {زیرتسک‌های خودش زیر آن می‌مانند.} other {زیرتسک‌های خودشان زیر آن‌ها می‌مانند.}}",
+    "question": "با {count, plural, one {# زیرتسک} other {# زیرتسک}} چه شود؟",
+    "cascadeDeleteHint": "{count, plural, one {زیرتسک هم حذف می‌شود.} other {هر # زیرتسک هم حذف می‌شوند.}}",
+    "cascadeArchiveHint": "{count, plural, one {زیرتسک هم بایگانی می‌شود.} other {هر # زیرتسک هم بایگانی می‌شوند.}}",
+    "detachHint": "{count, plural, one {# زیرتسک به تسکی مستقل تبدیل می‌شود.} other {# زیرتسک به تسک‌های مستقل تبدیل می‌شوند.}}",
+    "reassignHint": "{count, plural, one {# زیرتسک زیر تسکی که انتخاب می‌کنید می‌رود.} other {# زیرتسک زیر تسکی که انتخاب می‌کنید می‌روند.}}",
+    "tagDeleted": "حذف می‌شود",
+    "tagArchived": "بایگانی می‌شود",
+    "tagNoParent": "بدون والد",
+    "tagStaysUnder": "زیر {issue} می‌ماند",
+    "tagMovesTo": "به {issue} می‌رود",
+    "tagMovesAlong": "همراه می‌رود"
   },
   "comments": {
     "you": "شما",

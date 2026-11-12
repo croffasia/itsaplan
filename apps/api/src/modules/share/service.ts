@@ -28,7 +28,7 @@ import {
   type BoardIssueLink,
   type IssueLinkRow,
 } from '#modules/issues/links';
-import { getParentRef, listSubtasks, type IssueRef } from '#modules/issues/subtasks';
+import { getParentRef, listAncestors, listSubtasks, type IssueRef } from '#modules/issues/subtasks';
 import { applyFilters } from '#modules/views/filters';
 import { revokedDocumentShare, rewriteAssetUrls } from '#modules/documents/service';
 import { projectSharingEnabled } from '#modules/workspaces/service';
@@ -70,6 +70,7 @@ export interface SharedIssueBundle {
     links: IssueLinkRow[];
     parent: IssueRef | null;
     subtasks: IssueRef[];
+    ancestors: IssueRef[];
   };
   feed: FeedItemRow[];
 }
@@ -158,13 +159,14 @@ async function issueBundle(
 ): Promise<SharedIssueBundle> {
   const project = await getProjectById(issueRow.projectId);
   if (!project) throw new Error('project missing for shared issue');
-  const [scaffold, fields, feed, links, parent, subtasks] = await Promise.all([
+  const [scaffold, fields, feed, links, parent, subtasks, ancestors] = await Promise.all([
     buildScaffold(project, extended),
     extended ? getIssueFieldValues(issueRow.id) : [],
     extended ? issueFeed(issueRow.id) : [],
     listIssueLinks(issueRow.id),
     getParentRef(issueRow.parentId),
     listSubtasks(issueRow.id),
+    listAncestors(issueRow.id),
   ]);
   const shown = (id: number) => !onlyIssueIds || onlyIssueIds.has(id);
   const visible = extended ? issueRow : redactIssue(issueRow);
@@ -178,6 +180,7 @@ async function issueBundle(
       links: links.filter((link) => shown(link.issue.id)),
       parent: parent && shown(parent.id) ? parent : null,
       subtasks: subtasks.filter((subtask) => shown(subtask.id)),
+      ancestors: ancestors.filter((ancestor) => shown(ancestor.id)),
     },
     feed,
   };

@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import type { SubtaskDisposition, SubtaskMode } from '@/lib/api/endpoints/issues';
 import { cn } from '@/lib/utils';
+import { useIssueSubtreeQuery } from '@/services/issues.service';
 import IssuePickerDialog from '@/components/common/overlay/IssuePickerDialog';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
+import IssueSubtaskTree, { type SubtreeOutcome } from './IssueSubtaskTree';
 
 // What happens to the subtasks of the issues being removed. Shown inside the
 // delete and archive confirmations whenever the selection has any: nothing is
-// removed until this is answered.
+// removed until this is answered. The tree beside the choice shows every level and
+// what the chosen option does to each issue.
 export default function SubtaskDisposalChoice({
   projectKey,
   action,
@@ -18,6 +21,7 @@ export default function SubtaskDisposalChoice({
 }: {
   projectKey: string;
   action: 'delete' | 'archive';
+  // How many subtasks sit directly under the issues being removed.
   count: number;
   // The issues being removed, which their own subtasks cannot be moved to.
   removedIssueIds: number[];
@@ -28,50 +32,104 @@ export default function SubtaskDisposalChoice({
 }) {
   const t = useTranslations('issue.subtaskDisposal');
   const [picking, setPicking] = useState(false);
-  const [newParent, setNewParent] = useState<string | null>(null);
+  const [newParent, setNewParent] = useState<{ identifier: string; title: string } | null>(null);
+  const subtree = useIssueSubtreeQuery(projectKey, removedIssueIds).data;
+  const total = subtree?.length ?? count;
+  const nested = subtree?.some((issue) => !removedIssueIds.includes(issue.parentId)) ?? false;
+  const mode = value?.subtasks ?? null;
+  const keepsOwn = nested ? ` ${t('nestedGoAlong', { count })}` : '';
 
-  const them = count === 1 ? 'it' : 'them';
-  const options: { mode: SubtaskMode; label: string }[] = [
+  const options: { mode: SubtaskMode; label: string; hint: string }[] = [
     {
       mode: 'cascade',
-      label: action === 'delete' ? t('deleteToo', { count }) : t('archiveToo', { count }),
+      label: t(action === 'delete' ? 'deleteToo' : 'archiveToo', { count: total }),
+      hint: t(action === 'delete' ? 'cascadeDeleteHint' : 'cascadeArchiveHint', { count: total }),
     },
-    { mode: 'detach', label: t('detach', { count }) },
-    { mode: 'reassign', label: t('reassign', { count }) },
+    {
+      mode: 'detach',
+      label: t('detach', { count: total }),
+      hint: t('detachHint', { count }) + keepsOwn,
+    },
+    {
+      mode: 'reassign',
+      label: t('reassign', { count: total }),
+      hint: t('reassignHint', { count }) + keepsOwn,
+    },
   ];
+  const outcome: SubtreeOutcome =
+    mode === 'cascade'
+      ? action
+      : mode === 'detach'
+        ? 'detach'
+        : mode === 'reassign'
+          ? 'move'
+          : null;
 
   return (
-    <div className="space-y-2 rounded-md border p-3">
-      <p className="text-sm text-foreground">
-        {t('intro', { issues: removedIssueIds.length, count })}
-        {count === 1 ? '' : 's'}. Choose what happens to {them}.
-      </p>
-      <div className="flex flex-col gap-1">
+    <div className="grid items-start gap-6 sm:grid-cols-2">
+      <fieldset className="min-w-0 space-y-1">
+        <legend className="mb-2 text-sm font-medium">
+          {t('question', { issues: removedIssueIds.length, count: total })}
+        </legend>
         {options.map((option) => (
-          <button
+          <div
             key={option.mode}
-            type="button"
             className={cn(
-              'rounded-md px-2 py-1.5 text-left text-sm hover:bg-accent/50',
-              value?.subtasks === option.mode && 'bg-accent font-medium',
+              'rounded-lg px-3 py-2.5 transition-colors',
+              mode === option.mode ? 'bg-secondary' : 'hover:bg-accent',
             )}
-            onClick={() => {
-              if (option.mode === 'reassign') setPicking(true);
-              else onChange({ subtasks: option.mode });
-            }}
           >
-            {option.label}
-          </button>
+            <label className="flex cursor-pointer gap-3">
+              <input
+                type="radio"
+                name={`subtasks-${action}`}
+                checked={mode === option.mode}
+                onChange={() => {
+                  if (option.mode === 'reassign') setPicking(true);
+                  else onChange({ subtasks: option.mode });
+                }}
+                className="mt-1 size-4 shrink-0 cursor-pointer accent-foreground"
+              />
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="text-sm font-medium">{option.label}</span>
+                <span className="text-sm text-muted-foreground">{option.hint}</span>
+              </span>
+            </label>
+            {option.mode === 'reassign' && mode === 'reassign' && newParent && (
+              <div className="mt-2 flex min-w-0 items-center gap-2 ps-7 text-sm">
+                <span className="shrink-0 whitespace-nowrap text-muted-foreground">
+                  {t('newParent')}
+                </span>
+                <span className="flex min-w-0 items-center gap-1.5 rounded-md bg-background px-2 py-0.5">
+                  <span dir="ltr" className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                    {newParent.identifier}
+                  </span>
+                  <span dir="auto" className="truncate">
+                    {newParent.title}
+                  </span>
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 shrink-0 px-2"
+                  onClick={() => setPicking(true)}
+                >
+                  {t('change')}
+                </Button>
+              </div>
+            )}
+          </div>
         ))}
-      </div>
+      </fieldset>
 
-      {value?.subtasks === 'reassign' && (
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          New parent: <span className="font-mono text-foreground">{newParent}</span>
-          <Button variant="ghost" size="sm" className="h-6" onClick={() => setPicking(true)}>
-            {t('change')}
-          </Button>
-        </p>
+      {subtree && subtree.length > 0 && (
+        <IssueSubtaskTree
+          projectKey={projectKey}
+          rootIds={removedIssueIds}
+          issues={subtree}
+          outcome={outcome}
+          newParent={newParent?.identifier ?? null}
+        />
       )}
 
       {picking && (
@@ -79,11 +137,14 @@ export default function SubtaskDisposalChoice({
           projectKey={projectKey}
           title={t('reassignTitle')}
           prompt={t('searchParent')}
-          // A subtask cannot be the parent of another, and neither can an issue
-          // that is being removed here.
-          exclude={(hit) => hit.parentId !== null || removedIssueIds.includes(hit.id)}
+          // Neither an issue being removed here nor its subtasks can take them.
+          // The API rejects one further down, or one that nests them too deep.
+          exclude={(hit) =>
+            removedIssueIds.includes(hit.id) ||
+            (hit.parentId !== null && removedIssueIds.includes(hit.parentId))
+          }
           onPick={(hit) => {
-            setNewParent(hit.identifier);
+            setNewParent({ identifier: hit.identifier, title: hit.title });
             onChange({ subtasks: 'reassign', newParentId: hit.id });
             setPicking(false);
           }}

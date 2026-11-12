@@ -1,14 +1,16 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { db, issue } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
 // Subtasks: an issue carries the id of the issue it hangs under (parentId), set on
-// create or through an update. The hierarchy is one level deep and stays inside one
-// project. An issue's parent and its subtasks come back with the issue read
-// (GET /issues/:issueId → `parent` / `subtasks`); deleting or archiving an issue
-// that has subtasks says what happens to them (cascade / detach / reassign) or is
-// rejected with a 409.
+// create or through an update. Subtasks nest up to 8 levels and stay inside one
+// project. An issue's parent, its subtasks and the issues above it come back with the
+// issue read (GET /issues/:issueId → `parent` / `subtasks` / `ancestors`); deleting or
+// archiving an issue that has subtasks says what happens to them (cascade / detach
+// / reassign) or is rejected with a 409.
 
 interface Setup {
   asOwner: Api;
@@ -51,6 +53,17 @@ async function parentWithSubtask(client: Api, columnId: number) {
 
 function createSubtask(client: Api, columnId: number, parentId: number, title: string) {
   return client.projects({ projectKey: 'MKT' }).issues.post({ columnId, title, parentId });
+}
+
+// A chain of issues, each a subtask of the one before: the first is on level 1, the
+// last on level `levels`.
+async function chain(client: Api, columnId: number, levels: number) {
+  const issues = [(await createIssue(client, columnId, 'Level 1')).data!];
+  for (let level = 2; level <= levels; level++) {
+    const parent = issues[issues.length - 1];
+    issues.push((await createSubtask(client, columnId, parent.id, `Level ${level}`)).data!);
+  }
+  return issues;
 }
 
 function setParent(client: Api, issueId: number, parentId: number | null) {
@@ -146,22 +159,80 @@ describe('subtasks', () => {
       expect(res.status).toBe(400);
     });
 
-    it('rejects a subtask as a parent with 400 (one level deep)', async () => {
+    it('nests a subtask under a subtask', async () => {
       const { asOwner, columnId } = await setupProject();
-      const { subtask } = await parentWithSubtask(asOwner, columnId);
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
       const other = (await createIssue(asOwner, columnId, 'Other')).data!;
 
       const res = await setParent(asOwner, other.id, subtask.id);
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(200);
+      expect(await read(asOwner, subtask.id)).toMatchObject({
+        ancestors: [{ id: parent.id }],
+        parent: { id: parent.id },
+        subtasks: [{ id: other.id }],
+      });
+      expect((await read(asOwner, other.id)).ancestors.map((a) => a.id)).toEqual([
+        parent.id,
+        subtask.id,
+      ]);
     });
 
-    it('rejects making an issue that has subtasks a subtask with 400', async () => {
+    it('moves an issue under another parent together with its subtasks', async () => {
       const { asOwner, columnId } = await setupProject();
-      const { parent } = await parentWithSubtask(asOwner, columnId);
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
       const other = (await createIssue(asOwner, columnId, 'Other')).data!;
 
       const res = await setParent(asOwner, parent.id, other.id);
+      expect(res.status).toBe(200);
+      expect((await read(asOwner, subtask.id)).ancestors.map((a) => a.id)).toEqual([
+        other.id,
+        parent.id,
+      ]);
+    });
+
+    it('rejects an issue under one of its own subtasks with 400', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const [top, , bottom] = await chain(asOwner, columnId, 3);
+
+      const res = await setParent(asOwner, top.id, bottom.id);
       expect(res.status).toBe(400);
+      expect((await read(asOwner, top.id)).parentId).toBe(null);
+    });
+
+    it('accepts only one of two concurrent changes that together close a cycle', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const a = (await createIssue(asOwner, columnId, 'A')).data!;
+      const b = (await createIssue(asOwner, columnId, 'B')).data!;
+
+      const statuses = await Promise.all([
+        setParent(asOwner, a.id, b.id),
+        setParent(asOwner, b.id, a.id),
+      ]).then((all) => all.map((res) => res.status).sort());
+      expect(statuses).toEqual([200, 400]);
+    });
+
+    it('accepts a subtask on level 8 and rejects one on level 9 with 400', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const levels = await chain(asOwner, columnId, 8);
+      const last = levels[7];
+      expect((await read(asOwner, last.id)).ancestors.map((a) => a.id)).toEqual(
+        levels.slice(0, 7).map((issue) => issue.id),
+      );
+
+      const created = await createSubtask(asOwner, columnId, last.id, 'Level 9');
+      expect(created.status).toBe(400);
+      const other = (await createIssue(asOwner, columnId, 'Other')).data!;
+      expect((await setParent(asOwner, other.id, last.id)).status).toBe(400);
+    });
+
+    it('rejects a move that would put the issue’s subtasks past level 8 with 400', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const levels = await chain(asOwner, columnId, 7);
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+
+      expect((await setParent(asOwner, parent.id, levels[6].id)).status).toBe(400);
+      expect((await setParent(asOwner, parent.id, levels[5].id)).status).toBe(200);
+      expect((await read(asOwner, subtask.id)).ancestors).toHaveLength(7);
     });
 
     it('records the change on the subtask and on both parents', async () => {
@@ -222,6 +293,47 @@ describe('subtasks', () => {
     });
   });
 
+  describe('subtree', () => {
+    function subtree(client: Api, ids: number[]) {
+      return client
+        .projects({ projectKey: 'MKT' })
+        .issues.subtree.get({ query: { ids: ids.join(',') } });
+    }
+
+    it('lists every level under the issue with its parent, archived ones included', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const [top, middle, bottom] = await chain(asOwner, columnId, 3);
+      await asOwner.issues({ issueId: bottom.id }).archive.post();
+
+      const res = await subtree(asOwner, [top.id]);
+      expect(res.status).toBe(200);
+      expect(res.data!.map(({ id, parentId, archived }) => ({ id, parentId, archived }))).toEqual([
+        { id: middle.id, parentId: top.id, archived: false },
+        { id: bottom.id, parentId: middle.id, archived: true },
+      ]);
+    });
+
+    it('leaves out the issues of another project', async () => {
+      const { asOwner } = await setupProject();
+      const foreign = await foreignIssue(asOwner);
+      await asOwner
+        .projects({ projectKey: 'OPS' })
+        .issues.post({ columnId: foreign.columnId, title: 'Under', parentId: foreign.id });
+
+      const res = await subtree(asOwner, [foreign.id]);
+      expect(res.status).toBe(200);
+      expect(res.data).toEqual([]);
+    });
+
+    it('rejects a non-member with 403', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent } = await parentWithSubtask(asOwner, columnId);
+      const outsider = authedApi((await signUpTestUser({ name: 'Outsider' })).cookie);
+
+      expect((await subtree(outsider, [parent.id])).status).toBe(403);
+    });
+  });
+
   describe('delete', () => {
     it('deletes the subtasks with the parent on cascade', async () => {
       const { asOwner, columnId } = await setupProject();
@@ -257,6 +369,42 @@ describe('subtasks', () => {
       expect((await read(asOwner, subtask.id)).parentId).toBe(next.id);
     });
 
+    it('deletes every level under the parent on cascade', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const [top, middle, bottom] = await chain(asOwner, columnId, 3);
+
+      const res = await asOwner.issues({ issueId: top.id }).delete(undefined, {
+        query: { subtasks: 'cascade' },
+      });
+      expect(res.status).toBe(204);
+      expect((await asOwner.issues({ issueId: middle.id }).get()).status).toBe(404);
+      expect((await asOwner.issues({ issueId: bottom.id }).get()).status).toBe(404);
+    });
+
+    it('finishes a cascade through a parent cycle left in old data', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+      // The API refuses a cycle, so the old data is written directly.
+      await db.update(issue).set({ parentId: subtask.id }).where(eq(issue.id, parent.id));
+
+      const res = await asOwner.issues({ issueId: parent.id }).delete(undefined, {
+        query: { subtasks: 'cascade' },
+      });
+      expect(res.status).toBe(204);
+      expect((await asOwner.issues({ issueId: subtask.id }).get()).status).toBe(404);
+    });
+
+    it('keeps the subtasks of a detached subtask under it', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const [top, middle, bottom] = await chain(asOwner, columnId, 3);
+
+      await asOwner.issues({ issueId: top.id }).delete(undefined, {
+        query: { subtasks: 'detach' },
+      });
+      expect(await read(asOwner, middle.id)).toMatchObject({ parentId: null, ancestors: [] });
+      expect((await read(asOwner, bottom.id)).parentId).toBe(middle.id);
+    });
+
     it('rejects a delete that does not say what happens to the subtasks with 409', async () => {
       const { asOwner, columnId } = await setupProject();
       const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
@@ -275,6 +423,36 @@ describe('subtasks', () => {
         query: { subtasks: 'reassign', newParentId: parent.id },
       });
       expect(res.status).toBe(400);
+      expect((await asOwner.issues({ issueId: parent.id }).get()).status).toBe(200);
+    });
+
+    it('rejects reassigning the subtasks under one of them with 400 and moves none', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+      const second = (await createSubtask(asOwner, columnId, parent.id, 'Second')).data!;
+      const nested = (await createSubtask(asOwner, columnId, second.id, 'Nested')).data!;
+
+      const res = await asOwner.issues({ issueId: parent.id }).delete(undefined, {
+        query: { subtasks: 'reassign', newParentId: nested.id },
+      });
+      expect(res.status).toBe(400);
+      expect((await read(asOwner, subtask.id)).parentId).toBe(parent.id);
+      expect((await read(asOwner, second.id)).parentId).toBe(parent.id);
+    });
+
+    it('rejects a reassign that would nest past level 8 with 400 and moves none', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const levels = await chain(asOwner, columnId, 7);
+      const parent = (await createIssue(asOwner, columnId, 'Parent')).data!;
+      const leaf = (await createSubtask(asOwner, columnId, parent.id, 'Leaf')).data!;
+      const deep = (await createSubtask(asOwner, columnId, parent.id, 'Deep')).data!;
+      await createSubtask(asOwner, columnId, deep.id, 'Under deep');
+
+      const res = await asOwner.issues({ issueId: parent.id }).delete(undefined, {
+        query: { subtasks: 'reassign', newParentId: levels[6].id },
+      });
+      expect(res.status).toBe(400);
+      expect((await read(asOwner, leaf.id)).parentId).toBe(parent.id);
       expect((await asOwner.issues({ issueId: parent.id }).get()).status).toBe(200);
     });
 
@@ -327,6 +505,17 @@ describe('subtasks', () => {
       const res = await asOwner.issues({ issueId: parent.id }).restore.post();
       expect(res.status).toBe(200);
       expect(await read(asOwner, subtask.id)).toMatchObject({ archivedAt: null });
+    });
+
+    it('archives and restores every level under the parent', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const [top, , bottom] = await chain(asOwner, columnId, 3);
+
+      await asOwner.issues({ issueId: top.id }).archive.post({ subtasks: 'cascade' });
+      expect((await read(asOwner, bottom.id)).archivedAt).not.toBe(null);
+
+      await asOwner.issues({ issueId: top.id }).restore.post();
+      expect((await read(asOwner, bottom.id)).archivedAt).toBe(null);
     });
 
     it('archives an issue without subtasks with no choice to make', async () => {
@@ -456,6 +645,26 @@ describe('subtasks', () => {
       await move(asOwner, parent.id, doneColumnId);
       expect((await read(asOwner, subtask.id)).columnId).toBe(doneColumnId);
       expect((await read(asOwner, alreadyClosed.id)).columnId).toBe(canceledColumnId);
+    });
+
+    it('carries a close down and up from an issue in the middle', async () => {
+      const { asOwner, columnId, doneColumnId } = await setupProject();
+      const [top, middle, bottom] = await chain(asOwner, columnId, 3);
+      await setAutomations(asOwner, { completeParent: true, closeSubtasks: true });
+
+      await move(asOwner, middle.id, doneColumnId);
+      expect((await read(asOwner, bottom.id)).columnId).toBe(doneColumnId);
+      expect((await read(asOwner, top.id)).columnId).toBe(doneColumnId);
+    });
+
+    it('closes every parent up the chain once the last subtask closes', async () => {
+      const { asOwner, columnId, doneColumnId } = await setupProject();
+      const [top, middle, bottom] = await chain(asOwner, columnId, 3);
+      await setAutomations(asOwner, { completeParent: true, closeSubtasks: false });
+
+      await move(asOwner, bottom.id, doneColumnId);
+      expect((await read(asOwner, middle.id)).columnId).toBe(doneColumnId);
+      expect((await read(asOwner, top.id)).columnId).toBe(doneColumnId);
     });
 
     it('settles with both automations on', async () => {

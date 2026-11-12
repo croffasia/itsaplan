@@ -117,8 +117,8 @@
     "archiveTitle": "İşi arşivle",
     "apply": "Uygula",
     "cannotBeUndone": "Bu işlem geri alınamaz.",
-    "deleteDescription": "{issue} silinsin mi? Bu işlem işi, yorumlarını, etkinliklerini ve eklerini kaldırır.",
-    "archiveDescription": "{issue} arşivlensin mi? Panodan kaldırılır ve daha sonra geri yüklenebilir.",
+    "deleteDescription": "İş, yorumları, etkinlikleri ve ekleri silinecek.",
+    "archiveDescription": "Panodan kaldırılır ve daha sonra geri yüklenebilir.",
     "applyDescription": "Bu işe <v>{action}</v> eylemi uygulansın mı?",
     "moveTitle": "İşi taşı",
     "move": "Taşı",
@@ -128,7 +128,9 @@
     "moveChooseProject": "Bir proje seçin",
     "moveColumn": "Durum",
     "moveColumnMatching": "Eşleşen durum",
-    "moveCarriedOver": "Hedef projede aynı ada sahip bir karşılığı varsa tür, etiketler ve özel alanlar korunur. Döngü, girişim ve bu projedeki işlerle olan bağlantılar kaldırılır."
+    "moveCarriedOver": "Hedef projede aynı ada sahip bir karşılığı varsa tür, etiketler ve özel alanlar korunur. Döngü, girişim ve bu projedeki işlerle olan bağlantılar kaldırılır.",
+    "deleteQuestion": "{issue} silinsin mi?",
+    "archiveQuestion": "{issue} arşivlensin mi?"
   },
   "create": {
     "title": "Yeni iş",
@@ -226,14 +228,26 @@
     "allHidden": "Tüm alt işler filtre tarafından gizlendi."
   },
   "subtaskDisposal": {
-    "intro": "{issues, plural, one {Bu işin} other {Bu işlerin}} {count, plural, one {# alt işi} other {# alt işi}} var.",
     "deleteToo": "{count, plural, one {Onu da sil} other {Onları da sil}}",
     "archiveToo": "{count, plural, one {Onu da arşivle} other {Onları da arşivle}}",
     "detach": "{count, plural, one {Ana işsiz olarak koru} other {Ana işsiz olarak koru}}",
     "reassign": "{count, plural, one {Başka bir işe taşı} other {Başka bir işe taşı}}",
     "reassignTitle": "Alt işleri başka bir işe taşı",
     "change": "Değiştir",
-    "searchParent": "Yeni ana işi arayın…"
+    "searchParent": "Yeni ana işi arayın…",
+    "newParent": "Yeni ana iş:",
+    "nestedGoAlong": "{count, plural, one {Kendi alt işleri onun altında kalır.} other {Kendi alt işleri onların altında kalır.}}",
+    "question": "{count, plural, other {# alt işe ne olsun?}}",
+    "cascadeDeleteHint": "{count, plural, one {Alt iş de silinir.} other {# alt işin tümü de silinir.}}",
+    "cascadeArchiveHint": "{count, plural, one {Alt iş de arşivlenir.} other {# alt işin tümü de arşivlenir.}}",
+    "detachHint": "{count, plural, other {# alt iş bağımsız bir iş olur.}}",
+    "reassignHint": "{count, plural, other {# alt iş seçtiğiniz işin altına taşınır.}}",
+    "tagDeleted": "Silinir",
+    "tagArchived": "Arşivlenir",
+    "tagNoParent": "Ana iş yok",
+    "tagStaysUnder": "{issue} altında kalır",
+    "tagMovesTo": "{issue} altına taşınır",
+    "tagMovesAlong": "Birlikte taşınır"
   },
   "comments": {
     "you": "Siz",

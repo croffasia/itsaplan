@@ -31,6 +31,8 @@ import {
   MB,
   projectStoredBytes,
   lockAttachmentStorage,
+  lockIssueTree,
+  parentLinkProblem,
 } from '@repo/db';
 import { and, eq, gt, inArray, isNull, isNotNull, or, sql, type Column } from 'drizzle-orm';
 import { decryptSecret, type EncryptedSecret } from '@repo/crypto';
@@ -832,6 +834,10 @@ export async function createLocalIssueAndRecord(
       .select({ pos: sql<number>`COALESCE(MAX(${issue.position}), 0) + 1000` })
       .from(issue)
       .where(eq(issue.columnId, input.columnId));
+    const parentId =
+      input.parentId !== null && !(await parentLinkProblem(null, input.parentId, tx))
+        ? input.parentId
+        : null;
     const [row] = await tx
       .insert(issue)
       .values({
@@ -841,7 +847,7 @@ export async function createLocalIssueAndRecord(
         typeId: input.typeId ?? null,
         initiativeId: input.initiativeId ?? null,
         cycleId: input.cycleId,
-        parentId: input.parentId,
+        parentId,
         assigneeUserId: input.assigneeUserId,
         title: input.title || '(untitled)',
         description: input.description,
@@ -1181,13 +1187,22 @@ export async function createLocalComment(
 // whatever import_record knows at that moment, which misses a sub-issue processed
 // before its parent exists; Link revisits every issue a second time (see runLink)
 // and calls this once the parent is resolvable. The parent_id IS NULL guard makes
-// a retry a no-op and never overwrites a parent Create already got right.
-export async function setIssueParentIfUnset(issueId: number, parentId: number): Promise<void> {
-  if (issueId === parentId) return;
-  await db
-    .update(issue)
-    .set({ parentId })
-    .where(and(eq(issue.id, issueId), isNull(issue.parentId)));
+// a retry a no-op and never overwrites a parent Create already got right. A parent
+// that would put the issue past MAX_SUBTASK_DEPTH, or under itself, is not set: the
+// issue is imported without one.
+export async function setIssueParentIfUnset(
+  projectId: number,
+  issueId: number,
+  parentId: number,
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    await lockIssueTree(tx, projectId);
+    if (await parentLinkProblem(issueId, parentId, tx)) return;
+    await tx
+      .update(issue)
+      .set({ parentId })
+      .where(and(eq(issue.id, issueId), isNull(issue.parentId)));
+  });
 }
 
 // issue_link's unique index is on the unordered pair + kind, so re-running the

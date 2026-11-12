@@ -5,8 +5,13 @@ import type { Issue, SubtaskDisposition } from '@/lib/api/endpoints/issues';
 import { matchesFilterSet } from '@/utils/filters';
 import { describeEffect } from '@/utils/actions';
 import { useEffectText } from '@/hooks/useEffectText';
-import { dispositionReady } from '@/utils/subtasks';
-import { useDeleteIssue, useIssueQuery, useUpdateIssue } from '@/services/issues.service';
+import { dispositionReady, removalCount } from '@/utils/subtasks';
+import {
+  useDeleteIssue,
+  useIssueQuery,
+  useIssueSubtreeQuery,
+  useUpdateIssue,
+} from '@/services/issues.service';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import SubtaskDisposalChoice from './SubtaskDisposalChoice';
 import type { ReactNode } from 'react';
@@ -64,6 +69,7 @@ export function DeleteIssueDialog({
   onDeleted?: () => void;
 }) {
   const t = useTranslations('issue.actions');
+  const tr = useTranslations('workItems.removal');
   const deleteIssue = useDeleteIssue(project.project.ref);
   // The board carries only active issues, so an archived issue's subtasks are not
   // countable from it. The detail read carries them, archived ones included; it is
@@ -72,11 +78,14 @@ export function DeleteIssueDialog({
   const detail = useIssueQuery(issue.id);
   const subtasks = detail.data?.subtasks.length ?? 0;
   const [disposition, setDisposition] = useState<SubtaskDisposition | null>(null);
+  const subtree = useIssueSubtreeQuery(project.project.ref, [issue.id], subtasks > 0).data;
+  const removed = removalCount([issue.id], subtree ?? [], disposition);
 
   return (
     <ConfirmDialog
-      title={t('deleteTitle')}
-      confirmLabel={t('deleteTitle')}
+      title={t('deleteQuestion', { issue: issue.identifier })}
+      confirmLabel={removed > 1 ? tr('delete.confirm', { count: removed }) : t('deleteTitle')}
+      wide={subtasks > 0 && 'xl'}
       confirmDisabled={!detail.data || (subtasks > 0 && !dispositionReady(disposition))}
       onConfirm={async () => {
         await deleteIssue.mutateAsync({ id: issue.id, subtasks: disposition ?? undefined });
@@ -86,7 +95,7 @@ export function DeleteIssueDialog({
       onClose={onClose}
     >
       <p className="text-sm text-muted-foreground">
-        {t('deleteDescription', { issue: issue.identifier })} {t('cannotBeUndone')}
+        {t('deleteDescription')} {t('cannotBeUndone')}
       </p>
       {subtasks > 0 && (
         <SubtaskDisposalChoice

@@ -115,6 +115,20 @@ describe('move issue', () => {
     expect((await read(asOwner, parent.id)).subtasks.map((s) => s.id)).toEqual([a.id]);
   });
 
+  it('moves the subtasks of a subtask as well', async () => {
+    const { asOwner, ops, mktColumns } = await setup();
+    const top = (await createIssue(asOwner, mktColumns[0].id, 'Top')).data!;
+    const middle = (await createIssue(asOwner, mktColumns[0].id, 'Middle', top.id)).data!;
+    const bottom = (await createIssue(asOwner, mktColumns[0].id, 'Bottom', middle.id)).data!;
+
+    const res = await asOwner.issues({ issueId: top.id }).move.post({ projectId: ops.id });
+    expect(res.status).toBe(200);
+    expect(await read(asOwner, bottom.id)).toMatchObject({
+      projectId: ops.id,
+      parentId: middle.id,
+    });
+  });
+
   it('lists the watchers of the target project when read by the old number', async () => {
     const { asOwner, ops, mktColumns } = await setup();
     const user = await signUpTestUser({ name: 'Member' });

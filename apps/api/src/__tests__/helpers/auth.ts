@@ -1,8 +1,7 @@
 import { createHash } from 'node:crypto';
 import { auth } from '@repo/auth';
-import { db, workspaceManager } from '@repo/db';
+import { db, insertOwnedTeam, team, workspaceManager } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
-import { insertOwnedTeam } from '#modules/teams/service';
 import { app } from './app';
 
 export interface TestUser {
@@ -26,9 +25,9 @@ let counter = 0;
 // we read the Set-Cookie off the response. Each call uses a unique email so
 // tests do not collide. Pass this cookie to authenticated requests.
 //
-// Sign-up creates no team. Most tests need one to create projects in, so the user is
-// given a team named after its username, without a slug, in its own workspace, unless
-// `team` is false.
+// Sign-up gives an address with no pending invite a first team in its own workspace.
+// Most tests need one to create projects in. `team: false` deletes it; an address that
+// was invited first gets a team named after its username, without a slug, instead.
 //
 // Note: the very first user created in a fresh database becomes the "god" role
 // (better-auth create hook). resetDb() clears users between tests, so whichever
@@ -66,11 +65,17 @@ export async function signUpTestUser(
     .from(workspaceManager)
     .where(and(eq(workspaceManager.userId, userId), eq(workspaceManager.role, 'owner')));
   const workspaceId = own?.workspaceId ?? null;
-  if (overrides.team !== false) {
+  const [first] =
+    workspaceId === null
+      ? []
+      : await db.select({ id: team.id }).from(team).where(eq(team.workspaceId, workspaceId));
+  if (overrides.team === false) {
+    if (first) await db.delete(team).where(eq(team.id, first.id));
+  } else if (!first) {
     if (workspaceId === null) {
       throw new Error(`signUpTestUser: ${email} has no workspace for a team; pass team: false`);
     }
-    await db.transaction(async (tx) => insertOwnedTeam(tx, workspaceId, username, userId));
+    await db.transaction(async (tx) => insertOwnedTeam(tx, workspaceId, username, userId, null));
   }
 
   return { cookie, userId, email, username, workspaceId };

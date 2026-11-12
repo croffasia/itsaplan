@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { setSetting } from '@repo/db';
+import { eq } from 'drizzle-orm';
+import { auth } from '@repo/auth';
+import { db, setSetting, userPreference } from '@repo/db';
 import { authedApi } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -30,13 +32,43 @@ async function signUpClient() {
   return { user, api: authedApi(user.cookie) };
 }
 
+// An account from before the screen existed, which has no preferences. Sign-up records the
+// running release as seen, so a new account has nothing pending.
+async function signUpBeforeTheScreen() {
+  const client = await signUpClient();
+  await db.delete(userPreference).where(eq(userPreference.userId, client.user.userId));
+  return client;
+}
+
 describe('whats-new', () => {
   beforeEach(async () => {
     await resetDb();
   });
 
-  it('is pending until the user closes it', async () => {
+  it('shows a new account nothing until the next upgrade', async () => {
     const { api } = await signUpClient();
+
+    const res = await api.settings['whats-new'].get();
+    expect(res.data).toMatchObject({ pending: false, releases: [] });
+  });
+
+  it('stores the language of the browser that signed up', async () => {
+    const res = await auth.api.signUpEmail({
+      body: { email: 'ru@example.com', password: 'test-password-123', name: 'Ru' },
+      headers: new Headers({ 'accept-language': 'ru' }),
+      asResponse: true,
+    });
+    const cookie = res.headers
+      .getSetCookie()
+      .map((c) => c.split(';')[0])
+      .join('; ');
+
+    const stored = await authedApi(cookie, { 'accept-language': 'en' }).account.preferences.get();
+    expect(stored.data?.locale).toBe('ru');
+  });
+
+  it('is pending until the user closes it', async () => {
+    const { api } = await signUpBeforeTheScreen();
 
     const first = await api.settings['whats-new'].get();
     expect(first.status).toBe(200);
@@ -50,7 +82,7 @@ describe('whats-new', () => {
   });
 
   it('keeps the language of the browser for a user with no preferences yet', async () => {
-    const user = await signUpTestUser();
+    const { user } = await signUpBeforeTheScreen();
     const api = authedApi(user.cookie, { 'accept-language': 'ru' });
 
     await api.settings['whats-new'].seen.post();
@@ -62,7 +94,7 @@ describe('whats-new', () => {
   });
 
   it('carries the running release, from the changelog when the feed is unreachable', async () => {
-    const { api } = await signUpClient();
+    const { api } = await signUpBeforeTheScreen();
 
     const res = await api.settings['whats-new'].get();
     const running = res.data!.version;

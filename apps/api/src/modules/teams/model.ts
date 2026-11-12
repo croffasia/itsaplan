@@ -1,9 +1,9 @@
 import { t } from 'elysia';
+import { TEAM_SLUG_PATTERN } from '@repo/db';
 import { pageQueryFields, pageResponse } from '#shared/pagination';
 import { PermissionMatrixSchema } from '#shared/permissions';
 import { AccessViaSchema } from '#shared/workspace-roles';
 import { StatsDto } from '#modules/analytics/model';
-import { TEAM_SLUG_PATTERN } from './ref';
 
 // Both member lists here take the filters and the window the project member list
 // defines, so a reader learns one query and it holds everywhere.

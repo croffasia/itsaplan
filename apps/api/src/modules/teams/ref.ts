@@ -2,34 +2,7 @@ import { project, team } from '@repo/db';
 import { sql } from 'drizzle-orm';
 
 // How URLs name a team and a project. A team is its slug, or its id while it has
-// none; a project is "<teamRef>.<key>". The web app puts the team first in its paths
-// (/acme/MKT), so a slug must not be one of its own top-level segments.
-
-export const TEAM_SLUG_PATTERN = '^[a-z][a-z0-9-]{0,38}[a-z0-9]$';
-
-const RESERVED_SLUGS = new Set([
-  'account',
-  'api',
-  'docs',
-  'forgot-password',
-  'god',
-  'invite',
-  'issue',
-  'login',
-  'media',
-  'oauth',
-  'project',
-  'protected-media',
-  'register',
-  'reset-password',
-  'settings',
-  'share',
-  'workspaces',
-]);
-
-export function isReservedSlug(slug: string): boolean {
-  return RESERVED_SLUGS.has(slug);
-}
+// none; a project is "<teamRef>.<key>".
 
 export function teamRef(team: { id: number; slug: string | null }): string {
   return team.slug ?? String(team.id);

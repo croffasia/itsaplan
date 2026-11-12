@@ -1,5 +1,12 @@
 import { randomInt } from 'node:crypto';
-import { createWorkspace, db } from '@repo/db';
+import {
+  TEAM_SLUG_PATTERN,
+  createWorkspace,
+  db,
+  insertOwnedTeam,
+  isReservedSlug,
+  type DbExecutor,
+} from '@repo/db';
 import { and, eq, gt, isNull, sql, type SQL } from 'drizzle-orm';
 import { betterAuth, type BetterAuthPlugin } from 'better-auth';
 import { createAuthMiddleware, APIError } from 'better-auth/api';
@@ -13,7 +20,9 @@ import {
 } from '@better-auth/oauth-provider';
 import { jwt, openAPI, magicLink, username, genericOAuth } from 'better-auth/plugins';
 import { createLocalJWKSet, jwtVerify } from 'jose';
+import { localeFromAcceptLanguage } from '@repo/mailer';
 import * as schema from '@repo/db/schema';
+import rootPackage from '../../../package.json';
 import {
   getAuthSettings,
   admittedPastGate,
@@ -461,16 +470,21 @@ const settled = new Set<string>();
 // it, and apps/api on every request, so an account made before personal workspaces, by
 // SCIM, or while they were off gets its own without signing in again. Nothing in the API
 // creates a workspace; an edition that lets a person own more mounts a route of its own.
-// An agent's bot user is no person.
+// An agent's bot user is no person. A person in no team and with no pending invite also
+// gets a first team in it, named after the local part of their address, so they start
+// with a team instead of a form to create one.
 // ponytail: an account with no workspace while they are off reads the setting on each
 // request; cache it with the setting if that ever shows.
 export async function ensurePersonalWorkspace(account: {
   id: string;
+  email: string;
   role?: string | null;
 }): Promise<void> {
   const userId = account.id;
   if (settled.has(userId)) return;
   if (account.role !== 'god' && !(await getAuthSettings()).personalWorkspaces) return;
+  // Read before the transaction: inside it, a pool query can wait forever for a connection.
+  const invited = await hasPendingInvite(account.email);
   await db.transaction(async (tx) => {
     // Two sign-ins at once would otherwise both find none.
     const [person] = await tx
@@ -492,10 +506,61 @@ export async function ensurePersonalWorkspace(account: {
       .where(eq(schema.aiAgent.userId, userId))
       .limit(1);
     if (owned || agent) return;
-    const name = (person.name.trim() || person.email.split('@')[0]!).slice(0, 60);
-    await createWorkspace(tx, name, userId);
+    const local = person.email.split('@')[0]!;
+    const workspaceId = await createWorkspace(
+      tx,
+      (person.name.trim() || local).slice(0, 60),
+      userId,
+    );
+    const [inTeam] = await tx
+      .select({ n: sql`1` })
+      .from(schema.teamMember)
+      .where(eq(schema.teamMember.userId, userId))
+      .limit(1);
+    if (inTeam || invited) return;
+    const slug = await freeTeamSlug(tx, local);
+    await insertOwnedTeam(tx, workspaceId, local.slice(0, 60), userId, slug);
   });
   settled.add(userId);
+}
+
+// The slug of a first team, made from the local part of an address the way the web app
+// suggests one from a name. One that is too short, reserved or taken gets a random
+// suffix, and the check repeats until the slug is free. The stem is cut to 36 characters
+// so a dash and the suffix fit in the 40 a slug may have.
+async function freeTeamSlug(executor: DbExecutor, local: string): Promise<string> {
+  const stem =
+    local
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^[^a-z]+/, '')
+      .slice(0, 36)
+      .replace(/-+$/, '') || 'team';
+  const valid = new RegExp(TEAM_SLUG_PATTERN);
+  let candidate = stem;
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const free =
+      valid.test(candidate) &&
+      !isReservedSlug(candidate) &&
+      (await executor.$count(schema.team, eq(schema.team.slug, candidate))) === 0;
+    if (free) break;
+    candidate = `${stem}-${randomSuffix()}`;
+  }
+  return candidate;
+}
+
+// A new account has already seen the release it signed up on, so the "what's new" screen
+// waits for the next upgrade. The language is the browser's, which the preferences
+// take by default anyway.
+async function startOnRunningRelease(userId: string, headers?: Headers): Promise<void> {
+  await db
+    .insert(schema.userPreference)
+    .values({
+      userId,
+      locale: localeFromAcceptLanguage(headers?.get('accept-language') ?? null),
+      seenVersion: rootPackage.version,
+    })
+    .onConflictDoNothing();
 }
 
 // After an account stops owning a workspace (it deleted or handed over its own), so the
@@ -833,8 +898,9 @@ function createAuth() {
               },
             };
           },
-          after: async (user) => {
+          after: async (user, ctx) => {
             await ensurePersonalWorkspace(user);
+            await startOnRunningRelease(user.id, ctx?.headers);
           },
         },
       },

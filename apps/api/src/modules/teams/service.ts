@@ -3,6 +3,8 @@ import {
   agentTool,
   aiAgent,
   db,
+  insertOwnedTeam,
+  isReservedSlug,
   teamWorkspaceId,
   integrationCredential,
   issue,
@@ -20,7 +22,7 @@ import {
 } from '@repo/db';
 import { and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { HttpError, iso, pgErrorCode } from '#shared/lib';
-import { isReservedSlug, projectRefSql, teamRef } from './ref';
+import { projectRefSql, teamRef } from './ref';
 import { getLimits } from '#shared/limits';
 import { fullPermissions, type Permissions } from '#shared/permissions';
 import {
@@ -776,21 +778,6 @@ export async function listTeamProjectMembers(
 }
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
-export async function insertOwnedTeam(
-  tx: Transaction,
-  workspaceId: number,
-  name: string,
-  ownerId: string,
-  slug: string | null = null,
-) {
-  const [row] = await tx.insert(team).values({ workspaceId, name, slug }).returning();
-  const [membership] = await tx
-    .insert(teamMember)
-    .values({ teamId: row.id, userId: ownerId, role: 'owner' })
-    .returning();
-  return { team: row, membership };
-}
 
 // The people across the workspace's teams, which is what a seat ceiling counts. An
 // agent's bot user sits in a member list but takes no seat.

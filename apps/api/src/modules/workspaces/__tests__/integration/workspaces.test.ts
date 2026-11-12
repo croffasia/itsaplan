@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { eq } from 'drizzle-orm';
-import { setAuthSettings, setWorkspaceScim } from '@repo/auth';
+import { auth, setAuthSettings, setWorkspaceScim } from '@repo/auth';
 import { db, workspace } from '@repo/db';
 import { deleteAccount } from '#shared/account-deletion';
 import { setOwnedWorkspaceLimit } from '#shared/limits';
@@ -363,6 +363,64 @@ describe('workspaces', () => {
       ]);
     });
 
+    it('starts a new account in a team of its own, named after its address', async () => {
+      await setup();
+      const person = await signUpTestUser({ email: 'jane.doe@example.com' });
+
+      expect((await authedApi(person.cookie).teams.get()).data).toEqual([
+        expect.objectContaining({
+          workspaceId: person.workspaceId,
+          name: 'jane.doe',
+          slug: 'jane-doe',
+          role: 'owner',
+        }),
+      ]);
+    });
+
+    it('gives the first team a suffix when its slug is taken or reserved', async () => {
+      await setup();
+      await signUpTestUser({ email: 'jane.doe@example.com' });
+      const twin = await signUpTestUser({ email: 'Jane_Doe@other.example' });
+      const reserved = await signUpTestUser({ email: 'settings@example.com' });
+      const short = await signUpTestUser({ email: 'x@example.com' });
+
+      const slugOf = async (person: TestUser) =>
+        (await authedApi(person.cookie).teams.get()).data![0]!.slug;
+      expect(await slugOf(twin)).toMatch(/^jane-doe-\d{3}$/);
+      expect(await slugOf(reserved)).toMatch(/^settings-\d{3}$/);
+      expect(await slugOf(short)).toMatch(/^x-\d{3}$/);
+    });
+
+    it('makes no first team for an invited address', async () => {
+      const { ownerApi, teamId } = await setup();
+      await ownerApi.teams({ teamId }).invites.post({ email: 'guest@example.com', role: 'member' });
+
+      const signedUp = await auth.api.signUpEmail({
+        body: { email: 'guest@example.com', password: 'test-password-123', name: 'Guest' },
+        asResponse: true,
+      });
+      const cookie = signedUp.headers
+        .getSetCookie()
+        .map((c) => c.split(';')[0])
+        .join('; ');
+
+      expect((await authedApi(cookie).teams.get()).data).toEqual([]);
+    });
+
+    it('makes no first team for an account already in one', async () => {
+      const { ownerApi, teamId } = await setup();
+      await setAuthSettings({ personalWorkspaces: false });
+      const person = await addPerson(ownerApi, teamId);
+
+      await setAuthSettings({ personalWorkspaces: true });
+
+      const personApi = authedApi(person.cookie);
+      expect((await personApi.workspaces.get()).data).toContainEqual(
+        expect.objectContaining({ role: 'owner' }),
+      );
+      expect((await personApi.teams.get()).data).toEqual([expect.objectContaining({ id: teamId })]);
+    });
+
     it('leaves SCIM provisioning to god mode unless a build sets it up per workspace', async () => {
       await setup();
       const person = authedApi((await signUpTestUser({ team: false })).cookie);
@@ -478,11 +536,28 @@ describe('workspaces', () => {
 
       expect((await ws.get()).data).toMatchObject({ deletion: 'allowed' });
       expect((await ws.delete()).status).toBe(204);
-      expect((await personApi.teams.get()).data).toEqual([]);
-      // Personal workspaces are on, so the next request makes the owner a fresh one.
+      // Personal workspaces are on, so the next request makes the owner a fresh one, with
+      // a first team in it.
       const [fresh] = (await personApi.workspaces.get()).data!;
       expect(fresh).toMatchObject({ role: 'owner' });
       expect(fresh!.id).not.toBe(workspaceId);
+      expect((await personApi.teams.get()).data).toEqual([
+        expect.objectContaining({ workspaceId: fresh!.id }),
+      ]);
+    });
+
+    it('answers an account with no workspace that sends many requests at once', async () => {
+      const { personApi, workspaceId } = await ownWorkspace();
+      await personApi.workspaces({ workspaceId }).delete();
+
+      // More than the database pool has connections.
+      const answers = await Promise.all(
+        Array.from({ length: 12 }, () => personApi.workspaces.get()),
+      );
+
+      expect(answers.map((res) => res.status)).toEqual(Array(12).fill(200));
+      expect((await personApi.workspaces.get()).data).toHaveLength(1);
+      expect((await personApi.teams.get()).data).toHaveLength(1);
     });
 
     it('keeps one whose teams hold a project', async () => {

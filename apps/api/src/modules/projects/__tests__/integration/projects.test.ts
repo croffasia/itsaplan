@@ -305,7 +305,7 @@ describe('projects', () => {
       expect(copied.data).toMatchObject({
         key: 'DST',
         name: 'Destination',
-        teamName: user.username,
+        teamName: user.email.split('@')[0],
       });
 
       // The copy is owned by the caller: it shows up in their project list.

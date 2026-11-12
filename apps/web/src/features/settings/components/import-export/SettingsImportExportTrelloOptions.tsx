@@ -37,26 +37,26 @@ export default function SettingsImportExportTrelloOptions({
 
   return (
     <div className="space-y-6">
-      <div className="w-64 space-y-1.5">
-        <Label htmlFor="trello-archived-cards">{t('trello.archivedCards')}</Label>
-        <Select
-          value={value.archivedCards}
-          onValueChange={(next) =>
-            onChange({ ...value, archivedCards: next as TrelloArchivedCards })
-          }
-        >
-          <SelectTrigger id="trello-archived-cards" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="archive">{t('trello.archivedCardsArchive')}</SelectItem>
-            <SelectItem value="skip">{t('trello.archivedCardsSkip')}</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <div className="grid items-start gap-6 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="trello-archived-cards">{t('trello.archivedCards')}</Label>
+          <Select
+            value={value.archivedCards}
+            onValueChange={(next) =>
+              onChange({ ...value, archivedCards: next as TrelloArchivedCards })
+            }
+          >
+            <SelectTrigger id="trello-archived-cards" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="archive">{t('trello.archivedCardsArchive')}</SelectItem>
+              <SelectItem value="skip">{t('trello.archivedCardsSkip')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-      <div className="space-y-2">
-        <div className="w-64 space-y-1.5">
+        <div className="space-y-1.5">
           <Label htmlFor="trello-members">{t('trello.members')}</Label>
           <Select
             value={memberMap ? 'match' : 'skip'}
@@ -73,23 +73,24 @@ export default function SettingsImportExportTrelloOptions({
             </SelectContent>
           </Select>
         </div>
-        {memberMap && (
-          <>
-            <p className="text-xs text-muted-foreground">{t('trello.membersHint')}</p>
-            <SettingsCard className="max-h-64 divide-y divide-border/60 overflow-y-auto">
-              {members.map((member) => (
-                <SettingsImportExportTrelloMemberRow
-                  key={member.id}
-                  member={member}
-                  people={people}
-                  value={memberMap[member.id] ?? null}
-                  onChange={(userId) => setMember(member.id, userId)}
-                />
-              ))}
-            </SettingsCard>
-          </>
-        )}
       </div>
+
+      {memberMap && (
+        <div className="space-y-2">
+          <p className="text-xs text-muted-foreground">{t('trello.membersHint')}</p>
+          <SettingsCard className="max-h-64 divide-y divide-border/60 overflow-y-auto">
+            {members.map((member) => (
+              <SettingsImportExportTrelloMemberRow
+                key={member.id}
+                member={member}
+                people={people}
+                value={memberMap[member.id] ?? null}
+                onChange={(userId) => setMember(member.id, userId)}
+              />
+            ))}
+          </SettingsCard>
+        </div>
+      )}
     </div>
   );
 }

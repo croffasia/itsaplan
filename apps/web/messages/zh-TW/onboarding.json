@@ -1,0 +1,197 @@
+{
+  "label": "歡迎使用 It's a Plan",
+  "goTo": "前往第 {number} 頁",
+  "next": "下一步",
+  "start": "開始使用",
+  "getInPro": "在 Pro 中取得",
+  "proNote": "可在 Cloud 和 Self-hosted Pro 中使用。",
+  "replay": "開啟產品導覽",
+  "slides": {
+    "dashboards": {
+      "title": "打造自己的儀表板",
+      "body": "為你追蹤的每件事建立一個儀表板，並選擇其中的元件：工作項目數量、分類統計、燃起圖、吞吐量、活動和代理執行。"
+    },
+    "workItems": {
+      "title": "每項任務都是一個工作項目",
+      "body": "以看板、表格、時間軸或按月、週、日顯示的日曆檢視同一批工作項目。把常用的篩選條件儲存為檢視。"
+    },
+    "initiatives": {
+      "title": "將工作項目歸入同一目標",
+      "body": "計畫匯集推動一個更大目標的工作項目。隨著這些工作項目推進，計畫的進度和進展狀態會隨之更新。"
+    },
+    "cycles": {
+      "title": "按時間段規劃工作",
+      "body": "週期是團隊安排工作項目的固定時間段。週期結束時，將未完成的工作項目移到下一個週期。"
+    },
+    "documents": {
+      "title": "在工作旁邊寫文件",
+      "body": "將規格說明和決策記錄在文件中。把文件連結到工作項目和計畫，在留言中討論，並還原任何較早的版本。"
+    },
+    "notes": {
+      "title": "在筆記板上勾勒想法",
+      "body": "筆記板是用於放置筆記的自由畫布。筆記板可以只留給自己，也可以與專案共享。"
+    },
+    "agents": {
+      "title": "把工作交給 AI 代理",
+      "body": "將工作項目指派給代理，或在聊天中向它提問。它使用你提供的工具和技能工作，並回報它做了什麼。"
+    },
+    "schedules": {
+      "title": "依排程執行代理",
+      "body": "在設定的時間或工作項目進入某狀態時啟動代理。Pro 還會在工作項目被建立或指派、新增標籤或發表留言時啟動代理，且只針對符合篩選條件的工作項目。"
+    },
+    "workflows": {
+      "name": "工作流程",
+      "title": "把代理串成工作流程",
+      "body": "工作流程把工作從一個代理傳給下一個代理。它可以手動啟動，也可以依排程、工作項目事件或 Webhook 啟動，某一步還可以把工作退回修改。"
+    },
+    "portal": {
+      "name": "支援入口網站",
+      "title": "接收團隊外部的請求",
+      "body": "在你的網站上放一個表單，或為客戶提供一個入口網站。每個請求都會成為一個工作項目，有人回覆時寄件者會收到電子郵件。"
+    },
+    "budgets": {
+      "name": "AI 預算",
+      "title": "限制代理的花費",
+      "body": "為整個工作區、團隊、專案或每個人設定按天、按週或按月的模型花費限額。預算用完後，代理不再開始新的執行。"
+    },
+    "analytics": {
+      "name": "AI 分析",
+      "title": "查看代理的時間和花費去向",
+      "body": "按人員、觸發方式、排程和工作流程拆分代理執行，並查看執行時長和失敗的工具呼叫。"
+    },
+    "audit": {
+      "name": "稽核記錄",
+      "title": "了解誰做了什麼",
+      "body": "稽核記錄會記錄對人員、設定和資料的變更，以及每次登入。需要時可以匯出。"
+    }
+  },
+  "art": {
+    "issues": {
+      "checkout": "結帳頁面改版",
+      "webhooks": "整合 Stripe Webhook",
+      "refunds": "客服退款流程",
+      "invoices": "發票 PDF 匯出",
+      "twoFactor": "雙重驗證",
+      "testKeys": "設定 Stripe 測試金鑰",
+      "releaseNotes": "撰寫版本說明",
+      "flakyTest": "修正不穩定的匯出測試",
+      "staleIssues": "標記停滯的工作項目",
+      "roadmap": "草擬 Q3 路線圖",
+      "feedback": "彙整客戶意見"
+    },
+    "states": {
+      "todo": "待辦",
+      "inProgress": "進行中",
+      "review": "審查中",
+      "done": "已完成"
+    },
+    "sprintHealth": "迭代狀態",
+    "initiative": "Q3 發布",
+    "cycle": "週期 {number}",
+    "activeCycle": "週期 {number} · 進行中",
+    "week": "第 {number} 週",
+    "working": "工作中",
+    "steps": {
+      "read": "閱讀工作項目",
+      "search": "搜尋程式碼",
+      "pullRequest": "建立 Pull Request",
+      "report": "回報結果"
+    },
+    "schedules": {
+      "community": "Community",
+      "weeklyReport": "每週報告",
+      "everyMonday": "每週一 {time}",
+      "reviewFix": "檢查修正",
+      "entersState": "工作項目進入 {state}",
+      "runHistory": "執行記錄",
+      "running": "執行中",
+      "triageBugs": "分類錯誤回報",
+      "when": "何時",
+      "events": {
+        "created": "建立工作項目",
+        "assigned": "指派工作項目",
+        "labelAdded": "新增標籤",
+        "commentAdded": "新增留言"
+      },
+      "bugLabel": "錯誤",
+      "onlyFor": "僅限部分工作項目",
+      "typeBug": "類型：錯誤",
+      "priorityHigh": "優先順序：高",
+      "createdByAnyone": "建立者：任何人",
+      "howOften": "頻率",
+      "perDay": "{count} 次 / 24 小時",
+      "atOnce": "{count} 個同時執行"
+    },
+    "workflows": {
+      "name": "版本說明",
+      "on": "已開啟",
+      "trigger": "觸發器",
+      "issueEvent": "工作項目事件",
+      "writer": "撰稿人",
+      "draftNotes": "草擬說明",
+      "reviewer": "審閱者",
+      "checkDraft": "檢查草稿",
+      "request": "請求",
+      "sendBack": "退回",
+      "run": "執行 #{number}",
+      "running": "執行中 · {step}，第 {round} 輪"
+    },
+    "portal": {
+      "contactSupport": "聯絡支援",
+      "name": "姓名",
+      "email": "電子郵件",
+      "message": "訊息",
+      "send": "送出",
+      "request": "請求",
+      "issue": "無法匯出發票",
+      "replySent": "已透過電子郵件回覆",
+      "followed": "在入口網站上追蹤"
+    },
+    "budgets": {
+      "newBudget": "新建預算",
+      "workspace": "整個工作區",
+      "team": "團隊 · {name}",
+      "person": "每個人",
+      "perMonth": "每月",
+      "perWeek": "每週",
+      "perDay": "每天",
+      "spentOf": "{spent} / {limit}",
+      "thisMonth": "本月",
+      "ofLimit": "{limit} 中已用",
+      "refused": "執行被拒絕",
+      "spent": "預算已用完"
+    },
+    "analytics": {
+      "usage": "代理用量",
+      "range": "最近 30 天",
+      "byTrigger": "按觸發方式",
+      "triggers": {
+        "chat": "聊天",
+        "mention": "提及",
+        "schedule": "排程",
+        "issueEvent": "工作項目事件",
+        "workflow": "工作流程"
+      },
+      "total": "{cost} · {count, plural, other {# 次執行}}",
+      "runTime": "執行時長",
+      "byPerson": "按人員"
+    },
+    "audit": {
+      "export": "匯出",
+      "time": "時間",
+      "who": "操作人",
+      "action": "操作",
+      "where": "位置",
+      "workspace": "工作區",
+      "actions": {
+        "role": "將 Bob 的角色改為 Admin",
+        "sso": "透過 SSO 登入",
+        "created": "建立 ITS-241",
+        "label": "刪除標籤 \"legacy\"",
+        "tried": "嘗試刪除專案",
+        "requireSso": "開啟要求 SSO"
+      },
+      "denied": "已拒絕"
+    }
+  }
+}

@@ -1,0 +1,197 @@
+{
+  "label": "It's a Plan'a hoş geldiniz",
+  "goTo": "{number}. slayta git",
+  "next": "İleri",
+  "start": "Başlayın",
+  "getInPro": "Pro ile edinin",
+  "proNote": "Cloud ve Self-hosted Pro'da kullanılabilir.",
+  "replay": "Ürün turunu aç",
+  "slides": {
+    "dashboards": {
+      "title": "Kendi panolarınızı oluşturun",
+      "body": "Takip ettiğiniz her konu için bir pano oluşturun ve bileşenlerini seçin: iş sayıları, dağılımlar, burnup, iş hacmi, etkinlik ve ajan çalıştırmaları."
+    },
+    "workItems": {
+      "title": "Her görev bir iştir",
+      "body": "Aynı işleri kanban panosu, tablo, zaman çizelgesi ya da aylık, haftalık veya günlük takvim olarak görün. Kullandığınız filtreleri bir görünüm olarak kaydedin."
+    },
+    "initiatives": {
+      "title": "İşleri tek bir hedef altında toplayın",
+      "body": "Bir girişim, daha büyük bir hedefi ilerleten işleri toplar. İlerlemesi ve sağlık durumu bu işler ilerledikçe güncellenir."
+    },
+    "cycles": {
+      "title": "İşi zaman dilimlerine göre planlayın",
+      "body": "Döngü, takımın işlerini planladığı sabit bir dönemdir. Bittiğinde tamamlanmamış işleri bir sonrakine taşıyın."
+    },
+    "documents": {
+      "title": "İşin yanında yazın",
+      "body": "Spesifikasyonları ve kararları belgelerde tutun. Onları işlere ve girişimlere bağlayın, yorumlarda tartışın ve önceki herhangi bir revizyonu geri yükleyin."
+    },
+    "notes": {
+      "title": "Fikirleri bir panoya karalayın",
+      "body": "Not panosu, yapışkan notlar için serbest bir çalışma alanıdır. Bir panoyu kendinize saklayın ya da projeyle paylaşın."
+    },
+    "agents": {
+      "title": "İşi bir yapay zekâ ajanına devredin",
+      "body": "Bir işi bir ajana atayın ya da sohbette ona sorun. Ajan, verdiğiniz araçlar ve yeteneklerle çalışır ve ne yaptığını bildirir."
+    },
+    "schedules": {
+      "title": "Ajanları zamanlamayla çalıştırın",
+      "body": "Bir ajanı belirli bir saatte ya da bir iş bir duruma girdiğinde başlatın. Pro ayrıca bir iş oluşturulduğunda veya atandığında, bir etiket eklendiğinde ya da bir yorum yazıldığında da başlatır, yalnızca bir filtreye uyan işler için."
+    },
+    "workflows": {
+      "name": "Akışlar",
+      "title": "Ajanları bir akışta zincirleyin",
+      "body": "Bir akış, işi bir ajandan sonrakine aktarır. Elle, zamanlamayla, bir iş olayıyla ya da bir webhook'tan başlar ve bir adım işi düzeltme için geri gönderebilir."
+    },
+    "portal": {
+      "name": "Destek portalı",
+      "title": "Takım dışından talepler alın",
+      "body": "Sitenize bir form koyun ya da müşterilerinize bir portal verin. Her talep bir işe dönüşür ve biri yanıt verdiğinde gönderen kişiye e-posta gider."
+    },
+    "budgets": {
+      "name": "Yapay zekâ bütçeleri",
+      "title": "Ajanların harcamasını sınırlayın",
+      "body": "Tüm çalışma alanı, bir takım, bir proje ya da her kişi için günlük, haftalık veya aylık model harcama limiti belirleyin. Bir bütçe tükendiğinde ajanlar yeni çalıştırma başlatmaz."
+    },
+    "analytics": {
+      "name": "Yapay zekâ analitiği",
+      "title": "Ajanların zamanının ve parasının nereye gittiğini görün",
+      "body": "Ajan çalıştırmalarını kişiye, tetikleyiciye, zamanlamaya ve akışa göre ayırın; çalışma süresi ve başarısız olan araç çağrıları da dahil."
+    },
+    "audit": {
+      "name": "Denetim günlüğü",
+      "title": "Kimin ne yaptığını bilin",
+      "body": "Denetim günlüğü kişilerdeki, ayarlardaki ve verilerdeki değişiklikleri ve her girişi kaydeder. Gerektiğinde dışa aktarın."
+    }
+  },
+  "art": {
+    "issues": {
+      "checkout": "Ödeme sayfası yeniden tasarımı",
+      "webhooks": "Stripe webhook'larını entegre et",
+      "refunds": "Destek için iade akışı",
+      "invoices": "Faturaların PDF dışa aktarımı",
+      "twoFactor": "İki faktörlü kimlik doğrulama",
+      "testKeys": "Stripe test anahtarlarını kur",
+      "releaseNotes": "Sürüm notlarını yaz",
+      "flakyTest": "Kararsız dışa aktarma testini düzelt",
+      "staleIssues": "Eski işleri etiketle",
+      "roadmap": "Q3 yol haritası taslağı hazırla",
+      "feedback": "Müşteri geri bildirimini özetle"
+    },
+    "states": {
+      "todo": "Yapılacak",
+      "inProgress": "Devam ediyor",
+      "review": "İncelemede",
+      "done": "Tamamlandı"
+    },
+    "sprintHealth": "Sprint sağlığı",
+    "initiative": "Q3 lansmanı",
+    "cycle": "Döngü {number}",
+    "activeCycle": "Döngü {number} · aktif",
+    "week": "Hafta {number}",
+    "working": "Çalışıyor",
+    "steps": {
+      "read": "İşi oku",
+      "search": "Kodda ara",
+      "pullRequest": "Pull request aç",
+      "report": "Sonucu bildir"
+    },
+    "schedules": {
+      "community": "Community",
+      "weeklyReport": "Haftalık rapor",
+      "everyMonday": "Her pazartesi saat {time}",
+      "reviewFix": "Düzeltmeyi incele",
+      "entersState": "Bir iş {state} durumuna girdiğinde",
+      "runHistory": "Çalışma geçmişi",
+      "running": "çalışıyor",
+      "triageBugs": "Hata raporlarını ayıkla",
+      "when": "Ne zaman",
+      "events": {
+        "created": "Bir iş oluşturulduğunda",
+        "assigned": "Bir iş atandığında",
+        "labelAdded": "Bir etiket eklendiğinde",
+        "commentAdded": "Bir yorum eklendiğinde"
+      },
+      "bugLabel": "hata",
+      "onlyFor": "Yalnızca şu işler için",
+      "typeBug": "Tür: Hata",
+      "priorityHigh": "Öncelik: Yüksek",
+      "createdByAnyone": "Oluşturan: herkes",
+      "howOften": "Ne sıklıkla",
+      "perDay": "24 saatte {count}",
+      "atOnce": "aynı anda {count}"
+    },
+    "workflows": {
+      "name": "Sürüm notları",
+      "on": "Açık",
+      "trigger": "Tetikleyici",
+      "issueEvent": "İş olayı",
+      "writer": "Yazar",
+      "draftNotes": "Notların taslağını yaz",
+      "reviewer": "İnceleyen",
+      "checkDraft": "Taslağı kontrol et",
+      "request": "İstek",
+      "sendBack": "Geri gönder",
+      "run": "Çalıştırma #{number}",
+      "running": "Çalışıyor · {step}, {round}. tur"
+    },
+    "portal": {
+      "contactSupport": "Destekle iletişime geç",
+      "name": "Ad",
+      "email": "E-posta",
+      "message": "Mesaj",
+      "send": "Gönder",
+      "request": "Talep",
+      "issue": "Faturalar dışa aktarılamıyor",
+      "replySent": "Yanıt e-postayla gönderildi",
+      "followed": "Portalda takip ediliyor"
+    },
+    "budgets": {
+      "newBudget": "Yeni bütçe",
+      "workspace": "Tüm çalışma alanı",
+      "team": "Takım · {name}",
+      "person": "Her kişi",
+      "perMonth": "aylık",
+      "perWeek": "haftalık",
+      "perDay": "günlük",
+      "spentOf": "{spent} / {limit}",
+      "thisMonth": "Bu ay",
+      "ofLimit": "{limit} limitten harcanan",
+      "refused": "Çalıştırma reddedildi",
+      "spent": "Bütçe tükendi"
+    },
+    "analytics": {
+      "usage": "Ajan kullanımı",
+      "range": "Son 30 gün",
+      "byTrigger": "Tetikleyiciye göre",
+      "triggers": {
+        "chat": "Sohbet",
+        "mention": "Bahsetme",
+        "schedule": "Zamanlama",
+        "issueEvent": "İş olayı",
+        "workflow": "Akış"
+      },
+      "total": "{cost} · {count, plural, other {# çalıştırma}}",
+      "runTime": "Çalışma süresi",
+      "byPerson": "Kişiye göre"
+    },
+    "audit": {
+      "export": "Dışa aktar",
+      "time": "Zaman",
+      "who": "Kim",
+      "action": "İşlem",
+      "where": "Nerede",
+      "workspace": "Çalışma alanı",
+      "actions": {
+        "role": "Bob'un rolünü Admin yaptı",
+        "sso": "SSO ile giriş yaptı",
+        "created": "ITS-241'i oluşturdu",
+        "label": "\"legacy\" etiketini sildi",
+        "tried": "Bir projeyi silmeye çalıştı",
+        "requireSso": "SSO zorunluluğunu açtı"
+      },
+      "denied": "Reddedildi"
+    }
+  }
+}

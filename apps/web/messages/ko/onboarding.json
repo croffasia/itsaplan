@@ -1,0 +1,197 @@
+{
+  "label": "It's a Plan에 오신 것을 환영합니다",
+  "goTo": "{number}번 슬라이드로 이동",
+  "next": "다음",
+  "start": "시작하기",
+  "getInPro": "Pro에서 사용하기",
+  "proNote": "Cloud 및 Self-hosted Pro에서 사용할 수 있습니다.",
+  "replay": "제품 둘러보기 열기",
+  "slides": {
+    "dashboards": {
+      "title": "나만의 대시보드 만들기",
+      "body": "추적하는 항목마다 대시보드를 만들고 위젯을 고르세요: 이슈 수, 분류, 번업, 처리량, 활동, 에이전트 실행."
+    },
+    "workItems": {
+      "title": "모든 작업은 이슈입니다",
+      "body": "같은 이슈를 칸반 보드, 테이블, 타임라인 또는 월·주·일 단위 캘린더로 보세요. 사용하는 필터는 보기로 저장하세요."
+    },
+    "initiatives": {
+      "title": "하나의 목표 아래 이슈 묶기",
+      "body": "이니셔티브는 더 큰 목표를 진척시키는 이슈를 모읍니다. 이 이슈들이 진행되면 이니셔티브의 진행률과 진행 상태도 갱신됩니다."
+    },
+    "cycles": {
+      "title": "기간을 정해 작업 계획하기",
+      "body": "사이클은 팀이 이슈를 계획해 넣는 고정된 기간입니다. 사이클이 끝나면 완료되지 않은 이슈를 다음 사이클로 옮기세요."
+    },
+    "documents": {
+      "title": "작업 옆에서 글쓰기",
+      "body": "사양과 결정 사항을 문서에 보관하세요. 문서를 이슈와 이니셔티브에 연결하고, 댓글로 논의하고, 이전 버전 중 어느 것이든 복원하세요."
+    },
+    "notes": {
+      "title": "보드에 아이디어 스케치하기",
+      "body": "노트 보드는 스티키 노트를 자유롭게 배치할 수 있는 캔버스입니다. 보드를 혼자 쓰거나 프로젝트와 공유하세요."
+    },
+    "agents": {
+      "title": "AI 에이전트에게 작업 맡기기",
+      "body": "이슈를 에이전트에게 할당하거나 채팅으로 요청하세요. 에이전트는 사용자가 준 도구와 스킬로 작업하고 한 일을 보고합니다."
+    },
+    "schedules": {
+      "title": "일정에 따라 에이전트 실행하기",
+      "body": "정해진 시간이나 이슈가 특정 상태로 변경될 때 에이전트를 시작하세요. Pro는 이슈가 생성되거나 담당자가 지정될 때, 라벨이 추가되거나 댓글이 게시될 때도 에이전트를 시작하며, 필터에 맞는 이슈에만 적용됩니다."
+    },
+    "workflows": {
+      "name": "워크플로",
+      "title": "에이전트를 워크플로로 연결하기",
+      "body": "워크플로는 한 에이전트에서 다음 에이전트로 작업을 넘깁니다. 수동, 일정, 이슈 이벤트 또는 웹훅으로 시작하며, 단계에서 작업을 수정하도록 되돌려 보낼 수 있습니다."
+    },
+    "portal": {
+      "name": "지원 포털",
+      "title": "팀 외부의 요청 받기",
+      "body": "사이트에 양식을 두거나 고객에게 포털을 제공하세요. 각 요청은 이슈가 되고, 누군가 답하면 보낸 사람에게 이메일이 갑니다."
+    },
+    "budgets": {
+      "name": "AI 예산",
+      "title": "에이전트 지출 한도 정하기",
+      "body": "워크스페이스 전체, 팀, 프로젝트 또는 사용자별로 일, 주 또는 월 단위 모델 비용 한도를 설정하세요. 예산을 다 쓰면 에이전트는 새 실행을 시작하지 않습니다."
+    },
+    "analytics": {
+      "name": "AI 분석",
+      "title": "에이전트의 시간과 비용이 어디에 쓰이는지 보기",
+      "body": "에이전트 실행을 사용자, 트리거, 일정, 워크플로별로 나누어 보고, 실행 시간과 실패한 도구 호출도 확인하세요."
+    },
+    "audit": {
+      "name": "감사 로그",
+      "title": "누가 무엇을 했는지 알기",
+      "body": "감사 로그는 사용자, 설정, 데이터의 변경 사항과 모든 로그인을 기록합니다. 필요할 때 내보내세요."
+    }
+  },
+  "art": {
+    "issues": {
+      "checkout": "결제 페이지 리디자인",
+      "webhooks": "Stripe 웹훅 연동",
+      "refunds": "고객 지원용 환불 흐름",
+      "invoices": "인보이스 PDF 내보내기",
+      "twoFactor": "2단계 인증",
+      "testKeys": "Stripe 테스트 키 설정",
+      "releaseNotes": "릴리스 노트 작성",
+      "flakyTest": "불안정한 내보내기 테스트 수정",
+      "staleIssues": "오래된 이슈에 라벨 지정",
+      "roadmap": "Q3 로드맵 초안 작성",
+      "feedback": "고객 피드백 요약"
+    },
+    "states": {
+      "todo": "할 일",
+      "inProgress": "진행 중",
+      "review": "검토 중",
+      "done": "완료"
+    },
+    "sprintHealth": "스프린트 상태",
+    "initiative": "Q3 출시",
+    "cycle": "사이클 {number}",
+    "activeCycle": "사이클 {number} · 진행 중",
+    "week": "{number}주차",
+    "working": "작업 중",
+    "steps": {
+      "read": "이슈 읽기",
+      "search": "코드 검색",
+      "pullRequest": "Pull Request 생성",
+      "report": "결과 보고"
+    },
+    "schedules": {
+      "community": "Community",
+      "weeklyReport": "주간 보고서",
+      "everyMonday": "매주 월요일 {time}",
+      "reviewFix": "수정 사항 검토",
+      "entersState": "이슈가 {state} 상태로 변경될 때",
+      "runHistory": "실행 기록",
+      "running": "실행 중",
+      "triageBugs": "버그 리포트 분류",
+      "when": "실행 시점",
+      "events": {
+        "created": "이슈가 생성될 때",
+        "assigned": "이슈 담당자가 지정될 때",
+        "labelAdded": "라벨이 추가될 때",
+        "commentAdded": "댓글이 추가될 때"
+      },
+      "bugLabel": "버그",
+      "onlyFor": "대상 이슈",
+      "typeBug": "유형: 버그",
+      "priorityHigh": "우선순위: 높음",
+      "createdByAnyone": "작성자: 모든 사용자",
+      "howOften": "실행 빈도",
+      "perDay": "{count}회 / 24시간",
+      "atOnce": "{count}개 동시 실행"
+    },
+    "workflows": {
+      "name": "릴리스 노트",
+      "on": "켜짐",
+      "trigger": "트리거",
+      "issueEvent": "이슈 이벤트",
+      "writer": "작성자",
+      "draftNotes": "노트 초안 작성",
+      "reviewer": "검토자",
+      "checkDraft": "초안 확인",
+      "request": "요청",
+      "sendBack": "되돌려 보내기",
+      "run": "실행 #{number}",
+      "running": "실행 중 · {step}, {round}라운드"
+    },
+    "portal": {
+      "contactSupport": "지원팀에 문의",
+      "name": "이름",
+      "email": "이메일",
+      "message": "메시지",
+      "send": "보내기",
+      "request": "요청",
+      "issue": "인보이스를 내보낼 수 없음",
+      "replySent": "답변을 이메일로 보냄",
+      "followed": "포털에서 추적 중"
+    },
+    "budgets": {
+      "newBudget": "새 예산",
+      "workspace": "워크스페이스 전체",
+      "team": "팀 · {name}",
+      "person": "사용자별",
+      "perMonth": "월간",
+      "perWeek": "주간",
+      "perDay": "일일",
+      "spentOf": "{spent} / {limit}",
+      "thisMonth": "이번 달",
+      "ofLimit": "{limit} 중 사용",
+      "refused": "실행 거부됨",
+      "spent": "예산 소진"
+    },
+    "analytics": {
+      "usage": "에이전트 사용량",
+      "range": "최근 30일",
+      "byTrigger": "트리거별",
+      "triggers": {
+        "chat": "채팅",
+        "mention": "멘션",
+        "schedule": "일정",
+        "issueEvent": "이슈 이벤트",
+        "workflow": "워크플로"
+      },
+      "total": "{cost} · {count, plural, other {실행 #회}}",
+      "runTime": "실행 시간",
+      "byPerson": "사용자별"
+    },
+    "audit": {
+      "export": "내보내기",
+      "time": "시간",
+      "who": "사용자",
+      "action": "작업",
+      "where": "위치",
+      "workspace": "워크스페이스",
+      "actions": {
+        "role": "Bob의 역할을 Admin으로 변경",
+        "sso": "SSO로 로그인",
+        "created": "ITS-241 생성",
+        "label": "\"legacy\" 라벨 삭제",
+        "tried": "프로젝트 삭제 시도",
+        "requireSso": "SSO 필수 켬"
+      },
+      "denied": "거부됨"
+    }
+  }
+}

@@ -45,10 +45,11 @@ export const agentRunnerRoutes = new Elysia({
       runnerAgent: true,
       params: runParams,
       body: heartbeatBody,
-      response: { 204: t.Void(), ...commonErrors },
+      response: { 204: t.Void(), ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Extend a run lease',
-        description: 'Keep a claimed run leased while the runner is still working on it.',
+        description:
+          'Extend a live lease for the current attempt. Send attempt after a retry; expired or superseded attempts return 409.',
       },
     },
   )

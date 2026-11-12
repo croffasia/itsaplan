@@ -18,20 +18,21 @@ export async function appendRunEvents(
   },
 ) {
   return db.transaction(async (tx) => {
-    const [run] = await tx
-      .select()
+    const [row] = await tx
+      .select({ run: agentRun, leased: sql<boolean>`${agentRun.nextAttemptAt} > now()` })
       .from(agentRun)
-      .where(
-        and(
-          eq(agentRun.id, runId),
-          eq(agentRun.agentId, agentId),
-          eq(agentRun.status, 'pending'),
-          eq(agentRun.attempts, input.attempt),
-          sql`${agentRun.executionStartedAt} IS NOT NULL AND ${agentRun.nextAttemptAt} > now()`,
-        ),
-      )
+      .where(and(eq(agentRun.id, runId), eq(agentRun.agentId, agentId)))
       .for('update');
-    if (!run) throw new HttpError(404, 'Active run attempt not found');
+    if (!row) throw new HttpError(404, 'Run not found');
+    const { run, leased } = row;
+    if (
+      run.status !== 'pending' ||
+      run.attempts !== input.attempt ||
+      !run.executionStartedAt ||
+      !leased
+    ) {
+      throw new HttpError(409, 'Run attempt is no longer active');
+    }
     await tx.insert(agentRunTrace).values({ runId, attempt: input.attempt }).onConflictDoNothing();
     const key = and(eq(agentRunTrace.runId, runId), eq(agentRunTrace.attempt, input.attempt));
     const [trace] = await tx.select().from(agentRunTrace).where(key);

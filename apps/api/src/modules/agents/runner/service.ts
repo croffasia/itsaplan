@@ -1,5 +1,5 @@
 import { db, aiAgent, agentRun, project, projectMember } from '@repo/db';
-import { and, eq, isNotNull, isNull, or, sql } from 'drizzle-orm';
+import { and, eq, gt, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
 import { type ContextUsage } from '../chat-usage';
 import {
@@ -174,12 +174,7 @@ export async function takeNextRun(agent: RunnerAgent): Promise<RunnerRun | null>
   const agentId = agent.id;
   await expireExhaustedRuns(agent);
   const rows = await db.execute(sql`
-    UPDATE agent_run r
-    SET attempts = r.attempts + 1,
-        started_at = coalesce(r.started_at, now()),
-        execution_started_at = NULL,
-        next_attempt_at = now() + make_interval(secs => ${agentRunConfig.leaseSeconds()})
-    WHERE r.id = (
+    WITH due AS MATERIALIZED (
       SELECT id FROM agent_run q
       WHERE q.agent_id = ${agentId} AND q.status = 'pending' AND q.next_attempt_at <= now()
         AND ${runTurn}
@@ -187,6 +182,14 @@ export async function takeNextRun(agent: RunnerAgent): Promise<RunnerRun | null>
       FOR UPDATE SKIP LOCKED
       LIMIT 1
     )
+    UPDATE agent_run r
+    SET attempts = r.attempts + 1,
+        started_at = coalesce(r.started_at, now()),
+        execution_started_at = NULL,
+        claimed_at = now(),
+        next_attempt_at = now() + make_interval(secs => ${agentRunConfig.leaseSeconds()})
+    WHERE r.id = (SELECT id FROM due)
+      AND r.status = 'pending' AND r.next_attempt_at <= now()
     RETURNING
       r.id,
       r.trigger,
@@ -221,7 +224,7 @@ export async function takeNextRun(agent: RunnerAgent): Promise<RunnerRun | null>
   if (!row) return null;
   const wait = await runAdmissionDelay({ ...row, agentId });
   if (wait > 0) {
-    await deferRun(row.id, wait);
+    await deferRun(row.id, wait, db, row.attempts);
     return null;
   }
   const forPrompt = {
@@ -236,7 +239,7 @@ export async function takeNextRun(agent: RunnerAgent): Promise<RunnerRun | null>
     await agentRunStarted(forPrompt);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    await scheduleRunRetry(row.id, runRetryDelayMs(row.attempts), message);
+    await scheduleRunRetry(row.id, runRetryDelayMs(row.attempts), message, row.attempts);
     return null;
   }
   const result = {
@@ -273,8 +276,8 @@ function buildSystemPrompt(agent: RunnerAgent, project: RunnerProject, run: RunF
 
 // Extends a claimed run's lease while the runner is still working on it. A command
 // can outlive the lease by far, so the runner sends this periodically; without it the
-// run would be handed to another runner mid-flight. False when the run is not this
-// agent's, or is already finished.
+// run would be handed to another runner mid-flight. An expired or superseded attempt
+// is refused; an unknown run remains hidden from other agents.
 export async function heartbeatRun(
   agentId: number,
   runId: number,
@@ -292,13 +295,20 @@ export async function heartbeatRun(
         eq(agentRun.id, runId),
         eq(agentRun.agentId, agentId),
         eq(agentRun.status, 'pending'),
-        attempt == null ? undefined : eq(agentRun.attempts, attempt),
+        gt(agentRun.nextAttemptAt, sql`now()`),
+        eq(agentRun.attempts, attempt ?? 1),
         isNotNull(agentRun.startedAt),
         or(isNotNull(agentRun.executionStartedAt), isNull(agentRun.lastError)),
       ),
     )
     .returning({ id: agentRun.id });
-  return rows.length > 0;
+  if (rows.length > 0) return true;
+  const [run] = await db
+    .select({ startedAt: agentRun.startedAt })
+    .from(agentRun)
+    .where(and(eq(agentRun.id, runId), eq(agentRun.agentId, agentId)));
+  if (run?.startedAt) throw new HttpError(409, 'Run attempt is no longer active');
+  return false;
 }
 
 // Records the outcome the runner reports. A failure is terminal: the runner ran the

@@ -452,7 +452,12 @@ export async function markRunSuccess(
   await emitRunsFinished(rows.map((row) => row.id));
 }
 
-export async function scheduleRunRetry(id: number, delayMs: number, error: string): Promise<void> {
+export async function scheduleRunRetry(
+  id: number,
+  delayMs: number,
+  error: string,
+  attempts?: number,
+): Promise<void> {
   const delaySeconds = Math.max(1, Math.ceil(delayMs / 1000));
   await db
     .update(agentRun)
@@ -463,7 +468,13 @@ export async function scheduleRunRetry(id: number, delayMs: number, error: strin
       nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,
       lastError: error.slice(0, 500),
     })
-    .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
+    .where(
+      and(
+        eq(agentRun.id, id),
+        eq(agentRun.status, 'pending'),
+        attempts === undefined ? undefined : eq(agentRun.attempts, attempts),
+      ),
+    );
 }
 
 export async function markRunFailed(id: number, error: string, output?: string): Promise<void> {

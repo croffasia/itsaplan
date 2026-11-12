@@ -1,4 +1,8 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
+import { db, agentRun } from '@repo/db';
+import { eq } from 'drizzle-orm';
+import { setRunAdmission } from '../../../core/run-admission';
+import { scheduleRunRetry } from '../../../core/run-queue';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { apiKeyApi, authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -26,6 +30,7 @@ async function setup() {
     columnId,
     agent: created.data!.agent,
     asRunner: apiKeyApi(created.data!.apiKey!),
+    runnerKey: created.data!.apiKey!,
   };
 }
 
@@ -39,6 +44,7 @@ async function queueRun(asOwner: Api, columnId: number, username: string) {
 }
 
 describe('agent runner queue', () => {
+  afterEach(() => setRunAdmission());
   beforeEach(async () => {
     await resetDb();
   });
@@ -192,6 +198,93 @@ describe('agent runner queue', () => {
 
     expect((await asRunner['agent-runs']({ runId: run.id }).heartbeat.post()).status).toBe(204);
     expect((await asRunner['agent-runs']({ runId: run.id }).heartbeat.post()).status).toBe(204);
+  });
+
+  it('claims once across concurrent clients and only a successful heartbeat extends the lease', async () => {
+    const { asOwner, asRunner, agent, columnId, runnerKey } = await setup();
+    await queueRun(asOwner, columnId, agent.username);
+    const clients = [asRunner, apiKeyApi(runnerKey)];
+    const results = await Promise.all(
+      Array.from({ length: 8 }, (_, i) => clients[i % 2]['agent-runs'].claim.post()),
+    );
+    expect(results.every((result) => result.status === 200)).toBe(true);
+    const runs = results.flatMap((result) => (result.data?.run ? [result.data.run] : []));
+    expect(runs).toHaveLength(1);
+    const run = runs[0];
+    const read = async () => (await db.select().from(agentRun).where(eq(agentRun.id, run.id)))[0];
+    expect((await read()).attempts).toBe(1);
+    const lease = new Date(Date.now() + 30_000);
+    await db.update(agentRun).set({ nextAttemptAt: lease }).where(eq(agentRun.id, run.id));
+    for (const client of clients)
+      expect((await client['agent-runs'].claim.post()).data!.run).toBeNull();
+    expect((await read()).nextAttemptAt.getTime()).toBe(lease.getTime());
+    const route = asRunner['agent-runs']({ runId: run.id });
+    expect((await route.heartbeat.post({ attempt: run.attempts })).status).toBe(204);
+    expect((await read()).nextAttemptAt.getTime()).toBeGreaterThan(lease.getTime());
+    await db
+      .update(agentRun)
+      .set({ nextAttemptAt: new Date(0) })
+      .where(eq(agentRun.id, run.id));
+    expect((await route.heartbeat.post({ attempt: run.attempts })).status).toBe(409);
+    expect((await read()).nextAttemptAt.getTime()).toBe(0);
+    const next = (await clients[1]['agent-runs'].claim.post()).data!.run!;
+    expect(next).toMatchObject({ id: run.id, attempts: 2 });
+    const current = await read();
+    expect((await route.heartbeat.post()).status).toBe(409);
+    expect(
+      (
+        await route.events.post({
+          attempt: 2,
+          offset: 0,
+          events: [{ type: 'TOOL_CALL_START', toolCallId: 'tool-1', toolCallName: 'shell' }],
+        })
+      ).status,
+    ).toBe(200);
+    expect((await read()).nextAttemptAt).toEqual(current.nextAttemptAt);
+    expect((await route.heartbeat.post({ attempt: 1 })).status).toBe(409);
+    await scheduleRunRetry(run.id, 1000, 'old start failed', 1);
+    expect(await read()).toEqual(current);
+    expect((await route.heartbeat.post({ attempt: 2 })).status).toBe(204);
+  });
+
+  it('does not let an expired admission defer a newer executing attempt', async () => {
+    const { asOwner, asRunner, agent, columnId } = await setup();
+    await queueRun(asOwner, columnId, agent.username);
+    let release!: () => void;
+    let admitted!: (id: number) => void;
+    const entered = new Promise<number>((resolve) => {
+      admitted = resolve;
+    });
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    setRunAdmission(async ({ id }) => {
+      admitted(id);
+      await gate;
+      return 60;
+    });
+    const oldClaim = asRunner['agent-runs'].claim.post();
+    const id = await entered;
+    try {
+      await db
+        .update(agentRun)
+        .set({ nextAttemptAt: new Date(0) })
+        .where(eq(agentRun.id, id));
+      setRunAdmission();
+      const next = (await asRunner['agent-runs'].claim.post()).data!.run!;
+      expect(next).toMatchObject({ id, attempts: 2 });
+      release();
+      expect((await oldClaim).data!.run).toBeNull();
+      const [row] = await db.select().from(agentRun).where(eq(agentRun.id, id));
+      expect(row.attempts).toBe(2);
+      expect(row.executionStartedAt).not.toBeNull();
+      expect(
+        (await asRunner['agent-runs']({ runId: id }).heartbeat.post({ attempt: 2 })).status,
+      ).toBe(204);
+    } finally {
+      release();
+      await oldClaim;
+    }
   });
 
   it('records presence on the agent when its runner polls', async () => {

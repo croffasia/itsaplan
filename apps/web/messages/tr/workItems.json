@@ -1,5 +1,6 @@
 {
   "newIssue": "Yeni iş",
+  "addWorkItem": "İş maddesi ekle",
   "pin": "Sabitle",
   "unpin": "Sabitlemeyi kaldır",
   "collapse": "Daralt",
@@ -50,7 +51,6 @@
     "nextDays": "{count, plural, other {Sonraki # gün}}",
     "weekNumber": "{number}. hafta",
     "range": "{from} – {to}",
-    "addWorkItem": "İş maddesi ekle",
     "today": "Bugün",
     "moreIssues": "+{count} daha",
     "issueCount": "{count, plural, one {# iş} other {# iş}}",

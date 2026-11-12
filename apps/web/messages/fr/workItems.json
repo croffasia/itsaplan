@@ -1,5 +1,6 @@
 {
   "newIssue": "Nouveau ticket",
+  "addWorkItem": "Ajouter une tâche",
   "pin": "Épingler",
   "unpin": "Désépingler",
   "collapse": "Réduire",
@@ -50,7 +51,6 @@
     "nextDays": "{count, plural, one {Jour suivant} other {# jours suivants}}",
     "weekNumber": "Semaine {number}",
     "range": "{from} – {to}",
-    "addWorkItem": "Ajouter une tâche",
     "today": "Aujourd'hui",
     "moreIssues": "+{count} de plus",
     "issueCount": "{count, plural, one {# ticket} other {# tickets}}",

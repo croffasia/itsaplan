@@ -1,5 +1,6 @@
 {
   "newIssue": "新建工作項目",
+  "addWorkItem": "新增工作項目",
   "pin": "固定",
   "unpin": "取消固定",
   "collapse": "摺疊",
@@ -50,7 +51,6 @@
     "nextDays": "{count, plural, other {後 # 天}}",
     "weekNumber": "第 {number} 週",
     "range": "{from} – {to}",
-    "addWorkItem": "新增工作項目",
     "today": "今天",
     "moreIssues": "另有 {count} 個",
     "issueCount": "{count, plural, other {# 個工作項目}}",

@@ -1,13 +1,15 @@
-import { ChevronsLeftRight, Pin, PinOff, Plus } from 'lucide-react';
+import { ChevronsLeftRightIcon } from '@animateicons/react/lucide/chevrons-left-right-icon';
+import { PinIcon } from '@animateicons/react/lucide/pin-icon';
+import { PinOffIcon } from '@animateicons/react/lucide/pin-off-icon';
+import { PlusIcon } from '@animateicons/react/lucide/plus-icon';
 import { useTranslations } from 'next-intl';
 import { type IssueGroup } from '@/utils/project';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { GroupDot } from '../shared/GroupDot';
+import { HeaderIconButton } from '../shared/HeaderIconButton';
 import { PINNED_COLUMN } from '../../utils/kanban';
-import { type WipState, WIP_FULL_TEXT, wipFullColor } from '../../utils/wipLimit';
+import { type WipState, WIP_FULL_TEXT, wipAllows, wipFullColor } from '../../utils/wipLimit';
 
 // A column collapsed to a narrow vertical strip. It keeps its position in column
 // order, and shows its name vertically with its count. A collapse only releases the
@@ -35,7 +37,7 @@ export function CollapsedColumn({
 }) {
   const t = useTranslations('workItems');
   const { can } = usePermissions();
-  const canCreateIssue = can('work_items', 'create');
+  const canCreateIssue = can('work_items', 'create') && group.assign != null && wipAllows(wip, 1);
   return (
     <div
       className={cn(
@@ -45,49 +47,15 @@ export function CollapsedColumn({
     >
       {!readOnly && (
         <>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-6 text-muted-foreground"
-                onClick={onExpand}
-                aria-label={t('expand')}
-              >
-                <ChevronsLeftRight />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t('expand')}</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="hidden size-6 text-muted-foreground md:inline-flex"
-                onClick={onTogglePin}
-                aria-label={pinned ? t('unpin') : t('pin')}
-              >
-                {pinned ? <PinOff /> : <Pin />}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{pinned ? t('unpin') : t('pin')}</TooltipContent>
-          </Tooltip>
+          <HeaderIconButton icon={ChevronsLeftRightIcon} label={t('expand')} onClick={onExpand} />
+          <HeaderIconButton
+            icon={pinned ? PinOffIcon : PinIcon}
+            label={pinned ? t('unpin') : t('pin')}
+            onClick={onTogglePin}
+            className="hidden md:inline-flex"
+          />
           {canCreateIssue && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-6 text-muted-foreground"
-                  onClick={onAddIssue}
-                  aria-label={t('newIssue')}
-                >
-                  <Plus />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t('newIssue')}</TooltipContent>
-            </Tooltip>
+            <HeaderIconButton icon={PlusIcon} label={t('newIssue')} onClick={onAddIssue} />
           )}
         </>
       )}

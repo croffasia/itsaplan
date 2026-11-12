@@ -1,17 +1,19 @@
 import { useRef, type ReactNode, type RefObject } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { GROUP_H, ROW_H, SUBGROUP_H, type TimelineRow } from '../../utils/timeline';
+import { ADD_H, GROUP_H, ROW_H, SUBGROUP_H, type TimelineRow } from '../../utils/timeline';
 import { TimelineRowSlot } from './TimelineRowSlot';
 
 const ROW_HEIGHT: Record<TimelineRow['kind'], number> = {
   group: GROUP_H,
   subgroup: SUBGROUP_H,
   issue: ROW_H,
+  add: ADD_H,
 };
 
 function rowKey(row: TimelineRow): string {
   if (row.kind === 'group') return `g-${row.group.key}`;
   if (row.kind === 'subgroup') return `s-${row.groupKey}`;
+  if (row.kind === 'add') return `a-${row.key}`;
   return `i-${row.issue.id}`;
 }
 

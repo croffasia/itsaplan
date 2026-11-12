@@ -2,7 +2,6 @@ import { useMemo, useRef } from 'react';
 import { DndContext } from '@dnd-kit/core';
 import { toast } from 'sonner';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { BoardIssue, Issue } from '@/lib/api/endpoints/issues';
 import {
   buildGroups,
@@ -27,6 +26,7 @@ import { WipCount } from './WipCount';
 import { SelectAllToggle } from './SelectAllToggle';
 import { CardOverlay } from './CardOverlay';
 import { SwimlaneCell } from './SwimlaneCell';
+import { SwimlaneHeader } from './SwimlaneHeader';
 import {
   boardCollision,
   COLUMN_WIDTH,
@@ -133,7 +133,7 @@ export default function SwimlaneBoard({
   // since that changes the grouping fields rather than the order.
   const manualOrder = settings.sort.field === 'manual';
 
-  const wipOf = (column: IssueGroup) => wipStateFor(column, project.columns, columnCounts);
+  const wipOf = (column: IssueGroup) => wipStateFor(column.assign, project.columns, columnCounts);
 
   function moveIssue(
     swimlane: IssueGroup,
@@ -224,23 +224,12 @@ export default function SwimlaneBoard({
                     transform: `translateY(${vi.start}px)`,
                   }}
                 >
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      collapsed.toggle(row.swimlane.key);
-                    }}
-                    className="flex w-full items-center gap-2 bg-muted/30 px-4 py-1.5 text-sm font-medium text-foreground"
-                  >
-                    {isCollapsed ? (
-                      <ChevronRight className="size-3.5 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="size-3.5 text-muted-foreground" />
-                    )}
-                    <GroupDot group={row.swimlane} />
-                    {row.swimlane.name}
-                    <span className="text-muted-foreground">{row.count}</span>
-                  </button>
+                  <SwimlaneHeader
+                    swimlane={row.swimlane}
+                    count={row.count}
+                    collapsed={isCollapsed}
+                    onToggle={() => collapsed.toggle(row.swimlane.key)}
+                  />
 
                   {!isCollapsed && (
                     <div className="flex gap-3 px-4 pt-2 pb-4">

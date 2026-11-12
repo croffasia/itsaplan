@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
 import { DndContext } from '@dnd-kit/core';
 import { toast } from 'sonner';
-import { ChevronDown, Eye } from 'lucide-react';
+import { useIconHover } from '@animateicons/react';
+import { ChevronDownIcon } from '@animateicons/react/lucide/chevron-down-icon';
+import { EyeIcon } from '@animateicons/react/lucide/eye-icon';
 import { useTranslations } from 'next-intl';
 import {
   buildGroups,
@@ -24,9 +26,8 @@ import { useStableCallback } from '@/hooks/useStableCallback';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useSelection } from '../../context/useSelection';
 import { boardCollision, issuesToMove } from '../../utils/kanban';
-import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { GroupDot } from '../shared/GroupDot';
+import { HeaderIconButton } from '../shared/HeaderIconButton';
 import { CardOverlay } from './CardOverlay';
 import { BoardColumn } from './BoardColumn';
 import { CollapsedColumn } from './CollapsedColumn';
@@ -48,6 +49,7 @@ export default function FlatBoard({
   readOnly,
 }: WorkItemsViewProps) {
   const t = useTranslations('workItems');
+  const hiddenHeaderHover = useIconHover();
   const groupLabels = useGroupLabels();
   const sortedOrderMessage = useSortedOrderMessage();
   const wipLimitMessage = useWipLimitMessage();
@@ -102,7 +104,7 @@ export default function FlatBoard({
   );
   const maps = useMemo(() => buildMaps(project), [project]);
   const wipByGroup = useMemo(
-    () => new Map(groups.map((g) => [g.key, wipStateFor(g, project.columns, columnCounts)])),
+    () => new Map(groups.map((g) => [g.key, wipStateFor(g.assign, project.columns, columnCounts)])),
     [groups, project.columns, columnCounts],
   );
 
@@ -211,8 +213,11 @@ export default function FlatBoard({
 
         {hiddenGroups.length > 0 && (
           <div className="ml-auto w-64 shrink-0 self-start rounded-md border p-2">
-            <div className="flex w-full items-center gap-1.5 px-1 py-1 text-sm font-medium text-muted-foreground">
-              <ChevronDown className="size-4" />
+            <div
+              {...hiddenHeaderHover.triggerProps}
+              className="flex w-full items-center gap-1.5 px-1 py-1 text-sm font-medium text-muted-foreground"
+            >
+              <ChevronDownIcon ref={hiddenHeaderHover.ref} size={16} />
               {settings.group === 'status' ? t('hiddenColumns') : t('hiddenGroups')}
             </div>
             <div className="mt-1 flex flex-col gap-1">
@@ -231,20 +236,11 @@ export default function FlatBoard({
                     />
                   </div>
                   {!readOnly && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-6 text-muted-foreground"
-                          onClick={() => setHidden(group.key, false)}
-                          aria-label={t('show')}
-                        >
-                          <Eye />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>{t('show')}</TooltipContent>
-                    </Tooltip>
+                    <HeaderIconButton
+                      icon={EyeIcon}
+                      label={t('show')}
+                      onClick={() => setHidden(group.key, false)}
+                    />
                   )}
                 </div>
               ))}

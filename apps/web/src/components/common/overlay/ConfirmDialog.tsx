@@ -13,6 +13,7 @@ export default function ConfirmDialog({
   children,
   confirmLabel,
   confirmDisabled = false,
+  wide = false,
   onConfirm,
   onClose,
 }: {
@@ -20,6 +21,7 @@ export default function ConfirmDialog({
   children?: ReactNode;
   confirmLabel: string;
   confirmDisabled?: boolean;
+  wide?: boolean | 'xl';
   onConfirm: () => Promise<void>;
   onClose: () => void;
 }) {
@@ -38,7 +40,7 @@ export default function ConfirmDialog({
   }
 
   return (
-    <Modal title={title} onClose={onClose}>
+    <Modal title={title} onClose={onClose} wide={wide}>
       <div className="space-y-4">
         {children}
         <div className="flex justify-end gap-2">

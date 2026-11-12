@@ -117,7 +117,7 @@ export function TableRow({
             <IssueIdentifier
               issue={issue}
               className="text-xs text-muted-foreground tabular-nums"
-              onOpenParent={onOpenIssue}
+              onOpenAncestor={onOpenIssue}
             />
           )}
           <span dir="auto" className="truncate text-foreground">

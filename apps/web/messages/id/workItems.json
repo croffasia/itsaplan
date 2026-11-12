@@ -97,14 +97,14 @@
   },
   "removal": {
     "archive": {
-      "title": "{count, plural, one {Arsipkan issue} other {Arsipkan issue}}",
+      "title": "{count, plural, other {Arsipkan # issue?}}",
       "confirm": "{count, plural, one {Arsipkan # issue} other {Arsipkan # issue}}",
-      "description": "{count, plural, one {Arsipkan # issue yang dipilih? Issue ini akan meninggalkan papan dan dapat dipulihkan nanti.} other {Arsipkan # issue yang dipilih? Semua issue ini akan meninggalkan papan dan dapat dipulihkan nanti.}}"
+      "description": "{count, plural, one {Issue ini akan meninggalkan papan dan dapat dipulihkan nanti.} other {Semua issue ini akan meninggalkan papan dan dapat dipulihkan nanti.}}"
     },
     "delete": {
-      "title": "{count, plural, one {Hapus issue} other {Hapus issue}}",
+      "title": "{count, plural, other {Hapus # issue?}}",
       "confirm": "{count, plural, one {Hapus # issue} other {Hapus # issue}}",
-      "description": "{count, plural, one {Hapus # issue yang dipilih?} other {Hapus # issue yang dipilih?}} Tindakan ini juga akan menghapus komentar, aktivitas, dan lampiran. Tindakan ini tidak dapat dibatalkan."
+      "description": "Komentar, aktivitas, dan lampirannya juga akan dihapus. Tindakan ini tidak dapat dibatalkan."
     }
   },
   "share": {

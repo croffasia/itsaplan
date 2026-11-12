@@ -83,6 +83,7 @@ export const qk = {
   archivedIssues: (projectKey: string) => ['archivedIssues', projectKey] as const,
   // Command-palette issue search, scoped to a project and the search term.
   issueSearch: (projectKey: string, q: string) => ['issueSearch', projectKey, q] as const,
+  issueSubtree: (projectKey: string, ids: number[]) => ['issueSubtree', projectKey, ids] as const,
   issueSearchAll: (q: string, excludeProjectId: number | null) =>
     ['issueSearchAll', q, excludeProjectId] as const,
   // The project's auto-archive thresholds and subtask automations (the

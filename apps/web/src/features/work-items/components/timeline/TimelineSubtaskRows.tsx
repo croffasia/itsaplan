@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useIssueSubtaskFold, useSubtasks } from '../../context/useSubtasks';
 import { effSpan, LINK_ROW_H, type TimelineColumn } from '../../utils/timeline';
 import { TimelineCells } from './TimelineCells';
+import { SubtaskProgress } from '../shared/SubtaskProgress';
 
 // The issue's subtasks as sub-rows under its timeline row: each subtask named on
 // the left behind a nesting mark and followed by its property cells, with its own
@@ -87,6 +88,7 @@ export function TimelineSubtaskRows({
                 <span className={cn('truncate', done && 'text-muted-foreground/60 line-through')}>
                   {subtask.title}
                 </span>
+                <SubtaskProgress issueId={subtask.id} maps={maps} />
               </div>
               {columns.length > 0 && (
                 <TimelineCells

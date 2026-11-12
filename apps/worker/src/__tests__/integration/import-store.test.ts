@@ -37,6 +37,7 @@ import {
   retryImportJobLater,
   saveImportJobSourceProject,
   AttachmentRejectedError,
+  setIssueParentIfUnset,
   type NewLocalIssue,
 } from '../../import-store';
 
@@ -687,5 +688,69 @@ describe('createLocalAttachmentAndRecord', () => {
       localId: rows[0]!.id,
     });
     expect(await findImportRecord(jobId, 'attachment', loserSourceId)).toBeNull();
+  });
+});
+
+// A chain of issues written the way an import writes them, each under the one
+// before: the first is on level 1, the last on level `levels`.
+async function makeChain(projectId: number, columnId: number, levels: number): Promise<number[]> {
+  const ids: number[] = [];
+  for (let level = 1; level <= levels; level++) {
+    const id = await makeIssue(projectId, columnId, `Level ${level}`);
+    if (ids.length)
+      await db
+        .update(issue)
+        .set({ parentId: ids.at(-1)! })
+        .where(eq(issue.id, id));
+    ids.push(id);
+  }
+  return ids;
+}
+
+async function parentOf(issueId: number): Promise<number | null> {
+  const [row] = await db
+    .select({ parentId: issue.parentId })
+    .from(issue)
+    .where(eq(issue.id, issueId));
+  return row!.parentId;
+}
+
+describe('imported parents', () => {
+  it('creates an issue under a parent on level 7 and without one under level 8', async () => {
+    const { projectId, columnId, userId } = await makeProject();
+    const jobId = await makeImportJob(projectId, userId);
+    const levels = await makeChain(projectId, columnId, 8);
+
+    const onEight = await createLocalIssueAndRecord(jobId, 'plane-deep-1', 'ROOMS-1', {
+      ...newIssue(projectId, columnId, 'Fits'),
+      parentId: levels[6]!,
+    });
+    const onNine = await createLocalIssueAndRecord(jobId, 'plane-deep-2', 'ROOMS-2', {
+      ...newIssue(projectId, columnId, 'Too deep'),
+      parentId: levels[7]!,
+    });
+
+    expect(await parentOf(onEight)).toBe(levels[6]!);
+    expect(await parentOf(onNine)).toBeNull();
+  });
+
+  it('links a parent only while the issue and its subtasks stay within level 8', async () => {
+    const { projectId, columnId } = await makeProject();
+    const levels = await makeChain(projectId, columnId, 7);
+    const [withSubtask] = await makeChain(projectId, columnId, 2);
+
+    await setIssueParentIfUnset(projectId, withSubtask!, levels[6]!);
+    expect(await parentOf(withSubtask!)).toBeNull();
+
+    await setIssueParentIfUnset(projectId, withSubtask!, levels[5]!);
+    expect(await parentOf(withSubtask!)).toBe(levels[5]!);
+  });
+
+  it('does not link an issue under one of its own subtasks', async () => {
+    const { projectId, columnId } = await makeProject();
+    const [top, , bottom] = await makeChain(projectId, columnId, 3);
+
+    await setIssueParentIfUnset(projectId, top!, bottom!);
+    expect(await parentOf(top!)).toBeNull();
   });
 });

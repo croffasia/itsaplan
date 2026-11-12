@@ -29,6 +29,7 @@ import {
   getIssueBySeq,
   searchIssues,
   searchAllIssues,
+  listSubtree,
   updateIssue,
   deleteIssue,
   moveIssue,
@@ -149,6 +150,17 @@ export function useIssueBySeqQuery(projectKey: string | null, seq: number | null
       return issue;
     },
     enabled: projectKey != null && seq != null,
+  });
+}
+
+// Everything under the given issues, archived ones included, for a confirmation to
+// show what the action takes along. Read fresh each time a confirmation opens.
+export function useIssueSubtreeQuery(projectKey: string, ids: number[], enabled = true) {
+  return useQuery({
+    queryKey: qk.issueSubtree(projectKey, ids),
+    queryFn: () => listSubtree(projectKey, ids),
+    staleTime: 0,
+    enabled,
   });
 }
 

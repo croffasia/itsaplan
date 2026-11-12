@@ -6,9 +6,9 @@ import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSubtasks } from '../../context/useSubtasks';
 
-// How far an issue's subtasks have got, shown next to its title on the row the
-// subtask rows sit under. With onToggle it also folds those rows away, which is
-// what the chevron says. Renders nothing when the issue has no subtasks, when
+// How far an issue's subtasks have got, shown next to its title on its row or
+// subtask row. With onToggle it also folds the subtask rows away, which is what the
+// chevron says. Renders nothing when the issue has no subtasks, when
 // every one of them is canceled, or while the Subtasks display option is off.
 export function SubtaskProgress({
   issueId,

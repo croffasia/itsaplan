@@ -97,14 +97,14 @@
   },
   "removal": {
     "archive": {
-      "title": "{count, plural, one {İşi arşivle} other {İşleri arşivle}}",
+      "title": "{count, plural, other {# iş arşivlensin mi?}}",
       "confirm": "{count, plural, one {# işi arşivle} other {# işi arşivle}}",
-      "description": "{count, plural, one {Seçilen # iş arşivlensin mi? Panodan kaldırılır ve daha sonra geri yüklenebilir.} other {Seçilen # iş arşivlensin mi? Panodan kaldırılır ve daha sonra geri yüklenebilir.}}"
+      "description": "Panodan kaldırılır ve daha sonra geri yüklenebilir."
     },
     "delete": {
-      "title": "{count, plural, one {İşi sil} other {İşleri sil}}",
+      "title": "{count, plural, other {# iş silinsin mi?}}",
       "confirm": "{count, plural, one {# işi sil} other {# işi sil}}",
-      "description": "{count, plural, one {Seçilen # iş silinsin mi?} other {Seçilen # iş silinsin mi?}} Bu işlem yorumları, etkinlik geçmişini ve ekleri de kalıcı olarak kaldıracaktır. Bu işlem geri alınamaz."
+      "description": "Yorumları, etkinlik geçmişi ve ekleri de silinecek. Bu işlem geri alınamaz."
     }
   },
   "share": {

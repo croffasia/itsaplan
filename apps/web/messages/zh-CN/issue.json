@@ -117,8 +117,8 @@
     "archiveTitle": "归档工作项",
     "apply": "应用",
     "cannotBeUndone": "此操作无法撤销。",
-    "deleteDescription": "删除 {issue}？这会删除该工作项及其评论、活动和附件。",
-    "archiveDescription": "归档 {issue}？该工作项将离开看板，之后可以恢复。",
+    "deleteDescription": "该工作项及其评论、活动和附件将被删除。",
+    "archiveDescription": "该工作项将离开看板，之后可以恢复。",
     "applyDescription": "将 <v>{action}</v> 应用于此工作项？",
     "moveTitle": "移动事项",
     "move": "移动",
@@ -128,7 +128,9 @@
     "moveChooseProject": "选择项目",
     "moveColumn": "状态",
     "moveColumnMatching": "匹配的状态",
-    "moveCarriedOver": "目标项目中有同名的类型、标签和自定义字段时会保留。周期、计划以及与本项目事项的关联会被移除。"
+    "moveCarriedOver": "目标项目中有同名的类型、标签和自定义字段时会保留。周期、计划以及与本项目事项的关联会被移除。",
+    "deleteQuestion": "删除 {issue}？",
+    "archiveQuestion": "归档 {issue}？"
   },
   "create": {
     "title": "新建工作项",
@@ -226,14 +228,26 @@
     "allHidden": "所有子任务都被筛选隐藏了。"
   },
   "subtaskDisposal": {
-    "intro": "{issues, plural, other {这些工作项包含}} {count, plural, other {# 个子任务}}。",
     "deleteToo": "{count, plural, other {同时删除}}",
     "archiveToo": "{count, plural, other {同时归档}}",
     "detach": "{count, plural, other {保留并移除父工作项}}",
     "reassign": "{count, plural, other {移至另一个工作项}}",
     "reassignTitle": "将子任务移至另一个工作项",
     "change": "更改",
-    "searchParent": "搜索新的父工作项…"
+    "searchParent": "搜索新的父工作项…",
+    "newParent": "新的父工作项：",
+    "nestedGoAlong": "它们各自的子任务仍留在其下。",
+    "question": "{count, plural, other {如何处理这 # 个子任务？}}",
+    "cascadeDeleteHint": "{count, plural, other {这 # 个子任务也会一并删除。}}",
+    "cascadeArchiveHint": "{count, plural, other {这 # 个子任务也会一并归档。}}",
+    "detachHint": "{count, plural, other {# 个子任务将成为独立的工作项。}}",
+    "reassignHint": "{count, plural, other {# 个子任务将移到你选择的工作项下。}}",
+    "tagDeleted": "删除",
+    "tagArchived": "归档",
+    "tagNoParent": "无父工作项",
+    "tagStaysUnder": "仍在 {issue} 下",
+    "tagMovesTo": "移至 {issue}",
+    "tagMovesAlong": "一起移动"
   },
   "comments": {
     "you": "你",

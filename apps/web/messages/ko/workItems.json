@@ -97,14 +97,14 @@
   },
   "removal": {
     "archive": {
-      "title": "{count, plural, one {이슈 보관} other {이슈 보관}}",
+      "title": "{count, plural, other {이슈 #개를 보관하시겠습니까?}}",
       "confirm": "{count, plural, one {이슈 #개 보관} other {이슈 #개 보관}}",
-      "description": "{count, plural, one {선택한 이슈 #개를 보관하시겠습니까? 보드에서 사라지지만 나중에 복원할 수 있습니다.} other {선택한 이슈 #개를 보관하시겠습니까? 보드에서 사라지지만 나중에 복원할 수 있습니다.}}"
+      "description": "보드에서 사라지지만 나중에 복원할 수 있습니다."
     },
     "delete": {
-      "title": "{count, plural, one {이슈 삭제} other {이슈 삭제}}",
+      "title": "{count, plural, other {이슈 #개를 삭제하시겠습니까?}}",
       "confirm": "{count, plural, one {이슈 #개 삭제} other {이슈 #개 삭제}}",
-      "description": "{count, plural, one {선택한 이슈 #개를 삭제하시겠습니까?} other {선택한 이슈 #개를 삭제하시겠습니까?}} 댓글, 활동 기록 및 첨부 파일도 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
+      "description": "댓글, 활동 기록 및 첨부 파일도 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
     }
   },
   "share": {

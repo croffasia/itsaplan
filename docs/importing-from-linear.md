@@ -45,6 +45,9 @@ project, plus one for the team's issues with no project.
 - **A sub-issue whose parent is not part of the same import** (it is in another project or
   another team) cannot keep its parent link. Its description gets a line such as
   `Parent in Linear: ATO-12` just above the identifier line instead.
+- **Sub-issues nested deeper than 8 levels.** Subtasks nest at most 8 levels deep here. A
+  sub-issue whose parent link would go past that is imported without a parent, together
+  with its own sub-issues.
 - **Priority** — Urgent, High, Medium, and Low keep their level; No priority stays empty.
 - **Assignees and comment authors** — matched to an existing project member by email. It is
   never assigned to the wrong person, and no placeholder account is created; what happens

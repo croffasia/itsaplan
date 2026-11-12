@@ -117,8 +117,8 @@
     "archiveTitle": "Arsipkan issue",
     "apply": "Terapkan",
     "cannotBeUndone": "Tindakan ini tidak dapat dibatalkan.",
-    "deleteDescription": "Hapus {issue}? Tindakan ini akan menghapus issue, komentar, aktivitas, dan lampirannya.",
-    "archiveDescription": "Arsipkan {issue}? Issue ini akan meninggalkan papan dan dapat dipulihkan nanti.",
+    "deleteDescription": "Issue beserta komentar, aktivitas, dan lampirannya akan dihapus.",
+    "archiveDescription": "Issue ini akan meninggalkan papan dan dapat dipulihkan nanti.",
     "applyDescription": "Terapkan <v>{action}</v> pada issue ini?",
     "moveTitle": "Pindahkan isu",
     "move": "Pindahkan",
@@ -128,7 +128,9 @@
     "moveChooseProject": "Pilih proyek",
     "moveColumn": "Status",
     "moveColumnMatching": "Status yang sesuai",
-    "moveCarriedOver": "Tipe, label, dan bidang kustom dipertahankan jika proyek tujuan memiliki yang bernama sama. Siklus, inisiatif, dan tautan ke isu di proyek ini dihapus."
+    "moveCarriedOver": "Tipe, label, dan bidang kustom dipertahankan jika proyek tujuan memiliki yang bernama sama. Siklus, inisiatif, dan tautan ke isu di proyek ini dihapus.",
+    "deleteQuestion": "Hapus {issue}?",
+    "archiveQuestion": "Arsipkan {issue}?"
   },
   "create": {
     "title": "Issue baru",
@@ -226,14 +228,26 @@
     "allHidden": "Semua subtugas disembunyikan oleh filter."
   },
   "subtaskDisposal": {
-    "intro": "{issues, plural, one {Issue ini memiliki} other {Issue tersebut memiliki}} {count, plural, one {# subtugas} other {# subtugas}}.",
     "deleteToo": "{count, plural, one {Hapus juga} other {Hapus juga}}",
     "archiveToo": "{count, plural, one {Arsipkan juga} other {Arsipkan juga}}",
     "detach": "{count, plural, one {Pertahankan tanpa induk} other {Pertahankan tanpa induk}}",
     "reassign": "{count, plural, one {Pindahkan ke issue lain} other {Pindahkan ke issue lain}}",
     "reassignTitle": "Pindahkan subtugas ke issue lain",
     "change": "Ubah",
-    "searchParent": "Cari issue induk baru…"
+    "searchParent": "Cari issue induk baru…",
+    "newParent": "Induk baru:",
+    "nestedGoAlong": "Subtugasnya sendiri tetap berada di bawahnya.",
+    "question": "{count, plural, other {Apa yang terjadi pada # subtugasnya?}}",
+    "cascadeDeleteHint": "{count, plural, other {Semua # subtugas juga dihapus.}}",
+    "cascadeArchiveHint": "{count, plural, other {Semua # subtugas juga diarsipkan.}}",
+    "detachHint": "{count, plural, other {# subtugas menjadi issue mandiri.}}",
+    "reassignHint": "{count, plural, other {# subtugas pindah ke bawah issue yang Anda pilih.}}",
+    "tagDeleted": "Dihapus",
+    "tagArchived": "Diarsipkan",
+    "tagNoParent": "Tanpa induk",
+    "tagStaysUnder": "Tetap di bawah {issue}",
+    "tagMovesTo": "Pindah ke {issue}",
+    "tagMovesAlong": "Ikut pindah"
   },
   "comments": {
     "you": "Anda",

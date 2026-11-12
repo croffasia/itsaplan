@@ -221,6 +221,12 @@ export interface IssueRef {
   archived: boolean;
 }
 
+// An issue under the ones a delete, an archive or a move acts on, with the issue it
+// hangs under.
+export interface SubtreeIssue extends IssueRef {
+  parentId: number;
+}
+
 // What a delete or an archive does with the issue's subtasks: they follow it
 // (deleted with a delete, archived with an archive), they are detached into
 // ordinary issues, or they move to another parent. Required whenever the issue
@@ -239,6 +245,8 @@ export interface IssueRelations extends IssueDetail {
   links: IssueLink[];
   parent: IssueRef | null;
   subtasks: IssueRef[];
+  // The issues above this one, from the top level down to its parent.
+  ancestors: IssueRef[];
 }
 
 // The issue as the detail routes return it.
@@ -387,6 +395,11 @@ export const searchIssues = (projectKey: string, params: { q?: string; limit?: n
   if (params.limit != null) qs.set('limit', String(params.limit));
   return request<IssueSearchHit[]>(`/projects/${projectKey}/issues/search?${qs.toString()}`);
 };
+
+export const listSubtree = (projectKey: string, ids: number[]) =>
+  request<SubtreeIssue[]>(
+    `/projects/${encodeURIComponent(projectKey)}/issues/subtree?ids=${ids.join(',')}`,
+  );
 
 export const searchAllIssues = (params: {
   q: string;

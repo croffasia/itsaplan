@@ -117,8 +117,8 @@
     "archiveTitle": "Archive issue",
     "apply": "Apply",
     "cannotBeUndone": "This cannot be undone.",
-    "deleteDescription": "Delete {issue}? This removes the issue, its comments, activity and attachments.",
-    "archiveDescription": "Archive {issue}? It leaves the board and can be restored later.",
+    "deleteDescription": "The issue, its comments, activity and attachments will be deleted.",
+    "archiveDescription": "It leaves the board and can be restored later.",
     "applyDescription": "Apply <v>{action}</v> to this issue?",
     "moveTitle": "Move issue",
     "move": "Move",
@@ -128,7 +128,9 @@
     "moveChooseProject": "Choose a project",
     "moveColumn": "Status",
     "moveColumnMatching": "Matching status",
-    "moveCarriedOver": "Type, labels and custom fields are kept where the target project has one of the same name. Cycle, initiative and links to issues in this project are removed."
+    "moveCarriedOver": "Type, labels and custom fields are kept where the target project has one of the same name. Cycle, initiative and links to issues in this project are removed.",
+    "deleteQuestion": "Delete {issue}?",
+    "archiveQuestion": "Archive {issue}?"
   },
   "create": {
     "title": "New issue",
@@ -226,14 +228,26 @@
     "allHidden": "All subtasks are hidden by the filter."
   },
   "subtaskDisposal": {
-    "intro": "{issues, plural, one {This issue has} other {These issues have}} {count, plural, one {# subtask} other {# subtasks}}.",
     "deleteToo": "{count, plural, one {Delete it too} other {Delete them too}}",
     "archiveToo": "{count, plural, one {Archive it too} other {Archive them too}}",
     "detach": "{count, plural, one {Keep it without a parent} other {Keep them without a parent}}",
     "reassign": "{count, plural, one {Move it to another issue} other {Move them to another issue}}",
     "reassignTitle": "Move the subtasks to another issue",
     "change": "Change",
-    "searchParent": "Search the new parent issue…"
+    "searchParent": "Search for the new parent issue…",
+    "newParent": "New parent:",
+    "nestedGoAlong": "{count, plural, one {Its own subtasks stay under it.} other {Their own subtasks stay under them.}}",
+    "question": "{issues, plural, one {What happens to its {count, plural, one {subtask} other {# subtasks}}?} other {What happens to their {count, plural, one {subtask} other {# subtasks}}?}}",
+    "cascadeDeleteHint": "{count, plural, one {The subtask is deleted too.} other {All # subtasks are deleted too.}}",
+    "cascadeArchiveHint": "{count, plural, one {The subtask is archived too.} other {All # subtasks are archived too.}}",
+    "detachHint": "{count, plural, one {# subtask becomes a standalone issue.} other {# subtasks become standalone issues.}}",
+    "reassignHint": "{count, plural, one {# subtask moves under the issue you pick.} other {# subtasks move under the issue you pick.}}",
+    "tagDeleted": "Deleted",
+    "tagArchived": "Archived",
+    "tagNoParent": "No parent",
+    "tagStaysUnder": "Stays under {issue}",
+    "tagMovesTo": "Moves to {issue}",
+    "tagMovesAlong": "Moves along"
   },
   "comments": {
     "you": "You",

@@ -97,14 +97,14 @@
   },
   "removal": {
     "archive": {
-      "title": "{count, plural, one {Arquivar issue} other {Arquivar issues}}",
+      "title": "{count, plural, one {Arquivar # issue?} other {Arquivar # issues?}}",
       "confirm": "{count, plural, one {Arquivar # issue} other {Arquivar # issues}}",
-      "description": "{count, plural, one {Arquivar # issue selecionada? Ela sai do quadro e pode ser restaurada depois.} other {Arquivar # issues selecionadas? Elas saem do quadro e podem ser restauradas depois.}}"
+      "description": "{count, plural, one {Ela sai do quadro e pode ser restaurada depois.} other {Elas saem do quadro e podem ser restauradas depois.}}"
     },
     "delete": {
-      "title": "{count, plural, one {Excluir issue} other {Excluir issues}}",
+      "title": "{count, plural, one {Excluir # issue?} other {Excluir # issues?}}",
       "confirm": "{count, plural, one {Excluir # issue} other {Excluir # issues}}",
-      "description": "{count, plural, one {Excluir # issue selecionada?} other {Excluir # issues selecionadas?}} Isto também remove comentários, atividade e anexos. Isso não pode ser desfeito."
+      "description": "{count, plural, one {Seus comentários, atividade e anexos também serão excluídos.} other {Os comentários, atividade e anexos delas também serão excluídos.}} Isso não pode ser desfeito."
     }
   },
   "share": {

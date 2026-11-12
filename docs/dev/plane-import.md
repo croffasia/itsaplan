@@ -70,7 +70,8 @@ already had via `runLink`:
   second time (it already does this for relations) and calls
   `setIssueParentIfUnset` (`import-store.ts`) once the parent resolves. Idempotent: the
   `parent_id IS NULL` guard makes a retry a no-op and never overwrites a parent Create
-  already set correctly.
+  already set correctly. Both skip a parent that would put the issue under one of its own
+  sub-issues or past `MAX_SUBTASK_DEPTH`.
 - **Cross-references in text.** A new `rewrite` phase runs between Link and Attachments.
   `import_record.source_display_id` carries Plane's own `sequence_id` for every imported
   issue (stashed at Create time, from `CanonicalIssue.sequenceId`); the job's `config.

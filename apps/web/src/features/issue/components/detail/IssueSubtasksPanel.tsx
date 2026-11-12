@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { IssueRelations } from '@/lib/api/endpoints/issues';
 import { usePermissions } from '@/hooks/usePermissions';
-import { subtaskProgress } from '@/utils/subtasks';
+import { MAX_SUBTASK_DEPTH, subtaskProgress } from '@/utils/subtasks';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -24,12 +24,12 @@ import IssueSubtasksFilterChip from './IssueSubtasksFilterChip';
 import IssueSubtasksFilterMenu from './IssueSubtasksFilterMenu';
 import { useTranslations } from 'next-intl';
 
-// The issue's parent, and its subtasks with how many of them are done. The API
-// keeps the hierarchy one level deep, so a subtask gets no Add menu. An import can
-// keep deeper nesting from the source tracker, and then both lists show. A new
-// subtask opens the ordinary create modal with the parent's properties prefilled;
-// an existing issue is attached through the search dialog. On a public share the
-// section lists the hierarchy and stays off the page when the issue has none.
+// The issue's parent, and its subtasks with how many of them are done. An issue on
+// the last level (MAX_SUBTASK_DEPTH) gets no Add menu, and its Subtasks list shows
+// only when it already has some. A new subtask opens the ordinary create modal with
+// the parent's properties prefilled; an existing issue is attached through the
+// search dialog. On a public share the section lists the hierarchy and stays off
+// the page when the issue has none.
 export default function IssueSubtasksPanel({
   project,
   issue,
@@ -57,7 +57,8 @@ export default function IssueSubtasksPanel({
 
   const parent = issue.parent;
   if (readOnly && !parent && issue.subtasks.length === 0) return null;
-  const showSubtasks = !parent || issue.subtasks.length > 0;
+  const canNest = issue.ancestors.length + 1 < MAX_SUBTASK_DEPTH;
+  const showSubtasks = !parent || issue.subtasks.length > 0 || (!readOnly && canNest);
 
   const progress = subtaskProgress(issue.subtasks, new Map(project.columns.map((c) => [c.id, c])));
   const done = progress.total > 0 ? `${progress.done}/${progress.total}` : undefined;
@@ -139,7 +140,7 @@ export default function IssueSubtasksPanel({
             </div>
             <div className="flex shrink-0 items-center gap-1">
               {open && <IssueSubtasksFilterMenu filter={filter} />}
-              {open && !parent && canEdit && (
+              {open && canNest && canEdit && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -176,14 +177,18 @@ export default function IssueSubtasksPanel({
           projectKey={project.project.ref}
           title={t('addExisting')}
           prompt={t('searchPrompt')}
-          // The hierarchy is one level deep, so an issue that already hangs under
-          // a parent has to be detached there first.
-          exclude={(hit) => hit.id === issue.id || hit.parentId !== null}
+          // The API rejects a pick that would nest too deep with a message of its own.
+          exclude={(hit) =>
+            hit.id === issue.id ||
+            hit.parentId === issue.id ||
+            issue.ancestors.some((ancestor) => ancestor.id === hit.id)
+          }
           onPick={(hit) => {
             setParent.mutate({
               projectKey: project.project.ref,
               issueId: hit.id,
               parentId: issue.id,
+              previousParentId: hit.parentId,
             });
             setAttaching(false);
           }}

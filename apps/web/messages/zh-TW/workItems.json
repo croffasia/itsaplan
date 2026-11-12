@@ -97,14 +97,14 @@
   },
   "removal": {
     "archive": {
-      "title": "{count, plural, other {封存工作項目}}",
+      "title": "{count, plural, other {封存 # 個工作項目？}}",
       "confirm": "{count, plural, other {封存 # 個工作項目}}",
-      "description": "{count, plural, other {封存選中的 # 個工作項目？它們將離開看板，之後可以恢復。}}"
+      "description": "它們將離開看板，之後可以恢復。"
     },
     "delete": {
-      "title": "{count, plural, other {刪除工作項目}}",
+      "title": "{count, plural, other {刪除 # 個工作項目？}}",
       "confirm": "{count, plural, other {刪除 # 個工作項目}}",
-      "description": "{count, plural, other {刪除選中的 # 個工作項目？}}這還會刪除留言、活動記錄和附件。此操作無法復原。"
+      "description": "其留言、活動記錄和附件也會被刪除。此操作無法復原。"
     }
   },
   "share": {

@@ -77,7 +77,7 @@ export function IssueCardBody({
             <IssueIdentifier
               issue={issue}
               className="text-xs text-muted-foreground"
-              onOpenParent={onOpen}
+              onOpenAncestor={onOpen}
             />
           )}
           {has('priority') && issue.priority && <PriorityBadge priority={issue.priority} />}

@@ -1,4 +1,5 @@
 import { t } from 'elysia';
+import { MAX_SUBTASK_DEPTH } from '@repo/db';
 import { agentExecutionState } from '#modules/agents/model';
 import { ActivityPayloadResponse } from '#shared/activity';
 import { DevelopmentLinkResponse } from '#modules/git/model';
@@ -145,6 +146,15 @@ export const IssueRefResponse = t.Object({
   columnId: t.Number(),
   typeId: t.Nullable(t.Number()),
   archived: t.Boolean(),
+});
+
+export const SubtreeIssueResponse = t.Composite([
+  IssueRefResponse,
+  t.Object({ parentId: t.Number() }),
+]);
+
+export const subtreeQuery = t.Object({
+  ids: t.String({ description: 'CSV of issue ids.' }),
 });
 
 // The kinds a relation is stored under (IssueLinkKind in links.ts).
@@ -297,6 +307,9 @@ export const IssueWithFieldsResponse = t.Composite([
     watchers: t.Array(IssueWatcherResponse),
     parent: t.Nullable(IssueRefResponse),
     subtasks: t.Array(IssueRefResponse),
+    ancestors: t.Array(IssueRefResponse, {
+      description: `The issues above this one, from the top level down to its parent; empty for an issue with no parent. Subtasks nest at most ${MAX_SUBTASK_DEPTH} levels deep, so an issue with ${MAX_SUBTASK_DEPTH - 1} ancestors cannot have subtasks.`,
+    }),
     checklists: t.Array(ChecklistResponse),
     development: t.Array(DevelopmentLinkResponse),
   }),
@@ -481,8 +494,7 @@ export const createIssueBody = t.Object({
   parentId: t.Optional(
     t.Nullable(
       t.Integer({
-        description:
-          'Numeric id of the issue this one is a subtask of, or null. The parent must be in this project and must not be a subtask itself.',
+        description: `Numeric id of the issue this one is a subtask of, or null. The parent must be in this project and on a level below ${MAX_SUBTASK_DEPTH}: subtasks nest at most ${MAX_SUBTASK_DEPTH} levels deep.`,
       }),
     ),
   ),
@@ -648,8 +660,7 @@ export const updateIssueBody = t.Object({
   parentId: t.Optional(
     t.Nullable(
       t.Integer({
-        description:
-          'Make this issue a subtask of that issue id, or null to detach it. The parent must be in this project and must not be a subtask itself; an issue that has subtasks cannot become one.',
+        description: `Make this issue a subtask of that issue id, or null to detach it. The parent must be in this project and must not be this issue or one of its subtasks. The issue moves with its own subtasks, and together they must stay within ${MAX_SUBTASK_DEPTH} levels.`,
       }),
     ),
   ),

@@ -97,14 +97,14 @@
   },
   "removal": {
     "archive": {
-      "title": "{count, plural, other {归档工作项}}",
+      "title": "{count, plural, other {归档 # 个工作项？}}",
       "confirm": "{count, plural, other {归档 # 个工作项}}",
-      "description": "{count, plural, other {归档选中的 # 个工作项？它们将离开看板，之后可以恢复。}}"
+      "description": "它们将离开看板，之后可以恢复。"
     },
     "delete": {
-      "title": "{count, plural, other {删除工作项}}",
+      "title": "{count, plural, other {删除 # 个工作项？}}",
       "confirm": "{count, plural, other {删除 # 个工作项}}",
-      "description": "{count, plural, other {删除选中的 # 个工作项？}}这还会删除评论、活动记录和附件。此操作无法撤销。"
+      "description": "其评论、活动记录和附件也会被删除。此操作无法撤销。"
     }
   },
   "share": {

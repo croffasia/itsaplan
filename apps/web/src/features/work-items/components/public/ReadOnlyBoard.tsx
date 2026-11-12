@@ -36,6 +36,7 @@ export default function ReadOnlyBoard({
     onSettingsChange: noop,
     onOpenIssue,
     onAddIssue: noop,
+    newIssueDefaults: {},
     readOnly: true,
   };
 

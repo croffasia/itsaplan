@@ -1,15 +1,15 @@
 import { useRef } from 'react';
-import { useDroppable } from '@dnd-kit/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { ChevronsRightLeftIcon } from '@animateicons/react/lucide/chevrons-right-left-icon';
 import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue } from '@/lib/api/endpoints/issues';
-import { cn } from '@/lib/utils';
-import { isCustomFieldKey, type DateField } from '@/utils/viewSettings';
-import { CalendarUnscheduledCard } from './CalendarUnscheduledCard';
-
-// Droppable id for the unscheduled panel; day cells use `day:<YYYY-MM-DD>`.
-export const UNSCHEDULED_ID = 'unscheduled';
+import type { DateField } from '@/utils/viewSettings';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import ToolbarIconButton from '@/components/layout/ToolbarIconButton';
+import { dateFieldWording, UNSCHEDULED_ID } from '../../utils/calendar';
+import { CalendarDropZone } from './CalendarDropZone';
+import { CalendarIssueCard } from './CalendarIssueCard';
 
 // A card plus the gap under it.
 const CARD_H = 38;
@@ -21,17 +21,19 @@ export function CalendarUnscheduledPanel({
   issues,
   dot,
   onOpen,
+  onCollapse,
 }: {
   project: ProjectDetail;
   dateField: DateField;
   issues: Issue[];
   dot: (issue: Issue) => string;
   onOpen: (id: number) => void;
+  // Absent on a read-only share, which keeps the panel open.
+  onCollapse?: () => void;
 }) {
   const t = useTranslations('workItems.calendar');
-  const { setNodeRef, isOver } = useDroppable({ id: UNSCHEDULED_ID });
-  // A custom field placement has no wording of its own; it reads as a plain date.
-  const key = isCustomFieldKey(dateField) ? 'custom' : dateField;
+  const tItems = useTranslations('workItems');
+  const key = dateFieldWording(dateField);
   // Only the cards in and near the viewport are rendered: without dates, most of a
   // large project lands here, and the calendar renders the panel on every change.
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -46,16 +48,26 @@ export function CalendarUnscheduledPanel({
     getItemKey: (index) => issues[index].id,
   });
   return (
-    <div
-      ref={setNodeRef}
-      className={cn(
-        'flex max-h-48 w-full shrink-0 flex-col border-t p-3 sm:max-h-none sm:w-64 sm:border-t-0 sm:border-l',
-        isOver && 'bg-accent/40',
-      )}
+    <CalendarDropZone
+      id={UNSCHEDULED_ID}
+      className="flex max-h-48 w-full shrink-0 flex-col border-t p-3 sm:max-h-none sm:w-64 sm:border-e sm:border-t-0"
     >
       <div className="mb-2 flex items-center gap-2 text-sm font-medium text-muted-foreground">
         {t(`noDate.${key}`)}
         <span className="text-muted-foreground">{issues.length}</span>
+        {onCollapse && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <ToolbarIconButton
+                icon={ChevronsRightLeftIcon}
+                className="ms-auto p-1"
+                onClick={onCollapse}
+                aria-label={tItems('collapse')}
+              />
+            </TooltipTrigger>
+            <TooltipContent>{tItems('collapse')}</TooltipContent>
+          </Tooltip>
+        )}
       </div>
       <div ref={scrollRef} className="overflow-y-auto">
         <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
@@ -69,7 +81,7 @@ export function CalendarUnscheduledPanel({
                 className="absolute start-0 top-0 w-full pb-1"
                 style={{ transform: `translateY(${vi.start}px)` }}
               >
-                <CalendarUnscheduledCard
+                <CalendarIssueCard
                   project={project}
                   issue={issue}
                   color={dot(issue)}
@@ -83,6 +95,6 @@ export function CalendarUnscheduledPanel({
           <span className="text-xs text-muted-foreground/50">{t(`allDated.${key}`)}</span>
         )}
       </div>
-    </div>
+    </CalendarDropZone>
   );
 }

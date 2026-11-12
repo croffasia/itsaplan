@@ -7,18 +7,23 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
 
-// A draggable card in the unscheduled panel. Memoized because the panel renders
-// again on every scroll step.
-export const CalendarUnscheduledCard = memo(function CalendarUnscheduledCard({
+// Memoized because the unscheduled panel renders again on every scroll step.
+export const CalendarIssueCard = memo(function CalendarIssueCard({
   project,
   issue,
   color,
   onOpen,
+  multiline = false,
+  dayLabel,
 }: {
   project: ProjectDetail;
   issue: Issue;
   color: string;
   onOpen: (id: number) => void;
+  // A narrow column gives the title its own lines instead of cutting it short.
+  multiline?: boolean;
+  // For a list that has no day headers.
+  dayLabel?: string;
 }) {
   // Drag is disabled on phones, and without work_items edit (scheduling an issue
   // by dropping it on a day is an issue edit).
@@ -38,7 +43,8 @@ export const CalendarUnscheduledCard = memo(function CalendarUnscheduledCard({
           onOpen(issue.id);
         }}
         className={cn(
-          'kanban-card flex cursor-pointer items-center gap-2 rounded-md p-2 text-xs',
+          'kanban-card flex cursor-pointer items-center gap-x-2 gap-y-1 rounded-md p-2 text-xs',
+          multiline && 'flex-wrap',
           isDragging && 'opacity-40',
         )}
       >
@@ -47,7 +53,15 @@ export const CalendarUnscheduledCard = memo(function CalendarUnscheduledCard({
           style={{ backgroundColor: color }}
         />
         <span className="shrink-0 text-muted-foreground tabular-nums">{issue.identifier}</span>
-        <span className="truncate text-foreground">{issue.title}</span>
+        <span
+          className={cn(
+            'text-foreground',
+            multiline ? 'line-clamp-3 basis-full break-words' : 'truncate',
+          )}
+        >
+          {issue.title}
+        </span>
+        {dayLabel && <span className="ms-auto shrink-0 text-muted-foreground">{dayLabel}</span>}
       </div>
     </IssueContextMenu>
   );

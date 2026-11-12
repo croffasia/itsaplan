@@ -59,6 +59,11 @@
     "month": "Month",
     "quarter": "Quarter"
   },
+  "calendarModes": {
+    "month": "Month",
+    "byDay": "By day",
+    "byWeek": "By week"
+  },
   "weekStart": {
     "0": "Sunday",
     "1": "Monday"
@@ -85,6 +90,10 @@
     "subtasksCollapsed": "Start collapsed",
     "groupsCollapsed": "Groups start collapsed",
     "placeBy": "Place by",
+    "mode": "Mode",
+    "daysShown": "Days on screen",
+    "weeksShown": "Weeks on screen",
+    "splitByDay": "Split by day",
     "weekStartsOn": "Week starts on",
     "scale": "Scale",
     "dragToReorder": "Drag to reorder",
@@ -97,7 +106,8 @@
     "show": "Show",
     "subtasks": "Subtasks",
     "cardProperties": "Card properties",
-    "columns": "Columns"
+    "columns": "Columns",
+    "dates": "Dates"
   },
   "layoutCommand": "{layout} layout"
 }

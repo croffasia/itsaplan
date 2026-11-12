@@ -59,6 +59,11 @@
     "month": "월",
     "quarter": "분기"
   },
+  "calendarModes": {
+    "month": "월",
+    "byDay": "일별",
+    "byWeek": "주별"
+  },
   "weekStart": {
     "0": "일요일",
     "1": "월요일"
@@ -85,6 +90,10 @@
     "subtasksCollapsed": "접은 상태로 시작",
     "groupsCollapsed": "그룹을 접은 상태로 시작",
     "placeBy": "배치 기준",
+    "mode": "보기 방식",
+    "daysShown": "표시할 일수",
+    "weeksShown": "표시할 주 수",
+    "splitByDay": "일별로 나누기",
     "weekStartsOn": "주 시작 요일",
     "scale": "시간 단위",
     "dragToReorder": "드래그하여 순서 변경",
@@ -97,7 +106,8 @@
     "show": "표시",
     "subtasks": "하위 이슈",
     "cardProperties": "카드 속성",
-    "columns": "열"
+    "columns": "열",
+    "dates": "날짜"
   },
   "layoutCommand": "{layout} 보기"
 }

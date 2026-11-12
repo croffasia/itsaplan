@@ -1,34 +1,40 @@
-import { addDays, startOfMonth, startOfWeek } from 'date-fns';
-import type { CustomField } from '@/lib/api/endpoints/customFields';
+import { addDays, getWeek, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
 import type { Issue } from '@/lib/api/endpoints/issues';
-import { issueDay } from '@/utils/calendarFields';
-import type { BuiltinDateField, ViewSettings } from '@/utils/viewSettings';
+import { parseDate, toDateStr } from '@/utils/dates';
+import {
+  isCustomFieldKey,
+  type BuiltinDateField,
+  type DateField,
+  type ViewSettings,
+  type WeekStart,
+} from '@/utils/viewSettings';
 
-// The calendar layout for the visible month: issues bucketed by their chosen date
-// (a built-in column or a date custom field), the rest collected as unscheduled,
-// the weekday headers rotated to the chosen first day, and the six-week day grid
-// (a constant height regardless of month length).
-export interface CalendarModel {
-  byDay: Map<string, Issue[]>;
-  unscheduled: Issue[];
-  weekdays: string[];
-  days: Date[];
+// Drop target ids. A drop on `day:<YYYY-MM-DD>` moves the issue to that day, on
+// `week:<first day>` to its own weekday in that week, on the unscheduled panel
+// clears its date.
+export const UNSCHEDULED_ID = 'unscheduled';
+type DropKind = 'day' | 'week';
+
+export const dropId = (kind: DropKind, date: string) => `${kind}:${date}`;
+
+export function parseDropId(id: string | number): { kind: DropKind; date: string } | null {
+  const [kind, date] = String(id).split(':');
+  return (kind === 'day' || kind === 'week') && date ? { kind, date } : null;
 }
 
-export function buildCalendarModel(
+// The message key for a date field. A custom field has no wording of its own and
+// reads as a plain date.
+export const dateFieldWording = (field: DateField): BuiltinDateField | 'custom' =>
+  isCustomFieldKey(field) ? 'custom' : field;
+
+export function bucketByDay(
   issues: Issue[],
-  builtin: BuiltinDateField,
-  // The custom field the issues are placed by, or null for the built-in column.
-  custom: CustomField | null,
-  weekStart: ViewSettings['weekStart'],
-  cursor: Date,
-  // The seven weekday names, Sunday first, in the reader's language.
-  weekdayNames: string[],
-): CalendarModel {
+  dayOf: (issue: Issue) => string | null,
+): { byDay: Map<string, Issue[]>; unscheduled: Issue[] } {
   const byDay = new Map<string, Issue[]>();
   const unscheduled: Issue[] = [];
   for (const issue of issues) {
-    const day = issueDay(issue, builtin, custom);
+    const day = dayOf(issue);
     if (day) {
       const list = byDay.get(day) ?? [];
       list.push(issue);
@@ -37,10 +43,42 @@ export function buildCalendarModel(
       unscheduled.push(issue);
     }
   }
+  return { byDay, unscheduled };
+}
 
-  const weekdays = [...weekdayNames.slice(weekStart), ...weekdayNames.slice(0, weekStart)];
-  const gridStart = startOfWeek(startOfMonth(cursor), { weekStartsOn: weekStart });
-  const days = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
+// Whole weeks start on the week's first day and step a week at a time. Fewer days
+// start on the cursor's own day and step by their count.
+export const isFullWeek = (layout: Pick<ViewSettings, 'calendarMode' | 'calendarDays'>) =>
+  layout.calendarMode === 'byWeek' ||
+  (layout.calendarMode === 'byDay' && layout.calendarDays === 7);
 
-  return { byDay, unscheduled, weekdays, days };
+// The days on screen. A month always gets six weeks, so the grid keeps one height
+// whatever the month's length.
+export function visibleDays(
+  cursor: Date,
+  layout: Pick<ViewSettings, 'calendarMode' | 'calendarDays' | 'calendarWeeks' | 'weekStart'>,
+): Date[] {
+  const weekStartsOn = layout.weekStart;
+  const run = (first: Date, count: number) =>
+    Array.from({ length: count }, (_, i) => addDays(first, i));
+  if (layout.calendarMode === 'month')
+    return run(startOfWeek(startOfMonth(cursor), { weekStartsOn }), 42);
+  return run(
+    isFullWeek(layout) ? startOfWeek(cursor, { weekStartsOn }) : startOfDay(cursor),
+    layout.calendarMode === 'byWeek' ? layout.calendarWeeks * 7 : layout.calendarDays,
+  );
+}
+
+// The day a drop on a week column gives an issue: the same weekday in that week, or
+// the week's first day for an issue without a date.
+export function dayInWeek(current: string | null, firstDay: string, weekStart: WeekStart): string {
+  const first = parseDate(firstDay);
+  const day = parseDate(current);
+  if (!first || !day) return firstDay;
+  return toDateStr(addDays(first, (day.getDay() - weekStart + 7) % 7));
+}
+
+// Monday weeks are numbered the ISO way, Sunday weeks the US way.
+export function weekNumber(day: Date, weekStart: WeekStart): number {
+  return getWeek(day, { weekStartsOn: weekStart, firstWeekContainsDate: weekStart === 1 ? 4 : 1 });
 }

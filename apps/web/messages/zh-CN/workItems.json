@@ -44,6 +44,13 @@
   "calendar": {
     "previousMonth": "上个月",
     "nextMonth": "下个月",
+    "previousWeek": "上周",
+    "nextWeek": "下周",
+    "previousDays": "{count, plural, other {前 # 天}}",
+    "nextDays": "{count, plural, other {后 # 天}}",
+    "weekNumber": "第 {number} 周",
+    "range": "{from} – {to}",
+    "addWorkItem": "添加工作项",
     "today": "今天",
     "moreIssues": "另有 {count} 个",
     "issueCount": "{count, plural, other {# 个工作项}}",

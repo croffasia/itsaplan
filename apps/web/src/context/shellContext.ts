@@ -20,6 +20,9 @@ export type ShellContext = {
   // between the side panel and the issue page; pass it to force one of them.
   onOpenIssue: (id: number, mode?: IssueOpenMode) => void;
   onAddIssue: (defaults: NewIssueDefaults) => void;
+  // What the work items board's filters put on a new issue. onAddIssue applies
+  // them already.
+  newIssueDefaults: NewIssueDefaults;
   // Opens the chat panel on a new conversation with the agent.
   onChatWithAgent: (agentId: number) => void;
 };

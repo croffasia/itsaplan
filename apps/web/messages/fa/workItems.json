@@ -44,6 +44,13 @@
   "calendar": {
     "previousMonth": "ماه قبل",
     "nextMonth": "ماه بعد",
+    "previousWeek": "هفته قبل",
+    "nextWeek": "هفته بعد",
+    "previousDays": "{count, plural, other {# روز قبل}}",
+    "nextDays": "{count, plural, other {# روز بعد}}",
+    "weekNumber": "هفته {number}",
+    "range": "{from} – {to}",
+    "addWorkItem": "افزودن تسک",
     "today": "امروز",
     "moreIssues": "+{count} مورد دیگر",
     "issueCount": "{count, plural, one {# تسک} other {# تسک}}",

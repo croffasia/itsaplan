@@ -39,8 +39,7 @@ import type { Sort } from '@/utils/viewTypes';
 
 export type { Sort, SortField } from '@/utils/viewTypes';
 
-// What a call site fills the create dialog with. A field it leaves out is the
-// dialog's own choice: the first column, the default type, the current user.
+// What a call site fills a new issue with. newIssueInput fills in the rest.
 export type NewIssueDefaults = Partial<
   Pick<
     NewIssueInput,
@@ -55,12 +54,50 @@ export type NewIssueDefaults = Partial<
     | 'description'
     | 'parentId'
     | 'labelIds'
+    | 'startDate'
+    | 'dueDate'
   >
 > & {
   // Member custom fields the dialog opens with, set once the issue exists (they
   // are not part of the create payload).
   fieldValues?: { fieldId: number; userId: string }[];
 };
+
+// A new issue from its defaults. What they leave out gets the first column, the
+// default type, and the creating user as the assignee when they are a member. A
+// default cycle that is not among the planned ones has finished, and nothing new
+// is planned into it.
+export function newIssueInput(
+  project: ProjectDetail,
+  defaults: NewIssueDefaults,
+  userId: string | null,
+): NewIssueInput {
+  const userIsMember = project.assignees.some((a) => a.kind === 'member' && a.userId === userId);
+  return {
+    title: defaults.title ?? '',
+    description: defaults.description,
+    columnId: defaults.columnId ?? project.columns[0]?.id ?? 0,
+    typeId:
+      defaults.typeId === undefined
+        ? (project.issueTypes.find((t) => t.isDefault)?.id ?? null)
+        : defaults.typeId,
+    initiativeId: defaults.initiativeId ?? null,
+    cycleId: project.plannedCycles.find((c) => c.id === defaults.cycleId)?.id ?? null,
+    // null is an explicit "No assignee", from the board group of that name.
+    assigneeUserId:
+      defaults.assigneeUserId !== undefined
+        ? defaults.assigneeUserId
+        : userIsMember
+          ? userId
+          : null,
+    delegateUserId: defaults.delegateUserId ?? null,
+    priority: defaults.priority ?? null,
+    parentId: defaults.parentId ?? null,
+    startDate: defaults.startDate ?? null,
+    dueDate: defaults.dueDate ?? null,
+    labelIds: defaults.labelIds ?? [],
+  };
+}
 
 // The value a condition pins its field to. A field named by several conditions,
 // or by one that allows several values, is not pinned to any.
@@ -146,6 +183,10 @@ export interface WorkItemsViewProps {
   onSettingsChange: (settings: ViewSettings) => void;
   onOpenIssue: (id: number) => void;
   onAddIssue: (defaults: NewIssueDefaults) => void;
+  // What this board puts on a new issue: its filters, and the cycle or initiative
+  // it shows. onAddIssue applies them already; a layout that creates an issue
+  // itself applies them too.
+  newIssueDefaults: NewIssueDefaults;
   // When true the view is a public read-only share: dragging, adding issues and
   // multi-select are disabled, but opening an issue (onOpenIssue) still works.
   // Defaults to false (the normal authenticated board).

@@ -172,6 +172,7 @@ export default function Shell({
     customFields,
     onOpenIssue: openIssue,
     onAddIssue: addIssue,
+    newIssueDefaults: filterDefaults,
     onChatWithAgent: (agentId: number) => {
       setChatAgentId(agentId);
       chatPanel.openPanel();

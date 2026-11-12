@@ -1,9 +1,11 @@
-import { useDroppable } from '@dnd-kit/core';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue } from '@/lib/api/endpoints/issues';
 import { cn } from '@/lib/utils';
+import { dropId } from '../../utils/calendar';
+import { CalendarDropZone } from './CalendarDropZone';
 import { CalendarDayChip } from './CalendarDayChip';
 import { CalendarDayOverflow } from './CalendarDayOverflow';
+import { CalendarQuickAdd } from './CalendarQuickAdd';
 
 // How many chips a day cell shows before collapsing the rest into "+N".
 const MAX_CHIPS = 3;
@@ -18,6 +20,7 @@ export function CalendarDayCell({
   issues,
   dot,
   onOpen,
+  onQuickAdd,
 }: {
   project: ProjectDetail;
   dateKey: string;
@@ -27,9 +30,8 @@ export function CalendarDayCell({
   issues: Issue[];
   dot: (issue: Issue) => string;
   onOpen: (id: number) => void;
+  onQuickAdd?: (day: string, title: string) => Promise<void>;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: `day:${dateKey}` });
-
   let dayNumberClass = 'text-muted-foreground/50';
   if (isToday)
     dayNumberClass =
@@ -37,16 +39,16 @@ export function CalendarDayCell({
   else if (inMonth) dayNumberClass = 'text-foreground';
 
   return (
-    <div
-      ref={setNodeRef}
+    <CalendarDropZone
+      id={dropId('day', dateKey)}
       className={cn(
-        'flex min-h-0 flex-col gap-0.5 overflow-hidden border-t border-l p-1 [&:nth-child(-n+7)]:border-t-0 [&:nth-child(7n+1)]:border-l-0',
+        'group/add flex min-h-0 flex-col gap-0.5 overflow-hidden border-t border-l p-1 [&:nth-child(-n+7)]:border-t-0 [&:nth-child(7n+1)]:border-l-0',
         !inMonth && 'bg-muted/20',
-        isOver && 'bg-accent/40',
       )}
     >
-      <div className="flex justify-end px-1">
-        <span className={cn('text-xs', dayNumberClass)}>{dayNumber}</span>
+      <div className="flex h-5 shrink-0 items-center gap-1 px-1">
+        {onQuickAdd && <CalendarQuickAdd compact onAdd={(title) => onQuickAdd(dateKey, title)} />}
+        <span className={cn('ms-auto text-xs', dayNumberClass)}>{dayNumber}</span>
       </div>
       <div className="flex flex-col gap-0.5 overflow-y-auto">
         {issues.slice(0, MAX_CHIPS).map((issue) => (
@@ -67,6 +69,6 @@ export function CalendarDayCell({
           />
         )}
       </div>
-    </div>
+    </CalendarDropZone>
   );
 }

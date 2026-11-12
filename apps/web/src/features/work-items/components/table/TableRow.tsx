@@ -103,10 +103,10 @@ export function TableRow({
           onClick();
         }}
         className={cn(
-          'relative grid cursor-grab gap-3 border-b py-2 pr-4 text-sm transition-colors',
+          'relative grid cursor-grab gap-3 border-b py-2 pe-4 text-sm transition-colors',
           blocked ? 'row-blocked' : 'hover:bg-accent/40',
           alignTop ? 'items-start' : 'items-center',
-          indented ? 'pl-9' : 'pl-4',
+          indented ? 'ps-9' : 'ps-4',
           isDragging && 'opacity-40',
         )}
         style={{ gridTemplateColumns: gridTemplate }}

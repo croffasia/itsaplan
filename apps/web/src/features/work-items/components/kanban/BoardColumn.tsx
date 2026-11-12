@@ -1,7 +1,12 @@
 import { memo, useCallback, useRef } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ChevronsRightLeft, EyeOff, Pin, PinOff, Plus } from 'lucide-react';
+import { useIconHover } from '@animateicons/react';
+import { ChevronsRightLeftIcon } from '@animateicons/react/lucide/chevrons-right-left-icon';
+import { EyeOffIcon } from '@animateicons/react/lucide/eye-off-icon';
+import { PinIcon } from '@animateicons/react/lucide/pin-icon';
+import { PinOffIcon } from '@animateicons/react/lucide/pin-off-icon';
+import { PlusIcon } from '@animateicons/react/lucide/plus-icon';
 import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { BoardIssue } from '@/lib/api/endpoints/issues';
@@ -11,6 +16,7 @@ import type { PropertyKey } from '@/utils/viewSettings';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { GroupDot } from '../shared/GroupDot';
+import { HeaderIconButton } from '../shared/HeaderIconButton';
 import { BoardCard } from './BoardCard';
 import { CardDropSlot } from './CardDropSlot';
 import { DropLine } from '../shared/DropLine';
@@ -86,7 +92,8 @@ export const BoardColumn = memo(function BoardColumn({
   readOnly?: boolean;
 }) {
   const t = useTranslations('workItems');
-  const canCreateIssue = canCreate && !readOnly;
+  const canCreateIssue = canCreate && !readOnly && group.assign != null && wipAllows(wip, 1);
+  const addHover = useIconHover();
   const scrollRef = useRef<HTMLDivElement>(null);
   // A column with a full hard limit accepts no card from another column. It is not
   // a drop target during such a drag. Cards already in the column still reorder
@@ -141,65 +148,26 @@ export const BoardColumn = memo(function BoardColumn({
           {!readOnly && (
             <>
               <SelectAllToggle ids={issues.map((i) => i.id)} />
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="hidden size-6 text-muted-foreground md:inline-flex"
-                    onClick={() => onTogglePin(group)}
-                    aria-label={pinned ? t('unpin') : t('pin')}
-                  >
-                    {pinned ? <PinOff /> : <Pin />}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{pinned ? t('unpin') : t('pin')}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-6 text-muted-foreground"
-                    onClick={() => onCollapse(group)}
-                    aria-label={t('collapse')}
-                  >
-                    <ChevronsRightLeft />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('collapse')}</TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-6 text-muted-foreground"
-                    onClick={() => onHide(group)}
-                    aria-label={t('hide')}
-                  >
-                    <EyeOff />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>{t('hide')}</TooltipContent>
-              </Tooltip>
+              <HeaderIconButton
+                icon={pinned ? PinOffIcon : PinIcon}
+                label={pinned ? t('unpin') : t('pin')}
+                onClick={() => onTogglePin(group)}
+                className="hidden md:inline-flex"
+              />
+              <HeaderIconButton
+                icon={ChevronsRightLeftIcon}
+                label={t('collapse')}
+                onClick={() => onCollapse(group)}
+              />
+              <HeaderIconButton icon={EyeOffIcon} label={t('hide')} onClick={() => onHide(group)} />
             </>
           )}
           {canCreateIssue && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-6 text-muted-foreground"
-                  onClick={() => onAddIssue(group)}
-                  aria-label={t('newIssue')}
-                >
-                  <Plus />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>{t('newIssue')}</TooltipContent>
-            </Tooltip>
+            <HeaderIconButton
+              icon={PlusIcon}
+              label={t('newIssue')}
+              onClick={() => onAddIssue(group)}
+            />
           )}
         </div>
       </div>
@@ -261,10 +229,11 @@ export const BoardColumn = memo(function BoardColumn({
                   variant="outline"
                   className="invisible absolute left-0 w-full text-muted-foreground opacity-0 group-focus-within/column:visible group-focus-within/column:opacity-100 group-hover/column:visible group-hover/column:opacity-100"
                   style={{ top: cardsHeight + ADD_BUTTON_GAP }}
+                  {...addHover.triggerProps}
                   onClick={() => onAddIssue(group)}
                   aria-label={t('newIssue')}
                 >
-                  <Plus />
+                  <PlusIcon ref={addHover.ref} size={16} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{t('newIssue')}</TooltipContent>

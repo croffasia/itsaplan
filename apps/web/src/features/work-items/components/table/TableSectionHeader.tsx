@@ -1,10 +1,11 @@
-import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import { useIconHover } from '@animateicons/react';
+import { ChevronDownIcon } from '@animateicons/react/lucide/chevron-down-icon';
+import { ChevronRightIcon } from '@animateicons/react/lucide/chevron-right-icon';
+import { PlusIcon } from '@animateicons/react/lucide/plus-icon';
 import { useTranslations } from 'next-intl';
 import { type IssueGroup } from '@/utils/project';
-import { usePermissions } from '@/hooks/usePermissions';
-import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { GroupDot } from '../shared/GroupDot';
+import { HeaderIconButton } from '../shared/HeaderIconButton';
 import { TableDropZone } from './TableDropZone';
 
 // A primary group header row. A drop onto it appends to the group's bucket
@@ -18,7 +19,7 @@ export function TableSectionHeader({
   onDrop,
   onToggle,
   onAddIssue,
-  readOnly,
+  canAdd,
 }: {
   group: IssueGroup;
   count: number;
@@ -28,12 +29,11 @@ export function TableSectionHeader({
   onDrop: (issueId: number) => void;
   onToggle: () => void;
   onAddIssue: () => void;
-  // In a read-only share the add affordance is hidden.
-  readOnly?: boolean;
+  canAdd: boolean;
 }) {
   const t = useTranslations('workItems');
-  const { can } = usePermissions();
-  const canCreateIssue = can('work_items', 'create') && !readOnly;
+  const { ref, triggerProps } = useIconHover();
+  const Chevron = collapsed ? ChevronRightIcon : ChevronDownIcon;
   return (
     <TableDropZone
       id={dropId}
@@ -43,34 +43,16 @@ export function TableSectionHeader({
     >
       <button
         type="button"
+        {...triggerProps}
         onClick={onToggle}
         className="flex items-center gap-2 text-sm font-medium text-foreground"
       >
-        {collapsed ? (
-          <ChevronRight className="size-3.5 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="size-3.5 text-muted-foreground" />
-        )}
+        <Chevron ref={ref} size={14} className="text-muted-foreground" />
         <GroupDot group={group} />
         {group.name}
         <span className="text-muted-foreground">{count}</span>
       </button>
-      {canCreateIssue && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-6 text-muted-foreground"
-              onClick={onAddIssue}
-              aria-label={t('newIssue')}
-            >
-              <Plus />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{t('newIssue')}</TooltipContent>
-        </Tooltip>
-      )}
+      {canAdd && <HeaderIconButton icon={PlusIcon} label={t('newIssue')} onClick={onAddIssue} />}
     </TableDropZone>
   );
 }

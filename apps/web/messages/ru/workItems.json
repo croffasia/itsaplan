@@ -1,5 +1,6 @@
 {
   "newIssue": "Новая задача",
+  "addWorkItem": "Добавить задачу",
   "pin": "Закрепить",
   "unpin": "Открепить",
   "collapse": "Свернуть",
@@ -50,7 +51,6 @@
     "nextDays": "{count, plural, one {Следующий день} few {Следующие # дня} many {Следующие # дней} other {Следующие # дня}}",
     "weekNumber": "Неделя {number}",
     "range": "{from} – {to}",
-    "addWorkItem": "Добавить задачу",
     "today": "Сегодня",
     "moreIssues": "+{count} ещё",
     "issueCount": "{count, plural, one {# задача} few {# задачи} many {# задач} other {# задачи}}",

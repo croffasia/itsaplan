@@ -1,5 +1,6 @@
 {
   "newIssue": "Nova issue",
+  "addWorkItem": "Adicionar item de trabalho",
   "pin": "Fixar",
   "unpin": "Desafixar",
   "collapse": "Recolher",
@@ -50,7 +51,6 @@
     "nextDays": "{count, plural, one {Próximo dia} other {Próximos # dias}}",
     "weekNumber": "Semana {number}",
     "range": "{from} – {to}",
-    "addWorkItem": "Adicionar item de trabalho",
     "today": "Hoje",
     "moreIssues": "+{count} mais",
     "issueCount": "{count, plural, one {# issue} other {# issues}}",

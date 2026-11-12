@@ -1,5 +1,6 @@
 {
   "newIssue": "새 이슈",
+  "addWorkItem": "작업 추가",
   "pin": "고정",
   "unpin": "고정 해제",
   "collapse": "접기",
@@ -50,7 +51,6 @@
     "nextDays": "{count, plural, other {다음 #일}}",
     "weekNumber": "{number}주차",
     "range": "{from} – {to}",
-    "addWorkItem": "작업 추가",
     "today": "오늘",
     "moreIssues": "외 {count}개",
     "issueCount": "{count, plural, one {이슈 #개} other {이슈 #개}}",

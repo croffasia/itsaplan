@@ -1,5 +1,5 @@
 import type { Column, WipMode } from '@/lib/api/endpoints/columns';
-import { type IssueGroup } from '@/utils/project';
+import { type GroupAssign, type IssueGroup } from '@/utils/project';
 
 // A column's work-in-progress limit as the board reads it.
 //
@@ -14,15 +14,15 @@ export interface WipState {
   full: boolean;
 }
 
-// The limit of the column a board group stands for, or null when the group is not
-// a column (the board also groups by assignee, priority, cycle…) or that column
-// has no limit set.
+// The limit of the column a group's assign moves an issue into, or null when the
+// group is not a column (the board also groups by assignee, priority, cycle…) or
+// that column has no limit set.
 export function wipStateFor(
-  group: IssueGroup,
+  assign: GroupAssign | null,
   columns: Column[],
   counts: Map<number, number>,
 ): WipState | null {
-  const columnId = group.assign?.patch.columnId;
+  const columnId = assign?.patch.columnId;
   if (columnId == null) return null;
   const column = columns.find((c) => c.id === columnId);
   if (!column || column.wipLimit == null) return null;

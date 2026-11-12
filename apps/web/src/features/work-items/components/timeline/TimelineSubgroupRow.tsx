@@ -1,4 +1,6 @@
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { useIconHover } from '@animateicons/react';
+import { ChevronDownIcon } from '@animateicons/react/lucide/chevron-down-icon';
+import { ChevronRightIcon } from '@animateicons/react/lucide/chevron-right-icon';
 import { useDroppable } from '@dnd-kit/core';
 import { useTranslations } from 'next-intl';
 import { DEFAULT_COLOR, type IssueGroup } from '@/utils/project';
@@ -32,6 +34,8 @@ export function TimelineSubgroupRow({
 }) {
   const t = useTranslations('workItems.timeline');
   const { setNodeRef, isOver: isDrop } = useDroppable({ id: `sec:${groupKey}`, data: { onDrop } });
+  const { ref, triggerProps } = useIconHover();
+  const Chevron = collapsed ? ChevronRightIcon : ChevronDownIcon;
   return (
     <div
       ref={setNodeRef}
@@ -42,6 +46,7 @@ export function TimelineSubgroupRow({
         <TooltipTrigger asChild>
           <button
             type="button"
+            {...triggerProps}
             aria-label={collapsed ? t('expandGroup') : t('collapseGroup')}
             onClick={onToggle}
             className={cn(
@@ -50,11 +55,7 @@ export function TimelineSubgroupRow({
             )}
             style={{ width: labelW }}
           >
-            {collapsed ? (
-              <ChevronRight className="size-3 shrink-0" />
-            ) : (
-              <ChevronDown className="size-3 shrink-0" />
-            )}
+            <Chevron ref={ref} size={12} className="shrink-0" />
             <GroupDot group={sub} />
             <span className="min-w-0 flex-1 truncate">{sub.name}</span>
             <span className="shrink-0 text-muted-foreground/70">{count}</span>

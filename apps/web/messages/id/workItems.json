@@ -1,5 +1,6 @@
 {
   "newIssue": "Issue baru",
+  "addWorkItem": "Tambah item kerja",
   "pin": "Sematkan",
   "unpin": "Lepas sematan",
   "collapse": "Ciutkan",
@@ -50,7 +51,6 @@
     "nextDays": "{count, plural, other {# hari berikutnya}}",
     "weekNumber": "Minggu {number}",
     "range": "{from} – {to}",
-    "addWorkItem": "Tambah item kerja",
     "today": "Hari ini",
     "moreIssues": "+{count} lagi",
     "issueCount": "{count, plural, one {# issue} other {# issue}}",

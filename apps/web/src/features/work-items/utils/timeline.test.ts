@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { CustomField, CustomFieldType } from '@/lib/api/endpoints/customFields';
-import type { PropertyKey } from '@/utils/viewSettings';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import { EMPTY_FILTER_SET } from '@/utils/filters';
+import type { GroupLabels } from '@/utils/project';
+import type { GroupField, PropertyKey } from '@/utils/viewSettings';
 import { columnKey } from './table';
-import { timelineColumns } from './timeline';
+import { buildTimeline, timelineColumns } from './timeline';
 
 const field = (id: number, fieldType: CustomFieldType): CustomField => ({
   id,
@@ -29,5 +32,35 @@ describe('timelineColumns', () => {
       columns.map((c) => c.width),
       [132, 100, 132],
     );
+  });
+});
+
+describe('buildTimeline', () => {
+  const project = {
+    issues: [],
+    columns: [{ id: 1, name: 'Todo', color: '#000', stateType: 'unstarted' }],
+  } as unknown as ProjectDetail;
+  const addRows = (group: GroupField, canAdd: boolean) =>
+    buildTimeline({
+      project,
+      filters: EMPTY_FILTER_SET,
+      group,
+      subgroup: 'none',
+      sort: { field: 'manual', dir: 'asc' },
+      groupLabels: {} as GroupLabels,
+      showEmptyGroups: true,
+      collapsedGroups: new Set(),
+      canAddTo: () => canAdd,
+      viewportW: 0,
+      labelW: 0,
+      dayW: 32,
+    }).rows.filter((row) => row.kind === 'add');
+
+  it('ends each section with an add row, including the ungrouped one', () => {
+    assert.deepEqual(addRows('none', true), [{ kind: 'add', key: 'all', assign: null }]);
+    assert.deepEqual(addRows('status', true), [
+      { kind: 'add', key: 'c1', assign: { patch: { columnId: 1 }, fields: [] } },
+    ]);
+    assert.deepEqual(addRows('none', false), []);
   });
 });

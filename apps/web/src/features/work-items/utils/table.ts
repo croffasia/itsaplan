@@ -92,23 +92,30 @@ export type FlatItem =
       assign: GroupAssign | null;
       bucket: Issue[];
       dropKey: string;
-    };
+    }
+  // The last row of an expanded section: creates an issue in it. `assign` is what
+  // the new issue takes to land there.
+  | { kind: 'add'; assign: GroupAssign | null; dropKey: string };
 
 // Flatten the (optionally two-level) grouping into the virtualized item list. A
 // row's drop `assign` and `bucket` come from the cell it sits in, so the
-// virtualizer render stays a plain lookup-free map.
+// virtualizer render stays a plain lookup-free map. An expanded section ends with
+// an add row when `canAddTo` accepts its assign. A section with no assign (a
+// finished cycle) has no add row; the ungrouped list asks with null.
 export function buildTableItems({
   groups,
   subGroups,
   sorted,
   settings,
   collapsed,
+  canAddTo,
 }: {
   groups: IssueGroup[];
   subGroups: IssueGroup[];
   sorted: BoardIssue[];
   settings: ViewSettings;
   collapsed: Set<string>;
+  canAddTo: (assign: GroupAssign | null) => boolean;
 }): FlatItem[] {
   const grouped = settings.group !== 'none';
   const subgrouped = grouped && settings.subgroup !== 'none';
@@ -118,6 +125,7 @@ export function buildTableItems({
     sorted.forEach((issue, index) =>
       items.push({ kind: 'row', issue, index, assign: null, bucket: sorted, dropKey: 'all' }),
     );
+    if (canAddTo(null)) items.push({ kind: 'add', assign: null, dropKey: 'all' });
   } else if (!subgrouped) {
     const issuesByGroup = groupIssues(groups, sorted, settings.group);
     for (const group of groups) {
@@ -142,6 +150,9 @@ export function buildTableItems({
             dropKey: group.key,
           }),
         );
+        if (group.assign && canAddTo(group.assign)) {
+          items.push({ kind: 'add', assign: group.assign, dropKey: group.key });
+        }
       }
     }
   } else {
@@ -181,6 +192,9 @@ export function buildTableItems({
         issues.forEach((issue, index) =>
           items.push({ kind: 'row', issue, index, assign, bucket: issues, dropKey: key }),
         );
+        if (group.assign && sg.assign && canAddTo(assign)) {
+          items.push({ kind: 'add', assign, dropKey: key });
+        }
       }
     }
   }

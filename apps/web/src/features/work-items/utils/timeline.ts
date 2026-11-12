@@ -32,6 +32,7 @@ export const ROW_H = 36; // px, an issue row
 export const LINK_ROW_H = 26; // px, a linked-issue sub-row under an issue row
 export const GROUP_H = 32; // px, a state group header row
 export const SUBGROUP_H = 28; // px, a sub-group header row under a group
+export const ADD_H = 28; // px, the add row that ends a section
 
 // The dragged label-column width is a client-only preference, kept per project
 // and per saved view (the tab the timeline is open on), so each of them keeps the
@@ -116,7 +117,10 @@ export type TimelineRow =
       index: number;
       assign: GroupAssign | null;
       bucket: BoardIssue[];
-    };
+    }
+  // The last row of an expanded section: creates an issue in it. `key` is the
+  // section's key.
+  | { kind: 'add'; key: string; assign: GroupAssign | null };
 
 // The span covering a section's bars, shown on its header row when collapsed.
 function sectionSpan(issueRows: { span: Span }[]): Span | null {
@@ -145,6 +149,7 @@ export function buildTimeline({
   groupLabels,
   showEmptyGroups,
   collapsedGroups,
+  canAddTo,
   viewportW,
   labelW,
   dayW,
@@ -157,6 +162,9 @@ export function buildTimeline({
   groupLabels: GroupLabels;
   showEmptyGroups: boolean;
   collapsedGroups: Set<string>;
+  // An expanded section ends with an add row when this accepts its assign. A
+  // section with no assign (a finished cycle) has no add row.
+  canAddTo: (assign: GroupAssign | null) => boolean;
   viewportW: number;
   labelW: number;
   dayW: number;
@@ -190,6 +198,10 @@ export function buildTimeline({
       issueRows.forEach(({ issue, span }, index) => {
         rows.push({ kind: 'issue', issue, span, index, assign: issueGroup.assign, bucket });
       });
+      // The single group of an ungrouped timeline has no assign and takes any issue.
+      if ((group === 'none' || issueGroup.assign) && canAddTo(issueGroup.assign)) {
+        rows.push({ kind: 'add', key: issueGroup.key, assign: issueGroup.assign });
+      }
     }
   } else {
     const nested = nestIssues(groups, subGroups, sorted, group, subgroup);
@@ -234,6 +246,9 @@ export function buildTimeline({
         issueRows.forEach(({ issue, span }, index) => {
           rows.push({ kind: 'issue', issue, span, index, assign, bucket });
         });
+        if (issueGroup.assign && sub.assign && canAddTo(assign)) {
+          rows.push({ kind: 'add', key, assign });
+        }
       }
     }
   }

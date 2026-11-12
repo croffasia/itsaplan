@@ -1,15 +1,18 @@
 'use client';
 
+import { useAccountPreferencesQuery } from '@/services/preferences.service';
 import { useWhatsNewQuery } from './services/whatsNew.service';
 import WhatsNewOnceOnboarded from './components/WhatsNewOnceOnboarded';
 
 // Shows the post-upgrade screen once per release, over whatever page the user
 // landed on. Mounted for every signed-in page; the query it reads is disabled
-// without a session, so the sign-in and invite screens ask for nothing.
+// without a session, so the sign-in and invite screens ask for nothing. The tour of
+// the product goes first: until it is closed, this screen waits.
 export default function WhatsNew() {
   const { data } = useWhatsNewQuery();
+  const { data: prefs } = useAccountPreferencesQuery();
 
-  if (!data?.pending) return null;
+  if (!data?.pending || !prefs?.onboardingSeen) return null;
   // Nothing to say: a build whose version is missing from the changelog and an
   // account that sees neither the backup nor the report.
   if (data.releases.length === 0 && !data.backup && !data.migration) return null;

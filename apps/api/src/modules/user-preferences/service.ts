@@ -40,6 +40,8 @@ export interface UserPreferenceDto {
   // Whether the user is subscribed to the issues they create, are assigned, comment
   // on or are mentioned in. Off means they only ever subscribe by hand.
   autoWatch: boolean;
+  // Whether the user closed the tour of the product the web app shows once.
+  onboardingSeen: boolean;
   // The project the user was in last, or null before they opened one. The app root
   // reopens it; a deleted project clears it through the FK.
   lastProjectId: number | null;
@@ -63,6 +65,7 @@ export function defaults(locale: Locale = DEFAULT_LOCALE): UserPreferenceDto {
     issueStatsView: 'compact',
     issueActivityView: 'flat',
     autoWatch: true,
+    onboardingSeen: false,
     lastProjectId: null,
     hotkeys: {},
   };
@@ -90,6 +93,7 @@ function toDto(row: {
   issueStatsView: string;
   issueActivityView: string;
   autoWatch: boolean;
+  onboardingSeen: boolean;
   lastProjectId: number | null;
   hotkeys: Record<string, string> | null;
 }): UserPreferenceDto {
@@ -104,6 +108,7 @@ function toDto(row: {
     issueStatsView: row.issueStatsView as IssueStatsView,
     issueActivityView: row.issueActivityView as IssueActivityView,
     autoWatch: row.autoWatch,
+    onboardingSeen: row.onboardingSeen,
     lastProjectId: row.lastProjectId,
     hotkeys: row.hotkeys ?? {},
   };
@@ -126,6 +131,7 @@ export async function getPreferences(
       issueStatsView: userPreference.issueStatsView,
       issueActivityView: userPreference.issueActivityView,
       autoWatch: userPreference.autoWatch,
+      onboardingSeen: userPreference.onboardingSeen,
       lastProjectId: userPreference.lastProjectId,
       hotkeys: userPreference.hotkeys,
     })

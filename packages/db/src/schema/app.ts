@@ -304,6 +304,11 @@ export const projectSetting = pgTable(
 // not stored — it lasts as long as that issue stays open. auto_watch is whether the
 // user is subscribed to the issues they create, are assigned, comment on or are
 // mentioned in (see issue_watcher); off means they only ever subscribe by hand.
+//
+// TODO(andrew): store the settings in one jsonb column, so a new one needs no migration.
+// The migration copies the current values into it and drops their columns;
+// last_project_id stays a column for its FK. Defaults and allowed values then live in
+// the api's defaults() and model.ts.
 export const userPreference = pgTable(
   'user_preference',
   {
@@ -320,6 +325,9 @@ export const userPreference = pgTable(
     issueStatsView: text('issue_stats_view').notNull().default('compact'),
     issueActivityView: text('issue_activity_view').notNull().default('flat'),
     autoWatch: boolean('auto_watch').notNull().default(true),
+    // Whether the user closed the tour of the product. Every account starts without it,
+    // so one made before the tour existed sees it once too.
+    onboardingSeen: boolean('onboarding_seen').notNull().default(false),
     // The user's own keyboard shortcut overrides, as { hotkeyId: combo }. Only the
     // bindings they changed are stored; the rest come from the instance defaults
     // (app_setting key 'hotkeys') and then the built-in ones.

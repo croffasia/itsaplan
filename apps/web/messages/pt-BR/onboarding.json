@@ -1,0 +1,197 @@
+{
+  "label": "Boas-vindas ao It's a Plan",
+  "goTo": "Ir para o slide {number}",
+  "next": "Próximo",
+  "start": "Começar",
+  "getInPro": "Obter no Pro",
+  "proNote": "Disponível no Cloud e no Self-hosted Pro.",
+  "replay": "Abrir o tour do produto",
+  "slides": {
+    "dashboards": {
+      "title": "Monte seus próprios dashboards",
+      "body": "Crie um dashboard para cada coisa que você acompanha e escolha os widgets: contagens de issues, distribuições, burnup, vazão, atividade e execuções de agentes."
+    },
+    "workItems": {
+      "title": "Toda tarefa é uma issue",
+      "body": "Veja as mesmas issues como quadro kanban, tabela, linha do tempo ou calendário por mês, semana ou dia. Salve os filtros que você usa como uma visão."
+    },
+    "initiatives": {
+      "title": "Agrupe issues sob um objetivo",
+      "body": "Uma iniciativa reúne as issues que fazem avançar um objetivo maior. O progresso e a saúde dela se atualizam conforme essas issues avançam."
+    },
+    "cycles": {
+      "title": "Planeje o trabalho em blocos de tempo",
+      "body": "Um ciclo é um período fixo no qual o time planeja suas issues. Quando ele termina, mova as issues não concluídas para o próximo."
+    },
+    "documents": {
+      "title": "Escreva ao lado do trabalho",
+      "body": "Guarde especificações e decisões em documentos. Vincule-os a issues e iniciativas, discuta nos comentários e restaure qualquer revisão anterior."
+    },
+    "notes": {
+      "title": "Esboce ideias em um quadro",
+      "body": "Um quadro de notas é uma tela livre para notas adesivas. Mantenha um quadro só para você ou compartilhe com o projeto."
+    },
+    "agents": {
+      "title": "Passe trabalho para um agente de IA",
+      "body": "Atribua uma issue a um agente ou pergunte a ele no chat. Ele trabalha com as ferramentas e habilidades que você dá e informa o que fez."
+    },
+    "schedules": {
+      "title": "Execute agentes por agendamento",
+      "body": "Inicie um agente em um horário definido ou quando uma issue entra em um estado. O Pro também inicia um quando uma issue é criada ou atribuída, uma etiqueta é adicionada ou um comentário é publicado, só para as issues que atendem a um filtro."
+    },
+    "workflows": {
+      "name": "Fluxos",
+      "title": "Encadeie agentes em um fluxo",
+      "body": "Um fluxo passa o trabalho de um agente para o próximo. Ele começa manualmente, por agendamento, por um evento de issue ou por um webhook, e uma etapa pode devolver o trabalho para correções."
+    },
+    "portal": {
+      "name": "Portal de suporte",
+      "title": "Receba solicitações de fora do time",
+      "body": "Coloque um formulário no seu site ou dê um portal aos seus clientes. Cada solicitação vira uma issue, e quem enviou recebe um e-mail quando alguém responde."
+    },
+    "budgets": {
+      "name": "Orçamentos de IA",
+      "title": "Limite o que os agentes gastam",
+      "body": "Defina um limite de gastos com modelos para o workspace inteiro, um time, um projeto ou cada pessoa, por dia, semana ou mês. Quando um orçamento se esgota, os agentes não iniciam novas execuções."
+    },
+    "analytics": {
+      "name": "Análises de IA",
+      "title": "Veja para onde vão o tempo e o dinheiro dos agentes",
+      "body": "Divida as execuções de agentes por pessoa, gatilho, agendamento e fluxo, com a duração e as chamadas de ferramentas que falharam."
+    },
+    "audit": {
+      "name": "Log de auditoria",
+      "title": "Saiba quem fez o quê",
+      "body": "O log de auditoria registra as mudanças em pessoas, configurações e dados, e cada login. Exporte-o quando precisar."
+    }
+  },
+  "art": {
+    "issues": {
+      "checkout": "Redesign da página de checkout",
+      "webhooks": "Integrar webhooks do Stripe",
+      "refunds": "Fluxo de reembolso do suporte",
+      "invoices": "Exportação de faturas em PDF",
+      "twoFactor": "Autenticação em dois fatores",
+      "testKeys": "Configurar chaves de teste do Stripe",
+      "releaseNotes": "Escrever as notas de versão",
+      "flakyTest": "Corrigir o teste instável de exportação",
+      "staleIssues": "Rotular issues paradas",
+      "roadmap": "Rascunhar o roadmap do Q3",
+      "feedback": "Resumir o feedback de clientes"
+    },
+    "states": {
+      "todo": "A fazer",
+      "inProgress": "Em andamento",
+      "review": "Em revisão",
+      "done": "Concluído"
+    },
+    "sprintHealth": "Saúde da sprint",
+    "initiative": "Lançamento do Q3",
+    "cycle": "Ciclo {number}",
+    "activeCycle": "Ciclo {number} · ativo",
+    "week": "Semana {number}",
+    "working": "Trabalhando",
+    "steps": {
+      "read": "Ler a issue",
+      "search": "Buscar no código",
+      "pullRequest": "Abrir um pull request",
+      "report": "Reportar"
+    },
+    "schedules": {
+      "community": "Community",
+      "weeklyReport": "Relatório semanal",
+      "everyMonday": "Toda segunda às {time}",
+      "reviewFix": "Revisar a correção",
+      "entersState": "Uma issue entra em {state}",
+      "runHistory": "Histórico de execuções",
+      "running": "em execução",
+      "triageBugs": "Triar relatórios de bug",
+      "when": "Quando",
+      "events": {
+        "created": "Uma issue é criada",
+        "assigned": "Uma issue é atribuída",
+        "labelAdded": "Uma etiqueta é adicionada",
+        "commentAdded": "Um comentário é adicionado"
+      },
+      "bugLabel": "bug",
+      "onlyFor": "Só para issues",
+      "typeBug": "Tipo: Bug",
+      "priorityHigh": "Prioridade: Alta",
+      "createdByAnyone": "Criada por: qualquer pessoa",
+      "howOften": "Com que frequência",
+      "perDay": "{count} a cada 24 h",
+      "atOnce": "{count} ao mesmo tempo"
+    },
+    "workflows": {
+      "name": "Notas de versão",
+      "on": "Ativado",
+      "trigger": "Gatilho",
+      "issueEvent": "Evento de issue",
+      "writer": "Redator",
+      "draftNotes": "Rascunhar as notas",
+      "reviewer": "Revisor",
+      "checkDraft": "Revisar o rascunho",
+      "request": "Requisição",
+      "sendBack": "Devolver",
+      "run": "Execução nº {number}",
+      "running": "Em execução · {step}, rodada {round}"
+    },
+    "portal": {
+      "contactSupport": "Falar com o suporte",
+      "name": "Nome",
+      "email": "E-mail",
+      "message": "Mensagem",
+      "send": "Enviar",
+      "request": "Solicitação",
+      "issue": "Não consigo exportar as faturas",
+      "replySent": "Resposta enviada por e-mail",
+      "followed": "Acompanhada no portal"
+    },
+    "budgets": {
+      "newBudget": "Novo orçamento",
+      "workspace": "Espaço inteiro",
+      "team": "Time · {name}",
+      "person": "Cada pessoa",
+      "perMonth": "por mês",
+      "perWeek": "por semana",
+      "perDay": "por dia",
+      "spentOf": "{spent} de {limit}",
+      "thisMonth": "Este mês",
+      "ofLimit": "gastos de {limit}",
+      "refused": "Execução recusada",
+      "spent": "Orçamento esgotado"
+    },
+    "analytics": {
+      "usage": "Consumo dos agentes",
+      "range": "Últimos 30 dias",
+      "byTrigger": "Por gatilho",
+      "triggers": {
+        "chat": "Chat",
+        "mention": "Menção",
+        "schedule": "Agendamento",
+        "issueEvent": "Evento de issue",
+        "workflow": "Fluxo"
+      },
+      "total": "{cost} · {count, plural, one {# execução} other {# execuções}}",
+      "runTime": "Duração",
+      "byPerson": "Por pessoa"
+    },
+    "audit": {
+      "export": "Exportar",
+      "time": "Horário",
+      "who": "Quem",
+      "action": "Ação",
+      "where": "Onde",
+      "workspace": "Workspace",
+      "actions": {
+        "role": "Alterou a função de Bob para Admin",
+        "sso": "Entrou com SSO",
+        "created": "Criou ITS-241",
+        "label": "Excluiu a etiqueta \"legacy\"",
+        "tried": "Tentou excluir um projeto",
+        "requireSso": "Ativou Exigir SSO"
+      },
+      "denied": "Negado"
+    }
+  }
+}

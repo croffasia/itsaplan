@@ -1,0 +1,197 @@
+{
+  "label": "Welcome to It's a Plan",
+  "goTo": "Go to slide {number}",
+  "next": "Next",
+  "start": "Get started",
+  "getInPro": "Get it in Pro",
+  "proNote": "Available in Cloud and Self-hosted Pro.",
+  "replay": "Open the product tour",
+  "slides": {
+    "dashboards": {
+      "title": "Build your own dashboards",
+      "body": "Make a dashboard for each thing you track and pick its widgets: issue counts, breakdowns, burn-up, throughput, activity and agent runs."
+    },
+    "workItems": {
+      "title": "Every task is an issue",
+      "body": "See the same issues as a kanban board, a table, a timeline or a calendar by month, week or day. Save the filters you use as a view."
+    },
+    "initiatives": {
+      "title": "Group issues under one goal",
+      "body": "An initiative collects the issues that move a larger goal. Its progress and health update as those issues move."
+    },
+    "cycles": {
+      "title": "Plan work in time boxes",
+      "body": "A cycle is a fixed period the team plans its issues into. When it ends, move the unfinished issues to the next one."
+    },
+    "documents": {
+      "title": "Write next to the work",
+      "body": "Keep specs and decisions in documents. Link them to issues and initiatives, discuss them in comments and restore any earlier revision."
+    },
+    "notes": {
+      "title": "Sketch ideas on a board",
+      "body": "A note board is a freeform canvas for sticky notes. Keep a board to yourself or share it with the project."
+    },
+    "agents": {
+      "title": "Hand work to an AI agent",
+      "body": "Assign an issue to an agent or ask it in the chat. It works with the tools and skills you give it and reports what it did."
+    },
+    "schedules": {
+      "title": "Run agents on a schedule",
+      "body": "Start an agent at a set time or when an issue enters a state. Pro also starts one when an issue is created or assigned, a label is added or a comment is posted, only for the issues that match a filter."
+    },
+    "workflows": {
+      "name": "Workflows",
+      "title": "Chain agents into a workflow",
+      "body": "A workflow passes work from one agent to the next. It starts by hand, on a schedule, on an issue event or from a webhook, and a step can send the work back for fixes."
+    },
+    "portal": {
+      "name": "Support portal",
+      "title": "Take requests from outside the team",
+      "body": "Put a form on your site or give clients a portal. Each request becomes an issue, and the sender gets an email when someone replies."
+    },
+    "budgets": {
+      "name": "AI budgets",
+      "title": "Cap what agents spend",
+      "body": "Set a limit on model spending for the whole workspace, a team, a project or each person, per day, week or month. Once a budget is spent, agents start no new runs."
+    },
+    "analytics": {
+      "name": "AI analytics",
+      "title": "See where agent time and money go",
+      "body": "Break agent runs down by person, trigger, schedule and workflow, with run time and the tool calls that failed."
+    },
+    "audit": {
+      "name": "Audit log",
+      "title": "Know who did what",
+      "body": "The audit log records changes to people, settings and data, and every sign-in. Export it when you need it."
+    }
+  },
+  "art": {
+    "issues": {
+      "checkout": "Checkout page redesign",
+      "webhooks": "Integrate Stripe webhooks",
+      "refunds": "Refund flow for support",
+      "invoices": "Invoices PDF export",
+      "twoFactor": "Two-factor authentication",
+      "testKeys": "Set up Stripe test keys",
+      "releaseNotes": "Write the release notes",
+      "flakyTest": "Fix the flaky export test",
+      "staleIssues": "Label stale issues",
+      "roadmap": "Draft the Q3 roadmap",
+      "feedback": "Summarize customer feedback"
+    },
+    "states": {
+      "todo": "To do",
+      "inProgress": "In progress",
+      "review": "In review",
+      "done": "Done"
+    },
+    "sprintHealth": "Sprint health",
+    "initiative": "Q3 launch",
+    "cycle": "Cycle {number}",
+    "activeCycle": "Cycle {number} · active",
+    "week": "Week {number}",
+    "working": "Working",
+    "steps": {
+      "read": "Read the issue",
+      "search": "Search the code",
+      "pullRequest": "Open a pull request",
+      "report": "Report back"
+    },
+    "schedules": {
+      "community": "Community",
+      "weeklyReport": "Weekly report",
+      "everyMonday": "Every Monday at {time}",
+      "reviewFix": "Review the fix",
+      "entersState": "An issue enters {state}",
+      "runHistory": "Run history",
+      "running": "running",
+      "triageBugs": "Triage bug reports",
+      "when": "When",
+      "events": {
+        "created": "An issue is created",
+        "assigned": "An issue is assigned",
+        "labelAdded": "A label is added",
+        "commentAdded": "A comment is added"
+      },
+      "bugLabel": "bug",
+      "onlyFor": "Only for issues",
+      "typeBug": "Type: Bug",
+      "priorityHigh": "Priority: High",
+      "createdByAnyone": "Created by: anyone",
+      "howOften": "How often",
+      "perDay": "{count} per 24 h",
+      "atOnce": "{count} at once"
+    },
+    "workflows": {
+      "name": "Release notes",
+      "on": "On",
+      "trigger": "Trigger",
+      "issueEvent": "Issue event",
+      "writer": "Writer",
+      "draftNotes": "Draft the notes",
+      "reviewer": "Reviewer",
+      "checkDraft": "Check the draft",
+      "request": "Request",
+      "sendBack": "Send back",
+      "run": "Run #{number}",
+      "running": "Running · {step}, round {round}"
+    },
+    "portal": {
+      "contactSupport": "Contact support",
+      "name": "Name",
+      "email": "Email",
+      "message": "Message",
+      "send": "Send",
+      "request": "Request",
+      "issue": "Can't export invoices",
+      "replySent": "Reply sent by email",
+      "followed": "Followed on the portal"
+    },
+    "budgets": {
+      "newBudget": "New budget",
+      "workspace": "Whole workspace",
+      "team": "Team · {name}",
+      "person": "Each person",
+      "perMonth": "per month",
+      "perWeek": "per week",
+      "perDay": "per day",
+      "spentOf": "{spent} of {limit}",
+      "thisMonth": "This month",
+      "ofLimit": "of {limit} spent",
+      "refused": "Run refused",
+      "spent": "Budget spent"
+    },
+    "analytics": {
+      "usage": "Agent usage",
+      "range": "Last 30 days",
+      "byTrigger": "By trigger",
+      "triggers": {
+        "chat": "Chat",
+        "mention": "Mention",
+        "schedule": "Schedule",
+        "issueEvent": "Issue event",
+        "workflow": "Workflow"
+      },
+      "total": "{cost} · {count, plural, one {# run} other {# runs}}",
+      "runTime": "Run time",
+      "byPerson": "By person"
+    },
+    "audit": {
+      "export": "Export",
+      "time": "Time",
+      "who": "Who",
+      "action": "Action",
+      "where": "Where",
+      "workspace": "Workspace",
+      "actions": {
+        "role": "Changed Bob's role to Admin",
+        "sso": "Signed in with SSO",
+        "created": "Created ITS-241",
+        "label": "Deleted the label \"legacy\"",
+        "tried": "Tried to delete a project",
+        "requireSso": "Turned on Require SSO"
+      },
+      "denied": "Denied"
+    }
+  }
+}

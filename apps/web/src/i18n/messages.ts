@@ -21,6 +21,7 @@ import meta from '../../messages/en/meta.json';
 import nav from '../../messages/en/nav.json';
 import newProject from '../../messages/en/newProject.json';
 import notes from '../../messages/en/notes.json';
+import onboarding from '../../messages/en/onboarding.json';
 import palette from '../../messages/en/palette.json';
 import permissions from '../../messages/en/permissions.json';
 import projects from '../../messages/en/projects.json';
@@ -73,6 +74,7 @@ const coreMessages = {
   agentAnalytics,
   updates,
   whatsNew,
+  onboarding,
 };
 
 const NAMESPACES = Object.keys(coreMessages) as (keyof typeof coreMessages)[];

@@ -1,0 +1,197 @@
+{
+  "label": "Selamat datang di It's a Plan",
+  "goTo": "Buka slide {number}",
+  "next": "Berikutnya",
+  "start": "Mulai",
+  "getInPro": "Dapatkan di Pro",
+  "proNote": "Tersedia di Cloud dan Self-hosted Pro.",
+  "replay": "Buka tur produk",
+  "slides": {
+    "dashboards": {
+      "title": "Buat dasbor sendiri",
+      "body": "Buat dasbor untuk setiap hal yang Anda pantau dan pilih widgetnya: jumlah issue, rincian, burnup, throughput, aktivitas, dan eksekusi agen."
+    },
+    "workItems": {
+      "title": "Setiap tugas adalah issue",
+      "body": "Lihat issue yang sama sebagai papan kanban, tabel, linimasa, atau kalender per bulan, minggu, atau hari. Simpan filter yang Anda gunakan sebagai tampilan."
+    },
+    "initiatives": {
+      "title": "Kelompokkan issue di bawah satu tujuan",
+      "body": "Inisiatif mengumpulkan issue yang memajukan tujuan yang lebih besar. Kemajuan dan kesehatannya diperbarui saat issue tersebut bergerak."
+    },
+    "cycles": {
+      "title": "Rencanakan kerja dalam periode berbatas waktu",
+      "body": "Cycle adalah periode tetap tempat tim merencanakan issue-nya. Saat berakhir, pindahkan issue yang belum selesai ke cycle berikutnya."
+    },
+    "documents": {
+      "title": "Tulis di samping pekerjaan",
+      "body": "Simpan spesifikasi dan keputusan di dokumen. Tautkan ke issue dan inisiatif, diskusikan di komentar, dan pulihkan revisi sebelumnya mana pun."
+    },
+    "notes": {
+      "title": "Buat sketsa ide di papan",
+      "body": "Papan catatan adalah kanvas bebas untuk catatan tempel. Simpan papan untuk diri sendiri atau bagikan ke proyek."
+    },
+    "agents": {
+      "title": "Serahkan pekerjaan ke agen AI",
+      "body": "Tugaskan issue ke agen atau tanyakan di obrolan. Agen bekerja dengan alat dan keahlian yang Anda berikan dan melaporkan apa yang dikerjakannya."
+    },
+    "schedules": {
+      "title": "Jalankan agen sesuai jadwal",
+      "body": "Mulai agen pada waktu yang ditentukan atau saat issue masuk ke suatu status. Pro juga memulainya saat issue dibuat atau ditugaskan, label ditambahkan, atau komentar diposting, hanya untuk issue yang cocok dengan filter."
+    },
+    "workflows": {
+      "name": "Alur",
+      "title": "Rangkai agen menjadi alur",
+      "body": "Alur meneruskan pekerjaan dari satu agen ke agen berikutnya. Alur dimulai secara manual, sesuai jadwal, oleh peristiwa issue, atau dari webhook, dan satu langkah dapat mengembalikan pekerjaan untuk diperbaiki."
+    },
+    "portal": {
+      "name": "Portal dukungan",
+      "title": "Terima permintaan dari luar tim",
+      "body": "Pasang formulir di situs Anda atau beri klien sebuah portal. Setiap permintaan menjadi issue, dan pengirimnya menerima email saat ada yang membalas."
+    },
+    "budgets": {
+      "name": "Anggaran AI",
+      "title": "Batasi pengeluaran agen",
+      "body": "Tetapkan batas biaya model untuk seluruh workspace, satu tim, satu proyek, atau setiap orang, per hari, minggu, atau bulan. Setelah anggaran habis, agen tidak memulai eksekusi baru."
+    },
+    "analytics": {
+      "name": "Analitik AI",
+      "title": "Lihat ke mana waktu dan biaya agen pergi",
+      "body": "Rinci eksekusi agen per orang, pemicu, jadwal, dan alur, beserta durasi eksekusi dan panggilan alat yang gagal."
+    },
+    "audit": {
+      "name": "Log audit",
+      "title": "Ketahui siapa melakukan apa",
+      "body": "Log audit mencatat perubahan pada orang, pengaturan, dan data, serta setiap login. Ekspor saat Anda membutuhkannya."
+    }
+  },
+  "art": {
+    "issues": {
+      "checkout": "Desain ulang halaman checkout",
+      "webhooks": "Integrasi webhook Stripe",
+      "refunds": "Alur refund untuk dukungan",
+      "invoices": "Ekspor faktur ke PDF",
+      "twoFactor": "Autentikasi dua faktor",
+      "testKeys": "Siapkan kunci uji Stripe",
+      "releaseNotes": "Tulis catatan rilis",
+      "flakyTest": "Perbaiki tes ekspor yang tidak stabil",
+      "staleIssues": "Beri label issue lama",
+      "roadmap": "Susun draf roadmap Q3",
+      "feedback": "Rangkum masukan pelanggan"
+    },
+    "states": {
+      "todo": "Akan dikerjakan",
+      "inProgress": "Sedang dikerjakan",
+      "review": "Ditinjau",
+      "done": "Selesai"
+    },
+    "sprintHealth": "Kesehatan sprint",
+    "initiative": "Peluncuran Q3",
+    "cycle": "Cycle {number}",
+    "activeCycle": "Cycle {number} · aktif",
+    "week": "Minggu {number}",
+    "working": "Bekerja",
+    "steps": {
+      "read": "Baca issue",
+      "search": "Cari di kode",
+      "pullRequest": "Buka pull request",
+      "report": "Laporkan hasil"
+    },
+    "schedules": {
+      "community": "Community",
+      "weeklyReport": "Laporan mingguan",
+      "everyMonday": "Setiap Senin pukul {time}",
+      "reviewFix": "Tinjau perbaikan",
+      "entersState": "Issue masuk ke {state}",
+      "runHistory": "Riwayat eksekusi",
+      "running": "berjalan",
+      "triageBugs": "Triase laporan bug",
+      "when": "Kapan",
+      "events": {
+        "created": "Issue dibuat",
+        "assigned": "Issue ditugaskan",
+        "labelAdded": "Label ditambahkan",
+        "commentAdded": "Komentar ditambahkan"
+      },
+      "bugLabel": "bug",
+      "onlyFor": "Hanya untuk issue",
+      "typeBug": "Tipe: Bug",
+      "priorityHigh": "Prioritas: Tinggi",
+      "createdByAnyone": "Dibuat oleh: siapa saja",
+      "howOften": "Seberapa sering",
+      "perDay": "{count} per 24 jam",
+      "atOnce": "{count} bersamaan"
+    },
+    "workflows": {
+      "name": "Catatan rilis",
+      "on": "Aktif",
+      "trigger": "Pemicu",
+      "issueEvent": "Peristiwa issue",
+      "writer": "Penulis",
+      "draftNotes": "Susun draf catatan",
+      "reviewer": "Peninjau",
+      "checkDraft": "Periksa draf",
+      "request": "Permintaan",
+      "sendBack": "Kembalikan",
+      "run": "Eksekusi #{number}",
+      "running": "Berjalan · {step}, putaran {round}"
+    },
+    "portal": {
+      "contactSupport": "Hubungi dukungan",
+      "name": "Nama",
+      "email": "Email",
+      "message": "Pesan",
+      "send": "Kirim",
+      "request": "Permintaan",
+      "issue": "Tidak bisa mengekspor faktur",
+      "replySent": "Balasan dikirim lewat email",
+      "followed": "Dipantau di portal"
+    },
+    "budgets": {
+      "newBudget": "Anggaran baru",
+      "workspace": "Seluruh ruang kerja",
+      "team": "Tim · {name}",
+      "person": "Setiap orang",
+      "perMonth": "per bulan",
+      "perWeek": "per minggu",
+      "perDay": "per hari",
+      "spentOf": "{spent} dari {limit}",
+      "thisMonth": "Bulan ini",
+      "ofLimit": "terpakai dari {limit}",
+      "refused": "Eksekusi ditolak",
+      "spent": "Anggaran habis"
+    },
+    "analytics": {
+      "usage": "Penggunaan agen",
+      "range": "30 hari terakhir",
+      "byTrigger": "Per pemicu",
+      "triggers": {
+        "chat": "Chat",
+        "mention": "Mention",
+        "schedule": "Jadwal",
+        "issueEvent": "Peristiwa issue",
+        "workflow": "Alur"
+      },
+      "total": "{cost} · {count, plural, other {# eksekusi}}",
+      "runTime": "Durasi eksekusi",
+      "byPerson": "Per orang"
+    },
+    "audit": {
+      "export": "Ekspor",
+      "time": "Waktu",
+      "who": "Siapa",
+      "action": "Tindakan",
+      "where": "Di mana",
+      "workspace": "Workspace",
+      "actions": {
+        "role": "Mengubah peran Bob menjadi Admin",
+        "sso": "Masuk dengan SSO",
+        "created": "Membuat ITS-241",
+        "label": "Menghapus label \"legacy\"",
+        "tried": "Mencoba menghapus proyek",
+        "requireSso": "Mengaktifkan Wajibkan SSO"
+      },
+      "denied": "Ditolak"
+    }
+  }
+}

@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { AfterSignIn } from '@/cloud';
 import { Providers } from '@/components/providers';
 import RuntimeEnvScript from '@/components/runtime-env-script';
+import Onboarding from '@/features/onboarding/Onboarding';
 import WhatsNew from '@/features/whats-new/WhatsNew';
 import { localeDirection, type Locale } from '@/i18n/locales';
 import { APP_NAME } from '@/utils/app';
@@ -52,6 +53,7 @@ export default async function RootLayout({
           <NextIntlClientProvider>
             <Providers>
               {children}
+              <Onboarding />
               <WhatsNew />
               <AfterSignIn />
             </Providers>

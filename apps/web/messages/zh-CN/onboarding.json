@@ -1,0 +1,197 @@
+{
+  "label": "欢迎使用 It's a Plan",
+  "goTo": "转到第 {number} 页",
+  "next": "下一步",
+  "start": "开始使用",
+  "getInPro": "在 Pro 中获取",
+  "proNote": "可在 Cloud 和 Self-hosted Pro 中使用。",
+  "replay": "打开产品导览",
+  "slides": {
+    "dashboards": {
+      "title": "构建自己的仪表盘",
+      "body": "为你跟踪的每件事创建一个仪表盘，并选择其中的组件：工作项数量、分类统计、燃尽上升图、吞吐量、活动和代理运行。"
+    },
+    "workItems": {
+      "title": "每项任务都是一个工作项",
+      "body": "以看板、表格、时间线或按月、周、日显示的日历查看同一批工作项。把常用的筛选条件保存为视图。"
+    },
+    "initiatives": {
+      "title": "将工作项归入同一目标",
+      "body": "计划汇集推动一个更大目标的工作项。随着这些工作项推进，计划的进度和进展状态会随之更新。"
+    },
+    "cycles": {
+      "title": "按时间段规划工作",
+      "body": "周期是团队安排工作项的固定时间段。周期结束时，将未完成的工作项移到下一个周期。"
+    },
+    "documents": {
+      "title": "在工作旁边写文档",
+      "body": "将规格说明和决策记录在文档中。把文档关联到工作项和计划，在评论中讨论，并恢复任意早期版本。"
+    },
+    "notes": {
+      "title": "在便签板上勾勒想法",
+      "body": "便签板是用于放置便签的自由画布。便签板可以只留给自己，也可以与项目共享。"
+    },
+    "agents": {
+      "title": "把工作交给 AI 代理",
+      "body": "将工作项分配给代理，或在聊天中向它提问。它使用你提供的工具和技能工作，并汇报它做了什么。"
+    },
+    "schedules": {
+      "title": "定时运行代理",
+      "body": "在设定的时间或工作项进入某状态时启动代理。Pro 还会在工作项被创建或指派、添加标签或发表评论时启动代理，且只针对符合筛选条件的工作项。"
+    },
+    "workflows": {
+      "name": "工作流",
+      "title": "把代理串成工作流",
+      "body": "工作流把工作从一个代理传给下一个代理。它可以手动启动，也可以按定时任务、工作项事件或 Webhook 启动，某一步还可以把工作退回修改。"
+    },
+    "portal": {
+      "name": "支持门户",
+      "title": "接收团队外部的请求",
+      "body": "在你的网站上放一个表单，或为客户提供一个门户。每个请求都会成为一个工作项，有人回复时发送者会收到邮件。"
+    },
+    "budgets": {
+      "name": "AI 预算",
+      "title": "限制代理的花费",
+      "body": "为整个工作区、团队、项目或每个人设置按天、按周或按月的模型花费限额。预算用完后，代理不再开始新的运行。"
+    },
+    "analytics": {
+      "name": "AI 分析",
+      "title": "查看代理的时间和花费去向",
+      "body": "按人员、触发方式、定时任务和工作流拆分代理运行，并查看运行时长和失败的工具调用。"
+    },
+    "audit": {
+      "name": "审计日志",
+      "title": "了解谁做了什么",
+      "body": "审计日志记录对人员、设置和数据的更改，以及每次登录。需要时可以导出。"
+    }
+  },
+  "art": {
+    "issues": {
+      "checkout": "结账页面改版",
+      "webhooks": "集成 Stripe Webhook",
+      "refunds": "客服退款流程",
+      "invoices": "发票 PDF 导出",
+      "twoFactor": "双因素认证",
+      "testKeys": "配置 Stripe 测试密钥",
+      "releaseNotes": "撰写发布说明",
+      "flakyTest": "修复不稳定的导出测试",
+      "staleIssues": "标记停滞的工作项",
+      "roadmap": "起草 Q3 路线图",
+      "feedback": "汇总客户反馈"
+    },
+    "states": {
+      "todo": "待办",
+      "inProgress": "进行中",
+      "review": "评审中",
+      "done": "已完成"
+    },
+    "sprintHealth": "迭代状态",
+    "initiative": "Q3 发布",
+    "cycle": "周期 {number}",
+    "activeCycle": "周期 {number} · 进行中",
+    "week": "第 {number} 周",
+    "working": "工作中",
+    "steps": {
+      "read": "阅读工作项",
+      "search": "搜索代码",
+      "pullRequest": "创建拉取请求",
+      "report": "汇报结果"
+    },
+    "schedules": {
+      "community": "Community",
+      "weeklyReport": "每周报告",
+      "everyMonday": "每周一 {time}",
+      "reviewFix": "检查修复",
+      "entersState": "工作项进入 {state}",
+      "runHistory": "运行记录",
+      "running": "运行中",
+      "triageBugs": "分类 Bug 报告",
+      "when": "何时",
+      "events": {
+        "created": "创建工作项",
+        "assigned": "指派工作项",
+        "labelAdded": "添加标签",
+        "commentAdded": "添加评论"
+      },
+      "bugLabel": "bug",
+      "onlyFor": "仅限部分工作项",
+      "typeBug": "类型：Bug",
+      "priorityHigh": "优先级：高",
+      "createdByAnyone": "创建者：任何人",
+      "howOften": "频率",
+      "perDay": "{count} 次 / 24 小时",
+      "atOnce": "{count} 个同时运行"
+    },
+    "workflows": {
+      "name": "发布说明",
+      "on": "已开启",
+      "trigger": "触发器",
+      "issueEvent": "工作项事件",
+      "writer": "撰稿人",
+      "draftNotes": "起草说明",
+      "reviewer": "审阅人",
+      "checkDraft": "检查草稿",
+      "request": "请求",
+      "sendBack": "退回",
+      "run": "运行 #{number}",
+      "running": "运行中 · {step}，第 {round} 轮"
+    },
+    "portal": {
+      "contactSupport": "联系支持",
+      "name": "姓名",
+      "email": "邮箱",
+      "message": "消息",
+      "send": "发送",
+      "request": "请求",
+      "issue": "无法导出发票",
+      "replySent": "回复已通过邮件发送",
+      "followed": "在门户中跟进"
+    },
+    "budgets": {
+      "newBudget": "新建预算",
+      "workspace": "整个工作区",
+      "team": "团队 · {name}",
+      "person": "每个人",
+      "perMonth": "每月",
+      "perWeek": "每周",
+      "perDay": "每天",
+      "spentOf": "{spent} / {limit}",
+      "thisMonth": "本月",
+      "ofLimit": "{limit} 中已用",
+      "refused": "运行被拒绝",
+      "spent": "预算已用完"
+    },
+    "analytics": {
+      "usage": "代理用量",
+      "range": "最近 30 天",
+      "byTrigger": "按触发方式",
+      "triggers": {
+        "chat": "聊天",
+        "mention": "提及",
+        "schedule": "定时任务",
+        "issueEvent": "工作项事件",
+        "workflow": "工作流"
+      },
+      "total": "{cost} · {count, plural, other {# 次运行}}",
+      "runTime": "运行时长",
+      "byPerson": "按人员"
+    },
+    "audit": {
+      "export": "导出",
+      "time": "时间",
+      "who": "操作人",
+      "action": "操作",
+      "where": "位置",
+      "workspace": "工作区",
+      "actions": {
+        "role": "将 Bob 的角色改为 Admin",
+        "sso": "通过 SSO 登录",
+        "created": "创建 ITS-241",
+        "label": "删除标签 \"legacy\"",
+        "tried": "尝试删除项目",
+        "requireSso": "开启要求 SSO"
+      },
+      "denied": "已拒绝"
+    }
+  }
+}

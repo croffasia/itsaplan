@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { ApiError } from '@/lib/api/core/client';
 import { localeDirection, type Locale } from '@/i18n/locales';
 import { HotkeysProvider } from '@/context/useHotkeys';
+import { OnboardingTourProvider } from '@/context/onboardingTour';
 import { SyncProvider } from '@/context/syncContext';
 import { RelativeTimeProvider } from '@/context/relativeTimeContext';
 import { Toaster } from '@/components/ui/sonner';
@@ -68,7 +69,9 @@ export function Providers({ children }: { children: ReactNode }) {
         <SyncProvider>
           <RelativeTimeProvider>
             <HotkeysProvider>
-              <SigningOutGate>{children}</SigningOutGate>
+              <OnboardingTourProvider>
+                <SigningOutGate>{children}</SigningOutGate>
+              </OnboardingTourProvider>
             </HotkeysProvider>
           </RelativeTimeProvider>
         </SyncProvider>

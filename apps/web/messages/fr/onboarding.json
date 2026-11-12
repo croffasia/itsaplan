@@ -1,0 +1,197 @@
+{
+  "label": "Bienvenue dans It's a Plan",
+  "goTo": "Aller à la diapositive {number}",
+  "next": "Suivant",
+  "start": "Commencer",
+  "getInPro": "Obtenir avec Pro",
+  "proNote": "Disponible dans Cloud et Self-hosted Pro.",
+  "replay": "Ouvrir la visite du produit",
+  "slides": {
+    "dashboards": {
+      "title": "Créez vos propres tableaux de bord",
+      "body": "Créez un tableau de bord pour chaque sujet que vous suivez et choisissez ses widgets : nombre de tickets, répartitions, burnup, débit, activité et exécutions d'agents."
+    },
+    "workItems": {
+      "title": "Chaque tâche est un ticket",
+      "body": "Affichez les mêmes tickets en kanban, en liste, en chronologie ou en calendrier par mois, semaine ou jour. Enregistrez les filtres que vous utilisez comme une vue."
+    },
+    "initiatives": {
+      "title": "Regroupez les tickets autour d'un objectif",
+      "body": "Une initiative rassemble les tickets qui font avancer un objectif plus large. Son avancement et sa santé se mettent à jour au fil de ces tickets."
+    },
+    "cycles": {
+      "title": "Planifiez le travail par périodes délimitées",
+      "body": "Un cycle est une période fixe dans laquelle l'équipe planifie ses tickets. À la fin, déplacez les tickets non terminés vers le suivant."
+    },
+    "documents": {
+      "title": "Écrivez à côté du travail",
+      "body": "Conservez spécifications et décisions dans des documents. Liez-les aux tickets et aux initiatives, discutez-en dans les commentaires et restaurez n'importe quelle révision antérieure."
+    },
+    "notes": {
+      "title": "Esquissez des idées sur un tableau",
+      "body": "Un tableau de notes est un canevas libre pour des notes autocollantes. Gardez un tableau pour vous ou partagez-le avec le projet."
+    },
+    "agents": {
+      "title": "Confiez du travail à un agent IA",
+      "body": "Assignez un ticket à un agent ou demandez-lui dans le chat. Il travaille avec les outils et les compétences que vous lui donnez et rend compte de ce qu'il a fait."
+    },
+    "schedules": {
+      "title": "Exécutez des agents selon une planification",
+      "body": "Lancez un agent à heure fixe ou quand un ticket entre dans un état. Pro le lance aussi quand un ticket est créé ou assigné, qu'une étiquette est ajoutée ou qu'un commentaire est publié, uniquement pour les tickets qui correspondent à un filtre."
+    },
+    "workflows": {
+      "name": "Flux",
+      "title": "Enchaînez des agents dans un flux",
+      "body": "Un flux passe le travail d'un agent au suivant. Il démarre à la main, selon une planification, sur un événement de ticket ou depuis un webhook, et une étape peut renvoyer le travail pour correction."
+    },
+    "portal": {
+      "name": "Portail de support",
+      "title": "Recevez des demandes extérieures à l'équipe",
+      "body": "Placez un formulaire sur votre site ou donnez un portail à vos clients. Chaque demande devient un ticket, et l'expéditeur reçoit un e-mail quand quelqu'un répond."
+    },
+    "budgets": {
+      "name": "Budgets IA",
+      "title": "Plafonnez les dépenses des agents",
+      "body": "Fixez une limite aux dépenses de modèles pour tout l'espace de travail, une équipe, un projet ou chaque personne, par jour, semaine ou mois. Une fois un budget épuisé, les agents ne lancent plus de nouvelles exécutions."
+    },
+    "analytics": {
+      "name": "Analytique IA",
+      "title": "Voyez où vont le temps et l'argent des agents",
+      "body": "Ventilez les exécutions d'agents par personne, déclencheur, planification et flux, avec la durée d'exécution et les appels d'outils qui ont échoué."
+    },
+    "audit": {
+      "name": "Journal d'audit",
+      "title": "Sachez qui a fait quoi",
+      "body": "Le journal d'audit enregistre les modifications des personnes, des paramètres et des données, ainsi que chaque connexion. Exportez-le quand vous en avez besoin."
+    }
+  },
+  "art": {
+    "issues": {
+      "checkout": "Refonte de la page de paiement",
+      "webhooks": "Intégrer les webhooks Stripe",
+      "refunds": "Remboursements pour le support",
+      "invoices": "Export PDF des factures",
+      "twoFactor": "Authentification à deux facteurs",
+      "testKeys": "Configurer les clés de test Stripe",
+      "releaseNotes": "Rédiger les notes de version",
+      "flakyTest": "Corriger le test d'export instable",
+      "staleIssues": "Étiqueter les tickets inactifs",
+      "roadmap": "Ébaucher la feuille de route Q3",
+      "feedback": "Synthétiser les retours clients"
+    },
+    "states": {
+      "todo": "À faire",
+      "inProgress": "En cours",
+      "review": "En revue",
+      "done": "Terminé"
+    },
+    "sprintHealth": "Santé du sprint",
+    "initiative": "Lancement Q3",
+    "cycle": "Cycle {number}",
+    "activeCycle": "Cycle {number} · actif",
+    "week": "Semaine {number}",
+    "working": "Au travail",
+    "steps": {
+      "read": "Lire le ticket",
+      "search": "Chercher dans le code",
+      "pullRequest": "Ouvrir une pull request",
+      "report": "Rendre compte"
+    },
+    "schedules": {
+      "community": "Community",
+      "weeklyReport": "Rapport hebdomadaire",
+      "everyMonday": "Chaque lundi à {time}",
+      "reviewFix": "Vérifier le correctif",
+      "entersState": "Un ticket entre dans {state}",
+      "runHistory": "Historique des exécutions",
+      "running": "en cours",
+      "triageBugs": "Trier les rapports de bug",
+      "when": "Quand",
+      "events": {
+        "created": "Un ticket est créé",
+        "assigned": "Un ticket est assigné",
+        "labelAdded": "Une étiquette est ajoutée",
+        "commentAdded": "Un commentaire est ajouté"
+      },
+      "bugLabel": "bug",
+      "onlyFor": "Uniquement pour les tickets",
+      "typeBug": "Type : Bug",
+      "priorityHigh": "Priorité : Haute",
+      "createdByAnyone": "Créé par : n'importe qui",
+      "howOften": "À quelle fréquence",
+      "perDay": "{count} par 24 h",
+      "atOnce": "{count} à la fois"
+    },
+    "workflows": {
+      "name": "Notes de version",
+      "on": "Activé",
+      "trigger": "Déclencheur",
+      "issueEvent": "Événement de ticket",
+      "writer": "Rédacteur",
+      "draftNotes": "Ébaucher les notes",
+      "reviewer": "Relecteur",
+      "checkDraft": "Vérifier le brouillon",
+      "request": "Requête",
+      "sendBack": "Renvoyer",
+      "run": "Exécution n° {number}",
+      "running": "En cours · {step}, tour {round}"
+    },
+    "portal": {
+      "contactSupport": "Contacter le support",
+      "name": "Nom",
+      "email": "E-mail",
+      "message": "Message",
+      "send": "Envoyer",
+      "request": "Demande",
+      "issue": "Impossible d'exporter les factures",
+      "replySent": "Réponse envoyée par e-mail",
+      "followed": "Suivie sur le portail"
+    },
+    "budgets": {
+      "newBudget": "Nouveau budget",
+      "workspace": "Tout l’espace",
+      "team": "Équipe · {name}",
+      "person": "Chaque personne",
+      "perMonth": "par mois",
+      "perWeek": "par semaine",
+      "perDay": "par jour",
+      "spentOf": "{spent} sur {limit}",
+      "thisMonth": "Ce mois-ci",
+      "ofLimit": "dépensés sur {limit}",
+      "refused": "Exécution refusée",
+      "spent": "Budget épuisé"
+    },
+    "analytics": {
+      "usage": "Consommation des agents",
+      "range": "30 derniers jours",
+      "byTrigger": "Par déclencheur",
+      "triggers": {
+        "chat": "Chat",
+        "mention": "Mention",
+        "schedule": "Planification",
+        "issueEvent": "Événement de ticket",
+        "workflow": "Flux"
+      },
+      "total": "{cost} · {count, plural, one {# exécution} other {# exécutions}}",
+      "runTime": "Durée d'exécution",
+      "byPerson": "Par personne"
+    },
+    "audit": {
+      "export": "Exporter",
+      "time": "Date",
+      "who": "Qui",
+      "action": "Action",
+      "where": "Où",
+      "workspace": "Espace de travail",
+      "actions": {
+        "role": "Rôle de Bob changé en Admin",
+        "sso": "Connexion via SSO",
+        "created": "ITS-241 créé",
+        "label": "Étiquette \"legacy\" supprimée",
+        "tried": "Tentative de suppression d'un projet",
+        "requireSso": "« Exiger le SSO » activé"
+      },
+      "denied": "Refusé"
+    }
+  }
+}

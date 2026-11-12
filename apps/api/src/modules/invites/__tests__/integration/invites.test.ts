@@ -422,7 +422,7 @@ describe('invites', () => {
         .members.post({ userId: inviter.user.userId, role: 'member', roleId: role.data!.id });
       await owner.api
         .projects({ projectKey: 'MKT' })
-        .invites.post({ email: 'a@example.com', role: 'member' });
+        .invites.post({ email: 'a@example.com', role: 'member', roleId: role.data!.id });
       await owner.api
         .projects({ projectKey: 'MKT' })
         .invites.post({ email: 'b@example.com', role: 'owner' });
@@ -1056,10 +1056,10 @@ describe('invites', () => {
         .invites.post({ email: 'x@example.com', role: 'owner' });
       expect(refused.status).toBe(403);
 
-      // The same caller may still invite a plain member.
+      // The same caller may still invite a plain member on a role within their own.
       const allowed = await inviter.api
         .projects({ projectKey: 'MKT' })
-        .invites.post({ email: 'x@example.com', role: 'member' });
+        .invites.post({ email: 'x@example.com', role: 'member', roleId: role.data!.id });
       expect(allowed.status).toBe(201);
     });
 

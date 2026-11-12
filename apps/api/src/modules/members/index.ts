@@ -12,7 +12,7 @@ import {
 } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
-import { getAssignableRole, getDefaultRoleId } from '#modules/roles/service';
+import { getMemberRole } from '#modules/roles/service';
 import { getTeamMembership } from '#modules/teams/service';
 import type { ProjectRow } from '#modules/projects/service';
 import { isAgentUser } from '#modules/agents/core/service';
@@ -129,14 +129,10 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
       // omitting it joins the member on the default role, as accepting an invite does.
       let roleId: number | null = null;
       if (body.role === 'member') {
-        if (body.roleId != null) {
-          const role = await getAssignableRole(project.teamId, body.roleId);
-          if (!role) throw new HttpError(400, "roleId does not belong to this project's team");
-          await assertGrantablePermissions(project, user, role.permissions);
-          roleId = role.id;
-        } else {
-          roleId = await getDefaultRoleId();
-        }
+        const role = await getMemberRole(project.teamId, body.roleId);
+        if (!role) throw new HttpError(400, "roleId does not belong to this project's team");
+        await assertGrantablePermissions(project, user, role.permissions);
+        roleId = role.id;
       }
       if (!(await addMember(project.id, body.userId, body.role, roleId))) {
         throw new HttpError(
@@ -184,17 +180,14 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
         return noContent();
       }
 
-      if (body.roleId != null) {
-        const role = await getAssignableRole(project.teamId, body.roleId);
-        if (!role) throw new HttpError(400, "roleId does not belong to this project's team");
-        await assertGrantablePermissions(project, user, role.permissions);
-      }
-      const roleId = body.roleId ?? (await getDefaultRoleId());
+      const role = await getMemberRole(project.teamId, body.roleId);
+      if (!role) throw new HttpError(400, "roleId does not belong to this project's team");
+      await assertGrantablePermissions(project, user, role.permissions);
       // Demoting an owner to a member must keep at least one owner on the project.
       if (target === 'owner' && (await countOwners(project.id)) === 1) {
         throw new HttpError(400, 'A project must have at least one owner');
       }
-      await setMembership(project.id, params.userId, 'member', roleId);
+      await setMembership(project.id, params.userId, 'member', role.id);
       return noContent();
     },
     {

@@ -15,7 +15,7 @@ import { inviteValidSince } from '@repo/auth';
 import { hasConfiguredEmailProvider } from '@repo/db';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
-import { getAssignableRole } from '#modules/roles/service';
+import { getMemberRole } from '#modules/roles/service';
 import type { ProjectRow } from '#modules/projects/service';
 import { teamParams } from '#modules/teams/model';
 import {
@@ -108,12 +108,12 @@ async function hideLinksBeyondGrant(
   viewer: AuthUser,
   invites: ListedInvite[],
 ): Promise<ListedInvite[]> {
-  const grantable = new Map<number, boolean>();
+  const grantable = new Map<number | null, boolean>();
   return Promise.all(
     invites.map(async (invite) => {
-      if (!invite.token || invite.roleId == null) return invite;
+      if (!invite.token || invite.role !== 'member') return invite;
       if (!grantable.has(invite.roleId)) {
-        const role = await getAssignableRole(project.teamId, invite.roleId);
+        const role = await getMemberRole(project.teamId, invite.roleId);
         grantable.set(
           invite.roleId,
           !role || (await mayGrantPermissions(project, viewer, role.permissions)),
@@ -180,8 +180,8 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       // team or a system role; null (or omitted) falls back to the default role on accept. An
       // owner invite ignores roleId (owners bypass roles).
       const roleId = body.role === 'member' ? (body.roleId ?? null) : null;
-      if (roleId != null) {
-        const role = await getAssignableRole(project.teamId, roleId);
+      if (body.role === 'member') {
+        const role = await getMemberRole(project.teamId, roleId);
         if (!role) throw new HttpError(400, "roleId does not belong to this project's team");
         await assertGrantablePermissions(project, user, role.permissions);
       }
@@ -261,8 +261,8 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
           'Only a project owner or a team owner or manager can invite an owner',
         );
       }
-      if (grant.roleId != null) {
-        const role = await getAssignableRole(project.teamId, grant.roleId);
+      if (grant.projectRole === 'member') {
+        const role = await getMemberRole(project.teamId, grant.roleId);
         if (role) await assertGrantablePermissions(project, user, role.permissions);
       }
       const invite = await renewInvite(grant, renewedBy);

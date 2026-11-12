@@ -110,6 +110,16 @@ export async function getDefaultRoleId(): Promise<number | null> {
   return rows[0]?.id ?? null;
 }
 
+// The role a project member is put on: the one roleId names, or the default system role
+// when it is null. Null when roleId names a role the team does not assign.
+export async function getMemberRole(
+  teamId: number,
+  roleId: number | null | undefined,
+): Promise<RoleRow | null> {
+  const id = roleId ?? (await getDefaultRoleId());
+  return id == null ? null : getAssignableRole(teamId, id);
+}
+
 export async function createRole(
   teamId: number | null,
   input: { name: string; permissions: unknown },

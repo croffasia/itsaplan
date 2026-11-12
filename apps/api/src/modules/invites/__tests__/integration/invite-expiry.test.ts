@@ -136,6 +136,7 @@ describe('invite expiry and cleanup', () => {
     const guestInvite = await project(asMember).invites.post({
       email: guest.email,
       role: 'member',
+      roleId,
     });
     const guestToken = guestInvite.data!.token;
 
@@ -298,6 +299,7 @@ describe('renewing an expired invite', () => {
     const plain = await project(asOwner).invites.post({
       email: 'plain@example.com',
       role: 'member',
+      roleId,
     });
     await backdate(ownership.data!.token, 8);
     await backdate(plain.data!.token, 8);

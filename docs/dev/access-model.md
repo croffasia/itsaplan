@@ -163,10 +163,11 @@ or on the request body is checked in the handler or the service.
   accepted, so a sender who was demoted or deleted leaves the link refused (409). It covers project
   `owner` and a team rank above `member`. A plain or custom-role link stays valid. Removing the
   sender from the team deletes their pending invites there (404).
-- **Custom roles:** adding, re-roling, inviting or renewing with a `roleId` goes through
-  `assertGrantablePermissions`, which refuses a role that grants more than the granter holds. A
-  project owner, or an owner or manager of the team, is not capped. The project's invite list hides
-  the link of an invite whose role the viewer could not grant.
+- **Member roles:** adding, re-roling, inviting or renewing goes through
+  `assertGrantablePermissions` on the role it grants: the `roleId`, or the default role when there
+  is none. It refuses a role that grants more than the granter holds. A project owner, or an owner
+  or manager of the team, is not capped. The project's invite list hides the link of an invite
+  whose role the viewer could not grant.
 
 ## SCIM rows
 

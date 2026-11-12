@@ -160,7 +160,7 @@ describe('members', () => {
         (
           await adder.api
             .projects({ projectKey: 'MKT' })
-            .members.post({ userId: joiner.userId, role: 'member' })
+            .members.post({ userId: joiner.userId, role: 'member', roleId: role.data!.id })
         ).status,
       ).toBe(204);
     });

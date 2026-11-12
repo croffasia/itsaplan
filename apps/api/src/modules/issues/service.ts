@@ -1142,7 +1142,6 @@ export async function createIssue(
   await assertWipLimit(input.columnId);
   await assertIssueType(project.id, input.typeId);
   await assertParent(project.id, null, input.parentId);
-  await assertTreeLink(null, input.parentId);
   assertDateOrder(input.startDate, input.dueDate);
   // Also checked by setIssueLabels below, but here it fails before the issue exists.
   await assertIssueLabels(project.id, input.labelIds);
@@ -1150,6 +1149,10 @@ export async function createIssue(
   // column's auto-assignee applies. An assignee sent with the create wins over it.
   const assigneeUserId = input.assigneeUserId ?? (await columnAutoAssignee(input.columnId));
   const { id: issueId, createdAt } = await db.transaction(async (tx) => {
+    if (input.parentId != null) {
+      await lockIssueTree(tx, project.id);
+      await assertTreeLink(null, input.parentId, tx);
+    }
     const [seqRow] = await tx
       .update(projectTable)
       .set({ nextSequence: sql`next_sequence + 1` })

@@ -249,6 +249,24 @@ describe('share', () => {
       expect(shared.data.issue.parent).toBeNull();
     });
 
+    it('leaves the parent out of a link to a subtask', async () => {
+      const { asOwner, issueId, columnId } = await setup();
+      const subtask = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          .issues.post({ columnId, title: 'Step one', parentId: issueId })
+      ).data!;
+      const token = (await asOwner.issues({ issueId: subtask.id }).share.post({ extended: true }))
+        .data!.token;
+
+      const shared = await api.share.issue({ token }).get();
+      expect(shared.data.issue).toMatchObject({ parent: null, parentId: null, ancestors: [] });
+      expect(shared.data.feed.some((item: { action: string }) => item.action === 'parent')).toBe(
+        false,
+      );
+      expect(shared.data.feed.length).toBeGreaterThan(0);
+    });
+
     it('rejects a malformed token', async () => {
       const res = await api.share.issue({ token: 'not-a-uuid' }).get();
       expect(res.status).toBe(400);

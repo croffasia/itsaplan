@@ -61,6 +61,12 @@ export async function listSubtasks(issueId: number): Promise<IssueRef[]> {
   return refsWhere(eq(issue.parentId, issueId));
 }
 
+// The subtasks a delete, an archive or a restore acts on: the ones in the issue's
+// project. A subtask an old import left in another project is not touched.
+function subtasksInProject(projectId: number, issueId: number): Promise<IssueRef[]> {
+  return refsWhere(and(eq(issue.parentId, issueId), eq(issue.projectId, projectId))!);
+}
+
 // The issues above the issue, from the one on level 1 down to its parent.
 export async function listAncestors(issueId: number): Promise<IssueRef[]> {
   const ids = await ancestorIds(issueId);
@@ -119,13 +125,14 @@ export async function attachSubtaskCounts<T extends { id: number }>(
 // subtask archived on its own comes back too — the two are not told apart. An
 // active subtask is left as it is, together with everything under it.
 export async function restoreSubtasksOf(
+  projectId: number,
   issueId: number,
   actorUserId?: string | null,
 ): Promise<void> {
-  for (const subtask of await listSubtasks(issueId)) {
+  for (const subtask of await subtasksInProject(projectId, issueId)) {
     if (!subtask.archived) continue;
     await restoreIssue(subtask.id, actorUserId);
-    await restoreSubtasksOf(subtask.id, actorUserId);
+    await restoreSubtasksOf(projectId, subtask.id, actorUserId);
   }
 }
 
@@ -169,7 +176,14 @@ export async function disposeSubtasksOf(
   const attachments: AttachmentRow[] = [];
   for (const parentId of parents)
     attachments.push(
-      ...(await disposeSubtasks(parentId, action, disposition.mode, newParentId, actorUserId)),
+      ...(await disposeSubtasks(
+        projectId,
+        parentId,
+        action,
+        disposition.mode,
+        newParentId,
+        actorUserId,
+      )),
     );
   return attachments;
 }
@@ -182,25 +196,33 @@ async function issuesWithSubtasks(projectId: number, ids: number[]): Promise<num
     .selectDistinct({ parentId: issue.parentId })
     .from(issue)
     .innerJoin(parent, eq(parent.id, issue.parentId))
-    .where(and(inArray(issue.parentId, ids), eq(parent.projectId, projectId)));
+    .where(
+      and(
+        inArray(issue.parentId, ids),
+        eq(parent.projectId, projectId),
+        eq(issue.projectId, projectId),
+      ),
+    );
   return rows.flatMap((row) => (row.parentId === null ? [] : [row.parentId]));
 }
 
 // Applies the choice to one issue's subtasks. Runs one subtask at a time so each
 // gets the activity entries and webhooks its own update/delete/archive writes.
 async function disposeSubtasks(
+  projectId: number,
   issueId: number,
   action: 'delete' | 'archive',
   mode: SubtaskMode,
   newParentId: number | null,
   actorUserId?: string | null,
 ): Promise<AttachmentRow[]> {
-  if (mode === 'cascade') return cascade(issueId, action, new Set([issueId]), actorUserId);
+  if (mode === 'cascade')
+    return cascade(projectId, issueId, action, new Set([issueId]), actorUserId);
 
   // 'detach' clears the parent, 'reassign' points it at newParentId. The rules
   // that link has to hold (same project, no cycle, the depth limit) are enforced
   // by the update itself, which rejects the whole request on the first failure.
-  for (const subtask of await listSubtasks(issueId))
+  for (const subtask of await subtasksInProject(projectId, issueId))
     await updateIssue(subtask.id, { parentId: newParentId }, actorUserId);
   return [];
 }
@@ -208,16 +230,17 @@ async function disposeSubtasks(
 // Deletes or archives every level under the issue, each subtask after the ones under
 // it. `seen` ends the walk on a parent cycle left in old data.
 async function cascade(
+  projectId: number,
   issueId: number,
   action: 'delete' | 'archive',
   seen: Set<number>,
   actorUserId?: string | null,
 ): Promise<AttachmentRow[]> {
   const attachments: AttachmentRow[] = [];
-  for (const subtask of await listSubtasks(issueId)) {
+  for (const subtask of await subtasksInProject(projectId, issueId)) {
     if (seen.has(subtask.id)) continue;
     seen.add(subtask.id);
-    attachments.push(...(await cascade(subtask.id, action, seen, actorUserId)));
+    attachments.push(...(await cascade(projectId, subtask.id, action, seen, actorUserId)));
     if (action === 'delete')
       attachments.push(...((await deleteIssue(subtask.id, actorUserId)) ?? []));
     else await archiveIssue(subtask.id, actorUserId);
@@ -253,7 +276,7 @@ async function reassignTarget(
       'Subtasks cannot be reassigned to an issue being removed or to one under it',
     );
   for (const parentId of parentIds)
-    for (const subtask of await listSubtasks(parentId))
+    for (const subtask of await subtasksInProject(projectId, parentId))
       await assertTreeLink(subtask.id, newParentId);
   return newParentId;
 }

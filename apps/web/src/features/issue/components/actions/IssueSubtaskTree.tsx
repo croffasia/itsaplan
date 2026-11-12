@@ -1,29 +1,27 @@
 import { useTranslations } from 'next-intl';
-import type { SubtreeIssue } from '@/lib/api/endpoints/issues';
+import type { SubtaskMode, SubtreeIssue } from '@/lib/api/endpoints/issues';
 import { useProjectQuery } from '@/services/projects.service';
 import { issuePath } from '@/utils/paths';
-import { subtreeRows } from '@/utils/subtasks';
+import { removalRole, subtreeRows } from '@/utils/subtasks';
 import { cn } from '@/lib/utils';
 import { StateIcon } from '../shared/IssueIcons';
 
-// What a delete, an archive or a move does to each issue under the ones it is about.
-// 'detach' and 'move' act on the direct subtasks; the ones further down keep their
-// parent. Null while nothing is chosen.
-export type SubtreeOutcome = 'delete' | 'archive' | 'detach' | 'move' | null;
-
-// The issues under the ones the action is about, indented by level, each tagged with
-// what the chosen option does to it. `newParent` is the identifier a move goes to.
+// The issues under the ones the action is about, indented by level. In a delete or an
+// archive (`removal`) with a subtask choice made (`mode`), each is tagged with what
+// happens to it. `newParent` is the identifier a reassign goes to.
 export default function IssueSubtaskTree({
   projectKey,
   rootIds,
   issues,
-  outcome,
+  removal,
+  mode = null,
   newParent = null,
 }: {
   projectKey: string;
   rootIds: number[];
   issues: SubtreeIssue[];
-  outcome: SubtreeOutcome;
+  removal?: 'delete' | 'archive';
+  mode?: SubtaskMode | null;
   newParent?: string | null;
 }) {
   const t = useTranslations('issue.subtaskDisposal');
@@ -32,30 +30,34 @@ export default function IssueSubtaskTree({
   const columnById = new Map(columns.map((column) => [column.id, column]));
   const identifierOf = new Map(issues.map((issue) => [issue.id, issue.identifier]));
 
-  const tag = (issue: SubtreeIssue, depth: number): { label: string; tone: string } | null => {
-    if (outcome === 'delete') return { label: t('tagDeleted'), tone: 'bg-destructive/15' };
-    if (outcome === 'archive') return { label: t('tagArchived'), tone: 'bg-secondary' };
-    if (outcome === null) return null;
-    if (depth > 0) {
+  const tag = (
+    issue: SubtreeIssue,
+    role: ReturnType<typeof removalRole>,
+  ): { label: string; tone: string } | null => {
+    if (role === 'removed')
+      return removal === 'delete'
+        ? { label: t('tagDeleted'), tone: 'bg-destructive/15' }
+        : { label: t('tagArchived'), tone: 'bg-secondary' };
+    if (role === 'nested') {
       const label =
-        outcome === 'move'
+        mode === 'reassign'
           ? t('tagMovesAlong')
           : t('tagStaysUnder', { issue: identifierOf.get(issue.parentId) ?? '' });
       return { label, tone: 'text-muted-foreground' };
     }
-    if (outcome === 'detach') return { label: t('tagNoParent'), tone: 'bg-secondary' };
+    if (mode === 'detach') return { label: t('tagNoParent'), tone: 'bg-secondary' };
     return newParent
       ? { label: t('tagMovesTo', { issue: newParent }), tone: 'bg-secondary' }
       : null;
   };
 
-  // The tags sit in a column of their own, as wide as the longest one, so they line
-  // up whatever the depth and the title length.
   return (
     <ul className="grid max-h-80 grid-cols-[minmax(0,1fr)_auto] gap-x-4 overflow-y-auto rounded-lg bg-background py-1.5 pe-3">
       {subtreeRows(issues, rootIds).map(({ issue, depth }) => {
         const column = columnById.get(issue.columnId);
-        const outcomeTag = tag(issue, depth);
+        const role = removal && mode ? removalRole(issue, rootIds, mode) : null;
+        const outcomeTag = role && tag(issue, role);
+        const gone = role === 'removed' ? removal : null;
         return (
           <li
             key={issue.id}
@@ -81,12 +83,12 @@ export default function IssueSubtaskTree({
                 dir="auto"
                 className={cn(
                   'min-w-0 flex-1 truncate',
-                  outcome === 'delete' && 'text-muted-foreground line-through',
+                  gone === 'delete' && 'text-muted-foreground line-through',
                 )}
               >
                 {issue.title}
               </span>
-              {issue.archived && outcome !== 'archive' && (
+              {issue.archived && gone !== 'archive' && (
                 <span className="shrink-0 text-xs text-muted-foreground">{tc('archived')}</span>
               )}
             </span>

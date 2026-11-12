@@ -28,7 +28,7 @@ import {
   type BoardIssueLink,
   type IssueLinkRow,
 } from '#modules/issues/links';
-import { getParentRef, listAncestors, listSubtasks, type IssueRef } from '#modules/issues/subtasks';
+import { getParentRef, listSubtasks, type IssueRef } from '#modules/issues/subtasks';
 import { applyFilters } from '#modules/views/filters';
 import { revokedDocumentShare, rewriteAssetUrls } from '#modules/documents/service';
 import { projectSharingEnabled } from '#modules/workspaces/service';
@@ -148,7 +148,9 @@ async function issueFeed(issueId: number): Promise<FeedItemRow[]> {
 // token in the bundle; it is meaningful only on the shared-issue page and stripped
 // elsewhere, so a shared board never leaks its issues' individual tokens.
 // onlyIssueIds limits the relations and the subtask hierarchy to the issues a
-// shared board shows, so they cannot name one its filter excludes.
+// shared board shows, so they cannot name one its filter excludes. Without it the
+// bundle is a link to one issue, which shares what is under the issue and nothing
+// about its parent.
 async function issueBundle(
   issueRow: IssueRow,
   {
@@ -159,30 +161,33 @@ async function issueBundle(
 ): Promise<SharedIssueBundle> {
   const project = await getProjectById(issueRow.projectId);
   if (!project) throw new Error('project missing for shared issue');
-  const [scaffold, fields, feed, links, parent, subtasks, ancestors] = await Promise.all([
+  const withParent = onlyIssueIds !== undefined;
+  const [scaffold, fields, feed, links, parent, subtasks] = await Promise.all([
     buildScaffold(project, extended),
     extended ? getIssueFieldValues(issueRow.id) : [],
     extended ? issueFeed(issueRow.id) : [],
     listIssueLinks(issueRow.id),
-    getParentRef(issueRow.parentId),
+    withParent ? getParentRef(issueRow.parentId) : null,
     listSubtasks(issueRow.id),
-    listAncestors(issueRow.id),
   ]);
   const shown = (id: number) => !onlyIssueIds || onlyIssueIds.has(id);
+  const shownParent = parent && shown(parent.id) ? parent : null;
   const visible = extended ? issueRow : redactIssue(issueRow);
   return {
     project: scaffold,
     issue: {
       ...visible,
+      parentId: withParent ? visible.parentId : null,
       shareToken: keepShareToken ? issueRow.shareToken : null,
       shareExtended: keepShareToken && issueRow.shareExtended,
       fields,
       links: links.filter((link) => shown(link.issue.id)),
-      parent: parent && shown(parent.id) ? parent : null,
+      parent: shownParent,
       subtasks: subtasks.filter((subtask) => shown(subtask.id)),
-      ancestors: ancestors.filter((ancestor) => shown(ancestor.id)),
+      // A public page names the direct parent only, not the issues above it.
+      ancestors: shownParent ? [shownParent] : [],
     },
-    feed,
+    feed: withParent ? feed : feed.filter((item) => item.action !== 'parent'),
   };
 }
 

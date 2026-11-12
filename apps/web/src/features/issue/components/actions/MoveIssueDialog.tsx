@@ -66,12 +66,7 @@ export default function MoveIssueDialog({
         {subtree.length > 0 && t('moveSubtasks', { count: subtree.length })}
       </p>
       {subtree.length > 0 && (
-        <IssueSubtaskTree
-          projectKey={project.project.ref}
-          rootIds={[issue.id]}
-          issues={subtree}
-          outcome={null}
-        />
+        <IssueSubtaskTree projectKey={project.project.ref} rootIds={[issue.id]} issues={subtree} />
       )}
       <div className="space-y-1.5">
         <Label>{t('moveProject')}</Label>

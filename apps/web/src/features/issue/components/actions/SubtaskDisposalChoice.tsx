@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import type { SubtaskDisposition, SubtaskMode } from '@/lib/api/endpoints/issues';
-import { cn } from '@/lib/utils';
+import type { SubtaskDisposition } from '@/lib/api/endpoints/issues';
 import { useIssueSubtreeQuery } from '@/services/issues.service';
 import IssuePickerDialog from '@/components/common/overlay/IssuePickerDialog';
-import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
-import IssueSubtaskTree, { type SubtreeOutcome } from './IssueSubtaskTree';
+import IssueSubtaskDisposalOptions, {
+  type SubtaskDisposalOption,
+} from './IssueSubtaskDisposalOptions';
+import IssueSubtaskTree from './IssueSubtaskTree';
 
 // What happens to the subtasks of the issues being removed. Shown inside the
 // delete and archive confirmations whenever the selection has any: nothing is
@@ -35,11 +36,14 @@ export default function SubtaskDisposalChoice({
   const [newParent, setNewParent] = useState<{ identifier: string; title: string } | null>(null);
   const subtree = useIssueSubtreeQuery(projectKey, removedIssueIds).data;
   const total = subtree?.length ?? count;
-  const nested = subtree?.some((issue) => !removedIssueIds.includes(issue.parentId)) ?? false;
-  const mode = value?.subtasks ?? null;
-  const keepsOwn = nested ? ` ${t('nestedGoAlong', { count })}` : '';
+  // A selected issue under another selected one is removed, whatever the choice.
+  const unselected = subtree?.filter((issue) => !removedIssueIds.includes(issue.id)) ?? [];
+  const direct = subtree
+    ? unselected.filter((issue) => removedIssueIds.includes(issue.parentId)).length
+    : count;
+  const keepsOwn = unselected.length > direct ? ` ${t('nestedGoAlong', { count: direct })}` : '';
 
-  const options: { mode: SubtaskMode; label: string; hint: string }[] = [
+  const options: SubtaskDisposalOption[] = [
     {
       mode: 'cascade',
       label: t(action === 'delete' ? 'deleteToo' : 'archiveToo', { count: total }),
@@ -48,86 +52,36 @@ export default function SubtaskDisposalChoice({
     {
       mode: 'detach',
       label: t('detach', { count: total }),
-      hint: t('detachHint', { count }) + keepsOwn,
+      hint: t('detachHint', { count: direct }) + keepsOwn,
     },
     {
       mode: 'reassign',
       label: t('reassign', { count: total }),
-      hint: t('reassignHint', { count }) + keepsOwn,
+      hint: t('reassignHint', { count: direct }) + keepsOwn,
     },
   ];
-  const outcome: SubtreeOutcome =
-    mode === 'cascade'
-      ? action
-      : mode === 'detach'
-        ? 'detach'
-        : mode === 'reassign'
-          ? 'move'
-          : null;
 
   return (
     <div className="grid items-start gap-6 sm:grid-cols-2">
-      <fieldset className="min-w-0 space-y-1">
-        <legend className="mb-2 text-sm font-medium">
-          {t('question', { issues: removedIssueIds.length, count: total })}
-        </legend>
-        {options.map((option) => (
-          <div
-            key={option.mode}
-            className={cn(
-              'rounded-lg px-3 py-2.5 transition-colors',
-              mode === option.mode ? 'bg-secondary' : 'hover:bg-accent',
-            )}
-          >
-            <label className="flex cursor-pointer gap-3">
-              <input
-                type="radio"
-                name={`subtasks-${action}`}
-                checked={mode === option.mode}
-                onChange={() => {
-                  if (option.mode === 'reassign') setPicking(true);
-                  else onChange({ subtasks: option.mode });
-                }}
-                className="mt-1 size-4 shrink-0 cursor-pointer accent-foreground"
-              />
-              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="text-sm font-medium">{option.label}</span>
-                <span className="text-sm text-muted-foreground">{option.hint}</span>
-              </span>
-            </label>
-            {option.mode === 'reassign' && mode === 'reassign' && newParent && (
-              <div className="mt-2 flex min-w-0 items-center gap-2 ps-7 text-sm">
-                <span className="shrink-0 whitespace-nowrap text-muted-foreground">
-                  {t('newParent')}
-                </span>
-                <span className="flex min-w-0 items-center gap-1.5 rounded-md bg-background px-2 py-0.5">
-                  <span dir="ltr" className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                    {newParent.identifier}
-                  </span>
-                  <span dir="auto" className="truncate">
-                    {newParent.title}
-                  </span>
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 shrink-0 px-2"
-                  onClick={() => setPicking(true)}
-                >
-                  {t('change')}
-                </Button>
-              </div>
-            )}
-          </div>
-        ))}
-      </fieldset>
+      <IssueSubtaskDisposalOptions
+        name={`subtasks-${action}`}
+        legend={t('question', { issues: removedIssueIds.length, count: total })}
+        options={options}
+        mode={value?.subtasks ?? null}
+        newParent={newParent}
+        onSelect={(mode) => {
+          if (mode === 'reassign') setPicking(true);
+          else onChange({ subtasks: mode });
+        }}
+      />
 
       {subtree && subtree.length > 0 && (
         <IssueSubtaskTree
           projectKey={projectKey}
           rootIds={removedIssueIds}
           issues={subtree}
-          outcome={outcome}
+          removal={action}
+          mode={value?.subtasks ?? null}
           newParent={newParent?.identifier ?? null}
         />
       )}

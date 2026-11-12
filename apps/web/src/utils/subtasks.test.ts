@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { subtreeRows } from './subtasks';
+import { removalRole, subtreeRows } from './subtasks';
 
 const rows = (issues: { id: number; parentId: number }[], rootIds: number[]) =>
   subtreeRows(issues, rootIds).map(({ issue, depth }) => [issue.id, depth]);
@@ -30,5 +30,21 @@ describe('subtreeRows', () => {
       [2, 0],
       [3, 1],
     ]);
+  });
+});
+
+describe('removalRole', () => {
+  // 1 → 2 → 3 → 4, with 1 and 2 selected for removal.
+  const removed = [1, 2];
+  const roles = (mode: 'cascade' | 'detach' | 'reassign') =>
+    [2, 3, 4].map((id) => removalRole({ id, parentId: id - 1 }, removed, mode));
+
+  it('removes a selected issue that sits under another selected one', () => {
+    assert.deepEqual(roles('detach'), ['removed', 'direct', 'nested']);
+    assert.deepEqual(roles('reassign'), ['removed', 'direct', 'nested']);
+  });
+
+  it('removes every level on cascade', () => {
+    assert.deepEqual(roles('cascade'), ['removed', 'removed', 'removed']);
   });
 });

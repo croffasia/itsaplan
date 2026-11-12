@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { db, issue } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import { authedApi, type Api, ownWorkspaceId, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -127,6 +129,24 @@ describe('move issue', () => {
       projectId: ops.id,
       parentId: middle.id,
     });
+  });
+
+  it('leaves a subtask in another project where it is', async () => {
+    const { asOwner, ops, mktColumns } = await setup();
+    const top = (await createIssue(asOwner, mktColumns[0].id, 'Top')).data!;
+    await createProject(asOwner, { key: 'DEV', name: 'Development' });
+    const dev = (await asOwner.projects({ projectKey: 'DEV' }).get()).data!;
+    const foreign = (
+      await asOwner
+        .projects({ projectKey: 'DEV' })
+        .issues.post({ columnId: dev.columns[0].id, title: 'Elsewhere' })
+    ).data!;
+    // The API refuses a parent in another project, so the old data is written directly.
+    await db.update(issue).set({ parentId: top.id }).where(eq(issue.id, foreign.id));
+
+    const res = await asOwner.issues({ issueId: top.id }).move.post({ projectId: ops.id });
+    expect(res.status).toBe(200);
+    expect((await read(asOwner, foreign.id)).projectId).toBe(foreign.projectId);
   });
 
   it('lists the watchers of the target project when read by the old number', async () => {

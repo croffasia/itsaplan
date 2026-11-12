@@ -177,6 +177,22 @@ describe('subtasks', () => {
       ]);
     });
 
+    it('lists the issues above an issue only inside its project', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const top = (await createIssue(asOwner, columnId, 'Top')).data!;
+      const foreign = await foreignIssue(asOwner);
+      const below = (
+        await asOwner
+          .projects({ projectKey: 'OPS' })
+          .issues.post({ columnId: foreign.columnId, title: 'Below', parentId: foreign.id })
+      ).data!;
+      // The API refuses a parent in another project, so the old data is written directly.
+      await db.update(issue).set({ parentId: top.id }).where(eq(issue.id, foreign.id));
+
+      const { ancestors } = await read(asOwner, below.id);
+      expect(ancestors.map((ancestor) => ancestor.id)).toEqual([foreign.id]);
+    });
+
     it('moves an issue under another parent together with its subtasks', async () => {
       const { asOwner, columnId } = await setupProject();
       const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
@@ -392,6 +408,20 @@ describe('subtasks', () => {
       });
       expect(res.status).toBe(204);
       expect((await asOwner.issues({ issueId: subtask.id }).get()).status).toBe(404);
+    });
+
+    it('leaves a subtask in another project alone on cascade', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const parent = (await createIssue(asOwner, columnId, 'Parent')).data!;
+      const foreign = await foreignIssue(asOwner);
+      // The API refuses a parent in another project, so the old data is written directly.
+      await db.update(issue).set({ parentId: parent.id }).where(eq(issue.id, foreign.id));
+
+      const res = await asOwner.issues({ issueId: parent.id }).delete(undefined, {
+        query: { subtasks: 'cascade' },
+      });
+      expect(res.status).toBe(204);
+      expect((await asOwner.issues({ issueId: foreign.id }).get()).status).toBe(200);
     });
 
     it('keeps the subtasks of a detached subtask under it', async () => {

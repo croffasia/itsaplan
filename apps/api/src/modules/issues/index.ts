@@ -1028,7 +1028,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       const actorUserId = requireUser(user).id;
       const issue = await restoreIssue(params.issueId, actorUserId);
       if (!issue) throw new HttpError(404, 'Issue not found');
-      await restoreSubtasksOf(issue.id, actorUserId);
+      await restoreSubtasksOf(issue.projectId, issue.id, actorUserId);
       return issue;
     },
     {

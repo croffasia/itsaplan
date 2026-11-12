@@ -825,6 +825,7 @@ export async function createLocalIssueAndRecord(
         return existing.id;
       }
     }
+    if (input.parentId !== null) await lockIssueTree(tx, input.projectId);
     const [seqRow] = await tx
       .update(project)
       .set({ nextSequence: sql`next_sequence + 1` })

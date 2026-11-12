@@ -1,5 +1,5 @@
 import type { Column } from '@/lib/api/endpoints/columns';
-import type { BoardIssue, SubtaskDisposition } from '@/lib/api/endpoints/issues';
+import type { BoardIssue, SubtaskDisposition, SubtaskMode } from '@/lib/api/endpoints/issues';
 
 // The deepest level a subtask can sit on; an issue there cannot have subtasks.
 // Mirrors MAX_SUBTASK_DEPTH in @repo/db, which the API enforces.
@@ -44,6 +44,18 @@ export function subtreeRows<T extends { id: number; parentId: number }>(
   };
   for (const id of rootIds) if (!listed.has(id)) walk(id, 0);
   return rows;
+}
+
+// What a delete or an archive does to an issue under the removed ones: it is removed
+// with them, it is their direct subtask and gets the chosen disposition, or it sits
+// further down and keeps its parent.
+export function removalRole(
+  issue: { id: number; parentId: number },
+  removedIds: number[],
+  mode: SubtaskMode,
+): 'removed' | 'direct' | 'nested' {
+  if (mode === 'cascade' || removedIds.includes(issue.id)) return 'removed';
+  return removedIds.includes(issue.parentId) ? 'direct' : 'nested';
 }
 
 // How many issues a delete or an archive takes: the selected ones, and every level

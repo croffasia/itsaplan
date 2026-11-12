@@ -20,7 +20,7 @@ export default function SettingsImportExportJiraPreview() {
 
   return (
     <SettingsSection title={t('title')} description={t('description')}>
-      <SettingsCard className="space-y-4 p-4">
+      <SettingsCard className="space-y-6 p-6">
         <ul className="space-y-2 text-sm">
           {ITEMS.map((item) => (
             <li key={item} className="flex items-start gap-2">

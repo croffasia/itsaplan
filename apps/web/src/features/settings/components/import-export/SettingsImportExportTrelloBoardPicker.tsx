@@ -27,13 +27,13 @@ export default function SettingsImportExportTrelloBoardPicker({
   }
 
   return (
-    <div className="w-64 space-y-1.5">
+    <div className="space-y-1.5">
       <Label htmlFor="trello-board">{t('trello.board')}</Label>
       <Select
         value={selected?.id ?? ''}
         onValueChange={(id) => onSelect(boards.find((b) => b.id === id) ?? null)}
       >
-        <SelectTrigger id="trello-board" className="w-full">
+        <SelectTrigger id="trello-board" className="w-64">
           <SelectValue placeholder={t('trello.boardPlaceholder')} />
         </SelectTrigger>
         <SelectContent>
@@ -44,6 +44,7 @@ export default function SettingsImportExportTrelloBoardPicker({
           ))}
         </SelectContent>
       </Select>
+      <p className="text-xs text-muted-foreground">{t('trello.scopeHint')}</p>
     </div>
   );
 }

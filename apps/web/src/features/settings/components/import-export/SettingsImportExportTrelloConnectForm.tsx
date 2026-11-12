@@ -10,18 +10,20 @@ import type { TrelloConnection } from './SettingsImportExportTrello';
 
 // A Trello API key, then Trello's own authorization for it: the token comes back
 // from Trello's window and is checked live. Nothing is stored until an import is
-// actually started.
+// actually started. Opened again, it starts from the key it connected with.
 export default function SettingsImportExportTrelloConnectForm({
   projectKey,
+  initial,
   onTested,
 }: {
   projectKey: string;
+  initial: TrelloConnection | null;
   onTested: (connection: TrelloConnection) => void;
 }) {
   const t = useTranslations('settings.importExport');
   const testConnection = useTestTrelloConnection(projectKey);
   const authorize = useTrelloAuthorize();
-  const [apiKey, setApiKey] = useState('');
+  const [apiKey, setApiKey] = useState(initial?.apiKey ?? '');
   const [authorizing, setAuthorizing] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -52,23 +54,22 @@ export default function SettingsImportExportTrelloConnectForm({
   else if (testConnection.isPending) submitLabel = t('testing');
 
   return (
-    <form
-      onSubmit={(event) => void submit(event)}
-      autoComplete="off"
-      className="max-w-md space-y-4"
-    >
-      <div className="space-y-1.5">
-        <Label htmlFor="trello-api-key">{t('trello.apiKey')}</Label>
-        <Input
-          id="trello-api-key"
-          autoComplete="off"
-          data-1p-ignore
-          data-lpignore="true"
-          value={apiKey}
-          onChange={(event) => setApiKey(event.target.value)}
-          required
-        />
-        <p className="text-xs text-muted-foreground">
+    <form onSubmit={(event) => void submit(event)} autoComplete="off" className="space-y-6">
+      <div className="grid items-start gap-x-6 gap-y-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="trello-api-key">{t('trello.apiKey')}</Label>
+          <Input
+            id="trello-api-key"
+            autoComplete="off"
+            data-1p-ignore
+            data-lpignore="true"
+            value={apiKey}
+            onChange={(event) => setApiKey(event.target.value)}
+            aria-describedby="trello-api-key-hint"
+            required
+          />
+        </div>
+        <p id="trello-api-key-hint" className="text-xs text-muted-foreground sm:col-span-2">
           {t.rich('trello.apiKeyHint', {
             origin: typeof window === 'undefined' ? '' : window.location.origin,
             link: (chunks) => (

@@ -1,4 +1,6 @@
 import { describe, it, expect, afterEach, beforeEach } from 'bun:test';
+import { eq } from 'drizzle-orm';
+import { db, team } from '@repo/db';
 import {
   api as anonApi,
   apiKeyApi,
@@ -16,8 +18,8 @@ import { teamSkillObjectKeys } from '#modules/agents/skills/service';
 import { getObjectText } from '@repo/storage';
 
 // The teams feature owns list, create, detail, rename, and leave. Every account is
-// given a team at registration, named after its username, so a fresh account already
-// lists one.
+// given a team at registration, named after the local part of its address, so a fresh
+// account already lists one.
 
 async function signUpClient(overrides: { team?: boolean } = {}) {
   const user = await signUpTestUser(overrides);
@@ -35,6 +37,17 @@ async function addTeamMember(
   const api = authedApi(user.cookie);
   await api.invites({ token: created.data!.token }).accept.post();
   return { user, api };
+}
+
+function localPart(user: { email: string }) {
+  return user.email.split('@')[0];
+}
+
+// A team made before slugs were required, which no route can produce any more.
+async function unsluggedTeamId(api: Api) {
+  const teamId = (await api.teams.get()).data![0]!.id;
+  await db.update(team).set({ slug: null }).where(eq(team.id, teamId));
+  return teamId;
 }
 
 async function memberRole(api: Api, teamId: number, userId: string) {
@@ -158,7 +171,7 @@ describe('teams', () => {
       expect(list.status).toBe(200);
       expect(list.data).toHaveLength(1);
       expect(list.data?.[0]).toMatchObject({
-        name: user.username,
+        name: localPart(user),
         role: 'owner',
         memberCount: 1,
         ownerCount: 1,
@@ -353,7 +366,7 @@ describe('teams', () => {
       const detail = await api.teams({ teamId }).get();
       expect(detail.status).toBe(200);
       expect(detail.data).toMatchObject({
-        name: user.username,
+        name: localPart(user),
         role: 'owner',
         projectCount: 1,
         memberCount: 1,
@@ -707,7 +720,7 @@ describe('teams', () => {
           .teams({ teamId })
           .projects.post({ key: 'MKT', name: 'Marketing' });
         expect(created.status).toBe(201);
-        expect(created.data).toMatchObject({ key: 'MKT', teamId, teamName: user.username });
+        expect(created.data).toMatchObject({ key: 'MKT', teamId, teamName: localPart(user) });
 
         const projects = await api.teams({ teamId }).projects.get();
         expect(projects.data?.items).toMatchObject([{ key: 'MKT', isMember: true }]);
@@ -1103,7 +1116,7 @@ describe('teams', () => {
   describe('slug', () => {
     it('answers with the team id as its ref until a slug is set', async () => {
       const { api } = await signUpClient();
-      const teamId = (await api.teams.get()).data![0].id;
+      const teamId = await unsluggedTeamId(api);
       expect((await api.teams.get()).data?.[0]).toMatchObject({ slug: null, ref: String(teamId) });
 
       const set = await api.teams({ teamId }).patch({ slug: 'acme' });
@@ -1116,7 +1129,7 @@ describe('teams', () => {
 
     it('refuses a rename until the team has a slug', async () => {
       const { api } = await signUpClient();
-      const teamId = (await api.teams.get()).data![0].id;
+      const teamId = await unsluggedTeamId(api);
 
       expect((await api.teams({ teamId }).patch({ name: 'Growth' })).status).toBe(400);
       const res = await api.teams({ teamId }).patch({ name: 'Growth', slug: 'growth' });
@@ -1129,7 +1142,7 @@ describe('teams', () => {
       const teamId = (await api.teams.get()).data![0].id;
 
       const res = await api.teams({ teamId }).patch({ slug: 'acme' });
-      expect(res.data).toMatchObject({ name: user.username, slug: 'acme' });
+      expect(res.data).toMatchObject({ name: localPart(user), slug: 'acme' });
     });
 
     it('rejects a slug outside the allowed form', async () => {

@@ -50,8 +50,8 @@ describe('project ref', () => {
   });
 
   it('carries the ref on the project', async () => {
-    const { a } = await twoTeamsWithMkt();
-    expect(a).toMatchObject({ teamRef: String(a.teamId), ref: `${a.teamId}.MKT` });
+    const { first, a } = await twoTeamsWithMkt();
+    expect(a).toMatchObject({ teamRef: first!.ref, ref: `${first!.ref}.MKT` });
   });
 
   it("carries the ref on the team's project lists", async () => {

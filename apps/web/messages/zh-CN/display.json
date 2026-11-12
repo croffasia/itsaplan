@@ -59,6 +59,11 @@
     "month": "月",
     "quarter": "季度"
   },
+  "calendarModes": {
+    "month": "月",
+    "byDay": "按天",
+    "byWeek": "按周"
+  },
   "weekStart": {
     "0": "周日",
     "1": "周一"
@@ -85,6 +90,10 @@
     "subtasksCollapsed": "默认折叠",
     "groupsCollapsed": "默认折叠分组",
     "placeBy": "定位依据",
+    "mode": "模式",
+    "daysShown": "显示天数",
+    "weeksShown": "显示周数",
+    "splitByDay": "按天拆分",
     "weekStartsOn": "每周起始日",
     "scale": "时间刻度",
     "dragToReorder": "拖动以调整顺序",
@@ -97,7 +106,8 @@
     "show": "显示",
     "subtasks": "子任务",
     "cardProperties": "卡片属性",
-    "columns": "列"
+    "columns": "列",
+    "dates": "日期"
   },
   "layoutCommand": "{layout}布局"
 }

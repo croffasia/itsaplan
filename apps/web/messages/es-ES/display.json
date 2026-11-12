@@ -59,6 +59,11 @@
     "month": "Mes",
     "quarter": "Trimestre"
   },
+  "calendarModes": {
+    "month": "Mes",
+    "byDay": "Por día",
+    "byWeek": "Por semana"
+  },
   "weekStart": {
     "0": "Domingo",
     "1": "Lunes"
@@ -85,6 +90,10 @@
     "subtasksCollapsed": "Empezar contraídas",
     "groupsCollapsed": "Grupos contraídos al inicio",
     "placeBy": "Situar por",
+    "mode": "Modo",
+    "daysShown": "Días en pantalla",
+    "weeksShown": "Semanas en pantalla",
+    "splitByDay": "Dividir por día",
     "weekStartsOn": "La semana empieza el",
     "scale": "Escala",
     "dragToReorder": "Arrastra para reordenar",
@@ -97,7 +106,8 @@
     "show": "Mostrar",
     "subtasks": "Subtareas",
     "cardProperties": "Propiedades de la tarjeta",
-    "columns": "Columnas"
+    "columns": "Columnas",
+    "dates": "Fechas"
   },
   "layoutCommand": "Disposición {layout}"
 }

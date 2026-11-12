@@ -1,136 +1,111 @@
 import { useState } from 'react';
-import { isSameDay, isSameMonth, startOfMonth } from 'date-fns';
-import {
-  DndContext,
-  DragOverlay,
-  pointerWithin,
-  type DragEndEvent,
-  type DragStartEvent,
-} from '@dnd-kit/core';
+import { DndContext, DragOverlay, pointerWithin } from '@dnd-kit/core';
 import { useTranslations } from 'next-intl';
 import type { Issue } from '@/lib/api/endpoints/issues';
 import { buildMaps, issueColor, type WorkItemsViewProps } from '@/utils/project';
-import { toDateStr } from '@/utils/dates';
 import { useDndSensors } from '@/lib/dnd';
-import { useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
-import {
-  calendarBuiltinField,
-  calendarCustomField,
-  rescheduleFieldValue,
-} from '@/utils/calendarFields';
-import { buildCalendarModel } from '../../utils/calendar';
-import { CalendarMonthNav } from './CalendarMonthNav';
-import { CalendarDayCell } from './CalendarDayCell';
-import { CalendarUnscheduledPanel, UNSCHEDULED_ID } from './CalendarUnscheduledPanel';
+import { usePermissions } from '@/hooks/usePermissions';
+import { bucketByDay, isFullWeek, visibleDays } from '../../utils/calendar';
+import { useCalendarDrop } from '../../hooks/useCalendarDrop';
+import { useCalendarSchedule } from '../../hooks/useCalendarSchedule';
+import { CalendarNav } from './CalendarNav';
+import { CalendarMonthGrid } from './CalendarMonthGrid';
+import { CalendarDayGrid } from './CalendarDayGrid';
+import { CalendarWeekGrid } from './CalendarWeekGrid';
+import { CalendarUnscheduledPanel } from './CalendarUnscheduledPanel';
+import { CalendarUnscheduledStrip } from './CalendarUnscheduledStrip';
 
-// Sunday first, which is the order buildCalendarModel rotates from.
+// Sunday first, the order of Date.getDay().
 const WEEKDAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 
 export default function CalendarView({
   project,
   settings,
+  onSettingsChange,
   onOpenIssue,
+  newIssueDefaults,
   readOnly,
 }: WorkItemsViewProps) {
   const t = useTranslations('workItems.calendar');
-  const updateIssue = useUpdateIssue(project.project.ref);
-  const setFieldValue = useSetFieldValue(project.project.ref);
-  const [cursor, setCursor] = useState<Date>(() => startOfMonth(new Date()));
-  const [activeId, setActiveId] = useState<number | null>(null);
+  const { can } = usePermissions();
+  // Any day of the visible month, the first visible day, or any day of the first
+  // visible week.
+  const [cursor, setCursor] = useState<Date>(() => new Date());
   const sensors = useDndSensors(readOnly);
+  const schedule = useCalendarSchedule({
+    project,
+    dateField: settings.calendarDateField,
+    newIssueDefaults,
+  });
+  const { activeIssue, ...dragHandlers } = useCalendarDrop({
+    project,
+    schedule,
+    weekStart: settings.weekStart,
+  });
 
-  const builtinField = calendarBuiltinField(settings.calendarDateField);
-  const customFieldDef = calendarCustomField(settings.calendarDateField, project.customFields);
   const today = new Date();
+  const mode = settings.calendarMode;
   const maps = buildMaps(project);
   const dot = (issue: Issue) => issueColor(issue, maps);
+  const weekdayNames = WEEKDAY_KEYS.map((key) => t(`weekdays.${key}`));
+  const { byDay, unscheduled } = bucketByDay(project.issues, schedule.dayOf);
+  const days = visibleDays(cursor, settings);
+  const grid = {
+    project,
+    today,
+    days,
+    byDay,
+    dot,
+    onOpen: onOpenIssue,
+    onQuickAdd: !readOnly && can('work_items', 'create') ? schedule.create : undefined,
+  };
 
-  const { byDay, unscheduled, weekdays, days } = buildCalendarModel(
-    project.issues,
-    builtinField,
-    customFieldDef,
-    settings.weekStart,
-    cursor,
-    WEEKDAY_KEYS.map((key) => t(`weekdays.${key}`)),
-  );
-
-  // A drop moves the field the calendar is placed by: the built-in column, or the
-  // custom field's value (which keeps its time of day and, for a range, its
-  // length).
-  function reschedule(issueId: number, day: string | null) {
-    if (!customFieldDef) {
-      updateIssue.mutate({ id: issueId, patch: { [builtinField]: day } });
-      return;
-    }
-    const issue = project.issues.find((i) => i.id === issueId);
-    if (!issue) return;
-    setFieldValue.mutate({
-      issueId,
-      fieldId: customFieldDef.id,
-      value: rescheduleFieldValue(issue, customFieldDef, day),
-    });
-  }
-
-  function handleDragEnd(e: DragEndEvent) {
-    setActiveId(null);
-    const { active, over } = e;
-    if (!over) return;
-    const issueId = Number(active.id);
-    if (over.id === UNSCHEDULED_ID) reschedule(issueId, null);
-    else if (typeof over.id === 'string' && over.id.startsWith('day:'))
-      reschedule(issueId, over.id.slice(4));
-  }
-
-  const activeIssue =
-    activeId != null ? (project.issues.find((i) => i.id === activeId) ?? null) : null;
+  const setUnscheduledCollapsed = (calendarUnscheduledCollapsed: boolean) =>
+    onSettingsChange({ ...settings, calendarUnscheduledCollapsed });
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={pointerWithin}
-      onDragStart={(e: DragStartEvent) => setActiveId(Number(e.active.id))}
-      onDragCancel={() => setActiveId(null)}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="flex h-full flex-col sm:flex-row">
+    <DndContext sensors={sensors} collisionDetection={pointerWithin} {...dragHandlers}>
+      {/* The unscheduled panel comes first: at the start on a wide screen, under
+          the calendar on a phone. */}
+      <div className="flex h-full flex-col-reverse sm:flex-row">
+        {!readOnly && settings.calendarUnscheduledCollapsed ? (
+          <CalendarUnscheduledStrip
+            dateField={settings.calendarDateField}
+            count={unscheduled.length}
+            onExpand={() => setUnscheduledCollapsed(false)}
+          />
+        ) : (
+          <CalendarUnscheduledPanel
+            project={project}
+            dateField={settings.calendarDateField}
+            issues={unscheduled}
+            dot={dot}
+            onOpen={onOpenIssue}
+            onCollapse={readOnly ? undefined : () => setUnscheduledCollapsed(true)}
+          />
+        )}
+
         <div className="flex min-w-0 flex-1 flex-col p-2 sm:p-4">
-          <CalendarMonthNav cursor={cursor} onCursorChange={setCursor} />
-
-          <div className="grid grid-cols-7 border-b pb-1 text-xs font-medium text-muted-foreground">
-            {weekdays.map((d) => (
-              <div key={d} className="truncate px-0.5 text-center sm:px-2 sm:text-left">
-                {d}
-              </div>
-            ))}
-          </div>
-
-          <div className="grid flex-1 grid-cols-7 grid-rows-6 overflow-hidden rounded-b-md border-x border-b">
-            {days.map((day) => {
-              const key = toDateStr(day);
-              return (
-                <CalendarDayCell
-                  key={key}
-                  project={project}
-                  dateKey={key}
-                  dayNumber={day.getDate()}
-                  inMonth={isSameMonth(day, cursor)}
-                  isToday={isSameDay(day, today)}
-                  issues={byDay.get(key) ?? []}
-                  dot={dot}
-                  onOpen={onOpenIssue}
-                />
-              );
-            })}
-          </div>
+          <CalendarNav
+            cursor={cursor}
+            mode={mode}
+            fullWeek={isFullWeek(settings)}
+            days={days}
+            weekStart={settings.weekStart}
+            onCursorChange={setCursor}
+          />
+          {mode === 'month' && (
+            <CalendarMonthGrid {...grid} cursor={cursor} weekdayNames={weekdayNames} />
+          )}
+          {mode === 'byDay' && <CalendarDayGrid {...grid} weekdayNames={weekdayNames} />}
+          {mode === 'byWeek' && (
+            <CalendarWeekGrid
+              {...grid}
+              weekStart={settings.weekStart}
+              splitByDay={settings.calendarSplitByDay}
+            />
+          )}
         </div>
-
-        <CalendarUnscheduledPanel
-          project={project}
-          dateField={settings.calendarDateField}
-          issues={unscheduled}
-          dot={dot}
-          onOpen={onOpenIssue}
-        />
       </div>
 
       {/* dropAnimation disabled: the move is applied optimistically, so animating

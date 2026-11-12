@@ -59,6 +59,11 @@
     "month": "ماه",
     "quarter": "فصل"
   },
+  "calendarModes": {
+    "month": "ماه",
+    "byDay": "روزانه",
+    "byWeek": "هفتگی"
+  },
   "weekStart": {
     "0": "یکشنبه",
     "1": "دوشنبه"
@@ -85,6 +90,10 @@
     "subtasksCollapsed": "شروع به‌صورت جمع‌شده",
     "groupsCollapsed": "شروع با گروه‌های جمع‌شده",
     "placeBy": "قرارگیری بر اساس",
+    "mode": "نما",
+    "daysShown": "تعداد روزها",
+    "weeksShown": "تعداد هفته‌ها",
+    "splitByDay": "تفکیک بر اساس روز",
     "weekStartsOn": "شروع هفته از",
     "scale": "مقیاس",
     "dragToReorder": "برای تغییر ترتیب بکشید",
@@ -97,7 +106,8 @@
     "show": "نمایش",
     "subtasks": "زیرتسک‌ها",
     "cardProperties": "ویژگی‌های کارت",
-    "columns": "ستون‌ها"
+    "columns": "ستون‌ها",
+    "dates": "تاریخ‌ها"
   },
   "layoutCommand": "چیدمان {layout}"
 }

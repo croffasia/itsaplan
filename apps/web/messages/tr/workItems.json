@@ -44,6 +44,13 @@
   "calendar": {
     "previousMonth": "Önceki ay",
     "nextMonth": "Sonraki ay",
+    "previousWeek": "Önceki hafta",
+    "nextWeek": "Sonraki hafta",
+    "previousDays": "{count, plural, other {Önceki # gün}}",
+    "nextDays": "{count, plural, other {Sonraki # gün}}",
+    "weekNumber": "{number}. hafta",
+    "range": "{from} – {to}",
+    "addWorkItem": "İş maddesi ekle",
     "today": "Bugün",
     "moreIssues": "+{count} daha",
     "issueCount": "{count, plural, one {# iş} other {# iş}}",

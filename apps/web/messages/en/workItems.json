@@ -44,6 +44,13 @@
   "calendar": {
     "previousMonth": "Previous month",
     "nextMonth": "Next month",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "previousDays": "{count, plural, one {Previous day} other {Previous # days}}",
+    "nextDays": "{count, plural, one {Next day} other {Next # days}}",
+    "weekNumber": "Week {number}",
+    "range": "{from} – {to}",
+    "addWorkItem": "Add work item",
     "today": "Today",
     "moreIssues": "+{count} more",
     "issueCount": "{count, plural, one {# issue} other {# issues}}",

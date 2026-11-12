@@ -44,6 +44,13 @@
   "calendar": {
     "previousMonth": "Mois précédent",
     "nextMonth": "Mois suivant",
+    "previousWeek": "Semaine précédente",
+    "nextWeek": "Semaine suivante",
+    "previousDays": "{count, plural, one {Jour précédent} other {# jours précédents}}",
+    "nextDays": "{count, plural, one {Jour suivant} other {# jours suivants}}",
+    "weekNumber": "Semaine {number}",
+    "range": "{from} – {to}",
+    "addWorkItem": "Ajouter une tâche",
     "today": "Aujourd'hui",
     "moreIssues": "+{count} de plus",
     "issueCount": "{count, plural, one {# ticket} other {# tickets}}",

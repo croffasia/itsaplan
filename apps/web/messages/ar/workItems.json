@@ -37,6 +37,13 @@
   "calendar": {
     "previousMonth": "الشهر السابق",
     "nextMonth": "الشهر التالي",
+    "previousWeek": "الأسبوع السابق",
+    "nextWeek": "الأسبوع التالي",
+    "previousDays": "{count, plural, one {اليوم السابق} two {اليومان السابقان} few {# أيام سابقة} other {# يوم سابق}}",
+    "nextDays": "{count, plural, one {اليوم التالي} two {اليومان التاليان} few {# أيام تالية} other {# يوم تالٍ}}",
+    "weekNumber": "الأسبوع {number}",
+    "range": "{from} – {to}",
+    "addWorkItem": "إضافة عنصر عمل",
     "today": "اليوم",
     "moreIssues": "+{count} أخرى",
     "issueCount": "{count, plural, zero {لا مهام} one {مهمة واحدة} two {مهمتان} few {# مهام} many {# مهمة} other {# مهمة}}",

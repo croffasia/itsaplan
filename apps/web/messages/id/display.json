@@ -59,6 +59,11 @@
     "month": "Bulan",
     "quarter": "Kuartal"
   },
+  "calendarModes": {
+    "month": "Bulan",
+    "byDay": "Per hari",
+    "byWeek": "Per minggu"
+  },
   "weekStart": {
     "0": "Minggu",
     "1": "Senin"
@@ -85,6 +90,10 @@
     "subtasksCollapsed": "Mulai diciutkan",
     "groupsCollapsed": "Grup mulai diciutkan",
     "placeBy": "Tempatkan berdasarkan",
+    "mode": "Mode",
+    "daysShown": "Hari di layar",
+    "weeksShown": "Minggu di layar",
+    "splitByDay": "Pisahkan per hari",
     "weekStartsOn": "Minggu dimulai pada",
     "scale": "Skala",
     "dragToReorder": "Seret untuk mengurutkan",
@@ -97,7 +106,8 @@
     "show": "Tampilkan",
     "subtasks": "Subtugas",
     "cardProperties": "Properti kartu",
-    "columns": "Kolom"
+    "columns": "Kolom",
+    "dates": "Tanggal"
   },
   "layoutCommand": "Tata letak {layout}"
 }

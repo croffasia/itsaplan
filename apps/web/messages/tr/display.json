@@ -59,6 +59,11 @@
     "month": "Ay",
     "quarter": "Çeyrek"
   },
+  "calendarModes": {
+    "month": "Ay",
+    "byDay": "Güne göre",
+    "byWeek": "Haftaya göre"
+  },
   "weekStart": {
     "0": "Pazar",
     "1": "Pazartesi"
@@ -85,6 +90,10 @@
     "subtasksCollapsed": "Daraltılmış başlat",
     "groupsCollapsed": "Grupları daraltılmış başlat",
     "placeBy": "Konumlandırma kriteri",
+    "mode": "Görünüm",
+    "daysShown": "Ekrandaki gün sayısı",
+    "weeksShown": "Ekrandaki hafta sayısı",
+    "splitByDay": "Günlere böl",
     "weekStartsOn": "Haftanın başlangıç günü",
     "scale": "Ölçek",
     "dragToReorder": "Sıralamak için sürükleyin",
@@ -97,7 +106,8 @@
     "show": "Göster",
     "subtasks": "Alt işler",
     "cardProperties": "Kart özellikleri",
-    "columns": "Sütunlar"
+    "columns": "Sütunlar",
+    "dates": "Tarihler"
   },
   "layoutCommand": "{layout} düzeni"
 }

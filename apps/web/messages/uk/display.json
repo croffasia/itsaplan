@@ -59,6 +59,11 @@
     "month": "Місяць",
     "quarter": "Квартал"
   },
+  "calendarModes": {
+    "month": "Місяць",
+    "byDay": "За днями",
+    "byWeek": "За тижнями"
+  },
   "weekStart": {
     "0": "Неділя",
     "1": "Понеділок"
@@ -85,6 +90,10 @@
     "subtasksCollapsed": "Починати згорнутими",
     "groupsCollapsed": "Починати зі згорнутими групами",
     "placeBy": "Розміщувати за",
+    "mode": "Вигляд",
+    "daysShown": "Днів на екрані",
+    "weeksShown": "Тижнів на екрані",
+    "splitByDay": "Розбивати за днями",
     "weekStartsOn": "Початок тижня",
     "scale": "Масштаб",
     "dragToReorder": "Перетягніть, щоб змінити порядок",
@@ -97,7 +106,8 @@
     "show": "Показувати",
     "subtasks": "Підзадачі",
     "cardProperties": "Властивості картки",
-    "columns": "Стовпці"
+    "columns": "Стовпці",
+    "dates": "Дати"
   },
   "layoutCommand": "Розкладка «{layout}»"
 }

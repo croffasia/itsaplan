@@ -59,6 +59,11 @@
     "month": "شهر",
     "quarter": "ربع سنة"
   },
+  "calendarModes": {
+    "month": "شهر",
+    "byDay": "حسب اليوم",
+    "byWeek": "حسب الأسبوع"
+  },
   "weekStart": {
     "0": "الأحد",
     "1": "الإثنين"
@@ -85,6 +90,10 @@
     "subtasksCollapsed": "البدء مطوية",
     "groupsCollapsed": "البدء بمجموعات مطوية",
     "placeBy": "الترتيب حسب",
+    "mode": "طريقة العرض",
+    "daysShown": "عدد الأيام المعروضة",
+    "weeksShown": "عدد الأسابيع المعروضة",
+    "splitByDay": "التقسيم حسب اليوم",
     "weekStartsOn": "بداية الأسبوع",
     "scale": "المقياس",
     "dragToReorder": "اسحب لإعادة الترتيب",
@@ -97,7 +106,8 @@
     "show": "إظهار",
     "subtasks": "المهام الفرعية",
     "cardProperties": "خصائص البطاقة",
-    "columns": "الأعمدة"
+    "columns": "الأعمدة",
+    "dates": "التواريخ"
   },
   "layoutCommand": "تخطيط {layout}"
 }

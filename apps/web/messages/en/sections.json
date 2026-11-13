@@ -45,6 +45,10 @@
       "label": "Storage",
       "description": "How much people may upload: the size of a single file, the attachment types accepted, and the storage each project gets."
     },
+    "jobs": {
+      "label": "Background jobs",
+      "description": "How often background jobs run and retry. Changes apply without a restart."
+    },
     "email-templates": {
       "label": "Email templates",
       "description": "Manage system email templates."

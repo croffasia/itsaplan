@@ -45,6 +45,10 @@
       "label": "儲存",
       "description": "設定單個檔案大小、允許的附件類型和每個專案的儲存配額。"
     },
+    "jobs": {
+      "label": "背景任務",
+      "description": "背景任務的執行頻率與重試。變更無需重新啟動即可生效。"
+    },
     "email-templates": {
       "label": "電子郵件範本",
       "description": "管理系統電子郵件範本。"

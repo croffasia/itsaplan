@@ -1,7 +1,6 @@
-import { intEnv } from '#shared/lib';
-import { agentRunConfig } from '#modules/agents/core/run-queue';
+import { getJobSettings, type JobSettings } from '@repo/db';
 import { processAgentRuns } from '#modules/agents/core/run-poller';
-import { agentInvocationConfig, dispatchInvocations } from '#modules/agents/invocation/service';
+import { dispatchInvocations } from '#modules/agents/invocation/service';
 import { pruneAgentTraces } from '#modules/agents/core/runtime/trace-retention';
 import { sweepStaleIssues } from '#modules/issues/auto-archive';
 import { sweepExpiredShares } from '#modules/share/service';
@@ -16,17 +15,21 @@ import { sweepExpiredShares } from '#modules/share/service';
 // can carry thousands of issues, so sharing one loop would let either hold the other
 // back for that long.
 export function startBackgroundJobs(): void {
-  startLoop('agent-runs', runAgents, agentRunConfig.pollIntervalMs);
+  startLoop('agent-runs', runAgents, (jobs) => jobs.agentRuns.pollIntervalMs);
   // An external agent with an invocation URL is sent its work from a loop of its own, so
   // a slow endpoint holds back neither the runs of internal agents nor the other way.
-  startLoop('agent-invocations', sendInvocations, agentInvocationConfig.pollIntervalMs);
+  startLoop('agent-invocations', sendInvocations, (jobs) => jobs.agentInvocations.pollIntervalMs);
   // Archiving is not time-sensitive, so the sweep runs far less often than the queue
   // is drained.
-  startLoop('auto-archive', autoArchive, () => intEnv('AUTO_ARCHIVE_INTERVAL_MS', 3_600_000));
+  startLoop('auto-archive', autoArchive, (jobs) => minutes(jobs.sweeps.autoArchiveMinutes));
   // An expired link already reads as revoked everywhere, so the sweep only tidies the
   // token away; once a minute keeps the stored state close to what users see.
-  startLoop('share-expiry', expireShares, () => intEnv('SHARE_EXPIRY_INTERVAL_MS', 60_000));
-  startLoop('agent-traces', pruneTraces, () => intEnv('AGENT_TRACE_PRUNE_INTERVAL_MS', 3_600_000));
+  startLoop('share-expiry', expireShares, (jobs) => minutes(jobs.sweeps.shareExpiryMinutes));
+  startLoop('agent-traces', pruneTraces, (jobs) => minutes(jobs.sweeps.tracePruneMinutes));
+}
+
+function minutes(value: number): number {
+  return value * 60_000;
 }
 
 async function autoArchive(): Promise<void> {
@@ -60,14 +63,32 @@ async function pruneTraces(): Promise<void> {
   if (deleted > 0) console.log(`[background] pruned ${deleted} agent trace spans`);
 }
 
-function startLoop(name: string, job: () => Promise<void>, intervalMs: () => number): void {
+// How soon a loop tries again when the job settings could not be read.
+const SETTINGS_RETRY_MS = 5000;
+
+// The interval is read from the job settings after every pass, so a change in god mode
+// applies from the next one.
+function startLoop(
+  name: string,
+  job: () => Promise<void>,
+  intervalMs: (jobs: JobSettings) => number,
+): void {
   const tick = async () => {
     try {
       await job();
     } catch (error) {
       console.error(`[background] ${name} failed:`, error);
     }
-    setTimeout(tick, intervalMs()).unref();
+    setTimeout(tick, await nextDelay(name, intervalMs)).unref();
   };
   void tick();
+}
+
+async function nextDelay(name: string, intervalMs: (jobs: JobSettings) => number): Promise<number> {
+  try {
+    return intervalMs(await getJobSettings());
+  } catch (error) {
+    console.error(`[background] ${name} could not read the job settings:`, error);
+    return SETTINGS_RETRY_MS;
+  }
 }

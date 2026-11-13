@@ -22,6 +22,7 @@ import {
   type EmailDraft,
   type EmailTemplatesBody,
   type SharingSettings,
+  type JobSettingsPatch,
   getInstanceAuthSettings,
   updateInstanceAuthSettings,
   getInstanceEmailSettings,
@@ -47,6 +48,8 @@ import {
   updateInstanceEmbedSites,
   getInstanceStorageSettings,
   updateInstanceStorageSettings,
+  getInstanceJobSettings,
+  updateInstanceJobSettings,
   listInstanceUsers,
   setInstanceUserActive,
   getInstanceUser,
@@ -286,6 +289,22 @@ export function useUpdateInstanceStorageSettings() {
       // The upload UI reads the same limits through the open endpoint.
       qc.setQueryData(qk.storageSettings, data);
     },
+  });
+}
+
+// How the background jobs run: poll intervals, batch sizes, leases and attempts.
+export function useInstanceJobSettingsQuery() {
+  return useQuery({
+    queryKey: qk.instanceJobSettings,
+    queryFn: () => getInstanceJobSettings(),
+  });
+}
+
+export function useUpdateInstanceJobSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: JobSettingsPatch) => updateInstanceJobSettings(patch),
+    onSuccess: (data) => qc.setQueryData(qk.instanceJobSettings, data),
   });
 }
 

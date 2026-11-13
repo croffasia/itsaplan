@@ -45,6 +45,10 @@
       "label": "Depolama",
       "description": "Yükleme limitleri: tek dosya boyutu, kabul edilen ek türleri ve projelere tanınan depolama alanı."
     },
+    "jobs": {
+      "label": "Arka plan görevleri",
+      "description": "Arka plan görevlerinin ne sıklıkla çalıştığı ve yeniden denendiği. Değişiklikler yeniden başlatma gerekmeden uygulanır."
+    },
     "email-templates": {
       "label": "E-posta şablonları",
       "description": "Sistem e-postası şablonlarını yönetin."

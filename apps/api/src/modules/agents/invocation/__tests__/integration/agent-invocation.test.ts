@@ -3,6 +3,7 @@ import { createHmac } from 'node:crypto';
 import { apiKeyApi, authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { setTestJobSettings } from '#tests/helpers/jobs';
 import { addProjectMember } from '#tests/helpers/members';
 import { createAgent, teamOf } from '#tests/helpers/agents';
 import { dispatchInvocations } from '#modules/agents/invocation/service';
@@ -89,10 +90,8 @@ async function lastRun(asOwner: Api, teamId: number, agentId: number) {
   return (await agentOf(asOwner, teamId, agentId).runs.get({ query: {} })).data!.items[0];
 }
 
-const ENV_KEYS = ['NODE_ENV', 'AGENT_RUN_MAX_ATTEMPTS', 'AGENT_INVOCATION_TIMEOUT_MS'] as const;
-
 describe('agent invocation', () => {
-  const environment = Object.fromEntries(ENV_KEYS.map((key) => [key, process.env[key]]));
+  const nodeEnv = process.env.NODE_ENV;
   let endpoint: ReturnType<typeof fakeEndpoint> | null = null;
 
   beforeEach(async () => {
@@ -103,10 +102,8 @@ describe('agent invocation', () => {
   afterEach(async () => {
     await endpoint?.stop();
     endpoint = null;
-    for (const key of ENV_KEYS) {
-      if (environment[key] === undefined) delete process.env[key];
-      else process.env[key] = environment[key];
-    }
+    if (nodeEnv === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = nodeEnv;
   });
 
   it('issues a signing secret with the first URL and keeps it when the URL changes', async () => {
@@ -259,7 +256,7 @@ describe('agent invocation', () => {
   });
 
   it('fails a run the endpoint refused on its last attempt', async () => {
-    process.env.AGENT_RUN_MAX_ATTEMPTS = '1';
+    await setTestJobSettings({ agentRuns: { maxAttempts: 1 } });
     endpoint = fakeEndpoint(() => new Response('down', { status: 500 }));
     const { asOwner, teamId, columnId, agent } = await setup(endpoint.url);
     const issue = await queueRun(asOwner, columnId);
@@ -279,7 +276,7 @@ describe('agent invocation', () => {
   });
 
   it('leaves a run under its lease when the endpoint does not answer in time', async () => {
-    process.env.AGENT_INVOCATION_TIMEOUT_MS = '100';
+    await setTestJobSettings({ agentInvocations: { timeoutMs: 100 } });
     endpoint = fakeEndpoint(() => new Promise<Response>(() => {}));
     const { asOwner, teamId, columnId, agent } = await setup(endpoint.url);
     await queueRun(asOwner, columnId);

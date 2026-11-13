@@ -19,7 +19,7 @@ import {
   composeEmail,
   emailLocale,
 } from '@repo/auth';
-import { hasConfiguredEmailProvider, getStorageSettings } from '@repo/db';
+import { hasConfiguredEmailProvider, getJobSettings, getStorageSettings } from '@repo/db';
 import { hasEmailProvider } from '@repo/mailer';
 import { authContext } from '#shared/auth-context';
 import { requireGod } from '#shared/access';
@@ -108,6 +108,7 @@ import {
   setProjectDefaults,
   getAgentSettings,
   setAgentSettings,
+  setJobSettings,
   getSharingSettings,
   setSharingSettings,
 } from '#modules/settings/service';
@@ -126,6 +127,8 @@ import {
   AgentSettingsSchema,
   EmbedSitesSchema,
   HotkeyCombosSchema,
+  JobSettingsBody,
+  JobSettingsSchema,
   ProjectDefaultsSchema,
   SharingSettingsSchema,
   StorageSettingsSchema,
@@ -521,6 +524,27 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       description:
         "Update what applies to every team's agents. A shorter trace retention takes effect " +
         'on the next sweep, which deletes the traces already past it.',
+    },
+  })
+
+  .get('/god/job-settings', () => getJobSettings(), {
+    response: { 200: JobSettingsSchema, ...errors(401, 403) },
+    detail: {
+      summary: 'Get background job settings',
+      description:
+        'Get how the background jobs run: poll intervals, batch sizes, leases, attempts and cleanup intervals.',
+    },
+  })
+
+  .put('/god/job-settings', ({ body }) => setJobSettings(body), {
+    body: JobSettingsBody,
+    response: { 200: JobSettingsSchema, ...errors(400, 401, 403) },
+    detail: {
+      summary: 'Update background job settings',
+      description:
+        'Update how the background jobs run. Fields left out keep their value. Each job reads ' +
+        'the settings on its next pass, so no restart is needed. A lease must be longer than ' +
+        'the timeout of the request it covers.',
     },
   })
 

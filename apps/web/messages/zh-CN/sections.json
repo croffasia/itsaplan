@@ -45,6 +45,10 @@
       "label": "存储",
       "description": "设置单个文件大小、允许的附件类型和每个项目的存储配额。"
     },
+    "jobs": {
+      "label": "后台任务",
+      "description": "后台任务的运行频率与重试。更改无需重启即可生效。"
+    },
     "email-templates": {
       "label": "邮件模板",
       "description": "管理系统邮件模板。"

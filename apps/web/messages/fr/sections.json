@@ -45,6 +45,10 @@
       "label": "Stockage",
       "description": "Ce que les utilisateurs peuvent envoyer : la taille maximale d'un fichier, les types de pièces jointes acceptés, et l'espace de stockage alloué à chaque projet."
     },
+    "jobs": {
+      "label": "Tâches en arrière-plan",
+      "description": "À quelle fréquence les tâches en arrière-plan s'exécutent et sont retentées. Les modifications s'appliquent sans redémarrage."
+    },
     "email-templates": {
       "label": "Modèles d'e-mails",
       "description": "Gérez les modèles des e-mails système."

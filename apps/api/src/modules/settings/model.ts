@@ -1,4 +1,5 @@
 import { t } from 'elysia';
+import { JOB_SETTING_BOUNDS } from '@repo/db';
 import { MAX_CONCURRENT_RUNS, MAX_RUN_SECONDS, MIN_RUN_SECONDS } from './service';
 
 export const StorageSettingsSchema = t.Object({
@@ -42,6 +43,165 @@ export const AgentSettingsSchema = t.Object({
       "queue. 0 sets no limit. A workspace's own limit cannot exceed it.",
   }),
 });
+
+const int = ([minimum, maximum]: readonly [number, number], description: string) =>
+  t.Integer({ minimum, maximum, description });
+
+const WebhookJobsSchema = t.Object({
+  pollIntervalMs: int(
+    JOB_SETTING_BOUNDS.webhooks.pollIntervalMs,
+    'How often the worker looks for due webhook and notification deliveries.',
+  ),
+  batchSize: int(
+    JOB_SETTING_BOUNDS.webhooks.batchSize,
+    'Webhook deliveries taken and sent at once on one pass.',
+  ),
+  timeoutMs: int(
+    JOB_SETTING_BOUNDS.webhooks.timeoutMs,
+    'How long one webhook request may go without an answer.',
+  ),
+  maxAttempts: int(
+    JOB_SETTING_BOUNDS.webhooks.maxAttempts,
+    'Attempts before a webhook delivery is saved as failed.',
+  ),
+  disableThreshold: int(
+    JOB_SETTING_BOUNDS.webhooks.disableThreshold,
+    'Failed deliveries in a row before a webhook is turned off.',
+  ),
+  leaseSeconds: int(
+    JOB_SETTING_BOUNDS.webhooks.leaseSeconds,
+    'Seconds before a delivery left by a stopped worker is sent again. Longer than the timeout.',
+  ),
+  retentionDays: int(
+    JOB_SETTING_BOUNDS.webhooks.retentionDays,
+    'Days a delivered webhook stays in the delivery log.',
+  ),
+  cleanupIntervalMinutes: int(
+    JOB_SETTING_BOUNDS.webhooks.cleanupIntervalMinutes,
+    'How often old deliveries are deleted from the log.',
+  ),
+});
+
+const NotificationJobsSchema = t.Object({
+  batchSize: int(
+    JOB_SETTING_BOUNDS.notifications.batchSize,
+    'Notification deliveries taken and sent at once on one pass.',
+  ),
+  maxAttempts: int(
+    JOB_SETTING_BOUNDS.notifications.maxAttempts,
+    'Attempts before a notification is saved as failed.',
+  ),
+  leaseSeconds: int(
+    JOB_SETTING_BOUNDS.notifications.leaseSeconds,
+    'Seconds before a notification left by a stopped worker is sent again.',
+  ),
+});
+
+const ImportJobsSchema = t.Object({
+  pollIntervalMs: int(
+    JOB_SETTING_BOUNDS.imports.pollIntervalMs,
+    'How often the worker looks for an import to run.',
+  ),
+});
+
+const AgentRunJobsSchema = t.Object({
+  pollIntervalMs: int(
+    JOB_SETTING_BOUNDS.agentRuns.pollIntervalMs,
+    'How often the queue of agent runs and the due schedules are checked.',
+  ),
+  maxAttempts: int(
+    JOB_SETTING_BOUNDS.agentRuns.maxAttempts,
+    'Attempts before an agent run is saved as failed.',
+  ),
+  leaseSeconds: int(
+    JOB_SETTING_BOUNDS.agentRuns.leaseSeconds,
+    'Seconds before a run taken by a stopped process or runner is started again. An internal agent gets at least its run time limit.',
+  ),
+});
+
+const AgentChatJobsSchema = t.Object({
+  leaseSeconds: int(
+    JOB_SETTING_BOUNDS.agentChat.leaseSeconds,
+    'Seconds before an answer a runner left is handed out again.',
+  ),
+  maxAttempts: int(
+    JOB_SETTING_BOUNDS.agentChat.maxAttempts,
+    'Times an answer is handed to a runner before it is saved as failed.',
+  ),
+  claimWaitMs: int(
+    JOB_SETTING_BOUNDS.agentChat.claimWaitMs,
+    'How long a runner request waits for a chat message to answer.',
+  ),
+  claimPollMs: int(
+    JOB_SETTING_BOUNDS.agentChat.claimPollMs,
+    'How often that request checks for a message while it waits.',
+  ),
+  streamPollMs: int(
+    JOB_SETTING_BOUNDS.agentChat.streamPollMs,
+    'How often an open chat looks for new parts of the answer.',
+  ),
+  historyMessages: int(
+    JOB_SETTING_BOUNDS.agentChat.historyMessages,
+    'Earlier messages of the chat sent to the runner with a new one.',
+  ),
+});
+
+const AgentInvocationJobsSchema = t.Object({
+  pollIntervalMs: int(
+    JOB_SETTING_BOUNDS.agentInvocations.pollIntervalMs,
+    'How often work is looked for to send to agents with an invocation URL.',
+  ),
+  timeoutMs: int(
+    JOB_SETTING_BOUNDS.agentInvocations.timeoutMs,
+    'How long to wait for the invocation URL to answer. Shorter than the run and chat leases.',
+  ),
+});
+
+const SweepJobsSchema = t.Object({
+  autoArchiveMinutes: int(
+    JOB_SETTING_BOUNDS.sweeps.autoArchiveMinutes,
+    'How often stale issues are archived.',
+  ),
+  tracePruneMinutes: int(
+    JOB_SETTING_BOUNDS.sweeps.tracePruneMinutes,
+    'How often agent traces past their retention are deleted.',
+  ),
+  shareExpiryMinutes: int(
+    JOB_SETTING_BOUNDS.sweeps.shareExpiryMinutes,
+    'How often expired public links are closed.',
+  ),
+});
+
+const BotJobsSchema = t.Object({
+  configPollIntervalMs: int(
+    JOB_SETTING_BOUNDS.bot.configPollIntervalMs,
+    'How often the Telegram bot reads its settings again.',
+  ),
+});
+
+export const JobSettingsSchema = t.Object({
+  webhooks: WebhookJobsSchema,
+  notifications: NotificationJobsSchema,
+  imports: ImportJobsSchema,
+  agentRuns: AgentRunJobsSchema,
+  agentChat: AgentChatJobsSchema,
+  agentInvocations: AgentInvocationJobsSchema,
+  sweeps: SweepJobsSchema,
+  bot: BotJobsSchema,
+});
+
+export const JobSettingsBody = t.Partial(
+  t.Object({
+    webhooks: t.Partial(WebhookJobsSchema),
+    notifications: t.Partial(NotificationJobsSchema),
+    imports: t.Partial(ImportJobsSchema),
+    agentRuns: t.Partial(AgentRunJobsSchema),
+    agentChat: t.Partial(AgentChatJobsSchema),
+    agentInvocations: t.Partial(AgentInvocationJobsSchema),
+    sweeps: t.Partial(SweepJobsSchema),
+    bot: t.Partial(BotJobsSchema),
+  }),
+);
 
 // A command id bound to a combination written as modifier tokens plus a key
 // ('mod+k', 'n'). The set of commands lives in the web app (its lib/hotkeys), so

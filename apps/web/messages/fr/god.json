@@ -280,6 +280,101 @@
     "quotaMb": "Stockage par projet (Mo)",
     "quotaNote": "Dès qu'un projet atteint le quota, les nouveaux envois sont refusés jusqu'à ce que des pièces jointes soient supprimées."
   },
+  "jobs": {
+    "saved": "Paramètres des tâches en arrière-plan enregistrés",
+    "range": "Saisissez un nombre entier entre {min, number} et {max, number}.",
+    "withRange": "{hint} De {min, number} à {max, number}.",
+    "webhookLeaseNote": "Choisissez une durée de réservation supérieure au délai d'attente. Les durées de réservation sont en secondes, les délais d'attente en millisecondes.",
+    "webhookTimeoutNote": "Choisissez un délai d'attente inférieur à la durée de réservation. Les durées de réservation sont en secondes, les délais d'attente en millisecondes.",
+    "agentLeaseNote": "Choisissez une durée de réservation supérieure au délai d'attente de la section Agents avec une URL de l'endpoint. Les durées de réservation sont en secondes, les délais d'attente en millisecondes.",
+    "invocationTimeoutNote": "Choisissez un délai d'attente inférieur aux durées de réservation des sections Exécutions des agents et Chat avec les agents. Les durées de réservation sont en secondes, les délais d'attente en millisecondes.",
+    "webhooks": {
+      "title": "Webhooks",
+      "description": "Comment les envois partent et sont retentés, quand un webhook en échec est désactivé, et combien de temps le journal est conservé.",
+      "pollIntervalMs": "Intervalle de vérification (ms)",
+      "pollIntervalMsHint": "La fréquence à laquelle les envois et les notifications en file d'attente partent.",
+      "batchSize": "Taille du lot",
+      "batchSizeHint": "Le nombre d'envois expédiés à chaque vérification.",
+      "timeoutMs": "Délai d'attente (ms)",
+      "timeoutMsHint": "Le temps dont dispose le serveur destinataire pour répondre avant que la tentative échoue.",
+      "maxAttempts": "Tentatives max.",
+      "maxAttemptsHint": "Le nombre de fois qu'un envoi est tenté avant d'être enregistré comme échoué.",
+      "disableThreshold": "Échecs consécutifs",
+      "disableThresholdHint": "Le webhook est désactivé après ce nombre de tentatives échouées d'affilée, nouvelles tentatives comprises.",
+      "leaseSeconds": "Durée de réservation (s)",
+      "leaseSecondsHint": "Un envoi interrompu repart après ce délai.",
+      "retentionDays": "Conserver le journal des envois (jours)",
+      "retentionDaysHint": "Passé ce délai, les envois réussis sont supprimés du journal. Les envois en échec restent.",
+      "cleanupIntervalMinutes": "Intervalle de nettoyage (min)",
+      "cleanupIntervalMinutesHint": "La fréquence à laquelle les anciennes entrées sont supprimées du journal des envois."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Les notifications par e-mail et Telegram. Elles partent à l'Intervalle de vérification défini dans Webhooks.",
+      "batchSize": "Taille du lot",
+      "batchSizeHint": "Le nombre de notifications expédiées à chaque vérification.",
+      "maxAttempts": "Tentatives max.",
+      "maxAttemptsHint": "Le nombre de fois qu'une notification est envoyée avant d'être enregistrée comme échouée.",
+      "leaseSeconds": "Durée de réservation (s)",
+      "leaseSecondsHint": "Une notification interrompue repart après ce délai."
+    },
+    "imports": {
+      "title": "Imports",
+      "description": "Les imports depuis d'autres outils de suivi.",
+      "pollIntervalMs": "Intervalle de vérification (ms)",
+      "pollIntervalMsHint": "La fréquence à laquelle les imports en file d'attente démarrent."
+    },
+    "agentRuns": {
+      "title": "Exécutions des agents",
+      "description": "Comment les exécutions d'agents en file d'attente et planifiées démarrent et sont retentées.",
+      "pollIntervalMs": "Intervalle de vérification (ms)",
+      "pollIntervalMsHint": "La fréquence à laquelle les exécutions sont prises dans la file d'attente et les planifications arrivées à échéance y sont ajoutées.",
+      "maxAttempts": "Tentatives max.",
+      "maxAttemptsHint": "Le nombre de fois qu'une exécution est lancée avant d'être enregistrée comme échouée.",
+      "leaseSeconds": "Durée de réservation (s)",
+      "leaseSecondsHint": "Une exécution interrompue reprend après ce délai. Pour les agents internes, ce délai n'est jamais plus court que la Durée maximale d'exécution définie dans Général."
+    },
+    "agentChat": {
+      "title": "Chat avec les agents",
+      "description": "Les discussions avec les agents externes, via un runner ou une URL de l'endpoint.",
+      "leaseSeconds": "Durée de réservation (s)",
+      "leaseSecondsHint": "Une réponse interrompue reprend après ce délai.",
+      "maxAttempts": "Tentatives max.",
+      "maxAttemptsHint": "Le nombre de fois que l'agent reçoit un message avant que la réponse soit enregistrée comme échouée.",
+      "claimWaitMs": "Attente du runner (ms)",
+      "claimWaitMsHint": "Le temps qu'une requête du runner attend un nouveau message du chat.",
+      "claimPollMs": "Intervalle de vérification du runner (ms)",
+      "claimPollMsHint": "Un nouveau message du chat parvient à un runner en attente dans ce délai.",
+      "streamPollMs": "Intervalle de vérification de la réponse (ms)",
+      "streamPollMsHint": "La fréquence à laquelle un chat ouvert affiche les nouvelles parties de la réponse.",
+      "historyMessages": "Historique du chat (messages)",
+      "historyMessagesHint": "Le nombre de messages précédents du chat que l'agent reçoit avec chaque nouveau message."
+    },
+    "agentInvocations": {
+      "title": "Agents avec une URL de l'endpoint",
+      "description": "Les tâches et les messages de chat envoyés à l'URL de l'endpoint d'un agent.",
+      "pollIntervalMs": "Intervalle de vérification (ms)",
+      "pollIntervalMsHint": "La fréquence à laquelle les tâches et les messages de chat en file d'attente sont envoyés à ces agents.",
+      "timeoutMs": "Délai d'attente (ms)",
+      "timeoutMsHint": "Le temps dont dispose l'endpoint pour répondre. S'il répond trop tard, la tâche ou le message est renvoyé à la fin de sa durée de réservation."
+    },
+    "sweeps": {
+      "title": "Archivage et nettoyage",
+      "description": "La fréquence à laquelle les tickets fermés et inactifs sont archivés, et les anciennes traces d'exécution et les liens publics expirés supprimés.",
+      "autoArchiveMinutes": "Intervalle d'archivage (min)",
+      "autoArchiveMinutesHint": "La fréquence à laquelle les tickets fermés et inactifs sont archivés dans les projets où l'Archivage est activé.",
+      "tracePruneMinutes": "Intervalle de nettoyage des traces (min)",
+      "tracePruneMinutesHint": "La fréquence à laquelle sont supprimées les traces d'exécution plus anciennes que Conserver les traces d'exécution dans Général.",
+      "shareExpiryMinutes": "Intervalle de nettoyage des liens (min)",
+      "shareExpiryMinutesHint": "La fréquence à laquelle les liens publics expirés sont supprimés. Un lien cesse de s'ouvrir à son expiration, quelle que soit cette valeur."
+    },
+    "bot": {
+      "title": "Bot Telegram",
+      "description": "La vitesse à laquelle le bot prend en compte un changement de ses paramètres.",
+      "configPollIntervalMs": "Intervalle de vérification des paramètres (ms)",
+      "configPollIntervalMsHint": "Une modification dans Telegram parvient au bot dans ce délai."
+    }
+  },
   "telegram": {
     "saved": "Paramètres Telegram enregistrés",
     "bot": "Bot",

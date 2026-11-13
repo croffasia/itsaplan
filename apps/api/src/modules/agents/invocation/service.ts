@@ -1,14 +1,8 @@
-import { db, aiAgent, agentChatMessage, agentRun } from '@repo/db';
+import { db, aiAgent, agentChatMessage, agentRun, getJobSettings } from '@repo/db';
 import { and, eq, inArray, isNotNull, lte, or, sql, exists } from 'drizzle-orm';
 import { signPayload } from '@repo/crypto';
 import { pinnedFetch } from '@repo/net';
-import { intEnv } from '#shared/lib';
-import {
-  agentRunConfig,
-  markRunFailed,
-  runRetryDelayMs,
-  scheduleRunRetry,
-} from '../core/run-queue';
+import { markRunFailed, runRetryDelayMs, scheduleRunRetry } from '../core/run-queue';
 import { recordAgentRunFinished } from '../core/run-activity';
 import { getRunnerAgent, takeNextRun, type RunnerAgent, type RunnerRun } from '../runner/service';
 import { finishMessage, takeNextMessage, type ClaimedChat } from '../chat/service';
@@ -19,11 +13,6 @@ import { readInvocationSecret } from './secret';
 // same way, and the endpoint reports progress and the result through the runner routes
 // with the agent's API key. The request only hands the work over: a 2xx means the
 // endpoint took it.
-
-export const agentInvocationConfig = {
-  pollIntervalMs: () => intEnv('AGENT_INVOCATION_POLL_INTERVAL_MS', 1000),
-  timeoutMs: () => intEnv('AGENT_INVOCATION_TIMEOUT_MS', 15_000),
-};
 
 type InvocationEvent = 'agent.run' | 'agent.chat' | 'ping';
 
@@ -70,7 +59,7 @@ async function invoke(
     apiUrl: (process.env.API_URL ?? '').replace(/\/+$/, '') || null,
     ...data,
   });
-  const timeoutMs = agentInvocationConfig.timeoutMs();
+  const { timeoutMs } = (await getJobSettings()).agentInvocations;
   const signal = AbortSignal.timeout(timeoutMs);
   const started = Date.now();
   try {
@@ -182,7 +171,7 @@ async function sendRun(agent: RunnerAgent, target: Target, run: RunnerRun): Prom
   const outcome = await invoke(target, 'agent.run', agent, { run });
   if (outcome.ok || outcome.timedOut) return;
   const error = outcome.error ?? 'The endpoint refused the run';
-  if (run.attempts < agentRunConfig.maxAttempts()) {
+  if (run.attempts < (await getJobSettings()).agentRuns.maxAttempts) {
     await scheduleRunRetry(run.id, runRetryDelayMs(run.attempts), error);
     return;
   }

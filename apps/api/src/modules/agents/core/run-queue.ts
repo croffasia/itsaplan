@@ -1,5 +1,6 @@
 import {
   db,
+  getJobSettings,
   type DbExecutor,
   agentRun,
   aiAgent,
@@ -25,22 +26,13 @@ import {
   sql,
 } from 'drizzle-orm';
 import { getAgentSettings } from '#modules/settings/service';
-import { intEnv, iso } from '#shared/lib';
+import { iso } from '#shared/lib';
 import type { AgentRunTrigger } from '../model';
 import { equalJitterBackoffMs } from './helpers/backoff';
 import { emitRunsFinished } from './run-finished';
 
 // The agent_run outbox: data access for triggered runs and run history. The api's
 // run poller claims pending rows, runs them, and records the outcome.
-
-// Tuning, env-overridable with defaults. A claim's lease must exceed a run's wall time
-// so a row is not re-claimed while its run is still in flight: claimDueRuns raises it
-// above the instance's maximum run time when that is longer.
-export const agentRunConfig = {
-  pollIntervalMs: () => intEnv('AGENT_RUN_POLL_INTERVAL_MS', 2000),
-  maxAttempts: () => intEnv('AGENT_RUN_MAX_ATTEMPTS', 3),
-  leaseSeconds: () => intEnv('AGENT_RUN_LEASE_SECONDS', 300),
-};
 
 // Time a claim's lease leaves after the run's time limit, for recording the outcome.
 const LEASE_MARGIN_SECONDS = 60;
@@ -249,10 +241,10 @@ const RUN_CLAIM_LOCK_NS = 8243;
 // they are claimed over HTTP by the operator's runner (modules/agents/runner).
 export async function claimDueRuns(): Promise<ClaimedRun[]> {
   const { maxRunSeconds, maxConcurrentRuns } = await getAgentSettings();
-  const leaseSeconds = Math.max(
-    agentRunConfig.leaseSeconds(),
-    maxRunSeconds + LEASE_MARGIN_SECONDS,
-  );
+  const { agentRuns } = await getJobSettings();
+  // A claim's lease must exceed a run's wall time, or the row is claimed again while its
+  // run is still in flight.
+  const leaseSeconds = Math.max(agentRuns.leaseSeconds, maxRunSeconds + LEASE_MARGIN_SECONDS);
   const executionDeadline = performance.now() + (leaseSeconds - LEASE_MARGIN_SECONDS) * 1000;
   const rows = await db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(${RUN_CLAIM_LOCK_NS}, 0)`);

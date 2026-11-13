@@ -67,19 +67,6 @@ describe('god agent settings', () => {
     expect(res.data?.maxRunSeconds).toBe(240);
   });
 
-  it('keeps a run time maximum taken from the environment within range', async () => {
-    const { god } = await setup();
-    process.env.AGENT_RUN_TIMEOUT_MS = '7200000';
-    try {
-      const res = await god.api.god['agent-settings'].get();
-
-      expect(res.status).toBe(200);
-      expect(res.data?.maxRunSeconds).toBe(3600);
-    } finally {
-      delete process.env.AGENT_RUN_TIMEOUT_MS;
-    }
-  });
-
   it('changes one setting without touching the other', async () => {
     const { god } = await setup();
 

@@ -1,6 +1,5 @@
 import { getStorageSettings, mimeAllowed, MB } from '@repo/db';
 import { startPollLoop, type WorkerHandle } from './poll-loop';
-import { intEnv } from './env';
 import { tickErrorOutcome } from './import-retry';
 import {
   importSourceNames,
@@ -74,7 +73,7 @@ import {
 // work, then reschedules — a large import interleaves across many ticks
 // rather than running to completion in one.
 export function startImportWorker(): WorkerHandle {
-  return startPollLoop('import-worker', tick, () => intEnv('IMPORT_POLL_INTERVAL_MS', 3000));
+  return startPollLoop('import-worker', tick, (jobs) => jobs.imports.pollIntervalMs);
 }
 
 // How many issues Create/Link process per tick. Each issue costs several

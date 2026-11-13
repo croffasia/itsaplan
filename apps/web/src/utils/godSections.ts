@@ -10,6 +10,7 @@ import {
   Send,
   ShieldCheck,
   SlidersHorizontal,
+  Timer,
   Users,
   UsersRound,
   type LucideIcon,
@@ -69,9 +70,9 @@ export const GOD_SECTIONS: GodSection[] = godSections([
     icon: KeyRound,
   },
   {
-    slug: 'hotkeys',
+    slug: 'jobs',
     group: 'instance',
-    icon: Keyboard,
+    icon: Timer,
   },
   {
     slug: 'storage',
@@ -82,6 +83,11 @@ export const GOD_SECTIONS: GodSection[] = godSections([
     slug: 'email-templates',
     group: 'instance',
     icon: Mails,
+  },
+  {
+    slug: 'hotkeys',
+    group: 'instance',
+    icon: Keyboard,
   },
   {
     slug: 'telegram',

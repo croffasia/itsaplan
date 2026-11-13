@@ -1,4 +1,4 @@
-import { db, teamWorkspaceId } from '@repo/db';
+import { db, getJobSettings, teamWorkspaceId } from '@repo/db';
 import { getProjectTeamId } from '#modules/projects/service';
 import { getAgentSettings } from '#modules/settings/service';
 import { getLimits, getRunLimit } from '#shared/limits';
@@ -7,7 +7,6 @@ import { agentRunStarted, recordAgentRunFinished } from './run-activity';
 import { runAdmissionDelay } from './run-admission';
 import { runRefusal } from './run-refusal';
 import {
-  agentRunConfig,
   claimDueRuns,
   admitWorkspaceRun,
   countRunsAhead,
@@ -103,7 +102,7 @@ async function processRun(run: ClaimedRun): Promise<void> {
     await markRunSuccess(run.id, result.text, result.usage);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    if (run.attempts < agentRunConfig.maxAttempts()) {
+    if (run.attempts < (await getJobSettings()).agentRuns.maxAttempts) {
       await scheduleRunRetry(run.id, runRetryDelayMs(run.attempts), message);
       return;
     }

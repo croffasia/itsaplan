@@ -280,6 +280,101 @@
     "quotaMb": "Proje başına depolama (MB)",
     "quotaNote": "Bir proje kotasına ulaştığında, ekler silinene kadar yeni yüklemeler reddedilir."
   },
+  "jobs": {
+    "saved": "Arka plan görevi ayarları kaydedildi",
+    "range": "{min, number} ile {max, number} arasında bir tam sayı girin.",
+    "withRange": "{hint} {min, number} ile {max, number} arası.",
+    "webhookLeaseNote": "Lease süresini zaman aşımından uzun ayarlayın. Lease süreleri saniye, zaman aşımları milisaniye cinsindendir.",
+    "webhookTimeoutNote": "Zaman aşımını lease süresinden kısa ayarlayın. Lease süreleri saniye, zaman aşımları milisaniye cinsindendir.",
+    "agentLeaseNote": "Lease süresini Endpoint URL'si olan ajanlar bölümündeki zaman aşımından uzun ayarlayın. Lease süreleri saniye, zaman aşımları milisaniye cinsindendir.",
+    "invocationTimeoutNote": "Zaman aşımını Ajan çalıştırmaları ve Ajan sohbeti bölümlerindeki lease sürelerinden kısa ayarlayın. Lease süreleri saniye, zaman aşımları milisaniye cinsindendir.",
+    "webhooks": {
+      "title": "Webhook'lar",
+      "description": "Teslimlerin nasıl gönderilip yeniden denendiği, sürekli başarısız olan bir webhook'un ne zaman kapatıldığı ve günlüğün ne kadar saklandığı.",
+      "pollIntervalMs": "Kontrol aralığı (ms)",
+      "pollIntervalMsHint": "Kuyruktaki teslimlerin ve bildirimlerin ne sıklıkla gönderildiği.",
+      "batchSize": "Grup boyutu",
+      "batchSizeHint": "Her kontrolde kaç teslimin gönderildiği.",
+      "timeoutMs": "Zaman aşımı (ms)",
+      "timeoutMsHint": "Deneme başarısız sayılmadan önce alıcı sunucunun yanıt vermek için ne kadar süresi olduğu.",
+      "maxAttempts": "En fazla deneme",
+      "maxAttemptsHint": "Bir teslimin başarısız olarak kaydedilmeden önce kaç kez gönderildiği.",
+      "disableThreshold": "Art arda hata",
+      "disableThresholdHint": "Yeniden denemeler dahil bu kadar deneme art arda başarısız olursa webhook kapatılır.",
+      "leaseSeconds": "Lease süresi (sn)",
+      "leaseSecondsHint": "Yarıda kalan bir teslim bu sürenin ardından yeniden gönderilir.",
+      "retentionDays": "Teslim günlüğünü saklama süresi (gün)",
+      "retentionDaysHint": "Başarılı teslimler bu sürenin ardından günlükten silinir. Başarısız olanlar kalır.",
+      "cleanupIntervalMinutes": "Temizlik aralığı (dk)",
+      "cleanupIntervalMinutesHint": "Eski kayıtların teslim günlüğünden ne sıklıkla silindiği."
+    },
+    "notifications": {
+      "title": "Bildirimler",
+      "description": "E-posta ve Telegram bildirimleri. Webhook'lar bölümündeki Kontrol aralığı ile gönderilir.",
+      "batchSize": "Grup boyutu",
+      "batchSizeHint": "Her kontrolde kaç bildirimin gönderildiği.",
+      "maxAttempts": "En fazla deneme",
+      "maxAttemptsHint": "Bir bildirimin başarısız olarak kaydedilmeden önce kaç kez gönderildiği.",
+      "leaseSeconds": "Lease süresi (sn)",
+      "leaseSecondsHint": "Yarıda kalan bir bildirim bu sürenin ardından yeniden gönderilir."
+    },
+    "imports": {
+      "title": "İçe aktarmalar",
+      "description": "Diğer takip araçlarından içe aktarmalar.",
+      "pollIntervalMs": "Kontrol aralığı (ms)",
+      "pollIntervalMsHint": "Kuyruktaki içe aktarmaların ne sıklıkla başlatıldığı."
+    },
+    "agentRuns": {
+      "title": "Ajan çalıştırmaları",
+      "description": "Kuyruktaki ve zamanlanmış ajan çalıştırmalarının nasıl başladığı ve yeniden denendiği.",
+      "pollIntervalMs": "Kontrol aralığı (ms)",
+      "pollIntervalMsHint": "Çalıştırmaların kuyruktan ne sıklıkla alındığı ve zamanı gelen zamanlamaların kuyruğa eklendiği.",
+      "maxAttempts": "En fazla deneme",
+      "maxAttemptsHint": "Bir çalıştırmanın başarısız olarak kaydedilmeden önce kaç kez başlatıldığı.",
+      "leaseSeconds": "Lease süresi (sn)",
+      "leaseSecondsHint": "Yarıda kalan bir çalıştırma bu sürenin ardından yeniden başlar. Dahili ajanlar için bu süre hiçbir zaman Genel bölümündeki Çalışma süresi sınırından kısa olmaz."
+    },
+    "agentChat": {
+      "title": "Ajan sohbeti",
+      "description": "Harici ajanlarla bir runner veya endpoint URL'si üzerinden yapılan sohbetler.",
+      "leaseSeconds": "Lease süresi (sn)",
+      "leaseSecondsHint": "Yarıda kalan bir yanıt bu sürenin ardından yeniden başlar.",
+      "maxAttempts": "En fazla deneme",
+      "maxAttemptsHint": "Yanıt başarısız olarak kaydedilmeden önce ajanın bir mesajı kaç kez aldığı.",
+      "claimWaitMs": "Runner bekleme süresi (ms)",
+      "claimWaitMsHint": "Bir runner isteğinin yeni bir sohbet mesajı için ne kadar beklediği.",
+      "claimPollMs": "Runner kontrol aralığı (ms)",
+      "claimPollMsHint": "Yeni bir sohbet mesajı bekleyen runner'a en geç bu sürede ulaşır.",
+      "streamPollMs": "Yanıt kontrol aralığı (ms)",
+      "streamPollMsHint": "Açık bir sohbetin yanıtın yeni bölümlerini ne sıklıkla gösterdiği.",
+      "historyMessages": "Sohbet geçmişi (mesaj)",
+      "historyMessagesHint": "Ajanın her yeni mesajla birlikte sohbetin önceki kaç mesajını aldığı."
+    },
+    "agentInvocations": {
+      "title": "Endpoint URL'si olan ajanlar",
+      "description": "Bir ajanın endpoint URL'sine gönderilen görevler ve sohbet mesajları.",
+      "pollIntervalMs": "Kontrol aralığı (ms)",
+      "pollIntervalMsHint": "Kuyruktaki görevlerin ve sohbet mesajlarının bu ajanlara ne sıklıkla gönderildiği.",
+      "timeoutMs": "Zaman aşımı (ms)",
+      "timeoutMsHint": "Endpoint'in yanıt vermek için ne kadar süresi olduğu. Geç kalırsa görev veya mesaj, lease süresi bittiğinde yeniden gönderilir."
+    },
+    "sweeps": {
+      "title": "Arşivleme ve temizlik",
+      "description": "Uzun süre işlem görmeyen kapalı işlerin ne sıklıkla arşivlendiği, eski çalıştırma izlerinin ve süresi dolan herkese açık bağlantıların ne sıklıkla silindiği.",
+      "autoArchiveMinutes": "Arşivleme aralığı (dk)",
+      "autoArchiveMinutesHint": "Arşivleme açık olan projelerde uzun süre işlem görmeyen kapalı işlerin ne sıklıkla arşivlendiği.",
+      "tracePruneMinutes": "İz temizleme aralığı (dk)",
+      "tracePruneMinutesHint": "Genel bölümündeki Çalıştırma izlerini saklama süresinden eski çalıştırma izlerinin ne sıklıkla silindiği.",
+      "shareExpiryMinutes": "Bağlantı temizleme aralığı (dk)",
+      "shareExpiryMinutesHint": "Süresi dolan herkese açık bağlantıların ne sıklıkla silindiği. Bir bağlantı, bu değer ne olursa olsun süresi dolduğunda açılmaz."
+    },
+    "bot": {
+      "title": "Telegram botu",
+      "description": "Botun ayarlarındaki bir değişikliği ne kadar hızlı aldığı.",
+      "configPollIntervalMs": "Ayar kontrol aralığı (ms)",
+      "configPollIntervalMsHint": "Telegram bölümündeki bir değişiklik bota en geç bu sürede ulaşır."
+    }
+  },
   "telegram": {
     "saved": "Telegram ayarları kaydedildi",
     "bot": "Bot",

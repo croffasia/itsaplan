@@ -1,7 +1,15 @@
-import { db, agentChatEvent, agentChatFavorite, agentChatMessage, agentChatThread } from '@repo/db';
+import {
+  db,
+  agentChatEvent,
+  agentChatFavorite,
+  agentChatMessage,
+  agentChatThread,
+  getJobSettings,
+  type JobSettings,
+} from '@repo/db';
 import { and, asc, desc, eq, gt, inArray, notExists, sql } from 'drizzle-orm';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { intEnv, iso, likePattern } from '#shared/lib';
+import { iso, likePattern } from '#shared/lib';
 import { deleteContextUsage, recordContextUsage, type ContextUsage } from '../chat-usage';
 import { deleteFavorite, FAVORITES_LIMIT } from '../chat-favorites';
 import {
@@ -29,19 +37,7 @@ import type { AgUiEventBody, ChatMessageStatus } from './model';
 // retried after a failure the way an autonomous run is, and is claimed by a call that
 // waits for work instead of polling for it.
 
-// Tuning, env-overridable. The lease matches the run queue's: a coding agent can work
-// for minutes, and the lease has to outlast a quiet stretch or the answer is handed to
-// another runner mid-flight.
-export const agentChatConfig = {
-  leaseSeconds: () => intEnv('AGENT_CHAT_LEASE_SECONDS', 300),
-  maxAttempts: () => intEnv('AGENT_CHAT_MAX_ATTEMPTS', 3),
-  // How long a claim waits for work before it answers "nothing", and how often it looks
-  // while it waits. The wait is what makes an answer start the moment it is sent.
-  claimWaitMs: () => Math.min(intEnv('AGENT_CHAT_CLAIM_WAIT_MS', 25_000), 30_000),
-  claimPollMs: () => intEnv('AGENT_CHAT_CLAIM_POLL_MS', 500),
-  streamPollMs: () => intEnv('AGENT_CHAT_STREAM_POLL_MS', 300),
-  historyMessages: () => intEnv('AGENT_CHAT_HISTORY_MESSAGES', 20),
-};
+type ChatJobs = JobSettings['agentChat'];
 
 const PAGE_SIZE = 25;
 const TITLE_LIMIT = 80;
@@ -398,7 +394,7 @@ interface ClaimedRow {
 // Fails answers handed out too many times without a result, so a chat whose runner
 // keeps dying ends visibly instead of being served forever. Called once per claim, not
 // once per look at the feed: a claim waits for work and looks many times.
-async function expireExhausted(agentId: number): Promise<void> {
+async function expireExhausted(agentId: number, chat: ChatJobs): Promise<void> {
   await db
     .update(agentChatMessage)
     .set({
@@ -410,7 +406,7 @@ async function expireExhausted(agentId: number): Promise<void> {
       and(
         eq(agentChatMessage.agentId, agentId),
         inArray(agentChatMessage.status, LIVE_STATUSES),
-        sql`${agentChatMessage.attempts} >= ${agentChatConfig.maxAttempts()}`,
+        sql`${agentChatMessage.attempts} >= ${chat.maxAttempts}`,
         sql`${agentChatMessage.nextAttemptAt} <= now()`,
       ),
     );
@@ -422,27 +418,29 @@ async function expireExhausted(agentId: number): Promise<void> {
 export async function claimNextMessage(agent: RunnerAgent): Promise<ClaimedChat | null> {
   assertRunnerDrained(agent);
   await touchRunner(agent.id);
-  await expireExhausted(agent.id);
-  const deadline = Date.now() + agentChatConfig.claimWaitMs();
+  const { agentChat: chat } = await getJobSettings();
+  await expireExhausted(agent.id, chat);
+  const deadline = Date.now() + chat.claimWaitMs;
   for (;;) {
-    const message = await claimMessage(agent);
+    const message = await claimMessage(agent, chat);
     if (message) return message;
     if (Date.now() >= deadline) return null;
-    await sleep(Math.min(agentChatConfig.claimPollMs(), Math.max(0, deadline - Date.now())));
+    await sleep(Math.min(chat.claimPollMs, Math.max(0, deadline - Date.now())));
   }
 }
 
 // The agent's next due answer without waiting for one, for an agent whose answers are
 // sent to its invocation URL rather than claimed.
 export async function takeNextMessage(agent: RunnerAgent): Promise<ClaimedChat | null> {
-  await expireExhausted(agent.id);
-  return claimMessage(agent);
+  const { agentChat: chat } = await getJobSettings();
+  await expireExhausted(agent.id, chat);
+  return claimMessage(agent, chat);
 }
 
 // Takes the agent's next due answer, or null when it has none. Claiming clears whatever
 // a previous attempt produced: the answer is generated again from the start, and the
 // browser would otherwise read the abandoned half twice.
-async function claimMessage(agent: RunnerAgent): Promise<ClaimedChat | null> {
+async function claimMessage(agent: RunnerAgent, chat: ChatJobs): Promise<ClaimedChat | null> {
   const rows = await db.transaction(async (tx) => {
     const threads = await tx.execute(sql`
       WITH live_heads AS MATERIALIZED (
@@ -455,7 +453,7 @@ async function claimMessage(agent: RunnerAgent): Promise<ClaimedChat | null> {
         SELECT h.thread_id FROM live_heads h
         JOIN agent_chat_message head ON head.id = h.id
         WHERE head.next_attempt_at <= now()
-          AND head.attempts < ${agentChatConfig.maxAttempts()}
+          AND head.attempts < ${chat.maxAttempts}
         ORDER BY head.next_attempt_at, head.id
       )
       SELECT t.id FROM ready_heads h
@@ -476,7 +474,7 @@ async function claimMessage(agent: RunnerAgent): Promise<ClaimedChat | null> {
           status = 'streaming',
           content = '',
           started_at = coalesce(m.started_at, now()),
-          next_attempt_at = now() + make_interval(secs => ${agentChatConfig.leaseSeconds()})
+          next_attempt_at = now() + make_interval(secs => ${chat.leaseSeconds})
       WHERE m.id = (
         SELECT q.id FROM agent_chat_message q
         WHERE q.thread_id = ${thread.id}
@@ -487,7 +485,7 @@ async function claimMessage(agent: RunnerAgent): Promise<ClaimedChat | null> {
       )
         AND m.status IN ('pending', 'streaming')
         AND m.next_attempt_at <= now()
-        AND m.attempts < ${agentChatConfig.maxAttempts()}
+        AND m.attempts < ${chat.maxAttempts}
       RETURNING
         m.id,
         m.thread_id AS "threadId",
@@ -506,7 +504,7 @@ async function claimMessage(agent: RunnerAgent): Promise<ClaimedChat | null> {
   // turns nor the system prompt again: that session already holds both, in fuller form
   // than the transcript here keeps them.
   const resumed = row.sessionId !== null;
-  const history = await readHistory(row.threadId, row.id, resumed);
+  const history = await readHistory(row.threadId, row.id, resumed ? 1 : chat.historyMessages);
   const question = history.pop()?.content ?? '';
   return {
     id: row.id,
@@ -548,13 +546,13 @@ export async function setThreadSession(
     );
 }
 
-// The turns before the claimed answer, oldest last, capped at the configured depth. The
-// last of them is the message being answered. `questionOnly` takes just that one, for a
-// thread whose session already remembers everything before it.
+// The last `limit` turns before the claimed answer, oldest first. The last of them is the
+// message being answered; a thread whose session already remembers everything before it
+// takes just that one.
 async function readHistory(
   threadId: string,
   beforeMessageId: number,
-  questionOnly: boolean,
+  limit: number,
 ): Promise<{ role: string; content: string }[]> {
   const rows = await db
     .select({ role: agentChatMessage.role, content: agentChatMessage.content })
@@ -567,7 +565,7 @@ async function readHistory(
       ),
     )
     .orderBy(desc(agentChatMessage.id))
-    .limit(questionOnly ? 1 : agentChatConfig.historyMessages());
+    .limit(limit);
   return rows.reverse();
 }
 
@@ -614,8 +612,9 @@ function frameChatPrompt(history: { role: string; content: string }[], prompt: s
 }
 
 // When a claimed answer falls back to the feed unless the runner reports again.
-function leaseUntil() {
-  return sql`now() + make_interval(secs => ${agentChatConfig.leaseSeconds()})`;
+async function leaseUntil() {
+  const { leaseSeconds } = (await getJobSettings()).agentChat;
+  return sql`now() + make_interval(secs => ${leaseSeconds})`;
 }
 
 // The answer a runner call addresses: this agent's, and not finished yet.
@@ -649,7 +648,7 @@ export async function appendEvents(
     .update(agentChatMessage)
     .set({
       content: sql`left(${agentChatMessage.content} || ${textOf(events)}, ${ANSWER_LIMIT})`,
-      nextAttemptAt: leaseUntil(),
+      nextAttemptAt: await leaseUntil(),
     })
     .where(liveAnswer(agentId, messageId))
     .returning({ id: agentChatMessage.id });
@@ -669,7 +668,7 @@ export async function heartbeatMessage(
   await touchRunner(agentId);
   const rows = await db
     .update(agentChatMessage)
-    .set({ nextAttemptAt: leaseUntil() })
+    .set({ nextAttemptAt: await leaseUntil() })
     .where(liveAnswer(agentId, messageId))
     .returning({ id: agentChatMessage.id });
   if (rows.length > 0) return { canceled: false };

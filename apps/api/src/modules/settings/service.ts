@@ -3,9 +3,14 @@ import {
   setSetting,
   STORAGE_SETTING_KEY,
   getStorageSettings,
+  JOB_SETTINGS_KEY,
+  getJobSettings,
+  mergeJobSettings,
+  type JobSettings,
+  type JobSettingsPatch,
   type StorageSettings,
 } from '@repo/db';
-import { HttpError, intEnv } from '#shared/lib';
+import { HttpError } from '#shared/lib';
 
 // The instance settings kept in app_setting: the upload limits, the keyboard
 // shortcuts and the sites that may frame the public pages.
@@ -70,7 +75,6 @@ export interface AgentSettings {
   // Days the traces of an agent run are kept for; the background sweep deletes older
   // ones (agents/core/runtime/trace-retention.ts). 0 keeps them.
   traceRetentionDays: number;
-  // The longest one run may take. AGENT_RUN_TIMEOUT_MS sets the value used until one is saved.
   maxRunSeconds: number;
   // Runs of internal agents in flight at once across the instance; the rest wait in the
   // queue. 0 sets no limit.
@@ -84,10 +88,7 @@ export const MAX_CONCURRENT_RUNS = 1000;
 function defaultAgentSettings(): AgentSettings {
   return {
     traceRetentionDays: 30,
-    maxRunSeconds: Math.min(
-      Math.max(Math.round(intEnv('AGENT_RUN_TIMEOUT_MS', 240_000) / 1000), MIN_RUN_SECONDS),
-      MAX_RUN_SECONDS,
-    ),
+    maxRunSeconds: 240,
     maxConcurrentRuns: 5,
   };
 }
@@ -100,6 +101,26 @@ export async function getAgentSettings(): Promise<AgentSettings> {
 export async function setAgentSettings(patch: Partial<AgentSettings>): Promise<AgentSettings> {
   const next = { ...(await getAgentSettings()), ...patch };
   await setSetting(AGENT_SETTINGS_KEY, next);
+  return next;
+}
+
+// The background job settings (app_setting key 'jobs'); the shape and the reader are in
+// @repo/db, because the worker and the bot read them too.
+export async function setJobSettings(patch: JobSettingsPatch): Promise<JobSettings> {
+  const next = mergeJobSettings(await getJobSettings(), patch);
+  // A lease that ends before the request does hands the same work out a second time.
+  if (next.webhooks.leaseSeconds * 1000 <= next.webhooks.timeoutMs) {
+    throw new HttpError(400, 'The webhook lease must be longer than the webhook timeout');
+  }
+  const invocationLeaseMs =
+    Math.min(next.agentRuns.leaseSeconds, next.agentChat.leaseSeconds) * 1000;
+  if (invocationLeaseMs <= next.agentInvocations.timeoutMs) {
+    throw new HttpError(
+      400,
+      'The agent run and chat leases must be longer than the invocation timeout',
+    );
+  }
+  await setSetting(JOB_SETTINGS_KEY, next);
   return next;
 }
 

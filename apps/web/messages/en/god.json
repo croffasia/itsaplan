@@ -280,6 +280,101 @@
     "quotaMb": "Storage per project (MB)",
     "quotaNote": "Once a project reaches the quota, new uploads are refused until someone deletes attachments."
   },
+  "jobs": {
+    "saved": "Background job settings saved",
+    "range": "Enter a whole number from {min, number} to {max, number}.",
+    "withRange": "{hint} From {min, number} to {max, number}.",
+    "webhookLeaseNote": "Set a lease longer than the timeout. Leases are in seconds, timeouts in milliseconds.",
+    "webhookTimeoutNote": "Set a timeout shorter than the lease. Leases are in seconds, timeouts in milliseconds.",
+    "agentLeaseNote": "Set a lease longer than the timeout under Agents with an endpoint URL. Leases are in seconds, timeouts in milliseconds.",
+    "invocationTimeoutNote": "Set a timeout shorter than the leases under Agent runs and Agent chat. Leases are in seconds, timeouts in milliseconds.",
+    "webhooks": {
+      "title": "Webhooks",
+      "description": "How deliveries are sent and retried, when a failing webhook is turned off, and how long the log is kept.",
+      "pollIntervalMs": "Check interval (ms)",
+      "pollIntervalMsHint": "How often queued deliveries and notifications are sent.",
+      "batchSize": "Batch size",
+      "batchSizeHint": "How many deliveries are sent per check.",
+      "timeoutMs": "Timeout (ms)",
+      "timeoutMsHint": "How long the receiving server has to answer before the attempt fails.",
+      "maxAttempts": "Max attempts",
+      "maxAttemptsHint": "How many times a delivery is sent before it is saved as failed.",
+      "disableThreshold": "Failures in a row",
+      "disableThresholdHint": "The webhook is turned off after this many failed attempts in a row, retries included.",
+      "leaseSeconds": "Lease (sec)",
+      "leaseSecondsHint": "An interrupted delivery is sent again after this time.",
+      "retentionDays": "Keep delivery log (days)",
+      "retentionDaysHint": "Successful deliveries are deleted from the log after this time. Failed ones stay.",
+      "cleanupIntervalMinutes": "Cleanup interval (min)",
+      "cleanupIntervalMinutesHint": "How often old entries are deleted from the delivery log."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Email and Telegram notifications. They are sent at the Check interval set under Webhooks.",
+      "batchSize": "Batch size",
+      "batchSizeHint": "How many notifications are sent per check.",
+      "maxAttempts": "Max attempts",
+      "maxAttemptsHint": "How many times a notification is sent before it is saved as failed.",
+      "leaseSeconds": "Lease (sec)",
+      "leaseSecondsHint": "An interrupted notification is sent again after this time."
+    },
+    "imports": {
+      "title": "Imports",
+      "description": "Imports from other trackers.",
+      "pollIntervalMs": "Check interval (ms)",
+      "pollIntervalMsHint": "How often queued imports are started."
+    },
+    "agentRuns": {
+      "title": "Agent runs",
+      "description": "How queued and scheduled agent runs start and retry.",
+      "pollIntervalMs": "Check interval (ms)",
+      "pollIntervalMsHint": "How often runs are taken from the queue and due schedules are queued.",
+      "maxAttempts": "Max attempts",
+      "maxAttemptsHint": "How many times a run is started before it is saved as failed.",
+      "leaseSeconds": "Lease (sec)",
+      "leaseSecondsHint": "An interrupted run starts again after this time. For internal agents this time is never shorter than Run time limit in General."
+    },
+    "agentChat": {
+      "title": "Agent chat",
+      "description": "Chats with external agents, through a runner or an endpoint URL.",
+      "leaseSeconds": "Lease (sec)",
+      "leaseSecondsHint": "An interrupted answer starts again after this time.",
+      "maxAttempts": "Max attempts",
+      "maxAttemptsHint": "How many times the agent gets a message before the answer is saved as failed.",
+      "claimWaitMs": "Runner wait (ms)",
+      "claimWaitMsHint": "How long a runner request waits for a new chat message.",
+      "claimPollMs": "Runner check interval (ms)",
+      "claimPollMsHint": "A new chat message reaches a waiting runner within this time.",
+      "streamPollMs": "Answer check interval (ms)",
+      "streamPollMsHint": "How often an open chat shows new parts of the answer.",
+      "historyMessages": "Chat history (messages)",
+      "historyMessagesHint": "How many earlier chat messages the agent gets with each new one."
+    },
+    "agentInvocations": {
+      "title": "Agents with an endpoint URL",
+      "description": "Tasks and chat messages sent to an agent's endpoint URL.",
+      "pollIntervalMs": "Check interval (ms)",
+      "pollIntervalMsHint": "How often queued tasks and chat messages are sent to these agents.",
+      "timeoutMs": "Timeout (ms)",
+      "timeoutMsHint": "How long the endpoint has to answer. If it is late, the task or message is sent again when its lease ends."
+    },
+    "sweeps": {
+      "title": "Archive and cleanup",
+      "description": "How often stale closed issues are archived, and old run traces and expired public links deleted.",
+      "autoArchiveMinutes": "Archive interval (min)",
+      "autoArchiveMinutesHint": "How often stale closed issues are archived in projects with Archive turned on.",
+      "tracePruneMinutes": "Trace cleanup interval (min)",
+      "tracePruneMinutesHint": "How often run traces older than Keep run traces in General are deleted.",
+      "shareExpiryMinutes": "Link cleanup interval (min)",
+      "shareExpiryMinutesHint": "How often expired public links are deleted. A link stops opening when it expires, whatever this value is."
+    },
+    "bot": {
+      "title": "Telegram bot",
+      "description": "How fast the bot picks up a change to its settings.",
+      "configPollIntervalMs": "Settings check interval (ms)",
+      "configPollIntervalMsHint": "A change under Telegram reaches the bot within this time."
+    }
+  },
   "telegram": {
     "saved": "Telegram settings saved",
     "bot": "Bot",

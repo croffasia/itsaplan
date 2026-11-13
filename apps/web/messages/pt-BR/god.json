@@ -280,6 +280,101 @@
     "quotaMb": "Armazenamento por projeto (MB)",
     "quotaNote": "Quando um projeto atinge a cota, novos envios são recusados até alguém excluir anexos."
   },
+  "jobs": {
+    "saved": "Configurações das tarefas em segundo plano salvas",
+    "range": "Digite um número inteiro de {min, number} a {max, number}.",
+    "withRange": "{hint} De {min, number} a {max, number}.",
+    "webhookLeaseNote": "Defina um tempo de reserva maior que o timeout. Tempos de reserva são em segundos, timeouts em milissegundos.",
+    "webhookTimeoutNote": "Defina um timeout menor que o tempo de reserva. Tempos de reserva são em segundos, timeouts em milissegundos.",
+    "agentLeaseNote": "Defina um tempo de reserva maior que o timeout de Agentes com URL do endpoint. Tempos de reserva são em segundos, timeouts em milissegundos.",
+    "invocationTimeoutNote": "Defina um timeout menor que os tempos de reserva de Execuções de agentes e Chat com agentes. Tempos de reserva são em segundos, timeouts em milissegundos.",
+    "webhooks": {
+      "title": "Webhooks",
+      "description": "Como as entregas são enviadas e repetidas, quando um webhook com falhas é desativado e por quanto tempo o registro é mantido.",
+      "pollIntervalMs": "Intervalo de verificação (ms)",
+      "pollIntervalMsHint": "Com que frequência as entregas e notificações na fila são enviadas.",
+      "batchSize": "Tamanho do lote",
+      "batchSizeHint": "Quantas entregas são enviadas a cada verificação.",
+      "timeoutMs": "Timeout (ms)",
+      "timeoutMsHint": "Quanto tempo o servidor de destino tem para responder antes de a tentativa falhar.",
+      "maxAttempts": "Máximo de tentativas",
+      "maxAttemptsHint": "Quantas vezes uma entrega é enviada antes de ser salva como falha.",
+      "disableThreshold": "Falhas seguidas",
+      "disableThresholdHint": "O webhook é desativado depois dessa quantidade de tentativas com falha seguidas, incluindo as repetições.",
+      "leaseSeconds": "Tempo de reserva (s)",
+      "leaseSecondsHint": "Uma entrega interrompida é enviada de novo depois desse tempo.",
+      "retentionDays": "Manter registro de entregas (dias)",
+      "retentionDaysHint": "Depois desse tempo, as entregas bem-sucedidas são excluídas do registro. As que falharam ficam.",
+      "cleanupIntervalMinutes": "Intervalo de limpeza (min)",
+      "cleanupIntervalMinutesHint": "Com que frequência as entradas antigas são excluídas do registro de entregas."
+    },
+    "notifications": {
+      "title": "Notificações",
+      "description": "Notificações por e-mail e Telegram. Elas são enviadas no Intervalo de verificação definido em Webhooks.",
+      "batchSize": "Tamanho do lote",
+      "batchSizeHint": "Quantas notificações são enviadas a cada verificação.",
+      "maxAttempts": "Máximo de tentativas",
+      "maxAttemptsHint": "Quantas vezes uma notificação é enviada antes de ser salva como falha.",
+      "leaseSeconds": "Tempo de reserva (s)",
+      "leaseSecondsHint": "Uma notificação interrompida é enviada de novo depois desse tempo."
+    },
+    "imports": {
+      "title": "Importações",
+      "description": "Importações de outras ferramentas de acompanhamento.",
+      "pollIntervalMs": "Intervalo de verificação (ms)",
+      "pollIntervalMsHint": "Com que frequência as importações na fila são iniciadas."
+    },
+    "agentRuns": {
+      "title": "Execuções de agentes",
+      "description": "Como as execuções de agentes na fila e agendadas começam e são repetidas.",
+      "pollIntervalMs": "Intervalo de verificação (ms)",
+      "pollIntervalMsHint": "Com que frequência as execuções são tiradas da fila e os agendamentos que chegaram na hora entram na fila.",
+      "maxAttempts": "Máximo de tentativas",
+      "maxAttemptsHint": "Quantas vezes uma execução é iniciada antes de ser salva como falha.",
+      "leaseSeconds": "Tempo de reserva (s)",
+      "leaseSecondsHint": "Uma execução interrompida começa de novo depois desse tempo. Para agentes internos, esse tempo nunca é menor que o Limite de tempo de execução em Geral."
+    },
+    "agentChat": {
+      "title": "Chat com agentes",
+      "description": "Chats com agentes externos, por um runner ou por uma URL do endpoint.",
+      "leaseSeconds": "Tempo de reserva (s)",
+      "leaseSecondsHint": "Uma resposta interrompida começa de novo depois desse tempo.",
+      "maxAttempts": "Máximo de tentativas",
+      "maxAttemptsHint": "Quantas vezes o agente recebe uma mensagem antes de a resposta ser salva como falha.",
+      "claimWaitMs": "Espera do runner (ms)",
+      "claimWaitMsHint": "Quanto tempo uma requisição do runner espera por uma nova mensagem do chat.",
+      "claimPollMs": "Intervalo de verificação do runner (ms)",
+      "claimPollMsHint": "Uma nova mensagem do chat chega a um runner em espera dentro desse tempo.",
+      "streamPollMs": "Intervalo de verificação da resposta (ms)",
+      "streamPollMsHint": "Com que frequência um chat aberto mostra novas partes da resposta.",
+      "historyMessages": "Histórico do chat (mensagens)",
+      "historyMessagesHint": "Quantas mensagens anteriores do chat o agente recebe com cada mensagem nova."
+    },
+    "agentInvocations": {
+      "title": "Agentes com URL do endpoint",
+      "description": "Tarefas e mensagens de chat enviadas para a URL do endpoint de um agente.",
+      "pollIntervalMs": "Intervalo de verificação (ms)",
+      "pollIntervalMsHint": "Com que frequência as tarefas e mensagens de chat na fila são enviadas a esses agentes.",
+      "timeoutMs": "Timeout (ms)",
+      "timeoutMsHint": "Quanto tempo o endpoint tem para responder. Se ele demorar, a tarefa ou a mensagem é enviada de novo quando o tempo de reserva terminar."
+    },
+    "sweeps": {
+      "title": "Arquivamento e limpeza",
+      "description": "Com que frequência as issues fechadas e paradas são arquivadas e os rastros de execução antigos e links públicos expirados são excluídos.",
+      "autoArchiveMinutes": "Intervalo de arquivamento (min)",
+      "autoArchiveMinutesHint": "Com que frequência as issues fechadas e paradas são arquivadas nos projetos com Arquivo ativado.",
+      "tracePruneMinutes": "Intervalo de limpeza de rastros (min)",
+      "tracePruneMinutesHint": "Com que frequência os rastros de execução mais antigos que Manter rastros de execução em Geral são excluídos.",
+      "shareExpiryMinutes": "Intervalo de limpeza de links (min)",
+      "shareExpiryMinutesHint": "Com que frequência os links públicos expirados são excluídos. Um link para de abrir quando expira, seja qual for esse valor."
+    },
+    "bot": {
+      "title": "Bot do Telegram",
+      "description": "Quão rápido o bot percebe uma mudança nas suas configurações.",
+      "configPollIntervalMs": "Intervalo de verificação das configurações (ms)",
+      "configPollIntervalMsHint": "Uma mudança em Telegram chega ao bot dentro desse tempo."
+    }
+  },
   "telegram": {
     "saved": "Configurações do Telegram salvas",
     "bot": "Bot",

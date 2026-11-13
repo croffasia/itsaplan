@@ -150,8 +150,9 @@ services:
     ports:
       - '${API_PORT:-3000}:3000'
 
-  # Webhook delivery, notification delivery, agent schedules, and agent runs.
-  # Shares the database with the api. No public ports.
+  # Webhook and notification delivery, source imports, and the agent schedules, whose
+  # runs it queues for the api to execute. Shares the database with the api. No public
+  # ports.
   worker:
     image: ghcr.io/croffasia/itsaplan-pro-worker:${VERSION:-latest}
     restart: unless-stopped
@@ -184,7 +185,6 @@ services:
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
       S3_REGION: ${S3_REGION:-us-east-1}
       S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
-      # Optional tuning lives in apps/worker/src/config.ts.
 
   # Telegram bot: long polling for the instance bot, completing the account links
   # users start from their profile. The bot token is stored in the database and

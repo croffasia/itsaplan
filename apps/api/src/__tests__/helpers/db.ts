@@ -1,4 +1,11 @@
-import { db, defaultMemberPermissions, teamRole } from '@repo/db';
+import {
+  JOB_SETTINGS_KEY,
+  db,
+  defaultJobSettings,
+  defaultMemberPermissions,
+  setSetting,
+  teamRole,
+} from '@repo/db';
 import { sql } from 'drizzle-orm';
 
 // Empties every table in the test database so each test starts clean. Two
@@ -48,4 +55,6 @@ export async function resetDb(): Promise<void> {
   await db
     .insert(teamRole)
     .values({ name: 'Member', isDefault: true, permissions: defaultMemberPermissions() });
+  // Migration 0180 seeds the job settings, and the jobs read nothing else.
+  await setSetting(JOB_SETTINGS_KEY, defaultJobSettings());
 }

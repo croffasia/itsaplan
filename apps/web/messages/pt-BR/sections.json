@@ -45,6 +45,10 @@
       "label": "Armazenamento",
       "description": "Quanto as pessoas podem enviar: o tamanho de um único arquivo, os tipos de anexo aceitos e o armazenamento que cada projeto recebe."
     },
+    "jobs": {
+      "label": "Tarefas em segundo plano",
+      "description": "Com que frequência as tarefas em segundo plano rodam e são repetidas. As mudanças valem sem reiniciar."
+    },
     "email-templates": {
       "label": "Modelos de e-mail",
       "description": "Gerencie os modelos de e-mails do sistema."

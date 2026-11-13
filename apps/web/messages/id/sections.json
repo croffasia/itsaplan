@@ -45,6 +45,10 @@
       "label": "Penyimpanan",
       "description": "Batas unggahan pengguna: ukuran file tunggal, jenis lampiran yang diterima, dan ruang penyimpanan untuk setiap proyek."
     },
+    "jobs": {
+      "label": "Tugas latar belakang",
+      "description": "Seberapa sering tugas latar belakang berjalan dan dicoba ulang. Perubahan berlaku tanpa restart."
+    },
     "email-templates": {
       "label": "Template email",
       "description": "Kelola template email sistem."

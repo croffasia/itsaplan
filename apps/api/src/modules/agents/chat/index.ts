@@ -1,4 +1,5 @@
 import { Elysia, t } from 'elysia';
+import { getJobSettings } from '@repo/db';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
@@ -24,7 +25,6 @@ import {
   type ChatMessageStatus,
 } from './model';
 import {
-  agentChatConfig,
   appendEvents,
   cancelMessage,
   claimNextMessage,
@@ -265,6 +265,7 @@ async function* streamChatEvents(
   after: number,
 ): AsyncGenerator<string> {
   const until = Date.now() + STREAM_MAX_MS;
+  const { streamPollMs } = (await getJobSettings()).agentChat;
   let cursor = after;
   let ended = false;
   let quietSince = Date.now();
@@ -291,7 +292,7 @@ async function* streamChatEvents(
       yield ': ping\n\n';
       quietSince = Date.now();
     }
-    await sleep(agentChatConfig.streamPollMs());
+    await sleep(streamPollMs);
   }
 }
 

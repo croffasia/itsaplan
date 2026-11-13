@@ -34,6 +34,17 @@ export {
   type NotificationConfig,
 } from './domains/notification-settings';
 export {
+  JOB_SETTINGS_KEY,
+  JOB_SETTING_BOUNDS,
+  defaultJobSettings,
+  getJobSettings,
+  mergeJobSettings,
+  moveJobEnv,
+  startJobEnvMove,
+  type JobSettings,
+  type JobSettingsPatch,
+} from './domains/job-settings';
+export {
   STORAGE_SETTING_KEY,
   MB,
   DEFAULT_ATTACHMENT_MIME_TYPES,

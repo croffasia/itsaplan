@@ -133,8 +133,9 @@ services:
       # API_URL is the api origin; APP_URL is the web origin.
       - API_URL=${SERVICE_URL_API}
       - APP_URL=${SERVICE_URL_WEB}
-      # To override the cookie parent domain (multi-label TLDs / deep subdomains),
-      # add a COOKIE_DOMAIN env in Coolify — the code reads it if present.
+      # Set COOKIE_DOMAIN only to override the parent domain derived from
+      # APP_URL (multi-label TLDs, deep subdomains).
+      - COOKIE_DOMAIN=${COOKIE_DOMAIN:-}
       # Where the client IP for the rate limit is read; empty reads X-Forwarded-For.
       - CLIENT_IP_HEADER=${CLIENT_IP_HEADER:-}
       - TRUSTED_PROXIES=${TRUSTED_PROXIES:-}
@@ -156,8 +157,9 @@ services:
       retries: 5
       start_period: 30s
 
-  # Background worker for webhook delivery, agent schedules, and autonomous agent
-  # runs. Shares the database with the api. No public ports, so nothing to probe.
+  # Background worker: webhook and notification delivery, source imports, and the agent
+  # schedules, whose runs it queues for the api to execute. Shares the database with
+  # the api. No public ports, so nothing to probe.
   worker:
     image: ghcr.io/croffasia/itsaplan-worker:${VERSION:-latest}
     restart: unless-stopped
@@ -189,12 +191,6 @@ services:
       S3_SECRET_ACCESS_KEY: ${SERVICE_PASSWORD_MINIO}
       S3_REGION: ${S3_REGION:-us-east-1}
       S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
-      # Optional tuning — defaults live in apps/worker/src/config.ts:
-      # WEBHOOK_POLL_INTERVAL_MS, WEBHOOK_BATCH_SIZE, WEBHOOK_TIMEOUT_MS,
-      # WEBHOOK_MAX_ATTEMPTS, WEBHOOK_DISABLE_THRESHOLD, WEBHOOK_LEASE_SECONDS,
-      # WEBHOOK_CLEANUP_DAYS, WEBHOOK_CLEANUP_EVERY_TICKS.
-      # Agent schedules: AGENT_RUN_POLL_INTERVAL_MS. The api runs the queued runs
-      # and reads the other AGENT_RUN_* values.
 
   # Telegram bot: long polling for the instance bot, completing the account links
   # users start from their profile. It reads the bot token and writes the links in the
@@ -217,8 +213,6 @@ services:
       APP_ENCRYPTION_KEY: ${SERVICE_PASSWORD_64_ENCRYPTION}
       # The bot token itself is not set here: it is stored in the database and edited
       # in god mode, so the service picks up a change without a redeploy.
-      # Optional tuning — defaults live in apps/bot/src/config.ts:
-      # BOT_CONFIG_POLL_INTERVAL_MS, BOT_CONFIG_RETRY_INTERVAL_MS.
 
   web:
     image: ghcr.io/croffasia/itsaplan-web:${VERSION:-latest}

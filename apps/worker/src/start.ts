@@ -1,3 +1,4 @@
+import { startJobEnvMove } from '@repo/db';
 import { startWorker } from './worker';
 import { startAgentWorker } from './agent-worker';
 import { startImportWorker } from './import-worker';
@@ -7,6 +8,7 @@ import { startImportWorker } from './import-worker';
 // (registerImportSource) does it before calling this.
 export function startWorkers(): void {
   console.log('[worker] worker starting');
+  startJobEnvMove('worker');
   const worker = startWorker();
   const agentWorker = startAgentWorker();
   const importWorker = startImportWorker();

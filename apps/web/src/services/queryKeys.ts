@@ -360,6 +360,7 @@ export const qk = {
   instanceEmailTemplates: ['instanceEmailTemplates'] as const,
   instanceEmailPreview: (draft: unknown) => ['instanceEmailPreview', draft] as const,
   instanceStorageSettings: ['instanceStorageSettings'] as const,
+  instanceJobSettings: ['instanceJobSettings'] as const,
   systemRoles: ['systemRoles'] as const,
   // The upload limits as read by the upload UI (open to any signed-in user).
   storageSettings: ['storageSettings'] as const,

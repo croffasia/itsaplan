@@ -45,6 +45,10 @@
       "label": "Almacenamiento",
       "description": "Cuánto pueden subir las personas: el tamaño de un fichero solo, los tipos de adjunto aceptados, y el almacenamiento que recibe cada proyecto."
     },
+    "jobs": {
+      "label": "Tareas en segundo plano",
+      "description": "Cada cuánto se ejecutan y reintentan las tareas en segundo plano. Los cambios se aplican sin reiniciar."
+    },
     "email-templates": {
       "label": "Plantillas de correo",
       "description": "Gestiona las plantillas de los correos del sistema."

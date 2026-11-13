@@ -2,8 +2,8 @@
 
 Standalone Bun process (own Dockerfile). `start.ts` runs three poll loops: `worker.ts` (webhook and
 notification delivery, webhook cleanup, telemetry), `agent-worker.ts` (cron schedules) and
-`import-worker.ts` (source imports). Webhook defaults are in `src/config.ts`; other settings are
-read with `intEnv` where they are used. The import pipeline: `docs/dev/import-worker.md`.
+`import-worker.ts` (source imports). Intervals, batch sizes, leases and attempts come from the job
+settings in `@repo/db`, read on every pass. The import pipeline: `docs/dev/import-worker.md`.
 
 ## Invariants
 
@@ -19,11 +19,11 @@ read with `intEnv` where they are used. The import pipeline: `docs/dev/import-wo
 - **The worker queues cron schedules and runs no agent.** A due `cron` schedule of an active
   project gets an `agent_run` row. The api queues the other runs and executes internal agents. A
   runner or an invocation endpoint executes external ones.
-- **Claims use a lease; `status` stays `pending`.** A claim pushes `next_attempt_at` forward by
-  `WEBHOOK_LEASE_SECONDS`, `NOTIFICATION_LEASE_SECONDS`, or `LEASE_SECONDS` in `import-store.ts`.
-  Cron schedules use a row lock in a transaction instead.
-- **Keep `WEBHOOK_LEASE_SECONDS` above `WEBHOOK_TIMEOUT_MS`; no code checks it.** The timeout is a
-  socket idle timeout, so a receiver that keeps sending bytes can outlast the lease.
+- **Claims use a lease; `status` stays `pending`.** A claim pushes `next_attempt_at` forward by the
+  webhook or notification lease of the job settings, or `LEASE_SECONDS` in `import-store.ts`. Cron
+  schedules use a row lock in a transaction instead.
+- **The webhook timeout is a socket idle timeout.** God mode refuses a lease that is not longer than
+  it, but a receiver that keeps sending bytes can still outlast the lease.
 - **Notification credentials are read, never taken from the caller.** A delivery row names its
   project; credentials come from the owning team and the instance config.
 - **Always send a supplied URL through `pinnedFetch` from `@repo/net`, the SSRF guard.** That covers

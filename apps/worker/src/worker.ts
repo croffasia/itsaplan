@@ -1,4 +1,4 @@
-import { workerConfig } from './config';
+import { getJobSettings, type JobSettings } from '@repo/db';
 import { deliver } from './delivery';
 import { processNotificationDeliveries } from './notification-delivery';
 import { equalJitterBackoffMs } from './backoff';
@@ -14,27 +14,26 @@ import {
   cleanupOldDeliveries,
 } from './store';
 
-let ticksSinceCleanup = 0;
+let lastCleanupAt = Date.now();
 // Starts due, so an install is visible even if the instance is removed minutes later.
 let ticksSinceTelemetry = TELEMETRY_CHECK_EVERY_TICKS;
 
 export function startWorker(): WorkerHandle {
-  return startPollLoop('worker', tick, () => workerConfig().pollIntervalMs);
+  return startPollLoop('worker', tick, (jobs) => jobs.webhooks.pollIntervalMs);
 }
 
 // One poll: claim a batch of due deliveries, send them concurrently, record each
-// outcome, then run the delivery cleanup and the telemetry check on their own tick
-// intervals.
+// outcome, then run the delivery cleanup and the telemetry check when they are due.
 async function tick(): Promise<void> {
-  const cfg = workerConfig();
-  const claimed = await claimDueDeliveries();
+  const { webhooks, notifications } = await getJobSettings();
+  const claimed = await claimDueDeliveries(webhooks);
   if (claimed.length > 0) {
-    await Promise.all(claimed.map(processDelivery));
+    await Promise.all(claimed.map((d) => processDelivery(d, webhooks)));
   }
-  await processNotificationDeliveries();
-  if (++ticksSinceCleanup >= cfg.cleanupEveryTicks) {
-    ticksSinceCleanup = 0;
-    const removed = await cleanupOldDeliveries();
+  await processNotificationDeliveries(notifications);
+  if (Date.now() - lastCleanupAt >= webhooks.cleanupIntervalMinutes * 60_000) {
+    lastCleanupAt = Date.now();
+    const removed = await cleanupOldDeliveries(webhooks.retentionDays);
     if (removed > 0) console.log(`[worker] cleaned up ${removed} old deliveries`);
   }
   if (++ticksSinceTelemetry >= TELEMETRY_CHECK_EVERY_TICKS) {
@@ -48,8 +47,7 @@ async function tick(): Promise<void> {
   }
 }
 
-async function processDelivery(d: ClaimedDelivery): Promise<void> {
-  const cfg = workerConfig();
+async function processDelivery(d: ClaimedDelivery, cfg: JobSettings['webhooks']): Promise<void> {
   if (!d.isActive) {
     await markSkippedInactive(d.id);
     return;

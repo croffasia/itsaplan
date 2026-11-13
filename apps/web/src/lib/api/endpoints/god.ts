@@ -403,6 +403,46 @@ export const updateInstanceStorageSettings = (patch: StorageSettingsPatch) =>
     body: JSON.stringify(patch),
   });
 
+// How the background jobs of the api, the worker and the bot run. Each job reads them on
+// its next pass, so a change applies without a restart.
+export interface JobSettings {
+  webhooks: {
+    // Also paces notification deliveries: the worker sends both on one pass.
+    pollIntervalMs: number;
+    batchSize: number;
+    timeoutMs: number;
+    maxAttempts: number;
+    disableThreshold: number;
+    leaseSeconds: number;
+    retentionDays: number;
+    cleanupIntervalMinutes: number;
+  };
+  notifications: { batchSize: number; maxAttempts: number; leaseSeconds: number };
+  imports: { pollIntervalMs: number };
+  agentRuns: { pollIntervalMs: number; maxAttempts: number; leaseSeconds: number };
+  agentChat: {
+    leaseSeconds: number;
+    maxAttempts: number;
+    claimWaitMs: number;
+    claimPollMs: number;
+    streamPollMs: number;
+    historyMessages: number;
+  };
+  agentInvocations: { pollIntervalMs: number; timeoutMs: number };
+  sweeps: { autoArchiveMinutes: number; tracePruneMinutes: number; shareExpiryMinutes: number };
+  bot: { configPollIntervalMs: number };
+}
+
+export type JobSettingsPatch = { [G in keyof JobSettings]?: Partial<JobSettings[G]> };
+
+export const getInstanceJobSettings = () => request<JobSettings>('/god/job-settings');
+
+export const updateInstanceJobSettings = (patch: JobSettingsPatch) =>
+  request<JobSettings>('/god/job-settings', {
+    method: 'PUT',
+    body: JSON.stringify(patch),
+  });
+
 export const getInstanceGoogleSettings = () =>
   request<InstanceGoogleSettings>('/god/google-settings');
 

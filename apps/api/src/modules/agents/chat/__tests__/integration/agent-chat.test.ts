@@ -4,24 +4,10 @@ import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
 import { createAgent, teamOf } from '#tests/helpers/agents';
-import { agentChatConfig } from '#modules/agents/chat/service';
+import { setTestJobSettings } from '#tests/helpers/jobs';
 
 // Chatting with an external agent: a member sends a message, the agent's runner claims
-// it, reports what its command produces as AG-UI events, and closes it. The claim waits
-// for work on the server, so the wait is shortened here — otherwise every empty-feed
-// assertion would sit out the full production wait.
-process.env.AGENT_CHAT_CLAIM_WAIT_MS = '50';
-process.env.AGENT_CHAT_CLAIM_POLL_MS = '10';
-
-it('caps configured claim wait below the runner request timeout', () => {
-  const previous = process.env.AGENT_CHAT_CLAIM_WAIT_MS;
-  process.env.AGENT_CHAT_CLAIM_WAIT_MS = '60000';
-  try {
-    expect(agentChatConfig.claimWaitMs()).toBe(30_000);
-  } finally {
-    process.env.AGENT_CHAT_CLAIM_WAIT_MS = previous;
-  }
-});
+// it, reports what its command produces as AG-UI events, and closes it.
 
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
@@ -78,6 +64,9 @@ async function readStream(
 describe('external agent chat', () => {
   beforeEach(async () => {
     await resetDb();
+    // The claim waits for work on the server, so the wait is shortened here: otherwise
+    // every empty-feed assertion would sit out the full production wait.
+    await setTestJobSettings({ agentChat: { claimWaitMs: 50, claimPollMs: 10 } });
   });
 
   it('queues an answer the runner claims with the message framed as its task', async () => {
@@ -408,91 +397,69 @@ describe('external agent chat', () => {
   }
 
   it('recovers the oldest expired lease and advances after exhausted attempts', async () => {
-    const previousLease = process.env.AGENT_CHAT_LEASE_SECONDS;
-    const previousAttempts = process.env.AGENT_CHAT_MAX_ATTEMPTS;
-    process.env.AGENT_CHAT_LEASE_SECONDS = '1';
-    process.env.AGENT_CHAT_MAX_ATTEMPTS = '2';
-    try {
-      const { asOwner, asRunner, agent } = await setup();
-      const first = (await send(asOwner, agent.id, 'First')).data!;
-      const next = (await send(asOwner, agent.id, 'Next', first.threadId)).data!;
-      expect((await asRunner['agent-chats'].claim.post()).data!.message).toMatchObject({
-        id: first.messageId,
-        attempts: 1,
-      });
-      await asRunner['agent-chats']({ messageId: first.messageId }).events.post({
-        events: [{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'abandoned' }],
-      });
-      expect((await asRunner['agent-chats'].claim.post()).data!.message).toBeNull();
-      await Bun.sleep(1100);
-      const claims = await Promise.all([
-        asRunner['agent-chats'].claim.post(),
-        asRunner['agent-chats'].claim.post(),
-      ]);
-      const answers = claims.flatMap((claim) => (claim.data!.message ? [claim.data!.message] : []));
-      expect(answers).toHaveLength(1);
-      expect(answers[0]).toMatchObject({ id: first.messageId, attempts: 2 });
-      const events = await chatOf(asOwner, agent.id)
-        .chat({ messageId: first.messageId })
-        .events.get();
-      expect(events.data!.items).toEqual([]);
-      await Bun.sleep(1100);
-      expect((await asRunner['agent-chats'].claim.post()).data!.message).toMatchObject({
-        id: next.messageId,
-        attempts: 1,
-      });
-      const failed = await chatOf(asOwner, agent.id)
-        .chat({ messageId: first.messageId })
-        .events.get();
-      expect(failed.data!).toMatchObject({
-        status: 'failed',
-        error: 'Runner did not report a result',
-      });
-    } finally {
-      if (previousLease === undefined) delete process.env.AGENT_CHAT_LEASE_SECONDS;
-      else process.env.AGENT_CHAT_LEASE_SECONDS = previousLease;
-      if (previousAttempts === undefined) delete process.env.AGENT_CHAT_MAX_ATTEMPTS;
-      else process.env.AGENT_CHAT_MAX_ATTEMPTS = previousAttempts;
-    }
+    await setTestJobSettings({ agentChat: { leaseSeconds: 1, maxAttempts: 2 } });
+    const { asOwner, asRunner, agent } = await setup();
+    const first = (await send(asOwner, agent.id, 'First')).data!;
+    const next = (await send(asOwner, agent.id, 'Next', first.threadId)).data!;
+    expect((await asRunner['agent-chats'].claim.post()).data!.message).toMatchObject({
+      id: first.messageId,
+      attempts: 1,
+    });
+    await asRunner['agent-chats']({ messageId: first.messageId }).events.post({
+      events: [{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'abandoned' }],
+    });
+    expect((await asRunner['agent-chats'].claim.post()).data!.message).toBeNull();
+    await Bun.sleep(1100);
+    const claims = await Promise.all([
+      asRunner['agent-chats'].claim.post(),
+      asRunner['agent-chats'].claim.post(),
+    ]);
+    const answers = claims.flatMap((claim) => (claim.data!.message ? [claim.data!.message] : []));
+    expect(answers).toHaveLength(1);
+    expect(answers[0]).toMatchObject({ id: first.messageId, attempts: 2 });
+    const events = await chatOf(asOwner, agent.id)
+      .chat({ messageId: first.messageId })
+      .events.get();
+    expect(events.data!.items).toEqual([]);
+    await Bun.sleep(1100);
+    expect((await asRunner['agent-chats'].claim.post()).data!.message).toMatchObject({
+      id: next.messageId,
+      attempts: 1,
+    });
+    const failed = await chatOf(asOwner, agent.id)
+      .chat({ messageId: first.messageId })
+      .events.get();
+    expect(failed.data!).toMatchObject({
+      status: 'failed',
+      error: 'Runner did not report a result',
+    });
   });
 
   it('claims another thread when an exhausted head expires during a long poll', async () => {
-    const previousLease = process.env.AGENT_CHAT_LEASE_SECONDS;
-    const previousAttempts = process.env.AGENT_CHAT_MAX_ATTEMPTS;
-    const previousWait = process.env.AGENT_CHAT_CLAIM_WAIT_MS;
-    process.env.AGENT_CHAT_LEASE_SECONDS = '1';
-    process.env.AGENT_CHAT_MAX_ATTEMPTS = '1';
-    process.env.AGENT_CHAT_CLAIM_WAIT_MS = '2500';
+    await setTestJobSettings({
+      agentChat: { leaseSeconds: 1, maxAttempts: 1, claimWaitMs: 2500 },
+    });
+    const { asOwner, asRunner, agent } = await setup();
+    const first = (await send(asOwner, agent.id, 'First')).data!;
+    expect((await asRunner['agent-chats'].claim.post()).data!.message).toMatchObject({
+      id: first.messageId,
+      attempts: 1,
+    });
+    const waiting = asRunner['agent-chats'].claim.post();
     try {
-      const { asOwner, asRunner, agent } = await setup();
-      const first = (await send(asOwner, agent.id, 'First')).data!;
-      expect((await asRunner['agent-chats'].claim.post()).data!.message).toMatchObject({
-        id: first.messageId,
+      await Bun.sleep(1100);
+      const expired = await chatOf(asOwner, agent.id)
+        .chat({ messageId: first.messageId })
+        .events.get();
+      expect(expired.data!.status).toBe('streaming');
+      const other = (await send(asOwner, agent.id, 'Other')).data!;
+      expect((await waiting).data!.message).toMatchObject({
+        id: other.messageId,
+        threadId: other.threadId,
         attempts: 1,
       });
-      const waiting = asRunner['agent-chats'].claim.post();
-      try {
-        await Bun.sleep(1100);
-        const expired = await chatOf(asOwner, agent.id)
-          .chat({ messageId: first.messageId })
-          .events.get();
-        expect(expired.data!.status).toBe('streaming');
-        const other = (await send(asOwner, agent.id, 'Other')).data!;
-        expect((await waiting).data!.message).toMatchObject({
-          id: other.messageId,
-          threadId: other.threadId,
-          attempts: 1,
-        });
-      } finally {
-        await waiting;
-      }
     } finally {
-      if (previousLease === undefined) delete process.env.AGENT_CHAT_LEASE_SECONDS;
-      else process.env.AGENT_CHAT_LEASE_SECONDS = previousLease;
-      if (previousAttempts === undefined) delete process.env.AGENT_CHAT_MAX_ATTEMPTS;
-      else process.env.AGENT_CHAT_MAX_ATTEMPTS = previousAttempts;
-      if (previousWait === undefined) delete process.env.AGENT_CHAT_CLAIM_WAIT_MS;
-      else process.env.AGENT_CHAT_CLAIM_WAIT_MS = previousWait;
+      await waiting;
     }
   });
 

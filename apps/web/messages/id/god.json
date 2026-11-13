@@ -280,6 +280,101 @@
     "quotaMb": "Penyimpanan per proyek (MB)",
     "quotaNote": "Setelah proyek mencapai kuota, unggahan baru akan ditolak hingga seseorang menghapus lampiran."
   },
+  "jobs": {
+    "saved": "Pengaturan tugas latar belakang disimpan",
+    "range": "Masukkan bilangan bulat dari {min, number} sampai {max, number}.",
+    "withRange": "{hint} Dari {min, number} sampai {max, number}.",
+    "webhookLeaseNote": "Atur durasi lease lebih lama dari batas waktu. Durasi lease dalam detik, batas waktu dalam milidetik.",
+    "webhookTimeoutNote": "Atur batas waktu lebih pendek dari durasi lease. Durasi lease dalam detik, batas waktu dalam milidetik.",
+    "agentLeaseNote": "Atur durasi lease lebih lama dari batas waktu di Agen dengan URL endpoint. Durasi lease dalam detik, batas waktu dalam milidetik.",
+    "invocationTimeoutNote": "Atur batas waktu lebih pendek dari durasi lease di Eksekusi agen dan Chat agen. Durasi lease dalam detik, batas waktu dalam milidetik.",
+    "webhooks": {
+      "title": "Webhook",
+      "description": "Cara pengiriman dikirim dan dicoba ulang, kapan webhook yang terus gagal dinonaktifkan, dan berapa lama log disimpan.",
+      "pollIntervalMs": "Interval pemeriksaan (ms)",
+      "pollIntervalMsHint": "Seberapa sering pengiriman dan notifikasi dalam antrean dikirim.",
+      "batchSize": "Ukuran batch",
+      "batchSizeHint": "Berapa banyak pengiriman yang dikirim setiap pemeriksaan.",
+      "timeoutMs": "Batas waktu (ms)",
+      "timeoutMsHint": "Berapa lama server penerima punya waktu untuk merespons sebelum percobaan dianggap gagal.",
+      "maxAttempts": "Percobaan maksimum",
+      "maxAttemptsHint": "Berapa kali pengiriman dikirim sebelum disimpan sebagai gagal.",
+      "disableThreshold": "Gagal berturut-turut",
+      "disableThresholdHint": "Webhook dinonaktifkan setelah sebanyak ini percobaan gagal berturut-turut, termasuk percobaan ulang.",
+      "leaseSeconds": "Durasi lease (dtk)",
+      "leaseSecondsHint": "Pengiriman yang terputus dikirim lagi setelah waktu ini.",
+      "retentionDays": "Simpan log pengiriman (hari)",
+      "retentionDaysHint": "Pengiriman yang berhasil dihapus dari log setelah waktu ini. Yang gagal tetap disimpan.",
+      "cleanupIntervalMinutes": "Interval pembersihan (menit)",
+      "cleanupIntervalMinutesHint": "Seberapa sering entri lama dihapus dari log pengiriman."
+    },
+    "notifications": {
+      "title": "Notifikasi",
+      "description": "Notifikasi email dan Telegram. Notifikasi dikirim sesuai Interval pemeriksaan di Webhook.",
+      "batchSize": "Ukuran batch",
+      "batchSizeHint": "Berapa banyak notifikasi yang dikirim setiap pemeriksaan.",
+      "maxAttempts": "Percobaan maksimum",
+      "maxAttemptsHint": "Berapa kali notifikasi dikirim sebelum disimpan sebagai gagal.",
+      "leaseSeconds": "Durasi lease (dtk)",
+      "leaseSecondsHint": "Notifikasi yang terputus dikirim lagi setelah waktu ini."
+    },
+    "imports": {
+      "title": "Impor",
+      "description": "Impor dari alat pelacak lain.",
+      "pollIntervalMs": "Interval pemeriksaan (ms)",
+      "pollIntervalMsHint": "Seberapa sering impor dalam antrean dimulai."
+    },
+    "agentRuns": {
+      "title": "Eksekusi agen",
+      "description": "Cara eksekusi agen dari antrean dan jadwal dimulai dan dicoba ulang.",
+      "pollIntervalMs": "Interval pemeriksaan (ms)",
+      "pollIntervalMsHint": "Seberapa sering eksekusi diambil dari antrean dan jadwal yang sudah waktunya dimasukkan ke antrean.",
+      "maxAttempts": "Percobaan maksimum",
+      "maxAttemptsHint": "Berapa kali eksekusi dimulai sebelum disimpan sebagai gagal.",
+      "leaseSeconds": "Durasi lease (dtk)",
+      "leaseSecondsHint": "Eksekusi yang terputus dimulai ulang setelah waktu ini. Untuk agen internal, waktu ini tidak pernah lebih pendek dari Batas waktu jalan di Umum."
+    },
+    "agentChat": {
+      "title": "Chat agen",
+      "description": "Chat dengan agen eksternal, melalui runner atau URL endpoint.",
+      "leaseSeconds": "Durasi lease (dtk)",
+      "leaseSecondsHint": "Jawaban yang terputus dimulai ulang setelah waktu ini.",
+      "maxAttempts": "Percobaan maksimum",
+      "maxAttemptsHint": "Berapa kali agen menerima pesan sebelum jawabannya disimpan sebagai gagal.",
+      "claimWaitMs": "Waktu tunggu runner (ms)",
+      "claimWaitMsHint": "Berapa lama permintaan runner menunggu pesan chat baru.",
+      "claimPollMs": "Interval pemeriksaan runner (ms)",
+      "claimPollMsHint": "Pesan chat baru sampai ke runner yang menunggu dalam waktu ini.",
+      "streamPollMs": "Interval pemeriksaan jawaban (ms)",
+      "streamPollMsHint": "Seberapa sering chat yang terbuka menampilkan bagian baru dari jawaban.",
+      "historyMessages": "Riwayat chat (pesan)",
+      "historyMessagesHint": "Berapa banyak pesan chat sebelumnya yang diterima agen bersama setiap pesan baru."
+    },
+    "agentInvocations": {
+      "title": "Agen dengan URL endpoint",
+      "description": "Tugas dan pesan chat yang dikirim ke URL endpoint agen.",
+      "pollIntervalMs": "Interval pemeriksaan (ms)",
+      "pollIntervalMsHint": "Seberapa sering tugas dan pesan chat dalam antrean dikirim ke agen ini.",
+      "timeoutMs": "Batas waktu (ms)",
+      "timeoutMsHint": "Berapa lama endpoint punya waktu untuk merespons. Jika terlambat, tugas atau pesan dikirim ulang saat durasi lease-nya berakhir."
+    },
+    "sweeps": {
+      "title": "Arsip dan pembersihan",
+      "description": "Seberapa sering issue tertutup yang usang diarsipkan, serta trace eksekusi lama dan tautan publik kedaluwarsa dihapus.",
+      "autoArchiveMinutes": "Interval arsip (menit)",
+      "autoArchiveMinutesHint": "Seberapa sering issue tertutup yang usang diarsipkan di proyek yang mengaktifkan Arsip.",
+      "tracePruneMinutes": "Interval pembersihan trace (menit)",
+      "tracePruneMinutesHint": "Seberapa sering trace eksekusi yang lebih lama dari Simpan trace eksekusi di Umum dihapus.",
+      "shareExpiryMinutes": "Interval pembersihan tautan (menit)",
+      "shareExpiryMinutesHint": "Seberapa sering tautan publik kedaluwarsa dihapus. Tautan berhenti terbuka saat kedaluwarsa, berapa pun nilai ini."
+    },
+    "bot": {
+      "title": "Bot Telegram",
+      "description": "Seberapa cepat bot menerima perubahan pengaturannya.",
+      "configPollIntervalMs": "Interval pemeriksaan pengaturan (ms)",
+      "configPollIntervalMsHint": "Perubahan di Telegram sampai ke bot dalam waktu ini."
+    }
+  },
   "telegram": {
     "saved": "Pengaturan Telegram disimpan",
     "bot": "Bot",

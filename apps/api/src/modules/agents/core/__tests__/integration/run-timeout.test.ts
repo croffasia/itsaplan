@@ -5,6 +5,7 @@ import { getAgentSettings, setAgentSettings } from '#modules/settings/service';
 import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { setTestJobSettings } from '#tests/helpers/jobs';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
 import { createAgent } from '#tests/helpers/agents';
 import { createCredential } from '#tests/helpers/integrations';
@@ -17,14 +18,12 @@ import { setRunAdmission } from '../../run-admission';
 
 describe('agent run timeout', () => {
   let endpoint: ReturnType<typeof Bun.serve>;
-  let previousLease: string | undefined;
   let previousSettings: Awaited<ReturnType<typeof getAgentSettings>>;
   let releaseModel: (() => void) | undefined;
   let processing: Promise<void> | undefined;
 
   beforeEach(async () => {
     await resetDb();
-    previousLease = process.env.AGENT_RUN_LEASE_SECONDS;
     previousSettings = await getAgentSettings();
     endpoint = Bun.serve({ port: 0, fetch: () => new Promise<Response>(() => {}) });
   });
@@ -32,8 +31,6 @@ describe('agent run timeout', () => {
   afterEach(async () => {
     clearLimits();
     setRunAdmission();
-    if (previousLease === undefined) delete process.env.AGENT_RUN_LEASE_SECONDS;
-    else process.env.AGENT_RUN_LEASE_SECONDS = previousLease;
     releaseModel?.();
     try {
       if (processing) await processing;
@@ -164,7 +161,7 @@ describe('agent run timeout', () => {
       },
     });
     const issueId = await queueRun();
-    process.env.AGENT_RUN_LEASE_SECONDS = '1';
+    await setTestJobSettings({ agentRuns: { leaseSeconds: 1 } });
     await setAgentSettings({ maxRunSeconds: 1 });
     setRunAdmission(async () => {
       await setAgentSettings({ maxRunSeconds: 1800 });
@@ -192,7 +189,7 @@ describe('agent run timeout', () => {
       },
     });
     const issueId = await queueRun();
-    process.env.AGENT_RUN_LEASE_SECONDS = '1';
+    await setTestJobSettings({ agentRuns: { leaseSeconds: 1 } });
     await setAgentSettings({ maxRunSeconds: 1 });
     setRunAdmission(async () => {
       await new Promise((resolve) => setTimeout(resolve, 1200));

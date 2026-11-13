@@ -1,9 +1,8 @@
-import { db, aiAgent, agentRun, project, projectMember } from '@repo/db';
+import { db, aiAgent, agentRun, getJobSettings, project, projectMember } from '@repo/db';
 import { and, eq, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
 import { type ContextUsage } from '../chat-usage';
 import {
-  agentRunConfig,
   deferRun,
   runTurn,
   loadRunThread,
@@ -130,7 +129,7 @@ export async function touchRunner(agentId: number): Promise<void> {
 // runner keeps dying ends in a visible state instead of being served forever. That is
 // the end of the run, so the issue's timeline gets the same entry a reported failure
 // writes.
-async function expireExhaustedRuns(agent: RunnerAgent): Promise<void> {
+async function expireExhaustedRuns(agent: RunnerAgent, maxAttempts: number): Promise<void> {
   const rows = await db
     .update(agentRun)
     .set({
@@ -143,7 +142,7 @@ async function expireExhaustedRuns(agent: RunnerAgent): Promise<void> {
       and(
         eq(agentRun.agentId, agent.id),
         eq(agentRun.status, 'pending'),
-        sql`${agentRun.attempts} >= ${agentRunConfig.maxAttempts()}`,
+        sql`${agentRun.attempts} >= ${maxAttempts}`,
         sql`${agentRun.nextAttemptAt} <= now()`,
       ),
     )
@@ -172,13 +171,14 @@ export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | nu
 // keeps two claims on the same agent from taking the same run.
 export async function takeNextRun(agent: RunnerAgent): Promise<RunnerRun | null> {
   const agentId = agent.id;
-  await expireExhaustedRuns(agent);
+  const { maxAttempts, leaseSeconds } = (await getJobSettings()).agentRuns;
+  await expireExhaustedRuns(agent, maxAttempts);
   const rows = await db.execute(sql`
     UPDATE agent_run r
     SET attempts = r.attempts + 1,
         started_at = coalesce(r.started_at, now()),
         execution_started_at = NULL,
-        next_attempt_at = now() + make_interval(secs => ${agentRunConfig.leaseSeconds()})
+        next_attempt_at = now() + make_interval(secs => ${leaseSeconds})
     WHERE r.id = (
       SELECT id FROM agent_run q
       WHERE q.agent_id = ${agentId} AND q.status = 'pending' AND q.next_attempt_at <= now()
@@ -281,11 +281,12 @@ export async function heartbeatRun(
   attempt?: number,
 ): Promise<boolean> {
   await touchRunner(agentId);
+  const { leaseSeconds } = (await getJobSettings()).agentRuns;
   const rows = await db
     .update(agentRun)
     .set({
       executionStartedAt: sql`coalesce(${agentRun.executionStartedAt}, now())`,
-      nextAttemptAt: sql`now() + make_interval(secs => ${agentRunConfig.leaseSeconds()})`,
+      nextAttemptAt: sql`now() + make_interval(secs => ${leaseSeconds})`,
     })
     .where(
       and(

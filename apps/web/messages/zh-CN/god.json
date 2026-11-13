@@ -280,6 +280,101 @@
     "quotaMb": "每个项目的存储空间（MB）",
     "quotaNote": "项目达到配额后会拒绝新上传，直到有人删除附件。"
   },
+  "jobs": {
+    "saved": "后台任务设置已保存",
+    "range": "请输入 {min, number} 到 {max, number} 之间的整数。",
+    "withRange": "{hint}范围为 {min, number} 到 {max, number}。",
+    "webhookLeaseNote": "请将租约时长设为长于超时。租约时长以秒为单位，超时以毫秒为单位。",
+    "webhookTimeoutNote": "请将超时设为短于租约时长。租约时长以秒为单位，超时以毫秒为单位。",
+    "agentLeaseNote": "请将租约时长设为长于“带端点 URL 的代理”中的超时。租约时长以秒为单位，超时以毫秒为单位。",
+    "invocationTimeoutNote": "请将超时设为短于“代理运行”和“代理聊天”中的租约时长。租约时长以秒为单位，超时以毫秒为单位。",
+    "webhooks": {
+      "title": "Webhook",
+      "description": "投递的发送与重试方式、持续失败的 Webhook 何时关闭，以及投递日志保留多久。",
+      "pollIntervalMs": "检查间隔（毫秒）",
+      "pollIntervalMsHint": "发送队列中投递和通知的频率。",
+      "batchSize": "批次大小",
+      "batchSizeHint": "每次检查发送的投递数。",
+      "timeoutMs": "超时（毫秒）",
+      "timeoutMsHint": "接收服务器的响应时限，超过后本次尝试记为失败。",
+      "maxAttempts": "最大尝试次数",
+      "maxAttemptsHint": "投递记为失败前的发送次数。",
+      "disableThreshold": "连续失败次数",
+      "disableThresholdHint": "连续失败的尝试（含重试）达到此次数后，Webhook 会被关闭。",
+      "leaseSeconds": "租约时长（秒）",
+      "leaseSecondsHint": "中断的投递会在此时长后重新发送。",
+      "retentionDays": "保留投递日志（天）",
+      "retentionDaysHint": "成功的投递在此时长后从日志中删除。失败的投递会保留。",
+      "cleanupIntervalMinutes": "清理间隔（分钟）",
+      "cleanupIntervalMinutesHint": "从投递日志中删除旧记录的频率。"
+    },
+    "notifications": {
+      "title": "通知",
+      "description": "邮件和 Telegram 通知，按 Webhook 中的“检查间隔”发送。",
+      "batchSize": "批次大小",
+      "batchSizeHint": "每次检查发送的通知数。",
+      "maxAttempts": "最大尝试次数",
+      "maxAttemptsHint": "通知记为失败前的发送次数。",
+      "leaseSeconds": "租约时长（秒）",
+      "leaseSecondsHint": "中断的通知会在此时长后重新发送。"
+    },
+    "imports": {
+      "title": "导入",
+      "description": "从其他项目管理工具导入。",
+      "pollIntervalMs": "检查间隔（毫秒）",
+      "pollIntervalMsHint": "启动队列中导入的频率。"
+    },
+    "agentRuns": {
+      "title": "代理运行",
+      "description": "队列中和定时的代理运行如何开始和重试。",
+      "pollIntervalMs": "检查间隔（毫秒）",
+      "pollIntervalMsHint": "从队列取出运行、并将到期的定时任务加入队列的频率。",
+      "maxAttempts": "最大尝试次数",
+      "maxAttemptsHint": "运行记为失败前的启动次数。",
+      "leaseSeconds": "租约时长（秒）",
+      "leaseSecondsHint": "中断的运行会在此时长后重新开始。对内部代理，此时长不会短于通用设置中的“运行时间上限”。"
+    },
+    "agentChat": {
+      "title": "代理聊天",
+      "description": "通过运行器或端点 URL 与外部代理的聊天。",
+      "leaseSeconds": "租约时长（秒）",
+      "leaseSecondsHint": "中断的回答会在此时长后重新开始。",
+      "maxAttempts": "最大尝试次数",
+      "maxAttemptsHint": "回答记为失败前代理收到消息的次数。",
+      "claimWaitMs": "运行器等待时长（毫秒）",
+      "claimWaitMsHint": "运行器请求等待新聊天消息的时长。",
+      "claimPollMs": "运行器检查间隔（毫秒）",
+      "claimPollMsHint": "新的聊天消息会在此时长内送达等待中的运行器。",
+      "streamPollMs": "回答检查间隔（毫秒）",
+      "streamPollMsHint": "打开的聊天显示回答新片段的频率。",
+      "historyMessages": "聊天历史（消息数）",
+      "historyMessagesHint": "代理随每条新消息收到的之前聊天消息数。"
+    },
+    "agentInvocations": {
+      "title": "带端点 URL 的代理",
+      "description": "发送到代理端点 URL 的任务和聊天消息。",
+      "pollIntervalMs": "检查间隔（毫秒）",
+      "pollIntervalMsHint": "向这些代理发送队列中任务和聊天消息的频率。",
+      "timeoutMs": "超时（毫秒）",
+      "timeoutMsHint": "端点的响应时限。超时后，任务或消息会在租约结束时重新发送。"
+    },
+    "sweeps": {
+      "title": "归档和清理",
+      "description": "归档长期无活动的已关闭工作项，以及删除旧运行追踪和已过期公开链接的频率。",
+      "autoArchiveMinutes": "归档间隔（分钟）",
+      "autoArchiveMinutesHint": "在开启归档的项目中，归档长期无活动的已关闭工作项的频率。",
+      "tracePruneMinutes": "追踪清理间隔（分钟）",
+      "tracePruneMinutesHint": "删除早于通用设置中“保留运行追踪”时长的运行追踪的频率。",
+      "shareExpiryMinutes": "链接清理间隔（分钟）",
+      "shareExpiryMinutesHint": "删除已过期公开链接的频率。无论此值是多少，链接到期后都无法再打开。"
+    },
+    "bot": {
+      "title": "Telegram 机器人",
+      "description": "机器人获取设置更改的速度。",
+      "configPollIntervalMs": "设置检查间隔（毫秒）",
+      "configPollIntervalMsHint": "在“Telegram”中所做的更改会在此时长内对机器人生效。"
+    }
+  },
   "telegram": {
     "saved": "Telegram 设置已保存",
     "bot": "机器人",

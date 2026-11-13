@@ -20,7 +20,7 @@ If It's a Plan looks useful to you, star the repo ⭐ and
 <a href="docs/self-hosting.md"><img src="assets/docker-button.svg" alt="Self-host with Docker" height="40" /></a>
 <a href="https://itsaplan.dev/pro"><img src="assets/pro-button.svg" alt="Deploy Pro version" height="40" /></a>
 
-<img src="assets/screenshots/tour.gif" alt="Board, AI chat, initiatives, timeline, calendar, and agent schedules" width="100%" />
+<img src="assets/screenshots/tour.gif" alt="Board, timeline, initiatives, cycles, docs, notes, dashboards, AI agents, schedules, and workflows" width="100%" />
 
 </div>
 

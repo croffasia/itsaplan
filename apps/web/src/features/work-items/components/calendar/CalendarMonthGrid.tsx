@@ -28,7 +28,7 @@ export function CalendarMonthGrid({
 }) {
   return (
     <>
-      <div className="grid grid-cols-7 border-b pb-1 text-xs font-medium text-muted-foreground">
+      <div className="grid grid-cols-7 border-b py-1.5 text-xs font-medium text-muted-foreground">
         {days.slice(0, 7).map((day) => (
           <div key={day.getDay()} className="truncate px-0.5 text-center sm:px-2 sm:text-start">
             {weekdayNames[day.getDay()]}
@@ -36,7 +36,7 @@ export function CalendarMonthGrid({
         ))}
       </div>
 
-      <div className="grid flex-1 grid-cols-7 grid-rows-6 overflow-hidden rounded-b-md border-x border-b">
+      <div className="grid flex-1 grid-cols-7 grid-rows-6 overflow-hidden">
         {days.map((day) => {
           const key = toDateStr(day);
           return (

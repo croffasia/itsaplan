@@ -26,7 +26,7 @@ export function CalendarDayGrid({
 }) {
   return (
     <div
-      className="grid min-h-0 flex-1 grid-rows-1 overflow-x-auto rounded-md border"
+      className="grid min-h-0 flex-1 grid-rows-1 overflow-x-auto"
       style={{ gridTemplateColumns: `repeat(${days.length}, minmax(7rem, 1fr))` }}
     >
       {days.map((day) => {

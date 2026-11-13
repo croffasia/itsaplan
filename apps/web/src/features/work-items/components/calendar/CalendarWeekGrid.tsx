@@ -29,7 +29,7 @@ export function CalendarWeekGrid({
   const weeks = Array.from({ length: days.length / 7 }, (_, w) => days.slice(w * 7, w * 7 + 7));
   return (
     <div
-      className="grid min-h-0 flex-1 grid-rows-1 overflow-x-auto rounded-md border"
+      className="grid min-h-0 flex-1 grid-rows-1 overflow-x-auto"
       style={{ gridTemplateColumns: `repeat(${weeks.length}, minmax(12rem, 1fr))` }}
     >
       {weeks.map((week) => (

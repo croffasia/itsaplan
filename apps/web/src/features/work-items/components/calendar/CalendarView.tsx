@@ -85,7 +85,7 @@ export default function CalendarView({
           />
         )}
 
-        <div className="flex min-w-0 flex-1 flex-col p-2 sm:p-4">
+        <div className="flex min-w-0 flex-1 flex-col">
           <CalendarNav
             cursor={cursor}
             mode={mode}

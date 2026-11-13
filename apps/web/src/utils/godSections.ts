@@ -70,6 +70,11 @@ export const GOD_SECTIONS: GodSection[] = godSections([
     icon: KeyRound,
   },
   {
+    slug: 'jobs',
+    group: 'instance',
+    icon: Timer,
+  },
+  {
     slug: 'hotkeys',
     group: 'instance',
     icon: Keyboard,
@@ -78,11 +83,6 @@ export const GOD_SECTIONS: GodSection[] = godSections([
     slug: 'storage',
     group: 'instance',
     icon: HardDrive,
-  },
-  {
-    slug: 'jobs',
-    group: 'instance',
-    icon: Timer,
   },
   {
     slug: 'email-templates',

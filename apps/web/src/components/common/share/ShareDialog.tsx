@@ -267,6 +267,7 @@ export default function ShareDialog({
                     <p className="px-3 pt-2 text-xs text-muted-foreground">{t('expiryPickDate')}</p>
                     <Calendar
                       mode="single"
+                      fixedWeeks
                       selected={expiry ? new Date(expiry) : undefined}
                       disabled={{ before: new Date() }}
                       onSelect={(day) => {

@@ -96,6 +96,7 @@ export default function DateTimePill({
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
+          fixedWeeks
           selected={parseDate(start?.day ?? null) ?? undefined}
           onSelect={(d) => d && emit(toDateStr(d), startTime, endTime)}
           autoFocus

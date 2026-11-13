@@ -75,11 +75,6 @@ export const GOD_SECTIONS: GodSection[] = godSections([
     icon: Timer,
   },
   {
-    slug: 'hotkeys',
-    group: 'instance',
-    icon: Keyboard,
-  },
-  {
     slug: 'storage',
     group: 'instance',
     icon: HardDrive,
@@ -88,6 +83,11 @@ export const GOD_SECTIONS: GodSection[] = godSections([
     slug: 'email-templates',
     group: 'instance',
     icon: Mails,
+  },
+  {
+    slug: 'hotkeys',
+    group: 'instance',
+    icon: Keyboard,
   },
   {
     slug: 'telegram',

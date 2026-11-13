@@ -1,6 +1,11 @@
 import { t } from 'elysia';
 import { JOB_SETTING_BOUNDS } from '@repo/db';
-import { MAX_CONCURRENT_RUNS, MAX_RUN_SECONDS, MIN_RUN_SECONDS } from './service';
+import {
+  API_DOCS_AUDIENCES,
+  MAX_CONCURRENT_RUNS,
+  MAX_RUN_SECONDS,
+  MIN_RUN_SECONDS,
+} from './service';
 
 export const StorageSettingsSchema = t.Object({
   maxAttachmentMb: t.Number(),
@@ -21,6 +26,16 @@ export const SharingSettingsSchema = t.Object({
       'Whether public links work on this instance. Off closes every link until it is on again.',
   }),
 });
+
+export const ApiDocsSettingsSchema = t.Object({
+  audience: t.UnionEnum(API_DOCS_AUDIENCES, {
+    description:
+      'Who may read the API docs, in the app and at /docs and /api/auth/reference: no one, the ' +
+      'instance owner only, or everyone signed in.',
+  }),
+});
+
+export const ApiDocsVisibilitySchema = t.Object({ visible: t.Boolean() });
 
 export const AgentSettingsSchema = t.Object({
   traceRetentionDays: t.Integer({

@@ -4,6 +4,7 @@ import GodSettingsGate from './components/GodSettingsGate';
 import GodGeneralForm from './components/general/GodGeneralForm';
 import {
   useInstanceAgentSettingsQuery,
+  useInstanceApiDocsSettingsQuery,
   useInstanceAuthSettingsQuery,
   useInstanceEmbedSitesQuery,
   useInstanceProjectDefaultsQuery,
@@ -16,13 +17,14 @@ export default function GodGeneralPage() {
   const agents = useInstanceAgentSettingsQuery().data;
   const embed = useInstanceEmbedSitesQuery().data;
   const sharing = useInstanceSharingSettingsQuery().data;
+  const apiDocs = useInstanceApiDocsSettingsQuery().data;
 
   return (
     <GodSettingsGate
       slug="general"
       data={
-        defaults && auth && agents && embed && sharing
-          ? { defaults, auth, agents, embed, sharing }
+        defaults && auth && agents && embed && sharing && apiDocs
+          ? { defaults, auth, agents, embed, sharing, apiDocs }
           : undefined
       }
     >

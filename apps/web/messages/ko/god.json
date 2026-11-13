@@ -201,6 +201,15 @@
     "sharingEnabled": "공개 링크 허용",
     "sharingEnabledHint": "끄면 기존 링크는 다시 켤 때까지 열리지 않고 아무도 공유할 수 없습니다. 켜면 각 워크스페이스가 문서, 이슈, 보기를 링크로 공유할 수 있는지 정합니다.",
     "sharingSaved": "공개 링크 설정이 저장되었습니다",
+    "apiDocs": "API 문서",
+    "apiDocsAudience": "API 문서를 볼 수 있는 사람",
+    "apiDocsAudienceHint": "앱과 API의 /docs 주소에서 적용됩니다.",
+    "apiDocsAudiences": {
+      "nobody": "아무도 없음",
+      "god": "인스턴스 소유자",
+      "everyone": "모든 사람"
+    },
+    "apiDocsSaved": "API 문서 설정을 저장했습니다",
     "agents": "AI 에이전트",
     "agentsSaved": "AI 에이전트 설정이 저장되었습니다",
     "embedding": "임베드",

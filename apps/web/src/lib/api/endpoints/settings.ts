@@ -135,6 +135,12 @@ export const getHotkeySettings = () => request<HotkeyOverrides>('/settings/hotke
 // open to any signed-in user; the write is god mode.
 export const getInviteSearch = () => request<{ enabled: boolean }>('/settings/invite-search');
 
+// Whether the caller may read the API docs. God mode picks who may.
+export const getApiDocsVisibility = () => request<{ visible: boolean }>('/settings/api-docs');
+
+// The OpenAPI document of the api, served to whoever may read the API docs.
+export const getApiSpec = () => request<Record<string, unknown>>('/docs/json');
+
 // The instance's own sign-in policy, readable without a session: the sign-up
 // screen needs it before an account exists.
 export const getAuthConfig = () => request<PublicAuthConfig>('/auth-config');

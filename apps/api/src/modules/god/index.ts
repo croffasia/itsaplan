@@ -111,6 +111,8 @@ import {
   setJobSettings,
   getSharingSettings,
   setSharingSettings,
+  getApiDocsSettings,
+  setApiDocsSettings,
 } from '#modules/settings/service';
 import { getUpdateStatus } from '#modules/settings/updates';
 import { RoleResponse, createRoleBody, updateRoleBody } from '#modules/roles/model';
@@ -125,6 +127,7 @@ import {
 } from '#modules/roles/service';
 import {
   AgentSettingsSchema,
+  ApiDocsSettingsSchema,
   EmbedSitesSchema,
   HotkeyCombosSchema,
   JobSettingsBody,
@@ -564,6 +567,26 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       description:
         'Turn public links on or off for the whole instance. Off closes every link and ' +
         'refuses a new one; on opens the same links again, as each workspace allows.',
+    },
+  })
+
+  .get('/god/api-docs-settings', () => getApiDocsSettings(), {
+    response: { 200: ApiDocsSettingsSchema, ...errors(401, 403) },
+    detail: {
+      summary: 'Get who may read the API docs',
+      description:
+        'Get who may read the API docs, in the app and at /docs and /api/auth/reference.',
+    },
+  })
+
+  .put('/god/api-docs-settings', ({ body }) => setApiDocsSettings(body), {
+    body: ApiDocsSettingsSchema,
+    response: { 200: ApiDocsSettingsSchema, ...errors(400, 401, 403) },
+    detail: {
+      summary: 'Update who may read the API docs',
+      description:
+        'Set who may read the API docs, in the app and at /docs and /api/auth/reference. The ' +
+        'instance owner may under every audience except `nobody`.',
     },
   })
 

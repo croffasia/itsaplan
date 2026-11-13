@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useSession } from '@/lib/auth-client';
+import { useApiDocsVisibilityQuery } from '@/services/apiDocs.service';
 import {
   aiAgentsPath,
   aiTeamPath,
@@ -60,6 +61,7 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
   const { data: session } = useSession();
   const { groups } = useSettingsNavGroups(projectKey);
   const isGod = session?.user.role === 'god';
+  const showApiDocs = useApiDocsVisibilityQuery().data?.visible === true;
 
   const items: Command[] = [];
 
@@ -130,7 +132,7 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
         });
       }
     }
-    add('nav.api', t('apiDocs'), <Braces />, apiDocsPath(key), 'rest openapi');
+    if (showApiDocs) add('nav.api', t('apiDocs'), <Braces />, apiDocsPath(key), 'rest openapi');
     add('nav.mcp', t('mcpServer'), <Server />, mcpServerPath(key), 'model context protocol');
   }
 

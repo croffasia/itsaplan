@@ -201,6 +201,15 @@
     "sharingEnabled": "Izinkan tautan publik",
     "sharingEnabledHint": "Jika dimatikan, tautan yang ada berhenti terbuka sampai dinyalakan lagi dan tidak ada yang bisa berbagi. Jika aktif, tiap workspace menentukan apakah dokumen, isu, dan tampilannya bisa dibagikan lewat tautan.",
     "sharingSaved": "Pengaturan tautan publik disimpan",
+    "apiDocs": "Dokumentasi API",
+    "apiDocsAudience": "Siapa yang bisa membaca dokumentasi API",
+    "apiDocsAudienceHint": "Di aplikasi dan di alamat /docs pada API.",
+    "apiDocsAudiences": {
+      "nobody": "Tidak seorang pun",
+      "god": "Pemilik instance",
+      "everyone": "Semua orang"
+    },
+    "apiDocsSaved": "Pengaturan dokumentasi API disimpan",
     "agents": "Agen",
     "agentsSaved": "Pengaturan agen disimpan",
     "embedding": "Penyematan",

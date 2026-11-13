@@ -201,6 +201,15 @@
     "sharingEnabled": "允許公開連結",
     "sharingEnabledHint": "關閉後，現有連結在重新開啟前無法開啟，任何人都無法分享。開啟後，由各工作區決定其文件、項目和檢視能否透過連結分享。",
     "sharingSaved": "公開連結設定已儲存",
+    "apiDocs": "API 文件",
+    "apiDocsAudience": "誰可以閱讀 API 文件",
+    "apiDocsAudienceHint": "適用於應用程式內和 API 的 /docs 位址。",
+    "apiDocsAudiences": {
+      "nobody": "沒有人",
+      "god": "執行個體管理員",
+      "everyone": "所有人"
+    },
+    "apiDocsSaved": "API 文件設定已儲存",
     "agents": "代理",
     "agentsSaved": "代理設定已儲存",
     "embedding": "嵌入",

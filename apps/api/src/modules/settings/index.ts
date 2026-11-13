@@ -5,10 +5,11 @@ import { errors } from '#shared/responses';
 import { getStorageSettings } from '@repo/db';
 import { getAuthSettings } from '@repo/auth';
 import { localeFromAcceptLanguage } from '@repo/mailer';
-import { getHotkeySettings } from './service';
+import { apiDocsVisible, getHotkeySettings } from './service';
 import { getAppVersion } from './updates';
 import { getWhatsNew, markWhatsNewSeen } from './whats-new';
 import {
+  ApiDocsVisibilitySchema,
   HotkeyCombosSchema,
   InviteSearchSchema,
   StorageSettingsSchema,
@@ -52,6 +53,20 @@ export const settingsRoutes = new Elysia({
         summary: 'Get whether people can be searched when inviting',
         description:
           'Get whether the invite dialog of a team may look up accounts of this instance by name or address. Changing it is god mode.',
+      },
+    },
+  )
+
+  .get(
+    '/settings/api-docs',
+    async ({ user }) => ({ visible: await apiDocsVisible(requireUser(user)) }),
+    {
+      response: { 200: ApiDocsVisibilitySchema, ...errors(401) },
+      detail: {
+        summary: 'Get whether you may read the API docs',
+        description:
+          'Get whether god mode lets you read the API docs, in the app and at /docs and ' +
+          '/api/auth/reference.',
       },
     },
   )

@@ -142,6 +142,31 @@ export async function setSharingSettings(settings: SharingSettings): Promise<Sha
   return settings;
 }
 
+// Who may read the API docs (app_setting key 'apiDocs'): the entry and the page in the app, and
+// the references the api serves at /docs and /api/auth/reference.
+
+const API_DOCS_SETTINGS_KEY = 'apiDocs';
+
+export const API_DOCS_AUDIENCES = ['nobody', 'god', 'everyone'] as const;
+
+export interface ApiDocsSettings {
+  audience: (typeof API_DOCS_AUDIENCES)[number];
+}
+
+export async function getApiDocsSettings(): Promise<ApiDocsSettings> {
+  return (await getSetting<ApiDocsSettings>(API_DOCS_SETTINGS_KEY)) ?? { audience: 'everyone' };
+}
+
+export async function setApiDocsSettings(settings: ApiDocsSettings): Promise<ApiDocsSettings> {
+  await setSetting(API_DOCS_SETTINGS_KEY, settings);
+  return settings;
+}
+
+export async function apiDocsVisible(account: { role?: string | null }): Promise<boolean> {
+  const { audience } = await getApiDocsSettings();
+  return audience === 'everyone' || (audience === 'god' && account.role === 'god');
+}
+
 // The instance keyboard shortcuts (app_setting key 'hotkeys'): the combination
 // each command is bound to for everyone on this instance. Only the bindings
 // changed in god mode are stored; the web app fills the rest from its built-in

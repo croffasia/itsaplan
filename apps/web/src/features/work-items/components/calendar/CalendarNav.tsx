@@ -45,7 +45,7 @@ export function CalendarNav({
     ? format.dateTime(cursor, { month: 'long', year: 'numeric', calendar: 'gregory' })
     : dayRange(days[0], days[days.length - 1], { year: true });
   return (
-    <div className="mb-3 flex items-center gap-2">
+    <div className="flex items-center gap-2 border-b px-3 py-1.5">
       <h2 className="text-sm font-medium text-foreground tabular-nums">{title}</h2>
       {mode === 'byDay' && fullWeek && (
         <span className="text-sm text-muted-foreground">

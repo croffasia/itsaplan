@@ -49,7 +49,6 @@ describe('failureRate', () => {
 
 const counts: InstanceCounts = {
   users: 7,
-  activeUsers30d: 3,
   projects: 2,
   issues: 412,
   issuesCreated30d: 30,
@@ -90,6 +89,19 @@ const input: PulseInput = {
   platform: 'linux/arm64',
   postgresMajor: 17,
   counts,
+  activity: {
+    users1d: 2,
+    users7d: 3,
+    users30d: 3,
+    teams1d: 1,
+    projects1d: 2,
+    internalAgents1d: 1,
+    externalAgents1d: 0,
+    runs1d: { mention: 4 },
+    issuesClosedUndelegated1d: 6,
+    issuesClosedDelegated1d: 2,
+    imports1d: { linear: 1 },
+  },
   features: { initiatives: true, noteBoards: false, cycles: true },
   featuresUsed30d: { initiatives: false, noteBoards: false, cycles: true },
   featuresDisabled: { initiatives: false, notes: true },
@@ -100,7 +112,7 @@ const input: PulseInput = {
 };
 
 describe('buildPulse', () => {
-  it('reports counts as buckets, never as exact numbers', () => {
+  it('reports sizes as buckets, never as exact numbers', () => {
     const pulse = buildPulse(input);
     expect(pulse.scale).toEqual({
       users: '6-20',
@@ -111,6 +123,12 @@ describe('buildPulse', () => {
       attachmentMb: '101-1000',
     });
     expect(JSON.stringify(pulse)).not.toContain('412');
+  });
+
+  it('reports activity as exact totals, and active users also as a bucket', () => {
+    const pulse = buildPulse(input);
+    expect(pulse.activity).toEqual(input.activity);
+    expect(pulse.scale.activeUsers30d).toBe('2-5');
   });
 
   it('carries the fields the collector stores in columns', () => {

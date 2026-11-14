@@ -47,9 +47,15 @@ The worker logs the exact body before each send.
   license is active, and nothing from the license.
 - The runtime: Bun version, OS and architecture, Postgres major version, whether it
   runs in Docker.
-- How many users, projects and issues there are, plus how many users signed in and how
-  many issues were created in the last 30 days, and how much space attachments take.
-  All of it as size ranges (`6-20`, `101-1000`), never exact numbers.
+- How many users, projects and issues there are, plus how many people used the instance
+  and how many issues were created in the last 30 days, and how much space attachments
+  take. All of it as size ranges (`6-20`, `101-1000`).
+- Usage, as exact numbers:
+  - people who used it in the last 24 hours, 7 days and 30 days;
+  - teams and projects with any change in the last 24 hours;
+  - internal and external agents that ran in the last 24 hours, and runs per trigger;
+  - issues closed in the last 24 hours, with and without an agent delegate;
+  - projects imported in the last 24 hours, per source (`linear`, `trello`).
 - Which features are used, as yes/no, twice over: ever, and in the last 30 days.
   Initiatives, note boards, dashboards, saved views, custom fields, label groups,
   project actions, attachments, cycles, checklists, sub-issues, issue links, watchers,
@@ -74,7 +80,8 @@ The worker logs the exact body before each send.
 
 Names of anything. Project keys, issue titles, descriptions, comments. Email
 addresses, user names. Webhook URLs, agent prompts, credentials, environment
-variables, file contents, logs, error messages. Exact counts.
+variables, file contents, logs, error messages. Exact counts of users, projects and
+issues.
 
 The instance id is a random uuid stored in the database. It is not derived from your
 domain, your keys, or anything else in the instance.

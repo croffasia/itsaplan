@@ -1,13 +1,13 @@
 // Shapes the daily telemetry snapshot. Pure, so the rules are unit-tested.
 //
-// Counts go out as buckets, never exact, and nothing here carries a name, key, title,
-// address or email. The string lists (integration keys, git providers, locales) hold
+// Sizes go out as buckets. Activity goes out exact, as totals for the whole instance
+// with no split by team, project or person. Nothing here carries a name, key, title,
+// address or email. The string lists and the keys of the activity maps hold
 // identifiers from a fixed catalogue, never anything an operator typed. See
 // TELEMETRY.md.
 
 export interface InstanceCounts {
   users: number;
-  activeUsers30d: number;
   projects: number;
   issues: number;
   issuesCreated30d: number;
@@ -37,6 +37,28 @@ export interface InstanceCounts {
   hasGit: boolean;
 }
 
+// Use in the 24 hours before the send; people also over 7 and 30 days.
+export interface Activity {
+  // People who used the instance. Agents are not people here.
+  users1d: number;
+  users7d: number;
+  users30d: number;
+  // Where a person or an agent changed or commented on an issue or an initiative, or
+  // edited a document.
+  teams1d: number;
+  projects1d: number;
+  // Agents with at least one run.
+  internalAgents1d: number;
+  externalAgents1d: number;
+  // Runs by what started them: 'mention', 'delegation', 'schedule'...
+  runs1d: Record<string, number>;
+  // Issues that entered a completed column, split by whether they are delegated to an agent.
+  issuesClosedUndelegated1d: number;
+  issuesClosedDelegated1d: number;
+  // Finished imports by source: 'linear', 'trello', 'plane', or one a build registers.
+  imports1d: Record<string, number>;
+}
+
 // Instance-wide authentication policy, as stored in app_setting.
 export interface AuthPolicy {
   registration: 'open' | 'invite' | 'closed';
@@ -58,6 +80,7 @@ export interface PulseInput {
   platform: string;
   postgresMajor: number | null;
   counts: InstanceCounts;
+  activity: Activity;
   // Whether each feature was ever used, and whether it was used in the last 30 days.
   // Both maps carry the same keys.
   features: Record<string, boolean>;
@@ -118,7 +141,7 @@ export function buildPulse(input: PulseInput) {
     },
     scale: {
       users: bucket(c.users),
-      activeUsers30d: bucket(c.activeUsers30d),
+      activeUsers30d: bucket(input.activity.users30d),
       projects: bucket(c.projects),
       issues: bucket(c.issues),
       issuesCreated30d: bucket(c.issuesCreated30d),
@@ -167,5 +190,6 @@ export function buildPulse(input: PulseInput) {
       webhookFailureRate30d: failureRate(c.webhookDeliveriesFailed30d, c.webhookDeliveries30d),
       agentRunFailureRate30d: failureRate(c.agentRunsFailed30d, c.agentRuns30d),
     },
+    activity: input.activity,
   };
 }

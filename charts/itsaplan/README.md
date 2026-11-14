@@ -199,6 +199,8 @@ god mode, under **License**.
 | `api.env.CLIENT_IP_HEADER`            | Header the client IP for the rate limit is read from      | (unset, `X-Forwarded-For`)       |
 | `api.env.TRUSTED_PROXIES`             | Proxies skipped in an `X-Forwarded-For` chain (CSV)       | (unset)                          |
 | `api.env.GIT_WEBHOOK_BASE_URL`        | Public origin for incoming Git webhooks                   | (unset, uses `API_URL`)          |
+| `api.env.WEB_PUSH_VAPID_PUBLIC_KEY`   | Web Push VAPID public key (api and worker)                | (unset, push off)                |
+| `api.env.WEB_PUSH_SUBJECT`            | Web Push contact, `mailto:` or `https:` (api and worker)  | (unset, push off)                |
 | `api.env.S3_BUCKET`                   | S3 bucket name                                            | `""`                             |
 | `api.env.S3_REGION`                   | S3 region                                                 | `us-east-1`                      |
 | `api.env.S3_FORCE_PATH_STYLE`         | S3 path-style access                                      | `"true"`                         |
@@ -295,13 +297,14 @@ god mode, under **License**.
 
 ### Secrets
 
-| Key                           | Description                               | Default |
-|-------------------------------|-------------------------------------------|---------|
-| `secrets.postgresPassword`    | PostgreSQL password                       | `""`    |
-| `secrets.betterAuthSecret`    | better-auth secret                        | `""`    |
-| `secrets.appEncryptionKey`    | AES encryption key for secrets at rest    | `""`    |
-| `secrets.s3AccessKeyId`       | S3 access key (also RustFS root user)     | `""`    |
-| `secrets.s3SecretAccessKey`   | S3 secret key (also RustFS root password) | `""`    |
+| Key                              | Description                               | Default |
+|----------------------------------|-------------------------------------------|---------|
+| `secrets.postgresPassword`       | PostgreSQL password                       | `""`    |
+| `secrets.betterAuthSecret`       | better-auth secret                        | `""`    |
+| `secrets.appEncryptionKey`       | AES encryption key for secrets at rest    | `""`    |
+| `secrets.s3AccessKeyId`          | S3 access key (also RustFS root user)     | `""`    |
+| `secrets.s3SecretAccessKey`      | S3 secret key (also RustFS root password) | `""`    |
+| `secrets.webPushVapidPrivateKey` | Web Push VAPID private key (empty = off)  | `""`    |
 
 ### External services
 

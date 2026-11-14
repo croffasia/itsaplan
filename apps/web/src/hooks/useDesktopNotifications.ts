@@ -12,11 +12,12 @@ import {
   notificationSubject,
 } from '@/utils/inboxNotification';
 import { revScope } from '@/utils/revScopes';
+import { NOTIFICATION_SETTINGS_EVENT, isPushOnInThisBrowser } from '@/utils/browserNotifications';
 
 // Desktop notifications are turned on per browser: the choice is stored in this
-// browser's localStorage, next to the permission the browser keeps for the site.
+// browser's localStorage, next to the permission the browser keeps for the site. They
+// stand down while push is on in this browser, which shows the items instead.
 const STORAGE_KEY = 'desktopNotifications';
-const CHANGE_EVENT = 'desktopnotificationschange';
 // How many of the newest items, read or not, each inbox change reads. When more new
 // items than this arrive between two reads, the older ones are never shown.
 const LATEST = 20;
@@ -27,11 +28,12 @@ const FRONT_KEY = 'desktopNotificationsFront';
 const FRONT_BEAT_MS = 10_000;
 const TAB = Math.random().toString(36).slice(2);
 
-type DesktopNotificationsState = 'unsupported' | 'blocked' | 'off' | 'on';
+type DesktopNotificationsState = 'unsupported' | 'blocked' | 'push' | 'off' | 'on';
 
 function readState(): DesktopNotificationsState {
   if (!('Notification' in window)) return 'unsupported';
   if (Notification.permission === 'denied') return 'blocked';
+  if (isPushOnInThisBrowser()) return 'push';
   let stored = false;
   try {
     stored = localStorage.getItem(STORAGE_KEY) === 'on';
@@ -43,10 +45,10 @@ function readState(): DesktopNotificationsState {
 
 function subscribeState(onChange: () => void) {
   window.addEventListener('storage', onChange);
-  window.addEventListener(CHANGE_EVENT, onChange);
+  window.addEventListener(NOTIFICATION_SETTINGS_EVENT, onChange);
   return () => {
     window.removeEventListener('storage', onChange);
-    window.removeEventListener(CHANGE_EVENT, onChange);
+    window.removeEventListener(NOTIFICATION_SETTINGS_EVENT, onChange);
   };
 }
 
@@ -63,7 +65,7 @@ export async function setDesktopNotifications(on: boolean) {
   } catch {
     // Storage unavailable (private mode): the state stays as it was.
   }
-  window.dispatchEvent(new Event(CHANGE_EVENT));
+  window.dispatchEvent(new Event(NOTIFICATION_SETTINGS_EVENT));
 }
 
 function inFront() {

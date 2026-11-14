@@ -172,7 +172,15 @@
     "desktopNotificationsDescription": "لهذا المتصفح فقط. يعرض إشعارًا لكل عنصر جديد في صندوق الوارد من كل المشاريع، عندما يكون التطبيق مفتوحًا لكن ليس في المقدمة.",
     "desktopNotificationsBlocked": "هذا المتصفح يحظر الإشعارات من هذا الموقع. اسمح بها من إعدادات الموقع في المتصفح.",
     "desktopNotificationsUnsupported": "هذا المتصفح لا يستطيع عرض إشعارات سطح المكتب.",
+    "desktopNotificationsReplacedByPush": "الإشعارات الفورية مفعّلة في هذا المتصفح، وتحلّ محل إشعارات سطح المكتب هنا.",
     "desktopNotificationsOff": "مُعطّل",
+    "pushNotifications": "الإشعارات الفورية على هذا الجهاز",
+    "pushNotificationsDescription": "لهذا المتصفح فقط. يعرض الإشعارات التي تختارها في عمود «فوري» من إعدادات إشعارات المشروع، حتى عندما يكون التطبيق مغلقًا.",
+    "pushNotificationsBlocked": "هذا المتصفح يحظر الإشعارات من هذا الموقع. اسمح بها من إعدادات الموقع في المتصفح.",
+    "pushNotificationsUnsupported": "هذا المتصفح لا يستطيع استقبال الإشعارات الفورية.",
+    "pushNotificationsUnsupportedIos": "على iPhone أو iPad، أضف التطبيق إلى الشاشة الرئيسية أولًا (iOS 16.4 أو أحدث) ثم فعّل هذا الخيار من هناك.",
+    "pushNotificationsOff": "مُعطّل",
+    "pushNotificationsFailed": "تعذّر تغيير الإشعارات الفورية في هذا المتصفح.",
     "showChatByDefault": "إظهار المحادثة افتراضيًا",
     "showChatByDefaultDescription": "تفتح لوحة المحادثة مع صفحة المشروع. أغلقها في أي وقت من رأسها أو من أيقونة المحادثة."
   }

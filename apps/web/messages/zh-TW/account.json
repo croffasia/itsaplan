@@ -172,7 +172,15 @@
     "desktopNotificationsDescription": "僅限此瀏覽器。應用程式已開啟但不在前景時，所有專案的收件匣每出現一筆新項目就顯示一則通知。",
     "desktopNotificationsBlocked": "此瀏覽器封鎖了本網站的通知。請在瀏覽器的網站設定中允許。",
     "desktopNotificationsUnsupported": "此瀏覽器無法顯示桌面通知。",
+    "desktopNotificationsReplacedByPush": "此瀏覽器已開啟推播通知，在這裡會取代桌面通知。",
     "desktopNotificationsOff": "已關閉",
+    "pushNotifications": "此裝置上的推播通知",
+    "pushNotificationsDescription": "僅限此瀏覽器。顯示你在各專案通知設定的「推播」欄中勾選的通知，應用程式關閉時也會顯示。",
+    "pushNotificationsBlocked": "此瀏覽器封鎖了本網站的通知。請在瀏覽器的網站設定中允許。",
+    "pushNotificationsUnsupported": "此瀏覽器無法接收推播通知。",
+    "pushNotificationsUnsupportedIos": "在 iPhone 或 iPad 上，請先將應用程式加入主畫面（iOS 16.4 或更新版本），再從那裡開啟。",
+    "pushNotificationsOff": "已關閉",
+    "pushNotificationsFailed": "無法變更此瀏覽器的推播通知。",
     "showChatByDefault": "預設顯示聊天",
     "showChatByDefaultDescription": "開啟專案頁面時同時開啟聊天面板。可隨時透過面板標題欄或聊天圖示關閉。"
   }

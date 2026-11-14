@@ -98,6 +98,7 @@
     "description": "Виберіть, про які події ви дізнаєтесь і куди.",
     "email": "Пошта",
     "telegram": "Telegram",
+    "push": "Push",
     "events": {
       "assigned": "Призначено на задачу",
       "mentioned": "Згадали в задачі або документі",

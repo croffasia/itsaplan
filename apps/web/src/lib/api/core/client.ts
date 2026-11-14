@@ -3,6 +3,7 @@
 // sends credentials (the better-auth session cookie).
 
 import { runtimeEnv } from '@/utils/runtimeEnv';
+import { endPushInThisBrowser, waitForPushCleanup } from '@/utils/browserNotifications';
 
 // The API origin, read from the running server rather than from the build (see
 // utils/runtimeEnv). A deployment without it ships a client that cannot reach the
@@ -51,16 +52,20 @@ export function markSignedIn(): void {
 // session cookie exists, so a stale one keeps the app open on a page where every
 // request fails. Sign out to drop the cookie, then leave for the expired screen
 // whatever the sign-out answered — a cookie the server declines to clear must not
-// hold the browser in the app.
+// hold the browser in the app. This browser's push subscription goes as well, as on a
+// sign-out, so the ended session's notifications stop reaching it.
 // The request is written out rather than calling `signOut()` from @/lib/auth-client:
 // that module reads API_URL from this one, so importing it back here would make a
 // cycle that evaluates auth-client before API_URL is assigned.
 function endSession(): void {
   if (typeof window === 'undefined' || signingOut) return;
   signingOut = true;
-  void fetch(`${API_URL}/api/auth/sign-out`, { method: 'POST', credentials: 'include' })
-    .catch(() => {})
-    .then(() => window.location.replace('/login?expired=1'));
+  void Promise.all([
+    fetch(`${API_URL}/api/auth/sign-out`, { method: 'POST', credentials: 'include' }).catch(
+      () => {},
+    ),
+    waitForPushCleanup(endPushInThisBrowser()),
+  ]).then(() => window.location.replace('/login?expired=1'));
 }
 
 // Every request reports its failure through here, which is where an ended session is

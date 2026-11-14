@@ -172,7 +172,15 @@
     "desktopNotificationsDescription": "Dans ce navigateur uniquement. Affiche une notification pour chaque nouvel élément de la boîte de réception, de tous les projets, quand l'app est ouverte mais pas au premier plan.",
     "desktopNotificationsBlocked": "Ce navigateur bloque les notifications de ce site. Autorisez-les dans les paramètres du site du navigateur.",
     "desktopNotificationsUnsupported": "Ce navigateur ne peut pas afficher de notifications de bureau.",
+    "desktopNotificationsReplacedByPush": "Les notifications push sont activées dans ce navigateur et y remplacent les notifications de bureau.",
     "desktopNotificationsOff": "Désactivé",
+    "pushNotifications": "Notifications push sur cet appareil",
+    "pushNotificationsDescription": "Dans ce navigateur uniquement. Affiche les notifications que vous choisissez dans la colonne Push des paramètres de notification de chaque projet, même quand l'app est fermée.",
+    "pushNotificationsBlocked": "Ce navigateur bloque les notifications de ce site. Autorisez-les dans les paramètres du site du navigateur.",
+    "pushNotificationsUnsupported": "Ce navigateur ne peut pas recevoir de notifications push.",
+    "pushNotificationsUnsupportedIos": "Sur iPhone ou iPad, ajoutez d'abord l'app à l'écran d'accueil (iOS 16.4 ou ultérieur), puis activez cette option depuis celle-ci.",
+    "pushNotificationsOff": "Désactivé",
+    "pushNotificationsFailed": "Impossible de modifier les notifications push dans ce navigateur.",
     "showChatByDefault": "Afficher le chat par défaut",
     "showChatByDefaultDescription": "Le panneau de chat s'ouvre avec une page de projet. Fermez-le à tout moment depuis son en-tête ou l'icône de chat."
   }

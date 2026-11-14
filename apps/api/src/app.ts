@@ -234,6 +234,7 @@ export const app = new Elysia()
                 name: 'Telegram',
                 description: "The session user's linked Telegram account",
               },
+              { name: 'Push', description: "The session user's Web Push subscriptions" },
               {
                 name: 'Analytics',
                 description: 'Project metrics: stats, pulse, throughput, breakdowns, activity',

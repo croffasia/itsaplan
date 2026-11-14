@@ -340,6 +340,11 @@ export const qk = {
   // Telegram account, and the auth providers better-auth reports.
   telegramAccount: ['telegramAccount'] as const,
   linkedAccounts: ['linkedAccounts'] as const,
+  // Whether the instance sends Web Push, the browsers the signed-in user turned it on in,
+  // and this browser's own subscription and permission.
+  pushConfig: ['pushConfig'] as const,
+  pushDevices: ['pushDevices'] as const,
+  pushBrowser: ['pushBrowser'] as const,
   // The instance sign-in policy, including which social providers are configured.
   authConfig: ['authConfig'] as const,
   // The name an MCP client registered with, shown on the OAuth consent page.

@@ -1268,6 +1268,13 @@
       "when": 1794580755038,
       "tag": "0180_seed_job_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 181,
+      "version": "7",
+      "when": 1794631138557,
+      "tag": "0181_web_push",
+      "breakpoints": true
     }
   ]
 }

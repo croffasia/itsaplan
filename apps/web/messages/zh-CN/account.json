@@ -172,7 +172,15 @@
     "desktopNotificationsDescription": "仅限此浏览器。应用已打开但不在前台时，所有项目的收件箱里每出现一条新内容就显示一条通知。",
     "desktopNotificationsBlocked": "此浏览器屏蔽了本站的通知。请在浏览器的网站设置中允许。",
     "desktopNotificationsUnsupported": "此浏览器无法显示桌面通知。",
+    "desktopNotificationsReplacedByPush": "此浏览器已开启推送通知，在这里会代替桌面通知。",
     "desktopNotificationsOff": "已关闭",
+    "pushNotifications": "此设备上的推送通知",
+    "pushNotificationsDescription": "仅限此浏览器。显示你在各项目通知设置的“推送”列中勾选的通知，应用关闭时也会显示。",
+    "pushNotificationsBlocked": "此浏览器屏蔽了本站的通知。请在浏览器的网站设置中允许。",
+    "pushNotificationsUnsupported": "此浏览器无法接收推送通知。",
+    "pushNotificationsUnsupportedIos": "在 iPhone 或 iPad 上，请先把应用添加到主屏幕（iOS 16.4 或更高版本），再从那里开启。",
+    "pushNotificationsOff": "已关闭",
+    "pushNotificationsFailed": "无法更改此浏览器的推送通知。",
     "showChatByDefault": "默认显示聊天",
     "showChatByDefaultDescription": "打开项目页面时同时打开聊天面板。可随时通过面板标题栏或聊天图标关闭。"
   }

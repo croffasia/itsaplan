@@ -33,6 +33,7 @@ export {
   readNotificationConfig,
   type NotificationConfig,
 } from './domains/notification-settings';
+export { getWebPushConfig, type WebPushConfig } from './domains/web-push';
 export {
   JOB_SETTINGS_KEY,
   JOB_SETTING_BOUNDS,

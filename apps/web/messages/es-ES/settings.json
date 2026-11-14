@@ -98,6 +98,7 @@
     "description": "Elige qué eventos de tickets recibes y dónde.",
     "email": "Correo",
     "telegram": "Telegram",
+    "push": "Push",
     "events": {
       "assigned": "Asignado a un ticket",
       "mentioned": "Mencionado en un ticket o un documento",

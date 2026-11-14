@@ -111,6 +111,10 @@
       "label": "排程",
       "description": "按固定時間重複執行代理任務。"
     },
+    "workflows": {
+      "label": "工作流程",
+      "description": "代理之間互相交接工作。"
+    },
     "webhooks": {
       "label": "Webhook",
       "description": "將專案事件傳送到外部 URL，並使用每個 Webhook 獨立的金鑰簽章。"
@@ -222,6 +226,26 @@
       "preview": "預覽",
       "name": "你的姓名",
       "email": "電子郵件"
+    },
+    "workflows": {
+      "steps": "步驟",
+      "sendBack": "退回",
+      "runs": "執行紀錄",
+      "runningNow": "正在執行",
+      "history": "歷史",
+      "costSoFar": "目前費用",
+      "tokensSoFar": "目前 Token",
+      "agentRuns": "代理執行",
+      "tokens": "Token",
+      "cost": "費用",
+      "took": "用時",
+      "got": "收到的內容",
+      "returned": "回傳的內容",
+      "task": "任務",
+      "notes": "退回意見",
+      "done": "完成",
+      "round": "輪次",
+      "fullLog": "完整記錄"
     },
     "portal": {
       "title": "入口網站",

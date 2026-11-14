@@ -201,6 +201,15 @@
     "sharingEnabled": "Permitir enlaces públicos",
     "sharingEnabledHint": "Desactivado, los enlaces existentes dejan de abrirse hasta que se active de nuevo y nadie puede compartir. Activado, cada espacio de trabajo decide si sus documentos, incidencias y vistas se pueden compartir por enlace.",
     "sharingSaved": "Ajustes de enlaces públicos guardados",
+    "apiDocs": "Documentación de la API",
+    "apiDocsAudience": "Quién puede leer la documentación de la API",
+    "apiDocsAudienceHint": "En la aplicación y en la dirección /docs de la API.",
+    "apiDocsAudiences": {
+      "nobody": "Nadie",
+      "god": "Propietario de la instancia",
+      "everyone": "Todos"
+    },
+    "apiDocsSaved": "Ajustes de la documentación de la API guardados",
     "agents": "Agentes",
     "agentsSaved": "Ajustes de agentes guardados",
     "embedding": "Inserción",

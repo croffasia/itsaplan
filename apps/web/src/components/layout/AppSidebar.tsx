@@ -11,6 +11,7 @@ import { apiDocsPath, godPath, mcpServerPath } from '@/utils/paths';
 import { GOD_SECTIONS } from '@/utils/godSections';
 import { useSettingsNavGroups } from '@/hooks/useSettingsNavGroups';
 import { useSidebarSide } from '@/hooks/useSidebarSide';
+import { useApiDocsVisibilityQuery } from '@/services/apiDocs.service';
 import {
   Sidebar,
   SidebarContent,
@@ -53,6 +54,7 @@ export default function AppSidebar({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const isGod = mounted && session?.user.role === 'god';
+  const showApiDocs = useApiDocsVisibilityQuery().data?.visible === true;
 
   // Settings mode is on whenever the route matches one of the settings nav items.
   // Members and the AI Team pages are not in those groups, so they keep the main
@@ -85,13 +87,15 @@ export default function AppSidebar({
         {!settingsMode && (
           <>
             <SidebarMenu>
-              <SidebarNavItem
-                href={currentProjectKey ? apiDocsPath(currentProjectKey) : '#'}
-                icon={Braces}
-                label={t('apiDocs')}
-                active={onApiDocs}
-                disabled={disabled}
-              />
+              {showApiDocs && (
+                <SidebarNavItem
+                  href={currentProjectKey ? apiDocsPath(currentProjectKey) : '#'}
+                  icon={Braces}
+                  label={t('apiDocs')}
+                  active={onApiDocs}
+                  disabled={disabled}
+                />
+              )}
               <SidebarNavItem
                 href={currentProjectKey ? mcpServerPath(currentProjectKey) : '#'}
                 icon={Server}

@@ -322,3 +322,7 @@ The `openAPI()` plugin (`better-auth/plugins`) documents the auth handler. It se
 from every active plugin, so the passkey and apiKey endpoints appear without any manual description.
 This is separate from the planner's own OpenAPI docs at `/docs` (the `@elysiajs/swagger` spec, which
 does not see the catch-all auth handler).
+
+God mode picks who may read both references and their raw documents (General → API docs). The api
+answers 401 without a session and 403 to a user outside that audience. The web page loads `/docs/json`
+with the session and hands it to Scalar.

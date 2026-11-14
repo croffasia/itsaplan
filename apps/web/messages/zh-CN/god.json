@@ -201,6 +201,15 @@
     "sharingEnabled": "允许公开链接",
     "sharingEnabledHint": "关闭后，现有链接在重新开启前无法打开，任何人都无法分享。开启后，由各工作区决定其文档、事项和视图能否通过链接分享。",
     "sharingSaved": "公开链接设置已保存",
+    "apiDocs": "API 文档",
+    "apiDocsAudience": "谁可以阅读 API 文档",
+    "apiDocsAudienceHint": "适用于应用内和 API 的 /docs 地址。",
+    "apiDocsAudiences": {
+      "nobody": "没有人",
+      "god": "实例管理员",
+      "everyone": "所有人"
+    },
+    "apiDocsSaved": "API 文档设置已保存",
     "agents": "代理",
     "agentsSaved": "代理设置已保存",
     "embedding": "嵌入",

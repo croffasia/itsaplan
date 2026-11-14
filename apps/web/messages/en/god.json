@@ -201,6 +201,15 @@
     "sharingEnabled": "Allow public links",
     "sharingEnabledHint": "Off, existing links stop opening until this is on again, and nobody can share. On, each workspace decides whether its documents, issues and views can be shared by link.",
     "sharingSaved": "Public link settings saved",
+    "apiDocs": "API docs",
+    "apiDocsAudience": "Who can read API docs",
+    "apiDocsAudienceHint": "In the app and at the API's /docs address.",
+    "apiDocsAudiences": {
+      "nobody": "No one",
+      "god": "Instance owner",
+      "everyone": "Everyone"
+    },
+    "apiDocsSaved": "API docs settings saved",
     "agents": "Agents",
     "agentsSaved": "Agent settings saved",
     "embedding": "Embedding",

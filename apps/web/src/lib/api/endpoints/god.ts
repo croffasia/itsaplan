@@ -382,6 +382,21 @@ export const updateInstanceSharingSettings = (body: SharingSettings) =>
     body: JSON.stringify(body),
   });
 
+// Who may read the API docs, in the app and at the api's /docs and /api/auth/reference.
+export type ApiDocsAudience = 'nobody' | 'god' | 'everyone';
+
+export interface ApiDocsSettings {
+  audience: ApiDocsAudience;
+}
+
+export const getInstanceApiDocsSettings = () => request<ApiDocsSettings>('/god/api-docs-settings');
+
+export const updateInstanceApiDocsSettings = (body: ApiDocsSettings) =>
+  request<ApiDocsSettings>('/god/api-docs-settings', {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
+
 // The sites that may show the shared work items and views, and the public pages, in a frame.
 export interface EmbedSites {
   origins: string[];

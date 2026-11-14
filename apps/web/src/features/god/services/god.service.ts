@@ -22,6 +22,7 @@ import {
   type EmailDraft,
   type EmailTemplatesBody,
   type SharingSettings,
+  type ApiDocsSettings,
   type JobSettingsPatch,
   getInstanceAuthSettings,
   updateInstanceAuthSettings,
@@ -44,6 +45,8 @@ import {
   updateEmailTemplates,
   getInstanceSharingSettings,
   updateInstanceSharingSettings,
+  getInstanceApiDocsSettings,
+  updateInstanceApiDocsSettings,
   getInstanceEmbedSites,
   updateInstanceEmbedSites,
   getInstanceStorageSettings,
@@ -207,6 +210,21 @@ export function useUpdateInstanceSharingSettings() {
   return useMutation({
     mutationFn: (body: SharingSettings) => updateInstanceSharingSettings(body),
     onSuccess: (data) => qc.setQueryData(qk.instanceSharingSettings, data),
+  });
+}
+
+export function useInstanceApiDocsSettingsQuery() {
+  return useQuery({
+    queryKey: qk.instanceApiDocsSettings,
+    queryFn: () => getInstanceApiDocsSettings(),
+  });
+}
+
+export function useUpdateInstanceApiDocsSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ApiDocsSettings) => updateInstanceApiDocsSettings(body),
+    onSuccess: (data) => qc.setQueryData(qk.instanceApiDocsSettings, data),
   });
 }
 

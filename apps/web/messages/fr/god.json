@@ -201,6 +201,15 @@
     "sharingEnabled": "Autoriser les liens publics",
     "sharingEnabledHint": "Désactivé, les liens existants ne s'ouvrent plus tant que l'option n'est pas réactivée et personne ne peut partager. Activé, chaque espace de travail décide si ses documents, tickets et vues peuvent être partagés par lien.",
     "sharingSaved": "Paramètres des liens publics enregistrés",
+    "apiDocs": "Documentation de l'API",
+    "apiDocsAudience": "Qui peut lire la documentation de l'API",
+    "apiDocsAudienceHint": "Dans l'application et à l'adresse /docs de l'API.",
+    "apiDocsAudiences": {
+      "nobody": "Personne",
+      "god": "Propriétaire de l'instance",
+      "everyone": "Tout le monde"
+    },
+    "apiDocsSaved": "Paramètres de la documentation de l'API enregistrés",
     "agents": "Agents",
     "agentsSaved": "Paramètres des agents enregistrés",
     "embedding": "Intégration",

@@ -201,6 +201,15 @@
     "sharingEnabled": "Herkese açık bağlantılara izin ver",
     "sharingEnabledHint": "Kapalıyken mevcut bağlantılar yeniden açılana kadar çalışmaz ve kimse paylaşamaz. Açıkken her çalışma alanı, belgelerinin, işlerinin ve görünümlerinin bağlantıyla paylaşılıp paylaşılamayacağına kendisi karar verir.",
     "sharingSaved": "Herkese açık bağlantı ayarları kaydedildi",
+    "apiDocs": "API belgeleri",
+    "apiDocsAudience": "API belgelerini kimler okuyabilir",
+    "apiDocsAudienceHint": "Uygulamada ve API'nin /docs adresinde.",
+    "apiDocsAudiences": {
+      "nobody": "Hiç kimse",
+      "god": "Örneklem sahibi",
+      "everyone": "Herkes"
+    },
+    "apiDocsSaved": "API belgeleri ayarları kaydedildi",
     "agents": "Ajanlar",
     "agentsSaved": "Ajan ayarları kaydedildi",
     "embedding": "Yerleştirme",

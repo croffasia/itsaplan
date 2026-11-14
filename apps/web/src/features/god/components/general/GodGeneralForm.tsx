@@ -8,6 +8,7 @@ import SettingsSection from '@/components/common/page/SettingsSection';
 import { Switch } from '@/components/ui/switch';
 import GodSectionPage from '../GodSectionPage';
 import GodAgentsSection from './GodAgentsSection';
+import GodApiDocsSection from './GodApiDocsSection';
 import GodEmbedSitesSection from './GodEmbedSitesSection';
 import GodSharingSection from './GodSharingSection';
 import {
@@ -16,6 +17,7 @@ import {
 } from '../../services/god.service';
 import type {
   AgentSettings,
+  ApiDocsSettings,
   EmbedSites,
   InstanceAuthSettings,
   SharingSettings,
@@ -30,12 +32,14 @@ export default function GodGeneralForm({
   agents,
   embed,
   sharing,
+  apiDocs,
 }: {
   defaults: ProjectDefaults;
   auth: InstanceAuthSettings;
   agents: AgentSettings;
   embed: EmbedSites;
   sharing: SharingSettings;
+  apiDocs: ApiDocsSettings;
 }) {
   const t = useTranslations('god.general');
   const update = useUpdateInstanceProjectDefaults();
@@ -123,6 +127,8 @@ export default function GodGeneralForm({
         </SettingsSection>
 
         <GodAgentsSection agents={agents} />
+
+        <GodApiDocsSection settings={apiDocs} />
 
         <GodEmbedSitesSection sites={embed} />
       </div>

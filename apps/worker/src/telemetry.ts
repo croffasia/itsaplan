@@ -2,7 +2,12 @@ import { existsSync } from 'node:fs';
 import { db, getOrCreateSetting, getSetting, setSetting } from '@repo/db';
 import { sql } from 'drizzle-orm';
 import { equalJitterBackoffMs } from './backoff';
-import { buildPulse, type AuthPolicy, type InstanceCounts } from './telemetry-payload';
+import {
+  buildPulse,
+  type Activity,
+  type AuthPolicy,
+  type InstanceCounts,
+} from './telemetry-payload';
 import {
   minuteOfDay,
   randomSendMinute,
@@ -61,7 +66,7 @@ async function instanceId(): Promise<string> {
   // Printed once ever, so an operator who never reads the docs still finds out.
   console.log(
     '[telemetry] this instance now sends one anonymous snapshot a day. ' +
-      'It carries no names, no content and no exact counts — see TELEMETRY.md. ' +
+      'It carries no names and no content, only totals for the whole instance — see TELEMETRY.md. ' +
       'Turn it off with TELEMETRY_DISABLED=1 or DO_NOT_TRACK=1.',
   );
   return id;
@@ -166,8 +171,6 @@ async function readSnapshot(): Promise<Snapshot> {
   const rows = await db.execute(sql`
     SELECT
       (SELECT count(*)::int FROM "user") AS "users",
-      (SELECT count(DISTINCT user_id)::int FROM "session"
-        WHERE created_at > now() - interval '30 days') AS "activeUsers30d",
       (SELECT count(*)::int FROM project) AS "projects",
       (SELECT count(*)::int FROM issue) AS "issues",
       (SELECT count(*)::int FROM issue
@@ -295,6 +298,78 @@ async function readLists(): Promise<Lists> {
   };
 }
 
+// A count per identifier, filtered as `identifiers` filters a list.
+function identifierCounts(value: unknown): Record<string, number> {
+  if (!value || typeof value !== 'object') return {};
+  const entries = Object.entries(value)
+    .filter(([key, n]) => IDENTIFIER.test(key) && typeof n === 'number' && Number.isInteger(n))
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(0, MAX_IDENTIFIERS);
+  return Object.fromEntries(entries);
+}
+
+// People are read from user.last_seen_at, which the api writes for any signed-in request,
+// at most once an hour. The column has no time zone and holds UTC, so its window is
+// measured in UTC. A session would miss a person who never signs out.
+export async function readActivity(): Promise<Activity> {
+  const rows = await db.execute(sql`
+    WITH people AS (
+      SELECT u.last_seen_at AS seen FROM "user" u
+      WHERE u.last_seen_at > (now() AT TIME ZONE 'UTC') - interval '30 days'
+        AND NOT EXISTS (SELECT 1 FROM ai_agent a WHERE a.user_id = u.id)
+    ),
+    -- A null actor is the system, such as auto-archive, which is no sign of use.
+    active_projects AS (
+      SELECT coalesce(i.project_id, n.project_id) AS project_id
+      FROM issue_activity ia
+      LEFT JOIN issue i ON i.id = ia.issue_id
+      LEFT JOIN initiative n ON n.id = ia.initiative_id
+      WHERE ia.created_at > now() - interval '24 hours' AND ia.actor_user_id IS NOT NULL
+      UNION
+      SELECT project_id FROM project_document WHERE updated_at > now() - interval '24 hours'
+    ),
+    runs AS (
+      SELECT r.agent_id, r.trigger, a.kind
+      FROM agent_run r JOIN ai_agent a ON a.id = r.agent_id
+      WHERE r.created_at > now() - interval '24 hours'
+    ),
+    closed AS (
+      SELECT delegate_user_id FROM issue
+      WHERE id IN (SELECT issue_id FROM issue_status
+        WHERE state_type = 'completed' AND entered_at > now() - interval '24 hours')
+    )
+    SELECT
+      (SELECT count(*)::int FROM people
+        WHERE seen > (now() AT TIME ZONE 'UTC') - interval '24 hours') AS "users1d",
+      (SELECT count(*)::int FROM people
+        WHERE seen > (now() AT TIME ZONE 'UTC') - interval '7 days') AS "users7d",
+      (SELECT count(*)::int FROM people) AS "users30d",
+      (SELECT count(DISTINCT p.team_id)::int FROM project p
+        JOIN active_projects ap ON ap.project_id = p.id) AS "teams1d",
+      (SELECT count(*)::int FROM active_projects) AS "projects1d",
+      (SELECT count(DISTINCT agent_id)::int FROM runs WHERE kind = 'internal')
+        AS "internalAgents1d",
+      (SELECT count(DISTINCT agent_id)::int FROM runs WHERE kind = 'external')
+        AS "externalAgents1d",
+      (SELECT coalesce(json_object_agg(trigger, n), '{}'::json)
+        FROM (SELECT trigger, count(*)::int AS n FROM runs GROUP BY trigger) t) AS "runs1d",
+      (SELECT count(*)::int FROM closed WHERE delegate_user_id IS NULL)
+        AS "issuesClosedUndelegated1d",
+      (SELECT count(*)::int FROM closed WHERE delegate_user_id IS NOT NULL)
+        AS "issuesClosedDelegated1d",
+      (SELECT coalesce(json_object_agg(source, n), '{}'::json)
+        FROM (SELECT lower(source) AS source, count(*)::int AS n FROM import_job
+          WHERE status = 'completed' AND updated_at > now() - interval '24 hours'
+          GROUP BY lower(source)) t) AS "imports1d"
+  `);
+  const { runs1d, imports1d, ...counts } = (rows as unknown as Record<string, unknown>[])[0] ?? {};
+  return {
+    ...(counts as unknown as Omit<Activity, 'runs1d' | 'imports1d'>),
+    runs1d: identifierCounts(runs1d),
+    imports1d: identifierCounts(imports1d),
+  };
+}
+
 // The instance-wide sign-up policy, from the same app_setting row better-auth reads.
 // Defaults match packages/auth: an instance that never saved the settings is open.
 async function readAuthPolicy(): Promise<AuthPolicy> {
@@ -364,6 +439,7 @@ export async function processTelemetry(): Promise<void> {
     platform: `${process.platform}/${process.arch}`,
     postgresMajor: await postgresMajor(),
     counts: snapshot.counts,
+    activity: await readActivity(),
     features: snapshot.features,
     featuresUsed30d: snapshot.featuresUsed30d,
     featuresDisabled: snapshot.featuresDisabled,

@@ -117,6 +117,8 @@ describe('tools an extension defines', () => {
     expect(own.data?.items.map((i) => i.toolKey)).toEqual(['echo:first']);
     const other = await tools(asOwner, teamId).get({ query: { group: 'ech' } });
     expect(other.data?.total).toBe(0);
+    const both = await tools(asOwner, teamId).get({ query: { group: 'echo,pdf' } });
+    expect(both.data?.items.map((i) => i.toolKey)).toEqual(['pdf_read', 'echo:first']);
   });
 
   it('keeps a tool whose source is gone, unsupported, and gives it to no agent', async () => {

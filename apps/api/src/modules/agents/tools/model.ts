@@ -61,10 +61,10 @@ export const agentToolListQuery = t.Object({
   ),
   group: t.Optional(
     t.String({
-      maxLength: 100,
+      maxLength: 1000,
       description:
-        "An integration's key, for its tools, or the source of the tools the team defines " +
-        '(the `source` of a tool), for those.',
+        "A comma-separated list of groups: an integration's key, for its tools, or the source " +
+        'of the tools the team defines (the `source` of a tool), for those. Omit for all.',
     }),
   ),
   ...pageQueryFields,

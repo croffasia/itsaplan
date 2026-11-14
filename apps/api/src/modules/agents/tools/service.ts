@@ -110,7 +110,7 @@ function inGroup(group: string) {
 export async function listAgentTools(
   teamId: number,
   window: { limit: number; offset: number },
-  filter: { search?: string; group?: string } = {},
+  filter: { search?: string; groups?: string[] },
 ): Promise<{ items: AgentToolRow[]; total: number }> {
   const term = filter.search?.trim();
   const matching = term
@@ -119,7 +119,7 @@ export async function listAgentTools(
   const where = and(
     eq(agentTool.teamId, teamId),
     matching ? inArray(agentTool.toolKey, matching) : undefined,
-    filter.group ? inGroup(filter.group) : undefined,
+    filter.groups ? or(...filter.groups.map(inGroup)) : undefined,
   );
   const [rows, counted] = await Promise.all([
     selectTools()

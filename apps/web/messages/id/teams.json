@@ -46,7 +46,7 @@
     },
     "agentSkills": {
       "title": "Keahlian",
-      "description": "Instruksi yang dapat digunakan kembali dan dimuat agen internal saat diperlukan."
+      "description": "Instruksi yang dapat dipakai ulang dan Anda aktifkan untuk agen internal."
     },
     "agentTools": {
       "title": "Alat",
@@ -54,7 +54,7 @@
     },
     "agents": {
       "title": "Agen AI",
-      "description": "Agen AI yang dimiliki tim ini, dan proyek tempat mereka bekerja."
+      "description": "Agen AI yang dimiliki tim ini."
     },
     "analytics": {
       "title": "Penggunaan",
@@ -336,9 +336,9 @@
     "noMatches": "Tidak ada integrasi yang cocok dengan “{query}”.",
     "nothingFound": "Tidak ada yang ditemukan",
     "noKindMatches": "Tidak ada kredensial di grup yang dipilih.",
-    "showGroups": "Tampilkan grup",
+    "group": "Grup",
     "connected": "Kredensial ditambahkan",
-    "alreadyConnected": "Tim sudah memiliki kredensial {integration}",
+    "alreadyConnected": "Tim sudah memiliki kredensial untuk {integration}",
     "alreadyConnectedHint": "Tambahkan kredensial lain untuk akun kedua. Label membedakan keduanya.",
     "agentTools": "Alat yang tersedia",
     "validate": "Periksa kredensial",
@@ -352,7 +352,7 @@
     "checkUnknown": "Kredensial ini tidak dapat diperiksa secara otomatis. Anda tetap dapat menyimpannya.",
     "empty": "Belum ada kredensial",
     "emptyHint": "Tambahkan kredensial agar agen dapat menggunakan penyedia AI atau alat.",
-    "deleteMessage": "{kind, select, llm {Agen yang berjalan dengan kredensial ini akan berhenti bekerja hingga Anda memilih kredensial lain untuknya.} tool {Alat yang ditambahkan dengan kredensial ini akan dihapus, dan agen tidak dapat memanggilnya lagi.} service {Alat yang ditambahkan dengan kredensial ini akan dihapus, dan agen tidak dapat memanggilnya lagi.} other {}} Tindakan ini tidak dapat dibatalkan.",
+    "deleteMessage": "{kind, select, llm {Agen yang berjalan dengan kredensial ini akan berhenti bekerja hingga Anda memilih kredensial lain untuknya.} tool {Alat yang memakai kredensial ini akan dihapus, dan agen tidak dapat memanggilnya lagi.} service {Alat yang memakai kredensial ini akan dihapus, dan agen tidak dapat memanggilnya lagi.} other {}} Tindakan ini tidak dapat dibatalkan.",
     "groups": {
       "llm": {
         "title": "Penyedia AI",
@@ -364,56 +364,62 @@
       },
       "service": {
         "title": "Layanan",
-        "hint": "Alamat dan kunci tujuan permintaan dari alat Anda sendiri"
+        "hint": "Alamat dan kunci untuk alat Anda sendiri"
       }
     },
     "columns": {
       "integration": "Integrasi",
-      "credentials": "Kredensial"
+      "credentials": "Bidang"
     }
   },
   "skills": {
     "newSkill": "Keahlian baru",
     "create": "Buat keahlian",
     "delete": "Hapus keahlian",
-    "deleteMessage": "Hapus keahlian “{name}”? Keahlian ini akan dihapus dari setiap agen yang menggunakannya.",
-    "edit": "Ubah keahlian",
+    "deleteTitle": "Hapus keahlian?",
+    "deleteLabel": "Hapus {name}",
+    "deleteMessage": "“{name}” akan dihapus dan dilepas dari setiap agen yang menggunakannya. Tindakan ini tidak dapat dibatalkan.",
+    "editLabel": "Ubah {name}",
     "empty": "Belum ada keahlian",
-    "emptyHint": "Tulis markdown, unggah file, atau impor dari GitHub.",
+    "emptyHint": "Buat keahlian, lalu aktifkan pada agen yang membutuhkannya.",
     "name": "Nama (opsional)",
-    "namePlaceholder": "Secara bawaan, gunakan nama dari frontmatter SKILL.md",
-    "descriptionPlaceholder": "Ditampilkan kepada agen untuk menentukan kapan memuat keahlian ini",
+    "namePlaceholder": "Biarkan kosong untuk memakai nama dari markdown",
+    "descriptionPlaceholder": "Apa fungsinya dan kapan menggunakannya",
     "noDescription": "Tidak ada deskripsi",
     "unsaved": "Perubahan belum disimpan",
-    "addReference": "Tambah referensi",
+    "addReference": "Tambah file referensi",
+    "deleteFile": "Hapus {file}",
     "source": {
-      "inline": "Inline",
+      "inline": "Ditulis di sini",
       "upload": "Diunggah",
       "github": "GitHub"
     },
     "tabInline": "Tulis markdown",
+    "inlinePlaceholder": "---\nname: Keahlian saya\ndescription: Apa fungsinya dan kapan menggunakannya\n---\n\nInstruksi…",
     "tabUpload": "Unggah file",
     "tabGithub": "Impor dari GitHub",
-    "skillFile": "File SKILL.md",
+    "skillFile": "File markdown",
     "loaded": "Memuat {file}",
     "trustWarning": "Hanya impor keahlian yang Anda percayai",
     "trustWarning1": "Keahlian menjadi instruksi yang diikuti agen Anda. Tinjau sumbernya terlebih dahulu.",
-    "trustWarning2": "Hanya SKILL.md dan referensi markdown miliknya yang diimpor. Skrip dilewati.",
+    "trustWarning2": "Hanya SKILL.md dan file referensi markdown-nya yang diimpor. Skrip dilewati.",
     "githubUrl": "URL GitHub",
-    "githubUrlPlaceholder": "https://github.com/owner/repo atau folder keahlian",
+    "githubUrlPlaceholder": "https://github.com/owner/repo",
     "githubUrlHint": "Repositori, folder, atau file SKILL.md.",
     "findSkills": "Cari keahlian",
     "importTitle": "Impor keahlian dari GitHub",
     "foundCount": "{count, plural, one {Ditemukan # keahlian. Pilih yang akan diimpor.} other {Ditemukan # keahlian. Pilih yang akan diimpor.}}",
     "matchCount": "{shown} dari {total, plural, one {# keahlian} other {# keahlian}} cocok",
     "selectAll": "Pilih semua",
-    "searchPlaceholder": "Cari berdasarkan nama atau deskripsi",
+    "searchPlaceholder": "Cari keahlian",
     "noMatches": "Tidak ada keahlian yang cocok dengan “{query}”.",
+    "noSourceMatches": "Tidak ada keahlian dari sumber yang dipilih.",
+    "sourceFilter": "Sumber",
     "importCount": "{count, plural, =0 {Impor keahlian} one {Impor # keahlian} other {Impor # keahlian}}",
     "files": "File",
     "skill": "Keahlian",
     "description": "Deskripsi",
-    "referenceCount": "{count, plural, one {# referensi} other {# referensi}}",
+    "referenceCount": "{count, plural, one {# file referensi} other {# file referensi}}",
     "noAccess": "Anda tidak memiliki akses ke keahlian tim ini."
   },
   "tools": {
@@ -458,16 +464,16 @@
     "ownToolUnavailableTitle": "Alat untuk API apa pun",
     "ownToolUnavailableHint": "Buat alat agar agen Anda bisa memanggil layanan apa pun yang punya API, termasuk milik Anda sendiri. Tersedia di Cloud dan Pro self-hosted.",
     "group": "Grup",
-    "allGroups": "Semua alat",
     "ownTools": "Alat sendiri",
-    "noneInGroup": "Tidak ada alat di grup ini"
+    "noGroupMatches": "Tidak ada alat di grup yang dipilih."
   },
   "agents": {
     "projectDefaultsColumn": "Proyek baru",
-    "projectDefaultsHint": "Agen yang dipilih akan bergabung dengan setiap proyek baru dalam tim ini. Proyek yang sudah ada dan salinannya tetap memakai agen masing-masing.",
+    "projectDefaultsHint": "Agen yang diaktifkan di sini bergabung dengan setiap proyek baru dalam tim ini. Proyek yang sudah ada dan salinan proyek tetap memakai agen masing-masing.",
     "projectDefaultAria": "Tambahkan {agent} ke proyek baru",
     "projectDefaultsReadOnly": "Pemilik dan pengelola tim memilih agen yang bergabung dengan proyek baru.",
-    "projectDefaultsSaved": "Agen default disimpan",
+    "joinsNewProjectsSaved": "{agent} masuk ke proyek baru",
+    "skipsNewProjectsSaved": "{agent} tidak masuk ke proyek baru",
     "projectDefaultOn": "Aktif",
     "projectDefaultOff": "Nonaktif",
     "joinNewProjects": "Tambahkan ke proyek baru",
@@ -478,9 +484,10 @@
     "create": "Buat agen AI",
     "save": "Simpan agen AI",
     "delete": "Hapus agen AI",
+    "deleteTitle": "Hapus agen AI?",
     "edit": "Ubah agen AI",
     "empty": "Belum ada agen AI",
-    "emptyHint": "Agen berjalan pada runtime bawaan atau melalui API.",
+    "emptyHint": "Buat agen, lalu tambahkan ke proyek tempat agen bekerja.",
     "agent": "Agen AI",
     "sheetSubtitle": "Pengguna bot yang dapat didelegasikan issue",
     "kind": "Jenis",
@@ -662,9 +669,9 @@
     "apiKey": "Kunci API",
     "apiKeyValue": "Kunci API {start}…",
     "runHistory": "Riwayat eksekusi",
-    "noRuns": "Belum ada eksekusi. Eksekusi akan muncul di sini saat agen disebutkan dalam komentar atau issue didelegasikan kepadanya.",
+    "noRuns": "Belum ada eksekusi. Eksekusi dari pemicu, jadwal, dan tugas manual muncul di sini.",
     "loadMore": "Muat 25 lagi",
-    "endOfHistory": "Akhir riwayat",
+    "endOfHistory": "Tidak ada eksekusi yang lebih lama",
     "manualTask": "Tugas manual",
     "scheduledTask": "Tugas terjadwal",
     "documentTask": "Komentar di dokumen",
@@ -675,9 +682,9 @@
     "queue": "Antrean",
     "testChat": "Uji obrolan",
     "moreActions": "Tindakan lainnya",
-    "runsSubtitle": "@{username} · eksekusi yang dipicu",
+    "runsSubtitle": "@{username}",
     "regenerateMessage": "Kunci saat ini untuk <v>{name}</v> akan langsung berhenti berfungsi. Perbarui semua hal yang menggunakannya dengan kunci baru.",
-    "deleteMessage": "<v>{name}</v> dan kunci API-nya akan dihapus. Agen ini juga akan dihapus dari issue mana pun tempat agen tersebut ditetapkan atau didelegasikan. Tindakan ini tidak dapat dibatalkan.",
+    "deleteMessage": "<v>{name}</v> dan kunci API-nya akan dihapus. Agen akan dilepas dari setiap issue yang ditetapkan atau didelegasikan kepadanya. Tindakan ini tidak dapat dibatalkan.",
     "actionCount": "{count, plural, one {# tindakan} other {# tindakan}}",
     "toolCount": "{count, plural, one {# alat} other {# alat}}",
     "skillCount": "{count, plural, one {# keahlian} other {# keahlian}}",
@@ -706,7 +713,17 @@
     "noProjectsShort": "Tidak ada proyek",
     "chatNeedsAgent": "Buat agen AI untuk mengujinya di sini.",
     "chatNeedsProject": "Lampirkan agen AI ke sebuah proyek untuk mengujinya di sini.",
-    "triggerFieldsTitle": "Bidang kustom yang memulai eksekusi"
+    "triggerFieldsTitle": "Bidang kustom yang memulai eksekusi",
+    "search": "Cari agen",
+    "noMatches": "Tidak ada agen yang cocok dengan pencarian atau filter.",
+    "provider": "Penyedia model",
+    "joinsNewProjects": "Masuk ke proyek baru",
+    "skipsNewProjects": "Tidak masuk ke proyek baru",
+    "triggerField": "Bidang kustom",
+    "triggerFieldCount": "{count, plural, one {# bidang} other {# bidang}}",
+    "projectsCount": "Bekerja di {count, plural, one {# proyek} other {# proyek}}",
+    "showAllProjects": "Tampilkan semua {count} proyek",
+    "changeProjects": "Ubah proyek"
   },
   "members": {
     "roleSaved": "{name} sekarang menjadi {role}",

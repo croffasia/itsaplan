@@ -198,7 +198,7 @@ describe('agent tools', () => {
     expect(tooLong.status).toBe(400);
   });
 
-  it("narrows the list to one integration's tools", async () => {
+  it("narrows the list to some integrations' tools", async () => {
     const { asOwner, teamId } = await setup();
     const credentialId = await jinaCredential(asOwner);
     await tools(asOwner, teamId).post({ toolKey: 'jina_reader', credentialId });
@@ -208,12 +208,13 @@ describe('agent tools', () => {
       (await tools(asOwner, teamId).get({ query })).data?.items.map((i) => i.toolKey);
     expect(await keys({ group: 'jina' })).toEqual(['jina_reader']);
     expect(await keys({ group: 'pdf' })).toEqual(['pdf_read']);
+    expect(await keys({ group: 'pdf,jina' })).toEqual(['pdf_read', 'jina_reader']);
     expect(await keys({ group: 'pdf', search: 'jina' })).toEqual([]);
     expect(await keys({ group: 'jina_reader' })).toEqual([]);
 
-    const longest = await tools(asOwner, teamId).get({ query: { group: 'x'.repeat(100) } });
+    const longest = await tools(asOwner, teamId).get({ query: { group: 'x'.repeat(1000) } });
     expect(longest.status).toBe(200);
-    const tooLong = await tools(asOwner, teamId).get({ query: { group: 'x'.repeat(101) } });
+    const tooLong = await tools(asOwner, teamId).get({ query: { group: 'x'.repeat(1001) } });
     expect(tooLong.status).toBe(400);
   });
 

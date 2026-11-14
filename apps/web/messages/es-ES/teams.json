@@ -46,7 +46,7 @@
     },
     "agentSkills": {
       "title": "Habilidades",
-      "description": "Instrucciones reusables que los agentes internos cargan bajo demanda."
+      "description": "Instrucciones reutilizables que activas en los agentes internos."
     },
     "agentTools": {
       "title": "Herramientas",
@@ -54,7 +54,7 @@
     },
     "agents": {
       "title": "Agentes de IA",
-      "description": "Los agentes de IA que este equipo posee, y los proyectos en los que trabaja cada uno de ellos."
+      "description": "Los agentes de IA que este equipo posee."
     },
     "analytics": {
       "title": "Consumo",
@@ -336,9 +336,9 @@
     "noMatches": "Ninguna integración coincide con «{query}».",
     "nothingFound": "No se ha encontrado nada",
     "noKindMatches": "No hay credenciales en los grupos elegidos.",
-    "showGroups": "Mostrar grupos",
+    "group": "Grupo",
     "connected": "Credencial añadida",
-    "alreadyConnected": "El equipo ya tiene una credencial de {integration}",
+    "alreadyConnected": "El equipo ya tiene una credencial para {integration}",
     "alreadyConnectedHint": "Añade otra credencial para una segunda cuenta. La etiqueta las distingue.",
     "agentTools": "Herramientas disponibles",
     "validate": "Comprobar credencial",
@@ -352,7 +352,7 @@
     "checkUnknown": "Esta credencial no se puede comprobar automáticamente. Aun así puedes guardarla.",
     "empty": "Todavía no hay credenciales",
     "emptyHint": "Añade una credencial para que los agentes puedan usar un proveedor de IA o una herramienta.",
-    "deleteMessage": "{kind, select, llm {Los agentes que funcionan con ella dejarán de funcionar hasta que les elijas otra credencial.} tool {Las herramientas añadidas con ella se eliminarán y los agentes ya no podrán llamarlas.} service {Las herramientas añadidas con ella se eliminarán y los agentes ya no podrán llamarlas.} other {}} Esta acción no se puede deshacer.",
+    "deleteMessage": "{kind, select, llm {Los agentes que funcionan con ella dejarán de funcionar hasta que les elijas otra credencial.} tool {Las herramientas que la usan se eliminarán y los agentes ya no podrán llamarlas.} service {Las herramientas que la usan se eliminarán y los agentes ya no podrán llamarlas.} other {}} Esta acción no se puede deshacer.",
     "groups": {
       "llm": {
         "title": "Proveedores de IA",
@@ -364,56 +364,62 @@
       },
       "service": {
         "title": "Servicios",
-        "hint": "Una dirección y una clave a las que tus herramientas envían solicitudes"
+        "hint": "Una dirección y una clave para tus herramientas propias"
       }
     },
     "columns": {
       "integration": "Integración",
-      "credentials": "Credenciales"
+      "credentials": "Campos"
     }
   },
   "skills": {
     "newSkill": "Nueva habilidad",
     "create": "Crear la habilidad",
     "delete": "Eliminar la habilidad",
-    "deleteMessage": "¿Eliminar la habilidad «{name}»? Se quitará de cada agente que la usa.",
-    "edit": "Editar la habilidad",
+    "deleteTitle": "¿Eliminar la habilidad?",
+    "deleteLabel": "Eliminar {name}",
+    "deleteMessage": "«{name}» se eliminará y se quitará de todos los agentes que la usan. No se puede deshacer.",
+    "editLabel": "Editar {name}",
     "empty": "Todavía no hay habilidades",
-    "emptyHint": "Escribe markdown, sube un fichero o importa desde GitHub.",
+    "emptyHint": "Crea una habilidad y actívala en los agentes que la necesiten.",
     "name": "Nombre (opcional)",
-    "namePlaceholder": "Toma por defecto el nombre del frontmatter de SKILL.md",
-    "descriptionPlaceholder": "Se muestra al agente para decidir cuándo cargar esta habilidad",
+    "namePlaceholder": "Déjalo vacío para usar el nombre del markdown",
+    "descriptionPlaceholder": "Qué hace y cuándo usarla",
     "noDescription": "Sin descripción",
     "unsaved": "Cambios no guardados",
-    "addReference": "Añadir referencia",
+    "addReference": "Añadir fichero de referencia",
+    "deleteFile": "Eliminar {file}",
     "source": {
-      "inline": "En línea",
+      "inline": "Escrita aquí",
       "upload": "Subida",
       "github": "GitHub"
     },
     "tabInline": "Escribir markdown",
+    "inlinePlaceholder": "---\nname: Mi habilidad\ndescription: Qué hace y cuándo usarla\n---\n\nInstrucciones…",
     "tabUpload": "Subir un fichero",
     "tabGithub": "Importar de GitHub",
-    "skillFile": "Fichero SKILL.md",
+    "skillFile": "Fichero markdown",
     "loaded": "{file} cargada",
     "trustWarning": "Importa solo habilidades en las que confíes",
     "trustWarning1": "Una habilidad se convierte en instrucciones que tus agentes siguen. Revisa el origen primero.",
-    "trustWarning2": "Solo SKILL.md y sus referencias de markdown se importan. Los scripts se saltan.",
+    "trustWarning2": "Solo se importan SKILL.md y sus ficheros de referencia en markdown. Los scripts se omiten.",
     "githubUrl": "URL de GitHub",
-    "githubUrlPlaceholder": "https://github.com/propietario/repositorio o una carpeta de habilidad",
-    "githubUrlHint": "Un repositorio, una carpeta o un SKILL.md.",
+    "githubUrlPlaceholder": "https://github.com/owner/repo",
+    "githubUrlHint": "Un repositorio, una carpeta o un fichero SKILL.md.",
     "findSkills": "Encontrar habilidades",
     "importTitle": "Importar habilidades de GitHub",
     "foundCount": "{count, plural, one {Encontrada # habilidad. Elige cuáles importar.} other {Encontradas # habilidades. Elige cuáles importar.}}",
     "matchCount": "{shown} de {count, plural, one {# habilidad} other {# habilidades}} coinciden",
     "selectAll": "Seleccionar todo",
-    "searchPlaceholder": "Buscar por nombre o descripción",
+    "searchPlaceholder": "Buscar habilidades",
     "noMatches": "Ninguna habilidad coincide con «{query}».",
+    "noSourceMatches": "No hay habilidades de los orígenes elegidos.",
+    "sourceFilter": "Origen",
     "importCount": "{count, plural, =0 {Importar habilidades} one {Importar # habilidad} other {Importar # habilidades}}",
     "files": "Ficheros",
     "skill": "Habilidad",
     "description": "Descripción",
-    "referenceCount": "{count, plural, one {# referencia} other {# referencias}}",
+    "referenceCount": "{count, plural, one {# fichero de referencia} other {# ficheros de referencia}}",
     "noAccess": "No tienes acceso a las habilidades de este equipo."
   },
   "tools": {
@@ -458,16 +464,16 @@
     "ownToolUnavailableTitle": "Herramientas para cualquier API",
     "ownToolUnavailableHint": "Crea herramientas para que tus agentes llamen a cualquier servicio con API, incluido el tuyo. Disponible en Cloud y en Pro autoalojado.",
     "group": "Grupo",
-    "allGroups": "Todas las herramientas",
     "ownTools": "Herramientas propias",
-    "noneInGroup": "No hay herramientas en este grupo"
+    "noGroupMatches": "No hay herramientas en los grupos elegidos."
   },
   "agents": {
     "projectDefaultsColumn": "Proyectos nuevos",
-    "projectDefaultsHint": "Los agentes seleccionados se añaden a cada proyecto nuevo de este equipo. Los proyectos existentes y las copias conservan sus agentes.",
+    "projectDefaultsHint": "Los agentes activados aquí se añaden a cada proyecto nuevo de este equipo. Los proyectos existentes y las copias de proyectos conservan sus agentes.",
     "projectDefaultAria": "Añadir a {agent} a los proyectos nuevos",
     "projectDefaultsReadOnly": "Los propietarios y administradores del equipo eligen qué agentes se añaden a los proyectos nuevos.",
-    "projectDefaultsSaved": "Agentes predeterminados guardados",
+    "joinsNewProjectsSaved": "{agent} se añade a proyectos nuevos",
+    "skipsNewProjectsSaved": "{agent} no se añade a proyectos nuevos",
     "projectDefaultOn": "Activado",
     "projectDefaultOff": "Desactivado",
     "joinNewProjects": "Añadir a proyectos nuevos",
@@ -478,9 +484,10 @@
     "create": "Crear un agente de IA",
     "save": "Guardar el agente de IA",
     "delete": "Eliminar el agente de IA",
+    "deleteTitle": "¿Eliminar el agente de IA?",
     "edit": "Editar el agente de IA",
     "empty": "Todavía no hay agentes de IA",
-    "emptyHint": "Un agente funciona sobre el entorno de ejecución integro o a través de la API.",
+    "emptyHint": "Crea un agente y añádelo a los proyectos en los que va a trabajar.",
     "agent": "Agente de IA",
     "sheetSubtitle": "Un usuario bot al que le puedes delegar tickets",
     "kind": "Clase",
@@ -662,9 +669,9 @@
     "apiKey": "Clave de API",
     "apiKeyValue": "Clave de API {start}…",
     "runHistory": "Historial de ejecuciones",
-    "noRuns": "Todavía no hay ejecuciones. Las ejecuciones aparecen aquí cuando se menciona al agente en un comentario o se le delega un ticket.",
+    "noRuns": "Todavía no hay ejecuciones. Aquí aparecen las ejecuciones de disparadores, programaciones y tareas manuales.",
     "loadMore": "Cargar 25 más",
-    "endOfHistory": "Fin del historial",
+    "endOfHistory": "No hay ejecuciones anteriores",
     "manualTask": "Tarea manual",
     "scheduledTask": "Tarea programada",
     "documentTask": "Comentario en un documento",
@@ -675,9 +682,9 @@
     "queue": "Cola",
     "testChat": "Chat de prueba",
     "moreActions": "Más acciones",
-    "runsSubtitle": "@{username} · ejecuciones disparadas",
+    "runsSubtitle": "@{username}",
     "regenerateMessage": "La clave actual de <v>{name}</v> deja de funcionar de inmediato. Actualiza todo lo que la usa con la clave nueva.",
-    "deleteMessage": "<v>{name}</v> y su clave de API se quitarán, y se limpiará de los tickets a los que estaba asignado o delegado. No se puede deshacer.",
+    "deleteMessage": "<v>{name}</v> y su clave de API se eliminarán. El agente se quitará de todos los tickets que tenga asignados o delegados. No se puede deshacer.",
     "actionCount": "{count, plural, one {# acción} other {# acciones}}",
     "toolCount": "{count, plural, one {# herramienta} other {# herramientas}}",
     "skillCount": "{count, plural, one {# habilidad} other {# habilidades}}",
@@ -706,7 +713,17 @@
     "noProjectsShort": "Sin proyectos",
     "chatNeedsAgent": "Crea el agente de IA para probarlo aquí.",
     "chatNeedsProject": "Asocia el agente de IA a un proyecto para probarlo aquí.",
-    "triggerFieldsTitle": "Campos personalizados que empiezan una ejecución"
+    "triggerFieldsTitle": "Campos personalizados que empiezan una ejecución",
+    "search": "Buscar agentes",
+    "noMatches": "Ningún agente coincide con la búsqueda o los filtros.",
+    "provider": "Proveedor del modelo",
+    "joinsNewProjects": "Se añade a proyectos nuevos",
+    "skipsNewProjects": "No se añade a proyectos nuevos",
+    "triggerField": "Campo personalizado",
+    "triggerFieldCount": "{count, plural, one {# campo} other {# campos}}",
+    "projectsCount": "Trabaja en {count, plural, one {# proyecto} other {# proyectos}}",
+    "showAllProjects": "Ver los {count} proyectos",
+    "changeProjects": "Cambiar proyectos"
   },
   "members": {
     "roleSaved": "{name} es ahora {role}",

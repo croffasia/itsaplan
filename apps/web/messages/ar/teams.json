@@ -46,7 +46,7 @@
     },
     "agentSkills": {
       "title": "المهارات (skills)",
-      "description": "تعليمات تتعاد استخدامها، الوكلاء الداخليون بيحمّلوها لما يحتاجوها."
+      "description": "تعليمات قابلة لإعادة الاستخدام تفعّلها للوكلاء الداخليين."
     },
     "agentTools": {
       "title": "الأدوات (tools)",
@@ -54,7 +54,7 @@
     },
     "agents": {
       "title": "وكلاء الذكاء الاصطناعي",
-      "description": "وكلاء الذكاء الاصطناعي التابعون لهذا الفريق، والمشاريع التي يعمل فيها كل منهم."
+      "description": "وكلاء الذكاء الاصطناعي التابعون لهذا الفريق."
     },
     "analytics": {
       "title": "الاستهلاك",
@@ -336,9 +336,9 @@
     "noMatches": "لا يوجد تكامل يطابق “{query}”.",
     "nothingFound": "لا توجد نتائج",
     "noKindMatches": "لا توجد بيانات اعتماد في المجموعات المختارة.",
-    "showGroups": "عرض المجموعات",
+    "group": "المجموعة",
     "connected": "بيانات الاعتماد مضافة",
-    "alreadyConnected": "الفريق عنده بالفعل بيانات اعتماد لـ {integration}",
+    "alreadyConnected": "لدى الفريق بالفعل بيانات اعتماد لـ {integration}",
     "alreadyConnectedHint": "ضيف بيانات اعتماد تانية لحساب تاني. التسمية بتفرّق بينهم.",
     "agentTools": "الأدوات المتاحة",
     "validate": "تحقّق",
@@ -352,7 +352,7 @@
     "checkUnknown": "مينفعش نتحقّق من بيانات الاعتماد دي تلقائيًا. لسه تقدر تحفظها.",
     "empty": "لا توجد بيانات اعتماد بعد",
     "emptyHint": "ضيف بيانات اعتماد عشان الوكلاء يقدروا يستخدموا مزوّد ذكاء اصطناعي أو أداة.",
-    "deleteMessage": "{kind, select, llm {الوكلاء اللي بيشتغلوا عليها هيقفوا لحد ما تختار لهم بيانات اعتماد تانية.} tool {الأدوات اللي اتضافت بيها هتتحذف، والوكلاء مش هيقدروا يستدعوها تاني.} service {الأدوات اللي اتضافت بيها هتتحذف، والوكلاء مش هيقدروا يستدعوها تاني.} other {}} مفيش رجوع في الخطوة دي.",
+    "deleteMessage": "{kind, select, llm {سيتوقف الوكلاء الذين يعملون عليها حتى تختار لهم بيانات اعتماد أخرى.} tool {ستُحذف الأدوات التي تستخدمها، ولن يتمكن الوكلاء من استدعائها بعد ذلك.} service {ستُحذف الأدوات التي تستخدمها، ولن يتمكن الوكلاء من استدعائها بعد ذلك.} other {}} لا يمكن التراجع عن ذلك.",
     "groups": {
       "llm": {
         "title": "مزوّدو الذكاء الاصطناعي",
@@ -364,56 +364,62 @@
       },
       "service": {
         "title": "الخدمات",
-        "hint": "عنوان ومفتاح ترسل إليهما أدواتك الخاصة الطلبات"
+        "hint": "عنوان ومفتاح لأدواتك الخاصة"
       }
     },
     "columns": {
       "integration": "التكامل",
-      "credentials": "بيانات الاعتماد"
+      "credentials": "الحقول"
     }
   },
   "skills": {
     "newSkill": "مهارة جديدة",
     "create": "إنشاء مهارة",
     "delete": "حذف المهارة",
-    "deleteMessage": "تحذف مهارة «{name}»؟ هتتشال من كل وكيل بيستخدمها.",
-    "edit": "تعديل المهارة",
+    "deleteTitle": "حذف المهارة؟",
+    "deleteLabel": "حذف {name}",
+    "deleteMessage": "ستُحذف «{name}» وتُزال من كل وكيل يستخدمها. لا يمكن التراجع عن ذلك.",
+    "editLabel": "تعديل {name}",
     "empty": "لا توجد مهارات بعد",
-    "emptyHint": "اكتب markdown، أو ارفع ملف، أو استورد من GitHub.",
+    "emptyHint": "أنشئ مهارة، ثم فعّلها للوكلاء الذين يحتاجونها.",
     "name": "الاسم (اختياري)",
-    "namePlaceholder": "يأخذ الاسم افتراضيًا من frontmatter في SKILL.md",
-    "descriptionPlaceholder": "بيتعرض للوكيل عشان يقرّر يحمّل المهارة دي امتى",
+    "namePlaceholder": "اتركه فارغًا لاستخدام الاسم من ملف markdown",
+    "descriptionPlaceholder": "ما تفعله ومتى تُستخدم",
     "noDescription": "لا يوجد وصف",
     "unsaved": "تغييرات غير محفوظة",
-    "addReference": "إضافة مرجع",
+    "addReference": "إضافة ملف مرجعي",
+    "deleteFile": "حذف {file}",
     "source": {
-      "inline": "مضمّن",
+      "inline": "مكتوبة هنا",
       "upload": "مرفوع",
       "github": "GitHub"
     },
     "tabInline": "كتابة markdown",
+    "inlinePlaceholder": "---\nname: مهارتي\ndescription: ما تفعله ومتى تُستخدم\n---\n\nالتعليمات…",
     "tabUpload": "رفع ملف",
     "tabGithub": "استيراد من GitHub",
-    "skillFile": "ملف SKILL.md",
+    "skillFile": "ملف Markdown",
     "loaded": "حُمّل {file}",
     "trustWarning": "استورد المهارات الموثوقة فقط",
     "trustWarning1": "المهارة بتبقى تعليمات وكلاؤك بيمشوا عليها. راجع المصدر الأول.",
-    "trustWarning2": "بيتستورد SKILL.md ومراجعه بصيغة markdown بس. النصوص البرمجية بتتساب.",
+    "trustWarning2": "تُستورد SKILL.md وملفاتها المرجعية بصيغة markdown فقط. تُتخطّى النصوص البرمجية.",
     "githubUrl": "رابط GitHub",
-    "githubUrlPlaceholder": "https://github.com/owner/repo أو مجلد مهارة",
+    "githubUrlPlaceholder": "https://github.com/owner/repo",
     "githubUrlHint": "مستودع أو مجلد أو ملف SKILL.md.",
     "findSkills": "البحث عن مهارات",
     "importTitle": "استيراد مهارات من GitHub",
     "foundCount": "{count, plural, zero {مفيش مهارات اتلاقت.} one {اتلاقت مهارة واحدة. اختار اللي عايز تستورده.} two {اتلاقت مهارتين. اختار اللي عايز تستورده.} few {اتلاقت # مهارات. اختار اللي عايز تستورده.} many {اتلاقت # مهارة. اختار اللي عايز تستورده.} other {اتلاقت # مهارة. اختار اللي عايز تستورده.}}",
     "matchCount": "{shown} من {total, plural, zero {لا مهارات} one {مهارة واحدة} two {مهارتان} few {# مهارات} many {# مهارة} other {# مهارة}} مطابقة",
     "selectAll": "تحديد الكل",
-    "searchPlaceholder": "ابحث بالاسم أو الوصف",
-    "noMatches": "لا توجد مهارات تطابق “{query}”.",
+    "searchPlaceholder": "ابحث في المهارات",
+    "noMatches": "لا توجد مهارة تطابق “{query}”.",
+    "noSourceMatches": "لا توجد مهارات من المصادر المختارة.",
+    "sourceFilter": "المصدر",
     "importCount": "{count, plural, =0 {استيراد المهارات} zero {استيراد المهارات} one {استيراد مهارة واحدة} two {استيراد مهارتين} few {استيراد # مهارات} many {استيراد # مهارة} other {استيراد # مهارة}}",
     "files": "الملفات",
     "skill": "المهارة",
     "description": "الوصف",
-    "referenceCount": "{count, plural, zero {لا مراجع} one {مرجع واحد} two {مرجعان} few {# مراجع} many {# مرجعًا} other {# مرجع}}",
+    "referenceCount": "{count, plural, zero {لا ملفات مرجعية} one {ملف مرجعي واحد} two {ملفان مرجعيان} few {# ملفات مرجعية} many {# ملفًا مرجعيًا} other {# ملف مرجعي}}",
     "noAccess": "ليس لديك صلاحية الوصول إلى مهارات هذا الفريق."
   },
   "tools": {
@@ -458,16 +464,16 @@
     "ownToolUnavailableTitle": "أدوات لأي API",
     "ownToolUnavailableHint": "أنشئ أدوات تخلّي وكلاءك يستدعوا أي خدمة لها API، حتى خدماتك. متاح في Cloud وفي نسخة Pro للاستضافة الذاتية.",
     "group": "المجموعة",
-    "allGroups": "كل الأدوات",
     "ownTools": "أدواتك الخاصة",
-    "noneInGroup": "لا توجد أدوات في هذه المجموعة"
+    "noGroupMatches": "لا توجد أدوات في المجموعات المختارة."
   },
   "agents": {
     "projectDefaultsColumn": "المشاريع الجديدة",
-    "projectDefaultsHint": "ينضم الوكلاء المحددون إلى كل مشروع جديد في هذا الفريق. تحتفظ المشاريع الحالية والنسخ بوكلائها.",
+    "projectDefaultsHint": "ينضم الوكلاء المفعّلون هنا إلى كل مشروع جديد في هذا الفريق. تحتفظ المشاريع الحالية ونسخ المشاريع بوكلائها.",
     "projectDefaultAria": "إضافة {agent} إلى المشاريع الجديدة",
     "projectDefaultsReadOnly": "يختار مالكو الفريق ومديروه الوكلاء الذين ينضمون إلى المشاريع الجديدة.",
-    "projectDefaultsSaved": "تم حفظ الوكلاء الافتراضيين",
+    "joinsNewProjectsSaved": "يُضاف {agent} إلى المشاريع الجديدة",
+    "skipsNewProjectsSaved": "لا يُضاف {agent} إلى المشاريع الجديدة",
     "projectDefaultOn": "مفعّل",
     "projectDefaultOff": "معطّل",
     "joinNewProjects": "إضافة إلى المشاريع الجديدة",
@@ -478,9 +484,10 @@
     "create": "إنشاء وكيل ذكاء اصطناعي",
     "save": "حفظ الوكيل",
     "delete": "حذف الوكيل",
+    "deleteTitle": "حذف وكيل الذكاء الاصطناعي؟",
     "edit": "تعديل الوكيل",
     "empty": "لا يوجد وكلاء ذكاء اصطناعي بعد",
-    "emptyHint": "الوكيل بيشتغل على وقت التشغيل المدمج أو عن طريق API.",
+    "emptyHint": "أنشئ وكيلًا، ثم أضفه إلى المشاريع التي سيعمل فيها.",
     "agent": "وكيل ذكاء اصطناعي",
     "sheetSubtitle": "مستخدم آلي تقدر تفوّضله المهام",
     "kind": "النوع",
@@ -662,9 +669,9 @@
     "apiKey": "مفتاح API",
     "apiKeyValue": "مفتاح API {start}…",
     "runHistory": "سجل التشغيل",
-    "noRuns": "مفيش تشغيلات لسه. هتلاقي التشغيلات هنا لما حد يشاور على الوكيل في تعليق أو يفوّضله مهمة.",
+    "noRuns": "لا توجد تشغيلات بعد. تظهر هنا التشغيلات الناتجة عن المشغّلات والجداول الزمنية والمهام اليدوية.",
     "loadMore": "تحميل 25 إضافية",
-    "endOfHistory": "نهاية السجل",
+    "endOfHistory": "لا توجد تشغيلات أقدم",
     "manualTask": "مهمة يدوية",
     "scheduledTask": "مهمة مجدولة",
     "documentTask": "تعليق في مستند",
@@ -675,9 +682,9 @@
     "queue": "الطابور",
     "testChat": "محادثة تجريبية",
     "moreActions": "إجراءات أخرى",
-    "runsSubtitle": "@{username} · تشغيلات المشغّلات",
+    "runsSubtitle": "@{username}",
     "regenerateMessage": "مفتاح <v>{name}</v> الحالي هيبطّل يشتغل على طول. حدّث أي حاجة بتستخدمه بالمفتاح الجديد.",
-    "deleteMessage": "<v>{name}</v> ومفتاح API بتاعها هيتشالوا، وهتتشال من أي مهام كانت مسنودة ليها أو مفوّضة ليها. مش هينفع ترجع في ده.",
+    "deleteMessage": "سيُحذف <v>{name}</v> ومفتاح API الخاص به. سيُزال الوكيل من كل مهمة مسندة أو مفوّضة إليه. لا يمكن التراجع عن ذلك.",
     "actionCount": "{count, plural, zero {لا إجراءات} one {إجراء واحد} two {إجراءان} few {# إجراءات} many {# إجراءً} other {# إجراء}}",
     "toolCount": "{count, plural, zero {لا أدوات} one {أداة واحدة} two {أداتان} few {# أدوات} many {# أداة} other {# أداة}}",
     "skillCount": "{count, plural, zero {لا مهارات} one {مهارة واحدة} two {مهارتان} few {# مهارات} many {# مهارة} other {# مهارة}}",
@@ -706,7 +713,17 @@
     "noProjectsShort": "لا توجد مشاريع",
     "chatNeedsAgent": "أنشئ وكيل الذكاء الاصطناعي لتجربته هنا.",
     "chatNeedsProject": "أضف وكيل الذكاء الاصطناعي إلى مشروع لتجربته هنا.",
-    "triggerFieldsTitle": "الحقول المخصصة التي تبدأ تشغيلاً"
+    "triggerFieldsTitle": "الحقول المخصصة التي تبدأ تشغيلاً",
+    "search": "البحث في الوكلاء",
+    "noMatches": "لا يوجد وكيل يطابق البحث أو عوامل التصفية.",
+    "provider": "مزوّد النموذج",
+    "joinsNewProjects": "يُضاف إلى المشاريع الجديدة",
+    "skipsNewProjects": "لا يُضاف إلى المشاريع الجديدة",
+    "triggerField": "حقل مخصص",
+    "triggerFieldCount": "{count, plural, zero {لا حقول} one {حقل واحد} two {حقلان} few {# حقول} many {# حقلًا} other {# حقل}}",
+    "projectsCount": "يعمل في {count, plural, zero {لا مشاريع} one {مشروع واحد} two {مشروعين} few {# مشاريع} many {# مشروعًا} other {# مشروع}}",
+    "showAllProjects": "عرض كل المشاريع ({count})",
+    "changeProjects": "تغيير المشاريع"
   },
   "members": {
     "roleSaved": "{name} الآن {role}",

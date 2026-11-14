@@ -5,15 +5,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { AgentTriggerChip, TRIGGER_CHIP } from './AgentTriggerChip';
 import { useTranslations } from 'next-intl';
 
-// The enabled run triggers for an internal agent (mention, delegation, member
-// fields). Nothing is shown when none are on: an empty cell already says so. The
-// field triggers carry their count, and name the fields in a popover.
+// The enabled run triggers of an agent (mention, delegation, member fields), each named.
+// Nothing is shown when none are on: an empty cell already says so. The field triggers
+// are one chip with their count, and name the fields in a popover.
 export function AgentTriggers({ agent }: { agent: AiAgent }) {
   const t = useTranslations('teams.agents');
   const fieldCount = agent.fieldTriggers.length;
   if (!agent.triggerOnMention && !agent.triggerOnAssign && fieldCount === 0) return null;
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
       {agent.triggerOnMention && <AgentTriggerChip icon={AtSign} label={t('triggerMention')} />}
       {agent.triggerOnAssign && (
         <AgentTriggerChip icon={UserRoundCheck} label={t('triggerDelegation')} />
@@ -23,9 +23,12 @@ export function AgentTriggers({ agent }: { agent: AiAgent }) {
           <Tooltip>
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
-                <button type="button" className={TRIGGER_CHIP} aria-label={t('triggerFieldsTitle')}>
+                <button
+                  type="button"
+                  className={`${TRIGGER_CHIP} underline decoration-dotted underline-offset-4 hover:text-foreground`}
+                >
                   <ListChecks className="size-3 shrink-0" />
-                  {fieldCount}
+                  {t('triggerFieldCount', { count: fieldCount })}
                 </button>
               </PopoverTrigger>
             </TooltipTrigger>

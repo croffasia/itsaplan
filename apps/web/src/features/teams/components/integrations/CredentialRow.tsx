@@ -4,10 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { IntegrationIcon } from '@/components/common/IntegrationIcon';
+import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
-// One credential as a table row: the integration's icon, name and optional account label,
-// the redacted fields as badges, and edit/delete actions gated by permission.
+// One credential as a table row. A click on the row opens the editor.
 export function CredentialRow({
   credential,
   integration,
@@ -17,7 +17,8 @@ export function CredentialRow({
   onDelete,
 }: {
   credential: IntegrationCredential;
-  integration: Pick<IntegrationMeta, 'label' | 'kind' | 'icon'>;
+  integration: Pick<IntegrationMeta, 'label' | 'kind' | 'icon'> &
+    Partial<Pick<IntegrationMeta, 'credentialSchema'>>;
   canEdit: boolean;
   canDelete: boolean;
   onEdit: () => void;
@@ -25,8 +26,14 @@ export function CredentialRow({
 }) {
   const t = useTranslations('teams.integrations');
   const fields = Object.entries(credential.redacted);
+  // The form's name for a field; a field the catalog no longer lists keeps its key.
+  const fieldLabel = (key: string) =>
+    integration.credentialSchema?.find((f) => f.key === key)?.label ?? key;
   return (
-    <TableRow className="group/item">
+    <TableRow
+      className={cn('group/item', canEdit && 'cursor-pointer')}
+      onClick={canEdit ? onEdit : undefined}
+    >
       <TableCell className="px-3 py-3 whitespace-normal">
         <div className="flex min-w-0 items-center gap-2.5">
           <IntegrationIcon integration={integration} />
@@ -45,7 +52,7 @@ export function CredentialRow({
           <div className="flex flex-wrap gap-1">
             {fields.map(([k, v]) => (
               <Badge key={k} variant="outline" className="font-mono text-[10px] font-normal">
-                {k}: {String(v)}
+                {fieldLabel(k)}: {String(v)}
               </Badge>
             ))}
           </div>
@@ -53,7 +60,7 @@ export function CredentialRow({
           <span className="text-xs text-muted-foreground">{t('noFields')}</span>
         )}
       </TableCell>
-      <TableCell className="px-3 py-2">
+      <TableCell className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-end gap-1">
           {canEdit && (
             <Button

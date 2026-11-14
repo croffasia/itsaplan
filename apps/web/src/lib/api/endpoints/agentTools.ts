@@ -27,17 +27,17 @@ export interface NewConfiguredToolInput {
 }
 
 // What the tool list asks for: the window, a search over the tool name, its group and its
-// integration, and one integration's tools or a source's (`group`).
+// integration, and the tools of some integrations or sources (`groups`).
 export interface ConfiguredToolListParams extends PageParams {
   search?: string;
-  group?: string;
+  groups?: string[];
 }
 
 // Configured tools: a team's tools bound to a credential, and the tools enabled on
 // one agent. The tool catalog itself comes from the integrations catalog.
 export const listConfiguredTools = (teamId: number, params: ConfiguredToolListParams) =>
   request<Page<ConfiguredTool>>(
-    `/teams/${teamId}/agent-tools${pageQuery(params, { search: params.search, group: params.group })}`,
+    `/teams/${teamId}/agent-tools${pageQuery(params, { search: params.search, group: params.groups?.join(',') })}`,
   );
 
 // The whole list, which the agent editor's tool picker and the tool dialog need

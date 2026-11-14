@@ -23,7 +23,7 @@ export default function TeamAgentTools({
   pending,
   canDelete,
   searchTerm,
-  grouped,
+  filtered,
   sources,
   onOpen,
 }: {
@@ -33,7 +33,7 @@ export default function TeamAgentTools({
   pending: boolean;
   canDelete: boolean;
   searchTerm: string | undefined;
-  grouped: boolean;
+  filtered: boolean;
   sources: ToolSourceEntry[];
   onOpen: (tool: ConfiguredTool) => void;
 }) {
@@ -51,7 +51,7 @@ export default function TeamAgentTools({
       return (
         <p className="text-sm text-muted-foreground">{t('noMatches', { query: searchTerm })}</p>
       );
-    if (grouped) return <p className="text-sm text-muted-foreground">{t('noneInGroup')}</p>;
+    if (filtered) return <p className="text-sm text-muted-foreground">{t('noGroupMatches')}</p>;
     return <EmptyState title={t('empty')} description={t('emptyHint')} />;
   }
 

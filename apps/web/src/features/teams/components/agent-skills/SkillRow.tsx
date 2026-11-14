@@ -1,13 +1,17 @@
-import { BookText, Pencil, Trash2 } from 'lucide-react';
+import { BookText, Pencil, Trash2, Upload } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { AgentSkill } from '@/lib/api/endpoints/agentSkills';
 import GithubIcon from '@/components/common/GithubIcon';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { useTranslations } from 'next-intl';
+import { cn } from '@/lib/utils';
+import { ClampedDescription } from '../ClampedDescription';
 
-// One skill as a table row: name and source with the reference-file count below, the
-// description, and edit/delete actions gated by permission.
+const SOURCE_ICON = { github: GithubIcon, upload: Upload, inline: BookText };
+
+const CELL = 'px-3 py-3 align-middle whitespace-normal';
+
+// One skill as a table row. A click on the row opens the editor.
 export function SkillRow({
   skill,
   canEdit,
@@ -22,39 +26,39 @@ export function SkillRow({
   onDelete: () => void;
 }) {
   const t = useTranslations('teams.skills');
+  const SourceIcon = SOURCE_ICON[skill.source];
+  const sourceLabel = t(`source.${skill.source}`);
   const refCount = skill.files.length;
+
   return (
-    <TableRow className="group/item">
-      <TableCell className="px-3 py-3 align-top whitespace-normal">
-        <div className="flex min-w-0 items-start gap-2.5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-            {skill.source === 'github' ? (
-              <GithubIcon className="size-4" />
-            ) : (
-              <BookText className="size-4" />
-            )}
-          </div>
-          <div className="flex min-w-0 flex-col gap-1 pt-0.5">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <span className="truncate text-sm font-medium text-foreground">{skill.name}</span>
-              <Badge variant="outline" className="text-[10px] font-medium tracking-wide uppercase">
-                {t(`source.${skill.source}`)}
-              </Badge>
-            </div>
-            {refCount > 0 && (
-              <span className="text-xs text-muted-foreground">
-                {t('referenceCount', { count: refCount })}
-              </span>
-            )}
-          </div>
+    <TableRow
+      className={cn('group/item', canEdit && 'cursor-pointer')}
+      onClick={canEdit ? onEdit : undefined}
+    >
+      <TableCell className={CELL}>
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="flex min-w-0 items-center gap-1.5 text-sm font-medium">
+            <span title={sourceLabel} className="shrink-0 text-muted-foreground">
+              <SourceIcon className="size-3.5" aria-hidden />
+            </span>
+            <span className="sr-only">{sourceLabel}</span>
+            <span className="truncate">{skill.name}</span>
+          </span>
+          {refCount > 0 && (
+            <span className="text-xs text-muted-foreground">
+              {t('referenceCount', { count: refCount })}
+            </span>
+          )}
         </div>
       </TableCell>
-      <TableCell className="px-3 py-3 pt-4 align-top whitespace-normal">
-        <p className="line-clamp-2 text-sm text-muted-foreground">
-          {skill.description || t('noDescription')}
-        </p>
+      <TableCell className={CELL}>
+        {skill.description ? (
+          <ClampedDescription text={skill.description} className="text-sm" />
+        ) : (
+          <span className="text-sm text-muted-foreground">{t('noDescription')}</span>
+        )}
       </TableCell>
-      <TableCell className="px-3 py-2 pt-3 align-top">
+      <TableCell className="px-3 py-2 align-middle" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-end gap-1">
           {canEdit && (
             <Button
@@ -62,7 +66,7 @@ export function SkillRow({
               size="icon"
               className="size-8 text-muted-foreground hover:text-foreground"
               onClick={onEdit}
-              aria-label={t('edit')}
+              aria-label={t('editLabel', { name: skill.name })}
             >
               <Pencil className="size-4" />
             </Button>
@@ -73,7 +77,7 @@ export function SkillRow({
               size="icon"
               className="size-8 text-muted-foreground hover:text-destructive"
               onClick={onDelete}
-              aria-label={t('delete')}
+              aria-label={t('deleteLabel', { name: skill.name })}
             >
               <Trash2 className="size-4" />
             </Button>

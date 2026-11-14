@@ -15,7 +15,7 @@ export default function TeamAiAgentRunStatus({ status }: { status: AgentRun['exe
   const variant = STATUS_VARIANT[status];
   const t = useTranslations('issue.agentRuns');
   return (
-    <Badge variant={variant} className="shrink-0 capitalize">
+    <Badge variant={variant} className="shrink-0">
       {t(status)}
     </Badge>
   );

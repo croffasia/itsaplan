@@ -1,13 +1,15 @@
 import { getExternalRunTrace } from '@/lib/api/endpoints/agents';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { nextPageParam } from '@/lib/api/core/paging';
-import { DEFAULT_PAGE_SIZE } from '@/hooks/usePaging';
 import {
   getInternalRunTrace,
   getRunnerQueue,
   getRunsInFlight,
 } from '@/lib/api/endpoints/runnerQueue';
 import { qk } from './queryKeys';
+
+// How many runs the history shows at first and adds with each "load older".
+const RUNS_PAGE_SIZE = 15;
 
 // Under the runner queue key, so the queue's live refresh reloads it with the list.
 export function useRunsInFlightQuery(api: string) {
@@ -20,8 +22,7 @@ export function useRunsInFlightQuery(api: string) {
 export function useRunnerQueueQuery(api: string) {
   return useInfiniteQuery({
     queryKey: [...qk.runnerQueue, 'list', api],
-    queryFn: ({ pageParam }) =>
-      getRunnerQueue(api, { page: pageParam, pageSize: DEFAULT_PAGE_SIZE }),
+    queryFn: ({ pageParam }) => getRunnerQueue(api, { page: pageParam, pageSize: RUNS_PAGE_SIZE }),
     initialPageParam: 1,
     getNextPageParam: nextPageParam,
   });

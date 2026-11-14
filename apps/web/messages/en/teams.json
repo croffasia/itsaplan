@@ -46,15 +46,15 @@
     },
     "agentSkills": {
       "title": "Skills",
-      "description": "Reusable instructions internal agents load on demand."
+      "description": "Reusable instructions you turn on for internal agents."
     },
     "agentTools": {
       "title": "Tools",
       "description": "Tools the team's agents can call."
     },
     "agents": {
-      "title": "AI Agents",
-      "description": "The AI agents this team owns, and the projects each of them works in."
+      "title": "AI agents",
+      "description": "The AI agents this team owns."
     },
     "analytics": {
       "title": "Usage",
@@ -336,9 +336,9 @@
     "noMatches": "No integration matches “{query}”.",
     "nothingFound": "Nothing found",
     "noKindMatches": "No credentials in the chosen groups.",
-    "showGroups": "Show groups",
+    "group": "Group",
     "connected": "Credential added",
-    "alreadyConnected": "The team already has a {integration} credential",
+    "alreadyConnected": "The team already has a credential for {integration}",
     "alreadyConnectedHint": "Add another credential for a second account. The label tells them apart.",
     "agentTools": "Available tools",
     "validate": "Check credential",
@@ -352,7 +352,7 @@
     "checkUnknown": "This credential can't be checked automatically. You can still save it.",
     "empty": "No credentials yet",
     "emptyHint": "Add a credential so agents can use an AI provider or a tool.",
-    "deleteMessage": "{kind, select, llm {Agents that run on it stop working until you choose another credential for them.} tool {The tools added with it are deleted, and agents can no longer call them.} service {The tools added with it are deleted, and agents can no longer call them.} other {}} This can't be undone.",
+    "deleteMessage": "{kind, select, llm {Agents that run on it will stop working until you choose another credential for them.} tool {The tools that use it will be deleted, and agents will no longer be able to call them.} service {The tools that use it will be deleted, and agents will no longer be able to call them.} other {}} This cannot be undone.",
     "groups": {
       "llm": {
         "title": "AI providers",
@@ -364,56 +364,62 @@
       },
       "service": {
         "title": "Services",
-        "hint": "An address and a key your own tools send requests to"
+        "hint": "An address and a key for your custom tools"
       }
     },
     "columns": {
       "integration": "Integration",
-      "credentials": "Credentials"
+      "credentials": "Fields"
     }
   },
   "skills": {
     "newSkill": "New skill",
     "create": "Create skill",
     "delete": "Delete skill",
-    "deleteMessage": "Delete the skill “{name}”? It will be removed from every agent that uses it.",
-    "edit": "Edit skill",
+    "deleteTitle": "Delete the skill?",
+    "deleteLabel": "Delete {name}",
+    "deleteMessage": "“{name}” will be deleted and taken off every agent that uses it. This cannot be undone.",
+    "editLabel": "Edit {name}",
     "empty": "No skills yet",
-    "emptyHint": "Write markdown, upload a file, or import from GitHub.",
+    "emptyHint": "Create a skill, then turn it on for the agents that need it.",
     "name": "Name (optional)",
-    "namePlaceholder": "Defaults to the SKILL.md frontmatter name",
-    "descriptionPlaceholder": "Shown to the agent to decide when to load this skill",
+    "namePlaceholder": "Leave empty to use the name from the markdown",
+    "descriptionPlaceholder": "What it does and when to use it",
     "noDescription": "No description",
     "unsaved": "Unsaved changes",
-    "addReference": "Add reference",
+    "addReference": "Add reference file",
+    "deleteFile": "Delete {file}",
     "source": {
-      "inline": "Inline",
+      "inline": "Written here",
       "upload": "Uploaded",
       "github": "GitHub"
     },
     "tabInline": "Write markdown",
+    "inlinePlaceholder": "---\nname: My skill\ndescription: What it does and when to use it\n---\n\nInstructions…",
     "tabUpload": "Upload a file",
     "tabGithub": "Import from GitHub",
-    "skillFile": "SKILL.md file",
+    "skillFile": "Markdown file",
     "loaded": "Loaded {file}",
     "trustWarning": "Import only skills you trust",
     "trustWarning1": "A skill becomes instructions your agents follow. Review the source first.",
-    "trustWarning2": "Only SKILL.md and its markdown references are imported. Scripts are skipped.",
+    "trustWarning2": "Only SKILL.md and its markdown reference files are imported. Scripts are skipped.",
     "githubUrl": "GitHub URL",
-    "githubUrlPlaceholder": "https://github.com/owner/repo or a skill folder",
-    "githubUrlHint": "A repository, a folder, or a SKILL.md.",
+    "githubUrlPlaceholder": "https://github.com/owner/repo",
+    "githubUrlHint": "A repository, folder or SKILL.md file.",
     "findSkills": "Find skills",
     "importTitle": "Import skills from GitHub",
     "foundCount": "{count, plural, one {Found # skill. Pick which to import.} other {Found # skills. Pick which to import.}}",
     "matchCount": "{shown} of {total, plural, one {# skill} other {# skills}} match",
     "selectAll": "Select all",
-    "searchPlaceholder": "Search by name or description",
-    "noMatches": "No skills match “{query}”.",
+    "searchPlaceholder": "Search skills",
+    "noMatches": "No skill matches “{query}”.",
+    "noSourceMatches": "No skills from the chosen sources.",
+    "sourceFilter": "Source",
     "importCount": "{count, plural, =0 {Import skills} one {Import # skill} other {Import # skills}}",
     "files": "Files",
     "skill": "Skill",
     "description": "Description",
-    "referenceCount": "{count, plural, one {# reference} other {# references}}",
+    "referenceCount": "{count, plural, one {# reference file} other {# reference files}}",
     "noAccess": "You do not have access to the skills of this team."
   },
   "tools": {
@@ -458,16 +464,16 @@
     "ownToolUnavailableTitle": "Tools for any API",
     "ownToolUnavailableHint": "Create tools that let your agents call any service with an API, your own included. Available in Cloud and self-hosted Pro.",
     "group": "Group",
-    "allGroups": "All tools",
     "ownTools": "Custom tools",
-    "noneInGroup": "No tools in this group"
+    "noGroupMatches": "No tools in the chosen groups."
   },
   "agents": {
     "projectDefaultsColumn": "New projects",
-    "projectDefaultsHint": "Selected agents join each new project in this team. Existing projects and project copies keep their own agents.",
+    "projectDefaultsHint": "Agents turned on here join each new project in this team. Existing projects and project copies keep their own agents.",
     "projectDefaultAria": "Add {agent} to new projects",
     "projectDefaultsReadOnly": "Team owners and managers choose which agents join new projects.",
-    "projectDefaultsSaved": "Default agents saved",
+    "joinsNewProjectsSaved": "{agent} joins new projects",
+    "skipsNewProjectsSaved": "{agent} does not join new projects",
     "projectDefaultOn": "On",
     "projectDefaultOff": "Off",
     "joinNewProjects": "Add to new projects",
@@ -478,9 +484,10 @@
     "create": "Create AI agent",
     "save": "Save AI agent",
     "delete": "Delete AI agent",
+    "deleteTitle": "Delete the AI agent?",
     "edit": "Edit AI agent",
     "empty": "No AI agents yet",
-    "emptyHint": "An agent runs on the built-in runtime or through the API.",
+    "emptyHint": "Create an agent, then add it to the projects it works in.",
     "agent": "AI agent",
     "sheetSubtitle": "A bot user you can delegate issues to",
     "kind": "Kind",
@@ -662,9 +669,9 @@
     "apiKey": "API key",
     "apiKeyValue": "API key {start}…",
     "runHistory": "Run history",
-    "noRuns": "No runs yet. Runs appear here when the agent is mentioned in a comment or an issue is delegated to it.",
+    "noRuns": "No runs yet. Runs from triggers, schedules and manual tasks appear here.",
     "loadMore": "Load 25 more",
-    "endOfHistory": "End of history",
+    "endOfHistory": "No older runs",
     "manualTask": "Manual task",
     "scheduledTask": "Scheduled task",
     "documentTask": "Document comment",
@@ -675,9 +682,9 @@
     "queue": "Queue",
     "testChat": "Test chat",
     "moreActions": "More actions",
-    "runsSubtitle": "@{username} · triggered runs",
+    "runsSubtitle": "@{username}",
     "regenerateMessage": "The current key for <v>{name}</v> stops working right away. Update everything that uses it with the new key.",
-    "deleteMessage": "<v>{name}</v> and its API key will be removed, and it will be cleared from any issues it was assigned or delegated to. This cannot be undone.",
+    "deleteMessage": "<v>{name}</v> and its API key will be deleted. The agent will be taken off every issue it's assigned or delegated to. This cannot be undone.",
     "actionCount": "{count, plural, one {# action} other {# actions}}",
     "toolCount": "{count, plural, one {# tool} other {# tools}}",
     "skillCount": "{count, plural, one {# skill} other {# skills}}",
@@ -706,7 +713,17 @@
     "noProjectsShort": "No projects",
     "chatNeedsAgent": "Create the AI agent to test it here.",
     "chatNeedsProject": "Attach the AI agent to a project to test it here.",
-    "triggerFieldsTitle": "Custom fields that start a run"
+    "triggerFieldsTitle": "Custom fields that start a run",
+    "search": "Search agents",
+    "noMatches": "No agent matches the search or filters.",
+    "provider": "Model provider",
+    "joinsNewProjects": "Joins new projects",
+    "skipsNewProjects": "Does not join new projects",
+    "triggerField": "Custom field",
+    "triggerFieldCount": "{count, plural, one {# field} other {# fields}}",
+    "projectsCount": "Works in {count, plural, one {# project} other {# projects}}",
+    "showAllProjects": "Show all {count} projects",
+    "changeProjects": "Change projects"
   },
   "members": {
     "roleSaved": "{name} is now {role}",

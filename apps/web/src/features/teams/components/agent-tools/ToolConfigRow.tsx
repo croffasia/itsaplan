@@ -8,7 +8,7 @@ import NeedsProLink from '@/components/common/NeedsProLink';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 import type { ToolRowProps } from '../../types/toolSource';
-import { ToolConfigDescription } from './ToolConfigDescription';
+import { ClampedDescription } from '../ClampedDescription';
 
 export function ToolConfigRow({
   tool,
@@ -46,7 +46,9 @@ export function ToolConfigRow({
             ) : (
               <span className="truncate text-sm font-medium text-foreground">{tool.label}</span>
             )}
-            {tool.description && <ToolConfigDescription text={tool.description} />}
+            {tool.description && (
+              <ClampedDescription text={tool.description} className="pe-10 text-xs" />
+            )}
             <span className="truncate text-xs text-muted-foreground/70">{on}</span>
             {!tool.supported &&
               (locked ? (

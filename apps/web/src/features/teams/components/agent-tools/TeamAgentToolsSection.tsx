@@ -15,7 +15,7 @@ import { useSearchTerm } from '@/hooks/useSearchTerm';
 import { ToolConfigDialog } from './ToolConfigDialog';
 import ToolAddActions from './ToolAddActions';
 import TeamAgentTools from './TeamAgentTools';
-import ToolListToolbar, { ALL_GROUPS } from './ToolListToolbar';
+import TeamListToolbar from '../TeamListToolbar';
 
 // The configured tools of a team: external integrations the agents of its projects can
 // call, each bound to one of the team's credentials, and the tools the team defines
@@ -37,10 +37,16 @@ export default function TeamAgentToolsSection({ teamId }: { teamId: number }) {
   const editor = sources.find((s) => s.kind === 'source' && s.key === editing?.source);
   const paging = usePaging();
   const { search, setSearch, term } = useSearchTerm();
-  const [group, setGroup] = useState(ALL_GROUPS);
+  const [groupFilter, setGroupFilter] = useState<string[]>([]);
+  const groups = [
+    ...sources.map((source) => ({ value: source.key, label: t('tools.ownTools') })),
+    ...catalog
+      .filter((integration) => integration.tools.length > 0)
+      .map((integration) => ({ value: integration.key, label: integration.label })),
+  ];
   const toolsQuery = useConfiguredToolsPageQuery(permissions?.read ? teamId : null, {
     search: term,
-    group: group === ALL_GROUPS ? undefined : group,
+    groups: groupFilter.length > 0 ? groupFilter : undefined,
     ...paging.params,
   });
   const total = toolsQuery.data?.total ?? 0;
@@ -50,8 +56,8 @@ export default function TeamAgentToolsSection({ teamId }: { teamId: number }) {
     paging.reset();
   }
 
-  function onGroupChange(next: string) {
-    setGroup(next);
+  function onGroupFilterChange(_key: string, next: string[]) {
+    setGroupFilter(next);
     paging.reset();
   }
 
@@ -76,13 +82,14 @@ export default function TeamAgentToolsSection({ teamId }: { teamId: number }) {
         <p className="text-sm text-muted-foreground">{t('tools.noAccess')}</p>
       ) : (
         <div className="space-y-4">
-          <ToolListToolbar
-            catalog={catalog}
-            sources={sources}
-            group={group}
-            onGroupChange={onGroupChange}
+          <TeamListToolbar
             search={search}
             onSearchChange={onSearchChange}
+            placeholder={t('tools.search')}
+            sections={[
+              { key: 'group', label: t('tools.group'), options: groups, selected: groupFilter },
+            ]}
+            onFilterChange={onGroupFilterChange}
           />
 
           <TeamAgentTools
@@ -92,7 +99,7 @@ export default function TeamAgentToolsSection({ teamId }: { teamId: number }) {
             pending={toolsQuery.isPending}
             canDelete={permissions.delete}
             searchTerm={term}
-            grouped={group !== ALL_GROUPS}
+            filtered={groupFilter.length > 0}
             sources={sources}
             onOpen={(tool) => tool.source && setEditing({ source: tool.source, tool })}
           />

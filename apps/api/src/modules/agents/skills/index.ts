@@ -63,7 +63,13 @@ export const agentSkillRoutes = new Elysia({
 
   .get(
     '/teams/:teamId/agent-skills',
-    ({ membership, query }) => paginate(query, (window) => listSkills(membership.teamId, window)),
+    ({ membership, query }) =>
+      paginate(query, (window) =>
+        listSkills(membership.teamId, window, {
+          search: query.search,
+          sources: query.source?.split(','),
+        }),
+      ),
     {
       params: teamParams,
       query: skillListQuery,
@@ -72,7 +78,8 @@ export const agentSkillRoutes = new Elysia({
       detail: {
         summary: 'List agent skills',
         description:
-          "One page of the team's skill library, each skill with its reference files. The " +
+          "One page of the team's skill library, each skill with its reference files, " +
+          'optionally narrowed by a search on the name or the description and by source. The ' +
           'whole library, for a picker, comes from list_agent_skill_options.',
         ...mcpTool('list_agent_skills'),
       },

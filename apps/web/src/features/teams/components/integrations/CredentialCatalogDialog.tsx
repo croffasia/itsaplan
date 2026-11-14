@@ -1,23 +1,20 @@
 import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type {
-  IntegrationCredential,
-  IntegrationKind,
-  IntegrationMeta,
-} from '@/lib/api/endpoints/integrations';
+import type { IntegrationCredential, IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import { useIntegrationOptionsQuery } from '@/services/integrations.service';
 import Modal from '@/components/common/overlay/Modal';
 import { EmptyState } from '@/components/common/page/EmptyState';
+import FilterChips from '@/components/common/filters/FilterChips';
+import FilterMenu from '@/components/common/filters/FilterMenu';
 import { Input } from '@/components/ui/input';
 import { useCredentialForm } from '../../hooks/useCredentialForm';
 import { CredentialFields } from './CredentialFields';
 import { CredentialFormFooter } from './CredentialFormFooter';
 import { CredentialRailSection } from './CredentialRailSection';
-import ShowFilterMenu from './ShowFilterMenu';
 
 // Add a credential for any integration: the catalog on one side, grouped by kind and
-// narrowed by a search and the kinds shown, and the form of the open integration on the
+// narrowed by a search and the kinds chosen, and the form of the open integration on the
 // other. The first match is open until another one is picked.
 export function CredentialCatalogDialog({
   teamId,
@@ -32,7 +29,7 @@ export function CredentialCatalogDialog({
 }) {
   const t = useTranslations('teams.integrations');
   const [query, setQuery] = useState('');
-  const [hiddenKinds, setHiddenKinds] = useState<IntegrationKind[]>([]);
+  const [kindFilter, setKindFilter] = useState<string[]>([]);
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const options = useIntegrationOptionsQuery(teamId).data;
   const connected = useMemo(() => new Set(options?.map((o) => o.integrationKey)), [options]);
@@ -40,10 +37,19 @@ export function CredentialCatalogDialog({
   // An integration with no credential fields (PDF) has nothing to store.
   const storable = catalog.filter((c) => c.credentialSchema.length > 0);
   const kinds = [...new Set(storable.map((c) => c.kind))];
+  const filters = [
+    {
+      key: 'kind',
+      label: t('group'),
+      options: kinds.map((kind) => ({ value: kind, label: t(`groups.${kind}.title`) })),
+      selected: kindFilter,
+    },
+  ];
+  const onFilterChange = (_key: string, next: string[]) => setKindFilter(next);
   const q = query.trim().toLowerCase();
   const matches = storable.filter(
     (c) =>
-      !hiddenKinds.includes(c.kind) &&
+      (kindFilter.length === 0 || kindFilter.includes(c.kind)) &&
       (!q || c.label.toLowerCase().includes(q) || c.key.toLowerCase().includes(q)),
   );
   const active = matches.find((c) => c.key === activeKey) ?? matches[0];
@@ -52,24 +58,22 @@ export function CredentialCatalogDialog({
   return (
     <Modal title={t('add')} scope={teamName} onClose={() => onClose()} wide="xl" flush>
       <div className="flex h-[min(680px,72vh)] min-h-0 flex-col">
-        <div className="flex items-center gap-2 px-6 pb-4">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              autoFocus
-              autoComplete="off"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t('search')}
-              className="ps-9"
-            />
+        <div className="space-y-3 px-6 pb-4">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                autoFocus
+                autoComplete="off"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t('search')}
+                className="ps-9"
+              />
+            </div>
+            <FilterMenu sections={filters} onChange={onFilterChange} />
           </div>
-          <ShowFilterMenu
-            heading={t('showGroups')}
-            options={kinds.map((kind) => ({ value: kind, label: t(`groups.${kind}.title`) }))}
-            hidden={hiddenKinds}
-            onChange={setHiddenKinds}
-          />
+          <FilterChips sections={filters} onChange={onFilterChange} />
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col border-t sm:flex-row">

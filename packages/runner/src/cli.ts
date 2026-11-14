@@ -201,11 +201,15 @@ async function main(): Promise<void> {
 
   for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     process.on(signal, () => {
-      // The commands run in their own process groups, so quitting now leaves them running
-      // with nobody to report their result: the lease expires and the run is handed out
-      // again.
+      // On macOS and Linux the commands run in their own process groups, so quitting now
+      // leaves them running with nobody to report their result. On Windows they end with the
+      // runner. Either way the lease expires and the run is handed out again.
       if (state.stopping) {
-        log('quitting now — the commands in flight keep running, their runs are retried');
+        log(
+          process.platform === 'win32'
+            ? 'quitting now — the commands in flight end, their runs are retried'
+            : 'quitting now — the commands in flight keep running, their runs are retried',
+        );
         process.exit(1);
       }
       state.stopping = true;

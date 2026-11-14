@@ -75,6 +75,13 @@ two projects. An internal agent's rights in a project are the intersection of th
 actions: the keys in `ai_agent.tools` plus the always-on actions (`ALWAYS_ON_KEYS`). An external
 agent has no such list, so its key is checked against the role alone.
 
+A configured tool (`agent_tool`) is a catalog tool from `@repo/agent-tools` bound to a credential,
+or a tool an extension of the api defines: its key is `<source>:...`, and the source set with
+`setToolSource` (`agents/tools/extension.ts`) names it and runs it. A tool the instance does not
+have, its integration or its source gone, stays listed with `supported: false` and no agent gets
+it. An internal agent gets its enabled tools in its runs and chat answers, an external one over
+MCP; a tool named as a core tool of the agent is left out.
+
 `ai_agent_team_username_uq` makes the mention handle unique per team, ignoring case.
 `assertUsernameFree` also refuses a handle a person holds.
 

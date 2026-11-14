@@ -352,7 +352,7 @@
     "checkUnknown": "Ces identifiants ne peuvent pas être vérifiés automatiquement. Vous pouvez quand même les enregistrer.",
     "empty": "Aucun identifiant pour l'instant",
     "emptyHint": "Ajoutez des identifiants pour que les agents puissent utiliser un fournisseur d'IA ou un outil.",
-    "deleteMessage": "{kind, select, llm {Les agents qui les utilisent cesseront de fonctionner jusqu'à ce que vous leur choisissiez d'autres identifiants.} tool {Les outils ajoutés avec ces identifiants seront supprimés, et les agents ne pourront plus les appeler.} other {}} Cette action est irréversible.",
+    "deleteMessage": "{kind, select, llm {Les agents qui les utilisent cesseront de fonctionner jusqu'à ce que vous leur choisissiez d'autres identifiants.} tool {Les outils ajoutés avec ces identifiants seront supprimés, et les agents ne pourront plus les appeler.} service {Les outils ajoutés avec ces identifiants seront supprimés, et les agents ne pourront plus les appeler.} other {}} Cette action est irréversible.",
     "groups": {
       "llm": {
         "title": "Fournisseurs d'IA",
@@ -361,6 +361,10 @@
       "tool": {
         "title": "Outils",
         "hint": "Outils que les agents peuvent appeler"
+      },
+      "service": {
+        "title": "Services",
+        "hint": "Une adresse et une clé auxquelles vos outils envoient des requêtes"
       }
     },
     "columns": {
@@ -445,7 +449,17 @@
     "added": "Déjà ajouté",
     "noCredentialNeeded": "Les outils {integration} ne nécessitent pas d'identifiants.",
     "addCount": "{count, plural, =0 {Ajouter des outils} one {Ajouter # outil} other {Ajouter # outils}}",
-    "noAccess": "Vous n'avez pas accès aux outils de cette équipe."
+    "noAccess": "Vous n'avez pas accès aux outils de cette équipe.",
+    "unavailable": "Indisponible",
+    "unavailableHint": "Cette instance n'a pas cet outil. Il est conservé tel quel, mais aucun agent ne le reçoit.",
+    "locked": "Nécessite Cloud ou Pro",
+    "lockedHint": "Créé avec Cloud ou Pro. Conservé tel quel, mais ici aucun agent ne le reçoit.",
+    "ownTool": "Créer un outil",
+    "ownToolHint": "Dans Cloud et Pro : vos propres outils qui envoient des requêtes à tout service doté d'une API",
+    "group": "Groupe",
+    "allGroups": "Tous les outils",
+    "ownTools": "Outils personnalisés",
+    "noneInGroup": "Aucun outil dans ce groupe"
   },
   "agents": {
     "projectDefaultsColumn": "Nouveaux projets",

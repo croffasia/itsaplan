@@ -352,7 +352,7 @@
     "checkUnknown": "This credential can't be checked automatically. You can still save it.",
     "empty": "No credentials yet",
     "emptyHint": "Add a credential so agents can use an AI provider or a tool.",
-    "deleteMessage": "{kind, select, llm {Agents that run on it stop working until you choose another credential for them.} tool {The tools added with it are deleted, and agents can no longer call them.} other {}} This can't be undone.",
+    "deleteMessage": "{kind, select, llm {Agents that run on it stop working until you choose another credential for them.} tool {The tools added with it are deleted, and agents can no longer call them.} service {The tools added with it are deleted, and agents can no longer call them.} other {}} This can't be undone.",
     "groups": {
       "llm": {
         "title": "AI providers",
@@ -361,6 +361,10 @@
       "tool": {
         "title": "Tools",
         "hint": "Tools that agents can call"
+      },
+      "service": {
+        "title": "Services",
+        "hint": "An address and a key your own tools send requests to"
       }
     },
     "columns": {
@@ -445,7 +449,17 @@
     "added": "Already added",
     "noCredentialNeeded": "{integration} tools need no credential.",
     "addCount": "{count, plural, =0 {Add tools} one {Add # tool} other {Add # tools}}",
-    "noAccess": "You do not have access to the tools of this team."
+    "noAccess": "You do not have access to the tools of this team.",
+    "unavailable": "Unavailable",
+    "unavailableHint": "This instance does not have this tool. It is kept as it is, but no agent gets it.",
+    "locked": "Needs Cloud or Pro",
+    "lockedHint": "Made with Cloud or Pro. It is kept as it is, but no agent gets it here.",
+    "ownTool": "Create a tool",
+    "ownToolHint": "In Cloud and Pro: your own tools that send requests to any service with an API",
+    "group": "Group",
+    "allGroups": "All tools",
+    "ownTools": "Custom tools",
+    "noneInGroup": "No tools in this group"
   },
   "agents": {
     "projectDefaultsColumn": "New projects",

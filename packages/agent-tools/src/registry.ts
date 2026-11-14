@@ -96,6 +96,7 @@ export function integrationDescriptors(): IntegrationDescriptor[] {
     label: i.label,
     icon: i.icon,
     website: i.website,
+    kind: i.kind ?? 'tool',
     credentialSchema: i.credentialSchema,
     credentialOptional: i.credentialOptional,
     tools: i.tools.map((t) => ({

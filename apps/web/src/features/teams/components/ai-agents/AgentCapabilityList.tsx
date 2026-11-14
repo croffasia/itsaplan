@@ -14,6 +14,8 @@ export interface CapabilityItem {
   checked: boolean;
   title: string;
   subtitle?: string;
+  // Why the capability does not work here, shown beside it.
+  warning?: string;
   group?: string;
   search: string;
 }

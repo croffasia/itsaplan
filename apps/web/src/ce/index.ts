@@ -19,6 +19,7 @@ export { default as SignInPage } from './SignInPage';
 export { default as useCopySections } from './useCopySections';
 export { default as useImportSources } from './useImportSources';
 export { default as useProjectSettingsSections } from './useProjectSettingsSections';
+export { default as useToolSources } from './useToolSources';
 export { default as useWorkspaceSections } from './useWorkspaceSections';
 export { default as WorkspaceRailActions } from './WorkspaceRailActions';
 export { default as WorkspaceSectionExtras } from './WorkspaceSectionExtras';

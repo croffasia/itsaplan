@@ -352,7 +352,7 @@
     "checkUnknown": "이 인증 정보는 자동으로 확인할 수 없습니다. 그래도 저장할 수 있습니다.",
     "empty": "아직 인증 정보가 없습니다",
     "emptyHint": "AI 에이전트가 AI 공급자나 도구를 사용할 수 있도록 인증 정보를 추가하세요.",
-    "deleteMessage": "{kind, select, llm {이 인증 정보로 실행되는 AI 에이전트는 다른 인증 정보를 선택할 때까지 작동하지 않습니다.} tool {이 인증 정보로 추가한 도구가 삭제되며, AI 에이전트가 더 이상 호출할 수 없습니다.} other {}} 이 작업은 되돌릴 수 없습니다.",
+    "deleteMessage": "{kind, select, llm {이 인증 정보로 실행되는 AI 에이전트는 다른 인증 정보를 선택할 때까지 작동하지 않습니다.} tool {이 인증 정보로 추가한 도구가 삭제되며, AI 에이전트가 더 이상 호출할 수 없습니다.} service {이 인증 정보로 추가한 도구가 삭제되며, AI 에이전트가 더 이상 호출할 수 없습니다.} other {}} 이 작업은 되돌릴 수 없습니다.",
     "groups": {
       "llm": {
         "title": "AI 공급자",
@@ -361,6 +361,10 @@
       "tool": {
         "title": "도구",
         "hint": "AI 에이전트가 호출할 수 있는 도구"
+      },
+      "service": {
+        "title": "서비스",
+        "hint": "직접 만든 도구가 요청을 보내는 주소와 키"
       }
     },
     "columns": {
@@ -445,7 +449,17 @@
     "added": "이미 추가됨",
     "noCredentialNeeded": "{integration} 도구는 인증 정보가 필요하지 않습니다.",
     "addCount": "{count, plural, =0 {도구 추가} one {도구 #개 추가} other {도구 #개 추가}}",
-    "noAccess": "이 팀의 도구에 접근할 수 없습니다."
+    "noAccess": "이 팀의 도구에 접근할 수 없습니다.",
+    "unavailable": "사용할 수 없음",
+    "unavailableHint": "이 인스턴스에는 이 도구가 없습니다. 그대로 보관되지만 어떤 AI 에이전트도 받지 않습니다.",
+    "locked": "Cloud 또는 Pro 필요",
+    "lockedHint": "Cloud 또는 Pro에서 만들었습니다. 그대로 보관되지만 여기에서는 어떤 AI 에이전트도 받지 않습니다.",
+    "ownTool": "도구 만들기",
+    "ownToolHint": "Cloud 및 Pro: API가 있는 모든 서비스로 요청을 보내는 직접 만든 도구",
+    "group": "그룹",
+    "allGroups": "모든 도구",
+    "ownTools": "직접 만든 도구",
+    "noneInGroup": "이 그룹에 도구가 없습니다"
   },
   "agents": {
     "projectDefaultsColumn": "새 프로젝트",

@@ -352,7 +352,7 @@
     "checkUnknown": "Esta credencial não pode ser verificada automaticamente. Você ainda pode salvá-la.",
     "empty": "Nenhuma credencial ainda",
     "emptyHint": "Adicione uma credencial para que os agentes possam usar um provedor de IA ou uma ferramenta.",
-    "deleteMessage": "{kind, select, llm {Os agentes que rodam com ela vão parar de funcionar até você escolher outra credencial para eles.} tool {As ferramentas adicionadas com ela serão excluídas, e os agentes não poderão mais chamá-las.} other {}} Esta ação não pode ser desfeita.",
+    "deleteMessage": "{kind, select, llm {Os agentes que rodam com ela vão parar de funcionar até você escolher outra credencial para eles.} tool {As ferramentas adicionadas com ela serão excluídas, e os agentes não poderão mais chamá-las.} service {As ferramentas adicionadas com ela serão excluídas, e os agentes não poderão mais chamá-las.} other {}} Esta ação não pode ser desfeita.",
     "groups": {
       "llm": {
         "title": "Provedores de IA",
@@ -361,6 +361,10 @@
       "tool": {
         "title": "Ferramentas",
         "hint": "Ferramentas que os agentes podem chamar"
+      },
+      "service": {
+        "title": "Serviços",
+        "hint": "Um endereço e uma chave para os quais suas ferramentas enviam solicitações"
       }
     },
     "columns": {
@@ -445,7 +449,17 @@
     "added": "Já adicionada",
     "noCredentialNeeded": "As ferramentas de {integration} não precisam de credencial.",
     "addCount": "{count, plural, =0 {Adicionar ferramentas} one {Adicionar # ferramenta} other {Adicionar # ferramentas}}",
-    "noAccess": "Você não tem acesso às ferramentas deste time."
+    "noAccess": "Você não tem acesso às ferramentas deste time.",
+    "unavailable": "Indisponível",
+    "unavailableHint": "Esta instância não tem esta ferramenta. Ela fica como está, mas nenhum agente a recebe.",
+    "locked": "Requer Cloud ou Pro",
+    "lockedHint": "Criada no Cloud ou no Pro. Fica como está, mas aqui nenhum agente a recebe.",
+    "ownTool": "Criar uma ferramenta",
+    "ownToolHint": "No Cloud e no Pro: suas próprias ferramentas que enviam solicitações a qualquer serviço com API",
+    "group": "Grupo",
+    "allGroups": "Todas as ferramentas",
+    "ownTools": "Ferramentas próprias",
+    "noneInGroup": "Nenhuma ferramenta neste grupo"
   },
   "agents": {
     "projectDefaultsColumn": "Novos projetos",

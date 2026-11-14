@@ -8,12 +8,14 @@ import { EmptyState } from '@/components/common/page/EmptyState';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import { integrationOf } from '@/utils/integrationLabels';
+import type { ToolSourceEntry } from '../../types/toolSource';
 import { ToolConfigRow } from './ToolConfigRow';
 
 // The team's configured tools as a table: a catalog tool bound to an integration
-// credential, callable by the internal agents of every project the team owns. Adding
-// happens in a dialog opened from the section header; deleting confirms first.
-// Enabling a configured tool on an agent is done in the agent editor.
+// credential, or a tool the team defines, callable by the agents of every project the
+// team owns. Adding happens in a dialog opened from the section header, a tool the team
+// defines opens in its source's panel; deleting confirms first. Enabling a configured
+// tool on an agent is done in the agent editor.
 export default function TeamAgentTools({
   teamId,
   catalog,
@@ -21,6 +23,9 @@ export default function TeamAgentTools({
   pending,
   canDelete,
   searchTerm,
+  grouped,
+  sources,
+  onOpen,
 }: {
   teamId: number;
   catalog: IntegrationMeta[];
@@ -28,6 +33,9 @@ export default function TeamAgentTools({
   pending: boolean;
   canDelete: boolean;
   searchTerm: string | undefined;
+  grouped: boolean;
+  sources: ToolSourceEntry[];
+  onOpen: (tool: ConfiguredTool) => void;
 }) {
   const t = useTranslations('teams.tools');
   const tCommon = useTranslations('common');
@@ -38,12 +46,14 @@ export default function TeamAgentTools({
   const catalogTool = (toolKey: string) => catalogTools.find((tool) => tool.key === toolKey);
 
   if (pending) return <ListSkeleton rows={3} rowClassName="h-12" />;
-  if (tools.length === 0)
-    return searchTerm === undefined ? (
-      <EmptyState title={t('empty')} description={t('emptyHint')} />
-    ) : (
-      <p className="text-sm text-muted-foreground">{t('noMatches', { query: searchTerm })}</p>
-    );
+  if (tools.length === 0) {
+    if (searchTerm !== undefined)
+      return (
+        <p className="text-sm text-muted-foreground">{t('noMatches', { query: searchTerm })}</p>
+      );
+    if (grouped) return <p className="text-sm text-muted-foreground">{t('noneInGroup')}</p>;
+    return <EmptyState title={t('empty')} description={t('emptyHint')} />;
+  }
 
   return (
     <div className="overflow-x-auto">
@@ -69,24 +79,27 @@ export default function TeamAgentTools({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tools.map((tool) => (
-            <ToolConfigRow
-              key={tool.id}
-              tool={tool}
-              meta={catalogTool(tool.toolKey)}
-              integration={integrationOf(catalog, tool.integrationKey)}
-              canDelete={canDelete}
-              onDelete={() => setDeleting(tool)}
-            />
-          ))}
+          {tools.map((tool) => {
+            const source = sources.find((one) => one.key === tool.source);
+            return (
+              <ToolConfigRow
+                key={tool.id}
+                tool={tool}
+                meta={catalogTool(tool.toolKey)}
+                integration={integrationOf(catalog, tool.integrationKey)}
+                locked={source?.kind === 'locked'}
+                canDelete={canDelete}
+                onOpen={source?.kind === 'source' ? () => onOpen(tool) : undefined}
+                onDelete={() => setDeleting(tool)}
+              />
+            );
+          })}
         </TableBody>
       </Table>
 
       {deleting && (
         <ConfirmDialog
-          title={t('deleteTitle', {
-            tool: catalogTool(deleting.toolKey)?.label ?? deleting.toolKey,
-          })}
+          title={t('deleteTitle', { tool: deleting.label })}
           confirmLabel={t('delete')}
           onConfirm={async () => {
             await deleteTool.mutateAsync(deleting.id);

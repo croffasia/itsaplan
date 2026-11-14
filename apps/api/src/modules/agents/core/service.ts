@@ -544,15 +544,20 @@ export async function isProjectAgent(projectId: number, userId: string): Promise
   return rows.length > 0;
 }
 
-// The team of the agent a bot user belongs to, or null when the user is a person.
-// An agent belongs to exactly one team, so this is the team its API key acts in.
-export async function agentTeam(userId: string): Promise<number | null> {
+// The agent a bot user belongs to, or null when the user is a person.
+export async function agentOfUser(userId: string): Promise<{ id: number; teamId: number } | null> {
   const rows = await db
-    .select({ teamId: aiAgent.teamId })
+    .select({ id: aiAgent.id, teamId: aiAgent.teamId })
     .from(aiAgent)
     .where(eq(aiAgent.userId, userId))
     .limit(1);
-  return rows[0]?.teamId ?? null;
+  return rows[0] ?? null;
+}
+
+// The team of the agent a bot user belongs to, or null when the user is a person.
+// An agent belongs to exactly one team, so this is the team its API key acts in.
+export async function agentTeam(userId: string): Promise<number | null> {
+  return (await agentOfUser(userId))?.teamId ?? null;
 }
 
 // True if the user id is an agent's bot user rather than a person's.

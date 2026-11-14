@@ -352,7 +352,7 @@
     "checkUnknown": "無法自動驗證此認證資訊，但仍可儲存。",
     "empty": "暫無認證資訊",
     "emptyHint": "新增認證資訊後，代理即可使用 AI 服務供應商或工具。",
-    "deleteMessage": "{kind, select, llm {使用它執行的代理將停止運作，直到你為它們選擇其他認證資訊。} tool {用它新增的工具將被刪除，代理將無法再呼叫這些工具。} other {}}此操作無法復原。",
+    "deleteMessage": "{kind, select, llm {使用它執行的代理將停止運作，直到你為它們選擇其他認證資訊。} tool {用它新增的工具將被刪除，代理將無法再呼叫這些工具。} service {用它新增的工具將被刪除，代理將無法再呼叫這些工具。} other {}}此操作無法復原。",
     "groups": {
       "llm": {
         "title": "AI 服務供應商",
@@ -361,6 +361,10 @@
       "tool": {
         "title": "工具",
         "hint": "代理可以呼叫的工具"
+      },
+      "service": {
+        "title": "服務",
+        "hint": "你自己的工具傳送請求的位址和金鑰"
       }
     },
     "columns": {
@@ -445,7 +449,17 @@
     "added": "已新增",
     "noCredentialNeeded": "{integration} 工具不需要認證資訊。",
     "addCount": "{count, plural, =0 {新增工具} other {新增 # 個工具}}",
-    "noAccess": "你沒有權限檢視該團隊的工具。"
+    "noAccess": "你沒有權限檢視該團隊的工具。",
+    "unavailable": "無法使用",
+    "unavailableHint": "此執行個體沒有這個工具。它會按原樣保留，但不會提供給任何代理。",
+    "locked": "需要 Cloud 或 Pro",
+    "lockedHint": "使用 Cloud 或 Pro 建立。按原樣保留，但在這裡不會提供給任何代理。",
+    "ownTool": "建立工具",
+    "ownToolHint": "Cloud 與 Pro 提供：向任何有 API 的服務傳送請求的自訂工具",
+    "group": "群組",
+    "allGroups": "全部工具",
+    "ownTools": "自訂工具",
+    "noneInGroup": "此群組中沒有工具"
   },
   "agents": {
     "projectDefaultsColumn": "新專案",

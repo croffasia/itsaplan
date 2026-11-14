@@ -63,7 +63,7 @@ export const agentToolRoutes = new Elysia({
   .get(
     '/teams/:teamId/agent-tools',
     ({ membership, query }) =>
-      paginate(query, (window) => listAgentTools(membership.teamId, window, query.search)),
+      paginate(query, (window) => listAgentTools(membership.teamId, window, query)),
     {
       params: teamParams,
       query: agentToolListQuery,
@@ -73,7 +73,8 @@ export const agentToolRoutes = new Elysia({
         summary: 'List configured tools',
         description:
           "One page of a team's tools configured on integration credentials, optionally " +
-          'narrowed by a search on the tool name, its group or its integration. An id here is ' +
+          'narrowed by a search on the tool name, its group or its integration, and to one ' +
+          "integration's tools or the team's own tools by group. An id here is " +
           'what set_ai_agent_configured_tools takes to enable a tool on an agent. Separate ' +
           'from the built-in actions in list_ai_agent_tools. The whole list, for a picker, ' +
           'comes from list_configured_tool_options.',
@@ -140,7 +141,7 @@ export const agentToolRoutes = new Elysia({
       if (!(await agentInTeam(params.agentId, membership.teamId, agentScopeOf(membership)))) {
         throw new HttpError(404, 'Agent not found');
       }
-      return listAgentToolLinks(params.agentId);
+      return listAgentToolLinks(params.agentId, membership.teamId);
     },
     {
       params: agentParams,
@@ -162,7 +163,7 @@ export const agentToolRoutes = new Elysia({
       }
       await assertFullAgentAccess(membership, params.agentId);
       await setAgentTools(params.agentId, membership.teamId, body.agentToolIds);
-      return listAgentToolLinks(params.agentId);
+      return listAgentToolLinks(params.agentId, membership.teamId);
     },
     {
       body: setAgentToolsBody,

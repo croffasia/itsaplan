@@ -36,6 +36,15 @@ export const AgentToolResponse = t.Object({
   credentialId: t.Nullable(t.Number()),
   integrationKey: t.String(),
   credentialLabel: t.Nullable(t.String()),
+  label: t.String(),
+  description: t.Nullable(t.String()),
+  source: t.Nullable(
+    t.String({ description: 'The extension that defines the tool; null for a catalog tool.' }),
+  ),
+  supported: t.Boolean({
+    description:
+      'False for a tool this instance does not have: no agent gets it until it does again.',
+  }),
   createdAt: t.String(),
 });
 
@@ -48,6 +57,14 @@ export const agentToolListQuery = t.Object({
     t.String({
       maxLength: 200,
       description: 'Case-insensitive match on the tool name, its group or its integration.',
+    }),
+  ),
+  group: t.Optional(
+    t.String({
+      maxLength: 100,
+      description:
+        "An integration's key, for its tools, or the source of the tools the team defines " +
+        '(the `source` of a tool), for those.',
     }),
   ),
   ...pageQueryFields,

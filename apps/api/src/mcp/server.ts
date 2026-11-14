@@ -8,6 +8,7 @@ import { dispatchTool } from './dispatch';
 import { SERVER_INSTRUCTIONS } from './instructions';
 import type { McpCredential } from './credential';
 import { toolError } from './result';
+import { agentMcpTools, callConfiguredTool, mcpInputSchema } from './configured-tools';
 
 // The path param of every team-scoped route.
 const TEAM_PARAM = 'teamId';
@@ -27,8 +28,9 @@ async function callerTeam(userId: string): Promise<number | null> {
 }
 
 // A low-level MCP Server for one request. tools/list returns every route tagged
-// with x-mcp; tools/call dispatches to the real route via app.handle with the
-// caller's API key. The low-level Server (not McpServer) is used so the route's
+// with x-mcp, and for an agent's key the configured tools enabled on it; tools/call
+// dispatches to the real route via app.handle with the caller's API key, or runs the
+// configured tool. The low-level Server (not McpServer) is used so the route's
 // TypeBox JSON Schema can be served as the tool inputSchema without converting to
 // Zod. Arguments are validated by the route itself, not here.
 export async function buildMcpServer(
@@ -52,23 +54,34 @@ export async function buildMcpServer(
   const teamId = await callerTeam(userId);
   const needsTeam = (tool: McpRouteTool) => tool.pathParams.includes(TEAM_PARAM);
 
+  const configured = () => agentMcpTools(userId, new Set(byName.keys()), clientRequest);
+
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: table.map((t) => ({
-      name: t.name,
-      description: t.description,
-      // A caller whose team is already known does not get to name one.
-      inputSchema:
-        teamId !== null && needsTeam(t)
-          ? withoutFields(t.inputSchema, [TEAM_PARAM])
-          : t.inputSchema,
-      annotations: t.annotations,
-      outputSchema: t.images ? undefined : t.outputSchema,
-    })),
+    tools: [
+      ...table.map((t) => ({
+        name: t.name,
+        description: t.description,
+        // A caller whose team is already known does not get to name one.
+        inputSchema:
+          teamId !== null && needsTeam(t)
+            ? withoutFields(t.inputSchema, [TEAM_PARAM])
+            : t.inputSchema,
+        annotations: t.annotations,
+        outputSchema: t.images ? undefined : t.outputSchema,
+      })),
+      ...(await configured()).map((t) => ({
+        name: t.name,
+        description: t.description,
+        inputSchema: mcpInputSchema(t),
+      })),
+    ],
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (req) => {
     const tool = byName.get(req.params.name);
     if (!tool) {
+      const own = (await configured()).find((t) => t.name === req.params.name);
+      if (own) return callConfiguredTool(own, { ...(req.params.arguments ?? {}) });
       const text = `Unknown tool: ${req.params.name}`;
       return {
         content: [{ type: 'text', text }],

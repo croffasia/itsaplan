@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Sparkles, Wrench } from 'lucide-react';
 import type { AiAgent } from '@/lib/api/endpoints/agents';
+import type { ConfiguredTool } from '@/lib/api/endpoints/agentTools';
+import { useToolSources } from '@/cloud';
 import { teamSectionPath } from '@/utils/paths';
 import {
   useCreateAiAgent,
@@ -65,6 +67,10 @@ export function AgentSheetForm({
 }) {
   const t = useTranslations('teams.agents');
   const tTools = useTranslations('teams.tools');
+  const sources = useToolSources();
+  // A tool of a source another edition has is marked as needing it.
+  const lockedSource = (tool: ConfiguredTool) =>
+    sources.some((one) => one.kind === 'locked' && one.key === tool.source);
   const tCommon = useTranslations('common');
   const [value, setValue] = useState<AgentFormValue>(() => initialAgentValue(agent ?? undefined));
   const isCreate = agent == null;
@@ -110,13 +116,8 @@ export function AgentSheetForm({
     teamId,
     agent && agent.kind === 'internal' && canManageSkills ? agent.id : null,
   );
-  const toolsLibraryQuery = useConfiguredToolOptionsQuery(
-    value.kind === 'internal' && canManageTools ? teamId : null,
-  );
-  const agentToolsQuery = useAgentToolLinksQuery(
-    teamId,
-    agent && agent.kind === 'internal' && canManageTools ? agent.id : null,
-  );
+  const toolsLibraryQuery = useConfiguredToolOptionsQuery(canManageTools ? teamId : null);
+  const agentToolsQuery = useAgentToolLinksQuery(teamId, agent && canManageTools ? agent.id : null);
 
   const createAgent = useCreateAiAgent(teamId);
   const updateAgent = useUpdateAiAgent(teamId);
@@ -208,7 +209,7 @@ export function AgentSheetForm({
       if (res.agent.kind === 'internal' && canManageSkills && skillIds && skillIds.length > 0) {
         await setAgentSkills.mutateAsync({ agentId: res.agent.id, skillIds });
       }
-      if (res.agent.kind === 'internal' && canManageTools && toolIds && toolIds.length > 0) {
+      if (canManageTools && toolIds && toolIds.length > 0) {
         await setAgentTools.mutateAsync({ agentId: res.agent.id, agentToolIds: toolIds });
       }
       await saveJoinsNewProjects(res.agent.id);
@@ -219,7 +220,7 @@ export function AgentSheetForm({
       if (agent.kind === 'internal' && canManageSkills && skillIds !== null) {
         await setAgentSkills.mutateAsync({ agentId: agent.id, skillIds });
       }
-      if (agent.kind === 'internal' && canManageTools && toolIds !== null) {
+      if (canManageTools && toolIds !== null) {
         await setAgentTools.mutateAsync({ agentId: agent.id, agentToolIds: toolIds });
       }
       await saveJoinsNewProjects(agent.id);
@@ -256,10 +257,9 @@ export function AgentSheetForm({
   ) : null;
 
   const toolsLibrary = toolsLibraryQuery.data ?? [];
-  const showTools = value.kind === 'internal' && canManageTools;
-
-  // The Tools section body: the configured custom tools the agent may call.
-  const toolsContent = showTools ? (
+  // The Tools section body: the configured tools the agent may call, in its runs or, for
+  // an external agent, over MCP.
+  const toolsContent = canManageTools ? (
     toolsLibrary.length === 0 ? (
       <AgentEmptyNotice
         icon={Wrench}
@@ -273,9 +273,6 @@ export function AgentSheetForm({
         searchPlaceholder={t('searchTools')}
         onToggle={toggleTool}
         items={toolsLibrary.map((tool) => {
-          const toolLabel =
-            catalog.flatMap((i) => i.tools).find((t) => t.key === tool.toolKey)?.label ??
-            tool.toolKey;
           const integration = integrationOf(catalog, tool.integrationKey).label;
           const credential =
             tool.credentialLabel ??
@@ -285,10 +282,13 @@ export function AgentSheetForm({
           return {
             id: tool.id,
             checked: selectedTools.includes(tool.id),
-            title: toolLabel,
+            title: tool.label,
             subtitle: credential,
+            warning: tool.supported
+              ? undefined
+              : tTools(lockedSource(tool) ? 'locked' : 'unavailable'),
             group: integration,
-            search: `${toolLabel} ${integration} ${credential ?? ''}`.toLowerCase(),
+            search: `${tool.label} ${integration} ${credential ?? ''}`.toLowerCase(),
           };
         })}
       />

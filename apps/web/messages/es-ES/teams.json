@@ -352,7 +352,7 @@
     "checkUnknown": "Esta credencial no se puede comprobar automáticamente. Aun así puedes guardarla.",
     "empty": "Todavía no hay credenciales",
     "emptyHint": "Añade una credencial para que los agentes puedan usar un proveedor de IA o una herramienta.",
-    "deleteMessage": "{kind, select, llm {Los agentes que funcionan con ella dejarán de funcionar hasta que les elijas otra credencial.} tool {Las herramientas añadidas con ella se eliminarán y los agentes ya no podrán llamarlas.} other {}} Esta acción no se puede deshacer.",
+    "deleteMessage": "{kind, select, llm {Los agentes que funcionan con ella dejarán de funcionar hasta que les elijas otra credencial.} tool {Las herramientas añadidas con ella se eliminarán y los agentes ya no podrán llamarlas.} service {Las herramientas añadidas con ella se eliminarán y los agentes ya no podrán llamarlas.} other {}} Esta acción no se puede deshacer.",
     "groups": {
       "llm": {
         "title": "Proveedores de IA",
@@ -361,6 +361,10 @@
       "tool": {
         "title": "Herramientas",
         "hint": "Herramientas que pueden llamar los agentes"
+      },
+      "service": {
+        "title": "Servicios",
+        "hint": "Una dirección y una clave a las que tus herramientas envían solicitudes"
       }
     },
     "columns": {
@@ -445,7 +449,17 @@
     "added": "Ya añadida",
     "noCredentialNeeded": "Las herramientas de {integration} no necesitan credencial.",
     "addCount": "{count, plural, =0 {Añadir herramientas} one {Añadir # herramienta} other {Añadir # herramientas}}",
-    "noAccess": "No tienes acceso a las herramientas de este equipo."
+    "noAccess": "No tienes acceso a las herramientas de este equipo.",
+    "unavailable": "No disponible",
+    "unavailableHint": "Esta instancia no tiene esta herramienta. Se conserva tal cual, pero ningún agente la recibe.",
+    "locked": "Requiere Cloud o Pro",
+    "lockedHint": "Creada con Cloud o Pro. Se conserva tal cual, pero aquí ningún agente la recibe.",
+    "ownTool": "Crear una herramienta",
+    "ownToolHint": "En Cloud y Pro: tus propias herramientas que envían solicitudes a cualquier servicio con API",
+    "group": "Grupo",
+    "allGroups": "Todas las herramientas",
+    "ownTools": "Herramientas propias",
+    "noneInGroup": "No hay herramientas en este grupo"
   },
   "agents": {
     "projectDefaultsColumn": "Proyectos nuevos",

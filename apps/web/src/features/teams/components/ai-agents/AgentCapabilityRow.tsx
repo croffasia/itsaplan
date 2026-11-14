@@ -25,6 +25,9 @@ export function AgentCapabilityRow({
       <span className="min-w-0">
         <span className="text-sm">{item.title}</span>
         {detail && <span className="block text-xs text-muted-foreground">{detail}</span>}
+        {item.warning && (
+          <span className="block text-xs font-medium text-warning">{item.warning}</span>
+        )}
       </span>
     </label>
   );

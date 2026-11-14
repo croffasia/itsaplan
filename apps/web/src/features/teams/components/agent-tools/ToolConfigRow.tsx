@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { IntegrationIcon } from '@/components/common/IntegrationIcon';
+import NeedsProLink from '@/components/common/NeedsProLink';
+import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 import { ToolConfigDescription } from './ToolConfigDescription';
 
@@ -13,14 +15,20 @@ export function ToolConfigRow({
   tool,
   meta,
   integration,
+  locked,
   canDelete,
+  onOpen,
   onDelete,
 }: {
   tool: ConfiguredTool;
-  // Absent when the catalog no longer has the tool; the row then shows its key.
+  // The catalog entry, absent for a tool the team defines or one the catalog no longer has.
   meta: IntegrationMeta['tools'][number] | undefined;
   integration: Pick<IntegrationMeta, 'label' | 'kind' | 'icon'>;
+  // The tool comes from a source another edition has.
+  locked: boolean;
   canDelete: boolean;
+  // Opens a tool the team defines in its source's panel.
+  onOpen?: () => void;
   onDelete: () => void;
 }) {
   const t = useTranslations('teams.tools');
@@ -31,16 +39,38 @@ export function ToolConfigRow({
     (tool.credentialId != null ? t('credentialFallback', { id: tool.credentialId }) : null);
   const on = credential ? `${integration.label} · ${credential}` : integration.label;
   return (
-    <TableRow className="group/item">
+    <TableRow className={cn('group/item', onOpen && 'cursor-pointer')} onClick={onOpen}>
       <TableCell className="px-3 py-3 align-top whitespace-normal">
         <div className="flex min-w-0 items-start gap-2.5">
           <IntegrationIcon integration={integration} />
           <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="truncate text-sm font-medium text-foreground">
-              {meta?.label ?? tool.toolKey}
-            </span>
-            {meta?.description && <ToolConfigDescription text={meta.description} />}
+            {onOpen ? (
+              <button
+                type="button"
+                className="truncate text-start text-sm font-medium text-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpen();
+                }}
+              >
+                {tool.label}
+              </button>
+            ) : (
+              <span className="truncate text-sm font-medium text-foreground">{tool.label}</span>
+            )}
+            {tool.description && <ToolConfigDescription text={tool.description} />}
             <span className="truncate text-xs text-muted-foreground/70">{on}</span>
+            {!tool.supported &&
+              (locked ? (
+                <NeedsProLink label={t('locked')} hint={t('lockedHint')} className="mt-1" />
+              ) : (
+                <span
+                  title={t('unavailableHint')}
+                  className="mt-1 text-xs font-medium text-warning"
+                >
+                  {t('unavailable')}
+                </span>
+              ))}
           </div>
         </div>
       </TableCell>
@@ -67,8 +97,11 @@ export function ToolConfigRow({
               variant="ghost"
               size="icon"
               className="size-8 text-muted-foreground hover:text-destructive"
-              onClick={onDelete}
-              aria-label={t('deleteLabel', { tool: meta?.label ?? tool.toolKey })}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              aria-label={t('deleteLabel', { tool: tool.label })}
             >
               <Trash2 className="size-4" />
             </Button>

@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useSyncSubscribe } from '@/context/syncContext';
-import { listUnreadNotifications } from '@/lib/api/endpoints/notifications';
+import { listNotifications } from '@/lib/api/endpoints/notifications';
 import { useProjectsQuery } from '@/services/projects.service';
 import { qk } from '@/services/queryKeys';
 import {
@@ -17,9 +17,15 @@ import { revScope } from '@/utils/revScopes';
 // browser's localStorage, next to the permission the browser keeps for the site.
 const STORAGE_KEY = 'desktopNotifications';
 const CHANGE_EVENT = 'desktopnotificationschange';
-// How many of the newest unread items each inbox change reads. When more items than
-// this arrive between two reads, only the newest are shown.
+// How many of the newest items, read or not, each inbox change reads. When more new
+// items than this arrive between two reads, the older ones are never shown.
 const LATEST = 20;
+// A tab with the app shell in front marks itself here every FRONT_BEAT_MS, so that a
+// hidden tab shows nothing while the member uses the app in another tab. Screens outside
+// the shell (account and team settings) have no inbox and do not mark.
+const FRONT_KEY = 'desktopNotificationsFront';
+const FRONT_BEAT_MS = 10_000;
+const TAB = Math.random().toString(36).slice(2);
 
 type DesktopNotificationsState = 'unsupported' | 'blocked' | 'off' | 'on';
 
@@ -49,8 +55,6 @@ export function useDesktopNotificationsState(): DesktopNotificationsState {
   return useSyncExternalStore(subscribeState, readState, () => 'off');
 }
 
-// Turning on asks the browser for permission first and is stored only once it is
-// granted.
 export async function setDesktopNotifications(on: boolean) {
   if (on && Notification.permission === 'default') await Notification.requestPermission();
   try {
@@ -62,10 +66,43 @@ export async function setDesktopNotifications(on: boolean) {
   window.dispatchEvent(new Event(CHANGE_EVENT));
 }
 
+function inFront() {
+  return document.visibilityState === 'visible' && document.hasFocus();
+}
+
+function clearFront() {
+  try {
+    if (localStorage.getItem(FRONT_KEY)?.startsWith(`${TAB} `)) localStorage.removeItem(FRONT_KEY);
+  } catch {
+    // Storage unavailable: other tabs cannot see this one.
+  }
+}
+
+function markFront() {
+  if (!inFront()) return clearFront();
+  try {
+    localStorage.setItem(FRONT_KEY, `${TAB} ${Date.now()}`);
+  } catch {
+    // Storage unavailable: other tabs cannot see this one.
+  }
+}
+
+function anotherTabInFront() {
+  try {
+    const [tab, at] = (localStorage.getItem(FRONT_KEY) ?? '').split(' ');
+    return tab !== TAB && Date.now() - Number(at) < FRONT_BEAT_MS * 3;
+  } catch {
+    return false;
+  }
+}
+
 // Shows a desktop notification for each new inbox item, from every project, while the
 // app is open but not in front: a browser tab in the background, or a desktop shell
-// that forwards the Notifications API. Items that were unread when the notifications
-// came on are not shown again. Clicking a notification opens its item.
+// that forwards the Notifications API. While it is on, the sync poll keeps reading the
+// inbox in a hidden tab. An item is shown only when it is unread and was created after the
+// newest item read since the notifications came on, so older items, an item marked unread
+// again and one back from a snooze are not. Nothing is shown while the app shell is in
+// front, in this tab or in another. Clicking a notification opens its item.
 export function useDesktopNotifications() {
   const on = useDesktopNotificationsState() === 'on';
   const subscribe = useSyncSubscribe();
@@ -73,36 +110,64 @@ export function useDesktopNotifications() {
   const te = useTranslations('inbox.event');
   const tDocuments = useTranslations('documents');
   const { data: projects } = useProjectsQuery();
-  // The items already seen; null until the first read after the notifications came on.
-  const seen = useRef<Set<number> | null>(null);
+  // The createdAt of the newest item read since the notifications came on ('' when the
+  // member had none); null until the first read.
+  const newest = useRef<string | null>(null);
+  const onSince = useRef(0);
 
   useEffect(() => {
     if (!on) return;
-    return subscribe({ scope: revScope.inboxAll, targets: [qk.notificationsUnreadLatest] });
+    onSince.current = Date.now();
+    markFront();
+    const beat = setInterval(markFront, FRONT_BEAT_MS);
+    window.addEventListener('focus', markFront);
+    window.addEventListener('blur', markFront);
+    window.addEventListener('pagehide', clearFront);
+    document.addEventListener('visibilitychange', markFront);
+    return () => {
+      clearInterval(beat);
+      window.removeEventListener('focus', markFront);
+      window.removeEventListener('blur', markFront);
+      window.removeEventListener('pagehide', clearFront);
+      document.removeEventListener('visibilitychange', markFront);
+      clearFront();
+    };
+  }, [on]);
+
+  useEffect(() => {
+    if (!on) return;
+    return subscribe({
+      scope: revScope.inboxAll,
+      targets: [qk.notificationsLatest],
+      background: true,
+    });
   }, [on, subscribe]);
 
-  const { data: latest } = useQuery({
-    queryKey: qk.notificationsUnreadLatest,
-    queryFn: () => listUnreadNotifications(LATEST),
+  const { data: latest, dataUpdatedAt } = useQuery({
+    queryKey: qk.notificationsLatest,
+    queryFn: () =>
+      listNotifications(undefined, { limit: LATEST, filters: { includeSnoozed: true } }),
     enabled: on,
     select: (d) => d.items,
   });
 
   useEffect(() => {
     if (!on) {
-      seen.current = null;
+      newest.current = null;
       return;
     }
-    if (!latest) return;
-    if (seen.current == null) {
-      seen.current = new Set(latest.map((n) => n.id));
-      return;
-    }
-    const known = seen.current;
-    const fresh = latest.filter((n) => !known.has(n.id));
-    for (const n of fresh) known.add(n.id);
-    // In front, the inbox itself shows the new item.
-    if (document.visibilityState === 'visible' && document.hasFocus()) return;
+    // Only a read made after the notifications came on sets the start, so items that
+    // came in while they were off are not shown. The list is newest first.
+    if (!latest || (newest.current == null && dataUpdatedAt < onSince.current)) return;
+    const start = newest.current;
+    const top = latest[0]?.createdAt ?? '';
+    newest.current = start != null && start > top ? start : top;
+    if (start == null) return;
+    const fresh = latest.filter(
+      (n) => n.createdAt > start && n.readAt == null && n.snoozedUntil == null,
+    );
+    // In front, here or in another tab, the inbox itself shows the new item.
+    if (fresh.length === 0 || inFront() || anotherTabInFront()) return;
     for (const n of fresh) {
       const ref = projects?.find((p) => p.id === n.projectId)?.ref;
       const path = ref ? notificationPath(n, ref) : null;
@@ -122,5 +187,5 @@ export function useDesktopNotifications() {
         // Android) throws here; the inbox still has the item.
       }
     }
-  }, [on, latest, projects, router, te, tDocuments]);
+  }, [on, latest, dataUpdatedAt, projects, router, te, tDocuments]);
 }

@@ -172,4 +172,33 @@ describe('AgentSheetForm', () => {
 
     assert.equal(saveButton(), undefined);
   });
+
+  // An external agent calls the tools enabled on it over MCP, so its form lists them too.
+  it('lists the tools of an external agent', async () => {
+    const all = { read: true, create: true, edit: true, delete: true };
+    Object.defineProperty(globalThis, 'fetch', {
+      configurable: true,
+      value: async (input: RequestInfo | URL) => {
+        const path = new URL(input instanceof Request ? input.url : String(input)).pathname;
+        if (path.endsWith('/teams/1')) {
+          return Response.json({
+            id: 1,
+            name: 'Team',
+            permissions: { ai_agents: all, agent_skills: all, agent_tools: all, integrations: all },
+          });
+        }
+        if (path.endsWith('/agent-tools/options') || path.endsWith('/tool-configs')) {
+          return Response.json([]);
+        }
+        return Response.json({ error: 'Access denied' }, { status: 403 });
+      },
+    });
+
+    await render({ ...agent(true), kind: 'external' });
+    for (let i = 0; i < 20 && !document.body.textContent?.includes(teams.agents.toolsHint); i++) {
+      await act(async () => new Promise((resolve) => setTimeout(resolve, 10)));
+    }
+
+    assert.ok(document.body.textContent?.includes(teams.agents.toolsHint));
+  });
 });

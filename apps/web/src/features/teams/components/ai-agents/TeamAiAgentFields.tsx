@@ -396,6 +396,7 @@ export default function TeamAiAgentFields({
           tokenSection,
           accessSection,
           triggersSection,
+          toolsSection,
           connectionSection,
         ]
       : [

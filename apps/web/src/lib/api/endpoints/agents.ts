@@ -131,7 +131,7 @@ export interface AgentRunPage {
 // for project membership.
 export interface AgentTool {
   key: string;
-  group: 'issues' | 'initiatives' | 'cycles' | 'notes' | 'project';
+  group: 'issues' | 'initiatives' | 'cycles' | 'documents' | 'notes' | 'project';
   label: string;
   description: string;
   always: boolean;

@@ -16,7 +16,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { AGENT_KIND_ICON } from '../../utils/agentKindIcon';
 import { type AgentFormValue } from '../../utils/agentForm';
 import { AgentFormSection } from './AgentFormSection';
@@ -36,7 +35,7 @@ import { useTranslations } from 'next-intl';
 // it never collapses; the API key section is, because an external agent is unusable
 // until its key is in the operator's hands. A new agent starts with all of them closed:
 // nothing is filled in yet, and the key section opens itself once a key is issued.
-const DEFAULT_OPEN: Record<string, boolean> = { access: true, projects: true, token: true };
+const DEFAULT_OPEN: Record<string, boolean> = { access: true, token: true };
 
 // Radix Select forbids an empty-string item value, so the provider's default (a null
 // reasoning effort) uses this sentinel.
@@ -159,14 +158,6 @@ export default function TeamAiAgentFields({
         />
         <p className="text-xs text-muted-foreground">{t('usernameHint')}</p>
       </div>
-
-      <label className="flex cursor-pointer items-center justify-between gap-2">
-        <span>
-          <span className="text-sm font-medium">{t('chat')}</span>
-          <span className="block text-xs text-muted-foreground">{t('chatHint')}</span>
-        </span>
-        <Switch checked={value.chatEnabled} onCheckedChange={(v) => onChange({ chatEnabled: v })} />
-      </label>
 
       <AgentInstructionsField
         value={value.instructions}

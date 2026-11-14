@@ -67,11 +67,19 @@ async function insertNotifications(
 ): Promise<void> {
   if (rows.length === 0) return;
   const name = await actorName(rows[0].actorUserId);
-  await db.insert(notification).values(rows.map((r) => ({ ...r, actorName: name })));
-  // Fan out to the project's enabled delivery channels (email, Telegram). Best-effort:
-  // a delivery failure must not break the inbox insert or the domain mutation.
+  // Postgres returns the rows of a multi-row VALUES insert in the order of its VALUES.
+  const inserted = await db
+    .insert(notification)
+    .values(rows.map((r) => ({ ...r, actorName: name })))
+    .returning({ id: notification.id });
+  // Fan out to the project's enabled delivery channels (email, Telegram, push).
+  // Best-effort: a delivery failure must not break the inbox insert or the domain mutation.
   try {
-    await enqueueOutbound(rows, name, commentId);
+    await enqueueOutbound(
+      rows.map((r, i) => ({ ...r, id: inserted[i]!.id })),
+      name,
+      commentId,
+    );
   } catch (err) {
     console.error('[notifications] outbound enqueue failed:', err);
   }

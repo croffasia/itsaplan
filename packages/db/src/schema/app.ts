@@ -1092,12 +1092,13 @@ export const teamNotificationSetting = pgTable('team_notification_setting', {
 });
 
 // A member's own notification preferences for one project: for each issue event
-// type, whether they want it by email and/or Telegram. One row per (user, project);
-// absent means the member has not opted in and receives nothing.
-// email_events/telegram_events are EventToggles jsonb keyed by the four inbox
-// notification types (assigned/mentioned/commented/state_changed). Email is sent to
-// the member's account address; Telegram to the chat of the account they linked in
-// user_telegram_account, which is instance-wide rather than per project.
+// type, whether they want it by email, Telegram and/or Web Push. One row per (user,
+// project); absent means the member has not opted in and receives nothing.
+// email_events/telegram_events/push_events are EventToggles jsonb keyed by the four
+// inbox notification types (assigned/mentioned/commented/state_changed). Email is sent
+// to the member's account address; Telegram to the chat of the account they linked in
+// user_telegram_account, and push to every browser in push_subscription. Both are
+// instance-wide rather than per project.
 export const userNotificationPreference = pgTable(
   'user_notification_preference',
   {
@@ -1110,6 +1111,7 @@ export const userNotificationPreference = pgTable(
       .references(() => project.id, { onDelete: 'cascade' }),
     emailEvents: jsonb('email_events').notNull().default({}),
     telegramEvents: jsonb('telegram_events').notNull().default({}),
+    pushEvents: jsonb('push_events').notNull().default({}),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1148,19 +1150,47 @@ export const userTelegramAccount = pgTable(
   ],
 );
 
+// A browser a user turned push notifications on in, instance-wide like the Telegram
+// link. The endpoint is the URL the browser's push service issued for it; p256dh and
+// auth are the browser's keys the payload is encrypted to (RFC 8291). vapid_public_key
+// is the instance key the browser subscribed with: once the instance has other keys, the
+// push service refuses this instance's token for it, so nothing is queued for it. A user
+// keeps at most 10 rows, the oldest dropped first, and a push service that answers 404 or
+// 410 for an endpoint has its row deleted.
+export const pushSubscription = pgTable(
+  'push_subscription',
+  {
+    id: serial('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    endpoint: text('endpoint').notNull(),
+    p256dh: text('p256dh').notNull(),
+    auth: text('auth').notNull(),
+    vapidPublicKey: text('vapid_public_key').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('push_subscription_endpoint_unique').on(t.endpoint),
+    index('push_subscription_user_idx').on(t.userId, t.createdAt),
+  ],
+);
+
 // Outbox for outbound notification delivery. One row per (recipient, channel,
-// message) to send for an issue event: an email or a Telegram message to one member.
-// Rows are enqueued when inbox notifications are created (see
+// message) to send for an issue event: an email, a Telegram message or a push
+// message to one member. Rows are enqueued when inbox notifications are created (see
 // apps/api/src/modules/notifications/outbound.ts) and drained by the worker
 // following the same claim/retry pattern as webhook_delivery. The message text is
 // composed at enqueue time and stored in `payload`; the channel credentials are read
-// from team_notification_setting at send time. channel is 'email' | 'telegram'
-// ('email' picks SMTP or Resend from the team config). recipient is the member's
-// email address for email rows, or their Telegram chat id for telegram rows.
+// from team_notification_setting at send time, and the push keys from the instance
+// environment. channel is 'email' | 'telegram' | 'push' ('email' picks SMTP or Resend
+// from the team config). recipient is the member's email address for email rows,
+// their Telegram chat id for telegram rows, or a push_subscription id for push rows.
 // The stored message on a notification_delivery row, composed at enqueue time by the
 // api and read by the worker that sends it. Email uses `subject` and sends `html` as composed;
 // for a row without `html` the sender appends `url` to `text` and wraps it. Telegram sends
-// `html` (parse_mode HTML) and falls back to `text`. `dedupeKey` is what the enqueue side
+// `html` (parse_mode HTML) and falls back to `text`. Push sends `{ title, body: text, url,
+// tag }` to the service worker. `dedupeKey` is what the enqueue side
 // matches to avoid queuing the same message twice; `projectInviteId` ties an invite email to
 // its invite, so a delivery whose invite is no longer pending is dropped instead of sent.
 export interface DeliveryPayload {
@@ -1168,6 +1198,8 @@ export interface DeliveryPayload {
   text: string;
   html?: string;
   url?: string;
+  title?: string;
+  tag?: string;
   emailSource?: 'project' | 'instance';
   idempotencyKey?: string;
   dedupeKey?: string;
@@ -1191,7 +1223,10 @@ export const notificationDelivery = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    check('notification_delivery_channel_check', sql`${t.channel} IN ('email', 'telegram')`),
+    check(
+      'notification_delivery_channel_check',
+      sql`${t.channel} IN ('email', 'telegram', 'push')`,
+    ),
     // Backs the worker's claim query: due pending rows ordered by next_attempt_at.
     index('notification_delivery_due_idx')
       .on(t.nextAttemptAt)

@@ -16,8 +16,11 @@ function as400<T>(run: () => Promise<T>): Promise<T> {
 }
 
 // The shared SSRF guards, with their rejection turned into the API's 400.
-export function assertPublicHttpUrl(raw: string): Promise<URL> {
-  return as400(() => assertPublicUrl(raw));
+export function assertPublicHttpUrl(
+  raw: string,
+  policy?: Parameters<typeof assertPublicUrl>[1],
+): Promise<URL> {
+  return as400(() => assertPublicUrl(raw, policy));
 }
 
 export function pinnedFetch(raw: string, init?: PinnedRequestInit): Promise<Response> {

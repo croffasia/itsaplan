@@ -7,8 +7,17 @@ const EventToggles = t.Object({
   state_changed: t.Boolean(),
 });
 
-// Request body of the PUT and the response of both routes.
+// The response of both routes.
+export const NotificationPreferenceResponse = t.Object({
+  emailEvents: EventToggles,
+  telegramEvents: EventToggles,
+  pushEvents: EventToggles,
+});
+
+// A PUT without pushEvents keeps the stored ones, so a client that predates push
+// does not turn it off.
 export const NotificationPreferenceBody = t.Object({
   emailEvents: EventToggles,
   telegramEvents: EventToggles,
+  pushEvents: t.Optional(EventToggles),
 });

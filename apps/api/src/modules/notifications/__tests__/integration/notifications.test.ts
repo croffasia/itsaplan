@@ -1,6 +1,7 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { randomUUID } from 'node:crypto';
 import { db, notificationDelivery } from '@repo/db';
-import { asc } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -466,5 +467,137 @@ describe('notifications', () => {
     // The owner does not own this notification: mutating it is a 404.
     const res = await owner.api.notifications({ id }).read.post({ read: true } as never);
     expect(res.status).toBe(404);
+  });
+});
+
+// Push is the instance's, not the team's: it is on while the WEB_PUSH_* variables are
+// set, and each member chooses its events per project like email and Telegram.
+describe('push notifications', () => {
+  const ENV = ['WEB_PUSH_VAPID_PUBLIC_KEY', 'WEB_PUSH_VAPID_PRIVATE_KEY', 'WEB_PUSH_SUBJECT'];
+  const none = { assigned: false, mentioned: false, commented: false, state_changed: false };
+  let saved: (string | undefined)[];
+
+  beforeEach(async () => {
+    saved = ENV.map((name) => process.env[name]);
+    await resetDb();
+    process.env.WEB_PUSH_VAPID_PUBLIC_KEY =
+      'BP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8';
+    process.env.WEB_PUSH_VAPID_PRIVATE_KEY = 'yfWPiYE-n46HLnH0KqZOF1fJJU3MYrct3AELtAQ-oRw';
+    process.env.WEB_PUSH_SUBJECT = 'mailto:ops@example.com';
+  });
+
+  afterEach(() => {
+    ENV.forEach((name, i) => {
+      if (saved[i] === undefined) delete process.env[name];
+      else process.env[name] = saved[i];
+    });
+  });
+
+  async function subscribeBrowser(member: Member): Promise<number> {
+    const pair = (await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, [
+      'deriveBits',
+    ])) as CryptoKeyPair;
+    const res = await member.api.push.subscriptions.post({
+      endpoint: `https://example.com/push/${randomUUID()}`,
+      keys: {
+        p256dh: Buffer.from(await crypto.subtle.exportKey('raw', pair.publicKey)).toString(
+          'base64url',
+        ),
+        auth: Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString('base64url'),
+      },
+    });
+    return res.data!.id;
+  }
+
+  function queuedPushes() {
+    return db
+      .select({ recipient: notificationDelivery.recipient, payload: notificationDelivery.payload })
+      .from(notificationDelivery)
+      .where(eq(notificationDelivery.channel, 'push'))
+      .orderBy(asc(notificationDelivery.id));
+  }
+
+  it('queues one push per browser for the events the member turned on', async () => {
+    const { owner, project, columnId } = await setup();
+    const member = await addMember(owner);
+    const browsers = [await subscribeBrowser(member), await subscribeBrowser(member)];
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: none,
+      telegramEvents: none,
+      pushEvents: { ...none, assigned: true },
+    });
+
+    const issue = (await createIssue(owner.api, columnId, { assigneeUserId: member.userId })).data!;
+    await owner.api.issues({ issueId: issue.id }).comments.post({ body: 'Started on it' });
+
+    const inbox = (await member.api.notifications.get({ query: {} })).data!.items;
+    expect(inbox.map((n) => n.type).sort()).toEqual(['assigned', 'commented']);
+    const assigned = inbox.find((n) => n.type === 'assigned');
+    const queued = await queuedPushes();
+    expect(queued.map((row) => Number(row.recipient)).sort()).toEqual(browsers.sort());
+    for (const row of queued) {
+      expect(row.payload).toEqual({
+        title: `${issue.identifier} Task`,
+        text: `Assigned by ${assigned!.actorName}`,
+        url: `${process.env.APP_URL}/${project.teamRef}/issue/${issue.identifier}`,
+        tag: `inbox-${assigned!.id}`,
+      });
+    }
+  });
+
+  it('queues no push for a browser that subscribed with keys the instance no longer has', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    await subscribeBrowser(member);
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: none,
+      telegramEvents: none,
+      pushEvents: { ...none, assigned: true },
+    });
+    // A new key pair: the push services refuse this instance's token for the browser above.
+    process.env.WEB_PUSH_VAPID_PUBLIC_KEY =
+      'BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4';
+    process.env.WEB_PUSH_VAPID_PRIVATE_KEY = 'q1dXpw3UpT5VOmu_cf_v6ih07Aems3njxI-JWgLcM94';
+    const current = await subscribeBrowser(member);
+
+    await createIssue(owner.api, columnId, { assigneeUserId: member.userId });
+
+    expect((await queuedPushes()).map((row) => Number(row.recipient))).toEqual([current]);
+  });
+
+  it('queues no push while push is off', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    await subscribeBrowser(member);
+    const all = { assigned: true, mentioned: true, commented: true, state_changed: true };
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: none,
+      telegramEvents: none,
+      pushEvents: all,
+    });
+    delete process.env.WEB_PUSH_SUBJECT;
+
+    await createIssue(owner.api, columnId, { assigneeUserId: member.userId });
+
+    expect(await queuedPushes()).toEqual([]);
+  });
+
+  it('keeps the stored push events when a write leaves them out', async () => {
+    const { owner } = await setup();
+    const member = await addMember(owner);
+    const prefs = member.api.projects({ projectKey: 'MKT' })['notification-preferences'];
+    await prefs.put({
+      emailEvents: none,
+      telegramEvents: none,
+      pushEvents: { ...none, mentioned: true },
+    });
+
+    const res = await prefs.put({ emailEvents: { ...none, assigned: true }, telegramEvents: none });
+
+    expect(res.data).toEqual({
+      emailEvents: { ...none, assigned: true },
+      telegramEvents: none,
+      pushEvents: { ...none, mentioned: true },
+    });
   });
 });

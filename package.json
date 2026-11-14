@@ -33,6 +33,7 @@
     "db:migrate:test": "SKIP_PRE_MIGRATION_BACKUP=1 bun --env-file=.env.test packages/db/src/migrate.ts",
     "db:studio": "bun --filter='@repo/db' run db:studio",
     "auth:generate": "bun --filter='@repo/auth' run auth:generate",
+    "web-push:keys": "bun scripts/web-push-keys.ts",
     "prepare": "lefthook install || true"
   },
   "workspaces": [

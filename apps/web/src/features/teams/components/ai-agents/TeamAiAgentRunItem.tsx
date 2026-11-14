@@ -15,8 +15,19 @@ function runSubject(r: AgentRun, t: ReturnType<typeof useTranslations<'teams.age
     return [t('documentTask'), r.documentTitle?.trim()].filter(Boolean).join(' · ');
   }
   if (r.issueId == null) return r.trigger === 'manual' ? t('manualTask') : t('scheduledTask');
-  if (!r.issueIdentifier) return `issue #${r.issueId}`;
+  if (!r.issueIdentifier) return `#${r.issueId}`;
   return `${r.issueIdentifier}${r.issueTitle ? ` · ${r.issueTitle}` : ''}`;
+}
+
+// Worded as on the runner queue page.
+function queueDetail(r: AgentRun, t: ReturnType<typeof useTranslations<'issue.agentRuns'>>) {
+  const parts: string[] = [];
+  if (r.attempts > 0) parts.push(t('attempts', { count: r.attempts }));
+  if (new Date(r.nextAttemptAt) > new Date()) {
+    const time = formatDateTime(r.nextAttemptAt);
+    parts.push(r.lastError ? t('retryAt', { time }) : t('startsAt', { time }));
+  }
+  return parts.length > 0 ? parts.join(' · ') : t('queuedHint');
 }
 
 export default function TeamAiAgentRunItem({
@@ -27,6 +38,7 @@ export default function TeamAiAgentRunItem({
   external: boolean;
 }) {
   const t = useTranslations('teams.agents');
+  const tRuns = useTranslations('issue.agentRuns');
   const relativeTime = useRelativeTime();
   const [open, setOpen] = useState(false);
   const subject = runSubject(r, t);
@@ -44,10 +56,14 @@ export default function TeamAiAgentRunItem({
           <ChevronRight className="size-3.5 shrink-0" />
         )}
         <TeamAiAgentRunStatus status={r.executionState} />
-        <span className="shrink-0 text-muted-foreground capitalize">{r.trigger}</span>
+        {(r.issueId != null || r.documentId != null) && (
+          <span className="shrink-0 text-muted-foreground">{tRuns(`triggers.${r.trigger}`)}</span>
+        )}
         <span className="truncate font-medium">{subject}</span>
         {r.attempts > 1 && (
-          <span className="shrink-0 text-muted-foreground">·{r.attempts} attempts</span>
+          <span className="shrink-0 text-muted-foreground">
+            · {tRuns('attempts', { count: r.attempts })}
+          </span>
         )}
         <span className="ms-auto flex shrink-0 items-center gap-4">
           <span className="w-12 text-end">
@@ -69,10 +85,7 @@ export default function TeamAiAgentRunItem({
           )}
           {r.output && <AgentRunBlock label={t('result')} value={r.output} />}
           {r.executionState === 'queued' && (
-            <AgentRunBlock
-              label={t('queue')}
-              value={`Attempts: ${r.attempts}. Next attempt: ${formatDateTime(r.nextAttemptAt)}.`}
-            />
+            <AgentRunBlock label={t('queue')} value={queueDetail(r, tRuns)} />
           )}
           {external && <AgentRunExternalTrace runId={r.id} />}
           {outcome && <p className="text-xs text-muted-foreground">{outcome}</p>}

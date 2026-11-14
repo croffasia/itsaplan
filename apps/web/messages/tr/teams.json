@@ -46,15 +46,15 @@
     },
     "agentSkills": {
       "title": "Yetenekler",
-      "description": "Dahili ajanların ihtiyaç duydukça yüklediği yeniden kullanılabilir talimatlar."
+      "description": "Dahili ajanlar için açtığınız yeniden kullanılabilir talimatlar."
     },
     "agentTools": {
       "title": "Araçlar",
       "description": "Takımın ajanlarının çağırabileceği araçlar."
     },
     "agents": {
-      "title": "Yapay Zekâ Ajanları",
-      "description": "Bu takımın sahip olduğu yapay zekâ ajanları ve her birinin çalıştığı projeler."
+      "title": "Yapay zekâ ajanları",
+      "description": "Bu takımın sahip olduğu yapay zekâ ajanları."
     },
     "analytics": {
       "title": "Kullanım",
@@ -336,9 +336,9 @@
     "noMatches": "“{query}” ile eşleşen entegrasyon bulunamadı.",
     "nothingFound": "Sonuç bulunamadı",
     "noKindMatches": "Seçilen gruplarda kimlik bilgisi yok.",
-    "showGroups": "Grupları göster",
+    "group": "Grup",
     "connected": "Kimlik bilgisi eklendi",
-    "alreadyConnected": "Takımın zaten bir {integration} kimlik bilgisi var",
+    "alreadyConnected": "Takımın {integration} için zaten bir kimlik bilgisi var",
     "alreadyConnectedHint": "İkinci bir hesap için başka bir kimlik bilgisi ekleyin. Etiket bunları ayırt eder.",
     "agentTools": "Kullanılabilir araçlar",
     "validate": "Doğrula",
@@ -352,7 +352,7 @@
     "checkUnknown": "Bu kimlik bilgisi otomatik olarak kontrol edilemiyor. Yine de kaydedebilirsiniz.",
     "empty": "Henüz kimlik bilgisi yok",
     "emptyHint": "Ajanların bir yapay zekâ sağlayıcısını veya aracı kullanabilmesi için bir kimlik bilgisi ekleyin.",
-    "deleteMessage": "{kind, select, llm {Bununla çalışan ajanlar, onlar için başka bir kimlik bilgisi seçene kadar çalışmaz.} tool {Bununla eklenen araçlar silinir ve ajanlar artık onları çağıramaz.} service {Bununla eklenen araçlar silinir ve ajanlar artık onları çağıramaz.} other {}} Bu işlem geri alınamaz.",
+    "deleteMessage": "{kind, select, llm {Bununla çalışan ajanlar, onlar için başka bir kimlik bilgisi seçene kadar çalışmayacak.} tool {Bunu kullanan araçlar silinecek ve ajanlar artık onları çağıramayacak.} service {Bunu kullanan araçlar silinecek ve ajanlar artık onları çağıramayacak.} other {}} Bu işlem geri alınamaz.",
     "groups": {
       "llm": {
         "title": "Yapay zekâ sağlayıcıları",
@@ -364,56 +364,62 @@
       },
       "service": {
         "title": "Hizmetler",
-        "hint": "Kendi araçlarınızın istek gönderdiği adres ve anahtar"
+        "hint": "Kendi araçlarınız için bir adres ve anahtar"
       }
     },
     "columns": {
       "integration": "Entegrasyon",
-      "credentials": "Kimlik Bilgileri"
+      "credentials": "Alanlar"
     }
   },
   "skills": {
     "newSkill": "Yeni yetenek",
     "create": "Yetenek oluştur",
     "delete": "Yeteneği sil",
-    "deleteMessage": "“{name}” yeteneği silinsin mi? Onu kullanan tüm ajanlardan kaldırılacaktır.",
-    "edit": "Yeteneği düzenle",
+    "deleteTitle": "Yetenek silinsin mi?",
+    "deleteLabel": "{name} yeteneğini sil",
+    "deleteMessage": "“{name}” silinecek ve onu kullanan tüm ajanlardan kaldırılacak. Bu işlem geri alınamaz.",
+    "editLabel": "{name} yeteneğini düzenle",
     "empty": "Henüz yetenek yok",
-    "emptyHint": "Markdown yazın, dosya yükleyin veya GitHub'dan içe aktarın.",
+    "emptyHint": "Bir yetenek oluşturun, ardından ihtiyaç duyan ajanlarda etkinleştirin.",
     "name": "Ad (isteğe bağlı)",
-    "namePlaceholder": "Varsayılan olarak SKILL.md başlığındaki adı alır",
-    "descriptionPlaceholder": "Ajanın bu yeteneği ne zaman yükleyeceğine karar vermesi için gösterilir",
+    "namePlaceholder": "Boş bırakırsanız ad markdown'dan alınır",
+    "descriptionPlaceholder": "Ne yaptığı ve ne zaman kullanılacağı",
     "noDescription": "Açıklama yok",
     "unsaved": "Kaydedilmemiş değişiklikler",
-    "addReference": "Referans ekle",
+    "addReference": "Referans dosyası ekle",
+    "deleteFile": "{file} dosyasını sil",
     "source": {
-      "inline": "Doğrudan metin",
+      "inline": "Burada yazıldı",
       "upload": "Yükleme",
       "github": "GitHub"
     },
     "tabInline": "Markdown yaz",
+    "inlinePlaceholder": "---\nname: Yeteneğim\ndescription: Ne yaptığı ve ne zaman kullanılacağı\n---\n\nTalimatlar…",
     "tabUpload": "Dosya yükle",
     "tabGithub": "GitHub'dan içe aktar",
-    "skillFile": "SKILL.md dosyası",
+    "skillFile": "Markdown dosyası",
     "loaded": "{file} yüklendi",
     "trustWarning": "Yalnızca güvendiğiniz yetenekleri içe aktarın",
     "trustWarning1": "Bir yetenek ajanlarınızın takip edeceği talimatlara dönüşür. Önce kaynağı inceleyin.",
-    "trustWarning2": "Yalnızca SKILL.md ve markdown referansları içe aktarılır. Betikler (scripts) atlanır.",
+    "trustWarning2": "Yalnızca SKILL.md ve markdown referans dosyaları içe aktarılır. Betikler atlanır.",
     "githubUrl": "GitHub URL'si",
-    "githubUrlPlaceholder": "https://github.com/owner/repo veya bir yetenek klasörü",
-    "githubUrlHint": "Bir kod deposu, bir klasör veya SKILL.md adresi.",
+    "githubUrlPlaceholder": "https://github.com/owner/repo",
+    "githubUrlHint": "Bir depo, klasör veya SKILL.md dosyası.",
     "findSkills": "Yetenekleri bul",
     "importTitle": "GitHub'dan yetenek içe aktar",
     "foundCount": "{count, plural, one {# yetenek bulundu. İçe aktarılacakları seçin.} other {# yetenek bulundu. İçe aktarılacakları seçin.}}",
     "matchCount": "{shown} / {total, plural, one {# yetenek} other {# yetenek}} eşleşiyor",
     "selectAll": "Tümünü seç",
-    "searchPlaceholder": "Ada veya açıklamaya göre ara",
+    "searchPlaceholder": "Yetenek ara",
     "noMatches": "“{query}” ile eşleşen yetenek bulunamadı.",
+    "noSourceMatches": "Seçilen kaynaklarda yetenek yok.",
+    "sourceFilter": "Kaynak",
     "importCount": "{count, plural, =0 {Yetenekleri içe aktar} one {# yeteneği içe aktar} other {# yeteneği içe aktar}}",
     "files": "Dosyalar",
     "skill": "Yetenek",
     "description": "Açıklama",
-    "referenceCount": "{count, plural, one {# referans} other {# referans}}",
+    "referenceCount": "{count, plural, one {# referans dosyası} other {# referans dosyası}}",
     "noAccess": "Bu takımın yeteneklerine erişiminiz yok."
   },
   "tools": {
@@ -458,16 +464,16 @@
     "ownToolUnavailableTitle": "Her API için araçlar",
     "ownToolUnavailableHint": "Ajanlarınızın, kendi hizmetleriniz dahil API'si olan her hizmeti çağırmasını sağlayan araçlar oluşturun. Cloud ve kendi sunucunuzda çalışan Pro sürümünde mevcuttur.",
     "group": "Grup",
-    "allGroups": "Tüm araçlar",
     "ownTools": "Kendi araçlarınız",
-    "noneInGroup": "Bu grupta araç yok"
+    "noGroupMatches": "Seçilen gruplarda araç yok."
   },
   "agents": {
     "projectDefaultsColumn": "Yeni projeler",
-    "projectDefaultsHint": "Seçilen ajanlar bu takımdaki her yeni projeye otomatik katılır. Mevcut projeler ve proje kopyaları kendi ajanlarını korur.",
+    "projectDefaultsHint": "Burada açılan ajanlar bu takımdaki her yeni projeye katılır. Mevcut projeler ve proje kopyaları kendi ajanlarını korur.",
     "projectDefaultAria": "{agent} ajanını yeni projelere ekle",
     "projectDefaultsReadOnly": "Takım sahipleri ve yöneticileri hangi ajanların yeni projelere katılacağını belirler.",
-    "projectDefaultsSaved": "Varsayılan ajanlar kaydedildi",
+    "joinsNewProjectsSaved": "{agent} yeni projelere eklenir",
+    "skipsNewProjectsSaved": "{agent} yeni projelere eklenmez",
     "projectDefaultOn": "Açık",
     "projectDefaultOff": "Kapalı",
     "joinNewProjects": "Yeni projelere ekle",
@@ -478,9 +484,10 @@
     "create": "Ajan oluştur",
     "save": "Ajanı kaydet",
     "delete": "Ajanı sil",
+    "deleteTitle": "Yapay zekâ ajanı silinsin mi?",
     "edit": "Ajanı düzenle",
     "empty": "Henüz yapay zekâ ajanı yok",
-    "emptyHint": "Bir ajan yerleşik çalışma zamanında veya API üzerinden çalışır.",
+    "emptyHint": "Bir ajan oluşturun, sonra onu çalışacağı projelere ekleyin.",
     "agent": "Yapay zekâ ajanı",
     "sheetSubtitle": "İş devredebileceğiniz bir bot kullanıcı",
     "kind": "Tür",
@@ -662,9 +669,9 @@
     "apiKey": "API anahtarı",
     "apiKeyValue": "API anahtarı {start}…",
     "runHistory": "Çalışma geçmişi",
-    "noRuns": "Henüz çalışma yok. Ajan bir yorumda bahsedildiğinde veya bir iş ona devredildiğinde çalışmalar burada listelenir.",
+    "noRuns": "Henüz çalıştırma yok. Tetikleyicilerden, zamanlamalardan ve manuel görevlerden gelen çalıştırmalar burada görünür.",
     "loadMore": "25 tane daha yükle",
-    "endOfHistory": "Geçmişin sonu",
+    "endOfHistory": "Daha eski çalıştırma yok",
     "manualTask": "Manuel görev",
     "scheduledTask": "Zamanlanmış görev",
     "documentTask": "Belge yorumu",
@@ -675,9 +682,9 @@
     "queue": "Kuyruk",
     "testChat": "Test sohbeti",
     "moreActions": "Diğer işlemler",
-    "runsSubtitle": "@{username} · tetiklenen çalıştırmalar",
+    "runsSubtitle": "@{username}",
     "regenerateMessage": "<v>{name}</v> için mevcut anahtar hemen çalışmayı durdurur. Bunu kullanan her şeyi yeni anahtarla güncelleyin.",
-    "deleteMessage": "<v>{name}</v> ve API anahtarı kaldırılacaktır; atandığı veya devredildiği tüm işlerden silinir. Bu işlem geri alınamaz.",
+    "deleteMessage": "<v>{name}</v> ve API anahtarı silinecek. Ajan, atandığı veya devredildiği tüm işlerden çıkarılacak. Bu işlem geri alınamaz.",
     "actionCount": "{count, plural, one {# eylem} other {# eylem}}",
     "toolCount": "{count, plural, one {# araç} other {# araç}}",
     "skillCount": "{count, plural, one {# yetenek} other {# yetenek}}",
@@ -706,7 +713,17 @@
     "noProjectsShort": "Proje yok",
     "chatNeedsAgent": "Burada test etmek için önce yapay zekâ ajanını oluşturun.",
     "chatNeedsProject": "Burada test etmek için yapay zekâ ajanını bir projeye ekleyin.",
-    "triggerFieldsTitle": "Çalıştırmayı başlatan özel alanlar"
+    "triggerFieldsTitle": "Çalıştırmayı başlatan özel alanlar",
+    "search": "Ajan ara",
+    "noMatches": "Aramaya veya filtrelere uyan ajan yok.",
+    "provider": "Model sağlayıcısı",
+    "joinsNewProjects": "Yeni projelere eklenir",
+    "skipsNewProjects": "Yeni projelere eklenmez",
+    "triggerField": "Özel alan",
+    "triggerFieldCount": "{count, plural, one {# alan} other {# alan}}",
+    "projectsCount": "{count, plural, one {# projede} other {# projede}} çalışır",
+    "showAllProjects": "{count} projenin tümünü göster",
+    "changeProjects": "Projeleri değiştir"
   },
   "members": {
     "roleSaved": "{name} artık {role}",

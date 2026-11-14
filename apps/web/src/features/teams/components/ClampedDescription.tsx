@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
+import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-// A tool's description cut to two lines. The tooltip with the whole text opens only
-// when the cut hides part of it.
-export function ToolConfigDescription({ text }: { text: string }) {
+// A description cut to two lines. The tooltip with the whole text opens only when the
+// cut hides part of it.
+export function ClampedDescription({ text, className }: { text: string; className?: string }) {
   const ref = useRef<HTMLParagraphElement>(null);
   const [open, setOpen] = useState(false);
   return (
@@ -15,7 +16,7 @@ export function ToolConfigDescription({ text }: { text: string }) {
       }}
     >
       <TooltipTrigger asChild>
-        <p ref={ref} className="line-clamp-2 pe-10 text-xs text-muted-foreground">
+        <p ref={ref} className={cn('line-clamp-2 text-muted-foreground', className)}>
           {text}
         </p>
       </TooltipTrigger>

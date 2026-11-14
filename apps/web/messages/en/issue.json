@@ -525,7 +525,7 @@
     "triggers": {
       "mention": "Mention",
       "delegation": "Delegation",
-      "field": "Member field",
+      "field": "Custom field",
       "schedule": "Schedule",
       "manual": "Manual",
       "status": "Status change",

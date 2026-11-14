@@ -74,7 +74,7 @@ export function SkillFileList({
                   type="button"
                   className="text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
                   onClick={() => onDelete(f.path)}
-                  aria-label={`Delete ${f.label}`}
+                  aria-label={t('deleteFile', { file: f.label })}
                 >
                   <Trash2 className="size-3.5" />
                 </button>

@@ -46,7 +46,7 @@
     },
     "agentSkills": {
       "title": "技能",
-      "description": "内置代理可按需加载的可复用指令。"
+      "description": "你为内置代理开启的可复用指令。"
     },
     "agentTools": {
       "title": "工具",
@@ -54,7 +54,7 @@
     },
     "agents": {
       "title": "AI 代理",
-      "description": "该团队拥有的 AI 代理，以及各自工作的项目。"
+      "description": "该团队拥有的 AI 代理。"
     },
     "analytics": {
       "title": "用量",
@@ -336,9 +336,9 @@
     "noMatches": "没有与“{query}”匹配的集成。",
     "nothingFound": "没有找到结果",
     "noKindMatches": "所选分组中没有凭据。",
-    "showGroups": "显示分组",
+    "group": "分组",
     "connected": "已添加凭据",
-    "alreadyConnected": "团队已有 {integration} 凭据",
+    "alreadyConnected": "团队已有 {integration} 的凭据",
     "alreadyConnectedHint": "可为另一个账号再添加一个凭据，用标签区分它们。",
     "agentTools": "可用工具",
     "validate": "验证凭据",
@@ -352,7 +352,7 @@
     "checkUnknown": "无法自动验证此凭据，但仍可保存。",
     "empty": "暂无凭据",
     "emptyHint": "添加凭据后，代理即可使用 AI 提供商或工具。",
-    "deleteMessage": "{kind, select, llm {使用它运行的代理将停止工作，直到你为它们选择其他凭据。} tool {用它添加的工具将被删除，代理将无法再调用这些工具。} service {用它添加的工具将被删除，代理将无法再调用这些工具。} other {}}此操作无法撤销。",
+    "deleteMessage": "{kind, select, llm {使用它运行的代理将停止工作，直到你为它们选择其他凭据。} tool {使用它的工具将被删除，代理将无法再调用这些工具。} service {使用它的工具将被删除，代理将无法再调用这些工具。} other {}}此操作无法撤销。",
     "groups": {
       "llm": {
         "title": "AI 提供商",
@@ -364,56 +364,62 @@
       },
       "service": {
         "title": "服务",
-        "hint": "你自己的工具发送请求的地址和密钥"
+        "hint": "供自定义工具使用的地址和密钥"
       }
     },
     "columns": {
       "integration": "集成",
-      "credentials": "凭据"
+      "credentials": "字段"
     }
   },
   "skills": {
     "newSkill": "新建技能",
     "create": "新建技能",
     "delete": "删除技能",
-    "deleteMessage": "删除技能“{name}”？使用它的所有代理都会移除该技能。",
-    "edit": "编辑技能",
+    "deleteTitle": "删除技能？",
+    "deleteLabel": "删除 {name}",
+    "deleteMessage": "“{name}”将被删除，并从所有使用它的代理中移除。此操作无法撤销。",
+    "editLabel": "编辑 {name}",
     "empty": "暂无技能",
-    "emptyHint": "编写 Markdown、上传文件或从 GitHub 导入。",
+    "emptyHint": "先创建技能，再为需要它的代理开启。",
     "name": "名称（可选）",
-    "namePlaceholder": "默认使用 SKILL.md frontmatter 中的名称",
-    "descriptionPlaceholder": "向代理说明何时应加载此技能",
+    "namePlaceholder": "留空则使用 Markdown 中的名称",
+    "descriptionPlaceholder": "它做什么以及何时使用",
     "noDescription": "无描述",
     "unsaved": "有未保存的更改",
-    "addReference": "添加参考资料",
+    "addReference": "添加参考文件",
+    "deleteFile": "删除 {file}",
     "source": {
-      "inline": "内联",
+      "inline": "在此编写",
       "upload": "已上传",
       "github": "GitHub"
     },
     "tabInline": "编写 Markdown",
+    "inlinePlaceholder": "---\nname: 我的技能\ndescription: 它做什么以及何时使用\n---\n\n指令…",
     "tabUpload": "上传文件",
     "tabGithub": "从 GitHub 导入",
-    "skillFile": "SKILL.md 文件",
+    "skillFile": "Markdown 文件",
     "loaded": "已加载 {file}",
     "trustWarning": "只导入你信任的技能",
     "trustWarning1": "技能会成为代理遵循的指令，请先审查来源。",
-    "trustWarning2": "只导入 SKILL.md 及其 Markdown 参考资料，脚本会被跳过。",
+    "trustWarning2": "只导入 SKILL.md 及其 Markdown 参考文件，脚本会被跳过。",
     "githubUrl": "GitHub URL",
-    "githubUrlPlaceholder": "https://github.com/owner/repo 或技能文件夹",
-    "githubUrlHint": "可以填写仓库、文件夹或 SKILL.md。",
+    "githubUrlPlaceholder": "https://github.com/owner/repo",
+    "githubUrlHint": "仓库、文件夹或 SKILL.md 文件。",
     "findSkills": "查找技能",
     "importTitle": "从 GitHub 导入技能",
     "foundCount": "{count, plural, other {找到 # 个技能。请选择要导入的技能。}}",
     "matchCount": "显示 {shown} 个，共 {total, plural, other {# 个技能}}",
     "selectAll": "全选",
-    "searchPlaceholder": "按名称或描述搜索",
+    "searchPlaceholder": "搜索技能",
     "noMatches": "没有与“{query}”匹配的技能。",
+    "noSourceMatches": "所选来源中没有技能。",
+    "sourceFilter": "来源",
     "importCount": "{count, plural, =0 {导入技能} other {导入 # 个技能}}",
     "files": "文件",
     "skill": "技能",
     "description": "描述",
-    "referenceCount": "{count, plural, other {# 份参考资料}}",
+    "referenceCount": "{count, plural, other {# 个参考文件}}",
     "noAccess": "你没有权限查看该团队的技能。"
   },
   "tools": {
@@ -458,16 +464,16 @@
     "ownToolUnavailableTitle": "适用于任何 API 的工具",
     "ownToolUnavailableHint": "创建工具，让 AI 代理调用任何有 API 的服务，包括你自己的服务。可在 Cloud 和自托管 Pro 版中使用。",
     "group": "分组",
-    "allGroups": "全部工具",
     "ownTools": "自定义工具",
-    "noneInGroup": "此分组中没有工具"
+    "noGroupMatches": "所选分组中没有工具。"
   },
   "agents": {
     "projectDefaultsColumn": "新项目",
-    "projectDefaultsHint": "所选代理会加入此团队创建的每个新项目。现有项目及项目副本保留各自的代理。",
+    "projectDefaultsHint": "在此开启的代理会加入此团队的每个新项目。现有项目及项目副本保留各自的代理。",
     "projectDefaultAria": "将 {agent} 添加到新项目",
     "projectDefaultsReadOnly": "团队所有者和管理员选择加入新项目的代理。",
-    "projectDefaultsSaved": "已保存默认代理",
+    "joinsNewProjectsSaved": "{agent} 会加入新项目",
+    "skipsNewProjectsSaved": "{agent} 不会加入新项目",
     "projectDefaultOn": "开启",
     "projectDefaultOff": "关闭",
     "joinNewProjects": "添加到新项目",
@@ -478,9 +484,10 @@
     "create": "创建 AI 代理",
     "save": "保存 AI 代理",
     "delete": "删除 AI 代理",
+    "deleteTitle": "删除 AI 代理？",
     "edit": "编辑 AI 代理",
     "empty": "暂无 AI 代理",
-    "emptyHint": "代理由内置运行时运行或通过 API 驱动。",
+    "emptyHint": "先创建代理，再把它加入要工作的项目。",
     "agent": "AI 代理",
     "sheetSubtitle": "可以接受工作项委派的 AI 代理",
     "kind": "类型",
@@ -662,9 +669,9 @@
     "apiKey": "API 密钥",
     "apiKeyValue": "API 密钥 {start}…",
     "runHistory": "运行记录",
-    "noRuns": "暂无运行记录。在评论中提及代理或将工作项委派给代理后，运行记录会显示在这里。",
+    "noRuns": "暂无运行记录。由触发器、计划和手动任务启动的运行会显示在这里。",
     "loadMore": "再加载 25 条",
-    "endOfHistory": "已显示全部记录",
+    "endOfHistory": "没有更早的运行记录",
     "manualTask": "手动任务",
     "scheduledTask": "定时任务",
     "documentTask": "文档评论",
@@ -675,9 +682,9 @@
     "queue": "队列",
     "testChat": "测试对话",
     "moreActions": "更多操作",
-    "runsSubtitle": "@{username} · 由触发器启动的运行",
+    "runsSubtitle": "@{username}",
     "regenerateMessage": "<v>{name}</v> 的当前密钥会立即失效。请用新密钥更新所有使用它的地方。",
-    "deleteMessage": "<v>{name}</v> 及其 API 密钥将被删除，并从所有指派或委派给它的工作项中移除。此操作无法撤销。",
+    "deleteMessage": "<v>{name}</v> 及其 API 密钥将被删除。代理将从所有指派或委派给它的工作项中移除。此操作无法撤销。",
     "actionCount": "{count, plural, other {# 个操作}}",
     "toolCount": "{count, plural, other {# 个工具}}",
     "skillCount": "{count, plural, other {# 个技能}}",
@@ -706,7 +713,17 @@
     "noProjectsShort": "无项目",
     "chatNeedsAgent": "创建 AI 代理后即可在此测试。",
     "chatNeedsProject": "将 AI 代理加入项目后即可在此测试。",
-    "triggerFieldsTitle": "触发运行的自定义字段"
+    "triggerFieldsTitle": "触发运行的自定义字段",
+    "search": "搜索代理",
+    "noMatches": "没有符合搜索或筛选条件的代理。",
+    "provider": "模型提供商",
+    "joinsNewProjects": "加入新项目",
+    "skipsNewProjects": "不加入新项目",
+    "triggerField": "自定义字段",
+    "triggerFieldCount": "{count, plural, other {# 个字段}}",
+    "projectsCount": "参与 {count, plural, other {# 个项目}}",
+    "showAllProjects": "显示全部 {count} 个项目",
+    "changeProjects": "更改项目"
   },
   "members": {
     "roleSaved": "{name} 现在是{role}",

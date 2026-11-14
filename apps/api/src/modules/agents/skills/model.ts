@@ -37,7 +37,21 @@ export const SkillListResponse = t.Array(SkillResponse);
 
 export const SkillPageResponse = pageResponse(SkillResponse);
 
-export const skillListQuery = t.Object(pageQueryFields);
+export const skillListQuery = t.Object({
+  search: t.Optional(
+    t.String({
+      maxLength: 200,
+      description: 'Case-insensitive match on the skill name or its description.',
+    }),
+  ),
+  source: t.Optional(
+    t.String({
+      pattern: '^(upload|inline|github)(,(upload|inline|github))*$',
+      description: 'A comma-separated subset of upload, inline and github. Omit for all.',
+    }),
+  ),
+  ...pageQueryFields,
+});
 
 export const SkillMarkdownResponse = t.Object({ markdown: t.String() });
 

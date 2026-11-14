@@ -281,9 +281,7 @@ export function SkillCreateDialog({
               onChange={(e) => setMarkdown(e.target.value)}
               rows={10}
               className="font-mono text-xs"
-              placeholder={
-                '---\nname: My skill\ndescription: What it does and when to use it\n---\n\nInstructions…'
-              }
+              placeholder={t('inlinePlaceholder')}
             />
           </div>
           {nameAndCreate}

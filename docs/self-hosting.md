@@ -152,6 +152,24 @@ and sends as the mailbox over XOAUTH2. An empty server is filled with
 Then paste the tenant ID, the client ID and the secret into the page and send a test. A
 refused token is reported as rejected credentials and is not retried.
 
+## Push notifications
+
+Members can get their notifications as Web Push, next to email and Telegram, in each browser
+they turn it on in: Chrome, Edge and Firefox, Safari on macOS, and Safari on iOS and iPadOS
+16.4 or later once the app is added to the Home Screen. Push needs three variables, set on the
+api and on the worker:
+
+| Variable                     | Value                                                       |
+| ---------------------------- | ----------------------------------------------------------- |
+| `WEB_PUSH_VAPID_PUBLIC_KEY`  | from `bun run web-push:keys`                                |
+| `WEB_PUSH_VAPID_PRIVATE_KEY` | from `bun run web-push:keys`; a secret                      |
+| `WEB_PUSH_SUBJECT`           | a `mailto:` or `https:` contact the push services can reach |
+
+While any of them is unset, push is off and the app does not offer it. Generate the key pair
+once: a new pair ends every existing subscription, and members turn push on again in each
+browser. The worker sends to the browsers' push services (Google, Mozilla, Apple), so it needs
+outbound HTTPS. [docs/dev/web-push.md](dev/web-push.md) describes the whole path.
+
 ## Single sign-on
 
 Any provider with an OpenID Connect discovery document works: Keycloak, Authentik, KanIDM,

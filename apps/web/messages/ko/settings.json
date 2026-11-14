@@ -98,6 +98,7 @@
     "description": "알림을 받을 이슈 이벤트와 수신 방법을 선택하세요.",
     "email": "이메일",
     "telegram": "Telegram",
+    "push": "푸시",
     "events": {
       "assigned": "이슈 담당자로 지정됨",
       "mentioned": "이슈 또는 문서에서 멘션됨",

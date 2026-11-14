@@ -172,7 +172,15 @@
     "desktopNotificationsDescription": "Yalnızca bu tarayıcıda. Uygulama açıkken ama önde değilken, tüm projelerden Gelen Kutusu'na gelen her yeni öğe için bir bildirim gösterir.",
     "desktopNotificationsBlocked": "Bu tarayıcı bu sitenin bildirimlerini engelliyor. Tarayıcının site ayarlarından izin verin.",
     "desktopNotificationsUnsupported": "Bu tarayıcı masaüstü bildirimi gösteremez.",
+    "desktopNotificationsReplacedByPush": "Bu tarayıcıda anlık bildirimler açık ve burada masaüstü bildirimlerinin yerini alıyor.",
     "desktopNotificationsOff": "Kapalı",
+    "pushNotifications": "Bu cihazda anlık bildirimler",
+    "pushNotificationsDescription": "Yalnızca bu tarayıcıda. Her projenin bildirim ayarlarında Anlık sütununda seçtiğiniz bildirimleri, uygulama kapalıyken de gösterir.",
+    "pushNotificationsBlocked": "Bu tarayıcı bu sitenin bildirimlerini engelliyor. Tarayıcının site ayarlarından izin verin.",
+    "pushNotificationsUnsupported": "Bu tarayıcı anlık bildirim alamaz.",
+    "pushNotificationsUnsupportedIos": "iPhone veya iPad'de önce uygulamayı Ana Ekran'a ekleyin (iOS 16.4 veya üstü), sonra bunu oradan açın.",
+    "pushNotificationsOff": "Kapalı",
+    "pushNotificationsFailed": "Bu tarayıcıda anlık bildirimler değiştirilemedi.",
     "showChatByDefault": "Sohbeti varsayılan olarak göster",
     "showChatByDefaultDescription": "Proje sayfasıyla birlikte sohbet paneli de açılır. Başlığından veya sohbet simgesinden dilediğiniz zaman kapatabilirsiniz."
   }

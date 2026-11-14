@@ -98,6 +98,7 @@
     "description": "Hangi iş olaylarının nereye bildirileceğini seçin.",
     "email": "E-posta",
     "telegram": "Telegram",
+    "push": "Anlık",
     "events": {
       "assigned": "Bir işe sorumlu olarak atandığımda",
       "mentioned": "Bir işte veya belgede benden bahsedildiğinde",

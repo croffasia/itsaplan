@@ -6,6 +6,8 @@ import { passkeyClient } from '@better-auth/passkey/client';
 import { oauthProviderClient } from '@better-auth/oauth-provider/client';
 import { apiKeyClient } from '@better-auth/api-key/client';
 import { API_URL, markSigningOut } from '@/lib/api/core/client';
+import { waitForPushCleanup } from '@/utils/browserNotifications';
+import { unsubscribeThisBrowser } from '@/utils/webPush';
 
 // better-auth appends its default /api/auth only to a bare origin; an API_URL with a
 // path would be used as-is, so the mount is spelled out.
@@ -95,6 +97,9 @@ export async function signOut(then: 'login' | 'here' = 'login'): Promise<void> {
   for (const listener of signingOutListeners) listener();
   // Lets React take the app down before the session goes.
   await new Promise((resolve) => setTimeout(resolve, 0));
+  // A browser left subscribed would show this account's notifications to whoever uses it
+  // next.
+  await waitForPushCleanup(unsubscribeThisBrowser());
   // Leaves whatever the sign-out answered, as lib/api's endSession does: a failed
   // request must not hold the browser on the signing-out screen.
   await authClient.signOut().catch(() => {});

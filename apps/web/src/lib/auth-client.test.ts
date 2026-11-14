@@ -23,7 +23,14 @@ describe('authBaseURL', () => {
 
 // signOut takes the app down and leaves the page itself, so no caller navigates inside
 // an app whose session is gone.
-const replacedGlobals = ['window', 'document', 'fetch'] as const;
+const replacedGlobals = [
+  'window',
+  'document',
+  'navigator',
+  'localStorage',
+  'Event',
+  'fetch',
+] as const;
 
 let dom: JSDOM;
 let originals: Map<string, PropertyDescriptor | undefined>;
@@ -105,6 +112,69 @@ describe('signOut', () => {
 
     await signOut();
 
+    assert.equal(navigations, 1);
+  });
+
+  it('turns push off in this browser while the session still lets the api forget it', async () => {
+    const paths: string[] = [];
+    let unsubscribed = false;
+    const subscription = {
+      endpoint: 'https://push.example.test/1',
+      unsubscribe: async () => (unsubscribed = true),
+    };
+    const pushManager = { getSubscription: async () => subscription };
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: { serviceWorker: { getRegistration: async () => ({ pushManager }) } },
+    });
+    Object.assign(dom.window, { PushManager: class {}, Notification: class {} });
+    answer = (url) => {
+      paths.push(new URL(url).pathname);
+      return url.endsWith('/sign-out')
+        ? Response.json({ success: true })
+        : new Response(null, { status: 204 });
+    };
+
+    await signOut();
+
+    assert.deepEqual(paths, ['/push/subscriptions', '/api/auth/sign-out']);
+    assert.equal(unsubscribed, true);
+    assert.equal(navigations, 1);
+  });
+
+  it('clears the push flag of this browser, so its desktop notifications come back', async () => {
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: dom.window.localStorage,
+    });
+    Object.defineProperty(globalThis, 'Event', { configurable: true, value: dom.window.Event });
+    dom.window.localStorage.setItem('pushNotifications', 'on');
+
+    await signOut();
+
+    assert.equal(dom.window.localStorage.getItem('pushNotifications'), null);
+  });
+
+  it('drops the push subscription of this browser even when the api cannot be reached', async () => {
+    let unsubscribed = false;
+    const subscription = {
+      endpoint: 'https://push.example.test/1',
+      unsubscribe: async () => (unsubscribed = true),
+    };
+    const pushManager = { getSubscription: async () => subscription };
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: { serviceWorker: { getRegistration: async () => ({ pushManager }) } },
+    });
+    Object.assign(dom.window, { PushManager: class {}, Notification: class {} });
+    answer = (url) => {
+      if (url.endsWith('/push/subscriptions')) throw new TypeError('Failed to fetch');
+      return Response.json({ success: true });
+    };
+
+    await signOut();
+
+    assert.equal(unsubscribed, true);
     assert.equal(navigations, 1);
   });
 });

@@ -98,6 +98,7 @@
     "description": "Pilih peristiwa issue yang ingin Anda terima dan tujuan pengirimannya.",
     "email": "Email",
     "telegram": "Telegram",
+    "push": "Push",
     "events": {
       "assigned": "Ditugaskan ke suatu issue",
       "mentioned": "Disebutkan dalam suatu issue atau dokumen",

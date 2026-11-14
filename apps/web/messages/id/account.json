@@ -172,7 +172,15 @@
     "desktopNotificationsDescription": "Hanya di browser ini. Menampilkan notifikasi untuk setiap item baru di kotak masuk, dari semua proyek, saat aplikasi terbuka tetapi tidak di depan.",
     "desktopNotificationsBlocked": "Browser ini memblokir notifikasi dari situs ini. Izinkan di pengaturan situs pada browser.",
     "desktopNotificationsUnsupported": "Browser ini tidak dapat menampilkan notifikasi desktop.",
+    "desktopNotificationsReplacedByPush": "Notifikasi push aktif di browser ini dan menggantikan notifikasi desktop di sini.",
     "desktopNotificationsOff": "Nonaktif",
+    "pushNotifications": "Notifikasi push di perangkat ini",
+    "pushNotificationsDescription": "Hanya di browser ini. Menampilkan notifikasi yang Anda pilih di kolom Push pada pengaturan notifikasi setiap proyek, juga saat aplikasi ditutup.",
+    "pushNotificationsBlocked": "Browser ini memblokir notifikasi dari situs ini. Izinkan di pengaturan situs pada browser.",
+    "pushNotificationsUnsupported": "Browser ini tidak dapat menerima notifikasi push.",
+    "pushNotificationsUnsupportedIos": "Di iPhone atau iPad, tambahkan aplikasi ke Layar Utama terlebih dahulu (iOS 16.4 atau lebih baru), lalu aktifkan dari sana.",
+    "pushNotificationsOff": "Nonaktif",
+    "pushNotificationsFailed": "Tidak dapat mengubah notifikasi push di browser ini.",
     "showChatByDefault": "Tampilkan obrolan secara bawaan",
     "showChatByDefaultDescription": "Panel obrolan terbuka bersama halaman proyek. Tutup kapan saja dari bilah judul atau ikon obrolan."
   }

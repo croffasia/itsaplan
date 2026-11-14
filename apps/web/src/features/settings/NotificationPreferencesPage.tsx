@@ -13,7 +13,7 @@ import { useTranslations } from 'next-intl';
 
 // The member's own notification preferences (/:team/:projectKey/notifications).
 // A main-nav Configuration destination, open to any member: choose which issue events
-// you get and where (email, Telegram), plus your Telegram chat id. The delivery
+// you get and where (email, Telegram, push), plus your Telegram chat id. The delivery
 // providers are configured separately by the owner of the team that runs the project
 // (the team panel -> Notification providers).
 export default function NotificationPreferencesPage() {

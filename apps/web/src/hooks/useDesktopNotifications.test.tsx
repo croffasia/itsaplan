@@ -9,6 +9,7 @@ import { AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared
 import { SyncProvider } from '@/context/syncContext';
 import documents from '../../messages/en/documents.json';
 import inbox from '../../messages/en/inbox.json';
+import { setPushOnInThisBrowser } from '@/utils/browserNotifications';
 import { setDesktopNotifications, useDesktopNotifications } from './useDesktopNotifications';
 
 const replacedGlobals = [
@@ -299,6 +300,24 @@ describe('useDesktopNotifications', () => {
     await render();
     await inboxMoves([item(2), item(1)]);
     assert.equal(shown.length, 0);
+  });
+
+  it('stands down while push is on in this browser, and comes back when push goes off', async () => {
+    dom.window.localStorage.setItem('pushNotifications', 'on');
+    await render();
+    await inboxMoves([item(2), item(1)]);
+    assert.ok(!requests.includes(LATEST_PATH));
+    assert.ok(!requests.some((p) => p.startsWith('/sync/rev')));
+    assert.equal(shown.length, 0);
+
+    await act(() => setPushOnInThisBrowser(false));
+    await settle();
+    assert.ok(requests.includes(LATEST_PATH));
+    await inboxMoves([item(3), item(2), item(1)]);
+    assert.deepEqual(
+      shown.map((n) => n.options.tag),
+      ['inbox-3'],
+    );
   });
 
   it('reads nothing while it is turned off', async () => {

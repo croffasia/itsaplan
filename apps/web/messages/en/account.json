@@ -172,7 +172,15 @@
     "desktopNotificationsDescription": "This browser only. Shows a notification for each new Inbox item, from every project, while the app is open but not in front.",
     "desktopNotificationsBlocked": "This browser blocks notifications from this site. Allow them in the browser's site settings.",
     "desktopNotificationsUnsupported": "This browser cannot show desktop notifications.",
+    "desktopNotificationsReplacedByPush": "Push notifications are on in this browser and replace desktop notifications here.",
     "desktopNotificationsOff": "Off",
+    "pushNotifications": "Push notifications on this device",
+    "pushNotificationsDescription": "This browser only. Shows the notifications you pick under Push in a project's notification settings, also while the app is closed.",
+    "pushNotificationsBlocked": "This browser blocks notifications from this site. Allow them in the browser's site settings.",
+    "pushNotificationsUnsupported": "This browser cannot receive push notifications.",
+    "pushNotificationsUnsupportedIos": "On an iPhone or iPad, add the app to the Home Screen first (iOS 16.4 or later) and turn this on there.",
+    "pushNotificationsOff": "Off",
+    "pushNotificationsFailed": "Could not change push notifications in this browser.",
     "showChatByDefault": "Show the chat by default",
     "showChatByDefaultDescription": "The chat panel opens with a project page. Close it any time from its header or the chat icon."
   }

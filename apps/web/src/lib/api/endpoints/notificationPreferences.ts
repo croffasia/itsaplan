@@ -2,11 +2,13 @@ import { request } from '@/lib/api/core/client';
 import type { NotificationEventToggles } from '@/lib/api/endpoints/notificationSettings';
 
 // The session member's own notification preferences for a project: which issue
-// events they want by email and/or Telegram. Email is sent to the member's account
-// address, Telegram to the account they linked in their profile.
+// events they want by email, Telegram and/or push. Email is sent to the member's account
+// address, Telegram to the account they linked in their profile, push to every browser
+// they turned it on in.
 export interface NotificationPreferences {
   emailEvents: NotificationEventToggles;
   telegramEvents: NotificationEventToggles;
+  pushEvents: NotificationEventToggles;
 }
 
 // The session member's own notification preferences for a project (any member).

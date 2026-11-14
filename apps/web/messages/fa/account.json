@@ -172,7 +172,15 @@
     "desktopNotificationsDescription": "فقط در همین مرورگر. وقتی برنامه باز است ولی جلو نیست، برای هر مورد تازهٔ صندوق ورودی از همهٔ پروژه‌ها یک اعلان نشان می‌دهد.",
     "desktopNotificationsBlocked": "این مرورگر اعلان‌های این سایت را مسدود کرده است. آن‌ها را در تنظیمات سایت در مرورگر مجاز کنید.",
     "desktopNotificationsUnsupported": "این مرورگر نمی‌تواند اعلان دسکتاپ نشان دهد.",
+    "desktopNotificationsReplacedByPush": "اعلان‌های فوری در این مرورگر روشن است و این‌جا جای اعلان‌های دسکتاپ را می‌گیرد.",
     "desktopNotificationsOff": "خاموش",
+    "pushNotifications": "اعلان‌های فوری در این دستگاه",
+    "pushNotificationsDescription": "فقط در همین مرورگر. اعلان‌هایی را که در ستون «فوری» تنظیمات اعلان هر پروژه انتخاب می‌کنید نشان می‌دهد، حتی وقتی برنامه بسته است.",
+    "pushNotificationsBlocked": "این مرورگر اعلان‌های این سایت را مسدود کرده است. آن‌ها را در تنظیمات سایت در مرورگر مجاز کنید.",
+    "pushNotificationsUnsupported": "این مرورگر نمی‌تواند اعلان فوری دریافت کند.",
+    "pushNotificationsUnsupportedIos": "در iPhone یا iPad، اول برنامه را به صفحهٔ اصلی اضافه کنید (iOS 16.4 یا جدیدتر) و از همان‌جا این را روشن کنید.",
+    "pushNotificationsOff": "خاموش",
+    "pushNotificationsFailed": "تغییر اعلان‌های فوری در این مرورگر ممکن نشد.",
     "showChatByDefault": "نمایش گفتگو به‌صورت پیش‌فرض",
     "showChatByDefaultDescription": "پنل گفتگو همراه صفحه پروژه باز می‌شود. هر زمان می‌توانید آن را از سرصفحه یا آیکون گفتگو ببندید."
   }

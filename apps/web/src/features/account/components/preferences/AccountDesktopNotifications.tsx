@@ -15,10 +15,11 @@ export default function AccountDesktopNotifications() {
   let description = t('desktopNotificationsDescription');
   if (state === 'blocked') description = t('desktopNotificationsBlocked');
   if (state === 'unsupported') description = t('desktopNotificationsUnsupported');
+  if (state === 'push') description = t('desktopNotificationsReplacedByPush');
 
   return (
     <AccountPreferenceRow label={t('desktopNotifications')} description={description}>
-      {state === 'blocked' || state === 'unsupported' ? (
+      {state === 'blocked' || state === 'unsupported' || state === 'push' ? (
         <OnOffStatus on={false}>{t('desktopNotificationsOff')}</OnOffStatus>
       ) : (
         <Switch

@@ -469,6 +469,7 @@ export async function getAssignTriggerAgent(
   projectId: number,
   userId: string,
   actorUserId: string | null,
+  triggerSelfDelegation = false,
 ): Promise<{ id: number; delegationDelaySec: number } | null> {
   const rows = await db
     .select({
@@ -480,7 +481,10 @@ export async function getAssignTriggerAgent(
     .where(and(eq(aiAgent.userId, userId), eq(aiAgent.triggerOnAssign, true), inProject(projectId)))
     .limit(1);
   const row = rows[0];
-  if (!row || !isTriggerableBy(row, actorUserId)) return null;
+  if (!row) return null;
+  if (userId === actorUserId) {
+    if (!triggerSelfDelegation || row.kind !== 'external') return null;
+  } else if (!isTriggerableBy(row, actorUserId)) return null;
   return { id: row.id, delegationDelaySec: row.delegationDelaySec };
 }
 

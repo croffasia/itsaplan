@@ -41,6 +41,42 @@ let focused: boolean;
 let hidden: boolean;
 let permission: NotificationPermission;
 let intervals: Map<number, () => void>;
+// Whether the page under test is an installed app window (display-mode: standalone).
+let appWindow: boolean;
+// The display-mode query's change events.
+let displayMode: EventTarget;
+// The Web Locks held in this browser: the page's own, and in some tests one that an app
+// window in another browsing context holds.
+let heldLocks: { name: string; mode: LockMode }[];
+
+const APP_LOCK = 'desktop-notifications-app';
+
+// Set by a test to hold a granted lock's callback back, as when the grant and the page's
+// task that runs the callback are apart.
+let beforeCallback: Promise<void> | null;
+// How many requests the browser has granted.
+let grants: number;
+
+// Like a browser: the lock is granted in a later task, never inside request(), and a
+// request aborted before that is rejected and never granted.
+const fakeLocks = {
+  async request(name: string, options: LockOptions, callback: () => Promise<void>) {
+    await new Promise((r) => setTimeout(r, 0));
+    if (options.signal?.aborted) throw new dom.window.DOMException('Aborted', 'AbortError');
+    const lock = { name, mode: options.mode ?? 'exclusive' };
+    heldLocks.push(lock);
+    grants += 1;
+    try {
+      await beforeCallback;
+      await callback();
+    } finally {
+      heldLocks.splice(heldLocks.indexOf(lock), 1);
+    }
+  },
+  async query() {
+    return { held: [...heldLocks], pending: [] };
+  },
+};
 
 class FakeNotification {
   static get permission() {
@@ -154,6 +190,20 @@ beforeEach(() => {
   hidden = false;
   permission = 'granted';
   intervals = new Map();
+  appWindow = false;
+  displayMode = new dom.window.EventTarget();
+  heldLocks = [];
+  beforeCallback = null;
+  grants = 0;
+  dom.window.matchMedia = (media) =>
+    Object.assign(displayMode, {
+      media,
+      matches: media === '(display-mode: standalone)' && appWindow,
+      onchange: null,
+      addListener() {},
+      removeListener() {},
+    });
+  Object.defineProperty(dom.window.navigator, 'locks', { configurable: true, value: fakeLocks });
   const win = dom.window as unknown as Window & Record<string, unknown>;
   win.Notification = FakeNotification;
   win.focus = () => {};
@@ -293,6 +343,115 @@ describe('useDesktopNotifications', () => {
       ['inbox-3'],
     );
   });
+
+  it('shows nothing in an ordinary tab while an app window holds the lock', async () => {
+    hidden = true;
+    heldLocks.push({ name: APP_LOCK, mode: 'shared' });
+    await render();
+    await inboxMoves([item(2), item(1)]);
+    assert.equal(shown.length, 0);
+  });
+
+  it('shows in an ordinary tab again once the app window lets the lock go', async () => {
+    hidden = true;
+    const appLock = { name: APP_LOCK, mode: 'shared' as const };
+    heldLocks.push(appLock);
+    await render();
+    await inboxMoves([item(2), item(1)]);
+    // The app window closes, and the browser releases its lock.
+    heldLocks.splice(heldLocks.indexOf(appLock), 1);
+    await inboxMoves([item(3), item(2), item(1)]);
+    assert.deepEqual(
+      shown.map((n) => n.options.tag),
+      ['inbox-3'],
+    );
+  });
+
+  it('shows in an app window, which holds the lock', async () => {
+    hidden = true;
+    appWindow = true;
+    await render();
+    assert.deepEqual(heldLocks, [{ name: APP_LOCK, mode: 'shared' }]);
+    await inboxMoves([item(2), item(1)]);
+    assert.deepEqual(
+      shown.map((n) => n.options.tag),
+      ['inbox-2'],
+    );
+  });
+
+  it('holds the lock in an app window only while on, until turned off or unmounted', async () => {
+    appWindow = true;
+    dom.window.localStorage.removeItem('desktopNotifications');
+    await render();
+    assert.equal(heldLocks.length, 0);
+    await act(() => setDesktopNotifications(true));
+    await settle();
+    assert.equal(heldLocks.length, 1);
+    await act(() => setDesktopNotifications(false));
+    await settle();
+    assert.equal(heldLocks.length, 0);
+    await act(() => setDesktopNotifications(true));
+    await settle();
+    assert.equal(heldLocks.length, 1);
+    act(() => root.unmount());
+    await settle();
+    assert.equal(heldLocks.length, 0);
+  });
+
+  it('takes no lock when turned off before the browser grants it', async () => {
+    appWindow = true;
+    dom.window.localStorage.removeItem('desktopNotifications');
+    await render();
+    // On and off again in one go: the request is aborted while it waits for the grant.
+    await act(async () => {
+      await setDesktopNotifications(true);
+      await setDesktopNotifications(false);
+    });
+    await settle();
+    assert.equal(grants, 0);
+    assert.equal(heldLocks.length, 0);
+  });
+
+  it('lets go of a lock whose callback runs after the notifications were turned off', async () => {
+    appWindow = true;
+    let runCallback!: () => void;
+    beforeCallback = new Promise((r) => (runCallback = r));
+    await render();
+    // Granted, and the callback has not run yet.
+    assert.equal(heldLocks.length, 1);
+    await act(() => setDesktopNotifications(false));
+    runCallback();
+    await settle();
+    assert.equal(heldLocks.length, 0);
+  });
+
+  it('takes the lock when the browser moves the tab into the app window, and lets go when moved back', async () => {
+    await render();
+    assert.equal(heldLocks.length, 0);
+    appWindow = true;
+    act(() => void displayMode.dispatchEvent(new dom.window.Event('change')));
+    await settle();
+    assert.deepEqual(heldLocks, [{ name: APP_LOCK, mode: 'shared' }]);
+    appWindow = false;
+    act(() => void displayMode.dispatchEvent(new dom.window.Event('change')));
+    await settle();
+    assert.equal(heldLocks.length, 0);
+  });
+
+  for (const inAppWindow of [false, true]) {
+    const where = inAppWindow ? 'an app window' : 'an ordinary tab';
+    it(`shows in ${where} as before where the browser has no Web Locks`, async () => {
+      hidden = true;
+      appWindow = inAppWindow;
+      delete (dom.window.navigator as unknown as Record<string, unknown>).locks;
+      await render();
+      await inboxMoves([item(2), item(1)]);
+      assert.deepEqual(
+        shown.map((n) => n.options.tag),
+        ['inbox-2'],
+      );
+    });
+  }
 
   it('shows nothing while the app is in front', async () => {
     focused = true;

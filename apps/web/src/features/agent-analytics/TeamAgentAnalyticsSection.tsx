@@ -8,18 +8,20 @@ import { useTeamAgentAnalyticsQuery } from '@/services/agentAnalytics.service';
 import { useWorkspacesQuery } from '@/services/workspaces.service';
 import { workspacePath } from '@/utils/paths';
 import SectionPageView from '@/components/common/page/SectionPageView';
+import FilterChips from '@/components/common/filters/FilterChips';
+import FilterMenu, { type FilterSection } from '@/components/common/filters/FilterMenu';
 import { Skeleton } from '@/components/ui/skeleton';
 import AgentAnalyticsPanels from './components/AgentAnalyticsPanels';
-import ProjectSelect from './components/ProjectSelect';
 import RetentionHint from './components/RetentionHint';
-import WindowSelect from './components/WindowSelect';
+import { DEFAULT_DAYS, usePeriodFilter } from './hooks/usePeriodFilter';
 
 // What the team's agents spent. Its owner and managers read every project of the team;
 // anyone else the projects where their role grants agent_usage, which the api
-// narrows the figures to. Any one of those projects narrows the page further, picked
-// in the header or from the breakdown by project.
+// narrows the figures to. Some of those projects narrow the page further, ticked in the
+// filter or picked from the breakdown by project.
 export default function TeamAgentAnalyticsSection({ teamId }: { teamId: number }) {
   const t = useTranslations('teams.sections.analytics');
+  const tAnalytics = useTranslations('agentAnalytics');
   const tCommon = useTranslations('common');
   const team = useTeam(teamId);
   const permissions = useTeamQuery(teamId).data?.permissions;
@@ -28,11 +30,25 @@ export default function TeamAgentAnalyticsSection({ teamId }: { teamId: number }
   const workspace = useWorkspacesQuery().data?.find((entry) => entry.id === team?.workspaceId);
   const pricesHref = workspace?.role ? workspacePath(workspace.id, 'model-prices') : null;
   const canRead = runsTeam || permissions?.agent_usage.read === true;
-  const [days, setDays] = useState(30);
-  const [projectId, setProjectId] = useState<number | null>(null);
-  const { data } = useTeamAgentAnalyticsQuery(canRead ? teamId : null, days, projectId);
+  const [days, setDays] = useState(DEFAULT_DAYS);
+  const [projectIds, setProjectIds] = useState<number[]>([]);
+  const { data } = useTeamAgentAnalyticsQuery(canRead ? teamId : null, days, projectIds);
   // One project to read is no choice to make.
   const projects = data && data.readableProjects.length > 1 ? data.readableProjects : null;
+  const period = usePeriodFilter(days);
+  const filters: FilterSection[] = projects
+    ? [
+        period,
+        {
+          key: 'projects',
+          label: tAnalytics('projects'),
+          options: projects.map((p) => ({ value: String(p.projectId), label: p.name })),
+          selected: projectIds.map(String),
+        },
+      ]
+    : [period];
+  const onFilterChange = (key: string, selected: string[]) =>
+    key === period.key ? setDays(Number(selected[0])) : setProjectIds(selected.map(Number));
 
   let content: ReactNode;
   if (!team || (!runsTeam && !permissions)) {
@@ -49,12 +65,15 @@ export default function TeamAgentAnalyticsSection({ teamId }: { teamId: number }
   } else {
     content = (
       <div className="space-y-6">
+        <FilterChips sections={filters} onChange={onFilterChange} />
         <AgentAnalyticsPanels
           data={data}
-          onSelectProject={projects && projectId == null ? setProjectId : undefined}
+          onSelectProject={
+            projects && projectIds.length === 0 ? (id) => setProjectIds([id]) : undefined
+          }
           pricesHref={pricesHref}
         />
-        <AgentAnalyticsExtras scope={{ teamId, projectId }} days={days} />
+        <AgentAnalyticsExtras scope={{ teamId, projectIds }} days={days} />
       </div>
     );
   }
@@ -68,16 +87,7 @@ export default function TeamAgentAnalyticsSection({ teamId }: { teamId: number }
         </>
       }
       wide
-      actions={
-        canRead ? (
-          <>
-            {projects && (
-              <ProjectSelect projects={projects} value={projectId} onChange={setProjectId} />
-            )}
-            <WindowSelect value={days} onChange={setDays} />
-          </>
-        ) : undefined
-      }
+      actions={canRead ? <FilterMenu sections={filters} onChange={onFilterChange} /> : undefined}
     >
       {content}
     </SectionPageView>

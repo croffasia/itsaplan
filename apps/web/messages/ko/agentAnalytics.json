@@ -1,11 +1,12 @@
 {
   "window": "{days, plural, =1 {최근 24시간} other {최근 #일}}",
+  "period": "기간",
   "retentionNote": "내부 AI 에이전트만 포함됩니다. 인스턴스의 실행 추적 보관 기간보다 오래된 실행은 집계되지 않습니다.",
   "noComparison": "비교할 데이터가 없습니다",
   "vsPrevious": "이전 기간 대비 {value}",
   "deletedAgent": "삭제된 AI 에이전트",
   "deletedProject": "삭제된 프로젝트",
-  "allProjects": "모든 프로젝트",
+  "projects": "프로젝트",
   "totalTokens": "총 토큰",
   "totalCost": "총 비용",
   "stats": {
@@ -55,7 +56,7 @@
   },
   "preview": {
     "title": "Cloud 및 Pro에서 더 많은 기능 제공",
-    "description": "사용자 및 트리거별 비용, 실행 시간과 도구 호출을 확인할 수 있습니다. Cloud 및 셀프 호스팅 Pro에서 사용할 수 있습니다.",
+    "description": "사용자, 트리거, 일정, 워크플로별 비용과 실행 시간, 도구 호출을 확인할 수 있습니다. Cloud 및 셀프 호스팅 Pro에서 사용할 수 있습니다.",
     "hide": "숨기기",
     "show": "표시",
     "byPerson": {
@@ -64,11 +65,15 @@
     },
     "byTrigger": {
       "title": "트리거별",
-      "description": "채팅, 멘션, 일정 또는 이슈 이벤트별 사용량입니다."
+      "description": "실행을 시작한 트리거입니다."
     },
     "bySchedule": {
       "title": "일정별",
       "description": "일정별 사용 비용입니다."
+    },
+    "byWorkflow": {
+      "title": "워크플로별",
+      "description": "워크플로별 사용량입니다."
     },
     "tools": {
       "title": "도구",

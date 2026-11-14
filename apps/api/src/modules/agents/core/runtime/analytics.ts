@@ -96,12 +96,20 @@ export async function ownPrices(scope: AnalyticsScope): Promise<OwnPrices> {
   return new Map(rows.map((row) => [priceKey(row.provider, row.model), row]));
 }
 
-// The scope narrowed to one project, when one is asked for. A project it does not read
-// leaves it reading nothing.
-export function onlyProject(scope: AnalyticsScope, projectId?: number): AnalyticsScope {
-  if (projectId == null) return scope;
-  const readable = !scope.projectIds || scope.projectIds.includes(projectId);
-  return { ...scope, projectIds: readable ? [projectId] : [] };
+// The scope narrowed to the projects asked for, when some are. The projects it does not
+// read are dropped, so asking only for those leaves it reading nothing.
+export function onlyProjects(scope: AnalyticsScope, projectIds: number[]): AnalyticsScope {
+  if (projectIds.length === 0) return scope;
+  const readable = scope.projectIds;
+  return {
+    ...scope,
+    projectIds: readable ? projectIds.filter((id) => readable.includes(id)) : projectIds,
+  };
+}
+
+// The `projectIds` of `analyticsQuery`, whose pattern lets only ids through.
+export function queryProjectIds(csv?: string): number[] {
+  return csv ? csv.split(',').map(Number) : [];
 }
 
 // The projects the scope reads, by name: what it may be narrowed to.

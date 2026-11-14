@@ -8,7 +8,8 @@ import type { FilterSection } from './FilterMenu';
 const SEARCH_FROM = 9;
 
 // The values of one filter section, each ticked on or off. The menu stays open, so
-// several can be ticked in a row.
+// several can be ticked in a row. A section with a default value is a choice of one: a
+// value replaces the one ticked, and the menu closes.
 export default function FilterOptions({
   section,
   onChange,
@@ -18,6 +19,18 @@ export default function FilterOptions({
 }) {
   const t = useTranslations('common');
   const [query, setQuery] = useState('');
+
+  if (section.defaultValue !== undefined) {
+    return section.options.map((option) => (
+      <DropdownMenuCheckboxItem
+        key={option.value}
+        checked={section.selected[0] === option.value}
+        onCheckedChange={() => onChange([option.value])}
+      >
+        {option.label}
+      </DropdownMenuCheckboxItem>
+    ));
+  }
 
   const q = query.trim().toLowerCase();
   const options = q

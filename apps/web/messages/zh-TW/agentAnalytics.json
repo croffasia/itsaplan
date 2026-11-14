@@ -1,11 +1,12 @@
 {
   "window": "{days, plural, =1 {最近 24 小時} other {最近 # 天}}",
+  "period": "期間",
   "retentionNote": "僅統計內部代理。早於執行個體追蹤保留期的執行不計入。",
   "noComparison": "沒有可對比的資料",
   "vsPrevious": "之前為 {value}",
   "deletedAgent": "已刪除的代理",
   "deletedProject": "已刪除的專案",
-  "allProjects": "所有專案",
+  "projects": "專案",
   "totalTokens": "Token 總數",
   "totalCost": "總花費",
   "stats": {
@@ -55,7 +56,7 @@
   },
   "preview": {
     "title": "Cloud 和 Pro 中的更多內容",
-    "description": "按人員和觸發方式的花費、執行時長和工具呼叫。可在 Cloud 和自託管 Pro 版中使用。",
+    "description": "按人員、觸發方式、排程和工作流程的花費、執行時長和工具呼叫。可在 Cloud 和自託管 Pro 版中使用。",
     "hide": "隱藏",
     "show": "顯示",
     "byPerson": {
@@ -64,11 +65,15 @@
     },
     "byTrigger": {
       "title": "按觸發方式",
-      "description": "聊天、提及、排程或工作項目事件。"
+      "description": "執行由什麼觸發。"
     },
     "bySchedule": {
       "title": "按排程",
       "description": "每個排程的花費。"
+    },
+    "byWorkflow": {
+      "title": "按工作流程",
+      "description": "每個工作流程的用量。"
     },
     "tools": {
       "title": "工具",

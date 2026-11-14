@@ -1,11 +1,12 @@
 {
   "window": "{days, plural, =1 {Últimas 24 horas} other {Últimos # días}}",
+  "period": "Periodo",
   "retentionNote": "Solo agentes internos. No se cuentan las ejecuciones más antiguas que la retención de trazas de la instancia.",
   "noComparison": "Nada con lo que comparar",
   "vsPrevious": "frente a {value} antes",
   "deletedAgent": "Agente eliminado",
   "deletedProject": "Proyecto eliminado",
-  "allProjects": "Todos los proyectos",
+  "projects": "Proyectos",
   "totalTokens": "Total de tokens",
   "totalCost": "Coste total",
   "stats": {
@@ -55,7 +56,7 @@
   },
   "preview": {
     "title": "Más en Cloud y Pro",
-    "description": "Gasto por persona y disparador, duración de ejecuciones y llamadas a herramientas. Disponible en Cloud y en Pro autoalojado.",
+    "description": "Gasto por persona, disparador, programación y flujo, duración de ejecuciones y llamadas a herramientas. Disponible en Cloud y en Pro autoalojado.",
     "hide": "Ocultar",
     "show": "Mostrar",
     "byPerson": {
@@ -64,11 +65,15 @@
     },
     "byTrigger": {
       "title": "Por disparador",
-      "description": "Chat, mención, programación o evento de tarea."
+      "description": "Qué inició las ejecuciones."
     },
     "bySchedule": {
       "title": "Por programación",
       "description": "Lo que gastó cada programación."
+    },
+    "byWorkflow": {
+      "title": "Por flujo",
+      "description": "Lo que ha usado cada flujo."
     },
     "tools": {
       "title": "Herramientas",

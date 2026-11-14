@@ -8,7 +8,7 @@ import { usePersistedOpen } from '@/hooks/usePersistedOpen';
 import { cn } from '@/lib/utils';
 import Panel from './Panel';
 
-const PANELS = ['byPerson', 'byTrigger', 'bySchedule', 'tools', 'latency'] as const;
+const PANELS = ['byPerson', 'byTrigger', 'bySchedule', 'byWorkflow', 'tools', 'latency'] as const;
 
 // Placeholder bar widths: what a panel's list looks like, holding no figure. They stay
 // still, so they do not read as a panel that is loading.

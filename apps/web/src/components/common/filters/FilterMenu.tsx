@@ -26,9 +26,21 @@ export interface FilterSection {
   label: string;
   options: FilterOption[];
   selected: string[];
+  // Set on a section that always holds one value, such as a period: its values are a
+  // choice of one, and it is in use only while it holds another value.
+  defaultValue?: string;
 }
 
-// The filter of a list. A section narrows it to the values ticked in it and
+export const sectionInUse = (section: FilterSection) =>
+  section.defaultValue === undefined
+    ? section.selected.length > 0
+    : section.selected[0] !== section.defaultValue;
+
+// What a section holds once its filter is removed.
+export const clearedSection = (section: FilterSection) =>
+  section.defaultValue === undefined ? [] : [section.defaultValue];
+
+// The filter of a list or a dashboard. A section narrows it to the values ticked in it and
 // leaves it whole while none is; sections narrow it together.
 export default function FilterMenu({
   sections,
@@ -39,7 +51,7 @@ export default function FilterMenu({
 }) {
   const t = useTranslations('common');
   const shown = sections.filter((section) => section.options.length > 0);
-  const active = shown.filter((section) => section.selected.length > 0).length;
+  const active = shown.filter(sectionInUse).length;
   if (shown.length === 0) return null;
 
   return (
@@ -75,9 +87,11 @@ export default function FilterMenu({
               <DropdownMenuSub key={section.key}>
                 <DropdownMenuSubTrigger>
                   <span className="flex-1 truncate">{section.label}</span>
-                  {section.selected.length > 0 && (
+                  {sectionInUse(section) && (
                     <span className="text-xs text-muted-foreground tabular-nums">
-                      {section.selected.length}
+                      {section.defaultValue === undefined
+                        ? section.selected.length
+                        : section.options.find((o) => o.value === section.selected[0])?.label}
                     </span>
                   )}
                 </DropdownMenuSubTrigger>

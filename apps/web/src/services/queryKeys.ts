@@ -157,8 +157,8 @@ export const qk = {
     ['noteBoards', projectKey, 'board', boardId] as const,
   noteBoardAccessCandidates: (projectKey: string) =>
     ['noteBoards', projectKey, 'accessCandidates'] as const,
-  agentAnalytics: (teamId: number, days: number, projectId: number | null) =>
-    ['agentAnalytics', teamId, days, projectId] as const,
+  agentAnalytics: (teamId: number, days: number, projectIds: number[]) =>
+    ['agentAnalytics', teamId, days, projectIds] as const,
   workspaceAgentAnalytics: (workspaceId: number, days: number) =>
     ['workspaceAgentAnalytics', workspaceId, days] as const,
   // The model prices of a workspace: the models it uses, and pages of the built-in table.

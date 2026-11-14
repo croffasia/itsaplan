@@ -23,6 +23,7 @@ import {
   rotateWebhookSecret,
   deleteWebhook,
   listWebhookDeliveries,
+  webhookEventTypes,
 } from './service';
 
 export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['Webhooks'] } })
@@ -57,6 +58,18 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
       },
     },
   )
+
+  .get('/projects/:projectKey/webhooks/event-types', () => webhookEventTypes(), {
+    permission: ['webhooks', 'read'],
+    response: { 200: t.Array(t.String()), ...accessErrors },
+    detail: {
+      summary: 'List webhook events',
+      description:
+        "The events a project's webhook may subscribe to: the core's, then those the " +
+        'instance adds.',
+      ...mcpTool('list_webhook_event_types'),
+    },
+  })
 
   .post(
     '/projects/:projectKey/webhooks',

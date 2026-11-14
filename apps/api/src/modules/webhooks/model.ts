@@ -1,13 +1,13 @@
 import { t } from 'elysia';
-import { WEBHOOK_EVENT_TYPES } from './service';
 
 export const webhookParams = t.Object({ webhookId: t.Numeric() });
 
-const eventType = t.UnionEnum([...WEBHOOK_EVENT_TYPES]);
-
 export const createWebhookBody = t.Object({
   url: t.String({ minLength: 1 }),
-  events: t.Array(eventType, { minItems: 1 }),
+  events: t.Array(t.String({ minLength: 1, maxLength: 100 }), {
+    minItems: 1,
+    description: 'The events to send, from list_webhook_event_types.',
+  }),
   isActive: t.Optional(t.Boolean()),
 });
 
@@ -27,7 +27,7 @@ export const WebhookResponse = t.Object({
       description: 'Null in the list for a caller who may neither create nor edit webhooks.',
     }),
   ),
-  events: t.Array(eventType),
+  events: t.Array(t.String()),
   isActive: t.Boolean(),
   createdAt: t.String(),
 });

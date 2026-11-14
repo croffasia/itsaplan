@@ -168,6 +168,10 @@
     },
     "autoWatch": "Watch issues automatically",
     "autoWatchDescription": "The ones you create, get assigned, comment on, or are mentioned in.",
+    "desktopNotifications": "Desktop notifications",
+    "desktopNotificationsDescription": "This browser only. Shows a notification for each new Inbox item, from every project, while the app is open but not in front.",
+    "desktopNotificationsBlocked": "This browser blocks notifications from this site. Allow them in the browser's site settings.",
+    "desktopNotificationsUnsupported": "This browser cannot show desktop notifications.",
     "showChatByDefault": "Show the chat by default",
     "showChatByDefaultDescription": "The chat panel opens with a project page. Close it any time from its header or the chat icon."
   }

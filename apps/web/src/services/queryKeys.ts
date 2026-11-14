@@ -329,6 +329,8 @@ export const qk = {
   notificationsUnread: (projectKey: string) => ['notificationsUnread', projectKey] as const,
   // The unread count across every project (the app icon badge).
   notificationsUnreadTotal: ['notificationsUnreadTotal'] as const,
+  // The newest unread notifications across every project (desktop notifications).
+  notificationsUnreadLatest: ['notificationsUnreadLatest'] as const,
   // The signed-in user's WebAuthn passkeys (account security page).
   passkeys: ['passkeys'] as const,
   // The OAuth applications the signed-in user authorized (account security page).

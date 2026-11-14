@@ -83,6 +83,10 @@ export const getUnreadCount = (projectId?: number) =>
     projectId == null ? '/notifications/unread' : `/notifications/unread?projectId=${projectId}`,
   );
 
+// The newest unread notifications of every project, for desktop notifications.
+export const listUnreadNotifications = (limit: number) =>
+  request<NotificationPage>(`/notifications?includeRead=false&limit=${limit}`);
+
 export const setNotificationRead = (id: number, read: boolean) =>
   request<void>(`/notifications/${id}/read`, { method: 'POST', body: JSON.stringify({ read }) });
 

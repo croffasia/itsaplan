@@ -168,6 +168,10 @@
     },
     "autoWatch": "自動關注工作項目",
     "autoWatchDescription": "自動關注你建立、獲指派、留言或被提及的工作項目。",
+    "desktopNotifications": "桌面通知",
+    "desktopNotificationsDescription": "僅限此瀏覽器。應用程式已開啟但不在前景時，所有專案的收件匣每出現一筆新項目就顯示一則通知。",
+    "desktopNotificationsBlocked": "此瀏覽器封鎖了本網站的通知。請在瀏覽器的網站設定中允許。",
+    "desktopNotificationsUnsupported": "此瀏覽器無法顯示桌面通知。",
     "showChatByDefault": "預設顯示聊天",
     "showChatByDefaultDescription": "開啟專案頁面時同時開啟聊天面板。可隨時透過面板標題欄或聊天圖示關閉。"
   }

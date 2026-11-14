@@ -168,6 +168,10 @@
     },
     "autoWatch": "Acompanhar issues automaticamente",
     "autoWatchDescription": "As que você cria, é atribuído, comenta ou é mencionado.",
+    "desktopNotifications": "Notificações na área de trabalho",
+    "desktopNotificationsDescription": "Somente neste navegador. Mostra uma notificação para cada item novo da caixa de entrada, de todos os projetos, enquanto o app está aberto mas não em primeiro plano.",
+    "desktopNotificationsBlocked": "Este navegador bloqueia as notificações deste site. Permita-as nas configurações do site no navegador.",
+    "desktopNotificationsUnsupported": "Este navegador não consegue mostrar notificações na área de trabalho.",
     "showChatByDefault": "Mostrar o chat por padrão",
     "showChatByDefaultDescription": "O painel de chat abre com uma página de projeto. Feche-o a qualquer momento pelo cabeçalho ou pelo ícone de chat."
   }

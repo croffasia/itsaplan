@@ -168,6 +168,10 @@
     },
     "autoWatch": "Ikuti issue secara otomatis",
     "autoWatchDescription": "Issue yang Anda buat, ditugaskan kepada Anda, Anda komentari, atau yang menyebut Anda.",
+    "desktopNotifications": "Notifikasi desktop",
+    "desktopNotificationsDescription": "Hanya di browser ini. Menampilkan notifikasi untuk setiap item baru di kotak masuk, dari semua proyek, saat aplikasi terbuka tetapi tidak di depan.",
+    "desktopNotificationsBlocked": "Browser ini memblokir notifikasi dari situs ini. Izinkan di pengaturan situs pada browser.",
+    "desktopNotificationsUnsupported": "Browser ini tidak dapat menampilkan notifikasi desktop.",
     "showChatByDefault": "Tampilkan obrolan secara bawaan",
     "showChatByDefaultDescription": "Panel obrolan terbuka bersama halaman proyek. Tutup kapan saja dari bilah judul atau ikon obrolan."
   }

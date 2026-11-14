@@ -34,7 +34,7 @@ and never do arithmetic on it, so gaps in the numbers are harmless.
 | `issue:<issueId>`            | the issue screen              | the issue, its comments, checklists, attachments or field values change |
 | `initiative:<initiativeId>`  | the initiative screen         | the initiative or any issue inside it changes                     |
 | `inbox:<projectId>:<userId>` | the inbox                     | that user gets a notification, reads one, or deletes one          |
-| `inbox:all`                  | the app icon badge            | any `inbox:<projectId>:<userId>` of a project the user can read moves, or such a project is gained or lost |
+| `inbox:all`                  | the app icon badge, desktop notifications | any `inbox:<projectId>:<userId>` of a project the user can read moves, or such a project is gained or lost |
 
 Comments deliberately do not move the board: the board does not show them, so refetching it
 would be wasted work.

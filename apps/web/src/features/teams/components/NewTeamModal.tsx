@@ -10,7 +10,12 @@ import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { TEAM_SLUG_PATTERN, suggestTeamSlug } from '../utils/teamSlug';
+import {
+  TEAM_SLUG_PATTERN,
+  nameFromTeamSlug,
+  normalizeTeamSlugInput,
+  suggestTeamSlug,
+} from '../utils/teamSlug';
 
 // Creates a team with the current user as its owner. Name and URL slug only: everything
 // else a team carries (its members, its projects) is added afterwards. `onCreated` is where
@@ -28,7 +33,8 @@ export default function NewTeamModal({
   const createTeam = useCreateTeam();
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
-  // The slug follows the name until the user edits it; clearing it resumes that.
+  // Filling either field fills the other until that other field is edited.
+  const [nameEdited, setNameEdited] = useState(false);
   const [slugEdited, setSlugEdited] = useState(false);
 
   const slugValid = TEAM_SLUG_PATTERN.test(slug);
@@ -37,13 +43,15 @@ export default function NewTeamModal({
 
   function changeName(value: string) {
     setName(value);
+    setNameEdited(value.trim() !== '');
     if (!slugEdited) setSlug(suggestTeamSlug(value));
   }
 
   function changeSlug(value: string) {
-    const next = value.toLowerCase().trim();
+    const next = normalizeTeamSlugInput(value);
     setSlug(next);
     setSlugEdited(next !== '');
+    if (!nameEdited) setName(nameFromTeamSlug(next));
   }
 
   function submit() {

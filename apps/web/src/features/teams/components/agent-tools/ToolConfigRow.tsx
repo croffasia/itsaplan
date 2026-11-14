@@ -1,6 +1,4 @@
 import { Trash2 } from 'lucide-react';
-import type { ConfiguredTool } from '@/lib/api/endpoints/agentTools';
-import type { IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import { formatDate } from '@/utils/dates';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,6 +7,7 @@ import { IntegrationIcon } from '@/components/common/IntegrationIcon';
 import NeedsProLink from '@/components/common/NeedsProLink';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
+import type { ToolRowProps } from '../../types/toolSource';
 import { ToolConfigDescription } from './ToolConfigDescription';
 
 export function ToolConfigRow({
@@ -19,18 +18,7 @@ export function ToolConfigRow({
   canDelete,
   onOpen,
   onDelete,
-}: {
-  tool: ConfiguredTool;
-  // The catalog entry, absent for a tool the team defines or one the catalog no longer has.
-  meta: IntegrationMeta['tools'][number] | undefined;
-  integration: Pick<IntegrationMeta, 'label' | 'kind' | 'icon'>;
-  // The tool comes from a source another edition has.
-  locked: boolean;
-  canDelete: boolean;
-  // Opens a tool the team defines in its source's panel.
-  onOpen?: () => void;
-  onDelete: () => void;
-}) {
+}: ToolRowProps) {
   const t = useTranslations('teams.tools');
   const scopes = meta?.scopes ?? [];
   // The id tells a tool on an unlabelled credential from the same tool added with none.

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import type { ConfiguredTool } from '@/lib/api/endpoints/agentTools';
 import type { IntegrationMeta, IntegrationOption } from '@/lib/api/endpoints/integrations';
 import {
   useConfiguredToolOptionsQuery,
@@ -31,7 +32,11 @@ export interface ToolIntegrationEntry {
 
 // The state of the add-tool dialog: the catalog split by integration, a selection that
 // spans integrations, and one credential per integration to add its tools on.
-export function useAddTools(teamId: number, catalog: IntegrationMeta[], onDone: () => void) {
+export function useAddTools(
+  teamId: number,
+  catalog: IntegrationMeta[],
+  onDone: (added: ConfiguredTool[]) => void,
+) {
   const integrations = useMemo(
     () => toolIntegrations(catalog).sort((a, b) => a.label.localeCompare(b.label)),
     [catalog],
@@ -87,15 +92,18 @@ export function useAddTools(teamId: number, catalog: IntegrationMeta[], onDone: 
   async function submit() {
     setBusy(true);
     try {
+      const added: ConfiguredTool[] = [];
       for (const entry of pending) {
         for (const tool of entry.pending) {
-          await create.mutateAsync({
-            toolKey: tool.toolKey,
-            credentialId: entry.credentialId ?? undefined,
-          });
+          added.push(
+            await create.mutateAsync({
+              toolKey: tool.toolKey,
+              credentialId: entry.credentialId ?? undefined,
+            }),
+          );
         }
       }
-      onDone();
+      onDone(added);
     } catch {
       setBusy(false);
     }

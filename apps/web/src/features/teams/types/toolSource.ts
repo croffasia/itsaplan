@@ -7,6 +7,9 @@ export interface ToolEditorProps {
   teamId: number;
   tool: ConfiguredTool | null;
   onClose: () => void;
+  // Given the configured tool id of a new tool once it is saved. The agent editor turns the
+  // tool on for its agent.
+  onCreated?: (toolId: number) => void;
 }
 
 export interface ToolRowProps {
@@ -22,7 +25,8 @@ export interface ToolRowProps {
   onDelete: () => void;
 }
 
-// The button a source puts in the Tools page's header, beside the catalog's.
+// The button a source puts beside the catalog's, in the Tools page's header and in the agent
+// editor. The editor draws it inside its form, so it is `type="button"`.
 export type ToolCreateButton = ComponentType<{ onCreate: () => void }>;
 
 // A kind of tool a team defines itself, beside the catalog's: `key` is the `source` its

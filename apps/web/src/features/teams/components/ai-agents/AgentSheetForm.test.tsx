@@ -4,7 +4,9 @@ import { act } from 'react';
 import type { Root } from 'react-dom/client';
 import { NextIntlClientProvider } from 'next-intl';
 import { JSDOM } from 'jsdom';
-import type { AiAgent } from '@/lib/api/endpoints/agents';
+import type { AgentTool, AiAgent } from '@/lib/api/endpoints/agents';
+import type { AgentSkill } from '@/lib/api/endpoints/agentSkills';
+import type { ConfiguredTool } from '@/lib/api/endpoints/agentTools';
 import teams from '../../../../../messages/en/teams.json';
 import common from '../../../../../messages/en/common.json';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -175,30 +177,155 @@ describe('AgentSheetForm', () => {
 
   // An external agent calls the tools enabled on it over MCP, so its form lists them too.
   it('lists the tools of an external agent', async () => {
-    const all = { read: true, create: true, edit: true, delete: true };
-    Object.defineProperty(globalThis, 'fetch', {
-      configurable: true,
-      value: async (input: RequestInfo | URL) => {
-        const path = new URL(input instanceof Request ? input.url : String(input)).pathname;
-        if (path.endsWith('/teams/1')) {
-          return Response.json({
-            id: 1,
-            name: 'Team',
-            permissions: { ai_agents: all, agent_skills: all, agent_tools: all, integrations: all },
-          });
-        }
-        if (path.endsWith('/agent-tools/options') || path.endsWith('/tool-configs')) {
-          return Response.json([]);
-        }
-        return Response.json({ error: 'Access denied' }, { status: 403 });
-      },
-    });
+    serve({ '/agent-tools/options': [], '/tool-configs': [] });
 
     await render({ ...agent(true), kind: 'external' });
-    for (let i = 0; i < 20 && !document.body.textContent?.includes(teams.agents.toolsHint); i++) {
-      await act(async () => new Promise((resolve) => setTimeout(resolve, 10)));
-    }
+    await waitForText(teams.agents.toolsHint);
 
     assert.ok(document.body.textContent?.includes(teams.agents.toolsHint));
   });
+
+  it('lists only the tools turned on for the agent', async () => {
+    const issue = configuredTool(1, 'GitHub Comment Issue');
+    serve({
+      '/agent-tools/options': [issue, configuredTool(2, 'GitHub Create Issue')],
+      '/tool-configs': [issue],
+    });
+
+    await render(agent(true));
+    await openSection(teams.agents.toolsHint);
+    await waitForText(teams.agents.turnedOn);
+
+    const text = document.body.textContent ?? '';
+    assert.ok(text.includes('GitHub Comment Issue'));
+    assert.ok(!text.includes('GitHub Create Issue'));
+  });
+
+  it('offers adding a tool when the team has none', async () => {
+    serve({ '/agent-tools/options': [], '/tool-configs': [] });
+
+    await render(agent(true));
+    await openSection(teams.agents.toolsHint);
+    await waitForText(teams.tools.empty);
+
+    assert.ok(document.body.textContent?.includes(teams.agents.addFromCatalog));
+  });
+
+  it('lists only the skills turned on for the agent', async () => {
+    const triage = skill(1, 'Triage');
+    serve({ '/agent-skills/options': [triage, skill(2, 'Release notes')], '/4/skills': [triage] });
+
+    await render(agent(true));
+    await openSection(teams.agents.skillsHint);
+    await waitForText(teams.agents.turnedOn);
+
+    const text = document.body.textContent ?? '';
+    assert.ok(text.includes('Triage'));
+    assert.ok(!text.includes('Release notes'));
+  });
+
+  it('keeps the action groups folded until one is opened', async () => {
+    serve({
+      '/ai-agents/tools': [
+        action('create_issue', 'Create issues', false),
+        action('search_issues', 'Search issues', true),
+      ],
+    });
+
+    await render(agent(true));
+    await openSection(teams.agents.actionsHint);
+    await waitForText(teams.agents.summaryReadOnly);
+
+    assert.ok(!document.body.textContent?.includes('Create issues'));
+    await openSection(teams.agents.summaryReadOnly);
+    await waitForText('Create issues');
+    assert.ok(document.body.textContent?.includes('Create issues'));
+  });
+
+  it('lists only the projects the agent works in', async () => {
+    serve({
+      '/projects/options': [
+        { id: 1, key: 'MKT', ref: 'MKT', name: 'Marketing', mcpEnabled: false },
+        { id: 2, key: 'OPS', ref: 'OPS', name: 'Operations', mcpEnabled: false },
+      ],
+    });
+
+    await render(agent(true));
+    await openSection(teams.agents.projectsHint);
+    await waitForText(teams.agents.worksIn);
+
+    const text = document.body.textContent ?? '';
+    assert.ok(text.includes('Marketing'));
+    assert.ok(!text.includes('Operations'));
+  });
 });
+
+function configuredTool(id: number, label: string): ConfiguredTool {
+  return {
+    id,
+    teamId: 1,
+    toolKey: `github_${id}`,
+    credentialId: 3,
+    integrationKey: 'github',
+    credentialLabel: 'Itsaplan',
+    label,
+    description: null,
+    source: null,
+    supported: true,
+    createdAt: new Date(0).toISOString(),
+  };
+}
+
+function action(key: string, label: string, always: boolean): AgentTool {
+  return { key, group: 'issues', label, description: label, always };
+}
+
+function skill(id: number, name: string): AgentSkill {
+  return {
+    id,
+    teamId: 1,
+    name,
+    description: '',
+    source: 'inline',
+    sourceUrl: null,
+    files: [],
+    createdAt: new Date(0).toISOString(),
+  };
+}
+
+// The team, and each route whose path ends with a key of `routes`; every other route refuses.
+function serve(routes: Record<string, unknown>) {
+  const all = { read: true, create: true, edit: true, delete: true };
+  Object.defineProperty(globalThis, 'fetch', {
+    configurable: true,
+    value: async (input: RequestInfo | URL) => {
+      const path = new URL(input instanceof Request ? input.url : String(input)).pathname;
+      if (path.endsWith('/teams/1')) {
+        return Response.json({
+          id: 1,
+          name: 'Team',
+          permissions: { ai_agents: all, agent_skills: all, agent_tools: all, integrations: all },
+        });
+      }
+      const route = Object.keys(routes).find((suffix) => path.endsWith(suffix));
+      if (route) return Response.json(routes[route]);
+      return Response.json({ error: 'Access denied' }, { status: 403 });
+    },
+  });
+}
+
+// The form's sections and its action groups start closed; each opens from the button that
+// holds `text`: a section's hint, a group's summary.
+async function openSection(text: string) {
+  await waitForText(text);
+  const header = [...document.querySelectorAll('button')].find((b) =>
+    b.textContent?.includes(text),
+  );
+  await act(async () => header?.click());
+}
+
+async function waitForText(text: string) {
+  for (let i = 0; i < 20 && !document.body.textContent?.includes(text); i++) {
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 10)));
+  }
+}

@@ -95,7 +95,7 @@ function SheetBody({ initialAgent }: { initialAgent: AiAgent | null }) {
           </div>
           {agent && (
             <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-              {agent.kind}
+              {t(`kindLabel.${agent.kind}`)}
             </span>
           )}
         </div>

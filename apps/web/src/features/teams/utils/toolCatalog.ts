@@ -27,6 +27,12 @@ export interface ToolSection {
   tools: ToolOption[];
 }
 
+// A tool's label without its integration's name in front, for a list that already names
+// the integration.
+export function nameInIntegration(label: string, integration: string): string {
+  return label.startsWith(`${integration} `) ? label.slice(integration.length + 1) : label;
+}
+
 // The tool integrations of the catalog that offer a tool. An integration with none
 // only stores credentials for another feature.
 export function toolIntegrations(catalog: IntegrationMeta[]): ToolIntegration[] {
@@ -42,9 +48,7 @@ export function toolIntegrations(catalog: IntegrationMeta[]): ToolIntegration[] 
       tools: i.tools.map((tool) => ({
         toolKey: tool.key,
         label: tool.label,
-        name: tool.label.startsWith(`${i.label} `)
-          ? tool.label.slice(i.label.length + 1)
-          : tool.label,
+        name: nameInIntegration(tool.label, i.label),
         description: tool.description,
         scopes: tool.scopes ?? [],
         group: tool.group ?? null,

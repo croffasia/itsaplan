@@ -5,8 +5,8 @@ import { useTranslations } from 'next-intl';
 // How many items a checklist has to hold before its filter box is worth showing.
 export const SEARCH_THRESHOLD = 3;
 
-// The filter box over a long checklist in the agent form (actions, skills, tools).
-// It filters the list already on screen, it does not query the server.
+// The filter box over a long checklist in the agent form. It filters the list already on
+// screen, it does not query the server.
 export function AgentListSearch({
   value,
   onChange,

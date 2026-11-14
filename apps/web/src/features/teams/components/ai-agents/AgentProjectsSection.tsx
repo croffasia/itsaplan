@@ -1,11 +1,10 @@
 import { FolderKanban } from 'lucide-react';
 import type { TeamProjectOption } from '@/lib/api/endpoints/teams';
 import type { AgentFormValue } from '../../utils/agentForm';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { AgentCapabilityList } from './AgentCapabilityList';
 import { AgentEmptyNotice } from './AgentEmptyNotice';
 import { AgentFormSection } from './AgentFormSection';
+import { AgentPickList } from './AgentPickList';
 import { useTranslations } from 'next-intl';
 
 // The projects of the team the agent works in. Membership is what lets its key reach a
@@ -51,9 +50,8 @@ export default function AgentProjectsSection({
       }
     >
       {onJoinsNewProjectsChange && (
-        <label className="flex cursor-pointer items-start gap-2 border-b border-border/60 pb-4">
+        <label className="flex cursor-pointer items-center gap-2 border-b border-border/60 pb-4">
           <Checkbox
-            className="mt-0.5"
             checked={joinsNewProjects}
             onCheckedChange={(v) => onJoinsNewProjectsChange(v === true)}
           />
@@ -63,43 +61,22 @@ export default function AgentProjectsSection({
           </span>
         </label>
       )}
-      {projects.length > 1 && (
-        <div className="flex gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-xs"
-            disabled={value.projectIds.length === projects.length}
-            onClick={() => onChange({ projectIds: projects.map((project) => project.id) })}
-          >
-            {t('selectAllProjects')}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-xs"
-            disabled={value.projectIds.length === 0}
-            onClick={() => onChange({ projectIds: [] })}
-          >
-            {t('clearProjects')}
-          </Button>
-        </div>
-      )}
       {projects.length === 0 ? (
         <AgentEmptyNotice icon={FolderKanban} title={t('noProjects')} hint={t('noProjectsHint')} />
       ) : (
-        <AgentCapabilityList
-          searchPlaceholder={t('searchProjects')}
-          onToggle={toggle}
+        <AgentPickList
           items={projects.map((project) => ({
             id: project.id,
-            checked: value.projectIds.includes(project.id),
-            title: project.name,
-            subtitle: project.key,
-            search: `${project.name} ${project.key}`.toLowerCase(),
+            name: project.name,
+            note: project.key,
           }))}
+          selected={value.projectIds}
+          onToggle={toggle}
+          heading={t('worksIn')}
+          chooseLabel={t('chooseProjects')}
+          noneText={t('noProjectsOn')}
+          searchPlaceholder={t('searchProjects')}
+          removeLabel={(name) => t('removeFromProject', { project: name })}
         />
       )}
     </AgentFormSection>

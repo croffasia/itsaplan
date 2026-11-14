@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import type { ConfiguredTool } from '@/lib/api/endpoints/agentTools';
 import type { IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import Modal from '@/components/common/overlay/Modal';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
@@ -22,16 +23,22 @@ export function ToolConfigDialog({
   teamName,
   canAddCredential,
   catalog,
+  onAdded,
   onClose,
 }: {
   teamId: number;
   teamName: string;
   canAddCredential: boolean;
   catalog: IntegrationMeta[];
+  // Given the configured tools the dialog added, before it closes.
+  onAdded?: (tools: ConfiguredTool[]) => void;
   onClose: () => void;
 }) {
   const t = useTranslations('teams.tools');
-  const tools = useAddTools(teamId, catalog, onClose);
+  const tools = useAddTools(teamId, catalog, (added) => {
+    onAdded?.(added);
+    onClose();
+  });
   const { active } = tools;
   const [connecting, setConnecting] = useState<string | null>(null);
   const rail = { activeKey: active?.integration.key ?? null, onOpen: tools.open };

@@ -27,6 +27,12 @@ const LATEST = 20;
 const FRONT_KEY = 'desktopNotificationsFront';
 const FRONT_BEAT_MS = 10_000;
 const TAB = Math.random().toString(36).slice(2);
+// An installed app window holds this Web Lock while the notifications are on, and while
+// one does, the ordinary tabs of this browser show none, so a click opens the app window.
+// The browser releases the lock when the window closes, crashes or is discarded, so no
+// timer has to notice that it is gone.
+const APP_LOCK = 'desktop-notifications-app';
+const APP_WINDOW = '(display-mode: standalone)';
 
 type DesktopNotificationsState = 'unsupported' | 'blocked' | 'push' | 'off' | 'on';
 
@@ -89,6 +95,27 @@ function markFront() {
   }
 }
 
+// A tab moved into the app window, or back, changes its display mode without a reload.
+function subscribeAppWindow(onChange: () => void) {
+  const query = window.matchMedia(APP_WINDOW);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+}
+
+function readAppWindow() {
+  return window.matchMedia(APP_WINDOW).matches;
+}
+
+async function appWindowOpen() {
+  if (!('locks' in navigator)) return false;
+  try {
+    const { held } = await navigator.locks.query();
+    return held?.some((lock) => lock.name === APP_LOCK) ?? false;
+  } catch {
+    return false;
+  }
+}
+
 function anotherTabInFront() {
   try {
     const [tab, at] = (localStorage.getItem(FRONT_KEY) ?? '').split(' ');
@@ -104,9 +131,11 @@ function anotherTabInFront() {
 // inbox in a hidden tab. An item is shown only when it is unread and was created after the
 // newest item read since the notifications came on, so older items, an item marked unread
 // again and one back from a snooze are not. Nothing is shown while the app shell is in
-// front, in this tab or in another. Clicking a notification opens its item.
+// front, in this tab or in another, and an ordinary tab shows nothing while an installed
+// app window is open. Clicking a notification opens its item.
 export function useDesktopNotifications() {
   const on = useDesktopNotificationsState() === 'on';
+  const appWindow = useSyncExternalStore(subscribeAppWindow, readAppWindow, () => false);
   const subscribe = useSyncSubscribe();
   const router = useRouter();
   const te = useTranslations('inbox.event');
@@ -135,6 +164,24 @@ export function useDesktopNotifications() {
       clearFront();
     };
   }, [on]);
+
+  useEffect(() => {
+    if (!on || !appWindow || !('locks' in navigator)) return;
+    const done = new AbortController();
+    // Shared: every open app window holds it, and each shows the notifications.
+    navigator.locks
+      .request(APP_LOCK, { mode: 'shared', signal: done.signal }, () => {
+        // The callback runs in a task after the grant, so the abort may already be past.
+        return new Promise<void>((release) => {
+          if (done.signal.aborted) release();
+          else done.signal.addEventListener('abort', () => release(), { once: true });
+        });
+      })
+      .catch(() => {
+        // Not granted (aborted first, or locks blocked): the tabs go on showing them.
+      });
+    return () => done.abort();
+  }, [on, appWindow]);
 
   useEffect(() => {
     if (!on) return;
@@ -170,24 +217,33 @@ export function useDesktopNotifications() {
     );
     // In front, here or in another tab, the inbox itself shows the new item.
     if (fresh.length === 0 || inFront() || anotherTabInFront()) return;
-    for (const n of fresh) {
-      const ref = projects?.find((p) => p.id === n.projectId)?.ref;
-      const path = ref ? notificationPath(n, ref) : null;
-      try {
-        const shown = new Notification(notificationSubject(n, tDocuments('untitled')), {
-          body: notificationEventText(n, te),
-          tag: `inbox-${n.id}`,
-          icon: '/icon-192.png',
-        });
-        shown.onclick = () => {
-          window.focus();
-          if (path) router.push(path);
-          shown.close();
-        };
-      } catch {
-        // A browser that shows notifications only from a service worker (Chrome on
-        // Android) throws here; the inbox still has the item.
+    const show = () => {
+      for (const n of fresh) {
+        const ref = projects?.find((p) => p.id === n.projectId)?.ref;
+        const path = ref ? notificationPath(n, ref) : null;
+        try {
+          const shown = new Notification(notificationSubject(n, tDocuments('untitled')), {
+            body: notificationEventText(n, te),
+            tag: `inbox-${n.id}`,
+            icon: '/icon-192.png',
+          });
+          shown.onclick = () => {
+            window.focus();
+            if (path) router.push(path);
+            shown.close();
+          };
+        } catch {
+          // A browser that shows notifications only from a service worker (Chrome on
+          // Android) throws here; the inbox still has the item.
+        }
       }
+    };
+    if (appWindow) {
+      show();
+      return;
     }
-  }, [on, latest, dataUpdatedAt, projects, router, te, tDocuments]);
+    void appWindowOpen().then((open) => {
+      if (!open) show();
+    });
+  }, [on, appWindow, latest, dataUpdatedAt, projects, router, te, tDocuments]);
 }

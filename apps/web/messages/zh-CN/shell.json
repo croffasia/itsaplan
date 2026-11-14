@@ -12,5 +12,10 @@
   "noProjectsHint": "新建第一个项目，然后开始在看板中规划工作项。",
   "createProject": "新建项目",
   "loadFailedTitle": "无法加载项目",
-  "loadFailedHint": "请检查网络连接并刷新页面。"
+  "loadFailedHint": "请检查网络连接并刷新页面。",
+  "desktopNotifications": {
+    "message": "应用在后台时，要为收件箱的每条新内容显示桌面通知吗？",
+    "turnOn": "开启",
+    "notNow": "以后再说"
+  }
 }

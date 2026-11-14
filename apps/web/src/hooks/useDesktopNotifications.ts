@@ -12,7 +12,12 @@ import {
   notificationSubject,
 } from '@/utils/inboxNotification';
 import { revScope } from '@/utils/revScopes';
-import { NOTIFICATION_SETTINGS_EVENT, isPushOnInThisBrowser } from '@/utils/browserNotifications';
+import {
+  NOTIFICATION_SETTINGS_EVENT,
+  isPushOnInThisBrowser,
+  keepNotificationsAnswer,
+  notificationsAnswered,
+} from '@/utils/browserNotifications';
 
 // Desktop notifications are turned on per browser: the choice is stored in this
 // browser's localStorage, next to the permission the browser keeps for the site. They
@@ -71,7 +76,43 @@ export async function setDesktopNotifications(on: boolean) {
   } catch {
     // Storage unavailable (private mode): the state stays as it was.
   }
+  // A request the browser leaves undecided (Edge's quiet request, a closed prompt) is no
+  // answer to the strip in the app shell, so the strip stays.
+  if (!on || Notification.permission !== 'default') keepNotificationsAnswer();
   window.dispatchEvent(new Event(NOTIFICATION_SETTINGS_EVENT));
+}
+
+// The server render reports the strip as answered, so it does not flash before the
+// stored answer is read.
+export function useDesktopNotificationsAnswered(): boolean {
+  return useSyncExternalStore(subscribeState, notificationsAnswered, () => true);
+}
+
+export function setDesktopNotificationsAnswered() {
+  keepNotificationsAnswer();
+  window.dispatchEvent(new Event(NOTIFICATION_SETTINGS_EVENT));
+}
+
+const pageProbes = new WeakMap<Window, boolean>();
+
+// Whether this page can show a notification itself. Chrome on Android, phone or tablet,
+// shows one only from a service worker, and its Notification constructor throws a
+// TypeError. Constructing one before the permission is granted shows nothing, so the probe
+// runs only then; once it is granted, constructing one would show it, so Android is told
+// by the user agent instead.
+export function canShowFromPage(): boolean {
+  if (typeof window === 'undefined' || !('Notification' in window)) return false;
+  const known = pageProbes.get(window);
+  if (known !== undefined) return known;
+  if (Notification.permission === 'granted') return !/Android/i.test(navigator.userAgent);
+  let works = true;
+  try {
+    new Notification('').close();
+  } catch (error) {
+    works = !(error instanceof Error && error.name === 'TypeError');
+  }
+  pageProbes.set(window, works);
+  return works;
 }
 
 function inFront() {

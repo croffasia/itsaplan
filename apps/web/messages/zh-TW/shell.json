@@ -12,5 +12,10 @@
   "noProjectsHint": "新建第一個專案，然後開始在看板中規劃工作項目。",
   "createProject": "新建專案",
   "loadFailedTitle": "無法載入專案",
-  "loadFailedHint": "請檢查網路連線並重新整理頁面。"
+  "loadFailedHint": "請檢查網路連線並重新整理頁面。",
+  "desktopNotifications": {
+    "message": "應用程式在背景時，要為收件匣的每筆新項目顯示桌面通知嗎？",
+    "turnOn": "開啟",
+    "notNow": "以後再說"
+  }
 }

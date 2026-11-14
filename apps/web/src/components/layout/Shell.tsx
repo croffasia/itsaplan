@@ -25,6 +25,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/AppSidebar';
 import AppHeader from '@/components/layout/AppHeader';
 import CommandLayer from '@/components/layout/CommandLayer';
+import DesktopNotificationsPrompt from '@/components/layout/DesktopNotificationsPrompt';
 import ShellBody from '@/components/layout/ShellBody';
 import ShellHeaderTitle from '@/components/layout/ShellHeaderTitle';
 import ShellOverlays from '@/components/layout/ShellOverlays';
@@ -207,6 +208,7 @@ export default function Shell({
               onToggleChat={chatPanel.toggle}
             />
             <ShellNotice />
+            <DesktopNotificationsPrompt />
 
             {errorMsg && !forbidden && (
               <div className="border-b border-destructive/50 bg-destructive/10 px-4 py-2 text-sm text-destructive">

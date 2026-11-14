@@ -12,5 +12,10 @@
   "noProjectsHint": "Buat proyek pertama Anda untuk mulai merencanakan issue di papan.",
   "createProject": "Buat proyek",
   "loadFailedTitle": "Proyek Anda tidak dapat dimuat",
-  "loadFailedHint": "Periksa koneksi Anda, lalu muat ulang halaman."
+  "loadFailedHint": "Periksa koneksi Anda, lalu muat ulang halaman.",
+  "desktopNotifications": {
+    "message": "Dapatkan notifikasi desktop untuk setiap item baru di kotak masuk saat aplikasi berjalan di latar belakang.",
+    "turnOn": "Aktifkan",
+    "notNow": "Nanti saja"
+  }
 }

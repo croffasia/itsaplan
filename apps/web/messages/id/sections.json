@@ -111,6 +111,10 @@
       "label": "Jadwal",
       "description": "Jalankan tugas agen dengan jadwal berulang."
     },
+    "workflows": {
+      "label": "Alur",
+      "description": "Agen yang saling meneruskan pekerjaan."
+    },
     "webhooks": {
       "label": "Webhook",
       "description": "Kirim peristiwa proyek ke URL eksternal, ditandatangani dengan rahasia per-webhook."
@@ -222,6 +226,26 @@
       "preview": "Pratinjau",
       "name": "Nama Anda",
       "email": "Email"
+    },
+    "workflows": {
+      "steps": "Langkah",
+      "sendBack": "Kembalikan",
+      "runs": "Riwayat jalan",
+      "runningNow": "Sedang berjalan",
+      "history": "Riwayat",
+      "costSoFar": "Biaya sejauh ini",
+      "tokensSoFar": "Token sejauh ini",
+      "agentRuns": "Jalan agen",
+      "tokens": "Token",
+      "cost": "Biaya",
+      "took": "Durasi",
+      "got": "Yang diterima",
+      "returned": "Yang dikembalikan",
+      "task": "Tugas",
+      "notes": "Catatan pengembalian",
+      "done": "Selesai",
+      "round": "Putaran",
+      "fullLog": "Log lengkap"
     },
     "portal": {
       "title": "Portal",

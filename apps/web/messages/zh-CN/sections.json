@@ -111,6 +111,10 @@
       "label": "定时任务",
       "description": "按固定时间重复运行代理任务。"
     },
+    "workflows": {
+      "label": "工作流",
+      "description": "智能体之间互相交接工作。"
+    },
     "webhooks": {
       "label": "Webhook",
       "description": "将项目事件发送到外部 URL，并使用每个 Webhook 独立的密钥签名。"
@@ -222,6 +226,26 @@
       "preview": "预览",
       "name": "你的姓名",
       "email": "邮箱"
+    },
+    "workflows": {
+      "steps": "步骤",
+      "sendBack": "退回",
+      "runs": "运行记录",
+      "runningNow": "正在运行",
+      "history": "历史",
+      "costSoFar": "目前费用",
+      "tokensSoFar": "目前 Token",
+      "agentRuns": "代理运行",
+      "tokens": "Token",
+      "cost": "费用",
+      "took": "用时",
+      "got": "收到的内容",
+      "returned": "返回的内容",
+      "task": "任务",
+      "notes": "退回意见",
+      "done": "完成",
+      "round": "轮次",
+      "fullLog": "完整日志"
     },
     "portal": {
       "title": "门户",

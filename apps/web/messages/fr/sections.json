@@ -111,6 +111,10 @@
       "label": "Planifications",
       "description": "Exécutez des tâches d'agent selon une planification récurrente."
     },
+    "workflows": {
+      "label": "Flux",
+      "description": "Des agents qui se passent le travail."
+    },
     "webhooks": {
       "label": "Webhooks",
       "description": "Envoyez les événements du projet vers des URL externes, signés avec un secret propre à chaque webhook."
@@ -222,6 +226,26 @@
       "preview": "Aperçu",
       "name": "Votre nom",
       "email": "E-mail"
+    },
+    "workflows": {
+      "steps": "Étapes",
+      "sendBack": "Renvoyer",
+      "runs": "Historique des exécutions",
+      "runningNow": "En cours",
+      "history": "Historique",
+      "costSoFar": "Coût à ce stade",
+      "tokensSoFar": "Tokens à ce stade",
+      "agentRuns": "Exécutions d'agents",
+      "tokens": "Tokens",
+      "cost": "Coût",
+      "took": "Durée",
+      "got": "Ce qu'elle a reçu",
+      "returned": "Ce qu'elle a rendu",
+      "task": "Tâche",
+      "notes": "Notes du renvoi",
+      "done": "Terminé",
+      "round": "Tour",
+      "fullLog": "Journal complet"
     },
     "portal": {
       "title": "Portail",

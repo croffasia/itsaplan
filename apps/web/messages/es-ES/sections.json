@@ -111,6 +111,10 @@
       "label": "Tareas programadas",
       "description": "Ejecutar tareas programadas con agentes"
     },
+    "workflows": {
+      "label": "Flujos",
+      "description": "Agentes que se pasan el trabajo entre sí."
+    },
     "webhooks": {
       "label": "Webhooks",
       "description": "Enviar eventos del proyecto a URLs externas, firmados con un secreto para cada webhook."
@@ -222,6 +226,26 @@
       "preview": "Vista previa",
       "name": "Tu nombre",
       "email": "Correo"
+    },
+    "workflows": {
+      "steps": "Pasos",
+      "sendBack": "Devolver",
+      "runs": "Historial de ejecuciones",
+      "runningNow": "En curso",
+      "history": "Historial",
+      "costSoFar": "Coste hasta ahora",
+      "tokensSoFar": "Tokens hasta ahora",
+      "agentRuns": "Ejecuciones de agentes",
+      "tokens": "Tokens",
+      "cost": "Coste",
+      "took": "Duración",
+      "got": "Lo que recibió",
+      "returned": "Lo que devolvió",
+      "task": "Tarea",
+      "notes": "Notas de la devolución",
+      "done": "Hecho",
+      "round": "Ronda",
+      "fullLog": "Registro completo"
     },
     "portal": {
       "title": "Portal",

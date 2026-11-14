@@ -111,6 +111,10 @@
       "label": "일정",
       "description": "AI 에이전트 작업을 정해진 일정에 따라 반복 실행합니다."
     },
+    "workflows": {
+      "label": "워크플로",
+      "description": "에이전트끼리 작업을 넘겨줍니다."
+    },
     "webhooks": {
       "label": "웹훅",
       "description": "프로젝트 이벤트를 외부 URL로 전송하고 웹훅별 시크릿으로 서명합니다."
@@ -222,6 +226,26 @@
       "preview": "미리 보기",
       "name": "이름",
       "email": "이메일"
+    },
+    "workflows": {
+      "steps": "단계",
+      "sendBack": "되돌려 보내기",
+      "runs": "실행 기록",
+      "runningNow": "실행 중",
+      "history": "기록",
+      "costSoFar": "현재까지 비용",
+      "tokensSoFar": "현재까지 토큰",
+      "agentRuns": "에이전트 실행",
+      "tokens": "토큰",
+      "cost": "비용",
+      "took": "소요 시간",
+      "got": "받은 내용",
+      "returned": "반환한 내용",
+      "task": "작업",
+      "notes": "되돌려 보내기 메모",
+      "done": "완료",
+      "round": "라운드",
+      "fullLog": "전체 로그"
     },
     "portal": {
       "title": "포털",

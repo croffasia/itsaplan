@@ -111,6 +111,10 @@
       "label": "Zamanlamalar",
       "description": "Ajan görevlerini yinelenen bir zaman çizelgesine göre çalıştırın."
     },
+    "workflows": {
+      "label": "Akışlar",
+      "description": "İşi birbirine devreden ajanlar."
+    },
     "webhooks": {
       "label": "Webhook'lar",
       "description": "Proje olaylarını harici URL'lere gönderin (her webhook özel bir anahtarla imzalanır)."
@@ -222,6 +226,26 @@
       "preview": "Önizleme",
       "name": "Adınız",
       "email": "E-posta"
+    },
+    "workflows": {
+      "steps": "Adımlar",
+      "sendBack": "Geri gönder",
+      "runs": "Çalıştırma geçmişi",
+      "runningNow": "Şu anda çalışanlar",
+      "history": "Geçmiş",
+      "costSoFar": "Şu ana kadar maliyet",
+      "tokensSoFar": "Şu ana kadar token",
+      "agentRuns": "Ajan çalıştırmaları",
+      "tokens": "Token",
+      "cost": "Maliyet",
+      "took": "Süre",
+      "got": "Aldığı",
+      "returned": "Döndürdüğü",
+      "task": "Görev",
+      "notes": "Geri gönderme notları",
+      "done": "Tamamlandı",
+      "round": "Tur",
+      "fullLog": "Tam kayıt"
     },
     "portal": {
       "title": "Portal",

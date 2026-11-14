@@ -111,6 +111,10 @@
       "label": "Schedules",
       "description": "Run agent tasks on a recurring schedule."
     },
+    "workflows": {
+      "label": "Workflows",
+      "description": "Agents that hand work to each other."
+    },
     "webhooks": {
       "label": "Webhooks",
       "description": "Send project events to external URLs, signed with a per-webhook secret."
@@ -222,6 +226,26 @@
       "preview": "Preview",
       "name": "Your name",
       "email": "Email"
+    },
+    "workflows": {
+      "steps": "Steps",
+      "sendBack": "Send back",
+      "runs": "Run history",
+      "runningNow": "Running now",
+      "history": "History",
+      "costSoFar": "Cost so far",
+      "tokensSoFar": "Tokens so far",
+      "agentRuns": "Agent runs",
+      "tokens": "Tokens",
+      "cost": "Cost",
+      "took": "Took",
+      "got": "What it got",
+      "returned": "What it returned",
+      "task": "Task",
+      "notes": "Send back notes",
+      "done": "Done",
+      "round": "Round",
+      "fullLog": "Full log"
     },
     "portal": {
       "title": "Portal",

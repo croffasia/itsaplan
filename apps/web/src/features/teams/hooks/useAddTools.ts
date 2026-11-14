@@ -18,7 +18,7 @@ export interface ToolIntegrationEntry {
   // The tools the search leaves.
   tools: ToolOption[];
   credentials: IntegrationOption[];
-  // The credential its tools are added on, null when it needs none or the team has none.
+  // The credential its tools are added on, null for none.
   credentialId: number | null;
   // False while it needs a credential and the team has none: its tools are listed
   // and cannot be selected.
@@ -43,16 +43,18 @@ export function useAddTools(teamId: number, catalog: IntegrationMeta[], onDone: 
   const [query, setQuery] = useState('');
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
-  const [chosen, setChosen] = useState<Record<string, number>>({});
+  // null picks no credential for an integration whose credential is optional.
+  const [chosen, setChosen] = useState<Record<string, number | null>>({});
   const [busy, setBusy] = useState(false);
 
   const all = useMemo<ToolIntegrationEntry[]>(
     () =>
       integrations.map((integration) => {
         const own = (credentials ?? []).filter((c) => c.integrationKey === integration.key);
-        const credentialId = integration.needsCredential
-          ? (chosen[integration.key] ?? own[0]?.id ?? null)
-          : null;
+        let credentialId: number | null = null;
+        if (integration.takesCredential) {
+          credentialId = integration.key in chosen ? chosen[integration.key] : (own[0]?.id ?? null);
+        }
         const ready = !integration.needsCredential || own.length > 0;
         const added = (configured ?? [])
           .filter((c) => c.credentialId === credentialId)
@@ -112,7 +114,7 @@ export function useAddTools(teamId: number, catalog: IntegrationMeta[], onDone: 
         on ? [...new Set([...prev, ...toolKeys])] : prev.filter((k) => !toolKeys.includes(k)),
       ),
     clear: () => setSelected([]),
-    setCredential: (integrationKey: string, credentialId: number) =>
+    setCredential: (integrationKey: string, credentialId: number | null) =>
       setChosen((prev) => ({ ...prev, [integrationKey]: credentialId })),
     pending,
     busy,

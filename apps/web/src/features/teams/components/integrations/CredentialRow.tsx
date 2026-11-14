@@ -1,22 +1,23 @@
-import { KeyRound, Pencil, Trash2 } from 'lucide-react';
-import type { IntegrationCredential } from '@/lib/api/endpoints/integrations';
+import { Pencil, Trash2 } from 'lucide-react';
+import type { IntegrationCredential, IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { IntegrationIcon } from '@/components/common/IntegrationIcon';
 import { useTranslations } from 'next-intl';
 
-// One credential as a table row: the integration name and optional account label,
+// One credential as a table row: the integration's icon, name and optional account label,
 // the redacted fields as badges, and edit/delete actions gated by permission.
 export function CredentialRow({
   credential,
-  integrationLabel,
+  integration,
   canEdit,
   canDelete,
   onEdit,
   onDelete,
 }: {
   credential: IntegrationCredential;
-  integrationLabel: string;
+  integration: Pick<IntegrationMeta, 'label' | 'kind' | 'icon'>;
   canEdit: boolean;
   canDelete: boolean;
   onEdit: () => void;
@@ -28,11 +29,11 @@ export function CredentialRow({
     <TableRow className="group/item">
       <TableCell className="px-3 py-3 whitespace-normal">
         <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-            <KeyRound className="size-4" />
-          </div>
+          <IntegrationIcon integration={integration} />
           <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="truncate text-sm font-medium text-foreground">{integrationLabel}</span>
+            <span className="truncate text-sm font-medium text-foreground">
+              {integration.label}
+            </span>
             {credential.label && (
               <span className="truncate text-xs text-muted-foreground">{credential.label}</span>
             )}

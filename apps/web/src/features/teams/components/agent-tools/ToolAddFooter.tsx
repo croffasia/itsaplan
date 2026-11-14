@@ -43,7 +43,7 @@ export function ToolAddFooter({
         </>
       )}
       <div className="ms-auto flex shrink-0 gap-2">
-        <Button variant="outline" onClick={onCancel} disabled={busy}>
+        <Button variant="ghost" onClick={onCancel} disabled={busy}>
           {tCommon('cancel')}
         </Button>
         <Button onClick={onSubmit} disabled={total === 0 || busy}>

@@ -15,6 +15,8 @@ import {
 } from './replies';
 import { threadsMediaInsights, threadsUserInsights } from './insights';
 import { threadsKeywordSearch, threadsLocationSearch } from './search';
+import { threadsIcon } from './icon';
+import { verifyThreads } from './verify';
 
 // Threads (Meta): publishing, reading, reply moderation, insights, and search over
 // the Threads Graph API. One credential is one long-lived user access token; all
@@ -30,13 +32,21 @@ export const threads: Integration = {
       required: true,
       placeholder: 'THQVJ...',
       help:
-        'A long-lived Threads user access token (Meta App -> Use cases -> Threads -> Generate access token). ' +
-        'Scopes gate individual tools: threads_basic (read), threads_content_publish (post/reply), ' +
-        'threads_delete (delete), threads_read_replies (read replies/conversations), ' +
-        'threads_manage_replies (hide/approve replies), threads_manage_insights (insights), ' +
-        'threads_keyword_search (keyword search), threads_location_tagging (location search).',
+        'A long-lived Threads user access token (Meta App -> Use cases -> Threads -> Generate access token).\n\n' +
+        'Scopes gate individual tools:\n' +
+        '- `threads_basic`: read\n' +
+        '- `threads_content_publish`: post and reply\n' +
+        '- `threads_delete`: delete\n' +
+        '- `threads_read_replies`: read replies and conversations\n' +
+        '- `threads_manage_replies`: hide and approve replies\n' +
+        '- `threads_manage_insights`: insights\n' +
+        '- `threads_keyword_search`: keyword search\n' +
+        '- `threads_location_tagging`: location search',
     },
   ],
+  icon: threadsIcon,
+  website: 'https://www.threads.com',
+  verify: verifyThreads,
   tools: [
     threadsPublish,
     threadsReply,

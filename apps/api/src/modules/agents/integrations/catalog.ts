@@ -1,4 +1,5 @@
-import type { ConfigField } from '@repo/agent-tools';
+import { getProviderConfig } from '@mastra/core/llm';
+import type { ConfigField, IntegrationIcon } from '@repo/agent-tools';
 import { integrationDescriptors } from '@repo/agent-tools';
 import { AI_PROVIDERS } from './llm-providers';
 
@@ -19,7 +20,12 @@ export interface UnifiedIntegration {
   key: string;
   label: string;
   kind: IntegrationKind;
+  // A tool integration's brand mark. AI providers have none: there are too many to keep.
+  icon?: IntegrationIcon;
+  // The service's homepage. For an AI provider, its models page in Mastra's registry.
+  website?: string;
   credentialSchema: ConfigField[];
+  credentialOptional?: boolean;
   tools: {
     key: string;
     label: string;
@@ -51,6 +57,7 @@ const LLM_INTEGRATIONS: UnifiedIntegration[] = AI_PROVIDERS.map((p) => ({
   key: p.key,
   label: p.label,
   kind: 'llm',
+  website: getProviderConfig(p.key)?.docUrl,
   credentialSchema: llmCredentialSchema(p.requiresBaseUrl),
   tools: [],
 }));
@@ -62,13 +69,16 @@ export function integrationCatalog(): UnifiedIntegration[] {
     key: d.key,
     label: d.label,
     kind: 'tool',
+    icon: d.icon,
+    website: d.website,
     credentialSchema: d.credentialSchema,
+    credentialOptional: d.credentialOptional,
     tools: d.tools,
   }));
   return [...LLM_INTEGRATIONS, ...tools];
 }
 
-function findIntegration(key: string): UnifiedIntegration | undefined {
+export function findIntegration(key: string): UnifiedIntegration | undefined {
   return integrationCatalog().find((i) => i.key === key);
 }
 

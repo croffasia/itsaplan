@@ -25,6 +25,7 @@ export interface ConfigField {
   type: ConfigFieldType;
   required: boolean;
   placeholder?: string;
+  // Markdown, shown behind a "?" by the field's label.
   help?: string;
 }
 
@@ -60,11 +61,34 @@ export interface CustomToolEntry {
   execute: (credential: ToolConfig, input: Record<string, unknown>) => Promise<unknown>;
 }
 
+// What the service said about a credential. "rejected" is a clear refusal of the secret.
+// "unavailable" is a check that got no clear answer: an outage, a timeout, a bot wall.
+// "unknown" is a credential that cannot be checked from here: the service has no such
+// request, or its address is one the SSRF guard keeps the api from.
+export type CredentialCheck = 'valid' | 'rejected' | 'unavailable' | 'unknown';
+
+// A brand mark drawn in a 24×24 box: one SVG path and the color it is filled with. A
+// mark left without a color takes the text color, which keeps a black mark visible in
+// the dark theme.
+export interface IntegrationIcon {
+  path: string;
+  color?: string;
+}
+
 export interface Integration {
   key: string;
   label: string;
+  // The interface shows the label's first letters when it is left out.
+  icon?: IntegrationIcon;
+  // The service's homepage, linked from the interface.
+  website?: string;
   credentialSchema: ConfigField[];
+  // Its tools also run with no credential, on the service's keyless tier.
+  credentialOptional?: boolean;
   tools: CustomToolEntry[];
+  // Asks the service whether it accepts the credential, with one request that spends
+  // nothing. Left out when the service offers no such request.
+  verify?: (credential: ToolConfig, signal: AbortSignal) => Promise<CredentialCheck>;
 }
 
 // The serializable form of a tool, returned in an integration descriptor.
@@ -82,6 +106,9 @@ export interface ToolDescriptor {
 export interface IntegrationDescriptor {
   key: string;
   label: string;
+  icon?: IntegrationIcon;
+  website?: string;
   credentialSchema: ConfigField[];
+  credentialOptional?: boolean;
   tools: ToolDescriptor[];
 }

@@ -14,7 +14,7 @@ export function ToolCredentialNotice({
 }) {
   const t = useTranslations('teams');
   return (
-    <div className="mx-4 mb-2 flex flex-wrap items-center gap-3 rounded-lg bg-muted/50 px-3 py-2.5">
+    <div className="mx-4 mb-2 flex flex-wrap items-center gap-3 rounded-lg bg-muted/50 px-3 py-2.5 sm:mx-6">
       <KeyRound className="size-4 shrink-0 text-muted-foreground" />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-foreground">

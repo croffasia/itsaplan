@@ -118,6 +118,22 @@ describe('agent tools', () => {
     expect(missing.status).toBe(400);
   });
 
+  it('adds a tool whose credential is optional with no key and again on a key', async () => {
+    const { asOwner, teamId } = await setup();
+    const keyless = await tools(asOwner, teamId).post({ toolKey: 'keenable_search' });
+    expect(keyless.status).toBe(201);
+    expect(keyless.data).toMatchObject({ credentialId: null, integrationKey: 'keenable' });
+
+    const credentialId = await createCredential(asOwner, 'MKT', {
+      integrationKey: 'keenable',
+      credential: { apiKey: 'keen_test' },
+    });
+    const keyed = await tools(asOwner, teamId).post({ toolKey: 'keenable_search', credentialId });
+    expect(keyed.status).toBe(201);
+    expect(keyed.data).toMatchObject({ credentialId, integrationKey: 'keenable' });
+    expect((await tools(asOwner, teamId).post({ toolKey: 'keenable_search' })).status).toBe(409);
+  });
+
   it('binds different Jina tools to different credentials', async () => {
     const { asOwner, teamId } = await setup();
     const keyA = await jinaCredential(asOwner);
@@ -167,7 +183,8 @@ describe('agent tools', () => {
     const keys = async (search: string) =>
       (await tools(asOwner, teamId).get({ query: { search } })).data?.items.map((i) => i.toolKey);
     expect(await keys('reader')).toEqual(['jina_reader']);
-    expect(await keys('JINA AI')).toEqual(['jina_reader', 'jina_search']);
+    // Newest first.
+    expect(await keys('JINA AI')).toEqual(['jina_search', 'jina_reader']);
     expect(await keys(' pdf ')).toEqual(['pdf_read']);
     expect(await keys('discussions')).toEqual([]);
 

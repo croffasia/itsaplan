@@ -14,7 +14,7 @@ import { useAgentSection } from '../../context/agentSection';
 import { TeamAiAgentRow } from './TeamAiAgentRow';
 import { TeamAiAgentSheet } from './TeamAiAgentSheet';
 import { TeamAiAgentRunsSheet } from './TeamAiAgentRunsSheet';
-import { integrationLabel } from '@/utils/integrationLabels';
+import { integrationOf } from '@/utils/integrationLabels';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   useTeam,
@@ -103,7 +103,7 @@ export default function TeamAiAgents() {
                 <TeamAiAgentRow
                   key={a.id}
                   agent={a}
-                  providerLabel={(key: string) => integrationLabel(catalog, key)}
+                  providerLabel={(key: string) => integrationOf(catalog, key).label}
                   onChat={() => setEditingId(a.id)}
                   onRuns={() => setRunsAgent(a)}
                   onEdit={() => setEditingId(a.id)}

@@ -14,6 +14,10 @@ export interface ToolOption {
 export interface ToolIntegration {
   key: string;
   label: string;
+  icon?: IntegrationMeta['icon'];
+  website?: string;
+  // Its tools are added on a credential, or with none when it is optional.
+  takesCredential: boolean;
   needsCredential: boolean;
   tools: ToolOption[];
 }
@@ -31,7 +35,10 @@ export function toolIntegrations(catalog: IntegrationMeta[]): ToolIntegration[] 
     .map((i) => ({
       key: i.key,
       label: i.label,
-      needsCredential: i.credentialSchema.length > 0,
+      icon: i.icon,
+      website: i.website,
+      takesCredential: i.credentialSchema.length > 0,
+      needsCredential: i.credentialSchema.length > 0 && !i.credentialOptional,
       tools: i.tools.map((tool) => ({
         toolKey: tool.key,
         label: tool.label,

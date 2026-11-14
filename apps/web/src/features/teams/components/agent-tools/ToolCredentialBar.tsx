@@ -13,16 +13,19 @@ import {
 } from '@/components/ui/select';
 import type { ToolIntegrationEntry } from '../../hooks/useAddTools';
 
+const NONE = 'none';
+
 // The credential the tools of one integration are added on: a select over the team's
 // credentials of that integration with a way to add one, or a note when the integration
-// needs none. Below it, the token permissions the selected tools need.
+// takes none. Where the credential is optional, the select also offers none. Below it,
+// the token permissions the selected tools need.
 export function ToolCredentialBar({
   entry,
   onCredential,
   onAddCredential,
 }: {
   entry: ToolIntegrationEntry;
-  onCredential: (credentialId: number) => void;
+  onCredential: (credentialId: number | null) => void;
   // Left out for a member who may not add a credential.
   onAddCredential?: () => void;
 }) {
@@ -33,8 +36,8 @@ export function ToolCredentialBar({
   if (!ready) return null;
 
   return (
-    <div className="space-y-1.5 border-t px-4 py-3">
-      {!integration.needsCredential ? (
+    <div className="space-y-1.5 px-4 py-3 sm:px-6">
+      {!integration.takesCredential ? (
         <p className="text-xs text-muted-foreground">
           {t('tools.noCredentialNeeded', { integration: integration.label })}
         </p>
@@ -44,13 +47,16 @@ export function ToolCredentialBar({
             {t('tools.credential')}
           </Label>
           <Select
-            value={credentialId != null ? String(credentialId) : ''}
-            onValueChange={(v) => onCredential(Number(v))}
+            value={credentialId != null ? String(credentialId) : NONE}
+            onValueChange={(v) => onCredential(v === NONE ? null : Number(v))}
           >
             <SelectTrigger id={id} size="sm" className="w-full text-xs sm:w-56">
               <SelectValue placeholder={t('tools.chooseCredential')} />
             </SelectTrigger>
             <SelectContent>
+              {!integration.needsCredential && (
+                <SelectItem value={NONE}>{t('tools.keyless')}</SelectItem>
+              )}
               {credentials.map((c) => (
                 <SelectItem key={c.id} value={String(c.id)}>
                   {/* The id tells apart several unlabelled credentials of one integration. */}

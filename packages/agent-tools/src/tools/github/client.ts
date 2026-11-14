@@ -9,7 +9,7 @@ import type { ToolConfig } from '../../types';
 
 // The newer 2026-03-10 is unknown to GitHub Enterprise Server before 3.22, which
 // answers it with 410.
-const API_VERSION = '2022-11-28';
+export const API_VERSION = '2022-11-28';
 
 export interface GithubIssue {
   number?: number;

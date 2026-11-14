@@ -31,7 +31,22 @@ export const CredentialResponse = t.Object({
 
 export const CredentialPageResponse = pageResponse(CredentialResponse);
 
-export const credentialListQuery = t.Object(pageQueryFields);
+export const credentialListQuery = t.Object({
+  search: t.Optional(
+    t.String({
+      maxLength: 200,
+      description:
+        'Case-insensitive match on the integration name, its key or the credential label.',
+    }),
+  ),
+  kind: t.Optional(
+    t.String({
+      pattern: '^(llm|tool)(,(llm|tool))*$',
+      description: 'A comma-separated subset of llm and tool. Omit for all.',
+    }),
+  ),
+  ...pageQueryFields,
+});
 
 const ConfigFieldResponse = t.Object({
   key: t.String(),
@@ -46,6 +61,18 @@ const IntegrationResponse = t.Object({
   key: t.String(),
   label: t.String(),
   kind: t.String(),
+  icon: t.Optional(
+    t.Object(
+      { path: t.String(), color: t.Optional(t.String()) },
+      { description: 'A brand mark: one SVG path in a 24×24 box and its fill color.' },
+    ),
+  ),
+  website: t.Optional(
+    t.String({ description: "The service's homepage; an AI provider's models page." }),
+  ),
+  credentialOptional: t.Optional(
+    t.Boolean({ description: 'Its tools also run with no credential, on a keyless tier.' }),
+  ),
   credentialSchema: t.Array(ConfigFieldResponse),
   tools: t.Array(
     t.Object({
@@ -82,4 +109,22 @@ export const createCredentialBody = t.Object({
 export const updateCredentialBody = t.Object({
   label: t.Optional(t.Nullable(t.String())),
   credential: t.Optional(t.Record(t.String(), t.Any())),
+});
+
+export const checkCredentialBody = t.Omit(createCredentialBody, ['label']);
+
+export const checkStoredCredentialBody = t.Object({
+  credential: t.Record(t.String(), t.Any(), {
+    description: 'Only the fields being changed. Secret fields left out are the stored ones.',
+  }),
+});
+
+export const CredentialCheckResponse = t.Object({
+  result: t.Union(
+    [t.Literal('valid'), t.Literal('rejected'), t.Literal('unavailable'), t.Literal('unknown')],
+    {
+      description:
+        'What the service said: "rejected" is a clear refusal, "unavailable" a check that got no clear answer, "unknown" a credential that cannot be checked from here.',
+    },
+  ),
 });

@@ -8,6 +8,8 @@ import { githubGetDiscussion } from './get-discussion';
 import { githubCreateDiscussion } from './create-discussion';
 import { githubUpdateDiscussion } from './update-discussion';
 import { githubCommentDiscussion } from './comment-discussion';
+import { githubIcon } from './icon';
+import { verifyGithub } from './verify';
 
 // GitHub: the issues and discussions of a repository an agent can read and act on.
 // One credential is one personal access token on github.com, on GHE.com, or on a
@@ -32,6 +34,9 @@ export const github: Integration = {
       help: 'Fine-grained personal access token with the Issues and Discussions repository permissions set to Read and write, for the repositories the agent works in (Settings, Developer settings). A classic token needs the repo scope.',
     },
   ],
+  icon: githubIcon,
+  website: 'https://github.com',
+  verify: verifyGithub,
   tools: [
     githubListIssues,
     githubCreateIssue,

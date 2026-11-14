@@ -2,6 +2,7 @@ import { afterAll, afterEach, describe, expect, it, spyOn } from 'bun:test';
 import { getTool } from '../../../registry';
 import { keenableSearch } from '../search';
 import { keenableFetch } from '../fetch';
+import { verifyKeenable } from '../verify';
 
 const fetchSpy = spyOn(globalThis, 'fetch');
 
@@ -19,8 +20,10 @@ describe('keenable', () => {
   afterEach(() => fetchSpy.mockClear());
   afterAll(() => fetchSpy.mockRestore());
 
-  it('is registered with no credential to configure', () => {
-    expect(getTool('keenable_search')?.integration.credentialSchema).toEqual([]);
+  it('is registered with an API key its tools can also run without', () => {
+    const integration = getTool('keenable_search')?.integration;
+    expect(integration?.credentialSchema.map((f) => f.key)).toEqual(['apiKey']);
+    expect(integration?.credentialOptional).toBe(true);
     expect(getTool('keenable_fetch')?.integration.key).toBe('keenable');
   });
 
@@ -82,6 +85,41 @@ describe('keenable', () => {
       url: 'https://example.com/a?b=1',
       content: '# Example',
     });
+  });
+
+  it('sends a key to the keyed endpoints instead of the public ones', async () => {
+    respond(200, { results: [] });
+    await keenableSearch.execute({ apiKey: 'keen_test' }, { query: 'itsaplan' });
+    let call = lastCall();
+    expect(call.url).toBe('https://api.keenable.ai/v1/search');
+    expect(call.init.headers).toMatchObject({ 'X-API-Key': 'keen_test' });
+    expect(call.init.headers).not.toHaveProperty('X-Keenable-Title');
+
+    respond(200, { url: 'https://example.com', title: '', content: '' });
+    await keenableFetch.execute({ apiKey: 'keen_test' }, { url: 'https://example.com' });
+    call = lastCall();
+    expect(call.url).toBe('https://api.keenable.ai/v1/fetch?url=https%3A%2F%2Fexample.com');
+    expect(call.init.headers).toMatchObject({ 'X-API-Key': 'keen_test' });
+  });
+
+  it('checks a key with a search that has no query', async () => {
+    const check = (status: number) => {
+      respond(status, { code: 'x' });
+      return verifyKeenable({ apiKey: 'keen_test' }, new AbortController().signal);
+    };
+    expect(await check(400)).toBe('valid');
+    expect(await check(402)).toBe('valid');
+    expect(await check(401)).toBe('rejected');
+    expect(await check(503)).toBe('unavailable');
+    const { url, init } = lastCall();
+    expect(url).toBe('https://api.keenable.ai/v1/search');
+    expect(init.body).toBe('{}');
+    expect(init.headers).toMatchObject({ 'X-API-Key': 'keen_test' });
+
+    fetchSpy.mockResolvedValue(new Response('<html></html>', { status: 401 }));
+    expect(await verifyKeenable({ apiKey: 'keen_test' }, new AbortController().signal)).toBe(
+      'unavailable',
+    );
   });
 
   it('surfaces the status and body of a failed call', async () => {

@@ -6,7 +6,7 @@ import { sleep } from '../time';
 // extract endpoints are asynchronous: the POST returns a job id, which is then
 // polled with pollJob until the job reaches a terminal status.
 
-const FIRECRAWL_BASE = 'https://api.firecrawl.dev/v2';
+export const FIRECRAWL_BASE = 'https://api.firecrawl.dev/v2';
 
 const TERMINAL = new Set(['completed', 'failed', 'cancelled']);
 

@@ -26,13 +26,16 @@ export const keenableSearch: CustomToolEntry = {
       .optional()
       .describe('Limit the results to one domain, e.g. docs.example.com.'),
   }),
-  execute: async (_credential, input) => {
+  execute: async (credential, input) => {
     const body = (await keenableRequest(
-      'search/public',
+      credential,
+      'search',
       {
-        query: String(input.query),
-        max_results: Number(input.count ?? 5),
-        ...(input.site ? { site: String(input.site) } : {}),
+        body: {
+          query: String(input.query),
+          max_results: Number(input.count ?? 5),
+          ...(input.site ? { site: String(input.site) } : {}),
+        },
       },
       'Keenable search',
     )) as { results?: { title?: string; url?: string; snippet?: string }[] };

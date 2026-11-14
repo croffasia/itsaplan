@@ -8,6 +8,21 @@ Agents, the skill library, the configured tools and the integration credentials 
 team. Their routes are under `:teamId` and use the `teamPermission` guard. The integration
 catalog, the provider models and the credential options take `teamMember` only.
 
+Saving a credential, new or with changed fields, first asks its service whether it accepts it
+(`integrations/credential-check.ts`), with one request that spends nothing. The api refuses only a
+credential the service refused, so an outage never blocks a save through MCP. The dialog validates
+first, on edit too (the stored secrets fill the fields left blank), and also holds back a credential the service gave no answer for (`unavailable`: an outage, a
+timeout, a bot wall); one that cannot be checked from here (`unknown`: no such request, an address
+the SSRF guard refuses) can be saved. A tool integration
+checks itself (`verify` in its folder of `@repo/agent-tools`). An AI provider is asked for
+`/models` at the address in Mastra's registry, or at the credential's base URL; the providers whose
+address only their SDK holds, and the few with another request or refusal status, are listed by
+hand in `integrations/provider-check.ts`.
+
+A configured tool is bound to one credential of its integration, or to none when the integration
+has no credential fields (PDF). An integration marked `credentialOptional` (Keenable) takes both: a
+team can add its tools with no key, on the service's keyless tier, and again on a key.
+
 What acts in one project stays under `:projectKey`: an agent's chat, its schedules and starting
 a run. A run is read from the agent's history and traces under `:teamId`, the queue at each
 scope, and `/agent-runs/:runId`.

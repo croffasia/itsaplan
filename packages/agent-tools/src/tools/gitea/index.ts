@@ -3,6 +3,8 @@ import { giteaListIssues } from './list-issues';
 import { giteaCreateIssue } from './create-issue';
 import { giteaUpdateIssue } from './update-issue';
 import { giteaCommentIssue } from './comment-issue';
+import { giteaIcon } from './icon';
+import { verifyGitea } from './verify';
 
 // Gitea and Forgejo, which serves the same API: the issues of a repository an agent can
 // read and act on. One credential is one personal access token against one instance.
@@ -27,5 +29,8 @@ export const gitea: Integration = {
       help: 'Personal access token with issue read and write scope (Settings, Applications). It reaches only the repositories the account can access.',
     },
   ],
+  icon: giteaIcon,
+  website: 'https://about.gitea.com',
+  verify: verifyGitea,
   tools: [giteaListIssues, giteaCreateIssue, giteaUpdateIssue, giteaCommentIssue],
 };

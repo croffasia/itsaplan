@@ -31,7 +31,35 @@ export function setPushOnInThisBrowser(on: boolean) {
   } catch {
     // Storage unavailable (private mode): the desktop notifications keep their own setting.
   }
+  if (on) keepNotificationsAnswer();
   window.dispatchEvent(new Event(NOTIFICATION_SETTINGS_EVENT));
+}
+
+// Set once this browser has answered the strip in the app shell that offers desktop
+// notifications: "Not now" there, either setting turned on, or the desktop notifications
+// turned off. The strip is not shown again in this browser after that.
+const ANSWERED_KEY = 'desktopNotificationsAnswered';
+// Pages that have answered, so the strip goes away there even when the storage refuses
+// to keep the answer (full).
+const answeredPages = new WeakSet<Window>();
+
+export function keepNotificationsAnswer() {
+  answeredPages.add(window);
+  try {
+    localStorage.setItem(ANSWERED_KEY, 'yes');
+  } catch {
+    // Storage full: the answer holds for this page only.
+  }
+}
+
+export function notificationsAnswered(): boolean {
+  if (answeredPages.has(window)) return true;
+  try {
+    return localStorage.getItem(ANSWERED_KEY) != null;
+  } catch {
+    // Storage unavailable: an answer could not be kept, so the strip is not shown.
+    return true;
+  }
 }
 
 // Null where the browser has no Push API (Safari on iOS outside the Home Screen app), or no

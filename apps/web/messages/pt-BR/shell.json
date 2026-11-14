@@ -12,5 +12,10 @@
   "noProjectsHint": "Crie seu primeiro projeto para começar a planejar issues em um quadro.",
   "createProject": "Criar projeto",
   "loadFailedTitle": "Não foi possível carregar seus projetos",
-  "loadFailedHint": "Verifique sua conexão e recarregue a página."
+  "loadFailedHint": "Verifique sua conexão e recarregue a página.",
+  "desktopNotifications": {
+    "message": "Receba uma notificação na área de trabalho para cada item novo da caixa de entrada enquanto o app está em segundo plano.",
+    "turnOn": "Ativar",
+    "notNow": "Agora não"
+  }
 }

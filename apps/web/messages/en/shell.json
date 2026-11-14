@@ -12,5 +12,10 @@
   "noProjectsHint": "Create your first project to start planning issues on a board.",
   "createProject": "Create project",
   "loadFailedTitle": "Could not load your projects",
-  "loadFailedHint": "Check your connection and reload the page."
+  "loadFailedHint": "Check your connection and reload the page.",
+  "desktopNotifications": {
+    "message": "Get a desktop notification for each new inbox item while the app is in the background.",
+    "turnOn": "Turn on",
+    "notNow": "Not now"
+  }
 }

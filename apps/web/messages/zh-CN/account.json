@@ -172,6 +172,7 @@
     "desktopNotificationsDescription": "仅限此浏览器。应用已打开但不在前台时，所有项目的收件箱里每出现一条新内容就显示一条通知。",
     "desktopNotificationsBlocked": "此浏览器屏蔽了本站的通知。请在浏览器的网站设置中允许。",
     "desktopNotificationsUnsupported": "此浏览器无法显示桌面通知。",
+    "desktopNotificationsOff": "已关闭",
     "showChatByDefault": "默认显示聊天",
     "showChatByDefaultDescription": "打开项目页面时同时打开聊天面板。可随时通过面板标题栏或聊天图标关闭。"
   }

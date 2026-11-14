@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, it } from 'node:test';
 import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { JSDOM } from 'jsdom';
-import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
+import { focusManager, QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { SyncProvider, useSyncSubscribe } from './syncContext';
 
 const replacedGlobals = ['window', 'document', 'navigator', 'fetch', 'IS_REACT_ACT_ENVIRONMENT'];
@@ -26,6 +26,18 @@ function Probe() {
     return () => off.forEach((o) => o());
   }, [subscribe]);
   useQuery({ queryKey: ['probe', lastScope], queryFn: () => ++lastScopeReads });
+  return null;
+}
+
+function BackgroundProbe() {
+  const subscribe = useSyncSubscribe();
+  useEffect(() => {
+    const off = [
+      subscribe({ scope: 'board:1', targets: [['probe', 'board:1']] }),
+      subscribe({ scope: 'inbox:all', targets: [['probe', 'inbox:all']], background: true }),
+    ];
+    return () => off.forEach((o) => o());
+  }, [subscribe]);
   return null;
 }
 
@@ -64,6 +76,7 @@ beforeEach(() => {
 afterEach(() => {
   act(() => root.unmount());
   client.clear();
+  focusManager.setFocused(undefined);
   for (const [name, descriptor] of saved) {
     if (descriptor) Object.defineProperty(globalThis, name, descriptor);
     else delete (globalThis as Record<string, unknown>)[name];
@@ -91,5 +104,27 @@ describe('SyncProvider', () => {
     await act(() => client.invalidateQueries({ queryKey: ['sync', 'rev'] }));
     await settle();
     assert.equal(lastScopeReads, reads + 1);
+  });
+
+  it('polls only the scopes of background watchers while the tab is hidden', async () => {
+    await act(async () =>
+      root.render(
+        <QueryClientProvider client={client}>
+          <SyncProvider>
+            <BackgroundProbe />
+          </SyncProvider>
+        </QueryClientProvider>,
+      ),
+    );
+    await settle();
+    assert.deepEqual(revRequests.at(-1), ['board:1', 'inbox:all']);
+
+    await act(() => focusManager.setFocused(false));
+    await settle();
+    assert.deepEqual(revRequests.at(-1), ['inbox:all']);
+
+    await act(() => focusManager.setFocused(true));
+    await settle();
+    assert.deepEqual(revRequests.at(-1), ['board:1', 'inbox:all']);
   });
 });

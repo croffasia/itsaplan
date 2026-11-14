@@ -74,8 +74,10 @@ useLiveRefresh({
 That is the whole integration. No screen runs its own timer: `SyncProvider` collects the scopes
 of everything currently mounted, asks for them in one request, and invalidates the targets of
 the scopes that moved. The API takes at most 20 scopes per request; `getRevs` splits a longer
-list into requests of 20 and merges the answers. The poll stops while the tab sits in the
-background, and while nothing is registered.
+list into requests of 20 and merges the answers. The poll stops while nothing is registered.
+While the tab sits in the background it covers only the scopes of watchers that pass
+`background: true`, and stops when there are none. Desktop notifications pass it while they
+are on, so a hidden tab still reads the inbox marker while its other screens stay paused.
 
 ## Reading the counters
 

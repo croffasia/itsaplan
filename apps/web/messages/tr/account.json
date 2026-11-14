@@ -172,6 +172,7 @@
     "desktopNotificationsDescription": "Yalnızca bu tarayıcıda. Uygulama açıkken ama önde değilken, tüm projelerden Gelen Kutusu'na gelen her yeni öğe için bir bildirim gösterir.",
     "desktopNotificationsBlocked": "Bu tarayıcı bu sitenin bildirimlerini engelliyor. Tarayıcının site ayarlarından izin verin.",
     "desktopNotificationsUnsupported": "Bu tarayıcı masaüstü bildirimi gösteremez.",
+    "desktopNotificationsOff": "Kapalı",
     "showChatByDefault": "Sohbeti varsayılan olarak göster",
     "showChatByDefaultDescription": "Proje sayfasıyla birlikte sohbet paneli de açılır. Başlığından veya sohbet simgesinden dilediğiniz zaman kapatabilirsiniz."
   }

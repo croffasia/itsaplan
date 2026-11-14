@@ -84,7 +84,9 @@ export default function TeamAgentTools({
 
       {deleting && (
         <ConfirmDialog
-          title={t('delete')}
+          title={t('deleteTitle', {
+            tool: catalogTool(deleting.toolKey)?.label ?? deleting.toolKey,
+          })}
           confirmLabel={t('delete')}
           onConfirm={async () => {
             await deleteTool.mutateAsync(deleting.id);
@@ -92,9 +94,7 @@ export default function TeamAgentTools({
           }}
           onClose={() => setDeleting(null)}
         >
-          <div className="text-sm text-muted-foreground">
-            {t('deleteMessage', { tool: catalogTool(deleting.toolKey)?.label ?? deleting.toolKey })}
-          </div>
+          <div className="text-sm text-muted-foreground">{t('deleteMessage')}</div>
         </ConfirmDialog>
       )}
     </div>

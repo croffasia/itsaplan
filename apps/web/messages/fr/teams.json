@@ -38,7 +38,7 @@
     },
     "integrations": {
       "title": "Intégrations",
-      "description": "Les clés de fournisseurs IA et les identifiants d'outils sur lesquels reposent les projets de l'équipe."
+      "description": "Les identifiants des fournisseurs d'IA et des outils utilisés par les agents de l'équipe."
     },
     "mcp": {
       "title": "MCP",
@@ -50,7 +50,7 @@
     },
     "agentTools": {
       "title": "Outils",
-      "description": "Les outils que les agents peuvent appeler, chacun relié aux identifiants d'une intégration."
+      "description": "Les outils que les agents de l'équipe peuvent appeler."
     },
     "agents": {
       "title": "Agents IA",
@@ -324,21 +324,24 @@
     "noAccess": "Vous n'avez pas accès aux intégrations de cette équipe.",
     "add": "Ajouter des identifiants",
     "edit": "Modifier les identifiants",
+    "editLabel": "Modifier les identifiants {integration}",
     "delete": "Supprimer les identifiants",
+    "deleteLabel": "Supprimer les identifiants {integration}",
+    "deleteTitle": "Supprimer les identifiants {integration} ?",
     "label": "Libellé (facultatif)",
     "labelPlaceholder": "ex. Compte de l'équipe",
-    "labelHint": "Aide à distinguer plusieurs identifiants d'une même intégration. Les secrets sont stockés chiffrés.",
+    "labelHint": "Distingue ces identifiants des autres pour la même intégration. Les secrets sont stockés chiffrés.",
     "noFields": "Aucun champ",
     "search": "Rechercher une intégration",
     "noMatches": "Aucune intégration ne correspond à « {query} ».",
     "nothingFound": "Aucun résultat",
     "noKindMatches": "Aucun identifiant dans les groupes choisis.",
     "showGroups": "Afficher les groupes",
-    "connected": "Connectée",
-    "alreadyConnected": "{integration} est déjà connectée",
+    "connected": "Identifiants ajoutés",
+    "alreadyConnected": "L'équipe a déjà des identifiants {integration}",
     "alreadyConnectedHint": "Ajoutez d'autres identifiants pour un second compte. Le libellé permet de les distinguer.",
-    "agentTools": "Outils pour les agents",
-    "validate": "Valider",
+    "agentTools": "Outils disponibles",
+    "validate": "Vérifier les identifiants",
     "optionalMark": "(facultatif)",
     "keepStored": "Laisser vide pour conserver {value}",
     "fieldHelp": "À propos de {field}",
@@ -346,18 +349,18 @@
     "checkValid": "{integration} a accepté les identifiants.",
     "checkRejected": "{integration} a refusé les identifiants. Vérifiez-les et réessayez.",
     "checkUnavailable": "{integration} n'a pas répondu à la vérification. Réessayez plus tard.",
-    "checkUnknown": "Impossible de vérifier les identifiants. Vous pouvez quand même les enregistrer.",
+    "checkUnknown": "Ces identifiants ne peuvent pas être vérifiés automatiquement. Vous pouvez quand même les enregistrer.",
     "empty": "Aucun identifiant pour l'instant",
-    "emptyHint": "Sans identifiants, les agents ne peuvent utiliser ni fournisseur d'IA ni outil.",
-    "deleteMessage": "Supprimer les identifiants {integration} ? Les agents et les outils qui les utilisent cesseront de fonctionner jusqu'à ce que vous en ajoutiez de nouveaux.",
+    "emptyHint": "Ajoutez des identifiants pour que les agents puissent utiliser un fournisseur d'IA ou un outil.",
+    "deleteMessage": "{kind, select, llm {Les agents qui les utilisent cesseront de fonctionner jusqu'à ce que vous leur choisissiez d'autres identifiants.} tool {Les outils ajoutés avec ces identifiants seront supprimés, et les agents ne pourront plus les appeler.} other {}} Cette action est irréversible.",
     "groups": {
       "llm": {
         "title": "Fournisseurs d'IA",
-        "hint": "Le modèle sur lequel tourne un agent interne"
+        "hint": "Fournisseur d'IA pour les agents internes"
       },
       "tool": {
         "title": "Outils",
-        "hint": "Les intégrations qu'un agent peut appeler comme outils"
+        "hint": "Outils que les agents peuvent appeler"
       }
     },
     "columns": {
@@ -412,12 +415,14 @@
   "tools": {
     "add": "Ajouter un outil",
     "delete": "Supprimer l'outil",
+    "deleteLabel": "Supprimer {tool}",
+    "deleteTitle": "Supprimer {tool} ?",
     "tool": "Outil",
-    "scopes": "Scopes",
+    "scopes": "Permissions du token",
     "dateAdded": "Ajouté",
-    "noScopes": "Aucun scope",
+    "noScopes": "Aucune",
     "empty": "Aucun outil pour l'instant",
-    "emptyHint": "Configurez un outil une fois, puis activez-le sur n'importe quel agent.",
+    "emptyHint": "Ajoutez un outil, puis activez-le pour les agents qui en ont besoin.",
     "search": "Rechercher un outil",
     "noMatches": "Aucun outil ne correspond à « {query} ».",
     "nothingFound": "Aucun résultat",
@@ -425,10 +430,11 @@
     "credential": "Identifiants",
     "chooseCredential": "Choisir des identifiants",
     "credentialFallback": "Identifiants nº {id}",
-    "keyless": "Sans clé (limite partagée)",
+    "keyless": "Sans clé (limite de requêtes partagée)",
     "noCredential": "Aucun identifiant {integration} pour l'instant",
-    "noCredentialHint": "Ajoutez-en un dans les intégrations de l'équipe pour sélectionner ces outils.",
-    "deleteMessage": "Retirer {tool} ? Les agents qui l'utilisent perdront l'accès à cet outil.",
+    "noCredentialHint": "Ajoutez-en pour sélectionner ces outils.",
+    "noCredentialAsk": "Demandez à la personne qui gère les intégrations de l'équipe d'en ajouter.",
+    "deleteMessage": "Les agents qui l'utilisent ne pourront plus l'appeler.",
     "selectGroup": "Tout sélectionner",
     "clearGroup": "Effacer",
     "selectedCount": "{count, plural, one {# outil sélectionné} other {# outils sélectionnés}}",

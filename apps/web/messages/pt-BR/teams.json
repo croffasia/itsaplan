@@ -38,7 +38,7 @@
     },
     "integrations": {
       "title": "Integrações",
-      "description": "As chaves de provedor de IA e credenciais de ferramentas sobre as quais os projetos do time rodam."
+      "description": "Credenciais dos provedores de IA e das ferramentas que os agentes do time usam."
     },
     "mcp": {
       "title": "MCP",
@@ -50,7 +50,7 @@
     },
     "agentTools": {
       "title": "Ferramentas",
-      "description": "Ferramentas que agentes podem chamar, cada uma conectada a uma credencial de integração."
+      "description": "Ferramentas que os agentes do time podem chamar."
     },
     "agents": {
       "title": "Agentes de IA",
@@ -324,21 +324,24 @@
     "noAccess": "Você não tem acesso às integrações deste time.",
     "add": "Adicionar credencial",
     "edit": "Editar credencial",
+    "editLabel": "Editar credencial de {integration}",
     "delete": "Excluir credencial",
+    "deleteLabel": "Excluir credencial de {integration}",
+    "deleteTitle": "Excluir a credencial de {integration}?",
     "label": "Rótulo (opcional)",
     "labelPlaceholder": "ex. Conta do time",
-    "labelHint": "Ajuda a distinguir credenciais da mesma integração. Os segredos são armazenados criptografados.",
+    "labelHint": "Diferencia esta credencial de outras da mesma integração. Os segredos são armazenados criptografados.",
     "noFields": "Sem campos",
     "search": "Buscar integrações",
     "noMatches": "Nenhuma integração corresponde a “{query}”.",
     "nothingFound": "Nada encontrado",
     "noKindMatches": "Nenhuma credencial nos grupos escolhidos.",
     "showGroups": "Mostrar grupos",
-    "connected": "Conectada",
-    "alreadyConnected": "{integration} já está conectada",
+    "connected": "Credencial adicionada",
+    "alreadyConnected": "O time já tem uma credencial de {integration}",
     "alreadyConnectedHint": "Adicione outra credencial para uma segunda conta. O rótulo as diferencia.",
-    "agentTools": "Ferramentas para os agentes",
-    "validate": "Validar",
+    "agentTools": "Ferramentas disponíveis",
+    "validate": "Verificar credencial",
     "optionalMark": "(opcional)",
     "keepStored": "Deixe em branco para manter {value}",
     "fieldHelp": "Sobre {field}",
@@ -346,18 +349,18 @@
     "checkValid": "{integration} aceitou a credencial.",
     "checkRejected": "{integration} recusou a credencial. Confira e tente de novo.",
     "checkUnavailable": "{integration} não respondeu à verificação. Tente mais tarde.",
-    "checkUnknown": "Não foi possível verificar a credencial. Você ainda pode salvá-la.",
+    "checkUnknown": "Esta credencial não pode ser verificada automaticamente. Você ainda pode salvá-la.",
     "empty": "Nenhuma credencial ainda",
-    "emptyHint": "Agentes não podem usar um provedor de IA ou uma ferramenta sem uma.",
-    "deleteMessage": "Excluir a credencial de {integration}? Agentes e ferramentas que a usam vão parar de funcionar até você adicionar uma nova.",
+    "emptyHint": "Adicione uma credencial para que os agentes possam usar um provedor de IA ou uma ferramenta.",
+    "deleteMessage": "{kind, select, llm {Os agentes que rodam com ela vão parar de funcionar até você escolher outra credencial para eles.} tool {As ferramentas adicionadas com ela serão excluídas, e os agentes não poderão mais chamá-las.} other {}} Esta ação não pode ser desfeita.",
     "groups": {
       "llm": {
         "title": "Provedores de IA",
-        "hint": "O modelo sobre o qual um agente interno roda"
+        "hint": "Provedor de IA para agentes internos"
       },
       "tool": {
         "title": "Ferramentas",
-        "hint": "Integrações que um agente pode chamar como ferramentas"
+        "hint": "Ferramentas que os agentes podem chamar"
       }
     },
     "columns": {
@@ -412,12 +415,14 @@
   "tools": {
     "add": "Adicionar ferramenta",
     "delete": "Excluir ferramenta",
+    "deleteLabel": "Excluir {tool}",
+    "deleteTitle": "Excluir {tool}?",
     "tool": "Ferramenta",
-    "scopes": "Escopos",
+    "scopes": "Permissões do token",
     "dateAdded": "Adicionada",
-    "noScopes": "Sem escopos",
+    "noScopes": "Nenhuma",
     "empty": "Nenhuma ferramenta ainda",
-    "emptyHint": "Configure uma ferramenta uma vez, depois ative-a em qualquer agente.",
+    "emptyHint": "Adicione uma ferramenta e ative-a nos agentes que precisam dela.",
     "search": "Buscar ferramentas",
     "noMatches": "Nenhuma ferramenta corresponde a “{query}”.",
     "nothingFound": "Nada encontrado",
@@ -425,10 +430,11 @@
     "credential": "Credencial",
     "chooseCredential": "Escolher uma credencial",
     "credentialFallback": "Credencial nº {id}",
-    "keyless": "Sem chave (limite compartilhado)",
+    "keyless": "Sem chave (limite de requisições compartilhado)",
     "noCredential": "Nenhuma credencial de {integration} ainda",
-    "noCredentialHint": "Adicione uma nas integrações do time para selecionar estas ferramentas.",
-    "deleteMessage": "Remover {tool}? Agentes que a usam perderão acesso a esta ferramenta.",
+    "noCredentialHint": "Adicione uma para selecionar estas ferramentas.",
+    "noCredentialAsk": "Peça a quem gerencia as integrações do time para adicionar uma.",
+    "deleteMessage": "Os agentes que a usam não poderão mais chamá-la.",
     "selectGroup": "Selecionar tudo",
     "clearGroup": "Limpar",
     "selectedCount": "{count, plural, one {# ferramenta selecionada} other {# ferramentas selecionadas}}",

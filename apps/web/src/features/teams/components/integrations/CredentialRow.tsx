@@ -61,7 +61,7 @@ export function CredentialRow({
               size="icon"
               className="size-8 text-muted-foreground hover:text-foreground"
               onClick={onEdit}
-              aria-label={t('edit')}
+              aria-label={t('editLabel', { integration: integration.label })}
             >
               <Pencil className="size-4" />
             </Button>
@@ -72,7 +72,7 @@ export function CredentialRow({
               size="icon"
               className="size-8 text-muted-foreground hover:text-destructive"
               onClick={onDelete}
-              aria-label={t('delete')}
+              aria-label={t('deleteLabel', { integration: integration.label })}
             >
               <Trash2 className="size-4" />
             </Button>

@@ -38,7 +38,7 @@
     },
     "integrations": {
       "title": "集成",
-      "description": "团队项目使用的 AI 提供商密钥和工具凭据。"
+      "description": "团队代理使用的 AI 提供商和工具凭据。"
     },
     "mcp": {
       "title": "MCP",
@@ -50,7 +50,7 @@
     },
     "agentTools": {
       "title": "工具",
-      "description": "代理可以调用的工具，每个工具连接到一个集成凭据。"
+      "description": "团队代理可以调用的工具。"
     },
     "agents": {
       "title": "AI 代理",
@@ -324,21 +324,24 @@
     "noAccess": "你没有权限查看该团队的集成。",
     "add": "添加凭据",
     "edit": "编辑凭据",
+    "editLabel": "编辑 {integration} 凭据",
     "delete": "删除凭据",
+    "deleteLabel": "删除 {integration} 凭据",
+    "deleteTitle": "删除 {integration} 凭据？",
     "label": "标签（可选）",
     "labelPlaceholder": "例如：团队账户",
-    "labelHint": "用于区分同一集成的不同凭据。密钥会加密存储。",
+    "labelHint": "用于将此凭据与同一集成的其他凭据区分开。密钥会加密存储。",
     "noFields": "无字段",
     "search": "搜索集成",
     "noMatches": "没有与“{query}”匹配的集成。",
     "nothingFound": "没有找到结果",
     "noKindMatches": "所选分组中没有凭据。",
     "showGroups": "显示分组",
-    "connected": "已连接",
-    "alreadyConnected": "{integration} 已连接",
+    "connected": "已添加凭据",
+    "alreadyConnected": "团队已有 {integration} 凭据",
     "alreadyConnectedHint": "可为另一个账号再添加一个凭据，用标签区分它们。",
-    "agentTools": "代理可用的工具",
-    "validate": "验证",
+    "agentTools": "可用工具",
+    "validate": "验证凭据",
     "optionalMark": "（可选）",
     "keepStored": "留空则保留 {value}",
     "fieldHelp": "关于{field}",
@@ -346,18 +349,18 @@
     "checkValid": "{integration} 已接受该凭据。",
     "checkRejected": "{integration} 拒绝了该凭据。请检查后重试。",
     "checkUnavailable": "{integration} 未响应验证。请稍后重试。",
-    "checkUnknown": "无法验证该凭据，但仍可保存。",
+    "checkUnknown": "无法自动验证此凭据，但仍可保存。",
     "empty": "暂无凭据",
-    "emptyHint": "代理需要凭据才能使用 AI 提供商或工具。",
-    "deleteMessage": "删除 {integration} 凭据？使用它的代理和工具将停止工作，直到添加新凭据。",
+    "emptyHint": "添加凭据后，代理即可使用 AI 提供商或工具。",
+    "deleteMessage": "{kind, select, llm {使用它运行的代理将停止工作，直到你为它们选择其他凭据。} tool {用它添加的工具将被删除，代理将无法再调用这些工具。} other {}}此操作无法撤销。",
     "groups": {
       "llm": {
         "title": "AI 提供商",
-        "hint": "内置代理使用的模型"
+        "hint": "内置代理的 AI 提供商"
       },
       "tool": {
         "title": "工具",
-        "hint": "代理可以作为工具调用的集成"
+        "hint": "代理可以调用的工具"
       }
     },
     "columns": {
@@ -412,12 +415,14 @@
   "tools": {
     "add": "添加工具",
     "delete": "删除工具",
+    "deleteLabel": "删除 {tool}",
+    "deleteTitle": "删除 {tool}？",
     "tool": "工具",
-    "scopes": "权限范围",
+    "scopes": "令牌权限",
     "dateAdded": "添加时间",
-    "noScopes": "无权限范围",
+    "noScopes": "无",
     "empty": "暂无工具",
-    "emptyHint": "工具只需配置一次，之后可以为任意代理启用。",
+    "emptyHint": "添加工具后，为需要它的代理启用。",
     "search": "搜索工具",
     "noMatches": "没有与“{query}”匹配的工具。",
     "nothingFound": "没有找到结果",
@@ -425,10 +430,11 @@
     "credential": "凭据",
     "chooseCredential": "选择凭据",
     "credentialFallback": "凭据 #{id}",
-    "keyless": "不使用密钥（共享限额）",
+    "keyless": "不使用密钥（共享请求限额）",
     "noCredential": "尚无 {integration} 凭据",
-    "noCredentialHint": "请在团队集成中添加后再选择这些工具。",
-    "deleteMessage": "移除 {tool}？使用它的代理将无法再访问此工具。",
+    "noCredentialHint": "添加凭据后即可选择这些工具。",
+    "noCredentialAsk": "请联系管理团队集成的人员添加。",
+    "deleteMessage": "使用它的代理将无法再调用此工具。",
     "selectGroup": "全选",
     "clearGroup": "清除",
     "selectedCount": "{count, plural, other {已选择 # 个工具}}",

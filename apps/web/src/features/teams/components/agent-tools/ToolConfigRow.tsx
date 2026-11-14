@@ -68,7 +68,7 @@ export function ToolConfigRow({
               size="icon"
               className="size-8 text-muted-foreground hover:text-destructive"
               onClick={onDelete}
-              aria-label={t('delete')}
+              aria-label={t('deleteLabel', { tool: meta?.label ?? tool.toolKey })}
             >
               <Trash2 className="size-4" />
             </Button>

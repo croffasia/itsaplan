@@ -20,7 +20,9 @@ export function ToolCredentialNotice({
         <p className="text-sm font-medium text-foreground">
           {t('tools.noCredential', { integration })}
         </p>
-        <p className="text-xs text-muted-foreground">{t('tools.noCredentialHint')}</p>
+        <p className="text-xs text-muted-foreground">
+          {onAdd ? t('tools.noCredentialHint') : t('tools.noCredentialAsk')}
+        </p>
       </div>
       {onAdd && (
         <Button size="sm" className="h-8 shrink-0 gap-1.5" onClick={onAdd}>

@@ -94,7 +94,9 @@ export default function TeamIntegrations({
 
       {deleting && (
         <ConfirmDialog
-          title={t('delete')}
+          title={t('deleteTitle', {
+            integration: integrationOf(catalog, deleting.integrationKey).label,
+          })}
           confirmLabel={t('delete')}
           onConfirm={async () => {
             await deleteCredential.mutateAsync(deleting.id);
@@ -103,9 +105,7 @@ export default function TeamIntegrations({
           onClose={() => setDeleting(null)}
         >
           <div className="text-sm text-muted-foreground">
-            {t('deleteMessage', {
-              integration: integrationOf(catalog, deleting.integrationKey).label,
-            })}
+            {t('deleteMessage', { kind: integrationOf(catalog, deleting.integrationKey).kind })}
           </div>
         </ConfirmDialog>
       )}

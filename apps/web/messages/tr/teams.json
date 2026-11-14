@@ -38,7 +38,7 @@
     },
     "integrations": {
       "title": "Entegrasyonlar",
-      "description": "Takım projelerinin kullandığı yapay zekâ sağlayıcı anahtarları ve araç kimlik bilgileri."
+      "description": "Takımın ajanlarının kullandığı yapay zekâ sağlayıcılarının ve araçların kimlik bilgileri."
     },
     "mcp": {
       "title": "MCP",
@@ -50,7 +50,7 @@
     },
     "agentTools": {
       "title": "Araçlar",
-      "description": "Ajanların çağırabileceği ve bir entegrasyona bağlı olan araçlar."
+      "description": "Takımın ajanlarının çağırabileceği araçlar."
     },
     "agents": {
       "title": "Yapay Zekâ Ajanları",
@@ -324,20 +324,23 @@
     "noAccess": "Bu takımın entegrasyonlarına erişiminiz yok.",
     "add": "Kimlik bilgisi ekle",
     "edit": "Kimlik bilgisini düzenle",
+    "editLabel": "{integration} kimlik bilgisini düzenle",
     "delete": "Kimlik bilgisini sil",
+    "deleteLabel": "{integration} kimlik bilgisini sil",
+    "deleteTitle": "{integration} kimlik bilgisi silinsin mi?",
     "label": "Etiket (isteğe bağlı)",
     "labelPlaceholder": "Örn. Takım hesabı",
-    "labelHint": "Aynı entegrasyona ait farklı kimlik bilgilerini ayırt etmeye yardımcı olur. Gizli anahtarlar şifrelenmiş olarak saklanır.",
+    "labelHint": "Bu kimlik bilgisini aynı entegrasyonun diğer kimlik bilgilerinden ayırt eder. Gizli anahtarlar şifrelenmiş olarak saklanır.",
     "noFields": "Alan yok",
     "search": "Entegrasyonları ara",
     "noMatches": "“{query}” ile eşleşen entegrasyon bulunamadı.",
     "nothingFound": "Sonuç bulunamadı",
     "noKindMatches": "Seçilen gruplarda kimlik bilgisi yok.",
     "showGroups": "Grupları göster",
-    "connected": "Bağlı",
-    "alreadyConnected": "{integration} zaten bağlı",
+    "connected": "Kimlik bilgisi eklendi",
+    "alreadyConnected": "Takımın zaten bir {integration} kimlik bilgisi var",
     "alreadyConnectedHint": "İkinci bir hesap için başka bir kimlik bilgisi ekleyin. Etiket bunları ayırt eder.",
-    "agentTools": "Ajanlara sunulan araçlar",
+    "agentTools": "Kullanılabilir araçlar",
     "validate": "Doğrula",
     "optionalMark": "(isteğe bağlı)",
     "keepStored": "{value} değerini korumak için boş bırakın",
@@ -346,18 +349,18 @@
     "checkValid": "{integration} kimlik bilgisini kabul etti.",
     "checkRejected": "{integration} kimlik bilgisini reddetti. Kontrol edip yeniden deneyin.",
     "checkUnavailable": "{integration} kontrole yanıt vermedi. Daha sonra yeniden deneyin.",
-    "checkUnknown": "Kimlik bilgisi kontrol edilemedi. Yine de kaydedebilirsiniz.",
+    "checkUnknown": "Bu kimlik bilgisi otomatik olarak kontrol edilemiyor. Yine de kaydedebilirsiniz.",
     "empty": "Henüz kimlik bilgisi yok",
-    "emptyHint": "Ajanlar kimlik bilgisi olmadan bir yapay zekâ sağlayıcısını veya aracı kullanamaz.",
-    "deleteMessage": "{integration} kimlik bilgisi silinsin mi? Bunu kullanan ajanlar ve araçlar siz yenisini ekleyene kadar çalışmayı durdurur.",
+    "emptyHint": "Ajanların bir yapay zekâ sağlayıcısını veya aracı kullanabilmesi için bir kimlik bilgisi ekleyin.",
+    "deleteMessage": "{kind, select, llm {Bununla çalışan ajanlar, onlar için başka bir kimlik bilgisi seçene kadar çalışmaz.} tool {Bununla eklenen araçlar silinir ve ajanlar artık onları çağıramaz.} other {}} Bu işlem geri alınamaz.",
     "groups": {
       "llm": {
         "title": "Yapay zekâ sağlayıcıları",
-        "hint": "Dahili bir ajanın üzerinde çalıştığı model"
+        "hint": "Dahili ajanlar için yapay zekâ sağlayıcısı"
       },
       "tool": {
         "title": "Araçlar",
-        "hint": "Bir ajanın araç olarak çağırabileceği entegrasyonlar"
+        "hint": "Ajanların çağırabileceği araçlar"
       }
     },
     "columns": {
@@ -412,12 +415,14 @@
   "tools": {
     "add": "Araç ekle",
     "delete": "Aracı sil",
+    "deleteLabel": "{tool} aracını sil",
+    "deleteTitle": "{tool} silinsin mi?",
     "tool": "Araç",
-    "scopes": "Kapsamlar",
+    "scopes": "Belirteç izinleri",
     "dateAdded": "Eklendi",
-    "noScopes": "Kapsam yok",
+    "noScopes": "Yok",
     "empty": "Henüz araç yok",
-    "emptyHint": "Bir aracı bir kez yapılandırın, ardından istediğiniz ajanda etkinleştirin.",
+    "emptyHint": "Bir araç ekleyin, ardından ihtiyaç duyan ajanlarda etkinleştirin.",
     "search": "Araçları ara",
     "noMatches": "“{query}” ile eşleşen araç bulunamadı.",
     "nothingFound": "Sonuç bulunamadı",
@@ -425,10 +430,11 @@
     "credential": "Kimlik Bilgisi",
     "chooseCredential": "Bir kimlik bilgisi seçin",
     "credentialFallback": "Kimlik bilgisi #{id}",
-    "keyless": "Anahtarsız (ortak limit)",
+    "keyless": "Anahtarsız (ortak istek limiti)",
     "noCredential": "Henüz {integration} kimlik bilgisi yok",
-    "noCredentialHint": "Bu araçları seçmek için takım entegrasyonlarına bir tane ekleyin.",
-    "deleteMessage": "{tool} kaldırılsın mı? Bunu kullanan ajanlar bu araca erişimini kaybeder.",
+    "noCredentialHint": "Bu araçları seçmek için bir tane ekleyin.",
+    "noCredentialAsk": "Takımın entegrasyonlarını yöneten kişiden bir tane eklemesini isteyin.",
+    "deleteMessage": "Bunu kullanan ajanlar artık onu çağıramaz.",
     "selectGroup": "Tümünü seç",
     "clearGroup": "Temizle",
     "selectedCount": "{count, plural, one {# araç seçildi} other {# araç seçildi}}",

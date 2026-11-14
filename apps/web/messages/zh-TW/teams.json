@@ -38,7 +38,7 @@
     },
     "integrations": {
       "title": "整合",
-      "description": "團隊專案使用的 AI 服務供應商金鑰和工具認證資訊。"
+      "description": "團隊代理使用的 AI 服務供應商和工具認證資訊。"
     },
     "mcp": {
       "title": "MCP",
@@ -50,7 +50,7 @@
     },
     "agentTools": {
       "title": "工具",
-      "description": "代理可以呼叫的工具，每個工具連線到一個整合認證資訊。"
+      "description": "團隊代理可以呼叫的工具。"
     },
     "agents": {
       "title": "AI 代理",
@@ -324,21 +324,24 @@
     "noAccess": "你沒有權限檢視該團隊的整合。",
     "add": "新增認證資訊",
     "edit": "編輯認證資訊",
+    "editLabel": "編輯 {integration} 認證資訊",
     "delete": "刪除認證資訊",
+    "deleteLabel": "刪除 {integration} 認證資訊",
+    "deleteTitle": "刪除 {integration} 認證資訊？",
     "label": "標籤（可選）",
     "labelPlaceholder": "例如：團隊帳號",
-    "labelHint": "用於區分同一整合的不同認證資訊。金鑰會加密儲存。",
+    "labelHint": "用於將此認證資訊與同一整合的其他認證資訊區分開來。金鑰會加密儲存。",
     "noFields": "無欄位",
     "search": "搜尋整合",
     "noMatches": "沒有與「{query}」匹配的整合。",
     "nothingFound": "沒有找到結果",
     "noKindMatches": "所選群組中沒有認證資訊。",
     "showGroups": "顯示群組",
-    "connected": "已連線",
-    "alreadyConnected": "{integration} 已連線",
+    "connected": "已新增認證資訊",
+    "alreadyConnected": "團隊已有 {integration} 認證資訊",
     "alreadyConnectedHint": "可為另一個帳號再新增一組認證資訊，用標籤區分。",
-    "agentTools": "代理可用的工具",
-    "validate": "驗證",
+    "agentTools": "可用工具",
+    "validate": "驗證認證資訊",
     "optionalMark": "（可選）",
     "keepStored": "留空則保留 {value}",
     "fieldHelp": "關於{field}",
@@ -346,18 +349,18 @@
     "checkValid": "{integration} 已接受此認證資訊。",
     "checkRejected": "{integration} 拒絕了此認證資訊。請檢查後再試一次。",
     "checkUnavailable": "{integration} 未回應驗證。請稍後再試。",
-    "checkUnknown": "無法驗證此認證資訊，但仍可儲存。",
+    "checkUnknown": "無法自動驗證此認證資訊，但仍可儲存。",
     "empty": "暫無認證資訊",
-    "emptyHint": "代理需要認證資訊才能使用 AI 服務供應商或工具。",
-    "deleteMessage": "刪除 {integration} 認證資訊？使用它的代理和工具將停止工作，直到新增新認證資訊。",
+    "emptyHint": "新增認證資訊後，代理即可使用 AI 服務供應商或工具。",
+    "deleteMessage": "{kind, select, llm {使用它執行的代理將停止運作，直到你為它們選擇其他認證資訊。} tool {用它新增的工具將被刪除，代理將無法再呼叫這些工具。} other {}}此操作無法復原。",
     "groups": {
       "llm": {
         "title": "AI 服務供應商",
-        "hint": "內建代理使用的模型"
+        "hint": "內建代理的 AI 服務供應商"
       },
       "tool": {
         "title": "工具",
-        "hint": "代理可以作為工具呼叫的整合"
+        "hint": "代理可以呼叫的工具"
       }
     },
     "columns": {
@@ -412,12 +415,14 @@
   "tools": {
     "add": "新增工具",
     "delete": "刪除工具",
+    "deleteLabel": "刪除 {tool}",
+    "deleteTitle": "刪除 {tool}？",
     "tool": "工具",
-    "scopes": "權限範圍",
+    "scopes": "權杖權限",
     "dateAdded": "新增時間",
-    "noScopes": "無權限範圍",
+    "noScopes": "無",
     "empty": "暫無工具",
-    "emptyHint": "工具只需設定一次，之後可以為任意代理啟用。",
+    "emptyHint": "新增工具後，為需要它的代理啟用。",
     "search": "搜尋工具",
     "noMatches": "沒有與「{query}」匹配的工具。",
     "nothingFound": "沒有找到結果",
@@ -425,10 +430,11 @@
     "credential": "認證資訊",
     "chooseCredential": "選擇認證資訊",
     "credentialFallback": "認證資訊 #{id}",
-    "keyless": "不使用金鑰（共用限額）",
+    "keyless": "不使用金鑰（共用請求限額）",
     "noCredential": "尚無 {integration} 認證資訊",
-    "noCredentialHint": "請在團隊整合中新增後再選擇這些工具。",
-    "deleteMessage": "移除 {tool}？使用它的代理將無法再存取此工具。",
+    "noCredentialHint": "新增認證資訊後即可選擇這些工具。",
+    "noCredentialAsk": "請聯絡管理團隊整合的人員新增。",
+    "deleteMessage": "使用它的代理將無法再呼叫此工具。",
     "selectGroup": "全選",
     "clearGroup": "清除",
     "selectedCount": "{count, plural, other {已選擇 # 個工具}}",

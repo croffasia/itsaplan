@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
-import type { FilterSection } from './FilterMenu';
+import { clearedSection, sectionInUse, type FilterSection } from './FilterMenu';
 
 // The filters in force, one chip per section, each removed on its own or all at once.
 export default function FilterChips({
@@ -12,7 +12,7 @@ export default function FilterChips({
   onChange: (key: string, selected: string[]) => void;
 }) {
   const t = useTranslations('common');
-  const active = sections.filter((section) => section.selected.length > 0);
+  const active = sections.filter(sectionInUse);
   if (active.length === 0) return null;
 
   return (
@@ -31,7 +31,7 @@ export default function FilterChips({
           </span>
           <button
             type="button"
-            onClick={() => onChange(section.key, [])}
+            onClick={() => onChange(section.key, clearedSection(section))}
             aria-label={t('removeFilter', { filter: section.label })}
             className="flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
           >
@@ -44,7 +44,9 @@ export default function FilterChips({
           variant="ghost"
           size="sm"
           className="ms-auto h-7 text-muted-foreground"
-          onClick={() => active.forEach((section) => onChange(section.key, []))}
+          onClick={() =>
+            active.forEach((section) => onChange(section.key, clearedSection(section)))
+          }
         >
           {t('clearFilters')}
         </Button>

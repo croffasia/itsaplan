@@ -212,10 +212,51 @@ describe('agent analytics', () => {
     await seedRun('an-mkt', { agentId, teamId, projectId: mkt }, daysAgo(1), usage);
     await seedRun('an-ops', { agentId, teamId, projectId: ops }, daysAgo(1), usage);
 
-    const res = await teamDashboard(asOwner, teamId).get({ query: { projectId: ops } });
+    const res = await teamDashboard(asOwner, teamId).get({ query: { projectIds: `${ops}` } });
     expect(res.data!.totals.runs).toBe(1);
     expect(res.data!.projects.map((p) => p.name)).toEqual(['Operations']);
     expect(res.data!.readableProjects.map((p) => p.name)).toEqual(['Marketing', 'Operations']);
+  });
+
+  it('narrows the window to several projects', async () => {
+    const { asOwner, teamId } = await setup();
+    await createProject(asOwner, { key: 'OPS', name: 'Operations' });
+    await createProject(asOwner, { key: 'DOC', name: 'Docs' });
+    const agentId = await createScout(asOwner);
+    const usage = { inputTokens: 100, outputTokens: 0 };
+    const ids: number[] = [];
+    for (const key of ['MKT', 'OPS', 'DOC']) {
+      const projectId = await projectIdOf(asOwner, key);
+      ids.push(projectId);
+      await seedRun(`an-${key}`, { agentId, teamId, projectId }, daysAgo(1), usage);
+    }
+
+    const res = await teamDashboard(asOwner, teamId).get({
+      query: { projectIds: `${ids[0]},${ids[1]}` },
+    });
+    expect(res.data!.totals.runs).toBe(2);
+    expect(res.data!.projects.map((p) => p.name).sort()).toEqual(['Marketing', 'Operations']);
+  });
+
+  it('reads nothing for a project outside the team', async () => {
+    const { asOwner, teamId } = await setup();
+    const mkt = await projectIdOf(asOwner, 'MKT');
+    const meta = { agentId: await createScout(asOwner), teamId, projectId: mkt };
+    await seedRun('an-mkt', meta, daysAgo(1), { inputTokens: 100, outputTokens: 0 });
+
+    const res = await teamDashboard(asOwner, teamId).get({
+      query: { projectIds: `${mkt + 1000}` },
+    });
+    expect(res.status).toBe(200);
+    expect(res.data!.totals.runs).toBe(0);
+  });
+
+  it('refuses a project list that is not ids', async () => {
+    const { asOwner, teamId } = await setup();
+    for (const projectIds of ['abc', '0', '1,,2']) {
+      const res = await teamDashboard(asOwner, teamId).get({ query: { projectIds } });
+      expect(res.status).toBe(400);
+    }
   });
 
   it('reads a window of a day by the hour', async () => {
@@ -298,7 +339,7 @@ describe('agent analytics', () => {
     expect(res.data!.totals.runs).toBe(1);
     expect(res.data!.projects.map((p) => p.name)).toEqual(['Marketing']);
     expect(res.data!.readableProjects.map((p) => p.name)).toEqual(['Marketing']);
-    const other = await teamDashboard(asMember, teamId).get({ query: { projectId: ops } });
+    const other = await teamDashboard(asMember, teamId).get({ query: { projectIds: `${ops}` } });
     expect(other.data!.totals.runs).toBe(0);
   });
 

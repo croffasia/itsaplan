@@ -65,7 +65,8 @@ import { getAgentTrace, listAgentTraces } from './runtime/traces';
 import {
   analyticsProjects,
   getAgentAnalytics,
-  onlyProject,
+  onlyProjects,
+  queryProjectIds,
   workspaceScope,
 } from './runtime/analytics';
 import {
@@ -440,7 +441,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       };
       const [analytics, readableProjects] = await Promise.all([
         getAgentAnalytics(
-          onlyProject(scope, query.projectId),
+          onlyProjects(scope, queryProjectIds(query.projectIds)),
           query.days ?? DEFAULT_ANALYTICS_DAYS,
         ),
         analyticsProjects(scope),
@@ -458,7 +459,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
           'Runs, tokens and model cost of the agents of the team, over the last `days` days ' +
           'beside the same span before it. An owner or a manager of the team reads every ' +
           'project; anyone else the projects where their role grants agent_usage read. ' +
-          '`projectId` narrows it to one of them.',
+          '`projectIds` narrows it to some of them.',
       },
     },
   )

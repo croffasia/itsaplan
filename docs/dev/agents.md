@@ -143,7 +143,7 @@ The team's owner and managers read every project of the team, and so does anyone
 role grants `agent_usage` `read`, which covers a workspace owner and admin. Anyone else reads the
 projects where their project role grants it (`projectsWithPermission` in `shared/access.ts`), since
 a role is set per project and a team-wide figure would show the others. The response names those
-projects (`readableProjects`), and `projectId` narrows the dashboard to one of them.
+projects (`readableProjects`), and `projectIds` narrows the dashboard to some of them.
 `GET /workspaces/:workspaceId/agent-analytics` reads it over every team of a workspace, with the
 teams compared, for its owner and its admins.
 

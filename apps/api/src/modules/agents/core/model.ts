@@ -462,7 +462,7 @@ export const TeamAgentAnalyticsResponse = t.Composite([
   t.Object({
     readableProjects: t.Array(t.Object({ projectId: t.Number(), name: t.String() }), {
       description:
-        'The projects of the team the caller reads the figures of: what `projectId` takes.',
+        'The projects of the team the caller reads the figures of: what `projectIds` takes.',
     }),
   }),
 ]);
@@ -475,7 +475,11 @@ export const workspaceAnalyticsQuery = t.Object({ days: analyticsDays });
 
 export const analyticsQuery = t.Object({
   days: analyticsDays,
-  projectId: t.Optional(
-    t.Numeric({ description: 'Narrows the figures to one project of the team.' }),
+  projectIds: t.Optional(
+    t.String({
+      pattern: '^[1-9][0-9]{0,8}(,[1-9][0-9]{0,8})*$',
+      maxLength: 5000,
+      description: 'Comma-separated project ids of the team; narrows the figures to them.',
+    }),
   ),
 });

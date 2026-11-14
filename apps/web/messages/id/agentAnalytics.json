@@ -1,11 +1,12 @@
 {
   "window": "{days, plural, =1 {24 jam terakhir} other {# hari terakhir}}",
+  "period": "Periode",
   "retentionNote": "Hanya agen internal. Eksekusi yang lebih lama dari masa simpan trace instance tidak dihitung.",
   "noComparison": "Tidak ada pembanding",
   "vsPrevious": "sebelumnya {value}",
   "deletedAgent": "Agen dihapus",
   "deletedProject": "Proyek dihapus",
-  "allProjects": "Semua proyek",
+  "projects": "Proyek",
   "totalTokens": "Total token",
   "totalCost": "Total biaya",
   "stats": {
@@ -55,7 +56,7 @@
   },
   "preview": {
     "title": "Lebih banyak di Cloud dan Pro",
-    "description": "Biaya per orang dan pemicu, durasi eksekusi, dan panggilan alat. Tersedia di Cloud dan Pro self-hosted.",
+    "description": "Biaya per orang, pemicu, jadwal, dan alur, durasi eksekusi, dan panggilan alat. Tersedia di Cloud dan Pro self-hosted.",
     "hide": "Sembunyikan",
     "show": "Tampilkan",
     "byPerson": {
@@ -64,11 +65,15 @@
     },
     "byTrigger": {
       "title": "Per pemicu",
-      "description": "Chat, mention, jadwal, atau peristiwa tugas."
+      "description": "Yang memulai eksekusi."
     },
     "bySchedule": {
       "title": "Per jadwal",
       "description": "Biaya tiap jadwal."
+    },
+    "byWorkflow": {
+      "title": "Per alur",
+      "description": "Yang dipakai tiap alur."
     },
     "tools": {
       "title": "Alat",

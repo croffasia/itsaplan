@@ -8,11 +8,11 @@ import { qk } from '@/services/queryKeys';
 export function useTeamAgentAnalyticsQuery(
   teamId: number | null,
   days: number,
-  projectId: number | null,
+  projectIds: number[],
 ) {
   return useQuery({
-    queryKey: qk.agentAnalytics(teamId ?? 0, days, projectId),
-    queryFn: () => getTeamAgentAnalytics(teamId!, days, projectId),
+    queryKey: qk.agentAnalytics(teamId ?? 0, days, projectIds),
+    queryFn: () => getTeamAgentAnalytics(teamId!, days, projectIds),
     enabled: teamId != null,
     placeholderData: keepPreviousData,
   });

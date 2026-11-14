@@ -1,11 +1,12 @@
 {
   "window": "{days, plural, =1 {最近 24 小时} other {最近 # 天}}",
+  "period": "时间段",
   "retentionNote": "仅统计内部代理。早于实例追踪保留期的运行不计入。",
   "noComparison": "没有可对比的数据",
   "vsPrevious": "之前为 {value}",
   "deletedAgent": "已删除的代理",
   "deletedProject": "已删除的项目",
-  "allProjects": "所有项目",
+  "projects": "项目",
   "totalTokens": "Token 总数",
   "totalCost": "总花费",
   "stats": {
@@ -55,7 +56,7 @@
   },
   "preview": {
     "title": "Cloud 和 Pro 中的更多内容",
-    "description": "按人员和触发方式的花费、运行时长和工具调用。可在 Cloud 和自托管 Pro 版中使用。",
+    "description": "按人员、触发方式、计划和工作流的花费、运行时长和工具调用。可在 Cloud 和自托管 Pro 版中使用。",
     "hide": "隐藏",
     "show": "显示",
     "byPerson": {
@@ -64,11 +65,15 @@
     },
     "byTrigger": {
       "title": "按触发方式",
-      "description": "聊天、提及、计划或任务事件。"
+      "description": "运行由什么触发。"
     },
     "bySchedule": {
       "title": "按计划",
       "description": "每个计划的花费。"
+    },
+    "byWorkflow": {
+      "title": "按工作流",
+      "description": "每个工作流的用量。"
     },
     "tools": {
       "title": "工具",

@@ -81,8 +81,9 @@ export default function TeamAgentTools({
         <TableBody>
           {tools.map((tool) => {
             const source = sources.find((one) => one.key === tool.source);
+            const Row = (source?.kind === 'source' && source.Row) || ToolConfigRow;
             return (
-              <ToolConfigRow
+              <Row
                 key={tool.id}
                 tool={tool}
                 meta={catalogTool(tool.toolKey)}

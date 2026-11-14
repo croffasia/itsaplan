@@ -11,7 +11,7 @@ import {
 import { getProjectById } from '#modules/projects/service';
 import { getCredentialSecret } from '../../integrations/service';
 import { listAgentSkills } from '../../skills/service';
-import { listAgentToolsForRun } from '../../tools/service';
+import { agentToolSet } from '../../tools/service';
 import { buildCustomTools } from './tools/custom-tools';
 import { buildNamedRouteTools, buildRouteTools } from './tools/route-tools';
 import { buildLocalTools } from './tools/local';
@@ -120,13 +120,18 @@ async function buildAgent(
   if (!project) throw new HttpError(404, 'Project not found');
   const model = await resolveModel(row, sessionId);
   const skills = await listAgentSkills(row.id);
-  const customTools = await listAgentToolsForRun(row.id);
+  const customTools = await agentToolSet(row, { runId: opts.runId });
   const apiKey = await getInternalAgentApiKey(row);
   const instructions =
     projectPreamble(project) +
     (opts.contextPreamble ?? '') +
     (row.instructions ?? DEFAULT_INSTRUCTIONS) +
     skillsPreamble(skills);
+  const coreTools = {
+    ...buildRouteTools(project, apiKey, row.tools),
+    ...buildLocalTools(projectId, row.tools),
+    ...(skills.length > 0 ? buildSkillTool(row.teamId, skills) : {}),
+  };
   const config: AgentConfig = {
     id: `ai-agent-${row.id}`,
     name: row.name,
@@ -135,13 +140,8 @@ async function buildAgent(
     // The agent acts as its own bot user, in the project of this run. Route tools call
     // the real API with its key, so its role applies; get_current_date is the one
     // tool with no route; read_skill loads any enabled skills on demand; custom tools
-    // are the external integrations configured on the team and enabled here.
-    tools: {
-      ...buildRouteTools(project, apiKey, row.tools),
-      ...buildLocalTools(projectId, row.tools),
-      ...(skills.length > 0 ? buildSkillTool(row.teamId, skills) : {}),
-      ...buildCustomTools(customTools),
-    },
+    // are the tools configured on the team and enabled here.
+    tools: { ...coreTools, ...buildCustomTools(customTools, new Set(Object.keys(coreTools))) },
     // Conversation memory (last N messages of a thread) when enabled.
     ...(row.memoryEnabled
       ? { memory: buildMemory(row.memoryLastMessages ?? DEFAULT_LAST_MESSAGES) }

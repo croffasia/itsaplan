@@ -75,6 +75,10 @@ export interface IntegrationIcon {
   color?: string;
 }
 
+// 'tool' by default. A 'service' integration has no tools of its own: its credential is
+// an address and a key a team's own tools send requests to.
+export type IntegrationKind = 'tool' | 'service';
+
 export interface Integration {
   key: string;
   label: string;
@@ -82,6 +86,7 @@ export interface Integration {
   icon?: IntegrationIcon;
   // The service's homepage, linked from the interface.
   website?: string;
+  kind?: IntegrationKind;
   credentialSchema: ConfigField[];
   // Its tools also run with no credential, on the service's keyless tier.
   credentialOptional?: boolean;
@@ -108,6 +113,7 @@ export interface IntegrationDescriptor {
   label: string;
   icon?: IntegrationIcon;
   website?: string;
+  kind: IntegrationKind;
   credentialSchema: ConfigField[];
   credentialOptional?: boolean;
   tools: ToolDescriptor[];

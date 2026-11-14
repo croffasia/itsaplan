@@ -4,17 +4,19 @@ import { integrationDescriptors } from '@repo/agent-tools';
 import { AI_PROVIDERS } from './llm-providers';
 
 // The unified integration catalog: every service a project can store a credential
-// for. Two kinds:
-//   - "llm"  — the AI providers whose models an internal agent runs on. Their
-//              credential is an API key (plus a base URL for OpenAI-compatible
-//              endpoints). They expose no tools.
-//   - "tool" — the tool integrations (Jina, Firecrawl, Telegram, Threads) from
-//              @repo/agent-tools. Their credential schema and tool list come from the
-//              package.
+// for. Three kinds:
+//   - "llm"     — the AI providers whose models an internal agent runs on. Their
+//                 credential is an API key (plus a base URL for OpenAI-compatible
+//                 endpoints). They expose no tools.
+//   - "tool"    — the tool integrations (Jina, Firecrawl, Telegram, Threads) from
+//                 @repo/agent-tools. Their credential schema and tool list come from the
+//                 package.
+//   - "service" — an address and a key that a team's own tools send requests to, from
+//                 an extension of the api (setExtraIntegrations). No tools.
 // The credential form and, for tool integrations, the tool picker are built from a
 // descriptor on the frontend.
 
-export type IntegrationKind = 'llm' | 'tool';
+export type IntegrationKind = 'llm' | 'tool' | 'service';
 
 export interface UnifiedIntegration {
   key: string;
@@ -62,13 +64,13 @@ const LLM_INTEGRATIONS: UnifiedIntegration[] = AI_PROVIDERS.map((p) => ({
   tools: [],
 }));
 
-// Built on each call: an extension of the api adds tool integrations after this module
-// loads (setExtraIntegrations in @repo/agent-tools).
+// Built on each call: an extension of the api adds integrations after this module loads
+// (setExtraIntegrations in @repo/agent-tools).
 export function integrationCatalog(): UnifiedIntegration[] {
   const tools: UnifiedIntegration[] = integrationDescriptors().map((d) => ({
     key: d.key,
     label: d.label,
-    kind: 'tool',
+    kind: d.kind,
     icon: d.icon,
     website: d.website,
     credentialSchema: d.credentialSchema,

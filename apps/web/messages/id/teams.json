@@ -352,7 +352,7 @@
     "checkUnknown": "Kredensial ini tidak dapat diperiksa secara otomatis. Anda tetap dapat menyimpannya.",
     "empty": "Belum ada kredensial",
     "emptyHint": "Tambahkan kredensial agar agen dapat menggunakan penyedia AI atau alat.",
-    "deleteMessage": "{kind, select, llm {Agen yang berjalan dengan kredensial ini akan berhenti bekerja hingga Anda memilih kredensial lain untuknya.} tool {Alat yang ditambahkan dengan kredensial ini akan dihapus, dan agen tidak dapat memanggilnya lagi.} other {}} Tindakan ini tidak dapat dibatalkan.",
+    "deleteMessage": "{kind, select, llm {Agen yang berjalan dengan kredensial ini akan berhenti bekerja hingga Anda memilih kredensial lain untuknya.} tool {Alat yang ditambahkan dengan kredensial ini akan dihapus, dan agen tidak dapat memanggilnya lagi.} service {Alat yang ditambahkan dengan kredensial ini akan dihapus, dan agen tidak dapat memanggilnya lagi.} other {}} Tindakan ini tidak dapat dibatalkan.",
     "groups": {
       "llm": {
         "title": "Penyedia AI",
@@ -361,6 +361,10 @@
       "tool": {
         "title": "Alat",
         "hint": "Alat yang dapat dipanggil agen"
+      },
+      "service": {
+        "title": "Layanan",
+        "hint": "Alamat dan kunci tujuan permintaan dari alat Anda sendiri"
       }
     },
     "columns": {
@@ -445,7 +449,17 @@
     "added": "Sudah ditambahkan",
     "noCredentialNeeded": "Alat {integration} tidak memerlukan kredensial.",
     "addCount": "{count, plural, =0 {Tambah alat} one {Tambah # alat} other {Tambah # alat}}",
-    "noAccess": "Anda tidak memiliki akses ke alat tim ini."
+    "noAccess": "Anda tidak memiliki akses ke alat tim ini.",
+    "unavailable": "Tidak tersedia",
+    "unavailableHint": "Instans ini tidak memiliki alat ini. Alat disimpan apa adanya, tetapi tidak ada agen yang mendapatkannya.",
+    "locked": "Perlu Cloud atau Pro",
+    "lockedHint": "Dibuat dengan Cloud atau Pro. Disimpan apa adanya, tetapi di sini tidak ada agen yang mendapatkannya.",
+    "ownTool": "Buat alat",
+    "ownToolHint": "Di Cloud dan Pro: alat Anda sendiri yang mengirim permintaan ke layanan apa pun yang punya API",
+    "group": "Grup",
+    "allGroups": "Semua alat",
+    "ownTools": "Alat sendiri",
+    "noneInGroup": "Tidak ada alat di grup ini"
   },
   "agents": {
     "projectDefaultsColumn": "Proyek baru",

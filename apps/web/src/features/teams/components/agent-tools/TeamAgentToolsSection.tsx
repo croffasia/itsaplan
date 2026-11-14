@@ -1,23 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useToolSources } from '@/cloud';
+import type { ConfiguredTool } from '@/lib/api/endpoints/agentTools';
 import { useTeamQuery } from '@/services/teams.service';
 import { useIntegrationCatalogQuery } from '@/services/integrations.service';
 import { useConfiguredToolsPageQuery } from '@/services/customTools.service';
 import SectionPageView from '@/components/common/page/SectionPageView';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import ListPager from '@/components/common/ListPager';
-import SearchInput from '@/components/common/SearchInput';
-import { Button } from '@/components/ui/button';
 import { usePaging } from '@/hooks/usePaging';
 import { useSearchTerm } from '@/hooks/useSearchTerm';
 import { ToolConfigDialog } from './ToolConfigDialog';
+import ToolAddActions from './ToolAddActions';
 import TeamAgentTools from './TeamAgentTools';
+import ToolListToolbar, { ALL_GROUPS } from './ToolListToolbar';
 
-// The configured tools of a team: external integrations the internal agents of its
-// projects can call, each bound to one of the team's credentials.
+// The configured tools of a team: external integrations the agents of its projects can
+// call, each bound to one of the team's credentials, and the tools the team defines
+// itself, each opened in its source's panel.
 export default function TeamAgentToolsSection({ teamId }: { teamId: number }) {
   const t = useTranslations('teams');
   const { data: team } = useTeamQuery(teamId);
@@ -27,16 +29,29 @@ export default function TeamAgentToolsSection({ teamId }: { teamId: number }) {
   const canSee = !!permissions && (permissions.read || permissions.create);
   const catalog = useIntegrationCatalogQuery(canSee ? teamId : null).data ?? [];
   const [creating, setCreating] = useState(false);
+  const sources = useToolSources();
+  // The source panel open, on a tool of that source or on a new one.
+  const [editing, setEditing] = useState<{ source: string; tool: ConfiguredTool | null } | null>(
+    null,
+  );
+  const editor = sources.find((s) => s.kind === 'source' && s.key === editing?.source);
   const paging = usePaging();
   const { search, setSearch, term } = useSearchTerm();
+  const [group, setGroup] = useState(ALL_GROUPS);
   const toolsQuery = useConfiguredToolsPageQuery(permissions?.read ? teamId : null, {
     search: term,
+    group: group === ALL_GROUPS ? undefined : group,
     ...paging.params,
   });
   const total = toolsQuery.data?.total ?? 0;
 
   function onSearchChange(next: string) {
     setSearch(next);
+    paging.reset();
+  }
+
+  function onGroupChange(next: string) {
+    setGroup(next);
     paging.reset();
   }
 
@@ -47,10 +62,11 @@ export default function TeamAgentToolsSection({ teamId }: { teamId: number }) {
       wide
       actions={
         permissions?.create ? (
-          <Button size="sm" className="h-8 gap-1.5" onClick={() => setCreating(true)}>
-            <Plus className="size-3.5" />
-            {t('tools.add')}
-          </Button>
+          <ToolAddActions
+            sources={sources}
+            onCreate={(source) => setEditing({ source, tool: null })}
+            onAdd={() => setCreating(true)}
+          />
         ) : undefined
       }
     >
@@ -60,11 +76,13 @@ export default function TeamAgentToolsSection({ teamId }: { teamId: number }) {
         <p className="text-sm text-muted-foreground">{t('tools.noAccess')}</p>
       ) : (
         <div className="space-y-4">
-          <SearchInput
-            value={search}
-            onChange={onSearchChange}
-            placeholder={t('tools.search')}
-            className="w-60"
+          <ToolListToolbar
+            catalog={catalog}
+            sources={sources}
+            group={group}
+            onGroupChange={onGroupChange}
+            search={search}
+            onSearchChange={onSearchChange}
           />
 
           <TeamAgentTools
@@ -74,9 +92,16 @@ export default function TeamAgentToolsSection({ teamId }: { teamId: number }) {
             pending={toolsQuery.isPending}
             canDelete={permissions.delete}
             searchTerm={term}
+            grouped={group !== ALL_GROUPS}
+            sources={sources}
+            onOpen={(tool) => tool.source && setEditing({ source: tool.source, tool })}
           />
           {total > 0 && <ListPager paging={paging} total={total} />}
         </div>
+      )}
+
+      {editing && editor?.kind === 'source' && (
+        <editor.Editor teamId={teamId} tool={editing.tool} onClose={() => setEditing(null)} />
       )}
 
       {creating && team && (

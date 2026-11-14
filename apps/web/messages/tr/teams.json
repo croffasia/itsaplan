@@ -352,7 +352,7 @@
     "checkUnknown": "Bu kimlik bilgisi otomatik olarak kontrol edilemiyor. Yine de kaydedebilirsiniz.",
     "empty": "Henüz kimlik bilgisi yok",
     "emptyHint": "Ajanların bir yapay zekâ sağlayıcısını veya aracı kullanabilmesi için bir kimlik bilgisi ekleyin.",
-    "deleteMessage": "{kind, select, llm {Bununla çalışan ajanlar, onlar için başka bir kimlik bilgisi seçene kadar çalışmaz.} tool {Bununla eklenen araçlar silinir ve ajanlar artık onları çağıramaz.} other {}} Bu işlem geri alınamaz.",
+    "deleteMessage": "{kind, select, llm {Bununla çalışan ajanlar, onlar için başka bir kimlik bilgisi seçene kadar çalışmaz.} tool {Bununla eklenen araçlar silinir ve ajanlar artık onları çağıramaz.} service {Bununla eklenen araçlar silinir ve ajanlar artık onları çağıramaz.} other {}} Bu işlem geri alınamaz.",
     "groups": {
       "llm": {
         "title": "Yapay zekâ sağlayıcıları",
@@ -361,6 +361,10 @@
       "tool": {
         "title": "Araçlar",
         "hint": "Ajanların çağırabileceği araçlar"
+      },
+      "service": {
+        "title": "Hizmetler",
+        "hint": "Kendi araçlarınızın istek gönderdiği adres ve anahtar"
       }
     },
     "columns": {
@@ -445,7 +449,17 @@
     "added": "Zaten eklendi",
     "noCredentialNeeded": "{integration} araçları kimlik bilgisi gerektirmez.",
     "addCount": "{count, plural, =0 {Araç ekle} one {# araç ekle} other {# araç ekle}}",
-    "noAccess": "Bu takımın araçlarına erişiminiz yok."
+    "noAccess": "Bu takımın araçlarına erişiminiz yok.",
+    "unavailable": "Kullanılamıyor",
+    "unavailableHint": "Bu sunucuda bu araç yok. Olduğu gibi korunur ama hiçbir ajan onu almaz.",
+    "locked": "Cloud veya Pro gerekir",
+    "lockedHint": "Cloud veya Pro ile oluşturuldu. Olduğu gibi korunur ama burada hiçbir ajan onu almaz.",
+    "ownTool": "Araç oluştur",
+    "ownToolHint": "Cloud ve Pro'da: API'si olan herhangi bir hizmete istek gönderen kendi araçlarınız",
+    "group": "Grup",
+    "allGroups": "Tüm araçlar",
+    "ownTools": "Kendi araçlarınız",
+    "noneInGroup": "Bu grupta araç yok"
   },
   "agents": {
     "projectDefaultsColumn": "Yeni projeler",

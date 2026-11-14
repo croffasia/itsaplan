@@ -11,9 +11,12 @@ export const providerParams = t.Object({
   provider: t.String({ description: "LLM provider key from list_integrations, e.g. 'anthropic'." }),
 });
 
+const INTEGRATION_KINDS = ['llm', 'tool', 'service'] as const;
+
 export const integrationOptionsQuery = t.Object({
   kind: t.Optional(
-    t.Union([t.Literal('llm'), t.Literal('tool')], {
+    t.UnionEnum([...INTEGRATION_KINDS], {
+      default: undefined,
       description: 'Only the integrations of this kind.',
     }),
   ),
@@ -41,8 +44,8 @@ export const credentialListQuery = t.Object({
   ),
   kind: t.Optional(
     t.String({
-      pattern: '^(llm|tool)(,(llm|tool))*$',
-      description: 'A comma-separated subset of llm and tool. Omit for all.',
+      pattern: '^(llm|tool|service)(,(llm|tool|service))*$',
+      description: 'A comma-separated subset of llm, tool and service. Omit for all.',
     }),
   ),
   ...pageQueryFields,
@@ -94,7 +97,7 @@ export const ProviderModelListResponse = t.Array(t.Object({ id: t.String(), name
 const IntegrationOptionResponse = t.Object({
   id: t.Number(),
   integrationKey: t.String(),
-  kind: t.Union([t.Literal('llm'), t.Literal('tool')]),
+  kind: t.UnionEnum([...INTEGRATION_KINDS]),
   label: t.Nullable(t.String()),
 });
 

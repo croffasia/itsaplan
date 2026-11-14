@@ -6,6 +6,7 @@ export type {
   IntegrationIcon,
   CustomToolEntry,
   Integration,
+  IntegrationKind,
   ToolDescriptor,
   IntegrationDescriptor,
 } from './types';

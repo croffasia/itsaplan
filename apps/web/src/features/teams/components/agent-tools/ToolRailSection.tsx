@@ -39,7 +39,7 @@ export function ToolRailSection({
               )}
             >
               <IntegrationIcon
-                integration={{ label: integration.label, kind: 'tool' }}
+                integration={{ ...integration, kind: 'tool' }}
                 className="size-6 rounded-md text-[10px]"
               />
               <span className="min-w-0 flex-1 truncate font-medium">{integration.label}</span>

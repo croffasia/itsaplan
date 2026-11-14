@@ -38,7 +38,7 @@
     },
     "integrations": {
       "title": "Integrasi",
-      "description": "Kunci penyedia AI dan kredensial alat yang dijalankan proyek tim."
+      "description": "Kredensial penyedia AI dan alat yang digunakan agen tim."
     },
     "mcp": {
       "title": "MCP",
@@ -50,7 +50,7 @@
     },
     "agentTools": {
       "title": "Alat",
-      "description": "Alat yang dapat dipanggil agen, masing-masing terhubung ke kredensial integrasi."
+      "description": "Alat yang dapat dipanggil agen tim."
     },
     "agents": {
       "title": "Agen AI",
@@ -324,25 +324,43 @@
     "noAccess": "Anda tidak memiliki akses ke integrasi tim ini.",
     "add": "Tambah kredensial",
     "edit": "Ubah kredensial",
+    "editLabel": "Edit kredensial {integration}",
     "delete": "Hapus kredensial",
-    "back": "Kembali ke integrasi",
+    "deleteLabel": "Hapus kredensial {integration}",
+    "deleteTitle": "Hapus kredensial {integration}?",
     "label": "Label (opsional)",
     "labelPlaceholder": "cth. Akun tim",
-    "labelHint": "Membantu membedakan kredensial dari integrasi yang sama. Rahasia disimpan secara terenkripsi.",
+    "labelHint": "Membedakan kredensial ini dari kredensial lain untuk integrasi yang sama. Rahasia disimpan secara terenkripsi.",
     "noFields": "Tidak ada bidang",
     "search": "Cari integrasi",
     "noMatches": "Tidak ada integrasi yang cocok dengan “{query}”.",
+    "nothingFound": "Tidak ada yang ditemukan",
+    "noKindMatches": "Tidak ada kredensial di grup yang dipilih.",
+    "showGroups": "Tampilkan grup",
+    "connected": "Kredensial ditambahkan",
+    "alreadyConnected": "Tim sudah memiliki kredensial {integration}",
+    "alreadyConnectedHint": "Tambahkan kredensial lain untuk akun kedua. Label membedakan keduanya.",
+    "agentTools": "Alat yang tersedia",
+    "validate": "Periksa kredensial",
+    "optionalMark": "(opsional)",
+    "keepStored": "Kosongkan untuk mempertahankan {value}",
+    "fieldHelp": "Tentang {field}",
+    "website": "Situs web {integration}",
+    "checkValid": "{integration} menerima kredensial ini.",
+    "checkRejected": "{integration} menolak kredensial ini. Periksa lalu coba lagi.",
+    "checkUnavailable": "{integration} tidak menanggapi pemeriksaan. Coba lagi nanti.",
+    "checkUnknown": "Kredensial ini tidak dapat diperiksa secara otomatis. Anda tetap dapat menyimpannya.",
     "empty": "Belum ada kredensial",
-    "emptyHint": "Agen tidak dapat menggunakan penyedia AI atau alat tanpa kredensial tersebut.",
-    "deleteMessage": "Hapus kredensial {integration}? Agen dan alat yang menggunakannya akan berhenti bekerja hingga Anda menambahkan yang baru.",
+    "emptyHint": "Tambahkan kredensial agar agen dapat menggunakan penyedia AI atau alat.",
+    "deleteMessage": "{kind, select, llm {Agen yang berjalan dengan kredensial ini akan berhenti bekerja hingga Anda memilih kredensial lain untuknya.} tool {Alat yang ditambahkan dengan kredensial ini akan dihapus, dan agen tidak dapat memanggilnya lagi.} other {}} Tindakan ini tidak dapat dibatalkan.",
     "groups": {
       "llm": {
         "title": "Penyedia AI",
-        "hint": "Model yang dijalankan oleh agen internal"
+        "hint": "Penyedia AI untuk agen internal"
       },
       "tool": {
         "title": "Alat",
-        "hint": "Integrasi yang dapat dipanggil agen sebagai alat"
+        "hint": "Alat yang dapat dipanggil agen"
       }
     },
     "columns": {
@@ -397,20 +415,26 @@
   "tools": {
     "add": "Tambah alat",
     "delete": "Hapus alat",
+    "deleteLabel": "Hapus {tool}",
+    "deleteTitle": "Hapus {tool}?",
     "tool": "Alat",
-    "scopes": "Cakupan",
-    "noScopes": "Tanpa cakupan",
+    "scopes": "Izin token",
+    "dateAdded": "Ditambahkan",
+    "noScopes": "Tidak ada",
     "empty": "Belum ada alat",
-    "emptyHint": "Konfigurasikan alat sekali, lalu aktifkan pada agen mana pun.",
+    "emptyHint": "Tambahkan alat, lalu aktifkan pada agen yang membutuhkannya.",
     "search": "Cari alat",
     "noMatches": "Tidak ada alat yang cocok dengan “{query}”.",
+    "nothingFound": "Tidak ada yang ditemukan",
     "scopesLabel": "Izin token yang diperlukan",
     "credential": "Kredensial",
     "chooseCredential": "Pilih kredensial",
     "credentialFallback": "Kredensial #{id}",
+    "keyless": "Tanpa kunci (batas permintaan bersama)",
     "noCredential": "Belum ada kredensial {integration}",
-    "noCredentialHint": "Tambahkan satu di integrasi tim untuk memilih alat ini.",
-    "deleteMessage": "Hapus {tool}? Agen yang menggunakannya akan kehilangan akses ke alat ini.",
+    "noCredentialHint": "Tambahkan satu untuk memilih alat ini.",
+    "noCredentialAsk": "Minta orang yang mengelola integrasi tim untuk menambahkannya.",
+    "deleteMessage": "Agen yang menggunakannya tidak dapat memanggilnya lagi.",
     "selectGroup": "Pilih semua",
     "clearGroup": "Hapus pilihan",
     "selectedCount": "{count, plural, one {# alat dipilih} other {# alat dipilih}}",

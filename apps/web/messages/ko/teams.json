@@ -38,7 +38,7 @@
     },
     "integrations": {
       "title": "연동",
-      "description": "팀 프로젝트에서 사용할 AI 공급자 키와 도구 인증 정보를 관리합니다."
+      "description": "팀 AI 에이전트가 사용하는 AI 공급자 및 도구 인증 정보를 관리합니다."
     },
     "mcp": {
       "title": "MCP",
@@ -50,7 +50,7 @@
     },
     "agentTools": {
       "title": "도구",
-      "description": "AI 에이전트가 사용할 수 있는 도구와 각 도구에 연결된 연동 인증 정보를 관리합니다."
+      "description": "팀 AI 에이전트가 호출할 수 있는 도구를 관리합니다."
     },
     "agents": {
       "title": "AI 에이전트",
@@ -324,25 +324,43 @@
     "noAccess": "이 팀의 연동에 접근할 수 없습니다.",
     "add": "인증 정보 추가",
     "edit": "인증 정보 편집",
+    "editLabel": "{integration} 인증 정보 편집",
     "delete": "인증 정보 삭제",
-    "back": "연동으로 돌아가기",
+    "deleteLabel": "{integration} 인증 정보 삭제",
+    "deleteTitle": "{integration} 인증 정보를 삭제하시겠습니까?",
     "label": "라벨 (선택 사항)",
     "labelPlaceholder": "예: 팀 계정",
-    "labelHint": "같은 연동의 인증 정보를 쉽게 구분할 수 있도록 표시합니다. 시크릿은 암호화되어 저장됩니다.",
+    "labelHint": "같은 연동의 다른 인증 정보와 구분합니다. 시크릿은 암호화되어 저장됩니다.",
     "noFields": "필드 없음",
     "search": "연동 검색",
     "noMatches": "“{query}”과(와) 일치하는 연동이 없습니다.",
+    "nothingFound": "검색 결과가 없습니다",
+    "noKindMatches": "선택한 그룹에 인증 정보가 없습니다.",
+    "showGroups": "표시할 그룹",
+    "connected": "인증 정보 추가됨",
+    "alreadyConnected": "팀에 이미 {integration} 인증 정보가 있습니다",
+    "alreadyConnectedHint": "다른 계정용 인증 정보를 하나 더 추가하세요. 라벨로 구분할 수 있습니다.",
+    "agentTools": "사용 가능한 도구",
+    "validate": "인증 정보 확인",
+    "optionalMark": "(선택 사항)",
+    "keepStored": "비워 두면 {value} 유지",
+    "fieldHelp": "{field} 정보",
+    "website": "{integration} 웹사이트",
+    "checkValid": "{integration}에서 인증 정보를 확인했습니다.",
+    "checkRejected": "{integration}에서 인증 정보를 거부했습니다. 확인 후 다시 시도하세요.",
+    "checkUnavailable": "{integration}에서 검증에 응답하지 않았습니다. 나중에 다시 시도하세요.",
+    "checkUnknown": "이 인증 정보는 자동으로 확인할 수 없습니다. 그래도 저장할 수 있습니다.",
     "empty": "아직 인증 정보가 없습니다",
-    "emptyHint": "인증 정보가 없으면 AI 에이전트가 AI 공급자나 도구를 사용할 수 없습니다.",
-    "deleteMessage": "{integration} 인증 정보를 삭제하시겠습니까? 새 인증 정보를 추가할 때까지 이를 사용하는 AI 에이전트와 도구가 작동하지 않습니다.",
+    "emptyHint": "AI 에이전트가 AI 공급자나 도구를 사용할 수 있도록 인증 정보를 추가하세요.",
+    "deleteMessage": "{kind, select, llm {이 인증 정보로 실행되는 AI 에이전트는 다른 인증 정보를 선택할 때까지 작동하지 않습니다.} tool {이 인증 정보로 추가한 도구가 삭제되며, AI 에이전트가 더 이상 호출할 수 없습니다.} other {}} 이 작업은 되돌릴 수 없습니다.",
     "groups": {
       "llm": {
         "title": "AI 공급자",
-        "hint": "내부 AI 에이전트가 실행될 모델"
+        "hint": "내부 AI 에이전트용 AI 공급자"
       },
       "tool": {
         "title": "도구",
-        "hint": "AI 에이전트가 도구로 사용할 수 있는 연동"
+        "hint": "AI 에이전트가 호출할 수 있는 도구"
       }
     },
     "columns": {
@@ -397,20 +415,26 @@
   "tools": {
     "add": "도구 추가",
     "delete": "도구 삭제",
+    "deleteLabel": "{tool} 삭제",
+    "deleteTitle": "{tool} 도구를 삭제하시겠습니까?",
     "tool": "도구",
-    "scopes": "권한 범위",
-    "noScopes": "권한 범위 없음",
+    "scopes": "토큰 권한",
+    "dateAdded": "추가일",
+    "noScopes": "없음",
     "empty": "아직 도구가 없습니다",
-    "emptyHint": "도구를 한 번 설정한 다음 필요한 AI 에이전트에서 활성화하세요.",
+    "emptyHint": "도구를 추가한 다음 필요한 AI 에이전트에서 활성화하세요.",
     "search": "도구 검색",
     "noMatches": "“{query}”과(와) 일치하는 도구가 없습니다.",
+    "nothingFound": "검색 결과가 없습니다",
     "scopesLabel": "필요한 토큰 권한",
     "credential": "인증 정보",
     "chooseCredential": "인증 정보 선택",
     "credentialFallback": "인증 정보 #{id}",
+    "keyless": "키 없음(공유 요청 한도)",
     "noCredential": "아직 {integration} 인증 정보가 없습니다",
-    "noCredentialHint": "이 도구를 선택하려면 팀의 연동 설정에서 추가하세요.",
-    "deleteMessage": "{tool} 도구를 제거하시겠습니까? 이 도구를 사용하는 AI 에이전트가 더 이상 접근할 수 없습니다.",
+    "noCredentialHint": "이 도구를 선택하려면 인증 정보를 추가하세요.",
+    "noCredentialAsk": "팀 연동을 관리하는 사람에게 추가를 요청하세요.",
+    "deleteMessage": "이 도구를 사용하는 AI 에이전트가 더 이상 호출할 수 없습니다.",
     "selectGroup": "모두 선택",
     "clearGroup": "모두 해제",
     "selectedCount": "{count, plural, one {도구 #개 선택됨} other {도구 #개 선택됨}}",

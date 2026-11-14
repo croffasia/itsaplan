@@ -48,6 +48,7 @@ export default function Modal({
   onOpenAutoFocus,
   children,
   wide = false,
+  flush = false,
   fullscreen = false,
   onToggleFullscreen,
   className,
@@ -70,6 +71,9 @@ export default function Modal({
   onOpenAutoFocus?: (event: Event) => void;
   children: ReactNode;
   wide?: boolean | 'xl';
+  // The body runs edge to edge, so dividers between its parts span the dialog. Only
+  // the header keeps the padding; the caller pads its own parts.
+  flush?: boolean;
   // On the dialog itself, for a caller that has to adjust its padding.
   className?: string;
   // Controlled by the caller: in fullscreen the content is a flex column, so the
@@ -98,10 +102,11 @@ export default function Modal({
               // row keeps its content height under a capped container, so the body
               // never shrinks and never scrolls.
               cn('flex max-h-[85vh] flex-col overflow-hidden', MAX_WIDTH[`${wide}`]),
+          flush && 'gap-0 p-0',
           className,
         )}
       >
-        <DialogHeader>
+        <DialogHeader className={cn(flush && 'px-6 pt-6 pb-4')}>
           <DialogTitle className="flex items-center gap-2">
             {scope && (
               <>

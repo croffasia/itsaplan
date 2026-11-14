@@ -31,6 +31,7 @@ describe('toolIntegrations', () => {
   it('keeps the tool integrations that offer a tool', () => {
     const [github, ...rest] = toolIntegrations(catalog);
     assert.equal(rest.length, 0);
+    assert.equal(github.takesCredential, true);
     assert.equal(github.needsCredential, true);
     assert.deepEqual(
       github.tools.map((o) => o.name),

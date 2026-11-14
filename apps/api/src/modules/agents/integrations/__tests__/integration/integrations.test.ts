@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
-import { setExtraIntegrations } from '@repo/agent-tools';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { setExtraIntegrations, type ToolConfig } from '@repo/agent-tools';
+import { setCredentialChecker } from '#modules/agents/integrations/credential-check';
 import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -48,6 +49,17 @@ describe('integrations', () => {
         }),
       ]),
     );
+  });
+
+  it('carries the brand mark of a tool integration and the website of each', async () => {
+    const { asOwner, teamId } = await setup();
+    const res = await integrations(asOwner, teamId).catalog.get();
+    const telegram = res.data?.find((integration) => integration.key === 'telegram');
+    const openai = res.data?.find((integration) => integration.key === 'openai');
+    expect(telegram?.icon).toEqual({ path: expect.any(String), color: '#26A5E4' });
+    expect(telegram?.website).toBe('https://telegram.org');
+    expect(openai?.icon).toBeUndefined();
+    expect(openai?.website).toBe('https://platform.openai.com/docs/models');
   });
 
   // The tool and integration pickers search the label, so a search for Forgejo finds the
@@ -191,6 +203,74 @@ describe('integrations', () => {
     });
   });
 
+  describe('list filters', () => {
+    async function seed() {
+      const ctx = await setup();
+      const add = (integrationKey: string, label: string | null, credential: object) =>
+        integrations(ctx.asOwner, ctx.teamId).post({ integrationKey, label, credential });
+      await add('openai', 'Team', { apiKey: 'sk-1' });
+      await add('jina', 'Reader', { apiKey: 'jina-1' });
+      await add('firecrawl', null, { apiKey: 'fc-1' });
+      return ctx;
+    }
+    const keys = (res: { data: { items: { integrationKey: string }[] } | null }) =>
+      res.data?.items.map((c) => c.integrationKey).sort();
+
+    it('searches the integration name, its key and the credential label', async () => {
+      const { asOwner, teamId } = await seed();
+      const list = integrations(asOwner, teamId);
+
+      expect(keys(await list.get({ query: { search: 'OpenAI' } }))).toEqual(['openai']);
+      expect(keys(await list.get({ query: { search: 'firecr' } }))).toEqual(['firecrawl']);
+      expect(keys(await list.get({ query: { search: 'reader' } }))).toEqual(['jina']);
+      const none = await list.get({ query: { search: 'zzz' } });
+      expect(none.data).toMatchObject({ items: [], total: 0 });
+    });
+
+    it('lists everything for a blank search', async () => {
+      const { asOwner, teamId } = await seed();
+      const res = await integrations(asOwner, teamId).get({ query: { search: '   ' } });
+      expect(res.data?.total).toBe(3);
+    });
+
+    it('treats a typed wildcard as a plain character', async () => {
+      const { asOwner, teamId } = await seed();
+      const res = await integrations(asOwner, teamId).get({ query: { search: '%' } });
+      expect(res.data?.total).toBe(0);
+    });
+
+    it('narrows the list to the kinds asked for', async () => {
+      const { asOwner, teamId } = await seed();
+      const list = integrations(asOwner, teamId);
+
+      expect(keys(await list.get({ query: { kind: 'llm' } }))).toEqual(['openai']);
+      expect(keys(await list.get({ query: { kind: 'tool' } }))).toEqual(['firecrawl', 'jina']);
+      expect(keys(await list.get({ query: { kind: 'llm,tool' } }))).toHaveLength(3);
+    });
+
+    it('rejects a kind the catalog does not carry', async () => {
+      const { asOwner, teamId } = await seed();
+      const list = integrations(asOwner, teamId);
+      expect((await list.get({ query: { kind: 'other' } })).status).toBe(400);
+      expect((await list.get({ query: { kind: 'llm,' } })).status).toBe(400);
+    });
+
+    it('combines the search with the kinds and counts the matches', async () => {
+      const { asOwner, teamId } = await seed();
+      const res = await integrations(asOwner, teamId).get({
+        query: { search: 'team', kind: 'tool' },
+      });
+      expect(res.data).toMatchObject({ items: [], total: 0 });
+    });
+
+    it('takes a search of up to 200 characters', async () => {
+      const { asOwner, teamId } = await seed();
+      const list = integrations(asOwner, teamId);
+      expect((await list.get({ query: { search: 'a'.repeat(200) } })).status).toBe(200);
+      expect((await list.get({ query: { search: 'a'.repeat(201) } })).status).toBe(400);
+    });
+  });
+
   it('keeps the stored secret when an update omits it', async () => {
     const { asOwner, teamId } = await setup();
     const created = await integrations(asOwner, teamId).post({
@@ -274,9 +354,158 @@ describe('integrations', () => {
     expect(untagged).toEqual([
       'GET /teams/:teamId/integrations/options',
       'POST /teams/:teamId/integrations',
+      'POST /teams/:teamId/integrations/check',
+      'POST /teams/:teamId/integrations/:credentialId/check',
       'PATCH /teams/:teamId/integrations/:credentialId',
       'DELETE /teams/:teamId/integrations/:credentialId',
     ]);
+  });
+
+  // The preload answers "unknown" to every check, so these tests install the answer they
+  // need and put the preload's back.
+  describe('credential check', () => {
+    afterEach(() => setCredentialChecker(async () => 'unknown'));
+
+    it('refuses a credential its service rejects and stores nothing', async () => {
+      const { asOwner, teamId } = await setup();
+      setCredentialChecker(async () => 'rejected');
+      const res = await integrations(asOwner, teamId).post({
+        integrationKey: 'openai',
+        credential: { apiKey: 'sk-revoked-1234' },
+      });
+      expect(res.status).toBe(400);
+      expect(res.error?.value).toMatchObject({
+        error: 'OpenAI rejected this credential. Check it and try again.',
+      });
+      const list = await integrations(asOwner, teamId).get();
+      expect(list.data?.items).toHaveLength(0);
+    });
+
+    it('checks the stored secret together with the change on an update', async () => {
+      const { asOwner, teamId } = await setup();
+      const created = await integrations(asOwner, teamId).post({
+        integrationKey: 'telegram',
+        credential: { botToken: '123:abc' },
+      });
+      const checked: ToolConfig[] = [];
+      setCredentialChecker(async (_key, config) => {
+        checked.push(config);
+        return 'rejected';
+      });
+      const res = await integrations(
+        asOwner,
+        teamId,
+      )({ credentialId: created.data!.id }).patch({ credential: { defaultChatId: '42' } });
+      expect(res.status).toBe(400);
+      expect(checked).toEqual([{ botToken: '123:abc', defaultChatId: '42' }]);
+    });
+
+    it('checks a new credential without storing it', async () => {
+      const { asOwner, teamId } = await setup();
+      setCredentialChecker(async () => 'valid');
+      const res = await integrations(asOwner, teamId).check.post({
+        integrationKey: 'jina',
+        credential: { apiKey: 'jina-abcd' },
+      });
+      expect(res.status).toBe(200);
+      expect(res.data).toEqual({ result: 'valid' });
+      const list = await integrations(asOwner, teamId).get();
+      expect(list.data?.items).toHaveLength(0);
+    });
+
+    it('refuses to check an integration it does not know', async () => {
+      const { asOwner, teamId } = await setup();
+      const res = await integrations(asOwner, teamId).check.post({
+        integrationKey: 'not-an-integration',
+        credential: {},
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('checks a stored credential with the changes over it, storing nothing', async () => {
+      const { asOwner, teamId } = await setup();
+      const created = await integrations(asOwner, teamId).post({
+        integrationKey: 'telegram',
+        credential: { botToken: '123:abc' },
+      });
+      const checked: ToolConfig[] = [];
+      setCredentialChecker(async (_key, config) => {
+        checked.push(config);
+        return 'rejected';
+      });
+      const credential = integrations(asOwner, teamId)({ credentialId: created.data!.id });
+      const res = await credential.check.post({ credential: { defaultChatId: '42' } });
+      expect(res.status).toBe(200);
+      expect(res.data).toEqual({ result: 'rejected' });
+      expect(checked).toEqual([{ botToken: '123:abc', defaultChatId: '42' }]);
+      const list = await integrations(asOwner, teamId).get();
+      expect(list.data!.items[0]!.redacted).not.toHaveProperty('defaultChatId');
+    });
+
+    // The check would otherwise send the stored token to an address of the caller's choice.
+    it('refuses to check a stored credential at a new address without its secret', async () => {
+      const { asOwner, teamId } = await setup();
+      const created = await integrations(asOwner, teamId).post({
+        integrationKey: 'gitea',
+        credential: { baseUrl: 'https://git.example.com', token: 'token-secret-abcd' },
+      });
+      const credential = integrations(asOwner, teamId)({ credentialId: created.data!.id });
+      const res = await credential.check.post({
+        credential: { baseUrl: 'https://collector.example' },
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('answers 404 for a credential the team does not hold', async () => {
+      const { asOwner, teamId } = await setup();
+      const res = await integrations(
+        asOwner,
+        teamId,
+      )({ credentialId: 999_999 }).check.post({
+        credential: {},
+      });
+      expect(res.status).toBe(404);
+    });
+
+    it('refuses the checks to a member who may only read the credentials', async () => {
+      const { asOwner, teamId } = await setup();
+      const created = await integrations(asOwner, teamId).post({
+        integrationKey: 'jina',
+        credential: { apiKey: 'jina-abcd' },
+      });
+      const role = await createRole(asOwner, 'MKT', {
+        name: 'Reader',
+        permissions: { integrations: { read: true } },
+      });
+      const asMember = await addProjectMember(asOwner, 'MKT', role.data!.id);
+      const fresh = await integrations(asMember, teamId).check.post({
+        integrationKey: 'jina',
+        credential: { apiKey: 'jina-efgh' },
+      });
+      expect(fresh.status).toBe(403);
+      const stored = await integrations(
+        asMember,
+        teamId,
+      )({
+        credentialId: created.data!.id,
+      }).check.post({ credential: {} });
+      expect(stored.status).toBe(403);
+    });
+
+    it('renames a credential without asking its service', async () => {
+      const { asOwner, teamId } = await setup();
+      const created = await integrations(asOwner, teamId).post({
+        integrationKey: 'jina',
+        credential: { apiKey: 'jina-abcd' },
+      });
+      setCredentialChecker(async () => 'rejected');
+      const res = await integrations(
+        asOwner,
+        teamId,
+      )({ credentialId: created.data!.id }).patch({ label: 'Search' });
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({ label: 'Search' });
+    });
   });
 
   describe('access', () => {

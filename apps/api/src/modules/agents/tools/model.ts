@@ -31,7 +31,8 @@ export const AgentToolResponse = t.Object({
   id: t.Number(),
   teamId: t.Number(),
   toolKey: t.String(),
-  // Null for a tool of an integration that needs no credential.
+  // Null for a tool added with no credential: its integration needs none, or runs
+  // without one on a keyless tier.
   credentialId: t.Nullable(t.Number()),
   integrationKey: t.String(),
   credentialLabel: t.Nullable(t.String()),
@@ -55,7 +56,10 @@ export const agentToolListQuery = t.Object({
 export const createAgentToolBody = t.Object({
   toolKey: t.String({ minLength: 1 }),
   credentialId: t.Optional(
-    t.Number({ description: "Required unless the tool's integration needs no credential." }),
+    t.Number({
+      description:
+        "Required unless the tool's integration needs no credential or can run without one (credentialOptional).",
+    }),
   ),
 });
 

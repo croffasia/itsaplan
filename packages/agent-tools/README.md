@@ -63,6 +63,21 @@ resolves it.
      };
      ```
 
+   Optional fields of the `Integration`:
+   - `icon`: the brand mark in `icon.ts`, one SVG path in a 24×24 box and its fill
+     color. Leave the color out for a black mark, so it follows the text color.
+     Without an icon the interface shows the label's first letters.
+   - `website`: the service's homepage, linked from the interface.
+   - `verify`: asks the service whether it accepts a credential before it is saved, in
+     `verify.ts`. Use one request that spends nothing. Answer `rejected` only for a
+     refusal the API itself sends (a bot wall answers 403 with a page). Answer
+     `unavailable` for anything else that is not a success. Call an address that comes
+     from the credential through `pinnedFetch` from `@repo/net`. Without `verify` the
+     credential is saved unchecked.
+   - `credentialOptional`: its tools also run with no credential, on the service's
+     keyless tier.
+   - `help` on a credential field: markdown shown behind a "?" by the field's label.
+
 2. Register it in `src/registry.ts`. This is the one manual step: import the
    integration and add it to the `INTEGRATIONS` array.
 

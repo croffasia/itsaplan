@@ -42,7 +42,7 @@ import {
   toUpdatePatch,
   type AgentFormValue,
 } from '../../utils/agentForm';
-import { integrationLabel } from '@/utils/integrationLabels';
+import { integrationOf } from '@/utils/integrationLabels';
 import { useTranslations } from 'next-intl';
 
 // The Edit tab of the agent sheet, used for both create and edit. With no agent it
@@ -64,6 +64,7 @@ export function AgentSheetForm({
   onCreated: (agent: AiAgent) => void;
 }) {
   const t = useTranslations('teams.agents');
+  const tTools = useTranslations('teams.tools');
   const tCommon = useTranslations('common');
   const [value, setValue] = useState<AgentFormValue>(() => initialAgentValue(agent ?? undefined));
   const isCreate = agent == null;
@@ -275,14 +276,19 @@ export function AgentSheetForm({
           const toolLabel =
             catalog.flatMap((i) => i.tools).find((t) => t.key === tool.toolKey)?.label ??
             tool.toolKey;
-          const integration = integrationLabel(catalog, tool.integrationKey);
+          const integration = integrationOf(catalog, tool.integrationKey).label;
+          const credential =
+            tool.credentialLabel ??
+            (tool.credentialId != null
+              ? tTools('credentialFallback', { id: tool.credentialId })
+              : undefined);
           return {
             id: tool.id,
             checked: selectedTools.includes(tool.id),
             title: toolLabel,
-            subtitle: tool.credentialLabel ?? undefined,
+            subtitle: credential,
             group: integration,
-            search: `${toolLabel} ${integration} ${tool.credentialLabel ?? ''}`.toLowerCase(),
+            search: `${toolLabel} ${integration} ${credential ?? ''}`.toLowerCase(),
           };
         })}
       />

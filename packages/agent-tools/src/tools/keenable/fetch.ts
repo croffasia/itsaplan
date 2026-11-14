@@ -8,10 +8,11 @@ export const keenableFetch: CustomToolEntry = {
   description:
     'Fetch a web page (via the Keenable API) and return its content as markdown. Use to read an article, documentation, or any single URL, such as a search result.',
   inputSchema: z.object({ url: z.string().url().describe('The URL of the page to fetch.') }),
-  execute: async (_credential, input) => {
+  execute: async (credential, input) => {
     const body = (await keenableRequest(
-      `fetch/public?${new URLSearchParams({ url: String(input.url) })}`,
-      null,
+      credential,
+      'fetch',
+      { params: { url: String(input.url) } },
       'Keenable fetch',
     )) as { url?: string; title?: string; content?: string };
     return {

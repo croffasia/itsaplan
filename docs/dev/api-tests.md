@@ -53,7 +53,10 @@ copy of the test database, named `<name>_<worker>`, for example `itsaplan_test_3
   that limit before you raise the worker count.
 
 The preload also hashes passwords with scrypt at its lowest cost, because nearly every test creates
-users. `apps/api/bunfig.toml` loads it for `bun test` only.
+users. It answers every credential check "unknown" through `setCredentialChecker`, because the
+tests' secrets are made up and the suite does not reach the internet. A test that needs another
+answer installs it and puts "unknown" back in an `afterEach`. `apps/api/bunfig.toml` loads the
+preload for `bun test` only.
 
 ## S3
 

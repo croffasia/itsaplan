@@ -1,5 +1,5 @@
 import { db, agentTool, agentToolLink, integrationCredential } from '@repo/db';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { getTool, integrationDescriptors, type ToolConfig } from '@repo/agent-tools';
 import { iso, HttpError, rethrowDuplicate } from '#shared/lib';
 import { decryptSecret } from '@repo/crypto';
@@ -64,7 +64,7 @@ function toolKeysMatching(search: string): string[] {
   );
 }
 
-// One page of the team's configured tools, by tool key, with how many match in all.
+// One page of the team's configured tools, newest first, with how many match in all.
 export async function listAgentTools(
   teamId: number,
   window: { limit: number; offset: number },
@@ -76,7 +76,11 @@ export async function listAgentTools(
     term ? inArray(agentTool.toolKey, toolKeysMatching(term)) : undefined,
   );
   const [rows, counted] = await Promise.all([
-    selectTools().where(where).orderBy(agentTool.toolKey).limit(window.limit).offset(window.offset),
+    selectTools()
+      .where(where)
+      .orderBy(desc(agentTool.createdAt), desc(agentTool.id))
+      .limit(window.limit)
+      .offset(window.offset),
     db
       .select({ count: sql<number>`count(*)::int` })
       .from(agentTool)
@@ -109,19 +113,20 @@ export async function createAgentTool(
   const tool = getTool(input.toolKey);
   if (!tool) throw new HttpError(400, `Unknown tool: ${input.toolKey}`);
   const credentialId = input.credentialId ?? null;
-  if (tool.integration.credentialSchema.length === 0) {
-    if (credentialId !== null) {
-      throw new HttpError(400, `${tool.integration.label} tools take no credential.`);
+  const { integration } = tool;
+  if (credentialId === null) {
+    if (integration.credentialSchema.length > 0 && !integration.credentialOptional) {
+      throw new HttpError(400, `This tool needs a ${integration.label} credential.`);
     }
-  } else if (credentialId === null) {
-    throw new HttpError(400, `This tool needs a ${tool.integration.label} credential.`);
+  } else if (integration.credentialSchema.length === 0) {
+    throw new HttpError(400, `${integration.label} tools take no credential.`);
   } else {
     const credential = await getCredentialById(credentialId, teamId);
     if (!credential) throw new HttpError(400, 'Credential not found');
-    if (credential.integrationKey !== tool.integration.key) {
+    if (credential.integrationKey !== integration.key) {
       throw new HttpError(
         400,
-        `This tool needs a ${tool.integration.label} credential, not ${credential.integrationKey}.`,
+        `This tool needs a ${integration.label} credential, not ${credential.integrationKey}.`,
       );
     }
   }

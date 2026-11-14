@@ -2,6 +2,8 @@ export type {
   ConfigField,
   ConfigFieldType,
   ToolConfig,
+  CredentialCheck,
+  IntegrationIcon,
   CustomToolEntry,
   Integration,
   ToolDescriptor,

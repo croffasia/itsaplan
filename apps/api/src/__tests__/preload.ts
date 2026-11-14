@@ -38,3 +38,9 @@ if (worker) {
   url.pathname = `/${copy}`;
   process.env.DATABASE_URL = url.toString();
 }
+
+// Saving a credential asks its service whether it accepts it. The tests' secrets are made
+// up and the suite does not reach the internet, so every check answers "unknown". Imported
+// here, after DATABASE_URL is final.
+const { setCredentialChecker } = await import('#modules/agents/integrations/credential-check');
+setCredentialChecker(async () => 'unknown');

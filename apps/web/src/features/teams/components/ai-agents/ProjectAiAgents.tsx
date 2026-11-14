@@ -3,7 +3,7 @@ import { useTranslations } from 'next-intl';
 import { useProjectAgents } from '@/hooks/useProjectAgents';
 import { useShell } from '@/context/shellContext';
 import { useIntegrationCatalogQuery } from '@/services/integrations.service';
-import { integrationLabel } from '@/utils/integrationLabels';
+import { integrationOf } from '@/utils/integrationLabels';
 import { AgentRunnerStatus } from '@/components/common/agent-chat/AgentRunnerStatus';
 import ListPager from '@/components/common/ListPager';
 import { usePaging } from '@/hooks/usePaging';
@@ -97,7 +97,7 @@ export default function ProjectAiAgents() {
                   {agent.kind === 'internal' ? (
                     <AgentMetaRow
                       agent={agent}
-                      providerLabel={(key: string) => integrationLabel(catalog, key)}
+                      providerLabel={(key: string) => integrationOf(catalog, key).label}
                     />
                   ) : (
                     <div className="flex flex-col items-start gap-1">

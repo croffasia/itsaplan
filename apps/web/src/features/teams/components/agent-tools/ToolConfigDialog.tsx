@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import Modal from '@/components/common/overlay/Modal';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
+import { EmptyState } from '@/components/common/page/EmptyState';
 import { Input } from '@/components/ui/input';
 import { useAddTools } from '../../hooks/useAddTools';
 import { CredentialDialog } from '../integrations/CredentialDialog';
@@ -36,15 +37,9 @@ export function ToolConfigDialog({
   const rail = { activeKey: active?.integration.key ?? null, onOpen: tools.open };
 
   return (
-    <Modal
-      title={t('add')}
-      scope={teamName}
-      onClose={onClose}
-      wide="xl"
-      className="sm:max-w-[1000px]"
-    >
-      <div className="flex h-[min(720px,72vh)] min-h-0 flex-col gap-3">
-        <div className="relative">
+    <Modal title={t('add')} scope={teamName} onClose={onClose} wide="xl" flush>
+      <div className="flex h-[min(680px,72vh)] min-h-0 flex-col">
+        <div className="relative mx-6 mb-4">
           <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             autoFocus
@@ -56,16 +51,17 @@ export function ToolConfigDialog({
           />
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border sm:flex-row">
+        <div className="flex min-h-0 flex-1 flex-col border-t sm:flex-row">
           {tools.loading ? (
-            <ListSkeleton rows={6} className="flex-1 p-3" />
+            <ListSkeleton rows={6} className="flex-1 p-4" />
           ) : !active ? (
-            <p className="flex-1 py-10 text-center text-sm text-muted-foreground">
-              {t('noMatches', { query: tools.query.trim() })}
-            </p>
+            <EmptyState
+              title={t('nothingFound')}
+              description={t('noMatches', { query: tools.query.trim() })}
+            />
           ) : (
             <>
-              <nav className="max-h-40 shrink-0 overflow-y-auto border-b px-1.5 sm:max-h-none sm:w-64 sm:border-e sm:border-b-0">
+              <nav className="max-h-40 shrink-0 overflow-y-auto border-b px-2 pb-2 sm:max-h-none sm:w-64 sm:border-e sm:border-b-0">
                 <ToolRailSection
                   title={t('readyToUse')}
                   entries={tools.entries.filter((e) => e.ready)}
@@ -90,17 +86,20 @@ export function ToolConfigDialog({
           )}
         </div>
 
-        <ToolAddFooter
-          pending={tools.pending}
-          busy={tools.busy}
-          onClear={tools.clear}
-          onCancel={onClose}
-          onSubmit={tools.submit}
-        />
+        <div className="border-t px-6 py-3.5">
+          <ToolAddFooter
+            pending={tools.pending}
+            busy={tools.busy}
+            onClear={tools.clear}
+            onCancel={onClose}
+            onSubmit={tools.submit}
+          />
+        </div>
       </div>
       {connecting && (
         <CredentialDialog
           teamId={teamId}
+          teamName={teamName}
           catalog={catalog}
           existing={null}
           integration={connecting}

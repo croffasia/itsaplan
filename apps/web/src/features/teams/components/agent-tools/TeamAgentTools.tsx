@@ -7,7 +7,7 @@ import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components
 import { EmptyState } from '@/components/common/page/EmptyState';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
-import { integrationLabel } from '@/utils/integrationLabels';
+import { integrationOf } from '@/utils/integrationLabels';
 import { ToolConfigRow } from './ToolConfigRow';
 
 // The team's configured tools as a table: a catalog tool bound to an integration
@@ -49,15 +49,19 @@ export default function TeamAgentTools({
     <div className="overflow-x-auto">
       <Table className="min-w-[760px] table-fixed">
         <colgroup>
-          <col className="w-[58%]" />
-          <col className="w-[32%]" />
-          <col className="w-[10%]" />
+          <col className="w-[50%]" />
+          <col className="w-[28%]" />
+          <col className="w-[13%]" />
+          <col className="w-[9%]" />
         </colgroup>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead className="text-xs font-medium text-muted-foreground">{t('tool')}</TableHead>
             <TableHead className="text-xs font-medium text-muted-foreground">
               {t('scopes')}
+            </TableHead>
+            <TableHead className="text-xs font-medium text-muted-foreground">
+              {t('dateAdded')}
             </TableHead>
             <TableHead className="text-end text-xs font-medium text-muted-foreground">
               {tCommon('actions')}
@@ -70,7 +74,7 @@ export default function TeamAgentTools({
               key={tool.id}
               tool={tool}
               meta={catalogTool(tool.toolKey)}
-              integrationLabel={integrationLabel(catalog, tool.integrationKey)}
+              integration={integrationOf(catalog, tool.integrationKey)}
               canDelete={canDelete}
               onDelete={() => setDeleting(tool)}
             />
@@ -80,7 +84,9 @@ export default function TeamAgentTools({
 
       {deleting && (
         <ConfirmDialog
-          title={t('delete')}
+          title={t('deleteTitle', {
+            tool: catalogTool(deleting.toolKey)?.label ?? deleting.toolKey,
+          })}
           confirmLabel={t('delete')}
           onConfirm={async () => {
             await deleteTool.mutateAsync(deleting.id);
@@ -88,9 +94,7 @@ export default function TeamAgentTools({
           }}
           onClose={() => setDeleting(null)}
         >
-          <div className="text-sm text-muted-foreground">
-            {t('deleteMessage', { tool: catalogTool(deleting.toolKey)?.label ?? deleting.toolKey })}
-          </div>
+          <div className="text-sm text-muted-foreground">{t('deleteMessage')}</div>
         </ConfirmDialog>
       )}
     </div>

@@ -38,7 +38,7 @@
     },
     "integrations": {
       "title": "Integrations",
-      "description": "The AI provider keys and tool credentials the team's projects run on."
+      "description": "Credentials for the AI providers and tools the team's agents use."
     },
     "mcp": {
       "title": "MCP",
@@ -50,7 +50,7 @@
     },
     "agentTools": {
       "title": "Tools",
-      "description": "Tools agents can call, each connected to an integration credential."
+      "description": "Tools the team's agents can call."
     },
     "agents": {
       "title": "AI Agents",
@@ -324,25 +324,43 @@
     "noAccess": "You do not have access to the integrations of this team.",
     "add": "Add credential",
     "edit": "Edit credential",
+    "editLabel": "Edit {integration} credential",
     "delete": "Delete credential",
-    "back": "Back to integrations",
+    "deleteLabel": "Delete {integration} credential",
+    "deleteTitle": "Delete the {integration} credential?",
     "label": "Label (optional)",
     "labelPlaceholder": "e.g. Team account",
-    "labelHint": "Helps tell apart credentials of the same integration. Secrets are stored encrypted.",
+    "labelHint": "Tells this credential apart from others of the same integration. Secrets are stored encrypted.",
     "noFields": "No fields",
     "search": "Search integrations",
     "noMatches": "No integration matches “{query}”.",
+    "nothingFound": "Nothing found",
+    "noKindMatches": "No credentials in the chosen groups.",
+    "showGroups": "Show groups",
+    "connected": "Credential added",
+    "alreadyConnected": "The team already has a {integration} credential",
+    "alreadyConnectedHint": "Add another credential for a second account. The label tells them apart.",
+    "agentTools": "Available tools",
+    "validate": "Check credential",
+    "optionalMark": "(optional)",
+    "keepStored": "Leave blank to keep {value}",
+    "fieldHelp": "About {field}",
+    "website": "{integration} website",
+    "checkValid": "{integration} accepted the credential.",
+    "checkRejected": "{integration} rejected the credential. Check it and try again.",
+    "checkUnavailable": "{integration} did not answer the check. Try again later.",
+    "checkUnknown": "This credential can't be checked automatically. You can still save it.",
     "empty": "No credentials yet",
-    "emptyHint": "Agents can't use an AI provider or a tool without one.",
-    "deleteMessage": "Delete the {integration} credential? Agents and tools using it will stop working until you add a new one.",
+    "emptyHint": "Add a credential so agents can use an AI provider or a tool.",
+    "deleteMessage": "{kind, select, llm {Agents that run on it stop working until you choose another credential for them.} tool {The tools added with it are deleted, and agents can no longer call them.} other {}} This can't be undone.",
     "groups": {
       "llm": {
         "title": "AI providers",
-        "hint": "The model an internal agent runs on"
+        "hint": "AI provider for internal agents"
       },
       "tool": {
         "title": "Tools",
-        "hint": "Integrations an agent can call as tools"
+        "hint": "Tools that agents can call"
       }
     },
     "columns": {
@@ -397,20 +415,26 @@
   "tools": {
     "add": "Add tool",
     "delete": "Delete tool",
+    "deleteLabel": "Delete {tool}",
+    "deleteTitle": "Delete {tool}?",
     "tool": "Tool",
-    "scopes": "Scopes",
-    "noScopes": "No scopes",
+    "scopes": "Token permissions",
+    "dateAdded": "Added",
+    "noScopes": "None",
     "empty": "No tools yet",
-    "emptyHint": "Configure a tool once, then enable it on any agent.",
+    "emptyHint": "Add a tool, then turn it on for the agents that need it.",
     "search": "Search tools",
     "noMatches": "No tool matches “{query}”.",
+    "nothingFound": "Nothing found",
     "scopesLabel": "Required token permissions",
     "credential": "Credential",
     "chooseCredential": "Choose a credential",
     "credentialFallback": "Credential #{id}",
+    "keyless": "No key (shared rate limit)",
     "noCredential": "No {integration} credential yet",
-    "noCredentialHint": "Add one in the team's integrations to select these tools.",
-    "deleteMessage": "Remove {tool}? Agents using it will lose access to this tool.",
+    "noCredentialHint": "Add one to select these tools.",
+    "noCredentialAsk": "Ask someone who manages the team's integrations to add one.",
+    "deleteMessage": "Agents that use it will no longer be able to call it.",
     "selectGroup": "Select all",
     "clearGroup": "Clear",
     "selectedCount": "{count, plural, one {# tool selected} other {# tools selected}}",

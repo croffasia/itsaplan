@@ -22,6 +22,7 @@ import AccountPreferenceRow from './components/preferences/AccountPreferenceRow'
 import AccountPreferenceSelect from './components/preferences/AccountPreferenceSelect';
 import AccountPreferencesSection from './components/preferences/AccountPreferencesSection';
 import AccountPreferencesTimezone from './components/preferences/AccountPreferencesTimezone';
+import AccountDesktopNotifications from './components/preferences/AccountDesktopNotifications';
 import AccountHotkeys from './components/preferences/AccountHotkeys';
 import AccountPreferencesNav from './components/preferences/AccountPreferencesNav';
 import AccountPreferencesSaveState from './components/preferences/AccountPreferencesSaveState';
@@ -33,7 +34,8 @@ const ISSUE_ACTIVITY_VIEWS: IssueActivityView[] = ['flat', 'grouped'];
 const START_PAGES: StartPage[] = ['work-items', 'inbox', 'dashboard', 'initiatives'];
 
 // Personal interface preferences (/account/preferences). Each choice saves as soon
-// as it is made and applies on every device the user signs in from.
+// as it is made and applies on every device the user signs in from, except desktop
+// notifications, which are turned on per browser.
 export default function AccountPreferencesPage() {
   const t = useTranslations('account.preferences');
   const { data, isPending } = useAccountPreferencesQuery();
@@ -170,6 +172,7 @@ export default function AccountPreferencesPage() {
             disabled={disabled}
           />
         </AccountPreferenceRow>
+        <AccountDesktopNotifications />
       </AccountPreferencesSection>
 
       <AccountPreferencesSection id="ai-chat" title={t('sections.aiChat')}>

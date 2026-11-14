@@ -168,6 +168,10 @@
     },
     "autoWatch": "이슈 자동 구독",
     "autoWatchDescription": "내가 만들거나 담당자로 지정된 이슈, 댓글을 작성하거나 멘션된 이슈를 자동으로 구독합니다.",
+    "desktopNotifications": "데스크톱 알림",
+    "desktopNotificationsDescription": "이 브라우저에만 적용됩니다. 앱이 열려 있지만 앞에 있지 않을 때, 모든 프로젝트의 새 받은 편지함 항목마다 알림을 띄웁니다.",
+    "desktopNotificationsBlocked": "이 브라우저가 이 사이트의 알림을 막고 있습니다. 브라우저의 사이트 설정에서 허용해 주세요.",
+    "desktopNotificationsUnsupported": "이 브라우저는 데스크톱 알림을 띄울 수 없습니다.",
     "showChatByDefault": "기본으로 채팅 표시",
     "showChatByDefaultDescription": "프로젝트 페이지를 열 때 채팅 패널도 함께 엽니다. 패널 상단이나 채팅 아이콘을 눌러 언제든 닫을 수 있습니다."
   }

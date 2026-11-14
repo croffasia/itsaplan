@@ -168,6 +168,10 @@
     },
     "autoWatch": "Seguir tickets automáticamente",
     "autoWatchDescription": "Las que creas, te asignen, comentes o en las que te mencionen.",
+    "desktopNotifications": "Notificaciones de escritorio",
+    "desktopNotificationsDescription": "Solo en este navegador. Muestra una notificación por cada elemento nuevo de la bandeja de entrada, de todos los proyectos, mientras la app está abierta pero no en primer plano.",
+    "desktopNotificationsBlocked": "Este navegador bloquea las notificaciones de este sitio. Permítelas en los ajustes del sitio del navegador.",
+    "desktopNotificationsUnsupported": "Este navegador no puede mostrar notificaciones de escritorio.",
     "showChatByDefault": "Mostrar el chat por defecto",
     "showChatByDefaultDescription": "El panel de chat se abre con una página de proyecto. Ciérralo cuando quiera desde su cabecera o el icono de chat."
   }

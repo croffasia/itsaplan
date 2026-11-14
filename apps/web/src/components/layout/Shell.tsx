@@ -15,6 +15,7 @@ import { useShellProject } from '@/hooks/useShellProject';
 import { useShellRoute } from '@/hooks/useShellRoute';
 import { useShellTitle } from '@/hooks/useShellTitle';
 import { useAppBadge } from '@/hooks/useAppBadge';
+import { useDesktopNotifications } from '@/hooks/useDesktopNotifications';
 import { useProjectRouteSync } from '@/hooks/useProjectRouteSync';
 import { projectPath, issuePath } from '@/utils/paths';
 import { defaultsFromFilters, type NewIssueDefaults } from '@/utils/project';
@@ -62,6 +63,7 @@ export default function Shell({
     forbidden,
   } = useShellProject(projectKey, route.activeViewId);
   useAppBadge();
+  useDesktopNotifications();
   const projectName = project?.project.name ?? t('project');
   // A failed read keeps the last data, so a project that became unreadable is named
   // generically.

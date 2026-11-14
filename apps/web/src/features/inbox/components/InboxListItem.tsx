@@ -13,6 +13,7 @@ import {
 import { useTranslations } from 'next-intl';
 import type { Notification, NotificationType } from '@/lib/api/endpoints/notifications';
 import { formatDurationShort } from '@/utils/dates';
+import { notificationEventText, notificationSubject } from '@/utils/inboxNotification';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -86,20 +87,8 @@ export default function InboxListItem({
   const tDocuments = useTranslations('documents');
   const [pickOpen, setPickOpen] = useState(false);
   const Icon = TYPE_ICON[n.type];
-  const subject =
-    n.documentId != null
-      ? [n.documentIcon, n.documentTitle?.trim() || tDocuments('untitled')]
-          .filter(Boolean)
-          .join(' ')
-      : `${n.projectKey}-${n.issueSeq} ${n.issueTitle}`;
-  const who = n.actorName ?? te('someone');
-  // The verb phrase for a notification, addressed to the reader ("you").
-  const eventText =
-    n.type === 'state_changed'
-      ? n.fromState && n.toState
-        ? te('stateChanged', { who, from: n.fromState, to: n.toState })
-        : te('stateChangedPlain', { who })
-      : te(n.type, { who });
+  const subject = notificationSubject(n, tDocuments('untitled'));
+  const eventText = notificationEventText(n, te);
   const unread = n.readAt == null;
   const snoozed = n.snoozedUntil != null && new Date(n.snoozedUntil).getTime() > Date.now();
 

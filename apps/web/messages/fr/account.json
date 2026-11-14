@@ -168,6 +168,10 @@
     },
     "autoWatch": "Suivre les tickets automatiquement",
     "autoWatchDescription": "Ceux que vous créez, qui vous sont assignés, que vous commentez ou dans lesquels vous êtes mentionné.",
+    "desktopNotifications": "Notifications de bureau",
+    "desktopNotificationsDescription": "Dans ce navigateur uniquement. Affiche une notification pour chaque nouvel élément de la boîte de réception, de tous les projets, quand l'app est ouverte mais pas au premier plan.",
+    "desktopNotificationsBlocked": "Ce navigateur bloque les notifications de ce site. Autorisez-les dans les paramètres du site du navigateur.",
+    "desktopNotificationsUnsupported": "Ce navigateur ne peut pas afficher de notifications de bureau.",
     "showChatByDefault": "Afficher le chat par défaut",
     "showChatByDefaultDescription": "Le panneau de chat s'ouvre avec une page de projet. Fermez-le à tout moment depuis son en-tête ou l'icône de chat."
   }

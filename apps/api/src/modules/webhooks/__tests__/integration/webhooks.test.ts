@@ -144,10 +144,27 @@ describe('webhooks', () => {
       const { asOwner } = await setupOwnerProject();
       const res = await asOwner.projects({ projectKey: 'MKT' }).webhooks.post({
         url: 'https://example.com/hook',
-        // @ts-expect-error unknown event type is rejected by the schema
         events: ['issue.exploded'],
       });
       expect(res.status).toBe(400);
+      expect(res.error?.value).toMatchObject({ error: 'Unknown webhook event: issue.exploded' });
+    });
+
+    it('rejects an empty event name and one past 100 characters', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const post = (event: string) =>
+        asOwner.projects({ projectKey: 'MKT' }).webhooks.post({
+          url: 'https://example.com/hook',
+          events: [event],
+        });
+      expect((await post('')).status).toBe(400);
+      const longest = await post('x'.repeat(100));
+      expect(longest.error?.value).toMatchObject({
+        error: `Unknown webhook event: ${'x'.repeat(100)}`,
+      });
+      const tooLong = await post('x'.repeat(101));
+      expect(tooLong.status).toBe(400);
+      expect(tooLong.error?.value).not.toMatchObject({ error: expect.stringContaining('Unknown') });
     });
 
     it('rejects a non-numeric webhook id', async () => {
@@ -687,6 +704,9 @@ describe('webhooks', () => {
       // assert the top-level HTTP status (typed number) rather than error.status.
       const list = await outsider.projects({ projectKey: 'MKT' }).webhooks.get();
       expect(list.status).toBe(403);
+
+      const events = await outsider.projects({ projectKey: 'MKT' }).webhooks['event-types'].get();
+      expect(events.status).toBe(403);
 
       const create = await outsider.projects({ projectKey: 'MKT' }).webhooks.post({
         url: 'https://evil.example.com/hook',

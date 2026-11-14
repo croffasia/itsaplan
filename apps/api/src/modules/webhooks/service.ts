@@ -1,16 +1,16 @@
 import { randomBytes } from 'node:crypto';
 import { db, webhook, webhookDelivery } from '@repo/db';
 import { and, desc, eq, lt } from 'drizzle-orm';
-import { iso } from '#shared/lib';
+import { HttpError, iso } from '#shared/lib';
 
 // Outgoing webhook subscriptions on a project. A subscription targets a `url` and
 // lists the event types it wants. It carries its own `secret`, which signs the
 // payloads sent to that url. This layer only stores and returns the subscription.
 // The delivery side is separate.
 
-// The event types a subscription can select. Keep this list in sync with the events
-// emitted through modules/issues/webhook-payload.ts and modules/agents/core/run-finished.ts,
-// and with the frontend list (apps/web src/lib/api/endpoints/webhooks.ts).
+// The core's event types a subscription can select. Keep this list in sync with the events
+// emitted through modules/issues/webhook-payload.ts and modules/agents/core/run-finished.ts.
+// An extension of the api adds its own with setWebhookEvents.
 //
 // issue.updated fires on any field change, archiving and restoring included. The
 // granular issue.assigned, issue.state_changed, and issue.label_changed fire in
@@ -38,12 +38,50 @@ export const WEBHOOK_EVENT_TYPES = [
 ] as const;
 export type WebhookEventType = (typeof WEBHOOK_EVENT_TYPES)[number];
 
+// An event an extension of the api adds: the name a webhook subscribes to, and the action and
+// the resource type of its envelope. The extension sends it with emitExtensionWebhookEvent.
+export interface WebhookEventDefinition {
+  event: string;
+  action: 'create' | 'update' | 'remove';
+  type: string;
+}
+
+let extensionEvents: WebhookEventDefinition[] = [];
+
+// Replaces the events an extension adds; none takes them away. A webhook keeps an event taken
+// away, and is sent none of it. A name the core or another event has throws.
+export function setWebhookEvents(next: WebhookEventDefinition[] = []): void {
+  const taken = new Set<string>(WEBHOOK_EVENT_TYPES);
+  for (const one of next) {
+    if (taken.has(one.event)) throw new Error(`Webhook event '${one.event}' is taken`);
+    taken.add(one.event);
+  }
+  extensionEvents = next;
+}
+
+export function extensionWebhookEvent(event: string): WebhookEventDefinition | undefined {
+  return extensionEvents.find((one) => one.event === event);
+}
+
+// Every event a webhook may subscribe to: the core's, then the ones an extension adds.
+export function webhookEventTypes(): string[] {
+  return [...WEBHOOK_EVENT_TYPES, ...extensionEvents.map((one) => one.event)];
+}
+
+// An event no one offers is refused, unless the webhook has it already: one an extension took
+// away stays on the webhooks that subscribe to it.
+function checkEvents(events: string[], kept: string[] = []): void {
+  const known = new Set([...webhookEventTypes(), ...kept]);
+  const unknown = events.find((event) => !known.has(event));
+  if (unknown) throw new HttpError(400, `Unknown webhook event: ${unknown}`);
+}
+
 export interface WebhookRow {
   id: number;
   projectId: number;
   url: string;
   secret: string;
-  events: WebhookEventType[];
+  events: string[];
   isActive: boolean;
   createdAt: string;
 }
@@ -54,7 +92,7 @@ function mapWebhook(row: typeof webhook.$inferSelect): WebhookRow {
     projectId: row.projectId,
     url: row.url,
     secret: row.secret,
-    events: (row.events as WebhookEventType[]) ?? [],
+    events: (row.events as string[]) ?? [],
     isActive: row.isActive,
     createdAt: iso(row.createdAt),
   };
@@ -78,9 +116,10 @@ export async function listWebhooks(projectId: number): Promise<WebhookRow[]> {
 export async function createWebhook(input: {
   projectId: number;
   url: string;
-  events: WebhookEventType[];
+  events: string[];
   isActive?: boolean;
 }): Promise<WebhookRow> {
+  checkEvents(input.events);
   const [row] = await db
     .insert(webhook)
     .values({
@@ -102,11 +141,14 @@ export async function getWebhook(id: number): Promise<WebhookRow | null> {
 // Updates only the fields the patch provides. The secret changes only through rotation.
 export async function updateWebhook(
   id: number,
-  patch: { url?: string; events?: WebhookEventType[]; isActive?: boolean },
+  patch: { url?: string; events?: string[]; isActive?: boolean },
 ): Promise<WebhookRow | null> {
   const set: Partial<typeof webhook.$inferInsert> = {};
   if (patch.url !== undefined) set.url = patch.url;
-  if (patch.events !== undefined) set.events = patch.events;
+  if (patch.events !== undefined) {
+    checkEvents(patch.events, (await getWebhook(id))?.events);
+    set.events = patch.events;
+  }
   if (patch.isActive !== undefined) set.isActive = patch.isActive;
   // The worker keeps a webhook active while its consecutive failures stay under the
   // disable threshold, and clears that counter only on a delivery that succeeds. A

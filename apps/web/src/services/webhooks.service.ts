@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import {
+  listWebhookEventTypes,
   listWebhooks,
   listWebhookDeliveries,
   createWebhook,
@@ -10,6 +11,13 @@ import {
   deleteWebhook,
 } from '@/lib/api/endpoints/webhooks';
 import { qk } from '@/services/queryKeys';
+
+export function useWebhookEventTypesQuery(projectKey: string) {
+  return useQuery({
+    queryKey: qk.webhookEventTypes(projectKey),
+    queryFn: () => listWebhookEventTypes(projectKey),
+  });
+}
 
 export function useWebhooksQuery(projectKey: string | null) {
   return useQuery({

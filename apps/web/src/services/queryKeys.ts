@@ -100,6 +100,7 @@ export const qk = {
   views: (projectKey: string) => ['views', projectKey] as const,
   actions: (projectKey: string) => ['actions', projectKey] as const,
   webhooks: (projectKey: string) => ['webhooks', projectKey] as const,
+  webhookEventTypes: (projectKey: string) => ['webhookEventTypes', projectKey] as const,
   webhookDeliveries: (webhookId: number) => ['webhookDeliveries', webhookId] as const,
   // The project's import jobs (the Import/Export settings section).
   importJobs: (projectKey: string) => ['importJobs', projectKey] as const,

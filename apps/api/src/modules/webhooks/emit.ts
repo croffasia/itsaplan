@@ -2,14 +2,20 @@ import { randomUUID } from 'node:crypto';
 import { aiAgent, db, user, webhook, webhookDelivery } from '@repo/db';
 import { and, eq, sql } from 'drizzle-orm';
 import type { ActivityActor } from '#modules/issues/activity';
-import type { WebhookEventType } from './service';
+import {
+  extensionWebhookEvent,
+  type WebhookEventDefinition,
+  type WebhookEventType,
+} from './service';
 
 // Maps our granular event type to the Linear-style envelope's action + resource
 // type. action is create | update | remove. type is the PascalCase resource.
 // Linear's action/type pair cannot distinguish our assigned, state_changed, and
 // label_changed variants, because all of them are an issue update. The payload keeps
 // the granular event in its own `event` field.
-const EVENT_SHAPE: Record<WebhookEventType, { action: string; type: string }> = {
+type EventShape = Pick<WebhookEventDefinition, 'action' | 'type'>;
+
+const EVENT_SHAPE: Record<WebhookEventType, EventShape> = {
   'issue.created': { action: 'create', type: 'Issue' },
   'issue.updated': { action: 'update', type: 'Issue' },
   'issue.deleted': { action: 'remove', type: 'Issue' },
@@ -78,7 +84,7 @@ export async function projectEventWanted(
 }
 
 // The active webhooks of the project that subscribe to eventType.
-function subscribedWebhooks(projectId: number, eventType: WebhookEventType) {
+function subscribedWebhooks(projectId: number, eventType: string) {
   return db
     .select({ id: webhook.id })
     .from(webhook)
@@ -121,13 +127,35 @@ export async function emitWebhookEvents(
     }
   }
 
+  await deliver(projectId, eventType, EVENT_SHAPE[eventType], loadOnce, actor);
+}
+
+// Sends an event an extension adds (setWebhookEvents) to the webhooks of the project that
+// subscribe to it, as the core's events are sent. The listeners of onProjectEvent do not get
+// it. An event no longer added sends nothing.
+export async function emitExtensionWebhookEvent(
+  projectId: number,
+  event: string,
+  load: () => Promise<unknown[]>,
+  actor: ActivityActor,
+): Promise<void> {
+  const shape = extensionWebhookEvent(event);
+  if (shape) await deliver(projectId, event, shape, load, actor);
+}
+
+async function deliver(
+  projectId: number,
+  eventType: string,
+  { action, type }: EventShape,
+  load: () => Promise<unknown[]>,
+  actor: ActivityActor,
+): Promise<void> {
   const matching = await subscribedWebhooks(projectId, eventType);
   if (matching.length === 0) return;
 
-  const payloads = await loadOnce();
+  const payloads = await load();
   if (payloads.length === 0) return;
 
-  const { action, type } = EVENT_SHAPE[eventType];
   const resolvedActor = await resolveActor(actor);
   const now = new Date();
   const createdAt = now.toISOString();

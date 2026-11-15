@@ -383,7 +383,7 @@
     "linkExistingDescription": "從已連線的存放庫中選擇 Pull Request 或合併請求。",
     "createPullRequest": "建立 Pull Request",
     "createPullRequestDescription": "從現有分支建立 Pull Request，並關聯到此工作項目。",
-    "noConnectedRepositories": "請先在專案設定中連線 GitHub 或 GitLab 存放庫。",
+    "noConnectedRepositories": "請先在專案設定中連線 GitHub、GitLab、Gitea 或 Forgejo 存放庫。",
     "loadingRepositories": "正在載入存放庫…",
     "chooseRepository": "選擇存放庫",
     "openOnly": "未關閉",

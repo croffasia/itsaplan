@@ -383,7 +383,7 @@
     "linkExistingDescription": "Выберите pull request или merge request из подключённого репозитория.",
     "createPullRequest": "Создать PR/MR",
     "createPullRequestDescription": "Создайте PR/MR из существующей ветки и привяжите его к задаче.",
-    "noConnectedRepositories": "Сначала подключите репозиторий GitHub или GitLab в настройках проекта.",
+    "noConnectedRepositories": "Сначала подключите репозиторий GitHub, GitLab, Gitea или Forgejo в настройках проекта.",
     "loadingRepositories": "Загружаем репозитории…",
     "chooseRepository": "Выберите репозиторий",
     "openOnly": "Открытые",

@@ -383,7 +383,7 @@
     "linkExistingDescription": "Виберіть pull request або merge request із підключеного репозиторію.",
     "createPullRequest": "Створити PR/MR",
     "createPullRequestDescription": "Створіть PR/MR з наявної гілки та прив’яжіть його до задачі.",
-    "noConnectedRepositories": "Спочатку підключіть репозиторій GitHub або GitLab у налаштуваннях проєкту.",
+    "noConnectedRepositories": "Спочатку підключіть репозиторій GitHub, GitLab, Gitea або Forgejo у налаштуваннях проєкту.",
     "loadingRepositories": "Завантаження репозиторіїв…",
     "chooseRepository": "Виберіть репозиторій",
     "openOnly": "Відкриті",

@@ -383,7 +383,7 @@
     "linkExistingDescription": "Bağlı bir kod deposundan bir pull request veya merge request seçin.",
     "createPullRequest": "Pull request oluştur",
     "createPullRequestDescription": "Mevcut bir daldan pull request açın ve bu işe bağlayın.",
-    "noConnectedRepositories": "Önce proje ayarlarından bir GitHub veya GitLab deposu bağlayın.",
+    "noConnectedRepositories": "Önce proje ayarlarından bir GitHub, GitLab, Gitea veya Forgejo deposu bağlayın.",
     "loadingRepositories": "Depolar yükleniyor…",
     "chooseRepository": "Depo seçin",
     "openOnly": "Açık",

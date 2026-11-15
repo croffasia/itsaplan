@@ -43,7 +43,12 @@ export const createIssuePullRequestBody = t.Object({
 
 export const DevelopmentRepositoryResponse = t.Object({
   id: t.Number(),
-  provider: t.Union([t.Literal('github'), t.Literal('gitlab')]),
+  provider: t.Union([
+    t.Literal('github'),
+    t.Literal('gitlab'),
+    t.Literal('gitea'),
+    t.Literal('forgejo'),
+  ]),
   fullName: t.String(),
   webUrl: t.String(),
 });

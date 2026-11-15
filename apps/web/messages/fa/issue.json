@@ -383,7 +383,7 @@
     "linkExistingDescription": "یک pull request یا merge request از یک مخزن متصل انتخاب کنید.",
     "createPullRequest": "ساخت pull request",
     "createPullRequestDescription": "از یک شاخه موجود یک pull request باز کنید و آن را به این تسک متصل کنید.",
-    "noConnectedRepositories": "ابتدا یک مخزن GitHub یا GitLab را در تنظیمات پروژه متصل کنید.",
+    "noConnectedRepositories": "ابتدا یک مخزن GitHub، GitLab، Gitea یا Forgejo را در تنظیمات پروژه متصل کنید.",
     "loadingRepositories": "در حال بارگذاری مخزن‌ها…",
     "chooseRepository": "انتخاب مخزن",
     "openOnly": "باز",

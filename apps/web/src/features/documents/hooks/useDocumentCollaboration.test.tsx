@@ -30,7 +30,8 @@ let queryClient: QueryClient;
 let useDocumentCollaboration: UseDocumentCollaboration;
 let originalFetch: typeof fetch;
 let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
-let sessionSeed: Record<string, unknown> | null;
+let sessionText: string;
+let sessionBody: BodyInit | null | undefined;
 let sessionRejected: boolean;
 let collaboration: ReturnType<UseDocumentCollaboration>;
 
@@ -105,7 +106,8 @@ beforeEach(async () => {
 
   ({ useDocumentCollaboration } = await import('./useDocumentCollaboration'));
   originalFetch = globalThis.fetch;
-  sessionSeed = null;
+  sessionText = 'Saved';
+  sessionBody = undefined;
   sessionRejected = false;
   globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
     if (String(input).endsWith('/session')) {
@@ -115,8 +117,16 @@ beforeEach(async () => {
           { status: 400 },
         );
       }
-      sessionSeed = JSON.parse(String(init?.body)).contentJson;
-      return Response.json({ documentId: 42, epoch: 'e1', version: 0, contentJson: sessionSeed });
+      sessionBody = init?.body;
+      return Response.json({
+        documentId: 42,
+        epoch: 'e1',
+        version: 0,
+        contentJson: {
+          type: 'doc',
+          content: [{ type: 'paragraph', content: [{ type: 'text', text: sessionText }] }],
+        },
+      });
     }
     return Response.json({
       epoch: 'e1',
@@ -221,7 +231,8 @@ async function mountDocument() {
 }
 
 describe('useDocumentCollaboration', () => {
-  it('seeds a session from the document Markdown, not from a stale editor body', async () => {
+  it('opens the session from the api copy, not from the editor body', async () => {
+    sessionText = 'New requirement';
     await act(async () => {
       root.render(
         <QueryClientProvider client={queryClient}>
@@ -230,9 +241,7 @@ describe('useDocumentCollaboration', () => {
       );
     });
 
-    assert.ok(sessionSeed);
-    assert.match(JSON.stringify(sessionSeed), /New requirement/);
-    assert.doesNotMatch(JSON.stringify(sessionSeed), /Old requirement/);
+    assert.equal(sessionBody, undefined);
     assert.equal(editor.getText(), 'New requirement');
     assert.equal(collaboration.openFailed, false);
   });

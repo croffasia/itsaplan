@@ -7,10 +7,16 @@ import {
 } from '@repo/db';
 import { and, asc, eq, gt, lte, or } from 'drizzle-orm';
 import { Step, Mapping } from '@tiptap/pm/transform';
+import { DOCUMENT_BLOCK_TYPES } from '@repo/editor';
+import { markdownToDocumentJson } from '@repo/editor/markdown';
+import { JSDOM } from 'jsdom';
 import { HttpError } from '#shared/lib';
 import { assertValidDocumentContentJson, getDocument } from './service';
 import { collaborationSchema } from './collaboration-schema';
 import { documentMentionHandles, fanOutTextMentions } from './mentions';
+
+// jsdom runs no scripts and fetches nothing unless asked to.
+const { window } = new JSDOM('');
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 export async function lockVisibleDocument(
@@ -37,13 +43,7 @@ export async function lockVisibleDocument(
   return document;
 }
 
-export async function openDocumentSession(
-  projectId: number,
-  documentId: number,
-  userId: string,
-  input: { version: number; contentJson: Record<string, unknown> },
-) {
-  assertValidDocumentContentJson(input.contentJson);
+export async function openDocumentSession(projectId: number, documentId: number, userId: string) {
   return db.transaction(async (tx) => {
     const document = await lockVisibleDocument(tx, projectId, documentId, userId, true);
     const [existing] = await tx
@@ -52,9 +52,8 @@ export async function openDocumentSession(
       .where(eq(documentCollaboration.documentId, documentId));
     if (existing && JSON.stringify(existing.contentJson) === JSON.stringify(document.contentJson))
       return existing;
-    if (!document.contentJson && document.version !== input.version)
-      throw new HttpError(409, 'Reload the document before joining');
-    const json = document.contentJson ?? input.contentJson;
+    // A page written as Markdown has no editor JSON until its first session.
+    const json = document.contentJson ?? markdownToDocumentJson(document.content, window);
     assertValidDocumentContentJson(json);
     let normalized: Record<string, unknown>;
     try {
@@ -63,20 +62,7 @@ export async function openDocumentSession(
       normalized = node.toJSON();
       const ids = new Set<unknown>();
       const addIds = (value: Record<string, unknown>) => {
-        if (
-          [
-            'paragraph',
-            'heading',
-            'blockquote',
-            'codeBlock',
-            'bulletList',
-            'orderedList',
-            'taskList',
-            'table',
-            'horizontalRule',
-            'image',
-          ].includes(String(value.type))
-        ) {
+        if (DOCUMENT_BLOCK_TYPES.includes(String(value.type))) {
           const attrs = (value.attrs ?? {}) as Record<string, unknown>;
           const id = attrs.blockId && !ids.has(attrs.blockId) ? attrs.blockId : crypto.randomUUID();
           ids.add(id);
@@ -97,17 +83,13 @@ export async function openDocumentSession(
         set: { epoch: crypto.randomUUID(), version: 0, contentJson: normalized },
       })
       .returning();
-    if (JSON.stringify(document.contentJson) !== JSON.stringify(normalized)) {
+    // The JSON and block ids are built from what the page holds, so the page keeps its
+    // version and its last editor: opening it is not an edit.
+    if (JSON.stringify(document.contentJson) !== JSON.stringify(normalized))
       await tx
         .update(projectDocument)
-        .set({
-          contentJson: normalized,
-          version: document.version + 1,
-          updatedByUserId: userId,
-          updatedAt: new Date(),
-        })
+        .set({ contentJson: normalized })
         .where(eq(projectDocument.id, documentId));
-    }
     return session!;
   });
 }

@@ -85,6 +85,22 @@ describe('api keys', () => {
     expect(me.data).toEqual({ authenticated: false });
   });
 
+  it('answers a key over its rate limit with 429', async () => {
+    const user = await signUpTestUser();
+    const created = await auth.api.createApiKey({
+      body: { userId: user.userId, name: 'ci', rateLimitMax: 2, rateLimitTimeWindow: 60_000 },
+    });
+    const client = apiKeyApi(created.key);
+    expect((await client.projects.get()).status).toBe(200);
+    expect((await client.projects.get()).status).toBe(200);
+
+    const limited = await client.projects.get();
+    expect(limited.status).toBe(429);
+    expect(limited.error?.value).toEqual({
+      error: 'Too many requests. Wait a moment and try again.',
+    });
+  });
+
   it('refuses creating a key from a key', async () => {
     const user = await signUpTestUser();
     const created = await auth.api.createApiKey({ body: { userId: user.userId, name: 'ci' } });

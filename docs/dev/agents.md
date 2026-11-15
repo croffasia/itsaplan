@@ -14,7 +14,8 @@ credential the service refused, so an outage never blocks a save through MCP. Th
 first, on edit too (the stored secrets fill the fields left blank), and also holds back a credential the service gave no answer for (`unavailable`: an outage, a
 timeout, a bot wall); one that cannot be checked from here (`unknown`: no such request, an address
 the SSRF guard refuses) can be saved. A tool integration
-checks itself (`verify` in its folder of `@repo/agent-tools`). An AI provider is asked for
+checks itself (`verify` in its folder of `@repo/agent-tools`), and so does a service an extension
+adds through `setExtraIntegrations`; one without `verify` cannot be checked (`unknown`). An AI provider is asked for
 `/models` at the address in Mastra's registry, or at the credential's base URL; the providers whose
 address only their SDK holds, and the few with another request or refusal status, are listed by
 hand in `integrations/provider-check.ts`.

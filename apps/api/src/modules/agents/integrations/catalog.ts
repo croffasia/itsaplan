@@ -12,7 +12,8 @@ import { AI_PROVIDERS } from './llm-providers';
 //                 @repo/agent-tools. Their credential schema and tool list come from the
 //                 package.
 //   - "service" — an address and a key that a team's own tools send requests to, from
-//                 an extension of the api (setExtraIntegrations). No tools.
+//                 an extension of the api (setExtraIntegrations). No tools; its own
+//                 verify checks a credential, as a tool integration's does.
 // The credential form and, for tool integrations, the tool picker are built from a
 // descriptor on the frontend.
 

@@ -106,6 +106,10 @@ export function errorAnswer(
   if (pgErrorCode(error) === '23505') {
     return { status: 409, body: { error: 'A record with this name already exists.' } };
   }
+  // An API key over its rate limit: better-auth throws an APIError with this status.
+  if ((error as { statusCode?: unknown } | null)?.statusCode === 429) {
+    return { status: 429, body: { error: 'Too many requests. Wait a moment and try again.' } };
+  }
   // drizzle puts the failed statement and its parameters in the message, and the public
   // routes would hand that to anyone.
   return { status: 500, body: { error: 'Internal server error' } };

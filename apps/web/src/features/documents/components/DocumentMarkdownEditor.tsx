@@ -4,17 +4,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { JSONContent } from '@tiptap/core';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
-import Color from '@tiptap/extension-color';
-import Highlight from '@tiptap/extension-highlight';
-import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
-import { TableKit } from '@tiptap/extension-table';
-import TaskItem from '@tiptap/extension-task-item';
-import TaskList from '@tiptap/extension-task-list';
-import TextAlign from '@tiptap/extension-text-align';
-import { TextStyle } from '@tiptap/extension-text-style';
 import { type Editor, EditorContent, useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
+import { documentExtensions, isSafeDocumentImageSource } from '@repo/editor';
 import { common, createLowlight } from 'lowlight';
 import { useTranslations } from 'next-intl';
 import { Markdown } from 'tiptap-markdown';
@@ -27,7 +19,6 @@ import { useIssueRefs } from '@/context/issueRefs';
 import { createLinkKeyboardHandlers } from '@/components/common/editor/linkKeyboardHandlers';
 import { openLinkOnModifierClick } from '@/components/common/editor/modifierClickLink';
 import { ResizableImage } from '@/components/common/editor/tiptap-image';
-import { MarkdownTable } from '@/components/common/editor/tiptap-table';
 import { pasteMarkdown } from '@/components/common/editor/pasteMarkdown';
 import { useDocumentAnchor } from '../hooks/useDocumentAnchor';
 import { DocumentBlockId } from '../extensions/documentBlockId';
@@ -39,32 +30,6 @@ import { useMentionCandidates, useMentionNames } from '@/hooks/useMentionCandida
 import { useSession } from '@/lib/auth-client';
 
 const lowlight = createLowlight(common);
-const DOCUMENT_ASSET_PATH =
-  /^\/(?:protected-media\/)?projects\/[A-Za-z0-9._~%+-]+\/documents\/[1-9]\d*\/assets\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/raw$/i;
-
-function safeDocumentLinkHref(href: string): boolean {
-  if (
-    href.length === 0 ||
-    href.length > 2048 ||
-    [...href].some(
-      (character) => character === '\\' || /[\p{White_Space}\p{Cc}\p{Cf}]/u.test(character),
-    )
-  ) {
-    return false;
-  }
-  if (href.startsWith('#')) return true;
-  if (href.startsWith('/') && !href.startsWith('//')) return true;
-  if (/^(mailto:|tel:).+/i.test(href)) return true;
-  try {
-    const url = new URL(href);
-    return (
-      (url.protocol === 'http:' || url.protocol === 'https:') && !url.username && !url.password
-    );
-  } catch {
-    return false;
-  }
-}
-
 type EditorLabels = {
   placeholder: string;
   codeBlockLabel: string;
@@ -87,33 +52,13 @@ type EditorValue = { markdown: string; json: JSONContent };
 // but typing "@" offers nobody.
 export function documentEditorExtensions(labels: EditorLabels, mentions?: MentionOptions) {
   return [
-    DocumentBlockId,
-    StarterKit.configure({
-      codeBlock: false,
-      link: false,
-      heading: { levels: [1, 2, 3, 4, 5, 6] },
-      // Its paragraph is added before collab starts, so the server copy never gets it.
-      trailingNode: false,
+    ...documentExtensions({
+      blockId: DocumentBlockId,
+      codeBlock: CodeBlockLowlight.configure({ lowlight }),
+      image: ResizableImage,
+      mention: mentions ? Mention.configure(mentions) : Mention,
     }),
-    CodeBlockLowlight.configure({ lowlight }),
     Placeholder.configure({ placeholder: labels.placeholder }),
-    Link.configure({
-      autolink: true,
-      defaultProtocol: 'https',
-      openOnClick: true,
-      HTMLAttributes: { class: 'cursor-pointer', tabindex: '0' },
-      isAllowedUri: safeDocumentLinkHref,
-    }),
-    ResizableImage,
-    TableKit.configure({ table: false }),
-    MarkdownTable.configure({ resizable: false }),
-    TaskList,
-    TaskItem.configure({ nested: true }),
-    TextStyle,
-    Color,
-    Highlight.configure({ multicolor: true }),
-    TextAlign.configure({ types: ['heading', 'paragraph'] }),
-    mentions ? Mention.configure(mentions) : Mention,
     SlashCommand.configure({
       codeBlockLabel: labels.codeBlockLabel,
       tableLabel: labels.tableLabel,
@@ -352,25 +297,7 @@ export function insertDocumentImage(
 
 export function safeDocumentImageSource(source: string): string | null {
   const normalized = source.trim();
-  if (
-    normalized.length === 0 ||
-    normalized.length > 4096 ||
-    [...normalized].some(
-      (character) => character === '\\' || /[\p{White_Space}\p{Cc}\p{Cf}]/u.test(character),
-    )
-  ) {
-    return null;
-  }
-  if (DOCUMENT_ASSET_PATH.test(normalized)) return normalized;
-  try {
-    const url = new URL(normalized);
-    if ((url.protocol === 'http:' || url.protocol === 'https:') && !url.username && !url.password) {
-      return normalized;
-    }
-  } catch {
-    return null;
-  }
-  return null;
+  return isSafeDocumentImageSource(normalized) ? normalized : null;
 }
 
 export function firstImageFile(files: ArrayLike<File> | null | undefined): File | null {

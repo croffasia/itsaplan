@@ -1,17 +1,7 @@
 import { getHTMLFromFragment } from '@tiptap/core';
 import { Table } from '@tiptap/extension-table';
 import { Fragment, type Node as ProseMirrorNode } from '@tiptap/pm/model';
-
-// The part of tiptap-markdown's serializer state used below. `out` is the markdown
-// written so far; `inTable` is what makes a hard break serialize as <br>.
-type SerializerState = {
-  out: string;
-  inTable: boolean;
-  write: (text: string) => void;
-  renderInline: (node: ProseMirrorNode) => void;
-  ensureNewLine: () => void;
-  closeBlock: (node: ProseMirrorNode) => void;
-};
+import type { MarkdownState } from './markdown-state';
 
 // A pipe table carries a header row and one block per cell. A table with merged
 // cells or a cell holding two paragraphs has no markdown form, so it is written as
@@ -39,11 +29,13 @@ function isPipeTable(table: ProseMirrorNode): boolean {
 // would end the cell when the markdown is read back, so every pipe the cell wrote
 // is escaped. It is escaped after the fact rather than before: the serializer
 // escapes a backslash of its own, which would turn "\|" into a literal backslash.
-function writeCell(state: SerializerState, content: ProseMirrorNode) {
+function writeCell(state: MarkdownState, content: ProseMirrorNode) {
   const start = state.out.length;
   state.renderInline(content);
   state.out = state.out.slice(0, start) + state.out.slice(start).replaceAll('|', '\\|');
 }
+
+const ALIGNMENT_RULE: Record<string, string> = { left: ':---', center: ':---:', right: '---:' };
 
 // tiptap-markdown serializes a table itself, but writes each cell's content
 // unescaped. This replaces its serializer with one that escapes the pipes.
@@ -51,7 +43,7 @@ export const MarkdownTable = Table.extend({
   addStorage() {
     return {
       markdown: {
-        serialize(state: SerializerState, node: ProseMirrorNode) {
+        serialize(state: MarkdownState, node: ProseMirrorNode) {
           if (!isPipeTable(node)) {
             state.write(getHTMLFromFragment(Fragment.from(node), node.type.schema));
             state.closeBlock(node);
@@ -62,13 +54,16 @@ export const MarkdownTable = Table.extend({
             state.write('| ');
             row.forEach((cell, _cellOffset, column) => {
               if (column) state.write(' | ');
+              // A cell that holds only a mention has no text but still has content.
               const content = cell.firstChild;
-              if (content?.textContent.trim()) writeCell(state, content);
+              if (content?.childCount) writeCell(state, content);
             });
             state.write(' |');
             state.ensureNewLine();
             if (rowIndex === 0) {
-              state.write(`|${' --- |'.repeat(row.childCount)}`);
+              const rules: string[] = [];
+              row.forEach((cell) => rules.push(ALIGNMENT_RULE[cell.attrs.align] ?? '---'));
+              state.write(`|${rules.map((rule) => ` ${rule} |`).join('')}`);
               state.ensureNewLine();
             }
           });

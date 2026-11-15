@@ -6,7 +6,7 @@ import {
 } from 'react';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { cn } from '@/lib/utils';
-import { allowedImageStyle } from '@/utils/imageStyle';
+import { allowedImageStyle } from '@repo/editor';
 
 // Below this an image is too small to grab again.
 const MIN_WIDTH = 60;

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
+import { MarkdownTable } from '@repo/editor';
 import StarterKit from '@tiptap/starter-kit';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { TableKit } from '@tiptap/extension-table';
@@ -17,7 +18,6 @@ import { useIssueRefs } from '@/context/issueRefs';
 import { IssueRef } from './issueRefDecorations';
 import { refreshDecorations } from './refreshDecorations';
 import { SlashCommand } from '@/lib/tiptap-slash-command';
-import { MarkdownTable } from './tiptap-table';
 import { TightTaskList } from './tiptap-task-list';
 import { Video } from './tiptap-video';
 import { attachmentHtml, type Embeddable } from './attachmentEmbed';

@@ -241,10 +241,6 @@ export const deleteDocumentQuery = t.Object({
   version: t.Integer({ minimum: 1 }),
 });
 
-export const collaborationOpenBody = t.Object({
-  version: t.Integer({ minimum: 1 }),
-  contentJson: t.Record(t.String(), t.Any()),
-});
 export const collaborationQuery = t.Object({
   epoch: t.String({ format: 'uuid' }),
   version: t.Numeric({ minimum: 0 }),

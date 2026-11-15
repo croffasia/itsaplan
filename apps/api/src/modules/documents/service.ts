@@ -22,8 +22,16 @@ import {
   or,
   sql,
 } from 'drizzle-orm';
+import {
+  TEXT_ALIGNMENTS,
+  isAllowedImageStyle,
+  isBlockId,
+  isHexColor,
+  isMentionHandle,
+  isSafeDocumentImageSource,
+  isSafeLinkHref,
+} from '@repo/editor';
 import { HttpError, iso, shareLive } from '#shared/lib';
-import { MENTION_HANDLE_RE } from '#shared/mentions';
 import { documentMentionHandles, fanOutTextMentions } from './mentions';
 import {
   assertAttachmentStorageCapacity,
@@ -753,8 +761,6 @@ const DOCUMENT_MARK_TYPES = new Set([
   'highlight',
 ]);
 
-const TEXT_ALIGN = ['left', 'center', 'right'] as const;
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -781,10 +787,7 @@ function assertAllowedAttributes(
   context: string,
 ): void {
   const allowedKeys = new Set([...allowed, 'blockId']);
-  if (
-    attrs.blockId != null &&
-    (typeof attrs.blockId !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(attrs.blockId))
-  )
+  if (attrs.blockId != null && !isBlockId(attrs.blockId))
     throw new HttpError(400, 'Invalid document block identifier.');
   const unknown = Object.keys(attrs).find((key) => !allowedKeys.has(key));
   if (unknown) throw new HttpError(400, `${context} contains an unsupported "${unknown}" attr.`);
@@ -812,75 +815,17 @@ function assertOptionalBoundedString(value: unknown, maximum: number, context: s
   }
 }
 
-function containsUnsafeUrlCharacter(value: string): boolean {
-  return [...value].some(
-    (character) => character === '\\' || /[\p{White_Space}\p{Cc}\p{Cf}]/u.test(character),
-  );
-}
-
 function assertSafeLinkHref(value: unknown): void {
-  if (typeof value !== 'string' || value.length === 0 || value.length > 2_048) {
-    throw new HttpError(400, 'A link href must be a non-empty string up to 2048 characters.');
-  }
-  if (containsUnsafeUrlCharacter(value)) {
-    throw new HttpError(400, 'A link href cannot contain whitespace, controls, or backslashes.');
-  }
-  if (value.startsWith('#')) return;
-  if (value.startsWith('/') && !value.startsWith('//')) return;
-  if (/^(mailto:|tel:)/i.test(value)) {
-    if (value.slice(value.indexOf(':') + 1).length > 0) return;
-    throw new HttpError(400, 'A mailto or tel link must contain a destination.');
-  }
-  try {
-    const parsed = new URL(value);
-    if (
-      (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
-      !parsed.username &&
-      !parsed.password
-    ) {
-      return;
-    }
-  } catch {
-    // Fall through to the uniform validation error below.
-  }
-  throw new HttpError(400, 'A link href must use http, https, mailto, tel, /path, or #anchor.');
-}
-
-const DOCUMENT_ASSET_PATH =
-  /^\/(?:protected-media\/)?projects\/[A-Za-z0-9._~%+-]+\/documents\/[1-9]\d*\/assets\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/raw$/i;
-
-function assertSafeImageSource(value: unknown): void {
-  if (typeof value !== 'string' || value.length === 0 || value.length > 4_096) {
-    throw new HttpError(400, 'An image src must be a non-empty string up to 4096 characters.');
-  }
-  if (containsUnsafeUrlCharacter(value)) {
-    throw new HttpError(400, 'An image src cannot contain whitespace, controls, or backslashes.');
-  }
-  if (DOCUMENT_ASSET_PATH.test(value)) return;
-  try {
-    const parsed = new URL(value);
-    if (
-      (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
-      !parsed.username &&
-      !parsed.password
-    ) {
-      return;
-    }
-  } catch {
-    // Fall through to the uniform validation error below.
-  }
-  throw new HttpError(400, 'An image src must use http, https, or a protected Docs asset URL.');
+  if (!isSafeLinkHref(value))
+    throw new HttpError(
+      400,
+      'A link href must be an http, https, mailto or tel URL, a /path or a #anchor, up to 2048 characters with no spaces.',
+    );
 }
 
 function assertSafeColor(value: unknown): void {
-  if (
-    value !== undefined &&
-    value !== null &&
-    (typeof value !== 'string' ||
-      !/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value))
-  ) {
+  if (value != null && !isHexColor(value))
     throw new HttpError(400, 'Document colors must use a hexadecimal color value.');
-  }
 }
 
 function assertDocumentNodeAttributes(node: Record<string, unknown>): void {
@@ -888,18 +833,22 @@ function assertDocumentNodeAttributes(node: Record<string, unknown>): void {
   switch (node.type) {
     case 'paragraph':
       assertAllowedAttributes(attrs, ['textAlign'], 'A paragraph');
-      assertOptionalOneOf(attrs.textAlign, TEXT_ALIGN, 'Paragraph textAlign');
+      assertOptionalOneOf(attrs.textAlign, TEXT_ALIGNMENTS, 'Paragraph textAlign');
       return;
     case 'heading':
       assertAllowedAttributes(attrs, ['level', 'textAlign'], 'A heading');
       if (!Number.isInteger(attrs.level) || Number(attrs.level) < 1 || Number(attrs.level) > 6) {
         throw new HttpError(400, 'Heading level must be an integer from 1 to 6.');
       }
-      assertOptionalOneOf(attrs.textAlign, TEXT_ALIGN, 'Heading textAlign');
+      assertOptionalOneOf(attrs.textAlign, TEXT_ALIGNMENTS, 'Heading textAlign');
       return;
     case 'image': {
       assertAllowedAttributes(attrs, ['src', 'alt', 'title', 'width', 'style'], 'An image');
-      assertSafeImageSource(attrs.src);
+      if (!isSafeDocumentImageSource(attrs.src))
+        throw new HttpError(
+          400,
+          'An image src must be an http or https URL or a Docs asset path, up to 4096 characters with no spaces.',
+        );
       assertOptionalBoundedString(attrs.alt, 1_000, 'Image alt');
       assertOptionalBoundedString(attrs.title, 1_000, 'Image title');
       if (
@@ -908,11 +857,8 @@ function assertDocumentNodeAttributes(node: Record<string, unknown>): void {
       ) {
         throw new HttpError(400, 'Image width must be an integer from 1 to 4096.');
       }
-      if (
-        attrs.style != null &&
-        (typeof attrs.style !== 'string' || !/^max-width: *(?:100|[1-9]\d?)%;?$/i.test(attrs.style))
-      ) {
-        throw new HttpError(400, 'Image style may only contain a max-width percentage.');
+      if (attrs.style != null && !isAllowedImageStyle(attrs.style)) {
+        throw new HttpError(400, 'Image style may only set width and max-width.');
       }
       return;
     }
@@ -925,7 +871,7 @@ function assertDocumentNodeAttributes(node: Record<string, unknown>): void {
     case 'tableCell':
     case 'tableHeader': {
       assertAllowedAttributes(attrs, ['colspan', 'rowspan', 'colwidth', 'align'], 'A table cell');
-      assertOptionalOneOf(attrs.align, TEXT_ALIGN, 'Table cell align');
+      assertOptionalOneOf(attrs.align, TEXT_ALIGNMENTS, 'Table cell align');
       for (const key of ['colspan', 'rowspan'] as const) {
         const span = attrs[key];
         if (
@@ -956,13 +902,14 @@ function assertDocumentNodeAttributes(node: Record<string, unknown>): void {
       assertAllowedAttributes(attrs, ['start', 'tight', 'type'], 'An ordered list');
       assertOptionalBoolean(attrs.tight, 'List tight');
       assertOptionalOneOf(attrs.type, ['a', 'A', 'i', 'I', '1'], 'Ordered-list type');
+      // Markdown numbers a list from 0 up to nine digits.
       if (
         attrs.start !== undefined &&
         (!Number.isInteger(attrs.start) ||
-          Number(attrs.start) < 1 ||
-          Number(attrs.start) > 1_000_000)
+          Number(attrs.start) < 0 ||
+          Number(attrs.start) > 999_999_999)
       ) {
-        throw new HttpError(400, 'Ordered-list start must be a positive integer.');
+        throw new HttpError(400, 'Ordered-list start must be an integer from 0 to 999999999.');
       }
       return;
     case 'codeBlock':
@@ -971,11 +918,7 @@ function assertDocumentNodeAttributes(node: Record<string, unknown>): void {
       return;
     case 'mention':
       assertAllowedAttributes(attrs, ['username'], 'A mention');
-      if (
-        typeof attrs.username !== 'string' ||
-        attrs.username.length > 100 ||
-        !MENTION_HANDLE_RE.test(attrs.username)
-      ) {
+      if (!isMentionHandle(attrs.username)) {
         throw new HttpError(400, 'A mention must name a handle.');
       }
       return;

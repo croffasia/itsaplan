@@ -7,7 +7,6 @@ import { mcpTool } from '#mcp/generate';
 import { openDocumentSession, getDocumentSteps, saveDocumentSteps } from './collaboration';
 import { addDocumentComment, listDocumentComments, updateDocumentComment } from './comments';
 import {
-  collaborationOpenBody,
   collaborationQuery,
   collaborationSaveBody,
   collaborationSessionResponse,
@@ -28,13 +27,12 @@ export const documentCollaborationRoutes = new Elysia({
   .use(guards)
   .post(
     '/projects/:projectKey/documents/:documentId/session',
-    ({ project, params, user, body }) =>
-      openDocumentSession(project.id, params.documentId, requireUser(user).id, body),
+    ({ project, params, user }) =>
+      openDocumentSession(project.id, params.documentId, requireUser(user).id),
     {
       permission: ['documents', 'edit'],
       feature: 'documents',
       params: documentParams,
-      body: collaborationOpenBody,
       response: { 200: collaborationSessionResponse, ...commonErrors, ...errors(409) },
       detail: { summary: 'Join a collaborative document session' },
     },

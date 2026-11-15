@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // No Bun or Node types: the web bundles this package for the browser. The tests
+    // are checked with Bun's types by tsconfig.test.json.
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": []
+  },
+  "include": ["src"],
+  "exclude": ["src/__tests__"]
+}

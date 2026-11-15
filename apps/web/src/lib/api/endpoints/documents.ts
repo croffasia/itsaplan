@@ -308,15 +308,9 @@ export interface DocumentComment {
   updatedAt: string;
 }
 
-export const openDocumentSession = (
-  projectKey: string,
-  documentId: number,
-  version: number,
-  contentJson: Record<string, unknown>,
-) =>
+export const openDocumentSession = (projectKey: string, documentId: number) =>
   request<DocumentSession>(`/projects/${projectKey}/documents/${documentId}/session`, {
     method: 'POST',
-    body: JSON.stringify({ version, contentJson }),
   });
 export const getDocumentChanges = (
   projectKey: string,

@@ -1,39 +1,10 @@
-import { Extension } from '@tiptap/core';
+import { BlockId, DOCUMENT_BLOCK_TYPES } from '@repo/editor';
 import { ReplaceStep, ReplaceAroundStep } from '@tiptap/pm/transform';
 import { Plugin } from '@tiptap/pm/state';
 import { uuid } from '@/utils/uuid';
 
-export const DOCUMENT_BLOCK_TYPES = [
-  'paragraph',
-  'heading',
-  'blockquote',
-  'codeBlock',
-  'bulletList',
-  'orderedList',
-  'taskList',
-  'table',
-  'horizontalRule',
-  'image',
-];
-export const DocumentBlockId = Extension.create({
-  name: 'documentBlockId',
-  addGlobalAttributes() {
-    return [
-      {
-        types: DOCUMENT_BLOCK_TYPES,
-        attributes: {
-          blockId: {
-            default: null,
-            parseHTML: (element) => element.getAttribute('data-block-id'),
-            renderHTML: (attributes) =>
-              attributes.blockId
-                ? { 'data-block-id': attributes.blockId, id: `block-${attributes.blockId}` }
-                : {},
-          },
-        },
-      },
-    ];
-  },
+// Gives a block that a change created or copied an id of its own.
+export const DocumentBlockId = BlockId.extend({
   addProseMirrorPlugins() {
     return [
       new Plugin({

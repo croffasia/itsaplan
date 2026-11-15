@@ -110,7 +110,8 @@ export function useUpdateComment() {
   return useMutation({
     mutationFn: ({ commentId, body }: { issueId: number; commentId: number; body: string }) =>
       updateComment(commentId, { body }),
-    onSuccess: (_data, { issueId }) => void qc.invalidateQueries({ queryKey: qk.feed(issueId) }),
+    // Returned, so the edit box closes once the feed holds the new text.
+    onSuccess: (_data, { issueId }) => qc.invalidateQueries({ queryKey: qk.feed(issueId) }),
   });
 }
 

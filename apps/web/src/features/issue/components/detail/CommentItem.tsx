@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link2, Pencil, Reply, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { FeedItem } from '@/lib/api/endpoints/activity';
@@ -7,6 +7,7 @@ import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import { Button } from '@/components/ui/button';
 import { useRelativeTime } from '@/context/relativeTimeContext';
+import { readCommentDraft } from '@/utils/commentDrafts';
 import { commentPath } from '@/utils/paths';
 import CommentComposer, { type ComposerContext } from './CommentComposer';
 import { useCommentLink } from '../../context/commentLink';
@@ -45,8 +46,20 @@ export default function CommentItem({
   const link = useCommentLink();
   const relativeTime = useRelativeTime();
   const author = item.actorName ?? t('unknownAuthor');
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState<'clicked' | 'restored' | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const userId = composer?.userId;
+  const issueId = composer?.issueId;
+
+  useEffect(() => {
+    if (
+      canEdit &&
+      userId &&
+      issueId != null &&
+      readCommentDraft(userId, issueId, `edit:${item.id}`) != null
+    )
+      setEditing('restored');
+  }, [canEdit, userId, issueId, item.id]);
 
   async function copyLink(projectKey: string, sequenceNumber: number) {
     try {
@@ -92,7 +105,7 @@ export default function CommentItem({
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => setEditing(true)}
+                onClick={() => setEditing('clicked')}
                 className="h-6 px-2 text-xs text-muted-foreground"
                 title={t('edit')}
               >
@@ -130,13 +143,16 @@ export default function CommentItem({
             {...composer}
             commentId={item.id}
             initialBody={item.body ?? ''}
-            onClose={() => setEditing(false)}
+            restored={editing === 'restored'}
+            onClose={() => setEditing(null)}
           />
         </div>
       ) : (
         <div className="mt-1 ps-8.5">
           <div className="w-fit max-w-full rounded-xl rounded-ss-sm bg-muted/60 px-3 py-2">
             <MarkdownEditor
+              // The editor reads its content once, at mount: an edit has to remount it.
+              key={item.body ?? ''}
               className="text-sm text-foreground/90 [&_a.issue-ref]:mx-1 [&_a.issue-ref]:text-[0.9em]"
               defaultValue={item.body ?? ''}
               editable={false}

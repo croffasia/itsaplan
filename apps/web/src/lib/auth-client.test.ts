@@ -155,6 +155,24 @@ describe('signOut', () => {
     assert.equal(dom.window.localStorage.getItem('pushNotifications'), null);
   });
 
+  it('drops the unsent comments kept in this browser, and nothing else', async () => {
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: dom.window.localStorage,
+    });
+    const draftKey = 'itsaplan:comment-draft:u-ana:1:new';
+    dom.window.localStorage.setItem(
+      draftKey,
+      JSON.stringify({ body: 'half a reply', savedAt: Date.now() }),
+    );
+    dom.window.localStorage.setItem('theme', 'dark');
+
+    await signOut();
+
+    assert.equal(dom.window.localStorage.getItem(draftKey), null);
+    assert.equal(dom.window.localStorage.getItem('theme'), 'dark');
+  });
+
   it('drops the push subscription of this browser even when the api cannot be reached', async () => {
     let unsubscribed = false;
     const subscription = {

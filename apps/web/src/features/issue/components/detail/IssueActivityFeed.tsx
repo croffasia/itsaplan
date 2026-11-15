@@ -47,6 +47,7 @@ export default function IssueActivityFeed({
   const composer: ComposerContext = {
     issueId,
     projectKey,
+    userId: user?.id ?? null,
     authorName: user?.name || user?.email || t('you'),
     authorImage: (user as { image?: string | null } | null)?.image ?? null,
   };
@@ -84,7 +85,9 @@ export default function IssueActivityFeed({
         {tIssue('activityHeading')}
       </h3>
 
-      <CommentComposer {...composer} />
+      {/* Keyed, so a post that ends after the panel moved to another issue cannot clear
+          that issue's box. */}
+      <CommentComposer key={issueId} {...composer} />
 
       {view.ready && (
         <Tabs

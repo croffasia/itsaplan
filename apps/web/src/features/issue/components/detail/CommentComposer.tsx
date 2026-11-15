@@ -6,18 +6,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useMentionCandidates } from '@/hooks/useMentionCandidates';
 import { useMentionMenu } from '@/hooks/useMentionMenu';
+import type { CommentDraftBox } from '@/utils/commentDrafts';
 import { useCreateComment, useUpdateComment } from '../../services/comments.service';
+import { useCommentDraft } from '../../hooks/useCommentDraft';
 import { useTranslations } from 'next-intl';
 
 // The comment box, for a new comment or for editing one: a plain markdown textarea
 // with an @-mention menu (useMentionMenu). The feed renders a handle in the body as a
 // chip. Posts or saves as the current session user on the button or Cmd/Ctrl+Enter.
+// Unsent text is kept as a draft (useCommentDraft) until it is posted or cancelled.
 
 // What every composer needs to post, gathered once by the activity feed: the issue,
 // the project its "@" menu reads, and the author the avatar stands for.
 export interface ComposerContext {
   issueId: number;
   projectKey: string;
+  userId: string | null;
   authorName: string;
   authorImage: string | null;
 }
@@ -25,6 +29,7 @@ export interface ComposerContext {
 export default function CommentComposer({
   issueId,
   projectKey,
+  userId,
   authorName,
   authorImage,
   replyToId,
@@ -32,23 +37,30 @@ export default function CommentComposer({
   onClose,
   commentId,
   initialBody,
+  restored,
 }: ComposerContext & {
   // Set on the reply box a thread opens: the comment it answers and its author.
   replyToId?: number;
   replyToName?: string | null;
   // Closes the box — on the cancel button, on Escape, and once the comment is
   // posted or saved. The boxes a thread opens (reply, edit) are the only ones that
-  // can be closed.
+  // can be closed. Escape keeps the draft, the cancel button drops it.
   onClose?: () => void;
   // Set when the box edits an existing comment instead of posting a new one.
   commentId?: number;
   initialBody?: string;
+  // Set when the box reopened by itself to show a draft, not on a click: it then
+  // leaves the caret where it is.
+  restored?: boolean;
 }) {
   const t = useTranslations('issue.comments');
   const tCommon = useTranslations('common');
   const createComment = useCreateComment();
   const updateComment = useUpdateComment();
-  const [body, setBody] = useState(initialBody ?? '');
+  let draftBox: CommentDraftBox = 'new';
+  if (commentId != null) draftBox = `edit:${commentId}`;
+  else if (replyToId != null) draftBox = `reply:${replyToId}`;
+  const { body, setBody, discard } = useCommentDraft(userId, issueId, draftBox, initialBody);
   const [focused, setFocused] = useState(false);
   const candidates = useMentionCandidates({ projectKey, on: 'issue', place: 'comment' });
   const mention = useMentionMenu(body, setBody, candidates);
@@ -62,21 +74,27 @@ export default function CommentComposer({
   // caret — at the end of the text being edited.
   useEffect(() => {
     const ta = mention.ref.current;
-    if (!ta || (!isReply && !isEdit)) return;
+    if (!ta || (!isReply && !isEdit) || restored) return;
     ta.focus();
     if (isEdit) ta.setSelectionRange(ta.value.length, ta.value.length);
-  }, [isReply, isEdit, mention.ref]);
+  }, [isReply, isEdit, restored, mention.ref]);
+
+  function cancel() {
+    discard();
+    onClose?.();
+  }
 
   async function post() {
     const next = body.trim();
     if (!next) return;
     if (isEdit) {
-      if (next === initialBody?.trim()) return onClose?.();
+      if (next === initialBody?.trim()) return cancel();
       await updateComment.mutateAsync({ issueId, commentId: commentId!, body: next });
     } else {
       await createComment.mutateAsync({ issueId, input: { body: next, replyToId } });
       setBody('');
     }
+    discard();
     mention.close();
     onClose?.();
   }
@@ -152,7 +170,7 @@ export default function CommentComposer({
                 )}
                 <div className="flex items-center gap-1.5">
                   {onClose && (
-                    <Button size="sm" variant="ghost" onClick={onClose}>
+                    <Button size="sm" variant="ghost" onClick={cancel}>
                       {t('cancel')}
                     </Button>
                   )}

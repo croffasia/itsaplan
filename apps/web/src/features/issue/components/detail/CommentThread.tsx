@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FeedItem } from '@/lib/api/endpoints/activity';
 import { useSession } from '@/lib/auth-client';
 import { usePermissions } from '@/hooks/usePermissions';
+import { readCommentDraft } from '@/utils/commentDrafts';
 import CommentItem from './CommentItem';
 import CommentComposer, { type ComposerContext } from './CommentComposer';
 
@@ -31,7 +32,8 @@ export default function CommentThread({
   composer?: ComposerContext;
 }) {
   // The row the open box answers, null while it is closed.
-  const [replyTo, setReplyTo] = useState<Row | null>(null);
+  const [replyTo, setReplyTo] = useState<(Row & { restored?: boolean }) | null>(null);
+  const draftsChecked = useRef(false);
 
   // Edit and delete join the reply button where the feed is interactive. The same
   // rule the API asserts: the author with work_items edit, or a project owner.
@@ -41,12 +43,19 @@ export default function CommentThread({
   const manages = (item: FeedItem) =>
     canEditItems && (isOwner || item.actorUserId === session?.user.id);
 
-  const rows: Row[] = [];
-  const collect = (item: FeedItem, depth: number) => {
-    rows.push({ item, depth });
-    for (const reply of repliesByParent.get(item.id) ?? []) collect(reply, depth + 1);
-  };
-  collect(root, 0);
+  const rows = threadRows(root, repliesByParent);
+
+  // An unsent reply reopens its box when the thread is shown again. Checked once, so a
+  // box closed with Escape stays closed while the thread is on screen.
+  useEffect(() => {
+    if (draftsChecked.current || !composer?.userId) return;
+    draftsChecked.current = true;
+    const { userId, issueId } = composer;
+    const drafted = threadRows(root, repliesByParent).find(
+      (row) => readCommentDraft(userId, issueId, `reply:${row.item.id}`) != null,
+    );
+    if (drafted) setReplyTo({ ...drafted, restored: true });
+  }, [composer, root, repliesByParent]);
 
   return (
     <li className="flex flex-col gap-2 py-1.5">
@@ -65,15 +74,27 @@ export default function CommentThread({
       {replyTo && composer && (
         <div className={indentClass(replyTo.depth + 1)}>
           <CommentComposer
+            key={replyTo.item.id}
             {...composer}
             replyToId={replyTo.item.id}
             replyToName={replyTo.item.actorName}
+            restored={replyTo.restored}
             onClose={() => setReplyTo(null)}
           />
         </div>
       )}
     </li>
   );
+}
+
+function threadRows(root: FeedItem, repliesByParent: Map<number, FeedItem[]>): Row[] {
+  const rows: Row[] = [];
+  const collect = (item: FeedItem, depth: number) => {
+    rows.push({ item, depth });
+    for (const reply of repliesByParent.get(item.id) ?? []) collect(reply, depth + 1);
+  };
+  collect(root, 0);
+  return rows;
 }
 
 // Spelled out rather than computed: Tailwind generates only the classes it finds in

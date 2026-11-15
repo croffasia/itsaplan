@@ -383,7 +383,7 @@
     "linkExistingDescription": "从已连接的仓库中选择拉取请求或合并请求。",
     "createPullRequest": "创建拉取请求",
     "createPullRequestDescription": "从现有分支创建拉取请求，并关联到此任务。",
-    "noConnectedRepositories": "请先在项目设置中连接 GitHub 或 GitLab 仓库。",
+    "noConnectedRepositories": "请先在项目设置中连接 GitHub、GitLab、Gitea 或 Forgejo 仓库。",
     "loadingRepositories": "正在加载仓库…",
     "chooseRepository": "选择仓库",
     "openOnly": "开放",

@@ -383,7 +383,7 @@
     "linkExistingDescription": "연결된 저장소에서 Pull Request 또는 Merge Request를 선택하세요.",
     "createPullRequest": "Pull Request 생성",
     "createPullRequestDescription": "기존 브랜치에서 Pull Request를 생성하고 이 이슈에 연결합니다.",
-    "noConnectedRepositories": "먼저 프로젝트 설정에서 GitHub 또는 GitLab 저장소를 연결하세요.",
+    "noConnectedRepositories": "먼저 프로젝트 설정에서 GitHub, GitLab, Gitea 또는 Forgejo 저장소를 연결하세요.",
     "loadingRepositories": "저장소 불러오는 중…",
     "chooseRepository": "저장소 선택",
     "openOnly": "열림",

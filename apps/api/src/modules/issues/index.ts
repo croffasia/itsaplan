@@ -813,7 +813,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'List repositories available to an issue',
         description:
-          'List connected GitHub and GitLab repositories that can link development work.',
+          'List connected GitHub, GitLab, Gitea and Forgejo repositories that can link development work.',
       },
     },
   )
@@ -932,7 +932,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Create a pull request for an issue',
         description:
-          'Create a GitHub pull request or GitLab merge request from an existing branch.',
+          'Create a GitHub, Gitea or Forgejo pull request, or a GitLab merge request, from an existing branch.',
       },
     },
   )

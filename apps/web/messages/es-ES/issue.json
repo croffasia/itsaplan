@@ -383,7 +383,7 @@
     "linkExistingDescription": "Elige un pull request o merge request de un repositorio conectado.",
     "createPullRequest": "Crear un pull request",
     "createPullRequestDescription": "Abre un pull request desde una rama existente y enlázala a este ticket.",
-    "noConnectedRepositories": "Conecta primero un repositorio de GitHub o GitLab en los ajustes del proyecto.",
+    "noConnectedRepositories": "Conecta primero un repositorio de GitHub, GitLab, Gitea o Forgejo en los ajustes del proyecto.",
     "loadingRepositories": "Cargando repositorios…",
     "chooseRepository": "Elegir repositorio",
     "openOnly": "Abiertas",

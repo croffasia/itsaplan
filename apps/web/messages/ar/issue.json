@@ -383,7 +383,7 @@
     "linkExistingDescription": "اختر طلب سحب أو دمج من مستودع متصل.",
     "createPullRequest": "إنشاء طلب سحب",
     "createPullRequestDescription": "أنشئ طلب سحب من فرع موجود واربطه بهذه المهمة.",
-    "noConnectedRepositories": "اربط مستودع GitHub أو GitLab من إعدادات المشروع أولًا.",
+    "noConnectedRepositories": "اربط مستودع GitHub أو GitLab أو Gitea أو Forgejo من إعدادات المشروع أولًا.",
     "loadingRepositories": "جارٍ تحميل المستودعات…",
     "chooseRepository": "اختر المستودع",
     "openOnly": "المفتوحة",

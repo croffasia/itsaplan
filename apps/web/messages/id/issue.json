@@ -383,7 +383,7 @@
     "linkExistingDescription": "Pilih pull request atau merge request dari repositori yang terhubung.",
     "createPullRequest": "Buat pull request",
     "createPullRequestDescription": "Buka pull request dari branch yang ada dan tautkan ke issue ini.",
-    "noConnectedRepositories": "Hubungkan repositori GitHub atau GitLab di pengaturan proyek terlebih dahulu.",
+    "noConnectedRepositories": "Hubungkan repositori GitHub, GitLab, Gitea, atau Forgejo di pengaturan proyek terlebih dahulu.",
     "loadingRepositories": "Memuat repositori…",
     "chooseRepository": "Pilih repositori",
     "openOnly": "Terbuka",

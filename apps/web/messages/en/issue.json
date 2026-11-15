@@ -383,7 +383,7 @@
     "linkExistingDescription": "Choose a pull request or merge request from a connected repository.",
     "createPullRequest": "Create pull request",
     "createPullRequestDescription": "Open a pull request from an existing branch and link it to this issue.",
-    "noConnectedRepositories": "Connect a GitHub or GitLab repository in project settings first.",
+    "noConnectedRepositories": "Connect a GitHub, GitLab, Gitea or Forgejo repository in project settings first.",
     "loadingRepositories": "Loading repositories…",
     "chooseRepository": "Choose repository",
     "openOnly": "Open",

@@ -6,6 +6,9 @@ import {
   createProviderPullRequest,
   deleteProviderWebhook,
   createPullRequestComment,
+  DEVELOPMENT_PROVIDERS,
+  resolveLinkProvider,
+  ensureDevelopmentProvider,
   getProviderAccount,
   getProviderPullRequest,
   getProviderRepository,
@@ -15,6 +18,7 @@ import {
   listProviderRepositories,
   normalizeProviderBaseUrl,
   type CreateProviderPullRequestInput,
+  type DevelopmentProvider,
   type GitProvider,
   type ProviderBranchPage,
   type ProviderConnectionInput,
@@ -45,7 +49,7 @@ export interface GitManagedRepositoryDto {
 
 export interface DevelopmentRepositoryDto {
   id: number;
-  provider: 'github' | 'gitlab';
+  provider: DevelopmentProvider;
   fullName: string;
   webUrl: string;
 }
@@ -77,7 +81,7 @@ function mapRepository(row: {
 }
 
 interface ManagedDevelopmentRepository {
-  input: ProviderConnectionInput & { provider: 'github' | 'gitlab' };
+  input: ProviderConnectionInput & { provider: DevelopmentProvider };
   repository: ProviderRepository;
 }
 
@@ -110,8 +114,7 @@ async function managedDevelopmentRepository(
     )
     .limit(1);
   if (!row) throw new HttpError(404, 'Managed repository not found');
-  if (row.provider !== 'github' && row.provider !== 'gitlab')
-    throw new HttpError(400, 'Creating and linking pull requests supports GitHub and GitLab');
+  ensureDevelopmentProvider(row.provider);
   return {
     input: { provider: row.provider, baseUrl: row.baseUrl, token: decryptSecret(row) },
     repository: {
@@ -142,11 +145,11 @@ export async function listDevelopmentRepositories(
       and(
         eq(gitManagedRepository.projectId, projectId),
         eq(gitManagedRepository.status, 'connected'),
-        inArray(gitProviderConnection.provider, ['github', 'gitlab']),
+        inArray(gitProviderConnection.provider, [...DEVELOPMENT_PROVIDERS]),
       ),
     )
     .orderBy(asc(gitProviderConnection.provider), asc(gitManagedRepository.fullName));
-  return rows.map((row) => ({ ...row, provider: row.provider as 'github' | 'gitlab' }));
+  return rows.map((row) => ({ ...row, provider: row.provider as DevelopmentProvider }));
 }
 
 export async function listManagedPullRequests(
@@ -154,25 +157,30 @@ export async function listManagedPullRequests(
   repositoryId: number,
   state: 'open' | 'all',
   page: number,
-): Promise<{ provider: 'github' | 'gitlab'; repository: string; page: ProviderPullRequestPage }> {
+): Promise<{
+  provider: DevelopmentProvider;
+  repository: string;
+  page: ProviderPullRequestPage;
+}> {
   const managed = await managedDevelopmentRepository(projectId, repositoryId);
-  return {
-    provider: managed.input.provider,
-    repository: managed.repository.fullName,
-    page: await listProviderPullRequests(managed.input, managed.repository, state, page),
-  };
+  const [provider, pullRequests] = await Promise.all([
+    resolveLinkProvider(managed.input),
+    listProviderPullRequests(managed.input, managed.repository, state, page),
+  ]);
+  return { provider, repository: managed.repository.fullName, page: pullRequests };
 }
 
 export async function getManagedPullRequest(
   projectId: number,
   repositoryId: number,
   number: number,
-): Promise<{ provider: 'github' | 'gitlab'; details: ProviderPullRequestDetails }> {
+): Promise<{ provider: DevelopmentProvider; details: ProviderPullRequestDetails }> {
   const managed = await managedDevelopmentRepository(projectId, repositoryId);
-  return {
-    provider: managed.input.provider,
-    details: await getProviderPullRequest(managed.input, managed.repository, number),
-  };
+  const [provider, details] = await Promise.all([
+    resolveLinkProvider(managed.input),
+    getProviderPullRequest(managed.input, managed.repository, number),
+  ]);
+  return { provider, details };
 }
 
 export async function listManagedBranches(
@@ -188,10 +196,12 @@ export async function createManagedPullRequest(
   projectId: number,
   repositoryId: number,
   input: CreateProviderPullRequestInput,
-): Promise<{ provider: 'github' | 'gitlab'; details: ProviderPullRequestDetails }> {
+): Promise<{ provider: DevelopmentProvider; details: ProviderPullRequestDetails }> {
   const managed = await managedDevelopmentRepository(projectId, repositoryId);
+  // Resolved before the pull request exists, so a failure here leaves nothing unlinked.
+  const provider = await resolveLinkProvider(managed.input);
   return {
-    provider: managed.input.provider,
+    provider,
     details: await createProviderPullRequest(managed.input, managed.repository, input),
   };
 }

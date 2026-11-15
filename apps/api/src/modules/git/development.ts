@@ -8,6 +8,7 @@ import {
 } from './connections-service';
 import type {
   CreateProviderPullRequestInput,
+  DevelopmentProvider,
   ProviderPullRequest,
   ProviderPullRequestDetails,
 } from './connections-provider';
@@ -159,7 +160,7 @@ export async function listLinkablePullRequests(
 async function storePullRequestLink(
   projectId: number,
   issueId: number,
-  provider: 'github' | 'gitlab',
+  provider: DevelopmentProvider,
   details: ProviderPullRequestDetails,
 ): Promise<{ link: DevelopmentLink; created: boolean }> {
   const createdIssueIds = await upsertPullRequestLinks([issueId], provider, details.event);

@@ -2,11 +2,10 @@
   "archived": "已归档",
   "create": {
     "title": "新建团队",
-    "namePlaceholder": "团队名称",
+    "name": "团队名称",
     "slug": "URL",
-    "slugHint": "团队项目的链接以它开头，例如 /acme。",
     "slugInvalid": "请使用 2–40 个小写字母、数字或连字符，并以字母开头。",
-    "hint": "你将成为该团队的所有者。",
+    "nameRequired": "请输入团队名称。",
     "submit": "创建团队"
   },
   "sections": {

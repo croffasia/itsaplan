@@ -268,7 +268,10 @@
     "edited": "تم التعديل",
     "deleteComment": "حذف التعليق",
     "deleteCommentTitle": "حذف هذا التعليق؟",
-    "deleteCommentConfirmation": "سيتم حذف التعليق وجميع ردوده نهائيًا."
+    "deleteCommentConfirmation": "سيتم حذف التعليق وجميع ردوده نهائيًا.",
+    "reactions": "التفاعلات",
+    "addReaction": "إضافة تفاعل",
+    "reactedBy": "{names} تفاعل بـ {emoji}"
   },
   "stats": {
     "title": "الإحصاءات",

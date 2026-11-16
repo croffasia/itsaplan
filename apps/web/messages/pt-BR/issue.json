@@ -268,7 +268,10 @@
     "edited": "editado",
     "deleteComment": "Excluir comentário",
     "deleteCommentTitle": "Excluir este comentário?",
-    "deleteCommentConfirmation": "O comentário e suas respostas serão excluídos permanentemente."
+    "deleteCommentConfirmation": "O comentário e suas respostas serão excluídos permanentemente.",
+    "reactions": "Reações",
+    "addReaction": "Adicionar reação",
+    "reactedBy": "{names} reagiu com {emoji}"
   },
   "stats": {
     "title": "Estatísticas",

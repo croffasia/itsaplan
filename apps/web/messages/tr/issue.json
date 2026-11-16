@@ -268,7 +268,10 @@
     "edited": "düzenlendi",
     "deleteComment": "Yorumu sil",
     "deleteCommentTitle": "Bu yorum silinsin mi?",
-    "deleteCommentConfirmation": "Yorum ve yanıtları kalıcı olarak silinecektir."
+    "deleteCommentConfirmation": "Yorum ve yanıtları kalıcı olarak silinecektir.",
+    "reactions": "Tepkiler",
+    "addReaction": "Tepki ekle",
+    "reactedBy": "{names}, {emoji} ile tepki verdi"
   },
   "stats": {
     "title": "İstatistikler",

@@ -59,6 +59,7 @@ import {
   textSide,
   type FeedCursor,
 } from './activity';
+import { addReaction, removeReaction } from './reactions';
 import { listStatusTimeline } from './status-history';
 import { addIssueLink, attachBoardLinks, listIssueLinks, removeIssueLink } from './links';
 import {
@@ -169,6 +170,9 @@ import {
   createCommentBody,
   updateCommentBody,
   commentParams,
+  addReactionBody,
+  reactionParams,
+  CommentReactionResponse,
   archiveIssueBody,
   moveIssueBody,
   BulkUpdatedResponse,
@@ -325,6 +329,11 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         },
       };
     },
+    // Reacting to a comment asks for what writing one asks for, whoever wrote it.
+    commentReaction: entityGuard('work_items', 'Comment not found', async (p) => {
+      const entry = await getCommentRef(Number(p.commentId));
+      return entry?.projectId ?? null;
+    }),
   })
   .post(
     '/projects/:projectKey/issues',
@@ -1681,6 +1690,52 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           'Remove a comment and its replies. Your own comment needs work_items edit; ' +
           "another member's comment only a project owner can remove.",
         ...mcpTool('delete_comment'),
+      },
+    },
+  )
+
+  // Answers with every reaction of the comment, so the caller needs no second read.
+  .post(
+    '/comments/:commentId/reactions',
+    async ({ params, body, user, set }) => {
+      set.status = 201;
+      return addReaction(params.commentId, requireUser(user).id, body.emoji);
+    },
+    {
+      body: addReactionBody,
+      params: commentParams,
+      commentReaction: 'edit',
+      response: { 201: t.Array(CommentReactionResponse), ...commonErrors, ...errors(409) },
+      detail: {
+        summary: 'React to a comment',
+        description:
+          'Add your emoji reaction to a comment, such as 👍 or ✅. Pass the emoji ' +
+          'character itself, not a name such as :thumbsup:. One member can add ' +
+          'several different emoji to a comment, each one once; adding the same one ' +
+          'again changes nothing. Fails with 409 when the comment already carries the ' +
+          'maximum number of different emoji. The reactions of a comment come with it ' +
+          'in list_issue_activity.',
+        ...mcpTool('add_comment_reaction', { idempotentHint: true }),
+      },
+    },
+  )
+
+  .delete(
+    '/comments/:commentId/reactions/:emoji',
+    async ({ params, user }) => {
+      await removeReaction(params.commentId, requireUser(user).id, params.emoji);
+      return noContent();
+    },
+    {
+      params: reactionParams,
+      commentReaction: 'edit',
+      response: { 204: t.Void(), ...commonErrors },
+      detail: {
+        summary: 'Remove a reaction from a comment',
+        description:
+          'Remove your own emoji reaction from a comment. Removing one that is not ' +
+          'there changes nothing.',
+        ...mcpTool('remove_comment_reaction', { destructiveHint: false }),
       },
     },
   );

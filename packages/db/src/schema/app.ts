@@ -2102,6 +2102,27 @@ export const issueActivity = pgTable(
   ],
 );
 
+// Emoji reactions on a comment. A user reacts to a comment with any number of
+// different emoji, each one once.
+export const issueActivityReaction = pgTable(
+  'issue_activity_reaction',
+  {
+    activityId: integer('activity_id')
+      .notNull()
+      .references(() => issueActivity.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    emoji: text('emoji').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.activityId, t.userId, t.emoji] }),
+    // Backs the cascade of a user delete.
+    index('issue_activity_reaction_user_idx').on(t.userId),
+  ],
+);
+
 // Saved views (the tabs above a project's work items view). filters and display are jsonb
 // blobs owned by the UI; the server stores and returns them without inspecting
 // them. position orders the tabs.

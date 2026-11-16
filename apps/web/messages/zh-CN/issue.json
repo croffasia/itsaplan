@@ -268,7 +268,10 @@
     "edited": "已编辑",
     "deleteComment": "删除评论",
     "deleteCommentTitle": "删除此评论？",
-    "deleteCommentConfirmation": "该评论及其所有回复将被永久删除。"
+    "deleteCommentConfirmation": "该评论及其所有回复将被永久删除。",
+    "reactions": "回应",
+    "addReaction": "添加回应",
+    "reactedBy": "{names} 回应了 {emoji}"
   },
   "stats": {
     "title": "统计",

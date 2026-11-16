@@ -268,7 +268,10 @@
     "edited": "modifié",
     "deleteComment": "Supprimer le commentaire",
     "deleteCommentTitle": "Supprimer ce commentaire ?",
-    "deleteCommentConfirmation": "Le commentaire et ses réponses seront définitivement supprimés."
+    "deleteCommentConfirmation": "Le commentaire et ses réponses seront définitivement supprimés.",
+    "reactions": "Réactions",
+    "addReaction": "Ajouter une réaction",
+    "reactedBy": "{names} a réagi avec {emoji}"
   },
   "stats": {
     "title": "Statistiques",

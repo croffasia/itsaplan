@@ -20,6 +20,8 @@ import {
   createComment,
   updateComment,
   deleteComment,
+  addCommentReaction,
+  removeCommentReaction,
 } from '@/lib/api/endpoints/activity';
 import { qk } from '@/services/queryKeys';
 
@@ -120,5 +122,26 @@ export function useDeleteComment() {
   return useMutation({
     mutationFn: ({ commentId }: { issueId: number; commentId: number }) => deleteComment(commentId),
     onSuccess: (_data, { issueId }) => void qc.invalidateQueries({ queryKey: qk.feed(issueId) }),
+  });
+}
+
+export function useSetCommentReaction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      commentId,
+      emoji,
+      reacted,
+    }: {
+      issueId: number;
+      commentId: number;
+      emoji: string;
+      reacted: boolean;
+    }) => {
+      if (reacted) await addCommentReaction(commentId, emoji);
+      else await removeCommentReaction(commentId, emoji);
+    },
+    // Returned, so the mutation stays pending until the feed holds the change.
+    onSuccess: (_data, { issueId }) => qc.invalidateQueries({ queryKey: qk.feed(issueId) }),
   });
 }

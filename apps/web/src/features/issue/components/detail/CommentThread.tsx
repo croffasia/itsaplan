@@ -43,6 +43,9 @@ export default function CommentThread({
   const manages = (item: FeedItem) =>
     canEditItems && (isOwner || item.actorUserId === session?.user.id);
 
+  const viewer =
+    canEditItems && session ? { id: session.user.id, name: session.user.name } : undefined;
+
   const rows = threadRows(root, repliesByParent);
 
   // An unsent reply reopens its box when the thread is shown again. Checked once, so a
@@ -67,6 +70,7 @@ export default function CommentThread({
             onReply={composer ? () => setReplyTo(row) : undefined}
             canEdit={manages(row.item)}
             canDelete={manages(row.item)}
+            viewer={viewer}
             composer={composer}
           />
         </div>

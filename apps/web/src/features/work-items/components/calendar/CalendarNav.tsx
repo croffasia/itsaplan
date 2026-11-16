@@ -60,7 +60,7 @@ export function CalendarNav({
           {t('weekNumber', { number: weekNumber(days[0], weekStart) })}
         </span>
       )}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 rtl:[&_svg]:rotate-180">
         <Tooltip>
           <TooltipTrigger asChild>
             <ToolbarIconButton

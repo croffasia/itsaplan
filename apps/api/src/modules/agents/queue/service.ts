@@ -10,11 +10,11 @@ import {
   teamMember,
   teamWorkspaceId,
 } from '@repo/db';
-import { and, desc, eq, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { getTeamAccess, readableProjectIds } from '#shared/access';
 import type { WorkspaceGrant } from '#shared/workspace-roles';
 import { runsTeam } from '#modules/teams/service';
-import { iso } from '#shared/lib';
+import { iso, likePattern } from '#shared/lib';
 import { getLimits, getRunLimit } from '#shared/limits';
 import {
   executionState,
@@ -45,9 +45,26 @@ function queueProjectIds(userId: string, mcpOnly = false, grants?: Map<number, W
   );
 }
 
+function runMatches(term: string) {
+  const pattern = likePattern(term);
+  return or(
+    ilike(issue.title, pattern),
+    ilike(sql`${project.key} || '-' || ${issue.sequenceNumber}`, pattern),
+    ilike(agentSchedule.name, pattern),
+    ilike(aiAgent.username, likePattern(term.replace(/^@/, ''))),
+  );
+}
+
+const runStates = {
+  failed: sql`${executionState} = 'failed'`,
+  active: sql`${executionState} IN ('queued', 'running')`,
+};
+
 // `projectIds` narrows the queue to those projects, of the ones the caller may read. With
 // `granted` the caller reads every one of them, as whoever runs their team or workspace
 // does, so their permissions in each are not asked; an MCP client keeps to its own still.
+// `state` and `q` narrow the list; the counts of waiting, running and failed runs follow
+// `q` alone, so each filter can show how many runs it holds.
 export async function listRunnerQueue(
   userId: string,
   window: { limit: number; offset: number },
@@ -56,12 +73,21 @@ export async function listRunnerQueue(
     runId,
     projectIds,
     granted = false,
-  }: { mcpOnly?: boolean; runId?: number; projectIds?: number[]; granted?: boolean } = {},
+    state,
+    q,
+  }: {
+    mcpOnly?: boolean;
+    runId?: number;
+    projectIds?: number[];
+    granted?: boolean;
+    state?: keyof typeof runStates;
+    q?: string;
+  } = {},
 ) {
   const trusted = granted && !mcpOnly ? projectIds : undefined;
   const readable = trusted ?? (await queueProjectIds(userId, mcpOnly));
   const ids = projectIds ? readable.filter((id) => projectIds.includes(id)) : readable;
-  if (!ids.length) return { items: [], total: 0, queued: 0, running: 0 };
+  if (!ids.length) return { items: [], total: 0, queued: 0, running: 0, failed: 0 };
   // A run started in a document carries its comment, so it also takes reading documents.
   const documentIds =
     trusted ??
@@ -69,13 +95,17 @@ export async function listRunnerQueue(
       mcpOnly,
       includeArchived: true,
     }));
-  const where = and(
+  const term = q?.trim();
+  const scoped = and(
     inArray(agentRun.projectId, ids),
     runId == null ? undefined : eq(agentRun.id, runId),
     or(isNull(agentRun.issueId), eq(issue.projectId, agentRun.projectId)),
     or(isNull(agentRun.documentId), inArray(agentRun.projectId, documentIds)),
     runDocumentVisibleTo(userId),
+    term ? runMatches(term) : undefined,
   );
+  const stateFilter = state ? runStates[state] : undefined;
+  const where = and(scoped, stateFilter);
   const [rows, counted] = await Promise.all([
     db
       .select({
@@ -100,6 +130,7 @@ export async function listRunnerQueue(
         issueId: agentRun.issueId,
         sequenceNumber: issue.sequenceNumber,
         issueTitle: issue.title,
+        scheduleId: agentRun.scheduleId,
         scheduleName: agentSchedule.name,
         projectKey: project.key,
         teamRef: sql<string>`coalesce(${team.slug}, ${team.id}::text)`,
@@ -121,22 +152,27 @@ export async function listRunnerQueue(
       .offset(window.offset),
     db
       .select({
-        total: sql<number>`count(*)::int`,
+        total: stateFilter
+          ? sql<number>`count(*) FILTER (WHERE ${stateFilter})::int`
+          : sql<number>`count(*)::int`,
         queued: sql<number>`count(*) FILTER (WHERE ${executionState} = 'queued')::int`,
         running: sql<number>`count(*) FILTER (WHERE ${executionState} = 'running')::int`,
+        failed: sql<number>`count(*) FILTER (WHERE ${runStates.failed})::int`,
       })
       .from(agentRun)
       .innerJoin(aiAgent, eq(aiAgent.id, agentRun.agentId))
+      .innerJoin(project, eq(project.id, agentRun.projectId))
       .leftJoin(issue, eq(issue.id, agentRun.issueId))
-      .where(where),
+      .leftJoin(agentSchedule, eq(agentSchedule.id, agentRun.scheduleId))
+      .where(scoped),
   ]);
   const total = counted[0]?.total ?? 0;
   const running = counted[0]?.running ?? 0;
   return {
-    items: rows.map(({ inputTokens, outputTokens, teamRef, projectKey, ...row }) => ({
+    items: rows.map(({ teamRef, projectKey, ...row }) => ({
       ...row,
       projectRef: `${teamRef}.${projectKey}`,
-      ...contextTokensOf({ inputTokens, outputTokens }),
+      ...contextTokensOf(row),
       createdAt: iso(row.createdAt),
       nextAttemptAt: iso(row.nextAttemptAt),
       startedAt: row.startedAt ? iso(row.startedAt) : null,
@@ -145,6 +181,7 @@ export async function listRunnerQueue(
     total,
     queued: counted[0]?.queued ?? 0,
     running,
+    failed: counted[0]?.failed ?? 0,
   };
 }
 

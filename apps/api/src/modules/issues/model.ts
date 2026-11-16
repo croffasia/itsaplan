@@ -829,5 +829,9 @@ export const IssueAgentRunTraceResponse = t.Nullable(
   t.Object({
     ...AgentTraceDetailResponse.properties,
     previousTraceId: t.Nullable(t.String()),
+    attempt: t.Number({
+      description: 'The place of this attempt among the recorded ones, oldest 1.',
+    }),
+    attempts: t.Number({ description: 'How many attempts of the run recorded a trace.' }),
   }),
 );

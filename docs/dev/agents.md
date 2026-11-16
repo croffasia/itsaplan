@@ -188,8 +188,9 @@ Three routes read a run's trace:
   latest recorded attempt, or the one named by `traceId`. Each trace links to the previous recorded
   attempt (`previousTraceId`). It returns null for a missing latest trace and for an external run,
   which has no Mastra trace. An unknown or unrelated `traceId` returns 404.
-- `GET /agent-runs/:runId/internal-trace` reads the same trace by the run alone, and takes the same
-  `traceId`.
+- `GET /agent-runs/:runId/internal-trace` reads the same trace by the run alone. It takes the same
+  `traceId`, or `attempt` (the oldest recorded attempt is 1), and returns the attempt's number and
+  how many attempts were recorded (`attempt`, `attempts`).
 - `GET /agent-runs/:runId/trace?attempt=N` reads the transcript an external runner reported. The
   latest recorded attempt is the default.
 
@@ -220,7 +221,10 @@ on both calls: a custom invocation endpoint can leave it out, and the api then d
 `GET /agent-runs/queue` pages the active and past runs of internal and external agents across the
 caller's readable projects, including archived projects. It requires `work_items read` and
 `ai_agents read` in each project, and `documents read` for a run started in a document. `runId`
-narrows it to one authorized run for the detail pane.
+narrows it to one authorized run for the detail pane. `state` keeps the `failed` or the `active`
+(waiting and running) runs, and `q` finds runs by the issue's title or key, the schedule's name or
+the agent's username. The `queued`, `running` and `failed` counts follow `q` but not `state`, so
+each filter can show how many runs it holds.
 
 The same queue is narrowed to a project (`/projects/:projectKey/agent-runs/queue`), a team
 (`/teams/:teamId/...`) or a workspace (`/workspaces/:workspaceId/...`). The team's queue is for

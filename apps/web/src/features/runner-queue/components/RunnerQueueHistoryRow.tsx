@@ -2,56 +2,72 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import { cn } from '@/lib/utils';
-import { useRelativeTime } from '@/context/relativeTimeContext';
-import { formatDateTime } from '@/utils/dates';
+import { formatDateTime, formatTime } from '@/utils/dates';
+import { formatRunDuration } from '@/utils/formatRunDuration';
+import { runDuration } from '../utils/runDuration';
 import { runPlace } from '../utils/runIssueKey';
-import RunnerQueueKindBadge from './RunnerQueueKindBadge';
+import { runTitle } from '../utils/runTitle';
 import RunnerQueueStateIcon from './RunnerQueueStateIcon';
 
+// A finished run. Inside a group its issue or schedule is named above, so the row names
+// the agent instead.
 export default function RunnerQueueHistoryRow({
   run,
   href,
   selected,
   acrossProjects,
+  nested = false,
 }: {
   run: RunnerQueueRun;
   href: string;
   selected: boolean;
   acrossProjects: boolean;
+  nested?: boolean;
 }) {
   const t = useTranslations('issue.agentRuns');
-  const relativeTime = useRelativeTime();
-  const place = runPlace(run, acrossProjects);
+  const meta = (
+    nested
+      ? [
+          `#${run.id}`,
+          t(`triggers.${run.trigger}`),
+          run.attempts > 1 ? t('attemptsCount', { count: run.attempts }) : null,
+        ]
+      : [`@${run.username}`, runPlace(run, acrossProjects), t(`triggers.${run.trigger}`)]
+  )
+    .filter(Boolean)
+    .join(' · ');
+  const took = runDuration(run);
   return (
     <Link
       href={href}
       aria-current={selected ? 'page' : undefined}
       className={cn(
-        'flex w-full items-start gap-2.5 px-4 py-2 text-start hover:bg-accent/50',
+        'grid w-full grid-cols-[1rem_minmax(0,1fr)_auto] items-baseline gap-x-2.5 gap-y-0.5 px-4 py-2 text-start hover:bg-accent/50',
+        nested && 'ps-[2.625rem]',
         selected && 'bg-accent',
       )}
     >
-      <span className="flex h-5 shrink-0 items-center">
+      <span className="flex h-5 items-center self-start">
         <RunnerQueueStateIcon run={run} className="size-3.5" />
       </span>
-      <span className="sr-only">{t(run.executionState)}</span>
-      <span className="min-w-0 flex-1 space-y-1">
-        <span className="flex items-baseline gap-2">
-          <span className="truncate text-sm font-medium" dir="auto">
-            {run.issueTitle ?? run.scheduleName ?? run.prompt}
-          </span>
-          <time
-            className="ms-auto shrink-0 text-xs text-muted-foreground"
-            dateTime={run.createdAt}
-            title={formatDateTime(run.createdAt)}
-          >
-            {relativeTime(run.createdAt)}
-          </time>
-        </span>
-        <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <RunnerQueueKindBadge kind={run.kind} />
-          {place}
-        </span>
+      <span className="truncate text-sm font-medium">
+        <span className="sr-only">{t(run.executionState)} </span>
+        <span dir={nested ? undefined : 'auto'}>{nested ? `@${run.username}` : runTitle(run)}</span>
+      </span>
+      <time
+        className="text-end text-xs text-muted-foreground tabular-nums"
+        dateTime={run.createdAt}
+        title={formatDateTime(run.createdAt)}
+      >
+        {formatTime(run.createdAt)}
+      </time>
+      <span className="col-start-2 truncate text-xs text-muted-foreground">{meta}</span>
+      <span className="text-end text-xs tabular-nums">
+        {run.executionState === 'failed' ? (
+          <span className="text-destructive-text">{t('failed')}</span>
+        ) : (
+          <span className="text-muted-foreground">{took != null && formatRunDuration(took)}</span>
+        )}
       </span>
     </Link>
   );

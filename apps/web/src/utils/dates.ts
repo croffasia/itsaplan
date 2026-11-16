@@ -282,3 +282,32 @@ export function addDays(date: Date, n: number): Date {
   next.setDate(next.getDate() + n);
   return next;
 }
+
+// The year, month and day of a Persian date.
+function persianParts(date: Date): { year: number; month: number; day: number } {
+  const parts = new Intl.DateTimeFormat('en-US-u-ca-persian-nu-latn', {
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(date);
+  const num = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value);
+  return { year: num('year'), month: num('month'), day: num('day') };
+}
+
+// Local midnight on day 1 of the Shamsi month that contains `date`.
+export function startOfPersianMonth(date: Date): Date {
+  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  start.setDate(start.getDate() - (persianParts(date).day - 1));
+  return start;
+}
+
+// `months` Shamsi months after `date`, on day 1 of that month.
+export function addPersianMonths(date: Date, months: number): Date {
+  let cursor = startOfPersianMonth(date);
+  const step = months < 0 ? -1 : 1;
+  for (let i = 0; i < Math.abs(months); i++) {
+    cursor = startOfPersianMonth(addDays(cursor, step > 0 ? 31 : -1));
+  }
+  return cursor;
+}

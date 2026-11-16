@@ -1,6 +1,6 @@
 import { addDays, getWeek, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
 import type { Issue } from '@/lib/api/endpoints/issues';
-import { parseDate, toDateStr } from '@/utils/dates';
+import { getDisplayLocale, parseDate, startOfPersianMonth, toDateStr } from '@/utils/dates';
 import {
   isCustomFieldKey,
   type BuiltinDateField,
@@ -58,11 +58,17 @@ export function visibleDays(
   cursor: Date,
   layout: Pick<ViewSettings, 'calendarMode' | 'calendarDays' | 'calendarWeeks' | 'weekStart'>,
 ): Date[] {
-  const weekStartsOn = layout.weekStart;
+  const is_persian_locale = getDisplayLocale() === 'fa';
+  // Shamsi weeks begin on Saturday. Other locales keep the view setting.
+  const weekStartsOn: 0 | 1 | 6 = is_persian_locale ? 6 : layout.weekStart;
   const run = (first: Date, count: number) =>
     Array.from({ length: count }, (_, i) => addDays(first, i));
-  if (layout.calendarMode === 'month')
-    return run(startOfWeek(startOfMonth(cursor), { weekStartsOn }), 42);
+
+  if (layout.calendarMode === 'month') {
+    const monthStart = is_persian_locale ? startOfPersianMonth(cursor) : startOfMonth(cursor);
+    const monthWeekStart = is_persian_locale ? 6 : weekStartsOn;
+    return run(startOfWeek(monthStart, { weekStartsOn: monthWeekStart }), 42);
+  }
   return run(
     isFullWeek(layout) ? startOfWeek(cursor, { weekStartsOn }) : startOfDay(cursor),
     layout.calendarMode === 'byWeek' ? layout.calendarWeeks * 7 : layout.calendarDays,

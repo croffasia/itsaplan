@@ -24,7 +24,7 @@ export function CalendarDayCell({
 }: {
   project: ProjectDetail;
   dateKey: string;
-  dayNumber: number;
+  dayNumber: string;
   inMonth: boolean;
   isToday: boolean;
   issues: Issue[];

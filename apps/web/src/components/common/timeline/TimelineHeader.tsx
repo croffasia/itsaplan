@@ -1,8 +1,14 @@
 import { type ReactNode } from 'react';
 import { startOfDay } from 'date-fns';
-import { daysBetween } from '@/utils/dates';
+import { daysBetween, getDisplayLocale } from '@/utils/dates';
 import { type MonthLabel } from '@/utils/timelineTrack';
 import { cn } from '@/lib/utils';
+
+const persianDay = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { day: 'numeric' });
+function dayNumber(date: Date): string {
+  if (getDisplayLocale() !== 'fa') return String(date.getDate());
+  return persianDay.format(date);
+}
 
 // The sticky timeline header: the label column's corner, month labels, and the
 // day-number row. Day numbers thin out as the day width shrinks.
@@ -42,11 +48,14 @@ export function TimelineHeader({
         </div>
         <div className="flex h-6">
           {days.map((d, i) => {
-            const weekend = d.getDay() === 0 || d.getDay() === 6;
+            const weekday = d.getDay();
+            const jalali = getDisplayLocale() === 'fa';
+            const weekend = jalali ? weekday === 5 : weekday === 0 || weekday === 6;
+            const weekStart = jalali ? weekday === 6 : weekday === 1;
             const isToday = daysBetween(today, d) === 0;
             // Every day when wide (week); only Mondays when medium (month); none
             // when narrow (quarter) — the month labels above carry it.
-            const showNum = dayW >= 20 || (dayW >= 8 && d.getDay() === 1);
+            const showNum = dayW >= 20 || (dayW >= 8 && weekStart);
             return (
               <div
                 key={i}
@@ -57,7 +66,7 @@ export function TimelineHeader({
                 )}
                 style={{ width: dayW }}
               >
-                {showNum ? d.getDate() : ''}
+                {showNum ? dayNumber(d) : ''}
               </div>
             );
           })}

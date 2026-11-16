@@ -17,6 +17,7 @@ import { github } from './tools/github';
 import { pdf } from './tools/pdf';
 import { keenable } from './tools/keenable';
 import { dataforseo } from './tools/dataforseo';
+import { kie } from './tools/kie';
 
 // The core's tool integrations. Add an integration by creating its folder under tools/
 // and listing it here.
@@ -32,6 +33,7 @@ export const INTEGRATIONS: Integration[] = [
   pdf,
   keenable,
   dataforseo,
+  kie,
 ];
 
 type ToolIndex = Map<string, { integration: Integration; tool: CustomToolEntry }>;
@@ -96,6 +98,7 @@ export function integrationDescriptors(): IntegrationDescriptor[] {
   return integrations.map((i) => ({
     key: i.key,
     label: i.label,
+    description: i.description,
     icon: i.icon,
     website: i.website,
     kind: i.kind ?? 'tool',

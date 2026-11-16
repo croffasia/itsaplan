@@ -13,6 +13,7 @@ import { verifyNotion } from './verify';
 export const notion: Integration = {
   key: 'notion',
   label: 'Notion',
+  description: 'Searches, reads and writes Notion pages and their comments.',
   credentialSchema: [
     {
       key: 'token',

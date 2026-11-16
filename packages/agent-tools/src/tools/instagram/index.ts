@@ -52,6 +52,7 @@ import { verifyInstagram } from './verify';
 export const instagram: Integration = {
   key: 'instagram',
   label: 'Instagram',
+  description: 'Publishes posts, manages comments and reads insights on an Instagram account.',
   credentialSchema: [
     {
       key: 'accessToken',

@@ -268,7 +268,10 @@
     "edited": "ویرایش‌شده",
     "deleteComment": "حذف دیدگاه",
     "deleteCommentTitle": "این دیدگاه حذف شود؟",
-    "deleteCommentConfirmation": "دیدگاه و پاسخ‌هایش برای همیشه حذف می‌شوند."
+    "deleteCommentConfirmation": "دیدگاه و پاسخ‌هایش برای همیشه حذف می‌شوند.",
+    "reactions": "واکنش‌ها",
+    "addReaction": "افزودن واکنش",
+    "reactedBy": "{names} با {emoji} واکنش نشان داد"
   },
   "stats": {
     "title": "آمار",

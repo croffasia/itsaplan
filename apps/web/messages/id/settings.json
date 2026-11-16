@@ -103,7 +103,8 @@
       "assigned": "Ditugaskan ke suatu issue",
       "mentioned": "Disebutkan dalam suatu issue atau dokumen",
       "commented": "Komentar baru pada issue yang Anda pantau",
-      "state_changed": "Perubahan status pada issue yang Anda pantau"
+      "state_changed": "Perubahan status pada issue yang Anda pantau",
+      "reacted": "Reaksi pada komentar Anda"
     },
     "eventsTitle": "Peristiwa",
     "telegramAccount": "Akun Telegram",

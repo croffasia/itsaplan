@@ -13,7 +13,7 @@ import {
 } from '@repo/db';
 import { and, desc, eq, inArray, isNotNull, lt, or, sql, isNull } from 'drizzle-orm';
 import { addedMentionHandles, resolveMentionHandles, type MentionedUsers } from '#shared/mentions';
-import { autoWatchIssue, watcherUserIds } from '#modules/issues/watchers';
+import { autoWatchIssue, isEligibleIssueWatcher, watcherUserIds } from '#modules/issues/watchers';
 import { mentionReach } from '#modules/mentions/service';
 import { iso } from '#shared/lib';
 import { enqueueOutbound } from './outbound';
@@ -23,11 +23,18 @@ import { enqueueOutbound } from './outbound';
 // on the issue ('commented', 'state_changed') goes to its watchers (issue_watcher, see
 // modules/issues/watchers.ts); what is addressed to one person ('assigned',
 // 'mentioned') goes to them whether they watch the issue or not, and subscribes them
-// to it. A document has no watchers, so it only sends 'mentioned'. The actor is never
+// to it. A reaction to a comment ('reacted') goes to the comment's author alone. A
+// document has no watchers, so it only sends 'mentioned'. The actor is never
 // notified about their own action, and only project members receive notifications,
 // so agent bot users (assigned via delegate, not members) are excluded.
 
-export const NOTIFICATION_TYPES = ['assigned', 'mentioned', 'commented', 'state_changed'] as const;
+export const NOTIFICATION_TYPES = [
+  'assigned',
+  'mentioned',
+  'commented',
+  'state_changed',
+  'reacted',
+] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 // Points at an issue, or at a document: then documentId is set and issueId is null.
@@ -40,6 +47,8 @@ export interface NewNotificationRow {
   documentCommentId?: string | null;
   type: NotificationType;
   actorUserId: string | null;
+  // The emoji of a 'reacted' row.
+  reactionEmoji?: string;
 }
 
 // Keeps only the ids that are members of the project. Filters out non-members (an
@@ -123,6 +132,51 @@ export async function notifyComment(
     });
   }
   await insertNotifications(rows, comment.id);
+}
+
+// Tells the author of a comment that a member reacted to it. Nobody is told about a
+// reaction to their own comment, and the author is skipped unless they are a person
+// who can still read the project's issues (not an agent, not a member who left). A
+// member's reactions to one comment are told once, with the first emoji: more emoji,
+// or one taken back and added again, find that notification and stay quiet, so
+// reactions cannot fill an inbox. An author who deleted the notification is told
+// again by the next new reaction.
+export async function notifyReaction(
+  projectId: number,
+  comment: { issueId: number; id: number; actorUserId: string | null },
+  reactorUserId: string,
+  emoji: string,
+): Promise<void> {
+  const author = comment.actorUserId;
+  if (author == null || author === reactorUserId) return;
+  if (!(await isEligibleIssueWatcher(projectId, author))) return;
+  const [told] = await db
+    .select({ id: notification.id })
+    .from(notification)
+    .where(
+      and(
+        eq(notification.userId, author),
+        eq(notification.type, 'reacted'),
+        eq(notification.sourceActivityId, comment.id),
+        eq(notification.actorUserId, reactorUserId),
+      ),
+    )
+    .limit(1);
+  if (told) return;
+  await insertNotifications(
+    [
+      {
+        userId: author,
+        projectId,
+        issueId: comment.issueId,
+        sourceActivityId: comment.id,
+        type: 'reacted',
+        actorUserId: reactorUserId,
+        reactionEmoji: emoji,
+      },
+    ],
+    comment.id,
+  );
 }
 
 // Fan out the mentions an edit newly added to a comment. The handles the comment
@@ -300,6 +354,8 @@ export interface NotificationRow {
   // Only a 'state_changed' event has them, and only while its activity row lives.
   fromState: string | null;
   toState: string | null;
+  // Only a 'reacted' event has it.
+  reactionEmoji: string | null;
 }
 
 export interface NotificationCursor {
@@ -367,6 +423,7 @@ function mapRow(r: {
   projectKey: string;
   projectName: string;
   payload: ActivityPayload | null;
+  reactionEmoji: string | null;
 }): NotificationRow {
   const stateChange = r.type === 'state_changed';
   return {
@@ -391,6 +448,7 @@ function mapRow(r: {
     projectName: r.projectName,
     fromState: stateChange ? (r.payload?.from?.value ?? null) : null,
     toState: stateChange ? (r.payload?.to?.value ?? null) : null,
+    reactionEmoji: r.reactionEmoji,
   };
 }
 
@@ -449,6 +507,7 @@ export async function listNotifications(
       projectKey: project.key,
       projectName: project.name,
       payload: issueActivity.payload,
+      reactionEmoji: notification.reactionEmoji,
     })
     .from(notification)
     .innerJoin(

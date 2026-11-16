@@ -14,6 +14,7 @@ export type CoreEmailKey =
   | 'mentioned'
   | 'commented'
   | 'stateChanged'
+  | 'reacted'
   | 'documentMentioned'
   | 'documentCommentMentioned'
   | 'test';

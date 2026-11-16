@@ -106,6 +106,12 @@ export interface ActivityPayload {
   to?: ActivitySide;
 }
 
+// One emoji on a comment and the members who reacted with it, the first first.
+export interface CommentReaction {
+  emoji: string;
+  users: { id: string; name: string }[];
+}
+
 // One entry in an issue's timeline. kind selects which fields are set: a 'comment'
 // carries body; an 'activity' carries action and payload.
 // actorName is the author/actor snapshot (null when it was never set).
@@ -123,6 +129,8 @@ export interface FeedItem {
   createdAt: string;
   // Set once a comment is edited; null while it is in its author's original words.
   editedAt: string | null;
+  // The emoji reactions of a comment; empty on a change-log entry.
+  reactions: CommentReaction[];
 }
 
 // Opaque keyset cursor returned by the feed endpoint; pass it back to load the
@@ -211,3 +219,14 @@ export const updateComment = (commentId: number, input: { body: string }) =>
 
 export const deleteComment = (commentId: number) =>
   request<void>(`/comments/${commentId}`, { method: 'DELETE' });
+
+export const addCommentReaction = (commentId: number, emoji: string) =>
+  request<CommentReaction[]>(`/comments/${commentId}/reactions`, {
+    method: 'POST',
+    body: JSON.stringify({ emoji }),
+  });
+
+export const removeCommentReaction = (commentId: number, emoji: string) =>
+  request<void>(`/comments/${commentId}/reactions/${encodeURIComponent(emoji)}`, {
+    method: 'DELETE',
+  });

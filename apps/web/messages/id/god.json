@@ -509,6 +509,9 @@
       "stateChanged": {
         "name": "Status berubah"
       },
+      "reacted": {
+        "name": "Reaksi pada komentar"
+      },
       "documentMentioned": {
         "name": "Disebut di dokumen"
       },

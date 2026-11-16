@@ -509,6 +509,9 @@
       "stateChanged": {
         "name": "تغيير الحالة"
       },
+      "reacted": {
+        "name": "تفاعل مع تعليق"
+      },
       "documentMentioned": {
         "name": "إشارة في مستند"
       },

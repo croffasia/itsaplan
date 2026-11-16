@@ -509,6 +509,9 @@
       "stateChanged": {
         "name": "상태 변경"
       },
+      "reacted": {
+        "name": "댓글에 반응"
+      },
       "documentMentioned": {
         "name": "문서에서 멘션"
       },

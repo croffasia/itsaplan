@@ -268,7 +268,10 @@
     "edited": "diedit",
     "deleteComment": "Hapus komentar",
     "deleteCommentTitle": "Hapus komentar ini?",
-    "deleteCommentConfirmation": "Komentar dan balasannya akan dihapus secara permanen."
+    "deleteCommentConfirmation": "Komentar dan balasannya akan dihapus secara permanen.",
+    "reactions": "Reaksi",
+    "addReaction": "Tambahkan reaksi",
+    "reactedBy": "{names} bereaksi dengan {emoji}"
   },
   "stats": {
     "title": "Statistik",

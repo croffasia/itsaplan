@@ -103,7 +103,8 @@
       "assigned": "Bir işe sorumlu olarak atandığımda",
       "mentioned": "Bir işte veya belgede benden bahsedildiğinde",
       "commented": "Takip ettiğim bir işe yeni yorum yapıldığında",
-      "state_changed": "Takip ettiğim bir işin durumu değiştiğinde"
+      "state_changed": "Takip ettiğim bir işin durumu değiştiğinde",
+      "reacted": "Yorumuma tepki verildiğinde"
     },
     "eventsTitle": "Olaylar",
     "telegramAccount": "Telegram hesabı",

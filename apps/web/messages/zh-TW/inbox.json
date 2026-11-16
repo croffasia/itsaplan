@@ -16,7 +16,8 @@
     "assigned": "已指派",
     "mentioned": "已提及",
     "commented": "有新留言",
-    "state_changed": "狀態已變更"
+    "state_changed": "狀態已變更",
+    "reacted": "有新回應"
   },
   "actions": {
     "markRead": "標為已讀",
@@ -33,6 +34,7 @@
     "mentioned": "{who} 提及了你",
     "commented": "{who} 發表了留言",
     "stateChanged": "{who} 將狀態從 {from} 更改為 {to}",
-    "stateChangedPlain": "{who} 更改了狀態"
+    "stateChangedPlain": "{who} 更改了狀態",
+    "reacted": "{who} 用 {emoji} 回應了你的留言"
   }
 }

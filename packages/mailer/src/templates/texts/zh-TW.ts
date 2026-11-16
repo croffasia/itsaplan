@@ -57,6 +57,11 @@ export const zhTW: EmailLocaleTexts = {
       body: '{actor} 將此工作項目的狀態從 {from} 更改為 {to}。\n\n{ref}：{title}',
       button: '開啟工作項目',
     },
+    reacted: {
+      subject: '{ref}：{actor} 回應了你的留言',
+      body: '{actor} 用 {emoji} 回應了你的留言。\n\n{ref}：{title}',
+      button: '開啟留言',
+    },
     documentMentioned: {
       subject: '{document}：有人提及了你',
       body: '{actor} 在此文件中提及了你。\n\n{document}',

@@ -58,6 +58,11 @@ export const tr: EmailLocaleTexts = {
       body: '{actor} bu işin durumunu {from} değerinden {to} değerine değiştirdi.\n\n{ref}: {title}',
       button: 'İşi aç',
     },
+    reacted: {
+      subject: '{ref}: {actor} yorumunuza tepki verdi',
+      body: '{actor}, yorumunuza {emoji} ile tepki verdi.\n\n{ref}: {title}',
+      button: 'Yorumu aç',
+    },
     documentMentioned: {
       subject: '{document}: sizden bahsedildi',
       body: '{actor} bu belgede sizden bahsetti.\n\n{document}',

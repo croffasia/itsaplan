@@ -103,7 +103,8 @@
       "assigned": "الإسناد إلى مهمة",
       "mentioned": "الإشارة في مهمة أو مستند",
       "commented": "تعليق جديد على مهمة تتابعها",
-      "state_changed": "تغيّر الحالة في مهمة تتابعها"
+      "state_changed": "تغيّر الحالة في مهمة تتابعها",
+      "reacted": "تفاعل مع تعليقك"
     },
     "eventsTitle": "الأحداث",
     "telegramAccount": "حساب Telegram",

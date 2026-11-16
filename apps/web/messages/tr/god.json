@@ -509,6 +509,9 @@
       "stateChanged": {
         "name": "Durum değişti"
       },
+      "reacted": {
+        "name": "Yoruma tepki"
+      },
       "documentMentioned": {
         "name": "Belgede bahsedildi"
       },

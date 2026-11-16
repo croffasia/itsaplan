@@ -2102,6 +2102,27 @@ export const issueActivity = pgTable(
   ],
 );
 
+// Emoji reactions on a comment. A user reacts to a comment with any number of
+// different emoji, each one once.
+export const issueActivityReaction = pgTable(
+  'issue_activity_reaction',
+  {
+    activityId: integer('activity_id')
+      .notNull()
+      .references(() => issueActivity.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    emoji: text('emoji').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.activityId, t.userId, t.emoji] }),
+    // Backs the cascade of a user delete.
+    index('issue_activity_reaction_user_idx').on(t.userId),
+  ],
+);
+
 // Saved views (the tabs above a project's work items view). filters and display are jsonb
 // blobs owned by the UI; the server stores and returns them without inspecting
 // them. position orders the tabs.
@@ -2596,6 +2617,7 @@ export const importRecord = pgTable(
 // document so the inbox can filter and scope by project. source_activity_id points at
 // the issue_activity row that produced the notification, document_comment_id at the
 // document comment (each set null if that entry is later removed). type selects the kind.
+// reaction_emoji is the emoji of a 'reacted' notification, null on every other type.
 // read_at NULL means unread; snoozed_until, when set and still in the future, hides
 // the row from the default inbox until then.
 export const notification = pgTable(
@@ -2623,6 +2645,7 @@ export const notification = pgTable(
       onDelete: 'set null',
     }),
     actorName: text('actor_name'),
+    reactionEmoji: text('reaction_emoji'),
     readAt: timestamp('read_at', { withTimezone: true }),
     snoozedUntil: timestamp('snoozed_until', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -2630,7 +2653,7 @@ export const notification = pgTable(
   (t) => [
     check(
       'notification_type_check',
-      sql`${t.type} IN ('assigned', 'mentioned', 'commented', 'state_changed')`,
+      sql`${t.type} IN ('assigned', 'mentioned', 'commented', 'state_changed', 'reacted')`,
     ),
     check('notification_target_check', sql`(${t.issueId} IS NULL) <> (${t.documentId} IS NULL)`),
     // Backs the inbox list: a user's notifications newest first.

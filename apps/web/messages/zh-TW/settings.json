@@ -103,7 +103,8 @@
       "assigned": "被指派處理某一工作項目",
       "mentioned": "在工作項目或文件中被提及",
       "commented": "關注的工作項目有新留言",
-      "state_changed": "關注的工作項目狀態發生變化"
+      "state_changed": "關注的工作項目狀態發生變化",
+      "reacted": "你的留言有新回應"
     },
     "eventsTitle": "事件",
     "telegramAccount": "Telegram 帳號",

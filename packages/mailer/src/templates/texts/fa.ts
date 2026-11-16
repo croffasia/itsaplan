@@ -58,6 +58,11 @@ export const fa: EmailLocaleTexts = {
       body: '{actor} وضعیت این تسک را از {from} به {to} تغییر داد.\n\n{ref}: {title}',
       button: 'باز کردن تسک',
     },
+    reacted: {
+      subject: '{ref}: {actor} به دیدگاه شما واکنش نشان داد',
+      body: '{actor} با {emoji} به دیدگاه شما واکنش نشان داد.\n\n{ref}: {title}',
+      button: 'باز کردن دیدگاه',
+    },
     documentMentioned: {
       subject: '{document}: از شما نام برده شد',
       body: '{actor} در این سند از شما نام برد.\n\n{document}',

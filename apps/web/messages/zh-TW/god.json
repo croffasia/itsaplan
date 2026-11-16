@@ -509,6 +509,9 @@
       "stateChanged": {
         "name": "狀態已更改"
       },
+      "reacted": {
+        "name": "留言的回應"
+      },
       "documentMentioned": {
         "name": "在文件中被提及"
       },

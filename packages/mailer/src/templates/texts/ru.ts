@@ -58,6 +58,11 @@ export const ru: EmailLocaleTexts = {
       body: '{actor}: статус задачи изменён с «{from}» на «{to}».\n\n{ref}: {title}',
       button: 'Открыть задачу',
     },
+    reacted: {
+      subject: '{ref}: {actor} — реакция на ваш комментарий',
+      body: '{actor}: реакция {emoji} на ваш комментарий.\n\n{ref}: {title}',
+      button: 'Открыть комментарий',
+    },
     documentMentioned: {
       subject: '{document}: вас упомянули',
       body: '{actor}: вас упомянули в этом документе.\n\n{document}',

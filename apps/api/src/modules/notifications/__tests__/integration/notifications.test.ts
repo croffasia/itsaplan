@@ -474,7 +474,13 @@ describe('notifications', () => {
 // set, and each member chooses its events per project like email and Telegram.
 describe('push notifications', () => {
   const ENV = ['WEB_PUSH_VAPID_PUBLIC_KEY', 'WEB_PUSH_VAPID_PRIVATE_KEY', 'WEB_PUSH_SUBJECT'];
-  const none = { assigned: false, mentioned: false, commented: false, state_changed: false };
+  const none = {
+    assigned: false,
+    mentioned: false,
+    commented: false,
+    state_changed: false,
+    reacted: false,
+  };
   let saved: (string | undefined)[];
 
   beforeEach(async () => {

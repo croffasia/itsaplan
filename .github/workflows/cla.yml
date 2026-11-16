@@ -5,6 +5,9 @@ name: CLA
 # signatures/version1/cla.json in this repository, so no external service is
 # involved. The file lives on the cla-signatures branch because the action
 # pushes to it directly and the ruleset on main allows no direct pushes.
+# GitHub blocks pull_request_target in public repositories by default. The
+# repository's Actions policy (Settings → Actions → Policies) allows it for this
+# file only, because the action needs write access on pull requests from forks.
 on:
   issue_comment:
     types: [created]

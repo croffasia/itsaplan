@@ -2,10 +2,11 @@ name: PR title
 
 # The PR template and release workflow assume conventional commit titles
 # (type(scope): summary). This validates the title so it can be used as the
-# squash-merge commit subject.
+# squash-merge commit subject. It runs on pull_request because it needs no secrets
+# and no write access, and GitHub blocks pull_request_target in public repositories.
 on:
-  pull_request_target:
-    types: [opened, edited, synchronize]
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
 
 permissions:
   pull-requests: read

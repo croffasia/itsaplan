@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LocaleToggle } from '@/components/locale-toggle';
-import { ThemeToggle } from '@/components/theme-toggle';
+import InterfaceMenu from '@/components/layout/InterfaceMenu';
 import UserMenu from '@/components/layout/UserMenu';
 import {
   Empty,
@@ -34,8 +33,7 @@ export default function StartEmpty({
   return (
     <div className="relative flex h-svh items-center justify-center p-6">
       <div className="absolute top-3 right-4 flex items-center gap-1">
-        <LocaleToggle />
-        <ThemeToggle />
+        <InterfaceMenu />
         <UserMenu />
       </div>
       <Empty className="max-w-md">

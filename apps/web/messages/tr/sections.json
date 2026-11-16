@@ -38,8 +38,8 @@
       "description": "Bu örnekleme kimlerin kayıt olabileceği, hesapların nasıl onaylanacağı ve giriş sağlayıcıları."
     },
     "hotkeys": {
-      "label": "Klavye Kısayolları",
-      "description": "Bu örneklemdeki herkes için komutlara atanan kısayollar. Kullanıcılar tercihlerinden kendilerine özel kısayol tanımlayabilir."
+      "label": "Klavye kısayolları",
+      "description": "Herkes için varsayılanlar. Herkes kendininkini Tercihler'den değiştirebilir."
     },
     "storage": {
       "label": "Depolama",

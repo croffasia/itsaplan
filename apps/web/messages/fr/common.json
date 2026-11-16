@@ -14,7 +14,8 @@
   "name": "Nom",
   "edit": "Modifier",
   "language": "Langue",
-  "toggleTheme": "Changer de thème",
+  "interface": "Interface",
+  "allPreferences": "Toutes les préférences",
   "priority": {
     "label": "Priorité",
     "tooltip": "Priorité {priority}",
@@ -40,8 +41,9 @@
   "brandSubtitle": "Organisez vos tickets sur un tableau. Connectez-vous pour ouvrir vos projets.",
   "hotkeys": {
     "pressKeys": "Appuyez sur les touches",
-    "fixed": "Fixe",
-    "resetShortcut": "Réinitialiser ce raccourci",
+    "fixed": "Non modifiable",
+    "changeShortcut": "Modifier le raccourci : {command}",
+    "resetShortcut": "Réinitialiser le raccourci : {command}",
     "groups": {
       "general": "Général",
       "workItems": "Tickets"
@@ -76,7 +78,7 @@
         "select-all": "Sélectionner tous les tickets du tableau"
       }
     },
-    "conflict": "Déjà utilisé par {command}"
+    "conflict": "Également utilisé par {command}. Modifiez l'un des deux."
   },
   "agentChat": {
     "emptyHint": "Envoyez un message pour tester les réponses de cet agent et les outils qu'il utilise.",

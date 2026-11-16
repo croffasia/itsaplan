@@ -14,7 +14,8 @@
   "name": "이름",
   "edit": "편집",
   "language": "언어",
-  "toggleTheme": "테마 전환",
+  "interface": "인터페이스",
+  "allPreferences": "모든 환경설정",
   "priority": {
     "label": "우선순위",
     "tooltip": "{priority} 우선순위",
@@ -40,8 +41,9 @@
   "brandSubtitle": "보드에서 이슈를 계획하세요. 로그인하여 프로젝트를 확인하세요.",
   "hotkeys": {
     "pressKeys": "키를 입력하세요",
-    "fixed": "고정됨",
-    "resetShortcut": "단축키 초기화",
+    "fixed": "변경할 수 없음",
+    "changeShortcut": "단축키 변경: {command}",
+    "resetShortcut": "단축키 초기화: {command}",
     "groups": {
       "general": "일반",
       "workItems": "작업"
@@ -76,7 +78,7 @@
         "select-all": "보드의 모든 이슈 선택"
       }
     },
-    "conflict": "이미 {command}에서 사용 중입니다. 다른 단축키를 설정해 주세요."
+    "conflict": "{command}에서도 사용 중입니다. 둘 중 하나를 변경하세요."
   },
   "agentChat": {
     "emptyHint": "메시지를 보내 AI 에이전트가 어떻게 응답하고 어떤 도구를 사용하는지 테스트해 보세요.",

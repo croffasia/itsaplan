@@ -97,21 +97,19 @@
   "preferences": {
     "label": "환경 설정",
     "title": "환경 설정",
-    "description": "앱의 표시 방식과 동작을 설정합니다. 변경 사항은 즉시 저장되며 어디에서 로그인하든 동일하게 적용됩니다.",
+    "description": "앱의 표시 방식과 동작을 설정합니다.",
     "saved": "환경 설정이 저장되었습니다",
     "sections": {
       "appearance": "기본 설정",
       "dateAndTime": "날짜 및 시간",
-      "dateAndTimeDescription": "시간 정보는 UTC로 저장되고 여기에서 선택한 시간대를 기준으로 표시됩니다.",
       "navigation": "이동 설정",
-      "navigationDescription": "앱에서 이동하는 위치와 이슈를 여는 방식을 설정합니다.",
-      "issueSettings": "이슈 설정",
-      "issueSettingsDescription": "이슈를 열 때 통계와 활동 기록이 처음 표시되는 방식을 설정합니다. 이슈가 열려 있는 동안 이 설정을 변경해도 현재 열린 이슈에는 적용되지 않습니다.",
+      "issueSettings": "이슈 상세",
+      "issueSettingsDescription": "여는 모든 이슈에 적용되는 기본값입니다. 열려 있는 이슈에서 바꿔도 이 설정은 바뀌지 않습니다.",
       "notifications": "알림",
       "notificationsDescription": "이슈를 구독하면 댓글과 상태 변경 알림을 받을 수 있습니다.",
       "aiChat": "AI 채팅",
       "shortcuts": "키보드 단축키",
-      "shortcutsDescription": "변경을 누른 다음 원하는 키를 입력하세요. 초기화하면 이 인스턴스에 설정된 기본 단축키로 돌아갑니다."
+      "shortcutsDescription": "초기화 버튼을 누르면 단축키가 기본값으로 돌아갑니다."
     },
     "theme": "테마",
     "themeDescription": "시스템 테마를 선택하면 운영체제의 테마 설정을 따릅니다.",
@@ -120,10 +118,30 @@
       "light": "라이트 모드",
       "dark": "다크 모드"
     },
+    "themeFromBackground": "배경에 따라 결정",
+    "palette": "팔레트",
+    "paletteDescription": "각 팔레트에는 밝은 버전과 어두운 버전이 있습니다.",
+    "paletteOptions": {
+      "default": "기본",
+      "custom": "사용자 지정"
+    },
+    "accent": "강조색",
+    "accentDescription": "버튼, 링크, 선택한 항목의 색상입니다.",
+    "background": "배경",
+    "backgroundDescription": "어두운 색은 어두운 테마, 밝은 색은 밝은 테마가 됩니다.",
+    "contrast": "대비",
+    "contrastDescription": "텍스트와 테두리가 배경에서 얼마나 두드러지는지 정합니다.",
+    "sharePalette": "공유",
+    "sharePaletteDescription": "팔레트를 보내려면 복사하세요. '붙여넣기'는 클립보드의 팔레트를 적용합니다.",
+    "copyPalette": "복사",
+    "pastePalette": "붙여넣기",
+    "paletteCopied": "팔레트를 복사했습니다",
+    "palettePasted": "팔레트를 붙여넣었습니다",
+    "pastePaletteInvalid": "클립보드에 팔레트가 없습니다. 먼저 팔레트를 복사한 뒤 붙여넣으세요.",
     "language": "언어",
     "languageDescription": "인터페이스, 이메일 및 Telegram 봇에서 사용할 언어입니다.",
     "timezone": "시간대",
-    "timezoneDescription": "날짜와 시간을 표시할 기준 시간대를 선택하세요.",
+    "timezoneDescription": "앱의 모든 날짜와 시간이 이 시간대로 표시됩니다.",
     "timezonePlaceholder": "시간대 선택",
     "timezoneEmpty": "시간대를 찾을 수 없습니다.",
     "timezoneGroups": {
@@ -139,49 +157,47 @@
       "Other": "기타"
     },
     "issueOpenMode": "이슈 열기 방식",
-    "issueOpenModeDescription": "보드, 테이블, 캘린더 또는 타임라인에서 이슈를 클릭하면 어떻게 열지 설정합니다.",
     "issueOpenModeOptions": {
       "panel": "사이드 패널",
       "page": "전체 페이지"
     },
     "startPage": "시작 페이지",
-    "startPageDescription": "앱을 열 때 마지막으로 사용한 프로젝트에서 표시할 페이지를 선택합니다.",
+    "startPageDescription": "마지막으로 사용한 프로젝트에서 열립니다.",
     "startPageOptions": {
       "work-items": "작업",
       "inbox": "받은 편지함",
       "dashboard": "대시보드",
       "initiatives": "이니셔티브"
     },
-    "showStats": "통계 표시",
-    "showStatsDescription": "이슈를 열 때 통계를 펼쳐서 표시합니다.",
+    "showStats": "통계 펼치기",
     "statsView": "통계 보기",
-    "statsViewDescription": "막대형은 상태별 비율을 하나의 막대에 표시하고, 타임라인은 각 상태의 변화를 시간순으로 표시합니다.",
+    "statsViewDescription": "막대형은 상태별로 보낸 시간의 비율을 보여 줍니다. 타임라인은 상태마다 별도의 레인을 보여 줍니다.",
     "statsViewOptions": {
       "compact": "막대형",
       "timeline": "타임라인"
     },
     "activityView": "활동 보기",
-    "activityViewDescription": "목록형은 모든 활동을 최신순으로 표시하고, 상태별 보기는 이슈 상태에 따라 활동을 묶어 표시합니다.",
+    "activityViewDescription": "상태별은 당시 이슈의 상태에 따라 기록을 나눕니다.",
     "activityViewOptions": {
-      "flat": "목록형",
+      "flat": "목록",
       "grouped": "상태별"
     },
     "autoWatch": "이슈 자동 구독",
-    "autoWatchDescription": "내가 만들거나 담당자로 지정된 이슈, 댓글을 작성하거나 멘션된 이슈를 자동으로 구독합니다.",
+    "autoWatchDescription": "내가 만들거나 댓글을 달거나 담당자로 지정되거나 멘션된 이슈입니다.",
     "desktopNotifications": "데스크톱 알림",
-    "desktopNotificationsDescription": "이 브라우저에만 적용됩니다. 앱이 열려 있지만 앞에 있지 않을 때, 모든 프로젝트의 새 받은 편지함 항목마다 알림을 띄웁니다.",
+    "desktopNotificationsDescription": "이 브라우저에만 적용됩니다. 앱이 백그라운드에서 열려 있을 때 모든 프로젝트의 새 받은 편지함 항목을 보여 줍니다.",
     "desktopNotificationsBlocked": "이 브라우저가 이 사이트의 알림을 막고 있습니다. 브라우저의 사이트 설정에서 허용해 주세요.",
     "desktopNotificationsUnsupported": "이 브라우저는 데스크톱 알림을 띄울 수 없습니다.",
-    "desktopNotificationsReplacedByPush": "이 브라우저에서는 푸시 알림이 켜져 있어 데스크톱 알림을 대신합니다.",
+    "desktopNotificationsReplacedByPush": "이 브라우저에서 푸시 알림이 켜져 있어 여기서는 데스크톱 알림이 꺼져 있습니다.",
     "desktopNotificationsOff": "사용 안 함",
-    "pushNotifications": "이 기기의 푸시 알림",
-    "pushNotificationsDescription": "이 브라우저에만 적용됩니다. 프로젝트 알림 설정의 푸시 열에서 고른 알림을 앱이 닫혀 있어도 띄웁니다.",
+    "pushNotifications": "푸시 알림",
+    "pushNotificationsDescription": "이 브라우저에만 적용됩니다. 각 프로젝트 알림 설정의 푸시 열에서 고른 알림을 앱이 닫혀 있어도 보냅니다.",
     "pushNotificationsBlocked": "이 브라우저가 이 사이트의 알림을 막고 있습니다. 브라우저의 사이트 설정에서 허용해 주세요.",
     "pushNotificationsUnsupported": "이 브라우저는 푸시 알림을 받을 수 없습니다.",
-    "pushNotificationsUnsupportedIos": "iPhone이나 iPad에서는 먼저 앱을 홈 화면에 추가한 뒤(iOS 16.4 이상) 거기서 켜 주세요.",
+    "pushNotificationsUnsupportedIos": "iPhone 또는 iPad에서는 앱을 홈 화면에 추가한 뒤 그 앱에서 이 설정을 켜세요. iOS 16.4 이상이 필요합니다.",
     "pushNotificationsOff": "사용 안 함",
-    "pushNotificationsFailed": "이 브라우저의 푸시 알림을 바꾸지 못했습니다.",
-    "showChatByDefault": "기본으로 채팅 표시",
-    "showChatByDefaultDescription": "프로젝트 페이지를 열 때 채팅 패널도 함께 엽니다. 패널 상단이나 채팅 아이콘을 눌러 언제든 닫을 수 있습니다."
+    "pushNotificationsFailed": "이 브라우저에서 푸시 알림을 변경하지 못했습니다. 다시 시도하세요.",
+    "showChatByDefault": "기본으로 채팅 열기",
+    "showChatByDefaultDescription": "프로젝트 페이지를 열 때마다 채팅 패널이 함께 열립니다."
   }
 }

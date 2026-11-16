@@ -14,7 +14,8 @@
   "name": "الاسم",
   "edit": "تعديل",
   "language": "اللغة",
-  "toggleTheme": "تبديل المظهر",
+  "interface": "الواجهة",
+  "allPreferences": "كل التفضيلات",
   "priority": {
     "label": "الأولوية",
     "tooltip": "أولوية {priority}",
@@ -40,8 +41,9 @@
   "brandSubtitle": "خطّط مهامك على لوحة. سجّل الدخول عشان تفتح مشاريعك.",
   "hotkeys": {
     "pressKeys": "اضغط المفاتيح",
-    "fixed": "ثابت",
-    "resetShortcut": "إعادة تعيين هذا الاختصار",
+    "fixed": "لا يمكن تغييره",
+    "changeShortcut": "تغيير الاختصار: {command}",
+    "resetShortcut": "إعادة تعيين الاختصار: {command}",
     "groups": {
       "general": "عام",
       "workItems": "عناصر العمل"
@@ -76,7 +78,7 @@
         "select-all": "تحديد كل المهام على اللوحة"
       }
     },
-    "conflict": "مستخدم بالفعل من قِبل {command}"
+    "conflict": "يستخدمه {command} أيضًا. غيّر أحدهما."
   },
   "agentChat": {
     "emptyHint": "ابعت رسالة عشان تجرّب الوكيل ده بيرد إزاي وبيستخدم أنهي أدوات.",

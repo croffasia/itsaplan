@@ -39,7 +39,7 @@
     },
     "hotkeys": {
       "label": "Pintasan keyboard",
-      "description": "Tombol yang terikat ke setiap perintah untuk semua orang di instance ini. Setiap orang dapat mengatur ulang pintasan untuk akun mereka sendiri di preferensi."
+      "description": "Bawaan untuk semua orang. Setiap orang dapat mengubahnya di Preferensi."
     },
     "storage": {
       "label": "Penyimpanan",

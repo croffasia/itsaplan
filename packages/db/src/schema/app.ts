@@ -304,6 +304,9 @@ export const projectSetting = pgTable(
 // not stored — it lasts as long as that issue stays open. auto_watch is whether the
 // user is subscribed to the issues they create, are assigned, comment on or are
 // mentioned in (see issue_watcher); off means they only ever subscribe by hand.
+// palette is the color theme drawn in the light or dark mode `theme` picks; like
+// locale it has no CHECK, so adding a palette costs no migration. 'custom' draws the
+// colors in custom_theme, whose background also decides light or dark.
 //
 // TODO(andrew): store the settings in one jsonb column, so a new one needs no migration.
 // The migration copies the current values into it and drops their columns;
@@ -325,6 +328,12 @@ export const userPreference = pgTable(
     issueStatsView: text('issue_stats_view').notNull().default('compact'),
     issueActivityView: text('issue_activity_view').notNull().default('flat'),
     autoWatch: boolean('auto_watch').notNull().default(true),
+    palette: text('palette').notNull().default('default'),
+    customTheme: jsonb('custom_theme').$type<{
+      accent: string;
+      background: string;
+      contrast: number;
+    }>(),
     // Whether the user closed the tour of the product. Every account starts without it,
     // so one made before the tour existed sees it once too.
     onboardingSeen: boolean('onboarding_seen').notNull().default(false),

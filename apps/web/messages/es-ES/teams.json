@@ -2,11 +2,10 @@
   "archived": "Archivado",
   "create": {
     "title": "Nuevo equipo",
-    "namePlaceholder": "Nombre del equipo",
+    "name": "Nombre del equipo",
     "slug": "URL",
-    "slugHint": "Los enlaces a los proyectos del equipo empiezan por él, p. ej. /acme.",
     "slugInvalid": "Usa de 2 a 40 letras minúsculas, números o guiones, empezando por una letra.",
-    "hint": "Serás el propietario de este equipo.",
+    "nameRequired": "Escribe el nombre del equipo.",
     "submit": "Crear equipo"
   },
   "sections": {

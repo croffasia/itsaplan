@@ -2,11 +2,10 @@
   "archived": "已封存",
   "create": {
     "title": "新建團隊",
-    "namePlaceholder": "團隊名稱",
+    "name": "團隊名稱",
     "slug": "URL",
-    "slugHint": "團隊專案的連結以它開頭，例如 /acme。",
     "slugInvalid": "請使用 2–40 個小寫字母、數字或連字元，並以字母開頭。",
-    "hint": "你將成為該團隊的所有者。",
+    "nameRequired": "請輸入團隊名稱。",
     "submit": "建立團隊"
   },
   "sections": {

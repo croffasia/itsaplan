@@ -23,6 +23,7 @@ export interface UnifiedIntegration {
   key: string;
   label: string;
   kind: IntegrationKind;
+  description?: string;
   // A tool integration's brand mark. AI providers have none: there are too many to keep.
   icon?: IntegrationIcon;
   // The service's homepage. For an AI provider, its models page in Mastra's registry.
@@ -72,6 +73,7 @@ export function integrationCatalog(): UnifiedIntegration[] {
     key: d.key,
     label: d.label,
     kind: d.kind,
+    description: d.description,
     icon: d.icon,
     website: d.website,
     credentialSchema: d.credentialSchema,

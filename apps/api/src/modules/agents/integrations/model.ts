@@ -64,6 +64,9 @@ const IntegrationResponse = t.Object({
   key: t.String(),
   label: t.String(),
   kind: t.String(),
+  description: t.Optional(
+    t.String({ description: 'What the service is and what agents do with it, in one sentence.' }),
+  ),
   icon: t.Optional(
     t.Object(
       { path: t.String(), color: t.Optional(t.String()) },

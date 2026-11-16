@@ -13,6 +13,7 @@ import { verifyDataforseo } from './verify';
 export const dataforseo: Integration = {
   key: 'dataforseo',
   label: 'DataForSEO',
+  description: 'Gets search results, keyword data, backlinks and page audits for SEO.',
   icon: dataforseoIcon,
   // The project's partner link: an account opened through it supports the project.
   website: 'https://try.dataforseo.com/49wtthgg2yk6',

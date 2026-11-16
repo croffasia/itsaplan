@@ -18,6 +18,11 @@ const extra: Integration = {
   ],
 };
 
+// The interface shows the description under the integration's name.
+it('describes every core integration', () => {
+  expect(integrationDescriptors().filter((d) => !d.description?.trim())).toEqual([]);
+});
+
 describe('setExtraIntegrations', () => {
   afterEach(() => setExtraIntegrations());
 

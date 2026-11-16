@@ -10,6 +10,7 @@ import { verifyKeenable } from './verify';
 export const keenable: Integration = {
   key: 'keenable',
   label: 'Keenable',
+  description: 'Searches the web and reads pages.',
   icon: keenableIcon,
   website: 'https://keenable.ai',
   credentialSchema: [

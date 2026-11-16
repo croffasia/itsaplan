@@ -8,6 +8,7 @@ import { verifyTelegram } from './verify';
 export const telegram: Integration = {
   key: 'telegram',
   label: 'Telegram',
+  description: 'Sends messages to Telegram chats from your bot.',
   credentialSchema: [
     {
       key: 'botToken',

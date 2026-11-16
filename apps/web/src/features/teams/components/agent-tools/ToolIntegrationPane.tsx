@@ -34,7 +34,10 @@ export function ToolIntegrationPane({
         <IntegrationIcon integration={{ ...integration, kind: 'tool' }} />
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-sm font-semibold text-foreground">{integration.label}</h3>
-          <p className="text-xs text-muted-foreground">
+          {integration.description && (
+            <p className="text-xs text-muted-foreground">{integration.description}</p>
+          )}
+          <p className="text-xs text-muted-foreground/70">
             {tools.length < total
               ? t('matchCount', { shown: tools.length, total })
               : t('toolCount', { count: total })}

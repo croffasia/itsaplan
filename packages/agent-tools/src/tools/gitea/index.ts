@@ -12,6 +12,7 @@ import { verifyGitea } from './verify';
 export const gitea: Integration = {
   key: 'gitea',
   label: 'Gitea / Forgejo',
+  description: 'Lists, creates and updates issues on a Gitea or Forgejo server.',
   credentialSchema: [
     {
       key: 'baseUrl',

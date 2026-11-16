@@ -16,6 +16,7 @@ import { gitea } from './tools/gitea';
 import { github } from './tools/github';
 import { pdf } from './tools/pdf';
 import { keenable } from './tools/keenable';
+import { dataforseo } from './tools/dataforseo';
 
 // The core's tool integrations. Add an integration by creating its folder under tools/
 // and listing it here.
@@ -30,6 +31,7 @@ export const INTEGRATIONS: Integration[] = [
   github,
   pdf,
   keenable,
+  dataforseo,
 ];
 
 type ToolIndex = Map<string, { integration: Integration; tool: CustomToolEntry }>;

@@ -14,6 +14,7 @@ export function notificationSubject(n: Notification, untitled: string): string {
 // The verb phrase for a notification, addressed to the reader ("you").
 export function notificationEventText(n: Notification, te: EventMessages): string {
   const who = n.actorName ?? te('someone');
+  if (n.type === 'reacted') return te('reacted', { who, emoji: n.reactionEmoji ?? '' });
   if (n.type !== 'state_changed') return te(n.type, { who });
   return n.fromState && n.toState
     ? te('stateChanged', { who, from: n.fromState, to: n.toState })

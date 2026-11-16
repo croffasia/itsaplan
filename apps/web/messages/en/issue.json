@@ -268,7 +268,10 @@
     "edited": "edited",
     "deleteComment": "Delete comment",
     "deleteCommentTitle": "Delete this comment?",
-    "deleteCommentConfirmation": "The comment and its replies will be permanently deleted."
+    "deleteCommentConfirmation": "The comment and its replies will be permanently deleted.",
+    "reactions": "Reactions",
+    "addReaction": "Add reaction",
+    "reactedBy": "{names} reacted with {emoji}"
   },
   "stats": {
     "title": "Stats",

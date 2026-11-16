@@ -268,7 +268,10 @@
     "edited": "змінено",
     "deleteComment": "Видалити коментар",
     "deleteCommentTitle": "Видалити цей коментар?",
-    "deleteCommentConfirmation": "Коментар і відповіді на нього буде видалено безповоротно."
+    "deleteCommentConfirmation": "Коментар і відповіді на нього буде видалено безповоротно.",
+    "reactions": "Реакції",
+    "addReaction": "Додати реакцію",
+    "reactedBy": "{names}: реакція {emoji}"
   },
   "stats": {
     "title": "Статистика",

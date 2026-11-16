@@ -58,6 +58,11 @@ export const id: EmailLocaleTexts = {
       body: '{actor} mengubah status issue ini dari {from} ke {to}.\n\n{ref}: {title}',
       button: 'Buka issue',
     },
+    reacted: {
+      subject: '{ref}: {actor} bereaksi pada komentar Anda',
+      body: '{actor} bereaksi pada komentar Anda dengan {emoji}.\n\n{ref}: {title}',
+      button: 'Buka komentar',
+    },
     documentMentioned: {
       subject: '{document}: Anda disebut',
       body: '{actor} menyebut Anda di dokumen ini.\n\n{document}',

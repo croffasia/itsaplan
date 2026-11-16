@@ -370,6 +370,12 @@ export const CrossProjectIssueHitResponse = t.Composite([
   }),
 ]);
 
+// CommentReactionRow from reactions.ts: one emoji on a comment and who reacted with it.
+export const CommentReactionResponse = t.Object({
+  emoji: t.String(),
+  users: t.Array(t.Object({ id: t.String(), name: t.String() })),
+});
+
 // FeedItemRow from activity.ts: one timeline entry (comment or change-log).
 // kind is the FeedKind union (a string).
 export const FeedItemResponse = t.Object({
@@ -384,6 +390,7 @@ export const FeedItemResponse = t.Object({
   payload: ActivityPayloadResponse,
   createdAt: t.String(),
   editedAt: t.Nullable(t.String()),
+  reactions: t.Array(CommentReactionResponse),
 });
 
 export const FeedCursorResponse = t.Nullable(t.Object({ ts: t.String(), id: t.Number() }));
@@ -768,6 +775,20 @@ export const updateCommentBody = t.Object({
 
 export const commentParams = t.Object({
   commentId: t.Numeric({ description: 'The comment id.' }),
+});
+
+// The service checks that the text is one emoji; the length bounds it before that.
+const reactionEmoji = t.String({
+  minLength: 1,
+  maxLength: 64,
+  description: 'One emoji, such as 👍 or ✅.',
+});
+
+export const addReactionBody = t.Object({ emoji: reactionEmoji });
+
+export const reactionParams = t.Object({
+  commentId: t.Numeric({ description: 'The comment id.' }),
+  emoji: reactionEmoji,
 });
 
 export const archiveIssueBody = t.Optional(

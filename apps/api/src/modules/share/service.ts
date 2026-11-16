@@ -137,10 +137,11 @@ function redactIssue<T extends IssueRow>(row: T): T {
 
 // The read-only feed shows the newest activity; a public share never paginates,
 // so it is capped at listFeed's max page (100). An issue with more than that
-// shows its latest 100 entries.
+// shows its latest 100 entries. Reactions are left out: they name members who wrote
+// nothing in the issue.
 async function issueFeed(issueId: number): Promise<FeedItemRow[]> {
   const page = await listFeed(issueId, { limit: 100 });
-  return page.items;
+  return page.items.map((item) => ({ ...item, reactions: [] }));
 }
 
 // Builds the read-only bundle for one issue, shared by the shared-issue page and

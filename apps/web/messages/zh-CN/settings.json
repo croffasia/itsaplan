@@ -103,7 +103,8 @@
       "assigned": "被指派处理某一工作项",
       "mentioned": "在工作项或文档中被提及",
       "commented": "关注的工作项有新评论",
-      "state_changed": "关注的工作项状态发生变化"
+      "state_changed": "关注的工作项状态发生变化",
+      "reacted": "你的评论有新回应"
     },
     "eventsTitle": "事件",
     "telegramAccount": "Telegram 账户",

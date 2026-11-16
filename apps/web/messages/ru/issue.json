@@ -268,7 +268,10 @@
     "edited": "изменено",
     "deleteComment": "Удалить комментарий",
     "deleteCommentTitle": "Удалить этот комментарий?",
-    "deleteCommentConfirmation": "Комментарий и ответы на него будут удалены безвозвратно."
+    "deleteCommentConfirmation": "Комментарий и ответы на него будут удалены безвозвратно.",
+    "reactions": "Реакции",
+    "addReaction": "Добавить реакцию",
+    "reactedBy": "{names}: реакция {emoji}"
   },
   "stats": {
     "title": "Статистика",

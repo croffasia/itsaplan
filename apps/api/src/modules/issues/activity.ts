@@ -23,6 +23,7 @@ import {
   notifyTextMentions,
 } from '#modules/notifications/service';
 import { listStatusTimeline } from './status-history';
+import { listReactions, type CommentReactionRow } from './reactions';
 
 // Issue timeline: comments and change-log activity in one table (issue_activity).
 // kind selects which columns a row uses. The author is the session user
@@ -47,6 +48,8 @@ export interface FeedItemRow {
   createdAt: string;
   // Set once a comment is edited; null while it is in its author's original words.
   editedAt: string | null;
+  // The emoji reactions of a comment; empty on a change-log entry.
+  reactions: CommentReactionRow[];
 }
 
 // Opaque page cursor: the (created_at, id) of the last returned item. id breaks
@@ -88,7 +91,16 @@ function mapFeedItem(row: {
     payload: row.payload,
     createdAt: iso(row.createdAt),
     editedAt: row.editedAt ? iso(row.editedAt) : null,
+    reactions: [],
   };
+}
+
+// Fills in the reactions of the comments among the given entries, in one query.
+async function withReactions(items: FeedItemRow[]): Promise<FeedItemRow[]> {
+  const reactions = await listReactions(
+    items.filter((item) => item.kind === 'comment').map((item) => item.id),
+  );
+  return items.map((item) => ({ ...item, reactions: reactions.get(item.id) ?? [] }));
 }
 
 export type FeedFilter = 'comments' | 'history' | 'worklog';
@@ -164,7 +176,7 @@ export async function listFeed(issueId: number, opts: FeedPageOptions = {}): Pro
   const items = page.map(mapFeedItem);
   const replies = await listReplies(items.map((item) => item.id));
   return {
-    items: [...items, ...replies],
+    items: await withReactions([...items, ...replies]),
     nextCursor: hasMore && last ? { ts: last.cursorTs, id: last.id } : null,
   };
 }
@@ -244,7 +256,7 @@ export async function listFeedRange(
       ),
     )
     .orderBy(issueActivity.createdAt, issueActivity.id);
-  return rows.map(mapFeedItem);
+  return withReactions(rows.map(mapFeedItem));
 }
 
 // One stretch of the grouped feed: the status the issue was in, and the entries of
@@ -417,7 +429,7 @@ export async function updateComment(
     .where(eq(issueActivity.id, commentId))
     .returning();
   if (!row) throw new HttpError(404, 'Comment not found');
-  const comment = mapFeedItem(row);
+  const [comment] = await withReactions([mapFeedItem(row)]);
 
   await recordActivity(comment.issueId, [{ action: 'comment_edited' }], actorUserId);
   await emitCommentEvent(projectId, 'comment.updated', comment, actorUserId);
@@ -447,9 +459,11 @@ export async function deleteComment(
     .from(issueActivity)
     .where(and(eq(issueActivity.id, commentId), eq(issueActivity.kind, 'comment')));
   if (!before) return false;
+  // Read first: the reactions are deleted with the comment.
+  const [comment] = await withReactions([mapFeedItem(before)]);
   await db.delete(issueActivity).where(eq(issueActivity.id, commentId));
-  await recordActivity(before.issueId as number, [{ action: 'comment_deleted' }], actorUserId);
-  await emitCommentEvent(projectId, 'comment.deleted', mapFeedItem(before), actorUserId);
+  await recordActivity(comment.issueId, [{ action: 'comment_deleted' }], actorUserId);
+  await emitCommentEvent(projectId, 'comment.deleted', comment, actorUserId);
   return true;
 }
 

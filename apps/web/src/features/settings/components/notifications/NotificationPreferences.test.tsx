@@ -19,6 +19,7 @@ const none: NotificationEventToggles = {
   mentioned: false,
   commented: false,
   state_changed: false,
+  reacted: false,
 };
 
 let dom: JSDOM;

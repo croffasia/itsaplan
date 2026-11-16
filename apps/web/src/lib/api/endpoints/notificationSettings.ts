@@ -10,6 +10,7 @@ export interface NotificationEventToggles {
   mentioned: boolean;
   commented: boolean;
   state_changed: boolean;
+  reacted: boolean;
 }
 
 // The provider credentials as read from the API: secrets are never returned, only a

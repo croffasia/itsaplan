@@ -81,6 +81,7 @@ const CORE_TEMPLATES: EmailTemplate[] = [
     { ...ISSUE, from: 'In progress', to: 'Done' },
     '/acme/WEB/issue/42',
   ),
+  core('reacted', 'notifications', { ...ISSUE, emoji: '👍' }, '/acme/WEB/issue/42#comment-7'),
   core('documentMentioned', 'notifications', DOCUMENT, '/acme/WEB/documents/7'),
   core('documentCommentMentioned', 'notifications', DOCUMENT, '/acme/WEB/documents/7'),
   core('test', 'service', {}, null),

@@ -509,6 +509,9 @@
       "stateChanged": {
         "name": "تغییر وضعیت"
       },
+      "reacted": {
+        "name": "واکنش به دیدگاه"
+      },
       "documentMentioned": {
         "name": "نام‌بردن در سند"
       },

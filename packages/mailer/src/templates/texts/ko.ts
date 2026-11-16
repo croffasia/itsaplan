@@ -58,6 +58,11 @@ export const ko: EmailLocaleTexts = {
       body: '{actor}님이 이 이슈의 상태를 {from}에서 {to}(으)로 변경했습니다.\n\n{ref}: {title}',
       button: '이슈 열기',
     },
+    reacted: {
+      subject: '{ref}: {actor}님이 내 댓글에 반응했습니다',
+      body: '{actor}님이 내 댓글에 {emoji} 반응을 남겼습니다.\n\n{ref}: {title}',
+      button: '댓글 열기',
+    },
     documentMentioned: {
       subject: '{document}: 멘션되었습니다',
       body: '{actor}님이 이 문서에서 나를 멘션했습니다.\n\n{document}',

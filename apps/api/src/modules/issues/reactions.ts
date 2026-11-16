@@ -1,6 +1,7 @@
 import { db, issueActivity, issueActivityReaction, user } from '@repo/db';
 import { and, eq, inArray } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
+import { notifyReaction } from '#modules/notifications/service';
 
 // Emoji reactions on issue comments. A member reacts to a comment with any number of
 // different emoji, each one once.
@@ -56,18 +57,24 @@ export async function listReactions(
   return byComment;
 }
 
-// Adds the user's reaction and returns the comment's reactions. Reacting again with
-// the same emoji changes nothing. The comment row is locked while the emoji are
-// counted, so two members adding at once cannot pass the limit together.
+// Adds the user's reaction, tells the comment's author (see notifyReaction), and returns
+// the comment's reactions. Reacting again with the same emoji changes nothing. The
+// comment row is locked while the emoji are counted, so two members adding at once
+// cannot pass the limit together.
 export async function addReaction(
   commentId: number,
   userId: string,
   emoji: string,
+  projectId: number,
 ): Promise<CommentReactionRow[]> {
   assertEmoji(emoji);
-  await db.transaction(async (tx) => {
+  const added = await db.transaction(async (tx) => {
     const [comment] = await tx
-      .select({ id: issueActivity.id })
+      .select({
+        id: issueActivity.id,
+        issueId: issueActivity.issueId,
+        actorUserId: issueActivity.actorUserId,
+      })
       .from(issueActivity)
       .where(and(eq(issueActivity.id, commentId), eq(issueActivity.kind, 'comment')))
       .for('no key update');
@@ -78,11 +85,15 @@ export async function addReaction(
       .where(eq(issueActivityReaction.activityId, commentId));
     if (used.length >= MAX_COMMENT_EMOJI && !used.some((row) => row.emoji === emoji))
       throw new HttpError(409, `A comment takes at most ${MAX_COMMENT_EMOJI} different emoji`);
-    await tx
+    const rows = await tx
       .insert(issueActivityReaction)
       .values({ activityId: commentId, userId, emoji })
-      .onConflictDoNothing();
+      .onConflictDoNothing()
+      .returning({ activityId: issueActivityReaction.activityId });
+    return rows.length > 0 ? comment : null;
   });
+  if (added?.issueId != null)
+    await notifyReaction(projectId, { ...added, issueId: added.issueId }, userId, emoji);
   return (await listReactions([commentId])).get(commentId) ?? [];
 }
 

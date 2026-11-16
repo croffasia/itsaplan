@@ -1697,9 +1697,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // Answers with every reaction of the comment, so the caller needs no second read.
   .post(
     '/comments/:commentId/reactions',
-    async ({ params, body, user, set }) => {
+    async ({ params, body, user, set, projectId }) => {
       set.status = 201;
-      return addReaction(params.commentId, requireUser(user).id, body.emoji);
+      return addReaction(params.commentId, requireUser(user).id, body.emoji, projectId);
     },
     {
       body: addReactionBody,
@@ -1712,9 +1712,10 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           'Add your emoji reaction to a comment, such as 👍 or ✅. Pass the emoji ' +
           'character itself, not a name such as :thumbsup:. One member can add ' +
           'several different emoji to a comment, each one once; adding the same one ' +
-          'again changes nothing. Fails with 409 when the comment already carries the ' +
-          'maximum number of different emoji. The reactions of a comment come with it ' +
-          'in list_issue_activity.',
+          'again changes nothing. The author of the comment is notified of your first ' +
+          'reaction to it. Fails with 409 when the comment already carries the maximum ' +
+          'number of different emoji. The reactions of a comment come with it in ' +
+          'list_issue_activity.',
         ...mcpTool('add_comment_reaction', { idempotentHint: true }),
       },
     },

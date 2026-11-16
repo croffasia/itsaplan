@@ -24,6 +24,7 @@ const NotificationResponse = t.Object({
   projectName: t.String(),
   fromState: t.Nullable(t.String()),
   toState: t.Nullable(t.String()),
+  reactionEmoji: t.Nullable(t.String()),
 });
 
 export const NotificationPageResponse = t.Object({
@@ -60,6 +61,7 @@ export const markAllReadBody = t.Optional(
           t.Literal('mentioned'),
           t.Literal('commented'),
           t.Literal('state_changed'),
+          t.Literal('reacted'),
         ]),
         { minItems: 1 },
       ),

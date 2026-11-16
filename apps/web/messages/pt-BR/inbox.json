@@ -16,7 +16,8 @@
     "assigned": "Atribuído",
     "mentioned": "Mencionado",
     "commented": "Comentado",
-    "state_changed": "Status alterado"
+    "state_changed": "Status alterado",
+    "reacted": "Reação"
   },
   "actions": {
     "markRead": "Marcar como lida",
@@ -33,6 +34,7 @@
     "mentioned": "{who} mencionou você",
     "commented": "{who} comentou",
     "stateChanged": "{who} alterou o status de {from} para {to}",
-    "stateChangedPlain": "{who} alterou o status"
+    "stateChangedPlain": "{who} alterou o status",
+    "reacted": "{who} reagiu ao seu comentário com {emoji}"
   }
 }

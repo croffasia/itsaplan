@@ -509,6 +509,9 @@
       "stateChanged": {
         "name": "Статус змінено"
       },
+      "reacted": {
+        "name": "Реакція на коментар"
+      },
       "documentMentioned": {
         "name": "Згадка в документі"
       },

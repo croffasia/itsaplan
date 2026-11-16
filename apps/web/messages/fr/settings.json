@@ -103,7 +103,8 @@
       "assigned": "Assigné à un ticket",
       "mentioned": "Mentionné sur un ticket ou un document",
       "commented": "Nouveau commentaire sur un ticket que vous suivez",
-      "state_changed": "Changement d'état sur un ticket que vous suivez"
+      "state_changed": "Changement d'état sur un ticket que vous suivez",
+      "reacted": "Réaction à votre commentaire"
     },
     "eventsTitle": "Événements",
     "telegramAccount": "Compte Telegram",

@@ -103,7 +103,8 @@
       "assigned": "Assigned to an issue",
       "mentioned": "Mentioned on an issue or a document",
       "commented": "New comment on an issue you watch",
-      "state_changed": "State changed on an issue you watch"
+      "state_changed": "State changed on an issue you watch",
+      "reacted": "Reaction to your comment"
     },
     "eventsTitle": "Events",
     "telegramAccount": "Telegram account",

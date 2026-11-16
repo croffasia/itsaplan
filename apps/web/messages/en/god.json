@@ -509,6 +509,9 @@
       "stateChanged": {
         "name": "Status changed"
       },
+      "reacted": {
+        "name": "Reaction to a comment"
+      },
       "documentMentioned": {
         "name": "Mentioned in a document"
       },

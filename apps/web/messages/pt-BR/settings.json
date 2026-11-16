@@ -103,7 +103,8 @@
       "assigned": "Atribuído a uma issue",
       "mentioned": "Mencionado em uma issue ou um documento",
       "commented": "Novo comentário em uma issue que você acompanha",
-      "state_changed": "Estado alterado em uma issue que você acompanha"
+      "state_changed": "Estado alterado em uma issue que você acompanha",
+      "reacted": "Reação ao seu comentário"
     },
     "eventsTitle": "Eventos",
     "telegramAccount": "Conta do Telegram",

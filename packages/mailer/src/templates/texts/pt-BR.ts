@@ -58,6 +58,11 @@ export const ptBR: EmailLocaleTexts = {
       body: '{actor} alterou o status desta issue de {from} para {to}.\n\n{ref}: {title}',
       button: 'Abrir a issue',
     },
+    reacted: {
+      subject: '{ref}: {actor} reagiu ao seu comentário',
+      body: '{actor} reagiu ao seu comentário com {emoji}.\n\n{ref}: {title}',
+      button: 'Abrir o comentário',
+    },
     documentMentioned: {
       subject: '{document}: você foi mencionado',
       body: '{actor} mencionou você neste documento.\n\n{document}',

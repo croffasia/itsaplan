@@ -74,6 +74,7 @@ const EMAIL_TEMPLATE: Record<NotificationType, CoreEmailKey> = {
   mentioned: 'mentioned',
   commented: 'commented',
   state_changed: 'stateChanged',
+  reacted: 'reacted',
 };
 
 // What happened, as the Telegram message and the push notification say it.
@@ -83,6 +84,7 @@ function eventAction(
   type: NotificationType,
   actor: string,
   stateChange: StateChange | null,
+  emoji: string,
 ): string {
   switch (type) {
     case 'assigned':
@@ -95,6 +97,8 @@ function eventAction(
       return stateChange
         ? `Status changed from ${stateChange.from} to ${stateChange.to} by ${actor}`
         : `Status changed by ${actor}`;
+    case 'reacted':
+      return `${actor} reacted to your comment with ${emoji}`;
   }
 }
 
@@ -103,6 +107,7 @@ const TELEGRAM_EMOJI: Record<NotificationType, string> = {
   mentioned: '💬',
   commented: '💬',
   state_changed: '🔄',
+  reacted: '🙂',
 };
 
 // Telegram copy. Rendered as HTML (parse_mode HTML) with the issue reference as a
@@ -184,7 +189,7 @@ async function composeMessages(
     const url = documentUrl(ref, projectRow.key, documentId);
     const template =
       first.documentCommentId != null ? 'documentCommentMentioned' : 'documentMentioned';
-    const action = eventAction('mentioned', actor, null);
+    const action = eventAction('mentioned', actor, null, '');
     return {
       email: async (_type, locale) => {
         const words = emailWords(locale);
@@ -211,6 +216,8 @@ async function composeMessages(
   const statusActivityId =
     notifications.find((n) => n.type === 'state_changed')?.sourceActivityId ?? null;
   const stateChange = statusActivityId != null ? await readStateChange(statusActivityId) : null;
+  // A reaction is one event with one row.
+  const emoji = first.reactionEmoji ?? '';
   return {
     email: async (type, locale) => {
       const vars = {
@@ -219,15 +226,22 @@ async function composeMessages(
         title: issueRow.title,
         from: stateChange?.from ?? '—',
         to: stateChange?.to ?? '—',
+        emoji,
       };
       return { ...(await composeEmail(EMAIL_TEMPLATE[type], locale, vars, url)), url };
     },
     telegram: (type) =>
-      telegramPayload(type, issueKey, issueRow.title, eventAction(type, actor, stateChange), url),
+      telegramPayload(
+        type,
+        issueKey,
+        issueRow.title,
+        eventAction(type, actor, stateChange, emoji),
+        url,
+      ),
     push: (type, notificationId) =>
       pushPayload(
         `${issueKey} ${issueRow.title}`,
-        eventAction(type, actor, stateChange),
+        eventAction(type, actor, stateChange, emoji),
         url,
         notificationId,
       ),

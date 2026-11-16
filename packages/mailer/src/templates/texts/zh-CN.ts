@@ -57,6 +57,11 @@ export const zhCN: EmailLocaleTexts = {
       body: '{actor} 将此工作项的状态从 {from} 更改为 {to}。\n\n{ref}：{title}',
       button: '打开工作项',
     },
+    reacted: {
+      subject: '{ref}：{actor} 回应了你的评论',
+      body: '{actor} 用 {emoji} 回应了你的评论。\n\n{ref}：{title}',
+      button: '打开评论',
+    },
     documentMentioned: {
       subject: '{document}：有人提及了你',
       body: '{actor} 在此文档中提及了你。\n\n{document}',

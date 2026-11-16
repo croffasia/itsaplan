@@ -7,7 +7,7 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 // default).
 
 // The issue events a member can subscribe to, matching the inbox notification types.
-export type EventKey = 'assigned' | 'mentioned' | 'commented' | 'state_changed';
+export type EventKey = 'assigned' | 'mentioned' | 'commented' | 'state_changed' | 'reacted';
 export type EventToggles = Record<EventKey, boolean>;
 
 export interface NotificationPreferenceDto {
@@ -16,22 +16,32 @@ export interface NotificationPreferenceDto {
   pushEvents: EventToggles;
 }
 
+// The body's shape: `reacted` is optional.
+type EventTogglesInput = Omit<EventToggles, 'reacted'> & { reacted?: boolean };
+
 export interface NotificationPreferenceInput {
-  emailEvents: EventToggles;
-  telegramEvents: EventToggles;
+  emailEvents: EventTogglesInput;
+  telegramEvents: EventTogglesInput;
   // Left out, the stored ones are kept.
-  pushEvents?: EventToggles;
+  pushEvents?: EventTogglesInput;
 }
 
 function emptyEvents(): EventToggles {
-  return { assigned: false, mentioned: false, commented: false, state_changed: false };
+  return {
+    assigned: false,
+    mentioned: false,
+    commented: false,
+    state_changed: false,
+    reacted: false,
+  };
 }
 
 function defaults(): NotificationPreferenceDto {
   return { emailEvents: emptyEvents(), telegramEvents: emptyEvents(), pushEvents: emptyEvents() };
 }
 
-// Normalizes the stored jsonb (possibly partial or empty {}) into a full EventToggles.
+// Fills a set that may lack keys (stored jsonb, or a body from a client that predates
+// a key) into a full EventToggles. A missing key reads as off.
 function toToggles(value: unknown): EventToggles {
   const o = (value ?? {}) as Partial<Record<EventKey, boolean>>;
   return {
@@ -39,6 +49,7 @@ function toToggles(value: unknown): EventToggles {
     mentioned: Boolean(o.mentioned),
     commented: Boolean(o.commented),
     state_changed: Boolean(o.state_changed),
+    reacted: Boolean(o.reacted),
   };
 }
 
@@ -85,9 +96,9 @@ export async function setPreferences(
   input: NotificationPreferenceInput,
 ): Promise<NotificationPreferenceDto> {
   const values = {
-    emailEvents: input.emailEvents,
-    telegramEvents: input.telegramEvents,
-    ...(input.pushEvents ? { pushEvents: input.pushEvents } : {}),
+    emailEvents: toToggles(input.emailEvents),
+    telegramEvents: toToggles(input.telegramEvents),
+    ...(input.pushEvents ? { pushEvents: toToggles(input.pushEvents) } : {}),
   };
   const [row] = await db
     .insert(userNotificationPreference)

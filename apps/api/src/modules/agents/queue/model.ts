@@ -1,10 +1,22 @@
 import { t } from 'elysia';
 import { pageQueryFields, pageResponse } from '#shared/pagination';
-import { IssueAgentRunPageResponse } from '#modules/issues/model';
+import { IssueAgentRunPageResponse, issueAgentTraceQuery } from '#modules/issues/model';
 
 export const queueQuery = t.Object({
   ...pageQueryFields,
   runId: t.Optional(t.Numeric({ minimum: 1, multipleOf: 1 })),
+  state: t.Optional(
+    t.Union([t.Literal('failed'), t.Literal('active')], {
+      description: "'failed' lists the failed runs; 'active' the waiting and running ones.",
+    }),
+  ),
+  q: t.Optional(
+    t.String({
+      maxLength: 200,
+      description:
+        "Text to find in the issue's title or key, the schedule's name or the agent's username.",
+    }),
+  ),
   page: t.Optional(t.Numeric({ minimum: 1, multipleOf: 1 })),
   pageSize: t.Optional(t.Numeric({ minimum: 1, maximum: 100, multipleOf: 1 })),
 });
@@ -16,8 +28,11 @@ export const RunnerQueueResponse = t.Object({
       issueId: t.Nullable(t.Number()),
       sequenceNumber: t.Nullable(t.Number()),
       issueTitle: t.Nullable(t.String()),
+      scheduleId: t.Nullable(t.Number()),
       scheduleName: t.Nullable(t.String()),
       projectRef: t.String(),
+      inputTokens: t.Nullable(t.Number({ description: 'What the last model call read.' })),
+      outputTokens: t.Nullable(t.Number({ description: 'What the last model call wrote.' })),
       runnerState: t.Nullable(
         t.Union([t.Literal('push'), t.Literal('online'), t.Literal('offline'), t.Literal('never')]),
         {
@@ -29,6 +44,18 @@ export const RunnerQueueResponse = t.Object({
   ).properties,
   queued: t.Number(),
   running: t.Number(),
+  failed: t.Number({ description: 'Failed runs that match `q`, whatever `state` is.' }),
+});
+
+export const internalTraceQuery = t.Object({
+  ...issueAgentTraceQuery.properties,
+  attempt: t.Optional(
+    t.Numeric({
+      minimum: 1,
+      multipleOf: 1,
+      description: 'The recorded attempt to read, oldest 1; the latest when absent.',
+    }),
+  ),
 });
 
 export const RunsInFlightResponse = t.Object({

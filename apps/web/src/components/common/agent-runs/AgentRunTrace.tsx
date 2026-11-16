@@ -36,10 +36,10 @@ export default function AgentRunTrace({ issueId, runId }: { issueId: number; run
           </Button>
         </div>
       </div>
-      {query.isLoading && <p className="text-xs text-muted-foreground">{t('loading')}</p>}
+      {query.isLoading && <p className="text-xs text-muted-foreground">{t('loadingSteps')}</p>}
       {query.isError && (
         <p role="alert" className="text-xs text-destructive">
-          {t('loadError')}
+          {t('stepsLoadError')}
         </p>
       )}
       {query.isSuccess && detail == null && (

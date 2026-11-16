@@ -79,5 +79,5 @@ export async function getIssueAgentRunTrace(
       ),
     );
   if (!run) return undefined;
-  return getRunTrace(run.agentId, runId, projectId, issueId, viewerId, traceId);
+  return getRunTrace(run.agentId, runId, projectId, issueId, viewerId, { traceId });
 }

@@ -1,67 +1,40 @@
-import { useEffect, useRef, useState } from 'react';
-import { Check, Copy } from 'lucide-react';
+import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import Markdown from '@/components/common/Markdown';
-import RunnerQueueRunSection from './RunnerQueueRunSection';
+import { runLinks } from '../utils/runLinks';
+import RunnerQueueCopyButton from './RunnerQueueCopyButton';
+import RunnerQueueRunLinkRow from './RunnerQueueRunLinkRow';
 
-export default function RunnerQueueRunResult({ output }: { output: string }) {
+// The run's answer in one card: a row for each page of the workspace it links to, then
+// its text.
+export default function RunnerQueueRunResult({ run }: { run: RunnerQueueRun }) {
   const t = useTranslations('issue.agentRuns');
-  const tCommon = useTranslations('common');
-  const [copied, setCopied] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const [overflows, setOverflows] = useState(false);
-  const body = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = body.current;
-    if (el) setOverflows(el.scrollHeight > el.clientHeight);
-  }, [output]);
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(output);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // Clipboard can be blocked (no permission / insecure origin); ignore.
-    }
+  const output = run.output;
+  const links = useMemo(
+    () => (output && typeof window !== 'undefined' ? runLinks(output, window.location.origin) : []),
+    [output],
+  );
+  if (!output) {
+    const pending = run.executionState === 'queued' || run.executionState === 'running';
+    return (
+      <p className="text-sm text-muted-foreground">{t(pending ? 'noResultYet' : 'noResult')}</p>
+    );
   }
-
-  const folded = !expanded && overflows;
   return (
-    <RunnerQueueRunSection
-      title={t('result')}
-      actions={
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          aria-label={copied ? tCommon('copied') : tCommon('copy')}
-          onClick={() => void copy()}
-        >
-          {copied ? <Check /> : <Copy />}
-        </Button>
-      }
-    >
-      {output.startsWith('…') && <p className="text-xs text-muted-foreground">{t('outputTail')}</p>}
-      <div
-        ref={body}
-        className={cn(
-          'relative text-[15px] leading-relaxed',
-          !expanded && 'max-h-72 overflow-hidden',
+    <div className="flex items-start gap-3 rounded-xl bg-card p-3 ring-1 ring-border">
+      <div className="min-w-0 flex-1 space-y-3">
+        {links.map((url) => (
+          <RunnerQueueRunLinkRow key={url} url={url} />
+        ))}
+        {output.startsWith('…') && (
+          <p className="text-xs text-muted-foreground">{t('outputTail')}</p>
         )}
-      >
-        <Markdown>{output}</Markdown>
-        {folded && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-linear-to-t from-background" />
-        )}
+        <div className="-my-1.5">
+          <Markdown>{output}</Markdown>
+        </div>
       </div>
-      {folded && (
-        <Button variant="ghost" size="sm" className="-ms-3" onClick={() => setExpanded(true)}>
-          {tCommon('showMore')}
-        </Button>
-      )}
-    </RunnerQueueRunSection>
+      <RunnerQueueCopyButton text={output} />
+    </div>
   );
 }

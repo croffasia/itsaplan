@@ -16,6 +16,8 @@ let client: QueryClient;
 let descriptors: Map<string, PropertyDescriptor | undefined>;
 const latest: Trace = {
   previousTraceId: 'old',
+  attempt: 2,
+  attempts: 2,
   trace: {
     traceId: 'new',
     status: 'success',
@@ -41,6 +43,8 @@ const latest: Trace = {
 };
 const earlier: Trace = {
   previousTraceId: null,
+  attempt: 1,
+  attempts: 2,
   trace: { ...latest.trace, traceId: 'old', startedAt: '2026-01-01T00:00:00Z' },
   spans: [{ ...latest.spans[0], spanId: 'tool-old', output: 'Earlier result' }],
 };

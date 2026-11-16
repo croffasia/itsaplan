@@ -1,10 +1,11 @@
 import { getExternalRunTrace } from '@/lib/api/endpoints/agents';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { nextPageParam } from '@/lib/api/core/paging';
 import {
   getInternalRunTrace,
   getRunnerQueue,
   getRunsInFlight,
+  type RunnerQueueState,
 } from '@/lib/api/endpoints/runnerQueue';
 import { qk } from './queryKeys';
 
@@ -19,12 +20,17 @@ export function useRunsInFlightQuery(api: string) {
   });
 }
 
-export function useRunnerQueueQuery(api: string) {
+export function useRunnerQueueQuery(
+  api: string,
+  filter: { state?: RunnerQueueState; q?: string } = {},
+) {
   return useInfiniteQuery({
-    queryKey: [...qk.runnerQueue, 'list', api],
-    queryFn: ({ pageParam }) => getRunnerQueue(api, { page: pageParam, pageSize: RUNS_PAGE_SIZE }),
+    queryKey: [...qk.runnerQueue, 'list', api, filter],
+    queryFn: ({ pageParam }) =>
+      getRunnerQueue(api, { page: pageParam, pageSize: RUNS_PAGE_SIZE, ...filter }),
     initialPageParam: 1,
     getNextPageParam: nextPageParam,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -36,16 +42,22 @@ export function useRunnerQueueRunQuery(api: string, runId: number) {
   });
 }
 
-export function useExternalRunTraceQuery(runId: number, attempt?: number) {
+// The latest attempt without `attempt`. The previous attempt's steps stay on screen while
+// the picked one loads.
+export function useExternalRunTraceQuery(runId: number, attempt?: number, enabled = true) {
   return useQuery({
     queryKey: [...qk.externalRunTrace(runId), attempt ?? null],
     queryFn: () => getExternalRunTrace(runId, attempt),
+    placeholderData: keepPreviousData,
+    enabled,
   });
 }
 
-export function useInternalRunTraceQuery(runId: number, traceId?: string) {
+export function useInternalRunTraceQuery(runId: number, attempt?: number, enabled = true) {
   return useQuery({
-    queryKey: [...qk.internalRunTrace(runId), traceId ?? null],
-    queryFn: () => getInternalRunTrace(runId, traceId),
+    queryKey: [...qk.internalRunTrace(runId), attempt ?? null],
+    queryFn: () => getInternalRunTrace(runId, attempt),
+    placeholderData: keepPreviousData,
+    enabled,
   });
 }

@@ -90,6 +90,39 @@ describe('runner queue', () => {
     ).toBe('success');
   });
 
+  it('narrows the queue by state and by text, and counts the failed runs', async () => {
+    const { api, runner, issue } = await setup();
+    const first = (await runner['agent-runs'].claim.post()).data!.run!;
+    await runner['agent-runs']({ runId: first.id }).result.post({
+      status: 'failed',
+      error: 'exit 1',
+      usage: { inputTokens: 1200, outputTokens: 300 },
+    });
+    await api.issues({ issueId: issue.id }).comments.post({ body: '@runner again' });
+
+    const all = (await api['agent-runs'].queue.get()).data!;
+    expect(all).toMatchObject({ total: 2, queued: 1, running: 0, failed: 1 });
+    expect(all.items.find((run) => run.id === first.id)).toMatchObject({
+      inputTokens: 1200,
+      outputTokens: 300,
+      contextTokens: 1500,
+    });
+    const failed = (await api['agent-runs'].queue.get({ query: { state: 'failed' } })).data!;
+    expect(failed).toMatchObject({ total: 1, queued: 1, failed: 1 });
+    expect(failed.items.map((run) => run.id)).toEqual([first.id]);
+    const active = (await api['agent-runs'].queue.get({ query: { state: 'active' } })).data!;
+    expect(active.items.map((run) => run.executionState)).toEqual(['queued']);
+
+    for (const q of ['RUN-1', 'run this', '@runner']) {
+      expect((await api['agent-runs'].queue.get({ query: { q } })).data!.total).toBe(2);
+    }
+    expect((await api['agent-runs'].queue.get({ query: { q: 'nothing%' } })).data).toMatchObject({
+      total: 0,
+      queued: 0,
+      failed: 0,
+    });
+  });
+
   it('keeps admission delays and retry backoff in the waiting state', async () => {
     const { api, runner } = await setup();
     setRunAdmission(async () => 60);
@@ -261,6 +294,7 @@ describe('runner queue', () => {
       expect.objectContaining({
         id: queued.data!.runId,
         issueId: null,
+        scheduleId: schedule.data!.id,
         scheduleName: 'Daily',
         trigger: 'manual',
         executionState: 'queued',

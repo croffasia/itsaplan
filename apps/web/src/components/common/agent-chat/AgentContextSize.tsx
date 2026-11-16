@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { compactTokens } from '@/utils/compactTokens';
 
 // How large a conversation's context is after its last completed answer, which is what
 // says how close it is to the agent's limit. Null where the agent reports no counts
@@ -13,7 +14,7 @@ export function AgentContextSize({ tokens }: { tokens: number | null }) {
     <Tooltip>
       <TooltipTrigger asChild>
         <span className="text-xs text-muted-foreground" dir="ltr">
-          {tokens === null ? '—' : compact(tokens)}
+          {tokens === null ? '—' : compactTokens(tokens)}
         </span>
       </TooltipTrigger>
       <TooltipContent>
@@ -21,10 +22,4 @@ export function AgentContextSize({ tokens }: { tokens: number | null }) {
       </TooltipContent>
     </Tooltip>
   );
-}
-
-// Written the same way in every language: the localised compact form spells the
-// thousands out ("42,1 тыс.") and takes more room than the row has.
-function compact(tokens: number): string {
-  return tokens < 1000 ? String(tokens) : `${(tokens / 1000).toFixed(1)}k`;
 }

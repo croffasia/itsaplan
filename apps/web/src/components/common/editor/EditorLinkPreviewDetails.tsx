@@ -1,5 +1,6 @@
 import { useFormatter, useTranslations } from 'next-intl';
 import { colorDot } from '@/components/common/fields/colorDot';
+import { calendarSystem } from '@/utils/dates';
 import { byKey } from '@/utils/messageKey';
 import type { ResolvedLinkPreview } from './resolveLinkPreview';
 
@@ -42,7 +43,7 @@ export default function EditorLinkPreviewDetails({ preview }: { preview: Resolve
       {updated && Number.isFinite(updated.getTime()) && (
         <p>
           {t('previewUpdated', {
-            date: format.dateTime(updated, { dateStyle: 'medium', calendar: 'gregory' }),
+            date: format.dateTime(updated, { dateStyle: 'medium', calendar: calendarSystem() }),
           })}
         </p>
       )}

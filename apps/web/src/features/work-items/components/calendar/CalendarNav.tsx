@@ -3,12 +3,12 @@ import { ChevronLeftIcon } from '@animateicons/react/lucide/chevron-left-icon';
 import { ChevronRightIcon } from '@animateicons/react/lucide/chevron-right-icon';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { CalendarMode, WeekStart } from '@/utils/viewSettings';
+import { addPersianMonths, calendarSystem } from '@/utils/dates';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import ToolbarIconButton from '@/components/layout/ToolbarIconButton';
 import { weekNumber } from '../../utils/calendar';
 import { useDayRangeFormat } from '../../hooks/useDayRangeFormat';
-import { addPersianMonths, getDisplayLocale } from '@/utils/dates';
 
 // The by-week mode steps one week at a time, so any week can be the first on screen.
 export function CalendarNav({
@@ -32,7 +32,7 @@ export function CalendarNav({
   const month = mode === 'month';
   const step = (by: number) => {
     if (month)
-      return getDisplayLocale() === 'fa' ? addPersianMonths(cursor, by) : addMonths(cursor, by);
+      return calendarSystem() === 'persian' ? addPersianMonths(cursor, by) : addMonths(cursor, by);
     if (mode === 'byWeek') return addWeeks(cursor, by);
     return addDays(cursor, by * days.length);
   };
@@ -44,14 +44,8 @@ export function CalendarNav({
   const previous = label('previous');
   const next = label('next');
   const title = month
-    ? format.dateTime(cursor, {
-        month: 'long',
-        year: 'numeric',
-        calendar: getDisplayLocale() === 'fa' ? 'persian' : 'gregory',
-      })
-    : getDisplayLocale() === 'fa'
-      ? dayRange(days[0], days[days.length - 1], { year: true })
-      : dayRange(days[0], days[days.length - 1], { year: true });
+    ? format.dateTime(cursor, { month: 'long', year: 'numeric', calendar: calendarSystem() })
+    : dayRange(days[0], days[days.length - 1], { year: true });
   return (
     <div className="flex items-center gap-2 border-b px-3 py-1.5">
       <h2 className="text-sm font-medium text-foreground tabular-nums">{title}</h2>

@@ -1,7 +1,7 @@
 import { isSameDay } from 'date-fns';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue } from '@/lib/api/endpoints/issues';
-import { toDateStr } from '@/utils/dates';
+import { dayOfMonth, toDateStr } from '@/utils/dates';
 import { CalendarDayColumn } from './CalendarDayColumn';
 
 export function CalendarDayGrid({
@@ -37,7 +37,7 @@ export function CalendarDayGrid({
             project={project}
             dateKey={key}
             weekday={weekdayNames[day.getDay()]}
-            dayNumber={day.getDate()}
+            dayNumber={dayOfMonth(day)}
             isToday={isSameDay(day, today)}
             issues={byDay.get(key) ?? []}
             dot={dot}

@@ -1,6 +1,12 @@
-import { addDays, getWeek, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
+import { addDays, differenceInCalendarWeeks, getWeek, startOfDay, startOfWeek } from 'date-fns';
 import type { Issue } from '@/lib/api/endpoints/issues';
-import { getDisplayLocale, parseDate, startOfPersianMonth, toDateStr } from '@/utils/dates';
+import {
+  calendarSystem,
+  parseDate,
+  startOfCalendarMonth,
+  startOfPersianYear,
+  toDateStr,
+} from '@/utils/dates';
 import {
   isCustomFieldKey,
   type BuiltinDateField,
@@ -58,17 +64,11 @@ export function visibleDays(
   cursor: Date,
   layout: Pick<ViewSettings, 'calendarMode' | 'calendarDays' | 'calendarWeeks' | 'weekStart'>,
 ): Date[] {
-  const is_persian_locale = getDisplayLocale() === 'fa';
-  // Shamsi weeks begin on Saturday. Other locales keep the view setting.
-  const weekStartsOn: 0 | 1 | 6 = is_persian_locale ? 6 : layout.weekStart;
+  const weekStartsOn = layout.weekStart;
   const run = (first: Date, count: number) =>
     Array.from({ length: count }, (_, i) => addDays(first, i));
-
-  if (layout.calendarMode === 'month') {
-    const monthStart = is_persian_locale ? startOfPersianMonth(cursor) : startOfMonth(cursor);
-    const monthWeekStart = is_persian_locale ? 6 : weekStartsOn;
-    return run(startOfWeek(monthStart, { weekStartsOn: monthWeekStart }), 42);
-  }
+  if (layout.calendarMode === 'month')
+    return run(startOfWeek(startOfCalendarMonth(cursor), { weekStartsOn }), 42);
   return run(
     isFullWeek(layout) ? startOfWeek(cursor, { weekStartsOn }) : startOfDay(cursor),
     layout.calendarMode === 'byWeek' ? layout.calendarWeeks * 7 : layout.calendarDays,
@@ -84,7 +84,13 @@ export function dayInWeek(current: string | null, firstDay: string, weekStart: W
   return toDateStr(addDays(first, (day.getDay() - weekStart + 7) % 7));
 }
 
-// Monday weeks are numbered the ISO way, Sunday weeks the US way.
+// Monday weeks are numbered the ISO way, Saturday and Sunday weeks the US way. In the
+// solar Hijri calendar week 1 is the week that holds 1 Farvardin.
 export function weekNumber(day: Date, weekStart: WeekStart): number {
+  if (calendarSystem() === 'persian') {
+    const first = startOfWeek(day, { weekStartsOn: weekStart });
+    const year = startOfPersianYear(addDays(first, 6));
+    return differenceInCalendarWeeks(first, year, { weekStartsOn: weekStart }) + 1;
+  }
   return getWeek(day, { weekStartsOn: weekStart, firstWeekContainsDate: weekStart === 1 ? 4 : 1 });
 }

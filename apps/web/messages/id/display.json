@@ -65,6 +65,7 @@
     "byWeek": "Per minggu"
   },
   "weekStart": {
+    "6": "Sabtu",
     "0": "Minggu",
     "1": "Senin"
   },

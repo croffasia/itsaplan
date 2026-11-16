@@ -1,14 +1,8 @@
 import { type ReactNode } from 'react';
 import { startOfDay } from 'date-fns';
-import { daysBetween, getDisplayLocale } from '@/utils/dates';
+import { calendarSystem, dayOfMonth, daysBetween, localeWeekStart } from '@/utils/dates';
 import { type MonthLabel } from '@/utils/timelineTrack';
 import { cn } from '@/lib/utils';
-
-const persianDay = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { day: 'numeric' });
-function dayNumber(date: Date): string {
-  if (getDisplayLocale() !== 'fa') return String(date.getDate());
-  return persianDay.format(date);
-}
 
 // The sticky timeline header: the label column's corner, month labels, and the
 // day-number row. Day numbers thin out as the day width shrinks.
@@ -29,6 +23,9 @@ export function TimelineHeader({
   corner?: ReactNode;
 }) {
   const today = startOfDay(new Date());
+  // The Iranian weekend is Friday.
+  const persian = calendarSystem() === 'persian';
+  const weekStart = localeWeekStart();
   return (
     <div className="sticky top-0 z-20 flex border-b bg-background">
       <div className="sticky left-0 z-10 shrink-0 border-r bg-background" style={{ width: labelW }}>
@@ -49,13 +46,11 @@ export function TimelineHeader({
         <div className="flex h-6">
           {days.map((d, i) => {
             const weekday = d.getDay();
-            const jalali = getDisplayLocale() === 'fa';
-            const weekend = jalali ? weekday === 5 : weekday === 0 || weekday === 6;
-            const weekStart = jalali ? weekday === 6 : weekday === 1;
+            const weekend = persian ? weekday === 5 : weekday === 0 || weekday === 6;
             const isToday = daysBetween(today, d) === 0;
-            // Every day when wide (week); only Mondays when medium (month); none
-            // when narrow (quarter) — the month labels above carry it.
-            const showNum = dayW >= 20 || (dayW >= 8 && weekStart);
+            // Every day when wide (week); only the first day of each week when medium
+            // (month); none when narrow (quarter) — the month labels above carry it.
+            const showNum = dayW >= 20 || (dayW >= 8 && weekday === weekStart);
             return (
               <div
                 key={i}
@@ -66,7 +61,7 @@ export function TimelineHeader({
                 )}
                 style={{ width: dayW }}
               >
-                {showNum ? dayNumber(d) : ''}
+                {showNum ? dayOfMonth(d) : ''}
               </div>
             );
           })}

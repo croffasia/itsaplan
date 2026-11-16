@@ -1,18 +1,8 @@
 import { isSameDay } from 'date-fns';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue } from '@/lib/api/endpoints/issues';
-import { getIntlLocale, toDateStr } from '@/utils/dates';
+import { dayOfMonth, startOfCalendarMonth, toDateStr } from '@/utils/dates';
 import { CalendarDayCell } from './CalendarDayCell';
-
-function calendarMonthKey(date: Date): string {
-  return new Intl.DateTimeFormat(getIntlLocale(), {
-    year: 'numeric',
-    month: 'numeric',
-  }).format(date);
-}
-function calendarDayLabel(date: Date): string {
-  return new Intl.DateTimeFormat(getIntlLocale(), { day: 'numeric' }).format(date);
-}
 
 export function CalendarMonthGrid({
   project,
@@ -36,6 +26,7 @@ export function CalendarMonthGrid({
   onOpen: (id: number) => void;
   onQuickAdd?: (day: string, title: string) => Promise<void>;
 }) {
+  const monthStart = startOfCalendarMonth(cursor).getTime();
   return (
     <>
       <div className="grid grid-cols-7 border-b py-1.5 text-xs font-medium text-muted-foreground">
@@ -54,8 +45,8 @@ export function CalendarMonthGrid({
               key={key}
               project={project}
               dateKey={key}
-              dayNumber={calendarDayLabel(day)}
-              inMonth={calendarMonthKey(day) === calendarMonthKey(cursor)}
+              dayNumber={dayOfMonth(day)}
+              inMonth={startOfCalendarMonth(day).getTime() === monthStart}
               isToday={isSameDay(day, today)}
               issues={byDay.get(key) ?? []}
               dot={dot}

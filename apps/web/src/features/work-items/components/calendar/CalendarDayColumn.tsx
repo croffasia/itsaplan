@@ -20,7 +20,7 @@ export function CalendarDayColumn({
   project: ProjectDetail;
   dateKey: string;
   weekday: string;
-  dayNumber: number;
+  dayNumber: string;
   isToday: boolean;
   issues: Issue[];
   dot: (issue: Issue) => string;

@@ -65,6 +65,7 @@
     "byWeek": "Par semaine"
   },
   "weekStart": {
+    "6": "Samedi",
     "0": "Dimanche",
     "1": "Lundi"
   },

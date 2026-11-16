@@ -19,11 +19,19 @@ export function getDisplayLocale(): string {
   return displayLocale;
 }
 
-// The locale tag handed to Intl. Persian defaults to the solar Hijri calendar, but the
-// calendar grids and the date picker are Gregorian, so a date written in one and
-// picked in the other would not match; pin Persian to the Gregorian calendar.
 export function getIntlLocale(): string {
   return displayLocale === 'fa' ? 'fa-IR-u-ca-persian' : displayLocale;
+}
+
+// The display language's calendar, as an Intl `calendar` option.
+export function calendarSystem(): 'persian' | 'gregory' {
+  return displayLocale === 'fa' ? 'persian' : 'gregory';
+}
+
+// The display language's first day of the week, as a `Date.getDay()` number. The
+// Iranian week starts on Saturday.
+export function localeWeekStart(): 6 | 1 {
+  return calendarSystem() === 'persian' ? 6 : 1;
 }
 
 // The zone timestamps are rendered in, from the user's account preferences. The API
@@ -283,31 +291,50 @@ export function addDays(date: Date, n: number): Date {
   return next;
 }
 
-// The year, month and day of a Persian date.
-function persianParts(date: Date): { year: number; month: number; day: number } {
-  const parts = new Intl.DateTimeFormat('en-US-u-ca-persian-nu-latn', {
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-  }).formatToParts(date);
-  const num = (type: Intl.DateTimeFormatPartTypes) =>
-    Number(parts.find((part) => part.type === type)?.value);
-  return { year: num('year'), month: num('month'), day: num('day') };
+const persianDate = new Intl.DateTimeFormat('en-u-ca-persian', {
+  month: 'numeric',
+  day: 'numeric',
+});
+const persianDayLabel = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { day: 'numeric' });
+
+function persianMonthDay(date: Date): { month: number; day: number } {
+  const parts = persianDate.formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((p) => p.type === type)?.value);
+  return { month: part('month'), day: part('day') };
 }
 
-// Local midnight on day 1 of the Shamsi month that contains `date`.
-export function startOfPersianMonth(date: Date): Date {
-  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  start.setDate(start.getDate() - (persianParts(date).day - 1));
-  return start;
+// The day of the month in the display calendar.
+export function dayOfMonth(date: Date): string {
+  return calendarSystem() === 'persian' ? persianDayLabel.format(date) : String(date.getDate());
 }
 
-// `months` Shamsi months after `date`, on day 1 of that month.
+function startOfPersianMonth(date: Date): Date {
+  const midnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return addDays(midnight, 1 - persianMonthDay(date).day);
+}
+
+// Local midnight on 1 Farvardin of the solar Hijri year that holds `date`. The first
+// six months have 31 days, the next five 30.
+export function startOfPersianYear(date: Date): Date {
+  const { month, day } = persianMonthDay(date);
+  const daysBefore = month <= 6 ? (month - 1) * 31 : 186 + (month - 7) * 30;
+  const midnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return addDays(midnight, 1 - day - daysBefore);
+}
+
+// Local midnight on day 1 of the month that holds `date`, in the display calendar.
+export function startOfCalendarMonth(date: Date): Date {
+  return calendarSystem() === 'persian'
+    ? startOfPersianMonth(date)
+    : new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+// Day 1 of the solar Hijri month `months` months after the one that holds `date`.
+// A month has 29 to 31 days, so 31 days after day 1 is always in the next month.
 export function addPersianMonths(date: Date, months: number): Date {
   let cursor = startOfPersianMonth(date);
-  const step = months < 0 ? -1 : 1;
-  for (let i = 0; i < Math.abs(months); i++) {
-    cursor = startOfPersianMonth(addDays(cursor, step > 0 ? 31 : -1));
-  }
+  for (let i = 0; i < Math.abs(months); i++)
+    cursor = startOfPersianMonth(addDays(cursor, months > 0 ? 31 : -1));
   return cursor;
 }

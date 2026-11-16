@@ -30,6 +30,7 @@ export default function HotkeysEditorRow({
   const t = useTranslations('common.hotkeys');
   const isMac = useIsMac();
   const [recording, setRecording] = useState(false);
+  const command = t(`commands.${def.id}`);
 
   useEffect(() => {
     if (!recording) return;
@@ -53,7 +54,7 @@ export default function HotkeysEditorRow({
   return (
     <div className="flex items-center gap-4 py-2">
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm">{t(`commands.${def.id}`)}</p>
+        <p className="truncate text-sm">{command}</p>
         {conflictWith && (
           <p className="mt-0.5 text-xs text-destructive">
             {t('conflict', { command: conflictWith })}
@@ -68,17 +69,22 @@ export default function HotkeysEditorRow({
         {recording ? t('pressKeys') : formatCombo(combo, isMac)}
       </kbd>
       {def.fixed ? (
-        <span className="w-28 shrink-0 text-right text-xs text-muted-foreground">{t('fixed')}</span>
+        <span className="w-28 shrink-0 text-end text-xs text-muted-foreground">{t('fixed')}</span>
       ) : (
         <div className="flex w-28 shrink-0 justify-end gap-1">
-          <Button variant="ghost" size="sm" onClick={() => setRecording((r) => !r)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label={recording ? undefined : t('changeShortcut', { command })}
+            onClick={() => setRecording((r) => !r)}
+          >
             {recording ? tCommon('cancel') : tCommon('change')}
           </Button>
           <Button
             variant="ghost"
             size="icon"
             className="size-8"
-            aria-label={t('resetShortcut')}
+            aria-label={t('resetShortcut', { command })}
             disabled={!overridden}
             onClick={onReset}
           >

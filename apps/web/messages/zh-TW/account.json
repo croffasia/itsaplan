@@ -97,21 +97,19 @@
   "preferences": {
     "label": "偏好設定",
     "title": "偏好設定",
-    "description": "設定應用程式的外觀和行為。更改會立即儲存，並同步到你登入的所有裝置。",
+    "description": "設定應用程式的外觀和行為。",
     "saved": "偏好設定已儲存",
     "sections": {
       "appearance": "外觀",
       "dateAndTime": "日期和時間",
-      "dateAndTimeDescription": "時間戳記以 UTC 儲存，並按此處選擇的時區顯示。",
       "navigation": "導覽",
-      "navigationDescription": "設定進入應用程式後的頁面以及工作項目的開啟方式。",
-      "issueSettings": "工作項目設定",
-      "issueSettingsDescription": "設定工作項目統計和活動記錄的預設顯示方式。在已開啟的工作項目中切換顯示不會更改這些偏好。",
+      "issueSettings": "工作項目詳情",
+      "issueSettingsDescription": "你開啟的每個工作項目的預設設定。在已開啟的工作項目中變更不會影響這些偏好。",
       "notifications": "通知",
       "notificationsDescription": "關注工作項目後可接收其留言和狀態變更通知。",
       "aiChat": "AI 聊天",
       "shortcuts": "鍵盤快捷鍵",
-      "shortcutsDescription": "點選「更改」後按下所需按鍵。「重設」會恢復執行個體設定的快捷鍵。"
+      "shortcutsDescription": "重設按鈕會將快捷鍵恢復為預設值。"
     },
     "theme": "主題",
     "themeDescription": "「跟隨系統」會使用作業系統的主題設定。",
@@ -120,10 +118,30 @@
       "light": "淺色",
       "dark": "深色"
     },
+    "themeFromBackground": "由背景決定",
+    "palette": "配色",
+    "paletteDescription": "每套配色都有淺色和深色兩個版本。",
+    "paletteOptions": {
+      "default": "預設",
+      "custom": "自訂"
+    },
+    "accent": "強調色",
+    "accentDescription": "按鈕、連結和選取項目的顏色。",
+    "background": "背景",
+    "backgroundDescription": "深色背景對應深色主題，淺色背景對應淺色主題。",
+    "contrast": "對比",
+    "contrastDescription": "文字和框線與背景的區分程度。",
+    "sharePalette": "分享",
+    "sharePaletteDescription": "複製此配色即可傳送給別人。「貼上」會套用剪貼簿中的配色。",
+    "copyPalette": "複製",
+    "pastePalette": "貼上",
+    "paletteCopied": "已複製配色",
+    "palettePasted": "已貼上配色",
+    "pastePaletteInvalid": "剪貼簿中沒有配色。請先複製配色，再貼上。",
     "language": "語言",
     "languageDescription": "介面、電子郵件和 Telegram 機器人使用的語言。",
     "timezone": "時區",
-    "timezoneDescription": "選擇你所在的時區。",
+    "timezoneDescription": "應用程式中的所有日期和時間都會以此時區顯示。",
     "timezonePlaceholder": "選擇時區",
     "timezoneEmpty": "未找到時區。",
     "timezoneGroups": {
@@ -139,49 +157,47 @@
       "Other": "其他"
     },
     "issueOpenMode": "工作項目開啟方式",
-    "issueOpenModeDescription": "點選看板、表格、日曆或時間軸中的工作項目時採用的開啟方式。",
     "issueOpenModeOptions": {
       "panel": "側邊面板",
       "page": "完整頁面"
     },
     "startPage": "起始頁面",
-    "startPageDescription": "進入應用程式時，在上次使用的專案中開啟的功能區。",
+    "startPageDescription": "在你上次使用的專案中開啟。",
     "startPageOptions": {
       "work-items": "工作項目",
       "inbox": "收件匣",
       "dashboard": "儀表板",
       "initiatives": "計畫"
     },
-    "showStats": "顯示統計",
-    "showStatsDescription": "開啟工作項目時是否預設展開統計區域。",
+    "showStats": "展開統計",
     "statsView": "統計顯示方式",
-    "statsViewDescription": "精簡橫條圖以一條橫條顯示各狀態佔比；時間軸為每個狀態顯示獨立的時間段。",
+    "statsViewDescription": "精簡橫條圖顯示在各狀態停留時間的佔比。時間軸為每個狀態顯示獨立的泳道。",
     "statsViewOptions": {
       "compact": "精簡橫條圖",
       "timeline": "時間軸"
     },
     "activityView": "活動記錄顯示方式",
-    "activityViewDescription": "不分組時依時間由新到舊顯示所有記錄；分組時依工作項目當時所在的狀態分組。",
+    "activityViewDescription": "按狀態分組會依工作項目當時的狀態劃分紀錄。",
     "activityViewOptions": {
-      "flat": "不分組",
+      "flat": "單一清單",
       "grouped": "按狀態分組"
     },
     "autoWatch": "自動關注工作項目",
-    "autoWatchDescription": "自動關注你建立、獲指派、留言或被提及的工作項目。",
+    "autoWatchDescription": "你建立、留言、獲指派或被提及的工作項目。",
     "desktopNotifications": "桌面通知",
-    "desktopNotificationsDescription": "僅限此瀏覽器。應用程式已開啟但不在前景時，所有專案的收件匣每出現一筆新項目就顯示一則通知。",
+    "desktopNotificationsDescription": "僅限此瀏覽器。應用程式在背景開啟時，顯示所有專案收件匣中的每筆新項目。",
     "desktopNotificationsBlocked": "此瀏覽器封鎖了本網站的通知。請在瀏覽器的網站設定中允許。",
     "desktopNotificationsUnsupported": "此瀏覽器無法顯示桌面通知。",
-    "desktopNotificationsReplacedByPush": "此瀏覽器已開啟推播通知，在這裡會取代桌面通知。",
+    "desktopNotificationsReplacedByPush": "此瀏覽器已開啟推播通知，因此這裡的桌面通知已關閉。",
     "desktopNotificationsOff": "已關閉",
-    "pushNotifications": "此裝置上的推播通知",
-    "pushNotificationsDescription": "僅限此瀏覽器。顯示你在各專案通知設定的「推播」欄中勾選的通知，應用程式關閉時也會顯示。",
+    "pushNotifications": "推播通知",
+    "pushNotificationsDescription": "僅限此瀏覽器。即使應用程式已關閉，也會傳送你在各專案通知設定「推播」欄中選擇的通知。",
     "pushNotificationsBlocked": "此瀏覽器封鎖了本網站的通知。請在瀏覽器的網站設定中允許。",
     "pushNotificationsUnsupported": "此瀏覽器無法接收推播通知。",
-    "pushNotificationsUnsupportedIos": "在 iPhone 或 iPad 上，請先將應用程式加入主畫面（iOS 16.4 或更新版本），再從那裡開啟。",
+    "pushNotificationsUnsupportedIos": "在 iPhone 或 iPad 上，請先將應用程式加入主畫面，再從那裡開啟此項。需要 iOS 16.4 或更新版本。",
     "pushNotificationsOff": "已關閉",
-    "pushNotificationsFailed": "無法變更此瀏覽器的推播通知。",
-    "showChatByDefault": "預設顯示聊天",
-    "showChatByDefaultDescription": "開啟專案頁面時同時開啟聊天面板。可隨時透過面板標題欄或聊天圖示關閉。"
+    "pushNotificationsFailed": "無法變更此瀏覽器的推播通知。請再試一次。",
+    "showChatByDefault": "預設開啟聊天",
+    "showChatByDefaultDescription": "每次開啟專案頁面時，聊天面板都會一起開啟。"
   }
 }

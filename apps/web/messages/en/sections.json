@@ -39,7 +39,7 @@
     },
     "hotkeys": {
       "label": "Keyboard shortcuts",
-      "description": "The key each command is bound to for everyone on this instance. Each person can rebind a shortcut for their own account in their preferences."
+      "description": "Defaults for everyone. Each person can change theirs in Preferences."
     },
     "storage": {
       "label": "Storage",

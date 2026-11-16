@@ -14,7 +14,8 @@
   "name": "Nome",
   "edit": "Editar",
   "language": "Idioma",
-  "toggleTheme": "Alternar tema",
+  "interface": "Interface",
+  "allPreferences": "Todas as preferências",
   "priority": {
     "label": "Prioridade",
     "tooltip": "Prioridade {priority}",
@@ -40,8 +41,9 @@
   "brandSubtitle": "Planeje issues em um quadro. Entre para abrir seus projetos.",
   "hotkeys": {
     "pressKeys": "Pressione as teclas",
-    "fixed": "Fixo",
-    "resetShortcut": "Redefinir este atalho",
+    "fixed": "Não pode ser alterado",
+    "changeShortcut": "Alterar atalho: {command}",
+    "resetShortcut": "Redefinir atalho: {command}",
     "groups": {
       "general": "Geral",
       "workItems": "Itens de trabalho"
@@ -76,7 +78,7 @@
         "select-all": "Selecionar todas as issues no quadro"
       }
     },
-    "conflict": "Já usado por {command}"
+    "conflict": "Também usado por {command}. Altere um dos dois."
   },
   "agentChat": {
     "emptyHint": "Envie uma mensagem para testar como este agente responde e quais ferramentas ele usa.",

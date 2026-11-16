@@ -97,21 +97,19 @@
   "preferences": {
     "label": "Preferencias",
     "title": "Preferencias",
-    "description": "Cómo se ve y se comporta la aplicación para ti. Cada cambio se guarda de inmediato y se aplica donde quiera que inicies sesión.",
+    "description": "Cómo se ve y funciona la app para ti.",
     "saved": "Las preferencias se han guardado",
     "sections": {
       "appearance": "Apariencia",
       "dateAndTime": "Fecha y hora",
-      "dateAndTimeDescription": "Las marcas de tiempo se guardan en UTC y se muestran en la zona que elijas aquí.",
       "navigation": "Navegación",
-      "navigationDescription": "A dónde te lleva la aplicación, y cómo se abren los tickets.",
-      "issueSettings": "Ajustes del ticket",
-      "issueSettingsDescription": "Cómo empiezan las estadísticas y el registro de actividad de un ticket. Cambiarlos mientras un ticket está abierto no modifica estos.",
+      "issueSettings": "Detalles del ticket",
+      "issueSettingsDescription": "Valores predeterminados para cada ticket que abres. Cambiarlos en un ticket abierto no cambia estas preferencias.",
       "notifications": "Notificaciones",
       "notificationsDescription": "Seguir un ticket te trae sus comentarios y sus cambios de estado.",
       "aiChat": "Chat de IA",
       "shortcuts": "Atajos de teclado",
-      "shortcutsDescription": "Pulsa Cambiar, después las teclas que quieras. Restablecer devuelve un atajo al definido para esta instancia."
+      "shortcutsDescription": "El botón de restablecer devuelve el atajo a su valor predeterminado."
     },
     "theme": "Tema",
     "themeDescription": "Igualar al sistema sigue la definición de tu sistema operativo.",
@@ -120,10 +118,30 @@
       "light": "Claro",
       "dark": "Oscuro"
     },
+    "themeFromBackground": "Según el fondo",
+    "palette": "Paleta",
+    "paletteDescription": "Cada paleta tiene una versión clara y una oscura.",
+    "paletteOptions": {
+      "default": "Predeterminada",
+      "custom": "Personalizada"
+    },
+    "accent": "Acento",
+    "accentDescription": "El color de los botones, los enlaces y los elementos seleccionados.",
+    "background": "Fondo",
+    "backgroundDescription": "Un color oscuro da un tema oscuro; uno claro, un tema claro.",
+    "contrast": "Contraste",
+    "contrastDescription": "Cuánto destacan el texto y los bordes sobre el fondo.",
+    "sharePalette": "Compartir",
+    "sharePaletteDescription": "Copia esta paleta para enviarla. «Pegar» aplica una paleta del portapapeles.",
+    "copyPalette": "Copiar",
+    "pastePalette": "Pegar",
+    "paletteCopied": "Paleta copiada",
+    "palettePasted": "Paleta pegada",
+    "pastePaletteInvalid": "El portapapeles no contiene una paleta. Copia una primero y luego pégala.",
     "language": "Idioma",
     "languageDescription": "El idioma de la interfaz, tus correos y el bot de Telegram.",
     "timezone": "Zona horaria",
-    "timezoneDescription": "Elige la zona en la que trabajas.",
+    "timezoneDescription": "Todas las fechas y horas de la app se muestran en esta zona.",
     "timezonePlaceholder": "Seleccionar una zona horaria",
     "timezoneEmpty": "No se han encontrado zonas horarias.",
     "timezoneGroups": {
@@ -139,49 +157,47 @@
       "Other": "Otra"
     },
     "issueOpenMode": "Abrir tickets en",
-    "issueOpenModeDescription": "Qué pasa cuando pulsas un ticket en un tablero, tabla, calendario o cronología.",
     "issueOpenModeOptions": {
       "panel": "Panel lateral",
       "page": "Página completa"
     },
     "startPage": "Página de inicio",
-    "startPageDescription": "La sección que se abre cuando entras en la aplicación, en tu último proyecto activo.",
+    "startPageDescription": "Se abre en el último proyecto que usaste.",
     "startPageOptions": {
       "work-items": "Elementos de trabajo",
       "inbox": "Bandeja de entrada",
       "dashboard": "Paneles",
       "initiatives": "Iniciativas"
     },
-    "showStats": "Mostrar estadísticas",
-    "showStatsDescription": "Si la sección de estadísticas empieza expandida cuando abres un ticket.",
+    "showStats": "Expandir estadísticas",
     "statsView": "Mostrar las estadísticas como",
-    "statsViewDescription": "Compacta es una sola barra con una cuota por estado; Cronología da a cada estado su propio carril sobre un eje de tiempo.",
+    "statsViewDescription": "Barra compacta muestra la parte del tiempo en cada estado. Cronología da a cada estado su propio carril.",
     "statsViewOptions": {
       "compact": "Barra compacta",
       "timeline": "Cronología"
     },
     "activityView": "Mostrar la actividad como",
-    "activityViewDescription": "Plana es cada entrada con más recientes primero; Agrupada parte el registro por el estado en el que estaba el ticket.",
+    "activityViewDescription": "Agrupada por estado separa las entradas según el estado que tenía el ticket en ese momento.",
     "activityViewOptions": {
-      "flat": "Plana",
+      "flat": "Una sola lista",
       "grouped": "Agrupada por estado"
     },
     "autoWatch": "Seguir tickets automáticamente",
-    "autoWatchDescription": "Las que creas, te asignen, comentes o en las que te mencionen.",
+    "autoWatchDescription": "Tickets que creas, que comentas, que te asignan o en los que te mencionan.",
     "desktopNotifications": "Notificaciones de escritorio",
-    "desktopNotificationsDescription": "Solo en este navegador. Muestra una notificación por cada elemento nuevo de la bandeja de entrada, de todos los proyectos, mientras la app está abierta pero no en primer plano.",
+    "desktopNotificationsDescription": "Solo en este navegador. Muestra cada elemento nuevo de la bandeja de entrada, de todos los proyectos, mientras la app está abierta en segundo plano.",
     "desktopNotificationsBlocked": "Este navegador bloquea las notificaciones de este sitio. Permítelas en los ajustes del sitio del navegador.",
     "desktopNotificationsUnsupported": "Este navegador no puede mostrar notificaciones de escritorio.",
-    "desktopNotificationsReplacedByPush": "Las notificaciones push están activadas en este navegador y aquí sustituyen a las notificaciones de escritorio.",
+    "desktopNotificationsReplacedByPush": "Las notificaciones push están activadas en este navegador, así que aquí las de escritorio están desactivadas.",
     "desktopNotificationsOff": "Apagado",
-    "pushNotifications": "Notificaciones push en este dispositivo",
-    "pushNotificationsDescription": "Solo en este navegador. Muestra las notificaciones que elijas en la columna Push de los ajustes de notificaciones de cada proyecto, también con la app cerrada.",
+    "pushNotifications": "Notificaciones push",
+    "pushNotificationsDescription": "Solo en este navegador. Envía las notificaciones que elijas en la columna Push de los ajustes de notificaciones de cada proyecto, incluso con la app cerrada.",
     "pushNotificationsBlocked": "Este navegador bloquea las notificaciones de este sitio. Permítelas en los ajustes del sitio del navegador.",
     "pushNotificationsUnsupported": "Este navegador no puede recibir notificaciones push.",
-    "pushNotificationsUnsupportedIos": "En un iPhone o iPad, añade primero la app a la pantalla de inicio (iOS 16.4 o posterior) y actívalo desde allí.",
+    "pushNotificationsUnsupportedIos": "En un iPhone o iPad, añade la app a la pantalla de inicio y actívalo desde allí. Requiere iOS 16.4 o posterior.",
     "pushNotificationsOff": "Apagado",
-    "pushNotificationsFailed": "No se pudieron cambiar las notificaciones push en este navegador.",
-    "showChatByDefault": "Mostrar el chat por defecto",
-    "showChatByDefaultDescription": "El panel de chat se abre con una página de proyecto. Ciérralo cuando quiera desde su cabecera o el icono de chat."
+    "pushNotificationsFailed": "No se pudieron cambiar las notificaciones push en este navegador. Inténtalo de nuevo.",
+    "showChatByDefault": "Abrir chat por defecto",
+    "showChatByDefaultDescription": "El panel del chat se abre con cada página de proyecto."
   }
 }

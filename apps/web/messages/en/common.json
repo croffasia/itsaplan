@@ -14,7 +14,8 @@
   "name": "Name",
   "edit": "Edit",
   "language": "Language",
-  "toggleTheme": "Toggle theme",
+  "interface": "Interface",
+  "allPreferences": "All preferences",
   "priority": {
     "label": "Priority",
     "tooltip": "{priority} priority",
@@ -40,25 +41,26 @@
   "brandSubtitle": "Plan issues on a board. Sign in to open your projects.",
   "hotkeys": {
     "pressKeys": "Press keys",
-    "fixed": "Fixed",
-    "resetShortcut": "Reset this shortcut",
+    "fixed": "Cannot be changed",
+    "changeShortcut": "Change shortcut: {command}",
+    "resetShortcut": "Reset shortcut: {command}",
     "groups": {
       "general": "General",
       "workItems": "Work items"
     },
     "commands": {
       "palette": {
-        "toggle": "Open the command palette"
+        "toggle": "Open command palette"
       },
       "project": {
         "new": "New project",
         "settings": "Open project settings"
       },
       "sidebar": {
-        "toggle": "Show or hide the sidebar"
+        "toggle": "Show or hide sidebar"
       },
       "chat": {
-        "toggle": "Show or hide the AI chat"
+        "toggle": "Show or hide AI chat"
       },
       "issue": {
         "new": "New issue"
@@ -76,7 +78,7 @@
         "select-all": "Select all issues on the board"
       }
     },
-    "conflict": "Already used by {command}"
+    "conflict": "Also used by {command}. Change one of them."
   },
   "agentChat": {
     "emptyHint": "Send a message to test how this agent replies and which tools it uses.",

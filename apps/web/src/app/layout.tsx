@@ -1,4 +1,6 @@
+import type { CSSProperties } from 'react';
 import type { Metadata, Viewport } from 'next';
+import { cookies } from 'next/headers';
 import { ThemeProvider } from 'next-themes';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
@@ -9,6 +11,8 @@ import Onboarding from '@/features/onboarding/Onboarding';
 import WhatsNew from '@/features/whats-new/WhatsNew';
 import { localeDirection, type Locale } from '@/i18n/locales';
 import { APP_NAME } from '@/utils/app';
+import { COLOR_THEME_COOKIE, parseColorThemeCookie } from '@/utils/colorThemes';
+import { customThemeVars } from '@/utils/customTheme';
 import './globals.css';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -35,9 +39,18 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await getLocale();
+  const { palette, custom } = parseColorThemeCookie(
+    (await cookies()).get(COLOR_THEME_COOKIE)?.value,
+  );
 
   return (
-    <html lang={locale} dir={localeDirection(locale as Locale)} suppressHydrationWarning>
+    <html
+      lang={locale}
+      dir={localeDirection(locale as Locale)}
+      data-palette={palette === 'default' ? undefined : palette}
+      style={custom ? (customThemeVars(custom) as CSSProperties) : undefined}
+      suppressHydrationWarning
+    >
       <body className="antialiased">
         <RuntimeEnvScript />
         <ThemeProvider

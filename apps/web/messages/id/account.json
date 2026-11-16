@@ -97,21 +97,19 @@
   "preferences": {
     "label": "Preferensi",
     "title": "Preferensi",
-    "description": "Tampilan dan perilaku aplikasi untuk Anda. Setiap perubahan langsung disimpan dan diterapkan di mana pun Anda masuk.",
+    "description": "Tampilan dan cara kerja aplikasi untuk Anda.",
     "saved": "Preferensi disimpan",
     "sections": {
       "appearance": "Tampilan",
       "dateAndTime": "Tanggal dan waktu",
-      "dateAndTimeDescription": "Stempel waktu disimpan dalam UTC dan ditampilkan dalam zona yang Anda pilih di sini.",
       "navigation": "Navigasi",
-      "navigationDescription": "Ke mana aplikasi membawa Anda, dan bagaimana issue dibuka.",
-      "issueSettings": "Pengaturan issue",
-      "issueSettingsDescription": "Kondisi awal statistik dan log aktivitas issue saat dibuka. Mengubahnya saat issue sedang terbuka tidak memengaruhi pengaturan ini.",
+      "issueSettings": "Detail issue",
+      "issueSettingsDescription": "Bawaan untuk setiap issue yang Anda buka. Mengubahnya di issue yang sedang terbuka tidak mengubah setelan ini.",
       "notifications": "Notifikasi",
       "notificationsDescription": "Mengikuti issue akan memberi tahu Anda tentang komentar dan perubahan statusnya.",
       "aiChat": "Obrolan AI",
       "shortcuts": "Pintasan keyboard",
-      "shortcutsDescription": "Tekan Ubah, lalu tekan tombol yang diinginkan. Atur Ulang mengembalikan pintasan ke setelan bawaan instance ini."
+      "shortcutsDescription": "Tombol atur ulang mengembalikan pintasan ke bawaan."
     },
     "theme": "Tema",
     "themeDescription": "Gunakan pengaturan sistem operasi Anda.",
@@ -120,10 +118,30 @@
       "light": "Terang",
       "dark": "Gelap"
     },
+    "themeFromBackground": "Ditentukan latar",
+    "palette": "Palet",
+    "paletteDescription": "Setiap palet punya versi terang dan gelap.",
+    "paletteOptions": {
+      "default": "Bawaan",
+      "custom": "Kustom"
+    },
+    "accent": "Aksen",
+    "accentDescription": "Warna tombol, tautan, dan item yang dipilih.",
+    "background": "Latar",
+    "backgroundDescription": "Warna gelap menghasilkan tema gelap, warna terang tema terang.",
+    "contrast": "Kontras",
+    "contrastDescription": "Seberapa menonjol teks dan garis tepi dari latar.",
+    "sharePalette": "Bagikan",
+    "sharePaletteDescription": "Salin palet ini untuk mengirimnya. \"Tempel\" menerapkan palet dari papan klip.",
+    "copyPalette": "Salin",
+    "pastePalette": "Tempel",
+    "paletteCopied": "Palet disalin",
+    "palettePasted": "Palet ditempel",
+    "pastePaletteInvalid": "Papan klip tidak berisi palet. Salin palet dulu, lalu tempel.",
     "language": "Bahasa",
     "languageDescription": "Bahasa antarmuka, email Anda, dan bot Telegram.",
     "timezone": "Zona waktu",
-    "timezoneDescription": "Pilih zona waktu tempat Anda bekerja.",
+    "timezoneDescription": "Semua tanggal dan waktu di aplikasi ditampilkan dalam zona ini.",
     "timezonePlaceholder": "Pilih zona waktu",
     "timezoneEmpty": "Tidak ada zona waktu yang ditemukan.",
     "timezoneGroups": {
@@ -139,49 +157,47 @@
       "Other": "Lainnya"
     },
     "issueOpenMode": "Buka issue di",
-    "issueOpenModeDescription": "Apa yang terjadi saat Anda mengklik issue di papan, tabel, kalender, atau linimasa.",
     "issueOpenModeOptions": {
       "panel": "Panel samping",
       "page": "Halaman penuh"
     },
     "startPage": "Halaman awal",
-    "startPageDescription": "Bagian yang terbuka saat Anda masuk ke aplikasi, di proyek terakhir yang aktif.",
+    "startPageDescription": "Terbuka di proyek yang terakhir Anda gunakan.",
     "startPageOptions": {
       "work-items": "Item pekerjaan",
       "inbox": "Kotak masuk",
       "dashboard": "Dasbor",
       "initiatives": "Inisiatif"
     },
-    "showStats": "Tampilkan statistik",
-    "showStatsDescription": "Apakah bagian statistik langsung diperluas saat Anda membuka issue.",
+    "showStats": "Luaskan statistik",
     "statsView": "Tampilkan statistik sebagai",
-    "statsViewDescription": "Ringkas menampilkan satu bilah dengan proporsi untuk setiap status; Linimasa memberi setiap status jalurnya sendiri pada sumbu waktu.",
+    "statsViewDescription": "Bilah ringkas menampilkan porsi waktu di setiap status. Linimasa memberi setiap status jalurnya sendiri.",
     "statsViewOptions": {
       "compact": "Bilah ringkas",
       "timeline": "Linimasa"
     },
     "activityView": "Tampilkan aktivitas sebagai",
-    "activityViewDescription": "Datar menampilkan semua entri, dimulai dari yang terbaru; Dikelompokkan membagi log berdasarkan status issue.",
+    "activityViewDescription": "Dikelompokkan menurut status memisahkan entri menurut status issue saat itu.",
     "activityViewOptions": {
-      "flat": "Datar",
+      "flat": "Satu daftar",
       "grouped": "Dikelompokkan menurut status"
     },
     "autoWatch": "Ikuti issue secara otomatis",
-    "autoWatchDescription": "Issue yang Anda buat, ditugaskan kepada Anda, Anda komentari, atau yang menyebut Anda.",
+    "autoWatchDescription": "Issue yang Anda buat, Anda komentari, ditugaskan kepada Anda, atau yang menyebut Anda.",
     "desktopNotifications": "Notifikasi desktop",
-    "desktopNotificationsDescription": "Hanya di browser ini. Menampilkan notifikasi untuk setiap item baru di kotak masuk, dari semua proyek, saat aplikasi terbuka tetapi tidak di depan.",
+    "desktopNotificationsDescription": "Hanya di browser ini. Menampilkan setiap item baru di kotak masuk, dari semua proyek, saat aplikasi terbuka di latar belakang.",
     "desktopNotificationsBlocked": "Browser ini memblokir notifikasi dari situs ini. Izinkan di pengaturan situs pada browser.",
     "desktopNotificationsUnsupported": "Browser ini tidak dapat menampilkan notifikasi desktop.",
-    "desktopNotificationsReplacedByPush": "Notifikasi push aktif di browser ini dan menggantikan notifikasi desktop di sini.",
+    "desktopNotificationsReplacedByPush": "Notifikasi push aktif di browser ini, jadi notifikasi desktop nonaktif di sini.",
     "desktopNotificationsOff": "Nonaktif",
-    "pushNotifications": "Notifikasi push di perangkat ini",
-    "pushNotificationsDescription": "Hanya di browser ini. Menampilkan notifikasi yang Anda pilih di kolom Push pada pengaturan notifikasi setiap proyek, juga saat aplikasi ditutup.",
+    "pushNotifications": "Notifikasi push",
+    "pushNotificationsDescription": "Hanya di browser ini. Mengirim notifikasi yang Anda pilih di kolom Push pada pengaturan notifikasi setiap proyek, bahkan saat aplikasi ditutup.",
     "pushNotificationsBlocked": "Browser ini memblokir notifikasi dari situs ini. Izinkan di pengaturan situs pada browser.",
     "pushNotificationsUnsupported": "Browser ini tidak dapat menerima notifikasi push.",
-    "pushNotificationsUnsupportedIos": "Di iPhone atau iPad, tambahkan aplikasi ke Layar Utama terlebih dahulu (iOS 16.4 atau lebih baru), lalu aktifkan dari sana.",
+    "pushNotificationsUnsupportedIos": "Di iPhone atau iPad, tambahkan aplikasi ke Layar Utama, lalu aktifkan ini di sana. Memerlukan iOS 16.4 atau lebih baru.",
     "pushNotificationsOff": "Nonaktif",
-    "pushNotificationsFailed": "Tidak dapat mengubah notifikasi push di browser ini.",
-    "showChatByDefault": "Tampilkan obrolan secara bawaan",
-    "showChatByDefaultDescription": "Panel obrolan terbuka bersama halaman proyek. Tutup kapan saja dari bilah judul atau ikon obrolan."
+    "pushNotificationsFailed": "Tidak dapat mengubah notifikasi push di browser ini. Coba lagi.",
+    "showChatByDefault": "Buka obrolan secara default",
+    "showChatByDefaultDescription": "Panel obrolan terbuka bersama setiap halaman proyek."
   }
 }

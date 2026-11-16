@@ -1,6 +1,8 @@
 import type { Locale } from '@/i18n/locales';
 import { request } from '@/lib/api/core/client';
 import type { HotkeyOverrides } from '@/lib/api/endpoints/settings';
+import type { Palette } from '@/utils/colorThemes';
+import type { CustomTheme } from '@/utils/customTheme';
 
 // The signed-in user's interface preferences, held per account so they apply on
 // every device. timezone is an IANA zone name the app renders stored UTC timestamps
@@ -24,6 +26,10 @@ export interface AccountPreferences {
   // server renders with; also the language of this user's emails and bot messages.
   locale: Locale;
   theme: ThemePreference;
+  // The color theme drawn in the light or dark version `theme` picks. 'custom' draws
+  // customTheme, which stays stored when another palette is picked.
+  palette: Palette;
+  customTheme: CustomTheme | null;
   issueOpenMode: IssueOpenMode;
   startPage: StartPage;
   showChatByDefault: boolean;

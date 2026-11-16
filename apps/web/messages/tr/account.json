@@ -97,21 +97,19 @@
   "preferences": {
     "label": "Tercihler",
     "title": "Tercihler",
-    "description": "Uygulamanın görünümü ve davranış tercihleri. Her değişiklik anında kaydedilir ve giriş yaptığınız her yerde geçerli olur.",
+    "description": "Uygulamanın sizin için görünümü ve çalışma şekli.",
     "saved": "Tercihler kaydedildi",
     "sections": {
       "appearance": "Görünüm",
       "dateAndTime": "Tarih ve saat",
-      "dateAndTimeDescription": "Zaman damgaları UTC olarak saklanır ve burada seçtiğiniz saat diliminde gösterilir.",
       "navigation": "Gezinme",
-      "navigationDescription": "Uygulamanın açılış sayfası ve işlerin açılma biçimi.",
-      "issueSettings": "İş ayarları",
-      "issueSettingsDescription": "Bir işin istatistiklerinin ve etkinlik günlüğünün başlangıç görünümü. İş açıkken bunları değiştirmek genel ayarları etkilemez.",
+      "issueSettings": "İş ayrıntıları",
+      "issueSettingsDescription": "Açtığınız her iş için varsayılanlar. Bunları açık bir işte değiştirmek bu tercihleri değiştirmez.",
       "notifications": "Bildirimler",
       "notificationsDescription": "Bir işi takip etmek yorumlarını ve durum değişikliklerini size bildirir.",
       "aiChat": "Yapay zekâ sohbeti",
       "shortcuts": "Klavye kısayolları",
-      "shortcutsDescription": "Değiştir'e basıp istediğiniz tuşlara basın. Sıfırla seçeneği kısayolu bu örneklemin varsayılanına döndürür."
+      "shortcutsDescription": "Sıfırlama düğmesi kısayolu varsayılanına döndürür."
     },
     "theme": "Tema",
     "themeDescription": "Sistemle eşle seçeneği işletim sistemi temanızı takip eder.",
@@ -120,10 +118,30 @@
       "light": "Açık",
       "dark": "Koyu"
     },
+    "themeFromBackground": "Arka plana göre",
+    "palette": "Palet",
+    "paletteDescription": "Her paletin açık ve koyu bir sürümü vardır.",
+    "paletteOptions": {
+      "default": "Varsayılan",
+      "custom": "Özel"
+    },
+    "accent": "Vurgu",
+    "accentDescription": "Düğmelerin, bağlantıların ve seçili öğelerin rengi.",
+    "background": "Arka plan",
+    "backgroundDescription": "Koyu bir renk koyu tema, açık bir renk açık tema verir.",
+    "contrast": "Kontrast",
+    "contrastDescription": "Metin ve kenarlıkların arka plandan ne kadar ayrıldığı.",
+    "sharePalette": "Paylaş",
+    "sharePaletteDescription": "Göndermek için bu paleti kopyalayın. \"Yapıştır\" panodaki paleti uygular.",
+    "copyPalette": "Kopyala",
+    "pastePalette": "Yapıştır",
+    "paletteCopied": "Palet kopyalandı",
+    "palettePasted": "Palet yapıştırıldı",
+    "pastePaletteInvalid": "Panoda palet yok. Önce bir palet kopyalayın, sonra yapıştırın.",
     "language": "Dil",
     "languageDescription": "Arayüzün, e-postalarınızın ve Telegram botunun dili.",
     "timezone": "Saat dilimi",
-    "timezoneDescription": "Çalıştığınız saat dilimini seçin.",
+    "timezoneDescription": "Uygulamadaki tüm tarih ve saatler bu dilimde gösterilir.",
     "timezonePlaceholder": "Saat dilimi seçin",
     "timezoneEmpty": "Saat dilimi bulunamadı.",
     "timezoneGroups": {
@@ -139,49 +157,47 @@
       "Other": "Diğer"
     },
     "issueOpenMode": "İşleri şurada aç:",
-    "issueOpenModeDescription": "Panoda, tabloda, takvimde veya zaman çizelgesinde bir işe tıkladığınızda ne olacağı.",
     "issueOpenModeOptions": {
       "panel": "Yan panel",
       "page": "Tam sayfa"
     },
     "startPage": "Başlangıç sayfası",
-    "startPageDescription": "Uygulamayı açtığınızda son aktif projenizde açılacak bölüm.",
+    "startPageDescription": "En son kullandığınız projede açılır.",
     "startPageOptions": {
       "work-items": "İş maddeleri",
       "inbox": "Gelen Kutusu",
       "dashboard": "Panolar",
       "initiatives": "Girişimler"
     },
-    "showStats": "İstatistikleri göster",
-    "showStatsDescription": "Bir işi açtığınızda istatistikler bölümünün açık gelip gelmeyeceği.",
+    "showStats": "İstatistikleri genişlet",
     "statsView": "İstatistikleri şöyle göster:",
-    "statsViewDescription": "Kompakt: Durum başına payı olan tek bir çubuk; Zaman Çizelgesi: Her duruma bir zaman ekseni kulvarı verir.",
+    "statsViewDescription": "Kompakt çubuk, her durumda geçen sürenin payını gösterir. Zaman çizelgesi her duruma kendi kulvarını verir.",
     "statsViewOptions": {
       "compact": "Kompakt çubuk",
       "timeline": "Zaman çizelgesi"
     },
     "activityView": "Etkinliği şöyle göster:",
-    "activityViewDescription": "Düz liste: En yeni üstte olacak şekilde tüm kayıtlar; Duruma göre gruplu: Kayıtları işin o sırada bulunduğu duruma göre böler.",
+    "activityViewDescription": "Duruma göre gruplu, kayıtları işin o andaki durumuna göre ayırır.",
     "activityViewOptions": {
-      "flat": "Düz liste",
+      "flat": "Tek liste",
       "grouped": "Duruma göre gruplu"
     },
     "autoWatch": "İşleri otomatik takip et",
-    "autoWatchDescription": "Oluşturduğunuz, size atanan, yorum yaptığınız veya sizden bahsedilen işler.",
+    "autoWatchDescription": "Oluşturduğunuz, yorum yaptığınız, size atanan veya sizden bahsedilen işler.",
     "desktopNotifications": "Masaüstü bildirimleri",
-    "desktopNotificationsDescription": "Yalnızca bu tarayıcıda. Uygulama açıkken ama önde değilken, tüm projelerden Gelen Kutusu'na gelen her yeni öğe için bir bildirim gösterir.",
+    "desktopNotificationsDescription": "Yalnızca bu tarayıcıda. Uygulama arka planda açıkken, tüm projelerden Gelen Kutusu'na gelen her yeni öğeyi gösterir.",
     "desktopNotificationsBlocked": "Bu tarayıcı bu sitenin bildirimlerini engelliyor. Tarayıcının site ayarlarından izin verin.",
     "desktopNotificationsUnsupported": "Bu tarayıcı masaüstü bildirimi gösteremez.",
-    "desktopNotificationsReplacedByPush": "Bu tarayıcıda anlık bildirimler açık ve burada masaüstü bildirimlerinin yerini alıyor.",
+    "desktopNotificationsReplacedByPush": "Bu tarayıcıda anlık bildirimler açık, bu yüzden masaüstü bildirimleri burada kapalı.",
     "desktopNotificationsOff": "Kapalı",
-    "pushNotifications": "Bu cihazda anlık bildirimler",
-    "pushNotificationsDescription": "Yalnızca bu tarayıcıda. Her projenin bildirim ayarlarında Anlık sütununda seçtiğiniz bildirimleri, uygulama kapalıyken de gösterir.",
+    "pushNotifications": "Anlık bildirimler",
+    "pushNotificationsDescription": "Yalnızca bu tarayıcıda. Her projenin bildirim ayarlarında Anlık sütununda seçtiğiniz bildirimleri, uygulama kapalıyken bile gönderir.",
     "pushNotificationsBlocked": "Bu tarayıcı bu sitenin bildirimlerini engelliyor. Tarayıcının site ayarlarından izin verin.",
     "pushNotificationsUnsupported": "Bu tarayıcı anlık bildirim alamaz.",
-    "pushNotificationsUnsupportedIos": "iPhone veya iPad'de önce uygulamayı Ana Ekran'a ekleyin (iOS 16.4 veya üstü), sonra bunu oradan açın.",
+    "pushNotificationsUnsupportedIos": "iPhone veya iPad'de uygulamayı Ana Ekran'a ekleyin, ardından bunu orada açın. iOS 16.4 veya üstü gerekir.",
     "pushNotificationsOff": "Kapalı",
-    "pushNotificationsFailed": "Bu tarayıcıda anlık bildirimler değiştirilemedi.",
-    "showChatByDefault": "Sohbeti varsayılan olarak göster",
-    "showChatByDefaultDescription": "Proje sayfasıyla birlikte sohbet paneli de açılır. Başlığından veya sohbet simgesinden dilediğiniz zaman kapatabilirsiniz."
+    "pushNotificationsFailed": "Bu tarayıcıda anlık bildirimler değiştirilemedi. Tekrar deneyin.",
+    "showChatByDefault": "Sohbeti varsayılan olarak aç",
+    "showChatByDefaultDescription": "Sohbet paneli her proje sayfasıyla birlikte açılır."
   }
 }

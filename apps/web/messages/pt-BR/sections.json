@@ -39,7 +39,7 @@
     },
     "hotkeys": {
       "label": "Atalhos de teclado",
-      "description": "A tecla à qual cada comando está vinculado para todos nesta instância. Cada pessoa pode reatribuir um atalho para sua própria conta nas preferências."
+      "description": "Padrão para todos. Cada pessoa pode alterar os seus em Preferências."
     },
     "storage": {
       "label": "Armazenamento",

@@ -97,21 +97,19 @@
   "preferences": {
     "label": "Preferências",
     "title": "Preferências",
-    "description": "Como o app se parece e se comporta para você. Cada alteração salva na hora e se aplica onde quer que você entre.",
+    "description": "Como o app aparece e funciona para você.",
     "saved": "Preferências salvas",
     "sections": {
       "appearance": "Aparência",
       "dateAndTime": "Data e hora",
-      "dateAndTimeDescription": "Os carimbos de data/hora são armazenados em UTC e mostrados no fuso que você escolher aqui.",
       "navigation": "Navegação",
-      "navigationDescription": "Para onde o app leva você e como as issues abrem.",
-      "issueSettings": "Configurações de issue",
-      "issueSettingsDescription": "Como as estatísticas e o registro de atividade de uma issue começam. Alterá-las enquanto uma issue está aberta não as altera.",
+      "issueSettings": "Detalhes da issue",
+      "issueSettingsDescription": "Padrões para cada issue que você abre. Alterá-los em uma issue aberta não muda estas preferências.",
       "notifications": "Notificações",
       "notificationsDescription": "Acompanhar uma issue traz seus comentários e mudanças de status.",
       "aiChat": "Chat de IA",
       "shortcuts": "Atalhos de teclado",
-      "shortcutsDescription": "Pressione Alterar, depois as techas que você quer. Redefinir leva um atalho de volta ao definido para esta instância."
+      "shortcutsDescription": "O botão de redefinir volta o atalho ao padrão."
     },
     "theme": "Tema",
     "themeDescription": "Seguir sistema acompanha a configuração do seu sistema operacional.",
@@ -120,10 +118,30 @@
       "light": "Claro",
       "dark": "Escuro"
     },
+    "themeFromBackground": "Definido pelo fundo",
+    "palette": "Paleta",
+    "paletteDescription": "Cada paleta tem uma versão clara e uma escura.",
+    "paletteOptions": {
+      "default": "Padrão",
+      "custom": "Personalizada"
+    },
+    "accent": "Destaque",
+    "accentDescription": "A cor dos botões, links e itens selecionados.",
+    "background": "Fundo",
+    "backgroundDescription": "Uma cor escura gera um tema escuro; uma clara, um tema claro.",
+    "contrast": "Contraste",
+    "contrastDescription": "Quanto o texto e as bordas se destacam do fundo.",
+    "sharePalette": "Compartilhar",
+    "sharePaletteDescription": "Copie esta paleta para enviá-la. \"Colar\" aplica uma paleta da área de transferência.",
+    "copyPalette": "Copiar",
+    "pastePalette": "Colar",
+    "paletteCopied": "Paleta copiada",
+    "palettePasted": "Paleta colada",
+    "pastePaletteInvalid": "A área de transferência não tem uma paleta. Copie uma primeiro e depois cole.",
     "language": "Idioma",
     "languageDescription": "O idioma da interface, dos seus e-mails e do bot do Telegram.",
     "timezone": "Fuso horário",
-    "timezoneDescription": "Escolha o fuso no qual você trabalha.",
+    "timezoneDescription": "Todas as datas e horas do app aparecem neste fuso.",
     "timezonePlaceholder": "Selecione um fuso horário",
     "timezoneEmpty": "Nenhum fuso horário encontrado.",
     "timezoneGroups": {
@@ -139,49 +157,47 @@
       "Other": "Outro"
     },
     "issueOpenMode": "Abrir issues em",
-    "issueOpenModeDescription": "O que acontece quando você clica em uma issue em um quadro, tabela, calendário ou linha do tempo.",
     "issueOpenModeOptions": {
       "panel": "Painel lateral",
       "page": "Página inteira"
     },
     "startPage": "Página inicial",
-    "startPageDescription": "A seção que abre quando você entra no app, no seu último projeto ativo.",
+    "startPageDescription": "Abre no último projeto que você usou.",
     "startPageOptions": {
       "work-items": "Itens de trabalho",
       "inbox": "Caixa de entrada",
       "dashboard": "Dashboards",
       "initiatives": "Iniciativas"
     },
-    "showStats": "Mostrar estatísticas",
-    "showStatsDescription": "Se a seção de estatísticas começa expandida ao abrir uma issue.",
+    "showStats": "Expandir estatísticas",
     "statsView": "Mostrar estatísticas como",
-    "statsViewDescription": "Compacta é uma barra com uma parte por status; Linha do tempo dá a cada status sua própria faixa em um eixo de tempo.",
+    "statsViewDescription": "Barra compacta mostra a parte do tempo em cada status. Linha do tempo dá a cada status sua própria faixa.",
     "statsViewOptions": {
       "compact": "Barra compacta",
       "timeline": "Linha do tempo"
     },
     "activityView": "Mostrar atividade como",
-    "activityViewDescription": "Plana é cada entrada da mais recente; Agrupada divide o registro pelo estado em que a issue estava.",
+    "activityViewDescription": "Agrupada por status separa as entradas pelo status que a issue tinha no momento.",
     "activityViewOptions": {
-      "flat": "Plana",
-      "grouped": "Agrupada por estado"
+      "flat": "Lista única",
+      "grouped": "Agrupada por status"
     },
     "autoWatch": "Acompanhar issues automaticamente",
-    "autoWatchDescription": "As que você cria, é atribuído, comenta ou é mencionado.",
+    "autoWatchDescription": "Issues que você cria, comenta, que são atribuídas a você ou em que mencionam você.",
     "desktopNotifications": "Notificações na área de trabalho",
-    "desktopNotificationsDescription": "Somente neste navegador. Mostra uma notificação para cada item novo da caixa de entrada, de todos os projetos, enquanto o app está aberto mas não em primeiro plano.",
+    "desktopNotificationsDescription": "Somente neste navegador. Mostra cada item novo da caixa de entrada, de todos os projetos, enquanto o app está aberto em segundo plano.",
     "desktopNotificationsBlocked": "Este navegador bloqueia as notificações deste site. Permita-as nas configurações do site no navegador.",
     "desktopNotificationsUnsupported": "Este navegador não consegue mostrar notificações na área de trabalho.",
-    "desktopNotificationsReplacedByPush": "As notificações push estão ativadas neste navegador e substituem aqui as notificações na área de trabalho.",
+    "desktopNotificationsReplacedByPush": "As notificações push estão ativadas neste navegador, então as notificações na área de trabalho ficam desativadas aqui.",
     "desktopNotificationsOff": "Desligado",
-    "pushNotifications": "Notificações push neste dispositivo",
-    "pushNotificationsDescription": "Somente neste navegador. Mostra as notificações que você escolher na coluna Push das configurações de notificação de cada projeto, mesmo com o app fechado.",
+    "pushNotifications": "Notificações push",
+    "pushNotificationsDescription": "Somente neste navegador. Envia as notificações que você escolher na coluna Push das configurações de notificação de cada projeto, mesmo com o app fechado.",
     "pushNotificationsBlocked": "Este navegador bloqueia as notificações deste site. Permita-as nas configurações do site no navegador.",
     "pushNotificationsUnsupported": "Este navegador não consegue receber notificações push.",
-    "pushNotificationsUnsupportedIos": "No iPhone ou iPad, adicione primeiro o app à Tela de Início (iOS 16.4 ou posterior) e ative por lá.",
+    "pushNotificationsUnsupportedIos": "No iPhone ou iPad, adicione o app à Tela de Início e ative isto por lá. Requer iOS 16.4 ou posterior.",
     "pushNotificationsOff": "Desligado",
-    "pushNotificationsFailed": "Não foi possível alterar as notificações push neste navegador.",
-    "showChatByDefault": "Mostrar o chat por padrão",
-    "showChatByDefaultDescription": "O painel de chat abre com uma página de projeto. Feche-o a qualquer momento pelo cabeçalho ou pelo ícone de chat."
+    "pushNotificationsFailed": "Não foi possível alterar as notificações push neste navegador. Tente novamente.",
+    "showChatByDefault": "Abrir chat por padrão",
+    "showChatByDefaultDescription": "O painel do chat abre com cada página de projeto."
   }
 }

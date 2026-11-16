@@ -14,7 +14,8 @@
   "name": "Nombre",
   "edit": "Editar",
   "language": "Idioma",
-  "toggleTheme": "Cambiar tema",
+  "interface": "Interfaz",
+  "allPreferences": "Todas las preferencias",
   "priority": {
     "label": "Prioridad",
     "tooltip": "Prioridad {priority}",
@@ -40,8 +41,9 @@
   "brandSubtitle": "Planifica tickets en un tablero. Inicia sesión para abrir tus proyectos.",
   "hotkeys": {
     "pressKeys": "Pulsa las teclas",
-    "fixed": "Fijo",
-    "resetShortcut": "Restablecer este atajo",
+    "fixed": "No se puede cambiar",
+    "changeShortcut": "Cambiar atajo: {command}",
+    "resetShortcut": "Restablecer atajo: {command}",
     "groups": {
       "general": "General",
       "workItems": "Elementos de trabajo"
@@ -76,7 +78,7 @@
         "select-all": "Seleccionar todos los tickets del tablero"
       }
     },
-    "conflict": "Ya la usa {command}"
+    "conflict": "{command} también usa esta combinación. Cambia una de las dos."
   },
   "agentChat": {
     "emptyHint": "Envía un mensaje para probar cómo responde este agente y qué herramientas usa.",

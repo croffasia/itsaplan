@@ -39,7 +39,7 @@
     },
     "hotkeys": {
       "label": "Raccourcis clavier",
-      "description": "La touche associée à chaque commande pour tous les utilisateurs de cette instance. Chacun peut réattribuer un raccourci pour son propre compte dans ses préférences."
+      "description": "Par défaut pour tous. Chacun peut modifier les siens dans Préférences."
     },
     "storage": {
       "label": "Stockage",

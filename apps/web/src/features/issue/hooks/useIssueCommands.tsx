@@ -19,7 +19,7 @@ import type { ActionDef } from '@/lib/api/endpoints/actions';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { IssuePatch } from '@/lib/api/endpoints/issues';
 import { actionIcon } from '@/utils/actionIcons';
-import { toDateStr } from '@/utils/dates';
+import { calendarSystem, toDateStr } from '@/utils/dates';
 import { useActionsQuery } from '@/services/actions.service';
 import { useIssueQuery, useRestoreIssue, useUpdateIssue } from '@/services/issues.service';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -252,7 +252,7 @@ export function useIssueCommands(
               weekday: 'short',
               month: 'short',
               day: 'numeric',
-              calendar: 'gregory',
+              calendar: calendarSystem(),
             }),
             run: () => patch({ dueDate: toDateStr(p.date) }),
           })),

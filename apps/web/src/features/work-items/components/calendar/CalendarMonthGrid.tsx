@@ -1,7 +1,7 @@
-import { isSameDay, isSameMonth } from 'date-fns';
+import { isSameDay } from 'date-fns';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue } from '@/lib/api/endpoints/issues';
-import { toDateStr } from '@/utils/dates';
+import { dayOfMonth, startOfCalendarMonth, toDateStr } from '@/utils/dates';
 import { CalendarDayCell } from './CalendarDayCell';
 
 export function CalendarMonthGrid({
@@ -26,6 +26,7 @@ export function CalendarMonthGrid({
   onOpen: (id: number) => void;
   onQuickAdd?: (day: string, title: string) => Promise<void>;
 }) {
+  const monthStart = startOfCalendarMonth(cursor).getTime();
   return (
     <>
       <div className="grid grid-cols-7 border-b py-1.5 text-xs font-medium text-muted-foreground">
@@ -44,8 +45,8 @@ export function CalendarMonthGrid({
               key={key}
               project={project}
               dateKey={key}
-              dayNumber={day.getDate()}
-              inMonth={isSameMonth(day, cursor)}
+              dayNumber={dayOfMonth(day)}
+              inMonth={startOfCalendarMonth(day).getTime() === monthStart}
               isToday={isSameDay(day, today)}
               issues={byDay.get(key) ?? []}
               dot={dot}

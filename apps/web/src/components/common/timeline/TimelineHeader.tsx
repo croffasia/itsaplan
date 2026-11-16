@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { startOfDay } from 'date-fns';
-import { daysBetween } from '@/utils/dates';
+import { calendarSystem, dayOfMonth, daysBetween, localeWeekStart } from '@/utils/dates';
 import { type MonthLabel } from '@/utils/timelineTrack';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +23,9 @@ export function TimelineHeader({
   corner?: ReactNode;
 }) {
   const today = startOfDay(new Date());
+  // The Iranian weekend is Friday.
+  const persian = calendarSystem() === 'persian';
+  const weekStart = localeWeekStart();
   return (
     <div className="sticky top-0 z-20 flex border-b bg-background">
       <div className="sticky left-0 z-10 shrink-0 border-r bg-background" style={{ width: labelW }}>
@@ -42,11 +45,12 @@ export function TimelineHeader({
         </div>
         <div className="flex h-6">
           {days.map((d, i) => {
-            const weekend = d.getDay() === 0 || d.getDay() === 6;
+            const weekday = d.getDay();
+            const weekend = persian ? weekday === 5 : weekday === 0 || weekday === 6;
             const isToday = daysBetween(today, d) === 0;
-            // Every day when wide (week); only Mondays when medium (month); none
-            // when narrow (quarter) — the month labels above carry it.
-            const showNum = dayW >= 20 || (dayW >= 8 && d.getDay() === 1);
+            // Every day when wide (week); only the first day of each week when medium
+            // (month); none when narrow (quarter) — the month labels above carry it.
+            const showNum = dayW >= 20 || (dayW >= 8 && weekday === weekStart);
             return (
               <div
                 key={i}
@@ -57,7 +61,7 @@ export function TimelineHeader({
                 )}
                 style={{ width: dayW }}
               >
-                {showNum ? d.getDate() : ''}
+                {showNum ? dayOfMonth(d) : ''}
               </div>
             );
           })}

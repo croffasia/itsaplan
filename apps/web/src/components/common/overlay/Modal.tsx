@@ -90,7 +90,7 @@ export default function Modal({
           // max-width switch to/from `auto`/`none` and do not interpolate.
           'transition-none',
           fullscreen
-            ? 'top-0 left-0 flex h-screen w-screen max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-none border-0 sm:max-w-none'
+            ? 'top-0 left-0 flex h-dvh w-screen max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-none border-0 sm:max-w-none'
             : // A flex column, not the grid DialogContent defaults to: an auto grid
               // row keeps its content height under a capped container, so the body
               // never shrinks and never scrolls.

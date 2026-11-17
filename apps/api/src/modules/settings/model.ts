@@ -3,6 +3,7 @@ import { JOB_SETTING_BOUNDS } from '@repo/db';
 import {
   API_DOCS_AUDIENCES,
   MAX_CONCURRENT_RUNS,
+  MAX_KEY_REQUESTS_PER_MINUTE,
   MAX_RUN_SECONDS,
   MIN_RUN_SECONDS,
 } from './service';
@@ -36,6 +37,16 @@ export const ApiDocsSettingsSchema = t.Object({
 });
 
 export const ApiDocsVisibilitySchema = t.Object({ visible: t.Boolean() });
+
+export const ApiKeySettingsSchema = t.Object({
+  requestsPerMinute: t.Integer({
+    minimum: 0,
+    maximum: MAX_KEY_REQUESTS_PER_MINUTE,
+    description:
+      'Requests one API key may send per minute, MCP tool calls included. Each api process ' +
+      'counts on its own. 0 sets no limit.',
+  }),
+});
 
 export const AgentSettingsSchema = t.Object({
   traceRetentionDays: t.Integer({

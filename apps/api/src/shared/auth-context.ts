@@ -10,7 +10,8 @@ import {
   verifyMcpAccessToken,
 } from '@repo/auth';
 import { HttpError } from './lib';
-import { getMcpOAuthToken } from './mcp-request';
+import { countKeyRequests } from './key-rate-limit';
+import { getMcpClientRequest, getMcpOAuthToken } from './mcp-request';
 
 // GET routes that need no session. The raw attachment and avatar bytes routes
 // must work in <img>/<video> and external fetches. The invite lookup
@@ -55,6 +56,11 @@ export const authContext = new Elysia({ name: 'auth-context' }).resolve(
 // its headers. Whether the account may act is left to the caller.
 export async function requestUser(request: Request): Promise<SessionUser | null> {
   const session = await getSessionFromHeaders(request.headers);
+  // A session made from a key carries the key's id. A tool call dispatched from POST /mcp
+  // was counted there; the link to that request is not a header, so a client cannot fake it.
+  if (session && request.headers.has('x-api-key') && !getMcpClientRequest(request)) {
+    await countKeyRequests(session.session.id);
+  }
   if (session) return session.user;
   const mcpToken = getMcpOAuthToken(request);
   const mcpUserId = mcpToken ? await verifyMcpAccessToken(mcpToken) : null;

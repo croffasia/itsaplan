@@ -35,7 +35,7 @@
     },
     "authentication": {
       "label": "Authentication",
-      "description": "Who may register on this instance, how accounts are confirmed, and the providers people sign in with."
+      "description": "Who can register, how people sign in, and request limits."
     },
     "hotkeys": {
       "label": "Keyboard shortcuts",

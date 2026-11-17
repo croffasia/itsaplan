@@ -365,6 +365,7 @@ export const qk = {
   instanceAgentSettings: ['instanceAgentSettings'] as const,
   instanceSharingSettings: ['instanceSharingSettings'] as const,
   instanceApiDocsSettings: ['instanceApiDocsSettings'] as const,
+  instanceApiKeySettings: ['instanceApiKeySettings'] as const,
   apiDocsVisibility: ['apiDocsVisibility'] as const,
   apiSpec: ['apiSpec'] as const,
   instanceEmbedSites: ['instanceEmbedSites'] as const,

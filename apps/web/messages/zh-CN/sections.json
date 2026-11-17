@@ -35,7 +35,7 @@
     },
     "authentication": {
       "label": "身份验证",
-      "description": "设置谁可以注册、如何验证账户以及可用的外部登录提供商。"
+      "description": "谁可以注册、如何登录，以及请求限制。"
     },
     "hotkeys": {
       "label": "键盘快捷键",

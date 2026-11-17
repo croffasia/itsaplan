@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useUpdateInstanceAgentSettings } from '../../services/god.service';
+import { wholeNumberIn } from '../../utils/numbers';
 
 // The trace windows offered; a window stored through the API outside them is offered too.
 const TRACE_DAYS = [7, 30, 90, 365];
@@ -34,7 +35,7 @@ export default function GodAgentsSection({ agents }: { agents: AgentSettings }) 
   // The run limit as typed, or null while it shows the stored one.
   const [runLimitDraft, setRunLimitDraft] = useState<string | null>(null);
   const runLimit = runLimitDraft ?? String(agents.maxConcurrentRuns);
-  const runLimitValid = /^\d+$/.test(runLimit.trim()) && Number(runLimit) <= MAX_RUN_LIMIT;
+  const runLimitValid = wholeNumberIn(runLimit, 0, MAX_RUN_LIMIT);
 
   async function setAgentSettings(patch: Partial<AgentSettings>) {
     try {

@@ -35,7 +35,7 @@
     },
     "authentication": {
       "label": "Authentification",
-      "description": "Qui peut s'inscrire sur cette instance, comment les comptes sont confirmés, et les fournisseurs par lesquels les utilisateurs se connectent."
+      "description": "Qui peut s'inscrire, comment se connecter et les limites de requêtes."
     },
     "hotkeys": {
       "label": "Raccourcis clavier",

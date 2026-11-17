@@ -35,7 +35,7 @@
     },
     "authentication": {
       "label": "身分驗證",
-      "description": "設定誰可以註冊、如何驗證帳號以及可用的外部登入提供者。"
+      "description": "誰可以註冊、如何登入，以及請求限制。"
     },
     "hotkeys": {
       "label": "鍵盤快捷鍵",

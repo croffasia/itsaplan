@@ -37,6 +37,9 @@ const settings = {
   inviteTtlDays: 7,
   inviteSearch: false,
   allowedEmailDomains: ['company.com'],
+  signInRateLimit: 3,
+  emailRateLimit: 3,
+  magicLinkRateLimit: 5,
   hasEmailProvider: true,
   hasSsoProvider: true,
 } satisfies InstanceAuthSettings;
@@ -173,5 +176,40 @@ describe('useGodPolicyForm allowed email domains', () => {
       'sub.company.com',
     ]);
     assert.deepEqual(saved[1].allowedEmailDomains, []);
+  });
+});
+
+describe('useGodPolicyForm sign-in rate limits', () => {
+  it('starts clean on the stored limits', async () => {
+    await render();
+
+    assert.deepEqual(form.limits, {
+      signInRateLimit: '3',
+      emailRateLimit: '3',
+      magicLinkRateLimit: '5',
+    });
+    assert.equal(form.dirty, false);
+  });
+
+  it('refuses a limit that is not a whole number from 1 to 1000', async () => {
+    await render();
+
+    for (const value of ['0', '1001', '2.5', '', 'abc']) {
+      await act(async () => form.setLimit('emailRateLimit', value));
+      assert.equal(form.limitValid('emailRateLimit'), false, value);
+      assert.equal(form.limitsValid, false, value);
+    }
+  });
+
+  it('saves the limits as numbers along with the rest of the page', async () => {
+    await render();
+
+    await act(async () => form.setLimit('signInRateLimit', '10'));
+    assert.equal(form.dirty, true);
+    await act(async () => form.save());
+
+    assert.equal(saved.length, 1);
+    assert.equal(saved[0].signInRateLimit, 10);
+    assert.equal(saved[0].magicLinkRateLimit, 5);
   });
 });

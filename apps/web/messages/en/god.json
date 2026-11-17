@@ -210,6 +210,11 @@
       "everyone": "Everyone"
     },
     "apiDocsSaved": "API docs settings saved",
+    "apiKeys": "API keys",
+    "apiKeysSaved": "API key settings saved",
+    "keyRequestsPerMinute": "Requests per minute",
+    "keyRequestsPerMinuteHint": "How many requests one key can send per minute, MCP tool calls included. Each API replica counts on its own. 0 sets no limit.",
+    "keyRequestsPerMinuteInvalid": "Enter a whole number from 0 to {max}.",
     "agents": "Agents",
     "agentsSaved": "Agent settings saved",
     "embedding": "Embedding",
@@ -232,43 +237,51 @@
   "authentication": {
     "saved": "Authentication settings saved",
     "registration": "Registration",
-    "registrationHint": "Who may create an account on this instance.",
-    "registrationPasswordlessNote": "Sign-up and password recovery are handled by the sign-in provider.",
+    "registrationHint": "Who can create an account and how long invites stay valid.",
+    "registrationPasswordlessNote": "People sign up and reset passwords through the sign-in provider.",
     "inviteTtlDays": "Invite expiry (days)",
-    "inviteTtlDaysHint": "After this many days an invite link stops working and, with invite-only registration, no longer lets its address sign up. 0 keeps invites valid until they are answered.",
+    "inviteTtlDaysHint": "An invite stops working this many days after it is created. A new value also applies to existing invites. 0 means invites never expire.",
     "inviteTtlDaysInvalid": "Enter a whole number of days from 0 to {max}.",
     "allowedEmailDomains": "Allowed email domains",
-    "allowedEmailDomainsHint": "Only addresses at these domains can create an account. Separate them with commas, or leave empty to allow any. Existing accounts keep their access.",
-    "allowedEmailDomainsInvalid": "Each domain should look like example.com, with up to 100 domains.",
+    "allowedEmailDomainsHint": "Only addresses at these domains can create an account, including through an invite. Existing accounts keep their access. Separate domains with commas. A subdomain needs its own entry. Leave empty to allow any address.",
+    "allowedEmailDomainsInvalid": "Enter domains like example.com, up to 100.",
     "modes": {
       "open": {
         "label": "Open",
-        "description": "Anyone who reaches the sign-up page can create an account.",
+        "description": "Anyone can create an account on the sign-up page.",
         "descriptionPasswordless": "Anyone who signs in with the provider for the first time gets an account."
       },
       "invite": {
         "label": "Invite only",
-        "description": "An account can only be created through an invite link.",
-        "descriptionPasswordless": "Signing in with the provider only creates an account when there is a pending invite for that address."
+        "description": "Only addresses with a pending invite can create an account.",
+        "descriptionPasswordless": "Signing in with the provider creates an account only for an address with a pending invite."
       },
       "closed": {
         "label": "Closed",
-        "description": "No new accounts. Existing ones keep signing in.",
-        "descriptionPasswordless": "No new accounts, not even for someone arriving from the provider. Existing ones keep signing in."
+        "description": "Nobody can create an account. Existing accounts keep signing in.",
+        "descriptionPasswordless": "Signing in with the provider creates no account. Existing accounts keep signing in."
       }
     },
     "signIn": "Sign-in options",
-    "signInHint": "How people sign in. The options that send mail stay off until a provider is configured.",
-    "needsProvider": "Set up the Email provider under Integrations first.",
+    "needsProvider": "First set up an email provider in Integrations → Email provider.",
     "requireVerification": "Require email confirmation",
-    "requireVerificationHint": "A new account must confirm its address before it can sign in.",
+    "requireVerificationHint": "People must confirm their email address before signing in with a password. This includes existing accounts: the sign-in form offers to resend the confirmation link.",
     "magicLink": "Sign-in links",
-    "magicLinkHint": "Offer signing in with a link sent by email, alongside the password.",
+    "magicLinkHint": "People can sign in with a link sent to their email. It works only while Email and password is on.",
     "trustProviderEmails": "Trust addresses from sign-in providers",
-    "trustProviderEmailsHint": "Google and OpenID Connect sign a person in to the account that already has their address, confirmed here or not. Turn this on only where you control who can register at the provider.",
+    "trustProviderEmailsHint": "Google and OpenID Connect sign people in to the account with the same email address, even if nobody confirmed it. Turn this on only if you control who registers at the provider, or someone could take over an account.",
     "emailPassword": "Email and password",
-    "emailPasswordHint": "Offer the sign-in and sign-up form. Turn it off to let people in through a sign-in provider only.",
-    "needsSso": "Set up a sign-in provider under Integrations first."
+    "emailPasswordHint": "People sign up and sign in with an email and a password. When off, they sign in only through a sign-in provider or a passkey.",
+    "needsSso": "First set up a sign-in provider in Integrations → Auth provider.",
+    "signInLimits": "Request limits",
+    "signInLimitsHint": "How many requests one IP address can send to each API replica. The limits stop password guessing and email floods. Behind a reverse proxy, the proxy must set X-Forwarded-For, or all clients share each limit.",
+    "signInRateLimit": "Sign-in and sign-up attempts",
+    "signInRateLimitHint": "Per 10 seconds, including password and email changes.",
+    "emailRateLimit": "Account emails",
+    "emailRateLimitHint": "Per minute, for password reset and email confirmation messages.",
+    "magicLinkRateLimit": "Sign-in link requests",
+    "magicLinkRateLimitHint": "Per minute, for requesting and opening sign-in links.",
+    "signInLimitInvalid": "Enter a whole number from 1 to {max}."
   },
   "hotkeys": {
     "saved": "Keyboard shortcuts saved"

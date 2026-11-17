@@ -12,11 +12,20 @@
   "saveChanges": "Değişiklikleri kaydet",
   "noWidgets": "Henüz bileşen yok. Panoyu oluşturmak için bir bileşen ekleyin.",
   "addWidget": "Bileşen ekle",
-  "addWidgetTitle": "Bileşen ekle",
-  "addWidgetDescription": "Bu panoya eklemek için bir bileşen seçin.",
   "searchWidgets": "Bileşenlerde ara",
   "clearSearch": "Aramayı temizle",
-  "noWidgetMatches": "“{query}” ile eşleşen bileşen bulunamadı.",
+  "noWidgetMatches": "“{query}” ile eşleşen bileşen yok. Başka bir kelime deneyin veya aramayı temizleyin.",
+  "noWidgetMatchesInGroup": "Bu grupta “{query}” ile eşleşen bileşen yok. Tüm gruplarda aramak için Tümü'nü seçin.",
+  "addPanel": {
+    "title": "Bileşen ekle",
+    "description": "Bir bileşeni panoya sürükleyin.",
+    "all": "Tümü",
+    "groupFilter": "Bileşen grubu",
+    "added": "{count, plural, =1 {Eklendi} other {# kez eklendi}}",
+    "status": "{count, plural, =0 {Henüz bir şey eklenmedi} other {# bileşen eklendi}}",
+    "undo": "Sonuncuyu kaldır",
+    "new": "Yeni"
+  },
   "dragToMove": "Taşımak için sürükleyin",
   "widgetName": "Bileşen adı",
   "widgetSettings": "Bileşen ayarları",
@@ -30,48 +39,48 @@
   },
   "widgets": {
     "stat": {
-      "label": "Sayı",
-      "description": "Belirli bir filtreyle eşleşen işlerin sayısı"
+      "label": "İş sayısı",
+      "description": "Bir filtreyle eşleşen iş sayısı, örneğin açık hatalar"
     },
     "recent_issues": {
       "label": "Son işler",
-      "description": "Oluşturulma veya güncellenme tarihine göre son işler"
+      "description": "Bir filtreyle eşleşen yeni veya son güncellenen işler"
     },
     "activity_feed": {
       "label": "Etkinlik akışı",
-      "description": "Proje genelindeki değişiklik günlüğü (kişi ve eyleme göre filtrelenebilir)"
+      "description": "İşlerdeki son değişiklikler ve bunları yapanlar"
     },
     "pulse": {
       "label": "Nabız (Pulse)",
-      "description": "GitHub tarzı günlük etkinlik yoğunluk haritası"
+      "description": "Saat, gün veya haftaya göre proje etkinliği ısı haritası"
     },
     "throughput": {
       "label": "İş hacmi (Throughput)",
-      "description": "Haftalık oluşturulan ve kapatılan iş sayısı"
+      "description": "Her hafta oluşturulan ve kapatılan işler"
     },
     "burnup": {
       "label": "Burnup Grafiği",
-      "description": "Tahmini tamamlanma tarihiyle birlikte günlük kapsam, başlanan ve tamamlanan işler"
+      "description": "Günlük toplam ve tamamlanan işler, tahmini bitiş tarihiyle"
     },
     "breakdown": {
       "label": "Dağılım",
-      "description": "Durum, öncelik, tür veya sorumluya göre iş sayıları"
+      "description": "Durum, öncelik, tür, sorumlu veya temsilciye göre işler"
     },
     "agent_runs": {
       "label": "Ajan çalıştırmaları",
-      "description": "Son yapay zekâ ajanı çalıştırmaları ve sonuçları"
+      "description": "Son çalıştırmalar ve durumları, örneğin başarısız veya sırada"
     },
     "agent_health": {
       "label": "Ajan sağlığı",
-      "description": "Belirli bir dönemdeki ajan başarı oranı ve hatalar"
+      "description": "Seçilen dönemde tüm ajanların başarı oranı ve başarısız çalıştırmaları"
     },
     "webhook_health": {
       "label": "Webhook sağlığı",
-      "description": "Webhook teslimat sonuçları ve devre dışı bırakılmış uç noktalar"
+      "description": "Teslim sonuçları ve art arda hatalardan sonra kapatılan uç noktalar"
     },
     "agent_workload": {
       "label": "Ajan iş yükü",
-      "description": "Ajan başına devredilen işler ve çalıştırma sonuçları"
+      "description": "Her ajan için: devredilen açık işler ve başarılı çalıştırmalar"
     }
   },
   "breakdown": {

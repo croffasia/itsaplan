@@ -12,11 +12,20 @@
   "saveChanges": "Save changes",
   "noWidgets": "No widgets yet. Add one to build this dashboard.",
   "addWidget": "Add widget",
-  "addWidgetTitle": "Add a widget",
-  "addWidgetDescription": "Pick a widget to add to this dashboard.",
   "searchWidgets": "Search widgets",
   "clearSearch": "Clear search",
-  "noWidgetMatches": "No widget matches “{query}”.",
+  "noWidgetMatches": "No widget matches “{query}”. Try another word or clear the search.",
+  "noWidgetMatchesInGroup": "No widget in this group matches “{query}”. Select All to search every group.",
+  "addPanel": {
+    "title": "Add widgets",
+    "description": "Drag a widget onto the dashboard.",
+    "all": "All",
+    "groupFilter": "Widget group",
+    "added": "{count, plural, one {Added} other {Added #}}",
+    "status": "{count, plural, =0 {Nothing added yet} one {# widget added} other {# widgets added}}",
+    "undo": "Remove last added",
+    "new": "New"
+  },
   "dragToMove": "Drag to move",
   "widgetName": "Widget name",
   "widgetSettings": "Widget settings",
@@ -30,48 +39,48 @@
   },
   "widgets": {
     "stat": {
-      "label": "Number",
-      "description": "Count of issues matching a filter"
+      "label": "Issue count",
+      "description": "Number of issues that match a filter, such as open bugs"
     },
     "recent_issues": {
       "label": "Recent issues",
-      "description": "Latest issues by created or updated time"
+      "description": "Newest or recently updated issues that match a filter"
     },
     "activity_feed": {
       "label": "Activity feed",
-      "description": "Project-wide change log, filterable by actor and action"
+      "description": "Latest changes to issues and who made them"
     },
     "pulse": {
       "label": "Pulse",
-      "description": "GitHub-style heatmap of daily activity"
+      "description": "Heatmap of project activity by hour, day or week"
     },
     "throughput": {
       "label": "Throughput",
-      "description": "Created vs closed issues per week"
+      "description": "Issues created and closed each week"
     },
     "burnup": {
       "label": "Burnup",
-      "description": "Scope, started and completed issues per day with a projected completion date"
+      "description": "Total and completed issues by day, with a projected finish date"
     },
     "breakdown": {
       "label": "Breakdown",
-      "description": "Issue counts by status, priority, type, or assignee"
+      "description": "Issues split by state, priority, type, assignee or delegate"
     },
     "agent_runs": {
       "label": "Agent runs",
-      "description": "Recent AI agent runs with their outcome"
+      "description": "Latest runs and their status, such as failed or queued"
     },
     "agent_health": {
       "label": "Agent health",
-      "description": "Agent run success rate and failures over a window"
+      "description": "Success rate and failed runs of all agents over a chosen period"
     },
     "webhook_health": {
       "label": "Webhook health",
-      "description": "Webhook delivery outcomes and disabled endpoints"
+      "description": "Delivery results and endpoints turned off after failures in a row"
     },
     "agent_workload": {
       "label": "Agent workload",
-      "description": "Delegated issues and run outcomes per agent"
+      "description": "For each agent: open delegated issues and successful runs"
     }
   },
   "breakdown": {

@@ -35,7 +35,7 @@
     },
     "authentication": {
       "label": "Autenticación",
-      "description": "Quién se puede registrar en esta instancia, cómo se confirman las cuentas, y los proveedores con los que la gente inicia sesión."
+      "description": "Quién puede registrarse, cómo se inicia sesión y los límites de solicitudes."
     },
     "hotkeys": {
       "label": "Atajos de teclado",

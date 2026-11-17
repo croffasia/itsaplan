@@ -104,6 +104,47 @@ export async function setAgentSettings(patch: Partial<AgentSettings>): Promise<A
   return next;
 }
 
+// How many requests one API key may send per minute (app_setting key 'apiKeys'). 0 sets no
+// limit.
+
+const API_KEY_SETTINGS_KEY = 'apiKeys';
+
+export interface ApiKeySettings {
+  requestsPerMinute: number;
+}
+
+export const MAX_KEY_REQUESTS_PER_MINUTE = 100_000;
+
+// shared/key-rate-limit.ts reads the limit on every request made with a key, so each process
+// keeps it for a minute. A change saved here applies at once in this process and within a
+// minute in the others.
+const API_KEY_SETTINGS_TTL_MS = 60_000;
+let keptApiKeys: { settings: ApiKeySettings; readAt: number } | null = null;
+
+export async function getApiKeySettings(): Promise<ApiKeySettings> {
+  return (await getSetting<ApiKeySettings>(API_KEY_SETTINGS_KEY)) ?? { requestsPerMinute: 1200 };
+}
+
+export async function keptApiKeySettings(): Promise<ApiKeySettings> {
+  if (keptApiKeys && Date.now() - keptApiKeys.readAt < API_KEY_SETTINGS_TTL_MS) {
+    return keptApiKeys.settings;
+  }
+  const settings = await getApiKeySettings();
+  keptApiKeys = { settings, readAt: Date.now() };
+  return settings;
+}
+
+export async function setApiKeySettings(settings: ApiKeySettings): Promise<ApiKeySettings> {
+  await setSetting(API_KEY_SETTINGS_KEY, settings);
+  keptApiKeys = { settings, readAt: Date.now() };
+  return settings;
+}
+
+// The tests empty the database between cases, and a kept value would outlive it.
+export function forgetApiKeySettings(): void {
+  keptApiKeys = null;
+}
+
 // The background job settings (app_setting key 'jobs'); the shape and the reader are in
 // @repo/db, because the worker and the bot read them too.
 export async function setJobSettings(patch: JobSettingsPatch): Promise<JobSettings> {

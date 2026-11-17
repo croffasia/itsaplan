@@ -84,6 +84,12 @@ export interface AuthSettings {
   // The domains a new account's address must be at, lowercase. Empty admits any address.
   // Accounts that already exist keep signing in.
   allowedEmailDomains: string[];
+  // Requests one client address may send: sign-in, sign-up and password or email changes
+  // per 10 seconds, password reset and confirmation emails per minute, and sign-in links
+  // (requesting and opening one) per minute. Read by authRateLimitRules in ./index.ts.
+  signInRateLimit: number;
+  emailRateLimit: number;
+  magicLinkRateLimit: number;
 }
 
 function defaultAuthSettings(): AuthSettings {
@@ -97,6 +103,9 @@ function defaultAuthSettings(): AuthSettings {
     inviteTtlDays: 7,
     inviteSearch: false,
     allowedEmailDomains: [],
+    signInRateLimit: 3,
+    emailRateLimit: 3,
+    magicLinkRateLimit: 5,
   };
 }
 

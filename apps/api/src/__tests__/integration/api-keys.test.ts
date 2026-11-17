@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { auth, API_KEY_DEFAULT_EXPIRES_IN_SEC } from '@repo/auth';
-import { apikey, db } from '@repo/db';
+import { apikey, db, setSetting } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { apiKeyApi, app } from '#tests/helpers/app';
+import { apiKeyApi, app, authedApi } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
@@ -85,20 +85,60 @@ describe('api keys', () => {
     expect(me.data).toEqual({ authenticated: false });
   });
 
-  it('answers a key over its rate limit with 429', async () => {
-    const user = await signUpTestUser();
-    const created = await auth.api.createApiKey({
-      body: { userId: user.userId, name: 'ci', rateLimitMax: 2, rateLimitTimeWindow: 60_000 },
-    });
+  it('answers a key over the instance limit with 429 and Retry-After', async () => {
+    const god = await signUpTestUser();
+    await authedApi(god.cookie).god['api-key-settings'].put({ requestsPerMinute: 2 });
+    const created = await auth.api.createApiKey({ body: { userId: god.userId, name: 'ci' } });
     const client = apiKeyApi(created.key);
     expect((await client.projects.get()).status).toBe(200);
-    expect((await client.projects.get()).status).toBe(200);
+    expect((await client.me.get()).status).toBe(200);
 
     const limited = await client.projects.get();
     expect(limited.status).toBe(429);
-    expect(limited.error?.value).toEqual({
-      error: 'Too many requests. Wait a moment and try again.',
+    expect(limited.error?.value).toMatchObject({ code: 'RATE_LIMITED' });
+    const retryAfter = Number(limited.response.headers.get('retry-after'));
+    expect(retryAfter).toBeGreaterThan(0);
+    expect(retryAfter).toBeLessThanOrEqual(60);
+    expect((await client.me.get()).status).toBe(429);
+
+    const other = await auth.api.createApiKey({ body: { userId: god.userId, name: 'other' } });
+    expect((await apiKeyApi(other.key).projects.get()).status).toBe(200);
+  });
+
+  it('keeps the limit in memory instead of reading the database on each request', async () => {
+    const god = await signUpTestUser();
+    await authedApi(god.cookie).god['api-key-settings'].put({ requestsPerMinute: 1 });
+    await setSetting('apiKeys', { requestsPerMinute: 0 });
+    const created = await auth.api.createApiKey({ body: { userId: god.userId, name: 'ci' } });
+    const client = apiKeyApi(created.key);
+
+    expect((await client.projects.get()).status).toBe(200);
+    expect((await client.projects.get()).status).toBe(429);
+  });
+
+  it('applies the instance limit to a key that stores a limit of its own', async () => {
+    const user = await signUpTestUser();
+    const created = await auth.api.createApiKey({
+      body: { userId: user.userId, name: 'old', rateLimitMax: 1, rateLimitTimeWindow: 60_000 },
     });
+    const client = apiKeyApi(created.key);
+
+    expect((await client.projects.get()).status).toBe(200);
+    expect((await client.projects.get()).status).toBe(200);
+  });
+
+  it('sets no limit at 0', async () => {
+    const god = await signUpTestUser();
+    const settings = authedApi(god.cookie).god['api-key-settings'];
+    await settings.put({ requestsPerMinute: 1 });
+    const created = await auth.api.createApiKey({ body: { userId: god.userId, name: 'ci' } });
+    const client = apiKeyApi(created.key);
+    expect((await client.projects.get()).status).toBe(200);
+    expect((await client.projects.get()).status).toBe(429);
+
+    await settings.put({ requestsPerMinute: 0 });
+
+    expect((await client.projects.get()).status).toBe(200);
   });
 
   it('refuses creating a key from a key', async () => {

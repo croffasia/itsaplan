@@ -210,6 +210,11 @@
       "everyone": "所有人"
     },
     "apiDocsSaved": "API 文件設定已儲存",
+    "apiKeys": "API 金鑰",
+    "apiKeysSaved": "API 金鑰設定已儲存",
+    "keyRequestsPerMinute": "每分鐘請求數",
+    "keyRequestsPerMinuteHint": "一個金鑰每分鐘可傳送的請求數，包括 MCP 工具呼叫。每個 API 副本分別計數。0 表示不限。",
+    "keyRequestsPerMinuteInvalid": "請輸入 0 到 {max} 之間的整數。",
     "agents": "代理",
     "agentsSaved": "代理設定已儲存",
     "embedding": "嵌入",
@@ -232,43 +237,51 @@
   "authentication": {
     "saved": "身分驗證設定已儲存",
     "registration": "註冊",
-    "registrationHint": "設定哪些人可以建立此執行個體的帳號。",
-    "registrationPasswordlessNote": "註冊和密碼找回由登入提供者負責。",
+    "registrationHint": "誰可以建立帳號，以及邀請的有效期。",
+    "registrationPasswordlessNote": "註冊和重設密碼在登入提供者處完成。",
     "inviteTtlDays": "邀請有效期（天）",
-    "inviteTtlDaysHint": "超過此期限後，邀請連結將失效；在僅限邀請註冊時，也無法再用它註冊。設為 0 則邀請永不過期。",
+    "inviteTtlDaysHint": "邀請在建立後滿此天數即失效。新值也適用於現有的邀請。0 表示邀請永不過期。",
     "inviteTtlDaysInvalid": "請輸入 0 到 {max} 之間的整數天數。",
     "allowedEmailDomains": "允許的電子郵件網域",
-    "allowedEmailDomainsHint": "只有這些網域下的地址可以建立帳號。用逗號分隔；留空則允許任何地址。已有帳號不受影響。",
-    "allowedEmailDomainsInvalid": "每個網域應類似 example.com，最多 100 個。",
+    "allowedEmailDomainsHint": "只有這些網域下的地址可以建立帳號，透過邀請也一樣。現有帳號保留存取權限。網域之間以逗號分隔。每個子網域需要單獨新增。留空則允許任何地址。",
+    "allowedEmailDomainsInvalid": "請輸入類似 example.com 的網域，最多 100 個。",
     "modes": {
       "open": {
         "label": "開放註冊",
-        "description": "任何存取註冊頁面的人都可以建立帳號。",
+        "description": "任何人都可以在註冊頁面建立帳號。",
         "descriptionPasswordless": "任何人首次透過提供者登入即可獲得帳號。"
       },
       "invite": {
         "label": "僅限邀請",
-        "description": "只有收到專案邀請的電子郵件可以建立帳號。",
-        "descriptionPasswordless": "僅當該地址存在待處理的邀請時，透過提供者登入才會建立帳號。"
+        "description": "只有擁有待處理邀請的地址可以建立帳號。",
+        "descriptionPasswordless": "透過提供者登入時，只為擁有待處理邀請的地址建立帳號。"
       },
       "closed": {
         "label": "關閉註冊",
-        "description": "不允許建立新帳號，現有帳號仍可登入。",
-        "descriptionPasswordless": "不建立新帳號，即使透過提供者登入也不例外。現有帳號可繼續登入。"
+        "description": "任何人都無法建立帳號。現有帳號可以繼續登入。",
+        "descriptionPasswordless": "透過提供者登入不會建立帳號。現有帳號可以繼續登入。"
       }
     },
     "signIn": "登入選項",
-    "signInHint": "登入方式。需要傳送郵件的選項在設定郵件服務前不可用。",
-    "needsProvider": "請先在「郵件服務供應商」中完成設定。",
+    "needsProvider": "請先在 整合 → 郵件服務供應商 中設定郵件服務供應商。",
     "requireVerification": "要求驗證電子郵件",
-    "requireVerificationHint": "新帳號必須驗證電子郵件後才能登入。",
+    "requireVerificationHint": "使用密碼登入前必須先確認電子郵件地址。現有帳號同樣適用：登入表單會提供重新傳送確認連結的選項。",
     "magicLink": "電子郵件登入連結",
-    "magicLinkHint": "透過郵件傳送免密碼登入連結。",
+    "magicLinkHint": "可以透過傳送到電子郵件的連結登入。僅在開啟「電子郵件和密碼」時有效。",
     "trustProviderEmails": "信任登入提供者的電子郵件地址",
-    "trustProviderEmailsHint": "透過 Google 或 OpenID Connect 登入時，直接進入已使用該電子郵件地址的帳號，無論該地址是否在此驗證過。僅當由你決定誰能在提供者註冊時才開啟。",
+    "trustProviderEmailsHint": "Google 和 OpenID Connect 會讓使用者登入到使用相同電子郵件地址的帳號，即使該地址從未經過確認。僅當你能控制誰在提供者處註冊時才開啟，否則他人可能接管帳號。",
     "emailPassword": "電子郵件和密碼",
-    "emailPasswordHint": "提供登入和註冊表單。關閉後只能透過登入提供者進入。",
-    "needsSso": "請先在「整合」中設定登入提供者。"
+    "emailPasswordHint": "使用者以電子郵件和密碼註冊與登入。關閉後，只能透過登入提供者或通行金鑰登入。",
+    "needsSso": "請先在 整合 → 驗證提供者 中設定登入提供者。",
+    "signInLimits": "請求限制",
+    "signInLimitsHint": "一個 IP 位址可向每個 API 副本傳送的請求數。用於阻止猜測密碼和郵件轟炸。在反向代理之後，代理必須設定 X-Forwarded-For，否則所有用戶端共用每個限制。",
+    "signInRateLimit": "登入和註冊嘗試",
+    "signInRateLimitHint": "每 10 秒，包括變更密碼和電子郵件。",
+    "emailRateLimit": "帳戶郵件",
+    "emailRateLimitHint": "每分鐘，針對重設密碼郵件和電子郵件確認郵件。",
+    "magicLinkRateLimit": "登入連結請求",
+    "magicLinkRateLimitHint": "每分鐘，針對請求和開啟登入連結。",
+    "signInLimitInvalid": "請輸入 1 到 {max} 之間的整數。"
   },
   "hotkeys": {
     "saved": "鍵盤快捷鍵已儲存"

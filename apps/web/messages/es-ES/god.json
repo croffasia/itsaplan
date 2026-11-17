@@ -210,6 +210,11 @@
       "everyone": "Todos"
     },
     "apiDocsSaved": "Ajustes de la documentación de la API guardados",
+    "apiKeys": "Claves de API",
+    "apiKeysSaved": "Ajustes de las claves de API guardados",
+    "keyRequestsPerMinute": "Solicitudes por minuto",
+    "keyRequestsPerMinuteHint": "Cuántas solicitudes puede enviar una clave por minuto, incluidas las llamadas a herramientas MCP. Cada réplica de la API cuenta por separado. 0 es sin límite.",
+    "keyRequestsPerMinuteInvalid": "Escribe un número entero entre 0 y {max}.",
     "agents": "Agentes",
     "agentsSaved": "Ajustes de agentes guardados",
     "embedding": "Inserción",
@@ -232,43 +237,51 @@
   "authentication": {
     "saved": "Los ajustes de autenticación se han guardado",
     "registration": "Registro",
-    "registrationHint": "Quién puede crear una cuenta en esta instancia.",
-    "registrationPasswordlessNote": "El alta y la recuperación de contraseña las gestiona el proveedor de inicio de sesión.",
+    "registrationHint": "Quién puede crear una cuenta y cuánto duran las invitaciones.",
+    "registrationPasswordlessNote": "El registro y el restablecimiento de contraseña se hacen en el proveedor de inicio de sesión.",
     "inviteTtlDays": "Caducidad de las invitaciones (días)",
-    "inviteTtlDaysHint": "Pasado este plazo, el enlace de una invitación deja de funcionar y, con el registro por invitación, ya no permite darse de alta. Con 0, las invitaciones no caducan.",
+    "inviteTtlDaysHint": "Una invitación deja de funcionar este número de días después de crearse. Un valor nuevo también se aplica a las invitaciones existentes. 0 significa que las invitaciones no caducan.",
     "inviteTtlDaysInvalid": "Escribe un número entero de días entre 0 y {max}.",
     "allowedEmailDomains": "Dominios de correo permitidos",
-    "allowedEmailDomainsHint": "Solo las direcciones de estos dominios pueden crear una cuenta. Sepáralos con comas o deja el campo vacío para permitir cualquiera. Las cuentas existentes conservan el acceso.",
-    "allowedEmailDomainsInvalid": "Cada dominio debe tener la forma example.com, con un máximo de 100.",
+    "allowedEmailDomainsHint": "Solo las direcciones de estos dominios pueden crear una cuenta, también mediante invitación. Las cuentas existentes conservan el acceso. Separa los dominios con comas. Cada subdominio necesita su propia entrada. Déjalo vacío para permitir cualquier dirección.",
+    "allowedEmailDomainsInvalid": "Escribe dominios como example.com, hasta 100.",
     "modes": {
       "open": {
         "label": "Abierto",
-        "description": "Cualquiera que llegue a la página de registro puede crear una cuenta.",
+        "description": "Cualquiera puede crear una cuenta en la página de registro.",
         "descriptionPasswordless": "Quien inicie sesión por primera vez con el proveedor recibe una cuenta."
       },
       "invite": {
         "label": "Solo con invitación",
-        "description": "Una cuenta solo se puede crear a través de un enlace de invitación.",
-        "descriptionPasswordless": "Quien inicie sesión con el proveedor solo recibe una cuenta si tiene una invitación pendiente para su correo."
+        "description": "Solo las direcciones con una invitación pendiente pueden crear una cuenta.",
+        "descriptionPasswordless": "Iniciar sesión con el proveedor solo crea una cuenta para una dirección con una invitación pendiente."
       },
       "closed": {
         "label": "Cerrado",
-        "description": "No hay cuentas nuevas. Las existentes siguen iniciando sesión.",
-        "descriptionPasswordless": "No se crean cuentas nuevas, tampoco para quien llegue desde el proveedor. Las existentes siguen iniciando sesión."
+        "description": "Nadie puede crear una cuenta. Las cuentas existentes siguen iniciando sesión.",
+        "descriptionPasswordless": "Iniciar sesión con el proveedor no crea ninguna cuenta. Las cuentas existentes siguen iniciando sesión."
       }
     },
     "signIn": "Opciones de inicio de sesión",
-    "signInHint": "Cómo inician sesión las personas. Las opciones que envían correo se mantienen apagadas hasta que un proveedor esté configurado.",
-    "needsProvider": "Configura primero el proveedor de Correo bajo Integraciones.",
+    "needsProvider": "Primero configura un proveedor de correo en Integraciones → Proveedor de correo.",
     "requireVerification": "Exigir la confirmación del correo",
-    "requireVerificationHint": "Una cuenta nueva tiene que confirmar su dirección antes de que pueda iniciar sesión.",
+    "requireVerificationHint": "Hay que confirmar la dirección de correo antes de iniciar sesión con contraseña. También afecta a las cuentas existentes: el formulario de inicio de sesión ofrece reenviar el enlace de confirmación.",
     "magicLink": "Enlaces de inicio de sesión",
-    "magicLinkHint": "Ofrecer el inicio de sesión con un enlace enviado por correo, junto a la contraseña.",
+    "magicLinkHint": "Se puede iniciar sesión con un enlace enviado al correo. Solo funciona mientras Correo y contraseña esté activado.",
     "trustProviderEmails": "Confiar en las direcciones de los proveedores de inicio de sesión",
-    "trustProviderEmailsHint": "Google y OpenID Connect inician la sesión en la cuenta que ya tiene esa dirección, confirmada o no. Actívalo solo donde controlas quién puede registrarse en el proveedor.",
+    "trustProviderEmailsHint": "Google y OpenID Connect inician la sesión en la cuenta con la misma dirección de correo, aunque nadie la haya confirmado. Actívalo solo si controlas quién se registra en el proveedor, o alguien podría quedarse con una cuenta.",
     "emailPassword": "Correo y contraseña",
-    "emailPasswordHint": "Ofrecer el formulario de inicio de sesión y registro. Apágalo para dejar entrar a las personas solo por un proveedor de inicio de sesión.",
-    "needsSso": "Configura primero un proveedor de inicio de sesión bajo Integraciones."
+    "emailPasswordHint": "Las personas se registran e inician sesión con un correo y una contraseña. Si lo desactivas, solo pueden entrar con un proveedor de inicio de sesión o una passkey.",
+    "needsSso": "Primero configura un proveedor de inicio de sesión en Integraciones → Proveedor de autenticación.",
+    "signInLimits": "Límites de solicitudes",
+    "signInLimitsHint": "Cuántas solicitudes puede enviar una dirección IP a cada réplica de la API. Los límites frenan los intentos de adivinar contraseñas y los envíos masivos de correo. Detrás de un proxy inverso, el proxy debe enviar X-Forwarded-For, o todos los clientes comparten cada límite.",
+    "signInRateLimit": "Intentos de inicio de sesión y registro",
+    "signInRateLimitHint": "Cada 10 segundos, incluidos los cambios de contraseña y de correo.",
+    "emailRateLimit": "Correos de la cuenta",
+    "emailRateLimitHint": "Por minuto, para correos de restablecimiento de contraseña y de confirmación.",
+    "magicLinkRateLimit": "Solicitudes de enlaces de inicio de sesión",
+    "magicLinkRateLimitHint": "Por minuto, para pedir y abrir enlaces de inicio de sesión.",
+    "signInLimitInvalid": "Escribe un número entero entre 1 y {max}."
   },
   "hotkeys": {
     "saved": "Los atajos de teclado se han guardado"

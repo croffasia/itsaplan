@@ -16,6 +16,11 @@ export const EmailDomains = t.Array(t.String({ pattern: EMAIL_DOMAIN_PATTERN }),
   uniqueItems: true,
 });
 
+const MAX_AUTH_RATE_LIMIT = 1000;
+
+const rateLimitField = (description: string) =>
+  t.Integer({ minimum: 1, maximum: MAX_AUTH_RATE_LIMIT, description });
+
 export const userParams = t.Object({ userId: t.String() });
 
 export const projectParams = t.Object({ projectId: t.Numeric() });
@@ -55,6 +60,9 @@ export const AuthSettingsResponse = t.Object({
   inviteTtlDays: t.Integer(),
   inviteSearch: t.Boolean(),
   allowedEmailDomains: t.Array(t.String()),
+  signInRateLimit: t.Integer(),
+  emailRateLimit: t.Integer(),
+  magicLinkRateLimit: t.Integer(),
   // The settings that depend on outbound email cannot be turned on without a mail
   // provider, and the UI explains why.
   hasEmailProvider: t.Boolean(),
@@ -76,6 +84,18 @@ export const AuthSettingsBody = t.Object({
   inviteTtlDays: t.Optional(t.Integer({ minimum: 0, maximum: 3650 })),
   inviteSearch: t.Optional(t.Boolean()),
   allowedEmailDomains: t.Optional(EmailDomains),
+  // At least 1: the limits are what stops password guessing and mail floods.
+  signInRateLimit: t.Optional(
+    rateLimitField(
+      'Sign-in, sign-up and password or email changes one address may send per 10 seconds.',
+    ),
+  ),
+  emailRateLimit: t.Optional(
+    rateLimitField('Password reset and confirmation emails one address may request per minute.'),
+  ),
+  magicLinkRateLimit: t.Optional(
+    rateLimitField('Sign-in link requests and openings one address may send per minute.'),
+  ),
 });
 
 export const EmailSettingsResponse = t.Object({

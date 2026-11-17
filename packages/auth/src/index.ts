@@ -613,6 +613,28 @@ const DAY_SEC = 24 * 60 * 60;
 export const API_KEY_DEFAULT_EXPIRES_IN_SEC = 90 * DAY_SEC;
 export const API_KEY_MAX_EXPIRES_IN_DAYS = 365;
 
+type LimitField = 'signInRateLimit' | 'emailRateLimit' | 'magicLinkRateLimit';
+
+const limitFrom =
+  (field: LimitField) => async (_request: Request, current: { window: number; max: number }) => ({
+    window: current.window,
+    max: (await getAuthSettings())[field],
+  });
+
+// The paths of better-auth's own rules for sign-in and for the endpoints that send mail.
+// The first matching key wins, so the magic link paths come before /sign-in/*. A `*` does
+// not cross a `/`: `/sign-in*` would miss `/sign-in/email`.
+export const authRateLimitRules = {
+  '/sign-in/magic-link*': limitFrom('magicLinkRateLimit'),
+  '/magic-link/verify*': limitFrom('magicLinkRateLimit'),
+  '/sign-in/*': limitFrom('signInRateLimit'),
+  '/sign-up/*': limitFrom('signInRateLimit'),
+  '/change-password*': limitFrom('signInRateLimit'),
+  '/change-email*': limitFrom('signInRateLimit'),
+  '/request-password-reset': limitFrom('emailRateLimit'),
+  '/send-verification-email': limitFrom('emailRateLimit'),
+};
+
 // Created on first use rather than on import, so a build's extendAuth (./extensions) takes
 // effect wherever a bundler puts its module, as long as it runs before the first request.
 function createAuth() {
@@ -621,6 +643,7 @@ function createAuth() {
     baseURL,
     secret: process.env.BETTER_AUTH_SECRET,
     onAPIError: { errorURL: oauthErrorURL },
+    rateLimit: { customRules: authRateLimitRules },
 
     database: drizzleAdapter(db, {
       provider: 'pg',
@@ -939,11 +962,7 @@ function createAuth() {
       // at creation, and can list (value hidden) or delete it. Adds the `apikey` table.
       // enableSessionForAPIKeys makes a request carrying an `x-api-key` header resolve
       // to the key owner's session, so getSession (and every planner guard built on it)
-      // accepts API keys without any change in apps/api. Rate limit: 100 requests per
-      // second per key (timeWindow is in milliseconds). The ceiling is set for the
-      // heaviest legitimate caller rather than a typical one: an internal AI agent runs
-      // on its own key and dispatches every tool call through a route, and a model that
-      // emits a batch of tool calls in one step turns them into a burst of requests.
+      // accepts API keys without any change in apps/api.
       apiKey({
         enableSessionForAPIKeys: true,
         // Brand prefix so a leaked key is identifiable by secret scanners and in logs.
@@ -956,11 +975,10 @@ function createAuth() {
           defaultExpiresIn: API_KEY_DEFAULT_EXPIRES_IN_SEC,
           maxExpiresIn: API_KEY_MAX_EXPIRES_IN_DAYS,
         },
-        rateLimit: {
-          enabled: true,
-          timeWindow: 1000,
-          maxRequests: 100,
-        },
+        // The plugin's limiter restarts its window only after a pause longer than the
+        // window, and every getSession counts, so apps/api limits keys itself
+        // (shared/key-rate-limit.ts). Off here also skips the limits stored on old keys.
+        rateLimit: { enabled: false },
       }),
       // Sign-in by emailed link, offered alongside the password. Whether it is
       // available is an instance setting, so the plugin is always mounted and the
@@ -1089,8 +1107,7 @@ export type Session = Auth['$Infer']['Session'];
 // it throw out of getSession instead of returning no session, which a caller can
 // only report as a 500. Such a request carries no session, so it is answered as
 // one, and a key that reached its expiry is refused like any other unauthenticated
-// request. A refusal for another reason, a rate-limited key among them, still
-// propagates: it is not the same answer.
+// request. A refusal for another reason still propagates: it is not the same answer.
 export async function getSessionFromHeaders(
   headers: Headers,
 ): Promise<Awaited<ReturnType<typeof auth.api.getSession>>> {

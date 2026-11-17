@@ -1,5 +1,5 @@
 import { Elysia } from 'elysia';
-import { errorAnswer } from './shared/lib';
+import { HttpError, errorAnswer } from './shared/lib';
 import { authContext } from './shared/auth-context';
 import { projectRoutes } from './modules/projects';
 import { teamRoutes } from './modules/teams';
@@ -70,6 +70,7 @@ export const planner = new Elysia({ name: 'planner' })
   .onError({ as: 'global' }, ({ code, error, set }) => {
     const answer = errorAnswer(code, error);
     if (answer.status === 500) console.error('[planner] unhandled error:', error);
+    if (error instanceof HttpError && error.headers) Object.assign(set.headers, error.headers);
     set.status = answer.status;
     return answer.body;
   })

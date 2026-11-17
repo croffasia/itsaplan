@@ -210,6 +210,11 @@
       "everyone": "所有人"
     },
     "apiDocsSaved": "API 文档设置已保存",
+    "apiKeys": "API 密钥",
+    "apiKeysSaved": "API 密钥设置已保存",
+    "keyRequestsPerMinute": "每分钟请求数",
+    "keyRequestsPerMinuteHint": "一个密钥每分钟可发送的请求数，包括 MCP 工具调用。每个 API 副本分别计数。0 表示不限。",
+    "keyRequestsPerMinuteInvalid": "请输入 0 到 {max} 之间的整数。",
     "agents": "代理",
     "agentsSaved": "代理设置已保存",
     "embedding": "嵌入",
@@ -232,43 +237,51 @@
   "authentication": {
     "saved": "身份验证设置已保存",
     "registration": "注册",
-    "registrationHint": "设置哪些人可以创建此实例的账户。",
-    "registrationPasswordlessNote": "注册和密码找回由登录提供方负责。",
+    "registrationHint": "谁可以创建账户，以及邀请的有效期。",
+    "registrationPasswordlessNote": "注册和重置密码在登录提供方处完成。",
     "inviteTtlDays": "邀请有效期（天）",
-    "inviteTtlDaysHint": "超过此期限后，邀请链接将失效；在仅限邀请注册时，也无法再用它注册。设为 0 则邀请永不过期。",
+    "inviteTtlDaysHint": "邀请在创建后满此天数即失效。新值也适用于已有的邀请。0 表示邀请永不过期。",
     "inviteTtlDaysInvalid": "请输入 0 到 {max} 之间的整数天数。",
     "allowedEmailDomains": "允许的邮箱域名",
-    "allowedEmailDomainsHint": "只有这些域名下的地址可以创建账户。用逗号分隔；留空则允许任何地址。已有账户不受影响。",
-    "allowedEmailDomainsInvalid": "每个域名应类似 example.com，最多 100 个。",
+    "allowedEmailDomainsHint": "只有这些域名下的地址可以创建账户，通过邀请也一样。已有账户保留访问权限。域名之间用逗号分隔。每个子域名需要单独添加。留空则允许任何地址。",
+    "allowedEmailDomainsInvalid": "请输入类似 example.com 的域名，最多 100 个。",
     "modes": {
       "open": {
         "label": "开放注册",
-        "description": "任何访问注册页面的人都可以创建账户。",
+        "description": "任何人都可以在注册页面创建账户。",
         "descriptionPasswordless": "任何人首次通过提供方登录即可获得账户。"
       },
       "invite": {
         "label": "仅限邀请",
-        "description": "只有收到项目邀请的邮箱可以创建账户。",
-        "descriptionPasswordless": "仅当该地址存在待处理的邀请时，通过提供方登录才会创建账户。"
+        "description": "只有拥有待处理邀请的地址可以创建账户。",
+        "descriptionPasswordless": "通过提供方登录时，只为拥有待处理邀请的地址创建账户。"
       },
       "closed": {
         "label": "关闭注册",
-        "description": "不允许创建新账户，现有账户仍可登录。",
-        "descriptionPasswordless": "不创建新账户，即使通过提供方登录也不例外。现有账户可继续登录。"
+        "description": "任何人都无法创建账户。已有账户可以继续登录。",
+        "descriptionPasswordless": "通过提供方登录不会创建账户。已有账户可以继续登录。"
       }
     },
     "signIn": "登录选项",
-    "signInHint": "登录方式。需要发送邮件的选项在配置邮件服务前不可用。",
-    "needsProvider": "请先在“邮件服务商”中完成配置。",
+    "needsProvider": "请先在 集成 → 邮件服务商 中设置邮件服务商。",
     "requireVerification": "要求验证邮箱",
-    "requireVerificationHint": "新账户必须验证邮箱后才能登录。",
+    "requireVerificationHint": "使用密码登录前必须先确认邮箱地址。已有账户同样适用：登录表单会提供重新发送确认链接的选项。",
     "magicLink": "邮箱登录链接",
-    "magicLinkHint": "通过邮件发送免密码登录链接。",
+    "magicLinkHint": "可以通过发送到邮箱的链接登录。仅在开启「邮箱和密码」时有效。",
     "trustProviderEmails": "信任登录提供方的邮箱地址",
-    "trustProviderEmailsHint": "通过 Google 或 OpenID Connect 登录时，直接进入已使用该邮箱地址的账户，无论该地址是否在此验证过。仅当由你决定谁能在提供方注册时才开启。",
+    "trustProviderEmailsHint": "Google 和 OpenID Connect 会让用户登录到使用相同邮箱地址的账户，即使该地址从未被确认。仅当你能控制谁在提供方注册时才开启，否则他人可能接管账户。",
     "emailPassword": "邮箱和密码",
-    "emailPasswordHint": "提供登录和注册表单。关闭后只能通过登录提供方进入。",
-    "needsSso": "请先在「集成」中配置登录提供方。"
+    "emailPasswordHint": "用户使用邮箱和密码注册和登录。关闭后，只能通过登录提供方或通行密钥登录。",
+    "needsSso": "请先在 集成 → 身份验证提供商 中设置登录提供方。",
+    "signInLimits": "请求限制",
+    "signInLimitsHint": "一个 IP 地址可向每个 API 副本发送的请求数。用于阻止猜测密码和邮件轰炸。在反向代理之后，代理必须设置 X-Forwarded-For，否则所有客户端共用每个限制。",
+    "signInRateLimit": "登录和注册尝试",
+    "signInRateLimitHint": "每 10 秒，包括修改密码和邮箱。",
+    "emailRateLimit": "账户邮件",
+    "emailRateLimitHint": "每分钟，针对重置密码邮件和邮箱确认邮件。",
+    "magicLinkRateLimit": "登录链接请求",
+    "magicLinkRateLimitHint": "每分钟，针对请求和打开登录链接。",
+    "signInLimitInvalid": "请输入 1 到 {max} 之间的整数。"
   },
   "hotkeys": {
     "saved": "键盘快捷键已保存"

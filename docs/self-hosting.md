@@ -105,7 +105,9 @@ project's secret. Auth, email links, the browser and MCP keep using `API_URL`.
 
 The api rate-limits authentication per client address: sign-in, sign-up, password change and
 email change to 3 requests per 10 seconds, sign-in links (requesting and opening one) to 5 per
-minute, password reset and confirmation emails to 3 per minute. It reads the address from `X-Forwarded-For` and takes it only when the header holds
+minute, password reset and confirmation emails to 3 per minute. Change these numbers in god mode
+under **Authentication → Request limits**; each is at least 1. Each api replica counts on its
+own. It reads the address from `X-Forwarded-For` and takes it only when the header holds
 one address. When it finds no address it can use, every client shares one limit per route,
 and the api logs `Rate limiting could not determine a client IP` once.
 
@@ -131,6 +133,14 @@ client pick its own address: Caddy passes `X-Real-IP` on as the client sent it.
 A client that reaches the api without the proxy writes any of these headers itself.
 `docker-compose.yml` publishes the api on `API_PORT` of the host; keep that port closed to
 everything but the proxy.
+
+### API key rate limit
+
+One API key may send 1200 requests a minute. Each MCP message, such as a tool call, is one request. Change the limit
+in god mode under **General → API keys**; 0 turns it off. A key over the limit gets HTTP 429
+with a `Retry-After` header that says how many seconds remain in its minute. Each key has its
+own count, and with several api replicas each replica counts on its own. A new limit applies at
+once on the replica that saved it and within a minute on the others.
 
 ## Mail
 

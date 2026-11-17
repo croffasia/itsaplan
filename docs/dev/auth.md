@@ -47,7 +47,7 @@ The mail From address falls back to env (`EMAIL_FROM`, then `NOTIFICATIONS_EMAIL
 
 - `app_setting` key `auth` → `{ registration, requireEmailVerification, magicLink,
   emailPassword, trustProviderEmails, personalWorkspaces, inviteTtlDays, inviteSearch,
-  allowedEmailDomains }`.
+  allowedEmailDomains, signInRateLimit, emailRateLimit, magicLinkRateLimit }`.
 - `app_secret` keys `auth.email`, `auth.google`, `auth.oidc` and `auth.scim` → the mail
   provider, Google, the OIDC provider and the instance's SCIM token, set in god mode.
 - `app_secret` key `workspace.<id>.scim` → a workspace's SCIM token, set by the workspace owner.
@@ -108,6 +108,20 @@ With confirmation required, sign-up opens no session. A new address gets its use
 that already has an account gets a made-up user, the same `token: null` and no mail, so the answer
 does not reveal that the address is taken. The web sign-up shows a "confirm your email" screen for
 both instead of entering the app, and the link opens the session (`autoSignInAfterVerification`).
+
+## Rate limits on sign-in
+
+better-auth limits requests per client address in production, in memory, so each api replica
+counts on its own. `rateLimit.customRules` (`authRateLimitRules` in `src/index.ts`) gives the
+paths of its own rules a maximum from the auth settings, read per request, and keeps their
+window: `signInRateLimit` for `/sign-in/*`, `/sign-up/*`, `/change-password*` and `/change-email*`
+per 10 seconds, `emailRateLimit` for `/request-password-reset` and `/send-verification-email` per
+minute, `magicLinkRateLimit` for `/sign-in/magic-link*` and `/magic-link/verify*` per minute.
+The first matching key wins, so the magic link paths come before `/sign-in/*`. better-auth's `*`
+does not cross a `/`. The defaults are
+better-auth's (3, 3, 5) and the api takes 1 to 1000, so no limit can be turned off. Every other
+auth path keeps better-auth's 100 requests per 10 seconds. An API key never reaches these: its
+session is resolved in-process, not through the auth handler.
 
 ## Username
 
@@ -268,7 +282,22 @@ clears `expires_at` on the row afterwards.
 A key the plugin refuses with a 401 or 403 (expired, disabled, unknown or malformed) makes it throw
 out of `auth.api.getSession` rather than return no session. `getSessionFromHeaders` turns that into
 "no session", so an expired key is answered with a 401 instead of a 500. It rethrows any other
-refusal, such as a rate-limited key's 429.
+refusal.
+
+The plugin's rate limit is off (`rateLimit.enabled: false`). It restarts its window only after a
+pause longer than the window, and it counts every `getSession`, of which an MCP tool call makes two.
+The off switch also skips the limits each older key stored in its own row. apps/api limits keys
+instead: `requestUser` in `shared/auth-context.ts` counts each request made with a key in
+`shared/key-rate-limit.ts`, one fixed one-minute window per key. The limit is
+`requestsPerMinute` in god mode (General → API keys, `app_setting` key `apiKeys`), 1200 by
+default, 0 for none. Each api process keeps the setting for a minute (`keptApiKeySettings`): a
+change saved in god mode applies at once on the replica that saved it and within a minute on the
+others. A key over it gets 429 `RATE_LIMITED` with a `Retry-After` header, and an MCP
+tool call dispatched by an internal agent returns that as `retryAfterSeconds`. `POST /mcp` counts
+each JSON-RPC message of the request, a batch included, and answers 429 itself. The tool calls it
+dispatches are not counted again: `requestUser` recognises them by `getMcpClientRequest`, an
+in-process link a client cannot set. The windows are kept in memory, so each api replica counts
+on its own.
 
 ## MCP OAuth
 

@@ -35,7 +35,7 @@
     },
     "authentication": {
       "label": "Autentikasi",
-      "description": "Siapa yang boleh mendaftar di instance ini, cara akun dikonfirmasi, dan penyedia yang digunakan untuk masuk."
+      "description": "Siapa yang bisa mendaftar, cara orang masuk, dan batas permintaan."
     },
     "hotkeys": {
       "label": "Pintasan keyboard",

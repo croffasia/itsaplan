@@ -1,6 +1,12 @@
 import { t } from 'elysia';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
-import { auth, isAccountDeactivated, mcpUnauthorized, verifyMcpAccessToken } from '@repo/auth';
+import {
+  getSessionFromHeaders,
+  isAccountDeactivated,
+  mcpUnauthorized,
+  verifyMcpAccessToken,
+} from '@repo/auth';
+import { countKeyRequests } from '#shared/key-rate-limit';
 import { buildMcpServer } from './server';
 import type { McpApp } from './types';
 import type { McpCredential } from './credential';
@@ -44,15 +50,17 @@ export function mountMcp(app: any): void {
       if (apiKey) {
         const headers = new Headers(request.headers);
         headers.set('x-api-key', apiKey);
-        try {
-          const session = await auth.api.getSession({ headers });
-          // A deactivated account is refused here too, the way shared/auth-context.ts
-          // refuses it for every planner route. Deactivation arrives over SCIM or from
-          // god mode, after the key was issued.
-          if (session && !isAccountDeactivated(session.user))
-            return serve({ kind: 'api-key', apiKey }, session.user.id);
-        } catch {
-          // Not an API key: it may be an OAuth access token, checked below.
+        // No session for a value that is not an API key: it may be an OAuth access token,
+        // checked below.
+        const session = await getSessionFromHeaders(headers);
+        // A deactivated account is refused here too, the way shared/auth-context.ts
+        // refuses it for every planner route. Deactivation arrives over SCIM or from
+        // god mode, after the key was issued.
+        if (session && !isAccountDeactivated(session.user)) {
+          // One request per JSON-RPC message, a batch included. The tool calls they
+          // dispatch are not counted again (requestUser).
+          await countKeyRequests(session.session.id, Array.isArray(body) ? body.length : 1);
+          return serve({ kind: 'api-key', apiKey }, session.user.id);
         }
       }
       const userId = apiKey ? await verifyMcpAccessToken(apiKey) : null;

@@ -35,7 +35,7 @@
     },
     "authentication": {
       "label": "인증",
-      "description": "이 인스턴스의 회원가입 허용 범위, 계정 인증 방법 및 로그인 공급자를 설정합니다."
+      "description": "가입할 수 있는 사람, 로그인 방법, 요청 한도."
     },
     "hotkeys": {
       "label": "키보드 단축키",

@@ -552,6 +552,24 @@ describe('external agent chat', () => {
     expect(stream.frames.at(-1)).toContain('RUN_FINISHED');
   });
 
+  // Nothing is written while the answer waits for a runner, so the dropped connection is
+  // the only sign that nobody reads it any more.
+  it('stops reading an answer once the caller drops its stream', async () => {
+    const { owner, asOwner, agent } = await setup();
+    const sent = await send(asOwner, agent.id, 'Ping');
+    const caller = new AbortController();
+    const res = await app.handle(
+      new Request(
+        `http://localhost/projects/MKT/ai-agents/${agent.id}/chat/${sent.data!.messageId}/stream`,
+        { headers: { cookie: owner.cookie }, signal: caller.signal },
+      ),
+    );
+    const reader = res.body!.getReader();
+
+    caller.abort();
+    expect((await reader.read()).done).toBe(true);
+  });
+
   it('ends a failed answer with the reason it stopped', async () => {
     const { owner, asOwner, asRunner, agent } = await setup();
     await send(asOwner, agent.id, 'Ping');

@@ -44,7 +44,6 @@ import {
 // browser reconnect. An answer may legitimately wait a long time for a runner to come
 // online, so this is a bound on the connection, not on the answer.
 const STREAM_MAX_MS = 30 * 60_000;
-const KEEPALIVE_MS = 15_000;
 
 // The agent this route acts on, or a 404. Only an external agent has a chat feed: an
 // internal one is run in-process by /run and /run/stream.
@@ -121,7 +120,7 @@ export const agentChatRoutes = new Elysia({ name: 'agent-chat', detail: { tags: 
   // the chat show that it is waiting.
   .get(
     '/projects/:projectKey/ai-agents/:agentId/chat/:messageId/stream',
-    async ({ params, project, query, user }) => {
+    async ({ params, project, query, user, request }) => {
       const caller = requireUser(user);
       await requireExternalAgent(params.agentId, project.id);
       // Checked before the stream starts, so an unknown answer is a 404 rather than a
@@ -130,7 +129,9 @@ export const agentChatRoutes = new Elysia({ name: 'agent-chat', detail: { tags: 
       if (!(await readEvents(params.messageId, params.agentId, caller.id, after))) {
         throw new HttpError(404, 'Message not found');
       }
-      return sseResponse(streamChatEvents(params.messageId, params.agentId, caller.id, after));
+      return sseResponse(
+        streamChatEvents(params.messageId, params.agentId, caller.id, after, request.signal),
+      );
     },
     {
       params: chatMessageParams,
@@ -256,19 +257,19 @@ export const agentChatRoutes = new Elysia({ name: 'agent-chat', detail: { tags: 
 //
 // The answer always ends on RUN_FINISHED or RUN_ERROR, synthesized when the runner
 // reported neither, so a stream that closes without one means the connection dropped
-// rather than the answer ending. Comment frames keep the connection alive through a
-// proxy that would otherwise drop it while the agent is thinking.
+// rather than the answer ending. A caller that drops the connection stops the reads: while
+// the answer is quiet nothing is written, so nothing else would notice.
 async function* streamChatEvents(
   messageId: number,
   agentId: number,
   userId: string,
   after: number,
+  signal: AbortSignal,
 ): AsyncGenerator<string> {
   const until = Date.now() + STREAM_MAX_MS;
   const { streamPollMs } = (await getJobSettings()).agentChat;
   let cursor = after;
   let ended = false;
-  let quietSince = Date.now();
   for (;;) {
     const page = await readEvents(messageId, agentId, userId, cursor);
     if (!page) return;
@@ -276,10 +277,7 @@ async function* streamChatEvents(
       if (item.event.type === 'RUN_ERROR' || item.event.type === 'RUN_FINISHED') ended = true;
       yield sseFrame(item.event, item.id);
     }
-    if (page.nextCursor != null) {
-      cursor = page.nextCursor;
-      quietSince = Date.now();
-    }
+    if (page.nextCursor != null) cursor = page.nextCursor;
     // More is already stored than one read hands out: take it before deciding the
     // answer is over or waiting for the next tick.
     if (page.hasMore) continue;
@@ -287,11 +285,7 @@ async function* streamChatEvents(
       if (!ended) yield sseFrame(terminalEvent(page.status, page.error), cursor);
       return;
     }
-    if (Date.now() >= until) return;
-    if (Date.now() - quietSince >= KEEPALIVE_MS) {
-      yield ': ping\n\n';
-      quietSince = Date.now();
-    }
+    if (signal.aborted || Date.now() >= until) return;
     await sleep(streamPollMs);
   }
 }

@@ -6,6 +6,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
+import { DRAGGABLE_FOCUS } from '../../utils/dnd';
 
 // A draggable chip inside a day cell. A click (no drag) opens the issue; a drag
 // moves it to another day or the unscheduled panel.
@@ -42,6 +43,7 @@ export function CalendarDayChip({
             }}
             className={cn(
               'flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs transition-colors hover:bg-accent',
+              DRAGGABLE_FOCUS,
               isDragging && 'opacity-40',
             )}
           >
@@ -49,7 +51,9 @@ export function CalendarDayChip({
               className="inline-block size-1.5 shrink-0 rounded-full"
               style={{ backgroundColor: color }}
             />
-            <span className="truncate text-foreground">{issue.title}</span>
+            <span dir="auto" className="truncate text-foreground">
+              {issue.title}
+            </span>
           </div>
         </TooltipTrigger>
       </IssueContextMenu>

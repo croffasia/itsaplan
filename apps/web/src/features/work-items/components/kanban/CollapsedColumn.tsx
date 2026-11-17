@@ -63,7 +63,10 @@ export function CollapsedColumn({
       <div className="flex flex-1 items-start gap-2 text-sm font-medium [writing-mode:vertical-rl]">
         <span className="text-foreground">{group.name}</span>
         <span
-          className={cn(wip?.full ? WIP_FULL_TEXT[wipFullColor(wip)] : 'text-muted-foreground')}
+          className={cn(
+            'text-xs font-normal',
+            wip?.full ? WIP_FULL_TEXT[wipFullColor(wip)] : 'text-muted-foreground',
+          )}
         >
           {count}
         </span>

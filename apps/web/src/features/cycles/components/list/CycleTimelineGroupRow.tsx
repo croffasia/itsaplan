@@ -21,7 +21,7 @@ export default function CycleTimelineGroupRow({
   return (
     <div className="flex border-b bg-muted/40" style={{ height: CYCLE_GROUP_H }}>
       <div
-        className="sticky left-0 z-10 flex shrink-0 items-center gap-2 border-r bg-muted px-3 text-sm font-medium"
+        className="sticky start-0 z-10 flex shrink-0 items-center gap-2 border-e bg-muted px-3 text-sm font-medium"
         style={{ width: labelW }}
       >
         {colorDot(group.color)}

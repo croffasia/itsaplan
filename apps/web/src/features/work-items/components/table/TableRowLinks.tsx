@@ -22,7 +22,7 @@ export function TableRowLinks({
   if (links.length === 0) return null;
 
   return (
-    <div className="col-span-full flex flex-col pt-1 pl-6">
+    <div className="col-span-full flex flex-col ps-6 pt-1">
       {links.map((link, index) => {
         const column = maps.columnById.get(link.issue.columnId);
         // Relations are grouped by sort order, so only the first row of a run
@@ -39,7 +39,7 @@ export function TableRowLinks({
           >
             <button
               type="button"
-              className="flex min-w-0 items-center gap-2 rounded py-0.5 text-left text-xs text-muted-foreground hover:text-foreground"
+              className="flex min-w-0 items-center gap-2 rounded py-0.5 text-start text-xs text-muted-foreground hover:text-foreground"
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -55,7 +55,9 @@ export function TableRowLinks({
                 />
               )}
               <span className="shrink-0 tabular-nums">{link.issue.identifier}</span>
-              <span className="truncate">{link.issue.title}</span>
+              <span dir="auto" className="truncate">
+                {link.issue.title}
+              </span>
             </button>
           </div>
         );

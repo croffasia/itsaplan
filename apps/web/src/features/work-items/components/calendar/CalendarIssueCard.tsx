@@ -6,6 +6,7 @@ import { useIsPhone } from '@/hooks/useIsPhone';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
+import { DRAGGABLE_FOCUS } from '../../utils/dnd';
 
 // Memoized because the unscheduled panel renders again on every scroll step.
 export const CalendarIssueCard = memo(function CalendarIssueCard({
@@ -44,6 +45,7 @@ export const CalendarIssueCard = memo(function CalendarIssueCard({
         }}
         className={cn(
           'kanban-card flex cursor-pointer items-center gap-x-2 gap-y-1 rounded-md p-2 text-xs',
+          DRAGGABLE_FOCUS,
           multiline && 'flex-wrap',
           isDragging && 'opacity-40',
         )}
@@ -54,6 +56,7 @@ export const CalendarIssueCard = memo(function CalendarIssueCard({
         />
         <span className="shrink-0 text-muted-foreground tabular-nums">{issue.identifier}</span>
         <span
+          dir="auto"
           className={cn(
             'text-foreground',
             multiline ? 'line-clamp-3 basis-full break-words' : 'truncate',

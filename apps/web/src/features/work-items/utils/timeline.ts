@@ -29,6 +29,9 @@ import { columnFloor, orderedColumns, type OrderedColumn } from './table';
 // narrower days fit longer ranges and fall back to weekly gridlines.
 export const SCALE_DAY_W: Record<TimelineScale, number> = { week: 32, month: 12, quarter: 5 };
 export const ROW_H = 36; // px, an issue row
+// Narrower bars show no title: a few cut letters say nothing, and the label column
+// beside the track already names the issue.
+export const MIN_TITLED_BAR_W = 64;
 export const LINK_ROW_H = 26; // px, a linked-issue sub-row under an issue row
 export const GROUP_H = 32; // px, a state group header row
 export const SUBGROUP_H = 28; // px, a sub-group header row under a group

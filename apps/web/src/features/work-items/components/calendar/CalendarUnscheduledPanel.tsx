@@ -54,7 +54,7 @@ export function CalendarUnscheduledPanel({
     >
       <div className="mb-2 flex items-center gap-2 text-sm font-medium text-muted-foreground">
         {t(`noDate.${key}`)}
-        <span className="text-muted-foreground">{issues.length}</span>
+        <span className="text-xs font-normal text-muted-foreground">{issues.length}</span>
         {onCollapse && (
           <Tooltip>
             <TooltipTrigger asChild>

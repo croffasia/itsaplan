@@ -43,7 +43,7 @@ export function IssueCardSubtasks({
   const Chevron = open ? ChevronDownIcon : ChevronRightIcon;
 
   return (
-    <div className="mt-2.5 flex flex-col gap-1 border-t border-border/50 pt-2">
+    <div className="mt-2 flex flex-col gap-1 border-t border-border/50 pt-1.5">
       <button
         type="button"
         // The card starts a drag on press and opens itself on click, so the
@@ -60,7 +60,7 @@ export function IssueCardSubtasks({
         <Chevron {...hover.icon.chevron} size={12} className="shrink-0 text-muted-foreground" />
         <ListTreeIcon {...hover.icon.list} size={12} className="shrink-0 text-muted-foreground" />
         {t('subtasksProgress', { done: progress.done, total: progress.total })}
-        <span className="ml-auto h-0.5 w-12 shrink-0 overflow-hidden rounded-full bg-muted">
+        <span className="ms-auto h-0.5 w-12 shrink-0 overflow-hidden rounded-full bg-muted">
           <span
             className="block h-full rounded-full bg-muted-foreground/50"
             style={{

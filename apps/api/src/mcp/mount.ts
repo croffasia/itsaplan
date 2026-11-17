@@ -6,6 +6,7 @@ import {
   mcpUnauthorized,
   verifyMcpAccessToken,
 } from '@repo/auth';
+import { SSE_HEARTBEAT_MS } from '#shared/http';
 import { countKeyRequests } from '#shared/key-rate-limit';
 import { buildMcpServer } from './server';
 import type { McpApp } from './types';
@@ -40,6 +41,7 @@ export function mountMcp(app: any): void {
         const server = await buildMcpServer(mcpApp, credential, userId, request);
         const transport = new WebStandardStreamableHTTPServerTransport({
           sessionIdGenerator: undefined,
+          keepAliveMs: SSE_HEARTBEAT_MS,
         });
         await server.connect(transport);
         // Pass the body Elysia already parsed so the request stream is not read twice.

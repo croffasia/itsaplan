@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import { inlineSign } from '@/utils/inlineSign';
 
-// The grip on the right edge of a table column's header cell: dragging it sets
+// The grip on the end edge of a table column's header cell: dragging it sets
 // that column's width. The starting width is measured from the cell itself, so a
 // column that still sits on its default track resizes from where it is.
 export function TableColumnResizer({
@@ -24,7 +25,8 @@ export function TableColumnResizer({
     if (!cell) return;
     const startX = e.clientX;
     const startWidth = cell.getBoundingClientRect().width;
-    const onMove = (ev: PointerEvent) => onResize(startWidth + (ev.clientX - startX));
+    const sign = inlineSign(cell);
+    const onMove = (ev: PointerEvent) => onResize(startWidth + sign * (ev.clientX - startX));
     // pointercancel ends the drag as well: a touch the browser takes over for
     // scrolling never sends pointerup, and the move listener would keep resizing
     // on every later gesture.
@@ -48,7 +50,7 @@ export function TableColumnResizer({
       // Placed in the gap after the cell, so it does not cover the label, and
       // stretched over the header's padding to stay easy to grab. touch-none keeps
       // a touch drag on the grip from scrolling the table instead.
-      className="absolute -inset-y-2 -right-2 w-1.5 cursor-col-resize touch-none hover:bg-primary/40"
+      className="absolute -inset-y-2 -end-2 w-1.5 cursor-col-resize touch-none hover:bg-primary/40"
     />
   );
 }

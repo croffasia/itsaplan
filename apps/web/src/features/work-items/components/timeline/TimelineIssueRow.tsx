@@ -6,6 +6,7 @@ import { useIsPhone } from '@/hooks/useIsPhone';
 import { cn } from '@/lib/utils';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
 import { type TimelineDragMode } from '../../hooks/useTimelineDrag';
+import { DRAGGABLE_FOCUS } from '../../utils/dnd';
 import { ROW_H, type Span, type TimelineColumn } from '../../utils/timeline';
 import { IssueIdentifier } from '../shared/IssueIdentifier';
 import { SubtaskProgress } from '../shared/SubtaskProgress';
@@ -71,7 +72,7 @@ export function TimelineIssueRow({
       style={{ height: ROW_H }}
     >
       <div
-        className="sticky left-0 z-15 flex shrink-0 overflow-hidden border-r bg-background"
+        className="sticky start-0 z-15 flex shrink-0 overflow-hidden border-e bg-background"
         style={{ width: labelW }}
       >
         <IssueContextMenu project={project} issue={issue}>
@@ -80,8 +81,9 @@ export function TimelineIssueRow({
             {...attributes}
             {...listeners}
             className={cn(
-              'flex min-w-0 flex-1 items-center gap-2 overflow-hidden pr-3',
-              indented ? 'pl-7' : 'pl-3',
+              'flex min-w-0 flex-1 items-center gap-2 overflow-hidden pe-3',
+              indented ? 'ps-7' : 'ps-3',
+              DRAGGABLE_FOCUS,
               readOnly ? 'cursor-pointer' : 'cursor-grab',
             )}
             onClick={(e) => {
@@ -94,7 +96,9 @@ export function TimelineIssueRow({
               className="text-xs text-muted-foreground tabular-nums"
               onOpenAncestor={onOpen}
             />
-            <span className="min-w-0 flex-1 truncate text-sm text-foreground">{issue.title}</span>
+            <span dir="auto" className="min-w-0 flex-1 truncate text-sm text-foreground">
+              {issue.title}
+            </span>
             <SubtaskProgress
               issueId={issue.id}
               maps={maps}
@@ -117,7 +121,7 @@ export function TimelineIssueRow({
         {todayInRange && (
           <div
             className="absolute top-0 bottom-0 z-0 w-px bg-primary/40"
-            style={{ left: todayLeft }}
+            style={{ insetInlineStart: todayLeft }}
           />
         )}
         <TimelineBar

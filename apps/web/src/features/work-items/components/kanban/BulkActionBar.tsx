@@ -57,11 +57,11 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
       <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center">
         <div
           className={cn(
-            'pointer-events-auto flex items-center gap-1 rounded-lg border bg-popover p-1 pl-3 shadow-lg',
+            'pointer-events-auto flex items-center gap-1 rounded-lg border bg-popover p-1 ps-3 shadow-lg',
             disabled && 'opacity-70',
           )}
         >
-          <span className="pr-1 text-sm font-medium whitespace-nowrap">
+          <span className="pe-1 text-sm font-medium whitespace-nowrap">
             {t('selected', { count: ids.length })}
           </span>
 

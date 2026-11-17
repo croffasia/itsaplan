@@ -40,7 +40,7 @@ export function CalendarQuickAdd({
         <TooltipTrigger asChild>
           <ToolbarIconButton
             icon={PlusIcon}
-            className={cn('p-0.5', REVEAL)}
+            className={cn('ms-auto p-0.5', REVEAL)}
             onClick={() => setOpen(true)}
             aria-label={t('addWorkItem')}
           />

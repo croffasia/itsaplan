@@ -8,11 +8,11 @@ import { PriorityIcon } from './IssueIcons';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-// Small issue display badges shared by the project card (KanbanBoard) and the
-// table cells (TableView) so both render the same pill/icon/avatar.
+// Small issue display badges shared by the board card, the table cells and the
+// initiatives list.
 
-// Outline pill styling shared by the label and date badges.
-const PILL = 'text-muted-foreground rounded-full px-1.5 py-0.5 text-[10px]';
+// Outline pill styling shared by the label and date badges and the board card's pills.
+export const PILL = 'text-muted-foreground rounded-full px-1.5 py-0.5 text-[10px]';
 
 // Priority glyph with a "<priority> priority" tooltip.
 export function PriorityBadge({

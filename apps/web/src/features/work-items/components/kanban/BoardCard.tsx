@@ -10,6 +10,7 @@ import type { PropertyKey } from '@/utils/viewSettings';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
 import { useIsBlocked } from '../../context/useIssueLinks';
 import { useSelection } from '../../context/useSelection';
+import { DRAGGABLE_FOCUS } from '../../utils/dnd';
 import { draggedIds } from '../../utils/kanban';
 import { IssueCardBody } from './IssueCardBody';
 
@@ -97,7 +98,8 @@ export const BoardCard = memo(function BoardCard({
         className={cn(
           // select-none so a Shift/Cmd-click toggles selection without the browser
           // also starting a native text selection across cards.
-          'kanban-card cursor-grab rounded-md p-2 select-none',
+          'kanban-card cursor-grab rounded-md p-3 select-none',
+          DRAGGABLE_FOCUS,
           isDragging && 'opacity-40',
           blocked && 'kanban-card-blocked',
           // Selected cards read as a primary-tinted fill, like Linear — no border,

@@ -212,7 +212,6 @@ const COMMON: Omit<ViewSettings, 'group' | 'subgroup' | 'properties' | 'sort' | 
 const DEFAULT_PROPERTIES: Record<WorkItemsView, DisplayProperty[]> = {
   kanban: [
     'id',
-    'status',
     'statusAge',
     'priority',
     'type',

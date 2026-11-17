@@ -22,7 +22,8 @@ export function WipCount({
 }) {
   const t = useTranslations('workItems.wip');
 
-  if (!wip) return <span className="text-muted-foreground">{filteredCount}</span>;
+  if (!wip)
+    return <span className="text-xs font-normal text-muted-foreground">{filteredCount}</span>;
 
   // Only worth two numbers when the filters actually hide some of the column.
   const partial = filtered && filteredCount !== wip.count;
@@ -32,8 +33,8 @@ export function WipCount({
       <TooltipTrigger asChild>
         <span
           className={cn(
-            'tabular-nums',
-            wip.full ? `font-medium ${WIP_FULL_TEXT[wipFullColor(wip)]}` : 'text-muted-foreground',
+            'text-xs font-normal tabular-nums',
+            wip.full ? WIP_FULL_TEXT[wipFullColor(wip)] : 'text-muted-foreground',
           )}
         >
           {partial

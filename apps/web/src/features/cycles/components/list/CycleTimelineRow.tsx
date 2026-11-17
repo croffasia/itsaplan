@@ -49,7 +49,7 @@ export default function CycleTimelineRow({
   return (
     <div className="flex border-b hover:bg-accent/20" style={{ height: CYCLE_ROW_H }}>
       <div
-        className="sticky left-0 z-10 flex shrink-0 items-center overflow-hidden border-r bg-background px-3"
+        className="sticky start-0 z-10 flex shrink-0 items-center overflow-hidden border-e bg-background px-3"
         style={{ width: labelW }}
       >
         <CycleInfoPopover cycle={cycle} projectKey={projectKey} />
@@ -59,7 +59,7 @@ export default function CycleTimelineRow({
         {todayInRange && (
           <div
             className="absolute top-0 bottom-0 z-0 w-px bg-primary/40"
-            style={{ left: todayLeft }}
+            style={{ insetInlineStart: todayLeft }}
           />
         )}
         <div
@@ -70,30 +70,32 @@ export default function CycleTimelineRow({
             'group absolute top-1/2 z-10 flex h-6 -translate-y-1/2 items-center overflow-hidden rounded px-1.5 text-white select-none',
             canMove ? 'cursor-grab' : 'cursor-pointer',
           )}
-          style={{ left: rect.left, width: rect.width, backgroundColor: color }}
+          style={{ insetInlineStart: rect.left, width: rect.width, backgroundColor: color }}
         >
           <div
-            className="absolute inset-y-0 left-0 bg-white/30"
+            className="absolute inset-y-0 start-0 bg-white/30"
             style={{ width: `${progressPercent(cycle.progress)}%` }}
           />
           {canEdit && ends.start && (
             <span
               onPointerDown={(e) => onBeginDrag(e, cycle, 'start')}
-              className="absolute top-0 left-0 h-full w-1.5 cursor-ew-resize bg-white/40 opacity-0 group-hover:opacity-100"
+              className="absolute start-0 top-0 h-full w-1.5 cursor-ew-resize bg-white/40 opacity-0 group-hover:opacity-100"
             />
           )}
-          <span className="relative truncate text-[11px] leading-none">{cycle.name}</span>
+          <span dir="auto" className="relative truncate text-[11px] leading-none">
+            {cycle.name}
+          </span>
           {canEdit && ends.end && (
             <span
               onPointerDown={(e) => onBeginDrag(e, cycle, 'end')}
-              className="absolute top-0 right-0 h-full w-1.5 cursor-ew-resize bg-white/40 opacity-0 group-hover:opacity-100"
+              className="absolute end-0 top-0 h-full w-1.5 cursor-ew-resize bg-white/40 opacity-0 group-hover:opacity-100"
             />
           )}
         </div>
 
         <div
           className="pointer-events-none absolute top-1/2 flex -translate-y-1/2 items-center gap-2.5 text-[11px] whitespace-nowrap text-muted-foreground tabular-nums"
-          style={{ left: rect.left + rect.width + 8 }}
+          style={{ insetInlineStart: rect.left + rect.width + 8 }}
         >
           <span className="flex items-center gap-1" title={t('columns.length')}>
             <CalendarRange className="size-3" />

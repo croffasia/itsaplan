@@ -41,7 +41,7 @@ export function IssueCardSubtaskRow({
             onOpen?.(subtask.id);
           }}
           className={cn(
-            '-mx-1.5 flex items-center gap-2 rounded px-1.5 py-1 text-left',
+            '-mx-1.5 flex items-center gap-2 rounded px-1.5 py-1 text-start',
             onOpen && 'cursor-pointer hover:bg-muted/70',
           )}
         >
@@ -57,6 +57,7 @@ export function IssueCardSubtaskRow({
           </span>
           <span
             ref={titleRef}
+            dir="auto"
             className={cn(
               'truncate text-[11px] text-foreground/85',
               column?.stateType === 'completed' && 'text-muted-foreground/70 line-through',

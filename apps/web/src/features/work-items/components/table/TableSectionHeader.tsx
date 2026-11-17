@@ -50,7 +50,7 @@ export function TableSectionHeader({
         <Chevron ref={ref} size={14} className="text-muted-foreground" />
         <GroupDot group={group} />
         {group.name}
-        <span className="text-muted-foreground">{count}</span>
+        <span className="text-xs font-normal text-muted-foreground">{count}</span>
       </button>
       {canAdd && <HeaderIconButton icon={PlusIcon} label={t('newIssue')} onClick={onAddIssue} />}
     </TableDropZone>

@@ -1267,6 +1267,14 @@ span.issue-ref {
   background: var(--muted);
   font-weight: 600;
 }
+/* A gradient direction toward the end of the line, which `linear-gradient` has no
+   logical keyword for. The timelines draw their day lines with it. */
+:root {
+  --to-inline-end: to right;
+}
+[dir='rtl'] {
+  --to-inline-end: to left;
+}
 /* Right-to-left corrections for the shadcn primitives, applied from the outside for
    the same reason as the shadows above: the generated components are kept as shadcn
    writes them, so an edit inside one is lost the next time it is re-added.

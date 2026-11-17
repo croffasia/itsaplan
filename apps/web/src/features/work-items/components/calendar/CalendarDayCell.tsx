@@ -42,13 +42,13 @@ export function CalendarDayCell({
     <CalendarDropZone
       id={dropId('day', dateKey)}
       className={cn(
-        'group/add flex min-h-0 flex-col gap-0.5 overflow-hidden border-t border-l p-1 [&:nth-child(-n+7)]:border-t-0 [&:nth-child(7n+1)]:border-l-0',
+        'group/add flex min-h-0 flex-col gap-0.5 overflow-hidden border-s border-t p-1 [&:nth-child(-n+7)]:border-t-0 [&:nth-child(7n+1)]:border-s-0',
         !inMonth && 'bg-muted/20',
       )}
     >
       <div className="flex h-5 shrink-0 items-center gap-1 px-1">
+        <span className={cn('text-xs', dayNumberClass)}>{dayNumber}</span>
         {onQuickAdd && <CalendarQuickAdd compact onAdd={(title) => onQuickAdd(dateKey, title)} />}
-        <span className={cn('ms-auto text-xs', dayNumberClass)}>{dayNumber}</span>
       </div>
       <div className="flex flex-col gap-0.5 overflow-y-auto">
         {issues.slice(0, MAX_CHIPS).map((issue) => (

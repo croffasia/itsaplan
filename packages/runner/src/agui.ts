@@ -38,6 +38,9 @@ const TOOL_TEXT_LIMIT = 32_000;
 // eslint-disable-next-line no-control-regex
 const TERMINAL_CODES = /\x1b\[[0-?]*[ -/]*[@-~]/g;
 
+// The most events the server takes in one request, for a run's trace and a chat answer.
+const BATCH_LIMIT = 200;
+
 // Produces the events of one answer and hands them to `send` in batches. The caller
 // writes the command's output as it arrives and calls flush on a timer, so a long
 // answer reaches the chat while it is still being written.
@@ -123,10 +126,7 @@ export class AnswerStream {
   private async sendQueued(): Promise<void> {
     this.drainText();
     while (this.unsent.length > 0 || this.queued.length > 0) {
-      if (this.unsent.length === 0) {
-        this.unsent = this.queued;
-        this.queued = [];
-      }
+      if (this.unsent.length === 0) this.unsent = this.queued.splice(0, BATCH_LIMIT);
       await this.send(this.unsent);
       this.unsent = [];
     }

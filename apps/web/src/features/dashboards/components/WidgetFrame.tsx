@@ -21,6 +21,7 @@ export default function WidgetFrame({
   widget,
   editing,
   movable,
+  isNew,
   settings,
   onRename,
   onRemove,
@@ -29,6 +30,7 @@ export default function WidgetFrame({
   widget: WidgetInstance;
   editing: boolean;
   movable: boolean;
+  isNew: boolean;
   settings?: ReactNode;
   onRename: (title: string) => void;
   onRemove: () => void;
@@ -65,6 +67,11 @@ export default function WidgetFrame({
           <h3 className="min-w-0 flex-1 truncate text-sm font-semibold tracking-tight text-foreground">
             {title}
           </h3>
+        )}
+        {isNew && (
+          <span className="shrink-0 rounded bg-secondary px-1.5 py-0.5 text-[11px] font-semibold text-secondary-foreground">
+            {t('addPanel.new')}
+          </span>
         )}
         {editing && settings && (
           <Popover>

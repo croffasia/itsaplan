@@ -12,11 +12,20 @@
   "saveChanges": "Enregistrer les modifications",
   "noWidgets": "Aucun widget pour l'instant. Ajoutez-en un pour construire ce tableau de bord.",
   "addWidget": "Ajouter un widget",
-  "addWidgetTitle": "Ajouter un widget",
-  "addWidgetDescription": "Choisissez un widget à ajouter à ce tableau de bord.",
   "searchWidgets": "Rechercher un widget",
   "clearSearch": "Effacer la recherche",
-  "noWidgetMatches": "Aucun widget ne correspond à « {query} ».",
+  "noWidgetMatches": "Aucun widget ne correspond à « {query} ». Essayez un autre mot ou effacez la recherche.",
+  "noWidgetMatchesInGroup": "Aucun widget de ce groupe ne correspond à « {query} ». Sélectionnez Tous pour chercher dans tous les groupes.",
+  "addPanel": {
+    "title": "Ajouter des widgets",
+    "description": "Faites glisser un widget sur le tableau de bord.",
+    "all": "Tous",
+    "groupFilter": "Groupe de widgets",
+    "added": "{count, plural, one {Ajouté} other {Ajouté #}}",
+    "status": "{count, plural, =0 {Rien d'ajouté pour l'instant} one {# widget ajouté} other {# widgets ajoutés}}",
+    "undo": "Retirer le dernier",
+    "new": "Nouveau"
+  },
   "dragToMove": "Faites glisser pour déplacer",
   "widgetName": "Nom du widget",
   "widgetSettings": "Paramètres du widget",
@@ -30,48 +39,48 @@
   },
   "widgets": {
     "stat": {
-      "label": "Nombre",
-      "description": "Nombre de tickets correspondant à un filtre"
+      "label": "Nombre de tickets",
+      "description": "Tickets qui correspondent à un filtre, comme les bugs ouverts"
     },
     "recent_issues": {
       "label": "Tickets récents",
-      "description": "Les derniers tickets par date de création ou de mise à jour"
+      "description": "Tickets nouveaux ou mis à jour récemment qui correspondent à un filtre"
     },
     "activity_feed": {
       "label": "Flux d'activité",
-      "description": "Journal des changements du projet, filtrable par auteur et par action"
+      "description": "Dernières modifications des tickets et leurs auteurs"
     },
     "pulse": {
       "label": "Pulsation",
-      "description": "Carte de chaleur de l'activité quotidienne, à la façon de GitHub"
+      "description": "Carte de chaleur de l'activité du projet par heure, jour ou semaine"
     },
     "throughput": {
       "label": "Débit",
-      "description": "Tickets créés et fermés par semaine"
+      "description": "Tickets créés et fermés chaque semaine"
     },
     "burnup": {
       "label": "Burnup",
-      "description": "Périmètre, tâches commencées et terminées par jour, avec une date de fin projetée"
+      "description": "Tickets au total et terminés par jour, avec la date de fin projetée"
     },
     "breakdown": {
       "label": "Répartition",
-      "description": "Nombre de tickets par état, priorité, type ou responsable"
+      "description": "Tickets par état, priorité, type, responsable ou délégué"
     },
     "agent_runs": {
       "label": "Exécutions d'agents",
-      "description": "Les exécutions récentes des agents IA et leur résultat"
+      "description": "Dernières exécutions et leur statut, comme en échec ou en attente"
     },
     "agent_health": {
       "label": "Santé des agents",
-      "description": "Taux de réussite et échecs des exécutions d'agents sur une période"
+      "description": "Taux de réussite et exécutions en échec de tous les agents sur une période"
     },
     "webhook_health": {
       "label": "Santé des webhooks",
-      "description": "Résultats des livraisons de webhooks et points d'accès désactivés"
+      "description": "Résultats des livraisons et endpoints désactivés après des échecs consécutifs"
     },
     "agent_workload": {
       "label": "Charge des agents",
-      "description": "Tickets délégués et résultats des exécutions, par agent"
+      "description": "Par agent : tickets délégués ouverts et exécutions réussies"
     }
   },
   "breakdown": {

@@ -37,8 +37,20 @@ export function mountMcp(app: any): void {
   app.post(
     '/mcp',
     async ({ request, body }: { request: Request; body: unknown }) => {
+      // ?tools=catalog is the only mode besides the default. Another value is refused:
+      // a client that asked for a short list must not get the whole table instead.
+      const tools = new URL(request.url).searchParams.get('tools');
+      if (tools !== null && tools !== 'catalog') {
+        return jsonRpcError(400, -32602, 'Unknown value of "tools". Supported: catalog.');
+      }
       const serve = async (credential: McpCredential, userId: string) => {
-        const server = await buildMcpServer(mcpApp, credential, userId, request);
+        const server = await buildMcpServer(
+          mcpApp,
+          credential,
+          userId,
+          request,
+          tools === 'catalog',
+        );
         const transport = new WebStandardStreamableHTTPServerTransport({
           sessionIdGenerator: undefined,
           keepAliveMs: SSE_HEARTBEAT_MS,
@@ -81,9 +93,10 @@ export function mountMcp(app: any): void {
   app.delete('/mcp', methodNotAllowed, { detail: { hide: true } });
 }
 
+function jsonRpcError(status: number, code: number, message: string, headers?: HeadersInit) {
+  return Response.json({ jsonrpc: '2.0', error: { code, message }, id: null }, { status, headers });
+}
+
 function methodNotAllowed(): Response {
-  return Response.json(
-    { jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed.' }, id: null },
-    { status: 405, headers: { allow: 'POST' } },
-  );
+  return jsonRpcError(405, -32000, 'Method not allowed.', { allow: 'POST' });
 }

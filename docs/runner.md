@@ -18,6 +18,30 @@ The instance can also send the tasks to an endpoint that you run. See
 
 Enable MCP for the project first, in Settings, MCP Server. It is off by default.
 
+## A shorter tool list
+
+`/mcp` lists every tool, more than 200 of them, and that stays the default for existing
+clients. A client that loads all tool definitions at the start of a session spends about
+150,000 tokens on that list. Add `?tools=catalog` to the url to list 13 tools in about
+4,000 tokens:
+
+```json
+"url": "http://localhost:3000/mcp?tools=catalog"
+```
+
+- The most used tools are listed as before and are called directly: `get_current_user`,
+  `list_projects`, `get_project`, `get_issue_by_number`, `search_issues`, `list_issues`,
+  `create_issue`, `update_issue` and `add_comment`.
+- `discover` finds every other tool by words or by its exact name. It returns the tool's
+  description, its input schema and the execute tool that runs it.
+- `execute_read`, `execute_write` and `execute_destructive` run a discovered tool:
+  `{ "name": "delete_label", "arguments": { ... } }`. Each one accepts only the tools its
+  annotations are true for, so a client that asks before a destructive call still asks.
+  Permissions, validation and rate limits are those of a direct call.
+
+Use the default with a client that loads tool definitions on demand. Any other value of
+`tools` is refused with HTTP 400.
+
 ## Claude Code
 
 Claude Code reads `.mcp.json` from the working directory:

@@ -153,6 +153,41 @@ describe('agent runner queue', () => {
     expect(history.data!.items[0].output).toBe('Opene');
   });
 
+  it('cuts an output at 200,000 characters by default', async () => {
+    const { asOwner, asRunner, agent, columnId } = await setup();
+    await queueRun(asOwner, columnId, agent.username);
+    const run = (await asRunner['agent-runs'].claim.post()).data!.run!;
+
+    await asRunner['agent-runs']({ runId: run.id }).result.post({
+      status: 'success',
+      output: 'x'.repeat(250_000),
+    });
+
+    const history = await asOwner
+      .teams({ teamId: await teamOf(asOwner, 'MKT') })
+      ['ai-agents']({ agentId: agent.id })
+      .runs.get({ query: {} });
+    expect(history.data!.items[0].output).toHaveLength(200_000);
+  });
+
+  it('counts an emoji as one character, so the cut keeps it whole', async () => {
+    const { asOwner, asRunner, agent, columnId } = await setup();
+    await asOwner.god['agent-settings'].put({ maxAnswerChars: 2 });
+    await queueRun(asOwner, columnId, agent.username);
+    const run = (await asRunner['agent-runs'].claim.post()).data!.run!;
+
+    await asRunner['agent-runs']({ runId: run.id }).result.post({
+      status: 'success',
+      output: 'a😀b',
+    });
+
+    const history = await asOwner
+      .teams({ teamId: await teamOf(asOwner, 'MKT') })
+      ['ai-agents']({ agentId: agent.id })
+      .runs.get({ query: {} });
+    expect(history.data!.items[0].output).toBe('a😀');
+  });
+
   it('saves an output whole when the answer limit is 0', async () => {
     const { asOwner, asRunner, agent, columnId } = await setup();
     await asOwner.god['agent-settings'].put({ maxAnswerChars: 0 });

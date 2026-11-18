@@ -100,7 +100,7 @@ export default function GodAgentsSection({ agents }: { agents: AgentSettings }) 
           max={MAX_RUN_LIMIT}
           invalidNote={t('concurrentRunsInvalid', { max: MAX_RUN_LIMIT })}
           disabled={update.isPending}
-          className="w-24"
+          inputClassName="w-24"
           onSave={(value) => setAgentSettings({ maxConcurrentRuns: value })}
         />
         <GodLimitRow
@@ -111,7 +111,7 @@ export default function GodAgentsSection({ agents }: { agents: AgentSettings }) 
           invalidNote={t('answerLimitInvalid', { max: MAX_ANSWER_CHARS })}
           zeroNote={t('answerLimitNone')}
           disabled={update.isPending}
-          className="w-32"
+          inputClassName="w-32"
           onSave={(value) => setAgentSettings({ maxAnswerChars: value })}
         />
       </SettingsCard>

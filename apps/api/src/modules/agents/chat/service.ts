@@ -9,7 +9,6 @@ import {
 } from '@repo/db';
 import { and, asc, desc, eq, gt, inArray, notExists, sql } from 'drizzle-orm';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { getAgentSettings } from '#modules/settings/service';
 import { iso, likePattern } from '#shared/lib';
 import { deleteContextUsage, recordContextUsage, type ContextUsage } from '../chat-usage';
 import { deleteFavorite, FAVORITES_LIMIT } from '../chat-favorites';
@@ -21,6 +20,7 @@ import {
   type ThreadRow,
 } from '../chat-history';
 import { appendTextPart } from '../chat-parts';
+import { limitAnswer } from '../core/answer-limit';
 import { attachmentPreamble, chartPreamble, projectsPreamble } from '../core/prompt/framing';
 import { peoplePreamble, type Person } from '../core/prompt/run-context';
 import type { ChatMessagePage, ChatPart, ChatThreadPage } from '../model';
@@ -132,8 +132,9 @@ async function unstarredPage(userId: string, agentId: number, page: number): Pro
 // holds only what the agent wrote.
 //
 // The snippet is cut from the newest matching message, in the database — an answer runs
-// to the instance's answer limit, or further where it sets none. The rank puts a title hit first, then the ones where the
-// member's own message matches, then the ones matching only in the agent's reply.
+// to the instance's answer limit, or past it where none is set. The rank puts a title hit
+// first, then the ones where the member's own message matches, then the ones matching only
+// in the agent's reply.
 async function searchThreads(
   userId: string,
   agentId: number,
@@ -642,12 +643,10 @@ export async function appendEvents(
   messageId: number,
   events: AgUiEventBody[],
 ): Promise<ChatAck | null> {
-  const { maxAnswerChars } = await getAgentSettings();
-  const content = sql`${agentChatMessage.content} || ${textOf(events)}`;
   const claimed = await db
     .update(agentChatMessage)
     .set({
-      content: maxAnswerChars > 0 ? sql`left(${content}, ${maxAnswerChars})` : content,
+      content: await limitAnswer(sql`${agentChatMessage.content} || ${textOf(events)}`),
       nextAttemptAt: await leaseUntil(),
     })
     .where(liveAnswer(agentId, messageId))

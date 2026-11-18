@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { wholeNumberIn } from '../../utils/numbers';
 
 // A settings row whose control is a typed whole number from 0 to `max`, saved on leaving
-// the field or Enter rather than on each key. `zeroNote` is shown while the field holds 0.
+// the field or Enter rather than on each key.
 export default function GodLimitRow({
   title,
   description,
@@ -15,7 +15,7 @@ export default function GodLimitRow({
   invalidNote,
   zeroNote,
   disabled,
-  className,
+  inputClassName,
   onSave,
 }: {
   title: string;
@@ -25,13 +25,17 @@ export default function GodLimitRow({
   invalidNote: string;
   zeroNote?: string;
   disabled: boolean;
-  className: string;
+  inputClassName: string;
   onSave: (value: number) => Promise<void>;
 }) {
   // The number as typed, or null while it shows the stored one.
   const [draft, setDraft] = useState<string | null>(null);
   const shown = draft ?? String(value);
   const valid = wholeNumberIn(shown, 0, max);
+
+  let note: string | undefined;
+  if (!valid) note = invalidNote;
+  else if (Number(shown) === 0) note = zeroNote;
 
   async function save() {
     if (draft === null || !valid) return;
@@ -43,7 +47,7 @@ export default function GodLimitRow({
     <SettingsRow
       title={title}
       description={description}
-      note={!valid ? invalidNote : Number(shown) === 0 ? zeroNote : undefined}
+      note={note}
       control={
         <Input
           type="number"
@@ -51,7 +55,7 @@ export default function GodLimitRow({
           max={max}
           step={1}
           inputMode="numeric"
-          className={className}
+          className={inputClassName}
           aria-label={title}
           aria-invalid={!valid}
           value={shown}

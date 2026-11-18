@@ -80,8 +80,8 @@ export interface AgentSettings {
   // queue. 0 sets no limit.
   maxConcurrentRuns: number;
   // Characters of an agent's answer that are saved: a run's output and an external
-  // agent's chat reply. An internal agent's chat is kept by Mastra's memory, which this
-  // does not reach. 0 sets no limit.
+  // agent's chat reply. It does not apply to Mastra's memory tables, which hold an
+  // internal agent's chat. 0 sets no limit.
   maxAnswerChars: number;
 }
 
@@ -108,12 +108,6 @@ export async function setAgentSettings(patch: Partial<AgentSettings>): Promise<A
   const next = { ...(await getAgentSettings()), ...patch };
   await setSetting(AGENT_SETTINGS_KEY, next);
   return next;
-}
-
-// The part of a run's answer that is saved: its start, up to the instance limit.
-export async function cutAnswer(text: string): Promise<string> {
-  const { maxAnswerChars } = await getAgentSettings();
-  return maxAnswerChars > 0 ? text.slice(0, maxAnswerChars) : text;
 }
 
 // How many requests one API key may send per minute (app_setting key 'apiKeys'). 0 sets no

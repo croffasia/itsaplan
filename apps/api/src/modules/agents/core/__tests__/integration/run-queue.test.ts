@@ -5,7 +5,6 @@ import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent, teamOf } from '#tests/helpers/agents';
-import { setAgentSettings } from '#modules/settings/service';
 import {
   countRunsAhead,
   enqueueAgentRun,
@@ -180,7 +179,7 @@ describe('agent_run queue store', () => {
 
   it('saves the start of an output up to the instance answer limit', async () => {
     const { asOwner, columnId } = await setup();
-    await setAgentSettings({ maxAnswerChars: 4 });
+    await asOwner.god['agent-settings'].put({ maxAnswerChars: 4 });
     const { runId } = await enqueueRun(asOwner, columnId);
     await markRunSuccess(runId, 'done and more', null);
     expect((await readRun(runId)).output).toBe('done');
@@ -188,7 +187,7 @@ describe('agent_run queue store', () => {
 
   it('saves the start of a failed run output up to the instance answer limit', async () => {
     const { asOwner, columnId } = await setup();
-    await setAgentSettings({ maxAnswerChars: 4 });
+    await asOwner.god['agent-settings'].put({ maxAnswerChars: 4 });
     const { runId } = await enqueueRun(asOwner, columnId);
     await markRunFailed(runId, 'Timed out', 'half of it');
     expect(await readRun(runId)).toMatchObject({ lastError: 'Timed out', output: 'half' });
@@ -196,7 +195,7 @@ describe('agent_run queue store', () => {
 
   it('saves an output whole when the answer limit is 0', async () => {
     const { asOwner, columnId } = await setup();
-    await setAgentSettings({ maxAnswerChars: 0 });
+    await asOwner.god['agent-settings'].put({ maxAnswerChars: 0 });
     const { runId } = await enqueueRun(asOwner, columnId);
     const output = 'x'.repeat(250_000);
     await markRunSuccess(runId, output, null);

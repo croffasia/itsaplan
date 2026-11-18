@@ -18,20 +18,17 @@ export const initiativeParams = t.Object({ initiativeId: t.Numeric() });
 export const listInitiativesQuery = t.Object({
   status: t.Optional(
     t.String({
-      description:
-        'Filter by status: a comma-separated subset of proposed,planned,active,completed,canceled. Omit for all.',
+      description: 'Comma-separated: proposed, planned, active, completed, canceled. Omit for all.',
     }),
   ),
-  search: t.Optional(t.String({ description: 'Case-insensitive match on the title.' })),
+  search: t.Optional(t.String({ description: 'Matches the title.' })),
   sort: t.Optional(
     t.Union(
       [t.Literal('title'), t.Literal('priority'), t.Literal('targetDate'), t.Literal('owner')],
-      { description: 'Sort column. Omit for the manual position order.' },
+      { description: 'Omit for the manual order.' },
     ),
   ),
-  dir: t.Optional(
-    t.Union([t.Literal('asc'), t.Literal('desc')], { description: 'Sort direction. Default asc.' }),
-  ),
+  dir: t.Optional(t.Union([t.Literal('asc'), t.Literal('desc')], { description: 'Default asc.' })),
   ...pageQueryFields,
 });
 
@@ -43,8 +40,8 @@ export const initiativeOptionsQuery = t.Object({
 });
 
 export const initiativeFeedQuery = t.Object({
-  limit: t.Optional(t.String({ description: 'Max items per page (1-100). Default 25.' })),
-  cursor: t.Optional(t.String({ description: 'nextCursor from the previous page, for paging.' })),
+  limit: t.Optional(t.String({ description: '1-100. Default 25.' })),
+  cursor: t.Optional(t.String({ description: 'nextCursor from the previous page.' })),
 });
 
 // InitiativeRow from the service. progress is derived issue counts; health is
@@ -105,20 +102,14 @@ export const FeedPageResponse = t.Object({
 });
 
 export const createInitiativeBody = t.Object({
-  title: t.String({ minLength: 1, description: 'Initiative title.' }),
-  description: t.Optional(t.String({ description: 'Initiative description.' })),
+  title: t.String({ minLength: 1 }),
+  description: t.Optional(t.String()),
   status: t.Optional(InitiativeStatus),
-  ownerUserId: t.Optional(
-    t.Nullable(t.String({ description: 'Owner user id (a project member), or null.' })),
-  ),
-  priority: t.Optional(
-    t.Nullable(t.String({ description: 'One of: urgent, high, medium, low. Or null.' })),
-  ),
-  startDate: t.Optional(t.Nullable(isoDate("Start date 'YYYY-MM-DD', or null."))),
-  targetDate: t.Optional(t.Nullable(isoDate("Target date 'YYYY-MM-DD', or null."))),
-  labelIds: t.Optional(
-    t.Array(t.Integer(), { description: 'Label ids to attach. From get_project.labels.' }),
-  ),
+  ownerUserId: t.Optional(t.Nullable(t.String({ description: 'Project member user id.' }))),
+  priority: t.Optional(t.Nullable(t.String({ description: 'urgent, high, medium or low.' }))),
+  startDate: t.Optional(t.Nullable(isoDate())),
+  targetDate: t.Optional(t.Nullable(isoDate())),
+  labelIds: t.Optional(t.Array(t.Integer(), { description: 'Label ids from get_project.labels.' })),
 });
 
 export const updateInitiativeBody = t.Partial(createInitiativeBody);

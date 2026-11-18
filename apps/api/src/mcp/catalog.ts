@@ -49,24 +49,24 @@ const discoverInput = z.strictObject({
     .trim()
     .min(1)
     .max(200)
-    .describe('Words to look for, such as "delete label", or the exact name of a tool.'),
+    .describe('Words to search for, such as "delete label", or a tool\'s exact name.'),
   limit: z
     .number()
     .int()
     .min(1)
     .max(DISCOVER_MAX_LIMIT)
     .optional()
-    .describe(`How many tools to return. Default ${DISCOVER_DEFAULT_LIMIT}.`),
+    .describe(`Default ${DISCOVER_DEFAULT_LIMIT}.`),
 });
 
 // Strict, so a call that puts the tool's arguments beside `name` is refused instead of
 // running the tool without them.
 const executeInput = z.strictObject({
-  name: z.string().describe('The name of the tool to run, as discover returns it.'),
+  name: z.string().describe('Tool name from discover.'),
   arguments: z
     .record(z.string(), z.unknown())
     .optional()
-    .describe("The tool's own arguments, as its inputSchema describes them."),
+    .describe("The tool's arguments, as its inputSchema describes them."),
 });
 
 const READ: McpToolAnnotations = {
@@ -80,7 +80,7 @@ const WRITE: McpToolAnnotations = { ...READ, readOnlyHint: false, idempotentHint
 export function catalogTools() {
   const execute = (tier: Tier, what: string, annotations: McpToolAnnotations) => ({
     name: EXECUTE_TOOLS[tier],
-    description: `Run a tool that ${what}. discover names the execute tool of each tool.`,
+    description: `Run a tool that ${what}. discover says which execute tool runs it.`,
     inputSchema: mcpInputSchema({ inputSchema: executeInput }),
     annotations,
   });
@@ -96,8 +96,8 @@ export function catalogTools() {
       annotations: READ,
     },
     execute('read', 'only reads', READ),
-    execute('write', 'creates or changes something', WRITE),
-    execute('destructive', 'deletes or revokes something', { ...WRITE, destructiveHint: true }),
+    execute('write', 'creates or changes data', WRITE),
+    execute('destructive', 'deletes or revokes data', { ...WRITE, destructiveHint: true }),
   ];
 }
 

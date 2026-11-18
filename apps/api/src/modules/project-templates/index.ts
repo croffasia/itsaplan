@@ -67,8 +67,8 @@ export const projectTemplateRoutes = new Elysia({
       detail: {
         summary: 'List the project templates of a workspace',
         description:
-          'Every project template of the workspace, by name, with the teams it is limited to. ' +
-          'The workspaceId of a team comes from list_teams.',
+          'List all project templates of a workspace, with the teams ' +
+          'each one is limited to. Get workspaceId from list_teams.',
         ...mcpTool('list_workspace_project_templates'),
       },
     },
@@ -124,10 +124,10 @@ export const projectTemplateRoutes = new Elysia({
       detail: {
         summary: 'Save a project as a template',
         description:
-          'Save a snapshot of the configuration of a project of the workspace, without its ' +
-          'issues, as a project template. Later changes to the project do not change the ' +
-          'template. `include` chooses the sections as for a copy; docs, webhooks, agents ' +
-          'and schedules are never saved. `teamIds` limits the template to those teams.',
+          "Save a project's configuration, without its issues, as a workspace project template. " +
+          'The template is a snapshot: later project changes do not change it. `include` selects ' +
+          'sections, as in copy_project. Documents, ' +
+          'webhooks, agents and schedules are never saved.',
         ...mcpTool('create_project_template'),
       },
     },
@@ -143,11 +143,10 @@ export const projectTemplateRoutes = new Elysia({
       detail: {
         summary: 'Export a project template',
         description:
-          'The template as a document another workspace imports, on this instance or ' +
-          'another one. The people, initiatives and cycles it names, the settings other ' +
-          'than auto-archive and the subtask automations, and the sections an extension ' +
-          'adds are left out. ' +
-          'import_project_template takes it as `template`.',
+          'Export a project template as a file that another workspace can import, on this or ' +
+          'another instance. Pass it as `template` to import_project_template. The export leaves ' +
+          'out people, initiatives, cycles and extension sections. Of the settings, it keeps ' +
+          'only auto-archive and subtask automations.',
         ...mcpTool('export_project_template'),
       },
     },
@@ -312,9 +311,8 @@ export const projectTemplateRoutes = new Elysia({
       detail: {
         summary: 'Import a project template',
         description:
-          'Save an exported template as a template of the workspace, under the `name` and ' +
-          '`description` given here. `teamIds` limits it to those teams. The people, ' +
-          'initiatives and cycles it names are dropped.',
+          'Save a template from export_project_template in this workspace, with the `name` and ' +
+          '`description` given here. People, initiatives and cycles in it are dropped.',
         ...mcpTool('import_project_template'),
       },
     },
@@ -332,9 +330,8 @@ export const projectTemplateRoutes = new Elysia({
       detail: {
         summary: 'Update a project template',
         description:
-          'Rename a project template, change its description or the teams it is open to. ' +
-          'What it holds stays as saved. `teamIds` null opens it to every team of the ' +
-          'workspace.',
+          'Rename a project template, or change its description or teams. Its contents do not ' +
+          'change. `teamIds` null opens it to all teams of the workspace.',
         ...mcpTool('update_project_template'),
       },
     },
@@ -354,9 +351,9 @@ export const projectTemplateRoutes = new Elysia({
       detail: {
         summary: 'Delete a project template',
         description:
-          'Delete a project template, after taking its page in the gallery down. Projects ' +
-          'created from it are not changed. A published template is deleted only while the ' +
-          'workspace is linked to the gallery and the gallery answers.',
+          'Delete a project template and remove its gallery page. Projects created from it do ' +
+          'not change. A published template can be deleted only while the workspace is linked to ' +
+          'the gallery and the gallery responds.',
         ...mcpTool('delete_project_template', { openWorldHint: true }),
       },
     },
@@ -372,8 +369,8 @@ export const projectTemplateRoutes = new Elysia({
       detail: {
         summary: 'List the project templates of a team',
         description:
-          "The project templates of the team's workspace open to the team, by name. Pass " +
-          'its id as templateId to create_project to create a project from it.',
+          "List the project templates of the team's workspace that are open to the team. Pass an " +
+          'id as templateId to create_project.',
         ...mcpTool('list_project_templates'),
       },
     },
@@ -389,9 +386,9 @@ export const projectTemplateRoutes = new Elysia({
       detail: {
         summary: 'Get a project template',
         description:
-          'What a project template open to the team holds: its states, issue types, labels, ' +
-          'custom fields, issue templates, views, dashboards, actions, settings, the ' +
-          'sections it turns on and its estimates.',
+          'Get the contents of a project template open to the team: states, issue types, labels, ' +
+          'custom fields, issue templates, views, dashboards, ' +
+          'actions, settings, enabled sections and estimates.',
         ...mcpTool('get_project_template'),
       },
     },

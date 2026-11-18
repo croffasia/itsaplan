@@ -32,10 +32,10 @@ export const MemberPageResponse = t.Composite([
 ]);
 
 export const memberListQuery = t.Object({
-  search: t.Optional(t.String({ description: 'Matches the name, the address or the handle.' })),
+  search: t.Optional(t.String({ description: 'Matches name, email or handle.' })),
   kind: t.Optional(
     t.UnionEnum(['all', 'human', 'agent'], {
-      description: "Everyone, the people, or the AI agents' bot users. Defaults to everyone.",
+      description: "'human' for people, 'agent' for AI agents.",
     }),
   ),
   ...pageQueryFields,

@@ -19,7 +19,7 @@ export const teamTemplateParams = t.Object({ teamId: t.Numeric(), templateId: t.
 
 export const saveProjectTemplateBody = t.Object({
   projectId: t.Integer({
-    description: 'A project of a team of the workspace to save as a template.',
+    description: 'Project to save, from a team of the workspace.',
   }),
   name: t.String({ minLength: 1 }),
   description: t.Optional(t.String({ maxLength: PROJECT_DESCRIPTION_LIMIT })),
@@ -27,9 +27,7 @@ export const saveProjectTemplateBody = t.Object({
   teamIds: t.Optional(
     t.Array(t.Integer(), {
       minItems: 1,
-      description:
-        'The teams of the workspace the template is limited to. Omitted, every team of the ' +
-        'workspace sees it.',
+      description: 'Workspace teams that can use the template. Omit for all teams.',
     }),
   ),
 });
@@ -43,9 +41,7 @@ export const updateProjectTemplateBody = t.Partial(
     teamIds: t.Nullable(
       t.Array(t.Integer(), {
         minItems: 1,
-        description:
-          'The teams of the workspace the template is limited to, or null to open it to ' +
-          'every team of the workspace.',
+        description: 'Workspace teams that can use the template, or null for all teams.',
       }),
     ),
   }),

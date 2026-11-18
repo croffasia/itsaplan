@@ -19,78 +19,76 @@ export const chartSpec = t.Object({
     ],
     {
       description:
-        'How to draw it. `bar` compares categories, `line` and `area` follow a value ' +
-        'over time, `pie` and `radial` show parts of a whole, `treemap` shows the same ' +
-        'parts when there are too many for a pie, `funnel` shows what is left at each ' +
-        'stage, `radar` compares several measures over the same categories, `scatter` ' +
-        'puts one number against another. Pie, radial, funnel, and treemap show the ' +
-        'first series only.',
+        '`bar` compares categories. `line` and `area` show a value over time. `pie` and `radial` ' +
+        'show parts of a whole, `treemap` when there are too many parts for a pie. `funnel` ' +
+        'shows what is left at each stage. `radar` compares several measures on the same ' +
+        'categories. `scatter` plots one number against another. ' +
+        'Pie, radial, funnel and treemap show only the first series.',
     },
   ),
-  title: t.Optional(t.String({ maxLength: 200, description: 'Heading shown above the chart.' })),
+  title: t.Optional(t.String({ maxLength: 200, description: 'Heading above the chart.' })),
   x: t.String({
     minLength: 1,
     maxLength: 100,
     description:
-      'The key holding the category of each row: the x axis for bar, line, area, and ' +
-      'scatter, the slice name for pie, radial, funnel, and treemap, the corner name ' +
-      'for radar. On a scatter chart it holds a number, everywhere else a name.',
+      'Row key for the category: the x axis (bar, line, area, scatter), the slice name (pie, ' +
+      'radial, funnel, treemap) or the corner name ' +
+      '(radar). A number on scatter, a name elsewhere.',
   }),
   series: t.Array(
     t.Object({
       key: t.String({
         minLength: 1,
         maxLength: 100,
-        description: 'The key holding this series’ number in every data row.',
+        description: "Row key that holds this series' number.",
       }),
       label: t.Optional(t.String({ maxLength: 200, description: 'Name shown for the series.' })),
       color: t.Optional(
         t.String({
           maxLength: 30,
-          description: 'Hex color such as #6366f1. Left out, the chart palette is used.',
+          description: 'Hex color, such as #6366f1. Omit to use the chart palette.',
         }),
       ),
       type: t.Optional(
         t.Union([t.Literal('bar'), t.Literal('line'), t.Literal('area')], {
           description:
-            'Draws this series as a bar, a line, or an area instead of what `type` says, ' +
-            'so one chart can show a count as bars and an average as a line. Read on ' +
-            'bar, line, and area charts.',
+            'Draws this series as a bar, line or area, overriding `type`. Example: a count as ' +
+            'bars and an average as a line. Only for bar, line and area charts.',
         }),
       ),
     }),
-    { minItems: 1, maxItems: 12, description: 'One entry per measure drawn.' },
+    { minItems: 1, maxItems: 12, description: 'One entry per measure.' },
   ),
   data: t.Array(t.Record(t.String(), t.Union([t.String(), t.Number(), t.Null()])), {
     minItems: 1,
     maxItems: 500,
     description:
-      'The rows, each holding the `x` key and every series key, e.g. { "week": "W12", "created": 8 }.',
+      'Rows with the `x` key and every series key, such as { "week": "W12", "created": 8 }.',
   }),
   stacked: t.Optional(
     t.Union([t.Boolean(), t.Literal('percent')], {
       description:
-        'Stack the series instead of drawing them side by side. "percent" stacks them ' +
-        'as shares of 100%, which shows how a composition shifts rather than how it grew.',
+        'Stack the series instead of side by side. "percent" stacks them as shares of 100%, to ' +
+        'show how a composition changes, not how it grew.',
     }),
   ),
   horizontal: t.Optional(
     t.Boolean({
       description:
-        'Turn a bar chart on its side, so the categories run down the left. Use it for ' +
-        'long category names or a ranking of more than about eight of them.',
+        'Draw bars horizontally, categories on the left. Use for long category names or a ' +
+        'ranking of more than about eight.',
     }),
   ),
   curve: t.Optional(
     t.Union([t.Literal('monotone'), t.Literal('linear'), t.Literal('step')], {
       description:
-        'The shape a line or an area takes between two points: smoothed, straight, or ' +
-        'held until the next value. Default monotone.',
+        'Line shape between points: smoothed (monotone, ' +
+        'default), straight (linear) or held until the next value (step).',
     }),
   ),
   showValues: t.Optional(
     t.Boolean({
-      description: 'Print each number on the chart. Leave it off past about a dozen rows.',
+      description: 'Show each number on the chart. Leave off above about a dozen rows.',
     }),
   ),
 });

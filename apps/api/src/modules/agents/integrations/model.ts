@@ -8,7 +8,9 @@ export const credentialParams = t.Object({
 
 export const providerParams = t.Object({
   teamId: t.Numeric(),
-  provider: t.String({ description: "LLM provider key from list_integrations, e.g. 'anthropic'." }),
+  provider: t.String({
+    description: "LLM provider key from list_integrations, such as 'anthropic'.",
+  }),
 });
 
 const INTEGRATION_KINDS = ['llm', 'tool', 'service'] as const;
@@ -38,14 +40,13 @@ export const credentialListQuery = t.Object({
   search: t.Optional(
     t.String({
       maxLength: 200,
-      description:
-        'Case-insensitive match on the integration name, its key or the credential label.',
+      description: 'Matches integration name, key or credential label.',
     }),
   ),
   kind: t.Optional(
     t.String({
       pattern: '^(llm|tool|service)(,(llm|tool|service))*$',
-      description: 'A comma-separated subset of llm, tool and service. Omit for all.',
+      description: 'Comma-separated kinds. Omit for all.',
     }),
   ),
   ...pageQueryFields,

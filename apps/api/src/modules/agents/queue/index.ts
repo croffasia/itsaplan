@@ -116,9 +116,9 @@ export const runnerQueueRoutes = new Elysia({
       detail: {
         summary: 'Read an agent run',
         description:
-          "A run's status and, once it ended, the agent's answer or the error it stopped on. " +
-          'While it waits or runs, retryAfterSeconds says when to read it again. Takes the ' +
-          "same permissions as the run's transcript.",
+          "Get a run's status and, when it ended, the agent's answer or error. While the run " +
+          'waits or runs, retryAfterSeconds says when to read it again. Needs the same ' +
+          "permissions as the run's transcript.",
         ...mcpTool('get_agent_run'),
       },
     },

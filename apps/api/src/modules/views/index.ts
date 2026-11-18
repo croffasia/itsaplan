@@ -101,8 +101,7 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
       response: { 201: ViewResponse, ...commonErrors },
       detail: {
         summary: 'Create a saved view',
-        description:
-          'Create a saved view in a project, or, as a member of the project, a private one of your own.',
+        description: 'Create a saved view in a project.',
         ...requiresPermission(['views', 'create']),
         ...mcpTool('create_view'),
       },
@@ -125,7 +124,9 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
       detail: {
         summary: 'Reorder saved views',
         description:
-          "Set the project's order of its saved views, which also takes editing views, or the order of your own private ones. Each person's tab row follows it for the views they have not placed in it themselves.",
+          "Set the order of the project's saved views (needs view edit permission), or of your " +
+          "own private views. Each person's tabs follow the " +
+          'project order, except views they placed themselves.',
         ...mcpTool('reorder_views'),
       },
     },
@@ -181,7 +182,7 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
       response: { 200: ViewResponse, ...commonErrors },
       detail: {
         summary: 'Update a saved view',
-        description: 'Update an existing saved view.',
+        description: 'Update a saved view.',
         ...requiresPermission(['views', 'edit']),
         ...mcpTool('update_view'),
       },
@@ -243,7 +244,8 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
       detail: {
         summary: 'Publish a private view',
         description:
-          "Turn one of your private views into a view of the project, at the end of the project's order. It cannot be made private again.",
+          'Make one of your private views a project view, at the ' +
+          'end of the project order. You cannot make it private again.',
         ...requiresPermission(['views', 'create']),
         ...mcpTool('publish_view'),
       },
@@ -302,7 +304,7 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete a saved view',
-        description: 'Delete a saved view. Irreversible.',
+        description: 'Permanently delete a saved view.',
         ...requiresPermission(['views', 'delete']),
         ...mcpTool('delete_view'),
       },

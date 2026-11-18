@@ -215,9 +215,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       response: { 200: AiAgentListResponse, ...accessErrors },
       detail: {
         summary: 'List AI agents',
-        description:
-          "List the team's AI agents with their config. Pass projectId to list only the agents " +
-          'working in that project.',
+        description: "List the team's AI agents with their config.",
         ...mcpTool('list_ai_agents'),
       },
     },
@@ -266,9 +264,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       response: { 201: CreateAgentResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create an AI agent',
-        description:
-          "Create an AI agent. kind 'external' returns an API key once; kind 'internal' runs " +
-          'in-process from a model config and has no key.',
+        description: "Create an AI agent. For kind 'external', the API key is returned only once.",
         ...mcpTool('create_ai_agent'),
       },
     },
@@ -292,7 +288,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       response: { 200: AiAgentResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Update an AI agent',
-        description: "Update an AI agent's name, username, projects, or model config.",
+        description: "Update an AI agent's name, username, projects or model config.",
         ...mcpTool('update_ai_agent'),
       },
     },
@@ -318,9 +314,8 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       detail: {
         summary: "Set an AI agent's projects",
         description:
-          'Replace the projects of the team the agent works in. Send the full set: a project ' +
-          'left out is detached. A project of another team is rejected, and so is one the ' +
-          'caller is not a member of unless they run the team.',
+          'Set the team projects an agent works in. A project of another team is refused. A ' +
+          'project you are not a member of is refused, unless you are a team owner or manager.',
         ...mcpTool('set_ai_agent_projects'),
       },
     },
@@ -345,7 +340,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       response: { 200: RegenerateKeyResponse, ...commonErrors },
       detail: {
         summary: 'Regenerate the API key',
-        description: "Rotate an external agent's API key and return the new secret once.",
+        description: "Rotate an external agent's API key. Returns the new key only once.",
         // Rotating invalidates the previous key, which cannot be recovered.
         ...mcpTool('regenerate_ai_agent_key', { destructiveHint: true }),
       },
@@ -503,7 +498,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete an AI agent',
-        description: 'Delete an AI agent and its bot user. Irreversible.',
+        description: 'Permanently delete an AI agent and its bot user.',
         ...mcpTool('delete_ai_agent'),
       },
     },
@@ -540,12 +535,10 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       detail: {
         summary: 'Run an AI agent',
         description:
-          'Queue a run of an internal or external agent with the prompt as its task and ' +
-          'return its run id at once. The run waits its turn in the agent queue, like a ' +
-          "scheduled one, and shows in the agent's run history. Wait retryAfterSeconds, then " +
-          'read it with get_agent_run, and keep reading it after the retryAfterSeconds each ' +
-          'answer gives until its status is success, failed or canceled. An agent with chat ' +
-          'turned off returns 403.',
+          'Queue an agent run with prompt as the task and return the run id at once. The run ' +
+          "appears in the agent's run history. Call get_agent_run after each retryAfterSeconds " +
+          'until status is success, failed or ' +
+          'canceled. An agent with chat turned off returns 403.',
         ...mcpTool('run_ai_agent'),
       },
     },

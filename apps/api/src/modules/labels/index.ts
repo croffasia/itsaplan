@@ -41,7 +41,7 @@ export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels
       response: { 201: LabelResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create a label',
-        description: 'Create a label. Optional groupId assigns it to a label group.',
+        description: 'Create a label. groupId puts it in a label group.',
         ...mcpTool('create_label'),
       },
     },
@@ -67,7 +67,7 @@ export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels
       detail: {
         summary: 'Update a label',
         description:
-          "Update a label's name, color, or group. Set groupId to null to remove it from its group.",
+          "Update a label's name, color or group. groupId null removes it from its group.",
         ...mcpTool('update_label'),
       },
     },
@@ -107,7 +107,7 @@ export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels
       response: { 201: LabelGroupResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create a label group',
-        description: 'Create a label group, a named container for labels.',
+        description: 'Create a label group, a named set of labels.',
         ...mcpTool('create_label_group'),
       },
     },

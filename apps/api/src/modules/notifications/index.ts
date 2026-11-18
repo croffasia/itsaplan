@@ -76,9 +76,7 @@ export const notificationRoutes = new Elysia({
       response: { 200: NotificationPageResponse, ...errors(401) },
       detail: {
         summary: 'List inbox notifications',
-        description:
-          "List the caller's own inbox notifications, newest first. Pass includeRead 'false' " +
-          'for unread only, and nextCursor as cursor for the next page.',
+        description: 'List your inbox notifications, newest first.',
         ...mcpTool('list_notifications'),
       },
     },
@@ -97,7 +95,7 @@ export const notificationRoutes = new Elysia({
       response: { 200: UnreadCountResponse, ...errors(401) },
       detail: {
         summary: 'Get unread notification count',
-        description: "Count the caller's unread inbox notifications, in all projects or one.",
+        description: 'Count your unread inbox notifications, in all projects or one.',
         ...mcpTool('get_unread_notification_count'),
       },
     },
@@ -122,8 +120,8 @@ export const notificationRoutes = new Elysia({
       detail: {
         summary: 'Mark all notifications read',
         description:
-          "Mark the caller's unread inbox notifications read, in all projects or one. " +
-          'Returns how many changed.',
+          'Mark your unread inbox notifications as read, in ' +
+          'all projects or one. Returns the number changed.',
         ...mcpTool('mark_all_notifications_read'),
       },
     },
@@ -178,8 +176,7 @@ export const notificationRoutes = new Elysia({
       response: { 204: t.Void(), ...errors(401, 404) },
       detail: {
         summary: 'Mark a notification read or unread',
-        description:
-          "Mark one of the caller's inbox notifications read, or unread with read false.",
+        description: 'Mark one of your inbox notifications as read, or as unread with read false.',
         ...mcpTool('mark_notification_read'),
       },
     },

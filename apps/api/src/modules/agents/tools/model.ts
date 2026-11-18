@@ -56,15 +56,15 @@ export const agentToolListQuery = t.Object({
   search: t.Optional(
     t.String({
       maxLength: 200,
-      description: 'Case-insensitive match on the tool name, its group or its integration.',
+      description: 'Matches tool name, group or integration.',
     }),
   ),
   group: t.Optional(
     t.String({
       maxLength: 1000,
       description:
-        "A comma-separated list of groups: an integration's key, for its tools, or the source " +
-        'of the tools the team defines (the `source` of a tool), for those. Omit for all.',
+        'Comma-separated groups: an integration key, or ' +
+        "the `source` of the team's own tools. Omit for all.",
     }),
   ),
   ...pageQueryFields,

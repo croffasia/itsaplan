@@ -18,7 +18,6 @@ export const PROJECT_DESCRIPTION_LIMIT = 2000;
 
 const projectKey = t.String({
   pattern: PROJECT_KEY_PATTERN,
-  description: 'Upper-case letters and digits, starting with a letter, up to 10 characters.',
 });
 
 const projectBody = t.Object({
@@ -34,18 +33,12 @@ const projectBody = t.Object({
 export const createProjectBody = t.Composite([
   projectBody,
   t.Object({
-    preset: t.Optional(
-      t.Union(
-        ISSUE_TYPE_PRESET_KEYS.map((k) => t.Literal(k)),
-        { description: `Issue-type preset: ${ISSUE_TYPE_PRESET_KEYS.join(', ')}.` },
-      ),
-    ),
+    preset: t.Optional(t.Union(ISSUE_TYPE_PRESET_KEYS.map((k) => t.Literal(k)))),
     templateId: t.Optional(
       t.Integer({
         description:
-          'A project template open to the team (list_project_templates) to create the ' +
-          'project from. The project then starts with what the template holds, and preset ' +
-          'is not used.',
+          'Template from list_project_templates to ' +
+          'create the project from. preset is then ignored.',
       }),
     ),
   }),
@@ -86,21 +79,21 @@ export const updateProjectPreferencesBody = t.Object(
 
 const projectSearch = t.Optional(
   t.String({
-    description: 'Case-insensitive literal substring of the project key, name, or description.',
+    description: 'Case-insensitive text in the project key, name or description.',
   }),
 );
 const projectSort = t.Optional(
   t.UnionEnum(['key', 'name', 'created', 'activity'], {
     description:
-      'Sort by key (default), name, newest creation, or newest work-item activity/comment. ' +
-      'Activity puts projects without activity last. Ties are ordered by key.',
+      "'created' and 'activity' sort newest first. 'activity' " +
+      'puts projects with no activity last. Ties sort by key.',
   }),
 );
 const projectTeamId = t.Optional(
   t.Numeric({
     minimum: 1,
     multipleOf: 1,
-    description: 'Limit results to projects in this team that you belong to.',
+    description: 'Only projects of this team.',
   }),
 );
 
@@ -109,7 +102,7 @@ export const listProjectsQuery = t.Object({
   sort: projectSort,
   teamId: projectTeamId,
   permissions: t.Optional(
-    t.String({ description: "'true' to include the caller's permission matrix per project." }),
+    t.String({ description: "'true' adds your permission matrix to each project." }),
   ),
 });
 

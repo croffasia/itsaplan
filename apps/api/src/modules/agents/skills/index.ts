@@ -78,9 +78,8 @@ export const agentSkillRoutes = new Elysia({
       detail: {
         summary: 'List agent skills',
         description:
-          "One page of the team's skill library, each skill with its reference files, " +
-          'optionally narrowed by a search on the name or the description and by source. The ' +
-          'whole library, for a picker, comes from list_agent_skill_options.',
+          "List the team's skill library, one page at a time, with each skill's reference files. " +
+          'For the full library at once, use list_agent_skill_options.',
         ...mcpTool('list_agent_skills'),
       },
     },
@@ -95,9 +94,7 @@ export const agentSkillRoutes = new Elysia({
       response: { 200: SkillListResponse, ...accessErrors },
       detail: {
         summary: 'List every agent skill',
-        description:
-          "The team's whole skill library, for the picker that enables skills on an agent. " +
-          'Use list_agent_skills to read it a page at a time.',
+        description: "List the team's full skill library at once. Use list_agent_skills for pages.",
         ...mcpTool('list_agent_skill_options'),
       },
     },
@@ -117,7 +114,8 @@ export const agentSkillRoutes = new Elysia({
       detail: {
         summary: 'Get an agent skill',
         description:
-          "Get a skill's metadata and reference files. The SKILL.md text comes from get_agent_skill_markdown.",
+          "Get a skill's metadata and reference files. For " +
+          'the SKILL.md text, use get_agent_skill_markdown.',
         ...mcpTool('get_agent_skill'),
       },
     },
@@ -136,7 +134,7 @@ export const agentSkillRoutes = new Elysia({
       response: { 200: SkillMarkdownResponse, ...accessErrors },
       detail: {
         summary: 'Get skill markdown',
-        description: "Get a skill's SKILL.md content.",
+        description: "Get a skill's SKILL.md text.",
         ...mcpTool('get_agent_skill_markdown'),
       },
     },
@@ -156,7 +154,7 @@ export const agentSkillRoutes = new Elysia({
       response: { 200: RefContentResponse, ...accessErrors },
       detail: {
         summary: 'Get reference file content',
-        description: "Get the text of one of a skill's reference files by path.",
+        description: "Get the text of a skill's reference file by path.",
         ...mcpTool('get_agent_skill_reference'),
       },
     },
@@ -174,7 +172,8 @@ export const agentSkillRoutes = new Elysia({
       detail: {
         summary: 'Discover GitHub skills',
         description:
-          'List the skills at a GitHub URL (repo, folder, or file) without importing. Each result carries the URL that imports that one skill through create_agent_skill.',
+          'List the skills at a GitHub URL (repo, folder or file) without importing them. Each ' +
+          'result has the URL that imports that skill with create_agent_skill.',
         // A lookup on GitHub: it stores nothing and reaches outside this tracker.
         ...mcpTool('discover_github_skills', { readOnlyHint: true, openWorldHint: true }),
       },
@@ -223,7 +222,8 @@ export const agentSkillRoutes = new Elysia({
       detail: {
         summary: 'Create an agent skill',
         description:
-          'Create a skill from markdown or by importing a GitHub URL. A GitHub import also brings the markdown reference files next to the SKILL.md.',
+          'Create a skill from markdown or from a GitHub URL. A GitHub import also imports the ' +
+          'markdown reference files next to SKILL.md.',
         ...mcpTool('create_agent_skill'),
       },
     },
@@ -246,7 +246,7 @@ export const agentSkillRoutes = new Elysia({
       response: { 200: SkillResponse, ...commonErrors, ...errors(409, 413) },
       detail: {
         summary: 'Update an agent skill',
-        description: "Update a skill's name, description, or SKILL.md content.",
+        description: "Update a skill's name, description or SKILL.md text.",
         ...mcpTool('update_agent_skill'),
       },
     },
@@ -265,7 +265,7 @@ export const agentSkillRoutes = new Elysia({
       response: { 204: t.Void(), ...accessErrors },
       detail: {
         summary: 'Delete an agent skill',
-        description: 'Delete a skill, its reference files, and its links to agents.',
+        description: 'Delete a skill, its reference files and its links to agents.',
         ...mcpTool('delete_agent_skill'),
       },
     },
@@ -326,7 +326,7 @@ export const agentSkillRoutes = new Elysia({
       response: { 200: SkillResponse, ...commonErrors, ...errors(413) },
       detail: {
         summary: 'Update reference file content',
-        description: "Replace the text of a skill's existing reference file, addressed by path.",
+        description: 'Replace the text of an existing skill reference file, by path.',
         ...mcpTool('update_agent_skill_reference'),
       },
     },
@@ -390,7 +390,8 @@ export const agentSkillRoutes = new Elysia({
       detail: {
         summary: "Set an agent's enabled skills",
         description:
-          "Replace the set of skills enabled on an agent. Ids that are not skills of the agent's team are ignored.",
+          'Set the skills enabled on an agent. Ids that ' +
+          "are not skills of the agent's team are ignored.",
         ...mcpTool('set_ai_agent_skills'),
       },
     },

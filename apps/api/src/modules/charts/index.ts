@@ -26,23 +26,14 @@ export const chartRoutes = new Elysia({ name: 'charts', detail: { tags: ['Charts
     detail: {
       summary: 'Build a chart',
       description:
-        'Checks a chart spec and returns it. Put the returned spec in your answer ' +
-        'inside a fenced block tagged `chart`, where the chart belongs in the text, ' +
-        'and the app draws it there:\n\n' +
-        '```chart\n{"type":"bar","x":"week","series":[{"key":"created"}],' +
-        '"data":[{"week":"W10","created":8}]}\n```\n\n' +
-        'Use it instead of writing a table of numbers out, and do not repeat the ' +
-        'numbers next to it. Nothing is stored.\n\n' +
-        'Pick the type by the question the chart answers:\n' +
-        '- bar — one number per category; `horizontal` for long names or a ranking\n' +
-        '- line, area — a number over time; `stacked` on an area for what it is made of\n' +
-        '- bar or area with `stacked: "percent"` — how a composition shifts over time\n' +
-        '- pie, radial — the parts of one total, up to about six of them\n' +
-        '- treemap — the same parts when there are more than that\n' +
-        '- funnel — how many are left at each stage, given rows that only fall\n' +
-        '- radar — several categories scored on the same scale\n' +
-        '- scatter — whether two numbers move together\n' +
-        '- a `type` on a single series — a count as bars with an average as a line',
+        'Check a chart spec and return it. Put the returned spec in your answer, where the chart ' +
+        'belongs, in a fenced block tagged `chart`. The app draws it there:\n\n' +
+        '```chart\n' +
+        '{"type":"bar","x":"week","series":[{"key":"created"}],"data":[{"week":"W10","created":8}]}\n' +
+        '```\n\n' +
+        'Use a chart instead of a table of numbers, and do not repeat the numbers next to it. ' +
+        'Nothing is stored. Use pie or radial for up to about six parts of a total, and treemap ' +
+        'for more. A funnel needs values that only fall.',
       ...mcpTool('create_chart', { readOnlyHint: true, idempotentHint: true }),
     },
   });

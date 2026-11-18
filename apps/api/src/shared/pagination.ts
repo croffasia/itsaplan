@@ -13,10 +13,8 @@ export const DEFAULT_PAGE_SIZE = 25;
 // has to read the query to know which one it got. A list a picker needs entire gets an
 // `/options` route of its own.
 export const pageQueryFields = {
-  page: t.Optional(t.Numeric({ minimum: 1, description: '1-based page. Default 1.' })),
-  pageSize: t.Optional(
-    t.Numeric({ minimum: 1, maximum: 100, description: 'Items per page (1-100). Default 25.' }),
-  ),
+  page: t.Optional(t.Numeric({ minimum: 1, description: 'Page number. Default 1.' })),
+  pageSize: t.Optional(t.Numeric({ minimum: 1, maximum: 100, description: 'Default 25.' })),
 };
 
 export const pageResponse = <T extends TSchema>(item: T) =>

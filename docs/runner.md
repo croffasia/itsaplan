@@ -32,8 +32,9 @@ clients. A client that loads all tool definitions at the start of a session spen
 - The most used tools are listed as before and are called directly: `get_current_user`,
   `list_projects`, `get_project`, `get_issue_by_number`, `search_issues`, `list_issues`,
   `create_issue`, `update_issue` and `add_comment`.
-- `discover` finds every other tool by words or by its exact name. It returns the tool's
-  description, its input schema and the execute tool that runs it.
+- `discover` finds every other tool by the words of its name and description, best match
+  first, or by its exact name. It returns the tool's description, its input schema and the
+  execute tool that runs it.
 - `execute_read`, `execute_write` and `execute_destructive` run a discovered tool:
   `{ "name": "delete_label", "arguments": { ... } }`. Each one accepts only the tools its
   annotations are true for, so a client that asks before a destructive call still asks.

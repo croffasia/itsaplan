@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import { app } from '#tests/helpers/app';
-import { PRIMARY_TOOLS, catalogTools, matchTools } from '../../catalog';
+import { PRIMARY_TOOLS, catalogTools, toolSearch } from '../../catalog';
 import { routeTools, type McpRouteTool } from '../../generate';
 
 // The real route table, read from the assembled app: no session and no query.
@@ -39,36 +39,59 @@ describe('catalog tools/list', () => {
   });
 });
 
-describe('matchTools', () => {
-  const tools = [
+describe('toolSearch', () => {
+  const search = toolSearch([
     tool('create_label', 'Create a label.'),
     tool('delete_label', 'Delete a label.'),
     tool('delete_label_group', 'Delete a group and its labels.'),
     tool('list_issues', 'List issues, filtered by label.'),
-  ];
+    tool('list_members', 'List the members of a project.'),
+    tool('list_invites', 'List the invites of a team.'),
+    tool('delete_invite', 'Revoke an invite that was not accepted.'),
+  ]);
+  const names = (query: string) => search(query).map((t) => t.name);
 
   it('answers an exact name with that tool alone', () => {
-    expect(matchTools(tools, 'delete_label').map((t) => t.name)).toEqual(['delete_label']);
-    expect(matchTools(tools, ' Delete_Label ').map((t) => t.name)).toEqual(['delete_label']);
+    expect(names('delete_label')).toEqual(['delete_label']);
+    expect(names(' Delete_Label ')).toEqual(['delete_label']);
   });
 
-  it('ranks a word of the name above part of it, and that above the description', () => {
-    expect(matchTools(tools, 'label').map((t) => t.name)).toEqual([
-      'create_label',
-      'delete_label',
-      'delete_label_group',
-      'list_issues',
-    ]);
-    expect(matchTools(tools, 'issue').map((t) => t.name)).toEqual(['list_issues']);
+  it('ranks a word in the name above the same word in a description', () => {
+    const found = names('label');
+    expect(found.slice(0, 2)).toEqual(['create_label', 'delete_label']);
+    expect(found.at(-1)).toBe('list_issues');
   });
 
-  it('adds up the words of the query', () => {
-    expect(matchTools(tools, 'delete label')[0].name).toBe('delete_label');
-    expect(matchTools(tools, 'delete label')).toHaveLength(4);
+  it('ranks the tool holding every word of the query first', () => {
+    expect(names('delete label')[0]).toBe('delete_label');
+    expect(names('label group')[0]).toBe('delete_label_group');
   });
 
-  it('returns nothing when no word matches', () => {
-    expect(matchTools(tools, 'webhook')).toEqual([]);
-    expect(matchTools(tools, '---')).toEqual([]);
+  it('finds a tool by a word only its description has', () => {
+    expect(names('accepted')).toEqual(['delete_invite']);
+  });
+
+  it('reads a plural as its singular', () => {
+    expect(names('labels')).toEqual(names('label'));
+    expect(names('invites').sort()).toEqual(['delete_invite', 'list_invites']);
+  });
+
+  it('returns nothing when the query has no known word', () => {
+    expect(names('webhook')).toEqual([]);
+    expect(names('---')).toEqual([]);
+  });
+
+  it('ranks the route table', () => {
+    const real = toolSearch(table);
+    expect(real('unread notification count')[0].name).toBe('get_unread_notification_count');
+    expect(real('delete label')[0].name).toBe('delete_label');
+    expect(real('zzzz')).toEqual([]);
+  });
+
+  // Dozens of tools are named list_*, and few mention revoking.
+  it('ranks a rare word above a common one', () => {
+    const [first] = toolSearch(table)('list revoke');
+    expect(`${first.name} ${first.description}`).toMatch(/revoke/i);
+    expect(first.name).not.toMatch(/^list_/);
   });
 });

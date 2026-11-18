@@ -88,7 +88,8 @@ export function catalogTools() {
     {
       name: 'discover',
       description:
-        'Find the tools that are not listed here. Returns the best matches with their ' +
+        'Find the tools that are not listed here by the words of their name and ' +
+        'description. Returns the best matches, ranked by relevance, with their ' +
         'description, input schema and the execute tool that runs them. Pass the exact ' +
         'name of a tool to get that tool alone.',
       inputSchema: mcpInputSchema({ inputSchema: discoverInput }),
@@ -100,30 +101,72 @@ export function catalogTools() {
   ];
 }
 
-// The tools matching a query, best first. An exact name answers with that tool alone,
-// which is how a client reads one schema again. Otherwise each word of the query scores
-// a tool: most as a whole word of its name, less as part of the name, least in the
-// description.
-export function matchTools(table: McpRouteTool[], query: string): McpRouteTool[] {
-  const wanted = query.trim().toLowerCase();
-  const exact = table.find((tool) => tool.name === wanted);
-  if (exact) return [exact];
-  const words = wanted.split(/[^a-z0-9]+/).filter(Boolean);
-  return table
-    .map((tool) => {
-      const nameWords = tool.name.split('_');
-      const description = tool.description.toLowerCase();
-      let score = 0;
-      for (const word of words) {
-        if (nameWords.includes(word)) score += 3;
-        else if (tool.name.includes(word)) score += 2;
-        else if (description.includes(word)) score += 1;
-      }
-      return { tool, score };
-    })
-    .filter(({ score }) => score > 0)
-    .sort((a, b) => b.score - a.score || a.tool.name.localeCompare(b.tool.name))
-    .map(({ tool }) => tool);
+// A trailing plural "s" is dropped, so "labels" finds delete_label. No other stemming.
+function wordsOf(text: string): string[] {
+  return text
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
+    .map((word) => (word.length > 3 && /[^s]s$/.test(word) ? word.slice(0, -1) : word));
+}
+
+// The usual BM25 constants: K1 caps what a repeated word adds, B is how far a long
+// text is discounted.
+const K1 = 1.2;
+const B = 0.75;
+// The name and the description are scored apart and added. A word of the name counts
+// double: the name says what the tool does, the description also names other tools.
+const NAME_WEIGHT = 2;
+
+function averageLength(texts: string[][]): number {
+  return texts.reduce((sum, words) => sum + words.length, 0) / texts.length || 1;
+}
+
+// Indexes the table and returns the search over it: the tools matching a query, best
+// first, ranked with BM25. A word found in few tools ("revoke") weighs more than one
+// found in many ("list"). An exact name answers with that tool alone, which is how a
+// client reads one schema again. A tool no word of the query is found in is left out.
+export function toolSearch(table: McpRouteTool[]): (query: string) => McpRouteTool[] {
+  const docs = table.map((tool) => ({
+    tool,
+    name: wordsOf(tool.name),
+    description: wordsOf(tool.description),
+  }));
+  const averageName = averageLength(docs.map((doc) => doc.name));
+  const averageDescription = averageLength(docs.map((doc) => doc.description));
+  const toolsWith = new Map<string, number>();
+  for (const doc of docs) {
+    for (const word of new Set([...doc.name, ...doc.description])) {
+      toolsWith.set(word, (toolsWith.get(word) ?? 0) + 1);
+    }
+  }
+
+  const fieldScore = (words: string[], average: number, word: string) => {
+    const count = words.filter((w) => w === word).length;
+    return (count * (K1 + 1)) / (count + K1 * (1 - B + (B * words.length) / average));
+  };
+
+  return (query) => {
+    const exact = table.find((tool) => tool.name === query.trim().toLowerCase());
+    if (exact) return [exact];
+    const words = [...new Set(wordsOf(query))].filter((word) => toolsWith.has(word));
+    return docs
+      .map((doc) => {
+        let score = 0;
+        for (const word of words) {
+          const found = toolsWith.get(word)!;
+          const rarity = Math.log(1 + (docs.length - found + 0.5) / (found + 0.5));
+          score +=
+            rarity *
+            (NAME_WEIGHT * fieldScore(doc.name, averageName, word) +
+              fieldScore(doc.description, averageDescription, word));
+        }
+        return { tool: doc.tool, score };
+      })
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score || a.tool.name.localeCompare(b.tool.name))
+      .map(({ tool }) => tool);
+  };
 }
 
 type ToolResult = { content: unknown[]; isError?: boolean; structuredContent?: unknown };
@@ -144,7 +187,7 @@ export async function callCatalogTool(
   if (name === 'discover') {
     const parsed = discoverInput.safeParse(args);
     if (!parsed.success) return toolFailure(400, z.prettifyError(parsed.error));
-    const matches = matchTools(routes.table, parsed.data.query);
+    const matches = toolSearch(routes.table)(parsed.data.query);
     const data = {
       total: matches.length,
       tools: matches.slice(0, parsed.data.limit ?? DISCOVER_DEFAULT_LIMIT).map((tool) => ({

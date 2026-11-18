@@ -531,6 +531,7 @@
       "field": "自定义字段",
       "schedule": "定时任务",
       "manual": "手动",
+      "api": "API",
       "status": "状态变更",
       "event": "事件"
     },

@@ -207,6 +207,7 @@
       "delegation": "se ha ejecutado por una delegación de",
       "field": "se ha ejecutado por un campo de",
       "manual": "se ha ejecutado manualmente",
+      "api": "se ha ejecutado por la API",
       "schedule": "se ha ejecutado por programado",
       "status": "se ha ejecutado por un cambio de estado de",
       "event": "se ha ejecutado por un evento de"

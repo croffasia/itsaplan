@@ -531,6 +531,7 @@
       "field": "Champ personnalisé",
       "schedule": "Planification",
       "manual": "Manuel",
+      "api": "API",
       "status": "Changement de statut",
       "event": "Événement"
     },

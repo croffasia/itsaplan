@@ -17,8 +17,9 @@ export interface RunForPrompt {
   issueId: number | null;
   issueIdentifier: string | null;
   issueTitle: string | null;
-  // The issue's assignee and, on a mention run, the author of the comment behind it:
-  // the name they are called by and the handle they are tagged by.
+  // The issue's assignee and the person who asked: the author of the comment behind a
+  // mention run or the sender of an API task. The name they are called by and the handle
+  // they are tagged by.
   assigneeName: string | null;
   assigneeUsername: string | null;
   requesterName: string | null;
@@ -51,6 +52,12 @@ export function runModePreamble(run: Pick<RunForPrompt, 'trigger' | 'documentId'
       'watching it and no one will answer questions. Complete the task with your tools,',
       'making reasonable assumptions; never ask for clarification or wait for input.',
     );
+  } else if (run.trigger === 'api') {
+    lines.push(
+      'This run was sent to you through the API, by a person or a program that reads the',
+      'result later. No one is watching it and no one will answer questions. Complete the',
+      'task with your tools, making reasonable assumptions; never ask for clarification.',
+    );
   } else {
     const subject = run.documentId != null ? 'a document' : 'an issue';
     lines.push(
@@ -63,7 +70,7 @@ export function runModePreamble(run: Pick<RunForPrompt, 'trigger' | 'documentId'
 }
 
 export function framePrompt(run: RunForPrompt): string {
-  if (run.trigger === 'schedule' || run.trigger === 'manual') {
+  if (run.trigger === 'schedule' || run.trigger === 'manual' || run.trigger === 'api') {
     return `Carry out the following task:\n\n${run.prompt}`;
   }
   if (run.documentId != null) return frameDocumentMention(run);

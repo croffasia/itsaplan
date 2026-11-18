@@ -691,6 +691,7 @@
     "loadMore": "Cargar 25 más",
     "endOfHistory": "No hay ejecuciones anteriores",
     "manualTask": "Tarea manual",
+    "apiTask": "Tarea por API",
     "scheduledTask": "Tarea programada",
     "documentTask": "Comentario en un documento",
     "failed": "Fallida",

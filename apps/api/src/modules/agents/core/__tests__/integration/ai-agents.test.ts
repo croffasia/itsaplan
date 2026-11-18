@@ -367,20 +367,28 @@ describe('ai agents', () => {
         reasoningEffort: 'low',
       });
       const agentId = created.data!.agent.id;
-      const run = () =>
-        asOwner
+      const run = async () => {
+        const queued = await asOwner
           .projects({ projectKey: 'MKT' })
           ['ai-agents']({ agentId })
           .run.post({ prompt: 'hi' });
+        await processAgentRuns();
+        return asOwner['agent-runs']({ runId: queued.data!.runId }).get();
+      };
 
-      expect((await run()).data).toMatchObject({ text: 'ok' });
+      expect((await run()).data).toEqual({
+        runId: expect.any(Number),
+        status: 'success',
+        output: 'ok',
+        error: null,
+      });
       expect(endpoint.bodies.at(-1)).toMatchObject({
         model: 'stub-model',
         reasoning_effort: 'low',
       });
 
       await agents(asOwner, teamId)({ agentId }).patch({ reasoningEffort: null });
-      expect((await run()).data).toMatchObject({ text: 'ok' });
+      expect((await run()).data).toMatchObject({ status: 'success', output: 'ok' });
       expect(endpoint.bodies.at(-1)).not.toHaveProperty('reasoning_effort');
     } finally {
       endpoint.stop();
@@ -1023,18 +1031,114 @@ describe('ai agents', () => {
     expect(res.status).toBe(404);
   });
 
-  it('rejects running an external agent with 400', async () => {
+  // A task sent through /run is not waited for: it goes through the agent queue like a
+  // schedule's, and the caller reads it with get_agent_run when the answer says to.
+  it('queues a task and answers at once with when to read it', async () => {
+    const { owner, asOwner, teamId } = await setup();
+    const agent = (
+      await createAgent(asOwner, 'MKT', { name: 'B', username: 'b', kind: 'internal' })
+    ).data!.agent;
+
+    const res = await asOwner
+      .projects({ projectKey: 'MKT' })
+      ['ai-agents']({ agentId: agent.id })
+      .run.post({ prompt: 'Summarise the open bugs' });
+
+    expect(res.status).toBe(202);
+    expect(res.data).toEqual({
+      runId: expect.any(Number),
+      status: 'queued',
+      retryAfterSeconds: 10,
+    });
+    const [row] = await db.select().from(agentRun).where(eq(agentRun.id, res.data!.runId));
+    expect(row).toMatchObject({
+      agentId: agent.id,
+      trigger: 'api',
+      prompt: 'Summarise the open bugs',
+      requestedByUserId: owner.userId,
+      issueId: null,
+      scheduleId: null,
+      status: 'pending',
+    });
+    const read = await asOwner['agent-runs']({ runId: res.data!.runId }).get();
+    expect(read.data).toEqual({
+      runId: res.data!.runId,
+      status: 'queued',
+      output: null,
+      error: null,
+      retryAfterSeconds: 10,
+    });
+    const history = await agents(
+      asOwner,
+      teamId,
+    )({ agentId: agent.id }).runs.get({
+      query: {},
+    });
+    expect(history.data!.items).toContainEqual(
+      expect.objectContaining({ id: res.data!.runId, trigger: 'api' }),
+    );
+  });
+
+  it('queues a task of an external agent for its runner, which reports the answer', async () => {
     const { asOwner } = await setup();
     const created = await createAgent(asOwner, 'MKT', {
       name: 'Ext',
       username: 'ext',
       kind: 'external',
     });
-    const res = await asOwner
+    const asRunner = apiKeyApi(created.data!.apiKey!);
+    const queued = await asOwner
       .projects({ projectKey: 'MKT' })
       ['ai-agents']({ agentId: created.data!.agent.id })
-      .run.post({ prompt: 'hi' });
-    expect(res.status).toBe(400);
+      .run.post({ prompt: 'Check the release notes' });
+    expect(queued.status).toBe(202);
+
+    const claimed = (await asRunner['agent-runs'].claim.post()).data!.run!;
+    expect(claimed).toMatchObject({ id: queued.data!.runId, trigger: 'api' });
+    expect(claimed.prompt).toBe('Carry out the following task:\n\nCheck the release notes');
+    expect(claimed.systemPrompt).toContain('sent to you through the API');
+    expect(claimed.systemPrompt).toContain('is the person who asked you');
+    await asRunner['agent-runs']({ runId: claimed.id }).result.post({
+      status: 'success',
+      output: 'All good',
+    });
+
+    const read = await asOwner['agent-runs']({ runId: claimed.id }).get();
+    expect(read.data).toMatchObject({ status: 'success', output: 'All good' });
+    expect(read.data).not.toHaveProperty('retryAfterSeconds');
+  });
+
+  it('refuses a task to an owner-scoped external agent from someone else', async () => {
+    const { asOwner, teamId } = await setup();
+    const agent = (
+      await createAgent(asOwner, 'MKT', { name: 'E', username: 'e', kind: 'external' })
+    ).data!.agent;
+    await agents(asOwner, teamId)({ agentId: agent.id }).patch({ runnerScope: 'owner' });
+    const asMember = await addProjectMember(asOwner, 'MKT');
+    const run = (api: Api) =>
+      api.projects({ projectKey: 'MKT' })['ai-agents']({ agentId: agent.id }).run.post({
+        prompt: 'hi',
+      });
+
+    expect((await run(asMember)).status).toBe(403);
+    expect((await run(asOwner)).status).toBe(202);
+  });
+
+  it('reads a run only for whoever may read the runs of its project', async () => {
+    const { asOwner } = await setup();
+    const agent = (
+      await createAgent(asOwner, 'MKT', { name: 'B', username: 'b', kind: 'internal' })
+    ).data!.agent;
+    const { runId } = (
+      await asOwner
+        .projects({ projectKey: 'MKT' })
+        ['ai-agents']({ agentId: agent.id })
+        .run.post({ prompt: 'hi' })
+    ).data!;
+    const outsider = authedApi((await signUpTestUser({ name: 'Out' })).cookie);
+
+    expect((await outsider['agent-runs']({ runId }).get()).status).toBe(403);
+    expect((await asOwner['agent-runs']({ runId: runId + 1000 }).get()).status).toBe(404);
   });
 
   it('rejects running with an empty prompt (400) before any model call', async () => {

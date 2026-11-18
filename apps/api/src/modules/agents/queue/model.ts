@@ -1,6 +1,7 @@
 import { t } from 'elysia';
 import { pageQueryFields, pageResponse } from '#shared/pagination';
 import { IssueAgentRunPageResponse, issueAgentTraceQuery } from '#modules/issues/model';
+import { agentExecutionState } from '../model';
 
 export const queueQuery = t.Object({
   ...pageQueryFields,
@@ -55,6 +56,18 @@ export const internalTraceQuery = t.Object({
       multipleOf: 1,
       description: 'The recorded attempt to read, oldest 1; the latest when absent.',
     }),
+  ),
+});
+
+export const AgentRunResultResponse = t.Object({
+  runId: t.Number(),
+  status: agentExecutionState,
+  output: t.Nullable(
+    t.String({ description: "The agent's answer; the text it had produced for a failed run." }),
+  ),
+  error: t.Nullable(t.String({ description: 'Why the last attempt failed.' })),
+  retryAfterSeconds: t.Optional(
+    t.Number({ description: 'Seconds to wait before reading it again; absent once it ended.' }),
   ),
 });
 

@@ -691,6 +691,7 @@
     "loadMore": "Load 25 more",
     "endOfHistory": "No older runs",
     "manualTask": "Manual task",
+    "apiTask": "API task",
     "scheduledTask": "Scheduled task",
     "documentTask": "Document comment",
     "failed": "Failed",

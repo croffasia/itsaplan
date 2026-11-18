@@ -25,6 +25,7 @@ export const agentRunTrigger = t.Union([
   t.Literal('manual'),
   t.Literal('status'),
   t.Literal('event'),
+  t.Literal('api'),
 ]);
 
 export type AgentRunTrigger = typeof agentRunTrigger.static;

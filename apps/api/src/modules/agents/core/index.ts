@@ -23,6 +23,7 @@ import {
   memberProjectIds,
   assertFullAgentAccess,
   withCanManage,
+  queueApiRun,
   type AgentKind,
 } from './service';
 import {
@@ -39,8 +40,9 @@ import {
   CreateAgentResponse,
   renameThreadBody,
   RegenerateKeyResponse,
-  RunAgentResponse,
+  QueuedApiRunResponse,
   agentListQuery,
+  apiRunBody,
   agentParams,
   analyticsQuery,
   workspaceAnalyticsQuery,
@@ -56,7 +58,8 @@ import {
   tracesQuery,
   updateAgentBody,
 } from './model';
-import { runAgent, streamAgent, type AgentRunEvent, type RunOpts } from './runtime';
+import { streamAgent, type AgentRunEvent, type RunOpts } from './runtime';
+import { QUEUED_POLL_SECONDS } from './run-queue';
 import { peoplePreamble } from './prompt/run-context';
 import { attachmentPreamble, chartPreamble } from './prompt/framing';
 import type { SessionUser } from '#shared/auth-context';
@@ -515,27 +518,33 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     },
   })
 
-  // The agent is built from its stored model configuration (Mastra) and works in the
-  // project of this path, which it has to be a member of.
+  // The answer is not waited for: a run can take longer than a proxy holds a quiet
+  // request open, or than an MCP client waits for a tool result.
   .post(
     '/projects/:projectKey/ai-agents/:agentId/run',
-    async ({ params, project, body, user }) =>
-      runAgent(
+    async ({ params, project, body, user, set }) => {
+      const runId = await queueApiRun(
         params.agentId,
         project.id,
         body.prompt,
-        chatRunOpts(user, params.agentId, body.threadId),
-      ),
+        requireUser(user).id,
+      );
+      set.status = 202;
+      return { runId, status: 'queued' as const, retryAfterSeconds: QUEUED_POLL_SECONDS };
+    },
     {
-      body: runBody,
+      body: apiRunBody,
       params: projectAgentParams,
       permission: ['ai_agents', 'read'],
-      response: { 200: RunAgentResponse, ...commonErrors },
+      response: { 202: QueuedApiRunResponse, ...commonErrors },
       detail: {
         summary: 'Run an AI agent',
         description:
-          'Send a prompt to an internal AI agent and return its answer. Only an internal agent ' +
-          'runs here; an external one has no model config and returns 400. An agent with chat ' +
+          'Queue a run of an internal or external agent with the prompt as its task and ' +
+          'return its run id at once. The run waits its turn in the agent queue, like a ' +
+          "scheduled one, and shows in the agent's run history. Wait retryAfterSeconds, then " +
+          'read it with get_agent_run, and keep reading it after the retryAfterSeconds each ' +
+          'answer gives until its status is success, failed or canceled. An agent with chat ' +
           'turned off returns 403.',
         ...mcpTool('run_ai_agent'),
       },

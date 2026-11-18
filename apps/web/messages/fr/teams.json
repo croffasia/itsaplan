@@ -691,6 +691,7 @@
     "loadMore": "Charger 25 de plus",
     "endOfHistory": "Aucune exécution plus ancienne",
     "manualTask": "Tâche manuelle",
+    "apiTask": "Tâche via l'API",
     "scheduledTask": "Tâche planifiée",
     "documentTask": "Commentaire dans un document",
     "failed": "En échec",

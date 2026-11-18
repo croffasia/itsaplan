@@ -202,10 +202,14 @@ export const CreateAgentResponse = t.Object({
 // The new API key secret returned once by regenerate-key.
 export const RegenerateKeyResponse = t.Object({ apiKey: t.String() });
 
-// A run's generated text and the conversation thread id (null when memory is off).
-export const RunAgentResponse = t.Object({
-  text: t.String(),
-  threadId: t.Nullable(t.String()),
+export const apiRunBody = t.Object({
+  prompt: t.String({ minLength: 1, description: 'The task for the agent.' }),
+});
+
+export const QueuedApiRunResponse = t.Object({
+  runId: t.Number({ description: 'Read it with get_agent_run.' }),
+  status: t.Literal('queued'),
+  retryAfterSeconds: t.Number({ description: 'Seconds to wait before reading the run.' }),
 });
 
 // One row of an agent's run history (AgentRunRow from run-queue).

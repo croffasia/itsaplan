@@ -86,6 +86,13 @@ MCP; a tool named as a core tool of the agent is left out.
 `ai_agent_team_username_uq` makes the mention handle unique per team, ignoring case.
 `assertUsernameFree` also refuses a handle a person holds.
 
+`agent_forge_identity` holds the logins an agent opens pull requests as, each on a Git provider
+connection of its team. A login is stored lowercased and belongs to one agent per connection. A
+review of a pull request starts a `review` run only for the agent whose identity is the pull
+request's author on the connection the project manages the repository through, and only when the
+provider says the reviewer may write to the repository. The handle is never matched to a login:
+anyone may register a login on a host.
+
 ## MCP
 
 The team is resolved from the API key (`mcp/server.ts`). An agent's key acts in its own team, a

@@ -7,10 +7,12 @@ import {
 
 const teamConnectionsKey = (teamId: number) => ['teamGitConnections', teamId] as const;
 
-export function useTeamGitProviderConnectionsQuery(teamId: number) {
+// Pass null to skip the read, for a member who may not list the connections.
+export function useTeamGitProviderConnectionsQuery(teamId: number | null) {
   return useQuery({
-    queryKey: teamConnectionsKey(teamId),
-    queryFn: () => listTeamGitProviderConnections(teamId),
+    queryKey: teamConnectionsKey(teamId ?? 0),
+    queryFn: () => listTeamGitProviderConnections(teamId!),
+    enabled: teamId !== null,
   });
 }
 

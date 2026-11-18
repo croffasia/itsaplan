@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { isMemberField } from '@/utils/memberFields';
 import type { AgentFormValue } from '../../utils/agentForm';
 import { AgentDelayInput } from './AgentDelayInput';
+import { AgentForgeIdentities } from './AgentForgeIdentities';
 import { AgentFormSection } from './AgentFormSection';
 import { useTranslations } from 'next-intl';
 
@@ -51,7 +52,12 @@ export default function AgentTriggersSection({
       .map((field) => ({ field, project: attached[index] })),
   );
 
-  const switches = [value.chatEnabled, value.triggerOnMention, value.triggerOnAssign, value.triggerOnReview];
+  const switches = [
+    value.chatEnabled,
+    value.triggerOnMention,
+    value.triggerOnAssign,
+    value.triggerOnReview,
+  ];
   const enabled =
     switches.filter(Boolean).length +
     memberFields.filter((f) => value.fieldTriggers.some((tr) => tr.fieldId === f.field.id)).length;
@@ -125,6 +131,12 @@ export default function AgentTriggersSection({
           onCheckedChange={(v) => onChange({ triggerOnReview: v })}
         />
       </label>
+      {value.triggerOnReview && (
+        <AgentForgeIdentities
+          value={value.forgeIdentities}
+          onChange={(forgeIdentities) => onChange({ forgeIdentities })}
+        />
+      )}
       {memberFields.map(({ field, project }) => {
         const trigger = value.fieldTriggers.find((tr) => tr.fieldId === field.id);
         return (

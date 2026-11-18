@@ -89,8 +89,24 @@ const configFields = {
   triggerOnReview: t.Optional(
     t.Boolean({
       description:
-        'Run when a collaborator of the repository reviews a pull request the agent opened.',
+        'Run when someone with write access reviews a pull request opened by one of the ' +
+        "agent's forge identities.",
     }),
+  ),
+  forgeIdentities: t.Optional(
+    t.Array(
+      t.Object({
+        connectionId: t.Integer({ description: "A Git provider connection of the agent's team." }),
+        login: t.String({ minLength: 1, maxLength: 255 }),
+      }),
+      {
+        maxItems: 50,
+        description:
+          'The logins the agent opens pull requests as, each on a Git provider connection of ' +
+          'its team. Replaces the set. A login another agent has on the same connection is ' +
+          'refused (409); a connection of another team is ignored.',
+      },
+    ),
   ),
   chatEnabled: t.Optional(
     t.Boolean({
@@ -178,6 +194,14 @@ export const AiAgentResponse = t.Object({
   triggerOnReview: t.Boolean(),
   chatEnabled: t.Boolean(),
   fieldTriggers: t.Array(t.Object({ fieldId: t.Number(), name: t.String(), delaySec: t.Number() })),
+  forgeIdentities: t.Array(
+    t.Object({
+      connectionId: t.Number(),
+      login: t.String(),
+      provider: t.String(),
+      baseUrl: t.String(),
+    }),
+  ),
   delegationDelaySec: t.Number(),
   ownerUserId: t.Nullable(t.String()),
   ownerName: t.Nullable(t.String()),

@@ -62,7 +62,7 @@ export interface CheckEvent {
 }
 
 // A review submitted on a pull request: who reviewed, what they decided, and who
-// opened the pull request, so the agent that did can be told.
+// opened the pull request on the host.
 export type PullRequestReviewState = 'approved' | 'changes_requested' | 'commented';
 
 export interface PullRequestReviewEvent {
@@ -74,9 +74,6 @@ export interface PullRequestReviewEvent {
   body: string;
   reviewer: string;
   author: string | null;
-  // Whether the reviewer has write access to the repository: GitHub says so in the
-  // delivery, the others do not (null), and the handler asks them.
-  reviewerTrusted: boolean | null;
 }
 
 export type GitEvent =
@@ -158,7 +155,6 @@ interface GithubPayload {
     body?: string | null;
     html_url?: string;
     user?: { login?: string };
-    author_association?: string;
     type?: string;
     content?: string | null;
   };
@@ -301,9 +297,6 @@ function parseGithubReview(payload: unknown, event: string): PullRequestReviewEv
     body,
     reviewer,
     author: pr.user?.login ?? null,
-    reviewerTrusted: fromGithub
-      ? ['OWNER', 'MEMBER', 'COLLABORATOR'].includes(review?.author_association ?? '')
-      : null,
   };
 }
 

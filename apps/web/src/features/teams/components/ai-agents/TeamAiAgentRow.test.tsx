@@ -61,6 +61,7 @@ const agent = (canManage: boolean): AiAgent => ({
   triggerOnAssign: false,
   triggerOnReview: false,
   fieldTriggers: [],
+  forgeIdentities: [],
   delegationDelaySec: 0,
   ownerUserId: null,
   ownerName: null,

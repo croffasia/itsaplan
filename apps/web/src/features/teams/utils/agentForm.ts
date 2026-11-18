@@ -33,6 +33,9 @@ export interface AgentFormValue {
   // The member custom fields that start a run when the agent is set into one, each
   // with its own wait.
   fieldTriggers: FormFieldTrigger[];
+  // The logins the agent opens pull requests as. baseUrl names the host for a reader who
+  // may not list the team's connections.
+  forgeIdentities: FormForgeIdentity[];
   // Minutes a delegation run waits before the agent may pick it up, as a string so
   // the input can be cleared while typing.
   delegationDelayMin: string;
@@ -46,6 +49,12 @@ export interface AgentFormValue {
 }
 
 export type AgentDelivery = 'runner' | 'url';
+
+export interface FormForgeIdentity {
+  connectionId: number;
+  login: string;
+  baseUrl: string;
+}
 
 export interface FormFieldTrigger {
   fieldId: number;
@@ -106,6 +115,11 @@ export function initialAgentValue(agent?: AiAgent): AgentFormValue {
       fieldId: trigger.fieldId,
       delayMin: String(Math.round(trigger.delaySec / 60)),
     })),
+    forgeIdentities: (agent?.forgeIdentities ?? []).map(({ connectionId, login, baseUrl }) => ({
+      connectionId,
+      login,
+      baseUrl,
+    })),
     delegationDelayMin: String(Math.round((agent?.delegationDelaySec ?? 120) / 60)),
     projectIds: (agent?.projects ?? []).map((project) => project.id),
     runnerScope: agent?.runnerScope ?? 'team',
@@ -139,6 +153,9 @@ function configFields(v: AgentFormValue) {
       fieldId: trigger.fieldId,
       delaySec: delaySecFromMinutes(trigger.delayMin),
     })),
+    forgeIdentities: v.forgeIdentities
+      .filter((identity) => identity.login.trim())
+      .map(({ connectionId, login }) => ({ connectionId, login: login.trim() })),
     delegationDelaySec: delaySecFromMinutes(v.delegationDelayMin),
   };
   if (v.kind === 'external') {

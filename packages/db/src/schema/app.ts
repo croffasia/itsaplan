@@ -1421,6 +1421,28 @@ export const agentFieldTrigger = pgTable(
   ],
 );
 
+// The accounts an agent acts as on a repository host, each on a connection of the
+// agent's team. A review of a pull request one of them opened is handed to the agent
+// when it reacts to reviews. The binding is set on the agent: a login is never matched
+// to an agent by name, since anyone may hold a login on a host.
+export const agentForgeIdentity = pgTable(
+  'agent_forge_identity',
+  {
+    agentId: integer('agent_id')
+      .notNull()
+      .references(() => aiAgent.id, { onDelete: 'cascade' }),
+    connectionId: integer('connection_id')
+      .notNull()
+      .references(() => gitProviderConnection.id, { onDelete: 'cascade' }),
+    // Lowercased: the hosts compare logins without case.
+    login: text('login').notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.connectionId, t.login] }),
+    index('agent_forge_identity_agent_idx').on(t.agentId),
+  ],
+);
+
 // A preset a new issue can be created from. It carries the title and description
 // the issue starts with plus the properties applied on top of it — every one of
 // them optional, and one left NULL leaves the create dialog on its own default.

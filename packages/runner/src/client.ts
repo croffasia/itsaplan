@@ -9,7 +9,15 @@ export interface Run {
   traceEvents?: boolean;
   id: number;
   trigger:
-    'mention' | 'delegation' | 'field' | 'review' | 'schedule' | 'manual' | 'status' | 'event' | 'api';
+    | 'mention'
+    | 'delegation'
+    | 'field'
+    | 'review'
+    | 'schedule'
+    | 'manual'
+    | 'status'
+    | 'event'
+    | 'api';
   prompt: string;
   systemPrompt: string;
   issueId: number | null;

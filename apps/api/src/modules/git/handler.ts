@@ -264,13 +264,12 @@ const REVIEW_VERBS: Record<PullRequestReviewState, string> = {
 };
 
 // A review of a linked pull request is recorded on each issue the pull request is
-// linked to, by the reviewer. When the pull request was opened by an agent of the
-// project that reacts to reviews, and the reviewer may write to the repository, the
-// review is handed to the agent as a run on the first of those issues, once, however
-// many issues the pull request names. The write-access check is what keeps a stranger
-// on a public repository from giving the agent a task; the provider either says so in
-// the delivery or is asked through the project's connection. A review the author wrote
-// on its own pull request starts nothing.
+// linked to, by the reviewer. When the author of the pull request is a forge identity of
+// an agent of the project that reacts to reviews, on the connection the project manages
+// the repository through, and the reviewer may write to the repository, the review is
+// handed to the agent once, as a run on the first of those issues. The provider is asked
+// about the reviewer before anything is written, so a failed call leaves the delivery
+// free to be retried. A review by the author starts nothing.
 async function handlePullRequestReview(
   projectId: number,
   providerKey: GitProviderKey,
@@ -279,6 +278,7 @@ async function handlePullRequestReview(
 ): Promise<PullRequestOutcome> {
   const issueIds = await listPullRequestIssueIds(projectId, providerKey, event.repo, event.number);
   if (issueIds.length === 0) return 'ignored';
+  const agent = await reviewAgent(projectId, providerKey, event);
   const entry = {
     action: 'git_pr',
     subject: textSide(event.state),
@@ -289,15 +289,7 @@ async function handlePullRequestReview(
   for (const issueId of issueIds) {
     await recordActivity(issueId, [entry], actor);
   }
-  if (!event.author || event.author.toLowerCase() === event.reviewer.toLowerCase()) {
-    return 'reviewed';
-  }
-  const agent = await getReviewTriggerAgent(projectId, event.author);
   if (!agent) return 'reviewed';
-  const trusted =
-    event.reviewerTrusted ??
-    (await reviewerHasWriteAccess(projectId, providerKey, event.repo, event.reviewer));
-  if (!trusted) return 'reviewed';
   const where = event.url ? ` (${event.url})` : '';
   const text = event.body.trim();
   await enqueueAgentRun({
@@ -311,4 +303,17 @@ async function handlePullRequestReview(
       (text ? `\n\n${text}` : ''),
   });
   return 'reviewed';
+}
+
+// The agent a review is handed to, or null.
+async function reviewAgent(
+  projectId: number,
+  providerKey: GitProviderKey,
+  event: PullRequestReviewEvent,
+): Promise<{ id: number } | null> {
+  if (!event.author || event.author.toLowerCase() === event.reviewer.toLowerCase()) return null;
+  const agent = await getReviewTriggerAgent(projectId, providerKey, event.repo, event.author);
+  if (!agent) return null;
+  const trusted = await reviewerHasWriteAccess(projectId, providerKey, event.repo, event.reviewer);
+  return trusted ? agent : null;
 }

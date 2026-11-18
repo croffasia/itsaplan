@@ -15,8 +15,6 @@ const fmtDate = (v: string | null) => (v ? formatDate(v) : '');
 const isLong = (text: string | null): text is string =>
   !!text && (text.length > 80 || text.includes('\n'));
 
-// A custom field value shares its row with the field name as well as the actor, so
-// it runs out of width sooner than a title does — a datetime range already wraps.
 // The message for a 'git_pr' entry, by the subject the entry carries.
 const PULL_REQUEST_KEYS: Record<string, string> = {
   merged: 'pullRequestMerged',
@@ -25,6 +23,8 @@ const PULL_REQUEST_KEYS: Record<string, string> = {
   commented: 'pullRequestReviewed',
 };
 
+// A custom field value shares its row with the field name as well as the actor, so
+// it runs out of width sooner than a title does — a datetime range already wraps.
 const isLongValue = (text: string | null): text is string =>
   !!text && (text.length > 40 || text.includes('\n'));
 

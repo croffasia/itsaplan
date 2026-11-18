@@ -532,6 +532,7 @@
       "mention": "멘션",
       "delegation": "위임",
       "field": "사용자 지정 필드",
+      "review": "리뷰",
       "schedule": "일정",
       "manual": "수동",
       "api": "API",

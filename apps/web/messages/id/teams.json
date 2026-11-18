@@ -691,6 +691,7 @@
     "loadMore": "Muat 25 lagi",
     "endOfHistory": "Tidak ada eksekusi yang lebih lama",
     "manualTask": "Tugas manual",
+    "apiTask": "Tugas lewat API",
     "scheduledTask": "Tugas terjadwal",
     "documentTask": "Komentar di dokumen",
     "failed": "Gagal",

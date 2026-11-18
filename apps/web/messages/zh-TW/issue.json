@@ -531,6 +531,7 @@
       "field": "自訂欄位",
       "schedule": "排程",
       "manual": "手動",
+      "api": "API",
       "status": "狀態變更",
       "event": "事件"
     },

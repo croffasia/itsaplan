@@ -531,6 +531,7 @@
       "field": "Bidang kustom",
       "schedule": "Jadwal",
       "manual": "Manual",
+      "api": "API",
       "status": "Perubahan status",
       "event": "Peristiwa"
     },

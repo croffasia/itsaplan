@@ -691,6 +691,7 @@
     "loadMore": "25 tane daha yükle",
     "endOfHistory": "Daha eski çalıştırma yok",
     "manualTask": "Manuel görev",
+    "apiTask": "API görevi",
     "scheduledTask": "Zamanlanmış görev",
     "documentTask": "Belge yorumu",
     "failed": "Başarısız",

@@ -691,6 +691,7 @@
     "loadMore": "再載入 25 條",
     "endOfHistory": "沒有更早的執行記錄",
     "manualTask": "手動任務",
+    "apiTask": "API 任務",
     "scheduledTask": "排程任務",
     "documentTask": "文件留言",
     "failed": "失敗",

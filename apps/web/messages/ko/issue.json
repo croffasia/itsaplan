@@ -531,6 +531,7 @@
       "field": "사용자 지정 필드",
       "schedule": "일정",
       "manual": "수동",
+      "api": "API",
       "status": "상태 변경",
       "event": "이벤트"
     },

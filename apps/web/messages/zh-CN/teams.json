@@ -691,6 +691,7 @@
     "loadMore": "再加载 25 条",
     "endOfHistory": "没有更早的运行记录",
     "manualTask": "手动任务",
+    "apiTask": "API 任务",
     "scheduledTask": "定时任务",
     "documentTask": "文档评论",
     "failed": "失败",

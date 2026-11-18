@@ -791,11 +791,16 @@ export const agentRun = pgTable(
     issueId: integer('issue_id').references(() => issue.id, { onDelete: 'cascade' }),
     scheduleId: integer('schedule_id').references(() => agentSchedule.id, { onDelete: 'cascade' }),
     // 'event' is a run an extension queued on an issue for a schedule of its own type.
+    // 'api' is a task sent through POST /run or run_ai_agent: no issue, document or schedule.
     trigger: text('trigger').notNull().default('delegation'),
     scheduledFor: timestamp('scheduled_for', { withTimezone: true }),
     // The comment that mentioned the agent, kept for traceability. The prompt is
     // snapshotted into `prompt` so a run still works if the comment is later deleted.
     sourceActivityId: integer('source_activity_id').references(() => issueActivity.id, {
+      onDelete: 'set null',
+    }),
+    // Who sent an API task. A mention's author is read from its comment instead.
+    requestedByUserId: text('requested_by_user_id').references(() => user.id, {
       onDelete: 'set null',
     }),
     // A mention in a document comment: the document and the comment. Such a run has no
@@ -837,7 +842,7 @@ export const agentRun = pgTable(
     ),
     check(
       'agent_run_trigger_check',
-      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'schedule', 'manual', 'status', 'event')`,
+      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'schedule', 'manual', 'status', 'event', 'api')`,
     ),
     uniqueIndex('agent_run_schedule_fire_uq').on(t.scheduleId, t.scheduledFor),
     index('agent_run_due_idx').on(t.status, t.nextAttemptAt),

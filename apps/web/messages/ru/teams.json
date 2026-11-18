@@ -691,6 +691,7 @@
     "loadMore": "Загрузить ещё 25",
     "endOfHistory": "Более ранних запусков нет",
     "manualTask": "Ручная задача",
+    "apiTask": "Задача через API",
     "scheduledTask": "Задача по расписанию",
     "documentTask": "Комментарий в документе",
     "failed": "Сбой",

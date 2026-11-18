@@ -149,16 +149,16 @@ export const burnupQuery = t.Object({
 });
 
 export const activityQuery = t.Object({
-  limit: t.Optional(t.Numeric({ description: 'Max entries (1-100). Default 25.' })),
+  limit: t.Optional(t.Numeric({ description: '1-100. Default 25.' })),
   cursor: t.Optional(
-    t.String({ description: 'nextCursor of the previous page, as a JSON string.' }),
+    t.String({ description: 'nextCursor from the previous page, as a JSON string.' }),
   ),
   actorUserId: t.Optional(t.String()),
   action: t.Optional(
     t.String({ description: "Change-log action, such as 'created' or 'status'." }),
   ),
-  from: instantQuery('Inclusive earliest entry time.'),
-  to: instantQuery('Exclusive latest entry time.'),
+  from: instantQuery('At or after this'),
+  to: instantQuery('Before this'),
   // Comma-separated issue ids the client resolved from the widget's work items
   // filter; absent means no issue-scope restriction.
   issueIds: t.Optional(t.String()),

@@ -59,9 +59,9 @@ export const integrationRoutes = new Elysia({
     detail: {
       summary: 'List available integrations',
       description:
-        "List the integration catalog: LLM providers (kind 'llm'), tool integrations " +
-        "(kind 'tool') and services a team's own tools send requests to (kind 'service'). " +
-        'A provider key here is what list_provider_models takes.',
+        "List the integration catalog: LLM providers (kind 'llm'), tool integrations ('tool'), " +
+        "and services that a team's own tools call " +
+        "('service'). Pass a provider key to list_provider_models.",
       ...mcpTool('list_integrations'),
     },
   })
@@ -79,8 +79,8 @@ export const integrationRoutes = new Elysia({
       detail: {
         summary: "List a provider's models",
         description:
-          'List the models an LLM provider offers. An id here is what the model field on ' +
-          'create_ai_agent / update_ai_agent takes. Empty when the model registry is unreachable.',
+          'List the models of an LLM provider. Use an id as model in create_ai_agent or ' +
+          'update_ai_agent. Empty when the model registry is unreachable.',
         // The list comes from models.dev, the one route here that reads outside the tracker.
         ...mcpTool('list_provider_models', { openWorldHint: true }),
       },
@@ -130,10 +130,9 @@ export const integrationRoutes = new Elysia({
       detail: {
         summary: 'List credentials',
         description:
-          "One page of a team's integration credentials, secrets redacted, narrowed by a " +
-          'search and by kind. The id of a credential on an LLM provider is what ' +
-          'modelCredentialId on create_ai_agent / update_ai_agent takes. A credential is ' +
-          'added in the UI, not here.',
+          "List a team's integration credentials, one page at a time, with secrets hidden. Use " +
+          "an LLM credential's id as modelCredentialId in create_ai_agent or update_ai_agent. " +
+          'Credentials are added only in the UI.',
         ...mcpTool('list_integration_credentials'),
       },
     },

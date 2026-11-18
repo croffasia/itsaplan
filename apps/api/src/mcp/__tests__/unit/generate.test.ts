@@ -159,6 +159,27 @@ describe('mcp tool input schema', () => {
     expect(check({ thingId: 'a', typeId: true }).valid).toBe(false);
   });
 
+  // Elysia builds a numeric field as a numeric string with `default: 0` beside the number,
+  // and repeats the field's options on the number, so a client saw a default of 0 and the
+  // model read every description twice.
+  it('describes a numeric field once and gives it only the default the route declares', () => {
+    const tool = toolWith({
+      query: t.Object({
+        limit: t.Optional(t.Numeric({ description: 'Max results.' })),
+        page: t.Optional(t.Numeric({ default: 1 })),
+        typeId: t.Optional(t.Nullable(t.Integer({ description: 'Type id.' }))),
+      }),
+    });
+
+    const schema = JSON.stringify(tool.inputSchema);
+    expect(schema.match(/Max results\./g)).toHaveLength(1);
+    expect(schema.match(/Type id\./g)).toHaveLength(1);
+    expect(schema).not.toContain('"default":0');
+    expect(JSON.stringify(tool.inputSchema.properties.page)).toContain('"default":1');
+    const check = new AjvJsonSchemaValidator().getValidator(tool.inputSchema as JsonSchemaType);
+    expect(check({ thingId: 'a', limit: '5', page: 2, typeId: null }).valid).toBe(true);
+  });
+
   it('reports whether the route declares a body, whatever the method', () => {
     expect(toolWith({ body: { type: 'object', properties: {} } }).hasBody).toBe(true);
     expect(toolWith({}, 'GET').hasBody).toBe(false);

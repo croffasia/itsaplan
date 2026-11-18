@@ -209,10 +209,10 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       detail: {
         summary: 'Create an invite',
         description:
-          'Create an invite link for an email and role (owner or member). For a member, roleId ' +
-          "picks the custom role, or null for the default role. Accepting it joins the project's " +
-          'team as well. Queues an email when the instance email provider is configured; ' +
-          'emailFailed reports an email the provider could not send, the link still valid.',
+          "Create an invite link for an email and role. For 'member', roleId sets the custom " +
+          "role, or null the default role. Accepting also adds the user to the project's team. " +
+          'Sends an email if the instance has an email provider. ' +
+          'emailFailed means the email failed, but the link works.',
         ...mcpTool('create_invite'),
       },
     },
@@ -241,8 +241,8 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       detail: {
         summary: 'Send an invite email',
         description:
-          'Queue an email for a pending project invite. Returns false when the instance email ' +
-          'provider is not configured. An expired invite is refused: renew it instead.',
+          'Queue an email for a pending project invite. Returns false if the instance has no ' +
+          'email provider. An expired invite is refused: use renew_invite.',
         ...mcpTool('send_invite_email'),
       },
     },
@@ -277,9 +277,9 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       detail: {
         summary: 'Renew an expired invite',
         description:
-          'Replace an expired project invite with a new one for the same email and role: a new ' +
-          'link, valid again for the instance invite lifetime. Emails it when the instance ' +
-          'email provider is configured. An invite that has not expired is refused.',
+          'Replace an expired project invite with a new link for the same email and role, valid ' +
+          'for the instance invite lifetime. Sends an email if the instance has an email ' +
+          'provider. An invite that has not expired is refused.',
         ...mcpTool('renew_invite'),
       },
     },
@@ -299,8 +299,8 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       detail: {
         summary: "List a project's invites",
         description:
-          'The token is null on an invite the caller could not have sent: without permission ' +
-          'to create invites, or on an owner invite the caller may not grant.',
+          "List a project's invites. token is null on an invite you could not send: you cannot " +
+          'create invites, or it is an owner invite you cannot grant.',
         ...mcpTool('list_invites'),
       },
     },
@@ -541,8 +541,8 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       detail: {
         summary: 'Accept an invite',
         description:
-          'Accept an invite (email must match your session). An invite into a project you are ' +
-          'already a member of is refused: accepting it would rewrite the membership you hold.',
+          'Accept an invite. Its email must match your session. An invite into a project you are ' +
+          'already in is refused, because it would replace your membership.',
         ...mcpTool('accept_invite'),
       },
     },
@@ -560,7 +560,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       response: { 204: t.Void(), ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Reject an invite',
-        description: 'Reject an invite (email must match your session).',
+        description: 'Reject an invite. Its email must match your session.',
         // Rejecting consumes the invite; it has to be issued again to rejoin.
         ...mcpTool('reject_invite', { destructiveHint: true }),
       },

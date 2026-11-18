@@ -40,10 +40,9 @@ export const projectPreferences = new Elysia({
       detail: {
         summary: 'Update your project preferences',
         description:
-          'Set isFavorite or isHidden for the authenticated caller. These preferences affect only ' +
-          "the caller's project navigation. Hiding keeps the project accessible through the API " +
-          'and MCP, and it remains in list_projects. Other members and agents retain their own ' +
-          'preferences and access. Supply at least one preference; omitted fields remain unchanged.',
+          'Set isFavorite or isHidden on a project, for you only. A hidden project stays ' +
+          'accessible and stays in list_projects. Send at ' +
+          'least one field. Omitted fields do not change.',
         ...mcpTool('update_project_preferences'),
       },
     },

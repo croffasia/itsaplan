@@ -6,7 +6,7 @@ export const createWebhookBody = t.Object({
   url: t.String({ minLength: 1 }),
   events: t.Array(t.String({ minLength: 1, maxLength: 100 }), {
     minItems: 1,
-    description: 'The events to send, from list_webhook_event_types.',
+    description: 'Events from list_webhook_event_types.',
   }),
   isActive: t.Optional(t.Boolean()),
 });

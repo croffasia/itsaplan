@@ -10,7 +10,8 @@ export const createViewBody = t.Object({
   isPrivate: t.Optional(
     t.Boolean({
       description:
-        'Seen only by its creator, not even by the project owners. Any member of the project who can read its views may create one. Defaults to false.',
+        'Visible only to you, not even to project owners. Any ' +
+        'member who can read views can create one. Default false.',
     }),
   ),
 });

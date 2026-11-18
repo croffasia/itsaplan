@@ -113,7 +113,7 @@ export const attachmentRoutes = new Elysia({
       response: { 200: AttachmentListResponse, ...commonErrors },
       detail: {
         summary: 'List attachments',
-        description: "List an issue's attachments by its numeric id.",
+        description: "List an issue's attachments.",
         ...mcpTool('list_attachments'),
       },
     },
@@ -197,7 +197,7 @@ export const attachmentRoutes = new Elysia({
       response: { 201: AttachmentResponse, ...commonErrors, ...errors(413, 502) },
       detail: {
         summary: 'Add an attachment from a URL or base64',
-        description: 'Attach a file to an issue without a multipart upload.',
+        description: 'Attach a file to an issue from `url` or `contentBase64`.',
         ...mcpTool('add_attachment'),
       },
     },
@@ -269,7 +269,7 @@ export const attachmentRoutes = new Elysia({
       response: { 204: t.Void(), ...accessErrors },
       detail: {
         summary: 'Delete an attachment',
-        description: 'Delete an attachment. Irreversible.',
+        description: 'Permanently delete an attachment.',
         ...mcpTool('delete_attachment'),
       },
     },
@@ -282,11 +282,10 @@ export const attachmentRoutes = new Elysia({
     detail: {
       summary: 'View an attachment',
       description:
-        'Open one attachment of an issue or an initiative, given the url a result carries ' +
-        `for it or its id. An image comes back as the image itself (${VIEWABLE_IMAGES}). ` +
-        'Any other file comes back in `others` with its url and, for a PDF or a text file, ' +
-        'its full text; for a spreadsheet or document (.xlsx, .csv, .docx), its column ' +
-        'headers and first rows. A scanned PDF has no text to read.',
+        'Open one attachment of an issue or initiative, by url or id. An image comes back as ' +
+        `the image (${VIEWABLE_IMAGES}). Other files come back in \`others\` with their url, ` +
+        'plus the full text of a PDF or text file, or the column headers and first rows of a ' +
+        '.xlsx, .csv or .docx file. A scanned PDF has no text.',
       ...mcpImageTool('view_attachment'),
     },
   })
@@ -301,8 +300,8 @@ export const attachmentRoutes = new Elysia({
       detail: {
         summary: 'View the images of an issue',
         description:
-          `Look at the images attached to an issue, by its numeric id: ${VIEWABLE_IMAGES}. ` +
-          'Every other attachment comes back in `others` with its url.',
+          `Show the images attached to an issue: ${VIEWABLE_IMAGES}. ` +
+          'Other attachments are returned in `others` with their url.',
         ...mcpImageTool('view_issue_images'),
       },
     },

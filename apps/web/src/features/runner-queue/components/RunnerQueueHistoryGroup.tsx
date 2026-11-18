@@ -74,20 +74,17 @@ export default function RunnerQueueHistoryGroup({
           </span>
         </span>
       </button>
-      {open && (
-        <div className="relative before:absolute before:inset-y-1 before:start-[1.4375rem] before:w-px before:bg-border">
-          {runs.map((run) => (
-            <RunnerQueueHistoryRow
-              key={run.id}
-              run={run}
-              href={`${path}/${run.id}`}
-              selected={run.id === selectedId}
-              acrossProjects={acrossProjects}
-              nested
-            />
-          ))}
-        </div>
-      )}
+      {open &&
+        runs.map((run) => (
+          <RunnerQueueHistoryRow
+            key={run.id}
+            run={run}
+            href={`${path}/${run.id}`}
+            selected={run.id === selectedId}
+            acrossProjects={acrossProjects}
+            nested
+          />
+        ))}
     </div>
   );
 }

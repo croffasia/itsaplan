@@ -232,7 +232,11 @@
     "runSeconds": "{seconds} 秒",
     "concurrentRuns": "同时运行数",
     "concurrentRunsHint": "此实例上可同时进行的代理运行数。其余的在队列中等待。聊天和外部代理不计入。0 表示不限。",
-    "concurrentRunsInvalid": "请输入 0 到 {max} 之间的整数。"
+    "concurrentRunsInvalid": "请输入 0 到 {max} 之间的整数。",
+    "answerLimit": "回答长度上限",
+    "answerLimitHint": "保存的代理回答字符数。超出部分会被截断。聊天中显示完整回答，但外部代理收到的历史记录只有保存的部分。0 表示不限。",
+    "answerLimitInvalid": "请输入 0 到 {max, number} 之间的整数。",
+    "answerLimitNone": "不限长度。长回答会完整保存，可能拖慢运行列表的加载。"
   },
   "authentication": {
     "saved": "身份验证设置已保存",

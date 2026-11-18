@@ -28,6 +28,7 @@ import {
 import { getAgentSettings } from '#modules/settings/service';
 import { iso } from '#shared/lib';
 import type { AgentRunTrigger } from '../model';
+import { limitAnswer } from './answer-limit';
 import { equalJitterBackoffMs } from './helpers/backoff';
 import { emitRunsFinished } from './run-finished';
 
@@ -454,7 +455,7 @@ export async function markRunSuccess(
     .set({
       status: 'success',
       executionStartedAt: null,
-      output,
+      output: await limitAnswer(output),
       lastError: null,
       inputTokens: usage?.inputTokens ?? null,
       outputTokens: usage?.outputTokens ?? null,
@@ -486,7 +487,7 @@ export async function markRunFailed(id: number, error: string, output?: string):
       status: 'failed',
       executionStartedAt: null,
       lastError: error.slice(0, 500),
-      ...(output ? { output } : {}),
+      ...(output ? { output: await limitAnswer(output) } : {}),
       finishedAt: new Date(),
     })
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')))

@@ -232,7 +232,11 @@
     "runSeconds": "{seconds} dtk",
     "concurrentRuns": "Eksekusi bersamaan",
     "concurrentRunsHint": "Berapa banyak eksekusi agen yang berjalan bersamaan di instance ini. Sisanya menunggu dalam antrean. Obrolan dan agen eksternal tidak dihitung. 0 berarti tanpa batas.",
-    "concurrentRunsInvalid": "Masukkan bilangan bulat dari 0 sampai {max}."
+    "concurrentRunsInvalid": "Masukkan bilangan bulat dari 0 sampai {max}.",
+    "answerLimit": "Batas panjang jawaban",
+    "answerLimitHint": "Berapa banyak karakter jawaban agen yang disimpan. Sisanya dipotong. Obrolan menampilkan jawaban utuh, tetapi agen eksternal hanya menerima bagian yang disimpan sebagai riwayat. 0 berarti tanpa batas.",
+    "answerLimitInvalid": "Masukkan bilangan bulat dari 0 sampai {max, number}.",
+    "answerLimitNone": "Tanpa batas. Jawaban panjang disimpan utuh dan bisa membuat daftar eksekusi lambat dimuat."
   },
   "authentication": {
     "saved": "Pengaturan autentikasi disimpan",

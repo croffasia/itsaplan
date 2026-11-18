@@ -133,6 +133,14 @@ not retried. The abort does not interrupt a tool call in flight: the run ends wh
 returns. A claim's lease is at least 60 seconds longer than the instance maximum, so the poller
 does not claim a run again while it is running, unless a tool call outlasts that margin.
 
+## Answer length limit
+
+`maxAnswerChars` in the same setting is how many characters of an agent's answer are saved:
+200,000 by default, 0 for none. It applies to the output of every run, internal or external, and to
+an external agent's chat reply. The start of the answer is kept: `agents/core/answer-limit.ts` cuts
+it with Postgres `left()`, which counts characters. The limit does not apply to Mastra's memory
+tables, which hold an internal agent's chat.
+
 ## Dashboard and cost
 
 The run traces back the agent dashboard (`runtime/analytics.ts`) at

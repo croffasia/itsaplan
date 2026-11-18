@@ -20,6 +20,7 @@ import {
   type ThreadRow,
 } from '../chat-history';
 import { appendTextPart } from '../chat-parts';
+import { limitAnswer } from '../core/answer-limit';
 import { attachmentPreamble, chartPreamble, projectsPreamble } from '../core/prompt/framing';
 import { peoplePreamble, type Person } from '../core/prompt/run-context';
 import type { ChatMessagePage, ChatPart, ChatThreadPage } from '../model';
@@ -41,9 +42,6 @@ type ChatJobs = JobSettings['agentChat'];
 
 const PAGE_SIZE = 25;
 const TITLE_LIMIT = 80;
-// How much of an answer is kept as its text. A reply nobody would read to the end is
-// still bounded, the way a run's output is.
-const ANSWER_LIMIT = 100_000;
 // Events handed out per read. A stream that falls behind catches up over several reads
 // instead of loading everything an agent has said in one go.
 const EVENT_PAGE = 500;
@@ -134,8 +132,9 @@ async function unstarredPage(userId: string, agentId: number, page: number): Pro
 // holds only what the agent wrote.
 //
 // The snippet is cut from the newest matching message, in the database — an answer runs
-// to ANSWER_LIMIT characters. The rank puts a title hit first, then the ones where the
-// member's own message matches, then the ones matching only in the agent's reply.
+// to the instance's answer limit, or past it where none is set. The rank puts a title hit
+// first, then the ones where the member's own message matches, then the ones matching only
+// in the agent's reply.
 async function searchThreads(
   userId: string,
   agentId: number,
@@ -647,7 +646,7 @@ export async function appendEvents(
   const claimed = await db
     .update(agentChatMessage)
     .set({
-      content: sql`left(${agentChatMessage.content} || ${textOf(events)}, ${ANSWER_LIMIT})`,
+      content: await limitAnswer(sql`${agentChatMessage.content} || ${textOf(events)}`),
       nextAttemptAt: await leaseUntil(),
     })
     .where(liveAnswer(agentId, messageId))

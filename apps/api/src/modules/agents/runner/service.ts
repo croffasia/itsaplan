@@ -11,6 +11,7 @@ import {
   runRetryDelayMs,
   scheduleRunRetry,
 } from '../core/run-queue';
+import { limitAnswer } from '../core/answer-limit';
 import { agentRunStarted, recordAgentRunFinished } from '../core/run-activity';
 import { emitRunsFinished } from '../core/run-finished';
 import { runAdmissionDelay } from '../core/run-admission';
@@ -319,7 +320,7 @@ export async function finishRun(
     .set({
       status: result.status,
       executionStartedAt: null,
-      output: result.output?.slice(0, 10_000) ?? null,
+      output: result.output == null ? null : await limitAnswer(result.output),
       lastError: result.status === 'failed' ? (result.error?.slice(0, 500) ?? 'Run failed') : null,
       inputTokens: result.usage?.inputTokens ?? null,
       outputTokens: result.usage?.outputTokens ?? null,

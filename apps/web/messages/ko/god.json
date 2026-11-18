@@ -232,7 +232,11 @@
     "runSeconds": "{seconds}초",
     "concurrentRuns": "동시 실행 수",
     "concurrentRunsHint": "이 서버에서 동시에 진행되는 에이전트 실행 수입니다. 나머지는 대기열에서 기다립니다. 채팅과 외부 에이전트는 포함되지 않습니다. 0이면 제한이 없습니다.",
-    "concurrentRunsInvalid": "0에서 {max} 사이의 정수를 입력하세요."
+    "concurrentRunsInvalid": "0에서 {max} 사이의 정수를 입력하세요.",
+    "answerLimit": "답변 길이 제한",
+    "answerLimitHint": "저장되는 에이전트 답변의 글자 수입니다. 나머지는 잘립니다. 채팅에는 답변 전체가 표시되지만, 외부 에이전트는 대화 기록으로 저장된 부분만 받습니다. 0이면 제한이 없습니다.",
+    "answerLimitInvalid": "0에서 {max, number} 사이의 정수를 입력하세요.",
+    "answerLimitNone": "제한이 없습니다. 긴 답변이 전부 저장되어 실행 목록 로딩이 느려질 수 있습니다."
   },
   "authentication": {
     "saved": "인증 설정이 저장되었습니다",

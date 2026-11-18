@@ -130,6 +130,38 @@ describe('external agent chat', () => {
     expect(second.prompt).toContain('And the launch date?');
   });
 
+  it('keeps the start of an answer up to the instance answer limit', async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    await asOwner.god['agent-settings'].put({ maxAnswerChars: 5 });
+    const first = await send(asOwner, agent.id, 'Who owns the launch?');
+    await answer(asRunner, 'Maria does.');
+
+    await send(asOwner, agent.id, 'And the launch date?', first.data!.threadId);
+    const second = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    expect(second.prompt).toContain('You: Maria\n');
+    expect(second.prompt).not.toContain('Maria does.');
+  });
+
+  it('keeps an answer whole when the answer limit is 0', async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    await asOwner.god['agent-settings'].put({ maxAnswerChars: 0 });
+    const first = await send(asOwner, agent.id, 'Write the report');
+    const claimed = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    // 20 deltas at the 12,000-character event cap: past the 200,000 default limit.
+    await asRunner['agent-chats']({ messageId: claimed.id }).events.post({
+      events: Array.from({ length: 20 }, () => ({
+        type: 'TEXT_MESSAGE_CONTENT' as const,
+        messageId: 'm1',
+        delta: 'x'.repeat(12_000),
+      })),
+    });
+    await asRunner['agent-chats']({ messageId: claimed.id }).result.post({ status: 'success' });
+
+    await send(asOwner, agent.id, 'Thanks', first.data!.threadId);
+    const second = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    expect(second.prompt).toContain(`You: ${'x'.repeat(240_000)}\n`);
+  });
+
   it('returns nothing when the feed is empty', async () => {
     const { asRunner } = await setup();
     const res = await asRunner['agent-chats'].claim.post();

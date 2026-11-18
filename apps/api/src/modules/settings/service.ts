@@ -79,17 +79,23 @@ export interface AgentSettings {
   // Runs of internal agents in flight at once across the instance; the rest wait in the
   // queue. 0 sets no limit.
   maxConcurrentRuns: number;
+  // Characters of an agent's answer that are saved: a run's output and an external
+  // agent's chat reply. It does not apply to Mastra's memory tables, which hold an
+  // internal agent's chat. 0 sets no limit.
+  maxAnswerChars: number;
 }
 
 export const MIN_RUN_SECONDS = 10;
 export const MAX_RUN_SECONDS = 3600;
 export const MAX_CONCURRENT_RUNS = 1000;
+export const MAX_ANSWER_CHARS = 10_000_000;
 
 function defaultAgentSettings(): AgentSettings {
   return {
     traceRetentionDays: 30,
     maxRunSeconds: 240,
     maxConcurrentRuns: 5,
+    maxAnswerChars: 200_000,
   };
 }
 

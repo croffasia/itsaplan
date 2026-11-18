@@ -104,6 +104,8 @@ With `/mcp?tools=catalog` ([Coding agent setup](runner.md#a-shorter-tool-list)),
 advertises an `outputSchema`. `execute_read`, `execute_write` and `execute_destructive`
 return the result of the tool they run, unchanged. `discover` returns the success envelope
 with `data: { total, tools: [{ name, description, execute, annotations, inputSchema }] }`,
-where `total` counts every match and `tools` holds the best of them. A refused call, such
-as a tool run through the execute tool of another tier, returns the error envelope with
-status 400.
+where `total` counts every match and `tools` holds the best of them. When the query found
+nothing, or some of its words are in no tool, `data` also carries `unmatched`, those words,
+and `resources`, the words the tools are named after with the number of tools for each. A
+refused call, such as a tool run through the execute tool of another tier, returns the
+error envelope with status 400.

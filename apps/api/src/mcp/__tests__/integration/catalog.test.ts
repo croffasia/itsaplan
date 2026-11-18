@@ -175,11 +175,12 @@ describe('MCP catalog mode', () => {
     expect((limited.structuredContent!.data as typeof data).tools).toHaveLength(10);
 
     const none = await callTool(client, { name: 'discover', arguments: { query: 'zzzz' } });
-    expect(none.structuredContent).toEqual({
+    expect(none.structuredContent).toMatchObject({
       ok: true,
       status: 200,
-      data: { total: 0, tools: [] },
+      data: { total: 0, tools: [], unmatched: ['zzzz'], resources: { issue: expect.any(Number) } },
     });
+    expect(JSON.parse(textOf(none))).toEqual(none.structuredContent!.data);
   });
 
   it('refuses discover arguments outside its schema', async () => {

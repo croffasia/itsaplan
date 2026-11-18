@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api, createProject } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent, projectIdOf, teamOf } from '#tests/helpers/agents';
+import { getAgentById, getInternalAgentApiKey } from '../../service';
 import { createRole } from '#tests/helpers/roles';
 import { addProjectMember } from '#tests/helpers/members';
 
@@ -112,6 +113,119 @@ describe('agent run history', () => {
     expect(res.status).toBe(200);
     expect(res.data!.items.length).toBe(1);
     expect(res.data!.items[0]).toMatchObject({ trigger: 'delegation', issueId: issue.id });
+  });
+
+  it('queues explicit external self-delegation once, including for an owner-scoped runner', async () => {
+    const { asOwner, columnId, teamId } = await setup();
+    const created = (await createAgent(asOwner, 'MKT', {
+      name: 'Runner',
+      username: 'runner',
+      kind: 'external',
+      runnerScope: 'owner',
+      triggerOnAssign: true,
+      delegationDelaySec: 120,
+    })).data!;
+    const agent = created.agent;
+    const asAgent = apiKeyApi(created.apiKey!);
+    const issue = (await createIssue(asOwner, columnId)).data!;
+    const patch = { delegateUserId: agent.userId, triggerSelfDelegation: true };
+
+    expect((await asAgent.issues({ issueId: issue.id }).patch(patch)).status).toBe(200);
+    expect((await asAgent.issues({ issueId: issue.id }).patch(patch)).status).toBe(200);
+
+    const res = await agents(asOwner, teamId)({ agentId: agent.id }).runs.get();
+    expect(res.status).toBe(200);
+    expect(res.data!.items).toHaveLength(1);
+    expect(res.data!.items[0]).toMatchObject({
+      trigger: 'delegation',
+      status: 'pending',
+      issueId: issue.id,
+    });
+    expect(new Date(res.data!.items[0].nextAttemptAt).getTime() - Date.now()).toBeGreaterThan(
+      110_000,
+    );
+  });
+
+  for (const triggerSelfDelegation of [undefined, false]) {
+    it(`suppresses external self-delegation with opt-in ${triggerSelfDelegation}`, async () => {
+      const { asOwner, columnId, teamId } = await setup();
+      const created = (await createAgent(asOwner, 'MKT', {
+        name: 'Runner',
+        username: 'runner',
+        kind: 'external',
+        runnerScope: 'team',
+        triggerOnAssign: true,
+      })).data!;
+      const asAgent = apiKeyApi(created.apiKey!);
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const res = await asAgent.issues({ issueId: issue.id }).patch({
+        delegateUserId: created.agent.userId,
+        triggerSelfDelegation,
+      });
+      expect(res.status).toBe(200);
+      expect(res.data!.delegateUserId).toBe(created.agent.userId);
+      const runs = await agents(asOwner, teamId)({ agentId: created.agent.id }).runs.get();
+      expect(runs.data!.items).toEqual([]);
+    });
+  }
+
+  it('does not opt an external agent into disabled assignment triggers', async () => {
+    const { asOwner, columnId, teamId } = await setup();
+    const created = (await createAgent(asOwner, 'MKT', {
+      name: 'Runner',
+      username: 'runner',
+      kind: 'external',
+      triggerOnAssign: false,
+    })).data!;
+    const issue = (await createIssue(asOwner, columnId)).data!;
+    const res = await apiKeyApi(created.apiKey!).issues({ issueId: issue.id }).patch({
+      delegateUserId: created.agent.userId,
+      triggerSelfDelegation: true,
+    });
+    expect(res.status).toBe(200);
+    const runs = await agents(asOwner, teamId)({ agentId: created.agent.id }).runs.get();
+    expect(runs.data!.items).toEqual([]);
+  });
+
+  it('does not let the opt-in trigger another owner-scoped agent', async () => {
+    const { asOwner, columnId, teamId } = await setup();
+    const caller = (await createAgent(asOwner, 'MKT', {
+      name: 'Caller',
+      username: 'caller',
+      kind: 'external',
+    })).data!;
+    const target = (await createAgent(asOwner, 'MKT', {
+      name: 'Target',
+      username: 'target',
+      kind: 'external',
+      runnerScope: 'owner',
+      triggerOnAssign: true,
+    })).data!.agent;
+    const issue = (await createIssue(asOwner, columnId)).data!;
+    const res = await apiKeyApi(caller.apiKey!).issues({ issueId: issue.id }).patch({
+      delegateUserId: target.userId,
+      triggerSelfDelegation: true,
+    });
+    expect(res.status).toBe(200);
+    const runs = await agents(asOwner, teamId)({ agentId: target.id }).runs.get();
+    expect(runs.data!.items).toEqual([]);
+  });
+
+  it('keeps internal self-delegation suppressed even with explicit opt-in', async () => {
+    const { asOwner, columnId, teamId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Internal', 'internal');
+    await agents(asOwner, teamId)({ agentId: agent.id }).patch({ triggerOnAssign: true });
+    const stored = (await getAgentById(agent.id, teamId))!;
+    const asAgent = apiKeyApi(await getInternalAgentApiKey(stored));
+    const issue = (await createIssue(asOwner, columnId)).data!;
+    const res = await asAgent.issues({ issueId: issue.id }).patch({
+      delegateUserId: agent.userId,
+      triggerSelfDelegation: true,
+    });
+    expect(res.status).toBe(200);
+    const runs = await agents(asOwner, teamId)({ agentId: agent.id }).runs.get();
+    expect(runs.data!.items).toEqual([]);
   });
 
   it('queues a run when the agent is set into a field it reacts to', async () => {

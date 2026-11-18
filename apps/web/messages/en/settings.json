@@ -517,6 +517,19 @@
         "people": "Assignees and watchers, matched to project members"
       }
     },
+    "asanaPreview": {
+      "title": "Import from Asana",
+      "description": "Move an Asana project with its history. Available in Cloud and self-hosted Pro.",
+      "items": {
+        "hierarchy": "Subtasks, milestones, approvals, and dependencies",
+        "sections": "Sections as labels or initiatives, if you choose",
+        "columns": "Columns from sections or a field such as Status",
+        "content": "Comments and attachments",
+        "time": "Logged time",
+        "fields": "Tags as labels, and custom fields",
+        "people": "Assignees and followers, matched to project members"
+      }
+    },
     "title": "Import from {source}",
     "stepConnect": "Connect {source}",
     "stepProject": "Pick a project",

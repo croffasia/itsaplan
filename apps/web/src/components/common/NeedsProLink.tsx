@@ -1,21 +1,23 @@
 import { Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PRO_URL } from '@/utils/app';
+import { type ProFeature, proUrl } from '@/utils/app';
 
 // The mark on something another edition made, which does not work here: a link to the page about
 // that edition. It stops the click, so a row it sits in does not open.
 export default function NeedsProLink({
+  feature,
   label,
   hint,
   className,
 }: {
+  feature: ProFeature;
   label: string;
   hint: string;
   className?: string;
 }) {
   return (
     <a
-      href={PRO_URL}
+      href={proUrl(feature)}
       target="_blank"
       rel="noreferrer"
       title={hint}

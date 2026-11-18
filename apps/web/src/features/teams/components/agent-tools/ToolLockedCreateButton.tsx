@@ -20,7 +20,7 @@ export default function ToolLockedCreateButton() {
       <PopoverContent align="end" className="w-64 text-sm">
         <p className="font-medium">{t('ownToolUnavailableTitle')}</p>
         <p className="mt-1 text-xs text-muted-foreground">{t('ownToolUnavailableHint')}</p>
-        <UpgradeToProButton className="mt-3" />
+        <UpgradeToProButton feature="http-tools" className="mt-3" />
       </PopoverContent>
     </Popover>
   );

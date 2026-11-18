@@ -52,7 +52,12 @@ export function ToolConfigRow({
             <span className="truncate text-xs text-muted-foreground/70">{on}</span>
             {!tool.supported &&
               (locked ? (
-                <NeedsProLink label={t('locked')} hint={t('lockedHint')} className="mt-1" />
+                <NeedsProLink
+                  feature="http-tools"
+                  label={t('locked')}
+                  hint={t('lockedHint')}
+                  className="mt-1"
+                />
               ) : (
                 <span
                   title={t('unavailableHint')}

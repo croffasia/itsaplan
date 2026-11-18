@@ -517,6 +517,19 @@
         "people": "Responsables et observateurs, associés aux membres du projet"
       }
     },
+    "asanaPreview": {
+      "title": "Importer depuis Asana",
+      "description": "Transférez un projet Asana avec son historique. Disponible dans Cloud et dans Pro auto-hébergé.",
+      "items": {
+        "hierarchy": "Sous-tâches, jalons, approbations et dépendances",
+        "sections": "Sections en étiquettes ou en initiatives, si vous le choisissez",
+        "columns": "Colonnes à partir des sections ou d'un champ comme Status",
+        "content": "Commentaires et pièces jointes",
+        "time": "Temps saisi",
+        "fields": "Tags en étiquettes, et champs personnalisés",
+        "people": "Responsables et abonnés, associés aux membres du projet"
+      }
+    },
     "title": "Importer depuis {source}",
     "stepConnect": "Connectez {source}",
     "stepProject": "Choisissez un projet",

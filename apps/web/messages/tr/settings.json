@@ -517,6 +517,19 @@
         "people": "Proje üyeleriyle eşleştirilen atananlar ve izleyiciler"
       }
     },
+    "asanaPreview": {
+      "title": "Asana'dan içe aktar",
+      "description": "Bir Asana projesini geçmişiyle birlikte taşıyın. Cloud ve kendi sunucunuzda barındırılan Pro sürümünde mevcuttur.",
+      "items": {
+        "hierarchy": "Alt görevler, kilometre taşları, onaylar ve bağımlılıklar",
+        "sections": "İsterseniz bölümler etiket ya da girişim olarak",
+        "columns": "Bölümlerden ya da Status gibi bir alandan sütunlar",
+        "content": "Yorumlar ve ekler",
+        "time": "Kaydedilen süre",
+        "fields": "Asana etiketleri etiket olarak, ve özel alanlar",
+        "people": "Proje üyeleriyle eşleştirilen atananlar ve izleyiciler"
+      }
+    },
     "title": "{source} kaynağından içe aktar",
     "stepConnect": "{source} ile bağlantı kurun",
     "stepProject": "Bir proje seçin",

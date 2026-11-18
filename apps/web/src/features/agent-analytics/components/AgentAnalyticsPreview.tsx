@@ -30,7 +30,7 @@ export default function AgentAnalyticsPreview() {
           <p className="mt-1 text-xs text-muted-foreground">{t('description')}</p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
-          <UpgradeToProButton />
+          <UpgradeToProButton feature="agent-analytics" />
           <Button variant="ghost" size="sm" aria-expanded={open} onClick={toggle}>
             {open ? t('hide') : t('show')}
             <ChevronDown

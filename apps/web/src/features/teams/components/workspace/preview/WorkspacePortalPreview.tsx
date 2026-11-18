@@ -16,7 +16,7 @@ export default function WorkspacePortalPreview() {
 
   return (
     <SectionPageView title={t('title')} description={t('description')}>
-      <SectionPreview>
+      <SectionPreview feature="portal">
         <div className="space-y-10">
           <SettingsSection title={t('general')}>
             <SettingsCard className="divide-y divide-border/60">

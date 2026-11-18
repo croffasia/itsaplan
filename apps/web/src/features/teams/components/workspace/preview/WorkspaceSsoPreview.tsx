@@ -22,7 +22,7 @@ export default function WorkspaceSsoPreview() {
 
   return (
     <SectionPageView title={t('title')} description={t('description')}>
-      <SectionPreview>
+      <SectionPreview feature="sso">
         <SettingsSection
           title={t('provider')}
           description={t('providerHint')}

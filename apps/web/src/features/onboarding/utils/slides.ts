@@ -1,3 +1,5 @@
+import type { ProFeature } from '@/utils/app';
+
 export type OnboardingSlideId =
   | 'dashboards'
   | 'workItems'
@@ -20,8 +22,8 @@ export interface OnboardingSlideDef {
   dot: string;
   // A feature of Pro: drawn in Pro's gold and marked PRO.
   pro?: true;
-  // Links to the Pro page in an edition without Pro.
-  proLink?: true;
+  // Links to the Pro page in an edition without Pro, tagged with this feature.
+  proFeature?: ProFeature;
 }
 
 const PRO_TINT = 'bg-[#FBF4DA] dark:bg-[#2D2919]';
@@ -35,10 +37,15 @@ export const ONBOARDING_SLIDES: OnboardingSlideDef[] = [
   { id: 'documents', tint: 'bg-[#E4F3E9] dark:bg-[#1A2A21]', dot: 'bg-[#3C9A62]' },
   { id: 'notes', tint: 'bg-[#FCE9F1] dark:bg-[#311F29]', dot: 'bg-[#DB5B92]' },
   { id: 'agents', tint: 'bg-[#E3F0FA] dark:bg-[#182733]', dot: 'bg-[#2B8FCB]' },
-  { id: 'schedules', tint: 'bg-[#E9EAFB] dark:bg-[#1F2138]', dot: 'bg-[#5A64D6]', proLink: true },
-  { id: 'workflows', tint: PRO_TINT, dot: PRO_DOT, pro: true, proLink: true },
-  { id: 'portal', tint: PRO_TINT, dot: PRO_DOT, pro: true, proLink: true },
-  { id: 'budgets', tint: PRO_TINT, dot: PRO_DOT, pro: true, proLink: true },
-  { id: 'analytics', tint: PRO_TINT, dot: PRO_DOT, pro: true, proLink: true },
-  { id: 'audit', tint: PRO_TINT, dot: PRO_DOT, pro: true, proLink: true },
+  {
+    id: 'schedules',
+    tint: 'bg-[#E9EAFB] dark:bg-[#1F2138]',
+    dot: 'bg-[#5A64D6]',
+    proFeature: 'schedules',
+  },
+  { id: 'workflows', tint: PRO_TINT, dot: PRO_DOT, pro: true, proFeature: 'workflows' },
+  { id: 'portal', tint: PRO_TINT, dot: PRO_DOT, pro: true, proFeature: 'portal' },
+  { id: 'budgets', tint: PRO_TINT, dot: PRO_DOT, pro: true, proFeature: 'agent-budgets' },
+  { id: 'analytics', tint: PRO_TINT, dot: PRO_DOT, pro: true, proFeature: 'agent-analytics' },
+  { id: 'audit', tint: PRO_TINT, dot: PRO_DOT, pro: true, proFeature: 'audit-log' },
 ];

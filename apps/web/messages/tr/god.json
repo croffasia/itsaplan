@@ -232,7 +232,11 @@
     "runSeconds": "{seconds} sn",
     "concurrentRuns": "Aynı anda çalıştırma",
     "concurrentRunsHint": "Bu örneklemde aynı anda kaç ajan çalıştırmasının yürüyeceği. Diğerleri sırada bekler. Sohbetler ve harici ajanlar sayılmaz. 0 sınırsız demektir.",
-    "concurrentRunsInvalid": "0 ile {max} arasında bir tam sayı girin."
+    "concurrentRunsInvalid": "0 ile {max} arasında bir tam sayı girin.",
+    "answerLimit": "Yanıt uzunluğu sınırı",
+    "answerLimitHint": "Bir ajanın yanıtından kaç karakterin kaydedileceği. Gerisi kesilir. Sohbetler yanıtın tamamını gösterir, ancak harici ajanlar geçmiş olarak yalnızca kaydedilen kısmı alır. 0 sınırsız demektir.",
+    "answerLimitInvalid": "0 ile {max, number} arasında bir tam sayı girin.",
+    "answerLimitNone": "Sınır yok. Uzun yanıtlar tamamen kaydedilir ve çalıştırma listelerinin yüklenmesini yavaşlatabilir."
   },
   "authentication": {
     "saved": "Kimlik doğrulama ayarları kaydedildi",

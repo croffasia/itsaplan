@@ -232,7 +232,11 @@
     "runSeconds": "{seconds} s",
     "concurrentRuns": "Ejecuciones a la vez",
     "concurrentRunsHint": "Cuántas ejecuciones de agentes van a la vez en esta instancia. El resto espera en cola. Los chats y los agentes externos no cuentan. 0 es sin límite.",
-    "concurrentRunsInvalid": "Escribe un número entero entre 0 y {max}."
+    "concurrentRunsInvalid": "Escribe un número entero entre 0 y {max}.",
+    "answerLimit": "Límite de longitud de la respuesta",
+    "answerLimitHint": "Cuántos caracteres de la respuesta de un agente se guardan. El resto se corta. Los chats muestran la respuesta entera, pero los agentes externos solo reciben la parte guardada como historial. 0 es sin límite.",
+    "answerLimitInvalid": "Escribe un número entero entre 0 y {max, number}.",
+    "answerLimitNone": "Sin límite. Las respuestas largas se guardan enteras y pueden ralentizar la carga de las listas de ejecuciones."
   },
   "authentication": {
     "saved": "Los ajustes de autenticación se han guardado",

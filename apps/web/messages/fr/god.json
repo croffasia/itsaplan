@@ -232,7 +232,11 @@
     "runSeconds": "{seconds} s",
     "concurrentRuns": "Exécutions simultanées",
     "concurrentRunsHint": "Nombre d'exécutions d'agents en même temps sur cette instance. Les autres attendent en file d'attente. Les discussions et les agents externes ne comptent pas. 0 signifie sans limite.",
-    "concurrentRunsInvalid": "Saisissez un nombre entier entre 0 et {max}."
+    "concurrentRunsInvalid": "Saisissez un nombre entier entre 0 et {max}.",
+    "answerLimit": "Longueur maximale des réponses",
+    "answerLimitHint": "Nombre de caractères de la réponse d'un agent qui sont enregistrés. Le reste est coupé. Les discussions affichent la réponse entière, mais les agents externes ne reçoivent que la partie enregistrée comme historique. 0 signifie sans limite.",
+    "answerLimitInvalid": "Saisissez un nombre entier entre 0 et {max, number}.",
+    "answerLimitNone": "Aucune limite. Les réponses longues sont enregistrées en entier et peuvent ralentir le chargement des listes d'exécutions."
   },
   "authentication": {
     "saved": "Paramètres d'authentification enregistrés",

@@ -9,6 +9,7 @@ import {
 } from '@repo/db';
 import { and, asc, desc, eq, gt, inArray, notExists, sql } from 'drizzle-orm';
 import { setTimeout as sleep } from 'node:timers/promises';
+import { getAgentSettings } from '#modules/settings/service';
 import { iso, likePattern } from '#shared/lib';
 import { deleteContextUsage, recordContextUsage, type ContextUsage } from '../chat-usage';
 import { deleteFavorite, FAVORITES_LIMIT } from '../chat-favorites';
@@ -41,9 +42,6 @@ type ChatJobs = JobSettings['agentChat'];
 
 const PAGE_SIZE = 25;
 const TITLE_LIMIT = 80;
-// How much of an answer is kept as its text. A reply nobody would read to the end is
-// still bounded, the way a run's output is.
-const ANSWER_LIMIT = 100_000;
 // Events handed out per read. A stream that falls behind catches up over several reads
 // instead of loading everything an agent has said in one go.
 const EVENT_PAGE = 500;
@@ -134,7 +132,7 @@ async function unstarredPage(userId: string, agentId: number, page: number): Pro
 // holds only what the agent wrote.
 //
 // The snippet is cut from the newest matching message, in the database — an answer runs
-// to ANSWER_LIMIT characters. The rank puts a title hit first, then the ones where the
+// to the instance's answer limit, or further where it sets none. The rank puts a title hit first, then the ones where the
 // member's own message matches, then the ones matching only in the agent's reply.
 async function searchThreads(
   userId: string,
@@ -644,10 +642,12 @@ export async function appendEvents(
   messageId: number,
   events: AgUiEventBody[],
 ): Promise<ChatAck | null> {
+  const { maxAnswerChars } = await getAgentSettings();
+  const content = sql`${agentChatMessage.content} || ${textOf(events)}`;
   const claimed = await db
     .update(agentChatMessage)
     .set({
-      content: sql`left(${agentChatMessage.content} || ${textOf(events)}, ${ANSWER_LIMIT})`,
+      content: maxAnswerChars > 0 ? sql`left(${content}, ${maxAnswerChars})` : content,
       nextAttemptAt: await leaseUntil(),
     })
     .where(liveAnswer(agentId, messageId))

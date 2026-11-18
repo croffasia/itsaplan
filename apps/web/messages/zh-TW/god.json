@@ -232,7 +232,11 @@
     "runSeconds": "{seconds} 秒",
     "concurrentRuns": "同時執行數",
     "concurrentRunsHint": "此執行個體上可同時進行的代理執行數。其餘的在佇列中等待。聊天和外部代理不計入。0 表示不限。",
-    "concurrentRunsInvalid": "請輸入 0 到 {max} 之間的整數。"
+    "concurrentRunsInvalid": "請輸入 0 到 {max} 之間的整數。",
+    "answerLimit": "回答長度上限",
+    "answerLimitHint": "保存的代理回答字元數。超出部分會被截斷。聊天中顯示完整回答，但外部代理收到的歷史記錄只有保存的部分。0 表示不限。",
+    "answerLimitInvalid": "請輸入 0 到 {max, number} 之間的整數。",
+    "answerLimitNone": "不限長度。長回答會完整保存，可能拖慢執行清單的載入。"
   },
   "authentication": {
     "saved": "身分驗證設定已儲存",

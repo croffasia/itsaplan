@@ -79,17 +79,23 @@ export interface AgentSettings {
   // Runs of internal agents in flight at once across the instance; the rest wait in the
   // queue. 0 sets no limit.
   maxConcurrentRuns: number;
+  // Characters of an agent's answer that are saved: a run's output and an external
+  // agent's chat reply. An internal agent's chat is kept by Mastra's memory, which this
+  // does not reach. 0 sets no limit.
+  maxAnswerChars: number;
 }
 
 export const MIN_RUN_SECONDS = 10;
 export const MAX_RUN_SECONDS = 3600;
 export const MAX_CONCURRENT_RUNS = 1000;
+export const MAX_ANSWER_CHARS = 10_000_000;
 
 function defaultAgentSettings(): AgentSettings {
   return {
     traceRetentionDays: 30,
     maxRunSeconds: 240,
     maxConcurrentRuns: 5,
+    maxAnswerChars: 200_000,
   };
 }
 
@@ -102,6 +108,12 @@ export async function setAgentSettings(patch: Partial<AgentSettings>): Promise<A
   const next = { ...(await getAgentSettings()), ...patch };
   await setSetting(AGENT_SETTINGS_KEY, next);
   return next;
+}
+
+// The part of a run's answer that is saved: its start, up to the instance limit.
+export async function cutAnswer(text: string): Promise<string> {
+  const { maxAnswerChars } = await getAgentSettings();
+  return maxAnswerChars > 0 ? text.slice(0, maxAnswerChars) : text;
 }
 
 // How many requests one API key may send per minute (app_setting key 'apiKeys'). 0 sets no

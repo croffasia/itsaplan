@@ -2,6 +2,7 @@ import { t } from 'elysia';
 import { JOB_SETTING_BOUNDS } from '@repo/db';
 import {
   API_DOCS_AUDIENCES,
+  MAX_ANSWER_CHARS,
   MAX_CONCURRENT_RUNS,
   MAX_KEY_REQUESTS_PER_MINUTE,
   MAX_RUN_SECONDS,
@@ -67,6 +68,13 @@ export const AgentSettingsSchema = t.Object({
     description:
       'Runs of internal agents in flight at once across the instance; the rest wait in the ' +
       "queue. 0 sets no limit. A workspace's own limit cannot exceed it.",
+  }),
+  maxAnswerChars: t.Integer({
+    minimum: 0,
+    maximum: MAX_ANSWER_CHARS,
+    description:
+      "Characters of an agent's answer that are saved: the output of every run and an " +
+      "external agent's chat reply. The rest is cut off. 0 sets no limit.",
   }),
 });
 

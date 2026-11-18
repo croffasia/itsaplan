@@ -367,6 +367,8 @@ export interface AgentSettings {
   maxRunSeconds: number;
   // Runs of internal agents in flight at once across the instance. 0 sets no limit.
   maxConcurrentRuns: number;
+  // Characters of an agent's answer that are saved. 0 sets no limit.
+  maxAnswerChars: number;
 }
 
 export const getInstanceAgentSettings = () => request<AgentSettings>('/god/agent-settings');

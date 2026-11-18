@@ -1,5 +1,6 @@
 import { db, aiAgent, agentRun, getJobSettings, project, projectMember } from '@repo/db';
 import { and, eq, isNotNull, isNull, or, sql } from 'drizzle-orm';
+import { cutAnswer } from '#modules/settings/service';
 import { HttpError } from '#shared/lib';
 import { type ContextUsage } from '../chat-usage';
 import {
@@ -322,7 +323,7 @@ export async function finishRun(
     .set({
       status: result.status,
       executionStartedAt: null,
-      output: result.output?.slice(0, 10_000) ?? null,
+      output: result.output == null ? null : await cutAnswer(result.output),
       lastError: result.status === 'failed' ? (result.error?.slice(0, 500) ?? 'Run failed') : null,
       inputTokens: result.usage?.inputTokens ?? null,
       outputTokens: result.usage?.outputTokens ?? null,

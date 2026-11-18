@@ -232,7 +232,11 @@
     "runSeconds": "{seconds} s",
     "concurrentRuns": "Runs at once",
     "concurrentRunsHint": "How many agent runs work at once on this instance. The rest wait in the queue. Chats and external agents don't count. 0 sets no limit.",
-    "concurrentRunsInvalid": "Enter a whole number from 0 to {max}."
+    "concurrentRunsInvalid": "Enter a whole number from 0 to {max}.",
+    "answerLimit": "Answer length limit",
+    "answerLimitHint": "How many characters of an agent's answer are saved. The rest is cut off. Chats show the whole answer, but external agents get back only the saved part as history. 0 sets no limit.",
+    "answerLimitInvalid": "Enter a whole number from 0 to {max, number}.",
+    "answerLimitNone": "No limit. Long answers are saved whole and can make agent run lists slow to load."
   },
   "authentication": {
     "saved": "Authentication settings saved",

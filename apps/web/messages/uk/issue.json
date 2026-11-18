@@ -97,6 +97,7 @@
     "inOneWeek": "Через тиждень"
   },
   "actionsBar": {
+    "openInPanel": "Відкрити в бічній панелі",
     "shortLinkCopied": "Коротке посилання скопійовано",
     "branchCopied": "Назву гілки скопійовано",
     "copyShortLink": "Скопіювати коротке посилання",

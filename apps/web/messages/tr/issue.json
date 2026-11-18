@@ -97,6 +97,7 @@
     "inOneWeek": "Bir hafta sonra"
   },
   "actionsBar": {
+    "openInPanel": "Yan panelde aç",
     "shortLinkCopied": "Kısa bağlantı kopyalandı",
     "branchCopied": "Dal adı kopyalandı",
     "copyShortLink": "Kısa bağlantıyı kopyala",

@@ -97,6 +97,7 @@
     "inOneWeek": "بعد أسبوع"
   },
   "actionsBar": {
+    "openInPanel": "فتح في اللوحة الجانبية",
     "shortLinkCopied": "تم نسخ الرابط المختصر",
     "branchCopied": "تم نسخ اسم الفرع",
     "copyShortLink": "نسخ الرابط المختصر",

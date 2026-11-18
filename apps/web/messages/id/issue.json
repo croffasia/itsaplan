@@ -97,6 +97,7 @@
     "inOneWeek": "Dalam satu minggu"
   },
   "actionsBar": {
+    "openInPanel": "Buka di panel samping",
     "shortLinkCopied": "Tautan singkat disalin",
     "branchCopied": "Nama branch disalin",
     "copyShortLink": "Salin tautan singkat",

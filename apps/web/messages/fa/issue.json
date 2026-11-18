@@ -97,6 +97,7 @@
     "inOneWeek": "یک هفته دیگر"
   },
   "actionsBar": {
+    "openInPanel": "باز کردن در پنل کناری",
     "shortLinkCopied": "لینک کوتاه کپی شد",
     "branchCopied": "نام شاخه کپی شد",
     "copyShortLink": "کپی لینک کوتاه",

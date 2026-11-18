@@ -517,6 +517,19 @@
         "people": "프로젝트 멤버와 연결된 담당자와 지켜보는 사람"
       }
     },
+    "asanaPreview": {
+      "title": "Asana에서 가져오기",
+      "description": "Asana 프로젝트를 기록과 함께 옮깁니다. Cloud 및 셀프 호스팅 Pro에서 사용할 수 있습니다.",
+      "items": {
+        "hierarchy": "하위 작업, 마일스톤, 승인, 종속성",
+        "sections": "선택하면 섹션을 라벨 또는 이니셔티브로",
+        "columns": "섹션 또는 Status 같은 필드에서 만든 열",
+        "content": "댓글과 첨부 파일",
+        "time": "기록한 시간",
+        "fields": "태그를 라벨로, 사용자 지정 필드",
+        "people": "프로젝트 멤버와 연결된 담당자와 팔로워"
+      }
+    },
     "title": "{source}에서 가져오기",
     "stepConnect": "{source} 연결",
     "stepProject": "프로젝트 선택",

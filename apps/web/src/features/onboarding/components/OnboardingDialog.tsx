@@ -57,7 +57,7 @@ export default function OnboardingDialog({
         <OnboardingFooter
           count={slides.length}
           index={index}
-          proLink={!proEdition && Boolean(slides[index]?.proLink)}
+          proFeature={proEdition ? undefined : slides[index]?.proFeature}
           onGo={go}
           onDone={onClose}
         />

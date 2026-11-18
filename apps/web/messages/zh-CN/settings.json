@@ -517,6 +517,19 @@
         "people": "经办人和关注者，与项目成员对应"
       }
     },
+    "asanaPreview": {
+      "title": "从 Asana 导入",
+      "description": "迁移 Asana 项目及其历史记录。可在 Cloud 和自托管 Pro 版中使用。",
+      "items": {
+        "hierarchy": "子任务、里程碑、审批和依赖关系",
+        "sections": "可选择将分区导入为标签或计划",
+        "columns": "由分区或 Status 等字段生成的列",
+        "content": "评论和附件",
+        "time": "所记工时",
+        "fields": "标记导入为标签，以及自定义字段",
+        "people": "负责人和关注者，与项目成员对应"
+      }
+    },
     "title": "从 {source} 导入",
     "stepConnect": "连接 {source}",
     "stepProject": "选择项目",

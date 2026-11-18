@@ -103,7 +103,12 @@ export function SettingsScheduleRow({
       <TableCell className="px-3 py-4 align-top whitespace-normal">
         <SettingsScheduleWhen schedule={schedule} columnName={columnName} />
         {!schedule.supported && (
-          <NeedsProLink label={t('unavailable')} hint={t('unavailableHint')} className="mt-1.5" />
+          <NeedsProLink
+            feature="schedules"
+            label={t('unavailable')}
+            hint={t('unavailableHint')}
+            className="mt-1.5"
+          />
         )}
       </TableCell>
       <TableCell className="px-3 py-4 align-top text-sm whitespace-nowrap tabular-nums">

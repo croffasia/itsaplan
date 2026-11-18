@@ -517,6 +517,19 @@
         "people": "Responsables y observadores, emparejados con los miembros del proyecto"
       }
     },
+    "asanaPreview": {
+      "title": "Importar desde Asana",
+      "description": "Trae un proyecto de Asana con su historial. Disponible en Cloud y en Pro autoalojado.",
+      "items": {
+        "hierarchy": "Subtareas, hitos, aprobaciones y dependencias",
+        "sections": "Secciones como etiquetas o iniciativas, si lo eliges",
+        "columns": "Columnas a partir de las secciones o de un campo como Status",
+        "content": "Comentarios y adjuntos",
+        "time": "Tiempo registrado",
+        "fields": "Etiquetas de Asana como etiquetas, y campos personalizados",
+        "people": "Responsables y seguidores, emparejados con los miembros del proyecto"
+      }
+    },
     "title": "Importar desde {source}",
     "stepConnect": "Conecta {source}",
     "stepProject": "Elige un proyecto",

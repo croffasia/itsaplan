@@ -2,10 +2,11 @@
 
 import { Lock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import type { ProFeature } from '@/utils/app';
 import UpgradeToProButton from '../UpgradeToProButton';
 
 // Where a section the hosted build and Pro add is available, shown with its preview.
-export default function SectionPreviewBanner() {
+export default function SectionPreviewBanner({ feature }: { feature: ProFeature }) {
   const t = useTranslations('sections.previews');
 
   return (
@@ -14,7 +15,7 @@ export default function SectionPreviewBanner() {
         <Lock className="size-4 shrink-0" />
         {t('available')}
       </p>
-      <UpgradeToProButton />
+      <UpgradeToProButton feature={feature} />
     </div>
   );
 }

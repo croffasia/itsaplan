@@ -517,6 +517,19 @@
         "people": "Penanggung jawab dan pengamat, dicocokkan dengan anggota proyek"
       }
     },
+    "asanaPreview": {
+      "title": "Impor dari Asana",
+      "description": "Pindahkan proyek Asana beserta riwayatnya. Tersedia di Cloud dan Pro self-hosted.",
+      "items": {
+        "hierarchy": "Subtugas, milestone, persetujuan, dan dependensi",
+        "sections": "Bagian sebagai label atau inisiatif, jika Anda memilihnya",
+        "columns": "Kolom dari bagian atau dari field seperti Status",
+        "content": "Komentar dan lampiran",
+        "time": "Waktu tercatat",
+        "fields": "Tag sebagai label, dan kolom kustom",
+        "people": "Penanggung jawab dan pengikut, dicocokkan dengan anggota proyek"
+      }
+    },
     "title": "Impor dari {source}",
     "stepConnect": "Hubungkan {source}",
     "stepProject": "Pilih proyek",

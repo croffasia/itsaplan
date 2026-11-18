@@ -45,7 +45,7 @@ export default function WorkspaceRailActions({ variant = 'tile' }: { variant?: '
       >
         <p className="font-medium">{t('createUnavailableTitle')}</p>
         <p className="mt-1 text-xs text-muted-foreground">{t('createUnavailableHint')}</p>
-        <UpgradeToProButton className="mt-3" />
+        <UpgradeToProButton feature="workspaces" className="mt-3" />
       </PopoverContent>
     </Popover>
   );

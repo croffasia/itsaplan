@@ -13,5 +13,7 @@ export default function SidebarFooterAction() {
   useEffect(() => setMounted(true), []);
   if (!mounted || session?.user.role !== 'god') return null;
 
-  return <UpgradeToProButton className="w-full group-data-[collapsible=icon]:hidden" />;
+  return (
+    <UpgradeToProButton feature="sidebar" className="w-full group-data-[collapsible=icon]:hidden" />
+  );
 }

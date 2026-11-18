@@ -10,7 +10,7 @@ export default function WorkspaceAuditLogPreview() {
 
   return (
     <SectionPageView title={t('title')} description={t('description')} wide>
-      <SectionPreview>
+      <SectionPreview feature="audit-log">
         <AuditLogPreview />
       </SectionPreview>
     </SectionPageView>

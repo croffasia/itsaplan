@@ -3,8 +3,8 @@ import { APP_NAME } from '@/utils/app';
 import AppLogo from '@/components/common/AppLogo';
 
 // Branded panel shown beside the form on wide screens, in place of an external
-// image — self-contained, no asset. Shared by the auth screens and the invite
-// accept screen; the subtitle differs per context.
+// image — self-contained, no asset. BrandCardPage places it; the subtitle differs per
+// screen.
 export default function BrandPanel({ subtitle }: { subtitle?: string }) {
   const t = useTranslations('common');
   return (

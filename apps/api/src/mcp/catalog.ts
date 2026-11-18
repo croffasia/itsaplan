@@ -140,13 +140,17 @@ export function catalogTools() {
   ];
 }
 
-// A trailing plural "s" is dropped, so "labels" finds delete_label. No other stemming.
+// A trailing plural is dropped, so "labels" finds delete_label and "deliveries" finds
+// "delivery". No other stemming.
 function wordsOf(text: string): string[] {
   return text
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter(Boolean)
-    .map((word) => (word.length > 3 && /[^s]s$/.test(word) ? word.slice(0, -1) : word));
+    .map((word) => {
+      if (word.length > 4 && word.endsWith('ies')) return `${word.slice(0, -3)}y`;
+      return word.length > 3 && /[^s]s$/.test(word) ? word.slice(0, -1) : word;
+    });
 }
 
 // Everyday words, each with the words the tools use for it. A query word found here is
@@ -187,13 +191,53 @@ export const ALIASES: Record<string, string[]> = {
   todo: ['checklist'],
   hour: ['worklog'],
   timesheet: ['worklog'],
-  history: ['activity', 'revision'],
+  history: ['activity', 'revision', 'run'],
   version: ['revision'],
   trash: ['archived'],
   screenshot: ['image'],
   dependency: ['link'],
   burndown: ['burnup'],
   velocity: ['throughput'],
+  bug: ['issue'],
+  report: ['create'],
+  story: ['issue'],
+  card: ['issue'],
+  point: ['estimate'],
+  deadline: ['due'],
+  urgent: ['priority'],
+  done: ['status', 'state'],
+  organization: ['team'],
+  org: ['team'],
+  company: ['team'],
+  invitation: ['invite'],
+  milestone: ['initiative', 'cycle'],
+  goal: ['initiative'],
+  okr: ['initiative'],
+  objective: ['initiative'],
+  widget: ['chart', 'dashboard'],
+  metric: ['stat'],
+  analytic: ['stat'],
+  usage: ['stat'],
+  cost: ['stat'],
+  alert: ['notification'],
+  article: ['document'],
+  knowledge: ['document'],
+  canvas: ['note', 'board'],
+  file: ['attachment'],
+  token: ['credential', 'key'],
+  prompt: ['instruction'],
+  assistant: ['agent'],
+  admin: ['role', 'owner'],
+  permission: ['access', 'role'],
+  owner: ['ownership'],
+  me: ['current'],
+  profile: ['current'],
+  recurring: ['schedule', 'cron'],
+  repeat: ['schedule'],
+  fail: ['run', 'error'],
+  deleted: ['archived', 'restore'],
+  health: ['pulse', 'activity', 'stat'],
+  current: ['active'],
   // Verbs
   edit: ['update'],
   change: ['update'],
@@ -204,7 +248,30 @@ export const ALIASES: Record<string, string[]> = {
   find: ['search', 'list'],
   make: ['create'],
   add: ['create'],
-  close: ['finish'],
+  close: ['finish', 'status'],
+  resolve: ['status', 'update'],
+  reopen: ['status', 'update'],
+  assign: ['assignee'],
+  unassign: ['assignee'],
+  set: ['update'],
+  move: ['update'],
+  new: ['create'],
+  decline: ['reject'],
+  refuse: ['reject'],
+  extend: ['renew'],
+  react: ['reaction'],
+  like: ['reaction'],
+  reply: ['comment'],
+  trigger: ['run'],
+  launch: ['run'],
+  stop: ['cancel'],
+  abort: ['cancel'],
+  hide: ['hidden'],
+  unhide: ['hidden'],
+  carry: ['transfer'],
+  tick: ['update'],
+  give: ['set', 'add'],
+  grant: ['set', 'add'],
   complete: ['finish'],
   clone: ['copy', 'duplicate'],
   copy: ['duplicate'],
@@ -222,17 +289,19 @@ export const ALIASES: Record<string, string[]> = {
   resend: ['send'],
   reset: ['regenerate', 'rotate'],
   share: ['publish'],
-  log: ['worklog'],
+  log: ['worklog', 'run', 'delivery', 'activity'],
 };
 const aliasesOf = new Map(
   Object.entries(ALIASES).map(([word, used]) => [wordsOf(word)[0], used.flatMap(wordsOf)]),
 );
 
-// An input property is named in camelCase: "dueDate" is indexed as "due" and "date".
+// An input property is named in camelCase: "dueDate" is indexed as "due" and "date". A
+// path parameter is left out: it says where a tool acts, not what it does, and
+// projectKey on half the tools would make "project" a word that ranks nothing.
 function propertyWordsOf(tool: McpRouteTool): string[] {
-  return Object.keys(tool.inputSchema.properties).flatMap((name) =>
-    wordsOf(name.replace(/([a-z0-9])([A-Z])/g, '$1 $2')),
-  );
+  return Object.keys(tool.inputSchema.properties)
+    .filter((name) => !tool.pathParams.includes(name))
+    .flatMap((name) => wordsOf(name.replace(/([a-z0-9])([A-Z])/g, '$1 $2')));
 }
 
 // The usual BM25 constants: K1 caps what a repeated word adds, B is how far a long

@@ -20,7 +20,7 @@ function tool(name: string, description = '', properties: string[] = []): McpRou
     properties: Object.fromEntries(properties.map((property) => [property, {}])),
     required: [],
   };
-  return { name, description, inputSchema } as McpRouteTool;
+  return { name, description, inputSchema, pathParams: [] } as unknown as McpRouteTool;
 }
 
 async function discover(table: McpRouteTool[], query: string) {

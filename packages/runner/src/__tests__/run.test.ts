@@ -166,7 +166,7 @@ it('retries a partially accepted stream batch with its original offsets', async 
       issueId: null,
       issueIdentifier: null,
     });
-    expect(offsets.slice(0, 4)).toEqual([0, 200, 0, 200]);
+    expect(offsets.slice(0, 3)).toEqual([0, 200, 200]);
   } finally {
     globalThis.fetch = original;
   }

@@ -9,6 +9,6 @@
     "settings": "Настройки",
     "teamSettings": "Настройки команды",
     "invitation": "Приглашение",
-    "authorizeApp": "Доступ приложения"
+    "allowAccess": "Разрешить доступ"
   }
 }

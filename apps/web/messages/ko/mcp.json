@@ -34,16 +34,26 @@
     },
     "security": "OAuth는 PKCE(S256), 동적 클라이언트 등록 및 {app} 계정의 권한 범위가 적용된 액세스 토큰을 사용합니다.",
     "consent": {
-      "title": "{client}에서 계정에 연결하려고 합니다",
-      "titleUnnamed": "MCP 클라이언트가 계정에 연결하려고 합니다",
-      "description": "이 앱은 사용자의 권한으로 동작합니다. 사용자가 보고 바꿀 수 있는 것은 이 앱도 할 수 있습니다.",
-      "account": "{email}(으)로 로그인됨",
-      "redirect": "응답하면 {host}(으)로 돌아갑니다.",
-      "missingCode": "이 인증 요청에 동의 코드가 없습니다.",
-      "cancel": "취소",
-      "pending": "승인 중…",
-      "authorize": "승인",
-      "failed": "OAuth 인증을 완료할 수 없습니다."
+      "title": "{client}에 계정 접근을 허용할까요?",
+      "titleUnnamed": "이름 없는 앱에 계정 접근을 허용할까요?",
+      "actsAs": "허용하면 앱이 사용자로서 동작합니다:",
+      "canSee": "모든 팀에서 사용자가 볼 수 있는 모든 것을 봅니다",
+      "canChange": "사용자가 할 수 있는 모든 것을 만들고, 바꾸고, 삭제합니다",
+      "keepsAccess": "계정 › 보안에서 연결을 해제할 때까지 접근이 유지됩니다",
+      "account": "계정",
+      "app": "앱",
+      "thisComputer": "이 컴퓨터에서",
+      "named": "“{client}”는 앱이 직접 정한 이름입니다. 이 연결을 직접 시작한 경우에만 허용하세요.",
+      "unnamed": "앱이 이름을 보내지 않았습니다. 이 연결을 직접 시작한 경우에만 허용하세요.",
+      "deny": "허용 안 함",
+      "allow": "허용",
+      "allowing": "허용하는 중…",
+      "denying": "보내는 중…",
+      "expired": "이 요청은 10분이 지나 만료되었습니다. 앱에서 연결을 다시 시작하세요.",
+      "failed": "응답이 전달되지 않았습니다. 다시 시도하세요.",
+      "incompleteTitle": "링크가 완전하지 않습니다",
+      "incompleteBody": "앱에서 연결을 다시 시작하세요.",
+      "brandSubtitle": "Claude, ChatGPT 같은 AI 앱을 계정에 연결하세요."
     }
   }
 }

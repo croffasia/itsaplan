@@ -1,3 +1,3 @@
-import OAuthConsentPage from '@/features/mcp/components/OAuthConsentPage';
+import McpOAuthConsentPage from '@/features/mcp/McpOAuthConsentPage';
 
-export default OAuthConsentPage;
+export default McpOAuthConsentPage;

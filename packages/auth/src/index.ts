@@ -1030,6 +1030,9 @@ function createAuth() {
               allowUnauthenticatedClientRegistration: true,
               // Claude Code and Cursor send no application_type; "web" would refuse them.
               clientRegistrationDefaultApplicationType: 'infer',
+              // Also how long the consent page's signed request lives; the page's expired
+              // message (mcp.oauth.consent.expired) names 10 minutes.
+              codeExpiresIn: 600,
             }),
           ]
         : []),

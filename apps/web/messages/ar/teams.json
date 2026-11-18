@@ -691,6 +691,7 @@
     "loadMore": "تحميل 25 إضافية",
     "endOfHistory": "لا توجد تشغيلات أقدم",
     "manualTask": "مهمة يدوية",
+    "apiTask": "مهمة عبر API",
     "scheduledTask": "مهمة مجدولة",
     "documentTask": "تعليق في مستند",
     "failed": "فشل",

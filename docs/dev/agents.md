@@ -178,6 +178,23 @@ dashboard is read, so a price also recounts past calls whose traces are still st
 the models the workspace called in the last 90 days or priced, those no price covers first, and the
 whole table, paged, each beside the workspace's own price.
 
+## API runs
+
+`POST /projects/:projectKey/ai-agents/:agentId/run` (MCP `run_ai_agent`) queues its prompt as a run
+with the trigger `api`, as a schedule queues its task: no issue, document or schedule, and a thread
+of its own (`run:<id>`). It works for internal and external agents, through a runner or an
+invocation URL alike, and the run shows in the queue and the agent's run history. It is checked as
+a chat message is: chat on, the runner scope, and the run refusal hook for an internal agent.
+`agent_run.requested_by_user_id` keeps the sender. A claim reads it as the requester when the run
+has no source comment, so the agent is told who asked and the refusal hook is asked again for that
+person when the run starts.
+
+The route answers 202 at once, so a long run outlasts neither a proxy's read timeout nor an MCP
+client's request timeout. `GET /agent-runs/:runId` (MCP `get_agent_run`) reads the status, then the
+answer or the error, and while the run waits or runs `retryAfterSeconds` (`pollAfterSeconds` in
+`run-queue.ts`): 10 s while it is queued, a quarter of its running time within 5–30 s, or the time
+to its retry within the same bounds.
+
 ## Reading runs
 
 `GET /issues/:issueId/agent-runs` reads an issue's runs with cursor pagination. It requires
@@ -205,8 +222,9 @@ Three routes read a run's trace:
 The issue route requires both read permissions in the issue's current project. The two
 `/agent-runs/:runId` routes require them in the run's original project, and `documents read` for a
 run started in a document. Whoever runs the team needs none of them there. A run from a private
-document is read only by the document's owner. These two routes also serve runs without an issue: a
-schedule's, a manual run's, and one started in a document comment.
+document is read only by the document's owner. These two routes and `GET /agent-runs/:runId` take
+the same permissions, and also serve runs without an issue: a schedule's, a manual run's, an API
+run, and one started in a document comment.
 
 The api stores the events an external runner reports in `agent_run_trace`, one row per attempt:
 messages, tool inputs and results, and a local Codex session link. Transcripts follow the instance

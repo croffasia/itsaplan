@@ -13,7 +13,15 @@ import { getProjectTeamId } from '#modules/projects/service';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { paginate } from '#shared/pagination';
 import { isMcpRequest } from '#shared/mcp-request';
-import { internalTraceQuery, queueQuery, RunnerQueueResponse, RunsInFlightResponse } from './model';
+import { mcpTool } from '#mcp/generate';
+import { getAgentRunResult } from '../core/run-queue';
+import {
+  AgentRunResultResponse,
+  internalTraceQuery,
+  queueQuery,
+  RunnerQueueResponse,
+  RunsInFlightResponse,
+} from './model';
 import {
   listRunnerQueue,
   runsProjectTeam,
@@ -70,7 +78,7 @@ export const runnerQueueRoutes = new Elysia({
         },
       };
     },
-    runTrace(_enabled: boolean) {
+    readRun(_enabled: boolean) {
       return {
         detail: requiresPermission(['ai_agents', 'read']) as DocumentDecoration,
         async resolve({ params, user, request }) {
@@ -95,6 +103,27 @@ export const runnerQueueRoutes = new Elysia({
     },
   })
   .get(
+    '/agent-runs/:runId',
+    async ({ params }) => {
+      const run = await getAgentRunResult(params.runId);
+      if (!run) throw new HttpError(404, 'Run not found');
+      return run;
+    },
+    {
+      readRun: true,
+      params: runParams,
+      response: { 200: AgentRunResultResponse, ...commonErrors },
+      detail: {
+        summary: 'Read an agent run',
+        description:
+          "A run's status and, once it ended, the agent's answer or the error it stopped on. " +
+          'While it waits or runs, retryAfterSeconds says when to read it again. Takes the ' +
+          "same permissions as the run's transcript.",
+        ...mcpTool('get_agent_run'),
+      },
+    },
+  )
+  .get(
     '/agent-runs/:runId/trace',
     async ({ params, query, projectId }) => {
       const trace = await readRunTrace(projectId, params.runId, query.attempt);
@@ -102,7 +131,7 @@ export const runnerQueueRoutes = new Elysia({
       return Response.json(trace);
     },
     {
-      runTrace: true,
+      readRun: true,
       params: runParams,
       query: externalTraceQuery,
       response: { 200: ExternalTraceResponse, ...commonErrors },
@@ -128,7 +157,7 @@ export const runnerQueueRoutes = new Elysia({
       return Response.json(trace);
     },
     {
-      runTrace: true,
+      readRun: true,
       params: runParams,
       query: internalTraceQuery,
       response: { 200: IssueAgentRunTraceResponse, ...commonErrors },

@@ -531,6 +531,7 @@
       "field": "Campo personalizado",
       "schedule": "Programación",
       "manual": "Manual",
+      "api": "API",
       "status": "Cambio de estado",
       "event": "Evento"
     },

@@ -289,7 +289,7 @@ Every run holds these variables:
 | ------------------------ | --------------------------------------------------------------------------- |
 | `ITSAPLAN_URL`           | the instance that sent the task                                             |
 | `ITSAPLAN_API_KEY`       | the agent's key, for the API and the MCP server                             |
-| `ITSAPLAN_TRIGGER`       | `mention`, `delegation`, `field`, `schedule`, `manual`, `status`, or `chat` |
+| `ITSAPLAN_TRIGGER`       | `mention`, `delegation`, `field`, `schedule`, `manual`, `status`, `api`, or `chat` |
 | `ITSAPLAN_SYSTEM_PROMPT` | the context of the run, for a command that takes a system prompt            |
 | `ITSAPLAN_TIMEOUT_MS`    | the task timeout in milliseconds                                            |
 

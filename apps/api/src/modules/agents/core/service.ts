@@ -30,6 +30,8 @@ import { getDefaultRoleId } from '#modules/roles/service';
 import { deleteAccount } from '#shared/account-deletion';
 import { assertPublicHttpUrl } from '#shared/net';
 import { ensureInvocationSecret } from '../invocation/secret';
+import { enqueueAgentRun } from './run-queue';
+import { runRefusal } from './run-refusal';
 
 // Data access for AI agents. Each agent is backed by a hidden bot user
 // (ai_agent.user_id -> user.id): that user is what a work item is assigned to,
@@ -410,8 +412,8 @@ export function isTriggerableBy(
   return agent.ownerUserId === actorUserId;
 }
 
-// Asked for a chat message only: a queued run (a mention, a delegation, a schedule)
-// ignores chatEnabled.
+// Asked for a chat message and an API task only: a queued run (a mention, a delegation,
+// a schedule) ignores chatEnabled.
 export function assertChatEnabled(agent: { chatEnabled: boolean }): void {
   if (!agent.chatEnabled) {
     throw new HttpError(403, 'This agent is not available in chat', 'AGENT_CHAT_DISABLED');
@@ -434,6 +436,41 @@ export async function canTriggerAgent(agentId: number, actorUserId: string): Pro
     .where(eq(aiAgent.id, agentId))
     .limit(1);
   return !rows[0] || isTriggerableBy(rows[0], actorUserId);
+}
+
+// Queues a task sent through POST /run or run_ai_agent the way a schedule queues its
+// own, for an internal or an external agent alike. It is checked as a chat message is,
+// so a task the agent would refuse is refused here rather than failed in the queue.
+export async function queueApiRun(
+  agentId: number,
+  projectId: number,
+  prompt: string,
+  callerUserId: string,
+): Promise<number> {
+  const agent = await getAgentInProject(agentId, projectId);
+  if (!agent) throw new HttpError(404, 'Agent not found');
+  assertChatEnabled(agent);
+  if (!isTriggerableBy(agent, callerUserId)) {
+    throw new HttpError(403, 'This agent only takes tasks from its owner');
+  }
+  if (agent.kind === 'internal') {
+    const refused = await runRefusal({
+      agentId,
+      teamId: agent.teamId,
+      projectId,
+      userId: callerUserId,
+    });
+    if (refused) throw new HttpError(403, refused, 'run_refused');
+  }
+  return enqueueAgentRun({
+    agentId,
+    projectId,
+    issueId: null,
+    sourceActivityId: null,
+    requestedByUserId: callerUserId,
+    prompt,
+    trigger: 'api',
+  });
 }
 
 // Agents working in the project whose bot user is among the given ids and that react

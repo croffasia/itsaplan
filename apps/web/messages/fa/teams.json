@@ -691,6 +691,7 @@
     "loadMore": "بارگذاری ۲۵ مورد بیشتر",
     "endOfHistory": "اجرای قدیمی‌تری نیست",
     "manualTask": "وظیفه دستی",
+    "apiTask": "وظیفه از API",
     "scheduledTask": "وظیفه زمان‌بندی‌شده",
     "documentTask": "نظر در سند",
     "failed": "ناموفق",

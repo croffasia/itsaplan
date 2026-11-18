@@ -691,6 +691,7 @@
     "loadMore": "Завантажити ще 25",
     "endOfHistory": "Давніших запусків немає",
     "manualTask": "Ручна задача",
+    "apiTask": "Задача через API",
     "scheduledTask": "Задача за розкладом",
     "documentTask": "Коментар у документі",
     "failed": "Збій",

@@ -207,6 +207,7 @@
       "delegation": "executou por delegação de",
       "field": "executou por um campo de",
       "manual": "executou manualmente",
+      "api": "executou pela API",
       "schedule": "executou por agendamento",
       "status": "executou por mudança de estado de",
       "event": "executou por um evento de"

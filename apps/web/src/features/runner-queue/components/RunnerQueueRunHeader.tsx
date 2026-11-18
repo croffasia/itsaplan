@@ -45,6 +45,7 @@ export default function RunnerQueueRunHeader({
   const detail = outcomeDetail(run, t, relativeTime);
   const issueKey = runIssueKey(run);
   const href = run.sequenceNumber == null ? null : issuePath(run.projectRef, run.sequenceNumber);
+  const hasSubtitle = href !== null || !!run.scheduleName;
 
   async function copyLink() {
     try {
@@ -64,7 +65,12 @@ export default function RunnerQueueRunHeader({
         <ChevronLeft aria-hidden className="size-3.5 rtl:rotate-180" />
         {t('queueTitle')}
       </Link>
-      <div className="flex flex-wrap items-start gap-x-3.5 gap-y-3">
+      <div
+        className={cn(
+          'flex flex-wrap gap-x-3.5 gap-y-3',
+          hasSubtitle ? 'items-start' : 'items-center',
+        )}
+      >
         <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-xl', tone)}>
           <Icon aria-hidden className="size-5" />
         </span>
@@ -73,26 +79,28 @@ export default function RunnerQueueRunHeader({
             {waitsForRunner(run) ? t('waitingForRunner') : t(run.executionState)}
             {detail && <span className="font-normal text-muted-foreground"> · {detail}</span>}
           </h2>
-          <p className="truncate text-sm">
-            {href ? (
-              <Link
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group"
-                dir="auto"
-              >
-                <span className="me-1.5 text-muted-foreground tabular-nums">{issueKey}</span>
-                <span className="group-hover:underline">{run.issueTitle}</span>
-              </Link>
-            ) : (
-              run.scheduleName && (
-                <span className="text-muted-foreground">
-                  {t('scheduleRun', { name: run.scheduleName })}
-                </span>
-              )
-            )}
-          </p>
+          {hasSubtitle && (
+            <p className="truncate text-sm">
+              {href ? (
+                <Link
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group"
+                  dir="auto"
+                >
+                  <span className="me-1.5 text-muted-foreground tabular-nums">{issueKey}</span>
+                  <span className="group-hover:underline">{run.issueTitle}</span>
+                </Link>
+              ) : (
+                run.scheduleName && (
+                  <span className="text-muted-foreground">
+                    {t('scheduleRun', { name: run.scheduleName })}
+                  </span>
+                )
+              )}
+            </p>
+          )}
         </div>
         <span className="flex items-center gap-1.5">
           <Button

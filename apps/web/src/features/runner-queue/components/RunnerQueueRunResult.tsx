@@ -22,7 +22,7 @@ export default function RunnerQueueRunResult({ run }: { run: RunnerQueueRun }) {
     );
   }
   return (
-    <div className="flex items-start gap-3 rounded-xl bg-card p-3 ring-1 ring-border">
+    <div className="flex items-start gap-3 rounded-xl bg-card p-3">
       <div className="min-w-0 flex-1 space-y-3">
         {links.map((url) => (
           <RunnerQueueRunLinkRow key={url} url={url} />

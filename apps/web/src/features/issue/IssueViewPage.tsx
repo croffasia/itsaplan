@@ -45,22 +45,26 @@ export default function IssueViewPage() {
 
   if (!project) return null;
 
+  // The Properties sidebar is positioned against this non-scrolling frame, not the
+  // viewport, so a notice strip above the page moves it down with the page.
   return (
-    <div {...scrollRestorationProps} className="flex-1 overflow-y-auto">
-      <div className="flex flex-col px-8 py-6 xl:px-12">
-        {issueQuery.data && !moved ? (
-          <IssueDetailContent
-            project={project}
-            issueId={issueQuery.data.id}
-            layout="page"
-            onDeleted={exit}
-            commentId={commentId}
-          />
-        ) : issueQuery.isLoading || (moved && (!projects || movedTo)) ? (
-          <IssueDetailSkeleton />
-        ) : (
-          <div className="py-6 text-sm text-muted-foreground">{t('notFound')}</div>
-        )}
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <div {...scrollRestorationProps} className="flex-1 overflow-y-auto">
+        <div className="flex flex-col px-8 py-6 xl:px-12">
+          {issueQuery.data && !moved ? (
+            <IssueDetailContent
+              project={project}
+              issueId={issueQuery.data.id}
+              layout="page"
+              onDeleted={exit}
+              commentId={commentId}
+            />
+          ) : issueQuery.isLoading || (moved && (!projects || movedTo)) ? (
+            <IssueDetailSkeleton />
+          ) : (
+            <div className="py-6 text-sm text-muted-foreground">{t('notFound')}</div>
+          )}
+        </div>
       </div>
     </div>
   );

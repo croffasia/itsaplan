@@ -51,6 +51,8 @@ export function SubtaskProgress({
         {onToggle ? (
           <button
             type="button"
+            aria-expanded={open}
+            aria-label={t('subtasksDone', { done, total })}
             {...hover.trigger}
             // The row opens the issue on click, so the toggle has to keep the
             // click to itself.

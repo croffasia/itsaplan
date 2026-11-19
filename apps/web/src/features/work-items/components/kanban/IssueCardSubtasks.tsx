@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { useIconHover } from '@animateicons/react';
 import { ChevronDownIcon } from '@animateicons/react/lucide/chevron-down-icon';
 import { ChevronRightIcon } from '@animateicons/react/lucide/chevron-right-icon';
@@ -7,14 +6,9 @@ import { useTranslations } from 'next-intl';
 import { type Maps } from '@/utils/project';
 import { subtaskProgress } from '@/utils/subtasks';
 import { noDragProps } from '@/lib/dnd';
-import { useSubtasks, useSubtasksCollapsed } from '../../context/useSubtasks';
+import { useSubtaskFold, useSubtasks } from '../../context/useSubtasks';
 import { IssueCardSubtaskRow } from './IssueCardSubtaskRow';
 
-// The issue's subtasks under its card, headed by how many of them are done. Each
-// row names the subtask — state, identifier, title — since a subtask has no card
-// of its own and these rows are where it shows on the board; clicking one opens
-// it. A subtask's own subtasks are listed on the subtask itself. Without onOpen (the
-// drag preview) the rows are inert. Renders nothing for an issue with no subtasks.
 export function IssueCardSubtasks({
   issueId,
   maps,
@@ -26,12 +20,7 @@ export function IssueCardSubtasks({
 }) {
   const t = useTranslations('workItems');
   const subtasks = useSubtasks(issueId);
-  const collapsed = useSubtasksCollapsed();
-  // Null follows the display setting; a value is this one card unfolded or folded
-  // by hand. Flipping the setting clears it, so the switch moves every card.
-  const [unfolded, setUnfolded] = useState<boolean | null>(null);
-  useEffect(() => setUnfolded(null), [collapsed]);
-  const open = unfolded ?? !collapsed;
+  const { open, toggle } = useSubtaskFold();
   const hover = useIconHover({
     trigger: [
       { icon: 'chevron', trigger: 'hover' },
@@ -43,17 +32,22 @@ export function IssueCardSubtasks({
   const Chevron = open ? ChevronDownIcon : ChevronRightIcon;
 
   return (
-    <div className="mt-2.5 flex flex-col gap-1 border-t border-border/50 pt-2">
+    <div
+      className="mt-2.5 flex flex-col gap-1 border-t border-border/50 pt-2"
+      onKeyDown={(event) => {
+        // The card's keyboard drag sensor listens for the same keys as the buttons.
+        if (event.code === 'Enter' || event.code === 'Space') event.stopPropagation();
+      }}
+    >
       <button
         type="button"
-        // The card starts a drag on press and opens itself on click, so the
-        // header has to refuse both the way a subtask row does.
+        aria-expanded={open}
         {...noDragProps}
         {...hover.trigger}
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
-          setUnfolded(!open);
+          toggle();
         }}
         className="-mx-1.5 flex items-center gap-1.5 rounded px-1.5 py-0.5 text-[10px] tracking-wide text-muted-foreground/70 hover:bg-muted/70 hover:text-foreground"
       >

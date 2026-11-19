@@ -69,11 +69,11 @@ export interface SubtaskFold {
 // this one is folded or unfolded by hand; changing the setting takes that back, so
 // the switch moves every card and row at once. Nothing is stored: a reload starts
 // from the setting again.
-export function useSubtaskFold(): SubtaskFold {
+export function useSubtaskFold(startCollapsed = false): SubtaskFold {
   const collapsed = useSubtasksCollapsed();
   const [unfolded, setUnfolded] = useState<boolean | null>(null);
   useEffect(() => setUnfolded(null), [collapsed]);
-  const open = unfolded ?? !collapsed;
+  const open = unfolded ?? !(collapsed || startCollapsed);
   return { open, toggle: () => setUnfolded(!open) };
 }
 

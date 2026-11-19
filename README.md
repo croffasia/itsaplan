@@ -82,7 +82,10 @@ If It's a Plan looks useful to you, star the repo ⭐ and
   schedule. A schedule starts on a timer or when an issue moves to a state
 - Tokens and cost of every run, by agent, project, and model
 - Tools for other services: Notion, Telegram, Threads, Instagram, Jina, Firecrawl, Keenable,
-  Gitea, Forgejo, and GitHub
+  DataForSEO, Gitea, Forgejo, and GitHub
+- Images, video, music, and speech from the models on
+  [Kie](https://kie.ai?ref=0b6eb19939298accdf58e18b1a92a26e): Nano Banana, Seedream, Kling,
+  Veo, Suno, and others, with one API key
 - Chat with each agent, with its own history. Turn chat off for an agent that only works on
   mentions, assignments, and schedules
 - Chat with an external agent too. The runner answers from your machine, streams the reply and

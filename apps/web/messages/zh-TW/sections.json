@@ -35,11 +35,11 @@
     },
     "authentication": {
       "label": "身分驗證",
-      "description": "設定誰可以註冊、如何驗證帳號以及可用的外部登入提供者。"
+      "description": "誰可以註冊、如何登入，以及請求限制。"
     },
     "hotkeys": {
       "label": "鍵盤快捷鍵",
-      "description": "設定執行個體中所有使用者的預設快捷鍵。每位使用者可在偏好設定中重新繫結。"
+      "description": "所有使用者的預設快捷鍵。每人可在偏好設定中自行變更。"
     },
     "storage": {
       "label": "儲存",

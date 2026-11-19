@@ -42,6 +42,11 @@ export const COLUMN_WIDTH = 348;
 export const PINNED_COLUMN =
   'md:sticky md:start-0 md:z-10 bg-kanban-column-raised shadow-[var(--pinned-column-shadow)]';
 
+// Column header controls shown on hover or keyboard focus inside a `group/column`. Touch
+// screens have no hover, so they keep them in view.
+export const SHOW_ON_COLUMN_HOVER =
+  'opacity-0 group-hover/column:opacity-100 group-focus-within/column:opacity-100 pointer-coarse:opacity-100';
+
 export const boardCollision = preferPrefix('card:');
 
 // Collapsed swimlanes are a per-project, per-swimlane-field client-only preference,

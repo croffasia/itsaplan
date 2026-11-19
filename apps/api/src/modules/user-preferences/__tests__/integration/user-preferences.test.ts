@@ -30,6 +30,8 @@ describe('user preferences', () => {
       timezone: 'UTC',
       locale: 'en',
       theme: 'system',
+      palette: 'default',
+      customTheme: null,
       issueOpenMode: 'panel',
       startPage: 'work-items',
       showChatByDefault: false,
@@ -74,6 +76,7 @@ describe('user preferences', () => {
       timezone: 'Europe/Berlin',
       locale: 'uk',
       theme: 'dark',
+      palette: 'nord',
       issueOpenMode: 'page',
       startPage: 'inbox',
       showChatByDefault: true,
@@ -91,6 +94,8 @@ describe('user preferences', () => {
       timezone: 'Europe/Berlin',
       locale: 'uk',
       theme: 'dark',
+      palette: 'nord',
+      customTheme: null,
       issueOpenMode: 'page',
       startPage: 'inbox',
       showChatByDefault: true,
@@ -113,6 +118,61 @@ describe('user preferences', () => {
 
     expect(res.status).toBe(200);
     expect(res.data).toMatchObject({ timezone: 'Europe/Berlin', theme: 'light' });
+  });
+
+  it('keeps the custom theme when another palette is picked', async () => {
+    const u = await signUpTestUser();
+    const client = authedApi(u.cookie);
+    const customTheme = { accent: '#5e6ad2', background: '#101012', contrast: 30 };
+    await client.account.preferences.patch({ palette: 'custom', customTheme });
+
+    const res = await client.account.preferences.patch({ palette: 'github' });
+
+    expect(res.data).toMatchObject({ palette: 'github', customTheme });
+  });
+
+  it('rejects a custom palette without its colors', async () => {
+    const u = await signUpTestUser();
+
+    const res = await authedApi(u.cookie).account.preferences.patch({ palette: 'custom' });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects a custom theme color that is not a lowercase hex color', async () => {
+    const u = await signUpTestUser();
+    const client = authedApi(u.cookie);
+
+    for (const accent of ['red; color: blue', '#5E6AD2', '#5e6ad', '5e6ad2']) {
+      const res = await client.account.preferences.patch({
+        palette: 'custom',
+        customTheme: { accent, background: '#101012', contrast: 30 },
+      });
+      expect(res.status).toBe(400);
+    }
+  });
+
+  it('takes a contrast from 0 to 100 in whole steps', async () => {
+    const u = await signUpTestUser();
+    const client = authedApi(u.cookie);
+    const patch = (contrast: number) =>
+      client.account.preferences.patch({
+        palette: 'custom',
+        customTheme: { accent: '#5e6ad2', background: '#101012', contrast },
+      });
+
+    for (const contrast of [0, 100]) expect((await patch(contrast)).status).toBe(200);
+    for (const contrast of [-1, 101, 30.5]) expect((await patch(contrast)).status).toBe(400);
+  });
+
+  it('rejects an unknown palette', async () => {
+    const u = await signUpTestUser();
+
+    const res = await authedApi(u.cookie).account.preferences.patch({
+      palette: 'sepia' as 'nord',
+    });
+
+    expect(res.status).toBe(400);
   });
 
   it('rejects an unknown timezone', async () => {

@@ -2,11 +2,10 @@
   "archived": "보관됨",
   "create": {
     "title": "새 팀",
-    "namePlaceholder": "팀 이름",
+    "name": "팀 이름",
     "slug": "URL",
-    "slugHint": "팀 프로젝트의 링크는 이 값으로 시작합니다. 예: /acme",
     "slugInvalid": "영문 소문자로 시작하고, 영문 소문자, 숫자 또는 하이픈을 사용하여 2~40자로 입력하세요.",
-    "hint": "이 팀의 소유자가 됩니다.",
+    "nameRequired": "팀 이름을 입력하세요.",
     "submit": "팀 생성"
   },
   "sections": {
@@ -692,6 +691,7 @@
     "loadMore": "25개 더 불러오기",
     "endOfHistory": "이전 실행 기록이 없습니다",
     "manualTask": "수동 작업",
+    "apiTask": "API 작업",
     "scheduledTask": "예약 작업",
     "documentTask": "문서 댓글",
     "failed": "실패",

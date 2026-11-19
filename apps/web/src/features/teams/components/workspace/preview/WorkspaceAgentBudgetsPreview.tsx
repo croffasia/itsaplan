@@ -14,7 +14,7 @@ export default function WorkspaceAgentBudgetsPreview() {
 
   return (
     <SectionPageView title={t('title')} description={t('description')} wide>
-      <SectionPreview>
+      <SectionPreview feature="agent-budgets">
         <div className="flex flex-col gap-10">
           <section className="flex flex-col gap-5">
             <header className="flex flex-wrap items-baseline gap-x-3 border-b border-border pb-3">

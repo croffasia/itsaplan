@@ -3,6 +3,7 @@ import { ChevronLeftIcon } from '@animateicons/react/lucide/chevron-left-icon';
 import { ChevronRightIcon } from '@animateicons/react/lucide/chevron-right-icon';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { CalendarMode, WeekStart } from '@/utils/viewSettings';
+import { addPersianMonths, calendarSystem } from '@/utils/dates';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import ToolbarIconButton from '@/components/layout/ToolbarIconButton';
@@ -30,7 +31,8 @@ export function CalendarNav({
   const dayRange = useDayRangeFormat();
   const month = mode === 'month';
   const step = (by: number) => {
-    if (month) return addMonths(cursor, by);
+    if (month)
+      return calendarSystem() === 'persian' ? addPersianMonths(cursor, by) : addMonths(cursor, by);
     if (mode === 'byWeek') return addWeeks(cursor, by);
     return addDays(cursor, by * days.length);
   };
@@ -42,7 +44,7 @@ export function CalendarNav({
   const previous = label('previous');
   const next = label('next');
   const title = month
-    ? format.dateTime(cursor, { month: 'long', year: 'numeric', calendar: 'gregory' })
+    ? format.dateTime(cursor, { month: 'long', year: 'numeric', calendar: calendarSystem() })
     : dayRange(days[0], days[days.length - 1], { year: true });
   return (
     <div className="flex items-center gap-2 border-b px-3 py-1.5">
@@ -52,7 +54,7 @@ export function CalendarNav({
           {t('weekNumber', { number: weekNumber(days[0], weekStart) })}
         </span>
       )}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 rtl:[&_svg]:rotate-180">
         <Tooltip>
           <TooltipTrigger asChild>
             <ToolbarIconButton

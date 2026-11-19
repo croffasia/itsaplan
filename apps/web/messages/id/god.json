@@ -210,6 +210,11 @@
       "everyone": "Semua orang"
     },
     "apiDocsSaved": "Pengaturan dokumentasi API disimpan",
+    "apiKeys": "Kunci API",
+    "apiKeysSaved": "Pengaturan kunci API disimpan",
+    "keyRequestsPerMinute": "Permintaan per menit",
+    "keyRequestsPerMinuteHint": "Berapa banyak permintaan yang bisa dikirim satu kunci per menit, termasuk panggilan alat MCP. Setiap replika API menghitung sendiri. 0 berarti tanpa batas.",
+    "keyRequestsPerMinuteInvalid": "Masukkan bilangan bulat dari 0 sampai {max}.",
     "agents": "Agen",
     "agentsSaved": "Pengaturan agen disimpan",
     "embedding": "Penyematan",
@@ -227,48 +232,60 @@
     "runSeconds": "{seconds} dtk",
     "concurrentRuns": "Eksekusi bersamaan",
     "concurrentRunsHint": "Berapa banyak eksekusi agen yang berjalan bersamaan di instance ini. Sisanya menunggu dalam antrean. Obrolan dan agen eksternal tidak dihitung. 0 berarti tanpa batas.",
-    "concurrentRunsInvalid": "Masukkan bilangan bulat dari 0 sampai {max}."
+    "concurrentRunsInvalid": "Masukkan bilangan bulat dari 0 sampai {max}.",
+    "answerLimit": "Batas panjang jawaban",
+    "answerLimitHint": "Berapa banyak karakter jawaban agen yang disimpan. Sisanya dipotong. Obrolan menampilkan jawaban utuh, tetapi agen eksternal hanya menerima bagian yang disimpan sebagai riwayat. 0 berarti tanpa batas.",
+    "answerLimitInvalid": "Masukkan bilangan bulat dari 0 sampai {max, number}.",
+    "answerLimitNone": "Tanpa batas. Jawaban panjang disimpan utuh dan bisa membuat daftar eksekusi lambat dimuat."
   },
   "authentication": {
     "saved": "Pengaturan autentikasi disimpan",
     "registration": "Pendaftaran",
-    "registrationHint": "Siapa yang boleh membuat akun di instance ini.",
-    "registrationPasswordlessNote": "Pendaftaran dan pemulihan kata sandi ditangani oleh penyedia masuk.",
+    "registrationHint": "Siapa yang bisa membuat akun dan berapa lama undangan berlaku.",
+    "registrationPasswordlessNote": "Pendaftaran dan atur ulang kata sandi dilakukan di penyedia masuk.",
     "inviteTtlDays": "Masa berlaku undangan (hari)",
-    "inviteTtlDaysHint": "Setelah jangka waktu ini, tautan undangan tidak berfungsi lagi dan, dengan pendaftaran khusus undangan, tidak bisa lagi dipakai untuk mendaftar. Dengan 0, undangan tidak kedaluwarsa.",
+    "inviteTtlDaysHint": "Undangan berhenti berfungsi sejumlah hari ini setelah dibuat. Nilai baru juga berlaku untuk undangan yang sudah ada. 0 berarti undangan tidak pernah kedaluwarsa.",
     "inviteTtlDaysInvalid": "Masukkan jumlah hari berupa bilangan bulat dari 0 sampai {max}.",
     "allowedEmailDomains": "Domain email yang diizinkan",
-    "allowedEmailDomainsHint": "Hanya alamat di domain ini yang bisa membuat akun. Pisahkan dengan koma, atau kosongkan untuk mengizinkan semua alamat. Akun yang sudah ada tetap bisa masuk.",
-    "allowedEmailDomainsInvalid": "Setiap domain harus berbentuk seperti example.com, maksimal 100 domain.",
+    "allowedEmailDomainsHint": "Hanya alamat di domain ini yang bisa membuat akun, termasuk lewat undangan. Akun yang sudah ada tetap punya akses. Pisahkan domain dengan koma. Setiap subdomain perlu entri sendiri. Kosongkan untuk mengizinkan alamat apa pun.",
+    "allowedEmailDomainsInvalid": "Masukkan domain seperti example.com, maksimal 100.",
     "modes": {
       "open": {
         "label": "Terbuka",
-        "description": "Siapa saja yang mengakses halaman pendaftaran dapat membuat akun.",
+        "description": "Siapa pun bisa membuat akun di halaman pendaftaran.",
         "descriptionPasswordless": "Siapa pun yang masuk melalui penyedia untuk pertama kali akan mendapatkan akun."
       },
       "invite": {
         "label": "Hanya undangan",
-        "description": "Akun hanya dapat dibuat melalui tautan undangan.",
-        "descriptionPasswordless": "Masuk melalui penyedia hanya membuat akun jika ada undangan yang tertunda untuk alamat tersebut."
+        "description": "Hanya alamat dengan undangan yang masih menunggu yang bisa membuat akun.",
+        "descriptionPasswordless": "Masuk lewat penyedia hanya membuat akun untuk alamat dengan undangan yang masih menunggu."
       },
       "closed": {
         "label": "Tertutup",
-        "description": "Tidak ada akun baru. Akun yang ada tetap dapat masuk.",
-        "descriptionPasswordless": "Tidak ada akun baru, bahkan bagi yang datang dari penyedia. Akun yang ada tetap dapat masuk."
+        "description": "Tidak ada yang bisa membuat akun. Akun yang sudah ada tetap bisa masuk.",
+        "descriptionPasswordless": "Masuk lewat penyedia tidak membuat akun. Akun yang sudah ada tetap bisa masuk."
       }
     },
     "signIn": "Opsi masuk",
-    "signInHint": "Cara orang masuk. Opsi yang mengirim email tetap nonaktif hingga penyedia dikonfigurasi.",
-    "needsProvider": "Siapkan penyedia Email di bawah Integrasi terlebih dahulu.",
+    "needsProvider": "Siapkan dulu penyedia email di Integrasi → Penyedia email.",
     "requireVerification": "Wajibkan konfirmasi email",
-    "requireVerificationHint": "Akun baru harus mengonfirmasi alamat email sebelum dapat masuk.",
+    "requireVerificationHint": "Orang harus mengonfirmasi alamat email sebelum masuk dengan kata sandi. Ini juga berlaku untuk akun yang sudah ada: formulir masuk menawarkan untuk mengirim ulang tautan konfirmasi.",
     "magicLink": "Tautan masuk",
-    "magicLinkHint": "Tawarkan masuk dengan tautan yang dikirim melalui email, selain kata sandi.",
+    "magicLinkHint": "Orang bisa masuk dengan tautan yang dikirim ke email mereka. Ini hanya berfungsi selama Email dan kata sandi aktif.",
     "trustProviderEmails": "Percayai alamat dari penyedia masuk",
-    "trustProviderEmailsHint": "Google dan OpenID Connect memasukkan orang ke akun yang sudah memiliki alamat tersebut, baik dikonfirmasi di sini atau belum. Aktifkan ini hanya jika Anda mengontrol siapa yang dapat mendaftar di penyedia.",
+    "trustProviderEmailsHint": "Google dan OpenID Connect memasukkan orang ke akun dengan alamat email yang sama, meskipun alamat itu belum pernah dikonfirmasi. Aktifkan hanya jika Anda mengendalikan siapa yang mendaftar di penyedia, atau seseorang bisa mengambil alih akun.",
     "emailPassword": "Email dan kata sandi",
-    "emailPasswordHint": "Tampilkan formulir masuk dan daftar. Nonaktifkan untuk mengizinkan masuk hanya melalui penyedia masuk.",
-    "needsSso": "Siapkan penyedia masuk di bawah Integrasi terlebih dahulu."
+    "emailPasswordHint": "Orang mendaftar dan masuk dengan email dan kata sandi. Jika dimatikan, mereka hanya bisa masuk lewat penyedia masuk atau passkey.",
+    "needsSso": "Siapkan dulu penyedia masuk di Integrasi → Penyedia autentikasi.",
+    "signInLimits": "Batas permintaan",
+    "signInLimitsHint": "Berapa banyak permintaan yang bisa dikirim satu alamat IP ke setiap replika API. Batas ini menghentikan tebakan kata sandi dan banjir email. Di balik reverse proxy, proxy harus mengisi X-Forwarded-For, atau semua klien berbagi setiap batas.",
+    "signInRateLimit": "Percobaan masuk dan pendaftaran",
+    "signInRateLimitHint": "Per 10 detik, termasuk perubahan kata sandi dan email.",
+    "emailRateLimit": "Email akun",
+    "emailRateLimitHint": "Per menit, untuk email atur ulang kata sandi dan konfirmasi email.",
+    "magicLinkRateLimit": "Permintaan tautan masuk",
+    "magicLinkRateLimitHint": "Per menit, untuk meminta dan membuka tautan masuk.",
+    "signInLimitInvalid": "Masukkan bilangan bulat dari 1 sampai {max}."
   },
   "hotkeys": {
     "saved": "Pintasan keyboard disimpan"
@@ -508,6 +525,9 @@
       },
       "stateChanged": {
         "name": "Status berubah"
+      },
+      "reacted": {
+        "name": "Reaksi pada komentar"
       },
       "documentMentioned": {
         "name": "Disebut di dokumen"

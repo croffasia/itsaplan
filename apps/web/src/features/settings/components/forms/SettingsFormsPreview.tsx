@@ -11,7 +11,7 @@ export default function SettingsFormsPreview() {
 
   return (
     <SectionPageView title={text.label} description={text.description} wide>
-      <SectionPreview>
+      <SectionPreview feature="forms">
         <div className="flex flex-col gap-10">
           <SettingsFormsPreviewList />
           <SettingsFormsPreviewEditor />

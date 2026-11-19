@@ -63,9 +63,12 @@ it('shows the run its URL names and hides it after access denial', async () => {
     issueId: null,
     sequenceNumber: null,
     issueTitle: null,
+    scheduleId: null,
     scheduleName: null,
     projectRef: 'team.RUN',
     runnerState: 'online',
+    inputTokens: null,
+    outputTokens: null,
   };
   Object.defineProperties(globalThis, {
     window: { configurable: true, value: dom.window },
@@ -104,7 +107,15 @@ it('shows the run its URL names and hides it after access denial', async () => {
     defaultOptions: { queries: { staleTime: Infinity, retry: false } },
   });
   const detailKey = [...qk.runnerQueue, '/projects/team.RUN', { page: 1, pageSize: 1, runId: 1 }];
-  const page = { items: [run], total: 1, page: 1, pageSize: 10, queued: 0, running: 0 };
+  const page = {
+    items: [run],
+    total: 1,
+    page: 1,
+    pageSize: 10,
+    queued: 0,
+    running: 0,
+    failed: 0,
+  };
   client.setQueryData(detailKey, page);
   client.setQueryData([...qk.externalRunTrace(1), null], null);
   const { default: RunnerQueueRunPage } = await import('./RunnerQueueRunPage');

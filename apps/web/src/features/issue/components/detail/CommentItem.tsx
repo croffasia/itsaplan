@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link2, Pencil, Reply, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { FeedItem } from '@/lib/api/endpoints/activity';
@@ -7,10 +7,15 @@ import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import { Button } from '@/components/ui/button';
 import { useRelativeTime } from '@/context/relativeTimeContext';
+import { readCommentDraft } from '@/utils/commentDrafts';
 import { commentPath } from '@/utils/paths';
 import CommentComposer, { type ComposerContext } from './CommentComposer';
+import CommentReactionPicker from './CommentReactionPicker';
+import CommentReactions from './CommentReactions';
 import { useCommentLink } from '../../context/commentLink';
+import { useCommentReactions } from '../../hooks/useCommentReactions';
 import { useDeleteComment } from '../../services/comments.service';
+import { reactedEmojis, type ReactionViewer } from '../../utils/reactions';
 import { writeClipboardText } from '../../utils/clipboard';
 import { useTranslations } from 'next-intl';
 
@@ -25,6 +30,7 @@ export default function CommentItem({
   onReply,
   canEdit,
   canDelete,
+  viewer,
   composer,
 }: {
   item: FeedItem;
@@ -36,6 +42,9 @@ export default function CommentItem({
   // author with work_items edit, or a project owner. The API asserts the same.
   canEdit?: boolean;
   canDelete?: boolean;
+  // Set by CommentThread where the current user may react: any member who may
+  // comment, on anyone's comment.
+  viewer?: ReactionViewer;
   // The feed's composer state; the edit box posts with the same @-mention menu.
   composer?: ComposerContext;
 }) {
@@ -45,8 +54,21 @@ export default function CommentItem({
   const link = useCommentLink();
   const relativeTime = useRelativeTime();
   const author = item.actorName ?? t('unknownAuthor');
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState<'clicked' | 'restored' | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const { reactions, toggle } = useCommentReactions(item, viewer);
+  const userId = composer?.userId;
+  const issueId = composer?.issueId;
+
+  useEffect(() => {
+    if (
+      canEdit &&
+      userId &&
+      issueId != null &&
+      readCommentDraft(userId, issueId, `edit:${item.id}`) != null
+    )
+      setEditing('restored');
+  }, [canEdit, userId, issueId, item.id]);
 
   async function copyLink(projectKey: string, sequenceNumber: number) {
     try {
@@ -75,8 +97,15 @@ export default function CommentItem({
           · {relativeTime(item.createdAt)}
           {item.editedAt && ` · ${t('edited')}`}
         </span>
-        {(onReply || canEdit || canDelete) && (
-          <div className="ms-auto flex shrink-0 items-center gap-0.5 focus-within:opacity-100 sm:opacity-0 sm:group-hover/comment:opacity-100">
+        {(onReply || canEdit || canDelete || toggle) && (
+          <div className="ms-auto flex shrink-0 items-center gap-0.5 focus-within:opacity-100 has-data-[state=open]:opacity-100 sm:opacity-0 sm:group-hover/comment:opacity-100">
+            {toggle && viewer && (
+              <CommentReactionPicker
+                selected={reactedEmojis(reactions, viewer.id)}
+                onPick={toggle}
+                className="max-sm:hidden"
+              />
+            )}
             {link && (
               <Button
                 size="sm"
@@ -92,7 +121,7 @@ export default function CommentItem({
               <Button
                 size="sm"
                 variant="ghost"
-                onClick={() => setEditing(true)}
+                onClick={() => setEditing('clicked')}
                 className="h-6 px-2 text-xs text-muted-foreground"
                 title={t('edit')}
               >
@@ -130,13 +159,16 @@ export default function CommentItem({
             {...composer}
             commentId={item.id}
             initialBody={item.body ?? ''}
-            onClose={() => setEditing(false)}
+            restored={editing === 'restored'}
+            onClose={() => setEditing(null)}
           />
         </div>
       ) : (
         <div className="mt-1 ps-8.5">
           <div className="w-fit max-w-full rounded-xl rounded-ss-sm bg-muted/60 px-3 py-2">
             <MarkdownEditor
+              // The editor reads its content once, at mount: an edit has to remount it.
+              key={item.body ?? ''}
               className="text-sm text-foreground/90 [&_a.issue-ref]:mx-1 [&_a.issue-ref]:text-[0.9em]"
               defaultValue={item.body ?? ''}
               editable={false}
@@ -144,6 +176,7 @@ export default function CommentItem({
           </div>
         </div>
       )}
+      <CommentReactions reactions={reactions} viewerId={viewer?.id} onToggle={toggle} />
 
       {confirmingDelete && (
         <ConfirmDialog

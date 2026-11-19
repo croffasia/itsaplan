@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import GodSectionPage from '../GodSectionPage';
 import GodAgentsSection from './GodAgentsSection';
 import GodApiDocsSection from './GodApiDocsSection';
+import GodApiKeysSection from './GodApiKeysSection';
 import GodEmbedSitesSection from './GodEmbedSitesSection';
 import GodSharingSection from './GodSharingSection';
 import {
@@ -18,6 +19,7 @@ import {
 import type {
   AgentSettings,
   ApiDocsSettings,
+  ApiKeySettings,
   EmbedSites,
   InstanceAuthSettings,
   SharingSettings,
@@ -33,6 +35,7 @@ export default function GodGeneralForm({
   embed,
   sharing,
   apiDocs,
+  apiKeys,
 }: {
   defaults: ProjectDefaults;
   auth: InstanceAuthSettings;
@@ -40,6 +43,7 @@ export default function GodGeneralForm({
   embed: EmbedSites;
   sharing: SharingSettings;
   apiDocs: ApiDocsSettings;
+  apiKeys: ApiKeySettings;
 }) {
   const t = useTranslations('god.general');
   const update = useUpdateInstanceProjectDefaults();
@@ -129,6 +133,8 @@ export default function GodGeneralForm({
         <GodAgentsSection agents={agents} />
 
         <GodApiDocsSection settings={apiDocs} />
+
+        <GodApiKeysSection settings={apiKeys} />
 
         <GodEmbedSitesSection sites={embed} />
       </div>

@@ -53,7 +53,8 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
       detail: {
         summary: "List a project's webhooks",
         description:
-          'The signing secret is returned only to a caller who may create or edit webhooks.',
+          "List a project's webhooks. The signing secret is " +
+          'returned only to a user who can create or edit webhooks.',
         ...mcpTool('list_webhooks'),
       },
     },
@@ -65,8 +66,8 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
     detail: {
       summary: 'List webhook events',
       description:
-        "The events a project's webhook may subscribe to: the core's, then those the " +
-        'instance adds.',
+        'List the events a project webhook can subscribe ' +
+        'to: core events, then events the instance adds.',
       ...mcpTool('list_webhook_event_types'),
     },
   })
@@ -122,8 +123,8 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
       detail: {
         summary: 'Rotate the webhook secret',
         description:
-          'Issue a new signing secret. The next delivery is signed with it, so the receiver ' +
-          'has to be given it first.',
+          'Issue a new signing secret. The next delivery is ' +
+          'signed with it, so give it to the receiver first.',
         // The receiver rejects deliveries until it is given the new secret.
         ...mcpTool('rotate_webhook_secret', { destructiveHint: true }),
       },

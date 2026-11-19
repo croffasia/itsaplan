@@ -23,6 +23,7 @@ import {
   memberProjectIds,
   assertFullAgentAccess,
   withCanManage,
+  queueApiRun,
   type AgentKind,
 } from './service';
 import {
@@ -39,8 +40,9 @@ import {
   CreateAgentResponse,
   renameThreadBody,
   RegenerateKeyResponse,
-  RunAgentResponse,
+  QueuedApiRunResponse,
   agentListQuery,
+  apiRunBody,
   agentParams,
   analyticsQuery,
   workspaceAnalyticsQuery,
@@ -56,7 +58,8 @@ import {
   tracesQuery,
   updateAgentBody,
 } from './model';
-import { runAgent, streamAgent, type AgentRunEvent, type RunOpts } from './runtime';
+import { streamAgent, type AgentRunEvent, type RunOpts } from './runtime';
+import { QUEUED_POLL_SECONDS } from './run-queue';
 import { peoplePreamble } from './prompt/run-context';
 import { attachmentPreamble, chartPreamble } from './prompt/framing';
 import type { SessionUser } from '#shared/auth-context';
@@ -212,9 +215,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       response: { 200: AiAgentListResponse, ...accessErrors },
       detail: {
         summary: 'List AI agents',
-        description:
-          "List the team's AI agents with their config. Pass projectId to list only the agents " +
-          'working in that project.',
+        description: "List the team's AI agents with their config.",
         ...mcpTool('list_ai_agents'),
       },
     },
@@ -263,9 +264,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       response: { 201: CreateAgentResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create an AI agent',
-        description:
-          "Create an AI agent. kind 'external' returns an API key once; kind 'internal' runs " +
-          'in-process from a model config and has no key.',
+        description: "Create an AI agent. For kind 'external', the API key is returned only once.",
         ...mcpTool('create_ai_agent'),
       },
     },
@@ -289,7 +288,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       response: { 200: AiAgentResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Update an AI agent',
-        description: "Update an AI agent's name, username, projects, or model config.",
+        description: "Update an AI agent's name, username, projects or model config.",
         ...mcpTool('update_ai_agent'),
       },
     },
@@ -315,9 +314,8 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       detail: {
         summary: "Set an AI agent's projects",
         description:
-          'Replace the projects of the team the agent works in. Send the full set: a project ' +
-          'left out is detached. A project of another team is rejected, and so is one the ' +
-          'caller is not a member of unless they run the team.',
+          'Set the team projects an agent works in. A project of another team is refused. A ' +
+          'project you are not a member of is refused, unless you are a team owner or manager.',
         ...mcpTool('set_ai_agent_projects'),
       },
     },
@@ -342,7 +340,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       response: { 200: RegenerateKeyResponse, ...commonErrors },
       detail: {
         summary: 'Regenerate the API key',
-        description: "Rotate an external agent's API key and return the new secret once.",
+        description: "Rotate an external agent's API key. Returns the new key only once.",
         // Rotating invalidates the previous key, which cannot be recovered.
         ...mcpTool('regenerate_ai_agent_key', { destructiveHint: true }),
       },
@@ -500,7 +498,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete an AI agent',
-        description: 'Delete an AI agent and its bot user. Irreversible.',
+        description: 'Permanently delete an AI agent and its bot user.',
         ...mcpTool('delete_ai_agent'),
       },
     },
@@ -515,28 +513,32 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     },
   })
 
-  // The agent is built from its stored model configuration (Mastra) and works in the
-  // project of this path, which it has to be a member of.
+  // The answer is not waited for: a run can take longer than a proxy holds a quiet
+  // request open, or than an MCP client waits for a tool result.
   .post(
     '/projects/:projectKey/ai-agents/:agentId/run',
-    async ({ params, project, body, user }) =>
-      runAgent(
+    async ({ params, project, body, user, set }) => {
+      const runId = await queueApiRun(
         params.agentId,
         project.id,
         body.prompt,
-        chatRunOpts(user, params.agentId, body.threadId),
-      ),
+        requireUser(user).id,
+      );
+      set.status = 202;
+      return { runId, status: 'queued' as const, retryAfterSeconds: QUEUED_POLL_SECONDS };
+    },
     {
-      body: runBody,
+      body: apiRunBody,
       params: projectAgentParams,
       permission: ['ai_agents', 'read'],
-      response: { 200: RunAgentResponse, ...commonErrors },
+      response: { 202: QueuedApiRunResponse, ...commonErrors },
       detail: {
         summary: 'Run an AI agent',
         description:
-          'Send a prompt to an internal AI agent and return its answer. Only an internal agent ' +
-          'runs here; an external one has no model config and returns 400. An agent with chat ' +
-          'turned off returns 403.',
+          'Queue an agent run with prompt as the task and return the run id at once. The run ' +
+          "appears in the agent's run history. Call get_agent_run after each retryAfterSeconds " +
+          'until status is success, failed or ' +
+          'canceled. An agent with chat turned off returns 403.',
         ...mcpTool('run_ai_agent'),
       },
     },

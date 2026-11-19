@@ -17,6 +17,7 @@ import { verifyGithub } from './verify';
 export const github: Integration = {
   key: 'github',
   label: 'GitHub',
+  description: 'Lists, creates and updates issues and discussions in GitHub repositories.',
   credentialSchema: [
     {
       key: 'baseUrl',

@@ -60,10 +60,10 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
       detail: {
         summary: 'List the permission catalog',
         description:
-          "List the resources and actions a role's permission matrix is built from. " +
-          'A resource lists the actions it supports; one it omits is always denied. ' +
-          'ai_agents is administrative: it also attaches an agent to any project of the team ' +
-          'and exposes the API key of an agent.',
+          "List the resources and actions of a role's permission matrix. Each resource lists its " +
+          'supported actions. Unlisted actions are always denied. ai_agents is an admin ' +
+          'resource: it also lets a role attach an agent ' +
+          "to any team project and read an agent's API key.",
         ...mcpTool('list_permission_catalog'),
       },
     },
@@ -84,9 +84,9 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
       detail: {
         summary: "List a team's roles",
         description:
-          'One page of the roles a team offers: the system roles first, then its own, each ' +
-          'oldest first. `search` matches the name. A system role (system: true) is edited ' +
-          'only by the instance owner. Use list_role_options to read every one of them.',
+          "List a team's roles, one page at a time: system roles first, then custom roles, each " +
+          'oldest first. Only the instance owner can edit a system role (system: true). To get ' +
+          'all roles at once, use list_role_options.',
         ...mcpTool('list_roles'),
       },
     },
@@ -102,8 +102,8 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
     detail: {
       summary: "List a team's role options",
       description:
-        'Every role the team assigns, system roles included, with its permission matrix, for ' +
-        'the pickers that assign one. Use list_roles to read them a page at a time.',
+        'List every role the team can assign, system roles included, with their permission ' +
+        'matrices. Use list_roles for pages.',
       ...mcpTool('list_role_options'),
     },
   })
@@ -168,7 +168,8 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
       detail: {
         summary: 'Count what a role is assigned to',
         description:
-          'Count the project members, AI agents, pending invites and provisioned group mappings on a role. They have to be moved to another role before it can be deleted.',
+          'Count the project members, AI agents, pending ' +
+          'invites and provisioned group mappings that use a role.',
         ...mcpTool('get_role_usage'),
       },
     },
@@ -210,7 +211,9 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
       detail: {
         summary: 'Delete a role',
         description:
-          'Delete a custom role of the team. A role in use requires targetRoleId, the role its members, agents, pending invites and group mappings are moved to: another role of the team or a system role.',
+          'Delete a custom role of the team. If the role is in use, set targetRoleId: its ' +
+          'members, agents, pending invites and group mappings ' +
+          'move to that role (another team role or a system role).',
         ...mcpTool('delete_role'),
       },
     },

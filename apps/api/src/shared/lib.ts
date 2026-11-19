@@ -13,6 +13,7 @@ export class HttpError extends Error {
     public status: number,
     message: string,
     public code?: string,
+    public headers?: Record<string, string>,
   ) {
     super(message);
   }

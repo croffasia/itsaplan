@@ -5,7 +5,7 @@ import { issueColor, type Maps } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIssueSubtaskFold, useSubtasks } from '../../context/useSubtasks';
-import { effSpan, LINK_ROW_H, type TimelineColumn } from '../../utils/timeline';
+import { effSpan, LINK_ROW_H, MIN_TITLED_BAR_W, type TimelineColumn } from '../../utils/timeline';
 import { TimelineCells } from './TimelineCells';
 import { SubtaskProgress } from '../shared/SubtaskProgress';
 
@@ -68,13 +68,13 @@ export function TimelineSubtaskRows({
             style={{ height: LINK_ROW_H }}
           >
             <div
-              className="sticky left-0 z-15 flex shrink-0 overflow-hidden border-r bg-background"
+              className="sticky start-0 z-15 flex shrink-0 overflow-hidden border-e bg-background"
               style={{ width: labelW }}
             >
               <div
                 className={cn(
-                  'flex min-w-0 flex-1 cursor-pointer items-center gap-2 overflow-hidden pr-3 text-xs text-muted-foreground',
-                  indented ? 'pl-10' : 'pl-6',
+                  'flex min-w-0 flex-1 cursor-pointer items-center gap-2 overflow-hidden pe-3 text-xs text-muted-foreground',
+                  indented ? 'ps-10' : 'ps-6',
                 )}
                 onClick={(e) => {
                   e.preventDefault();
@@ -83,9 +83,12 @@ export function TimelineSubtaskRows({
               >
                 {/* Marks the row as nested under the issue row above: the sub-rows
                     are otherwise only indented, which reads as a link row. */}
-                <CornerDownRight className="size-3 shrink-0 text-muted-foreground/60" />
+                <CornerDownRight className="size-3 shrink-0 text-muted-foreground/60 rtl:-scale-x-100" />
                 <span className="shrink-0 tabular-nums">{subtask.identifier}</span>
-                <span className={cn('truncate', done && 'text-muted-foreground/60 line-through')}>
+                <span
+                  dir="auto"
+                  className={cn('truncate', done && 'text-muted-foreground/60 line-through')}
+                >
                   {subtask.title}
                 </span>
                 <SubtaskProgress issueId={subtask.id} maps={maps} />
@@ -104,7 +107,7 @@ export function TimelineSubtaskRows({
               {todayInRange && (
                 <div
                   className="absolute top-0 bottom-0 z-0 w-px bg-primary/40"
-                  style={{ left: todayLeft }}
+                  style={{ insetInlineStart: todayLeft }}
                 />
               )}
               {/* Thinner than the issue bar, so the sub-rows read as one level
@@ -118,15 +121,19 @@ export function TimelineSubtaskRows({
                     }}
                     className="absolute top-1/2 z-10 flex h-3.5 -translate-y-1/2 cursor-pointer items-center rounded-sm px-1.5 text-white opacity-80"
                     style={{
-                      left: rect.left,
+                      insetInlineStart: rect.left,
                       width: rect.width,
                       backgroundColor: issueColor(subtask, maps),
-                      borderLeft: span.inferredStart
+                      borderInlineStart: span.inferredStart
                         ? '2px dashed rgba(255,255,255,0.75)'
                         : undefined,
                     }}
                   >
-                    <span className="truncate text-[10px] leading-none">{subtask.title}</span>
+                    {rect.width >= MIN_TITLED_BAR_W && (
+                      <span dir="auto" className="truncate text-[10px] leading-none">
+                        {subtask.title}
+                      </span>
+                    )}
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>

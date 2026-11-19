@@ -26,7 +26,7 @@ const username = t.String({
   minLength: 1,
   maxLength: 64,
   pattern: '^[a-zA-Z0-9._-]+$',
-  description: 'Mention handle (letters, digits, . _ -).',
+  description: 'Mention handle.',
 });
 
 // The reasoning effort levels the provider SDKs share (see runtime/index.ts).
@@ -39,33 +39,31 @@ const configFields = {
     t.Nullable(
       t.Number({
         description:
-          'Credential id of the LLM provider, from list_integration_credentials. Required for an ' +
-          'internal agent to run.',
+          'LLM credential id from ' +
+          'list_integration_credentials. An internal agent needs it to run.',
       }),
     ),
   ),
   model: t.Optional(
     t.Nullable(
       t.String({
-        description:
-          "Model id the provider offers, from list_provider_models, e.g. 'claude-sonnet-5'.",
+        description: "Model id from list_provider_models, such as 'claude-sonnet-5'.",
       }),
     ),
   ),
-  instructions: t.Optional(t.Nullable(t.String({ description: 'System prompt for the agent.' }))),
+  instructions: t.Optional(t.Nullable(t.String({ description: "The agent's system prompt." }))),
   tools: t.Optional(
     t.Array(t.String(), {
       description:
-        'Built-in action keys from list_ai_agent_tools the agent is granted. Tools on an ' +
-        'integration are granted separately, through set_ai_agent_configured_tools.',
+        'Built-in action keys to grant, from list_ai_agent_tools. Grant integration tools with ' +
+        'set_ai_agent_configured_tools.',
     }),
   ),
-  temperature: t.Optional(t.Nullable(t.Number({ description: 'Sampling temperature.' }))),
+  temperature: t.Optional(t.Nullable(t.Number())),
   reasoningEffort: t.Optional(
     t.Nullable(reasoningEffort, {
       description:
-        "How much a reasoning model thinks before it answers. Null leaves it to the provider's " +
-        'default.',
+        'How much a reasoning model thinks before it answers. null uses the provider default.',
     }),
   ),
   maxSteps: t.Optional(t.Nullable(t.Integer({ description: 'Max tool-call steps per run.' }))),
@@ -74,7 +72,8 @@ const configFields = {
       t.Integer({
         minimum: 1,
         description:
-          "Seconds one run may take before it is stopped and saved as failed. Null uses the instance's maximum, which also caps this value.",
+          'Seconds a run may take before it stops as failed. null ' +
+          'uses the instance maximum, which also caps this value.',
       }),
     ),
   ),
@@ -89,9 +88,8 @@ const configFields = {
   chatEnabled: t.Optional(
     t.Boolean({
       description:
-        'Whether the agent may be chatted with (the chat selector and the chat routes). ' +
-        'Off, it keeps running through a mention, a delegation, or a schedule. Defaults ' +
-        'to true.',
+        'Allow chat with the agent. When off, the agent still ' +
+        'runs on a mention, a delegation or a schedule. Default true.',
     }),
   ),
   fieldTriggers: t.Optional(
@@ -102,8 +100,8 @@ const configFields = {
       }),
       {
         description:
-          'Member custom fields (from list_custom_fields) the agent also reacts to: being set ' +
-          'into one of them starts a run after delaySec seconds. Other fields are ignored.',
+          'Member custom fields from list_custom_fields. Setting the agent in one starts a run ' +
+          'after delaySec seconds. Other fields are ignored.',
       },
     ),
   ),
@@ -117,16 +115,15 @@ const configFields = {
   projectIds: t.Optional(
     t.Array(t.Integer(), {
       description:
-        'Projects of the team the agent works in, from list_projects. Replaces the set: a ' +
-        'project left out is detached. A project of another team is rejected. The agent ' +
-        'joins on the default role; set_member_role changes it per project.',
+        'Team projects the agent works in, from list_projects. Replaces the whole set. Projects ' +
+        'of another team are refused. The agent joins with the ' +
+        'default role. Change it per project with set_member_role.',
     }),
   ),
   runnerScope: t.Optional(
     t.Union([t.Literal('owner'), t.Literal('team')], {
       description:
-        "Which runs an external agent's runner receives: 'owner' only the creator's, " +
-        "'team' any member's.",
+        "Runs an external agent's runner gets: 'owner' only the creator's, 'team' any member's.",
     }),
   ),
   invocationUrl: t.Optional(
@@ -135,9 +132,8 @@ const configFields = {
         minLength: 1,
         maxLength: 2048,
         description:
-          "HTTPS URL an external agent's runs and chat messages are POSTed to, signed with " +
-          'its invocation secret, instead of being claimed by a runner. Null puts the agent ' +
-          'back on a runner. Ignored for an internal agent.',
+          "HTTPS URL that gets an external agent's runs and chat messages as signed POSTs, in " +
+          'place of a runner. null returns the agent to a runner. Ignored for an internal agent.',
       }),
     ),
   ),
@@ -202,10 +198,14 @@ export const CreateAgentResponse = t.Object({
 // The new API key secret returned once by regenerate-key.
 export const RegenerateKeyResponse = t.Object({ apiKey: t.String() });
 
-// A run's generated text and the conversation thread id (null when memory is off).
-export const RunAgentResponse = t.Object({
-  text: t.String(),
-  threadId: t.Nullable(t.String()),
+export const apiRunBody = t.Object({
+  prompt: t.String({ minLength: 1, description: 'The task for the agent.' }),
+});
+
+export const QueuedApiRunResponse = t.Object({
+  runId: t.Number({ description: 'Read it with get_agent_run.' }),
+  status: t.Literal('queued'),
+  retryAfterSeconds: t.Number({ description: 'Seconds to wait before reading the run.' }),
 });
 
 // One row of an agent's run history (AgentRunRow from run-queue).
@@ -311,10 +311,10 @@ export const ChatThreadListResponse = t.Object({
 });
 
 export const createAgentBody = t.Object({
-  name: t.String({ minLength: 1, description: 'Display name.' }),
+  name: t.String({ minLength: 1 }),
   username,
   kind: t.Union([t.Literal('external'), t.Literal('internal')], {
-    description: "'external' (API key) or 'internal' (in-process, needs a model config).",
+    description: "'external' gets an API key. 'internal' runs in-process and needs a model config.",
   }),
   ...configFields,
 });
@@ -333,9 +333,8 @@ export const agentListQuery = t.Object({
 export const setAgentProjectsBody = t.Object({
   projectIds: t.Array(t.Integer(), {
     description:
-      'Projects of the team the agent works in. Replaces the set: a project left out is ' +
-      'detached. The agent joins on the default role; set_member_role changes it per ' +
-      'project.',
+      'Team projects the agent works in. Replaces the whole set. The agent joins with the ' +
+      'default role. Change it per project with set_member_role.',
   }),
 });
 

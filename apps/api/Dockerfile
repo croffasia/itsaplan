@@ -16,6 +16,7 @@ COPY packages/db/package.json ./packages/db/
 COPY packages/auth/package.json ./packages/auth/
 COPY packages/agent-tools/package.json ./packages/agent-tools/
 COPY packages/crypto/package.json ./packages/crypto/
+COPY packages/editor/package.json ./packages/editor/
 COPY packages/mailer/package.json ./packages/mailer/
 COPY packages/net/package.json ./packages/net/
 COPY packages/storage/package.json ./packages/storage/

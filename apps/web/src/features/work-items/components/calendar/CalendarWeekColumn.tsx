@@ -3,7 +3,7 @@ import { useFormatter, useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue } from '@/lib/api/endpoints/issues';
 import { cn } from '@/lib/utils';
-import { toDateStr } from '@/utils/dates';
+import { calendarSystem, toDateStr } from '@/utils/dates';
 import type { WeekStart } from '@/utils/viewSettings';
 import { weekNumber } from '../../utils/calendar';
 import { useDayRangeFormat } from '../../hooks/useDayRangeFormat';
@@ -36,7 +36,7 @@ export function CalendarWeekColumn({
   const format = useFormatter();
   const dayRange = useDayRangeFormat();
   const dayLabel = (day: Date) =>
-    format.dateTime(day, { weekday: 'short', day: 'numeric', calendar: 'gregory' });
+    format.dateTime(day, { weekday: 'short', day: 'numeric', calendar: calendarSystem() });
   const issuesOf = (day: Date) => byDay.get(toDateStr(day)) ?? [];
   const todayInWeek = days.find((day) => isSameDay(day, today));
   return (

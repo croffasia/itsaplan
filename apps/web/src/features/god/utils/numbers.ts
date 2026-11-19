@@ -9,3 +9,10 @@ const compact = new Intl.NumberFormat('en-US', {
 export function compactCount(value: number): string {
   return compact.format(value);
 }
+
+// A typed value that is a whole number from min to max. An empty field fails: Number('')
+// is 0, which would save a limit nobody typed.
+export function wholeNumberIn(value: string, min: number, max: number): boolean {
+  const number = Number(value);
+  return /^\d+$/.test(value.trim()) && number >= min && number <= max;
+}

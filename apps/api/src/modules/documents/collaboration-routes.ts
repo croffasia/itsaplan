@@ -7,7 +7,6 @@ import { mcpTool } from '#mcp/generate';
 import { openDocumentSession, getDocumentSteps, saveDocumentSteps } from './collaboration';
 import { addDocumentComment, listDocumentComments, updateDocumentComment } from './comments';
 import {
-  collaborationOpenBody,
   collaborationQuery,
   collaborationSaveBody,
   collaborationSessionResponse,
@@ -28,13 +27,12 @@ export const documentCollaborationRoutes = new Elysia({
   .use(guards)
   .post(
     '/projects/:projectKey/documents/:documentId/session',
-    ({ project, params, user, body }) =>
-      openDocumentSession(project.id, params.documentId, requireUser(user).id, body),
+    ({ project, params, user }) =>
+      openDocumentSession(project.id, params.documentId, requireUser(user).id),
     {
       permission: ['documents', 'edit'],
       feature: 'documents',
       params: documentParams,
-      body: collaborationOpenBody,
       response: { 200: collaborationSessionResponse, ...commonErrors, ...errors(409) },
       detail: { summary: 'Join a collaborative document session' },
     },
@@ -83,7 +81,9 @@ export const documentCollaborationRoutes = new Elysia({
       detail: {
         summary: 'Read document comment threads',
         description:
-          "List a document's comments, oldest first. A reply has the id of the first comment of its thread in `parentId`. `quote` is the text a thread is about, and `resolvedAt` is set on a resolved thread.",
+          "List a document's comments, oldest first. A reply has the id of its thread's first " +
+          'comment in `parentId`. `quote` is the text the ' +
+          'thread is about. `resolvedAt` is set on a resolved thread.',
         ...mcpTool('list_document_comments'),
       },
     },
@@ -103,7 +103,8 @@ export const documentCollaborationRoutes = new Elysia({
       detail: {
         summary: 'Comment on selected document text or reply',
         description:
-          'Reply in a comment thread of a document with parentId. Starting a thread takes the selected text: quote, from, to and the document version.',
+          'Add a comment to a document. A new thread needs ' +
+          'the selected text: quote, from, to and version.',
         ...mcpTool('add_document_comment'),
       },
     },
@@ -127,7 +128,8 @@ export const documentCollaborationRoutes = new Elysia({
       detail: {
         summary: 'Edit a document comment or resolve a thread',
         description:
-          'Change the `body` of your own comment, or set `resolved` on the first comment of a thread to resolve or reopen the thread.',
+          "Change the `body` of your own comment, or set `resolved` on a thread's first comment " +
+          'to resolve or reopen the thread.',
         ...mcpTool('update_document_comment'),
       },
     },

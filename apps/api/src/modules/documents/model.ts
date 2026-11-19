@@ -17,7 +17,7 @@ export const documentAssetParams = t.Object({
   documentId: t.Numeric(),
   publicId: t.String({
     format: 'uuid',
-    description: "The asset's id, from list_document_assets or from its url in the page text.",
+    description: 'Asset id from list_document_assets or from its url in the document text.',
   }),
 });
 
@@ -60,7 +60,7 @@ export const listDocumentsQuery = t.Object({
   q: t.Optional(t.String({ maxLength: 200 })),
   archived: t.Optional(
     t.Union([t.Literal('true'), t.Literal('false')], {
-      description: "'true' lists archived pages; the default lists active pages.",
+      description: "'true' lists archived documents instead of active ones.",
     }),
   ),
 });
@@ -217,7 +217,7 @@ export const uploadDocumentAssetBody = t.Object({ file: t.File() });
 export const documentAssetFromChatBody = t.Object({
   chatAttachmentId: t.String({
     format: 'uuid',
-    description: 'The attachment id of the file in the chat.',
+    description: 'Attachment id from the chat file marker.',
   }),
 });
 
@@ -243,10 +243,6 @@ export const deleteDocumentQuery = t.Object({
   version: t.Integer({ minimum: 1 }),
 });
 
-export const collaborationOpenBody = t.Object({
-  version: t.Integer({ minimum: 1 }),
-  contentJson: t.Record(t.String(), t.Any()),
-});
 export const collaborationQuery = t.Object({
   epoch: t.String({ format: 'uuid' }),
   version: t.Numeric({ minimum: 0 }),
@@ -280,12 +276,12 @@ export const documentCommentBody = t.Object({
   body: t.String({
     minLength: 1,
     maxLength: 10_000,
-    description: 'The comment. Tag a project member or an AI agent with @username.',
+    description: 'Tag a project member or AI agent with @username.',
   }),
   parentId: t.Optional(
     t.String({
       format: 'uuid',
-      description: 'The first comment of the thread to reply in. Omit to start a thread.',
+      description: 'First comment of the thread to reply in. Omit to start a thread.',
     }),
   ),
   quote: t.Optional(t.String({ maxLength: 2000 })),
@@ -294,7 +290,7 @@ export const documentCommentBody = t.Object({
   version: t.Optional(
     t.Integer({
       minimum: 1,
-      description: 'The document version the text was selected in. Required to start a thread.',
+      description: 'Document version of the selected text. Required to start a thread.',
     }),
   ),
 });

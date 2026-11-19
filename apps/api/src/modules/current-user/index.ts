@@ -25,11 +25,10 @@ export const currentUserRoutes = new Elysia({
     detail: {
       summary: 'Get the current user',
       description:
-        'Who you are: the user your key, sign-in or MCP connection acts as. Call it when a ' +
-        'request says "me", "my" or "mine" — user.id is the assigneeUserId of your own ' +
-        'issues — instead of guessing from a name or an email. user.timezone is the zone ' +
-        'to read "today" or "this week" in. Without credentials, or for a deactivated ' +
-        'account, it answers `{ authenticated: false }` instead of failing.',
+        'Get the user your key or session acts as. Use it for "me", "my" or "mine" instead of ' +
+        'matching a name or an email. user.id is the assigneeUserId of your issues. Read "today" ' +
+        'and "this week" in user.timezone. Without credentials or for a deactivated account, ' +
+        'returns `{ authenticated: false }`.',
       ...mcpTool('get_current_user'),
     },
   },

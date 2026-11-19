@@ -58,6 +58,11 @@ export const fr: EmailLocaleTexts = {
       body: "{actor} a fait passer l'état de ce ticket de {from} à {to}.\n\n{ref} : {title}",
       button: 'Ouvrir le ticket',
     },
+    reacted: {
+      subject: '{ref} : {actor} a réagi à votre commentaire',
+      body: '{actor} a réagi à votre commentaire avec {emoji}.\n\n{ref} : {title}',
+      button: 'Ouvrir le commentaire',
+    },
     documentMentioned: {
       subject: '{document} : vous avez été mentionné',
       body: '{actor} vous a mentionné dans ce document.\n\n{document}',

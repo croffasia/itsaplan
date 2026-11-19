@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { Cycle, CyclePatch } from '@/lib/api/endpoints/cycles';
 import { ApiError } from '@/lib/api/core/client';
 import { addDays, daysBetween, toDateStr } from '@/utils/dates';
+import { inlineSign } from '@/utils/inlineSign';
 import { useUpdateCycle } from '@/services/cycles.service';
 import { cycleSpan, dateWindow, movableEnds } from '../utils/cycleDates';
 
@@ -43,12 +44,13 @@ export function useCycleDrag({
     const limits = dateWindow(cycles, cycle);
     const ends = movableEnds(cycle.status);
     const startX = e.clientX;
+    const sign = inlineSign(e.currentTarget);
     const current = { start: span.start, end: span.end };
     let travelled = false;
 
     const onMove = (ev: PointerEvent) => {
       if (Math.abs(ev.clientX - startX) > CLICK_SLOP) travelled = true;
-      const delta = Math.round((ev.clientX - startX) / dayW);
+      const delta = Math.round((sign * (ev.clientX - startX)) / dayW);
       if (!ends[mode]) return;
       if (mode === 'move') {
         const min = limits.from ? -daysBetween(limits.from, span.start) : -Infinity;

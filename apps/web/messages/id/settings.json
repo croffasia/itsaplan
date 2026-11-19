@@ -103,7 +103,8 @@
       "assigned": "Ditugaskan ke suatu issue",
       "mentioned": "Disebutkan dalam suatu issue atau dokumen",
       "commented": "Komentar baru pada issue yang Anda pantau",
-      "state_changed": "Perubahan status pada issue yang Anda pantau"
+      "state_changed": "Perubahan status pada issue yang Anda pantau",
+      "reacted": "Reaksi pada komentar Anda"
     },
     "eventsTitle": "Peristiwa",
     "telegramAccount": "Akun Telegram",
@@ -514,6 +515,19 @@
         "time": "Catatan waktu dan estimasi",
         "fields": "Kolom kustom, komponen, dan versi",
         "people": "Penanggung jawab dan pengamat, dicocokkan dengan anggota proyek"
+      }
+    },
+    "asanaPreview": {
+      "title": "Impor dari Asana",
+      "description": "Pindahkan proyek Asana beserta riwayatnya. Tersedia di Cloud dan Pro self-hosted.",
+      "items": {
+        "hierarchy": "Subtugas, milestone, persetujuan, dan dependensi",
+        "sections": "Bagian sebagai label atau inisiatif, jika Anda memilihnya",
+        "columns": "Kolom dari bagian atau dari field seperti Status",
+        "content": "Komentar dan lampiran",
+        "time": "Waktu tercatat",
+        "fields": "Tag sebagai label, dan kolom kustom",
+        "people": "Penanggung jawab dan pengikut, dicocokkan dengan anggota proyek"
       }
     },
     "title": "Impor dari {source}",

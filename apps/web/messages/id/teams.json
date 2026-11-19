@@ -2,11 +2,10 @@
   "archived": "Diarsipkan",
   "create": {
     "title": "Tim baru",
-    "namePlaceholder": "Nama tim",
+    "name": "Nama tim",
     "slug": "URL",
-    "slugHint": "Tautan ke proyek tim diawali dengannya, misalnya /acme.",
     "slugInvalid": "Gunakan 2–40 huruf kecil, angka, atau tanda hubung, diawali huruf.",
-    "hint": "Anda akan menjadi pemilik tim ini.",
+    "nameRequired": "Masukkan nama tim.",
     "submit": "Buat tim"
   },
   "sections": {
@@ -692,6 +691,7 @@
     "loadMore": "Muat 25 lagi",
     "endOfHistory": "Tidak ada eksekusi yang lebih lama",
     "manualTask": "Tugas manual",
+    "apiTask": "Tugas lewat API",
     "scheduledTask": "Tugas terjadwal",
     "documentTask": "Komentar di dokumen",
     "failed": "Gagal",

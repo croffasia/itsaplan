@@ -33,8 +33,8 @@ export function TimelineQuickAdd({
     <div className="flex border-b" style={{ height: ADD_H }}>
       <div
         className={cn(
-          'sticky left-0 z-15 flex shrink-0 items-center border-r bg-background pr-3',
-          indented ? 'pl-7' : 'pl-3',
+          'sticky start-0 z-15 flex shrink-0 items-center border-e bg-background pe-3',
+          indented ? 'ps-7' : 'ps-3',
         )}
         style={{ width: labelW }}
       >
@@ -56,7 +56,7 @@ export function TimelineQuickAdd({
         {todayInRange && (
           <div
             className="absolute top-0 bottom-0 z-0 w-px bg-primary/40"
-            style={{ left: todayLeft }}
+            style={{ insetInlineStart: todayLeft }}
           />
         )}
       </div>

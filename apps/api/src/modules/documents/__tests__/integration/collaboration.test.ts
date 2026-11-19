@@ -14,7 +14,7 @@ async function setup() {
   const routes = client.projects({ projectKey: 'DOC' }).documents;
   const created = await routes.post({ title: 'Shared', content: 'Hello world', contentJson });
   const doc = routes({ documentId: created.data!.id });
-  const opened = await doc.session.post({ version: created.data!.version, contentJson });
+  const opened = await doc.session.post();
   expect(opened.status).toBe(200);
   return { client, doc, id: created.data!.id, session: opened.data! };
 }
@@ -173,12 +173,9 @@ describe('collaborative documents', () => {
       contentJson: rich,
     });
     expect(replaced.status).toBe(200);
-    const first = await doc.session.post({ version: replaced.data!.version, contentJson: rich });
+    const first = await doc.session.post();
     expect(first.status).toBe(200);
-    const second = await doc.session.post({
-      version: replaced.data!.version,
-      contentJson: first.data!.contentJson,
-    });
+    const second = await doc.session.post();
     expect(second.status).toBe(200);
     expect(second.data!.epoch).toBe(first.data!.epoch);
     expect(
@@ -199,8 +196,127 @@ describe('collaborative documents', () => {
     expect((await doc.patch({ version: current.version, content: 'Replacement' })).status).toBe(
       200,
     );
-    expect((await doc.get()).data!.contentJson).toBeNull();
+    const replaced = (await doc.get()).data!;
+    expect(replaced.contentJson).toBeNull();
     expect((await doc.steps.get({ query: { epoch: session.epoch, version: 0 } })).status).toBe(409);
+    const reopened = await doc.session.post();
+    expect(reopened.data!.epoch).not.toBe(session.epoch);
+    expect(reopened.data!.contentJson).toMatchObject({
+      content: [{ type: 'paragraph', content: [{ text: 'Replacement' }] }],
+    });
+    expect((await doc.get()).data!.version).toBe(replaced.version);
+  });
+  it('opens a page written as Markdown without a new version or a new editor', async () => {
+    const owner = await signUpTestUser();
+    const client = authedApi(owner.cookie);
+    await createProject(client, { key: 'DOC', name: 'Documents' });
+    const reader = await signUpTestUser();
+    const readerApi = authedApi(reader.cookie);
+    const invite = await client
+      .projects({ projectKey: 'DOC' })
+      .invites.post({ email: reader.email, role: 'member' });
+    await readerApi.invites({ token: invite.data!.token }).accept.post();
+    const created = await client
+      .projects({ projectKey: 'DOC' })
+      .documents.post({ title: 'Plan', content: '# Plan\n\n- [x] Ship it @everyone' });
+    const doc = readerApi
+      .projects({ projectKey: 'DOC' })
+      .documents({ documentId: created.data!.id });
+    const before = (await doc.get()).data!;
+
+    const opened = await doc.session.post();
+    expect(opened.status).toBe(200);
+    expect(opened.data!.contentJson).toMatchObject({
+      content: [
+        { type: 'heading', attrs: { level: 1 }, content: [{ text: 'Plan' }] },
+        {
+          type: 'taskList',
+          content: [
+            {
+              type: 'taskItem',
+              attrs: { checked: true },
+              content: [
+                {
+                  content: [
+                    { type: 'text', text: 'Ship it ' },
+                    { type: 'mention', attrs: { username: 'everyone' } },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    const after = (await doc.get()).data!;
+    expect(after).toMatchObject({
+      version: before.version,
+      updatedByUserId: owner.userId,
+      updatedAt: before.updatedAt,
+      contentJson: opened.data!.contentJson,
+    });
+    expect(
+      (await doc.revisions.get()).data!.map(({ version, createdByUserId }) => ({
+        version,
+        createdByUserId,
+      })),
+    ).toEqual([{ version: before.version, createdByUserId: owner.userId }]);
+
+    const rewritten = await client
+      .projects({ projectKey: 'DOC' })
+      .documents({ documentId: created.data!.id })
+      .patch({ version: after.version, content: '# Plan\n\nShipped' });
+    expect(rewritten.status).toBe(200);
+    expect((await doc.session.post()).status).toBe(200);
+    expect((await doc.get()).data!).toMatchObject({
+      version: rewritten.data!.version,
+      updatedByUserId: owner.userId,
+    });
+    expect((await doc.revisions.get()).data!.map(({ createdByUserId }) => createdByUserId)).toEqual(
+      [owner.userId, owner.userId],
+    );
+  });
+  it('opens a page whose Markdown holds values the editor drops', async () => {
+    const owner = await signUpTestUser();
+    const client = authedApi(owner.cookie);
+    await createProject(client, { key: 'DOC', name: 'Documents' });
+    const content = [
+      '<span style="color: rgb(255, 0, 0);">red</span> <span style="color: red">named</span> <mark>plain</mark>',
+      '![relative](/media/x.png)',
+      '<p style="text-align: justify" data-block-id="bad id!">justified</p>',
+      '<a href="https://x.y" target="_top" class="a$b">link</a>',
+      '0. zero\n1. one',
+      '- note\n- [ ] task',
+    ].join('\n\n');
+    const created = await client
+      .projects({ projectKey: 'DOC' })
+      .documents.post({ title: 'Raw', content });
+    const doc = client.projects({ projectKey: 'DOC' }).documents({ documentId: created.data!.id });
+
+    const opened = await doc.session.post();
+    expect(opened.status).toBe(200);
+    const blocks = opened.data!.contentJson.content as {
+      type: string;
+      attrs: Record<string, unknown>;
+      content: { marks?: { type: string; attrs?: Record<string, unknown> }[] }[];
+    }[];
+    expect(blocks.map((block) => block.type)).toEqual([
+      'paragraph',
+      'paragraph',
+      'paragraph',
+      'orderedList',
+      'bulletList',
+      'taskList',
+    ]);
+    expect(blocks[0]!.content[0]!.marks).toEqual([
+      { type: 'textStyle', attrs: { color: '#ff0000' } },
+    ]);
+    expect(blocks[1]!.attrs.textAlign).toBeNull();
+    expect(blocks[2]!.content[0]!.marks![0]!.attrs).toMatchObject({
+      target: '_blank',
+      class: 'cursor-pointer',
+    });
+    expect(blocks[3]!.attrs.start).toBe(0);
   });
   it('rejects invalid structures, links and out-of-bounds transformations', async () => {
     const { doc, session } = await setup();
@@ -290,6 +406,6 @@ describe('collaborative documents', () => {
     const current = (await doc.get()).data!;
     await doc.access.post({ version: current.version, isPrivate: true });
     expect((await other.comments.get()).status).toBe(404);
-    expect((await other.session.post({ version: current.version, contentJson })).status).toBe(404);
+    expect((await other.session.post()).status).toBe(404);
   });
 });

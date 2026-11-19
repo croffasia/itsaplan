@@ -7,6 +7,7 @@ import {
   teamRole,
 } from '@repo/db';
 import { sql } from 'drizzle-orm';
+import { forgetApiKeySettings } from '#modules/settings/service';
 
 // Empties every table in the test database so each test starts clean. Two
 // guards keep this from ever running against a real database: NODE_ENV must be
@@ -57,4 +58,5 @@ export async function resetDb(): Promise<void> {
     .values({ name: 'Member', isDefault: true, permissions: defaultMemberPermissions() });
   // Migration 0180 seeds the job settings, and the jobs read nothing else.
   await setSetting(JOB_SETTINGS_KEY, defaultJobSettings());
+  forgetApiKeySettings();
 }

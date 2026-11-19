@@ -65,6 +65,7 @@
     "byWeek": "Haftaya göre"
   },
   "weekStart": {
+    "6": "Cumartesi",
     "0": "Pazar",
     "1": "Pazartesi"
   },

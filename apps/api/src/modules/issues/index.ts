@@ -59,6 +59,7 @@ import {
   textSide,
   type FeedCursor,
 } from './activity';
+import { addReaction, removeReaction } from './reactions';
 import { listStatusTimeline } from './status-history';
 import { addIssueLink, attachBoardLinks, listIssueLinks, removeIssueLink } from './links';
 import {
@@ -169,6 +170,9 @@ import {
   createCommentBody,
   updateCommentBody,
   commentParams,
+  addReactionBody,
+  reactionParams,
+  CommentReactionResponse,
   archiveIssueBody,
   moveIssueBody,
   BulkUpdatedResponse,
@@ -325,6 +329,11 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         },
       };
     },
+    // Reacting to a comment asks for what writing one asks for, whoever wrote it.
+    commentReaction: entityGuard('work_items', 'Comment not found', async (p) => {
+      const entry = await getCommentRef(Number(p.commentId));
+      return entry?.projectId ?? null;
+    }),
   })
   .post(
     '/projects/:projectKey/issues',
@@ -339,8 +348,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Create an issue',
         description:
-          'Create an issue in a project. Fails with 409 (code wip_limit_exceeded) ' +
-          'when the target column is at a hard WIP limit.',
+          'Create an issue in a project. Returns 409 (code wip_limit_exceeded) if the target ' +
+          'column is at a hard WIP limit.',
         ...mcpTool('create_issue'),
       },
     },
@@ -508,7 +517,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'List issues by filters',
         description:
-          "List a project's issues by field filters, most recently updated first. Each issue carries createdAt, updatedAt, completedAt, statusSince (when it entered its current column), estimatePoints, estimateMinutes, loggedMinutes and its parent's identifier and title. blocked=true lists the issues held up by an issue still open, through a blocks relation.",
+          "List a project's issues by field filters, most recently updated first. Each issue has " +
+          'createdAt, updatedAt, completedAt, statusSince (when it entered its current column), ' +
+          "estimatePoints, estimateMinutes, loggedMinutes, and its parent's identifier and title.",
         ...mcpTool('list_issues'),
       },
     },
@@ -604,7 +615,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Get an issue by number',
         description:
-          'Get an issue by its project-scoped number: the 42 in "MKT-42". Use this when you were given an identifier; get_issue takes the internal numeric id instead.',
+          'Get an issue by its project number: the 42 in "MKT-42". Use it when you have an ' +
+          'identifier. get_issue takes the internal numeric id.',
         ...mcpTool('get_issue_by_number'),
       },
     },
@@ -633,10 +645,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Search issues in all projects',
         description:
-          'Search the issues of every project you can read by text, archived issues included, ' +
-          'at most perProjectLimit hits from each project. Each hit names its project ' +
-          '(projectKey, projectRef, projectName, teamName); use search_issues for one project. ' +
-          'An agent run searches only the project it works in.',
+          'Search by text the issues of all projects you can read, archived issues included. ' +
+          'Each hit names its project. For one project, use search_issues. In an agent run, ' +
+          "searches only the run's project.",
         ...requiresPermission(['work_items', 'read']),
         ...mcpTool('search_issues_all_projects'),
       },
@@ -694,10 +705,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'List issues in all projects',
         description:
-          'List the issues of every project you can read by field filters, most recently ' +
-          'updated first. Each issue names its project (projectKey, projectRef, projectName, ' +
-          'teamName); use list_issues for one project and its project-scoped filters. An agent ' +
-          'run lists only the project it works in.',
+          'List the issues of all projects you can read by field filters, most recently updated ' +
+          'first. Each issue names its project. For one project and its project filters, use ' +
+          "list_issues. In an agent run, lists only the run's project.",
         ...requiresPermission(['work_items', 'read']),
         ...mcpTool('list_issues_all_projects'),
       },
@@ -772,8 +782,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Update an issue',
         description:
-          'Update an issue by its numeric id. Moving it into a column that is at a ' +
-          'hard WIP limit fails with 409 (code wip_limit_exceeded).',
+          'Update an issue. Moving it into a column at a ' +
+          'hard WIP limit returns 409 (code wip_limit_exceeded).',
         ...mcpTool('update_issue'),
       },
     },
@@ -794,10 +804,10 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Move an issue to another project',
         description:
-          'Move an issue, with its subtasks, to another project of the same team. Each ' +
-          'moved issue gets a new number in the target project and its old identifier ' +
-          'still resolves. Column, type, labels and custom fields are matched by name; ' +
-          'cycle, initiative and links to issues left behind are dropped.',
+          'Move an issue and its subtasks to another project in the same team. Each moved issue ' +
+          'gets a new number. Its old identifier still resolves. Column, type, labels and custom ' +
+          'fields are matched by name. Cycle, initiative ' +
+          'and links to issues that stay behind are dropped.',
         ...mcpTool('move_issue'),
       },
     },
@@ -813,7 +823,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'List repositories available to an issue',
         description:
-          'List connected GitHub and GitLab repositories that can link development work.',
+          'List connected GitHub, GitLab, Gitea and Forgejo repositories that can link development work.',
       },
     },
   )
@@ -932,7 +942,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Create a pull request for an issue',
         description:
-          'Create a GitHub pull request or GitLab merge request from an existing branch.',
+          'Create a GitHub, Gitea or Forgejo pull request, or a GitLab merge request, from an existing branch.',
       },
     },
   )
@@ -981,8 +991,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 204: t.Void(), ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Delete an issue',
-        description:
-          "Permanently delete an issue by its numeric id. Irreversible. An issue that has subtasks needs the subtasks parameter, which says whether they are deleted with it ('cascade'), detached into ordinary issues ('detach'), or moved to newParentId ('reassign').",
+        description: 'Permanently delete an issue. An issue with subtasks needs `subtasks`.',
         ...mcpTool('delete_issue'),
       },
     },
@@ -1013,8 +1022,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 200: IssueResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Archive an issue',
-        description:
-          "Archive an issue by its numeric id. An issue that has subtasks needs the subtasks field, which says whether they are archived with it ('cascade'), detached into ordinary issues ('detach'), or moved to newParentId ('reassign').",
+        description: 'Archive an issue. An issue with subtasks needs `subtasks`.',
         ...mcpTool('archive_issue'),
       },
     },
@@ -1037,8 +1045,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 200: IssueResponse, ...commonErrors },
       detail: {
         summary: 'Restore an archived issue',
-        description:
-          'Restore an archived issue by its numeric id. Its archived subtasks are restored with it.',
+        description: 'Restore an archived issue and its archived subtasks.',
         ...mcpTool('restore_issue'),
       },
     },
@@ -1069,8 +1076,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Set a custom field value',
         description:
-          'Set a custom field value on an issue by its numeric id. A member field takes the ' +
-          "user id of a project member the field's scope allows.",
+          'Set a custom field value on an issue. A member field takes the user id of a project ' +
+          "member that the field's scope allows.",
         ...mcpTool('set_issue_field_value'),
       },
     },
@@ -1094,7 +1101,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Link two issues',
         description:
-          'Link an issue to another issue of the same project. kind states the relation as read from the issue in the path: it blocks, is blocked by, relates to, duplicates, or is duplicated by the target. Both issue ids are the internal numeric ids.',
+          'Link an issue to another issue in the same project. Read kind from issueId to ' +
+          "targetIssueId: 'blocks' means issueId blocks targetIssueId.",
         ...mcpTool('link_issues'),
       },
     },
@@ -1115,7 +1123,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Unlink two issues',
-        description: "Remove one of an issue's relations by the link id.",
+        description: 'Remove an issue relation by its link id.',
         ...mcpTool('unlink_issues'),
       },
     },
@@ -1147,7 +1155,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 201: ChecklistResponse, ...commonErrors },
       detail: {
         summary: 'Add a checklist',
-        description: 'Add a checklist to an issue. It starts empty; add its items separately.',
+        description: 'Add an empty checklist to an issue. Add items with create_checklist_items.',
         ...mcpTool('create_checklist'),
       },
     },
@@ -1182,7 +1190,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 200: ChecklistResponse, ...commonErrors },
       detail: {
         summary: 'Rename a checklist',
-        description: "Change a checklist's title.",
+        description: 'Rename a checklist.',
         ...mcpTool('rename_checklist'),
       },
     },
@@ -1202,7 +1210,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete a checklist',
-        description: 'Delete a checklist and every item on it.',
+        description: 'Delete a checklist and all its items.',
         ...mcpTool('delete_checklist'),
       },
     },
@@ -1241,7 +1249,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Add checklist items in bulk',
         description:
-          'Append 1–100 items to an existing checklist in input order. Each content is 1–500 characters. The items and their activity entries are saved atomically.',
+          'Append items to an existing checklist, in input order. All items are saved, or none.',
         ...mcpTool('create_checklist_items'),
       },
     },
@@ -1257,7 +1265,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 200: t.Array(ChecklistItemResponse), ...commonErrors },
       detail: {
         summary: 'Reorder checklist items',
-        description: 'Set the display order of the items within one checklist.',
+        description: 'Set the display order of the items in a checklist.',
         ...mcpTool('reorder_checklist_items'),
       },
     },
@@ -1275,7 +1283,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 200: ChecklistItemResponse, ...commonErrors },
       detail: {
         summary: 'Update a checklist item',
-        description: "Change a checklist item's text, its checked state, or both.",
+        description: "Change a checklist item's text, checked state, or both.",
         ...mcpTool('update_checklist_item'),
       },
     },
@@ -1294,7 +1302,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete a checklist item',
-        description: 'Remove one item from a checklist.',
+        description: 'Delete a checklist item.',
         ...mcpTool('delete_checklist_item'),
       },
     },
@@ -1356,8 +1364,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     response: { 200: t.Array(WorklogResponse), ...commonErrors },
     detail: {
       summary: "List an issue's logged time",
-      description:
-        'Every time entry on an issue, the newest day first. The time an issue took is the sum of them.',
+      description: 'List all time entries on an issue, newest day first.',
       ...mcpTool('list_worklogs'),
     },
   })
@@ -1375,8 +1382,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 201: WorklogResponse, ...commonErrors },
       detail: {
         summary: 'Log time on an issue',
-        description:
-          'Log the time spent on an issue. The entry belongs to whoever logs it, and the day it was spent on cannot be in the future.',
+        description: 'Log time spent on an issue. The entry belongs to you.',
         ...mcpTool('create_worklog'),
       },
     },
@@ -1393,9 +1399,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Change a time entry',
         description:
-          'Change the time, the day or the note of an entry. Your own entry needs work_items ' +
-          "edit; another member's entry is a record of what they did, so only a project owner " +
-          'can change it.',
+          'Change the time, day or note of a time entry. Your own entry needs work_items edit. ' +
+          "Only a project owner can change another member's entry.",
         ...mcpTool('update_worklog'),
       },
     },
@@ -1415,9 +1420,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Delete a time entry',
         description:
-          "Remove one entry, lowering the issue's logged time by it. Your own entry needs " +
-          "work_items edit; another member's entry is a record of what they did, so only a " +
-          'project owner can remove it.',
+          'Delete a time entry. Your own entry needs work_items edit. Only a project owner can ' +
+          "delete another member's entry.",
         ...mcpTool('delete_worklog'),
       },
     },
@@ -1483,8 +1487,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 200: t.Array(IssueWatcherResponse), ...commonErrors },
       detail: {
         summary: 'Add an issue watcher',
-        description:
-          'Subscribe another real project member to the issue. Requires permission to edit work items.',
+        description: 'Subscribe another human project member to an issue. Needs work_items edit.',
         ...mcpTool('add_issue_watcher'),
       },
     },
@@ -1506,7 +1509,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Remove an issue watcher',
         description:
-          'Unsubscribe another real project member from the issue. Requires permission to edit work items.',
+          'Unsubscribe another human project member from an issue. Needs work_items edit.',
         ...mcpTool('remove_issue_watcher'),
       },
     },
@@ -1529,9 +1532,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Get an issue feed',
         description:
-          "Get an issue's activity feed by its numeric id: comments and change-log " +
-          'entries, newest first by default. The page holds the top-level entries; the replies of ' +
-          "its comments come with them, each carrying its parent's id in replyToId.",
+          "Get an issue's activity feed: comments and change-log entries, newest first by " +
+          'default. A page holds top-level entries. Each comment comes with its replies, which ' +
+          'have the parent id in replyToId.',
         ...mcpTool('list_issue_activity'),
       },
     },
@@ -1632,10 +1635,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Add a comment',
         description:
-          'Add a comment to an issue by its numeric id. Pass replyToId to answer an ' +
-          'existing comment of that issue instead of starting a new thread. Writing ' +
-          '@username in the body notifies that member or AI agent; the handles are ' +
-          'the usernames in get_project.assignees.',
+          'Add a comment to an issue. Pass replyToId to reply to an existing comment of the ' +
+          'issue. @username in the body notifies that member ' +
+          'or AI agent. Usernames are in get_project.assignees.',
         ...mcpTool('add_comment'),
       },
     },
@@ -1655,9 +1657,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Edit a comment',
         description:
-          'Change the text of a comment, and re-resolve its mentions: the members an ' +
-          'edit newly names are notified, the agents run. Your own comment needs ' +
-          "work_items edit; another member's comment only a project owner can change.",
+          "Change a comment's text. Members newly mentioned in the edit are notified, and newly " +
+          'mentioned agents run. Your own comment needs work_items edit. Only a project owner ' +
+          "can change another member's comment.",
         ...mcpTool('update_comment'),
       },
     },
@@ -1678,9 +1680,53 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Delete a comment',
         description:
-          'Remove a comment and its replies. Your own comment needs work_items edit; ' +
-          "another member's comment only a project owner can remove.",
+          'Delete a comment and its replies. Your own comment needs work_items edit. Only a ' +
+          "project owner can delete another member's comment.",
         ...mcpTool('delete_comment'),
+      },
+    },
+  )
+
+  // Answers with every reaction of the comment, so the caller needs no second read.
+  .post(
+    '/comments/:commentId/reactions',
+    async ({ params, body, user, set, projectId }) => {
+      set.status = 201;
+      return addReaction(params.commentId, requireUser(user).id, body.emoji, projectId);
+    },
+    {
+      body: addReactionBody,
+      params: commentParams,
+      commentReaction: 'edit',
+      response: { 201: t.Array(CommentReactionResponse), ...commonErrors, ...errors(409) },
+      detail: {
+        summary: 'React to a comment',
+        description:
+          'Add your emoji reaction to a comment. Pass the emoji character, not a name like ' +
+          ':thumbsup:. You can add several different emoji, each once. Repeating one does ' +
+          'nothing. The author is notified of your first reaction. Returns 409 when the comment ' +
+          'has the maximum number of different emoji.',
+        ...mcpTool('add_comment_reaction', { idempotentHint: true }),
+      },
+    },
+  )
+
+  .delete(
+    '/comments/:commentId/reactions/:emoji',
+    async ({ params, user }) => {
+      await removeReaction(params.commentId, requireUser(user).id, params.emoji);
+      return noContent();
+    },
+    {
+      params: reactionParams,
+      commentReaction: 'edit',
+      response: { 204: t.Void(), ...commonErrors },
+      detail: {
+        summary: 'Remove a reaction from a comment',
+        description:
+          'Remove your emoji reaction from a comment. ' +
+          'Removing one that is not there does nothing.',
+        ...mcpTool('remove_comment_reaction', { destructiveHint: false }),
       },
     },
   );

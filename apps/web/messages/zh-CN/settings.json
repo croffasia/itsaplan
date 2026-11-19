@@ -103,7 +103,8 @@
       "assigned": "被指派处理某一工作项",
       "mentioned": "在工作项或文档中被提及",
       "commented": "关注的工作项有新评论",
-      "state_changed": "关注的工作项状态发生变化"
+      "state_changed": "关注的工作项状态发生变化",
+      "reacted": "你的评论有新回应"
     },
     "eventsTitle": "事件",
     "telegramAccount": "Telegram 账户",
@@ -514,6 +515,19 @@
         "time": "工时记录和估算",
         "fields": "自定义字段、组件和版本",
         "people": "经办人和关注者，与项目成员对应"
+      }
+    },
+    "asanaPreview": {
+      "title": "从 Asana 导入",
+      "description": "迁移 Asana 项目及其历史记录。可在 Cloud 和自托管 Pro 版中使用。",
+      "items": {
+        "hierarchy": "子任务、里程碑、审批和依赖关系",
+        "sections": "可选择将分区导入为标签或计划",
+        "columns": "由分区或 Status 等字段生成的列",
+        "content": "评论和附件",
+        "time": "所记工时",
+        "fields": "标记导入为标签，以及自定义字段",
+        "people": "负责人和关注者，与项目成员对应"
       }
     },
     "title": "从 {source} 导入",

@@ -50,8 +50,8 @@ export const agentInvocationRoutes = new Elysia({
       detail: {
         summary: 'Read the invocation secret',
         description:
-          'The key the requests sent to the invocation URL are signed with, in the ' +
-          'X-Itsaplan-Signature header.',
+          "Get the key that signs requests to the agent's " +
+          'invocation URL, in the X-Itsaplan-Signature header.',
         ...mcpTool('get_ai_agent_invocation_secret'),
       },
     },
@@ -70,8 +70,8 @@ export const agentInvocationRoutes = new Elysia({
       detail: {
         summary: 'Rotate the invocation secret',
         description:
-          'Issue a new signing key. The next request is signed with it, so the endpoint ' +
-          'has to be given it first.',
+          'Issue a new signing key. The next request is ' +
+          'signed with it, so give it to the endpoint first.',
         // The endpoint keeps verifying with the old key until it is given the new one.
         ...mcpTool('rotate_ai_agent_invocation_secret', { destructiveHint: true }),
       },
@@ -92,8 +92,7 @@ export const agentInvocationRoutes = new Elysia({
       detail: {
         summary: 'Send a test request',
         description:
-          "Send a signed ping to the agent's invocation URL and report how the endpoint " +
-          'answered.',
+          "Send a signed ping to the agent's invocation URL and report the endpoint's response.",
         ...mcpTool('test_ai_agent_invocation'),
       },
     },

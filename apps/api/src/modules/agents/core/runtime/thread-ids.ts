@@ -23,8 +23,8 @@ export function isOwnChatThread(threadId: string, agentId: number, userId: strin
 // per (agent, document) for a mention in a document comment, one per schedule for a
 // scheduled run (a schedule belongs to a single agent, so its id already names the
 // agent). Repeated runs then build on what the agent did before, and a retry sees how
-// the failed attempt ended. The run-scoped id is the fallback for a run with none of
-// them, which nothing enqueues today — the columns are nullable.
+// the failed attempt ended. A run with none of them, a task sent through the API, gets a
+// thread of its own.
 export function runThreadId(run: {
   id: number;
   agentId: number;

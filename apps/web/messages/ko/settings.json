@@ -103,7 +103,8 @@
       "assigned": "이슈 담당자로 지정됨",
       "mentioned": "이슈 또는 문서에서 멘션됨",
       "commented": "구독 중인 이슈에 새 댓글",
-      "state_changed": "구독 중인 이슈의 상태 변경"
+      "state_changed": "구독 중인 이슈의 상태 변경",
+      "reacted": "내 댓글에 반응"
     },
     "eventsTitle": "이벤트",
     "telegramAccount": "Telegram 계정",
@@ -514,6 +515,19 @@
         "time": "작업 시간과 추정치",
         "fields": "사용자 지정 필드, 컴포넌트, 버전",
         "people": "프로젝트 멤버와 연결된 담당자와 지켜보는 사람"
+      }
+    },
+    "asanaPreview": {
+      "title": "Asana에서 가져오기",
+      "description": "Asana 프로젝트를 기록과 함께 옮깁니다. Cloud 및 셀프 호스팅 Pro에서 사용할 수 있습니다.",
+      "items": {
+        "hierarchy": "하위 작업, 마일스톤, 승인, 종속성",
+        "sections": "선택하면 섹션을 라벨 또는 이니셔티브로",
+        "columns": "섹션 또는 Status 같은 필드에서 만든 열",
+        "content": "댓글과 첨부 파일",
+        "time": "기록한 시간",
+        "fields": "태그를 라벨로, 사용자 지정 필드",
+        "people": "프로젝트 멤버와 연결된 담당자와 팔로워"
       }
     },
     "title": "{source}에서 가져오기",

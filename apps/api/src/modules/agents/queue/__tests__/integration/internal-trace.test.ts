@@ -74,6 +74,27 @@ describe('internal run trace', () => {
     expect((await trace().get({ query: { traceId: 'missing' } })).status).toBe(404);
   });
 
+  it('picks a recorded attempt by its number and says how many there are', async () => {
+    const { metadata, trace } = await setup();
+    await seedTrace('daily-1', metadata, new Date('2026-01-01T00:00:00Z'));
+    await seedTrace('daily-2', metadata, new Date('2026-01-02T00:00:00Z'));
+    await seedTrace('daily-3', metadata, new Date('2026-01-03T00:00:00Z'));
+
+    expect((await trace().get()).data).toMatchObject({
+      trace: { traceId: 'daily-3' },
+      attempt: 3,
+      attempts: 3,
+      previousTraceId: 'daily-2',
+    });
+    expect((await trace().get({ query: { attempt: 1 } })).data).toMatchObject({
+      trace: { traceId: 'daily-1' },
+      attempt: 1,
+      attempts: 3,
+      previousTraceId: null,
+    });
+    expect((await trace().get({ query: { attempt: 4 } })).status).toBe(404);
+  });
+
   it('answers null until a trace of that run is recorded', async () => {
     const { metadata, trace } = await setup();
     await seedTrace('other-run', { ...metadata, runId: metadata.runId + 1 }, new Date());

@@ -12,7 +12,8 @@ import { AI_PROVIDERS } from './llm-providers';
 //                 @repo/agent-tools. Their credential schema and tool list come from the
 //                 package.
 //   - "service" — an address and a key that a team's own tools send requests to, from
-//                 an extension of the api (setExtraIntegrations). No tools.
+//                 an extension of the api (setExtraIntegrations). No tools; its own
+//                 verify checks a credential, as a tool integration's does.
 // The credential form and, for tool integrations, the tool picker are built from a
 // descriptor on the frontend.
 
@@ -22,6 +23,7 @@ export interface UnifiedIntegration {
   key: string;
   label: string;
   kind: IntegrationKind;
+  description?: string;
   // A tool integration's brand mark. AI providers have none: there are too many to keep.
   icon?: IntegrationIcon;
   // The service's homepage. For an AI provider, its models page in Mastra's registry.
@@ -71,6 +73,7 @@ export function integrationCatalog(): UnifiedIntegration[] {
     key: d.key,
     label: d.label,
     kind: d.kind,
+    description: d.description,
     icon: d.icon,
     website: d.website,
     credentialSchema: d.credentialSchema,

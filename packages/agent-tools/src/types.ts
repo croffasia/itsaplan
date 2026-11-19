@@ -82,6 +82,8 @@ export type IntegrationKind = 'tool' | 'service';
 export interface Integration {
   key: string;
   label: string;
+  // What the service is and what agents do with it, in one sentence.
+  description?: string;
   // The interface shows the label's first letters when it is left out.
   icon?: IntegrationIcon;
   // The service's homepage, linked from the interface.
@@ -111,6 +113,7 @@ export interface ToolDescriptor {
 export interface IntegrationDescriptor {
   key: string;
   label: string;
+  description?: string;
   icon?: IntegrationIcon;
   website?: string;
   kind: IntegrationKind;

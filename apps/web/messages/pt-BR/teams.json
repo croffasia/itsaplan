@@ -2,11 +2,10 @@
   "archived": "Arquivado",
   "create": {
     "title": "Novo time",
-    "namePlaceholder": "Nome do time",
+    "name": "Nome do time",
     "slug": "URL",
-    "slugHint": "Os links para os projetos da equipe começam com ele, por exemplo /acme.",
     "slugInvalid": "Use de 2 a 40 letras minúsculas, números ou hifens, começando com uma letra.",
-    "hint": "Você será o dono deste time.",
+    "nameRequired": "Informe o nome do time.",
     "submit": "Criar time"
   },
   "sections": {
@@ -692,6 +691,7 @@
     "loadMore": "Carregar mais 25",
     "endOfHistory": "Não há execuções mais antigas",
     "manualTask": "Tarefa manual",
+    "apiTask": "Tarefa via API",
     "scheduledTask": "Tarefa agendada",
     "documentTask": "Comentário em um documento",
     "failed": "Com falha",

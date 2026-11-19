@@ -10,10 +10,17 @@ import {
 } from '@/services/preferences.service';
 import { setLocaleCookie } from '@/i18n/cookie';
 import { canonicalTimezone, setDisplayLocale, setDisplayTimezone } from '@/utils/dates';
+import {
+  colorThemeCookieValue,
+  readColorThemeCookie,
+  setColorThemeCookie,
+} from '@/utils/colorThemes';
+import { isDarkColor } from '@/utils/customTheme';
 
 // Applies the account preferences that are read app-wide rather than at one call
-// site: the theme (handed to next-themes), the display timezone (handed to the date
-// formatters) and the interface language. Renders nothing.
+// site: the theme (handed to next-themes), the palette (mirrored into the cookie the
+// server renders from), the display timezone (handed to the date formatters) and the
+// interface language. Renders nothing.
 //
 // The timezone starts as 'UTC' for an account that never set one, which is rarely
 // what the person means, so the first load detects the browser zone and saves it.
@@ -26,8 +33,13 @@ export default function PreferencesSync() {
   const router = useRouter();
 
   const timezone = prefs?.timezone;
-  const theme = prefs?.theme;
   const locale = prefs?.locale;
+  // A custom palette is light or dark by its background, whatever the theme says.
+  let theme = prefs?.theme;
+  if (prefs?.palette === 'custom' && prefs.customTheme) {
+    theme = isDarkColor(prefs.customTheme.background) ? 'dark' : 'light';
+  }
+  const colorTheme = prefs && colorThemeCookieValue(prefs.palette, prefs.customTheme);
 
   // The language the date formatters render in. Set while rendering, not in an
   // effect: this component renders before the tree that formats dates, so the first
@@ -53,6 +65,14 @@ export default function PreferencesSync() {
       setTheme(theme);
     }
   }, [theme, setTheme]);
+
+  // The server renders the palette from the cookie. The same handshake as the language
+  // below: when the account says otherwise, write the cookie and re-render.
+  useEffect(() => {
+    if (!colorTheme || colorTheme === readColorThemeCookie()) return;
+    setColorThemeCookie(colorTheme);
+    router.refresh();
+  }, [colorTheme, router]);
 
   // The server rendered in the cookie's language. When the account says otherwise —
   // first load on a new device, or another device changing it — write the cookie and

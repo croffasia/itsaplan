@@ -22,6 +22,8 @@ export interface IntegrationMeta {
   key: string;
   label: string;
   kind: IntegrationKind;
+  // What the service is, in one sentence. Only tool integrations carry one.
+  description?: string;
   // A brand mark: one SVG path in a 24×24 box, filled with `color` or the text color.
   // Only tool integrations carry one.
   icon?: { path: string; color?: string };

@@ -16,24 +16,33 @@ not aid comprehension.
 
 ## Tokens (intent-named; values live in `globals.css`)
 
-Colors are OKLCH grayscale ramps with no brand hue; no surface sits on pure white or pure
-black. Light and dark are both first-class (`.dark` class toggles; the app ships a theme
+The default palette is OKLCH grayscale ramps with no brand hue; no surface sits on pure white or
+pure black. Light and dark are both first-class (`.dark` class toggles; the app ships a theme
 switch).
+
+Six more palettes (GitHub, Nord, Catppuccin, One, Tomorrow, Nightfox) override the color tokens
+under `:root[data-palette="<id>"]` and `:root[data-palette="<id>"].dark`; a custom palette is
+built at runtime from an accent, a background and a contrast in `apps/web/src/utils/customTheme.ts`.
+Every palette meets the APCA targets under Principles: an official color that misses one moves in
+OKLCH lightness only, hue kept. Text also stays Lc 10 above `muted-foreground` on the page, and a
+hairline (`border`, `input`) sits at least 0.05 OKLCH lightness past the page, card and popover, so
+a divider shows on every surface.
 
 - `background` / `foreground` — page base and primary text.
 - `card` / `card-foreground` — a raised surface (modals, popovers, kanban detail).
-  Only a few percent off `background`; use a background shift, not a border, to raise.
+  Only a few percent off `background` and never equal to it; use a background shift, not a
+  border, to raise. In light the card is the lighter one, so a white page is toned down.
 - `muted` / `muted-foreground` — quiet fills and secondary text.
 - `secondary` — the active/selected chip fill (tabs, toggles).
 - `accent` / `accent-foreground` — hover fill for interactive rows/buttons.
-- `border` — hairline; in dark it is `white / 10%`, i.e. a tint, never flat gray.
-- `primary` — high-contrast solid (primary buttons); near-black in light, near-white
-  in dark.
+- `border` — hairline, never flat gray; in the default dark it is `white / 10%`.
+- `primary` — high-contrast solid (primary buttons); near-black in light and near-white in dark
+  in the default palette, the accent in the others, under a white or near-black label.
 - `destructive` — error / overdue / delete only. It serves two roles at once: `text-destructive`
   on the page, and a fill under the white label of a destructive button or badge.
 - `destructive-text` — the board's small red text: a full hard-limit count and an overdue
   date. Equal to `destructive` in light; in dark a lighter red, Lc 62–65 where `destructive`
-  gives 53.
+  gives 53. It reads at Lc 60 on the page, the card, the full-column tint and the overdue pill.
 - `overdue` — the fill of an overdue date pill: `destructive` mixed into the card.
 - `warning` — a state that needs attention but has refused nothing, where `destructive` would
   overstate it: a soft WIP limit is at its maximum while a hard one has blocked the move. Text
@@ -75,11 +84,14 @@ switch).
   main action; secondary actions are ghost/outline.
 - **Depth over lines.** Raise a surface with a 3–5% background shift and a soft shadow,
   not a 1px border.
-- **Contrast is measured, not eyeballed** — APCA: body `Lc ≥ 75`, large/bold `≥ 45`,
-  non-text UI `≥ 30`. `destructive` in dark reaches only ~53 in each of its two roles: as it
-  lightens it reads better as text on the near-black page and worse under the white label of
-  a destructive button, so it sits where those two curves cross. Both roles are above the
-  large/bold threshold. Small red text on the board uses `destructive-text` instead.
+- **Contrast is measured, not eyeballed** — APCA: body `Lc ≥ 75` (including
+  `muted-foreground` on every surface and the label on `primary`), small state text
+  (`destructive-text`, `warning`) `≥ 60`, large/bold `≥ 45`, non-text UI `≥ 30`.
+  `destructive` in dark reaches only ~53 in each of its two roles: as it lightens it reads
+  better as text on the near-black page and worse under the white label of a destructive
+  button, so it sits where those two curves cross. Both roles are above the large/bold
+  threshold on the page, the card and the popover. Small red text on the board uses
+  `destructive-text` instead.
 - **Motion is restrained.** Hover 120–200ms, entrance 250–400ms; animate only
   `transform`/`opacity`; honor `prefers-reduced-motion`.
 

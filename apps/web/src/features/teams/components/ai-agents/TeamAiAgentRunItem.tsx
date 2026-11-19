@@ -14,7 +14,10 @@ function runSubject(r: AgentRun, t: ReturnType<typeof useTranslations<'teams.age
   if (r.documentId != null) {
     return [t('documentTask'), r.documentTitle?.trim()].filter(Boolean).join(' · ');
   }
-  if (r.issueId == null) return r.trigger === 'manual' ? t('manualTask') : t('scheduledTask');
+  if (r.issueId == null) {
+    if (r.trigger === 'api') return t('apiTask');
+    return r.trigger === 'manual' ? t('manualTask') : t('scheduledTask');
+  }
   if (!r.issueIdentifier) return `#${r.issueId}`;
   return `${r.issueIdentifier}${r.issueTitle ? ` · ${r.issueTitle}` : ''}`;
 }

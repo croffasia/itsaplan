@@ -3,7 +3,7 @@ import { HttpError } from '#shared/lib';
 import { externalTraceQuery, ExternalTraceResponse, runParams } from '../runner/model';
 import { visibleRun, readRunTrace } from '../runner/run-events';
 import { getRunTrace } from '../core/runtime/traces';
-import { issueAgentTraceQuery, IssueAgentRunTraceResponse } from '#modules/issues/model';
+import { IssueAgentRunTraceResponse } from '#modules/issues/model';
 import { Elysia, type DocumentDecoration } from 'elysia';
 import { authContext } from '#shared/auth-context';
 import { hasPermission } from '@repo/db';
@@ -13,7 +13,15 @@ import { getProjectTeamId } from '#modules/projects/service';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { paginate } from '#shared/pagination';
 import { isMcpRequest } from '#shared/mcp-request';
-import { queueQuery, RunnerQueueResponse, RunsInFlightResponse } from './model';
+import { mcpTool } from '#mcp/generate';
+import { getAgentRunResult } from '../core/run-queue';
+import {
+  AgentRunResultResponse,
+  internalTraceQuery,
+  queueQuery,
+  RunnerQueueResponse,
+  RunsInFlightResponse,
+} from './model';
 import {
   listRunnerQueue,
   runsProjectTeam,
@@ -24,7 +32,7 @@ import {
 import { teamParams } from '#modules/teams/model';
 import { workspaceParams } from '#modules/workspaces/model';
 
-// One page of the queue, with how many of its runs are waiting and running.
+// One page of the queue, with how many of its runs are waiting, running and failed.
 async function readQueue(
   userId: string,
   query: typeof queueQuery.static,
@@ -32,15 +40,17 @@ async function readQueue(
   projectIds?: number[],
   granted = false,
 ) {
-  let counts = { queued: 0, running: 0 };
+  let counts = { queued: 0, running: 0, failed: 0 };
   const page = await paginate(query, async (window) => {
     const result = await listRunnerQueue(userId, window, {
       mcpOnly,
       runId: query.runId,
       projectIds,
       granted,
+      state: query.state,
+      q: query.q,
     });
-    counts = { queued: result.queued, running: result.running };
+    counts = { queued: result.queued, running: result.running, failed: result.failed };
     return result;
   });
   return { ...page, ...counts };
@@ -68,7 +78,7 @@ export const runnerQueueRoutes = new Elysia({
         },
       };
     },
-    runTrace(_enabled: boolean) {
+    readRun(_enabled: boolean) {
       return {
         detail: requiresPermission(['ai_agents', 'read']) as DocumentDecoration,
         async resolve({ params, user, request }) {
@@ -93,6 +103,27 @@ export const runnerQueueRoutes = new Elysia({
     },
   })
   .get(
+    '/agent-runs/:runId',
+    async ({ params }) => {
+      const run = await getAgentRunResult(params.runId);
+      if (!run) throw new HttpError(404, 'Run not found');
+      return run;
+    },
+    {
+      readRun: true,
+      params: runParams,
+      response: { 200: AgentRunResultResponse, ...commonErrors },
+      detail: {
+        summary: 'Read an agent run',
+        description:
+          "Get a run's status and, when it ended, the agent's answer or error. While the run " +
+          'waits or runs, retryAfterSeconds says when to read it again. Needs the same ' +
+          "permissions as the run's transcript.",
+        ...mcpTool('get_agent_run'),
+      },
+    },
+  )
+  .get(
     '/agent-runs/:runId/trace',
     async ({ params, query, projectId }) => {
       const trace = await readRunTrace(projectId, params.runId, query.attempt);
@@ -100,7 +131,7 @@ export const runnerQueueRoutes = new Elysia({
       return Response.json(trace);
     },
     {
-      runTrace: true,
+      readRun: true,
       params: runParams,
       query: externalTraceQuery,
       response: { 200: ExternalTraceResponse, ...commonErrors },
@@ -120,21 +151,23 @@ export const runnerQueueRoutes = new Elysia({
         projectId,
         issueId,
         requireUser(user).id,
-        query.traceId,
+        query,
       );
       if (trace === undefined) throw new HttpError(404, 'Run attempt not found');
       return Response.json(trace);
     },
     {
-      runTrace: true,
+      readRun: true,
       params: runParams,
-      query: issueAgentTraceQuery,
+      query: internalTraceQuery,
       response: { 200: IssueAgentRunTraceResponse, ...commonErrors },
       detail: {
         summary: "Read an internal run's trace",
         description:
-          "The selected or latest recorded attempt of an internal agent's run, on an issue or " +
-          'on none, with a link to the previous one. Null when no latest trace is available. ' +
+          "One recorded attempt of an internal agent's run, on an issue or on none: picked by " +
+          'its trace id or its number, or else the latest. It carries its number, how many ' +
+          'attempts were recorded, and a link to the previous one. Null when no latest trace ' +
+          'is available. ' +
           'Takes the same permissions as the external transcript.',
       },
     },

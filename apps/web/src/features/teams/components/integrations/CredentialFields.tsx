@@ -49,7 +49,9 @@ export function CredentialFields({
         <IntegrationIcon integration={meta} className="size-11 rounded-xl text-sm" />
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-base font-semibold text-foreground">{meta.label}</h3>
-          <p className="text-sm text-muted-foreground">{t(`groups.${meta.kind}.hint`)}</p>
+          <p className="text-sm text-muted-foreground">
+            {meta.description ?? t(`groups.${meta.kind}.hint`)}
+          </p>
         </div>
         {meta.website && <IntegrationWebsiteLink integration={meta.label} href={meta.website} />}
       </div>

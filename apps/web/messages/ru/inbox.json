@@ -16,7 +16,8 @@
     "assigned": "Назначено",
     "mentioned": "Упоминание",
     "commented": "Прокомментировано",
-    "state_changed": "Статус изменён"
+    "state_changed": "Статус изменён",
+    "reacted": "Реакция"
   },
   "actions": {
     "markRead": "Отметить прочитанным",
@@ -33,6 +34,7 @@
     "mentioned": "{who} упомянул(а) вас",
     "commented": "{who} оставил(а) комментарий",
     "stateChanged": "{who} изменил(а) статус с {from} на {to}",
-    "stateChangedPlain": "{who} изменил(а) статус"
+    "stateChangedPlain": "{who} изменил(а) статус",
+    "reacted": "{who}: реакция {emoji} на ваш комментарий"
   }
 }

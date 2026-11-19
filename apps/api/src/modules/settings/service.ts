@@ -79,17 +79,23 @@ export interface AgentSettings {
   // Runs of internal agents in flight at once across the instance; the rest wait in the
   // queue. 0 sets no limit.
   maxConcurrentRuns: number;
+  // Characters of an agent's answer that are saved: a run's output and an external
+  // agent's chat reply. It does not apply to Mastra's memory tables, which hold an
+  // internal agent's chat. 0 sets no limit.
+  maxAnswerChars: number;
 }
 
 export const MIN_RUN_SECONDS = 10;
 export const MAX_RUN_SECONDS = 3600;
 export const MAX_CONCURRENT_RUNS = 1000;
+export const MAX_ANSWER_CHARS = 10_000_000;
 
 function defaultAgentSettings(): AgentSettings {
   return {
     traceRetentionDays: 30,
     maxRunSeconds: 240,
     maxConcurrentRuns: 5,
+    maxAnswerChars: 200_000,
   };
 }
 
@@ -102,6 +108,47 @@ export async function setAgentSettings(patch: Partial<AgentSettings>): Promise<A
   const next = { ...(await getAgentSettings()), ...patch };
   await setSetting(AGENT_SETTINGS_KEY, next);
   return next;
+}
+
+// How many requests one API key may send per minute (app_setting key 'apiKeys'). 0 sets no
+// limit.
+
+const API_KEY_SETTINGS_KEY = 'apiKeys';
+
+export interface ApiKeySettings {
+  requestsPerMinute: number;
+}
+
+export const MAX_KEY_REQUESTS_PER_MINUTE = 100_000;
+
+// shared/key-rate-limit.ts reads the limit on every request made with a key, so each process
+// keeps it for a minute. A change saved here applies at once in this process and within a
+// minute in the others.
+const API_KEY_SETTINGS_TTL_MS = 60_000;
+let keptApiKeys: { settings: ApiKeySettings; readAt: number } | null = null;
+
+export async function getApiKeySettings(): Promise<ApiKeySettings> {
+  return (await getSetting<ApiKeySettings>(API_KEY_SETTINGS_KEY)) ?? { requestsPerMinute: 1200 };
+}
+
+export async function keptApiKeySettings(): Promise<ApiKeySettings> {
+  if (keptApiKeys && Date.now() - keptApiKeys.readAt < API_KEY_SETTINGS_TTL_MS) {
+    return keptApiKeys.settings;
+  }
+  const settings = await getApiKeySettings();
+  keptApiKeys = { settings, readAt: Date.now() };
+  return settings;
+}
+
+export async function setApiKeySettings(settings: ApiKeySettings): Promise<ApiKeySettings> {
+  await setSetting(API_KEY_SETTINGS_KEY, settings);
+  keptApiKeys = { settings, readAt: Date.now() };
+  return settings;
+}
+
+// The tests empty the database between cases, and a kept value would outlive it.
+export function forgetApiKeySettings(): void {
+  keptApiKeys = null;
 }
 
 // The background job settings (app_setting key 'jobs'); the shape and the reader are in

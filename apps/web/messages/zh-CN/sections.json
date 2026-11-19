@@ -35,11 +35,11 @@
     },
     "authentication": {
       "label": "身份验证",
-      "description": "设置谁可以注册、如何验证账户以及可用的外部登录提供商。"
+      "description": "谁可以注册、如何登录，以及请求限制。"
     },
     "hotkeys": {
       "label": "键盘快捷键",
-      "description": "设置实例中所有用户的默认快捷键。每位用户可在偏好设置中重新绑定。"
+      "description": "所有用户的默认快捷键。每人可在偏好设置中自行更改。"
     },
     "storage": {
       "label": "存储",

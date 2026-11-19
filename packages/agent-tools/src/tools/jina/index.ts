@@ -13,6 +13,7 @@ import { verifyJina } from './verify';
 export const jina: Integration = {
   key: 'jina',
   label: 'Jina AI',
+  description: 'Reads web pages, searches the web, and ranks and classifies text.',
   credentialSchema: [
     {
       key: 'apiKey',

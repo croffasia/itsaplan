@@ -67,6 +67,7 @@ export function IssueCardSubtaskRow({
               </span>
               <span
                 ref={titleRef}
+                dir="auto"
                 className={cn(
                   'truncate text-[11px] text-foreground/85',
                   column?.stateType === 'completed' && 'text-muted-foreground/70 line-through',

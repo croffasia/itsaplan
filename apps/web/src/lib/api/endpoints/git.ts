@@ -94,7 +94,7 @@ export interface DevelopmentLink {
 
 export interface DevelopmentRepository {
   id: number;
-  provider: 'github' | 'gitlab';
+  provider: 'github' | 'gitlab' | 'gitea' | 'forgejo';
   fullName: string;
   webUrl: string;
 }

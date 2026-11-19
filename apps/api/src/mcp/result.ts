@@ -34,6 +34,15 @@ export function toolError(
   };
 }
 
+// The result of a call that failed before it reached a route.
+export function toolFailure(status: number, text: string) {
+  return {
+    content: [{ type: 'text' as const, text }],
+    isError: true,
+    structuredContent: toolError(status, text),
+  };
+}
+
 function retryAfterSeconds(value: string | null): number | null {
   if (value === null) return null;
   const trimmed = value.trim();

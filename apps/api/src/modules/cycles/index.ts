@@ -66,7 +66,7 @@ export const cycleRoutes = new Elysia({
       response: { 200: CycleListResponse, ...commonErrors },
       detail: {
         summary: 'List cycles',
-        description: "A project's cycles, oldest first.",
+        description: "List a project's cycles, oldest first.",
         ...mcpTool('list_cycles'),
       },
     },
@@ -121,7 +121,7 @@ export const cycleRoutes = new Elysia({
       detail: {
         summary: 'Create a cycle',
         description:
-          'Create a cycle in a project. Its dates must not overlap another cycle of the same project.',
+          'Create a cycle in a project. Its dates must not overlap another cycle of the project.',
         ...mcpTool('create_cycle'),
       },
     },
@@ -145,9 +145,9 @@ export const cycleRoutes = new Elysia({
       detail: {
         summary: 'List cycles in all projects',
         description:
-          'The cycles of every project you can read cycles in, oldest first. Each cycle names ' +
-          'its project (projectKey, projectRef, projectName, teamName); use list_cycles for one ' +
-          'project. An agent run lists only the project it works in.',
+          'List the cycles of all projects where you can read cycles, oldest first. Each cycle ' +
+          'names its project. For one project, use ' +
+          "list_cycles. In an agent run, lists only the run's project.",
         ...requiresPermission(['cycles', 'read']),
         ...mcpTool('list_cycles_all_projects'),
       },
@@ -167,7 +167,7 @@ export const cycleRoutes = new Elysia({
       response: { 200: CycleResponse, ...commonErrors },
       detail: {
         summary: 'Get a cycle',
-        description: 'Get a cycle by its numeric id.',
+        description: 'Get a cycle by id.',
         ...mcpTool('get_cycle'),
       },
     },
@@ -187,8 +187,7 @@ export const cycleRoutes = new Elysia({
       response: { 200: CycleResponse, ...commonErrors },
       detail: {
         summary: 'Update a cycle',
-        description:
-          'Update a cycle by its numeric id. New dates must not overlap another cycle of the same project.',
+        description: 'Update a cycle. New dates must not overlap another cycle of the project.',
         ...mcpTool('update_cycle'),
       },
     },
@@ -206,7 +205,7 @@ export const cycleRoutes = new Elysia({
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete a cycle',
-        description: 'Delete a cycle by its numeric id. Its issues stay, without a cycle.',
+        description: 'Delete a cycle. Its issues stay, with no cycle.',
         ...mcpTool('delete_cycle'),
       },
     },
@@ -226,7 +225,8 @@ export const cycleRoutes = new Elysia({
       detail: {
         summary: 'Finish a cycle',
         description:
-          'Close a running cycle before its planned end date. Final: a finished cycle cannot be reopened, keeps its planned end date, and keeps its issues.',
+          'Close a running cycle before its planned end date. This is final: the cycle cannot ' +
+          'reopen, and it keeps its planned end date and its issues.',
         ...mcpTool('finish_cycle', { destructiveHint: true }),
       },
     },
@@ -254,7 +254,8 @@ export const cycleRoutes = new Elysia({
       detail: {
         summary: 'Start the next cycle today',
         description:
-          "Finish the running cycle and start the project's next upcoming cycle today, moving the unfinished issues over. The started cycle keeps its planned end date.",
+          "Finish the running cycle and start the project's next upcoming cycle today. " +
+          'Unfinished issues move to the new cycle. The new cycle keeps its planned end date.',
         ...mcpTool('start_next_cycle', { destructiveHint: true }),
       },
     },
@@ -280,7 +281,8 @@ export const cycleRoutes = new Elysia({
       detail: {
         summary: 'Transfer unfinished issues',
         description:
-          "Move the cycle's issues that are not in a completed or canceled state to another cycle, or off any cycle. Finished issues stay on this cycle.",
+          "Move the cycle's issues that are not completed or canceled to another cycle, or to no " +
+          'cycle. Completed and canceled issues stay.',
         ...mcpTool('transfer_cycle_issues'),
       },
     },

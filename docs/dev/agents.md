@@ -14,7 +14,8 @@ credential the service refused, so an outage never blocks a save through MCP. Th
 first, on edit too (the stored secrets fill the fields left blank), and also holds back a credential the service gave no answer for (`unavailable`: an outage, a
 timeout, a bot wall); one that cannot be checked from here (`unknown`: no such request, an address
 the SSRF guard refuses) can be saved. A tool integration
-checks itself (`verify` in its folder of `@repo/agent-tools`). An AI provider is asked for
+checks itself (`verify` in its folder of `@repo/agent-tools`), and so does a service an extension
+adds through `setExtraIntegrations`; one without `verify` cannot be checked (`unknown`). An AI provider is asked for
 `/models` at the address in Mastra's registry, or at the credential's base URL; the providers whose
 address only their SDK holds, and the few with another request or refusal status, are listed by
 hand in `integrations/provider-check.ts`.
@@ -132,6 +133,14 @@ not retried. The abort does not interrupt a tool call in flight: the run ends wh
 returns. A claim's lease is at least 60 seconds longer than the instance maximum, so the poller
 does not claim a run again while it is running, unless a tool call outlasts that margin.
 
+## Answer length limit
+
+`maxAnswerChars` in the same setting is how many characters of an agent's answer are saved:
+200,000 by default, 0 for none. It applies to the output of every run, internal or external, and to
+an external agent's chat reply. The start of the answer is kept: `agents/core/answer-limit.ts` cuts
+it with Postgres `left()`, which counts characters. The limit does not apply to Mastra's memory
+tables, which hold an internal agent's chat.
+
 ## Dashboard and cost
 
 The run traces back the agent dashboard (`runtime/analytics.ts`) at
@@ -169,6 +178,23 @@ dashboard is read, so a price also recounts past calls whose traces are still st
 the models the workspace called in the last 90 days or priced, those no price covers first, and the
 whole table, paged, each beside the workspace's own price.
 
+## API runs
+
+`POST /projects/:projectKey/ai-agents/:agentId/run` (MCP `run_ai_agent`) queues its prompt as a run
+with the trigger `api`, as a schedule queues its task: no issue, document or schedule, and a thread
+of its own (`run:<id>`). It works for internal and external agents, through a runner or an
+invocation URL alike, and the run shows in the queue and the agent's run history. It is checked as
+a chat message is: chat on, the runner scope, and the run refusal hook for an internal agent.
+`agent_run.requested_by_user_id` keeps the sender. A claim reads it as the requester when the run
+has no source comment, so the agent is told who asked and the refusal hook is asked again for that
+person when the run starts.
+
+The route answers 202 at once, so a long run outlasts neither a proxy's read timeout nor an MCP
+client's request timeout. `GET /agent-runs/:runId` (MCP `get_agent_run`) reads the status, then the
+answer or the error, and while the run waits or runs `retryAfterSeconds` (`pollAfterSeconds` in
+`run-queue.ts`): 10 s while it is queued, a quarter of its running time within 5–30 s, or the time
+to its retry within the same bounds.
+
 ## Reading runs
 
 `GET /issues/:issueId/agent-runs` reads an issue's runs with cursor pagination. It requires
@@ -187,16 +213,18 @@ Three routes read a run's trace:
   latest recorded attempt, or the one named by `traceId`. Each trace links to the previous recorded
   attempt (`previousTraceId`). It returns null for a missing latest trace and for an external run,
   which has no Mastra trace. An unknown or unrelated `traceId` returns 404.
-- `GET /agent-runs/:runId/internal-trace` reads the same trace by the run alone, and takes the same
-  `traceId`.
+- `GET /agent-runs/:runId/internal-trace` reads the same trace by the run alone. It takes the same
+  `traceId`, or `attempt` (the oldest recorded attempt is 1), and returns the attempt's number and
+  how many attempts were recorded (`attempt`, `attempts`).
 - `GET /agent-runs/:runId/trace?attempt=N` reads the transcript an external runner reported. The
   latest recorded attempt is the default.
 
 The issue route requires both read permissions in the issue's current project. The two
 `/agent-runs/:runId` routes require them in the run's original project, and `documents read` for a
 run started in a document. Whoever runs the team needs none of them there. A run from a private
-document is read only by the document's owner. These two routes also serve runs without an issue: a
-schedule's, a manual run's, and one started in a document comment.
+document is read only by the document's owner. These two routes and `GET /agent-runs/:runId` take
+the same permissions, and also serve runs without an issue: a schedule's, a manual run's, an API
+run, and one started in a document comment.
 
 The api stores the events an external runner reports in `agent_run_trace`, one row per attempt:
 messages, tool inputs and results, and a local Codex session link. Transcripts follow the instance
@@ -219,7 +247,10 @@ on both calls: a custom invocation endpoint can leave it out, and the api then d
 `GET /agent-runs/queue` pages the active and past runs of internal and external agents across the
 caller's readable projects, including archived projects. It requires `work_items read` and
 `ai_agents read` in each project, and `documents read` for a run started in a document. `runId`
-narrows it to one authorized run for the detail pane.
+narrows it to one authorized run for the detail pane. `state` keeps the `failed` or the `active`
+(waiting and running) runs, and `q` finds runs by the issue's title or key, the schedule's name or
+the agent's username. The `queued`, `running` and `failed` counts follow `q` but not `state`, so
+each filter can show how many runs it holds.
 
 The same queue is narrowed to a project (`/projects/:projectKey/agent-runs/queue`), a team
 (`/teams/:teamId/...`) or a workspace (`/workspaces/:workspaceId/...`). The team's queue is for

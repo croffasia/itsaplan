@@ -24,6 +24,7 @@ import { verifyThreads } from './verify';
 export const threads: Integration = {
   key: 'threads',
   label: 'Threads',
+  description: 'Publishes posts, answers replies and reads insights on Threads.',
   credentialSchema: [
     {
       key: 'accessToken',

@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
 import { auth } from '@repo/auth';
-import { app } from '#tests/helpers/app';
+import { app, authedApi } from '#tests/helpers/app';
 import { resetDb } from '#tests/helpers/db';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { patchOps, setupScim } from '#modules/scim/__tests__/helpers';
@@ -29,6 +29,36 @@ async function initialize(apiKey: string) {
       }),
     }),
   );
+}
+
+function post(apiKey: string, body: object) {
+  return app.handle(
+    new Request('http://localhost/mcp', {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${apiKey}`,
+        'content-type': 'application/json',
+        accept: 'application/json, text/event-stream',
+      },
+      body: JSON.stringify(body),
+    }),
+  );
+}
+
+const message = (method: string, params?: object) => ({ jsonrpc: '2.0', id: 1, method, params });
+
+// The result of one tool call. The transport answers with an SSE stream.
+async function callTool(apiKey: string, name: string) {
+  const res = await post(apiKey, message('tools/call', { name }));
+  const data = (await res.text()).split('\n').find((line) => line.startsWith('data: '));
+  return JSON.parse(data!.slice('data: '.length)).result;
+}
+
+async function keyLimitedTo(requestsPerMinute: number) {
+  const god = await signUpTestUser();
+  await authedApi(god.cookie).god['api-key-settings'].put({ requestsPerMinute });
+  const { key } = await auth.api.createApiKey({ body: { userId: god.userId, name: 'mcp' } });
+  return key;
 }
 
 describe('MCP authentication', () => {
@@ -71,5 +101,23 @@ describe('MCP authentication', () => {
       .patch(patchOps([{ op: 'replace', path: 'active', value: false }]));
 
     expect((await initialize(created.key)).status).toBe(401);
+  });
+
+  it('counts a tool call once against the key limit, and answers past it with 429', async () => {
+    const key = await keyLimitedTo(2);
+
+    expect((await callTool(key, 'list_projects')).isError).toBe(false);
+    expect((await callTool(key, 'list_projects')).isError).toBe(false);
+
+    const limited = await post(key, message('tools/call', { name: 'list_projects' }));
+    expect(limited.status).toBe(429);
+    expect(Number(limited.headers.get('retry-after'))).toBeGreaterThan(0);
+  });
+
+  it('counts every message, a tool list and each message of a batch included', async () => {
+    const key = await keyLimitedTo(2);
+
+    expect((await post(key, message('tools/list'))).status).toBe(200);
+    expect((await post(key, [message('tools/list'), message('tools/list')])).status).toBe(429);
   });
 });

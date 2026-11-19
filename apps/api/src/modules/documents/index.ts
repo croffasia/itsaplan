@@ -111,9 +111,10 @@ function documentAssetDto(
   };
 }
 
-const OWNER_ONLY = 'Only the page owner can do this, or a project owner on a public page.';
+const OWNER_ONLY = 'Only its owner, or a project owner on a public document, can do this.';
 const EMBED_HINT =
-  'It does not appear in the page by itself: add `embedUrl` from the result to the page text, as ![name](embedUrl) for an image or [name](embedUrl) for a file.';
+  'The file shows in the document only after you add `embedUrl` from the result to its ' +
+  'text: ![name](embedUrl) for an image, [name](embedUrl) for other files.';
 
 async function isProjectOwner(projectId: number, userId: string): Promise<boolean> {
   return (await getProjectAccess(projectId, userId))?.role === 'owner';
@@ -141,7 +142,7 @@ export const documentRoutes = new Elysia({
       detail: {
         summary: "List a project's documents",
         description:
-          'Return the visible Docs tree without document bodies. Use q to search Markdown and archived=true for the archive.',
+          'List the document tree you can see, without content. q searches the Markdown.',
         ...mcpTool('list_documents'),
       },
     },
@@ -160,7 +161,7 @@ export const documentRoutes = new Elysia({
       response: { 200: DocumentResponse, ...commonErrors },
       detail: {
         summary: 'Get a document',
-        description: 'Return one visible project document with its Markdown content.',
+        description: 'Get a document you can see, with its Markdown content.',
         ...mcpTool('get_document'),
       },
     },
@@ -186,7 +187,7 @@ export const documentRoutes = new Elysia({
       response: { 200: DocumentIssueLinkListResponse, ...commonErrors },
       detail: {
         summary: 'List work items linked to a document',
-        description: 'Return work items explicitly linked to one visible Docs page.',
+        description: 'List the issues linked to a document.',
         ...mcpTool('list_document_issues'),
       },
     },
@@ -215,7 +216,7 @@ export const documentRoutes = new Elysia({
       detail: {
         summary: 'Link a document to a work item',
         description:
-          'Link one active Docs page to a work item in the same project. Editing both resources is required.',
+          'Link an active document to an issue in the same project. You need edit access to both.',
         ...mcpTool('link_document_issue'),
       },
     },
@@ -241,7 +242,7 @@ export const documentRoutes = new Elysia({
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Unlink a document from a work item',
-        description: 'Remove an explicit Docs-to-work-item link.',
+        description: 'Remove a link between a document and an issue.',
         ...mcpTool('unlink_document_issue'),
       },
     },
@@ -262,7 +263,7 @@ export const documentRoutes = new Elysia({
       response: { 200: IssueDocumentLinkListResponse, ...commonErrors },
       detail: {
         summary: 'List Docs linked to a work item',
-        description: 'Return visible Docs pages explicitly linked to one work item.',
+        description: 'List the documents linked to an issue that you can see.',
         ...mcpTool('list_issue_documents'),
       },
     },
@@ -283,7 +284,7 @@ export const documentRoutes = new Elysia({
       response: { 200: IssueDocumentLinkListResponse, ...commonErrors },
       detail: {
         summary: 'List Docs linked to an initiative',
-        description: 'Return visible Docs pages explicitly linked to one initiative.',
+        description: 'List the documents linked to an initiative that you can see.',
         ...mcpTool('list_initiative_documents'),
       },
     },
@@ -304,7 +305,7 @@ export const documentRoutes = new Elysia({
       response: { 200: DocumentInitiativeLinkListResponse, ...commonErrors },
       detail: {
         summary: 'List initiatives linked to a document',
-        description: 'Return initiatives explicitly linked to one visible Docs page.',
+        description: 'List the initiatives linked to a document.',
         ...mcpTool('list_document_initiatives'),
       },
     },
@@ -332,7 +333,8 @@ export const documentRoutes = new Elysia({
       detail: {
         summary: 'Link a document to an initiative',
         description:
-          'Link one active Docs page to an initiative in the same project. Editing both resources is required.',
+          'Link an active document to an initiative in ' +
+          'the same project. You need edit access to both.',
         ...mcpTool('link_document_initiative'),
       },
     },
@@ -358,7 +360,7 @@ export const documentRoutes = new Elysia({
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Unlink a document from an initiative',
-        description: 'Remove an explicit Docs-to-initiative link.',
+        description: 'Remove a link between a document and an initiative.',
         ...mcpTool('unlink_document_initiative'),
       },
     },
@@ -378,7 +380,8 @@ export const documentRoutes = new Elysia({
       detail: {
         summary: 'List document assets',
         description:
-          'List the files of a visible Docs page. Open one with view_document_asset: `url` needs a session.',
+          "List a document's files. Open a file with " +
+          'view_document_asset, because `url` needs a browser session.',
         ...mcpTool('list_document_assets'),
       },
     },
@@ -443,7 +446,7 @@ export const documentRoutes = new Elysia({
       response: { 201: DocumentAssetResponse, ...commonErrors, ...errors(409, 413, 502) },
       detail: {
         summary: 'Add a document asset from a URL or base64',
-        description: `Store a file for an active, unlocked Docs page, from \`url\` or \`contentBase64\`. ${EMBED_HINT}`,
+        description: `Store a file for an active, unlocked document, from \`url\` or \`contentBase64\`. ${EMBED_HINT}`,
         ...mcpTool('add_document_asset'),
       },
     },
@@ -477,7 +480,7 @@ export const documentRoutes = new Elysia({
       response: { 201: DocumentAssetResponse, ...commonErrors, ...errors(409, 413, 502) },
       detail: {
         summary: 'Copy a chat attachment into a document',
-        description: `Copy a file attached in the chat of this project into an active, unlocked Docs page. The id is in the [file: "name" (attachment id: …)] marker, and the chat keeps its file. ${EMBED_HINT}`,
+        description: `Copy a file attached in this project's chat into an active, unlocked document. Get the id from the [file: "name" (attachment id: …)] marker. The chat keeps its copy. ${EMBED_HINT}`,
         ...mcpTool('add_document_asset_from_chat'),
       },
     },
@@ -502,9 +505,9 @@ export const documentRoutes = new Elysia({
       detail: {
         summary: 'View a document asset',
         description:
-          `Open one file of a Docs page. An image comes back as the image itself (${VIEWABLE_IMAGES}). ` +
-          'Any other file comes back in `others` and, for a PDF or a text file, carries its full ' +
-          'text; for a spreadsheet or document (.xlsx, .csv, .docx), its column headers and first rows.',
+          `Open one file of a document. An image comes back as the image (${VIEWABLE_IMAGES}). ` +
+          'Other files come back in `others`, plus the full text of a PDF or text file, or the ' +
+          'column headers and first rows of a .xlsx, .csv or .docx file.',
         ...mcpImageTool('view_document_asset'),
       },
     },
@@ -561,7 +564,7 @@ export const documentRoutes = new Elysia({
       response: { 204: t.Void(), ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Delete a document asset',
-        description: `Delete one asset from an active, unlocked Docs page. Irreversible. The page text keeps its reference, so remove that with update_document. ${OWNER_ONLY}`,
+        description: `Permanently delete a file from an active, unlocked document. The document text keeps its reference: remove it with update_document. ${OWNER_ONLY}`,
         ...mcpTool('delete_document_asset'),
       },
     },
@@ -580,7 +583,8 @@ export const documentRoutes = new Elysia({
       response: { 200: DocumentExportResponse, ...commonErrors },
       detail: {
         summary: 'Export a document',
-        description: 'Return stable filename, Markdown body and version metadata for export tools.',
+        description:
+          'Export a document: a stable filename, the Markdown body and version metadata.',
         ...mcpTool('export_document'),
       },
     },
@@ -603,7 +607,7 @@ export const documentRoutes = new Elysia({
       response: { 200: DocumentRevisionListResponse, ...commonErrors },
       detail: {
         summary: 'List document revisions',
-        description: 'Return immutable document versions, newest first.',
+        description: "List a document's past versions, newest first.",
         ...mcpTool('list_document_revisions'),
       },
     },
@@ -627,7 +631,7 @@ export const documentRoutes = new Elysia({
       response: { 200: DocumentRevisionResponse, ...commonErrors },
       detail: {
         summary: 'Get a document revision',
-        description: 'Return one historical Markdown snapshot.',
+        description: 'Get the Markdown of one past version of a document.',
         ...mcpTool('get_document_revision'),
       },
     },
@@ -657,7 +661,7 @@ export const documentRoutes = new Elysia({
       detail: {
         summary: 'Create a document',
         description:
-          'Create a public or private Markdown page, optionally nested under another page.',
+          'Create a public or private Markdown document, optionally under a parent document.',
         ...mcpTool('create_document'),
       },
     },
@@ -683,7 +687,8 @@ export const documentRoutes = new Elysia({
       detail: {
         summary: 'Update a document',
         description:
-          'Update Markdown, appearance, nesting or position. Send the version last read; a stale or locked page returns 409.',
+          "Update a document's Markdown, appearance, parent or position. Send the last version " +
+          'you read. A stale version or a locked document returns 409.',
         ...mcpTool('update_document'),
       },
     },
@@ -711,7 +716,9 @@ export const documentRoutes = new Elysia({
       detail: {
         summary: 'Change document access',
         description:
-          'The document owner can make a page public to the project or private to themselves. A project owner must explicitly claim an orphaned public page first.',
+          'Make a document public to the project or private to you. Only its owner can do this. ' +
+          'A project owner must first claim an orphaned ' +
+          'public document with transfer_document_ownership.',
         ...mcpTool('set_document_access'),
       },
     },
@@ -740,7 +747,8 @@ export const documentRoutes = new Elysia({
       detail: {
         summary: 'Transfer document ownership',
         description:
-          'Transfer a page to another project member. A project owner can claim or transfer a public page whose previous owner left the project.',
+          'Give a document to another project member. A project owner can claim or transfer a ' +
+          'public document whose owner left the project.',
         ...mcpTool('transfer_document_ownership'),
       },
     },
@@ -768,7 +776,7 @@ export const documentRoutes = new Elysia({
       response: { 200: DocumentResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Lock a document',
-        description: `Lock a page against changes. ${OWNER_ONLY}`,
+        description: `Lock a document against changes. ${OWNER_ONLY}`,
         ...mcpTool('lock_document'),
       },
     },
@@ -796,7 +804,7 @@ export const documentRoutes = new Elysia({
       response: { 200: DocumentResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Unlock a document',
-        description: `Unlock a page so it can be changed again. ${OWNER_ONLY}`,
+        description: `Unlock a document so it can be changed. ${OWNER_ONLY}`,
         ...mcpTool('unlock_document'),
       },
     },
@@ -823,7 +831,7 @@ export const documentRoutes = new Elysia({
       response: { 200: DocumentResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Archive a document tree',
-        description: `Archive a page and all descendants without deleting their content or history. ${OWNER_ONLY}`,
+        description: `Archive a document and its descendants. Content and history are kept. ${OWNER_ONLY}`,
         ...mcpTool('archive_document'),
       },
     },
@@ -850,7 +858,7 @@ export const documentRoutes = new Elysia({
       response: { 200: DocumentResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Restore a document tree',
-        description: `Restore an archived page and its descendants. It returns to the root if its parent remains archived. ${OWNER_ONLY}`,
+        description: `Restore an archived document and its descendants. If its parent is still archived, it moves to the root. ${OWNER_ONLY}`,
         ...mcpTool('restore_document'),
       },
     },
@@ -878,8 +886,7 @@ export const documentRoutes = new Elysia({
       response: { 201: DocumentResponse, ...commonErrors, ...errors(409, 413, 502) },
       detail: {
         summary: 'Duplicate a document',
-        description:
-          'Copy one visible page and its appearance into a new page owned by the caller.',
+        description: 'Copy a document and its appearance into a new document that you own.',
         ...mcpTool('duplicate_document'),
       },
     },
@@ -904,7 +911,7 @@ export const documentRoutes = new Elysia({
       response: { 200: DocumentPreferenceResponse, ...commonErrors },
       detail: {
         summary: 'Update document preferences',
-        description: 'Favorite or unfavorite a page for the current user.',
+        description: 'Add a document to your favorites or remove it.',
         ...mcpTool('set_document_preference'),
       },
     },
@@ -930,8 +937,7 @@ export const documentRoutes = new Elysia({
       response: { 200: DocumentResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Restore a document revision',
-        description:
-          'Copy a historical snapshot into a new current version without rewriting history.',
+        description: 'Restore a past version as a new current version. History does not change.',
         ...mcpTool('restore_document_revision'),
       },
     },
@@ -961,7 +967,7 @@ export const documentRoutes = new Elysia({
       response: { 204: t.Void(), ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Delete a document',
-        description: `Permanently delete an archived document and its history. Its child pages move to the project root. ${OWNER_ONLY}`,
+        description: `Permanently delete an archived document and its history. Its child documents move to the project root. ${OWNER_ONLY}`,
         ...mcpTool('delete_document'),
       },
     },

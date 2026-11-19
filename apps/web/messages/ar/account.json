@@ -97,21 +97,19 @@
   "preferences": {
     "label": "التفضيلات",
     "title": "التفضيلات",
-    "description": "شكل التطبيق وطريقة شغله معاك. أي تغيير بيتحفظ على طول وبيتطبّق في أي مكان تسجّل دخولك منه.",
+    "description": "شكل التطبيق وطريقة عمله بالنسبة لك.",
     "saved": "تم حفظ التفضيلات",
     "sections": {
       "appearance": "المظهر",
       "dateAndTime": "التاريخ والوقت",
-      "dateAndTimeDescription": "الطوابع الزمنية بتتخزّن بتوقيت UTC، وبتتعرض بالمنطقة اللي تختارها هنا.",
       "navigation": "التنقل",
-      "navigationDescription": "التطبيق بيوديك فين، والمهام بتتفتح إزاي.",
-      "issueSettings": "إعدادات المهام",
-      "issueSettingsDescription": "إحصاءات المهمة وسجل نشاطها بيبدأوا بأي شكل. لو غيّرتهم وأنت فاتح مهمة، الإعدادات دي مش هتتغير.",
+      "issueSettings": "تفاصيل المهمة",
+      "issueSettingsDescription": "الإعدادات الافتراضية لكل مهمة تفتحها. تغييرها في مهمة مفتوحة لا يغيّر هذه الإعدادات.",
       "notifications": "الإشعارات",
       "notificationsDescription": "لما تتابع مهمة، هيوصلك تعليقاتها وأي تغيير في حالتها.",
       "aiChat": "محادثة الذكاء الاصطناعي",
       "shortcuts": "اختصارات لوحة المفاتيح",
-      "shortcutsDescription": "اضغط تغيير، وبعدين اضغط المفاتيح اللي عايزها. وإعادة التعيين بترجّع الاختصار للي متظبط للنسخة دي."
+      "shortcutsDescription": "يعيد زر إعادة التعيين الاختصار إلى قيمته الافتراضية."
     },
     "theme": "المظهر",
     "themeDescription": "مطابقة النظام بتمشي على إعداد نظام التشغيل اللي عندك.",
@@ -120,10 +118,30 @@
       "light": "فاتح",
       "dark": "داكن"
     },
+    "themeFromBackground": "تحدده الخلفية",
+    "palette": "لوحة الألوان",
+    "paletteDescription": "لكل لوحة نسخة فاتحة وأخرى داكنة.",
+    "paletteOptions": {
+      "default": "الافتراضية",
+      "custom": "مخصصة"
+    },
+    "accent": "لون التمييز",
+    "accentDescription": "لون الأزرار والروابط والعناصر المحددة.",
+    "background": "الخلفية",
+    "backgroundDescription": "اللون الداكن يعطي سمة داكنة، والفاتح سمة فاتحة.",
+    "contrast": "التباين",
+    "contrastDescription": "مدى بروز النص والحدود عن الخلفية.",
+    "sharePalette": "مشاركة",
+    "sharePaletteDescription": "انسخ هذه اللوحة لإرسالها. «لصق» يطبّق لوحة من الحافظة.",
+    "copyPalette": "نسخ",
+    "pastePalette": "لصق",
+    "paletteCopied": "تم نسخ اللوحة",
+    "palettePasted": "تم لصق اللوحة",
+    "pastePaletteInvalid": "لا تحتوي الحافظة على لوحة ألوان. انسخ لوحة أولًا ثم الصقها.",
     "language": "اللغة",
     "languageDescription": "لغة الواجهة، ورسايل بريدك، وبوت Telegram.",
     "timezone": "المنطقة الزمنية",
-    "timezoneDescription": "اختار المنطقة اللي بتشتغل فيها.",
+    "timezoneDescription": "تظهر كل التواريخ والأوقات في التطبيق بهذه المنطقة الزمنية.",
     "timezonePlaceholder": "اختر منطقة زمنية",
     "timezoneEmpty": "لم يتم العثور على مناطق زمنية.",
     "timezoneGroups": {
@@ -139,49 +157,47 @@
       "Other": "أخرى"
     },
     "issueOpenMode": "فتح المهام في",
-    "issueOpenModeDescription": "اللي بيحصل لما تدوس على مهمة في لوحة أو جدول أو تقويم أو جدول زمني.",
     "issueOpenModeOptions": {
       "panel": "لوحة جانبية",
       "page": "صفحة كاملة"
     },
     "startPage": "صفحة البداية",
-    "startPageDescription": "القسم اللي بيتفتح لما تدخل التطبيق، في آخر مشروع كنت شغال عليه.",
+    "startPageDescription": "تُفتح في آخر مشروع استخدمته.",
     "startPageOptions": {
       "work-items": "عناصر العمل",
       "inbox": "صندوق الوارد",
       "dashboard": "لوحات المعلومات",
       "initiatives": "المبادرات"
     },
-    "showStats": "إظهار الإحصاءات",
-    "showStatsDescription": "قسم الإحصاءات يبدأ مفتوح ولا مقفول لما تفتح مهمة.",
+    "showStats": "توسيع الإحصاءات",
     "statsView": "إظهار الإحصاءات كـ",
-    "statsViewDescription": "المضغوط شريط واحد فيه حصة لكل حالة، والجدول الزمني بيدّي كل حالة مسار لوحدها على محور زمني.",
+    "statsViewDescription": "يعرض الشريط المضغوط نسبة الوقت في كل حالة. ويعطي الجدول الزمني كل حالة مسارًا خاصًا بها.",
     "statsViewOptions": {
       "compact": "شريط مضغوط",
       "timeline": "جدول زمني"
     },
     "activityView": "إظهار النشاط كـ",
-    "activityViewDescription": "المسطّح بيعرض كل الإدخالات والأحدث الأول، والمجمّع بيقسّم السجل حسب الحالة اللي كانت المهمة فيها.",
+    "activityViewDescription": "يقسم التجميع حسب الحالة السجلات بحسب حالة المهمة في ذلك الوقت.",
     "activityViewOptions": {
-      "flat": "مسطّح",
+      "flat": "قائمة واحدة",
       "grouped": "مجمّع حسب الحالة"
     },
     "autoWatch": "متابعة المهام تلقائيًا",
-    "autoWatchDescription": "المهام اللي تنشئها أو تتسند ليك أو تعلّق عليها أو يتذكر اسمك فيها.",
+    "autoWatchDescription": "المهام التي تنشئها أو تعلّق عليها أو تُسند إليك أو يُذكر اسمك فيها.",
     "desktopNotifications": "إشعارات سطح المكتب",
-    "desktopNotificationsDescription": "لهذا المتصفح فقط. يعرض إشعارًا لكل عنصر جديد في صندوق الوارد من كل المشاريع، عندما يكون التطبيق مفتوحًا لكن ليس في المقدمة.",
+    "desktopNotificationsDescription": "لهذا المتصفح فقط. يعرض كل عنصر جديد في صندوق الوارد من كل المشاريع عندما يكون التطبيق مفتوحًا في الخلفية.",
     "desktopNotificationsBlocked": "هذا المتصفح يحظر الإشعارات من هذا الموقع. اسمح بها من إعدادات الموقع في المتصفح.",
     "desktopNotificationsUnsupported": "هذا المتصفح لا يستطيع عرض إشعارات سطح المكتب.",
-    "desktopNotificationsReplacedByPush": "الإشعارات الفورية مفعّلة في هذا المتصفح، وتحلّ محل إشعارات سطح المكتب هنا.",
+    "desktopNotificationsReplacedByPush": "الإشعارات الفورية مفعّلة في هذا المتصفح، لذا إشعارات سطح المكتب متوقفة هنا.",
     "desktopNotificationsOff": "مُعطّل",
-    "pushNotifications": "الإشعارات الفورية على هذا الجهاز",
-    "pushNotificationsDescription": "لهذا المتصفح فقط. يعرض الإشعارات التي تختارها في عمود «فوري» من إعدادات إشعارات المشروع، حتى عندما يكون التطبيق مغلقًا.",
+    "pushNotifications": "الإشعارات الفورية",
+    "pushNotificationsDescription": "لهذا المتصفح فقط. يرسل الإشعارات التي تختارها في عمود «فوري» من إعدادات إشعارات كل مشروع، حتى عندما يكون التطبيق مغلقًا.",
     "pushNotificationsBlocked": "هذا المتصفح يحظر الإشعارات من هذا الموقع. اسمح بها من إعدادات الموقع في المتصفح.",
     "pushNotificationsUnsupported": "هذا المتصفح لا يستطيع استقبال الإشعارات الفورية.",
-    "pushNotificationsUnsupportedIos": "على iPhone أو iPad، أضف التطبيق إلى الشاشة الرئيسية أولًا (iOS 16.4 أو أحدث) ثم فعّل هذا الخيار من هناك.",
+    "pushNotificationsUnsupportedIos": "على iPhone أو iPad، أضف التطبيق إلى الشاشة الرئيسية، ثم فعّل هذا الخيار من هناك. يتطلب iOS 16.4 أو أحدث.",
     "pushNotificationsOff": "مُعطّل",
-    "pushNotificationsFailed": "تعذّر تغيير الإشعارات الفورية في هذا المتصفح.",
-    "showChatByDefault": "إظهار المحادثة افتراضيًا",
-    "showChatByDefaultDescription": "تفتح لوحة المحادثة مع صفحة المشروع. أغلقها في أي وقت من رأسها أو من أيقونة المحادثة."
+    "pushNotificationsFailed": "تعذّر تغيير الإشعارات الفورية في هذا المتصفح. حاول مرة أخرى.",
+    "showChatByDefault": "فتح المحادثة افتراضيًا",
+    "showChatByDefaultDescription": "تُفتح لوحة المحادثة مع كل صفحة مشروع."
   }
 }

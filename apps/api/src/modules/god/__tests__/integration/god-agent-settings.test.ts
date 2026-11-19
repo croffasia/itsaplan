@@ -4,8 +4,8 @@ import { addUser, setup } from '../helpers';
 
 // The instance-wide agent settings under god mode: what applies to every team's
 // agents: how long the traces of their runs are kept, which the background sweep reads
-// (agents/core/runtime/trace-retention.ts), the longest one run may take, and how many
-// runs are in flight at once.
+// (agents/core/runtime/trace-retention.ts), the longest one run may take, how many
+// runs are in flight at once, and how much of an answer is saved.
 
 describe('god agent settings', () => {
   beforeEach(async () => {
@@ -74,7 +74,12 @@ describe('god agent settings', () => {
     const res = await god.api.god['agent-settings'].put({ maxRunSeconds: 900 });
 
     expect(res.status).toBe(200);
-    expect(res.data).toEqual({ traceRetentionDays: 7, maxRunSeconds: 900, maxConcurrentRuns: 5 });
+    expect(res.data).toEqual({
+      traceRetentionDays: 7,
+      maxRunSeconds: 900,
+      maxConcurrentRuns: 5,
+      maxAnswerChars: 200_000,
+    });
   });
 
   it('refuses a run time maximum under 10 seconds or over an hour', async () => {
@@ -99,5 +104,27 @@ describe('god agent settings', () => {
 
     expect((await god.api.god['agent-settings'].put({ maxConcurrentRuns: -1 })).status).toBe(400);
     expect((await god.api.god['agent-settings'].put({ maxConcurrentRuns: 1001 })).status).toBe(400);
+  });
+
+  it('starts the answer limit at 200,000 characters and takes 0, which sets no limit', async () => {
+    const { god } = await setup();
+
+    expect((await god.api.god['agent-settings'].get()).data?.maxAnswerChars).toBe(200_000);
+    const res = await god.api.god['agent-settings'].put({ maxAnswerChars: 0 });
+
+    expect(res.status).toBe(200);
+    expect(res.data?.maxAnswerChars).toBe(0);
+  });
+
+  it('takes an answer limit of ten million characters and refuses one past it or below 0', async () => {
+    const { god } = await setup();
+
+    expect((await god.api.god['agent-settings'].put({ maxAnswerChars: 10_000_000 })).status).toBe(
+      200,
+    );
+    expect((await god.api.god['agent-settings'].put({ maxAnswerChars: 10_000_001 })).status).toBe(
+      400,
+    );
+    expect((await god.api.god['agent-settings'].put({ maxAnswerChars: -1 })).status).toBe(400);
   });
 });

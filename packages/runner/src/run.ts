@@ -16,10 +16,7 @@ export async function runTask(config: RunnerConfig, client: Client, run: Run) {
         session && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(session)
           ? session
           : undefined;
-      for (let start = 0; start < events.length; start += 200) {
-        const batch = events.slice(start, start + 200);
-        await client.runEvents(run, offset + start, batch, sessionId);
-      }
+      await client.runEvents(run, offset, events, sessionId);
       offset += events.length;
     },
   );

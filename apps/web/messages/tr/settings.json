@@ -103,7 +103,8 @@
       "assigned": "Bir işe sorumlu olarak atandığımda",
       "mentioned": "Bir işte veya belgede benden bahsedildiğinde",
       "commented": "Takip ettiğim bir işe yeni yorum yapıldığında",
-      "state_changed": "Takip ettiğim bir işin durumu değiştiğinde"
+      "state_changed": "Takip ettiğim bir işin durumu değiştiğinde",
+      "reacted": "Yorumuma tepki verildiğinde"
     },
     "eventsTitle": "Olaylar",
     "telegramAccount": "Telegram hesabı",
@@ -513,6 +514,19 @@
         "content": "Yorumlar, ekler ve metindeki görseller",
         "time": "Zaman günlüğü ve tahminler",
         "fields": "Özel alanlar, bileşenler ve sürümler",
+        "people": "Proje üyeleriyle eşleştirilen atananlar ve izleyiciler"
+      }
+    },
+    "asanaPreview": {
+      "title": "Asana'dan içe aktar",
+      "description": "Bir Asana projesini geçmişiyle birlikte taşıyın. Cloud ve kendi sunucunuzda barındırılan Pro sürümünde mevcuttur.",
+      "items": {
+        "hierarchy": "Alt görevler, kilometre taşları, onaylar ve bağımlılıklar",
+        "sections": "İsterseniz bölümler etiket ya da girişim olarak",
+        "columns": "Bölümlerden ya da Status gibi bir alandan sütunlar",
+        "content": "Yorumlar ve ekler",
+        "time": "Kaydedilen süre",
+        "fields": "Asana etiketleri etiket olarak, ve özel alanlar",
         "people": "Proje üyeleriyle eşleştirilen atananlar ve izleyiciler"
       }
     },

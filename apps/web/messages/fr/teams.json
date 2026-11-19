@@ -2,11 +2,10 @@
   "archived": "Archivé",
   "create": {
     "title": "Nouvelle équipe",
-    "namePlaceholder": "Nom de l'équipe",
+    "name": "Nom de l'équipe",
     "slug": "URL",
-    "slugHint": "Les liens vers les projets de l'équipe commencent par lui, par ex. /acme.",
     "slugInvalid": "Utilisez 2 à 40 lettres minuscules, chiffres ou tirets, en commençant par une lettre.",
-    "hint": "Vous serez le propriétaire de cette équipe.",
+    "nameRequired": "Saisissez le nom de l'équipe.",
     "submit": "Créer l'équipe"
   },
   "sections": {
@@ -692,6 +691,7 @@
     "loadMore": "Charger 25 de plus",
     "endOfHistory": "Aucune exécution plus ancienne",
     "manualTask": "Tâche manuelle",
+    "apiTask": "Tâche via l'API",
     "scheduledTask": "Tâche planifiée",
     "documentTask": "Commentaire dans un document",
     "failed": "En échec",

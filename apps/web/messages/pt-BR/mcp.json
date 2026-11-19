@@ -34,16 +34,26 @@
     },
     "security": "O OAuth usa PKCE (S256), registro dinâmico de cliente e tokens de acesso com escopo limitado à sua conta {app}.",
     "consent": {
-      "title": "{client} quer se conectar à sua conta",
-      "titleUnnamed": "Um cliente MCP quer se conectar à sua conta",
-      "description": "Ele vai agir com as suas permissões: tudo o que você pode ver e alterar, ele também poderá.",
-      "account": "Conectado como {email}",
-      "redirect": "Depois de responder, você volta para {host}.",
-      "missingCode": "Esta requisição de autorização não tem seu código de consentimento.",
-      "cancel": "Cancelar",
-      "pending": "Autorizando…",
-      "authorize": "Autorizar",
-      "failed": "Não foi possível concluir a autorização OAuth."
+      "title": "Permitir que {client} acesse sua conta?",
+      "titleUnnamed": "Permitir que um aplicativo sem nome acesse sua conta?",
+      "actsAs": "Depois de permitido, o aplicativo age como você:",
+      "canSee": "Vê tudo o que você pode ver, em todos os seus times",
+      "canChange": "Cria, altera e exclui tudo o que você pode",
+      "keepsAccess": "Mantém o acesso até você desconectá-lo em Conta › Segurança",
+      "account": "Conta",
+      "app": "Aplicativo",
+      "thisComputer": "Neste computador",
+      "named": "O próprio aplicativo escolheu o nome “{client}”. Só permita se foi você quem iniciou esta conexão.",
+      "unnamed": "O aplicativo não enviou um nome. Só permita se foi você quem iniciou esta conexão.",
+      "deny": "Não permitir",
+      "allow": "Permitir",
+      "allowing": "Permitindo…",
+      "denying": "Enviando…",
+      "expired": "Esta solicitação expirou após 10 minutos. Inicie a conexão de novo no aplicativo.",
+      "failed": "Sua resposta não chegou. Tente de novo.",
+      "incompleteTitle": "Este link está incompleto",
+      "incompleteBody": "Inicie a conexão de novo no aplicativo.",
+      "brandSubtitle": "Conecte à sua conta aplicativos de IA como Claude e ChatGPT."
     }
   }
 }

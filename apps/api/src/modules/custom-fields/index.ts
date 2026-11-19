@@ -59,7 +59,7 @@ export const customFieldRoutes = new Elysia({
       response: { 201: CustomFieldResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create a custom field',
-        description: 'Create a custom field for a project.',
+        description: 'Create a custom field in a project.',
         ...mcpTool('create_custom_field'),
       },
     },
@@ -85,9 +85,9 @@ export const customFieldRoutes = new Elysia({
       detail: {
         summary: 'Update a custom field',
         description:
-          'Update a custom field. Changing its type clears the values issues hold in it, ' +
-          'narrowing a member scope clears the ones it no longer allows, and an option left ' +
-          'out of `options` is deleted along with the selections of it.',
+          'Update a custom field. Changing its type clears all its values on issues. Narrowing ' +
+          'the member scope clears the values it no longer allows. An option missing from ' +
+          '`options` is deleted with all its selections.',
         ...mcpTool('update_custom_field', { destructiveHint: true }),
       },
     },

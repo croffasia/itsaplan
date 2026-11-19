@@ -103,7 +103,8 @@
       "assigned": "Assigné à un ticket",
       "mentioned": "Mentionné sur un ticket ou un document",
       "commented": "Nouveau commentaire sur un ticket que vous suivez",
-      "state_changed": "Changement d'état sur un ticket que vous suivez"
+      "state_changed": "Changement d'état sur un ticket que vous suivez",
+      "reacted": "Réaction à votre commentaire"
     },
     "eventsTitle": "Événements",
     "telegramAccount": "Compte Telegram",
@@ -514,6 +515,19 @@
         "time": "Temps passé et estimations",
         "fields": "Champs personnalisés, composants et versions",
         "people": "Responsables et observateurs, associés aux membres du projet"
+      }
+    },
+    "asanaPreview": {
+      "title": "Importer depuis Asana",
+      "description": "Transférez un projet Asana avec son historique. Disponible dans Cloud et dans Pro auto-hébergé.",
+      "items": {
+        "hierarchy": "Sous-tâches, jalons, approbations et dépendances",
+        "sections": "Sections en étiquettes ou en initiatives, si vous le choisissez",
+        "columns": "Colonnes à partir des sections ou d'un champ comme Status",
+        "content": "Commentaires et pièces jointes",
+        "time": "Temps saisi",
+        "fields": "Tags en étiquettes, et champs personnalisés",
+        "people": "Responsables et abonnés, associés aux membres du projet"
       }
     },
     "title": "Importer depuis {source}",

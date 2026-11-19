@@ -103,7 +103,8 @@
       "assigned": "被指派處理某一工作項目",
       "mentioned": "在工作項目或文件中被提及",
       "commented": "關注的工作項目有新留言",
-      "state_changed": "關注的工作項目狀態發生變化"
+      "state_changed": "關注的工作項目狀態發生變化",
+      "reacted": "你的留言有新回應"
     },
     "eventsTitle": "事件",
     "telegramAccount": "Telegram 帳號",
@@ -513,6 +514,19 @@
         "content": "留言、附件和內文中的圖片",
         "time": "工時記錄和估算",
         "fields": "自訂欄位、元件和版本",
+        "people": "負責人和關注者，與專案成員對應"
+      }
+    },
+    "asanaPreview": {
+      "title": "從 Asana 匯入",
+      "description": "遷移 Asana 專案及其歷史記錄。可在 Cloud 和自託管 Pro 版中使用。",
+      "items": {
+        "hierarchy": "子任務、里程碑、核准和相依關係",
+        "sections": "可選擇將區段匯入為標籤或計畫",
+        "columns": "由區段或 Status 等欄位產生的欄",
+        "content": "留言和附件",
+        "time": "所記工時",
+        "fields": "標記匯入為標籤，以及自訂欄位",
         "people": "負責人和關注者，與專案成員對應"
       }
     },

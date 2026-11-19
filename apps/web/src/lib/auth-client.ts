@@ -7,6 +7,7 @@ import { oauthProviderClient } from '@better-auth/oauth-provider/client';
 import { apiKeyClient } from '@better-auth/api-key/client';
 import { API_URL, markSigningOut } from '@/lib/api/core/client';
 import { waitForPushCleanup } from '@/utils/browserNotifications';
+import { clearCommentDrafts } from '@/utils/commentDrafts';
 import { unsubscribeThisBrowser } from '@/utils/webPush';
 
 // better-auth appends its default /api/auth only to a bare origin; an API_URL with a
@@ -97,6 +98,8 @@ export async function signOut(then: 'login' | 'here' = 'login'): Promise<void> {
   for (const listener of signingOutListeners) listener();
   // Lets React take the app down before the session goes.
   await new Promise((resolve) => setTimeout(resolve, 0));
+  // Unsent comments must not stay readable in this browser for whoever uses it next.
+  clearCommentDrafts();
   // A browser left subscribed would show this account's notifications to whoever uses it
   // next.
   await waitForPushCleanup(unsubscribeThisBrowser());

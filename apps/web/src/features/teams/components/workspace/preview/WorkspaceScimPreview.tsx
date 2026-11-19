@@ -16,7 +16,7 @@ export default function WorkspaceScimPreview() {
 
   return (
     <SectionPageView title={t('title')} description={t('description')}>
-      <SectionPreview>
+      <SectionPreview feature="scim">
         <div className="space-y-10">
           <SettingsSection
             title={t('provisioning')}

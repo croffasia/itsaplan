@@ -207,9 +207,9 @@ export function buildTableItems({
 const CUSTOM_COLUMN_WIDTH = 'minmax(120px,180px)';
 const MARKDOWN_COLUMN_WIDTH = 'minmax(280px,480px)';
 
-// Title column: flexible but capped, so it does not stretch across the whole
-// table when few columns are shown; leftover width stays to the right.
-const TITLE_COLUMN_WIDTH = 'minmax(220px,520px)';
+// Title column: takes the width the other columns leave, so the last column ends at
+// the end edge, under the section's add button.
+const TITLE_COLUMN_WIDTH = 'minmax(220px,1fr)';
 
 // A resolved Table column, either a built-in property or a custom field. The
 // order of these follows settings.properties (reorderable in the Display panel).

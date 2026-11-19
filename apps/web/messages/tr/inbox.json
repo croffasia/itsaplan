@@ -16,7 +16,8 @@
     "assigned": "Atandı",
     "mentioned": "Bahsedildi",
     "commented": "Yorum yapıldı",
-    "state_changed": "Durum değişti"
+    "state_changed": "Durum değişti",
+    "reacted": "Tepki"
   },
   "actions": {
     "markRead": "Okundu olarak işaretle",
@@ -33,6 +34,7 @@
     "mentioned": "{who} sizden bahsetti",
     "commented": "{who} bir yorum yaptı",
     "stateChanged": "{who} durumu {from} değerinden {to} değerine değiştirdi",
-    "stateChangedPlain": "{who} durumu değiştirdi"
+    "stateChangedPlain": "{who} durumu değiştirdi",
+    "reacted": "{who}, yorumunuza {emoji} ile tepki verdi"
   }
 }

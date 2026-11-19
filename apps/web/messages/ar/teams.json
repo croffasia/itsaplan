@@ -2,11 +2,10 @@
   "archived": "مؤرشف",
   "create": {
     "title": "فريق جديد",
-    "namePlaceholder": "اسم الفريق",
+    "name": "اسم الفريق",
     "slug": "URL",
-    "slugHint": "تبدأ روابط مشاريع الفريق به، مثل ‎/acme.",
     "slugInvalid": "استخدم من 2 إلى 40 حرفًا لاتينيًا صغيرًا أو رقمًا أو شرطة، على أن يبدأ بحرف.",
-    "hint": "ستكون مالك هذا الفريق.",
+    "nameRequired": "أدخل اسم الفريق.",
     "submit": "إنشاء فريق"
   },
   "sections": {
@@ -692,6 +691,7 @@
     "loadMore": "تحميل 25 إضافية",
     "endOfHistory": "لا توجد تشغيلات أقدم",
     "manualTask": "مهمة يدوية",
+    "apiTask": "مهمة عبر API",
     "scheduledTask": "مهمة مجدولة",
     "documentTask": "تعليق في مستند",
     "failed": "فشل",

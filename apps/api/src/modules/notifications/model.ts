@@ -24,6 +24,7 @@ const NotificationResponse = t.Object({
   projectName: t.String(),
   fromState: t.Nullable(t.String()),
   toState: t.Nullable(t.String()),
+  reactionEmoji: t.Nullable(t.String()),
 });
 
 export const NotificationPageResponse = t.Object({
@@ -37,11 +38,11 @@ export const UnreadCountResponse = t.Object({ unread: t.Number() });
 export const AffectedCountResponse = t.Object({ count: t.Number() });
 
 export const listNotificationsQuery = t.Object({
-  limit: t.Optional(t.String({ description: 'Max items per page (1-100). Default 30.' })),
+  limit: t.Optional(t.String({ description: '1-100. Default 30.' })),
   cursor: t.Optional(t.String({ description: 'nextCursor from the previous page.' })),
-  types: t.Optional(t.String({ description: 'Comma-separated notification types to include.' })),
-  from: t.Optional(t.String({ description: 'Filter by actor user id.' })),
-  projectId: t.Optional(t.String({ description: 'Filter by project id.' })),
+  types: t.Optional(t.String({ description: 'Comma-separated notification types.' })),
+  from: t.Optional(t.String({ description: 'Actor user id.' })),
+  projectId: t.Optional(t.String()),
   includeRead: t.Optional(t.String({ description: "'false' hides read. Default true." })),
   includeSnoozed: t.Optional(t.String({ description: "'true' shows snoozed. Default false." })),
 });
@@ -60,6 +61,7 @@ export const markAllReadBody = t.Optional(
           t.Literal('mentioned'),
           t.Literal('commented'),
           t.Literal('state_changed'),
+          t.Literal('reacted'),
         ]),
         { minItems: 1 },
       ),

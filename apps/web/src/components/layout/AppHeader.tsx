@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { LocaleToggle } from '@/components/locale-toggle';
+import InterfaceMenu from '@/components/layout/InterfaceMenu';
 import UserMenu from '@/components/layout/UserMenu';
 
 // The slim header inside the sidebar inset, shared by the project view and the
@@ -97,8 +96,7 @@ export default function AppHeader({
         </Tooltip>
       )}
 
-      <LocaleToggle />
-      <ThemeToggle />
+      <InterfaceMenu />
       <UserMenu />
     </header>
   );

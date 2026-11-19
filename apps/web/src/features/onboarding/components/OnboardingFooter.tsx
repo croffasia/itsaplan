@@ -2,18 +2,18 @@ import { useTranslations } from 'next-intl';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { PRO_URL } from '@/utils/app';
+import { type ProFeature, proUrl } from '@/utils/app';
 
 export default function OnboardingFooter({
   count,
   index,
-  proLink,
+  proFeature,
   onGo,
   onDone,
 }: {
   count: number;
   index: number;
-  proLink: boolean;
+  proFeature?: ProFeature;
   onGo: (index: number) => void;
   onDone: () => void;
 }) {
@@ -48,9 +48,9 @@ export default function OnboardingFooter({
             {tCommon('back')}
           </Button>
         )}
-        {proLink && (
+        {proFeature && (
           <Button asChild className="bg-pro text-pro-foreground hover:bg-pro/90">
-            <a href={PRO_URL} target="_blank" rel="noreferrer">
+            <a href={proUrl(proFeature)} target="_blank" rel="noreferrer">
               {t('getInPro')}
               <ArrowUpRight className="opacity-70" />
             </a>

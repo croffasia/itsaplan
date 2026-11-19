@@ -1,6 +1,12 @@
-import { addDays, getWeek, startOfDay, startOfMonth, startOfWeek } from 'date-fns';
+import { addDays, differenceInCalendarWeeks, getWeek, startOfDay, startOfWeek } from 'date-fns';
 import type { Issue } from '@/lib/api/endpoints/issues';
-import { parseDate, toDateStr } from '@/utils/dates';
+import {
+  calendarSystem,
+  parseDate,
+  startOfCalendarMonth,
+  startOfPersianYear,
+  toDateStr,
+} from '@/utils/dates';
 import {
   isCustomFieldKey,
   type BuiltinDateField,
@@ -62,7 +68,7 @@ export function visibleDays(
   const run = (first: Date, count: number) =>
     Array.from({ length: count }, (_, i) => addDays(first, i));
   if (layout.calendarMode === 'month')
-    return run(startOfWeek(startOfMonth(cursor), { weekStartsOn }), 42);
+    return run(startOfWeek(startOfCalendarMonth(cursor), { weekStartsOn }), 42);
   return run(
     isFullWeek(layout) ? startOfWeek(cursor, { weekStartsOn }) : startOfDay(cursor),
     layout.calendarMode === 'byWeek' ? layout.calendarWeeks * 7 : layout.calendarDays,
@@ -78,7 +84,13 @@ export function dayInWeek(current: string | null, firstDay: string, weekStart: W
   return toDateStr(addDays(first, (day.getDay() - weekStart + 7) % 7));
 }
 
-// Monday weeks are numbered the ISO way, Sunday weeks the US way.
+// Monday weeks are numbered the ISO way, Saturday and Sunday weeks the US way. In the
+// solar Hijri calendar week 1 is the week that holds 1 Farvardin.
 export function weekNumber(day: Date, weekStart: WeekStart): number {
+  if (calendarSystem() === 'persian') {
+    const first = startOfWeek(day, { weekStartsOn: weekStart });
+    const year = startOfPersianYear(addDays(first, 6));
+    return differenceInCalendarWeeks(first, year, { weekStartsOn: weekStart }) + 1;
+  }
   return getWeek(day, { weekStartsOn: weekStart, firstWeekContainsDate: weekStart === 1 ? 4 : 1 });
 }

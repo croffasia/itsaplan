@@ -2,11 +2,10 @@
   "archived": "Arşivlendi",
   "create": {
     "title": "Yeni takım",
-    "namePlaceholder": "Takım adı",
+    "name": "Takım adı",
     "slug": "URL",
-    "slugHint": "Takımın projelerine giden bağlantılar bununla başlar, örn. /acme.",
     "slugInvalid": "Harfle başlayan, 2–40 arası küçük harf, rakam veya tire kullanın.",
-    "hint": "Bu takımın sahibi siz olacaksınız.",
+    "nameRequired": "Takım adını girin.",
     "submit": "Takım oluştur"
   },
   "sections": {
@@ -692,6 +691,7 @@
     "loadMore": "25 tane daha yükle",
     "endOfHistory": "Daha eski çalıştırma yok",
     "manualTask": "Manuel görev",
+    "apiTask": "API görevi",
     "scheduledTask": "Zamanlanmış görev",
     "documentTask": "Belge yorumu",
     "failed": "Başarısız",

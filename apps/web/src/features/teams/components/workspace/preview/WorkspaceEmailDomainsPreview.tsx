@@ -12,7 +12,7 @@ export default function WorkspaceEmailDomainsPreview() {
 
   return (
     <SectionPageView title={t('title')} description={t('description')}>
-      <SectionPreview>
+      <SectionPreview feature="email-domains">
         <SettingsCard>
           <SettingsRow
             title={t('label')}

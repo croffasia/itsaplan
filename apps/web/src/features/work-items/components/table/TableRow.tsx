@@ -15,6 +15,7 @@ import { IssueIdentifier } from '../shared/IssueIdentifier';
 import { SubtaskProgress } from '../shared/SubtaskProgress';
 import { useIsBlocked } from '../../context/useIssueLinks';
 import { useSubtaskFold } from '../../context/useSubtasks';
+import { DRAGGABLE_FOCUS } from '../../utils/dnd';
 import { columnKey, type OrderedColumn } from '../../utils/table';
 import { TableBuiltinCell } from './TableBuiltinCell';
 import { TableRowLinks } from './TableRowLinks';
@@ -104,6 +105,7 @@ export function TableRow({
         }}
         className={cn(
           'relative grid cursor-grab gap-3 border-b py-2 pe-4 text-sm transition-colors',
+          DRAGGABLE_FOCUS,
           blocked ? 'row-blocked' : 'hover:bg-accent/40',
           alignTop ? 'items-start' : 'items-center',
           indented ? 'ps-9' : 'ps-4',

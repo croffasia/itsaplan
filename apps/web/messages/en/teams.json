@@ -2,11 +2,10 @@
   "archived": "Archived",
   "create": {
     "title": "New team",
-    "namePlaceholder": "Team name",
+    "name": "Team name",
     "slug": "URL",
-    "slugHint": "Links to the team's projects start with it, e.g. /acme.",
     "slugInvalid": "Use 2–40 lowercase letters, numbers or hyphens, starting with a letter.",
-    "hint": "You'll be the owner of this team.",
+    "nameRequired": "Enter a team name.",
     "submit": "Create team"
   },
   "sections": {
@@ -692,6 +691,7 @@
     "loadMore": "Load 25 more",
     "endOfHistory": "No older runs",
     "manualTask": "Manual task",
+    "apiTask": "API task",
     "scheduledTask": "Scheduled task",
     "documentTask": "Document comment",
     "failed": "Failed",

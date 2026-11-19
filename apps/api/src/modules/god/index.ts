@@ -113,6 +113,8 @@ import {
   setSharingSettings,
   getApiDocsSettings,
   setApiDocsSettings,
+  getApiKeySettings,
+  setApiKeySettings,
 } from '#modules/settings/service';
 import { getUpdateStatus } from '#modules/settings/updates';
 import { RoleResponse, createRoleBody, updateRoleBody } from '#modules/roles/model';
@@ -128,6 +130,7 @@ import {
 import {
   AgentSettingsSchema,
   ApiDocsSettingsSchema,
+  ApiKeySettingsSchema,
   EmbedSitesSchema,
   HotkeyCombosSchema,
   JobSettingsBody,
@@ -194,7 +197,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       detail: {
         summary: 'Get authentication settings',
         description:
-          'Get the instance registration mode, allowed email domains, invite lifetime and email-dependent auth options.',
+          'Get the instance registration mode, allowed email domains, invite lifetime, email-dependent auth options and the sign-in rate limits.',
       },
     },
   )
@@ -223,7 +226,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       detail: {
         summary: 'Update authentication settings',
         description:
-          'Update the instance registration mode, allowed email domains, invite lifetime and email-dependent auth options.',
+          'Update the instance registration mode, allowed email domains, invite lifetime, email-dependent auth options and the sign-in rate limits.',
       },
     },
   )
@@ -587,6 +590,25 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       description:
         'Set who may read the API docs, in the app and at /docs and /api/auth/reference. The ' +
         'instance owner may under every audience except `nobody`.',
+    },
+  })
+
+  .get('/god/api-key-settings', () => getApiKeySettings(), {
+    response: { 200: ApiKeySettingsSchema, ...errors(401, 403) },
+    detail: {
+      summary: 'Get the API key rate limit',
+      description: 'Get how many requests one API key may send per minute.',
+    },
+  })
+
+  .put('/god/api-key-settings', ({ body }) => setApiKeySettings(body), {
+    body: ApiKeySettingsSchema,
+    response: { 200: ApiKeySettingsSchema, ...errors(400, 401, 403) },
+    detail: {
+      summary: 'Update the API key rate limit',
+      description:
+        'Set how many requests one API key may send per minute. A key over the limit is ' +
+        'answered with 429 and a Retry-After header. 0 sets no limit.',
     },
   })
 

@@ -35,11 +35,11 @@
     },
     "authentication": {
       "label": "Authentication",
-      "description": "Who may register on this instance, how accounts are confirmed, and the providers people sign in with."
+      "description": "Who can register, how people sign in, and request limits."
     },
     "hotkeys": {
       "label": "Keyboard shortcuts",
-      "description": "The key each command is bound to for everyone on this instance. Each person can rebind a shortcut for their own account in their preferences."
+      "description": "Defaults for everyone. Each person can change theirs in Preferences."
     },
     "storage": {
       "label": "Storage",

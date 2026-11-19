@@ -124,9 +124,10 @@ export const chatAttachmentRoutes = new Elysia({
       detail: {
         summary: 'Upload a chat attachment',
         description:
-          'Store a file for the agent chat: a spreadsheet to import issues from, a spec, or a log. ' +
-          'A PDF is converted to Markdown and stored as a .md file; a scanned PDF is refused. ' +
-          'Send the bytes as base64 in `contentBase64`. Read it back with read_chat_attachment.',
+          'Store a file for the agent chat, for example a spreadsheet to import issues from, a ' +
+          'spec or a log. Send the bytes as base64 in `contentBase64`. A PDF is converted to ' +
+          'Markdown and stored as .md. A scanned PDF is ' +
+          'refused. Read the file with read_chat_attachment.',
         ...mcpTool('upload_chat_attachment'),
       },
     },
@@ -149,13 +150,11 @@ export const chatAttachmentRoutes = new Elysia({
       detail: {
         summary: 'Read a chat attachment',
         description:
-          'Read a file the person attached in the chat. A [file: "name" (attachment id: …)] ' +
-          'marker in their message means that file is attached: it is stored in the chat and ' +
-          'is not on your filesystem, so read it with this tool and the id from the marker — ' +
-          'never look for it on disk. Answers with the file metadata and, for a spreadsheet or ' +
-          'document (.xlsx, .csv, .docx), the column headers and first rows; for a text file ' +
-          '(.md, .txt, and a PDF converted to Markdown on upload), its full text. To turn a ' +
-          'table into issues, map its columns with prepare_issue_import.',
+          'Read a file attached in the chat. Its id is in the [file: "name" (attachment id: …)] ' +
+          'marker. The file is not on your filesystem: do not look for it on disk. Returns the ' +
+          'metadata, plus the full text of a text file (.md, .txt, or a PDF converted on ' +
+          'upload), or the column headers and first rows of a .xlsx, .csv or .docx file. To turn ' +
+          'a table into issues, map its columns with prepare_issue_import.',
         ...mcpTool('read_chat_attachment'),
       },
     },

@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { PRO_URL } from '@/utils/app';
+import { proUrl } from '@/utils/app';
 import { SettingsScheduleField } from './SettingsScheduleField';
 import { useTranslations } from 'next-intl';
 
@@ -29,7 +29,7 @@ export function SettingsScheduleTypeField({
       <Select
         value={value}
         onValueChange={(next) => {
-          if (next === MORE) window.open(PRO_URL, '_blank', 'noreferrer');
+          if (next === MORE) window.open(proUrl('schedules'), '_blank', 'noreferrer');
           else onChange(next as AgentScheduleType);
         }}
       >

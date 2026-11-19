@@ -1,5 +1,5 @@
-import { startOfDay } from 'date-fns';
-import { addDays, daysBetween, formatMonthYear } from '@/utils/dates';
+import { startOfDay, startOfWeek } from 'date-fns';
+import { addDays, daysBetween, formatMonthYear, localeWeekStart } from '@/utils/dates';
 
 // The day track the date-laid-out views place their bars on: the work items
 // timeline and the cycles timeline. Holds the geometry only — which rows exist and
@@ -20,6 +20,8 @@ export interface MonthLabel {
   width: number;
 }
 
+// Every `left` here, todayLeft included, is a distance from the track's start edge: the
+// views place it with inset-inline-start, so a right-to-left page counts it from the right.
 export interface DayTrack {
   days: Date[];
   months: MonthLabel[];
@@ -30,7 +32,7 @@ export interface DayTrack {
   spanToRect: (start: Date, end: Date) => { left: number; width: number };
 }
 
-// The track covering `min`..`max` with padding on both sides, extended on the right
+// The track covering `min`..`max` with padding on both sides, extended at the end
 // with trailing days so it fills the viewport instead of leaving empty space; the
 // day size stays fixed. An empty range (both null) falls back to the four weeks
 // after today.
@@ -48,7 +50,8 @@ export function buildDayTrack({
   dayW: number;
 }): DayTrack {
   const today = startOfDay(new Date());
-  const rangeStart = addDays(min ?? today, -3);
+  // Starts on a week start, so the weekly gridlines fall where the header numbers the weeks.
+  const rangeStart = startOfWeek(addDays(min ?? today, -3), { weekStartsOn: localeWeekStart() });
   const rangeEnd = addDays(max ?? addDays(today, 28), 7);
   const naturalDays = Math.max(1, daysBetween(rangeStart, rangeEnd) + 1);
   const daysToFill = Math.ceil(Math.max(0, viewportW - labelW) / dayW);
@@ -68,14 +71,15 @@ export function buildDayTrack({
   // narrow days do not turn the track into solid lines.
   const gridPeriod = dayW >= 20 ? dayW : dayW * 7;
   const dayLines = {
-    backgroundImage: `repeating-linear-gradient(to right, transparent 0, transparent ${gridPeriod - 1}px, var(--border) ${gridPeriod - 1}px, var(--border) ${gridPeriod}px)`,
+    backgroundImage: `repeating-linear-gradient(var(--to-inline-end), transparent 0, transparent ${gridPeriod - 1}px, var(--border) ${gridPeriod - 1}px, var(--border) ${gridPeriod}px)`,
   };
 
   return {
     days,
     months,
     trackWidth,
-    todayLeft: daysBetween(rangeStart, today) * dayW,
+    // The middle of today, under the header's today mark.
+    todayLeft: (daysBetween(rangeStart, today) + 0.5) * dayW,
     todayInRange: today >= rangeStart && today <= rangeEnd,
     dayLines,
     spanToRect: (start: Date, end: Date) => ({

@@ -14,7 +14,8 @@
   "name": "名稱",
   "edit": "編輯",
   "language": "語言",
-  "toggleTheme": "切換主題",
+  "interface": "介面",
+  "allPreferences": "所有偏好設定",
   "priority": {
     "label": "優先順序",
     "tooltip": "{priority}優先順序",
@@ -40,8 +41,9 @@
   "brandSubtitle": "在看板中規劃工作項目。登入後開啟你的專案。",
   "hotkeys": {
     "pressKeys": "請按鍵",
-    "fixed": "固定",
-    "resetShortcut": "重設此快捷鍵",
+    "fixed": "無法更改",
+    "changeShortcut": "更改快捷鍵：{command}",
+    "resetShortcut": "重設快捷鍵：{command}",
     "groups": {
       "general": "一般",
       "workItems": "工作項目"
@@ -76,7 +78,7 @@
         "select-all": "選擇看板中的所有工作項目"
       }
     },
-    "conflict": "已被「{command}」使用"
+    "conflict": "「{command}」也在使用。請更改其中一個。"
   },
   "agentChat": {
     "emptyHint": "傳送訊息，測試此代理如何回覆以及會使用哪些工具。",

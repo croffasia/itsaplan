@@ -24,7 +24,7 @@ export function CalendarDayOverflow({
       <PopoverTrigger asChild>
         <button
           type="button"
-          className="px-1.5 text-left text-[10px] text-muted-foreground hover:text-foreground"
+          className="px-1.5 text-start text-[10px] text-muted-foreground hover:text-foreground"
         >
           {t('moreIssues', { count: hidden })}
         </button>
@@ -44,7 +44,7 @@ export function CalendarDayOverflow({
                     setOpen(false);
                     onOpen(issue.id);
                   }}
-                  className="flex w-full items-center gap-1.5 rounded px-2 py-1 text-left text-xs hover:bg-accent"
+                  className="flex w-full items-center gap-1.5 rounded px-2 py-1 text-start text-xs hover:bg-accent"
                 >
                   <span
                     className="inline-block size-1.5 shrink-0 rounded-full"
@@ -53,7 +53,9 @@ export function CalendarDayOverflow({
                   <span className="shrink-0 text-muted-foreground tabular-nums">
                     {issue.identifier}
                   </span>
-                  <span className="truncate text-foreground">{issue.title}</span>
+                  <span dir="auto" className="truncate text-foreground">
+                    {issue.title}
+                  </span>
                 </button>
               </TooltipTrigger>
               <TooltipContent>{`${issue.identifier} ${issue.title}`}</TooltipContent>

@@ -9,11 +9,14 @@ type CredentialChecker = (integrationKey: string, config: ToolConfig) => Promise
 const CHECK_TIMEOUT_MS = 10_000;
 
 // Asks the service a credential is for whether it accepts it: an AI provider through
-// providerCheck, a tool integration through its own verify.
-async function askService(integrationKey: string, config: ToolConfig): Promise<CredentialCheck> {
+// providerCheck, a tool integration and a service an extension adds through their own verify.
+export async function askService(
+  integrationKey: string,
+  config: ToolConfig,
+): Promise<CredentialCheck> {
   const signal = AbortSignal.timeout(CHECK_TIMEOUT_MS);
   try {
-    if (integrationKind(integrationKey) === 'tool') {
+    if (integrationKind(integrationKey) !== 'llm') {
       const verify = getIntegration(integrationKey)?.verify;
       return verify ? await verify(config, signal) : 'unknown';
     }

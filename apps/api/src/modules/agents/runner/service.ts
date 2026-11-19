@@ -7,9 +7,11 @@ import {
   runTurn,
   loadRunThread,
   markRunExecuting,
+  requesterColumns,
   runRetryDelayMs,
   scheduleRunRetry,
 } from '../core/run-queue';
+import { limitAnswer } from '../core/answer-limit';
 import { agentRunStarted, recordAgentRunFinished } from '../core/run-activity';
 import { emitRunsFinished } from '../core/run-finished';
 import { runAdmissionDelay } from '../core/run-admission';
@@ -211,11 +213,7 @@ export async function takeNextRun(agent: RunnerAgent): Promise<RunnerRun | null>
       r.source_activity_id AS "sourceActivityId",
       r.document_id AS "documentId",
       r.source_document_comment_id AS "sourceDocumentCommentId",
-      (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterName",
-      (SELECT COALESCE(u.username, ag.username)
-         FROM issue_activity a JOIN "user" u ON u.id = a.actor_user_id
-         LEFT JOIN ai_agent ag ON ag.user_id = u.id
-         WHERE a.id = r.source_activity_id) AS "requesterUsername"
+      ${requesterColumns}
   `);
   const row = (rows as unknown as ClaimedRow[])[0];
   if (!row) return null;
@@ -322,7 +320,7 @@ export async function finishRun(
     .set({
       status: result.status,
       executionStartedAt: null,
-      output: result.output?.slice(0, 10_000) ?? null,
+      output: result.output == null ? null : await limitAnswer(result.output),
       lastError: result.status === 'failed' ? (result.error?.slice(0, 500) ?? 'Run failed') : null,
       inputTokens: result.usage?.inputTokens ?? null,
       outputTokens: result.usage?.outputTokens ?? null,

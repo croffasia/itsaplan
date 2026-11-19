@@ -29,7 +29,7 @@ export default function SettingsWorkflowsPreview() {
         <PageHeader
           title={text.label}
           description={text.description}
-          actions={<SectionPreviewBanner />}
+          actions={<SectionPreviewBanner feature="workflows" />}
           className="mb-5"
         />
       </div>

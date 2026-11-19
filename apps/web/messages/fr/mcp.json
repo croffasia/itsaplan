@@ -34,16 +34,26 @@
     },
     "security": "OAuth utilise PKCE (S256), l'enregistrement dynamique des clients et des jetons d'accès limités à votre compte {app}.",
     "consent": {
-      "title": "{client} souhaite se connecter à votre compte",
-      "titleUnnamed": "Un client MCP souhaite se connecter à votre compte",
-      "description": "Il agira avec vos autorisations : tout ce que vous pouvez voir et modifier, il le pourra aussi.",
-      "account": "Connecté en tant que {email}",
-      "redirect": "Après votre réponse, vous revenez sur {host}.",
-      "missingCode": "Cette demande d'autorisation n'a pas de code de consentement.",
-      "cancel": "Annuler",
-      "pending": "Autorisation…",
-      "authorize": "Autoriser",
-      "failed": "Impossible de terminer l'autorisation OAuth."
+      "title": "Autoriser {client} à accéder à votre compte ?",
+      "titleUnnamed": "Autoriser une application sans nom à accéder à votre compte ?",
+      "actsAs": "Une fois autorisée, l’application agit en votre nom :",
+      "canSee": "Voit tout ce que vous pouvez voir, dans toutes vos équipes",
+      "canChange": "Crée, modifie et supprime tout ce que vous pouvez",
+      "keepsAccess": "Garde l’accès jusqu’à ce que vous la déconnectiez dans Compte › Sécurité",
+      "account": "Compte",
+      "app": "Application",
+      "thisComputer": "Sur cet ordinateur",
+      "named": "L’application s’est nommée elle-même « {client} ». N’autorisez que si vous avez lancé cette connexion.",
+      "unnamed": "L’application n’a envoyé aucun nom. N’autorisez que si vous avez lancé cette connexion.",
+      "deny": "Ne pas autoriser",
+      "allow": "Autoriser",
+      "allowing": "Autorisation…",
+      "denying": "Envoi…",
+      "expired": "Cette demande a expiré au bout de 10 minutes. Relancez la connexion dans l’application.",
+      "failed": "Votre réponse n’a pas abouti. Réessayez.",
+      "incompleteTitle": "Ce lien est incomplet",
+      "incompleteBody": "Relancez la connexion dans l’application.",
+      "brandSubtitle": "Connectez à votre compte des applications d’IA comme Claude et ChatGPT."
     }
   }
 }

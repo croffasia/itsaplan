@@ -176,4 +176,29 @@ describe('agent_run queue store', () => {
     await markRunFailed(runId, 'x'.repeat(600));
     expect((await readRun(runId)).lastError).toHaveLength(500);
   });
+
+  it('saves the start of an output up to the instance answer limit', async () => {
+    const { asOwner, columnId } = await setup();
+    await asOwner.god['agent-settings'].put({ maxAnswerChars: 4 });
+    const { runId } = await enqueueRun(asOwner, columnId);
+    await markRunSuccess(runId, 'done and more', null);
+    expect((await readRun(runId)).output).toBe('done');
+  });
+
+  it('saves the start of a failed run output up to the instance answer limit', async () => {
+    const { asOwner, columnId } = await setup();
+    await asOwner.god['agent-settings'].put({ maxAnswerChars: 4 });
+    const { runId } = await enqueueRun(asOwner, columnId);
+    await markRunFailed(runId, 'Timed out', 'half of it');
+    expect(await readRun(runId)).toMatchObject({ lastError: 'Timed out', output: 'half' });
+  });
+
+  it('saves an output whole when the answer limit is 0', async () => {
+    const { asOwner, columnId } = await setup();
+    await asOwner.god['agent-settings'].put({ maxAnswerChars: 0 });
+    const { runId } = await enqueueRun(asOwner, columnId);
+    const output = 'x'.repeat(250_000);
+    await markRunSuccess(runId, output, null);
+    expect((await readRun(runId)).output).toBe(output);
+  });
 });

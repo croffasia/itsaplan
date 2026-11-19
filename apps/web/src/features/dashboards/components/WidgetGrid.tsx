@@ -14,6 +14,7 @@ import {
   STACK_WIDTH,
   stackLayout,
   WIDGET_DEFAULTS,
+  type WidgetType,
 } from '@/utils/dashboardWidgets';
 import type { DashboardEditor } from '../hooks/useDashboardEditor';
 import WidgetFrame from './WidgetFrame';
@@ -28,16 +29,26 @@ import WidgetSettings, { hasWidgetSettings } from './WidgetSettings';
 // Below STACK_WIDTH the saved positions are replaced by a two-column layout
 // derived from them (stackLayout), and dragging and resizing are off: what is
 // stored is the desktop layout, and a drag on the derived one would overwrite it.
+//
+// `dropType` is the widget being dragged in from the add panel: the grid shows where
+// it would land at its default size and adds it on drop. `newIds` are the widgets
+// added from the panel; they carry a "New" badge.
 export default function WidgetGrid({
   projectKey,
   project,
   editor,
   editing,
+  dropType,
+  newIds,
+  onDropped,
 }: {
   projectKey: string;
   project: ProjectDetail;
   editor: DashboardEditor;
   editing: boolean;
+  dropType: WidgetType | null;
+  newIds: string[];
+  onDropped: (id: string) => void;
 }) {
   const direction = Direction.useDirection();
   const t = useTranslations('dashboards');
@@ -47,6 +58,7 @@ export default function WidgetGrid({
   const { width, containerRef } = useContainerWidth();
   const stacked = width < STACK_WIDTH;
   const movable = editing && !stacked;
+  const dropSize = movable && dropType ? WIDGET_DEFAULTS[dropType] : null;
 
   const layout = useMemo(
     () => (stacked ? stackLayout(editor.layout) : editor.layout),
@@ -67,7 +79,9 @@ export default function WidgetGrid({
     [layout, stacked],
   );
 
-  if (layout.length === 0) {
+  const empty = layout.length === 0;
+  // While editing, an empty grid still renders: it is where a widget is dropped.
+  if (empty && !movable) {
     return (
       <p className="rounded-lg border border-dashed py-16 text-center text-sm text-muted-foreground">
         {t('noWidgets')}
@@ -79,7 +93,12 @@ export default function WidgetGrid({
     // react-grid-layout places every widget at an absolute `left` and has no
     // right-to-left mode, so the grid itself keeps its direction. Each widget then
     // takes the page's back, since only the placing has to stay left to right.
-    <div ref={containerRef} dir="ltr">
+    <div ref={containerRef} dir="ltr" className={cn('relative', dropSize && 'flex grow flex-col')}>
+      {empty && (
+        <p className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
+          {t('noWidgets')}
+        </p>
+      )}
       {width > 0 && (
         <GridLayout
           width={width}
@@ -92,10 +111,27 @@ export default function WidgetGrid({
           }}
           dragConfig={{ enabled: movable, handle: '.widget-drag-handle', threshold: 4 }}
           resizeConfig={{ enabled: movable, handles: ['se'] }}
+          dropConfig={{
+            enabled: dropSize != null,
+            onDragOver: () => (dropSize ? { w: dropSize.w, h: dropSize.h } : false),
+          }}
           compactor={verticalCompactor}
           onDragStop={(l) => editor.applyGrid(l)}
           onResizeStop={(l) => editor.applyGrid(l)}
-          className={cn(movable && 'rounded-lg outline-1 outline-border/50 outline-dashed')}
+          onDrop={(l, item) => {
+            if (dropType && item) {
+              onDropped(editor.dropWidget(dropType, l, { x: item.x, y: item.y }));
+            }
+          }}
+          className={cn(
+            movable && 'rounded-lg outline-1 outline-border/50 outline-dashed',
+            empty && 'min-h-40',
+            // While a widget is dragged in, the grid reaches the bottom of the page, so a
+            // drop below the last widget lands too. The widgets let the drag through to the
+            // grid: in Firefox, react-grid-layout moves the drop placeholder only while the
+            // grid element itself is under the pointer.
+            dropSize && 'grow [&>*]:pointer-events-none',
+          )}
         >
           {layout.map((widget) => (
             <div key={widget.id} dir={direction} className="min-w-0 overflow-hidden">
@@ -103,6 +139,7 @@ export default function WidgetGrid({
                 widget={widget}
                 editing={editing}
                 movable={movable}
+                isNew={newIds.includes(widget.id)}
                 settings={
                   editing && hasWidgetSettings(widget.type) ? (
                     <WidgetSettings

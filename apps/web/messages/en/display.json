@@ -65,6 +65,7 @@
     "byWeek": "By week"
   },
   "weekStart": {
+    "6": "Saturday",
     "0": "Sunday",
     "1": "Monday"
   },

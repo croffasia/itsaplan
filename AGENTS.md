@@ -17,8 +17,9 @@ Before you change files in an app or package, read its `AGENTS.md`: `apps/api`, 
 - Cross-package imports use the workspace protocol: `"@repo/db": "workspace:*"`. Packages export
   raw `.ts` and have no build step. `packages/runner` is the exception: it is published to npm,
   bundles to `dist/`, and its source uses no Bun APIs because the CLI runs on plain Node.
-- The web app never imports a package. It calls the API over HTTP. Dependencies run
-  `api → @repo/auth → @repo/db → @repo/crypto`.
+- The web app imports one package, `@repo/editor`, the page model it shares with the API, and
+  calls the API over HTTP for everything else. `@repo/editor` also runs in the browser, so it uses
+  no Bun or Node APIs. Dependencies run `api → @repo/auth → @repo/db → @repo/crypto`.
 - A server-side fetch of a supplied URL goes through `@repo/net`, the SSRF guard.
 - Never skip the pre-commit hook with `--no-verify`. It runs `eslint --fix` and `prettier --write`.
 - Minimum comments. A comment says why; the code says what. No comment longer than its code, none

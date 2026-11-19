@@ -304,6 +304,9 @@ export const projectSetting = pgTable(
 // not stored — it lasts as long as that issue stays open. auto_watch is whether the
 // user is subscribed to the issues they create, are assigned, comment on or are
 // mentioned in (see issue_watcher); off means they only ever subscribe by hand.
+// palette is the color theme drawn in the light or dark mode `theme` picks; like
+// locale it has no CHECK, so adding a palette costs no migration. 'custom' draws the
+// colors in custom_theme, whose background also decides light or dark.
 //
 // TODO(andrew): store the settings in one jsonb column, so a new one needs no migration.
 // The migration copies the current values into it and drops their columns;
@@ -325,6 +328,12 @@ export const userPreference = pgTable(
     issueStatsView: text('issue_stats_view').notNull().default('compact'),
     issueActivityView: text('issue_activity_view').notNull().default('flat'),
     autoWatch: boolean('auto_watch').notNull().default(true),
+    palette: text('palette').notNull().default('default'),
+    customTheme: jsonb('custom_theme').$type<{
+      accent: string;
+      background: string;
+      contrast: number;
+    }>(),
     // Whether the user closed the tour of the product. Every account starts without it,
     // so one made before the tour existed sees it once too.
     onboardingSeen: boolean('onboarding_seen').notNull().default(false),
@@ -782,11 +791,16 @@ export const agentRun = pgTable(
     issueId: integer('issue_id').references(() => issue.id, { onDelete: 'cascade' }),
     scheduleId: integer('schedule_id').references(() => agentSchedule.id, { onDelete: 'cascade' }),
     // 'event' is a run an extension queued on an issue for a schedule of its own type.
+    // 'api' is a task sent through POST /run or run_ai_agent: no issue, document or schedule.
     trigger: text('trigger').notNull().default('delegation'),
     scheduledFor: timestamp('scheduled_for', { withTimezone: true }),
     // The comment that mentioned the agent, kept for traceability. The prompt is
     // snapshotted into `prompt` so a run still works if the comment is later deleted.
     sourceActivityId: integer('source_activity_id').references(() => issueActivity.id, {
+      onDelete: 'set null',
+    }),
+    // Who sent an API task. A mention's author is read from its comment instead.
+    requestedByUserId: text('requested_by_user_id').references(() => user.id, {
       onDelete: 'set null',
     }),
     // A mention in a document comment: the document and the comment. Such a run has no
@@ -828,7 +842,7 @@ export const agentRun = pgTable(
     ),
     check(
       'agent_run_trigger_check',
-      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'schedule', 'manual', 'status', 'event')`,
+      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'schedule', 'manual', 'status', 'event', 'api')`,
     ),
     uniqueIndex('agent_run_schedule_fire_uq').on(t.scheduleId, t.scheduledFor),
     index('agent_run_due_idx').on(t.status, t.nextAttemptAt),
@@ -2102,6 +2116,27 @@ export const issueActivity = pgTable(
   ],
 );
 
+// Emoji reactions on a comment. A user reacts to a comment with any number of
+// different emoji, each one once.
+export const issueActivityReaction = pgTable(
+  'issue_activity_reaction',
+  {
+    activityId: integer('activity_id')
+      .notNull()
+      .references(() => issueActivity.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    emoji: text('emoji').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.activityId, t.userId, t.emoji] }),
+    // Backs the cascade of a user delete.
+    index('issue_activity_reaction_user_idx').on(t.userId),
+  ],
+);
+
 // Saved views (the tabs above a project's work items view). filters and display are jsonb
 // blobs owned by the UI; the server stores and returns them without inspecting
 // them. position orders the tabs.
@@ -2596,6 +2631,7 @@ export const importRecord = pgTable(
 // document so the inbox can filter and scope by project. source_activity_id points at
 // the issue_activity row that produced the notification, document_comment_id at the
 // document comment (each set null if that entry is later removed). type selects the kind.
+// reaction_emoji is the emoji of a 'reacted' notification, null on every other type.
 // read_at NULL means unread; snoozed_until, when set and still in the future, hides
 // the row from the default inbox until then.
 export const notification = pgTable(
@@ -2623,6 +2659,7 @@ export const notification = pgTable(
       onDelete: 'set null',
     }),
     actorName: text('actor_name'),
+    reactionEmoji: text('reaction_emoji'),
     readAt: timestamp('read_at', { withTimezone: true }),
     snoozedUntil: timestamp('snoozed_until', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -2630,7 +2667,7 @@ export const notification = pgTable(
   (t) => [
     check(
       'notification_type_check',
-      sql`${t.type} IN ('assigned', 'mentioned', 'commented', 'state_changed')`,
+      sql`${t.type} IN ('assigned', 'mentioned', 'commented', 'state_changed', 'reacted')`,
     ),
     check('notification_target_check', sql`(${t.issueId} IS NULL) <> (${t.documentId} IS NULL)`),
     // Backs the inbox list: a user's notifications newest first.

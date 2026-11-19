@@ -97,21 +97,19 @@
   "preferences": {
     "label": "Préférences",
     "title": "Préférences",
-    "description": "L'apparence et le comportement de l'application pour vous. Chaque changement est enregistré immédiatement et s'applique partout où vous vous connectez.",
+    "description": "L'apparence et le fonctionnement de l'application pour vous.",
     "saved": "Préférences enregistrées",
     "sections": {
       "appearance": "Apparence",
       "dateAndTime": "Date et heure",
-      "dateAndTimeDescription": "Les horodatages sont stockés en UTC et affichés dans le fuseau que vous choisissez ici.",
       "navigation": "Navigation",
-      "navigationDescription": "Où l'application vous emmène, et comment les tickets s'ouvrent.",
-      "issueSettings": "Paramètres des tickets",
-      "issueSettingsDescription": "L'état initial des statistiques et du journal d'activité d'un ticket. Les modifier alors qu'un ticket est ouvert ne change pas ces préférences.",
+      "issueSettings": "Détails du ticket",
+      "issueSettingsDescription": "Valeurs par défaut pour chaque ticket que vous ouvrez. Les changer sur un ticket ouvert ne modifie pas ces préférences.",
       "notifications": "Notifications",
       "notificationsDescription": "Suivre un ticket vous en apporte les commentaires et les changements d'état.",
       "aiChat": "Chat IA",
       "shortcuts": "Raccourcis clavier",
-      "shortcutsDescription": "Appuyez sur Modifier, puis sur les touches souhaitées. Réinitialiser rétablit le raccourci défini pour cette instance."
+      "shortcutsDescription": "Le bouton de réinitialisation rétablit le raccourci par défaut."
     },
     "theme": "Thème",
     "themeDescription": "Suivre le système reprend le réglage de votre système d'exploitation.",
@@ -120,10 +118,30 @@
       "light": "Clair",
       "dark": "Sombre"
     },
+    "themeFromBackground": "Défini par le fond",
+    "palette": "Palette",
+    "paletteDescription": "Chaque palette a une version claire et une version sombre.",
+    "paletteOptions": {
+      "default": "Par défaut",
+      "custom": "Personnalisée"
+    },
+    "accent": "Accent",
+    "accentDescription": "La couleur des boutons, des liens et des éléments sélectionnés.",
+    "background": "Fond",
+    "backgroundDescription": "Une couleur sombre donne un thème sombre, une couleur claire un thème clair.",
+    "contrast": "Contraste",
+    "contrastDescription": "À quel point le texte et les bordures ressortent sur le fond.",
+    "sharePalette": "Partager",
+    "sharePaletteDescription": "Copiez cette palette pour l'envoyer. « Coller » applique une palette du presse-papiers.",
+    "copyPalette": "Copier",
+    "pastePalette": "Coller",
+    "paletteCopied": "Palette copiée",
+    "palettePasted": "Palette collée",
+    "pastePaletteInvalid": "Le presse-papiers ne contient pas de palette. Copiez-en une d'abord, puis collez-la.",
     "language": "Langue",
     "languageDescription": "La langue de l'interface, de vos e-mails et du bot Telegram.",
     "timezone": "Fuseau horaire",
-    "timezoneDescription": "Choisissez le fuseau dans lequel vous travaillez.",
+    "timezoneDescription": "Toutes les dates et heures de l'application s'affichent dans ce fuseau.",
     "timezonePlaceholder": "Sélectionnez un fuseau horaire",
     "timezoneEmpty": "Aucun fuseau horaire trouvé.",
     "timezoneGroups": {
@@ -139,49 +157,47 @@
       "Other": "Autre"
     },
     "issueOpenMode": "Ouvrir les tickets dans",
-    "issueOpenModeDescription": "Ce qui se passe quand vous cliquez sur un ticket dans un tableau, une liste, un calendrier ou une chronologie.",
     "issueOpenModeOptions": {
       "panel": "Un panneau latéral",
       "page": "Une page entière"
     },
     "startPage": "Page de démarrage",
-    "startPageDescription": "La section qui s'ouvre à l'entrée dans l'application, dans votre dernier projet actif.",
+    "startPageDescription": "S'ouvre dans le dernier projet utilisé.",
     "startPageOptions": {
       "work-items": "Tickets",
       "inbox": "Boîte de réception",
       "dashboard": "Tableaux de bord",
       "initiatives": "Initiatives"
     },
-    "showStats": "Afficher les statistiques",
-    "showStatsDescription": "Si la section des statistiques est développée à l'ouverture d'un ticket.",
+    "showStats": "Développer les statistiques",
     "statsView": "Afficher les statistiques en",
-    "statsViewDescription": "Compact affiche une seule barre avec une part par état ; Chronologie donne à chaque état son propre couloir sur un axe temporel.",
+    "statsViewDescription": "Barre compacte montre la part du temps passée dans chaque état. Chronologie donne à chaque état son propre couloir.",
     "statsViewOptions": {
       "compact": "Barre compacte",
       "timeline": "Chronologie"
     },
     "activityView": "Afficher l'activité en",
-    "activityViewDescription": "À plat liste chaque entrée de la plus récente à la plus ancienne ; Groupée découpe le journal selon l'état dans lequel se trouvait le ticket.",
+    "activityViewDescription": "Groupée par état répartit les entrées selon l'état du ticket à ce moment-là.",
     "activityViewOptions": {
-      "flat": "À plat",
+      "flat": "Une seule liste",
       "grouped": "Groupée par état"
     },
     "autoWatch": "Suivre les tickets automatiquement",
-    "autoWatchDescription": "Ceux que vous créez, qui vous sont assignés, que vous commentez ou dans lesquels vous êtes mentionné.",
+    "autoWatchDescription": "Les tickets que vous créez, que vous commentez, qui vous sont assignés ou où l'on vous mentionne.",
     "desktopNotifications": "Notifications de bureau",
-    "desktopNotificationsDescription": "Dans ce navigateur uniquement. Affiche une notification pour chaque nouvel élément de la boîte de réception, de tous les projets, quand l'app est ouverte mais pas au premier plan.",
+    "desktopNotificationsDescription": "Dans ce navigateur uniquement. Affiche chaque nouvel élément de la boîte de réception, de tous les projets, quand l'app est ouverte en arrière-plan.",
     "desktopNotificationsBlocked": "Ce navigateur bloque les notifications de ce site. Autorisez-les dans les paramètres du site du navigateur.",
     "desktopNotificationsUnsupported": "Ce navigateur ne peut pas afficher de notifications de bureau.",
-    "desktopNotificationsReplacedByPush": "Les notifications push sont activées dans ce navigateur et y remplacent les notifications de bureau.",
+    "desktopNotificationsReplacedByPush": "Les notifications push sont activées dans ce navigateur, donc les notifications de bureau y sont désactivées.",
     "desktopNotificationsOff": "Désactivé",
-    "pushNotifications": "Notifications push sur cet appareil",
-    "pushNotificationsDescription": "Dans ce navigateur uniquement. Affiche les notifications que vous choisissez dans la colonne Push des paramètres de notification de chaque projet, même quand l'app est fermée.",
+    "pushNotifications": "Notifications push",
+    "pushNotificationsDescription": "Dans ce navigateur uniquement. Envoie les notifications que vous choisissez dans la colonne Push des paramètres de notification de chaque projet, même quand l'app est fermée.",
     "pushNotificationsBlocked": "Ce navigateur bloque les notifications de ce site. Autorisez-les dans les paramètres du site du navigateur.",
     "pushNotificationsUnsupported": "Ce navigateur ne peut pas recevoir de notifications push.",
-    "pushNotificationsUnsupportedIos": "Sur iPhone ou iPad, ajoutez d'abord l'app à l'écran d'accueil (iOS 16.4 ou ultérieur), puis activez cette option depuis celle-ci.",
+    "pushNotificationsUnsupportedIos": "Sur iPhone ou iPad, ajoutez l'app à l'écran d'accueil, puis activez cette option depuis l'app. Nécessite iOS 16.4 ou ultérieur.",
     "pushNotificationsOff": "Désactivé",
-    "pushNotificationsFailed": "Impossible de modifier les notifications push dans ce navigateur.",
-    "showChatByDefault": "Afficher le chat par défaut",
-    "showChatByDefaultDescription": "Le panneau de chat s'ouvre avec une page de projet. Fermez-le à tout moment depuis son en-tête ou l'icône de chat."
+    "pushNotificationsFailed": "Impossible de modifier les notifications push dans ce navigateur. Réessayez.",
+    "showChatByDefault": "Ouvrir le chat par défaut",
+    "showChatByDefaultDescription": "Le panneau du chat s'ouvre avec chaque page de projet."
   }
 }

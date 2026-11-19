@@ -5,8 +5,8 @@ import { cn } from '@/lib/utils';
 import { useRelativeTime } from '@/context/relativeTimeContext';
 import { formatTime } from '@/utils/dates';
 import { runPlace } from '../utils/runIssueKey';
+import { runTitle } from '../utils/runTitle';
 import { waitsForRunner } from '../utils/waitsForRunner';
-import RunnerQueueKindBadge from './RunnerQueueKindBadge';
 import RunnerQueueStateIcon from './RunnerQueueStateIcon';
 
 type Translate = ReturnType<typeof useTranslations<'issue.agentRuns'>>;
@@ -43,10 +43,10 @@ export default function RunnerQueueActiveCard({
   const relativeTime = useRelativeTime();
   const [label, aside] = runStatus(run, t, relativeTime);
   const meta = [
-    runPlace(run, acrossProjects),
     `@${run.username}`,
+    runPlace(run, acrossProjects),
     t(`triggers.${run.trigger}`),
-    run.attempts > 1 ? t('attempts', { count: run.attempts }) : null,
+    run.attempts > 1 ? t('attemptsCount', { count: run.attempts }) : null,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -55,8 +55,8 @@ export default function RunnerQueueActiveCard({
       href={href}
       aria-current={selected ? 'page' : undefined}
       className={cn(
-        'flex w-full flex-col gap-1.5 rounded-lg border bg-card p-3 text-start hover:bg-accent/50',
-        selected && 'bg-accent',
+        'flex w-full flex-col gap-1 rounded-lg bg-card px-3 py-2.5 text-start ring-1 ring-border hover:bg-accent/50',
+        selected && 'ring-[1.5px] ring-foreground',
       )}
     >
       <span
@@ -72,12 +72,9 @@ export default function RunnerQueueActiveCard({
         )}
       </span>
       <span className="line-clamp-2 text-sm font-medium" dir="auto">
-        {run.issueTitle ?? run.scheduleName ?? run.prompt}
+        {runTitle(run)}
       </span>
-      <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-        <RunnerQueueKindBadge kind={run.kind} />
-        <span className="truncate">{meta}</span>
-      </span>
+      <span className="truncate text-xs text-muted-foreground">{meta}</span>
     </Link>
   );
 }

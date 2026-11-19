@@ -46,10 +46,12 @@ jobs:
         run: bun run typecheck
 
       # High and critical advisories fail the job; moderate and lower only print.
-      # GHSA-vfj7-8cjw-p6xm (braces) has no patched release and reaches us only through
-      # the Next.js ESLint plugin, which globs the repository's own files.
+      # TODO(croffasia): drop GHSA-fc5q-39xc-vjpf (picomatch ReDoS) once picomatch has a
+      # patched release; 4.0.7 is the latest. No user-supplied glob reaches it: the api gets
+      # it only through Mastra's workspace and skill loaders, which it does not use, and the
+      # other paths are build tools.
       - name: Audit dependencies
-        run: bun audit --audit-level=high --ignore=GHSA-vfj7-8cjw-p6xm
+        run: bun audit --audit-level=high --ignore=GHSA-fc5q-39xc-vjpf
 
       - name: Script tests
         run: bun test scripts/

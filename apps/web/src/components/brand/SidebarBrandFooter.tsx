@@ -42,6 +42,7 @@ export default function SidebarBrandFooter() {
     <button
       type="button"
       onClick={tour.replay}
+      data-product-mark
       aria-label={t('replay')}
       title={t('replay')}
       className="shrink-0 rounded-md transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-hidden"

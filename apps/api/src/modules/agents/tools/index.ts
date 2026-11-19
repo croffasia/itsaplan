@@ -53,9 +53,9 @@ export const agentToolRoutes = new Elysia({
     detail: {
       summary: 'List built-in agent actions',
       description:
-        'List the built-in actions an internal agent can be granted (the valid keys for the ' +
-        'tools field on create_ai_agent / update_ai_agent), each with the permission its ' +
-        "route asserts — an action the agent's role refuses returns 403 when it runs.",
+        'List the built-in actions you can grant an internal agent: the valid `tools` keys for ' +
+        'create_ai_agent and update_ai_agent. Each shows the permission it checks. An action the ' +
+        "agent's role does not allow returns 403 when it runs.",
       ...mcpTool('list_ai_agent_tools'),
     },
   })
@@ -77,12 +77,9 @@ export const agentToolRoutes = new Elysia({
       detail: {
         summary: 'List configured tools',
         description:
-          "One page of a team's tools configured on integration credentials, optionally " +
-          'narrowed by a search on the tool name, its group or its integration, and to the ' +
-          "tools of some integrations or the team's own tools by group. An id here is " +
-          'what set_ai_agent_configured_tools takes to enable a tool on an agent. Separate ' +
-          'from the built-in actions in list_ai_agent_tools. The whole list, for a picker, ' +
-          'comes from list_configured_tool_options.',
+          "List a team's tools configured on integration credentials, one page at a time. Enable " +
+          'one on an agent with set_ai_agent_configured_tools. Built-in actions are in ' +
+          'list_ai_agent_tools. For the full list at once, use list_configured_tool_options.',
         ...mcpTool('list_configured_tools'),
       },
     },
@@ -98,8 +95,7 @@ export const agentToolRoutes = new Elysia({
       detail: {
         summary: 'List every configured tool',
         description:
-          "A team's whole list of configured tools, for the picker that enables them on an " +
-          'agent. Use list_configured_tools to read it a page at a time.',
+          "List all of a team's configured tools at once. Use list_configured_tools for pages.",
         ...mcpTool('list_configured_tool_options'),
       },
     },
@@ -178,8 +174,8 @@ export const agentToolRoutes = new Elysia({
       detail: {
         summary: "Set an agent's enabled tools",
         description:
-          'Replace the set of configured tools enabled on an agent. Send the full set: a tool ' +
-          "left out is disabled. Ids that are not tools of the agent's team are ignored.",
+          'Replace the configured tools enabled on an agent. Send the full set: a tool not in it ' +
+          "is disabled. Ids that are not tools of the agent's team are ignored.",
         ...mcpTool('set_ai_agent_configured_tools'),
       },
     },

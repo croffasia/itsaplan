@@ -2,8 +2,7 @@ import { Suspense } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import DocumentTitle from '@/components/common/DocumentTitle';
-import { Card, CardContent } from '@/components/ui/card';
-import { BrandPanel } from '@/cloud';
+import BrandCardPage from '@/components/common/page/BrandCardPage';
 import AuthLegalNotice from './AuthLegalNotice';
 
 // The card shared by every logged-out screen. The forms read the URL (an invite
@@ -18,17 +17,15 @@ export default function AuthCard({
 }) {
   const t = useTranslations('meta.screens');
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-muted p-6 md:p-10">
-      <div className="flex w-full max-w-sm flex-col gap-4 md:max-w-4xl">
-        <Card className="overflow-hidden p-0">
-          <CardContent className="grid p-0 md:grid-cols-2">
-            <Suspense fallback={null}>{children}</Suspense>
-            <BrandPanel />
-          </CardContent>
-        </Card>
-        <AuthLegalNotice />
-        <DocumentTitle title={t(screen)} />
-      </div>
-    </div>
+    <BrandCardPage
+      footer={
+        <>
+          <AuthLegalNotice />
+          <DocumentTitle title={t(screen)} />
+        </>
+      }
+    >
+      <Suspense fallback={null}>{children}</Suspense>
+    </BrandCardPage>
   );
 }

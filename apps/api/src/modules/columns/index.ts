@@ -32,9 +32,7 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
       response: { 201: ColumnResponse, ...commonErrors },
       detail: {
         summary: 'Create a column',
-        description:
-          'Create a column (workflow state). stateType is one of ' +
-          'backlog/unstarted/started/completed/canceled.',
+        description: 'Create a column (workflow state).',
         ...mcpTool('create_column'),
       },
     },
@@ -52,9 +50,7 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
       response: { 200: ColumnListResponse, ...commonErrors },
       detail: {
         summary: 'Reorder columns',
-        description:
-          "Reorder a project's columns. orderedIds is the full left-to-right list of " +
-          'column ids. Returns the reordered columns.',
+        description: "Reorder a project's columns. orderedIds lists all column ids, left to right.",
         ...mcpTool('reorder_columns'),
       },
     },
@@ -74,9 +70,7 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
       response: { 200: ColumnResponse, ...commonErrors },
       detail: {
         summary: 'Update a column',
-        description:
-          "Update a column's name, stateType, color, its WIP limit " +
-          '(wipLimit / wipMode), or its auto-assignee (autoAssignUserId).',
+        description: "Update a column's name, state type, color, WIP limit or auto-assignee.",
         ...mcpTool('update_column'),
       },
     },
@@ -96,10 +90,9 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
       detail: {
         summary: 'Delete a column',
         description:
-          "Delete a column. Body mode 'move' reassigns its issues to targetColumnId, " +
-          "'delete' removes them. The last backlog column cannot be deleted, nor a column whose " +
-          'agent schedules have runs that have not finished. The schedules of a deleted ' +
-          'column are deleted with it.',
+          "Delete a column. mode 'move' moves its issues to targetColumnId. mode 'delete' " +
+          'deletes them. You cannot delete the last backlog column, or a column whose agent ' +
+          "schedules have unfinished runs. The column's schedules are deleted with it.",
         ...mcpTool('delete_column'),
       },
     },

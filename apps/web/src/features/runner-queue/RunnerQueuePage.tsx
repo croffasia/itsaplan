@@ -1,18 +1,24 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useParams } from 'next/navigation';
 import { RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useRunnerQueueQuery, useRunsInFlightQuery } from '@/services/runnerQueue.service';
-import type { RunnerQueueRun, RunnerQueueScope } from '@/lib/api/endpoints/runnerQueue';
+import type {
+  RunnerQueueRun,
+  RunnerQueueScope,
+  RunnerQueueState,
+} from '@/lib/api/endpoints/runnerQueue';
 import { qk } from '@/services/queryKeys';
 import { revScope } from '@/utils/revScopes';
 import { Button } from '@/components/ui/button';
 import RunnerQueueActiveCard from './components/RunnerQueueActiveCard';
-import RunnerQueueHistoryRow from './components/RunnerQueueHistoryRow';
+import RunnerQueueFilters from './components/RunnerQueueFilters';
+import RunnerQueueHistory from './components/RunnerQueueHistory';
 import RunnerQueueOfflineNotice from './components/RunnerQueueOfflineNotice';
 
 const isActive = (run: RunnerQueueRun) =>
@@ -28,7 +34,10 @@ export default function RunnerQueuePage({
   const params = useParams<{ runId?: string }>();
   const selectedId = params.runId ? Number(params.runId) : null;
   const t = useTranslations('issue.agentRuns');
-  const query = useRunnerQueueQuery(scope.api);
+  const [state, setState] = useState<RunnerQueueState>();
+  const [search, setSearch] = useState('');
+  const q = useDebouncedValue(search.trim(), 300);
+  const query = useRunnerQueueQuery(scope.api, { state, q: q || undefined });
   const inFlight = useRunsInFlightQuery(scope.api).data;
   const acrossProjects = scope.acrossProjects ?? false;
   useLiveRefresh({ scope: revScope.runnerQueue, targets: [qk.runnerQueue] });
@@ -37,6 +46,7 @@ export default function RunnerQueuePage({
   const runs = pages?.flatMap((page) => page.items) ?? [];
   const active = runs.filter(isActive);
   const history = runs.filter((run) => !isActive(run));
+  const activeCount = data ? data.queued + data.running : 0;
   return (
     <div className="flex h-full min-h-0">
       <div
@@ -45,7 +55,7 @@ export default function RunnerQueuePage({
           selectedId != null && 'hidden md:flex',
         )}
       >
-        <div className="flex items-center justify-between gap-2 p-4 pb-3">
+        <div className="flex items-start justify-between gap-2 px-4 pt-4 pb-3">
           <div className="min-w-0">
             <h1 className="text-base font-semibold">{t('queueTitle')}</h1>
             {inFlight && (
@@ -57,7 +67,7 @@ export default function RunnerQueuePage({
             )}
           </div>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon-sm"
             aria-label={t('refresh')}
             disabled={query.isFetching}
@@ -66,6 +76,14 @@ export default function RunnerQueuePage({
             <RefreshCw />
           </Button>
         </div>
+        <RunnerQueueFilters
+          state={state}
+          onStateChange={setState}
+          search={search}
+          onSearchChange={setSearch}
+          failed={data?.failed ?? 0}
+          active={activeCount}
+        />
         <div className="min-h-0 flex-1 overflow-y-auto pb-4">
           {query.isLoading && <p className="px-4 text-sm text-muted-foreground">{t('loading')}</p>}
           {query.isError && (
@@ -74,16 +92,18 @@ export default function RunnerQueuePage({
             </p>
           )}
           {data && data.total === 0 && (
-            <p className="px-4 text-sm text-muted-foreground">{t('queueEmpty')}</p>
+            <p className="px-4 pt-2 text-sm text-muted-foreground">
+              {state || q ? t('noMatches') : t('queueEmpty')}
+            </p>
           )}
           <RunnerQueueOfflineNotice runs={active} />
-          {data && active.length > 0 && (
+          {active.length > 0 && (
             <section>
-              <h2 className="flex justify-between px-4 pt-3 pb-2 text-xs font-semibold text-muted-foreground">
+              <h2 className="flex justify-between px-4 pt-4 pb-1 text-xs font-semibold text-muted-foreground">
                 {t('activeSection')}
-                <span className="font-normal">{data.queued + data.running}</span>
+                <span>{activeCount}</span>
               </h2>
-              <div className="space-y-2 px-4">
+              <div className="space-y-2 px-3 pt-1">
                 {active.map((run) => (
                   <RunnerQueueActiveCard
                     key={run.id}
@@ -96,22 +116,12 @@ export default function RunnerQueuePage({
               </div>
             </section>
           )}
-          {history.length > 0 && (
-            <section>
-              <h2 className="px-4 pt-5 pb-1.5 text-xs font-semibold text-muted-foreground">
-                {t('historySection')}
-              </h2>
-              {history.map((run) => (
-                <RunnerQueueHistoryRow
-                  key={run.id}
-                  run={run}
-                  href={`${scope.path}/${run.id}`}
-                  selected={run.id === selectedId}
-                  acrossProjects={acrossProjects}
-                />
-              ))}
-            </section>
-          )}
+          <RunnerQueueHistory
+            runs={history}
+            path={scope.path}
+            selectedId={selectedId}
+            acrossProjects={acrossProjects}
+          />
           {query.hasNextPage && (
             <div className="px-4 pt-3">
               <Button

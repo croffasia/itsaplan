@@ -35,11 +35,11 @@
     },
     "authentication": {
       "label": "Kimlik Doğrulama",
-      "description": "Bu örnekleme kimlerin kayıt olabileceği, hesapların nasıl onaylanacağı ve giriş sağlayıcıları."
+      "description": "Kimlerin kaydolabileceği, kişilerin nasıl giriş yaptığı ve istek sınırları."
     },
     "hotkeys": {
-      "label": "Klavye Kısayolları",
-      "description": "Bu örneklemdeki herkes için komutlara atanan kısayollar. Kullanıcılar tercihlerinden kendilerine özel kısayol tanımlayabilir."
+      "label": "Klavye kısayolları",
+      "description": "Herkes için varsayılanlar. Herkes kendininkini Tercihler'den değiştirebilir."
     },
     "storage": {
       "label": "Depolama",

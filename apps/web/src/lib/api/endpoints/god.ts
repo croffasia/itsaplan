@@ -28,6 +28,11 @@ export interface InstanceAuthSettings {
   inviteSearch: boolean;
   // The domains a new account's address must be at; empty admits any address.
   allowedEmailDomains: string[];
+  // Requests one client address may send: sign-in per 10 seconds, account emails and
+  // sign-in links per minute.
+  signInRateLimit: number;
+  emailRateLimit: number;
+  magicLinkRateLimit: number;
   hasEmailProvider: boolean;
   // Whether Google or the OIDC provider can run. Password sign-in may only be turned
   // off while one of them can.
@@ -44,6 +49,9 @@ export interface InstanceAuthSettingsPatch {
   inviteTtlDays?: number;
   inviteSearch?: boolean;
   allowedEmailDomains?: string[];
+  signInRateLimit?: number;
+  emailRateLimit?: number;
+  magicLinkRateLimit?: number;
 }
 
 // 'microsoft365' signs in to smtp.office365.com as an app registration (OAuth) instead
@@ -359,6 +367,8 @@ export interface AgentSettings {
   maxRunSeconds: number;
   // Runs of internal agents in flight at once across the instance. 0 sets no limit.
   maxConcurrentRuns: number;
+  // Characters of an agent's answer that are saved. 0 sets no limit.
+  maxAnswerChars: number;
 }
 
 export const getInstanceAgentSettings = () => request<AgentSettings>('/god/agent-settings');
@@ -393,6 +403,19 @@ export const getInstanceApiDocsSettings = () => request<ApiDocsSettings>('/god/a
 
 export const updateInstanceApiDocsSettings = (body: ApiDocsSettings) =>
   request<ApiDocsSettings>('/god/api-docs-settings', {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  });
+
+export interface ApiKeySettings {
+  // 0 sets no limit.
+  requestsPerMinute: number;
+}
+
+export const getInstanceApiKeySettings = () => request<ApiKeySettings>('/god/api-key-settings');
+
+export const updateInstanceApiKeySettings = (body: ApiKeySettings) =>
+  request<ApiKeySettings>('/god/api-key-settings', {
     method: 'PUT',
     body: JSON.stringify(body),
   });

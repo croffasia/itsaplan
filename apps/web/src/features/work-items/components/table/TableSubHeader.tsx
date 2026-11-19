@@ -39,7 +39,7 @@ export function TableSubHeader({
         <Chevron ref={ref} size={12} />
         <GroupDot group={sub} />
         {sub.name}
-        <span className="text-muted-foreground/70">{count}</span>
+        <span className="font-normal text-muted-foreground/70">{count}</span>
       </button>
     </TableDropZone>
   );

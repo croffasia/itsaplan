@@ -9,8 +9,7 @@ import { useGodSectionText } from '@/hooks/useSectionLabels';
 import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { LocaleToggle } from '@/components/locale-toggle';
+import InterfaceMenu from '@/components/layout/InterfaceMenu';
 import SectionPageSkeleton from '@/components/common/skeleton/SectionPageSkeleton';
 import UserMenu from '@/components/layout/UserMenu';
 import GodSidebar from '@/components/layout/GodSidebar';
@@ -52,8 +51,7 @@ export default function GodShell({
           <Separator orientation="vertical" className="mr-1 h-4" />
           <div className="min-w-0 truncate text-sm font-medium">{t('godMode')}</div>
           <div className="ml-auto flex items-center gap-2">
-            <LocaleToggle />
-            <ThemeToggle />
+            <InterfaceMenu />
             <UserMenu />
           </div>
         </header>

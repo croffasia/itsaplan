@@ -14,7 +14,8 @@
   "name": "名称",
   "edit": "编辑",
   "language": "语言",
-  "toggleTheme": "切换主题",
+  "interface": "界面",
+  "allPreferences": "全部偏好设置",
   "priority": {
     "label": "优先级",
     "tooltip": "{priority}优先级",
@@ -40,8 +41,9 @@
   "brandSubtitle": "在看板中规划工作项。登录后打开你的项目。",
   "hotkeys": {
     "pressKeys": "请按键",
-    "fixed": "固定",
-    "resetShortcut": "重置此快捷键",
+    "fixed": "无法更改",
+    "changeShortcut": "更改快捷键：{command}",
+    "resetShortcut": "重置快捷键：{command}",
     "groups": {
       "general": "常规",
       "workItems": "工作项"
@@ -76,7 +78,7 @@
         "select-all": "选择看板中的所有工作项"
       }
     },
-    "conflict": "已被“{command}”使用"
+    "conflict": "“{command}”也在使用。请更改其中一个。"
   },
   "agentChat": {
     "emptyHint": "发送消息，测试此代理如何回复以及会使用哪些工具。",

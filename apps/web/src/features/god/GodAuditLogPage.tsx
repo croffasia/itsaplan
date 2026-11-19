@@ -7,7 +7,7 @@ import GodSectionPage from './components/GodSectionPage';
 export default function GodAuditLogPage() {
   return (
     <GodSectionPage slug="audit-log" widthClassName="max-w-none">
-      <SectionPreview>
+      <SectionPreview feature="audit-log">
         <AuditLogPreview />
       </SectionPreview>
     </GodSectionPage>

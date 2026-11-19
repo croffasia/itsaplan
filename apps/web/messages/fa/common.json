@@ -14,7 +14,8 @@
   "name": "نام",
   "edit": "ویرایش",
   "language": "زبان",
-  "toggleTheme": "تغییر پوسته",
+  "interface": "رابط کاربری",
+  "allPreferences": "همه تنظیمات",
   "priority": {
     "label": "اولویت",
     "tooltip": "اولویت {priority}",
@@ -40,8 +41,9 @@
   "brandSubtitle": "تسک‌ها را روی برد برنامه‌ریزی کنید. برای باز کردن پروژه‌هایتان وارد شوید.",
   "hotkeys": {
     "pressKeys": "کلیدها را فشار دهید",
-    "fixed": "ثابت",
-    "resetShortcut": "بازنشانی این میانبر",
+    "fixed": "قابل تغییر نیست",
+    "changeShortcut": "تغییر میانبر: {command}",
+    "resetShortcut": "بازنشانی میانبر: {command}",
     "groups": {
       "general": "عمومی",
       "workItems": "تسک‌ها"
@@ -76,7 +78,7 @@
         "select-all": "انتخاب همه تسک‌های روی برد"
       }
     },
-    "conflict": "قبلاً توسط {command} استفاده شده است"
+    "conflict": "{command} هم از آن استفاده می‌کند. یکی از آن دو را تغییر دهید."
   },
   "agentChat": {
     "emptyHint": "یک پیام بفرستید تا ببینید این ایجنت چطور پاسخ می‌دهد و از چه ابزارهایی استفاده می‌کند.",

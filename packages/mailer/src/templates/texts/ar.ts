@@ -58,6 +58,11 @@ export const ar: EmailLocaleTexts = {
       body: '{actor} غيّر حالة المهمة دي من {from} لـ {to}.\n\n{ref}: {title}',
       button: 'افتح المهمة',
     },
+    reacted: {
+      subject: '{ref}: {actor} تفاعل مع تعليقك',
+      body: '{actor} تفاعل مع تعليقك بـ {emoji}.\n\n{ref}: {title}',
+      button: 'افتح التعليق',
+    },
     documentMentioned: {
       subject: '{document}: حد أشار إليك',
       body: '{actor} أشار إليك في المستند ده.\n\n{document}',

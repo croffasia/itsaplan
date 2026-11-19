@@ -28,6 +28,7 @@ import {
 import { getAgentSettings } from '#modules/settings/service';
 import { iso } from '#shared/lib';
 import type { AgentRunTrigger } from '../model';
+import { limitAnswer } from './answer-limit';
 import { equalJitterBackoffMs } from './helpers/backoff';
 import { emitRunsFinished } from './run-finished';
 
@@ -151,38 +152,46 @@ async function countClaimedRuns(executor: DbExecutor): Promise<number> {
 
 export async function enqueueAgentRun(input: {
   agentId: number;
-  // The project the run works in, which is the issue's or the document's. An agent works
-  // in several projects, so the run carries its own rather than reading the agent's.
+  // The project the run works in: the issue's, the document's, or the one an API task
+  // was sent in. An agent works in several projects, so the run carries its own rather
+  // than reading the agent's.
   projectId: number;
   issueId: number | null;
   sourceActivityId: number | null;
+  // Who sent an API task; a mention's author is read from its comment.
+  requestedByUserId?: string;
   // A mention in a document comment: the document and the comment, with no issue.
   documentId?: number;
   sourceDocumentCommentId?: string;
   prompt: string;
-  trigger?: 'mention' | 'delegation' | 'field';
+  trigger?: 'mention' | 'delegation' | 'field' | 'api';
   // Seconds the run stays unclaimable after it is queued, so the issue can still be
   // edited before the agent reads it.
   delaySeconds?: number;
-}): Promise<void> {
+}): Promise<number> {
   const delay = Math.max(0, Math.trunc(input.delaySeconds ?? 0));
-  await db.insert(agentRun).values({
-    agentId: input.agentId,
-    projectId: input.projectId,
-    issueId: input.issueId,
-    sourceActivityId: input.sourceActivityId,
-    documentId: input.documentId,
-    sourceDocumentCommentId: input.sourceDocumentCommentId,
-    prompt: input.prompt,
-    trigger: input.trigger ?? (input.sourceActivityId == null ? 'delegation' : 'mention'),
-    nextAttemptAt: delay > 0 ? sql`now() + make_interval(secs => ${delay})` : undefined,
-  });
+  const [run] = await db
+    .insert(agentRun)
+    .values({
+      agentId: input.agentId,
+      projectId: input.projectId,
+      issueId: input.issueId,
+      sourceActivityId: input.sourceActivityId,
+      requestedByUserId: input.requestedByUserId,
+      documentId: input.documentId,
+      sourceDocumentCommentId: input.sourceDocumentCommentId,
+      prompt: input.prompt,
+      trigger: input.trigger ?? (input.sourceActivityId == null ? 'delegation' : 'mention'),
+      nextAttemptAt: delay > 0 ? sql`now() + make_interval(secs => ${delay})` : undefined,
+    })
+    .returning({ id: agentRun.id });
+  return run.id;
 }
 
 export interface ClaimedRun {
   id: number;
   agentId: number;
-  // Null for a cron schedule's run or a manual one, which works on no single issue.
+  // Null for a cron schedule's run, a manual one or an API task, which work on no issue.
   issueId: number | null;
   scheduleId: number | null;
   trigger: AgentRunTrigger;
@@ -207,8 +216,8 @@ export interface ClaimedRun {
   issueTitle: string | null;
   // The issue's assignee (the responsible human) and, for a mention run, the author of
   // the comment that mentioned the agent (from the source activity's name snapshot) with
-  // their account. Each carries the handle the agent tags them by. Any may be null: no
-  // assignee, a deleted user, or a run with no source comment.
+  // their account, or the sender of an API task. Each carries the handle the agent tags
+  // them by. Any may be null: no assignee, a deleted user, or a run nobody asked for.
   assigneeName: string | null;
   assigneeUsername: string | null;
   requesterName: string | null;
@@ -239,6 +248,24 @@ const RUN_CLAIM_LOCK_NS = 8243;
 // claimable again after the lease — no separate recovery pass. The run's project and
 // the agent's user_id are read inline. An external agent's runs are left alone:
 // they are claimed over HTTP by the operator's runner (modules/agents/runner).
+// Who asked for a claimed run `r`, in the RETURNING list of a claim: the author of the
+// comment that mentioned the agent, or the sender of an API task.
+export const requesterColumns = sql`
+  coalesce(
+    (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id),
+    (SELECT u.name FROM "user" u WHERE u.id = r.requested_by_user_id)
+  ) AS "requesterName",
+  (SELECT COALESCE(u.username, ag.username)
+     FROM "user" u LEFT JOIN ai_agent ag ON ag.user_id = u.id
+     WHERE u.id = coalesce(
+       (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id),
+       r.requested_by_user_id
+     )) AS "requesterUsername",
+  coalesce(
+    (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id),
+    r.requested_by_user_id
+  ) AS "requesterUserId"`;
+
 export async function claimDueRuns(): Promise<ClaimedRun[]> {
   const { maxRunSeconds, maxConcurrentRuns } = await getAgentSettings();
   const { agentRuns } = await getJobSettings();
@@ -297,12 +324,7 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
            FROM issue i JOIN "user" u ON u.id = i.assignee_user_id
            LEFT JOIN ai_agent ag ON ag.user_id = u.id
            WHERE i.id = r.issue_id) AS "assigneeUsername",
-        (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterName",
-        (SELECT COALESCE(u.username, ag.username)
-           FROM issue_activity a JOIN "user" u ON u.id = a.actor_user_id
-           LEFT JOIN ai_agent ag ON ag.user_id = u.id
-           WHERE a.id = r.source_activity_id) AS "requesterUsername",
-        (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterUserId"
+        ${requesterColumns}
     `);
   });
   const runs = rows as unknown as Omit<ClaimedRun, ThreadField | 'executionDeadline'>[];
@@ -433,7 +455,7 @@ export async function markRunSuccess(
     .set({
       status: 'success',
       executionStartedAt: null,
-      output,
+      output: await limitAnswer(output),
       lastError: null,
       inputTokens: usage?.inputTokens ?? null,
       outputTokens: usage?.outputTokens ?? null,
@@ -465,7 +487,7 @@ export async function markRunFailed(id: number, error: string, output?: string):
       status: 'failed',
       executionStartedAt: null,
       lastError: error.slice(0, 500),
-      ...(output ? { output } : {}),
+      ...(output ? { output: await limitAnswer(output) } : {}),
       finishedAt: new Date(),
     })
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')))
@@ -513,6 +535,54 @@ export const executionState = sql<'queued' | 'running' | 'success' | 'failed' | 
     WHEN ${agentRun.executionStartedAt} IS NOT NULL AND ${agentRun.nextAttemptAt} > now()
       THEN 'running'
     ELSE 'queued' END`;
+
+export const QUEUED_POLL_SECONDS = 10;
+const MIN_POLL_SECONDS = 5;
+const MAX_POLL_SECONDS = 30;
+
+// When a caller waiting for a run should read it again. A running run is read again after
+// a quarter of the time it has run so far, so a short one answers soon and a long one is
+// read twice a minute; a run waiting out a retry, when the retry is due. None once it ended.
+export function pollAfterSeconds(
+  run: {
+    executionState: AgentRunRow['executionState'];
+    executionStartedAt: Date | null;
+    nextAttemptAt: Date;
+    lastError: string | null;
+  },
+  now = Date.now(),
+): number | undefined {
+  const bounded = (seconds: number) =>
+    Math.min(MAX_POLL_SECONDS, Math.max(MIN_POLL_SECONDS, Math.round(seconds)));
+  if (run.executionState === 'running' && run.executionStartedAt) {
+    return bounded((now - run.executionStartedAt.getTime()) / 4000);
+  }
+  if (run.executionState !== 'queued') return undefined;
+  const retryInMs = run.nextAttemptAt.getTime() - now;
+  return run.lastError != null && retryInMs > 0 ? bounded(retryInMs / 1000) : QUEUED_POLL_SECONDS;
+}
+
+export async function getAgentRunResult(runId: number) {
+  const [row] = await db
+    .select({
+      executionState,
+      executionStartedAt: agentRun.executionStartedAt,
+      nextAttemptAt: agentRun.nextAttemptAt,
+      lastError: agentRun.lastError,
+      output: agentRun.output,
+    })
+    .from(agentRun)
+    .where(eq(agentRun.id, runId));
+  if (!row) return null;
+  const retryAfterSeconds = pollAfterSeconds(row);
+  return {
+    runId,
+    status: row.executionState,
+    output: row.output,
+    error: row.lastError,
+    ...(retryAfterSeconds === undefined ? {} : { retryAfterSeconds }),
+  };
+}
 
 export async function markRunExecuting(
   id: number,

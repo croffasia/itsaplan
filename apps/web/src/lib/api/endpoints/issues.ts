@@ -482,6 +482,9 @@ export interface IssueAgentTraceSpan {
 
 export interface IssueAgentRunTrace {
   previousTraceId: string | null;
+  // This attempt's place among the recorded ones (oldest 1), and how many there are.
+  attempt: number;
+  attempts: number;
   trace: { traceId: string; status: string; startedAt: string; endedAt: string | null };
   spans: IssueAgentTraceSpan[];
 }

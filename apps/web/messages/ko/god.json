@@ -210,6 +210,11 @@
       "everyone": "모든 사람"
     },
     "apiDocsSaved": "API 문서 설정을 저장했습니다",
+    "apiKeys": "API 키",
+    "apiKeysSaved": "API 키 설정을 저장했습니다",
+    "keyRequestsPerMinute": "분당 요청 수",
+    "keyRequestsPerMinuteHint": "키 하나가 1분에 보낼 수 있는 요청 수입니다. MCP 도구 호출도 포함됩니다. API 복제본마다 따로 셉니다. 0이면 제한이 없습니다.",
+    "keyRequestsPerMinuteInvalid": "0에서 {max} 사이의 정수를 입력하세요.",
     "agents": "AI 에이전트",
     "agentsSaved": "AI 에이전트 설정이 저장되었습니다",
     "embedding": "임베드",
@@ -227,48 +232,60 @@
     "runSeconds": "{seconds}초",
     "concurrentRuns": "동시 실행 수",
     "concurrentRunsHint": "이 서버에서 동시에 진행되는 에이전트 실행 수입니다. 나머지는 대기열에서 기다립니다. 채팅과 외부 에이전트는 포함되지 않습니다. 0이면 제한이 없습니다.",
-    "concurrentRunsInvalid": "0에서 {max} 사이의 정수를 입력하세요."
+    "concurrentRunsInvalid": "0에서 {max} 사이의 정수를 입력하세요.",
+    "answerLimit": "답변 길이 제한",
+    "answerLimitHint": "저장되는 에이전트 답변의 글자 수입니다. 나머지는 잘립니다. 채팅에는 답변 전체가 표시되지만, 외부 에이전트는 대화 기록으로 저장된 부분만 받습니다. 0이면 제한이 없습니다.",
+    "answerLimitInvalid": "0에서 {max, number} 사이의 정수를 입력하세요.",
+    "answerLimitNone": "제한이 없습니다. 긴 답변이 전부 저장되어 실행 목록 로딩이 느려질 수 있습니다."
   },
   "authentication": {
     "saved": "인증 설정이 저장되었습니다",
     "registration": "회원가입",
-    "registrationHint": "이 인스턴스에서 계정을 생성할 수 있는 사용자를 설정합니다.",
-    "registrationPasswordlessNote": "회원가입과 비밀번호 복구는 로그인 공급자에서 처리합니다.",
+    "registrationHint": "계정을 만들 수 있는 사람과 초대가 유효한 기간입니다.",
+    "registrationPasswordlessNote": "가입과 비밀번호 재설정은 로그인 공급자에서 합니다.",
     "inviteTtlDays": "초대 유효 기간(일)",
-    "inviteTtlDaysHint": "초대 링크는 이 일수가 지나면 더 이상 작동하지 않으며, 초대 전용 회원가입에서는 해당 주소로 가입할 수 없게 됩니다. 0으로 설정하면 초대에 응답할 때까지 유효합니다.",
+    "inviteTtlDaysHint": "초대는 만들어진 뒤 이 일수가 지나면 더 이상 작동하지 않습니다. 새 값은 기존 초대에도 적용됩니다. 0이면 초대가 만료되지 않습니다.",
     "inviteTtlDaysInvalid": "0에서 {max} 사이의 정수 일수를 입력하세요.",
     "allowedEmailDomains": "허용된 이메일 도메인",
-    "allowedEmailDomainsHint": "이 도메인의 주소로만 계정을 만들 수 있습니다. 쉼표로 구분하고, 비워 두면 모든 주소를 허용합니다. 기존 계정은 계속 로그인할 수 있습니다.",
-    "allowedEmailDomainsInvalid": "각 도메인은 example.com 형식이어야 하며 최대 100개까지 입력할 수 있습니다.",
+    "allowedEmailDomainsHint": "이 도메인의 주소만 계정을 만들 수 있으며, 초대를 통한 가입도 마찬가지입니다. 기존 계정은 계속 접근할 수 있습니다. 도메인은 쉼표로 구분하세요. 하위 도메인은 따로 추가해야 합니다. 비워 두면 모든 주소를 허용합니다.",
+    "allowedEmailDomainsInvalid": "example.com 같은 도메인을 100개까지 입력하세요.",
     "modes": {
       "open": {
         "label": "공개",
-        "description": "회원가입 페이지에 접근할 수 있는 사람은 누구나 계정을 생성할 수 있습니다.",
+        "description": "누구나 가입 페이지에서 계정을 만들 수 있습니다.",
         "descriptionPasswordless": "공급자로 처음 로그인하는 사용자에게 계정이 생성됩니다."
       },
       "invite": {
         "label": "초대 전용",
-        "description": "초대 링크를 통해서만 계정을 생성할 수 있습니다.",
-        "descriptionPasswordless": "공급자로 로그인하면 해당 이메일 주소에 대기 중인 초대가 있을 때만 계정이 생성됩니다."
+        "description": "대기 중인 초대가 있는 주소만 계정을 만들 수 있습니다.",
+        "descriptionPasswordless": "공급자로 로그인하면 대기 중인 초대가 있는 주소에만 계정이 생성됩니다."
       },
       "closed": {
         "label": "비공개",
-        "description": "새 계정을 생성할 수 없습니다. 기존 계정은 계속 로그인할 수 있습니다.",
-        "descriptionPasswordless": "공급자에서 오는 사용자를 포함해 새 계정을 생성하지 않습니다. 기존 계정은 계속 로그인할 수 있습니다."
+        "description": "아무도 계정을 만들 수 없습니다. 기존 계정은 계속 로그인할 수 있습니다.",
+        "descriptionPasswordless": "공급자로 로그인해도 계정이 생성되지 않습니다. 기존 계정은 계속 로그인할 수 있습니다."
       }
     },
     "signIn": "로그인 옵션",
-    "signInHint": "사용자가 로그인할 수 있는 방법을 설정합니다. 이메일을 전송하는 옵션은 이메일 공급자를 설정해야 사용할 수 있습니다.",
-    "needsProvider": "먼저 연동 설정에서 이메일 공급자를 설정하세요.",
+    "needsProvider": "먼저 연동 → 이메일 서비스 공급자에서 이메일 공급자를 설정하세요.",
     "requireVerification": "이메일 인증 필수",
-    "requireVerificationHint": "새 계정은 로그인하기 전에 이메일 주소를 인증해야 합니다.",
+    "requireVerificationHint": "비밀번호로 로그인하기 전에 이메일 주소를 확인해야 합니다. 기존 계정도 해당되며, 로그인 화면에서 확인 링크를 다시 보낼 수 있습니다.",
     "magicLink": "로그인 링크",
-    "magicLinkHint": "비밀번호와 함께 이메일로 전송된 링크를 통한 로그인도 제공합니다.",
+    "magicLinkHint": "이메일로 받은 링크로 로그인할 수 있습니다. 이메일 및 비밀번호가 켜져 있을 때만 작동합니다.",
     "trustProviderEmails": "로그인 공급자의 이메일 주소 신뢰",
-    "trustProviderEmailsHint": "Google 및 OpenID Connect는 이메일 주소가 이미 등록된 계정과 일치하면 해당 계정으로 로그인합니다. 이 인스턴스에서 이메일 인증 여부와 관계없이 적용됩니다. 공급자에서 가입 가능한 사용자를 직접 관리하는 경우에만 활성화하세요.",
+    "trustProviderEmailsHint": "Google과 OpenID Connect는 같은 이메일 주소의 계정으로 로그인시킵니다. 주소가 확인되지 않았어도 마찬가지입니다. 공급자에서 누가 가입하는지 직접 관리할 때만 켜세요. 그렇지 않으면 다른 사람이 계정을 가로챌 수 있습니다.",
     "emailPassword": "이메일 및 비밀번호",
-    "emailPasswordHint": "이메일과 비밀번호를 사용하는 로그인 및 회원가입 양식을 제공합니다. 로그인 공급자를 통해서만 로그인하도록 하려면 비활성화하세요.",
-    "needsSso": "먼저 연동 설정에서 로그인 공급자를 설정하세요."
+    "emailPasswordHint": "이메일과 비밀번호로 가입하고 로그인합니다. 끄면 로그인 공급자나 패스키로만 로그인할 수 있습니다.",
+    "needsSso": "먼저 연동 → 인증 서비스 공급자에서 로그인 공급자를 설정하세요.",
+    "signInLimits": "요청 한도",
+    "signInLimitsHint": "IP 주소 하나가 각 API 복제본에 보낼 수 있는 요청 수입니다. 비밀번호 추측과 메일 폭주를 막습니다. 리버스 프록시 뒤에서는 프록시가 X-Forwarded-For를 설정해야 합니다. 그렇지 않으면 모든 클라이언트가 각 한도를 함께 씁니다.",
+    "signInRateLimit": "로그인 및 가입 시도",
+    "signInRateLimitHint": "10초당, 비밀번호와 이메일 변경 포함.",
+    "emailRateLimit": "계정 메일",
+    "emailRateLimitHint": "분당, 비밀번호 재설정 메일과 이메일 확인 메일.",
+    "magicLinkRateLimit": "로그인 링크 요청",
+    "magicLinkRateLimitHint": "분당, 로그인 링크 요청과 열기.",
+    "signInLimitInvalid": "1에서 {max} 사이의 정수를 입력하세요."
   },
   "hotkeys": {
     "saved": "키보드 단축키가 저장되었습니다"
@@ -508,6 +525,9 @@
       },
       "stateChanged": {
         "name": "상태 변경"
+      },
+      "reacted": {
+        "name": "댓글에 반응"
       },
       "documentMentioned": {
         "name": "문서에서 멘션"

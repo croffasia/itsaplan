@@ -130,6 +130,38 @@ describe('external agent chat', () => {
     expect(second.prompt).toContain('And the launch date?');
   });
 
+  it('keeps the start of an answer up to the instance answer limit', async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    await asOwner.god['agent-settings'].put({ maxAnswerChars: 5 });
+    const first = await send(asOwner, agent.id, 'Who owns the launch?');
+    await answer(asRunner, 'Maria does.');
+
+    await send(asOwner, agent.id, 'And the launch date?', first.data!.threadId);
+    const second = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    expect(second.prompt).toContain('You: Maria\n');
+    expect(second.prompt).not.toContain('Maria does.');
+  });
+
+  it('keeps an answer whole when the answer limit is 0', async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    await asOwner.god['agent-settings'].put({ maxAnswerChars: 0 });
+    const first = await send(asOwner, agent.id, 'Write the report');
+    const claimed = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    // 20 deltas at the 12,000-character event cap: past the 200,000 default limit.
+    await asRunner['agent-chats']({ messageId: claimed.id }).events.post({
+      events: Array.from({ length: 20 }, () => ({
+        type: 'TEXT_MESSAGE_CONTENT' as const,
+        messageId: 'm1',
+        delta: 'x'.repeat(12_000),
+      })),
+    });
+    await asRunner['agent-chats']({ messageId: claimed.id }).result.post({ status: 'success' });
+
+    await send(asOwner, agent.id, 'Thanks', first.data!.threadId);
+    const second = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    expect(second.prompt).toContain(`You: ${'x'.repeat(240_000)}\n`);
+  });
+
   it('returns nothing when the feed is empty', async () => {
     const { asRunner } = await setup();
     const res = await asRunner['agent-chats'].claim.post();
@@ -550,6 +582,24 @@ describe('external agent chat', () => {
     expect(stream.frames[0]).toContain('Pong');
     // The runner reported no lifecycle events, so the end is stated for it.
     expect(stream.frames.at(-1)).toContain('RUN_FINISHED');
+  });
+
+  // Nothing is written while the answer waits for a runner, so the dropped connection is
+  // the only sign that nobody reads it any more.
+  it('stops reading an answer once the caller drops its stream', async () => {
+    const { owner, asOwner, agent } = await setup();
+    const sent = await send(asOwner, agent.id, 'Ping');
+    const caller = new AbortController();
+    const res = await app.handle(
+      new Request(
+        `http://localhost/projects/MKT/ai-agents/${agent.id}/chat/${sent.data!.messageId}/stream`,
+        { headers: { cookie: owner.cookie }, signal: caller.signal },
+      ),
+    );
+    const reader = res.body!.getReader();
+
+    caller.abort();
+    expect((await reader.read()).done).toBe(true);
   });
 
   it('ends a failed answer with the reason it stopped', async () => {

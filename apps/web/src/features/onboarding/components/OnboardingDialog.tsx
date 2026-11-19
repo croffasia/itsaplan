@@ -5,24 +5,26 @@ import { useTranslations } from 'next-intl';
 import { X } from 'lucide-react';
 import { proEdition } from '@/cloud';
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { flyToMark } from '../utils/flyToMark';
 import { ONBOARDING_SLIDES as slides } from '../utils/slides';
 import OnboardingFooter from './OnboardingFooter';
 import OnboardingSlide from './OnboardingSlide';
 
 // The slides sit side by side in a strip that scrolls and snaps, so a swipe moves them as
-// well as the buttons do. Unless closable, it has no close button and ignores Escape and
-// clicks outside: it ends only with the button on the last slide.
-export default function OnboardingDialog({
-  closable,
-  onClose,
-}: {
-  closable: boolean;
-  onClose: () => void;
-}) {
+// well as the buttons do.
+export default function OnboardingDialog({ onClose }: { onClose: () => void }) {
   const t = useTranslations('onboarding');
   const tCommon = useTranslations('common');
   const trackRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const closing = useRef(false);
   const [index, setIndex] = useState(0);
+
+  const close = () => {
+    if (closing.current) return;
+    closing.current = true;
+    void flyToMark(contentRef.current).then(onClose);
+  };
 
   const onScroll = () => {
     const track = trackRef.current;
@@ -38,8 +40,9 @@ export default function OnboardingDialog({
   };
 
   return (
-    <Dialog open onOpenChange={(open) => !open && closable && onClose()}>
+    <Dialog open onOpenChange={(open) => !open && close()}>
       <DialogContent
+        ref={contentRef}
         showCloseButton={false}
         aria-describedby={undefined}
         className="gap-0 overflow-hidden p-0 sm:max-w-[640px]"
@@ -57,16 +60,14 @@ export default function OnboardingDialog({
         <OnboardingFooter
           count={slides.length}
           index={index}
-          proLink={!proEdition && Boolean(slides[index]?.proLink)}
+          proFeature={proEdition ? undefined : slides[index]?.proFeature}
           onGo={go}
-          onDone={onClose}
+          onDone={close}
         />
-        {closable && (
-          <DialogClose className="absolute end-3 top-3 inline-flex size-8 items-center justify-center rounded-lg bg-background/70 text-foreground backdrop-blur-sm transition-colors hover:bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden">
-            <X className="size-4" />
-            <span className="sr-only">{tCommon('close')}</span>
-          </DialogClose>
-        )}
+        <DialogClose className="absolute end-3 top-3 inline-flex size-8 items-center justify-center rounded-lg bg-background/70 text-foreground backdrop-blur-sm transition-colors hover:bg-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden">
+          <X className="size-4" />
+          <span className="sr-only">{tCommon('close')}</span>
+        </DialogClose>
       </DialogContent>
     </Dialog>
   );

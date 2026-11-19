@@ -3,12 +3,13 @@ import { ListXIcon } from '@animateicons/react/lucide/list-x-icon';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { useSelection } from '../../context/useSelection';
+import { SHOW_ON_COLUMN_HOVER } from '../../utils/kanban';
 import { HeaderIconButton } from '../shared/HeaderIconButton';
 
 // Column-header toggle that selects or clears every issue id in a column. Renders
-// nothing for an empty column. Hidden until the column is hovered or a selection is
-// active, so the header stays clean otherwise — needs a `group/column` ancestor for
-// the hover reveal.
+// nothing for an empty column. Hidden until the column is hovered or focused, or a
+// selection is active, and always shown on touch screens — needs a `group/column`
+// ancestor for the reveal.
 export function SelectAllToggle({ ids, className }: { ids: number[]; className?: string }) {
   const t = useTranslations('workItems');
   const selection = useSelection();
@@ -21,7 +22,7 @@ export function SelectAllToggle({ ids, className }: { ids: number[]; className?:
       onClick={() => (allSelected ? selection.remove(ids) : selection.add(ids))}
       className={cn(
         allSelected && 'text-primary',
-        !selection.isSelecting && !allSelected && 'opacity-0 group-hover/column:opacity-100',
+        !selection.isSelecting && !allSelected && SHOW_ON_COLUMN_HOVER,
         className,
       )}
     />

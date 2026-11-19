@@ -10,7 +10,7 @@ import { outputSchema, type McpOutputSchema } from './result';
 
 // The JSON Schema an MCP client receives for a tool's arguments. TypeBox emits
 // JSON Schema, so the route schemas are merged into this shape as they are, except
-// for the bare `nullable` (see withoutBareNullable).
+// for what mcpField removes.
 export interface McpInputSchema {
   type: 'object';
   properties: Record<string, unknown>;
@@ -128,19 +128,30 @@ interface SchemaShape {
 // `{ type: 'null' }` branch. Ajv, which MCP clients use to check arguments, refuses
 // `nullable` without a `type` and so rejects the whole tool. Without a `type` the keyword
 // changes nothing a validator accepts, so it is dropped there.
-function withoutBareNullable(node: unknown): unknown {
-  if (Array.isArray(node)) return node.map(withoutBareNullable);
+//
+// t.Numeric() and t.Integer() are a union of a numeric string with `default: 0` and a
+// number that carries the field's options again. A client reads that 0 as the field's
+// default, and the model reads the description twice. So the string branch loses its
+// default, and a union branch loses the description the union already carries.
+function mcpField(node: unknown, unionDescription?: unknown): unknown {
+  if (Array.isArray(node)) return node.map((branch) => mcpField(branch, unionDescription));
   if (typeof node !== 'object' || node === null) return node;
   const schema = node as Record<string, unknown>;
+  const numericString =
+    schema.type === 'string' && (schema.format === 'numeric' || schema.format === 'integer');
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(schema)) {
     if (key === 'nullable' && !('type' in schema)) continue;
+    if (key === 'description' && value === unionDescription) continue;
+    if (key === 'default' && numericString && value === 0) continue;
     if (key === 'properties' && typeof value === 'object' && value !== null) {
       out[key] = Object.fromEntries(
-        Object.entries(value).map(([name, field]) => [name, withoutBareNullable(field)]),
+        Object.entries(value).map(([name, field]) => [name, mcpField(field)]),
       );
-    } else if (['items', 'additionalProperties', 'not', 'anyOf', 'oneOf', 'allOf'].includes(key)) {
-      out[key] = withoutBareNullable(value);
+    } else if (['anyOf', 'oneOf', 'allOf'].includes(key)) {
+      out[key] = mcpField(value, schema.description ?? unionDescription);
+    } else if (['items', 'additionalProperties', 'not'].includes(key)) {
+      out[key] = mcpField(value);
     } else {
       out[key] = value;
     }
@@ -163,7 +174,7 @@ function mergeInputSchema(hooks: Record<string, unknown>, pathParams: string[]):
     for (const part of parts) {
       if (!part.properties) continue;
       for (const [name, field] of Object.entries(part.properties)) {
-        properties[name] = withoutBareNullable(field);
+        properties[name] = mcpField(field);
       }
       const names = Array.isArray(part.required) ? (part.required as string[]) : [];
       common = common === null ? names : common.filter((n) => names.includes(n));
@@ -172,7 +183,7 @@ function mergeInputSchema(hooks: Record<string, unknown>, pathParams: string[]):
   }
   for (const name of pathParams) {
     if (!(name in properties)) {
-      properties[name] = { type: 'string', description: `Path parameter '${name}'.` };
+      properties[name] = { type: 'string' };
     }
     required.push(name);
   }

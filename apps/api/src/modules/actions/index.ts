@@ -118,7 +118,7 @@ export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Acti
       response: { 200: ActionResponse, ...commonErrors },
       detail: {
         summary: 'Update an action',
-        description: 'Update an existing action.',
+        description: 'Update an action.',
         ...mcpTool('update_action'),
       },
     },
@@ -136,7 +136,7 @@ export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Acti
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete an action',
-        description: 'Delete an action. Irreversible.',
+        description: 'Permanently delete an action.',
         ...mcpTool('delete_action'),
       },
     },

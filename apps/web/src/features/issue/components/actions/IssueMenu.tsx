@@ -35,7 +35,7 @@ import { buildIssueBranchName, buildIssuePrompt } from '../../utils/issuePrompt'
 import { writeClipboardText } from '../../utils/clipboard';
 import { delegatableAgents } from '../../utils/delegates';
 import { useSession } from '@/lib/auth-client';
-import { toDateStr } from '@/utils/dates';
+import { calendarSystem, toDateStr } from '@/utils/dates';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { PRIORITY_FIELDS } from '@/components/common/fields/priorityFields';
 import { StateIcon } from '../shared/IssueIcons';
@@ -308,7 +308,7 @@ export default function IssueMenu({
                         weekday: 'short',
                         month: 'short',
                         day: 'numeric',
-                        calendar: 'gregory',
+                        calendar: calendarSystem(),
                       })}
                     </ContextMenuShortcut>
                   </ContextMenuItem>

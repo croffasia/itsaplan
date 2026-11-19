@@ -11,6 +11,7 @@ import { verifyFirecrawl } from './verify';
 export const firecrawl: Integration = {
   key: 'firecrawl',
   label: 'Firecrawl',
+  description: 'Scrapes, maps, crawls and searches websites and extracts data from pages.',
   credentialSchema: [
     { key: 'apiKey', label: 'API key', type: 'secret', required: true, placeholder: 'fc-...' },
   ],

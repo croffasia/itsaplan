@@ -35,11 +35,11 @@
     },
     "authentication": {
       "label": "Authentification",
-      "description": "Qui peut s'inscrire sur cette instance, comment les comptes sont confirmés, et les fournisseurs par lesquels les utilisateurs se connectent."
+      "description": "Qui peut s'inscrire, comment se connecter et les limites de requêtes."
     },
     "hotkeys": {
       "label": "Raccourcis clavier",
-      "description": "La touche associée à chaque commande pour tous les utilisateurs de cette instance. Chacun peut réattribuer un raccourci pour son propre compte dans ses préférences."
+      "description": "Par défaut pour tous. Chacun peut modifier les siens dans Préférences."
     },
     "storage": {
       "label": "Stockage",

@@ -35,11 +35,11 @@
     },
     "authentication": {
       "label": "Autenticación",
-      "description": "Quién se puede registrar en esta instancia, cómo se confirman las cuentas, y los proveedores con los que la gente inicia sesión."
+      "description": "Quién puede registrarse, cómo se inicia sesión y los límites de solicitudes."
     },
     "hotkeys": {
       "label": "Atajos de teclado",
-      "description": "La tecla a la que está vinculado cada comando para todo el mundo de esta instancia. Cada persona puede volver a vincular un atajo a su cuenta en sus preferencias."
+      "description": "Predeterminados para todos. Cada persona puede cambiar los suyos en Preferencias."
     },
     "storage": {
       "label": "Almacenamiento",

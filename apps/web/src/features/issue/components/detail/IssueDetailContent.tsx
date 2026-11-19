@@ -310,8 +310,9 @@ export default function IssueDetailContent({
 
   if (layout === 'page') {
     // From xl the issue content sits at the start edge and the actions with
-    // Properties are fixed to the end edge (out of flow), so they never shift the
-    // content; the end margin reserves their width so the two do not overlap.
+    // Properties are pinned to the end edge of IssueViewPage's non-scrolling frame (out
+    // of flow), so they never shift the content; the end margin reserves their width so
+    // the two do not overlap.
     // Below xl there is no room for two columns, so the same two blocks are shown
     // inside the content column instead — the actions above the title, Properties
     // under the description.
@@ -327,11 +328,11 @@ export default function IssueDetailContent({
           {activity}
         </div>
         <aside
-          className="hidden xl:fixed xl:end-6 xl:top-16 xl:block xl:w-(--issue-properties-w)"
+          className="hidden xl:absolute xl:end-6 xl:top-4 xl:flex xl:max-h-[calc(100%-2.5rem)] xl:w-(--issue-properties-w) xl:flex-col"
           style={propertiesWidthVar}
         >
           {propertiesGrip}
-          <div className="max-h-[calc(100vh-5.5rem)] overflow-y-auto">
+          <div className="min-h-0 overflow-y-auto">
             {actions}
             {sidebarProperties}
           </div>

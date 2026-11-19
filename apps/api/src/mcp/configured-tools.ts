@@ -4,7 +4,7 @@ import { agentOfUser } from '#modules/agents/core/service';
 import { agentToolSet, type RunnableTool } from '#modules/agents/tools/service';
 import { teamMcpEnabled } from '#modules/teams/service';
 import type { McpInputSchema } from './generate';
-import { toolError } from './result';
+import { toolFailure } from './result';
 
 // The configured tools enabled on the agent a key belongs to, which an external agent
 // calls over MCP as an internal one calls them in its runs. A person's key has none, nor an
@@ -19,7 +19,7 @@ export async function agentMcpTools(
   return (await agentToolSet(agent, { request })).filter((tool) => !taken.has(tool.name));
 }
 
-export function mcpInputSchema(tool: RunnableTool): McpInputSchema {
+export function mcpInputSchema(tool: Pick<RunnableTool, 'inputSchema'>): McpInputSchema {
   const { $schema: _, ...schema } = z.toJSONSchema(tool.inputSchema, {
     io: 'input',
     unrepresentable: 'any',
@@ -27,21 +27,13 @@ export function mcpInputSchema(tool: RunnableTool): McpInputSchema {
   return { type: 'object', properties: {}, required: [], ...schema };
 }
 
-function failure(status: number, text: string) {
-  return {
-    content: [{ type: 'text' as const, text }],
-    isError: true,
-    structuredContent: toolError(status, text),
-  };
-}
-
 export async function callConfiguredTool(tool: RunnableTool, args: Record<string, unknown>) {
   const parsed = tool.inputSchema.safeParse(args);
-  if (!parsed.success) return failure(400, z.prettifyError(parsed.error));
+  if (!parsed.success) return toolFailure(400, z.prettifyError(parsed.error));
   try {
     const result = await tool.run(parsed.data as Record<string, unknown>);
     return { content: [{ type: 'text' as const, text: JSON.stringify(result ?? null) }] };
   } catch (err) {
-    return failure(502, errorMessage(err, 'Tool call failed'));
+    return toolFailure(502, errorMessage(err, 'Tool call failed'));
   }
 }

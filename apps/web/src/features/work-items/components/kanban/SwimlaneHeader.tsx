@@ -30,7 +30,7 @@ export function SwimlaneHeader({
       <Chevron ref={ref} size={14} className="text-muted-foreground" />
       <GroupDot group={swimlane} />
       {swimlane.name}
-      <span className="text-muted-foreground">{count}</span>
+      <span className="text-xs font-normal text-muted-foreground">{count}</span>
     </button>
   );
 }

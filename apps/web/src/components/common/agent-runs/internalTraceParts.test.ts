@@ -21,7 +21,7 @@ function span(fields: Partial<IssueAgentTraceSpan>): IssueAgentTraceSpan {
   };
 }
 
-it('lists the tool calls in order, then the answer, and leaves out the model spans', () => {
+it('lists the model and tool calls in order, then the answer, and leaves out the spans around them', () => {
   const parts = internalTraceParts([
     span({
       spanId: 'root',
@@ -32,6 +32,13 @@ it('lists the tool calls in order, then the answer, and leaves out the model spa
       output: { text: 'Done', object: null },
     }),
     span({ spanId: 'llm', name: "llm: 'gpt'", type: 'model_generation', output: { text: 'x' } }),
+    span({
+      spanId: 'call',
+      name: "llm: 'gpt'",
+      type: 'model_inference',
+      startedAt: '2026-01-01T00:00:01Z',
+      durationMs: 900,
+    }),
     span({
       spanId: 't1',
       name: "tool: 'get_issue'",
@@ -45,11 +52,14 @@ it('lists the tool calls in order, then the answer, and leaves out the model spa
       name: "mcp_tool: 'search' on 'docs'",
       type: 'mcp_tool_call',
       startedAt: '2026-01-01T00:00:05Z',
+      durationMs: 3000,
       input: 'query',
+      error: { message: 'Timed out', id: 'TOOL_TIMEOUT' },
     }),
   ]);
 
   assert.deepEqual(parts, [
+    { type: 'model', receivedAt: '2026-01-01T00:00:01Z', durationMs: 900 },
     {
       type: 'tool',
       toolCallId: 't1',
@@ -65,6 +75,8 @@ it('lists the tool calls in order, then the answer, and leaves out the model spa
       args: 'query',
       result: undefined,
       receivedAt: '2026-01-01T00:00:05Z',
+      durationMs: 3000,
+      error: 'Timed out',
     },
     { type: 'text', text: 'Done', receivedAt: '2026-01-01T00:00:09Z' },
   ]);

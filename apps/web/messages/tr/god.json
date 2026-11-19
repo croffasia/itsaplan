@@ -210,6 +210,11 @@
       "everyone": "Herkes"
     },
     "apiDocsSaved": "API belgeleri ayarları kaydedildi",
+    "apiKeys": "API anahtarları",
+    "apiKeysSaved": "API anahtarı ayarları kaydedildi",
+    "keyRequestsPerMinute": "Dakikadaki istek",
+    "keyRequestsPerMinuteHint": "Bir anahtarın dakikada kaç istek gönderebileceği, MCP araç çağrıları dahil. Her API kopyası ayrı sayar. 0 sınırsız demektir.",
+    "keyRequestsPerMinuteInvalid": "0 ile {max} arasında bir tam sayı girin.",
     "agents": "Ajanlar",
     "agentsSaved": "Ajan ayarları kaydedildi",
     "embedding": "Yerleştirme",
@@ -227,48 +232,60 @@
     "runSeconds": "{seconds} sn",
     "concurrentRuns": "Aynı anda çalıştırma",
     "concurrentRunsHint": "Bu örneklemde aynı anda kaç ajan çalıştırmasının yürüyeceği. Diğerleri sırada bekler. Sohbetler ve harici ajanlar sayılmaz. 0 sınırsız demektir.",
-    "concurrentRunsInvalid": "0 ile {max} arasında bir tam sayı girin."
+    "concurrentRunsInvalid": "0 ile {max} arasında bir tam sayı girin.",
+    "answerLimit": "Yanıt uzunluğu sınırı",
+    "answerLimitHint": "Bir ajanın yanıtından kaç karakterin kaydedileceği. Gerisi kesilir. Sohbetler yanıtın tamamını gösterir, ancak harici ajanlar geçmiş olarak yalnızca kaydedilen kısmı alır. 0 sınırsız demektir.",
+    "answerLimitInvalid": "0 ile {max, number} arasında bir tam sayı girin.",
+    "answerLimitNone": "Sınır yok. Uzun yanıtlar tamamen kaydedilir ve çalıştırma listelerinin yüklenmesini yavaşlatabilir."
   },
   "authentication": {
     "saved": "Kimlik doğrulama ayarları kaydedildi",
     "registration": "Kayıt",
-    "registrationHint": "Bu örneklemde kimlerin hesap oluşturabileceği.",
-    "registrationPasswordlessNote": "Kayıt ve şifre kurtarma işlemleri giriş sağlayıcısı tarafından yürütülür.",
+    "registrationHint": "Kimlerin hesap oluşturabileceği ve davetlerin ne kadar geçerli kalacağı.",
+    "registrationPasswordlessNote": "Kayıt ve şifre sıfırlama giriş sağlayıcısında yapılır.",
     "inviteTtlDays": "Davet geçerlilik süresi (gün)",
-    "inviteTtlDaysHint": "Bu süre sonunda davet bağlantısı çalışmayı durdurur ve yalnızca davetle kayıt modunda adrese kayıt olma yetkisi vermez. 0 değeri yanıtlanana kadar geçerli tutar.",
+    "inviteTtlDaysHint": "Bir davet, oluşturulduktan bu kadar gün sonra çalışmaz. Yeni değer mevcut davetlere de uygulanır. 0, davetlerin hiç sona ermeyeceği anlamına gelir.",
     "inviteTtlDaysInvalid": "0 ile {max} arasında bir tam gün sayısı girin.",
     "allowedEmailDomains": "İzin verilen e-posta alan adları",
-    "allowedEmailDomainsHint": "Yalnızca bu alan adlarındaki adresler hesap oluşturabilir. Virgülle ayırın veya herkese izin vermek için boş bırakın. Mevcut hesapların erişimi korunur.",
-    "allowedEmailDomainsInvalid": "Her alan adı ornek.com biçiminde olmalı ve en fazla 100 alan adı girilmelidir.",
+    "allowedEmailDomainsHint": "Yalnızca bu alan adlarındaki adresler hesap oluşturabilir, davetle de olsa. Mevcut hesaplar erişimini korur. Alan adlarını virgülle ayırın. Her alt alan adı ayrı yazılmalıdır. Her adrese izin vermek için boş bırakın.",
+    "allowedEmailDomainsInvalid": "example.com gibi alan adları girin, en fazla 100.",
     "modes": {
       "open": {
         "label": "Açık",
-        "description": "Kayıt sayfasına ulaşan herkes hesap oluşturabilir.",
+        "description": "Herkes kayıt sayfasında hesap oluşturabilir.",
         "descriptionPasswordless": "Sağlayıcı ile ilk kez giriş yapan herkes bir hesap alır."
       },
       "invite": {
         "label": "Yalnızca davetle",
-        "description": "Yalnızca bir davet bağlantısı üzerinden hesap oluşturulabilir.",
-        "descriptionPasswordless": "Sağlayıcı ile giriş, yalnızca o adres için bekleyen bir davet varsa hesap oluşturur."
+        "description": "Yalnızca bekleyen bir daveti olan adresler hesap oluşturabilir.",
+        "descriptionPasswordless": "Sağlayıcı ile giriş, yalnızca bekleyen daveti olan bir adres için hesap oluşturur."
       },
       "closed": {
         "label": "Kapalı",
-        "description": "Yeni hesap oluşturulamaz. Mevcut hesaplar giriş yapmaya devam eder.",
-        "descriptionPasswordless": "Sağlayıcıdan gelenler dahil yeni hesap oluşturulamaz. Mevcut hesaplar giriş yapmaya devam eder."
+        "description": "Kimse hesap oluşturamaz. Mevcut hesaplar giriş yapmaya devam eder.",
+        "descriptionPasswordless": "Sağlayıcı ile giriş hesap oluşturmaz. Mevcut hesaplar giriş yapmaya devam eder."
       }
     },
     "signIn": "Giriş seçenekleri",
-    "signInHint": "Kullanıcıların nasıl giriş yapacağı. E-posta gönderen seçenekler bir sağlayıcı yapılandırılana kadar devre dışı kalır.",
-    "needsProvider": "Önce Entegrasyonlar altından E-posta sağlayıcısını ayarlayın.",
+    "needsProvider": "Önce Entegrasyonlar → E-posta Sağlayıcısı bölümünde bir e-posta sağlayıcısı kurun.",
     "requireVerification": "E-posta doğrulamasını zorunlu kıl",
-    "requireVerificationHint": "Yeni bir hesap giriş yapabilmek için önce adresini doğrulamalıdır.",
+    "requireVerificationHint": "Şifreyle giriş yapmadan önce e-posta adresi doğrulanmalıdır. Bu, mevcut hesaplar için de geçerlidir: giriş formu doğrulama bağlantısını yeniden göndermeyi önerir.",
     "magicLink": "Giriş bağlantıları (Magic Link)",
-    "magicLinkHint": "Şifrenin yanında e-posta ile gönderilen bağlantıyla giriş seçeneği sunun.",
+    "magicLinkHint": "E-postaya gönderilen bir bağlantıyla giriş yapılabilir. Yalnızca E-posta ve şifre açıkken çalışır.",
     "trustProviderEmails": "Giriş sağlayıcılarından gelen adreslere güven",
-    "trustProviderEmailsHint": "Google ve OpenID Connect, burada doğrulanmış olsun veya olmasın, adrese sahip olan mevcut hesaba giriş yaptırır. Bunu yalnızca sağlayıcıdaki kayıtları kontrol ettiğiniz durumlarda açın.",
+    "trustProviderEmailsHint": "Google ve OpenID Connect, kişiyi aynı e-posta adresine sahip hesaba sokar, adresi kimse doğrulamamış olsa bile. Bunu yalnızca sağlayıcıda kimin kaydolduğunu siz denetliyorsanız açın, yoksa biri bir hesabı ele geçirebilir.",
     "emailPassword": "E-posta ve şifre",
-    "emailPasswordHint": "Giriş ve kayıt formunu sunun. Yalnızca giriş sağlayıcısı üzerinden izin vermek için kapatın.",
-    "needsSso": "Önce Entegrasyonlar altından bir giriş sağlayıcısı ayarlayın."
+    "emailPasswordHint": "Kişiler e-posta ve şifreyle kaydolur ve giriş yapar. Kapalıyken yalnızca bir giriş sağlayıcısı veya geçiş anahtarıyla giriş yapabilirler.",
+    "needsSso": "Önce Entegrasyonlar → Kimlik Doğrulama Sağlayıcısı bölümünde bir giriş sağlayıcısı kurun.",
+    "signInLimits": "İstek sınırları",
+    "signInLimitsHint": "Bir IP adresinin her API kopyasına gönderebileceği istek sayısı. Sınırlar şifre tahminini ve e-posta selini durdurur. Ters proxy arkasında proxy X-Forwarded-For başlığını ayarlamalıdır, yoksa tüm istemciler her sınırı paylaşır.",
+    "signInRateLimit": "Giriş ve kayıt denemeleri",
+    "signInRateLimitHint": "10 saniyede, şifre ve e-posta değişiklikleri dahil.",
+    "emailRateLimit": "Hesap e-postaları",
+    "emailRateLimitHint": "Dakikada, şifre sıfırlama ve e-posta doğrulama iletileri için.",
+    "magicLinkRateLimit": "Giriş bağlantısı istekleri",
+    "magicLinkRateLimitHint": "Dakikada, giriş bağlantısı isteme ve açma için.",
+    "signInLimitInvalid": "1 ile {max} arasında bir tam sayı girin."
   },
   "hotkeys": {
     "saved": "Klavye kısayolları kaydedildi"
@@ -508,6 +525,9 @@
       },
       "stateChanged": {
         "name": "Durum değişti"
+      },
+      "reacted": {
+        "name": "Yoruma tepki"
       },
       "documentMentioned": {
         "name": "Belgede bahsedildi"

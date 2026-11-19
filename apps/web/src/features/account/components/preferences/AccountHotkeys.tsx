@@ -20,10 +20,12 @@ export default function AccountHotkeys({
   if (!instance) return null;
 
   return (
-    <HotkeysEditor
-      base={applyOverrides(DEFAULT_COMBOS, instance)}
-      overrides={overrides}
-      onChange={onChange}
-    />
+    <div className="pt-4">
+      <HotkeysEditor
+        base={applyOverrides(DEFAULT_COMBOS, instance)}
+        overrides={overrides}
+        onChange={onChange}
+      />
+    </div>
   );
 }

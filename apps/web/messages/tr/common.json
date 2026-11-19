@@ -14,7 +14,8 @@
   "name": "Ad",
   "edit": "Düzenle",
   "language": "Dil",
-  "toggleTheme": "Temayı değiştir",
+  "interface": "Arayüz",
+  "allPreferences": "Tüm tercihler",
   "priority": {
     "label": "Öncelik",
     "tooltip": "{priority} öncelik",
@@ -40,8 +41,9 @@
   "brandSubtitle": "İşleri bir pano üzerinde planlayın. Projelerinizi açmak için giriş yapın.",
   "hotkeys": {
     "pressKeys": "Tuşlara basın",
-    "fixed": "Sabit",
-    "resetShortcut": "Bu kısayolu sıfırla",
+    "fixed": "Değiştirilemez",
+    "changeShortcut": "Kısayolu değiştir: {command}",
+    "resetShortcut": "Kısayolu sıfırla: {command}",
     "groups": {
       "general": "Genel",
       "workItems": "İş maddeleri"
@@ -76,7 +78,7 @@
         "select-all": "Panodaki tüm işleri seç"
       }
     },
-    "conflict": "Zaten {command} komutu tarafından kullanılıyor"
+    "conflict": "{command} komutu da bunu kullanıyor. İkisinden birini değiştirin."
   },
   "agentChat": {
     "emptyHint": "Bu ajanın nasıl yanıt verdiğini ve hangi araçları kullandığını test etmek için bir mesaj gönderin.",

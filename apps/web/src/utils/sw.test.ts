@@ -79,7 +79,8 @@ describe('sw.js', () => {
       }),
     );
 
-    assert.deepEqual(shown, [
+    // The notification options originate in the worker's VM context.
+    assert.deepEqual(structuredClone(shown), [
       {
         title: 'MKT-7 Fix login',
         options: {

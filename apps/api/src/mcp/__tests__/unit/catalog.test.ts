@@ -185,6 +185,37 @@ describe('toolSearch aliases', () => {
     expect(names('column')[0]).toBe('update_column');
   });
 
+  it('reads a camelCase name in a description by its words', () => {
+    const found = toolSearch([
+      tool('add_note', 'Add a note. Pass replyToId to answer a note.'),
+      tool('delete_note', 'Remove a note and its replies.'),
+    ])('reply').tools.map((t) => t.name);
+    expect(found.sort()).toEqual(['add_note', 'delete_note']);
+  });
+
+  // The id in the path is often the only property a reader has. Without it, "sprint
+  // details" (details matches no tool) ranks get_cycle below every tool that changes a
+  // cycle, as their descriptions say "cycle" more often.
+  it('finds a reader by the resource its path parameter names', () => {
+    const real = toolSearch(table);
+    const top = (query: string) =>
+      real(query)
+        .tools.slice(0, 5)
+        .map((t) => t.name);
+    expect(top('sprint details')).toContain('get_cycle');
+    expect(top('ticket details')).toContain('get_issue');
+    expect(top('agent details')).toContain('get_ai_agent');
+    expect(real('project').tools.length).toBeLessThan(table.length / 2);
+  });
+
+  it('does not lead a word for a credential to the tool that regenerates one', () => {
+    const top = toolSearch(table)('show my api token')
+      .tools.slice(0, 3)
+      .map((t) => t.name);
+    expect(top).not.toContain('regenerate_ai_agent_key');
+    expect(top).toContain('list_integration_credentials');
+  });
+
   it('leads every alias to a word the route table has', () => {
     const real = toolSearch(table);
     const dead = Object.values(ALIASES)

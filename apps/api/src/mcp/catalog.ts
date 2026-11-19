@@ -140,10 +140,12 @@ export function catalogTools() {
   ];
 }
 
-// A trailing plural is dropped, so "labels" finds delete_label and "deliveries" finds
-// "delivery". No other stemming.
+// A camelCase name is split first, so "replyToId" in a description or a property name is
+// indexed as "reply", "to" and "id". A trailing plural is dropped, so "labels" finds
+// delete_label and "deliveries" finds "delivery". No other stemming.
 function wordsOf(text: string): string[] {
   return text
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter(Boolean)
@@ -224,7 +226,7 @@ export const ALIASES: Record<string, string[]> = {
   knowledge: ['document'],
   canvas: ['note', 'board'],
   file: ['attachment'],
-  token: ['credential', 'key'],
+  token: ['credential'],
   prompt: ['instruction'],
   assistant: ['agent'],
   admin: ['role', 'owner'],
@@ -295,13 +297,15 @@ const aliasesOf = new Map(
   Object.entries(ALIASES).map(([word, used]) => [wordsOf(word)[0], used.flatMap(wordsOf)]),
 );
 
-// An input property is named in camelCase: "dueDate" is indexed as "due" and "date". A
-// path parameter is left out: it says where a tool acts, not what it does, and
-// projectKey on half the tools would make "project" a word that ranks nothing.
+// The parameters that say which project or team a tool acts in are left out: projectKey
+// on half the tools would make "project" a word that ranks nothing. The other path
+// parameters stay, as an id is often the only property a reader has: without "cycle" from
+// cycleId, "sprint details" would rank get_cycle below the tools that change a cycle.
+const SCOPE_PARAMS = ['projectKey', 'teamId'];
 function propertyWordsOf(tool: McpRouteTool): string[] {
   return Object.keys(tool.inputSchema.properties)
-    .filter((name) => !tool.pathParams.includes(name))
-    .flatMap((name) => wordsOf(name.replace(/([a-z0-9])([A-Z])/g, '$1 $2')));
+    .filter((name) => !SCOPE_PARAMS.includes(name))
+    .flatMap(wordsOf);
 }
 
 // The usual BM25 constants: K1 caps what a repeated word adds, B is how far a long

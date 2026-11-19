@@ -460,8 +460,17 @@
     "locked": "需要 Cloud 或 Pro",
     "lockedHint": "使用 Cloud 或 Pro 创建。按原样保留，但在这里不会提供给任何代理。",
     "ownTool": "创建 HTTP 工具",
-    "ownToolUnavailableTitle": "适用于任何 API 的工具",
-    "ownToolUnavailableHint": "创建工具，让 AI 代理调用任何有 API 的服务，包括你自己的服务。可在 Cloud 和自托管 Pro 版中使用。",
+    "ownToolUnavailableTitle": "让 AI 代理调用任何 API",
+    "ownToolUnavailableHint": "AI 代理也能调用你自己的服务，使用你设置的地址和 API 密钥。可在 Cloud 和自托管 Pro 版中使用。",
+    "ownToolPreview": {
+      "heading": "新建 HTTP 工具",
+      "title": "标题",
+      "titleValue": "发布文章",
+      "connection": "连接",
+      "connectionValue": "博客 API",
+      "path": "路径",
+      "params": "参数"
+    },
     "group": "分组",
     "ownTools": "自定义工具",
     "noGroupMatches": "所选分组中没有工具。"

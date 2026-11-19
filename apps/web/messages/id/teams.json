@@ -460,8 +460,17 @@
     "locked": "Perlu Cloud atau Pro",
     "lockedHint": "Dibuat dengan Cloud atau Pro. Disimpan apa adanya, tetapi di sini tidak ada agen yang mendapatkannya.",
     "ownTool": "Buat alat HTTP",
-    "ownToolUnavailableTitle": "Alat untuk API apa pun",
-    "ownToolUnavailableHint": "Buat alat agar agen Anda bisa memanggil layanan apa pun yang punya API, termasuk milik Anda sendiri. Tersedia di Cloud dan Pro self-hosted.",
+    "ownToolUnavailableTitle": "Biarkan agen memanggil API apa pun",
+    "ownToolUnavailableHint": "Agen juga bisa memanggil layanan Anda sendiri, dengan alamat dan kunci API yang Anda atur. Tersedia di Cloud dan Pro self-hosted.",
+    "ownToolPreview": {
+      "heading": "Alat HTTP baru",
+      "title": "Judul",
+      "titleValue": "Terbitkan postingan",
+      "connection": "Koneksi",
+      "connectionValue": "API blog",
+      "path": "Jalur",
+      "params": "Parameter"
+    },
     "group": "Grup",
     "ownTools": "Alat sendiri",
     "noGroupMatches": "Tidak ada alat di grup yang dipilih."

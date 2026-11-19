@@ -460,8 +460,17 @@
     "locked": "Cloud 또는 Pro 필요",
     "lockedHint": "Cloud 또는 Pro에서 만들었습니다. 그대로 보관되지만 여기에서는 어떤 AI 에이전트도 받지 않습니다.",
     "ownTool": "HTTP 도구 만들기",
-    "ownToolUnavailableTitle": "모든 API를 위한 도구",
-    "ownToolUnavailableHint": "직접 운영하는 서비스를 포함해 API가 있는 모든 서비스를 에이전트가 호출할 수 있게 하는 도구를 만드세요. Cloud 및 셀프 호스팅 Pro에서 사용할 수 있습니다.",
+    "ownToolUnavailableTitle": "에이전트가 모든 API를 호출하게 하세요",
+    "ownToolUnavailableHint": "직접 설정한 주소와 API 키로, 직접 운영하는 서비스도 에이전트가 호출할 수 있습니다. Cloud 및 셀프 호스팅 Pro에서 사용할 수 있습니다.",
+    "ownToolPreview": {
+      "heading": "새 HTTP 도구",
+      "title": "제목",
+      "titleValue": "게시물 발행",
+      "connection": "연결",
+      "connectionValue": "블로그 API",
+      "path": "경로",
+      "params": "매개변수"
+    },
     "group": "그룹",
     "ownTools": "직접 만든 도구",
     "noGroupMatches": "선택한 그룹에 도구가 없습니다."

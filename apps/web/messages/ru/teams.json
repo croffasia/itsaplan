@@ -460,8 +460,17 @@
     "locked": "Нужен Cloud или Pro",
     "lockedHint": "Создан в Cloud или Pro. Сохранён как есть, но здесь агенты его не получают.",
     "ownTool": "Создать HTTP-инструмент",
-    "ownToolUnavailableTitle": "Инструменты для любого API",
-    "ownToolUnavailableHint": "Создавайте инструменты, через которые агенты вызывают любой сервис с API, в том числе ваш собственный. Доступно в Cloud и в Pro-версии для своего сервера.",
+    "ownToolUnavailableTitle": "Дайте агентам вызывать любой API",
+    "ownToolUnavailableHint": "Агенты вызывают и ваши собственные сервисы по адресу и API-ключу, которые вы укажете. Доступно в Cloud и в Pro-версии для своего сервера.",
+    "ownToolPreview": {
+      "heading": "Новый HTTP-инструмент",
+      "title": "Название",
+      "titleValue": "Опубликовать пост",
+      "connection": "Подключение",
+      "connectionValue": "API блога",
+      "path": "Путь",
+      "params": "Параметры"
+    },
     "group": "Группа",
     "ownTools": "Свои инструменты",
     "noGroupMatches": "В выбранных группах нет инструментов."

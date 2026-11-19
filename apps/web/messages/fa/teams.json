@@ -460,8 +460,17 @@
     "locked": "نیاز به Cloud یا Pro",
     "lockedHint": "با Cloud یا Pro ساخته شده است. همان‌طور که هست می‌ماند، اما اینجا هیچ ایجنتی آن را نمی‌گیرد.",
     "ownTool": "ساخت ابزار HTTP",
-    "ownToolUnavailableTitle": "ابزار برای هر API",
-    "ownToolUnavailableHint": "ابزارهایی بسازید که ایجنت‌هایتان با آن‌ها هر سرویسی را که API دارد صدا بزنند، از جمله سرویس‌های خودتان. در Cloud و نسخه Pro خودمیزبان در دسترس است.",
+    "ownToolUnavailableTitle": "بگذارید ایجنت‌ها هر API را صدا بزنند",
+    "ownToolUnavailableHint": "ایجنت‌ها می‌توانند سرویس‌های خودتان را هم با آدرس و کلید API که تعیین می‌کنید صدا بزنند. در Cloud و نسخه Pro خودمیزبان در دسترس است.",
+    "ownToolPreview": {
+      "heading": "ابزار HTTP جدید",
+      "title": "عنوان",
+      "titleValue": "انتشار پست",
+      "connection": "اتصال",
+      "connectionValue": "API وبلاگ",
+      "path": "مسیر",
+      "params": "پارامترها"
+    },
     "group": "گروه",
     "ownTools": "ابزارهای خودتان",
     "noGroupMatches": "در گروه‌های انتخاب‌شده ابزاری نیست."

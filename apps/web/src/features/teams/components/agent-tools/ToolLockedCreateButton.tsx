@@ -3,10 +3,10 @@ import { useTranslations } from 'next-intl';
 import UpgradeToProButton from '@/components/common/UpgradeToProButton';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import ToolLockedFormPreview from './ToolLockedFormPreview';
 
-// The button for a tool of the team's own where no source makes one: it says what such tools do
-// and where they are available. The agent editor draws it inside its form, so it must not
-// submit that form.
+// The button for a tool of the team's own where no source makes one. The agent editor draws it
+// inside its form, so it must not submit that form.
 export default function ToolLockedCreateButton() {
   const t = useTranslations('teams.tools');
   return (
@@ -17,10 +17,13 @@ export default function ToolLockedCreateButton() {
           {t('ownTool')}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-64 text-sm">
-        <p className="font-medium">{t('ownToolUnavailableTitle')}</p>
-        <p className="mt-1 text-xs text-muted-foreground">{t('ownToolUnavailableHint')}</p>
-        <UpgradeToProButton feature="http-tools" className="mt-3" />
+      <PopoverContent align="end" className="overflow-hidden p-0 text-sm">
+        <ToolLockedFormPreview />
+        <div className="p-4">
+          <p className="font-medium">{t('ownToolUnavailableTitle')}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{t('ownToolUnavailableHint')}</p>
+          <UpgradeToProButton feature="http-tools" className="mt-3" />
+        </div>
       </PopoverContent>
     </Popover>
   );

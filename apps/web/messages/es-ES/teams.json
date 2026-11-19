@@ -460,8 +460,17 @@
     "locked": "Requiere Cloud o Pro",
     "lockedHint": "Creada con Cloud o Pro. Se conserva tal cual, pero aquí ningún agente la recibe.",
     "ownTool": "Crear herramienta HTTP",
-    "ownToolUnavailableTitle": "Herramientas para cualquier API",
-    "ownToolUnavailableHint": "Crea herramientas para que tus agentes llamen a cualquier servicio con API, incluido el tuyo. Disponible en Cloud y en Pro autoalojado.",
+    "ownToolUnavailableTitle": "Deja que tus agentes llamen a cualquier API",
+    "ownToolUnavailableHint": "Tus agentes también pueden llamar a tus propios servicios, con la dirección y la clave de API que indiques. Disponible en Cloud y en Pro autoalojado.",
+    "ownToolPreview": {
+      "heading": "Nueva herramienta HTTP",
+      "title": "Título",
+      "titleValue": "Publicar una entrada",
+      "connection": "Conexión",
+      "connectionValue": "API del blog",
+      "path": "Ruta",
+      "params": "Parámetros"
+    },
     "group": "Grupo",
     "ownTools": "Herramientas propias",
     "noGroupMatches": "No hay herramientas en los grupos elegidos."

@@ -460,8 +460,17 @@
     "locked": "Nécessite Cloud ou Pro",
     "lockedHint": "Créé avec Cloud ou Pro. Conservé tel quel, mais ici aucun agent ne le reçoit.",
     "ownTool": "Créer un outil HTTP",
-    "ownToolUnavailableTitle": "Des outils pour toute API",
-    "ownToolUnavailableHint": "Créez des outils qui permettent à vos agents d'appeler tout service doté d'une API, y compris le vôtre. Disponible dans Cloud et dans Pro auto-hébergé.",
+    "ownToolUnavailableTitle": "Laissez vos agents appeler toute API",
+    "ownToolUnavailableHint": "Vos agents peuvent aussi appeler vos propres services, avec l'adresse et la clé d'API que vous indiquez. Disponible dans Cloud et dans Pro auto-hébergé.",
+    "ownToolPreview": {
+      "heading": "Nouvel outil HTTP",
+      "title": "Titre",
+      "titleValue": "Publier un article",
+      "connection": "Connexion",
+      "connectionValue": "API du blog",
+      "path": "Chemin",
+      "params": "Paramètres"
+    },
     "group": "Groupe",
     "ownTools": "Outils personnalisés",
     "noGroupMatches": "Aucun outil dans les groupes choisis."

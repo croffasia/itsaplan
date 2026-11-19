@@ -1,0 +1,43 @@
+# Enables automatic recovery through the read-only Ambient Resume probe for both Native and Classic. Set false to disable it.
+# ambient_resume: true | false
+ambient_resume: false
+# Configuration schema used by Comet. Do not edit this value.
+schema: comet.project.v1
+# Default workflow entered by /comet. Must also appear in workflows.
+default_workflow: native
+# Workflows enabled in this project: native, classic, or both.
+workflows:
+  - native
+# Generate a standalone HTML change walkthrough for Native and Classic. Enabling it uses extra explanation tokens.
+# change_walkthrough: true | false (default: true)
+change_walkthrough: true
+# Project policy for automatic personal-memory learning and retrieval.
+memory:
+  # Allows workflow events in this project to form new personal memories automatically.
+  # learning: true | false
+  learning: true
+  # Allows personal memories to be injected into Agent context for this project.
+  # retrieval: true | false
+  retrieval: true
+# Project knowledge retrieval provider used by ordinary Comet tasks.
+knowledge:
+  # Provider for project knowledge.
+  # provider: local | remote
+  provider: local
+# Native workflow settings. They do not change Classic state or behavior.
+native:
+  # Root directory where Native stores Comet specs and changes. Runtime data stays under .comet.
+  artifact_root: docs
+  # Artifact language used by Native workflow documents.
+  # language: en | zh-CN
+  language: en
+  # Controls how Native asks clarifying questions: batch asks every currently answerable question per round (default), sequential asks one at a time.
+  # clarification_mode: batch | sequential
+  clarification_mode: batch
+  # Controls whether Native archives automatically after a successful preview or waits for explicit user confirmation.
+  # archive_confirmation: automatic | required
+  archive_confirmation: automatic
+  # Maximum failed Verify outcomes allowed for one confirmed acceptance target before Native stops the completion loop.
+  max_verify_failures: 5
+  # Maximum dispatched Supervisor children awaiting integration and archive. Defaults to 2; single-session always uses 1. Changes apply at the next dispatch.
+  max_parallel_children: 2

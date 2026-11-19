@@ -1,0 +1,7 @@
+services:
+  api:
+    ports: !override
+      - '127.0.0.1:${API_PORT:-3000}:3000'
+  web:
+    ports: !override
+      - '127.0.0.1:${WEB_PORT:-3001}:3001'

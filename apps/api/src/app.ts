@@ -225,6 +225,7 @@ export const app = new Elysia()
               { name: 'Model Prices', description: 'The prices a workspace costs model calls at' },
               { name: 'Dashboards', description: 'Saved analytics dashboards' },
               { name: 'Documents', description: 'Shared project Docs pages' },
+              { name: 'Weekly Reports', description: 'Project progress and weekly Docs snapshots' },
               { name: 'Link previews', description: 'Public web link metadata' },
               { name: 'Mentions', description: 'Who an @username reaches where it is written' },
               { name: 'Note boards', description: 'Freeform canvases of sticky notes' },

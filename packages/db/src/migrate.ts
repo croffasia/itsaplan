@@ -1,6 +1,6 @@
 // Programmatic migration runner — used on api container startup
 // (drizzle-kit is not needed in production, only the generated SQL in ./drizzle).
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
@@ -27,7 +27,12 @@ const migrationsFolder = fileURLToPath(new URL('../drizzle', import.meta.url));
 
 // A build's own tables, kept apart from the core's: its migrations folder, applied after
 // the core's under the same lock and backup, with a bookkeeping table of its own.
-const buildFolder = process.env.BUILD_MIGRATIONS_DIR;
+const weeklyReportFolder = fileURLToPath(
+  new URL('../../../apps/api/weekly-report-migrations', import.meta.url),
+);
+const buildFolder =
+  process.env.BUILD_MIGRATIONS_DIR ??
+  (existsSync(weeklyReportFolder) ? weeklyReportFolder : undefined);
 const BUILD_TABLE = '__build_migrations';
 const readJournal = (folder: string) =>
   JSON.parse(readFileSync(`${folder}/meta/_journal.json`, 'utf8'));

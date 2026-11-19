@@ -162,6 +162,7 @@ export default function DocumentsPage() {
         loading={visibleDocumentsQuery.isLoading}
         failed={visibleDocumentsQuery.isError}
         canCreate={canCreate}
+        canPreviewWeeklyReport={can('work_items', 'read')}
         canEdit={canEdit}
         authorNames={Object.fromEntries(
           project.assignees.map((candidate) => [candidate.userId, candidate.name]),

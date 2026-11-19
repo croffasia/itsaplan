@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { useShell } from '@/context/shellContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { settingsSection } from '@/utils/settingsSections';
 import { useSettingsSectionText } from '@/hooks/useSectionLabels';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import RequirePermission from '@/components/common/permissions/RequirePermission
 import { SettingsResourceProvider } from './context/settingsPermission';
 import SettingsGeneral from './components/general/SettingsGeneral';
 import SettingsFeatures from './components/general/SettingsFeatures';
+import SettingsWeeklyReport from './components/general/SettingsWeeklyReport';
 import { useGeneralForm } from './hooks/useGeneralForm';
 import { useFeatureToggles } from './hooks/useFeatureToggles';
 
@@ -27,6 +29,7 @@ export default function SettingsGeneralPage() {
 
 function GeneralPage({ project }: { project: ProjectDetail }) {
   const t = useTranslations('common');
+  const { can } = usePermissions(project);
   const sectionText = useSettingsSectionText()(section.slug);
   const form = useGeneralForm(project);
   const features = useFeatureToggles(project);
@@ -47,6 +50,9 @@ function GeneralPage({ project }: { project: ProjectDetail }) {
           <div className="space-y-10">
             <SettingsGeneral form={form} />
             <SettingsFeatures form={features} />
+            {can('workflow_config', 'read') && (
+              <SettingsWeeklyReport key={project.project.ref} project={project} />
+            )}
           </div>
         </RequirePermission>
       </SettingsResourceProvider>

@@ -34,6 +34,7 @@ import { cn } from '@/lib/utils';
 import { useMoveDocument, useSetDocumentFavorite } from '../services/documents.service';
 import { DOCUMENT_LIST_TABS, type DocumentListTab } from '../utils/documentList';
 import DocumentTree, { type DocumentSort } from './DocumentTree';
+import DocumentsWeeklyReport from './DocumentsWeeklyReport';
 
 const SORTS = [
   'position',
@@ -60,6 +61,7 @@ export default function DocumentsIndex({
   loading,
   failed,
   canCreate,
+  canPreviewWeeklyReport,
   canEdit,
   authorNames,
   reorderSafe,
@@ -78,6 +80,7 @@ export default function DocumentsIndex({
   loading: boolean;
   failed: boolean;
   canCreate: boolean;
+  canPreviewWeeklyReport?: boolean;
   canEdit: boolean;
   authorNames: Record<string, string>;
   reorderSafe: boolean;
@@ -178,44 +181,49 @@ export default function DocumentsIndex({
               )}
             </div>
           </div>
-          {canCreate && (
-            <div className="flex shrink-0 items-center gap-1.5">
-              <input
-                ref={uploadInput}
-                className="sr-only"
-                type="file"
-                accept=".md,.markdown,text/markdown"
-                aria-label={t('uploadMarkdown')}
-                disabled={creating}
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  event.currentTarget.value = '';
-                  if (file) onUpload(file);
-                }}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-8 px-2.5 shadow-none"
-                disabled={creating}
-                onClick={() => uploadInput.current?.click()}
-              >
-                <Upload />
-                <span className="hidden sm:inline">{t('uploadMarkdown')}</span>
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                className="h-8 px-2.5 shadow-none"
-                disabled={creating}
-                onClick={() => onCreate(null)}
-              >
-                {creating ? <LoaderCircle className="animate-spin" /> : <Plus />}
-                <span className="hidden sm:inline">{t('newDocument')}</span>
-              </Button>
-            </div>
-          )}
+          <div className="flex shrink-0 items-center gap-1.5">
+            {canPreviewWeeklyReport && (
+              <DocumentsWeeklyReport projectKey={projectKey} canSave={canCreate} />
+            )}
+            {canCreate && (
+              <>
+                <input
+                  ref={uploadInput}
+                  className="sr-only"
+                  type="file"
+                  accept=".md,.markdown,text/markdown"
+                  aria-label={t('uploadMarkdown')}
+                  disabled={creating}
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.currentTarget.value = '';
+                    if (file) onUpload(file);
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2.5 shadow-none"
+                  disabled={creating}
+                  onClick={() => uploadInput.current?.click()}
+                >
+                  <Upload />
+                  <span className="hidden sm:inline">{t('uploadMarkdown')}</span>
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-8 px-2.5 shadow-none"
+                  disabled={creating}
+                  onClick={() => onCreate(null)}
+                >
+                  {creating ? <LoaderCircle className="animate-spin" /> : <Plus />}
+                  <span className="hidden sm:inline">{t('newDocument')}</span>
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </header>
 

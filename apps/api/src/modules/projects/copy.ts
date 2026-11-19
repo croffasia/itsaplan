@@ -31,6 +31,7 @@ import {
   type TargetTeam,
 } from './service';
 import { GIT_SETTING_KEY } from '#modules/git/service';
+import { WEEKLY_REPORT_SETTING_KEY } from '#modules/weekly-reports/service';
 import { getProjectDefaults } from '#modules/settings/service';
 import { listAgents, updateAgent } from '#modules/agents/core/service';
 import { listAllAgentSchedules, createAgentSchedule } from '#modules/agents/schedules/service';
@@ -380,7 +381,11 @@ async function readProjectSnapshot(projectId: number, inc: Include): Promise<Pro
           .select({ key: projectSetting.key, value: projectSetting.value })
           .from(projectSetting)
           .where(
-            and(eq(projectSetting.projectId, projectId), ne(projectSetting.key, GIT_SETTING_KEY)),
+            and(
+              eq(projectSetting.projectId, projectId),
+              ne(projectSetting.key, GIT_SETTING_KEY),
+              ne(projectSetting.key, WEEKLY_REPORT_SETTING_KEY),
+            ),
           )
       : [],
   ]);

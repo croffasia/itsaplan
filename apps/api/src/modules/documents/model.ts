@@ -65,9 +65,11 @@ export const listDocumentsQuery = t.Object({
   ),
 });
 
+export const MAX_DOCUMENT_MARKDOWN_LENGTH = 250_000;
+
 const documentFields = {
   title: t.Optional(t.String({ maxLength: 255 })),
-  content: t.Optional(t.String({ maxLength: 250_000 })),
+  content: t.Optional(t.String({ maxLength: MAX_DOCUMENT_MARKDOWN_LENGTH })),
   contentJson: t.Optional(t.Nullable(t.Record(t.String(), t.Any()))),
   icon: t.Optional(t.Nullable(t.String({ maxLength: 64 }))),
   metadata: t.Optional(t.Record(t.String(), t.Any())),
@@ -254,7 +256,7 @@ export const collaborationSaveBody = t.Object({
   version: t.Integer({ minimum: 0 }),
   clientId: t.String({ minLength: 1, maxLength: 64 }),
   steps: t.Array(t.Record(t.String(), t.Any()), { minItems: 1, maxItems: 1000 }),
-  content: t.String({ maxLength: 250_000 }),
+  content: t.String({ maxLength: MAX_DOCUMENT_MARKDOWN_LENGTH }),
 });
 export const collaborationSessionResponse = t.Object({
   documentId: t.Number(),

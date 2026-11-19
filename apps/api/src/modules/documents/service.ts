@@ -345,10 +345,11 @@ export async function getDocument(
   projectId: number,
   documentId: number,
   userId: string,
+  executor: Executor = db,
 ): Promise<DocumentRow | null> {
-  const row = await selectDocument(db, projectId, documentId, userId);
+  const row = await selectDocument(executor, projectId, documentId, userId);
   if (!row) return null;
-  return mapDocumentForUser(db, row, userId);
+  return mapDocumentForUser(executor, row, userId);
 }
 
 export async function listDocumentAssets(
@@ -648,7 +649,7 @@ async function planDocumentMove(
   };
 }
 
-export async function createDocument(input: {
+type DocumentCreateInput = {
   projectId: number;
   userId: string;
   title?: string;
@@ -659,36 +660,44 @@ export async function createDocument(input: {
   fullWidth?: boolean;
   isPrivate?: boolean;
   parentId?: number | null;
-}): Promise<DocumentRow> {
+};
+
+export async function insertDocument(
+  tx: Executor,
+  input: DocumentCreateInput & { isLocked?: boolean },
+): Promise<DocumentRow> {
   assertValidDocumentContentJson(input.contentJson);
   assertValidMetadata(input.metadata);
   const parentId = input.parentId ?? null;
-  const document = await db.transaction(async (tx) => {
-    await lockDocumentActor(tx, input.userId);
-    await tx.execute(
-      sql`select pg_advisory_xact_lock(${DOCUMENT_TREE_LOCK_NAMESPACE}, ${input.projectId})`,
-    );
-    await assertValidParent(tx, input.projectId, null, parentId, input.userId);
-    const [row] = await tx
-      .insert(projectDocument)
-      .values({
-        projectId: input.projectId,
-        parentId,
-        title: input.title ?? '',
-        content: input.content ?? '',
-        contentJson: input.contentJson ?? null,
-        icon: input.icon,
-        metadata: input.metadata ?? {},
-        fullWidth: input.fullWidth ?? false,
-        isPrivate: input.isPrivate ?? false,
-        position: await nextPosition(tx, input.projectId, parentId),
-        ownerUserId: input.userId,
-        createdByUserId: input.userId,
-        updatedByUserId: input.userId,
-      })
-      .returning();
-    return mapDocumentForUser(tx, row, input.userId);
-  });
+  await lockDocumentActor(tx, input.userId);
+  await tx.execute(
+    sql`select pg_advisory_xact_lock(${DOCUMENT_TREE_LOCK_NAMESPACE}, ${input.projectId})`,
+  );
+  await assertValidParent(tx, input.projectId, null, parentId, input.userId);
+  const [row] = await tx
+    .insert(projectDocument)
+    .values({
+      projectId: input.projectId,
+      parentId,
+      title: input.title ?? '',
+      content: input.content ?? '',
+      contentJson: input.contentJson ?? null,
+      icon: input.icon,
+      metadata: input.metadata ?? {},
+      fullWidth: input.fullWidth ?? false,
+      isPrivate: input.isPrivate ?? false,
+      isLocked: input.isLocked ?? false,
+      position: await nextPosition(tx, input.projectId, parentId),
+      ownerUserId: input.userId,
+      createdByUserId: input.userId,
+      updatedByUserId: input.userId,
+    })
+    .returning();
+  return mapDocumentForUser(tx, row, input.userId);
+}
+
+export async function createDocument(input: DocumentCreateInput): Promise<DocumentRow> {
+  const document = await db.transaction((tx) => insertDocument(tx, input));
   await fanOutTextMentions({
     projectId: input.projectId,
     documentId: document.id,

@@ -1,0 +1,2354 @@
+# comet-execution: managed-run
+schema: comet.native.v4
+name: weighted-weekly-report
+language: en
+phase: archive
+status: done
+state_version: 8
+brief: brief.md
+document_constraints_version: 3
+spec_changes:
+  - capability: weekly-project-report
+    operation: create
+    source: specs/weekly-project-report/spec.md
+workspace:
+  isolation: current
+  change_branch: codex/weighted-weekly-report
+  target_branch: codex/weighted-weekly-report
+  finish: null
+loop:
+  stage: done
+  goal_cycle: 1
+  iteration: 1
+  attempt: 1
+  retry_epoch: 0
+  failed_iteration_count: 0
+  no_progress_count: 0
+  execution_failure_count: 0
+  previous_unresolved_ids: []
+  next_action: null
+acceptance:
+  - id: A1
+    source: brief.md
+    text: A project administrator can bind valid issue types, compatible custom
+      fields and an IANA time zone in project settings. Invalid or cross-project
+      ID bindings are rejected, and project copies require rebinding. Native
+      task forms still support the existing hierarchy and fields.
+    result: passed
+    reason:
+      text: Chrome project settings saved all eight bindings and Asia/Taipei, and
+        reloading kept the values. API fixtures rejected a foreign field, a type
+        mismatch, a duplicate type and an invalid zone, and the copied project
+        required configuration. Native hierarchy and field regressions passed.
+      truncated: false
+  - id: A2
+    source: brief.md
+    text: In the internal preview, level-three weights `40/60` and rates `80/100`
+      give `92%`. A level-one node with level-two weights `60/40` and rates
+      `92/50` shows `75.2%`. The native counter still displays completed child
+      counts.
+    result: passed
+    reason:
+      text: Chrome and the API fixture showed exactly 92% and 50% for the level-two
+        nodes and 75.2% for the aggregate. The native task and archived-child
+        regressions passed with the existing counting behavior.
+      truncated: false
+  - id: A3
+    source: brief.md
+    text: Missing or out-of-range values, sibling weights that fail to total `100%`,
+      and absent children yield an unavailable calculation rather than a
+      fabricated percentage. An unavailable contributing level-two result
+      carries through to level one. A completed archived child still contributes
+      its reported rate and weight.
+    result: passed
+    reason:
+      text: Unit and API checks rejected a stored weight total other than 100%,
+        propagated a missing or out-of-range rate and preserved archived
+        completed work. The read-only supplementary assertion checked the
+        no-child and missing-value cases.
+      truncated: false
+  - id: A4
+    source: brief.md
+    text: With fictional tasks, earlier due dates trigger delay reporting in the
+      configured time zone. Group an overdue level-two task's own reason and a
+      direct level-three child's reason under level two, including children due
+      before their parent. The day a task is due, unscheduled work, completed
+      tasks and canceled tasks produce no delay line. A blank reason prompts
+      review. Ordinary task updates can still save without a reason.
+    result: passed
+    reason:
+      text: Chrome displayed only the two allowed reasons plus the missing-reason
+        prompt. API and date-boundary checks covered due-today, missing due
+        date, finished and canceled tasks, a late child of a parent due today,
+        and an ordinary task update with no reason.
+      truncated: false
+  - id: A5
+    source: brief.md
+    text: From Docs, preview both progress levels internally and confirm a dated,
+      locked, copyable Markdown document with only level-two titles, progress
+      and reportable reasons. The document contains no generated level-three
+      title, key or link. Enforce existing source task and Docs permissions on
+      the routes. No public share token is generated.
+    result: passed
+    reason:
+      text: Chrome generated and reopened locked Docs page 1 and the existing copy
+        action confirmed success. The document contained two level-two rows and
+        reasons, with no tertiary metadata or public token. API checks verified
+        document history and project/work-item access.
+      truncated: false
+  - id: A6
+    source: brief.md
+    text: Concurrent and repeated saves within the same project/week resolve to one
+      document without overwriting its content. A new week creates its own
+      document and reflects changes since the prior week. Run the feature
+      migration separately from the core journal and verify its unique key and
+      document transaction.
+    result: passed
+    reason:
+      text: Two concurrent confirmations returned one document, repeated reads kept
+        its content, and the next week created a distinct page without the
+        completed delay reason. A stale preview from the previous week was
+        rejected. The feature migration recorded the unique project/week index
+        separately.
+      truncated: false
+  - id: A7
+    source: brief.md
+    text: Verify the feature with fictional data on a local, isolated test instance
+      while the v1.11.0 trial remains available on its existing ports and
+      database. The sole checkout is the current project directory and the
+      development branch is based on the v1.11.0 tag. Keep all changes local.
+    result: passed
+    reason:
+      text: Only the current checkout and local development branch existed at v1.11.0.
+        Fictional API and browser data used the separate loopback demo and test
+        database. Original trial and demo both responded HTTP 200. No changes
+        were committed or pushed.
+      truncated: false
+builder_handoff:
+  candidate_id: weighted-weekly-report:3
+  identity_provider: skill-coordinated
+  builder_execution_ref: 01a1f325-f099-7a81-83e6-bb222d9e2f96
+  iteration: 1
+  summary:
+    text: Implemented configurable weighted progress, overdue reason grouping and
+      one locked Docs snapshot per project week. Verified all seven acceptance
+      items with fictional fixtures on the local development branch and the
+      isolated demo.
+    truncated: false
+  addressed_acceptance_ids:
+    - A1
+    - A2
+    - A3
+    - A4
+    - A5
+    - A6
+    - A7
+  checks:
+    - name:
+        text: Bun regression tests in apps/api
+        truncated: false
+      result: passed
+      note:
+        text: '/Users/poco/Projects/itsaplan/apps/api: bun --no-env-file test
+          src/modules/weekly-reports
+          src/modules/documents/__tests__/integration/documents.test.ts
+          src/modules/issues/__tests__/integration/subtasks.test.ts, using the
+          isolated itsaplan_weekly_test Postgres. 84 pass, 0 fail, 586
+          assertions.'
+        truncated: false
+    - name:
+        text: Repository typecheck and lint
+        truncated: false
+      result: passed
+      note:
+        text: '/Users/poco/Projects/itsaplan: bun run typecheck and bun run lint. Each
+          completed with 12 successful package tasks.'
+        truncated: false
+    - name:
+        text: Formatting and Git whitespace
+        truncated: false
+      result: passed
+      note:
+        text: '/Users/poco/Projects/itsaplan: node_modules/.bin/prettier --check for
+          changed feature TypeScript and JSON files, and git diff --check. Both
+          exited 0.'
+        truncated: false
+    - name:
+        text: Weekly report migration and environmental isolation
+        truncated: false
+      result: passed
+      note:
+        text: "/Users/poco/Projects/itsaplan: Bun programmatic migrator applied the core
+          and weekly migrations to isolated test and demo databases. The demo's
+          drizzle.__build_migrations count is 1. git worktree list showed only
+          this checkout and local development branch. Original localhost:3001
+          and demo 127.0.0.1:13001 both responded HTTP 200."
+        truncated: false
+    - name:
+        text: Chrome extension acceptance in the isolated demo
+        truncated: false
+      result: passed
+      note:
+        text: The project settings saved all bindings and the Asia/Taipei time zone and
+          reloaded correctly. Docs preview showed 75.2%, 92%, 50%, two active
+          reasons and the missing-reason prompt. The saved local
+          /weekly-demo/WEEKLY/docs/1 is locked; Markdown copy confirmed, with
+          only level-two content. Opening Weekly report again returned the same
+          document and a one-document list. Separate demo database confirmed one
+          week row, document ID 1 and no public share token.
+        truncated: false
+  checks_truncated: false
+  known_limits:
+    - text: Validation covered 84 relevant tests and the local Chrome workflow. The
+        full repository test suite and deployment were out of the local
+        validation scope.
+      truncated: false
+  known_limits_truncated: false
+  review: null
+  submitted_at: 2026-11-19T09:49:46.722Z
+blockers: []
+verification:
+  candidate_id: weighted-weekly-report:3
+  identity_provider: skill-coordinated
+  verifier_execution_ref: 01a1f325-f099-7a81-83e6-bb222d9e2f96
+  iteration: 1
+  attempt: 1
+  assurance: self-reviewed
+  verdict: pass
+  checks: []
+  reported_checks:
+    - name:
+        text: Bun regression tests in apps/api
+        truncated: false
+      result: passed
+      note:
+        text: '/Users/poco/Projects/itsaplan/apps/api: bun --no-env-file test
+          src/modules/weekly-reports
+          src/modules/documents/__tests__/integration/documents.test.ts
+          src/modules/issues/__tests__/integration/subtasks.test.ts, using the
+          isolated itsaplan_weekly_test Postgres. 84 pass, 0 fail, 586
+          assertions.'
+        truncated: false
+    - name:
+        text: Repository typecheck and lint
+        truncated: false
+      result: passed
+      note:
+        text: '/Users/poco/Projects/itsaplan: bun run typecheck and bun run lint. Each
+          completed with 12 successful package tasks.'
+        truncated: false
+    - name:
+        text: Formatting and Git whitespace
+        truncated: false
+      result: passed
+      note:
+        text: '/Users/poco/Projects/itsaplan: node_modules/.bin/prettier --check for
+          changed feature TypeScript and JSON files, and git diff --check. Both
+          exited 0.'
+        truncated: false
+    - name:
+        text: Weekly report migration and environmental isolation
+        truncated: false
+      result: passed
+      note:
+        text: "/Users/poco/Projects/itsaplan: Bun programmatic migrator applied the core
+          and weekly migrations to isolated test and demo databases. The demo's
+          drizzle.__build_migrations count is 1. git worktree list showed only
+          this checkout and local development branch. Original localhost:3001
+          and demo 127.0.0.1:13001 both responded HTTP 200."
+        truncated: false
+    - name:
+        text: Chrome extension acceptance in the isolated demo
+        truncated: false
+      result: passed
+      note:
+        text: The project settings saved all bindings and the Asia/Taipei time zone and
+          reloaded correctly. Docs preview showed 75.2%, 92%, 50%, two active
+          reasons and the missing-reason prompt. The saved local
+          /weekly-demo/WEEKLY/docs/1 is locked; Markdown copy confirmed, with
+          only level-two content. Opening Weekly report again returned the same
+          document and a one-document list. Separate demo database confirmed one
+          week row, document ID 1 and no public share token.
+        truncated: false
+    - name:
+        text: Supplementary calculation edge cases
+        truncated: false
+      result: passed
+      note:
+        text: '/Users/poco/Projects/itsaplan: Bun stdin assertions verified empty child
+          groups, an absent completion rate, and an unscheduled task with a
+          reason. All assertions passed.'
+        truncated: false
+  summary:
+    text: All seven acceptance criteria passed. Local Chrome demo and 84 targeted
+      regression tests verified the change without changing the existing trial
+      deployment.
+    truncated: false
+  risks:
+    - text: The full repository test suite was not run. The existing Next.js 16.4.2
+        dependency raised a security-update notice and the isolated demo serves
+        loopback only.
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-11-19T09:50:00.030Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: All seven acceptance criteria passed. Local Chrome demo and 84 targeted
+        regression tests verified the change without changing the existing trial
+        deployment.
+      truncated: false
+    completed_at: 2026-11-19T09:50:00.030Z
+history_overflow:
+  dropped_entries: 0
+  first_dropped_at: null
+  last_dropped_at: null
+  outcome_counts:
+    pass: 0
+    fail: 0
+    blocked: 0
+    execution-error: 0
+    recovery: 0
+verification_result: pass
+verification_report: verification.md
+archived: true
+created_at: 2026-11-19T09:42:04.830Z
+archive_receipt:
+  runId: weighted-weekly-report
+  change: weighted-weekly-report
+  archiveRef: 2026-11-19-weighted-weekly-report
+  transactionId: a7c61431-9c5c-40cb-91b5-a925e10a80a5
+  stateVersion: 8
+  specs:
+    - capability: weekly-project-report
+      operation: create
+run_checkpoint:
+  {
+    'schema': 'comet.workflow-run-checkpoint.v2',
+    'hash': '1463e89a0c23f922b48aacac68b41de03c07c113cb5724fe28283859d8c60db9',
+    'run':
+      {
+        'protocolVersion': 1,
+        'schemaVersion': 1,
+        'runId': 'weighted-weekly-report',
+        'revision': 1,
+        'workflow':
+          {
+            'id': 'comet-native',
+            'version': '4',
+            'hash': 'a4e64ffbd76a550331a69bca1a149bcae73b6fabe8117152be4bfc1abf28d8eb',
+          },
+        'definitionHashes':
+          {
+            '["comet-native","4"]': 'a4e64ffbd76a550331a69bca1a149bcae73b6fabe8117152be4bfc1abf28d8eb',
+          },
+        'initialStateHash': '9195097f20e56968254096884bdf007f46ee181009d91e701166b00b7e8a65bd',
+        'input':
+          {
+            'artifactRootRef': 'docs',
+            'name': 'weighted-weekly-report',
+            'task': '那就用这个本地仓库，基于 v1.11.0 开个开发分支，按刚才的最小方案做两级加权、延期原因归并和每周快照。先用假数据在本地验证，别影响现有试用环境，也先不推远端。',
+          },
+        'state':
+          {
+            'acceptance':
+              [
+                {
+                  'id': 'A1',
+                  'reason':
+                    {
+                      'text': 'Chrome project settings saved all eight bindings and Asia/Taipei, and reloading kept the values. API fixtures rejected a foreign field, a type mismatch, a duplicate type and an invalid zone, and the copied project required configuration. Native hierarchy and field regressions passed.',
+                      'truncated': false,
+                    },
+                  'result': 'passed',
+                  'source': 'brief.md',
+                  'text': 'A project administrator can bind valid issue types, compatible custom fields and an IANA time zone in project settings. Invalid or cross-project ID bindings are rejected, and project copies require rebinding. Native task forms still support the existing hierarchy and fields.',
+                },
+                {
+                  'id': 'A2',
+                  'reason':
+                    {
+                      'text': 'Chrome and the API fixture showed exactly 92% and 50% for the level-two nodes and 75.2% for the aggregate. The native task and archived-child regressions passed with the existing counting behavior.',
+                      'truncated': false,
+                    },
+                  'result': 'passed',
+                  'source': 'brief.md',
+                  'text': 'In the internal preview, level-three weights `40/60` and rates `80/100` give `92%`. A level-one node with level-two weights `60/40` and rates `92/50` shows `75.2%`. The native counter still displays completed child counts.',
+                },
+                {
+                  'id': 'A3',
+                  'reason':
+                    {
+                      'text': 'Unit and API checks rejected a stored weight total other than 100%, propagated a missing or out-of-range rate and preserved archived completed work. The read-only supplementary assertion checked the no-child and missing-value cases.',
+                      'truncated': false,
+                    },
+                  'result': 'passed',
+                  'source': 'brief.md',
+                  'text': 'Missing or out-of-range values, sibling weights that fail to total `100%`, and absent children yield an unavailable calculation rather than a fabricated percentage. An unavailable contributing level-two result carries through to level one. A completed archived child still contributes its reported rate and weight.',
+                },
+                {
+                  'id': 'A4',
+                  'reason':
+                    {
+                      'text': 'Chrome displayed only the two allowed reasons plus the missing-reason prompt. API and date-boundary checks covered due-today, missing due date, finished and canceled tasks, a late child of a parent due today, and an ordinary task update with no reason.',
+                      'truncated': false,
+                    },
+                  'result': 'passed',
+                  'source': 'brief.md',
+                  'text': "With fictional tasks, earlier due dates trigger delay reporting in the configured time zone. Group an overdue level-two task's own reason and a direct level-three child's reason under level two, including children due before their parent. The day a task is due, unscheduled work, completed tasks and canceled tasks produce no delay line. A blank reason prompts review. Ordinary task updates can still save without a reason.",
+                },
+                {
+                  'id': 'A5',
+                  'reason':
+                    {
+                      'text': 'Chrome generated and reopened locked Docs page 1 and the existing copy action confirmed success. The document contained two level-two rows and reasons, with no tertiary metadata or public token. API checks verified document history and project/work-item access.',
+                      'truncated': false,
+                    },
+                  'result': 'passed',
+                  'source': 'brief.md',
+                  'text': 'From Docs, preview both progress levels internally and confirm a dated, locked, copyable Markdown document with only level-two titles, progress and reportable reasons. The document contains no generated level-three title, key or link. Enforce existing source task and Docs permissions on the routes. No public share token is generated.',
+                },
+                {
+                  'id': 'A6',
+                  'reason':
+                    {
+                      'text': 'Two concurrent confirmations returned one document, repeated reads kept its content, and the next week created a distinct page without the completed delay reason. A stale preview from the previous week was rejected. The feature migration recorded the unique project/week index separately.',
+                      'truncated': false,
+                    },
+                  'result': 'passed',
+                  'source': 'brief.md',
+                  'text': 'Concurrent and repeated saves within the same project/week resolve to one document without overwriting its content. A new week creates its own document and reflects changes since the prior week. Run the feature migration separately from the core journal and verify its unique key and document transaction.',
+                },
+                {
+                  'id': 'A7',
+                  'reason':
+                    {
+                      'text': 'Only the current checkout and local development branch existed at v1.11.0. Fictional API and browser data used the separate loopback demo and test database. Original trial and demo both responded HTTP 200. No changes were committed or pushed.',
+                      'truncated': false,
+                    },
+                  'result': 'passed',
+                  'source': 'brief.md',
+                  'text': 'Verify the feature with fictional data on a local, isolated test instance while the v1.11.0 trial remains available on its existing ports and database. The sole checkout is the current project directory and the development branch is based on the v1.11.0 tag. Keep all changes local.',
+                },
+              ],
+            'archived': true,
+            'blockers': [],
+            'brief': 'brief.md',
+            'builder_handoff':
+              {
+                'addressed_acceptance_ids': ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7'],
+                'builder_execution_ref': '01a1f325-f099-7a81-83e6-bb222d9e2f96',
+                'candidate_id': 'weighted-weekly-report:3',
+                'checks':
+                  [
+                    {
+                      'name': { 'text': 'Bun regression tests in apps/api', 'truncated': false },
+                      'note':
+                        {
+                          'text': '/Users/poco/Projects/itsaplan/apps/api: bun --no-env-file test src/modules/weekly-reports src/modules/documents/__tests__/integration/documents.test.ts src/modules/issues/__tests__/integration/subtasks.test.ts, using the isolated itsaplan_weekly_test Postgres. 84 pass, 0 fail, 586 assertions.',
+                          'truncated': false,
+                        },
+                      'result': 'passed',
+                    },
+                    {
+                      'name': { 'text': 'Repository typecheck and lint', 'truncated': false },
+                      'note':
+                        {
+                          'text': '/Users/poco/Projects/itsaplan: bun run typecheck and bun run lint. Each completed with 12 successful package tasks.',
+                          'truncated': false,
+                        },
+                      'result': 'passed',
+                    },
+                    {
+                      'name': { 'text': 'Formatting and Git whitespace', 'truncated': false },
+                      'note':
+                        {
+                          'text': '/Users/poco/Projects/itsaplan: node_modules/.bin/prettier --check for changed feature TypeScript and JSON files, and git diff --check. Both exited 0.',
+                          'truncated': false,
+                        },
+                      'result': 'passed',
+                    },
+                    {
+                      'name':
+                        {
+                          'text': 'Weekly report migration and environmental isolation',
+                          'truncated': false,
+                        },
+                      'note':
+                        {
+                          'text': "/Users/poco/Projects/itsaplan: Bun programmatic migrator applied the core and weekly migrations to isolated test and demo databases. The demo's drizzle.__build_migrations count is 1. git worktree list showed only this checkout and local development branch. Original localhost:3001 and demo 127.0.0.1:13001 both responded HTTP 200.",
+                          'truncated': false,
+                        },
+                      'result': 'passed',
+                    },
+                    {
+                      'name':
+                        {
+                          'text': 'Chrome extension acceptance in the isolated demo',
+                          'truncated': false,
+                        },
+                      'note':
+                        {
+                          'text': 'The project settings saved all bindings and the Asia/Taipei time zone and reloaded correctly. Docs preview showed 75.2%, 92%, 50%, two active reasons and the missing-reason prompt. The saved local /weekly-demo/WEEKLY/docs/1 is locked; Markdown copy confirmed, with only level-two content. Opening Weekly report again returned the same document and a one-document list. Separate demo database confirmed one week row, document ID 1 and no public share token.',
+                          'truncated': false,
+                        },
+                      'result': 'passed',
+                    },
+                  ],
+                'checks_truncated': false,
+                'identity_provider': 'skill-coordinated',
+                'iteration': 1,
+                'known_limits':
+                  [
+                    {
+                      'text': 'Validation covered 84 relevant tests and the local Chrome workflow. The full repository test suite and deployment were out of the local validation scope.',
+                      'truncated': false,
+                    },
+                  ],
+                'known_limits_truncated': false,
+                'review': null,
+                'submitted_at': '2026-11-19T09:49:46.722Z',
+                'summary':
+                  {
+                    'text': 'Implemented configurable weighted progress, overdue reason grouping and one locked Docs snapshot per project week. Verified all seven acceptance items with fictional fixtures on the local development branch and the isolated demo.',
+                    'truncated': false,
+                  },
+              },
+            'created_at': '2026-11-19T09:42:04.830Z',
+            'document_constraints_version': 3,
+            'history':
+              [
+                {
+                  'attempt': 1,
+                  'completed_at': '2026-11-19T09:50:00.030Z',
+                  'goal_cycle': 1,
+                  'iteration': 1,
+                  'outcome': 'pass',
+                  'summary':
+                    {
+                      'text': 'All seven acceptance criteria passed. Local Chrome demo and 84 targeted regression tests verified the change without changing the existing trial deployment.',
+                      'truncated': false,
+                    },
+                  'unresolved_ids': [],
+                },
+              ],
+            'history_overflow':
+              {
+                'dropped_entries': 0,
+                'first_dropped_at': null,
+                'last_dropped_at': null,
+                'outcome_counts':
+                  { 'blocked': 0, 'execution-error': 0, 'fail': 0, 'pass': 0, 'recovery': 0 },
+              },
+            'language': 'en',
+            'loop':
+              {
+                'attempt': 1,
+                'execution_failure_count': 0,
+                'failed_iteration_count': 0,
+                'goal_cycle': 1,
+                'iteration': 1,
+                'next_action': null,
+                'no_progress_count': 0,
+                'previous_unresolved_ids': [],
+                'retry_epoch': 0,
+                'stage': 'done',
+              },
+            'name': 'weighted-weekly-report',
+            'phase': 'archive',
+            'schema': 'comet.native.v4',
+            'spec_changes':
+              [
+                {
+                  'capability': 'weekly-project-report',
+                  'operation': 'create',
+                  'source': 'specs/weekly-project-report/spec.md',
+                },
+              ],
+            'state_version': 8,
+            'status': 'done',
+            'verification':
+              {
+                'assurance': 'self-reviewed',
+                'attempt': 1,
+                'candidate_id': 'weighted-weekly-report:3',
+                'checks': [],
+                'completed_at': '2026-11-19T09:50:00.030Z',
+                'identity_provider': 'skill-coordinated',
+                'iteration': 1,
+                'reported_checks':
+                  [
+                    {
+                      'name': { 'text': 'Bun regression tests in apps/api', 'truncated': false },
+                      'note':
+                        {
+                          'text': '/Users/poco/Projects/itsaplan/apps/api: bun --no-env-file test src/modules/weekly-reports src/modules/documents/__tests__/integration/documents.test.ts src/modules/issues/__tests__/integration/subtasks.test.ts, using the isolated itsaplan_weekly_test Postgres. 84 pass, 0 fail, 586 assertions.',
+                          'truncated': false,
+                        },
+                      'result': 'passed',
+                    },
+                    {
+                      'name': { 'text': 'Repository typecheck and lint', 'truncated': false },
+                      'note':
+                        {
+                          'text': '/Users/poco/Projects/itsaplan: bun run typecheck and bun run lint. Each completed with 12 successful package tasks.',
+                          'truncated': false,
+                        },
+                      'result': 'passed',
+                    },
+                    {
+                      'name': { 'text': 'Formatting and Git whitespace', 'truncated': false },
+                      'note':
+                        {
+                          'text': '/Users/poco/Projects/itsaplan: node_modules/.bin/prettier --check for changed feature TypeScript and JSON files, and git diff --check. Both exited 0.',
+                          'truncated': false,
+                        },
+                      'result': 'passed',
+                    },
+                    {
+                      'name':
+                        {
+                          'text': 'Weekly report migration and environmental isolation',
+                          'truncated': false,
+                        },
+                      'note':
+                        {
+                          'text': "/Users/poco/Projects/itsaplan: Bun programmatic migrator applied the core and weekly migrations to isolated test and demo databases. The demo's drizzle.__build_migrations count is 1. git worktree list showed only this checkout and local development branch. Original localhost:3001 and demo 127.0.0.1:13001 both responded HTTP 200.",
+                          'truncated': false,
+                        },
+                      'result': 'passed',
+                    },
+                    {
+                      'name':
+                        {
+                          'text': 'Chrome extension acceptance in the isolated demo',
+                          'truncated': false,
+                        },
+                      'note':
+                        {
+                          'text': 'The project settings saved all bindings and the Asia/Taipei time zone and reloaded correctly. Docs preview showed 75.2%, 92%, 50%, two active reasons and the missing-reason prompt. The saved local /weekly-demo/WEEKLY/docs/1 is locked; Markdown copy confirmed, with only level-two content. Opening Weekly report again returned the same document and a one-document list. Separate demo database confirmed one week row, document ID 1 and no public share token.',
+                          'truncated': false,
+                        },
+                      'result': 'passed',
+                    },
+                    {
+                      'name':
+                        { 'text': 'Supplementary calculation edge cases', 'truncated': false },
+                      'note':
+                        {
+                          'text': '/Users/poco/Projects/itsaplan: Bun stdin assertions verified empty child groups, an absent completion rate, and an unscheduled task with a reason. All assertions passed.',
+                          'truncated': false,
+                        },
+                      'result': 'passed',
+                    },
+                  ],
+                'risks':
+                  [
+                    {
+                      'text': 'The full repository test suite was not run. The existing Next.js 16.4.2 dependency raised a security-update notice and the isolated demo serves loopback only.',
+                      'truncated': false,
+                    },
+                  ],
+                'risks_truncated': false,
+                'summary':
+                  {
+                    'text': 'All seven acceptance criteria passed. Local Chrome demo and 84 targeted regression tests verified the change without changing the existing trial deployment.',
+                    'truncated': false,
+                  },
+                'verdict': 'pass',
+                'verifier_execution_ref': '01a1f325-f099-7a81-83e6-bb222d9e2f96',
+              },
+            'verification_report': 'verification.md',
+            'verification_result': 'pass',
+            'workspace':
+              {
+                'change_branch': 'codex/weighted-weekly-report',
+                'finish': null,
+                'isolation': 'current',
+                'target_branch': 'codex/weighted-weekly-report',
+              },
+          },
+        'status': 'completed',
+        'sequence': 8,
+        'actions':
+          [
+            {
+              'attempt': 1,
+              'claim':
+                {
+                  'executorId': 'native-host',
+                  'sessionId': '01a1f325-f099-7a81-83e6-bb222d9e2f96',
+                  'token': 'portable-f59fa73a6e94aaaab7244e53d362ea8e1fc78e66f77c0025e42755470276aa5b',
+                },
+              'executionOrigin':
+                {
+                  'workflow':
+                    {
+                      'hash': 'a4e64ffbd76a550331a69bca1a149bcae73b6fabe8117152be4bfc1abf28d8eb',
+                      'id': 'comet-native',
+                      'version': '4',
+                    },
+                },
+              'id': 'weighted-weekly-report:1',
+              'input':
+                {
+                  'input':
+                    {
+                      'artifactRootRef': 'docs',
+                      'name': 'weighted-weekly-report',
+                      'task': '那就用这个本地仓库，基于 v1.11.0 开个开发分支，按刚才的最小方案做两级加权、延期原因归并和每周快照。先用假数据在本地验证，别影响现有试用环境，也先不推远端。',
+                    },
+                  'outputs': {},
+                },
+              'inputHash': '55023b0fa60bbcaba4406acf682f922e19c4fa63fa04caf8712f0b59065503bf',
+              'outcome':
+                {
+                  'actionId': 'weighted-weekly-report:1',
+                  'attempt': 1,
+                  'claimToken': 'portable-f59fa73a6e94aaaab7244e53d362ea8e1fc78e66f77c0025e42755470276aa5b',
+                  'inputHash': '55023b0fa60bbcaba4406acf682f922e19c4fa63fa04caf8712f0b59065503bf',
+                  'outcomeId': 'native-result-7dc83a458b104ec9b886a037eaab28c3a8ca3eb312ce426fce6e1af6aa936737',
+                  'output':
+                    {
+                      'acceptance':
+                        [
+                          {
+                            'id': 'A1',
+                            'source': 'brief.md',
+                            'text': 'A project administrator can bind valid issue types, compatible custom fields and an IANA time zone in project settings. Invalid or cross-project ID bindings are rejected, and project copies require rebinding. Native task forms still support the existing hierarchy and fields.',
+                          },
+                          {
+                            'id': 'A2',
+                            'source': 'brief.md',
+                            'text': 'In the internal preview, level-three weights `40/60` and rates `80/100` give `92%`. A level-one node with level-two weights `60/40` and rates `92/50` shows `75.2%`. The native counter still displays completed child counts.',
+                          },
+                          {
+                            'id': 'A3',
+                            'source': 'brief.md',
+                            'text': 'Missing or out-of-range values, sibling weights that fail to total `100%`, and absent children yield an unavailable calculation rather than a fabricated percentage. An unavailable contributing level-two result carries through to level one. A completed archived child still contributes its reported rate and weight.',
+                          },
+                          {
+                            'id': 'A4',
+                            'source': 'brief.md',
+                            'text': "With fictional tasks, earlier due dates trigger delay reporting in the configured time zone. Group an overdue level-two task's own reason and a direct level-three child's reason under level two, including children due before their parent. The day a task is due, unscheduled work, completed tasks and canceled tasks produce no delay line. A blank reason prompts review. Ordinary task updates can still save without a reason.",
+                          },
+                          {
+                            'id': 'A5',
+                            'source': 'brief.md',
+                            'text': 'From Docs, preview both progress levels internally and confirm a dated, locked, copyable Markdown document with only level-two titles, progress and reportable reasons. The document contains no generated level-three title, key or link. Enforce existing source task and Docs permissions on the routes. No public share token is generated.',
+                          },
+                          {
+                            'id': 'A6',
+                            'source': 'brief.md',
+                            'text': 'Concurrent and repeated saves within the same project/week resolve to one document without overwriting its content. A new week creates its own document and reflects changes since the prior week. Run the feature migration separately from the core journal and verify its unique key and document transaction.',
+                          },
+                          {
+                            'id': 'A7',
+                            'source': 'brief.md',
+                            'text': 'Verify the feature with fictional data on a local, isolated test instance while the v1.11.0 trial remains available on its existing ports and database. The sole checkout is the current project directory and the development branch is based on the v1.11.0 tag. Keep all changes local.',
+                          },
+                        ],
+                      'children': null,
+                      'specChanges':
+                        [
+                          {
+                            'capability': 'weekly-project-report',
+                            'operation': 'create',
+                            'source': 'specs/weekly-project-report/spec.md',
+                          },
+                        ],
+                    },
+                  'status': 'succeeded',
+                },
+              'protocolVersion': 1,
+              'receipts':
+                [
+                  {
+                    'hash': '58c1020694ba1e7db6c4ac78d618be347524bbecf488ea8ad64da1e89ac0b6ca',
+                    'outcomeId': 'native-result-7dc83a458b104ec9b886a037eaab28c3a8ca3eb312ce426fce6e1af6aa936737',
+                  },
+                ],
+              'reconciliations': [],
+              'ref': 'native-shape-prepare',
+              'requiredCapabilities': [],
+              'retry': 'manual',
+              'runId': 'weighted-weekly-report',
+              'status': 'succeeded',
+              'stepId': 'shape.prepare',
+              'type': 'call_tool',
+            },
+            {
+              'attempt': 1,
+              'claim':
+                {
+                  'executorId': 'native-host',
+                  'sessionId': '01a1f325-f099-7a81-83e6-bb222d9e2f96',
+                  'token': 'portable-99533cfb873b90787e465f4802e082f956c0254f1e2b5608ca29100e36a75677',
+                },
+              'executionOrigin':
+                {
+                  'workflow':
+                    {
+                      'hash': 'a4e64ffbd76a550331a69bca1a149bcae73b6fabe8117152be4bfc1abf28d8eb',
+                      'id': 'comet-native',
+                      'version': '4',
+                    },
+                },
+              'id': 'weighted-weekly-report:3',
+              'input':
+                {
+                  'input':
+                    {
+                      'artifactRootRef': 'docs',
+                      'name': 'weighted-weekly-report',
+                      'task': '那就用这个本地仓库，基于 v1.11.0 开个开发分支，按刚才的最小方案做两级加权、延期原因归并和每周快照。先用假数据在本地验证，别影响现有试用环境，也先不推远端。',
+                    },
+                  'outputs': {},
+                },
+              'inputHash': 'bbd9188c96ee7e0dc0a289f1772b1ac396ea73944ae303c73c2ccb16b9ba1f4a',
+              'outcome':
+                {
+                  'actionId': 'weighted-weekly-report:3',
+                  'attempt': 1,
+                  'claimToken': 'portable-99533cfb873b90787e465f4802e082f956c0254f1e2b5608ca29100e36a75677',
+                  'inputHash': 'bbd9188c96ee7e0dc0a289f1772b1ac396ea73944ae303c73c2ccb16b9ba1f4a',
+                  'outcomeId': 'native-result-064dbd4211e55760a089c16faf676903007019720551de1b62a519ea6e9dd4d6',
+                  'output':
+                    {
+                      'addressedAcceptanceIds': ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7'],
+                      'checks':
+                        [
+                          {
+                            'name': 'Bun regression tests in apps/api',
+                            'note': '/Users/poco/Projects/itsaplan/apps/api: bun --no-env-file test src/modules/weekly-reports src/modules/documents/__tests__/integration/documents.test.ts src/modules/issues/__tests__/integration/subtasks.test.ts, using the isolated itsaplan_weekly_test Postgres. 84 pass, 0 fail, 586 assertions.',
+                            'result': 'passed',
+                          },
+                          {
+                            'name': 'Repository typecheck and lint',
+                            'note': '/Users/poco/Projects/itsaplan: bun run typecheck and bun run lint. Each completed with 12 successful package tasks.',
+                            'result': 'passed',
+                          },
+                          {
+                            'name': 'Formatting and Git whitespace',
+                            'note': '/Users/poco/Projects/itsaplan: node_modules/.bin/prettier --check for changed feature TypeScript and JSON files, and git diff --check. Both exited 0.',
+                            'result': 'passed',
+                          },
+                          {
+                            'name': 'Weekly report migration and environmental isolation',
+                            'note': "/Users/poco/Projects/itsaplan: Bun programmatic migrator applied the core and weekly migrations to isolated test and demo databases. The demo's drizzle.__build_migrations count is 1. git worktree list showed only this checkout and local development branch. Original localhost:3001 and demo 127.0.0.1:13001 both responded HTTP 200.",
+                            'result': 'passed',
+                          },
+                          {
+                            'name': 'Chrome extension acceptance in the isolated demo',
+                            'note': 'The project settings saved all bindings and the Asia/Taipei time zone and reloaded correctly. Docs preview showed 75.2%, 92%, 50%, two active reasons and the missing-reason prompt. The saved local /weekly-demo/WEEKLY/docs/1 is locked; Markdown copy confirmed, with only level-two content. Opening Weekly report again returned the same document and a one-document list. Separate demo database confirmed one week row, document ID 1 and no public share token.',
+                            'result': 'passed',
+                          },
+                        ],
+                      'knownLimits':
+                        [
+                          'Validation covered 84 relevant tests and the local Chrome workflow. The full repository test suite and deployment were out of the local validation scope.',
+                        ],
+                      'requireIndependentReview': false,
+                      'summary': 'Implemented configurable weighted progress, overdue reason grouping and one locked Docs snapshot per project week. Verified all seven acceptance items with fictional fixtures on the local development branch and the isolated demo.',
+                    },
+                  'status': 'succeeded',
+                },
+              'protocolVersion': 1,
+              'receipts':
+                [
+                  {
+                    'hash': 'c6b930e13fde694f57793a00c76cad1297920c871054a81b613dd8492c47a0e5',
+                    'outcomeId': 'native-result-064dbd4211e55760a089c16faf676903007019720551de1b62a519ea6e9dd4d6',
+                  },
+                ],
+              'reconciliations': [],
+              'ref': 'native-builder',
+              'requiredCapabilities': [],
+              'retry': 'manual',
+              'runId': 'weighted-weekly-report',
+              'status': 'succeeded',
+              'stepId': 'build.builder',
+              'type': 'handoff',
+            },
+            {
+              'attempt': 1,
+              'claim':
+                {
+                  'executorId': 'native-host',
+                  'sessionId': '01a1f325-f099-7a81-83e6-bb222d9e2f96',
+                  'token': 'portable-ee7b7cefc98f47acbb274e52ec8696b4ab9adf95ecd7ac7f7e2bfef6c0fcdc86',
+                },
+              'executionOrigin':
+                {
+                  'workflow':
+                    {
+                      'hash': 'a4e64ffbd76a550331a69bca1a149bcae73b6fabe8117152be4bfc1abf28d8eb',
+                      'id': 'comet-native',
+                      'version': '4',
+                    },
+                },
+              'id': 'weighted-weekly-report:4',
+              'input':
+                {
+                  'input':
+                    {
+                      'artifactRootRef': 'docs',
+                      'name': 'weighted-weekly-report',
+                      'task': '那就用这个本地仓库，基于 v1.11.0 开个开发分支，按刚才的最小方案做两级加权、延期原因归并和每周快照。先用假数据在本地验证，别影响现有试用环境，也先不推远端。',
+                    },
+                  'outputs': {},
+                },
+              'inputHash': '058ff40122e0b13b9006222ae7f12514ed5203a05cd4c06180f72a8ab4e46ac9',
+              'outcome':
+                {
+                  'actionId': 'weighted-weekly-report:4',
+                  'attempt': 1,
+                  'claimToken': 'portable-ee7b7cefc98f47acbb274e52ec8696b4ab9adf95ecd7ac7f7e2bfef6c0fcdc86',
+                  'inputHash': '058ff40122e0b13b9006222ae7f12514ed5203a05cd4c06180f72a8ab4e46ac9',
+                  'outcomeId': 'native-result-d5f06f47512e6957baa0f4b0ee595c696bc27760fc1fab1a0b0d6268e348b5cd',
+                  'output':
+                    {
+                      'candidateId': 'weighted-weekly-report:3',
+                      'checks':
+                        [
+                          {
+                            'name': 'Bun regression tests in apps/api',
+                            'note': '/Users/poco/Projects/itsaplan/apps/api: bun --no-env-file test src/modules/weekly-reports src/modules/documents/__tests__/integration/documents.test.ts src/modules/issues/__tests__/integration/subtasks.test.ts, using the isolated itsaplan_weekly_test Postgres. 84 pass, 0 fail, 586 assertions.',
+                            'result': 'passed',
+                          },
+                          {
+                            'name': 'Repository typecheck and lint',
+                            'note': '/Users/poco/Projects/itsaplan: bun run typecheck and bun run lint. Each completed with 12 successful package tasks.',
+                            'result': 'passed',
+                          },
+                          {
+                            'name': 'Formatting and Git whitespace',
+                            'note': '/Users/poco/Projects/itsaplan: node_modules/.bin/prettier --check for changed feature TypeScript and JSON files, and git diff --check. Both exited 0.',
+                            'result': 'passed',
+                          },
+                          {
+                            'name': 'Weekly report migration and environmental isolation',
+                            'note': "/Users/poco/Projects/itsaplan: Bun programmatic migrator applied the core and weekly migrations to isolated test and demo databases. The demo's drizzle.__build_migrations count is 1. git worktree list showed only this checkout and local development branch. Original localhost:3001 and demo 127.0.0.1:13001 both responded HTTP 200.",
+                            'result': 'passed',
+                          },
+                          {
+                            'name': 'Chrome extension acceptance in the isolated demo',
+                            'note': 'The project settings saved all bindings and the Asia/Taipei time zone and reloaded correctly. Docs preview showed 75.2%, 92%, 50%, two active reasons and the missing-reason prompt. The saved local /weekly-demo/WEEKLY/docs/1 is locked; Markdown copy confirmed, with only level-two content. Opening Weekly report again returned the same document and a one-document list. Separate demo database confirmed one week row, document ID 1 and no public share token.',
+                            'result': 'passed',
+                          },
+                          {
+                            'name': 'Supplementary calculation edge cases',
+                            'note': '/Users/poco/Projects/itsaplan: Bun stdin assertions verified empty child groups, an absent completion rate, and an unscheduled task with a reason. All assertions passed.',
+                            'result': 'passed',
+                          },
+                        ],
+                      'response':
+                        {
+                          'kind': 'final-result',
+                          'result':
+                            {
+                              'acceptance':
+                                [
+                                  {
+                                    'id': 'A1',
+                                    'reason': 'Chrome project settings saved all eight bindings and Asia/Taipei, and reloading kept the values. API fixtures rejected a foreign field, a type mismatch, a duplicate type and an invalid zone, and the copied project required configuration. Native hierarchy and field regressions passed.',
+                                    'result': 'passed',
+                                  },
+                                  {
+                                    'id': 'A2',
+                                    'reason': 'Chrome and the API fixture showed exactly 92% and 50% for the level-two nodes and 75.2% for the aggregate. The native task and archived-child regressions passed with the existing counting behavior.',
+                                    'result': 'passed',
+                                  },
+                                  {
+                                    'id': 'A3',
+                                    'reason': 'Unit and API checks rejected a stored weight total other than 100%, propagated a missing or out-of-range rate and preserved archived completed work. The read-only supplementary assertion checked the no-child and missing-value cases.',
+                                    'result': 'passed',
+                                  },
+                                  {
+                                    'id': 'A4',
+                                    'reason': 'Chrome displayed only the two allowed reasons plus the missing-reason prompt. API and date-boundary checks covered due-today, missing due date, finished and canceled tasks, a late child of a parent due today, and an ordinary task update with no reason.',
+                                    'result': 'passed',
+                                  },
+                                  {
+                                    'id': 'A5',
+                                    'reason': 'Chrome generated and reopened locked Docs page 1 and the existing copy action confirmed success. The document contained two level-two rows and reasons, with no tertiary metadata or public token. API checks verified document history and project/work-item access.',
+                                    'result': 'passed',
+                                  },
+                                  {
+                                    'id': 'A6',
+                                    'reason': 'Two concurrent confirmations returned one document, repeated reads kept its content, and the next week created a distinct page without the completed delay reason. A stale preview from the previous week was rejected. The feature migration recorded the unique project/week index separately.',
+                                    'result': 'passed',
+                                  },
+                                  {
+                                    'id': 'A7',
+                                    'reason': 'Only the current checkout and local development branch existed at v1.11.0. Fictional API and browser data used the separate loopback demo and test database. Original trial and demo both responded HTTP 200. No changes were committed or pushed.',
+                                    'result': 'passed',
+                                  },
+                                ],
+                              'attempt': 1,
+                              'iteration': 1,
+                              'requestReview':
+                                {
+                                  'reason': 'The user approved the minimum proposal and specified the existing local branch, no new worktree, fictional local data, an unchanged trial environment and no remote push. The implementation and checks cover that scope and the target specification.',
+                                  'result': 'aligned',
+                                },
+                              'risks':
+                                [
+                                  'The full repository test suite was not run. The existing Next.js 16.4.2 dependency raised a security-update notice and the isolated demo serves loopback only.',
+                                ],
+                              'summary': 'All seven acceptance criteria passed. Local Chrome demo and 84 targeted regression tests verified the change without changing the existing trial deployment.',
+                              'verdict': 'pass',
+                            },
+                        },
+                      'verifierExecutionRef': '01a1f325-f099-7a81-83e6-bb222d9e2f96',
+                    },
+                  'status': 'succeeded',
+                },
+              'protocolVersion': 1,
+              'receipts':
+                [
+                  {
+                    'hash': '16d42687e345c4c76742af21c7c130fa6177e1cd57b966a23d33fdd69f79d6eb',
+                    'outcomeId': 'native-result-d5f06f47512e6957baa0f4b0ee595c696bc27760fc1fab1a0b0d6268e348b5cd',
+                  },
+                ],
+              'reconciliations': [],
+              'ref': 'native-verifier',
+              'requiredCapabilities': [],
+              'retry': 'manual',
+              'runId': 'weighted-weekly-report',
+              'status': 'succeeded',
+              'stepId': 'verify.verifier',
+              'type': 'handoff',
+            },
+            {
+              'attempt': 1,
+              'claim':
+                {
+                  'executorId': 'comet-native-archive-preflight',
+                  'token': 'portable-a66a05a75075162829ca5574917a6398e1cea0144cbcb8e5454fd6555c000e2b',
+                },
+              'executionOrigin':
+                {
+                  'workflow':
+                    {
+                      'hash': 'a4e64ffbd76a550331a69bca1a149bcae73b6fabe8117152be4bfc1abf28d8eb',
+                      'id': 'comet-native',
+                      'version': '4',
+                    },
+                },
+              'id': 'weighted-weekly-report:6',
+              'input':
+                {
+                  'input':
+                    {
+                      'artifactRootRef': 'docs',
+                      'name': 'weighted-weekly-report',
+                      'task': '那就用这个本地仓库，基于 v1.11.0 开个开发分支，按刚才的最小方案做两级加权、延期原因归并和每周快照。先用假数据在本地验证，别影响现有试用环境，也先不推远端。',
+                    },
+                  'outputs': {},
+                },
+              'inputHash': '9b51fb951f972ecf857f519362bc2be4d6cbc63109056038574492817aabedc3',
+              'outcome':
+                {
+                  'actionId': 'weighted-weekly-report:6',
+                  'attempt': 1,
+                  'claimToken': 'portable-a66a05a75075162829ca5574917a6398e1cea0144cbcb8e5454fd6555c000e2b',
+                  'inputHash': '9b51fb951f972ecf857f519362bc2be4d6cbc63109056038574492817aabedc3',
+                  'outcomeId': 'weighted-weekly-report:6:1:executor-result',
+                  'output':
+                    {
+                      'archiveDirRef': 'docs/comet/archive/2026-11-19-weighted-weekly-report',
+                      'blockers': [],
+                      'candidateId': 'weighted-weekly-report:3',
+                      'capabilityPeers': [],
+                      'ready': true,
+                      'reportRef': 'docs/comet/changes/weighted-weekly-report/verification.md',
+                      'reportStateVersion': 6,
+                      'requiresReverification': false,
+                      'specPreview':
+                        [
+                          {
+                            'capability': 'weekly-project-report',
+                            'operation': 'create',
+                            'source': 'specs/weekly-project-report/spec.md',
+                          },
+                        ],
+                      'stateVersion': 7,
+                    },
+                  'status': 'succeeded',
+                },
+              'protocolVersion': 1,
+              'receipts':
+                [
+                  {
+                    'hash': '8f0044ab35949a8156c5891038118af47778b52a32758d622ed81b71b8bd2167',
+                    'outcomeId': 'weighted-weekly-report:6:1:executor-result',
+                  },
+                ],
+              'reconciliations': [],
+              'ref': 'native-archive-preflight',
+              'requiredCapabilities': [],
+              'retry': 'idempotent',
+              'runId': 'weighted-weekly-report',
+              'status': 'succeeded',
+              'stepId': 'archive.prepare',
+              'type': 'call_tool',
+            },
+            {
+              'attempt': 1,
+              'claim':
+                {
+                  'executorId': 'comet-native-archive-apply',
+                  'token': 'portable-5f577105f4b4daa330f135ab9e8f12ca73325693e2881efea1e837cb89d65e6b',
+                },
+              'executionOrigin':
+                {
+                  'workflow':
+                    {
+                      'hash': 'a4e64ffbd76a550331a69bca1a149bcae73b6fabe8117152be4bfc1abf28d8eb',
+                      'id': 'comet-native',
+                      'version': '4',
+                    },
+                },
+              'id': 'weighted-weekly-report:7',
+              'input':
+                {
+                  'input':
+                    {
+                      'artifactRootRef': 'docs',
+                      'name': 'weighted-weekly-report',
+                      'task': '那就用这个本地仓库，基于 v1.11.0 开个开发分支，按刚才的最小方案做两级加权、延期原因归并和每周快照。先用假数据在本地验证，别影响现有试用环境，也先不推远端。',
+                    },
+                  'outputs': {},
+                },
+              'inputHash': 'db0424e0a9931db6e64494fddc08fc0ec5409e5c39bbf7bed1cec7af719730a5',
+              'outcome':
+                {
+                  'actionId': 'weighted-weekly-report:7',
+                  'attempt': 1,
+                  'claimToken': 'portable-5f577105f4b4daa330f135ab9e8f12ca73325693e2881efea1e837cb89d65e6b',
+                  'inputHash': 'db0424e0a9931db6e64494fddc08fc0ec5409e5c39bbf7bed1cec7af719730a5',
+                  'outcomeId': 'weighted-weekly-report:7:1:executor-result',
+                  'output':
+                    {
+                      'archiveRef': '2026-11-19-weighted-weekly-report',
+                      'specCount': 1,
+                      'stateVersion': 7,
+                      'transactionId': 'a7c61431-9c5c-40cb-91b5-a925e10a80a5',
+                    },
+                  'status': 'succeeded',
+                },
+              'protocolVersion': 1,
+              'receipts':
+                [
+                  {
+                    'hash': '85935e89e868df4588f672db056374473decdc4e83edacf6fc07fe0eb2b3afbf',
+                    'outcomeId': 'weighted-weekly-report:7:1:executor-result',
+                  },
+                ],
+              'reconciliations': [],
+              'ref': 'native-archive',
+              'requiredCapabilities': [],
+              'retry': 'manual',
+              'runId': 'weighted-weekly-report',
+              'status': 'succeeded',
+              'stepId': 'archive.execute',
+              'type': 'call_tool',
+            },
+            {
+              'attempt': 1,
+              'claim':
+                {
+                  'executorId': 'comet-native-archive-finalize',
+                  'token': 'portable-ddc9ee5c20d9182215c7e94808657511d8eef6a3253155ca72272d6f6386fa80',
+                },
+              'executionOrigin':
+                {
+                  'workflow':
+                    {
+                      'hash': 'a4e64ffbd76a550331a69bca1a149bcae73b6fabe8117152be4bfc1abf28d8eb',
+                      'id': 'comet-native',
+                      'version': '4',
+                    },
+                },
+              'id': 'weighted-weekly-report:8',
+              'input':
+                {
+                  'input':
+                    {
+                      'artifactRootRef': 'docs',
+                      'name': 'weighted-weekly-report',
+                      'task': '那就用这个本地仓库，基于 v1.11.0 开个开发分支，按刚才的最小方案做两级加权、延期原因归并和每周快照。先用假数据在本地验证，别影响现有试用环境，也先不推远端。',
+                    },
+                  'outputs': {},
+                },
+              'inputHash': 'd131e0619b1e80edae145341e5292059a56969b839f5aa1faf53b62398942354',
+              'outcome':
+                {
+                  'actionId': 'weighted-weekly-report:8',
+                  'attempt': 1,
+                  'claimToken': 'portable-ddc9ee5c20d9182215c7e94808657511d8eef6a3253155ca72272d6f6386fa80',
+                  'inputHash': 'd131e0619b1e80edae145341e5292059a56969b839f5aa1faf53b62398942354',
+                  'outcomeId': 'weighted-weekly-report:8:1:executor-result',
+                  'output':
+                    {
+                      'archiveRef': '2026-11-19-weighted-weekly-report',
+                      'change': 'weighted-weekly-report',
+                      'runId': 'weighted-weekly-report',
+                      'specs': [{ 'capability': 'weekly-project-report', 'operation': 'create' }],
+                      'stateVersion': 8,
+                      'transactionId': 'a7c61431-9c5c-40cb-91b5-a925e10a80a5',
+                    },
+                  'status': 'succeeded',
+                },
+              'protocolVersion': 1,
+              'receipts':
+                [
+                  {
+                    'hash': 'caf26672c342775f16df0ac04f5027187f99f977b86258944892148d54884343',
+                    'outcomeId': 'weighted-weekly-report:8:1:executor-result',
+                  },
+                ],
+              'reconciliations': [],
+              'ref': 'native-archive-finalize',
+              'requiredCapabilities': [],
+              'retry': 'manual',
+              'runId': 'weighted-weekly-report',
+              'status': 'succeeded',
+              'stepId': 'archive.finalize',
+              'type': 'call_tool',
+            },
+          ],
+        'actionContexts':
+          {
+            'weighted-weekly-report:1': { 'results': {}, 'sequence': 1 },
+            'weighted-weekly-report:3': { 'results': {}, 'sequence': 3 },
+            'weighted-weekly-report:4': { 'results': {}, 'sequence': 4 },
+            'weighted-weekly-report:6': { 'results': {}, 'sequence': 6 },
+            'weighted-weekly-report:7': { 'results': {}, 'sequence': 7 },
+            'weighted-weekly-report:8': { 'results': {}, 'sequence': 8 },
+          },
+        'waits':
+          [
+            {
+              'id': 'weighted-weekly-report:2',
+              'stepId': 'shape.confirm',
+              'sequence': 2,
+              'status': 'resolved',
+              'proposal':
+                {
+                  'input':
+                    {
+                      'artifactRootRef': 'docs',
+                      'name': 'weighted-weekly-report',
+                      'task': '那就用这个本地仓库，基于 v1.11.0 开个开发分支，按刚才的最小方案做两级加权、延期原因归并和每周快照。先用假数据在本地验证，别影响现有试用环境，也先不推远端。',
+                    },
+                  'outputs':
+                    {
+                      'shape.prepare':
+                        {
+                          'acceptance':
+                            [
+                              {
+                                'id': 'A1',
+                                'source': 'brief.md',
+                                'text': 'A project administrator can bind valid issue types, compatible custom fields and an IANA time zone in project settings. Invalid or cross-project ID bindings are rejected, and project copies require rebinding. Native task forms still support the existing hierarchy and fields.',
+                              },
+                              {
+                                'id': 'A2',
+                                'source': 'brief.md',
+                                'text': 'In the internal preview, level-three weights `40/60` and rates `80/100` give `92%`. A level-one node with level-two weights `60/40` and rates `92/50` shows `75.2%`. The native counter still displays completed child counts.',
+                              },
+                              {
+                                'id': 'A3',
+                                'source': 'brief.md',
+                                'text': 'Missing or out-of-range values, sibling weights that fail to total `100%`, and absent children yield an unavailable calculation rather than a fabricated percentage. An unavailable contributing level-two result carries through to level one. A completed archived child still contributes its reported rate and weight.',
+                              },
+                              {
+                                'id': 'A4',
+                                'source': 'brief.md',
+                                'text': "With fictional tasks, earlier due dates trigger delay reporting in the configured time zone. Group an overdue level-two task's own reason and a direct level-three child's reason under level two, including children due before their parent. The day a task is due, unscheduled work, completed tasks and canceled tasks produce no delay line. A blank reason prompts review. Ordinary task updates can still save without a reason.",
+                              },
+                              {
+                                'id': 'A5',
+                                'source': 'brief.md',
+                                'text': 'From Docs, preview both progress levels internally and confirm a dated, locked, copyable Markdown document with only level-two titles, progress and reportable reasons. The document contains no generated level-three title, key or link. Enforce existing source task and Docs permissions on the routes. No public share token is generated.',
+                              },
+                              {
+                                'id': 'A6',
+                                'source': 'brief.md',
+                                'text': 'Concurrent and repeated saves within the same project/week resolve to one document without overwriting its content. A new week creates its own document and reflects changes since the prior week. Run the feature migration separately from the core journal and verify its unique key and document transaction.',
+                              },
+                              {
+                                'id': 'A7',
+                                'source': 'brief.md',
+                                'text': 'Verify the feature with fictional data on a local, isolated test instance while the v1.11.0 trial remains available on its existing ports and database. The sole checkout is the current project directory and the development branch is based on the v1.11.0 tag. Keep all changes local.',
+                              },
+                            ],
+                          'children': null,
+                          'specChanges':
+                            [
+                              {
+                                'capability': 'weekly-project-report',
+                                'operation': 'create',
+                                'source': 'specs/weekly-project-report/spec.md',
+                              },
+                            ],
+                        },
+                    },
+                },
+              'proposalHash': '70dec130f29995f9ee9988394fa50ebf6deed081ed0669704eded699cc11ba7f',
+              'choices': ['approved', 'rejected'],
+              'results': {},
+              'decision':
+                {
+                  'id': '96023091c5f8197a96c9e4a029c5059c51ab75446aec028993cbd2ccbf60e2e1',
+                  'choice': 'approved',
+                  'proposalHash': '70dec130f29995f9ee9988394fa50ebf6deed081ed0669704eded699cc11ba7f',
+                },
+            },
+            {
+              'id': 'weighted-weekly-report:5',
+              'stepId': 'verify.confirm',
+              'sequence': 5,
+              'status': 'resolved',
+              'proposal':
+                {
+                  'activation':
+                    {
+                      'report':
+                        {
+                          'attempt': 1,
+                          'candidateId': 'weighted-weekly-report:3',
+                          'iteration': 1,
+                          'reportRef': 'docs/comet/changes/weighted-weekly-report/verification.md',
+                          'stateVersion': 6,
+                        },
+                    },
+                  'input':
+                    {
+                      'artifactRootRef': 'docs',
+                      'name': 'weighted-weekly-report',
+                      'task': '那就用这个本地仓库，基于 v1.11.0 开个开发分支，按刚才的最小方案做两级加权、延期原因归并和每周快照。先用假数据在本地验证，别影响现有试用环境，也先不推远端。',
+                    },
+                  'outputs':
+                    {
+                      'verify.verifier':
+                        {
+                          'candidateId': 'weighted-weekly-report:3',
+                          'checks':
+                            [
+                              {
+                                'name': 'Bun regression tests in apps/api',
+                                'note': '/Users/poco/Projects/itsaplan/apps/api: bun --no-env-file test src/modules/weekly-reports src/modules/documents/__tests__/integration/documents.test.ts src/modules/issues/__tests__/integration/subtasks.test.ts, using the isolated itsaplan_weekly_test Postgres. 84 pass, 0 fail, 586 assertions.',
+                                'result': 'passed',
+                              },
+                              {
+                                'name': 'Repository typecheck and lint',
+                                'note': '/Users/poco/Projects/itsaplan: bun run typecheck and bun run lint. Each completed with 12 successful package tasks.',
+                                'result': 'passed',
+                              },
+                              {
+                                'name': 'Formatting and Git whitespace',
+                                'note': '/Users/poco/Projects/itsaplan: node_modules/.bin/prettier --check for changed feature TypeScript and JSON files, and git diff --check. Both exited 0.',
+                                'result': 'passed',
+                              },
+                              {
+                                'name': 'Weekly report migration and environmental isolation',
+                                'note': "/Users/poco/Projects/itsaplan: Bun programmatic migrator applied the core and weekly migrations to isolated test and demo databases. The demo's drizzle.__build_migrations count is 1. git worktree list showed only this checkout and local development branch. Original localhost:3001 and demo 127.0.0.1:13001 both responded HTTP 200.",
+                                'result': 'passed',
+                              },
+                              {
+                                'name': 'Chrome extension acceptance in the isolated demo',
+                                'note': 'The project settings saved all bindings and the Asia/Taipei time zone and reloaded correctly. Docs preview showed 75.2%, 92%, 50%, two active reasons and the missing-reason prompt. The saved local /weekly-demo/WEEKLY/docs/1 is locked; Markdown copy confirmed, with only level-two content. Opening Weekly report again returned the same document and a one-document list. Separate demo database confirmed one week row, document ID 1 and no public share token.',
+                                'result': 'passed',
+                              },
+                              {
+                                'name': 'Supplementary calculation edge cases',
+                                'note': '/Users/poco/Projects/itsaplan: Bun stdin assertions verified empty child groups, an absent completion rate, and an unscheduled task with a reason. All assertions passed.',
+                                'result': 'passed',
+                              },
+                            ],
+                          'response':
+                            {
+                              'kind': 'final-result',
+                              'result':
+                                {
+                                  'acceptance':
+                                    [
+                                      {
+                                        'id': 'A1',
+                                        'reason': 'Chrome project settings saved all eight bindings and Asia/Taipei, and reloading kept the values. API fixtures rejected a foreign field, a type mismatch, a duplicate type and an invalid zone, and the copied project required configuration. Native hierarchy and field regressions passed.',
+                                        'result': 'passed',
+                                      },
+                                      {
+                                        'id': 'A2',
+                                        'reason': 'Chrome and the API fixture showed exactly 92% and 50% for the level-two nodes and 75.2% for the aggregate. The native task and archived-child regressions passed with the existing counting behavior.',
+                                        'result': 'passed',
+                                      },
+                                      {
+                                        'id': 'A3',
+                                        'reason': 'Unit and API checks rejected a stored weight total other than 100%, propagated a missing or out-of-range rate and preserved archived completed work. The read-only supplementary assertion checked the no-child and missing-value cases.',
+                                        'result': 'passed',
+                                      },
+                                      {
+                                        'id': 'A4',
+                                        'reason': 'Chrome displayed only the two allowed reasons plus the missing-reason prompt. API and date-boundary checks covered due-today, missing due date, finished and canceled tasks, a late child of a parent due today, and an ordinary task update with no reason.',
+                                        'result': 'passed',
+                                      },
+                                      {
+                                        'id': 'A5',
+                                        'reason': 'Chrome generated and reopened locked Docs page 1 and the existing copy action confirmed success. The document contained two level-two rows and reasons, with no tertiary metadata or public token. API checks verified document history and project/work-item access.',
+                                        'result': 'passed',
+                                      },
+                                      {
+                                        'id': 'A6',
+                                        'reason': 'Two concurrent confirmations returned one document, repeated reads kept its content, and the next week created a distinct page without the completed delay reason. A stale preview from the previous week was rejected. The feature migration recorded the unique project/week index separately.',
+                                        'result': 'passed',
+                                      },
+                                      {
+                                        'id': 'A7',
+                                        'reason': 'Only the current checkout and local development branch existed at v1.11.0. Fictional API and browser data used the separate loopback demo and test database. Original trial and demo both responded HTTP 200. No changes were committed or pushed.',
+                                        'result': 'passed',
+                                      },
+                                    ],
+                                  'attempt': 1,
+                                  'iteration': 1,
+                                  'requestReview':
+                                    {
+                                      'reason': 'The user approved the minimum proposal and specified the existing local branch, no new worktree, fictional local data, an unchanged trial environment and no remote push. The implementation and checks cover that scope and the target specification.',
+                                      'result': 'aligned',
+                                    },
+                                  'risks':
+                                    [
+                                      'The full repository test suite was not run. The existing Next.js 16.4.2 dependency raised a security-update notice and the isolated demo serves loopback only.',
+                                    ],
+                                  'summary': 'All seven acceptance criteria passed. Local Chrome demo and 84 targeted regression tests verified the change without changing the existing trial deployment.',
+                                  'verdict': 'pass',
+                                },
+                            },
+                          'verifierExecutionRef': '01a1f325-f099-7a81-83e6-bb222d9e2f96',
+                        },
+                    },
+                },
+              'proposalHash': '367b6a3e02910996d67a5f1149ea1a0b31ad62adb36cc5fed54d7ff37b42f053',
+              'choices': ['approved', 'rejected', 'reverify'],
+              'results': {},
+              'decision':
+                {
+                  'id': '72ddc3af9da68bf09be58848f6c8abf36bcecc4017da28b7ead1cc6de0015132',
+                  'choice': 'approved',
+                  'proposalHash': '367b6a3e02910996d67a5f1149ea1a0b31ad62adb36cc5fed54d7ff37b42f053',
+                  'reason': '用户明确接受周报的 7 项验收结果并要求归档。周报实现与规格一致。Next.js 升级到 16.4.6 后在独立假数据环境完成 Chrome 回归，84 项周报相关测试通过；推送测试断言修复后前端 709 项全量测试均通过。按授权在当前分支本地提交三项改动，暂不推送。',
+                },
+            },
+          ],
+        'ready': [],
+        'joins': {},
+        'outputs': {},
+        'children': [],
+        'lineage': [],
+      },
+    'sourceRevision': 15,
+    'sourceHash': 'd16ecd34a0de0d03b85f770fc62ead37f24dab55482c71d5fe5b553606d403c4',
+    'pool':
+      {
+        'version': 3,
+        'values':
+          [
+            {
+              'choice': 'approved',
+              'proposal':
+                {
+                  'input':
+                    {
+                      'artifactRootRef': 'docs',
+                      'name': 'weighted-weekly-report',
+                      'task': '那就用这个本地仓库，基于 v1.11.0 开个开发分支，按刚才的最小方案做两级加权、延期原因归并和每周快照。先用假数据在本地验证，别影响现有试用环境，也先不推远端。',
+                    },
+                  'outputs':
+                    {
+                      'shape.prepare':
+                        {
+                          'acceptance':
+                            [
+                              {
+                                'id': 'A1',
+                                'source': 'brief.md',
+                                'text': 'A project administrator can bind valid issue types, compatible custom fields and an IANA time zone in project settings. Invalid or cross-project ID bindings are rejected, and project copies require rebinding. Native task forms still support the existing hierarchy and fields.',
+                              },
+                              {
+                                'id': 'A2',
+                                'source': 'brief.md',
+                                'text': 'In the internal preview, level-three weights `40/60` and rates `80/100` give `92%`. A level-one node with level-two weights `60/40` and rates `92/50` shows `75.2%`. The native counter still displays completed child counts.',
+                              },
+                              {
+                                'id': 'A3',
+                                'source': 'brief.md',
+                                'text': 'Missing or out-of-range values, sibling weights that fail to total `100%`, and absent children yield an unavailable calculation rather than a fabricated percentage. An unavailable contributing level-two result carries through to level one. A completed archived child still contributes its reported rate and weight.',
+                              },
+                              {
+                                'id': 'A4',
+                                'source': 'brief.md',
+                                'text': "With fictional tasks, earlier due dates trigger delay reporting in the configured time zone. Group an overdue level-two task's own reason and a direct level-three child's reason under level two, including children due before their parent. The day a task is due, unscheduled work, completed tasks and canceled tasks produce no delay line. A blank reason prompts review. Ordinary task updates can still save without a reason.",
+                              },
+                              {
+                                'id': 'A5',
+                                'source': 'brief.md',
+                                'text': 'From Docs, preview both progress levels internally and confirm a dated, locked, copyable Markdown document with only level-two titles, progress and reportable reasons. The document contains no generated level-three title, key or link. Enforce existing source task and Docs permissions on the routes. No public share token is generated.',
+                              },
+                              {
+                                'id': 'A6',
+                                'source': 'brief.md',
+                                'text': 'Concurrent and repeated saves within the same project/week resolve to one document without overwriting its content. A new week creates its own document and reflects changes since the prior week. Run the feature migration separately from the core journal and verify its unique key and document transaction.',
+                              },
+                              {
+                                'id': 'A7',
+                                'source': 'brief.md',
+                                'text': 'Verify the feature with fictional data on a local, isolated test instance while the v1.11.0 trial remains available on its existing ports and database. The sole checkout is the current project directory and the development branch is based on the v1.11.0 tag. Keep all changes local.',
+                              },
+                            ],
+                          'children': null,
+                          'specChanges':
+                            [
+                              {
+                                'capability': 'weekly-project-report',
+                                'operation': 'create',
+                                'source': 'specs/weekly-project-report/spec.md',
+                              },
+                            ],
+                        },
+                    },
+                },
+            },
+            {
+              'acceptance':
+                [
+                  {
+                    'id': 'A1',
+                    'source': 'brief.md',
+                    'text': 'A project administrator can bind valid issue types, compatible custom fields and an IANA time zone in project settings. Invalid or cross-project ID bindings are rejected, and project copies require rebinding. Native task forms still support the existing hierarchy and fields.',
+                  },
+                  {
+                    'id': 'A2',
+                    'source': 'brief.md',
+                    'text': 'In the internal preview, level-three weights `40/60` and rates `80/100` give `92%`. A level-one node with level-two weights `60/40` and rates `92/50` shows `75.2%`. The native counter still displays completed child counts.',
+                  },
+                  {
+                    'id': 'A3',
+                    'source': 'brief.md',
+                    'text': 'Missing or out-of-range values, sibling weights that fail to total `100%`, and absent children yield an unavailable calculation rather than a fabricated percentage. An unavailable contributing level-two result carries through to level one. A completed archived child still contributes its reported rate and weight.',
+                  },
+                  {
+                    'id': 'A4',
+                    'source': 'brief.md',
+                    'text': "With fictional tasks, earlier due dates trigger delay reporting in the configured time zone. Group an overdue level-two task's own reason and a direct level-three child's reason under level two, including children due before their parent. The day a task is due, unscheduled work, completed tasks and canceled tasks produce no delay line. A blank reason prompts review. Ordinary task updates can still save without a reason.",
+                  },
+                  {
+                    'id': 'A5',
+                    'source': 'brief.md',
+                    'text': 'From Docs, preview both progress levels internally and confirm a dated, locked, copyable Markdown document with only level-two titles, progress and reportable reasons. The document contains no generated level-three title, key or link. Enforce existing source task and Docs permissions on the routes. No public share token is generated.',
+                  },
+                  {
+                    'id': 'A6',
+                    'source': 'brief.md',
+                    'text': 'Concurrent and repeated saves within the same project/week resolve to one document without overwriting its content. A new week creates its own document and reflects changes since the prior week. Run the feature migration separately from the core journal and verify its unique key and document transaction.',
+                  },
+                  {
+                    'id': 'A7',
+                    'source': 'brief.md',
+                    'text': 'Verify the feature with fictional data on a local, isolated test instance while the v1.11.0 trial remains available on its existing ports and database. The sole checkout is the current project directory and the development branch is based on the v1.11.0 tag. Keep all changes local.',
+                  },
+                ],
+              'children': null,
+              'specChanges':
+                [
+                  {
+                    'capability': 'weekly-project-report',
+                    'operation': 'create',
+                    'source': 'specs/weekly-project-report/spec.md',
+                  },
+                ],
+            },
+            {
+              'addressedAcceptanceIds': ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7'],
+              'checks':
+                [
+                  {
+                    'name': 'Bun regression tests in apps/api',
+                    'note': '/Users/poco/Projects/itsaplan/apps/api: bun --no-env-file test src/modules/weekly-reports src/modules/documents/__tests__/integration/documents.test.ts src/modules/issues/__tests__/integration/subtasks.test.ts, using the isolated itsaplan_weekly_test Postgres. 84 pass, 0 fail, 586 assertions.',
+                    'result': 'passed',
+                  },
+                  {
+                    'name': 'Repository typecheck and lint',
+                    'note': '/Users/poco/Projects/itsaplan: bun run typecheck and bun run lint. Each completed with 12 successful package tasks.',
+                    'result': 'passed',
+                  },
+                  {
+                    'name': 'Formatting and Git whitespace',
+                    'note': '/Users/poco/Projects/itsaplan: node_modules/.bin/prettier --check for changed feature TypeScript and JSON files, and git diff --check. Both exited 0.',
+                    'result': 'passed',
+                  },
+                  {
+                    'name': 'Weekly report migration and environmental isolation',
+                    'note': "/Users/poco/Projects/itsaplan: Bun programmatic migrator applied the core and weekly migrations to isolated test and demo databases. The demo's drizzle.__build_migrations count is 1. git worktree list showed only this checkout and local development branch. Original localhost:3001 and demo 127.0.0.1:13001 both responded HTTP 200.",
+                    'result': 'passed',
+                  },
+                  {
+                    'name': 'Chrome extension acceptance in the isolated demo',
+                    'note': 'The project settings saved all bindings and the Asia/Taipei time zone and reloaded correctly. Docs preview showed 75.2%, 92%, 50%, two active reasons and the missing-reason prompt. The saved local /weekly-demo/WEEKLY/docs/1 is locked; Markdown copy confirmed, with only level-two content. Opening Weekly report again returned the same document and a one-document list. Separate demo database confirmed one week row, document ID 1 and no public share token.',
+                    'result': 'passed',
+                  },
+                ],
+              'knownLimits':
+                [
+                  'Validation covered 84 relevant tests and the local Chrome workflow. The full repository test suite and deployment were out of the local validation scope.',
+                ],
+              'requireIndependentReview': false,
+              'summary': 'Implemented configurable weighted progress, overdue reason grouping and one locked Docs snapshot per project week. Verified all seven acceptance items with fictional fixtures on the local development branch and the isolated demo.',
+            },
+            {
+              'choice': 'approved',
+              'proposal':
+                {
+                  'activation':
+                    {
+                      'report':
+                        {
+                          'attempt': 1,
+                          'candidateId': 'weighted-weekly-report:3',
+                          'iteration': 1,
+                          'reportRef': 'docs/comet/changes/weighted-weekly-report/verification.md',
+                          'stateVersion': 6,
+                        },
+                    },
+                  'input':
+                    {
+                      'artifactRootRef': 'docs',
+                      'name': 'weighted-weekly-report',
+                      'task': '那就用这个本地仓库，基于 v1.11.0 开个开发分支，按刚才的最小方案做两级加权、延期原因归并和每周快照。先用假数据在本地验证，别影响现有试用环境，也先不推远端。',
+                    },
+                  'outputs':
+                    {
+                      'verify.verifier':
+                        {
+                          'candidateId': 'weighted-weekly-report:3',
+                          'checks':
+                            [
+                              {
+                                'name': 'Bun regression tests in apps/api',
+                                'note': '/Users/poco/Projects/itsaplan/apps/api: bun --no-env-file test src/modules/weekly-reports src/modules/documents/__tests__/integration/documents.test.ts src/modules/issues/__tests__/integration/subtasks.test.ts, using the isolated itsaplan_weekly_test Postgres. 84 pass, 0 fail, 586 assertions.',
+                                'result': 'passed',
+                              },
+                              {
+                                'name': 'Repository typecheck and lint',
+                                'note': '/Users/poco/Projects/itsaplan: bun run typecheck and bun run lint. Each completed with 12 successful package tasks.',
+                                'result': 'passed',
+                              },
+                              {
+                                'name': 'Formatting and Git whitespace',
+                                'note': '/Users/poco/Projects/itsaplan: node_modules/.bin/prettier --check for changed feature TypeScript and JSON files, and git diff --check. Both exited 0.',
+                                'result': 'passed',
+                              },
+                              {
+                                'name': 'Weekly report migration and environmental isolation',
+                                'note': "/Users/poco/Projects/itsaplan: Bun programmatic migrator applied the core and weekly migrations to isolated test and demo databases. The demo's drizzle.__build_migrations count is 1. git worktree list showed only this checkout and local development branch. Original localhost:3001 and demo 127.0.0.1:13001 both responded HTTP 200.",
+                                'result': 'passed',
+                              },
+                              {
+                                'name': 'Chrome extension acceptance in the isolated demo',
+                                'note': 'The project settings saved all bindings and the Asia/Taipei time zone and reloaded correctly. Docs preview showed 75.2%, 92%, 50%, two active reasons and the missing-reason prompt. The saved local /weekly-demo/WEEKLY/docs/1 is locked; Markdown copy confirmed, with only level-two content. Opening Weekly report again returned the same document and a one-document list. Separate demo database confirmed one week row, document ID 1 and no public share token.',
+                                'result': 'passed',
+                              },
+                              {
+                                'name': 'Supplementary calculation edge cases',
+                                'note': '/Users/poco/Projects/itsaplan: Bun stdin assertions verified empty child groups, an absent completion rate, and an unscheduled task with a reason. All assertions passed.',
+                                'result': 'passed',
+                              },
+                            ],
+                          'response':
+                            {
+                              'kind': 'final-result',
+                              'result':
+                                {
+                                  'acceptance':
+                                    [
+                                      {
+                                        'id': 'A1',
+                                        'reason': 'Chrome project settings saved all eight bindings and Asia/Taipei, and reloading kept the values. API fixtures rejected a foreign field, a type mismatch, a duplicate type and an invalid zone, and the copied project required configuration. Native hierarchy and field regressions passed.',
+                                        'result': 'passed',
+                                      },
+                                      {
+                                        'id': 'A2',
+                                        'reason': 'Chrome and the API fixture showed exactly 92% and 50% for the level-two nodes and 75.2% for the aggregate. The native task and archived-child regressions passed with the existing counting behavior.',
+                                        'result': 'passed',
+                                      },
+                                      {
+                                        'id': 'A3',
+                                        'reason': 'Unit and API checks rejected a stored weight total other than 100%, propagated a missing or out-of-range rate and preserved archived completed work. The read-only supplementary assertion checked the no-child and missing-value cases.',
+                                        'result': 'passed',
+                                      },
+                                      {
+                                        'id': 'A4',
+                                        'reason': 'Chrome displayed only the two allowed reasons plus the missing-reason prompt. API and date-boundary checks covered due-today, missing due date, finished and canceled tasks, a late child of a parent due today, and an ordinary task update with no reason.',
+                                        'result': 'passed',
+                                      },
+                                      {
+                                        'id': 'A5',
+                                        'reason': 'Chrome generated and reopened locked Docs page 1 and the existing copy action confirmed success. The document contained two level-two rows and reasons, with no tertiary metadata or public token. API checks verified document history and project/work-item access.',
+                                        'result': 'passed',
+                                      },
+                                      {
+                                        'id': 'A6',
+                                        'reason': 'Two concurrent confirmations returned one document, repeated reads kept its content, and the next week created a distinct page without the completed delay reason. A stale preview from the previous week was rejected. The feature migration recorded the unique project/week index separately.',
+                                        'result': 'passed',
+                                      },
+                                      {
+                                        'id': 'A7',
+                                        'reason': 'Only the current checkout and local development branch existed at v1.11.0. Fictional API and browser data used the separate loopback demo and test database. Original trial and demo both responded HTTP 200. No changes were committed or pushed.',
+                                        'result': 'passed',
+                                      },
+                                    ],
+                                  'attempt': 1,
+                                  'iteration': 1,
+                                  'requestReview':
+                                    {
+                                      'reason': 'The user approved the minimum proposal and specified the existing local branch, no new worktree, fictional local data, an unchanged trial environment and no remote push. The implementation and checks cover that scope and the target specification.',
+                                      'result': 'aligned',
+                                    },
+                                  'risks':
+                                    [
+                                      'The full repository test suite was not run. The existing Next.js 16.4.2 dependency raised a security-update notice and the isolated demo serves loopback only.',
+                                    ],
+                                  'summary': 'All seven acceptance criteria passed. Local Chrome demo and 84 targeted regression tests verified the change without changing the existing trial deployment.',
+                                  'verdict': 'pass',
+                                },
+                            },
+                          'verifierExecutionRef': '01a1f325-f099-7a81-83e6-bb222d9e2f96',
+                        },
+                    },
+                },
+            },
+            {
+              'candidateId': 'weighted-weekly-report:3',
+              'checks':
+                [
+                  {
+                    'name': 'Bun regression tests in apps/api',
+                    'note': '/Users/poco/Projects/itsaplan/apps/api: bun --no-env-file test src/modules/weekly-reports src/modules/documents/__tests__/integration/documents.test.ts src/modules/issues/__tests__/integration/subtasks.test.ts, using the isolated itsaplan_weekly_test Postgres. 84 pass, 0 fail, 586 assertions.',
+                    'result': 'passed',
+                  },
+                  {
+                    'name': 'Repository typecheck and lint',
+                    'note': '/Users/poco/Projects/itsaplan: bun run typecheck and bun run lint. Each completed with 12 successful package tasks.',
+                    'result': 'passed',
+                  },
+                  {
+                    'name': 'Formatting and Git whitespace',
+                    'note': '/Users/poco/Projects/itsaplan: node_modules/.bin/prettier --check for changed feature TypeScript and JSON files, and git diff --check. Both exited 0.',
+                    'result': 'passed',
+                  },
+                  {
+                    'name': 'Weekly report migration and environmental isolation',
+                    'note': "/Users/poco/Projects/itsaplan: Bun programmatic migrator applied the core and weekly migrations to isolated test and demo databases. The demo's drizzle.__build_migrations count is 1. git worktree list showed only this checkout and local development branch. Original localhost:3001 and demo 127.0.0.1:13001 both responded HTTP 200.",
+                    'result': 'passed',
+                  },
+                  {
+                    'name': 'Chrome extension acceptance in the isolated demo',
+                    'note': 'The project settings saved all bindings and the Asia/Taipei time zone and reloaded correctly. Docs preview showed 75.2%, 92%, 50%, two active reasons and the missing-reason prompt. The saved local /weekly-demo/WEEKLY/docs/1 is locked; Markdown copy confirmed, with only level-two content. Opening Weekly report again returned the same document and a one-document list. Separate demo database confirmed one week row, document ID 1 and no public share token.',
+                    'result': 'passed',
+                  },
+                  {
+                    'name': 'Supplementary calculation edge cases',
+                    'note': '/Users/poco/Projects/itsaplan: Bun stdin assertions verified empty child groups, an absent completion rate, and an unscheduled task with a reason. All assertions passed.',
+                    'result': 'passed',
+                  },
+                ],
+              'response':
+                {
+                  'kind': 'final-result',
+                  'result':
+                    {
+                      'acceptance':
+                        [
+                          {
+                            'id': 'A1',
+                            'reason': 'Chrome project settings saved all eight bindings and Asia/Taipei, and reloading kept the values. API fixtures rejected a foreign field, a type mismatch, a duplicate type and an invalid zone, and the copied project required configuration. Native hierarchy and field regressions passed.',
+                            'result': 'passed',
+                          },
+                          {
+                            'id': 'A2',
+                            'reason': 'Chrome and the API fixture showed exactly 92% and 50% for the level-two nodes and 75.2% for the aggregate. The native task and archived-child regressions passed with the existing counting behavior.',
+                            'result': 'passed',
+                          },
+                          {
+                            'id': 'A3',
+                            'reason': 'Unit and API checks rejected a stored weight total other than 100%, propagated a missing or out-of-range rate and preserved archived completed work. The read-only supplementary assertion checked the no-child and missing-value cases.',
+                            'result': 'passed',
+                          },
+                          {
+                            'id': 'A4',
+                            'reason': 'Chrome displayed only the two allowed reasons plus the missing-reason prompt. API and date-boundary checks covered due-today, missing due date, finished and canceled tasks, a late child of a parent due today, and an ordinary task update with no reason.',
+                            'result': 'passed',
+                          },
+                          {
+                            'id': 'A5',
+                            'reason': 'Chrome generated and reopened locked Docs page 1 and the existing copy action confirmed success. The document contained two level-two rows and reasons, with no tertiary metadata or public token. API checks verified document history and project/work-item access.',
+                            'result': 'passed',
+                          },
+                          {
+                            'id': 'A6',
+                            'reason': 'Two concurrent confirmations returned one document, repeated reads kept its content, and the next week created a distinct page without the completed delay reason. A stale preview from the previous week was rejected. The feature migration recorded the unique project/week index separately.',
+                            'result': 'passed',
+                          },
+                          {
+                            'id': 'A7',
+                            'reason': 'Only the current checkout and local development branch existed at v1.11.0. Fictional API and browser data used the separate loopback demo and test database. Original trial and demo both responded HTTP 200. No changes were committed or pushed.',
+                            'result': 'passed',
+                          },
+                        ],
+                      'attempt': 1,
+                      'iteration': 1,
+                      'requestReview':
+                        {
+                          'reason': 'The user approved the minimum proposal and specified the existing local branch, no new worktree, fictional local data, an unchanged trial environment and no remote push. The implementation and checks cover that scope and the target specification.',
+                          'result': 'aligned',
+                        },
+                      'risks':
+                        [
+                          'The full repository test suite was not run. The existing Next.js 16.4.2 dependency raised a security-update notice and the isolated demo serves loopback only.',
+                        ],
+                      'summary': 'All seven acceptance criteria passed. Local Chrome demo and 84 targeted regression tests verified the change without changing the existing trial deployment.',
+                      'verdict': 'pass',
+                    },
+                },
+              'verifierExecutionRef': '01a1f325-f099-7a81-83e6-bb222d9e2f96',
+            },
+            {
+              'archiveDirRef': 'docs/comet/archive/2026-11-19-weighted-weekly-report',
+              'blockers': [],
+              'candidateId': 'weighted-weekly-report:3',
+              'capabilityPeers': [],
+              'ready': true,
+              'reportRef': 'docs/comet/changes/weighted-weekly-report/verification.md',
+              'reportStateVersion': 6,
+              'requiresReverification': false,
+              'specPreview':
+                [
+                  {
+                    'capability': 'weekly-project-report',
+                    'operation': 'create',
+                    'source': 'specs/weekly-project-report/spec.md',
+                  },
+                ],
+              'stateVersion': 7,
+            },
+            {
+              'archiveRef': '2026-11-19-weighted-weekly-report',
+              'specCount': 1,
+              'stateVersion': 7,
+              'transactionId': 'a7c61431-9c5c-40cb-91b5-a925e10a80a5',
+            },
+            {
+              'sequence': 2,
+              'value':
+                {
+                  'choice': 'approved',
+                  'proposal':
+                    {
+                      'input':
+                        {
+                          'artifactRootRef': 'docs',
+                          'name': 'weighted-weekly-report',
+                          'task': '那就用这个本地仓库，基于 v1.11.0 开个开发分支，按刚才的最小方案做两级加权、延期原因归并和每周快照。先用假数据在本地验证，别影响现有试用环境，也先不推远端。',
+                        },
+                      'outputs':
+                        {
+                          'shape.prepare':
+                            {
+                              'acceptance':
+                                [
+                                  {
+                                    'id': 'A1',
+                                    'source': 'brief.md',
+                                    'text': 'A project administrator can bind valid issue types, compatible custom fields and an IANA time zone in project settings. Invalid or cross-project ID bindings are rejected, and project copies require rebinding. Native task forms still support the existing hierarchy and fields.',
+                                  },
+                                  {
+                                    'id': 'A2',
+                                    'source': 'brief.md',
+                                    'text': 'In the internal preview, level-three weights `40/60` and rates `80/100` give `92%`. A level-one node with level-two weights `60/40` and rates `92/50` shows `75.2%`. The native counter still displays completed child counts.',
+                                  },
+                                  {
+                                    'id': 'A3',
+                                    'source': 'brief.md',
+                                    'text': 'Missing or out-of-range values, sibling weights that fail to total `100%`, and absent children yield an unavailable calculation rather than a fabricated percentage. An unavailable contributing level-two result carries through to level one. A completed archived child still contributes its reported rate and weight.',
+                                  },
+                                  {
+                                    'id': 'A4',
+                                    'source': 'brief.md',
+                                    'text': "With fictional tasks, earlier due dates trigger delay reporting in the configured time zone. Group an overdue level-two task's own reason and a direct level-three child's reason under level two, including children due before their parent. The day a task is due, unscheduled work, completed tasks and canceled tasks produce no delay line. A blank reason prompts review. Ordinary task updates can still save without a reason.",
+                                  },
+                                  {
+                                    'id': 'A5',
+                                    'source': 'brief.md',
+                                    'text': 'From Docs, preview both progress levels internally and confirm a dated, locked, copyable Markdown document with only level-two titles, progress and reportable reasons. The document contains no generated level-three title, key or link. Enforce existing source task and Docs permissions on the routes. No public share token is generated.',
+                                  },
+                                  {
+                                    'id': 'A6',
+                                    'source': 'brief.md',
+                                    'text': 'Concurrent and repeated saves within the same project/week resolve to one document without overwriting its content. A new week creates its own document and reflects changes since the prior week. Run the feature migration separately from the core journal and verify its unique key and document transaction.',
+                                  },
+                                  {
+                                    'id': 'A7',
+                                    'source': 'brief.md',
+                                    'text': 'Verify the feature with fictional data on a local, isolated test instance while the v1.11.0 trial remains available on its existing ports and database. The sole checkout is the current project directory and the development branch is based on the v1.11.0 tag. Keep all changes local.',
+                                  },
+                                ],
+                              'children': null,
+                              'specChanges':
+                                [
+                                  {
+                                    'capability': 'weekly-project-report',
+                                    'operation': 'create',
+                                    'source': 'specs/weekly-project-report/spec.md',
+                                  },
+                                ],
+                            },
+                        },
+                    },
+                },
+            },
+            {
+              'sequence': 1,
+              'value':
+                {
+                  'acceptance':
+                    [
+                      {
+                        'id': 'A1',
+                        'source': 'brief.md',
+                        'text': 'A project administrator can bind valid issue types, compatible custom fields and an IANA time zone in project settings. Invalid or cross-project ID bindings are rejected, and project copies require rebinding. Native task forms still support the existing hierarchy and fields.',
+                      },
+                      {
+                        'id': 'A2',
+                        'source': 'brief.md',
+                        'text': 'In the internal preview, level-three weights `40/60` and rates `80/100` give `92%`. A level-one node with level-two weights `60/40` and rates `92/50` shows `75.2%`. The native counter still displays completed child counts.',
+                      },
+                      {
+                        'id': 'A3',
+                        'source': 'brief.md',
+                        'text': 'Missing or out-of-range values, sibling weights that fail to total `100%`, and absent children yield an unavailable calculation rather than a fabricated percentage. An unavailable contributing level-two result carries through to level one. A completed archived child still contributes its reported rate and weight.',
+                      },
+                      {
+                        'id': 'A4',
+                        'source': 'brief.md',
+                        'text': "With fictional tasks, earlier due dates trigger delay reporting in the configured time zone. Group an overdue level-two task's own reason and a direct level-three child's reason under level two, including children due before their parent. The day a task is due, unscheduled work, completed tasks and canceled tasks produce no delay line. A blank reason prompts review. Ordinary task updates can still save without a reason.",
+                      },
+                      {
+                        'id': 'A5',
+                        'source': 'brief.md',
+                        'text': 'From Docs, preview both progress levels internally and confirm a dated, locked, copyable Markdown document with only level-two titles, progress and reportable reasons. The document contains no generated level-three title, key or link. Enforce existing source task and Docs permissions on the routes. No public share token is generated.',
+                      },
+                      {
+                        'id': 'A6',
+                        'source': 'brief.md',
+                        'text': 'Concurrent and repeated saves within the same project/week resolve to one document without overwriting its content. A new week creates its own document and reflects changes since the prior week. Run the feature migration separately from the core journal and verify its unique key and document transaction.',
+                      },
+                      {
+                        'id': 'A7',
+                        'source': 'brief.md',
+                        'text': 'Verify the feature with fictional data on a local, isolated test instance while the v1.11.0 trial remains available on its existing ports and database. The sole checkout is the current project directory and the development branch is based on the v1.11.0 tag. Keep all changes local.',
+                      },
+                    ],
+                  'children': null,
+                  'specChanges':
+                    [
+                      {
+                        'capability': 'weekly-project-report',
+                        'operation': 'create',
+                        'source': 'specs/weekly-project-report/spec.md',
+                      },
+                    ],
+                },
+            },
+            {
+              'sequence': 3,
+              'value':
+                {
+                  'addressedAcceptanceIds': ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7'],
+                  'checks':
+                    [
+                      {
+                        'name': 'Bun regression tests in apps/api',
+                        'note': '/Users/poco/Projects/itsaplan/apps/api: bun --no-env-file test src/modules/weekly-reports src/modules/documents/__tests__/integration/documents.test.ts src/modules/issues/__tests__/integration/subtasks.test.ts, using the isolated itsaplan_weekly_test Postgres. 84 pass, 0 fail, 586 assertions.',
+                        'result': 'passed',
+                      },
+                      {
+                        'name': 'Repository typecheck and lint',
+                        'note': '/Users/poco/Projects/itsaplan: bun run typecheck and bun run lint. Each completed with 12 successful package tasks.',
+                        'result': 'passed',
+                      },
+                      {
+                        'name': 'Formatting and Git whitespace',
+                        'note': '/Users/poco/Projects/itsaplan: node_modules/.bin/prettier --check for changed feature TypeScript and JSON files, and git diff --check. Both exited 0.',
+                        'result': 'passed',
+                      },
+                      {
+                        'name': 'Weekly report migration and environmental isolation',
+                        'note': "/Users/poco/Projects/itsaplan: Bun programmatic migrator applied the core and weekly migrations to isolated test and demo databases. The demo's drizzle.__build_migrations count is 1. git worktree list showed only this checkout and local development branch. Original localhost:3001 and demo 127.0.0.1:13001 both responded HTTP 200.",
+                        'result': 'passed',
+                      },
+                      {
+                        'name': 'Chrome extension acceptance in the isolated demo',
+                        'note': 'The project settings saved all bindings and the Asia/Taipei time zone and reloaded correctly. Docs preview showed 75.2%, 92%, 50%, two active reasons and the missing-reason prompt. The saved local /weekly-demo/WEEKLY/docs/1 is locked; Markdown copy confirmed, with only level-two content. Opening Weekly report again returned the same document and a one-document list. Separate demo database confirmed one week row, document ID 1 and no public share token.',
+                        'result': 'passed',
+                      },
+                    ],
+                  'knownLimits':
+                    [
+                      'Validation covered 84 relevant tests and the local Chrome workflow. The full repository test suite and deployment were out of the local validation scope.',
+                    ],
+                  'requireIndependentReview': false,
+                  'summary': 'Implemented configurable weighted progress, overdue reason grouping and one locked Docs snapshot per project week. Verified all seven acceptance items with fictional fixtures on the local development branch and the isolated demo.',
+                },
+            },
+            {
+              'sequence': 5,
+              'value':
+                {
+                  'choice': 'approved',
+                  'proposal':
+                    {
+                      'activation':
+                        {
+                          'report':
+                            {
+                              'attempt': 1,
+                              'candidateId': 'weighted-weekly-report:3',
+                              'iteration': 1,
+                              'reportRef': 'docs/comet/changes/weighted-weekly-report/verification.md',
+                              'stateVersion': 6,
+                            },
+                        },
+                      'input':
+                        {
+                          'artifactRootRef': 'docs',
+                          'name': 'weighted-weekly-report',
+                          'task': '那就用这个本地仓库，基于 v1.11.0 开个开发分支，按刚才的最小方案做两级加权、延期原因归并和每周快照。先用假数据在本地验证，别影响现有试用环境，也先不推远端。',
+                        },
+                      'outputs':
+                        {
+                          'verify.verifier':
+                            {
+                              'candidateId': 'weighted-weekly-report:3',
+                              'checks':
+                                [
+                                  {
+                                    'name': 'Bun regression tests in apps/api',
+                                    'note': '/Users/poco/Projects/itsaplan/apps/api: bun --no-env-file test src/modules/weekly-reports src/modules/documents/__tests__/integration/documents.test.ts src/modules/issues/__tests__/integration/subtasks.test.ts, using the isolated itsaplan_weekly_test Postgres. 84 pass, 0 fail, 586 assertions.',
+                                    'result': 'passed',
+                                  },
+                                  {
+                                    'name': 'Repository typecheck and lint',
+                                    'note': '/Users/poco/Projects/itsaplan: bun run typecheck and bun run lint. Each completed with 12 successful package tasks.',
+                                    'result': 'passed',
+                                  },
+                                  {
+                                    'name': 'Formatting and Git whitespace',
+                                    'note': '/Users/poco/Projects/itsaplan: node_modules/.bin/prettier --check for changed feature TypeScript and JSON files, and git diff --check. Both exited 0.',
+                                    'result': 'passed',
+                                  },
+                                  {
+                                    'name': 'Weekly report migration and environmental isolation',
+                                    'note': "/Users/poco/Projects/itsaplan: Bun programmatic migrator applied the core and weekly migrations to isolated test and demo databases. The demo's drizzle.__build_migrations count is 1. git worktree list showed only this checkout and local development branch. Original localhost:3001 and demo 127.0.0.1:13001 both responded HTTP 200.",
+                                    'result': 'passed',
+                                  },
+                                  {
+                                    'name': 'Chrome extension acceptance in the isolated demo',
+                                    'note': 'The project settings saved all bindings and the Asia/Taipei time zone and reloaded correctly. Docs preview showed 75.2%, 92%, 50%, two active reasons and the missing-reason prompt. The saved local /weekly-demo/WEEKLY/docs/1 is locked; Markdown copy confirmed, with only level-two content. Opening Weekly report again returned the same document and a one-document list. Separate demo database confirmed one week row, document ID 1 and no public share token.',
+                                    'result': 'passed',
+                                  },
+                                  {
+                                    'name': 'Supplementary calculation edge cases',
+                                    'note': '/Users/poco/Projects/itsaplan: Bun stdin assertions verified empty child groups, an absent completion rate, and an unscheduled task with a reason. All assertions passed.',
+                                    'result': 'passed',
+                                  },
+                                ],
+                              'response':
+                                {
+                                  'kind': 'final-result',
+                                  'result':
+                                    {
+                                      'acceptance':
+                                        [
+                                          {
+                                            'id': 'A1',
+                                            'reason': 'Chrome project settings saved all eight bindings and Asia/Taipei, and reloading kept the values. API fixtures rejected a foreign field, a type mismatch, a duplicate type and an invalid zone, and the copied project required configuration. Native hierarchy and field regressions passed.',
+                                            'result': 'passed',
+                                          },
+                                          {
+                                            'id': 'A2',
+                                            'reason': 'Chrome and the API fixture showed exactly 92% and 50% for the level-two nodes and 75.2% for the aggregate. The native task and archived-child regressions passed with the existing counting behavior.',
+                                            'result': 'passed',
+                                          },
+                                          {
+                                            'id': 'A3',
+                                            'reason': 'Unit and API checks rejected a stored weight total other than 100%, propagated a missing or out-of-range rate and preserved archived completed work. The read-only supplementary assertion checked the no-child and missing-value cases.',
+                                            'result': 'passed',
+                                          },
+                                          {
+                                            'id': 'A4',
+                                            'reason': 'Chrome displayed only the two allowed reasons plus the missing-reason prompt. API and date-boundary checks covered due-today, missing due date, finished and canceled tasks, a late child of a parent due today, and an ordinary task update with no reason.',
+                                            'result': 'passed',
+                                          },
+                                          {
+                                            'id': 'A5',
+                                            'reason': 'Chrome generated and reopened locked Docs page 1 and the existing copy action confirmed success. The document contained two level-two rows and reasons, with no tertiary metadata or public token. API checks verified document history and project/work-item access.',
+                                            'result': 'passed',
+                                          },
+                                          {
+                                            'id': 'A6',
+                                            'reason': 'Two concurrent confirmations returned one document, repeated reads kept its content, and the next week created a distinct page without the completed delay reason. A stale preview from the previous week was rejected. The feature migration recorded the unique project/week index separately.',
+                                            'result': 'passed',
+                                          },
+                                          {
+                                            'id': 'A7',
+                                            'reason': 'Only the current checkout and local development branch existed at v1.11.0. Fictional API and browser data used the separate loopback demo and test database. Original trial and demo both responded HTTP 200. No changes were committed or pushed.',
+                                            'result': 'passed',
+                                          },
+                                        ],
+                                      'attempt': 1,
+                                      'iteration': 1,
+                                      'requestReview':
+                                        {
+                                          'reason': 'The user approved the minimum proposal and specified the existing local branch, no new worktree, fictional local data, an unchanged trial environment and no remote push. The implementation and checks cover that scope and the target specification.',
+                                          'result': 'aligned',
+                                        },
+                                      'risks':
+                                        [
+                                          'The full repository test suite was not run. The existing Next.js 16.4.2 dependency raised a security-update notice and the isolated demo serves loopback only.',
+                                        ],
+                                      'summary': 'All seven acceptance criteria passed. Local Chrome demo and 84 targeted regression tests verified the change without changing the existing trial deployment.',
+                                      'verdict': 'pass',
+                                    },
+                                },
+                              'verifierExecutionRef': '01a1f325-f099-7a81-83e6-bb222d9e2f96',
+                            },
+                        },
+                    },
+                },
+            },
+            {
+              'sequence': 4,
+              'value':
+                {
+                  'candidateId': 'weighted-weekly-report:3',
+                  'checks':
+                    [
+                      {
+                        'name': 'Bun regression tests in apps/api',
+                        'note': '/Users/poco/Projects/itsaplan/apps/api: bun --no-env-file test src/modules/weekly-reports src/modules/documents/__tests__/integration/documents.test.ts src/modules/issues/__tests__/integration/subtasks.test.ts, using the isolated itsaplan_weekly_test Postgres. 84 pass, 0 fail, 586 assertions.',
+                        'result': 'passed',
+                      },
+                      {
+                        'name': 'Repository typecheck and lint',
+                        'note': '/Users/poco/Projects/itsaplan: bun run typecheck and bun run lint. Each completed with 12 successful package tasks.',
+                        'result': 'passed',
+                      },
+                      {
+                        'name': 'Formatting and Git whitespace',
+                        'note': '/Users/poco/Projects/itsaplan: node_modules/.bin/prettier --check for changed feature TypeScript and JSON files, and git diff --check. Both exited 0.',
+                        'result': 'passed',
+                      },
+                      {
+                        'name': 'Weekly report migration and environmental isolation',
+                        'note': "/Users/poco/Projects/itsaplan: Bun programmatic migrator applied the core and weekly migrations to isolated test and demo databases. The demo's drizzle.__build_migrations count is 1. git worktree list showed only this checkout and local development branch. Original localhost:3001 and demo 127.0.0.1:13001 both responded HTTP 200.",
+                        'result': 'passed',
+                      },
+                      {
+                        'name': 'Chrome extension acceptance in the isolated demo',
+                        'note': 'The project settings saved all bindings and the Asia/Taipei time zone and reloaded correctly. Docs preview showed 75.2%, 92%, 50%, two active reasons and the missing-reason prompt. The saved local /weekly-demo/WEEKLY/docs/1 is locked; Markdown copy confirmed, with only level-two content. Opening Weekly report again returned the same document and a one-document list. Separate demo database confirmed one week row, document ID 1 and no public share token.',
+                        'result': 'passed',
+                      },
+                      {
+                        'name': 'Supplementary calculation edge cases',
+                        'note': '/Users/poco/Projects/itsaplan: Bun stdin assertions verified empty child groups, an absent completion rate, and an unscheduled task with a reason. All assertions passed.',
+                        'result': 'passed',
+                      },
+                    ],
+                  'response':
+                    {
+                      'kind': 'final-result',
+                      'result':
+                        {
+                          'acceptance':
+                            [
+                              {
+                                'id': 'A1',
+                                'reason': 'Chrome project settings saved all eight bindings and Asia/Taipei, and reloading kept the values. API fixtures rejected a foreign field, a type mismatch, a duplicate type and an invalid zone, and the copied project required configuration. Native hierarchy and field regressions passed.',
+                                'result': 'passed',
+                              },
+                              {
+                                'id': 'A2',
+                                'reason': 'Chrome and the API fixture showed exactly 92% and 50% for the level-two nodes and 75.2% for the aggregate. The native task and archived-child regressions passed with the existing counting behavior.',
+                                'result': 'passed',
+                              },
+                              {
+                                'id': 'A3',
+                                'reason': 'Unit and API checks rejected a stored weight total other than 100%, propagated a missing or out-of-range rate and preserved archived completed work. The read-only supplementary assertion checked the no-child and missing-value cases.',
+                                'result': 'passed',
+                              },
+                              {
+                                'id': 'A4',
+                                'reason': 'Chrome displayed only the two allowed reasons plus the missing-reason prompt. API and date-boundary checks covered due-today, missing due date, finished and canceled tasks, a late child of a parent due today, and an ordinary task update with no reason.',
+                                'result': 'passed',
+                              },
+                              {
+                                'id': 'A5',
+                                'reason': 'Chrome generated and reopened locked Docs page 1 and the existing copy action confirmed success. The document contained two level-two rows and reasons, with no tertiary metadata or public token. API checks verified document history and project/work-item access.',
+                                'result': 'passed',
+                              },
+                              {
+                                'id': 'A6',
+                                'reason': 'Two concurrent confirmations returned one document, repeated reads kept its content, and the next week created a distinct page without the completed delay reason. A stale preview from the previous week was rejected. The feature migration recorded the unique project/week index separately.',
+                                'result': 'passed',
+                              },
+                              {
+                                'id': 'A7',
+                                'reason': 'Only the current checkout and local development branch existed at v1.11.0. Fictional API and browser data used the separate loopback demo and test database. Original trial and demo both responded HTTP 200. No changes were committed or pushed.',
+                                'result': 'passed',
+                              },
+                            ],
+                          'attempt': 1,
+                          'iteration': 1,
+                          'requestReview':
+                            {
+                              'reason': 'The user approved the minimum proposal and specified the existing local branch, no new worktree, fictional local data, an unchanged trial environment and no remote push. The implementation and checks cover that scope and the target specification.',
+                              'result': 'aligned',
+                            },
+                          'risks':
+                            [
+                              'The full repository test suite was not run. The existing Next.js 16.4.2 dependency raised a security-update notice and the isolated demo serves loopback only.',
+                            ],
+                          'summary': 'All seven acceptance criteria passed. Local Chrome demo and 84 targeted regression tests verified the change without changing the existing trial deployment.',
+                          'verdict': 'pass',
+                        },
+                    },
+                  'verifierExecutionRef': '01a1f325-f099-7a81-83e6-bb222d9e2f96',
+                },
+            },
+            {
+              'sequence': 6,
+              'value':
+                {
+                  'archiveDirRef': 'docs/comet/archive/2026-11-19-weighted-weekly-report',
+                  'blockers': [],
+                  'candidateId': 'weighted-weekly-report:3',
+                  'capabilityPeers': [],
+                  'ready': true,
+                  'reportRef': 'docs/comet/changes/weighted-weekly-report/verification.md',
+                  'reportStateVersion': 6,
+                  'requiresReverification': false,
+                  'specPreview':
+                    [
+                      {
+                        'capability': 'weekly-project-report',
+                        'operation': 'create',
+                        'source': 'specs/weekly-project-report/spec.md',
+                      },
+                    ],
+                  'stateVersion': 7,
+                },
+            },
+            {
+              'sequence': 7,
+              'value':
+                {
+                  'archiveRef': '2026-11-19-weighted-weekly-report',
+                  'specCount': 1,
+                  'stateVersion': 7,
+                  'transactionId': 'a7c61431-9c5c-40cb-91b5-a925e10a80a5',
+                },
+            },
+            {
+              'sequence': 8,
+              'value':
+                {
+                  'archiveRef': '2026-11-19-weighted-weekly-report',
+                  'change': 'weighted-weekly-report',
+                  'runId': 'weighted-weekly-report',
+                  'specs': [{ 'capability': 'weekly-project-report', 'operation': 'create' }],
+                  'stateVersion': 8,
+                  'transactionId': 'a7c61431-9c5c-40cb-91b5-a925e10a80a5',
+                },
+            },
+          ],
+        'nodes':
+          [
+            { 'key': 'shape.prepare', 'value': 1, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'shape.confirm', 'value': 0, 'left': null, 'right': 0, 'height': 2 },
+            { 'key': 'build.builder', 'value': 2, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'shape.confirm', 'value': 0, 'left': 2, 'right': 0, 'height': 2 },
+            { 'key': 'shape.prepare', 'value': 1, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'verify.verifier', 'value': 4, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'verify.confirm', 'value': 3, 'left': 4, 'right': 5, 'height': 2 },
+            { 'key': 'shape.confirm', 'value': 0, 'left': 2, 'right': 6, 'height': 3 },
+            { 'key': 'archive.prepare', 'value': 5, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'build.builder', 'value': 2, 'left': 8, 'right': null, 'height': 2 },
+            { 'key': 'shape.confirm', 'value': 0, 'left': 9, 'right': 6, 'height': 3 },
+            { 'key': 'archive.execute', 'value': 6, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'build.builder', 'value': 2, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'archive.prepare', 'value': 5, 'left': 11, 'right': 12, 'height': 2 },
+            { 'key': 'shape.confirm', 'value': 0, 'left': 13, 'right': 6, 'height': 3 },
+            { 'key': 'shape.prepare', 'value': 8, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'shape.confirm', 'value': 7, 'left': null, 'right': 15, 'height': 2 },
+            { 'key': 'build.builder', 'value': 9, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'shape.confirm', 'value': 7, 'left': 17, 'right': 15, 'height': 2 },
+            { 'key': 'shape.prepare', 'value': 8, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'verify.verifier', 'value': 11, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'verify.confirm', 'value': 10, 'left': 19, 'right': 20, 'height': 2 },
+            { 'key': 'shape.confirm', 'value': 7, 'left': 17, 'right': 21, 'height': 3 },
+            { 'key': 'archive.prepare', 'value': 12, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'build.builder', 'value': 9, 'left': 23, 'right': null, 'height': 2 },
+            { 'key': 'shape.confirm', 'value': 7, 'left': 24, 'right': 21, 'height': 3 },
+            { 'key': 'archive.execute', 'value': 13, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'build.builder', 'value': 9, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'archive.prepare', 'value': 12, 'left': 26, 'right': 27, 'height': 2 },
+            { 'key': 'shape.confirm', 'value': 7, 'left': 28, 'right': 21, 'height': 3 },
+            { 'key': 'archive.finalize', 'value': 14, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'archive.execute', 'value': 13, 'left': null, 'right': 30, 'height': 2 },
+            { 'key': 'archive.prepare', 'value': 12, 'left': 31, 'right': 27, 'height': 3 },
+            { 'key': 'shape.confirm', 'value': 7, 'left': 32, 'right': 21, 'height': 4 },
+            { 'key': 'shape.prepare', 'value': 8, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'build.builder', 'value': 9, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'verify.verifier', 'value': 11, 'left': null, 'right': null, 'height': 1 },
+            { 'key': 'shape.prepare', 'value': 8, 'left': null, 'right': 36, 'height': 2 },
+            { 'key': 'shape.confirm', 'value': 7, 'left': 35, 'right': 37, 'height': 3 },
+          ],
+        'maps': [null, 1, 3, 7, 10, 14, 16, 18, 22, 25, 29, 33, 34, 38],
+        'bindings':
+          [
+            { 'path': ['actions', '0', 'input', 'outputs'], 'map': 0 },
+            { 'path': ['actions', '1', 'input', 'outputs'], 'map': 1 },
+            { 'path': ['actions', '2', 'input', 'outputs'], 'map': 2 },
+            { 'path': ['actions', '3', 'input', 'outputs'], 'map': 3 },
+            { 'path': ['actions', '4', 'input', 'outputs'], 'map': 4 },
+            { 'path': ['actions', '5', 'input', 'outputs'], 'map': 5 },
+            { 'path': ['actionContexts', 'weighted-weekly-report:1', 'results'], 'map': 0 },
+            { 'path': ['actionContexts', 'weighted-weekly-report:3', 'results'], 'map': 6 },
+            { 'path': ['actionContexts', 'weighted-weekly-report:4', 'results'], 'map': 7 },
+            { 'path': ['actionContexts', 'weighted-weekly-report:6', 'results'], 'map': 8 },
+            { 'path': ['actionContexts', 'weighted-weekly-report:7', 'results'], 'map': 9 },
+            { 'path': ['actionContexts', 'weighted-weekly-report:8', 'results'], 'map': 10 },
+            { 'path': ['outputs'], 'map': 11 },
+            { 'path': ['waits', '0', 'results'], 'map': 12 },
+            { 'path': ['waits', '1', 'results'], 'map': 13 },
+          ],
+      },
+    'storageHash': '026deaa754f0ceb1336baf59ea1acdb02112f61e5d28163d0436cfe700b57f68',
+  }

@@ -46,6 +46,7 @@ export default function RunnerQueueActiveCard({
     `@${run.username}`,
     runPlace(run, acrossProjects),
     t(`triggers.${run.trigger}`),
+    run.initiator?.name,
     run.attempts > 1 ? t('attemptsCount', { count: run.attempts }) : null,
   ]
     .filter(Boolean)

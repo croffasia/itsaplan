@@ -19,6 +19,8 @@ export interface FilterOption {
   label: string;
   detail?: string;
   count?: number;
+  // A person's value shows their avatar before the label.
+  avatar?: { name: string; image?: string | null };
 }
 
 export interface FilterSection {

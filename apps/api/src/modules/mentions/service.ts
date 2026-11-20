@@ -119,6 +119,7 @@ export async function queueMentionRuns(input: {
       sourceActivityId: null,
       ...input.source,
       requestedByUserId: input.actorUserId,
+      startedByUserId: input.actorUserId,
       prompt: input.prompt,
       trigger: 'mention',
     });

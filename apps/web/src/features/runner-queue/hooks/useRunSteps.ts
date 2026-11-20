@@ -10,8 +10,8 @@ import { internalTraceParts } from '@/components/common/agent-runs/internalTrace
 // so the tab can say how many there are and whether one failed before it is opened.
 export function useRunSteps(run: RunnerQueueRun) {
   const internal = run.kind === 'internal';
-  const internalTrace = useInternalRunTraceQuery(run.id, undefined, internal);
-  const externalTrace = useExternalRunTraceQuery(run.id, undefined, !internal);
+  const internalTrace = useInternalRunTraceQuery(run.id, undefined, internal && run.canReadSteps);
+  const externalTrace = useExternalRunTraceQuery(run.id, undefined, !internal && run.canReadSteps);
   useLiveRefresh({
     scope: revScope.runnerQueue,
     targets: [internal ? qk.internalRunTrace(run.id) : qk.externalRunTrace(run.id)],

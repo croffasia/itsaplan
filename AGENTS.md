@@ -110,7 +110,7 @@ Read the doc for what your task touches:
 | --------------------------------------------- | -------------------------------------------------------------------- |
 | local setup, running tests, the Docker gate   | `docs/development.md`                                                |
 | who may do what: roles, workspaces, invites   | `docs/dev/access-model.md`                                           |
-| AI agents, runs, traces, the runner queue     | `docs/dev/agents.md`                                                 |
+| AI agents, runs, traces, the run list         | `docs/dev/agents.md`                                                 |
 | SCIM                                          | `docs/dev/scim.md`                                                   |
 | sign-in methods, sessions, API keys, MCP OAuth | `docs/dev/auth.md`                                                  |
 | live updates: scopes, counters, refetch       | `docs/dev/revision-engine.md`                                        |

@@ -7,9 +7,8 @@ import { IssueAgentRunTraceResponse } from '#modules/issues/model';
 import { Elysia, type DocumentDecoration } from 'elysia';
 import { authContext } from '#shared/auth-context';
 import { hasPermission } from '@repo/db';
-import { assertPermission, getTeamAccess, requireUser } from '#shared/access';
+import { getTeamAccess, requireUser } from '#shared/access';
 import { runsTeam } from '#modules/teams/service';
-import { getProjectTeamId } from '#modules/projects/service';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { paginate } from '#shared/pagination';
 import { isMcpRequest } from '#shared/mcp-request';
@@ -21,9 +20,15 @@ import {
   queueQuery,
   RunnerQueueResponse,
   RunsInFlightResponse,
+  RunInitiatorOptionsResponse,
+  RunProjectOptionsResponse,
 } from './model';
 import {
+  assertReadsRuns,
+  assertReadsRunSteps,
+  listRunInitiators,
   listRunnerQueue,
+  listRunProjects,
   runsProjectTeam,
   scopeProjectIds,
   teamRunsInFlight,
@@ -49,6 +54,8 @@ async function readQueue(
       granted,
       state: query.state,
       q: query.q,
+      initiatorIds: query.initiatorIds?.split(','),
+      onlyProjectIds: query.projectIds?.split(',').map(Number),
     });
     counts = { queued: result.queued, running: result.running, failed: result.failed };
     return result;
@@ -78,24 +85,16 @@ export const runnerQueueRoutes = new Elysia({
         },
       };
     },
-    readRun(_enabled: boolean) {
+    readRun(part: 'answer' | 'steps') {
       return {
         detail: requiresPermission(['ai_agents', 'read']) as DocumentDecoration,
         async resolve({ params, user, request }) {
-          const run = await visibleRun(
-            Number((params as { runId: string }).runId),
-            requireUser(user).id,
-          );
+          const viewer = requireUser(user);
+          const run = await visibleRun(Number((params as { runId: string }).runId), viewer.id);
           if (!run) throw new HttpError(404, 'Run not found');
           const { projectId } = run;
-          const teamId = await getProjectTeamId(projectId);
-          if (!(await runsProjectTeam(teamId, requireUser(user).id))) {
-            await assertPermission(projectId, user, 'work_items', 'read');
-            await assertPermission(projectId, user, 'ai_agents', 'read');
-            if (run.documentId != null) {
-              await assertPermission(projectId, user, 'documents', 'read');
-            }
-          }
+          await assertReadsRuns(projectId, viewer);
+          if (part === 'steps') await assertReadsRunSteps(run, viewer.id);
           await assertMcpAllowed(projectId, request.headers);
           return { projectId, agentId: run.agentId, issueId: run.issueId };
         },
@@ -110,15 +109,15 @@ export const runnerQueueRoutes = new Elysia({
       return run;
     },
     {
-      readRun: true,
+      readRun: 'answer',
       params: runParams,
       response: { 200: AgentRunResultResponse, ...commonErrors },
       detail: {
         summary: 'Read an agent run',
         description:
           "Get a run's status and, when it ended, the agent's answer or error. While the run " +
-          'waits or runs, retryAfterSeconds says when to read it again. Needs the same ' +
-          "permissions as the run's transcript.",
+          'waits or runs, retryAfterSeconds says when to read it again. Needs agent read ' +
+          "permission in the run's project.",
         ...mcpTool('get_agent_run'),
       },
     },
@@ -131,14 +130,14 @@ export const runnerQueueRoutes = new Elysia({
       return Response.json(trace);
     },
     {
-      readRun: true,
+      readRun: 'steps',
       params: runParams,
       query: externalTraceQuery,
       response: { 200: ExternalTraceResponse, ...commonErrors },
       detail: {
         summary: 'Read an external run transcript',
         description:
-          'Recorded events and local Codex session of the selected or latest attempt. Requires both agent and work item read permission in the original project, and document read permission for a run started in a document.',
+          "Recorded events and local Codex session of the selected or latest attempt. Requires agent read permission in the run's project, and creating or changing its agents unless the caller runs the team, owns the project or is the run's initiator.",
       },
     },
   )
@@ -157,7 +156,7 @@ export const runnerQueueRoutes = new Elysia({
       return Response.json(trace);
     },
     {
-      readRun: true,
+      readRun: 'steps',
       params: runParams,
       query: internalTraceQuery,
       response: { 200: IssueAgentRunTraceResponse, ...commonErrors },
@@ -182,8 +181,8 @@ export const runnerQueueRoutes = new Elysia({
       detail: {
         summary: 'Read the runner queue',
         description:
-          'Active and past runs of internal and external agents across projects where the caller may read both ' +
-          'work items and agents. A run started in a document also takes document read permission. ' +
+          'Active and past runs of internal and external agents across projects where the caller may read agents, ' +
+          'with where each run comes from. A run started in a private document shows only to whoever may read it. ' +
           'Running leases first, waiting runs by due time, then newest past runs.',
       },
     },
@@ -203,6 +202,25 @@ export const runnerQueueRoutes = new Elysia({
         summary: "Read a project's run queue",
         description:
           'The runner queue narrowed to one project, with the same permissions and order.',
+      },
+    },
+  )
+  .get(
+    '/projects/:projectKey/agent-runs/initiators/options',
+    async ({ user, request, project }) => {
+      const userId = requireUser(user).id;
+      return listRunInitiators(userId, {
+        mcpOnly: isMcpRequest(request.headers),
+        projectIds: [project.id],
+        granted: await runsProjectTeam(project.teamId, userId),
+      });
+    },
+    {
+      memberAdmin: ['ai_agents', 'read'],
+      response: { 200: RunInitiatorOptionsResponse, ...commonErrors },
+      detail: {
+        summary: "List the initiators of a project's runs",
+        description: "Everyone a run of the project's queue works for, for its filter.",
       },
     },
   )
@@ -245,6 +263,44 @@ export const runnerQueueRoutes = new Elysia({
     },
   )
   .get(
+    '/teams/:teamId/agent-runs/initiators/options',
+    async ({ user, request, membership }) =>
+      listRunInitiators(requireUser(user).id, {
+        mcpOnly: isMcpRequest(request.headers),
+        projectIds: await scopeProjectIds({ teamId: membership.teamId }),
+        granted: true,
+      }),
+    {
+      params: teamParams,
+      teamPermission: ['ai_agents', 'read'],
+      teamRuns: true,
+      response: { 200: RunInitiatorOptionsResponse, ...commonErrors },
+      detail: {
+        summary: "List the initiators of a team's runs",
+        description: "Everyone a run of the team's queue works for, for its filter.",
+      },
+    },
+  )
+  .get(
+    '/teams/:teamId/agent-runs/projects/options',
+    async ({ user, request, membership }) =>
+      listRunProjects(requireUser(user).id, {
+        mcpOnly: isMcpRequest(request.headers),
+        projectIds: await scopeProjectIds({ teamId: membership.teamId }),
+        granted: true,
+      }),
+    {
+      params: teamParams,
+      teamPermission: ['ai_agents', 'read'],
+      teamRuns: true,
+      response: { 200: RunProjectOptionsResponse, ...commonErrors },
+      detail: {
+        summary: "List the projects of a team's run queue",
+        description: "The projects of the team's queue, for its filter.",
+      },
+    },
+  )
+  .get(
     '/teams/:teamId/agent-runs/in-flight',
     ({ membership }) => teamRunsInFlight(membership.teamId),
     {
@@ -279,6 +335,42 @@ export const runnerQueueRoutes = new Elysia({
         summary: "Read a workspace's run queue",
         description:
           'The runner queue narrowed to the projects of every team of a workspace you manage.',
+      },
+    },
+  )
+  .get(
+    '/workspaces/:workspaceId/agent-runs/initiators/options',
+    async ({ user, request, standing }) =>
+      listRunInitiators(requireUser(user).id, {
+        mcpOnly: isMcpRequest(request.headers),
+        projectIds: await scopeProjectIds({ workspaceId: standing.workspaceId }),
+        granted: true,
+      }),
+    {
+      workspaceManager: true,
+      params: workspaceParams,
+      response: { 200: RunInitiatorOptionsResponse, ...errors(401, 404) },
+      detail: {
+        summary: "List the initiators of a workspace's runs",
+        description: "Everyone a run of the workspace's queue works for, for its filter.",
+      },
+    },
+  )
+  .get(
+    '/workspaces/:workspaceId/agent-runs/projects/options',
+    async ({ user, request, standing }) =>
+      listRunProjects(requireUser(user).id, {
+        mcpOnly: isMcpRequest(request.headers),
+        projectIds: await scopeProjectIds({ workspaceId: standing.workspaceId }),
+        granted: true,
+      }),
+    {
+      workspaceManager: true,
+      params: workspaceParams,
+      response: { 200: RunProjectOptionsResponse, ...errors(401, 404) },
+      detail: {
+        summary: "List the projects of a workspace's run queue",
+        description: "The projects of the workspace's queue, for its filter.",
       },
     },
   )

@@ -178,6 +178,43 @@ describe('agent traces', () => {
     expect(hidden.status).toBe(403);
   });
 
+  it("gives a queued run's trace only to whoever reads the run's steps", async () => {
+    const { asOwner, teamId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Scout', 'scout');
+    const projectId = await projectIdOf(asOwner, 'MKT');
+    const reader = await createRole(asOwner, 'MKT', {
+      name: 'Agent reader',
+      permissions: { ai_agents: { read: true } },
+    });
+    const editor = await createRole(asOwner, 'MKT', {
+      name: 'Agent editor',
+      permissions: { ai_agents: { read: true, edit: true } },
+    });
+    const asReader = await addProjectMember(asOwner, 'MKT', reader.data!.id);
+    const asEditor = await addProjectMember(asOwner, 'MKT', editor.data!.id);
+    const initiator = await signUpTestUser();
+    const invite = await asOwner
+      .projects({ projectKey: 'MKT' })
+      .invites.post({ email: initiator.email, role: 'member', roleId: reader.data!.id });
+    const asInitiator = authedApi(initiator.cookie);
+    await asInitiator.invites({ token: invite.data!.token }).accept.post();
+    const [run] = await db
+      .insert(agentRun)
+      .values({ agentId: agent.id, projectId, prompt: 'Task', requestedByUserId: initiator.userId })
+      .returning();
+    await seedTrace(
+      'trace-run',
+      { agentId: agent.id, teamId, projectId, runId: run.id, trigger: 'mention' },
+      new Date(),
+    );
+
+    const read = (api: Api) => traces(api, teamId, agent.id)({ traceId: 'trace-run' }).get();
+    expect((await read(asReader)).status).toBe(403);
+    expect((await read(asEditor)).status).toBe(200);
+    expect((await read(asInitiator)).status).toBe(200);
+    expect((await read(asOwner)).status).toBe(200);
+  });
+
   it("keeps a member's chat to them, the team's owner included", async () => {
     const { asOwner, teamId } = await setup();
     const agent = await createInternalAgent(asOwner, 'Scout', 'scout');

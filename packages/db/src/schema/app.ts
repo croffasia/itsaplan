@@ -803,6 +803,18 @@ export const agentRun = pgTable(
     requestedByUserId: text('requested_by_user_id').references(() => user.id, {
       onDelete: 'set null',
     }),
+    // Who queued the run or made the change that started it, a person or an agent's bot
+    // user; null for a timed schedule. An agent does that during the run in `parentRunId`,
+    // which goes back to the first run of the chain, `rootRunId` (see run-initiator.ts).
+    startedByUserId: text('started_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    parentRunId: integer('parent_run_id').references((): AnyPgColumn => agentRun.id, {
+      onDelete: 'set null',
+    }),
+    rootRunId: integer('root_run_id').references((): AnyPgColumn => agentRun.id, {
+      onDelete: 'set null',
+    }),
     // A mention in a document comment: the document and the comment. Such a run has no
     // issue.
     documentId: integer('document_id').references(() => projectDocument.id, {
@@ -855,6 +867,13 @@ export const agentRun = pgTable(
     index('agent_run_source_activity_idx')
       .on(t.sourceActivityId)
       .where(sql`${t.sourceActivityId} IS NOT NULL`),
+    // Back the set null of a deleted run's chain.
+    index('agent_run_parent_run_idx')
+      .on(t.parentRunId)
+      .where(sql`${t.parentRunId} IS NOT NULL`),
+    index('agent_run_root_run_idx')
+      .on(t.rootRunId)
+      .where(sql`${t.rootRunId} IS NOT NULL`),
   ],
 );
 

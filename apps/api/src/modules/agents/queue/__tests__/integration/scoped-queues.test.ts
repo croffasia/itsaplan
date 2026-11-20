@@ -39,7 +39,7 @@ async function setup() {
   await api.teams({ teamId: second.id }).projects.post({ key: 'TWO', name: 'Two' });
   await queueRun(api, 'ONE', 'first');
   await queueRun(api, 'TWO', 'second');
-  return { api, workspaceId, teamId: first!.id };
+  return { api, workspaceId, teamId: first!.id, ownerId: owner.userId };
 }
 
 const titles = (page: { items: { issueTitle: string | null }[] }) =>
@@ -49,7 +49,7 @@ describe('team and workspace run queues', () => {
   beforeEach(resetDb);
 
   it("lists a team's projects in its queue and every team's in the workspace's", async () => {
-    const { api, workspaceId, teamId } = await setup();
+    const { api, workspaceId, teamId, ownerId } = await setup();
     const elsewhere = authedApi((await signUpTestUser()).cookie);
     await createProject(elsewhere, { key: 'OUT', name: 'Out' });
     await queueRun(elsewhere, 'OUT', 'outside');
@@ -59,6 +59,12 @@ describe('team and workspace run queues', () => {
     expect(titles(team)).toEqual(['first']);
     expect(titles(workspace)).toEqual(['first', 'second']);
     expect(workspace).toMatchObject({ total: 2, queued: 2, running: 0 });
+    const workspaceRuns = api.workspaces({ workspaceId })['agent-runs'];
+    const projects = (await workspaceRuns.projects.options.get()).data!;
+    expect(projects.map((entry) => entry.ref.split('.')[1]).sort()).toEqual(['ONE', 'TWO']);
+    // The owner started no run and the agents are members too: only the owner is listed.
+    const initiators = (await workspaceRuns.initiators.options.get()).data!;
+    expect(initiators.map((person) => person.id)).toEqual([ownerId]);
   });
 
   it('counts the runs in flight over the whole workspace from either', async () => {
@@ -120,6 +126,10 @@ describe('team and workspace run queues', () => {
     expect((await member.teams({ teamId })['agent-runs'].queue.get()).status).toBe(403);
     expect((await member.teams({ teamId })['agent-runs']['in-flight'].get()).status).toBe(403);
     expect((await member.workspaces({ workspaceId })['agent-runs'].queue.get()).status).toBe(404);
+    const memberWorkspaceRuns = member.workspaces({ workspaceId })['agent-runs'];
+    expect((await memberWorkspaceRuns.initiators.options.get()).status).toBe(404);
+    expect((await memberWorkspaceRuns.projects.options.get()).status).toBe(404);
+    expect((await member.teams({ teamId })['agent-runs'].projects.options.get()).status).toBe(403);
     expect((await member.workspaces({ workspaceId })['agent-runs']['in-flight'].get()).status).toBe(
       404,
     );

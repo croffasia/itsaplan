@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { db, agentRun } from '@repo/db';
 import { eq } from 'drizzle-orm';
 import { apiKeyApi, authedApi, type Api, createProject } from '#tests/helpers/app';
+import { mcpRpc } from '#tests/helpers/mcp';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent } from '#tests/helpers/agents';
@@ -13,8 +14,9 @@ import { getMastra } from '../../runtime/observability';
 // Who a queued run is for (agent_run.requested_by_user_id): the person who started it, or,
 // when an agent sets another to work, the person the first agent was working for.
 
-// A model that first delegates the issue to the worker, then answers.
-let delegation: { issueId: number; delegateUserId: string };
+// A model that first changes the issue with `change`, by default delegating it to the worker,
+// then answers.
+let change: { issueId: number; delegateUserId?: string; columnId?: number };
 let calls = 0;
 
 function reply(stream: boolean): Response {
@@ -22,7 +24,7 @@ function reply(stream: boolean): Response {
   const toolCall = {
     id: 'call_1',
     type: 'function',
-    function: { name: 'update_issue', arguments: JSON.stringify(delegation) },
+    function: { name: 'update_issue', arguments: JSON.stringify(change) },
   };
   const answers = calls > 1;
   const finish = answers ? 'stop' : 'tool_calls';
@@ -88,7 +90,7 @@ describe('agent run initiator', () => {
         triggerOnAssign: true,
       })
     ).data!.agent;
-    delegation = { issueId, delegateUserId: worker.userId };
+    change = { issueId, delegateUserId: worker.userId };
     return { owner, asOwner, teamId, issueId, worker };
   }
 
@@ -114,12 +116,37 @@ describe('agent run initiator', () => {
     return { agent: created.data!.agent, apiKey: created.data!.apiKey };
   }
 
+  // A tool call of an external agent's MCP client, naming the run it works on as the
+  // runner's ITSAPLAN_RUN_ID.
+  async function overMcp(apiKey: string, runId: number, args: Record<string, unknown>) {
+    const result = await mcpRpc(
+      apiKey,
+      'tools/call',
+      { name: 'update_issue', arguments: args },
+      { 'x-itsaplan-run-id': String(runId) },
+    );
+    expect(result.isError).toBeFalsy();
+  }
+
   async function initiatorsOf(agentId: number) {
     const rows = await db
       .select({ initiator: agentRun.requestedByUserId })
       .from(agentRun)
       .where(eq(agentRun.agentId, agentId));
     return rows.map((row) => row.initiator);
+  }
+
+  async function originOf(agentId: number) {
+    const [row] = await db
+      .select({
+        requestedByUserId: agentRun.requestedByUserId,
+        startedByUserId: agentRun.startedByUserId,
+        parentRunId: agentRun.parentRunId,
+        rootRunId: agentRun.rootRunId,
+      })
+      .from(agentRun)
+      .where(eq(agentRun.agentId, agentId));
+    return row;
   }
 
   it('is the person who delegates, mentions or sets the agent in a field', async () => {
@@ -153,12 +180,45 @@ describe('agent run initiator', () => {
 
   it("passes the person of an internal agent's run on to the agent it delegates to", async () => {
     const { owner, asOwner, issueId, worker } = await setup();
-    await lead(asOwner, 'internal');
+    const { agent } = await lead(asOwner, 'internal');
     await asOwner.issues({ issueId }).comments.post({ body: 'hand this over @lead' });
 
     await processAgentRuns();
 
-    expect(await initiatorsOf(worker.id)).toEqual([owner.userId]);
+    const [leadRun] = await db
+      .select({ id: agentRun.id })
+      .from(agentRun)
+      .where(eq(agentRun.agentId, agent.id));
+    expect(await originOf(worker.id)).toEqual({
+      requestedByUserId: owner.userId,
+      startedByUserId: agent.userId,
+      parentRunId: leadRun.id,
+      rootRunId: leadRun.id,
+    });
+  });
+
+  it("links a schedule's run to the run of the agent whose change started it", async () => {
+    const { asOwner, issueId, worker } = await setup();
+    const { agent } = await lead(asOwner, 'internal');
+    const columnId = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!.columns[1].id;
+    await asOwner
+      .projects({ projectKey: 'MKT' })
+      ['agent-schedules'].post({ agentId: worker.id, name: 'Review', type: 'status', columnId });
+    change = { issueId, columnId };
+    await asOwner.issues({ issueId }).comments.post({ body: 'move this on @lead' });
+
+    await processAgentRuns();
+
+    const [leadRun] = await db
+      .select({ id: agentRun.id })
+      .from(agentRun)
+      .where(eq(agentRun.agentId, agent.id));
+    expect(await originOf(worker.id)).toEqual({
+      requestedByUserId: null,
+      startedByUserId: agent.userId,
+      parentRunId: leadRun.id,
+      rootRunId: leadRun.id,
+    });
   });
 
   it("passes the person of an internal agent's chat on to the agent it delegates to", async () => {
@@ -171,25 +231,96 @@ describe('agent run initiator', () => {
       .run.stream.post({ prompt: 'hand the task over' });
     for await (const _ of res.data as AsyncIterable<unknown>);
 
-    expect(await initiatorsOf(worker.id)).toEqual([owner.userId]);
+    expect(await originOf(worker.id)).toEqual({
+      requestedByUserId: owner.userId,
+      startedByUserId: agent.userId,
+      parentRunId: null,
+      rootRunId: null,
+    });
   });
 
-  it("passes an external agent's person on from the run it is at work on", async () => {
+  it("passes an external agent's person on from the run its MCP calls name", async () => {
     const { owner, asOwner, issueId, worker } = await setup();
     const { agent, apiKey } = await lead(asOwner, 'external');
     await asOwner
       .projects({ projectKey: 'MKT' })
       ['ai-agents']({ agentId: agent.id })
       .run.post({ prompt: 'hand the task over' });
-    const asLead = apiKeyApi(apiKey!);
-    expect((await asLead['agent-runs'].claim.post()).data!.run).not.toBeNull();
+    const run = (await apiKeyApi(apiKey!)['agent-runs'].claim.post()).data!.run!;
 
-    await asLead.issues({ issueId }).patch({ delegateUserId: worker.userId });
+    await overMcp(apiKey!, run.id, { issueId, delegateUserId: worker.userId });
 
-    expect(await initiatorsOf(worker.id)).toEqual([owner.userId]);
+    expect(await originOf(worker.id)).toEqual({
+      requestedByUserId: owner.userId,
+      startedByUserId: agent.userId,
+      parentRunId: run.id,
+      rootRunId: run.id,
+    });
   });
 
-  it('is the project for an agent at work on nothing', async () => {
+  it("takes no work from a run that is not the calling agent's", async () => {
+    const { asOwner, issueId, worker } = await setup();
+    const { apiKey } = await lead(asOwner, 'external');
+    const other = (
+      await createAgent(asOwner, 'MKT', { name: 'Other', username: 'other', kind: 'external' })
+    ).data!;
+    await asOwner
+      .projects({ projectKey: 'MKT' })
+      ['ai-agents']({ agentId: other.agent.id })
+      .run.post({ prompt: 'some work' });
+    const othersRun = (await apiKeyApi(other.apiKey!)['agent-runs'].claim.post()).data!.run!;
+
+    await overMcp(apiKey!, othersRun.id, { issueId, delegateUserId: worker.userId });
+
+    expect(await originOf(worker.id)).toMatchObject({ requestedByUserId: null, parentRunId: null });
+  });
+
+  it('links each run of a chain to the run it came from and to the first one', async () => {
+    const { owner, asOwner, issueId, worker } = await setup();
+    const first = await lead(asOwner, 'external');
+    const middle = (
+      await createAgent(asOwner, 'MKT', {
+        name: 'Middle',
+        username: 'middle',
+        kind: 'external',
+        triggerOnAssign: true,
+        delegationDelaySec: 0,
+      })
+    ).data!;
+    await asOwner
+      .projects({ projectKey: 'MKT' })
+      ['ai-agents']({ agentId: first.agent.id })
+      .run.post({ prompt: 'hand the task over' });
+    const rootRun = (await apiKeyApi(first.apiKey!)['agent-runs'].claim.post()).data!.run!;
+    await overMcp(first.apiKey!, rootRun.id, { issueId, delegateUserId: middle.agent.userId });
+    const middleRun = (await apiKeyApi(middle.apiKey!)['agent-runs'].claim.post()).data!.run!;
+
+    await overMcp(middle.apiKey!, middleRun.id, { issueId, delegateUserId: worker.userId });
+
+    expect(await originOf(middle.agent.id)).toEqual({
+      requestedByUserId: owner.userId,
+      startedByUserId: first.agent.userId,
+      parentRunId: rootRun.id,
+      rootRunId: rootRun.id,
+    });
+    expect(await originOf(worker.id)).toEqual({
+      requestedByUserId: owner.userId,
+      startedByUserId: middle.agent.userId,
+      parentRunId: middleRun.id,
+      rootRunId: rootRun.id,
+    });
+    const listed = (
+      await asOwner.projects({ projectKey: 'MKT' })['agent-runs'].queue.get()
+    ).data!.items.find((run) => run.agentId === worker.id)!;
+    expect(listed).toMatchObject({
+      initiator: { name: 'Owner' },
+      startedBy: { agentUsername: 'middle' },
+      parentRun: { id: middleRun.id, projectRef: listed.projectRef },
+      rootRun: { id: rootRun.id, scheduleName: null, initiator: { name: 'Owner' } },
+    });
+  });
+
+  it('is the project for an agent whose call names no run', async () => {
     const { asOwner, issueId, worker } = await setup();
     const { apiKey } = await lead(asOwner, 'external');
 

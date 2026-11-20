@@ -150,6 +150,13 @@ async function countClaimedRuns(executor: DbExecutor): Promise<number> {
   return row?.count ?? 0;
 }
 
+// The first run of the chain a run queued in `parentRunId` joins.
+export function rootRunOf(parentRunId: number | null | undefined) {
+  return parentRunId == null
+    ? null
+    : sql<number>`(SELECT coalesce(root_run_id, id) FROM agent_run WHERE id = ${parentRunId})`;
+}
+
 export async function enqueueAgentRun(input: {
   agentId: number;
   // The project the run works in: the issue's, the document's, or the one an API task
@@ -158,8 +165,10 @@ export async function enqueueAgentRun(input: {
   projectId: number;
   issueId: number | null;
   sourceActivityId: number | null;
-  // The person the run is for (see run-initiator.ts); none for the project's own work.
+  // Where the run comes from (see run-initiator.ts); none for the project's own work.
   requestedByUserId?: string | null;
+  startedByUserId?: string | null;
+  parentRunId?: number | null;
   // A mention in a document comment: the document and the comment, with no issue.
   documentId?: number;
   sourceDocumentCommentId?: string;
@@ -178,6 +187,9 @@ export async function enqueueAgentRun(input: {
       issueId: input.issueId,
       sourceActivityId: input.sourceActivityId,
       requestedByUserId: input.requestedByUserId,
+      startedByUserId: input.startedByUserId,
+      parentRunId: input.parentRunId,
+      rootRunId: rootRunOf(input.parentRunId),
       documentId: input.documentId,
       sourceDocumentCommentId: input.sourceDocumentCommentId,
       prompt: input.prompt,
@@ -661,9 +673,11 @@ export interface AgentRunPage {
 //
 // An agent works in several projects of its team and a run carries the one it ran in,
 // so `projectIds` bounds the page to the projects the reader may see. Omitted, it
-// reads every project — only a caller who runs the team passes nothing.
+// reads every project — only a caller who runs the team passes nothing. A run from a
+// document private from the reader is left out.
 export async function listAgentRuns(
   agentId: number,
+  viewerId: string,
   opts: { before?: number; limit?: number; projectIds?: number[] } = {},
 ): Promise<AgentRunPage> {
   if (opts.projectIds?.length === 0) return { items: [], nextCursor: null };
@@ -692,13 +706,11 @@ export async function listAgentRuns(
     .from(agentRun)
     .leftJoin(issue, eq(issue.id, agentRun.issueId))
     .leftJoin(project, eq(project.id, issue.projectId))
-    .leftJoin(
-      projectDocument,
-      and(eq(projectDocument.id, agentRun.documentId), eq(projectDocument.isPrivate, false)),
-    )
+    .leftJoin(projectDocument, eq(projectDocument.id, agentRun.documentId))
     .where(
       and(
         eq(agentRun.agentId, agentId),
+        runDocumentVisibleTo(viewerId),
         opts.projectIds ? inArray(agentRun.projectId, opts.projectIds) : undefined,
         opts.before ? lt(agentRun.id, opts.before) : undefined,
       ),

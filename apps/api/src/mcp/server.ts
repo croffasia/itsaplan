@@ -1,6 +1,7 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { agentTeam } from '#modules/agents/core/service';
+import { actFor, namedRunWork, type AgentWork } from '#modules/agents/core/run-initiator';
 import { listTeams } from '#modules/teams/service';
 import type { McpApp } from './types';
 import { routeTools, withoutFields, type McpRouteTool, type ViewedAttachments } from './generate';
@@ -74,6 +75,10 @@ export async function buildMcpServer(
   const listed = catalog ? PRIMARY_TOOLS.flatMap((name) => byName.get(name) ?? []) : table;
   const taken = new Set([...byName.keys(), ...catalogDefs.map((t) => t.name)]);
   const configured = () => agentMcpTools(userId, taken, clientRequest);
+  // An external agent's calls in a run work for that run's initiator (see run-initiator.ts).
+  let work: Promise<AgentWork | null> | undefined;
+  const workOf = () =>
+    (work ??= clientRequest ? namedRunWork(userId, clientRequest.headers) : Promise.resolve(null));
 
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
@@ -105,10 +110,9 @@ export async function buildMcpServer(
         );
       }
     }
-    const { text, isError, structuredContent } = await dispatchTool(app, tool, args, credential, {
-      viaMcpEndpoint: true,
-      clientRequest,
-    });
+    const { text, isError, structuredContent } = await actFor(await workOf(), () =>
+      dispatchTool(app, tool, args, credential, { viaMcpEndpoint: true, clientRequest }),
+    );
     if (tool.images && !isError) return { content: imageContent(text) };
     return { content: [{ type: 'text' as const, text }], isError, structuredContent };
   };

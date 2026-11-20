@@ -1,23 +1,19 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
-import { issuePath, splitProjectRef } from '@/utils/paths';
+import { documentPath, issuePath, splitProjectRef } from '@/utils/paths';
 import Avatar from '@/components/common/Avatar';
 import { runIssueKey } from '../utils/runIssueKey';
 import { waitsForRunner } from '../utils/waitsForRunner';
-import RunnerQueueKindBadge from './RunnerQueueKindBadge';
-import RunnerQueueRunFactList, { type RunFact } from './RunnerQueueRunFactList';
-import RunnerQueueStateIcon from './RunnerQueueStateIcon';
+import RunnerQueueKindBadge from '../components/RunnerQueueKindBadge';
+import type { RunFact } from '../components/RunnerQueueRunFactList';
+import RunnerQueueStateIcon from '../components/RunnerQueueStateIcon';
 
-// Who ran the run, on what, and how it reached the agent.
-export default function RunnerQueueRunWho({
-  run,
-  className,
-}: {
-  run: RunnerQueueRun;
-  className?: string;
-}) {
+// What the run is: its state, its agent, what set it off, what it works on, how it reaches
+// the agent, and its number.
+export function useRunFacts(run: RunnerQueueRun): RunFact[] {
   const t = useTranslations('issue.agentRuns');
+  const tDocuments = useTranslations('documents');
   const issueKey = runIssueKey(run);
   const facts: RunFact[] = [
     [
@@ -52,6 +48,19 @@ export default function RunnerQueueRunWho({
         {issueKey}
       </Link>,
     ]);
+  } else if (run.document) {
+    facts.push([
+      t('facts.document'),
+      <Link
+        key="document"
+        href={documentPath(run.projectRef, run.document.id)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline-offset-2 hover:underline"
+      >
+        {run.document.title.trim() || tDocuments('untitled')}
+      </Link>,
+    ]);
   } else {
     if (run.scheduleName) facts.push([t('facts.schedule'), run.scheduleName]);
     facts.push([t('facts.project'), splitProjectRef(run.projectRef).key]);
@@ -62,5 +71,11 @@ export default function RunnerQueueRunWho({
       t(`connection.${run.runnerState}`),
     ]);
   }
-  return <RunnerQueueRunFactList facts={facts} className={className} />;
+  facts.push([
+    t('facts.run'),
+    <span key="run" className="tabular-nums">
+      #{run.id}
+    </span>,
+  ]);
+  return facts;
 }

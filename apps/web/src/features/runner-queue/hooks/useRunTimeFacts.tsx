@@ -3,21 +3,15 @@ import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import { dayKey, formatShortDate, formatTime } from '@/utils/dates';
 import { formatRunDuration } from '@/utils/formatRunDuration';
 import { runDuration } from '../utils/runDuration';
-import RunnerQueueRunElapsed from './RunnerQueueRunElapsed';
-import RunnerQueueRunFactList, { type RunFact } from './RunnerQueueRunFactList';
+import RunnerQueueRunElapsed from '../components/RunnerQueueRunElapsed';
+import type { RunFact } from '../components/RunnerQueueRunFactList';
 
 const dateAndTime = (value: string) =>
   `${formatShortDate(value)}, ${formatTime(value, { seconds: true })}`;
 
 // When the run was created or started and finished, how long it took, and its attempts.
 // The end shows only its time when it falls on the start's day.
-export default function RunnerQueueRunWhen({
-  run,
-  className,
-}: {
-  run: RunnerQueueRun;
-  className?: string;
-}) {
+export function useRunTimeFacts(run: RunnerQueueRun): RunFact[] {
   const t = useTranslations('issue.agentRuns');
   const facts: RunFact[] = [];
   if (run.startedAt) facts.push([t('facts.started'), dateAndTime(run.startedAt)]);
@@ -39,5 +33,5 @@ export default function RunnerQueueRunWhen({
     ]);
   }
   if (run.attempts > 1) facts.push([t('facts.attempts'), run.attempts]);
-  return <RunnerQueueRunFactList facts={facts} className={className} />;
+  return facts;
 }

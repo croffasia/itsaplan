@@ -19,6 +19,7 @@ import {
 } from '#shared/access';
 import { boundProjectId, isMcpRequest } from '#shared/mcp-request';
 import { getProjectById } from '#modules/projects/service';
+import { assertReadsRuns } from '#modules/agents/queue/service';
 import { HttpError, instantParam } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { deleteObject } from '@repo/storage';
@@ -228,6 +229,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // entry and a comment belong to the issue that carries them, so they all resolve
   // to the same work_items permission.
   .macro({
+    // An issue's runs are read as the run list reads them: reading the issue is not needed.
     issueAgentRuns(_enabled: boolean) {
       return {
         detail: requiresPermission(['ai_agents', 'read']) as DocumentDecoration,
@@ -236,8 +238,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
             Number((params as { issueId: string }).issueId),
           );
           if (projectId == null) throw new HttpError(404, 'Issue not found');
-          await assertPermission(projectId, user, 'work_items', 'read');
-          await assertPermission(projectId, user, 'ai_agents', 'read');
+          await assertReadsRuns(projectId, requireUser(user));
           await assertMcpAllowed(projectId, request.headers);
           return { projectId };
         },
@@ -1355,7 +1356,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         summary: "Read an issue run's trace",
         description:
           'The selected or latest recorded attempt, with a link to the previous one. ' +
-          'Null when no latest trace is available.',
+          'Null when no latest trace is available. Also takes creating or changing agents in ' +
+          "the project, unless the caller runs the team, owns the project or is the run's initiator.",
       },
     },
   )

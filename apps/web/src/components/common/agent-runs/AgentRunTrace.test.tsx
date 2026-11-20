@@ -119,13 +119,13 @@ it('opens an earlier attempt and returns to the latest, keeping their outputs se
   assert.ok(!document.body.textContent?.includes('Earlier result'));
 });
 
-it('hides cached trace content after a refetch denies access', async () => {
+it('hides the steps once a refetch denies access', async () => {
   assert.ok(document.body.textContent?.includes('Private tool input'));
   await act(async () => {
     await client.invalidateQueries({ queryKey: qk.issueAgentRunTrace(1, 2), exact: true });
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
-  assert.ok(document.querySelector('[role="alert"]'));
+  assert.ok(!document.body.textContent?.includes(issue.agentRuns.trace));
   assert.ok(!document.body.textContent?.includes('Private tool input'));
   assert.ok(!document.body.textContent?.includes('Latest result'));
   assert.equal(document.querySelectorAll('details').length, 0);

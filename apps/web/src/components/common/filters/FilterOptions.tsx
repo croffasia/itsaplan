@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import Avatar from '@/components/common/Avatar';
 import type { FilterSection } from './FilterMenu';
 
 // A section with this many values or more gets a search box over them.
@@ -70,6 +71,13 @@ export default function FilterOptions({
               }
               onSelect={(e) => e.preventDefault()}
             >
+              {option.avatar && (
+                <Avatar
+                  name={option.avatar.name}
+                  image={option.avatar.image}
+                  className="size-4 text-[8px]"
+                />
+              )}
               <span className="shrink-0 truncate">{option.label}</span>
               {option.detail && (
                 <span className="min-w-0 truncate text-muted-foreground">{option.detail}</span>

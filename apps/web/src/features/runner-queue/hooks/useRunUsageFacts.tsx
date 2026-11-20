@@ -1,20 +1,14 @@
 import { useTranslations } from 'next-intl';
 import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import { compactTokens } from '@/utils/compactTokens';
-import RunnerQueueRunFactList, { type RunFact } from './RunnerQueueRunFactList';
+import type { RunFact } from '../components/RunnerQueueRunFactList';
 
-// What the run cost in context, and its number.
-export default function RunnerQueueRunCost({
-  run,
-  className,
-}: {
-  run: RunnerQueueRun;
-  className?: string;
-}) {
+// What the run took of the model's context, none until the run reports it.
+export function useRunUsageFacts(run: RunnerQueueRun): RunFact[] {
   const t = useTranslations('issue.agentRuns');
-  const facts: RunFact[] = [];
-  if (run.contextTokens != null) {
-    facts.push([
+  if (run.contextTokens == null) return [];
+  return [
+    [
       t('facts.context'),
       <span key="context" className="space-y-0.5">
         <span className="block">
@@ -29,13 +23,6 @@ export default function RunnerQueueRunCost({
           </span>
         )}
       </span>,
-    ]);
-  }
-  facts.push([
-    t('facts.run'),
-    <span key="run" className="tabular-nums">
-      #{run.id}
-    </span>,
-  ]);
-  return <RunnerQueueRunFactList facts={facts} className={className} />;
+    ],
+  ];
 }

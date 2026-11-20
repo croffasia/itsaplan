@@ -9,6 +9,11 @@ Each preset needs two files in the working directory:
 - the CLI's own config, which points it at the MCP server of your instance,
 - `itsaplan-runner.json`, which points the runner at your instance.
 
+The CLI's config sends two headers: the agent's key, and the id of the run the agent works on
+(`X-Itsaplan-Run-Id`). The runner sets both for the command, as `ITSAPLAN_API_KEY` and
+`ITSAPLAN_RUN_ID`. With the run id, a run the agent starts, such as by delegating an issue, works
+for the person of the agent's run. Without it, that run is the project's work.
+
 This page holds both files for each preset, and the notes that apply to that CLI. The
 runner's own settings are in its
 [README](https://github.com/croffasia/itsaplan/blob/main/packages/runner/README.md).
@@ -54,7 +59,10 @@ Claude Code reads `.mcp.json` from the working directory:
     "itsaplan": {
       "type": "http",
       "url": "http://localhost:3000/mcp",
-      "headers": { "Authorization": "Bearer ${ITSAPLAN_API_KEY}" }
+      "headers": {
+        "Authorization": "Bearer ${ITSAPLAN_API_KEY}",
+        "X-Itsaplan-Run-Id": "${ITSAPLAN_RUN_ID}"
+      }
     }
   }
 }
@@ -83,13 +91,14 @@ Claude Code reads `.mcp.json` from the working directory:
 
 ## Codex
 
-Codex reads its MCP servers from `~/.codex/config.toml`. `bearer_token_env_var` takes the
-key from the environment that the runner sets:
+Codex reads its MCP servers from `~/.codex/config.toml`. `bearer_token_env_var` and
+`env_http_headers` take the key and the run id from the environment that the runner sets:
 
 ```toml
 [mcp_servers.itsaplan]
 url = "http://localhost:3000/mcp"
 bearer_token_env_var = "ITSAPLAN_API_KEY"
+env_http_headers = { "X-Itsaplan-Run-Id" = "ITSAPLAN_RUN_ID" }
 ```
 
 `itsaplan-runner.json`:
@@ -116,8 +125,9 @@ bearer_token_env_var = "ITSAPLAN_API_KEY"
 ## Antigravity CLI
 
 Antigravity CLI reads its MCP servers from `~/.gemini/config/mcp_config.json`, one file
-per machine. Its headers take no variables, so you write the key in the file. A remote
-server is named by `serverUrl`, not by `url` or `httpUrl`:
+per machine. Its headers take no variables, so you write the key in the file. Its calls thus
+name no run, and a run the agent starts is the project's work. A remote server is named by
+`serverUrl`, not by `url` or `httpUrl`:
 
 ```json
 {
@@ -158,7 +168,7 @@ server is named by `serverUrl`, not by `url` or `httpUrl`:
 GitHub Copilot CLI reads `.mcp.json` from the working directory, but only once you have
 trusted that directory interactively. `--additional-mcp-config` loads the same file
 without that step, which is what the runner config below passes. Its headers accept no
-variables. You thus write the key in the file:
+variables. You thus write the key in the file, and its calls name no run, as Antigravity's do:
 
 ```json
 {
@@ -209,7 +219,10 @@ thus stays out of the file:
       "type": "remote",
       "url": "http://localhost:3000/mcp",
       "enabled": true,
-      "headers": { "Authorization": "Bearer {env:ITSAPLAN_API_KEY}" }
+      "headers": {
+        "Authorization": "Bearer {env:ITSAPLAN_API_KEY}",
+        "X-Itsaplan-Run-Id": "{env:ITSAPLAN_RUN_ID}"
+      }
     }
   }
 }
@@ -248,7 +261,10 @@ The extension reads `.mcp.json` from the working directory:
     "itsaplan": {
       "type": "http",
       "url": "http://localhost:3000/mcp",
-      "headers": { "Authorization": "Bearer ${ITSAPLAN_API_KEY}" }
+      "headers": {
+        "Authorization": "Bearer ${ITSAPLAN_API_KEY}",
+        "X-Itsaplan-Run-Id": "${ITSAPLAN_RUN_ID}"
+      }
     }
   }
 }
@@ -272,8 +288,9 @@ The extension reads `.mcp.json` from the working directory:
 - Print mode does not wait for tool approval. `--approve` is only project-trust for
   `.pi/settings.json`, not tool permission.
 - Sign in once with `pi` interactively so a provider is available.
-- Headers in `.mcp.json` expand `${ITSAPLAN_API_KEY}` only if your `pi-mcp-adapter` version
-  does. If they stay literal, write the key in the file the way Copilot's config does.
+- Headers in `.mcp.json` expand `${ITSAPLAN_API_KEY}` and `${ITSAPLAN_RUN_ID}` only if your
+  `pi-mcp-adapter` version does. If they stay literal, write the key in the file the way
+  Copilot's config does.
 
 ## Oh My Pi
 
@@ -285,7 +302,10 @@ Oh My Pi reads `.mcp.json` from the working directory:
     "itsaplan": {
       "type": "http",
       "url": "http://localhost:3000/mcp",
-      "headers": { "Authorization": "Bearer ${ITSAPLAN_API_KEY}" }
+      "headers": {
+        "Authorization": "Bearer ${ITSAPLAN_API_KEY}",
+        "X-Itsaplan-Run-Id": "${ITSAPLAN_RUN_ID}"
+      }
     }
   }
 }
@@ -309,8 +329,8 @@ Oh My Pi reads `.mcp.json` from the working directory:
 - `--mode json` is the same stream Pi writes. `--resume` takes the session id from the
   opening line.
 - `--append-system-prompt` gives Oh My Pi the context of the run.
-- Headers in `.mcp.json` expand `${ITSAPLAN_API_KEY}` only if your Oh My Pi build does.
-  If they stay literal, write the key in the file the way Copilot's config does.
+- Headers in `.mcp.json` expand `${ITSAPLAN_API_KEY}` and `${ITSAPLAN_RUN_ID}` only if your Oh My
+  Pi build does. If they stay literal, write the key in the file the way Copilot's config does.
 
 ## Mastra Code
 
@@ -323,7 +343,10 @@ in the headers, so the key stays out of the file:
     "itsaplan": {
       "type": "http",
       "url": "http://localhost:3000/mcp",
-      "headers": { "Authorization": "Bearer ${ITSAPLAN_API_KEY}" }
+      "headers": {
+        "Authorization": "Bearer ${ITSAPLAN_API_KEY}",
+        "X-Itsaplan-Run-Id": "${ITSAPLAN_RUN_ID}"
+      }
     }
   }
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { ApiError } from '@/lib/api/core/client';
 import { useExternalRunTraceQuery } from '@/services/runnerQueue.service';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { qk } from '@/services/queryKeys';
@@ -18,6 +19,8 @@ export default function AgentRunExternalTrace({ runId }: { runId: number }) {
   useLiveRefresh({ scope: revScope.runnerQueue, targets: [qk.externalRunTrace(runId)] });
   const trace = query.isError ? null : query.data;
   const count = (latest.isError ? null : latest.data?.attempt) ?? 1;
+  // The steps are for whoever may change the project's agents and for the run's initiator.
+  if (latest.error instanceof ApiError && latest.error.status === 403) return null;
   const attempts = (
     <AgentRunAttempts
       count={count}

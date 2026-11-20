@@ -9,9 +9,8 @@ export interface InternalWork {
   agentId: number;
   teamId: number;
   projectId: number;
-  // Who asked for the work: the member of a chat, the author of the comment that
-  // mentioned the agent, or the sender of an API task. Null for work nobody asked for in
-  // person, such as a delegation or a schedule's run.
+  // The person the work is for: the member of a chat or the person a queued run is for.
+  // Null for the project's own work, such as a schedule's run.
   userId: string | null;
 }
 

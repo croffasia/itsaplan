@@ -81,6 +81,7 @@ import { getInitiativeProjectId } from '#modules/initiatives/service';
 import { cycleStatus, getCycleRef, type CycleStatus } from '#modules/cycles/service';
 import { getMembership } from '#modules/members/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
+import { runInitiator } from '#modules/agents/core/run-initiator';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 import { queueStatusRuns } from '#modules/agents/schedules/issue-runs';
 import { applySubtaskAutomation } from './automation';
@@ -1446,6 +1447,7 @@ async function enqueueDelegateRun(after: IssueRow, actor?: ActivityActor): Promi
     projectId: after.projectId,
     issueId: after.id,
     sourceActivityId: null,
+    requestedByUserId: await runInitiator(actorId(actor), after.id),
     prompt: `Work item ${after.identifier}: "${after.title}" has been delegated to you. Review it and take the appropriate next step.`,
     delaySeconds: agent.delegationDelaySec,
   });
@@ -1833,6 +1835,7 @@ async function enqueueFieldRun(
     projectId,
     issueId,
     sourceActivityId: null,
+    requestedByUserId: await runInitiator(actorUserId, issueId),
     trigger: 'field',
     prompt: `Work item ${row.identifier}: "${row.title}" now has you as its "${field.name}". Review it and take the appropriate next step.`,
     delaySeconds: agent.delaySec,

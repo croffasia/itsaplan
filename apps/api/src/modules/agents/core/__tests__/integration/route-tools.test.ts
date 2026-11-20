@@ -51,7 +51,7 @@ async function toolsFor(asOwner: Api, tools: string[], roleId?: number) {
   const agent = await getAgentById(agentId, project.id);
   if (!agent) throw new Error('Test agent was not found');
   const apiKey = await getInternalAgentApiKey(agent);
-  return buildRouteTools(project, apiKey, agent.tools);
+  return buildRouteTools(project, apiKey, agent.tools, null);
 }
 
 type ToolMap = Awaited<ReturnType<typeof toolsFor>>;
@@ -502,7 +502,7 @@ describe('internal agent route tools', () => {
     // The listing still shows the agent once, and the key works against a real route.
     const listed = await agents(asOwner, teamId).get();
     expect(listed.data?.filter((a) => a.id === agentId)).toHaveLength(1);
-    const tools = buildRouteTools(project, first, agent.tools);
+    const tools = buildRouteTools(project, first, agent.tools, null);
     expect(await run(tools, 'get_project')).toMatchObject({ columns: expect.any(Array) });
   });
 
@@ -658,7 +658,7 @@ describe('internal agent route tools are bound to the run project', () => {
     if (!project) throw new Error('Test project was not created');
     const agent = await getAgentById(created.data!.agent.id, teamId);
     if (!agent) throw new Error('Test agent was not found');
-    const built = buildRouteTools(project, await getInternalAgentApiKey(agent), agent.tools);
+    const built = buildRouteTools(project, await getInternalAgentApiKey(agent), agent.tools, null);
     return { asOwner, tools: built, mktIssue, opsIssue };
   }
 

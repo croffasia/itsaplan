@@ -185,15 +185,52 @@ with the trigger `api`, as a schedule queues its task: no issue, document or sch
 of its own (`run:<id>`). It works for internal and external agents, through a runner or an
 invocation URL alike, and the run shows in the queue and the agent's run history. It is checked as
 a chat message is: chat on, the runner scope, and the run refusal hook for an internal agent.
-`agent_run.requested_by_user_id` keeps the sender. A claim reads it as the requester when the run
-has no source comment, so the agent is told who asked and the refusal hook is asked again for that
-person when the run starts.
+The sender is the initiator of the run (see "Run initiator").
 
 The route answers 202 at once, so a long run outlasts neither a proxy's read timeout nor an MCP
 client's request timeout. `GET /agent-runs/:runId` (MCP `get_agent_run`) reads the status, then the
 answer or the error, and while the run waits or runs `retryAfterSeconds` (`pollAfterSeconds` in
 `run-queue.ts`): 10 s while it is queued, a quarter of its running time within 5–30 s, or the time
 to its retry within the same bounds.
+
+## Run initiator
+
+The initiator is the person a run works for. `agent_run.requested_by_user_id` stores it. Null means
+the run is the project's work. The initiator is never an agent.
+
+| The run starts when                                       | Initiator                                  |
+| --------------------------------------------------------- | ------------------------------------------ |
+| a person mentions the agent in a comment                  | the person                                 |
+| a person replies to a comment of the agent                | the person                                 |
+| a person edits a comment and adds a mention of the agent  | the person who edits                       |
+| a person delegates an issue to the agent                  | the person                                 |
+| a person sets the agent in a member field                 | the person                                 |
+| a person sends the agent an API task                      | the person                                 |
+| a schedule starts                                         | null                                       |
+| another agent starts it (see below)                       | the initiator of that agent's run or chat  |
+
+Agent A starts a run of agent B when A delegates an issue to B, sets B in a member field or sends B
+an API task. A comment of an agent starts no run. The run of B gets the initiator of the work A does
+at that time:
+
+1. A is an internal agent in a queued run: the initiator of that run.
+2. A is an internal agent in a chat: the initiator of that chat. When a person writes in the chat,
+   that person is the initiator. When an agent writes, the chat gets the initiator of that agent's
+   work, by this list.
+3. A is an external agent: the initiator of its run in the `running` execution state. A run on the
+   same issue comes first, then the run that started last. The api reads it, because the calls of
+   an external agent name no run.
+4. A has no run in the `running` state: null.
+
+An internal agent gives the initiator to each tool call of its run or chat (`actFor` in
+`run-initiator.ts`). Thus each run in a chain of agents has the initiator of the first run.
+
+The initiator has two uses:
+
+- The claim tells the agent who asked. When the initiator wrote the comment that started the run,
+  it gives the name that comment showed. Otherwise it gives the user name of the initiator.
+- The run refusal hook gets the initiator: when an API task is queued, when a run starts and for
+  each chat message.
 
 ## Reading runs
 

@@ -628,9 +628,11 @@ export const aiAgent = pgTable(
     runTimeoutSec: integer('run_timeout_sec'),
     // Internal-agent run triggers. A mention in a comment enqueues a run when
     // trigger_on_mention is set; being set as an issue's delegate enqueues one when
-    // trigger_on_assign is set.
+    // trigger_on_assign is set; a review of a pull request the agent opened, by someone
+    // with write access to the repository, enqueues one when trigger_on_review is set.
     triggerOnMention: boolean('trigger_on_mention').notNull().default(true),
     triggerOnAssign: boolean('trigger_on_assign').notNull().default(false),
+    triggerOnReview: boolean('trigger_on_review').notNull().default(false),
     // Gates the test chat and the external-agent chat only; the triggers above and
     // schedules still run an agent with chat off.
     chatEnabled: boolean('chat_enabled').notNull().default(true),
@@ -842,7 +844,7 @@ export const agentRun = pgTable(
     ),
     check(
       'agent_run_trigger_check',
-      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'schedule', 'manual', 'status', 'event', 'api')`,
+      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'review', 'schedule', 'manual', 'status', 'event', 'api')`,
     ),
     uniqueIndex('agent_run_schedule_fire_uq').on(t.scheduleId, t.scheduledFor),
     index('agent_run_due_idx').on(t.status, t.nextAttemptAt),
@@ -1416,6 +1418,28 @@ export const agentFieldTrigger = pgTable(
     primaryKey({ columns: [t.agentId, t.fieldId] }),
     check('agent_field_trigger_delay_check', sql`${t.delaySec} >= 0 AND ${t.delaySec} <= 86400`),
     index('agent_field_trigger_field_idx').on(t.fieldId),
+  ],
+);
+
+// The accounts an agent acts as on a repository host, each on a connection of the
+// agent's team. A review of a pull request one of them opened is handed to the agent
+// when it reacts to reviews. The binding is set on the agent: a login is never matched
+// to an agent by name, since anyone may hold a login on a host.
+export const agentForgeIdentity = pgTable(
+  'agent_forge_identity',
+  {
+    agentId: integer('agent_id')
+      .notNull()
+      .references(() => aiAgent.id, { onDelete: 'cascade' }),
+    connectionId: integer('connection_id')
+      .notNull()
+      .references(() => gitProviderConnection.id, { onDelete: 'cascade' }),
+    // Lowercased: the hosts compare logins without case.
+    login: text('login').notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.connectionId, t.login] }),
+    index('agent_forge_identity_agent_idx').on(t.agentId),
   ],
 );
 

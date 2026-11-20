@@ -15,6 +15,14 @@ const fmtDate = (v: string | null) => (v ? formatDate(v) : '');
 const isLong = (text: string | null): text is string =>
   !!text && (text.length > 80 || text.includes('\n'));
 
+// The message for a 'git_pr' entry, by the subject the entry carries.
+const PULL_REQUEST_KEYS: Record<string, string> = {
+  merged: 'pullRequestMerged',
+  approved: 'pullRequestApproved',
+  changes_requested: 'pullRequestChangesRequested',
+  commented: 'pullRequestReviewed',
+};
+
 // A custom field value shares its row with the field name as well as the actor, so
 // it runs out of width sooner than a title does — a datetime range already wraps.
 const isLongValue = (text: string | null): text is string =>
@@ -168,8 +176,9 @@ export function useActivityText() {
         return { line: line(subject === 'failed' ? 'agentFailed' : 'agentFinished') };
       case 'git_pr':
       case 'github_pr': {
-        // The from side is "owner/repo#42", the to side the pull request's URL.
-        const key = subject === 'merged' ? 'pullRequestMerged' : 'pullRequestOpened';
+        // The from side is "owner/repo#42", the to side the pull request's URL. A
+        // review's subject is the decision, and its actor the reviewer.
+        const key = PULL_REQUEST_KEYS[subject ?? ''] ?? 'pullRequestOpened';
         const pr = (chunks: ReactNode) =>
           to ? (
             <a

@@ -11,12 +11,15 @@ import {
   agentSkillLink,
   agentToolLink,
   agentFieldTrigger,
+  agentForgeIdentity,
   customField,
+  gitManagedRepository,
+  gitProviderConnection,
   integrationCredential,
 } from '@repo/db';
 import { and, asc, eq, inArray, ne, notInArray, or, sql } from 'drizzle-orm';
 import { auth } from '@repo/auth';
-import { iso, HttpError, rethrowDuplicate } from '#shared/lib';
+import { iso, HttpError, pgErrorCode, rethrowDuplicate } from '#shared/lib';
 import { getCredentialById } from '../integrations/service';
 import { integrationKind } from '../integrations/catalog';
 import { encryptSecret, decryptSecret } from '@repo/crypto';
@@ -74,6 +77,19 @@ export interface FieldTriggerRead extends FieldTrigger {
   name: string;
 }
 
+// An account the agent acts as on a repository host: a login on one of the team's
+// connections. A review of a pull request it opened is handed to the agent.
+export interface ForgeIdentity {
+  connectionId: number;
+  login: string;
+}
+
+// The same identity as a read of an agent returns it, with the host it is on.
+export interface ForgeIdentityRead extends ForgeIdentity {
+  provider: string;
+  baseUrl: string;
+}
+
 // A project the agent is a member of, as the settings screen lists them.
 export interface AgentProject {
   id: number;
@@ -107,12 +123,15 @@ export interface AiAgentRow {
   // Run triggers.
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  triggerOnReview: boolean;
   // Whether the agent may be chatted with; a mention, a delegation and a schedule ignore it.
   chatEnabled: boolean;
   // The member custom fields the agent also reacts to: being set into one of them
   // starts a run the way being made an issue's delegate does. Each field carries its
   // own delay, so a field can start at once while another leaves time to edit.
   fieldTriggers: FieldTriggerRead[];
+  // The accounts the agent opens pull requests as on the team's repository hosts.
+  forgeIdentities: ForgeIdentityRead[];
   // How long a delegation run waits before it can be claimed.
   delegationDelaySec: number;
   // The member who created the agent, and whose runs an 'owner'-scoped runner is
@@ -161,8 +180,10 @@ function mapAgent(row: {
   memoryLastMessages: number | null;
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  triggerOnReview: boolean;
   chatEnabled: boolean;
   fieldTriggers: FieldTriggerRead[];
+  forgeIdentities: ForgeIdentityRead[];
   delegationDelaySec: number;
   ownerUserId: string | null;
   ownerName: string | null;
@@ -196,8 +217,10 @@ function mapAgent(row: {
     memoryLastMessages: row.memoryLastMessages,
     triggerOnMention: row.triggerOnMention,
     triggerOnAssign: row.triggerOnAssign,
+    triggerOnReview: row.triggerOnReview,
     chatEnabled: row.chatEnabled,
     fieldTriggers: row.fieldTriggers,
+    forgeIdentities: row.forgeIdentities,
     delegationDelaySec: row.delegationDelaySec,
     ownerUserId: row.ownerUserId,
     ownerName: row.ownerName,
@@ -237,10 +260,14 @@ const agentColumns = {
   memoryLastMessages: aiAgent.memoryLastMessages,
   triggerOnMention: aiAgent.triggerOnMention,
   triggerOnAssign: aiAgent.triggerOnAssign,
+  triggerOnReview: aiAgent.triggerOnReview,
   chatEnabled: aiAgent.chatEnabled,
   fieldTriggers: sql<
     FieldTriggerRead[]
   >`(select coalesce(json_agg(json_build_object('fieldId', ${agentFieldTrigger.fieldId}, 'name', ${customField.name}, 'delaySec', ${agentFieldTrigger.delaySec}) order by ${customField.name}), '[]'::json) from ${agentFieldTrigger} join ${customField} on ${customField.id} = ${agentFieldTrigger.fieldId} where ${agentFieldTrigger.agentId} = ${aiAgent.id})`,
+  forgeIdentities: sql<
+    ForgeIdentityRead[]
+  >`(select coalesce(json_agg(json_build_object('connectionId', ${agentForgeIdentity.connectionId}, 'login', ${agentForgeIdentity.login}, 'provider', ${gitProviderConnection.provider}, 'baseUrl', ${gitProviderConnection.baseUrl}) order by ${gitProviderConnection.baseUrl}, ${agentForgeIdentity.login}), '[]'::json) from ${agentForgeIdentity} join ${gitProviderConnection} on ${gitProviderConnection.id} = ${agentForgeIdentity.connectionId} where ${agentForgeIdentity.agentId} = ${aiAgent.id})`,
   delegationDelaySec: aiAgent.delegationDelaySec,
   ownerUserId: aiAgent.ownerUserId,
   ownerName: sql<string | null>`(select o.name from ${user} o where o.id = ${aiAgent.ownerUserId})`,
@@ -499,6 +526,39 @@ export async function listMentionTriggerAgents(
     .map((row) => ({ id: row.id, userId: row.userId }));
 }
 
+// The agent working in the project that reacts to reviews and has the login as a forge
+// identity on the connection the project manages the repository through, or null. Turns
+// the author of a pull request into the agent a review of it is handed to.
+export async function getReviewTriggerAgent(
+  projectId: number,
+  provider: string,
+  repository: string,
+  login: string,
+): Promise<{ id: number } | null> {
+  const rows = await db
+    .select({ id: aiAgent.id, ...triggerScopeColumns })
+    .from(aiAgent)
+    .innerJoin(agentForgeIdentity, eq(agentForgeIdentity.agentId, aiAgent.id))
+    .innerJoin(gitProviderConnection, eq(gitProviderConnection.id, agentForgeIdentity.connectionId))
+    .innerJoin(
+      gitManagedRepository,
+      eq(gitManagedRepository.connectionId, gitProviderConnection.id),
+    )
+    .where(
+      and(
+        eq(agentForgeIdentity.login, login.toLowerCase()),
+        eq(gitProviderConnection.provider, provider),
+        eq(gitManagedRepository.projectId, projectId),
+        eq(gitManagedRepository.fullName, repository),
+        eq(aiAgent.triggerOnReview, true),
+        inProject(projectId),
+      ),
+    )
+    .limit(1);
+  const row = rows[0];
+  return row && isTriggerableBy(row, null) ? { id: row.id } : null;
+}
+
 // The agent working in the project whose bot user is userId and that reacts to being
 // delegated to, or null. Turns a new delegate into the agent that should run on
 // delegation.
@@ -567,6 +627,82 @@ async function setFieldTriggers(
         .values([...byField].map(([fieldId, delaySec]) => ({ agentId, fieldId, delaySec })));
     }
   });
+}
+
+// The forge identities to store for an agent, lowercased and without repeats. An
+// identity on a connection of another team is dropped, so a stale id from a client never
+// binds. A login another agent already holds on the same connection is refused: a review
+// must name one agent. Checked before the agent is written, so a refused create leaves
+// nothing behind.
+async function resolveForgeIdentities(
+  teamId: number,
+  agentId: number | null,
+  identities: ForgeIdentity[],
+): Promise<ForgeIdentity[]> {
+  const connectionIds = [...new Set(identities.map((i) => i.connectionId))];
+  if (connectionIds.length === 0) return [];
+  const allowed = new Set(
+    (
+      await db
+        .select({ id: gitProviderConnection.id })
+        .from(gitProviderConnection)
+        .where(
+          and(
+            eq(gitProviderConnection.teamId, teamId),
+            inArray(gitProviderConnection.id, connectionIds),
+          ),
+        )
+    ).map((row) => row.id),
+  );
+  const resolved = new Map<string, ForgeIdentity>();
+  for (const identity of identities) {
+    const login = identity.login.trim().toLowerCase();
+    if (!allowed.has(identity.connectionId) || !login) continue;
+    resolved.set(`${identity.connectionId}:${login}`, {
+      connectionId: identity.connectionId,
+      login,
+    });
+  }
+  const rows = [...resolved.values()];
+  if (rows.length === 0) return [];
+  const [taken] = await db
+    .select({ login: agentForgeIdentity.login })
+    .from(agentForgeIdentity)
+    .where(
+      and(
+        or(
+          ...rows.map((row) =>
+            and(
+              eq(agentForgeIdentity.connectionId, row.connectionId),
+              eq(agentForgeIdentity.login, row.login),
+            ),
+          ),
+        ),
+        agentId === null ? undefined : ne(agentForgeIdentity.agentId, agentId),
+      ),
+    )
+    .limit(1);
+  if (taken) throw new HttpError(409, `Another agent already has the forge login ${taken.login}.`);
+  return rows;
+}
+
+// Replaces the agent's forge identities with ones resolveForgeIdentities returned.
+async function setForgeIdentities(agentId: number, identities: ForgeIdentity[]): Promise<void> {
+  try {
+    await db.transaction(async (tx) => {
+      await tx.delete(agentForgeIdentity).where(eq(agentForgeIdentity.agentId, agentId));
+      if (identities.length > 0) {
+        await tx
+          .insert(agentForgeIdentity)
+          .values(identities.map((identity) => ({ agentId, ...identity })));
+      }
+    });
+  } catch (err) {
+    if (pgErrorCode(err) === '23505') {
+      throw new HttpError(409, 'Another agent already has this forge login.');
+    }
+    throw err;
+  }
 }
 
 // True if the user id is the bot user of an agent working in this project. Validates
@@ -653,10 +789,12 @@ export interface NewAgentInput {
   // for its API key alone must not collect runs no one drains.
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  triggerOnReview?: boolean;
   // Whether the agent may be chatted with. Defaults on.
   chatEnabled?: boolean;
   // The member custom fields that start a run when the agent is set into one.
   fieldTriggers?: FieldTrigger[];
+  forgeIdentities?: ForgeIdentity[];
   delegationDelaySec?: number;
   // The projects of the team the agent works in. Empty means it works in none yet:
   // it authenticates and reaches nothing until it is attached to one.
@@ -727,6 +865,7 @@ export async function createAgent(
   if (isInternal) await assertModelCredential(teamId, input.modelCredentialId);
   if (invocationUrl) await assertPublicHttpUrl(invocationUrl);
   const projectIds = await resolveTeamProjectIds(teamId, input.projectIds ?? []);
+  const forgeIdentities = await resolveForgeIdentities(teamId, null, input.forgeIdentities ?? []);
   // An agent joins a project the way a person accepting an invite does: on the default
   // role, changed per project from the project's member list afterwards.
   const roleId = await getDefaultRoleId();
@@ -755,6 +894,7 @@ export async function createAgent(
           memoryLastMessages: isInternal ? (input.memoryLastMessages ?? null) : null,
           triggerOnMention: input.triggerOnMention ?? isInternal,
           triggerOnAssign: input.triggerOnAssign ?? false,
+          triggerOnReview: input.triggerOnReview ?? false,
           chatEnabled: input.chatEnabled ?? true,
           delegationDelaySec: input.delegationDelaySec,
           ownerUserId: input.ownerUserId ?? null,
@@ -780,6 +920,7 @@ export async function createAgent(
   if (input.fieldTriggers?.length) {
     await setFieldTriggers(agentId, projectIds, input.fieldTriggers);
   }
+  if (forgeIdentities.length > 0) await setForgeIdentities(agentId, forgeIdentities);
   if (invocationUrl) await ensureInvocationSecret(agentId);
 
   // Issued outside the transaction: better-auth writes the key through its own
@@ -917,8 +1058,10 @@ export interface AgentPatch {
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  triggerOnReview?: boolean;
   chatEnabled?: boolean;
   fieldTriggers?: FieldTrigger[];
+  forgeIdentities?: ForgeIdentity[];
   delegationDelaySec?: number;
   runnerScope?: RunnerScope;
   invocationUrl?: string | null;
@@ -935,6 +1078,8 @@ export async function updateAgent(
   // Only an external agent is sent its work; an internal one runs here.
   const invocationUrl = agent.kind === 'external' ? patch.invocationUrl : undefined;
   if (invocationUrl) await assertPublicHttpUrl(invocationUrl);
+  const forgeIdentities =
+    patch.forgeIdentities && (await resolveForgeIdentities(teamId, id, patch.forgeIdentities));
 
   // The display name lives on the bot user.
   if (patch.name !== undefined) {
@@ -958,6 +1103,7 @@ export async function updateAgent(
   if (patch.memoryLastMessages !== undefined) set.memoryLastMessages = patch.memoryLastMessages;
   if (patch.triggerOnMention !== undefined) set.triggerOnMention = patch.triggerOnMention;
   if (patch.triggerOnAssign !== undefined) set.triggerOnAssign = patch.triggerOnAssign;
+  if (patch.triggerOnReview !== undefined) set.triggerOnReview = patch.triggerOnReview;
   if (patch.chatEnabled !== undefined) set.chatEnabled = patch.chatEnabled;
   if (patch.delegationDelaySec !== undefined) set.delegationDelaySec = patch.delegationDelaySec;
   if (patch.runnerScope !== undefined) set.runnerScope = patch.runnerScope;
@@ -982,6 +1128,7 @@ export async function updateAgent(
   if (patch.fieldTriggers !== undefined) {
     await setFieldTriggers(id, projectIds, patch.fieldTriggers);
   }
+  if (forgeIdentities) await setForgeIdentities(id, forgeIdentities);
   if (invocationUrl) await ensureInvocationSecret(id);
 
   return getAgentById(id, teamId);

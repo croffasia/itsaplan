@@ -206,6 +206,7 @@
       "mention": "executou por menção em",
       "delegation": "executou por delegação de",
       "field": "executou por um campo de",
+      "review": "executou por uma revisão de",
       "manual": "executou manualmente",
       "api": "executou pela API",
       "schedule": "executou por agendamento",

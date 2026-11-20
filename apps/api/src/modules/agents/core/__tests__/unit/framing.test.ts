@@ -43,6 +43,21 @@ const run: RunForPrompt = {
 };
 
 describe('framePrompt', () => {
+  it('frames a review run around the review text, for the pull request the agent opened', () => {
+    const text = framePrompt({
+      ...run,
+      trigger: 'review',
+      prompt:
+        'ann requested changes on pull request acme/site#42.\n\nThe retry swallows the error.',
+    });
+    expect(text).toContain(
+      'Your pull request for issue MKT-7 "Checkout" of your project was reviewed.',
+    );
+    expect(text).toContain('The review:\n\nann requested changes on pull request acme/site#42.');
+    expect(text).toContain('@ann');
+    expect(text).toContain('(issueId 7)');
+    expect(text).not.toContain('mentioned');
+  });
   it('frames a document mention as a reply in its thread, with the thread for context', () => {
     const text = framePrompt({
       ...run,

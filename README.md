@@ -99,7 +99,9 @@ If It's a Plan looks useful to you, star the repo ⭐ and
 - REST API with an OpenAPI reference and API keys
 - MCP server, so an external assistant can read and change issues through the same API
 - Pull requests from GitHub, GitLab, Gitea, Forgejo, and Bitbucket. "Fixes KEY-42" links the
-  pull request to the issue, and the issue moves when the pull request opens and merges
+  pull request to the issue, the issue moves when the pull request opens and merges, and a
+  review by someone with write access, on a pull request opened by one of an agent's forge
+  accounts, is handed to that agent
 - Outgoing webhooks for the events you pick, with signed payloads, retries, and a delivery log
 - Sign-in with an email or username and a password, a passkey, Google, or your identity provider
   over OIDC. SCIM keeps accounts in sync with your directory

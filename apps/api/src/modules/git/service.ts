@@ -196,6 +196,18 @@ export async function claimGitDelivery(projectId: number, deliveryId: string): P
   return claimed.length > 0;
 }
 
+// Gives a claimed delivery id back, so a redelivery of an event whose handling failed
+// is processed instead of answered as a duplicate.
+export async function releaseGitDelivery(projectId: number, deliveryId: string): Promise<void> {
+  await db
+    .update(projectSetting)
+    .set({
+      value: sql`jsonb_set(${projectSetting.value}, '{recentDeliveries}', COALESCE(${projectSetting.value}->'recentDeliveries', '[]'::jsonb) - ${deliveryId}::text)`,
+      updatedAt: sql`now()`,
+    })
+    .where(and(eq(projectSetting.projectId, projectId), eq(projectSetting.key, GIT_SETTING_KEY)));
+}
+
 // How many repositories the list keeps. A project delivering from more than this
 // many is unusual; the oldest fall off the end.
 const REPOSITORIES_CAP = 20;

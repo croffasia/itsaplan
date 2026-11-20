@@ -206,6 +206,7 @@
       "mention": "bahsedilme üzerine çalıştı:",
       "delegation": "iş devredilmesi üzerine çalıştı:",
       "field": "alan değişikliği üzerine çalıştı:",
+      "review": "incelemesi üzerine çalıştı:",
       "manual": "manuel çalıştırıldı",
       "api": "API ile çalıştırıldı",
       "schedule": "zamanlamaya göre çalıştı",

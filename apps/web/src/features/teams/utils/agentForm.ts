@@ -26,12 +26,16 @@ export interface AgentFormValue {
   memoryLastMessages: string;
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  triggerOnReview: boolean;
   // Whether the agent may be chatted with. Off, it drops out of the chat selector and
   // the chat routes reject it; a mention, a delegation, and a schedule are unaffected.
   chatEnabled: boolean;
   // The member custom fields that start a run when the agent is set into one, each
   // with its own wait.
   fieldTriggers: FormFieldTrigger[];
+  // The logins the agent opens pull requests as. baseUrl names the host for a reader who
+  // may not list the team's connections.
+  forgeIdentities: FormForgeIdentity[];
   // Minutes a delegation run waits before the agent may pick it up, as a string so
   // the input can be cleared while typing.
   delegationDelayMin: string;
@@ -45,6 +49,12 @@ export interface AgentFormValue {
 }
 
 export type AgentDelivery = 'runner' | 'url';
+
+export interface FormForgeIdentity {
+  connectionId: number;
+  login: string;
+  baseUrl: string;
+}
 
 export interface FormFieldTrigger {
   fieldId: number;
@@ -99,10 +109,16 @@ export function initialAgentValue(agent?: AiAgent): AgentFormValue {
     memoryLastMessages: agent?.memoryLastMessages != null ? String(agent.memoryLastMessages) : '',
     triggerOnMention: agent?.triggerOnMention ?? true,
     triggerOnAssign: agent?.triggerOnAssign ?? false,
+    triggerOnReview: agent?.triggerOnReview ?? false,
     chatEnabled: agent?.chatEnabled ?? true,
     fieldTriggers: (agent?.fieldTriggers ?? []).map((trigger) => ({
       fieldId: trigger.fieldId,
       delayMin: String(Math.round(trigger.delaySec / 60)),
+    })),
+    forgeIdentities: (agent?.forgeIdentities ?? []).map(({ connectionId, login, baseUrl }) => ({
+      connectionId,
+      login,
+      baseUrl,
     })),
     delegationDelayMin: String(Math.round((agent?.delegationDelaySec ?? 120) / 60)),
     projectIds: (agent?.projects ?? []).map((project) => project.id),
@@ -131,11 +147,15 @@ function configFields(v: AgentFormValue) {
     instructions: v.instructions.trim() || null,
     triggerOnMention: v.triggerOnMention,
     triggerOnAssign: v.triggerOnAssign,
+    triggerOnReview: v.triggerOnReview,
     chatEnabled: v.chatEnabled,
     fieldTriggers: v.fieldTriggers.map((trigger) => ({
       fieldId: trigger.fieldId,
       delaySec: delaySecFromMinutes(trigger.delayMin),
     })),
+    forgeIdentities: v.forgeIdentities
+      .filter((identity) => identity.login.trim())
+      .map(({ connectionId, login }) => ({ connectionId, login: login.trim() })),
     delegationDelaySec: delaySecFromMinutes(v.delegationDelayMin),
   };
   if (v.kind === 'external') {

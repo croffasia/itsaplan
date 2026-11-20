@@ -164,7 +164,7 @@ export async function enqueueAgentRun(input: {
   documentId?: number;
   sourceDocumentCommentId?: string;
   prompt: string;
-  trigger?: 'mention' | 'delegation' | 'field' | 'api';
+  trigger?: 'mention' | 'delegation' | 'field' | 'api' | 'review';
   // Seconds the run stays unclaimable after it is queued, so the issue can still be
   // edited before the agent reads it.
   delaySeconds?: number;

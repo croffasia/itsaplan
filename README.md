@@ -81,8 +81,8 @@ If It's a Plan looks useful to you, star the repo ⭐ and
 - A run starts on an @mention in a comment on an issue or a document, on an assignment, or on a
   schedule. A schedule starts on a timer or when an issue moves to a state
 - Tokens and cost of every run, by agent, project, and model
-- Tools for other services: Notion, Telegram, Threads, Instagram, Jina, Firecrawl, Keenable,
-  DataForSEO, Gitea, Forgejo, and GitHub
+- Tools for other services: Notion, Baserow, Telegram, Threads, Instagram, Jina, Firecrawl,
+  Keenable, DataForSEO, Gitea, Forgejo, and GitHub
 - Images, video, music, and speech from the models on
   [Kie](https://kie.ai?ref=0b6eb19939298accdf58e18b1a92a26e): Nano Banana, Seedream, Kling,
   Veo, Suno, and others, with one API key

@@ -12,6 +12,7 @@ import { telegram } from './tools/telegram';
 import { threads } from './tools/threads';
 import { instagram } from './tools/instagram';
 import { notion } from './tools/notion';
+import { baserow } from './tools/baserow';
 import { gitea } from './tools/gitea';
 import { github } from './tools/github';
 import { pdf } from './tools/pdf';
@@ -28,6 +29,7 @@ export const INTEGRATIONS: Integration[] = [
   threads,
   instagram,
   notion,
+  baserow,
   gitea,
   github,
   pdf,

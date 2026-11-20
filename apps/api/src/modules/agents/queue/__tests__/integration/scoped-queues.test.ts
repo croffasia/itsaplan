@@ -39,7 +39,7 @@ async function setup() {
   await api.teams({ teamId: second.id }).projects.post({ key: 'TWO', name: 'Two' });
   await queueRun(api, 'ONE', 'first');
   await queueRun(api, 'TWO', 'second');
-  return { api, workspaceId, teamId: first!.id };
+  return { api, workspaceId, teamId: first!.id, ownerId: owner.userId };
 }
 
 const titles = (page: { items: { issueTitle: string | null }[] }) =>
@@ -49,7 +49,7 @@ describe('team and workspace run queues', () => {
   beforeEach(resetDb);
 
   it("lists a team's projects in its queue and every team's in the workspace's", async () => {
-    const { api, workspaceId, teamId } = await setup();
+    const { api, workspaceId, teamId, ownerId } = await setup();
     const elsewhere = authedApi((await signUpTestUser()).cookie);
     await createProject(elsewhere, { key: 'OUT', name: 'Out' });
     await queueRun(elsewhere, 'OUT', 'outside');
@@ -62,7 +62,9 @@ describe('team and workspace run queues', () => {
     const workspaceRuns = api.workspaces({ workspaceId })['agent-runs'];
     const projects = (await workspaceRuns.projects.options.get()).data!;
     expect(projects.map((entry) => entry.ref.split('.')[1]).sort()).toEqual(['ONE', 'TWO']);
-    expect((await workspaceRuns.initiators.options.get()).data).toEqual([]);
+    // The owner started no run and the agents are members too: only the owner is listed.
+    const initiators = (await workspaceRuns.initiators.options.get()).data!;
+    expect(initiators.map((person) => person.id)).toEqual([ownerId]);
   });
 
   it('counts the runs in flight over the whole workspace from either', async () => {

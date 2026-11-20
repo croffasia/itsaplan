@@ -262,6 +262,10 @@ describe('runner queue', () => {
     const issueRuns = member.issues({ issueId: issue.id })['agent-runs'];
     expect((await issueRuns({ runId: mine.id }).trace.get()).status).toBe(200);
     expect((await issueRuns({ runId: theirs.id }).trace.get()).status).toBe(403);
+
+    await api.projects({ projectKey: 'RUN' }).members({ userId: memberId }).delete();
+    const afterLeaving = (await teamRuns.initiators.options.get()).data!;
+    expect(afterLeaving.map((person) => person.id)).toContain(memberId);
   });
 
   it('narrows the queue to the project it is read in', async () => {

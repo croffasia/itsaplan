@@ -5,6 +5,7 @@ import {
   aiAgent,
   hasPermission,
   project,
+  projectMember,
   team,
   issue,
   revision,
@@ -12,7 +13,7 @@ import {
   teamWorkspaceId,
   user,
 } from '@repo/db';
-import { and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, isNotNull, isNull, notInArray, or, sql } from 'drizzle-orm';
 import {
   assertPermission,
   getProjectAccess,
@@ -155,16 +156,27 @@ async function runListScope(
   return { ids, visible };
 }
 
-// The initiators of the runs of a list, for its filter.
+// Who a list can be filtered by: the people of its projects, and whoever started one of
+// its runs and has left since. Agents are left out, because a run is never started by one.
 export async function listRunInitiators(userId: string, scope: RunListScope) {
   const { ids, visible } = await runListScope(userId, scope);
   if (!ids.length) return [];
-  return db
-    .selectDistinct({ id: user.id, name: user.name, image: user.image })
+  const members = db
+    .select({ id: projectMember.userId })
+    .from(projectMember)
+    .where(inArray(projectMember.projectId, ids));
+  const initiators = db
+    .select({ id: sql<string>`${agentRun.requestedByUserId}` })
     .from(agentRun)
-    .innerJoin(user, eq(user.id, agentRun.requestedByUserId))
     .leftJoin(issue, eq(issue.id, agentRun.issueId))
-    .where(visible)
+    .where(and(visible, isNotNull(agentRun.requestedByUserId)));
+  const agents = db.select({ id: aiAgent.userId }).from(aiAgent);
+  return db
+    .select({ id: user.id, name: user.name, image: user.image })
+    .from(user)
+    .where(
+      and(or(inArray(user.id, members), inArray(user.id, initiators)), notInArray(user.id, agents)),
+    )
     .orderBy(user.name, user.id);
 }
 

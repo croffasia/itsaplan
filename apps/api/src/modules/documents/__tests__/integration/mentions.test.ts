@@ -173,7 +173,8 @@ describe('document mentions', () => {
     expect(run.threadContext).not.toContain('summarize');
   });
 
-  it("names the document in the agent's run history, without the title once it is private", async () => {
+  // Who else stops seeing the run once the document is private: runner-queue.test.ts.
+  it("names the document in the agent's run history, to its owner once it is private", async () => {
     const { owner } = await setup();
     const agent = await createInternalAgent(owner);
     const { id, doc, rootId } = await documentWithThread(owner);
@@ -192,7 +193,10 @@ describe('document mentions', () => {
 
     const { version } = (await doc.get()).data!;
     expect((await doc.access.post({ version, isPrivate: true })).status).toBe(200);
-    expect((await history()).data!.items[0]).toMatchObject({ documentId: id, documentTitle: null });
+    expect((await history()).data!.items[0]).toMatchObject({
+      documentId: id,
+      documentTitle: 'Plan',
+    });
   });
 
   it('starts no run for an agent whose role cannot comment on documents', async () => {

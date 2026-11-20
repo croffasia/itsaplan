@@ -338,6 +338,7 @@ export const IssueSearchHitResponse = t.Object({
   identifier: t.String(),
   title: t.String(),
   columnId: t.Number(),
+  position: t.Number(),
   typeId: t.Nullable(t.Number()),
   initiativeId: t.Nullable(t.Number()),
   cycleId: t.Nullable(t.Number()),
@@ -600,6 +601,27 @@ export const listIssuesQuery = t.Object({
     }),
   ),
   includeArchived: t.Optional(t.String({ description: "'true' includes archived issues." })),
+  sort: t.Optional(
+    t.Union(
+      [
+        t.Literal('position'),
+        t.Literal('updated'),
+        t.Literal('created'),
+        t.Literal('dueDate'),
+        t.Literal('priority'),
+      ],
+      {
+        description:
+          'position gives the same sequence as the board. With priority, asc shows urgent ' +
+          'first. Omit for the most recently updated first.',
+      },
+    ),
+  ),
+  dir: t.Optional(
+    t.Union([t.Literal('asc'), t.Literal('desc')], {
+      description: 'Default asc. Issues without a value are last in both directions.',
+    }),
+  ),
   limit: t.Optional(t.Numeric({ description: '1-500. Default 50.' })),
 });
 
@@ -615,6 +637,8 @@ export const listAllIssuesQuery = t.Composite([
     'updatedFrom',
     'updatedTo',
     'includeArchived',
+    'sort',
+    'dir',
     'limit',
   ]),
   t.Object({

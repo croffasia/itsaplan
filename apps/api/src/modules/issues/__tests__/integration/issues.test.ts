@@ -1470,6 +1470,75 @@ describe('issues', () => {
       expect((await list(asOwner, { updatedFrom: 'last week' })).status).toBe(400);
     });
 
+    describe('sort', () => {
+      const ids = async (client: Api, query: Record<string, string | number>) =>
+        (await list(client, query)).data!.map((i) => i.id);
+
+      it('orders a column by position the way the board does, with each position', async () => {
+        const { asOwner, columnId, columnIds } = await setupProject();
+        const first = (await createIssue(asOwner, columnId, { title: 'First' })).data!;
+        const second = (await createIssue(asOwner, columnId, { title: 'Second' })).data!;
+        const third = (await createIssue(asOwner, columnId, { title: 'Third' })).data!;
+        await asOwner.issues({ issueId: third.id }).patch({ position: first.position + 1 });
+        // A move between columns keeps the position, so this card ties with the first one.
+        const moved = (await createIssue(asOwner, columnIds[1], { title: 'Moved' })).data!;
+        await asOwner.issues({ issueId: moved.id }).patch({ columnId });
+
+        const board = (await issuesOf(asOwner)).filter((i) => i.columnId === columnId);
+        const res = await list(asOwner, { columnId, sort: 'position' });
+        expect(res.data!.map((i) => i.id)).toEqual(board.map((i) => i.id));
+        expect(res.data!.map((i) => i.id)).toEqual([first.id, moved.id, third.id, second.id]);
+        expect(res.data![1]!.position).toBe(first.position);
+        expect(res.data![2]!.position).toBe(first.position + 1);
+        expect(await ids(asOwner, { columnId, sort: 'position', dir: 'desc' })).toEqual([
+          second.id,
+          third.id,
+          moved.id,
+          first.id,
+        ]);
+      });
+
+      it('puts issues without a due date or a priority last in both directions', async () => {
+        const { asOwner, columnId } = await setupProject();
+        const late = (await createIssue(asOwner, columnId, { dueDate: '2026-03-10' })).data!;
+        const early = (await createIssue(asOwner, columnId, { dueDate: '2026-03-05' })).data!;
+        const unset = (await createIssue(asOwner, columnId)).data!;
+        await asOwner.issues({ issueId: late.id }).patch({ priority: 'urgent' });
+        await asOwner.issues({ issueId: early.id }).patch({ priority: 'low' });
+
+        expect(await ids(asOwner, { sort: 'dueDate' })).toEqual([early.id, late.id, unset.id]);
+        expect(await ids(asOwner, { sort: 'dueDate', dir: 'desc' })).toEqual([
+          late.id,
+          early.id,
+          unset.id,
+        ]);
+        expect(await ids(asOwner, { sort: 'priority' })).toEqual([late.id, early.id, unset.id]);
+        expect(await ids(asOwner, { sort: 'priority', dir: 'desc' })).toEqual([
+          early.id,
+          late.id,
+          unset.id,
+        ]);
+      });
+
+      it('orders by creation and by update, and keeps the newest update first by default', async () => {
+        const { asOwner, columnId } = await setupProject();
+        const older = (await createIssue(asOwner, columnId, { title: 'Older' })).data!;
+        const newer = (await createIssue(asOwner, columnId, { title: 'Newer' })).data!;
+        await asOwner.issues({ issueId: older.id }).patch({ title: 'Older, edited' });
+
+        expect(await ids(asOwner, { sort: 'created' })).toEqual([older.id, newer.id]);
+        expect(await ids(asOwner, { sort: 'created', dir: 'desc' })).toEqual([newer.id, older.id]);
+        expect(await ids(asOwner, { sort: 'updated' })).toEqual([newer.id, older.id]);
+        expect(await ids(asOwner, {})).toEqual([older.id, newer.id]);
+      });
+
+      it('rejects an unknown sort or direction', async () => {
+        const { asOwner } = await setupProject();
+        expect((await list(asOwner, { sort: 'title' })).status).toBe(400);
+        expect((await list(asOwner, { sort: 'position', dir: 'up' })).status).toBe(400);
+      });
+    });
+
     it('denies a non-member', async () => {
       const { asOwner, columnId } = await setupProject();
       await createIssue(asOwner, columnId, { title: 'Secret' });

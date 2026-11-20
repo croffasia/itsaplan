@@ -53,7 +53,10 @@ export async function dispatchTool(
   } else {
     const qs = new URLSearchParams();
     for (const [key, value] of Object.entries(rest)) {
-      if (value != null) qs.set(key, String(value));
+      // A model often fills an optional field it leaves unset with "". The route would
+      // refuse that for a fixed-value or numeric field, so it is dropped as unset.
+      if (value == null || (value === '' && !tool.inputSchema.required.includes(key))) continue;
+      qs.set(key, String(value));
     }
     const query = qs.toString();
     if (query) url += `?${query}`;

@@ -607,6 +607,21 @@ describe('internal agent route tools', () => {
 
     expect(result.map((i) => i.title)).toEqual(['Held up']);
   });
+
+  it('reads an optional field filled with an empty string as unset, and refuses a wrong value', async () => {
+    const { asOwner } = await setup();
+    const tools = await toolsFor(asOwner, ['create_issue']);
+    const columnId = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!.columns[0]!.id;
+    await run(tools, 'create_issue', { columnId, title: 'Listed' });
+
+    const listed = (await run(tools, 'list_issues', { sort: '', dir: '', columnId: '' })) as {
+      title: string;
+    }[];
+    expect(listed.map((i) => i.title)).toEqual(['Listed']);
+    expect(await run(tools, 'list_issues', { sort: 'title' })).toMatchObject({
+      error: expect.anything(),
+    });
+  });
 });
 
 // A run works in one project, and its tools are bound to it: an object addressed by id

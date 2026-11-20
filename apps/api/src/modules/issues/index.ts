@@ -504,6 +504,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           updatedFrom: instantParam('updatedFrom', query.updatedFrom),
           updatedTo: instantParam('updatedTo', query.updatedTo),
           blocked: query.blocked === 'true',
+          sort: query.sort,
+          dir: query.dir,
           limit,
         },
         { includeArchived: query.includeArchived === 'true' },
@@ -517,9 +519,10 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'List issues by filters',
         description:
-          "List a project's issues by field filters, most recently updated first. Each issue has " +
-          'createdAt, updatedAt, completedAt, statusSince (when it entered its current column), ' +
-          "estimatePoints, estimateMinutes, loggedMinutes, and its parent's identifier and title.",
+          "List a project's issues by field filters. Each issue has position (a lower value is " +
+          'nearer the top of its column), createdAt, updatedAt, completedAt, statusSince (when ' +
+          'it entered its current column), estimatePoints, estimateMinutes, loggedMinutes, and ' +
+          "its parent's identifier and title.",
         ...mcpTool('list_issues'),
       },
     },
@@ -694,6 +697,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           cycleIds: csvIds(query.cycleIds),
           parentIds: csvIds(query.parentIds),
           stateTypes: stateTypes?.length ? (stateTypes as IssueStateType[]) : undefined,
+          sort: query.sort,
+          dir: query.dir,
           limit: Math.min(Math.max(query.limit ?? 50, 1), 500),
         },
         { includeArchived: query.includeArchived === 'true' },
@@ -705,9 +710,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'List issues in all projects',
         description:
-          'List the issues of all projects you can read by field filters, most recently updated ' +
-          'first. Each issue names its project. For one project and its project filters, use ' +
-          "list_issues. In an agent run, lists only the run's project.",
+          'List the issues of all projects you can read by field filters. Each issue names its ' +
+          'project. For one project and its project filters, use list_issues. In an agent run, ' +
+          "lists only the run's project.",
         ...requiresPermission(['work_items', 'read']),
         ...mcpTool('list_issues_all_projects'),
       },

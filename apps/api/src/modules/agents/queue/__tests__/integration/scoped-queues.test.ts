@@ -59,6 +59,10 @@ describe('team and workspace run queues', () => {
     expect(titles(team)).toEqual(['first']);
     expect(titles(workspace)).toEqual(['first', 'second']);
     expect(workspace).toMatchObject({ total: 2, queued: 2, running: 0 });
+    const workspaceRuns = api.workspaces({ workspaceId })['agent-runs'];
+    const projects = (await workspaceRuns.projects.options.get()).data!;
+    expect(projects.map((entry) => entry.ref.split('.')[1]).sort()).toEqual(['ONE', 'TWO']);
+    expect((await workspaceRuns.initiators.options.get()).data).toEqual([]);
   });
 
   it('counts the runs in flight over the whole workspace from either', async () => {
@@ -120,6 +124,10 @@ describe('team and workspace run queues', () => {
     expect((await member.teams({ teamId })['agent-runs'].queue.get()).status).toBe(403);
     expect((await member.teams({ teamId })['agent-runs']['in-flight'].get()).status).toBe(403);
     expect((await member.workspaces({ workspaceId })['agent-runs'].queue.get()).status).toBe(404);
+    const memberWorkspaceRuns = member.workspaces({ workspaceId })['agent-runs'];
+    expect((await memberWorkspaceRuns.initiators.options.get()).status).toBe(404);
+    expect((await memberWorkspaceRuns.projects.options.get()).status).toBe(404);
+    expect((await member.teams({ teamId })['agent-runs'].projects.options.get()).status).toBe(403);
     expect((await member.workspaces({ workspaceId })['agent-runs']['in-flight'].get()).status).toBe(
       404,
     );

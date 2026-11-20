@@ -16,10 +16,13 @@ import type {
 import { qk } from '@/services/queryKeys';
 import { revScope } from '@/utils/revScopes';
 import { Button } from '@/components/ui/button';
+import FilterChips from '@/components/common/filters/FilterChips';
+import FilterMenu from '@/components/common/filters/FilterMenu';
 import RunnerQueueActiveCard from './components/RunnerQueueActiveCard';
 import RunnerQueueFilters from './components/RunnerQueueFilters';
 import RunnerQueueHistory from './components/RunnerQueueHistory';
 import RunnerQueueOfflineNotice from './components/RunnerQueueOfflineNotice';
+import { useRunnerQueueFilters } from './hooks/useRunnerQueueFilters';
 
 const isActive = (run: RunnerQueueRun) =>
   run.executionState === 'queued' || run.executionState === 'running';
@@ -36,8 +39,15 @@ export default function RunnerQueuePage({
   const t = useTranslations('issue.agentRuns');
   const [state, setState] = useState<RunnerQueueState>();
   const [search, setSearch] = useState('');
+  const filters = useRunnerQueueFilters(scope);
+  const { initiatorIds, projectIds } = filters;
   const q = useDebouncedValue(search.trim(), 300);
-  const query = useRunnerQueueQuery(scope.api, { state, q: q || undefined });
+  const query = useRunnerQueueQuery(scope.api, {
+    state,
+    q: q || undefined,
+    initiatorIds,
+    projectIds,
+  });
   const inFlight = useRunsInFlightQuery(scope.api).data;
   const acrossProjects = scope.acrossProjects ?? false;
   useLiveRefresh({ scope: revScope.runnerQueue, targets: [qk.runnerQueue] });
@@ -47,6 +57,7 @@ export default function RunnerQueuePage({
   const active = runs.filter(isActive);
   const history = runs.filter((run) => !isActive(run));
   const activeCount = data ? data.queued + data.running : 0;
+  const filtered = Boolean(state || q || initiatorIds.length || projectIds.length);
   return (
     <div className="flex h-full min-h-0">
       <div
@@ -66,15 +77,18 @@ export default function RunnerQueuePage({
               </p>
             )}
           </div>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label={t('refresh')}
-            disabled={query.isFetching}
-            onClick={() => void query.refetch()}
-          >
-            <RefreshCw />
-          </Button>
+          <div className="flex items-center gap-1">
+            <FilterMenu sections={filters.sections} onChange={filters.onChange} />
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label={t('refresh')}
+              disabled={query.isFetching}
+              onClick={() => void query.refetch()}
+            >
+              <RefreshCw />
+            </Button>
+          </div>
         </div>
         <RunnerQueueFilters
           state={state}
@@ -84,6 +98,9 @@ export default function RunnerQueuePage({
           failed={data?.failed ?? 0}
           active={activeCount}
         />
+        <div className="px-4 pb-2 empty:hidden">
+          <FilterChips sections={filters.sections} onChange={filters.onChange} />
+        </div>
         <div className="min-h-0 flex-1 overflow-y-auto pb-4">
           {query.isLoading && <p className="px-4 text-sm text-muted-foreground">{t('loading')}</p>}
           {query.isError && (
@@ -93,7 +110,7 @@ export default function RunnerQueuePage({
           )}
           {data && data.total === 0 && (
             <p className="px-4 pt-2 text-sm text-muted-foreground">
-              {state || q ? t('noMatches') : t('queueEmpty')}
+              {filtered ? t('noMatches') : t('queueEmpty')}
             </p>
           )}
           <RunnerQueueOfflineNotice runs={active} />

@@ -1,6 +1,7 @@
 import { db, agentRun, aiAgent, issue } from '@repo/db';
 import { and, desc, eq, lt } from 'drizzle-orm';
 import { iso } from '#shared/lib';
+import { assertReadsRunSteps } from '#modules/agents/queue/service';
 import { contextTokensOf, executionState } from '#modules/agents/core/run-queue';
 import { getRunTrace } from '#modules/agents/core/runtime/traces';
 
@@ -67,7 +68,7 @@ export async function getIssueAgentRunTrace(
   traceId?: string,
 ) {
   const [run] = await db
-    .select({ agentId: agentRun.agentId })
+    .select({ agentId: agentRun.agentId, initiatorUserId: agentRun.requestedByUserId })
     .from(agentRun)
     .innerJoin(issue, eq(issue.id, agentRun.issueId))
     .where(
@@ -79,5 +80,6 @@ export async function getIssueAgentRunTrace(
       ),
     );
   if (!run) return undefined;
+  await assertReadsRunSteps({ projectId, initiatorUserId: run.initiatorUserId }, viewerId);
   return getRunTrace(run.agentId, runId, projectId, issueId, viewerId, { traceId });
 }

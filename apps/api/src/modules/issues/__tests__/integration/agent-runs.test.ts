@@ -99,25 +99,18 @@ describe('issue agent runs', () => {
     expect(second.data!.nextCursor).toBeNull();
   });
 
-  it('requires both work item and agent read access', async () => {
+  it('takes agent read access, and creating or changing agents for the steps', async () => {
     const { api, issue } = await setup();
     const run = (await api.issues({ issueId: issue.id })['agent-runs'].get()).data!.items[0];
-    for (const permissions of [{ work_items: { read: true } }, { ai_agents: { read: true } }]) {
+    const read = async (permissions: Parameters<typeof createRole>[2]['permissions']) => {
       const role = await createRole(api, 'RUN', { name: JSON.stringify(permissions), permissions });
       const member = await addProjectMember(api, 'RUN', role.data!.id);
-      expect((await member.issues({ issueId: issue.id })['agent-runs'].get()).status).toBe(403);
-      const trace = await member
-        .issues({ issueId: issue.id })
-        ['agent-runs']({ runId: run.id })
-        .trace.get();
-      expect(trace.status).toBe(403);
-    }
-    const role = await createRole(api, 'RUN', {
-      name: 'Run reader',
-      permissions: { work_items: { read: true }, ai_agents: { read: true } },
-    });
-    const member = await addProjectMember(api, 'RUN', role.data!.id);
-    expect((await member.issues({ issueId: issue.id })['agent-runs'].get()).status).toBe(200);
+      const runs = member.issues({ issueId: issue.id })['agent-runs'];
+      return [(await runs.get()).status, (await runs({ runId: run.id }).trace.get()).status];
+    };
+    expect(await read({ work_items: { read: true } })).toEqual([403, 403]);
+    expect(await read({ ai_agents: { read: true } })).toEqual([200, 403]);
+    expect(await read({ ai_agents: { read: true, edit: true } })).toEqual([200, 200]);
   });
 
   it('rejects missing issues and invalid page bounds', async () => {

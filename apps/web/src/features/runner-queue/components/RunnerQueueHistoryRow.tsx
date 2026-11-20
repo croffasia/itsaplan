@@ -30,9 +30,15 @@ export default function RunnerQueueHistoryRow({
       ? [
           `#${run.id}`,
           t(`triggers.${run.trigger}`),
+          run.initiator?.name,
           run.attempts > 1 ? t('attemptsCount', { count: run.attempts }) : null,
         ]
-      : [`@${run.username}`, runPlace(run, acrossProjects), t(`triggers.${run.trigger}`)]
+      : [
+          `@${run.username}`,
+          runPlace(run, acrossProjects),
+          t(`triggers.${run.trigger}`),
+          run.initiator?.name,
+        ]
   )
     .filter(Boolean)
     .join(' · ');

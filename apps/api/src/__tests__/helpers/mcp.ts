@@ -101,7 +101,12 @@ export async function mcpAccessToken(cookie: string): Promise<string> {
 
 // One JSON-RPC call to /mcp with a bearer key, and its result. The transport answers over SSE:
 // one `data:` line carrying the JSON-RPC response.
-export async function mcpRpc(bearer: string, method: string, params: Record<string, unknown> = {}) {
+export async function mcpRpc(
+  bearer: string,
+  method: string,
+  params: Record<string, unknown> = {},
+  headers: Record<string, string> = {},
+) {
   const res = await app.handle(
     new Request('http://localhost/mcp', {
       method: 'POST',
@@ -109,6 +114,7 @@ export async function mcpRpc(bearer: string, method: string, params: Record<stri
         authorization: `Bearer ${bearer}`,
         'content-type': 'application/json',
         accept: 'application/json, text/event-stream',
+        ...headers,
       },
       body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }),
     }),

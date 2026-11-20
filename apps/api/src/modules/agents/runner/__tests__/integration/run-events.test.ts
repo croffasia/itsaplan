@@ -175,15 +175,19 @@ describe('external run events', () => {
     expect((await route.get({ query: { attempt: 3 } })).status).toBe(404);
   }, 20_000);
 
-  it('requires both read permissions and hides traces after an issue moves', async () => {
+  it('takes changing agents to read steps and hides traces after an issue moves', async () => {
     const { api, runner, run, issue } = await setup();
     await runner['agent-runs']({ runId: run.id }).events.post({ attempt: 1, offset: 0, events });
-    for (const permissions of [{ work_items: { read: true } }, { ai_agents: { read: true } }]) {
+    for (const [permissions, status] of [
+      [{ work_items: { read: true } }, 403],
+      [{ ai_agents: { read: true } }, 403],
+      [{ ai_agents: { read: true, edit: true } }, 200],
+    ] as const) {
       const role = (
         await createRole(api, 'RUN', { name: JSON.stringify(permissions), permissions })
       ).data!;
       const member = await addProjectMember(api, 'RUN', role.id);
-      expect((await member['agent-runs']({ runId: run.id }).trace.get()).status).toBe(403);
+      expect((await member['agent-runs']({ runId: run.id }).trace.get()).status).toBe(status);
     }
     const other = (await createProject(api, { key: 'NEXT', name: 'Next' })).data!;
     await api.issues({ issueId: issue.id }).move.post({ projectId: other.id });

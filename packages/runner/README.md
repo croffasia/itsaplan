@@ -35,14 +35,19 @@ the other CLIs, see
     "itsaplan": {
       "type": "http",
       "url": "http://localhost:3000/mcp",
-      "headers": { "Authorization": "Bearer ${ITSAPLAN_API_KEY}" }
+      "headers": {
+        "Authorization": "Bearer ${ITSAPLAN_API_KEY}",
+        "X-Itsaplan-Run-Id": "${ITSAPLAN_RUN_ID}"
+      }
     }
   }
 }
 ```
 
-The runner sets `ITSAPLAN_API_KEY` for the command that it starts. The key thus stays in
-one file.
+The runner sets `ITSAPLAN_API_KEY` and `ITSAPLAN_RUN_ID` for the command that it starts. The
+key thus stays in one file. The run id tells the instance which run a call belongs to. A run the
+agent starts, such as by delegating an issue, then works for the same person. Without it, that run
+is the project's work.
 
 **4. Write `itsaplan-runner.json`** in the same folder:
 
@@ -301,7 +306,7 @@ A queued run adds three more:
 
 | Variable            | What it holds                                                   |
 | ------------------- | --------------------------------------------------------------- |
-| `ITSAPLAN_RUN_ID`   | the run's id                                                    |
+| `ITSAPLAN_RUN_ID`   | the run's id, which the MCP config sends as `X-Itsaplan-Run-Id` |
 | `ITSAPLAN_ISSUE`    | the issue key, for example `MKT-42`. Empty if there is no issue |
 | `ITSAPLAN_ISSUE_ID` | the numeric id of the issue. Empty if there is no issue         |
 

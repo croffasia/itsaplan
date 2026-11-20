@@ -3,9 +3,11 @@ import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-qu
 import { nextPageParam } from '@/lib/api/core/paging';
 import {
   getInternalRunTrace,
+  getRunInitiatorOptions,
   getRunnerQueue,
+  getRunProjectOptions,
   getRunsInFlight,
-  type RunnerQueueState,
+  type RunnerQueueFilter,
 } from '@/lib/api/endpoints/runnerQueue';
 import { qk } from './queryKeys';
 
@@ -20,10 +22,23 @@ export function useRunsInFlightQuery(api: string) {
   });
 }
 
-export function useRunnerQueueQuery(
-  api: string,
-  filter: { state?: RunnerQueueState; q?: string } = {},
-) {
+// Under the runner queue key too, so a new initiator shows with the run that brings them.
+export function useRunInitiatorOptionsQuery(api: string) {
+  return useQuery({
+    queryKey: [...qk.runnerQueue, 'initiators', api],
+    queryFn: () => getRunInitiatorOptions(api),
+  });
+}
+
+export function useRunProjectOptionsQuery(api: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...qk.runnerQueue, 'projects', api],
+    queryFn: () => getRunProjectOptions(api),
+    enabled,
+  });
+}
+
+export function useRunnerQueueQuery(api: string, filter: RunnerQueueFilter = {}) {
   return useInfiniteQuery({
     queryKey: [...qk.runnerQueue, 'list', api, filter],
     queryFn: ({ pageParam }) =>

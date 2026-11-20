@@ -22,7 +22,7 @@ import {
   type ToolMeta,
 } from './catalog';
 import { collapseNumericSchema } from './numeric-schema';
-import { actFor } from '../../run-initiator';
+import { actFor, type AgentWork } from '../../run-initiator';
 
 // The tools an internal agent uses to work in its project, built from the routes
 // tagged with mcpTool() — the same table the MCP endpoint serves. A tool call is
@@ -101,18 +101,18 @@ export function actionCatalog(): (ToolMeta & { permission?: Permission })[] {
 // Builds the route-backed tools for one agent, keyed by tool id. The read-only
 // always-on actions are always included; a mutating action only when its key is in
 // enabledActions (the agent's granted actions, from ai_agent.tools).
-// `initiator` is the person the run or chat is for, passed on to the runs its calls start.
+// `work` is the run or chat the tools serve, passed on to the runs their calls start.
 export function buildRouteTools(
   project: ProjectRow,
   apiKey: string,
   enabledActions: string[],
-  initiator: string | null,
+  work: AgentWork,
 ): Record<string, ReturnType<typeof createTool>> {
   const granted = new Set([...ALWAYS_ON_KEYS, ...normalizeToolKeys(enabledActions)]);
   // An update replaces the board's canvas as a whole, so without the read the agent
   // would send a canvas built from nothing and delete every card already on the board.
   if (granted.has('update_note_board')) granted.add('get_note_board');
-  return buildNamedRouteTools(project, apiKey, granted, initiator);
+  return buildNamedRouteTools(project, apiKey, granted, work);
 }
 
 // The tools of the routes with these names, whatever the catalog grants.
@@ -120,13 +120,13 @@ export function buildNamedRouteTools(
   project: ProjectRow,
   apiKey: string,
   names: Iterable<string>,
-  initiator: string | null,
+  work: AgentWork,
 ): Record<string, ReturnType<typeof createTool>> {
   const wanted = new Set(names);
   const tools: Record<string, ReturnType<typeof createTool>> = {};
   for (const route of routeTools(getMcpApp())) {
     if (!wanted.has(route.name)) continue;
-    tools[route.name] = buildOne(route, project, apiKey, initiator);
+    tools[route.name] = buildOne(route, project, apiKey, work);
   }
   return tools;
 }
@@ -135,7 +135,7 @@ function buildOne(
   route: McpRouteTool,
   project: ProjectRow,
   apiKey: string,
-  initiator: string | null,
+  work: AgentWork,
 ): ReturnType<typeof createTool> {
   const overrides = toolMeta(route.name)?.overrides;
   const bindsProject = route.pathParams.includes('projectKey');
@@ -155,7 +155,7 @@ function buildOne(
       const args: Record<string, unknown> = { ...input };
       for (const name of hidden) delete args[name];
       if (bindsProject) args.projectKey = project.ref;
-      const { text, isError } = await actFor(initiator, () =>
+      const { text, isError } = await actFor(work, () =>
         dispatchTool(
           getMcpApp(),
           route,

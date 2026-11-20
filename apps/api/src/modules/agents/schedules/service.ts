@@ -5,7 +5,8 @@ import { getTeamLimits } from '#shared/limits';
 import { minCronIntervalSeconds, nextCronRun } from './cron';
 import { isScheduleSupported, type ScheduleOptions } from './extension';
 import { agentWorksInProject, canTriggerAgent, isTriggerableBy } from '../core/service';
-import { contextTokensOf, executionState } from '../core/run-queue';
+import { contextTokensOf, executionState, rootRunOf } from '../core/run-queue';
+import { runOrigin } from '../core/run-initiator';
 import { emitRunsCanceled } from '../core/run-finished';
 import { deleteThreadsWhere } from '../core/runtime/memory';
 
@@ -333,6 +334,7 @@ export async function enqueueManualScheduleRun(
     throw new HttpError(400, 'Only a cron schedule runs on demand');
   }
   await assertTriggerable(schedule.agentId, actorUserId);
+  const { startedByUserId, parentRunId } = await runOrigin(actorUserId);
   const [run] = await db
     .insert(agentRun)
     .values({
@@ -340,6 +342,9 @@ export async function enqueueManualScheduleRun(
       projectId,
       scheduleId,
       trigger: 'manual',
+      startedByUserId,
+      parentRunId,
+      rootRunId: rootRunOf(parentRunId),
       prompt: schedule.prompt,
     })
     .returning({ id: agentRun.id });

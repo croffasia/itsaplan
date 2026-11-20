@@ -1,6 +1,8 @@
 import { db, agentRun, agentSchedule, aiAgent, issue, project, projectColumn } from '@repo/db';
 import { and, eq, inArray, ne, notInArray, sql } from 'drizzle-orm';
 import { emitRunsCanceled } from '../core/run-finished';
+import { runOrigin } from '../core/run-initiator';
+import { rootRunOf } from '../core/run-queue';
 import { filterScheduleIssues, isScheduleSupported, type ScheduleForExtension } from './extension';
 
 // The runs schedules queue on issues: a 'status' schedule's when an issue enters its
@@ -82,6 +84,7 @@ export async function queueStatusRuns(
         `Work item ${row.identifier}: "${row.title}" entered the "${schedule.columnName}" status.`,
     })),
     issueIds,
+    actorUserId,
   );
 }
 
@@ -110,12 +113,20 @@ export async function queueScheduleRuns(
   await insertIssueRuns(
     schedules.map((schedule) => ({ ...schedule, lead })),
     issueIds,
+    actorUserId,
   );
 }
 
-async function insertIssueRuns(all: IssueSchedule[], issueIds: number[]): Promise<void> {
+// A schedule's run is the project's work, so it has no initiator. It keeps who made the
+// change, and the run an agent made it in, as the runs a person or an agent queues do.
+async function insertIssueRuns(
+  all: IssueSchedule[],
+  issueIds: number[],
+  actorUserId: string | null | undefined,
+): Promise<void> {
   const schedules = all.filter(isScheduleSupported);
   if (schedules.length === 0) return;
+  const { startedByUserId, parentRunId } = await runOrigin(actorUserId);
   const issues = await db
     .select({
       id: issue.id,
@@ -145,6 +156,9 @@ async function insertIssueRuns(all: IssueSchedule[], issueIds: number[]): Promis
           issueId: row.id,
           scheduleId: schedule.id,
           trigger: schedule.type === 'status' ? 'status' : 'event',
+          startedByUserId,
+          parentRunId,
+          rootRunId: rootRunOf(parentRunId),
           prompt: issueRunPrompt(schedule.lead(row), schedule.prompt),
           nextAttemptAt: sql`now() + make_interval(secs => ${schedule.delaySec})`,
         }));

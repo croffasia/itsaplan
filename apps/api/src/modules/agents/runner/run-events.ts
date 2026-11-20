@@ -72,15 +72,15 @@ export async function appendRunEvents(
   });
 }
 
-// The project of a run whose transcript the viewer asks for, its agent and issue, and the
-// document it was started in, if any.
+// The run the viewer asks for, unless its issue moved to another project or its document is
+// private from them: its project, agent, issue and initiator.
 export async function visibleRun(runId: number, viewerId: string) {
   const [row] = await db
     .select({
       projectId: agentRun.projectId,
       agentId: agentRun.agentId,
       issueId: agentRun.issueId,
-      documentId: agentRun.documentId,
+      initiatorUserId: agentRun.requestedByUserId,
     })
     .from(agentRun)
     .leftJoin(issue, eq(issue.id, agentRun.issueId))

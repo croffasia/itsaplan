@@ -105,20 +105,20 @@ describe('internal run trace', () => {
     expect(res.data).toBeNull();
   });
 
-  it('takes reading both work items and agents in the run project', async () => {
+  it('takes creating or changing agents in the run project to read its steps', async () => {
     const { api, trace } = await setup();
-    const agentsOnly = (
-      await createRole(api, 'RUN', { name: 'Agents', permissions: { ai_agents: { read: true } } })
-    ).data!;
-    const both = (
-      await createRole(api, 'RUN', {
-        name: 'Both',
-        permissions: { ai_agents: { read: true }, work_items: { read: true } },
-      })
-    ).data!;
+    const role = async (name: string, ai_agents: Record<string, boolean>) =>
+      addProjectMember(
+        api,
+        'RUN',
+        (await createRole(api, 'RUN', { name, permissions: { ai_agents } })).data!.id,
+      );
 
-    expect((await trace(await addProjectMember(api, 'RUN', both.id)).get()).status).toBe(200);
-    expect((await trace(await addProjectMember(api, 'RUN', agentsOnly.id)).get()).status).toBe(403);
+    expect((await trace(await role('Edit', { read: true, edit: true })).get()).status).toBe(200);
+    expect((await trace(await role('Create', { read: true, create: true })).get()).status).toBe(
+      200,
+    );
+    expect((await trace(await role('Read', { read: true })).get()).status).toBe(403);
     expect((await api['agent-runs']({ runId: 999999 })['internal-trace'].get()).status).toBe(404);
   });
 });

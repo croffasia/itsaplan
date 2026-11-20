@@ -235,7 +235,9 @@ export async function listIssues(project: ProjectRow): Promise<IssueRow[]> {
     .select()
     .from(issue)
     .where(and(eq(issue.projectId, project.id), isNull(issue.archivedAt)))
-    .orderBy(issue.columnId, issue.position);
+    // Cards share a position after a move between columns; id keeps them in one order,
+    // the same one list_issues gives for sort=position.
+    .orderBy(issue.columnId, issue.position, issue.id);
   const issues = rows.map((row) => mapIssue(row, project.key));
   await attachDetails(issues, { fieldValues: true, ids: projectIssueIds(project.id, false) });
   return issues;
@@ -264,6 +266,7 @@ export interface IssueSearchHit {
   identifier: string;
   title: string;
   columnId: number;
+  position: number;
   typeId: number | null;
   initiativeId: number | null;
   cycleId: number | null;
@@ -353,6 +356,31 @@ function hitOrder(numberMatch: SQL | undefined): SQL[] {
   return numberMatch ? [sql`case when ${numberMatch} then 0 else 1 end`, recent] : [recent];
 }
 
+interface IssueOrder {
+  sort?: 'position' | 'updated' | 'created' | 'dueDate' | 'priority';
+  dir?: 'asc' | 'desc';
+}
+
+// An unset or unknown priority ranks null, so it comes last in both directions.
+const priorityRank = sql`case ${issue.priority}
+  when 'urgent' then 0 when 'high' then 1 when 'medium' then 2 when 'low' then 3 end`;
+
+const sortValues = {
+  position: issue.position,
+  updated: issue.updatedAt,
+  created: issue.createdAt,
+  dueDate: issue.dueDate,
+  priority: priorityRank,
+};
+
+// id breaks ties in the same direction, so position asc matches the board and desc is its
+// exact reverse.
+function listOrder({ sort, dir }: IssueOrder, fallback: SQL[]): SQL[] {
+  if (!sort) return fallback;
+  const direction = dir === 'desc' ? sql`desc` : sql`asc`;
+  return [sql`${sortValues[sort]} ${direction} nulls last`, sql`${issue.id} ${direction}`];
+}
+
 const hitColumns = {
   id: issue.id,
   sequenceNumber: issue.sequenceNumber,
@@ -363,6 +391,7 @@ const hitColumns = {
   assigneeUserId: issue.assigneeUserId,
   delegateUserId: issue.delegateUserId,
   columnId: issue.columnId,
+  position: issue.position,
   title: issue.title,
   priority: issue.priority,
   dueDate: issue.dueDate,
@@ -482,12 +511,13 @@ function fieldConds(filters: FieldFilters): SQL[] {
 // issues to the result (search always sets it; list defaults to active only).
 export async function searchIssues(
   project: ProjectRow,
-  filters: IssueQuery & {
-    createdFrom?: Date;
-    createdTo?: Date;
-    updatedFrom?: Date;
-    updatedTo?: Date;
-  },
+  filters: IssueQuery &
+    IssueOrder & {
+      createdFrom?: Date;
+      createdTo?: Date;
+      updatedFrom?: Date;
+      updatedTo?: Date;
+    },
   opts: { includeArchived?: boolean } = {},
 ): Promise<IssueSearchHit[]> {
   const conds: SQL[] = [eq(issue.projectId, project.id)];
@@ -560,7 +590,7 @@ export async function searchIssues(
     .select(hitColumns)
     .from(issue)
     .where(and(...conds))
-    .orderBy(...hitOrder(numberMatch));
+    .orderBy(...listOrder(filters, hitOrder(numberMatch)));
   const rows = filters.limit !== undefined ? await base.limit(filters.limit) : await base;
 
   const hits = rows.map((r) => toHit(r, project.key));
@@ -652,16 +682,18 @@ export const ISSUE_STATE_TYPES = [
 ] as const;
 export type IssueStateType = (typeof ISSUE_STATE_TYPES)[number];
 
-// The filtered list over the given projects, most recently updated first. The ids it
-// takes (cycles, parents) are global, so they need no project to resolve against.
+// The filtered list over the given projects, most recently updated first unless a sort
+// is chosen. The ids it takes (cycles, parents) are global, so they need no project to
+// resolve against.
 export async function listIssuesInProjects(
   projectIds: number[],
-  filters: FieldFilters & {
-    cycleIds?: number[];
-    parentIds?: number[];
-    stateTypes?: IssueStateType[];
-    limit: number;
-  },
+  filters: FieldFilters &
+    IssueOrder & {
+      cycleIds?: number[];
+      parentIds?: number[];
+      stateTypes?: IssueStateType[];
+      limit: number;
+    },
   opts: { includeArchived?: boolean } = {},
 ): Promise<CrossProjectIssueHit[]> {
   if (!projectIds.length) return [];
@@ -685,7 +717,7 @@ export async function listIssuesInProjects(
     .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
     .innerJoin(team, eq(team.id, projectTable.teamId))
     .where(and(...conds))
-    .orderBy(...hitOrder(undefined))
+    .orderBy(...listOrder(filters, hitOrder(undefined)))
     .limit(filters.limit);
   const hits = rows.map(toCrossProjectHit);
   await attachLabels(hits);

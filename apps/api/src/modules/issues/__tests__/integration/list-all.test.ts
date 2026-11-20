@@ -93,6 +93,17 @@ describe('cross-project issue list', () => {
     expect(titles(await list(api, { assigneeUserId: '', cycleIds: '' }))).toHaveLength(7);
   });
 
+  it('sorts across projects, issues without the value last', async () => {
+    const { api } = await setup();
+    const late = await createIssue(api, 'MKT', 'Late', { dueDate: '2026-03-10' });
+    const early = await createIssue(api, 'OPS', 'Early', { dueDate: '2026-03-05' });
+    const unset = await createIssue(api, 'OPS', 'Unset');
+
+    const ids = async (query: Query) => (await list(api, query)).data!.map((hit) => hit.id);
+    expect(await ids({ sort: 'dueDate' })).toEqual([early.id, late.id, unset.id]);
+    expect(await ids({ sort: 'dueDate', dir: 'desc' })).toEqual([late.id, early.id, unset.id]);
+  });
+
   it('rejects an unknown state type', async () => {
     const { api } = await setup();
     const res = await list(api, { stateTypes: 'started,done' });

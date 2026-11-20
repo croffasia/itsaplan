@@ -1,0 +1,76 @@
+{
+  "title": "Cicli",
+  "newCycle": "Nuovo ciclo",
+  "status": {
+    "upcoming": "Imminente",
+    "active": "Attivo",
+    "completed": "Completato"
+  },
+  "views": {
+    "table": "Tabella",
+    "timeline": "Timeline"
+  },
+  "columns": {
+    "name": "Nome",
+    "dates": "Date",
+    "length": "Durata",
+    "issues": "Issue",
+    "progress": "Avanzamento"
+  },
+  "emptyTitle": "Nessun ciclo ancora",
+  "emptyDescription": "Un ciclo è un periodo a tempo definito in cui il team pianifica le sue issue.",
+  "nothingPlannedTitle": "Niente pianificato",
+  "nothingPlannedDescription": "La timeline mostra cicli attivi e imminenti. I conclusi sono nella tabella.",
+  "options": "Opzioni ciclo",
+  "transferIssues": "{count, plural, one {Sposta # issue non completata} other {Sposta # issue non completate}}",
+  "finishedEarly": "Concluso in anticipo, previsto per finire {date}",
+  "form": {
+    "editTitle": "Modifica ciclo",
+    "newTitle": "Nuovo ciclo",
+    "name": "Nome",
+    "goal": "Obiettivo",
+    "goalPlaceholder": "Cosa dovrebbe consegnare questo ciclo?",
+    "length": "Durata",
+    "starts": "Inizia",
+    "ends": "Finisce",
+    "create": "Crea ciclo",
+    "saveFailed": "Impossibile salvare il ciclo"
+  },
+  "weeks": "{count, plural, one {# settimana} other {# settimane}}",
+  "transfer": {
+    "title": "Sposta le issue non completate",
+    "description": "Le issue non completate si spostano nel ciclo che scegli. Quelle completate e annullate restano qui.",
+    "moveTo": "Sposta in",
+    "noCycle": "Nessun ciclo",
+    "submit": "Sposta issue",
+    "moving": "Spostamento…",
+    "moved": "{count, plural, one {# issue spostata} other {# issue spostate}}",
+    "failed": "Impossibile spostare le issue"
+  },
+  "finish": {
+    "action": "Concludi ciclo",
+    "title": "Concludi il ciclo in anticipo",
+    "description": "{cycle} si chiude oggi invece del {date}. Non puoi riaprirlo. {count, plural, =0 {Niente è rimasto non completato.} one {# issue non completata resta su di esso.} other {# issue non completate restano su di esso.}}",
+    "submit": "Concludi ciclo"
+  },
+  "startNext": {
+    "action": "Avvia il prossimo ciclo oggi",
+    "title": "Avvia il prossimo ciclo oggi",
+    "description": "{cycle} si chiude oggi e non puoi riaprirlo. {next} inizia oggi e finisce ancora il {date}. {count, plural, =0 {Niente passa oltre.} one {# issue non completata si sposta in esso.} other {# issue non completate si spostano in esso.}} Le issue completate e annullate restano su {cycle}.",
+    "submit": "Avvia prossimo ciclo",
+    "started": "{cycle} avviato. {count, plural, =0 {Nessuna issue passata oltre.} one {# issue passata oltre.} other {# issue passate oltre.}}"
+  },
+  "delete": {
+    "title": "Elimina ciclo",
+    "description": "{cycle} viene eliminato per sempre. {count, plural, =0 {Non contiene issue.} one {# issue resta nel progetto, senza ciclo.} other {# issue restano nel progetto, senza ciclo.}}"
+  },
+  "details": "Dettaglio ciclo",
+  "goal": "Obiettivo",
+  "noGoal": "Nessun obiettivo impostato.",
+  "progress": "Avanzamento",
+  "openCycle": "Apri ciclo",
+  "dragFailed": "Impossibile spostare il ciclo",
+  "notFound": "Ciclo non trovato.",
+  "defaultName": "Sprint {n}",
+  "issuesDone": "Issue completate"
+}

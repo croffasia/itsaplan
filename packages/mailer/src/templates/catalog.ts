@@ -6,6 +6,7 @@ import { esES } from './texts/es-ES';
 import { fa } from './texts/fa';
 import { fr } from './texts/fr';
 import { id } from './texts/id';
+import { it } from './texts/it';
 import { ko } from './texts/ko';
 import { ptBR } from './texts/pt-BR';
 import { ru } from './texts/ru';
@@ -25,6 +26,7 @@ const LOCALE_TEXTS: Record<Locale, EmailLocaleTexts> = {
   fr,
   'pt-BR': ptBR,
   id,
+  it,
   'es-ES': esES,
   ko,
   tr,

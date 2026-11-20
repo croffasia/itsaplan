@@ -1,0 +1,131 @@
+{
+  "newIssue": "Nuova issue",
+  "addWorkItem": "Aggiungi work item",
+  "pin": "Fissa",
+  "unpin": "Sfissa",
+  "collapse": "Comprimi",
+  "expand": "Espandi",
+  "hide": "Nascondi",
+  "show": "Mostra",
+  "hiddenColumns": "Colonne nascoste",
+  "hiddenGroups": "Gruppi nascosti",
+  "selectAll": "Seleziona tutto",
+  "deselectAll": "Deseleziona tutto",
+  "resizeColumn": "Ridimensiona la colonna",
+  "viewNamePlaceholder": "Tutte le issue",
+  "sortedOrder": "Le issue sono ordinate per {field}. Cambia l'ordinamento in Manuale per spostarle.",
+  "statusSince": "Nello stato attuale dal {date}",
+  "createdOn": "Creata {date}",
+  "updatedOn": "Aggiornata {date}",
+  "subtasksProgress": "Sotto-task {done}/{total}",
+  "subtasksDone": "{done} di {total} sotto-task completati",
+  "wip": {
+    "reached": "{column} ha raggiunto il limite di {limit} issue.",
+    "tooltip": "Limite in lavorazione: {max}",
+    "count": "{count} / {max}",
+    "filteredCount": "{shown} di {total} / {max}",
+    "filteredTooltip": "{shown} mostrate dai filtri attuali. Il limite di {max} conta tutte le {total} issue della colonna."
+  },
+  "columns": {
+    "title": "Titolo",
+    "status": "Stato",
+    "statusAge": "Nello stato",
+    "priority": "Priorità",
+    "type": "Tipo",
+    "initiative": "Iniziativa",
+    "cycle": "Ciclo",
+    "labels": "Etichette",
+    "estimatePoints": "Story points",
+    "estimateTime": "Tempo",
+    "startDate": "Inizio",
+    "dueDate": "Scadenza",
+    "created": "Creata",
+    "updated": "Aggiornata"
+  },
+  "calendar": {
+    "previousMonth": "Mese precedente",
+    "nextMonth": "Mese successivo",
+    "previousWeek": "Settimana precedente",
+    "nextWeek": "Settimana successiva",
+    "previousDays": "{count, plural, one {Giorno precedente} other {# giorni precedenti}}",
+    "nextDays": "{count, plural, one {Giorno successivo} other {# giorni successivi}}",
+    "weekNumber": "Settimana {number}",
+    "range": "{from} – {to}",
+    "today": "Oggi",
+    "moreIssues": "+{count} altre",
+    "issueCount": "{count, plural, one {# issue} other {# issue}}",
+    "weekdays": {
+      "sun": "Dom",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Gio",
+      "fri": "Ven",
+      "sat": "Sab"
+    },
+    "noDate": {
+      "dueDate": "Nessuna data di scadenza",
+      "startDate": "Nessuna data di inizio",
+      "custom": "Nessuna data"
+    },
+    "allDated": {
+      "dueDate": "Tutto ha una data di scadenza.",
+      "startDate": "Tutto ha una data di inizio.",
+      "custom": "Tutto ha una data."
+    }
+  },
+  "empty": {
+    "title": "Nessuna issue",
+    "description": "Le issue compariranno qui.",
+    "filteredTitle": "Nessuna issue corrispondente",
+    "filteredDescription": "Cambia i filtri per vederne altre."
+  },
+  "timeline": {
+    "expandGroup": "Espandi gruppo",
+    "collapseGroup": "Comprimi gruppo",
+    "inferredStart": "Inizio dedotto dalla data di creazione",
+    "inferredStartDraggable": "Inizio dedotto dalla data di creazione — trascinalo per impostarlo"
+  },
+  "bulk": {
+    "selected": "{count} selezionate",
+    "status": "Stato",
+    "priority": "Priorità",
+    "assignee": "Assegnatario",
+    "delegate": "Delegato",
+    "initiative": "Iniziativa",
+    "cycle": "Ciclo",
+    "labels": "Etichette",
+    "noAssignee": "Nessun assegnatario",
+    "noDelegate": "Nessun delegato",
+    "noInitiative": "Nessuna iniziativa",
+    "noCycle": "Nessun ciclo",
+    "archive": "Archivia",
+    "clearSelection": "Azzera selezione"
+  },
+  "removal": {
+    "archive": {
+      "title": "{count, plural, one {Archivia # issue?} other {Archivia # issue?}}",
+      "confirm": "{count, plural, one {Archivia # issue} other {Archivia # issue}}",
+      "description": "{count, plural, one {Lascia la bacheca e può essere ripristinata in seguito.} other {Lasciano la bacheca e possono essere ripristinate in seguito.}}"
+    },
+    "delete": {
+      "title": "{count, plural, one {Elimina # issue?} other {Elimina # issue?}}",
+      "confirm": "{count, plural, one {Elimina # issue} other {Elimina # issue}}",
+      "description": "{count, plural, one {I suoi commenti, attività e allegati verranno eliminati anch'essi.} other {I loro commenti, attività e allegati verranno eliminati anch'essi.}} Non è possibile annullare."
+    }
+  },
+  "share": {
+    "issueTitle": "Issue",
+    "issueUnavailable": "Questa issue non è disponibile.",
+    "boardUnavailable": "Questa bacheca condivisa non è disponibile. Il link potrebbe essere stato revocato o scaduto."
+  },
+  "groups": {
+    "noAssignee": "Nessun assegnatario",
+    "noDelegate": "Nessun delegato",
+    "noPriority": "Nessuna priorità",
+    "noType": "Nessun tipo",
+    "noInitiative": "Nessuna iniziativa",
+    "noCycle": "Nessun ciclo",
+    "noMember": "Nessun valore"
+  }
+}

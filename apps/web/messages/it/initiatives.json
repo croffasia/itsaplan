@@ -1,0 +1,168 @@
+{
+  "title": "Iniziative",
+  "newInitiative": "Nuova iniziativa",
+  "notFound": "Iniziativa non trovata.",
+  "options": "Opzioni iniziativa",
+  "showDescription": "Mostra descrizione",
+  "noDescription": "Nessuna descrizione.",
+  "noOwner": "Nessun proprietario",
+  "startDate": "Data di inizio",
+  "targetDate": "Data obiettivo",
+  "progress": "Avanzamento",
+  "activity": "Attività",
+  "noActivity": "Nessuna attività ancora.",
+  "noIssuesLinked": "Nessuna issue collegata ancora.",
+  "inProgress": "In corso",
+  "emptyTitle": "Nessuna iniziativa ancora",
+  "emptyDescription": "Un'iniziativa raggruppa issue correlate sotto un unico obiettivo.",
+  "emptyTabDescription": "Le iniziative passano tra le schede man mano che cambia lo stato.",
+  "emptyTab": {
+    "active": "Nessuna iniziativa attiva",
+    "planned": "Nessuna iniziativa pianificata",
+    "proposed": "Nessuna iniziativa proposta",
+    "completed": "Nessuna iniziativa completata"
+  },
+  "tabs": {
+    "active": "Attive",
+    "planned": "Pianificate",
+    "proposed": "Proposte",
+    "completed": "Completate",
+    "all": "Tutte le iniziative"
+  },
+  "detailTabs": {
+    "overview": "Panoramica",
+    "progress": "Avanzamento",
+    "issues": "Issue"
+  },
+  "columns": {
+    "name": "Nome",
+    "priority": "Priorità",
+    "owner": "Proprietario",
+    "target": "Obiettivo",
+    "progress": "Avanzamento",
+    "health": "Salute"
+  },
+  "status": {
+    "proposed": "Proposta",
+    "planned": "Pianificata",
+    "active": "Attiva",
+    "completed": "Completata",
+    "canceled": "Annullata"
+  },
+  "stateGroups": {
+    "backlog": "Backlog",
+    "unstarted": "Da fare",
+    "started": "In corso",
+    "completed": "Fatto",
+    "canceled": "Annullata"
+  },
+  "health": {
+    "on_track": "In linea",
+    "at_risk": "A rischio",
+    "off_track": "In grave ritardo",
+    "unknown": "Nessun aggiornamento"
+  },
+  "healthInfo": {
+    "trigger": "Come viene calcolata la salute?",
+    "title": "Salute",
+    "description": "Confronta il lavoro svolto con il tempo trascorso. Si aggiorna automaticamente.",
+    "legend": {
+      "on_track": "Il lavoro procede al passo con la pianificazione.",
+      "at_risk": "Il lavoro sta rallentando rispetto alla pianificazione.",
+      "off_track": "Il lavoro è molto in ritardo, o la data obiettivo è passata.",
+      "unknown": "Dati insufficienti: nessuna issue o nessuna data obiettivo."
+    },
+    "howCalculated": "Come viene calcolata",
+    "workDone": "Lavoro svolto",
+    "timeElapsed": "Tempo trascorso",
+    "trail": "Quanto il lavoro è in ritardo rispetto al tempo",
+    "trailOnTrack": "in ritardo fino al 10%",
+    "trailAtRisk": "in ritardo del 10-25%",
+    "trailOffTrack": "in ritardo di oltre il 25%"
+  },
+  "timeline": {
+    "title": "Timeline",
+    "started": "Avvio",
+    "target": "Obiettivo",
+    "remaining": "Rimanente",
+    "overdue": "{days}g in ritardo",
+    "dueToday": "Scade oggi",
+    "left": "{days}g rimasti",
+    "timeElapsed": "Tempo trascorso",
+    "workDone": "Lavoro svolto",
+    "noTargetDate": "Imposta una data obiettivo per seguire il ritmo."
+  },
+  "form": {
+    "titlePlaceholder": "Lancio Q3",
+    "descriptionPlaceholder": "Di cosa tratta questa iniziativa?",
+    "create": "Crea iniziativa",
+    "creating": "Creazione…",
+    "editTitle": "Modifica iniziativa",
+    "save": "Salva modifiche"
+  },
+  "pagination": {
+    "range": "{from}–{to} di {total}",
+    "previous": "Pagina precedente",
+    "next": "Pagina successiva"
+  },
+  "select": {
+    "label": "Iniziativa",
+    "search": "Collega a un'iniziativa…",
+    "empty": "Nessuna iniziativa.",
+    "none": "Nessuna iniziativa",
+    "create": "Crea iniziativa"
+  },
+  "feed": {
+    "system": "Sistema",
+    "createdInitiative": "ha creato l'iniziativa",
+    "createdIssue": "ha creato l'issue",
+    "renamed": "ha rinominato in “{title}”",
+    "descriptionUpdated": "ha aggiornato la descrizione",
+    "descriptionCleared": "ha cancellato la descrizione",
+    "statusSet": "ha impostato lo stato su {status}",
+    "statusMoved": "ha spostato da {from} a {to}",
+    "prioritySet": "ha impostato la priorità su {priority}",
+    "priorityRemoved": "ha rimosso la priorità",
+    "ownerSet": "ha impostato il proprietario su {name}",
+    "ownerRemoved": "ha rimosso il proprietario {name}",
+    "assigneeSet": "ha assegnato a {name}",
+    "assigneeRemoved": "ha rimosso l'assegnatario {name}",
+    "delegateSet": "ha delegato a {name}",
+    "delegateRemoved": "ha rimosso il delegato {name}",
+    "targetDateSet": "ha impostato la data obiettivo su {date}",
+    "targetDateRemoved": "ha rimosso la data obiettivo",
+    "startDateSet": "ha impostato la data di inizio su {date}",
+    "startDateRemoved": "ha rimosso la data di inizio",
+    "dueDateSet": "ha impostato la data di scadenza su {date}",
+    "dueDateRemoved": "ha rimosso la data di scadenza",
+    "labelAdded": "ha aggiunto l'etichetta {label}",
+    "labelRemoved": "ha rimosso l'etichetta {label}",
+    "typeSet": "ha impostato il tipo su {type}",
+    "typeRemoved": "ha rimosso il tipo",
+    "linked": "ha collegato a {name}",
+    "unlinked": "ha scollegato dall'iniziativa"
+  },
+  "attachments": {
+    "title": "Allegati",
+    "add": "Aggiungi",
+    "uploading": "Caricamento…",
+    "empty": "Nessun allegato ancora.",
+    "emptyHint": "Trascina i file qui, oppure usa Aggiungi per caricarli.",
+    "dropToUpload": "Trascina i file per caricarli",
+    "uploadFailed": "Caricamento non riuscito",
+    "open": "Apri {name}",
+    "download": "Scarica",
+    "downloadFile": "Scarica {name}",
+    "deleteFile": "Elimina {name}",
+    "deleteTitle": "Elimina allegato",
+    "deleteConfirmation": "Elimino {name}? Viene rimosso anche dalla descrizione ovunque sia incorporato. Non è possibile annullare."
+  },
+  "documents": {
+    "title": "Documenti",
+    "add": "Collega un documento",
+    "empty": "Nessun documento collegato ancora.",
+    "loadFailed": "Non è stato possibile caricare i documenti collegati. Riprova.",
+    "untitled": "Senza titolo",
+    "remove": "Scollega {title}"
+  }
+}

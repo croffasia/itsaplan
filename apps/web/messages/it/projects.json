@@ -1,0 +1,52 @@
+{
+  "editAction": "Modifica progetto",
+  "copyAction": "Copia progetto",
+  "saveTemplateAction": "Salva come template",
+  "saveTemplate": {
+    "title": "Salva \"{name}\" come template",
+    "newTitle": "Nuovo template di progetto",
+    "hint": "Il template conserva una copia delle impostazioni scelte. Le modifiche successive a questo progetto non lo modificano. Documenti, agenti, pianificazioni e webhook non vengono salvati.",
+    "teams": "Team",
+    "allTeams": "Tutti i team del workspace",
+    "allTeamsHint": "Disattiva per scegliere i team che vedono questo template quando creano un progetto.",
+    "team": "Team",
+    "project": "Progetto",
+    "chooseTeam": "Scegli un team",
+    "chooseProject": "Scegli un progetto",
+    "previewEmpty": "Scegli un progetto per vedere cosa conterrà il template.",
+    "importTitle": "Importa un template di progetto",
+    "importHint": "Incolla un template copiato da un altro workspace, oppure carica il suo file. Le persone nominate vengono escluse.",
+    "importLabel": "Template",
+    "importPlaceholder": "Incolla qui il template copiato",
+    "importFile": "Carica file",
+    "importEmpty": "Incolla un template per vedere cosa contiene.",
+    "importInvalid": "Questo non è un template di progetto, oppure è danneggiato.",
+    "save": "Salva template",
+    "saved": "Template \"{name}\" salvato"
+  },
+  "deleteAction": "Elimina progetto",
+  "leaveAction": "Abbandona progetto",
+  "archiveAction": "Archivia progetto",
+  "restoreAction": "Ripristina progetto",
+  "archived": "{name} archiviato",
+  "restored": "{name} ripristinato",
+  "deleteDialog": {
+    "title": "Eliminare {name}?",
+    "confirm": "Elimina definitivamente",
+    "description": "Questo elimina definitivamente <strong>{name}</strong> e tutto ciò che contiene: issue, commenti, allegati e impostazioni. L'operazione non può essere annullata.",
+    "typeToConfirm": "Digita <code>{key}</code> per confermare."
+  },
+  "leaveDialog": {
+    "title": "Abbandonare {name}?",
+    "confirm": "Abbandona progetto",
+    "description": "Perderai l'accesso a <strong>{name}</strong> e ai suoi elementi di lavoro. Per rientrare serve un nuovo invito da un proprietario."
+  },
+  "editDialog": {
+    "title": "Modifica progetto",
+    "key": "Chiave",
+    "keyHint": "I link delle issue richiedono una chiave di lettere maiuscole e cifre che inizia con una lettera. Dopo averla salvata, la chiave non può più cambiare.",
+    "name": "Nome",
+    "description": "Descrizione",
+    "submit": "Salva"
+  }
+}

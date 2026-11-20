@@ -41,7 +41,7 @@ If It's a Plan looks useful to you, star the repo ⭐ and
 | Product management | Kanban, table, timeline, and calendar views · cycles · custom fields · dashboards · docs · notes boards · project templates · import from Linear, Trello, and Plane |
 | AI agents | Agents as project members · internal on any model, or external on your coding CLI · runs start on an @mention, an assignment, or a schedule |
 | Platform | REST API with OpenAPI · MCP server · webhooks · pull requests from 5 forges · SSO over OIDC and SCIM · passkeys and Google sign-in |
-| 13 languages | English · Українська · Русский · 简体中文 · 繁體中文 · العربية · Français · فارسی · Português (Brasil) · Bahasa Indonesia · Español · 한국어 · Türkçe |
+| 14 languages | English · Українська · Русский · 简体中文 · 繁體中文 · العربية · Français · فارسی · Português (Brasil) · Bahasa Indonesia · Español · 한국어 · Türkçe · Italiano |
 
 <details>
 <summary><b>Product management</b>: the full list</summary>

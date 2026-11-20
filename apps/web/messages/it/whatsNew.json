@@ -1,0 +1,25 @@
+{
+  "eyebrow": "Aggiornato",
+  "title": "Novità in {version}",
+  "done": "Ho capito",
+  "backup": {
+    "title": "Un backup è stato preso prima dell'aggiornamento",
+    "body": "Il database è stato dumpato prima che le migrazioni di questa versione venissero eseguite: {size}, conservato fino al {expires}, poi eliminato automaticamente. Ripristinalo se torni alla versione precedente.",
+    "credentialsHint": "I nomi di utente e database sono POSTGRES_USER e POSTGRES_DB del tuo .env."
+  },
+  "report": {
+    "title": "Cosa è cambiato nei tuoi dati",
+    "subtitle": "I progetti appartengono ora a un team, e un team condivide un'unica lista di ruoli, skill, agenti e credenziali di integrazione.",
+    "teamsHeading": "Team e i loro progetti",
+    "renamedRoles": "Ruoli rinominati",
+    "renamedSkills": "Skill rinominate",
+    "renamedAgents": "Handle degli agenti rinominati",
+    "renamedCredentials": "Credenziali di integrazione rinominate",
+    "mergedHeading": "Uniti e spostati",
+    "mergedRoles": "{count, plural, one {# ruolo predefinito duplicato è diventato uno} other {# ruoli predefiniti duplicati sono diventati uno}}",
+    "mergedTools": "{count, plural, one {# tool configurato duplicato è diventato uno} other {# tool configurati duplicati sono diventati uno}}",
+    "movedInvites": "{count, plural, one {# invito pendente spostato nel team} other {# inviti pendenti spostati nel team}}",
+    "notificationsHeading": "Provider di notifica",
+    "notificationsBody": "Un team conserva una sola configurazione del provider di notifica, quindi è stata mantenuta quella salvata per ultima. Rileva le impostazioni per: {projects}."
+  }
+}

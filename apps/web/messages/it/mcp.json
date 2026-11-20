@@ -1,0 +1,59 @@
+{
+  "title": "Server MCP",
+  "description": "Collega agenti AI a questo progetto tramite il Model Context Protocol. Un agente vede ciò che la sua chiave API consente.",
+  "disabled": "Disattivato",
+  "offForTeam": "MCP è disattivato per il team {team}.",
+  "offForProject": "Il team {team} ha MCP attivato, ma questo progetto è disattivato.",
+  "openTeamSettings": "Apri le impostazioni MCP del team",
+  "askManager": "Chiedi a un proprietario o a un manager del team di attivarlo:",
+  "keyHint": "Crea una chiave nella pagina <link>Chiavi API</link>, poi sostituisci <code>{apiKey}</code> nello snippet.",
+  "endpoint": "Endpoint MCP",
+  "clientTabsAria": "Client",
+  "addToFile": "Aggiungi a <code>{file}</code>",
+  "notes": {
+    "claudeCode": "Esegui questo nel terminale.",
+    "vscode": "Richiede GitHub Copilot.",
+    "claudeDesktop": "Claude Desktop si collega ai server remoti tramite il ponte mcp-remote. Richiede Node.js.",
+    "other": "Qualsiasi client che supporta MCP su Streamable HTTP funziona. Puntalo sull'endpoint. Invia un header Authorization: Bearer {apiKey}."
+  },
+  "clients": {
+    "other": "Altro"
+  },
+  "oauth": {
+    "configuration": "Come collegarsi",
+    "methodTabsAria": "Metodo di connessione",
+    "method": "OAuth",
+    "personalKey": "Chiave API",
+    "description": "Usalo per qualsiasi client MCP che supporta OAuth, come ChatGPT o Claude. Ti autentichi con il tuo account {app}. Il client non riceve mai una chiave API.",
+    "discovery": "Scoperta OAuth",
+    "steps": {
+      "add": "Aggiungi un'app MCP nel tuo client.",
+      "paste": "Incolla l'endpoint MCP.",
+      "choose": "Scegli OAuth quando il client chiede come accedere.",
+      "signIn": "Accedi a {app} e autorizza l'accesso."
+    },
+    "security": "OAuth usa PKCE (S256), registrazione dinamica dei client e token di accesso limitati al tuo account {app}.",
+    "consent": {
+      "title": "Consentire a {client} di accedere al tuo account?",
+      "titleUnnamed": "Consentire a un'app senza nome di accedere al tuo account?",
+      "actsAs": "Una volta consentito, l'app agisce come te:",
+      "canSee": "Vede tutto ciò che vedi, in tutti i tuoi team",
+      "canChange": "Crea, modifica ed elimina tutto ciò che puoi",
+      "keepsAccess": "Mantiene l'accesso fino a quando non la disconnetti in Account › Sicurezza",
+      "account": "Account",
+      "app": "App",
+      "thisComputer": "Su questo computer",
+      "named": "L'app si è chiamata “{client}”. Consenti solo se hai avviato tu questa connessione.",
+      "unnamed": "L'app non ha inviato un nome. Consenti solo se hai avviato tu questa connessione.",
+      "deny": "Non consentire",
+      "allow": "Consenti",
+      "allowing": "Concessione in corso…",
+      "denying": "Invio in corso…",
+      "expired": "Questa richiesta è scaduta dopo 10 minuti. Riavvia la connessione nell'app.",
+      "failed": "La tua risposta non è andata a buon fine. Riprova.",
+      "incompleteTitle": "Questo link non è completo",
+      "incompleteBody": "Riavvia la connessione nell'app.",
+      "brandSubtitle": "Collega app AI come Claude e ChatGPT al tuo account."
+    }
+  }
+}

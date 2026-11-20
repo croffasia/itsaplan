@@ -158,8 +158,8 @@ export async function enqueueAgentRun(input: {
   projectId: number;
   issueId: number | null;
   sourceActivityId: number | null;
-  // Who sent an API task; a mention's author is read from its comment.
-  requestedByUserId?: string;
+  // The person the run is for (see run-initiator.ts); none for the project's own work.
+  requestedByUserId?: string | null;
   // A mention in a document comment: the document and the comment, with no issue.
   documentId?: number;
   sourceDocumentCommentId?: string;
@@ -214,10 +214,9 @@ export interface ClaimedRun {
   // frame the run with them. Null if the issue was deleted after enqueue.
   issueIdentifier: string | null;
   issueTitle: string | null;
-  // The issue's assignee (the responsible human) and, for a mention run, the author of
-  // the comment that mentioned the agent (from the source activity's name snapshot) with
-  // their account, or the sender of an API task. Each carries the handle the agent tags
-  // them by. Any may be null: no assignee, a deleted user, or a run nobody asked for.
+  // The issue's assignee (the responsible human) and the person the run is for, each with
+  // their account and the handle the agent tags them by. Any may be null: no assignee, a
+  // deleted user, or the project's own work.
   assigneeName: string | null;
   assigneeUsername: string | null;
   requesterName: string | null;
@@ -248,23 +247,20 @@ const RUN_CLAIM_LOCK_NS = 8243;
 // claimable again after the lease — no separate recovery pass. The run's project and
 // the agent's user_id are read inline. An external agent's runs are left alone:
 // they are claimed over HTTP by the operator's runner (modules/agents/runner).
-// Who asked for a claimed run `r`, in the RETURNING list of a claim: the author of the
-// comment that mentioned the agent, or the sender of an API task.
+// Who asked for a claimed run `r`, in the RETURNING list of a claim: the person the run
+// is for, by the name their comment was written under when they wrote the one that
+// mentioned the agent, which also names a deleted author.
 export const requesterColumns = sql`
   coalesce(
-    (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id),
+    (SELECT actor_name FROM issue_activity a
+      WHERE a.id = r.source_activity_id
+        AND a.actor_user_id IS NOT DISTINCT FROM r.requested_by_user_id),
     (SELECT u.name FROM "user" u WHERE u.id = r.requested_by_user_id)
   ) AS "requesterName",
   (SELECT COALESCE(u.username, ag.username)
      FROM "user" u LEFT JOIN ai_agent ag ON ag.user_id = u.id
-     WHERE u.id = coalesce(
-       (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id),
-       r.requested_by_user_id
-     )) AS "requesterUsername",
-  coalesce(
-    (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id),
-    r.requested_by_user_id
-  ) AS "requesterUserId"`;
+     WHERE u.id = r.requested_by_user_id) AS "requesterUsername",
+  r.requested_by_user_id AS "requesterUserId"`;
 
 export async function claimDueRuns(): Promise<ClaimedRun[]> {
   const { maxRunSeconds, maxConcurrentRuns } = await getAgentSettings();

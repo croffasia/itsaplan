@@ -799,7 +799,7 @@ export const agentRun = pgTable(
     sourceActivityId: integer('source_activity_id').references(() => issueActivity.id, {
       onDelete: 'set null',
     }),
-    // Who sent an API task. A mention's author is read from its comment instead.
+    // The person the run is for, null for the project's own work (see run-initiator.ts).
     requestedByUserId: text('requested_by_user_id').references(() => user.id, {
       onDelete: 'set null',
     }),

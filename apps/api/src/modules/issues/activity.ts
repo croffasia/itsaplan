@@ -439,8 +439,13 @@ export async function updateComment(
     const mentioned = await resolveMentionHandles(projectId, added);
     if (mentioned.agentUserIds.length > 0)
       // replyToId is dropped: an edit reaches only the agents it newly names, not
-      // the author of the comment being answered, who a create would reach.
-      await enqueueMentionRuns(projectId, { ...comment, replyToId: null }, mentioned.agentUserIds);
+      // the author of the comment being answered, who a create would reach. The one
+      // who edits names them, whoever wrote the comment.
+      await enqueueMentionRuns(
+        projectId,
+        { ...comment, replyToId: null, actorUserId },
+        mentioned.agentUserIds,
+      );
     await notifyEditedCommentMentions(projectId, comment, mentioned);
   }
   return comment;

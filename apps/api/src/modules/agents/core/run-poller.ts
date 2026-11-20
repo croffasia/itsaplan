@@ -83,6 +83,7 @@ async function processRun(run: ClaimedRun): Promise<void> {
       scheduleId: run.scheduleId,
       runId: run.id,
       trigger: run.trigger,
+      initiatorUserId: run.requesterUserId,
       contextPreamble: runModePreamble(run) + peopleContext(run),
       abortSignal: AbortSignal.timeout(timeoutMs),
     });

@@ -1,0 +1,22 @@
+mcp.169-58-123-186.sslip.io {
+    log {
+        format filter {
+            wrap json
+            fields {
+                request>headers>X-Api-Key delete
+            }
+        }
+    }
+    handle /mcp {
+        request_body {
+            max_size 2MB
+        }
+        reverse_proxy api:3000 {
+            header_down -WWW-Authenticate
+            flush_interval -1
+        }
+    }
+    handle {
+        respond "Not found" 404
+    }
+}

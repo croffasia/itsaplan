@@ -7,6 +7,8 @@ import { noContent } from '#shared/http';
 import { HttpError } from '#shared/lib';
 import { errors } from '#shared/responses';
 import { SCIM_BASE_URL } from '#modules/scim/resource';
+import { WorkspaceSlackSettingsBody, WorkspaceSlackSettingsResponse } from '#modules/slack/model';
+import { getWorkspaceSlackSettings, setWorkspaceSlackSettings } from '#modules/slack/service';
 import {
   MappableProjectListResponse,
   ScimGroupMappingsBody,
@@ -109,6 +111,39 @@ export const workspaceRoutes = new Elysia({ name: 'workspaces', detail: { tags: 
         description:
           'Delete a workspace you own, with its teams. One whose teams hold a project or an ' +
           'AI agent is refused until those are gone.',
+      },
+    },
+  )
+
+  // The Slack app the workspace's notifications go through carries secrets, so only its
+  // owner reads or changes it.
+  .get(
+    '/workspaces/:workspaceId/slack-settings',
+    ({ standing }) => getWorkspaceSlackSettings(standing.workspaceId),
+    {
+      workspaceOwner: true,
+      params: workspaceParams,
+      response: { 200: WorkspaceSlackSettingsResponse, ...errors(401, 403, 404) },
+      detail: {
+        summary: 'Get Slack settings',
+        description:
+          "Whether the workspace's projects send Slack notifications, and through which app (secrets redacted).",
+      },
+    },
+  )
+
+  .put(
+    '/workspaces/:workspaceId/slack-settings',
+    ({ standing, body }) => setWorkspaceSlackSettings(standing.workspaceId, body),
+    {
+      workspaceOwner: true,
+      params: workspaceParams,
+      body: WorkspaceSlackSettingsBody,
+      response: { 200: WorkspaceSlackSettingsResponse, ...errors(400, 401, 403, 404) },
+      detail: {
+        summary: 'Update Slack settings',
+        description:
+          'Turn Slack notifications on or off for the workspace, and send them through the instance app or one of its own. A new bot token is verified with Slack before it is stored.',
       },
     },
   )

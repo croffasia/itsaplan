@@ -2,7 +2,7 @@ import { db, userNotificationPreference } from '@repo/db';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 
 // A member's own notification preferences for one project: for each issue event
-// type, whether they want it by email, Telegram and/or Web Push. One row per (user,
+// type, whether they want it by email, Telegram, Slack and/or Web Push. One row per (user,
 // project); absent means the member has not opted in and receives nothing (opt-in
 // default).
 
@@ -13,6 +13,7 @@ export type EventToggles = Record<EventKey, boolean>;
 export interface NotificationPreferenceDto {
   emailEvents: EventToggles;
   telegramEvents: EventToggles;
+  slackEvents: EventToggles;
   pushEvents: EventToggles;
 }
 
@@ -23,6 +24,7 @@ export interface NotificationPreferenceInput {
   emailEvents: EventTogglesInput;
   telegramEvents: EventTogglesInput;
   // Left out, the stored ones are kept.
+  slackEvents?: EventTogglesInput;
   pushEvents?: EventTogglesInput;
 }
 
@@ -37,7 +39,12 @@ function emptyEvents(): EventToggles {
 }
 
 function defaults(): NotificationPreferenceDto {
-  return { emailEvents: emptyEvents(), telegramEvents: emptyEvents(), pushEvents: emptyEvents() };
+  return {
+    emailEvents: emptyEvents(),
+    telegramEvents: emptyEvents(),
+    slackEvents: emptyEvents(),
+    pushEvents: emptyEvents(),
+  };
 }
 
 // Fills a set that may lack keys (stored jsonb, or a body from a client that predates
@@ -56,11 +63,13 @@ function toToggles(value: unknown): EventToggles {
 function toDto(row: {
   emailEvents: unknown;
   telegramEvents: unknown;
+  slackEvents: unknown;
   pushEvents: unknown;
 }): NotificationPreferenceDto {
   return {
     emailEvents: toToggles(row.emailEvents),
     telegramEvents: toToggles(row.telegramEvents),
+    slackEvents: toToggles(row.slackEvents),
     pushEvents: toToggles(row.pushEvents),
   };
 }
@@ -68,6 +77,7 @@ function toDto(row: {
 const eventColumns = {
   emailEvents: userNotificationPreference.emailEvents,
   telegramEvents: userNotificationPreference.telegramEvents,
+  slackEvents: userNotificationPreference.slackEvents,
   pushEvents: userNotificationPreference.pushEvents,
 };
 
@@ -98,6 +108,7 @@ export async function setPreferences(
   const values = {
     emailEvents: toToggles(input.emailEvents),
     telegramEvents: toToggles(input.telegramEvents),
+    ...(input.slackEvents ? { slackEvents: toToggles(input.slackEvents) } : {}),
     ...(input.pushEvents ? { pushEvents: toToggles(input.pushEvents) } : {}),
   };
   const [row] = await db

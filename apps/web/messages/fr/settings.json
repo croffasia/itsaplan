@@ -98,6 +98,7 @@
     "description": "Choisissez quels événements de ticket vous recevez, et où.",
     "email": "E-mail",
     "telegram": "Telegram",
+    "slack": "Slack",
     "push": "Push",
     "events": {
       "assigned": "Assigné à un ticket",
@@ -110,6 +111,17 @@
     "telegramAccount": "Compte Telegram",
     "telegramAccountHint": "Les notifications Telegram sont envoyées au compte relié à votre profil, pour tous les projets dont vous faites partie.",
     "noTelegramAccount": "Aucun compte Telegram connecté",
+    "slackAccount": "Compte Slack",
+    "slackAccountHint": "Les notifications Slack de ce projet arrivent sur votre compte dans l'espace de travail Slack {workspace}.",
+    "noSlackAccount": "Aucun compte Slack connecté",
+    "slackConnected": "Connecté",
+    "slackConnect": "Connecter",
+    "slackDisconnect": "Déconnecter",
+    "slackConnectedToast": "Compte Slack connecté",
+    "slackConnecting": "Connexion de votre compte Slack…",
+    "slackConnectFailed": "Compte Slack non connecté",
+    "slackConnectCancelled": "La connexion a été annulée dans Slack. Reconnectez-vous depuis les paramètres de notification du projet.",
+    "slackBack": "Revenir à l'app",
     "preferencesSaved": "Préférences de notification enregistrées"
   },
   "transfer": {

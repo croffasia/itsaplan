@@ -98,6 +98,7 @@
     "description": "Выберите, о каких событиях задач вы получаете уведомления и куда.",
     "email": "Почта",
     "telegram": "Telegram",
+    "slack": "Slack",
     "push": "Push",
     "events": {
       "assigned": "Назначен на задачу",
@@ -110,6 +111,17 @@
     "telegramAccount": "Аккаунт Telegram",
     "telegramAccountHint": "Telegram-уведомления приходят в аккаунт, подключённый к вашему профилю, по всем проектам, где вы состоите.",
     "noTelegramAccount": "Аккаунт Telegram не подключён",
+    "slackAccount": "Аккаунт Slack",
+    "slackAccountHint": "Уведомления Slack из этого проекта приходят в ваш аккаунт в рабочем пространстве Slack {workspace}.",
+    "noSlackAccount": "Аккаунт Slack не подключён",
+    "slackConnected": "Подключён",
+    "slackConnect": "Подключить",
+    "slackDisconnect": "Отключить",
+    "slackConnectedToast": "Аккаунт Slack подключён",
+    "slackConnecting": "Подключаем аккаунт Slack…",
+    "slackConnectFailed": "Аккаунт Slack не подключён",
+    "slackConnectCancelled": "Подключение отменено в Slack. Подключите заново в настройках уведомлений проекта.",
+    "slackBack": "Вернуться в приложение",
     "preferencesSaved": "Настройки уведомлений сохранены"
   },
   "transfer": {

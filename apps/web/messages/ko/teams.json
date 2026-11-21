@@ -946,6 +946,18 @@
       "removePrice": "가격 제거",
       "save": "가격 저장"
     },
+    "slack": {
+      "title": "Slack",
+      "description": "이 워크스페이스의 프로젝트가 알림을 보낼 때 쓰는 Slack 앱입니다.",
+      "saved": "Slack 설정이 저장되었습니다",
+      "notifications": "Slack 알림",
+      "notificationsHint": "켜면 Slack 계정을 연결한 멤버가 선택한 이벤트를 다이렉트 메시지로 받습니다.",
+      "app": "Slack 앱",
+      "instanceApp": "인스턴스 앱",
+      "ownApp": "자체 앱",
+      "instanceAppHint": "인스턴스 관리자가 설정했습니다. 멤버에게 {workspace} Slack 워크스페이스 계정이 필요합니다.",
+      "instanceMissing": "인스턴스 관리자가 Slack 앱을 설정하지 않았습니다. 여기서 설정하려면 '자체 앱'을 선택하세요."
+    },
     "queue": {
       "title": "에이전트 실행"
     }

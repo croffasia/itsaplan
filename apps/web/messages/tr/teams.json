@@ -946,6 +946,18 @@
       "removePrice": "Fiyatı kaldır",
       "save": "Fiyatı kaydet"
     },
+    "slack": {
+      "title": "Slack",
+      "description": "Bu çalışma alanındaki projelerin bildirim gönderdiği Slack uygulaması.",
+      "saved": "Slack ayarları kaydedildi",
+      "notifications": "Slack bildirimleri",
+      "notificationsHint": "Açıkken Slack hesabını bağlayan üyeler, seçtikleri olaylar için doğrudan mesaj alır.",
+      "app": "Slack uygulaması",
+      "instanceApp": "Örnek uygulaması",
+      "ownApp": "Kendi uygulaması",
+      "instanceAppHint": "Örnek yöneticisi tarafından kuruldu. Üyelerin {workspace} Slack çalışma alanında hesabı olmalıdır.",
+      "instanceMissing": "Örnek yöneticisi bir Slack uygulaması kurmadı. Burada kurmak için \"Kendi uygulaması\" seçeneğini seçin."
+    },
     "queue": {
       "title": "Ajan çalıştırmaları"
     }

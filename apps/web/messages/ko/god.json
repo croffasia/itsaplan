@@ -410,6 +410,12 @@
     "botTokenHint": "저장할 때 Telegram에서 토큰이 유효한지 확인합니다. 잘못된 토큰은 이 화면에서 거부됩니다.",
     "resolvedHint": "토큰에서 확인된 정보입니다. 계정을 연결할 때 사용자에게 표시되는 봇입니다."
   },
+  "slack": {
+    "saved": "Slack 설정이 저장되었습니다",
+    "app": "Slack 앱",
+    "appConfigured": "켜면 멤버가 프로젝트 알림 설정에서 Slack 계정을 연결할 수 있습니다.",
+    "appMissing": "앱을 켜려면 봇 토큰, Client ID, 클라이언트 시크릿을 추가하세요."
+  },
   "email": {
     "saved": "이메일 서비스 공급자 설정이 저장되었습니다",
     "provider": "이메일 서비스 공급자",

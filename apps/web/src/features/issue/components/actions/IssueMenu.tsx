@@ -20,6 +20,7 @@ import {
 import type { ActionDef } from '@/lib/api/endpoints/actions';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { getIssue, type Issue, type IssuePatch } from '@/lib/api/endpoints/issues';
+import { matchedActions } from '@/utils/actions';
 import { actionIcon } from '@/utils/actionIcons';
 import { useActionsQuery } from '@/services/actions.service';
 import { useRestoreIssue, useUpdateIssue } from '@/services/issues.service';
@@ -30,7 +31,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import type { ShellContext } from '@/context/shellContext';
 import { useArchiveAction } from '../../hooks/useArchiveAction';
-import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueActions';
+import { ApplyActionDialog, DeleteIssueDialog } from './IssueActions';
 import { buildIssueBranchName, buildIssuePrompt } from '../../utils/issuePrompt';
 import { writeClipboardText } from '../../utils/clipboard';
 import { delegatableAgents } from '../../utils/delegates';

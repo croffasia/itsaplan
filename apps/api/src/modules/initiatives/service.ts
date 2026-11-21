@@ -1,7 +1,7 @@
 import { db, initiative, initiativeLabel, issue, label, projectColumn, user } from '@repo/db';
 import { and, asc, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
 import { labelNames, rowSide } from '#modules/issues/activity';
-import { getMembership } from '#modules/members/service';
+import { assertAssignableMember } from '#modules/members/service';
 import { HttpError, iso, num } from '#shared/lib';
 import { computeHealth, type Health } from './health';
 import { recordActivity, logInitiativeUpdate, type InitiativeSnapshot } from './activity';
@@ -295,16 +295,6 @@ export interface NewInitiativeInput {
   labelIds?: number[];
 }
 
-async function assertInitiativeOwner(
-  projectId: number,
-  ownerUserId?: string | null,
-): Promise<void> {
-  if (!ownerUserId) return;
-  if (!(await getMembership(projectId, ownerUserId))) {
-    throw new HttpError(400, 'Initiative owner must be a project member');
-  }
-}
-
 async function assertInitiativeLabels(projectId: number, labelIds?: number[]): Promise<void> {
   const ids = [...new Set(labelIds ?? [])];
   if (ids.length === 0) return;
@@ -327,9 +317,10 @@ function assertDateOrder(startDate?: string | null, targetDate?: string | null) 
 async function assertInitiativeReferences(
   projectId: number,
   input: { ownerUserId?: string | null; labelIds?: number[] },
+  currentOwnerUserId?: string | null,
 ): Promise<void> {
   await Promise.all([
-    assertInitiativeOwner(projectId, input.ownerUserId),
+    assertAssignableMember(projectId, input.ownerUserId, currentOwnerUserId, 'Initiative owner'),
     assertInitiativeLabels(projectId, input.labelIds),
   ]);
 }
@@ -400,7 +391,7 @@ export async function updateInitiative(
   const beforeRows = await db.select().from(initiative).where(eq(initiative.id, id));
   const before = beforeRows[0];
   if (!before) return null;
-  await assertInitiativeReferences(before.projectId, patch);
+  await assertInitiativeReferences(before.projectId, patch, before.ownerUserId);
   // Each date is checked against the effective other one: a patch sets one date
   // and leaves the stored value of the other in force.
   assertDateOrder(

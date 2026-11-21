@@ -62,15 +62,15 @@ function candidate(overrides: Partial<Assignee> & { userId: string; name: string
     restrictedToUserId: null,
     respondsToMention: null,
     canReadWorkItems: true,
-    active: true,
+    canAssign: true,
     ...overrides,
   };
 }
 
 const assignees: Assignee[] = [
-  candidate({ userId: 'me', name: 'Alex Active', active: true }),
-  candidate({ userId: 'peer', name: 'Bianca Active', active: true }),
-  candidate({ userId: 'ex', name: 'Carlos Departed', active: false }),
+  candidate({ userId: 'me', name: 'Alex Active', canAssign: true }),
+  candidate({ userId: 'peer', name: 'Bianca Active', canAssign: true }),
+  candidate({ userId: 'ex', name: 'Carlos Departed', canAssign: false }),
   candidate({ userId: 'bot', name: 'Helper Bot', kind: 'agent', agentKind: 'external' }),
 ];
 

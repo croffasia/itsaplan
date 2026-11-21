@@ -1,13 +1,14 @@
 // Shared model for manual actions' effects. An effect is a partial issue patch
 // over built-in fields; a field is "set" when its key is present in the object
 // (its value may be null, meaning "clear it" on apply), and an absent key leaves
-// the field unchanged. Applying an effect is a single issue update with the
-// effect object as the patch (see api.updateIssue / useUpdateIssue).
+// the field unchanged.
 
-import type { ActionEffect } from '@/lib/api/endpoints/actions';
+import type { ActionDef, ActionEffect } from '@/lib/api/endpoints/actions';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { EffectText } from '@/hooks/useEffectText';
 import { formatDate } from '@/utils/dates';
+import { matchesFilterSet } from '@/utils/filters';
 
 // The built-in fields an effect can set, in display order.
 export const EFFECT_FIELD_KEYS = [
@@ -29,6 +30,31 @@ export function effectFieldKeys(effect: ActionEffect): EffectFieldKey[] {
 // Whether the effect changes anything (has at least one set field).
 export function isEmptyEffect(effect: ActionEffect): boolean {
   return effectFieldKeys(effect).length === 0;
+}
+
+export function availableActionEffect(effect: ActionEffect, project: ProjectDetail): ActionEffect {
+  const { assigneeUserId, ...otherFields } = effect;
+  if (
+    assigneeUserId == null ||
+    project.assignees.some((a) => a.userId === assigneeUserId && a.canAssign)
+  ) {
+    return effect;
+  }
+  return otherFields;
+}
+
+// The project's manual actions whose condition matches this issue, in saved
+// order. Shared by the issue detail Actions block and the context menu.
+export function matchedActions(
+  actions: ActionDef[],
+  project: ProjectDetail,
+  issue: Issue,
+): ActionDef[] {
+  return actions.filter(
+    (a) =>
+      matchesFilterSet(issue, a.condition, project) &&
+      !isEmptyEffect(availableActionEffect(a.effect, project)),
+  );
 }
 
 // The display value of one set effect field, resolving ids to project names.

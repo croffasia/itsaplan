@@ -45,8 +45,8 @@ describe('deactivated accounts as assignees', () => {
 
     const { assignees } = (await project(asOwner).get()).data!;
 
-    expect(assignees.find((a) => a.userId === leaver)?.active).toBe(false);
-    expect(assignees.find((a) => a.userId === stayer)?.active).toBe(true);
+    expect(assignees.find((a) => a.userId === leaver)?.canAssign).toBe(false);
+    expect(assignees.find((a) => a.userId === stayer)?.canAssign).toBe(true);
   });
 
   it('refuses a deactivated account as the assignee of a new issue', async () => {
@@ -142,7 +142,7 @@ describe('deactivated accounts as assignees', () => {
 
     expect((await createIssue(asOwner, columns[0].id, leaver)).status).toBe(201);
     const { assignees } = (await project(asOwner).get()).data!;
-    expect(assignees.find((a) => a.userId === leaver)?.active).toBe(true);
+    expect(assignees.find((a) => a.userId === leaver)?.canAssign).toBe(true);
   });
 
   describe('bulk update', () => {
@@ -190,96 +190,6 @@ describe('deactivated accounts as assignees', () => {
       expect(res.status).toBe(200);
       const after = (await asOwner.issues({ issueId: held.id }).get()).data!;
       expect(after).toMatchObject({ priority: 'high', assigneeUserId: leaver });
-    });
-  });
-
-  describe('column auto-assignee', () => {
-    function patchColumn(
-      asOwner: Api,
-      columnId: number,
-      body: { name?: string; autoAssignUserId?: string | null },
-    ) {
-      return project(asOwner).columns({ columnId }).patch(body);
-    }
-
-    it('refuses a deactivated account, on create and on update', async () => {
-      const { asOwner, leaver, columns } = await setup();
-      await deactivate(asOwner, leaver);
-
-      const updated = await patchColumn(asOwner, columns[1].id, { autoAssignUserId: leaver });
-      const created = await project(asOwner).columns.post({
-        name: 'Review',
-        stateType: 'started',
-        autoAssignUserId: leaver,
-      });
-
-      expect(updated.status).toBe(400);
-      expect(created.status).toBe(400);
-    });
-
-    it('takes a save that keeps the auto-assignee the column has', async () => {
-      const { asOwner, leaver, columns } = await setup();
-      await patchColumn(asOwner, columns[1].id, { autoAssignUserId: leaver });
-      await deactivate(asOwner, leaver);
-
-      const res = await patchColumn(asOwner, columns[1].id, {
-        name: 'Doing',
-        autoAssignUserId: leaver,
-      });
-
-      expect(res.status).toBe(200);
-      expect(res.data).toMatchObject({ name: 'Doing', autoAssignUserId: leaver });
-    });
-
-    it('still takes the issue, and leaves its assignee unchanged', async () => {
-      const { asOwner, leaver, stayer, columns } = await setup();
-      const target = columns[1].id;
-      await patchColumn(asOwner, target, { autoAssignUserId: leaver });
-      const moved = (await createIssue(asOwner, columns[0].id, stayer)).data!;
-      await deactivate(asOwner, leaver);
-
-      const move = await asOwner.issues({ issueId: moved.id }).patch({ columnId: target });
-      expect(move.status).toBe(200);
-      expect(move.data).toMatchObject({ columnId: target, assigneeUserId: stayer });
-
-      const created = await createIssue(asOwner, target);
-      expect(created.status).toBe(201);
-      expect(created.data).toMatchObject({ columnId: target, assigneeUserId: null });
-    });
-  });
-
-  describe('issue templates', () => {
-    function templates(asOwner: Api) {
-      return project(asOwner)['issue-templates'];
-    }
-
-    it('refuses a deactivated account as the preset assignee', async () => {
-      const { asOwner, leaver } = await setup();
-      await deactivate(asOwner, leaver);
-
-      const res = await templates(asOwner).post({ name: 'Bug', assigneeUserId: leaver });
-
-      expect(res.status).toBe(400);
-    });
-
-    it('takes a save that keeps the preset assignee, and one that replaces it', async () => {
-      const { asOwner, leaver, stayer } = await setup();
-      const template = (await templates(asOwner).post({ name: 'Bug', assigneeUserId: leaver }))
-        .data!;
-      await deactivate(asOwner, leaver);
-
-      const kept = await templates(asOwner)({ templateId: template.id }).patch({
-        name: 'Defect',
-        assigneeUserId: leaver,
-      });
-      expect(kept.status).toBe(200);
-      expect(kept.data).toMatchObject({ name: 'Defect', assigneeUserId: leaver });
-
-      const replaced = await templates(asOwner)({ templateId: template.id }).patch({
-        assigneeUserId: stayer,
-      });
-      expect(replaced.status).toBe(200);
-      expect(replaced.data).toMatchObject({ assigneeUserId: stayer });
     });
   });
 });

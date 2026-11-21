@@ -1,11 +1,12 @@
 import { db, projectAction } from '@repo/db';
 import { and, eq, sql } from 'drizzle-orm';
-import { iso, num } from '#shared/lib';
+import { HttpError, iso, num } from '#shared/lib';
+import { assertIssueLabels, setIssueLabels, updateIssue } from '#modules/issues/service';
+import { actionEffectValidator } from './model';
 
 // Manual actions: saved macros on a project. condition is a filter set deciding
 // which issues the action applies to (empty = always); effect is a partial issue
-// patch applied in one update. Both jsonb blobs are owned by the UI; this layer
-// stores and returns them without inspecting their shape.
+// patch. The saved definition is stored verbatim and validated when run.
 
 export interface ActionRow {
   id: number;
@@ -70,6 +71,27 @@ export async function createAction(input: {
 export async function getAction(id: number): Promise<ActionRow | null> {
   const rows = await db.select().from(projectAction).where(eq(projectAction.id, id));
   return rows[0] ? mapAction(rows[0]) : null;
+}
+
+export async function applyAction(
+  projectId: number,
+  issueId: number,
+  actionId: number,
+  actorUserId: string,
+) {
+  const action = await getAction(actionId);
+  if (!action || action.projectId !== projectId) throw new HttpError(404, 'Action not found');
+  const effect = actionEffectValidator.safeParse(action.effect);
+  if (!effect.success) throw new HttpError(400, 'Invalid action effect');
+  const { labelIds, ...patch } = effect.data;
+  await assertIssueLabels(projectId, labelIds);
+  const updated = await updateIssue(issueId, patch, actorUserId, { skipUnavailableAssignee: true });
+  if (!updated) throw new HttpError(404, 'Issue not found');
+  if (labelIds) {
+    await setIssueLabels(projectId, issueId, labelIds, actorUserId);
+    updated.labelIds = labelIds;
+  }
+  return updated;
 }
 
 // Updates only the provided fields. condition/effect are replaced wholesale (not

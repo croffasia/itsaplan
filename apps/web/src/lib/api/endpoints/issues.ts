@@ -326,6 +326,9 @@ export const getIssueBySeq = (projectKey: string, seq: number, signal?: AbortSig
 
 export const listIssueCycles = (id: number) => request<IssueCycleEntry[]>(`/issues/${id}/cycles`);
 
+export const applyIssueAction = (id: number, actionId: number) =>
+  request<Issue>(`/issues/${id}/actions/${actionId}`, { method: 'POST' });
+
 export const updateIssue = (id: number, patch: IssuePatch) =>
   request<Issue>(`/issues/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
 

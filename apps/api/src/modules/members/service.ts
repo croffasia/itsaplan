@@ -11,7 +11,7 @@ import {
   userPreference,
 } from '@repo/db';
 import { and, desc, eq, ilike, isNotNull, isNull, notExists, or, sql } from 'drizzle-orm';
-import { iso } from '#shared/lib';
+import { HttpError, iso } from '#shared/lib';
 import { DEFAULT_TIMEZONE } from '#modules/user-preferences/service';
 import {
   defaultMemberPermissions,
@@ -104,12 +104,43 @@ export async function getMembership(projectId: number, userId: string): Promise<
   return rows[0] ? (rows[0].role as MemberRole) : null;
 }
 
-// Whether the account can still be given work: false once it is deactivated (user.active),
-// by god or the instance's SCIM provider. Its projects and issues stay, so a write that
-// only keeps what an issue already holds does not ask; one that hands work over does.
-export async function isAccountActive(userId: string): Promise<boolean> {
-  const rows = await db.select({ active: user.active }).from(user).where(eq(user.id, userId));
-  return rows[0] ? !isAccountDeactivated(rows[0]) : false;
+function assignmentEligibility(member?: { active: boolean | null }) {
+  if (!member) return 'not_member';
+  return isAccountDeactivated(member) ? 'inactive' : 'assignable';
+}
+
+export async function getAssignmentEligibility(projectId: number, userId: string) {
+  const [member] = await db
+    .select({ active: user.active })
+    .from(projectMember)
+    .innerJoin(user, eq(user.id, projectMember.userId))
+    .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, userId)));
+  return assignmentEligibility(member);
+}
+
+export function assertAssignmentEligibility(
+  eligibility: Awaited<ReturnType<typeof getAssignmentEligibility>>,
+  unchanged = false,
+  field = 'Assignee',
+): void {
+  if (eligibility === 'not_member') throw new HttpError(400, field + ' must be a project member');
+  if (eligibility === 'inactive' && !unchanged)
+    throw new HttpError(400, field + ' must be an active account');
+}
+
+export async function assertAssignableMember(
+  projectId: number,
+  userId?: string | null,
+  currentUserId?: string | null,
+  field?: string,
+): Promise<void> {
+  if (userId) {
+    assertAssignmentEligibility(
+      await getAssignmentEligibility(projectId, userId),
+      userId === currentUserId,
+      field,
+    );
+  }
 }
 
 export function toMemberContext(role: MemberRole, rolePermissions: unknown): MemberContext {
@@ -218,10 +249,8 @@ export interface AssigneeCandidate {
   // always reaches as a notification.
   respondsToMention: boolean | null;
   canReadWorkItems: boolean;
-  // False for a deactivated account. It stays in the list so the issues it holds still
-  // resolve to a name, and so filters, member fields and mentions still reach it; a
-  // picker of assignees leaves it out.
-  active: boolean;
+  // Existing assignments and filters still resolve candidates that cannot take new work.
+  canAssign: boolean;
 }
 
 export async function listAssigneeCandidates(projectId: number): Promise<AssigneeCandidate[]> {
@@ -276,7 +305,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
       email: r.email,
       username: r.username,
       image: r.image,
-      active: !isAccountDeactivated(r),
+      canAssign: assignmentEligibility(r) === 'assignable',
       kind: 'member',
       agentKind: null,
       role: r.role as MemberRole,
@@ -293,7 +322,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
     email: r.email,
     username: r.username,
     image: r.image,
-    active: !isAccountDeactivated(r),
+    canAssign: assignmentEligibility(r) === 'assignable',
     kind: 'agent',
     agentKind: r.agentKind as 'external' | 'internal',
     role: null,

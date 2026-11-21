@@ -4,16 +4,16 @@ import type { Assignee, ProjectDetail } from '@/lib/api/endpoints/projects';
 import { EMPTY_FILTER_SET } from '@/utils/filters';
 import { assignableMembers, buildGroups, newIssueInput, type GroupLabels } from './project';
 
-const me = { kind: 'member', userId: 'me', name: 'Me', active: true } as Assignee;
-const activePeer = { kind: 'member', userId: 'peer', name: 'Peer', active: true } as Assignee;
-const departed = { kind: 'member', userId: 'ex', name: 'Departed', active: false } as Assignee;
+const me = { kind: 'member', userId: 'me', name: 'Me', canAssign: true } as Assignee;
+const activePeer = { kind: 'member', userId: 'peer', name: 'Peer', canAssign: true } as Assignee;
+const departed = { kind: 'member', userId: 'ex', name: 'Departed', canAssign: false } as Assignee;
 const departedIdle = {
   kind: 'member',
   userId: 'ex-idle',
   name: 'Departed Idle',
-  active: false,
+  canAssign: false,
 } as Assignee;
-const agent = { kind: 'agent', userId: 'bot', name: 'Bot', active: true } as Assignee;
+const agent = { kind: 'agent', userId: 'bot', name: 'Bot', canAssign: true } as Assignee;
 
 const project = {
   columns: [{ id: 10 }, { id: 11 }],

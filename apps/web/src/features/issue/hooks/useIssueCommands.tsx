@@ -18,6 +18,7 @@ import {
 import type { ActionDef } from '@/lib/api/endpoints/actions';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { IssuePatch } from '@/lib/api/endpoints/issues';
+import { matchedActions } from '@/utils/actions';
 import { actionIcon } from '@/utils/actionIcons';
 import { calendarSystem, toDateStr } from '@/utils/dates';
 import { useActionsQuery } from '@/services/actions.service';
@@ -30,11 +31,7 @@ import { useFormatter, useTranslations } from 'next-intl';
 import { PRIORITY_FIELDS } from '@/components/common/fields/priorityFields';
 import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import type { Command, CommandSection } from '@/utils/commands';
-import {
-  ApplyActionDialog,
-  DeleteIssueDialog,
-  matchedActions,
-} from '../components/actions/IssueActions';
+import { ApplyActionDialog, DeleteIssueDialog } from '../components/actions/IssueActions';
 import { useArchiveAction } from './useArchiveAction';
 import { StateIcon } from '../components/shared/IssueIcons';
 import { dueDatePresets } from '../utils/dueDatePresets';

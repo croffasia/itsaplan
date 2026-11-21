@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import type { ActionDef } from '@/lib/api/endpoints/actions';
+import type { ActionDef, ActionEffect } from '@/lib/api/endpoints/actions';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue, SubtaskDisposition } from '@/lib/api/endpoints/issues';
-import { matchesFilterSet } from '@/utils/filters';
-import { describeEffect } from '@/utils/actions';
+import { availableActionEffect, describeEffect, isEmptyEffect } from '@/utils/actions';
 import { useEffectText } from '@/hooks/useEffectText';
 import { dispositionReady, removalCount } from '@/utils/subtasks';
 import {
@@ -17,27 +16,25 @@ import SubtaskDisposalChoice from './SubtaskDisposalChoice';
 import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 
-// The project's manual actions whose condition matches this issue, in saved
-// order. Shared by the issue detail Actions block and the context menu.
-export function matchedActions(
-  actions: ActionDef[],
-  project: ProjectDetail,
-  issue: Issue,
-): ActionDef[] {
-  return actions.filter((a) => matchesFilterSet(issue, a.condition, project));
-}
-
 // The confirm-dialog body for running an action: the changes it will apply, one
 // per line.
-function EffectSummary({ action, project }: { action: ActionDef; project: ProjectDetail }) {
+function EffectSummary({
+  name,
+  effect,
+  project,
+}: {
+  name: string;
+  effect: ActionEffect;
+  project: ProjectDetail;
+}) {
   const t = useTranslations('issue.actions');
   const effectText = useEffectText();
-  const lines = describeEffect(action.effect, project, effectText);
+  const lines = describeEffect(effect, project, effectText);
   return (
     <div className="text-sm text-muted-foreground">
       <p>
         {t.rich('applyDescription', {
-          action: action.name,
+          action: name,
           v: (chunks: ReactNode) => <span className="font-medium text-foreground">{chunks}</span>,
         })}
       </p>
@@ -126,17 +123,19 @@ export function ApplyActionDialog({
 }) {
   const t = useTranslations('issue.actions');
   const updateIssue = useUpdateIssue(project.project.ref);
+  const effect = availableActionEffect(action.effect, project);
   return (
     <ConfirmDialog
       title={action.name}
       confirmLabel={t('apply')}
+      confirmDisabled={isEmptyEffect(effect)}
       onConfirm={async () => {
-        await updateIssue.mutateAsync({ id: issue.id, patch: action.effect });
+        await updateIssue.mutateAsync({ id: issue.id, patch: effect, actionId: action.id });
         onClose();
       }}
       onClose={onClose}
     >
-      <EffectSummary action={action} project={project} />
+      <EffectSummary name={action.name} effect={effect} project={project} />
     </ConfirmDialog>
   );
 }

@@ -67,7 +67,7 @@ export type NewIssueDefaults = Partial<
 // accounts are active. Deactivated accounts stay in project.assignees so existing
 // assignments, filters, member fields and mentions keep resolving.
 export function assignableMembers(assignees: Assignee[]): Assignee[] {
-  return assignees.filter((a) => a.kind === 'member' && a.active);
+  return assignees.filter((a) => a.kind === 'member' && a.canAssign);
 }
 
 // A new issue from its defaults. What they leave out gets the first column, the
@@ -396,11 +396,11 @@ function allGroups(project: ProjectDetail, group: GroupField, labels: GroupLabel
       }
       return [
         ...project.assignees
-          .filter((a) => a.kind === 'member' && (a.active || held.has(a.userId)))
+          .filter((a) => a.kind === 'member' && (a.canAssign || held.has(a.userId)))
           .map((a) => ({
             key: `a${a.userId}`,
             name: a.name,
-            assign: a.active ? patchOnly({ assigneeUserId: a.userId }) : null,
+            assign: a.canAssign ? patchOnly({ assigneeUserId: a.userId }) : null,
             values: [a.userId],
           })),
         {

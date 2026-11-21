@@ -7,7 +7,7 @@ async function setupOwnerProject() {
   const owner = await signUpTestUser();
   const asOwner = authedApi(owner.cookie);
   const project = await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
-  return { asOwner, projectId: project.data!.id };
+  return { asOwner, owner, projectId: project.data!.id };
 }
 
 // Adds a member on the default role, which grants no `actions` permission.
@@ -126,6 +126,99 @@ describe('actions', () => {
       const { asOwner } = await setupOwnerProject();
       const res = await asOwner.projects({ projectKey: 'NOPE' }).actions.quick.get();
       expect(res.status).toBe(404);
+    });
+  });
+
+  describe('apply', () => {
+    it('applies state, priority and labels while keeping the assignee after deactivation', async () => {
+      const { asOwner, owner } = await setupOwnerProject();
+      await addDefaultMember(asOwner);
+      const project = asOwner.projects({ projectKey: 'MKT' });
+      const { assignees, columns } = (await project.get()).data!;
+      const departing = assignees.find((a) => a.userId !== owner.userId)!.userId;
+      const created = await project.issues.post({
+        title: 'Task',
+        columnId: columns[0].id,
+        assigneeUserId: owner.userId,
+      });
+      const label = (await project.labels.post({ name: 'Urgent' })).data!;
+      const saved = await project.actions.post({
+        name: 'Escalate',
+        effect: {
+          assigneeUserId: departing,
+          columnId: columns[1].id,
+          priority: 'high',
+          labelIds: [label.id],
+        },
+      });
+      expect(saved.status).toBe(201);
+      expect((await asOwner.god.users({ userId: departing }).deactivate.post()).status).toBe(200);
+
+      const item = asOwner.issues({ issueId: created.data!.id });
+      const result = await item.actions({ actionId: saved.data!.id }).post();
+      expect(result.status).toBe(200);
+      expect((await item.get()).data).toMatchObject({
+        assigneeUserId: owner.userId,
+        columnId: columns[1].id,
+        priority: 'high',
+        labelIds: [label.id],
+      });
+      expect((await project.actions.quick.get()).data?.[0]?.effect).toMatchObject({
+        assigneeUserId: departing,
+      });
+    });
+
+    it('assigns an active member, ignores an unavailable assignment and clears an assignee', async () => {
+      const { asOwner, owner } = await setupOwnerProject();
+      await addDefaultMember(asOwner);
+      const project = asOwner.projects({ projectKey: 'MKT' });
+      const { assignees, columns } = (await project.get()).data!;
+      const member = assignees.find((a) => a.userId !== owner.userId)!.userId;
+      const created = await project.issues.post({ title: 'Task', columnId: columns[0].id });
+      const item = asOwner.issues({ issueId: created.data!.id });
+      const assign = await project.actions.post({
+        name: 'Assign',
+        effect: { assigneeUserId: member },
+      });
+      const run = item.actions({ actionId: assign.data!.id });
+      const assigned = await run.post();
+      expect(assigned.status).toBe(200);
+      expect(assigned.data!.assigneeUserId).toBe(member);
+
+      expect((await asOwner.god.users({ userId: member }).deactivate.post()).status).toBe(200);
+      await item.patch({ assigneeUserId: owner.userId });
+      const skipped = await run.post();
+      expect(skipped.status).toBe(200);
+      expect(skipped.data!.assigneeUserId).toBe(owner.userId);
+
+      const clear = await project.actions.post({ name: 'Clear', effect: { assigneeUserId: null } });
+      const cleared = await item.actions({ actionId: clear.data!.id }).post();
+      expect(cleared.status).toBe(200);
+      expect(cleared.data!.assigneeUserId).toBeNull();
+    });
+
+    it('requires issue edit permission and an action from the issue project', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const project = asOwner.projects({ projectKey: 'MKT' });
+      const view = await project.get();
+      const created = await project.issues.post({
+        title: 'Task',
+        columnId: view.data!.columns[0].id,
+      });
+      const issueId = created.data!.id;
+      const local = await project.actions.post({ name: 'Local', effect: { priority: 'high' } });
+      const outsider = authedApi((await signUpTestUser()).cookie);
+      expect(
+        (await outsider.issues({ issueId }).actions({ actionId: local.data!.id }).post()).status,
+      ).toBe(403);
+
+      await createProject(asOwner, { key: 'OPS', name: 'Operations' });
+      const foreign = await asOwner
+        .projects({ projectKey: 'OPS' })
+        .actions.post({ name: 'Foreign', effect: { priority: 'high' } });
+      const item = asOwner.issues({ issueId });
+      expect((await item.actions({ actionId: foreign.data!.id }).post()).status).toBe(404);
+      expect((await item.get()).data!.priority).toBeNull();
     });
   });
 

@@ -83,7 +83,7 @@ export interface Assignee {
   canReadWorkItems: boolean;
   // False for a deactivated account: still listed so existing assignments, filters,
   // member fields and mentions keep resolving, while assignee pickers leave it out.
-  active: boolean;
+  canAssign: boolean;
 }
 
 // The caller's own role in a project (owner/member). Returned with the project;

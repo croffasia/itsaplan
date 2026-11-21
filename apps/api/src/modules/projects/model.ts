@@ -206,7 +206,7 @@ const AssigneeCandidateResponse = t.Object({
   canReadWorkItems: t.Boolean(),
   // False for a deactivated account: it holds the issues it had, but is not offered
   // for new assignments and the API refuses it as a new assignee.
-  active: t.Boolean(),
+  canAssign: t.Boolean(),
 });
 
 // The caller's own role in a project (from MemberContext in members/service). The

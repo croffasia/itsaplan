@@ -1,7 +1,7 @@
 import { db, issueTemplate, issueTemplateLabel, issueType, label, projectColumn } from '@repo/db';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
-import { getMembership, isAccountActive } from '#modules/members/service';
+import { assertAssignableMember } from '#modules/members/service';
 
 // Data access for issue templates: the presets a new issue can be created from.
 // Every template belongs to a project, and each of its properties is optional —
@@ -114,15 +114,7 @@ async function assertPresets(
       .where(and(eq(projectColumn.id, input.columnId), eq(projectColumn.projectId, projectId)));
     if (rows.length === 0) throw new HttpError(400, 'Column must belong to this project');
   }
-  if (input.assigneeUserId) {
-    const role = await getMembership(projectId, input.assigneeUserId);
-    if (!role) throw new HttpError(400, 'Assignee must be a project member');
-    if (
-      input.assigneeUserId !== currentAssigneeUserId &&
-      !(await isAccountActive(input.assigneeUserId))
-    )
-      throw new HttpError(400, 'Assignee must be an active account');
-  }
+  await assertAssignableMember(projectId, input.assigneeUserId, currentAssigneeUserId);
   const labelIds = [...new Set(input.labelIds ?? [])];
   if (labelIds.length > 0) {
     const rows = await db

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'bun:test';
 import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { createAgent } from '#tests/helpers/agents';
 import { createRole } from '#tests/helpers/roles';
 
 type Client = ReturnType<typeof authedApi>;
@@ -1540,5 +1541,327 @@ describe('documents', () => {
     expect(retained.data).toHaveLength(20);
     expect(retained.data?.[0].version).toBe(version);
     expect(retained.data?.at(-1)!.version).toBe(version - 19);
+  });
+
+  it('shares a private page with chosen members and hides it from the rest', async () => {
+    const owner = await setupOwnerProject();
+    const guest = await addMember(owner.api);
+    const outsider = await addMember(owner.api);
+    const page = (
+      await documents(owner.api).post({ title: 'Contacts', content: 'Phone list', isPrivate: true })
+    ).data!;
+    expect(page).toMatchObject({ visibility: 'private', memberIds: [] });
+
+    const shared = await documents(owner.api)({ documentId: page.id }).access.post({
+      version: page.version,
+      isPrivate: true,
+      memberIds: [guest.userId, guest.userId, owner.userId],
+    });
+    expect(shared.status).toBe(200);
+    expect(shared.data).toMatchObject({
+      isPrivate: true,
+      visibility: 'restricted',
+      memberIds: [guest.userId],
+      version: 2,
+    });
+
+    expect((await documents(guest.api).get({ query: {} })).data).toMatchObject([
+      { id: page.id, isPrivate: true, visibility: 'restricted' },
+    ]);
+    expect((await documents(guest.api)({ documentId: page.id }).get()).data).toMatchObject({
+      content: 'Phone list',
+      memberIds: [guest.userId],
+    });
+    expect((await documents(outsider.api).get({ query: {} })).data).toEqual([]);
+    expect((await documents(outsider.api)({ documentId: page.id }).get()).status).toBe(404);
+
+    const edited = await documents(guest.api)({ documentId: page.id }).patch({
+      version: 2,
+      content: 'Phone list, checked',
+    });
+    expect(edited.data).toMatchObject({ content: 'Phone list, checked', version: 3 });
+    expect(
+      (
+        await documents(guest.api)({ documentId: page.id }).access.post({
+          version: 3,
+          isPrivate: true,
+          memberIds: [guest.userId, outsider.userId],
+        })
+      ).status,
+    ).toBe(403);
+    expect(
+      (await documents(guest.api)({ documentId: page.id }).archive.post({ version: 3 })).status,
+    ).toBe(403);
+
+    const kept = await documents(owner.api)({ documentId: page.id }).access.post({
+      version: 3,
+      isPrivate: true,
+    });
+    expect(kept.data).toMatchObject({ memberIds: [guest.userId], version: 3 });
+
+    const narrowed = await documents(owner.api)({ documentId: page.id }).access.post({
+      version: 3,
+      isPrivate: true,
+      memberIds: [],
+    });
+    expect(narrowed.data).toMatchObject({ visibility: 'private', memberIds: [], version: 4 });
+    expect((await documents(guest.api)({ documentId: page.id }).get()).status).toBe(404);
+
+    await documents(owner.api)({ documentId: page.id }).access.post({
+      version: 4,
+      isPrivate: true,
+      memberIds: [guest.userId],
+    });
+    const opened = await documents(owner.api)({ documentId: page.id }).access.post({
+      version: 5,
+      isPrivate: false,
+    });
+    expect(opened.data).toMatchObject({ visibility: 'public', memberIds: [] });
+    const closed = await documents(owner.api)({ documentId: page.id }).access.post({
+      version: opened.data!.version,
+      isPrivate: true,
+    });
+    expect(closed.data).toMatchObject({ visibility: 'private', memberIds: [] });
+    expect((await documents(guest.api)({ documentId: page.id }).get()).status).toBe(404);
+  });
+
+  it('shares a page only with project members whose role can read Docs', async () => {
+    const owner = await setupOwnerProject();
+    const guest = await addMember(owner.api);
+    const blockedRole = await createRole(owner.api, 'MKT', {
+      name: 'No documents',
+      permissions: { work_items: { read: true } },
+    });
+    const blocked = await addMember(owner.api, blockedRole.data!.id);
+    const stranger = await signUpTestUser();
+    const page = (await documents(owner.api).post({ title: 'Notes', isPrivate: true })).data!;
+
+    const candidates = await documents(owner.api)['access-candidates'].get();
+    expect(candidates.status).toBe(200);
+    expect(candidates.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ userId: guest.userId, kind: 'member', canAccess: true }),
+        expect.objectContaining({ userId: blocked.userId, kind: 'member', canAccess: false }),
+      ]),
+    );
+    expect(candidates.data!.some((candidate) => candidate.userId === stranger.userId)).toBe(false);
+
+    for (const userId of [blocked.userId, stranger.userId]) {
+      expect(
+        (
+          await documents(owner.api)({ documentId: page.id }).access.post({
+            version: page.version,
+            isPrivate: true,
+            memberIds: [guest.userId, userId],
+          })
+        ).status,
+      ).toBe(400);
+    }
+    expect((await documents(guest.api)({ documentId: page.id }).get()).status).toBe(404);
+
+    const agent = (
+      await createAgent(owner.api, 'MKT', { name: 'Doc Bot', username: 'docbot', kind: 'internal' })
+    ).data!.agent;
+    expect(candidates.data!.every((candidate) => candidate.kind === 'member')).toBe(true);
+    expect(
+      (
+        await documents(owner.api)({ documentId: page.id }).access.post({
+          version: page.version,
+          isPrivate: true,
+          memberIds: [agent.userId],
+        })
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await documents(owner.api)({ documentId: page.id }).access.post({
+          version: page.version,
+          isPrivate: false,
+          memberIds: [guest.userId],
+        })
+      ).status,
+    ).toBe(400);
+
+    const readerRole = await createRole(owner.api, 'MKT', {
+      name: 'Reader',
+      permissions: { documents: { read: true } },
+    });
+    const reader = await addMember(owner.api, readerRole.data!.id);
+    expect((await documents(reader.api)['access-candidates'].get()).status).toBe(403);
+  });
+
+  it('keeps the shared list when a change arrives with a stale version', async () => {
+    const owner = await setupOwnerProject();
+    const guest = await addMember(owner.api);
+    const second = await addMember(owner.api);
+    const page = (await documents(owner.api).post({ title: 'Notes', isPrivate: true })).data!;
+    await documents(owner.api)({ documentId: page.id }).access.post({
+      version: page.version,
+      isPrivate: true,
+      memberIds: [guest.userId],
+    });
+
+    const stale = await documents(owner.api)({ documentId: page.id }).access.post({
+      version: page.version,
+      isPrivate: true,
+      memberIds: [second.userId],
+    });
+    expect(stale.status).toBe(409);
+    expect((await documents(owner.api)({ documentId: page.id }).get()).data).toMatchObject({
+      memberIds: [guest.userId],
+    });
+  });
+
+  it('ends a share when the member leaves the project or can no longer read Docs', async () => {
+    const owner = await setupOwnerProject();
+    const guest = await addMember(owner.api);
+    const second = await addMember(owner.api);
+    const third = await addMember(owner.api);
+    const page = (await documents(owner.api).post({ title: 'Notes', isPrivate: true })).data!;
+    const shared = await documents(owner.api)({ documentId: page.id }).access.post({
+      version: page.version,
+      isPrivate: true,
+      memberIds: [guest.userId, second.userId],
+    });
+
+    const members = owner.api.projects({ projectKey: 'MKT' }).members;
+    expect((await members({ userId: guest.userId }).delete()).status).toBe(204);
+    expect((await documents(owner.api)({ documentId: page.id }).get()).data).toMatchObject({
+      memberIds: [second.userId],
+    });
+
+    const blockedRole = await createRole(owner.api, 'MKT', {
+      name: 'No documents',
+      permissions: { work_items: { read: true } },
+    });
+    await members({ userId: second.userId }).patch({
+      role: 'member',
+      roleId: blockedRole.data!.id,
+    });
+    const saved = await documents(owner.api)({ documentId: page.id }).access.post({
+      version: shared.data!.version,
+      isPrivate: true,
+      memberIds: [second.userId, third.userId],
+    });
+    expect(saved.status).toBe(200);
+    expect(saved.data).toMatchObject({ memberIds: [third.userId] });
+  });
+
+  it('hides a shared page from the rest in search, links, comments and history', async () => {
+    const owner = await setupOwnerProject();
+    const guest = await addMember(owner.api);
+    const outsider = await addMember(owner.api);
+    const project = await owner.api.projects({ projectKey: 'MKT' }).get();
+    const workItem = (
+      await owner.api
+        .projects({ projectKey: 'MKT' })
+        .issues.post({ columnId: project.data!.columns[0]!.id, title: 'Call the vendor' })
+    ).data!;
+    const page = (
+      await documents(owner.api).post({ title: 'Vendors', content: 'Zephyr Ltd', isPrivate: true })
+    ).data!;
+    await documents(owner.api)({ documentId: page.id }).access.post({
+      version: page.version,
+      isPrivate: true,
+      memberIds: [guest.userId],
+    });
+    await documents(owner.api)({ documentId: page.id }).issues.post({ issueId: workItem.id });
+    const forIssue = (api: Client) => documents(api)['for-issue']({ issueId: workItem.id }).get();
+
+    expect((await documents(guest.api).get({ query: { q: 'zephyr' } })).data).toHaveLength(1);
+    expect((await forIssue(guest.api)).data).toMatchObject([{ documentId: page.id }]);
+    expect((await documents(guest.api)({ documentId: page.id }).comments.get()).status).toBe(200);
+    // A private version stays its owner's: the members a page is shared with read the
+    // page as it is now.
+    expect((await documents(guest.api)({ documentId: page.id }).revisions.get()).data).toEqual([]);
+
+    expect((await documents(outsider.api).get({ query: { q: 'zephyr' } })).data).toEqual([]);
+    expect((await forIssue(outsider.api)).data).toEqual([]);
+    expect((await documents(outsider.api)({ documentId: page.id }).comments.get()).status).toBe(
+      404,
+    );
+    expect((await documents(outsider.api)({ documentId: page.id }).revisions.get()).status).toBe(
+      404,
+    );
+  });
+
+  it('does not archive a page shared with the member who archives its parent', async () => {
+    const owner = await setupOwnerProject();
+    const guest = await addMember(owner.api);
+    const page = (await documents(owner.api).post({ title: 'Contacts', isPrivate: true })).data!;
+    const shared = await documents(owner.api)({ documentId: page.id }).access.post({
+      version: page.version,
+      isPrivate: true,
+      memberIds: [guest.userId],
+    });
+    const folder = (await documents(guest.api).post({ title: 'Folder' })).data!;
+    const moved = await documents(guest.api)({ documentId: page.id }).patch({
+      version: shared.data!.version,
+      parentId: folder.id,
+    });
+    expect(moved.status).toBe(200);
+
+    expect(
+      (await documents(guest.api)({ documentId: folder.id }).archive.post({ version: 1 })).status,
+    ).toBe(200);
+    expect((await documents(owner.api)({ documentId: page.id }).get()).data).toMatchObject({
+      archivedAt: null,
+    });
+  });
+
+  it('starts a private subpage with the people who see its private parent', async () => {
+    const owner = await setupOwnerProject();
+    const guest = await addMember(owner.api);
+    const second = await addMember(owner.api);
+    const parent = (await documents(owner.api).post({ title: 'Team notes', isPrivate: true }))
+      .data!;
+    await documents(owner.api)({ documentId: parent.id }).access.post({
+      version: parent.version,
+      isPrivate: true,
+      memberIds: [guest.userId, second.userId],
+    });
+
+    const child = await documents(guest.api).post({
+      title: 'Meeting',
+      parentId: parent.id,
+      isPrivate: true,
+    });
+    expect(child.status).toBe(201);
+    expect(child.data).toMatchObject({ ownerUserId: guest.userId, visibility: 'restricted' });
+    expect([...child.data!.memberIds].sort()).toEqual([owner.userId, second.userId].sort());
+    expect((await documents(owner.api)({ documentId: child.data!.id }).get()).data).toMatchObject({
+      parentId: parent.id,
+    });
+
+    const ownParent = (await documents(owner.api).post({ title: 'Drafts', isPrivate: true })).data!;
+    const ownChild = await documents(owner.api).post({
+      title: 'Mine',
+      parentId: ownParent.id,
+      isPrivate: true,
+    });
+    expect(ownChild.data).toMatchObject({ visibility: 'private', memberIds: [] });
+  });
+
+  it('drops the new owner from the shared list when a shared page changes owner', async () => {
+    const owner = await setupOwnerProject();
+    const guest = await addMember(owner.api);
+    const second = await addMember(owner.api);
+    const page = (await documents(owner.api).post({ title: 'Handover', isPrivate: true })).data!;
+    const shared = await documents(owner.api)({ documentId: page.id }).access.post({
+      version: page.version,
+      isPrivate: true,
+      memberIds: [guest.userId, second.userId],
+    });
+
+    const transferred = await documents(owner.api)({ documentId: page.id }).ownership.post({
+      version: shared.data!.version,
+      ownerUserId: guest.userId,
+    });
+    expect(transferred.status).toBe(200);
+    expect((await documents(guest.api)({ documentId: page.id }).get()).data).toMatchObject({
+      ownerUserId: guest.userId,
+      memberIds: [second.userId],
+    });
+    expect((await documents(owner.api)({ documentId: page.id }).get()).status).toBe(404);
   });
 });

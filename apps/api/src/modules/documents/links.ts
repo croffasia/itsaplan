@@ -6,7 +6,8 @@ import {
   projectDocumentInitiative,
   projectDocumentIssue,
 } from '@repo/db';
-import { and, asc, eq, or } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
+import { documentVisibleTo } from './access';
 import { HttpError } from '#shared/lib';
 
 export interface DocumentIssueLinkRow {
@@ -53,9 +54,6 @@ function documentLinkRow(row: {
   };
 }
 
-const documentAccess = (userId: string) =>
-  or(eq(projectDocument.isPrivate, false), eq(projectDocument.ownerUserId, userId));
-
 async function visibleDocument(
   projectId: number,
   documentId: number,
@@ -75,7 +73,7 @@ async function visibleDocument(
       and(
         eq(projectDocument.id, documentId),
         eq(projectDocument.projectId, projectId),
-        documentAccess(userId),
+        documentVisibleTo(userId),
       ),
     )
     .limit(1);
@@ -138,7 +136,7 @@ export async function listIssueDocumentLinks(
       and(
         eq(projectDocumentIssue.issueId, issueId),
         eq(projectDocument.projectId, projectId),
-        documentAccess(userId),
+        documentVisibleTo(userId),
       ),
     )
     .orderBy(asc(projectDocument.title), asc(projectDocument.id));
@@ -272,7 +270,7 @@ export async function listInitiativeDocumentLinks(
       and(
         eq(projectDocumentInitiative.initiativeId, initiativeId),
         eq(projectDocument.projectId, projectId),
-        documentAccess(userId),
+        documentVisibleTo(userId),
       ),
     )
     .orderBy(asc(projectDocument.title), asc(projectDocument.id));

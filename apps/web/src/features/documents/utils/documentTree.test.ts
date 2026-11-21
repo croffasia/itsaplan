@@ -13,6 +13,7 @@ function document(id: number, parentId: number | null, title: string): ProjectDo
     metadata: {},
     fullWidth: false,
     isPrivate: false,
+    visibility: 'public',
     isLocked: false,
     isFavorite: false,
     archivedAt: null,

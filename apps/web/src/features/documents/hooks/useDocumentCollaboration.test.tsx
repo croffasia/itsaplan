@@ -47,6 +47,8 @@ function projectDocument(version: number, content: string): ProjectDocument {
     metadata: {},
     fullWidth: false,
     isPrivate: false,
+    visibility: 'public',
+    memberIds: [],
     isLocked: false,
     isFavorite: false,
     archivedAt: null,

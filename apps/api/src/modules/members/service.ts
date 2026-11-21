@@ -5,11 +5,13 @@ import {
   teamMember,
   teamRole,
   projectColumn,
+  projectDocument,
+  projectDocumentMember,
   user,
   aiAgent,
   userPreference,
 } from '@repo/db';
-import { and, desc, eq, ilike, isNotNull, isNull, notExists, or, sql } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, isNotNull, isNull, notExists, or, sql } from 'drizzle-orm';
 import { iso } from '#shared/lib';
 import { DEFAULT_TIMEZONE } from '#modules/user-preferences/service';
 import {
@@ -502,11 +504,58 @@ export async function setMembership(
   return updated.length > 0;
 }
 
+// Someone a private note board or Docs page can be shared with. `canAccess` is whether
+// their role lets them read that section at all: without it a grant changes nothing,
+// since every route of the section still checks the permission matrix.
+export interface AccessCandidate {
+  userId: string;
+  name: string;
+  image: string | null;
+  kind: 'member' | 'agent';
+  canAccess: boolean;
+}
+
+export async function listAccessCandidates(
+  projectId: number,
+  resource: 'documents' | 'note_boards',
+): Promise<AccessCandidate[]> {
+  const [candidates, contexts] = await Promise.all([
+    listAssigneeCandidates(projectId),
+    listMemberContexts(projectId),
+  ]);
+  return candidates.map((candidate) => {
+    const permissions = contexts.get(candidate.userId)?.permissions;
+    return {
+      userId: candidate.userId,
+      name: candidate.name,
+      image: candidate.image,
+      kind: candidate.kind,
+      canAccess: permissions ? hasPermission(permissions, resource, 'read') : false,
+    };
+  });
+}
+
 export async function removeMember(projectId: number, userId: string): Promise<void> {
   await db.transaction(async (tx) => {
     await tx
       .delete(projectMember)
       .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, userId)));
+    // The private Docs pages shared with them here: a later return must not bring that
+    // access back.
+    await tx
+      .delete(projectDocumentMember)
+      .where(
+        and(
+          eq(projectDocumentMember.userId, userId),
+          inArray(
+            projectDocumentMember.documentId,
+            tx
+              .select({ id: projectDocument.id })
+              .from(projectDocument)
+              .where(eq(projectDocument.projectId, projectId)),
+          ),
+        ),
+      );
     // A column cannot keep assigning issues to someone who is no longer a member:
     // the same assignment sent as a patch would be refused.
     await tx

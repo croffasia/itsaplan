@@ -572,6 +572,7 @@
       "trigger": "Trigger",
       "initiator": "Initiator",
       "startedBy": "Started by",
+      "canceledBy": "Stopped by",
       "fromRun": "From run",
       "firstRun": "First run",
       "workItem": "Work item",

@@ -269,7 +269,7 @@ describe('runner queue', () => {
     expect(afterLeaving.map((person) => person.id)).toContain(memberId);
   });
 
-  it('lets whoever manages a run stop it, and tells the listeners who did', async () => {
+  it('lets whoever manages a run stop it, and tells the listeners and the run who did', async () => {
     const { api, ownerId, issue } = await setup();
     const member = await addProjectMember(api, 'RUN');
     await member.issues({ issueId: issue.id }).comments.post({ body: '@runner mine' });
@@ -297,6 +297,9 @@ describe('runner queue', () => {
     expect(stoppedBy).toEqual([mine.initiator!.id, ownerId]);
     const after = (await api['agent-runs'].queue.get()).data!;
     expect(after.items.map((run) => run.executionState)).toEqual(['canceled', 'canceled']);
+    const stopper = (id: number) => after.items.find((run) => run.id === id)!.canceledBy;
+    expect(stopper(mine.id)).toMatchObject({ name: mine.initiator!.name, agentUsername: null });
+    expect(stopper(theirs.id)).toMatchObject({ name: theirs.initiator!.name });
   });
 
   it('does not stop a run nobody can see, nor one in an archived project', async () => {

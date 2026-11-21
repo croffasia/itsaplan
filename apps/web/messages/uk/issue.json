@@ -572,6 +572,7 @@
       "trigger": "Тригер",
       "initiator": "Ініціатор",
       "startedBy": "Запустив",
+      "canceledBy": "Зупинив",
       "fromRun": "Із запуску",
       "firstRun": "Перший запуск",
       "workItem": "Задача",

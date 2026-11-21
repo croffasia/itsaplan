@@ -572,6 +572,7 @@
       "trigger": "觸發方式",
       "initiator": "發起人",
       "startedBy": "啟動者",
+      "canceledBy": "停止者",
       "fromRun": "來自執行",
       "firstRun": "首次執行",
       "workItem": "工作項目",

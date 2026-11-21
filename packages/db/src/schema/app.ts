@@ -815,6 +815,11 @@ export const agentRun = pgTable(
     rootRunId: integer('root_run_id').references((): AnyPgColumn => agentRun.id, {
       onDelete: 'set null',
     }),
+    // Who stopped the run before it ended, a person or an agent's bot user. Null for a run that
+    // ended by itself or that the api ended, as when its issue moved to another column or project.
+    canceledByUserId: text('canceled_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
     // A mention in a document comment: the document and the comment. Such a run has no
     // issue.
     documentId: integer('document_id').references(() => projectDocument.id, {

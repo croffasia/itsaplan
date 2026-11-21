@@ -265,10 +265,12 @@ the answer. For the steps, the reader also needs one of these:
 - The reader is the run's initiator.
 
 The same people can stop a run that waits or works. The run becomes `canceled` at once, and the api
-sends `agent_run.finished` with the person who stopped it as the actor. An internal agent at work
-checks its run every 5 seconds and then stops its model call and its tools. An external runner
-learns of the stop when its heartbeat or events call answers `canceled: true`. Then it kills its
-command and reports nothing more.
+sends `agent_run.finished` with the person who stopped it as the actor. The run records that person
+or agent in `canceled_by_user_id`. Ending the pending runs of a schedule records who ended them too.
+The field stays null when the run ended by itself or when the api ended it, as when its issue moved
+to another column or project. An internal agent at work checks its run every 5 seconds and then
+stops its model call and its tools. An external runner learns of the stop when its heartbeat or
+events call answers `canceled: true`. Then it kills its command and reports nothing more.
 
 Two rules hide a run:
 
@@ -351,9 +353,9 @@ list. Each takes the access of its list.
 The answer gives:
 
 - The runs. Each run gives `initiator`, `startedBy`, `parentRun` and `rootRun` (see "Run initiator"
-  and "Run origin"), and `canReadSteps` by the steps rule (see "Reading and stopping runs"). A run names its
-  issue by key and title and its `document` by id and title, and the parent and the first run by id.
-  It names them also when the caller cannot read them: opening one asks again.
+  and "Run origin"), and `canReadSteps` and `canceledBy` by "Reading and stopping runs". A run names
+  its issue by key and title and its `document` by id and title, and the parent and the first run by
+  id. It names them also when the caller cannot read them: opening one asks again.
 - The `queued`, `running` and `failed` counts. They obey every filter but `state`, so each state
   shows how many runs it holds.
 

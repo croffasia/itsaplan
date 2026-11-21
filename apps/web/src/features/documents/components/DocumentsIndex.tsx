@@ -31,9 +31,20 @@ import {
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { useMoveDocument, useSetDocumentFavorite } from '../services/documents.service';
-import { DOCUMENT_LIST_TABS, type DocumentListTab } from '../utils/documentList';
-import DocumentTree, { type DocumentSort } from './DocumentTree';
+import {
+  useMoveDocument,
+  useSetDocumentFavorite,
+  useSetDocumentPinned,
+} from '../services/documents.service';
+import {
+  DOCUMENT_LIST_TABS,
+  type DocumentListTab,
+  type DocumentListView,
+  type DocumentSort,
+} from '../utils/documentList';
+import DocumentsHome from './DocumentsHome';
+import DocumentsViewTabs from './DocumentsViewTabs';
+import DocumentTree from './DocumentTree';
 
 const SORTS = [
   'position',
@@ -54,6 +65,7 @@ const defaults: {
 export default function DocumentsIndex({
   projectKey,
   documents,
+  view,
   tab,
   search,
   searching,
@@ -61,10 +73,12 @@ export default function DocumentsIndex({
   failed,
   canCreate,
   canEdit,
+  canPin,
   authorNames,
   reorderSafe,
   creating,
   onSearchChange,
+  onViewChange,
   onTabChange,
   onCreate,
   onUpload,
@@ -72,6 +86,7 @@ export default function DocumentsIndex({
 }: {
   projectKey: string;
   documents: ProjectDocumentSummary[];
+  view: DocumentListView;
   tab: DocumentListTab;
   search: string;
   searching: boolean;
@@ -79,10 +94,12 @@ export default function DocumentsIndex({
   failed: boolean;
   canCreate: boolean;
   canEdit: boolean;
+  canPin: boolean;
   authorNames: Record<string, string>;
   reorderSafe: boolean;
   creating: boolean;
   onSearchChange: (value: string) => void;
+  onViewChange: (view: DocumentListView) => void;
   onTabChange: (tab: DocumentListTab) => void;
   onCreate: (parentId: number | null) => void;
   onUpload: (file: File) => void;
@@ -91,6 +108,7 @@ export default function DocumentsIndex({
   const t = useTranslations('documents');
   const move = useMoveDocument(projectKey);
   const favorite = useSetDocumentFavorite(projectKey);
+  const pin = useSetDocumentPinned(projectKey);
   const [preferences, setPreferences] = useDocumentNavigation(projectKey, 'index', defaults);
   const sort = SORTS.includes(preferences.sort) ? preferences.sort : 'position';
   const sortDirection = preferences.direction === 'desc' ? 'desc' : 'asc';
@@ -145,6 +163,7 @@ export default function DocumentsIndex({
       ? { ...document, parentId: null }
       : document,
   );
+  const tree = view === 'tree';
   const filterCount = Number(creatorId !== null) + Number(createdRange !== 'all');
   const sortLabel = {
     position: t('manualOrder'),
@@ -177,6 +196,7 @@ export default function DocumentsIndex({
                 </span>
               )}
             </div>
+            <DocumentsViewTabs view={view} onSelect={onViewChange} />
           </div>
           {canCreate && (
             <div className="flex shrink-0 items-center gap-1.5">
@@ -219,28 +239,30 @@ export default function DocumentsIndex({
         </div>
       </header>
 
-      <div className="shrink-0 border-b px-4 md:px-6">
-        <div
-          className="mx-auto flex w-full max-w-6xl items-center gap-6 overflow-x-auto"
-          role="tablist"
-        >
-          {DOCUMENT_LIST_TABS.map((option) => (
-            <button
-              key={option}
-              type="button"
-              role="tab"
-              aria-selected={tab === option}
-              className={cn(
-                'relative h-10 shrink-0 px-0.5 text-[13px] font-medium text-muted-foreground transition-colors outline-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-center after:scale-x-0 after:bg-foreground after:transition-transform hover:text-foreground focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring',
-                tab === option && 'text-foreground after:scale-x-100',
-              )}
-              onClick={() => onTabChange(option)}
-            >
-              {tabLabel(option)}
-            </button>
-          ))}
+      {tree && (
+        <div className="shrink-0 border-b px-4 md:px-6">
+          <div
+            className="mx-auto flex w-full max-w-6xl items-center gap-6 overflow-x-auto"
+            role="tablist"
+          >
+            {DOCUMENT_LIST_TABS.map((option) => (
+              <button
+                key={option}
+                type="button"
+                role="tab"
+                aria-selected={tab === option}
+                className={cn(
+                  'relative h-10 shrink-0 px-0.5 text-[13px] font-medium text-muted-foreground transition-colors outline-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-center after:scale-x-0 after:bg-foreground after:transition-transform hover:text-foreground focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring',
+                  tab === option && 'text-foreground after:scale-x-100',
+                )}
+                onClick={() => onTabChange(option)}
+              >
+                {tabLabel(option)}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="shrink-0 px-4 py-3 md:px-6">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-1.5">
@@ -255,109 +277,113 @@ export default function DocumentsIndex({
             />
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          {tree && (
+            <>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 text-muted-foreground"
+                    aria-label={t('sort')}
+                  >
+                    <ArrowUpDown />
+                    <span className="hidden md:inline">{sortLabel}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-48">
+                  {SORTS.map((option) => (
+                    <DropdownMenuItem key={option} onSelect={() => setSort(option)}>
+                      <Check className={cn('me-1', option !== sort && 'invisible')} />
+                      {option === 'position'
+                        ? t('manualOrder')
+                        : option === 'title'
+                          ? t('nameOrder')
+                          : option === 'created'
+                            ? t('createdOrder')
+                            : t('updatedOrder')}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-muted-foreground"
-                aria-label={t('sort')}
+                size="icon-sm"
+                className="text-muted-foreground"
+                disabled={sort === 'position'}
+                aria-label={sortDirection === 'asc' ? t('sortDescending') : t('sortAscending')}
+                onClick={() => setSortDirection((value) => (value === 'asc' ? 'desc' : 'asc'))}
               >
-                <ArrowUpDown />
-                <span className="hidden md:inline">{sortLabel}</span>
+                {sortDirection === 'asc' ? <ArrowUp /> : <ArrowDown />}
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-48">
-              {SORTS.map((option) => (
-                <DropdownMenuItem key={option} onSelect={() => setSort(option)}>
-                  <Check className={cn('me-1', option !== sort && 'invisible')} />
-                  {option === 'position'
-                    ? t('manualOrder')
-                    : option === 'title'
-                      ? t('nameOrder')
-                      : option === 'created'
-                        ? t('createdOrder')
-                        : t('updatedOrder')}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
 
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-sm"
-            className="text-muted-foreground"
-            disabled={sort === 'position'}
-            aria-label={sortDirection === 'asc' ? t('sortDescending') : t('sortAscending')}
-            onClick={() => setSortDirection((value) => (value === 'asc' ? 'desc' : 'asc'))}
-          >
-            {sortDirection === 'asc' ? <ArrowUp /> : <ArrowDown />}
-          </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant={filterCount > 0 ? 'secondary' : 'ghost'}
-                size="sm"
-                className="h-8 px-2 text-muted-foreground"
-                aria-label={t('filters')}
-              >
-                <SlidersHorizontal />
-                <span className="hidden md:inline">{t('filters')}</span>
-                {filterCount > 0 && (
-                  <span className="min-w-4 rounded-full bg-foreground px-1 text-center text-[10px] leading-4 text-background tabular-nums">
-                    {filterCount}
-                  </span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>{t('createdBy')}</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-56">
-                  <DropdownMenuItem onSelect={() => setCreatorId(null)}>
-                    <Check className={cn('me-1', creatorId !== null && 'invisible')} />
-                    {t('anyone')}
-                  </DropdownMenuItem>
-                  {creatorIds.map((id) => (
-                    <DropdownMenuItem key={id} onSelect={() => setCreatorId(id)}>
-                      <Check className={cn('me-1', creatorId !== id && 'invisible')} />
-                      <span className="truncate" dir="auto">
-                        {authorNames[id] ?? t('unknownAuthor')}
-                      </span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger>{t('createdDate')}</DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  {(['all', 'today', 'week', 'month'] as const).map((range) => (
-                    <DropdownMenuItem key={range} onSelect={() => setCreatedRange(range)}>
-                      <Check className={cn('me-1', createdRange !== range && 'invisible')} />
-                      {t(range)}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-              {filterCount > 0 && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onSelect={() => {
-                      setCreatorId(null);
-                      setCreatedRange('all');
-                    }}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant={filterCount > 0 ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="h-8 px-2 text-muted-foreground"
+                    aria-label={t('filters')}
                   >
-                    {t('clearFilters')}
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                    <SlidersHorizontal />
+                    <span className="hidden md:inline">{t('filters')}</span>
+                    {filterCount > 0 && (
+                      <span className="min-w-4 rounded-full bg-foreground px-1 text-center text-[10px] leading-4 text-background tabular-nums">
+                        {filterCount}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>{t('createdBy')}</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-56">
+                      <DropdownMenuItem onSelect={() => setCreatorId(null)}>
+                        <Check className={cn('me-1', creatorId !== null && 'invisible')} />
+                        {t('anyone')}
+                      </DropdownMenuItem>
+                      {creatorIds.map((id) => (
+                        <DropdownMenuItem key={id} onSelect={() => setCreatorId(id)}>
+                          <Check className={cn('me-1', creatorId !== id && 'invisible')} />
+                          <span className="truncate" dir="auto">
+                            {authorNames[id] ?? t('unknownAuthor')}
+                          </span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>{t('createdDate')}</DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {(['all', 'today', 'week', 'month'] as const).map((range) => (
+                        <DropdownMenuItem key={range} onSelect={() => setCreatedRange(range)}>
+                          <Check className={cn('me-1', createdRange !== range && 'invisible')} />
+                          {t(range)}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  {filterCount > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onSelect={() => {
+                          setCreatorId(null);
+                          setCreatedRange('all');
+                        }}
+                      >
+                        {t('clearFilters')}
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
         </div>
       </div>
 
@@ -386,16 +412,27 @@ export default function DocumentsIndex({
                 {t('reload')}
               </Button>
             </div>
+          ) : !tree && !searching && documents.length > 0 ? (
+            <DocumentsHome
+              projectKey={projectKey}
+              documents={documents}
+              onSeeFavorites={() => {
+                onTabChange('favorites');
+                onViewChange('tree');
+              }}
+            />
           ) : (
             <DocumentTree
               projectKey={projectKey}
-              documents={displayDocuments}
+              documents={tree ? displayDocuments : documents}
               activeId={null}
               searching={searching}
-              sortBy={sort}
+              sortBy={tree ? sort : 'position'}
               sortDirection={sortDirection}
               canCreate={canCreate}
+              canPin={canPin}
               reorderEnabled={
+                tree &&
                 canEdit &&
                 tab !== 'favorites' &&
                 tab !== 'archived' &&
@@ -406,11 +443,13 @@ export default function DocumentsIndex({
                 !move.isPending
               }
               favoritePending={favorite.isPending}
+              pinPending={pin.isPending}
               onCreate={onCreate}
               onMove={(input) => move.mutate(input)}
               onFavoriteChange={(documentId, isFavorite) =>
                 favorite.mutate({ documentId, isFavorite })
               }
+              onPinChange={(documentId, isPinned) => pin.mutate({ documentId, isPinned })}
             />
           )}
         </div>

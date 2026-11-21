@@ -2270,6 +2270,9 @@ export const projectDocument = pgTable(
     fullWidth: boolean('full_width').notNull().default(false),
     isPrivate: boolean('is_private').notNull().default(false),
     isLocked: boolean('is_locked').notNull().default(false),
+    // Shown first among its siblings to everyone in the project, while the page is public and
+    // active.
+    isPinned: boolean('is_pinned').notNull().default(false),
     archivedAt: timestamp('archived_at', { withTimezone: true }),
     archivedByAncestorId: integer('archived_by_ancestor_id').references(
       (): AnyPgColumn => projectDocument.id,

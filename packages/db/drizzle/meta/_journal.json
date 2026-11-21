@@ -1331,6 +1331,13 @@
       "when": 1795218249580,
       "tag": "0189_document_members",
       "breakpoints": true
+    },
+    {
+      "idx": 190,
+      "version": "7",
+      "when": 1795261876685,
+      "tag": "0190_document_pin",
+      "breakpoints": true
     }
   ]
 }

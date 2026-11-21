@@ -29,10 +29,12 @@ import {
   documentAccessBody,
   documentOwnershipBody,
   documentParams,
+  documentPinBody,
   documentRevisionParams,
   DocumentExportResponse,
   DocumentAssetListResponse,
   DocumentAssetResponse,
+  DocumentPinResponse,
   DocumentPreferenceResponse,
   DocumentInitiativeLinkListResponse,
   DocumentIssueLinkListResponse,
@@ -75,6 +77,7 @@ import {
   restoreDocumentRevision,
   setDocumentAccess,
   setDocumentLocked,
+  setDocumentPinned,
   setDocumentPreference,
   storeDocumentAsset,
   transferDocumentOwnership,
@@ -937,6 +940,33 @@ export const documentRoutes = new Elysia({
         summary: 'Update document preferences',
         description: 'Add a document to your favorites or remove it.',
         ...mcpTool('set_document_preference'),
+      },
+    },
+  )
+  .patch(
+    '/projects/:projectKey/documents/:documentId/pin',
+    async ({ project, user, params, body }) => {
+      const pin = await setDocumentPinned(
+        project.id,
+        params.documentId,
+        requireUser(user).id,
+        body.isPinned,
+      );
+      if (!pin) throw new HttpError(404, 'Document not found');
+      return pin;
+    },
+    {
+      projectAdmin: true,
+      feature: 'documents',
+      params: documentParams,
+      body: documentPinBody,
+      response: { 200: DocumentPinResponse, ...commonErrors, ...errors(409) },
+      detail: {
+        summary: 'Pin or unpin a document',
+        description:
+          'Show a public document first among its siblings for everyone in the project, or ' +
+          'stop doing so. Only a project owner, or an owner or manager of its team, can do this.',
+        ...mcpTool('set_document_pin'),
       },
     },
   )

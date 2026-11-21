@@ -81,6 +81,9 @@ export function projectedDocumentMove({
     const sourceIndex = ordered.findIndex((document) => document.id === source.id);
     const targetIndex = ordered.findIndex((document) => document.id === target.id);
     if (sourceIndex < 0 || targetIndex < 0) return null;
+    // Pinned pages stay ahead of the others whatever their position, so a drop across that
+    // line would not land where it was dropped.
+    if (source.isPinned !== target.isPinned) return null;
     placeAfterAnchor = sourceIndex < targetIndex;
   }
 

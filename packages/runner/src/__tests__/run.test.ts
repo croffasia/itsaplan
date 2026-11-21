@@ -156,16 +156,21 @@ it('retries a partially accepted stream batch with its original offsets', async 
     outputFormat: 'codex-jsonl',
   };
   try {
-    await runTask(config, new Client(config), {
-      id: 1,
-      attempts: 1,
-      traceEvents: true,
-      trigger: 'manual',
-      prompt: '',
-      systemPrompt: '',
-      issueId: null,
-      issueIdentifier: null,
-    });
+    await runTask(
+      config,
+      new Client(config),
+      {
+        id: 1,
+        attempts: 1,
+        traceEvents: true,
+        trigger: 'manual',
+        prompt: '',
+        systemPrompt: '',
+        issueId: null,
+        issueIdentifier: null,
+      },
+      new AbortController(),
+    );
     expect(offsets.slice(0, 3)).toEqual([0, 200, 200]);
   } finally {
     globalThis.fetch = original;
@@ -307,7 +312,7 @@ it('does not retry or ignore a final event rejection for a stale attempt', async
   }) as typeof fetch;
   try {
     await expect(
-      runTask(shortTaskConfig, new Client(shortTaskConfig), shortRun),
+      runTask(shortTaskConfig, new Client(shortTaskConfig), shortRun, new AbortController()),
     ).rejects.toMatchObject({
       status: 404,
     });
@@ -317,3 +322,23 @@ it('does not retry or ignore a final event rejection for a stale attempt', async
     globalThis.fetch = original;
   }
 });
+
+it('kills the command and reports nothing more once the server says the run was stopped', async () => {
+  const original = globalThis.fetch;
+  const paths: string[] = [];
+  globalThis.fetch = (async (input) => {
+    paths.push(new URL(String(input)).pathname);
+    return Response.json({ nextOffset: 0, truncated: false, canceled: true });
+  }) as typeof fetch;
+  const config: RunnerConfig = { ...shortTaskConfig, command: 'printf one; sleep 10; printf two' };
+  const logs: string[] = [];
+  const started = Date.now();
+  try {
+    await handleRun(config, new Client(config), (line) => logs.push(line), shortRun);
+    expect(Date.now() - started).toBeLessThan(5_000);
+    expect(paths).toEqual(['/agent-runs/1/events']);
+    expect(logs.at(-1)).toBe('run 1: stopped');
+  } finally {
+    globalThis.fetch = original;
+  }
+}, 15_000);

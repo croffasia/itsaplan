@@ -3,6 +3,8 @@
   "newInitiative": "Inisiatif baru",
   "notFound": "Inisiatif tidak ditemukan.",
   "options": "Opsi inisiatif",
+  "addFavorite": "Tambah ke favorit",
+  "removeFavorite": "Hapus dari favorit",
   "showDescription": "Tampilkan deskripsi",
   "noDescription": "Tidak ada deskripsi.",
   "noOwner": "Tanpa pemilik",

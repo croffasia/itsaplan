@@ -115,6 +115,8 @@ export interface AgentRun {
   // What the last model call of the run read and wrote: absent for a run that finished
   // before this was recorded and for one whose agent reports no counts.
   contextTokens?: number;
+  // When an external agent first took the run; null for one it never received.
+  receivedAt: string | null;
   nextAttemptAt: string;
   createdAt: string;
 }

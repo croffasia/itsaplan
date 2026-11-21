@@ -3,6 +3,8 @@
   "newInitiative": "ابتکار جدید",
   "notFound": "ابتکار پیدا نشد.",
   "options": "گزینه‌های ابتکار",
+  "addFavorite": "افزودن به موردعلاقه‌ها",
+  "removeFavorite": "حذف از موردعلاقه‌ها",
   "showDescription": "نمایش توضیحات",
   "noDescription": "بدون توضیحات.",
   "noOwner": "بدون مسئول",

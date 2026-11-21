@@ -67,6 +67,7 @@ export interface AgentScheduleRun {
   contextTokens?: number;
   scheduledFor: string | null;
   startedAt: string | null;
+  receivedAt: string | null;
   finishedAt: string | null;
   createdAt: string;
 }

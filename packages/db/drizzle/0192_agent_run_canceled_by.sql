@@ -1,0 +1,2 @@
+ALTER TABLE "agent_run" ADD COLUMN "canceled_by_user_id" text;--> statement-breakpoint
+ALTER TABLE "agent_run" ADD CONSTRAINT "agent_run_canceled_by_user_id_user_id_fk" FOREIGN KEY ("canceled_by_user_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;

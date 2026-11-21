@@ -3,6 +3,8 @@
   "newInitiative": "Yeni girişim",
   "notFound": "Girişim bulunamadı.",
   "options": "Girişim seçenekleri",
+  "addFavorite": "Favorilere ekle",
+  "removeFavorite": "Favorilerden çıkar",
   "showDescription": "Açıklamayı göster",
   "noDescription": "Açıklama yok.",
   "noOwner": "Sahip atanmamış",

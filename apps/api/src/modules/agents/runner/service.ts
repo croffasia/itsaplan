@@ -169,13 +169,12 @@ export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | nu
   const run = await takeNextRun(agent);
   if (!run) return null;
   // A start that fails is a failed attempt: the run comes back after the retry delay,
-  // with the error on it, rather than being handed out half started. The runner got
-  // nothing, so the run is not received yet and the next claim starts it again.
+  // with the error on it, rather than being handed out half started. The attempt was
+  // taken, so the next claim hands the run out without starting it again.
   try {
     await runTaken(agent, run);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    await db.update(agentRun).set({ receivedAt: null }).where(eq(agentRun.id, run.id));
     await scheduleRunRetry(run.id, runRetryDelayMs(run.attempts), message);
     return null;
   }

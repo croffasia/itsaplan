@@ -366,7 +366,12 @@ export async function cancelPendingScheduleRuns(
   await assertTriggerable(schedule.agentId, actorUserId);
   const rows = await db
     .update(agentRun)
-    .set({ status: 'canceled', executionStartedAt: null, finishedAt: new Date() })
+    .set({
+      status: 'canceled',
+      canceledByUserId: actorUserId,
+      executionStartedAt: null,
+      finishedAt: new Date(),
+    })
     .where(
       and(
         eq(agentRun.scheduleId, scheduleId),

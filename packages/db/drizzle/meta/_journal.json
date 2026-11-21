@@ -1345,6 +1345,13 @@
       "when": 1795265438428,
       "tag": "0191_agent_run_received",
       "breakpoints": true
+    },
+    {
+      "idx": 192,
+      "version": "7",
+      "when": 1795275753838,
+      "tag": "0192_agent_run_canceled_by",
+      "breakpoints": true
     }
   ]
 }

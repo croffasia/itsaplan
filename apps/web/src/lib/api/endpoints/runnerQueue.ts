@@ -7,6 +7,8 @@ export interface RunnerQueuePerson {
   image: string | null;
 }
 
+export type RunnerQueueActor = RunnerQueuePerson & { agentUsername: string | null };
+
 export interface RunnerQueueRun extends IssueAgentRun {
   issueId: number | null;
   sequenceNumber: number | null;
@@ -19,7 +21,7 @@ export interface RunnerQueueRun extends IssueAgentRun {
   // queued it or made the change that started it, null for a timed schedule; the run an agent
   // did that in, and the first run of that chain.
   initiator: RunInitiatorOption | null;
-  startedBy: (RunnerQueuePerson & { agentUsername: string | null }) | null;
+  startedBy: RunnerQueueActor | null;
   parentRun: { id: number; projectRef: string } | null;
   rootRun: {
     id: number;
@@ -27,6 +29,9 @@ export interface RunnerQueueRun extends IssueAgentRun {
     scheduleName: string | null;
     initiator: RunnerQueuePerson | null;
   } | null;
+  // Who stopped the run before it ended; null for one that ended by itself or that the api ended,
+  // as when its issue moved to another column or project.
+  canceledBy: RunnerQueueActor | null;
   canReadSteps: boolean;
   // Null for an internal agent, which runs in the api and has no runner.
   runnerState: 'push' | 'online' | 'offline' | 'never' | null;

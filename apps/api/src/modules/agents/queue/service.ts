@@ -13,7 +13,19 @@ import {
   teamWorkspaceId,
   user,
 } from '@repo/db';
-import { and, desc, eq, ilike, inArray, isNotNull, isNull, notInArray, or, sql } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  notInArray,
+  or,
+  sql,
+  type AnyColumn,
+} from 'drizzle-orm';
 import {
   assertPermission,
   getProjectAccess,
@@ -54,6 +66,15 @@ function queueProjectIds(userId: string, mcpOnly = false, grants?: Map<number, W
   });
 }
 
+const actorOf = (userId: AnyColumn) => sql<{
+  name: string;
+  image: string | null;
+  agentUsername: string | null;
+} | null>`(
+    SELECT json_build_object('name', u.name, 'image', u.image, 'agentUsername', g.username)
+    FROM "user" u LEFT JOIN ai_agent g ON g.user_id = u.id
+    WHERE u.id = ${userId})`;
+
 // Where the run comes from (see ../core/run-initiator.ts): its initiator, who queued it,
 // and the run an agent queued it in with the first run of that chain. A run the reader
 // may not open is still named, so the chain stays readable; opening it asks again.
@@ -61,10 +82,7 @@ const runOriginColumns = {
   initiator: sql<{ id: string; name: string; image: string | null } | null>`(
     SELECT json_build_object('id', u.id, 'name', u.name, 'image', u.image) FROM "user" u
     WHERE u.id = ${agentRun.requestedByUserId})`,
-  startedBy: sql<{ name: string; image: string | null; agentUsername: string | null } | null>`(
-    SELECT json_build_object('name', u.name, 'image', u.image, 'agentUsername', g.username)
-    FROM "user" u LEFT JOIN ai_agent g ON g.user_id = u.id
-    WHERE u.id = ${agentRun.startedByUserId})`,
+  startedBy: actorOf(agentRun.startedByUserId),
   parentRun: sql<{ id: number; projectRef: string } | null>`(
     SELECT json_build_object('id', r.id, 'projectRef', coalesce(t.slug, t.id::text) || '.' || p.key)
     FROM agent_run r JOIN project p ON p.id = r.project_id JOIN team t ON t.id = p.team_id
@@ -137,7 +155,12 @@ export async function assertManagesRun(
 export async function cancelAgentRun(runId: number, actorUserId: string): Promise<boolean> {
   const rows = await db
     .update(agentRun)
-    .set({ status: 'canceled', executionStartedAt: null, finishedAt: new Date() })
+    .set({
+      status: 'canceled',
+      canceledByUserId: actorUserId,
+      executionStartedAt: null,
+      finishedAt: new Date(),
+    })
     .where(and(eq(agentRun.id, runId), eq(agentRun.status, 'pending')))
     .returning({ id: agentRun.id });
   await emitRunsCanceled(
@@ -275,6 +298,7 @@ export async function listRunnerQueue(
           SELECT json_build_object('id', d.id, 'title', d.title) FROM project_document d
           WHERE d.id = ${agentRun.documentId})`,
         ...runOriginColumns,
+        canceledBy: actorOf(agentRun.canceledByUserId),
         projectKey: project.key,
         teamRef: sql<string>`coalesce(${team.slug}, ${team.id}::text)`,
       })

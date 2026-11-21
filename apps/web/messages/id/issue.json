@@ -572,6 +572,7 @@
       "trigger": "Pemicu",
       "initiator": "Inisiator",
       "startedBy": "Dimulai oleh",
+      "canceledBy": "Dihentikan oleh",
       "fromRun": "Dari eksekusi",
       "firstRun": "Eksekusi pertama",
       "workItem": "Item pekerjaan",

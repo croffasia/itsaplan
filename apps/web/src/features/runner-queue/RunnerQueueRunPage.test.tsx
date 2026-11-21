@@ -12,7 +12,7 @@ import issue from '../../../messages/en/issue.json';
 import common from '../../../messages/en/common.json';
 import teams from '../../../messages/en/teams.json';
 
-it('shows the run its URL names, stops it while it works, and hides it after access denial', async () => {
+it('shows the run its URL names, stops it while it works, names who stopped it, and hides it after access denial', async () => {
   const names = [
     'window',
     'document',
@@ -70,6 +70,7 @@ it('shows the run its URL names, stops it while it works, and hides it after acc
     projectRef: 'team.RUN',
     initiator: null,
     startedBy: null,
+    canceledBy: null,
     parentRun: null,
     rootRun: null,
     document: null,
@@ -166,6 +167,17 @@ it('shows the run its URL names, stops it while it works, and hides it after acc
     await act(async () => stopButton()!.click());
     assert.ok(requests.some((request) => /^POST .*\/agent-runs\/1\/cancel$/.test(request)));
     assert.ok(document.body.textContent?.includes('Selected result'));
+    assert.ok(!document.body.textContent?.includes('Stopped by'));
+    await act(async () => {
+      const canceledBy = { name: 'Lead', image: null, agentUsername: 'lead' };
+      client.setQueryData(detailKey, {
+        ...page,
+        items: [{ ...run, status: 'canceled', executionState: 'canceled', canceledBy }],
+      });
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+    assert.ok(document.body.textContent?.includes('Stopped by'));
+    assert.ok(document.body.textContent?.includes('@lead'));
     await act(async () => {
       client
         .getQueryCache()

@@ -6,11 +6,12 @@ import Avatar from '@/components/common/Avatar';
 import { runIssueKey } from '../utils/runIssueKey';
 import { waitsForRunner } from '../utils/waitsForRunner';
 import RunnerQueueKindBadge from '../components/RunnerQueueKindBadge';
+import RunnerQueueRunActor from '../components/RunnerQueueRunActor';
 import type { RunFact } from '../components/RunnerQueueRunFactList';
 import RunnerQueueStateIcon from '../components/RunnerQueueStateIcon';
 
-// What the run is: its state, its agent, what set it off, what it works on, how it reaches
-// the agent, and its number.
+// What the run is: its state and who stopped it, its agent, what set it off, what it works on,
+// how it reaches the agent, and its number.
 export function useRunFacts(run: RunnerQueueRun): RunFact[] {
   const t = useTranslations('issue.agentRuns');
   const tDocuments = useTranslations('documents');
@@ -23,6 +24,14 @@ export function useRunFacts(run: RunnerQueueRun): RunFact[] {
         {waitsForRunner(run) ? t('waitingForRunner') : t(run.executionState)}
       </>,
     ],
+  ];
+  if (run.canceledBy) {
+    facts.push([
+      t('facts.canceledBy'),
+      <RunnerQueueRunActor key="canceledBy" actor={run.canceledBy} />,
+    ]);
+  }
+  facts.push(
     [
       t('facts.agent'),
       <>
@@ -34,7 +43,7 @@ export function useRunFacts(run: RunnerQueueRun): RunFact[] {
       </>,
     ],
     [t('facts.trigger'), t(`triggers.${run.trigger}`)],
-  ];
+  );
   if (issueKey && run.sequenceNumber != null) {
     facts.push([
       t('facts.workItem'),

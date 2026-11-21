@@ -572,6 +572,7 @@
       "trigger": "트리거",
       "initiator": "요청자",
       "startedBy": "시작한 주체",
+      "canceledBy": "중지한 주체",
       "fromRun": "상위 실행",
       "firstRun": "첫 실행",
       "workItem": "작업",

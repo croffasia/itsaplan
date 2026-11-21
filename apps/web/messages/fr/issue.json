@@ -572,6 +572,7 @@
       "trigger": "Déclencheur",
       "initiator": "Initiateur",
       "startedBy": "Lancée par",
+      "canceledBy": "Arrêtée par",
       "fromRun": "Depuis l'exécution",
       "firstRun": "Première exécution",
       "workItem": "Ticket",

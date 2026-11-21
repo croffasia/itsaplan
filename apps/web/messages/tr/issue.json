@@ -572,6 +572,7 @@
       "trigger": "Tetikleyici",
       "initiator": "Talep eden",
       "startedBy": "Başlatan",
+      "canceledBy": "Durduran",
       "fromRun": "Kaynak çalıştırma",
       "firstRun": "İlk çalıştırma",
       "workItem": "İş maddesi",

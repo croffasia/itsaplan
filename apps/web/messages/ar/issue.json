@@ -572,6 +572,7 @@
       "trigger": "المشغّل",
       "initiator": "المُبادِر",
       "startedBy": "بدأه",
+      "canceledBy": "أوقفه",
       "fromRun": "من التشغيل",
       "firstRun": "التشغيل الأول",
       "workItem": "عنصر العمل",

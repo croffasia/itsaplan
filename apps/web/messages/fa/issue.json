@@ -572,6 +572,7 @@
       "trigger": "تریگر",
       "initiator": "آغازگر",
       "startedBy": "شروع‌کننده",
+      "canceledBy": "متوقف‌کننده",
       "fromRun": "اجرای والد",
       "firstRun": "اجرای نخست",
       "workItem": "تسک",

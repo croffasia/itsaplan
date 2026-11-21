@@ -572,6 +572,7 @@
       "trigger": "Disparador",
       "initiator": "Iniciador",
       "startedBy": "Iniciada por",
+      "canceledBy": "Detenida por",
       "fromRun": "Desde la ejecución",
       "firstRun": "Primera ejecución",
       "workItem": "Elemento de trabajo",

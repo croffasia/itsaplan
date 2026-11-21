@@ -572,6 +572,7 @@
       "trigger": "Gatilho",
       "initiator": "Iniciador",
       "startedBy": "Iniciada por",
+      "canceledBy": "Parada por",
       "fromRun": "Da execução",
       "firstRun": "Primeira execução",
       "workItem": "Item de trabalho",

@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.13.0](https://github.com/croffasia/itsaplan/compare/v1.12.0...v1.13.0) (2026-11-21)
+
+
+### Features
+
+* **agent-tools:** add Baserow table and row tools for AI agents ([#961](https://github.com/croffasia/itsaplan/issues/961)) ([9ab0b52](https://github.com/croffasia/itsaplan/commit/9ab0b522e3a21afbd665e52022d6bdabec2b39f6))
+* allow marking initiatives as favorites in the left panel ([#927](https://github.com/croffasia/itsaplan/issues/927)) ([#965](https://github.com/croffasia/itsaplan/issues/965)) ([f670a46](https://github.com/croffasia/itsaplan/commit/f670a46e77769e1141a1f3fad397440e8abd9316))
+* record who stopped an agent run and show it on the run page ([#971](https://github.com/croffasia/itsaplan/issues/971)) ([3c0875e](https://github.com/croffasia/itsaplan/commit/3c0875ea1130ef0b269e6568b36fdd356833d714))
+* share a private Docs page with chosen members ([#962](https://github.com/croffasia/itsaplan/issues/962)) ([dc71b78](https://github.com/croffasia/itsaplan/commit/dc71b78726dd3349884100ac692c3f115a7593d7))
+* stop agent runs from the run page, the API and MCP ([#967](https://github.com/croffasia/itsaplan/issues/967)) ([8b1ea5b](https://github.com/croffasia/itsaplan/commit/8b1ea5bbc1004a80e0c5764ce3f42036285e13ca))
+
+
+### Improvements
+
+* **api:** record the initiator of every agent run ([#959](https://github.com/croffasia/itsaplan/issues/959)) ([a84ffab](https://github.com/croffasia/itsaplan/commit/a84ffab0fd3cd81811009dd411ad16ce343a0527))
+* **api:** sort issue lists by board position, dates or priority ([#956](https://github.com/croffasia/itsaplan/issues/956)) ([66ace97](https://github.com/croffasia/itsaplan/commit/66ace974ad8747670a0865c06c3b959e496ef46e))
+* link agent runs into chains and gate their steps ([#960](https://github.com/croffasia/itsaplan/issues/960)) ([1b1824e](https://github.com/croffasia/itsaplan/commit/1b1824ed59a15586075ab8d4b66702ee2987ca16))
+
 ## [1.12.0](https://github.com/croffasia/itsaplan/compare/v1.11.0...v1.12.0) (2026-11-19)
 
 

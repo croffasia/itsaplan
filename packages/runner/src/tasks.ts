@@ -31,14 +31,25 @@ export async function handleRun(
 ): Promise<void> {
   const label = run.issueIdentifier ?? `run ${run.id}`;
   log(`${label}: started (${run.trigger})`);
+  const stop = new AbortController();
   try {
     const outcome = await withHeartbeat(
       log,
-      () => client.heartbeat(run.id, run.traceEvents ? run.attempts : undefined),
-      runTask(config, client, run),
+      async () => {
+        if (await client.heartbeat(run.id, run.traceEvents ? run.attempts : undefined)) {
+          stop.abort();
+        }
+      },
+      runTask(config, client, run, stop),
     );
-    log(`${label}: ${outcome.status}${outcome.error ? ` — ${outcome.error}` : ''}`);
+    if (stop.signal.aborted) log(`${label}: stopped`);
+    else log(`${label}: ${outcome.status}${outcome.error ? ` — ${outcome.error}` : ''}`);
   } catch (err) {
+    // A stopped run is already ended, so nothing is reported for it.
+    if (stop.signal.aborted) {
+      log(`${label}: stopped`);
+      return;
+    }
     // The command itself never throws here; this is the runner failing to run or
     // report it. Reporting the failure keeps the run from being retried blindly.
     const message = err instanceof Error ? err.message : String(err);
@@ -53,9 +64,9 @@ export async function handleRun(
   }
 }
 
-// The stop the member pressed comes back on whichever call the runner was making: the
-// events report while the command writes, the heartbeat while it is silent. Both abort
-// the same controller, which kills the command.
+// The stop of a run or a chat answer comes back on whichever call the runner was making:
+// the events report while the command writes, the heartbeat while it is silent. Both
+// abort the same controller, which kills the command.
 export async function handleChat(
   config: RunnerConfig,
   client: Client,

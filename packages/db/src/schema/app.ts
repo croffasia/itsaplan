@@ -841,6 +841,9 @@ export const agentRun = pgTable(
     outputTokens: integer('output_tokens'),
     startedAt: timestamp('started_at', { withTimezone: true }),
     executionStartedAt: timestamp('execution_started_at', { withTimezone: true }),
+    // When an external agent first took the run: its runner claimed it, or its endpoint
+    // took the request. Null for a run it never received, and for an internal agent's.
+    receivedAt: timestamp('received_at', { withTimezone: true }),
     // The api's current claim of an internal agent's run; null while the run waits,
     // deferred or in retry backoff. The instance's run limit counts the claimed runs.
     claimedAt: timestamp('claimed_at', { withTimezone: true }),

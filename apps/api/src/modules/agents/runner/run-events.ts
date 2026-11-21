@@ -2,6 +2,7 @@ import { db, agentRun, agentRunTrace, issue } from '@repo/db';
 import { and, desc, eq, isNull, lt, or, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
 import { runDocumentVisibleTo } from '../core/run-queue';
+import { runCanceled } from './service';
 import type { AgUiEventBody } from '../model';
 
 const MAX_EVENTS = 2000;
@@ -31,7 +32,13 @@ export async function appendRunEvents(
         ),
       )
       .for('update');
-    if (!run) throw new HttpError(404, 'Active run attempt not found');
+    if (!run) {
+      // Nothing of a stopped run's batch is kept.
+      if (await runCanceled(agentId, runId, input.attempt)) {
+        return { nextOffset: input.offset, truncated: false, canceled: true };
+      }
+      throw new HttpError(404, 'Active run attempt not found');
+    }
     await tx.insert(agentRunTrace).values({ runId, attempt: input.attempt }).onConflictDoNothing();
     const key = and(eq(agentRunTrace.runId, runId), eq(agentRunTrace.attempt, input.attempt));
     const [trace] = await tx.select().from(agentRunTrace).where(key);
@@ -41,7 +48,7 @@ export async function appendRunEvents(
     if (input.offset > trace.nextOffset) throw new HttpError(409, 'Unexpected trace offset');
     const unseen = input.events.slice(trace.nextOffset - input.offset);
     if (unseen.length === 0) {
-      return { nextOffset: trace.nextOffset, truncated: trace.truncated };
+      return { nextOffset: trace.nextOffset, truncated: trace.truncated, canceled: false };
     }
     const events = trace.events as { event: AgUiEventBody; receivedAt: string }[];
     let bytes = Buffer.byteLength(JSON.stringify(events));
@@ -68,7 +75,7 @@ export async function appendRunEvents(
       })
       .where(key);
     await tx.execute(sql`SELECT bump_rev(${'runner-queue:' + run.projectId}, ${run.projectId})`);
-    return { nextOffset, truncated };
+    return { nextOffset, truncated, canceled: false };
   });
 }
 

@@ -99,6 +99,10 @@ export const getInternalRunTrace = (runId: number, attempt?: number) =>
     `/agent-runs/${runId}/internal-trace${attempt == null ? '' : `?attempt=${attempt}`}`,
   );
 
+// Stops a run that waits or works; 409 once it ended.
+export const cancelAgentRun = (runId: number) =>
+  request<{ runId: number; status: string }>(`/agent-runs/${runId}/cancel`, { method: 'POST' });
+
 export const getRunInitiatorOptions = (api: string) =>
   request<RunInitiatorOption[]>(`${api}/agent-runs/initiators/options`);
 

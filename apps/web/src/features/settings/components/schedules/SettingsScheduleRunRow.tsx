@@ -69,7 +69,7 @@ export function SettingsScheduleRunRow({
             label={run.lastError ? t('error') : t('result')}
             value={run.lastError ?? run.output ?? t('noOutput')}
           />
-          {run.kind === 'external' && <AgentRunExternalTrace runId={run.id} />}
+          {run.kind === 'external' && <AgentRunExternalTrace run={run} />}
         </div>
       )}
     </div>

@@ -276,7 +276,12 @@ export async function pinnedFetch(raw: string, init: PinnedRequestInit = {}): Pr
         res.on('end', complete);
       },
     );
-    req.on('error', reject);
+    // A host whose every address refused fails as an AggregateError with no message, which
+    // callers show. It gets the message of its first refusal and keeps its code.
+    req.on('error', (error: Error & { errors?: Error[] }) => {
+      if (!error.message) error.message = error.errors?.[0]?.message ?? 'connection failed';
+      reject(error);
+    });
     const abort = () => req.destroy(new Error('request aborted'));
     init.signal?.addEventListener('abort', abort, { once: true });
     req.on('close', () => init.signal?.removeEventListener('abort', abort));

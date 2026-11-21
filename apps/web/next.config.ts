@@ -8,6 +8,11 @@ const tracingRoot = process.env.WEB_TRACING_ROOT ?? path.join(import.meta.dirnam
 // Where `@/cloud` resolves. Unset, tsconfig resolves it to src/ce, the stubs a
 // self-hosted instance runs.
 const cloudUiEntry = process.env.CLOUD_UI_ENTRY;
+// Hosts besides localhost that may open next dev, such as a tunnel. The dev server
+// refuses the rest, and a page opened from one of them never hydrates.
+const devAllowedOrigins = process.env.DEV_ALLOWED_ORIGINS?.split(',')
+  .map((host) => host.trim())
+  .filter(Boolean);
 
 // Fixed on every response. The Content-Security-Policy is not here: it names the api
 // origin, which is read from the environment at startup (utils/runtimeEnv), while this
@@ -32,6 +37,7 @@ const nextConfig: NextConfig = {
   // standalone build for a lean docker image.
   output: 'standalone',
   poweredByHeader: false,
+  allowedDevOrigins: devAllowedOrigins,
   // No page may be framed, except the public ones (/share, /p) on the sites the instance
   // owner trusts: src/proxy.ts decides those per request.
   headers: async () => [

@@ -41,7 +41,13 @@ export const runEventsBody = t.Object({
   events: t.Array(AgUiEvent, { minItems: 1, maxItems: 200 }),
   sessionId: t.Optional(t.String({ format: 'uuid' })),
 });
-export const RunEventsAck = t.Object({ nextOffset: t.Number(), truncated: t.Boolean() });
+// `canceled` is how a stop reaches the runner: on the calls it already makes, so the server
+// needs no connection to the operator's machine.
+const canceled = t.Boolean({
+  description: 'Someone stopped the run: kill the command and report nothing more.',
+});
+export const RunAckResponse = t.Object({ canceled });
+export const RunEventsAck = t.Object({ nextOffset: t.Number(), truncated: t.Boolean(), canceled });
 
 export const externalTraceQuery = t.Object({
   attempt: t.Optional(t.Numeric({ minimum: 1, multipleOf: 1 })),

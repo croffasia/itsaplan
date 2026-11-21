@@ -1,6 +1,6 @@
 import { t } from 'elysia';
 import { MAX_SUBTASK_DEPTH } from '@repo/db';
-import { agentExecutionState } from '#modules/agents/model';
+import { agentExecutionState, runReceivedAt } from '#modules/agents/model';
 import { ActivityPayloadResponse } from '#shared/activity';
 import { DevelopmentLinkResponse } from '#modules/git/model';
 import { AgentTraceDetailResponse } from '#modules/agents/core/model';
@@ -837,6 +837,7 @@ export const IssueAgentRunPageResponse = t.Object({
       contextTokens: t.Optional(t.Number()),
       createdAt: t.String(),
       startedAt: t.Nullable(t.String()),
+      receivedAt: runReceivedAt,
       finishedAt: t.Nullable(t.String()),
       nextAttemptAt: t.String(),
     }),

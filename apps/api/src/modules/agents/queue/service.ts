@@ -34,6 +34,7 @@ import {
   holdsSlot,
   runDocumentVisibleTo,
 } from '../core/run-queue';
+import { emitRunsCanceled } from '../core/run-finished';
 
 // An agent with an invocation URL is sent its work and only calls back while it has
 // some, so its last contact says nothing about whether the endpoint is up. An internal
@@ -104,9 +105,10 @@ export async function assertReadsRuns(projectId: number, user: AuthUser): Promis
   await assertPermission(projectId, user, 'ai_agents', 'read');
 }
 
-// Whether the user reads the steps of every run in the project, what each agent did:
-// whoever runs its team, an owner of it, and whoever may create or change its agents.
-export async function readsAllRunSteps(projectId: number, userId: string): Promise<boolean> {
+// Whether the user manages every run in the project, reads the steps of each, what its agent
+// did, and stops it: whoever runs its team, an owner of it, and whoever may create or change
+// its agents.
+export async function managesAllRuns(projectId: number, userId: string): Promise<boolean> {
   if (await runsProjectTeam(await getProjectTeamId(projectId), userId)) return true;
   const access = await getProjectAccess(projectId, userId);
   if (!access) return false;
@@ -117,16 +119,32 @@ export async function readsAllRunSteps(projectId: number, userId: string): Promi
   );
 }
 
-// A run's steps are also for its initiator.
-export async function assertReadsRunSteps(
+// A run is also managed by its initiator.
+export async function assertManagesRun(
   run: { projectId: number; initiatorUserId: string | null },
   userId: string,
 ): Promise<void> {
-  if (run.initiatorUserId === userId || (await readsAllRunSteps(run.projectId, userId))) return;
+  if (run.initiatorUserId === userId || (await managesAllRuns(run.projectId, userId))) return;
   throw new HttpError(
     403,
-    "Only whoever may create or change the project's agents, or the run's initiator, reads its steps",
+    "Only whoever may create or change the project's agents, or the run's initiator, reads a run's steps and stops it",
   );
+}
+
+// Stops a run that waits or works. Its row ends as 'canceled' at once, an internal agent at
+// work stops at the poller's next check, and an external agent's runner kills its command
+// on its next heartbeat or events report. False when the run had already ended.
+export async function cancelAgentRun(runId: number, actorUserId: string): Promise<boolean> {
+  const rows = await db
+    .update(agentRun)
+    .set({ status: 'canceled', executionStartedAt: null, finishedAt: new Date() })
+    .where(and(eq(agentRun.id, runId), eq(agentRun.status, 'pending')))
+    .returning({ id: agentRun.id });
+  await emitRunsCanceled(
+    rows.map((row) => row.id),
+    actorUserId,
+  );
+  return rows.length > 0;
 }
 
 // The projects of a run list. `projectIds` narrows it to those, of the ones the caller may
@@ -244,6 +262,7 @@ export async function listRunnerQueue(
         outputTokens: agentRun.outputTokens,
         createdAt: agentRun.createdAt,
         startedAt: agentRun.startedAt,
+        receivedAt: agentRun.receivedAt,
         finishedAt: agentRun.finishedAt,
         nextAttemptAt: agentRun.nextAttemptAt,
         runnerState: runnerPresence,
@@ -295,7 +314,7 @@ export async function listRunnerQueue(
   const allSteps = new Map(
     await Promise.all(
       [...new Set(rows.map((row) => row.projectId))].map(
-        async (id) => [id, await readsAllRunSteps(id, userId)] as const,
+        async (id) => [id, await managesAllRuns(id, userId)] as const,
       ),
     ),
   );
@@ -308,6 +327,7 @@ export async function listRunnerQueue(
       createdAt: iso(row.createdAt),
       nextAttemptAt: iso(row.nextAttemptAt),
       startedAt: row.startedAt ? iso(row.startedAt) : null,
+      receivedAt: row.receivedAt ? iso(row.receivedAt) : null,
       finishedAt: row.finishedAt ? iso(row.finishedAt) : null,
     })),
     total,

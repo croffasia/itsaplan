@@ -259,8 +259,39 @@ describe('agent runner queue', () => {
     await queueRun(asOwner, columnId, agent.username);
     const run = (await asRunner['agent-runs'].claim.post()).data!.run!;
 
-    expect((await asRunner['agent-runs']({ runId: run.id }).heartbeat.post()).status).toBe(204);
-    expect((await asRunner['agent-runs']({ runId: run.id }).heartbeat.post()).status).toBe(204);
+    const beat = await asRunner['agent-runs']({ runId: run.id }).heartbeat.post();
+    expect(beat.status).toBe(200);
+    expect(beat.data).toEqual({ canceled: false });
+    expect((await asRunner['agent-runs']({ runId: run.id }).heartbeat.post()).status).toBe(200);
+  });
+
+  it('tells the runner that someone stopped its run, on the heartbeat and the events', async () => {
+    const { asOwner, asRunner, agent, columnId } = await setup();
+    await queueRun(asOwner, columnId, agent.username);
+    const run = (await asRunner['agent-runs'].claim.post()).data!.run!;
+    const reports = asRunner['agent-runs']({ runId: run.id });
+    await reports.events.post({
+      attempt: run.attempts,
+      offset: 0,
+      events: [{ type: 'TOOL_CALL_START' as const, toolCallId: 'a', toolCallName: 'shell' }],
+    });
+
+    expect((await asOwner['agent-runs']({ runId: run.id }).cancel.post()).status).toBe(200);
+
+    expect((await reports.heartbeat.post({ attempt: run.attempts })).data).toEqual({
+      canceled: true,
+    });
+    const events = await reports.events.post({
+      attempt: run.attempts,
+      offset: 1,
+      events: [{ type: 'TOOL_CALL_END' as const, toolCallId: 'a' }],
+    });
+    expect(events.data).toMatchObject({ canceled: true });
+    expect((await asOwner['agent-runs']({ runId: run.id }).trace.get()).data!.events).toHaveLength(
+      1,
+    );
+    // Another attempt of the run was not stopped: it is no longer the runner's.
+    expect((await reports.heartbeat.post({ attempt: run.attempts + 1 })).status).toBe(404);
   });
 
   it('records presence on the agent when its runner polls', async () => {

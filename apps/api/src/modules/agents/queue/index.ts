@@ -1,4 +1,4 @@
-import { assertMcpAllowed, guards, requiresPermission } from '#shared/guards';
+import { assertProjectReachable, guards, requiresPermission } from '#shared/guards';
 import { HttpError } from '#shared/lib';
 import { externalTraceQuery, ExternalTraceResponse, runParams } from '../runner/model';
 import { visibleRun, readRunTrace } from '../runner/run-events';
@@ -25,7 +25,8 @@ import {
 } from './model';
 import {
   assertReadsRuns,
-  assertReadsRunSteps,
+  assertManagesRun,
+  cancelAgentRun,
   listRunInitiators,
   listRunnerQueue,
   listRunProjects,
@@ -85,7 +86,8 @@ export const runnerQueueRoutes = new Elysia({
         },
       };
     },
-    readRun(part: 'answer' | 'steps') {
+    // The answer is for whoever reads the run; its steps and stopping it for whoever manages it.
+    readRun(part: 'answer' | 'steps' | 'stop') {
       return {
         detail: requiresPermission(['ai_agents', 'read']) as DocumentDecoration,
         async resolve({ params, user, request }) {
@@ -94,8 +96,8 @@ export const runnerQueueRoutes = new Elysia({
           if (!run) throw new HttpError(404, 'Run not found');
           const { projectId } = run;
           await assertReadsRuns(projectId, viewer);
-          if (part === 'steps') await assertReadsRunSteps(run, viewer.id);
-          await assertMcpAllowed(projectId, request.headers);
+          if (part !== 'answer') await assertManagesRun(run, viewer.id);
+          await assertProjectReachable(projectId, request);
           return { projectId, agentId: run.agentId, issueId: run.issueId };
         },
       };
@@ -119,6 +121,31 @@ export const runnerQueueRoutes = new Elysia({
           'waits or runs, retryAfterSeconds says when to read it again. Needs agent read ' +
           "permission in the run's project.",
         ...mcpTool('get_agent_run'),
+      },
+    },
+  )
+  .post(
+    '/agent-runs/:runId/cancel',
+    async ({ params, user }) => {
+      if (!(await cancelAgentRun(params.runId, requireUser(user).id))) {
+        throw new HttpError(409, 'The run already ended');
+      }
+      return (await getAgentRunResult(params.runId))!;
+    },
+    {
+      readRun: 'stop',
+      params: runParams,
+      response: { 200: AgentRunResultResponse, ...commonErrors, ...errors(409) },
+      detail: {
+        summary: 'Stop an agent run',
+        description:
+          'Cancel a run that waits or works, of an internal or an external agent. An internal ' +
+          "agent at work stops within seconds; an external agent's runner stops its command " +
+          'when it next reports, within a minute. Returns the run as get_agent_run reads it; ' +
+          '409 when it already ended. Needs agent read ' +
+          "permission in the run's project, and creating or changing its agents unless the " +
+          "caller runs the team, owns the project or is the run's initiator.",
+        ...mcpTool('cancel_agent_run'),
       },
     },
   )

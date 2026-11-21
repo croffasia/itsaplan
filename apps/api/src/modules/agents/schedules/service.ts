@@ -398,6 +398,7 @@ export interface ScheduleRunRow {
   contextTokens?: number;
   scheduledFor: string | null;
   startedAt: string | null;
+  receivedAt: string | null;
   finishedAt: string | null;
   createdAt: string;
 }
@@ -429,6 +430,7 @@ export async function listScheduleRuns(
     ...contextTokensOf(row),
     scheduledFor: row.scheduledFor ? iso(row.scheduledFor) : null,
     startedAt: row.startedAt ? iso(row.startedAt) : null,
+    receivedAt: row.receivedAt ? iso(row.receivedAt) : null,
     finishedAt: row.finishedAt ? iso(row.finishedAt) : null,
     createdAt: iso(row.createdAt),
   }));

@@ -40,6 +40,13 @@ export const runContextTokens = t.Optional(
   }),
 );
 
+export const runReceivedAt = t.Nullable(
+  t.String({
+    description:
+      "When the agent first took the run. Null for a run an external agent never received, as one its endpoint refused, and for an internal agent's run.",
+  }),
+);
+
 // What the last model call of an answer read, cache included, and what it wrote, as a
 // runner reports it. Left out by a command that reported nothing about it, which leaves
 // the counts already stored; null where the command reports none a context size can be

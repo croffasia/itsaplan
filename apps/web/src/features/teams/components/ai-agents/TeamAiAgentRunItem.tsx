@@ -90,7 +90,7 @@ export default function TeamAiAgentRunItem({
           {r.executionState === 'queued' && (
             <AgentRunBlock label={t('queue')} value={queueDetail(r, tRuns)} />
           )}
-          {external && <AgentRunExternalTrace runId={r.id} />}
+          {external && <AgentRunExternalTrace run={r} />}
           {outcome && <p className="text-xs text-muted-foreground">{outcome}</p>}
         </div>
       )}

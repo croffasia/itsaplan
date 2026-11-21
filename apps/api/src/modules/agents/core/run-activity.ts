@@ -3,17 +3,16 @@ import { getIssue, updateIssue } from '#modules/issues/service';
 import type { AgentRunTrigger } from '../model';
 import { isProjectAgent } from './service';
 
-// What happens on the issue when an agent takes a queued run of it. Only the first
-// claim counts: a re-claim after an expired lease is the same task handed out again.
-// A schedule's run on an issue first makes the agent the issue's delegate, so the issue
-// shows which agent works on it.
+// What happens on the issue when an agent takes a queued run of it, called for the first
+// attempt it takes only: a later one is the same task handed out again. A schedule's run
+// on an issue first makes the agent the issue's delegate, so the issue shows which agent
+// works on it.
 export async function agentRunStarted(run: {
   issueId: number | null;
-  attempts: number;
   agentUserId: string;
   trigger: AgentRunTrigger;
 }): Promise<void> {
-  if (run.issueId == null || run.attempts > 1) return;
+  if (run.issueId == null) return;
   if (run.trigger === 'status' || run.trigger === 'event') {
     await delegateToAgent(run.issueId, run.agentUserId);
   }

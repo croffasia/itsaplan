@@ -7,6 +7,7 @@ import { resetDb } from '#tests/helpers/db';
 import { createAgent, teamOf } from '#tests/helpers/agents';
 import { createRole } from '#tests/helpers/roles';
 import { addProjectMember } from '#tests/helpers/members';
+import { onProjectEvent } from '#modules/webhooks/emit';
 import { setRunAdmission } from '../../../core/run-admission';
 import { scheduleRunRetry } from '../../../core/run-queue';
 
@@ -266,6 +267,48 @@ describe('runner queue', () => {
     await api.projects({ projectKey: 'RUN' }).members({ userId: memberId }).delete();
     const afterLeaving = (await teamRuns.initiators.options.get()).data!;
     expect(afterLeaving.map((person) => person.id)).toContain(memberId);
+  });
+
+  it('lets whoever manages a run stop it, and tells the listeners who did', async () => {
+    const { api, ownerId, issue } = await setup();
+    const member = await addProjectMember(api, 'RUN');
+    await member.issues({ issueId: issue.id }).comments.post({ body: '@runner mine' });
+    const runs = (await api['agent-runs'].queue.get()).data!.items;
+    const mine = runs.find((run) => run.initiator?.id !== ownerId)!;
+    const theirs = runs.find((run) => run.initiator?.id === ownerId)!;
+    const stoppedBy: unknown[] = [];
+    const off = onProjectEvent(({ type, actor }) => {
+      if (type === 'agent_run.finished') stoppedBy.push(actor);
+      return Promise.resolve();
+    });
+
+    try {
+      expect((await member['agent-runs']({ runId: theirs.id }).cancel.post()).status).toBe(403);
+      const stopped = await member['agent-runs']({ runId: mine.id }).cancel.post();
+      expect(stopped.status).toBe(200);
+      expect(stopped.data).toMatchObject({ runId: mine.id, status: 'canceled' });
+      const byOwner = await api['agent-runs']({ runId: theirs.id }).cancel.post();
+      expect(byOwner.data).toMatchObject({ status: 'canceled' });
+      expect((await api['agent-runs']({ runId: theirs.id }).cancel.post()).status).toBe(409);
+    } finally {
+      off();
+    }
+
+    expect(stoppedBy).toEqual([mine.initiator!.id, ownerId]);
+    const after = (await api['agent-runs'].queue.get()).data!;
+    expect(after.items.map((run) => run.executionState)).toEqual(['canceled', 'canceled']);
+  });
+
+  it('does not stop a run nobody can see, nor one in an archived project', async () => {
+    const { api, project } = await setup();
+    const [run] = (await api['agent-runs'].queue.get()).data!.items;
+    expect((await api['agent-runs']({ runId: run.id + 1000 }).cancel.post()).status).toBe(404);
+
+    await api.teams({ teamId: project.teamId }).projects({ projectId: project.id }).archive.post();
+    expect((await api['agent-runs']({ runId: run.id }).cancel.post()).status).toBe(403);
+    expect((await api['agent-runs']({ runId: run.id }).get()).data).toMatchObject({
+      status: 'queued',
+    });
   });
 
   it('narrows the queue to the project it is read in', async () => {

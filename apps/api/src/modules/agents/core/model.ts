@@ -1,7 +1,7 @@
 import { t } from 'elysia';
 
 import { pageQueryFields, pageResponse } from '#shared/pagination';
-import { agentRunTrigger, agentExecutionState, runContextTokens } from '../model';
+import { agentRunTrigger, agentExecutionState, runContextTokens, runReceivedAt } from '../model';
 
 export { agentParams, projectAgentParams } from '../model';
 
@@ -224,6 +224,7 @@ export const AgentRunResponse = t.Object({
   lastError: t.Nullable(t.String()),
   output: t.Nullable(t.String()),
   contextTokens: runContextTokens,
+  receivedAt: runReceivedAt,
   nextAttemptAt: t.String(),
   createdAt: t.String(),
 });

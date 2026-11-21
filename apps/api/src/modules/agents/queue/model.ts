@@ -79,8 +79,9 @@ export const RunnerQueueResponse = t.Object({
       ),
       canReadSteps: t.Boolean({
         description:
-          "Whether the caller reads the run's steps, what its agent did: whoever runs the team, " +
-          "an owner of the project, whoever may create or change its agents, and the run's initiator.",
+          "Whether the caller reads the run's steps, what its agent did, and may stop it: whoever " +
+          'runs the team, an owner of the project, whoever may create or change its agents, and ' +
+          "the run's initiator.",
       }),
       inputTokens: t.Nullable(t.Number({ description: 'What the last model call read.' })),
       outputTokens: t.Nullable(t.Number({ description: 'What the last model call wrote.' })),

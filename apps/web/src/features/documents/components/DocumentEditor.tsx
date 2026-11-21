@@ -6,6 +6,7 @@ import type { ProjectDocument, ProjectDocumentSummary } from '@/lib/api/endpoint
 import { useRelativeTime } from '@/context/relativeTimeContext';
 import { useSession } from '@/lib/auth-client';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { useDocumentCommentMarks } from '../hooks/useDocumentCommentMarks';
 import { useDocumentCollaboration } from '../hooks/useDocumentCollaboration';
 import DocumentCommentsPanel from './DocumentCommentsPanel';
@@ -16,6 +17,7 @@ import { useDocumentActionGate } from '../hooks/useDocumentActionGate';
 import { useDocumentEditorPreferences } from '../hooks/useDocumentEditorPreferences';
 import {
   useArchiveDocument,
+  useMoveDocument,
   useRestoreDocument,
   useSetDocumentAccess,
   useSetDocumentFavorite,
@@ -105,6 +107,7 @@ export default function DocumentEditor({
   const setDocumentAccess = useSetDocumentAccess(projectKey);
   const setDocumentLocked = useSetDocumentLocked(projectKey);
   const archiveDocument = useArchiveDocument(projectKey);
+  const moveDocument = useMoveDocument(projectKey);
   const restoreDocument = useRestoreDocument(projectKey);
   const setDocumentFavorite = useSetDocumentFavorite(projectKey);
   const uploadDocumentAsset = useUploadDocumentAsset(projectKey, document.id);
@@ -153,6 +156,7 @@ export default function DocumentEditor({
     setDocumentAccess.isPending ||
     setDocumentLocked.isPending ||
     archiveDocument.isPending ||
+    moveDocument.isPending ||
     restoreDocument.isPending ||
     setDocumentFavorite.isPending;
   const actionPending = documentAction.pending || providerActionPending;
@@ -256,6 +260,18 @@ export default function DocumentEditor({
             void documentAction.run(async () => {
               const baseVersion = await prepareVersion();
               if (baseVersion !== null) await onDuplicate(title, baseVersion);
+            });
+          }}
+          onMove={(move, parent) => {
+            void runVersioned((baseVersion) =>
+              moveDocument.mutateAsync({ documentId: document.id, version: baseVersion, ...move }),
+            ).then((changed) => {
+              if (!changed) return;
+              toast.success(
+                parent
+                  ? t('movedTo', { title: parent.title.trim() || t('untitled') })
+                  : t('movedToTopLevel'),
+              );
             });
           }}
           onFavoriteChange={(isFavorite) => {

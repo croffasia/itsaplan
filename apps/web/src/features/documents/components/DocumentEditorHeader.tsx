@@ -12,6 +12,7 @@ import type { ProjectDocument, ProjectDocumentSummary } from '@/lib/api/endpoint
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { DocumentSaveState } from '../hooks/useDocumentDraft';
+import type { DocumentPlacement } from '../utils/documentMove';
 import DocumentAccessButton from './DocumentAccessButton';
 import DocumentBreadcrumbs from './DocumentBreadcrumbs';
 import DocumentCopyLinkButton from './DocumentCopyLinkButton';
@@ -46,6 +47,7 @@ export default function DocumentEditorHeader({
   onStickyToolbarChange,
   onCreate,
   onDuplicate,
+  onMove,
   onFavoriteChange,
   onLockChange,
   onAccessChange,
@@ -83,6 +85,7 @@ export default function DocumentEditorHeader({
   onStickyToolbarChange: (value: boolean) => void;
   onCreate: (parentId: number | null, isPrivate: boolean) => void;
   onDuplicate: () => void;
+  onMove: (move: DocumentPlacement, parent: ProjectDocumentSummary | null) => void;
   onFavoriteChange: (favorite: boolean) => void;
   onLockChange: (locked: boolean) => void;
   onAccessChange: (isPrivate: boolean, memberIds?: string[]) => void;
@@ -217,6 +220,7 @@ export default function DocumentEditorHeader({
           <PanelRight />
         </Button>
         <DocumentOptionsMenu
+          projectKey={projectKey}
           document={document}
           title={title}
           content={content}
@@ -231,6 +235,7 @@ export default function DocumentEditorHeader({
           onStickyToolbarChange={onStickyToolbarChange}
           onCreateChild={() => onCreate(document.id, document.isPrivate)}
           onDuplicate={onDuplicate}
+          onMove={onMove}
           onArchive={onArchive}
           onRestore={onRestore}
           onDelete={onDelete}

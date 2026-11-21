@@ -22,6 +22,7 @@ export default function SortableDocumentRow({
   canCreate,
   reorderEnabled,
   favoritePending,
+  menu,
   children,
   onToggle,
   onCreate,
@@ -37,6 +38,7 @@ export default function SortableDocumentRow({
   canCreate: boolean;
   reorderEnabled: boolean;
   favoritePending: boolean;
+  menu?: ReactNode;
   children?: ReactNode;
   onToggle: () => void;
   onCreate: () => void;
@@ -160,6 +162,8 @@ export default function SortableDocumentRow({
               <Plus className="size-3.5" />
             </Button>
           )}
+
+          {menu}
         </div>
       </div>
       {children}

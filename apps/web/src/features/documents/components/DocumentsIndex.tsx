@@ -16,6 +16,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import { Button } from '@/components/ui/button';
 import {
@@ -395,6 +396,8 @@ export default function DocumentsIndex({
               sortBy={sort}
               sortDirection={sortDirection}
               canCreate={canCreate}
+              canMove={canEdit}
+              movePending={move.isPending}
               reorderEnabled={
                 canEdit &&
                 tab !== 'favorites' &&
@@ -408,6 +411,16 @@ export default function DocumentsIndex({
               favoritePending={favorite.isPending}
               onCreate={onCreate}
               onMove={(input) => move.mutate(input)}
+              onMoveTo={(input, parent) =>
+                move.mutate(input, {
+                  onSuccess: () =>
+                    toast.success(
+                      parent
+                        ? t('movedTo', { title: parent.title.trim() || t('untitled') })
+                        : t('movedToTopLevel'),
+                    ),
+                })
+              }
               onFavoriteChange={(documentId, isFavorite) =>
                 favorite.mutate({ documentId, isFavorite })
               }

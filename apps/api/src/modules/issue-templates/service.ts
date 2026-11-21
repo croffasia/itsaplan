@@ -1,7 +1,7 @@
 import { db, issueTemplate, issueTemplateLabel, issueType, label, projectColumn } from '@repo/db';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
-import { getMembership } from '#modules/members/service';
+import { getMembership, isAccountActive } from '#modules/members/service';
 
 // Data access for issue templates: the presets a new issue can be created from.
 // Every template belongs to a project, and each of its properties is optional —
@@ -92,8 +92,14 @@ export interface IssueTemplateInput {
 
 // Enforces that every property the template presets belongs to its project: the
 // foreign keys only require the row to exist somewhere. Only checks what the input
-// sets to a non-null value — clearing a property is always allowed.
-async function assertPresets(projectId: number, input: Partial<IssueTemplateInput>): Promise<void> {
+// sets to a non-null value — clearing a property is always allowed. A deactivated
+// account is refused as a new assignee; `currentAssigneeUserId` is the one the template
+// has now, so saving it unchanged still passes.
+async function assertPresets(
+  projectId: number,
+  input: Partial<IssueTemplateInput>,
+  currentAssigneeUserId: string | null = null,
+): Promise<void> {
   if (input.typeId != null) {
     const rows = await db
       .select({ id: issueType.id })
@@ -111,6 +117,11 @@ async function assertPresets(projectId: number, input: Partial<IssueTemplateInpu
   if (input.assigneeUserId) {
     const role = await getMembership(projectId, input.assigneeUserId);
     if (!role) throw new HttpError(400, 'Assignee must be a project member');
+    if (
+      input.assigneeUserId !== currentAssigneeUserId &&
+      !(await isAccountActive(input.assigneeUserId))
+    )
+      throw new HttpError(400, 'Assignee must be an active account');
   }
   const labelIds = [...new Set(input.labelIds ?? [])];
   if (labelIds.length > 0) {
@@ -164,7 +175,7 @@ export async function updateIssueTemplate(
 ): Promise<IssueTemplateRow | null> {
   const current = await getIssueTemplateById(projectId, id);
   if (!current) return null;
-  await assertPresets(projectId, patch);
+  await assertPresets(projectId, patch, current.assigneeUserId);
   await db
     .update(issueTemplate)
     .set({

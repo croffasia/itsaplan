@@ -42,6 +42,7 @@ import { useDueDatePresetLabel } from './useDueDatePresetLabel';
 import { buildIssuePrompt } from '../utils/issuePrompt';
 import { writeClipboardText } from '../utils/clipboard';
 import { delegatableAgents } from '../utils/delegates';
+import { assignableMembers } from '@/utils/project';
 
 // The palette commands for the issue the user is looking at — the issue page or
 // the open detail panel. They are the context menu's actions in command form and
@@ -99,7 +100,7 @@ export function useIssueCommands(
   const canEdit = can('work_items', 'edit');
   const canDelete = can('work_items', 'delete');
   const patch = (fields: IssuePatch) => updateIssue.mutate({ id: issue.id, patch: fields });
-  const members = project.assignees.filter((a) => a.kind === 'member');
+  const members = assignableMembers(project.assignees);
   const agents = delegatableAgents(project.assignees, session?.user.id ?? null);
   const actions = matchedActions(actionsQuery.data ?? [], project, issue);
   const currentColumn = project.columns.find((c) => c.id === issue.columnId);
@@ -177,7 +178,7 @@ export function useIssueCommands(
       },
     });
 
-    if (members.length > 0) {
+    if (members.length > 0 || issue.assigneeUserId != null) {
       items.push({
         id: 'issue.assignee',
         label: t('assignee'),

@@ -34,6 +34,7 @@ import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueAct
 import { buildIssueBranchName, buildIssuePrompt } from '../../utils/issuePrompt';
 import { writeClipboardText } from '../../utils/clipboard';
 import { delegatableAgents } from '../../utils/delegates';
+import { assignableMembers } from '@/utils/project';
 import { useSession } from '@/lib/auth-client';
 import { calendarSystem, toDateStr } from '@/utils/dates';
 import { colorDot } from '@/components/common/fields/colorDot';
@@ -127,7 +128,7 @@ export default function IssueMenu({
   const currentColumn = project.columns.find((c) => c.id === issue.columnId);
   const currentPriority =
     PRIORITY_FIELDS.find((p) => p.value === (issue.priority ?? '')) ?? PRIORITY_FIELDS[0];
-  const members = project.assignees.filter((a) => a.kind === 'member');
+  const members = assignableMembers(project.assignees);
   const agents = delegatableAgents(project.assignees, session?.user.id ?? null);
   const initiatives = initiativesQuery.data ?? [];
 
@@ -192,7 +193,7 @@ export default function IssueMenu({
               </ContextMenuSubContent>
             </ContextMenuSub>
 
-            {members.length > 0 && (
+            {(members.length > 0 || issue.assigneeUserId != null) && (
               <ContextMenuSub>
                 <ContextMenuSubTrigger>
                   <User />

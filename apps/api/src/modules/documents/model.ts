@@ -32,6 +32,9 @@ const DocumentSummaryResponse = t.Object({
   isPrivate: t.Boolean(),
   visibility: t.Union([t.Literal('public'), t.Literal('private'), t.Literal('restricted')]),
   isLocked: t.Boolean(),
+  isPinned: t.Boolean({
+    description: 'Shown first among its siblings to everyone in the project.',
+  }),
   isFavorite: t.Boolean(),
   archivedAt: t.Nullable(t.String()),
   position: t.Number(),
@@ -133,6 +136,12 @@ export const updateDocumentPreferenceBody = t.Object({
 });
 
 export const DocumentPreferenceResponse = t.Object({ isFavorite: t.Boolean() });
+
+export const documentPinBody = t.Object({
+  isPinned: t.Boolean(),
+});
+
+export const DocumentPinResponse = t.Object({ isPinned: t.Boolean() });
 
 export const documentIssueParams = t.Object({
   projectKey: t.String(),

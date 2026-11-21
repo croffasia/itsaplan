@@ -15,6 +15,7 @@ function document(id: number, parentId: number | null, title: string): ProjectDo
     isPrivate: false,
     visibility: 'public',
     isLocked: false,
+    isPinned: false,
     isFavorite: false,
     archivedAt: null,
     position: id,

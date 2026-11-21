@@ -20,10 +20,9 @@ import { FilePlus2, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import { Button } from '@/components/ui/button';
+import { compareDocuments, type DocumentSort } from '../utils/documentList';
 import { projectedDocumentMove } from '../utils/documentMove';
 import SortableDocumentRow from './SortableDocumentRow';
-
-export type DocumentSort = 'position' | 'title' | 'created' | 'updated';
 
 const treeDefaults: { collapsed: number[] } = { collapsed: [] };
 
@@ -35,11 +34,14 @@ export default function DocumentTree({
   sortBy,
   sortDirection,
   canCreate,
+  canPin,
   reorderEnabled,
   favoritePending,
+  pinPending,
   onCreate,
   onMove,
   onFavoriteChange,
+  onPinChange,
 }: {
   projectKey: string;
   documents: ProjectDocumentSummary[];
@@ -48,8 +50,10 @@ export default function DocumentTree({
   sortBy: DocumentSort;
   sortDirection: 'asc' | 'desc';
   canCreate: boolean;
+  canPin: boolean;
   reorderEnabled: boolean;
   favoritePending: boolean;
+  pinPending: boolean;
   onCreate: (parentId: number | null) => void;
   onMove: (input: {
     documentId: number;
@@ -60,6 +64,7 @@ export default function DocumentTree({
     nextSiblingId: number | null;
   }) => void;
   onFavoriteChange: (documentId: number, isFavorite: boolean) => void;
+  onPinChange: (documentId: number, isPinned: boolean) => void;
 }) {
   const t = useTranslations('documents');
   const [treeState, setTreeState] = useDocumentNavigation(projectKey, 'tree', treeDefaults);
@@ -81,17 +86,7 @@ export default function DocumentTree({
     }
 
     for (const siblings of groups.values()) {
-      siblings.sort((a, b) => {
-        let result = a.position - b.position || a.id - b.id;
-        if (sortBy === 'title') result = a.title.localeCompare(b.title) || a.id - b.id;
-        if (sortBy === 'created') {
-          result = Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id - b.id;
-        }
-        if (sortBy === 'updated') {
-          result = Date.parse(a.updatedAt) - Date.parse(b.updatedAt) || a.id - b.id;
-        }
-        return sortBy !== 'position' && sortDirection === 'desc' ? -result : result;
-      });
+      siblings.sort((a, b) => compareDocuments(a, b, sortBy, sortDirection));
     }
     return groups;
   }, [byId, documents, sortBy, sortDirection]);
@@ -148,11 +143,14 @@ export default function DocumentTree({
         collapsed={isCollapsed}
         hasChildren={children.length > 0}
         canCreate={canCreate}
+        canPin={canPin}
         reorderEnabled={reorderEnabled}
         favoritePending={favoritePending}
+        pinPending={pinPending}
         onToggle={() => toggle(item.id)}
         onCreate={() => onCreate(item.id)}
         onFavoriteChange={() => onFavoriteChange(item.id, !item.isFavorite)}
+        onPinChange={() => onPinChange(item.id, !item.isPinned)}
       >
         {nested && !isCollapsed && children.length > 0 && renderRows(item.id, depth + 1)}
       </SortableDocumentRow>

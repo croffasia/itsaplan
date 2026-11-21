@@ -79,7 +79,7 @@ import {
 } from '#modules/agents/core/service';
 import { getInitiativeProjectId } from '#modules/initiatives/service';
 import { cycleStatus, getCycleRef, type CycleStatus } from '#modules/cycles/service';
-import { getMembership } from '#modules/members/service';
+import { getMembership, isAccountActive } from '#modules/members/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
 import { runOrigin } from '#modules/agents/core/run-initiator';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
@@ -1034,14 +1034,22 @@ export interface NewIssueInput {
 
 // Enforces that assignee holds a project member and delegate holds an agent of the
 // same project. Only checks the fields present in the patch, and only when set to a
-// non-null value (clearing a field is always allowed). Throws 400 otherwise.
+// non-null value (clearing a field is always allowed). Throws 400 otherwise. A
+// deactivated account is refused as a new assignee; `currentAssigneeUserId` is who the
+// issue has now, so a write that keeps a deactivated assignee in place still passes.
 async function assertAssignments(
   projectId: number,
   patch: { assigneeUserId?: string | null; delegateUserId?: string | null },
+  currentAssigneeUserId: string | null = null,
 ): Promise<void> {
   if (patch.assigneeUserId) {
     const role = await getMembership(projectId, patch.assigneeUserId);
     if (!role) throw new HttpError(400, 'Assignee must be a project member');
+    if (
+      patch.assigneeUserId !== currentAssigneeUserId &&
+      !(await isAccountActive(patch.assigneeUserId))
+    )
+      throw new HttpError(400, 'Assignee must be an active account');
   }
   if (patch.delegateUserId) {
     if (!(await isProjectAgent(projectId, patch.delegateUserId)))
@@ -1351,7 +1359,7 @@ export async function updateIssue(
     patch.startDate !== undefined ? patch.startDate : before.startDate,
     patch.dueDate !== undefined ? patch.dueDate : before.dueDate,
   );
-  await assertAssignments(before.projectId, patch);
+  await assertAssignments(before.projectId, patch, before.assigneeUserId);
   await assertInitiative(before.projectId, patch.initiativeId);
   await assertCycle(before.projectId, patch.cycleId, before.cycleId);
   await assertColumn(before.projectId, patch.columnId);
@@ -1600,6 +1608,20 @@ export async function bulkUpdateIssues(
     await assertColumn(projectId, patch.columnId);
     const incoming = await countEnteringColumn(valid, patch.columnId);
     if (incoming > 0) await assertWipLimit(patch.columnId, incoming);
+  }
+  // Same reason as the WIP check: an inactive assignee that only some of the issues
+  // already hold would refuse the rest after the first ones were written.
+  if (patch.assigneeUserId && valid.length > 0 && !(await isAccountActive(patch.assigneeUserId))) {
+    const [{ changing }] = await db
+      .select({ changing: sql<number>`count(*)::int` })
+      .from(issue)
+      .where(
+        and(
+          inArray(issue.id, valid),
+          or(isNull(issue.assigneeUserId), ne(issue.assigneeUserId, patch.assigneeUserId)),
+        ),
+      );
+    if (changing > 0) throw new HttpError(400, 'Assignee must be an active account');
   }
   for (const id of valid) await updateIssue(id, patch, actorUserId);
   return valid.length;

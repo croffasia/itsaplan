@@ -1,3 +1,4 @@
+import { isAccountDeactivated } from '@repo/auth';
 import {
   db,
   project,
@@ -101,6 +102,14 @@ export async function getMembership(projectId: number, userId: string): Promise<
     .from(projectMember)
     .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, userId)));
   return rows[0] ? (rows[0].role as MemberRole) : null;
+}
+
+// Whether the account can still be given work: false once it is deactivated (user.active),
+// by god or the instance's SCIM provider. Its projects and issues stay, so a write that
+// only keeps what an issue already holds does not ask; one that hands work over does.
+export async function isAccountActive(userId: string): Promise<boolean> {
+  const rows = await db.select({ active: user.active }).from(user).where(eq(user.id, userId));
+  return rows[0] ? !isAccountDeactivated(rows[0]) : false;
 }
 
 export function toMemberContext(role: MemberRole, rolePermissions: unknown): MemberContext {
@@ -209,6 +218,10 @@ export interface AssigneeCandidate {
   // always reaches as a notification.
   respondsToMention: boolean | null;
   canReadWorkItems: boolean;
+  // False for a deactivated account. It stays in the list so the issues it holds still
+  // resolve to a name, and so filters, member fields and mentions still reach it; a
+  // picker of assignees leaves it out.
+  active: boolean;
 }
 
 export async function listAssigneeCandidates(projectId: number): Promise<AssigneeCandidate[]> {
@@ -220,6 +233,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
         email: user.email,
         username: user.username,
         image: user.image,
+        active: user.active,
         role: projectMember.role,
         permissions: teamRole.permissions,
         description: projectMember.description,
@@ -239,6 +253,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
         email: user.email,
         username: aiAgent.username,
         image: user.image,
+        active: user.active,
         agentKind: aiAgent.kind,
         ownerUserId: aiAgent.ownerUserId,
         runnerScope: aiAgent.runnerScope,
@@ -261,6 +276,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
       email: r.email,
       username: r.username,
       image: r.image,
+      active: !isAccountDeactivated(r),
       kind: 'member',
       agentKind: null,
       role: r.role as MemberRole,
@@ -277,6 +293,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
     email: r.email,
     username: r.username,
     image: r.image,
+    active: !isAccountDeactivated(r),
     kind: 'agent',
     agentKind: r.agentKind as 'external' | 'internal',
     role: null,

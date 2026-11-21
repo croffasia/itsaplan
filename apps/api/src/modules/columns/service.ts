@@ -1,3 +1,4 @@
+import { isAccountDeactivated } from '@repo/auth';
 import {
   db,
   project,
@@ -6,10 +7,11 @@ import {
   issueLabel,
   issueFieldValue,
   issueFieldOption,
+  user,
 } from '@repo/db';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
-import { getMembership } from '#modules/members/service';
+import { getMembership, isAccountActive } from '#modules/members/service';
 import { recordActivityForIssues, statusSide } from '#modules/issues/activity';
 import { getIssues } from '#modules/issues/service';
 import { emitIssueEvents, issuePayloads } from '#modules/issues/webhook-payload';
@@ -44,18 +46,30 @@ function mapColumn(row: typeof projectColumn.$inferSelect): ColumnRow {
   };
 }
 
-async function assertAutoAssignee(projectId: number, userId?: string | null): Promise<void> {
+// A deactivated account is refused as a new auto-assignee; `currentUserId` is the one the
+// column has now, so saving a column that keeps it (the settings form sends it back with
+// every edit) still passes.
+async function assertAutoAssignee(
+  projectId: number,
+  userId?: string | null,
+  currentUserId: string | null = null,
+): Promise<void> {
   if (!userId) return;
   if (!(await getMembership(projectId, userId)))
     throw new HttpError(400, 'Auto-assignee must be a project member');
+  if (userId !== currentUserId && !(await isAccountActive(userId)))
+    throw new HttpError(400, 'Auto-assignee must be an active account');
 }
 
+// Who an issue entering the column is assigned to. A deactivated auto-assignee takes
+// nobody: the issue enters the column and keeps the assignee it has.
 export async function columnAutoAssignee(columnId: number): Promise<string | null> {
   const [row] = await db
-    .select({ userId: projectColumn.autoAssignUserId })
+    .select({ userId: projectColumn.autoAssignUserId, active: user.active })
     .from(projectColumn)
+    .innerJoin(user, eq(user.id, projectColumn.autoAssignUserId))
     .where(eq(projectColumn.id, columnId));
-  return row?.userId ?? null;
+  return row && !isAccountDeactivated(row) ? row.userId : null;
 }
 
 export const WIP_LIMIT_EXCEEDED = 'wip_limit_exceeded';
@@ -177,8 +191,14 @@ export async function updateColumn(
     autoAssignUserId?: string | null;
   },
 ): Promise<ColumnRow | null> {
-  await assertAutoAssignee(projectId, patch.autoAssignUserId);
   const scope = and(eq(projectColumn.id, id), eq(projectColumn.projectId, projectId));
+  if (patch.autoAssignUserId) {
+    const [current] = await db
+      .select({ userId: projectColumn.autoAssignUserId })
+      .from(projectColumn)
+      .where(scope);
+    await assertAutoAssignee(projectId, patch.autoAssignUserId, current?.userId ?? null);
+  }
   const set: Partial<typeof projectColumn.$inferInsert> = {};
   if (patch.name !== undefined) set.name = patch.name;
   if (patch.color !== undefined) set.color = patch.color;

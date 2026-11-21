@@ -5,7 +5,7 @@ import { guards, entityGuard } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
 import { requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
-import { commonErrors, errors } from '#shared/responses';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { paginate } from '#shared/pagination';
 import { deleteObjects } from '@repo/storage';
 import {
@@ -41,6 +41,7 @@ import {
 } from './model';
 import {
   listInitiatives,
+  listFavoriteInitiatives,
   listInitiativeOptions,
   initiativeStatusCounts,
   getInitiative,
@@ -48,6 +49,8 @@ import {
   createInitiative,
   updateInitiative,
   deleteInitiative,
+  addFavoriteInitiative,
+  removeFavoriteInitiative,
 } from './service';
 import {
   createInitiativeAttachment,
@@ -100,7 +103,7 @@ export const initiativeRoutes = new Elysia({
 
   .get(
     '/projects/:projectKey/initiatives',
-    ({ project, query }) => {
+    ({ project, query, user }) => {
       const statuses = query.status
         ? query.status
             .split(',')
@@ -108,13 +111,17 @@ export const initiativeRoutes = new Elysia({
             .filter(Boolean)
         : undefined;
       return paginate(query, (window) =>
-        listInitiatives(project.id, {
-          statuses,
-          search: query.search,
-          sort: query.sort,
-          dir: query.dir,
-          ...window,
-        }),
+        listInitiatives(
+          project.id,
+          {
+            statuses,
+            search: query.search,
+            sort: query.sort,
+            dir: query.dir,
+            ...window,
+          },
+          requireUser(user).id,
+        ),
       );
     },
     {
@@ -126,6 +133,20 @@ export const initiativeRoutes = new Elysia({
         summary: 'List initiatives',
         description: "List a project's initiatives.",
         ...mcpTool('list_initiatives'),
+      },
+    },
+  )
+
+  .get(
+    '/projects/:projectKey/initiatives/favorites',
+    ({ project, user }) => listFavoriteInitiatives(project.id, requireUser(user).id),
+    {
+      permission: ['initiatives', 'read'],
+      feature: 'initiatives',
+      response: { 200: InitiativeOptionListResponse, ...accessErrors },
+      detail: {
+        summary: 'List favorite initiatives',
+        description: "List the caller's favorite initiatives in a project.",
       },
     },
   )
@@ -182,8 +203,8 @@ export const initiativeRoutes = new Elysia({
 
   .get(
     '/initiatives/:initiativeId',
-    async ({ params }) => {
-      const found = await getInitiative(params.initiativeId);
+    async ({ params, user }) => {
+      const found = await getInitiative(params.initiativeId, requireUser(user).id);
       if (!found) throw new HttpError(404, 'Initiative not found');
       return found;
     },
@@ -195,6 +216,41 @@ export const initiativeRoutes = new Elysia({
         summary: 'Get an initiative',
         description: 'Get an initiative by id.',
         ...mcpTool('get_initiative'),
+      },
+    },
+  )
+
+  // Favorites are the caller's own, so reading the initiative is enough to mark one.
+  .put(
+    '/initiatives/:initiativeId/favorite',
+    async ({ params, user }) => {
+      await addFavoriteInitiative(params.initiativeId, requireUser(user).id);
+      return noContent();
+    },
+    {
+      params: initiativeParams,
+      initiative: 'read',
+      response: { 204: t.Void(), ...commonErrors },
+      detail: {
+        summary: 'Favorite an initiative',
+        description: "Add an initiative to the caller's favorites.",
+      },
+    },
+  )
+
+  .delete(
+    '/initiatives/:initiativeId/favorite',
+    async ({ params, user }) => {
+      await removeFavoriteInitiative(params.initiativeId, requireUser(user).id);
+      return noContent();
+    },
+    {
+      params: initiativeParams,
+      initiative: 'read',
+      response: { 204: t.Void(), ...commonErrors },
+      detail: {
+        summary: 'Unfavorite an initiative',
+        description: "Remove an initiative from the caller's favorites.",
       },
     },
   )

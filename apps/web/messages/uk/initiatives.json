@@ -3,6 +3,8 @@
   "newInitiative": "Нова ініціатива",
   "notFound": "Ініціативу не знайдено.",
   "options": "Дії з ініціативою",
+  "addFavorite": "Додати до обраного",
+  "removeFavorite": "Прибрати з обраного",
   "showDescription": "Показати опис",
   "noDescription": "Опису немає.",
   "noOwner": "Без власника",

@@ -12,7 +12,9 @@ import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { STATUS_META } from '@/utils/initiativeMeta';
+import { useSetInitiativeFavorite } from '@/services/initiatives.service';
 import HealthBadge from '../shared/HealthBadge';
+import InitiativeFavoriteButton from '../shared/InitiativeFavoriteButton';
 import ProgressBar from '@/components/common/ProgressBar';
 
 // The whole row navigates to the detail page; the title is also a real anchor so
@@ -29,6 +31,7 @@ export default function InitiativeRow({
   const t = useTranslations('initiatives');
   const priorityLabel = usePriorityLabel();
   const router = useRouter();
+  const setFavorite = useSetInitiativeFavorite(projectKey);
   const href = initiativePath(projectKey, initiative.id);
 
   return (
@@ -43,6 +46,16 @@ export default function InitiativeRow({
           >
             {initiative.title}
           </Link>
+          <div className="ms-auto shrink-0">
+            <InitiativeFavoriteButton
+              favorite={initiative.favorite}
+              disabled={setFavorite.isPending}
+              revealOnHover
+              onToggle={() =>
+                setFavorite.mutate({ id: initiative.id, favorite: !initiative.favorite })
+              }
+            />
+          </div>
         </div>
       </TableCell>
 

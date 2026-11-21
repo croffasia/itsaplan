@@ -463,6 +463,104 @@ describe('initiatives', () => {
     });
   });
 
+  describe('favorites', () => {
+    it('marks an initiative favorite for the caller and clears it again', async () => {
+      const { asOwner } = await setup();
+      const created = (await createInitiative(asOwner, { title: 'Q3 Launch' })).data!;
+      expect(created.favorite).toBe(false);
+      expect((await initiatives(asOwner).favorites.get()).data).toEqual([]);
+
+      const added = await asOwner.initiatives({ initiativeId: created.id }).favorite.put();
+      expect(added.status).toBe(204);
+
+      const detail = await asOwner.initiatives({ initiativeId: created.id }).get();
+      expect(detail.data).toMatchObject({ id: created.id, favorite: true });
+
+      const list = await initiatives(asOwner).get();
+      expect(list.data!.items).toMatchObject([{ id: created.id, favorite: true }]);
+
+      const favs = await initiatives(asOwner).favorites.get();
+      expect(favs.status).toBe(200);
+      expect(favs.data).toEqual([{ id: created.id, title: 'Q3 Launch', status: 'planned' }]);
+
+      const patched = await asOwner
+        .initiatives({ initiativeId: created.id })
+        .patch({ title: 'Q3 Launch v2' });
+      expect(patched.data).toMatchObject({ id: created.id, title: 'Q3 Launch v2', favorite: true });
+
+      const removed = await asOwner.initiatives({ initiativeId: created.id }).favorite.delete();
+      expect(removed.status).toBe(204);
+      expect((await asOwner.initiatives({ initiativeId: created.id }).get()).data).toMatchObject({
+        id: created.id,
+        favorite: false,
+      });
+      expect((await initiatives(asOwner).favorites.get()).data).toEqual([]);
+    });
+
+    it('is idempotent when favoriting twice or unfavoriting a non-favorite', async () => {
+      const { asOwner } = await setup();
+      const { id } = (await createInitiative(asOwner, { title: 'Q3' })).data!;
+
+      expect((await asOwner.initiatives({ initiativeId: id }).favorite.delete()).status).toBe(204);
+      expect((await asOwner.initiatives({ initiativeId: id }).favorite.put()).status).toBe(204);
+      expect((await asOwner.initiatives({ initiativeId: id }).favorite.put()).status).toBe(204);
+      expect((await initiatives(asOwner).favorites.get()).data).toHaveLength(1);
+    });
+
+    it('is personal to the caller and allowed with initiatives:read only', async () => {
+      const { asOwner } = await setup();
+      const first = (await createInitiative(asOwner, { title: 'First' })).data!;
+      const second = (await createInitiative(asOwner, { title: 'Second' })).data!;
+
+      const readRole = await createRole(asOwner, 'MKT', {
+        name: 'Initiatives reader',
+        permissions: { initiatives: { read: true } },
+      });
+      const asReader = await addProjectMember(asOwner, 'MKT', readRole.data!.id);
+
+      await asOwner.initiatives({ initiativeId: first.id }).favorite.put();
+      expect((await asReader.initiatives({ initiativeId: second.id }).favorite.put()).status).toBe(
+        204,
+      );
+
+      expect((await initiatives(asOwner).favorites.get()).data?.map((i) => i.id)).toEqual([
+        first.id,
+      ]);
+      expect((await initiatives(asReader).favorites.get()).data?.map((i) => i.id)).toEqual([
+        second.id,
+      ]);
+      expect((await asReader.initiatives({ initiativeId: first.id }).get()).data?.favorite).toBe(
+        false,
+      );
+      expect((await asReader.initiatives({ initiativeId: second.id }).get()).data?.favorite).toBe(
+        true,
+      );
+    });
+
+    it('returns 404 for a missing initiative and 403 without read permission', async () => {
+      const { asOwner } = await setup();
+      const { id } = (await createInitiative(asOwner, { title: 'Q3' })).data!;
+
+      expect((await asOwner.initiatives({ initiativeId: 999999 }).favorite.put()).status).toBe(404);
+      expect((await asOwner.initiatives({ initiativeId: 999999 }).favorite.delete()).status).toBe(
+        404,
+      );
+
+      const noAccessRole = await createRole(asOwner, 'MKT', { name: 'None', permissions: {} });
+      const asNoAccess = await addProjectMember(asOwner, 'MKT', noAccessRole.data!.id);
+      expect((await initiatives(asNoAccess).favorites.get()).status).toBe(403);
+      expect((await asNoAccess.initiatives({ initiativeId: id }).favorite.put()).status).toBe(403);
+      expect((await asNoAccess.initiatives({ initiativeId: id }).favorite.delete()).status).toBe(
+        403,
+      );
+
+      const outsider = authedApi((await signUpTestUser()).cookie);
+      expect((await initiatives(outsider).favorites.get()).status).toBe(403);
+      expect((await outsider.initiatives({ initiativeId: id }).favorite.put()).status).toBe(403);
+      expect((await outsider.initiatives({ initiativeId: id }).favorite.delete()).status).toBe(403);
+    });
+  });
+
   describe('access', () => {
     it('returns 404 for an unknown project', async () => {
       const { asOwner } = await setup();

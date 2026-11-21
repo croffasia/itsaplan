@@ -258,5 +258,20 @@
     "retry": "Tekrar dene",
     "noResolved": "Çözülmüş tartışma yok.",
     "empty": "Bir tartışma başlatmak için metin seçin."
+  },
+  "access": {
+    "title": "Sayfa erişimi",
+    "placeholder": "Sayfa erişimi…",
+    "nothingFound": "Hiçbir şey bulunamadı.",
+    "members": "Üyeler",
+    "agents": "Ajanlar",
+    "agent": "Ajan",
+    "noAccess": "Erişim yok",
+    "listHint": "Yalnızca bu kişiler açabilir",
+    "visibility": {
+      "public": "Herkese Açık",
+      "private": "Gizli",
+      "restricted": "Kısıtlı"
+    }
   }
 }

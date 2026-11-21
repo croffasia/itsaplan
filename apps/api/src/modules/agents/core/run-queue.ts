@@ -29,6 +29,7 @@ import { getAgentSettings } from '#modules/settings/service';
 import { iso } from '#shared/lib';
 import type { AgentRunTrigger } from '../model';
 import { limitAnswer } from './answer-limit';
+import { documentVisibleTo } from '#modules/documents/access';
 import { equalJitterBackoffMs } from './helpers/backoff';
 import { emitRunsFinished } from './run-finished';
 
@@ -69,12 +70,7 @@ export function runDocumentVisibleTo(viewerId: string) {
       db
         .select({ id: projectDocument.id })
         .from(projectDocument)
-        .where(
-          and(
-            eq(projectDocument.id, agentRun.documentId),
-            or(eq(projectDocument.isPrivate, false), eq(projectDocument.ownerUserId, viewerId)),
-          ),
-        ),
+        .where(and(eq(projectDocument.id, agentRun.documentId), documentVisibleTo(viewerId))),
     ),
   );
 }

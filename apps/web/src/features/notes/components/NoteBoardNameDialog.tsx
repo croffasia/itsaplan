@@ -6,7 +6,8 @@ import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { VISIBILITY_ICON, type NewBoardVisibility } from '../utils/visibility';
+import { ACCESS_ICON } from '@/components/common/access/accessVisibility';
+import type { NewBoardVisibility } from '../utils/visibility';
 
 // A name prompt used for creating and renaming a note board. When `withVisibility`
 // is set (creating), it also picks whether the board is public or private.
@@ -37,7 +38,7 @@ export default function NoteBoardNameDialog({
   if (!open) return null;
 
   const isValid = name.trim().length > 0;
-  const VisibilityIcon = VISIBILITY_ICON[visibility];
+  const VisibilityIcon = ACCESS_ICON[visibility];
 
   return (
     <Modal title={title} description={description} scope={projectKey} onClose={onClose}>

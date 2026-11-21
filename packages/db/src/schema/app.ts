@@ -1550,6 +1550,25 @@ export const initiativeAttachment = pgTable(
   (t) => [index('initiative_attachment_initiative_idx').on(t.initiativeId)],
 );
 
+// The initiatives a user marked as favorite. Favorites are personal: they mark the
+// initiative with a star and list it under Initiatives in the sidebar, for that user
+// only.
+export const initiativeFavorite = pgTable(
+  'initiative_favorite',
+  {
+    initiativeId: integer('initiative_id')
+      .notNull()
+      .references(() => initiative.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.initiativeId, t.userId] }),
+    index('initiative_favorite_user_idx').on(t.userId),
+  ],
+);
+
 // A time-boxed period of work inside a project (a sprint). Issues point at it
 // through issue.cycle_id. The state of a cycle — upcoming, active, completed — is
 // not stored: it follows from start_date/end_date against the current date, so a
@@ -2342,6 +2361,24 @@ export const projectDocumentRevision = pgTable(
   (t) => [
     unique('project_document_revision_document_version_unique').on(t.documentId, t.version),
     index('project_document_revision_document_idx').on(t.documentId, t.version),
+  ],
+);
+
+// The members granted access to a private page besides its owner. A private page
+// with at least one row here is what the UI calls "restricted".
+export const projectDocumentMember = pgTable(
+  'project_document_member',
+  {
+    documentId: integer('document_id')
+      .notNull()
+      .references(() => projectDocument.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.documentId, t.userId] }),
+    index('project_document_member_user_idx').on(t.userId),
   ],
 );
 

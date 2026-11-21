@@ -1,5 +1,5 @@
 {
-  "id": "f39e1067-053e-4bec-afa3-c3f6481564d9",
+  "id": "547b43fa-3329-4d50-9750-2a5067b7ccbd",
   "prevId": "dbdc0e63-3202-4bac-8184-cbdd14c56336",
   "version": "7",
   "dialect": "postgresql",
@@ -2632,12 +2632,6 @@
         },
         "execution_started_at": {
           "name": "execution_started_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "received_at": {
-          "name": "received_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
@@ -10424,6 +10418,82 @@
           "columns": [
             "document_id",
             "issue_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.project_document_member": {
+      "name": "project_document_member",
+      "schema": "",
+      "columns": {
+        "document_id": {
+          "name": "document_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "project_document_member_user_idx": {
+          "name": "project_document_member_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "project_document_member_document_id_project_document_id_fk": {
+          "name": "project_document_member_document_id_project_document_id_fk",
+          "tableFrom": "project_document_member",
+          "tableTo": "project_document",
+          "columnsFrom": [
+            "document_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "project_document_member_user_id_user_id_fk": {
+          "name": "project_document_member_user_id_user_id_fk",
+          "tableFrom": "project_document_member",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "project_document_member_document_id_user_id_pk": {
+          "name": "project_document_member_document_id_user_id_pk",
+          "columns": [
+            "document_id",
+            "user_id"
           ]
         }
       },

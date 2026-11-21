@@ -17,6 +17,7 @@ import { autoWatchIssue, isEligibleIssueWatcher, watcherUserIds } from '#modules
 import { mentionReach } from '#modules/mentions/service';
 import { iso } from '#shared/lib';
 import { enqueueOutbound } from './outbound';
+import { documentVisibleTo } from '#modules/documents/access';
 
 // Inbox notifications. A notification is one (recipient, event) row: a user is told
 // about an issue they are involved in, or that a document mentions them. What happens
@@ -453,12 +454,10 @@ function mapRow(r: {
 }
 
 // The document of a notification, joined only while the user may still open it: a page
-// made private after it mentioned someone is its owner's alone.
+// made private after it mentioned someone is hidden from them unless it is shared with
+// them.
 function visibleDocument(userId: string) {
-  return and(
-    eq(projectDocument.id, notification.documentId),
-    or(eq(projectDocument.isPrivate, false), eq(projectDocument.ownerUserId, userId)),
-  );
+  return and(eq(projectDocument.id, notification.documentId), documentVisibleTo(userId));
 }
 
 // A notification whose issue or document the user can still see.

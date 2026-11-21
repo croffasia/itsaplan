@@ -468,6 +468,8 @@ export interface IssueAgentRun {
   contextTokens?: number;
   createdAt: string;
   startedAt: string | null;
+  // When an external agent first took the run; null for one it never received.
+  receivedAt: string | null;
   finishedAt: string | null;
   nextAttemptAt: string;
 }

@@ -1,7 +1,14 @@
 import { getExternalRunTrace } from '@/lib/api/endpoints/agents';
-import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { nextPageParam } from '@/lib/api/core/paging';
 import {
+  cancelAgentRun,
   getInternalRunTrace,
   getRunInitiatorOptions,
   getRunnerQueue,
@@ -74,5 +81,13 @@ export function useInternalRunTraceQuery(runId: number, attempt?: number, enable
     queryFn: () => getInternalRunTrace(runId, attempt),
     placeholderData: keepPreviousData,
     enabled,
+  });
+}
+
+export function useCancelAgentRun() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: cancelAgentRun,
+    onSettled: () => qc.invalidateQueries({ queryKey: qk.runnerQueue }),
   });
 }

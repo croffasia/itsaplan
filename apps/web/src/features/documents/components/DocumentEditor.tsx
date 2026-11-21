@@ -93,6 +93,9 @@ export default function DocumentEditor({
   const editorEditable = editable && !documentAction.pending;
   const canManage =
     canEdit && currentUserId !== null && (isProjectOwner || document.ownerUserId === currentUserId);
+  // Only its owner changes who sees a page: the API refuses a project owner too.
+  const canChangeAccess =
+    canEdit && currentUserId !== null && document.ownerUserId === currentUserId;
   const canManageLifecycle =
     canDelete &&
     currentUserId !== null &&
@@ -229,6 +232,7 @@ export default function DocumentEditor({
           canCreate={canCreate}
           canUpdate={editable}
           canManage={canManage}
+          canChangeAccess={canChangeAccess}
           canManageLifecycle={canManageLifecycle}
           canDelete={canManageLifecycle}
           canShare={canShare && !document.isPrivate && document.archivedAt === null}
@@ -268,12 +272,13 @@ export default function DocumentEditor({
               }),
             );
           }}
-          onPrivacyChange={(isPrivate) => {
+          onAccessChange={(isPrivate, memberIds) => {
             void runVersioned((baseVersion) =>
               setDocumentAccess.mutateAsync({
                 documentId: document.id,
                 version: baseVersion,
                 isPrivate,
+                memberIds,
               }),
             );
           }}

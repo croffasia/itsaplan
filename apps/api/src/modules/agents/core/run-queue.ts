@@ -29,6 +29,7 @@ import { getAgentSettings } from '#modules/settings/service';
 import { iso } from '#shared/lib';
 import type { AgentRunTrigger } from '../model';
 import { limitAnswer } from './answer-limit';
+import { documentVisibleTo } from '#modules/documents/access';
 import { equalJitterBackoffMs } from './helpers/backoff';
 import { emitRunsFinished } from './run-finished';
 
@@ -69,12 +70,7 @@ export function runDocumentVisibleTo(viewerId: string) {
       db
         .select({ id: projectDocument.id })
         .from(projectDocument)
-        .where(
-          and(
-            eq(projectDocument.id, agentRun.documentId),
-            or(eq(projectDocument.isPrivate, false), eq(projectDocument.ownerUserId, viewerId)),
-          ),
-        ),
+        .where(and(eq(projectDocument.id, agentRun.documentId), documentVisibleTo(viewerId))),
     ),
   );
 }
@@ -448,6 +444,15 @@ async function loadThreadContext(sourceActivityId: number | null): Promise<strin
   return ancestors.map((a) => `${a.actorName ?? 'Unknown'}: ${a.body ?? ''}`).join('\n\n');
 }
 
+// True once the run is no longer waiting or at work: canceled, or deleted with its issue.
+export async function runEnded(id: number): Promise<boolean> {
+  const [row] = await db
+    .select({ status: agentRun.status })
+    .from(agentRun)
+    .where(eq(agentRun.id, id));
+  return row?.status !== 'pending';
+}
+
 // A run canceled while it was in flight keeps that outcome: each of these writes only
 // where the row is still 'pending'.
 
@@ -457,7 +462,7 @@ export async function markRunSuccess(
   id: number,
   output: string,
   usage: { inputTokens: number; outputTokens: number } | null,
-): Promise<void> {
+): Promise<boolean> {
   const rows = await db
     .update(agentRun)
     .set({
@@ -472,6 +477,7 @@ export async function markRunSuccess(
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')))
     .returning({ id: agentRun.id });
   await emitRunsFinished(rows.map((row) => row.id));
+  return rows.length > 0;
 }
 
 export async function scheduleRunRetry(id: number, delayMs: number, error: string): Promise<void> {
@@ -488,7 +494,7 @@ export async function scheduleRunRetry(id: number, delayMs: number, error: strin
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
 }
 
-export async function markRunFailed(id: number, error: string, output?: string): Promise<void> {
+export async function markRunFailed(id: number, error: string, output?: string): Promise<boolean> {
   const rows = await db
     .update(agentRun)
     .set({
@@ -501,6 +507,7 @@ export async function markRunFailed(id: number, error: string, output?: string):
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')))
     .returning({ id: agentRun.id });
   await emitRunsFinished(rows.map((row) => row.id));
+  return rows.length > 0;
 }
 
 // Puts a claimed run back in the queue without spending the attempt, for a run the
@@ -647,6 +654,7 @@ export interface AgentRunRow {
   // printed. Null until the run finishes.
   output: string | null;
   contextTokens?: number;
+  receivedAt: string | null;
   nextAttemptAt: string;
   createdAt: string;
 }
@@ -697,6 +705,7 @@ export async function listAgentRuns(
       output: agentRun.output,
       inputTokens: agentRun.inputTokens,
       outputTokens: agentRun.outputTokens,
+      receivedAt: agentRun.receivedAt,
       nextAttemptAt: agentRun.nextAttemptAt,
       createdAt: agentRun.createdAt,
       issueSeq: issue.sequenceNumber,
@@ -735,6 +744,7 @@ export async function listAgentRuns(
       lastError: r.lastError,
       output: r.output,
       ...contextTokensOf(r),
+      receivedAt: r.receivedAt ? iso(r.receivedAt) : null,
       nextAttemptAt: iso(r.nextAttemptAt),
       createdAt: iso(r.createdAt),
     })),

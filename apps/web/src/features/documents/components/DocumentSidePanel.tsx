@@ -58,6 +58,11 @@ export default function DocumentSidePanel({
   onOpenHistory: () => void;
 }) {
   const t = useTranslations('documents');
+  const accessLabel = {
+    public: t('projectAccess'),
+    private: t('privatePage'),
+    restricted: t('access.visibility.restricted'),
+  }[document.visibility];
   const fileInput = useRef<HTMLInputElement>(null);
   const [issuePickerOpen, setIssuePickerOpen] = useState(false);
   const assets = useDocumentAssetsQuery(projectKey, document.id);
@@ -117,9 +122,7 @@ export default function DocumentSidePanel({
           </div>
           <div className="flex items-start justify-between gap-4 py-3">
             <dt className="text-muted-foreground">{t('privacy')}</dt>
-            <dd className="font-medium">
-              {document.isPrivate ? t('privatePage') : t('projectAccess')}
-            </dd>
+            <dd className="font-medium">{accessLabel}</dd>
           </div>
           <div className="flex items-start justify-between gap-4 py-3">
             <dt className="text-muted-foreground">{t('createdAt')}</dt>

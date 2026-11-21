@@ -249,7 +249,7 @@ chain of agent runs back to its first run.
 
 The api finds the agent's run by the same rules as the initiator.
 
-## Reading runs
+## Reading and stopping runs
 
 A reader sees a run in two parts:
 
@@ -263,6 +263,14 @@ the answer. For the steps, the reader also needs one of these:
 - The reader owns the project.
 - The reader can create or change agents in the project (`ai_agents create` or `edit`).
 - The reader is the run's initiator.
+
+The same people can stop a run that waits or works. The run becomes `canceled` at once, and the api
+sends `agent_run.finished` with the person who stopped it as the actor. The run records that person
+or agent in `canceled_by_user_id`. Ending the pending runs of a schedule records who ended them too.
+The field stays null when the run ended by itself or when the api ended it, as when its issue moved
+to another column or project. An internal agent at work checks its run every 5 seconds and then
+stops its model call and its tools. An external runner learns of the stop when its heartbeat or
+events call answers `canceled: true`. Then it kills its command and reports nothing more.
 
 Two rules hide a run:
 
@@ -280,12 +288,19 @@ Two rules hide a run:
 | `GET /agent-runs/:runId`                                | the answer of one run                             | the answer rule                                |
 | `GET /agent-runs/:runId/internal-trace`                 | the trace of an internal run                      | the steps rule                                 |
 | `GET /agent-runs/:runId/trace`                          | the transcript of an external run                 | the steps rule                                 |
+| `POST /agent-runs/:runId/cancel`                        | stops a run that waits or works                   | the steps rule                                 |
 | `GET /teams/:teamId/ai-agents/:agentId/traces/:traceId` | one trace of the agent                            | for the trace of a queued run, the steps rule  |
 
-The three `/agent-runs/:runId` routes also read runs without an issue: the run of a schedule, a
+The `/agent-runs/:runId` routes also read and stop runs without an issue: the run of a schedule, a
 manual run, an API run and a run from a document comment.
 
 ## External run transcripts
+
+An external agent takes an attempt of a run when its runner claims it, or when its invocation
+endpoint answers the request with a 2xx or does not answer in time. The first attempt it takes sets
+`received_at` on the run and records `agent_started` on the issue. An attempt the endpoint refused
+sets neither, so a run that the agent never received has no `received_at`. The run payloads give it
+as `receivedAt`, and the run's steps then say that the agent did not receive the run.
 
 The api stores what an external runner reports in `agent_run_trace`, one row for each attempt: the
 messages, the tool inputs and results, and a link to the local Codex session. After the run ends,
@@ -322,7 +337,7 @@ active and the past ones. Each route gives the list of one scope:
 | `GET /teams/:teamId/agent-runs/queue`           | the team's projects                                 | whoever runs the team or manages its workspace            |
 | `GET /workspaces/:workspaceId/agent-runs/queue` | the projects of every team of the workspace         | the workspace's owner and admins                          |
 
-The list includes archived projects. It hides the runs that "Reading runs" hides.
+The list includes archived projects. It hides the runs that "Reading and stopping runs" hides.
 
 Filters:
 
@@ -338,9 +353,9 @@ list. Each takes the access of its list.
 The answer gives:
 
 - The runs. Each run gives `initiator`, `startedBy`, `parentRun` and `rootRun` (see "Run initiator"
-  and "Run origin"), and `canReadSteps` by the steps rule (see "Reading runs"). A run names its
-  issue by key and title and its `document` by id and title, and the parent and the first run by id.
-  It names them also when the caller cannot read them: opening one asks again.
+  and "Run origin"), and `canReadSteps` and `canceledBy` by "Reading and stopping runs". A run names
+  its issue by key and title and its `document` by id and title, and the parent and the first run by
+  id. It names them also when the caller cannot read them: opening one asks again.
 - The `queued`, `running` and `failed` counts. They obey every filter but `state`, so each state
   shows how many runs it holds.
 

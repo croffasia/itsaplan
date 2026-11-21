@@ -120,6 +120,8 @@ export const qk = {
   documents: (projectKey: string, q = '', archived = false) =>
     ['documents', projectKey, 'list', archived ? 'archived' : 'active', q] as const,
   documentListsForProject: (projectKey: string) => ['documents', projectKey, 'list'] as const,
+  documentAccessCandidates: (projectKey: string) =>
+    ['documents', projectKey, 'accessCandidates'] as const,
   document: (projectKey: string, documentId: number) =>
     ['documents', projectKey, 'document', documentId] as const,
   documentRevisions: (projectKey: string, documentId: number) =>
@@ -299,6 +301,8 @@ export const qk = {
   // The linkable initiatives behind the issue picker, narrowed by the typed search.
   initiativeOptions: (projectKey: string, params: Record<string, unknown>) =>
     ['initiatives', projectKey, 'options', params] as const,
+  // The caller's favorite initiatives in a project, listed under Initiatives in the sidebar.
+  favoriteInitiatives: (projectKey: string) => ['initiatives', projectKey, 'favorites'] as const,
   initiativeCounts: (projectKey: string) => ['initiativeCounts', projectKey] as const,
   initiative: (id: number) => ['initiative', id] as const,
   initiativeFeed: (id: number) => ['initiativeFeed', id] as const,

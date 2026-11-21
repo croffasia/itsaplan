@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import RunnerQueueRunLink from '../components/RunnerQueueRunLink';
+import RunnerQueueRunActor from '../components/RunnerQueueRunActor';
 import RunnerQueueRunPerson from '../components/RunnerQueueRunPerson';
 import type { RunFact } from '../components/RunnerQueueRunFactList';
 
@@ -31,15 +32,7 @@ export function useRunOriginFacts(run: RunnerQueueRun, listPath: string): RunFac
   }
   const facts: RunFact[] = [[t('facts.initiator'), forWhom]];
   if (startedBy) {
-    const { name, image, agentUsername } = startedBy;
-    facts.push([
-      t('facts.startedBy'),
-      agentUsername ? (
-        <RunnerQueueRunPerson name={agentUsername} label={`@${agentUsername}`} />
-      ) : (
-        <RunnerQueueRunPerson name={name} image={image} label={name} />
-      ),
-    ]);
+    facts.push([t('facts.startedBy'), <RunnerQueueRunActor key="startedBy" actor={startedBy} />]);
   }
   if (parentRun) facts.push([t('facts.fromRun'), link(parentRun, `#${parentRun.id}`)]);
   if (rootRun && rootRun.id !== parentRun?.id) {

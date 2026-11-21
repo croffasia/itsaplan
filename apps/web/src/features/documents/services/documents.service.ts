@@ -20,6 +20,7 @@ import {
   createDocument,
   duplicateDocument,
   setDocumentAccess,
+  listDocumentAccessCandidates,
   setDocumentLocked,
   archiveDocument,
   restoreDocument,
@@ -217,12 +218,22 @@ export function useSetDocumentAccess(projectKey: string | null) {
       documentId,
       version,
       isPrivate,
+      memberIds,
     }: {
       documentId: number;
       version: number;
       isPrivate: boolean;
-    }) => setDocumentAccess(projectKey!, documentId, { version, isPrivate }),
+      memberIds?: string[];
+    }) => setDocumentAccess(projectKey!, documentId, { version, isPrivate, memberIds }),
   );
+}
+
+export function useDocumentAccessCandidates(projectKey: string | null) {
+  return useQuery({
+    queryKey: qk.documentAccessCandidates(projectKey ?? ''),
+    queryFn: () => listDocumentAccessCandidates(projectKey!),
+    enabled: projectKey != null,
+  });
 }
 
 export function useSetDocumentLocked(projectKey: string | null) {

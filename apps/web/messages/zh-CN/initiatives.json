@@ -3,6 +3,8 @@
   "newInitiative": "新建计划",
   "notFound": "未找到计划。",
   "options": "计划选项",
+  "addFavorite": "添加到收藏",
+  "removeFavorite": "从收藏中移除",
   "showDescription": "显示描述",
   "noDescription": "暂无描述。",
   "noOwner": "无负责人",

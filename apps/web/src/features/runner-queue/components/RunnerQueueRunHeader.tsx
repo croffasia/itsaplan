@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { outcomeDetail } from '../utils/outcomeDetail';
 import { runIssueKey } from '../utils/runIssueKey';
 import { waitsForRunner } from '../utils/waitsForRunner';
+import RunnerQueueRunStopButton from './RunnerQueueRunStopButton';
 
 const OUTCOME = {
   success: [Check, 'bg-green-500/15 text-green-500'],
@@ -111,6 +112,7 @@ export default function RunnerQueueRunHeader({
           >
             <Link2 />
           </Button>
+          <RunnerQueueRunStopButton run={run} />
           {href && (
             <Button asChild variant="secondary" size="sm">
               <Link href={href} target="_blank" rel="noopener noreferrer">

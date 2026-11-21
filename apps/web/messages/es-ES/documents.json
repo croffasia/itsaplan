@@ -258,5 +258,20 @@
     "retry": "Reintentar",
     "noResolved": "No hay discusiones resueltas.",
     "empty": "Selecciona texto para iniciar una discusión."
+  },
+  "access": {
+    "title": "Acceso a la página",
+    "placeholder": "Acceso a la página…",
+    "nothingFound": "No se ha encontrado nada.",
+    "members": "Miembros",
+    "agents": "Agentes",
+    "agent": "Agente",
+    "noAccess": "Sin acceso",
+    "listHint": "Solo estas personas pueden abrirla",
+    "visibility": {
+      "public": "Público",
+      "private": "Privado",
+      "restricted": "Restringido"
+    }
   }
 }

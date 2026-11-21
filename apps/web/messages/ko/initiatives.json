@@ -3,6 +3,8 @@
   "newInitiative": "새 이니셔티브",
   "notFound": "이니셔티브를 찾을 수 없습니다.",
   "options": "이니셔티브 옵션",
+  "addFavorite": "즐겨찾기에 추가",
+  "removeFavorite": "즐겨찾기에서 제거",
   "showDescription": "설명 표시",
   "noDescription": "설명이 없습니다.",
   "noOwner": "소유자 없음",

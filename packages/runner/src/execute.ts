@@ -47,8 +47,8 @@ function childEnv(config: RunnerConfig, task: Task): Record<string, string> {
 }
 
 // The command gets its own process group, so the Ctrl-C that stops the runner does not
-// reach it — the runner promises to finish what is in flight. The timeout and the
-// member's stop then have to kill that group themselves, or a command that is a
+// reach it — the runner promises to finish what is in flight. The timeout and a stop
+// then have to kill that group themselves, or a command that is a
 // pipeline leaves its children behind.
 function killGroup(pid: number): void {
   try {
@@ -82,7 +82,7 @@ function stdinText(preset: Preset | undefined, task: Task): string {
 
 // `onData` sees stdout as it arrives, for a caller that reports the output while the
 // command is still running. `signal` ends the command the way the timeout does, for a
-// chat answer the member stopped.
+// run or a chat answer someone stopped.
 export async function execute(
   config: RunnerConfig,
   task: Task,

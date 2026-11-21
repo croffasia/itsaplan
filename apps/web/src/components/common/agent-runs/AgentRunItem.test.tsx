@@ -21,6 +21,7 @@ const run: IssueAgentRun = {
   lastError: null,
   createdAt: '2026-01-01T00:00:00Z',
   startedAt: null,
+  receivedAt: null,
   finishedAt: null,
   nextAttemptAt: '2026-01-01T00:00:00Z',
 };

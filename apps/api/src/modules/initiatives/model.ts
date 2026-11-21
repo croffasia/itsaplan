@@ -63,6 +63,7 @@ export const InitiativeResponse = t.Object({
   labelIds: t.Array(t.Number()),
   progress: t.Object({ completed: t.Number(), canceled: t.Number(), total: t.Number() }),
   health: t.Nullable(t.String()),
+  favorite: t.Boolean(),
 });
 
 export const InitiativePageResponse = pageResponse(InitiativeResponse);

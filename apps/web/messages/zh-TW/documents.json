@@ -258,5 +258,20 @@
     "retry": "重試",
     "noResolved": "沒有已解決的討論。",
     "empty": "選取文字即可開始討論。"
+  },
+  "access": {
+    "title": "頁面存取權限",
+    "placeholder": "選擇存取權限…",
+    "nothingFound": "未找到結果。",
+    "members": "成員",
+    "agents": "代理",
+    "agent": "代理",
+    "noAccess": "無權存取",
+    "listHint": "只有這些成員可以開啟",
+    "visibility": {
+      "public": "公開",
+      "private": "私人",
+      "restricted": "指定成員"
+    }
   }
 }

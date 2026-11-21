@@ -258,5 +258,20 @@
   },
   "selectionActions": "Selection actions",
   "recentAndFavorites": "Recent and favorites",
-  "searching": "Searching documents…"
+  "searching": "Searching documents…",
+  "access": {
+    "title": "Akses halaman",
+    "placeholder": "Akses halaman…",
+    "nothingFound": "Tidak ada yang ditemukan.",
+    "members": "Anggota",
+    "agents": "Agen",
+    "agent": "Agen",
+    "noAccess": "Tidak ada akses",
+    "listHint": "Hanya orang-orang ini yang dapat membukanya",
+    "visibility": {
+      "public": "Publik",
+      "private": "Pribadi",
+      "restricted": "Terbatas"
+    }
+  }
 }

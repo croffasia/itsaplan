@@ -11,6 +11,8 @@ import {
   issueActivity,
   project,
   projectColumn,
+  projectDocument,
+  projectDocumentMember,
   projectMember,
   team,
   teamInvite,
@@ -1005,6 +1007,22 @@ async function dropTeamMembership(tx: Transaction, teamId: number, userId: strin
   await tx
     .delete(projectMember)
     .where(and(eq(projectMember.userId, userId), inArray(projectMember.projectId, teamProjects)));
+  // The private Docs pages shared with them there: a later return must not bring that
+  // access back.
+  await tx
+    .delete(projectDocumentMember)
+    .where(
+      and(
+        eq(projectDocumentMember.userId, userId),
+        inArray(
+          projectDocumentMember.documentId,
+          tx
+            .select({ id: projectDocument.id })
+            .from(projectDocument)
+            .where(inArray(projectDocument.projectId, teamProjects)),
+        ),
+      ),
+    );
   // A pending invite this member created outlives them otherwise, keeping the
   // registration gate open on their behalf after they were removed.
   await tx

@@ -258,5 +258,20 @@
     "retry": "Retry",
     "noResolved": "No resolved discussions.",
     "empty": "Select text to start a discussion."
+  },
+  "access": {
+    "title": "الوصول إلى الصفحة",
+    "placeholder": "الوصول إلى الصفحة…",
+    "nothingFound": "لم يُعثر على شيء.",
+    "members": "الأعضاء",
+    "agents": "الوكلاء",
+    "agent": "وكيل",
+    "noAccess": "بلا وصول",
+    "listHint": "دول بس اللي يقدروا يفتحوها",
+    "visibility": {
+      "public": "عامة",
+      "private": "خاصة",
+      "restricted": "مقيّدة"
+    }
   }
 }

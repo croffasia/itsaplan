@@ -258,5 +258,20 @@
   },
   "selectionActions": "Selection actions",
   "recentAndFavorites": "Recent and favorites",
-  "searching": "Searching documents…"
+  "searching": "Searching documents…",
+  "access": {
+    "title": "Acesso à página",
+    "placeholder": "Acesso à página…",
+    "nothingFound": "Nada encontrado.",
+    "members": "Membros",
+    "agents": "Agentes",
+    "agent": "Agente",
+    "noAccess": "Sem acesso",
+    "listHint": "Apenas estas pessoas podem abri-la",
+    "visibility": {
+      "public": "Público",
+      "private": "Privado",
+      "restricted": "Restrito"
+    }
+  }
 }

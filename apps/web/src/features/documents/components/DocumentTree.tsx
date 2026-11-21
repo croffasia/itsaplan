@@ -20,7 +20,12 @@ import { FilePlus2, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import { Button } from '@/components/ui/button';
-import { projectedDocumentMove } from '../utils/documentMove';
+import {
+  adjacentDocumentMove,
+  projectedDocumentMove,
+  type OptimisticDocumentMove,
+} from '../utils/documentMove';
+import DocumentRowMenu from './DocumentRowMenu';
 import SortableDocumentRow from './SortableDocumentRow';
 
 export type DocumentSort = 'position' | 'title' | 'created' | 'updated';
@@ -35,10 +40,13 @@ export default function DocumentTree({
   sortBy,
   sortDirection,
   canCreate,
+  canMove,
+  movePending,
   reorderEnabled,
   favoritePending,
   onCreate,
   onMove,
+  onMoveTo,
   onFavoriteChange,
 }: {
   projectKey: string;
@@ -48,17 +56,16 @@ export default function DocumentTree({
   sortBy: DocumentSort;
   sortDirection: 'asc' | 'desc';
   canCreate: boolean;
+  canMove: boolean;
+  movePending: boolean;
   reorderEnabled: boolean;
   favoritePending: boolean;
   onCreate: (parentId: number | null) => void;
-  onMove: (input: {
-    documentId: number;
-    version: number;
-    parentId: number | null;
-    position: number;
-    previousSiblingId: number | null;
-    nextSiblingId: number | null;
-  }) => void;
+  onMove: (input: OptimisticDocumentMove & { version: number }) => void;
+  onMoveTo: (
+    input: OptimisticDocumentMove & { version: number },
+    parent: ProjectDocumentSummary | null,
+  ) => void;
   onFavoriteChange: (documentId: number, isFavorite: boolean) => void;
 }) {
   const t = useTranslations('documents');
@@ -134,7 +141,17 @@ export default function DocumentTree({
     });
   };
 
-  function renderDocument(item: ProjectDocumentSummary, depth: number, nested: boolean) {
+  const step = (source: ProjectDocumentSummary, direction: -1 | 1) => {
+    const move = adjacentDocumentMove({ source, direction, ordered, byParent, byId });
+    if (move) onMove({ documentId: source.id, version: source.version, ...move });
+  };
+
+  function renderDocument(
+    item: ProjectDocumentSummary,
+    depth: number,
+    nested: boolean,
+    siblings: ProjectDocumentSummary[],
+  ) {
     const children = byParent.get(item.id) ?? [];
     const isCollapsed = collapsed.has(item.id);
     return (
@@ -150,6 +167,24 @@ export default function DocumentTree({
         canCreate={canCreate}
         reorderEnabled={reorderEnabled}
         favoritePending={favoritePending}
+        menu={
+          canMove &&
+          item.archivedAt === null &&
+          !item.isLocked && (
+            <DocumentRowMenu
+              projectKey={projectKey}
+              document={item}
+              busy={movePending}
+              reorderEnabled={reorderEnabled}
+              first={siblings[0] === item}
+              last={siblings.at(-1) === item}
+              onMoveTo={(move, parent) =>
+                onMoveTo({ documentId: item.id, version: item.version, ...move }, parent)
+              }
+              onStep={(direction) => step(item, direction)}
+            />
+          )
+        }
         onToggle={() => toggle(item.id)}
         onCreate={() => onCreate(item.id)}
         onFavoriteChange={() => onFavoriteChange(item.id, !item.isFavorite)}
@@ -160,9 +195,10 @@ export default function DocumentTree({
   }
 
   function renderRows(parentId: number | null, depth: number) {
+    const siblings = byParent.get(parentId) ?? [];
     return (
       <ul role={depth === 0 ? 'tree' : 'group'} className={depth === 0 ? 'space-y-px' : undefined}>
-        {(byParent.get(parentId) ?? []).map((item) => renderDocument(item, depth, true))}
+        {siblings.map((item) => renderDocument(item, depth, true, siblings))}
       </ul>
     );
   }
@@ -233,7 +269,7 @@ export default function DocumentTree({
         <nav aria-label={t('treeLabel')}>
           {searching ? (
             <ul role="tree" className="space-y-px">
-              {ordered.map((item) => renderDocument(item, 0, false))}
+              {ordered.map((item) => renderDocument(item, 0, false, ordered))}
             </ul>
           ) : (
             renderRows(null, 0)

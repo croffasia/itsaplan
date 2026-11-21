@@ -9,7 +9,6 @@ import {
   Download,
   Expand,
   History,
-  LockKeyhole,
   MoreHorizontal,
   PanelTop,
   Plus,
@@ -37,13 +36,11 @@ export default function DocumentOptionsMenu({
   stickyToolbar,
   canCreate,
   canUpdate,
-  canManage,
   canManageLifecycle,
   canDelete,
   busy,
   onFullWidthChange,
   onStickyToolbarChange,
-  onPrivacyChange,
   onCreateChild,
   onDuplicate,
   onArchive,
@@ -58,13 +55,11 @@ export default function DocumentOptionsMenu({
   stickyToolbar: boolean;
   canCreate: boolean;
   canUpdate: boolean;
-  canManage: boolean;
   canManageLifecycle: boolean;
   canDelete: boolean;
   busy: boolean;
   onFullWidthChange: (value: boolean) => void;
   onStickyToolbarChange: (value: boolean) => void;
-  onPrivacyChange: (value: boolean) => void;
   onCreateChild: () => void;
   onDuplicate: () => void;
   onArchive: () => void;
@@ -166,20 +161,7 @@ export default function DocumentOptionsMenu({
             </>
           )}
 
-          {(canManage || canManageLifecycle || canDelete) && <DropdownMenuSeparator />}
-          {canManage && !archived && (
-            <DropdownMenuItem
-              disabled={busy}
-              onSelect={(event) => {
-                event.preventDefault();
-                onPrivacyChange(!document.isPrivate);
-              }}
-            >
-              <LockKeyhole />
-              <span className="flex-1">{t('privatePage')}</span>
-              {document.isPrivate && <Check className="text-primary" aria-hidden />}
-            </DropdownMenuItem>
-          )}
+          {(canManageLifecycle || canDelete) && <DropdownMenuSeparator />}
           {canManageLifecycle && !archived && (
             <DropdownMenuItem disabled={busy || document.isLocked} onSelect={onArchive}>
               <Archive />

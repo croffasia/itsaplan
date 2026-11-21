@@ -6,6 +6,7 @@ import { getProjectAccess, requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { mcpTool } from '#mcp/generate';
 import { accessErrors, commonErrors } from '#shared/responses';
+import { listAccessCandidates } from '#modules/members/service';
 import {
   NoteBoardAccessCandidateListResponse,
   NoteBoardResponse,
@@ -21,7 +22,6 @@ import {
   getNoteBoard,
   updateNoteBoard,
   deleteNoteBoard,
-  listNoteBoardAccessCandidates,
   type NoteBoardRow,
 } from './service';
 
@@ -61,7 +61,7 @@ async function grantedMembers(
 ): Promise<string[]> {
   const ids = [...new Set(userIds)].filter((id) => id !== ownerUserId);
   if (ids.length === 0) return [];
-  const candidates = await listNoteBoardAccessCandidates(projectId);
+  const candidates = await listAccessCandidates(projectId, 'note_boards');
   const grantable = new Set(candidates.filter((c) => c.canAccess).map((c) => c.userId));
   if (ids.some((id) => !grantable.has(id))) {
     throw new HttpError(400, 'Access can only be granted to project members who may read notes');
@@ -95,7 +95,7 @@ export const noteBoardRoutes = new Elysia({
 
   .get(
     '/projects/:projectKey/note-boards/access-candidates',
-    async ({ project }) => listNoteBoardAccessCandidates(project.id),
+    async ({ project }) => listAccessCandidates(project.id, 'note_boards'),
     {
       permission: ['note_boards', 'edit'],
       feature: 'notes',

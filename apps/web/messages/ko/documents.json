@@ -258,5 +258,20 @@
     "retry": "다시 시도",
     "noResolved": "해결된 논의가 없습니다.",
     "empty": "텍스트를 선택하여 논의를 시작하세요."
+  },
+  "access": {
+    "title": "페이지 접근 권한",
+    "placeholder": "페이지 접근 권한…",
+    "nothingFound": "검색 결과가 없습니다.",
+    "members": "멤버",
+    "agents": "AI 에이전트",
+    "agent": "AI 에이전트",
+    "noAccess": "접근 권한 없음",
+    "listHint": "선택한 사용자만 이 페이지를 열 수 있습니다",
+    "visibility": {
+      "public": "공개",
+      "private": "비공개",
+      "restricted": "제한됨"
+    }
   }
 }

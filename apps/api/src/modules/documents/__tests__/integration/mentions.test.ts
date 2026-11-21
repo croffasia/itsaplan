@@ -124,6 +124,26 @@ describe('document mentions', () => {
     expect(await mentions(second)).toHaveLength(1);
   });
 
+  it('notifies only the members a private page is shared with', async () => {
+    const { owner } = await setup();
+    const guest = await addMember(owner);
+    const outsider = await addMember(owner);
+    const { id, doc, rootId } = await documentWithThread(owner);
+    const current = (await doc.get()).data!;
+    await owner.api
+      .projects({ projectKey: 'DOC' })
+      .documents({ documentId: id })
+      .access.post({ version: current.version, isPrivate: true, memberIds: [guest.userId] });
+
+    await doc.comments.post({
+      parentId: rootId,
+      body: `@${guest.username} @${outsider.username} see this`,
+    });
+
+    expect(await mentions(guest)).toHaveLength(1);
+    expect(await mentions(outsider)).toHaveLength(0);
+  });
+
   it('does not notify a member whose role cannot read documents', async () => {
     const { owner } = await setup();
     const role = await createRole(owner.api, 'DOC', {

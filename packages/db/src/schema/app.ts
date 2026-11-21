@@ -2342,6 +2342,24 @@ export const projectDocumentRevision = pgTable(
   ],
 );
 
+// The members granted access to a private page besides its owner. A private page
+// with at least one row here is what the UI calls "restricted".
+export const projectDocumentMember = pgTable(
+  'project_document_member',
+  {
+    documentId: integer('document_id')
+      .notNull()
+      .references(() => projectDocument.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.documentId, t.userId] }),
+    index('project_document_member_user_idx').on(t.userId),
+  ],
+);
+
 // Per-user page preferences. Keeping favorites outside the shared page row means
 // one person's sidebar choices never affect another project member.
 export const projectDocumentPreference = pgTable(

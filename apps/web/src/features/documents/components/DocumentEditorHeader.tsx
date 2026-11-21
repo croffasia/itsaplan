@@ -12,6 +12,7 @@ import type { ProjectDocument, ProjectDocumentSummary } from '@/lib/api/endpoint
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { DocumentSaveState } from '../hooks/useDocumentDraft';
+import DocumentAccessButton from './DocumentAccessButton';
 import DocumentBreadcrumbs from './DocumentBreadcrumbs';
 import DocumentCopyLinkButton from './DocumentCopyLinkButton';
 import DocumentFavoriteButton from './DocumentFavoriteButton';
@@ -34,6 +35,7 @@ export default function DocumentEditorHeader({
   canCreate,
   canUpdate,
   canManage,
+  canChangeAccess,
   canManageLifecycle,
   canDelete,
   canShare,
@@ -46,7 +48,7 @@ export default function DocumentEditorHeader({
   onDuplicate,
   onFavoriteChange,
   onLockChange,
-  onPrivacyChange,
+  onAccessChange,
   onArchive,
   onRestore,
   onDelete,
@@ -70,6 +72,7 @@ export default function DocumentEditorHeader({
   canCreate: boolean;
   canUpdate: boolean;
   canManage: boolean;
+  canChangeAccess: boolean;
   canManageLifecycle: boolean;
   canDelete: boolean;
   canShare: boolean;
@@ -82,7 +85,7 @@ export default function DocumentEditorHeader({
   onDuplicate: () => void;
   onFavoriteChange: (favorite: boolean) => void;
   onLockChange: (locked: boolean) => void;
-  onPrivacyChange: (isPrivate: boolean) => void;
+  onAccessChange: (isPrivate: boolean, memberIds?: string[]) => void;
   onArchive: () => void;
   onRestore: () => void;
   onDelete: () => void;
@@ -192,6 +195,13 @@ export default function DocumentEditorHeader({
           disabled={!canManage || document.archivedAt !== null || busy}
           onChange={onLockChange}
         />
+        <DocumentAccessButton
+          projectKey={projectKey}
+          document={document}
+          canChange={canChangeAccess && document.archivedAt === null}
+          disabled={busy}
+          onChange={onAccessChange}
+        />
         {canShare && <DocumentShareButton projectKey={projectKey} document={document} />}
         <DocumentCopyLinkButton />
         <div className="mx-1 hidden h-4 w-px bg-border sm:block" aria-hidden />
@@ -214,13 +224,11 @@ export default function DocumentEditorHeader({
           stickyToolbar={stickyToolbar}
           canCreate={canCreate}
           canUpdate={canUpdate}
-          canManage={canManage}
           canManageLifecycle={canManageLifecycle}
           canDelete={canDelete}
           busy={busy}
           onFullWidthChange={onFullWidthChange}
           onStickyToolbarChange={onStickyToolbarChange}
-          onPrivacyChange={onPrivacyChange}
           onCreateChild={() => onCreate(document.id, document.isPrivate)}
           onDuplicate={onDuplicate}
           onArchive={onArchive}

@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronRight, FileText, GripVertical, LockKeyhole, Plus, Star } from 'lucide-react';
+import { ChevronRight, FileText, GripVertical, LockKeyhole, Plus, Star, Users } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
@@ -126,7 +126,8 @@ export default function SortableDocumentRow({
               {title}
             </span>
             <span className="flex shrink-0 items-center gap-1.5 text-muted-foreground">
-              {document.isPrivate && <LockKeyhole className="size-3" />}
+              {document.visibility === 'restricted' && <Users className="size-3" />}
+              {document.visibility === 'private' && <LockKeyhole className="size-3" />}
             </span>
           </Link>
 

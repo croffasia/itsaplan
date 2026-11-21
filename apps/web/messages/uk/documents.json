@@ -258,5 +258,20 @@
     "retry": "Retry",
     "noResolved": "No resolved discussions.",
     "empty": "Select text to start a discussion."
+  },
+  "access": {
+    "title": "Доступ до сторінки",
+    "placeholder": "Доступ до сторінки…",
+    "nothingFound": "Нічого не знайдено.",
+    "members": "Учасники",
+    "agents": "Агенти",
+    "agent": "Агент",
+    "noAccess": "Немає доступу",
+    "listHint": "Відкрити можуть лише ці люди",
+    "visibility": {
+      "public": "Публічна",
+      "private": "Приватна",
+      "restricted": "Обмежена"
+    }
   }
 }

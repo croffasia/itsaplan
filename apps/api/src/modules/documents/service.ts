@@ -5,6 +5,7 @@ import {
   documentComment,
   project,
   projectDocument,
+  projectDocumentMember,
   projectDocumentPreference,
   projectDocumentRevision,
   projectMember,
@@ -33,6 +34,7 @@ import {
 } from '@repo/editor';
 import { HttpError, iso, shareLive } from '#shared/lib';
 import { documentMentionHandles, fanOutTextMentions } from './mentions';
+import { documentVisibleTo, sharedMemberIds } from './access';
 import {
   assertAttachmentStorageCapacity,
   assertAttachmentFileAllowed,
@@ -75,6 +77,10 @@ async function lockProjectDocumentActors(
   await lockDocumentActors(executor, [actorUserId, ...rows.map((row) => row.ownerUserId)]);
 }
 
+// The three states the UI offers: a private page with members it is shared with is
+// restricted.
+type DocumentVisibility = 'public' | 'private' | 'restricted';
+
 export interface DocumentSummaryRow {
   id: number;
   projectId: number;
@@ -84,6 +90,7 @@ export interface DocumentSummaryRow {
   metadata: Record<string, unknown>;
   fullWidth: boolean;
   isPrivate: boolean;
+  visibility: DocumentVisibility;
   isLocked: boolean;
   isFavorite: boolean;
   archivedAt: string | null;
@@ -97,6 +104,8 @@ export interface DocumentSummaryRow {
 }
 
 export interface DocumentRow extends DocumentSummaryRow {
+  // The members a private page is shared with, its owner left out.
+  memberIds: string[];
   content: string;
   contentJson: Record<string, unknown> | null;
   // The public share link. A link past its expiry reads as not shared even before
@@ -140,10 +149,6 @@ export interface DocumentAssetRow {
   createdAt: string;
 }
 
-function documentAccess(userId: string) {
-  return or(eq(projectDocument.isPrivate, false), eq(projectDocument.ownerUserId, userId));
-}
-
 // The columns that revoke a page's share link. A private page has no public link, so
 // making a page private writes them too.
 export const revokedDocumentShare = {
@@ -153,11 +158,22 @@ export const revokedDocumentShare = {
   shareIncludeIssues: false,
 };
 
-function mapDocument(row: typeof projectDocument.$inferSelect, isFavorite = false): DocumentRow {
+function visibilityOf(isPrivate: boolean, hasMembers: boolean): DocumentVisibility {
+  if (!isPrivate) return 'public';
+  return hasMembers ? 'restricted' : 'private';
+}
+
+function mapDocument(
+  row: typeof projectDocument.$inferSelect,
+  isFavorite = false,
+  memberIds: string[] = [],
+): DocumentRow {
   const { archivedByAncestorId: _archivedByAncestorId, ...publicRow } = row;
   const shared = row.shareToken !== null && shareLive(row.shareExpiresAt);
   return {
     ...publicRow,
+    visibility: visibilityOf(row.isPrivate, memberIds.length > 0),
+    memberIds,
     isFavorite,
     archivedAt: row.archivedAt ? iso(row.archivedAt) : null,
     shareToken: shared ? row.shareToken : null,
@@ -172,17 +188,19 @@ function mapDocument(row: typeof projectDocument.$inferSelect, isFavorite = fals
 function summaryOf(
   row: typeof projectDocument.$inferSelect,
   isFavorite = false,
+  hasMembers = false,
 ): DocumentSummaryRow {
   const {
     content: _content,
     contentJson: _contentJson,
+    memberIds: _memberIds,
     shareToken: _shareToken,
     shareExpiresAt: _shareExpiresAt,
     shareIncludeChildren: _shareIncludeChildren,
     shareIncludeIssues: _shareIncludeIssues,
     ...summary
   } = mapDocument(row, isFavorite);
-  return summary;
+  return { ...summary, visibility: visibilityOf(row.isPrivate, hasMembers) };
 }
 
 function mapRevision(row: typeof projectDocumentRevision.$inferSelect): DocumentRevisionRow {
@@ -292,6 +310,30 @@ async function favoriteDocumentIds(
   return new Set(rows.map((row) => row.documentId));
 }
 
+async function memberIdsOf(executor: Executor, documentId: number): Promise<string[]> {
+  const rows = await executor
+    .select({ userId: projectDocumentMember.userId })
+    .from(projectDocumentMember)
+    .where(eq(projectDocumentMember.documentId, documentId))
+    .orderBy(asc(projectDocumentMember.userId));
+  return rows.map((row) => row.userId);
+}
+
+async function replaceMembers(
+  executor: Executor,
+  documentId: number,
+  userIds: string[],
+): Promise<void> {
+  await executor
+    .delete(projectDocumentMember)
+    .where(eq(projectDocumentMember.documentId, documentId));
+  if (userIds.length > 0) {
+    await executor
+      .insert(projectDocumentMember)
+      .values(userIds.map((userId) => ({ documentId, userId })));
+  }
+}
+
 export async function listDocuments(
   projectId: number,
   userId: string,
@@ -300,7 +342,7 @@ export async function listDocuments(
   const term = options.q?.trim();
   const conditions = [
     eq(projectDocument.projectId, projectId),
-    documentAccess(userId),
+    documentVisibleTo(userId),
     options.archived ? isNotNull(projectDocument.archivedAt) : isNull(projectDocument.archivedAt),
   ];
   if (term) {
@@ -319,13 +361,22 @@ export async function listDocuments(
     .where(and(...conditions))
     .orderBy(asc(projectDocument.position), asc(projectDocument.id));
   const visibleIds = new Set(rows.map((row) => row.id));
-  const favorites = await favoriteDocumentIds(
-    db,
-    userId,
-    rows.map((row) => row.id),
-  );
+  const ids = rows.map((row) => row.id);
+  const favorites = await favoriteDocumentIds(db, userId, ids);
+  const shared =
+    ids.length === 0
+      ? []
+      : await db
+          .selectDistinct({ documentId: projectDocumentMember.documentId })
+          .from(projectDocumentMember)
+          .where(inArray(projectDocumentMember.documentId, ids));
+  const withMembers = new Set(shared.map((row) => row.documentId));
   return rows.map((row) => ({
-    ...summaryOf({ ...row, content: '', contentJson: null }, favorites.has(row.id)),
+    ...summaryOf(
+      { ...row, content: '', contentJson: null },
+      favorites.has(row.id),
+      withMembers.has(row.id),
+    ),
     parentId: row.parentId !== null && visibleIds.has(row.parentId) ? row.parentId : null,
   }));
 }
@@ -343,7 +394,7 @@ async function selectDocument(
       and(
         eq(projectDocument.id, documentId),
         eq(projectDocument.projectId, projectId),
-        documentAccess(userId),
+        documentVisibleTo(userId),
       ),
     );
   return row ?? null;
@@ -497,7 +548,8 @@ async function mapDocumentForUser(
 ): Promise<DocumentRow> {
   const favorites = await favoriteDocumentIds(executor, userId, [row.id]);
   const parentId = await visibleDocumentParentId(executor, row.projectId, row.parentId, userId);
-  return mapDocument({ ...row, parentId }, favorites.has(row.id));
+  const memberIds = row.isPrivate ? await memberIdsOf(executor, row.id) : [];
+  return mapDocument({ ...row, parentId }, favorites.has(row.id), memberIds);
 }
 
 async function visibleDocumentParentId(
@@ -514,7 +566,7 @@ async function visibleDocumentParentId(
       and(
         eq(projectDocument.id, parentId),
         eq(projectDocument.projectId, projectId),
-        documentAccess(userId),
+        documentVisibleTo(userId),
       ),
     );
   return parent?.id ?? null;
@@ -541,7 +593,7 @@ async function assertValidParent(
         archivedAt: projectDocument.archivedAt,
       })
       .from(projectDocument)
-      .where(and(eq(projectDocument.id, cursor), documentAccess(userId)));
+      .where(and(eq(projectDocument.id, cursor), documentVisibleTo(userId)));
     if (!parent || parent.projectId !== projectId) {
       throw new HttpError(400, 'Parent document must belong to the same project');
     }
@@ -656,6 +708,25 @@ async function planDocumentMove(
   };
 }
 
+// Who a private subpage starts shared with: everyone who sees its private parent,
+// the subpage's own owner left out.
+async function parentAudience(
+  executor: Executor,
+  projectId: number,
+  parentId: number,
+  ownerUserId: string,
+): Promise<string[]> {
+  const [parent] = await executor
+    .select({ isPrivate: projectDocument.isPrivate, ownerUserId: projectDocument.ownerUserId })
+    .from(projectDocument)
+    .where(eq(projectDocument.id, parentId));
+  if (!parent?.isPrivate) return [];
+  const audience = [parent.ownerUserId, ...(await memberIdsOf(executor, parentId))].filter(
+    (userId): userId is string => userId !== null,
+  );
+  return sharedMemberIds(projectId, ownerUserId, audience, audience);
+}
+
 export async function createDocument(input: {
   projectId: number;
   userId: string;
@@ -695,6 +766,13 @@ export async function createDocument(input: {
         updatedByUserId: input.userId,
       })
       .returning();
+    if (row.isPrivate && parentId !== null) {
+      await replaceMembers(
+        tx,
+        row.id,
+        await parentAudience(tx, input.projectId, parentId, input.userId),
+      );
+    }
     return mapDocumentForUser(tx, row, input.userId);
   });
   await fanOutTextMentions({
@@ -1159,6 +1237,9 @@ export async function setDocumentAccess(
   userId: string,
   version: number,
   isPrivate: boolean,
+  // Replaces who a private page is shared with; left out, the list stays. A public
+  // page has none.
+  memberIds?: string[],
 ): Promise<DocumentRow | null> {
   return db.transaction(async (tx) => {
     // Lock the owner before the page can become private. Account deletion then
@@ -1166,12 +1247,21 @@ export async function setDocumentAccess(
     // this request stops without creating an ownerless private page.
     const visible = await selectDocument(tx, projectId, documentId, userId);
     if (!visible) return null;
-    await lockDocumentActors(tx, [userId, visible.ownerUserId]);
+    await lockDocumentActors(tx, [userId, visible.ownerUserId, ...(memberIds ?? [])]);
     const current = await ownedDocument(tx, projectId, documentId, userId, false);
     if (!current) return null;
     assertExpectedVersion(current, version);
     assertActive(current);
-    if (current.isPrivate === isPrivate) return mapDocumentForUser(tx, current, userId);
+    const shared = await memberIdsOf(tx, documentId);
+    let members: string[] | undefined;
+    if (!isPrivate) members = [];
+    else if (memberIds) members = await sharedMemberIds(projectId, userId, memberIds, shared);
+    const sameMembers =
+      members === undefined ||
+      (members.length === shared.length && members.every((id) => shared.includes(id)));
+    if (current.isPrivate === isPrivate && sameMembers) {
+      return mapDocumentForUser(tx, current, userId);
+    }
     const [row] = await tx
       .update(projectDocument)
       .set({
@@ -1186,6 +1276,9 @@ export async function setDocumentAccess(
     if (!row) {
       throw new HttpError(409, 'This document changed elsewhere. Reload it before continuing.');
     }
+    // After the versioned update, which holds the page's row: two requests at once
+    // cannot both write the list.
+    if (members) await replaceMembers(tx, documentId, members);
     return mapDocumentForUser(tx, row, userId);
   });
 }
@@ -1211,6 +1304,14 @@ export async function transferDocumentOwnership(
       .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, ownerUserId)));
     if (!target) throw new HttpError(400, 'The new document owner must belong to this project.');
     if (current.ownerUserId === ownerUserId) return mapDocumentForUser(tx, current, userId);
+    await tx
+      .delete(projectDocumentMember)
+      .where(
+        and(
+          eq(projectDocumentMember.documentId, documentId),
+          eq(projectDocumentMember.userId, ownerUserId),
+        ),
+      );
     const [row] = await tx
       .update(projectDocument)
       .set({
@@ -1271,7 +1372,13 @@ async function documentSubtreeIds(
   const rows = await executor
     .select({ id: projectDocument.id, parentId: projectDocument.parentId })
     .from(projectDocument)
-    .where(and(eq(projectDocument.projectId, projectId), documentAccess(userId)));
+    .where(
+      and(
+        eq(projectDocument.projectId, projectId),
+        // A page shared with the caller is not theirs to archive along with its parent.
+        or(eq(projectDocument.isPrivate, false), eq(projectDocument.ownerUserId, userId)),
+      ),
+    );
   const ids = new Set<number>([documentId]);
   let changed = true;
   while (changed) {
@@ -1375,7 +1482,7 @@ export async function restoreDocument(
       const [parent] = await tx
         .select({ archivedAt: projectDocument.archivedAt })
         .from(projectDocument)
-        .where(and(eq(projectDocument.id, current.parentId), documentAccess(userId)));
+        .where(and(eq(projectDocument.id, current.parentId), documentVisibleTo(userId)));
       detachFromParent = !parent || parent.archivedAt !== null;
     }
     const [row] = await tx

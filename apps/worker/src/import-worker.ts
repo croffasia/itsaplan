@@ -34,6 +34,7 @@ import {
   listImportRecords,
   listUncreatedImportRecords,
   listCreatedImportRecords,
+  listCreatedIntakeImportRecords,
   firstProjectColumnId,
   getProjectKey,
   getIssueSequenceNumber,
@@ -43,6 +44,9 @@ import {
   createLocalLabel,
   createLocalCycleAndRecord,
   createLocalIssueAndRecord,
+  createLocalIntakeRequestAndRecord,
+  createLocalIntakeComment,
+  enableProjectIntake,
   setIssueLabels,
   addIssueWatchers,
   createLocalCustomFieldAndRecord,
@@ -352,6 +356,36 @@ async function createOneIssue(
   const worklogs = (await reader.listIssueWorklogs?.(sourceId)) ?? [];
 
   const existing = await findImportRecord(job.id, 'issue', sourceId);
+  if (canonical.inTriage) {
+    let intakeId = existing?.localId;
+    if (intakeId == null) {
+      await enableProjectIntake(job.projectId);
+      intakeId = await createLocalIntakeRequestAndRecord(
+        job.id,
+        sourceId,
+        String(canonical.sequenceId),
+        {
+          projectId: job.projectId,
+          source: job.source,
+          title: canonical.title,
+          description: canonical.descriptionMarkdown,
+          priority: canonical.priority,
+          createdAt: canonical.createdAt,
+          updatedAt: canonical.updatedAt,
+        },
+      );
+    }
+    await createIntakeComments(job, intakeId, comments);
+    if (attachments.length) {
+      await insertDiscoveredIds(
+        job.id,
+        'attachment',
+        attachments.map((a) => a.sourceId),
+      );
+    }
+    return;
+  }
+
   let localId = existing?.localId;
   if (localId == null) {
     const stateRecord = await findImportRecord(job.id, 'state', canonical.stateSourceId);
@@ -525,6 +559,30 @@ async function createComments(
   }
 }
 
+async function createIntakeComments(
+  job: ClaimedImportJob,
+  intakeRequestId: number,
+  comments: CanonicalComment[],
+): Promise<void> {
+  const unmatchedUserPolicy = (job.config as CommonImportConfig).unmatchedUserPolicy;
+  for (const comment of comments) {
+    const existing = await findImportRecord(job.id, 'comment', comment.sourceId);
+    if (existing?.localId != null) continue;
+    const authorUserId = comment.authorEmail
+      ? await findProjectMemberUserId(job.projectId, comment.authorEmail)
+      : null;
+    if (comment.authorEmail && !authorUserId && unmatchedUserPolicy === 'skip') continue;
+    const localId = await createLocalIntakeComment(
+      intakeRequestId,
+      authorUserId,
+      comment.authorName,
+      comment.bodyMarkdown,
+      new Date(comment.createdAt),
+    );
+    await upsertImportRecord(job.id, 'comment', comment.sourceId, 'intake_comment', localId);
+  }
+}
+
 // --- Link: for each created issue, fetch its relations and create the ones
 // with a destination in itsaplan's issue_link.kind (see "Relations vs.
 // dependencies" in the notes file). Also gives every issue's parent link a
@@ -588,9 +646,9 @@ async function rewriteCrossReferences(
   return applyCrossReferenceReplacements(text, sourceProjectKey, replacements);
 }
 
-// The issues first, then the initiatives, each keyed on import_record's own id.
+// The issues first, then the initiatives, then intake requests, each keyed on import_record's own id.
 interface OwnerCursor extends RecordCursor {
-  owner?: 'initiative';
+  owner?: 'initiative' | 'intake';
 }
 
 export async function runRewrite(job: ClaimedImportJob): Promise<void> {
@@ -661,12 +719,21 @@ async function rewriteInitiatives(job: ClaimedImportJob, afterId: number): Promi
 
 export async function runAttachments(job: ClaimedImportJob, reader: SourceReader): Promise<void> {
   const cursor = job.cursor as Partial<OwnerCursor>;
-  const owner = cursor.owner === 'initiative' ? 'initiative' : 'issue';
+  const owner =
+    cursor.owner === 'initiative' ? 'initiative' : cursor.owner === 'intake' ? 'intake' : 'issue';
   const afterId = cursor.lastRecordId ?? 0;
-  const pending = await listCreatedImportRecords(job.id, owner, afterId, ISSUES_PER_TICK);
+  const pending =
+    owner === 'intake'
+      ? await listCreatedIntakeImportRecords(job.id, afterId, ISSUES_PER_TICK)
+      : await listCreatedImportRecords(job.id, owner, afterId, ISSUES_PER_TICK);
   if (pending.length === 0) {
     if (owner === 'issue') {
       const next: OwnerCursor = { owner: 'initiative', lastRecordId: 0 };
+      await saveImportJobCursor(job.id, next);
+      return;
+    }
+    if (owner === 'initiative') {
+      const next: OwnerCursor = { owner: 'intake', lastRecordId: 0 };
       await saveImportJobCursor(job.id, next);
       return;
     }
@@ -684,7 +751,7 @@ export async function runAttachments(job: ClaimedImportJob, reader: SourceReader
         attachments,
       );
       await pointIssueTextAtFiles(job.id, record.localId);
-    } else {
+    } else if (owner === 'initiative') {
       const attachments = (await reader.listInitiativeAttachments?.(record.sourceId)) ?? [];
       await storeAttachments(
         job,
@@ -694,10 +761,19 @@ export async function runAttachments(job: ClaimedImportJob, reader: SourceReader
         attachments,
       );
       await pointInitiativeTextAtFiles(job.id, record.localId);
+    } else {
+      const attachments = await reader.listIssueAttachments(record.sourceId);
+      await storeAttachments(
+        job,
+        reader,
+        record.sourceId,
+        { intakeRequestId: record.localId },
+        attachments,
+      );
     }
   }
   const next: OwnerCursor = {
-    ...(owner === 'initiative' ? { owner } : {}),
+    ...(owner !== 'issue' ? { owner } : {}),
     lastRecordId: pending[pending.length - 1]!.id,
   };
   await saveImportJobCursor(job.id, next);

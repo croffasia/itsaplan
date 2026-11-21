@@ -433,7 +433,7 @@ interface PlaneWorkItem {
   title?: string;
   sequence_id: number;
   description_html: string;
-  state?: { id: string } | string;
+  state?: { id: string; group?: string } | string;
   assignees?: ({ email: string } | string)[];
   labels?: ({ id: string } | string)[];
   cycle_id?: string | null;
@@ -470,6 +470,7 @@ function mapWorkItem(raw: PlaneWorkItem): CanonicalIssue {
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
     archivedAt: null,
+    inTriage: typeof raw.state === 'object' && raw.state?.group === 'triage',
   };
 }
 

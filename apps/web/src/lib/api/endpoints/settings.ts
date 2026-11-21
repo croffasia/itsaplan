@@ -38,6 +38,7 @@ export interface ProjectFeatures {
   subtasks: boolean;
   checklists: boolean;
   issueStats: boolean;
+  intake: boolean;
 }
 
 // A project's settings: MCP reachability, which is read-only here, and the enabled

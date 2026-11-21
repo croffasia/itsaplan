@@ -141,7 +141,8 @@
       "subtasks": "Des tickets découpés en sous-tâches sous un parent.",
       "checklists": "Des listes d'étapes suivies au sein d'un ticket.",
       "issueStats": "Le temps passé par un ticket dans chaque état.",
-      "documents": "Documentation partagée du projet, organisée en pages."
+      "documents": "Documentation partagée du projet, organisée en pages.",
+      "intake": "Review incoming requests before they become issues on the board."
     },
     "featureOn": "Section {feature} activée",
     "featureOff": "Section {feature} désactivée"

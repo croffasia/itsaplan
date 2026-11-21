@@ -5,6 +5,7 @@ import {
   BookOpenText,
   Inbox,
   LayoutDashboard,
+  ListTodo,
   RefreshCw,
   SquareKanban,
   StickyNote,
@@ -16,6 +17,7 @@ import {
   documentsPath,
   inboxPath,
   initiativesPath,
+  intakePath,
   notesPath,
   projectPath,
   viewPath,
@@ -23,6 +25,7 @@ import {
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
+import { useIntakeSummaryQuery } from '@/services/intake.service';
 import { useViewsQuery } from '@/services/views.service';
 import { viewIcon } from '@/utils/viewIcons';
 import { SidebarGroup, SidebarGroupContent, SidebarMenu } from '@/components/ui/sidebar';
@@ -45,6 +48,8 @@ export default function SidebarWorkNav({
   const features = useProjectFeatures();
   const disabled = !projectKey;
   const { data: inboxUnread } = useInboxUnread(projectKey, projectId);
+  const intakeVisible = features.intake && can('intake', 'read');
+  const { data: intakeSummary } = useIntakeSummaryQuery(projectKey, intakeVisible);
   const { data: views } = useViewsQuery(projectKey);
   const favorites = views?.filter((v) => v.favorite) ?? [];
 
@@ -92,6 +97,16 @@ export default function SidebarWorkNav({
             disabled={disabled}
             badge={inboxUnread}
           />
+          {intakeVisible && (
+            <SidebarNavItem
+              href={projectKey ? intakePath(projectKey) : '#'}
+              icon={ListTodo}
+              label={t('intake')}
+              active={pathname.endsWith('/intake')}
+              disabled={disabled}
+              badge={intakeSummary?.pendingCount || undefined}
+            />
+          )}
           {features.dashboards && can('dashboards', 'read') && (
             <SidebarNavItem
               href={projectKey ? dashboardsPath(projectKey) : '#'}

@@ -186,6 +186,10 @@ export const app = new Elysia()
               { name: 'Issue Templates', description: 'Presets a new issue can be created from' },
               { name: 'Issues', description: 'Issues, their fields, feed, and comments' },
               {
+                name: 'Intake',
+                description: 'Per-project intake queue where requests wait before becoming issues',
+              },
+              {
                 name: 'Initiatives',
                 description: 'Initiatives (issue groupings) and their activity feed',
               },

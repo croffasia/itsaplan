@@ -1,0 +1,61 @@
+{
+  "title": "Intake",
+  "newRequest": "New request",
+  "empty": "No requests in this view",
+  "selectRequest": "Select a request to review",
+  "loading": "Loading…",
+  "someone": "Someone",
+  "summaryWaiting": "{count} waiting",
+  "summaryWithOldest": "{count} waiting · oldest {age} ago",
+  "status": {
+    "pending": "Waiting",
+    "snoozed": "Snoozed",
+    "accepted": "Accepted",
+    "declined": "Declined",
+    "duplicate": "Duplicate",
+    "all": "All"
+  },
+  "fields": {
+    "title": "Title",
+    "titlePlaceholder": "Short summary of the request",
+    "description": "Description",
+    "descriptionPlaceholder": "Context, details, or links…",
+    "source": "Source",
+    "assignee": "Assignee",
+    "unassigned": "Unassigned",
+    "dueDate": "Due date",
+    "declineReasonPlaceholder": "One-line reason (optional)",
+    "duplicateIssueIdPlaceholder": "Existing issue ID",
+    "commentPlaceholder": "Add a comment…"
+  },
+  "actions": {
+    "submit": "Submit request",
+    "accept": "Accept",
+    "confirmAccept": "Create issue",
+    "decline": "Decline",
+    "confirmDecline": "Decline request",
+    "snooze": "Snooze",
+    "confirmSnooze": "Snooze",
+    "duplicate": "Mark duplicate",
+    "confirmDuplicate": "Mark duplicate",
+    "addComment": "Comment"
+  },
+  "sections": {
+    "attachments": "Attachments",
+    "comments": "Comments"
+  },
+  "linked": {
+    "accepted": "Accepted as issue",
+    "duplicate": "Marked as duplicate of",
+    "declineReason": "Declined: {reason}"
+  },
+  "toast": {
+    "created": "Request added to intake",
+    "accepted": "Request accepted and created as an issue",
+    "declined": "Request declined",
+    "snoozed": "Request snoozed",
+    "duplicate": "Request marked as duplicate",
+    "deleted": "Request deleted",
+    "commentAdded": "Comment added"
+  }
+}

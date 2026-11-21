@@ -27,7 +27,8 @@
     "repositories": "Kod depoları",
     "note_boards": "Not panoları",
     "import_export": "İçe/Dışa Aktarma",
-    "danger_zone": "Tehlikeli bölge"
+    "danger_zone": "Tehlikeli bölge",
+    "intake": "Intake"
   },
   "actions": {
     "create": "Oluştur",

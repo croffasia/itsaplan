@@ -22,6 +22,10 @@ const TYPES: NotificationType[] = [
   'commented',
   'state_changed',
   'reacted',
+  'intake_accepted',
+  'intake_declined',
+  'intake_snoozed',
+  'intake_duplicate',
 ];
 
 // The inbox list header: title with unread count, a type filter, display toggles

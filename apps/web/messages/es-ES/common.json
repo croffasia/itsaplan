@@ -192,7 +192,8 @@
     "notes": "Notas",
     "subtasks": "Subtareas",
     "checklists": "Listas de verificación",
-    "issueStats": "Estadísticas de tickets"
+    "issueStats": "Estadísticas de tickets",
+    "intake": "Intake"
   },
   "featureOffTitle": "{feature} están desactivadas",
   "toggleSidebar": "Cambiar la barra lateral",

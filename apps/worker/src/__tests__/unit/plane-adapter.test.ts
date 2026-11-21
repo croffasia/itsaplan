@@ -238,4 +238,22 @@ describe('PlaneReader', () => {
       'Plane attachment resolve did not redirect: GET /work-items/issue-1/attachments/att-1/ -> HTTP 200',
     );
   });
+
+  it('marks work items in Plane triage group with inTriage = true', async () => {
+    const reader = readerAnswering(
+      Response.json({
+        id: 'wi-1',
+        name: 'Triage item',
+        sequence_id: 7,
+        description_html: '<p>Waiting</p>',
+        state: { id: 'st-triage', group: 'triage' },
+        assignees: [],
+        labels: [],
+        created_at: '2026-01-01T00:00:00Z',
+        updated_at: '2026-01-01T00:00:00Z',
+      }),
+    );
+    const item = await reader.getIssue('wi-1');
+    expect(item.inTriage).toBe(true);
+  });
 });

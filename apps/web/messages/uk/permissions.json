@@ -27,7 +27,8 @@
     "repositories": "Репозиторії",
     "note_boards": "Дошки нотаток",
     "import_export": "Імпорт/Експорт",
-    "danger_zone": "Небезпечна зона"
+    "danger_zone": "Небезпечна зона",
+    "intake": "Intake"
   },
   "actions": {
     "create": "Створення",

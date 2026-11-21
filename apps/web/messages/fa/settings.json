@@ -141,7 +141,8 @@
       "subtasks": "تسک‌هایی که به زیرتسک‌ها زیر یک تسک والد تقسیم می‌شوند.",
       "checklists": "فهرست‌هایی از مراحل که داخل یک تسک پیگیری می‌شوند.",
       "issueStats": "مدت زمانی که یک تسک در هر وضعیت سپری کرده است.",
-      "documents": "مستندات مشترک پروژه که در قالب صفحه‌ها سازمان‌دهی شده‌اند."
+      "documents": "مستندات مشترک پروژه که در قالب صفحه‌ها سازمان‌دهی شده‌اند.",
+      "intake": "Review incoming requests before they become issues on the board."
     },
     "featureOn": "{feature} روشن شد",
     "featureOff": "{feature} خاموش شد"

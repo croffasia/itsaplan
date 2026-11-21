@@ -35,6 +35,12 @@ export const WEBHOOK_EVENT_TYPES = [
   // A run of an agent in the project ended: success, failed or canceled. Its payload is
   // the run (modules/agents/core/run-finished.ts).
   'agent_run.finished',
+  // Intake queue lifecycle events.
+  'intake.created',
+  'intake.accepted',
+  'intake.declined',
+  'intake.snoozed',
+  'intake.duplicate',
 ] as const;
 export type WebhookEventType = (typeof WEBHOOK_EVENT_TYPES)[number];
 

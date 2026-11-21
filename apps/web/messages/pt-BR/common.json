@@ -192,7 +192,8 @@
     "notes": "Notas",
     "subtasks": "Subtarefas",
     "checklists": "Checklists",
-    "issueStats": "Estatísticas de issue"
+    "issueStats": "Estatísticas de issue",
+    "intake": "Intake"
   },
   "featureOffTitle": "{feature} estão desativados",
   "toggleSidebar": "Alternar barra lateral",

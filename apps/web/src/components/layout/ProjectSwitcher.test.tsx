@@ -57,6 +57,7 @@ const projects: Project[] = Array.from({ length: 20 }, (_, index) => ({
   subtasksEnabled: true,
   checklistsEnabled: true,
   issueStatsEnabled: true,
+  intakeEnabled: false,
   availableFeatures: [],
   pointsEstimateEnabled: false,
   timeEstimateEnabled: false,

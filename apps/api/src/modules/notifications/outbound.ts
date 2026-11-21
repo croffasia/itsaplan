@@ -16,7 +16,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { composeEmail, isAccountDeactivated, savedLocales } from '@repo/auth';
 import { DEFAULT_LOCALE, emailWords, type CoreEmailKey, type Locale } from '@repo/mailer';
 import { readRedactedSettings } from '#modules/notification-settings/service';
-import { getPreferencesForUsers } from '#modules/notification-preferences/service';
+import { getPreferencesForUsers, type EventKey } from '#modules/notification-preferences/service';
 import { getTelegramChatIds, hasUsableInstanceBot } from '#modules/telegram/service';
 import { getPushSubscriptionIds } from '#modules/push/service';
 import { escapeHtml } from '#shared/lib';
@@ -69,7 +69,7 @@ async function readStateChange(activityId: number): Promise<StateChange | null> 
   return { from, to };
 }
 
-const EMAIL_TEMPLATE: Record<NotificationType, CoreEmailKey> = {
+const EMAIL_TEMPLATE: Record<EventKey, CoreEmailKey> = {
   assigned: 'assigned',
   mentioned: 'mentioned',
   commented: 'commented',
@@ -77,11 +77,15 @@ const EMAIL_TEMPLATE: Record<NotificationType, CoreEmailKey> = {
   reacted: 'reacted',
 };
 
+function isOutboundType(type: NotificationType): type is EventKey {
+  return type in EMAIL_TEMPLATE;
+}
+
 // What happened, as the Telegram message and the push notification say it.
 // Issue-centric third person, matching the email copy without repeating the
 // second-person address.
 function eventAction(
-  type: NotificationType,
+  type: EventKey,
   actor: string,
   stateChange: StateChange | null,
   emoji: string,
@@ -102,7 +106,7 @@ function eventAction(
   }
 }
 
-const TELEGRAM_EMOJI: Record<NotificationType, string> = {
+const TELEGRAM_EMOJI: Record<EventKey, string> = {
   assigned: '📌',
   mentioned: '💬',
   commented: '💬',
@@ -113,7 +117,7 @@ const TELEGRAM_EMOJI: Record<NotificationType, string> = {
 // Telegram copy. Rendered as HTML (parse_mode HTML) with the issue reference as a
 // clickable link, plus a plain-text fallback.
 function telegramPayload(
-  type: NotificationType,
+  type: EventKey,
   ref: string,
   title: string,
   action: string,
@@ -162,9 +166,9 @@ function pushPayload(
 }
 
 interface Messages {
-  email: (type: NotificationType, locale: Locale) => Promise<DeliveryPayload>;
-  telegram: (type: NotificationType) => DeliveryPayload;
-  push: (type: NotificationType, notificationId: number) => DeliveryPayload;
+  email: (type: EventKey, locale: Locale) => Promise<DeliveryPayload>;
+  telegram: (type: EventKey) => DeliveryPayload;
+  push: (type: EventKey, notificationId: number) => DeliveryPayload;
 }
 
 // The copy of one event, about the issue or the document its rows point at. Null when
@@ -257,8 +261,12 @@ export async function enqueueOutbound(
   actorName: string | null,
   commentId: number | null,
 ): Promise<void> {
-  if (notifications.length === 0) return;
-  const projectId = notifications[0].projectId;
+  const outbound = notifications.filter(
+    (n): n is InsertedNotification & { type: EventKey } =>
+      n.intakeRequestId == null && isOutboundType(n.type),
+  );
+  if (outbound.length === 0) return;
+  const projectId = outbound[0].projectId;
 
   const [projectRow] = await db
     .select({ key: project.key, name: project.name, teamId: project.teamId, teamSlug: team.slug })
@@ -288,10 +296,10 @@ export async function enqueueOutbound(
   const vapid = getWebPushConfig();
   if (!emailEnabled && !telegramEnabled && !vapid) return;
 
-  const messages = await composeMessages(notifications, projectRow, actorName, commentId);
+  const messages = await composeMessages(outbound, projectRow, actorName, commentId);
   if (!messages) return;
 
-  const userIds = [...new Set(notifications.map((n) => n.userId))];
+  const userIds = [...new Set(outbound.map((n) => n.userId))];
   const [users, prefsByUser, chatIdByUser, localeByUser, pushByUser] = await Promise.all([
     db
       .select({ id: user.id, email: user.email, active: user.active })
@@ -311,7 +319,7 @@ export async function enqueueOutbound(
 
   // Everyone told the same thing in one language gets the same email, composed once.
   const emails = new Map<string, Promise<DeliveryPayload>>();
-  const emailFor = (type: NotificationType, locale: Locale) => {
+  const emailFor = (type: EventKey, locale: Locale) => {
     const key = `${type}:${locale}`;
     const email = emails.get(key) ?? messages.email(type, locale);
     emails.set(key, email);
@@ -319,7 +327,7 @@ export async function enqueueOutbound(
   };
 
   const out: OutboxRow[] = [];
-  for (const n of notifications) {
+  for (const n of outbound) {
     const prefs = prefsByUser.get(n.userId);
     const email = emailById.get(n.userId);
     if (!prefs || !email) continue; // not opted in, or deactivated

@@ -141,7 +141,8 @@
       "subtasks": "Issue yang dipecah menjadi subtugas di bawah induk.",
       "checklists": "Daftar langkah yang dipantau di dalam issue.",
       "issueStats": "Berapa lama suatu issue berada di setiap status.",
-      "documents": "Dokumentasi proyek bersama yang diorganisasikan ke dalam halaman."
+      "documents": "Dokumentasi proyek bersama yang diorganisasikan ke dalam halaman.",
+      "intake": "Review incoming requests before they become issues on the board."
     },
     "featureOn": "{feature} diaktifkan",
     "featureOff": "{feature} dinonaktifkan"

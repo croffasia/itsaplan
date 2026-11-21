@@ -5,6 +5,7 @@
 
 const CORE_RESOURCES = [
   'work_items',
+  'intake',
   'initiatives',
   'cycles',
   'dashboards',
@@ -121,6 +122,7 @@ export function defaultMemberPermissions(): Permissions {
   const read = { read: true };
   const member: Partial<Record<PermissionResource, Partial<ResourcePermissions>>> = {
     work_items: all,
+    intake: all,
     initiatives: all,
     cycles: all,
     documents: all,

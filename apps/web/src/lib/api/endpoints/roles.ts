@@ -7,6 +7,7 @@ export type PermissionAction = 'create' | 'edit' | 'read' | 'delete';
 
 export type PermissionResource =
   | 'work_items'
+  | 'intake'
   | 'initiatives'
   | 'cycles'
   | 'dashboards'

@@ -141,7 +141,8 @@
       "subtasks": "將工作項目拆分為父工作項目下的子任務。",
       "checklists": "在工作項目中追蹤簡單步驟。",
       "issueStats": "統計工作項目在各狀態中停留的時間。",
-      "documents": "組織和共享專案文件。"
+      "documents": "組織和共享專案文件。",
+      "intake": "Review incoming requests before they become issues on the board."
     },
     "featureOn": "已啟用{feature}",
     "featureOff": "已停用{feature}"

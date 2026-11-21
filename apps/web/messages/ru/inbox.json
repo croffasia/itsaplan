@@ -17,7 +17,11 @@
     "mentioned": "Упоминание",
     "commented": "Прокомментировано",
     "state_changed": "Статус изменён",
-    "reacted": "Реакция"
+    "reacted": "Реакция",
+    "intake_accepted": "Intake accepted",
+    "intake_declined": "Intake declined",
+    "intake_snoozed": "Intake snoozed",
+    "intake_duplicate": "Intake duplicate"
   },
   "actions": {
     "markRead": "Отметить прочитанным",
@@ -35,6 +39,11 @@
     "commented": "{who} оставил(а) комментарий",
     "stateChanged": "{who} изменил(а) статус с {from} на {to}",
     "stateChangedPlain": "{who} изменил(а) статус",
-    "reacted": "{who}: реакция {emoji} на ваш комментарий"
+    "reacted": "{who}: реакция {emoji} на ваш комментарий",
+    "intake_accepted": "{who} accepted your intake request",
+    "intake_declined": "{who} declined your intake request",
+    "intakeDeclinedWithReason": "{who} declined your intake request: {reason}",
+    "intake_snoozed": "{who} snoozed your intake request",
+    "intake_duplicate": "{who} marked your intake request as a duplicate"
   }
 }

@@ -5,6 +5,7 @@ import {
   user,
   issue,
   issueActivity,
+  intakeRequest,
   project,
   team,
   projectColumn,
@@ -35,10 +36,14 @@ export const NOTIFICATION_TYPES = [
   'commented',
   'state_changed',
   'reacted',
+  'intake_accepted',
+  'intake_declined',
+  'intake_snoozed',
+  'intake_duplicate',
 ] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
-// Points at an issue, or at a document: then documentId is set and issueId is null.
+// Points at an issue, a document, or an intake request (which may also carry issueId).
 export interface NewNotificationRow {
   userId: string;
   projectId: number;
@@ -46,6 +51,7 @@ export interface NewNotificationRow {
   sourceActivityId: number | null;
   documentId?: number;
   documentCommentId?: string | null;
+  intakeRequestId?: number;
   type: NotificationType;
   actorUserId: string | null;
   // The emoji of a 'reacted' row.
@@ -324,6 +330,35 @@ export async function notifyDocumentMentions(input: {
   );
 }
 
+// Tells the member who filed an intake request about its outcome (accepted,
+// declined, snoozed, or marked as duplicate). Skipped when the reviewer is the
+// submitter or when the submitter is not a project member (e.g. an external
+// service or an agent).
+export async function notifyIntakeOutcome(input: {
+  projectId: number;
+  intakeRequestId: number;
+  recipientUserId: string | null;
+  actorUserId: string | null;
+  type: 'intake_accepted' | 'intake_declined' | 'intake_snoozed' | 'intake_duplicate';
+  issueId?: number | null;
+}): Promise<void> {
+  const recipient = input.recipientUserId;
+  if (!recipient || recipient === input.actorUserId) return;
+  const members = await keepProjectMembers(input.projectId, [recipient]);
+  if (!members.has(recipient)) return;
+  await insertNotifications([
+    {
+      userId: recipient,
+      projectId: input.projectId,
+      issueId: input.issueId ?? null,
+      sourceActivityId: null,
+      intakeRequestId: input.intakeRequestId,
+      type: input.type,
+      actorUserId: input.actorUserId,
+    },
+  ]);
+}
+
 // --- Inbox read + mutations ------------------------------------------------------
 
 // A notification enriched with the issue or the document and the project it points at,
@@ -349,6 +384,10 @@ export interface NotificationRow {
   documentIcon: string | null;
   // Set when the mention is in a comment on the document.
   documentCommentId: string | null;
+  intakeRequestId: number | null;
+  intakeRequestTitle: string | null;
+  intakeDeclineReason: string | null;
+  intakeSnoozedUntil: string | null;
   projectId: number;
   projectKey: string;
   projectName: string;
@@ -420,6 +459,10 @@ function mapRow(r: {
   documentTitle: string | null;
   documentIcon: string | null;
   documentCommentId: string | null;
+  intakeRequestId: number | null;
+  intakeRequestTitle: string | null;
+  intakeDeclineReason: string | null;
+  intakeSnoozedUntil: Date | null;
   projectId: number;
   projectKey: string;
   projectName: string;
@@ -444,6 +487,10 @@ function mapRow(r: {
     documentTitle: r.documentTitle,
     documentIcon: r.documentIcon,
     documentCommentId: r.documentCommentId,
+    intakeRequestId: r.intakeRequestId,
+    intakeRequestTitle: r.intakeRequestTitle,
+    intakeDeclineReason: r.intakeDeclineReason,
+    intakeSnoozedUntil: r.intakeSnoozedUntil ? iso(r.intakeSnoozedUntil) : null,
     projectId: r.projectId,
     projectKey: r.projectKey,
     projectName: r.projectName,
@@ -460,8 +507,12 @@ function visibleDocument(userId: string) {
   return and(eq(projectDocument.id, notification.documentId), documentVisibleTo(userId));
 }
 
-// A notification whose issue or document the user can still see.
-const hasTarget = or(isNotNull(notification.issueId), isNotNull(projectDocument.id));
+// A notification whose issue, document, or intake request the user can still see.
+const hasTarget = or(
+  isNotNull(notification.issueId),
+  isNotNull(projectDocument.id),
+  isNotNull(notification.intakeRequestId),
+);
 
 // One page of a user's inbox, newest first, keyset-paged on (created_at, id).
 // Only projects the user is still a member of: the row carries the issue title, its
@@ -502,6 +553,10 @@ export async function listNotifications(
       documentTitle: projectDocument.title,
       documentIcon: projectDocument.icon,
       documentCommentId: notification.documentCommentId,
+      intakeRequestId: notification.intakeRequestId,
+      intakeRequestTitle: intakeRequest.title,
+      intakeDeclineReason: intakeRequest.declineReason,
+      intakeSnoozedUntil: intakeRequest.snoozedUntil,
       projectId: project.id,
       projectKey: project.key,
       projectName: project.name,
@@ -517,6 +572,7 @@ export async function listNotifications(
     .leftJoin(issue, eq(issue.id, notification.issueId))
     .leftJoin(projectColumn, eq(projectColumn.id, issue.columnId))
     .leftJoin(projectDocument, visibleDocument(userId))
+    .leftJoin(intakeRequest, eq(intakeRequest.id, notification.intakeRequestId))
     .leftJoin(issueActivity, eq(issueActivity.id, notification.sourceActivityId))
     .where(and(...conds, hasTarget))
     .orderBy(desc(notification.createdAt), desc(notification.id))

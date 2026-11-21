@@ -78,6 +78,7 @@ export interface ProjectRow {
   subtasksEnabled: boolean;
   checklistsEnabled: boolean;
   issueStatsEnabled: boolean;
+  intakeEnabled: boolean;
   pointsEstimateEnabled: boolean;
   timeEstimateEnabled: boolean;
   timeLoggingEnabled: boolean;
@@ -100,6 +101,7 @@ export interface ProjectFeatures {
   subtasks: boolean;
   checklists: boolean;
   issueStats: boolean;
+  intake: boolean;
 }
 
 // A project in the caller's list, carrying the caller's own role in it. The list
@@ -157,6 +159,7 @@ export async function mapProject(row: ProjectWithTeam): Promise<ProjectRow> {
     subtasksEnabled: on('subtasks', row.subtasksEnabled),
     checklistsEnabled: on('checklists', row.checklistsEnabled),
     issueStatsEnabled: on('issueStats', row.issueStatsEnabled),
+    intakeEnabled: on('intake', row.intakeEnabled),
     pointsEstimateEnabled: row.pointsEstimateEnabled,
     timeEstimateEnabled: row.timeEstimateEnabled,
     timeLoggingEnabled: row.timeLoggingEnabled,
@@ -647,6 +650,7 @@ export function projectFeatures(
     subtasks: row.subtasksEnabled,
     checklists: row.checklistsEnabled,
     issueStats: row.issueStatsEnabled,
+    intake: row.intakeEnabled,
   };
 }
 
@@ -670,6 +674,7 @@ export async function setProjectFeatures(
   if (patch.subtasks !== undefined) values.subtasksEnabled = patch.subtasks;
   if (patch.checklists !== undefined) values.checklistsEnabled = patch.checklists;
   if (patch.issueStats !== undefined) values.issueStatsEnabled = patch.issueStats;
+  if (patch.intake !== undefined) values.intakeEnabled = patch.intake;
   if (Object.keys(values).length === 0) return getProjectById(projectId);
   await db.update(project).set(values).where(eq(project.id, projectId));
   return getProjectById(projectId);

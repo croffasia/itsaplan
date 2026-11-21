@@ -195,6 +195,7 @@ const PROJECT_FLAGS = {
   subtasksEnabled: project.subtasksEnabled,
   checklistsEnabled: project.checklistsEnabled,
   issueStatsEnabled: project.issueStatsEnabled,
+  intakeEnabled: project.intakeEnabled,
   pointsEstimateEnabled: project.pointsEstimateEnabled,
   timeEstimateEnabled: project.timeEstimateEnabled,
   timeLoggingEnabled: project.timeLoggingEnabled,

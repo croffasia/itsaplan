@@ -6,6 +6,9 @@ import {
   labelGroup,
   cycle,
   issue,
+  intakeRequest,
+  intakeComment,
+  intakeAttachment,
   issueType,
   issueWorklog,
   initiative,
@@ -253,6 +256,9 @@ export async function retryImportJobLater(
 
 export type ImportEntityType =
   | 'issue'
+  | 'intake_request'
+  | 'intake_comment'
+  | 'intake_attachment'
   | 'comment'
   | 'label'
   | 'state'
@@ -453,6 +459,7 @@ export async function listCreatedImportRecords(
       and(
         eq(importRecord.importJobId, jobId),
         eq(importRecord.sourceEntityType, entityType),
+        eq(importRecord.localEntityType, entityType),
         gt(importRecord.id, afterId),
         isNotNull(importRecord.localId),
       ),
@@ -460,6 +467,118 @@ export async function listCreatedImportRecords(
     .orderBy(importRecord.id)
     .limit(limit);
   return rows as CreatedImportRecordRow[];
+}
+
+export async function listCreatedIntakeImportRecords(
+  jobId: number,
+  afterId: number,
+  limit: number,
+): Promise<CreatedImportRecordRow[]> {
+  const rows = await db
+    .select({ id: importRecord.id, sourceId: importRecord.sourceId, localId: importRecord.localId })
+    .from(importRecord)
+    .where(
+      and(
+        eq(importRecord.importJobId, jobId),
+        eq(importRecord.sourceEntityType, 'issue'),
+        eq(importRecord.localEntityType, 'intake_request'),
+        gt(importRecord.id, afterId),
+        isNotNull(importRecord.localId),
+      ),
+    )
+    .orderBy(importRecord.id)
+    .limit(limit);
+  return rows as CreatedImportRecordRow[];
+}
+
+export async function enableProjectIntake(projectId: number): Promise<void> {
+  await db.update(project).set({ intakeEnabled: true }).where(eq(project.id, projectId));
+}
+
+export async function createLocalIntakeRequestAndRecord(
+  jobId: number,
+  sourceId: string,
+  sourceDisplayId: string,
+  input: {
+    projectId: number;
+    source: string;
+    title: string;
+    description: string;
+    priority: string | null;
+    createdAt: string;
+    updatedAt: string;
+  },
+): Promise<number> {
+  return db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select({ id: intakeRequest.id })
+      .from(intakeRequest)
+      .where(
+        and(
+          eq(intakeRequest.projectId, input.projectId),
+          eq(intakeRequest.source, input.source),
+          eq(intakeRequest.externalId, sourceId),
+        ),
+      )
+      .limit(1);
+    if (existing) {
+      await upsertImportRecordWith(
+        tx,
+        jobId,
+        'issue',
+        sourceId,
+        'intake_request',
+        existing.id,
+        sourceDisplayId,
+      );
+      return existing.id;
+    }
+    const [row] = await tx
+      .insert(intakeRequest)
+      .values({
+        projectId: input.projectId,
+        title: input.title,
+        description: input.description,
+        priority: input.priority,
+        status: 'pending',
+        source: input.source,
+        externalId: sourceId,
+        createdAt: new Date(input.createdAt),
+        updatedAt: new Date(input.updatedAt),
+      })
+      .returning({ id: intakeRequest.id });
+    await upsertImportRecordWith(
+      tx,
+      jobId,
+      'issue',
+      sourceId,
+      'intake_request',
+      row!.id,
+      sourceDisplayId,
+    );
+    return row!.id;
+  });
+}
+
+export async function createLocalIntakeComment(
+  intakeRequestId: number,
+  actorUserId: string | null,
+  actorName: string,
+  body: string,
+  createdAt: Date,
+): Promise<number> {
+  const [row] = await db
+    .insert(intakeComment)
+    .values({
+      intakeRequestId,
+      actorUserId,
+      actorName,
+      body,
+      createdAt,
+      updatedAt: createdAt,
+    })
+    .returning({ id: intakeComment.id });
+  return row!.id;
 }
 
 export async function firstProjectColumnId(projectId: number): Promise<number | null> {
@@ -1251,7 +1370,8 @@ export async function findProjectMemberUserId(
   return rows[0]?.userId ?? null;
 }
 
-export type AttachmentOwner = { issueId: number } | { initiativeId: number };
+export type AttachmentOwner =
+  { issueId: number } | { initiativeId: number } | { intakeRequestId: number };
 
 export type NewLocalAttachment = {
   projectId: number;
@@ -1261,13 +1381,13 @@ export type NewLocalAttachment = {
 } & AttachmentOwner;
 
 // The path text stores an attachment by, which the web serves through /media.
-export function attachmentPath(owner: 'issue' | 'initiative', publicId: string): string {
-  return owner === 'issue'
-    ? `/media/attachments/${publicId}/raw`
-    : `/media/initiative-attachments/${publicId}/raw`;
+export function attachmentPath(owner: 'issue' | 'initiative' | 'intake', publicId: string): string {
+  if (owner === 'issue') return `/media/attachments/${publicId}/raw`;
+  if (owner === 'initiative') return `/media/initiative-attachments/${publicId}/raw`;
+  return `/media/intake-attachments/${publicId}/raw`;
 }
 
-// The stored files this job imported for one issue or initiative, by their source id.
+// The stored files this job imported for one issue, initiative, or intake request, by source id.
 export async function importedAttachmentPaths(
   jobId: number,
   owner: AttachmentOwner,
@@ -1286,30 +1406,35 @@ export async function importedAttachmentPaths(
               eq(issueAttachment.issueId, owner.issueId),
             ),
           )
-      : await db
-          .select({ sourceId: importRecord.sourceId, publicId: initiativeAttachment.publicId })
-          .from(importRecord)
-          .innerJoin(initiativeAttachment, eq(initiativeAttachment.id, importRecord.localId))
-          .where(
-            and(
-              eq(importRecord.importJobId, jobId),
-              eq(importRecord.sourceEntityType, 'attachment'),
-              eq(importRecord.localEntityType, 'initiative_attachment'),
-              eq(initiativeAttachment.initiativeId, owner.initiativeId),
-            ),
-          );
-  const kind = 'issueId' in owner ? 'issue' : 'initiative';
+      : 'initiativeId' in owner
+        ? await db
+            .select({ sourceId: importRecord.sourceId, publicId: initiativeAttachment.publicId })
+            .from(importRecord)
+            .innerJoin(initiativeAttachment, eq(initiativeAttachment.id, importRecord.localId))
+            .where(
+              and(
+                eq(importRecord.importJobId, jobId),
+                eq(importRecord.sourceEntityType, 'attachment'),
+                eq(importRecord.localEntityType, 'initiative_attachment'),
+                eq(initiativeAttachment.initiativeId, owner.initiativeId),
+              ),
+            )
+        : await db
+            .select({ sourceId: importRecord.sourceId, publicId: intakeAttachment.publicId })
+            .from(importRecord)
+            .innerJoin(intakeAttachment, eq(intakeAttachment.id, importRecord.localId))
+            .where(
+              and(
+                eq(importRecord.importJobId, jobId),
+                eq(importRecord.sourceEntityType, 'attachment'),
+                eq(importRecord.localEntityType, 'intake_attachment'),
+                eq(intakeAttachment.intakeRequestId, owner.intakeRequestId),
+              ),
+            );
+  const kind = 'issueId' in owner ? 'issue' : 'initiativeId' in owner ? 'initiative' : 'intake';
   return new Map(rows.map((r) => [r.sourceId, attachmentPath(kind, r.publicId)]));
 }
 
-// Reuse-before-duplicate, the same shape as the other entities: an attachment
-// already on this issue with the same filename is reused rather than re-uploaded
-// on a second import run. Size, mime type, and project quota are all checked
-// against the instance's own settings before the upload, so a file that cannot
-// be stored never reaches the object store at all; the quota is checked once
-// more inside the lock, right before the insert, the same two-step api's own
-// upload route follows — the first check keeps a doomed-to-reject file off the
-// object store, the second is the one a concurrent write can't slip past.
 export async function createLocalAttachmentAndRecord(
   jobId: number,
   sourceId: string,
@@ -1317,7 +1442,12 @@ export async function createLocalAttachmentAndRecord(
 ): Promise<number> {
   const filename = safeAttachmentFilename(input.filename);
   const onIssue = 'issueId' in input;
-  const localType = onIssue ? 'attachment' : 'initiative_attachment';
+  const onInitiative = 'initiativeId' in input;
+  const localType: ImportEntityType = onIssue
+    ? 'attachment'
+    : onInitiative
+      ? 'initiative_attachment'
+      : 'intake_attachment';
   const [existing] = onIssue
     ? await db
         .select({ id: issueAttachment.id })
@@ -1325,15 +1455,25 @@ export async function createLocalAttachmentAndRecord(
         .where(
           and(eq(issueAttachment.issueId, input.issueId), eq(issueAttachment.filename, filename)),
         )
-    : await db
-        .select({ id: initiativeAttachment.id })
-        .from(initiativeAttachment)
-        .where(
-          and(
-            eq(initiativeAttachment.initiativeId, input.initiativeId),
-            eq(initiativeAttachment.filename, filename),
-          ),
-        );
+    : onInitiative
+      ? await db
+          .select({ id: initiativeAttachment.id })
+          .from(initiativeAttachment)
+          .where(
+            and(
+              eq(initiativeAttachment.initiativeId, input.initiativeId),
+              eq(initiativeAttachment.filename, filename),
+            ),
+          )
+      : await db
+          .select({ id: intakeAttachment.id })
+          .from(intakeAttachment)
+          .where(
+            and(
+              eq(intakeAttachment.intakeRequestId, input.intakeRequestId),
+              eq(intakeAttachment.filename, filename),
+            ),
+          );
   if (existing) {
     await upsertImportRecordWith(db, jobId, 'attachment', sourceId, localType, existing.id);
     return existing.id;
@@ -1361,7 +1501,9 @@ export async function createLocalAttachmentAndRecord(
 
   const key = onIssue
     ? attachmentObjectKey(input.projectId, 'attachments', input.issueId, filename)
-    : attachmentObjectKey(input.projectId, 'initiatives', input.initiativeId, filename);
+    : onInitiative
+      ? attachmentObjectKey(input.projectId, 'initiatives', input.initiativeId, filename)
+      : attachmentObjectKey(input.projectId, 'intake', input.intakeRequestId, filename);
   await putObject(key, input.bytes, input.contentType);
 
   try {
@@ -1388,10 +1530,15 @@ export async function createLocalAttachmentAndRecord(
             .insert(issueAttachment)
             .values({ issueId: input.issueId, ...file })
             .returning({ id: issueAttachment.id })
-        : await tx
-            .insert(initiativeAttachment)
-            .values({ initiativeId: input.initiativeId, ...file })
-            .returning({ id: initiativeAttachment.id });
+        : onInitiative
+          ? await tx
+              .insert(initiativeAttachment)
+              .values({ initiativeId: input.initiativeId, ...file })
+              .returning({ id: initiativeAttachment.id })
+          : await tx
+              .insert(intakeAttachment)
+              .values({ intakeRequestId: input.intakeRequestId, ...file })
+              .returning({ id: intakeAttachment.id });
       await upsertImportRecordWith(tx, jobId, 'attachment', sourceId, localType, row!.id);
       return row!.id;
     });

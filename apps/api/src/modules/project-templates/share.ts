@@ -194,7 +194,11 @@ function importedSnapshot(template: SharedProjectTemplate): ProjectSnapshot {
     if (known[kind].has(id)) return id;
     throw new HttpError(400, `The template has no ${KIND_NAMES[kind]} ${id}`);
   });
-  return { ...relinked, sections: {} };
+  return {
+    ...relinked,
+    flags: { ...relinked.flags, intakeEnabled: relinked.flags.intakeEnabled ?? false },
+    sections: {},
+  };
 }
 
 export function previewImportedTemplate(template: SharedProjectTemplate): ProjectTemplateContents {

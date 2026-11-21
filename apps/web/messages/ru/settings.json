@@ -141,7 +141,8 @@
       "subtasks": "Задачи, разбитые на подзадачи под родительской.",
       "checklists": "Списки шагов внутри задачи.",
       "issueStats": "Сколько задача провела в каждом статусе.",
-      "documents": "Совместная работа с документами проекта."
+      "documents": "Совместная работа с документами проекта.",
+      "intake": "Review incoming requests before they become issues on the board."
     },
     "featureOn": "Раздел «{feature}» включён",
     "featureOff": "Раздел «{feature}» выключен"

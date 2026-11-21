@@ -109,7 +109,7 @@ export function safeAttachmentFilename(input: string, fallback = 'file'): string
 // an earlier version.
 export function attachmentObjectKey(
   projectId: number,
-  namespace: 'attachments' | 'chat' | 'documents' | 'initiatives',
+  namespace: 'attachments' | 'chat' | 'documents' | 'initiatives' | 'intake',
   ownerId: number | null,
   filename: string,
 ): string {

@@ -192,7 +192,8 @@
     "notes": "便签",
     "subtasks": "子任务",
     "checklists": "检查清单",
-    "issueStats": "工作项统计"
+    "issueStats": "工作项统计",
+    "intake": "Intake"
   },
   "featureOffTitle": "{feature}已停用",
   "toggleSidebar": "切换侧边栏",

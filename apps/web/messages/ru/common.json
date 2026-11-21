@@ -192,7 +192,8 @@
     "notes": "Заметки",
     "subtasks": "Подзадачи",
     "checklists": "Чек-листы",
-    "issueStats": "Статистика задач"
+    "issueStats": "Статистика задач",
+    "intake": "Intake"
   },
   "featureOffTitle": "Раздел «{feature}» выключен",
   "toggleSidebar": "Показать или скрыть боковую панель",

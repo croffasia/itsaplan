@@ -27,7 +27,8 @@
     "repositories": "程式碼存放庫",
     "note_boards": "筆記板",
     "import_export": "匯入/匯出",
-    "danger_zone": "危險操作"
+    "danger_zone": "危險操作",
+    "intake": "Intake"
   },
   "actions": {
     "create": "新建",

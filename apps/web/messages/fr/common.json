@@ -192,7 +192,8 @@
     "notes": "Notes",
     "subtasks": "Sous-tâches",
     "checklists": "Checklists",
-    "issueStats": "Statistiques de tickets"
+    "issueStats": "Statistiques de tickets",
+    "intake": "Intake"
   },
   "featureOffTitle": "La section {feature} est désactivée",
   "toggleSidebar": "Afficher ou masquer la barre latérale",

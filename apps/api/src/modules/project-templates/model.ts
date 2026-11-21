@@ -208,6 +208,7 @@ const sharedSnapshot = strict({
     subtasksEnabled: t.Boolean(),
     checklistsEnabled: t.Boolean(),
     issueStatsEnabled: t.Boolean(),
+    intakeEnabled: t.Optional(t.Boolean()),
     pointsEstimateEnabled: t.Boolean(),
     timeEstimateEnabled: t.Boolean(),
     timeLoggingEnabled: t.Boolean(),

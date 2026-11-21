@@ -192,7 +192,8 @@
     "notes": "노트",
     "subtasks": "하위 이슈",
     "checklists": "체크리스트",
-    "issueStats": "이슈 통계"
+    "issueStats": "이슈 통계",
+    "intake": "Intake"
   },
   "featureOffTitle": "{feature} 기능이 비활성화되어 있습니다.",
   "toggleSidebar": "사이드바 전환",

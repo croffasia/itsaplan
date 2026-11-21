@@ -192,7 +192,8 @@
     "notes": "Notlar",
     "subtasks": "Alt işler",
     "checklists": "Kontrol listeleri",
-    "issueStats": "İş istatistikleri"
+    "issueStats": "İş istatistikleri",
+    "intake": "Intake"
   },
   "featureOffTitle": "{feature} kapatıldı",
   "toggleSidebar": "Kenar çubuğunu aç/kapat",

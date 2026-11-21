@@ -141,7 +141,8 @@
       "subtasks": "Bir ana iş altında alt işlere bölünen görevler.",
       "checklists": "Bir iş içinde takip edilen kontrol listeleri.",
       "issueStats": "Bir işin her durumda ne kadar süre kaldığı.",
-      "documents": "Sayfalar halinde düzenlenen ortak proje belgeleri."
+      "documents": "Sayfalar halinde düzenlenen ortak proje belgeleri.",
+      "intake": "Review incoming requests before they become issues on the board."
     },
     "featureOn": "{feature} açıldı",
     "featureOff": "{feature} kapatıldı"

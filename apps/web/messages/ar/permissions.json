@@ -27,7 +27,8 @@
     "repositories": "المستودعات",
     "note_boards": "لوحات الملاحظات",
     "import_export": "استيراد/تصدير",
-    "danger_zone": "منطقة الخطر"
+    "danger_zone": "منطقة الخطر",
+    "intake": "Intake"
   },
   "actions": {
     "create": "إنشاء",

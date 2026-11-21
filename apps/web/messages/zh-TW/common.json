@@ -192,7 +192,8 @@
     "notes": "筆記",
     "subtasks": "子任務",
     "checklists": "檢查清單",
-    "issueStats": "工作項目統計"
+    "issueStats": "工作項目統計",
+    "intake": "Intake"
   },
   "featureOffTitle": "{feature}已停用",
   "toggleSidebar": "切換側邊欄",

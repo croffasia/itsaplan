@@ -3,12 +3,15 @@
 import { useState } from 'react';
 import {
   AtSign,
+  CheckCircle2,
   CircleDot,
   Clock,
+  Copy,
   MessageSquare,
   MoreHorizontal,
   SmilePlus,
   UserRound,
+  XCircle,
   type LucideIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -47,6 +50,10 @@ const TYPE_ICON: Record<NotificationType, LucideIcon> = {
   commented: MessageSquare,
   state_changed: CircleDot,
   reacted: SmilePlus,
+  intake_accepted: CheckCircle2,
+  intake_declined: XCircle,
+  intake_snoozed: Clock,
+  intake_duplicate: Copy,
 };
 
 const dropdownMenu = {

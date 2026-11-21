@@ -437,6 +437,7 @@ describe('projects', () => {
         subtasks: true,
         checklists: true,
         issueStats: true,
+        intake: false,
       });
     });
 
@@ -882,6 +883,7 @@ describe('projects', () => {
         subtasks: true,
         checklists: true,
         issueStats: true,
+        intake: false,
       });
       expect((await viewOf(api, 'MKT')).data?.project).toMatchObject({
         initiativesEnabled: true,

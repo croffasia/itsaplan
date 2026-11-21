@@ -27,6 +27,11 @@ const EVENT_SHAPE: Record<WebhookEventType, EventShape> = {
   'comment.updated': { action: 'update', type: 'Comment' },
   'comment.deleted': { action: 'remove', type: 'Comment' },
   'agent_run.finished': { action: 'update', type: 'AgentRun' },
+  'intake.created': { action: 'create', type: 'IntakeRequest' },
+  'intake.accepted': { action: 'update', type: 'IntakeRequest' },
+  'intake.declined': { action: 'update', type: 'IntakeRequest' },
+  'intake.snoozed': { action: 'update', type: 'IntakeRequest' },
+  'intake.duplicate': { action: 'update', type: 'IntakeRequest' },
 };
 
 // Who caused the event. An agent acts through its own bot user, so a user id is an

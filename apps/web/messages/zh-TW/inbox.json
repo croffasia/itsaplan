@@ -17,7 +17,11 @@
     "mentioned": "已提及",
     "commented": "有新留言",
     "state_changed": "狀態已變更",
-    "reacted": "有新回應"
+    "reacted": "有新回應",
+    "intake_accepted": "Intake accepted",
+    "intake_declined": "Intake declined",
+    "intake_snoozed": "Intake snoozed",
+    "intake_duplicate": "Intake duplicate"
   },
   "actions": {
     "markRead": "標為已讀",
@@ -35,6 +39,11 @@
     "commented": "{who} 發表了留言",
     "stateChanged": "{who} 將狀態從 {from} 更改為 {to}",
     "stateChangedPlain": "{who} 更改了狀態",
-    "reacted": "{who} 用 {emoji} 回應了你的留言"
+    "reacted": "{who} 用 {emoji} 回應了你的留言",
+    "intake_accepted": "{who} accepted your intake request",
+    "intake_declined": "{who} declined your intake request",
+    "intakeDeclinedWithReason": "{who} declined your intake request: {reason}",
+    "intake_snoozed": "{who} snoozed your intake request",
+    "intake_duplicate": "{who} marked your intake request as a duplicate"
   }
 }

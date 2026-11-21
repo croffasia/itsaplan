@@ -5,6 +5,7 @@
 export const revScope = {
   runnerQueue: 'runnerQueue:1',
   board: (projectId: number) => `board:${projectId}`,
+  intake: (projectId: number) => `intake:${projectId}`,
   issue: (issueId: number) => `issue:${issueId}`,
   initiative: (initiativeId: number) => `initiative:${initiativeId}`,
   inbox: (projectId: number) => `inbox:${projectId}`,

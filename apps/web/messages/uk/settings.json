@@ -141,7 +141,8 @@
       "subtasks": "Задачі, розбиті на підзадачі під батьківською.",
       "checklists": "Списки кроків усередині задачі.",
       "issueStats": "Скільки часу задача пробула в кожному статусі.",
-      "documents": "Спільна робота з документами проєкту."
+      "documents": "Спільна робота з документами проєкту.",
+      "intake": "Review incoming requests before they become issues on the board."
     },
     "featureOn": "Розділ «{feature}» увімкнено",
     "featureOff": "Розділ «{feature}» вимкнено"

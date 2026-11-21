@@ -189,6 +189,8 @@ export const project = pgTable(
     subtasksEnabled: boolean('subtasks_enabled').notNull().default(true),
     checklistsEnabled: boolean('checklists_enabled').notNull().default(true),
     issueStatsEnabled: boolean('issue_stats_enabled').notNull().default(true),
+    // Per-project intake queue where requests wait before becoming issues. Off by default.
+    intakeEnabled: boolean('intake_enabled').notNull().default(false),
     // Which kinds of estimate the issues of this project carry, set in Settings ->
     // Configuration. Both off by default; turning one off hides its UI and keeps the
     // values, which show again when it is turned back on.
@@ -2667,6 +2669,96 @@ export const importRecord = pgTable(
 // actions never notify the actor. project_id is denormalized from the issue or the
 // document so the inbox can filter and scope by project. source_activity_id points at
 // the issue_activity row that produced the notification, document_comment_id at the
+// Per-project intake queue. A request waits here until a reviewer accepts it
+// (creating an ordinary issue), declines it with an optional reason, snoozes it
+// until a timestamp, or marks it as a duplicate of an existing issue. It is not
+// an issue and does not appear on the board, in views, cycles, analytics, or
+// agent triggers.
+export const intakeRequest = pgTable(
+  'intake_request',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    description: text('description').notNull().default(''),
+    priority: text('priority'),
+    status: text('status').notNull().default('pending'),
+    // Where the request came from ('app', 'api', 'mcp', 'form', 'plane', or a
+    // caller-supplied service name) and an optional caller-assigned id for dedup.
+    source: text('source').notNull().default('app'),
+    externalId: text('external_id'),
+    submittedByUserId: text('submitted_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    submittedByName: text('submitted_by_name'),
+    reviewedByUserId: text('reviewed_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    reviewedByName: text('reviewed_by_name'),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+    declineReason: text('decline_reason'),
+    snoozedUntil: timestamp('snoozed_until', { withTimezone: true }),
+    acceptedIssueId: integer('accepted_issue_id').references(() => issue.id, {
+      onDelete: 'set null',
+    }),
+    duplicateOfIssueId: integer('duplicate_of_issue_id').references(() => issue.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check(
+      'intake_request_status_check',
+      sql`${t.status} IN ('pending', 'snoozed', 'accepted', 'declined', 'duplicate')`,
+    ),
+    index('intake_request_project_status_idx').on(t.projectId, t.status, t.createdAt),
+    uniqueIndex('intake_request_project_source_external_uq')
+      .on(t.projectId, t.source, t.externalId)
+      .where(sql`${t.externalId} IS NOT NULL`),
+  ],
+);
+
+// Comments on an intake request. When the request is accepted, these are copied
+// onto the created issue as comment activity rows.
+export const intakeComment = pgTable(
+  'intake_comment',
+  {
+    id: serial('id').primaryKey(),
+    intakeRequestId: integer('intake_request_id')
+      .notNull()
+      .references(() => intakeRequest.id, { onDelete: 'cascade' }),
+    actorUserId: text('actor_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    actorName: text('actor_name'),
+    body: text('body').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('intake_comment_request_idx').on(t.intakeRequestId, t.createdAt, t.id)],
+);
+
+// File attachments on an intake request. Moved to issue_attachment on accept.
+export const intakeAttachment = pgTable(
+  'intake_attachment',
+  {
+    id: serial('id').primaryKey(),
+    publicId: uuid('public_id').notNull().defaultRandom().unique(),
+    intakeRequestId: integer('intake_request_id')
+      .notNull()
+      .references(() => intakeRequest.id, { onDelete: 'cascade' }),
+    s3Key: text('s3_key').notNull(),
+    filename: text('filename').notNull(),
+    contentType: text('content_type').notNull(),
+    sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('intake_attachment_request_idx').on(t.intakeRequestId)],
+);
+
 // document comment (each set null if that entry is later removed). type selects the kind.
 // reaction_emoji is the emoji of a 'reacted' notification, null on every other type.
 // read_at NULL means unread; snoozed_until, when set and still in the future, hides
@@ -2691,6 +2783,9 @@ export const notification = pgTable(
     documentCommentId: uuid('document_comment_id').references(() => documentComment.id, {
       onDelete: 'set null',
     }),
+    intakeRequestId: integer('intake_request_id').references(() => intakeRequest.id, {
+      onDelete: 'cascade',
+    }),
     type: text('type').notNull(),
     actorUserId: text('actor_user_id').references(() => user.id, {
       onDelete: 'set null',
@@ -2704,19 +2799,25 @@ export const notification = pgTable(
   (t) => [
     check(
       'notification_type_check',
-      sql`${t.type} IN ('assigned', 'mentioned', 'commented', 'state_changed', 'reacted')`,
+      sql`${t.type} IN ('assigned', 'mentioned', 'commented', 'state_changed', 'reacted', 'intake_accepted', 'intake_declined', 'intake_snoozed', 'intake_duplicate')`,
     ),
-    check('notification_target_check', sql`(${t.issueId} IS NULL) <> (${t.documentId} IS NULL)`),
+    check(
+      'notification_target_check',
+      sql`(${t.intakeRequestId} IS NOT NULL AND ${t.documentId} IS NULL) OR (${t.intakeRequestId} IS NULL AND ((${t.issueId} IS NULL) <> (${t.documentId} IS NULL)))`,
+    ),
     // Backs the inbox list: a user's notifications newest first.
     index('notification_user_idx').on(t.userId, t.createdAt.desc(), t.id.desc()),
     // Backs the unread count and the unread-only inbox view.
     index('notification_user_unread_idx')
       .on(t.userId, t.id.desc())
       .where(sql`${t.readAt} IS NULL`),
-    // Back the cascades of an issue or comment delete.
+    // Back the cascades of an issue, intake request, or comment delete.
     index('notification_issue_idx')
       .on(t.issueId)
       .where(sql`${t.issueId} IS NOT NULL`),
+    index('notification_intake_request_idx')
+      .on(t.intakeRequestId)
+      .where(sql`${t.intakeRequestId} IS NOT NULL`),
     index('notification_source_activity_idx')
       .on(t.sourceActivityId)
       .where(sql`${t.sourceActivityId} IS NOT NULL`),

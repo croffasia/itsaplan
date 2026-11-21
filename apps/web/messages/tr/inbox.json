@@ -17,7 +17,11 @@
     "mentioned": "Bahsedildi",
     "commented": "Yorum yapıldı",
     "state_changed": "Durum değişti",
-    "reacted": "Tepki"
+    "reacted": "Tepki",
+    "intake_accepted": "Intake accepted",
+    "intake_declined": "Intake declined",
+    "intake_snoozed": "Intake snoozed",
+    "intake_duplicate": "Intake duplicate"
   },
   "actions": {
     "markRead": "Okundu olarak işaretle",
@@ -35,6 +39,11 @@
     "commented": "{who} bir yorum yaptı",
     "stateChanged": "{who} durumu {from} değerinden {to} değerine değiştirdi",
     "stateChangedPlain": "{who} durumu değiştirdi",
-    "reacted": "{who}, yorumunuza {emoji} ile tepki verdi"
+    "reacted": "{who}, yorumunuza {emoji} ile tepki verdi",
+    "intake_accepted": "{who} accepted your intake request",
+    "intake_declined": "{who} declined your intake request",
+    "intakeDeclinedWithReason": "{who} declined your intake request: {reason}",
+    "intake_snoozed": "{who} snoozed your intake request",
+    "intake_duplicate": "{who} marked your intake request as a duplicate"
   }
 }

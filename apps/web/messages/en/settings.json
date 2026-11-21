@@ -141,7 +141,8 @@
       "subtasks": "Issues broken down into subtasks under a parent.",
       "checklists": "Lists of steps tracked inside an issue.",
       "issueStats": "How long an issue spent in each state.",
-      "documents": "Shared project documentation organized into pages."
+      "documents": "Shared project documentation organized into pages.",
+      "intake": "Review incoming requests before they become issues on the board."
     },
     "featureOn": "{feature} turned on",
     "featureOff": "{feature} turned off"

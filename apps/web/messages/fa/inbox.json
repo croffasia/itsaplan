@@ -17,7 +17,11 @@
     "mentioned": "منشن‌شده",
     "commented": "دیدگاه داده",
     "state_changed": "وضعیت تغییر کرد",
-    "reacted": "واکنش"
+    "reacted": "واکنش",
+    "intake_accepted": "Intake accepted",
+    "intake_declined": "Intake declined",
+    "intake_snoozed": "Intake snoozed",
+    "intake_duplicate": "Intake duplicate"
   },
   "actions": {
     "markRead": "علامت‌گذاری به‌عنوان خوانده‌شده",
@@ -35,6 +39,11 @@
     "commented": "{who} دیدگاه داد",
     "stateChanged": "{who} وضعیت را از {from} به {to} تغییر داد",
     "stateChangedPlain": "{who} وضعیت را تغییر داد",
-    "reacted": "{who} با {emoji} به دیدگاه شما واکنش نشان داد"
+    "reacted": "{who} با {emoji} به دیدگاه شما واکنش نشان داد",
+    "intake_accepted": "{who} accepted your intake request",
+    "intake_declined": "{who} declined your intake request",
+    "intakeDeclinedWithReason": "{who} declined your intake request: {reason}",
+    "intake_snoozed": "{who} snoozed your intake request",
+    "intake_duplicate": "{who} marked your intake request as a duplicate"
   }
 }

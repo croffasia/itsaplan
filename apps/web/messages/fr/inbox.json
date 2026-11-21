@@ -17,7 +17,11 @@
     "mentioned": "Mentionné",
     "commented": "Commenté",
     "state_changed": "Changement d'état",
-    "reacted": "Réaction"
+    "reacted": "Réaction",
+    "intake_accepted": "Intake accepted",
+    "intake_declined": "Intake declined",
+    "intake_snoozed": "Intake snoozed",
+    "intake_duplicate": "Intake duplicate"
   },
   "actions": {
     "markRead": "Marquer comme lu",
@@ -35,6 +39,11 @@
     "commented": "{who} a commenté",
     "stateChanged": "{who} a fait passer l'état de {from} à {to}",
     "stateChangedPlain": "{who} a changé l'état",
-    "reacted": "{who} a réagi à votre commentaire avec {emoji}"
+    "reacted": "{who} a réagi à votre commentaire avec {emoji}",
+    "intake_accepted": "{who} accepted your intake request",
+    "intake_declined": "{who} declined your intake request",
+    "intakeDeclinedWithReason": "{who} declined your intake request: {reason}",
+    "intake_snoozed": "{who} snoozed your intake request",
+    "intake_duplicate": "{who} marked your intake request as a duplicate"
   }
 }

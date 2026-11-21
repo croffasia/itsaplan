@@ -11,6 +11,7 @@ import type { FeatureTogglesForm } from '../../hooks/useFeatureToggles';
 // of an issue.
 const FEATURES = [
   'dashboards',
+  'intake',
   'initiatives',
   'cycles',
   'documents',

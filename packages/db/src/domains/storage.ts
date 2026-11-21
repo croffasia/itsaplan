@@ -6,6 +6,8 @@ import {
   documentAsset,
   initiative,
   initiativeAttachment,
+  intakeAttachment,
+  intakeRequest,
   issue,
   issueAttachment,
   project,
@@ -138,11 +140,17 @@ export async function projectStoredBytes(
     .from(initiativeAttachment)
     .innerJoin(initiative, eq(initiative.id, initiativeAttachment.initiativeId))
     .where(eq(initiative.projectId, projectId));
+  const intake = await executor
+    .select({ total: sql<string>`coalesce(sum(${intakeAttachment.sizeBytes}), 0)` })
+    .from(intakeAttachment)
+    .innerJoin(intakeRequest, eq(intakeRequest.id, intakeAttachment.intakeRequestId))
+    .where(eq(intakeRequest.projectId, projectId));
   return (
     num(issues[0]?.total) +
     num(chats[0]?.total) +
     num(documents[0]?.total) +
-    num(initiatives[0]?.total)
+    num(initiatives[0]?.total) +
+    num(intake[0]?.total)
   );
 }
 
@@ -192,10 +200,18 @@ export async function workspaceStoredBytes(
     .innerJoin(project, eq(project.id, initiative.projectId))
     .innerJoin(team, eq(team.id, project.teamId))
     .where(eq(team.workspaceId, workspaceId));
+  const intake = await executor
+    .select({ total: sql<string>`coalesce(sum(${intakeAttachment.sizeBytes}), 0)` })
+    .from(intakeAttachment)
+    .innerJoin(intakeRequest, eq(intakeRequest.id, intakeAttachment.intakeRequestId))
+    .innerJoin(project, eq(project.id, intakeRequest.projectId))
+    .innerJoin(team, eq(team.id, project.teamId))
+    .where(eq(team.workspaceId, workspaceId));
   return (
     num(issues[0]?.total) +
     num(chats[0]?.total) +
     num(documents[0]?.total) +
-    num(initiatives[0]?.total)
+    num(initiatives[0]?.total) +
+    num(intake[0]?.total)
   );
 }

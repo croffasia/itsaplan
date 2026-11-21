@@ -27,7 +27,8 @@
     "repositories": "Repositories",
     "note_boards": "Note boards",
     "import_export": "Import/Export",
-    "danger_zone": "Danger zone"
+    "danger_zone": "Danger zone",
+    "intake": "Intake"
   },
   "actions": {
     "create": "Create",

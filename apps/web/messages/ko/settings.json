@@ -141,7 +141,8 @@
       "subtasks": "이슈를 상위 이슈 아래의 하위 이슈로 나눕니다.",
       "checklists": "이슈 안에서 단계별 작업을 체크리스트로 관리합니다.",
       "issueStats": "이슈가 각 상태에 머문 시간을 확인합니다.",
-      "documents": "페이지로 구성된 프로젝트 문서를 공유합니다."
+      "documents": "페이지로 구성된 프로젝트 문서를 공유합니다.",
+      "intake": "Review incoming requests before they become issues on the board."
     },
     "featureOn": "{feature} 활성화됨",
     "featureOff": "{feature} 비활성화됨"

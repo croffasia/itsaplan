@@ -75,6 +75,7 @@ const executeInput = z.strictObject({
 // resource with no tool left fails the catalog unit test.
 export const RESOURCES = [
   'issue',
+  'intake',
   'comment',
   'checklist',
   'worklog',

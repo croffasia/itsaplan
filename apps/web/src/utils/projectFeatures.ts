@@ -22,6 +22,7 @@ export function projectFeatures(project: Project | null): ProjectFeatureSet {
     subtasks: project?.subtasksEnabled ?? false,
     checklists: project?.checklistsEnabled ?? false,
     issueStats: project?.issueStatsEnabled ?? false,
+    intake: project?.intakeEnabled ?? false,
     pointsEstimate: project?.pointsEstimateEnabled ?? false,
     timeEstimate: project?.timeEstimateEnabled ?? false,
     timeLogging: project?.timeLoggingEnabled ?? false,

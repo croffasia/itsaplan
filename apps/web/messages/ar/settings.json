@@ -141,7 +141,8 @@
       "subtasks": "مهام بتتقسّم لمهام فرعية تحت مهمة أصل.",
       "checklists": "قوايم خطوات بتتابعها جوه المهمة.",
       "issueStats": "المدة اللي قضتها المهمة في كل حالة.",
-      "documents": "وثائق المشروع المشتركة والمنظمة كويكي."
+      "documents": "وثائق المشروع المشتركة والمنظمة كويكي.",
+      "intake": "Review incoming requests before they become issues on the board."
     },
     "featureOn": "تم تفعيل {feature}",
     "featureOff": "تم إيقاف {feature}"

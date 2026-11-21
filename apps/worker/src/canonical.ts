@@ -163,4 +163,7 @@ export interface CanonicalIssue {
   updatedAt: string;
   // Set when the source has the issue archived; the issue is created archived.
   archivedAt: string | null;
+  // Set when the source item is still in triage/intake (e.g. Plane's 'triage'
+  // state group) and should be imported as a waiting intake request instead of an issue.
+  inTriage?: boolean;
 }

@@ -156,6 +156,7 @@ export const ProjectResponse = t.Object({
   subtasksEnabled: t.Boolean(),
   checklistsEnabled: t.Boolean(),
   issueStatsEnabled: t.Boolean(),
+  intakeEnabled: t.Boolean(),
   pointsEstimateEnabled: t.Boolean(),
   timeEstimateEnabled: t.Boolean(),
   timeLoggingEnabled: t.Boolean(),
@@ -255,6 +256,7 @@ export const FeaturesResponse = t.Object({
   subtasks: t.Boolean(),
   checklists: t.Boolean(),
   issueStats: t.Boolean(),
+  intake: t.Boolean(),
 });
 
 // The project's settings: MCP reachability and the enabled sections. Reachability is

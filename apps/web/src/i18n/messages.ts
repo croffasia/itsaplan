@@ -12,6 +12,7 @@ import filters from '../../messages/en/filters.json';
 import god from '../../messages/en/god.json';
 import inbox from '../../messages/en/inbox.json';
 import initiatives from '../../messages/en/initiatives.json';
+import intake from '../../messages/en/intake.json';
 import invite from '../../messages/en/invite.json';
 import issue from '../../messages/en/issue.json';
 import issueLinks from '../../messages/en/issueLinks.json';
@@ -60,6 +61,7 @@ const coreMessages = {
   projects,
   aiChat,
   inbox,
+  intake,
   permissions,
   members,
   cycles,

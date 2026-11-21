@@ -1,8 +1,11 @@
-import { db, projectAction } from '@repo/db';
+import { isDeepStrictEqual } from 'node:util';
+import { db, issue, projectAction } from '@repo/db';
 import { and, eq, sql } from 'drizzle-orm';
 import { HttpError, iso, num } from '#shared/lib';
 import { assertIssueLabels, setIssueLabels, updateIssue } from '#modules/issues/service';
-import { actionEffectValidator } from './model';
+import { columnAutoAssignee } from '#modules/columns/service';
+import { getAssignmentEligibility } from '#modules/members/service';
+import { actionEffectValidator, type ActionEffect } from './model';
 
 // Manual actions: saved macros on a project. condition is a filter set deciding
 // which issues the action applies to (empty = always); effect is a partial issue
@@ -78,14 +81,43 @@ export async function applyAction(
   issueId: number,
   actionId: number,
   actorUserId: string,
+  confirmedEffect: ActionEffect,
 ) {
   const action = await getAction(actionId);
   if (!action || action.projectId !== projectId) throw new HttpError(404, 'Action not found');
   const effect = actionEffectValidator.safeParse(action.effect);
   if (!effect.success) throw new HttpError(400, 'Invalid action effect');
-  const { labelIds, ...patch } = effect.data;
+  const [current] = await db
+    .select({ columnId: issue.columnId })
+    .from(issue)
+    .where(and(eq(issue.id, issueId), eq(issue.projectId, projectId)));
+  if (!current) throw new HttpError(404, 'Issue not found');
+
+  const { assigneeUserId, ...otherFields } = effect.data;
+  const effective: ActionEffect = otherFields;
+  if (assigneeUserId !== undefined) {
+    if (
+      assigneeUserId === null ||
+      (await getAssignmentEligibility(projectId, assigneeUserId)) === 'assignable'
+    ) {
+      effective.assigneeUserId = assigneeUserId;
+    }
+  } else if (effective.columnId !== undefined && effective.columnId !== current.columnId) {
+    const autoAssignee = await columnAutoAssignee(projectId, effective.columnId);
+    if (autoAssignee) effective.assigneeUserId = autoAssignee;
+  }
+
+  if (!isDeepStrictEqual(effective, confirmedEffect)) {
+    throw new HttpError(
+      409,
+      'Action changes are out of date. Open the action again to review them.',
+      'ACTION_EFFECT_CHANGED',
+    );
+  }
+
+  const { labelIds, ...patch } = effective;
   await assertIssueLabels(projectId, labelIds);
-  const updated = await updateIssue(issueId, patch, actorUserId, { skipUnavailableAssignee: true });
+  const updated = await updateIssue(issueId, patch, actorUserId, { skipAutoAssignee: true });
   if (!updated) throw new HttpError(404, 'Issue not found');
   if (labelIds) {
     await setIssueLabels(projectId, issueId, labelIds, actorUserId);

@@ -100,13 +100,20 @@ describe('imports', () => {
     expect(new Date(first!.dueDate as string).toISOString().slice(0, 10)).toBe('2026-09-01');
   });
 
-  it('continues a CSV import after an assignee is deactivated', async () => {
+  it('keeps unresolved named CSV assignees empty in an auto-assigning column', async () => {
     const { asOwner, owner } = await setup();
     await addProjectMember(asOwner, 'MKT');
     const project = asOwner.projects({ projectKey: 'MKT' });
-    const { assignees } = (await project.get()).data!;
+    const { assignees, columns } = (await project.get()).data!;
     const active = assignees.find((a) => a.userId === owner.userId)!;
     const departing = assignees.find((a) => a.userId !== owner.userId)!;
+    expect(
+      (
+        await project
+          .columns({ columnId: columns[0].id })
+          .patch({ autoAssignUserId: active.userId })
+      ).status,
+    ).toBe(200);
     const uploaded = await project['chat-attachments'].post({
       filename: 'tasks.csv',
       contentBase64: Buffer.from(
@@ -115,7 +122,7 @@ describe('imports', () => {
           'First,' + active.email,
           'Second,' + departing.email,
           'Third,unknown@example.test',
-          'Fourth,' + active.email,
+          'Fourth,',
         ].join('\n'),
       ).toString('base64'),
       contentType: 'text/csv',

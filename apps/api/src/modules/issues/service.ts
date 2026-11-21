@@ -1036,7 +1036,7 @@ export interface NewIssueInput {
   labelIds?: number[];
 }
 
-// Explicit edits can keep an existing assignee. Imports and actions omit unavailable assignments.
+// Explicit edits can keep an existing assignee. Imports omit unavailable assignments.
 async function resolveIssueAssignee(
   projectId: number,
   assigneeUserId: string | null | undefined,
@@ -1191,9 +1191,11 @@ export async function createIssue(
   assertDateOrder(input.startDate, input.dueDate);
   // Also checked by setIssueLabels below, but here it fails before the issue exists.
   await assertIssueLabels(project.id, input.labelIds);
-  // An issue created in a column enters it the same way a moved one does, so the
-  // column's auto-assignee applies. An assignee sent with the create wins over it.
-  const assigneeUserId = requestedAssignee ?? (await columnAutoAssignee(input.columnId));
+  // A named but unresolved import assignee stays unassigned. Blank cells use the column default.
+  const hasImportAssignee = opts?.skipUnavailableAssignee && input.assigneeUserId !== undefined;
+  const assigneeUserId =
+    requestedAssignee ??
+    (hasImportAssignee ? null : await columnAutoAssignee(project.id, input.columnId));
   const { id: issueId, createdAt } = await db.transaction(async (tx) => {
     if (input.parentId != null) {
       await lockIssueTree(tx, project.id);
@@ -1353,7 +1355,7 @@ export async function updateIssue(
   id: number,
   patch: IssuePatch,
   actor?: ActivityActor,
-  opts?: { onlyIfColumnId?: number; skipIfColumnFull?: boolean; skipUnavailableAssignee?: boolean },
+  opts?: { onlyIfColumnId?: number; skipIfColumnFull?: boolean; skipAutoAssignee?: boolean },
 ): Promise<IssueRow | null> {
   const before = await loadSnapshot(id);
   if (!before) return null;
@@ -1368,7 +1370,6 @@ export async function updateIssue(
     before.projectId,
     patch.assigneeUserId,
     before.assigneeUserId,
-    opts?.skipUnavailableAssignee,
   );
   await assertDelegate(before.projectId, patch.delegateUserId);
   await assertInitiative(before.projectId, patch.initiativeId);
@@ -1386,11 +1387,10 @@ export async function updateIssue(
   await assertIssueType(before.projectId, patch.typeId);
   await assertParent(before.projectId, id, patch.parentId);
 
-  // An explicit assignment takes precedence over automatic assignment, even if a saved
-  // action's target is now unavailable.
+  // Saved actions resolve automatic assignment before checking the confirmed effect.
   const autoAssignee =
-    movedToColumnId !== null && patch.assigneeUserId === undefined
-      ? await columnAutoAssignee(movedToColumnId)
+    !opts?.skipAutoAssignee && movedToColumnId !== null && patch.assigneeUserId === undefined
+      ? await columnAutoAssignee(before.projectId, movedToColumnId)
       : null;
 
   const set: Partial<typeof issue.$inferInsert> = {};

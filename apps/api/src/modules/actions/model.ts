@@ -8,6 +8,8 @@ const actionEffect = t.Pick(
 );
 
 export const actionEffectValidator = getSchemaValidator(actionEffect);
+export type ActionEffect = (typeof actionEffect)['static'];
+export const applyActionBody = t.Object({ effect: actionEffect });
 
 export const ActionResponse = t.Object({
   id: t.Number(),

@@ -223,7 +223,7 @@ export function useUpdateIssue(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, patch, actionId }: { id: number; patch: IssuePatch; actionId?: number }) =>
-      actionId === undefined ? updateIssue(id, patch) : applyIssueAction(id, actionId),
+      actionId === undefined ? updateIssue(id, patch) : applyIssueAction(id, actionId, patch),
     onMutate: async ({ id, patch }) => {
       if (!projectKey) return {};
       const key = qk.boardIssues(projectKey);

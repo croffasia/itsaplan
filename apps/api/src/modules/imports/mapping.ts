@@ -31,7 +31,7 @@ export interface ImportDraft {
   priority?: string;
   dueDate?: string;
   labelIds?: number[];
-  assigneeUserId?: string;
+  assigneeUserId?: string | null;
 }
 
 export interface AppliedRow {
@@ -137,9 +137,8 @@ export function validateMapping(input: unknown): ImportMapping {
 }
 
 // Applies the saved mapping to the whole file and returns one entry per row: the
-// create input, or the reason the row was skipped. Values that do not resolve —
-// an unknown priority is kept as written, an unknown label or assignee is dropped
-// with a note on the row.
+// create input, or the reason the row was skipped. An unmatched assignee is null;
+// a blank cell leaves the assignee unspecified.
 export function applyMapping(
   parsed: ParsedSheet,
   mapping: ImportMapping,
@@ -186,7 +185,7 @@ export function applyMapping(
         const member = ctx.members.find(
           (m) => m.email.toLowerCase() === who || m.name?.toLowerCase() === who,
         );
-        if (member) draft.assigneeUserId = member.userId;
+        draft.assigneeUserId = member?.userId ?? null;
       }
     }
     return { rowNumber, draft };

@@ -32,15 +32,23 @@ export function isEmptyEffect(effect: ActionEffect): boolean {
   return effectFieldKeys(effect).length === 0;
 }
 
-export function availableActionEffect(effect: ActionEffect, project: ProjectDetail): ActionEffect {
+export function availableActionEffect(
+  effect: ActionEffect,
+  project: ProjectDetail,
+  issue: Pick<Issue, 'columnId'>,
+): ActionEffect {
   const { assigneeUserId, ...otherFields } = effect;
-  if (
-    assigneeUserId == null ||
-    project.assignees.some((a) => a.userId === assigneeUserId && a.canAssign)
-  ) {
-    return effect;
+  if (assigneeUserId === null) return effect;
+  if (assigneeUserId !== undefined) {
+    return project.assignees.some((a) => a.userId === assigneeUserId && a.canAssign)
+      ? effect
+      : otherFields;
   }
-  return otherFields;
+  if (effect.columnId === undefined || effect.columnId === issue.columnId) return effect;
+  const autoAssignee = project.columns.find((c) => c.id === effect.columnId)?.autoAssignUserId;
+  return autoAssignee && project.assignees.some((a) => a.userId === autoAssignee && a.canAssign)
+    ? { ...otherFields, assigneeUserId: autoAssignee }
+    : otherFields;
 }
 
 // The project's manual actions whose condition matches this issue, in saved
@@ -50,11 +58,14 @@ export function matchedActions(
   project: ProjectDetail,
   issue: Issue,
 ): ActionDef[] {
-  return actions.filter(
-    (a) =>
-      matchesFilterSet(issue, a.condition, project) &&
-      !isEmptyEffect(availableActionEffect(a.effect, project)),
-  );
+  return actions.filter((a) => {
+    if (!matchesFilterSet(issue, a.condition, project)) return false;
+    const { assigneeUserId, ...otherFields } = availableActionEffect(a.effect, project, issue);
+    return (
+      !isEmptyEffect(otherFields) ||
+      (assigneeUserId !== undefined && assigneeUserId !== issue.assigneeUserId)
+    );
+  });
 }
 
 // The display value of one set effect field, resolving ids to project names.

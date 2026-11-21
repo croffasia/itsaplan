@@ -44,13 +44,16 @@ function mapColumn(row: typeof projectColumn.$inferSelect): ColumnRow {
   };
 }
 
-export async function columnAutoAssignee(columnId: number): Promise<string | null> {
+export async function columnAutoAssignee(
+  projectId: number,
+  columnId: number,
+): Promise<string | null> {
   const [row] = await db
-    .select({ projectId: projectColumn.projectId, userId: projectColumn.autoAssignUserId })
+    .select({ userId: projectColumn.autoAssignUserId })
     .from(projectColumn)
-    .where(eq(projectColumn.id, columnId));
+    .where(and(eq(projectColumn.id, columnId), eq(projectColumn.projectId, projectId)));
   if (!row?.userId) return null;
-  return (await getAssignmentEligibility(row.projectId, row.userId)) === 'assignable'
+  return (await getAssignmentEligibility(projectId, row.userId)) === 'assignable'
     ? row.userId
     : null;
 }

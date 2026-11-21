@@ -1547,6 +1547,25 @@ export const initiativeAttachment = pgTable(
   (t) => [index('initiative_attachment_initiative_idx').on(t.initiativeId)],
 );
 
+// The initiatives a user marked as favorite. Favorites are personal: they mark the
+// initiative with a star and list it under Initiatives in the sidebar, for that user
+// only.
+export const initiativeFavorite = pgTable(
+  'initiative_favorite',
+  {
+    initiativeId: integer('initiative_id')
+      .notNull()
+      .references(() => initiative.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.initiativeId, t.userId] }),
+    index('initiative_favorite_user_idx').on(t.userId),
+  ],
+);
+
 // A time-boxed period of work inside a project (a sprint). Issues point at it
 // through issue.cycle_id. The state of a cycle — upcoming, active, completed — is
 // not stored: it follows from start_date/end_date against the current date, so a

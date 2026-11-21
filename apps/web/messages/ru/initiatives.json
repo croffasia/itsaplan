@@ -3,6 +3,8 @@
   "newInitiative": "Новая инициатива",
   "notFound": "Инициатива не найдена.",
   "options": "Действия с инициативой",
+  "addFavorite": "Добавить в избранное",
+  "removeFavorite": "Убрать из избранного",
   "showDescription": "Показать описание",
   "noDescription": "Описания нет.",
   "noOwner": "Без владельца",

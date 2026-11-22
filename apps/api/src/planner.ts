@@ -50,6 +50,7 @@ import { notificationPreferenceRoutes } from './modules/notification-preferences
 import { userPreferenceRoutes } from './modules/user-preferences';
 import { connectedAppRoutes } from './modules/connected-apps';
 import { telegramRoutes } from './modules/telegram';
+import { slackRoutes } from './modules/slack';
 import { pushRoutes } from './modules/push';
 import { syncRoutes } from './modules/sync';
 import { linkPreviewRoutes } from './modules/link-previews';
@@ -121,6 +122,7 @@ export const planner = new Elysia({ name: 'planner' })
   .use(userPreferenceRoutes)
   .use(connectedAppRoutes)
   .use(telegramRoutes)
+  .use(slackRoutes)
   .use(pushRoutes)
   .use(syncRoutes)
   .use(linkPreviewRoutes)

@@ -1,4 +1,5 @@
 import { request } from '@/lib/api/core/client';
+import type { SlackApp, SlackAppPatch } from '@/lib/api/endpoints/slack';
 
 export type WorkspaceRole = 'owner' | 'admin';
 
@@ -155,3 +156,29 @@ export const setWorkspaceScimGroupMappings = (
 
 export const listWorkspaceProjectOptions = (workspaceId: number | null) =>
   request<WorkspaceProjectOption[]>(`${scimPath(workspaceId)}/projects`);
+
+// Whether the workspace's projects send Slack notifications, and through which app: the
+// instance's, named by `instanceSlackTeamName` (null while god mode has none on), or the
+// workspace's own (`own`).
+export interface WorkspaceSlackSettings extends SlackApp {
+  enabled: boolean;
+  own: boolean;
+  instanceSlackTeamName: string | null;
+}
+
+export interface WorkspaceSlackSettingsPatch extends SlackAppPatch {
+  enabled: boolean;
+  own: boolean;
+}
+
+export const getWorkspaceSlackSettings = (workspaceId: number) =>
+  request<WorkspaceSlackSettings>(`/workspaces/${workspaceId}/slack-settings`);
+
+export const updateWorkspaceSlackSettings = (
+  workspaceId: number,
+  patch: WorkspaceSlackSettingsPatch,
+) =>
+  request<WorkspaceSlackSettings>(`/workspaces/${workspaceId}/slack-settings`, {
+    method: 'PUT',
+    body: JSON.stringify(patch),
+  });

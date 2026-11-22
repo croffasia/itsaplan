@@ -79,7 +79,11 @@ import {
 } from '#modules/agents/core/service';
 import { getInitiativeProjectId } from '#modules/initiatives/service';
 import { cycleStatus, getCycleRef, type CycleStatus } from '#modules/cycles/service';
-import { getMembership } from '#modules/members/service';
+import {
+  assertAssignmentEligibility,
+  getAssignmentEligibility,
+  getMembership,
+} from '#modules/members/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
 import { runOrigin } from '#modules/agents/core/run-initiator';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
@@ -1032,21 +1036,23 @@ export interface NewIssueInput {
   labelIds?: number[];
 }
 
-// Enforces that assignee holds a project member and delegate holds an agent of the
-// same project. Only checks the fields present in the patch, and only when set to a
-// non-null value (clearing a field is always allowed). Throws 400 otherwise.
-async function assertAssignments(
+// Explicit edits can keep an existing assignee. Imports omit unavailable assignments.
+async function resolveIssueAssignee(
   projectId: number,
-  patch: { assigneeUserId?: string | null; delegateUserId?: string | null },
-): Promise<void> {
-  if (patch.assigneeUserId) {
-    const role = await getMembership(projectId, patch.assigneeUserId);
-    if (!role) throw new HttpError(400, 'Assignee must be a project member');
-  }
-  if (patch.delegateUserId) {
-    if (!(await isProjectAgent(projectId, patch.delegateUserId)))
-      throw new HttpError(400, 'Delegate must be an agent of this project');
-  }
+  assigneeUserId: string | null | undefined,
+  currentAssigneeUserId?: string | null,
+  skipUnavailable = false,
+): Promise<string | null | undefined> {
+  if (!assigneeUserId) return assigneeUserId;
+  const eligibility = await getAssignmentEligibility(projectId, assigneeUserId);
+  if (skipUnavailable && eligibility !== 'assignable') return undefined;
+  assertAssignmentEligibility(eligibility, assigneeUserId === currentAssigneeUserId);
+  return assigneeUserId;
+}
+
+async function assertDelegate(projectId: number, userId?: string | null): Promise<void> {
+  if (userId && !(await isProjectAgent(projectId, userId)))
+    throw new HttpError(400, 'Delegate must be an agent of this project');
 }
 
 // Enforces that a linked initiative belongs to the same project. Only checks when
@@ -1143,7 +1149,7 @@ export async function assertTreeLink(
 
 // Enforces that every label belongs to the issue's project — the issue_label
 // foreign key only requires the label to exist somewhere. Throws 400 otherwise.
-async function assertIssueLabels(projectId: number, labelIds?: number[]): Promise<void> {
+export async function assertIssueLabels(projectId: number, labelIds?: number[]): Promise<void> {
   const ids = [...new Set(labelIds ?? [])];
   if (ids.length === 0) return;
   const rows = await db
@@ -1167,8 +1173,15 @@ export async function createIssue(
   project: ProjectRow,
   input: NewIssueInput,
   actorUserId?: string | null,
+  opts?: { skipUnavailableAssignee?: boolean },
 ): Promise<IssueRow> {
-  await assertAssignments(project.id, input);
+  const requestedAssignee = await resolveIssueAssignee(
+    project.id,
+    input.assigneeUserId,
+    undefined,
+    opts?.skipUnavailableAssignee,
+  );
+  await assertDelegate(project.id, input.delegateUserId);
   await assertInitiative(project.id, input.initiativeId);
   await assertCycle(project.id, input.cycleId);
   await assertColumn(project.id, input.columnId);
@@ -1178,9 +1191,11 @@ export async function createIssue(
   assertDateOrder(input.startDate, input.dueDate);
   // Also checked by setIssueLabels below, but here it fails before the issue exists.
   await assertIssueLabels(project.id, input.labelIds);
-  // An issue created in a column enters it the same way a moved one does, so the
-  // column's auto-assignee applies. An assignee sent with the create wins over it.
-  const assigneeUserId = input.assigneeUserId ?? (await columnAutoAssignee(input.columnId));
+  // A named but unresolved import assignee stays unassigned. Blank cells use the column default.
+  const hasImportAssignee = opts?.skipUnavailableAssignee && input.assigneeUserId !== undefined;
+  const assigneeUserId =
+    requestedAssignee ??
+    (hasImportAssignee ? null : await columnAutoAssignee(project.id, input.columnId));
   const { id: issueId, createdAt } = await db.transaction(async (tx) => {
     if (input.parentId != null) {
       await lockIssueTree(tx, project.id);
@@ -1340,7 +1355,7 @@ export async function updateIssue(
   id: number,
   patch: IssuePatch,
   actor?: ActivityActor,
-  opts?: { onlyIfColumnId?: number; skipIfColumnFull?: boolean },
+  opts?: { onlyIfColumnId?: number; skipIfColumnFull?: boolean; skipAutoAssignee?: boolean },
 ): Promise<IssueRow | null> {
   const before = await loadSnapshot(id);
   if (!before) return null;
@@ -1351,7 +1366,12 @@ export async function updateIssue(
     patch.startDate !== undefined ? patch.startDate : before.startDate,
     patch.dueDate !== undefined ? patch.dueDate : before.dueDate,
   );
-  await assertAssignments(before.projectId, patch);
+  const requestedAssignee = await resolveIssueAssignee(
+    before.projectId,
+    patch.assigneeUserId,
+    before.assigneeUserId,
+  );
+  await assertDelegate(before.projectId, patch.delegateUserId);
   await assertInitiative(before.projectId, patch.initiativeId);
   await assertCycle(before.projectId, patch.cycleId, before.cycleId);
   await assertColumn(before.projectId, patch.columnId);
@@ -1367,10 +1387,10 @@ export async function updateIssue(
   await assertIssueType(before.projectId, patch.typeId);
   await assertParent(before.projectId, id, patch.parentId);
 
-  // An assignee sent with the same move wins over the column's auto-assignee.
+  // Saved actions resolve automatic assignment before checking the confirmed effect.
   const autoAssignee =
-    movedToColumnId !== null && patch.assigneeUserId === undefined
-      ? await columnAutoAssignee(movedToColumnId)
+    !opts?.skipAutoAssignee && movedToColumnId !== null && patch.assigneeUserId === undefined
+      ? await columnAutoAssignee(before.projectId, movedToColumnId)
       : null;
 
   const set: Partial<typeof issue.$inferInsert> = {};
@@ -1380,7 +1400,7 @@ export async function updateIssue(
   if (patch.parentId !== undefined) set.parentId = patch.parentId;
   if (patch.initiativeId !== undefined) set.initiativeId = patch.initiativeId;
   if (patch.cycleId !== undefined) set.cycleId = patch.cycleId;
-  if (patch.assigneeUserId !== undefined) set.assigneeUserId = patch.assigneeUserId;
+  if (requestedAssignee !== undefined) set.assigneeUserId = requestedAssignee;
   else if (autoAssignee) set.assigneeUserId = autoAssignee;
   if (patch.delegateUserId !== undefined) set.delegateUserId = patch.delegateUserId;
   if (patch.title !== undefined) set.title = patch.title;
@@ -1600,6 +1620,26 @@ export async function bulkUpdateIssues(
     await assertColumn(projectId, patch.columnId);
     const incoming = await countEnteringColumn(valid, patch.columnId);
     if (incoming > 0) await assertWipLimit(patch.columnId, incoming);
+  }
+  // Same reason as the WIP check: an inactive assignee that only some of the issues
+  // already hold would refuse the rest after the first ones were written.
+  const eligibility =
+    patch.assigneeUserId && valid.length > 0
+      ? await getAssignmentEligibility(projectId, patch.assigneeUserId)
+      : 'assignable';
+  if (patch.assigneeUserId && eligibility === 'inactive') {
+    const [{ changing }] = await db
+      .select({ changing: sql<number>`count(*)::int` })
+      .from(issue)
+      .where(
+        and(
+          inArray(issue.id, valid),
+          or(isNull(issue.assigneeUserId), ne(issue.assigneeUserId, patch.assigneeUserId)),
+        ),
+      );
+    assertAssignmentEligibility(eligibility, changing === 0);
+  } else {
+    assertAssignmentEligibility(eligibility);
   }
   for (const id of valid) await updateIssue(id, patch, actorUserId);
   return valid.length;

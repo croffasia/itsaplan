@@ -355,6 +355,12 @@ instance. The issue shows them as the run's transcript.
   time. Then it reports the result of the command, even with an incomplete transcript.
   Any other refusal fails the run.
 
+### Stopping a run
+
+When someone stops a run or a chat answer in the instance, the runner kills its command and
+reports nothing more for it. The runner learns of the stop at its next upload of events, or
+at its next heartbeat when the command writes nothing. A heartbeat goes out once a minute.
+
 ## Chat
 
 The runner streams the answer to the chat while the command runs. It sends the tool calls

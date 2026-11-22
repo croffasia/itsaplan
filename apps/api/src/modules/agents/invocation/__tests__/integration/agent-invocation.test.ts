@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { createHmac } from 'node:crypto';
+import { db, agentRun } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import { apiKeyApi, authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -242,17 +244,67 @@ describe('agent invocation', () => {
     });
   });
 
-  it('puts a run the endpoint refused back for a retry', async () => {
-    endpoint = fakeEndpoint(() => new Response('down', { status: 500 }));
+  it('puts a run the endpoint refused back for a retry, and starts it once taken', async () => {
+    let refuse = true;
+    endpoint = fakeEndpoint(() =>
+      refuse ? new Response('down', { status: 500 }) : new Response('ok'),
+    );
     const { asOwner, teamId, columnId, agent } = await setup(endpoint.url);
-    await queueRun(asOwner, columnId);
+    const issue = await queueRun(asOwner, columnId);
+    const starts = async () =>
+      (await asOwner.issues({ issueId: issue.id }).feed.get({ query: {} })).data!.items.filter(
+        (item) => item.action === 'agent_started',
+      );
 
     await dispatchInvocations();
     expect(await lastRun(asOwner, teamId, agent.id)).toMatchObject({
       status: 'pending',
       attempts: 1,
       lastError: 'The endpoint answered 500',
+      receivedAt: null,
     });
+    expect(await starts()).toHaveLength(0);
+
+    refuse = false;
+    await db
+      .update(agentRun)
+      .set({ nextAttemptAt: new Date(0) })
+      .where(eq(agentRun.agentId, agent.id));
+    await dispatchInvocations();
+    expect((await lastRun(asOwner, teamId, agent.id)).receivedAt).not.toBeNull();
+    expect(await starts()).toHaveLength(1);
+  });
+
+  it('does not start or end on the issue a run stopped while its endpoint answered', async () => {
+    let stop: () => Promise<unknown> = async () => {};
+    let refuse = false;
+    endpoint = fakeEndpoint(async () => {
+      await stop();
+      return refuse ? new Response('down', { status: 500 }) : new Response('ok');
+    });
+    const { asOwner, teamId, columnId, agent } = await setup(endpoint.url);
+    const activity = async (issueId: number) =>
+      (await asOwner.issues({ issueId }).feed.get({ query: {} })).data!.items.filter(
+        (item) => item.action === 'agent_started' || item.action === 'agent_finished',
+      );
+    const stopLastRun = async () => {
+      const { id } = await lastRun(asOwner, teamId, agent.id);
+      return asOwner['agent-runs']({ runId: id }).cancel.post();
+    };
+
+    const taken = await queueRun(asOwner, columnId);
+    stop = stopLastRun;
+    await dispatchInvocations();
+    expect(await lastRun(asOwner, teamId, agent.id)).toMatchObject({ status: 'canceled' });
+    expect((await lastRun(asOwner, teamId, agent.id)).receivedAt).not.toBeNull();
+    expect(await activity(taken.id)).toHaveLength(0);
+
+    await setTestJobSettings({ agentRuns: { maxAttempts: 1 } });
+    refuse = true;
+    const refused = await queueRun(asOwner, columnId);
+    await dispatchInvocations();
+    expect(await lastRun(asOwner, teamId, agent.id)).toMatchObject({ status: 'canceled' });
+    expect(await activity(refused.id)).toHaveLength(0);
   });
 
   it('fails a run the endpoint refused on its last attempt', async () => {

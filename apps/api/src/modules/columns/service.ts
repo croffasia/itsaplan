@@ -9,7 +9,7 @@ import {
 } from '@repo/db';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
-import { getMembership } from '#modules/members/service';
+import { assertAssignableMember, getAssignmentEligibility } from '#modules/members/service';
 import { recordActivityForIssues, statusSide } from '#modules/issues/activity';
 import { getIssues } from '#modules/issues/service';
 import { emitIssueEvents, issuePayloads } from '#modules/issues/webhook-payload';
@@ -44,18 +44,18 @@ function mapColumn(row: typeof projectColumn.$inferSelect): ColumnRow {
   };
 }
 
-async function assertAutoAssignee(projectId: number, userId?: string | null): Promise<void> {
-  if (!userId) return;
-  if (!(await getMembership(projectId, userId)))
-    throw new HttpError(400, 'Auto-assignee must be a project member');
-}
-
-export async function columnAutoAssignee(columnId: number): Promise<string | null> {
+export async function columnAutoAssignee(
+  projectId: number,
+  columnId: number,
+): Promise<string | null> {
   const [row] = await db
     .select({ userId: projectColumn.autoAssignUserId })
     .from(projectColumn)
-    .where(eq(projectColumn.id, columnId));
-  return row?.userId ?? null;
+    .where(and(eq(projectColumn.id, columnId), eq(projectColumn.projectId, projectId)));
+  if (!row?.userId) return null;
+  return (await getAssignmentEligibility(projectId, row.userId)) === 'assignable'
+    ? row.userId
+    : null;
 }
 
 export const WIP_LIMIT_EXCEEDED = 'wip_limit_exceeded';
@@ -135,7 +135,7 @@ export async function createColumn(input: {
   wipMode?: string;
   autoAssignUserId?: string | null;
 }): Promise<ColumnRow> {
-  await assertAutoAssignee(input.projectId, input.autoAssignUserId);
+  await assertAssignableMember(input.projectId, input.autoAssignUserId, undefined, 'Auto-assignee');
   const [{ pos }] = await db
     .select({ pos: sql<number>`COALESCE(MAX(${projectColumn.position}), -1) + 1` })
     .from(projectColumn)
@@ -177,8 +177,19 @@ export async function updateColumn(
     autoAssignUserId?: string | null;
   },
 ): Promise<ColumnRow | null> {
-  await assertAutoAssignee(projectId, patch.autoAssignUserId);
   const scope = and(eq(projectColumn.id, id), eq(projectColumn.projectId, projectId));
+  if (patch.autoAssignUserId) {
+    const [current] = await db
+      .select({ userId: projectColumn.autoAssignUserId })
+      .from(projectColumn)
+      .where(scope);
+    await assertAssignableMember(
+      projectId,
+      patch.autoAssignUserId,
+      current?.userId ?? null,
+      'Auto-assignee',
+    );
+  }
   const set: Partial<typeof projectColumn.$inferInsert> = {};
   if (patch.name !== undefined) set.name = patch.name;
   if (patch.color !== undefined) set.color = patch.color;

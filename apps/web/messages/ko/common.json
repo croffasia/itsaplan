@@ -313,5 +313,16 @@
     "range": "전체 {total}개 중 {first}-{last}"
   },
   "upgradeToPro": "Pro로 업그레이드",
-  "signingOut": "로그아웃하는 중…"
+  "signingOut": "로그아웃하는 중…",
+  "slackApp": {
+    "setup": "api.slack.com/apps에서 chat:write 봇 scope와 Redirect URL로 앱을 만드세요. 앱을 Slack 워크스페이스에 설치한 뒤 Basic Information에서 Client ID와 시크릿을 복사하세요.",
+    "botToken": "봇 토큰",
+    "botTokenHint": "OAuth & Permissions에 있습니다. 저장하면 Slack이 확인합니다.",
+    "clientId": "Client ID",
+    "clientSecret": "클라이언트 시크릿",
+    "redirectUrl": "Redirect URL",
+    "redirectUrlHint": "Slack의 OAuth & Permissions → Redirect URLs에 추가하세요.",
+    "workspace": "Slack 워크스페이스",
+    "workspaceHint": "앱이 설치된 Slack 워크스페이스입니다. 이 워크스페이스의 계정만 연결할 수 있습니다."
+  }
 }

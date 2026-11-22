@@ -1,7 +1,16 @@
-import { db, initiative, initiativeLabel, issue, label, projectColumn, user } from '@repo/db';
+import {
+  db,
+  initiative,
+  initiativeFavorite,
+  initiativeLabel,
+  issue,
+  label,
+  projectColumn,
+  user,
+} from '@repo/db';
 import { and, asc, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
 import { labelNames, rowSide } from '#modules/issues/activity';
-import { getMembership } from '#modules/members/service';
+import { assertAssignableMember } from '#modules/members/service';
 import { HttpError, iso, num } from '#shared/lib';
 import { computeHealth, type Health } from './health';
 import { recordActivity, logInitiativeUpdate, type InitiativeSnapshot } from './activity';
@@ -33,6 +42,7 @@ export interface InitiativeRow {
   labelIds: number[];
   progress: InitiativeProgress;
   health: Health | null;
+  favorite: boolean;
 }
 
 // Issue counts per initiative, grouped by the linked issues' state type. Empty
@@ -80,10 +90,28 @@ async function labelsFor(initiativeIds: number[]): Promise<Map<number, number[]>
   return out;
 }
 
+// Favorite initiative ids for one user, in one query.
+async function favoritesFor(initiativeIds: number[], userId?: string | null): Promise<Set<number>> {
+  const out = new Set<number>();
+  if (!userId || initiativeIds.length === 0) return out;
+  const rows = await db
+    .select({ initiativeId: initiativeFavorite.initiativeId })
+    .from(initiativeFavorite)
+    .where(
+      and(
+        inArray(initiativeFavorite.initiativeId, initiativeIds),
+        eq(initiativeFavorite.userId, userId),
+      ),
+    );
+  for (const r of rows) out.add(r.initiativeId);
+  return out;
+}
+
 function mapInitiative(
   row: typeof initiative.$inferSelect,
   labelIds: number[],
   progress: InitiativeProgress,
+  favorite: boolean,
 ): InitiativeRow {
   return {
     id: row.id,
@@ -106,6 +134,7 @@ function mapInitiative(
       targetDate: row.targetDate,
       createdAt: iso(row.createdAt),
     }),
+    favorite,
   };
 }
 
@@ -151,6 +180,7 @@ function orderExpr(sort: InitiativeSort) {
 export async function listInitiatives(
   projectId: number,
   opts: ListInitiativesOpts,
+  userId?: string | null,
 ): Promise<InitiativeListPage> {
   const conds = [eq(initiative.projectId, projectId)];
   if (opts.statuses && opts.statuses.length) {
@@ -183,13 +213,55 @@ export async function listInitiatives(
     .where(where);
 
   const ids = rows.map((r) => r.id);
-  const [counts, labels] = await Promise.all([countsFor(ids), labelsFor(ids)]);
+  const [counts, labels, favorites] = await Promise.all([
+    countsFor(ids),
+    labelsFor(ids),
+    favoritesFor(ids, userId),
+  ]);
   return {
     items: rows.map((row) =>
-      mapInitiative(row, labels.get(row.id) ?? [], counts.get(row.id) ?? EMPTY_PROGRESS),
+      mapInitiative(
+        row,
+        labels.get(row.id) ?? [],
+        counts.get(row.id) ?? EMPTY_PROGRESS,
+        favorites.has(row.id),
+      ),
     ),
     total: Number(total),
   };
+}
+
+export async function listFavoriteInitiatives(
+  projectId: number,
+  userId: string,
+): Promise<InitiativeOption[]> {
+  return db
+    .select({ id: initiative.id, title: initiative.title, status: initiative.status })
+    .from(initiative)
+    .innerJoin(
+      initiativeFavorite,
+      and(
+        eq(initiativeFavorite.initiativeId, initiative.id),
+        eq(initiativeFavorite.userId, userId),
+      ),
+    )
+    .where(eq(initiative.projectId, projectId))
+    .orderBy(asc(initiative.position), desc(initiative.id));
+}
+
+export async function addFavoriteInitiative(initiativeId: number, userId: string): Promise<void> {
+  await db.insert(initiativeFavorite).values({ initiativeId, userId }).onConflictDoNothing();
+}
+
+export async function removeFavoriteInitiative(
+  initiativeId: number,
+  userId: string,
+): Promise<void> {
+  await db
+    .delete(initiativeFavorite)
+    .where(
+      and(eq(initiativeFavorite.initiativeId, initiativeId), eq(initiativeFavorite.userId, userId)),
+    );
 }
 
 export interface InitiativeOption {
@@ -267,11 +339,23 @@ export async function initiativeStatusCounts(projectId: number): Promise<Initiat
   return out;
 }
 
-export async function getInitiative(id: number): Promise<InitiativeRow | null> {
+export async function getInitiative(
+  id: number,
+  userId?: string | null,
+): Promise<InitiativeRow | null> {
   const rows = await db.select().from(initiative).where(eq(initiative.id, id));
   if (!rows[0]) return null;
-  const [counts, labels] = await Promise.all([countsFor([id]), labelsFor([id])]);
-  return mapInitiative(rows[0], labels.get(id) ?? [], counts.get(id) ?? EMPTY_PROGRESS);
+  const [counts, labels, favorites] = await Promise.all([
+    countsFor([id]),
+    labelsFor([id]),
+    favoritesFor([id], userId),
+  ]);
+  return mapInitiative(
+    rows[0],
+    labels.get(id) ?? [],
+    counts.get(id) ?? EMPTY_PROGRESS,
+    favorites.has(id),
+  );
 }
 
 // The project an initiative belongs to, or null if it does not exist. Used by the
@@ -293,16 +377,6 @@ export interface NewInitiativeInput {
   startDate?: string | null;
   targetDate?: string | null;
   labelIds?: number[];
-}
-
-async function assertInitiativeOwner(
-  projectId: number,
-  ownerUserId?: string | null,
-): Promise<void> {
-  if (!ownerUserId) return;
-  if (!(await getMembership(projectId, ownerUserId))) {
-    throw new HttpError(400, 'Initiative owner must be a project member');
-  }
 }
 
 async function assertInitiativeLabels(projectId: number, labelIds?: number[]): Promise<void> {
@@ -327,9 +401,10 @@ function assertDateOrder(startDate?: string | null, targetDate?: string | null) 
 async function assertInitiativeReferences(
   projectId: number,
   input: { ownerUserId?: string | null; labelIds?: number[] },
+  currentOwnerUserId?: string | null,
 ): Promise<void> {
   await Promise.all([
-    assertInitiativeOwner(projectId, input.ownerUserId),
+    assertAssignableMember(projectId, input.ownerUserId, currentOwnerUserId, 'Initiative owner'),
     assertInitiativeLabels(projectId, input.labelIds),
   ]);
 }
@@ -362,7 +437,7 @@ export async function createInitiative(
   await recordActivity(row.id, [{ action: 'created' }], actorUserId);
   if (input.labelIds?.length)
     await setInitiativeLabels(projectId, row.id, input.labelIds, actorUserId);
-  return (await getInitiative(row.id))!;
+  return (await getInitiative(row.id, actorUserId))!;
 }
 
 export interface InitiativePatch {
@@ -400,7 +475,7 @@ export async function updateInitiative(
   const beforeRows = await db.select().from(initiative).where(eq(initiative.id, id));
   const before = beforeRows[0];
   if (!before) return null;
-  await assertInitiativeReferences(before.projectId, patch);
+  await assertInitiativeReferences(before.projectId, patch, before.ownerUserId);
   // Each date is checked against the effective other one: a patch sets one date
   // and leaves the stored value of the other in force.
   assertDateOrder(
@@ -425,7 +500,7 @@ export async function updateInitiative(
   if (patch.labelIds !== undefined) {
     await setInitiativeLabels(before.projectId, id, patch.labelIds, actorUserId);
   }
-  return getInitiative(id);
+  return getInitiative(id, actorUserId);
 }
 
 // Linked issues keep existing (issue.initiative_id is set null by the FK); the

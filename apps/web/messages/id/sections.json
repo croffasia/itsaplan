@@ -57,6 +57,10 @@
       "label": "Telegram",
       "description": "Bot yang dihubungkan pengguna ke akun Telegram mereka, dan bot yang mengirimkan notifikasi Telegram untuk proyek yang tidak menetapkan bot sendiri."
     },
+    "slack": {
+      "label": "Slack",
+      "description": "Mengirim notifikasi sebagai pesan langsung Slack."
+    },
     "email": {
       "label": "Penyedia email",
       "description": "Penyedia email yang digunakan instance: pengaturan ulang kata sandi, konfirmasi alamat, dan tautan masuk."

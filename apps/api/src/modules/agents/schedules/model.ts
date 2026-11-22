@@ -1,7 +1,7 @@
 import { t } from 'elysia';
 import { pageQueryFields, pageResponse } from '#shared/pagination';
 
-import { runContextTokens, agentExecutionState } from '../model';
+import { runContextTokens, runReceivedAt, agentExecutionState } from '../model';
 
 export const scheduleParams = t.Object({
   projectKey: t.String(),
@@ -128,6 +128,7 @@ export const ScheduleRunResponse = t.Object({
   contextTokens: runContextTokens,
   scheduledFor: t.Nullable(t.String()),
   startedAt: t.Nullable(t.String()),
+  receivedAt: runReceivedAt,
   finishedAt: t.Nullable(t.String()),
   createdAt: t.String(),
 });

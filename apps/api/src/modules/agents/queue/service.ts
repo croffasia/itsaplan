@@ -13,7 +13,19 @@ import {
   teamWorkspaceId,
   user,
 } from '@repo/db';
-import { and, desc, eq, ilike, inArray, isNotNull, isNull, notInArray, or, sql } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  notInArray,
+  or,
+  sql,
+  type AnyColumn,
+} from 'drizzle-orm';
 import {
   assertPermission,
   getProjectAccess,
@@ -34,6 +46,7 @@ import {
   holdsSlot,
   runDocumentVisibleTo,
 } from '../core/run-queue';
+import { emitRunsCanceled } from '../core/run-finished';
 
 // An agent with an invocation URL is sent its work and only calls back while it has
 // some, so its last contact says nothing about whether the endpoint is up. An internal
@@ -53,6 +66,15 @@ function queueProjectIds(userId: string, mcpOnly = false, grants?: Map<number, W
   });
 }
 
+const actorOf = (userId: AnyColumn) => sql<{
+  name: string;
+  image: string | null;
+  agentUsername: string | null;
+} | null>`(
+    SELECT json_build_object('name', u.name, 'image', u.image, 'agentUsername', g.username)
+    FROM "user" u LEFT JOIN ai_agent g ON g.user_id = u.id
+    WHERE u.id = ${userId})`;
+
 // Where the run comes from (see ../core/run-initiator.ts): its initiator, who queued it,
 // and the run an agent queued it in with the first run of that chain. A run the reader
 // may not open is still named, so the chain stays readable; opening it asks again.
@@ -60,10 +82,7 @@ const runOriginColumns = {
   initiator: sql<{ id: string; name: string; image: string | null } | null>`(
     SELECT json_build_object('id', u.id, 'name', u.name, 'image', u.image) FROM "user" u
     WHERE u.id = ${agentRun.requestedByUserId})`,
-  startedBy: sql<{ name: string; image: string | null; agentUsername: string | null } | null>`(
-    SELECT json_build_object('name', u.name, 'image', u.image, 'agentUsername', g.username)
-    FROM "user" u LEFT JOIN ai_agent g ON g.user_id = u.id
-    WHERE u.id = ${agentRun.startedByUserId})`,
+  startedBy: actorOf(agentRun.startedByUserId),
   parentRun: sql<{ id: number; projectRef: string } | null>`(
     SELECT json_build_object('id', r.id, 'projectRef', coalesce(t.slug, t.id::text) || '.' || p.key)
     FROM agent_run r JOIN project p ON p.id = r.project_id JOIN team t ON t.id = p.team_id
@@ -104,9 +123,10 @@ export async function assertReadsRuns(projectId: number, user: AuthUser): Promis
   await assertPermission(projectId, user, 'ai_agents', 'read');
 }
 
-// Whether the user reads the steps of every run in the project, what each agent did:
-// whoever runs its team, an owner of it, and whoever may create or change its agents.
-export async function readsAllRunSteps(projectId: number, userId: string): Promise<boolean> {
+// Whether the user manages every run in the project, reads the steps of each, what its agent
+// did, and stops it: whoever runs its team, an owner of it, and whoever may create or change
+// its agents.
+export async function managesAllRuns(projectId: number, userId: string): Promise<boolean> {
   if (await runsProjectTeam(await getProjectTeamId(projectId), userId)) return true;
   const access = await getProjectAccess(projectId, userId);
   if (!access) return false;
@@ -117,16 +137,37 @@ export async function readsAllRunSteps(projectId: number, userId: string): Promi
   );
 }
 
-// A run's steps are also for its initiator.
-export async function assertReadsRunSteps(
+// A run is also managed by its initiator.
+export async function assertManagesRun(
   run: { projectId: number; initiatorUserId: string | null },
   userId: string,
 ): Promise<void> {
-  if (run.initiatorUserId === userId || (await readsAllRunSteps(run.projectId, userId))) return;
+  if (run.initiatorUserId === userId || (await managesAllRuns(run.projectId, userId))) return;
   throw new HttpError(
     403,
-    "Only whoever may create or change the project's agents, or the run's initiator, reads its steps",
+    "Only whoever may create or change the project's agents, or the run's initiator, reads a run's steps and stops it",
   );
+}
+
+// Stops a run that waits or works. Its row ends as 'canceled' at once, an internal agent at
+// work stops at the poller's next check, and an external agent's runner kills its command
+// on its next heartbeat or events report. False when the run had already ended.
+export async function cancelAgentRun(runId: number, actorUserId: string): Promise<boolean> {
+  const rows = await db
+    .update(agentRun)
+    .set({
+      status: 'canceled',
+      canceledByUserId: actorUserId,
+      executionStartedAt: null,
+      finishedAt: new Date(),
+    })
+    .where(and(eq(agentRun.id, runId), eq(agentRun.status, 'pending')))
+    .returning({ id: agentRun.id });
+  await emitRunsCanceled(
+    rows.map((row) => row.id),
+    actorUserId,
+  );
+  return rows.length > 0;
 }
 
 // The projects of a run list. `projectIds` narrows it to those, of the ones the caller may
@@ -244,6 +285,7 @@ export async function listRunnerQueue(
         outputTokens: agentRun.outputTokens,
         createdAt: agentRun.createdAt,
         startedAt: agentRun.startedAt,
+        receivedAt: agentRun.receivedAt,
         finishedAt: agentRun.finishedAt,
         nextAttemptAt: agentRun.nextAttemptAt,
         runnerState: runnerPresence,
@@ -256,6 +298,7 @@ export async function listRunnerQueue(
           SELECT json_build_object('id', d.id, 'title', d.title) FROM project_document d
           WHERE d.id = ${agentRun.documentId})`,
         ...runOriginColumns,
+        canceledBy: actorOf(agentRun.canceledByUserId),
         projectKey: project.key,
         teamRef: sql<string>`coalesce(${team.slug}, ${team.id}::text)`,
       })
@@ -295,7 +338,7 @@ export async function listRunnerQueue(
   const allSteps = new Map(
     await Promise.all(
       [...new Set(rows.map((row) => row.projectId))].map(
-        async (id) => [id, await readsAllRunSteps(id, userId)] as const,
+        async (id) => [id, await managesAllRuns(id, userId)] as const,
       ),
     ),
   );
@@ -308,6 +351,7 @@ export async function listRunnerQueue(
       createdAt: iso(row.createdAt),
       nextAttemptAt: iso(row.nextAttemptAt),
       startedAt: row.startedAt ? iso(row.startedAt) : null,
+      receivedAt: row.receivedAt ? iso(row.receivedAt) : null,
       finishedAt: row.finishedAt ? iso(row.finishedAt) : null,
     })),
     total,

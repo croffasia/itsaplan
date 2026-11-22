@@ -30,6 +30,7 @@ import IssuePropertyRow from './IssuePropertyRow';
 import IssuePropertyGroupHeading from './IssuePropertyGroupHeading';
 import { type Embeddable } from '@/components/common/editor/attachmentEmbed';
 import { parseDate } from '@/utils/dates';
+import { assignableMembers } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
@@ -79,7 +80,8 @@ export default function IssueProperties({
   groupsOpen: { isOpen: (key: string) => boolean; toggle: (key: string) => void };
 }) {
   const t = useTranslations('issue.fields');
-  const hasMembers = project.assignees.some((a) => a.kind === 'member');
+  const hasMembers =
+    assignableMembers(project.assignees).length > 0 || issue.assigneeUserId != null;
   const hasAgents = project.assignees.some((a) => a.kind === 'agent');
   // The calendars grey out days that would put one date on the wrong side of the
   // other: the start no later than the due date, the due date no earlier than the

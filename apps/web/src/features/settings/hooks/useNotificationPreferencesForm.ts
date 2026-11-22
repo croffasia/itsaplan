@@ -13,6 +13,8 @@ export interface NotificationPreferencesForm {
   setEmailEvents: (v: NotificationEventToggles) => void;
   telegramEvents: NotificationEventToggles;
   setTelegramEvents: (v: NotificationEventToggles) => void;
+  slackEvents: NotificationEventToggles;
+  setSlackEvents: (v: NotificationEventToggles) => void;
   pushEvents: NotificationEventToggles;
   setPushEvents: (v: NotificationEventToggles) => void;
   dirty: boolean;
@@ -32,15 +34,17 @@ export function useNotificationPreferencesForm(
   const [telegramEvents, setTelegramEvents] = useState<NotificationEventToggles>(
     initial.telegramEvents,
   );
+  const [slackEvents, setSlackEvents] = useState<NotificationEventToggles>(initial.slackEvents);
   const [pushEvents, setPushEvents] = useState<NotificationEventToggles>(initial.pushEvents);
 
   const dirty =
     !eventsEqual(emailEvents, initial.emailEvents) ||
     !eventsEqual(telegramEvents, initial.telegramEvents) ||
+    !eventsEqual(slackEvents, initial.slackEvents) ||
     !eventsEqual(pushEvents, initial.pushEvents);
 
   async function save() {
-    await update.mutateAsync({ emailEvents, telegramEvents, pushEvents });
+    await update.mutateAsync({ emailEvents, telegramEvents, slackEvents, pushEvents });
     toast.success(t('preferencesSaved'));
   }
 
@@ -49,6 +53,8 @@ export function useNotificationPreferencesForm(
     setEmailEvents,
     telegramEvents,
     setTelegramEvents,
+    slackEvents,
+    setSlackEvents,
     pushEvents,
     setPushEvents,
     dirty,

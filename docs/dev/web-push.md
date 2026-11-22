@@ -1,6 +1,6 @@
 # Web Push
 
-Web Push is the third notification channel, next to email and Telegram. It uses the same
+Web Push is a notification channel next to email, Telegram and Slack. It uses the same
 outbox, `notification_delivery`, and the same worker loop. It is on for the whole instance
 while its keys are set, and each member chooses its events per project.
 

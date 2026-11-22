@@ -1,10 +1,12 @@
 import { Elysia, t } from 'elysia';
+import { mcpTool } from '#mcp/generate';
 import { guards } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
 import { noContent } from '#shared/http';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import {
   AvailableGitRepositoryPageResponse,
+  DevelopmentRepositoryResponse,
   GitProviderConnectionListResponse,
   GitProviderConnectionResponse,
   GitSettingsResponse,
@@ -23,6 +25,7 @@ import {
   disconnectGitProvider,
   disconnectRepository,
   listAvailableRepositories,
+  listDevelopmentRepositories,
   listGitProviderConnections,
   listTeamGitProviderConnections,
   reconcileManagedWebhooks,
@@ -68,6 +71,23 @@ export const gitSettingsRoutes = new Elysia({
       params: teamGitProviderConnectionParams,
       response: { 204: t.Void(), ...commonErrors, ...errors(502) },
       detail: { summary: 'Disconnect a team Git provider account and its managed webhooks' },
+    },
+  )
+  // Read on the same right as issues, whose development links already name these
+  // repositories, so an agent on the default role can find where its project's code is.
+  .get(
+    '/projects/:projectKey/repositories',
+    ({ project }) => listDevelopmentRepositories(project.id),
+    {
+      permission: ['work_items', 'read'],
+      response: { 200: t.Array(DevelopmentRepositoryResponse), ...accessErrors },
+      detail: {
+        summary: 'List repositories connected to a project',
+        description:
+          'List the repositories connected to the project in its settings, with the provider ' +
+          'and the address of the instance each one is on.',
+        ...mcpTool('list_project_repositories'),
+      },
     },
   )
   .get('/projects/:projectKey/settings/git', ({ project }) => getOrCreateGitSettings(project.id), {

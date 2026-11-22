@@ -946,6 +946,18 @@
       "removePrice": "刪除價格",
       "save": "儲存價格"
     },
+    "slack": {
+      "title": "Slack",
+      "description": "本工作區的專案用來傳送通知的 Slack 應用程式。",
+      "saved": "Slack 設定已儲存",
+      "notifications": "Slack 通知",
+      "notificationsHint": "開啟後，已連結 Slack 帳號的成員會以私訊收到所選事件的通知。",
+      "app": "Slack 應用程式",
+      "instanceApp": "執行個體應用程式",
+      "ownApp": "自有應用程式",
+      "instanceAppHint": "由執行個體管理員設定。成員需要有 Slack 工作區 {workspace} 的帳號。",
+      "instanceMissing": "執行個體管理員尚未設定 Slack 應用程式。選擇「自有應用程式」即可在此設定。"
+    },
     "queue": {
       "title": "代理執行"
     }

@@ -313,5 +313,16 @@
     "range": "第 {first}-{last} 項，共 {total} 項"
   },
   "upgradeToPro": "升級至 Pro",
-  "signingOut": "正在登出…"
+  "signingOut": "正在登出…",
+  "slackApp": {
+    "setup": "在 api.slack.com/apps 建立應用程式，加入機器人權限範圍 chat:write 和 Redirect URL。將應用程式安裝到你的 Slack 工作區，然後從 Basic Information 複製 Client ID 和金鑰。",
+    "botToken": "機器人權杖",
+    "botTokenHint": "位於 OAuth & Permissions。儲存時 Slack 會驗證它。",
+    "clientId": "Client ID",
+    "clientSecret": "用戶端金鑰",
+    "redirectUrl": "Redirect URL",
+    "redirectUrlHint": "在 Slack 的 OAuth & Permissions → Redirect URLs 中加入它。",
+    "workspace": "Slack 工作區",
+    "workspaceHint": "應用程式所安裝的 Slack 工作區。只有該工作區的帳號可以連結。"
+  }
 }

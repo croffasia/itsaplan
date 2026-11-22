@@ -185,6 +185,7 @@ export async function confirmImport(
         project,
         { ...item.draft, columnId: ctx.defaultColumnId },
         actorUserId,
+        { skipUnavailableAssignee: true },
       );
       result.imported.push({
         key: `${project.key}-${created.sequenceNumber}`,

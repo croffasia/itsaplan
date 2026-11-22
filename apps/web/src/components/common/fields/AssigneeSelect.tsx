@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react';
 import { CircleDashed } from 'lucide-react';
 import type { Assignee } from '@/lib/api/endpoints/projects';
+import { assignableMembers } from '@/utils/project';
 import { useSession } from '@/lib/auth-client';
 import Avatar from '@/components/common/Avatar';
 import { Pill } from './Pill';
@@ -31,8 +32,10 @@ export default function AssigneeSelect({
   const none = t('noAssignee');
   const { data: session } = useSession();
   const currentUserId = session?.user.id ?? null;
-  const members = assignees.filter((a) => a.kind === 'member');
-  const assignee = members.find((a) => a.userId === value);
+  // The current value still resolves against deactivated accounts so an existing
+  // assignment displays as before; only active members are offered in the list.
+  const assignee = assignees.find((a) => a.kind === 'member' && a.userId === value);
+  const members = assignableMembers(assignees);
 
   const toItem = (a: Assignee): PickItem => ({
     key: a.userId,

@@ -485,7 +485,9 @@ export const createIssueBody = t.Object({
   assigneeUserId: t.Optional(
     t.Nullable(
       t.String({
-        description: "User id from get_project.assignees with kind 'member'.",
+        description:
+          "User id from get_project.assignees with kind 'member' and active true. " +
+          'A deactivated account (active false) is refused as a new assignee.',
       }),
     ),
   ),

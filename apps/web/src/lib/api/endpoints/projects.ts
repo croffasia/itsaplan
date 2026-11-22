@@ -81,6 +81,9 @@ export interface Assignee {
   // Whether this person may read issues and can therefore receive watcher
   // notifications without leaking work-item content.
   canReadWorkItems: boolean;
+  // False for a deactivated account: still listed so existing assignments, filters,
+  // member fields and mentions keep resolving, while assignee pickers leave it out.
+  canAssign: boolean;
 }
 
 // The caller's own role in a project (owner/member). Returned with the project;

@@ -204,6 +204,9 @@ const AssigneeCandidateResponse = t.Object({
   restrictedToUserId: t.Nullable(t.String()),
   respondsToMention: t.Nullable(t.Boolean()),
   canReadWorkItems: t.Boolean(),
+  // False for a deactivated account: it holds the issues it had, but is not offered
+  // for new assignments and the API refuses it as a new assignee.
+  canAssign: t.Boolean(),
 });
 
 // The caller's own role in a project (from MemberContext in members/service). The

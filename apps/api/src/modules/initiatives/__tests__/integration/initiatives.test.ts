@@ -130,6 +130,39 @@ describe('initiatives', () => {
     });
   });
 
+  it('rejects a new deactivated owner and preserves an existing one until reassigned', async () => {
+    const { asOwner, owner } = await setup();
+    await addProjectMember(asOwner, 'MKT');
+    const { assignees } = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!;
+    const departing = assignees.find((a) => a.userId !== owner.userId)!.userId;
+    const held = await createInitiative(asOwner, { title: 'Held', ownerUserId: departing });
+    const unowned = await createInitiative(asOwner, { title: 'Unowned' });
+    expect(held.status).toBe(201);
+    expect(held.data!.ownerUserId).toBe(departing);
+    expect((await asOwner.god.users({ userId: departing }).deactivate.post()).status).toBe(200);
+
+    const rejected = await createInitiative(asOwner, { title: 'Rejected', ownerUserId: departing });
+    expect(rejected.status).toBe(400);
+    expect(
+      (
+        await asOwner
+          .initiatives({ initiativeId: unowned.data!.id })
+          .patch({ ownerUserId: departing })
+      ).status,
+    ).toBe(400);
+
+    const item = asOwner.initiatives({ initiativeId: held.data!.id });
+    const kept = await item.patch({ title: 'Still held', ownerUserId: departing });
+    expect(kept.status).toBe(200);
+    expect(kept.data!.ownerUserId).toBe(departing);
+    const reassigned = await item.patch({ ownerUserId: owner.userId });
+    expect(reassigned.status).toBe(200);
+    expect(reassigned.data!.ownerUserId).toBe(owner.userId);
+    const cleared = await item.patch({ ownerUserId: null });
+    expect(cleared.status).toBe(200);
+    expect(cleared.data!.ownerUserId).toBeNull();
+  });
+
   describe('list filter', () => {
     it('filters by a comma-separated status set', async () => {
       const { asOwner } = await setup();

@@ -8,6 +8,7 @@ import {
   Copy,
   Download,
   Expand,
+  FolderInput,
   History,
   MoreHorizontal,
   PanelTop,
@@ -16,7 +17,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { ProjectDocument } from '@/lib/api/endpoints/documents';
+import type { ProjectDocument, ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -26,9 +27,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useTranslations } from 'next-intl';
+import type { DocumentPlacement } from '../utils/documentMove';
 import DocumentExportDialog from './DocumentExportDialog';
+import DocumentMoveDialog from './DocumentMoveDialog';
 
 export default function DocumentOptionsMenu({
+  projectKey,
   document,
   title,
   content,
@@ -43,11 +47,13 @@ export default function DocumentOptionsMenu({
   onStickyToolbarChange,
   onCreateChild,
   onDuplicate,
+  onMove,
   onArchive,
   onRestore,
   onDelete,
   onOpenHistory,
 }: {
+  projectKey: string;
   document: ProjectDocument;
   title: string;
   content: () => string;
@@ -62,6 +68,7 @@ export default function DocumentOptionsMenu({
   onStickyToolbarChange: (value: boolean) => void;
   onCreateChild: () => void;
   onDuplicate: () => void;
+  onMove: (move: DocumentPlacement, parent: ProjectDocumentSummary | null) => void;
   onArchive: () => void;
   onRestore: () => void;
   onDelete: () => void;
@@ -69,6 +76,7 @@ export default function DocumentOptionsMenu({
 }) {
   const t = useTranslations('documents');
   const [exportOpen, setExportOpen] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
   const archived = document.archivedAt !== null;
 
   const copyMarkdown = useCallback(async () => {
@@ -145,9 +153,9 @@ export default function DocumentOptionsMenu({
             {t('export')}
           </DropdownMenuItem>
 
+          {(canCreate || canUpdate) && <DropdownMenuSeparator />}
           {canCreate && (
             <>
-              <DropdownMenuSeparator />
               {!archived && (
                 <DropdownMenuItem onSelect={onCreateChild}>
                   <Plus />
@@ -159,6 +167,12 @@ export default function DocumentOptionsMenu({
                 {t('makeCopy')}
               </DropdownMenuItem>
             </>
+          )}
+          {canUpdate && (
+            <DropdownMenuItem disabled={busy} onSelect={() => setMoveOpen(true)}>
+              <FolderInput />
+              {t('moveTo')}
+            </DropdownMenuItem>
           )}
 
           {(canManageLifecycle || canDelete) && <DropdownMenuSeparator />}
@@ -194,6 +208,17 @@ export default function DocumentOptionsMenu({
         richHtml={richHtml}
         onOpenChange={setExportOpen}
       />
+      {moveOpen && (
+        <DocumentMoveDialog
+          projectKey={projectKey}
+          documentId={document.id}
+          onPick={(move, parent) => {
+            setMoveOpen(false);
+            onMove(move, parent);
+          }}
+          onClose={() => setMoveOpen(false)}
+        />
+      )}
     </>
   );
 }

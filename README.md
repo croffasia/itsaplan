@@ -82,7 +82,7 @@ If It's a Plan looks useful to you, star the repo ⭐ and
   schedule. A schedule starts on a timer or when an issue moves to a state
 - Tokens and cost of every run, by agent, project, and model
 - Tools for other services: Notion, Baserow, Telegram, Slack, Threads, Instagram, Jina,
-  Firecrawl, Keenable, DataForSEO, Gitea, Forgejo, and GitHub
+  Firecrawl, Keenable, DataForSEO, Gitea, Forgejo, GitHub, and GitLab
 - Images, video, music, and speech from the models on
   [Kie](https://kie.ai?ref=0b6eb19939298accdf58e18b1a92a26e): Nano Banana, Seedream, Kling,
   Veo, Suno, and others, with one API key

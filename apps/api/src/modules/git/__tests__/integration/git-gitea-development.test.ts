@@ -4,6 +4,7 @@ import { app } from '../../../../app';
 import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { addProjectMember } from '#tests/helpers/members';
 
 // The provider runs on localhost. The SSRF guard refuses loopback hosts under
 // NODE_ENV=test, so each case runs as development, as the managed webhook tests do.
@@ -188,6 +189,40 @@ describe('Gitea and Forgejo development links', () => {
     fake?.stop();
     fake = null;
     process.env.NODE_ENV = environment.NODE_ENV;
+  });
+
+  // The list is read on the issues right, so a member on the default role, which holds
+  // no repositories right, reads it.
+  it('lists the project repositories with their instance to a member who reads issues', async () => {
+    fake = fakeServer('gitea');
+    const { asOwner } = await setup('gitea', fake);
+    const asMember = await addProjectMember(asOwner, 'MKT');
+
+    const listed = await asMember.projects({ projectKey: 'MKT' }).repositories.get();
+
+    expect(listed.status).toBe(200);
+    expect(listed.data).toEqual([
+      {
+        id: expect.any(Number),
+        provider: 'gitea',
+        baseUrl: fake.baseUrl,
+        fullName: 'acme/site',
+        webUrl: 'https://git.example/acme/site',
+      },
+    ]);
+    const outsider = authedApi((await signUpTestUser()).cookie);
+    expect((await outsider.projects({ projectKey: 'MKT' }).repositories.get()).status).toBe(403);
+  });
+
+  it('lists no repositories for a project without connected ones', async () => {
+    const owner = await signUpTestUser();
+    const asOwner = authedApi(owner.cookie);
+    await createProject(asOwner, { key: 'OPS', name: 'Ops' });
+
+    const listed = await asOwner.projects({ projectKey: 'OPS' }).repositories.get();
+
+    expect(listed.status).toBe(200);
+    expect(listed.data).toEqual([]);
   });
 
   it('lists a Gitea repository and pages its pull requests by the Link header', async () => {

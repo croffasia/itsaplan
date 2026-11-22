@@ -50,6 +50,7 @@ export interface GitManagedRepositoryDto {
 export interface DevelopmentRepositoryDto {
   id: number;
   provider: DevelopmentProvider;
+  baseUrl: string;
   fullName: string;
   webUrl: string;
 }
@@ -133,6 +134,7 @@ export async function listDevelopmentRepositories(
     .select({
       id: gitManagedRepository.id,
       provider: gitProviderConnection.provider,
+      baseUrl: gitProviderConnection.baseUrl,
       fullName: gitManagedRepository.fullName,
       webUrl: gitManagedRepository.webUrl,
     })

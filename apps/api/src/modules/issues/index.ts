@@ -92,7 +92,7 @@ import {
   removeIssueDevelopmentLink,
 } from '#modules/git/development';
 import { listDevelopmentRepositories, listManagedBranches } from '#modules/git/connections-service';
-import { DevelopmentLinkResponse } from '#modules/git/model';
+import { DevelopmentLinkResponse, DevelopmentRepositoryResponse } from '#modules/git/model';
 import {
   createChecklist,
   createChecklistItem,
@@ -120,7 +120,6 @@ import {
   issueDevelopmentListQuery,
   linkIssueDevelopmentBody,
   createIssuePullRequestBody,
-  DevelopmentRepositoryResponse,
   LinkablePullRequestPageResponse,
   DevelopmentBranchPageResponse,
   IssueResponse,

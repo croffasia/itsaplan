@@ -3,20 +3,28 @@ import { RequestError, type Client, type Run } from './client';
 import type { RunnerConfig } from './config';
 import { execute } from './execute';
 
-export async function runTask(config: RunnerConfig, client: Client, run: Run) {
+// `stop` is aborted when the server says someone stopped the run, on the events report
+// here or on the heartbeat. The server has already ended the run by then, so the command
+// is killed and nothing more is reported for it.
+export async function runTask(
+  config: RunnerConfig,
+  client: Client,
+  run: Run,
+  stop: AbortController,
+) {
   let offset = 0;
   const stream = new AnswerStream(
     config.outputFormat,
     `run-${run.id}`,
     String(run.id),
     async (events) => {
-      if (!run.traceEvents) return;
+      if (!run.traceEvents || stop.signal.aborted) return;
       const session = config.outputFormat === 'codex-jsonl' ? stream.startedSession() : null;
       const sessionId =
         session && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(session)
           ? session
           : undefined;
-      await client.runEvents(run, offset, events, sessionId);
+      if (await client.runEvents(run, offset, events, sessionId)) stop.abort();
       offset += events.length;
     },
   );
@@ -43,6 +51,7 @@ export async function runTask(config: RunnerConfig, client: Client, run: Run) {
           usage.write(chunk);
           stream.write(chunk);
         },
+        signal: stop.signal,
       },
     );
     clearInterval(timer);
@@ -61,6 +70,7 @@ export async function runTask(config: RunnerConfig, client: Client, run: Run) {
         );
       }
     }
+    if (stop.signal.aborted) return outcome;
     // A stream format's stdout is its raw event lines; the run reports the answer read out
     // of them. Plain text is the answer as printed.
     const output = config.outputFormat === 'text' ? outcome.output : stream.answer();

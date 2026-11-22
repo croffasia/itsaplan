@@ -8,6 +8,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
+import { assignableMembers } from '@/utils/project';
 import { subtaskCount } from '@/utils/subtasks';
 import { cn } from '@/lib/utils';
 import { colorDot } from '@/components/common/fields/colorDot';
@@ -48,7 +49,10 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
   const subtasks = subtaskCount(project.issues, ids);
   const canEdit = can('work_items', 'edit');
   const canDelete = can('work_items', 'delete');
-  const members = project.assignees.filter((a) => a.kind === 'member');
+  const members = assignableMembers(project.assignees);
+  const hasAssigned = project.issues.some(
+    (i) => selection.selected.has(i.id) && i.assigneeUserId != null,
+  );
   const agents = project.assignees.filter((a) => a.kind === 'agent');
   const disabled = bulk.pending;
 
@@ -97,7 +101,7 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
                 ))}
               </BarMenu>
 
-              {members.length > 0 && (
+              {(members.length > 0 || hasAssigned) && (
                 <BarMenu
                   icon={<User className="size-4" />}
                   label={t('assignee')}

@@ -130,6 +130,39 @@ describe('initiatives', () => {
     });
   });
 
+  it('rejects a new deactivated owner and preserves an existing one until reassigned', async () => {
+    const { asOwner, owner } = await setup();
+    await addProjectMember(asOwner, 'MKT');
+    const { assignees } = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!;
+    const departing = assignees.find((a) => a.userId !== owner.userId)!.userId;
+    const held = await createInitiative(asOwner, { title: 'Held', ownerUserId: departing });
+    const unowned = await createInitiative(asOwner, { title: 'Unowned' });
+    expect(held.status).toBe(201);
+    expect(held.data!.ownerUserId).toBe(departing);
+    expect((await asOwner.god.users({ userId: departing }).deactivate.post()).status).toBe(200);
+
+    const rejected = await createInitiative(asOwner, { title: 'Rejected', ownerUserId: departing });
+    expect(rejected.status).toBe(400);
+    expect(
+      (
+        await asOwner
+          .initiatives({ initiativeId: unowned.data!.id })
+          .patch({ ownerUserId: departing })
+      ).status,
+    ).toBe(400);
+
+    const item = asOwner.initiatives({ initiativeId: held.data!.id });
+    const kept = await item.patch({ title: 'Still held', ownerUserId: departing });
+    expect(kept.status).toBe(200);
+    expect(kept.data!.ownerUserId).toBe(departing);
+    const reassigned = await item.patch({ ownerUserId: owner.userId });
+    expect(reassigned.status).toBe(200);
+    expect(reassigned.data!.ownerUserId).toBe(owner.userId);
+    const cleared = await item.patch({ ownerUserId: null });
+    expect(cleared.status).toBe(200);
+    expect(cleared.data!.ownerUserId).toBeNull();
+  });
+
   describe('list filter', () => {
     it('filters by a comma-separated status set', async () => {
       const { asOwner } = await setup();
@@ -460,6 +493,104 @@ describe('initiatives', () => {
       const role = await createRole(asOwner, 'MKT', { name: 'Nothing', permissions: {} });
       const asMember = await addProjectMember(asOwner, 'MKT', role.data!.id);
       expect((await initiatives(asMember).options.get()).status).toBe(403);
+    });
+  });
+
+  describe('favorites', () => {
+    it('marks an initiative favorite for the caller and clears it again', async () => {
+      const { asOwner } = await setup();
+      const created = (await createInitiative(asOwner, { title: 'Q3 Launch' })).data!;
+      expect(created.favorite).toBe(false);
+      expect((await initiatives(asOwner).favorites.get()).data).toEqual([]);
+
+      const added = await asOwner.initiatives({ initiativeId: created.id }).favorite.put();
+      expect(added.status).toBe(204);
+
+      const detail = await asOwner.initiatives({ initiativeId: created.id }).get();
+      expect(detail.data).toMatchObject({ id: created.id, favorite: true });
+
+      const list = await initiatives(asOwner).get();
+      expect(list.data!.items).toMatchObject([{ id: created.id, favorite: true }]);
+
+      const favs = await initiatives(asOwner).favorites.get();
+      expect(favs.status).toBe(200);
+      expect(favs.data).toEqual([{ id: created.id, title: 'Q3 Launch', status: 'planned' }]);
+
+      const patched = await asOwner
+        .initiatives({ initiativeId: created.id })
+        .patch({ title: 'Q3 Launch v2' });
+      expect(patched.data).toMatchObject({ id: created.id, title: 'Q3 Launch v2', favorite: true });
+
+      const removed = await asOwner.initiatives({ initiativeId: created.id }).favorite.delete();
+      expect(removed.status).toBe(204);
+      expect((await asOwner.initiatives({ initiativeId: created.id }).get()).data).toMatchObject({
+        id: created.id,
+        favorite: false,
+      });
+      expect((await initiatives(asOwner).favorites.get()).data).toEqual([]);
+    });
+
+    it('is idempotent when favoriting twice or unfavoriting a non-favorite', async () => {
+      const { asOwner } = await setup();
+      const { id } = (await createInitiative(asOwner, { title: 'Q3' })).data!;
+
+      expect((await asOwner.initiatives({ initiativeId: id }).favorite.delete()).status).toBe(204);
+      expect((await asOwner.initiatives({ initiativeId: id }).favorite.put()).status).toBe(204);
+      expect((await asOwner.initiatives({ initiativeId: id }).favorite.put()).status).toBe(204);
+      expect((await initiatives(asOwner).favorites.get()).data).toHaveLength(1);
+    });
+
+    it('is personal to the caller and allowed with initiatives:read only', async () => {
+      const { asOwner } = await setup();
+      const first = (await createInitiative(asOwner, { title: 'First' })).data!;
+      const second = (await createInitiative(asOwner, { title: 'Second' })).data!;
+
+      const readRole = await createRole(asOwner, 'MKT', {
+        name: 'Initiatives reader',
+        permissions: { initiatives: { read: true } },
+      });
+      const asReader = await addProjectMember(asOwner, 'MKT', readRole.data!.id);
+
+      await asOwner.initiatives({ initiativeId: first.id }).favorite.put();
+      expect((await asReader.initiatives({ initiativeId: second.id }).favorite.put()).status).toBe(
+        204,
+      );
+
+      expect((await initiatives(asOwner).favorites.get()).data?.map((i) => i.id)).toEqual([
+        first.id,
+      ]);
+      expect((await initiatives(asReader).favorites.get()).data?.map((i) => i.id)).toEqual([
+        second.id,
+      ]);
+      expect((await asReader.initiatives({ initiativeId: first.id }).get()).data?.favorite).toBe(
+        false,
+      );
+      expect((await asReader.initiatives({ initiativeId: second.id }).get()).data?.favorite).toBe(
+        true,
+      );
+    });
+
+    it('returns 404 for a missing initiative and 403 without read permission', async () => {
+      const { asOwner } = await setup();
+      const { id } = (await createInitiative(asOwner, { title: 'Q3' })).data!;
+
+      expect((await asOwner.initiatives({ initiativeId: 999999 }).favorite.put()).status).toBe(404);
+      expect((await asOwner.initiatives({ initiativeId: 999999 }).favorite.delete()).status).toBe(
+        404,
+      );
+
+      const noAccessRole = await createRole(asOwner, 'MKT', { name: 'None', permissions: {} });
+      const asNoAccess = await addProjectMember(asOwner, 'MKT', noAccessRole.data!.id);
+      expect((await initiatives(asNoAccess).favorites.get()).status).toBe(403);
+      expect((await asNoAccess.initiatives({ initiativeId: id }).favorite.put()).status).toBe(403);
+      expect((await asNoAccess.initiatives({ initiativeId: id }).favorite.delete()).status).toBe(
+        403,
+      );
+
+      const outsider = authedApi((await signUpTestUser()).cookie);
+      expect((await initiatives(outsider).favorites.get()).status).toBe(403);
+      expect((await outsider.initiatives({ initiativeId: id }).favorite.put()).status).toBe(403);
+      expect((await outsider.initiatives({ initiativeId: id }).favorite.delete()).status).toBe(403);
     });
   });
 

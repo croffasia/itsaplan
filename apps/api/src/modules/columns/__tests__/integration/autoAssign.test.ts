@@ -42,6 +42,66 @@ describe('column auto-assignee', () => {
     await resetDb();
   });
 
+  describe('deactivated accounts', () => {
+    it('refuses a deactivated account, on create and on update', async () => {
+      const { asOwner, ownerId } = await setupProject();
+      const leaver = await addMember(asOwner, ownerId);
+      const target = (await columnByName(asOwner, 'In Progress')).id;
+      expect((await asOwner.god.users({ userId: leaver }).deactivate.post()).status).toBe(200);
+
+      const updated = await setAutoAssignee(asOwner, target, leaver);
+      const created = await asOwner.projects({ projectKey: 'MKT' }).columns.post({
+        name: 'Review',
+        stateType: 'started',
+        autoAssignUserId: leaver,
+      });
+
+      expect(updated.status).toBe(400);
+      expect(created.status).toBe(400);
+    });
+
+    it('takes a save that keeps the auto-assignee the column has', async () => {
+      const { asOwner, ownerId } = await setupProject();
+      const leaver = await addMember(asOwner, ownerId);
+      const target = (await columnByName(asOwner, 'In Progress')).id;
+      expect((await setAutoAssignee(asOwner, target, leaver)).status).toBe(200);
+      expect((await asOwner.god.users({ userId: leaver }).deactivate.post()).status).toBe(200);
+
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .columns({ columnId: target })
+        .patch({
+          name: 'Doing',
+          autoAssignUserId: leaver,
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({ name: 'Doing', autoAssignUserId: leaver });
+    });
+
+    it('still takes the issue, and leaves its assignee unchanged', async () => {
+      const { asOwner, ownerId } = await setupProject();
+      const leaver = await addMember(asOwner, ownerId);
+      const target = (await columnByName(asOwner, 'In Progress')).id;
+      const source = (await columnByName(asOwner, 'Todo')).id;
+      expect((await setAutoAssignee(asOwner, target, leaver)).status).toBe(200);
+      const moved = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          .issues.post({ columnId: source, title: 'Assigned', assigneeUserId: ownerId })
+      ).data!;
+      expect((await asOwner.god.users({ userId: leaver }).deactivate.post()).status).toBe(200);
+
+      const move = await asOwner.issues({ issueId: moved.id }).patch({ columnId: target });
+      expect(move.status).toBe(200);
+      expect(move.data).toMatchObject({ columnId: target, assigneeUserId: ownerId });
+
+      const created = await createIssue(asOwner, target);
+      expect(created.status).toBe(201);
+      expect(created.data).toMatchObject({ columnId: target, assigneeUserId: null });
+    });
+  });
+
   describe('configuration', () => {
     it('defaults to nobody', async () => {
       const { asOwner } = await setupProject();

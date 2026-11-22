@@ -166,7 +166,32 @@ export function assertRunnerDrained(agent: RunnerAgent): void {
 export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | null> {
   assertRunnerDrained(agent);
   await touchRunner(agent.id);
-  return takeNextRun(agent);
+  const run = await takeNextRun(agent);
+  if (!run) return null;
+  // A start that fails is a failed attempt: the run comes back after the retry delay,
+  // with the error on it, rather than being handed out half started. The attempt was
+  // taken, so the next claim hands the run out without starting it again.
+  try {
+    await runTaken(agent, run);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    await scheduleRunRetry(run.id, runRetryDelayMs(run.attempts), message);
+    return null;
+  }
+  return run;
+}
+
+// The agent took this attempt of the run: its runner claimed it, or its endpoint took the
+// request. The first attempt it takes starts its work on the issue, unless someone
+// stopped the run meanwhile.
+export async function runTaken(agent: RunnerAgent, run: RunnerRun): Promise<void> {
+  const [first] = await db
+    .update(agentRun)
+    .set({ receivedAt: new Date() })
+    .where(and(eq(agentRun.id, run.id), isNull(agentRun.receivedAt)))
+    .returning({ status: agentRun.status });
+  if (first?.status !== 'pending') return;
+  await agentRunStarted({ issueId: run.issueId, trigger: run.trigger, agentUserId: agent.userId });
 }
 
 // Claims the agent's next due run, or null when it has none. FOR UPDATE SKIP LOCKED
@@ -228,15 +253,6 @@ export async function takeNextRun(agent: RunnerAgent): Promise<RunnerRun | null>
     agentUsername: agent.username,
     ...(await loadRunThread(row)),
   };
-  // A start that fails is a failed attempt: the run comes back after the retry delay,
-  // with the error on it, rather than being handed out half started.
-  try {
-    await agentRunStarted(forPrompt);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    await scheduleRunRetry(row.id, runRetryDelayMs(row.attempts), message);
-    return null;
-  }
   const result = {
     traceEvents: true,
     id: row.id,
@@ -271,13 +287,13 @@ function buildSystemPrompt(agent: RunnerAgent, project: RunnerProject, run: RunF
 
 // Extends a claimed run's lease while the runner is still working on it. A command
 // can outlive the lease by far, so the runner sends this periodically; without it the
-// run would be handed to another runner mid-flight. False when the run is not this
-// agent's, or is already finished.
+// run would be handed to another runner mid-flight. Null when the run is not this
+// agent's, or ended other than by a stop.
 export async function heartbeatRun(
   agentId: number,
   runId: number,
   attempt?: number,
-): Promise<boolean> {
+): Promise<{ canceled: boolean } | null> {
   await touchRunner(agentId);
   const { leaseSeconds } = (await getJobSettings()).agentRuns;
   const rows = await db
@@ -297,7 +313,29 @@ export async function heartbeatRun(
       ),
     )
     .returning({ id: agentRun.id });
-  return rows.length > 0;
+  if (rows.length > 0) return { canceled: false };
+  return (await runCanceled(agentId, runId, attempt)) ? { canceled: true } : null;
+}
+
+// Whether someone stopped this agent's run, in the attempt the runner works on when it
+// names one.
+export async function runCanceled(
+  agentId: number,
+  runId: number,
+  attempt?: number,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: agentRun.id })
+    .from(agentRun)
+    .where(
+      and(
+        eq(agentRun.id, runId),
+        eq(agentRun.agentId, agentId),
+        eq(agentRun.status, 'canceled'),
+        attempt == null ? undefined : eq(agentRun.attempts, attempt),
+      ),
+    );
+  return row !== undefined;
 }
 
 // Records the outcome the runner reports. A failure is terminal: the runner ran the

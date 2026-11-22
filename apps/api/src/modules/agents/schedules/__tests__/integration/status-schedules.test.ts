@@ -159,7 +159,7 @@ describe('status agent schedules', () => {
     expect(runs[0].prompt).toContain('Review it and take the appropriate next step.');
   });
 
-  it('ends a waiting run when the issue leaves the column, and queues a new one on return', async () => {
+  it('ends a waiting run when the issue leaves the column, as stopped by nobody, and queues a new one on return', async () => {
     const { asOwner, backlog, started, agent } = await setup();
     const schedule = (await statusSchedule(asOwner, agent.id, started.id, { delaySec: 300 })).data!;
     const issue = (await createIssue(asOwner, backlog.id)).data!;
@@ -167,6 +167,8 @@ describe('status agent schedules', () => {
     await asOwner.issues({ issueId: issue.id }).patch({ columnId: started.id });
     await asOwner.issues({ issueId: issue.id }).patch({ columnId: backlog.id });
     expect((await runsOf(asOwner, schedule.id)).map((r) => r.status)).toEqual(['canceled']);
+    const listed = (await asOwner.projects({ projectKey: 'MKT' })['agent-runs'].queue.get()).data!;
+    expect(listed.items.map((run) => run.canceledBy)).toEqual([null]);
 
     await asOwner.issues({ issueId: issue.id }).patch({ columnId: started.id });
     expect((await runsOf(asOwner, schedule.id)).map((r) => r.status)).toEqual([

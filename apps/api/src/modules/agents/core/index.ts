@@ -66,7 +66,7 @@ import type { SessionUser } from '#shared/auth-context';
 import { listAgentRuns } from './run-queue';
 import { getAgentTrace, listAgentTraces } from './runtime/traces';
 import { visibleRun } from '../runner/run-events';
-import { assertReadsRunSteps } from '../queue/service';
+import { assertManagesRun } from '../queue/service';
 import {
   analyticsProjects,
   getAgentAnalytics,
@@ -421,7 +421,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       if (trace.trace.runId != null) {
         const run = await visibleRun(trace.trace.runId, membership.userId);
         if (!run) throw new HttpError(404, 'Trace not found');
-        await assertReadsRunSteps(run, membership.userId);
+        await assertManagesRun(run, membership.userId);
       }
       return trace;
     },

@@ -4,7 +4,13 @@ import { signPayload } from '@repo/crypto';
 import { pinnedFetch } from '@repo/net';
 import { markRunFailed, runRetryDelayMs, scheduleRunRetry } from '../core/run-queue';
 import { recordAgentRunFinished } from '../core/run-activity';
-import { getRunnerAgent, takeNextRun, type RunnerAgent, type RunnerRun } from '../runner/service';
+import {
+  getRunnerAgent,
+  runTaken,
+  takeNextRun,
+  type RunnerAgent,
+  type RunnerRun,
+} from '../runner/service';
 import { finishMessage, takeNextMessage, type ClaimedChat } from '../chat/service';
 import { readInvocationSecret } from './secret';
 
@@ -169,14 +175,22 @@ async function takeBatch<T>(take: () => Promise<T | null>): Promise<T[]> {
 // run, and the last refusal fails it.
 async function sendRun(agent: RunnerAgent, target: Target, run: RunnerRun): Promise<void> {
   const outcome = await invoke(target, 'agent.run', agent, { run });
-  if (outcome.ok || outcome.timedOut) return;
+  // An endpoint that did not answer in time may already be working on the run. The run is
+  // the agent's then, so a start that fails on the issue is logged and the run goes on.
+  if (outcome.ok || outcome.timedOut) {
+    await runTaken(agent, run).catch((error: unknown) => {
+      console.error(`[agent-invocation] run ${run.id} could not start on its issue:`, error);
+    });
+    return;
+  }
   const error = outcome.error ?? 'The endpoint refused the run';
   if (run.attempts < (await getJobSettings()).agentRuns.maxAttempts) {
     await scheduleRunRetry(run.id, runRetryDelayMs(run.attempts), error);
     return;
   }
-  await recordAgentRunFinished({ issueId: run.issueId, agentUserId: agent.userId }, 'failed');
-  await markRunFailed(run.id, error);
+  if (await markRunFailed(run.id, error)) {
+    await recordAgentRunFinished({ issueId: run.issueId, agentUserId: agent.userId }, 'failed');
+  }
 }
 
 // A person is waiting for the answer, so a refusal fails it at once instead of after

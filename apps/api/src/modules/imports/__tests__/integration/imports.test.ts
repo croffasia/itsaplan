@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import ExcelJS from 'exceljs';
 import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
+import { addProjectMember } from '#tests/helpers/members';
 import { resetDb } from '#tests/helpers/db';
 import { getProjectByRef } from '#modules/projects/service';
 import { createMappedImport } from '../../service';
@@ -15,7 +16,7 @@ async function setup() {
   const owner = await signUpTestUser();
   const asOwner = authedApi(owner.cookie);
   await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
-  return { asOwner };
+  return { asOwner, owner };
 }
 
 async function uploadWorkbook(
@@ -97,6 +98,58 @@ describe('imports', () => {
     // Treaty revives the iso() date into a Date on the client, though its type
     // still says string — hence the cast.
     expect(new Date(first!.dueDate as string).toISOString().slice(0, 10)).toBe('2026-09-01');
+  });
+
+  it('keeps unresolved named CSV assignees empty in an auto-assigning column', async () => {
+    const { asOwner, owner } = await setup();
+    await addProjectMember(asOwner, 'MKT');
+    const project = asOwner.projects({ projectKey: 'MKT' });
+    const { assignees, columns } = (await project.get()).data!;
+    const active = assignees.find((a) => a.userId === owner.userId)!;
+    const departing = assignees.find((a) => a.userId !== owner.userId)!;
+    expect(
+      (
+        await project
+          .columns({ columnId: columns[0].id })
+          .patch({ autoAssignUserId: active.userId })
+      ).status,
+    ).toBe(200);
+    const uploaded = await project['chat-attachments'].post({
+      filename: 'tasks.csv',
+      contentBase64: Buffer.from(
+        [
+          'Task,Assignee',
+          'First,' + active.email,
+          'Second,' + departing.email,
+          'Third,unknown@example.test',
+          'Fourth,',
+        ].join('\n'),
+      ).toString('base64'),
+      contentType: 'text/csv',
+    });
+    expect(uploaded.status).toBe(201);
+    const draft = await mapImport(uploaded.data!.id, { title: 'Task', assignee: 'Assignee' });
+    expect((await asOwner.god.users({ userId: departing.userId }).deactivate.post()).status).toBe(
+      200,
+    );
+
+    const confirmed = await asOwner.imports({ importId: draft.id }).confirm.post();
+    expect(confirmed.status).toBe(200);
+    expect(confirmed.data!.imported.map((i) => i.title)).toEqual([
+      'First',
+      'Second',
+      'Third',
+      'Fourth',
+    ]);
+    expect(confirmed.data!.skipped).toEqual([]);
+    expect((await asOwner.imports({ importId: draft.id }).get()).data!.status).toBe('confirmed');
+    const issues = (await project.issues.get()).data!;
+    expect(Object.fromEntries(issues.map((i) => [i.title, i.assigneeUserId]))).toEqual({
+      First: active.userId,
+      Second: null,
+      Third: null,
+      Fourth: active.userId,
+    });
   });
 
   it('marks a row whose title the project already has and skips it on confirm', async () => {

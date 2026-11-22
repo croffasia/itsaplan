@@ -36,6 +36,8 @@ export const queueQuery = t.Object({
   pageSize: t.Optional(t.Numeric({ minimum: 1, maximum: 100, multipleOf: 1 })),
 });
 const person = { name: t.String(), image: t.Nullable(t.String()) };
+const actor = (whenAgent: string) =>
+  t.Object({ ...person, agentUsername: t.Nullable(t.String({ description: whenAgent })) });
 const run = IssueAgentRunPageResponse.properties.items.items;
 export const RunnerQueueResponse = t.Object({
   ...pageResponse(
@@ -53,16 +55,15 @@ export const RunnerQueueResponse = t.Object({
       initiator: t.Nullable(t.Object({ id: t.String(), ...person }), {
         description: "The person the run works for; null for the project's own work.",
       }),
-      startedBy: t.Nullable(
-        t.Object({
-          ...person,
-          agentUsername: t.Nullable(t.String({ description: 'Set when an agent queued it.' })),
-        }),
-        {
-          description:
-            'Who queued the run or made the change that started it; null for a timed schedule.',
-        },
-      ),
+      startedBy: t.Nullable(actor('Set when an agent queued it.'), {
+        description:
+          'Who queued the run or made the change that started it; null for a timed schedule.',
+      }),
+      canceledBy: t.Nullable(actor('Set when an agent stopped it.'), {
+        description:
+          'Who stopped the run before it ended; null for a run that ended by itself or that the ' +
+          'api ended, as when its issue moved to another column or project.',
+      }),
       parentRun: t.Nullable(t.Object({ id: t.Number(), projectRef: t.String() }), {
         description: 'The run in which an agent queued this one.',
       }),
@@ -79,8 +80,9 @@ export const RunnerQueueResponse = t.Object({
       ),
       canReadSteps: t.Boolean({
         description:
-          "Whether the caller reads the run's steps, what its agent did: whoever runs the team, " +
-          "an owner of the project, whoever may create or change its agents, and the run's initiator.",
+          "Whether the caller reads the run's steps, what its agent did, and may stop it: whoever " +
+          'runs the team, an owner of the project, whoever may create or change its agents, and ' +
+          "the run's initiator.",
       }),
       inputTokens: t.Nullable(t.Number({ description: 'What the last model call read.' })),
       outputTokens: t.Nullable(t.Number({ description: 'What the last model call wrote.' })),

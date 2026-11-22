@@ -7,6 +7,7 @@ import {
   ClaimResponse,
   heartbeatBody,
   resultBody,
+  RunAckResponse,
   runParams,
   runEventsBody,
   RunEventsAck,
@@ -37,18 +38,21 @@ export const agentRunnerRoutes = new Elysia({
   .post(
     '/agent-runs/:runId/heartbeat',
     async ({ agent, params, body }) => {
-      const ok = await heartbeatRun(agent.id, params.runId, body?.attempt);
-      if (!ok) throw new HttpError(404, 'Run not found');
-      return noContent();
+      const ack = await heartbeatRun(agent.id, params.runId, body?.attempt);
+      if (!ack) throw new HttpError(404, 'Run not found');
+      return ack;
     },
     {
       runnerAgent: true,
       params: runParams,
       body: heartbeatBody,
-      response: { 204: t.Void(), ...commonErrors },
+      response: { 200: RunAckResponse, ...commonErrors },
       detail: {
         summary: 'Extend a run lease',
-        description: 'Keep a claimed run leased while the runner is still working on it.',
+        description:
+          'Keep a claimed run leased while the runner is still working on it. Answers ' +
+          '`canceled` when someone stopped the run, which is how a runner writing nothing ' +
+          'learns of it.',
       },
     },
   )
@@ -64,7 +68,9 @@ export const agentRunnerRoutes = new Elysia({
       detail: {
         summary: 'Append external run events',
         description:
-          'Ordered, idempotent event batches for the current leased attempt. Session ids name local Codex threads.',
+          'Ordered, idempotent event batches for the current leased attempt. Session ids name ' +
+          'local Codex threads. Answers `canceled` when someone stopped the run: kill the ' +
+          'command and stop reporting.',
       },
     },
   )

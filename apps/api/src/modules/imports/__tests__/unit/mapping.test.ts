@@ -54,8 +54,7 @@ describe('applyMapping', () => {
       labelIds: [1, 2],
       assigneeUserId: 'u1',
     });
-    // An unknown label and an unmatched assignee resolve to nothing, not to an error.
-    expect(applied[1].draft).toEqual({ title: 'B', dueDate: '2026-09-07' });
+    expect(applied[1].draft).toEqual({ title: 'B', dueDate: '2026-09-07', assigneeUserId: null });
     // Skips name the sheet row, blank lines included.
     expect(applied[2]).toEqual({ rowNumber: 4, reason: 'Empty title' });
     expect(applied[3].reason).toBe('"bad-date" is not a readable date');

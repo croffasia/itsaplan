@@ -301,6 +301,8 @@ export const qk = {
   // The linkable initiatives behind the issue picker, narrowed by the typed search.
   initiativeOptions: (projectKey: string, params: Record<string, unknown>) =>
     ['initiatives', projectKey, 'options', params] as const,
+  // The caller's favorite initiatives in a project, listed under Initiatives in the sidebar.
+  favoriteInitiatives: (projectKey: string) => ['initiatives', projectKey, 'favorites'] as const,
   initiativeCounts: (projectKey: string) => ['initiativeCounts', projectKey] as const,
   initiative: (id: number) => ['initiative', id] as const,
   initiativeFeed: (id: number) => ['initiativeFeed', id] as const,

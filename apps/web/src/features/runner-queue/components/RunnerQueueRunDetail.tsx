@@ -86,7 +86,7 @@ export default function RunnerQueueRunDetail({
               {run.kind === 'internal' ? (
                 <AgentRunInternalTrace runId={run.id} />
               ) : (
-                <AgentRunExternalTrace runId={run.id} />
+                <AgentRunExternalTrace run={run} />
               )}
             </TabsContent>
           )}

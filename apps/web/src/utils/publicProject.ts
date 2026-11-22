@@ -24,6 +24,7 @@ export function toPublicProjectDetail(
       email: '',
       username: null,
       canReadWorkItems: false,
+      canAssign: true,
     })),
     customFields: scaffold.customFields,
     // A public page creates nothing, so it needs no templates.

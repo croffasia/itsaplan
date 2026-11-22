@@ -28,6 +28,7 @@ export interface Initiative {
   labelIds: number[];
   progress: InitiativeProgress;
   health: InitiativeHealth | null;
+  favorite: boolean;
 }
 
 // An initiative as a picker option, for linking an issue to one.
@@ -129,10 +130,16 @@ export const listInitiativeOptions = (
   );
 };
 
+export const listFavoriteInitiatives = (projectKey: string) =>
+  request<InitiativeOption[]>(`/projects/${encodeURIComponent(projectKey)}/initiatives/favorites`);
+
 export const initiativeCounts = (projectKey: string) =>
   request<InitiativeCounts>(`/projects/${projectKey}/initiatives/counts`);
 
 export const getInitiative = (id: number) => request<Initiative>(`/initiatives/${id}`);
+
+export const setInitiativeFavorite = (id: number, favorite: boolean) =>
+  request<void>(`/initiatives/${id}/favorite`, { method: favorite ? 'PUT' : 'DELETE' });
 
 export const createInitiative = (projectKey: string, input: NewInitiativeInput) =>
   request<Initiative>(`/projects/${projectKey}/initiatives`, {

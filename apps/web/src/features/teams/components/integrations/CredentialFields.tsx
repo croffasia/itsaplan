@@ -1,29 +1,18 @@
 import { KeyRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type {
-  CredentialCheck,
-  IntegrationCredential,
-  IntegrationMeta,
-} from '@/lib/api/endpoints/integrations';
+import type { IntegrationCredential, IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { IntegrationIcon } from '@/components/common/IntegrationIcon';
 import { cn } from '@/lib/utils';
 import type { CredentialFormState } from '../../hooks/useCredentialForm';
 import { toolIntegrations } from '../../utils/toolCatalog';
-import { CredentialCheckStatus } from './CredentialCheckStatus';
-import { CredentialField } from './CredentialField';
+import { CredentialInputs } from './CredentialInputs';
 import { IntegrationWebsiteLink } from '../IntegrationWebsiteLink';
-
-function secretStatus(check: CredentialCheck | null): 'valid' | 'invalid' | undefined {
-  if (check === 'valid') return 'valid';
-  if (check === 'rejected' || check === 'unavailable') return 'invalid';
-  return undefined;
-}
+import { ToolLockedNotice } from '../ToolLockedNotice';
 
 // The credential form of one integration: what it is, its fields and the label. A tool
-// integration also lists the tools agents get with the credential.
+// integration also lists the tools agents get with the credential. One that comes with
+// another edition shows what it is and its tools, and no form.
 export function CredentialFields({
   meta,
   existing,
@@ -40,8 +29,6 @@ export function CredentialFields({
 }) {
   const t = useTranslations('teams.integrations');
   const tools = toolIntegrations([meta])[0]?.tools ?? [];
-  // The check's answer is shown on the first secret, the field it is usually about.
-  const checkedField = meta.credentialSchema.find((f) => f.type === 'secret')?.key;
 
   return (
     <div className={cn('space-y-6', className)}>
@@ -56,6 +43,8 @@ export function CredentialFields({
         {meta.website && <IntegrationWebsiteLink integration={meta.label} href={meta.website} />}
       </div>
 
+      {meta.locked && <ToolLockedNotice integration={meta.label} />}
+
       {connected && (
         <div className="flex items-center gap-3 rounded-lg bg-muted/50 px-3.5 py-3">
           <KeyRound className="size-4 shrink-0 text-muted-foreground" />
@@ -69,32 +58,7 @@ export function CredentialFields({
       )}
 
       <div className="space-y-6">
-        {meta.credentialSchema.map((field) => (
-          <div key={field.key} className="space-y-1.5">
-            <CredentialField
-              field={field}
-              value={form.values[field.key]}
-              existing={existing}
-              status={field.key === checkedField ? secretStatus(form.check) : undefined}
-              onChange={(value) => form.setField(field.key, value)}
-            />
-            {field.key === checkedField && (
-              <CredentialCheckStatus check={form.check} integration={meta.label} />
-            )}
-          </div>
-        ))}
-
-        <div className="space-y-1.5">
-          <Label htmlFor="credential-label">{t('label')}</Label>
-          <Input
-            id="credential-label"
-            autoComplete="off"
-            value={form.label}
-            onChange={(e) => form.setLabel(e.target.value)}
-            placeholder={t('labelPlaceholder')}
-          />
-          <p className="text-xs text-muted-foreground">{t('labelHint')}</p>
-        </div>
+        {!meta.locked && <CredentialInputs meta={meta} existing={existing} form={form} />}
 
         {tools.length > 0 && (
           <div className="space-y-2.5 border-t pt-5">

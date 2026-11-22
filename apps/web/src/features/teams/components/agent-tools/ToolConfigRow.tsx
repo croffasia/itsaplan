@@ -53,7 +53,7 @@ export function ToolConfigRow({
             {!tool.supported &&
               (locked ? (
                 <NeedsProLink
-                  feature="http-tools"
+                  feature={tool.source ? 'http-tools' : 'agent-tools'}
                   label={t('locked')}
                   hint={t('lockedHint')}
                   className="mt-1"

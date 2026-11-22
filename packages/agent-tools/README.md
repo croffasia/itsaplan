@@ -93,6 +93,20 @@ Each call replaces the previous ones, and a call without an argument removes the
 key that is already taken throws. A configured tool whose integration is removed stays
 stored, and the runtime skips it.
 
+## An integration another edition runs
+
+An integration whose code another edition of the app holds is listed here alone: its
+folder under `tools/` exports an `IntegrationListing` (what the integration is, its
+credential fields and its tools, with no `inputSchema` or `execute`), and
+`LOCKED_INTEGRATIONS` in `src/registry.ts` lists it. The catalog shows it `locked: true`,
+last; `getTool` and `getIntegration` do not know it, so no credential or configured tool
+of it can be added and no agent gets one. `getLockedTool` names a configured tool kept from
+a time it ran.
+
+That edition builds the integration on `lockedListing(key)`, adding each tool's
+`inputSchema` and `execute`, and adds it with `setExtraIntegrations`. The integration then
+takes the listing's place. Its names and descriptions stay in the listing.
+
 ## An integration without a credential
 
 An integration whose tools need no account with an external service (PDF downloads

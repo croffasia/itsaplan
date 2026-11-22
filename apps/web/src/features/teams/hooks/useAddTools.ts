@@ -21,8 +21,7 @@ export interface ToolIntegrationEntry {
   credentials: IntegrationOption[];
   // The credential its tools are added on, null for none.
   credentialId: number | null;
-  // False while it needs a credential and the team has none: its tools are listed
-  // and cannot be selected.
+  // False for a locked one or one missing its credential: its tools cannot be selected.
   ready: boolean;
   // Tools already configured on that credential. The API answers 409 for a duplicate.
   added: string[];
@@ -60,7 +59,7 @@ export function useAddTools(
         if (integration.takesCredential) {
           credentialId = integration.key in chosen ? chosen[integration.key] : (own[0]?.id ?? null);
         }
-        const ready = !integration.needsCredential || own.length > 0;
+        const ready = !integration.locked && (!integration.needsCredential || own.length > 0);
         const added = (configured ?? [])
           .filter((c) => c.credentialId === credentialId)
           .map((c) => c.toolKey);

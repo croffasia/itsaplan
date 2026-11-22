@@ -53,7 +53,8 @@ export function CredentialCatalogDialog({
       (!q || c.label.toLowerCase().includes(q) || c.key.toLowerCase().includes(q)),
   );
   const active = matches.find((c) => c.key === activeKey) ?? matches[0];
-  const form = useCredentialForm(teamId, active, null, onClose);
+  // An integration that comes with another edition has no form to fill in.
+  const form = useCredentialForm(teamId, active?.locked ? undefined : active, null, onClose);
 
   return (
     <Modal title={t('add')} scope={teamName} onClose={() => onClose()} wide="xl" flush>

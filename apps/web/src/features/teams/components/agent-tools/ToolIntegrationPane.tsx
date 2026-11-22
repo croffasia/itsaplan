@@ -3,6 +3,7 @@ import { IntegrationIcon } from '@/components/common/IntegrationIcon';
 import type { ToolIntegrationEntry } from '../../hooks/useAddTools';
 import { toolSections } from '../../utils/toolCatalog';
 import { IntegrationWebsiteLink } from '../IntegrationWebsiteLink';
+import { ToolLockedNotice } from '../ToolLockedNotice';
 import { ToolCredentialBar } from './ToolCredentialBar';
 import { ToolCredentialNotice } from './ToolCredentialNotice';
 import { ToolSectionList } from './ToolSectionList';
@@ -54,7 +55,12 @@ export function ToolIntegrationPane({
           <IntegrationWebsiteLink integration={integration.label} href={integration.website} />
         )}
       </div>
-      {!ready && <ToolCredentialNotice integration={integration.label} onAdd={onAddCredential} />}
+      {integration.locked && (
+        <ToolLockedNotice integration={integration.label} className="mx-4 mb-2 sm:mx-6" />
+      )}
+      {!ready && !integration.locked && (
+        <ToolCredentialNotice integration={integration.label} onAdd={onAddCredential} />
+      )}
       <div className="min-h-0 flex-1 overflow-y-auto px-2 sm:px-4">
         {toolSections(tools).map((section) => (
           <ToolSectionList

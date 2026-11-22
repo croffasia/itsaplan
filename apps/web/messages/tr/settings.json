@@ -98,6 +98,7 @@
     "description": "Hangi iş olaylarının nereye bildirileceğini seçin.",
     "email": "E-posta",
     "telegram": "Telegram",
+    "slack": "Slack",
     "push": "Anlık",
     "events": {
       "assigned": "Bir işe sorumlu olarak atandığımda",
@@ -110,6 +111,17 @@
     "telegramAccount": "Telegram hesabı",
     "telegramAccountHint": "Telegram bildirimleri, dahil olduğunuz tüm projeler için profilinize bağlı olan hesaba gönderilir.",
     "noTelegramAccount": "Bağlı Telegram hesabı yok",
+    "slackAccount": "Slack hesabı",
+    "slackAccountHint": "Bu projenin Slack bildirimleri, {workspace} Slack çalışma alanındaki hesabınıza gider.",
+    "noSlackAccount": "Bağlı Slack hesabı yok",
+    "slackConnected": "Bağlı",
+    "slackConnect": "Bağla",
+    "slackDisconnect": "Bağlantıyı kes",
+    "slackConnectedToast": "Slack hesabı bağlandı",
+    "slackConnecting": "Slack hesabınız bağlanıyor…",
+    "slackConnectFailed": "Slack hesabı bağlanmadı",
+    "slackConnectCancelled": "Bağlantı Slack'te iptal edildi. Projenin bildirim ayarlarından yeniden bağlayın.",
+    "slackBack": "Uygulamaya dön",
     "preferencesSaved": "Bildirim tercihleri kaydedildi"
   },
   "transfer": {

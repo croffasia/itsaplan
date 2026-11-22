@@ -57,6 +57,10 @@
       "label": "Telegram",
       "description": "設定使用者關聯 Telegram 帳號所用的機器人，以及專案未單獨設定時傳送通知的機器人。"
     },
+    "slack": {
+      "label": "Slack",
+      "description": "以 Slack 私訊傳送通知。"
+    },
     "email": {
       "label": "郵件服務供應商",
       "description": "設定執行個體用於傳送密碼重設、電子郵件驗證和登入連結的郵件服務供應商。"

@@ -98,6 +98,7 @@
     "description": "انتخاب کنید کدام رویدادهای تسک را دریافت می‌کنید و کجا.",
     "email": "ایمیل",
     "telegram": "Telegram",
+    "slack": "Slack",
     "push": "فوری",
     "events": {
       "assigned": "به یک تسک تخصیص داده شدید",
@@ -110,6 +111,17 @@
     "telegramAccount": "حساب Telegram",
     "telegramAccountHint": "اعلان‌های Telegram به حسابی که به پروفایل شما متصل است ارسال می‌شود، برای هر پروژه‌ای که در آن هستید.",
     "noTelegramAccount": "حساب Telegram متصل نیست",
+    "slackAccount": "حساب Slack",
+    "slackAccountHint": "اعلان‌های Slack این پروژه به حساب شما در فضای کاری Slack ‏{workspace} می‌رسد.",
+    "noSlackAccount": "هیچ حساب Slack وصل نیست",
+    "slackConnected": "وصل است",
+    "slackConnect": "وصل کردن",
+    "slackDisconnect": "قطع اتصال",
+    "slackConnectedToast": "حساب Slack وصل شد",
+    "slackConnecting": "در حال وصل کردن حساب Slack…",
+    "slackConnectFailed": "حساب Slack وصل نشد",
+    "slackConnectCancelled": "اتصال در Slack لغو شد. دوباره از تنظیمات اعلان پروژه وصل کنید.",
+    "slackBack": "بازگشت به برنامه",
     "preferencesSaved": "تنظیمات اعلان ذخیره شد"
   },
   "transfer": {

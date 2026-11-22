@@ -946,6 +946,18 @@
       "removePrice": "删除价格",
       "save": "保存价格"
     },
+    "slack": {
+      "title": "Slack",
+      "description": "本工作区的项目用来发送通知的 Slack 应用。",
+      "saved": "Slack 设置已保存",
+      "notifications": "Slack 通知",
+      "notificationsHint": "开启后，连接了 Slack 账号的成员会以私信收到所选事件的通知。",
+      "app": "Slack 应用",
+      "instanceApp": "实例应用",
+      "ownApp": "自有应用",
+      "instanceAppHint": "由实例管理员设置。成员需要有 Slack 工作区 {workspace} 的账号。",
+      "instanceMissing": "实例管理员尚未设置 Slack 应用。选择“自有应用”即可在此设置。"
+    },
     "queue": {
       "title": "代理运行"
     }

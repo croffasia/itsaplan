@@ -410,6 +410,12 @@
     "botTokenHint": "保存时会通过 Telegram 验证令牌，错误令牌会立即被拒绝。",
     "resolvedHint": "根据令牌解析。用户关联账户时会看到此机器人。"
   },
+  "slack": {
+    "saved": "Slack 设置已保存",
+    "app": "Slack 应用",
+    "appConfigured": "开启后，成员可以在项目的通知设置中连接自己的 Slack 账号。",
+    "appMissing": "添加机器人令牌、Client ID 和客户端密钥后即可开启应用。"
+  },
   "email": {
     "saved": "邮件服务商已保存",
     "provider": "邮件服务商",

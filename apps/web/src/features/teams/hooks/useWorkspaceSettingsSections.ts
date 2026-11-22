@@ -1,4 +1,12 @@
-import { BadgeDollarSign, Clock3, Coins, Info, LayoutTemplate, ShieldCheck } from 'lucide-react';
+import {
+  BadgeDollarSign,
+  Clock3,
+  Coins,
+  Hash,
+  Info,
+  LayoutTemplate,
+  ShieldCheck,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useWorkspaceSections } from '@/cloud';
 import type { WorkspaceSummary } from '@/lib/api/endpoints/workspaces';
@@ -31,6 +39,10 @@ export function useWorkspaceSettingsSections(workspace: WorkspaceSummary): Works
       badge: detail && String(detail.managerCount),
     },
     { id: 'model-prices', label: t('modelPrices.title'), icon: BadgeDollarSign, group: 'settings' },
+    // It carries the secrets of a Slack app, so only the owner opens it.
+    ...(workspace.role === 'owner'
+      ? [{ id: 'slack', label: t('slack.title'), icon: Hash, group: 'settings' as const }]
+      : []),
   ]);
   return WORKSPACE_SECTION_GROUPS.flatMap((group) =>
     sections.filter((section) => section.group === group),

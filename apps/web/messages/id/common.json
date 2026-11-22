@@ -313,5 +313,16 @@
     "range": "{first}-{last} dari {total}"
   },
   "upgradeToPro": "Upgrade ke Pro",
-  "signingOut": "Sedang keluar…"
+  "signingOut": "Sedang keluar…",
+  "slackApp": {
+    "setup": "Buat aplikasi di api.slack.com/apps dengan bot scope chat:write dan Redirect URL. Pasang aplikasi ke workspace Slack Anda, lalu salin Client ID dan rahasianya dari Basic Information.",
+    "botToken": "Token bot",
+    "botTokenHint": "Di OAuth & Permissions. Slack memeriksanya saat Anda menyimpan.",
+    "clientId": "Client ID",
+    "clientSecret": "Rahasia klien",
+    "redirectUrl": "Redirect URL",
+    "redirectUrlHint": "Tambahkan di Slack, pada OAuth & Permissions → Redirect URLs.",
+    "workspace": "Workspace Slack",
+    "workspaceHint": "Workspace Slack tempat aplikasi dipasang. Hanya akun di workspace ini yang dapat terhubung."
+  }
 }

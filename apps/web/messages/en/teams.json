@@ -946,6 +946,18 @@
       "removePrice": "Remove price",
       "save": "Save price"
     },
+    "slack": {
+      "title": "Slack",
+      "description": "The Slack app this workspace's projects send notifications through.",
+      "saved": "Slack settings saved",
+      "notifications": "Slack notifications",
+      "notificationsHint": "When on, members who connect their Slack account get direct messages for the events they choose.",
+      "app": "Slack app",
+      "instanceApp": "Instance app",
+      "ownApp": "Own app",
+      "instanceAppHint": "Set up by the instance administrator. Members need an account in the {workspace} Slack workspace.",
+      "instanceMissing": "The instance administrator has not set up a Slack app. Choose Own app to set one up here."
+    },
     "queue": {
       "title": "Agent runs"
     }

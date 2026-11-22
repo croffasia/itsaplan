@@ -98,6 +98,8 @@ import {
   sendTestEmail,
 } from './email-templates';
 import { getInstanceBotSettings, setInstanceBotSettings } from '#modules/telegram/service';
+import { getInstanceSlackSettings, setInstanceSlackSettings } from '#modules/slack/service';
+import { InstanceSlackSettingsBody, InstanceSlackSettingsResponse } from '#modules/slack/model';
 import {
   setStorageSettings,
   getHotkeySettings,
@@ -709,6 +711,24 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       },
     },
   )
+
+  .get('/god/slack-settings', () => getInstanceSlackSettings(), {
+    response: { 200: InstanceSlackSettingsResponse, ...errors(401, 403) },
+    detail: {
+      summary: 'Get Slack app settings',
+      description: 'Get the instance Slack app notifications go through (secrets redacted).',
+    },
+  })
+
+  .put('/god/slack-settings', ({ body }) => setInstanceSlackSettings(body), {
+    body: InstanceSlackSettingsBody,
+    response: { 200: InstanceSlackSettingsResponse, ...errors(400, 401, 403) },
+    detail: {
+      summary: 'Update Slack app settings',
+      description:
+        'Update the instance Slack app and whether it is in use. A new bot token is verified with Slack before it is stored.',
+    },
+  })
 
   .get(
     '/god/users',

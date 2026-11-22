@@ -313,5 +313,16 @@
     "range": "{first}-{last} از {total}"
   },
   "upgradeToPro": "ارتقا به Pro",
-  "signingOut": "در حال خروج…"
+  "signingOut": "در حال خروج…",
+  "slackApp": {
+    "setup": "در api.slack.com/apps برنامه‌ای با bot scope ‏chat:write و Redirect URL بسازید. آن را در فضای کاری Slack نصب کنید، سپس Client ID و secret را از Basic Information کپی کنید.",
+    "botToken": "توکن ربات",
+    "botTokenHint": "در بخش OAuth & Permissions. Slack هنگام ذخیره آن را بررسی می‌کند.",
+    "clientId": "Client ID",
+    "clientSecret": "Client secret",
+    "redirectUrl": "Redirect URL",
+    "redirectUrlHint": "آن را در Slack، در OAuth & Permissions → Redirect URLs اضافه کنید.",
+    "workspace": "فضای کاری Slack",
+    "workspaceHint": "فضای کاری Slack که برنامه در آن نصب شده است. فقط حساب‌های همین فضا می‌توانند وصل شوند."
+  }
 }

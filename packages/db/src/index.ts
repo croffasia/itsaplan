@@ -35,6 +35,17 @@ export {
 } from './domains/notification-settings';
 export { getWebPushConfig, type WebPushConfig } from './domains/web-push';
 export {
+  SLACK_APP_SECRET_KEY,
+  getInstanceSlackConfig,
+  isSlackAppUsable,
+  readWorkspaceSlackConfig,
+  slackAppForProject,
+  slackAppForWorkspace,
+  type InstanceSlackConfig,
+  type SlackApp,
+  type WorkspaceSlackConfig,
+} from './domains/slack';
+export {
   JOB_SETTINGS_KEY,
   JOB_SETTING_BOUNDS,
   defaultJobSettings,

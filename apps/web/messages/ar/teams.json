@@ -946,6 +946,18 @@
       "removePrice": "احذف السعر",
       "save": "احفظ السعر"
     },
+    "slack": {
+      "title": "Slack",
+      "description": "تطبيق Slack الذي ترسل به مشاريع مساحة العمل هذه الإشعارات.",
+      "saved": "حُفظت إعدادات Slack",
+      "notifications": "إشعارات Slack",
+      "notificationsHint": "عند التفعيل، يتلقى الأعضاء الذين ربطوا حساب Slack رسائل مباشرة عن الأحداث التي يختارونها.",
+      "app": "تطبيق Slack",
+      "instanceApp": "تطبيق المثيل",
+      "ownApp": "تطبيق خاص",
+      "instanceAppHint": "أعدّه مسؤول المثيل. يحتاج الأعضاء إلى حساب في مساحة عمل Slack ‏{workspace}.",
+      "instanceMissing": "لم يُعدّ مسؤول المثيل تطبيق Slack. اختر «تطبيق خاص» لإعداده هنا."
+    },
     "queue": {
       "title": "تشغيلات الوكلاء"
     }

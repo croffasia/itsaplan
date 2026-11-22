@@ -6,6 +6,21 @@ export const webhookBody = t.String();
 
 export const WebhookAckResponse = t.Object({ ok: t.Boolean(), handled: t.String() });
 
+export const DevelopmentRepositoryResponse = t.Object({
+  id: t.Number(),
+  provider: t.Union([
+    t.Literal('github'),
+    t.Literal('gitlab'),
+    t.Literal('gitea'),
+    t.Literal('forgejo'),
+  ]),
+  baseUrl: t.String({
+    description: 'Address of the provider instance, such as https://github.com.',
+  }),
+  fullName: t.String({ description: "The repository's path on its provider, such as owner/name." }),
+  webUrl: t.String(),
+});
+
 const PipelineStatusResponse = t.Union([
   t.Literal('pending'),
   t.Literal('running'),

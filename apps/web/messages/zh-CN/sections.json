@@ -57,6 +57,10 @@
       "label": "Telegram",
       "description": "设置用户关联 Telegram 账户所用的机器人，以及项目未单独配置时发送通知的机器人。"
     },
+    "slack": {
+      "label": "Slack",
+      "description": "以 Slack 私信发送通知。"
+    },
     "email": {
       "label": "邮件服务商",
       "description": "设置实例用于发送密码重置、邮箱验证和登录链接的邮件服务商。"

@@ -25,6 +25,7 @@ import {
   archiveDocument,
   restoreDocument,
   setDocumentFavorite,
+  setDocumentPinned,
   listDocumentRevisions,
   listDocumentAssets,
   uploadDocumentAsset,
@@ -291,6 +292,19 @@ export function useSetDocumentFavorite(projectKey: string | null) {
       for (const [queryKey, data] of context.previousLists) qc.setQueryData(queryKey, data);
     },
     onSettled: (_result, _error, { documentId }) => {
+      if (!projectKey) return;
+      void qc.invalidateQueries({ queryKey: qk.document(projectKey, documentId) });
+      invalidateLists(qc, projectKey);
+    },
+  });
+}
+
+export function useSetDocumentPinned(projectKey: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ documentId, isPinned }: { documentId: number; isPinned: boolean }) =>
+      setDocumentPinned(projectKey!, documentId, isPinned),
+    onSuccess: (_result, { documentId }) => {
       if (!projectKey) return;
       void qc.invalidateQueries({ queryKey: qk.document(projectKey, documentId) });
       invalidateLists(qc, projectKey);

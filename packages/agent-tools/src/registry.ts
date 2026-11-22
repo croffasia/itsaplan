@@ -9,12 +9,14 @@ import { ToolConfigError } from './errors';
 import { jina } from './tools/jina';
 import { firecrawl } from './tools/firecrawl';
 import { telegram } from './tools/telegram';
+import { slack } from './tools/slack';
 import { threads } from './tools/threads';
 import { instagram } from './tools/instagram';
 import { notion } from './tools/notion';
 import { baserow } from './tools/baserow';
 import { gitea } from './tools/gitea';
 import { github } from './tools/github';
+import { gitlab } from './tools/gitlab';
 import { pdf } from './tools/pdf';
 import { keenable } from './tools/keenable';
 import { dataforseo } from './tools/dataforseo';
@@ -26,12 +28,14 @@ export const INTEGRATIONS: Integration[] = [
   jina,
   firecrawl,
   telegram,
+  slack,
   threads,
   instagram,
   notion,
   baserow,
   gitea,
   github,
+  gitlab,
   pdf,
   keenable,
   dataforseo,

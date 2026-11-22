@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import type { Initiative, InitiativeStatus } from '@/lib/api/endpoints/initiatives';
 import { initiativePath } from '@/utils/paths';
 import { parseDate } from '@/utils/dates';
+import { assignableMembers } from '@/utils/project';
 import { useCreateInitiative, useUpdateInitiative } from '@/services/initiatives.service';
 import { useProjectQuery } from '@/services/projects.service';
 import Modal, { useModalFullscreen } from './Modal';
@@ -125,7 +126,7 @@ export default function InitiativeDialog({
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <InitiativeStatusSelect value={status} onChange={setStatus} />
 
-          {project?.assignees.some((a) => a.kind === 'member') && (
+          {project && (assignableMembers(project.assignees).length > 0 || ownerUserId != null) && (
             <AssigneeSelect
               assignees={project.assignees}
               value={ownerUserId}

@@ -1,5 +1,5 @@
 {
-  "id": "d67d6c34-5125-4c64-b564-7a637f645755",
+  "id": "12d4a151-7262-4c8c-8c14-421bc162b34e",
   "prevId": "712fa733-1fac-4eb8-b16c-9ca2fb3980be",
   "version": "7",
   "dialect": "postgresql",
@@ -9139,12 +9139,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "intake_request_id": {
-          "name": "intake_request_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "type": {
           "name": "type",
           "type": "text",
@@ -9255,22 +9249,6 @@
           "method": "btree",
           "with": {}
         },
-        "notification_intake_request_idx": {
-          "name": "notification_intake_request_idx",
-          "columns": [
-            {
-              "expression": "intake_request_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"notification\".\"intake_request_id\" IS NOT NULL",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "notification_source_activity_idx": {
           "name": "notification_source_activity_idx",
           "columns": [
@@ -9367,19 +9345,6 @@
           "onDelete": "set null",
           "onUpdate": "no action"
         },
-        "notification_intake_request_id_intake_request_id_fk": {
-          "name": "notification_intake_request_id_intake_request_id_fk",
-          "tableFrom": "notification",
-          "tableTo": "intake_request",
-          "columnsFrom": [
-            "intake_request_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
         "notification_actor_user_id_user_id_fk": {
           "name": "notification_actor_user_id_user_id_fk",
           "tableFrom": "notification",
@@ -9400,11 +9365,11 @@
       "checkConstraints": {
         "notification_type_check": {
           "name": "notification_type_check",
-          "value": "\"notification\".\"type\" IN ('assigned', 'mentioned', 'commented', 'state_changed', 'reacted', 'intake_accepted', 'intake_declined', 'intake_snoozed', 'intake_duplicate')"
+          "value": "\"notification\".\"type\" IN ('assigned', 'mentioned', 'commented', 'state_changed', 'reacted')"
         },
         "notification_target_check": {
           "name": "notification_target_check",
-          "value": "(\"notification\".\"intake_request_id\" IS NOT NULL AND \"notification\".\"document_id\" IS NULL) OR (\"notification\".\"intake_request_id\" IS NULL AND ((\"notification\".\"issue_id\" IS NULL) <> (\"notification\".\"document_id\" IS NULL)))"
+          "value": "(\"notification\".\"issue_id\" IS NULL) <> (\"notification\".\"document_id\" IS NULL)"
         }
       },
       "isRLSEnabled": false
@@ -9517,7 +9482,7 @@
       "checkConstraints": {
         "notification_delivery_channel_check": {
           "name": "notification_delivery_channel_check",
-          "value": "\"notification_delivery\".\"channel\" IN ('email', 'telegram', 'push')"
+          "value": "\"notification_delivery\".\"channel\" IN ('email', 'telegram', 'slack', 'push')"
         }
       },
       "isRLSEnabled": false
@@ -9626,13 +9591,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": true
-        },
-        "intake_enabled": {
-          "name": "intake_enabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
         },
         "points_estimate_enabled": {
           "name": "points_estimate_enabled",
@@ -12541,6 +12499,13 @@
           "notNull": true,
           "default": "'{}'::jsonb"
         },
+        "slack_events": {
+          "name": "slack_events",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
         "push_events": {
           "name": "push_events",
           "type": "jsonb",
@@ -13721,478 +13686,6 @@
       },
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.intake_attachment": {
-      "name": "intake_attachment",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "public_id": {
-          "name": "public_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "intake_request_id": {
-          "name": "intake_request_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "s3_key": {
-          "name": "s3_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "filename": {
-          "name": "filename",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "content_type": {
-          "name": "content_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "size_bytes": {
-          "name": "size_bytes",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "intake_attachment_request_idx": {
-          "name": "intake_attachment_request_idx",
-          "columns": [
-            {
-              "expression": "intake_request_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "intake_attachment_intake_request_id_intake_request_id_fk": {
-          "name": "intake_attachment_intake_request_id_intake_request_id_fk",
-          "tableFrom": "intake_attachment",
-          "tableTo": "intake_request",
-          "columnsFrom": [
-            "intake_request_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "intake_attachment_public_id_unique": {
-          "name": "intake_attachment_public_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "public_id"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.intake_comment": {
-      "name": "intake_comment",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "intake_request_id": {
-          "name": "intake_request_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "actor_user_id": {
-          "name": "actor_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "actor_name": {
-          "name": "actor_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "body": {
-          "name": "body",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "intake_comment_request_idx": {
-          "name": "intake_comment_request_idx",
-          "columns": [
-            {
-              "expression": "intake_request_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "intake_comment_intake_request_id_intake_request_id_fk": {
-          "name": "intake_comment_intake_request_id_intake_request_id_fk",
-          "tableFrom": "intake_comment",
-          "tableTo": "intake_request",
-          "columnsFrom": [
-            "intake_request_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "intake_comment_actor_user_id_user_id_fk": {
-          "name": "intake_comment_actor_user_id_user_id_fk",
-          "tableFrom": "intake_comment",
-          "tableTo": "user",
-          "columnsFrom": [
-            "actor_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.intake_request": {
-      "name": "intake_request",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "project_id": {
-          "name": "project_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "''"
-        },
-        "priority": {
-          "name": "priority",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "source": {
-          "name": "source",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'app'"
-        },
-        "external_id": {
-          "name": "external_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "submitted_by_user_id": {
-          "name": "submitted_by_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "submitted_by_name": {
-          "name": "submitted_by_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "reviewed_by_user_id": {
-          "name": "reviewed_by_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "reviewed_by_name": {
-          "name": "reviewed_by_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "reviewed_at": {
-          "name": "reviewed_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "decline_reason": {
-          "name": "decline_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "snoozed_until": {
-          "name": "snoozed_until",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "accepted_issue_id": {
-          "name": "accepted_issue_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "duplicate_of_issue_id": {
-          "name": "duplicate_of_issue_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "intake_request_project_status_idx": {
-          "name": "intake_request_project_status_idx",
-          "columns": [
-            {
-              "expression": "project_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "status",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "created_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "intake_request_project_source_external_uq": {
-          "name": "intake_request_project_source_external_uq",
-          "columns": [
-            {
-              "expression": "project_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "source",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "external_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "where": "\"intake_request\".\"external_id\" IS NOT NULL",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "intake_request_project_id_project_id_fk": {
-          "name": "intake_request_project_id_project_id_fk",
-          "tableFrom": "intake_request",
-          "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "intake_request_submitted_by_user_id_user_id_fk": {
-          "name": "intake_request_submitted_by_user_id_user_id_fk",
-          "tableFrom": "intake_request",
-          "tableTo": "user",
-          "columnsFrom": [
-            "submitted_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "intake_request_reviewed_by_user_id_user_id_fk": {
-          "name": "intake_request_reviewed_by_user_id_user_id_fk",
-          "tableFrom": "intake_request",
-          "tableTo": "user",
-          "columnsFrom": [
-            "reviewed_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "intake_request_accepted_issue_id_issue_id_fk": {
-          "name": "intake_request_accepted_issue_id_issue_id_fk",
-          "tableFrom": "intake_request",
-          "tableTo": "issue",
-          "columnsFrom": [
-            "accepted_issue_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "intake_request_duplicate_of_issue_id_issue_id_fk": {
-          "name": "intake_request_duplicate_of_issue_id_issue_id_fk",
-          "tableFrom": "intake_request",
-          "tableTo": "issue",
-          "columnsFrom": [
-            "duplicate_of_issue_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "intake_request_status_check": {
-          "name": "intake_request_status_check",
-          "value": "\"intake_request\".\"status\" IN ('pending', 'snoozed', 'accepted', 'declined', 'duplicate')"
-        }
-      },
       "isRLSEnabled": false
     }
   },

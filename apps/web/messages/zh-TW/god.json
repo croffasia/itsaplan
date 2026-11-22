@@ -410,6 +410,12 @@
     "botTokenHint": "儲存時會透過 Telegram 驗證權杖，錯誤權杖會立即被拒絕。",
     "resolvedHint": "根據權杖解析。使用者關聯帳號時會看到此機器人。"
   },
+  "slack": {
+    "saved": "Slack 設定已儲存",
+    "app": "Slack 應用程式",
+    "appConfigured": "開啟後，成員可以在專案的通知設定中連結自己的 Slack 帳號。",
+    "appMissing": "新增機器人權杖、Client ID 和用戶端金鑰後即可開啟應用程式。"
+  },
   "email": {
     "saved": "郵件服務供應商已儲存",
     "provider": "郵件服務供應商",

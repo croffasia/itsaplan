@@ -59,6 +59,7 @@ const projectDocument: ProjectDocument = {
   visibility: 'public',
   memberIds: [],
   isLocked: false,
+  isPinned: false,
   isFavorite: false,
   archivedAt: null,
   position: 0,

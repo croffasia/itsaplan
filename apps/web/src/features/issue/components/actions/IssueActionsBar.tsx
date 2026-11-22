@@ -21,13 +21,15 @@ import {
   listIssueDocumentShares,
   type ShareOptions,
 } from '@/lib/api/endpoints/share';
+import { matchedActions } from '@/utils/actions';
 import { actionIcon } from '@/utils/actionIcons';
 import { useActionsQuery } from '@/services/actions.service';
 import { useRestoreIssue } from '@/services/issues.service';
 import { qk } from '@/services/queryKeys';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useArchiveAction } from '../../hooks/useArchiveAction';
-import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueActions';
+import { ApplyActionDialog } from './ApplyActionDialog';
+import { DeleteIssueDialog } from './DeleteIssueDialog';
 import { buildIssueBranchName, buildIssuePrompt } from '../../utils/issuePrompt';
 import { writeClipboardText } from '../../utils/clipboard';
 import { useSession } from '@/lib/auth-client';

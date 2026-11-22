@@ -41,18 +41,6 @@ export const createIssuePullRequestBody = t.Object({
   draft: t.Boolean(),
 });
 
-export const DevelopmentRepositoryResponse = t.Object({
-  id: t.Number(),
-  provider: t.Union([
-    t.Literal('github'),
-    t.Literal('gitlab'),
-    t.Literal('gitea'),
-    t.Literal('forgejo'),
-  ]),
-  fullName: t.String(),
-  webUrl: t.String(),
-});
-
 export const LinkablePullRequestResponse = t.Object({
   number: t.Number(),
   title: t.String(),
@@ -485,7 +473,9 @@ export const createIssueBody = t.Object({
   assigneeUserId: t.Optional(
     t.Nullable(
       t.String({
-        description: "User id from get_project.assignees with kind 'member'.",
+        description:
+          "User id from get_project.assignees with kind 'member' and active true. " +
+          'A deactivated account (active false) is refused as a new assignee.',
       }),
     ),
   ),

@@ -11,7 +11,7 @@ export type PublicScaffold = Omit<
   ProjectScaffold,
   'viewer' | 'permissions' | 'assignees' | 'sharingEnabled'
 > & {
-  assignees: Omit<Assignee, 'email' | 'username' | 'canReadWorkItems'>[];
+  assignees: Omit<Assignee, 'email' | 'username' | 'canReadWorkItems' | 'canAssign'>[];
 };
 
 export interface SharedIssueBundle {

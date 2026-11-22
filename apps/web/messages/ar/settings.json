@@ -98,6 +98,7 @@
     "description": "اختار أحداث المهام اللي توصلك، وتوصلك فين.",
     "email": "البريد الإلكتروني",
     "telegram": "Telegram",
+    "slack": "Slack",
     "push": "فوري",
     "events": {
       "assigned": "الإسناد إلى مهمة",
@@ -110,6 +111,17 @@
     "telegramAccount": "حساب Telegram",
     "telegramAccountHint": "إشعارات Telegram بتوصل للحساب المربوط بملفك الشخصي، في كل مشروع انت فيه.",
     "noTelegramAccount": "لا يوجد حساب Telegram مرتبط",
+    "slackAccount": "حساب Slack",
+    "slackAccountHint": "تصل إشعارات Slack من هذا المشروع إلى حسابك في مساحة عمل Slack ‏{workspace}.",
+    "noSlackAccount": "لا يوجد حساب Slack مربوط",
+    "slackConnected": "مربوط",
+    "slackConnect": "ربط",
+    "slackDisconnect": "فصل",
+    "slackConnectedToast": "تم ربط حساب Slack",
+    "slackConnecting": "جارٍ ربط حساب Slack…",
+    "slackConnectFailed": "لم يتم ربط حساب Slack",
+    "slackConnectCancelled": "أُلغي الربط في Slack. اربط الحساب مجددًا من إعدادات الإشعارات في المشروع.",
+    "slackBack": "العودة إلى التطبيق",
     "preferencesSaved": "حُفظت تفضيلات الإشعارات"
   },
   "transfer": {

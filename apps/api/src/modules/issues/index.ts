@@ -1,4 +1,6 @@
 import { Elysia, t, type DocumentDecoration } from 'elysia';
+import { applyActionBody } from '#modules/actions/model';
+import { applyAction } from '#modules/actions/service';
 import { listIssueAgentRuns, getIssueAgentRunTrace } from './agent-runs';
 import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
@@ -92,7 +94,7 @@ import {
   removeIssueDevelopmentLink,
 } from '#modules/git/development';
 import { listDevelopmentRepositories, listManagedBranches } from '#modules/git/connections-service';
-import { DevelopmentLinkResponse } from '#modules/git/model';
+import { DevelopmentLinkResponse, DevelopmentRepositoryResponse } from '#modules/git/model';
 import {
   createChecklist,
   createChecklistItem,
@@ -120,7 +122,6 @@ import {
   issueDevelopmentListQuery,
   linkIssueDevelopmentBody,
   createIssuePullRequestBody,
-  DevelopmentRepositoryResponse,
   LinkablePullRequestPageResponse,
   DevelopmentBranchPageResponse,
   IssueResponse,
@@ -792,6 +793,19 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           'hard WIP limit returns 409 (code wip_limit_exceeded).',
         ...mcpTool('update_issue'),
       },
+    },
+  )
+
+  .post(
+    '/issues/:issueId/actions/:actionId',
+    ({ params, user, projectId, body }) =>
+      applyAction(projectId, params.issueId, params.actionId, requireUser(user).id, body.effect),
+    {
+      params: t.Object({ issueId: t.Numeric(), actionId: t.Numeric() }),
+      body: applyActionBody,
+      workItem: 'edit',
+      response: { 200: IssueResponse, ...commonErrors, ...errors(409) },
+      detail: { summary: 'Apply a saved action to an issue' },
     },
   )
 

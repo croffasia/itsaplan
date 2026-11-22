@@ -27,6 +27,25 @@ describe('projectedDocumentMove', () => {
     );
   });
 
+  it('refuses a drop between a pinned page and one that is not', () => {
+    const pinned = { ...page(1, null, 2), isPinned: true };
+    const other = { ...page(2, null, 1), isPinned: false };
+    assert.equal(
+      projectedDocumentMove({
+        source: other,
+        target: pinned,
+        deltaX: 0,
+        ordered: [pinned, other],
+        byParent: new Map([[null, [pinned, other]]]),
+        byId: new Map([
+          [1, pinned],
+          [2, other],
+        ]),
+      }),
+      null,
+    );
+  });
+
   it('refuses to move a page below one of its descendants', () => {
     const parent = page(1, null, 0);
     const child = page(2, 1, 0);

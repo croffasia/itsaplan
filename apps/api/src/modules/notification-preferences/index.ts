@@ -7,12 +7,13 @@ import { NotificationPreferenceBody, NotificationPreferenceResponse } from './mo
 import { getPreferences, setPreferences } from './service';
 
 // A member's own notification preferences for a project: which issue events they want
-// by email, Telegram and/or Web Push. Every route is self-scoped to the session user,
+// by email, Telegram, Slack and/or Web Push. Every route is self-scoped to the session user,
 // so bare project membership is enough (no admin gate) — a member only ever reads or
 // writes their own row. The project's provider credentials are a separate, owner-only
 // concern (notification-settings), and where the member is reached comes from their
-// linked Telegram account (/telegram/account) and their browsers (/push/subscriptions),
-// not from here.
+// linked Telegram account (/telegram/account), their Slack account
+// (/projects/:projectKey/slack/account) and their browsers (/push/subscriptions), not from
+// here.
 export const notificationPreferenceRoutes = new Elysia({
   name: 'notification-preferences',
   detail: { tags: ['Settings'] },

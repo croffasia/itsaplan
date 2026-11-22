@@ -20,13 +20,21 @@ import {
 import DocumentView from './components/DocumentView';
 import DocumentsIndex from './components/DocumentsIndex';
 import { importedMarkdownJson, markdownTitle } from './utils/documentImport';
-import { documentBelongsToTab, type DocumentListTab } from './utils/documentList';
+import {
+  documentBelongsToTab,
+  type DocumentListTab,
+  type DocumentListView,
+} from './utils/documentList';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useDocumentNavigation, useRecentDocuments } from '@/hooks/useDocumentNavigation';
 import { useTranslations } from 'next-intl';
 
-const listDefaults: { search: string; tab: DocumentListTab } = { search: '', tab: 'public' };
+const listDefaults: { search: string; view: DocumentListView; tab: DocumentListTab } = {
+  search: '',
+  view: 'home',
+  tab: 'public',
+};
 
 export default function DocumentsPage() {
   const { project } = useShell();
@@ -42,7 +50,12 @@ export default function DocumentsPage() {
   const listTab = ['public', 'private', 'favorites', 'archived'].includes(navigation.tab)
     ? navigation.tab
     : 'public';
+  const listView = navigation.view === 'tree' ? 'tree' : 'home';
+  const archivedList = listView === 'tree' && listTab === 'archived';
+  const privateList = listView === 'tree' && listTab === 'private';
   const setSearch = (search: string) => setNavigation((previous) => ({ ...previous, search }));
+  const setListView = (view: DocumentListView) =>
+    setNavigation((previous) => ({ ...previous, view }));
   const setListTab = (tab: DocumentListTab) => setNavigation((previous) => ({ ...previous, tab }));
   const deferredSearch = useDebouncedValue(search.trim(), 250);
   const { visit } = useRecentDocuments(projectKey);
@@ -53,18 +66,17 @@ export default function DocumentsPage() {
     projectKey,
     deferredSearch,
     false,
-    documentId === null && listTab !== 'archived',
+    documentId === null && !archivedList,
   );
   const archivedDocumentsQuery = useDocumentsQuery(
     projectKey,
     deferredSearch,
     true,
-    documentId === null && listTab === 'archived',
+    documentId === null && archivedList,
   );
-  const visibleDocumentsQuery =
-    listTab === 'archived' ? archivedDocumentsQuery : activeDocumentsQuery;
-  const filteredDocuments = (visibleDocumentsQuery.data ?? []).filter((document) =>
-    documentBelongsToTab(document, listTab),
+  const visibleDocumentsQuery = archivedList ? archivedDocumentsQuery : activeDocumentsQuery;
+  const filteredDocuments = (visibleDocumentsQuery.data ?? []).filter(
+    (document) => listView === 'home' || documentBelongsToTab(document, listTab),
   );
   const visibleIds = new Set(filteredDocuments.map((document) => document.id));
   const reorderSafe = filteredDocuments.every(
@@ -143,7 +155,7 @@ export default function DocumentsPage() {
         title: markdownTitle(file.name),
         content: markdown,
         contentJson,
-        isPrivate: listTab === 'private',
+        isPrivate: privateList,
       });
       router.push(documentPath(projectKey, newDocument.id));
     } catch {
@@ -156,6 +168,7 @@ export default function DocumentsPage() {
       <DocumentsIndex
         projectKey={projectKey}
         documents={visibleDocuments}
+        view={listView}
         tab={listTab}
         search={search}
         searching={deferredSearch.length > 0}
@@ -169,8 +182,9 @@ export default function DocumentsPage() {
         reorderSafe={reorderSafe}
         creating={createDocument.isPending}
         onSearchChange={setSearch}
+        onViewChange={setListView}
         onTabChange={setListTab}
-        onCreate={(parentId) => void create(parentId, listTab === 'private')}
+        onCreate={(parentId) => void create(parentId, privateList)}
         onUpload={(file) => void upload(file)}
         onRetry={() => void visibleDocumentsQuery.refetch()}
       />

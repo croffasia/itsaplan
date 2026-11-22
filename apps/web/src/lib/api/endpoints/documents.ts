@@ -37,6 +37,7 @@ export interface ProjectDocumentSummary {
   isPrivate: boolean;
   visibility: DocumentVisibility;
   isLocked: boolean;
+  isPinned: boolean;
   isFavorite: boolean;
   archivedAt: string | null;
   position: number;
@@ -257,6 +258,12 @@ export const setDocumentFavorite = (projectKey: string, documentId: number, isFa
   request<{ isFavorite: boolean }>(`/projects/${projectKey}/documents/${documentId}/preferences`, {
     method: 'PATCH',
     body: JSON.stringify({ isFavorite }),
+  });
+
+export const setDocumentPinned = (projectKey: string, documentId: number, isPinned: boolean) =>
+  request<{ isPinned: boolean }>(`/projects/${projectKey}/documents/${documentId}/pin`, {
+    method: 'PATCH',
+    body: JSON.stringify({ isPinned }),
   });
 
 export const listDocumentRevisions = (projectKey: string, documentId: number) =>

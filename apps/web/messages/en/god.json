@@ -410,6 +410,12 @@
     "botTokenHint": "The token is verified with Telegram when you save, so a wrong one is refused here rather than failing silently later.",
     "resolvedHint": "Resolved from the token. This is the bot people will see when connecting."
   },
+  "slack": {
+    "saved": "Slack settings saved",
+    "app": "Slack app",
+    "appConfigured": "When on, members can connect their Slack account in a project's notification settings.",
+    "appMissing": "Add the bot token, client ID and client secret to turn the app on."
+  },
   "email": {
     "saved": "Email provider saved",
     "provider": "Email provider",

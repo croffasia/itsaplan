@@ -1,16 +1,20 @@
 import { beforeEach, describe, it, expect } from 'bun:test';
 import { randomUUID } from 'node:crypto';
+import { encryptSecret } from '@repo/crypto';
 import {
   INSTANCE_EMAIL_SECRET_KEY,
   appSecret,
   db,
   defaultInstanceEmailConfig,
+  SLACK_APP_SECRET_KEY,
   project,
   team,
   teamInvite,
   workspace,
+  workspaceSlackSetting,
   writeSecret,
 } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import { deliverNotification } from '../../notification-send';
 
 // The send reads the credentials itself, so these cover the two decisions it makes
@@ -102,6 +106,119 @@ describe('deliverNotification', () => {
     expect(sent).toMatchObject({
       text: 'Plain\n\nhttps://plan.test/a',
       html: '<table>Composed</table>',
+    });
+  });
+
+  describe('slack', () => {
+    const app = {
+      botToken: 'xoxb-instance',
+      clientId: '1.2',
+      clientSecret: 'secret',
+      slackTeamId: 'T1',
+      slackTeamName: 'Acme',
+    };
+
+    async function workspaceOf(teamId: number): Promise<number> {
+      const [row] = await db
+        .select({ workspaceId: team.workspaceId })
+        .from(team)
+        .where(eq(team.id, teamId));
+      return row!.workspaceId;
+    }
+
+    async function setWorkspaceSlack(teamId: number, config: Record<string, unknown>) {
+      await db.insert(workspaceSlackSetting).values({
+        workspaceId: await workspaceOf(teamId),
+        ...encryptSecret(JSON.stringify(config)),
+      });
+    }
+
+    // Answers chat.postMessage and records what was asked.
+    async function send(
+      projectId: number,
+      answer: () => Response = () => Response.json({ ok: true }),
+    ) {
+      const realFetch = globalThis.fetch;
+      const calls: { url: string; init?: RequestInit }[] = [];
+      globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+        const url = String(input);
+        if (!url.startsWith('https://slack.com/api/')) return realFetch(input, init);
+        calls.push({ url, init });
+        return answer();
+      }) as typeof fetch;
+      const result = await deliverNotification({
+        projectId,
+        channel: 'slack',
+        recipient: 'U1',
+        payload: {
+          text: 'plain',
+          mrkdwn: '<https://plan.test/a|*MKT-1*> Title',
+          url: 'https://plan.test/a',
+        },
+      }).finally(() => {
+        globalThis.fetch = realFetch;
+      });
+      return { result, calls };
+    }
+
+    it('sends a direct message through the instance app', async () => {
+      const { projectId } = await makeProject();
+      await writeSecret(SLACK_APP_SECRET_KEY, { enabled: true, ...app }, {});
+
+      const { result, calls } = await send(projectId);
+
+      expect(result).toEqual({ ok: true });
+      expect(calls.map((c) => c.url)).toEqual(['https://slack.com/api/chat.postMessage']);
+      expect(new Headers(calls[0]!.init?.headers).get('authorization')).toBe(
+        'Bearer xoxb-instance',
+      );
+      expect(JSON.parse(String(calls[0]!.init?.body))).toEqual({
+        channel: 'U1',
+        text: '<https://plan.test/a|*MKT-1*> Title',
+        unfurl_links: false,
+        unfurl_media: false,
+      });
+    });
+
+    it('sends through the workspace app in place of the instance one', async () => {
+      const { teamId, projectId } = await makeProject();
+      await writeSecret(SLACK_APP_SECRET_KEY, { enabled: true, ...app }, {});
+      await setWorkspaceSlack(teamId, { enabled: true, own: true, ...app, botToken: 'xoxb-own' });
+
+      const { calls } = await send(projectId);
+
+      expect(new Headers(calls[0]!.init?.headers).get('authorization')).toBe('Bearer xoxb-own');
+    });
+
+    it('fails permanently when the workspace turned Slack off', async () => {
+      const { teamId, projectId } = await makeProject();
+      await writeSecret(SLACK_APP_SECRET_KEY, { enabled: true, ...app }, {});
+      await setWorkspaceSlack(teamId, { enabled: false, own: false });
+
+      const { result, calls } = await send(projectId);
+
+      expect(result).toEqual({ ok: false, retryable: false, error: 'slack not configured' });
+      expect(calls).toHaveLength(0);
+    });
+
+    it('tries again when Slack is rate limiting, and not for a refusal', async () => {
+      const { projectId } = await makeProject();
+      await writeSecret(SLACK_APP_SECRET_KEY, { enabled: true, ...app }, {});
+
+      const limited = await send(
+        projectId,
+        () => new Response('', { status: 429, headers: { 'retry-after': '1' } }),
+      );
+      const refused = await send(projectId, () =>
+        Response.json({ ok: false, error: 'channel_not_found' }),
+      );
+
+      expect(limited.result).toMatchObject({ ok: false, retryable: true });
+      expect(refused.result).toEqual({
+        ok: false,
+        retryable: false,
+        error: 'Slack chat.postMessage: channel_not_found',
+      });
     });
   });
 

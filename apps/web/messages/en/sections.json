@@ -57,6 +57,10 @@
       "label": "Telegram",
       "description": "The bot people connect their Telegram account to, and the one that delivers Telegram notifications for projects that set no bot of their own."
     },
+    "slack": {
+      "label": "Slack",
+      "description": "Sends notifications as Slack direct messages."
+    },
     "email": {
       "label": "Email provider",
       "description": "The mail provider the instance sends through: password resets, address confirmation, and sign-in links."

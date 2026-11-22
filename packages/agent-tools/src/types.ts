@@ -120,4 +120,9 @@ export interface IntegrationDescriptor {
   credentialSchema: ConfigField[];
   credentialOptional?: boolean;
   tools: ToolDescriptor[];
+  // Another edition runs it: nothing of it can be added here.
+  locked?: boolean;
 }
+
+// An integration another edition runs, listed without the code of its tools.
+export type IntegrationListing = Omit<IntegrationDescriptor, 'kind' | 'locked'>;

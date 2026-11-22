@@ -18,6 +18,7 @@ import { ToolRailSection } from './ToolRailSection';
 // Each integration's tools are added on one of its credentials, picked in the same
 // view, or on none when the integration needs no credential. An integration the team
 // has no credential for offers to add one, in the credential dialog opened over this one.
+// One that comes with another edition is listed last, its tools shown and not selectable.
 export function ToolConfigDialog({
   teamId,
   teamName,
@@ -76,7 +77,12 @@ export function ToolConfigDialog({
                 />
                 <ToolRailSection
                   title={t('needsCredential')}
-                  entries={tools.entries.filter((e) => !e.ready)}
+                  entries={tools.entries.filter((e) => !e.ready && !e.integration.locked)}
+                  {...rail}
+                />
+                <ToolRailSection
+                  title={t('lockedSection')}
+                  entries={tools.entries.filter((e) => e.integration.locked)}
                   {...rail}
                 />
               </nav>

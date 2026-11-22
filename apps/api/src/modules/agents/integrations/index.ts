@@ -61,7 +61,8 @@ export const integrationRoutes = new Elysia({
       description:
         "List the integration catalog: LLM providers (kind 'llm'), tool integrations ('tool'), " +
         "and services that a team's own tools call " +
-        "('service'). Pass a provider key to list_provider_models.",
+        "('service'). A tool integration marked locked comes with another edition of the app: " +
+        'no credential or tool of it can be added. Pass a provider key to list_provider_models.',
       ...mcpTool('list_integrations'),
     },
   })

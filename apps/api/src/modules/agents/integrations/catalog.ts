@@ -14,6 +14,8 @@ import { AI_PROVIDERS } from './llm-providers';
 //   - "service" — an address and a key that a team's own tools send requests to, from
 //                 an extension of the api (setExtraIntegrations). No tools; its own
 //                 verify checks a credential, as a tool integration's does.
+// A tool integration another edition of the app runs is listed `locked`: what it is and
+// what its tools do, with no credential or tool of it to add here.
 // The credential form and, for tool integrations, the tool picker are built from a
 // descriptor on the frontend.
 
@@ -37,6 +39,7 @@ export interface UnifiedIntegration {
     scopes?: string[];
     group?: string;
   }[];
+  locked?: boolean;
 }
 
 // The credential fields of an LLM provider: an API key, plus a base URL for the
@@ -79,20 +82,22 @@ export function integrationCatalog(): UnifiedIntegration[] {
     credentialSchema: d.credentialSchema,
     credentialOptional: d.credentialOptional,
     tools: d.tools,
+    locked: d.locked,
   }));
   return [...LLM_INTEGRATIONS, ...tools];
 }
 
+// An integration a credential can be stored for: a locked one is left out.
 export function findIntegration(key: string): UnifiedIntegration | undefined {
-  return integrationCatalog().find((i) => i.key === key);
+  return integrationCatalog().find((i) => i.key === key && !i.locked);
 }
 
-// The credential schema for an integration, or undefined for an unknown key.
+// The credential schema for an integration, or undefined for a key no credential is stored for.
 export function credentialSchemaFor(key: string): ConfigField[] | undefined {
   return findIntegration(key)?.credentialSchema;
 }
 
-// The kind of an integration, or undefined for a key the catalog no longer carries.
+// The kind of an integration, or undefined for a key no credential is stored for.
 export function integrationKind(key: string): IntegrationKind | undefined {
   return findIntegration(key)?.kind;
 }

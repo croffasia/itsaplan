@@ -15,6 +15,7 @@ export const TEMPLATE_GALLERY_RULES_URL = 'https://itsaplan.dev/terms#template-g
 export type ProFeature =
   | 'agent-analytics'
   | 'agent-budgets'
+  | 'agent-tools'
   | 'asana-import'
   | 'audit-log'
   | 'email-domains'

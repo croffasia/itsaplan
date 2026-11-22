@@ -56,6 +56,7 @@ import {
 import {
   recordActivity,
   recordActivityEntries,
+  textSide,
   logIssueUpdate,
   labelNames,
   actorId,
@@ -1233,13 +1234,28 @@ export async function createIssue(
         position: Number(posRow.pos),
       })
       .returning({ id: issue.id, createdAt: issue.createdAt });
+    // The entry holds the text as filed, so the change log shows who wrote a field
+    // that was never edited.
+    await recordActivityEntries(
+      [
+        {
+          issueId: row.id,
+          event: {
+            action: 'created',
+            title: textSide(input.title),
+            description: textSide(input.description ?? ''),
+          },
+        },
+      ],
+      actorUserId,
+      tx,
+    );
     return row;
   });
 
   // The first stretch of the status history starts when the issue does, so the
   // entries of its creation fall inside it.
   await recordStatusChange([issueId], input.columnId, createdAt);
-  await recordActivity(issueId, [{ action: 'created' }], actorUserId);
   if (input.cycleId != null) await recordCycleChange(issueId, null, input.cycleId);
   if (input.parentId != null) await recordParentChange(issueId, null, input.parentId, actorUserId);
   // Suppress the label_changed event on creation — the initial labels are part of

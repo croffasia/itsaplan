@@ -1,4 +1,5 @@
 import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
+import { compareDocuments } from './documentList';
 
 export interface OptimisticDocumentMove {
   documentId: number;
@@ -109,6 +110,18 @@ export function projectedDocumentMove({
   };
 }
 
+// The sibling a step up or down passes, from siblings in list order. Pinned pages stay
+// ahead of the others, so a page has no step across that line.
+export function documentStepTarget(
+  source: ProjectDocumentSummary,
+  direction: -1 | 1,
+  siblings: ProjectDocumentSummary[],
+): ProjectDocumentSummary | null {
+  const index = siblings.findIndex((document) => document.id === source.id);
+  const target = index < 0 ? undefined : siblings[index + direction];
+  return target && target.isPinned === source.isPinned ? target : null;
+}
+
 // One step up or down among the siblings of a page: the same move as a drop on
 // the sibling beside it.
 export function adjacentDocumentMove({
@@ -124,9 +137,10 @@ export function adjacentDocumentMove({
   byParent: Map<number | null, ProjectDocumentSummary[]>;
   byId: Map<number, ProjectDocumentSummary>;
 }): DocumentPlacement | null {
-  const siblings = [...(byParent.get(source.parentId) ?? [])].sort(comparePosition);
-  const index = siblings.findIndex((document) => document.id === source.id);
-  const target = index < 0 ? undefined : siblings[index + direction];
+  const siblings = [...(byParent.get(source.parentId) ?? [])].sort((a, b) =>
+    compareDocuments(a, b, 'position', 'asc'),
+  );
+  const target = documentStepTarget(source, direction, siblings);
   if (!target) return null;
   return projectedDocumentMove({ source, target, deltaX: 0, ordered, byParent, byId });
 }

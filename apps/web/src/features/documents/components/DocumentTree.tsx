@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/button';
 import { compareDocuments, type DocumentSort } from '../utils/documentList';
 import {
   adjacentDocumentMove,
+  documentStepTarget,
   projectedDocumentMove,
   type OptimisticDocumentMove,
 } from '../utils/documentMove';
@@ -149,6 +150,10 @@ export default function DocumentTree({
   ) {
     const children = byParent.get(item.id) ?? [];
     const isCollapsed = collapsed.has(item.id);
+    const pinnable = canPin && !item.isPrivate && item.archivedAt === null;
+    const create = () => onCreate(item.id);
+    const favoriteChange = () => onFavoriteChange(item.id, !item.isFavorite);
+    const pinChange = () => onPinChange(item.id, !item.isPinned);
     return (
       <SortableDocumentRow
         key={item.id}
@@ -160,32 +165,36 @@ export default function DocumentTree({
         collapsed={isCollapsed}
         hasChildren={children.length > 0}
         canCreate={canCreate}
-        canPin={canPin}
+        pinnable={pinnable}
         reorderEnabled={reorderEnabled}
         favoritePending={favoritePending}
-        menu={
-          canMove &&
-          item.archivedAt === null &&
-          !item.isLocked && (
-            <DocumentRowMenu
-              projectKey={projectKey}
-              document={item}
-              busy={movePending}
-              reorderEnabled={reorderEnabled}
-              first={siblings[0] === item}
-              last={siblings.at(-1) === item}
-              onMoveTo={(move, parent) =>
-                onMoveTo({ documentId: item.id, version: item.version, ...move }, parent)
-              }
-              onStep={(direction) => step(item, direction)}
-            />
-          )
-        }
         pinPending={pinPending}
+        menu={
+          <DocumentRowMenu
+            projectKey={projectKey}
+            document={item}
+            canCreate={canCreate}
+            pinnable={pinnable}
+            movable={canMove && item.archivedAt === null && !item.isLocked}
+            reorderEnabled={reorderEnabled}
+            canStepUp={documentStepTarget(item, -1, siblings) !== null}
+            canStepDown={documentStepTarget(item, 1, siblings) !== null}
+            favoritePending={favoritePending}
+            pinPending={pinPending}
+            movePending={movePending}
+            onFavoriteChange={favoriteChange}
+            onPinChange={pinChange}
+            onCreate={create}
+            onMoveTo={(move, parent) =>
+              onMoveTo({ documentId: item.id, version: item.version, ...move }, parent)
+            }
+            onStep={(direction) => step(item, direction)}
+          />
+        }
         onToggle={() => toggle(item.id)}
-        onCreate={() => onCreate(item.id)}
-        onFavoriteChange={() => onFavoriteChange(item.id, !item.isFavorite)}
-        onPinChange={() => onPinChange(item.id, !item.isPinned)}
+        onCreate={create}
+        onFavoriteChange={favoriteChange}
+        onPinChange={pinChange}
       >
         {nested && !isCollapsed && children.length > 0 && renderRows(item.id, depth + 1)}
       </SortableDocumentRow>

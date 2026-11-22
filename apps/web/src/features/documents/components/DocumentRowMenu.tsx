@@ -1,7 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowDown, ArrowUp, FolderInput, MoreHorizontal } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  FolderInput,
+  MoreHorizontal,
+  Pin,
+  PinOff,
+  Plus,
+  Star,
+  StarOff,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import { Button } from '@/components/ui/button';
@@ -9,6 +19,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { DocumentPlacement } from '../utils/documentMove';
@@ -17,19 +28,35 @@ import DocumentMoveDialog from './DocumentMoveDialog';
 export default function DocumentRowMenu({
   projectKey,
   document,
-  busy,
+  canCreate,
+  pinnable,
+  movable,
   reorderEnabled,
-  first,
-  last,
+  canStepUp,
+  canStepDown,
+  favoritePending,
+  pinPending,
+  movePending,
+  onFavoriteChange,
+  onPinChange,
+  onCreate,
   onMoveTo,
   onStep,
 }: {
   projectKey: string;
   document: ProjectDocumentSummary;
-  busy: boolean;
+  canCreate: boolean;
+  pinnable: boolean;
+  movable: boolean;
   reorderEnabled: boolean;
-  first: boolean;
-  last: boolean;
+  canStepUp: boolean;
+  canStepDown: boolean;
+  favoritePending: boolean;
+  pinPending: boolean;
+  movePending: boolean;
+  onFavoriteChange: () => void;
+  onPinChange: () => void;
+  onCreate: () => void;
   onMoveTo: (move: DocumentPlacement, parent: ProjectDocumentSummary | null) => void;
   onStep: (direction: -1 | 1) => void;
 }) {
@@ -51,20 +78,41 @@ export default function DocumentRowMenu({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-44">
-          <DropdownMenuItem disabled={busy} onSelect={() => setMoveOpen(true)}>
-            <FolderInput />
-            {t('moveTo')}
+          <DropdownMenuItem disabled={favoritePending} onSelect={onFavoriteChange}>
+            {document.isFavorite ? <StarOff /> : <Star />}
+            {document.isFavorite ? t('removeFavorite') : t('addFavorite')}
           </DropdownMenuItem>
-          {reorderEnabled && (
+          {pinnable && (
+            <DropdownMenuItem disabled={pinPending} onSelect={onPinChange}>
+              {document.isPinned ? <PinOff /> : <Pin />}
+              {document.isPinned ? t('unpinPage') : t('pinPage')}
+            </DropdownMenuItem>
+          )}
+          {canCreate && (
+            <DropdownMenuItem onSelect={onCreate}>
+              <Plus />
+              {t('addSubpage')}
+            </DropdownMenuItem>
+          )}
+          {movable && (
             <>
-              <DropdownMenuItem disabled={first} onSelect={() => onStep(-1)}>
-                <ArrowUp />
-                {t('moveUp')}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled={movePending} onSelect={() => setMoveOpen(true)}>
+                <FolderInput />
+                {t('moveTo')}
               </DropdownMenuItem>
-              <DropdownMenuItem disabled={last} onSelect={() => onStep(1)}>
-                <ArrowDown />
-                {t('moveDown')}
-              </DropdownMenuItem>
+              {reorderEnabled && (
+                <>
+                  <DropdownMenuItem disabled={!canStepUp} onSelect={() => onStep(-1)}>
+                    <ArrowUp />
+                    {t('moveUp')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem disabled={!canStepDown} onSelect={() => onStep(1)}>
+                    <ArrowDown />
+                    {t('moveDown')}
+                  </DropdownMenuItem>
+                </>
+              )}
             </>
           )}
         </DropdownMenuContent>

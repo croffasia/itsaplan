@@ -30,7 +30,7 @@ export default function SortableDocumentRow({
   hasChildren,
   nested,
   canCreate,
-  canPin,
+  pinnable,
   reorderEnabled,
   favoritePending,
   pinPending,
@@ -49,11 +49,11 @@ export default function SortableDocumentRow({
   hasChildren: boolean;
   nested: boolean;
   canCreate: boolean;
-  canPin: boolean;
+  pinnable: boolean;
   reorderEnabled: boolean;
   favoritePending: boolean;
   pinPending: boolean;
-  menu?: ReactNode;
+  menu: ReactNode;
   children?: ReactNode;
   onToggle: () => void;
   onCreate: () => void;
@@ -64,7 +64,6 @@ export default function SortableDocumentRow({
   const draggable = reorderEnabled && !document.isLocked;
   const sortable = useSortable({ id: document.id, disabled: !draggable });
   const title = document.title.trim() || t('untitled');
-  const pinnable = canPin && !document.isPrivate && document.archivedAt === null;
   const style = {
     transform: CSS.Translate.toString(sortable.transform),
     transition: sortable.transition,

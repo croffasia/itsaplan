@@ -3,7 +3,17 @@
 import type { ReactNode } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronRight, FileText, GripVertical, LockKeyhole, Plus, Star, Users } from 'lucide-react';
+import {
+  ChevronRight,
+  FileText,
+  GripVertical,
+  LockKeyhole,
+  Pin,
+  PinOff,
+  Plus,
+  Star,
+  Users,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
@@ -20,12 +30,15 @@ export default function SortableDocumentRow({
   hasChildren,
   nested,
   canCreate,
+  canPin,
   reorderEnabled,
   favoritePending,
+  pinPending,
   children,
   onToggle,
   onCreate,
   onFavoriteChange,
+  onPinChange,
 }: {
   projectKey: string;
   document: ProjectDocumentSummary;
@@ -35,17 +48,21 @@ export default function SortableDocumentRow({
   hasChildren: boolean;
   nested: boolean;
   canCreate: boolean;
+  canPin: boolean;
   reorderEnabled: boolean;
   favoritePending: boolean;
+  pinPending: boolean;
   children?: ReactNode;
   onToggle: () => void;
   onCreate: () => void;
   onFavoriteChange: () => void;
+  onPinChange: () => void;
 }) {
   const t = useTranslations('documents');
   const draggable = reorderEnabled && !document.isLocked;
   const sortable = useSortable({ id: document.id, disabled: !draggable });
   const title = document.title.trim() || t('untitled');
+  const pinnable = canPin && !document.isPrivate && document.archivedAt === null;
   const style = {
     transform: CSS.Translate.toString(sortable.transform),
     transition: sortable.transition,
@@ -126,10 +143,31 @@ export default function SortableDocumentRow({
               {title}
             </span>
             <span className="flex shrink-0 items-center gap-1.5 text-muted-foreground">
+              {document.isPinned && !pinnable && (
+                <Pin className="size-3" role="img" aria-label={t('pinnedPage')} />
+              )}
               {document.visibility === 'restricted' && <Users className="size-3" />}
               {document.visibility === 'private' && <LockKeyhole className="size-3" />}
             </span>
           </Link>
+
+          {pinnable && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              disabled={pinPending}
+              className={cn(
+                'size-6 shrink-0 text-muted-foreground',
+                !document.isPinned &&
+                  'opacity-0 transition-opacity group-focus-within/row:opacity-100 group-hover/row:opacity-100',
+              )}
+              aria-label={document.isPinned ? t('unpinPage') : t('pinPage')}
+              onClick={onPinChange}
+            >
+              {document.isPinned ? <PinOff className="size-3.5" /> : <Pin className="size-3.5" />}
+            </Button>
+          )}
 
           <Button
             type="button"

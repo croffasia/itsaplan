@@ -92,6 +92,7 @@ export interface DocumentSummaryRow {
   isPrivate: boolean;
   visibility: DocumentVisibility;
   isLocked: boolean;
+  isPinned: boolean;
   isFavorite: boolean;
   archivedAt: string | null;
   position: number;
@@ -174,6 +175,9 @@ function mapDocument(
     ...publicRow,
     visibility: visibilityOf(row.isPrivate, memberIds.length > 0),
     memberIds,
+    // A pin is kept while its page is private or archived, and shows again once the page is
+    // public and active.
+    isPinned: row.isPinned && !row.isPrivate && row.archivedAt === null,
     isFavorite,
     archivedAt: row.archivedAt ? iso(row.archivedAt) : null,
     shareToken: shared ? row.shareToken : null,
@@ -1652,6 +1656,22 @@ export async function setDocumentPreference(
       set: { isFavorite, updatedAt: new Date() },
     });
   return { isFavorite };
+}
+
+export async function setDocumentPinned(
+  projectId: number,
+  documentId: number,
+  userId: string,
+  isPinned: boolean,
+): Promise<{ isPinned: boolean } | null> {
+  const current = await selectDocument(db, projectId, documentId, userId);
+  if (!current) return null;
+  if (isPinned) {
+    assertActive(current);
+    if (current.isPrivate) throw new HttpError(400, 'A private document cannot be pinned.');
+  }
+  await db.update(projectDocument).set({ isPinned }).where(eq(projectDocument.id, documentId));
+  return { isPinned };
 }
 
 export async function listDocumentRevisions(

@@ -9,6 +9,7 @@ import { ToolConfigError } from './errors';
 import { jina } from './tools/jina';
 import { firecrawl } from './tools/firecrawl';
 import { telegram } from './tools/telegram';
+import { slack } from './tools/slack';
 import { threads } from './tools/threads';
 import { instagram } from './tools/instagram';
 import { notion } from './tools/notion';
@@ -27,6 +28,7 @@ export const INTEGRATIONS: Integration[] = [
   jina,
   firecrawl,
   telegram,
+  slack,
   threads,
   instagram,
   notion,

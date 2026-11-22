@@ -1,4 +1,5 @@
 import { request } from '@/lib/api/core/client';
+import type { SlackApp, SlackAppPatch } from '@/lib/api/endpoints/slack';
 import type { MemberRole } from '@/lib/api/endpoints/members';
 import type { TeamRole } from '@/lib/api/endpoints/teams';
 import type { NotificationEncryption } from '@/lib/api/endpoints/notificationSettings';
@@ -152,6 +153,16 @@ export interface InstanceTelegramSettings {
 export interface InstanceTelegramSettingsPatch {
   enabled?: boolean;
   botToken?: string;
+}
+
+// The instance Slack app: what every workspace's projects send Slack notifications
+// through unless a workspace set an app of its own.
+export interface InstanceSlackSettings extends SlackApp {
+  enabled: boolean;
+}
+
+export interface InstanceSlackSettingsPatch extends SlackAppPatch {
+  enabled?: boolean;
 }
 
 // One account in the instance user directory. `role` is the global better-auth role
@@ -332,6 +343,14 @@ export const testEmailDraft = (draft: EmailDraft) =>
   request<InstanceEmailTestResult>('/god/email-templates/test', {
     method: 'POST',
     body: JSON.stringify(draft),
+  });
+
+export const getInstanceSlackSettings = () => request<InstanceSlackSettings>('/god/slack-settings');
+
+export const updateInstanceSlackSettings = (patch: InstanceSlackSettingsPatch) =>
+  request<InstanceSlackSettings>('/god/slack-settings', {
+    method: 'PUT',
+    body: JSON.stringify(patch),
   });
 
 export const getInstanceTelegramSettings = () =>

@@ -946,6 +946,18 @@
       "removePrice": "Hapus harga",
       "save": "Simpan harga"
     },
+    "slack": {
+      "title": "Slack",
+      "description": "Aplikasi Slack yang dipakai proyek workspace ini untuk mengirim notifikasi.",
+      "saved": "Pengaturan Slack disimpan",
+      "notifications": "Notifikasi Slack",
+      "notificationsHint": "Jika aktif, anggota yang menghubungkan akun Slack mendapat pesan langsung untuk peristiwa yang mereka pilih.",
+      "app": "Aplikasi Slack",
+      "instanceApp": "Aplikasi instance",
+      "ownApp": "Aplikasi sendiri",
+      "instanceAppHint": "Disiapkan oleh administrator instance. Anggota memerlukan akun di workspace Slack {workspace}.",
+      "instanceMissing": "Administrator instance belum menyiapkan aplikasi Slack. Pilih \"Aplikasi sendiri\" untuk menyiapkannya di sini."
+    },
     "queue": {
       "title": "Eksekusi agen"
     }

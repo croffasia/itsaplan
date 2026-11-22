@@ -313,5 +313,16 @@
     "range": "{total} kayıttan {first}-{last} arası"
   },
   "upgradeToPro": "Pro'ya geçin",
-  "signingOut": "Oturum kapatılıyor…"
+  "signingOut": "Oturum kapatılıyor…",
+  "slackApp": {
+    "setup": "api.slack.com/apps adresinde chat:write bot scope'u ve Redirect URL ile bir uygulama oluşturun. Uygulamayı Slack çalışma alanınıza yükleyin, ardından Client ID'yi ve parolayı Basic Information'dan kopyalayın.",
+    "botToken": "Bot jetonu (token)",
+    "botTokenHint": "OAuth & Permissions altında. Slack, kaydettiğinizde jetonu doğrular.",
+    "clientId": "Client ID",
+    "clientSecret": "İstemci Parolası (Client Secret)",
+    "redirectUrl": "Redirect URL",
+    "redirectUrlHint": "Slack'te OAuth & Permissions → Redirect URLs altına ekleyin.",
+    "workspace": "Slack çalışma alanı",
+    "workspaceHint": "Uygulamanın yüklü olduğu Slack çalışma alanı. Yalnızca bu çalışma alanındaki hesaplar bağlanabilir."
+  }
 }

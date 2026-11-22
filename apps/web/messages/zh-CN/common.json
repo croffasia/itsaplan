@@ -313,5 +313,16 @@
     "range": "第 {first}-{last} 项，共 {total} 项"
   },
   "upgradeToPro": "升级到 Pro",
-  "signingOut": "正在退出…"
+  "signingOut": "正在退出…",
+  "slackApp": {
+    "setup": "在 api.slack.com/apps 创建应用，添加机器人权限范围 chat:write 和 Redirect URL。将应用安装到你的 Slack 工作区，然后从 Basic Information 复制 Client ID 和密钥。",
+    "botToken": "机器人令牌",
+    "botTokenHint": "位于 OAuth & Permissions。保存时 Slack 会校验它。",
+    "clientId": "Client ID",
+    "clientSecret": "客户端密钥",
+    "redirectUrl": "Redirect URL",
+    "redirectUrlHint": "在 Slack 的 OAuth & Permissions → Redirect URLs 中添加它。",
+    "workspace": "Slack 工作区",
+    "workspaceHint": "应用所安装的 Slack 工作区。只有该工作区的账号可以连接。"
+  }
 }

@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import { assignableMembers } from '@/utils/project';
 import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
 import LabelsSelect from '@/components/common/fields/LabelsSelect';
 import PrioritySelect from '@/components/common/fields/PrioritySelect';
@@ -41,7 +42,7 @@ export default function IssueTemplateProperties({
           />
         )}
 
-        {project.assignees.some((a) => a.kind === 'member') && (
+        {(assignableMembers(project.assignees).length > 0 || values.assigneeUserId != null) && (
           <AssigneeSelect
             assignees={project.assignees}
             value={values.assigneeUserId}

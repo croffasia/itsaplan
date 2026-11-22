@@ -15,6 +15,7 @@ interface Member {
   api: Api;
   userId: string;
   username: string;
+  email: string;
 }
 
 async function setup() {
@@ -25,7 +26,7 @@ async function setup() {
   const columns = view.data!.columns;
   const done = columns.find((c) => c.stateType === 'completed') ?? columns[columns.length - 1];
   return {
-    owner: { api, userId: u.userId, username: u.username },
+    owner: { api, userId: u.userId, username: u.username, email: u.email },
     project: view.data!.project,
     columnId: columns[0].id,
     doneColumnId: done.id,
@@ -39,7 +40,7 @@ async function addMember(owner: Member): Promise<Member> {
     .invites.post({ email: u.email, role: 'member' });
   const api = authedApi(u.cookie);
   await api.invites({ token: invite.data!.token }).accept.post();
-  return { api, userId: u.userId, username: u.username };
+  return { api, userId: u.userId, username: u.username, email: u.email };
 }
 
 function createIssue(client: Api, columnId: number, patch: Record<string, unknown> = {}) {
@@ -595,6 +596,7 @@ describe('push notifications', () => {
     await prefs.put({
       emailEvents: none,
       telegramEvents: none,
+      slackEvents: { ...none, commented: true },
       pushEvents: { ...none, mentioned: true },
     });
 
@@ -603,7 +605,153 @@ describe('push notifications', () => {
     expect(res.data).toEqual({
       emailEvents: { ...none, assigned: true },
       telegramEvents: none,
+      slackEvents: { ...none, commented: true },
       pushEvents: { ...none, mentioned: true },
     });
+  });
+});
+
+// Slack goes through the app that serves the project's workspace; a member is reached at
+// the Slack account they connected through it.
+describe('slack notifications', () => {
+  const none = {
+    assigned: false,
+    mentioned: false,
+    commented: false,
+    state_changed: false,
+    reacted: false,
+  };
+  const realFetch = globalThis.fetch;
+  let nonce = '';
+  // The Slack account Slack confirms on the next connection.
+  let slackUserId = '';
+
+  beforeEach(async () => {
+    await resetDb();
+    const part = (o: object) => Buffer.from(JSON.stringify(o)).toString('base64url');
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input);
+      if (url === 'https://slack.com/api/auth.test') {
+        return Response.json({ ok: true, bot_id: 'B1', team_id: 'T1', team: 'Acme' });
+      }
+      if (url === 'https://slack.com/api/openid.connect.token') {
+        const claims = {
+          aud: '1.2',
+          nonce,
+          'https://slack.com/user_id': slackUserId,
+          'https://slack.com/team_id': 'T1',
+        };
+        return Response.json({ ok: true, id_token: `${part({})}.${part(claims)}.sig` });
+      }
+      return realFetch(input, init);
+    }) as typeof fetch;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  // The instance app, and the member's account connected through it.
+  async function connect(owner: Member, member: Member, slackUser: string) {
+    slackUserId = slackUser;
+    await owner.api.god['slack-settings'].put({
+      enabled: true,
+      botToken: 'xoxb-1',
+      clientId: '1.2',
+      clientSecret: 'secret',
+    });
+    const account = member.api.projects({ projectKey: 'MKT' }).slack.account;
+    const url = new URL((await account.link.post()).data!.url);
+    nonce = url.searchParams.get('nonce')!;
+    const done = await member.api.slack.account.complete.post({
+      code: 'code',
+      state: url.searchParams.get('state')!,
+    });
+    expect(done.status).toBe(200);
+  }
+
+  function queuedSlack() {
+    return db
+      .select({ recipient: notificationDelivery.recipient, payload: notificationDelivery.payload })
+      .from(notificationDelivery)
+      .where(eq(notificationDelivery.channel, 'slack'))
+      .orderBy(notificationDelivery.id);
+  }
+
+  it('queues a Slack message to the connected account for the events the member turned on', async () => {
+    const { owner, project, columnId } = await setup();
+    const member = await addMember(owner);
+    await connect(owner, member, 'U-MEMBER');
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: none,
+      telegramEvents: none,
+      slackEvents: { ...none, assigned: true },
+    });
+
+    const issue = (
+      await createIssue(owner.api, columnId, {
+        title: '<b>Loud</b> & co',
+        assigneeUserId: member.userId,
+      })
+    ).data!;
+    await owner.api.issues({ issueId: issue.id }).comments.post({ body: 'Started on it' });
+
+    const inbox = (await member.api.notifications.get({ query: {} })).data!.items;
+    const actor = inbox.find((n) => n.type === 'assigned')!.actorName;
+    const url = `${process.env.APP_URL}/${project.teamRef}/issue/${issue.identifier}`;
+    expect(await queuedSlack()).toEqual([
+      {
+        recipient: 'U-MEMBER',
+        payload: {
+          text: `📌 ${issue.identifier} <b>Loud</b> & co\n\nAssigned by ${actor}`,
+          mrkdwn: `📌 <${url}|*${issue.identifier}*> &lt;b&gt;Loud&lt;/b&gt; &amp; co\n\nAssigned by ${actor}`,
+          url,
+        },
+      },
+    ]);
+  });
+
+  it('quotes the comment of a comment event, escaped and cut at 300 characters', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    await connect(owner, member, 'U-MEMBER');
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: none,
+      telegramEvents: none,
+      slackEvents: { ...none, commented: true },
+    });
+    const issue = (await createIssue(owner.api, columnId, { assigneeUserId: member.userId })).data!;
+    const comments = owner.api.issues({ issueId: issue.id }).comments;
+    await comments.post({ body: 'Started <now>\n& tested' });
+    await comments.post({ body: 'a'.repeat(301) });
+
+    const [short, long] = await queuedSlack();
+    expect(short!.payload.mrkdwn).toEndWith('\n>Started &lt;now&gt;\n>&amp; tested');
+    expect(short!.payload.text).toEndWith('\n\nStarted <now>\n& tested');
+    expect(long!.payload.mrkdwn).toEndWith(`\n>${'a'.repeat(300)}…`);
+  });
+
+  it('queues nothing for a member with no connected account, or while the workspace has Slack off', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    await connect(owner, owner, 'U-OWNER');
+    const all = { ...none, assigned: true };
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: none,
+      telegramEvents: none,
+      slackEvents: all,
+    });
+    await createIssue(owner.api, columnId, { assigneeUserId: member.userId });
+    expect(await queuedSlack()).toEqual([]);
+
+    await connect(owner, member, 'U-MEMBER');
+    const workspaceId = (await owner.api.workspaces.get()).data!.find(
+      (w) => w.role === 'owner',
+    )!.id;
+    await owner.api
+      .workspaces({ workspaceId })
+      ['slack-settings'].put({ enabled: false, own: false });
+    await createIssue(owner.api, columnId, { assigneeUserId: member.userId });
+    expect(await queuedSlack()).toEqual([]);
   });
 });

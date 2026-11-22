@@ -946,6 +946,18 @@
       "removePrice": "Supprimer le prix",
       "save": "Enregistrer le prix"
     },
+    "slack": {
+      "title": "Slack",
+      "description": "L'app Slack par laquelle les projets de cet espace de travail envoient leurs notifications.",
+      "saved": "Paramètres Slack enregistrés",
+      "notifications": "Notifications Slack",
+      "notificationsHint": "Activé, les membres qui connectent leur compte Slack reçoivent des messages directs pour les événements choisis.",
+      "app": "App Slack",
+      "instanceApp": "App de l'instance",
+      "ownApp": "App propre",
+      "instanceAppHint": "Configurée par l'administrateur de l'instance. Les membres ont besoin d'un compte dans l'espace de travail Slack {workspace}.",
+      "instanceMissing": "L'administrateur de l'instance n'a pas configuré d'app Slack. Choisissez « App propre » pour en configurer une ici."
+    },
     "queue": {
       "title": "Exécutions d'agents"
     }

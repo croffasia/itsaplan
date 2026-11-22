@@ -1,4 +1,15 @@
-import { t } from 'elysia';
+import { getSchemaValidator, t } from 'elysia';
+import { updateIssueBody } from '#modules/issues/model';
+
+const actionEffect = t.Pick(
+  updateIssueBody,
+  ['columnId', 'assigneeUserId', 'priority', 'typeId', 'startDate', 'dueDate', 'labelIds'],
+  { additionalProperties: false },
+);
+
+export const actionEffectValidator = getSchemaValidator(actionEffect);
+export type ActionEffect = (typeof actionEffect)['static'];
+export const applyActionBody = t.Object({ effect: actionEffect });
 
 export const ActionResponse = t.Object({
   id: t.Number(),

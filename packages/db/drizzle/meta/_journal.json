@@ -1352,6 +1352,20 @@
       "when": 1795275753838,
       "tag": "0192_agent_run_canceled_by",
       "breakpoints": true
+    },
+    {
+      "idx": 193,
+      "version": "7",
+      "when": 1795290272195,
+      "tag": "0193_slack_notifications",
+      "breakpoints": true
+    },
+    {
+      "idx": 194,
+      "version": "7",
+      "when": 1795294773792,
+      "tag": "0194_slack_accounts",
+      "breakpoints": true
     }
   ]
 }

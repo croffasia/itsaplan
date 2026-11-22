@@ -1,58 +1,11 @@
 import { useState } from 'react';
-import type { ActionDef } from '@/lib/api/endpoints/actions';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue, SubtaskDisposition } from '@/lib/api/endpoints/issues';
-import { matchesFilterSet } from '@/utils/filters';
-import { describeEffect } from '@/utils/actions';
-import { useEffectText } from '@/hooks/useEffectText';
 import { dispositionReady, removalCount } from '@/utils/subtasks';
-import {
-  useDeleteIssue,
-  useIssueQuery,
-  useIssueSubtreeQuery,
-  useUpdateIssue,
-} from '@/services/issues.service';
+import { useDeleteIssue, useIssueQuery, useIssueSubtreeQuery } from '@/services/issues.service';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import SubtaskDisposalChoice from './SubtaskDisposalChoice';
-import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
-
-// The project's manual actions whose condition matches this issue, in saved
-// order. Shared by the issue detail Actions block and the context menu.
-export function matchedActions(
-  actions: ActionDef[],
-  project: ProjectDetail,
-  issue: Issue,
-): ActionDef[] {
-  return actions.filter((a) => matchesFilterSet(issue, a.condition, project));
-}
-
-// The confirm-dialog body for running an action: the changes it will apply, one
-// per line.
-function EffectSummary({ action, project }: { action: ActionDef; project: ProjectDetail }) {
-  const t = useTranslations('issue.actions');
-  const effectText = useEffectText();
-  const lines = describeEffect(action.effect, project, effectText);
-  return (
-    <div className="text-sm text-muted-foreground">
-      <p>
-        {t.rich('applyDescription', {
-          action: action.name,
-          v: (chunks: ReactNode) => <span className="font-medium text-foreground">{chunks}</span>,
-        })}
-      </p>
-      {lines.length > 0 && (
-        <ul className="mt-2 space-y-0.5">
-          {lines.map((l) => (
-            <li key={l.key} className="text-foreground">
-              {l.text}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
 
 // Confirm and run a issue delete. Owns the mutation; the caller owns whether the
 // dialog is mounted and leaves the deleted issue via onDeleted. Shared by the
@@ -107,36 +60,6 @@ export function DeleteIssueDialog({
           onChange={setDisposition}
         />
       )}
-    </ConfirmDialog>
-  );
-}
-
-// Confirm and apply one manual action's effect as a single patch. Owns the
-// mutation; the caller owns whether the dialog is mounted.
-export function ApplyActionDialog({
-  project,
-  issue,
-  action,
-  onClose,
-}: {
-  project: ProjectDetail;
-  issue: Issue;
-  action: ActionDef;
-  onClose: () => void;
-}) {
-  const t = useTranslations('issue.actions');
-  const updateIssue = useUpdateIssue(project.project.ref);
-  return (
-    <ConfirmDialog
-      title={action.name}
-      confirmLabel={t('apply')}
-      onConfirm={async () => {
-        await updateIssue.mutateAsync({ id: issue.id, patch: action.effect });
-        onClose();
-      }}
-      onClose={onClose}
-    >
-      <EffectSummary action={action} project={project} />
     </ConfirmDialog>
   );
 }

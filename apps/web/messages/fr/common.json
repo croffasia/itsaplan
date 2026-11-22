@@ -313,5 +313,16 @@
     "range": "{first}-{last} sur {total}"
   },
   "upgradeToPro": "Passer à Pro",
-  "signingOut": "Déconnexion…"
+  "signingOut": "Déconnexion…",
+  "slackApp": {
+    "setup": "Créez une app sur api.slack.com/apps avec le scope de bot chat:write et la Redirect URL. Installez-la dans votre espace de travail Slack, puis copiez le Client ID et le secret depuis Basic Information.",
+    "botToken": "Token du bot",
+    "botTokenHint": "Dans OAuth & Permissions. Slack le vérifie à l'enregistrement.",
+    "clientId": "Client ID",
+    "clientSecret": "Secret client",
+    "redirectUrl": "Redirect URL",
+    "redirectUrlHint": "Ajoutez-la dans Slack, sous OAuth & Permissions → Redirect URLs.",
+    "workspace": "Espace de travail Slack",
+    "workspaceHint": "L'espace de travail Slack où l'app est installée. Seuls ses comptes peuvent se connecter."
+  }
 }

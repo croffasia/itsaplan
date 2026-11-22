@@ -313,5 +313,16 @@
     "range": "{first}-{last} من {total}"
   },
   "upgradeToPro": "الترقية إلى Pro",
-  "signingOut": "جارٍ تسجيل الخروج…"
+  "signingOut": "جارٍ تسجيل الخروج…",
+  "slackApp": {
+    "setup": "أنشئ تطبيقًا في api.slack.com/apps مع نطاق الروبوت chat:write وRedirect URL. ثبّته في مساحة عمل Slack، ثم انسخ Client ID والسرّ من Basic Information.",
+    "botToken": "رمز الروبوت",
+    "botTokenHint": "في OAuth & Permissions. يتحقق Slack منه عند الحفظ.",
+    "clientId": "Client ID",
+    "clientSecret": "سرّ العميل",
+    "redirectUrl": "Redirect URL",
+    "redirectUrlHint": "أضفه في Slack ضمن OAuth & Permissions → Redirect URLs.",
+    "workspace": "مساحة عمل Slack",
+    "workspaceHint": "مساحة عمل Slack المثبّت فيها التطبيق. يمكن ربط حسابات هذه المساحة فقط."
+  }
 }

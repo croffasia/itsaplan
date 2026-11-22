@@ -521,6 +521,13 @@ export const ALWAYS_ON_ACTIONS: ToolMeta[] = [
     always: true,
   },
   {
+    key: 'list_project_repositories',
+    group: 'project',
+    label: 'Read connected repositories',
+    description: 'List the repositories connected to the project in its settings.',
+    always: true,
+  },
+  {
     key: 'search_issues',
     group: 'issues',
     label: 'Search issues',

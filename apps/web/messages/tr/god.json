@@ -410,6 +410,12 @@
     "botTokenHint": "Kaydettiğinizde jeton Telegram ile doğrulanır, böylece hatalı bir jeton sessizce başarısız olmak yerine burada reddedilir.",
     "resolvedHint": "Jetondan çözümlendi. Kullanıcıların bağlanırken göreceği bot budur."
   },
+  "slack": {
+    "saved": "Slack ayarları kaydedildi",
+    "app": "Slack uygulaması",
+    "appConfigured": "Açıkken üyeler, Slack hesaplarını bir projenin bildirim ayarlarından bağlayabilir.",
+    "appMissing": "Uygulamayı açmak için bot jetonunu, Client ID'yi ve istemci parolasını ekleyin."
+  },
   "email": {
     "saved": "E-posta sağlayıcısı kaydedildi",
     "provider": "E-posta sağlayıcısı",

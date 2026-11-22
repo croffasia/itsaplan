@@ -1,5 +1,5 @@
 {
-  "id": "788f52b6-ec63-4b8f-90b1-46cf81357a00",
+  "id": "12d4a151-7262-4c8c-8c14-421bc162b34e",
   "prevId": "712fa733-1fac-4eb8-b16c-9ca2fb3980be",
   "version": "7",
   "dialect": "postgresql",
@@ -9482,7 +9482,7 @@
       "checkConstraints": {
         "notification_delivery_channel_check": {
           "name": "notification_delivery_channel_check",
-          "value": "\"notification_delivery\".\"channel\" IN ('email', 'telegram', 'push')"
+          "value": "\"notification_delivery\".\"channel\" IN ('email', 'telegram', 'slack', 'push')"
         }
       },
       "isRLSEnabled": false
@@ -10051,13 +10051,6 @@
         },
         "is_locked": {
           "name": "is_locked",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "is_pinned": {
-          "name": "is_pinned",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
@@ -12501,6 +12494,13 @@
         },
         "telegram_events": {
           "name": "telegram_events",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "slack_events": {
+          "name": "slack_events",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true,

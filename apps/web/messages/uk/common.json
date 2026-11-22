@@ -313,5 +313,16 @@
     "range": "{first}-{last} з {total}"
   },
   "upgradeToPro": "Перейти на Pro",
-  "signingOut": "Вихід…"
+  "signingOut": "Вихід…",
+  "slackApp": {
+    "setup": "Створіть застосунок на api.slack.com/apps з bot scope chat:write і Redirect URL. Встановіть його в робочий простір Slack, потім скопіюйте Client ID і секрет із Basic Information.",
+    "botToken": "Токен бота",
+    "botTokenHint": "У розділі OAuth & Permissions. Slack перевірить токен під час збереження.",
+    "clientId": "Client ID",
+    "clientSecret": "Секрет застосунку",
+    "redirectUrl": "Redirect URL",
+    "redirectUrlHint": "Додайте його в Slack: OAuth & Permissions → Redirect URLs.",
+    "workspace": "Робочий простір Slack",
+    "workspaceHint": "Робочий простір Slack, у який встановлено застосунок. Підключити можна лише акаунти з нього."
+  }
 }

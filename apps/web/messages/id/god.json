@@ -410,6 +410,12 @@
     "botTokenHint": "Token diverifikasi dengan Telegram saat Anda menyimpan, jadi token yang salah akan ditolak di sini daripada gagal tanpa peringatan nanti.",
     "resolvedHint": "Diresolusi dari token. Ini adalah bot yang akan dilihat pengguna saat menghubungkan."
   },
+  "slack": {
+    "saved": "Pengaturan Slack disimpan",
+    "app": "Aplikasi Slack",
+    "appConfigured": "Jika aktif, anggota dapat menghubungkan akun Slack mereka di pengaturan notifikasi proyek.",
+    "appMissing": "Tambahkan token bot, Client ID, dan rahasia klien untuk mengaktifkan aplikasi."
+  },
   "email": {
     "saved": "Penyedia email disimpan",
     "provider": "Penyedia email",

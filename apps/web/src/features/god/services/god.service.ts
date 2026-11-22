@@ -35,6 +35,9 @@ import {
   getInstanceOidcSettings,
   updateInstanceOidcSettings,
   getInstanceTelegramSettings,
+  getInstanceSlackSettings,
+  updateInstanceSlackSettings,
+  type InstanceSlackSettingsPatch,
   updateInstanceTelegramSettings,
   getInstanceProjectDefaults,
   updateInstanceProjectDefaults,
@@ -163,6 +166,26 @@ export function useUpdateInstanceOidcSettings() {
     onSuccess: (data) => {
       qc.setQueryData(qk.instanceOidcSettings, data);
       invalidateSignInMethods(qc);
+    },
+  });
+}
+
+// The instance Slack app every workspace sends Slack notifications through unless it set
+// one of its own. Saving it changes where the projects' Slack notifications go.
+export function useInstanceSlackSettingsQuery() {
+  return useQuery({
+    queryKey: qk.instanceSlackSettings,
+    queryFn: () => getInstanceSlackSettings(),
+  });
+}
+
+export function useUpdateInstanceSlackSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: InstanceSlackSettingsPatch) => updateInstanceSlackSettings(patch),
+    onSuccess: (data) => {
+      qc.setQueryData(qk.instanceSlackSettings, data);
+      void qc.invalidateQueries({ queryKey: ['slackAccount'] });
     },
   });
 }

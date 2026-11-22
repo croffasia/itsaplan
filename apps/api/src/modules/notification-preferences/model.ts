@@ -16,13 +16,15 @@ const EventTogglesBody = t.Object({ ...baseEventFields, reacted: t.Optional(t.Bo
 export const NotificationPreferenceResponse = t.Object({
   emailEvents: EventToggles,
   telegramEvents: EventToggles,
+  slackEvents: EventToggles,
   pushEvents: EventToggles,
 });
 
-// A PUT without pushEvents keeps the stored ones, so a client that predates push
-// does not turn it off.
+// A PUT without slackEvents or pushEvents keeps the stored ones, so a client that
+// predates a channel does not turn it off.
 export const NotificationPreferenceBody = t.Object({
   emailEvents: EventTogglesBody,
   telegramEvents: EventTogglesBody,
+  slackEvents: t.Optional(EventTogglesBody),
   pushEvents: t.Optional(EventTogglesBody),
 });

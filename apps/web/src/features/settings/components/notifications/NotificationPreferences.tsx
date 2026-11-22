@@ -1,25 +1,31 @@
 import { type ReactNode } from 'react';
-import { BellRing, Mail, Send } from 'lucide-react';
+import { BellRing, Hash, Mail, Send } from 'lucide-react';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import type { NotificationEventToggles } from '@/lib/api/endpoints/notificationSettings';
 import { usePushConfigQuery } from '@/services/push.service';
 import NotificationChannelHeader from './NotificationChannelHeader';
 import NotificationChannelRow from './NotificationChannelRow';
 import NotificationTelegramAccount from './NotificationTelegramAccount';
+import NotificationSlackAccount from './NotificationSlackAccount';
+import { useSlackAccountQuery } from '../../services/slack.service';
 import { NOTIFICATION_EVENTS } from '../../utils/notificationEvents';
 import type { NotificationPreferencesForm } from '../../hooks/useNotificationPreferencesForm';
 import { useTranslations } from 'next-intl';
 
 // A member's own notification preferences for the project: for each issue event, a
-// checkbox per channel (email, Telegram, and push while the instance sends it). Visible
-// to every member (each edits only their own). Email is sent to the account address;
-// Telegram to the account connected in the member's profile, shown below; push to the
-// browsers the member turned it on in. Delivery only happens for channels a project
-// owner has configured. Save lives in the page header.
+// checkbox per channel (email, Telegram, Slack while the project's workspace sends it, and
+// push while the instance sends it). Visible to every member (each edits only their own).
+// Email is sent to the account address; Telegram to the account connected in the member's
+// profile; Slack to the account the member connects below; push to the browsers the member
+// turned it on in. Delivery only happens for channels a project owner has configured. Save
+// lives in the page header.
 
 // Shared column templates so the header labels line up with every event row.
-const COLS = 'grid grid-cols-[1fr_5rem_5rem] items-center';
-const COLS_WITH_PUSH = 'grid grid-cols-[1fr_5rem_5rem_5rem] items-center';
+const COLS: Record<number, string> = {
+  2: 'grid grid-cols-[1fr_5rem_5rem] items-center',
+  3: 'grid grid-cols-[1fr_5rem_5rem_5rem] items-center',
+  4: 'grid grid-cols-[1fr_5rem_5rem_5rem_5rem] items-center',
+};
 
 interface Channel {
   icon: ReactNode;
@@ -28,10 +34,16 @@ interface Channel {
   setEvents: (events: NotificationEventToggles) => void;
 }
 
-export default function NotificationPreferences({ form }: { form: NotificationPreferencesForm }) {
+export default function NotificationPreferences({
+  projectKey,
+  form,
+}: {
+  projectKey: string;
+  form: NotificationPreferencesForm;
+}) {
   const t = useTranslations('settings.notifications');
   const push = usePushConfigQuery().data?.enabled === true;
-  const cols = push ? COLS_WITH_PUSH : COLS;
+  const slack = useSlackAccountQuery(projectKey).data?.slackTeamName != null;
   const channels: Channel[] = [
     {
       icon: <Mail className="size-3.5" />,
@@ -46,6 +58,14 @@ export default function NotificationPreferences({ form }: { form: NotificationPr
       setEvents: form.setTelegramEvents,
     },
   ];
+  if (slack) {
+    channels.push({
+      icon: <Hash className="size-3.5" />,
+      label: t('slack'),
+      events: form.slackEvents,
+      setEvents: form.setSlackEvents,
+    });
+  }
   if (push) {
     channels.push({
       icon: <BellRing className="size-3.5" />,
@@ -54,6 +74,7 @@ export default function NotificationPreferences({ form }: { form: NotificationPr
       setEvents: form.setPushEvents,
     });
   }
+  const cols = COLS[channels.length];
 
   return (
     <div className="flex flex-col gap-10">
@@ -87,6 +108,7 @@ export default function NotificationPreferences({ form }: { form: NotificationPr
       </SettingsSection>
 
       <NotificationTelegramAccount />
+      <NotificationSlackAccount projectKey={projectKey} />
     </div>
   );
 }

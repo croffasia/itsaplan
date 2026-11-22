@@ -57,6 +57,10 @@
       "label": "Telegram",
       "description": "Kullanıcıların Telegram hesaplarını bağladığı ve kendi botunu ayarlamayan projeler için bildirim gönderen bot."
     },
+    "slack": {
+      "label": "Slack",
+      "description": "Bildirimleri Slack doğrudan mesajı olarak gönderir."
+    },
     "email": {
       "label": "E-posta Sağlayıcısı",
       "description": "Örneklemin e-posta gönderdiği sağlayıcı: şifre sıfırlama, adres doğrulama ve giriş bağlantıları."

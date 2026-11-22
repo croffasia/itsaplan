@@ -116,7 +116,7 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
         t('notificationPreferences'),
         <Bell />,
         notificationsPath(key),
-        'email telegram',
+        'email telegram slack',
       );
     // The settings destinations, already permission-filtered by the hook the
     // settings sidebar uses. The group label is a keyword so "workflow" or

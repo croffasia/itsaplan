@@ -410,6 +410,12 @@
     "botTokenHint": "El token se verifica con Telegram cuando guardas, así que uno erróneo se rechaza aquí en lugar de fallar en silencio más tarde.",
     "resolvedHint": "Resuelto del token. Este es el bot que las personas verán al conectar."
   },
+  "slack": {
+    "saved": "La configuración de Slack se ha guardado",
+    "app": "App de Slack",
+    "appConfigured": "Si está activada, los miembros pueden conectar su cuenta de Slack en los ajustes de notificaciones de un proyecto.",
+    "appMissing": "Añade el token del bot, el Client ID y el secreto de cliente para activar la app."
+  },
   "email": {
     "saved": "El proveedor de correo se ha guardado",
     "provider": "Proveedor de correo",

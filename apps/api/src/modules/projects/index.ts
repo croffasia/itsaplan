@@ -191,7 +191,8 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         description:
           "Get a project's setup by key: columns, issue types, labels, custom fields, issue " +
           'templates, and assignable users and agents. Gives the ids for create_issue and ' +
-          'update_issue. To find issues, use list_issues or search_issues.',
+          'update_issue. To find issues, use list_issues or search_issues. The repositories ' +
+          'connected to the project are listed by list_project_repositories.',
         ...mcpTool('get_project'),
       },
     },

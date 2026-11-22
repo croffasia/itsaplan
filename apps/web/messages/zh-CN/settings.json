@@ -98,6 +98,7 @@
     "description": "选择要接收的工作项事件及通知渠道。",
     "email": "邮件",
     "telegram": "Telegram",
+    "slack": "Slack",
     "push": "推送",
     "events": {
       "assigned": "被指派处理某一工作项",
@@ -110,6 +111,17 @@
     "telegramAccount": "Telegram 账户",
     "telegramAccountHint": "你参与的每个项目都会将 Telegram 通知发送到已关联账户。",
     "noTelegramAccount": "未关联 Telegram 账户",
+    "slackAccount": "Slack 账号",
+    "slackAccountHint": "此项目的 Slack 通知会发送到你在 Slack 工作区 {workspace} 中的账号。",
+    "noSlackAccount": "未连接 Slack 账号",
+    "slackConnected": "已连接",
+    "slackConnect": "连接",
+    "slackDisconnect": "断开连接",
+    "slackConnectedToast": "Slack 账号已连接",
+    "slackConnecting": "正在连接你的 Slack 账号…",
+    "slackConnectFailed": "Slack 账号未连接",
+    "slackConnectCancelled": "已在 Slack 中取消连接。请在项目的通知设置中重新连接。",
+    "slackBack": "返回应用",
     "preferencesSaved": "通知偏好已保存"
   },
   "transfer": {

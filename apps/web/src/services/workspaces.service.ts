@@ -15,6 +15,9 @@ import {
   updateWorkspace,
   type WorkspacePatch,
   updateWorkspaceScim,
+  getWorkspaceSlackSettings,
+  updateWorkspaceSlackSettings,
+  type WorkspaceSlackSettingsPatch,
 } from '@/lib/api/endpoints/workspaces';
 import { qk } from '@/services/queryKeys';
 
@@ -135,5 +138,26 @@ export function useWorkspaceProjectOptionsQuery(workspaceId: number | null) {
   return useQuery({
     queryKey: qk.scimProjects(workspaceId),
     queryFn: () => listWorkspaceProjectOptions(workspaceId),
+  });
+}
+
+// The Slack app the workspace's notifications go through. Saving it changes where the
+// projects' Slack notifications go, so the members' accounts refetch.
+export function useWorkspaceSlackSettingsQuery(workspaceId: number) {
+  return useQuery({
+    queryKey: qk.workspaceSlack(workspaceId),
+    queryFn: () => getWorkspaceSlackSettings(workspaceId),
+  });
+}
+
+export function useUpdateWorkspaceSlackSettings(workspaceId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: WorkspaceSlackSettingsPatch) =>
+      updateWorkspaceSlackSettings(workspaceId, patch),
+    onSuccess: (data) => {
+      qc.setQueryData(qk.workspaceSlack(workspaceId), data);
+      void qc.invalidateQueries({ queryKey: ['slackAccount'] });
+    },
   });
 }

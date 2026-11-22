@@ -98,6 +98,7 @@
     "description": "알림을 받을 이슈 이벤트와 수신 방법을 선택하세요.",
     "email": "이메일",
     "telegram": "Telegram",
+    "slack": "Slack",
     "push": "푸시",
     "events": {
       "assigned": "이슈 담당자로 지정됨",
@@ -110,6 +111,17 @@
     "telegramAccount": "Telegram 계정",
     "telegramAccountHint": "참여 중인 모든 프로젝트의 Telegram 알림이 프로필에 연결된 계정으로 전송됩니다.",
     "noTelegramAccount": "연결된 Telegram 계정이 없습니다",
+    "slackAccount": "Slack 계정",
+    "slackAccountHint": "이 프로젝트의 Slack 알림은 {workspace} Slack 워크스페이스의 내 계정으로 전송됩니다.",
+    "noSlackAccount": "연결된 Slack 계정이 없습니다",
+    "slackConnected": "연결됨",
+    "slackConnect": "연결",
+    "slackDisconnect": "연결 해제",
+    "slackConnectedToast": "Slack 계정이 연결되었습니다",
+    "slackConnecting": "Slack 계정을 연결하는 중…",
+    "slackConnectFailed": "Slack 계정이 연결되지 않았습니다",
+    "slackConnectCancelled": "Slack에서 연결이 취소되었습니다. 프로젝트 알림 설정에서 다시 연결하세요.",
+    "slackBack": "앱으로 돌아가기",
     "preferencesSaved": "알림 설정이 저장되었습니다"
   },
   "transfer": {

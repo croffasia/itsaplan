@@ -1133,13 +1133,13 @@ export const teamNotificationSetting = pgTable('team_notification_setting', {
 });
 
 // A member's own notification preferences for one project: for each issue event
-// type, whether they want it by email, Telegram and/or Web Push. One row per (user,
-// project); absent means the member has not opted in and receives nothing.
-// email_events/telegram_events/push_events are EventToggles jsonb keyed by the four
-// inbox notification types (assigned/mentioned/commented/state_changed). Email is sent
-// to the member's account address; Telegram to the chat of the account they linked in
-// user_telegram_account, and push to every browser in push_subscription. Both are
-// instance-wide rather than per project.
+// type, whether they want it by email, Telegram, Slack and/or Web Push. One row per
+// (user, project); absent means the member has not opted in and receives nothing.
+// email_events/telegram_events/slack_events/push_events are EventToggles jsonb keyed by
+// the inbox notification types. Email is sent to the member's account address; Telegram
+// to the chat of the account they linked in user_telegram_account; Slack to the account
+// they connected in user_slack_account; push to every browser in push_subscription. The
+// Telegram link and the browsers are instance-wide rather than per project.
 export const userNotificationPreference = pgTable(
   'user_notification_preference',
   {
@@ -1152,6 +1152,7 @@ export const userNotificationPreference = pgTable(
       .references(() => project.id, { onDelete: 'cascade' }),
     emailEvents: jsonb('email_events').notNull().default({}),
     telegramEvents: jsonb('telegram_events').notNull().default({}),
+    slackEvents: jsonb('slack_events').notNull().default({}),
     pushEvents: jsonb('push_events').notNull().default({}),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -1191,6 +1192,59 @@ export const userTelegramAccount = pgTable(
   ],
 );
 
+// A workspace's own Slack app for notifications, used in place of the instance app in
+// app_secret key 'slack.app'. Stored encrypted like team_notification_setting; `redacted`
+// is the same config with the secrets replaced by flags. No row means the workspace sends
+// through the instance app.
+export const workspaceSlackSetting = pgTable('workspace_slack_setting', {
+  workspaceId: integer('workspace_id')
+    .primaryKey()
+    .references(() => workspace.id, { onDelete: 'cascade' }),
+  ciphertext: text('ciphertext').notNull(),
+  iv: text('iv').notNull(),
+  authTag: text('auth_tag').notNull(),
+  redacted: jsonb('redacted').notNull().default({}),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// The Slack accounts a user connected, one per Slack workspace (slack_team_id): a Slack
+// user id belongs to one Slack workspace, and the app a product workspace sends through
+// can be in any. Connected with Sign in with Slack through the app that serves the
+// project the user started from. One Slack account serves one product account.
+export const userSlackAccount = pgTable(
+  'user_slack_account',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    slackTeamId: text('slack_team_id').notNull(),
+    slackUserId: text('slack_user_id').notNull(),
+    // Display only, refreshed on every connection: so the user can tell which account it is.
+    name: text('name'),
+    slackTeamName: text('slack_team_name'),
+    linkedAt: timestamp('linked_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.slackTeamId] }),
+    unique('user_slack_account_slack_user_unique').on(t.slackTeamId, t.slackUserId),
+  ],
+);
+
+// A Slack connection a user started and Slack has not answered yet. `code` is the OAuth
+// state and nonce. The project names the app that serves it and the page the user returns
+// to. A user keeps one: starting another replaces it.
+export const slackLinkRequest = pgTable('slack_link_request', {
+  code: text('code').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .unique()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  projectId: integer('project_id')
+    .notNull()
+    .references(() => project.id, { onDelete: 'cascade' }),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+});
+
 // A browser a user turned push notifications on in, instance-wide like the Telegram
 // link. The endpoint is the URL the browser's push service issued for it; p256dh and
 // auth are the browser's keys the payload is encrypted to (RFC 8291). vapid_public_key
@@ -1218,26 +1272,30 @@ export const pushSubscription = pgTable(
 );
 
 // Outbox for outbound notification delivery. One row per (recipient, channel,
-// message) to send for an issue event: an email, a Telegram message or a push
+// message) to send for an issue event: an email, a Telegram or Slack message or a push
 // message to one member. Rows are enqueued when inbox notifications are created (see
 // apps/api/src/modules/notifications/outbound.ts) and drained by the worker
 // following the same claim/retry pattern as webhook_delivery. The message text is
 // composed at enqueue time and stored in `payload`; the channel credentials are read
 // from team_notification_setting at send time, and the push keys from the instance
-// environment. channel is 'email' | 'telegram' | 'push' ('email' picks SMTP or Resend
-// from the team config). recipient is the member's email address for email rows,
-// their Telegram chat id for telegram rows, or a push_subscription id for push rows.
+// environment. channel is 'email' | 'telegram' | 'slack' | 'push' ('email' picks SMTP or
+// Resend from the team config). recipient is the member's email address for email rows,
+// their Telegram chat id for telegram rows, their Slack user id for slack rows, or a
+// push_subscription id for push rows. The Slack app is the one that serves the project's
+// workspace (domains/slack.ts).
 // The stored message on a notification_delivery row, composed at enqueue time by the
 // api and read by the worker that sends it. Email uses `subject` and sends `html` as composed;
 // for a row without `html` the sender appends `url` to `text` and wraps it. Telegram sends
-// `html` (parse_mode HTML) and falls back to `text`. Push sends `{ title, body: text, url,
-// tag }` to the service worker. `dedupeKey` is what the enqueue side
-// matches to avoid queuing the same message twice; `projectInviteId` ties an invite email to
-// its invite, so a delivery whose invite is no longer pending is dropped instead of sent.
+// `html` (parse_mode HTML) and falls back to `text`. Slack sends `mrkdwn` and falls back to
+// `text`. Push sends `{ title, body: text, url, tag }` to the service worker. `dedupeKey`
+// is what the enqueue side matches to avoid queuing the same message twice;
+// `projectInviteId` ties an invite email to its invite, so a delivery whose invite is no
+// longer pending is dropped instead of sent.
 export interface DeliveryPayload {
   subject?: string;
   text: string;
   html?: string;
+  mrkdwn?: string;
   url?: string;
   title?: string;
   tag?: string;
@@ -1266,7 +1324,7 @@ export const notificationDelivery = pgTable(
   (t) => [
     check(
       'notification_delivery_channel_check',
-      sql`${t.channel} IN ('email', 'telegram', 'push')`,
+      sql`${t.channel} IN ('email', 'telegram', 'slack', 'push')`,
     ),
     // Backs the worker's claim query: due pending rows ordered by next_attempt_at.
     index('notification_delivery_due_idx')

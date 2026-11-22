@@ -10,6 +10,7 @@ import {
   getProjectEmailConfig,
   getWebPushConfig,
   isInstanceBotUsable,
+  slackAppForProject,
   type DeliveryPayload,
   type NotificationConfig,
 } from '@repo/db';
@@ -19,11 +20,11 @@ import { pinnedFetch, UrlNotAllowedError } from '@repo/net';
 import { encryptPushPayload, vapidAuthorization } from './web-push';
 
 // Sends one claimed notification_delivery row over its channel. Email transport lives
-// in @repo/mailer (shared with the authentication mail sent from @repo/auth); Telegram
-// and Web Push are only used here, so they stay in this file, with the push encryption
-// in web-push.ts. A team that set no bot token of its own sends through the instance
-// bot, the same one members link their Telegram accounts through. Each channel is a
-// branch here and a compose function in the api's outbound.ts. The result tells the
+// in @repo/mailer (shared with the authentication mail sent from @repo/auth); Telegram,
+// Slack and Web Push are only used here, so they stay in this file, with the push
+// encryption in web-push.ts. A team that set no bot token of its own sends through the
+// instance bot, the same one members link their Telegram accounts through. Each channel
+// is a branch here and a compose function in the api's outbound.ts. The result tells the
 // caller whether a failure is worth retrying (transient: network error, timeout, rate
 // limit, server error) or permanent (bad credentials, rejected recipient,
 // misconfiguration).
@@ -31,6 +32,7 @@ import { encryptPushPayload, vapidAuthorization } from './web-push';
 export type { SendResult };
 
 export interface SendInput {
+  projectId: number;
   channel: string;
   recipient: string | null;
   payload: DeliveryPayload;
@@ -113,6 +115,69 @@ async function sendTelegram(input: SendInput): Promise<SendResult> {
       error: err instanceof Error ? err.message : 'telegram request failed',
     };
   }
+}
+
+interface SlackAnswer {
+  ok?: boolean;
+  error?: string;
+}
+
+// Codes Slack answers with when the fault is on its side, so the send is tried again.
+const SLACK_TRANSIENT = new Set([
+  'ratelimited',
+  'internal_error',
+  'fatal_error',
+  'service_unavailable',
+  'request_timeout',
+]);
+
+// A member is reached by direct message at the Slack account they connected: a user id
+// as the channel opens the bot's conversation with that person. The app is the one that
+// serves the project's workspace now, the same one the member connected through. Slack
+// reports a failure as ok:false with a code; any code but its own outages is permanent
+// (a revoked token, a user the bot cannot reach).
+async function sendSlack(input: SendInput): Promise<SendResult> {
+  const app = await slackAppForProject(input.projectId);
+  if (!app) return { ok: false, retryable: false, error: 'slack not configured' };
+  if (!input.recipient) return { ok: false, retryable: false, error: 'no slack user id' };
+  const text =
+    input.payload.mrkdwn ??
+    (input.payload.url ? `${input.payload.text}\n\n${input.payload.url}` : input.payload.text);
+  let res: Response;
+  try {
+    res = await fetch('https://slack.com/api/chat.postMessage', {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${app.botToken}`,
+        'content-type': 'application/json; charset=utf-8',
+      },
+      signal: AbortSignal.timeout(15_000),
+      body: JSON.stringify({
+        channel: input.recipient,
+        text,
+        unfurl_links: false,
+        unfurl_media: false,
+      }),
+    });
+  } catch (err) {
+    const error = err instanceof Error ? err.message : 'slack request failed';
+    return { ok: false, retryable: true, error };
+  }
+  if (!res.ok) {
+    return {
+      ok: false,
+      retryable: res.status === 429 || res.status >= 500,
+      error: `Slack chat.postMessage HTTP ${res.status}`,
+    };
+  }
+  const body = (await res.json().catch(() => ({}))) as SlackAnswer;
+  if (body.ok) return { ok: true };
+  const code = body.error ?? 'unknown_error';
+  return {
+    ok: false,
+    retryable: SLACK_TRANSIENT.has(code),
+    error: `Slack chat.postMessage: ${code}`,
+  };
 }
 
 export type PushFetch = typeof pinnedFetch;
@@ -212,6 +277,7 @@ export async function sendPush(
 async function sendDelivery(input: SendInput): Promise<SendResult> {
   if (input.channel === 'email') return sendNotificationEmail(input);
   if (input.channel === 'telegram') return sendTelegram(input);
+  if (input.channel === 'slack') return sendSlack(input);
   if (input.channel === 'push') return sendPush(input.recipient, input.payload);
   return { ok: false, retryable: false, error: `unknown channel: ${input.channel}` };
 }
@@ -260,6 +326,7 @@ export async function deliverNotification(row: DeliveryRow): Promise<SendResult>
   const teamId = await teamOf(row.projectId);
   if (teamId == null) return { ok: false, retryable: false, error: 'Project not found' };
   return sendDelivery({
+    projectId: row.projectId,
     channel: row.channel,
     recipient: row.recipient,
     payload: row.payload,

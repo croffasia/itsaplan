@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'bun:test';
-import { issueRef, repoPath } from '../client';
+import { numberRef, repoPath } from '../client';
 
 describe('gitea helpers', () => {
   it('takes an issue number bare, hashed, or from the issue URL', () => {
-    expect(issueRef(12)).toBe(12);
-    expect(issueRef('#12')).toBe(12);
-    expect(issueRef('https://git.example.com/acme/widgets/issues/12')).toBe(12);
-    expect(() => issueRef('an issue')).toThrow('not a Gitea issue number or URL');
+    expect(numberRef(12)).toBe(12);
+    expect(numberRef('#12')).toBe(12);
+    expect(numberRef('https://git.example.com/acme/widgets/issues/12')).toBe(12);
+    expect(() => numberRef('an issue')).toThrow('not a Gitea issue or pull request number or URL');
   });
 
   it('builds the repository path with each segment encoded', () => {

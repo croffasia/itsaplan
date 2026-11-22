@@ -151,6 +151,7 @@ export default function DocumentTree({
     const children = byParent.get(item.id) ?? [];
     const isCollapsed = collapsed.has(item.id);
     const pinnable = canPin && !item.isPrivate && item.archivedAt === null;
+    const creatable = canCreate && item.archivedAt === null;
     const create = () => onCreate(item.id);
     const favoriteChange = () => onFavoriteChange(item.id, !item.isFavorite);
     const pinChange = () => onPinChange(item.id, !item.isPinned);
@@ -164,7 +165,7 @@ export default function DocumentTree({
         active={activeId === item.id}
         collapsed={isCollapsed}
         hasChildren={children.length > 0}
-        canCreate={canCreate}
+        canCreate={creatable}
         pinnable={pinnable}
         reorderEnabled={reorderEnabled}
         favoritePending={favoritePending}
@@ -173,7 +174,7 @@ export default function DocumentTree({
           <DocumentRowMenu
             projectKey={projectKey}
             document={item}
-            canCreate={canCreate}
+            canCreate={creatable}
             pinnable={pinnable}
             movable={canMove && item.archivedAt === null && !item.isLocked}
             reorderEnabled={reorderEnabled}

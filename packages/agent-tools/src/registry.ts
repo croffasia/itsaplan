@@ -15,6 +15,7 @@ import { notion } from './tools/notion';
 import { baserow } from './tools/baserow';
 import { gitea } from './tools/gitea';
 import { github } from './tools/github';
+import { gitlab } from './tools/gitlab';
 import { pdf } from './tools/pdf';
 import { keenable } from './tools/keenable';
 import { dataforseo } from './tools/dataforseo';
@@ -32,6 +33,7 @@ export const INTEGRATIONS: Integration[] = [
   baserow,
   gitea,
   github,
+  gitlab,
   pdf,
   keenable,
   dataforseo,

@@ -2165,11 +2165,14 @@ export interface ActivitySide {
 // What an activity entry says changed. `subject` names the sub-item the action
 // applies to (the custom field for 'field', the checklist for a checklist item);
 // `from` and `to` are the two sides of the change. A side the action does not
-// have is absent, and an action that describes nothing carries {}.
+// have is absent, and an action that describes nothing carries {}. 'created' carries
+// `title` and `description`, the text the issue was filed with.
 export interface ActivityPayload {
   subject?: ActivitySide;
   from?: ActivitySide;
   to?: ActivitySide;
+  title?: ActivitySide;
+  description?: ActivitySide;
 }
 
 // Timeline of comments and change-log activity for issues and initiatives, in one

@@ -13,27 +13,21 @@ const byPosition = (a: ProjectDocumentSummary, b: ProjectDocumentSummary) =>
 
 // What the Docs home shows, from the list of active pages the viewer can read.
 export function documentHomeSections(documents: ProjectDocumentSummary[]): {
-  pinned: ProjectDocumentSummary[];
-  cards: DocumentHomeCard[];
+  pinned: DocumentHomeCard[];
   favorites: ProjectDocumentSummary[];
   recent: ProjectDocumentSummary[];
 } {
-  const ids = new Set(documents.map((document) => document.id));
-  const childrenOf = new Map<number | null, ProjectDocumentSummary[]>();
+  const childrenOf = new Map<number, ProjectDocumentSummary[]>();
   for (const document of documents) {
-    // A page whose parent is not in the list is shown at the top level, as the tree does.
-    const parentId =
-      document.parentId !== null && ids.has(document.parentId) ? document.parentId : null;
-    childrenOf.set(parentId, [...(childrenOf.get(parentId) ?? []), document]);
+    if (document.parentId === null) continue;
+    childrenOf.set(document.parentId, [...(childrenOf.get(document.parentId) ?? []), document]);
   }
-  for (const siblings of childrenOf.values()) siblings.sort(byPosition);
 
   return {
-    pinned: documents.filter((document) => document.isPinned).sort(byPosition),
-    cards: (childrenOf.get(null) ?? []).map((page) => ({
-      page,
-      children: childrenOf.get(page.id) ?? [],
-    })),
+    pinned: documents
+      .filter((document) => document.isPinned)
+      .sort(byPosition)
+      .map((page) => ({ page, children: (childrenOf.get(page.id) ?? []).sort(byPosition) })),
     favorites: documents.filter((document) => document.isFavorite).sort(byPosition),
     recent: [...documents]
       .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt) || b.id - a.id)

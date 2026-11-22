@@ -73,7 +73,6 @@ export default function DocumentsIndex({
   failed,
   canCreate,
   canEdit,
-  canPin,
   authorNames,
   reorderSafe,
   creating,
@@ -94,7 +93,6 @@ export default function DocumentsIndex({
   failed: boolean;
   canCreate: boolean;
   canEdit: boolean;
-  canPin: boolean;
   authorNames: Record<string, string>;
   reorderSafe: boolean;
   creating: boolean;
@@ -416,8 +414,8 @@ export default function DocumentsIndex({
             <DocumentsHome
               projectKey={projectKey}
               documents={documents}
-              onSeeFavorites={() => {
-                onTabChange('favorites');
+              onOpenTree={(nextTab) => {
+                onTabChange(nextTab);
                 onViewChange('tree');
               }}
             />
@@ -430,7 +428,7 @@ export default function DocumentsIndex({
               sortBy={tree ? sort : 'position'}
               sortDirection={sortDirection}
               canCreate={canCreate}
-              canPin={canPin}
+              canPin={canEdit}
               reorderEnabled={
                 tree &&
                 canEdit &&

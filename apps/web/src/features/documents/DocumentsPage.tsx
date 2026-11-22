@@ -41,7 +41,7 @@ export default function DocumentsPage() {
   const params = useParams<{ documentId?: string }>();
   const router = useRouter();
   const t = useTranslations('documents');
-  const { can, isAdmin } = usePermissions();
+  const { can } = usePermissions();
   const projectKey = useShellRoute().projectKey ?? '';
   const routeId = params.documentId ? Number(params.documentId) : null;
   const documentId = routeId && Number.isFinite(routeId) ? routeId : null;
@@ -176,7 +176,6 @@ export default function DocumentsPage() {
         failed={visibleDocumentsQuery.isError}
         canCreate={canCreate}
         canEdit={canEdit}
-        canPin={isAdmin}
         authorNames={Object.fromEntries(
           project.assignees.map((candidate) => [candidate.userId, candidate.name]),
         )}

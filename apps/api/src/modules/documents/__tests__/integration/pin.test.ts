@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'bun:test';
 import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { createRole } from '#tests/helpers/roles';
 
 type Client = ReturnType<typeof authedApi>;
 
@@ -11,11 +12,11 @@ async function setupOwnerProject(): Promise<Client> {
   return api;
 }
 
-async function addMember(owner: Client): Promise<{ api: Client; userId: string }> {
+async function addMember(owner: Client, roleId?: number): Promise<{ api: Client; userId: string }> {
   const user = await signUpTestUser();
   const invite = await owner
     .projects({ projectKey: 'MKT' })
-    .invites.post({ email: user.email, role: 'member' });
+    .invites.post({ email: user.email, role: 'member', roleId });
   const api = authedApi(user.cookie);
   await api.invites({ token: invite.data!.token }).accept.post();
   return { api, userId: user.userId };
@@ -54,19 +55,54 @@ describe('document pins', () => {
     expect((await documents(member)({ documentId: page.id }).get()).data?.isPinned).toBe(false);
   });
 
-  it('lets only a project admin pin', async () => {
+  it('lets a member who may edit pages pin, and refuses one who may not', async () => {
     const owner = await setupOwnerProject();
-    const member = (await addMember(owner)).api;
+    const editor = (await addMember(owner)).api;
+    const readerRole = await createRole(owner, 'MKT', {
+      name: 'Reader',
+      permissions: { documents: { read: true } },
+    });
+    const reader = (await addMember(owner, readerRole.data!.id)).api;
     const outsider = authedApi((await signUpTestUser()).cookie);
     const page = (await documents(owner).post({ title: 'Guide' })).data!;
+    const pin = (api: Client, isPinned: boolean) =>
+      documents(api)({ documentId: page.id }).pin.patch({ isPinned });
 
-    expect(
-      (await documents(member)({ documentId: page.id }).pin.patch({ isPinned: true })).status,
-    ).toBe(403);
-    expect(
-      (await documents(outsider)({ documentId: page.id }).pin.patch({ isPinned: true })).status,
-    ).toBe(403);
+    expect((await pin(reader, true)).status).toBe(403);
+    expect((await pin(outsider, true)).status).toBe(403);
     expect((await documents(owner)({ documentId: page.id }).get()).data?.isPinned).toBe(false);
+
+    expect((await pin(editor, true)).status).toBe(200);
+    expect((await documents(reader)({ documentId: page.id }).get()).data?.isPinned).toBe(true);
+    expect((await pin(reader, false)).status).toBe(403);
+    expect((await pin(editor, false)).data).toEqual({ isPinned: false });
+  });
+
+  it('refuses an editor on a private, restricted or archived page', async () => {
+    const owner = await setupOwnerProject();
+    const editor = await addMember(owner);
+    const other = await addMember(owner);
+    const hidden = (await documents(owner).post({ title: 'Hidden', isPrivate: true })).data!;
+    const shared = (await documents(owner).post({ title: 'Shared' })).data!;
+    await documents(owner)({ documentId: shared.id }).access.post({
+      version: 1,
+      isPrivate: true,
+      memberIds: [editor.userId],
+    });
+    const mine = (await documents(editor.api).post({ title: 'Mine', isPrivate: true })).data!;
+    const archived = (await documents(owner).post({ title: 'Old' })).data!;
+    await documents(owner)({ documentId: archived.id }).archive.post({ version: 1 });
+
+    const pin = (api: Client, documentId: number) =>
+      documents(api)({ documentId }).pin.patch({ isPinned: true });
+    expect((await pin(editor.api, hidden.id)).status).toBe(404);
+    expect((await pin(other.api, shared.id)).status).toBe(404);
+    expect((await pin(editor.api, shared.id)).status).toBe(400);
+    expect((await pin(editor.api, mine.id)).status).toBe(400);
+    expect((await pin(editor.api, archived.id)).status).toBe(409);
+    for (const id of [hidden.id, shared.id, archived.id]) {
+      expect((await documents(owner)({ documentId: id }).get()).data?.isPinned).toBe(false);
+    }
   });
 
   it('refuses a missing, private or archived page and a body without the flag', async () => {

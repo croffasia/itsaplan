@@ -956,7 +956,7 @@ export const documentRoutes = new Elysia({
       return pin;
     },
     {
-      projectAdmin: true,
+      permission: ['documents', 'edit'],
       feature: 'documents',
       params: documentParams,
       body: documentPinBody,
@@ -965,7 +965,7 @@ export const documentRoutes = new Elysia({
         summary: 'Pin or unpin a document',
         description:
           'Show a public document first among its siblings for everyone in the project, or ' +
-          'stop doing so. Only a project owner, or an owner or manager of its team, can do this.',
+          'stop doing so.',
         ...mcpTool('set_document_pin'),
       },
     },

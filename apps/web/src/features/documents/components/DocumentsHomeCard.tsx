@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import type { DocumentHomeCard } from '../utils/documentHome';
@@ -11,13 +10,14 @@ const CHILD_LIMIT = 5;
 export default function DocumentsHomeCard({
   projectKey,
   card,
+  onSeeAll,
 }: {
   projectKey: string;
   card: DocumentHomeCard;
+  onSeeAll: () => void;
 }) {
   const t = useTranslations('documents');
-  const [expanded, setExpanded] = useState(false);
-  const children = expanded ? card.children : card.children.slice(0, CHILD_LIMIT);
+  const children = card.children.slice(0, CHILD_LIMIT);
 
   return (
     <section className="flex min-w-0 flex-col rounded-lg border bg-card p-2">
@@ -41,10 +41,9 @@ export default function DocumentsHomeCard({
           variant="ghost"
           size="sm"
           className="mt-1 h-7 self-start px-2 text-xs text-muted-foreground"
-          aria-expanded={expanded}
-          onClick={() => setExpanded((value) => !value)}
+          onClick={onSeeAll}
         >
-          {expanded ? t('showLess') : t('seeAll', { count: card.children.length })}
+          {t('seeAll', { count: card.children.length })}
         </Button>
       )}
     </section>

@@ -18,35 +18,34 @@ const page = (id: number, parentId: number | null, extra: Partial<ProjectDocumen
 const ids = (documents: ProjectDocumentSummary[]) => documents.map((document) => document.id);
 
 describe('documentHomeSections', () => {
-  test('makes a card of each top-level page with its direct children in order', () => {
-    const { cards } = documentHomeSections([
-      page(1, null),
+  test('makes a card of each pinned page with its direct children in order', () => {
+    const { pinned } = documentHomeSections([
+      page(1, null, { isPinned: true }),
       page(2, 1, { position: 9 }),
       page(3, 1),
       page(4, 3),
       page(5, null),
+      page(6, 5, { isPinned: true }),
     ]);
     assert.deepEqual(
-      cards.map((card) => [card.page.id, ids(card.children)]),
+      pinned.map((card) => [card.page.id, ids(card.children)]),
       [
         [1, [3, 2]],
-        [5, []],
+        [6, []],
       ],
     );
   });
 
-  test('shows a page at the top level when its parent is not in the list', () => {
-    const { cards } = documentHomeSections([page(2, 99)]);
-    assert.deepEqual(ids(cards.map((card) => card.page)), [2]);
+  test('makes no card when nothing is pinned', () => {
+    assert.deepEqual(documentHomeSections([page(1, null), page(2, 1)]).pinned, []);
   });
 
-  test('lists pinned pages and favorites from any depth', () => {
-    const { pinned, favorites } = documentHomeSections([
+  test('lists favorites from any depth', () => {
+    const { favorites } = documentHomeSections([
       page(1, null, { isFavorite: true }),
-      page(2, 1, { isPinned: true }),
+      page(2, 1),
       page(3, 2, { isFavorite: true }),
     ]);
-    assert.deepEqual(ids(pinned), [2]);
     assert.deepEqual(ids(favorites), [1, 3]);
   });
 

@@ -87,7 +87,9 @@ export default function MarkdownEditor({
   const router = useRouter();
   const { data: session } = useSession();
   const issueRefs = useIssueRefs();
-  const mentionCandidates = useMentionCandidates(mentions ?? null);
+  // A read-only text has no "@" menu. A public share page renders one with no session,
+  // and the list request would answer 401, which lib/api treats as an ended session.
+  const mentionCandidates = useMentionCandidates(editable ? (mentions ?? null) : null);
   const mentionCandidatesRef = useRef(mentionCandidates);
   mentionCandidatesRef.current = mentionCandidates;
   const mentionNames = useMentionNames();

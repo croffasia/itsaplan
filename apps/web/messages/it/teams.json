@@ -337,6 +337,8 @@
     "noKindMatches": "Nessuna credenziale nei gruppi selezionati.",
     "group": "Gruppo",
     "connected": "Credenziale aggiunta",
+    "locked": "Richiede Cloud o Pro",
+    "lockedHint": "I suoi strumenti funzionano in Cloud e Pro self-hosted. La credenziale resta salvata, ma qui nessun agente la usa.",
     "alreadyConnected": "La squadra ha già una credenziale per {integration}",
     "alreadyConnectedHint": "Aggiungi un'altra credenziale per un secondo account. L'etichetta le distingue.",
     "agentTools": "Strumenti disponibili",
@@ -459,6 +461,9 @@
     "unavailableHint": "Questa istanza non ha questo strumento. Resta com'è, ma nessun agente lo riceve.",
     "locked": "Richiede Cloud o Pro",
     "lockedHint": "Creato con Cloud o Pro. Resta com'è, ma nessun agente lo riceve qui.",
+    "lockedSection": "In Cloud e Pro",
+    "lockedIntegration": "{integration} è disponibile in Cloud e Pro",
+    "lockedIntegrationHint": "In Cloud e Pro self-hosted gli agenti ricevono i suoi strumenti. Qui puoi vedere cosa fanno.",
     "ownTool": "Crea strumento HTTP",
     "ownToolUnavailableTitle": "Fai chiamare qualsiasi API agli agenti",
     "ownToolUnavailableHint": "Gli agenti possono chiamare anche i tuoi servizi, con l'indirizzo e l'API key che imposti. Disponibile in Cloud e Pro self-hosted.",
@@ -945,6 +950,18 @@
       "useBuiltIn": "Usa prezzo integrato",
       "removePrice": "Rimuovi prezzo",
       "save": "Salva prezzo"
+    },
+    "slack": {
+      "title": "Slack",
+      "description": "L'app Slack tramite cui i progetti di questo workspace inviano le notifiche.",
+      "saved": "Impostazioni Slack salvate",
+      "notifications": "Notifiche Slack",
+      "notificationsHint": "Se attive, i membri che connettono il proprio account Slack ricevono messaggi diretti per gli eventi che scelgono.",
+      "app": "App Slack",
+      "instanceApp": "App dell'istanza",
+      "ownApp": "App propria",
+      "instanceAppHint": "Configurata dall'amministratore dell'istanza. I membri devono avere un account nel workspace Slack {workspace}.",
+      "instanceMissing": "L'amministratore dell'istanza non ha configurato un'app Slack. Scegli App propria per configurarne una qui."
     },
     "queue": {
       "title": "Esecuzioni degli agenti"

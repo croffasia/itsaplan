@@ -57,6 +57,10 @@
       "label": "Telegram",
       "description": "Il bot a cui le persone collegano il loro account Telegram, e quello che invia le notifiche Telegram per i progetti che non impostano un bot proprio."
     },
+    "slack": {
+      "label": "Slack",
+      "description": "Invia le notifiche come messaggi diretti Slack."
+    },
     "email": {
       "label": "Provider email",
       "description": "Il provider email tramite cui l'istanza invia: reset della password, conferma dell'indirizzo e link di accesso."

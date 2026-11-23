@@ -743,9 +743,10 @@ async function storeAttachments(
     } catch (error) {
       if (!(error instanceof AttachmentRejectedError)) throw error;
       // The id and the file name come from the imported tracker. A line break in one
-      // would start a forged line in the worker log.
+      // would start a forged line in the worker log. CodeQL takes this exact replace,
+      // with an empty replacement, as the sanitizer of a log line.
       const line = `[import ${job.id}] attachment ${attachment.sourceId} rejected: ${error.message}`;
-      console.error(line.replace(/[\r\n]+/g, ' '));
+      console.error(line.replace(/\n|\r/g, ''));
     }
   }
 }

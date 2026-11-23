@@ -193,5 +193,15 @@
       },
       "denied": "Denied"
     }
+  },
+  "showcase": {
+    "title": "Add your company to the list",
+    "body": "Send your logo, website and a few words about how your team works in It's a Plan. We review each request, and you can take the logo down at any time.",
+    "open": "Add my company",
+    "dismiss": "No thanks",
+    "art": {
+      "heading": "Who uses It's a Plan",
+      "yourLogo": "Your logo"
+    }
   }
 }

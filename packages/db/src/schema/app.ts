@@ -337,6 +337,8 @@ export const userPreference = pgTable(
     // Whether the user closed the tour of the product. Every account starts without it,
     // so one made before the tour existed sees it once too.
     onboardingSeen: boolean('onboarding_seen').notNull().default(false),
+    // Whether the instance owner closed the request to list the company on itsaplan.dev.
+    showcaseSeen: boolean('showcase_seen').notNull().default(false),
     // The user's own keyboard shortcut overrides, as { hotkeyId: combo }. Only the
     // bindings they changed are stored; the rest come from the instance defaults
     // (app_setting key 'hotkeys') and then the built-in ones.

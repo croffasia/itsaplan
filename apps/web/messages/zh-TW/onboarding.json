@@ -193,5 +193,15 @@
       },
       "denied": "已拒絕"
     }
+  },
+  "showcase": {
+    "title": "將貴公司加入清單",
+    "body": "傳送標誌、網站，並簡單介紹您的團隊如何使用 It's a Plan。我們會審核每個申請，您也可以隨時撤下標誌。",
+    "open": "新增我的公司",
+    "dismiss": "不用了",
+    "art": {
+      "heading": "誰在使用 It's a Plan",
+      "yourLogo": "您的標誌"
+    }
   }
 }

@@ -65,6 +65,8 @@ export interface UserPreferenceDto {
   autoWatch: boolean;
   // Whether the user closed the tour of the product the web app shows once.
   onboardingSeen: boolean;
+  // Whether the instance owner closed the request to list the company on itsaplan.dev.
+  showcaseSeen: boolean;
   // The project the user was in last, or null before they opened one. The app root
   // reopens it; a deleted project clears it through the FK.
   lastProjectId: number | null;
@@ -91,6 +93,7 @@ export function defaults(locale: Locale = DEFAULT_LOCALE): UserPreferenceDto {
     issueActivityView: 'flat',
     autoWatch: true,
     onboardingSeen: false,
+    showcaseSeen: false,
     lastProjectId: null,
     hotkeys: {},
   };
@@ -121,6 +124,7 @@ function toDto(row: {
   issueActivityView: string;
   autoWatch: boolean;
   onboardingSeen: boolean;
+  showcaseSeen: boolean;
   lastProjectId: number | null;
   hotkeys: Record<string, string> | null;
 }): UserPreferenceDto {
@@ -138,6 +142,7 @@ function toDto(row: {
     issueActivityView: row.issueActivityView as IssueActivityView,
     autoWatch: row.autoWatch,
     onboardingSeen: row.onboardingSeen,
+    showcaseSeen: row.showcaseSeen,
     lastProjectId: row.lastProjectId,
     hotkeys: row.hotkeys ?? {},
   };
@@ -163,6 +168,7 @@ export async function getPreferences(
       issueActivityView: userPreference.issueActivityView,
       autoWatch: userPreference.autoWatch,
       onboardingSeen: userPreference.onboardingSeen,
+      showcaseSeen: userPreference.showcaseSeen,
       lastProjectId: userPreference.lastProjectId,
       hotkeys: userPreference.hotkeys,
     })

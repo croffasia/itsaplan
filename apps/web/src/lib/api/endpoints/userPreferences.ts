@@ -44,6 +44,8 @@ export interface AccountPreferences {
   autoWatch: boolean;
   // Whether the user closed the tour of the product, shown once to every account.
   onboardingSeen: boolean;
+  // Whether the instance owner closed the request to list the company on itsaplan.dev.
+  showcaseSeen: boolean;
   lastProjectId: number | null;
   // The keyboard shortcuts this user rebound, as { commandId: combo }. Only the
   // changed ones; the rest come from the instance settings, then the built-in

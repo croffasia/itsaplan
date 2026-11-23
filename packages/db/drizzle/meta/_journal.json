@@ -1373,6 +1373,13 @@
       "when": 1795358766329,
       "tag": "0195_document_pin",
       "breakpoints": true
+    },
+    {
+      "idx": 196,
+      "version": "7",
+      "when": 1795439535540,
+      "tag": "0196_showcase_seen",
+      "breakpoints": true
     }
   ]
 }

@@ -193,5 +193,15 @@
       },
       "denied": "Denegado"
     }
+  },
+  "showcase": {
+    "title": "Añade tu empresa a la lista",
+    "body": "Envía tu logotipo, tu sitio web y unas palabras sobre cómo trabaja tu equipo en It's a Plan. Revisamos cada solicitud y puedes retirar el logotipo cuando quieras.",
+    "open": "Añadir mi empresa",
+    "dismiss": "No, gracias",
+    "art": {
+      "heading": "Quién usa It's a Plan",
+      "yourLogo": "Tu logotipo"
+    }
   }
 }

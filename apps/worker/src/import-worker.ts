@@ -742,10 +742,10 @@ async function storeAttachments(
       await createLocalAttachmentAndRecord(job.id, attachment.sourceId, input);
     } catch (error) {
       if (!(error instanceof AttachmentRejectedError)) throw error;
-      console.error(
-        `[import ${job.id}] attachment ${attachment.sourceId} rejected:`,
-        error.message,
-      );
+      // The id and the file name come from the imported tracker. A line break in one
+      // would start a forged line in the worker log.
+      const line = `[import ${job.id}] attachment ${attachment.sourceId} rejected: ${error.message}`;
+      console.error(line.replace(/[\r\n]+/g, ' '));
     }
   }
 }

@@ -5,7 +5,7 @@ import { request } from '@/lib/api/core/client';
 import type { AgentRunTrigger } from '@/lib/api/endpoints/agents';
 import type { Checklist } from '@/lib/api/endpoints/checklists';
 import type { CustomFieldType } from '@/lib/api/endpoints/customFields';
-import type { DevelopmentLink } from '@/lib/api/endpoints/git';
+import type { DevelopmentLink, LinkedRepositoryIssue } from '@/lib/api/endpoints/git';
 
 // The subtask disposition as the delete route takes it: a query string, since a
 // DELETE carries no body.
@@ -255,6 +255,7 @@ export interface IssueWithWatchers extends IssueRelations {
   watchers: IssueWatcher[];
   checklists: Checklist[];
   development: DevelopmentLink[];
+  repositoryIssue: LinkedRepositoryIssue | null;
 }
 
 export interface NewIssueInput {

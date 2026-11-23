@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import type { DevelopmentLink } from '@/lib/api/endpoints/git';
+import type { DevelopmentLink, LinkedRepositoryIssue } from '@/lib/api/endpoints/git';
 import { usePersistedOpen } from '@/hooks/usePersistedOpen';
 import IssueDevelopmentAddMenu from './IssueDevelopmentAddMenu';
 import IssueDevelopmentCreateDialog from './IssueDevelopmentCreateDialog';
 import IssueDevelopmentLinkCard from './IssueDevelopmentLinkCard';
 import IssueDevelopmentLinkDialog from './IssueDevelopmentLinkDialog';
+import IssueDevelopmentRepositoryIssueCard from './IssueDevelopmentRepositoryIssueCard';
 import IssueSectionHeading from './IssueSectionHeading';
 import { useTranslations } from 'next-intl';
 
@@ -13,6 +14,7 @@ export default function IssueDevelopmentPanel({
   identifier,
   issueTitle,
   links,
+  repositoryIssue,
   canEdit,
   canManage,
 }: {
@@ -20,6 +22,7 @@ export default function IssueDevelopmentPanel({
   identifier: string;
   issueTitle: string;
   links: DevelopmentLink[];
+  repositoryIssue: LinkedRepositoryIssue | null;
   canEdit: boolean;
   canManage: boolean;
 }) {
@@ -27,14 +30,14 @@ export default function IssueDevelopmentPanel({
   const { open, toggle } = usePersistedOpen('issue-development-open');
   const [linkOpen, setLinkOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
-  if (links.length === 0 && !canManage) return null;
+  if (links.length === 0 && !repositoryIssue && !canManage) return null;
 
   return (
     <div className={`mt-6 border-t pt-5 ${open ? '' : '-mb-2'}`}>
       <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
         <IssueSectionHeading
           label={t('title')}
-          tally={String(links.length)}
+          tally={String(links.length + (repositoryIssue ? 1 : 0))}
           open={open}
           onToggle={toggle}
         />
@@ -47,6 +50,7 @@ export default function IssueDevelopmentPanel({
       </div>
       {open && (
         <div className="space-y-2">
+          {repositoryIssue && <IssueDevelopmentRepositoryIssueCard issue={repositoryIssue} />}
           {links.length === 0 && (
             <button
               type="button"

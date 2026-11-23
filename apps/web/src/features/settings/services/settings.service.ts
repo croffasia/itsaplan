@@ -38,6 +38,10 @@ import {
   listAvailableGitRepositories,
   connectGitRepositories,
   disconnectGitRepository,
+  getGitRepositoryMapping,
+  importGitRepositoryIssues,
+  updateGitRepository,
+  type RepositoryMapping,
 } from '@/lib/api/endpoints/git';
 import {
   type CreateImportJobInput,
@@ -81,9 +85,9 @@ import { qk } from '@/services/queryKeys';
 
 // A mutation whose success invalidates the project detail (and dependent lists).
 // Shared by every settings write below.
-function useProjectMutation<TArgs>(
+function useProjectMutation<TArgs, TResult>(
   projectKey: string,
-  mutationFn: (args: TArgs) => Promise<unknown>,
+  mutationFn: (args: TArgs) => Promise<TResult>,
 ) {
   const invalidate = useInvalidateProject(projectKey);
   return useMutation({ mutationFn, onSuccess: () => invalidate() });
@@ -211,7 +215,8 @@ export function useUpdateEstimates(projectKey: string) {
   );
 }
 
-// Repository section: the inbound webhook connection and its pull request automations.
+// Repository section: the connected repositories, their issue sync, the inbound webhook
+// and the pull request automations.
 export function useGitSettingsQuery(projectKey: string) {
   return useQuery({
     queryKey: qk.gitSettings(projectKey),
@@ -462,4 +467,40 @@ export function useUpdateIssueTemplate(projectKey: string) {
 
 export function useDeleteIssueTemplate(projectKey: string) {
   return useProjectMutation(projectKey, (id: number) => deleteIssueTemplate(projectKey, id));
+}
+
+export function useUpdateGitRepository(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      repositoryId,
+      patch,
+    }: {
+      repositoryId: number;
+      patch: Parameters<typeof updateGitRepository>[2];
+    }) => updateGitRepository(projectKey, repositoryId, patch),
+    onSuccess: (_, { repositoryId, patch }) => {
+      const { labelMappings } = patch;
+      if (labelMappings)
+        qc.setQueryData(
+          qk.gitRepositoryMapping(projectKey, repositoryId),
+          (current: RepositoryMapping | undefined) => current && { ...current, labelMappings },
+        );
+    },
+    // Exact: the repository's labels come from its provider and have not changed.
+    onSettled: () => qc.invalidateQueries({ queryKey: qk.gitConnections(projectKey), exact: true }),
+  });
+}
+
+export function useGitRepositoryMappingQuery(projectKey: string, repositoryId: number) {
+  return useQuery({
+    queryKey: qk.gitRepositoryMapping(projectKey, repositoryId),
+    queryFn: () => getGitRepositoryMapping(projectKey, repositoryId),
+  });
+}
+
+export function useImportGitRepositoryIssues(projectKey: string, repositoryId: number) {
+  return useMutation({
+    mutationFn: (page: number) => importGitRepositoryIssues(projectKey, repositoryId, page),
+  });
 }

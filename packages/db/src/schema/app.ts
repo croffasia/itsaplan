@@ -1098,6 +1098,15 @@ export const gitManagedRepository = pgTable(
     webhookExternalId: text('webhook_external_id').notNull(),
     status: text('status').notNull().default('connected'),
     lastError: text('last_error'),
+    // 'off', 'one_way' (the repository's new issues come in, a status change made
+    // here goes out) or 'two_way' (every change of a linked issue in the repository
+    // also comes in).
+    issueSync: text('issue_sync').notNull().default('off'),
+    // Where a new issue lands; null is the project's first column.
+    issueColumnId: integer('issue_column_id').references(() => projectColumn.id, {
+      onDelete: 'set null',
+    }),
+    issueComments: boolean('issue_comments').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1109,6 +1118,43 @@ export const gitManagedRepository = pgTable(
     ),
     index('git_managed_repository_project_connection_idx').on(t.projectId, t.connectionId),
   ],
+);
+
+// The project label and the issue type a label of the repository's issues becomes.
+// Either may be null; a row with both null maps to nothing.
+export const gitRepositoryLabel = pgTable(
+  'git_repository_label',
+  {
+    id: serial('id').primaryKey(),
+    repositoryId: integer('repository_id')
+      .notNull()
+      .references(() => gitManagedRepository.id, { onDelete: 'cascade' }),
+    externalName: text('external_name').notNull(),
+    labelId: integer('label_id').references(() => label.id, { onDelete: 'set null' }),
+    typeId: integer('type_id').references(() => issueType.id, { onDelete: 'set null' }),
+  },
+  (t) => [unique().on(t.repositoryId, t.externalName)],
+);
+
+// An issue of a connected repository and the issue it became here. issue_id is null
+// only while the issue is being created: the row is inserted first, so two deliveries
+// or imports of one repository issue cannot both create it.
+export const gitIssueLink = pgTable(
+  'git_issue_link',
+  {
+    id: serial('id').primaryKey(),
+    repositoryId: integer('repository_id')
+      .notNull()
+      .references(() => gitManagedRepository.id, { onDelete: 'cascade' }),
+    number: integer('number').notNull(),
+    issueId: integer('issue_id')
+      .unique()
+      .references(() => issue.id, { onDelete: 'cascade' }),
+    url: text('url'),
+    state: text('state').notNull().default('open'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.repositoryId, t.number)],
 );
 
 // Per-team notification provider credentials: the outbound channels every project

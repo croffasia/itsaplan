@@ -129,7 +129,7 @@
     },
     "git": {
       "label": "مخازن",
-      "description": "بستن تسک‌ها هنگام ادغام pull request آن‌ها در GitHub، GitLab، Gitea، Forgejo یا Bitbucket."
+      "description": "تسک‌ها را هنگام ادغام پول‌ریکوئست‌هایشان ببندید و تسک‌های مخزن را با برد همگام کنید."
     },
     "import-export": {
       "label": "ورود/خروج",

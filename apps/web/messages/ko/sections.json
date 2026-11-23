@@ -129,7 +129,7 @@
     },
     "git": {
       "label": "저장소",
-      "description": "GitHub, GitLab, Gitea, Forgejo 또는 Bitbucket에서 Pull Request가 병합되면 연결된 이슈를 종료합니다."
+      "description": "Pull Request가 병합되면 이슈를 닫고, 저장소 이슈를 보드와 동기화합니다."
     },
     "import-export": {
       "label": "가져오기/내보내기",

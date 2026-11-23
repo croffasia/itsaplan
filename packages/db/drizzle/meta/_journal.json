@@ -1380,6 +1380,13 @@
       "when": 1795439535540,
       "tag": "0196_showcase_seen",
       "breakpoints": true
+    },
+    {
+      "idx": 197,
+      "version": "7",
+      "when": 1795454110776,
+      "tag": "0197_git_issue_sync",
+      "breakpoints": true
     }
   ]
 }

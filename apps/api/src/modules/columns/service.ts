@@ -16,6 +16,7 @@ import { emitIssueEvents, issuePayloads } from '#modules/issues/webhook-payload'
 import { emitWebhookEvents, projectEventWanted } from '#modules/webhooks/emit';
 import { recordStatusChange } from '#modules/issues/status-history';
 import { hasUnfinishedStatusRuns, queueStatusRuns } from '#modules/agents/schedules/issue-runs';
+import { pushLinkedIssueState } from '#modules/git/issue-sync';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 
 export interface ColumnRow {
@@ -308,6 +309,7 @@ export async function deleteColumn(
     await emitIssueEvents(projectId, 'issue.updated', moved, actorUserId);
     await emitIssueEvents(projectId, 'issue.state_changed', moved, actorUserId);
     await queueStatusRuns(columnIssueIds, target.id, actorUserId);
+    for (const issueId of columnIssueIds) await pushLinkedIssueState(issueId, target.id);
   } else {
     for (const issueId of columnIssueIds) await deleteThreadsWhere({ issueId });
     await emitWebhookEvents(projectId, 'issue.deleted', async () => deletedPayloads, actorUserId);

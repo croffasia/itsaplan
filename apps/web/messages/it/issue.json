@@ -433,7 +433,8 @@
       "failed": "Fallita",
       "canceled": "Annullata",
       "skipped": "Saltata"
-    }
+    },
+    "repositoryIssue": "Issue {provider}"
   },
   "documents": {
     "title": "Documenti",

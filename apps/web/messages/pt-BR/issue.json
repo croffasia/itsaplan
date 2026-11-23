@@ -433,7 +433,8 @@
       "failed": "Falhou",
       "canceled": "Cancelado",
       "skipped": "Ignorado"
-    }
+    },
+    "repositoryIssue": "Issue do {provider}"
   },
   "documents": {
     "title": "Documentos",

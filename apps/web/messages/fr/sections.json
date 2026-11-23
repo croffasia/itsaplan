@@ -129,7 +129,7 @@
     },
     "git": {
       "label": "Dépôts",
-      "description": "Fermez les tickets quand leurs pull requests sont fusionnées sur GitHub, GitLab, Gitea, Forgejo ou Bitbucket."
+      "description": "Fermez les tickets quand leurs pull requests sont fusionnées, et synchronisez les tickets du dépôt avec le tableau."
     },
     "import-export": {
       "label": "Import/Export",

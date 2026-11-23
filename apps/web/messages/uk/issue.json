@@ -433,7 +433,8 @@
       "failed": "Помилка",
       "canceled": "Скасовано",
       "skipped": "Пропущено"
-    }
+    },
+    "repositoryIssue": "Задача в {provider}"
   },
   "documents": {
     "title": "Документи",

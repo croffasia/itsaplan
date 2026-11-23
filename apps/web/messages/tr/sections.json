@@ -129,7 +129,7 @@
     },
     "git": {
       "label": "Kod Depoları",
-      "description": "GitHub, GitLab, Gitea, Forgejo veya Bitbucket üzerinde pull request birleştiğinde işleri kapatın."
+      "description": "Pull request'leri birleştiğinde işleri kapatın ve depo işlerini panoyla eşitleyin."
     },
     "import-export": {
       "label": "İçe/Dışa Aktarma",

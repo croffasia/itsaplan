@@ -552,6 +552,12 @@ export function actorId(actor: ActivityActor): string | null {
   return typeof actor === 'string' ? actor : null;
 }
 
+// A named system actor writes text that came from outside the team, such as a synced
+// repository issue. Like a comment with an authorName, its mentions reach nobody.
+export function isOutsideAuthor(actor: ActivityActor): boolean {
+  return actor != null && typeof actor === 'object';
+}
+
 // What a write runs on: the pool, or the transaction the caller is inside.
 type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -809,7 +815,7 @@ export async function logIssueUpdate(
       statusActivityId: idByAction.get('status') ?? null,
     });
   }
-  if (descriptionChanged) {
+  if (descriptionChanged && !isOutsideAuthor(actor)) {
     await notifyTextMentions({
       projectId: row.projectId,
       issueId: after.id,

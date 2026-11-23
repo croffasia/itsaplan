@@ -73,6 +73,13 @@ function toDto(stored: StoredGitSettings): GitSettings {
   };
 }
 
+// While the integration is off, no repository event reaches the project and no change
+// goes back to a repository. A project starts with it off.
+export async function gitIntegrationEnabled(projectId: number): Promise<boolean> {
+  const stored = await getProjectSetting<StoredGitSettings>(projectId, GIT_SETTING_KEY);
+  return stored?.enabled ?? false;
+}
+
 // Reads the project's settings, creating a disabled config with a fresh
 // webhook id and secret on first read — the settings page needs both to show
 // before the user has saved anything.
@@ -229,7 +236,7 @@ export async function recordGitEvent(
     .where(and(eq(projectSetting.projectId, projectId), eq(projectSetting.key, GIT_SETTING_KEY)));
 }
 
-async function assertProjectColumn(
+export async function assertProjectColumn(
   projectId: number,
   columnId: number | null | undefined,
 ): Promise<void> {
@@ -241,12 +248,17 @@ async function assertProjectColumn(
   if (!rows[0]) throw new HttpError(400, 'Unknown column');
 }
 
-// The project's first completed-type column — the default close target.
-export async function firstCompletedColumnId(projectId: number): Promise<number | null> {
+// The project's first column, or its first column of the given state type.
+export async function firstColumnId(projectId: number, stateType?: string): Promise<number | null> {
   const rows = await db
     .select({ id: projectColumn.id })
     .from(projectColumn)
-    .where(and(eq(projectColumn.projectId, projectId), eq(projectColumn.stateType, 'completed')))
+    .where(
+      and(
+        eq(projectColumn.projectId, projectId),
+        stateType ? eq(projectColumn.stateType, stateType) : undefined,
+      ),
+    )
     .orderBy(asc(projectColumn.position))
     .limit(1);
   return rows[0]?.id ?? null;

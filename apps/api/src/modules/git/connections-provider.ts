@@ -1,7 +1,7 @@
 import { HttpError } from '#shared/lib';
 import { assertPublicHttpUrl, pinnedFetch } from '#shared/net';
-import { pipelineStatus } from './providers';
-import type { PipelineEvent, PullRequestEvent, PullRequestState } from './providers';
+import { githubIssueSnapshot, gitlabIssueSnapshot, pipelineStatus } from './providers';
+import type { IssueSnapshot, PipelineEvent, PullRequestEvent, PullRequestState } from './providers';
 
 export type GitProvider = 'github' | 'gitlab' | 'gitea' | 'forgejo' | 'bitbucket';
 
@@ -139,7 +139,7 @@ function providerHeaders(provider: GitProvider, token: string): Headers {
   return headers;
 }
 
-const PROVIDER_LABEL: Record<GitProvider, string> = {
+export const PROVIDER_LABEL: Record<GitProvider, string> = {
   github: 'GitHub',
   gitlab: 'GitLab',
   gitea: 'Gitea',
@@ -580,8 +580,9 @@ function nextPageNumber(
   count: number,
   perPage: number,
 ): number | null {
-  const providerNext = response.headers.get('x-next-page');
-  if (providerNext) return Number(providerNext) || null;
+  // A next page that does not advance would repeat pages forever.
+  const providerNext = Number(response.headers.get('x-next-page'));
+  if (providerNext) return providerNext > page ? providerNext : null;
   const link = response.headers.get('link');
   if (link) return link.includes('rel="next"') ? page + 1 : null;
   return count === perPage ? page + 1 : null;
@@ -773,12 +774,15 @@ function numericId(hook: Record<string, unknown> | null): string | null {
   return typeof id === 'number' || typeof id === 'string' ? String(id) : null;
 }
 
+// `issueEvents` adds the issue and comment events a repository with issue sync needs.
 function providerWebhookApi(
   provider: GitProvider,
   repository: ProviderRepository,
   payloadUrl: string,
   secret: string,
+  issueEvents: boolean,
 ): ProviderWebhookApi {
+  const issueHooks = issueEvents ? ['issues', 'issue_comment'] : [];
   const arrayBody = (body: unknown) => (Array.isArray(body) ? body : []);
   const configUrl = (hook: Record<string, unknown> | null) => text(record(hook?.config)?.url);
   if (provider === 'gitlab') {
@@ -795,6 +799,8 @@ function providerWebhookApi(
         merge_requests_events: true,
         pipeline_events: true,
         push_events: true,
+        issues_events: issueEvents,
+        note_events: issueEvents,
         enable_ssl_verification: true,
       }),
     };
@@ -810,7 +816,7 @@ function providerWebhookApi(
       body: (create) => ({
         ...(create ? { type: 'gitea' } : {}),
         active: true,
-        events: ['pull_request', 'create', 'delete'],
+        events: ['pull_request', 'create', 'delete', ...issueHooks],
         config: { url: payloadUrl, content_type: 'json', secret },
       }),
     };
@@ -849,7 +855,7 @@ function providerWebhookApi(
     body: (create) => ({
       ...(create ? { name: 'web' } : {}),
       active: true,
-      events: ['pull_request', 'check_run', 'create', 'delete'],
+      events: ['pull_request', 'check_run', 'create', 'delete', ...issueHooks],
       config: { url: payloadUrl, content_type: 'json', insecure_ssl: '0', secret },
     }),
   };
@@ -864,8 +870,9 @@ export async function installProviderWebhook(
   payloadUrl: string,
   secret: string,
   webhookExternalId: string | null,
+  issueEvents: boolean,
 ): Promise<string> {
-  const api = providerWebhookApi(input.provider, repository, payloadUrl, secret);
+  const api = providerWebhookApi(input.provider, repository, payloadUrl, secret, issueEvents);
   let existingId = webhookExternalId;
   if (existingId === null) {
     const hooksResponse = await providerRequest(input, `${api.hooksPath}${api.listQuery}`);
@@ -925,5 +932,117 @@ export async function createPullRequestComment(
   await providerRequest(input, path, {
     method: 'POST',
     body: JSON.stringify(input.provider === 'bitbucket' ? { content: { raw: body } } : { body }),
+  });
+}
+
+function repositoryApiPath(input: ProviderConnectionInput, repository: ProviderRepository): string {
+  return input.provider === 'gitlab'
+    ? `/projects/${encodeURIComponent(repository.externalId)}`
+    : githubRepoPath(repository.fullName);
+}
+
+// One page of the repository's open issues, oldest first, so a page read later still
+// starts after the issues an earlier page held.
+export async function listProviderOpenIssues(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  page: number,
+): Promise<{ issues: IssueSnapshot[]; nextPage: number | null }> {
+  ensureDevelopmentProvider(input.provider);
+  const perPage = 50;
+  const params = new URLSearchParams({
+    page: String(page),
+    [pageSizeParam(input.provider)]: String(perPage),
+  });
+  if (input.provider === 'gitlab') {
+    params.set('state', 'opened');
+    params.set('order_by', 'created_at');
+    params.set('sort', 'asc');
+  } else if (input.provider === 'github') {
+    params.set('state', 'open');
+    params.set('sort', 'created');
+    params.set('direction', 'asc');
+  } else {
+    params.set('state', 'open');
+    params.set('type', 'issues');
+  }
+  const response = await providerRequest(
+    input,
+    `${repositoryApiPath(input, repository)}/issues?${params}`,
+  );
+  const body: unknown = await response.json();
+  if (!Array.isArray(body))
+    throw new HttpError(502, `${PROVIDER_LABEL[input.provider]} returned an invalid issue list`);
+  const normalize = input.provider === 'gitlab' ? gitlabIssueSnapshot : githubIssueSnapshot;
+  return {
+    issues: body.map(normalize).filter((issue): issue is IssueSnapshot => issue !== null),
+    nextPage: nextPageNumber(response, page, body.length, perPage),
+  };
+}
+
+export interface ProviderLabel {
+  name: string;
+  // "#rrggbb", or null when the provider sent no usable color.
+  color: string | null;
+}
+
+function labelColor(value: unknown): string | null {
+  const hex = text(value)?.replace(/^#/, '');
+  return hex && /^[0-9a-f]{6}$/i.test(hex) ? `#${hex.toLowerCase()}` : null;
+}
+
+// The repository's labels, by name, up to 20 pages (1,000 labels): a server that keeps
+// naming a next page cannot hold the request.
+export async function listProviderLabels(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+): Promise<ProviderLabel[]> {
+  ensureDevelopmentProvider(input.provider);
+  const perPage = 50;
+  const labels = new Map<string, ProviderLabel>();
+  for (let page: number | null = 1; page !== null && page <= 20;) {
+    const params = new URLSearchParams({
+      page: String(page),
+      [pageSizeParam(input.provider)]: String(perPage),
+    });
+    const response = await providerRequest(
+      input,
+      `${repositoryApiPath(input, repository)}/labels?${params}`,
+    );
+    const body: unknown = await response.json();
+    if (!Array.isArray(body))
+      throw new HttpError(502, `${PROVIDER_LABEL[input.provider]} returned an invalid label list`);
+    for (const item of body) {
+      const name = text(record(item)?.name);
+      if (name) labels.set(name, { name, color: labelColor(record(item)?.color) });
+    }
+    page = nextPageNumber(response, page, body.length, perPage);
+  }
+  return [...labels.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function setProviderIssueState(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  number: number,
+  state: 'open' | 'closed',
+  reason: 'completed' | 'not_planned',
+): Promise<void> {
+  ensureDevelopmentProvider(input.provider);
+  const path = `${repositoryApiPath(input, repository)}/issues/${number}`;
+  if (input.provider === 'gitlab') {
+    await providerRequest(input, path, {
+      method: 'PUT',
+      body: JSON.stringify({ state_event: state === 'closed' ? 'close' : 'reopen' }),
+    });
+    return;
+  }
+  await providerRequest(input, path, {
+    method: 'PATCH',
+    body: JSON.stringify(
+      input.provider === 'github' && state === 'closed'
+        ? { state, state_reason: reason }
+        : { state },
+    ),
   });
 }

@@ -2,7 +2,7 @@ import { t } from 'elysia';
 import { MAX_SUBTASK_DEPTH } from '@repo/db';
 import { agentExecutionState, runReceivedAt } from '#modules/agents/model';
 import { ActivityPayloadResponse } from '#shared/activity';
-import { DevelopmentLinkResponse } from '#modules/git/model';
+import { DevelopmentLinkResponse, LinkedRepositoryIssueResponse } from '#modules/git/model';
 import { AgentTraceDetailResponse } from '#modules/agents/core/model';
 import { instantQuery, isoDate } from '#shared/schemas';
 
@@ -304,6 +304,7 @@ export const IssueWithFieldsResponse = t.Composite([
     }),
     checklists: t.Array(ChecklistResponse),
     development: t.Array(DevelopmentLinkResponse),
+    repositoryIssue: t.Nullable(LinkedRepositoryIssueResponse),
   }),
 ]);
 

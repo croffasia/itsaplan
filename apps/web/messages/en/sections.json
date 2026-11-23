@@ -129,7 +129,7 @@
     },
     "git": {
       "label": "Repositories",
-      "description": "Close issues when their pull requests merge on GitHub, GitLab, Gitea, Forgejo, or Bitbucket."
+      "description": "Close issues when their pull requests merge, and sync repository issues to the board."
     },
     "import-export": {
       "label": "Import/Export",

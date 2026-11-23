@@ -433,7 +433,8 @@
       "failed": "실패",
       "canceled": "취소됨",
       "skipped": "건너뜀"
-    }
+    },
+    "repositoryIssue": "{provider} 이슈"
   },
   "documents": {
     "title": "문서",

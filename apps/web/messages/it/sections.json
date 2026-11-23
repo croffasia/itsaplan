@@ -129,7 +129,7 @@
     },
     "git": {
       "label": "Repository",
-      "description": "Chiudi le issue quando i loro pull request vengono uniti su GitHub, GitLab, Gitea, Forgejo o Bitbucket."
+      "description": "Chiudi le issue quando i loro pull request vengono uniti e sincronizza le issue del repository con la board."
     },
     "import-export": {
       "label": "Importa/Esporta",

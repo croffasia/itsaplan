@@ -129,7 +129,7 @@
     },
     "git": {
       "label": "存放庫",
-      "description": "當關聯的 Pull Request 在 GitHub、GitLab、Gitea、Forgejo 或 Bitbucket 上合併時關閉工作項目。"
+      "description": "在 Pull Request 合併時關閉對應工作項目，並將存放庫工作項目同步到看板。"
     },
     "import-export": {
       "label": "匯入/匯出",

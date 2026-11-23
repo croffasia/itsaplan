@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { db, aiAgent, apikey, teamMember } from '@repo/db';
 import { eq } from 'drizzle-orm';
 import { authedApi, type Api, createProject } from '#tests/helpers/app';
@@ -7,7 +7,12 @@ import { resetDb } from '#tests/helpers/db';
 import { getProjectByRef } from '#modules/projects/service';
 import { getAgentById, getInternalAgentApiKey } from '../../service';
 import { actionCatalog, buildRouteTools } from '../../runtime/tools/route-tools';
-import { AGENT_ACTIONS, ALWAYS_ON_ACTIONS } from '../../runtime/tools/catalog';
+import {
+  AGENT_ACTIONS,
+  ALWAYS_ON_ACTIONS,
+  setExtraActions,
+  type ToolMeta,
+} from '../../runtime/tools/catalog';
 import { routeTools } from '#mcp/generate';
 import { getMcpApp } from '#mcp/app-ref';
 import { createRole } from '#tests/helpers/roles';
@@ -46,9 +51,23 @@ async function toolsFor(asOwner: Api, tools: string[], roleId?: number) {
   if (roleId !== undefined) {
     await setAgentProjectRole(asOwner, 'MKT', created.data!.agent.userId, roleId);
   }
+  return builtTools(agentId);
+}
+
+async function agentWith(asOwner: Api, tools: string[]) {
+  const created = await createAgent(asOwner, 'MKT', {
+    name: 'Keeper',
+    username: `keeper-${++agentSeq}`,
+    kind: 'internal',
+    tools,
+  });
+  return created.data!.agent.id;
+}
+
+async function builtTools(agentId: number) {
   const project = await getProjectByRef('MKT', '');
   if (!project) throw new Error('Test project was not created');
-  const agent = await getAgentById(agentId, project.id);
+  const agent = await getAgentById(agentId, project.teamId);
   if (!agent) throw new Error('Test agent was not found');
   const apiKey = await getInternalAgentApiKey(agent);
   return buildRouteTools(project, apiKey, agent.tools, { initiator: null, runId: null });
@@ -260,6 +279,76 @@ describe('internal agent route tools', () => {
     expect(tools.get_note_board).toBeDefined();
     // The read comes with the update, not with any other note board action.
     expect((await toolsFor(asOwner, ['create_note_board'])).get_note_board).toBeUndefined();
+  });
+
+  describe("an extension's actions", () => {
+    const watchHooks: ToolMeta = {
+      key: 'list_webhooks',
+      group: 'automation',
+      label: 'Read webhooks',
+      description: 'List the webhooks of the project.',
+      always: false,
+      needs: ['get_webhook_stats'],
+    };
+    const readViews: ToolMeta = {
+      key: 'list_views',
+      group: 'automation',
+      label: 'Read views',
+      description: 'List the views of the project.',
+      always: true,
+    };
+
+    afterEach(() => setExtraActions([]));
+
+    it('grants an enabled action with what it needs, and an always-on one to every agent', async () => {
+      setExtraActions([watchHooks, readViews]);
+      const { asOwner } = await setup();
+
+      const granted = await toolsFor(asOwner, ['list_webhooks']);
+      expect(granted.list_webhooks).toBeDefined();
+      expect(granted.get_webhook_stats).toBeDefined();
+      expect(granted.list_views).toBeDefined();
+
+      const plain = await toolsFor(asOwner, []);
+      expect(plain.list_webhooks).toBeUndefined();
+      expect(plain.get_webhook_stats).toBeUndefined();
+      expect(plain.list_views).toBeDefined();
+    });
+
+    it('keeps a locked action on the agent, turned off but never on, and builds no tool of it', async () => {
+      setExtraActions([watchHooks, readViews]);
+      const { asOwner, teamId } = await setup();
+      const keeper = await agentWith(asOwner, ['list_webhooks']);
+      setExtraActions([
+        { ...watchHooks, locked: true },
+        { ...readViews, locked: true },
+      ]);
+
+      const tools = await builtTools(keeper);
+      expect(tools.list_webhooks).toBeUndefined();
+      expect(tools.get_webhook_stats).toBeUndefined();
+      expect(tools.list_views).toBeUndefined();
+
+      const listed = await agents(asOwner, teamId).get({ query: {} });
+      expect(listed.data?.map((agent) => agent.tools)).toEqual([['list_webhooks']]);
+      // A locked action is no action the agent can take.
+      expect(listed.data?.[0].actionCount).toBe(ALWAYS_ON_ACTIONS.length);
+      const catalog = await agents(asOwner, teamId).tools.get();
+      expect(catalog.data?.find((action) => action.key === 'list_webhooks')).toMatchObject({
+        group: 'automation',
+        locked: true,
+        permission: ['webhooks', 'read'],
+      });
+
+      const agent = agents(asOwner, teamId)({ agentId: keeper });
+      expect((await agent.patch({ tools: ['list_webhooks'] })).data?.tools).toEqual([
+        'list_webhooks',
+      ]);
+      expect((await agent.patch({ tools: [] })).data?.tools).toEqual([]);
+      expect((await agent.patch({ tools: ['list_webhooks'] })).data?.tools).toEqual([]);
+      const fresh = await agentWith(asOwner, ['list_webhooks']);
+      expect((await agents(asOwner, teamId)({ agentId: fresh }).get()).data?.tools).toEqual([]);
+    });
   });
 
   // A hidden argument names a field of the route's own schema. Renaming the field

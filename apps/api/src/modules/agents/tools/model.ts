@@ -17,6 +17,9 @@ const ToolMetaResponse = t.Object({
   label: t.String(),
   description: t.String(),
   always: t.Boolean(),
+  locked: t.Optional(
+    t.Boolean({ description: 'Listed and kept on the agents that have it, and given to none.' }),
+  ),
   // [resource, action] on the role matrix, from the route behind the action. Absent
   // when no route backs it, or when its route asks only for project membership.
   // A bounded array rather than t.Tuple: TypeBox writes a tuple as draft-7's

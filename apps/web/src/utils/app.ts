@@ -13,6 +13,7 @@ export const TEMPLATE_GALLERY_RULES_URL = 'https://itsaplan.dev/terms#template-g
 // The places that link to the Pro page. The site keeps its own list of these values, so a
 // new one goes there too.
 export type ProFeature =
+  | 'agent-actions'
   | 'agent-analytics'
   | 'agent-budgets'
   | 'asana-import'

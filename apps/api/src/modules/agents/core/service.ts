@@ -20,7 +20,7 @@ import { iso, HttpError, rethrowDuplicate } from '#shared/lib';
 import { getCredentialById } from '../integrations/service';
 import { integrationKind } from '../integrations/catalog';
 import { encryptSecret, decryptSecret } from '@repo/crypto';
-import { normalizeToolKeys, ALWAYS_ON_ACTIONS } from './runtime/tools/catalog';
+import { alwaysOnKeys, normalizeToolKeys, toolMeta } from './runtime/tools/catalog';
 import { deleteThreadsWhere } from './runtime/memory';
 import { listAgentMemberFieldIds } from '#modules/custom-fields/service';
 import { runsTeam, type TeamStanding } from '#modules/teams/service';
@@ -136,7 +136,7 @@ export interface AiAgentRow {
   modelProvider: string | null;
   // How many actions the agent can take, how many skills and configured tools are
   // enabled. actionCount is the always-on read-only actions plus the granted mutating
-  // ones (`tools`), matching the Actions section of the editor. For the meta display.
+  // ones (`tools`, a locked one left out), matching the Actions section of the editor.
   actionCount: number;
   skillCount: number;
   toolCount: number;
@@ -208,7 +208,7 @@ function mapAgent(row: {
     createdAt: iso(row.createdAt),
     apiKeyStart: row.apiKeyStart,
     modelProvider: row.modelProvider,
-    actionCount: tools.length + ALWAYS_ON_ACTIONS.length,
+    actionCount: tools.filter((key) => !toolMeta(key)?.locked).length + alwaysOnKeys().length,
     skillCount: row.skillCount,
     toolCount: row.toolCount,
   };
@@ -951,7 +951,7 @@ export async function updateAgent(
   if (patch.modelCredentialId !== undefined) set.modelCredentialId = patch.modelCredentialId;
   if (patch.model !== undefined) set.model = patch.model;
   if (patch.instructions !== undefined) set.instructions = patch.instructions;
-  if (patch.tools !== undefined) set.tools = normalizeToolKeys(patch.tools);
+  if (patch.tools !== undefined) set.tools = normalizeToolKeys(patch.tools, agent.tools);
   if (patch.temperature !== undefined) set.temperature = patch.temperature;
   if (patch.reasoningEffort !== undefined) set.reasoningEffort = patch.reasoningEffort;
   if (patch.maxSteps !== undefined) set.maxSteps = patch.maxSteps;

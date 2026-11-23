@@ -1,0 +1,114 @@
+{
+  "title": "Visualizzazione",
+  "layouts": {
+    "kanban": "Kanban",
+    "table": "Tabella",
+    "timeline": "Timeline",
+    "calendar": "Calendario"
+  },
+  "sortFields": {
+    "manual": "Manuale",
+    "title": "Titolo",
+    "identifier": "Numero issue",
+    "status": "Stato",
+    "priority": "Priorità",
+    "assignee": "Assegnatario",
+    "type": "Tipo",
+    "startDate": "Data di inizio",
+    "dueDate": "Data di scadenza",
+    "created": "Creato",
+    "updated": "Aggiornato"
+  },
+  "groupFields": {
+    "none": "Nessun raggruppamento",
+    "status": "Stato",
+    "assignee": "Assegnatario",
+    "delegate": "Delegato",
+    "priority": "Priorità",
+    "type": "Tipo",
+    "initiative": "Iniziativa",
+    "cycle": "Ciclo"
+  },
+  "properties": {
+    "id": "ID",
+    "status": "Stato",
+    "priority": "Priorità",
+    "type": "Tipo",
+    "assignee": "Assegnatario",
+    "delegate": "Delegato",
+    "initiative": "Iniziativa",
+    "cycle": "Ciclo",
+    "labels": "Etichette",
+    "estimatePoints": "Punti storia",
+    "estimateTime": "Stima del tempo",
+    "startDate": "Data di inizio",
+    "dueDate": "Data di scadenza",
+    "created": "Creato",
+    "updated": "Aggiornato",
+    "statusAge": "Tempo nello stato"
+  },
+  "stateTypes": {
+    "backlog": "Backlog",
+    "unstarted": "Non iniziata",
+    "started": "Iniziata",
+    "completed": "Completata",
+    "canceled": "Annullata"
+  },
+  "timelineScales": {
+    "week": "Settimana",
+    "month": "Mese",
+    "quarter": "Trimestre"
+  },
+  "calendarModes": {
+    "month": "Mese",
+    "byDay": "Per giorno",
+    "byWeek": "Per settimana"
+  },
+  "weekStart": {
+    "6": "Sabato",
+    "0": "Domenica",
+    "1": "Lunedì"
+  },
+  "dateFields": {
+    "dueDate": "Data di scadenza",
+    "startDate": "Data di inizio"
+  },
+  "rows": {
+    "columns": "Colonne",
+    "grouping": "Raggruppamento",
+    "swimlanes": "Corsie",
+    "subGrouping": "Sotto-raggruppamento",
+    "ordering": "Ordinamento",
+    "ascending": "Crescente",
+    "descending": "Decrescente",
+    "emptyColumns": "Colonne vuote",
+    "emptyGroups": "Gruppi vuoti",
+    "links": "Link",
+    "separateCards": "Come card separate",
+    "separateRows": "Come righe separate",
+    "nestedInCard": "Dentro la card genitore",
+    "nestedInRow": "Dentro la riga genitore",
+    "subtasksCollapsed": "Inizia collassato",
+    "groupsCollapsed": "I gruppi iniziano collassati",
+    "placeBy": "Posiziona per",
+    "mode": "Modalità",
+    "daysShown": "Giorni a schermo",
+    "weeksShown": "Settimane a schermo",
+    "splitByDay": "Dividi per giorno",
+    "weekStartsOn": "La settimana inizia di",
+    "scale": "Scala",
+    "dragToReorder": "Trascina per riordinare",
+    "customField": "Campo personalizzato",
+    "viewIcon": "Icona vista"
+  },
+  "sections": {
+    "board": "Board",
+    "rows": "Righe",
+    "show": "Mostra",
+    "subtasks": "Sottotask",
+    "cardProperties": "Proprietà card",
+    "columns": "Colonne",
+    "dates": "Date"
+  },
+  "layoutCommand": "Layout {layout}"
+}

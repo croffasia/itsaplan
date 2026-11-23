@@ -1,0 +1,271 @@
+{
+  "account": {
+    "profile": "Profilo",
+    "preferences": "Preferenze",
+    "accounts": "Account",
+    "security": "Sicurezza",
+    "api-keys": "API key",
+    "invitations": "Inviti"
+  },
+  "godGroups": {
+    "management": "Gestione",
+    "instance": "Istanza",
+    "security": "Sicurezza"
+  },
+  "god": {
+    "users": {
+      "label": "Utenti",
+      "description": "Ogni account su questa istanza: il ruolo globale, se l'indirizzo è confermato e i progetti a cui ogni utente può accedere."
+    },
+    "teams": {
+      "label": "Squadre",
+      "description": "Ogni squadra su questa istanza: i progetti che possiede e chi ne fa parte."
+    },
+    "projects": {
+      "label": "Progetti",
+      "description": "Ogni progetto su questa istanza: cosa contiene, quando è stato attivo l'ultima volta e chi può accedervi."
+    },
+    "roles": {
+      "label": "Ruoli di sistema",
+      "description": "Ruoli predefiniti disponibili per ogni squadra su questa istanza."
+    },
+    "general": {
+      "label": "Generale",
+      "description": "Impostazioni che si applicano a ogni workspace su questa istanza."
+    },
+    "authentication": {
+      "label": "Autenticazione",
+      "description": "Chi può registrarsi, come le persone accedono e i limiti delle richieste."
+    },
+    "hotkeys": {
+      "label": "Scorciatoie da tastiera",
+      "description": "Predefiniti per tutti. Ognuno può cambiarli nelle Preferenze."
+    },
+    "storage": {
+      "label": "Archiviazione",
+      "description": "Quanto possono caricare le persone: la dimensione di un singolo file, i tipi di allegato accettati e lo storage che ogni progetto riceve."
+    },
+    "jobs": {
+      "label": "Job in background",
+      "description": "Con che frequenza i job in background vengono eseguiti e ritentati. Le modifiche si applicano senza riavvio."
+    },
+    "email-templates": {
+      "label": "Modelli email",
+      "description": "Gestisci i modelli di email di sistema."
+    },
+    "telegram": {
+      "label": "Telegram",
+      "description": "Il bot a cui le persone collegano il loro account Telegram, e quello che invia le notifiche Telegram per i progetti che non impostano un bot proprio."
+    },
+    "slack": {
+      "label": "Slack",
+      "description": "Invia le notifiche come messaggi diretti Slack."
+    },
+    "email": {
+      "label": "Provider email",
+      "description": "Il provider email tramite cui l'istanza invia: reset della password, conferma dell'indirizzo e link di accesso."
+    },
+    "auth-provider": {
+      "label": "Provider di autenticazione",
+      "description": "Gli account esterni con cui le persone possono accedere."
+    },
+    "scim": {
+      "label": "SCIM",
+      "description": "Consenti a un provider di identità di creare, aggiornare e disattivare account su questa istanza, e di concedere l'accesso ai progetti tramite i suoi gruppi."
+    },
+    "audit-log": {
+      "label": "Registro di audit",
+      "description": "Chi ha fatto cosa su questa istanza, quando e da dove."
+    }
+  },
+  "settings": {
+    "general": {
+      "label": "Generale",
+      "description": "Nome, descrizione del progetto e le sezioni che mostra."
+    },
+    "states": {
+      "label": "Stati",
+      "description": "Gli stati del flusso di lavoro che le issue attraversano, ciascuno mostrato come colonna."
+    },
+    "issue-types": {
+      "label": "Tipi di issue",
+      "description": "I tipi di issue che questo progetto può contenere, ciascuno con i propri campi."
+    },
+    "labels": {
+      "label": "Etichette",
+      "description": "Tag per organizzare e filtrare le issue in tutto il progetto."
+    },
+    "custom-fields": {
+      "label": "Campi personalizzati",
+      "description": "Campi extra mostrati sulle issue, globali o limitati a un tipo di issue."
+    },
+    "issue-templates": {
+      "label": "Modelli di issue",
+      "description": "Impostazioni predefinite da cui si può creare una nuova issue: titolo, descrizione e proprietà."
+    },
+    "configuration": {
+      "label": "Configurazione",
+      "description": "Come i sotto-task si chiudono insieme al loro genitore, e quando le issue stantie vengono archiviate."
+    },
+    "actions": {
+      "label": "Azioni",
+      "description": "Pulsanti su un'issue che impostano campi in un clic."
+    },
+    "schedules": {
+      "label": "Pianificazioni",
+      "description": "Esegui task degli agenti su una pianificazione ricorrente."
+    },
+    "workflows": {
+      "label": "Workflow",
+      "description": "Agenti che passano il lavoro l'uno all'altro."
+    },
+    "webhooks": {
+      "label": "Webhooks",
+      "description": "Invia gli eventi del progetto a URL esterni, firmati con un secret per ogni webhook."
+    },
+    "forms": {
+      "label": "Moduli",
+      "description": "Consenti a chiunque con il link di aprire un'issue qui."
+    },
+    "git": {
+      "label": "Repository",
+      "description": "Chiudi le issue quando i loro pull request vengono uniti su GitHub, GitLab, Gitea, Forgejo o Bitbucket."
+    },
+    "import-export": {
+      "label": "Importa/Esporta",
+      "description": "Importa issue da un altro tracker, oppure esporta i dati di questo progetto come JSON."
+    },
+    "ai-agents": {
+      "label": "Agenti AI",
+      "description": "Agenti AI che lavorano in questo progetto."
+    },
+    "queue": {
+      "label": "Esecuzioni degli agenti",
+      "description": "Esecuzioni degli agenti interni ed esterni del progetto: in corso, in attesa e passate."
+    }
+  },
+  "previews": {
+    "available": "Disponibile in Cloud e self-hosted Pro.",
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Attività tra le squadre e i progetti di questo workspace.",
+      "summary": {
+        "teams": "Squadre",
+        "projects": "Progetti",
+        "people": "Persone",
+        "agents": "Agenti AI",
+        "openIssues": "Issue aperte",
+        "storage": "Archiviazione"
+      },
+      "blocks": {
+        "agents": "Agenti AI",
+        "schedules": "Esecuzioni pianificate",
+        "time": "Tempo registrato",
+        "flow": "Flusso issue",
+        "projects": "Progetti attivi",
+        "teams": "Squadre attive"
+      }
+    },
+    "agentBudgets": {
+      "title": "Budget AI",
+      "description": "Limiti su quanto gli agenti spendono sui modelli.",
+      "workspace": "Workspace intero",
+      "figures": {
+        "spent": "Speso",
+        "limit": "Limite",
+        "left": "Rimanente",
+        "forecast": "Previsione per il periodo"
+      },
+      "list": "Budget",
+      "columns": {
+        "budget": "Budget",
+        "spent": "Speso"
+      }
+    },
+    "auditLog": {
+      "title": "Registro di audit",
+      "description": "Chi ha fatto cosa in questo workspace, nelle sue squadre e nei suoi progetti, e quando le sue persone hanno fatto accesso.",
+      "columns": {
+        "time": "Ora",
+        "actor": "Chi",
+        "action": "Azione",
+        "where": "Dove",
+        "from": "Da"
+      }
+    },
+    "emailDomains": {
+      "title": "Domini email",
+      "description": "Scegli quali domini email possono unirsi a questo workspace.",
+      "label": "Domini email consentiti",
+      "hint": "Solo gli indirizzi di questi domini possono essere invitati o aggiunti tramite SCIM, e le persone invitate possono registrarsi con essi. Lascia vuoto per usare i domini dell'istanza. I membri attuali mantengono il loro accesso."
+    },
+    "sso": {
+      "title": "Single sign-on",
+      "description": "Consenti alle persone di questo workspace di accedere con il provider di identità della tua azienda.",
+      "provider": "Provider di identità",
+      "providerHint": "Inserisci ciò che il tuo provider di identità ti fornisce, poi aggiungi gli indirizzi qui sotto.",
+      "fields": {
+        "domains": "Domini email",
+        "entryPoint": "URL di accesso",
+        "entityId": "Entity ID del provider",
+        "certificate": "Certificato di firma",
+        "acsUrl": "ACS URL",
+        "spEntityId": "Entity ID e metadati"
+      }
+    },
+    "forms": {
+      "new": "Nuovo modulo",
+      "columns": {
+        "form": "Modulo",
+        "link": "Link"
+      },
+      "enabled": "Accetta richieste",
+      "tabs": {
+        "form": "Modulo",
+        "questions": "Domande",
+        "issue": "Issue",
+        "design": "Design"
+      },
+      "questionsHint": "Nome ed email vengono sempre richiesti.",
+      "preview": "Anteprima",
+      "name": "Il tuo nome",
+      "email": "Email"
+    },
+    "workflows": {
+      "steps": "Passi",
+      "sendBack": "Manda indietro",
+      "runs": "Storico esecuzioni",
+      "runningNow": "In esecuzione ora",
+      "history": "Storico",
+      "costSoFar": "Costo finora",
+      "tokensSoFar": "Token finora",
+      "agentRuns": "Esecuzioni degli agenti",
+      "tokens": "Token",
+      "cost": "Costo",
+      "took": "Durata",
+      "got": "Cosa ha ricevuto",
+      "returned": "Cosa ha restituito",
+      "task": "Task",
+      "notes": "Note di rimando",
+      "done": "Fatto",
+      "round": "Round",
+      "fullLog": "Log completo"
+    },
+    "portal": {
+      "title": "Portale",
+      "description": "La pagina dove le persone inviano richieste ai progetti del workspace e le seguono.",
+      "general": "Generale",
+      "forms": "Moduli pubblici",
+      "formsHint": "I progetti del workspace possono pubblicare moduli che chiunque con il link può compilare. Disattivati, i loro moduli e portali smettono di aprirsi e i progetti perdono le impostazioni Moduli; nulla viene eliminato.",
+      "name": "Nome",
+      "nameHint": "Ciò che le persone vedono sul portale e nelle sue email al posto del nome del workspace. Vuoto mostra il nome del workspace.",
+      "address": "Indirizzo",
+      "addressHint": "Il portale si apre a questo indirizzo. Finché non ne imposti uno, si apre al numero del workspace.",
+      "link": "Link del portale",
+      "logo": "Logo",
+      "logoHint": "Mostrato sul portale e sui moduli al posto del nome del portale. Un solo logo serve per entrambi i temi.",
+      "light": "Tema chiaro",
+      "dark": "Tema scuro"
+    }
+  }
+}

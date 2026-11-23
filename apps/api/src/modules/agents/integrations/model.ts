@@ -90,6 +90,12 @@ const IntegrationResponse = t.Object({
       group: t.Optional(t.String()),
     }),
   ),
+  locked: t.Optional(
+    t.Boolean({
+      description:
+        'Comes with another edition of the app: it is listed, and no credential or tool of it can be added.',
+    }),
+  ),
 });
 
 export const IntegrationCatalogResponse = t.Array(IntegrationResponse);

@@ -24,6 +24,12 @@ A configured tool is bound to one credential of its integration, or to none when
 has no credential fields (PDF). An integration marked `credentialOptional` (Keenable) takes both: a
 team can add its tools with no key, on the service's keyless tier, and again on a key.
 
+An integration another edition of the app runs (Exa) is listed locked (`LOCKED_INTEGRATIONS` in
+`@repo/agent-tools`): the catalog shows what it is and its tools, marked as coming with Cloud and
+Pro, and the API refuses a credential or a configured tool of it. Once that edition adds an
+integration with its key through `setExtraIntegrations`, the catalog lists that integration
+instead. A tool added while it ran stays, named by the listing, and goes to no agent.
+
 What acts in one project stays under `:projectKey`: an agent's chat, its schedules and starting
 a run. A run is read from the agent's history and traces under `:teamId`, the queue at each
 scope, and `/agent-runs/:runId`.

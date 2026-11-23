@@ -1,0 +1,594 @@
+{
+  "providers": {
+    "credential": "Password",
+    "google": "Google",
+    "passkey": "Passkey"
+  },
+  "users": {
+    "empty": "Nessun account corrisponde a questi filtri.",
+    "searchPlaceholder": "Cerca per nome o email",
+    "kind": "Tipo di account",
+    "kinds": {
+      "human": "Persone",
+      "agent": "Bot AI",
+      "all": "Tutti gli account"
+    },
+    "columns": {
+      "account": "Account",
+      "role": "Ruolo",
+      "signIn": "Accesso",
+      "projects": "Progetti",
+      "lastSeen": "Visto l'ultima volta",
+      "email": "Email",
+      "active": "Attivo"
+    },
+    "registered": "entrato il {date}",
+    "roleGod": "Proprietario",
+    "roleUser": "Utente",
+    "agent": "Agente",
+    "noProviders": "nessuno",
+    "neverSeen": "mai",
+    "verified": "Verificato",
+    "notVerified": "Non verificato",
+    "open": "Apri account",
+    "showAccess": "Mostra accesso progetti",
+    "activeAria": "Account attivo: {email}",
+    "activeState": {
+      "on": "Attivo",
+      "off": "Disattivo"
+    },
+    "activeLock": {
+      "owner": "Il proprietario dell'istanza è sempre attivo.",
+      "agent": "L'account di un agente segue il suo agente.",
+      "scim": "Il tuo provider di identità (SCIM) decide quali account sono attivi."
+    },
+    "deactivateTitle": "Disattivo {email}?",
+    "deactivateBody": "Viene subito disconnesso e non può più accedere o usare le sue API key finché non riattivi l'account. Le sue connessioni MCP e gli inviti che ha inviato vengono rimossi. Nient'altro viene eliminato.",
+    "deactivateConfirm": "Disattiva"
+  },
+  "userPanel": {
+    "instanceOwner": "Proprietario dell'istanza",
+    "user": "Utente",
+    "aiAgent": "Agente AI",
+    "emailVerified": "Email verificata",
+    "unconfirmedTitle": "Indirizzo email non confermato",
+    "unconfirmedHint": "Confermalo qui se il link non gli è mai arrivato.",
+    "verify": "Segna come verificato",
+    "verifying": "Conferma…",
+    "verifyDone": "Indirizzo email confermato",
+    "signInMethods": "Metodi di accesso",
+    "noProviders": "Nessuno collegato",
+    "projects": "Progetti",
+    "noProjects": "Nessuno",
+    "registered": "Registrato",
+    "lastSeen": "Visto l'ultima volta",
+    "neverSignedIn": "Mai acceduto",
+    "projectAccess": "Accesso progetti",
+    "noAccessTitle": "Nessun accesso progetti",
+    "noAccessHint": "Questo account non raggiunge nulla finché qualcuno non lo invita in un progetto.",
+    "deleteHint": "Issue e commenti restano, con l'autore non assegnato.",
+    "deleteTitle": "Elimina account",
+    "deleteConfirm": "Elimina account",
+    "deleteConfirmWithProjects": "{count, plural, one {Elimina account e progetto} other {Elimina account e progetti}}",
+    "deleteMessage": "<strong>{name}</strong> perde l'accesso a questa istanza. Le issue e i commenti che ha scritto restano, con l'autore non assegnato. Non è possibile annullare.",
+    "deleteWorkspaceNote": "Un workspace di cui questo account è proprietario viene eliminato con esso finché non ha progetti o agenti AI. Altrimenti passa a te, con tutto ciò che l'account possedeva da solo al suo interno.",
+    "soleOwnerTitle": "{count, plural, one {Unico proprietario di un progetto} other {Unico proprietario di # progetti}}",
+    "soleOwnerHint": "{count, plural, one {Una volta eliminato l'account, nessuno può gestirlo.} other {Una volta eliminato l'account, nessuno può gestirli.}}",
+    "deleteWithProjects": "{count, plural, one {Elimina il progetto con l'account} other {Elimina i progetti con l'account}}",
+    "deleteWithProjectsOn": "Anche tutto ciò che c'è dentro viene eliminato.",
+    "deleteWithProjectsOff": "Oppure annulla e aggiungi prima un secondo proprietario.",
+    "deleted": "Account eliminato",
+    "deletedWithProjects": "Account e i suoi progetti eliminati"
+  },
+  "projects": {
+    "empty": "Nessun progetto corrisponde a questa ricerca.",
+    "searchPlaceholder": "Cerca per key o nome",
+    "columns": {
+      "project": "Progetto",
+      "members": "Membri",
+      "issues": "Issue",
+      "agents": "Agenti",
+      "lastActivity": "Ultima attività",
+      "mcp": "MCP"
+    },
+    "created": "creato il {date}",
+    "archived": "{count} archiviati",
+    "neverActive": "mai",
+    "mcpEnabled": "Attivo",
+    "mcpOff": "Disattivo",
+    "open": "Apri progetto",
+    "showDetails": "Mostra dettagli progetto"
+  },
+  "projectPanel": {
+    "mcpEnabled": "MCP attivo",
+    "mcpOff": "MCP disattivo",
+    "created": "creato il {date}",
+    "lastActivity": "Ultima attività: {value}",
+    "noActivity": "nessuna",
+    "statTitle": "{label}: {value}",
+    "stats": {
+      "issues": "Issue",
+      "archivedIssues": "Issue archiviate",
+      "initiatives": "Iniziative",
+      "members": "Membri",
+      "dashboards": "Dashboard",
+      "views": "Viste",
+      "agents": "Agenti AI",
+      "skills": "Skill",
+      "tools": "Strumenti"
+    },
+    "members": "Membri",
+    "noMembersTitle": "Nessun membro",
+    "noMembersHint": "Nessuno può raggiungere questo progetto finché qualcuno non viene invitato."
+  },
+  "teams": {
+    "empty": "Nessuna squadra corrisponde a questa ricerca.",
+    "searchPlaceholder": "Cerca per nome",
+    "columns": {
+      "team": "Squadra",
+      "projects": "Progetti",
+      "members": "Membri",
+      "issues": "Issue",
+      "agents": "Agenti",
+      "mcp": "MCP"
+    },
+    "mcpEnabled": "Attivo",
+    "mcpOff": "Disattivo",
+    "open": "Apri squadra",
+    "showDetails": "Mostra dettagli squadra"
+  },
+  "teamPanel": {
+    "mcpEnabled": "MCP attivo",
+    "mcpOff": "MCP disattivo",
+    "created": "creata il {date}",
+    "statTitle": "{label}: {value}",
+    "stats": {
+      "projects": "Progetti",
+      "issues": "Issue",
+      "members": "Membri",
+      "agents": "Agenti AI",
+      "skills": "Skill",
+      "tools": "Strumenti",
+      "roles": "Ruoli di progetto"
+    },
+    "projects": "Progetti",
+    "searchProjects": "Cerca progetti",
+    "projectCounts": "{issues} issue · {members} membri",
+    "noProjectsTitle": "Nessun progetto",
+    "noProjectsHint": "Questa squadra non ha ancora progetti.",
+    "noProjectMatches": "Nessun progetto corrisponde a questa ricerca.",
+    "members": "Membri",
+    "searchMembers": "Cerca membri",
+    "noMembersTitle": "Nessun membro",
+    "noMembersHint": "Nessuno fa ancora parte di questa squadra.",
+    "noMemberMatches": "Nessun membro corrisponde a questa ricerca.",
+    "roles": {
+      "owner": "Proprietario",
+      "manager": "Manager",
+      "member": "Membro",
+      "agent": "Agente"
+    },
+    "joined": "entrato il {date}"
+  },
+  "roles": {
+    "newRole": "Nuovo ruolo",
+    "empty": "Nessun ruolo di sistema.",
+    "default": "Predefinito",
+    "defaultUndeletable": "Il ruolo predefinito non può essere eliminato",
+    "columns": {
+      "role": "Ruolo",
+      "permissions": "Permessi"
+    },
+    "edit": "Modifica ruolo",
+    "delete": "Elimina ruolo",
+    "deleteTitle": "Elimino il ruolo \"{name}\"",
+    "deleteDescription": "Non è possibile annullare."
+  },
+  "general": {
+    "saved": "Predefiniti di progetto salvati",
+    "projectDefaults": "Predefiniti di progetto",
+    "mcpEnabled": "Accesso MCP per i nuovi progetti",
+    "mcpEnabledHint": "Un nuovo progetto parte aperto ai client MCP se la sua squadra ha MCP attivo. I progetti esistenti mantengono la loro impostazione.",
+    "workspacesSaved": "Impostazioni workspace salvate",
+    "workspaces": "Workspace",
+    "personalWorkspaces": "Workspace personali",
+    "personalWorkspacesHint": "Ogni persona riceve un workspace suo, nominato come lei. Disattivato, i nuovi account non ne ricevono uno e le persone lavorano solo nei workspace a cui vengono aggiunte. I workspace esistenti restano.",
+    "invites": "Inviti",
+    "inviteSearch": "Suggerisci persone quando inviti",
+    "inviteSearchHint": "I proprietari e i manager della squadra possono trovare account di ogni workspace per nome o email. Le corrispondenze appaiono mentre scrivono nel dialogo di invito. Disattivato, inseriscono l'indirizzo completo.",
+    "invitesSaved": "Impostazioni inviti salvate",
+    "sharing": "Link pubblici",
+    "sharingEnabled": "Consenti link pubblici",
+    "sharingEnabledHint": "Disattivato, i link esistenti smettono di aprirsi finché non viene riattivato e nessuno può condividere. Attivo, ogni workspace decide se i suoi documenti, issue e viste possono essere condivisi tramite link.",
+    "sharingSaved": "Impostazioni link pubblici salvate",
+    "apiDocs": "Documentazione API",
+    "apiDocsAudience": "Chi può leggere la documentazione API",
+    "apiDocsAudienceHint": "Nell'app e all'indirizzo /docs dell'API.",
+    "apiDocsAudiences": {
+      "nobody": "Nessuno",
+      "god": "Proprietario dell'istanza",
+      "everyone": "Tutti"
+    },
+    "apiDocsSaved": "Impostazioni documentazione API salvate",
+    "apiKeys": "API key",
+    "apiKeysSaved": "Impostazioni API key salvate",
+    "keyRequestsPerMinute": "Richieste al minuto",
+    "keyRequestsPerMinuteHint": "Quante richieste una key può inviare al minuto, incluse le chiamate agli strumenti MCP. Ogni replica dell'API conta per conto proprio. 0 non imposta un limite.",
+    "keyRequestsPerMinuteInvalid": "Inserisci un numero intero da 0 a {max}.",
+    "agents": "Agenti",
+    "agentsSaved": "Impostazioni agenti salvate",
+    "embedding": "Embedding",
+    "embedSites": "Siti fidati",
+    "embedSitesHint": "Solo questi siti possono incorporare documenti, issue e viste condivise tramite link pubblico. Senza nessuno elencato, nessun sito può. Inserisci ciascuno come https://example.com, separati da virgole.",
+    "embedSitesInvalid": "Inserisci ogni sito come https://example.com, senza path.",
+    "embedSaved": "Siti fidati salvati. Si applicano entro un minuto.",
+    "traceRetention": "Conserva tracce di esecuzione",
+    "traceRetentionHint": "Una traccia registra le chiamate di modello e strumento di un'esecuzione agente. Dopo questo tempo viene eliminata e le dashboard di utilizzo smettono di contarla.",
+    "traceDays": "{days, plural, one {# giorno} other {# giorni}}",
+    "traceForever": "Per sempre",
+    "maxRunTime": "Limite di tempo di esecuzione",
+    "maxRunTimeHint": "Un'esecuzione che richiede più tempo viene fermata e salvata come fallita. Il limite di un agente può solo essere più corto. Le chat non hanno limiti.",
+    "runMinutes": "{minutes, plural, one {# minuto} other {# minuti}}",
+    "runSeconds": "{seconds} s",
+    "concurrentRuns": "Esecuzioni simultanee",
+    "concurrentRunsHint": "Quante esecuzioni agente lavorano in contemporanea su questa istanza. Le altre aspettano in coda. Le chat e gli agenti esterni non contano. 0 non imposta un limite.",
+    "concurrentRunsInvalid": "Inserisci un numero intero da 0 a {max}.",
+    "answerLimit": "Limite di lunghezza della risposta",
+    "answerLimitHint": "Quanti caratteri della risposta di un agente vengono salvati. Il resto viene tagliato. Le chat mostrano la risposta intera, ma gli agenti esterni ricevono solo la parte salvata come storico. 0 non imposta un limite.",
+    "answerLimitInvalid": "Inserisci un numero intero da 0 a {max, number}.",
+    "answerLimitNone": "Nessun limite. Le risposte lunghe vengono salvate intere e possono rendere lenti i carichi delle liste di esecuzioni agente."
+  },
+  "authentication": {
+    "saved": "Impostazioni di autenticazione salvate",
+    "registration": "Registrazione",
+    "registrationHint": "Chi può creare un account e per quanto restano validi gli inviti.",
+    "registrationPasswordlessNote": "Le persone si registrano e reimpostano le password tramite il provider di accesso.",
+    "inviteTtlDays": "Scadenza inviti (giorni)",
+    "inviteTtlDaysHint": "Un invito smette di funzionare dopo questo numero di giorni dalla creazione. Un valore nuovo si applica anche agli inviti esistenti. 0 significa che gli inviti non scadono mai.",
+    "inviteTtlDaysInvalid": "Inserisci un numero intero di giorni da 0 a {max}.",
+    "allowedEmailDomains": "Domini email consentiti",
+    "allowedEmailDomainsHint": "Solo gli indirizzi di questi domini possono creare un account, anche tramite invito. Gli account esistenti mantengono il loro accesso. Separa i domini con virgole. Un sottodominio richiede una voce propria. Lascia vuoto per consentire qualsiasi indirizzo.",
+    "allowedEmailDomainsInvalid": "Inserisci domini come example.com, fino a 100.",
+    "modes": {
+      "open": {
+        "label": "Aperta",
+        "description": "Qualsiasi persona può creare un account nella pagina di registrazione.",
+        "descriptionPasswordless": "Qualsiasi persona che accede per la prima volta con il provider riceve un account."
+      },
+      "invite": {
+        "label": "Solo invito",
+        "description": "Solo gli indirizzi con un invito in sospeso possono creare un account.",
+        "descriptionPasswordless": "Accedere con il provider crea un account solo per un indirizzo con un invito in sospeso."
+      },
+      "closed": {
+        "label": "Chiusa",
+        "description": "Nessuno può creare un account. Gli account esistenti continuano ad accedere.",
+        "descriptionPasswordless": "Accedere con il provider non crea account. Gli account esistenti continuano ad accedere."
+      }
+    },
+    "signIn": "Opzioni di accesso",
+    "needsProvider": "Configura prima un provider email in Integrazioni → Provider email.",
+    "requireVerification": "Richiedi conferma email",
+    "requireVerificationHint": "Le persone devono confermare il loro indirizzo email prima di accedere con una password. Questo include gli account esistenti: il modulo di accesso offre di rinviare il link di conferma.",
+    "magicLink": "Link di accesso",
+    "magicLinkHint": "Le persone possono accedere con un link inviato alla loro email. Funziona solo mentre Email e password è attivo.",
+    "trustProviderEmails": "Fida degli indirizzi dei provider di accesso",
+    "trustProviderEmailsHint": "Google e OpenID Connect fanno accedere le persone all'account con lo stesso indirizzo email, anche se nessuno lo ha confermato. Attivalo solo se controlli chi si registra presso il provider, altrimenti qualcuno potrebbe prendere il controllo di un account.",
+    "emailPassword": "Email e password",
+    "emailPasswordHint": "Le persone si registrano e accedono con un'email e una password. Disattivato, accedono solo tramite un provider di accesso o una passkey.",
+    "needsSso": "Configura prima un provider di accesso in Integrazioni → Provider di autenticazione.",
+    "signInLimits": "Limiti di richieste",
+    "signInLimitsHint": "Quante richieste un indirizzo IP può inviare a ogni replica dell'API. I limiti fermano i tentativi di indovinare password e gli allagamenti di email. Dietro un reverse proxy, il proxy deve impostare X-Forwarded-For, altrimenti tutti i client condividono ogni limite.",
+    "signInRateLimit": "Tentativi di accesso e registrazione",
+    "signInRateLimitHint": "Ogni 10 secondi, incluse modifiche di password e email.",
+    "emailRateLimit": "Email account",
+    "emailRateLimitHint": "Al minuto, per i messaggi di reimpostazione password e conferma email.",
+    "magicLinkRateLimit": "Richieste di link di accesso",
+    "magicLinkRateLimitHint": "Al minuto, per richiedere e aprire i link di accesso.",
+    "signInLimitInvalid": "Inserisci un numero intero da 1 a {max}."
+  },
+  "hotkeys": {
+    "saved": "Scorciatoie da tastiera salvate"
+  },
+  "storage": {
+    "saved": "Impostazioni di archiviazione salvate",
+    "fileSize": "Dimensione file",
+    "fileSizeHint": "Il singolo file più grande che un caricamento può contenere. Un file più grande viene rifiutato prima di essere salvato.",
+    "attachmentMb": "Dimensione allegati (MB)",
+    "attachmentHint": "Si applica agli allegati delle issue, ai file incollati in una descrizione e agli allegati aggiunti dagli agenti.",
+    "avatarMb": "Dimensione avatar (MB)",
+    "avatarHint": "L'immagine del profilo che le persone caricano per il loro account.",
+    "mimeTypes": "Tipi di allegato accettati",
+    "mimeTypesHint": "Un tipo di contenuto per riga. Lascia vuoto per accettare qualsiasi file.",
+    "mimeTypesNote": "Una riga è un tipo completo (application/pdf) o un wildcard (image/*). I file già salvati restano qualunque cosa dica la lista.",
+    "quota": "Quota progetto",
+    "quotaHint": "Lo spazio di archiviazione totale degli allegati che un progetto può usare. 0 significa nessun limite.",
+    "quotaMb": "Archiviazione per progetto (MB)",
+    "quotaNote": "Quando un progetto raggiunge la quota, i nuovi caricamenti vengono rifiutati finché qualcuno non elimina allegati."
+  },
+  "jobs": {
+    "saved": "Impostazioni job di sfondo salvate",
+    "range": "Inserisci un numero intero da {min, number} a {max, number}.",
+    "withRange": "{hint} Da {min, number} a {max, number}.",
+    "webhookLeaseNote": "Imposta una lease più lunga del timeout. Le lease sono in secondi, i timeout in millisecondi.",
+    "webhookTimeoutNote": "Imposta un timeout più corto della lease. Le lease sono in secondi, i timeout in millisecondi.",
+    "agentLeaseNote": "Imposta una lease più lunga del timeout sotto Agenti con un URL di endpoint. Le lease sono in secondi, i timeout in millisecondi.",
+    "invocationTimeoutNote": "Imposta un timeout più corto delle lease sotto Esecuzioni agenti e Chat agenti. Le lease sono in secondi, i timeout in millisecondi.",
+    "webhooks": {
+      "title": "Webhook",
+      "description": "Come le consegne vengono inviate e ritentate, quando un webhook fallente viene disattivato e per quanto resta il log.",
+      "pollIntervalMs": "Intervallo di controllo (ms)",
+      "pollIntervalMsHint": "Con quale frequenza vengono inviate le consegne e le notifiche in coda.",
+      "batchSize": "Dimensione batch",
+      "batchSizeHint": "Quante consegne vengono inviate per controllo.",
+      "timeoutMs": "Timeout (ms)",
+      "timeoutMsHint": "Quanto tempo ha il server ricevente per rispondere prima che il tentativo fallisca.",
+      "maxAttempts": "Tentativi massimi",
+      "maxAttemptsHint": "Quante volte una consegna viene inviata prima di essere salvata come fallita.",
+      "disableThreshold": "Fallimenti consecutivi",
+      "disableThresholdHint": "Il webhook viene disattivato dopo questo numero di tentativi falliti consecutivi, ritentativi inclusi.",
+      "leaseSeconds": "Lease (sec)",
+      "leaseSecondsHint": "Una consegna interrotta viene inviata di nuovo dopo questo tempo.",
+      "retentionDays": "Conserva log consegne (giorni)",
+      "retentionDaysHint": "Le consegne riuscite vengono eliminate dal log dopo questo tempo. Quelle fallite restano.",
+      "cleanupIntervalMinutes": "Intervallo di pulizia (min)",
+      "cleanupIntervalMinutesHint": "Con quale frequenza le voci vecchie vengono eliminate dal log delle consegne."
+    },
+    "notifications": {
+      "title": "Notifiche",
+      "description": "Notifiche via email e Telegram. Vengono inviate all'intervallo di controllo impostato sotto Webhook.",
+      "batchSize": "Dimensione batch",
+      "batchSizeHint": "Quante notifiche vengono inviate per controllo.",
+      "maxAttempts": "Tentativi massimi",
+      "maxAttemptsHint": "Quante volte una notifica viene inviata prima di essere salvata come fallita.",
+      "leaseSeconds": "Lease (sec)",
+      "leaseSecondsHint": "Una notifica interrotta viene inviata di nuovo dopo questo tempo."
+    },
+    "imports": {
+      "title": "Importazioni",
+      "description": "Importazioni da altri tracker.",
+      "pollIntervalMs": "Intervallo di controllo (ms)",
+      "pollIntervalMsHint": "Con quale frequenza vengono avviate le importazioni in coda."
+    },
+    "agentRuns": {
+      "title": "Esecuzioni agenti",
+      "description": "Come le esecuzioni agente in coda e pianificate vengono avviate e ritentate.",
+      "pollIntervalMs": "Intervallo di controllo (ms)",
+      "pollIntervalMsHint": "Con quale frequenza le esecuzioni vengono prese dalla coda e le pianificazioni scadute vengono messe in coda.",
+      "maxAttempts": "Tentativi massimi",
+      "maxAttemptsHint": "Quante volte un'esecuzione viene avviata prima di essere salvata come fallita.",
+      "leaseSeconds": "Lease (sec)",
+      "leaseSecondsHint": "Un'esecuzione interrotta riparte dopo questo tempo. Per gli agenti interni questo tempo non è mai più corto del Limite di tempo di esecuzione in Generale."
+    },
+    "agentChat": {
+      "title": "Chat agenti",
+      "description": "Chat con agenti esterni, tramite runner o URL di endpoint.",
+      "leaseSeconds": "Lease (sec)",
+      "leaseSecondsHint": "Una risposta interrotta riparte dopo questo tempo.",
+      "maxAttempts": "Tentativi massimi",
+      "maxAttemptsHint": "Quante volte l'agente riceve un messaggio prima che la risposta venga salvata come fallita.",
+      "claimWaitMs": "Attesa runner (ms)",
+      "claimWaitMsHint": "Quanto tempo una richiesta del runner aspetta un nuovo messaggio di chat.",
+      "claimPollMs": "Intervallo di controllo runner (ms)",
+      "claimPollMsHint": "Un nuovo messaggio di chat raggiunge un runner in attesa entro questo tempo.",
+      "streamPollMs": "Intervallo di controllo risposta (ms)",
+      "streamPollMsHint": "Con quale frequenza una chat aperta mostra le nuove parti della risposta.",
+      "historyMessages": "Storico chat (messaggi)",
+      "historyMessagesHint": "Quanti messaggi di chat precedenti l'agente riceve con ogni nuovo messaggio."
+    },
+    "agentInvocations": {
+      "title": "Agenti con un URL di endpoint",
+      "description": "Task e messaggi di chat inviati all'URL di endpoint di un agente.",
+      "pollIntervalMs": "Intervallo di controllo (ms)",
+      "pollIntervalMsHint": "Con quale frequenza i task e i messaggi di chat in coda vengono inviati a questi agenti.",
+      "timeoutMs": "Timeout (ms)",
+      "timeoutMsHint": "Quanto tempo ha l'endpoint per rispondere. Se è in ritardo, il task o il messaggio viene inviato di nuovo a scadenza della sua lease."
+    },
+    "sweeps": {
+      "title": "Archivio e pulizia",
+      "description": "Con quale frequenza le issue chiuse da tempo vengono archiviate e le tracce di esecuzione vecchie e i link pubblici scaduti vengono eliminati.",
+      "autoArchiveMinutes": "Intervallo di archiviazione (min)",
+      "autoArchiveMinutesHint": "Con quale frequenza le issue chiuse da tempo vengono archiviate nei progetti con Archivio attivo.",
+      "tracePruneMinutes": "Intervallo di pulizia tracce (min)",
+      "tracePruneMinutesHint": "Con quale frequenza vengono eliminate le tracce di esecuzione più vecchie di Conserva tracce di esecuzione in Generale.",
+      "shareExpiryMinutes": "Intervallo di pulizia link (min)",
+      "shareExpiryMinutesHint": "Con quale frequenza vengono eliminati i link pubblici scaduti. Un link smette di aprirsi quando scade, qualunque sia questo valore."
+    },
+    "bot": {
+      "title": "Bot Telegram",
+      "description": "Con quale velocità il bot raccoglie una modifica alle sue impostazioni.",
+      "configPollIntervalMs": "Intervallo di controllo impostazioni (ms)",
+      "configPollIntervalMsHint": "Una modifica sotto Telegram raggiunge il bot entro questo tempo."
+    }
+  },
+  "telegram": {
+    "saved": "Impostazioni Telegram salvate",
+    "bot": "Bot",
+    "botConfigured": "Le persone collegano il loro account Telegram aprendo una chat con questo bot dal loro profilo.",
+    "botMissing": "Crea un bot con @BotFather in Telegram e incollane qui il token.",
+    "botToken": "Token bot",
+    "botTokenHint": "Il token viene verificato con Telegram quando salvi, quindi uno sbagliato viene rifiutato qui invece di fallire in silenzio più tardi.",
+    "resolvedHint": "Risolto dal token. È il bot che le persone vedranno quando si collegano."
+  },
+  "slack": {
+    "saved": "Impostazioni Slack salvate",
+    "app": "App Slack",
+    "appConfigured": "Se attiva, i membri possono connettere il proprio account Slack nelle impostazioni di notifica di un progetto.",
+    "appMissing": "Aggiungi bot token, client ID e client secret per attivare l'app."
+  },
+  "email": {
+    "saved": "Provider email salvato",
+    "provider": "Provider email",
+    "providerHint": "Scegli un provider. Le credenziali vengono salvate cifrate.",
+    "from": "Indirizzo mittente",
+    "fromHint": "Necessario per Resend. Con SMTP il valore predefinito è il nome utente.",
+    "host": "Host",
+    "port": "Porta",
+    "encryption": "Cifratura",
+    "encryptionOptions": {
+      "none": "Nessuna",
+      "ssl": "SSL",
+      "tls": "TLS"
+    },
+    "username": "Nome utente",
+    "password": "Password",
+    "passwordPlaceholder": "Password SMTP",
+    "timeout": "Timeout (s)",
+    "optional": "Facoltativo",
+    "apiKey": "API key",
+    "teamNotifications": "Notifiche di squadra",
+    "teamNotificationsHint": "Consenti alle squadre di inviare le loro notifiche tramite questo provider invece di configurarne uno loro. Ogni squadra sceglie comunque se usarlo.",
+    "test": "Invia email di test",
+    "testing": "Invio…",
+    "testHint": "Invia un messaggio reale con le impostazioni attuali senza salvarle.",
+    "testConfigureFirst": "Attiva prima un provider e aggiungi le sue credenziali richieste.",
+    "testSent": "Email di test inviata a {email}",
+    "smtpAuth": "Autenticazione",
+    "smtpAuthOptions": {
+      "password": "Password",
+      "microsoft365": "Microsoft 365 (OAuth)"
+    },
+    "mailbox": "Casella",
+    "tenantId": "Tenant ID",
+    "clientId": "Client ID",
+    "clientSecret": "Client secret",
+    "clientSecretPlaceholder": "Secret della registrazione app",
+    "microsoft365Hint": "Accede come registrazione app in Entra ID invece che con la password della casella, così la casella può mantenere MFA attivo. L'app ha bisogno del permesso applicativo Office 365 Exchange Online SMTP.SendAsApp con consenso dell'amministratore, accesso a questa casella in Exchange e SMTP AUTH attivo per la casella."
+  },
+  "emailTemplates": {
+    "saved": "Modelli email salvati",
+    "unsaved": "Modifiche non salvate",
+    "blankText": "Aggiungi l'oggetto o il testo mancante per salvare",
+    "emails": "Email",
+    "layout": "Layout",
+    "edited": "Modificato",
+    "subject": "Oggetto",
+    "text": "Testo",
+    "button": "Pulsante",
+    "formatting": "Formattazione",
+    "heading1": "Titolo 1",
+    "heading2": "Titolo 2",
+    "bold": "Grassetto",
+    "italic": "Corsivo",
+    "strikethrough": "Barrato",
+    "link": "Link",
+    "bulletedList": "Elenco puntato",
+    "numberedList": "Elenco numerato",
+    "quote": "Citazione",
+    "boldSample": "grassetto",
+    "italicSample": "corsivo",
+    "strikeSample": "testo",
+    "linkSample": "testo del link",
+    "unknownVariables": "{count, plural, one {Variabile sconosciuta: {names}} other {Variabili sconosciute: {names}}}",
+    "removeUnknownVariables": "Rimuovi le variabili sconosciute per salvare",
+    "reset": "Ripristina predefinito",
+    "test": "Invia test",
+    "testing": "Invio…",
+    "testSent": "Inviata a {email}",
+    "testNeedsProvider": "Configura prima il provider email",
+    "layoutHtml": "HTML del layout",
+    "layoutCss": "CSS del layout",
+    "placeholders": "Segnaposto",
+    "variables": "Variabili",
+    "required": "Richiesto",
+    "requiredPlaceholders": "Aggiungi {names} al layout per salvare",
+    "preview": "Anteprima",
+    "previewEmail": "Email",
+    "previewText": "Testo semplice",
+    "previewFailed": "L'anteprima non si è caricata. Ricarica la pagina per riprovare.",
+    "from": "Da",
+    "to": "A",
+    "groups": {
+      "signIn": "Accesso",
+      "invitations": "Inviti",
+      "notifications": "Notifiche",
+      "service": "Altro"
+    },
+    "templates": {
+      "reset": {
+        "name": "Reimpostazione password"
+      },
+      "verify": {
+        "name": "Conferma indirizzo email"
+      },
+      "magic": {
+        "name": "Link di accesso"
+      },
+      "inviteProject": {
+        "name": "Invito a un progetto"
+      },
+      "inviteTeam": {
+        "name": "Invito a una squadra"
+      },
+      "assigned": {
+        "name": "Issue assegnata"
+      },
+      "mentioned": {
+        "name": "Menzionato in un'issue"
+      },
+      "commented": {
+        "name": "Nuovo commento"
+      },
+      "stateChanged": {
+        "name": "Stato cambiato"
+      },
+      "reacted": {
+        "name": "Reazione a un commento"
+      },
+      "documentMentioned": {
+        "name": "Menzionato in un documento"
+      },
+      "documentCommentMentioned": {
+        "name": "Menzionato in un commento a un documento"
+      },
+      "test": {
+        "name": "Email di test",
+        "hint": "Inviata dal pulsante di test nella pagina Provider email."
+      }
+    },
+    "placeholderText": {
+      "content": "Testo dell'email",
+      "button": "Pulsante con il link",
+      "subject": "Oggetto",
+      "lang": "Codice lingua",
+      "dir": "Direzione del testo",
+      "site_name": "Nome istanza",
+      "site_url": "Indirizzo istanza",
+      "logo_url": "Indirizzo logo"
+    },
+    "variableText": {
+      "actor": "Chi l'ha fatto",
+      "ref": "Numero issue",
+      "title": "Titolo issue",
+      "from": "Stato precedente",
+      "to": "Nuovo stato",
+      "document": "Titolo documento",
+      "inviter": "Chi ha inviato l'invito",
+      "project": "Nome progetto",
+      "team": "Nome squadra",
+      "role": "Ruolo dopo l'ingresso"
+    }
+  },
+  "authProvider": {
+    "saved": "Provider di autenticazione salvato",
+    "google": "Google",
+    "googleConfigured": "Un indirizzo senza account ne riceve uno; un indirizzo con già un account confermato accede a esso.",
+    "googleMissing": "Aggiungi prima il client ID e il secret.",
+    "clientId": "Client ID",
+    "clientSecret": "Client secret",
+    "redirectUri": "Redirect URI",
+    "redirectUriHint": "Registralo sul client OAuth nella console Google Cloud. Google rifiuta l'accesso se non corrisponde esattamente.",
+    "copyRedirectUri": "Copia redirect URI",
+    "oidc": "OpenID Connect",
+    "oidcConfigured": "Un indirizzo senza account ne riceve uno; un indirizzo con già un account confermato accede a esso.",
+    "oidcMissing": "Aggiungi prima l'URL di discovery, il client ID e il secret.",
+    "discoveryUrl": "Discovery URL",
+    "discoveryUrlHint": "Il .well-known/openid-configuration del tuo provider. Da esso vengono letti gli endpoint di autorizzazione, token e userinfo.",
+    "oidcLabel": "Etichetta pulsante",
+    "oidcLabelPlaceholder": "Accedi con Acme SSO",
+    "oidcLabelHint": "Dà il nome al tuo provider sul pulsante di accesso. Lasciala vuota per un'etichetta generica.",
+    "scopes": "Scopes",
+    "scopesHint": "Separati da spazi. openid è richiesto; profile ed email compilano il nome e l'indirizzo.",
+    "oidcRedirectUriHint": "Registralo come redirect URI sul client presso il tuo provider di identità. Il provider rifiuta l'accesso se non corrisponde esattamente."
+  }
+}

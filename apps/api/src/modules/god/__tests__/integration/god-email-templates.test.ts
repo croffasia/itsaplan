@@ -54,7 +54,7 @@ describe('god email templates', () => {
       hasLink: true,
       edits: {},
     });
-    expect(Object.keys(assigned.defaults)).toHaveLength(13);
+    expect(Object.keys(assigned.defaults)).toHaveLength(14);
     expect(assigned.defaults.ru!.subject).toBe('{ref}: назначена на вас');
     expect(res.data!.layout).toEqual(res.data!.defaultLayout);
     expect(res.data!.canSend).toBe(false);

@@ -1,0 +1,21 @@
+{
+  "noProjectAccess": "Non hai accesso a questo progetto.",
+  "projectUnavailable": "Questo progetto non è disponibile.",
+  "noProjects": "Nessun progetto ancora, creane uno per iniziare.",
+  "noTeamsTitle": "Nessun team ancora",
+  "noTeamsHint": "Crea il tuo team: progetti, membri e agenti sono custoditi al suo interno.",
+  "noTeamsMemberHint": "Chiedi al proprietario del workspace di aggiungerti a un team.",
+  "noProjectAccessHint": "Chiedi a un proprietario o a un manager del team di aggiungerti a un progetto.",
+  "noProjectAccessOwnerHint": "Chiedi a un proprietario o a un manager del team di aggiungerti a un progetto, oppure crea un tuo team.",
+  "createTeam": "Crea team",
+  "noProjectsTitle": "Nessun progetto ancora",
+  "noProjectsHint": "Crea il tuo primo progetto per iniziare a pianificare issue su una board.",
+  "createProject": "Crea progetto",
+  "loadFailedTitle": "Impossibile caricare i tuoi progetti",
+  "loadFailedHint": "Controlla la connessione e ricarica la pagina.",
+  "desktopNotifications": {
+    "message": "Ricevi una notifica desktop per ogni nuovo elemento della inbox mentre l'app è in background.",
+    "turnOn": "Attiva",
+    "notNow": "Non ora"
+  }
+}

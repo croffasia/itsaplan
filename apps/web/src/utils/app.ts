@@ -16,6 +16,7 @@ export type ProFeature =
   | 'agent-actions'
   | 'agent-analytics'
   | 'agent-budgets'
+  | 'agent-tools'
   | 'asana-import'
   | 'audit-log'
   | 'email-domains'

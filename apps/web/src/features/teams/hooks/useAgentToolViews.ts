@@ -31,7 +31,9 @@ export function useAgentToolViews(
     const credential =
       tool.credentialLabel ??
       (tool.credentialId != null ? t('credentialFallback', { id: tool.credentialId }) : null);
-    const locked = sources.some((one) => one.kind === 'locked' && one.key === tool.source);
+    const locked =
+      !!integration.locked ||
+      sources.some((one) => one.kind === 'locked' && one.key === tool.source);
     return {
       tool,
       name: tool.source ? tool.label : nameInIntegration(tool.label, integration.label),

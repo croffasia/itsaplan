@@ -1,7 +1,7 @@
 import { db, agentTool, agentToolLink, integrationCredential } from '@repo/db';
 import { and, desc, eq, inArray, or, sql } from 'drizzle-orm';
 import type { z } from 'zod';
-import { getTool, integrationDescriptors, type ToolConfig } from '@repo/agent-tools';
+import { getLockedTool, getTool, integrationDescriptors, type ToolConfig } from '@repo/agent-tools';
 import { iso, HttpError, rethrowDuplicate } from '#shared/lib';
 import { decryptSecret } from '@repo/crypto';
 import { getCredentialById } from '../integrations/service';
@@ -62,11 +62,13 @@ async function sourceTools(
 }
 
 // A row the catalog does not know and no source defines keeps its key as its name. A
-// catalog tool bound to no credential takes its integration from the catalog.
+// catalog tool bound to no credential takes its integration from the catalog. A tool of a
+// locked integration is named by its listing, and no agent gets it.
 async function describeRows(teamId: number, rows: StoredRow[]): Promise<AgentToolRow[]> {
   const defined = await sourceTools(teamId, rows);
   return rows.map(({ credentialIntegrationKey, ...row }) => {
-    const catalog = getTool(row.toolKey);
+    const running = getTool(row.toolKey);
+    const catalog = running ?? getLockedTool(row.toolKey);
     const sourced = defined.get(row.id);
     return {
       ...row,
@@ -74,7 +76,7 @@ async function describeRows(teamId: number, rows: StoredRow[]): Promise<AgentToo
       label: catalog?.tool.label ?? sourced?.label ?? row.toolKey,
       description: catalog?.tool.description ?? sourced?.description ?? null,
       source: catalog ? null : sourceKeyOf(row.toolKey),
-      supported: !!catalog || !!sourced?.supported,
+      supported: !!running || !!sourced?.supported,
       createdAt: iso(row.createdAt),
     };
   });

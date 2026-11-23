@@ -1,4 +1,5 @@
 import {
+  Blocks,
   BookOpenText,
   ChevronRight,
   FolderKanban,
@@ -14,15 +15,18 @@ import type { AgentTool } from '@/lib/api/endpoints/agents';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { MatrixCheckbox } from '@/components/common/permissions/MatrixCheckbox';
+import NeedsProLink from '@/components/common/NeedsProLink';
+import { agentActionGroupIcons } from '@/cloud';
 import { AgentActionRow } from './AgentActionRow';
 
-const GROUP_ICONS: Record<AgentTool['group'], LucideIcon> = {
+const GROUP_ICONS: Record<string, LucideIcon> = {
   issues: SquareKanban,
   initiatives: Target,
   cycles: RefreshCw,
   documents: BookOpenText,
   notes: StickyNote,
   project: FolderKanban,
+  ...agentActionGroupIcons,
 };
 
 // One feature's actions in the Actions section. Folded, its row says what of it the agent
@@ -38,7 +42,7 @@ export function AgentActionGroup({
   open,
   onOpenChange,
 }: {
-  group: AgentTool['group'];
+  group: string;
   all: AgentTool[];
   shown: AgentTool[];
   selected: string[];
@@ -47,18 +51,25 @@ export function AgentActionGroup({
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations('teams.agents');
+  const tools = useTranslations('teams.tools');
   const format = useFormatter();
-  const Icon = GROUP_ICONS[group];
-  const name = t(`actionGroup.${group}`);
+  const Icon = GROUP_ICONS[group] ?? Blocks;
+  // An edition names its groups in its messages.
+  const nameKey = `actionGroup.${group}` as Parameters<typeof t.has>[0];
+  const name = t.has(nameKey) ? t(nameKey) : group;
   const optIn = all.filter((tool) => !tool.always);
-  const on = optIn.filter((tool) => selected.includes(tool.key));
-  const alwaysCount = all.length - optIn.length;
-  const allOn = optIn.length > 0 && on.length === optIn.length;
+  // A locked action is turned off, never on, and the agent does not get it.
+  const grantable = optIn.filter((tool) => !tool.locked);
+  const on = grantable.filter((tool) => selected.includes(tool.key));
+  const alwaysCount = all.filter((tool) => tool.always && !tool.locked).length;
+  const allOn = grantable.length > 0 && on.length === grantable.length;
 
   let summary: string;
   let boxState: boolean | 'indeterminate' = false;
   if (optIn.length === 0) {
     summary = t('alwaysOn');
+  } else if (grantable.length === 0) {
+    summary = t('summaryNone');
   } else if (allOn) {
     summary = t('summaryAll');
     boxState = true;
@@ -106,19 +117,28 @@ export function AgentActionGroup({
             {t('countOf', { on: on.length + alwaysCount, total: all.length })}
           </span>
         </CollapsibleTrigger>
-        {optIn.length > 0 ? (
+        {grantable.length > 0 && (
           <MatrixCheckbox
             className="mx-2"
             checked={boxState}
             onCheckedChange={() =>
               onToggle(
-                optIn.map((tool) => tool.key),
+                (allOn ? optIn : grantable).map((tool) => tool.key),
                 !allOn,
               )
             }
             aria-label={t(allOn ? 'turnOffGroup' : 'turnOnGroup', { group: name })}
           />
-        ) : (
+        )}
+        {optIn.length > 0 && grantable.length === 0 && (
+          <NeedsProLink
+            feature="agent-actions"
+            label={tools('locked')}
+            hint={tools('lockedHint')}
+            className="mx-2"
+          />
+        )}
+        {optIn.length === 0 && (
           <Tooltip>
             <TooltipTrigger asChild>
               <span tabIndex={0} className="mx-1.5 rounded-sm p-0.5 text-muted-foreground">

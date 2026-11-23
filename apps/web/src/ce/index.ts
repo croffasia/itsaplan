@@ -2,6 +2,7 @@
 // instance runs. The hosted build points the alias at its own module exporting the
 // same names, so a cloud-only part is imported from here and nowhere else.
 export { default as AgentAnalyticsExtras } from './AgentAnalyticsExtras';
+export { default as agentActionGroupIcons } from './agentActionGroupIcons';
 export { default as BrandMark } from './BrandMark';
 export { default as BrandPanel } from './BrandPanel';
 export { default as GodSectionExtras } from './GodSectionExtras';

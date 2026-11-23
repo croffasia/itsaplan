@@ -172,7 +172,11 @@ export function toUpdatePatch(v: AgentFormValue): AiAgentPatch {
 // How many tools the agent ends up with: the granted ones plus the read-only tools
 // that are always on.
 export function grantedToolCount(tools: AgentTool[], selected: string[]): number {
-  return selected.length + tools.filter((t) => t.always).length;
+  const locked = new Set(tools.filter((t) => t.locked).map((t) => t.key));
+  return (
+    selected.filter((key) => !locked.has(key)).length +
+    tools.filter((t) => t.always && !t.locked).length
+  );
 }
 
 // Buckets a list by a key, keeping the order the keys first appear in, so a grouped

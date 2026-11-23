@@ -13,14 +13,7 @@ import type { Permission } from '#shared/guards';
 import { dispatchTool } from '#mcp/dispatch';
 import { getMcpApp } from '#mcp/app-ref';
 import { compactProjectActivity } from './activity-result';
-import {
-  AGENT_ACTIONS,
-  ALWAYS_ON_ACTIONS,
-  ALWAYS_ON_KEYS,
-  normalizeToolKeys,
-  toolMeta,
-  type ToolMeta,
-} from './catalog';
+import { allActions, alwaysOnKeys, normalizeToolKeys, toolMeta, type ToolMeta } from './catalog';
 import { collapseNumericSchema } from './numeric-schema';
 import { actFor, type AgentWork } from '../../run-initiator';
 
@@ -92,7 +85,7 @@ function imageModelOutput(output: unknown) {
 // behind it, or one whose route asks only for project membership, has none.
 export function actionCatalog(): (ToolMeta & { permission?: Permission })[] {
   const byName = new Map(routeTools(getMcpApp()).map((route) => [route.name, route]));
-  return [...AGENT_ACTIONS, ...ALWAYS_ON_ACTIONS].map((action) => ({
+  return allActions().map((action) => ({
     ...action,
     permission: byName.get(action.key)?.permission,
   }));
@@ -100,7 +93,8 @@ export function actionCatalog(): (ToolMeta & { permission?: Permission })[] {
 
 // Builds the route-backed tools for one agent, keyed by tool id. The read-only
 // always-on actions are always included; a mutating action only when its key is in
-// enabledActions (the agent's granted actions, from ai_agent.tools).
+// enabledActions (the agent's granted actions, from ai_agent.tools), with what it needs.
+// A locked action gives nothing.
 // `work` is the run or chat the tools serve, passed on to the runs their calls start.
 export function buildRouteTools(
   project: ProjectRow,
@@ -108,10 +102,13 @@ export function buildRouteTools(
   enabledActions: string[],
   work: AgentWork,
 ): Record<string, ReturnType<typeof createTool>> {
-  const granted = new Set([...ALWAYS_ON_KEYS, ...normalizeToolKeys(enabledActions)]);
-  // An update replaces the board's canvas as a whole, so without the read the agent
-  // would send a canvas built from nothing and delete every card already on the board.
-  if (granted.has('update_note_board')) granted.add('get_note_board');
+  const granted = new Set(alwaysOnKeys());
+  for (const key of normalizeToolKeys(enabledActions)) {
+    const action = toolMeta(key);
+    if (!action || action.locked) continue;
+    granted.add(key);
+    for (const need of action.needs ?? []) granted.add(need);
+  }
   return buildNamedRouteTools(project, apiKey, granted, work);
 }
 

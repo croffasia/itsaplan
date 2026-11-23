@@ -133,10 +133,13 @@ export interface AgentRunPage {
 // for project membership.
 export interface AgentTool {
   key: string;
-  group: 'issues' | 'initiatives' | 'cycles' | 'documents' | 'notes' | 'project';
+  // One of the core's groups, or one an edition adds (`agentActionGroupIcons` of `@/cloud`).
+  group: string;
   label: string;
   description: string;
   always: boolean;
+  // Listed and kept on the agents that have it, and given to none.
+  locked?: boolean;
   permission?: [PermissionResource, PermissionAction];
 }
 

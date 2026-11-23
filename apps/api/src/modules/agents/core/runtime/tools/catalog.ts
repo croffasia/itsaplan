@@ -10,6 +10,9 @@
 //   actions it is allowed to take. Listed only so the UI can show them (always
 //   enabled, not editable); their keys are never stored on the agent.
 //
+// An extension of the api adds actions of its own with setExtraActions, opt-in or
+// always on, in a group of the core's or one of its own.
+//
 // Every key is the name of a route tagged with mcpTool() — the exceptions are
 // get_current_date and prepare_issue_import, which have no route behind them (see
 // tools/local.ts). What a tool
@@ -22,17 +25,19 @@
 // its route asserts and is read off the route (see actionCatalog in route-tools.ts);
 // restating it here would be a second list that drifts from the guards silently.
 
-// The feature an action belongs to, so the config UI can group the catalog.
-export type ToolGroup = 'issues' | 'initiatives' | 'cycles' | 'documents' | 'notes' | 'project';
-
 export interface ToolMeta {
   key: string;
-  group: ToolGroup;
+  // issues, initiatives, cycles, documents, notes, project, or an extension's own.
+  group: string;
   label: string;
   // Shown in the config UI next to the label.
   description: string;
   // True for the read-only actions that are always granted and cannot be toggled off.
   always: boolean;
+  // Route tools that come with the action, such as the read an update cannot do without.
+  needs?: string[];
+  // An extension's action while what runs it is off: listed, given to no agent.
+  locked?: boolean;
   // What the agent's copy of the tool changes about the route: `description` is the
   // text the model reads instead of the route's own, `hide` are arguments it may not
   // set (dropped from the tool's schema and from its calls). An MCP client is
@@ -479,6 +484,8 @@ export const AGENT_ACTIONS: ToolMeta[] = [
     label: 'Update note boards',
     description: 'Rename a board and add, edit, or remove its notes.',
     always: false,
+    // Without the read, an update replacing the canvas whole would delete every card.
+    needs: ['get_note_board'],
     overrides: {
       hide: ['visibility', 'memberIds'],
       description:
@@ -627,19 +634,44 @@ export const ALWAYS_ON_ACTIONS: ToolMeta[] = [
   },
 ];
 
-const ACTION_KEYS = new Set(AGENT_ACTIONS.map((t) => t.key));
+const CORE_ACTIONS = [...AGENT_ACTIONS, ...ALWAYS_ON_ACTIONS];
+const CORE_KEYS = new Set(CORE_ACTIONS.map((t) => t.key));
 
-export const ALWAYS_ON_KEYS: string[] = ALWAYS_ON_ACTIONS.map((t) => t.key);
+let extraActions: ToolMeta[] = [];
 
-const BY_KEY = new Map([...AGENT_ACTIONS, ...ALWAYS_ON_ACTIONS].map((t) => [t.key, t]));
+// The actions an extension of the api adds to the catalog. Each call replaces the previous
+// ones, and a key the core has throws.
+export function setExtraActions(actions: ToolMeta[]): void {
+  const taken = actions.find((action) => CORE_KEYS.has(action.key));
+  if (taken) throw new Error(`The agent action ${taken.key} is the core's`);
+  extraActions = actions;
+}
+
+// Every action of the catalog, the core's first.
+export function allActions(): ToolMeta[] {
+  return [...CORE_ACTIONS, ...extraActions];
+}
+
+// What every internal agent is granted without asking.
+export function alwaysOnKeys(): string[] {
+  return allActions()
+    .filter((t) => t.always && !t.locked)
+    .map((t) => t.key);
+}
 
 export function toolMeta(key: string): ToolMeta | undefined {
-  return BY_KEY.get(key);
+  return allActions().find((t) => t.key === key);
 }
 
 // Keeps only keys that are grantable actions, so an agent never stores an unknown
-// or non-grantable (always-on) tool key.
-export function normalizeToolKeys(keys: unknown): string[] {
+// or non-grantable (always-on) tool key. A locked action is turned off, never on: it stays
+// only among the `kept` keys, those the agent has.
+export function normalizeToolKeys(keys: unknown, kept: string[] = []): string[] {
   if (!Array.isArray(keys)) return [];
-  return [...new Set(keys.filter((k): k is string => typeof k === 'string' && ACTION_KEYS.has(k)))];
+  const grantable = new Set(
+    allActions()
+      .filter((t) => !t.always && (!t.locked || kept.includes(t.key)))
+      .map((t) => t.key),
+  );
+  return [...new Set(keys.filter((k): k is string => typeof k === 'string' && grantable.has(k)))];
 }

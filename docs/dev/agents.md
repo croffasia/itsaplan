@@ -79,8 +79,14 @@ project.
 The projects an agent works in are its bot user's `project_member` rows. The `role_id` on each is
 what its requests in that project are checked against, so one agent can hold different roles in
 two projects. An internal agent's rights in a project are the intersection of that role and its
-actions: the keys in `ai_agent.tools` plus the always-on actions (`ALWAYS_ON_KEYS`). An external
+actions: the keys in `ai_agent.tools` plus the always-on actions (`alwaysOnKeys`). An external
 agent has no such list, so its key is checked against the role alone.
+
+An extension of the api adds actions to the catalog with `setExtraActions`
+(`agents/core/runtime/tools/catalog.ts`): routes tagged `mcpTool()`, opt-in or always on, in a group
+of the core's or one of its own, each with the route tools it needs. A `locked` action stays listed
+and on the agents that have it, and no agent gets it. The web app names a group in
+`teams.agents.actionGroup.<group>` and takes its icon from `agentActionGroupIcons` of `@/cloud`.
 
 A configured tool (`agent_tool`) is a catalog tool from `@repo/agent-tools` bound to a credential,
 or a tool an extension of the api defines: its key is `<source>:...`, and the source set with

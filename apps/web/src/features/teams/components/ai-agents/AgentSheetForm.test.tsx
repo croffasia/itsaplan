@@ -242,6 +242,30 @@ describe('AgentSheetForm', () => {
     assert.ok(document.body.textContent?.includes('Create issues'));
   });
 
+  it("marks an edition's locked action and lets it be turned off only", async () => {
+    serve({
+      '/ai-agents/tools': [
+        { ...action('run_flow', 'Run flows', false), group: 'automation', locked: true },
+        { ...action('list_flows', 'Read flows', false), group: 'automation', locked: true },
+      ],
+    });
+
+    await render({ ...agent(true), tools: ['run_flow'] });
+    await openSection(teams.agents.actionsHint);
+    await waitForText(teams.tools.locked);
+    assert.ok(document.body.textContent?.includes(teams.agents.summaryNone));
+    assert.ok(!document.body.textContent?.includes(teams.agents.alwaysOn));
+
+    await openSection('automation');
+    await waitForText('Run flows');
+    const box = (label: string) =>
+      [...document.querySelectorAll('label')]
+        .find((row) => row.textContent?.includes(label))
+        ?.querySelector('button[role="checkbox"]');
+    assert.equal(box('Run flows')?.hasAttribute('disabled'), false);
+    assert.equal(box('Read flows')?.hasAttribute('disabled'), true);
+  });
+
   it('lists only the projects the agent works in', async () => {
     serve({
       '/projects/options': [

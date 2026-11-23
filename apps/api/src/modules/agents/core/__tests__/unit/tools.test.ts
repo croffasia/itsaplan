@@ -1,8 +1,11 @@
-import { describe, it, expect } from 'bun:test';
+import { afterEach, describe, it, expect } from 'bun:test';
 import {
   normalizeToolKeys,
   AGENT_ACTIONS,
   ALWAYS_ON_ACTIONS,
+  allActions,
+  alwaysOnKeys,
+  setExtraActions,
   type ToolMeta,
 } from '../../runtime/tools/catalog';
 
@@ -139,5 +142,51 @@ describe('normalizeToolKeys', () => {
       ...ALWAYS_ON_ACTIONS.map((t) => t.key),
     ]);
     for (const key of management) expect(grantable.has(key)).toBe(false);
+  });
+});
+
+describe('setExtraActions', () => {
+  const runFlows: ToolMeta = {
+    key: 'run_flow',
+    group: 'automation',
+    label: 'Run flows',
+    description: 'Start a flow.',
+    always: false,
+  };
+  const listFlows: ToolMeta = { ...runFlows, key: 'list_flows', always: true };
+
+  afterEach(() => setExtraActions([]));
+
+  it("lists an extension's actions after the core's", () => {
+    setExtraActions([runFlows, listFlows]);
+    expect(allActions().slice(-2)).toEqual([runFlows, listFlows]);
+  });
+
+  it('keeps an opt-in action on the agent and grants an always-on one without asking', () => {
+    setExtraActions([runFlows, listFlows]);
+    expect(normalizeToolKeys(['run_flow', 'list_flows'])).toEqual(['run_flow']);
+    expect(alwaysOnKeys()).toContain('list_flows');
+  });
+
+  it('keeps a locked action only on an agent that has it, and grants a locked always-on one to nobody', () => {
+    setExtraActions([
+      { ...runFlows, locked: true },
+      { ...listFlows, locked: true },
+    ]);
+    expect(normalizeToolKeys(['run_flow'], ['run_flow'])).toEqual(['run_flow']);
+    expect(normalizeToolKeys(['run_flow'])).toEqual([]);
+    expect(alwaysOnKeys()).not.toContain('list_flows');
+  });
+
+  it('replaces the previous actions on each call', () => {
+    setExtraActions([runFlows]);
+    setExtraActions([listFlows]);
+    expect(normalizeToolKeys(['run_flow'])).toEqual([]);
+  });
+
+  it("refuses a key the core's catalog has", () => {
+    expect(() => setExtraActions([{ ...runFlows, key: 'create_issue' }])).toThrow();
+    expect(() => setExtraActions([{ ...runFlows, key: 'get_issue' }])).toThrow();
+    expect(allActions()).toHaveLength(AGENT_ACTIONS.length + ALWAYS_ON_ACTIONS.length);
   });
 });

@@ -1,0 +1,37 @@
+{
+  "label": "Chiavi API",
+  "title": "Chiavi API",
+  "description": "Le chiavi API autenticano le richieste all'API come il tuo account ({email}). Il valore di una chiave viene mostrato una sola volta, al momento della creazione.",
+  "sectionTitle": "Le tue chiavi API",
+  "create": "Crea chiave API",
+  "empty": "Nessuna chiave API ancora. Creane una per autenticare le richieste all'API.",
+  "fallbackName": "Chiave API",
+  "createdAt": "Creata {date}",
+  "expiresAt": "Scade {date}",
+  "noExpiry": "Non scade",
+  "deleteAction": "Elimina chiave API",
+  "createDialog": {
+    "title": "Crea chiave API",
+    "nameLabel": "Nome",
+    "namePlaceholder": "es. pipeline CI",
+    "nameHint": "Un'etichetta per riconoscere questa chiave in seguito.",
+    "expiryLabel": "Scade tra",
+    "expiresInDays": "{days} giorni",
+    "expiryHint": "La chiave smette di funzionare in quel giorno. Creane una nuova per continuare.",
+    "submit": "Crea chiave",
+    "submitPending": "Creazione…",
+    "error": "Impossibile creare la chiave API."
+  },
+  "createdDialog": {
+    "title": "Chiave API creata",
+    "description": "Copia la tua chiave ora. Per sicurezza, viene mostrata una sola volta e non può essere recuperata in seguito.",
+    "copy": "Copia chiave"
+  },
+  "deleteDialog": {
+    "title": "Eliminare la chiave API?",
+    "confirm": "Elimina chiave",
+    "description": "Qualsiasi richiesta che usa questa chiave smetterà di funzionare immediatamente. L'operazione non può essere annullata.",
+    "error": "Impossibile eliminare la chiave API."
+  },
+  "loadFailed": "Impossibile caricare le chiavi API."
+}

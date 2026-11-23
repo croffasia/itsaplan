@@ -1,0 +1,40 @@
+{
+  "title": "Inbox",
+  "empty": "Nessuna notifica",
+  "selectNotification": "Seleziona una notifica",
+  "backToList": "Inbox",
+  "filter": "Filtra",
+  "display": "Visualizzazione",
+  "notificationType": "Tipo di notifica",
+  "showRead": "Mostra lette",
+  "showSnoozed": "Mostra in pausa",
+  "markAllRead": "Segna tutte come lette",
+  "deleteAllRead": "Elimina tutte le lette",
+  "deleteAllCompleted": "Elimina per issue completate",
+  "deleteAllCompletedDescription": "Questo elimina le notifiche delle issue completate o annullate che corrispondono ai filtri correnti, incluse quelle non lette. L'operazione non può essere annullata.",
+  "types": {
+    "assigned": "Assegnata",
+    "mentioned": "Menzionata",
+    "commented": "Commentata",
+    "state_changed": "Stato modificato",
+    "reacted": "Reagita"
+  },
+  "actions": {
+    "markRead": "Segna come letta",
+    "markUnread": "Segna come non letta",
+    "snooze": "Metti in pausa",
+    "unsnooze": "Riprendi",
+    "tomorrow": "Domani",
+    "inAWeek": "Tra una settimana",
+    "pickDate": "Scegli una data…"
+  },
+  "event": {
+    "someone": "Qualcuno",
+    "assigned": "{who} ti ha assegnato l'issue",
+    "mentioned": "{who} ti ha menzionato",
+    "commented": "{who} ha commentato",
+    "stateChanged": "{who} ha cambiato lo stato da {from} a {to}",
+    "stateChangedPlain": "{who} ha cambiato lo stato",
+    "reacted": "{who} ha reagito al tuo commento con {emoji}"
+  }
+}

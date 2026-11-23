@@ -11,6 +11,7 @@ export const LOCALES = [
   'fr',
   'pt-BR',
   'id',
+  'it',
   'es-ES',
   'ko',
   'tr',

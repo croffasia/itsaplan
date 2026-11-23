@@ -11,9 +11,11 @@ import {
   type InitiativePatch,
   type NewInitiativeInput,
   listInitiatives,
+  listFavoriteInitiatives,
   listInitiativeOptions,
   initiativeCounts,
   getInitiative,
+  setInitiativeFavorite,
   createInitiative,
   updateInitiative,
   deleteInitiative,
@@ -62,6 +64,26 @@ export function useInitiativeQuery(id: number | null) {
     queryKey: qk.initiative(id ?? 0),
     queryFn: () => getInitiative(id!),
     enabled: id != null,
+  });
+}
+
+export function useFavoriteInitiativesQuery(projectKey: string | null, enabled = true) {
+  return useQuery({
+    queryKey: qk.favoriteInitiatives(projectKey ?? ''),
+    queryFn: () => listFavoriteInitiatives(projectKey!),
+    enabled: projectKey != null && enabled,
+  });
+}
+
+export function useSetInitiativeFavorite(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, favorite }: { id: number; favorite: boolean }) =>
+      setInitiativeFavorite(id, favorite),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: qk.initiativesForProject(projectKey) });
+      qc.invalidateQueries({ queryKey: qk.initiative(id) });
+    },
   });
 }
 

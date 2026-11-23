@@ -55,7 +55,7 @@ describe('external run events', () => {
       sessionId,
     });
     expect(write.status).toBe(200);
-    expect(write.data).toEqual({ nextOffset: 3, truncated: false });
+    expect(write.data).toEqual({ nextOffset: 3, truncated: false, canceled: false });
     expect(
       (await api.sync.rev.get({ query: { scopes: 'runnerQueue:1' } })).data!.revs['runnerQueue:1'],
     ).not.toBe(marker);
@@ -75,7 +75,11 @@ describe('external run events', () => {
     const route = runner['agent-runs']({ runId: run.id }).events;
     const batch = { attempt: 1, offset: 0, events, sessionId };
     await route.post(batch);
-    expect((await route.post(batch)).data).toEqual({ nextOffset: 3, truncated: false });
+    expect((await route.post(batch)).data).toEqual({
+      nextOffset: 3,
+      truncated: false,
+      canceled: false,
+    });
     expect((await route.post({ ...batch, offset: 5 })).status).toBe(409);
     expect(
       (await route.post({ ...batch, offset: 3, sessionId: '0199a213-81c0-7800-8aa1-bbab2a035a54' }))
@@ -94,6 +98,7 @@ describe('external run events', () => {
     expect((await route.post({ ...batch, events: events.slice(0, 2) })).data).toEqual({
       nextOffset: 2,
       truncated: false,
+      canceled: false,
     });
     expect(
       (
@@ -108,10 +113,15 @@ describe('external run events', () => {
     expect((await route.post({ ...batch, offset: 1, events: events.slice(1) })).data).toEqual({
       nextOffset: 3,
       truncated: false,
+      canceled: false,
     });
     const trace = (await api['agent-runs']({ runId: run.id }).trace.get()).data!;
     expect(trace.events.map((e) => e.event)).toEqual(events);
-    expect((await route.post(batch)).data).toEqual({ nextOffset: 3, truncated: false });
+    expect((await route.post(batch)).data).toEqual({
+      nextOffset: 3,
+      truncated: false,
+      canceled: false,
+    });
     expect(
       (await route.post({ ...batch, sessionId: '0199a213-81c0-7800-8aa1-bbab2a035a54' })).status,
     ).toBe(409);
@@ -129,15 +139,18 @@ describe('external run events', () => {
     expect((await route.post({ attempt: 1, offset: 0, events: large })).data).toEqual({
       nextOffset: 40,
       truncated: true,
+      canceled: false,
     });
     const trace = (await api['agent-runs']({ runId: run.id }).trace.get()).data!;
     expect((await route.post({ attempt: 1, offset: 39, events })).data).toEqual({
       nextOffset: 42,
       truncated: true,
+      canceled: false,
     });
     expect((await route.post({ attempt: 1, offset: 39, events })).data).toEqual({
       nextOffset: 42,
       truncated: true,
+      canceled: false,
     });
     expect((await route.post({ attempt: 1, offset: 43, events })).status).toBe(409);
     expect((await api['agent-runs']({ runId: run.id }).trace.get()).data).toEqual(trace);
@@ -163,7 +176,7 @@ describe('external run events', () => {
     ).toBe(404);
     expect(
       (await runner['agent-runs']({ runId: run.id }).heartbeat.post({ attempt: 2 })).status,
-    ).toBe(204);
+    ).toBe(200);
     await write.post({ attempt: 2, offset: 0, events });
     const route = api['agent-runs']({ runId: run.id }).trace;
     expect((await route.get()).data).toMatchObject({
@@ -175,15 +188,19 @@ describe('external run events', () => {
     expect((await route.get({ query: { attempt: 3 } })).status).toBe(404);
   }, 20_000);
 
-  it('requires both read permissions and hides traces after an issue moves', async () => {
+  it('takes changing agents to read steps and hides traces after an issue moves', async () => {
     const { api, runner, run, issue } = await setup();
     await runner['agent-runs']({ runId: run.id }).events.post({ attempt: 1, offset: 0, events });
-    for (const permissions of [{ work_items: { read: true } }, { ai_agents: { read: true } }]) {
+    for (const [permissions, status] of [
+      [{ work_items: { read: true } }, 403],
+      [{ ai_agents: { read: true } }, 403],
+      [{ ai_agents: { read: true, edit: true } }, 200],
+    ] as const) {
       const role = (
         await createRole(api, 'RUN', { name: JSON.stringify(permissions), permissions })
       ).data!;
       const member = await addProjectMember(api, 'RUN', role.id);
-      expect((await member['agent-runs']({ runId: run.id }).trace.get()).status).toBe(403);
+      expect((await member['agent-runs']({ runId: run.id }).trace.get()).status).toBe(status);
     }
     const other = (await createProject(api, { key: 'NEXT', name: 'Next' })).data!;
     await api.issues({ issueId: issue.id }).move.post({ projectId: other.id });
@@ -212,7 +229,7 @@ describe('external run events', () => {
       offset: 0,
       events: large,
     });
-    expect(ack.data).toEqual({ nextOffset: 40, truncated: true });
+    expect(ack.data).toEqual({ nextOffset: 40, truncated: true, canceled: false });
     const trace = (await api['agent-runs']({ runId: run.id }).trace.get()).data!;
     expect(JSON.stringify(trace.events).length).toBeLessThan(1_000_000);
     expect(

@@ -18,9 +18,26 @@ export const queueQuery = t.Object({
         "Text to find in the issue's title or key, the schedule's name or the agent's username.",
     }),
   ),
+  initiatorIds: t.Optional(
+    t.String({
+      pattern: '^[A-Za-z0-9_-]+(,[A-Za-z0-9_-]+)*$',
+      maxLength: 5000,
+      description: 'Comma-separated user ids; keeps the runs these people are the initiators of.',
+    }),
+  ),
+  projectIds: t.Optional(
+    t.String({
+      pattern: '^[1-9][0-9]{0,8}(,[1-9][0-9]{0,8})*$',
+      maxLength: 5000,
+      description: 'Comma-separated project ids; keeps the runs of these projects.',
+    }),
+  ),
   page: t.Optional(t.Numeric({ minimum: 1, multipleOf: 1 })),
   pageSize: t.Optional(t.Numeric({ minimum: 1, maximum: 100, multipleOf: 1 })),
 });
+const person = { name: t.String(), image: t.Nullable(t.String()) };
+const actor = (whenAgent: string) =>
+  t.Object({ ...person, agentUsername: t.Nullable(t.String({ description: whenAgent })) });
 const run = IssueAgentRunPageResponse.properties.items.items;
 export const RunnerQueueResponse = t.Object({
   ...pageResponse(
@@ -32,6 +49,41 @@ export const RunnerQueueResponse = t.Object({
       scheduleId: t.Nullable(t.Number()),
       scheduleName: t.Nullable(t.String()),
       projectRef: t.String(),
+      document: t.Nullable(t.Object({ id: t.Number(), title: t.String() }), {
+        description: 'The document whose comment started the run.',
+      }),
+      initiator: t.Nullable(t.Object({ id: t.String(), ...person }), {
+        description: "The person the run works for; null for the project's own work.",
+      }),
+      startedBy: t.Nullable(actor('Set when an agent queued it.'), {
+        description:
+          'Who queued the run or made the change that started it; null for a timed schedule.',
+      }),
+      canceledBy: t.Nullable(actor('Set when an agent stopped it.'), {
+        description:
+          'Who stopped the run before it ended; null for a run that ended by itself or that the ' +
+          'api ended, as when its issue moved to another column or project.',
+      }),
+      parentRun: t.Nullable(t.Object({ id: t.Number(), projectRef: t.String() }), {
+        description: 'The run in which an agent queued this one.',
+      }),
+      rootRun: t.Nullable(
+        t.Object({
+          id: t.Number(),
+          projectRef: t.String(),
+          scheduleName: t.Nullable(t.String()),
+          initiator: t.Nullable(t.Object(person), {
+            description: "The first run's initiator; null for the project's own work.",
+          }),
+        }),
+        { description: 'The first run of the chain this run is part of.' },
+      ),
+      canReadSteps: t.Boolean({
+        description:
+          "Whether the caller reads the run's steps, what its agent did, and may stop it: whoever " +
+          'runs the team, an owner of the project, whoever may create or change its agents, and ' +
+          "the run's initiator.",
+      }),
       inputTokens: t.Nullable(t.Number({ description: 'What the last model call read.' })),
       outputTokens: t.Nullable(t.Number({ description: 'What the last model call wrote.' })),
       runnerState: t.Nullable(
@@ -45,8 +97,13 @@ export const RunnerQueueResponse = t.Object({
   ).properties,
   queued: t.Number(),
   running: t.Number(),
-  failed: t.Number({ description: 'Failed runs that match `q`, whatever `state` is.' }),
+  failed: t.Number({ description: 'Failed runs that match every filter but `state`.' }),
 });
+
+export const RunInitiatorOptionsResponse = t.Array(t.Object({ id: t.String(), ...person }));
+export const RunProjectOptionsResponse = t.Array(
+  t.Object({ id: t.Number(), name: t.String(), ref: t.String() }),
+);
 
 export const internalTraceQuery = t.Object({
   ...issueAgentTraceQuery.properties,

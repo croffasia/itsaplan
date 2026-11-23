@@ -20,10 +20,15 @@ import { FilePlus2, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import { Button } from '@/components/ui/button';
-import { projectedDocumentMove } from '../utils/documentMove';
+import { compareDocuments, type DocumentSort } from '../utils/documentList';
+import {
+  adjacentDocumentMove,
+  documentStepTarget,
+  projectedDocumentMove,
+  type OptimisticDocumentMove,
+} from '../utils/documentMove';
+import DocumentRowMenu from './DocumentRowMenu';
 import SortableDocumentRow from './SortableDocumentRow';
-
-export type DocumentSort = 'position' | 'title' | 'created' | 'updated';
 
 const treeDefaults: { collapsed: number[] } = { collapsed: [] };
 
@@ -35,11 +40,17 @@ export default function DocumentTree({
   sortBy,
   sortDirection,
   canCreate,
+  canMove,
+  movePending,
+  canPin,
   reorderEnabled,
   favoritePending,
+  pinPending,
   onCreate,
   onMove,
+  onMoveTo,
   onFavoriteChange,
+  onPinChange,
 }: {
   projectKey: string;
   documents: ProjectDocumentSummary[];
@@ -48,18 +59,20 @@ export default function DocumentTree({
   sortBy: DocumentSort;
   sortDirection: 'asc' | 'desc';
   canCreate: boolean;
+  canMove: boolean;
+  movePending: boolean;
+  canPin: boolean;
   reorderEnabled: boolean;
   favoritePending: boolean;
+  pinPending: boolean;
   onCreate: (parentId: number | null) => void;
-  onMove: (input: {
-    documentId: number;
-    version: number;
-    parentId: number | null;
-    position: number;
-    previousSiblingId: number | null;
-    nextSiblingId: number | null;
-  }) => void;
+  onMove: (input: OptimisticDocumentMove & { version: number }) => void;
+  onMoveTo: (
+    input: OptimisticDocumentMove & { version: number },
+    parent: ProjectDocumentSummary | null,
+  ) => void;
   onFavoriteChange: (documentId: number, isFavorite: boolean) => void;
+  onPinChange: (documentId: number, isPinned: boolean) => void;
 }) {
   const t = useTranslations('documents');
   const [treeState, setTreeState] = useDocumentNavigation(projectKey, 'tree', treeDefaults);
@@ -81,17 +94,7 @@ export default function DocumentTree({
     }
 
     for (const siblings of groups.values()) {
-      siblings.sort((a, b) => {
-        let result = a.position - b.position || a.id - b.id;
-        if (sortBy === 'title') result = a.title.localeCompare(b.title) || a.id - b.id;
-        if (sortBy === 'created') {
-          result = Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id - b.id;
-        }
-        if (sortBy === 'updated') {
-          result = Date.parse(a.updatedAt) - Date.parse(b.updatedAt) || a.id - b.id;
-        }
-        return sortBy !== 'position' && sortDirection === 'desc' ? -result : result;
-      });
+      siblings.sort((a, b) => compareDocuments(a, b, sortBy, sortDirection));
     }
     return groups;
   }, [byId, documents, sortBy, sortDirection]);
@@ -134,9 +137,24 @@ export default function DocumentTree({
     });
   };
 
-  function renderDocument(item: ProjectDocumentSummary, depth: number, nested: boolean) {
+  const step = (source: ProjectDocumentSummary, direction: -1 | 1) => {
+    const move = adjacentDocumentMove({ source, direction, ordered, byParent, byId });
+    if (move) onMove({ documentId: source.id, version: source.version, ...move });
+  };
+
+  function renderDocument(
+    item: ProjectDocumentSummary,
+    depth: number,
+    nested: boolean,
+    siblings: ProjectDocumentSummary[],
+  ) {
     const children = byParent.get(item.id) ?? [];
     const isCollapsed = collapsed.has(item.id);
+    const pinnable = canPin && !item.isPrivate && item.archivedAt === null;
+    const creatable = canCreate && item.archivedAt === null;
+    const create = () => onCreate(item.id);
+    const favoriteChange = () => onFavoriteChange(item.id, !item.isFavorite);
+    const pinChange = () => onPinChange(item.id, !item.isPinned);
     return (
       <SortableDocumentRow
         key={item.id}
@@ -147,12 +165,37 @@ export default function DocumentTree({
         active={activeId === item.id}
         collapsed={isCollapsed}
         hasChildren={children.length > 0}
-        canCreate={canCreate}
+        canCreate={creatable}
+        pinnable={pinnable}
         reorderEnabled={reorderEnabled}
         favoritePending={favoritePending}
+        pinPending={pinPending}
+        menu={
+          <DocumentRowMenu
+            projectKey={projectKey}
+            document={item}
+            canCreate={creatable}
+            pinnable={pinnable}
+            movable={canMove && item.archivedAt === null && !item.isLocked}
+            reorderEnabled={reorderEnabled}
+            canStepUp={documentStepTarget(item, -1, siblings) !== null}
+            canStepDown={documentStepTarget(item, 1, siblings) !== null}
+            favoritePending={favoritePending}
+            pinPending={pinPending}
+            movePending={movePending}
+            onFavoriteChange={favoriteChange}
+            onPinChange={pinChange}
+            onCreate={create}
+            onMoveTo={(move, parent) =>
+              onMoveTo({ documentId: item.id, version: item.version, ...move }, parent)
+            }
+            onStep={(direction) => step(item, direction)}
+          />
+        }
         onToggle={() => toggle(item.id)}
-        onCreate={() => onCreate(item.id)}
-        onFavoriteChange={() => onFavoriteChange(item.id, !item.isFavorite)}
+        onCreate={create}
+        onFavoriteChange={favoriteChange}
+        onPinChange={pinChange}
       >
         {nested && !isCollapsed && children.length > 0 && renderRows(item.id, depth + 1)}
       </SortableDocumentRow>
@@ -160,9 +203,10 @@ export default function DocumentTree({
   }
 
   function renderRows(parentId: number | null, depth: number) {
+    const siblings = byParent.get(parentId) ?? [];
     return (
       <ul role={depth === 0 ? 'tree' : 'group'} className={depth === 0 ? 'space-y-px' : undefined}>
-        {(byParent.get(parentId) ?? []).map((item) => renderDocument(item, depth, true))}
+        {siblings.map((item) => renderDocument(item, depth, true, siblings))}
       </ul>
     );
   }
@@ -233,7 +277,7 @@ export default function DocumentTree({
         <nav aria-label={t('treeLabel')}>
           {searching ? (
             <ul role="tree" className="space-y-px">
-              {ordered.map((item) => renderDocument(item, 0, false))}
+              {ordered.map((item) => renderDocument(item, 0, false, ordered))}
             </ul>
           ) : (
             renderRows(null, 0)

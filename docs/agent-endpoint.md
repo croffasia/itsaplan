@@ -134,7 +134,9 @@ uses. When the person stops the answer, the events, heartbeat and result routes 
 answer return `{ "canceled": true }`. Then stop the work on that answer.
 
 The agent reads and changes issues with the same key, through the REST API or the MCP
-server at `<apiUrl>/mcp`.
+server at `<apiUrl>/mcp`. On its MCP calls in a run, send `run.id` in the `X-Itsaplan-Run-Id`
+header. A run the agent then starts, such as by delegating an issue, works for the same person.
+Without it, that run is the project's work.
 
 ## With the runner
 

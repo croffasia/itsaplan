@@ -337,6 +337,8 @@
     "noKindMatches": "所选分组中没有凭据。",
     "group": "分组",
     "connected": "已添加凭据",
+    "locked": "需要 Cloud 或 Pro",
+    "lockedHint": "它的工具可在 Cloud 和自托管 Pro 版中使用。凭据会保留，但在这里不会被任何代理使用。",
     "alreadyConnected": "团队已有 {integration} 的凭据",
     "alreadyConnectedHint": "可为另一个账号再添加一个凭据，用标签区分它们。",
     "agentTools": "可用工具",
@@ -459,6 +461,9 @@
     "unavailableHint": "此实例没有该工具。它会按原样保留，但不会提供给任何代理。",
     "locked": "需要 Cloud 或 Pro",
     "lockedHint": "使用 Cloud 或 Pro 创建。按原样保留，但在这里不会提供给任何代理。",
+    "lockedSection": "Cloud 和 Pro 版提供",
+    "lockedIntegration": "{integration} 可在 Cloud 和 Pro 版中使用",
+    "lockedIntegrationHint": "在 Cloud 和自托管 Pro 版中，AI 代理可以使用它的工具。你可以在这里查看每个工具的作用。",
     "ownTool": "创建 HTTP 工具",
     "ownToolUnavailableTitle": "让 AI 代理调用任何 API",
     "ownToolUnavailableHint": "AI 代理也能调用你自己的服务，使用你设置的地址和 API 密钥。可在 Cloud 和自托管 Pro 版中使用。",
@@ -945,6 +950,18 @@
       "useBuiltIn": "使用内置价格",
       "removePrice": "删除价格",
       "save": "保存价格"
+    },
+    "slack": {
+      "title": "Slack",
+      "description": "本工作区的项目用来发送通知的 Slack 应用。",
+      "saved": "Slack 设置已保存",
+      "notifications": "Slack 通知",
+      "notificationsHint": "开启后，连接了 Slack 账号的成员会以私信收到所选事件的通知。",
+      "app": "Slack 应用",
+      "instanceApp": "实例应用",
+      "ownApp": "自有应用",
+      "instanceAppHint": "由实例管理员设置。成员需要有 Slack 工作区 {workspace} 的账号。",
+      "instanceMissing": "实例管理员尚未设置 Slack 应用。选择“自有应用”即可在此设置。"
     },
     "queue": {
       "title": "代理运行"

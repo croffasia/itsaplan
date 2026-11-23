@@ -1,12 +1,12 @@
-import { KeyRound } from 'lucide-react';
+import { KeyRound, Lock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import { IntegrationIcon } from '@/components/common/IntegrationIcon';
 import { cn } from '@/lib/utils';
 
 // One kind of integration in the credential dialog's list. A row is marked when the
-// team already holds a credential for it; a tool integration shows how many tools it
-// offers.
+// team already holds a credential for it, or when it comes with another edition; a tool
+// integration shows how many tools it offers.
 export function CredentialRailSection({
   title,
   integrations,
@@ -49,6 +49,9 @@ export function CredentialRailSection({
                 className="size-6 rounded-md text-[10px]"
               />
               <span className="min-w-0 flex-1 truncate font-medium">{integration.label}</span>
+              {integration.locked && (
+                <Lock role="img" aria-label={t('locked')} className="size-3.5 shrink-0" />
+              )}
               {connected.has(integration.key) && (
                 <KeyRound role="img" aria-label={t('connected')} className="size-3.5 shrink-0" />
               )}

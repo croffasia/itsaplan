@@ -30,7 +30,11 @@ const DocumentSummaryResponse = t.Object({
   metadata: t.Record(t.String(), t.Any()),
   fullWidth: t.Boolean(),
   isPrivate: t.Boolean(),
+  visibility: t.Union([t.Literal('public'), t.Literal('private'), t.Literal('restricted')]),
   isLocked: t.Boolean(),
+  isPinned: t.Boolean({
+    description: 'Shown first among its siblings to everyone in the project.',
+  }),
   isFavorite: t.Boolean(),
   archivedAt: t.Nullable(t.String()),
   position: t.Number(),
@@ -45,6 +49,7 @@ const DocumentSummaryResponse = t.Object({
 export const DocumentResponse = t.Composite([
   DocumentSummaryResponse,
   t.Object({
+    memberIds: t.Array(t.String()),
     content: t.String(),
     contentJson: t.Nullable(t.Record(t.String(), t.Any())),
     shareToken: t.Nullable(t.String()),
@@ -96,7 +101,24 @@ export const documentVersionBody = t.Object({
 export const documentAccessBody = t.Object({
   version: t.Integer({ minimum: 1 }),
   isPrivate: t.Boolean(),
+  memberIds: t.Optional(
+    t.Array(t.String(), {
+      description:
+        'User ids of the project members a private document is shared with. ' +
+        'It replaces the list. Leave it out to keep the list.',
+    }),
+  ),
 });
+
+export const DocumentAccessCandidateListResponse = t.Array(
+  t.Object({
+    userId: t.String(),
+    name: t.String(),
+    image: t.Nullable(t.String()),
+    kind: t.Union([t.Literal('member'), t.Literal('agent')]),
+    canAccess: t.Boolean(),
+  }),
+);
 
 export const documentOwnershipBody = t.Object({
   version: t.Integer({ minimum: 1 }),
@@ -114,6 +136,12 @@ export const updateDocumentPreferenceBody = t.Object({
 });
 
 export const DocumentPreferenceResponse = t.Object({ isFavorite: t.Boolean() });
+
+export const documentPinBody = t.Object({
+  isPinned: t.Boolean(),
+});
+
+export const DocumentPinResponse = t.Object({ isPinned: t.Boolean() });
 
 export const documentIssueParams = t.Object({
   projectKey: t.String(),

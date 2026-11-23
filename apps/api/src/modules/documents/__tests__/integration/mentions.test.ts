@@ -124,6 +124,26 @@ describe('document mentions', () => {
     expect(await mentions(second)).toHaveLength(1);
   });
 
+  it('notifies only the members a private page is shared with', async () => {
+    const { owner } = await setup();
+    const guest = await addMember(owner);
+    const outsider = await addMember(owner);
+    const { id, doc, rootId } = await documentWithThread(owner);
+    const current = (await doc.get()).data!;
+    await owner.api
+      .projects({ projectKey: 'DOC' })
+      .documents({ documentId: id })
+      .access.post({ version: current.version, isPrivate: true, memberIds: [guest.userId] });
+
+    await doc.comments.post({
+      parentId: rootId,
+      body: `@${guest.username} @${outsider.username} see this`,
+    });
+
+    expect(await mentions(guest)).toHaveLength(1);
+    expect(await mentions(outsider)).toHaveLength(0);
+  });
+
   it('does not notify a member whose role cannot read documents', async () => {
     const { owner } = await setup();
     const role = await createRole(owner.api, 'DOC', {
@@ -173,7 +193,8 @@ describe('document mentions', () => {
     expect(run.threadContext).not.toContain('summarize');
   });
 
-  it("names the document in the agent's run history, without the title once it is private", async () => {
+  // Who else stops seeing the run once the document is private: runner-queue.test.ts.
+  it("names the document in the agent's run history, to its owner once it is private", async () => {
     const { owner } = await setup();
     const agent = await createInternalAgent(owner);
     const { id, doc, rootId } = await documentWithThread(owner);
@@ -192,7 +213,10 @@ describe('document mentions', () => {
 
     const { version } = (await doc.get()).data!;
     expect((await doc.access.post({ version, isPrivate: true })).status).toBe(200);
-    expect((await history()).data!.items[0]).toMatchObject({ documentId: id, documentTitle: null });
+    expect((await history()).data!.items[0]).toMatchObject({
+      documentId: id,
+      documentTitle: 'Plan',
+    });
   });
 
   it('starts no run for an agent whose role cannot comment on documents', async () => {

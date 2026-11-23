@@ -1,4 +1,5 @@
 import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
+import { compareDocuments } from './documentList';
 
 export interface OptimisticDocumentMove {
   documentId: number;
@@ -7,6 +8,8 @@ export interface OptimisticDocumentMove {
   previousSiblingId: number | null;
   nextSiblingId: number | null;
 }
+
+export type DocumentPlacement = Omit<OptimisticDocumentMove, 'documentId'>;
 
 export function applyOptimisticDocumentMove(
   documents: ProjectDocumentSummary[],
@@ -60,7 +63,7 @@ export function projectedDocumentMove({
   ordered: ProjectDocumentSummary[];
   byParent: Map<number | null, ProjectDocumentSummary[]>;
   byId: Map<number, ProjectDocumentSummary>;
-}): Omit<OptimisticDocumentMove, 'documentId'> | null {
+}): DocumentPlacement | null {
   if (source.id === target.id) return null;
 
   const descendants = descendantIds(source.id, byParent);
@@ -81,6 +84,9 @@ export function projectedDocumentMove({
     const sourceIndex = ordered.findIndex((document) => document.id === source.id);
     const targetIndex = ordered.findIndex((document) => document.id === target.id);
     if (sourceIndex < 0 || targetIndex < 0) return null;
+    // Pinned pages stay ahead of the others whatever their position, so a drop across that
+    // line would not land where it was dropped.
+    if (source.isPinned !== target.isPinned) return null;
     placeAfterAnchor = sourceIndex < targetIndex;
   }
 
@@ -89,15 +95,7 @@ export function projectedDocumentMove({
   const siblings = [...(byParent.get(parentId) ?? [])]
     .filter((document) => document.id !== source.id)
     .sort(comparePosition);
-  if (parentId === target.id) {
-    const previous = siblings.at(-1);
-    return {
-      parentId,
-      position: positionForRequest(previous, undefined, siblings.length),
-      previousSiblingId: previous?.id ?? null,
-      nextSiblingId: null,
-    };
-  }
+  if (parentId === target.id) return moveToEnd(parentId, siblings);
 
   const anchorIndex = siblings.findIndex((document) => document.id === anchor.id);
   if (anchorIndex < 0) return null;
@@ -109,6 +107,105 @@ export function projectedDocumentMove({
     position: positionForRequest(previous, next, insertionIndex),
     previousSiblingId: previous?.id ?? null,
     nextSiblingId: next?.id ?? null,
+  };
+}
+
+// The sibling a step up or down passes, from siblings in list order. Pinned pages stay
+// ahead of the others, so a page has no step across that line.
+export function documentStepTarget(
+  source: ProjectDocumentSummary,
+  direction: -1 | 1,
+  siblings: ProjectDocumentSummary[],
+): ProjectDocumentSummary | null {
+  const index = siblings.findIndex((document) => document.id === source.id);
+  const target = index < 0 ? undefined : siblings[index + direction];
+  return target && target.isPinned === source.isPinned ? target : null;
+}
+
+// One step up or down among the siblings of a page: the same move as a drop on
+// the sibling beside it.
+export function adjacentDocumentMove({
+  source,
+  direction,
+  ordered,
+  byParent,
+  byId,
+}: {
+  source: ProjectDocumentSummary;
+  direction: -1 | 1;
+  ordered: ProjectDocumentSummary[];
+  byParent: Map<number | null, ProjectDocumentSummary[]>;
+  byId: Map<number, ProjectDocumentSummary>;
+}): DocumentPlacement | null {
+  const siblings = [...(byParent.get(source.parentId) ?? [])].sort((a, b) =>
+    compareDocuments(a, b, 'position', 'asc'),
+  );
+  const target = documentStepTarget(source, direction, siblings);
+  if (!target) return null;
+  return projectedDocumentMove({ source, target, deltaX: 0, ordered, byParent, byId });
+}
+
+export interface DocumentMoveParent {
+  page: ProjectDocumentSummary;
+  ancestors: ProjectDocumentSummary[];
+}
+
+// The pages a page can move under, in tree order: active pages with the same
+// access, without the page itself, its subpages and its current parent. A page
+// whose parent is not in the list counts as a top-level page, as in the page tree.
+export function documentMoveParents(
+  source: ProjectDocumentSummary,
+  documents: ProjectDocumentSummary[],
+): DocumentMoveParent[] {
+  const ids = new Set(documents.map((document) => document.id));
+  const byParent = new Map<number | null, ProjectDocumentSummary[]>();
+  for (const document of documents) {
+    const parentId =
+      document.parentId !== null && ids.has(document.parentId) ? document.parentId : null;
+    const siblings = byParent.get(parentId) ?? [];
+    siblings.push(document);
+    byParent.set(parentId, siblings);
+  }
+
+  const parents: DocumentMoveParent[] = [];
+  const visit = (parentId: number | null, ancestors: ProjectDocumentSummary[]) => {
+    for (const page of (byParent.get(parentId) ?? []).sort(comparePosition)) {
+      if (page.id === source.id) continue;
+      if (
+        page.archivedAt === null &&
+        page.isPrivate === source.isPrivate &&
+        page.id !== source.parentId
+      ) {
+        parents.push({ page, ancestors });
+      }
+      visit(page.id, [...ancestors, page]);
+    }
+  };
+  visit(null, []);
+  return parents;
+}
+
+// Places a page after the last page the viewer sees below its new parent.
+export function documentMoveToParent(
+  source: ProjectDocumentSummary,
+  parentId: number | null,
+  documents: ProjectDocumentSummary[],
+): DocumentPlacement {
+  return moveToEnd(
+    parentId,
+    documents
+      .filter((document) => document.id !== source.id && document.parentId === parentId)
+      .sort(comparePosition),
+  );
+}
+
+function moveToEnd(parentId: number | null, siblings: ProjectDocumentSummary[]): DocumentPlacement {
+  const previous = siblings.at(-1);
+  return {
+    parentId,
+    position: positionForRequest(previous, undefined, siblings.length),
+    previousSiblingId: previous?.id ?? null,
+    nextSiblingId: null,
   };
 }
 

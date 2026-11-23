@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { ApiError } from '@/lib/api/core/client';
 import { Button } from '@/components/ui/button';
 import { useIssueAgentRunTraceQuery } from '@/services/issues.service';
 import { formatDateTime } from '@/utils/dates';
@@ -11,6 +12,8 @@ export default function AgentRunTrace({ issueId, runId }: { issueId: number; run
   const query = useIssueAgentRunTraceQuery(issueId, runId, traceId);
   const detail = query.isError ? null : query.data;
   const previousTraceId = detail?.previousTraceId;
+  // The steps are for whoever may change the project's agents and for the run's initiator.
+  if (query.error instanceof ApiError && query.error.status === 403) return null;
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">

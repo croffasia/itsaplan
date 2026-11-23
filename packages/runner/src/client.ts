@@ -77,8 +77,12 @@ export class Client {
     return body.run;
   }
 
-  async heartbeat(runId: number, attempt?: number): Promise<void> {
-    await this.post(`/agent-runs/${runId}/heartbeat`, attempt == null ? undefined : { attempt });
+  // True when someone stopped the run: the server has no connection to this machine, so
+  // the stop is returned on the calls the runner already makes.
+  async heartbeat(runId: number, attempt?: number): Promise<boolean> {
+    return canceled(
+      await this.post(`/agent-runs/${runId}/heartbeat`, attempt == null ? undefined : { attempt }),
+    );
   }
 
   // `usage` is what the last model call of the run read and wrote. Left out where the
@@ -96,18 +100,21 @@ export class Client {
     await this.post(`/agent-runs/${runId}/result`, result);
   }
 
+  // True when someone stopped the run.
   async runEvents(
     run: Run,
     offset: number,
     events: AgUiEvent[],
     sessionId?: string,
-  ): Promise<void> {
-    await this.post(`/agent-runs/${run.id}/events`, {
-      attempt: run.attempts,
-      offset,
-      events,
-      ...(sessionId && { sessionId }),
-    });
+  ): Promise<boolean> {
+    return canceled(
+      await this.post(`/agent-runs/${run.id}/events`, {
+        attempt: run.attempts,
+        offset,
+        events,
+        ...(sessionId && { sessionId }),
+      }),
+    );
   }
 
   async claimChat(): Promise<ChatMessage | null> {
@@ -143,8 +150,8 @@ export class Client {
   }
 }
 
-// An instance too old to know about stopping answers this with 204 and no body, which
-// reads the same way as an answer nobody stopped.
+// An instance too old to know about stopping answers this with 204 and no body, or with no
+// `canceled`, which reads the same way as work nobody stopped.
 async function canceled(res: Response): Promise<boolean> {
   const body = (await res.json().catch(() => ({}))) as { canceled?: boolean };
   return body.canceled === true;

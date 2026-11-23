@@ -116,3 +116,26 @@ describe('pinnedFetch User-Agent', () => {
     expect(headers['user-agent']).toBe('itsaplan-webhooks/1');
   });
 });
+
+// localhost has two addresses, and a port closed on both fails as an AggregateError,
+// which node gives no message.
+describe('pinnedFetch refused connection', () => {
+  const saved = process.env.NODE_ENV;
+  afterEach(() => {
+    process.env.NODE_ENV = saved;
+  });
+
+  it('names the refusal and keeps its code', async () => {
+    const server = createServer();
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const address = server.address();
+    const port = typeof address === 'object' && address ? address.port : 0;
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    process.env.NODE_ENV = 'development';
+    const error = await pinnedFetch(`http://localhost:${port}/`).catch((e: unknown) => e);
+    expect(error).toMatchObject({
+      code: 'ECONNREFUSED',
+      message: expect.stringContaining('ECONNREFUSED'),
+    });
+  });
+});

@@ -70,7 +70,7 @@ export default function AgentRunItem({
           {run.kind === 'internal' && issueId != null ? (
             <AgentRunTrace issueId={issueId} runId={run.id} />
           ) : null}
-          {run.kind === 'external' && <AgentRunExternalTrace runId={run.id} />}
+          {run.kind === 'external' && <AgentRunExternalTrace run={run} />}
           {issueId == null && run.kind !== 'external' && (
             <p className="text-xs text-muted-foreground">{t('externalHint')}</p>
           )}

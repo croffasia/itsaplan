@@ -337,6 +337,8 @@
     "noKindMatches": "Tidak ada kredensial di grup yang dipilih.",
     "group": "Grup",
     "connected": "Kredensial ditambahkan",
+    "locked": "Perlu Cloud atau Pro",
+    "lockedHint": "Alatnya berfungsi di Cloud dan Pro self-hosted. Kredensial tetap disimpan, tetapi di sini tidak ada agen yang memakainya.",
     "alreadyConnected": "Tim sudah memiliki kredensial untuk {integration}",
     "alreadyConnectedHint": "Tambahkan kredensial lain untuk akun kedua. Label membedakan keduanya.",
     "agentTools": "Alat yang tersedia",
@@ -459,6 +461,9 @@
     "unavailableHint": "Instans ini tidak memiliki alat ini. Alat disimpan apa adanya, tetapi tidak ada agen yang mendapatkannya.",
     "locked": "Perlu Cloud atau Pro",
     "lockedHint": "Dibuat dengan Cloud atau Pro. Disimpan apa adanya, tetapi di sini tidak ada agen yang mendapatkannya.",
+    "lockedSection": "Di Cloud dan Pro",
+    "lockedIntegration": "{integration} tersedia di Cloud dan Pro",
+    "lockedIntegrationHint": "Agen mendapatkan alatnya di Cloud dan Pro self-hosted. Di sini Anda bisa melihat apa yang dilakukannya.",
     "ownTool": "Buat alat HTTP",
     "ownToolUnavailableTitle": "Biarkan agen memanggil API apa pun",
     "ownToolUnavailableHint": "Agen juga bisa memanggil layanan Anda sendiri, dengan alamat dan kunci API yang Anda atur. Tersedia di Cloud dan Pro self-hosted.",
@@ -945,6 +950,18 @@
       "useBuiltIn": "Pakai harga bawaan",
       "removePrice": "Hapus harga",
       "save": "Simpan harga"
+    },
+    "slack": {
+      "title": "Slack",
+      "description": "Aplikasi Slack yang dipakai proyek workspace ini untuk mengirim notifikasi.",
+      "saved": "Pengaturan Slack disimpan",
+      "notifications": "Notifikasi Slack",
+      "notificationsHint": "Jika aktif, anggota yang menghubungkan akun Slack mendapat pesan langsung untuk peristiwa yang mereka pilih.",
+      "app": "Aplikasi Slack",
+      "instanceApp": "Aplikasi instance",
+      "ownApp": "Aplikasi sendiri",
+      "instanceAppHint": "Disiapkan oleh administrator instance. Anggota memerlukan akun di workspace Slack {workspace}.",
+      "instanceMissing": "Administrator instance belum menyiapkan aplikasi Slack. Pilih \"Aplikasi sendiri\" untuk menyiapkannya di sini."
     },
     "queue": {
       "title": "Eksekusi agen"

@@ -29,6 +29,7 @@ import { getAgentSettings } from '#modules/settings/service';
 import { iso } from '#shared/lib';
 import type { AgentRunTrigger } from '../model';
 import { limitAnswer } from './answer-limit';
+import { documentVisibleTo } from '#modules/documents/access';
 import { equalJitterBackoffMs } from './helpers/backoff';
 import { emitRunsFinished } from './run-finished';
 
@@ -69,12 +70,7 @@ export function runDocumentVisibleTo(viewerId: string) {
       db
         .select({ id: projectDocument.id })
         .from(projectDocument)
-        .where(
-          and(
-            eq(projectDocument.id, agentRun.documentId),
-            or(eq(projectDocument.isPrivate, false), eq(projectDocument.ownerUserId, viewerId)),
-          ),
-        ),
+        .where(and(eq(projectDocument.id, agentRun.documentId), documentVisibleTo(viewerId))),
     ),
   );
 }
@@ -150,6 +146,13 @@ async function countClaimedRuns(executor: DbExecutor): Promise<number> {
   return row?.count ?? 0;
 }
 
+// The first run of the chain a run queued in `parentRunId` joins.
+export function rootRunOf(parentRunId: number | null | undefined) {
+  return parentRunId == null
+    ? null
+    : sql<number>`(SELECT coalesce(root_run_id, id) FROM agent_run WHERE id = ${parentRunId})`;
+}
+
 export async function enqueueAgentRun(input: {
   agentId: number;
   // The project the run works in: the issue's, the document's, or the one an API task
@@ -158,8 +161,10 @@ export async function enqueueAgentRun(input: {
   projectId: number;
   issueId: number | null;
   sourceActivityId: number | null;
-  // Who sent an API task; a mention's author is read from its comment.
-  requestedByUserId?: string;
+  // Where the run comes from (see run-initiator.ts); none for the project's own work.
+  requestedByUserId?: string | null;
+  startedByUserId?: string | null;
+  parentRunId?: number | null;
   // A mention in a document comment: the document and the comment, with no issue.
   documentId?: number;
   sourceDocumentCommentId?: string;
@@ -178,6 +183,9 @@ export async function enqueueAgentRun(input: {
       issueId: input.issueId,
       sourceActivityId: input.sourceActivityId,
       requestedByUserId: input.requestedByUserId,
+      startedByUserId: input.startedByUserId,
+      parentRunId: input.parentRunId,
+      rootRunId: rootRunOf(input.parentRunId),
       documentId: input.documentId,
       sourceDocumentCommentId: input.sourceDocumentCommentId,
       prompt: input.prompt,
@@ -214,10 +222,9 @@ export interface ClaimedRun {
   // frame the run with them. Null if the issue was deleted after enqueue.
   issueIdentifier: string | null;
   issueTitle: string | null;
-  // The issue's assignee (the responsible human) and, for a mention run, the author of
-  // the comment that mentioned the agent (from the source activity's name snapshot) with
-  // their account, or the sender of an API task. Each carries the handle the agent tags
-  // them by. Any may be null: no assignee, a deleted user, or a run nobody asked for.
+  // The issue's assignee (the responsible human) and the person the run is for, each with
+  // their account and the handle the agent tags them by. Any may be null: no assignee, a
+  // deleted user, or the project's own work.
   assigneeName: string | null;
   assigneeUsername: string | null;
   requesterName: string | null;
@@ -248,23 +255,20 @@ const RUN_CLAIM_LOCK_NS = 8243;
 // claimable again after the lease — no separate recovery pass. The run's project and
 // the agent's user_id are read inline. An external agent's runs are left alone:
 // they are claimed over HTTP by the operator's runner (modules/agents/runner).
-// Who asked for a claimed run `r`, in the RETURNING list of a claim: the author of the
-// comment that mentioned the agent, or the sender of an API task.
+// Who asked for a claimed run `r`, in the RETURNING list of a claim: the person the run
+// is for, by the name their comment was written under when they wrote the one that
+// mentioned the agent, which also names a deleted author.
 export const requesterColumns = sql`
   coalesce(
-    (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id),
+    (SELECT actor_name FROM issue_activity a
+      WHERE a.id = r.source_activity_id
+        AND a.actor_user_id IS NOT DISTINCT FROM r.requested_by_user_id),
     (SELECT u.name FROM "user" u WHERE u.id = r.requested_by_user_id)
   ) AS "requesterName",
   (SELECT COALESCE(u.username, ag.username)
      FROM "user" u LEFT JOIN ai_agent ag ON ag.user_id = u.id
-     WHERE u.id = coalesce(
-       (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id),
-       r.requested_by_user_id
-     )) AS "requesterUsername",
-  coalesce(
-    (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id),
-    r.requested_by_user_id
-  ) AS "requesterUserId"`;
+     WHERE u.id = r.requested_by_user_id) AS "requesterUsername",
+  r.requested_by_user_id AS "requesterUserId"`;
 
 export async function claimDueRuns(): Promise<ClaimedRun[]> {
   const { maxRunSeconds, maxConcurrentRuns } = await getAgentSettings();
@@ -440,6 +444,15 @@ async function loadThreadContext(sourceActivityId: number | null): Promise<strin
   return ancestors.map((a) => `${a.actorName ?? 'Unknown'}: ${a.body ?? ''}`).join('\n\n');
 }
 
+// True once the run is no longer waiting or at work: canceled, or deleted with its issue.
+export async function runEnded(id: number): Promise<boolean> {
+  const [row] = await db
+    .select({ status: agentRun.status })
+    .from(agentRun)
+    .where(eq(agentRun.id, id));
+  return row?.status !== 'pending';
+}
+
 // A run canceled while it was in flight keeps that outcome: each of these writes only
 // where the row is still 'pending'.
 
@@ -449,7 +462,7 @@ export async function markRunSuccess(
   id: number,
   output: string,
   usage: { inputTokens: number; outputTokens: number } | null,
-): Promise<void> {
+): Promise<boolean> {
   const rows = await db
     .update(agentRun)
     .set({
@@ -464,6 +477,7 @@ export async function markRunSuccess(
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')))
     .returning({ id: agentRun.id });
   await emitRunsFinished(rows.map((row) => row.id));
+  return rows.length > 0;
 }
 
 export async function scheduleRunRetry(id: number, delayMs: number, error: string): Promise<void> {
@@ -480,7 +494,7 @@ export async function scheduleRunRetry(id: number, delayMs: number, error: strin
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
 }
 
-export async function markRunFailed(id: number, error: string, output?: string): Promise<void> {
+export async function markRunFailed(id: number, error: string, output?: string): Promise<boolean> {
   const rows = await db
     .update(agentRun)
     .set({
@@ -493,6 +507,7 @@ export async function markRunFailed(id: number, error: string, output?: string):
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')))
     .returning({ id: agentRun.id });
   await emitRunsFinished(rows.map((row) => row.id));
+  return rows.length > 0;
 }
 
 // Puts a claimed run back in the queue without spending the attempt, for a run the
@@ -639,6 +654,7 @@ export interface AgentRunRow {
   // printed. Null until the run finishes.
   output: string | null;
   contextTokens?: number;
+  receivedAt: string | null;
   nextAttemptAt: string;
   createdAt: string;
 }
@@ -665,9 +681,11 @@ export interface AgentRunPage {
 //
 // An agent works in several projects of its team and a run carries the one it ran in,
 // so `projectIds` bounds the page to the projects the reader may see. Omitted, it
-// reads every project — only a caller who runs the team passes nothing.
+// reads every project — only a caller who runs the team passes nothing. A run from a
+// document private from the reader is left out.
 export async function listAgentRuns(
   agentId: number,
+  viewerId: string,
   opts: { before?: number; limit?: number; projectIds?: number[] } = {},
 ): Promise<AgentRunPage> {
   if (opts.projectIds?.length === 0) return { items: [], nextCursor: null };
@@ -687,6 +705,7 @@ export async function listAgentRuns(
       output: agentRun.output,
       inputTokens: agentRun.inputTokens,
       outputTokens: agentRun.outputTokens,
+      receivedAt: agentRun.receivedAt,
       nextAttemptAt: agentRun.nextAttemptAt,
       createdAt: agentRun.createdAt,
       issueSeq: issue.sequenceNumber,
@@ -696,13 +715,11 @@ export async function listAgentRuns(
     .from(agentRun)
     .leftJoin(issue, eq(issue.id, agentRun.issueId))
     .leftJoin(project, eq(project.id, issue.projectId))
-    .leftJoin(
-      projectDocument,
-      and(eq(projectDocument.id, agentRun.documentId), eq(projectDocument.isPrivate, false)),
-    )
+    .leftJoin(projectDocument, eq(projectDocument.id, agentRun.documentId))
     .where(
       and(
         eq(agentRun.agentId, agentId),
+        runDocumentVisibleTo(viewerId),
         opts.projectIds ? inArray(agentRun.projectId, opts.projectIds) : undefined,
         opts.before ? lt(agentRun.id, opts.before) : undefined,
       ),
@@ -727,6 +744,7 @@ export async function listAgentRuns(
       lastError: r.lastError,
       output: r.output,
       ...contextTokensOf(r),
+      receivedAt: r.receivedAt ? iso(r.receivedAt) : null,
       nextAttemptAt: iso(r.nextAttemptAt),
       createdAt: iso(r.createdAt),
     })),

@@ -18,6 +18,7 @@ import {
 import type { ActionDef } from '@/lib/api/endpoints/actions';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { IssuePatch } from '@/lib/api/endpoints/issues';
+import { matchedActions } from '@/utils/actions';
 import { actionIcon } from '@/utils/actionIcons';
 import { calendarSystem, toDateStr } from '@/utils/dates';
 import { useActionsQuery } from '@/services/actions.service';
@@ -30,11 +31,8 @@ import { useFormatter, useTranslations } from 'next-intl';
 import { PRIORITY_FIELDS } from '@/components/common/fields/priorityFields';
 import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import type { Command, CommandSection } from '@/utils/commands';
-import {
-  ApplyActionDialog,
-  DeleteIssueDialog,
-  matchedActions,
-} from '../components/actions/IssueActions';
+import { ApplyActionDialog } from '../components/actions/ApplyActionDialog';
+import { DeleteIssueDialog } from '../components/actions/DeleteIssueDialog';
 import { useArchiveAction } from './useArchiveAction';
 import { StateIcon } from '../components/shared/IssueIcons';
 import { dueDatePresets } from '../utils/dueDatePresets';
@@ -42,6 +40,7 @@ import { useDueDatePresetLabel } from './useDueDatePresetLabel';
 import { buildIssuePrompt } from '../utils/issuePrompt';
 import { writeClipboardText } from '../utils/clipboard';
 import { delegatableAgents } from '../utils/delegates';
+import { assignableMembers } from '@/utils/project';
 
 // The palette commands for the issue the user is looking at — the issue page or
 // the open detail panel. They are the context menu's actions in command form and
@@ -99,7 +98,7 @@ export function useIssueCommands(
   const canEdit = can('work_items', 'edit');
   const canDelete = can('work_items', 'delete');
   const patch = (fields: IssuePatch) => updateIssue.mutate({ id: issue.id, patch: fields });
-  const members = project.assignees.filter((a) => a.kind === 'member');
+  const members = assignableMembers(project.assignees);
   const agents = delegatableAgents(project.assignees, session?.user.id ?? null);
   const actions = matchedActions(actionsQuery.data ?? [], project, issue);
   const currentColumn = project.columns.find((c) => c.id === issue.columnId);
@@ -177,7 +176,7 @@ export function useIssueCommands(
       },
     });
 
-    if (members.length > 0) {
+    if (members.length > 0 || issue.assigneeUserId != null) {
       items.push({
         id: 'issue.assignee',
         label: t('assignee'),

@@ -12,6 +12,20 @@ function withDocumentAssetUrl(asset: DocumentAsset): DocumentAsset {
   };
 }
 
+// Who sees a page: the project, its owner alone, or its owner and the members it is
+// shared with.
+export type DocumentVisibility = 'public' | 'private' | 'restricted';
+
+// Someone a private page can be shared with. `canAccess` false means their role
+// cannot read Docs at all, so the API rejects sharing with them.
+export interface DocumentAccessCandidate {
+  userId: string;
+  name: string;
+  image: string | null;
+  kind: 'member' | 'agent';
+  canAccess: boolean;
+}
+
 export interface ProjectDocumentSummary {
   id: number;
   projectId: number;
@@ -21,7 +35,9 @@ export interface ProjectDocumentSummary {
   metadata: Record<string, unknown>;
   fullWidth: boolean;
   isPrivate: boolean;
+  visibility: DocumentVisibility;
   isLocked: boolean;
+  isPinned: boolean;
   isFavorite: boolean;
   archivedAt: string | null;
   position: number;
@@ -34,6 +50,8 @@ export interface ProjectDocumentSummary {
 }
 
 export interface ProjectDocument extends ProjectDocumentSummary {
+  // The members a private page is shared with, its owner left out.
+  memberIds: string[];
   content: string;
   contentJson: Record<string, unknown> | null;
   shareToken: string | null;
@@ -193,12 +211,15 @@ export const deleteDocument = (projectKey: string, documentId: number, version: 
 export const setDocumentAccess = (
   projectKey: string,
   documentId: number,
-  input: { version: number; isPrivate: boolean },
+  input: { version: number; isPrivate: boolean; memberIds?: string[] },
 ) =>
   request<ProjectDocument>(`/projects/${projectKey}/documents/${documentId}/access`, {
     method: 'POST',
     body: JSON.stringify(input),
   });
+
+export const listDocumentAccessCandidates = (projectKey: string) =>
+  request<DocumentAccessCandidate[]>(`/projects/${projectKey}/documents/access-candidates`);
 
 export const setDocumentLocked = (
   projectKey: string,
@@ -237,6 +258,12 @@ export const setDocumentFavorite = (projectKey: string, documentId: number, isFa
   request<{ isFavorite: boolean }>(`/projects/${projectKey}/documents/${documentId}/preferences`, {
     method: 'PATCH',
     body: JSON.stringify({ isFavorite }),
+  });
+
+export const setDocumentPinned = (projectKey: string, documentId: number, isPinned: boolean) =>
+  request<{ isPinned: boolean }>(`/projects/${projectKey}/documents/${documentId}/pin`, {
+    method: 'PATCH',
+    body: JSON.stringify({ isPinned }),
   });
 
 export const listDocumentRevisions = (projectKey: string, documentId: number) =>

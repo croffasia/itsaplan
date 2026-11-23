@@ -1,6 +1,7 @@
 import { db, agentRun, aiAgent, issue } from '@repo/db';
 import { and, desc, eq, lt } from 'drizzle-orm';
 import { iso } from '#shared/lib';
+import { assertManagesRun } from '#modules/agents/queue/service';
 import { contextTokensOf, executionState } from '#modules/agents/core/run-queue';
 import { getRunTrace } from '#modules/agents/core/runtime/traces';
 
@@ -27,6 +28,7 @@ export async function listIssueAgentRuns(
       outputTokens: agentRun.outputTokens,
       createdAt: agentRun.createdAt,
       startedAt: agentRun.startedAt,
+      receivedAt: agentRun.receivedAt,
       finishedAt: agentRun.finishedAt,
       nextAttemptAt: agentRun.nextAttemptAt,
     })
@@ -52,6 +54,7 @@ export async function listIssueAgentRuns(
       ...contextTokensOf({ inputTokens, outputTokens }),
       createdAt: iso(row.createdAt),
       startedAt: row.startedAt ? iso(row.startedAt) : null,
+      receivedAt: row.receivedAt ? iso(row.receivedAt) : null,
       finishedAt: row.finishedAt ? iso(row.finishedAt) : null,
       nextAttemptAt: iso(row.nextAttemptAt),
     })),
@@ -67,7 +70,7 @@ export async function getIssueAgentRunTrace(
   traceId?: string,
 ) {
   const [run] = await db
-    .select({ agentId: agentRun.agentId })
+    .select({ agentId: agentRun.agentId, initiatorUserId: agentRun.requestedByUserId })
     .from(agentRun)
     .innerJoin(issue, eq(issue.id, agentRun.issueId))
     .where(
@@ -79,5 +82,6 @@ export async function getIssueAgentRunTrace(
       ),
     );
   if (!run) return undefined;
+  await assertManagesRun({ projectId, initiatorUserId: run.initiatorUserId }, viewerId);
   return getRunTrace(run.agentId, runId, projectId, issueId, viewerId, { traceId });
 }

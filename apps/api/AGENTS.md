@@ -3,7 +3,7 @@
 | Before you change                                        | Read                       |
 | -------------------------------------------------------- | -------------------------- |
 | roles, workspaces, invites, members, who may do what     | `docs/dev/access-model.md` |
-| agents, runs, traces, analytics, runner queue, MCP reach | `docs/dev/agents.md`       |
+| agents, runs, traces, analytics, run list, MCP reach     | `docs/dev/agents.md`       |
 | SCIM                                                     | `docs/dev/scim.md`         |
 | test setup, parallel workers                             | `docs/dev/api-tests.md`    |
 

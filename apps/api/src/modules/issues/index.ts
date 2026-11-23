@@ -1,4 +1,6 @@
 import { Elysia, t, type DocumentDecoration } from 'elysia';
+import { applyActionBody } from '#modules/actions/model';
+import { applyAction } from '#modules/actions/service';
 import { listIssueAgentRuns, getIssueAgentRunTrace } from './agent-runs';
 import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
@@ -19,6 +21,7 @@ import {
 } from '#shared/access';
 import { boundProjectId, isMcpRequest } from '#shared/mcp-request';
 import { getProjectById } from '#modules/projects/service';
+import { assertReadsRuns } from '#modules/agents/queue/service';
 import { HttpError, instantParam } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { deleteObject } from '@repo/storage';
@@ -91,7 +94,7 @@ import {
   removeIssueDevelopmentLink,
 } from '#modules/git/development';
 import { listDevelopmentRepositories, listManagedBranches } from '#modules/git/connections-service';
-import { DevelopmentLinkResponse } from '#modules/git/model';
+import { DevelopmentLinkResponse, DevelopmentRepositoryResponse } from '#modules/git/model';
 import {
   createChecklist,
   createChecklistItem,
@@ -119,7 +122,6 @@ import {
   issueDevelopmentListQuery,
   linkIssueDevelopmentBody,
   createIssuePullRequestBody,
-  DevelopmentRepositoryResponse,
   LinkablePullRequestPageResponse,
   DevelopmentBranchPageResponse,
   IssueResponse,
@@ -228,6 +230,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // entry and a comment belong to the issue that carries them, so they all resolve
   // to the same work_items permission.
   .macro({
+    // An issue's runs are read as the run list reads them: reading the issue is not needed.
     issueAgentRuns(_enabled: boolean) {
       return {
         detail: requiresPermission(['ai_agents', 'read']) as DocumentDecoration,
@@ -236,8 +239,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
             Number((params as { issueId: string }).issueId),
           );
           if (projectId == null) throw new HttpError(404, 'Issue not found');
-          await assertPermission(projectId, user, 'work_items', 'read');
-          await assertPermission(projectId, user, 'ai_agents', 'read');
+          await assertReadsRuns(projectId, requireUser(user));
           await assertMcpAllowed(projectId, request.headers);
           return { projectId };
         },
@@ -791,6 +793,19 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           'hard WIP limit returns 409 (code wip_limit_exceeded).',
         ...mcpTool('update_issue'),
       },
+    },
+  )
+
+  .post(
+    '/issues/:issueId/actions/:actionId',
+    ({ params, user, projectId, body }) =>
+      applyAction(projectId, params.issueId, params.actionId, requireUser(user).id, body.effect),
+    {
+      params: t.Object({ issueId: t.Numeric(), actionId: t.Numeric() }),
+      body: applyActionBody,
+      workItem: 'edit',
+      response: { 200: IssueResponse, ...commonErrors, ...errors(409) },
+      detail: { summary: 'Apply a saved action to an issue' },
     },
   )
 
@@ -1355,7 +1370,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         summary: "Read an issue run's trace",
         description:
           'The selected or latest recorded attempt, with a link to the previous one. ' +
-          'Null when no latest trace is available.',
+          'Null when no latest trace is available. Also takes creating or changing agents in ' +
+          "the project, unless the caller runs the team, owns the project or is the run's initiator.",
       },
     },
   )

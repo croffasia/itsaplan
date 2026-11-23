@@ -4,7 +4,7 @@ import { MoreHorizontal } from 'lucide-react';
 import type { IssueTemplate } from '@/lib/api/endpoints/issueTemplates';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { CycleRef, Issue, IssueFieldValueInput } from '@/lib/api/endpoints/issues';
-import { newIssueInput, type NewIssueDefaults } from '@/utils/project';
+import { assignableMembers, newIssueInput, type NewIssueDefaults } from '@/utils/project';
 import { parseDate } from '@/utils/dates';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/lib/auth-client';
@@ -221,7 +221,12 @@ export default function NewIssueModal({
     if (next.columnId != null) setColumnId(next.columnId);
     if (next.typeId != null) setTypeId(next.typeId);
     if (next.priority != null) setPriority(next.priority);
-    if (next.assigneeUserId != null) setAssigneeUserId(next.assigneeUserId);
+    if (
+      next.assigneeUserId != null &&
+      assignableMembers(project.assignees).some((a) => a.userId === next.assigneeUserId)
+    ) {
+      setAssigneeUserId(next.assigneeUserId);
+    }
     if (next.labelIds.length > 0) setLabelIds(next.labelIds);
   }
 
@@ -378,7 +383,7 @@ export default function NewIssueModal({
         >
           <StatusSelect columns={project.columns} value={columnId} onChange={setColumnId} />
 
-          {project.assignees.some((a) => a.kind === 'member') && (
+          {(assignableMembers(project.assignees).length > 0 || assigneeUserId != null) && (
             <AssigneeSelect
               assignees={project.assignees}
               value={assigneeUserId}

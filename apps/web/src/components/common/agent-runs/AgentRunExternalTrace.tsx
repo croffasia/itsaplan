@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { ApiError } from '@/lib/api/core/client';
+import type { AgentRunStatus } from '@/lib/api/endpoints/agents';
 import { useExternalRunTraceQuery } from '@/services/runnerQueue.service';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { qk } from '@/services/queryKeys';
@@ -8,9 +10,22 @@ import { externalTraceParts } from './externalTraceParts';
 import AgentRunAttempts from './AgentRunAttempts';
 import AgentRunSteps from './AgentRunSteps';
 
+// Why the run shows no steps: it still waits or works, the agent never received it, or its
+// runner sends no events.
+function noStepsKey(status: AgentRunStatus, receivedAt: string | null) {
+  if (status === 'pending') return 'noTrace';
+  if (receivedAt == null) return 'notReceived';
+  return 'externalHint';
+}
+
 // The latest attempt's number is how many attempts the picker offers. An attempt the
 // runner sent no events for has no transcript.
-export default function AgentRunExternalTrace({ runId }: { runId: number }) {
+export default function AgentRunExternalTrace({
+  run,
+}: {
+  run: { id: number; status: AgentRunStatus; receivedAt: string | null };
+}) {
+  const runId = run.id;
   const t = useTranslations('issue.agentRuns');
   const [attempt, setAttempt] = useState<number>();
   const latest = useExternalRunTraceQuery(runId);
@@ -18,6 +33,8 @@ export default function AgentRunExternalTrace({ runId }: { runId: number }) {
   useLiveRefresh({ scope: revScope.runnerQueue, targets: [qk.externalRunTrace(runId)] });
   const trace = query.isError ? null : query.data;
   const count = (latest.isError ? null : latest.data?.attempt) ?? 1;
+  // The steps are for whoever may change the project's agents and for the run's initiator.
+  if (latest.error instanceof ApiError && latest.error.status === 403) return null;
   const attempts = (
     <AgentRunAttempts
       count={count}
@@ -40,7 +57,7 @@ export default function AgentRunExternalTrace({ runId }: { runId: number }) {
           </div>
         ))}
       {query.isSuccess && !trace && (
-        <p className="text-sm text-muted-foreground">{t('externalHint')}</p>
+        <p className="text-sm text-muted-foreground">{t(noStepsKey(run.status, run.receivedAt))}</p>
       )}
       {trace?.truncated && (
         <p role="status" className="text-xs text-muted-foreground">

@@ -82,13 +82,14 @@ export default function TeamAgentTools({
           {tools.map((tool) => {
             const source = sources.find((one) => one.key === tool.source);
             const Row = (source?.kind === 'source' && source.Row) || ToolConfigRow;
+            const integration = integrationOf(catalog, tool.integrationKey);
             return (
               <Row
                 key={tool.id}
                 tool={tool}
                 meta={catalogTool(tool.toolKey)}
-                integration={integrationOf(catalog, tool.integrationKey)}
-                locked={source?.kind === 'locked'}
+                integration={integration}
+                locked={source?.kind === 'locked' || !!integration.locked}
                 canDelete={canDelete}
                 onOpen={source?.kind === 'source' ? () => onOpen(tool) : undefined}
                 onDelete={() => setDeleting(tool)}

@@ -12,6 +12,8 @@ import type { ProjectDocument, ProjectDocumentSummary } from '@/lib/api/endpoint
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { DocumentSaveState } from '../hooks/useDocumentDraft';
+import type { DocumentPlacement } from '../utils/documentMove';
+import DocumentAccessButton from './DocumentAccessButton';
 import DocumentBreadcrumbs from './DocumentBreadcrumbs';
 import DocumentCopyLinkButton from './DocumentCopyLinkButton';
 import DocumentFavoriteButton from './DocumentFavoriteButton';
@@ -34,6 +36,7 @@ export default function DocumentEditorHeader({
   canCreate,
   canUpdate,
   canManage,
+  canChangeAccess,
   canManageLifecycle,
   canDelete,
   canShare,
@@ -44,9 +47,10 @@ export default function DocumentEditorHeader({
   onStickyToolbarChange,
   onCreate,
   onDuplicate,
+  onMove,
   onFavoriteChange,
   onLockChange,
-  onPrivacyChange,
+  onAccessChange,
   onArchive,
   onRestore,
   onDelete,
@@ -70,6 +74,7 @@ export default function DocumentEditorHeader({
   canCreate: boolean;
   canUpdate: boolean;
   canManage: boolean;
+  canChangeAccess: boolean;
   canManageLifecycle: boolean;
   canDelete: boolean;
   canShare: boolean;
@@ -80,9 +85,10 @@ export default function DocumentEditorHeader({
   onStickyToolbarChange: (value: boolean) => void;
   onCreate: (parentId: number | null, isPrivate: boolean) => void;
   onDuplicate: () => void;
+  onMove: (move: DocumentPlacement, parent: ProjectDocumentSummary | null) => void;
   onFavoriteChange: (favorite: boolean) => void;
   onLockChange: (locked: boolean) => void;
-  onPrivacyChange: (isPrivate: boolean) => void;
+  onAccessChange: (isPrivate: boolean, memberIds?: string[]) => void;
   onArchive: () => void;
   onRestore: () => void;
   onDelete: () => void;
@@ -192,6 +198,13 @@ export default function DocumentEditorHeader({
           disabled={!canManage || document.archivedAt !== null || busy}
           onChange={onLockChange}
         />
+        <DocumentAccessButton
+          projectKey={projectKey}
+          document={document}
+          canChange={canChangeAccess && document.archivedAt === null}
+          disabled={busy}
+          onChange={onAccessChange}
+        />
         {canShare && <DocumentShareButton projectKey={projectKey} document={document} />}
         <DocumentCopyLinkButton />
         <div className="mx-1 hidden h-4 w-px bg-border sm:block" aria-hidden />
@@ -207,6 +220,7 @@ export default function DocumentEditorHeader({
           <PanelRight />
         </Button>
         <DocumentOptionsMenu
+          projectKey={projectKey}
           document={document}
           title={title}
           content={content}
@@ -214,15 +228,14 @@ export default function DocumentEditorHeader({
           stickyToolbar={stickyToolbar}
           canCreate={canCreate}
           canUpdate={canUpdate}
-          canManage={canManage}
           canManageLifecycle={canManageLifecycle}
           canDelete={canDelete}
           busy={busy}
           onFullWidthChange={onFullWidthChange}
           onStickyToolbarChange={onStickyToolbarChange}
-          onPrivacyChange={onPrivacyChange}
           onCreateChild={() => onCreate(document.id, document.isPrivate)}
           onDuplicate={onDuplicate}
+          onMove={onMove}
           onArchive={onArchive}
           onRestore={onRestore}
           onDelete={onDelete}

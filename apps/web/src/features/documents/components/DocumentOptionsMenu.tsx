@@ -8,8 +8,8 @@ import {
   Copy,
   Download,
   Expand,
+  FolderInput,
   History,
-  LockKeyhole,
   MoreHorizontal,
   PanelTop,
   Plus,
@@ -17,7 +17,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { ProjectDocument } from '@/lib/api/endpoints/documents';
+import type { ProjectDocument, ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -27,9 +27,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useTranslations } from 'next-intl';
+import type { DocumentPlacement } from '../utils/documentMove';
 import DocumentExportDialog from './DocumentExportDialog';
+import DocumentMoveDialog from './DocumentMoveDialog';
 
 export default function DocumentOptionsMenu({
+  projectKey,
   document,
   title,
   content,
@@ -37,20 +40,20 @@ export default function DocumentOptionsMenu({
   stickyToolbar,
   canCreate,
   canUpdate,
-  canManage,
   canManageLifecycle,
   canDelete,
   busy,
   onFullWidthChange,
   onStickyToolbarChange,
-  onPrivacyChange,
   onCreateChild,
   onDuplicate,
+  onMove,
   onArchive,
   onRestore,
   onDelete,
   onOpenHistory,
 }: {
+  projectKey: string;
   document: ProjectDocument;
   title: string;
   content: () => string;
@@ -58,15 +61,14 @@ export default function DocumentOptionsMenu({
   stickyToolbar: boolean;
   canCreate: boolean;
   canUpdate: boolean;
-  canManage: boolean;
   canManageLifecycle: boolean;
   canDelete: boolean;
   busy: boolean;
   onFullWidthChange: (value: boolean) => void;
   onStickyToolbarChange: (value: boolean) => void;
-  onPrivacyChange: (value: boolean) => void;
   onCreateChild: () => void;
   onDuplicate: () => void;
+  onMove: (move: DocumentPlacement, parent: ProjectDocumentSummary | null) => void;
   onArchive: () => void;
   onRestore: () => void;
   onDelete: () => void;
@@ -74,6 +76,7 @@ export default function DocumentOptionsMenu({
 }) {
   const t = useTranslations('documents');
   const [exportOpen, setExportOpen] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
   const archived = document.archivedAt !== null;
 
   const copyMarkdown = useCallback(async () => {
@@ -150,9 +153,9 @@ export default function DocumentOptionsMenu({
             {t('export')}
           </DropdownMenuItem>
 
+          {(canCreate || canUpdate) && <DropdownMenuSeparator />}
           {canCreate && (
             <>
-              <DropdownMenuSeparator />
               {!archived && (
                 <DropdownMenuItem onSelect={onCreateChild}>
                   <Plus />
@@ -165,21 +168,14 @@ export default function DocumentOptionsMenu({
               </DropdownMenuItem>
             </>
           )}
-
-          {(canManage || canManageLifecycle || canDelete) && <DropdownMenuSeparator />}
-          {canManage && !archived && (
-            <DropdownMenuItem
-              disabled={busy}
-              onSelect={(event) => {
-                event.preventDefault();
-                onPrivacyChange(!document.isPrivate);
-              }}
-            >
-              <LockKeyhole />
-              <span className="flex-1">{t('privatePage')}</span>
-              {document.isPrivate && <Check className="text-primary" aria-hidden />}
+          {canUpdate && (
+            <DropdownMenuItem disabled={busy} onSelect={() => setMoveOpen(true)}>
+              <FolderInput />
+              {t('moveTo')}
             </DropdownMenuItem>
           )}
+
+          {(canManageLifecycle || canDelete) && <DropdownMenuSeparator />}
           {canManageLifecycle && !archived && (
             <DropdownMenuItem disabled={busy || document.isLocked} onSelect={onArchive}>
               <Archive />
@@ -212,6 +208,17 @@ export default function DocumentOptionsMenu({
         richHtml={richHtml}
         onOpenChange={setExportOpen}
       />
+      {moveOpen && (
+        <DocumentMoveDialog
+          projectKey={projectKey}
+          documentId={document.id}
+          onPick={(move, parent) => {
+            setMoveOpen(false);
+            onMove(move, parent);
+          }}
+          onClose={() => setMoveOpen(false)}
+        />
+      )}
     </>
   );
 }

@@ -3,6 +3,7 @@ import {
   notificationDelivery,
   issue,
   issueActivity,
+  documentComment,
   project,
   projectDocument,
   team,
@@ -10,6 +11,7 @@ import {
   emailSource,
   getProjectEmailConfig,
   getWebPushConfig,
+  slackAppForWorkspace,
   type DeliveryPayload,
 } from '@repo/db';
 import { eq, inArray } from 'drizzle-orm';
@@ -18,6 +20,7 @@ import { DEFAULT_LOCALE, emailWords, type CoreEmailKey, type Locale } from '@rep
 import { readRedactedSettings } from '#modules/notification-settings/service';
 import { getPreferencesForUsers } from '#modules/notification-preferences/service';
 import { getTelegramChatIds, hasUsableInstanceBot } from '#modules/telegram/service';
+import { getSlackUserIds } from '#modules/slack/service';
 import { getPushSubscriptionIds } from '#modules/push/service';
 import { escapeHtml } from '#shared/lib';
 import { commentUrl, documentUrl, issueUrl, teamRef } from '#modules/teams/ref';
@@ -28,19 +31,21 @@ import type { NotificationType, NewNotificationRow } from './service';
 // member and per their own preferences: for each inbox row (already one per
 // recipient), the member's notification-preferences decide whether it goes by email
 // (to their account address), Telegram (to the chat of the Telegram account they
-// linked) and/or Web Push (one row for each browser they subscribed). The team that
-// owns the project supplies the provider credentials (SMTP/Resend, and optionally its
-// own bot token — Telegram otherwise goes through the instance bot); push is on for
-// the whole instance while its VAPID keys are set. The message text is composed here
-// at enqueue time and stored on the row; the worker drains the outbox and the sender
-// reads the credentials at send time.
+// linked), Slack (to the account they connected in the Slack workspace of the app that
+// serves the project) and/or Web Push (one row for each browser they subscribed). The
+// team that owns the project supplies the provider credentials (SMTP/Resend, and
+// optionally its own bot token — Telegram otherwise goes through the instance bot); the
+// Slack app is the workspace's own or the instance's; push is on for the whole instance
+// while its VAPID keys are set. The message text is composed here at enqueue time and
+// stored on the row; the worker drains the outbox and the sender reads the credentials at
+// send time.
 //
 // This is best-effort: enqueue never throws into the caller (a failure here must not
 // break creating a comment or updating an issue), so callers wrap it in try/catch.
 
 interface OutboxRow {
   projectId: number;
-  channel: 'email' | 'telegram' | 'push';
+  channel: 'email' | 'telegram' | 'slack' | 'push';
   recipient: string;
   payload: DeliveryPayload;
 }
@@ -77,7 +82,7 @@ const EMAIL_TEMPLATE: Record<NotificationType, CoreEmailKey> = {
   reacted: 'reacted',
 };
 
-// What happened, as the Telegram message and the push notification say it.
+// What happened, as the Telegram and Slack messages and the push notification say it.
 // Issue-centric third person, matching the email copy without repeating the
 // second-person address.
 function eventAction(
@@ -102,7 +107,7 @@ function eventAction(
   }
 }
 
-const TELEGRAM_EMOJI: Record<NotificationType, string> = {
+const EVENT_EMOJI: Record<NotificationType, string> = {
   assigned: '📌',
   mentioned: '💬',
   commented: '💬',
@@ -119,7 +124,7 @@ function telegramPayload(
   action: string,
   url: string | undefined,
 ): DeliveryPayload {
-  const emoji = TELEGRAM_EMOJI[type];
+  const emoji = EVENT_EMOJI[type];
 
   // HTML (parse_mode=HTML): the issue reference is the clickable link, so no raw URL
   // is shown. A blank line (\n\n) separates the title line from the action line. The
@@ -149,6 +154,46 @@ function documentTelegramPayload(
   };
 }
 
+// Slack mrkdwn treats only these three as markup.
+function escapeMrkdwn(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// A comment quoted in a Slack message is cut here; the link opens the rest.
+const SLACK_QUOTE_MAX = 300;
+
+// Slack copy: the Telegram words, with the issue reference or the document title as the
+// link. The action is not set in italics: an underscore in a name would end them early.
+// An event about a comment quotes its text under the action. `text` is the plain
+// fallback; the sender appends the URL to it once.
+function slackPayload(
+  emoji: string,
+  label: string,
+  title: string,
+  action: string,
+  url: string | undefined,
+  comment: string | null,
+): DeliveryPayload {
+  const bold = `*${escapeMrkdwn(label)}*`;
+  const head = url ? `<${url}|${bold}>` : bold;
+  const plainHead = title ? `${label} ${title}` : label;
+  const markedHead = title ? `${head} ${escapeMrkdwn(title)}` : head;
+  const chars = [...(comment ?? '').trim()];
+  const excerpt =
+    chars.length > SLACK_QUOTE_MAX
+      ? `${chars.slice(0, SLACK_QUOTE_MAX).join('').trimEnd()}…`
+      : chars.join('');
+  const quote = excerpt
+    .split('\n')
+    .map((line) => `>${escapeMrkdwn(line)}`)
+    .join('\n');
+  return {
+    text: `${emoji} ${plainHead}\n\n${action}${excerpt ? `\n\n${excerpt}` : ''}`,
+    mrkdwn: `${emoji} ${markedHead}\n\n${escapeMrkdwn(action)}${excerpt ? `\n${quote}` : ''}`,
+    url,
+  };
+}
+
 // Push copy: the issue or the document as the title, what happened as the body. The tag
 // names the inbox item as the in-page desktop notification's tag does, so a second push
 // for the same item replaces the first.
@@ -164,6 +209,7 @@ function pushPayload(
 interface Messages {
   email: (type: NotificationType, locale: Locale) => Promise<DeliveryPayload>;
   telegram: (type: NotificationType) => DeliveryPayload;
+  slack: (type: NotificationType) => DeliveryPayload;
   push: (type: NotificationType, notificationId: number) => DeliveryPayload;
 }
 
@@ -187,6 +233,13 @@ async function composeMessages(
     if (!documentRow) return null;
     const title = documentRow.title.trim();
     const url = documentUrl(ref, projectRow.key, documentId);
+    const [commentRow] =
+      first.documentCommentId != null
+        ? await db
+            .select({ body: documentComment.body })
+            .from(documentComment)
+            .where(eq(documentComment.id, first.documentCommentId))
+        : [];
     const template =
       first.documentCommentId != null ? 'documentCommentMentioned' : 'documentMentioned';
     const action = eventAction('mentioned', actor, null, '');
@@ -197,6 +250,8 @@ async function composeMessages(
         return { ...(await composeEmail(template, locale, vars, url)), url };
       },
       telegram: () => documentTelegramPayload(title || 'Untitled', action, url),
+      slack: () =>
+        slackPayload('💬', title || 'Untitled', '', action, url, commentRow?.body ?? null),
       push: (_type, notificationId) =>
         pushPayload(title || 'Untitled', action, url, notificationId),
     };
@@ -218,6 +273,14 @@ async function composeMessages(
   const stateChange = statusActivityId != null ? await readStateChange(statusActivityId) : null;
   // A reaction is one event with one row.
   const emoji = first.reactionEmoji ?? '';
+  // The comment the event is about: the new one, the one that mentions, or the one reacted to.
+  const [commentRow] =
+    commentId != null
+      ? await db
+          .select({ body: issueActivity.body })
+          .from(issueActivity)
+          .where(eq(issueActivity.id, commentId))
+      : [];
   return {
     email: async (type, locale) => {
       const vars = {
@@ -237,6 +300,15 @@ async function composeMessages(
         issueRow.title,
         eventAction(type, actor, stateChange, emoji),
         url,
+      ),
+    slack: (type) =>
+      slackPayload(
+        EVENT_EMOJI[type],
+        issueKey,
+        issueRow.title,
+        eventAction(type, actor, stateChange, emoji),
+        url,
+        commentRow?.body ?? null,
       ),
     push: (type, notificationId) =>
       pushPayload(
@@ -261,7 +333,13 @@ export async function enqueueOutbound(
   const projectId = notifications[0].projectId;
 
   const [projectRow] = await db
-    .select({ key: project.key, name: project.name, teamId: project.teamId, teamSlug: team.slug })
+    .select({
+      key: project.key,
+      name: project.name,
+      teamId: project.teamId,
+      teamSlug: team.slug,
+      workspaceId: team.workspaceId,
+    })
     .from(project)
     .innerJoin(team, eq(team.id, project.teamId))
     .where(eq(project.id, projectId));
@@ -284,26 +362,32 @@ export async function enqueueOutbound(
   // set no token, the instance bot.
   const telegramEnabled =
     settings.telegram.enabled && (settings.telegram.hasBotToken || (await hasUsableInstanceBot()));
+  // The app of the workspace, or the instance's; null while Slack is off for the workspace.
+  const slackApp = await slackAppForWorkspace(projectRow.workspaceId);
   // The instance's VAPID keys; null while push is off.
   const vapid = getWebPushConfig();
-  if (!emailEnabled && !telegramEnabled && !vapid) return;
+  if (!emailEnabled && !telegramEnabled && !slackApp && !vapid) return;
 
   const messages = await composeMessages(notifications, projectRow, actorName, commentId);
   if (!messages) return;
 
   const userIds = [...new Set(notifications.map((n) => n.userId))];
-  const [users, prefsByUser, chatIdByUser, localeByUser, pushByUser] = await Promise.all([
-    db
-      .select({ id: user.id, email: user.email, active: user.active })
-      .from(user)
-      .where(inArray(user.id, userIds)),
-    getPreferencesForUsers(projectId, userIds),
-    telegramEnabled ? getTelegramChatIds(userIds) : Promise.resolve(new Map<string, string>()),
-    savedLocales(userIds),
-    vapid
-      ? getPushSubscriptionIds(userIds, vapid.publicKey)
-      : Promise.resolve(new Map<string, number[]>()),
-  ]);
+  const [users, prefsByUser, chatIdByUser, slackIdByUser, localeByUser, pushByUser] =
+    await Promise.all([
+      db
+        .select({ id: user.id, email: user.email, active: user.active })
+        .from(user)
+        .where(inArray(user.id, userIds)),
+      getPreferencesForUsers(projectId, userIds),
+      telegramEnabled ? getTelegramChatIds(userIds) : Promise.resolve(new Map<string, string>()),
+      slackApp
+        ? getSlackUserIds(userIds, slackApp.slackTeamId)
+        : Promise.resolve(new Map<string, string>()),
+      savedLocales(userIds),
+      vapid
+        ? getPushSubscriptionIds(userIds, vapid.publicKey)
+        : Promise.resolve(new Map<string, number[]>()),
+    ]);
   // A deactivated account keeps its projects, but nothing from them reaches it.
   const emailById = new Map(
     users.filter((u) => !isAccountDeactivated(u)).map((u) => [u.id, u.email]),
@@ -342,6 +426,19 @@ export async function enqueueOutbound(
           channel: 'telegram',
           recipient: chatId,
           payload: messages.telegram(n.type),
+        });
+      }
+    }
+    if (slackApp && prefs.slackEvents[n.type]) {
+      // No connected account in that Slack workspace means nowhere to send; the member
+      // sees the prompt to connect one in the project's notification settings.
+      const slackUserId = slackIdByUser.get(n.userId);
+      if (slackUserId) {
+        out.push({
+          projectId,
+          channel: 'slack',
+          recipient: slackUserId,
+          payload: messages.slack(n.type),
         });
       }
     }

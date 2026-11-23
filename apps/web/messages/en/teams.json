@@ -337,6 +337,8 @@
     "noKindMatches": "No credentials in the chosen groups.",
     "group": "Group",
     "connected": "Credential added",
+    "locked": "Needs Cloud or Pro",
+    "lockedHint": "Its tools work in Cloud and self-hosted Pro. The credential is kept, but no agent uses it here.",
     "alreadyConnected": "The team already has a credential for {integration}",
     "alreadyConnectedHint": "Add another credential for a second account. The label tells them apart.",
     "agentTools": "Available tools",
@@ -459,6 +461,9 @@
     "unavailableHint": "This instance does not have this tool. It is kept as it is, but no agent gets it.",
     "locked": "Needs Cloud or Pro",
     "lockedHint": "Made with Cloud or Pro. It is kept as it is, but no agent gets it here.",
+    "lockedSection": "In Cloud and Pro",
+    "lockedIntegration": "{integration} is available in Cloud and Pro",
+    "lockedIntegrationHint": "Agents get its tools in Cloud and self-hosted Pro. Here you can see what they do.",
     "ownTool": "Create HTTP tool",
     "ownToolUnavailableTitle": "Let agents call any API",
     "ownToolUnavailableHint": "Agents can call your own services too, with the address and API key you set. Available in Cloud and self-hosted Pro.",
@@ -945,6 +950,18 @@
       "useBuiltIn": "Use built-in price",
       "removePrice": "Remove price",
       "save": "Save price"
+    },
+    "slack": {
+      "title": "Slack",
+      "description": "The Slack app this workspace's projects send notifications through.",
+      "saved": "Slack settings saved",
+      "notifications": "Slack notifications",
+      "notificationsHint": "When on, members who connect their Slack account get direct messages for the events they choose.",
+      "app": "Slack app",
+      "instanceApp": "Instance app",
+      "ownApp": "Own app",
+      "instanceAppHint": "Set up by the instance administrator. Members need an account in the {workspace} Slack workspace.",
+      "instanceMissing": "The instance administrator has not set up a Slack app. Choose Own app to set one up here."
     },
     "queue": {
       "title": "Agent runs"

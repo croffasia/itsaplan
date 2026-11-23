@@ -2,16 +2,32 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import { cn } from '@/lib/utils';
-import { usePersistedOpen } from '@/hooks/usePersistedOpen';
-import RunnerQueueRunCost from './RunnerQueueRunCost';
-import RunnerQueueRunWhen from './RunnerQueueRunWhen';
-import RunnerQueueRunWho from './RunnerQueueRunWho';
+import { usePersistedOpen, usePersistedOpenGroups } from '@/hooks/usePersistedOpen';
+import IssuePropertyGroupHeading from '@/features/issue/components/detail/IssuePropertyGroupHeading';
+import { useRunFacts } from '../hooks/useRunFacts';
+import { useRunOriginFacts } from '../hooks/useRunOriginFacts';
+import { useRunTimeFacts } from '../hooks/useRunTimeFacts';
+import { useRunUsageFacts } from '../hooks/useRunUsageFacts';
+import RunnerQueueRunFactList from './RunnerQueueRunFactList';
 
-// The run's properties in three groups. It folds as an issue's properties do, and the fold
-// is remembered.
-export default function RunnerQueueRunProperties({ run }: { run: RunnerQueueRun }) {
+// The run's properties in groups. The section and each group fold as an issue's properties
+// do, and the folds are remembered.
+export default function RunnerQueueRunProperties({
+  run,
+  listPath,
+}: {
+  run: RunnerQueueRun;
+  listPath: string;
+}) {
   const t = useTranslations('issue.agentRuns');
   const details = usePersistedOpen('agent-run-details-open');
+  const groupsOpen = usePersistedOpenGroups('agent-run-groups-closed');
+  const groups = [
+    { key: 'groupRun', facts: useRunFacts(run) },
+    { key: 'groupOrigin', facts: useRunOriginFacts(run, listPath) },
+    { key: 'groupTime', facts: useRunTimeFacts(run) },
+    { key: 'groupUsage', facts: useRunUsageFacts(run) },
+  ] as const;
   const Chevron = details.open ? ChevronDown : ChevronRight;
   return (
     <aside
@@ -28,12 +44,23 @@ export default function RunnerQueueRunProperties({ run }: { run: RunnerQueueRun 
         {t('details')}
       </button>
       {details.open && (
-        <div className="mt-3 grid gap-6 @xl:grid-cols-2 @xl:gap-x-12 @5xl:grid-cols-1 @5xl:gap-0 @5xl:divide-y">
-          <RunnerQueueRunWho run={run} className="@5xl:pb-3" />
-          <div className="grid gap-4 @5xl:gap-0 @5xl:divide-y">
-            <RunnerQueueRunWhen run={run} className="@5xl:py-3" />
-            <RunnerQueueRunCost run={run} className="@5xl:pt-3" />
-          </div>
+        <div className="mt-3 grid items-start gap-x-12 gap-y-5 @xl:grid-cols-2 @5xl:grid-cols-1">
+          {groups
+            .filter((group) => group.facts.length > 0)
+            .map((group) => {
+              const open = groupsOpen.isOpen(group.key);
+              return (
+                <section key={group.key}>
+                  <IssuePropertyGroupHeading
+                    label={t(group.key)}
+                    open={open}
+                    onToggle={() => groupsOpen.toggle(group.key)}
+                    className="w-full"
+                  />
+                  {open && <RunnerQueueRunFactList facts={group.facts} className="mt-3" />}
+                </section>
+              );
+            })}
         </div>
       )}
     </aside>

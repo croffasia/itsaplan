@@ -337,6 +337,8 @@
     "noKindMatches": "Nenhuma credencial nos grupos escolhidos.",
     "group": "Grupo",
     "connected": "Credencial adicionada",
+    "locked": "Requer Cloud ou Pro",
+    "lockedHint": "As ferramentas dela funcionam no Cloud e no Pro auto-hospedado. A credencial fica guardada, mas aqui nenhum agente a usa.",
     "alreadyConnected": "O time já tem uma credencial para {integration}",
     "alreadyConnectedHint": "Adicione outra credencial para uma segunda conta. O rótulo as diferencia.",
     "agentTools": "Ferramentas disponíveis",
@@ -459,6 +461,9 @@
     "unavailableHint": "Esta instância não tem esta ferramenta. Ela fica como está, mas nenhum agente a recebe.",
     "locked": "Requer Cloud ou Pro",
     "lockedHint": "Criada no Cloud ou no Pro. Fica como está, mas aqui nenhum agente a recebe.",
+    "lockedSection": "No Cloud e no Pro",
+    "lockedIntegration": "{integration} está disponível no Cloud e no Pro",
+    "lockedIntegrationHint": "Seus agentes recebem as ferramentas dela no Cloud e no Pro auto-hospedado. Aqui você vê o que elas fazem.",
     "ownTool": "Criar ferramenta HTTP",
     "ownToolUnavailableTitle": "Deixe seus agentes chamarem qualquer API",
     "ownToolUnavailableHint": "Seus agentes também podem chamar seus próprios serviços, com o endereço e a chave de API que você definir. Disponível no Cloud e no Pro auto-hospedado.",
@@ -945,6 +950,18 @@
       "useBuiltIn": "Usar o preço embutido",
       "removePrice": "Remover preço",
       "save": "Salvar preço"
+    },
+    "slack": {
+      "title": "Slack",
+      "description": "O app do Slack pelo qual os projetos deste workspace enviam notificações.",
+      "saved": "Configurações do Slack salvas",
+      "notifications": "Notificações do Slack",
+      "notificationsHint": "Quando ativado, os membros que conectarem a conta do Slack recebem mensagens diretas sobre os eventos que escolherem.",
+      "app": "App do Slack",
+      "instanceApp": "App da instância",
+      "ownApp": "App próprio",
+      "instanceAppHint": "Configurado pelo administrador da instância. Os membros precisam de uma conta no workspace do Slack {workspace}.",
+      "instanceMissing": "O administrador da instância não configurou um app do Slack. Escolha \"App próprio\" para configurar um aqui."
     },
     "queue": {
       "title": "Execuções de agentes"

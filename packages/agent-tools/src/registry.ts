@@ -1,19 +1,25 @@
 import type {
   Integration,
   IntegrationDescriptor,
+  IntegrationListing,
   CustomToolEntry,
   ConfigField,
   ToolConfig,
+  ToolDescriptor,
 } from './types';
 import { ToolConfigError } from './errors';
+import { exa } from './tools/exa';
 import { jina } from './tools/jina';
 import { firecrawl } from './tools/firecrawl';
 import { telegram } from './tools/telegram';
+import { slack } from './tools/slack';
 import { threads } from './tools/threads';
 import { instagram } from './tools/instagram';
 import { notion } from './tools/notion';
+import { baserow } from './tools/baserow';
 import { gitea } from './tools/gitea';
 import { github } from './tools/github';
+import { gitlab } from './tools/gitlab';
 import { pdf } from './tools/pdf';
 import { keenable } from './tools/keenable';
 import { dataforseo } from './tools/dataforseo';
@@ -25,16 +31,22 @@ export const INTEGRATIONS: Integration[] = [
   jina,
   firecrawl,
   telegram,
+  slack,
   threads,
   instagram,
   notion,
+  baserow,
   gitea,
   github,
+  gitlab,
   pdf,
   keenable,
   dataforseo,
   kie,
 ];
+
+// Listed locked until setExtraIntegrations adds one with the same key.
+export const LOCKED_INTEGRATIONS: IntegrationListing[] = [exa];
 
 type ToolIndex = Map<string, { integration: Integration; tool: CustomToolEntry }>;
 
@@ -92,10 +104,37 @@ export function getTool(
   return toolIndex.get(toolKey);
 }
 
+// The listing of a locked integration, for the edition that runs it to build the integration
+// on. Throws for a key the core does not list, so that edition fails at start once a listing
+// is taken away.
+export function lockedListing(key: string): IntegrationListing {
+  const listing = LOCKED_INTEGRATIONS.find((l) => l.key === key);
+  if (!listing) throw new Error(`No locked integration "${key}".`);
+  return listing;
+}
+
+// The listings no added integration has taken the key of.
+function lockedListings(): IntegrationListing[] {
+  return LOCKED_INTEGRATIONS.filter((l) => !byKey.has(l.key));
+}
+
+// A tool of a locked integration with its listing, or undefined: what names a configured
+// tool kept from a time the integration ran, which no agent gets now.
+export function getLockedTool(
+  toolKey: string,
+): { integration: IntegrationListing; tool: ToolDescriptor } | undefined {
+  for (const integration of lockedListings()) {
+    const tool = integration.tools.find((t) => t.key === toolKey);
+    if (tool) return { integration, tool };
+  }
+  return undefined;
+}
+
 // The serializable catalog for a frontend: the credential form is built from each
-// integration's credentialSchema, and the tool picker from its tools.
+// integration's credentialSchema, and the tool picker from its tools. The locked listings
+// come last.
 export function integrationDescriptors(): IntegrationDescriptor[] {
-  return integrations.map((i) => ({
+  const running = integrations.map((i) => ({
     key: i.key,
     label: i.label,
     description: i.description,
@@ -112,6 +151,8 @@ export function integrationDescriptors(): IntegrationDescriptor[] {
       group: t.group,
     })),
   }));
+  const locked = lockedListings().map((l) => ({ ...l, kind: 'tool' as const, locked: true }));
+  return [...running, ...locked];
 }
 
 // Validates and coerces a submitted credential against a schema: required fields must

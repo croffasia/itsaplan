@@ -14,6 +14,7 @@ import { listAgentSkills } from '../../skills/service';
 import { agentToolSet } from '../../tools/service';
 import { buildCustomTools } from './tools/custom-tools';
 import { buildNamedRouteTools, buildRouteTools } from './tools/route-tools';
+import { runOrigin, type AgentWork } from '../run-initiator';
 import { buildLocalTools } from './tools/local';
 import { buildSkillTool, skillsPreamble } from './skill-runtime';
 import { buildMemory, ensureThread, DEFAULT_LAST_MESSAGES } from './memory';
@@ -115,6 +116,7 @@ async function buildAgent(
   projectId: number,
   opts: RunOpts,
   sessionId: string,
+  work: AgentWork,
 ): Promise<Agent> {
   const project = await getProjectById(projectId);
   if (!project) throw new HttpError(404, 'Project not found');
@@ -128,7 +130,7 @@ async function buildAgent(
     (row.instructions ?? DEFAULT_INSTRUCTIONS) +
     skillsPreamble(skills);
   const coreTools = {
-    ...buildRouteTools(project, apiKey, row.tools),
+    ...buildRouteTools(project, apiKey, row.tools, work),
     ...buildLocalTools(projectId, row.tools),
     ...(skills.length > 0 ? buildSkillTool(row.teamId, skills) : {}),
   };
@@ -155,7 +157,7 @@ async function buildAgent(
       runId: opts.runId,
       trigger: opts.trigger,
       issueId: opts.issueId,
-      routeTools: (names) => buildNamedRouteTools(project, apiKey, names),
+      routeTools: (names) => buildNamedRouteTools(project, apiKey, names, work),
     }),
   );
   // An agent traces its run only through a container (see observability.ts).
@@ -305,6 +307,12 @@ async function prepareRun(
   if (row.kind !== 'internal') {
     throw new HttpError(400, 'Only internal agents can be run');
   }
+  // A queued run's caller is the agent's own bot user, so the run names its person. A chat
+  // is for its member, or for the person behind an agent that chats.
+  const work: AgentWork =
+    opts.runId != null
+      ? { initiator: opts.initiatorUserId ?? null, runId: opts.runId }
+      : { initiator: (await runOrigin(opts.callerUserId)).requestedByUserId, runId: null };
   // A queued run was asked about in the poller, before it was recorded as started.
   if (opts.runId == null) {
     assertChatEnabled(row);
@@ -312,7 +320,7 @@ async function prepareRun(
       agentId: row.id,
       teamId: row.teamId,
       projectId,
-      userId: opts.callerUserId,
+      userId: work.initiator,
     });
     if (refused) throw new HttpError(403, refused, 'run_refused');
   }
@@ -322,7 +330,7 @@ async function prepareRun(
   const threadId = row.memoryEnabled
     ? (opts.threadId ?? newChatThreadId(row.id, opts.callerUserId))
     : null;
-  const agent = await buildAgent(row, projectId, opts, threadId ?? randomUUID());
+  const agent = await buildAgent(row, projectId, opts, threadId ?? randomUUID(), work);
 
   // Mastra's generate/stream have overloaded options; type the shape we use. In
   // Mastra v1 the temperature belongs to the call's model settings — a flat
@@ -383,9 +391,11 @@ export type RunOpts = {
   threadId?: string | null;
   issueId?: number | null;
   scheduleId?: number | null;
-  // The queued run this executes, and what triggered it. Absent for a chat run.
+  // The queued run this executes, what triggered it and the person it is for (see
+  // run-initiator.ts). Absent for a chat run.
   runId?: number;
   trigger?: AgentRunTrigger;
+  initiatorUserId?: string | null;
   contextPreamble?: string;
 };
 

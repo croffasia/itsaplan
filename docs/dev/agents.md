@@ -24,6 +24,12 @@ A configured tool is bound to one credential of its integration, or to none when
 has no credential fields (PDF). An integration marked `credentialOptional` (Keenable) takes both: a
 team can add its tools with no key, on the service's keyless tier, and again on a key.
 
+An integration another edition of the app runs (Exa) is listed locked (`LOCKED_INTEGRATIONS` in
+`@repo/agent-tools`): the catalog shows what it is and its tools, marked as coming with Cloud and
+Pro, and the API refuses a credential or a configured tool of it. Once that edition adds an
+integration with its key through `setExtraIntegrations`, the catalog lists that integration
+instead. A tool added while it ran stays, named by the listing, and goes to no agent.
+
 What acts in one project stays under `:projectKey`: an agent's chat, its schedules and starting
 a run. A run is read from the agent's history and traces under `:teamId`, the queue at each
 scope, and `/agent-runs/:runId`.
@@ -185,9 +191,7 @@ with the trigger `api`, as a schedule queues its task: no issue, document or sch
 of its own (`run:<id>`). It works for internal and external agents, through a runner or an
 invocation URL alike, and the run shows in the queue and the agent's run history. It is checked as
 a chat message is: chat on, the runner scope, and the run refusal hook for an internal agent.
-`agent_run.requested_by_user_id` keeps the sender. A claim reads it as the requester when the run
-has no source comment, so the agent is told who asked and the refusal hook is asked again for that
-person when the run starts.
+The sender is the initiator of the run (see "Run initiator").
 
 The route answers 202 at once, so a long run outlasts neither a proxy's read timeout nor an MCP
 client's request timeout. `GET /agent-runs/:runId` (MCP `get_agent_run`) reads the status, then the
@@ -195,72 +199,171 @@ answer or the error, and while the run waits or runs `retryAfterSeconds` (`pollA
 `run-queue.ts`): 10 s while it is queued, a quarter of its running time within 5–30 s, or the time
 to its retry within the same bounds.
 
-## Reading runs
+## Run initiator
 
-`GET /issues/:issueId/agent-runs` reads an issue's runs with cursor pagination. It requires
-`work_items read` and `ai_agents read` in the issue's current project.
+The initiator is the person a run works for. `agent_run.requested_by_user_id` stores it. Null means
+the run is the project's work. The initiator is never an agent.
 
-A run keeps its original project. Moving an issue cancels the pending runs of the issue and its
-subtasks. The issue panel, the trace routes and every queue then hide the moved issue's runs from
-everyone, members of the original project included, so a moved issue does not expose its former
-project's prompts or traces. The agent's run history (`GET /teams/:teamId/ai-agents/:agentId/runs`)
-has no such filter: members of the original project and whoever runs the team still read those runs
-there.
+| The run starts when                                       | Initiator                                  |
+| --------------------------------------------------------- | ------------------------------------------ |
+| a person mentions the agent in a comment                  | the person                                 |
+| a person replies to a comment of the agent                | the person                                 |
+| a person edits a comment and adds a mention of the agent  | the person who edits                       |
+| a person delegates an issue to the agent                  | the person                                 |
+| a person sets the agent in a member field                 | the person                                 |
+| a person sends the agent an API task                      | the person                                 |
+| a schedule starts                                         | null                                       |
+| another agent starts it (see below)                       | the initiator of that agent's run or chat  |
 
-Three routes read a run's trace:
+Agent A starts a run of agent B when A delegates an issue to B, sets B in a member field or sends B
+an API task. A comment of an agent starts no run. The run of B gets the initiator of the work A does
+at that time:
 
-- `GET /issues/:issueId/agent-runs/:runId/trace` reads the Mastra trace of an internal run: the
-  latest recorded attempt, or the one named by `traceId`. Each trace links to the previous recorded
-  attempt (`previousTraceId`). It returns null for a missing latest trace and for an external run,
-  which has no Mastra trace. An unknown or unrelated `traceId` returns 404.
-- `GET /agent-runs/:runId/internal-trace` reads the same trace by the run alone. It takes the same
-  `traceId`, or `attempt` (the oldest recorded attempt is 1), and returns the attempt's number and
-  how many attempts were recorded (`attempt`, `attempts`).
-- `GET /agent-runs/:runId/trace?attempt=N` reads the transcript an external runner reported. The
-  latest recorded attempt is the default.
+1. A is an internal agent in a queued run: the initiator of that run.
+2. A is an internal agent in a chat: the initiator of that chat. When a person writes in the chat,
+   that person is the initiator. When an agent writes, the chat gets the initiator of that agent's
+   work, by this list.
+3. A is an external agent: the initiator of the run its MCP call names in the `X-Itsaplan-Run-Id`
+   header. The runner sets that id for the command (`ITSAPLAN_RUN_ID`), and the agent's MCP config
+   sends it (see [Coding agent setup](../runner.md)). The api takes the run only when it is A's and
+   in the `running` execution state.
+4. Any other call of A: null. This is a call with no run or another run, and a REST call.
 
-The issue route requires both read permissions in the issue's current project. The two
-`/agent-runs/:runId` routes require them in the run's original project, and `documents read` for a
-run started in a document. Whoever runs the team needs none of them there. A run from a private
-document is read only by the document's owner. These two routes and `GET /agent-runs/:runId` take
-the same permissions, and also serve runs without an issue: a schedule's, a manual run's, an API
-run, and one started in a document comment.
+The api runs each tool call of an agent in its work (`actFor` in `run-initiator.ts`). Thus each run
+in a chain of agents has the initiator of the first run. The api never takes the initiator from the
+request.
 
-The api stores the events an external runner reports in `agent_run_trace`, one row per attempt:
-messages, tool inputs and results, and a local Codex session link. Transcripts follow the instance
-trace retention window after the run finishes. Pending runs and final results are retained.
+The initiator has two uses:
 
-`POST /agent-runs/:runId/events` accepts only the calling agent's current executing, unexpired
-attempt. Event offsets deduplicate retries: a fully accepted batch is acknowledged without changes,
-and a batch overlapping the accepted prefix appends only its unseen suffix. An offset beyond the
-next expected offset is a gap and returns 409. A different session ID is rejected even for a
-replayed batch. An attempt's transcript stops recording after 2,000 events or 1 MB. Acknowledgements
-continue, so the runner can still report its final result. A Codex UUID forms the local
-`codex://threads/` link, and no supplied URL is accepted.
+- The claim tells the agent who asked. When the initiator wrote the comment that started the run,
+  it gives the name that comment showed. Otherwise it gives the user name of the initiator.
+- The run refusal hook gets the initiator: when an API task is queued, when a run starts and for
+  each chat message.
 
-The runner sends the attempt number on heartbeat and result calls. The api answers 404 to the
-process of a reclaimed attempt, and its command keeps running until it ends. `attempt` is optional
-on both calls: a custom invocation endpoint can leave it out, and the api then does not check it.
+## Run origin
 
-## Runner queue
+A run records whom it works for, who started it and in which run. With these, a reader follows a
+chain of agent runs back to its first run.
 
-`GET /agent-runs/queue` pages the active and past runs of internal and external agents across the
-caller's readable projects, including archived projects. It requires `work_items read` and
-`ai_agents read` in each project, and `documents read` for a run started in a document. `runId`
-narrows it to one authorized run for the detail pane. `state` keeps the `failed` or the `active`
-(waiting and running) runs, and `q` finds runs by the issue's title or key, the schedule's name or
-the agent's username. The `queued`, `running` and `failed` counts follow `q` but not `state`, so
-each filter can show how many runs it holds.
+- `requested_by_user_id`: the initiator, the person the run works for (see "Run initiator").
+- `started_by_user_id`: the person or the agent that started the run. When a change started it, such
+  as a move of an issue into the status a schedule waits for, it is who made the change. Null for a
+  timed schedule.
+- `parent_run_id`: the run in which the agent started this run. Null when a person, a timed schedule
+  or an agent in a chat started it.
+- `root_run_id`: the first run of the chain. Null when the run has no parent.
 
-The same queue is narrowed to a project (`/projects/:projectKey/agent-runs/queue`), a team
-(`/teams/:teamId/...`) or a workspace (`/workspaces/:workspaceId/...`). The team's queue is for
-whoever runs the team and the workspace managers, the workspace's for its owner and admins. Whoever
-runs the team also reads the project queues of its projects without a role there.
-`GET /agent-runs/queue` still takes a role.
+The api finds the agent's run by the same rules as the initiator.
 
-Each of the three scopes also answers `.../agent-runs/in-flight`: the workspace's limit and the
-internal runs holding a slot in the workspace. A run in retry backoff holds a slot, so this count
-can differ from the queue's `running` count.
+## Reading and stopping runs
+
+A reader sees a run in two parts:
+
+- The answer: the status, the task and the result.
+- The steps: what the agent did. For an internal agent, this is its Mastra trace. For an external
+  agent, this is the transcript its runner reported.
+
+Whoever runs the team reads both. Any other reader needs `ai_agents read` in the run's project for
+the answer. For the steps, the reader also needs one of these:
+
+- The reader owns the project.
+- The reader can create or change agents in the project (`ai_agents create` or `edit`).
+- The reader is the run's initiator.
+
+The same people can stop a run that waits or works. The run becomes `canceled` at once, and the api
+sends `agent_run.finished` with the person who stopped it as the actor. The run records that person
+or agent in `canceled_by_user_id`. Ending the pending runs of a schedule records who ended them too.
+The field stays null when the run ended by itself or when the api ended it, as when its issue moved
+to another column or project. An internal agent at work checks its run every 5 seconds and then
+stops its model call and its tools. An external runner learns of the stop when its heartbeat or
+events call answers `canceled: true`. Then it kills its command and reports nothing more.
+
+Two rules hide a run:
+
+- A run keeps its original project. When its issue moves to another project, the readers there must
+  not see the prompts and traces of the old project. Thus the move cancels the pending runs of the
+  issue and its subtasks, and the issue panel, the trace routes and every queue hide the issue's runs
+  from everyone. The agent's run history (`GET /teams/:teamId/ai-agents/:agentId/runs`) still shows
+  them to the members of the original project and to whoever runs the team.
+- Only the document's owner reads a run from a private document.
+
+| Route                                                   | Gives                                             | Who reads                                      |
+| ------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------- |
+| `GET /issues/:issueId/agent-runs`                       | the issue's runs with their answers, newest first | the answer rule in the issue's current project |
+| `GET /issues/:issueId/agent-runs/:runId/trace`          | the trace of an internal run on the issue         | the steps rule in the issue's current project  |
+| `GET /agent-runs/:runId`                                | the answer of one run                             | the answer rule                                |
+| `GET /agent-runs/:runId/internal-trace`                 | the trace of an internal run                      | the steps rule                                 |
+| `GET /agent-runs/:runId/trace`                          | the transcript of an external run                 | the steps rule                                 |
+| `POST /agent-runs/:runId/cancel`                        | stops a run that waits or works                   | the steps rule                                 |
+| `GET /teams/:teamId/ai-agents/:agentId/traces/:traceId` | one trace of the agent                            | for the trace of a queued run, the steps rule  |
+
+The `/agent-runs/:runId` routes also read and stop runs without an issue: the run of a schedule, a
+manual run, an API run and a run from a document comment.
+
+## External run transcripts
+
+An external agent takes an attempt of a run when its runner claims it, or when its invocation
+endpoint answers the request with a 2xx or does not answer in time. The first attempt it takes sets
+`received_at` on the run and records `agent_started` on the issue. An attempt the endpoint refused
+sets neither, so a run that the agent never received has no `received_at`. The run payloads give it
+as `receivedAt`, and the run's steps then say that the agent did not receive the run.
+
+The api stores what an external runner reports in `agent_run_trace`, one row for each attempt: the
+messages, the tool inputs and results, and a link to the local Codex session. After the run ends,
+the api keeps the transcript for the instance's trace retention window. It keeps the transcripts of
+pending runs and the final results.
+
+`POST /agent-runs/:runId/events` takes events only for the current attempt of the calling agent,
+while that attempt runs and has not expired. The offset of each event stops a repeated batch from
+adding copies:
+
+- A batch the api already took gets an acknowledgement and changes nothing.
+- A batch that overlaps the events already taken adds only its new events.
+- A batch that starts after the next expected offset leaves a gap and gets 409.
+- A batch with another session ID gets 409, also when it repeats a batch.
+
+The api stops recording the transcript of an attempt at 2,000 events or 1 MB. It continues to
+acknowledge the events, so the runner can still report its final result. The api makes the link
+`codex://threads/<id>` from the Codex session UUID and accepts no URL from the runner.
+
+The runner sends the attempt number on heartbeat and result calls. After a new claim of the run, the
+api answers 404 to the process of the old attempt. The command of that process continues until it
+ends. `attempt` is optional on both calls: a custom invocation endpoint can omit it, and then the api
+does not check it.
+
+## Run list
+
+The run list is the Agent runs page of the web app: the runs of internal and external agents, the
+active and the past ones. Each route gives the list of one scope:
+
+| Route                                           | Runs of                                             | Who reads                                                 |
+| ----------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------- |
+| `GET /agent-runs/queue`                         | every project where the caller has `ai_agents read` | anyone signed in                                          |
+| `GET /projects/:projectKey/agent-runs/queue`    | the project                                         | `ai_agents read` in the project, or whoever runs the team |
+| `GET /teams/:teamId/agent-runs/queue`           | the team's projects                                 | whoever runs the team or manages its workspace            |
+| `GET /workspaces/:workspaceId/agent-runs/queue` | the projects of every team of the workspace         | the workspace's owner and admins                          |
+
+The list includes archived projects. It hides the runs that "Reading and stopping runs" hides.
+
+Filters:
+
+- `state`: the `active` runs (waiting and running) or the `failed` runs.
+- `q`: the issue's title or key, the schedule's name or the agent's username.
+- `initiatorIds`, `projectIds`: the runs of these initiators or projects, comma-separated.
+- `runId`: one run, for the detail pane.
+
+The filters take their choices from `.../agent-runs/initiators/options`, the initiators of the
+list's runs, and, for a team or a workspace, `.../agent-runs/projects/options`, the projects of its
+list. Each takes the access of its list.
+
+The answer gives:
+
+- The runs. Each run gives `initiator`, `startedBy`, `parentRun` and `rootRun` (see "Run initiator"
+  and "Run origin"), and `canReadSteps` and `canceledBy` by "Reading and stopping runs". A run names
+  its issue by key and title and its `document` by id and title, and the parent and the first run by
+  id. It names them also when the caller cannot read them: opening one asks again.
+- The `queued`, `running` and `failed` counts. They obey every filter but `state`, so each state
+  shows how many runs it holds.
 
 ## Concurrency limits
 
@@ -275,6 +378,10 @@ neither.
   lowered by `setLimitsProvider`. The poller applies it and defers a claimed run past it. Here a run
   in retry backoff keeps its slot whatever its id. Among claims waiting for admission the lower id
   goes first.
+
+`GET .../agent-runs/in-flight` of a project, a team or a workspace gives the workspace's limit and
+the internal runs that hold a slot. A run in retry backoff holds a slot, so this count can differ
+from the `running` count of the run list.
 
 ## Execution state
 

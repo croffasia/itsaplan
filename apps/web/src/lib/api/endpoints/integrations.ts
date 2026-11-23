@@ -39,6 +39,8 @@ export interface IntegrationMeta {
     // The section the tool is listed under in its integration.
     group?: string;
   }[];
+  // Another edition runs it: nothing of it can be added here.
+  locked?: boolean;
 }
 
 // A model an LLM provider offers, from the models.dev registry.

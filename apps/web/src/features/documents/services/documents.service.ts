@@ -20,10 +20,12 @@ import {
   createDocument,
   duplicateDocument,
   setDocumentAccess,
+  listDocumentAccessCandidates,
   setDocumentLocked,
   archiveDocument,
   restoreDocument,
   setDocumentFavorite,
+  setDocumentPinned,
   listDocumentRevisions,
   listDocumentAssets,
   uploadDocumentAsset,
@@ -217,12 +219,22 @@ export function useSetDocumentAccess(projectKey: string | null) {
       documentId,
       version,
       isPrivate,
+      memberIds,
     }: {
       documentId: number;
       version: number;
       isPrivate: boolean;
-    }) => setDocumentAccess(projectKey!, documentId, { version, isPrivate }),
+      memberIds?: string[];
+    }) => setDocumentAccess(projectKey!, documentId, { version, isPrivate, memberIds }),
   );
+}
+
+export function useDocumentAccessCandidates(projectKey: string | null) {
+  return useQuery({
+    queryKey: qk.documentAccessCandidates(projectKey ?? ''),
+    queryFn: () => listDocumentAccessCandidates(projectKey!),
+    enabled: projectKey != null,
+  });
 }
 
 export function useSetDocumentLocked(projectKey: string | null) {
@@ -280,6 +292,19 @@ export function useSetDocumentFavorite(projectKey: string | null) {
       for (const [queryKey, data] of context.previousLists) qc.setQueryData(queryKey, data);
     },
     onSettled: (_result, _error, { documentId }) => {
+      if (!projectKey) return;
+      void qc.invalidateQueries({ queryKey: qk.document(projectKey, documentId) });
+      invalidateLists(qc, projectKey);
+    },
+  });
+}
+
+export function useSetDocumentPinned(projectKey: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ documentId, isPinned }: { documentId: number; isPinned: boolean }) =>
+      setDocumentPinned(projectKey!, documentId, isPinned),
+    onSuccess: (_result, { documentId }) => {
       if (!projectKey) return;
       void qc.invalidateQueries({ queryKey: qk.document(projectKey, documentId) });
       invalidateLists(qc, projectKey);

@@ -20,6 +20,8 @@ export interface ToolIntegration {
   // Its tools are added on a credential, or with none when it is optional.
   takesCredential: boolean;
   needsCredential: boolean;
+  // Comes with another edition: its tools are listed and cannot be added.
+  locked: boolean;
   tools: ToolOption[];
 }
 
@@ -47,6 +49,7 @@ export function toolIntegrations(catalog: IntegrationMeta[]): ToolIntegration[] 
       website: i.website,
       takesCredential: i.credentialSchema.length > 0,
       needsCredential: i.credentialSchema.length > 0 && !i.credentialOptional,
+      locked: !!i.locked,
       tools: i.tools.map((tool) => ({
         toolKey: tool.key,
         label: tool.label,

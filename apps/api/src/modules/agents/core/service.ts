@@ -31,6 +31,7 @@ import { deleteAccount } from '#shared/account-deletion';
 import { assertPublicHttpUrl } from '#shared/net';
 import { ensureInvocationSecret } from '../invocation/secret';
 import { enqueueAgentRun } from './run-queue';
+import { runOrigin } from './run-initiator';
 import { runRefusal } from './run-refusal';
 
 // Data access for AI agents. Each agent is backed by a hidden bot user
@@ -453,12 +454,13 @@ export async function queueApiRun(
   if (!isTriggerableBy(agent, callerUserId)) {
     throw new HttpError(403, 'This agent only takes tasks from its owner');
   }
+  const origin = await runOrigin(callerUserId);
   if (agent.kind === 'internal') {
     const refused = await runRefusal({
       agentId,
       teamId: agent.teamId,
       projectId,
-      userId: callerUserId,
+      userId: origin.requestedByUserId,
     });
     if (refused) throw new HttpError(403, refused, 'run_refused');
   }
@@ -467,7 +469,7 @@ export async function queueApiRun(
     projectId,
     issueId: null,
     sourceActivityId: null,
-    requestedByUserId: callerUserId,
+    ...origin,
     prompt,
     trigger: 'api',
   });

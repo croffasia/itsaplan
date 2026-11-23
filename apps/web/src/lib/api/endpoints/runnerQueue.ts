@@ -2,6 +2,13 @@ import { request } from '@/lib/api/core/client';
 import { pageQuery, type Page, type PageParams } from '@/lib/api/core/paging';
 import type { IssueAgentRun, IssueAgentRunTrace } from './issues';
 
+export interface RunnerQueuePerson {
+  name: string;
+  image: string | null;
+}
+
+export type RunnerQueueActor = RunnerQueuePerson & { agentUsername: string | null };
+
 export interface RunnerQueueRun extends IssueAgentRun {
   issueId: number | null;
   sequenceNumber: number | null;
@@ -9,6 +16,23 @@ export interface RunnerQueueRun extends IssueAgentRun {
   scheduleId: number | null;
   scheduleName: string | null;
   projectRef: string;
+  document: { id: number; title: string } | null;
+  // Where the run comes from: the person it works for, null for the project's own work; who
+  // queued it or made the change that started it, null for a timed schedule; the run an agent
+  // did that in, and the first run of that chain.
+  initiator: RunInitiatorOption | null;
+  startedBy: RunnerQueueActor | null;
+  parentRun: { id: number; projectRef: string } | null;
+  rootRun: {
+    id: number;
+    projectRef: string;
+    scheduleName: string | null;
+    initiator: RunnerQueuePerson | null;
+  } | null;
+  // Who stopped the run before it ended; null for one that ended by itself or that the api ended,
+  // as when its issue moved to another column or project.
+  canceledBy: RunnerQueueActor | null;
+  canReadSteps: boolean;
   // Null for an internal agent, which runs in the api and has no runner.
   runnerState: 'push' | 'online' | 'offline' | 'never' | null;
   // What the last model call read and wrote; null when the agent reports no counts.
@@ -16,14 +40,26 @@ export interface RunnerQueueRun extends IssueAgentRun {
   outputTokens: number | null;
 }
 
-// The counts follow the search alone, so each filter can show how many runs it holds.
+// The counts follow every filter but the state, so each state can show how many runs it holds.
 export type RunnerQueuePage = Page<RunnerQueueRun> & {
   queued: number;
   running: number;
   failed: number;
 };
+export type RunInitiatorOption = RunnerQueuePerson & { id: string };
+export interface RunProjectOption {
+  id: number;
+  name: string;
+  ref: string;
+}
 // 'active' is the waiting and running runs.
 export type RunnerQueueState = 'failed' | 'active';
+export interface RunnerQueueFilter {
+  state?: RunnerQueueState;
+  q?: string;
+  initiatorIds?: string[];
+  projectIds?: number[];
+}
 // Where a run queue is read and opened: `api` is the path it is read under
 // (`/projects/<ref>`, `/teams/<id>` or `/workspaces/<id>`), `path` the page that lists it.
 export interface RunnerQueueScope {
@@ -33,15 +69,20 @@ export interface RunnerQueueScope {
   acrossProjects?: boolean;
 }
 
+const listParam = (values: (string | number)[] | undefined) =>
+  values?.length ? values.join(',') : undefined;
+
 export const getRunnerQueue = (
   api: string,
-  params: PageParams & { runId?: number; state?: RunnerQueueState; q?: string },
+  params: PageParams & RunnerQueueFilter & { runId?: number },
 ) =>
   request<RunnerQueuePage>(
     `${api}/agent-runs/queue${pageQuery(params, {
       runId: params.runId?.toString(),
       state: params.state,
       q: params.q,
+      initiatorIds: listParam(params.initiatorIds),
+      projectIds: listParam(params.projectIds),
     })}`,
   );
 
@@ -62,3 +103,13 @@ export const getInternalRunTrace = (runId: number, attempt?: number) =>
   request<IssueAgentRunTrace | null>(
     `/agent-runs/${runId}/internal-trace${attempt == null ? '' : `?attempt=${attempt}`}`,
   );
+
+// Stops a run that waits or works; 409 once it ended.
+export const cancelAgentRun = (runId: number) =>
+  request<{ runId: number; status: string }>(`/agent-runs/${runId}/cancel`, { method: 'POST' });
+
+export const getRunInitiatorOptions = (api: string) =>
+  request<RunInitiatorOption[]>(`${api}/agent-runs/initiators/options`);
+
+export const getRunProjectOptions = (api: string) =>
+  request<RunProjectOption[]>(`${api}/agent-runs/projects/options`);

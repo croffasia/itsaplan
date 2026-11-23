@@ -28,6 +28,7 @@ export const qk = {
   // invalidating the workspace refreshes all of them.
   workspace: (workspaceId: number) => ['workspace', workspaceId] as const,
   workspaceManagers: (workspaceId: number) => ['workspace', workspaceId, 'managers'] as const,
+  workspaceSlack: (workspaceId: number) => ['workspace', workspaceId, 'slack'] as const,
   workspaceManagerCandidates: (workspaceId: number, search: string) =>
     ['workspace', workspaceId, 'managers', 'candidates', search] as const,
   scim: scimKey,
@@ -120,6 +121,8 @@ export const qk = {
   documents: (projectKey: string, q = '', archived = false) =>
     ['documents', projectKey, 'list', archived ? 'archived' : 'active', q] as const,
   documentListsForProject: (projectKey: string) => ['documents', projectKey, 'list'] as const,
+  documentAccessCandidates: (projectKey: string) =>
+    ['documents', projectKey, 'accessCandidates'] as const,
   document: (projectKey: string, documentId: number) =>
     ['documents', projectKey, 'document', documentId] as const,
   documentRevisions: (projectKey: string, documentId: number) =>
@@ -299,6 +302,8 @@ export const qk = {
   // The linkable initiatives behind the issue picker, narrowed by the typed search.
   initiativeOptions: (projectKey: string, params: Record<string, unknown>) =>
     ['initiatives', projectKey, 'options', params] as const,
+  // The caller's favorite initiatives in a project, listed under Initiatives in the sidebar.
+  favoriteInitiatives: (projectKey: string) => ['initiatives', projectKey, 'favorites'] as const,
   initiativeCounts: (projectKey: string) => ['initiativeCounts', projectKey] as const,
   initiative: (id: number) => ['initiative', id] as const,
   initiativeFeed: (id: number) => ['initiativeFeed', id] as const,
@@ -339,6 +344,8 @@ export const qk = {
   // The signed-in user's connected external accounts (accounts page): the linked
   // Telegram account, and the auth providers better-auth reports.
   telegramAccount: ['telegramAccount'] as const,
+  // The session member's Slack account for a project: one per Slack workspace.
+  slackAccount: (projectKey: string) => ['slackAccount', projectKey] as const,
   linkedAccounts: ['linkedAccounts'] as const,
   // Whether the instance sends Web Push, the browsers the signed-in user turned it on in,
   // and this browser's own subscription and permission.
@@ -361,6 +368,7 @@ export const qk = {
   instanceGoogleSettings: ['instanceGoogleSettings'] as const,
   instanceOidcSettings: ['instanceOidcSettings'] as const,
   instanceTelegramSettings: ['instanceTelegramSettings'] as const,
+  instanceSlackSettings: ['instanceSlackSettings'] as const,
   instanceProjectDefaults: ['instanceProjectDefaults'] as const,
   instanceAgentSettings: ['instanceAgentSettings'] as const,
   instanceSharingSettings: ['instanceSharingSettings'] as const,

@@ -17,6 +17,7 @@ type Tab = 'result' | 'steps' | 'task';
 // it failed, and on what it was asked while it has not started.
 function firstTab(run: RunnerQueueRun): Tab {
   if (run.output && run.executionState === 'success') return 'result';
+  if (!run.canReadSteps) return run.output ? 'result' : 'task';
   if (run.executionState === 'queued' || run.executionState === 'canceled') {
     return run.attempts > 0 ? 'steps' : 'task';
   }
@@ -58,38 +59,42 @@ export default function RunnerQueueRunDetail({
         >
           <TabsList variant="line">
             <TabsTrigger value="result">{t('result')}</TabsTrigger>
-            <TabsTrigger value="steps">
-              {t('stepsTab')}
-              {toolCalls > 0 && (
-                <span className="text-xs font-normal text-muted-foreground tabular-nums">
-                  {toolCalls}
-                </span>
-              )}
-              {failedStep && (
-                <span
-                  role="img"
-                  aria-label={t('failed')}
-                  className="size-1.5 rounded-full bg-destructive"
-                />
-              )}
-            </TabsTrigger>
+            {run.canReadSteps && (
+              <TabsTrigger value="steps">
+                {t('stepsTab')}
+                {toolCalls > 0 && (
+                  <span className="text-xs font-normal text-muted-foreground tabular-nums">
+                    {toolCalls}
+                  </span>
+                )}
+                {failedStep && (
+                  <span
+                    role="img"
+                    aria-label={t('failed')}
+                    className="size-1.5 rounded-full bg-destructive"
+                  />
+                )}
+              </TabsTrigger>
+            )}
             <TabsTrigger value="task">{t('task')}</TabsTrigger>
           </TabsList>
           <TabsContent value="result">
             <RunnerQueueRunResult run={run} />
           </TabsContent>
-          <TabsContent value="steps">
-            {run.kind === 'internal' ? (
-              <AgentRunInternalTrace runId={run.id} />
-            ) : (
-              <AgentRunExternalTrace runId={run.id} />
-            )}
-          </TabsContent>
+          {run.canReadSteps && (
+            <TabsContent value="steps">
+              {run.kind === 'internal' ? (
+                <AgentRunInternalTrace runId={run.id} />
+              ) : (
+                <AgentRunExternalTrace run={run} />
+              )}
+            </TabsContent>
+          )}
           <TabsContent value="task">
             <RunnerQueueRunTask prompt={run.prompt} />
           </TabsContent>
         </Tabs>
-        <RunnerQueueRunProperties run={run} />
+        <RunnerQueueRunProperties run={run} listPath={listPath} />
       </div>
     </article>
   );

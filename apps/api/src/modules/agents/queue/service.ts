@@ -3,18 +3,41 @@ import {
   agentRun,
   agentSchedule,
   aiAgent,
+  hasPermission,
   project,
+  projectMember,
   team,
   issue,
   revision,
   teamMember,
   teamWorkspaceId,
+  user,
 } from '@repo/db';
-import { and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
-import { getTeamAccess, readableProjectIds } from '#shared/access';
+import {
+  and,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  notInArray,
+  or,
+  sql,
+  type AnyColumn,
+} from 'drizzle-orm';
+import {
+  assertPermission,
+  getProjectAccess,
+  getTeamAccess,
+  readableProjectIds,
+  type AuthUser,
+} from '#shared/access';
+import { getProjectTeamId } from '#modules/projects/service';
 import type { WorkspaceGrant } from '#shared/workspace-roles';
 import { runsTeam } from '#modules/teams/service';
-import { iso, likePattern } from '#shared/lib';
+import { projectRefSql } from '#modules/teams/ref';
+import { HttpError, iso, likePattern } from '#shared/lib';
 import { getLimits, getRunLimit } from '#shared/limits';
 import {
   executionState,
@@ -23,6 +46,7 @@ import {
   holdsSlot,
   runDocumentVisibleTo,
 } from '../core/run-queue';
+import { emitRunsCanceled } from '../core/run-finished';
 
 // An agent with an invocation URL is sent its work and only calls back while it has
 // some, so its last contact says nothing about whether the endpoint is up. An internal
@@ -35,15 +59,48 @@ const runnerPresence = sql<'push' | 'online' | 'offline' | 'never' | null>`CASE
   ELSE 'offline' END`;
 
 function queueProjectIds(userId: string, mcpOnly = false, grants?: Map<number, WorkspaceGrant>) {
-  return readableProjectIds(
-    userId,
-    [
-      ['work_items', 'read'],
-      ['ai_agents', 'read'],
-    ],
-    { mcpOnly, includeArchived: true, grants },
-  );
+  return readableProjectIds(userId, [['ai_agents', 'read']], {
+    mcpOnly,
+    includeArchived: true,
+    grants,
+  });
 }
+
+const actorOf = (userId: AnyColumn) => sql<{
+  name: string;
+  image: string | null;
+  agentUsername: string | null;
+} | null>`(
+    SELECT json_build_object('name', u.name, 'image', u.image, 'agentUsername', g.username)
+    FROM "user" u LEFT JOIN ai_agent g ON g.user_id = u.id
+    WHERE u.id = ${userId})`;
+
+// Where the run comes from (see ../core/run-initiator.ts): its initiator, who queued it,
+// and the run an agent queued it in with the first run of that chain. A run the reader
+// may not open is still named, so the chain stays readable; opening it asks again.
+const runOriginColumns = {
+  initiator: sql<{ id: string; name: string; image: string | null } | null>`(
+    SELECT json_build_object('id', u.id, 'name', u.name, 'image', u.image) FROM "user" u
+    WHERE u.id = ${agentRun.requestedByUserId})`,
+  startedBy: actorOf(agentRun.startedByUserId),
+  parentRun: sql<{ id: number; projectRef: string } | null>`(
+    SELECT json_build_object('id', r.id, 'projectRef', coalesce(t.slug, t.id::text) || '.' || p.key)
+    FROM agent_run r JOIN project p ON p.id = r.project_id JOIN team t ON t.id = p.team_id
+    WHERE r.id = ${agentRun.parentRunId})`,
+  rootRun: sql<{
+    id: number;
+    projectRef: string;
+    scheduleName: string | null;
+    initiator: { name: string; image: string | null } | null;
+  } | null>`(
+    SELECT json_build_object('id', r.id, 'projectRef', coalesce(t.slug, t.id::text) || '.' || p.key,
+      'scheduleName', s.name,
+      'initiator', (SELECT json_build_object('name', u.name, 'image', u.image) FROM "user" u
+        WHERE u.id = r.requested_by_user_id))
+    FROM agent_run r JOIN project p ON p.id = r.project_id JOIN team t ON t.id = p.team_id
+      LEFT JOIN agent_schedule s ON s.id = r.schedule_id
+    WHERE r.id = ${agentRun.rootRunId})`,
+};
 
 function runMatches(term: string) {
   const pattern = likePattern(term);
@@ -60,49 +117,152 @@ const runStates = {
   active: sql`${executionState} IN ('queued', 'running')`,
 };
 
-// `projectIds` narrows the queue to those projects, of the ones the caller may read. With
-// `granted` the caller reads every one of them, as whoever runs their team or workspace
-// does, so their permissions in each are not asked; an MCP client keeps to its own still.
-// `state` and `q` narrow the list; the counts of waiting, running and failed runs follow
-// `q` alone, so each filter can show how many runs it holds.
-export async function listRunnerQueue(
+// A run's answer is for whoever runs the project's team or reads its agents.
+export async function assertReadsRuns(projectId: number, user: AuthUser): Promise<void> {
+  if (await runsProjectTeam(await getProjectTeamId(projectId), user.id)) return;
+  await assertPermission(projectId, user, 'ai_agents', 'read');
+}
+
+// Whether the user manages every run in the project, reads the steps of each, what its agent
+// did, and stops it: whoever runs its team, an owner of it, and whoever may create or change
+// its agents.
+export async function managesAllRuns(projectId: number, userId: string): Promise<boolean> {
+  if (await runsProjectTeam(await getProjectTeamId(projectId), userId)) return true;
+  const access = await getProjectAccess(projectId, userId);
+  if (!access) return false;
+  return (
+    access.role === 'owner' ||
+    hasPermission(access.permissions, 'ai_agents', 'edit') ||
+    hasPermission(access.permissions, 'ai_agents', 'create')
+  );
+}
+
+// A run is also managed by its initiator.
+export async function assertManagesRun(
+  run: { projectId: number; initiatorUserId: string | null },
   userId: string,
-  window: { limit: number; offset: number },
-  {
-    mcpOnly = false,
-    runId,
-    projectIds,
-    granted = false,
-    state,
-    q,
-  }: {
-    mcpOnly?: boolean;
-    runId?: number;
-    projectIds?: number[];
-    granted?: boolean;
-    state?: keyof typeof runStates;
-    q?: string;
-  } = {},
+): Promise<void> {
+  if (run.initiatorUserId === userId || (await managesAllRuns(run.projectId, userId))) return;
+  throw new HttpError(
+    403,
+    "Only whoever may create or change the project's agents, or the run's initiator, reads a run's steps and stops it",
+  );
+}
+
+// Stops a run that waits or works. Its row ends as 'canceled' at once, an internal agent at
+// work stops at the poller's next check, and an external agent's runner kills its command
+// on its next heartbeat or events report. False when the run had already ended.
+export async function cancelAgentRun(runId: number, actorUserId: string): Promise<boolean> {
+  const rows = await db
+    .update(agentRun)
+    .set({
+      status: 'canceled',
+      canceledByUserId: actorUserId,
+      executionStartedAt: null,
+      finishedAt: new Date(),
+    })
+    .where(and(eq(agentRun.id, runId), eq(agentRun.status, 'pending')))
+    .returning({ id: agentRun.id });
+  await emitRunsCanceled(
+    rows.map((row) => row.id),
+    actorUserId,
+  );
+  return rows.length > 0;
+}
+
+// The projects of a run list. `projectIds` narrows it to those, of the ones the caller may
+// read. With `granted` the caller reads every one of them, as whoever runs their team or
+// workspace does, so their permissions in each are not asked; an MCP client keeps to its
+// own still.
+interface RunListScope {
+  mcpOnly?: boolean;
+  projectIds?: number[];
+  granted?: boolean;
+}
+
+// The projects of the list and the runs of them it shows: not a run of an issue that moved
+// to another project, nor one from a document private from the caller.
+async function runListScope(
+  userId: string,
+  { mcpOnly = false, projectIds, granted = false }: RunListScope,
 ) {
   const trusted = granted && !mcpOnly ? projectIds : undefined;
   const readable = trusted ?? (await queueProjectIds(userId, mcpOnly));
   const ids = projectIds ? readable.filter((id) => projectIds.includes(id)) : readable;
+  const visible = and(
+    inArray(agentRun.projectId, ids),
+    or(isNull(agentRun.issueId), eq(issue.projectId, agentRun.projectId)),
+    runDocumentVisibleTo(userId),
+  );
+  return { ids, visible };
+}
+
+// Who a list can be filtered by: the people of its projects, and whoever started one of
+// its runs and has left since. Agents are left out, because a run is never started by one.
+export async function listRunInitiators(userId: string, scope: RunListScope) {
+  const { ids, visible } = await runListScope(userId, scope);
+  if (!ids.length) return [];
+  const members = db
+    .select({ id: projectMember.userId })
+    .from(projectMember)
+    .where(inArray(projectMember.projectId, ids));
+  const initiators = db
+    .select({ id: sql<string>`${agentRun.requestedByUserId}` })
+    .from(agentRun)
+    .leftJoin(issue, eq(issue.id, agentRun.issueId))
+    .where(and(visible, isNotNull(agentRun.requestedByUserId)));
+  const agents = db.select({ id: aiAgent.userId }).from(aiAgent);
+  return db
+    .select({ id: user.id, name: user.name, image: user.image })
+    .from(user)
+    .where(
+      and(or(inArray(user.id, members), inArray(user.id, initiators)), notInArray(user.id, agents)),
+    )
+    .orderBy(user.name, user.id);
+}
+
+// The projects of a list, for its filter.
+export async function listRunProjects(userId: string, scope: RunListScope) {
+  const { ids } = await runListScope(userId, scope);
+  if (!ids.length) return [];
+  return db
+    .select({ id: project.id, name: project.name, ref: projectRefSql })
+    .from(project)
+    .innerJoin(team, eq(team.id, project.teamId))
+    .where(inArray(project.id, ids))
+    .orderBy(project.name, project.id);
+}
+
+// `state`, `q`, `initiatorIds` and `onlyProjectIds` narrow the list; the counts of waiting,
+// running and failed runs follow all but `state`, so each state can show how many runs it
+// holds.
+export async function listRunnerQueue(
+  userId: string,
+  window: { limit: number; offset: number },
+  {
+    runId,
+    state,
+    q,
+    initiatorIds,
+    onlyProjectIds,
+    ...scope
+  }: RunListScope & {
+    runId?: number;
+    state?: keyof typeof runStates;
+    q?: string;
+    initiatorIds?: string[];
+    onlyProjectIds?: number[];
+  } = {},
+) {
+  const { ids, visible } = await runListScope(userId, scope);
   if (!ids.length) return { items: [], total: 0, queued: 0, running: 0, failed: 0 };
-  // A run started in a document carries its comment, so it also takes reading documents.
-  const documentIds =
-    trusted ??
-    (await readableProjectIds(userId, [['documents', 'read']], {
-      mcpOnly,
-      includeArchived: true,
-    }));
   const term = q?.trim();
   const scoped = and(
-    inArray(agentRun.projectId, ids),
+    visible,
     runId == null ? undefined : eq(agentRun.id, runId),
-    or(isNull(agentRun.issueId), eq(issue.projectId, agentRun.projectId)),
-    or(isNull(agentRun.documentId), inArray(agentRun.projectId, documentIds)),
-    runDocumentVisibleTo(userId),
     term ? runMatches(term) : undefined,
+    initiatorIds?.length ? inArray(agentRun.requestedByUserId, initiatorIds) : undefined,
+    onlyProjectIds?.length ? inArray(agentRun.projectId, onlyProjectIds) : undefined,
   );
   const stateFilter = state ? runStates[state] : undefined;
   const where = and(scoped, stateFilter);
@@ -110,6 +270,7 @@ export async function listRunnerQueue(
     db
       .select({
         id: agentRun.id,
+        projectId: agentRun.projectId,
         agentId: agentRun.agentId,
         username: aiAgent.username,
         kind: aiAgent.kind,
@@ -124,6 +285,7 @@ export async function listRunnerQueue(
         outputTokens: agentRun.outputTokens,
         createdAt: agentRun.createdAt,
         startedAt: agentRun.startedAt,
+        receivedAt: agentRun.receivedAt,
         finishedAt: agentRun.finishedAt,
         nextAttemptAt: agentRun.nextAttemptAt,
         runnerState: runnerPresence,
@@ -132,6 +294,11 @@ export async function listRunnerQueue(
         issueTitle: issue.title,
         scheduleId: agentRun.scheduleId,
         scheduleName: agentSchedule.name,
+        document: sql<{ id: number; title: string } | null>`(
+          SELECT json_build_object('id', d.id, 'title', d.title) FROM project_document d
+          WHERE d.id = ${agentRun.documentId})`,
+        ...runOriginColumns,
+        canceledBy: actorOf(agentRun.canceledByUserId),
         projectKey: project.key,
         teamRef: sql<string>`coalesce(${team.slug}, ${team.id}::text)`,
       })
@@ -168,14 +335,23 @@ export async function listRunnerQueue(
   ]);
   const total = counted[0]?.total ?? 0;
   const running = counted[0]?.running ?? 0;
+  const allSteps = new Map(
+    await Promise.all(
+      [...new Set(rows.map((row) => row.projectId))].map(
+        async (id) => [id, await managesAllRuns(id, userId)] as const,
+      ),
+    ),
+  );
   return {
-    items: rows.map(({ teamRef, projectKey, ...row }) => ({
+    items: rows.map(({ teamRef, projectKey, projectId, ...row }) => ({
       ...row,
+      canReadSteps: allSteps.get(projectId) === true || row.initiator?.id === userId,
       projectRef: `${teamRef}.${projectKey}`,
       ...contextTokensOf(row),
       createdAt: iso(row.createdAt),
       nextAttemptAt: iso(row.nextAttemptAt),
       startedAt: row.startedAt ? iso(row.startedAt) : null,
+      receivedAt: row.receivedAt ? iso(row.receivedAt) : null,
       finishedAt: row.finishedAt ? iso(row.finishedAt) : null,
     })),
     total,

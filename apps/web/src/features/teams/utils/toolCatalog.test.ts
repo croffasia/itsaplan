@@ -33,10 +33,16 @@ describe('toolIntegrations', () => {
     assert.equal(rest.length, 0);
     assert.equal(github.takesCredential, true);
     assert.equal(github.needsCredential, true);
+    assert.equal(github.locked, false);
     assert.deepEqual(
       github.tools.map((o) => o.name),
       ['List Issues', 'List Discussions', 'Ping', 'Create Issue'],
     );
+  });
+
+  it('marks an integration of another edition locked', () => {
+    const [locked] = toolIntegrations([{ ...catalog[2], locked: true }]);
+    assert.equal(locked.locked, true);
   });
 });
 

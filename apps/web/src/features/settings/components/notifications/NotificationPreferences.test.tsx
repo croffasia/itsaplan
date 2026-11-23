@@ -11,7 +11,8 @@ import type { NotificationPreferencesForm } from '../../hooks/useNotificationPre
 import account from '../../../../../messages/en/account.json';
 import settings from '../../../../../messages/en/settings.json';
 
-// Push is a column next to Email and Telegram only while the instance sends push.
+// Push is a column only while the instance sends push, and Slack only while the project's
+// workspace sends Slack.
 
 const labels = settings.notifications;
 const none: NotificationEventToggles = {
@@ -27,6 +28,7 @@ let root: Root;
 let client: QueryClient;
 let originals: Map<string, PropertyDescriptor | undefined>;
 let pushEvents: NotificationEventToggles;
+let slackEvents: NotificationEventToggles;
 
 function form(): NotificationPreferencesForm {
   return {
@@ -34,6 +36,8 @@ function form(): NotificationPreferencesForm {
     setEmailEvents: () => {},
     telegramEvents: none,
     setTelegramEvents: () => {},
+    slackEvents,
+    setSlackEvents: (events) => (slackEvents = events),
     pushEvents,
     setPushEvents: (events) => (pushEvents = events),
     dirty: false,
@@ -42,14 +46,15 @@ function form(): NotificationPreferencesForm {
   };
 }
 
-async function render(pushEnabled: boolean) {
+async function render(pushEnabled: boolean, slackTeamName: string | null = null) {
   client.setQueryData(qk.pushConfig, { enabled: pushEnabled, publicKey: pushEnabled ? 'k' : null });
+  client.setQueryData(qk.slackAccount('MKT'), { slackTeamName, link: null });
   const { default: NotificationPreferences } = await import('./NotificationPreferences');
   await act(async () =>
     root.render(
       <QueryClientProvider client={client}>
         <NextIntlClientProvider locale="en" messages={{ account, settings }} timeZone="UTC">
-          <NotificationPreferences form={form()} />
+          <NotificationPreferences projectKey="MKT" form={form()} />
         </NextIntlClientProvider>
       </QueryClientProvider>,
     ),
@@ -84,6 +89,7 @@ beforeEach(async () => {
   for (const [key, value] of Object.entries(globals))
     Object.defineProperty(globalThis, key, { configurable: true, value });
   pushEvents = none;
+  slackEvents = none;
   client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
   // No instance bot: the Telegram account section stays out of the way.
   client.setQueryData(qk.telegramAccount, { botUsername: null, link: null });
@@ -110,6 +116,26 @@ describe('NotificationPreferences', () => {
     assert.ok(assigned);
     await act(async () => assigned.click());
     assert.deepEqual(pushEvents, { ...none, assigned: true });
+  });
+
+  it('has a Slack column and the account to connect while the workspace sends Slack', async () => {
+    await render(false, 'Acme');
+
+    const mentioned = box(`${labels.events.mentioned} — ${labels.slack}`);
+    assert.ok(mentioned);
+    await act(async () => mentioned.click());
+    assert.deepEqual(slackEvents, { ...none, mentioned: true });
+    assert.ok(document.body.textContent?.includes(labels.noSlackAccount));
+    assert.ok(
+      document.body.textContent?.includes(labels.slackAccountHint.replace('{workspace}', 'Acme')),
+    );
+  });
+
+  it('has no Slack column while Slack is off for the project', async () => {
+    await render(false);
+
+    assert.equal(box(`${labels.events.mentioned} — ${labels.slack}`), null);
+    assert.ok(!document.body.textContent?.includes(labels.slackAccount));
   });
 
   it('has no Push column while the instance sends no push', async () => {

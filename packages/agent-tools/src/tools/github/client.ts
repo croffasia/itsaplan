@@ -3,9 +3,10 @@ import { z } from 'zod';
 import type { ToolConfig } from '../../types';
 
 // GitHub API client for github.com, GitHub Enterprise Cloud with data residency
-// (GHE.com) and GitHub Enterprise Server. Issues go through the REST API, discussions
-// through GraphQL, which is the only API GitHub offers for them. Failures are turned
-// into messages a person can act on, because a tool error goes straight to the model.
+// (GHE.com) and GitHub Enterprise Server. Issues and pull requests go through the REST
+// API, discussions and review threads through GraphQL, which is the only API GitHub
+// offers for them. Failures are turned into messages a person can act on, because a tool
+// error goes straight to the model.
 
 // The newer 2026-03-10 is unknown to GitHub Enterprise Server before 3.22, which
 // answers it with 410.
@@ -20,6 +21,26 @@ export interface GithubIssue {
   labels?: (string | { name?: string })[];
   pull_request?: unknown;
   [key: string]: unknown;
+}
+
+export interface GithubPull {
+  number?: number;
+  title?: string;
+  body?: string | null;
+  state?: string;
+  draft?: boolean;
+  merged?: boolean;
+  merged_at?: string | null;
+  mergeable?: boolean | null;
+  mergeable_state?: string;
+  html_url?: string;
+  updated_at?: string;
+  user?: { login?: string } | null;
+  head?: { ref?: string; sha?: string };
+  base?: { ref?: string };
+  additions?: number;
+  deletions?: number;
+  changed_files?: number;
 }
 
 interface GithubResponse {
@@ -72,9 +93,13 @@ export const discussionInput = z
   .union([z.number(), z.string()])
   .describe('Discussion number, #number, or the discussion URL.');
 
-const REF_PATHS = { issue: 'issues|pull', discussion: 'discussions' };
+export const pullInput = z
+  .union([z.number(), z.string()])
+  .describe('Pull request number, #number, or the pull request URL.');
 
-// The bare number of an issue or a discussion. A model passes the number bare, with a
+const REF_PATHS = { issue: 'issues|pull', discussion: 'discussions', 'pull request': 'pull' };
+
+// The bare number of an issue, a discussion or a pull request. A model passes the number bare, with a
 // # prefix, or as the URL it was given, which can carry a comment anchor with digits of
 // its own; all three are accepted.
 export function numberRef(raw: unknown, kind: keyof typeof REF_PATHS): number {
@@ -131,7 +156,7 @@ function explain(res: Response, body: GithubResponse): string {
     case 403:
       return `The GitHub token lacks permission for this action${detail}`;
     case 404:
-      return 'Repository or issue not found. Check the owner/repo spelling and that the token can access the repository: GitHub answers 404 for a private repository the token cannot see.';
+      return 'Repository, issue or pull request not found. Check the owner/repo spelling and that the token can access the repository: GitHub answers 404 for a private repository the token cannot see.';
     case 410:
       return `The issue was deleted, or issues are disabled in this repository${detail}`;
     case 422:
@@ -145,7 +170,7 @@ function explain(res: Response, body: GithubResponse): string {
 // call goes through the SSRF guard; redirects are not followed.
 async function send(
   credential: ToolConfig,
-  method: 'GET' | 'POST' | 'PATCH',
+  method: 'GET' | 'POST' | 'PATCH' | 'PUT',
   url: string,
   headers: Record<string, string>,
   body?: Record<string, unknown>,
@@ -187,7 +212,7 @@ async function send(
 // API root, query string included.
 export async function githubRequest<T = Record<string, unknown>>(
   credential: ToolConfig,
-  method: 'GET' | 'POST' | 'PATCH',
+  method: 'GET' | 'POST' | 'PATCH' | 'PUT',
   path: string,
   body?: Record<string, unknown>,
 ): Promise<T> {

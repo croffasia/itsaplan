@@ -1,5 +1,6 @@
-import { db, projectDocument } from '@repo/db';
-import { and, eq, or } from 'drizzle-orm';
+import { db, projectDocument, projectDocumentMember } from '@repo/db';
+import { and, eq } from 'drizzle-orm';
+import { documentVisibleTo } from '#modules/documents/access';
 import { HttpError } from '#shared/lib';
 import { hasPermission } from '#shared/permissions';
 import type { MentionedUsers } from '#shared/mentions';
@@ -40,16 +41,32 @@ export async function mentionReach(
   let agentUserIds = target.place === 'comment' ? users.agentUserIds : [];
   if (target.on === 'document') {
     const [document] = await db
-      .select({ isPrivate: projectDocument.isPrivate })
+      .select({ isPrivate: projectDocument.isPrivate, ownerUserId: projectDocument.ownerUserId })
       .from(projectDocument)
       .where(
         and(eq(projectDocument.id, target.documentId), eq(projectDocument.projectId, projectId)),
       );
-    if (!document || document.isPrivate) return { memberIds: [], agents: [] };
+    if (!document) return { memberIds: [], agents: [] };
+    // A private page reaches only its owner and the members it is shared with.
+    const audience = document.isPrivate
+      ? new Set([
+          document.ownerUserId,
+          ...(
+            await db
+              .select({ userId: projectDocumentMember.userId })
+              .from(projectDocumentMember)
+              .where(eq(projectDocumentMember.documentId, target.documentId))
+          ).map((row) => row.userId),
+        ])
+      : null;
     const contexts = await listMemberContexts(projectId);
     const may = (action: 'read' | 'edit') => (userId: string) => {
       const context = contexts.get(userId);
-      return !!context && hasPermission(context.permissions, 'documents', action);
+      return (
+        !!context &&
+        hasPermission(context.permissions, 'documents', action) &&
+        (audience === null || audience.has(userId))
+      );
     };
     memberIds = memberIds.filter(may('read'));
     agentUserIds = agentUserIds.filter(may('edit'));
@@ -80,7 +97,7 @@ export async function listMentionCandidates(
         and(
           eq(projectDocument.id, target.documentId),
           eq(projectDocument.projectId, projectId),
-          or(eq(projectDocument.isPrivate, false), eq(projectDocument.ownerUserId, viewerId)),
+          documentVisibleTo(viewerId),
         ),
       );
     if (!visible) throw new HttpError(404, 'Document not found');
@@ -118,6 +135,8 @@ export async function queueMentionRuns(input: {
       issueId: null,
       sourceActivityId: null,
       ...input.source,
+      requestedByUserId: input.actorUserId,
+      startedByUserId: input.actorUserId,
       prompt: input.prompt,
       trigger: 'mention',
     });

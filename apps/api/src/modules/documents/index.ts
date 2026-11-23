@@ -6,7 +6,7 @@ import { guards } from '#shared/guards';
 import { noContent } from '#shared/http';
 import { HttpError } from '#shared/lib';
 import { mcpImageTool, mcpTool } from '#mcp/generate';
-import { commonErrors, errors } from '#shared/responses';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { importAttachmentBody, rawAttachmentQuery } from '#modules/attachments/model';
 import {
   attachmentObjectResponse,
@@ -21,6 +21,7 @@ import {
   viewFile,
 } from '#modules/chat-attachments/service';
 import {
+  DocumentAccessCandidateListResponse,
   createDocumentBody,
   deleteDocumentQuery,
   documentAssetFromChatBody,
@@ -28,10 +29,12 @@ import {
   documentAccessBody,
   documentOwnershipBody,
   documentParams,
+  documentPinBody,
   documentRevisionParams,
   DocumentExportResponse,
   DocumentAssetListResponse,
   DocumentAssetResponse,
+  DocumentPinResponse,
   DocumentPreferenceResponse,
   DocumentInitiativeLinkListResponse,
   DocumentIssueLinkListResponse,
@@ -74,6 +77,7 @@ import {
   restoreDocumentRevision,
   setDocumentAccess,
   setDocumentLocked,
+  setDocumentPinned,
   setDocumentPreference,
   storeDocumentAsset,
   transferDocumentOwnership,
@@ -91,6 +95,7 @@ import {
   removeDocumentInitiativeLink,
   removeDocumentIssueLink,
 } from './links';
+import { listDocumentAccessCandidates } from './access';
 
 function documentAssetDto(
   project: { teamId: number; key: string },
@@ -144,6 +149,21 @@ export const documentRoutes = new Elysia({
         description:
           'List the document tree you can see, without content. q searches the Markdown.',
         ...mcpTool('list_documents'),
+      },
+    },
+  )
+  .get(
+    '/projects/:projectKey/documents/access-candidates',
+    async ({ project }) => listDocumentAccessCandidates(project.id),
+    {
+      permission: ['documents', 'edit'],
+      feature: 'documents',
+      response: { 200: DocumentAccessCandidateListResponse, ...accessErrors },
+      detail: {
+        summary: 'List who a document can be shared with',
+        description:
+          'The project members a private document can be shared with. `canAccess` false ' +
+          'means their role cannot read Docs at all, so sharing with them is rejected.',
       },
     },
   )
@@ -661,7 +681,9 @@ export const documentRoutes = new Elysia({
       detail: {
         summary: 'Create a document',
         description:
-          'Create a public or private Markdown document, optionally under a parent document.',
+          'Create a public or private Markdown document, optionally under a parent document. ' +
+          'A private document created under a private parent starts shared with the people ' +
+          'who see that parent.',
         ...mcpTool('create_document'),
       },
     },
@@ -697,12 +719,16 @@ export const documentRoutes = new Elysia({
     '/projects/:projectKey/documents/:documentId/access',
     async ({ project, user, params, body }) => {
       const userId = requireUser(user).id;
+      if (!body.isPrivate && body.memberIds !== undefined) {
+        throw new HttpError(400, 'Only a private document can be shared with chosen members');
+      }
       const document = await setDocumentAccess(
         project.id,
         params.documentId,
         userId,
         body.version,
         body.isPrivate,
+        body.memberIds,
       );
       if (!document) throw new HttpError(404, 'Document not found');
       return document;
@@ -716,8 +742,9 @@ export const documentRoutes = new Elysia({
       detail: {
         summary: 'Change document access',
         description:
-          'Make a document public to the project or private to you. Only its owner can do this. ' +
-          'A project owner must first claim an orphaned ' +
+          'Make a document public to the project or private to you. A private document can be ' +
+          'shared with chosen members: send their user ids in memberIds. Only its owner can do ' +
+          'this. A project owner must first claim an orphaned ' +
           'public document with transfer_document_ownership.',
         ...mcpTool('set_document_access'),
       },
@@ -913,6 +940,33 @@ export const documentRoutes = new Elysia({
         summary: 'Update document preferences',
         description: 'Add a document to your favorites or remove it.',
         ...mcpTool('set_document_preference'),
+      },
+    },
+  )
+  .patch(
+    '/projects/:projectKey/documents/:documentId/pin',
+    async ({ project, user, params, body }) => {
+      const pin = await setDocumentPinned(
+        project.id,
+        params.documentId,
+        requireUser(user).id,
+        body.isPinned,
+      );
+      if (!pin) throw new HttpError(404, 'Document not found');
+      return pin;
+    },
+    {
+      permission: ['documents', 'edit'],
+      feature: 'documents',
+      params: documentParams,
+      body: documentPinBody,
+      response: { 200: DocumentPinResponse, ...commonErrors, ...errors(409) },
+      detail: {
+        summary: 'Pin or unpin a document',
+        description:
+          'Show a public document first among its siblings for everyone in the project, or ' +
+          'stop doing so.',
+        ...mcpTool('set_document_pin'),
       },
     },
   )

@@ -410,6 +410,12 @@
     "botTokenHint": "Le token est vérifié auprès de Telegram à l'enregistrement : un token erroné est donc refusé ici, plutôt que d'échouer silencieusement plus tard.",
     "resolvedHint": "Déduit du token. C'est le bot que les utilisateurs verront lors de la connexion."
   },
+  "slack": {
+    "saved": "Paramètres Slack enregistrés",
+    "app": "App Slack",
+    "appConfigured": "Activée, elle permet aux membres de connecter leur compte Slack dans les paramètres de notification d'un projet.",
+    "appMissing": "Ajoutez le token du bot, le Client ID et le secret client pour activer l'app."
+  },
   "email": {
     "saved": "Fournisseur d'e-mail enregistré",
     "provider": "Fournisseur d'e-mail",

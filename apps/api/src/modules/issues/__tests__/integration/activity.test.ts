@@ -104,6 +104,30 @@ describe('issue activity', () => {
       );
     });
 
+    it("keeps the filed title and description on the 'created' entry after an edit", async () => {
+      const { asOwner, owner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId, { description: 'As filed' })).data!;
+      await asOwner.issues({ issueId: issue.id }).patch({ description: 'Edited' });
+
+      const history = await feed(asOwner, issue.id, { filter: 'history', order: 'asc' });
+      const created = history.data!.items[0]!;
+      expect(created.action).toBe('created');
+      expect(created.actorUserId).toBe(owner.userId);
+      expect(created.payload).toEqual({
+        title: { value: 'Task' },
+        description: { value: 'As filed' },
+      });
+    });
+
+    it("records an empty description on the 'created' entry when none is given", async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const history = await feed(asOwner, issue.id, { filter: 'history' });
+      const created = history.data!.items.find((i) => i.action === 'created')!;
+      expect(created.payload.description).toEqual({ value: '' });
+    });
+
     it('returns items newest first', async () => {
       const { asOwner, columnId } = await setupProject();
       const issue = (await createIssue(asOwner, columnId)).data!;

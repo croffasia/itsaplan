@@ -21,6 +21,7 @@ describe('agent run timeout', () => {
   let previousSettings: Awaited<ReturnType<typeof getAgentSettings>>;
   let releaseModel: (() => void) | undefined;
   let processing: Promise<void> | undefined;
+  let asOwner: ReturnType<typeof authedApi>;
 
   beforeEach(async () => {
     await resetDb();
@@ -45,7 +46,7 @@ describe('agent run timeout', () => {
 
   async function queueRun(runTimeoutSec: number | null = null) {
     const owner = await signUpTestUser({ name: 'Owner' });
-    const asOwner = authedApi(owner.cookie);
+    asOwner = authedApi(owner.cookie);
     await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
     const view = await asOwner.projects({ projectKey: 'MKT' }).get();
     const credentialId = await createCredential(asOwner, 'MKT', {
@@ -176,6 +177,32 @@ describe('agent run timeout', () => {
       attempts: 1,
       lastError: 'Timed out after 1s',
     });
+  }, 10_000);
+
+  it('stops a run canceled while the agent works', async () => {
+    await endpoint.stop(true);
+    let modelCalled!: () => void;
+    const working = new Promise<void>((resolve) => {
+      modelCalled = resolve;
+    });
+    endpoint = Bun.serve({
+      port: 0,
+      fetch() {
+        modelCalled();
+        return new Promise<Response>(() => {});
+      },
+    });
+    const issueId = await queueRun();
+
+    processing = processAgentRuns();
+    await working;
+    const runId = (await runOf(issueId)).id;
+    expect((await asOwner['agent-runs']({ runId }).cancel.post()).status).toBe(200);
+    await processing;
+
+    expect(await runOf(issueId)).toMatchObject({ status: 'canceled', lastError: null });
+    const feed = (await asOwner.issues({ issueId }).feed.get({ query: {} })).data!.items;
+    expect(feed.filter((item) => item.action === 'agent_finished')).toHaveLength(0);
   }, 10_000);
 
   it('does not start a run after admission exhausts the claim execution budget', async () => {

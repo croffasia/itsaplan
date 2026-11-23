@@ -4,7 +4,7 @@ import { act } from 'react';
 import type { Root } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { JSDOM } from 'jsdom';
-import { useOtherProjectIssueSearch } from './issues.service';
+import { useOtherProjectIssueSearch, useUpdateIssue } from './issues.service';
 import { qk } from './queryKeys';
 import type { CrossProjectIssueHit } from '@/lib/api/endpoints/issues';
 
@@ -107,6 +107,37 @@ afterEach(async () => {
     if (descriptor) Object.defineProperty(globalThis, name, descriptor);
     else Reflect.deleteProperty(globalThis, name);
   }
+});
+
+it('sends the confirmed effect when applying a saved issue action', async () => {
+  let update!: ReturnType<typeof useUpdateIssue>['mutateAsync'];
+  function MutationHarness() {
+    update = useUpdateIssue(null).mutateAsync;
+    return null;
+  }
+  let request: Request | undefined;
+  Object.defineProperty(globalThis, 'fetch', {
+    configurable: true,
+    value: async (input: string | URL, init: RequestInit) => {
+      request = new Request(input, init);
+      return Response.json({});
+    },
+  });
+  await act(async () => {
+    root.render(
+      <QueryClientProvider client={client}>
+        <MutationHarness />
+      </QueryClientProvider>,
+    );
+  });
+  const patch = { priority: 'high', assigneeUserId: null };
+  await act(async () => {
+    await update({ id: 3, actionId: 9, patch });
+  });
+  assert.ok(request);
+  assert.equal(request.method, 'POST');
+  assert.equal(new URL(request.url).pathname, '/issues/3/actions/9');
+  assert.deepEqual(await request.json(), { effect: patch });
 });
 
 it('waits for the current project to load before searching the other projects', async () => {

@@ -6,7 +6,7 @@ import type { IntegrationMeta } from '@/lib/api/endpoints/integrations';
 export function integrationOf(
   catalog: IntegrationMeta[],
   key: string,
-): Pick<IntegrationMeta, 'label' | 'kind' | 'icon'> &
+): Pick<IntegrationMeta, 'label' | 'kind' | 'icon' | 'locked'> &
   Partial<Pick<IntegrationMeta, 'credentialSchema'>> {
   return catalog.find((i) => i.key === key) ?? { label: key, kind: 'tool' };
 }

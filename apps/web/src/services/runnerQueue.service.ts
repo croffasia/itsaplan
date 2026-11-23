@@ -1,11 +1,20 @@
 import { getExternalRunTrace } from '@/lib/api/endpoints/agents';
-import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { nextPageParam } from '@/lib/api/core/paging';
 import {
+  cancelAgentRun,
   getInternalRunTrace,
+  getRunInitiatorOptions,
   getRunnerQueue,
+  getRunProjectOptions,
   getRunsInFlight,
-  type RunnerQueueState,
+  type RunnerQueueFilter,
 } from '@/lib/api/endpoints/runnerQueue';
 import { qk } from './queryKeys';
 
@@ -20,10 +29,23 @@ export function useRunsInFlightQuery(api: string) {
   });
 }
 
-export function useRunnerQueueQuery(
-  api: string,
-  filter: { state?: RunnerQueueState; q?: string } = {},
-) {
+// Under the runner queue key too, so a new initiator shows with the run that brings them.
+export function useRunInitiatorOptionsQuery(api: string) {
+  return useQuery({
+    queryKey: [...qk.runnerQueue, 'initiators', api],
+    queryFn: () => getRunInitiatorOptions(api),
+  });
+}
+
+export function useRunProjectOptionsQuery(api: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...qk.runnerQueue, 'projects', api],
+    queryFn: () => getRunProjectOptions(api),
+    enabled,
+  });
+}
+
+export function useRunnerQueueQuery(api: string, filter: RunnerQueueFilter = {}) {
   return useInfiniteQuery({
     queryKey: [...qk.runnerQueue, 'list', api, filter],
     queryFn: ({ pageParam }) =>
@@ -59,5 +81,13 @@ export function useInternalRunTraceQuery(runId: number, attempt?: number, enable
     queryFn: () => getInternalRunTrace(runId, attempt),
     placeholderData: keepPreviousData,
     enabled,
+  });
+}
+
+export function useCancelAgentRun() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: cancelAgentRun,
+    onSettled: () => qc.invalidateQueries({ queryKey: qk.runnerQueue }),
   });
 }

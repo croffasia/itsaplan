@@ -1,3 +1,4 @@
+import { isAccountDeactivated } from '@repo/auth';
 import {
   db,
   project,
@@ -5,12 +6,14 @@ import {
   teamMember,
   teamRole,
   projectColumn,
+  projectDocument,
+  projectDocumentMember,
   user,
   aiAgent,
   userPreference,
 } from '@repo/db';
-import { and, desc, eq, ilike, isNotNull, isNull, notExists, or, sql } from 'drizzle-orm';
-import { iso } from '#shared/lib';
+import { and, desc, eq, ilike, inArray, isNotNull, isNull, notExists, or, sql } from 'drizzle-orm';
+import { HttpError, iso } from '#shared/lib';
 import { DEFAULT_TIMEZONE } from '#modules/user-preferences/service';
 import {
   defaultMemberPermissions,
@@ -101,6 +104,45 @@ export async function getMembership(projectId: number, userId: string): Promise<
     .from(projectMember)
     .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, userId)));
   return rows[0] ? (rows[0].role as MemberRole) : null;
+}
+
+function assignmentEligibility(member?: { active: boolean | null }) {
+  if (!member) return 'not_member';
+  return isAccountDeactivated(member) ? 'inactive' : 'assignable';
+}
+
+export async function getAssignmentEligibility(projectId: number, userId: string) {
+  const [member] = await db
+    .select({ active: user.active })
+    .from(projectMember)
+    .innerJoin(user, eq(user.id, projectMember.userId))
+    .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, userId)));
+  return assignmentEligibility(member);
+}
+
+export function assertAssignmentEligibility(
+  eligibility: Awaited<ReturnType<typeof getAssignmentEligibility>>,
+  unchanged = false,
+  field = 'Assignee',
+): void {
+  if (eligibility === 'not_member') throw new HttpError(400, field + ' must be a project member');
+  if (eligibility === 'inactive' && !unchanged)
+    throw new HttpError(400, field + ' must be an active account');
+}
+
+export async function assertAssignableMember(
+  projectId: number,
+  userId?: string | null,
+  currentUserId?: string | null,
+  field?: string,
+): Promise<void> {
+  if (userId) {
+    assertAssignmentEligibility(
+      await getAssignmentEligibility(projectId, userId),
+      userId === currentUserId,
+      field,
+    );
+  }
 }
 
 export function toMemberContext(role: MemberRole, rolePermissions: unknown): MemberContext {
@@ -209,6 +251,8 @@ export interface AssigneeCandidate {
   // always reaches as a notification.
   respondsToMention: boolean | null;
   canReadWorkItems: boolean;
+  // Existing assignments and filters still resolve candidates that cannot take new work.
+  canAssign: boolean;
 }
 
 export async function listAssigneeCandidates(projectId: number): Promise<AssigneeCandidate[]> {
@@ -220,6 +264,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
         email: user.email,
         username: user.username,
         image: user.image,
+        active: user.active,
         role: projectMember.role,
         permissions: teamRole.permissions,
         description: projectMember.description,
@@ -239,6 +284,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
         email: user.email,
         username: aiAgent.username,
         image: user.image,
+        active: user.active,
         agentKind: aiAgent.kind,
         ownerUserId: aiAgent.ownerUserId,
         runnerScope: aiAgent.runnerScope,
@@ -261,6 +307,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
       email: r.email,
       username: r.username,
       image: r.image,
+      canAssign: assignmentEligibility(r) === 'assignable',
       kind: 'member',
       agentKind: null,
       role: r.role as MemberRole,
@@ -277,6 +324,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
     email: r.email,
     username: r.username,
     image: r.image,
+    canAssign: assignmentEligibility(r) === 'assignable',
     kind: 'agent',
     agentKind: r.agentKind as 'external' | 'internal',
     role: null,
@@ -502,11 +550,58 @@ export async function setMembership(
   return updated.length > 0;
 }
 
+// Someone a private note board or Docs page can be shared with. `canAccess` is whether
+// their role lets them read that section at all: without it a grant changes nothing,
+// since every route of the section still checks the permission matrix.
+export interface AccessCandidate {
+  userId: string;
+  name: string;
+  image: string | null;
+  kind: 'member' | 'agent';
+  canAccess: boolean;
+}
+
+export async function listAccessCandidates(
+  projectId: number,
+  resource: 'documents' | 'note_boards',
+): Promise<AccessCandidate[]> {
+  const [candidates, contexts] = await Promise.all([
+    listAssigneeCandidates(projectId),
+    listMemberContexts(projectId),
+  ]);
+  return candidates.map((candidate) => {
+    const permissions = contexts.get(candidate.userId)?.permissions;
+    return {
+      userId: candidate.userId,
+      name: candidate.name,
+      image: candidate.image,
+      kind: candidate.kind,
+      canAccess: permissions ? hasPermission(permissions, resource, 'read') : false,
+    };
+  });
+}
+
 export async function removeMember(projectId: number, userId: string): Promise<void> {
   await db.transaction(async (tx) => {
     await tx
       .delete(projectMember)
       .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, userId)));
+    // The private Docs pages shared with them here: a later return must not bring that
+    // access back.
+    await tx
+      .delete(projectDocumentMember)
+      .where(
+        and(
+          eq(projectDocumentMember.userId, userId),
+          inArray(
+            projectDocumentMember.documentId,
+            tx
+              .select({ id: projectDocument.id })
+              .from(projectDocument)
+              .where(eq(projectDocument.projectId, projectId)),
+          ),
+        ),
+      );
     // A column cannot keep assigning issues to someone who is no longer a member:
     // the same assignment sent as a patch would be refused.
     await tx

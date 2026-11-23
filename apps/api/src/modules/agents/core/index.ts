@@ -65,6 +65,8 @@ import { attachmentPreamble, chartPreamble } from './prompt/framing';
 import type { SessionUser } from '#shared/auth-context';
 import { listAgentRuns } from './run-queue';
 import { getAgentTrace, listAgentTraces } from './runtime/traces';
+import { visibleRun } from '../runner/run-events';
+import { assertManagesRun } from '../queue/service';
 import {
   analyticsProjects,
   getAgentAnalytics,
@@ -358,7 +360,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       const projectIds = runsTeam(membership.role)
         ? undefined
         : await memberProjectIds(membership.teamId, membership.userId);
-      return listAgentRuns(params.agentId, {
+      return listAgentRuns(params.agentId, membership.userId, {
         before: query.before,
         limit: query.limit,
         projectIds,
@@ -415,6 +417,12 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       const trace = await getAgentTrace(params.agentId, params.traceId, membership.userId);
       if (!trace) throw new HttpError(404, 'Trace not found');
       await assertTraceScope(membership, trace.trace.projectId);
+      // The trace of a queued run holds its steps, read as the run's own trace routes read them.
+      if (trace.trace.runId != null) {
+        const run = await visibleRun(trace.trace.runId, membership.userId);
+        if (!run) throw new HttpError(404, 'Trace not found');
+        await assertManagesRun(run, membership.userId);
+      }
       return trace;
     },
     {
@@ -425,7 +433,9 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
         summary: 'Read an agent trace',
         description:
           'Every step of one trace, oldest first: the run, the model calls it made, and the ' +
-          'tools it used, each with what it was given and what it returned.',
+          'tools it used, each with what it was given and what it returned. The trace of a ' +
+          'queued run also takes creating or changing agents in its project, unless the caller ' +
+          "runs the team, owns the project or is the run's initiator.",
       },
     },
   )

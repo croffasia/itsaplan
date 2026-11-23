@@ -1,17 +1,17 @@
 import { z } from 'zod';
 import type { CustomToolEntry } from '../../types';
-import { giteaRequest, repoPath, type GiteaIssue } from './client';
+import { giteaRequest, repoInput, repoPath, type GiteaIssue } from './client';
 
 // Lists a repository's issues. Pull requests share the numbering with issues in
 // Gitea, so they are filtered out server-side with type=issues.
 export const giteaListIssues: CustomToolEntry = {
   key: 'gitea_list_issues',
+  group: 'Issues',
   label: 'Gitea List Issues',
   description:
     'List issues in a Gitea repository. Returns each issue with its number, which the other Gitea tools take. Pull requests are not included.',
   inputSchema: z.object({
-    owner: z.string().min(1).describe('Repository owner (user or organization).'),
-    repo: z.string().min(1).describe('Repository name.'),
+    ...repoInput,
     state: z.enum(['open', 'closed', 'all']).optional().describe('Filter by state (default open).'),
     limit: z
       .number()

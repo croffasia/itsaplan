@@ -1,9 +1,9 @@
 import { Elysia, t } from 'elysia';
 import { mcpImageTool, mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
-import { guards, entityGuard } from '#shared/guards';
+import { guards, entityGuard, requiresPermission } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
-import { requireUser } from '#shared/access';
+import { readableProjectIds, requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { paginate } from '#shared/pagination';
@@ -32,17 +32,20 @@ import {
   InitiativeOptionListResponse,
   InitiativePageResponse,
   InitiativeResponse,
+  InitiativeSearchHitListResponse,
   createInitiativeBody,
   initiativeFeedQuery,
   initiativeOptionsQuery,
   initiativeParams,
   listInitiativesQuery,
+  searchInitiativesQuery,
   updateInitiativeBody,
 } from './model';
 import {
   listInitiatives,
   listFavoriteInitiatives,
   listInitiativeOptions,
+  searchInitiativesInProjects,
   initiativeStatusCounts,
   getInitiative,
   getInitiativeProjectId,
@@ -197,6 +200,34 @@ export const initiativeRoutes = new Elysia({
         summary: 'Create an initiative',
         description: 'Create an initiative in a project.',
         ...mcpTool('create_initiative'),
+      },
+    },
+  )
+
+  // The command palette's search. This route comes before /initiatives/:initiativeId so
+  // the static "search" segment wins over the numeric param.
+  .get(
+    '/initiatives/search',
+    async ({ user, query }) => {
+      // An archived project stays readable, so its own initiatives are found once it is
+      // named; the search over every project leaves it out, as the issue search does.
+      const ids = await readableProjectIds(requireUser(user).id, [['initiatives', 'read']], {
+        includeArchived: query.projectId != null,
+      });
+      return searchInitiativesInProjects(
+        ids.filter((id) => query.projectId == null || id === query.projectId),
+        query.q,
+      );
+    },
+    {
+      query: searchInitiativesQuery,
+      response: { 200: InitiativeSearchHitListResponse, ...errors(400, 401) },
+      detail: {
+        summary: 'Search initiatives in all projects',
+        description:
+          'Search the initiatives of every project you can read them in by title, the 20 most ' +
+          'recently updated first. projectId narrows the search to one project.',
+        ...requiresPermission(['initiatives', 'read']),
       },
     },
   )

@@ -7,6 +7,7 @@ import { issuePath } from '@/utils/paths';
 import type { Command, CommandPage, CommandSection } from '@/utils/commands';
 import { substringFilter } from '@/utils/commandFilter';
 import CommandPaletteDocuments from './CommandPaletteDocuments';
+import CommandPaletteInitiatives from './CommandPaletteInitiatives';
 import CommandPaletteIssues from '@/components/layout/CommandPaletteIssues';
 import CommandPaletteOtherIssues from './CommandPaletteOtherIssues';
 import CommandPaletteScope from './CommandPaletteScope';
@@ -27,9 +28,10 @@ import {
 // second level (status, priority, assignee, labels); Backspace on an empty input
 // goes back. While the user is typing, an "Issues" group lists issues of the current
 // project the server matches by identifier, title, description, number or custom
-// fields (archived issues included), and the last groups list the matches in every
-// other project the user can read, one group per project. While a project is open, a
-// switch narrows the search to it.
+// fields (archived issues included), then an "Initiatives" group lists the initiatives
+// matched by title, and the last groups list the issues matched in every other project
+// the user can read, one group per project. While a project is open, a switch narrows
+// the search to it.
 export default function CommandPalette({
   open,
   onOpenChange,
@@ -151,6 +153,13 @@ export default function CommandPalette({
             }}
           />
         )}
+        <CommandPaletteInitiatives
+          query={debounced}
+          projectId={allProjects ? null : currentProjectId}
+          currentProjectId={currentProjectId}
+          enabled={open && !page && searching && (allProjects || hasProject)}
+          onClose={() => onOpenChange(false)}
+        />
         {!page && searching && (others.hits.length > 0 || others.fetching) && (
           <CommandPaletteOtherIssues
             hits={others.hits}

@@ -5,13 +5,17 @@ import {
   initiativeLabel,
   issue,
   label,
+  project,
   projectColumn,
+  team,
   user,
 } from '@repo/db';
 import { and, asc, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
 import { labelNames, rowSide } from '#modules/issues/activity';
 import { assertAssignableMember } from '#modules/members/service';
-import { HttpError, iso, num } from '#shared/lib';
+import { projectRefSql } from '#modules/teams/ref';
+import { HttpError, iso, likePattern, num } from '#shared/lib';
+import { getLimits } from '#shared/limits';
 import { computeHealth, type Health } from './health';
 import { recordActivity, logInitiativeUpdate, type InitiativeSnapshot } from './activity';
 
@@ -300,6 +304,57 @@ export async function listInitiativeOptions(
     )
     .orderBy(...order)
     .limit(50);
+}
+
+export interface InitiativeSearchHit {
+  id: number;
+  title: string;
+  projectId: number;
+  projectRef: string;
+  projectKey: string;
+}
+
+// The given projects that have initiatives on. A workspace whose limits block the
+// section reads as off whatever the project stored, as in mapProject.
+async function projectsWithInitiatives(projectIds: number[]): Promise<number[]> {
+  if (!projectIds.length) return [];
+  const rows = await db
+    .select({ id: project.id, workspaceId: team.workspaceId })
+    .from(project)
+    .innerJoin(team, eq(team.id, project.teamId))
+    .where(and(inArray(project.id, projectIds), eq(project.initiativesEnabled, true)));
+  const blocked = new Set<number>();
+  for (const workspaceId of new Set(rows.map((row) => row.workspaceId))) {
+    const { blockedFeatures } = await getLimits(workspaceId);
+    if (blockedFeatures.includes('initiatives')) blocked.add(workspaceId);
+  }
+  return rows.filter((row) => !blocked.has(row.workspaceId)).map((row) => row.id);
+}
+
+// Title search over the given projects that have initiatives on, the 20 most recently
+// updated first.
+export async function searchInitiativesInProjects(
+  projectIds: number[],
+  query: string,
+): Promise<InitiativeSearchHit[]> {
+  const term = query.trim();
+  if (!term) return [];
+  const searched = await projectsWithInitiatives(projectIds);
+  if (!searched.length) return [];
+  return db
+    .select({
+      id: initiative.id,
+      title: initiative.title,
+      projectId: initiative.projectId,
+      projectRef: projectRefSql,
+      projectKey: project.key,
+    })
+    .from(initiative)
+    .innerJoin(project, eq(project.id, initiative.projectId))
+    .innerJoin(team, eq(team.id, project.teamId))
+    .where(and(inArray(initiative.projectId, searched), ilike(initiative.title, likePattern(term))))
+    .orderBy(desc(initiative.updatedAt), desc(initiative.id))
+    .limit(20);
 }
 
 export interface InitiativeStatusCounts {

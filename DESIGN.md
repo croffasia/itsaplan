@@ -61,6 +61,11 @@ a divider shows on every surface.
   entity series (status, type) the entity's own color is used.
 - `priority-low|medium|high|urgent` — fixed hues for the priority field.
 - `sidebar-*` — the app sidebar surface (slightly off the page background).
+- `rail` — a secondary column beside the page: the Docs page tree and the page side panel.
+  Mixed from `background` and `sidebar`, so the app sidebar, the rail and the page step in
+  lightness and no column needs a border. Derived, so every palette gets it.
+- `tile-shadow` / `tile-shadow-hover` — the soft elevation of a card that sits on the page
+  (a pinned page on the Docs home), in place of a border.
 
 ## Scale & shape
 
@@ -112,3 +117,10 @@ column (comfortable side padding, no narrow centered measure), widgets laid out 
 controls) over the body, separated from neighbors by space and a hairline divider under
 the header, not by a card. Full-bleed widgets (stat strip, pulse) break the two-column
 rhythm so the page is not one repeated shape.
+
+## Docs section (rail, page, side panel)
+
+Docs render as three columns: the app sidebar, the Docs rail with the page tree, and the page.
+The side panel (details or comments) opens as a fourth column on the `rail` surface. Columns are
+told apart by surface lightness, not by borders. On narrow screens the rail and the side panel
+become drawers. A reader sees values in place of the controls they may not use.

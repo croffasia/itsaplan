@@ -4,10 +4,13 @@ import type { SelectionBookmark } from '@tiptap/pm/state';
 import { ListPlus, MessageSquarePlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { usePermissions } from '@/hooks/usePermissions';
-import { Button } from '@/components/ui/button';
 import DocumentCreateIssueDialog from './DocumentCreateIssueDialog';
 
 export type DocumentSelection = { from: number; to: number; quote: string; version?: number };
+
+const ACTION =
+  'inline-flex h-7.5 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium transition-colors hover:bg-accent [&_svg]:size-3.5 [&_svg]:text-muted-foreground';
+
 export default function DocumentSelectionActions({
   editor,
   projectKey,
@@ -50,30 +53,31 @@ export default function DocumentSelectionActions({
   if (!selection || !editor.isEditable) return null;
   return (
     <>
+      <span className="mx-0.5 my-1 w-px self-stretch bg-border" aria-hidden />
       <div
-        className="ms-1 flex items-center gap-1 border-s ps-1 print:hidden"
-        role="toolbar"
+        className="flex items-center gap-0.5 print:hidden"
+        role="group"
         aria-label={t('selectionActions')}
       >
-        <Button
-          size="sm"
-          variant="ghost"
+        <button
+          type="button"
+          className={ACTION}
           onMouseDown={(event) => event.preventDefault()}
           onClick={() => onComment(selection)}
         >
-          <MessageSquarePlus className="size-4" />
+          <MessageSquarePlus />
           {t('comments.add')}
-        </Button>
+        </button>
         {can('work_items', 'create') && can('work_items', 'edit') && (
-          <Button
-            size="sm"
-            variant="ghost"
+          <button
+            type="button"
+            className={ACTION}
             onMouseDown={(event) => event.preventDefault()}
             onClick={() => setCreating(true)}
           >
-            <ListPlus className="size-4" />
+            <ListPlus />
             {t('workItem.create')}
-          </Button>
+          </button>
         )}
       </div>
       {creating && (

@@ -12,10 +12,13 @@ function subscribe(listener: () => void) {
     window.removeEventListener('storage', listener);
   };
 }
-function read(key: string | null) {
+type StorageKind = 'session' | 'local';
+const storageOf = (kind: StorageKind) =>
+  kind === 'local' ? window.localStorage : window.sessionStorage;
+function read(key: string | null, kind: StorageKind) {
   if (!key || typeof window === 'undefined') return '';
   try {
-    return window.sessionStorage.getItem(key) ?? memory.get(key) ?? '';
+    return storageOf(kind).getItem(key) ?? memory.get(key) ?? '';
   } catch {
     return memory.get(key) ?? '';
   }
@@ -51,43 +54,53 @@ export function useDocumentNavigation<T extends object>(
   projectKey: string | null,
   section: string,
   fallback: T,
+  storage: StorageKind = 'session',
 ) {
   const { data: session } = useSession();
   const key =
     session?.user.id && projectKey ? `docs-nav:${session.user.id}:${projectKey}:${section}` : null;
-  const getSnapshot = useCallback(() => read(key), [key]);
+  const getSnapshot = useCallback(() => read(key, storage), [key, storage]);
   const raw = useSyncExternalStore(subscribe, getSnapshot, empty);
   const value = useMemo(() => parse(raw, fallback), [raw, fallback]);
   const setValue = useCallback(
     (next: T | ((previous: T) => T)) => {
       if (!key) return;
-      const resolved = typeof next === 'function' ? next(parse(read(key), fallback)) : next;
+      const resolved =
+        typeof next === 'function' ? next(parse(read(key, storage), fallback)) : next;
       const serialized = JSON.stringify(resolved);
       memory.set(key, serialized);
       try {
-        window.sessionStorage.setItem(key, serialized);
+        storageOf(storage).setItem(key, serialized);
       } catch {
         /* Session memory remains available. */
       }
       window.dispatchEvent(new Event(CHANGE_EVENT));
     },
-    [key, fallback],
+    [key, fallback, storage],
   );
   return [value, setValue] as const;
 }
 
-const recentDefault: { ids: number[] } = { ids: [] };
+// Visit times line up with ids by index; a visit without a time reads as 0. Kept in
+// localStorage so visits from earlier days stay.
+const recentDefault: { ids: number[]; times: number[] } = { ids: [], times: [] };
+export interface DocumentVisit {
+  id: number;
+  at: number;
+}
+const visitsOf = ({ ids, times }: typeof recentDefault): DocumentVisit[] =>
+  ids.map((id, index) => ({ id, at: times[index] ?? 0 }));
 export function useRecentDocuments(projectKey: string | null) {
-  const [recent, update] = useDocumentNavigation(projectKey, 'recent', recentDefault);
+  const [recent, update] = useDocumentNavigation(projectKey, 'recent', recentDefault, 'local');
   const visit = useCallback(
     (id: number) =>
-      update((previous) => ({
-        ids: [
-          id,
-          ...(Array.isArray(previous.ids) ? previous.ids : []).filter((item) => item !== id),
-        ].slice(0, 12),
-      })),
+      update((previous) => {
+        const visits = visitsOf(previous).filter((item) => item.id !== id);
+        const next = [{ id, at: Date.now() }, ...visits].slice(0, 12);
+        return { ids: next.map((item) => item.id), times: next.map((item) => item.at) };
+      }),
     [update],
   );
-  return { ids: Array.isArray(recent.ids) ? recent.ids : [], visit };
+  const visits = useMemo(() => visitsOf(recent).filter((item) => item.at > 0), [recent]);
+  return { ids: recent.ids, visits, visit };
 }

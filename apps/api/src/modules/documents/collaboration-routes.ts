@@ -2,10 +2,15 @@ import { Elysia, t } from 'elysia';
 import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
 import { requireUser } from '#shared/access';
-import { commonErrors, errors } from '#shared/responses';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { mcpTool } from '#mcp/generate';
 import { openDocumentSession, getDocumentSteps, saveDocumentSteps } from './collaboration';
-import { addDocumentComment, listDocumentComments, updateDocumentComment } from './comments';
+import {
+  addDocumentComment,
+  listDocumentComments,
+  listDocumentThreadsForUser,
+  updateDocumentComment,
+} from './comments';
 import {
   collaborationQuery,
   collaborationSaveBody,
@@ -17,6 +22,7 @@ import {
   documentCommentBody,
   documentCommentUpdateBody,
   documentCommentResponse,
+  documentThreadForYouResponse,
 } from './model';
 
 export const documentCollaborationRoutes = new Elysia({
@@ -25,6 +31,21 @@ export const documentCollaborationRoutes = new Elysia({
 })
   .use(authContext)
   .use(guards)
+  .get(
+    '/projects/:projectKey/documents/for-you',
+    ({ project, user }) => listDocumentThreadsForUser(project.id, requireUser(user).id),
+    {
+      permission: ['documents', 'read'],
+      feature: 'documents',
+      response: { 200: t.Array(documentThreadForYouResponse), ...accessErrors },
+      detail: {
+        summary: 'List comment threads that wait for you',
+        description:
+          'Open threads on live pages you can open where the last message is someone ' +
+          "else's and the thread mentions you or you wrote in it. Newest first.",
+      },
+    },
+  )
   .post(
     '/projects/:projectKey/documents/:documentId/session',
     ({ project, params, user }) =>

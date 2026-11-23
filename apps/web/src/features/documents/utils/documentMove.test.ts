@@ -33,25 +33,6 @@ describe('projectedDocumentMove', () => {
     );
   });
 
-  it('refuses a drop between a pinned page and one that is not', () => {
-    const pinned = { ...page(1, null, 2), isPinned: true };
-    const other = { ...page(2, null, 1), isPinned: false };
-    assert.equal(
-      projectedDocumentMove({
-        source: other,
-        target: pinned,
-        deltaX: 0,
-        ordered: [pinned, other],
-        byParent: new Map([[null, [pinned, other]]]),
-        byId: new Map([
-          [1, pinned],
-          [2, other],
-        ]),
-      }),
-      null,
-    );
-  });
-
   it('refuses to move a page below one of its descendants', () => {
     const parent = page(1, null, 0);
     const child = page(2, 1, 0);
@@ -260,40 +241,6 @@ describe('adjacentDocumentMove', () => {
     assert.equal(adjacentDocumentMove({ source: first, direction: -1, ...tree }), null);
     assert.equal(adjacentDocumentMove({ source: fourth, direction: 1, ...tree }), null);
     assert.equal(adjacentDocumentMove({ source: child, direction: 1, ...tree }), null);
-  });
-
-  it('steps among the pinned pages and among the others, never across the two', () => {
-    const pin = (id: number, position: number, isPinned: boolean) => ({
-      ...page(id, null, position),
-      isPinned,
-    });
-    const plainA = pin(1, 1024, false);
-    const pinnedA = pin(2, 2048, true);
-    const plainB = pin(3, 3072, false);
-    const pinnedB = pin(4, 4096, true);
-    const all = [pinnedA, pinnedB, plainA, plainB];
-    const list = {
-      ordered: all,
-      byParent: new Map<number | null, ProjectDocumentSummary[]>([[null, all]]),
-      byId: new Map(all.map((item) => [item.id, item])),
-    };
-
-    assert.equal(adjacentDocumentMove({ source: pinnedA, direction: -1, ...list }), null);
-    assert.equal(adjacentDocumentMove({ source: pinnedB, direction: 1, ...list }), null);
-    assert.equal(adjacentDocumentMove({ source: plainA, direction: -1, ...list }), null);
-    assert.equal(adjacentDocumentMove({ source: plainB, direction: 1, ...list }), null);
-    assert.deepEqual(adjacentDocumentMove({ source: pinnedA, direction: 1, ...list }), {
-      parentId: null,
-      position: 4097,
-      previousSiblingId: 4,
-      nextSiblingId: null,
-    });
-    assert.deepEqual(adjacentDocumentMove({ source: plainB, direction: -1, ...list }), {
-      parentId: null,
-      position: 1023,
-      previousSiblingId: null,
-      nextSiblingId: 1,
-    });
   });
 });
 

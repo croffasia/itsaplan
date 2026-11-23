@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { Link2Off } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { getSharedDocument, getSharedDocumentIssue } from '@/lib/api/endpoints/share';
 import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -11,8 +12,8 @@ import PublicShareFrame from '@/components/common/page/PublicShareFrame';
 import PublicShareHeader from '@/components/common/page/PublicShareHeader';
 import PublicIssueOverlay from '@/features/issue/components/public/PublicIssueOverlay';
 import DocumentLoadingState from './components/DocumentLoadingState';
-import DocumentShareArticle from './components/DocumentShareArticle';
-import DocumentShareTree from './components/DocumentShareTree';
+import DocumentShareArticle from './components/public/DocumentShareArticle';
+import DocumentShareTree from './components/public/DocumentShareTree';
 import { parsePageParam, sharedIssueHref, sharedPageHref } from './utils/sharedLinks';
 
 // The public read-only page for a shared document (/share/document/:token). Fetches the
@@ -56,7 +57,13 @@ export default function PublicDocumentPage({ token }: { token: string }) {
   if (!shared) {
     return (
       <PublicShareFrame>
-        <p className="px-6 py-10 text-sm text-muted-foreground">{t('shareUnavailable')}</p>
+        <div className="flex max-w-140 flex-col items-start gap-2 px-[clamp(1rem,3vw,2.5rem)] py-18">
+          <span className="mb-2 grid size-9 place-items-center rounded-lg bg-muted">
+            <Link2Off className="size-4 text-muted-foreground" />
+          </span>
+          <h1 className="text-xl font-semibold tracking-[-0.015em]">{t('shareLinkUnavailable')}</h1>
+          <p className="text-[15px] text-muted-foreground">{t('shareUnavailable')}</p>
+        </div>
       </PublicShareFrame>
     );
   }
@@ -67,22 +74,30 @@ export default function PublicDocumentPage({ token }: { token: string }) {
 
   return (
     <PublicShareFrame>
-      <PublicShareHeader name={shared.project.name} ticker={shared.project.key} />
-      <div className="flex flex-col md:flex-row">
-        {shared.pages.length > 1 && (
-          <DocumentShareTree pages={shared.pages} currentId={shared.document.id} onOpen={open} />
-        )}
-        <IssueRefsProvider
-          refs={issueRefs.issues.size > 0 ? [`share.${shared.project.key}`] : []}
-          shared={issueRefs}
-        >
-          <DocumentShareArticle
-            token={token}
-            document={shared.document}
-            pages={shared.pages}
-            onOpen={open}
-          />
-        </IssueRefsProvider>
+      <div className="flex h-dvh flex-col pt-[env(safe-area-inset-top)]">
+        <PublicShareHeader
+          name={shared.project.name}
+          ticker={shared.project.key}
+          className="h-13 border-b-0 bg-rail py-0"
+        />
+        <div className="flex min-h-0 flex-1 max-[860px]:flex-col">
+          {shared.pages.length > 1 && (
+            <DocumentShareTree pages={shared.pages} currentId={shared.document.id} onOpen={open} />
+          )}
+          <main key={shared.document.id} className="min-w-0 flex-1 overflow-y-auto">
+            <IssueRefsProvider
+              refs={issueRefs.issues.size > 0 ? [`share.${shared.project.key}`] : []}
+              shared={issueRefs}
+            >
+              <DocumentShareArticle
+                token={token}
+                shared={shared}
+                onOpen={open}
+                onOpenIssue={(id) => router.push(issueRefs.href(id))}
+              />
+            </IssueRefsProvider>
+          </main>
+        </div>
       </div>
       <PublicIssueOverlay
         queryKey={['share', 'document', token, 'issue']}

@@ -1387,6 +1387,13 @@
       "when": 1795454110776,
       "tag": "0197_git_issue_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 198,
+      "version": "7",
+      "when": 1795471492288,
+      "tag": "0198_document_comment_resolver",
+      "breakpoints": true
     }
   ]
 }

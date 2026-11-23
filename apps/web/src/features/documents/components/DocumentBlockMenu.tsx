@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import { ArrowDown, ArrowUp, Copy, GripVertical, Link2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { copyText } from '@/utils/clipboard';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,45 +14,77 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { changeDocumentBlock, documentBlockRange } from '../utils/documentBlocks';
 
+const HANDLE = 24;
+
+// The handle beside the block under the pointer, or under the cursor while typing. A
+// heading carries its section: the blocks below it up to the next heading of the same
+// or a higher level.
 export default function DocumentBlockMenu({ editor }: { editor: Editor }) {
   const t = useTranslations('documents.blocks');
   const [position, setPosition] = useState(1);
-  const [top, setTop] = useState(0);
+  const [top, setTop] = useState<number | null>(null);
+  const [open, setOpen] = useState(false);
+  const openRef = useRef(open);
+  openRef.current = open;
+  const positionRef = useRef(position);
+  positionRef.current = position;
+
   useEffect(() => {
-    const update = () => {
-      const position = editor.state.selection.from;
-      setPosition(position);
-      const range = documentBlockRange(editor, position);
+    const container = editor.view.dom.closest('[data-document-editor]');
+    const place = (at: number) => {
+      const range = documentBlockRange(editor, at);
       const node = range && editor.view.nodeDOM(range.from);
-      const container = editor.view.dom.closest('[data-document-editor]');
-      if (node instanceof HTMLElement && container)
-        setTop(node.getBoundingClientRect().top - container.getBoundingClientRect().top);
+      if (!(node instanceof HTMLElement) || !container) return;
+      const line = Number.parseFloat(getComputedStyle(node).lineHeight) || HANDLE;
+      setPosition(at);
+      setTop(
+        node.getBoundingClientRect().top -
+          container.getBoundingClientRect().top +
+          Math.max(0, (line - HANDLE) / 2),
+      );
     };
-    editor.on('selectionUpdate', update);
-    const resize = new ResizeObserver(update);
+    const hover = (event: MouseEvent) => {
+      if (openRef.current) return;
+      const hit = editor.view.posAtCoords({ left: event.clientX, top: event.clientY });
+      if (hit) place(hit.inside >= 0 ? hit.inside : hit.pos);
+    };
+    const selection = () => {
+      if (!openRef.current) place(editor.state.selection.from);
+    };
+    const resize = new ResizeObserver(() => place(positionRef.current));
+    editor.view.dom.addEventListener('mousemove', hover);
+    editor.on('selectionUpdate', selection);
     resize.observe(editor.view.dom);
-    update();
     return () => {
-      editor.off('selectionUpdate', update);
+      editor.view.dom.removeEventListener('mousemove', hover);
+      editor.off('selectionUpdate', selection);
       resize.disconnect();
     };
   }, [editor]);
+
+  if (top === null) return null;
   const range = documentBlockRange(editor, position);
   return (
-    <div className="absolute -start-7 z-20 print:hidden" style={{ top }}>
-      <DropdownMenu>
+    // As wide as the gap to the text, so the pointer stays over the editor on its way here.
+    <div
+      className={cn(
+        'absolute -start-10 z-20 w-10 opacity-0 transition-opacity group-focus-within/doc:opacity-100 group-hover/doc:opacity-100 max-[860px]:-start-7 max-[860px]:w-7 print:hidden',
+        open && 'opacity-100',
+      )}
+      style={{ top }}
+    >
+      <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            size="icon-sm"
             aria-label={t('actions')}
-            className="size-7 text-muted-foreground"
+            title={t('actions')}
+            className="grid size-6 place-items-center rounded-sm text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring aria-expanded:bg-accent aria-expanded:text-foreground"
           >
-            <GripVertical className="size-4" />
-          </Button>
+            <GripVertical className="size-3.5" />
+          </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
+        <DropdownMenuContent align="start" className="min-w-50">
           {(['up', 'down', 'duplicate'] as const).map((action) => {
             const Icon = action === 'up' ? ArrowUp : action === 'down' ? ArrowDown : Copy;
             return (
@@ -69,21 +102,20 @@ export default function DocumentBlockMenu({ editor }: { editor: Editor }) {
               </DropdownMenuItem>
             );
           })}
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             disabled={!range?.node.attrs.blockId}
             onSelect={() => {
               const url = new URL(window.location.href);
               url.hash = `block-${range?.node.attrs.blockId}`;
-              void navigator.clipboard
-                .writeText(url.toString())
-                .then(() => toast.success(t('linkCopied')))
-                .catch(() => toast.error(t('copyFailed')));
+              void copyText(url.toString()).then((copied) =>
+                copied ? toast.success(t('linkCopied')) : toast.error(t('copyFailed')),
+              );
             }}
           >
             <Link2 />
             {t('copyLink')}
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
             onSelect={() => changeDocumentBlock(editor, position, 'delete')}

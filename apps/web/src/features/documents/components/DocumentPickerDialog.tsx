@@ -17,12 +17,16 @@ import { useDocumentsQuery } from '../services/documents.service';
 
 export default function DocumentPickerDialog({
   projectKey,
-  linkedDocumentIds,
+  excludeIds,
+  title,
+  emptyText,
   onPick,
   onClose,
 }: {
   projectKey: string;
-  linkedDocumentIds: Set<number>;
+  excludeIds: Set<number>;
+  title?: string;
+  emptyText?: string;
   onPick: (document: ProjectDocumentSummary) => void;
   onClose: () => void;
 }) {
@@ -30,14 +34,14 @@ export default function DocumentPickerDialog({
   const [query, setQuery] = useState('');
   const debounced = useDebouncedValue(query.trim(), 250);
   const documents = useDocumentsQuery(projectKey, debounced);
-  const choices = (documents.data ?? []).filter((document) => !linkedDocumentIds.has(document.id));
+  const choices = (documents.data ?? []).filter((document) => !excludeIds.has(document.id));
 
   return (
     <CommandDialog
       open
       onOpenChange={onClose}
       shouldFilter={false}
-      title={t('linkWorkItem.selectDocument')}
+      title={title ?? t('linkWorkItem.selectDocument')}
       description={t('linkWorkItem.searchDocuments')}
     >
       <CommandInput
@@ -47,7 +51,9 @@ export default function DocumentPickerDialog({
       />
       <CommandList>
         <CommandEmpty>
-          {documents.isLoading ? t('linkWorkItem.loading') : t('linkWorkItem.noDocuments')}
+          {documents.isLoading
+            ? t('linkWorkItem.loading')
+            : (emptyText ?? t('linkWorkItem.noDocuments'))}
         </CommandEmpty>
         <CommandGroup>
           {choices.map((document) => (

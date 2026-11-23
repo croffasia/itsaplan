@@ -84,9 +84,6 @@ export function projectedDocumentMove({
     const sourceIndex = ordered.findIndex((document) => document.id === source.id);
     const targetIndex = ordered.findIndex((document) => document.id === target.id);
     if (sourceIndex < 0 || targetIndex < 0) return null;
-    // Pinned pages stay ahead of the others whatever their position, so a drop across that
-    // line would not land where it was dropped.
-    if (source.isPinned !== target.isPinned) return null;
     placeAfterAnchor = sourceIndex < targetIndex;
   }
 
@@ -110,8 +107,7 @@ export function projectedDocumentMove({
   };
 }
 
-// The sibling a step up or down passes, from siblings in list order. Pinned pages stay
-// ahead of the others, so a page has no step across that line.
+// The sibling a step up or down passes, from siblings in list order.
 export function documentStepTarget(
   source: ProjectDocumentSummary,
   direction: -1 | 1,
@@ -119,7 +115,7 @@ export function documentStepTarget(
 ): ProjectDocumentSummary | null {
   const index = siblings.findIndex((document) => document.id === source.id);
   const target = index < 0 ? undefined : siblings[index + direction];
-  return target && target.isPinned === source.isPinned ? target : null;
+  return target ?? null;
 }
 
 // One step up or down among the siblings of a page: the same move as a drop on

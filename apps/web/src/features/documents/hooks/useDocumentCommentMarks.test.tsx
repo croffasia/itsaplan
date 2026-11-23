@@ -41,6 +41,7 @@ const comment: DocumentComment = {
   to: 6,
   orphaned: false,
   resolvedAt: null,
+  resolvedByName: null,
   createdAt: '2026-09-01T00:00:00.000Z',
   updatedAt: '2026-09-01T00:00:00.000Z',
 };
@@ -205,6 +206,21 @@ describe('useDocumentCommentMarks', () => {
 
     assert.equal(marks().length, 1);
     assert.equal(marks()[0].textContent, 'Hello');
+  });
+
+  it('highlights the active thread and keeps it when the marks are drawn again', async () => {
+    await open(false);
+    hooks.highlightCommentMark(editor, comment.id);
+    assert.equal(editor.view.dom.querySelectorAll('.document-comment-mark-active').length, 1);
+
+    await act(async () => {
+      await queryClient.invalidateQueries();
+    });
+    assert.equal(editor.view.dom.querySelectorAll('.document-comment-mark-active').length, 1);
+
+    hooks.highlightCommentMark(editor, null);
+    assert.equal(editor.view.dom.querySelectorAll('.document-comment-mark-active').length, 0);
+    assert.equal(marks().length, 1);
   });
 
   it('marks the threads for a reader, and opens the comments from a mark', async () => {

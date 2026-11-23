@@ -337,6 +337,21 @@ export const documentCommentResponse = t.Object({
   to: t.Nullable(t.Number()),
   orphaned: t.Boolean(),
   resolvedAt: t.Nullable(t.String()),
+  resolvedByName: t.Nullable(t.String({ description: 'Who resolved the thread.' })),
   createdAt: t.String(),
   updatedAt: t.String(),
+});
+export const documentThreadForYouResponse = t.Object({
+  threadId: t.String({ description: "The thread's first comment." }),
+  documentId: t.Number(),
+  documentTitle: t.String(),
+  documentIcon: t.Nullable(t.String()),
+  authorId: t.Nullable(t.String()),
+  authorName: t.Nullable(t.String()),
+  authorImage: t.Nullable(t.String()),
+  body: t.String({ description: 'The last message of the thread.' }),
+  kind: t.Union([t.Literal('mention'), t.Literal('reply')], {
+    description: '`mention` when the last message mentions you, `reply` otherwise.',
+  }),
+  createdAt: t.String(),
 });

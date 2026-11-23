@@ -46,6 +46,8 @@ export const documentsPath = (ref: string) => `${projectPath(ref)}/docs`;
 export const documentPath = (ref: string, documentId: number) =>
   `${documentsPath(ref)}/${documentId}`;
 
+export const documentsArchivePath = (ref: string) => `${documentsPath(ref)}/archive`;
+
 export const settingsPath = (ref: string, section: string) =>
   `${projectPath(ref)}/settings/${section}`;
 

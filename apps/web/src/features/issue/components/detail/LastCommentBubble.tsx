@@ -6,7 +6,7 @@ import { useRelativeTime } from '@/context/relativeTimeContext';
 import { cn } from '@/lib/utils';
 import { useLastComment } from '../../hooks/useLastComment';
 import type { ActivityFeedView } from '../../hooks/useActivityFeedView';
-import { commentPreview } from '../../utils/commentPreview';
+import { commentPreview } from '@/utils/commentPreview';
 
 const SHOW_MS = 5000;
 

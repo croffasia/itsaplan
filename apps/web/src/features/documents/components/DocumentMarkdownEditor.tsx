@@ -18,10 +18,11 @@ import { refreshDecorations } from '@/components/common/editor/refreshDecoration
 import { useIssueRefs } from '@/context/issueRefs';
 import { createLinkKeyboardHandlers } from '@/components/common/editor/linkKeyboardHandlers';
 import { openLinkOnModifierClick } from '@/components/common/editor/modifierClickLink';
-import { ResizableImage } from '@/components/common/editor/tiptap-image';
 import { pasteMarkdown } from '@/components/common/editor/pasteMarkdown';
 import { useDocumentAnchor } from '../hooks/useDocumentAnchor';
 import { DocumentBlockId } from '../extensions/documentBlockId';
+import { DocumentImageUpload, trackImageUpload } from '../extensions/documentImageUpload';
+import { DocumentResizableImage } from '../extensions/documentResizableImage';
 import DocumentBlockMenu from './DocumentBlockMenu';
 import DocumentSelectionActions, { type DocumentSelection } from './DocumentSelectionActions';
 import { SlashCommand } from '@/lib/tiptap-slash-command';
@@ -32,6 +33,9 @@ import { useSession } from '@/lib/auth-client';
 const lowlight = createLowlight(common);
 type EditorLabels = {
   placeholder: string;
+  // Shown on the empty line the cursor is on, once the page has text.
+  linePlaceholder?: string;
+  uploadingImage?: string;
   codeBlockLabel: string;
   tableLabel: string;
   blocks?: {
@@ -55,10 +59,17 @@ export function documentEditorExtensions(labels: EditorLabels, mentions?: Mentio
     ...documentExtensions({
       blockId: DocumentBlockId,
       codeBlock: CodeBlockLowlight.configure({ lowlight }),
-      image: ResizableImage,
+      image: DocumentResizableImage,
       mention: mentions ? Mention.configure(mentions) : Mention,
     }),
-    Placeholder.configure({ placeholder: labels.placeholder }),
+    Placeholder.configure({
+      placeholder: ({ editor, node }) => {
+        if (node.type.name === 'heading')
+          return labels.blocks?.headings[(node.attrs.level as number) - 1] ?? '';
+        return editor.isEmpty ? labels.placeholder : (labels.linePlaceholder ?? '');
+      },
+    }),
+    DocumentImageUpload.configure({ label: labels.uploadingImage ?? '' }),
     SlashCommand.configure({
       codeBlockLabel: labels.codeBlockLabel,
       tableLabel: labels.tableLabel,
@@ -86,7 +97,6 @@ export default function DocumentMarkdownEditor({
   onReady,
   onChange,
   onBlur,
-  onPickImage,
   onUploadImage,
 }: {
   projectKey?: string;
@@ -101,13 +111,13 @@ export default function DocumentMarkdownEditor({
   onReady: (editor: Editor | null) => void;
   onChange: (value: EditorValue) => void;
   onBlur: (value: EditorValue) => void;
-  onPickImage?: () => void;
   onUploadImage?: (file: File) => Promise<{ url: string; filename: string }>;
 }) {
   const t = useTranslations('documents.toolbar');
   const router = useRouter();
   const issueRefs = useIssueRefs();
   const editorRef = useRef<Editor | null>(null);
+  const imageInput = useRef<HTMLInputElement>(null);
   const linkKeyboardHandlers = useMemo(createLinkKeyboardHandlers, []);
   const editableRef = useRef(editable);
   editableRef.current = editable;
@@ -138,6 +148,8 @@ export default function DocumentMarkdownEditor({
     extensions: documentEditorExtensions(
       {
         placeholder,
+        linePlaceholder: t('linePlaceholder'),
+        uploadingImage: t('uploadingImage'),
         codeBlockLabel: t('codeBlock'),
         tableLabel: t('table'),
         blocks: {
@@ -156,7 +168,9 @@ export default function DocumentMarkdownEditor({
           quote: t('quote'),
           divider: t('divider'),
         },
-        image: onPickImage ? { label: t('uploadImage'), onPick: onPickImage } : undefined,
+        // The editor is built once, often before the session takes input, so the item is
+        // always there and the input it opens renders only while the page is editable.
+        image: { label: t('image'), onPick: () => imageInput.current?.click() },
       },
       {
         items: () => mentionCandidatesRef.current,
@@ -254,7 +268,7 @@ export default function DocumentMarkdownEditor({
   if (!editor) return null;
 
   return (
-    <div className={`relative ${className ?? ''}`} data-document-editor="">
+    <div className={`document-prose group/doc relative ${className ?? ''}`} data-document-editor="">
       {editable && <DocumentBlockMenu editor={editor} />}
       {editable && (
         <EditorSelectionMenu editor={editor}>
@@ -270,7 +284,27 @@ export default function DocumentMarkdownEditor({
       )}
       {editable && <EditorTableMenu editor={editor} />}
       <EditorContent editor={editor} className="flex min-h-full flex-col" />
-      <EditorLinkPreview editor={editor} source={defaultJson ? '' : defaultValue} />
+      <EditorLinkPreview
+        editor={editor}
+        source={defaultJson ? '' : defaultValue}
+        editLink={editable}
+      />
+      {editable && onUploadImage && (
+        <input
+          ref={imageInput}
+          className="sr-only"
+          type="file"
+          accept="image/*"
+          tabIndex={-1}
+          aria-label={t('uploadImage')}
+          onChange={(event) => {
+            const file = firstImageFile(event.target.files);
+            event.currentTarget.value = '';
+            if (file)
+              void uploadAndInsertImage(editor, file, onUploadImage, editor.state.selection.from);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -311,12 +345,15 @@ export async function uploadAndInsertImage(
   position: number,
   isEditable: () => boolean = () => editor.isEditable,
 ): Promise<boolean> {
+  const settle = trackImageUpload(editor, position);
   try {
     const asset = await upload(file);
+    const tracked = settle();
     if (editor.isDestroyed || !editor.isEditable || !isEditable()) return false;
     const source = safeDocumentImageSource(asset.url);
     if (!source) return false;
-    const safePosition = Math.max(0, Math.min(position, editor.state.doc.content.size));
+    const target = tracked ?? position;
+    const safePosition = Math.max(0, Math.min(target, editor.state.doc.content.size));
     return editor
       .chain()
       .focus()
@@ -326,6 +363,7 @@ export async function uploadAndInsertImage(
       })
       .run();
   } catch {
+    settle();
     return false;
   }
 }

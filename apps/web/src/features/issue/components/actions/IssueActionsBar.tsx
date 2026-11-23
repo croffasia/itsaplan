@@ -295,7 +295,7 @@ export default function IssueActionsBar({
         onOpenChange={setSharing}
         title={t('shareIssue')}
         token={issue.shareToken}
-        options={[{ name: 'extended', checked: issue.shareExtended }]}
+        extended={issue.shareExtended}
         expiresAt={issue.shareExpiresAt}
         enable={share}
         disable={disableShare}

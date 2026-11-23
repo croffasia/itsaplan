@@ -52,6 +52,8 @@ export default function PopoverPick({
   contentClassName = 'w-56',
   modal = false,
   readOnly = false,
+  open: openProp,
+  onOpenChange,
 }: {
   trigger: ReactNode;
   inputPlaceholder: string;
@@ -70,8 +72,13 @@ export default function PopoverPick({
   // When true the pill is shown as-is with no popover — a read-only display of the
   // current value (public shared pages).
   readOnly?: boolean;
+  // Set both to open the list from outside, for a host that opens it as a step of a flow.
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [ownOpen, setOwnOpen] = useState(false);
+  const open = openProp ?? ownOpen;
+  const setOpen = onOpenChange ?? setOwnOpen;
 
   if (readOnly) return <ReadOnlyPill>{trigger}</ReadOnlyPill>;
 

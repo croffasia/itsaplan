@@ -7,16 +7,20 @@ import { useLinkPreviewQuery } from './useLinkPreviewQuery';
 import EditorLinkPreviewCard from './EditorLinkPreviewCard';
 import LinkPreviewDialog from './LinkPreviewDialog';
 import { useEditorLinkPresentation } from './useEditorLinkPresentation';
+import { editLink as startLinkEdit } from './editLink';
 import styles from './EditorLinkPreview.module.css';
 
 export default function EditorLinkPreview({
   editor,
   source = '',
   compact = true,
+  editLink = false,
 }: {
   editor: Editor;
   source?: string;
   compact?: boolean;
+  // Offers "Edit link", which opens the link field of the editor's EditorSelectionMenu.
+  editLink?: boolean;
 }) {
   const t = useTranslations('common.editor');
   const { dialog, closeDialog } = useEditorLinkPresentation(editor, source, compact);
@@ -46,7 +50,7 @@ export default function EditorLinkPreview({
         sideOffset={10}
         collisionPadding={12}
         aria-label={t('linkPreview')}
-        className={`${styles.preview} w-80 max-w-[calc(100vw-24px)] rounded-2xl border-0 bg-popover p-1 text-popover-foreground`}
+        className={`${styles.preview} w-75 max-w-[calc(100vw-24px)] rounded-lg border-0 bg-popover p-0 text-popover-foreground`}
         onOpenAutoFocus={(event) => event.preventDefault()}
         onCloseAutoFocus={(event) => event.preventDefault()}
         onPointerEnter={keepOpen}
@@ -56,7 +60,19 @@ export default function EditorLinkPreview({
           if (!event.currentTarget.contains(event.relatedTarget)) leave();
         }}
       >
-        <EditorLinkPreviewCard url={anchor.href} preview={data} loading={isPending} />
+        <EditorLinkPreviewCard
+          url={anchor.href}
+          preview={data}
+          loading={isPending}
+          onEdit={
+            editLink && editor.isEditable
+              ? () => {
+                  close();
+                  startLinkEdit(editor, anchor);
+                }
+              : undefined
+          }
+        />
       </PopoverContent>
     </Popover>
   );

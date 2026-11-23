@@ -2,13 +2,13 @@
 
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Notification } from '@/lib/api/endpoints/notifications';
-import DocumentView from '@/features/documents/components/DocumentView';
+import DocumentView from '@/features/documents/components/page/DocumentView';
 import IssueDetailContent from '@/features/issue/components/detail/IssueDetailContent';
 import InboxDetailHeader from './InboxDetailHeader';
 
 // The issue or the document of the selected notification. On a narrow screen it takes
 // the whole inbox and returns to the list through the back button; on a wide one it is
-// the right pane next to the list. A mention in a document comment opens its comments.
+// the right pane next to the list. A document comment notification opens its thread.
 export default function InboxDetail({
   project,
   notification,
@@ -36,7 +36,7 @@ export default function InboxDetail({
           <DocumentView
             projectKey={projectKey}
             documentId={notification.documentId}
-            defaultCommentsOpen={notification.documentCommentId != null}
+            commentId={notification.documentCommentId}
             onDeleted={onDeleted}
           />
         </div>

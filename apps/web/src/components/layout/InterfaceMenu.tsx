@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import DisplaySettingsRow from '@/components/layout/DisplaySettingsRow';
 import DisplaySettingsSelect from '@/components/layout/DisplaySettingsSelect';
 import { useColorThemeChoice } from '@/hooks/useColorThemeChoice';
-import { LOCALES, LOCALE_FLAGS, LOCALE_LABELS, type Locale } from '@/i18n/locales';
+import { LOCALES, LOCALE_LABELS, type Locale } from '@/i18n/locales';
 import type { ThemePreference } from '@/lib/api/endpoints/userPreferences';
 import { useAccountPreferences, useUpdateAccountPreferences } from '@/services/preferences.service';
 import { accountPath } from '@/utils/accountSections';
@@ -50,10 +50,7 @@ export default function InterfaceMenu() {
           <DisplaySettingsSelect
             value={locale}
             onChange={(value) => update.mutate({ locale: value as Locale })}
-            options={LOCALES.map((value) => ({
-              value,
-              label: `${LOCALE_FLAGS[value]} ${LOCALE_LABELS[value]}`,
-            }))}
+            options={LOCALES.map((value) => ({ value, label: LOCALE_LABELS[value] }))}
           />
         </DisplaySettingsRow>
         {prefs.palette !== 'custom' && (

@@ -162,6 +162,27 @@ describe('repository provider events', () => {
     });
   });
 
+  it('reads a Gitea or Forgejo push to a pull request as an update', () => {
+    const headers = { 'x-gitea-event': 'pull_request', 'x-github-event': 'pull_request' };
+    const provider = detectProvider(headers)!;
+    expect(
+      provider.parse(
+        {
+          action: 'synchronized',
+          pull_request: {
+            number: 7,
+            title: 'Some change',
+            html_url: 'https://git.example/acme/site/pulls/7',
+            base: { ref: 'main' },
+            head: { ref: 'feature/MKT-42', sha: 'def456' },
+          },
+          repository: { full_name: 'acme/site', default_branch: 'main' },
+        },
+        headers,
+      ),
+    ).toMatchObject({ kind: 'pull_request', action: 'updated', number: 7, headSha: 'def456' });
+  });
+
   it('links a Forgejo branch under /src/branch/', () => {
     const headers = { 'x-forgejo-event': 'create', 'x-gitea-event': 'create' };
     const provider = detectProvider(headers)!;

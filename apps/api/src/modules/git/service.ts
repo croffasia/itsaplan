@@ -33,7 +33,7 @@ interface StoredGitSettings {
   // Written only by recordGitEvent.
   repositories?: GitRepository[];
   // Ring buffer of the last processed delivery ids (newest last, capped at
-  // RECENT_DELIVERIES_CAP). Written only by claimGitDelivery.
+  // RECENT_DELIVERIES_CAP). Written only by claimGitDelivery and releaseGitDelivery.
   recentDeliveries?: string[];
 }
 
@@ -164,13 +164,14 @@ export async function findProjectByGitWebhookId(
 // enough; a replay also requires the project's secret.
 const RECENT_DELIVERIES_CAP = 50;
 
+const recentDeliveryIds = sql`COALESCE(${projectSetting.value}->'recentDeliveries', '[]'::jsonb)`;
+
 // Claims a delivery id for processing by appending it to the recentDeliveries
 // ring buffer. Returns false when the id is already in the buffer (a replay or a
 // redelivery), in which case the caller must not act on it again. Check and
 // append are one UPDATE, so two concurrent claims of the same id cannot both
 // win.
 export async function claimGitDelivery(projectId: number, deliveryId: string): Promise<boolean> {
-  const recent = sql`COALESCE(${projectSetting.value}->'recentDeliveries', '[]'::jsonb)`;
   const claimed = await db
     .update(projectSetting)
     .set({
@@ -178,7 +179,7 @@ export async function claimGitDelivery(projectId: number, deliveryId: string): P
         SELECT COALESCE(jsonb_agg(elem ORDER BY ord), '[]'::jsonb)
         FROM (
           SELECT elem, ord
-          FROM jsonb_array_elements(${recent} || to_jsonb(${deliveryId}::text)) WITH ORDINALITY AS t(elem, ord)
+          FROM jsonb_array_elements(${recentDeliveryIds} || to_jsonb(${deliveryId}::text)) WITH ORDINALITY AS t(elem, ord)
           ORDER BY ord DESC
           LIMIT ${RECENT_DELIVERIES_CAP}
         ) latest
@@ -189,11 +190,23 @@ export async function claimGitDelivery(projectId: number, deliveryId: string): P
       and(
         eq(projectSetting.projectId, projectId),
         eq(projectSetting.key, GIT_SETTING_KEY),
-        sql`NOT (${recent} ? ${deliveryId}::text)`,
+        sql`NOT (${recentDeliveryIds} ? ${deliveryId}::text)`,
       ),
     )
     .returning({ projectId: projectSetting.projectId });
   return claimed.length > 0;
+}
+
+// Removes a claimed delivery id after its processing failed, so the provider's
+// redelivery of it is processed instead of being answered as a duplicate.
+export async function releaseGitDelivery(projectId: number, deliveryId: string): Promise<void> {
+  await db
+    .update(projectSetting)
+    .set({
+      value: sql`jsonb_set(${projectSetting.value}, '{recentDeliveries}', ${recentDeliveryIds} - ${deliveryId}::text)`,
+      updatedAt: sql`now()`,
+    })
+    .where(and(eq(projectSetting.projectId, projectId), eq(projectSetting.key, GIT_SETTING_KEY)));
 }
 
 // How many repositories the list keeps. A project delivering from more than this

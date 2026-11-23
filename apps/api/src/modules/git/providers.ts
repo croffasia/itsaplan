@@ -179,8 +179,12 @@ function parseGithubPullRequest(payload: unknown): PullRequestEvent | null {
   const merged = action === 'closed' && pr.merged === true;
   const closed = action === 'closed' && !merged;
   const opened = action === 'opened' || action === 'reopened' || action === 'ready_for_review';
+  // GitHub names a push to the pull request 'synchronize', Gitea and Forgejo 'synchronized'.
   const updated =
-    action === 'edited' || action === 'synchronize' || action === 'converted_to_draft';
+    action === 'edited' ||
+    action === 'synchronize' ||
+    action === 'synchronized' ||
+    action === 'converted_to_draft';
   if (!opened && !updated && !merged && !closed) return null;
   return {
     kind: 'pull_request',

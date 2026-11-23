@@ -869,6 +869,22 @@ describe('Repository webhook', () => {
     expect((await issueState(asOwner, issue.id)).columnId).toBe(columns[0].id);
   });
 
+  it('processes a redelivery of a delivery that failed', async () => {
+    const { asOwner, webhookId, secret, columns } = await setupProject();
+    const issue = (await createIssue(asOwner, columns[0].id)).data!;
+    // A number past the integer column's range makes the link write fail.
+    const payload = prPayload({
+      number: 3_000_000_000,
+      body: `Fixes MKT-${issue.sequenceNumber}`,
+    });
+
+    const first = await deliver(webhookId, secret, payload, { deliveryId: 'guid-failed' });
+    expect(first.status).toBe(500);
+    // Failing again proves it was processed rather than answered as a duplicate.
+    const redelivery = await deliver(webhookId, secret, payload, { deliveryId: 'guid-failed' });
+    expect(redelivery.status).toBe(500);
+  });
+
   it('does not copy the repository settings into a project copy', async () => {
     const { asOwner } = await setupProject();
     const copy = await asOwner

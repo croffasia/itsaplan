@@ -40,6 +40,7 @@ describe('user preferences', () => {
       issueActivityView: 'flat',
       autoWatch: true,
       onboardingSeen: false,
+      showcaseSeen: false,
       lastProjectId: null,
       hotkeys: {},
     });
@@ -85,6 +86,7 @@ describe('user preferences', () => {
       issueActivityView: 'grouped',
       autoWatch: false,
       onboardingSeen: true,
+      showcaseSeen: true,
       hotkeys: { 'issue.new': 'i' },
     });
 
@@ -104,6 +106,7 @@ describe('user preferences', () => {
       issueActivityView: 'grouped',
       autoWatch: false,
       onboardingSeen: true,
+      showcaseSeen: true,
       lastProjectId: null,
       hotkeys: { 'issue.new': 'i' },
     });

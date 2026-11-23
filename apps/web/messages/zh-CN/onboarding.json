@@ -193,5 +193,15 @@
       },
       "denied": "已拒绝"
     }
+  },
+  "showcase": {
+    "title": "将贵公司加入列表",
+    "body": "发送徽标、网站，并简单介绍您的团队如何使用 It's a Plan。我们会审核每个申请，您也可以随时撤下徽标。",
+    "open": "添加我的公司",
+    "dismiss": "不用了",
+    "art": {
+      "heading": "谁在使用 It's a Plan",
+      "yourLogo": "您的徽标"
+    }
   }
 }

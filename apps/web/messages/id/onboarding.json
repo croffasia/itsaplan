@@ -193,5 +193,15 @@
       },
       "denied": "Ditolak"
     }
+  },
+  "showcase": {
+    "title": "Tambahkan perusahaan Anda ke daftar",
+    "body": "Kirim logo, situs web, dan beberapa kata tentang cara tim Anda bekerja di It's a Plan. Kami memeriksa setiap permintaan, dan Anda bisa menurunkan logo kapan saja.",
+    "open": "Tambahkan perusahaan saya",
+    "dismiss": "Tidak, terima kasih",
+    "art": {
+      "heading": "Siapa yang memakai It's a Plan",
+      "yourLogo": "Logo Anda"
+    }
   }
 }

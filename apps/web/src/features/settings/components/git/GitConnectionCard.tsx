@@ -3,7 +3,6 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import type { GitSettings } from '@/lib/api/endpoints/git';
 import SettingsCard from '@/components/common/page/SettingsCard';
-import SettingsSection from '@/components/common/page/SettingsSection';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useRegenerateGitSecret } from '../../services/settings.service';
@@ -31,8 +30,8 @@ function initialTab(provider: string | undefined): ProviderKey {
   return PROVIDERS.find((p) => p.key === seen)?.key ?? 'github';
 }
 
-// The Connection block: how to register the webhook on a repository, and which
-// repositories have delivered so far.
+// The webhook made by hand, for a repository no provider account can reach. Collapsed:
+// a repository connected through an account needs none of it.
 export default function GitConnectionCard({
   projectKey,
   settings,
@@ -70,10 +69,15 @@ export default function GitConnectionCard({
   );
 
   return (
-    <SettingsSection title={t('webhookEndpoint')} description={t('webhookEndpointHint')}>
-      <SettingsCard className="divide-y divide-border/60">
-        {/* One URL and one secret serve every host — they sit above the tabs,
-            which carry nothing but each host's instructions. */}
+    <details className="group">
+      <summary className="cursor-pointer list-none select-none marker:content-none">
+        <span className="inline-flex items-center gap-2 text-sm font-medium">
+          <span className="transition-transform group-open:rotate-90">›</span>
+          {t('manualSetup')}
+        </span>
+        <p className="ms-5 mt-1 text-xs text-muted-foreground">{t('manualSetupHint')}</p>
+      </summary>
+      <SettingsCard className="mt-4 divide-y divide-border/60">
         <div className="space-y-4 p-4">
           <GitCopyField label={t('payloadUrl')} value={settings.payloadUrl} />
           <GitCopyField
@@ -83,37 +87,29 @@ export default function GitConnectionCard({
             action={regenerateAction}
           />
         </div>
-        <details className="group p-4">
-          <summary className="cursor-pointer list-none text-sm font-medium select-none marker:content-none">
-            <span className="inline-flex items-center gap-2">
-              <span className="transition-transform group-open:rotate-90">›</span>
-              {t('manualSetup')}
-            </span>
-          </summary>
-          <div className="mt-4">
-            <Tabs value={tab} onValueChange={(v) => setTab(v as ProviderKey)}>
-              <TabsList variant="line">
-                {PROVIDERS.map((p) => (
-                  <TabsTrigger key={p.key} value={p.key}>
-                    {p.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+        <div className="p-4">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as ProviderKey)}>
+            <TabsList variant="line">
               {PROVIDERS.map((p) => (
-                <TabsContent key={p.key} value={p.key} className="mt-4 space-y-4">
-                  {hint(p.hint)}
-                  {p.key === 'github' && (
-                    <GithubCliCommand payloadUrl={settings.payloadUrl} secret={settings.secret} />
-                  )}
-                  {p.key === 'gitlab' && (
-                    <GitlabCliCommand payloadUrl={settings.payloadUrl} secret={settings.secret} />
-                  )}
-                </TabsContent>
+                <TabsTrigger key={p.key} value={p.key}>
+                  {p.label}
+                </TabsTrigger>
               ))}
-            </Tabs>
-          </div>
-        </details>
+            </TabsList>
+            {PROVIDERS.map((p) => (
+              <TabsContent key={p.key} value={p.key} className="mt-4 space-y-4">
+                {hint(p.hint)}
+                {p.key === 'github' && (
+                  <GithubCliCommand payloadUrl={settings.payloadUrl} secret={settings.secret} />
+                )}
+                {p.key === 'gitlab' && (
+                  <GitlabCliCommand payloadUrl={settings.payloadUrl} secret={settings.secret} />
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
+        </div>
       </SettingsCard>
-    </SettingsSection>
+    </details>
   );
 }

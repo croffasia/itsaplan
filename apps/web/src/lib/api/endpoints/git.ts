@@ -26,6 +26,10 @@ export interface GitRepository {
 
 export type GitConnectionProvider = 'github' | 'gitlab' | 'gitea' | 'forgejo' | 'bitbucket';
 
+// 'one_way': the repository's new issues become issues here, and a status change here
+// closes or reopens them. 'two_way': changes of a linked repository issue also come back.
+export type IssueSyncMode = 'off' | 'one_way' | 'two_way';
+
 export interface GitManagedRepository {
   id: number;
   externalId: string;
@@ -33,6 +37,44 @@ export interface GitManagedRepository {
   webUrl: string;
   status: 'connected' | 'error';
   lastError: string | null;
+  issueSync: IssueSyncMode;
+  // Where new issues land; null is the project's first column.
+  issueColumnId: number | null;
+  issueComments: boolean;
+}
+
+// The project label and the issue type a repository label becomes; either may be null.
+export interface RepositoryLabelMapping {
+  externalName: string;
+  labelId: number | null;
+  typeId: number | null;
+}
+
+export interface RepositoryLabel {
+  name: string;
+  // "#rrggbb", or null when the provider sent none.
+  color: string | null;
+}
+
+// A repository's labels and what each becomes here.
+export interface RepositoryMapping {
+  labels: RepositoryLabel[];
+  labelMappings: RepositoryLabelMapping[];
+}
+
+export interface RepositoryIssueImportPage {
+  created: number;
+  skipped: number;
+  nextPage: number | null;
+}
+
+// The repository issue an issue was created from.
+export interface LinkedRepositoryIssue {
+  provider: GitConnectionProvider;
+  repository: string;
+  number: number;
+  url: string | null;
+  state: 'open' | 'closed';
 }
 
 export interface AvailableGitRepositoryPage {
@@ -206,6 +248,32 @@ export const disconnectGitRepository = (
   request<void>(
     `/projects/${projectKey}/settings/git/connections/${connectionId}/repositories/${repositoryId}`,
     { method: 'DELETE' },
+  );
+
+export const updateGitRepository = (
+  projectKey: string,
+  repositoryId: number,
+  patch: {
+    issueSync?: IssueSyncMode;
+    issueColumnId?: number | null;
+    issueComments?: boolean;
+    labelMappings?: RepositoryLabelMapping[];
+  },
+) =>
+  request<GitManagedRepository>(
+    `/projects/${projectKey}/settings/git/repositories/${repositoryId}`,
+    { method: 'PATCH', body: JSON.stringify(patch) },
+  );
+
+export const getGitRepositoryMapping = (projectKey: string, repositoryId: number) =>
+  request<RepositoryMapping>(
+    `/projects/${projectKey}/settings/git/repositories/${repositoryId}/mapping`,
+  );
+
+export const importGitRepositoryIssues = (projectKey: string, repositoryId: number, page: number) =>
+  request<RepositoryIssueImportPage>(
+    `/projects/${projectKey}/settings/git/repositories/${repositoryId}/issues/import`,
+    { method: 'POST', body: JSON.stringify({ page }) },
   );
 
 export const listIssueDevelopmentRepositories = (issueId: number) =>

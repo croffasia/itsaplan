@@ -129,7 +129,7 @@
     },
     "git": {
       "label": "仓库",
-      "description": "当关联的拉取请求在 GitHub、GitLab、Gitea、Forgejo 或 Bitbucket 上合并时关闭工作项。"
+      "description": "在拉取请求合并时关闭对应工作项，并将仓库工作项同步到看板。"
     },
     "import-export": {
       "label": "导入/导出",

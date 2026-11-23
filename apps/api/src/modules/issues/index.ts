@@ -94,6 +94,7 @@ import {
   removeIssueDevelopmentLink,
 } from '#modules/git/development';
 import { listDevelopmentRepositories, listManagedBranches } from '#modules/git/connections-service';
+import { getLinkedRepositoryIssue } from '#modules/git/issue-sync';
 import { DevelopmentLinkResponse, DevelopmentRepositoryResponse } from '#modules/git/model';
 import {
   createChecklist,
@@ -601,6 +602,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       const ancestors = await listAncestors(issue.id);
       const checklists = await listChecklists(issue.id);
       const development = await listIssueDevelopmentLinks(issue.id);
+      const repositoryIssue = await getLinkedRepositoryIssue(issue.id);
       return {
         ...issue,
         fields,
@@ -611,6 +613,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         ancestors,
         checklists,
         development,
+        repositoryIssue,
       };
     },
     {
@@ -741,6 +744,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       const ancestors = await listAncestors(issue.id);
       const checklists = await listChecklists(issue.id);
       const development = await listIssueDevelopmentLinks(issue.id);
+      const repositoryIssue = await getLinkedRepositoryIssue(issue.id);
       return {
         ...issue,
         fields,
@@ -751,6 +755,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         ancestors,
         checklists,
         development,
+        repositoryIssue,
       };
     },
     {

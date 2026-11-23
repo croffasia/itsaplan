@@ -433,7 +433,8 @@
       "failed": "Başarısız",
       "canceled": "İptal edildi",
       "skipped": "Atlandı"
-    }
+    },
+    "repositoryIssue": "{provider} işi"
   },
   "documents": {
     "title": "Belgeler",

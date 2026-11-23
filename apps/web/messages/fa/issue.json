@@ -433,7 +433,8 @@
       "failed": "ناموفق",
       "canceled": "لغو شده",
       "skipped": "رد شده"
-    }
+    },
+    "repositoryIssue": "تسک {provider}"
   },
   "documents": {
     "title": "مستندات",

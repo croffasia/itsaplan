@@ -129,7 +129,7 @@
     },
     "git": {
       "label": "Репозиторії",
-      "description": "Закриття задач, коли їхній pull request змержено в GitHub, GitLab, Gitea, Forgejo або Bitbucket."
+      "description": "Закривайте задачі під час мерджу їхніх pull request і синхронізуйте задачі репозиторію з дошкою."
     },
     "import-export": {
       "label": "Імпорт/Експорт",

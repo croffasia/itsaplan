@@ -93,6 +93,12 @@ export const GitProvider = t.Union([
   t.Literal('bitbucket'),
 ]);
 
+const IssueSyncMode = t.Union([t.Literal('off'), t.Literal('one_way'), t.Literal('two_way')], {
+  description:
+    "'one_way': new repository issues become issues and a status change here closes or " +
+    "reopens them. 'two_way': changes of a linked repository issue also come back.",
+});
+
 export const GitManagedRepositoryResponse = t.Object({
   id: t.Number(),
   externalId: t.String(),
@@ -100,6 +106,45 @@ export const GitManagedRepositoryResponse = t.Object({
   webUrl: t.String(),
   status: t.Union([t.Literal('connected'), t.Literal('error')]),
   lastError: t.Nullable(t.String()),
+  issueSync: IssueSyncMode,
+  issueColumnId: t.Nullable(t.Number({ description: 'Null puts new issues in the first column.' })),
+  issueComments: t.Boolean(),
+});
+
+const RepositoryLabelMapping = t.Object({
+  externalName: t.String({ minLength: 1, maxLength: 200 }),
+  labelId: t.Nullable(t.Number()),
+  typeId: t.Nullable(t.Number()),
+});
+
+export const updateManagedRepositoryBody = t.Object({
+  issueSync: t.Optional(IssueSyncMode),
+  issueColumnId: t.Optional(t.Nullable(t.Number())),
+  issueComments: t.Optional(t.Boolean()),
+  labelMappings: t.Optional(t.Array(RepositoryLabelMapping, { maxItems: 500 })),
+});
+
+export const RepositoryMappingResponse = t.Object({
+  labels: t.Array(t.Object({ name: t.String(), color: t.Nullable(t.String()) })),
+  labelMappings: t.Array(RepositoryLabelMapping),
+});
+
+export const importRepositoryIssuesBody = t.Object({
+  page: t.Optional(t.Number({ minimum: 1 })),
+});
+
+export const ImportRepositoryIssuesResponse = t.Object({
+  created: t.Number(),
+  skipped: t.Number(),
+  nextPage: t.Nullable(t.Number()),
+});
+
+export const LinkedRepositoryIssueResponse = t.Object({
+  provider: GitProvider,
+  repository: t.String(),
+  number: t.Number(),
+  url: t.Nullable(t.String()),
+  state: t.Union([t.Literal('open'), t.Literal('closed')]),
 });
 
 export const GitProviderConnectionResponse = t.Object({
@@ -133,6 +178,11 @@ export const teamGitProviderConnectionParams = t.Object({
 export const gitManagedRepositoryParams = t.Object({
   projectKey: t.String(),
   connectionId: t.Numeric(),
+  repositoryId: t.Numeric(),
+});
+
+export const managedRepositoryParams = t.Object({
+  projectKey: t.String(),
   repositoryId: t.Numeric(),
 });
 

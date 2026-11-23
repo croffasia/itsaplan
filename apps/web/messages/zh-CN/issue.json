@@ -433,7 +433,8 @@
       "failed": "失败",
       "canceled": "已取消",
       "skipped": "已跳过"
-    }
+    },
+    "repositoryIssue": "{provider} 工作项"
   },
   "documents": {
     "title": "文档",

@@ -60,6 +60,7 @@ import {
   logIssueUpdate,
   labelNames,
   actorId,
+  isOutsideAuthor,
   type ActivityActor,
   userName,
   rowSide,
@@ -90,6 +91,7 @@ import { runOrigin } from '#modules/agents/core/run-initiator';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 import { queueStatusRuns } from '#modules/agents/schedules/issue-runs';
 import { applySubtaskAutomation } from './automation';
+import { pushLinkedIssueState } from '#modules/git/issue-sync';
 import { assertWipLimit, columnAutoAssignee, wipLimitBreach } from '#modules/columns/service';
 
 // Data access for issues and their per-issue data: labels, custom field values,
@@ -1101,7 +1103,7 @@ async function assertColumn(projectId: number, columnId: number | undefined): Pr
 
 // Enforces that an issue type belongs to the issue's project. Only checks when set
 // to a non-null value (clearing the type is always allowed). Throws 400 otherwise.
-async function assertIssueType(
+export async function assertIssueType(
   projectId: number,
   typeId: number | null | undefined,
 ): Promise<void> {
@@ -1173,9 +1175,10 @@ function assertDateOrder(startDate?: string | null, dueDate?: string | null) {
 export async function createIssue(
   project: ProjectRow,
   input: NewIssueInput,
-  actorUserId?: string | null,
-  opts?: { skipUnavailableAssignee?: boolean },
+  actor?: ActivityActor,
+  opts?: { skipUnavailableAssignee?: boolean; skipWipLimit?: boolean; skipStatusRuns?: boolean },
 ): Promise<IssueRow> {
+  const actorUserId = actorId(actor);
   const requestedAssignee = await resolveIssueAssignee(
     project.id,
     input.assigneeUserId,
@@ -1186,7 +1189,7 @@ export async function createIssue(
   await assertInitiative(project.id, input.initiativeId);
   await assertCycle(project.id, input.cycleId);
   await assertColumn(project.id, input.columnId);
-  await assertWipLimit(input.columnId);
+  if (!opts?.skipWipLimit) await assertWipLimit(input.columnId);
   await assertIssueType(project.id, input.typeId);
   await assertParent(project.id, null, input.parentId);
   assertDateOrder(input.startDate, input.dueDate);
@@ -1247,7 +1250,7 @@ export async function createIssue(
           },
         },
       ],
-      actorUserId,
+      actor,
       tx,
     );
     return row;
@@ -1257,20 +1260,20 @@ export async function createIssue(
   // entries of its creation fall inside it.
   await recordStatusChange([issueId], input.columnId, createdAt);
   if (input.cycleId != null) await recordCycleChange(issueId, null, input.cycleId);
-  if (input.parentId != null) await recordParentChange(issueId, null, input.parentId, actorUserId);
+  if (input.parentId != null) await recordParentChange(issueId, null, input.parentId, actor);
   // Suppress the label_changed event on creation — the initial labels are part of
   // the issue.created payload, so a separate change event would be redundant.
   if (input.labelIds?.length)
-    await setIssueLabels(project.id, issueId, input.labelIds, actorUserId, false);
+    await setIssueLabels(project.id, issueId, input.labelIds, actor, false);
   const created = (await getIssue(issueId))!;
   // The author follows what they filed; the assignee is subscribed by the
   // assignment notification below, the same as a later assignment does.
   await autoWatchIssue(project.id, issueId, [actorUserId]);
-  await emitIssueEvent('issue.created', created, actorUserId);
+  await emitIssueEvent('issue.created', created, actor);
   // An issue created already delegated to an agent enqueues a run, the same as
   // delegating one later does.
-  await enqueueDelegateRun(created, actorUserId);
-  await queueStatusRuns([issueId], input.columnId, actorUserId);
+  await enqueueDelegateRun(created, actor);
+  if (!opts?.skipStatusRuns) await queueStatusRuns([issueId], input.columnId, actorUserId);
   // An issue created already assigned to a member notifies them, the same as
   // assigning one later does.
   if (created.assigneeUserId) {
@@ -1283,14 +1286,15 @@ export async function createIssue(
   }
   // A description written on creation reaches the people it mentions, the same as
   // one written into an existing issue does.
-  await notifyTextMentions({
-    projectId: project.id,
-    issueId,
-    actorUserId: actorUserId ?? null,
-    sourceActivityId: null,
-    before: '',
-    after: created.description,
-  });
+  if (!isOutsideAuthor(actor))
+    await notifyTextMentions({
+      projectId: project.id,
+      issueId,
+      actorUserId: actorUserId ?? null,
+      sourceActivityId: null,
+      before: '',
+      after: created.description,
+    });
   return created;
 }
 
@@ -1463,6 +1467,7 @@ export async function updateIssue(
         await emitIssueEvent('issue.state_changed', after, actor);
         await queueStatusRuns([id], after.columnId, actorId(actor));
         await applySubtaskAutomation(after, actor);
+        await pushLinkedIssueState(id, after.columnId);
       }
     }
   }
@@ -1523,7 +1528,7 @@ export async function setIssueLabels(
   projectId: number,
   issueId: number,
   labelIds: number[],
-  actorUserId?: string | null,
+  actor?: ActivityActor,
   emitEvent = true,
 ): Promise<void> {
   await assertIssueLabels(projectId, labelIds);
@@ -1560,13 +1565,13 @@ export async function setIssueLabels(
     events.push({ action: 'label_add', to: rowSide(names.get(labelId), labelId) });
   for (const labelId of removed)
     events.push({ action: 'label_remove', from: rowSide(names.get(labelId), labelId) });
-  await recordActivity(issueId, events, actorUserId);
+  await recordActivity(issueId, events, actor);
 
   if (emitEvent && (added.length > 0 || removed.length > 0)) {
     const issueRow = await getIssue(issueId);
     if (issueRow) {
       const named = (ids: number[]) => ids.map((id) => ({ id, name: names.get(id) ?? null }));
-      await emitIssueEvent('issue.label_changed', issueRow, actorUserId, {
+      await emitIssueEvent('issue.label_changed', issueRow, actor, {
         labelChange: { added: named(added), removed: named(removed) },
       });
     }

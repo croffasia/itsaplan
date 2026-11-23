@@ -96,6 +96,8 @@ export const qk = {
   gitConnections: (projectKey: string) => ['gitConnections', projectKey] as const,
   gitAvailableRepositories: (projectKey: string, connectionId: number, search: string) =>
     ['gitConnections', projectKey, connectionId, 'repositories', search] as const,
+  gitRepositoryMapping: (projectKey: string, repositoryId: number) =>
+    ['gitConnections', projectKey, 'mapping', repositoryId] as const,
   // The member's own notification preferences for a project.
   notificationPreferences: (projectKey: string) => ['notificationPreferences', projectKey] as const,
   views: (projectKey: string) => ['views', projectKey] as const,

@@ -433,7 +433,8 @@
       "failed": "En échec",
       "canceled": "Annulé",
       "skipped": "Ignoré"
-    }
+    },
+    "repositoryIssue": "Ticket {provider}"
   },
   "documents": {
     "title": "Documents",

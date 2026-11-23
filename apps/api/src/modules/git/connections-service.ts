@@ -1,5 +1,11 @@
-import { db, gitManagedRepository, gitProviderConnection, project } from '@repo/db';
-import { decryptSecret, encryptSecret } from '@repo/crypto';
+import {
+  db,
+  gitManagedRepository,
+  gitProviderConnection,
+  gitRepositoryLabel,
+  project,
+} from '@repo/db';
+import { decryptSecret, encryptSecret, type EncryptedSecret } from '@repo/crypto';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
 import {
@@ -14,8 +20,10 @@ import {
   getProviderRepository,
   installProviderWebhook,
   listProviderBranches,
+  listProviderLabels,
   listProviderPullRequests,
   listProviderRepositories,
+  type ProviderLabel,
   normalizeProviderBaseUrl,
   type CreateProviderPullRequestInput,
   type DevelopmentProvider,
@@ -26,7 +34,8 @@ import {
   type ProviderPullRequestPage,
   type ProviderRepository,
 } from './connections-provider';
-import { getOrCreateGitSettings, type GitSettings } from './service';
+import { assertProjectColumn, getOrCreateGitSettings, type GitSettings } from './service';
+import { assertIssueLabels, assertIssueType } from '#modules/issues/service';
 
 export interface GitProviderConnectionDto {
   id: number;
@@ -38,6 +47,8 @@ export interface GitProviderConnectionDto {
   updatedAt: string;
 }
 
+export type IssueSyncMode = 'off' | 'one_way' | 'two_way';
+
 export interface GitManagedRepositoryDto {
   id: number;
   externalId: string;
@@ -45,6 +56,15 @@ export interface GitManagedRepositoryDto {
   webUrl: string;
   status: 'connected' | 'error';
   lastError: string | null;
+  issueSync: IssueSyncMode;
+  issueColumnId: number | null;
+  issueComments: boolean;
+}
+
+export interface RepositoryLabelMapping {
+  externalName: string;
+  labelId: number | null;
+  typeId: number | null;
 }
 
 export interface DevelopmentRepositoryDto {
@@ -68,6 +88,9 @@ const repositoryColumns = {
   webUrl: gitManagedRepository.webUrl,
   status: gitManagedRepository.status,
   lastError: gitManagedRepository.lastError,
+  issueSync: gitManagedRepository.issueSync,
+  issueColumnId: gitManagedRepository.issueColumnId,
+  issueComments: gitManagedRepository.issueComments,
 };
 
 function mapRepository(row: {
@@ -77,8 +100,15 @@ function mapRepository(row: {
   webUrl: string;
   status: string;
   lastError: string | null;
+  issueSync: string;
+  issueColumnId: number | null;
+  issueComments: boolean;
 }): GitManagedRepositoryDto {
-  return { ...row, status: row.status === 'error' ? 'error' : 'connected' };
+  return {
+    ...row,
+    status: row.status === 'error' ? 'error' : 'connected',
+    issueSync: (['one_way', 'two_way'] as const).find((mode) => mode === row.issueSync) ?? 'off',
+  };
 }
 
 interface ManagedDevelopmentRepository {
@@ -86,21 +116,48 @@ interface ManagedDevelopmentRepository {
   repository: ProviderRepository;
 }
 
+// What a call to a repository's provider reads: the connection's token and the repository.
+export const providerCallColumns = {
+  provider: gitProviderConnection.provider,
+  baseUrl: gitProviderConnection.baseUrl,
+  ciphertext: gitProviderConnection.ciphertext,
+  iv: gitProviderConnection.iv,
+  authTag: gitProviderConnection.authTag,
+  externalId: gitManagedRepository.externalId,
+  fullName: gitManagedRepository.fullName,
+  webUrl: gitManagedRepository.webUrl,
+};
+
+export function providerCallArgs(
+  row: EncryptedSecret & {
+    provider: string;
+    baseUrl: string;
+    externalId: string;
+    fullName: string;
+    webUrl: string;
+  },
+): { input: ProviderConnectionInput; repository: ProviderRepository } {
+  return {
+    input: {
+      provider: row.provider as GitProvider,
+      baseUrl: row.baseUrl,
+      token: decryptSecret(row),
+    },
+    repository: {
+      externalId: row.externalId,
+      fullName: row.fullName,
+      webUrl: row.webUrl,
+      private: false,
+    },
+  };
+}
+
 async function managedDevelopmentRepository(
   projectId: number,
   repositoryId: number,
 ): Promise<ManagedDevelopmentRepository> {
   const [row] = await db
-    .select({
-      provider: gitProviderConnection.provider,
-      baseUrl: gitProviderConnection.baseUrl,
-      ciphertext: gitProviderConnection.ciphertext,
-      iv: gitProviderConnection.iv,
-      authTag: gitProviderConnection.authTag,
-      externalId: gitManagedRepository.externalId,
-      fullName: gitManagedRepository.fullName,
-      webUrl: gitManagedRepository.webUrl,
-    })
+    .select(providerCallColumns)
     .from(gitManagedRepository)
     .innerJoin(
       gitProviderConnection,
@@ -116,15 +173,8 @@ async function managedDevelopmentRepository(
     .limit(1);
   if (!row) throw new HttpError(404, 'Managed repository not found');
   ensureDevelopmentProvider(row.provider);
-  return {
-    input: { provider: row.provider, baseUrl: row.baseUrl, token: decryptSecret(row) },
-    repository: {
-      externalId: row.externalId,
-      fullName: row.fullName,
-      webUrl: row.webUrl,
-      private: false,
-    },
-  };
+  const { input, repository } = providerCallArgs(row);
+  return { input: { ...input, provider: row.provider }, repository };
 }
 
 export async function listDevelopmentRepositories(
@@ -389,6 +439,7 @@ async function reconcileRepositoryWebhook(
       settings.payloadUrl,
       settings.secret,
       repository.webhookExternalId,
+      repository.issueSync !== 'off',
     );
     await db
       .update(gitManagedRepository)
@@ -463,6 +514,7 @@ export async function connectRepositories(
       settings.payloadUrl,
       settings.secret,
       null,
+      false,
     );
     await db.insert(gitManagedRepository).values({
       projectId,
@@ -565,16 +617,7 @@ export async function postPullRequestLinkback(
   body: string,
 ): Promise<boolean> {
   const [row] = await db
-    .select({
-      provider: gitProviderConnection.provider,
-      baseUrl: gitProviderConnection.baseUrl,
-      ciphertext: gitProviderConnection.ciphertext,
-      iv: gitProviderConnection.iv,
-      authTag: gitProviderConnection.authTag,
-      externalId: gitManagedRepository.externalId,
-      fullName: gitManagedRepository.fullName,
-      webUrl: gitManagedRepository.webUrl,
-    })
+    .select(providerCallColumns)
     .from(gitManagedRepository)
     .innerJoin(
       gitProviderConnection,
@@ -589,20 +632,118 @@ export async function postPullRequestLinkback(
     )
     .limit(1);
   if (!row) return false;
-  await createPullRequestComment(
-    {
-      provider,
-      baseUrl: row.baseUrl,
-      token: decryptSecret(row),
-    },
-    {
-      externalId: row.externalId,
-      fullName: row.fullName,
-      webUrl: row.webUrl,
-      private: false,
-    },
-    number,
-    body,
-  );
+  const call = providerCallArgs(row);
+  await createPullRequestComment(call.input, call.repository, number, body);
   return true;
+}
+
+// A row whose label or type was deleted in the project is left pointing at nothing.
+function mapsToSomething(mapping: RepositoryLabelMapping): boolean {
+  return mapping.labelId != null || mapping.typeId != null;
+}
+
+// The repository's labels and what each one becomes here. A mapped label the
+// repository has since deleted stays listed, so it can be unmapped.
+export async function getRepositoryMapping(
+  projectId: number,
+  repositoryId: number,
+): Promise<{
+  labels: ProviderLabel[];
+  labelMappings: RepositoryLabelMapping[];
+}> {
+  const managed = await managedDevelopmentRepository(projectId, repositoryId);
+  const [labels, labelMappings] = await Promise.all([
+    listProviderLabels(managed.input, managed.repository),
+    db
+      .select({
+        externalName: gitRepositoryLabel.externalName,
+        labelId: gitRepositoryLabel.labelId,
+        typeId: gitRepositoryLabel.typeId,
+      })
+      .from(gitRepositoryLabel)
+      .where(eq(gitRepositoryLabel.repositoryId, repositoryId)),
+  ]);
+  const labelNames = new Set(labels.map((label) => label.name));
+  const goneLabels = labelMappings
+    .filter((mapping) => !labelNames.has(mapping.externalName))
+    .map((mapping) => ({ name: mapping.externalName, color: null }));
+  return {
+    labels: [...labels, ...goneLabels].sort((a, b) => a.name.localeCompare(b.name)),
+    labelMappings: labelMappings.filter(mapsToSomething),
+  };
+}
+
+export async function updateManagedRepository(
+  projectId: number,
+  repositoryId: number,
+  patch: {
+    issueSync?: IssueSyncMode;
+    issueColumnId?: number | null;
+    issueComments?: boolean;
+    labelMappings?: RepositoryLabelMapping[];
+  },
+): Promise<GitManagedRepositoryDto> {
+  const [row] = await db
+    .select({ repository: gitManagedRepository, provider: gitProviderConnection.provider })
+    .from(gitManagedRepository)
+    .innerJoin(
+      gitProviderConnection,
+      eq(gitManagedRepository.connectionId, gitProviderConnection.id),
+    )
+    .where(
+      and(eq(gitManagedRepository.id, repositoryId), eq(gitManagedRepository.projectId, projectId)),
+    )
+    .limit(1);
+  if (!row) throw new HttpError(404, 'Managed repository not found');
+  const issuesOn = (mode: string) => mode !== 'off';
+  if (
+    patch.issueSync &&
+    issuesOn(patch.issueSync) &&
+    !(DEVELOPMENT_PROVIDERS as readonly string[]).includes(row.provider)
+  )
+    throw new HttpError(400, 'Bitbucket repositories cannot sync issues');
+  await assertProjectColumn(projectId, patch.issueColumnId);
+  const labelMappings = patch.labelMappings?.filter(mapsToSomething);
+  if (labelMappings) {
+    await assertIssueLabels(
+      projectId,
+      labelMappings.flatMap((mapping) => (mapping.labelId == null ? [] : [mapping.labelId])),
+    );
+    for (const mapping of labelMappings) await assertIssueType(projectId, mapping.typeId);
+  }
+
+  const fields: Partial<typeof gitManagedRepository.$inferInsert> = {};
+  if (patch.issueSync !== undefined) fields.issueSync = patch.issueSync;
+  if (patch.issueColumnId !== undefined) fields.issueColumnId = patch.issueColumnId;
+  if (patch.issueComments !== undefined) fields.issueComments = patch.issueComments;
+  const [updated] = await db
+    .update(gitManagedRepository)
+    .set({ ...fields, updatedAt: new Date() })
+    .where(eq(gitManagedRepository.id, repositoryId))
+    .returning();
+  if (labelMappings) {
+    // One mapping per repository label: the last mapping of a name wins.
+    const byName = new Map(labelMappings.map((mapping) => [mapping.externalName, mapping]));
+    await db.transaction(async (tx) => {
+      await tx.delete(gitRepositoryLabel).where(eq(gitRepositoryLabel.repositoryId, repositoryId));
+      if (byName.size > 0)
+        await tx
+          .insert(gitRepositoryLabel)
+          .values([...byName.values()].map((mapping) => ({ repositoryId, ...mapping })));
+    });
+  }
+  // The webhook carries issue events only while the sync is on.
+  if (updated && issuesOn(updated.issueSync) !== issuesOn(row.repository.issueSync)) {
+    const connection = await connectionSecret(updated.connectionId, projectId);
+    await reconcileRepositoryWebhook(
+      providerInput(connection),
+      updated,
+      await getOrCreateGitSettings(projectId),
+    );
+  }
+  const [current] = await db
+    .select(repositoryColumns)
+    .from(gitManagedRepository)
+    .where(eq(gitManagedRepository.id, repositoryId));
+  return mapRepository(current!);
 }

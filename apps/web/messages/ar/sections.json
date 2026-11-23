@@ -129,7 +129,7 @@
     },
     "git": {
       "label": "المستودعات",
-      "description": "قفل المهام لما طلبات السحب بتاعتها تتدمج على GitHub أو GitLab أو Gitea أو Forgejo أو Bitbucket."
+      "description": "أغلق المهام عند دمج طلبات السحب الخاصة بها، وزامن مهام المستودع مع اللوحة."
     },
     "import-export": {
       "label": "استيراد/تصدير",

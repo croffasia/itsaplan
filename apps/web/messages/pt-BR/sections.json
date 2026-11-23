@@ -129,7 +129,7 @@
     },
     "git": {
       "label": "Repositórios",
-      "description": "Feche issues quando seus pull requests mesclam no GitHub, GitLab, Gitea, Forgejo ou Bitbucket."
+      "description": "Feche issues quando seus pull requests forem mesclados e sincronize as issues do repositório com o quadro."
     },
     "import-export": {
       "label": "Importar/Exportar",

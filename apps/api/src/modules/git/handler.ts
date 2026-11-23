@@ -18,9 +18,11 @@ import {
   upsertPullRequestLinks,
 } from './development';
 import type { GitEvent, GitProviderKey, PullRequestEvent } from './providers';
-import { columnStateTypes, firstCompletedColumnId, type GitSettings } from './service';
+import { columnStateTypes, firstColumnId, type GitSettings } from './service';
 import { postPullRequestLinkback } from './connections-service';
 import { issueWebPath } from '#modules/teams/ref';
+import type { ProjectRow } from '#modules/projects/service';
+import { handleIssueComment, handleIssueEvent } from './issue-sync';
 
 // Stores normalized repository events and applies pull request automation:
 // - a pull request merged into the repository's default branch moves the issues
@@ -57,12 +59,15 @@ async function resolveIssues(
 }
 
 export async function handleGitEvent(
-  project: { id: number; key: string; teamRef: string },
+  project: ProjectRow,
   settings: GitSettings,
   providerKey: GitProviderKey,
   providerLabel: string,
   event: GitEvent,
-): Promise<PullRequestOutcome | 'branch' | 'pipeline' | 'check'> {
+): Promise<PullRequestOutcome | 'branch' | 'pipeline' | 'check' | 'issue' | 'comment'> {
+  if (event.kind === 'issue') return handleIssueEvent(project, providerKey, providerLabel, event);
+  if (event.kind === 'issue_comment')
+    return handleIssueComment(project, providerKey, providerLabel, event);
   if (event.kind === 'check') {
     await updateCheckLinks(project.id, providerKey, event);
     return 'check';
@@ -224,7 +229,7 @@ async function mergeTargetColumnId(
   const configured = settings.onMergeColumnId;
   if (configured != null && (await columnStateTypes([configured])).has(configured))
     return configured;
-  return firstCompletedColumnId(projectId);
+  return firstColumnId(projectId, 'completed');
 }
 
 // The configured open target if it still exists; null means the automation is off.

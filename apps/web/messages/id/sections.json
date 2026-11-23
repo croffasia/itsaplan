@@ -129,7 +129,7 @@
     },
     "git": {
       "label": "Repositori",
-      "description": "Tutup issue saat pull request digabungkan di GitHub, GitLab, Gitea, Forgejo, atau Bitbucket."
+      "description": "Tutup issue saat pull request-nya digabungkan, dan sinkronkan issue repositori ke papan."
     },
     "import-export": {
       "label": "Impor/Ekspor",

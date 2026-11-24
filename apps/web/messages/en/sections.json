@@ -138,10 +138,6 @@
     "ai-agents": {
       "label": "AI Agents",
       "description": "AI agents working in this project."
-    },
-    "queue": {
-      "label": "Agent runs",
-      "description": "Runs of the project's internal and external agents: in progress, waiting and past."
     }
   },
   "previews": {

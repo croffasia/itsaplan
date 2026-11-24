@@ -1,7 +1,7 @@
 import { useTranslations } from 'next-intl';
 import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import { compactTokens } from '@/utils/compactTokens';
-import type { RunFact } from '../components/RunnerQueueRunFactList';
+import type { RunFact } from '../types/runFact';
 
 // What the run took of the model's context, none until the run reports it.
 export function useRunUsageFacts(run: RunnerQueueRun): RunFact[] {
@@ -9,7 +9,7 @@ export function useRunUsageFacts(run: RunnerQueueRun): RunFact[] {
   if (run.contextTokens == null) return [];
   return [
     [
-      t('facts.context'),
+      'context',
       <span key="context" className="space-y-0.5">
         <span className="block">
           {t('contextTokens', { size: compactTokens(run.contextTokens) })}

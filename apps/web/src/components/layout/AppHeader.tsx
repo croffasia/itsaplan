@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { MessagesSquare, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useHotkeyLabel } from '@/context/useHotkeys';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import AgentsButton from '@/components/layout/AgentsButton';
 import InterfaceMenu from '@/components/layout/InterfaceMenu';
 import UserMenu from '@/components/layout/UserMenu';
 
@@ -17,23 +18,21 @@ export default function AppHeader({
   hasProject,
   onOpenCommand,
   onNewIssue,
-  chatActive,
-  onToggleChat,
+  panelOpen,
+  onTogglePanel,
 }: {
   title: ReactNode;
   hasProject: boolean;
   onOpenCommand: () => void;
   onNewIssue: () => void;
-  chatActive: boolean;
-  onToggleChat: () => void;
+  panelOpen: boolean;
+  onTogglePanel: () => void;
 }) {
   const t = useTranslations('nav');
   const { can } = usePermissions();
   const paletteKey = useHotkeyLabel('palette.toggle');
   const newIssueKey = useHotkeyLabel('issue.new');
-  const chatKey = useHotkeyLabel('chat.toggle');
   const canCreateIssue = hasProject && can('work_items', 'create');
-  const canUseChat = hasProject && can('ai_agents', 'read');
   return (
     <header className="flex h-12 shrink-0 items-center gap-2 border-b px-2 sm:px-4">
       <SidebarTrigger />
@@ -78,23 +77,7 @@ export default function AppHeader({
         </Tooltip>
       )}
 
-      {canUseChat && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant={chatActive ? 'default' : 'outline'}
-              size="icon"
-              className="size-8 shrink-0"
-              aria-label={t('aiChatHint', { key: chatKey ?? '' })}
-              aria-pressed={chatActive}
-              onClick={onToggleChat}
-            >
-              <MessagesSquare />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{t('aiChatHint', { key: chatKey ?? '' })}</TooltipContent>
-        </Tooltip>
-      )}
+      {hasProject && <AgentsButton open={panelOpen} onToggle={onTogglePanel} />}
 
       <InterfaceMenu />
       <UserMenu />

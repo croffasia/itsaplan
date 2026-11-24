@@ -13,6 +13,7 @@
   "newInitiative": "Nouvelle initiative",
   "newProject": "Nouveau projet",
   "toggleChat": "Afficher ou masquer le chat IA",
+  "toggleRuns": "Afficher ou masquer les exécutions d'agents",
   "board": "Tableau",
   "commands": "Commandes",
   "switchProject": "Changer de projet"

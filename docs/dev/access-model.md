@@ -21,7 +21,8 @@ or on the request body is checked in the handler or the service.
 ## Membership and workspace roles
 
 - Access to a project comes from a `project_member` row (`owner` | `member`), from the caller's
-  role in the workspace that holds the project, or from both.
+  rank in the team that owns it and from their role in the workspace that holds it. Where several
+  apply, the caller holds what they grant together.
 - Owners bypass the permission matrix. The global `user.role` (`god` | `user`) does **not**:
   `getProjectAccess` never reads it. God acts through its own routes under `/god`.
 - A project keeps at least one owner. `members/` answers 400, `teams/` and SCIM answer 409. The
@@ -29,22 +30,27 @@ or on the request body is checked in the handler or the service.
 - Workspace roles are `owner` and `admin`, stored in `workspace_manager`. They reach every team
   and project of the workspace without a membership row: the owner as an owner of each, an admin
   with a matrix that only reads. The table is `shared/workspace-roles.ts`.
+- A team's owner and managers reach every project of the team without a `project_member` row: an
+  owner as an owner of each, a manager with a matrix that only reads (`projectGrantOf` in
+  `shared/workspace-roles.ts`). A plain team member reaches the projects they joined.
 - `ai_agents.read` also opens the agent run and chat routes, and an internal agent's tools act
-  with the agent's own key. So a workspace admin can start a run that writes.
+  with the agent's own key. So a workspace admin or a team manager can start a run that writes.
 - **Whether the caller reaches something:** `getProjectAccess` and `getTeamAccess` in
   `shared/access.ts` merge the membership with the grant, and the project and team guards read
   them. Workspace guards read `requireWorkspaceManager`. `listProjects`, `listTeams` and `readRevs`
   take the reached teams the same way. `listProjects` and `listTeams` answer `via: 'workspace'`
-  for what the caller reaches only through the workspace.
+  for what the caller reaches only through the workspace, and `listProjects` answers `via: 'team'`
+  for what they reach through their rank in the team, with a workspace role or without one.
 - Two caller checks use the rows. `agentScopeOf` gives every agent of a team only to someone who
   runs the team; anyone else, a workspace admin included, reaches agents they own and those that share a
   `project_member` row with them. A private view takes a project membership of their own
   (`via: 'member'`).
 - **Whether someone else is a member:** assignees, mentions, watchers, notification recipients,
-  seats, the last-owner check and SCIM read the rows. A workspace owner or admin with no row is in
-  no member list, gets no notifications and takes no seat. With a row they count as any other
-  member. An admin holds a team row when appointed (`addAdmin`). The owner gets one by creating a
-  team or a project in the workspace.
+  seats, the last-owner check and SCIM read the rows. A team owner or manager with no
+  `project_member` row is in no member list of the project and gets no notifications from it. A
+  workspace owner or admin with no row is in no member list, gets no notifications and takes no
+  seat. With a row they count as any other member. An admin holds a team row when appointed
+  (`addAdmin`). The owner gets one by creating a team or a project in the workspace.
 
 ## Guards
 
@@ -177,7 +183,8 @@ or on the request body is checked in the handler or the service.
   undo the change. Its description can be edited.
 - A project membership from the sync comes with a `team_member` row in the owning team, added as a
   plain member with `source: 'scim'`. That row is removed once the person has no project row of any
-  source in the team. A row someone else created, or one whose rank was raised, stays.
+  source in the team. A row someone else created, or one whose rank was raised, stays, and a rank
+  of manager or owner keeps the access to the team's projects that it grants.
 - `teams/` refuses to remove or leave a `'scim'` row of rank `member` (409). Its rank can be
   changed: the rank is the team's to set, the membership is the identity provider's.
 - A workspace's provider, on deactivate or delete, removes every team and project row of that

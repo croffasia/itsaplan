@@ -138,10 +138,6 @@
     "ai-agents": {
       "label": "AI 代理",
       "description": "在該專案中工作的 AI 代理。"
-    },
-    "queue": {
-      "label": "代理執行",
-      "description": "專案內部與外部代理的執行：進行中、等待中和已結束的。"
     }
   },
   "previews": {

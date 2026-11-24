@@ -24,6 +24,7 @@ export const PREFERENCE_DEFAULTS: AccountPreferences = {
   issueOpenMode: 'panel',
   startPage: 'work-items',
   showChatByDefault: false,
+  agentRunsView: 'full',
   issueStatsOpen: true,
   issueStatsView: 'compact',
   issueActivityView: 'flat',

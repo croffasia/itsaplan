@@ -870,6 +870,35 @@ describe('external agent chat', () => {
     expect((await send(asOwner, agent.id, 'Hello')).status).toBe(200);
   });
 
+  it('lets whoever runs the team chat and keep threads without a role in the project', async () => {
+    const { asOwner, agent } = await setup();
+    const teamId = await teamOf(asOwner, 'MKT');
+    const join = async (role: 'manager' | 'member') => {
+      const user = await signUpTestUser({ team: false });
+      const invite = await asOwner.teams({ teamId }).invites.post({ email: user.email, role });
+      const client = authedApi(user.cookie);
+      await client.invites({ token: invite.data!.token }).accept.post();
+      return client;
+    };
+    const asManager = await join('manager');
+
+    const sent = await send(asManager, agent.id, 'Hello');
+    expect(sent.status).toBe(200);
+    const { messageId, threadId } = sent.data!;
+    const chat = chatOf(asManager, agent.id);
+    expect((await chat.chat({ messageId }).events.get({ query: {} })).status).toBe(200);
+    const threads = await chat.threads.get({ query: {} });
+    expect(threads.data!.items.map((thread) => thread.id)).toEqual([threadId]);
+    expect((await chat.threads({ threadId }).messages.get({ query: {} })).status).toBe(200);
+    expect((await chat.threads({ threadId }).favorite.put()).status).toBe(204);
+    expect((await chat.threads({ threadId }).favorite.delete()).status).toBe(204);
+    expect((await chat.threads({ threadId }).patch({ title: 'Launch' })).status).toBe(204);
+    expect((await chat.chat({ messageId }).cancel.post()).status).toBe(204);
+    expect((await chat.threads({ threadId }).delete()).status).toBe(204);
+
+    expect((await send(await join('member'), agent.id, 'Hello')).status).toBe(403);
+  });
+
   it("keeps an owner-scoped agent's chat to its owner", async () => {
     const { asOwner, agent } = await setup();
     await asOwner

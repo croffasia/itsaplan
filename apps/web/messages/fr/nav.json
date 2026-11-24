@@ -37,7 +37,8 @@
   "search": "Rechercher ou lancer une commande…",
   "searchHint": "Rechercher ou lancer une commande ({key})",
   "newIssueHint": "Nouveau ticket ({key})",
-  "aiChatHint": "Discuter avec vos agents IA ({key})",
+  "agentsPanel": "Chat IA et exécutions d'agents",
+  "runningRuns": "{count, plural, one {# exécution} other {# exécutions}} en cours",
   "sections": "Sections",
   "doubleClickToRename": "Double-cliquez pour renommer",
   "groups": {

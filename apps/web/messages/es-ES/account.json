@@ -107,7 +107,7 @@
       "issueSettingsDescription": "Valores predeterminados para cada ticket que abres. Cambiarlos en un ticket abierto no cambia estas preferencias.",
       "notifications": "Notificaciones",
       "notificationsDescription": "Seguir un ticket te trae sus comentarios y sus cambios de estado.",
-      "aiChat": "Chat de IA",
+      "aiChat": "Chat y ejecuciones de agentes",
       "shortcuts": "Atajos de teclado",
       "shortcutsDescription": "El botón de restablecer devuelve el atajo a su valor predeterminado."
     },
@@ -198,6 +198,12 @@
     "pushNotificationsOff": "Apagado",
     "pushNotificationsFailed": "No se pudieron cambiar las notificaciones push en este navegador. Inténtalo de nuevo.",
     "showChatByDefault": "Abrir chat por defecto",
-    "showChatByDefaultDescription": "El panel del chat se abre con cada página de proyecto."
+    "showChatByDefaultDescription": "El panel del chat se abre con cada página de proyecto.",
+    "agentRunsView": "Mostrar las ejecuciones como",
+    "agentRunsViewDescription": "Completa abre una ejecución junto a la lista. Compacta la abre en lugar de la lista. Los móviles usan siempre la compacta.",
+    "agentRunsViewOptions": {
+      "full": "Completa",
+      "compact": "Compacta"
+    }
   }
 }

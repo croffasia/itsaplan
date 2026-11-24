@@ -33,11 +33,14 @@ and never do arithmetic on it, so gaps in the numbers are harmless.
 | `board:<projectId>`          | the work items board          | any issue, label, relation, initiative or cycle in the project changes |
 | `issue:<issueId>`            | the issue screen              | the issue, its comments, checklists, attachments or field values change |
 | `initiative:<initiativeId>`  | the initiative screen         | the initiative or any issue inside it changes                     |
+| `agentRuns:<projectId>`      | the header's count of running runs | any agent run of the project is written, or its transcript grows |
 | `inbox:<projectId>:<userId>` | the inbox                     | that user gets a notification, reads one, or deletes one          |
 | `inbox:all`                  | the app icon badge, desktop notifications | any `inbox:<projectId>:<userId>` of a project the user can read moves, or such a project is gained or lost |
 
 Comments deliberately do not move the board: the board does not show them, so refetching it
 would be wasted work.
+
+`agentRuns:12` reads the row `runner-queue:12`. See "Sync marker" in [agents.md](agents.md).
 
 The inbox is the one scope that belongs to a person rather than an entity. Clients ask for
 `inbox:12` and the API fills in the session user, so one person can never watch another's inbox.

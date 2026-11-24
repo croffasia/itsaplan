@@ -62,6 +62,9 @@
       "chat": {
         "toggle": "Afficher ou masquer le chat IA"
       },
+      "runs": {
+        "toggle": "Afficher ou masquer les exécutions d'agents"
+      },
       "issue": {
         "new": "Nouveau ticket"
       },

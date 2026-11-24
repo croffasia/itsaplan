@@ -107,7 +107,7 @@
       "issueSettingsDescription": "پیش‌فرض‌ها برای هر تسکی که باز می‌کنید. تغییر آن‌ها در تسکِ باز این تنظیمات را تغییر نمی‌دهد.",
       "notifications": "اعلان‌ها",
       "notificationsDescription": "دنبال کردن یک تسک دیدگاه‌ها و تغییرات وضعیت آن را برایتان می‌آورد.",
-      "aiChat": "گفتگوی AI",
+      "aiChat": "گفتگو و اجراهای ایجنت",
       "shortcuts": "میان‌برهای صفحه‌کلید",
       "shortcutsDescription": "دکمهٔ بازنشانی میانبر را به پیش‌فرض برمی‌گرداند."
     },
@@ -198,6 +198,12 @@
     "pushNotificationsOff": "خاموش",
     "pushNotificationsFailed": "تغییر اعلان‌های فوری در این مرورگر ممکن نشد. دوباره تلاش کنید.",
     "showChatByDefault": "باز کردن گفتگو به‌طور پیش‌فرض",
-    "showChatByDefaultDescription": "پنل گفتگو با هر صفحهٔ پروژه باز می‌شود."
+    "showChatByDefaultDescription": "پنل گفتگو با هر صفحهٔ پروژه باز می‌شود.",
+    "agentRunsView": "نمایش اجراهای ایجنت به‌صورت",
+    "agentRunsViewDescription": "نمای کامل اجرا را کنار فهرست باز می‌کند. نمای فشرده آن را به‌جای فهرست باز می‌کند. تلفن‌ها همیشه از نمای فشرده استفاده می‌کنند.",
+    "agentRunsViewOptions": {
+      "full": "کامل",
+      "compact": "فشرده"
+    }
   }
 }

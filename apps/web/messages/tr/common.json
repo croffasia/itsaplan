@@ -62,6 +62,9 @@
       "chat": {
         "toggle": "Yapay zekâ sohbetini göster veya gizle"
       },
+      "runs": {
+        "toggle": "Ajan çalıştırmalarını göster veya gizle"
+      },
       "issue": {
         "new": "Yeni iş"
       },

@@ -107,7 +107,7 @@
       "issueSettingsDescription": "Defaults for every issue you open. Changing them on an open issue does not change these.",
       "notifications": "Notifications",
       "notificationsDescription": "Watching an issue brings you its comments and status changes.",
-      "aiChat": "AI chat",
+      "aiChat": "Chat and agent runs",
       "shortcuts": "Keyboard shortcuts",
       "shortcutsDescription": "The reset button returns a shortcut to its default."
     },
@@ -198,6 +198,12 @@
     "pushNotificationsOff": "Off",
     "pushNotificationsFailed": "Could not change push notifications in this browser. Try again.",
     "showChatByDefault": "Open chat by default",
-    "showChatByDefaultDescription": "The chat panel opens with every project page."
+    "showChatByDefaultDescription": "The chat panel opens with every project page.",
+    "agentRunsView": "Show agent runs as",
+    "agentRunsViewDescription": "Full opens a run beside the list. Compact opens it in place of the list. Phones always use compact.",
+    "agentRunsViewOptions": {
+      "full": "Full",
+      "compact": "Compact"
+    }
   }
 }

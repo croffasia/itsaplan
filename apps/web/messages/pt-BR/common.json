@@ -62,6 +62,9 @@
       "chat": {
         "toggle": "Mostrar ou ocultar o chat da IA"
       },
+      "runs": {
+        "toggle": "Mostrar ou ocultar as execuções de agentes"
+      },
       "issue": {
         "new": "Nova issue"
       },

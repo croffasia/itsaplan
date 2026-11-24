@@ -138,10 +138,6 @@
     "ai-agents": {
       "label": "Yapay Zekâ Ajanları",
       "description": "Bu projede çalışan yapay zekâ ajanları."
-    },
-    "queue": {
-      "label": "Ajan çalıştırmaları",
-      "description": "Projenin dahili ve harici ajanlarının çalıştırmaları: süren, bekleyen ve geçmiş."
     }
   },
   "previews": {

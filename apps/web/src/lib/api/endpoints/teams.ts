@@ -26,7 +26,7 @@ export interface Team {
   role: TeamRole;
   // 'workspace' when the caller is not in the team and reaches it through their role in
   // its workspace; source and joinedAt are then the team's defaults.
-  via: AccessVia;
+  via: 'member' | 'workspace';
   // How the caller's own membership came about. A provisioned one is the identity
   // provider's: the team cannot be left while it stands.
   source: 'invite' | 'scim';
@@ -65,8 +65,8 @@ export interface TeamMember {
   joinedAt: string;
 }
 
-// A project the team owns. `isMember` is the caller's own access to it: a team
-// member sees every project of the team, but only opens the ones they belong to.
+// A project the team owns. `isMember` is whether the caller has a membership of it; whoever
+// runs the team opens it without one.
 export interface TeamProject {
   id: number;
   key: string;
@@ -121,14 +121,14 @@ export interface TeamLead {
 export interface TeamProjectDetail {
   lastActivityAt: string | null;
   stats: AnalyticsStats;
-  // The reader's access to the project, null when they only run the team. A
-  // provisioned membership ends at the identity provider, so it cannot be left here.
+  // The reader's access to the project. A provisioned membership ends at the identity
+  // provider, so it cannot be left here.
   viewer: {
     role: MemberRole;
     via: AccessVia;
     source: 'invite' | 'scim';
     permissions: Permissions;
-  } | null;
+  };
 }
 
 // One member of a project the team owns. The access their membership resolves to is

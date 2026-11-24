@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
+import CopyButton from '@/components/common/CopyButton';
 import Markdown from '@/components/common/Markdown';
 import { runLinks } from '../utils/runLinks';
-import RunnerQueueCopyButton from './RunnerQueueCopyButton';
 import RunnerQueueRunLinkRow from './RunnerQueueRunLinkRow';
 
 // The run's answer in one card: a row for each page of the workspace it links to, then
@@ -34,7 +34,7 @@ export default function RunnerQueueRunResult({ run }: { run: RunnerQueueRun }) {
           <Markdown>{output}</Markdown>
         </div>
       </div>
-      <RunnerQueueCopyButton text={output} />
+      <CopyButton text={output} />
     </div>
   );
 }

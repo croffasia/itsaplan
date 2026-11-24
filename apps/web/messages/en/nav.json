@@ -37,7 +37,8 @@
   "search": "Search or run a command…",
   "searchHint": "Search or run a command ({key})",
   "newIssueHint": "New issue ({key})",
-  "aiChatHint": "Chat with your AI agents ({key})",
+  "agentsPanel": "AI chat and agent runs",
+  "runningRuns": "{count, plural, one {# run} other {# runs}} working",
   "sections": "Sections",
   "doubleClickToRename": "Double-click to rename",
   "groups": {

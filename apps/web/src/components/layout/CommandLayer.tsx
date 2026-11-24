@@ -31,6 +31,7 @@ export default function CommandLayer({
   onOpenIssue,
   onIssueDeleted,
   onToggleChat,
+  onToggleRuns,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -49,6 +50,7 @@ export default function CommandLayer({
   onOpenIssue: (sequenceNumber: number) => void;
   onIssueDeleted: () => void;
   onToggleChat: () => void;
+  onToggleRuns: () => void;
 }) {
   const { project } = useShell();
   const hasProject = !!project;
@@ -68,6 +70,7 @@ export default function CommandLayer({
     onNewProject,
     onSelectProject,
     onToggleChat,
+    onToggleRuns,
   });
   const navigation = useNavigationCommands(currentProjectKey);
 

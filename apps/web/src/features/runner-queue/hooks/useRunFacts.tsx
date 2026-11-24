@@ -7,7 +7,7 @@ import { runIssueKey } from '../utils/runIssueKey';
 import { waitsForRunner } from '../utils/waitsForRunner';
 import RunnerQueueKindBadge from '../components/RunnerQueueKindBadge';
 import RunnerQueueRunActor from '../components/RunnerQueueRunActor';
-import type { RunFact } from '../components/RunnerQueueRunFactList';
+import type { RunFact } from '../types/runFact';
 import RunnerQueueStateIcon from '../components/RunnerQueueStateIcon';
 
 // What the run is: its state and who stopped it, its agent, what set it off, what it works on,
@@ -18,7 +18,7 @@ export function useRunFacts(run: RunnerQueueRun): RunFact[] {
   const issueKey = runIssueKey(run);
   const facts: RunFact[] = [
     [
-      t('facts.status'),
+      'status',
       <>
         <RunnerQueueStateIcon run={run} className="size-3.5" />
         {waitsForRunner(run) ? t('waitingForRunner') : t(run.executionState)}
@@ -26,14 +26,11 @@ export function useRunFacts(run: RunnerQueueRun): RunFact[] {
     ],
   ];
   if (run.canceledBy) {
-    facts.push([
-      t('facts.canceledBy'),
-      <RunnerQueueRunActor key="canceledBy" actor={run.canceledBy} />,
-    ]);
+    facts.push(['canceledBy', <RunnerQueueRunActor key="canceledBy" actor={run.canceledBy} />]);
   }
   facts.push(
     [
-      t('facts.agent'),
+      'agent',
       <>
         <span className="flex min-w-0 items-center gap-1.5">
           <Avatar name={run.username} />
@@ -42,11 +39,11 @@ export function useRunFacts(run: RunnerQueueRun): RunFact[] {
         <RunnerQueueKindBadge kind={run.kind} />
       </>,
     ],
-    [t('facts.trigger'), t(`triggers.${run.trigger}`)],
+    ['trigger', t(`triggers.${run.trigger}`)],
   );
   if (issueKey && run.sequenceNumber != null) {
     facts.push([
-      t('facts.workItem'),
+      'workItem',
       <Link
         key="issue"
         href={issuePath(run.projectRef, run.sequenceNumber)}
@@ -59,7 +56,7 @@ export function useRunFacts(run: RunnerQueueRun): RunFact[] {
     ]);
   } else if (run.document) {
     facts.push([
-      t('facts.document'),
+      'document',
       <Link
         key="document"
         href={documentPath(run.projectRef, run.document.id)}
@@ -71,17 +68,17 @@ export function useRunFacts(run: RunnerQueueRun): RunFact[] {
       </Link>,
     ]);
   } else {
-    if (run.scheduleName) facts.push([t('facts.schedule'), run.scheduleName]);
-    facts.push([t('facts.project'), splitProjectRef(run.projectRef).key]);
+    if (run.scheduleName) facts.push(['schedule', run.scheduleName]);
+    facts.push(['project', splitProjectRef(run.projectRef).key]);
   }
   if (run.runnerState) {
     facts.push([
-      run.runnerState === 'push' ? t('facts.delivery') : t('facts.runner'),
+      run.runnerState === 'push' ? 'delivery' : 'runner',
       t(`connection.${run.runnerState}`),
     ]);
   }
   facts.push([
-    t('facts.run'),
+    'run',
     <span key="run" className="tabular-nums">
       #{run.id}
     </span>,

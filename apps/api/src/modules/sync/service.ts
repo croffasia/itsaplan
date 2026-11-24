@@ -3,7 +3,7 @@ import { and, eq, inArray, isNotNull, or, sql } from 'drizzle-orm';
 import { toMemberContext, type MemberRole } from '#modules/members/service';
 import { reachedProjectIds } from '#shared/access';
 import { hasPermission, type PermissionResource } from '#shared/permissions';
-import { projectAccess, type WorkspaceGrant } from '#shared/workspace-roles';
+import { projectAccess, type ProjectGrant } from '#shared/workspace-roles';
 
 // The revision engine's read side. The counters themselves are written by the
 // triggers in migration 0070 — no application code bumps them, so a write moves
@@ -26,6 +26,7 @@ export const scopeKind: Record<string, ScopeKind> = {
     key: (initiativeId) => `initiative:${initiativeId}`,
     resource: 'initiatives',
   },
+  agentRuns: { key: (projectId) => `runner-queue:${projectId}`, resource: 'ai_agents' },
   inbox: { key: (projectId, userId) => `inbox:${projectId}:${userId}`, resource: null },
 };
 
@@ -47,13 +48,13 @@ function memberOrGranted(grantedTeams: number[]) {
 }
 
 // The markers a client is watching, in one query. A scope of a project the user neither
-// belongs to nor reaches through their workspace role returns no row and reads as
-// unchanged. A scope whose resource their access may not read is dropped the same way,
+// belongs to nor reaches by a grant returns no row and reads as unchanged. A scope whose
+// resource their access may not read is dropped the same way,
 // so it also reads as unchanged.
 export async function readRevs(
   wanted: ScopeRead[],
   userId: string,
-  grants: Map<number, WorkspaceGrant>,
+  grants: Map<number, ProjectGrant>,
 ): Promise<Record<string, string>> {
   if (wanted.length === 0) return {};
   const grantedTeams = [...grants.keys()];
@@ -101,7 +102,7 @@ export async function readRevs(
 // project's marker, so it moves when any inbox moves and when a project is gained or lost.
 export async function inboxAllRevision(
   userId: string,
-  grants: Map<number, WorkspaceGrant>,
+  grants: Map<number, ProjectGrant>,
 ): Promise<string> {
   const rows = await db
     .select({ projectId: project.id, rev: revision.rev })

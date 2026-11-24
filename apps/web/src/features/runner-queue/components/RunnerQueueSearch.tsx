@@ -10,19 +10,19 @@ export default function RunnerQueueSearch({
   onChange: (value: string) => void;
 }) {
   const t = useTranslations('issue.agentRuns');
+  const tCommon = useTranslations('common');
   return (
-    <div className="px-4 pb-2">
-      <label className="flex h-8 items-center gap-2 rounded-lg bg-muted px-2.5 text-muted-foreground focus-within:ring-2 focus-within:ring-ring/50">
-        <Search aria-hidden className="size-4 shrink-0" />
-        <input
-          type="search"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder={t('searchRuns')}
-          aria-label={t('searchRuns')}
-          className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground md:text-sm"
-        />
-      </label>
-    </div>
+    <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg bg-muted px-2.5 text-muted-foreground focus-within:ring-2 focus-within:ring-ring/50">
+      <Search aria-hidden className="size-4 shrink-0" />
+      <input
+        type="search"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={tCommon('search')}
+        title={t('searchRuns')}
+        aria-label={t('searchRuns')}
+        className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground md:text-sm"
+      />
+    </label>
   );
 }

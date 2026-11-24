@@ -25,8 +25,10 @@ export type ShellContext = {
   // What the work items board's filters put on a new issue. onAddIssue applies
   // them already.
   newIssueDefaults: NewIssueDefaults;
-  // Opens the chat panel on a new conversation with the agent.
+  // Opens the side panel on a new conversation with the agent.
   onChatWithAgent: (agentId: number) => void;
+  // Opens the side panel on the agent runs: on one of them, or on the list.
+  onOpenRuns: (runId: number | null) => void;
 };
 
 export const ShellCtx = createContext<ShellContext | null>(null);

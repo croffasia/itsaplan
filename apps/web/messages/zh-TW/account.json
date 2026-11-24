@@ -107,7 +107,7 @@
       "issueSettingsDescription": "你開啟的每個工作項目的預設設定。在已開啟的工作項目中變更不會影響這些偏好。",
       "notifications": "通知",
       "notificationsDescription": "關注工作項目後可接收其留言和狀態變更通知。",
-      "aiChat": "AI 聊天",
+      "aiChat": "聊天與代理執行",
       "shortcuts": "鍵盤快捷鍵",
       "shortcutsDescription": "重設按鈕會將快捷鍵恢復為預設值。"
     },
@@ -198,6 +198,12 @@
     "pushNotificationsOff": "已關閉",
     "pushNotificationsFailed": "無法變更此瀏覽器的推播通知。請再試一次。",
     "showChatByDefault": "預設開啟聊天",
-    "showChatByDefaultDescription": "每次開啟專案頁面時，聊天面板都會一起開啟。"
+    "showChatByDefaultDescription": "每次開啟專案頁面時，聊天面板都會一起開啟。",
+    "agentRunsView": "代理執行顯示方式",
+    "agentRunsViewDescription": "完整檢視會在清單旁開啟執行。精簡檢視會在清單的位置開啟執行。手機一律使用精簡檢視。",
+    "agentRunsViewOptions": {
+      "full": "完整",
+      "compact": "精簡"
+    }
   }
 }

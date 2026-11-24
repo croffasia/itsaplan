@@ -37,7 +37,8 @@
   "search": "Arama yapın veya komut çalıştırın…",
   "searchHint": "Arama yapın veya komut çalıştırın ({key})",
   "newIssueHint": "Yeni iş ({key})",
-  "aiChatHint": "Yapay zekâ ajanlarınızla sohbet edin ({key})",
+  "agentsPanel": "Yapay zekâ sohbeti ve ajan çalıştırmaları",
+  "runningRuns": "{count, plural, other {# çalıştırma}} sürüyor",
   "sections": "Bölümler",
   "doubleClickToRename": "Yeniden adlandırmak için çift tıklayın",
   "groups": {

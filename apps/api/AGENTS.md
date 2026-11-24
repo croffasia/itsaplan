@@ -96,7 +96,7 @@ Enforced through macros in the route options.
   at least one owner per project.
 - Whether _the caller_ may reach something goes through `getProjectAccess` / `getTeamAccess`.
   Whether _someone else_ is a member (assignees, mentions, recipients, seats, last-owner) reads
-  the rows, so a workspace manager is in no member list.
+  the rows, so whoever reaches a project by a workspace role or a team rank is in no member list.
 - Member routes use `memberAdmin` or `memberSelfOrAdmin`. Granting `owner`, or a member role (a
   `roleId` or the default role), is capped: `assertProjectAdmin`, `mayGrantInviteRanks`,
   `assertGrantablePermissions`.

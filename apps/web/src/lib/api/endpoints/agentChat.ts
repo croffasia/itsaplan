@@ -119,6 +119,7 @@ export async function* streamAiAgentChat(
       console.error('Could not stop the answer', err);
     });
   };
+  yield { type: 'thread', threadId: sent.threadId };
   if (signal?.aborted) cancel();
   else signal?.addEventListener('abort', cancel, { once: true });
   const base = `${API_URL}${chat}/stream`;
@@ -145,13 +146,7 @@ export async function* streamAiAgentChat(
         if (mapped) yield mapped;
       }
     } catch (err) {
-      // A stop still has to name the thread: the reader binds it on `done`, and without
-      // that the next message would open a second conversation.
-      if (signal?.aborted) {
-        yield { type: 'done', threadId: sent.threadId };
-        throw err;
-      }
-      if (attempt === CHAT_STREAM_RETRIES) throw err;
+      if (signal?.aborted || attempt === CHAT_STREAM_RETRIES) throw err;
     }
     if (ended) break;
   }
@@ -191,6 +186,7 @@ export async function uploadChatAttachment(
 // back from a search: the text around the hit, and where it was found.
 export interface AiChatThread {
   id: string;
+  agentId: number;
   title: string | null;
   cliSessionId: string | null;
   contextTokens?: number | null;
@@ -243,17 +239,17 @@ export interface ChatAttachment {
   url: string;
 }
 
-// One page of the caller's own chat threads with an agent, newest first. `q` searches
-// them by title and message text instead, over every page.
-export const listAiAgentThreads = (projectKey: string, agentId: number, page: number, q = '') =>
+// One page of the caller's own chat threads with the agents of a project, newest first.
+// `q` searches them by title and message text instead, over every page.
+export const listChatThreads = (projectKey: string, page: number, q = '') =>
   request<AiChatThreadPage>(
-    `/projects/${projectKey}/ai-agents/${agentId}/threads?page=${page}` +
+    `/projects/${projectKey}/ai-agents/threads?page=${page}` +
       (q ? `&q=${encodeURIComponent(q)}` : ''),
   );
 
-// The conversations the caller starred with an agent, newest first, in one go.
-export const listAiAgentFavoriteThreads = (projectKey: string, agentId: number) =>
-  request<AiChatThreadPage>(`/projects/${projectKey}/ai-agents/${agentId}/threads?favorites=true`);
+// The conversations the caller starred in a project, newest first, in one go.
+export const listFavoriteChatThreads = (projectKey: string) =>
+  request<AiChatThreadPage>(`/projects/${projectKey}/ai-agents/threads?favorites=true`);
 
 // Stars one of the caller's conversations, or takes the star off it.
 export const setAiAgentThreadFavorite = (

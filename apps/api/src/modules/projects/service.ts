@@ -40,7 +40,7 @@ import { PROJECT_FEATURES, featureLabel, type ProjectFeature } from '#shared/fea
 import { getLimits, getTeamLimits } from '#shared/limits';
 import { projectAccess, type AccessVia } from '#shared/workspace-roles';
 import { toMemberContext, type MemberRole } from '#modules/members/service';
-import { workspaceGrants } from '#modules/workspaces/service';
+import { projectGrants, workspaceGrants } from '#modules/workspaces/service';
 import { assertSeatFree } from '#modules/teams/service';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 import { getProjectDefaults } from '#modules/settings/service';
@@ -194,8 +194,8 @@ export function searchProjects(
   return readProjects(userId, { ...opts, favoritesFirst: true }, window);
 }
 
-// A project reached through the workspace has no membership row, so its preference
-// columns are null and count as off.
+// A project reached without a membership has no membership row, so its preference columns
+// are null and count as off.
 function preference(
   column: typeof projectMember.isFavorite | typeof projectMember.isHidden,
   on?: boolean,
@@ -209,7 +209,7 @@ async function readProjects(
   opts: ProjectListOptions,
   window?: { limit: number; offset: number },
 ): Promise<{ items: ProjectListItem[]; total: number }> {
-  const grants = await workspaceGrants(userId);
+  const grants = await projectGrants(userId);
   const grantedTeams = [...grants.keys()];
   const term = opts.q?.trim().replace(/[\\%_]/g, '\\$&');
   const callerMember = and(
@@ -237,7 +237,7 @@ async function readProjects(
       : undefined,
   );
   const readingTeams = [...grants]
-    .filter(([, grant]) => grant === 'owner' || grant.work_items.read)
+    .filter(([, { grant }]) => grant === 'owner' || grant.work_items.read)
     .map(([teamId]) => teamId);
   const latestActivity = db
     .selectDistinctOn([issue.projectId], {

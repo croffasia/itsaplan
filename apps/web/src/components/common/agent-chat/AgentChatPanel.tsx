@@ -42,6 +42,7 @@ export function AgentChatPanel({
   onStop,
   onRemovePending,
   onReset,
+  empty,
   composerStart,
   composerEnd,
   hasEarlierMessages,
@@ -58,6 +59,8 @@ export function AgentChatPanel({
   onStop: () => void;
   onRemovePending: (id: string) => void;
   onReset?: () => void;
+  // Rendered in place of the panel's own empty state.
+  empty?: ReactNode;
   // Rendered at the start of the composer's button row, before the panel's own
   // buttons.
   composerStart?: ReactNode;
@@ -139,17 +142,20 @@ export function AgentChatPanel({
       <MessageScrollerProvider>
         <div className="min-h-0 flex-1 overflow-hidden">
           {messages.length === 0 && pending.length === 0 ? (
-            <Empty className="h-full">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Bot />
-                </EmptyMedia>
-                <EmptyTitle>{t('title', { agent: agent.name })}</EmptyTitle>
-                <EmptyDescription>{t('emptyHint')}</EmptyDescription>
-              </EmptyHeader>
-            </Empty>
+            (empty ?? (
+              <Empty className="h-full">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Bot />
+                  </EmptyMedia>
+                  <EmptyTitle>{t('title', { agent: agent.name })}</EmptyTitle>
+                  <EmptyDescription>{t('emptyHint')}</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ))
           ) : (
             <AgentChatTranscript
+              agentName={agent.name}
               messages={messages}
               status={status}
               activeTool={activeTool}
@@ -217,7 +223,7 @@ export function AgentChatPanel({
               className="hidden"
               onChange={(e) => void attach(e.target.files)}
             />
-            <InputGroup className="rounded-2xl border-transparent bg-muted has-[[data-slot=input-group-control]:focus-visible]:border-transparent has-[[data-slot=input-group-control]:focus-visible]:ring-0 dark:bg-muted/50">
+            <InputGroup className="rounded-2xl border-transparent bg-card has-[[data-slot=input-group-control]:focus-visible]:border-transparent has-[[data-slot=input-group-control]:focus-visible]:ring-0 dark:bg-card">
               <InputGroupTextarea
                 // `auto` once there is something to read, so a message keeps the
                 // script it was typed in. An empty box has nothing to read from.

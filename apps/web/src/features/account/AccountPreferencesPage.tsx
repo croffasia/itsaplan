@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import type {
   AccountPreferencesPatch,
+  AgentRunsView,
   IssueActivityView,
   IssueOpenMode,
   IssueStatsView,
@@ -29,6 +30,7 @@ import AccountPreferencesNav from './components/preferences/AccountPreferencesNa
 import AccountPreferencesSaveState from './components/preferences/AccountPreferencesSaveState';
 
 const ISSUE_OPEN_MODES: IssueOpenMode[] = ['panel', 'page'];
+const AGENT_RUNS_VIEWS: AgentRunsView[] = ['full', 'compact'];
 const ISSUE_STATS_VIEWS: IssueStatsView[] = ['compact', 'timeline'];
 const ISSUE_ACTIVITY_VIEWS: IssueActivityView[] = ['flat', 'grouped'];
 const START_PAGES: StartPage[] = ['work-items', 'inbox', 'dashboard', 'initiatives'];
@@ -171,6 +173,20 @@ export default function AccountPreferencesPage() {
           <Switch
             checked={prefs.showChatByDefault}
             onCheckedChange={(showChatByDefault) => save({ showChatByDefault })}
+            disabled={disabled}
+          />
+        </AccountPreferenceRow>
+        <AccountPreferenceRow
+          label={t('agentRunsView')}
+          description={t('agentRunsViewDescription')}
+        >
+          <AccountPreferenceSelect
+            value={prefs.agentRunsView}
+            options={AGENT_RUNS_VIEWS.map((value) => ({
+              value,
+              label: t(`agentRunsViewOptions.${value}`),
+            }))}
+            onChange={(agentRunsView) => save({ agentRunsView })}
             disabled={disabled}
           />
         </AccountPreferenceRow>

@@ -138,10 +138,6 @@
     "ai-agents": {
       "label": "Agen AI",
       "description": "Agen AI yang bekerja dalam proyek ini."
-    },
-    "queue": {
-      "label": "Eksekusi agen",
-      "description": "Eksekusi agen internal dan eksternal proyek: berjalan, menunggu, dan yang sudah selesai."
     }
   },
   "previews": {

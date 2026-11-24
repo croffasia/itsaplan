@@ -37,7 +37,8 @@
   "search": "Buscar ou executar um comando…",
   "searchHint": "Buscar ou executar um comando ({key})",
   "newIssueHint": "Nova issue ({key})",
-  "aiChatHint": "Converse com seus agentes de IA ({key})",
+  "agentsPanel": "Chat de IA e execuções de agentes",
+  "runningRuns": "{count, plural, one {# execução} other {# execuções}} em andamento",
   "sections": "Seções",
   "doubleClickToRename": "Clique duas vezes para renomear",
   "groups": {

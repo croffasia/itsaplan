@@ -190,11 +190,13 @@ export interface AiAgentPatch {
   invocationUrl?: string | null;
 }
 
-// One event of a streamed agent run (mirrors the API's AgentRunEvent). `text` is a
-// chunk of the answer to append; `tool-start`/`tool-end` report a capability the
-// agent is using, so the UI can show what it is doing; `done` ends the run with the
-// conversation thread id; `error` reports a failure that happened mid-run.
+// One event of a streamed agent run (mirrors the API's AgentRunEvent). `thread` names the
+// conversation the answer goes to, where the agent keeps one; `text` is a chunk of the
+// answer to append; `tool-start`/`tool-end` report a capability the agent is using, so the
+// UI can show what it is doing; `done` ends the run with the conversation thread id;
+// `error` reports a failure that happened mid-run.
 export type AgentRunEvent =
+  | { type: 'thread'; threadId: string }
   | { type: 'text'; value: string }
   | { type: 'tool-start'; toolCallId: string; toolName: string; args?: string }
   // An external agent's runner sends a call's arguments after the call itself, in

@@ -16,11 +16,7 @@ import {
   type MemberRole,
 } from '#modules/members/service';
 import { getTeamMembership, runsTeam, type TeamStanding } from '#modules/teams/service';
-import {
-  projectWorkspaceGrant,
-  workspaceGrant,
-  workspaceGrants,
-} from '#modules/workspaces/service';
+import { projectGrant, projectGrants, workspaceGrant } from '#modules/workspaces/service';
 import {
   hasPermission,
   emptyPermissions,
@@ -36,7 +32,7 @@ import {
   teamAccess,
   type ProjectAccess,
   type TeamAccess,
-  type WorkspaceGrant,
+  type ProjectGrant,
 } from './workspace-roles';
 
 // The authenticated user carried on the request context. Populated by the
@@ -67,15 +63,16 @@ export function requireGod(user: AuthUser | undefined | null): AuthUser {
   return current;
 }
 
-// What the person holds in a project: their membership, raised to what their role in
-// the workspace grants (see workspace-roles.ts). Every access check below reads it.
+// What the person holds in a project: their membership, raised to what their rank in its
+// team and their role in the workspace grant (see workspace-roles.ts). Every access check
+// below reads it.
 export async function getProjectAccess(
   projectId: number,
   userId: string,
 ): Promise<ProjectAccess | null> {
   const [member, grant] = await Promise.all([
     getMemberContext(projectId, userId),
-    projectWorkspaceGrant(projectId, userId),
+    projectGrant(projectId, userId),
   ]);
   return projectAccess(member, grant);
 }
@@ -424,8 +421,8 @@ export async function projectsWithPermission(
     .map((entry) => entry.projectId);
 }
 
-// The ids of the projects the user is a member of or reaches through a workspace role,
-// as a subquery. It starts from the user's own memberships and the granted teams, so it
+// The ids of the projects the user is a member of or reaches by a grant, as a subquery.
+// It starts from the user's own memberships and the granted teams, so it
 // reads indexes rather than every project of the instance.
 export function reachedProjectIds(userId: string, grantedTeams: number[]): SQLWrapper {
   const member = db
@@ -438,19 +435,19 @@ export function reachedProjectIds(userId: string, grantedTeams: number[]): SQLWr
   );
 }
 
-// Every project the user reaches, as a member or through their workspace role, where
-// their access holds each permission. mcpOnly keeps the projects open to MCP clients.
-// A caller that already read the user's workspace grants passes them.
+// Every project the user reaches, as a member or by a grant, where their access holds each
+// permission. mcpOnly keeps the projects open to MCP clients. A caller that already read
+// the user's grants passes them.
 export async function readableProjectIds(
   userId: string,
   required: [PermissionResource, PermissionAction][],
   opts: {
     mcpOnly?: boolean;
     includeArchived?: boolean;
-    grants?: Map<number, WorkspaceGrant>;
+    grants?: Map<number, ProjectGrant>;
   } = {},
 ): Promise<number[]> {
-  const grants = opts.grants ?? (await workspaceGrants(userId));
+  const grants = opts.grants ?? (await projectGrants(userId));
   const rows = await db
     .select({
       id: project.id,

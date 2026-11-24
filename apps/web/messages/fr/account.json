@@ -107,7 +107,7 @@
       "issueSettingsDescription": "Valeurs par défaut pour chaque ticket que vous ouvrez. Les changer sur un ticket ouvert ne modifie pas ces préférences.",
       "notifications": "Notifications",
       "notificationsDescription": "Suivre un ticket vous en apporte les commentaires et les changements d'état.",
-      "aiChat": "Chat IA",
+      "aiChat": "Chat et exécutions d'agents",
       "shortcuts": "Raccourcis clavier",
       "shortcutsDescription": "Le bouton de réinitialisation rétablit le raccourci par défaut."
     },
@@ -198,6 +198,12 @@
     "pushNotificationsOff": "Désactivé",
     "pushNotificationsFailed": "Impossible de modifier les notifications push dans ce navigateur. Réessayez.",
     "showChatByDefault": "Ouvrir le chat par défaut",
-    "showChatByDefaultDescription": "Le panneau du chat s'ouvre avec chaque page de projet."
+    "showChatByDefaultDescription": "Le panneau du chat s'ouvre avec chaque page de projet.",
+    "agentRunsView": "Afficher les exécutions en",
+    "agentRunsViewDescription": "Complète ouvre une exécution à côté de la liste. Compacte l'ouvre à la place de la liste. Les téléphones utilisent toujours la vue compacte.",
+    "agentRunsViewOptions": {
+      "full": "Complète",
+      "compact": "Compacte"
+    }
   }
 }

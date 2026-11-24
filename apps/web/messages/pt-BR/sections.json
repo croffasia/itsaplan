@@ -138,10 +138,6 @@
     "ai-agents": {
       "label": "Agentes de IA",
       "description": "Agentes de IA trabalhando neste projeto."
-    },
-    "queue": {
-      "label": "Execuções de agentes",
-      "description": "Execuções dos agentes internos e externos do projeto: em andamento, aguardando e anteriores."
     }
   },
   "previews": {

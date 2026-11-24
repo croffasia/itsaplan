@@ -107,7 +107,7 @@
       "issueSettingsDescription": "Açtığınız her iş için varsayılanlar. Bunları açık bir işte değiştirmek bu tercihleri değiştirmez.",
       "notifications": "Bildirimler",
       "notificationsDescription": "Bir işi takip etmek yorumlarını ve durum değişikliklerini size bildirir.",
-      "aiChat": "Yapay zekâ sohbeti",
+      "aiChat": "Sohbet ve ajan çalıştırmaları",
       "shortcuts": "Klavye kısayolları",
       "shortcutsDescription": "Sıfırlama düğmesi kısayolu varsayılanına döndürür."
     },
@@ -198,6 +198,12 @@
     "pushNotificationsOff": "Kapalı",
     "pushNotificationsFailed": "Bu tarayıcıda anlık bildirimler değiştirilemedi. Tekrar deneyin.",
     "showChatByDefault": "Sohbeti varsayılan olarak aç",
-    "showChatByDefaultDescription": "Sohbet paneli her proje sayfasıyla birlikte açılır."
+    "showChatByDefaultDescription": "Sohbet paneli her proje sayfasıyla birlikte açılır.",
+    "agentRunsView": "Çalıştırmaları şöyle göster:",
+    "agentRunsViewDescription": "Tam, çalıştırmayı listenin yanında açar. Kompakt, listenin yerine açar. Telefonlar her zaman kompakt görünümü kullanır.",
+    "agentRunsViewOptions": {
+      "full": "Tam",
+      "compact": "Kompakt"
+    }
   }
 }

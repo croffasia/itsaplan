@@ -80,11 +80,11 @@ segment. Files are `messages/<locale>/<namespace>.json`; namespaces are domains,
   its state (icon plus word) instead of a disabled switch, input or button, and say once who can
   change it. Reuse `components/common/fields/OnOffStatus.tsx` for an on/off state.
 - When a switch that gates a section is off, drop the section.
-- A workspace's owner and admins reach its projects and teams without being members: the project
-  or team carries `via: 'workspace'`. In a project `usePermissions().isMember` is false; a team
-  screen reads `team.via`.
-- For those users, leave out starring and hiding a project, saving a private view, leaving the
-  project or the team, and notification settings. Everything else follows `can()`.
+- A workspace's owner and admins reach its projects and teams without being members
+  (`via: 'workspace'`), a team's owner and managers its projects (`via: 'team'`). In a project
+  `usePermissions().isMember` is then false; a team screen reads `team.via`.
+- For those users, leave out starring and hiding a project, saving a private view, leaving what
+  they are not a member of, and notification settings. Everything else follows `can()`.
 - Add shadcn components with `bunx shadcn@latest add <name>`.
 - **Do not edit `src/components/ui/`.** Re-adding a component overwrites it. Style from outside:
   a rule in `globals.css` on `[data-slot='…']`, outside `@layer`, since anything in

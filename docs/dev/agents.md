@@ -339,15 +339,17 @@ does not check it.
 
 ## Run list
 
-The run list is the Agent runs page of the web app: the runs of internal and external agents, the
-active and the past ones. Each route gives the list of one scope:
+The run list gives the runs of internal and external agents, the active and the past ones. The web
+app shows a project's list in the side panel, next to the AI chat, and a team's and a workspace's on
+their Agent runs pages. The addresses under a project's `agents/queue` open the panel. Each route
+gives the list of one scope:
 
-| Route                                           | Runs of                                             | Who reads                                                 |
-| ----------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------- |
-| `GET /agent-runs/queue`                         | every project where the caller has `ai_agents read` | anyone signed in                                          |
-| `GET /projects/:projectKey/agent-runs/queue`    | the project                                         | `ai_agents read` in the project, or whoever runs the team |
-| `GET /teams/:teamId/agent-runs/queue`           | the team's projects                                 | whoever runs the team or manages its workspace            |
-| `GET /workspaces/:workspaceId/agent-runs/queue` | the projects of every team of the workspace         | the workspace's owner and admins                          |
+| Route                                           | Runs of                                             | Who reads                                      |
+| ----------------------------------------------- | --------------------------------------------------- | ---------------------------------------------- |
+| `GET /agent-runs/queue`                         | every project where the caller has `ai_agents read` | anyone signed in                               |
+| `GET /projects/:projectKey/agent-runs/queue`    | the project                                         | `ai_agents read` in the project                |
+| `GET /teams/:teamId/agent-runs/queue`           | the team's projects                                 | whoever runs the team or manages its workspace |
+| `GET /workspaces/:workspaceId/agent-runs/queue` | the projects of every team of the workspace         | the workspace's owner and admins               |
 
 The list includes archived projects. It hides the runs that "Reading and stopping runs" hides.
 
@@ -356,7 +358,7 @@ Filters:
 - `state`: the `active` runs (waiting and running) or the `failed` runs.
 - `q`: the issue's title or key, the schedule's name or the agent's username.
 - `initiatorIds`, `projectIds`: the runs of these initiators or projects, comma-separated.
-- `runId`: one run, for the detail pane.
+- `runId`: one run, for the view of that run.
 
 The filters take their choices from `.../agent-runs/initiators/options`, the initiators of the
 list's runs, and, for a team or a workspace, `.../agent-runs/projects/options`, the projects of its
@@ -402,10 +404,14 @@ has a `last_error`. A run in retry backoff has one, so its heartbeat answers 404
 ## Sync marker
 
 `runnerQueue:1` is a user-scoped sync marker. It combines the `runner-queue:` revisions of the
-projects a queue may list to the user, those of the teams they run included, with lease expiry,
-runner presence and the internal runs in flight in those projects' workspaces. Time-based state
-changes are visible without a write. The queue, the issue run panel, the agent's run list and the
-trace views watch it. A runner being online is separate from a run holding an execution lease.
+projects a queue may list to the user with lease expiry, runner presence and the internal runs in
+flight in those projects' workspaces. Time-based state changes are visible without a write. The
+queue, the issue run panel, the agent's run list and the trace views watch it. A runner being online
+is separate from a run holding an execution lease.
+
+`agentRuns:<projectId>` is the `runner-queue:` revision of one project alone, for whoever reads its
+agents. The header's count of running runs watches it while no run works. While one works, the count
+watches `runnerQueue:1`: a run that loses its lease stops counting without a write.
 
 The `agent_run_rev` trigger bumps `runner-queue:<projectId>` on every write to `agent_run`, and
 `appendRunEvents` bumps it for a transcript write. The trigger does not write the issue scope, so the

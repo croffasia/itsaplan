@@ -1,10 +1,12 @@
 import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
+import { cn } from '@/lib/utils';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AgentRunExternalTrace from '@/components/common/agent-runs/AgentRunExternalTrace';
 import AgentRunInternalTrace from '@/components/common/agent-runs/AgentRunInternalTrace';
 import { useRunSteps } from '../hooks/useRunSteps';
+import RunnerQueueRunFactGrid from './RunnerQueueRunFactGrid';
 import RunnerQueueRunHeader from './RunnerQueueRunHeader';
 import RunnerQueueRunNotice from './RunnerQueueRunNotice';
 import RunnerQueueRunProperties from './RunnerQueueRunProperties';
@@ -24,12 +26,16 @@ function firstTab(run: RunnerQueueRun): Tab {
   return 'steps';
 }
 
+// A run on the page of `listPath`, or in the side panel without it. `withColumn` keeps its
+// properties in a column of their own, where there is room for one.
 export default function RunnerQueueRunDetail({
   run,
   listPath,
+  withColumn = listPath != null,
 }: {
   run: RunnerQueueRun;
-  listPath: string;
+  listPath?: string;
+  withColumn?: boolean;
 }) {
   const t = useTranslations('issue.agentRuns');
   const [tab, setTab] = useState(() => firstTab(run));
@@ -50,7 +56,13 @@ export default function RunnerQueueRunDetail({
     <article className="@container space-y-6">
       <RunnerQueueRunHeader run={run} listPath={listPath} />
       <RunnerQueueRunNotice run={run} onShowFailedStep={failedStep ? showFailedStep : undefined} />
-      <div className="grid items-start gap-6 @5xl:grid-cols-[minmax(0,1fr)_340px] @5xl:gap-10">
+      {!withColumn && <RunnerQueueRunFactGrid run={run} />}
+      <div
+        className={cn(
+          'grid items-start gap-6',
+          withColumn && '@5xl:grid-cols-[minmax(0,1fr)_340px] @5xl:gap-10',
+        )}
+      >
         <Tabs
           ref={panels}
           value={tab}
@@ -94,7 +106,7 @@ export default function RunnerQueueRunDetail({
             <RunnerQueueRunTask prompt={run.prompt} />
           </TabsContent>
         </Tabs>
-        <RunnerQueueRunProperties run={run} listPath={listPath} />
+        {withColumn && <RunnerQueueRunProperties run={run} listPath={listPath} />}
       </div>
     </article>
   );

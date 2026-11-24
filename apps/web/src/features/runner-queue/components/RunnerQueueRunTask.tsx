@@ -1,5 +1,5 @@
+import CopyButton from '@/components/common/CopyButton';
 import Markdown from '@/components/common/Markdown';
-import RunnerQueueCopyButton from './RunnerQueueCopyButton';
 
 export default function RunnerQueueRunTask({ prompt }: { prompt: string }) {
   return (
@@ -7,7 +7,7 @@ export default function RunnerQueueRunTask({ prompt }: { prompt: string }) {
       <div className="min-w-0 flex-1 text-sm">
         <Markdown>{prompt}</Markdown>
       </div>
-      <RunnerQueueCopyButton text={prompt} />
+      <CopyButton text={prompt} />
     </div>
   );
 }

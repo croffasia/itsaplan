@@ -62,6 +62,9 @@
       "chat": {
         "toggle": "Show or hide AI chat"
       },
+      "runs": {
+        "toggle": "Show or hide agent runs"
+      },
       "issue": {
         "new": "New issue"
       },

@@ -21,7 +21,6 @@ import {
 } from '#shared/access';
 import { boundProjectId, isMcpRequest } from '#shared/mcp-request';
 import { getProjectById } from '#modules/projects/service';
-import { assertReadsRuns } from '#modules/agents/queue/service';
 import { HttpError, instantParam } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { deleteObject } from '@repo/storage';
@@ -240,7 +239,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
             Number((params as { issueId: string }).issueId),
           );
           if (projectId == null) throw new HttpError(404, 'Issue not found');
-          await assertReadsRuns(projectId, requireUser(user));
+          await assertPermission(projectId, requireUser(user), 'ai_agents', 'read');
           await assertMcpAllowed(projectId, request.headers);
           return { projectId };
         },

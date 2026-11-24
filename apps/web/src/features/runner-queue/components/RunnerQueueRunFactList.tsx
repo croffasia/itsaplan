@@ -1,7 +1,7 @@
-import { Fragment, type ReactNode } from 'react';
+import { Fragment } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
-
-export type RunFact = [label: string, value: ReactNode];
+import type { RunFact } from '../types/runFact';
 
 export default function RunnerQueueRunFactList({
   facts,
@@ -10,6 +10,7 @@ export default function RunnerQueueRunFactList({
   facts: RunFact[];
   className?: string;
 }) {
+  const t = useTranslations('issue.agentRuns.facts');
   return (
     <dl
       className={cn(
@@ -17,9 +18,9 @@ export default function RunnerQueueRunFactList({
         className,
       )}
     >
-      {facts.map(([label, value]) => (
-        <Fragment key={label}>
-          <dt className="text-muted-foreground">{label}</dt>
+      {facts.map(([key, value]) => (
+        <Fragment key={key}>
+          <dt className="text-muted-foreground">{t(key)}</dt>
           <dd className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 break-words">
             {value}
           </dd>

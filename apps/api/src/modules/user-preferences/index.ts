@@ -8,8 +8,8 @@ import { PreferencePatch, PreferenceResponse } from './model';
 import { getPreferences, isValidTimezone, updatePreferences } from './service';
 
 // The session user's own interface preferences: timezone, language, theme, how a clicked issue
-// opens, which section the app root lands on, whether the floating AI chat starts
-// visible, how an issue's status stats section starts out, whether they are
+// opens, which section the app root lands on, whether the AI chat starts open, where an
+// agent run opens, how an issue's status stats section starts out, whether they are
 // subscribed to the issues they touch, and the project they were in last. Every
 // route is self-scoped to the session user, so no project guard applies — a user
 // only ever reads or writes their own row. Not MCP tools: an agent has no business

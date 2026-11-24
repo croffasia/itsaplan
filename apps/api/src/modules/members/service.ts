@@ -1,6 +1,8 @@
 import { isAccountDeactivated } from '@repo/auth';
 import {
   db,
+  noteBoard,
+  noteBoardMember,
   project,
   projectMember,
   teamMember,
@@ -12,7 +14,19 @@ import {
   aiAgent,
   userPreference,
 } from '@repo/db';
-import { and, desc, eq, ilike, inArray, isNotNull, isNull, notExists, or, sql } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  isNotNull,
+  isNull,
+  notExists,
+  or,
+  sql,
+  type SQLWrapper,
+} from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
 import { DEFAULT_TIMEZONE } from '#modules/user-preferences/service';
 import {
@@ -581,27 +595,49 @@ export async function listAccessCandidates(
   });
 }
 
+// Ends what was shared with a person in the projects: private Docs pages and note boards.
+// Neither a later return nor a rank in the team may bring that access back.
+export async function dropShares(
+  tx: Pick<typeof db, 'delete' | 'select'>,
+  userId: string,
+  projectIds: number[] | SQLWrapper,
+): Promise<void> {
+  await tx
+    .delete(projectDocumentMember)
+    .where(
+      and(
+        eq(projectDocumentMember.userId, userId),
+        inArray(
+          projectDocumentMember.documentId,
+          tx
+            .select({ id: projectDocument.id })
+            .from(projectDocument)
+            .where(inArray(projectDocument.projectId, projectIds)),
+        ),
+      ),
+    );
+  await tx
+    .delete(noteBoardMember)
+    .where(
+      and(
+        eq(noteBoardMember.userId, userId),
+        inArray(
+          noteBoardMember.boardId,
+          tx
+            .select({ id: noteBoard.id })
+            .from(noteBoard)
+            .where(inArray(noteBoard.projectId, projectIds)),
+        ),
+      ),
+    );
+}
+
 export async function removeMember(projectId: number, userId: string): Promise<void> {
   await db.transaction(async (tx) => {
     await tx
       .delete(projectMember)
       .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, userId)));
-    // The private Docs pages shared with them here: a later return must not bring that
-    // access back.
-    await tx
-      .delete(projectDocumentMember)
-      .where(
-        and(
-          eq(projectDocumentMember.userId, userId),
-          inArray(
-            projectDocumentMember.documentId,
-            tx
-              .select({ id: projectDocument.id })
-              .from(projectDocument)
-              .where(eq(projectDocument.projectId, projectId)),
-          ),
-        ),
-      );
+    await dropShares(tx, userId, [projectId]);
     // A column cannot keep assigning issues to someone who is no longer a member:
     // the same assignment sent as a patch would be refused.
     await tx

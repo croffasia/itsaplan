@@ -37,7 +37,8 @@
   "search": "Cari atau jalankan perintah…",
   "searchHint": "Cari atau jalankan perintah ({key})",
   "newIssueHint": "Issue baru ({key})",
-  "aiChatHint": "Mengobrol dengan agen AI Anda ({key})",
+  "agentsPanel": "Obrolan AI dan eksekusi agen",
+  "runningRuns": "{count, plural, other {# eksekusi}} berjalan",
   "sections": "Bagian",
   "doubleClickToRename": "Klik dua kali untuk mengganti nama",
   "groups": {

@@ -4,6 +4,7 @@
 // never appears here.
 export const revScope = {
   runnerQueue: 'runnerQueue:1',
+  agentRuns: (projectId: number) => `agentRuns:${projectId}`,
   board: (projectId: number) => `board:${projectId}`,
   issue: (issueId: number) => `issue:${issueId}`,
   initiative: (initiativeId: number) => `initiative:${initiativeId}`,

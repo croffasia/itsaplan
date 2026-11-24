@@ -107,7 +107,7 @@
       "issueSettingsDescription": "你打开的每个工作项的默认设置。在已打开的工作项中更改不会影响这些偏好。",
       "notifications": "通知",
       "notificationsDescription": "关注工作项后可接收其评论和状态变更通知。",
-      "aiChat": "AI 聊天",
+      "aiChat": "聊天和代理运行",
       "shortcuts": "键盘快捷键",
       "shortcutsDescription": "重置按钮会将快捷键恢复为默认值。"
     },
@@ -198,6 +198,12 @@
     "pushNotificationsOff": "已关闭",
     "pushNotificationsFailed": "无法更改此浏览器的推送通知。请重试。",
     "showChatByDefault": "默认打开聊天",
-    "showChatByDefaultDescription": "每次打开项目页面时，聊天面板都会一起打开。"
+    "showChatByDefaultDescription": "每次打开项目页面时，聊天面板都会一起打开。",
+    "agentRunsView": "代理运行显示方式",
+    "agentRunsViewDescription": "完整视图在列表旁边打开运行。紧凑视图在列表位置打开运行。手机始终使用紧凑视图。",
+    "agentRunsViewOptions": {
+      "full": "完整",
+      "compact": "紧凑"
+    }
   }
 }

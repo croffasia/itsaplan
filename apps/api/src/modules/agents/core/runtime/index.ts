@@ -100,11 +100,13 @@ function reasoningProviderOptions(effort: ReasoningEffort): ProviderOptions {
   };
 }
 
-// One event of a streamed agent run, sent to the caller as it happens. `text` is
-// a chunk of the answer to append; `tool-start`/`tool-end` report a capability the
-// agent is using (so the UI can show what it is doing); `done` closes the stream
-// and carries the conversation thread id; `error` reports a failure mid-stream.
+// One event of a streamed agent run, sent to the caller as it happens. `thread` names the
+// conversation the answer goes to, where the agent keeps one; `text` is a chunk of the
+// answer to append; `tool-start`/`tool-end` report a capability the agent is using (so the
+// UI can show what it is doing); `done` closes the stream and carries the conversation
+// thread id; `error` reports a failure mid-stream.
 export type AgentRunEvent =
+  | { type: 'thread'; threadId: string }
   | { type: 'text'; value: string }
   | { type: 'tool-start'; toolCallId: string; toolName: string; args?: string }
   | { type: 'tool-end'; toolCallId: string; toolName: string; result?: string }
@@ -227,8 +229,8 @@ function contextOf(usage: ModelUsage | undefined): ContextUsage | null {
 
 type ModelUsage = { inputTokens?: number; outputTokens?: number };
 
-// Streams the internal agent's response as it is produced. Yields text chunks and
-// the tool calls the agent makes, then a final `done` with the thread id (see
+// Streams the internal agent's response as it is produced. Yields the thread the answer
+// goes to, text chunks and the tool calls the agent makes, then a final `done` (see
 // AgentRunEvent). Same preconditions and memory/thread handling as runAgent. A
 // failure raised while streaming is yielded as an `error` event rather than thrown,
 // so a caller consuming the stream sees it inline and the stream still ends.
@@ -245,6 +247,7 @@ export async function* streamAgent(
 ): AsyncGenerator<AgentRunEvent> {
   try {
     const { agent, row, options, threadId } = await prepareRun(agentId, projectId, prompt, opts);
+    if (threadId) yield { type: 'thread', threadId };
     const result = await agent.stream(prompt, { ...options, abortSignal: signal });
     // The size of the context is what the last call of the answer read, so each step
     // replaces the one before it rather than being added to it.

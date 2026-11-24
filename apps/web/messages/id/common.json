@@ -62,6 +62,9 @@
       "chat": {
         "toggle": "Tampilkan atau sembunyikan obrolan AI"
       },
+      "runs": {
+        "toggle": "Tampilkan atau sembunyikan eksekusi agen"
+      },
       "issue": {
         "new": "Issue baru"
       },

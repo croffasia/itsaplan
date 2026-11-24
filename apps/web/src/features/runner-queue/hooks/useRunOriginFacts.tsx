@@ -4,11 +4,11 @@ import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import RunnerQueueRunLink from '../components/RunnerQueueRunLink';
 import RunnerQueueRunActor from '../components/RunnerQueueRunActor';
 import RunnerQueueRunPerson from '../components/RunnerQueueRunPerson';
-import type { RunFact } from '../components/RunnerQueueRunFactList';
+import type { RunFact } from '../types/runFact';
 
 // Where the run comes from: whom it works for, who started it, the run it came from and the
 // first run of its chain.
-export function useRunOriginFacts(run: RunnerQueueRun, listPath: string): RunFact[] {
+export function useRunOriginFacts(run: RunnerQueueRun, listPath?: string): RunFact[] {
   const t = useTranslations('issue.agentRuns');
   const link = (target: { id: number; projectRef: string }, label: ReactNode) => (
     <RunnerQueueRunLink target={target} projectRef={run.projectRef} listPath={listPath}>
@@ -30,16 +30,16 @@ export function useRunOriginFacts(run: RunnerQueueRun, listPath: string): RunFac
   } else if (projectRoot) {
     forWhom = link(projectRoot, projectWork);
   }
-  const facts: RunFact[] = [[t('facts.initiator'), forWhom]];
+  const facts: RunFact[] = [['initiator', forWhom]];
   if (startedBy) {
-    facts.push([t('facts.startedBy'), <RunnerQueueRunActor key="startedBy" actor={startedBy} />]);
+    facts.push(['startedBy', <RunnerQueueRunActor key="startedBy" actor={startedBy} />]);
   }
-  if (parentRun) facts.push([t('facts.fromRun'), link(parentRun, `#${parentRun.id}`)]);
+  if (parentRun) facts.push(['fromRun', link(parentRun, `#${parentRun.id}`)]);
   if (rootRun && rootRun.id !== parentRun?.id) {
     const label = rootRun.initiator
       ? `#${rootRun.id} · ${rootRun.initiator.name}`
       : `#${rootRun.id}`;
-    facts.push([t('facts.firstRun'), link(rootRun, label)]);
+    facts.push(['firstRun', link(rootRun, label)]);
   }
   return facts;
 }

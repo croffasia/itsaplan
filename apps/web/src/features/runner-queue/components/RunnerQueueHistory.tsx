@@ -3,6 +3,7 @@ import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import { dayKey, formatShortDate } from '@/utils/dates';
 import { groupRuns } from '../utils/groupRuns';
 import { runDays } from '../utils/runDays';
+import { runPath } from '../utils/runPath';
 import RunnerQueueHistoryGroup from './RunnerQueueHistoryGroup';
 import RunnerQueueHistoryRow from './RunnerQueueHistoryRow';
 
@@ -33,15 +34,15 @@ export default function RunnerQueueHistory({
 
   return runDays(runs).map(({ day, runs: dayRuns }) => (
     <section key={day}>
-      <h2 className="px-4 pt-4 pb-1 text-xs font-semibold text-muted-foreground">
+      <h3 className="px-4 pt-4 pb-1 text-xs font-semibold text-muted-foreground">
         {dayLabel(day)}
-      </h2>
+      </h3>
       {groupRuns(dayRuns).map((group) =>
         group.length === 1 ? (
           <RunnerQueueHistoryRow
             key={group[0].id}
             run={group[0]}
-            href={`${path}/${group[0].id}`}
+            href={runPath(group[0], path)}
             selected={group[0].id === selectedId}
             acrossProjects={acrossProjects}
           />

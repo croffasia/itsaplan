@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { ApiError } from '@/lib/api/core/client';
 import type { AiAgent } from '@/lib/api/endpoints/agents';
 import { useAgentChat } from '@/hooks/useAgentChat';
 import { useAgentThreadMessagesQuery } from '@/services/aiAgents.service';
@@ -10,19 +11,19 @@ import { AgentChatPanel } from '@/components/common/agent-chat/AgentChatPanel';
 import { AiChatThreadSkeleton } from './AiChatThreadSkeleton';
 
 // The transcript and composer for one conversation with an agent. The chat session
-// lives here, so it survives the floating window being minimized (the window is hidden,
-// not unmounted) and navigation between pages. `threadId` is the conversation the host
-// wants shown: a past thread is restored from its transcript, null means a fresh chat.
-// When a fresh chat produces its first reply, its new thread id is reported up via
-// onThreadCreated so the host can select it and refresh the history list. Hosts key
-// this component by agent id and a new-chat nonce: switching agents or starting a new
-// chat remounts it into a fresh session.
+// lives here, so it survives the panel being closed (it is hidden, not unmounted) and
+// navigation between pages. `threadId` is the conversation the host wants shown: a past
+// thread is restored from its transcript, null means a fresh chat. The thread a fresh
+// chat's first message starts is reported up via onThreadCreated. The host keys this
+// component by the agent: switching agents remounts it into a fresh session.
 export function AiChatThread({
   projectKey,
   agent,
   threadId,
   onThreadCreated,
+  onThreadMissing,
   onStateChange,
+  empty,
   composerStart,
   composerEnd,
 }: {
@@ -30,13 +31,17 @@ export function AiChatThread({
   agent: AiAgent;
   threadId: string | null;
   onThreadCreated: (threadId: string) => void;
+  // The conversation to show is not there: it was deleted on another device.
+  onThreadMissing: (threadId: string) => void;
   // Reported so a host that keeps the conversation out of sight can still tell what is
   // going on in it.
-  onStateChange?: (state: { running: boolean; hasMessages: boolean }) => void;
+  onStateChange: (state: { running: boolean; hasMessages: boolean }) => void;
+  // What the host shows over the composer while nothing was said.
+  empty: ReactNode;
   // A control of the host that belongs to this conversation, put next to its composer.
-  composerStart?: ReactNode;
+  composerStart: ReactNode;
   // What the host says about this conversation, put at the end of the same row.
-  composerEnd?: ReactNode;
+  composerEnd: ReactNode;
 }) {
   const {
     messages,
@@ -58,11 +63,11 @@ export function AiChatThread({
   // session appear without a reload.
   useEffect(() => {
     if (status !== 'ready') return;
-    void qc.invalidateQueries({ queryKey: qk.agentThreads(projectKey, agent.id) });
-  }, [status, qc, projectKey, agent.id]);
+    void qc.invalidateQueries({ queryKey: qk.chatThreads(projectKey) });
+  }, [status, qc, projectKey]);
 
   useEffect(() => {
-    onStateChange?.({ running: status !== 'ready', hasMessages: messages.length > 0 });
+    onStateChange({ running: status !== 'ready', hasMessages: messages.length > 0 });
   }, [status, messages.length, onStateChange]);
 
   // How many transcript pages of the active thread are already in the conversation.
@@ -96,13 +101,21 @@ export function AiChatThread({
     prependHistory([...older].reverse().flatMap((page) => page.items));
   }, [threadId, messagesQuery.data, activeThreadId, prependHistory]);
 
-  // A fresh chat produced its first reply: report the new thread id up so the host
-  // selects it and refreshes the history list. Only for a fresh chat (threadId null);
-  // when restoring a past thread, activeThreadId briefly lags the selected threadId,
-  // and reporting it back would overwrite the new selection in a render loop.
+  // A fresh chat started its thread: report the id up so the host selects it, and read the
+  // history that now lists it. Only for a fresh chat (threadId null): when restoring a past
+  // thread, activeThreadId briefly lags the selected threadId, and reporting it back would
+  // overwrite the new selection in a render loop.
   useEffect(() => {
-    if (activeThreadId && threadId === null) onThreadCreated(activeThreadId);
-  }, [activeThreadId, threadId, onThreadCreated]);
+    if (!activeThreadId || threadId !== null) return;
+    onThreadCreated(activeThreadId);
+    void qc.invalidateQueries({ queryKey: qk.chatThreads(projectKey) });
+  }, [activeThreadId, threadId, onThreadCreated, qc, projectKey]);
+
+  const { error } = messagesQuery;
+  const missing = threadId !== activeThreadId && error instanceof ApiError && error.status === 404;
+  useEffect(() => {
+    if (missing && threadId) onThreadMissing(threadId);
+  }, [missing, threadId, onThreadMissing]);
 
   const restoring = threadId != null && threadId !== activeThreadId && messagesQuery.isLoading;
   if (restoring) return <AiChatThreadSkeleton />;
@@ -118,6 +131,7 @@ export function AiChatThread({
       onSend={send}
       onStop={stop}
       onRemovePending={removePending}
+      empty={empty}
       composerStart={composerStart}
       composerEnd={composerEnd}
       hasEarlierMessages={messagesQuery.hasNextPage}

@@ -182,12 +182,7 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
   .get(
     '/teams/:teamId/projects/:projectId',
     async ({ membership, params }) => {
-      const detail = await getTeamProject(
-        membership.teamId,
-        params.projectId,
-        membership.userId,
-        membership.role,
-      );
+      const detail = await getTeamProject(membership.teamId, params.projectId, membership.userId);
       if (!detail) throw new HttpError(404, 'Project not found');
       return detail;
     },
@@ -211,7 +206,6 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
           membership.teamId,
           params.projectId,
           membership.userId,
-          membership.role,
           { search: query.search, kind: query.kind, ...window },
         );
         if (!page) throw new HttpError(404, 'Project not found');

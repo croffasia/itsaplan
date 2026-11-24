@@ -29,6 +29,17 @@ export function useRunsInFlightQuery(api: string) {
   });
 }
 
+// How many runs work in the project now, internal and external.
+export function useRunningRunsQuery(projectRef: string, enabled: boolean) {
+  return useQuery({
+    queryKey: qk.runningRuns(projectRef),
+    queryFn: () =>
+      getRunnerQueue(`/projects/${projectRef}`, { page: 1, pageSize: 1, state: 'active' }),
+    select: (page) => page.running,
+    enabled,
+  });
+}
+
 // Under the runner queue key too, so a new initiator shows with the run that brings them.
 export function useRunInitiatorOptionsQuery(api: string) {
   return useQuery({

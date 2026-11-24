@@ -13,6 +13,7 @@ export const qk = {
     ['receivedInvites', userId, email, params] as const,
   externalRunTrace: (runId: number) => ['externalRunTrace', runId] as const,
   runnerQueue: ['runnerQueue'] as const,
+  runningRuns: (projectRef: string) => ['runnerQueue', 'running', projectRef] as const,
   issueAgentRuns: (issueId: number) => ['issueAgentRuns', issueId] as const,
   issueAgentRunTrace: (issueId: number, runId: number, traceId?: string) =>
     ['issueAgentRuns', issueId, 'trace', runId, traceId ?? null] as const,
@@ -227,17 +228,14 @@ export const qk = {
     ['agentSchedules', projectKey, 'page', params] as const,
   agentScheduleRuns: (projectKey: string, scheduleId: number) =>
     ['agentSchedules', projectKey, scheduleId, 'runs'] as const,
-  // The caller's chat threads with one agent (the AI Chat history rail) and the
+  // The caller's chat threads with the agents of a project (the chat history) and the
   // transcript of one thread (restored when a thread is opened). A search is a list of
   // its own, so the unsearched list stays cached while one is typed.
-  agentThreadLists: (projectKey: string, agentId: number) =>
-    ['aiAgents', projectKey, agentId, 'threadList'] as const,
-  agentThreads: (projectKey: string, agentId: number, q = '') =>
-    ['aiAgents', projectKey, agentId, 'threadList', q] as const,
-  // The conversations starred with one agent: the group on top of the history, and what
-  // the star in the tabs bar reads its state from.
-  agentFavoriteThreads: (projectKey: string, agentId: number) =>
-    ['aiAgents', projectKey, agentId, 'favoriteThreads'] as const,
+  chatThreadLists: (projectKey: string) => ['aiAgents', projectKey, 'threadList'] as const,
+  chatThreads: (projectKey: string, q = '') => ['aiAgents', projectKey, 'threadList', q] as const,
+  // The starred ones: the group on top of the history, and what the star of the open chat
+  // reads its state from.
+  favoriteChatThreads: (projectKey: string) => ['aiAgents', projectKey, 'favoriteThreads'] as const,
   agentThreadMessages: (projectKey: string, agentId: number, threadId: string) =>
     ['aiAgents', projectKey, agentId, 'threads', threadId] as const,
   // Everything integration-scoped. A credential belongs to the team, so changing one

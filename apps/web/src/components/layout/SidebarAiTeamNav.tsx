@@ -16,19 +16,16 @@ import SidebarNavItem from '@/components/layout/SidebarNavItem';
 import SidebarNavSubmenu from '@/components/layout/SidebarNavSubmenu';
 
 // The AI Team sidebar group: the AI Team sections the viewer may read, then the
-// agents of the project, then their runs. Renders nothing when none of them are readable.
+// agents of the project. Renders nothing when none of them are readable.
 export default function SidebarAiTeamNav({ projectKey }: { projectKey: string | null }) {
   const t = useTranslations('nav');
   const sectionText = useSettingsSectionText();
   const pathname = usePathname();
   const { aiTeamSection } = useShellRoute();
-  const { can, isAdmin } = usePermissions();
+  const { can } = usePermissions();
   const disabled = !projectKey;
 
-  // The run list also opens to whoever runs the team, as its route does.
-  const sections = useAiTeamSections().filter(
-    (s) => can(s.resource, 'read') || (s.slug === 'queue' && isAdmin),
-  );
+  const sections = useAiTeamSections().filter((s) => can(s.resource, 'read'));
   const showAgents = can(AI_AGENTS_SECTION.resource, 'read');
   if (sections.length === 0 && !showAgents) return null;
   const href = (slug: string) => (projectKey ? aiTeamPath(projectKey, slug) : '#');
@@ -42,11 +39,10 @@ export default function SidebarAiTeamNav({ projectKey }: { projectKey: string | 
       disabled={disabled}
     />
   );
-  const listed = sections.filter((s) => s.slug !== 'queue');
   // A menu opens to links, so with no project to link to each section is an item of its own.
   const entries: AiTeamEntry[] = projectKey
-    ? aiTeamEntries(listed)
-    : listed.map((section) => ({ section }));
+    ? aiTeamEntries(sections)
+    : sections.map((section) => ({ section }));
   const entryItem = (entry: AiTeamEntry) =>
     'section' in entry ? (
       sectionItem(entry.section)
@@ -80,7 +76,6 @@ export default function SidebarAiTeamNav({ projectKey }: { projectKey: string | 
               disabled={disabled}
             />
           )}
-          {sections.filter((s) => s.slug === 'queue').map(sectionItem)}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

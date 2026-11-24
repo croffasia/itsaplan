@@ -73,6 +73,7 @@ export const contextUsageBody = t.Optional(
 // set by a search: the text around the hit, and where it was found.
 export type ChatThreadSummary = {
   id: string;
+  agentId: number;
   title: string | null;
   cliSessionId: string | null;
   contextTokens?: number | null;

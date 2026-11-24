@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import type { MemberRole } from '@/lib/api/endpoints/members';
 import type { AccessVia } from '@/lib/api/endpoints/projects';
 import type { TeamProject, TeamRole } from '@/lib/api/endpoints/teams';
 import { useSession } from '@/lib/auth-client';
@@ -43,7 +42,7 @@ export default function TeamProjectActions({
   teamId: number;
   teamRole: TeamRole;
   project: TeamProject;
-  viewer: { role: MemberRole; via: AccessVia; source: 'invite' | 'scim' } | null;
+  viewer: { via: AccessVia; source: 'invite' | 'scim' } | null;
 }) {
   const t = useTranslations('projects');
   const router = useRouter();
@@ -59,7 +58,7 @@ export default function TeamProjectActions({
     useWorkspacesQuery().data?.some((w) => w.id === workspaceId && w.role !== null) ?? false;
 
   const userId = session?.user.id;
-  const isLastOwner = viewer?.role === 'owner' && project.owners.length === 1;
+  const isLastOwner = project.owners.length === 1 && project.owners[0].userId === userId;
   // A provisioned membership ends at the identity provider, so it is not given up here.
   const canLeave = viewer?.via === 'member' && !isLastOwner && viewer.source !== 'scim';
   const canEdit = teamRole !== 'member';

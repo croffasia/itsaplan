@@ -107,7 +107,7 @@
       "issueSettingsDescription": "Predefiniti per ogni issue che apri. Cambiarli su un'issue aperta non cambia questi.",
       "notifications": "Notifiche",
       "notificationsDescription": "Se segui un'issue, ricevi i suoi commenti e i cambi di stato.",
-      "aiChat": "Chat AI",
+      "aiChat": "Chat ed esecuzioni degli agenti",
       "shortcuts": "Scorciatoie da tastiera",
       "shortcutsDescription": "Il pulsante di reset riporta la scorciatoia al valore predefinito."
     },
@@ -198,6 +198,12 @@
     "pushNotificationsOff": "Disattivate",
     "pushNotificationsFailed": "Non è stato possibile cambiare le notifiche push in questo browser. Riprova.",
     "showChatByDefault": "Apri la chat di default",
-    "showChatByDefaultDescription": "Il pannello chat si apre con ogni pagina di progetto."
+    "showChatByDefaultDescription": "Il pannello chat si apre con ogni pagina di progetto.",
+    "agentRunsView": "Mostra le esecuzioni come",
+    "agentRunsViewDescription": "Completa apre un'esecuzione accanto all'elenco. Compatta la apre al posto dell'elenco. I telefoni usano sempre quella compatta.",
+    "agentRunsViewOptions": {
+      "full": "Completa",
+      "compact": "Compatta"
+    }
   }
 }

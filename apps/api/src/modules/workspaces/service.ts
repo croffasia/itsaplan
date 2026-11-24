@@ -28,7 +28,13 @@ import { requireUser, type AuthUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { getLimits, getOwnedWorkspaceLimit, tightestLimit } from '#shared/limits';
 import { getAgentSettings, getSharingSettings } from '#modules/settings/service';
-import { workspaceRoleGrant, type WorkspaceGrant } from '#shared/workspace-roles';
+import {
+  projectGrantOf,
+  workspaceRoleGrant,
+  type ProjectGrant,
+  type WorkspaceGrant,
+} from '#shared/workspace-roles';
+import type { TeamStanding } from '#modules/teams/service';
 
 export type WorkspaceRole = 'owner' | 'admin';
 
@@ -59,20 +65,26 @@ export async function workspaceGrant(
   return row ? workspaceRoleGrant(row.role) : null;
 }
 
-export async function projectWorkspaceGrant(
+// What the person's rank in the project's team and their role in its workspace grant there.
+export async function projectGrant(
   projectId: number,
   userId: string,
-): Promise<WorkspaceGrant | null> {
+): Promise<ProjectGrant | null> {
   const [row] = await db
-    .select({ role: workspaceManager.role })
+    .select({ rank: teamMember.role, role: workspaceManager.role })
     .from(project)
     .innerJoin(team, eq(team.id, project.teamId))
-    .innerJoin(
+    .leftJoin(teamMember, and(eq(teamMember.teamId, team.id), eq(teamMember.userId, userId)))
+    .leftJoin(
       workspaceManager,
       and(eq(workspaceManager.workspaceId, team.workspaceId), eq(workspaceManager.userId, userId)),
     )
     .where(eq(project.id, projectId));
-  return row ? workspaceRoleGrant(row.role) : null;
+  if (!row) return null;
+  return projectGrantOf(
+    row.rank as TeamStanding | null,
+    row.role ? workspaceRoleGrant(row.role) : null,
+  );
 }
 
 // Every team the person reaches through a workspace role, with what the role grants.
@@ -86,6 +98,25 @@ export async function workspaceGrants(userId: string): Promise<Map<number, Works
   for (const row of rows) {
     const grant = workspaceRoleGrant(row.role);
     if (grant) out.set(row.teamId, grant);
+  }
+  return out;
+}
+
+// Every team whose projects the person reaches without a membership of them, with what
+// they hold there.
+export async function projectGrants(userId: string): Promise<Map<number, ProjectGrant>> {
+  const [ranks, grants] = await Promise.all([
+    db
+      .select({ teamId: teamMember.teamId, rank: teamMember.role })
+      .from(teamMember)
+      .where(and(eq(teamMember.userId, userId), inArray(teamMember.role, ['owner', 'manager']))),
+    workspaceGrants(userId),
+  ]);
+  const rankOf = new Map(ranks.map((row) => [row.teamId, row.rank as TeamStanding]));
+  const out = new Map<number, ProjectGrant>();
+  for (const teamId of new Set([...rankOf.keys(), ...grants.keys()])) {
+    const granted = projectGrantOf(rankOf.get(teamId) ?? null, grants.get(teamId) ?? null);
+    if (granted) out.set(teamId, granted);
   }
   return out;
 }

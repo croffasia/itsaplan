@@ -17,7 +17,7 @@ export default function RunnerQueueRunProperties({
   listPath,
 }: {
   run: RunnerQueueRun;
-  listPath: string;
+  listPath?: string;
 }) {
   const t = useTranslations('issue.agentRuns');
   const details = usePersistedOpen('agent-run-details-open');

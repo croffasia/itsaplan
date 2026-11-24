@@ -138,10 +138,6 @@
     "ai-agents": {
       "label": "Agents",
       "description": "Des comptes bots auxquels vous pouvez déléguer des tickets."
-    },
-    "queue": {
-      "label": "Exécutions d'agents",
-      "description": "Exécutions des agents internes et externes du projet : en cours, en attente et passées."
     }
   },
   "previews": {

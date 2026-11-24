@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { highlight } from '@/lib/highlight';
+import CopyButton from '@/components/common/CopyButton';
 
 // What a tool call was given or answered. `md-content` carries the highlighter's
 // colours, the fill behind the block, and the left-to-right direction a mirrored page
@@ -11,7 +12,10 @@ export default function AgentChatToolBlock({ label, text }: { label: string; tex
 
   return (
     <div className="min-w-0">
-      <span className="text-xs text-muted-foreground">{label}</span>
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        {label}
+        <CopyButton text={text} />
+      </div>
       <div className="md-content mt-1">
         <pre className="max-h-64 overflow-auto text-xs leading-relaxed wrap-break-word whitespace-pre-wrap">
           <code>{highlighted ?? text}</code>

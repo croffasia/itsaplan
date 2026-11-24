@@ -37,7 +37,8 @@
   "search": "Пошук або команда…",
   "searchHint": "Пошук або команда ({key})",
   "newIssueHint": "Нова задача ({key})",
-  "aiChatHint": "Чат зі ШІ-агентами ({key})",
+  "agentsPanel": "ШІ-чат і запуски агентів",
+  "runningRuns": "{count, plural, one {# запуск} few {# запуски} many {# запусків} other {# запуску}} у роботі",
   "sections": "Розділи",
   "doubleClickToRename": "Подвійний клік, щоб перейменувати",
   "groups": {

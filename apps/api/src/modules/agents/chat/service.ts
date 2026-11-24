@@ -1,29 +1,21 @@
 import {
   db,
   agentChatEvent,
-  agentChatFavorite,
   agentChatMessage,
   agentChatThread,
   getJobSettings,
   type JobSettings,
 } from '@repo/db';
-import { and, asc, desc, eq, gt, inArray, notExists, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import { setTimeout as sleep } from 'node:timers/promises';
-import { iso, likePattern } from '#shared/lib';
+import { iso } from '#shared/lib';
 import { deleteContextUsage, recordContextUsage, type ContextUsage } from '../chat-usage';
-import { deleteFavorite, FAVORITES_LIMIT } from '../chat-favorites';
-import {
-  searchTerm,
-  snippetOf,
-  summarize,
-  type ThreadListOpts,
-  type ThreadRow,
-} from '../chat-history';
+import { deleteFavorite } from '../chat-favorites';
 import { appendTextPart } from '../chat-parts';
 import { limitAnswer } from '../core/answer-limit';
 import { attachmentPreamble, chartPreamble, projectsPreamble } from '../core/prompt/framing';
 import { peoplePreamble, type Person } from '../core/prompt/run-context';
-import type { ChatMessagePage, ChatPart, ChatThreadPage } from '../model';
+import type { ChatMessagePage, ChatPart } from '../model';
 import { newChatThreadId } from '../core/runtime/thread-ids';
 import { assertRunnerDrained, touchRunner, type RunnerAgent } from '../runner/service';
 import type { AgUiEventBody, ChatMessageStatus } from './model';
@@ -49,129 +41,6 @@ const EVENT_PAGE = 500;
 // The statuses an answer can still be worked on in: a runner claims either, and only
 // these take events, heartbeats and a result.
 const LIVE_STATUSES = ['pending', 'streaming'];
-
-// The caller's conversations with one external agent: the favorites group, the hits of
-// a search, or one page of the rest of them, newest first.
-export async function listThreads(
-  userId: string,
-  agentId: number,
-  opts: ThreadListOpts = {},
-): Promise<ChatThreadPage> {
-  if (opts.favorites) return favoriteThreads(userId, agentId);
-  const term = searchTerm(opts.q);
-  const page = opts.page ?? 0;
-  const rows = term
-    ? await searchThreads(userId, agentId, term, page)
-    : await unstarredPage(userId, agentId, page);
-  const hasMore = rows.length > PAGE_SIZE;
-  const items = await summarize(hasMore ? rows.slice(0, PAGE_SIZE) : rows);
-  return { items, nextPage: hasMore ? page + 1 : null };
-}
-
-// The conversations the caller starred, newest first, in one go.
-async function favoriteThreads(userId: string, agentId: number): Promise<ChatThreadPage> {
-  const rows = await db
-    .select(threadColumns)
-    .from(agentChatThread)
-    .innerJoin(agentChatFavorite, eq(agentChatFavorite.threadId, agentChatThread.id))
-    .where(
-      and(
-        eq(agentChatThread.agentId, agentId),
-        eq(agentChatThread.userId, userId),
-        eq(agentChatFavorite.userId, userId),
-      ),
-    )
-    .orderBy(desc(agentChatThread.updatedAt))
-    .limit(FAVORITES_LIMIT);
-  return {
-    items: await summarize(rows.map((row) => ({ ...row, favorite: true }))),
-    nextPage: null,
-  };
-}
-
-const threadColumns = {
-  id: agentChatThread.id,
-  title: agentChatThread.title,
-  cliSessionId: agentChatThread.cliSessionId,
-  createdAt: agentChatThread.createdAt,
-  updatedAt: agentChatThread.updatedAt,
-};
-
-// One page of the conversations that are not starred, newest first, with one row over
-// the page to tell whether there is another. The starred ones are left out because the
-// group above the list already holds them.
-async function unstarredPage(userId: string, agentId: number, page: number): Promise<ThreadRow[]> {
-  const rows = await db
-    .select(threadColumns)
-    .from(agentChatThread)
-    .where(
-      and(
-        eq(agentChatThread.agentId, agentId),
-        eq(agentChatThread.userId, userId),
-        notExists(
-          db
-            .select({ one: sql`1` })
-            .from(agentChatFavorite)
-            .where(
-              and(
-                eq(agentChatFavorite.userId, userId),
-                eq(agentChatFavorite.threadId, agentChatThread.id),
-              ),
-            ),
-        ),
-      ),
-    )
-    .orderBy(desc(agentChatThread.updatedAt))
-    .limit(PAGE_SIZE + 1)
-    .offset(page * PAGE_SIZE);
-  return rows.map((row) => ({ ...row, favorite: false }));
-}
-
-// The conversations whose title or messages contain the term. A tool call is not
-// searched: its arguments and its result are events of their own, and the message text
-// holds only what the agent wrote.
-//
-// The snippet is cut from the newest matching message, in the database — an answer runs
-// to the instance's answer limit, or past it where none is set. The rank puts a title hit
-// first, then the ones where the member's own message matches, then the ones matching only
-// in the agent's reply.
-async function searchThreads(
-  userId: string,
-  agentId: number,
-  term: string,
-  page: number,
-): Promise<ThreadRow[]> {
-  const like = likePattern(term);
-  const snippet = snippetOf(sql`msg.content`, term);
-  const rows = await db.execute(sql`
-    SELECT t.id,
-           t.title,
-           t.cli_session_id AS "cliSessionId",
-           t.created_at AS "createdAt",
-           t.updated_at AS "updatedAt",
-           f.thread_id IS NOT NULL AS favorite,
-           hit.snippet,
-           CASE
-             WHEN t.title ILIKE ${like} THEN 1
-             WHEN coalesce(hit.user_match, false) THEN 2
-             ELSE 3
-           END AS rank
-    FROM agent_chat_thread t
-    LEFT JOIN agent_chat_favorite f ON f.thread_id = t.id AND f.user_id = t.user_id
-    LEFT JOIN LATERAL (
-      SELECT bool_or(msg.role = 'user') AS user_match,
-             (array_agg(${snippet} ORDER BY msg.id DESC))[1] AS snippet
-      FROM agent_chat_message msg
-      WHERE msg.thread_id = t.id AND msg.content ILIKE ${like}
-    ) hit ON true
-    WHERE t.agent_id = ${agentId}
-      AND t.user_id = ${userId}
-      AND (t.title ILIKE ${like} OR hit.snippet IS NOT NULL)
-    ORDER BY rank, t.updated_at DESC
-    LIMIT ${PAGE_SIZE + 1} OFFSET ${page * PAGE_SIZE}
-  `);
-  return rows as unknown as ThreadRow[];
-}
 
 // Whether the conversation is the caller's own, and with this agent where the caller
 // names one. False is a 404 for everything a thread is addressed by.

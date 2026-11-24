@@ -1,0 +1,2 @@
+ALTER TABLE "user_preference" ADD COLUMN "agent_runs_view" text DEFAULT 'full' NOT NULL;--> statement-breakpoint
+ALTER TABLE "user_preference" ADD CONSTRAINT "user_preference_agent_runs_view_check" CHECK ("user_preference"."agent_runs_view" IN ('full', 'compact'));

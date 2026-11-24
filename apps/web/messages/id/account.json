@@ -107,7 +107,7 @@
       "issueSettingsDescription": "Bawaan untuk setiap issue yang Anda buka. Mengubahnya di issue yang sedang terbuka tidak mengubah setelan ini.",
       "notifications": "Notifikasi",
       "notificationsDescription": "Mengikuti issue akan memberi tahu Anda tentang komentar dan perubahan statusnya.",
-      "aiChat": "Obrolan AI",
+      "aiChat": "Obrolan dan eksekusi agen",
       "shortcuts": "Pintasan keyboard",
       "shortcutsDescription": "Tombol atur ulang mengembalikan pintasan ke bawaan."
     },
@@ -198,6 +198,12 @@
     "pushNotificationsOff": "Nonaktif",
     "pushNotificationsFailed": "Tidak dapat mengubah notifikasi push di browser ini. Coba lagi.",
     "showChatByDefault": "Buka obrolan secara default",
-    "showChatByDefaultDescription": "Panel obrolan terbuka bersama setiap halaman proyek."
+    "showChatByDefaultDescription": "Panel obrolan terbuka bersama setiap halaman proyek.",
+    "agentRunsView": "Tampilkan eksekusi sebagai",
+    "agentRunsViewDescription": "Penuh membuka eksekusi di samping daftar. Ringkas membukanya menggantikan daftar. Ponsel selalu memakai tampilan ringkas.",
+    "agentRunsViewOptions": {
+      "full": "Penuh",
+      "compact": "Ringkas"
+    }
   }
 }

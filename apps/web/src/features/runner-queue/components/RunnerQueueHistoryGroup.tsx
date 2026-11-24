@@ -5,6 +5,7 @@ import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import { cn } from '@/lib/utils';
 import { formatTime } from '@/utils/dates';
 import { runIssueKey } from '../utils/runIssueKey';
+import { runPath } from '../utils/runPath';
 import { runTitle } from '../utils/runTitle';
 import RunnerQueueHistoryRow from './RunnerQueueHistoryRow';
 
@@ -79,7 +80,7 @@ export default function RunnerQueueHistoryGroup({
           <RunnerQueueHistoryRow
             key={run.id}
             run={run}
-            href={`${path}/${run.id}`}
+            href={runPath(run, path)}
             selected={run.id === selectedId}
             acrossProjects={acrossProjects}
             nested

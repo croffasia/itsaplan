@@ -5,6 +5,7 @@ import { useRunnerQueueRunQuery } from '@/services/runnerQueue.service';
 import type { RunnerQueueScope } from '@/lib/api/endpoints/runnerQueue';
 import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
 import RunnerQueueRunDetail from './components/RunnerQueueRunDetail';
+import RunnerQueueRunLoader from './components/RunnerQueueRunLoader';
 import { runTitle } from './utils/runTitle';
 
 export default function RunnerQueueRunPage({
@@ -20,13 +21,9 @@ export default function RunnerQueueRunPage({
   useDocumentTitle(titlePath(t('queueTitle'), run && runTitle(run)));
   return (
     <div className="min-w-0 flex-1 overflow-y-auto px-4 py-5 md:px-10">
-      {query.isLoading && <p className="text-sm text-muted-foreground">{t('loading')}</p>}
-      {(query.isError || (query.isSuccess && !run)) && (
-        <p role="alert" className="text-sm text-muted-foreground">
-          {t('runNotFound')}
-        </p>
-      )}
-      {run && <RunnerQueueRunDetail key={run.id} run={run} listPath={scope.path} />}
+      <RunnerQueueRunLoader api={scope.api} runId={runId}>
+        {(loaded) => <RunnerQueueRunDetail key={loaded.id} run={loaded} listPath={scope.path} />}
+      </RunnerQueueRunLoader>
     </div>
   );
 }

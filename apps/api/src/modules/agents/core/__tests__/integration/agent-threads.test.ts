@@ -3,13 +3,17 @@ import type { MastraMessagePart } from '@mastra/core/agent/message-list';
 import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { streamAgent } from '../../runtime';
 import { ensureThread, buildMemory } from '../../runtime/memory';
 import { recordContextUsage } from '../../../chat-usage';
 import { createAgent } from '#tests/helpers/agents';
+import { createCredential } from '#tests/helpers/integrations';
 
 // The chat-history endpoints:
-//   GET /projects/:key/ai-agents/:agentId/threads             — the caller's own chat
-//                                                               threads with the agent
+//   GET /projects/:key/ai-agents/threads                      — the caller's own chat
+//                                                               threads with every agent
+//                                                               of the project
+//   GET /projects/:key/ai-agents/:agentId/threads             — the same with one agent
 //   GET .../ai-agents/:agentId/threads/:threadId/messages     — one thread's transcript
 //   PATCH  .../ai-agents/:agentId/threads/:threadId           — rename one conversation
 //   DELETE .../ai-agents/:agentId/threads/:threadId           — delete one conversation
@@ -106,6 +110,35 @@ describe('agent chat history', () => {
     expect(res.data!.items).toEqual([]);
   });
 
+  it('names and lists a new conversation before the agent answers', async () => {
+    const { owner, asOwner } = await setup();
+    const credentialId = await createCredential(asOwner, 'MKT', {
+      integrationKey: 'openai-compatible',
+      credential: { apiKey: 'sk-test', baseUrl: 'http://localhost:1/v1' },
+    });
+    const agent = (
+      await createAgent(asOwner, 'MKT', {
+        name: 'Bot',
+        username: 'bot',
+        kind: 'internal',
+        modelCredentialId: credentialId,
+        model: 'any-model',
+        memoryEnabled: true,
+      })
+    ).data!.agent;
+
+    // Closed on its first event, so the model is never called.
+    const answer = streamAgent(agent.id, agent.projects[0].id, 'plan the launch', {
+      callerUserId: owner.userId,
+    });
+    const first = await answer.next();
+    await answer.return(undefined);
+
+    const listed = (await agents(asOwner).threads.get({ query: {} })).data!.items;
+    expect(listed).toMatchObject([{ agentId: agent.id, title: 'plan the launch' }]);
+    expect(first.value).toEqual({ type: 'thread', threadId: listed[0].id });
+  });
+
   it("lists the caller's threads for the agent, newest first, with the title", async () => {
     const { owner, asOwner } = await setup();
     const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
@@ -179,6 +212,119 @@ describe('agent chat history', () => {
 
     const res = await agents(authedApi(outsider.cookie))({ agentId: agent.id }).threads.get();
     expect(res.status).toBe(403);
+  });
+
+  describe('with every agent of the project', () => {
+    const threads = (api: Api, query: { q?: string; page?: number; favorites?: boolean } = {}) =>
+      agents(api).threads.get({ query });
+
+    // A conversation with an external agent, which the chat feed keeps, next to one with an
+    // internal agent, which Mastra keeps. The external one is the newer.
+    async function setupBoth() {
+      const { owner, asOwner } = await setup();
+      const internal = await createInternalAgent(asOwner, 'Design Bot', 'design');
+      const external = (
+        await createAgent(asOwner, 'MKT', {
+          name: 'Developer',
+          username: 'developer',
+          kind: 'external',
+        })
+      ).data!.agent;
+      await seedThread('inside', owner.userId, internal, 'launch plan', [
+        { role: 'user', text: 'plan the launch' },
+        { role: 'assistant', text: 'in three steps' },
+      ]);
+      await backdateThread('inside');
+      const sent = await agents(asOwner)({ agentId: external.id }).chat.post({
+        prompt: 'Who ships the release?',
+      });
+      return { owner, asOwner, internal, external, outsideId: sent.data!.threadId };
+    }
+
+    it('lists the conversations of both kinds of agent as one history, newest first', async () => {
+      const { asOwner, internal, external, outsideId } = await setupBoth();
+
+      const res = await threads(asOwner);
+      expect(res.status).toBe(200);
+      expect(res.data!.items).toMatchObject([
+        { id: outsideId, agentId: external.id, title: 'Who ships the release?' },
+        { id: 'inside', agentId: internal.id, title: 'launch plan' },
+      ]);
+      expect(res.data!.nextPage).toBeNull();
+    });
+
+    it('pages over both stores without repeating a conversation', async () => {
+      const { owner, asOwner, internal, outsideId } = await setupBoth();
+      for (let i = 0; i < 24; i++) await seedThread(`t-${i}`, owner.userId, internal, `q ${i}`);
+
+      const first = await threads(asOwner);
+      expect(first.data!.items).toHaveLength(25);
+      expect(first.data!.nextPage).toBe(1);
+      const second = await threads(asOwner, { page: 1 });
+      expect(second.data!.items.map((t) => t.id)).toEqual(['inside']);
+      expect(second.data!.nextPage).toBeNull();
+      expect(first.data!.items.map((t) => t.id)).toContain(outsideId);
+    });
+
+    it('searches both stores, titles before messages', async () => {
+      const { owner, asOwner, internal, outsideId } = await setupBoth();
+      await seedThread('mentions', owner.userId, internal, 'retro', [
+        { role: 'assistant', text: 'after the release' },
+      ]);
+
+      const res = await threads(asOwner, { q: 'release' });
+      expect(res.data!.items.map((t) => [t.id, t.match])).toEqual([
+        [outsideId, 'title'],
+        ['mentions', 'assistant'],
+      ]);
+      expect(res.data!.items[1].snippet).toContain('after the release');
+    });
+
+    it('lists the stars of both stores as their own group', async () => {
+      const { asOwner, internal, external, outsideId } = await setupBoth();
+      await agents(asOwner)({ agentId: internal.id })
+        .threads({ threadId: 'inside' })
+        .favorite.put();
+
+      const favorites = async () =>
+        (await threads(asOwner, { favorites: true })).data!.items.map((t) => [t.id, t.favorite]);
+      expect(await favorites()).toEqual([['inside', true]]);
+      expect((await threads(asOwner)).data!.items.map((t) => t.id)).toEqual([outsideId]);
+
+      await agents(asOwner)({ agentId: external.id })
+        .threads({ threadId: outsideId })
+        .favorite.put();
+      expect(await favorites()).toEqual([
+        [outsideId, true],
+        ['inside', true],
+      ]);
+    });
+
+    it("leaves out other people's conversations and those of agents not in the project", async () => {
+      const { owner, asOwner, internal, outsideId } = await setupBoth();
+      await seedThread('theirs', 'another-user-id', internal, 'theirs');
+      await createProject(asOwner, { key: 'WEB', name: 'Website' });
+      const elsewhere = (
+        await createAgent(asOwner, 'WEB', { name: 'Web Bot', username: 'web', kind: 'internal' })
+      ).data!.agent;
+      await seedThread('elsewhere', owner.userId, elsewhere, 'elsewhere');
+
+      expect((await threads(asOwner)).data!.items.map((t) => t.id)).toEqual([outsideId, 'inside']);
+    });
+
+    it('is empty in a project without agents', async () => {
+      const { asOwner } = await setup();
+      const res = await threads(asOwner);
+      expect(res.status).toBe(200);
+      expect(res.data).toEqual({ items: [], nextPage: null });
+    });
+
+    it('denies a non-member with 403 and refuses a negative page', async () => {
+      const { asOwner } = await setup();
+      const outsider = await signUpTestUser({ name: 'Outsider' });
+      expect((await threads(authedApi(outsider.cookie))).status).toBe(403);
+      expect((await threads(asOwner, { page: -1 })).status).toBe(400);
+    });
   });
 
   it("returns a thread's transcript, mapping roles and text", async () => {

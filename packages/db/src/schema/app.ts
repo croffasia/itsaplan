@@ -294,11 +294,12 @@ export const projectSetting = pgTable(
 // means the user has not changed anything and the defaults below apply.
 // last_project_id is the project the user was in last, so the app root reopens it
 // after signing in on any device; the FK clears it when that project is deleted.
-// show_chat_by_default keeps the floating AI chat button on screen from the start,
-// with the chat window collapsed. hotkeys holds the keyboard shortcuts this user
-// rebound. issue_stats_open and issue_stats_view are how the status stats section of
-// an issue starts out: expanded or collapsed, and 'compact' (one bar per status) or
-// 'timeline' (a lane per status on a time axis). issue_activity_view is how the
+// show_chat_by_default opens the side panel on the AI chat in a project the user has not
+// opened or closed it in yet. agent_runs_view is where a run opens in that panel: 'full'
+// (beside the list) or 'compact' (in place of it). hotkeys holds the keyboard shortcuts
+// this user rebound. issue_stats_open and issue_stats_view are how the status stats
+// section of an issue starts out: expanded or collapsed, and 'compact' (one bar per
+// status) or 'timeline' (a lane per status on a time axis). issue_activity_view is how the
 // activity log below it starts out: 'flat' (every entry newest first) or 'grouped'
 // (a block per stretch the issue spent in a status). Switching either on an issue is
 // not stored — it lasts as long as that issue stays open. auto_watch is whether the
@@ -324,6 +325,7 @@ export const userPreference = pgTable(
     issueOpenMode: text('issue_open_mode').notNull().default('panel'),
     startPage: text('start_page').notNull().default('work-items'),
     showChatByDefault: boolean('show_chat_by_default').notNull().default(false),
+    agentRunsView: text('agent_runs_view').notNull().default('full'),
     issueStatsOpen: boolean('issue_stats_open').notNull().default(true),
     issueStatsView: text('issue_stats_view').notNull().default('compact'),
     issueActivityView: text('issue_activity_view').notNull().default('flat'),
@@ -359,6 +361,7 @@ export const userPreference = pgTable(
       'user_preference_start_page_check',
       sql`${t.startPage} IN ('inbox', 'dashboard', 'work-items', 'initiatives')`,
     ),
+    check('user_preference_agent_runs_view_check', sql`${t.agentRunsView} IN ('full', 'compact')`),
     check(
       'user_preference_issue_stats_view_check',
       sql`${t.issueStatsView} IN ('compact', 'timeline')`,

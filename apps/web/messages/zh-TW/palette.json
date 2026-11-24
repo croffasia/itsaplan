@@ -13,6 +13,7 @@
   "newInitiative": "新建計畫",
   "newProject": "新建專案",
   "toggleChat": "顯示或隱藏 AI 聊天",
+  "toggleRuns": "顯示或隱藏代理執行",
   "board": "看板",
   "commands": "命令",
   "switchProject": "切換專案"

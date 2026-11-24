@@ -37,7 +37,8 @@
   "search": "Cerca o esegui un comando…",
   "searchHint": "Cerca o esegui un comando ({key})",
   "newIssueHint": "Nuova issue ({key})",
-  "aiChatHint": "Chatta con i tuoi agenti AI ({key})",
+  "agentsPanel": "Chat AI ed esecuzioni degli agenti",
+  "runningRuns": "{count, plural, one {# esecuzione} other {# esecuzioni}} in corso",
   "sections": "Sezioni",
   "doubleClickToRename": "Doppio clic per rinominare",
   "groups": {

@@ -107,7 +107,7 @@
       "issueSettingsDescription": "Padrões para cada issue que você abre. Alterá-los em uma issue aberta não muda estas preferências.",
       "notifications": "Notificações",
       "notificationsDescription": "Acompanhar uma issue traz seus comentários e mudanças de status.",
-      "aiChat": "Chat de IA",
+      "aiChat": "Chat e execuções de agentes",
       "shortcuts": "Atalhos de teclado",
       "shortcutsDescription": "O botão de redefinir volta o atalho ao padrão."
     },
@@ -198,6 +198,12 @@
     "pushNotificationsOff": "Desligado",
     "pushNotificationsFailed": "Não foi possível alterar as notificações push neste navegador. Tente novamente.",
     "showChatByDefault": "Abrir chat por padrão",
-    "showChatByDefaultDescription": "O painel do chat abre com cada página de projeto."
+    "showChatByDefaultDescription": "O painel do chat abre com cada página de projeto.",
+    "agentRunsView": "Mostrar execuções como",
+    "agentRunsViewDescription": "Completa abre uma execução ao lado da lista. Compacta abre no lugar da lista. Celulares sempre usam a compacta.",
+    "agentRunsViewOptions": {
+      "full": "Completa",
+      "compact": "Compacta"
+    }
   }
 }

@@ -9,7 +9,6 @@ import {
   team,
   issue,
   revision,
-  teamMember,
   teamWorkspaceId,
   user,
 } from '@repo/db';
@@ -26,15 +25,9 @@ import {
   sql,
   type AnyColumn,
 } from 'drizzle-orm';
-import {
-  assertPermission,
-  getProjectAccess,
-  getTeamAccess,
-  readableProjectIds,
-  type AuthUser,
-} from '#shared/access';
+import { getProjectAccess, getTeamAccess, readableProjectIds } from '#shared/access';
 import { getProjectTeamId } from '#modules/projects/service';
-import type { WorkspaceGrant } from '#shared/workspace-roles';
+import type { ProjectGrant } from '#shared/workspace-roles';
 import { runsTeam } from '#modules/teams/service';
 import { projectRefSql } from '#modules/teams/ref';
 import { HttpError, iso, likePattern } from '#shared/lib';
@@ -58,7 +51,7 @@ const runnerPresence = sql<'push' | 'online' | 'offline' | 'never' | null>`CASE
   WHEN ${aiAgent.lastSeenAt} > now() - interval '90 seconds' THEN 'online'
   ELSE 'offline' END`;
 
-function queueProjectIds(userId: string, mcpOnly = false, grants?: Map<number, WorkspaceGrant>) {
+function queueProjectIds(userId: string, mcpOnly = false, grants?: Map<number, ProjectGrant>) {
   return readableProjectIds(userId, [['ai_agents', 'read']], {
     mcpOnly,
     includeArchived: true,
@@ -117,17 +110,12 @@ const runStates = {
   active: sql`${executionState} IN ('queued', 'running')`,
 };
 
-// A run's answer is for whoever runs the project's team or reads its agents.
-export async function assertReadsRuns(projectId: number, user: AuthUser): Promise<void> {
-  if (await runsProjectTeam(await getProjectTeamId(projectId), user.id)) return;
-  await assertPermission(projectId, user, 'ai_agents', 'read');
-}
-
 // Whether the user manages every run in the project, reads the steps of each, what its agent
 // did, and stops it: whoever runs its team, an owner of it, and whoever may create or change
 // its agents.
 export async function managesAllRuns(projectId: number, userId: string): Promise<boolean> {
-  if (await runsProjectTeam(await getProjectTeamId(projectId), userId)) return true;
+  const standing = await getTeamAccess(await getProjectTeamId(projectId), userId);
+  if (runsTeam(standing?.role ?? null)) return true;
   const access = await getProjectAccess(projectId, userId);
   if (!access) return false;
   return (
@@ -361,12 +349,6 @@ export async function listRunnerQueue(
   };
 }
 
-// Whether the user runs the team: its owner or a manager, or the workspace's owner. They
-// read every project of the team without a role in it.
-export async function runsProjectTeam(teamId: number, userId: string): Promise<boolean> {
-  return runsTeam((await getTeamAccess(teamId, userId))?.role ?? null);
-}
-
 // The projects of a team, or of every team of a workspace, archived ones included.
 export async function scopeProjectIds(
   scope: { teamId: number } | { workspaceId: number },
@@ -392,31 +374,14 @@ export async function workspaceRunsInFlight(workspaceId: number) {
   return { running, limit: await getRunLimit(workspaceId, limits) };
 }
 
-// The projects of the teams the user owns or manages, whose runs the team's and the
-// project's queues list without a role in the project.
-async function runTeamProjectIds(userId: string): Promise<number[]> {
-  const rows = await db
-    .select({ id: project.id })
-    .from(project)
-    .innerJoin(teamMember, eq(teamMember.teamId, project.teamId))
-    .where(and(eq(teamMember.userId, userId), inArray(teamMember.role, ['owner', 'manager'])));
-  return rows.map((row) => row.id);
-}
-
-// Covers every project a queue may list to the user, so a run in a project they read only
-// as whoever runs its team also moves the marker. The runs in flight in those projects'
-// workspaces are counted too: the queue's header shows them, projects the user does not
-// read included.
+// Covers every project a queue may list to the user. The runs in flight in those projects'
+// workspaces are counted too: the queue shows them, projects the user does not read included.
 export async function runnerQueueRevision(
   userId: string,
-  grants: Map<number, WorkspaceGrant>,
+  grants: Map<number, ProjectGrant>,
   mcpOnly = false,
 ) {
-  const [readable, runTeam] = await Promise.all([
-    queueProjectIds(userId, mcpOnly, grants),
-    mcpOnly ? [] : runTeamProjectIds(userId),
-  ]);
-  const ids = mcpOnly ? readable : [...new Set([...readable, ...runTeam])].sort((a, b) => a - b);
+  const ids = await queueProjectIds(userId, mcpOnly, grants);
   if (!ids.length) return '0';
   const workspaceIds = db
     .selectDistinct({ id: team.workspaceId })

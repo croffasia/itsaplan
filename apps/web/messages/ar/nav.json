@@ -37,7 +37,8 @@
   "search": "ابحث أو نفّذ أمرًا…",
   "searchHint": "ابحث أو نفّذ أمرًا ({key})",
   "newIssueHint": "مهمة جديدة ({key})",
-  "aiChatHint": "الدردشة مع وكلاء الذكاء الاصطناعي ({key})",
+  "agentsPanel": "محادثة الذكاء الاصطناعي وتشغيلات الوكلاء",
+  "runningRuns": "{count, plural, zero {# تشغيل} one {تشغيل واحد} two {تشغيلان} few {# تشغيلات} many {# تشغيلًا} other {# تشغيل}} قيد العمل",
   "sections": "الأقسام",
   "doubleClickToRename": "انقر نقرًا مزدوجًا لإعادة التسمية",
   "groups": {

@@ -8,9 +8,6 @@ import {
   useRunProjectOptionsQuery,
 } from '@/services/runnerQueue.service';
 
-// The state value that filters nothing out.
-const ALL = 'all';
-
 // The run list's filters: by state, by initiator, the reader first, and, in a team's or a
 // workspace's list, by project.
 export function useRunnerQueueFilters(scope: RunnerQueueScope) {
@@ -23,17 +20,6 @@ export function useRunnerQueueFilters(scope: RunnerQueueScope) {
   const initiators = useRunInitiatorOptionsQuery(scope.api).data ?? [];
   const projects = useRunProjectOptionsQuery(scope.api, acrossProjects).data ?? [];
   const sections: FilterSection[] = [
-    {
-      key: 'state',
-      label: t('facts.status'),
-      options: [
-        { value: ALL, label: t('filterAll') },
-        { value: 'failed', label: t('filterFailed') },
-        { value: 'active', label: t('activeSection') },
-      ],
-      selected: [state ?? ALL],
-      defaultValue: ALL,
-    },
     {
       key: 'initiators',
       label: t('facts.initiator'),
@@ -55,13 +41,8 @@ export function useRunnerQueueFilters(scope: RunnerQueueScope) {
     });
   }
   const onChange = (key: string, selected: string[]) => {
-    if (key === 'state') {
-      setState(selected[0] === ALL ? undefined : (selected[0] as RunnerQueueState));
-    } else if (key === 'projects') {
-      setProjectIds(selected.map(Number));
-    } else {
-      setInitiatorIds(selected);
-    }
+    if (key === 'projects') setProjectIds(selected.map(Number));
+    else setInitiatorIds(selected);
   };
-  return { sections, onChange, state, initiatorIds, projectIds };
+  return { sections, onChange, state, setState, initiatorIds, projectIds };
 }

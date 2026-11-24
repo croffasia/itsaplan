@@ -37,7 +37,8 @@
   "search": "검색 또는 명령 실행…",
   "searchHint": "검색 또는 명령 실행 ({key})",
   "newIssueHint": "새 이슈 ({key})",
-  "aiChatHint": "AI 에이전트와 대화 ({key})",
+  "agentsPanel": "AI 채팅 및 에이전트 실행",
+  "runningRuns": "{count, plural, other {#개}} 실행 중",
   "sections": "섹션",
   "doubleClickToRename": "두 번 클릭하여 이름 변경",
   "groups": {

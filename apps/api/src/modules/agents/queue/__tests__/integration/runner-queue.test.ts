@@ -212,6 +212,26 @@ describe('runner queue', () => {
     expect((await denied.sync.rev.get(scopes)).data!.revs['runnerQueue:1']).toBe('0');
   });
 
+  it("moves a project's own marker with its runs, and only for whoever reads its agents", async () => {
+    const { api, project, runner } = await setup();
+    const role = (
+      await createRole(api, 'RUN', {
+        name: 'Work items only',
+        permissions: { work_items: { read: true } },
+      })
+    ).data!;
+    const denied = await addProjectMember(api, 'RUN', role.id);
+    const scope = `agentRuns:${project.id}`;
+    const marker = async (client: typeof api) =>
+      (await client.sync.rev.get({ query: { scopes: scope } })).data!.revs[scope];
+
+    const before = await marker(api);
+    expect(before).not.toBe('0');
+    await runner['agent-runs'].claim.post();
+    expect(await marker(api)).not.toBe(before);
+    expect(await marker(denied)).toBe('0');
+  });
+
   it('filters by initiator and project and gives the initiator the steps of their runs', async () => {
     const { api, ownerId, project, issue, agent } = await setup();
     const member = await addProjectMember(api, 'RUN');

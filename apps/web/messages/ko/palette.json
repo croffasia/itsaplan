@@ -13,6 +13,7 @@
   "newInitiative": "새 이니셔티브",
   "newProject": "새 프로젝트",
   "toggleChat": "AI 채팅 표시 또는 숨기기",
+  "toggleRuns": "에이전트 실행 표시 또는 숨기기",
   "board": "보드",
   "commands": "명령",
   "switchProject": "프로젝트 전환"

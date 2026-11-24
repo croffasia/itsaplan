@@ -1,6 +1,6 @@
 import { isMcpRequest } from '#shared/mcp-request';
 import { runnerQueueRevision } from '#modules/agents/queue/service';
-import { workspaceGrants } from '#modules/workspaces/service';
+import { projectGrants } from '#modules/workspaces/service';
 import { Elysia } from 'elysia';
 import { authContext } from '#shared/auth-context';
 import { requireUser } from '#shared/access';
@@ -45,7 +45,7 @@ export const syncRoutes = new Elysia({ name: 'sync', detail: { tags: ['Sync'] } 
         reads.set(scope, { key: spec.key(id, userId), resource: spec.resource });
       }
 
-      const grants = await workspaceGrants(userId);
+      const grants = await projectGrants(userId);
       const [found, runnerQueue, inboxAll] = await Promise.all([
         readRevs([...reads.values()], userId, grants),
         requested.includes('runnerQueue:1')

@@ -187,6 +187,29 @@ describe('note boards', () => {
       expect((await boards(granted.api)({ boardId }).get()).status).toBe(404);
     });
 
+    it('ends with the project membership, and a rank in the team does not bring it back', async () => {
+      const owner = await setupOwnerProject();
+      const granted = await addMember(owner.api);
+      const project = owner.api.projects({ projectKey: 'MKT' });
+      const { teamId } = (await project.get()).data!.project;
+      await owner.api.teams({ teamId }).members({ userId: granted.userId }).patch({
+        role: 'manager',
+      });
+      const boardId = (await boards(owner.api).post({ name: 'Ideas' })).data!.id;
+      const open = (await boards(owner.api).post({ name: 'Open' })).data!.id;
+      await boards(owner.api)({ boardId }).patch({
+        visibility: 'restricted',
+        memberIds: [granted.userId],
+      });
+      expect((await boards(granted.api)({ boardId }).get()).status).toBe(200);
+
+      expect((await project.members({ userId: granted.userId }).delete()).status).toBe(204);
+
+      expect((await boards(granted.api)({ boardId: open }).get()).status).toBe(200);
+      expect((await boards(granted.api)({ boardId }).get()).status).toBe(404);
+      expect((await boards(owner.api)({ boardId }).get()).data!.memberIds).toEqual([]);
+    });
+
     it('rejects granting access to someone outside the project', async () => {
       const owner = await setupOwnerProject();
       const outsider = await signUpTestUser();

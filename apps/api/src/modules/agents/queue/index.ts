@@ -7,7 +7,7 @@ import { IssueAgentRunTraceResponse } from '#modules/issues/model';
 import { Elysia, type DocumentDecoration } from 'elysia';
 import { authContext } from '#shared/auth-context';
 import { hasPermission } from '@repo/db';
-import { getTeamAccess, requireUser } from '#shared/access';
+import { assertPermission, getTeamAccess, requireUser } from '#shared/access';
 import { runsTeam } from '#modules/teams/service';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { paginate } from '#shared/pagination';
@@ -24,13 +24,11 @@ import {
   RunProjectOptionsResponse,
 } from './model';
 import {
-  assertReadsRuns,
   assertManagesRun,
   cancelAgentRun,
   listRunInitiators,
   listRunnerQueue,
   listRunProjects,
-  runsProjectTeam,
   scopeProjectIds,
   teamRunsInFlight,
   workspaceRunsInFlight,
@@ -95,7 +93,7 @@ export const runnerQueueRoutes = new Elysia({
           const run = await visibleRun(Number((params as { runId: string }).runId), viewer.id);
           if (!run) throw new HttpError(404, 'Run not found');
           const { projectId } = run;
-          await assertReadsRuns(projectId, viewer);
+          await assertPermission(projectId, viewer, 'ai_agents', 'read');
           if (part !== 'answer') await assertManagesRun(run, viewer.id);
           await assertProjectReachable(projectId, request);
           return { projectId, agentId: run.agentId, issueId: run.issueId };
@@ -216,11 +214,8 @@ export const runnerQueueRoutes = new Elysia({
   )
   .get(
     '/projects/:projectKey/agent-runs/queue',
-    async ({ user, query, request, project }) => {
-      const userId = requireUser(user).id;
-      const granted = await runsProjectTeam(project.teamId, userId);
-      return readQueue(userId, query, isMcpRequest(request.headers), [project.id], granted);
-    },
+    ({ user, query, request, project }) =>
+      readQueue(requireUser(user).id, query, isMcpRequest(request.headers), [project.id]),
     {
       memberAdmin: ['ai_agents', 'read'],
       query: queueQuery,
@@ -234,14 +229,11 @@ export const runnerQueueRoutes = new Elysia({
   )
   .get(
     '/projects/:projectKey/agent-runs/initiators/options',
-    async ({ user, request, project }) => {
-      const userId = requireUser(user).id;
-      return listRunInitiators(userId, {
+    ({ user, request, project }) =>
+      listRunInitiators(requireUser(user).id, {
         mcpOnly: isMcpRequest(request.headers),
         projectIds: [project.id],
-        granted: await runsProjectTeam(project.teamId, userId),
-      });
-    },
+      }),
     {
       memberAdmin: ['ai_agents', 'read'],
       response: { 200: RunInitiatorOptionsResponse, ...commonErrors },

@@ -75,16 +75,15 @@ import {
   workspaceScope,
 } from './runtime/analytics';
 import {
-  listChatThreads,
   getChatThreadMessages,
   deleteChatThread,
   renameChatThread,
   ownsChatThread,
 } from './runtime/memory';
 import { addFavorite, removeFavorite } from '../chat-favorites';
+import { listThreads } from '../chat-history';
 import { isOwnChatThread } from './runtime/thread-ids';
 import {
-  listThreads as listExternalThreads,
   getThreadMessages as getExternalThreadMessages,
   deleteThread as deleteExternalThread,
   renameThread as renameExternalThread,
@@ -125,14 +124,12 @@ async function* runFrames(events: AsyncIterable<AgentRunEvent>): AsyncGenerator<
 function threadStore(kind: AgentKind) {
   return kind === 'external'
     ? {
-        list: listExternalThreads,
         messages: getExternalThreadMessages,
         rename: renameExternalThread,
         remove: deleteExternalThread,
         owns: ownsExternalThread,
       }
     : {
-        list: listChatThreads,
         messages: getChatThreadMessages,
         rename: renameChatThread,
         remove: deleteChatThread,
@@ -555,9 +552,9 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
   )
 
   // Same as /run but streams the response as Server-Sent Events: one `data:` line
-  // per JSON-encoded AgentRunEvent (text chunks, the tools the agent uses, then a
-  // final `done` with the thread id). Lets the UI show the answer and what the
-  // agent is doing as it happens. Errors mid-stream arrive as an `error` event.
+  // per JSON-encoded AgentRunEvent (the thread, text chunks, the tools the agent uses, then
+  // a final `done`). Lets the UI show the answer and what the agent is doing as it happens.
+  // Errors mid-stream arrive as an `error` event.
   //
   // The run is bound to this connection: the caller dropping it — by pressing stop in
   // the chat, or by closing the page — aborts the run instead of leaving it going with
@@ -595,16 +592,29 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     },
   )
 
-  // The caller's own chat threads with this agent, newest first, a page at a time.
-  // Scoped to the caller (the thread's owner), so a user only sees their own
+  // The caller's own chat threads with the agents of this project, newest first, a page at
+  // a time. Scoped to the caller (the thread's owner), so a user only sees their own
   // conversations. `q` searches them and `favorites` returns the starred ones instead.
+  .get(
+    '/projects/:projectKey/ai-agents/threads',
+    async ({ project, query, user }) =>
+      listThreads(requireUser(user).id, await listProjectAgents(project.id), query),
+    {
+      query: threadListQuery,
+      permission: ['ai_agents', 'read'],
+      response: { 200: ChatThreadListResponse, ...commonErrors },
+      detail: { summary: "List chat threads with a project's agents" },
+    },
+  )
+
+  // The same with one agent.
   .get(
     '/projects/:projectKey/ai-agents/:agentId/threads',
     async ({ params, project, query, user }) => {
       const caller = requireUser(user);
       const agent = await getAgentInProject(params.agentId, project.id);
       if (!agent) throw new HttpError(404, 'Agent not found');
-      return threadStore(agent.kind).list(caller.id, params.agentId, query);
+      return listThreads(caller.id, [agent], query);
     },
     {
       params: projectAgentParams,

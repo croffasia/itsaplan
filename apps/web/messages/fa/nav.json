@@ -37,7 +37,8 @@
   "search": "جستجو یا اجرای دستور…",
   "searchHint": "جستجو یا اجرای دستور ({key})",
   "newIssueHint": "تسک جدید ({key})",
-  "aiChatHint": "گفتگو با ایجنت‌های AI ({key})",
+  "agentsPanel": "چت هوش مصنوعی و اجراهای ایجنت",
+  "runningRuns": "{count, plural, one {# اجرا} other {# اجرا}} در حال کار",
   "sections": "بخش‌ها",
   "doubleClickToRename": "برای تغییر نام دوبار کلیک کنید",
   "groups": {

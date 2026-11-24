@@ -13,6 +13,7 @@
   "newInitiative": "New initiative",
   "newProject": "New project",
   "toggleChat": "Show or hide the AI chat",
+  "toggleRuns": "Show or hide the agent runs",
   "board": "Board",
   "commands": "Commands",
   "switchProject": "Switch project"

@@ -37,7 +37,8 @@
   "search": "搜索或运行命令…",
   "searchHint": "搜索或运行命令（{key}）",
   "newIssueHint": "新建工作项（{key}）",
-  "aiChatHint": "与 AI 代理聊天（{key}）",
+  "agentsPanel": "AI 聊天和代理运行",
+  "runningRuns": "{count, plural, other {# 次运行}}进行中",
   "sections": "功能区",
   "doubleClickToRename": "双击重命名",
   "groups": {

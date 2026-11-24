@@ -24,6 +24,7 @@ export const PALETTES = [
 ] as const;
 export const ISSUE_OPEN_MODES = ['panel', 'page'] as const;
 export const START_PAGES = ['inbox', 'dashboard', 'work-items', 'initiatives'] as const;
+export const AGENT_RUNS_VIEWS = ['full', 'compact'] as const;
 export const ISSUE_STATS_VIEWS = ['compact', 'timeline'] as const;
 export const ISSUE_ACTIVITY_VIEWS = ['flat', 'grouped'] as const;
 
@@ -37,6 +38,7 @@ export interface CustomTheme {
 }
 export type IssueOpenMode = (typeof ISSUE_OPEN_MODES)[number];
 export type StartPage = (typeof START_PAGES)[number];
+export type AgentRunsView = (typeof AGENT_RUNS_VIEWS)[number];
 export type IssueStatsView = (typeof ISSUE_STATS_VIEWS)[number];
 export type IssueActivityView = (typeof ISSUE_ACTIVITY_VIEWS)[number];
 
@@ -52,9 +54,11 @@ export interface UserPreferenceDto {
   customTheme: CustomTheme | null;
   issueOpenMode: IssueOpenMode;
   startPage: StartPage;
-  // Keeps the floating AI chat button on screen from the start, with the chat
-  // window collapsed.
+  // Opens the side panel on the AI chat in a project the user has not opened or closed
+  // it in yet.
   showChatByDefault: boolean;
+  // Where a run opens in the side panel: beside the list or in place of it.
+  agentRunsView: AgentRunsView;
   // How the status stats section of an issue starts out, and the shape the activity
   // log below it starts in. Switching either on an issue is not stored.
   issueStatsOpen: boolean;
@@ -88,6 +92,7 @@ export function defaults(locale: Locale = DEFAULT_LOCALE): UserPreferenceDto {
     issueOpenMode: 'panel',
     startPage: 'work-items',
     showChatByDefault: false,
+    agentRunsView: 'full',
     issueStatsOpen: true,
     issueStatsView: 'compact',
     issueActivityView: 'flat',
@@ -119,6 +124,7 @@ function toDto(row: {
   issueOpenMode: string;
   startPage: string;
   showChatByDefault: boolean;
+  agentRunsView: string;
   issueStatsOpen: boolean;
   issueStatsView: string;
   issueActivityView: string;
@@ -137,6 +143,7 @@ function toDto(row: {
     issueOpenMode: row.issueOpenMode as IssueOpenMode,
     startPage: row.startPage as StartPage,
     showChatByDefault: row.showChatByDefault,
+    agentRunsView: row.agentRunsView as AgentRunsView,
     issueStatsOpen: row.issueStatsOpen,
     issueStatsView: row.issueStatsView as IssueStatsView,
     issueActivityView: row.issueActivityView as IssueActivityView,
@@ -163,6 +170,7 @@ export async function getPreferences(
       issueOpenMode: userPreference.issueOpenMode,
       startPage: userPreference.startPage,
       showChatByDefault: userPreference.showChatByDefault,
+      agentRunsView: userPreference.agentRunsView,
       issueStatsOpen: userPreference.issueStatsOpen,
       issueStatsView: userPreference.issueStatsView,
       issueActivityView: userPreference.issueActivityView,

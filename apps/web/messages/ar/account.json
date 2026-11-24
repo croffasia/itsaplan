@@ -107,7 +107,7 @@
       "issueSettingsDescription": "الإعدادات الافتراضية لكل مهمة تفتحها. تغييرها في مهمة مفتوحة لا يغيّر هذه الإعدادات.",
       "notifications": "الإشعارات",
       "notificationsDescription": "لما تتابع مهمة، هيوصلك تعليقاتها وأي تغيير في حالتها.",
-      "aiChat": "محادثة الذكاء الاصطناعي",
+      "aiChat": "المحادثة وتشغيلات الوكلاء",
       "shortcuts": "اختصارات لوحة المفاتيح",
       "shortcutsDescription": "يعيد زر إعادة التعيين الاختصار إلى قيمته الافتراضية."
     },
@@ -198,6 +198,12 @@
     "pushNotificationsOff": "مُعطّل",
     "pushNotificationsFailed": "تعذّر تغيير الإشعارات الفورية في هذا المتصفح. حاول مرة أخرى.",
     "showChatByDefault": "فتح المحادثة افتراضيًا",
-    "showChatByDefaultDescription": "تُفتح لوحة المحادثة مع كل صفحة مشروع."
+    "showChatByDefaultDescription": "تُفتح لوحة المحادثة مع كل صفحة مشروع.",
+    "agentRunsView": "إظهار تشغيلات الوكلاء كـ",
+    "agentRunsViewDescription": "العرض الكامل يفتح التشغيل بجانب القائمة. العرض المضغوط يفتحه مكان القائمة. تستخدم الهواتف العرض المضغوط دائمًا.",
+    "agentRunsViewOptions": {
+      "full": "كامل",
+      "compact": "مضغوط"
+    }
   }
 }

@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { IssueOpenMode } from '@/lib/api/endpoints/userPreferences';
 import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { View } from '@/lib/api/endpoints/views';
 import type { NewIssueDefaults } from '@/utils/project';
@@ -19,7 +20,8 @@ export type ShellContext = {
   // Opens an issue. Without `mode` the account's issueOpenMode preference decides
   // between the side panel and the issue page; pass it to force one of them.
   onOpenIssue: (id: number, mode?: IssueOpenMode) => void;
-  onAddIssue: (defaults: NewIssueDefaults) => void;
+  // Opens the new-issue modal. `onCreated` runs once the issue exists.
+  onAddIssue: (defaults: NewIssueDefaults, onCreated?: (created: Issue) => void) => void;
   // What the work items board's filters put on a new issue. onAddIssue applies
   // them already.
   newIssueDefaults: NewIssueDefaults;

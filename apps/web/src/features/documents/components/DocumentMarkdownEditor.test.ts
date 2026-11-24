@@ -299,6 +299,40 @@ describe('DocumentMarkdownEditor JSON persistence', () => {
 
     assert.equal(await insertion, false);
     assert.equal(editor.getJSON().content?.some((node) => node.type === 'image') ?? false, false);
+    assert.equal(document.querySelector('[role="status"]'), null);
+    editor.destroy();
+  });
+
+  it('shows the upload in place and inserts the image there after text moves it', async () => {
+    const editor = new Editor({
+      element: document.querySelector('#one') as HTMLElement,
+      extensions: documentEditorExtensions({
+        placeholder: '',
+        codeBlockLabel: 'Code',
+        tableLabel: 'Table',
+        uploadingImage: 'Uploading image…',
+      }),
+      content: '<p>First</p><p>Second</p>',
+      editable: true,
+    });
+    let resolveUpload!: (asset: { url: string; filename: string }) => void;
+    const upload = new Promise<{ url: string; filename: string }>((resolve) => {
+      resolveUpload = resolve;
+    });
+    const image = new window.File(['image'], 'photo.png', { type: 'image/png' });
+    const secondParagraph = editor.state.doc.child(0).nodeSize;
+    const insertion = uploadAndInsertImage(editor, image, () => upload, secondParagraph);
+
+    assert.equal(document.querySelector('[role="status"]')?.textContent, 'Uploading image…');
+    editor.commands.insertContentAt(0, '<p>Typed above</p>');
+    resolveUpload({ url: protectedImage, filename: 'photo.png' });
+
+    assert.equal(await insertion, true);
+    assert.equal(document.querySelector('[role="status"]'), null);
+    assert.deepEqual(
+      editor.getJSON().content?.map((node) => node.type),
+      ['paragraph', 'paragraph', 'image', 'paragraph'],
+    );
     editor.destroy();
   });
 });

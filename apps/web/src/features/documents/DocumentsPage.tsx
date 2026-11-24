@@ -1,204 +1,89 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { useShellRoute } from '@/hooks/useShellRoute';
-import { useShell } from '@/context/shellContext';
-import { usePermissions } from '@/hooks/usePermissions';
-import { useLiveRefresh } from '@/hooks/useLiveRefresh';
-import { revScope } from '@/utils/revScopes';
-import { qk } from '@/services/queryKeys';
-import { documentsPath, documentPath } from '@/utils/paths';
-import { Skeleton } from '@/components/ui/skeleton';
-import { ApiError } from '@/lib/api/core/client';
-import {
-  useCreateDocument,
-  useDocumentQuery,
-  useDocumentsQuery,
-} from './services/documents.service';
-import DocumentView from './components/DocumentView';
-import DocumentsIndex from './components/DocumentsIndex';
-import { importedMarkdownJson, markdownTitle } from './utils/documentImport';
-import {
-  documentBelongsToTab,
-  type DocumentListTab,
-  type DocumentListView,
-} from './utils/documentList';
-import { useDebouncedValue } from '@/hooks/useDebouncedValue';
-import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { useDocumentNavigation, useRecentDocuments } from '@/hooks/useDocumentNavigation';
+import { useCallback, useState, type ReactNode } from 'react';
+import { usePathname, useSelectedLayoutSegment } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useShell } from '@/context/shellContext';
+import { titlePath, useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useLiveRefresh } from '@/hooks/useLiveRefresh';
+import { usePermissions } from '@/hooks/usePermissions';
+import { usePersistedOpen } from '@/hooks/usePersistedOpen';
+import { useShellRoute } from '@/hooks/useShellRoute';
+import { qk } from '@/services/queryKeys';
+import { revScope } from '@/utils/revScopes';
+import DocumentsRail from './components/rail/DocumentsRail';
+import DocumentsState from './components/DocumentsState';
+import { DocumentsRailProvider } from './context/documentsRail';
+import { useDocumentsQuery } from './services/documents.service';
 
-const listDefaults: { search: string; view: DocumentListView; tab: DocumentListTab } = {
-  search: '',
-  view: 'home',
-  tab: 'public',
-};
-
-export default function DocumentsPage() {
-  const { project } = useShell();
-  const params = useParams<{ documentId?: string }>();
-  const router = useRouter();
+// The Docs layout: the rail beside home, the archive or a page. It stays mounted while the
+// user moves between them, so the tree keeps its scroll and state.
+export default function DocumentsPage({ children }: { children: ReactNode }) {
   const t = useTranslations('documents');
+  const { project } = useShell();
   const { can } = usePermissions();
   const projectKey = useShellRoute().projectKey ?? '';
-  const routeId = params.documentId ? Number(params.documentId) : null;
-  const documentId = routeId && Number.isFinite(routeId) ? routeId : null;
-  const [navigation, setNavigation] = useDocumentNavigation(projectKey, 'list', listDefaults);
-  const search = typeof navigation.search === 'string' ? navigation.search : '';
-  const listTab = ['public', 'private', 'favorites', 'archived'].includes(navigation.tab)
-    ? navigation.tab
-    : 'public';
-  const listView = navigation.view === 'tree' ? 'tree' : 'home';
-  const archivedList = listView === 'tree' && listTab === 'archived';
-  const privateList = listView === 'tree' && listTab === 'private';
-  const setSearch = (search: string) => setNavigation((previous) => ({ ...previous, search }));
-  const setListView = (view: DocumentListView) =>
-    setNavigation((previous) => ({ ...previous, view }));
-  const setListTab = (tab: DocumentListTab) => setNavigation((previous) => ({ ...previous, tab }));
-  const deferredSearch = useDebouncedValue(search.trim(), 250);
-  const { visit } = useRecentDocuments(projectKey);
-  useEffect(() => {
-    if (documentId !== null) visit(documentId);
-  }, [documentId, visit]);
-  const activeDocumentsQuery = useDocumentsQuery(
-    projectKey,
-    deferredSearch,
-    false,
-    documentId === null && !archivedList,
-  );
-  const archivedDocumentsQuery = useDocumentsQuery(
-    projectKey,
-    deferredSearch,
-    true,
-    documentId === null && archivedList,
-  );
-  const visibleDocumentsQuery = archivedList ? archivedDocumentsQuery : activeDocumentsQuery;
-  const filteredDocuments = (visibleDocumentsQuery.data ?? []).filter(
-    (document) => listView === 'home' || documentBelongsToTab(document, listTab),
-  );
-  const visibleIds = new Set(filteredDocuments.map((document) => document.id));
-  const reorderSafe = filteredDocuments.every(
-    (document) => document.parentId === null || visibleIds.has(document.parentId),
-  );
-  const visibleDocuments = filteredDocuments.map((document) =>
-    document.parentId !== null && !visibleIds.has(document.parentId)
-      ? { ...document, parentId: null }
-      : document,
-  );
-  const documentQuery = useDocumentQuery(projectKey, documentId);
-  const documentTitle =
-    !documentQuery.isError &&
-    documentQuery.data &&
-    (documentQuery.data.title.trim() || t('untitled'));
-  useDocumentTitle(titlePath(project?.project.name, documentTitle));
-  const createDocument = useCreateDocument(projectKey);
+  const pathname = usePathname();
+  // The segment after /docs: none on home, `archive`, or a page id.
+  const segment = useSelectedLayoutSegment();
+  const view = segment === null ? 'home' : segment === 'archive' ? 'archive' : 'page';
+  const pageId = Number(segment);
+  const activeId = view === 'page' && Number.isSafeInteger(pageId) ? pageId : null;
   const canRead = can('documents', 'read');
-  const canCreate = can('documents', 'create');
-  const canEdit = can('documents', 'edit');
-
+  const live = useDocumentsQuery(projectKey, '', false, canRead);
+  // The drawer belongs to the screen it was opened on, so moving to another screen closes it.
+  const [railOpenedAt, setRailOpenedAt] = useState<string | null>(null);
+  const railOpen = railOpenedAt === pathname;
+  const setRailOpen = useCallback(
+    (open: boolean) => setRailOpenedAt(open ? pathname : null),
+    [pathname],
+  );
+  const rail = usePersistedOpen('docs-rail');
+  useDocumentTitle(titlePath(project?.project.name, t('title')), 'section');
   useLiveRefresh({
     scope: project ? revScope.documents(project.project.id) : null,
     targets: [qk.documentListsForProject(projectKey)],
   });
 
-  useEffect(() => {
-    if (documentQuery.error instanceof ApiError && documentQuery.error.status === 404) {
-      router.replace(documentsPath(projectKey));
-    }
-  }, [documentQuery.error, projectKey, router]);
-
   if (!project) {
     return (
-      <div className="flex flex-1 gap-0 overflow-hidden">
-        <Skeleton className="m-4 w-72" />
-        <Skeleton className="m-4 flex-1" />
+      <div className="flex min-h-0 flex-1">
+        <div className="w-68 shrink-0 bg-rail max-md:hidden" />
       </div>
-    );
-  }
-
-  if (!canRead) {
-    return (
-      <div className="flex flex-1 items-center justify-center px-4 text-center text-sm text-muted-foreground">
-        {t('noAccess')}
-      </div>
-    );
-  }
-
-  const create = async (parentId: number | null, isPrivate: boolean) => {
-    try {
-      setSearch('');
-      const newDocument = await createDocument.mutateAsync({ parentId, isPrivate });
-      router.push(documentPath(projectKey, newDocument.id));
-    } catch {
-      // Mutation errors are reported by the shared query client.
-    }
-  };
-
-  const upload = async (file: File) => {
-    let markdown: string;
-    try {
-      markdown = (await file.text()).replace(/^\uFEFF/, '');
-    } catch {
-      toast.error(t('markdownReadFailed'));
-      return;
-    }
-    const contentJson = importedMarkdownJson(markdown);
-    if (!contentJson) {
-      toast.error(t('markdownTooLarge'));
-      return;
-    }
-    try {
-      setSearch('');
-      const newDocument = await createDocument.mutateAsync({
-        title: markdownTitle(file.name),
-        content: markdown,
-        contentJson,
-        isPrivate: privateList,
-      });
-      router.push(documentPath(projectKey, newDocument.id));
-    } catch {
-      // Mutation errors are reported by the shared query client.
-    }
-  };
-
-  if (documentId === null) {
-    return (
-      <DocumentsIndex
-        projectKey={projectKey}
-        documents={visibleDocuments}
-        view={listView}
-        tab={listTab}
-        search={search}
-        searching={deferredSearch.length > 0}
-        loading={visibleDocumentsQuery.isLoading}
-        failed={visibleDocumentsQuery.isError}
-        canCreate={canCreate}
-        canEdit={canEdit}
-        authorNames={Object.fromEntries(
-          project.assignees.map((candidate) => [candidate.userId, candidate.name]),
-        )}
-        reorderSafe={reorderSafe}
-        creating={createDocument.isPending}
-        onSearchChange={setSearch}
-        onViewChange={setListView}
-        onTabChange={setListTab}
-        onCreate={(parentId) => void create(parentId, privateList)}
-        onUpload={(file) => void upload(file)}
-        onRetry={() => void visibleDocumentsQuery.refetch()}
-      />
     );
   }
 
   return (
-    <DocumentView
-      key={documentId}
-      projectKey={projectKey}
-      documentId={documentId}
-      onBack={() => router.push(documentsPath(projectKey))}
-      onCreated={() => setSearch('')}
-      onDeleted={() => router.push(documentsPath(projectKey))}
-    />
+    <DocumentsRailProvider
+      open={railOpen}
+      setOpen={setRailOpen}
+      shown={rail.open}
+      toggleShown={rail.toggle}
+    >
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <DocumentsRail
+          projectKey={projectKey}
+          view={view}
+          activeId={activeId}
+          canRead={canRead}
+          open={railOpen}
+          shown={rail.open}
+          onOpenChange={setRailOpen}
+        />
+        <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-background">
+          {!canRead ? (
+            <DocumentsState projectKey={projectKey} kind="noAccess" />
+          ) : live.isLoadingError && view !== 'page' ? (
+            <DocumentsState
+              projectKey={projectKey}
+              kind="failed"
+              onRetry={() => void live.refetch()}
+            />
+          ) : (
+            children
+          )}
+        </div>
+      </div>
+    </DocumentsRailProvider>
   );
 }

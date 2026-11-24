@@ -84,7 +84,6 @@ export interface NewProjectDocumentInput {
   contentJson?: Record<string, unknown> | null;
   icon?: string | null;
   metadata?: Record<string, unknown>;
-  fullWidth?: boolean;
   isPrivate?: boolean;
   parentId?: number | null;
 }
@@ -96,7 +95,6 @@ export interface ProjectDocumentPatch {
   contentJson?: Record<string, unknown> | null;
   icon?: string | null;
   metadata?: Record<string, unknown>;
-  fullWidth?: boolean;
   parentId?: number | null;
   position?: number;
   previousSiblingId?: number | null;
@@ -218,6 +216,16 @@ export const setDocumentAccess = (
     body: JSON.stringify(input),
   });
 
+export const transferDocumentOwnership = (
+  projectKey: string,
+  documentId: number,
+  input: { version: number; ownerUserId: string },
+) =>
+  request<ProjectDocument>(`/projects/${projectKey}/documents/${documentId}/ownership`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+
 export const listDocumentAccessCandidates = (projectKey: string) =>
   request<DocumentAccessCandidate[]>(`/projects/${projectKey}/documents/access-candidates`);
 
@@ -331,6 +339,7 @@ export interface DocumentComment {
   to: number | null;
   orphaned: boolean;
   resolvedAt: string | null;
+  resolvedByName: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -391,3 +400,21 @@ export const updateDocumentComment = (
     `/projects/${projectKey}/documents/${documentId}/comments/${commentId}`,
     { method: 'PATCH', body: JSON.stringify(input) },
   );
+
+// An open thread that waits for the caller, shown by its last message. `kind` is 'mention'
+// when that message mentions the caller.
+export interface DocumentThreadForYou {
+  threadId: string;
+  documentId: number;
+  documentTitle: string;
+  documentIcon: string | null;
+  authorId: string | null;
+  authorName: string | null;
+  authorImage: string | null;
+  body: string;
+  kind: 'mention' | 'reply';
+  createdAt: string;
+}
+
+export const listDocumentThreadsForYou = (projectKey: string) =>
+  request<DocumentThreadForYou[]>(`/projects/${encodeURIComponent(projectKey)}/documents/for-you`);

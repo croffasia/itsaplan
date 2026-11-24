@@ -44,6 +44,10 @@ describe('buildSlashItems', () => {
         'Image',
       ],
     );
+    assert.deepEqual(
+      docs.map((item) => item.hint ?? ''),
+      ['', '#', '##', '###', '####', '#####', '######', '-', '1.', '[]', '>', '```', '---', '', ''],
+    );
   });
 
   it('offers a task list in a compact editor that registers the extension', () => {

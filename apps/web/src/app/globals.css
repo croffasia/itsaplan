@@ -19,6 +19,7 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-rail: var(--rail);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -114,6 +115,7 @@
   --sidebar-accent-foreground: oklch(0.22 0 0);
   --sidebar-border: oklch(0.905 0 0);
   --sidebar-ring: oklch(0.62 0 0);
+  --rail: color-mix(in oklab, var(--background) 55%, var(--sidebar));
   --priority-low: #6b7280;
   --priority-medium: #eab308;
   --priority-high: #f97316;
@@ -141,6 +143,9 @@
      rounded surface the transcript scrolls up to, so it casts all round. */
   --chat-tabs-shadow: 0 10px 16px -6px rgb(0 0 0 / 0.28);
   --chat-composer-shadow: 0 -2px 20px 2px rgb(0 0 0 / 0.22);
+  /* A card on the page, such as a pinned page on the Docs home. */
+  --tile-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 6px 16px -10px rgb(0 0 0 / 0.14);
+  --tile-shadow-hover: 0 2px 4px rgb(0 0 0 / 0.05), 0 16px 32px -14px rgb(0 0 0 / 0.22);
 }
 
 .dark {
@@ -199,6 +204,8 @@
   --modal-shadow: 0 40px 80px -20px rgb(0 0 0 / 0.85), 0 16px 32px -16px rgb(0 0 0 / 0.7);
   --chat-tabs-shadow: 0 12px 18px -6px rgb(0 0 0 / 0.75);
   --chat-composer-shadow: 0 -2px 22px 4px rgb(0 0 0 / 0.7);
+  --tile-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04), 0 8px 20px -12px rgb(0 0 0 / 0.6);
+  --tile-shadow-hover: inset 0 1px 0 rgb(255 255 255 / 0.06), 0 18px 36px -14px rgb(0 0 0 / 0.75);
 }
 
 /* The palettes a user can pick besides the default, in light and dark. They override
@@ -1471,11 +1478,196 @@ span.issue-ref {
   font-weight: 500;
 }
 
+/* The body of a Docs page, in the editor and on the public page: reading type for a
+   page rather than the compact one of a description or a comment. Scoped to
+   `.document-prose` (DocumentMarkdownEditor), so other editors keep `.md-content` as is. */
+.document-prose .md-content {
+  font-size: 1rem;
+  line-height: 1.75;
+}
+.document-prose .md-content > * {
+  margin: 0 0 1rem;
+}
+.document-prose .md-content > :first-child {
+  margin-top: 0;
+}
+.document-prose .md-content > :is(h1, h2, h3, h4, h5, h6) {
+  font-weight: 600;
+  scroll-margin-top: 1.5rem;
+}
+.document-prose .md-content > h1 {
+  margin: 2.5rem 0 0.75rem;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.document-prose .md-content > h2 {
+  margin: 2.5rem 0 0.75rem;
+  font-size: 1.375rem;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+.document-prose .md-content > h3 {
+  margin: 1.75rem 0 0.5rem;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+.document-prose .md-content > :is(h4, h5, h6) {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+/* The placeholder of the empty line the cursor is on: a heading shows its level, any
+   other line the commands it takes. */
+.document-prose .md-content.ProseMirror-focused > .is-empty::before {
+  content: attr(data-placeholder);
+  float: inline-start;
+  height: 0;
+  color: var(--muted-foreground);
+  opacity: 0.7;
+  pointer-events: none;
+}
+.document-prose .md-content blockquote {
+  padding-block: 2px;
+  padding-inline-start: 1rem;
+  border-inline-start: 2px solid var(--border);
+  color: var(--muted-foreground);
+}
+.document-prose .md-content code {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.875em;
+  border-radius: 4px;
+  padding: 0.15em 0.35em;
+}
+.document-prose .md-content pre {
+  background: color-mix(in oklab, var(--muted) 75%, transparent);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.84375rem;
+  line-height: 1.7;
+}
+.document-prose .md-content pre code {
+  font-size: inherit;
+  padding: 0;
+}
+.document-prose .md-content a:where(:not(.issue-ref, .document-issue-link, .share-link-locked)) {
+  color: inherit;
+  text-decoration-line: underline;
+  text-decoration-color: var(--input);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.15s;
+}
+.document-prose .md-content a:where(:not(.issue-ref, .document-issue-link)):hover {
+  text-decoration-color: currentColor;
+}
+.document-prose .md-content .document-issue-link {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.8em;
+  color: inherit;
+  background: var(--muted);
+}
+.document-prose .md-content :is(ul, ol) {
+  padding-inline-start: 1.5rem;
+}
+.document-prose .md-content li + li {
+  margin-top: 0.25rem;
+}
+.document-prose .md-content hr {
+  margin-block: 2rem;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+.document-prose .md-content .mention:not(.mention-self) {
+  color: inherit;
+  background: var(--muted);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.document-prose .md-content ul[data-type='taskList'] {
+  padding-inline-start: 0;
+}
+.document-prose .md-content ul[data-type='taskList'] li {
+  gap: 0.625rem;
+}
+.document-prose .md-content ul[data-type='taskList'] li + li {
+  margin-top: 0.375rem;
+}
+.document-prose .md-content ul[data-type='taskList'] li > label {
+  margin-top: 0.3125rem;
+  display: flex;
+}
+.document-prose .md-content ul[data-type='taskList'] input[type='checkbox'] {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1.5px var(--input);
+  transition: background-color 0.15s;
+}
+.document-prose .md-content ul[data-type='taskList'] input[type='checkbox']:checked {
+  background: var(--primary);
+  box-shadow: none;
+}
+.document-prose .md-content ul[data-type='taskList'] input[type='checkbox']:checked::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  background: var(--primary-foreground);
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+.document-prose .md-content ul[data-type='taskList'] li[data-checked='true'] > div {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+  text-decoration-color: var(--input);
+}
+.document-prose .md-content table {
+  width: 100%;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.document-prose .md-content :is(th, td) {
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-inline-end: 1px solid var(--border);
+  padding: 0.625rem 0.75rem;
+}
+.document-prose .md-content :is(th, td):last-child {
+  border-inline-end: 0;
+}
+.document-prose .md-content th {
+  background: none;
+  padding-block: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+.document-prose .md-content tr:last-child > td {
+  border-bottom: 0;
+}
+.document-prose .md-content > .node-image {
+  margin-block: 1.5rem;
+}
+.document-prose .md-content img {
+  border-radius: var(--radius-lg);
+}
+/* The page turns editable after its images render, and an image redraws only when it
+   changes, so the editor's own attribute decides whether the resize handle shows. */
+.document-prose .md-content[contenteditable='false'] [data-image-resize] {
+  display: none;
+}
+
 .document-comment-mark {
-  background-color: color-mix(in oklch, var(--primary) 12%, transparent);
-  border-bottom: 2px solid color-mix(in oklch, var(--primary) 45%, transparent);
+  background-color: color-mix(in oklab, var(--warning) 15%, transparent);
+  border-bottom: 2px solid color-mix(in oklab, var(--warning) 55%, transparent);
   cursor: pointer;
 }
-.document-comment-mark:hover {
-  background-color: color-mix(in oklch, var(--primary) 22%, transparent);
+.document-comment-mark:hover,
+.document-comment-mark-active {
+  background-color: color-mix(in oklab, var(--warning) 32%, transparent);
 }

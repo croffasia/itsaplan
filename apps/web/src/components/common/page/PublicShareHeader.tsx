@@ -1,4 +1,5 @@
 import ItsAPlanMark from '@/components/brand/ItsAPlanMark';
+import { cn } from '@/lib/utils';
 import { APP_NAME, APP_SITE_URL } from '@/utils/app';
 
 // The header over a public shared page (a board, an issue or a document). It shows the project
@@ -9,13 +10,15 @@ export default function PublicShareHeader({
   name,
   ticker,
   trailing,
+  className,
 }: {
   name: string;
   ticker: string;
   trailing?: string;
+  className?: string;
 }) {
   return (
-    <header className="flex shrink-0 items-center gap-3 border-b px-4 py-3">
+    <header className={cn('flex shrink-0 items-center gap-3 border-b px-4 py-3', className)}>
       <div className="flex min-w-0 items-baseline gap-2">
         <span className="truncate text-base font-semibold">{name}</span>
         <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">

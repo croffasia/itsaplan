@@ -6,6 +6,7 @@ import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { useIssueBySeqQuery } from '@/services/issues.service';
 import { useTeamsQuery } from '@/services/teams.service';
 import { useAccountPreferences } from '@/services/preferences.service';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import type { IssueOpenMode } from '@/lib/api/endpoints/userPreferences';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useOverlays } from '@/hooks/useOverlays';
@@ -113,8 +114,8 @@ export default function Shell({
         initiatives: initiativeOptions,
       })
     : {};
-  const addIssue = (defaults: NewIssueDefaults) =>
-    overlays.setNewIssueDefaults({ ...filterDefaults, ...defaults });
+  const addIssue = (defaults: NewIssueDefaults, onCreated?: (created: Issue) => void) =>
+    overlays.setNewIssue({ defaults: { ...filterDefaults, ...defaults }, onCreated });
 
   const openNewIssue = () => addIssue({});
 

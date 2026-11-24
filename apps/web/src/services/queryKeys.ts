@@ -123,8 +123,11 @@ export const qk = {
   documents: (projectKey: string, q = '', archived = false) =>
     ['documents', projectKey, 'list', archived ? 'archived' : 'active', q] as const,
   documentListsForProject: (projectKey: string) => ['documents', projectKey, 'list'] as const,
+  // Under the lists, so the Docs live refresh and every page write refresh it too.
+  documentsForYou: (projectKey: string) => ['documents', projectKey, 'list', 'forYou'] as const,
   documentAccessCandidates: (projectKey: string) =>
     ['documents', projectKey, 'accessCandidates'] as const,
+  projectShares: (projectKey: string) => ['project-shares', projectKey] as const,
   document: (projectKey: string, documentId: number) =>
     ['documents', projectKey, 'document', documentId] as const,
   documentRevisions: (projectKey: string, documentId: number) =>

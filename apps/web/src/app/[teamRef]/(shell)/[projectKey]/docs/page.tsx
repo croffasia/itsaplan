@@ -1,10 +1,3 @@
-import RequireFeature from '@/components/common/permissions/RequireFeature';
-import DocumentsPage from '@/features/documents/DocumentsPage';
+import DocumentsHomePage from '@/features/documents/DocumentsHomePage';
 
-export default function Page() {
-  return (
-    <RequireFeature feature="documents">
-      <DocumentsPage />
-    </RequireFeature>
-  );
-}
+export default DocumentsHomePage;

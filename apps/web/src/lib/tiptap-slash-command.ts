@@ -2,16 +2,19 @@ import { Extension, type Editor, type Range } from '@tiptap/core';
 import { ReactRenderer } from '@tiptap/react';
 import Suggestion from '@tiptap/suggestion';
 import {
-  CheckSquare2,
   Heading1,
   Heading2,
   Heading3,
-  Image as ImageIcon,
+  Heading4,
+  Heading5,
+  Heading6,
+  ImagePlus,
   List,
   ListOrdered,
   Minus,
   Pilcrow,
   Quote,
+  SquareCheck,
   SquareCode,
   Table,
   type LucideIcon,
@@ -21,6 +24,8 @@ import EditorSlashMenu, { type SlashMenuRef } from '@/components/common/editor/E
 export type SlashItem = {
   title: string;
   icon: LucideIcon;
+  // The Markdown that makes the same block when typed at the start of a line.
+  hint?: string;
   // The range covers the typed "/query", which the command removes before acting.
   run: (props: { editor: Editor; range: Range }) => void;
 };
@@ -60,12 +65,13 @@ export function buildSlashItems(options: SlashCommandOptions): SlashItem[] {
       icon: Pilcrow,
       run: ({ editor, range }) => editor.chain().focus().deleteRange(range).setParagraph().run(),
     });
-    const headingIcons = [Heading1, Heading2, Heading3, Heading3, Heading3, Heading3];
+    const headingIcons = [Heading1, Heading2, Heading3, Heading4, Heading5, Heading6];
     options.blocks.headings.forEach((title, index) => {
       const level = (index + 1) as 1 | 2 | 3 | 4 | 5 | 6;
       items.push({
         title,
-        icon: headingIcons[index] ?? Heading3,
+        icon: headingIcons[index],
+        hint: '#'.repeat(level),
         run: ({ editor, range }) =>
           editor.chain().focus().deleteRange(range).setHeading({ level }).run(),
       });
@@ -74,24 +80,28 @@ export function buildSlashItems(options: SlashCommandOptions): SlashItem[] {
       {
         title: options.blocks.bulletList,
         icon: List,
+        hint: '-',
         run: ({ editor, range }) =>
           editor.chain().focus().deleteRange(range).toggleBulletList().run(),
       },
       {
         title: options.blocks.orderedList,
         icon: ListOrdered,
+        hint: '1.',
         run: ({ editor, range }) =>
           editor.chain().focus().deleteRange(range).toggleOrderedList().run(),
       },
       {
         title: options.blocks.taskList,
-        icon: CheckSquare2,
+        icon: SquareCheck,
+        hint: '[]',
         run: ({ editor, range }) =>
           editor.chain().focus().deleteRange(range).toggleTaskList().run(),
       },
       {
         title: options.blocks.quote,
         icon: Quote,
+        hint: '>',
         run: ({ editor, range }) =>
           editor.chain().focus().deleteRange(range).toggleBlockquote().run(),
       },
@@ -100,19 +110,22 @@ export function buildSlashItems(options: SlashCommandOptions): SlashItem[] {
   if (options.taskListLabel && !options.blocks) {
     items.push({
       title: options.taskListLabel,
-      icon: CheckSquare2,
+      icon: SquareCheck,
+      hint: '[]',
       run: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleTaskList().run(),
     });
   }
   items.push({
     title: options.codeBlockLabel,
     icon: SquareCode,
+    hint: '```',
     run: ({ editor, range }) => editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
   });
   if (options.blocks) {
     items.push({
       title: options.blocks.divider,
       icon: Minus,
+      hint: '---',
       run: ({ editor, range }) =>
         editor.chain().focus().deleteRange(range).setHorizontalRule().run(),
     });
@@ -133,7 +146,7 @@ export function buildSlashItems(options: SlashCommandOptions): SlashItem[] {
   if (options.image) {
     items.push({
       title: options.image.label,
-      icon: ImageIcon,
+      icon: ImagePlus,
       run: ({ editor, range }) => {
         editor.chain().focus().deleteRange(range).run();
         options.image?.onPick();

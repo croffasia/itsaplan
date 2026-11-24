@@ -2923,6 +2923,9 @@ export const documentComment = pgTable(
     to: integer('selection_to'),
     orphaned: boolean('orphaned').notNull().default(false),
     resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    resolvedByUserId: text('resolved_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

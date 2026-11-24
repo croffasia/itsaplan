@@ -9,7 +9,9 @@ import {
   type ProjectDocumentRevisionSummary,
   type ProjectDocumentSummary,
   listDocuments,
+  listDocumentThreadsForYou,
   getDocument,
+  listDocumentComments,
   listDocumentIssueLinks,
   listIssueDocumentLinks,
   linkDocumentIssue,
@@ -20,6 +22,7 @@ import {
   createDocument,
   duplicateDocument,
   setDocumentAccess,
+  transferDocumentOwnership,
   listDocumentAccessCandidates,
   setDocumentLocked,
   archiveDocument,
@@ -34,6 +37,12 @@ import {
   updateDocument,
   deleteDocument,
 } from '@/lib/api/endpoints/documents';
+import {
+  type ShareOptions,
+  disableDocumentShare,
+  enableDocumentShare,
+  listProjectShares,
+} from '@/lib/api/endpoints/share';
 import { qk } from '@/services/queryKeys';
 import { applyOptimisticDocumentMove } from '../utils/documentMove';
 
@@ -60,12 +69,28 @@ export function useDocumentsQuery(
   });
 }
 
+export function useDocumentThreadsForYouQuery(projectKey: string | null) {
+  return useQuery({
+    queryKey: qk.documentsForYou(projectKey ?? ''),
+    queryFn: () => listDocumentThreadsForYou(projectKey!),
+    enabled: projectKey != null,
+    staleTime: 30_000,
+  });
+}
+
 export function useDocumentQuery(projectKey: string | null, documentId: number | null) {
   return useQuery({
     queryKey: qk.document(projectKey ?? '', documentId ?? 0),
     queryFn: () => getDocument(projectKey!, documentId!),
     enabled: projectKey != null && documentId != null,
     refetchOnMount: 'always',
+  });
+}
+
+export function useDocumentCommentsQuery(projectKey: string, documentId: number) {
+  return useQuery({
+    queryKey: qk.documentComments(projectKey, documentId),
+    queryFn: () => listDocumentComments(projectKey, documentId),
   });
 }
 
@@ -229,12 +254,74 @@ export function useSetDocumentAccess(projectKey: string | null) {
   );
 }
 
+export function useTransferDocumentOwnership(projectKey: string | null) {
+  return useDocumentMutation(
+    projectKey,
+    ({
+      documentId,
+      version,
+      ownerUserId,
+    }: {
+      documentId: number;
+      version: number;
+      ownerUserId: string;
+    }) => transferDocumentOwnership(projectKey!, documentId, { version, ownerUserId }),
+  );
+}
+
 export function useDocumentAccessCandidates(projectKey: string | null) {
   return useQuery({
     queryKey: qk.documentAccessCandidates(projectKey ?? ''),
     queryFn: () => listDocumentAccessCandidates(projectKey!),
     enabled: projectKey != null,
   });
+}
+
+// The ids of the pages with a live public link.
+export function useSharedDocumentIds(projectKey: string) {
+  return useQuery({
+    queryKey: qk.projectShares(projectKey),
+    queryFn: () => listProjectShares(projectKey),
+    select: (shares) => new Set(shares.documents.map((d) => d.id)),
+  });
+}
+
+// The ids of the pages whose live public link also opens their subpages.
+export function useDocumentsSharedWithSubpages(projectKey: string, enabled: boolean) {
+  return useQuery({
+    queryKey: qk.projectShares(projectKey),
+    queryFn: () => listProjectShares(projectKey),
+    enabled,
+    select: (shares) => new Set(shares.documents.filter((d) => d.includeChildren).map((d) => d.id)),
+  });
+}
+
+// The page is refetched before the mutation settles: its share fields are what the
+// access popover shows.
+function useDocumentShareMutation<TInput, TData>(
+  projectKey: string,
+  documentId: number,
+  mutationFn: (input: TInput) => Promise<TData>,
+) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: qk.document(projectKey, documentId), exact: true }),
+        qc.invalidateQueries({ queryKey: qk.projectShares(projectKey) }),
+      ]),
+  });
+}
+
+export function useEnableDocumentShare(projectKey: string, documentId: number) {
+  return useDocumentShareMutation(projectKey, documentId, (options: ShareOptions) =>
+    enableDocumentShare(documentId, options),
+  );
+}
+
+export function useDisableDocumentShare(projectKey: string, documentId: number) {
+  return useDocumentShareMutation(projectKey, documentId, () => disableDocumentShare(documentId));
 }
 
 export function useSetDocumentLocked(projectKey: string | null) {

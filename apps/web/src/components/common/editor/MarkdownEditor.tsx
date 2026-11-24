@@ -258,7 +258,12 @@ export default function MarkdownEditor({
       {/* Grows with the text rather than being pinned to the container's height,
           so a container that scrolls measures the overflow and shows a bar. */}
       <EditorContent editor={editor} className="flex min-h-full flex-col" />
-      <EditorLinkPreview editor={editor} source={defaultValue} compact={readingLinks} />
+      <EditorLinkPreview
+        editor={editor}
+        source={defaultValue}
+        compact={readingLinks}
+        editLink={editable}
+      />
       {imageAttachments && (
         <EditorImagePicker
           open={imagePickerOpen}

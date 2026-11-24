@@ -391,6 +391,30 @@ describe('collaborative documents', () => {
     ).toBe(200);
     expect((await doc.comments.get()).data![0].resolvedAt).not.toBeNull();
   });
+  it('records who resolved a thread and forgets it on reopen', async () => {
+    const { doc } = await setup();
+    const version = (await doc.get()).data!.version;
+    const thread = await doc.comments.post({
+      body: 'Check',
+      quote: 'Hello',
+      from: 1,
+      to: 6,
+      version,
+    });
+    const resolve = (resolved: boolean) =>
+      doc.comments({ commentId: thread.data!.id }).patch({ resolved });
+
+    await resolve(true);
+    const [resolved] = (await doc.comments.get()).data!;
+    expect(resolved.resolvedByName).toBe(resolved.authorName);
+    expect(resolved).not.toHaveProperty('resolvedByUserId');
+
+    await resolve(false);
+    expect((await doc.comments.get()).data![0]).toMatchObject({
+      resolvedAt: null,
+      resolvedByName: null,
+    });
+  });
   it('refuses non-members and does not expose private document sessions or comments', async () => {
     const { client, doc, id, session } = await setup();
     const stranger = await signUpTestUser();

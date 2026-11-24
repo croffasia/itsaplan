@@ -200,6 +200,7 @@
     "downloadAction": "Télécharger",
     "downloadFailed": "Impossible de télécharger le modèle.",
     "importAction": "Importer un modèle",
+    "galleryAction": "Galerie de modèles",
     "deleteAction": "Supprimer le modèle",
     "deleteDialog": {
       "title": "Supprimer le modèle « {name} » ?",

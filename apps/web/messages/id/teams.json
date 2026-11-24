@@ -200,6 +200,7 @@
     "downloadAction": "Unduh",
     "downloadFailed": "Tidak dapat mengunduh templat.",
     "importAction": "Impor templat",
+    "galleryAction": "Galeri templat",
     "deleteAction": "Hapus templat",
     "deleteDialog": {
       "title": "Hapus templat \"{name}\"?",

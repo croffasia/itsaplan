@@ -200,6 +200,7 @@
     "downloadAction": "Download",
     "downloadFailed": "Couldn't download the template.",
     "importAction": "Import template",
+    "galleryAction": "Template gallery",
     "deleteAction": "Delete template",
     "deleteDialog": {
       "title": "Delete template \"{name}\"?",

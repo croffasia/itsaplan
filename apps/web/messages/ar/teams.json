@@ -200,6 +200,7 @@
     "downloadAction": "تنزيل",
     "downloadFailed": "تعذّر تنزيل القالب.",
     "importAction": "استيراد قالب",
+    "galleryAction": "معرض القوالب",
     "deleteAction": "حذف القالب",
     "deleteDialog": {
       "title": "حذف القالب \"{name}\"؟",

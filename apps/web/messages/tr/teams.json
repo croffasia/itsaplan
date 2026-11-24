@@ -200,6 +200,7 @@
     "downloadAction": "İndir",
     "downloadFailed": "Şablon indirilemedi.",
     "importAction": "Şablonu içe aktar",
+    "galleryAction": "Şablon galerisi",
     "deleteAction": "Şablonu sil",
     "deleteDialog": {
       "title": "\"{name}\" şablonu silinsin mi?",

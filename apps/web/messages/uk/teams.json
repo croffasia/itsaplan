@@ -200,6 +200,7 @@
     "downloadAction": "Завантажити",
     "downloadFailed": "Не вдалося завантажити шаблон.",
     "importAction": "Імпортувати шаблон",
+    "galleryAction": "Галерея шаблонів",
     "deleteAction": "Видалити шаблон",
     "deleteDialog": {
       "title": "Видалити шаблон «{name}»?",

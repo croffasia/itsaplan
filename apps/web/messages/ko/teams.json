@@ -200,6 +200,7 @@
     "downloadAction": "다운로드",
     "downloadFailed": "템플릿을 다운로드하지 못했습니다.",
     "importAction": "템플릿 가져오기",
+    "galleryAction": "템플릿 갤러리",
     "deleteAction": "템플릿 삭제",
     "deleteDialog": {
       "title": "\"{name}\" 템플릿을 삭제할까요?",

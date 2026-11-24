@@ -200,6 +200,7 @@
     "downloadAction": "دانلود",
     "downloadFailed": "دانلود قالب ممکن نشد.",
     "importAction": "وارد کردن قالب",
+    "galleryAction": "گالری قالب‌ها",
     "deleteAction": "حذف قالب",
     "deleteDialog": {
       "title": "قالب «{name}» حذف شود؟",

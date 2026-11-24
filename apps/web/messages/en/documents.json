@@ -226,15 +226,8 @@
   },
   "workItem": {
     "create": "Create work item",
-    "description": "Create a linked work item from this selection.",
-    "title": "Title",
-    "status": "Status",
     "source": "Source document",
-    "cancel": "Cancel",
-    "creating": "Creating…",
-    "failed": "Could not create the work item. Try again.",
-    "linkFailed": "The work item was created. Retry to finish linking it; another item will not be created.",
-    "retryLink": "Retry linking",
+    "linkFailed": "{key} was created, but it could not be linked to this page.",
     "created": "{key} created and linked to this page"
   },
   "selectionActions": "Selection actions",

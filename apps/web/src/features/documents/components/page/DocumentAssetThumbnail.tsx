@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { DocumentAsset } from '@/lib/api/endpoints/documents';
-import { attachmentHtml } from '@/components/common/editor/attachmentEmbed';
+import { setEmbedDragData } from '@/components/common/editor/attachmentEmbed';
 import { formatSize } from '@/utils/fileSize';
 
 // An image asset of the page as a thumbnail card, its actions over the top corner.
@@ -16,11 +16,7 @@ export default function DocumentAssetThumbnail({
     // a file, and the editor would upload it again as a new asset.
     <figure
       draggable
-      onDragStart={(event) => {
-        event.dataTransfer.setData('text/html', attachmentHtml(asset));
-        event.dataTransfer.setData('text/plain', asset.url);
-        event.dataTransfer.effectAllowed = 'copy';
-      }}
+      onDragStart={(event) => setEmbedDragData(event.dataTransfer, asset)}
       className="group relative m-0 overflow-hidden rounded-lg bg-muted/70"
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- protected assets cannot go through Next's public image optimizer. */}

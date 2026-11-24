@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Editor } from '@tiptap/react';
-import type { SelectionBookmark } from '@tiptap/pm/state';
 import { ListPlus, MessageSquarePlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { usePermissions } from '@/hooks/usePermissions';
-import DocumentCreateIssueDialog from './DocumentCreateIssueDialog';
+import { useDocumentIssueFromSelection } from '../hooks/useDocumentIssueFromSelection';
+import DocumentSelectionDivider from './DocumentSelectionDivider';
 
 export type DocumentSelection = { from: number; to: number; quote: string; version?: number };
 
@@ -25,35 +25,23 @@ export default function DocumentSelectionActions({
   const t = useTranslations('documents');
   const { can } = usePermissions();
   const [selection, setSelection] = useState<DocumentSelection | null>(null);
-  const [creating, setCreating] = useState(false);
-  const bookmark = useRef<SelectionBookmark>(editor.state.selection.getBookmark());
+  const createIssue = useDocumentIssueFromSelection({ editor, projectKey, documentId });
   useEffect(() => {
     const update = () => {
-      if (creating) return;
       const { from, to, empty } = editor.state.selection;
       const quote = editor.state.doc.textBetween(from, to, '\n');
       setSelection(!empty && quote.trim() ? { from, to, quote } : null);
-      bookmark.current = editor.state.selection.getBookmark();
-    };
-    const map = ({
-      transaction,
-    }: {
-      transaction: { mapping: Parameters<SelectionBookmark['map']>[0] };
-    }) => {
-      if (creating) bookmark.current = bookmark.current.map(transaction.mapping);
     };
     editor.on('selectionUpdate', update);
-    editor.on('transaction', map);
     update();
     return () => {
       editor.off('selectionUpdate', update);
-      editor.off('transaction', map);
     };
-  }, [creating, editor]);
+  }, [editor]);
   if (!selection || !editor.isEditable) return null;
   return (
     <>
-      <span className="mx-0.5 my-1 w-px self-stretch bg-border" aria-hidden />
+      <DocumentSelectionDivider />
       <div
         className="flex items-center gap-0.5 print:hidden"
         role="group"
@@ -73,23 +61,13 @@ export default function DocumentSelectionActions({
             type="button"
             className={ACTION}
             onMouseDown={(event) => event.preventDefault()}
-            onClick={() => setCreating(true)}
+            onClick={() => createIssue(selection.quote)}
           >
             <ListPlus />
             {t('workItem.create')}
           </button>
         )}
       </div>
-      {creating && (
-        <DocumentCreateIssueDialog
-          editor={editor}
-          projectKey={projectKey}
-          documentId={documentId}
-          quote={selection.quote}
-          bookmark={bookmark}
-          onClose={() => setCreating(false)}
-        />
-      )}
     </>
   );
 }

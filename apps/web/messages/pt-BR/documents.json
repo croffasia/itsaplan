@@ -224,15 +224,8 @@
   },
   "workItem": {
     "create": "Criar item de trabalho",
-    "description": "Crie um item de trabalho vinculado a partir desta seleção.",
-    "title": "Título",
-    "status": "Status",
     "source": "Documento de origem",
-    "cancel": "Cancelar",
-    "creating": "Criando…",
-    "failed": "Não foi possível criar o item de trabalho. Tente novamente.",
-    "linkFailed": "O item de trabalho foi criado. Tente de novo para concluir o vínculo; outro item não será criado.",
-    "retryLink": "Tentar vincular de novo",
+    "linkFailed": "{key} foi criado, mas não foi possível vinculá-lo a esta página.",
     "created": "{key} criado e vinculado a esta página"
   },
   "comments": {

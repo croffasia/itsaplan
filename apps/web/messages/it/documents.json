@@ -226,15 +226,8 @@
   },
   "workItem": {
     "create": "Crea work item",
-    "description": "Crea un work item collegato da questa selezione.",
-    "title": "Titolo",
-    "status": "Stato",
     "source": "Documento di origine",
-    "cancel": "Annulla",
-    "creating": "Creazione…",
-    "failed": "Non è stato possibile creare il work item. Riprova.",
-    "linkFailed": "Il work item è stato creato. Riprova per completare il collegamento; non verrà creato un altro elemento.",
-    "retryLink": "Riprova il collegamento",
+    "linkFailed": "{key} è stato creato, ma non è stato possibile collegarlo a questa pagina.",
     "created": "{key} creato e collegato a questa pagina"
   },
   "selectionActions": "Azioni selezione",

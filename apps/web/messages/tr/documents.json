@@ -226,15 +226,8 @@
   },
   "workItem": {
     "create": "İş maddesi oluştur",
-    "description": "Bu seçimden bağlantılı bir iş maddesi oluşturun.",
-    "title": "Başlık",
-    "status": "Durum",
     "source": "Kaynak belge",
-    "cancel": "İptal",
-    "creating": "Oluşturuluyor…",
-    "failed": "İş maddesi oluşturulamadı. Tekrar deneyin.",
-    "linkFailed": "İş maddesi oluşturuldu. Bağlantıyı tamamlamak için tekrar deneyin; mükerrer iş oluşturulmayacaktır.",
-    "retryLink": "Bağlantıyı tekrar dene",
+    "linkFailed": "{key} oluşturuldu ancak bu sayfaya bağlanamadı.",
     "created": "{key} oluşturuldu ve bu sayfaya bağlandı"
   },
   "selectionActions": "Seçim işlemleri",

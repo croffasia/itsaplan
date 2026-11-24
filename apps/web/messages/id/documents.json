@@ -224,15 +224,8 @@
   },
   "workItem": {
     "create": "Buat item kerja",
-    "description": "Buat item kerja yang tertaut dari pilihan ini.",
-    "title": "Judul",
-    "status": "Status",
     "source": "Dokumen sumber",
-    "cancel": "Batal",
-    "creating": "Membuat…",
-    "failed": "Tidak dapat membuat item kerja. Coba lagi.",
-    "linkFailed": "Item kerja sudah dibuat. Coba lagi untuk menyelesaikan tautannya; item lain tidak akan dibuat.",
-    "retryLink": "Coba tautkan lagi",
+    "linkFailed": "{key} sudah dibuat, tetapi tidak bisa ditautkan ke halaman ini.",
     "created": "{key} dibuat dan ditautkan ke halaman ini"
   },
   "comments": {

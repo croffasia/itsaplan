@@ -25,6 +25,13 @@ export function attachmentHtml(a: Embeddable): string {
   return `<a href="${a.url}">${a.filename}</a>`;
 }
 
+// A card dragged into an editor carries the embed, which tiptap inserts as is.
+export function setEmbedDragData(dataTransfer: DataTransfer, a: Embeddable) {
+  dataTransfer.setData('text/html', attachmentHtml(a));
+  dataTransfer.setData('text/plain', a.url);
+  dataTransfer.effectAllowed = 'copy';
+}
+
 // The same embed as markdown, for appending to the description text directly.
 // Markdown has no video syntax, so a video stays a raw <video> tag (the Video
 // tiptap node parses it back).

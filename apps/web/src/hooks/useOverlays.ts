@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import type { NewIssueDefaults } from '@/utils/project';
 
 // The project-level overlays, grouped here so the Shell tracks one object instead of
@@ -9,8 +10,12 @@ export function useOverlays() {
   const [showNewProject, setShowNewProject] = useState(false);
   const [showNewInitiative, setShowNewInitiative] = useState(false);
   const [showCommand, setShowCommand] = useState(false);
-  // Initial field values for a new issue (null = the new-issue modal is closed).
-  const [newIssueDefaults, setNewIssueDefaults] = useState<NewIssueDefaults | null>(null);
+  // The new-issue modal's initial field values and what runs once the issue exists
+  // (null = the modal is closed).
+  const [newIssue, setNewIssue] = useState<{
+    defaults: NewIssueDefaults;
+    onCreated?: (created: Issue) => void;
+  } | null>(null);
   // Which issue the detail panel shows (null = the panel is closed).
   const [openIssueId, setOpenIssueId] = useState<number | null>(null);
 
@@ -22,11 +27,7 @@ export function useOverlays() {
   }, [pathname]);
 
   const anyOpen =
-    showNewProject ||
-    showNewInitiative ||
-    showCommand ||
-    newIssueDefaults != null ||
-    openIssueId != null;
+    showNewProject || showNewInitiative || showCommand || newIssue != null || openIssueId != null;
 
   return {
     showNewProject,
@@ -35,8 +36,8 @@ export function useOverlays() {
     setShowNewInitiative,
     showCommand,
     setShowCommand,
-    newIssueDefaults,
-    setNewIssueDefaults,
+    newIssue,
+    setNewIssue,
     openIssueId,
     setOpenIssueId,
     anyOpen,

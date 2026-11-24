@@ -118,6 +118,7 @@ export default function DocumentMarkdownEditor({
   const router = useRouter();
   const issueRefs = useIssueRefs();
   const editorRef = useRef<Editor | null>(null);
+  const dragFromPage = useRef(false);
   const imageInput = useRef<HTMLInputElement>(null);
   const linkKeyboardHandlers = useMemo(createLinkKeyboardHandlers, []);
   const editableRef = useRef(editable);
@@ -215,9 +216,11 @@ export default function DocumentMarkdownEditor({
         return pasteMarkdown(currentEditor, event.clipboardData);
       },
       handleDrop: (view, event, _slice, moved) => {
+        const fromPage = dragFromPage.current;
+        dragFromPage.current = false;
         const file = firstImageFile(event.dataTransfer?.files);
         const currentEditor = editorRef.current;
-        if (moved || !file || !onUploadImage || !currentEditor || !editableRef.current)
+        if (moved || fromPage || !file || !onUploadImage || !currentEditor || !editableRef.current)
           return false;
         const dropPoint = view.posAtCoords({ left: event.clientX, top: event.clientY });
         if (!dropPoint) return false;
@@ -249,6 +252,26 @@ export default function DocumentMarkdownEditor({
   });
 
   useDocumentAnchor(editor);
+
+  // Chrome adds a dragged <img> to the drop as a file. A drag that starts in the page,
+  // such as an Option-drag copy, copies the content itself instead of uploading the image.
+  // A drop on the page clears the flag in handleDrop, a drag that ends elsewhere here.
+  useEffect(() => {
+    const dom = editor?.view.dom;
+    if (!dom) return;
+    const start = () => {
+      dragFromPage.current = true;
+    };
+    const end = () => {
+      dragFromPage.current = false;
+    };
+    dom.addEventListener('dragstart', start);
+    dom.addEventListener('dragend', end);
+    return () => {
+      dom.removeEventListener('dragstart', start);
+      dom.removeEventListener('dragend', end);
+    };
+  }, [editor]);
 
   useEffect(() => {
     editorRef.current = editor;

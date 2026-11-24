@@ -7,10 +7,18 @@ const MIN_PERCENT = 25;
 
 const HANDLE_CLASS =
   'pointer-events-auto touch-none bg-background opacity-0 shadow-[var(--overlay-shadow)] transition-opacity group-hover:opacity-100';
-// The image keeps to the line-start edge, so only the line-end corners resize it.
-const CORNER_CLASSES = [
-  'top-1.5 cursor-nesw-resize rtl:cursor-nwse-resize',
-  'bottom-1.5 cursor-nwse-resize rtl:cursor-nesw-resize',
+type Edge = 'start' | 'end';
+type Handle = { edge: Edge; className: string };
+
+const SIDES: Handle[] = [
+  { edge: 'start', className: 'start-2' },
+  { edge: 'end', className: 'end-2' },
+];
+const CORNERS: Handle[] = [
+  { edge: 'start', className: 'start-1.5 top-1.5 cursor-nwse-resize rtl:cursor-nesw-resize' },
+  { edge: 'end', className: 'end-1.5 top-1.5 cursor-nesw-resize rtl:cursor-nwse-resize' },
+  { edge: 'start', className: 'start-1.5 bottom-1.5 cursor-nesw-resize rtl:cursor-nwse-resize' },
+  { edge: 'end', className: 'end-1.5 bottom-1.5 cursor-nwse-resize rtl:cursor-nesw-resize' },
 ];
 
 // An image sized as a share of the text width, 25–100%, stored as `style="width: N%"`,
@@ -25,18 +33,22 @@ export default function DocumentPercentImage({
   // Set while dragging: no transaction (and no undo step) per pointermove.
   const [dragPercent, setDragPercent] = useState<number | null>(null);
 
-  // The handle sits on the line-end edge, so in a right-to-left page it grows leftwards.
-  function startResize(event: PointerEvent) {
+  function startResize(event: PointerEvent, edge: Edge) {
     const frame = frameRef.current;
     const text = frame?.parentElement;
     if (!frame || !text || !editor.isEditable) return;
     // Otherwise the pointerdown selects the node and starts a native drag.
     event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = frame.getBoundingClientRect().width;
+    // A drag away from the image makes it wider on either edge. The line-end edge is on
+    // the left in a right-to-left page.
     const rtl = getComputedStyle(frame).direction === 'rtl';
+    const growsRightwards = rtl ? edge === 'start' : edge === 'end';
+    const outward = growsRightwards ? 1 : -1;
     const percentAt = (clientX: number) => {
-      const rect = frame.getBoundingClientRect();
-      const span = rtl ? rect.right - clientX : clientX - rect.left;
-      return Math.round(Math.min(100, Math.max(MIN_PERCENT, (span / text.clientWidth) * 100)));
+      const width = startWidth + (clientX - startX) * outward;
+      return Math.round(Math.min(100, Math.max(MIN_PERCENT, (width / text.clientWidth) * 100)));
     };
     const onMove = (move: globalThis.PointerEvent) => setDragPercent(percentAt(move.clientX));
     const onUp = (up: globalThis.PointerEvent) => {
@@ -76,30 +88,38 @@ export default function DocumentPercentImage({
           // A node view has no drag handle of its own; without one the image is stuck.
           data-drag-handle
         />
-        {/* Sticky to the middle of the screen, so on a tall image the handle stays in view.
-            It moves between the corner handles and never covers them. */}
-        <span className="pointer-events-none absolute end-2 top-6 bottom-6 flex items-center">
+        {/* Sticky to the middle of the screen, so on a tall image the side handles stay in
+            view. They move between the corner handles and never cover them. */}
+        {SIDES.map((side) => (
           <span
-            role="presentation"
-            data-image-resize
-            onPointerDown={startResize}
+            key={side.className}
             className={cn(
-              HANDLE_CLASS,
-              'sticky top-[calc(50%-1.5rem)] bottom-[calc(50%-1.5rem)] h-12 max-h-full w-1.5 cursor-ew-resize rounded-full',
-              handlesShown && 'opacity-100',
+              'pointer-events-none absolute top-6 bottom-6 flex items-center',
+              side.className,
             )}
-          />
-        </span>
-        {CORNER_CLASSES.map((corner) => (
+          >
+            <span
+              role="presentation"
+              data-image-resize
+              onPointerDown={(event) => startResize(event, side.edge)}
+              className={cn(
+                HANDLE_CLASS,
+                'sticky top-[calc(50%-1.5rem)] bottom-[calc(50%-1.5rem)] h-12 max-h-full w-1.5 cursor-ew-resize rounded-full',
+                handlesShown && 'opacity-100',
+              )}
+            />
+          </span>
+        ))}
+        {CORNERS.map((corner) => (
           <span
-            key={corner}
+            key={corner.className}
             role="presentation"
             data-image-resize
-            onPointerDown={startResize}
+            onPointerDown={(event) => startResize(event, corner.edge)}
             className={cn(
               HANDLE_CLASS,
-              'absolute end-1.5 size-3 rounded-sm',
-              corner,
+              'absolute size-3 rounded-sm',
+              corner.className,
               handlesShown && 'opacity-100',
             )}
           />

@@ -226,15 +226,8 @@
   },
   "workItem": {
     "create": "建立工作項目",
-    "description": "用選取的內容建立一個連結的工作項目。",
-    "title": "標題",
-    "status": "狀態",
     "source": "來源文件",
-    "cancel": "取消",
-    "creating": "正在建立…",
-    "failed": "無法建立工作項目，請重試。",
-    "linkFailed": "工作項目已建立。請重試以完成連結，不會再建立另一個工作項目。",
-    "retryLink": "重試連結",
+    "linkFailed": "已建立 {key}，但無法連結到此頁面。",
     "created": "已建立 {key} 並連結到此頁面"
   },
   "selectionActions": "選取範圍操作",

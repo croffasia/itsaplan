@@ -226,15 +226,8 @@
   },
   "workItem": {
     "create": "创建工作项",
-    "description": "根据所选内容创建关联的工作项。",
-    "title": "标题",
-    "status": "状态",
     "source": "来源文档",
-    "cancel": "取消",
-    "creating": "正在创建…",
-    "failed": "无法创建工作项，请重试。",
-    "linkFailed": "工作项已创建。请重试以完成关联，不会再创建新的工作项。",
-    "retryLink": "重试关联",
+    "linkFailed": "已创建 {key}，但未能关联到此页面。",
     "created": "已创建 {key} 并关联到此页面"
   },
   "selectionActions": "Selection actions",

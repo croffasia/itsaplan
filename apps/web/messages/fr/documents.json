@@ -226,15 +226,8 @@
   },
   "workItem": {
     "create": "Créer une tâche",
-    "description": "Créez une tâche liée à partir de cette sélection.",
-    "title": "Titre",
-    "status": "Statut",
     "source": "Document source",
-    "cancel": "Annuler",
-    "creating": "Création…",
-    "failed": "Impossible de créer la tâche. Réessayez.",
-    "linkFailed": "La tâche a été créée. Réessayez pour terminer la liaison ; aucune autre tâche ne sera créée.",
-    "retryLink": "Réessayer la liaison",
+    "linkFailed": "{key} a été créé, mais n’a pas pu être lié à cette page.",
     "created": "{key} créée et liée à cette page"
   },
   "selectionActions": "Selection actions",

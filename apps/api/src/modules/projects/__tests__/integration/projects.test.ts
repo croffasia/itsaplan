@@ -369,6 +369,7 @@ describe('projects', () => {
         name: 'Steps',
         fieldType: 'text',
         issueTypeId: type.id,
+        required: true,
       });
 
       await source.copy.post({ key: 'DST', name: 'Destination' });
@@ -380,11 +381,12 @@ describe('projects', () => {
           name: f.name,
           issueTypeId: f.issueTypeId,
           showInBody: f.showInBody,
+          required: f.required,
         })),
       ).toEqual(
         expect.arrayContaining([
-          { name: 'Severity', issueTypeId: null, showInBody: true },
-          { name: 'Steps', issueTypeId: bug.id, showInBody: false },
+          { name: 'Severity', issueTypeId: null, showInBody: true, required: false },
+          { name: 'Steps', issueTypeId: bug.id, showInBody: false, required: true },
         ]),
       );
     });

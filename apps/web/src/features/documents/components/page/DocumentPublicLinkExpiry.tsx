@@ -1,10 +1,10 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { ShareState } from '@/lib/api/endpoints/share';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import DatePill from '@/components/common/fields/DatePill';
 import { toDateStr } from '@/utils/dates';
 
 type Choice = 'never' | '1' | '3' | '7' | 'date';
@@ -30,7 +30,6 @@ export default function DocumentPublicLinkExpiry({
 }) {
   const t = useTranslations('documents');
   const format = useFormatter();
-  const dateId = useId();
   // The API keeps the expiry, not the preset that set it: a preset stays pressed while the
   // expiry it saved is the current one.
   const [preset, setPreset] = useState<{ choice: Choice; expiresAt: string | null } | null>(null);
@@ -98,28 +97,24 @@ export default function DocumentPublicLinkExpiry({
       </div>
       {dateOpen && (
         <form
-          className="flex gap-2"
+          className="flex items-center gap-2"
           onSubmit={(e) => {
             e.preventDefault();
             if (date) save('date', endOfDay(date));
           }}
         >
-          <label htmlFor={dateId} className="sr-only">
-            {t('publicLink.expiryDate')}
-          </label>
-          <Input
-            id={dateId}
-            type="date"
-            min={toDateStr(new Date())}
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="h-8 flex-1 text-[13px] md:text-[13px]"
+          <DatePill
+            value={date || null}
+            placeholder={t('publicLink.expiryDate')}
+            clearable={false}
+            disabled={{ before: new Date() }}
+            onChange={(value) => setDate(value ?? '')}
           />
           <Button
             type="submit"
             size="sm"
             disabled={disabled || !date}
-            className="h-8 px-2.5 text-[13px]"
+            className="h-7 px-2.5 text-[13px]"
           >
             {t('publicLink.setDate')}
           </Button>

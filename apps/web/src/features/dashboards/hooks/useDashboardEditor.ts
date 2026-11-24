@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { arrayMove } from '@dnd-kit/sortable';
 import { useTranslations } from 'next-intl';
+import type { Layout } from 'react-grid-layout';
 import type { Dashboard } from '@/lib/api/endpoints/dashboards';
 import {
   createWidget,
@@ -52,12 +52,6 @@ export function useDashboardEditor(
 
   const edit = (next: DashboardLayout) => setDraft({ key: activeKey, layout: next });
 
-  const addWidget = (type: WidgetType) => {
-    // Drop the new widget below everything so it never overlaps existing ones;
-    // react-grid-layout's compaction pulls it up to the first free slot.
-    const bottom = layout.reduce((m, w) => Math.max(m, w.y + w.h), 0);
-    edit([...layout, { ...createWidget(type), x: 0, y: bottom }]);
-  };
   const removeWidget = (id: string) => edit(layout.filter((w) => w.id !== id));
   const updateWidget = (id: string, patch: Partial<Omit<WidgetInstance, 'id' | 'type'>>) =>
     edit(
@@ -67,18 +61,22 @@ export function useDashboardEditor(
           : w,
       ),
     );
-  // Applies react-grid-layout's positions/sizes back onto the widgets after a
-  // drag or resize. `items` is RGL's layout array ({ i, x, y, w, h }).
-  const applyGrid = (
-    items: readonly { i: string; x: number; y: number; w: number; h: number }[],
-  ) => {
+  // react-grid-layout's positions and sizes applied back onto the widgets.
+  const withGridPositions = (items: Layout) => {
     const byId = new Map(items.map((it) => [it.i, it]));
-    edit(
-      layout.map((w) => {
-        const it = byId.get(w.id);
-        return it ? { ...w, x: it.x, y: it.y, w: it.w, h: it.h } : w;
-      }),
-    );
+    return layout.map((w) => {
+      const it = byId.get(w.id);
+      return it ? { ...w, x: it.x, y: it.y, w: it.w, h: it.h } : w;
+    });
+  };
+  const applyGrid = (items: Layout) => edit(withGridPositions(items));
+  // A widget dragged in from the add panel, at the cell it was dropped on. `items`
+  // holds the moves the grid made to free that cell. Returns the new widget's id, so
+  // the caller can point at it and take it back.
+  const dropWidget = (type: WidgetType, items: Layout, at: { x: number; y: number }) => {
+    const widget = { ...createWidget(type), ...at };
+    edit([...withGridPositions(items), widget]);
+    return widget.id;
   };
 
   const discard = () => setDraft(null);
@@ -115,13 +113,7 @@ export function useDashboardEditor(
     }
   };
 
-  const reorderDashboards = (draggedId: number, targetId: number) => {
-    const ids = dashboards.map((d) => d.id);
-    const from = ids.indexOf(draggedId);
-    const to = ids.indexOf(targetId);
-    if (from === -1 || to === -1 || from === to) return;
-    reorderM.mutate(arrayMove(ids, from, to));
-  };
+  const reorderDashboards = (ids: number[]) => reorderM.mutate(ids);
 
   return {
     active,
@@ -129,7 +121,7 @@ export function useDashboardEditor(
     layout,
     dirty,
     saving: createM.isPending || updateM.isPending,
-    addWidget,
+    dropWidget,
     removeWidget,
     updateWidget,
     applyGrid,

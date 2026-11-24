@@ -23,6 +23,7 @@ export function cut(markdown: string): string {
 // the whole block tree.
 export const notionReadPage: CustomToolEntry = {
   key: 'notion_read_page',
+  group: 'Pages',
   label: 'Notion Read Page',
   scopes: ['Read content'],
   description:

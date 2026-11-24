@@ -1,18 +1,22 @@
 import type { Locale } from '@/i18n/locales';
 import { request } from '@/lib/api/core/client';
 import type { HotkeyOverrides } from '@/lib/api/endpoints/settings';
+import type { Palette } from '@/utils/colorThemes';
+import type { CustomTheme } from '@/utils/customTheme';
 
 // The signed-in user's interface preferences, held per account so they apply on
 // every device. timezone is an IANA zone name the app renders stored UTC timestamps
 // in; issueOpenMode decides whether a clicked issue opens in the side panel or on
-// its own page; startPage is the section the app root lands on; showChatByDefault
-// keeps the floating AI chat button on screen from the start; lastProjectId is the
-// project the app root reopens (null until the user has opened one).
+// its own page; startPage is the section the app root lands on; showChatByDefault opens
+// the side panel on the AI chat in a project the user has not opened or closed it in yet;
+// lastProjectId is the project the app root reopens (null until the user has opened one).
 export type ThemePreference = 'light' | 'dark' | 'system';
 
 export type IssueOpenMode = 'panel' | 'page';
 
 export type StartPage = 'inbox' | 'dashboard' | 'work-items' | 'initiatives';
+
+export type AgentRunsView = 'full' | 'compact';
 
 export type IssueStatsView = 'compact' | 'timeline';
 
@@ -24,9 +28,15 @@ export interface AccountPreferences {
   // server renders with; also the language of this user's emails and bot messages.
   locale: Locale;
   theme: ThemePreference;
+  // The color theme drawn in the light or dark version `theme` picks. 'custom' draws
+  // customTheme, which stays stored when another palette is picked.
+  palette: Palette;
+  customTheme: CustomTheme | null;
   issueOpenMode: IssueOpenMode;
   startPage: StartPage;
   showChatByDefault: boolean;
+  // Where a run opens in the side panel: beside the list or in place of it.
+  agentRunsView: AgentRunsView;
   // How the status stats section of an issue starts out, and the shape its activity
   // log starts in. Switching either on an issue is not saved — it lasts as long as
   // that issue stays open.
@@ -36,6 +46,10 @@ export interface AccountPreferences {
   // Whether the user is subscribed to the issues they create, are assigned, comment
   // on or are mentioned in. Off means they only ever subscribe by hand.
   autoWatch: boolean;
+  // Whether the user closed the tour of the product, shown once to every account.
+  onboardingSeen: boolean;
+  // Whether the instance owner closed the request to list the company on itsaplan.dev.
+  showcaseSeen: boolean;
   lastProjectId: number | null;
   // The keyboard shortcuts this user rebound, as { commandId: combo }. Only the
   // changed ones; the rest come from the instance settings, then the built-in

@@ -209,6 +209,19 @@ describe('cycles', () => {
       const read = await asOwner.cycles({ cycleId: cycle.id }).get();
       expect(read.data!.progress).toMatchObject({ total: 3, completed: 1, canceled: 0 });
     });
+
+    it('leaves out an issue archived unfinished and keeps an archived finished one', async () => {
+      const { asOwner, columnId, doneColumnId } = await setup();
+      const cycle = (await createCycle(asOwner, {})).data!;
+      await createIssue(asOwner, columnId, { cycleId: cycle.id });
+      const open = (await createIssue(asOwner, columnId, { cycleId: cycle.id })).data!;
+      const done = (await createIssue(asOwner, doneColumnId, { cycleId: cycle.id })).data!;
+      await asOwner.issues({ issueId: open.id }).archive.post();
+      await asOwner.issues({ issueId: done.id }).archive.post();
+
+      const read = await asOwner.cycles({ cycleId: cycle.id }).get();
+      expect(read.data!.progress).toMatchObject({ total: 2, completed: 1, canceled: 0 });
+    });
   });
 
   describe('update', () => {

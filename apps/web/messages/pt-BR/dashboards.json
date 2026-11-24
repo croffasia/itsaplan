@@ -12,11 +12,20 @@
   "saveChanges": "Salvar alterações",
   "noWidgets": "Nenhum widget ainda. Adicione um para montar este dashboard.",
   "addWidget": "Adicionar widget",
-  "addWidgetTitle": "Adicionar um widget",
-  "addWidgetDescription": "Escolha um widget para adicionar a este dashboard.",
   "searchWidgets": "Buscar widgets",
   "clearSearch": "Limpar busca",
-  "noWidgetMatches": "Nenhum widget corresponde a “{query}”.",
+  "noWidgetMatches": "Nenhum widget corresponde a “{query}”. Tente outra palavra ou limpe a busca.",
+  "noWidgetMatchesInGroup": "Nenhum widget deste grupo corresponde a “{query}”. Selecione Todos para buscar em todos os grupos.",
+  "addPanel": {
+    "title": "Adicionar widgets",
+    "description": "Arraste um widget para o dashboard.",
+    "all": "Todos",
+    "groupFilter": "Grupo de widgets",
+    "added": "{count, plural, one {Adicionado} other {Adicionado #}}",
+    "status": "{count, plural, =0 {Nada adicionado ainda} one {# widget adicionado} other {# widgets adicionados}}",
+    "undo": "Remover o último",
+    "new": "Novo"
+  },
   "dragToMove": "Arraste para mover",
   "widgetName": "Nome do widget",
   "widgetSettings": "Configurações do widget",
@@ -30,48 +39,48 @@
   },
   "widgets": {
     "stat": {
-      "label": "Número",
-      "description": "Contagem de issues que correspondem a um filtro"
+      "label": "Contagem de issues",
+      "description": "Issues que correspondem a um filtro, como bugs abertos"
     },
     "recent_issues": {
       "label": "Issues recentes",
-      "description": "Últimas issues por data de criação ou atualização"
+      "description": "Issues novas ou atualizadas há pouco que correspondem a um filtro"
     },
     "activity_feed": {
       "label": "Feed de atividade",
-      "description": "Registro de alterações do projeto, filtrável por autor e ação"
+      "description": "Últimas mudanças nas issues e quem as fez"
     },
     "pulse": {
       "label": "Pulso",
-      "description": "Mapa de calor estilo GitHub da atividade diária"
+      "description": "Mapa de calor da atividade do projeto por hora, dia ou semana"
     },
     "throughput": {
       "label": "Vazão",
-      "description": "Issues criadas vs. fechadas por semana"
+      "description": "Issues criadas e fechadas a cada semana"
     },
     "burnup": {
       "label": "Burnup",
-      "description": "Escopo, issues iniciadas e concluídas por dia com uma data de conclusão prevista"
+      "description": "Total de issues e concluídas por dia, com data de término prevista"
     },
     "breakdown": {
       "label": "Distribuição",
-      "description": "Contagens de issues por status, prioridade, tipo ou responsável"
+      "description": "Issues por estado, prioridade, tipo, responsável ou delegado"
     },
     "agent_runs": {
       "label": "Execuções de agente",
-      "description": "Execuções recentes de agentes de IA com seu resultado"
+      "description": "Últimas execuções e seu status, como com falha ou na fila"
     },
     "agent_health": {
       "label": "Saúde dos agentes",
-      "description": "Taxa de sucesso de execuções de agente e falhas em um período"
+      "description": "Taxa de sucesso e execuções com falha de todos os agentes em um período"
     },
     "webhook_health": {
       "label": "Saúde dos webhooks",
-      "description": "Resultados de entrega de webhook e endpoints desativados"
+      "description": "Resultados de entrega e endpoints desativados após falhas seguidas"
     },
     "agent_workload": {
       "label": "Carga dos agentes",
-      "description": "Issues delegadas e resultados de execução por agente"
+      "description": "Por agente: issues delegadas abertas e execuções bem-sucedidas"
     }
   },
   "breakdown": {
@@ -198,6 +207,7 @@
       "delegation": "executou por delegação de",
       "field": "executou por um campo de",
       "manual": "executou manualmente",
+      "api": "executou pela API",
       "schedule": "executou por agendamento",
       "status": "executou por mudança de estado de",
       "event": "executou por um evento de"

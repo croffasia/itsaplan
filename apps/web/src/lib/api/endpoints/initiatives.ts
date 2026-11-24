@@ -28,6 +28,7 @@ export interface Initiative {
   labelIds: number[];
   progress: InitiativeProgress;
   health: InitiativeHealth | null;
+  favorite: boolean;
 }
 
 // An initiative as a picker option, for linking an issue to one.
@@ -35,6 +36,15 @@ export interface InitiativeOption {
   id: number;
   title: string;
   status: InitiativeStatus;
+}
+
+// An initiative found by the command palette, with the project it belongs to.
+export interface InitiativeSearchHit {
+  id: number;
+  title: string;
+  projectId: number;
+  projectRef: string;
+  projectKey: string;
 }
 
 // Columns the initiative list can be sorted by, server-side. progress and health
@@ -129,10 +139,23 @@ export const listInitiativeOptions = (
   );
 };
 
+export const listFavoriteInitiatives = (projectKey: string) =>
+  request<InitiativeOption[]>(`/projects/${encodeURIComponent(projectKey)}/initiatives/favorites`);
+
+// Title search in every project the user can read initiatives in, or in projectId only.
+export const searchInitiatives = (params: { q: string; projectId?: number }) => {
+  const q = new URLSearchParams({ q: params.q });
+  if (params.projectId) q.set('projectId', String(params.projectId));
+  return request<InitiativeSearchHit[]>(`/initiatives/search?${q.toString()}`);
+};
+
 export const initiativeCounts = (projectKey: string) =>
   request<InitiativeCounts>(`/projects/${projectKey}/initiatives/counts`);
 
 export const getInitiative = (id: number) => request<Initiative>(`/initiatives/${id}`);
+
+export const setInitiativeFavorite = (id: number, favorite: boolean) =>
+  request<void>(`/initiatives/${id}/favorite`, { method: favorite ? 'PUT' : 'DELETE' });
 
 export const createInitiative = (projectKey: string, input: NewInitiativeInput) =>
   request<Initiative>(`/projects/${projectKey}/initiatives`, {

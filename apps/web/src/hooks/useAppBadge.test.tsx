@@ -18,8 +18,8 @@ let rev: number;
 let badge: (number | 'cleared')[];
 let requests: string[];
 
-function Probe({ projectIds }: { projectIds: number[] }) {
-  useAppBadge(projectIds);
+function Probe() {
+  useAppBadge();
   return null;
 }
 
@@ -35,12 +35,12 @@ async function settle() {
   for (let i = 0; i < 10; i++) await act(() => new Promise((r) => setTimeout(r, 5)));
 }
 
-async function render(projectIds: number[]) {
+async function render() {
   await act(async () =>
     root.render(
       <QueryClientProvider client={client}>
         <SyncProvider>
-          <Probe projectIds={projectIds} />
+          <Probe />
         </SyncProvider>
       </QueryClientProvider>,
     ),
@@ -65,7 +65,7 @@ beforeEach(() => {
   setGlobal('fetch', async (input: string) => {
     const path = new URL(input).pathname + new URL(input).search;
     requests.push(path);
-    if (path.startsWith('/sync/rev')) return json({ revs: { 'inbox:7': String(rev) } });
+    if (path.startsWith('/sync/rev')) return json({ revs: { 'inbox:all': String(rev) } });
     if (path === '/notifications/unread') return json({ unread });
     return json({});
   });
@@ -84,14 +84,17 @@ afterEach(() => {
 
 describe('useAppBadge', () => {
   it('shows the unread total across projects on the app icon', async () => {
-    await render([7, 8]);
+    await render();
     assert.deepEqual(badge, [2]);
     assert.ok(requests.includes('/notifications/unread'));
-    assert.ok(requests.some((p) => p.startsWith('/sync/rev') && p.includes('inbox:8')));
+    assert.deepEqual(
+      requests.filter((p) => p.startsWith('/sync/rev')),
+      ['/sync/rev?scopes=inbox:all'],
+    );
   });
 
-  it('clears the badge when an inbox scope moves and nothing is unread', async () => {
-    await render([7]);
+  it('clears the badge when the inbox scope moves and nothing is unread', async () => {
+    await render();
     unread = 0;
     rev = 2;
     await act(() => client.invalidateQueries({ queryKey: ['sync', 'rev'] }));
@@ -101,7 +104,7 @@ describe('useAppBadge', () => {
 
   it('does nothing where the browser has no Badging API', async () => {
     delete (dom.window.navigator as unknown as Record<string, unknown>).setAppBadge;
-    await render([7]);
+    await render();
     assert.deepEqual(badge, []);
     assert.ok(!requests.includes('/notifications/unread'));
   });

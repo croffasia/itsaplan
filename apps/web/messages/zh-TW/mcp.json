@@ -24,26 +24,36 @@
     "methodTabsAria": "連線方式",
     "method": "OAuth",
     "personalKey": "API 金鑰",
-    "description": "適用於任何支援 OAuth 的 MCP 用戶端，例如 ChatGPT 或 Claude。你使用 Itsaplan 帳號登入。用戶端不會收到 API 金鑰。",
+    "description": "適用於任何支援 OAuth 的 MCP 用戶端，例如 ChatGPT 或 Claude。你使用 {app} 帳號登入。用戶端不會收到 API 金鑰。",
     "discovery": "OAuth 發現",
     "steps": {
       "add": "在用戶端中新增 MCP 應用程式。",
       "paste": "貼上 MCP 端點。",
       "choose": "當用戶端詢問登入方式時選擇 OAuth。",
-      "signIn": "登入 Itsaplan 並批准存取。"
+      "signIn": "登入 {app} 並批准存取。"
     },
-    "security": "OAuth 使用 PKCE (S256)、動態用戶端註冊以及限定到你的 Itsaplan 帳號的存取權杖。",
+    "security": "OAuth 使用 PKCE (S256)、動態用戶端註冊以及限定到你的 {app} 帳號的存取權杖。",
     "consent": {
-      "title": "{client} 想要連線到你的帳號",
-      "titleUnnamed": "一個 MCP 用戶端想要連線到你的帳號",
-      "description": "它將以你的權限行事：你能檢視和修改的內容，它也都可以。",
-      "account": "已登入為 {email}",
-      "redirect": "完成後，你將返回 {host}。",
-      "missingCode": "此授權請求缺少同意代碼。",
-      "cancel": "取消",
-      "pending": "正在授權…",
-      "authorize": "授權",
-      "failed": "無法完成 OAuth 授權。"
+      "title": "允許 {client} 存取你的帳號？",
+      "titleUnnamed": "允許一個未命名的應用程式存取你的帳號？",
+      "actsAs": "允許後，該應用程式會以你的身分操作：",
+      "canSee": "檢視你在所有團隊中能看到的一切",
+      "canChange": "建立、修改和刪除你有權操作的任何內容",
+      "keepsAccess": "保有存取權，直到你在「帳號 › 安全」中斷開連線",
+      "account": "帳號",
+      "app": "應用程式",
+      "thisComputer": "在這台電腦上",
+      "named": "「{client}」是該應用程式自己設定的名稱。只有在你親自發起此連線時才允許。",
+      "unnamed": "該應用程式沒有提供名稱。只有在你親自發起此連線時才允許。",
+      "deny": "不允許",
+      "allow": "允許",
+      "allowing": "正在允許…",
+      "denying": "正在傳送…",
+      "expired": "此請求已在 10 分鐘後過期。請在應用程式中重新發起連線。",
+      "failed": "你的回覆未能送達。請再試一次。",
+      "incompleteTitle": "此連結不完整",
+      "incompleteBody": "請在應用程式中重新發起連線。",
+      "brandSubtitle": "將 Claude、ChatGPT 等 AI 應用程式連接到你的帳號。"
     }
   }
 }

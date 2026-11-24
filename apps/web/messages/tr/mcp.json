@@ -24,26 +24,36 @@
     "methodTabsAria": "Bağlantı yöntemi",
     "method": "OAuth",
     "personalKey": "API anahtarı",
-    "description": "Bunu ChatGPT veya Claude gibi OAuth destekleyen herhangi bir MCP istemcisi için kullanın. Itsaplan hesabınızla giriş yaparsınız; istemciye hiçbir zaman API anahtarı iletilmez.",
+    "description": "Bunu ChatGPT veya Claude gibi OAuth destekleyen herhangi bir MCP istemcisi için kullanın. {app} hesabınızla giriş yaparsınız; istemciye hiçbir zaman API anahtarı iletilmez.",
     "discovery": "OAuth keşfi",
     "steps": {
       "add": "İstemcinize bir MCP uygulaması ekleyin.",
       "paste": "MCP uç noktasını yapıştırın.",
       "choose": "İstemci giriş yöntemi sorduğunda OAuth'u seçin.",
-      "signIn": "Itsaplan'a giriş yapın ve erişimi onaylayın."
+      "signIn": "{app}'a giriş yapın ve erişimi onaylayın."
     },
-    "security": "OAuth; PKCE (S256), dinamik istemci kaydı ve Itsaplan hesabınızla sınırlı erişim belirteçleri kullanır.",
+    "security": "OAuth; PKCE (S256), dinamik istemci kaydı ve {app} hesabınızla sınırlı erişim belirteçleri kullanır.",
     "consent": {
-      "title": "{client} hesabınıza bağlanmak istiyor",
-      "titleUnnamed": "Bir MCP istemcisi hesabınıza bağlanmak istiyor",
-      "description": "Sizin izinlerinizle işlem yapacaktır: Görüntüleyebildiğiniz ve değiştirebildiğiniz her şeye o da erişebilir.",
-      "account": "{email} olarak giriş yapıldı",
-      "redirect": "Yanıt verdikten sonra {host} adresine döneceksiniz.",
-      "missingCode": "Bu yetkilendirme isteğinde onay kodu eksik.",
-      "cancel": "İptal",
-      "pending": "Yetkilendiriliyor…",
-      "authorize": "Yetkilendir",
-      "failed": "OAuth yetkilendirmesi tamamlanamadı."
+      "title": "{client} için hesabınıza erişim izni verilsin mi?",
+      "titleUnnamed": "Adı olmayan bir uygulamaya hesabınıza erişim izni verilsin mi?",
+      "actsAs": "İzin verdiğinizde uygulama sizin adınıza işlem yapar:",
+      "canSee": "Tüm takımlarınızda görebildiğiniz her şeyi görür",
+      "canChange": "Yapabildiğiniz her şeyi oluşturur, değiştirir ve siler",
+      "keepsAccess": "Hesap › Güvenlik bölümünde bağlantısını kesene kadar erişimi sürer",
+      "account": "Hesap",
+      "app": "Uygulama",
+      "thisComputer": "Bu bilgisayarda",
+      "named": "“{client}” adını uygulama kendisi seçti. Yalnızca bu bağlantıyı siz başlattıysanız izin verin.",
+      "unnamed": "Uygulama bir ad göndermedi. Yalnızca bu bağlantıyı siz başlattıysanız izin verin.",
+      "deny": "İzin verme",
+      "allow": "İzin ver",
+      "allowing": "İzin veriliyor…",
+      "denying": "Gönderiliyor…",
+      "expired": "Bu isteğin 10 dakikalık süresi doldu. Bağlantıyı uygulamada yeniden başlatın.",
+      "failed": "Yanıtınız iletilemedi. Yeniden deneyin.",
+      "incompleteTitle": "Bu bağlantı adresi eksik",
+      "incompleteBody": "Bağlantıyı uygulamada yeniden başlatın.",
+      "brandSubtitle": "Claude ve ChatGPT gibi yapay zekâ uygulamalarını hesabınıza bağlayın."
     }
   }
 }

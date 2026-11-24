@@ -1,4 +1,7 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { randomUUID } from 'node:crypto';
+import { db, notificationDelivery } from '@repo/db';
+import { asc, eq } from 'drizzle-orm';
 import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -12,9 +15,10 @@ interface Member {
   api: Api;
   userId: string;
   username: string;
+  email: string;
 }
 
-async function setup(): Promise<{ owner: Member; columnId: number; doneColumnId: number }> {
+async function setup() {
   const u = await signUpTestUser();
   const api = authedApi(u.cookie);
   await createProject(api, { key: 'MKT', name: 'Marketing' });
@@ -22,7 +26,8 @@ async function setup(): Promise<{ owner: Member; columnId: number; doneColumnId:
   const columns = view.data!.columns;
   const done = columns.find((c) => c.stateType === 'completed') ?? columns[columns.length - 1];
   return {
-    owner: { api, userId: u.userId, username: u.username },
+    owner: { api, userId: u.userId, username: u.username, email: u.email },
+    project: view.data!.project,
     columnId: columns[0].id,
     doneColumnId: done.id,
   };
@@ -35,7 +40,7 @@ async function addMember(owner: Member): Promise<Member> {
     .invites.post({ email: u.email, role: 'member' });
   const api = authedApi(u.cookie);
   await api.invites({ token: invite.data!.token }).accept.post();
-  return { api, userId: u.userId, username: u.username };
+  return { api, userId: u.userId, username: u.username, email: u.email };
 }
 
 function createIssue(client: Api, columnId: number, patch: Record<string, unknown> = {}) {
@@ -115,7 +120,7 @@ describe('notifications', () => {
     });
     expect(assigned.data!.count).toBe(1);
     const afterAssigned = (await member.api.notifications.get({ query: {} })).data!.items;
-    expect(afterAssigned.map((item) => item.issueId).sort((a, b) => a - b)).toEqual(
+    expect(afterAssigned.map((item) => item.issueId!).sort((a, b) => a - b)).toEqual(
       [active.id, completed.id].sort((a, b) => a - b),
     );
     expect(afterAssigned.find((item) => item.issueId === completed.id)!.readAt).not.toBeNull();
@@ -185,7 +190,11 @@ describe('notifications', () => {
 
     const inbox = await member.api.notifications.get({ query: { types: 'mentioned' } });
     expect(inbox.data!.items).toHaveLength(1);
-    expect(inbox.data!.items[0]).toMatchObject({ type: 'mentioned', actorUserId: owner.userId });
+    expect(inbox.data!.items[0]).toMatchObject({
+      type: 'mentioned',
+      actorUserId: owner.userId,
+      issueCommentId: null,
+    });
   });
 
   it('notifies a member mentioned in a markdown custom field', async () => {
@@ -280,14 +289,123 @@ describe('notifications', () => {
 
     // Member comments -> owner (a watcher) gets a 'commented' notification.
     await owner.api.issues({ issueId }).comments.post({ body: 'looking into it' } as never);
-    await member.api.issues({ issueId }).comments.post({ body: 'done' } as never);
+    const comment = (await member.api.issues({ issueId }).comments.post({ body: 'done' })).data!;
 
     const ownerInbox = await owner.api.notifications.get({ query: { types: 'commented' } });
     expect(ownerInbox.data!.items).toHaveLength(1);
     expect(ownerInbox.data!.items[0]).toMatchObject({
       type: 'commented',
       actorUserId: member.userId,
+      issueCommentId: comment.id,
     });
+  });
+
+  it('keeps the notification of a deleted comment, pointing at the issue only', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    const issue = (await createIssue(owner.api, columnId)).data!;
+    const comment = (
+      await owner.api
+        .issues({ issueId: issue.id })
+        .comments.post({ body: `@${member.username} look` })
+    ).data!;
+
+    await owner.api.comments({ commentId: comment.id }).delete();
+
+    const inbox = await member.api.notifications.get({ query: {} });
+    expect(inbox.data!.items).toHaveLength(1);
+    expect(inbox.data!.items[0]).toMatchObject({
+      type: 'mentioned',
+      issueId: issue.id,
+      issueCommentId: null,
+    });
+  });
+
+  it('links the email about a comment to the comment, and about a description to the issue', async () => {
+    const { owner, project, columnId } = await setup();
+    const member = await addMember(owner);
+    await owner.api.teams({ teamId: project.teamId })['notification-settings'].put({
+      smtp: {
+        enabled: true,
+        host: 'smtp.example.com',
+        port: 587,
+        encryption: 'none',
+        username: 'mailer@example.com',
+        password: 'secret',
+        timeout: null,
+      },
+    });
+    const events = { assigned: true, mentioned: true, commented: true, state_changed: true };
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: events,
+      telegramEvents: events,
+    });
+    const issue = (await createIssue(owner.api, columnId)).data!;
+    const client = owner.api.issues({ issueId: issue.id });
+    const comment = (await client.comments.post({ body: `@${member.username} have a look` })).data!;
+    await client.patch({ description: `@${member.username} size this` });
+
+    // No route reads the outbox, and its rows are what the worker sends.
+    const queued = await db
+      .select({ payload: notificationDelivery.payload })
+      .from(notificationDelivery)
+      .orderBy(asc(notificationDelivery.id));
+    const issueLink = `${process.env.APP_URL}/${project.teamRef}/issue/${issue.identifier}`;
+    expect(queued.map((row) => row.payload.url)).toEqual([
+      `${issueLink}#comment-${comment.id}`,
+      issueLink,
+    ]);
+  });
+
+  it('sends each recipient the email in their language, with what god changed', async () => {
+    const { owner, project, columnId, doneColumnId } = await setup();
+    const member = await addMember(owner);
+    await owner.api.teams({ teamId: project.teamId })['notification-settings'].put({
+      smtp: {
+        enabled: true,
+        host: 'smtp.example.com',
+        port: 587,
+        encryption: 'none',
+        username: 'mailer@example.com',
+        password: 'secret',
+        timeout: null,
+      },
+    });
+    const events = { assigned: true, mentioned: true, commented: true, state_changed: true };
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: events,
+      telegramEvents: events,
+    });
+    await member.api.account.preferences.patch({ locale: 'ru' });
+    await owner.api.god['email-templates'].put({
+      edits: {
+        stateChanged: {
+          ru: {
+            subject: 'Статус {ref}: {to}',
+            body: '**{title}** {from} → {to}',
+            button: 'Открыть',
+          },
+        },
+      },
+      layout: null,
+    });
+    const issue = (
+      await createIssue(owner.api, columnId, {
+        title: '<b>Loud</b> title',
+        assigneeUserId: member.userId,
+      })
+    ).data!;
+    await db.delete(notificationDelivery);
+
+    await owner.api.issues({ issueId: issue.id }).patch({ columnId: doneColumnId });
+
+    const [queued] = await db
+      .select({ payload: notificationDelivery.payload })
+      .from(notificationDelivery);
+    expect(queued!.payload.subject).toStartWith(`Статус ${issue.identifier}:`);
+    expect(queued!.payload.text).toContain('<b>Loud</b> title');
+    expect(queued!.payload.html).toContain('&lt;b&gt;Loud&lt;/b&gt; title');
+    expect(queued!.payload.html).toContain('class="button"');
   });
 
   it('a status change notification names the states it moved between', async () => {
@@ -350,5 +468,290 @@ describe('notifications', () => {
     // The owner does not own this notification: mutating it is a 404.
     const res = await owner.api.notifications({ id }).read.post({ read: true } as never);
     expect(res.status).toBe(404);
+  });
+});
+
+// Push is the instance's, not the team's: it is on while the WEB_PUSH_* variables are
+// set, and each member chooses its events per project like email and Telegram.
+describe('push notifications', () => {
+  const ENV = ['WEB_PUSH_VAPID_PUBLIC_KEY', 'WEB_PUSH_VAPID_PRIVATE_KEY', 'WEB_PUSH_SUBJECT'];
+  const none = {
+    assigned: false,
+    mentioned: false,
+    commented: false,
+    state_changed: false,
+    reacted: false,
+  };
+  let saved: (string | undefined)[];
+
+  beforeEach(async () => {
+    saved = ENV.map((name) => process.env[name]);
+    await resetDb();
+    process.env.WEB_PUSH_VAPID_PUBLIC_KEY =
+      'BP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8';
+    process.env.WEB_PUSH_VAPID_PRIVATE_KEY = 'yfWPiYE-n46HLnH0KqZOF1fJJU3MYrct3AELtAQ-oRw';
+    process.env.WEB_PUSH_SUBJECT = 'mailto:ops@example.com';
+  });
+
+  afterEach(() => {
+    ENV.forEach((name, i) => {
+      if (saved[i] === undefined) delete process.env[name];
+      else process.env[name] = saved[i];
+    });
+  });
+
+  async function subscribeBrowser(member: Member): Promise<number> {
+    const pair = (await crypto.subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, [
+      'deriveBits',
+    ])) as CryptoKeyPair;
+    const res = await member.api.push.subscriptions.post({
+      endpoint: `https://example.com/push/${randomUUID()}`,
+      keys: {
+        p256dh: Buffer.from(await crypto.subtle.exportKey('raw', pair.publicKey)).toString(
+          'base64url',
+        ),
+        auth: Buffer.from(crypto.getRandomValues(new Uint8Array(16))).toString('base64url'),
+      },
+    });
+    return res.data!.id;
+  }
+
+  function queuedPushes() {
+    return db
+      .select({ recipient: notificationDelivery.recipient, payload: notificationDelivery.payload })
+      .from(notificationDelivery)
+      .where(eq(notificationDelivery.channel, 'push'))
+      .orderBy(asc(notificationDelivery.id));
+  }
+
+  it('queues one push per browser for the events the member turned on', async () => {
+    const { owner, project, columnId } = await setup();
+    const member = await addMember(owner);
+    const browsers = [await subscribeBrowser(member), await subscribeBrowser(member)];
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: none,
+      telegramEvents: none,
+      pushEvents: { ...none, assigned: true },
+    });
+
+    const issue = (await createIssue(owner.api, columnId, { assigneeUserId: member.userId })).data!;
+    await owner.api.issues({ issueId: issue.id }).comments.post({ body: 'Started on it' });
+
+    const inbox = (await member.api.notifications.get({ query: {} })).data!.items;
+    expect(inbox.map((n) => n.type).sort()).toEqual(['assigned', 'commented']);
+    const assigned = inbox.find((n) => n.type === 'assigned');
+    const queued = await queuedPushes();
+    expect(queued.map((row) => Number(row.recipient)).sort()).toEqual(browsers.sort());
+    for (const row of queued) {
+      expect(row.payload).toEqual({
+        title: `${issue.identifier} Task`,
+        text: `Assigned by ${assigned!.actorName}`,
+        url: `${process.env.APP_URL}/${project.teamRef}/issue/${issue.identifier}`,
+        tag: `inbox-${assigned!.id}`,
+      });
+    }
+  });
+
+  it('queues no push for a browser that subscribed with keys the instance no longer has', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    await subscribeBrowser(member);
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: none,
+      telegramEvents: none,
+      pushEvents: { ...none, assigned: true },
+    });
+    // A new key pair: the push services refuse this instance's token for the browser above.
+    process.env.WEB_PUSH_VAPID_PUBLIC_KEY =
+      'BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4';
+    process.env.WEB_PUSH_VAPID_PRIVATE_KEY = 'q1dXpw3UpT5VOmu_cf_v6ih07Aems3njxI-JWgLcM94';
+    const current = await subscribeBrowser(member);
+
+    await createIssue(owner.api, columnId, { assigneeUserId: member.userId });
+
+    expect((await queuedPushes()).map((row) => Number(row.recipient))).toEqual([current]);
+  });
+
+  it('queues no push while push is off', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    await subscribeBrowser(member);
+    const all = { assigned: true, mentioned: true, commented: true, state_changed: true };
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: none,
+      telegramEvents: none,
+      pushEvents: all,
+    });
+    delete process.env.WEB_PUSH_SUBJECT;
+
+    await createIssue(owner.api, columnId, { assigneeUserId: member.userId });
+
+    expect(await queuedPushes()).toEqual([]);
+  });
+
+  it('keeps the stored push events when a write leaves them out', async () => {
+    const { owner } = await setup();
+    const member = await addMember(owner);
+    const prefs = member.api.projects({ projectKey: 'MKT' })['notification-preferences'];
+    await prefs.put({
+      emailEvents: none,
+      telegramEvents: none,
+      slackEvents: { ...none, commented: true },
+      pushEvents: { ...none, mentioned: true },
+    });
+
+    const res = await prefs.put({ emailEvents: { ...none, assigned: true }, telegramEvents: none });
+
+    expect(res.data).toEqual({
+      emailEvents: { ...none, assigned: true },
+      telegramEvents: none,
+      slackEvents: { ...none, commented: true },
+      pushEvents: { ...none, mentioned: true },
+    });
+  });
+});
+
+// Slack goes through the app that serves the project's workspace; a member is reached at
+// the Slack account they connected through it.
+describe('slack notifications', () => {
+  const none = {
+    assigned: false,
+    mentioned: false,
+    commented: false,
+    state_changed: false,
+    reacted: false,
+  };
+  const realFetch = globalThis.fetch;
+  let nonce = '';
+  // The Slack account Slack confirms on the next connection.
+  let slackUserId = '';
+
+  beforeEach(async () => {
+    await resetDb();
+    const part = (o: object) => Buffer.from(JSON.stringify(o)).toString('base64url');
+    globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+      const url = String(input);
+      if (url === 'https://slack.com/api/auth.test') {
+        return Response.json({ ok: true, bot_id: 'B1', team_id: 'T1', team: 'Acme' });
+      }
+      if (url === 'https://slack.com/api/openid.connect.token') {
+        const claims = {
+          aud: '1.2',
+          nonce,
+          'https://slack.com/user_id': slackUserId,
+          'https://slack.com/team_id': 'T1',
+        };
+        return Response.json({ ok: true, id_token: `${part({})}.${part(claims)}.sig` });
+      }
+      return realFetch(input, init);
+    }) as typeof fetch;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  // The instance app, and the member's account connected through it.
+  async function connect(owner: Member, member: Member, slackUser: string) {
+    slackUserId = slackUser;
+    await owner.api.god['slack-settings'].put({
+      enabled: true,
+      botToken: 'xoxb-1',
+      clientId: '1.2',
+      clientSecret: 'secret',
+    });
+    const { accounts } = member.api.slack;
+    const url = new URL((await accounts({ slackTeamId: 'T1' }).link.post()).data!.url);
+    nonce = url.searchParams.get('nonce')!;
+    const done = await accounts.complete.post({
+      code: 'code',
+      state: url.searchParams.get('state')!,
+    });
+    expect(done.status).toBe(204);
+  }
+
+  function queuedSlack() {
+    return db
+      .select({ recipient: notificationDelivery.recipient, payload: notificationDelivery.payload })
+      .from(notificationDelivery)
+      .where(eq(notificationDelivery.channel, 'slack'))
+      .orderBy(notificationDelivery.id);
+  }
+
+  it('queues a Slack message to the connected account for the events the member turned on', async () => {
+    const { owner, project, columnId } = await setup();
+    const member = await addMember(owner);
+    await connect(owner, member, 'U-MEMBER');
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: none,
+      telegramEvents: none,
+      slackEvents: { ...none, assigned: true },
+    });
+
+    const issue = (
+      await createIssue(owner.api, columnId, {
+        title: '<b>Loud</b> & co',
+        assigneeUserId: member.userId,
+      })
+    ).data!;
+    await owner.api.issues({ issueId: issue.id }).comments.post({ body: 'Started on it' });
+
+    const inbox = (await member.api.notifications.get({ query: {} })).data!.items;
+    const actor = inbox.find((n) => n.type === 'assigned')!.actorName;
+    const url = `${process.env.APP_URL}/${project.teamRef}/issue/${issue.identifier}`;
+    expect(await queuedSlack()).toEqual([
+      {
+        recipient: 'U-MEMBER',
+        payload: {
+          text: `📌 ${issue.identifier} <b>Loud</b> & co\n\nAssigned by ${actor}`,
+          mrkdwn: `📌 <${url}|*${issue.identifier}*> &lt;b&gt;Loud&lt;/b&gt; &amp; co\n\nAssigned by ${actor}`,
+          url,
+        },
+      },
+    ]);
+  });
+
+  it('quotes the comment of a comment event, escaped and cut at 300 characters', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    await connect(owner, member, 'U-MEMBER');
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: none,
+      telegramEvents: none,
+      slackEvents: { ...none, commented: true },
+    });
+    const issue = (await createIssue(owner.api, columnId, { assigneeUserId: member.userId })).data!;
+    const comments = owner.api.issues({ issueId: issue.id }).comments;
+    await comments.post({ body: 'Started <now>\n& tested' });
+    await comments.post({ body: 'a'.repeat(301) });
+
+    const [short, long] = await queuedSlack();
+    expect(short!.payload.mrkdwn).toEndWith('\n>Started &lt;now&gt;\n>&amp; tested');
+    expect(short!.payload.text).toEndWith('\n\nStarted <now>\n& tested');
+    expect(long!.payload.mrkdwn).toEndWith(`\n>${'a'.repeat(300)}…`);
+  });
+
+  it('queues nothing for a member with no connected account, or while the workspace has Slack off', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    await connect(owner, owner, 'U-OWNER');
+    const all = { ...none, assigned: true };
+    await member.api.projects({ projectKey: 'MKT' })['notification-preferences'].put({
+      emailEvents: none,
+      telegramEvents: none,
+      slackEvents: all,
+    });
+    await createIssue(owner.api, columnId, { assigneeUserId: member.userId });
+    expect(await queuedSlack()).toEqual([]);
+
+    await connect(owner, member, 'U-MEMBER');
+    const workspaceId = (await owner.api.workspaces.get()).data!.find(
+      (w) => w.role === 'owner',
+    )!.id;
+    await owner.api
+      .workspaces({ workspaceId })
+      ['slack-settings'].put({ enabled: false, own: false });
+    await createIssue(owner.api, columnId, { assigneeUserId: member.userId });
+    expect(await queuedSlack()).toEqual([]);
   });
 });

@@ -329,6 +329,55 @@ describe('sync', () => {
     });
   });
 
+  describe('inbox:all scope', () => {
+    // A member of MKT who also joins OPS, a second project of the same team.
+    async function twoProjects() {
+      const base = await setup();
+      const { userId, api: asMember } = await addMember(base.asOwner);
+      await createProject(base.asOwner, { key: 'OPS', name: 'Operations' });
+      const ops = base.asOwner.projects({ projectKey: 'OPS' });
+      await ops.members.post({ userId, role: 'member' });
+      const opsColumnId = (await ops.get()).data!.columns[0].id;
+      const notifyInOps = () =>
+        ops.issues.post({ columnId: opsColumnId, title: 'Task', assigneeUserId: userId });
+      return { ...base, userId, asMember, ops, notifyInOps };
+    }
+
+    it('moves when an inbox in any of the projects moves', async () => {
+      const { asOwner, columnId, userId, asMember, notifyInOps } = await twoProjects();
+
+      const initial = await rev(asMember, 'inbox:all');
+      await createIssue(asOwner, columnId, { assigneeUserId: userId });
+      const afterMkt = await rev(asMember, 'inbox:all');
+      expect(afterMkt).not.toBe(initial);
+
+      await notifyInOps();
+      expect(await rev(asMember, 'inbox:all')).not.toBe(afterMkt);
+    });
+
+    it('leaves out a project the user can no longer read', async () => {
+      const { asOwner, columnId, userId, asMember, ops, notifyInOps } = await twoProjects();
+      await createIssue(asOwner, columnId, { assigneeUserId: userId });
+      const mktOnly = await rev(asMember, 'inbox:all');
+
+      await notifyInOps();
+      expect(await rev(asMember, 'inbox:all')).not.toBe(mktOnly);
+
+      expect((await ops.members({ userId }).delete()).status).toBe(204);
+      expect(await rev(asMember, 'inbox:all')).toBe(mktOnly);
+    });
+
+    it("never reads someone else's inbox", async () => {
+      const { asOwner, columnId } = await setup();
+      const { userId } = await addMember(asOwner);
+      const before = await rev(asOwner, 'inbox:all');
+
+      await createIssue(asOwner, columnId, { assigneeUserId: userId });
+
+      expect(await rev(asOwner, 'inbox:all')).toBe(before);
+    });
+  });
+
   describe('access', () => {
     it('reads a non-member\'s project as "0"', async () => {
       const { asOwner, projectId, columnId } = await setup();

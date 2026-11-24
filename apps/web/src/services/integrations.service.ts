@@ -1,5 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  type CredentialListParams,
   type CredentialPatch,
   type IntegrationKind,
   type NewCredentialInput,
@@ -10,16 +11,18 @@ import {
   createCredential,
   updateCredential,
   deleteCredential,
+  checkNewCredential,
+  checkStoredCredential,
 } from '@/lib/api/endpoints/integrations';
-import type { PageParams } from '@/lib/api/core/paging';
 import { qk } from '@/services/queryKeys';
 
 // One page of the team's stored credentials, secrets redacted. Backs the team's
 // Integrations tab.
-export function useCredentialsPageQuery(teamId: number, params: PageParams) {
+export function useCredentialsPageQuery(teamId: number | null, params: CredentialListParams) {
   return useQuery({
-    queryKey: qk.teamCredentialPage(teamId, params),
-    queryFn: () => listCredentials(teamId, params),
+    queryKey: qk.teamCredentialPage(teamId ?? 0, params),
+    queryFn: () => listCredentials(teamId!, params),
+    enabled: teamId != null,
     placeholderData: keepPreviousData,
   });
 }
@@ -65,6 +68,25 @@ export function useCreateCredential(teamId: number) {
       // The team list carries how many credentials the team holds.
       void qc.invalidateQueries({ queryKey: qk.teams });
     },
+  });
+}
+
+// Asks the service about a credential before it is saved: a stored one when
+// `credentialId` is given, with `credential` over it.
+export function useCheckCredential(teamId: number) {
+  return useMutation({
+    mutationFn: async (input: {
+      integrationKey: string;
+      credentialId: number | null;
+      credential: Record<string, unknown>;
+    }) =>
+      (input.credentialId != null
+        ? await checkStoredCredential(teamId, input.credentialId, input.credential)
+        : await checkNewCredential(teamId, {
+            integrationKey: input.integrationKey,
+            credential: input.credential,
+          })
+      ).result,
   });
 }
 

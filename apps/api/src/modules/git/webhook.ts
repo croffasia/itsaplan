@@ -5,7 +5,12 @@ import { getProjectById } from '#modules/projects/service';
 import { handleGitEvent } from './handler';
 import { detectProvider } from './providers';
 import { WebhookAckResponse, webhookBody, webhookParams } from './model';
-import { claimGitDelivery, findProjectByGitWebhookId, recordGitEvent } from './service';
+import {
+  claimGitDelivery,
+  findProjectByGitWebhookId,
+  recordGitEvent,
+  releaseGitDelivery,
+} from './service';
 
 // Inbound webhook receiver, shared by every supported repository host.
 // Unauthenticated (a delivery carries no session) and mounted on the root app:
@@ -42,15 +47,26 @@ async function receive({
   const event = provider.parse(payload, headers);
   if (!event) return { ok: true, handled: 'ignored' };
   if (!found.settings.enabled) return { ok: true, handled: 'disabled' };
+  const project = await getProjectById(found.projectId);
+  if (!project) throw new HttpError(404, 'Unknown webhook');
   // A provider sends a unique id per delivery and reuses it on redelivery; an id
   // seen before means a replay, which must not repeat its side effects.
   const deliveryId = provider.deliveryId(headers);
   if (deliveryId && !(await claimGitDelivery(found.projectId, deliveryId)))
     return { ok: true, handled: 'duplicate' };
-  const project = await getProjectById(found.projectId);
-  if (!project) throw new HttpError(404, 'Unknown webhook');
-  const handled = await handleGitEvent(project, found.settings, providerKey, providerLabel, event);
-  return { ok: true, handled };
+  try {
+    const handled = await handleGitEvent(
+      project,
+      found.settings,
+      providerKey,
+      providerLabel,
+      event,
+    );
+    return { ok: true, handled };
+  } catch (err) {
+    if (deliveryId) await releaseGitDelivery(found.projectId, deliveryId);
+    throw err;
+  }
 }
 
 const options = {

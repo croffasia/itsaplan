@@ -15,7 +15,7 @@ import { inviteValidSince } from '@repo/auth';
 import { hasConfiguredEmailProvider } from '@repo/db';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
-import { getRole } from '#modules/roles/service';
+import { getMemberRole } from '#modules/roles/service';
 import type { ProjectRow } from '#modules/projects/service';
 import { teamParams } from '#modules/teams/model';
 import {
@@ -28,6 +28,8 @@ import {
   InviteViewResponse,
   createInviteBody,
   createTeamInviteBody,
+  inviteCandidatesQuery,
+  InviteCandidateListResponse,
   inviteParams,
   teamInviteParams,
   tokenParams,
@@ -38,6 +40,7 @@ import {
   mayGrantInviteRanks,
   listProjectInvites,
   listTeamInvites,
+  listInviteCandidates,
   type ListedInvite,
   deleteProjectInvite,
   deleteTeamInvite,
@@ -105,12 +108,12 @@ async function hideLinksBeyondGrant(
   viewer: AuthUser,
   invites: ListedInvite[],
 ): Promise<ListedInvite[]> {
-  const grantable = new Map<number, boolean>();
+  const grantable = new Map<number | null, boolean>();
   return Promise.all(
     invites.map(async (invite) => {
-      if (!invite.token || invite.roleId == null) return invite;
+      if (!invite.token || invite.role !== 'member') return invite;
       if (!grantable.has(invite.roleId)) {
-        const role = await getRole(project.teamId, invite.roleId);
+        const role = await getMemberRole(project.teamId, invite.roleId);
         grantable.set(
           invite.roleId,
           !role || (await mayGrantPermissions(project, viewer, role.permissions)),
@@ -174,11 +177,11 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
         );
       }
       // For a member invite, an explicit roleId must name a role of this project's
-      // team; null (or omitted) falls back to the team's default role on accept. An
+      // team or a system role; null (or omitted) falls back to the default role on accept. An
       // owner invite ignores roleId (owners bypass roles).
       const roleId = body.role === 'member' ? (body.roleId ?? null) : null;
-      if (roleId != null) {
-        const role = await getRole(project.teamId, roleId);
+      if (body.role === 'member') {
+        const role = await getMemberRole(project.teamId, roleId);
         if (!role) throw new HttpError(400, "roleId does not belong to this project's team");
         await assertGrantablePermissions(project, user, role.permissions);
       }
@@ -206,10 +209,10 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       detail: {
         summary: 'Create an invite',
         description:
-          'Create an invite link for an email and role (owner or member). For a member, roleId ' +
-          "picks the custom role, or null for the default role. Accepting it joins the project's " +
-          'team as well. Queues an email when the instance email provider is configured; ' +
-          'emailFailed reports an email the provider could not send, the link still valid.',
+          "Create an invite link for an email and role. For 'member', roleId sets the custom " +
+          "role, or null the default role. Accepting also adds the user to the project's team. " +
+          'Sends an email if the instance has an email provider. ' +
+          'emailFailed means the email failed, but the link works.',
         ...mcpTool('create_invite'),
       },
     },
@@ -238,8 +241,8 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       detail: {
         summary: 'Send an invite email',
         description:
-          'Queue an email for a pending project invite. Returns false when the instance email ' +
-          'provider is not configured. An expired invite is refused: renew it instead.',
+          'Queue an email for a pending project invite. Returns false if the instance has no ' +
+          'email provider. An expired invite is refused: use renew_invite.',
         ...mcpTool('send_invite_email'),
       },
     },
@@ -258,8 +261,8 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
           'Only a project owner or a team owner or manager can invite an owner',
         );
       }
-      if (grant.roleId != null) {
-        const role = await getRole(project.teamId, grant.roleId);
+      if (grant.projectRole === 'member') {
+        const role = await getMemberRole(project.teamId, grant.roleId);
         if (role) await assertGrantablePermissions(project, user, role.permissions);
       }
       const invite = await renewInvite(grant, renewedBy);
@@ -274,9 +277,9 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       detail: {
         summary: 'Renew an expired invite',
         description:
-          'Replace an expired project invite with a new one for the same email and role: a new ' +
-          'link, valid again for the instance invite lifetime. Emails it when the instance ' +
-          'email provider is configured. An invite that has not expired is refused.',
+          'Replace an expired project invite with a new link for the same email and role, valid ' +
+          'for the instance invite lifetime. Sends an email if the instance has an email ' +
+          'provider. An invite that has not expired is refused.',
         ...mcpTool('renew_invite'),
       },
     },
@@ -296,8 +299,8 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       detail: {
         summary: "List a project's invites",
         description:
-          'The token is null on an invite the caller could not have sent: without permission ' +
-          'to create invites, or on an owner invite the caller may not grant.',
+          "List a project's invites. token is null on an invite you could not send: you cannot " +
+          'create invites, or it is an owner invite you cannot grant.',
         ...mcpTool('list_invites'),
       },
     },
@@ -379,6 +382,24 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
         description:
           'Every invite into the team, including the ones that also name one of its projects. ' +
           'The token is null on an invite granting a rank only a team owner may grant.',
+      },
+    },
+  )
+
+  .get(
+    '/teams/:teamId/invites/candidates',
+    ({ membership, query }) => listInviteCandidates(membership.teamId, query.search),
+    {
+      teamManager: true,
+      params: teamParams,
+      query: inviteCandidatesQuery,
+      response: { 200: InviteCandidateListResponse, ...commonErrors },
+      detail: {
+        summary: 'Search people to invite to a team',
+        description:
+          'Up to 8 accounts of the instance whose name or address contains the search, ' +
+          'leaving out the members of the team and the AI agents. Whoever may invite to the ' +
+          'team may search, while the instance owner has the search turned on.',
       },
     },
   )
@@ -520,8 +541,8 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       detail: {
         summary: 'Accept an invite',
         description:
-          'Accept an invite (email must match your session). An invite into a project you are ' +
-          'already a member of is refused: accepting it would rewrite the membership you hold.',
+          'Accept an invite. Its email must match your session. An invite into a project you are ' +
+          'already in is refused, because it would replace your membership.',
         ...mcpTool('accept_invite'),
       },
     },
@@ -539,7 +560,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       response: { 204: t.Void(), ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Reject an invite',
-        description: 'Reject an invite (email must match your session).',
+        description: 'Reject an invite. Its email must match your session.',
         // Rejecting consumes the invite; it has to be issued again to rejoin.
         ...mcpTool('reject_invite', { destructiveHint: true }),
       },

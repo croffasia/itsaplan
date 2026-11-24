@@ -5,6 +5,7 @@ import { creds, igRequest } from './client';
 // Replies to a mention of the account, either in a media caption or in a comment.
 export const instagramReplyToMention: CustomToolEntry = {
   key: 'instagram_reply_to_mention',
+  group: 'Mentions',
   scopes: ['instagram_basic', 'instagram_manage_comments'],
   label: 'Instagram Reply To Mention',
   description:
@@ -32,6 +33,7 @@ export const instagramReplyToMention: CustomToolEntry = {
 // Reads a comment that @mentioned the account.
 export const instagramGetMentionedComment: CustomToolEntry = {
   key: 'instagram_get_mentioned_comment',
+  group: 'Mentions',
   scopes: ['instagram_basic', 'instagram_manage_comments'],
   label: 'Instagram Get Mentioned Comment',
   description: 'Read a specific comment (by id) in which the connected account was @mentioned.',
@@ -57,6 +59,7 @@ export const instagramGetMentionedComment: CustomToolEntry = {
 // Reads a media object whose caption @mentioned the account.
 export const instagramGetMentionedMedia: CustomToolEntry = {
   key: 'instagram_get_mentioned_media',
+  group: 'Mentions',
   scopes: ['instagram_basic', 'instagram_manage_comments'],
   label: 'Instagram Get Mentioned Media',
   description:

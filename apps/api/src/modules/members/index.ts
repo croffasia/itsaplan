@@ -12,7 +12,7 @@ import {
 } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
-import { getDefaultRoleId, getRole } from '#modules/roles/service';
+import { getMemberRole } from '#modules/roles/service';
 import { getTeamMembership } from '#modules/teams/service';
 import type { ProjectRow } from '#modules/projects/service';
 import { isAgentUser } from '#modules/agents/core/service';
@@ -86,10 +86,7 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
       response: { 200: MemberPageResponse, ...accessErrors },
       detail: {
         summary: 'List project members',
-        description:
-          'One page of the project members, the newest membership first. `search` matches ' +
-          'the name, the address or the handle, and `kind` narrows the list to the people or ' +
-          'to the AI agents.',
+        description: 'List project members, one page at a time, newest first.',
         ...mcpTool('list_members'),
       },
     },
@@ -108,8 +105,8 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
       detail: {
         summary: 'List who can be added to the project',
         description:
-          "The members of the project's team who are not in it yet. Anyone else is invited by " +
-          'email instead.',
+          "List the members of the project's team who are " +
+          'not in the project. Invite other people by email.',
         ...mcpTool('list_member_candidates'),
       },
     },
@@ -125,18 +122,14 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
       }
       await assertMayGrantOwner(project, body.role, user);
       await assertAgentNotOwner(body.userId, body.role);
-      // An explicit roleId must name a role of this project's team; omitting it
-      // joins the member on the team's default role, as accepting an invite does.
+      // An explicit roleId must name a role of this project's team or a system role;
+      // omitting it joins the member on the default role, as accepting an invite does.
       let roleId: number | null = null;
       if (body.role === 'member') {
-        if (body.roleId != null) {
-          const role = await getRole(project.teamId, body.roleId);
-          if (!role) throw new HttpError(400, "roleId does not belong to this project's team");
-          await assertGrantablePermissions(project, user, role.permissions);
-          roleId = role.id;
-        } else {
-          roleId = await getDefaultRoleId(project.teamId);
-        }
+        const role = await getMemberRole(project.teamId, body.roleId);
+        if (!role) throw new HttpError(400, "roleId does not belong to this project's team");
+        await assertGrantablePermissions(project, user, role.permissions);
+        roleId = role.id;
       }
       if (!(await addMember(project.id, body.userId, body.role, roleId))) {
         throw new HttpError(
@@ -154,9 +147,9 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
       detail: {
         summary: 'Add a member',
         description:
-          "Add a member of the project's team to the project, as an owner or on a custom role " +
-          "(roleId, or null for the team's default role). Only a project owner or a team owner " +
-          'or manager adds an owner.',
+          "Add a member of the project's team to the project, as owner or with a custom role " +
+          '(roleId, or null for the default role). Only a ' +
+          'project owner or a team owner or manager can add an owner.',
         ...mcpTool('add_member'),
       },
     },
@@ -184,17 +177,14 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
         return noContent();
       }
 
-      const roleId = body.roleId ?? null;
-      if (roleId != null) {
-        const role = await getRole(project.teamId, roleId);
-        if (!role) throw new HttpError(400, "roleId does not belong to this project's team");
-        await assertGrantablePermissions(project, user, role.permissions);
-      }
+      const role = await getMemberRole(project.teamId, body.roleId);
+      if (!role) throw new HttpError(400, "roleId does not belong to this project's team");
+      await assertGrantablePermissions(project, user, role.permissions);
       // Demoting an owner to a member must keep at least one owner on the project.
       if (target === 'owner' && (await countOwners(project.id)) === 1) {
         throw new HttpError(400, 'A project must have at least one owner');
       }
-      await setMembership(project.id, params.userId, 'member', roleId);
+      await setMembership(project.id, params.userId, 'member', role.id);
       return noContent();
     },
     {
@@ -205,10 +195,10 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
       detail: {
         summary: "Update a member's role",
         description:
-          "Set a member's role. 'owner' promotes to owner, which only a project owner or a team " +
-          "owner or manager may grant; 'member' assigns a custom role by roleId, or null for " +
-          'the default. You cannot change your own role, the last owner cannot be demoted, and ' +
-          'a membership granted by a provisioned group is managed by the identity provider.',
+          "Set a member's role. 'owner' makes the member an owner: only a project owner or a " +
+          "team owner or manager can do this. 'member' sets the custom role roleId, or the " +
+          'default role if roleId is null. You cannot change your own role or demote the last ' +
+          'owner. The identity provider manages memberships from a provisioned group.',
         ...mcpTool('set_member_role'),
       },
     },
@@ -230,8 +220,7 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: "Set a member's description",
-        description:
-          'Set what a member does in the project. Up to 500 characters; empty string clears it.',
+        description: 'Set what a member does in the project. An empty string clears it.',
         ...mcpTool('set_member_description'),
       },
     },
@@ -259,8 +248,8 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
       detail: {
         summary: 'Remove a member',
         description:
-          'Remove a member from the project, or leave it yourself. A membership granted by a ' +
-          'provisioned group is managed by the identity provider.',
+          'Remove a member from the project, or leave it yourself. The identity provider manages ' +
+          'memberships from a provisioned group.',
         ...mcpTool('remove_member'),
       },
     },

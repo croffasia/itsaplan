@@ -1,5 +1,6 @@
 {
   "newIssue": "تسک جدید",
+  "addWorkItem": "افزودن تسک",
   "pin": "سنجاق کردن",
   "unpin": "برداشتن سنجاق",
   "collapse": "جمع کردن",
@@ -44,6 +45,12 @@
   "calendar": {
     "previousMonth": "ماه قبل",
     "nextMonth": "ماه بعد",
+    "previousWeek": "هفته قبل",
+    "nextWeek": "هفته بعد",
+    "previousDays": "{count, plural, other {# روز قبل}}",
+    "nextDays": "{count, plural, other {# روز بعد}}",
+    "weekNumber": "هفته {number}",
+    "range": "{from} – {to}",
     "today": "امروز",
     "moreIssues": "+{count} مورد دیگر",
     "issueCount": "{count, plural, one {# تسک} other {# تسک}}",
@@ -67,8 +74,13 @@
       "custom": "همه‌چیز تاریخ دارد."
     }
   },
+  "empty": {
+    "title": "تسکی وجود ندارد",
+    "description": "تسک‌ها اینجا نمایش داده می‌شوند.",
+    "filteredTitle": "تسک مطابقی وجود ندارد",
+    "filteredDescription": "برای دیدن موارد بیشتر، فیلترها را تغییر دهید."
+  },
   "timeline": {
-    "empty": "هنوز تسکی برای قرار دادن روی خط زمانی وجود ندارد.",
     "expandGroup": "باز کردن گروه",
     "collapseGroup": "جمع کردن گروه",
     "inferredStart": "شروع استنباط‌شده از تاریخ ایجاد",
@@ -92,20 +104,20 @@
   },
   "removal": {
     "archive": {
-      "title": "{count, plural, one {بایگانی تسک} other {بایگانی تسک‌ها}}",
+      "title": "{count, plural, one {# تسک بایگانی شود؟} other {# تسک بایگانی شوند؟}}",
       "confirm": "{count, plural, one {بایگانی # تسک} other {بایگانی # تسک}}",
-      "description": "{count, plural, one {# تسک انتخاب‌شده بایگانی شود؟ از برد خارج می‌شود و بعداً قابل بازیابی است.} other {# تسک انتخاب‌شده بایگانی شوند؟ از برد خارج می‌شوند و بعداً قابل بازیابی هستند.}}"
+      "description": "{count, plural, one {از برد خارج می‌شود و بعداً قابل بازیابی است.} other {از برد خارج می‌شوند و بعداً قابل بازیابی هستند.}}"
     },
     "delete": {
-      "title": "{count, plural, one {حذف تسک} other {حذف تسک‌ها}}",
+      "title": "{count, plural, one {# تسک حذف شود؟} other {# تسک حذف شوند؟}}",
       "confirm": "{count, plural, one {حذف # تسک} other {حذف # تسک}}",
-      "description": "{count, plural, one {# تسک انتخاب‌شده حذف شود؟} other {# تسک انتخاب‌شده حذف شوند؟}} این کار دیدگاه‌ها، فعالیت‌ها و پیوست‌ها را نیز حذف می‌کند. این عمل قابل بازگشت نیست."
+      "description": "دیدگاه‌ها، فعالیت‌ها و پیوست‌ها نیز حذف می‌شوند. این عمل قابل بازگشت نیست."
     }
   },
   "share": {
     "issueTitle": "تسک",
     "issueUnavailable": "این تسک در دسترس نیست.",
-    "boardUnavailable": "این برد اشتراکی در دسترس نیست. ممکن است لینک لغو شده باشد."
+    "boardUnavailable": "این برد اشتراکی در دسترس نیست. ممکن است لینک لغو شده یا منقضی شده باشد."
   },
   "groups": {
     "noAssignee": "بدون مسئول",

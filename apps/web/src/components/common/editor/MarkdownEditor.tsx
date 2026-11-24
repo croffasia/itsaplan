@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
+import { MarkdownTable } from '@repo/editor';
 import StarterKit from '@tiptap/starter-kit';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { TableKit } from '@tiptap/extension-table';
@@ -17,7 +18,6 @@ import { useIssueRefs } from '@/context/issueRefs';
 import { IssueRef } from './issueRefDecorations';
 import { refreshDecorations } from './refreshDecorations';
 import { SlashCommand } from '@/lib/tiptap-slash-command';
-import { MarkdownTable } from './tiptap-table';
 import { TightTaskList } from './tiptap-task-list';
 import { Video } from './tiptap-video';
 import { attachmentHtml, type Embeddable } from './attachmentEmbed';
@@ -27,7 +27,8 @@ import EditorImagePicker from './EditorImagePicker';
 import EditorSelectionMenu from './EditorSelectionMenu';
 import EditorTableMenu from './EditorTableMenu';
 import EditorLinkPreview from './EditorLinkPreview';
-import { useMentionCandidates } from '@/hooks/useMentionCandidates';
+import { useMentionCandidates, useMentionNames } from '@/hooks/useMentionCandidates';
+import type { MentionSource } from '@/lib/api/endpoints/mentions';
 import { useTranslations } from 'next-intl';
 
 // Shared by every editor instance. A block with no language is detected by
@@ -54,6 +55,7 @@ export default function MarkdownEditor({
   uploadFile,
   imageAttachments,
   readingLinks = true,
+  mentions,
 }: {
   defaultValue: string;
   onChange?: (markdown: string) => void;
@@ -73,6 +75,9 @@ export default function MarkdownEditor({
   // stored to read them from yet (a create dialog), which drops the picker.
   imageAttachments?: Embeddable[];
   readingLinks?: boolean;
+  // Where the text is written, which decides who the "@" menu offers. Without it the
+  // menu offers nobody: a mention in the text would reach no one.
+  mentions?: MentionSource;
 }) {
   const t = useTranslations('common.editor');
   const editorRef = useRef<Editor | null>(null);
@@ -82,9 +87,14 @@ export default function MarkdownEditor({
   const router = useRouter();
   const { data: session } = useSession();
   const issueRefs = useIssueRefs();
-  const mentionCandidates = useMentionCandidates();
+  // A read-only text has no "@" menu. A public share page renders one with no session,
+  // and the list request would answer 401, which lib/api treats as an ended session.
+  const mentionCandidates = useMentionCandidates(editable ? (mentions ?? null) : null);
   const mentionCandidatesRef = useRef(mentionCandidates);
   mentionCandidatesRef.current = mentionCandidates;
+  const mentionNames = useMentionNames();
+  const mentionNamesRef = useRef(mentionNames);
+  mentionNamesRef.current = mentionNames;
   const issueRefsRef = useRef(issueRefs);
   issueRefsRef.current = issueRefs;
   const openIssueRefRef = useRef(router.push);
@@ -137,11 +147,12 @@ export default function MarkdownEditor({
       }),
       // Renders ![](url) markdown inline.
       ResizableImage,
-      // Renders an @username in the text as a mention chip, and offers the project's
-      // members and agents while one is typed.
+      // Renders an @username in the text as a mention chip, and offers who a mention
+      // written here reaches while one is typed.
       Mention.configure({
         items: () => mentionCandidatesRef.current,
         self: () => selfHandleRef.current,
+        name: (handle) => mentionNamesRef.current.get(handle),
       }),
       // Paints KEY-123 as a link without writing the link into the markdown.
       IssueRef.configure({
@@ -181,7 +192,7 @@ export default function MarkdownEditor({
         class: 'md-content flex-1 focus:outline-none',
       },
       handleClick(view, _pos, event) {
-        return openLinkOnModifierClick(event, view.dom);
+        return openLinkOnModifierClick(event, view);
       },
       handleDOMEvents: linkKeyboardHandlers,
       // Files dropped from the OS are uploaded, then inserted at the drop
@@ -247,7 +258,12 @@ export default function MarkdownEditor({
       {/* Grows with the text rather than being pinned to the container's height,
           so a container that scrolls measures the overflow and shows a bar. */}
       <EditorContent editor={editor} className="flex min-h-full flex-col" />
-      <EditorLinkPreview editor={editor} source={defaultValue} compact={readingLinks} />
+      <EditorLinkPreview
+        editor={editor}
+        source={defaultValue}
+        compact={readingLinks}
+        editLink={editable}
+      />
       {imageAttachments && (
         <EditorImagePicker
           open={imagePickerOpen}

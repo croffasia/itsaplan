@@ -2,14 +2,13 @@ import { Elysia } from 'elysia';
 import { authContext } from '#shared/auth-context';
 import { guards, entityGuard } from '#shared/guards';
 import { HttpError } from '#shared/lib';
-import { getObject } from '@repo/storage';
 import { mcpTool } from '#mcp/generate';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { requireUser } from '#shared/access';
 import {
   assertAttachmentUploadAllowed,
-  attachmentEtag,
   attachmentObjectKey,
+  attachmentObjectResponse,
   deleteAttachmentObject,
   safeAttachmentFilename,
   storeAttachmentObject,
@@ -125,9 +124,10 @@ export const chatAttachmentRoutes = new Elysia({
       detail: {
         summary: 'Upload a chat attachment',
         description:
-          'Store a file for the agent chat: a spreadsheet to import issues from, a spec, or a log. ' +
-          'A PDF is converted to Markdown and stored as a .md file; a scanned PDF is refused. ' +
-          'Send the bytes as base64 in `contentBase64`. Read it back with read_chat_attachment.',
+          'Store a file for the agent chat, for example a spreadsheet to import issues from, a ' +
+          'spec or a log. Send the bytes as base64 in `contentBase64`. A PDF is converted to ' +
+          'Markdown and stored as .md. A scanned PDF is ' +
+          'refused. Read the file with read_chat_attachment.',
         ...mcpTool('upload_chat_attachment'),
       },
     },
@@ -150,13 +150,11 @@ export const chatAttachmentRoutes = new Elysia({
       detail: {
         summary: 'Read a chat attachment',
         description:
-          'Read a file the person attached in the chat. A [file: "name" (attachment id: …)] ' +
-          'marker in their message means that file is attached: it is stored in the chat and ' +
-          'is not on your filesystem, so read it with this tool and the id from the marker — ' +
-          'never look for it on disk. Answers with the file metadata and, for a spreadsheet or ' +
-          'document (.xlsx, .csv, .docx), the column headers and first rows; for a text file ' +
-          '(.md, .txt, and a PDF converted to Markdown on upload), its full text. To turn a ' +
-          'table into issues, map its columns with prepare_issue_import.',
+          'Read a file attached in the chat. Its id is in the [file: "name" (attachment id: …)] ' +
+          'marker. The file is not on your filesystem: do not look for it on disk. Returns the ' +
+          'metadata, plus the full text of a text file (.md, .txt, or a PDF converted on ' +
+          'upload), or the column headers and first rows of a .xlsx, .csv or .docx file. To turn ' +
+          'a table into issues, map its columns with prepare_issue_import.',
         ...mcpTool('read_chat_attachment'),
       },
     },
@@ -170,40 +168,13 @@ export const chatAttachmentRoutes = new Elysia({
     async ({ params, query, request }) => {
       const row = await getChatAttachmentByPublicId(params.publicId);
       if (!row) throw new HttpError(404, 'Attachment not found');
-
-      // The etag is a digest of the key rather than the key itself: this route is
-      // public, and the key carries the project id and the stored filename.
-      const etag = attachmentEtag(row.s3Key);
-      if (request.headers.get('if-none-match') === etag) {
-        return new Response(null, { status: 304, headers: { ETag: etag } });
-      }
-
-      let obj;
-      try {
-        obj = await getObject(row.s3Key);
-      } catch (err) {
-        throw new HttpError(404, err instanceof Error ? err.message : 'Object not found');
-      }
-
-      // The bytes and their content type are attacker-controlled, and this route
-      // is public and same-origin as the planner UI, so serving an HTML or SVG
-      // file inline would be stored XSS. Defenses: X-Content-Type-Options:nosniff
-      // stops MIME sniffing, and inline rendering is allowed only for a strict
-      // media allowlist (raster images, video, audio). Everything else — html,
-      // svg, xml, scripts — is forced to download and cannot execute.
-      const ct = row.contentType || obj.contentType;
-      const inlineSafe = /^(image\/(png|jpe?g|gif|webp|avif|bmp)|video\/|audio\/)/i.test(ct);
-      const inline = inlineSafe && query.download == null;
-      const headers: Record<string, string> = {
-        'Content-Type': ct,
-        'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(row.filename)}`,
-        'X-Content-Type-Options': 'nosniff',
-        'Cache-Control': 'no-cache',
-        ETag: etag,
-      };
-      if (obj.contentLength != null) headers['Content-Length'] = String(obj.contentLength);
-      if (!inline) headers['Content-Security-Policy'] = "default-src 'none'; sandbox";
-      return new Response(obj.body, { headers });
+      return attachmentObjectResponse({
+        s3Key: row.s3Key,
+        contentType: row.contentType,
+        filename: row.filename,
+        request,
+        download: query.download != null,
+      });
     },
     {
       params: publicIdParams,

@@ -12,6 +12,7 @@ import { useProjectsQuery } from '@/services/projects.service';
 import IssueDetailContent from './components/detail/IssueDetailContent';
 import IssueDetailSkeleton from './components/detail/IssueDetailSkeleton';
 import { useIssueTitle } from './hooks/useIssueTitle';
+import { useCommentHash } from './hooks/useCommentHash';
 import { useTranslations } from 'next-intl';
 
 // The full-page issue view (/:team/issue/:identifier), rendered inside the Shell
@@ -22,6 +23,7 @@ export default function IssueViewPage() {
   const router = useRouter();
   const { project } = useShell();
   const seq = useShellRoute().routeIssueSeq;
+  const commentId = useCommentHash();
 
   const exit = () => project && router.push(projectPath(project.project.ref));
   useExitOnEscape(exit);
@@ -37,27 +39,32 @@ export default function IssueViewPage() {
   const movedTo = moved ? projects?.find((p) => p.id === issueQuery.data!.projectId) : undefined;
   useEffect(() => {
     if (movedTo && issueQuery.data)
-      router.replace(issuePath(movedTo.ref, issueQuery.data.sequenceNumber));
+      router.replace(issuePath(movedTo.ref, issueQuery.data.sequenceNumber) + window.location.hash);
   }, [movedTo, issueQuery.data, router]);
   useIssueTitle(moved || issueQuery.isError ? null : (issueQuery.data?.id ?? null), 'page');
 
   if (!project) return null;
 
+  // The Properties sidebar is positioned against this non-scrolling frame, not the
+  // viewport, so a notice strip above the page moves it down with the page.
   return (
-    <div {...scrollRestorationProps} className="flex-1 overflow-y-auto">
-      <div className="flex flex-col px-8 py-6 xl:px-12">
-        {issueQuery.data && !moved ? (
-          <IssueDetailContent
-            project={project}
-            issueId={issueQuery.data.id}
-            layout="page"
-            onDeleted={exit}
-          />
-        ) : issueQuery.isLoading || (moved && (!projects || movedTo)) ? (
-          <IssueDetailSkeleton />
-        ) : (
-          <div className="py-6 text-sm text-muted-foreground">{t('notFound')}</div>
-        )}
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <div {...scrollRestorationProps} className="flex-1 overflow-y-auto">
+        <div className="flex flex-col px-8 py-6 xl:px-12">
+          {issueQuery.data && !moved ? (
+            <IssueDetailContent
+              project={project}
+              issueId={issueQuery.data.id}
+              layout="page"
+              onDeleted={exit}
+              commentId={commentId}
+            />
+          ) : issueQuery.isLoading || (moved && (!projects || movedTo)) ? (
+            <IssueDetailSkeleton />
+          ) : (
+            <div className="py-6 text-sm text-muted-foreground">{t('notFound')}</div>
+          )}
+        </div>
       </div>
     </div>
   );

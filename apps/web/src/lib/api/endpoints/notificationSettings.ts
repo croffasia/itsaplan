@@ -1,16 +1,7 @@
 import { request } from '@/lib/api/core/client';
 
-// Per-team notification provider credentials (owner-managed) plus a member's own
-// delivery preferences for a project. The issue events match the inbox notification
-// types.
+// Per-team notification provider credentials (owner-managed).
 export type NotificationEncryption = 'none' | 'ssl' | 'tls';
-
-export interface NotificationEventToggles {
-  assigned: boolean;
-  mentioned: boolean;
-  commented: boolean;
-  state_changed: boolean;
-}
 
 // The provider credentials as read from the API: secrets are never returned, only a
 // `hasX` flag telling whether a value is stored.
@@ -30,6 +21,7 @@ export interface NotificationSettings {
     timeout: number | null;
   };
   resend: { enabled: boolean; hasApiKey: boolean };
+  from: string;
   telegram: { enabled: boolean; hasBotToken: boolean };
 }
 
@@ -47,6 +39,7 @@ export interface NotificationSettingsPatch {
     timeout: number | null;
   };
   resend?: { enabled: boolean; apiKey?: string };
+  from?: string;
   telegram?: { enabled: boolean; botToken?: string };
 }
 

@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { signOut, useSession } from '@/lib/auth-client';
-import { ACCOUNT_SECTIONS, accountPath } from '@/utils/accountSections';
+import { accountPath } from '@/utils/accountSections';
+import { useAccountSections } from '@/hooks/useAccountSections';
 import { useAccountSectionLabel } from '@/hooks/useSectionLabels';
 import Avatar from '@/components/common/Avatar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -21,15 +21,13 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Signed-in user control in the header: shows the account avatar and a menu with
-// the email, the role, links to preferences, connected accounts, account security
-// (passkeys) and API keys, and sign out.
-// Signing out clears the session and the proxy sends the browser back to
-// the login page.
+// the email, the role, links to the account pages, and sign out.
+// Signing out clears the session and loads the sign-in page itself.
 export default function UserMenu() {
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
   const sectionLabel = useAccountSectionLabel();
-  const router = useRouter();
+  const sections = useAccountSections();
   const { data: session, isPending } = useSession();
 
   // better-auth reads the session on the client, so the server renders no user and
@@ -45,10 +43,8 @@ export default function UserMenu() {
   const role = (user as { role?: string }).role ?? 'user';
   const image = (user as { image?: string | null }).image ?? null;
 
-  async function onSignOut() {
-    await signOut();
-    router.push('/login');
-    router.refresh();
+  function onSignOut() {
+    void signOut();
   }
 
   return (
@@ -69,7 +65,7 @@ export default function UserMenu() {
           <span className="text-xs text-muted-foreground capitalize">{t('role', { role })}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {ACCOUNT_SECTIONS.map(({ slug, icon: Icon }) => (
+        {sections.map(({ slug, icon: Icon }) => (
           <DropdownMenuItem key={slug} asChild>
             <Link href={accountPath(slug)}>
               <Icon />

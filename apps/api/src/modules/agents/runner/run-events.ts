@@ -1,6 +1,8 @@
 import { db, agentRun, agentRunTrace, issue } from '@repo/db';
 import { and, desc, eq, isNull, lt, or, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
+import { runDocumentVisibleTo } from '../core/run-queue';
+import { runCanceled } from './service';
 import type { AgUiEventBody } from '../model';
 
 const MAX_EVENTS = 2000;
@@ -30,22 +32,29 @@ export async function appendRunEvents(
         ),
       )
       .for('update');
-    if (!run) throw new HttpError(404, 'Active run attempt not found');
+    if (!run) {
+      // Nothing of a stopped run's batch is kept.
+      if (await runCanceled(agentId, runId, input.attempt)) {
+        return { nextOffset: input.offset, truncated: false, canceled: true };
+      }
+      throw new HttpError(404, 'Active run attempt not found');
+    }
     await tx.insert(agentRunTrace).values({ runId, attempt: input.attempt }).onConflictDoNothing();
     const key = and(eq(agentRunTrace.runId, runId), eq(agentRunTrace.attempt, input.attempt));
     const [trace] = await tx.select().from(agentRunTrace).where(key);
-    if (input.offset < trace.nextOffset && input.offset + input.events.length <= trace.nextOffset) {
-      return { nextOffset: trace.nextOffset, truncated: trace.truncated };
-    }
-    if (input.offset !== trace.nextOffset) throw new HttpError(409, 'Unexpected trace offset');
     if (trace.sessionId && input.sessionId && trace.sessionId !== input.sessionId) {
       throw new HttpError(409, 'Session is already bound to this attempt');
+    }
+    if (input.offset > trace.nextOffset) throw new HttpError(409, 'Unexpected trace offset');
+    const unseen = input.events.slice(trace.nextOffset - input.offset);
+    if (unseen.length === 0) {
+      return { nextOffset: trace.nextOffset, truncated: trace.truncated, canceled: false };
     }
     const events = trace.events as { event: AgUiEventBody; receivedAt: string }[];
     let bytes = Buffer.byteLength(JSON.stringify(events));
     let truncated = trace.truncated;
     const receivedAt = new Date().toISOString();
-    for (const event of input.events) {
+    for (const event of unseen) {
       const stored = { event, receivedAt };
       const size = Buffer.byteLength(JSON.stringify(stored)) + 1;
       if (truncated || events.length >= MAX_EVENTS || bytes + size > MAX_BYTES) {
@@ -66,22 +75,30 @@ export async function appendRunEvents(
       })
       .where(key);
     await tx.execute(sql`SELECT bump_rev(${'runner-queue:' + run.projectId}, ${run.projectId})`);
-    return { nextOffset, truncated };
+    return { nextOffset, truncated, canceled: false };
   });
 }
 
-export async function runProjectId(runId: number) {
+// The run the viewer asks for, unless its issue moved to another project or its document is
+// private from them: its project, agent, issue and initiator.
+export async function visibleRun(runId: number, viewerId: string) {
   const [row] = await db
-    .select({ projectId: agentRun.projectId })
+    .select({
+      projectId: agentRun.projectId,
+      agentId: agentRun.agentId,
+      issueId: agentRun.issueId,
+      initiatorUserId: agentRun.requestedByUserId,
+    })
     .from(agentRun)
     .leftJoin(issue, eq(issue.id, agentRun.issueId))
     .where(
       and(
         eq(agentRun.id, runId),
         or(isNull(agentRun.issueId), eq(issue.projectId, agentRun.projectId)),
+        runDocumentVisibleTo(viewerId),
       ),
     );
-  return row?.projectId;
+  return row;
 }
 
 export async function readRunTrace(projectId: number, runId: number, attempt?: number) {

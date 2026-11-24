@@ -1,6 +1,16 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Check, Copy, Eye, EyeOff, History, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import {
+  Check,
+  Copy,
+  Eye,
+  EyeOff,
+  History,
+  MoreHorizontal,
+  Pencil,
+  RefreshCw,
+  Trash2,
+} from 'lucide-react';
 import type { Webhook } from '@/lib/api/endpoints/webhooks';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,21 +31,24 @@ export function SettingsWebhookRow({
   webhook,
   onShowDeliveries,
   onEdit,
+  onRotateSecret,
   onDelete,
 }: {
   webhook: Webhook;
   onShowDeliveries: () => void;
   onEdit: () => void;
+  onRotateSecret: () => void;
   onDelete: () => void;
 }) {
+  const secret = webhook.secret;
   const t = useTranslations('settings.webhooks');
   const can = useSettingsCan();
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  async function copySecret() {
+  async function copySecret(value: string) {
     try {
-      await navigator.clipboard.writeText(webhook.secret);
+      await navigator.clipboard.writeText(value);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
@@ -58,29 +71,29 @@ export function SettingsWebhookRow({
             <span className="block truncate text-sm font-medium" title={webhook.url}>
               {webhook.url}
             </span>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span className="truncate font-mono">
-                {revealed ? webhook.secret : maskSecret(webhook.secret)}
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-6 shrink-0"
-                title={t(revealed ? 'hideSecret' : 'revealSecret')}
-                onClick={() => setRevealed((r) => !r)}
-              >
-                {revealed ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-6 shrink-0"
-                title={t('copySecret')}
-                onClick={copySecret}
-              >
-                {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-              </Button>
-            </div>
+            {secret != null && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span className="truncate font-mono">{revealed ? secret : maskSecret(secret)}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-6 shrink-0"
+                  title={t(revealed ? 'hideSecret' : 'revealSecret')}
+                  onClick={() => setRevealed((r) => !r)}
+                >
+                  {revealed ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-6 shrink-0"
+                  title={t('copySecret')}
+                  onClick={() => copySecret(secret)}
+                >
+                  {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </TableCell>
@@ -119,6 +132,12 @@ export function SettingsWebhookRow({
                   <DropdownMenuItem className="min-h-11 sm:min-h-8" onSelect={onEdit}>
                     <Pencil />
                     {t('edit')}
+                  </DropdownMenuItem>
+                )}
+                {can('edit') && (
+                  <DropdownMenuItem className="min-h-11 sm:min-h-8" onSelect={onRotateSecret}>
+                    <RefreshCw />
+                    {t('rotateSecret')}
                   </DropdownMenuItem>
                 )}
                 {can('delete') && can('edit') && <DropdownMenuSeparator />}

@@ -7,6 +7,7 @@ import { timeFilter, toUnixSeconds } from '../time';
 // created-time range (unix seconds).
 export const threadsListPosts: CustomToolEntry = {
   key: 'threads_list_posts',
+  group: 'Posts and profile',
   label: 'Threads List My Posts',
   scopes: ['threads_basic'],
   description:

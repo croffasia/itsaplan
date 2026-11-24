@@ -2,7 +2,13 @@ import { db, aiAgent, modelPrice, project, team, user } from '@repo/db';
 import { and, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import { iso, num } from '#shared/lib';
 import { spansTableExists } from './store';
-import { estimateCost, priceKey, type CallUsage, type OwnPrices } from './model-pricing';
+import {
+  estimateCost,
+  longInputSizes,
+  priceKey,
+  type CallUsage,
+  type OwnPrices,
+} from './model-pricing';
 
 // The figures behind the agent dashboard, read from the traces the runtime records
 // (see observability.ts). One trace is one run: its root span carries the team, the
@@ -90,12 +96,20 @@ export async function ownPrices(scope: AnalyticsScope): Promise<OwnPrices> {
   return new Map(rows.map((row) => [priceKey(row.provider, row.model), row]));
 }
 
-// The scope narrowed to one project, when one is asked for. A project it does not read
-// leaves it reading nothing.
-export function onlyProject(scope: AnalyticsScope, projectId?: number): AnalyticsScope {
-  if (projectId == null) return scope;
-  const readable = !scope.projectIds || scope.projectIds.includes(projectId);
-  return { ...scope, projectIds: readable ? [projectId] : [] };
+// The scope narrowed to the projects asked for, when some are. The projects it does not
+// read are dropped, so asking only for those leaves it reading nothing.
+export function onlyProjects(scope: AnalyticsScope, projectIds: number[]): AnalyticsScope {
+  if (projectIds.length === 0) return scope;
+  const readable = scope.projectIds;
+  return {
+    ...scope,
+    projectIds: readable ? projectIds.filter((id) => readable.includes(id)) : projectIds,
+  };
+}
+
+// The `projectIds` of `analyticsQuery`, whose pattern lets only ids through.
+export function queryProjectIds(csv?: string): number[] {
+  return csv ? csv.split(',').map(Number) : [];
 }
 
 // The projects the scope reads, by name: what it may be narrowed to.
@@ -167,6 +181,9 @@ function dayOf(value: unknown): Date {
 // of that bucket made. Fine enough to fold into every panel, and coarse enough that a long
 // window stays a few hundred rows. A project belongs to one team, so the team adds no
 // rows of its own. The token sums are bigint, which the driver hands back as a string.
+// The calls are split further by how many of the table's long-input sizes one call's
+// input reaches (`input_band`), so the calls of a row share their long-input price: a
+// sum of short and long calls would be priced as its average call.
 type CallRow = {
   day: unknown;
   in_window: boolean;
@@ -183,6 +200,10 @@ type CallRow = {
 };
 
 async function modelCalls(scope: AnalyticsScope, window: AnalyticsWindow): Promise<CallRow[]> {
+  const sizes = sql.join(
+    longInputSizes().map((size) => sql`${size}`),
+    sql`, `,
+  );
   const rows = await db.execute(sql`
     WITH runs AS (${tracedRuns(scope, window.previousFrom)})
     SELECT date_trunc(${window.bucket}::text, s."startedAtZ") AS day,
@@ -192,6 +213,8 @@ async function modelCalls(scope: AnalyticsScope, window: AnalyticsWindow): Promi
            runs.project_id,
            s.attributes->>'provider' AS provider,
            s.attributes->>'model' AS model,
+           (SELECT count(*) FROM unnest(ARRAY[${sizes}]::bigint[]) AS size
+             WHERE size <= (s.attributes->'usage'->>'inputTokens')::bigint)::int AS input_band,
            count(*)::int AS calls,
            coalesce(sum((s.attributes->'usage'->>'inputTokens')::bigint), 0) AS input_tokens,
            coalesce(sum((s.attributes->'usage'->>'outputTokens')::bigint), 0) AS output_tokens,
@@ -202,7 +225,7 @@ async function modelCalls(scope: AnalyticsScope, window: AnalyticsWindow): Promi
       FROM mastra_ai_spans s
       JOIN runs ON runs.trace_id = s."traceId"
      WHERE s."spanType" = 'model_inference'
-     GROUP BY 1, 2, 3, 4, 5, 6, 7
+     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
   `);
   return rows as unknown as CallRow[];
 }

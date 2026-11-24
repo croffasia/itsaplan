@@ -9,13 +9,15 @@ import {
 } from '@repo/db';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
-import { getMembership } from '#modules/members/service';
+import { assertAssignableMember, getAssignmentEligibility } from '#modules/members/service';
 import { recordActivityForIssues, statusSide } from '#modules/issues/activity';
 import { getIssues } from '#modules/issues/service';
 import { emitIssueEvents, issuePayloads } from '#modules/issues/webhook-payload';
 import { emitWebhookEvents, projectEventWanted } from '#modules/webhooks/emit';
 import { recordStatusChange } from '#modules/issues/status-history';
 import { hasUnfinishedStatusRuns, queueStatusRuns } from '#modules/agents/schedules/issue-runs';
+import { pushLinkedIssueState } from '#modules/git/issue-sync';
+import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 
 export interface ColumnRow {
   id: number;
@@ -43,18 +45,18 @@ function mapColumn(row: typeof projectColumn.$inferSelect): ColumnRow {
   };
 }
 
-async function assertAutoAssignee(projectId: number, userId?: string | null): Promise<void> {
-  if (!userId) return;
-  if (!(await getMembership(projectId, userId)))
-    throw new HttpError(400, 'Auto-assignee must be a project member');
-}
-
-export async function columnAutoAssignee(columnId: number): Promise<string | null> {
+export async function columnAutoAssignee(
+  projectId: number,
+  columnId: number,
+): Promise<string | null> {
   const [row] = await db
     .select({ userId: projectColumn.autoAssignUserId })
     .from(projectColumn)
-    .where(eq(projectColumn.id, columnId));
-  return row?.userId ?? null;
+    .where(and(eq(projectColumn.id, columnId), eq(projectColumn.projectId, projectId)));
+  if (!row?.userId) return null;
+  return (await getAssignmentEligibility(projectId, row.userId)) === 'assignable'
+    ? row.userId
+    : null;
 }
 
 export const WIP_LIMIT_EXCEEDED = 'wip_limit_exceeded';
@@ -134,7 +136,7 @@ export async function createColumn(input: {
   wipMode?: string;
   autoAssignUserId?: string | null;
 }): Promise<ColumnRow> {
-  await assertAutoAssignee(input.projectId, input.autoAssignUserId);
+  await assertAssignableMember(input.projectId, input.autoAssignUserId, undefined, 'Auto-assignee');
   const [{ pos }] = await db
     .select({ pos: sql<number>`COALESCE(MAX(${projectColumn.position}), -1) + 1` })
     .from(projectColumn)
@@ -176,8 +178,19 @@ export async function updateColumn(
     autoAssignUserId?: string | null;
   },
 ): Promise<ColumnRow | null> {
-  await assertAutoAssignee(projectId, patch.autoAssignUserId);
   const scope = and(eq(projectColumn.id, id), eq(projectColumn.projectId, projectId));
+  if (patch.autoAssignUserId) {
+    const [current] = await db
+      .select({ userId: projectColumn.autoAssignUserId })
+      .from(projectColumn)
+      .where(scope);
+    await assertAssignableMember(
+      projectId,
+      patch.autoAssignUserId,
+      current?.userId ?? null,
+      'Auto-assignee',
+    );
+  }
   const set: Partial<typeof projectColumn.$inferInsert> = {};
   if (patch.name !== undefined) set.name = patch.name;
   if (patch.color !== undefined) set.color = patch.color;
@@ -252,7 +265,7 @@ export async function deleteColumn(
     deletedPayloads = await issuePayloads(await getIssues(rows.map((r) => r.id)));
   }
 
-  const movedIssueIds = await db.transaction(async (tx) => {
+  const columnIssueIds = await db.transaction(async (tx) => {
     if (column.stateType === 'backlog') {
       // Serialize backlog deletions so concurrent requests cannot remove the last two.
       await tx
@@ -267,37 +280,38 @@ export async function deleteColumn(
       if (count <= 1) throw new HttpError(400, 'The last backlog column cannot be deleted');
     }
 
-    let moved: number[] = [];
+    let rows: { id: number }[];
     if (opts.mode === 'move') {
-      const rows = await tx
+      rows = await tx
         .update(issue)
         .set({ columnId: opts.targetColumnId, updatedAt: sql`now()` })
         .where(eq(issue.columnId, columnId))
         .returning({ id: issue.id });
-      moved = rows.map((r) => r.id);
     } else {
       const issueIds = tx.select({ id: issue.id }).from(issue).where(eq(issue.columnId, columnId));
       await tx.delete(issueFieldOption).where(inArray(issueFieldOption.issueId, issueIds));
       await tx.delete(issueFieldValue).where(inArray(issueFieldValue.issueId, issueIds));
       await tx.delete(issueLabel).where(inArray(issueLabel.issueId, issueIds));
-      await tx.delete(issue).where(eq(issue.columnId, columnId));
+      rows = await tx.delete(issue).where(eq(issue.columnId, columnId)).returning({ id: issue.id });
     }
     await tx.delete(projectColumn).where(eq(projectColumn.id, columnId));
-    return moved;
+    return rows.map((r) => r.id);
   });
 
   if (target) {
-    await recordStatusChange(movedIssueIds, target.id);
+    await recordStatusChange(columnIssueIds, target.id);
     await recordActivityForIssues(
-      movedIssueIds,
+      columnIssueIds,
       { action: 'status', from: statusSide(column), to: statusSide(target) },
       actorUserId,
     );
-    const moved = () => getIssues(movedIssueIds);
+    const moved = () => getIssues(columnIssueIds);
     await emitIssueEvents(projectId, 'issue.updated', moved, actorUserId);
     await emitIssueEvents(projectId, 'issue.state_changed', moved, actorUserId);
-    await queueStatusRuns(movedIssueIds, target.id, actorUserId);
+    await queueStatusRuns(columnIssueIds, target.id, actorUserId);
+    for (const issueId of columnIssueIds) await pushLinkedIssueState(issueId, target.id);
   } else {
+    for (const issueId of columnIssueIds) await deleteThreadsWhere({ issueId });
     await emitWebhookEvents(projectId, 'issue.deleted', async () => deletedPayloads, actorUserId);
   }
 }

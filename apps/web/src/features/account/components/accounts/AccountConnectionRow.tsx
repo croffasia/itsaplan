@@ -19,8 +19,7 @@ export default function AccountConnectionRow({
   icon: ReactNode;
   name: string;
   description: string;
-  // What the account is connected to (an address, a Telegram name), or null when it
-  // is not connected.
+  // What the account is connected to (an address), or null when it is not connected.
   connectedTo: string | null;
   busy: boolean;
   // Why disconnecting is unavailable, when it is. Shown instead of the button.

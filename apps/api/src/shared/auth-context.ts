@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia';
 import { db } from '@repo/db';
 import { user as users } from '@repo/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull, lt, or, sql } from 'drizzle-orm';
 import {
   auth,
   ensurePersonalWorkspace,
@@ -10,7 +10,8 @@ import {
   verifyMcpAccessToken,
 } from '@repo/auth';
 import { HttpError } from './lib';
-import { getMcpOAuthToken } from './mcp-request';
+import { countKeyRequests } from './key-rate-limit';
+import { getMcpClientRequest, getMcpOAuthToken } from './mcp-request';
 
 // GET routes that need no session. The raw attachment and avatar bytes routes
 // must work in <img>/<video> and external fetches. The invite lookup
@@ -55,6 +56,11 @@ export const authContext = new Elysia({ name: 'auth-context' }).resolve(
 // its headers. Whether the account may act is left to the caller.
 export async function requestUser(request: Request): Promise<SessionUser | null> {
   const session = await getSessionFromHeaders(request.headers);
+  // A session made from a key carries the key's id. A tool call dispatched from POST /mcp
+  // was counted there; the link to that request is not a header, so a client cannot fake it.
+  if (session && request.headers.has('x-api-key') && !getMcpClientRequest(request)) {
+    await countKeyRequests(session.session.id);
+  }
   if (session) return session.user;
   const mcpToken = getMcpOAuthToken(request);
   const mcpUserId = mcpToken ? await verifyMcpAccessToken(mcpToken) : null;
@@ -69,5 +75,31 @@ export async function requestUser(request: Request): Promise<SessionUser | null>
 async function signedIn(user: SessionUser): Promise<SessionUser> {
   if (isAccountDeactivated(user)) throw new HttpError(401, 'This account is deactivated');
   await ensurePersonalWorkspace(user);
+  await noteSeen(user.id);
   return user;
+}
+
+// god's "Last seen" is good to the hour, so a person's use is written at most once an
+// hour: the memo spares the query, and the condition keeps several api replicas from
+// writing it each.
+const SEEN_EVERY_MS = 60 * 60 * 1000;
+const lastNoted = new Map<string, number>();
+
+async function noteSeen(userId: string): Promise<void> {
+  const now = Date.now();
+  if ((lastNoted.get(userId) ?? 0) > now - SEEN_EVERY_MS) return;
+  lastNoted.set(userId, now);
+  const due = new Date(now - SEEN_EVERY_MS);
+  try {
+    await db
+      .update(users)
+      // updatedAt has an $onUpdate, and SCIM shows it as meta.lastModified: using the app is
+      // no change to the account.
+      .set({ lastSeenAt: new Date(now), updatedAt: sql`${users.updatedAt}` })
+      .where(and(eq(users.id, userId), or(isNull(users.lastSeenAt), lt(users.lastSeenAt, due))));
+  } catch (error) {
+    // Forgotten so the next request tries again, rather than an hour later.
+    lastNoted.delete(userId);
+    console.error('[auth] could not note when a person was last seen:', error);
+  }
 }

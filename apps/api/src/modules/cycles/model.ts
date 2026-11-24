@@ -2,14 +2,14 @@ import { t } from 'elysia';
 import { pageQueryFields, pageResponse } from '#shared/pagination';
 import { isoDate } from '#shared/schemas';
 
-const IsoDate = isoDate("Date 'YYYY-MM-DD'.");
+const IsoDate = isoDate();
 
 export const cycleParams = t.Object({ cycleId: t.Numeric() });
 
 export const listCyclesQuery = t.Object({
   status: t.Optional(
     t.Literal('planned', {
-      description: 'Only the cycles that have not finished: active and upcoming.',
+      description: 'Only cycles that have not finished: active and upcoming.',
     }),
   ),
 });
@@ -35,6 +35,18 @@ export const CycleResponse = t.Object({
 
 export const CycleListResponse = t.Array(CycleResponse);
 
+export const CrossProjectCycleListResponse = t.Array(
+  t.Composite([
+    CycleResponse,
+    t.Object({
+      projectRef: t.String(),
+      projectKey: t.String(),
+      projectName: t.String(),
+      teamName: t.String(),
+    }),
+  ]),
+);
+
 export const CyclePageResponse = pageResponse(CycleResponse);
 
 export const CycleOptionListResponse = t.Array(
@@ -42,7 +54,7 @@ export const CycleOptionListResponse = t.Array(
 );
 
 export const createCycleBody = t.Object({
-  name: t.String({ minLength: 1, description: 'Cycle name.' }),
+  name: t.String({ minLength: 1 }),
   goal: t.Optional(t.String({ description: 'What the team commits to in this cycle.' })),
   startDate: IsoDate,
   endDate: IsoDate,
@@ -53,7 +65,7 @@ export const updateCycleBody = t.Partial(createCycleBody);
 export const transferCycleBody = t.Object({
   targetCycleId: t.Nullable(
     t.Integer({
-      description: 'Cycle to move the unfinished issues to, or null to leave them without a cycle.',
+      description: 'Cycle for the unfinished issues, or null for no cycle.',
     }),
   ),
 });

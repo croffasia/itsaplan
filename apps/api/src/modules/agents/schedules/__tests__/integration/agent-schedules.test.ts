@@ -8,7 +8,7 @@ import { clearLimits, setLimits } from '#tests/helpers/limits';
 
 // A schedule sends a fixed task to an internal agent on a cron, in UTC. The worker
 // picks up the queued runs, so a run created here stays pending. Access is the
-// ai_agents permission resource.
+// agent_schedules permission resource.
 
 const schedules = (api: Api, projectKey = 'MKT') => api.projects({ projectKey })['agent-schedules'];
 
@@ -338,7 +338,7 @@ describe('agent schedules', () => {
     ).toBeUndefined();
   });
 
-  it('ends every pending run of a schedule', async () => {
+  it('ends every pending run of a schedule, as stopped by who ended them', async () => {
     const { asOwner } = await setup();
     const agentId = await makeAgent(asOwner, { username: 'hook', kind: 'external' });
     const scheduleId = (await createSchedule(asOwner, agentId)).data!.id;
@@ -353,6 +353,8 @@ describe('agent schedules', () => {
     const runs = await schedules(asOwner)({ scheduleId }).runs.get();
     expect(runs.data?.map((run) => run.status)).toEqual(['canceled', 'canceled']);
     expect(runs.data?.[0].finishedAt).not.toBeNull();
+    const listed = (await asOwner.projects({ projectKey: 'MKT' })['agent-runs'].queue.get()).data!;
+    expect(listed.items.map((run) => run.canceledBy?.name)).toEqual(['Owner', 'Owner']);
     expect((await schedules(asOwner).get()).data?.items[0]).toMatchObject({
       pendingRuns: 0,
       lastRunStatus: 'canceled',

@@ -6,11 +6,14 @@ import { jinaGrounding } from './grounding';
 import { jinaRerank } from './rerank';
 import { jinaClassify } from './classify';
 import { jinaSegment } from './segment';
+import { jinaIcon } from './icon';
+import { verifyJina } from './verify';
 
 // Jina AI: a family of web/search/text tools that share one API key.
 export const jina: Integration = {
   key: 'jina',
   label: 'Jina AI',
+  description: 'Reads web pages, searches the web, and ranks and classifies text.',
   credentialSchema: [
     {
       key: 'apiKey',
@@ -18,9 +21,12 @@ export const jina: Integration = {
       type: 'secret',
       required: true,
       placeholder: 'jina_...',
-      help: 'One key for all Jina tools. Get a free key at jina.ai.',
+      help: 'One key for all Jina tools. Get a free key at [jina.ai](https://jina.ai).',
     },
   ],
+  icon: jinaIcon,
+  website: 'https://jina.ai',
+  verify: verifyJina,
   tools: [
     jinaReader,
     jinaSearch,

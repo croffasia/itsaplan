@@ -5,6 +5,7 @@ import { pdfRead } from './read';
 export const pdf: Integration = {
   key: 'pdf',
   label: 'PDF',
+  description: 'Reads the text of a PDF file.',
   credentialSchema: [],
   tools: [pdfRead],
 };

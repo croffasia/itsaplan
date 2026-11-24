@@ -11,7 +11,21 @@ import {
   importJob,
   importRecord,
   issueLabel,
+  issueWatcher,
+  issueChecklist,
+  issueChecklistItem,
+  customField,
+  issueFieldValue,
+  issueFieldOption,
+  customFieldOption,
+  projectMember,
   user,
+  issueType,
+  initiative,
+  initiativeLabel,
+  issueWorklog,
+  label,
+  labelGroup,
 } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
 import {
@@ -24,7 +38,7 @@ import {
 } from '../../import-store';
 import { runCreate } from '../../import-worker';
 import type { SourceReader } from '../../reader';
-import type { CanonicalComment, CanonicalIssue } from '../../canonical';
+import type { CanonicalComment, CanonicalInitiative, CanonicalIssue } from '../../canonical';
 
 // Like import-rewrite's tests: the job row is 'paused' so no other test's
 // claimDueImportJobs picks it up, and runCreate is called directly with the job
@@ -80,6 +94,7 @@ const ISSUE: CanonicalIssue = {
   descriptionMarkdown: '',
   stateSourceId: 'state-1',
   assigneeEmail: null,
+  watcherEmails: [],
   labelSourceIds: [],
   cycleSourceId: null,
   parentSourceId: null,
@@ -89,6 +104,7 @@ const ISSUE: CanonicalIssue = {
   customFields: [],
   createdAt: '2026-01-01T00:00:00Z',
   updatedAt: '2026-01-01T00:00:00Z',
+  archivedAt: null,
 };
 
 const COMMENTS: CanonicalComment[] = [
@@ -116,11 +132,13 @@ type CreateReader = Pick<
   | 'listStates'
   | 'listLabels'
   | 'listCycles'
+  | 'listCustomFields'
   | 'listIssues'
   | 'getIssue'
   | 'listIssueRelations'
   | 'listIssueComments'
   | 'listIssueAttachments'
+  | 'listIssueChecklists'
 >;
 
 function readerWithFlakyComments(): SourceReader {
@@ -129,6 +147,7 @@ function readerWithFlakyComments(): SourceReader {
     listStates: async () => [],
     listLabels: async () => [],
     listCycles: async () => [],
+    listCustomFields: async () => [],
     listIssues: async () => ({ items: [ISSUE], cursor: null }),
     getIssue: async () => ISSUE,
     listIssueRelations: async () => [],
@@ -138,20 +157,24 @@ function readerWithFlakyComments(): SourceReader {
       return COMMENTS;
     },
     listIssueAttachments: async () => [],
+    listIssueChecklists: async () => [],
   };
   return reader as SourceReader;
 }
 
 function readerForIssues(issues: CanonicalIssue[]): SourceReader {
   return {
+    describeSource: async () => ({ name: 'Source project', url: null }),
     listStates: async () => [],
     listLabels: async () => [],
     listCycles: async () => [],
+    listCustomFields: async () => [],
     listIssues: async () => ({ items: issues, cursor: null }),
     getIssue: async (id) => issues.find((item) => item.sourceId === id)!,
     listIssueRelations: async () => [],
     listIssueComments: async () => COMMENTS,
     listIssueAttachments: async () => [],
+    listIssueChecklists: async () => [],
     resolveAttachmentDownload: async () => {
       throw new Error('Create must not download attachments');
     },
@@ -177,7 +200,288 @@ async function seedMappedIssue(job: ClaimedImportJob): Promise<number> {
   });
 }
 
+async function addProjectMember(projectId: number, email: string): Promise<string> {
+  const userId = randomUUID();
+  await db.insert(user).values({ id: userId, name: email, email });
+  await db.insert(projectMember).values({ projectId, userId, role: 'member' });
+  return userId;
+}
+
 describe('runCreate', () => {
+  it('creates custom fields, checklists, watchers and an archived issue, once across a retry', async () => {
+    const job = await makeCreateJob();
+    const ada = await addProjectMember(job.projectId, `ada-${job.id}@example.test`);
+    const bob = await addProjectMember(job.projectId, `bob-${job.id}@example.test`);
+    const archived: CanonicalIssue = {
+      ...ISSUE,
+      assigneeEmail: `ada-${job.id}@example.test`,
+      watcherEmails: [`bob-${job.id}@example.test`, 'stranger@example.test'],
+      customFields: [
+        { fieldSourceId: 'field-size', value: 'L' },
+        { fieldSourceId: 'field-points', value: 3 },
+        { fieldSourceId: 'field-missing', value: 'lost' },
+      ],
+      archivedAt: '2026-01-05T00:00:00Z',
+    };
+    await insertDiscoveredIds(job.id, 'issue', [archived.sourceId]);
+    await insertDiscoveredIds(job.id, 'custom_field', ['field-size', 'field-points']);
+    const reader = readerForIssues([archived]);
+    reader.listIssueComments = async () => [];
+    reader.listCustomFields = async () => [
+      { sourceId: 'field-size', name: 'Size', fieldType: 'select', options: ['S', 'L'] },
+      { sourceId: 'field-points', name: 'Points', fieldType: 'number', options: [] },
+    ];
+    reader.listIssueChecklists = async () => [
+      {
+        sourceId: 'checklist-1',
+        title: 'Checklist',
+        items: [
+          { content: 'First', done: true },
+          { content: 'Second', done: false },
+        ],
+      },
+      { sourceId: 'checklist-2', title: 'Checklist', items: [] },
+    ];
+
+    await runCreate(job, reader);
+    await runCreate(job, reader);
+
+    const [created] = await db.select().from(issue).where(eq(issue.projectId, job.projectId));
+    expect(created!.assigneeUserId).toBe(ada);
+    expect(created!.archivedAt).toEqual(new Date('2026-01-05T00:00:00Z'));
+    const watchers = await db
+      .select({ userId: issueWatcher.userId })
+      .from(issueWatcher)
+      .where(eq(issueWatcher.issueId, created!.id));
+    expect(watchers).toEqual([{ userId: bob }]);
+
+    const fields = await db
+      .select({ id: customField.id, name: customField.name, fieldType: customField.fieldType })
+      .from(customField)
+      .where(eq(customField.projectId, job.projectId))
+      .orderBy(customField.position);
+    expect(fields.map(({ name, fieldType }) => [name, fieldType])).toEqual([
+      ['Size', 'select'],
+      ['Points', 'number'],
+    ]);
+    const options = await db
+      .select({ value: customFieldOption.value })
+      .from(customFieldOption)
+      .where(eq(customFieldOption.fieldId, fields[0]!.id))
+      .orderBy(customFieldOption.position);
+    expect(options.map((o) => o.value)).toEqual(['S', 'L']);
+    const [picked] = await db
+      .select({ value: customFieldOption.value })
+      .from(issueFieldOption)
+      .innerJoin(customFieldOption, eq(customFieldOption.id, issueFieldOption.optionId))
+      .where(eq(issueFieldOption.issueId, created!.id));
+    expect(picked!.value).toBe('L');
+    const values = await db
+      .select({ valueNumber: issueFieldValue.valueNumber })
+      .from(issueFieldValue)
+      .where(eq(issueFieldValue.issueId, created!.id));
+    expect(values.map((v) => Number(v.valueNumber))).toEqual([3]);
+
+    const checklists = await db
+      .select()
+      .from(issueChecklist)
+      .where(eq(issueChecklist.issueId, created!.id))
+      .orderBy(issueChecklist.position);
+    expect(checklists.map((c) => c.title)).toEqual(['Checklist', 'Checklist']);
+    const items = await db
+      .select({ content: issueChecklistItem.content, done: issueChecklistItem.done })
+      .from(issueChecklistItem)
+      .where(eq(issueChecklistItem.checklistId, checklists[0]!.id))
+      .orderBy(issueChecklistItem.position);
+    expect(items).toEqual([
+      { content: 'First', done: true },
+      { content: 'Second', done: false },
+    ]);
+  });
+
+  it('creates issue types, initiatives, estimates, time entries and the other field types', async () => {
+    const job = await makeCreateJob();
+    const adaEmail = `ada-${job.id}@example.test`;
+    const ada = await addProjectMember(job.projectId, adaEmail);
+    const epic: CanonicalInitiative = {
+      sourceId: 'epic-1',
+      title: 'Checkout',
+      descriptionMarkdown: 'Epic text',
+      status: 'active',
+      ownerEmail: adaEmail,
+      priority: 'high',
+      startDate: '2026-01-01',
+      targetDate: '2026-02-01',
+      labelSourceIds: ['label-web'],
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-02T00:00:00Z',
+    };
+    const story: CanonicalIssue = {
+      ...ISSUE,
+      typeSourceId: 'type-story',
+      initiativeSourceId: 'epic-1',
+      estimatePoints: 5,
+      estimateMinutes: 90.4,
+      labelSourceIds: ['label-web'],
+      customFields: [
+        { fieldSourceId: 'f-platforms', value: ['iOS', 'Web'] },
+        { fieldSourceId: 'f-review', value: '2026-03-04' },
+        { fieldSourceId: 'f-reviewer', value: adaEmail.toUpperCase() },
+        { fieldSourceId: 'f-spec', value: 'https://example.com/spec' },
+      ],
+    };
+    await insertDiscoveredIds(job.id, 'issue', [story.sourceId]);
+    await insertDiscoveredIds(job.id, 'label', ['label-web']);
+    await insertDiscoveredIds(job.id, 'issue_type', ['type-story']);
+    await insertDiscoveredIds(job.id, 'initiative', ['epic-1']);
+    await insertDiscoveredIds(job.id, 'custom_field', [
+      'f-platforms',
+      'f-review',
+      'f-reviewer',
+      'f-spec',
+    ]);
+    const reader = readerForIssues([story]);
+    reader.listIssueComments = async () => [];
+    reader.listLabels = async () => [{ sourceId: 'label-web', name: 'web', group: 'Components' }];
+    reader.listIssueTypes = async () => [{ sourceId: 'type-story', name: 'Story' }];
+    reader.listInitiatives = async () => [epic];
+    reader.listCustomFields = async () => [
+      {
+        sourceId: 'f-platforms',
+        name: 'Platforms',
+        fieldType: 'multi_select',
+        options: ['Android', 'iOS', 'Web'],
+      },
+      { sourceId: 'f-review', name: 'Review on', fieldType: 'date', options: [] },
+      { sourceId: 'f-reviewer', name: 'Reviewer', fieldType: 'member', options: [] },
+      { sourceId: 'f-spec', name: 'Spec', fieldType: 'url', options: [] },
+    ];
+    reader.listIssueWorklogs = async () => [
+      {
+        sourceId: 'w-1',
+        authorEmail: adaEmail,
+        minutes: 30,
+        spentOn: '2026-01-03',
+        note: 'Review',
+      },
+      {
+        sourceId: 'w-2',
+        authorEmail: 'stranger@example.test',
+        minutes: 60,
+        spentOn: '2026-01-03',
+        note: null,
+      },
+    ];
+
+    await runCreate(job, reader);
+    await runCreate(job, reader);
+
+    const [created] = await db.select().from(issue).where(eq(issue.projectId, job.projectId));
+    const [type] = await db.select().from(issueType).where(eq(issueType.id, created!.typeId!));
+    expect(type!.name).toBe('Story');
+    expect(Number(created!.estimatePoints)).toBe(5);
+    expect(created!.estimateMinutes).toBe(90);
+
+    const made = await db.select().from(initiative).where(eq(initiative.projectId, job.projectId));
+    expect(made).toHaveLength(1);
+    expect(created!.initiativeId).toBe(made[0]!.id);
+    expect(made[0]).toMatchObject({
+      title: 'Checkout',
+      description: 'Epic text',
+      status: 'active',
+      ownerUserId: ada,
+      priority: 'high',
+      startDate: '2026-01-01',
+      targetDate: '2026-02-01',
+    });
+    const [labelled] = await db
+      .select({ group: labelGroup.name })
+      .from(initiativeLabel)
+      .innerJoin(label, eq(label.id, initiativeLabel.labelId))
+      .innerJoin(labelGroup, eq(labelGroup.id, label.groupId))
+      .where(eq(initiativeLabel.initiativeId, made[0]!.id));
+    expect(labelled!.group).toBe('Components');
+
+    const worklogs = await db
+      .select({
+        userId: issueWorklog.userId,
+        minutes: issueWorklog.minutes,
+        note: issueWorklog.note,
+      })
+      .from(issueWorklog)
+      .where(eq(issueWorklog.issueId, created!.id));
+    expect(worklogs).toEqual([{ userId: ada, minutes: 30, note: 'Review' }]);
+    const [tracking] = await db
+      .select({
+        points: project.pointsEstimateEnabled,
+        time: project.timeEstimateEnabled,
+        logging: project.timeLoggingEnabled,
+      })
+      .from(project)
+      .where(eq(project.id, job.projectId));
+    expect(tracking).toEqual({ points: true, time: true, logging: true });
+
+    const picked = await db
+      .select({ value: customFieldOption.value })
+      .from(issueFieldOption)
+      .innerJoin(customFieldOption, eq(customFieldOption.id, issueFieldOption.optionId))
+      .where(eq(issueFieldOption.issueId, created!.id))
+      .orderBy(customFieldOption.position);
+    expect(picked.map((p) => p.value)).toEqual(['iOS', 'Web']);
+    const values = await db
+      .select({
+        name: customField.name,
+        date: issueFieldValue.valueDate,
+        userId: issueFieldValue.valueUserId,
+        text: issueFieldValue.valueText,
+      })
+      .from(issueFieldValue)
+      .innerJoin(customField, eq(customField.id, issueFieldValue.fieldId))
+      .where(eq(issueFieldValue.issueId, created!.id))
+      .orderBy(customField.position);
+    expect(values).toEqual([
+      { name: 'Review on', date: '2026-03-04', userId: null, text: null },
+      { name: 'Reviewer', date: null, userId: ada, text: null },
+      { name: 'Spec', date: null, userId: null, text: 'https://example.com/spec' },
+    ]);
+  });
+
+  it('reuses a field of the same name and type and adds the options it lacks', async () => {
+    const job = await makeCreateJob();
+    const [existing] = await db
+      .insert(customField)
+      .values({ projectId: job.projectId, name: 'Size', fieldType: 'select' })
+      .returning({ id: customField.id });
+    await db.insert(customFieldOption).values({ fieldId: existing!.id, value: 'S' });
+    await db
+      .insert(customField)
+      .values({ projectId: job.projectId, name: 'Points', fieldType: 'text' });
+    await insertDiscoveredIds(job.id, 'custom_field', ['field-size', 'field-points']);
+    const reader = readerForIssues([]);
+    reader.listCustomFields = async () => [
+      { sourceId: 'field-size', name: 'Size', fieldType: 'select', options: ['S', 'L'] },
+      { sourceId: 'field-points', name: 'Points', fieldType: 'number', options: [] },
+    ];
+
+    await runCreate(job, reader);
+
+    expect(await findImportRecord(job.id, 'custom_field', 'field-size')).toEqual({
+      localId: existing!.id,
+    });
+    const options = await db
+      .select({ value: customFieldOption.value })
+      .from(customFieldOption)
+      .where(eq(customFieldOption.fieldId, existing!.id))
+      .orderBy(customFieldOption.position);
+    expect(options.map((o) => o.value)).toEqual(['S', 'L']);
+    const points = await db
+      .select({ fieldType: customField.fieldType })
+      .from(customField)
+      .where(and(eq(customField.projectId, job.projectId), eq(customField.name, 'Points')))
+      .orderBy(customField.id);
+    expect(points.map((p) => p.fieldType)).toEqual(['text', 'number']);
+  });
+
   it("creates an issue's comments on the retry after its comment read failed", async () => {
     const job = await makeCreateJob();
     await insertDiscoveredIds(job.id, 'issue', [ISSUE.sourceId]);

@@ -19,6 +19,12 @@ import {
   type InstanceOidcSettingsPatch,
   type InstanceTelegramSettingsPatch,
   type InstanceUserKind,
+  type EmailDraft,
+  type EmailTemplatesBody,
+  type SharingSettings,
+  type ApiDocsSettings,
+  type ApiKeySettings,
+  type JobSettingsPatch,
   getInstanceAuthSettings,
   updateInstanceAuthSettings,
   getInstanceEmailSettings,
@@ -29,13 +35,30 @@ import {
   getInstanceOidcSettings,
   updateInstanceOidcSettings,
   getInstanceTelegramSettings,
+  getInstanceSlackSettings,
+  updateInstanceSlackSettings,
+  type InstanceSlackSettingsPatch,
   updateInstanceTelegramSettings,
   getInstanceProjectDefaults,
   updateInstanceProjectDefaults,
   getInstanceAgentSettings,
   updateInstanceAgentSettings,
+  getEmailTemplates,
+  previewEmailDraft,
+  testEmailDraft,
+  updateEmailTemplates,
+  getInstanceSharingSettings,
+  updateInstanceSharingSettings,
+  getInstanceApiDocsSettings,
+  updateInstanceApiDocsSettings,
+  getInstanceApiKeySettings,
+  updateInstanceApiKeySettings,
+  getInstanceEmbedSites,
+  updateInstanceEmbedSites,
   getInstanceStorageSettings,
   updateInstanceStorageSettings,
+  getInstanceJobSettings,
+  updateInstanceJobSettings,
   listInstanceUsers,
   setInstanceUserActive,
   getInstanceUser,
@@ -47,7 +70,12 @@ import {
   listInstanceTeamProjects,
   listInstanceTeamMembers,
   verifyInstanceUserEmail,
+  listSystemRoles,
+  createSystemRole,
+  updateSystemRole,
+  deleteSystemRole,
 } from '@/lib/api/endpoints/god';
+import type { Permissions } from '@/lib/api/endpoints/roles';
 import { qk } from '@/services/queryKeys';
 
 // Data hooks for god mode. Every write returns the new state, which replaces the
@@ -72,7 +100,10 @@ export function useUpdateInstanceAuthSettings() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (patch: InstanceAuthSettingsPatch) => updateInstanceAuthSettings(patch),
-    onSuccess: (data) => qc.setQueryData(qk.instanceAuthSettings, data),
+    onSuccess: (data) => {
+      qc.setQueryData(qk.instanceAuthSettings, data);
+      qc.setQueryData(qk.inviteSearch, { enabled: data.inviteSearch });
+    },
   });
 }
 
@@ -139,6 +170,27 @@ export function useUpdateInstanceOidcSettings() {
   });
 }
 
+// The instance Slack app every workspace sends Slack notifications through unless it set
+// one of its own. Saving it changes where the projects' Slack notifications go.
+export function useInstanceSlackSettingsQuery() {
+  return useQuery({
+    queryKey: qk.instanceSlackSettings,
+    queryFn: () => getInstanceSlackSettings(),
+  });
+}
+
+export function useUpdateInstanceSlackSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: InstanceSlackSettingsPatch) => updateInstanceSlackSettings(patch),
+    onSuccess: (data) => {
+      qc.setQueryData(qk.instanceSlackSettings, data);
+      void qc.invalidateQueries({ queryKey: qk.slackAccounts });
+      void qc.invalidateQueries({ queryKey: qk.notificationPreferences });
+    },
+  });
+}
+
 // The instance Telegram bot: the bot users link their accounts through, and the
 // default sender for Telegram notifications.
 export function useInstanceTelegramSettingsQuery() {
@@ -173,6 +225,80 @@ export function useUpdateInstanceProjectDefaults() {
   });
 }
 
+export function useInstanceSharingSettingsQuery() {
+  return useQuery({
+    queryKey: qk.instanceSharingSettings,
+    queryFn: () => getInstanceSharingSettings(),
+  });
+}
+
+export function useUpdateInstanceSharingSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SharingSettings) => updateInstanceSharingSettings(body),
+    onSuccess: (data) => qc.setQueryData(qk.instanceSharingSettings, data),
+  });
+}
+
+export function useInstanceApiDocsSettingsQuery() {
+  return useQuery({
+    queryKey: qk.instanceApiDocsSettings,
+    queryFn: () => getInstanceApiDocsSettings(),
+  });
+}
+
+export function useUpdateInstanceApiDocsSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ApiDocsSettings) => updateInstanceApiDocsSettings(body),
+    onSuccess: (data) => qc.setQueryData(qk.instanceApiDocsSettings, data),
+  });
+}
+
+export function useInstanceApiKeySettingsQuery() {
+  return useQuery({
+    queryKey: qk.instanceApiKeySettings,
+    queryFn: () => getInstanceApiKeySettings(),
+  });
+}
+
+export function useUpdateInstanceApiKeySettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ApiKeySettings) => updateInstanceApiKeySettings(body),
+    onSuccess: (data) => qc.setQueryData(qk.instanceApiKeySettings, data),
+  });
+}
+
+export function useEmailTemplatesQuery() {
+  return useQuery({
+    queryKey: qk.instanceEmailTemplates,
+    queryFn: () => getEmailTemplates(),
+  });
+}
+
+export function useUpdateEmailTemplates() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: EmailTemplatesBody) => updateEmailTemplates(body),
+    onSuccess: (data) => qc.setQueryData(qk.instanceEmailTemplates, data),
+  });
+}
+
+// The email as the api renders it, so the preview is what goes out.
+export function useEmailPreviewQuery(draft: EmailDraft) {
+  return useQuery({
+    queryKey: qk.instanceEmailPreview(draft),
+    queryFn: () => previewEmailDraft(draft),
+    placeholderData: keepPreviousData,
+    retry: false,
+  });
+}
+
+export function useTestEmailDraft() {
+  return useMutation({ mutationFn: (draft: EmailDraft) => testEmailDraft(draft) });
+}
+
 // What applies to every team's agents: how long their run traces are kept.
 export function useInstanceAgentSettingsQuery() {
   return useQuery({
@@ -186,6 +312,22 @@ export function useUpdateInstanceAgentSettings() {
   return useMutation({
     mutationFn: (body: Partial<AgentSettings>) => updateInstanceAgentSettings(body),
     onSuccess: (data) => qc.setQueryData(qk.instanceAgentSettings, data),
+  });
+}
+
+// The sites that may frame the public pages.
+export function useInstanceEmbedSitesQuery() {
+  return useQuery({
+    queryKey: qk.instanceEmbedSites,
+    queryFn: () => getInstanceEmbedSites(),
+  });
+}
+
+export function useUpdateInstanceEmbedSites() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (origins: string[]) => updateInstanceEmbedSites(origins),
+    onSuccess: (data) => qc.setQueryData(qk.instanceEmbedSites, data),
   });
 }
 
@@ -207,6 +349,22 @@ export function useUpdateInstanceStorageSettings() {
       // The upload UI reads the same limits through the open endpoint.
       qc.setQueryData(qk.storageSettings, data);
     },
+  });
+}
+
+// How the background jobs run: poll intervals, batch sizes, leases and attempts.
+export function useInstanceJobSettingsQuery() {
+  return useQuery({
+    queryKey: qk.instanceJobSettings,
+    queryFn: () => getInstanceJobSettings(),
+  });
+}
+
+export function useUpdateInstanceJobSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: JobSettingsPatch) => updateInstanceJobSettings(patch),
+    onSuccess: (data) => qc.setQueryData(qk.instanceJobSettings, data),
   });
 }
 
@@ -339,4 +497,31 @@ export function useInstanceTeamMembersQuery(teamId: number, search: string | und
     initialPageParam: 1,
     getNextPageParam: nextPageParam,
   });
+}
+
+export function useSystemRolesQuery() {
+  return useQuery({ queryKey: qk.systemRoles, queryFn: listSystemRoles });
+}
+
+function useSystemRoleMutation<TInput, TResult>(mutationFn: (input: TInput) => Promise<TResult>) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () => void qc.invalidateQueries({ queryKey: qk.systemRoles }),
+  });
+}
+
+export function useCreateSystemRole() {
+  return useSystemRoleMutation(createSystemRole);
+}
+
+export function useUpdateSystemRole() {
+  return useSystemRoleMutation(
+    ({ roleId, patch }: { roleId: number; patch: { name?: string; permissions?: Permissions } }) =>
+      updateSystemRole(roleId, patch),
+  );
+}
+
+export function useDeleteSystemRole() {
+  return useSystemRoleMutation(deleteSystemRole);
 }

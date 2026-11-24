@@ -5,6 +5,7 @@ import {
   documentComment,
   project,
   projectDocument,
+  projectDocumentMember,
   projectDocumentPreference,
   projectDocumentRevision,
   projectMember,
@@ -22,14 +23,27 @@ import {
   or,
   sql,
 } from 'drizzle-orm';
-import { HttpError, iso } from '#shared/lib';
+import {
+  TEXT_ALIGNMENTS,
+  isAllowedImageStyle,
+  isBlockId,
+  isHexColor,
+  isMentionHandle,
+  isSafeDocumentImageSource,
+  isSafeLinkHref,
+} from '@repo/editor';
+import { HttpError, iso, shareLive } from '#shared/lib';
+import { documentMentionHandles, fanOutTextMentions } from './mentions';
+import { documentVisibleTo, sharedMemberIds } from './access';
 import {
   assertAttachmentStorageCapacity,
   assertAttachmentFileAllowed,
+  assertAttachmentUploadAllowed,
   attachmentObjectKey,
   cloneAttachmentObject,
   deleteAttachmentObject,
   lockAttachmentStorage,
+  storeAttachmentObject,
 } from '#modules/attachments/storage';
 
 type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -63,6 +77,10 @@ async function lockProjectDocumentActors(
   await lockDocumentActors(executor, [actorUserId, ...rows.map((row) => row.ownerUserId)]);
 }
 
+// The three states the UI offers: a private page with members it is shared with is
+// restricted.
+type DocumentVisibility = 'public' | 'private' | 'restricted';
+
 export interface DocumentSummaryRow {
   id: number;
   projectId: number;
@@ -72,7 +90,9 @@ export interface DocumentSummaryRow {
   metadata: Record<string, unknown>;
   fullWidth: boolean;
   isPrivate: boolean;
+  visibility: DocumentVisibility;
   isLocked: boolean;
+  isPinned: boolean;
   isFavorite: boolean;
   archivedAt: string | null;
   position: number;
@@ -85,8 +105,16 @@ export interface DocumentSummaryRow {
 }
 
 export interface DocumentRow extends DocumentSummaryRow {
+  // The members a private page is shared with, its owner left out.
+  memberIds: string[];
   content: string;
   contentJson: Record<string, unknown> | null;
+  // The public share link. A link past its expiry reads as not shared even before
+  // the sweep clears it.
+  shareToken: string | null;
+  shareExpiresAt: string | null;
+  shareIncludeChildren: boolean;
+  shareIncludeIssues: boolean;
 }
 
 export interface DocumentRevisionSummaryRow {
@@ -122,16 +150,40 @@ export interface DocumentAssetRow {
   createdAt: string;
 }
 
-function documentAccess(userId: string) {
-  return or(eq(projectDocument.isPrivate, false), eq(projectDocument.ownerUserId, userId));
+// The columns that revoke a page's share link. A private page has no public link, so
+// making a page private writes them too.
+export const revokedDocumentShare = {
+  shareToken: null,
+  shareExpiresAt: null,
+  shareIncludeChildren: false,
+  shareIncludeIssues: false,
+};
+
+function visibilityOf(isPrivate: boolean, hasMembers: boolean): DocumentVisibility {
+  if (!isPrivate) return 'public';
+  return hasMembers ? 'restricted' : 'private';
 }
 
-function mapDocument(row: typeof projectDocument.$inferSelect, isFavorite = false): DocumentRow {
+function mapDocument(
+  row: typeof projectDocument.$inferSelect,
+  isFavorite = false,
+  memberIds: string[] = [],
+): DocumentRow {
   const { archivedByAncestorId: _archivedByAncestorId, ...publicRow } = row;
+  const shared = row.shareToken !== null && shareLive(row.shareExpiresAt);
   return {
     ...publicRow,
+    visibility: visibilityOf(row.isPrivate, memberIds.length > 0),
+    memberIds,
+    // A pin is kept while its page is private or archived, and shows again once the page is
+    // public and active.
+    isPinned: row.isPinned && !row.isPrivate && row.archivedAt === null,
     isFavorite,
     archivedAt: row.archivedAt ? iso(row.archivedAt) : null,
+    shareToken: shared ? row.shareToken : null,
+    shareExpiresAt: shared && row.shareExpiresAt ? iso(row.shareExpiresAt) : null,
+    shareIncludeChildren: shared && row.shareIncludeChildren,
+    shareIncludeIssues: shared && row.shareIncludeIssues,
     createdAt: iso(row.createdAt),
     updatedAt: iso(row.updatedAt),
   };
@@ -140,9 +192,19 @@ function mapDocument(row: typeof projectDocument.$inferSelect, isFavorite = fals
 function summaryOf(
   row: typeof projectDocument.$inferSelect,
   isFavorite = false,
+  hasMembers = false,
 ): DocumentSummaryRow {
-  const { content: _content, contentJson: _contentJson, ...summary } = mapDocument(row, isFavorite);
-  return summary;
+  const {
+    content: _content,
+    contentJson: _contentJson,
+    memberIds: _memberIds,
+    shareToken: _shareToken,
+    shareExpiresAt: _shareExpiresAt,
+    shareIncludeChildren: _shareIncludeChildren,
+    shareIncludeIssues: _shareIncludeIssues,
+    ...summary
+  } = mapDocument(row, isFavorite);
+  return { ...summary, visibility: visibilityOf(row.isPrivate, hasMembers) };
 }
 
 function mapRevision(row: typeof projectDocumentRevision.$inferSelect): DocumentRevisionRow {
@@ -176,31 +238,38 @@ export function replaceAssetReferences<T>(
   targetDocumentId: number,
   publicIds: Map<string, string>,
 ): T {
+  return rewriteAssetUrls(value, sourceDocumentId, (match, mediaPrefix, publicId) => {
+    const targetPublicId = publicIds.get(publicId.toLowerCase());
+    return targetPublicId
+      ? `${mediaPrefix ?? ''}${documentAssetPath(targetProject, targetDocumentId, targetPublicId)}`
+      : match;
+  });
+}
+
+// Rewrites every asset URL in a document body, its Markdown or its Tiptap JSON: those
+// of one document, or of any document when documentId is null.
+export function rewriteAssetUrls<T>(
+  value: T,
+  documentId: number | null,
+  replace: (match: string, mediaPrefix: string | undefined, publicId: string) => string,
+): T {
   if (typeof value === 'string') {
-    const replaced = value.replace(
+    return value.replace(
       new RegExp(
-        `(/(?:protected-)?media)?/projects/[^/\\s"']+/documents/${sourceDocumentId}/assets/([0-9a-f-]{36})/raw`,
+        `(/(?:protected-)?media)?/projects/[^/\\s"']+/documents/${documentId ?? '\\d+'}/assets/([0-9a-f-]{36})/raw`,
         'gi',
       ),
-      (match, mediaPrefix: string | undefined, publicId: string) => {
-        const targetPublicId = publicIds.get(publicId.toLowerCase());
-        return targetPublicId
-          ? `${mediaPrefix ?? ''}${documentAssetPath(targetProject, targetDocumentId, targetPublicId)}`
-          : match;
-      },
-    );
-    return replaced as T;
+      replace,
+    ) as T;
   }
   if (Array.isArray(value)) {
-    return value.map((item) =>
-      replaceAssetReferences(item, sourceDocumentId, targetProject, targetDocumentId, publicIds),
-    ) as T;
+    return value.map((item) => rewriteAssetUrls(item, documentId, replace)) as T;
   }
   if (value && typeof value === 'object') {
     return Object.fromEntries(
       Object.entries(value).map(([key, item]) => [
         key,
-        replaceAssetReferences(item, sourceDocumentId, targetProject, targetDocumentId, publicIds),
+        rewriteAssetUrls(item, documentId, replace),
       ]),
     ) as T;
   }
@@ -245,6 +314,30 @@ async function favoriteDocumentIds(
   return new Set(rows.map((row) => row.documentId));
 }
 
+async function memberIdsOf(executor: Executor, documentId: number): Promise<string[]> {
+  const rows = await executor
+    .select({ userId: projectDocumentMember.userId })
+    .from(projectDocumentMember)
+    .where(eq(projectDocumentMember.documentId, documentId))
+    .orderBy(asc(projectDocumentMember.userId));
+  return rows.map((row) => row.userId);
+}
+
+async function replaceMembers(
+  executor: Executor,
+  documentId: number,
+  userIds: string[],
+): Promise<void> {
+  await executor
+    .delete(projectDocumentMember)
+    .where(eq(projectDocumentMember.documentId, documentId));
+  if (userIds.length > 0) {
+    await executor
+      .insert(projectDocumentMember)
+      .values(userIds.map((userId) => ({ documentId, userId })));
+  }
+}
+
 export async function listDocuments(
   projectId: number,
   userId: string,
@@ -253,7 +346,7 @@ export async function listDocuments(
   const term = options.q?.trim();
   const conditions = [
     eq(projectDocument.projectId, projectId),
-    documentAccess(userId),
+    documentVisibleTo(userId),
     options.archived ? isNotNull(projectDocument.archivedAt) : isNull(projectDocument.archivedAt),
   ];
   if (term) {
@@ -272,13 +365,22 @@ export async function listDocuments(
     .where(and(...conditions))
     .orderBy(asc(projectDocument.position), asc(projectDocument.id));
   const visibleIds = new Set(rows.map((row) => row.id));
-  const favorites = await favoriteDocumentIds(
-    db,
-    userId,
-    rows.map((row) => row.id),
-  );
+  const ids = rows.map((row) => row.id);
+  const favorites = await favoriteDocumentIds(db, userId, ids);
+  const shared =
+    ids.length === 0
+      ? []
+      : await db
+          .selectDistinct({ documentId: projectDocumentMember.documentId })
+          .from(projectDocumentMember)
+          .where(inArray(projectDocumentMember.documentId, ids));
+  const withMembers = new Set(shared.map((row) => row.documentId));
   return rows.map((row) => ({
-    ...summaryOf({ ...row, content: '', contentJson: null }, favorites.has(row.id)),
+    ...summaryOf(
+      { ...row, content: '', contentJson: null },
+      favorites.has(row.id),
+      withMembers.has(row.id),
+    ),
     parentId: row.parentId !== null && visibleIds.has(row.parentId) ? row.parentId : null,
   }));
 }
@@ -296,7 +398,7 @@ async function selectDocument(
       and(
         eq(projectDocument.id, documentId),
         eq(projectDocument.projectId, projectId),
-        documentAccess(userId),
+        documentVisibleTo(userId),
       ),
     );
   return row ?? null;
@@ -338,7 +440,37 @@ export async function assertDocumentAssetUploadTarget(
   return true;
 }
 
-export async function createDocumentAsset(input: {
+export async function storeDocumentAsset(input: {
+  projectId: number;
+  documentId: number;
+  userId: string;
+  filename: string;
+  contentType: string;
+  bytes: Buffer;
+}): Promise<DocumentAssetRow> {
+  const { projectId, documentId, userId, filename, contentType, bytes } = input;
+  await assertAttachmentUploadAllowed(projectId, bytes.length, contentType);
+  const key = attachmentObjectKey(projectId, 'documents', documentId, filename);
+  await storeAttachmentObject(key, bytes, contentType);
+  try {
+    const asset = await createDocumentAsset({
+      projectId,
+      documentId,
+      userId,
+      s3Key: key,
+      filename,
+      contentType,
+      sizeBytes: bytes.length,
+    });
+    if (!asset) throw new HttpError(404, 'Document not found');
+    return asset;
+  } catch (error) {
+    await deleteAttachmentObject(key);
+    throw error;
+  }
+}
+
+async function createDocumentAsset(input: {
   projectId: number;
   documentId: number;
   userId: string;
@@ -420,7 +552,8 @@ async function mapDocumentForUser(
 ): Promise<DocumentRow> {
   const favorites = await favoriteDocumentIds(executor, userId, [row.id]);
   const parentId = await visibleDocumentParentId(executor, row.projectId, row.parentId, userId);
-  return mapDocument({ ...row, parentId }, favorites.has(row.id));
+  const memberIds = row.isPrivate ? await memberIdsOf(executor, row.id) : [];
+  return mapDocument({ ...row, parentId }, favorites.has(row.id), memberIds);
 }
 
 async function visibleDocumentParentId(
@@ -437,7 +570,7 @@ async function visibleDocumentParentId(
       and(
         eq(projectDocument.id, parentId),
         eq(projectDocument.projectId, projectId),
-        documentAccess(userId),
+        documentVisibleTo(userId),
       ),
     );
   return parent?.id ?? null;
@@ -464,7 +597,7 @@ async function assertValidParent(
         archivedAt: projectDocument.archivedAt,
       })
       .from(projectDocument)
-      .where(and(eq(projectDocument.id, cursor), documentAccess(userId)));
+      .where(and(eq(projectDocument.id, cursor), documentVisibleTo(userId)));
     if (!parent || parent.projectId !== projectId) {
       throw new HttpError(400, 'Parent document must belong to the same project');
     }
@@ -579,6 +712,25 @@ async function planDocumentMove(
   };
 }
 
+// Who a private subpage starts shared with: everyone who sees its private parent,
+// the subpage's own owner left out.
+async function parentAudience(
+  executor: Executor,
+  projectId: number,
+  parentId: number,
+  ownerUserId: string,
+): Promise<string[]> {
+  const [parent] = await executor
+    .select({ isPrivate: projectDocument.isPrivate, ownerUserId: projectDocument.ownerUserId })
+    .from(projectDocument)
+    .where(eq(projectDocument.id, parentId));
+  if (!parent?.isPrivate) return [];
+  const audience = [parent.ownerUserId, ...(await memberIdsOf(executor, parentId))].filter(
+    (userId): userId is string => userId !== null,
+  );
+  return sharedMemberIds(projectId, ownerUserId, audience, audience);
+}
+
 export async function createDocument(input: {
   projectId: number;
   userId: string;
@@ -594,7 +746,7 @@ export async function createDocument(input: {
   assertValidDocumentContentJson(input.contentJson);
   assertValidMetadata(input.metadata);
   const parentId = input.parentId ?? null;
-  return db.transaction(async (tx) => {
+  const document = await db.transaction(async (tx) => {
     await lockDocumentActor(tx, input.userId);
     await tx.execute(
       sql`select pg_advisory_xact_lock(${DOCUMENT_TREE_LOCK_NAMESPACE}, ${input.projectId})`,
@@ -618,8 +770,23 @@ export async function createDocument(input: {
         updatedByUserId: input.userId,
       })
       .returning();
+    if (row.isPrivate && parentId !== null) {
+      await replaceMembers(
+        tx,
+        row.id,
+        await parentAudience(tx, input.projectId, parentId, input.userId),
+      );
+    }
     return mapDocumentForUser(tx, row, input.userId);
   });
+  await fanOutTextMentions({
+    projectId: input.projectId,
+    documentId: document.id,
+    before: [],
+    after: documentMentionHandles(document),
+    actorUserId: input.userId,
+  });
+  return document;
 }
 
 function assertExpectedVersion(row: { version: number }, expected: number): void {
@@ -655,6 +822,7 @@ const DOCUMENT_NODE_TYPES = new Set([
   'heading',
   'horizontalRule',
   'hardBreak',
+  'mention',
   'codeBlock',
   'image',
   'table',
@@ -674,8 +842,6 @@ const DOCUMENT_MARK_TYPES = new Set([
   'underline',
   'highlight',
 ]);
-
-const TEXT_ALIGN = ['left', 'center', 'right'] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -703,10 +869,7 @@ function assertAllowedAttributes(
   context: string,
 ): void {
   const allowedKeys = new Set([...allowed, 'blockId']);
-  if (
-    attrs.blockId != null &&
-    (typeof attrs.blockId !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(attrs.blockId))
-  )
+  if (attrs.blockId != null && !isBlockId(attrs.blockId))
     throw new HttpError(400, 'Invalid document block identifier.');
   const unknown = Object.keys(attrs).find((key) => !allowedKeys.has(key));
   if (unknown) throw new HttpError(400, `${context} contains an unsupported "${unknown}" attr.`);
@@ -734,75 +897,17 @@ function assertOptionalBoundedString(value: unknown, maximum: number, context: s
   }
 }
 
-function containsUnsafeUrlCharacter(value: string): boolean {
-  return [...value].some(
-    (character) => character === '\\' || /[\p{White_Space}\p{Cc}\p{Cf}]/u.test(character),
-  );
-}
-
 function assertSafeLinkHref(value: unknown): void {
-  if (typeof value !== 'string' || value.length === 0 || value.length > 2_048) {
-    throw new HttpError(400, 'A link href must be a non-empty string up to 2048 characters.');
-  }
-  if (containsUnsafeUrlCharacter(value)) {
-    throw new HttpError(400, 'A link href cannot contain whitespace, controls, or backslashes.');
-  }
-  if (value.startsWith('#')) return;
-  if (value.startsWith('/') && !value.startsWith('//')) return;
-  if (/^(mailto:|tel:)/i.test(value)) {
-    if (value.slice(value.indexOf(':') + 1).length > 0) return;
-    throw new HttpError(400, 'A mailto or tel link must contain a destination.');
-  }
-  try {
-    const parsed = new URL(value);
-    if (
-      (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
-      !parsed.username &&
-      !parsed.password
-    ) {
-      return;
-    }
-  } catch {
-    // Fall through to the uniform validation error below.
-  }
-  throw new HttpError(400, 'A link href must use http, https, mailto, tel, /path, or #anchor.');
-}
-
-const DOCUMENT_ASSET_PATH =
-  /^\/(?:protected-media\/)?projects\/[A-Za-z0-9._~%+-]+\/documents\/[1-9]\d*\/assets\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/raw$/i;
-
-function assertSafeImageSource(value: unknown): void {
-  if (typeof value !== 'string' || value.length === 0 || value.length > 4_096) {
-    throw new HttpError(400, 'An image src must be a non-empty string up to 4096 characters.');
-  }
-  if (containsUnsafeUrlCharacter(value)) {
-    throw new HttpError(400, 'An image src cannot contain whitespace, controls, or backslashes.');
-  }
-  if (DOCUMENT_ASSET_PATH.test(value)) return;
-  try {
-    const parsed = new URL(value);
-    if (
-      (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
-      !parsed.username &&
-      !parsed.password
-    ) {
-      return;
-    }
-  } catch {
-    // Fall through to the uniform validation error below.
-  }
-  throw new HttpError(400, 'An image src must use http, https, or a protected Docs asset URL.');
+  if (!isSafeLinkHref(value))
+    throw new HttpError(
+      400,
+      'A link href must be an http, https, mailto or tel URL, a /path or a #anchor, up to 2048 characters with no spaces.',
+    );
 }
 
 function assertSafeColor(value: unknown): void {
-  if (
-    value !== undefined &&
-    value !== null &&
-    (typeof value !== 'string' ||
-      !/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value))
-  ) {
+  if (value != null && !isHexColor(value))
     throw new HttpError(400, 'Document colors must use a hexadecimal color value.');
-  }
 }
 
 function assertDocumentNodeAttributes(node: Record<string, unknown>): void {
@@ -810,18 +915,22 @@ function assertDocumentNodeAttributes(node: Record<string, unknown>): void {
   switch (node.type) {
     case 'paragraph':
       assertAllowedAttributes(attrs, ['textAlign'], 'A paragraph');
-      assertOptionalOneOf(attrs.textAlign, TEXT_ALIGN, 'Paragraph textAlign');
+      assertOptionalOneOf(attrs.textAlign, TEXT_ALIGNMENTS, 'Paragraph textAlign');
       return;
     case 'heading':
       assertAllowedAttributes(attrs, ['level', 'textAlign'], 'A heading');
       if (!Number.isInteger(attrs.level) || Number(attrs.level) < 1 || Number(attrs.level) > 6) {
         throw new HttpError(400, 'Heading level must be an integer from 1 to 6.');
       }
-      assertOptionalOneOf(attrs.textAlign, TEXT_ALIGN, 'Heading textAlign');
+      assertOptionalOneOf(attrs.textAlign, TEXT_ALIGNMENTS, 'Heading textAlign');
       return;
     case 'image': {
       assertAllowedAttributes(attrs, ['src', 'alt', 'title', 'width', 'style'], 'An image');
-      assertSafeImageSource(attrs.src);
+      if (!isSafeDocumentImageSource(attrs.src))
+        throw new HttpError(
+          400,
+          'An image src must be an http or https URL or a Docs asset path, up to 4096 characters with no spaces.',
+        );
       assertOptionalBoundedString(attrs.alt, 1_000, 'Image alt');
       assertOptionalBoundedString(attrs.title, 1_000, 'Image title');
       if (
@@ -830,11 +939,8 @@ function assertDocumentNodeAttributes(node: Record<string, unknown>): void {
       ) {
         throw new HttpError(400, 'Image width must be an integer from 1 to 4096.');
       }
-      if (
-        attrs.style != null &&
-        (typeof attrs.style !== 'string' || !/^max-width: *(?:100|[1-9]\d?)%;?$/i.test(attrs.style))
-      ) {
-        throw new HttpError(400, 'Image style may only contain a max-width percentage.');
+      if (attrs.style != null && !isAllowedImageStyle(attrs.style)) {
+        throw new HttpError(400, 'Image style may only set width and max-width.');
       }
       return;
     }
@@ -847,7 +953,7 @@ function assertDocumentNodeAttributes(node: Record<string, unknown>): void {
     case 'tableCell':
     case 'tableHeader': {
       assertAllowedAttributes(attrs, ['colspan', 'rowspan', 'colwidth', 'align'], 'A table cell');
-      assertOptionalOneOf(attrs.align, TEXT_ALIGN, 'Table cell align');
+      assertOptionalOneOf(attrs.align, TEXT_ALIGNMENTS, 'Table cell align');
       for (const key of ['colspan', 'rowspan'] as const) {
         const span = attrs[key];
         if (
@@ -878,18 +984,25 @@ function assertDocumentNodeAttributes(node: Record<string, unknown>): void {
       assertAllowedAttributes(attrs, ['start', 'tight', 'type'], 'An ordered list');
       assertOptionalBoolean(attrs.tight, 'List tight');
       assertOptionalOneOf(attrs.type, ['a', 'A', 'i', 'I', '1'], 'Ordered-list type');
+      // Markdown numbers a list from 0 up to nine digits.
       if (
         attrs.start !== undefined &&
         (!Number.isInteger(attrs.start) ||
-          Number(attrs.start) < 1 ||
-          Number(attrs.start) > 1_000_000)
+          Number(attrs.start) < 0 ||
+          Number(attrs.start) > 999_999_999)
       ) {
-        throw new HttpError(400, 'Ordered-list start must be a positive integer.');
+        throw new HttpError(400, 'Ordered-list start must be an integer from 0 to 999999999.');
       }
       return;
     case 'codeBlock':
       assertAllowedAttributes(attrs, ['language'], 'A code block');
       assertOptionalBoundedString(attrs.language, 100, 'Code-block language');
+      return;
+    case 'mention':
+      assertAllowedAttributes(attrs, ['username'], 'A mention');
+      if (!isMentionHandle(attrs.username)) {
+        throw new HttpError(400, 'A mention must name a handle.');
+      }
       return;
     default:
       assertAllowedAttributes(attrs, [], `A ${String(node.type)} node`);
@@ -991,7 +1104,8 @@ export async function updateDocument(
 ): Promise<DocumentRow | null> {
   assertValidDocumentContentJson(input.contentJson);
   assertValidMetadata(input.metadata);
-  return db.transaction(async (tx) => {
+  let mentionedBefore: string[] = [];
+  const document = await db.transaction(async (tx) => {
     const anchoredMove = input.previousSiblingId !== undefined || input.nextSiblingId !== undefined;
     if (anchoredMove && (input.parentId === undefined || input.position === undefined)) {
       throw new HttpError(400, 'An anchored move requires parentId and position.');
@@ -1001,6 +1115,7 @@ export async function updateDocument(
     }
     const current = await selectDocument(tx, projectId, documentId, userId);
     if (!current) return null;
+    mentionedBefore = documentMentionHandles(current);
     await lockDocumentActors(tx, [userId, current.ownerUserId]);
     if (input.parentId !== undefined || input.position !== undefined) {
       await tx.execute(
@@ -1093,6 +1208,16 @@ export async function updateDocument(
     }
     return mapDocumentForUser(tx, row, userId);
   });
+  if (document && (input.content !== undefined || input.contentJson !== undefined)) {
+    await fanOutTextMentions({
+      projectId,
+      documentId,
+      before: mentionedBefore,
+      after: documentMentionHandles(document),
+      actorUserId: userId,
+    });
+  }
+  return document;
 }
 
 async function ownedDocument(
@@ -1116,6 +1241,9 @@ export async function setDocumentAccess(
   userId: string,
   version: number,
   isPrivate: boolean,
+  // Replaces who a private page is shared with; left out, the list stays. A public
+  // page has none.
+  memberIds?: string[],
 ): Promise<DocumentRow | null> {
   return db.transaction(async (tx) => {
     // Lock the owner before the page can become private. Account deletion then
@@ -1123,16 +1251,26 @@ export async function setDocumentAccess(
     // this request stops without creating an ownerless private page.
     const visible = await selectDocument(tx, projectId, documentId, userId);
     if (!visible) return null;
-    await lockDocumentActors(tx, [userId, visible.ownerUserId]);
+    await lockDocumentActors(tx, [userId, visible.ownerUserId, ...(memberIds ?? [])]);
     const current = await ownedDocument(tx, projectId, documentId, userId, false);
     if (!current) return null;
     assertExpectedVersion(current, version);
     assertActive(current);
-    if (current.isPrivate === isPrivate) return mapDocumentForUser(tx, current, userId);
+    const shared = await memberIdsOf(tx, documentId);
+    let members: string[] | undefined;
+    if (!isPrivate) members = [];
+    else if (memberIds) members = await sharedMemberIds(projectId, userId, memberIds, shared);
+    const sameMembers =
+      members === undefined ||
+      (members.length === shared.length && members.every((id) => shared.includes(id)));
+    if (current.isPrivate === isPrivate && sameMembers) {
+      return mapDocumentForUser(tx, current, userId);
+    }
     const [row] = await tx
       .update(projectDocument)
       .set({
         isPrivate,
+        ...(isPrivate ? revokedDocumentShare : {}),
         updatedByUserId: userId,
         updatedAt: sql`now()`,
         version: sql`${projectDocument.version} + 1`,
@@ -1142,6 +1280,9 @@ export async function setDocumentAccess(
     if (!row) {
       throw new HttpError(409, 'This document changed elsewhere. Reload it before continuing.');
     }
+    // After the versioned update, which holds the page's row: two requests at once
+    // cannot both write the list.
+    if (members) await replaceMembers(tx, documentId, members);
     return mapDocumentForUser(tx, row, userId);
   });
 }
@@ -1167,6 +1308,14 @@ export async function transferDocumentOwnership(
       .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, ownerUserId)));
     if (!target) throw new HttpError(400, 'The new document owner must belong to this project.');
     if (current.ownerUserId === ownerUserId) return mapDocumentForUser(tx, current, userId);
+    await tx
+      .delete(projectDocumentMember)
+      .where(
+        and(
+          eq(projectDocumentMember.documentId, documentId),
+          eq(projectDocumentMember.userId, ownerUserId),
+        ),
+      );
     const [row] = await tx
       .update(projectDocument)
       .set({
@@ -1227,7 +1376,13 @@ async function documentSubtreeIds(
   const rows = await executor
     .select({ id: projectDocument.id, parentId: projectDocument.parentId })
     .from(projectDocument)
-    .where(and(eq(projectDocument.projectId, projectId), documentAccess(userId)));
+    .where(
+      and(
+        eq(projectDocument.projectId, projectId),
+        // A page shared with the caller is not theirs to archive along with its parent.
+        or(eq(projectDocument.isPrivate, false), eq(projectDocument.ownerUserId, userId)),
+      ),
+    );
   const ids = new Set<number>([documentId]);
   let changed = true;
   while (changed) {
@@ -1268,6 +1423,8 @@ export async function archiveDocument(
       .set({
         archivedAt: sql`now()`,
         archivedByAncestorId: null,
+        // An archived page has no public link, and restoring it does not bring the link back.
+        ...revokedDocumentShare,
         updatedByUserId: userId,
         updatedAt: sql`now()`,
         version: sql`${projectDocument.version} + 1`,
@@ -1290,6 +1447,7 @@ export async function archiveDocument(
         .set({
           archivedAt: sql`now()`,
           archivedByAncestorId: documentId,
+          ...revokedDocumentShare,
           updatedByUserId: userId,
           updatedAt: sql`now()`,
           version: sql`${projectDocument.version} + 1`,
@@ -1328,7 +1486,7 @@ export async function restoreDocument(
       const [parent] = await tx
         .select({ archivedAt: projectDocument.archivedAt })
         .from(projectDocument)
-        .where(and(eq(projectDocument.id, current.parentId), documentAccess(userId)));
+        .where(and(eq(projectDocument.id, current.parentId), documentVisibleTo(userId)));
       detachFromParent = !parent || parent.archivedAt !== null;
     }
     const [row] = await tx
@@ -1500,6 +1658,22 @@ export async function setDocumentPreference(
   return { isFavorite };
 }
 
+export async function setDocumentPinned(
+  projectId: number,
+  documentId: number,
+  userId: string,
+  isPinned: boolean,
+): Promise<{ isPinned: boolean } | null> {
+  const current = await selectDocument(db, projectId, documentId, userId);
+  if (!current) return null;
+  if (isPinned) {
+    assertActive(current);
+    if (current.isPrivate) throw new HttpError(400, 'A private document cannot be pinned.');
+  }
+  await db.update(projectDocument).set({ isPinned }).where(eq(projectDocument.id, documentId));
+  return { isPinned };
+}
+
 export async function listDocumentRevisions(
   projectId: number,
   documentId: number,
@@ -1625,7 +1799,7 @@ export async function restoreDocumentRevision(
         // A historical secret may never be restored into a public current row.
         // Restoring a public snapshot into a private page keeps the safer current
         // access level instead of unexpectedly publishing it.
-        ...(revision.isPrivate ? { isPrivate: true } : {}),
+        ...(revision.isPrivate ? { isPrivate: true, ...revokedDocumentShare } : {}),
         updatedByUserId: userId,
         updatedAt: sql`now()`,
         version: sql`${projectDocument.version} + 1`,

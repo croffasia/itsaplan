@@ -23,6 +23,12 @@ data:
   {{- with .Values.api.env.GIT_WEBHOOK_BASE_URL }}
   GIT_WEBHOOK_BASE_URL: {{ . | quote }}
   {{- end }}
+  {{- with .Values.api.env.WEB_PUSH_VAPID_PUBLIC_KEY }}
+  WEB_PUSH_VAPID_PUBLIC_KEY: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.api.env.WEB_PUSH_SUBJECT }}
+  WEB_PUSH_SUBJECT: {{ . | quote }}
+  {{- end }}
   {{- with .Values.api.env.SKIP_PRE_MIGRATION_BACKUP }}
   SKIP_PRE_MIGRATION_BACKUP: {{ . | quote }}
   {{- end }}

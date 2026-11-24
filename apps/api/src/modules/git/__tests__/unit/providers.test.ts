@@ -162,6 +162,27 @@ describe('repository provider events', () => {
     });
   });
 
+  it('reads a Gitea or Forgejo push to a pull request as an update', () => {
+    const headers = { 'x-gitea-event': 'pull_request', 'x-github-event': 'pull_request' };
+    const provider = detectProvider(headers)!;
+    expect(
+      provider.parse(
+        {
+          action: 'synchronized',
+          pull_request: {
+            number: 7,
+            title: 'Some change',
+            html_url: 'https://git.example/acme/site/pulls/7',
+            base: { ref: 'main' },
+            head: { ref: 'feature/MKT-42', sha: 'def456' },
+          },
+          repository: { full_name: 'acme/site', default_branch: 'main' },
+        },
+        headers,
+      ),
+    ).toMatchObject({ kind: 'pull_request', action: 'updated', number: 7, headSha: 'def456' });
+  });
+
   it('links a Forgejo branch under /src/branch/', () => {
     const headers = { 'x-forgejo-event': 'create', 'x-gitea-event': 'create' };
     const provider = detectProvider(headers)!;
@@ -253,5 +274,101 @@ describe('repository provider events', () => {
       branch: 'MKT-12-cleanup',
       headSha: null,
     });
+  });
+
+  it('reads a GitLab issue update as the fields its changes name', () => {
+    const headers = { 'x-gitlab-event': 'Issue Hook' };
+    expect(
+      detectProvider(headers)!.parse(
+        {
+          object_kind: 'issue',
+          object_attributes: {
+            iid: 4,
+            title: 'Crash',
+            description: 'Steps',
+            url: 'https://gitlab.example/acme/site/-/issues/4',
+            state: 'opened',
+            action: 'update',
+          },
+          labels: [{ title: 'bug' }],
+          changes: { labels: { previous: [], current: [{ title: 'bug' }] } },
+          project: { path_with_namespace: 'acme/site' },
+          user: { username: 'dev' },
+        },
+        headers,
+      ),
+    ).toMatchObject({
+      kind: 'issue',
+      action: 'updated',
+      number: 4,
+      state: 'open',
+      labels: ['bug'],
+      changed: ['labels'],
+    });
+  });
+
+  it('skips a confidential GitLab issue and a note on a merge request', () => {
+    const headers = { 'x-gitlab-event': 'Issue Hook' };
+    const provider = detectProvider(headers)!;
+    const project = { path_with_namespace: 'acme/site' };
+    expect(
+      provider.parse(
+        {
+          object_kind: 'issue',
+          object_attributes: { iid: 4, action: 'open', confidential: true },
+          project,
+        },
+        headers,
+      ),
+    ).toBeNull();
+    expect(
+      provider.parse(
+        {
+          object_kind: 'note',
+          object_attributes: { noteable_type: 'MergeRequest', note: 'LGTM' },
+          merge_request: { iid: 2 },
+          project,
+        },
+        headers,
+      ),
+    ).toBeNull();
+    expect(
+      provider.parse(
+        {
+          object_kind: 'note',
+          object_attributes: { noteable_type: 'Issue', note: 'Same here' },
+          issue: { iid: 4 },
+          user: { username: 'dev' },
+          project,
+        },
+        headers,
+      ),
+    ).toMatchObject({ kind: 'issue_comment', number: 4, body: 'Same here', author: 'dev' });
+  });
+
+  it('reads a Gitea label change and skips its comments on pull requests', () => {
+    const issueHeaders = { 'x-gitea-event': 'issues', 'x-github-event': 'issues' };
+    const repository = { full_name: 'acme/site' };
+    const issue = { number: 9, title: 'Crash', state: 'open', labels: [{ name: 'bug' }] };
+    expect(
+      detectProvider(issueHeaders)!.parse(
+        { action: 'label_updated', issue, repository },
+        issueHeaders,
+      ),
+    ).toMatchObject({ kind: 'issue', action: 'updated', changed: ['labels'], labels: ['bug'] });
+    expect(
+      detectProvider(issueHeaders)!.parse(
+        { action: 'label_cleared', issue, repository },
+        issueHeaders,
+      ),
+    ).toMatchObject({ changed: ['labels'], labels: [] });
+
+    const commentHeaders = { 'x-gitea-event': 'issue_comment', 'x-github-event': 'issue_comment' };
+    expect(
+      detectProvider(commentHeaders)!.parse(
+        { action: 'created', is_pull: true, issue, comment: { body: 'LGTM' }, repository },
+        commentHeaders,
+      ),
+    ).toBeNull();
   });
 });

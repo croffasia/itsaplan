@@ -34,8 +34,8 @@ function looksLikeCron(value: string): boolean {
   return parts.length === 5 && /^[\d*/,-]+$/.test(parts[0]);
 }
 
-// A schedule's times are stored and shown in UTC, which is the only zone a cron here
-// runs in, so the zone is written out with them.
+// A schedule's times are stored in UTC, the only zone a cron here runs in. A list of schedules
+// shows them in UTC too, with the zone written out.
 export function formatUtc(value: string): string {
   return `${new Intl.DateTimeFormat(getIntlLocale(), {
     dateStyle: 'medium',

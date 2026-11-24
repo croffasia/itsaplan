@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia';
 import { noContent } from '#shared/http';
 import { guards, entityGuard } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
+import { checkPermission } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { assertPublicHttpUrl } from '#shared/net';
 import { mcpTool } from '#mcp/generate';
@@ -19,8 +20,10 @@ import {
   createWebhook,
   getWebhook,
   updateWebhook,
+  rotateWebhookSecret,
   deleteWebhook,
   listWebhookDeliveries,
+  webhookEventTypes,
 } from './service';
 
 export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['Webhooks'] } })
@@ -35,15 +38,39 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
   })
   .get(
     '/projects/:projectKey/webhooks',
-    async ({ project }) => {
-      return listWebhooks(project.id);
+    async ({ project, user }) => {
+      const rows = await listWebhooks(project.id);
+      // The secret lets its holder sign deliveries the receiver trusts, so it goes only to
+      // a caller who may create or edit webhooks.
+      const canSeeSecret =
+        (await checkPermission(project.id, user, 'webhooks', 'edit')) ||
+        (await checkPermission(project.id, user, 'webhooks', 'create'));
+      return canSeeSecret ? rows : rows.map((row) => ({ ...row, secret: null }));
     },
     {
       permission: ['webhooks', 'read'],
       response: { 200: t.Array(WebhookResponse), ...accessErrors },
-      detail: { summary: "List a project's webhooks", ...mcpTool('list_webhooks') },
+      detail: {
+        summary: "List a project's webhooks",
+        description:
+          "List a project's webhooks. The signing secret is " +
+          'returned only to a user who can create or edit webhooks.',
+        ...mcpTool('list_webhooks'),
+      },
     },
   )
+
+  .get('/projects/:projectKey/webhooks/event-types', () => webhookEventTypes(), {
+    permission: ['webhooks', 'read'],
+    response: { 200: t.Array(t.String()), ...accessErrors },
+    detail: {
+      summary: 'List webhook events',
+      description:
+        'List the events a project webhook can subscribe ' +
+        'to: core events, then events the instance adds.',
+      ...mcpTool('list_webhook_event_types'),
+    },
+  })
 
   .post(
     '/projects/:projectKey/webhooks',
@@ -79,6 +106,28 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
       webhook: 'edit',
       response: { 200: WebhookResponse, ...commonErrors },
       detail: { summary: 'Update a webhook', ...mcpTool('update_webhook') },
+    },
+  )
+
+  .post(
+    '/webhooks/:webhookId/secret',
+    async ({ params }) => {
+      const rotated = await rotateWebhookSecret(params.webhookId);
+      if (!rotated) throw new HttpError(404, 'Webhook not found');
+      return rotated;
+    },
+    {
+      params: webhookParams,
+      webhook: 'edit',
+      response: { 200: WebhookResponse, ...commonErrors },
+      detail: {
+        summary: 'Rotate the webhook secret',
+        description:
+          'Issue a new signing secret. The next delivery is ' +
+          'signed with it, so give it to the receiver first.',
+        // The receiver rejects deliveries until it is given the new secret.
+        ...mcpTool('rotate_webhook_secret', { destructiveHint: true }),
+      },
     },
   )
 

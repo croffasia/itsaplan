@@ -3,8 +3,7 @@ import type { View } from '@/lib/api/endpoints/views';
 import { ViewIcon } from '@/utils/viewIcons';
 
 // The saved-view label (icon + name), shown in the tab and in the drag overlay. A
-// favorite carries a star, since its pinned position alone does not say why it is
-// first.
+// favorite carries a star, the mark of the views also listed in the sidebar.
 export default function ViewTabLabel({ view }: { view: View }) {
   return (
     <>

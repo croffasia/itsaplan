@@ -19,7 +19,7 @@ export default function WorkspaceDashboardPreview() {
 
   return (
     <SectionPageView title={t('title')} description={t('description')} wide>
-      <SectionPreview>
+      <SectionPreview feature="workspace-dashboard">
         <div className="flex flex-col gap-10">
           <div className="flex flex-wrap gap-y-4 rounded-xl bg-muted/50 py-4">
             <div className="grid min-w-0 flex-[4_1_440px] grid-cols-4 gap-4 px-6">

@@ -33,8 +33,7 @@ export const issueTypeRoutes = new Elysia({
       response: { 201: IssueTypeResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create an issue type',
-        description:
-          'Create an issue type. Set isDefault to make it the default type for new issues.',
+        description: 'Create an issue type. isDefault makes it the default type for new issues.',
         ...mcpTool('create_issue_type'),
       },
     },
@@ -59,7 +58,7 @@ export const issueTypeRoutes = new Elysia({
       response: { 200: IssueTypeResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Update an issue type',
-        description: "Update an issue type's name, color, or default flag.",
+        description: "Update an issue type's name, color or default flag.",
         ...mcpTool('update_issue_type'),
       },
     },

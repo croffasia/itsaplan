@@ -108,6 +108,20 @@ export const deleteInvite = (projectKey: string, inviteId: number) =>
 
 export const listTeamInvites = (teamId: number) => request<InviteRow[]>(`/teams/${teamId}/invites`);
 
+// Someone an invite into the team can be addressed to: an account of the instance
+// outside the team.
+export interface InviteCandidate {
+  userId: string;
+  name: string;
+  email: string;
+  image: string | null;
+}
+
+export const listInviteCandidates = (teamId: number, search: string) =>
+  request<InviteCandidate[]>(
+    `/teams/${teamId}/invites/candidates?${new URLSearchParams({ search })}`,
+  );
+
 export const createTeamInvite = (teamId: number, input: { email: string; role: InviteTeamRole }) =>
   request<InviteCreateResult>(`/teams/${teamId}/invites`, {
     method: 'POST',

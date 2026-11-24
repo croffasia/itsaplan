@@ -2,8 +2,14 @@ import { describe, it, expect } from 'bun:test';
 import { randomUUID } from 'node:crypto';
 import { db, workspace, team, project, projectColumn, issue, importJob, user } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { createLocalIssueAndRecord, type ClaimedImportJob } from '../../import-store';
-import { runRewrite } from '../../import-worker';
+import {
+  createLocalInitiativeAndRecord,
+  createLocalIssueAndRecord,
+  getInitiativeDescription,
+  type ClaimedImportJob,
+} from '../../import-store';
+import { runAttachments, runRewrite } from '../../import-worker';
+import type { SourceReader } from '../../reader';
 
 // Each test makes its own team, project and job, like import-store.test.ts. The job
 // row is 'paused' so no other test's claimDueImportJobs picks it up; runRewrite is
@@ -146,5 +152,39 @@ describe('runRewrite', () => {
     await runRewrite(linear.job);
 
     expect((await issueRow(first)).description).toBe(description);
+  });
+});
+
+describe('runAttachments', () => {
+  it('drops the file links of an initiative whose source lists no files for it', async () => {
+    const { job } = await makeLinearJob('ATO');
+    const initiativeId = await createLocalInitiativeAndRecord(
+      job.id,
+      {
+        sourceId: 'initiative-1',
+        title: 'Launch',
+        descriptionMarkdown: 'See [spec.pdf](import-attachment:file-1)',
+        status: 'active',
+        ownerEmail: null,
+        priority: null,
+        startDate: null,
+        targetDate: null,
+        labelSourceIds: [],
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      },
+      { projectId: job.projectId, ownerUserId: null, labelIds: [] },
+    );
+    const reader = { listIssueAttachments: async () => [] } as unknown as SourceReader;
+
+    await runAttachments({ ...job, phase: 'attachments' }, reader);
+    const [row] = await db
+      .select({ cursor: importJob.cursor })
+      .from(importJob)
+      .where(eq(importJob.id, job.id));
+    const cursor = row!.cursor as Record<string, unknown>;
+    await runAttachments({ ...job, phase: 'attachments', cursor }, reader);
+
+    expect(await getInitiativeDescription(initiativeId)).toBe('See spec.pdf');
   });
 });

@@ -1,10 +1,11 @@
 import type { CycleStatus } from '@/lib/api/endpoints/cycles';
+import type { ActionEffect } from '@/lib/api/endpoints/actions';
 import type { InitiativeStatus } from '@/lib/api/endpoints/initiatives';
 import { request } from '@/lib/api/core/client';
 import type { AgentRunTrigger } from '@/lib/api/endpoints/agents';
 import type { Checklist } from '@/lib/api/endpoints/checklists';
 import type { CustomFieldType } from '@/lib/api/endpoints/customFields';
-import type { DevelopmentLink } from '@/lib/api/endpoints/git';
+import type { DevelopmentLink, LinkedRepositoryIssue } from '@/lib/api/endpoints/git';
 
 // The subtask disposition as the delete route takes it: a query string, since a
 // DELETE carries no body.
@@ -73,6 +74,8 @@ export interface Issue {
   // activity) or only its title, description, state, type, priority, dates,
   // subtasks and links.
   shareExtended: boolean;
+  // When the share link stops working, or null when it never does.
+  shareExpiresAt: string | null;
   labelIds: number[];
   fieldValues: IssueFieldValueEntry[];
 }
@@ -95,6 +98,14 @@ export interface IssueSearchHit {
   dueDate: string | null;
   labelIds: number[];
   archived: boolean;
+}
+
+export interface CrossProjectIssueHit extends IssueSearchHit {
+  projectId: number;
+  projectRef: string;
+  projectKey: string;
+  projectName: string;
+  teamName: string;
 }
 
 export interface IssueFieldValue {
@@ -211,6 +222,12 @@ export interface IssueRef {
   archived: boolean;
 }
 
+// An issue under the ones a delete, an archive or a move acts on, with the issue it
+// hangs under.
+export interface SubtreeIssue extends IssueRef {
+  parentId: number;
+}
+
 // What a delete or an archive does with the issue's subtasks: they follow it
 // (deleted with a delete, archived with an archive), they are detached into
 // ordinary issues, or they move to another parent. Required whenever the issue
@@ -229,6 +246,8 @@ export interface IssueRelations extends IssueDetail {
   links: IssueLink[];
   parent: IssueRef | null;
   subtasks: IssueRef[];
+  // The issues above this one, from the top level down to its parent.
+  ancestors: IssueRef[];
 }
 
 // The issue as the detail routes return it.
@@ -236,6 +255,7 @@ export interface IssueWithWatchers extends IssueRelations {
   watchers: IssueWatcher[];
   checklists: Checklist[];
   development: DevelopmentLink[];
+  repositoryIssue: LinkedRepositoryIssue | null;
 }
 
 export interface NewIssueInput {
@@ -310,6 +330,12 @@ export const getIssueBySeq = (projectKey: string, seq: number, signal?: AbortSig
 
 export const listIssueCycles = (id: number) => request<IssueCycleEntry[]>(`/issues/${id}/cycles`);
 
+export const applyIssueAction = (id: number, actionId: number, effect: ActionEffect) =>
+  request<Issue>(`/issues/${id}/actions/${actionId}`, {
+    method: 'POST',
+    body: JSON.stringify({ effect }),
+  });
+
 export const updateIssue = (id: number, patch: IssuePatch) =>
   request<Issue>(`/issues/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
 
@@ -380,6 +406,24 @@ export const searchIssues = (projectKey: string, params: { q?: string; limit?: n
   return request<IssueSearchHit[]>(`/projects/${projectKey}/issues/search?${qs.toString()}`);
 };
 
+export const listSubtree = (projectKey: string, ids: number[]) =>
+  request<SubtreeIssue[]>(
+    `/projects/${encodeURIComponent(projectKey)}/issues/subtree?ids=${ids.join(',')}`,
+  );
+
+export const searchAllIssues = (params: {
+  q: string;
+  limit?: number;
+  perProjectLimit?: number;
+  excludeProjectId?: number;
+}) => {
+  const qs = new URLSearchParams({ q: params.q });
+  if (params.limit != null) qs.set('limit', String(params.limit));
+  if (params.perProjectLimit != null) qs.set('perProjectLimit', String(params.perProjectLimit));
+  if (params.excludeProjectId != null) qs.set('excludeProjectId', String(params.excludeProjectId));
+  return request<CrossProjectIssueHit[]>(`/issues/search?${qs.toString()}`);
+};
+
 // Relations between issues. The relation reads from the issue in the path: it
 // blocks / relates to / duplicates targetIssueId. Both ends show it.
 export const linkIssues = (issueId: number, targetIssueId: number, kind: IssueLinkInputKind) =>
@@ -416,7 +460,7 @@ export interface IssueAgentRun {
   id: number;
   agentId: number;
   username: string;
-  kind: string;
+  kind: 'internal' | 'external';
   status: 'pending' | 'success' | 'failed' | 'canceled';
   executionState: 'queued' | 'running' | 'success' | 'failed' | 'canceled';
   trigger: AgentRunTrigger;
@@ -427,6 +471,8 @@ export interface IssueAgentRun {
   contextTokens?: number;
   createdAt: string;
   startedAt: string | null;
+  // When an external agent first took the run; null for one it never received.
+  receivedAt: string | null;
   finishedAt: string | null;
   nextAttemptAt: string;
 }
@@ -448,6 +494,9 @@ export interface IssueAgentTraceSpan {
 
 export interface IssueAgentRunTrace {
   previousTraceId: string | null;
+  // This attempt's place among the recorded ones (oldest 1), and how many there are.
+  attempt: number;
+  attempts: number;
   trace: { traceId: string; status: string; startedAt: string; endedAt: string | null };
   spans: IssueAgentTraceSpan[];
 }

@@ -11,5 +11,21 @@
   "unfavorite": "Retirer des favoris",
   "shareBoard": "Partager le tableau",
   "newViewHint": "Créer une vue à partir des filtres et de l'affichage actuels",
-  "filter": "Filtrer"
+  "filter": "Filtrer",
+  "private": "Privée",
+  "privateHint": "Vous seul voyez cette vue",
+  "duplicate": "Dupliquer",
+  "copyName": "{name} (copie)",
+  "hide": "Masquer",
+  "show": "Afficher",
+  "hiddenViews": "Vues masquées ({count})",
+  "tabRow": "Barre d'onglets",
+  "resetTabRow": "Réinitialiser la barre",
+  "resetTabRowHint": "L'ordre du projet, vos vues privées ensuite, rien de masqué",
+  "pinProjectOrder": "Définir comme ordre du projet",
+  "pinProjectOrderHint": "Toute personne qui n'a pas organisé sa barre voit les vues du projet dans cet ordre",
+  "publish": "Ajouter au projet",
+  "publishHint": "Tout le projet la verra. Elle ne pourra plus redevenir privée.",
+  "published": "{name} est désormais une vue du projet",
+  "projectOrderSet": "Les vues du projet suivent désormais cet ordre"
 }

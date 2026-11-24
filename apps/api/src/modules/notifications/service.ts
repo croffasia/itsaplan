@@ -6,33 +6,50 @@ import {
   issue,
   issueActivity,
   project,
+  team,
   projectColumn,
+  projectDocument,
   type ActivityPayload,
 } from '@repo/db';
-import { and, desc, eq, inArray, lt, or, sql, isNull } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull, lt, or, sql, isNull } from 'drizzle-orm';
 import { addedMentionHandles, resolveMentionHandles, type MentionedUsers } from '#shared/mentions';
-import { autoWatchIssue, watcherUserIds } from '#modules/issues/watchers';
+import { autoWatchIssue, isEligibleIssueWatcher, watcherUserIds } from '#modules/issues/watchers';
+import { mentionReach } from '#modules/mentions/service';
 import { iso } from '#shared/lib';
 import { enqueueOutbound } from './outbound';
+import { documentVisibleTo } from '#modules/documents/access';
 
 // Inbox notifications. A notification is one (recipient, event) row: a user is told
-// about an issue they are involved in. What happens on the issue ('commented',
-// 'state_changed') goes to its watchers (issue_watcher, see modules/issues/watchers.ts);
-// what is addressed to one person ('assigned', 'mentioned') goes to them whether
-// they watch the issue or not, and subscribes them to it. The actor is never
+// about an issue they are involved in, or that a document mentions them. What happens
+// on the issue ('commented', 'state_changed') goes to its watchers (issue_watcher, see
+// modules/issues/watchers.ts); what is addressed to one person ('assigned',
+// 'mentioned') goes to them whether they watch the issue or not, and subscribes them
+// to it. A reaction to a comment ('reacted') goes to the comment's author alone. A
+// document has no watchers, so it only sends 'mentioned'. The actor is never
 // notified about their own action, and only project members receive notifications,
 // so agent bot users (assigned via delegate, not members) are excluded.
 
-export const NOTIFICATION_TYPES = ['assigned', 'mentioned', 'commented', 'state_changed'] as const;
+export const NOTIFICATION_TYPES = [
+  'assigned',
+  'mentioned',
+  'commented',
+  'state_changed',
+  'reacted',
+] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
+// Points at an issue, or at a document: then documentId is set and issueId is null.
 export interface NewNotificationRow {
   userId: string;
   projectId: number;
-  issueId: number;
+  issueId: number | null;
   sourceActivityId: number | null;
+  documentId?: number;
+  documentCommentId?: string | null;
   type: NotificationType;
   actorUserId: string | null;
+  // The emoji of a 'reacted' row.
+  reactionEmoji?: string;
 }
 
 // Keeps only the ids that are members of the project. Filters out non-members (an
@@ -53,14 +70,26 @@ async function actorName(id: string | null): Promise<string | null> {
   return rows[0]?.name ?? null;
 }
 
-async function insertNotifications(rows: NewNotificationRow[]): Promise<void> {
+// commentId names the comment the event is about, which its email and Telegram link to.
+async function insertNotifications(
+  rows: NewNotificationRow[],
+  commentId: number | null = null,
+): Promise<void> {
   if (rows.length === 0) return;
   const name = await actorName(rows[0].actorUserId);
-  await db.insert(notification).values(rows.map((r) => ({ ...r, actorName: name })));
-  // Fan out to the project's enabled delivery channels (email, Telegram). Best-effort:
-  // a delivery failure must not break the inbox insert or the domain mutation.
+  // Postgres returns the rows of a multi-row VALUES insert in the order of its VALUES.
+  const inserted = await db
+    .insert(notification)
+    .values(rows.map((r) => ({ ...r, actorName: name })))
+    .returning({ id: notification.id });
+  // Fan out to the project's enabled delivery channels (email, Telegram, push).
+  // Best-effort: a delivery failure must not break the inbox insert or the domain mutation.
   try {
-    await enqueueOutbound(rows, name);
+    await enqueueOutbound(
+      rows.map((r, i) => ({ ...r, id: inserted[i]!.id })),
+      name,
+      commentId,
+    );
   } catch (err) {
     console.error('[notifications] outbound enqueue failed:', err);
   }
@@ -103,7 +132,52 @@ export async function notifyComment(
       actorUserId: actor,
     });
   }
-  await insertNotifications(rows);
+  await insertNotifications(rows, comment.id);
+}
+
+// Tells the author of a comment that a member reacted to it. Nobody is told about a
+// reaction to their own comment, and the author is skipped unless they are a person
+// who can still read the project's issues (not an agent, not a member who left). A
+// member's reactions to one comment are told once, with the first emoji: more emoji,
+// or one taken back and added again, find that notification and stay quiet, so
+// reactions cannot fill an inbox. An author who deleted the notification is told
+// again by the next new reaction.
+export async function notifyReaction(
+  projectId: number,
+  comment: { issueId: number; id: number; actorUserId: string | null },
+  reactorUserId: string,
+  emoji: string,
+): Promise<void> {
+  const author = comment.actorUserId;
+  if (author == null || author === reactorUserId) return;
+  if (!(await isEligibleIssueWatcher(projectId, author))) return;
+  const [told] = await db
+    .select({ id: notification.id })
+    .from(notification)
+    .where(
+      and(
+        eq(notification.userId, author),
+        eq(notification.type, 'reacted'),
+        eq(notification.sourceActivityId, comment.id),
+        eq(notification.actorUserId, reactorUserId),
+      ),
+    )
+    .limit(1);
+  if (told) return;
+  await insertNotifications(
+    [
+      {
+        userId: author,
+        projectId,
+        issueId: comment.issueId,
+        sourceActivityId: comment.id,
+        type: 'reacted',
+        actorUserId: reactorUserId,
+        reactionEmoji: emoji,
+      },
+    ],
+    comment.id,
+  );
 }
 
 // Fan out the mentions an edit newly added to a comment. The handles the comment
@@ -129,15 +203,15 @@ export async function notifyEditedCommentMentions(
       type: 'mentioned' as const,
       actorUserId: comment.actorUserId,
     })),
+    comment.id,
   );
 }
 
 // Fan out the mentions an issue's description or markdown custom field gained. Only
 // the handles the write added are reached, so re-saving a text keeps quiet about the
 // people it already named. Being mentioned subscribes to the issue, the same as it
-// does in a comment. Only the members named are reached: the text describes the work
-// rather than addressing anyone, so an agent named in it is neither notified nor
-// given a run — an agent is addressed in a comment, or given an issue by delegation.
+// does in a comment. A text reaches only the members it names (see mentionReach): an
+// agent is addressed in a comment, or given an issue by delegation.
 export async function notifyTextMentions(input: {
   projectId: number;
   issueId: number;
@@ -150,7 +224,12 @@ export async function notifyTextMentions(input: {
   const { projectId, issueId, actorUserId: actor } = input;
   const handles = addedMentionHandles(input.before, input.after);
   if (handles.length === 0) return;
-  const { memberIds } = await resolveMentionHandles(projectId, handles);
+  const { memberIds } = await mentionReach(
+    projectId,
+    actor,
+    { on: 'issue', place: 'text' },
+    await resolveMentionHandles(projectId, handles),
+  );
   if (memberIds.length === 0) return;
   await autoWatchIssue(projectId, issueId, memberIds);
   await insertNotifications(
@@ -220,10 +299,37 @@ export async function notifyIssueChange(input: {
   await insertNotifications(rows);
 }
 
+// Fan out a mention in a document: in its text, or in the comment documentCommentId
+// names. The caller resolves who may read the document; the actor is left out here.
+export async function notifyDocumentMentions(input: {
+  projectId: number;
+  documentId: number;
+  documentCommentId: string | null;
+  actorUserId: string | null;
+  memberIds: string[];
+}): Promise<void> {
+  await insertNotifications(
+    input.memberIds
+      .filter((userId) => userId !== input.actorUserId)
+      .map((userId) => ({
+        userId,
+        projectId: input.projectId,
+        issueId: null,
+        sourceActivityId: null,
+        documentId: input.documentId,
+        documentCommentId: input.documentCommentId,
+        type: 'mentioned' as const,
+        actorUserId: input.actorUserId,
+      })),
+  );
+}
+
 // --- Inbox read + mutations ------------------------------------------------------
 
-// A notification enriched with the issue and project it points at, so the inbox can
-// render a row (identifier, title, project, actor, status) without extra calls.
+// A notification enriched with the issue or the document and the project it points at,
+// so the inbox can render a row (identifier or title, project, actor, status) without
+// extra calls. The issue fields are null on a document's notification, the document
+// fields on an issue's.
 export interface NotificationRow {
   id: number;
   type: NotificationType;
@@ -232,16 +338,25 @@ export interface NotificationRow {
   readAt: string | null;
   snoozedUntil: string | null;
   createdAt: string;
-  issueId: number;
-  issueSeq: number;
-  issueTitle: string;
-  issueStateType: string;
+  issueId: number | null;
+  issueSeq: number | null;
+  issueTitle: string | null;
+  issueStateType: string | null;
+  // Set while the issue comment it is about still exists.
+  issueCommentId: number | null;
+  documentId: number | null;
+  documentTitle: string | null;
+  documentIcon: string | null;
+  // Set when the mention is in a comment on the document.
+  documentCommentId: string | null;
   projectId: number;
   projectKey: string;
   projectName: string;
   // Only a 'state_changed' event has them, and only while its activity row lives.
   fromState: string | null;
   toState: string | null;
+  // Only a 'reacted' event has it.
+  reactionEmoji: string | null;
 }
 
 export interface NotificationCursor {
@@ -260,6 +375,19 @@ export interface NotificationFilters {
   projectId?: number;
   includeRead?: boolean;
   includeSnoozed?: boolean;
+  // Keeps only projects an MCP call may reach: the project and its team both have MCP on.
+  mcpOnly?: boolean;
+}
+
+function mcpReachable() {
+  return inArray(
+    notification.projectId,
+    db
+      .select({ id: project.id })
+      .from(project)
+      .innerJoin(team, eq(team.id, project.teamId))
+      .where(and(eq(project.mcpEnabled, true), eq(team.mcpEnabled, true))),
+  );
 }
 
 function notificationConditions(userId: string, f: NotificationFilters) {
@@ -268,6 +396,7 @@ function notificationConditions(userId: string, f: NotificationFilters) {
   if (f.fromUserId) conds.push(eq(notification.actorUserId, f.fromUserId));
   if (f.projectId != null) conds.push(eq(notification.projectId, f.projectId));
   if (f.includeRead === false) conds.push(isNull(notification.readAt));
+  if (f.mcpOnly) conds.push(mcpReachable());
   if (!f.includeSnoozed)
     conds.push(or(isNull(notification.snoozedUntil), lt(notification.snoozedUntil, sql`now()`))!);
   return conds;
@@ -281,14 +410,21 @@ function mapRow(r: {
   readAt: Date | null;
   snoozedUntil: Date | null;
   createdAt: Date;
-  issueId: number;
-  issueSeq: number;
-  issueTitle: string;
-  issueStateType: string;
+  issueId: number | null;
+  issueSeq: number | null;
+  issueTitle: string | null;
+  issueStateType: string | null;
+  activityId: number | null;
+  activityKind: string | null;
+  documentId: number | null;
+  documentTitle: string | null;
+  documentIcon: string | null;
+  documentCommentId: string | null;
   projectId: number;
   projectKey: string;
   projectName: string;
   payload: ActivityPayload | null;
+  reactionEmoji: string | null;
 }): NotificationRow {
   const stateChange = r.type === 'state_changed';
   return {
@@ -303,20 +439,36 @@ function mapRow(r: {
     issueSeq: r.issueSeq,
     issueTitle: r.issueTitle,
     issueStateType: r.issueStateType,
+    issueCommentId: r.activityKind === 'comment' ? r.activityId : null,
+    documentId: r.documentId,
+    documentTitle: r.documentTitle,
+    documentIcon: r.documentIcon,
+    documentCommentId: r.documentCommentId,
     projectId: r.projectId,
     projectKey: r.projectKey,
     projectName: r.projectName,
     fromState: stateChange ? (r.payload?.from?.value ?? null) : null,
     toState: stateChange ? (r.payload?.to?.value ?? null) : null,
+    reactionEmoji: r.reactionEmoji,
   };
 }
 
+// The document of a notification, joined only while the user may still open it: a page
+// made private after it mentioned someone is hidden from them unless it is shared with
+// them.
+function visibleDocument(userId: string) {
+  return and(eq(projectDocument.id, notification.documentId), documentVisibleTo(userId));
+}
+
+// A notification whose issue or document the user can still see.
+const hasTarget = or(isNotNull(notification.issueId), isNotNull(projectDocument.id));
+
 // One page of a user's inbox, newest first, keyset-paged on (created_at, id).
 // Only projects the user is still a member of: the row carries the issue title, its
-// current state and the project name read at query time, so a removed member must
-// not reach them. includeRead defaults to true (the inbox shows read notifications
-// too); a snoozed notification (snoozed_until still in the future) is hidden unless
-// includeSnoozed. limit is clamped to 1..100.
+// current state, the document title and the project name read at query time, so a
+// removed member must not reach them. includeRead defaults to true (the inbox shows
+// read notifications too); a snoozed notification (snoozed_until still in the future)
+// is hidden unless includeSnoozed. limit is clamped to 1..100.
 export async function listNotifications(
   userId: string,
   opts: { before?: NotificationCursor | null; limit?: number; filters?: NotificationFilters } = {},
@@ -340,25 +492,33 @@ export async function listNotifications(
       snoozedUntil: notification.snoozedUntil,
       createdAt: notification.createdAt,
       cursorTs: sql<string>`${notification.createdAt}::text`,
-      issueId: issue.id,
+      issueId: notification.issueId,
       issueSeq: issue.sequenceNumber,
       issueTitle: issue.title,
       issueStateType: projectColumn.stateType,
+      activityId: issueActivity.id,
+      activityKind: issueActivity.kind,
+      documentId: projectDocument.id,
+      documentTitle: projectDocument.title,
+      documentIcon: projectDocument.icon,
+      documentCommentId: notification.documentCommentId,
       projectId: project.id,
       projectKey: project.key,
       projectName: project.name,
       payload: issueActivity.payload,
+      reactionEmoji: notification.reactionEmoji,
     })
     .from(notification)
     .innerJoin(
       projectMember,
       and(eq(projectMember.projectId, notification.projectId), eq(projectMember.userId, userId)),
     )
-    .innerJoin(issue, eq(issue.id, notification.issueId))
     .innerJoin(project, eq(project.id, notification.projectId))
-    .innerJoin(projectColumn, eq(projectColumn.id, issue.columnId))
+    .leftJoin(issue, eq(issue.id, notification.issueId))
+    .leftJoin(projectColumn, eq(projectColumn.id, issue.columnId))
+    .leftJoin(projectDocument, visibleDocument(userId))
     .leftJoin(issueActivity, eq(issueActivity.id, notification.sourceActivityId))
-    .where(and(...conds))
+    .where(and(...conds, hasTarget))
     .orderBy(desc(notification.createdAt), desc(notification.id))
     .limit(limit + 1);
 
@@ -373,13 +533,18 @@ export async function listNotifications(
 
 // The number of unread, non-snoozed notifications for the inbox badge, optionally
 // scoped to one project. Counts only what listNotifications shows.
-export async function unreadCount(userId: string, projectId?: number): Promise<number> {
+export async function unreadCount(
+  userId: string,
+  projectId?: number,
+  mcpOnly = false,
+): Promise<number> {
   const conds = [
     eq(notification.userId, userId),
     isNull(notification.readAt),
     or(isNull(notification.snoozedUntil), lt(notification.snoozedUntil, sql`now()`)),
   ];
   if (projectId != null) conds.push(eq(notification.projectId, projectId));
+  if (mcpOnly) conds.push(mcpReachable());
   const [row] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(notification)
@@ -387,7 +552,8 @@ export async function unreadCount(userId: string, projectId?: number): Promise<n
       projectMember,
       and(eq(projectMember.projectId, notification.projectId), eq(projectMember.userId, userId)),
     )
-    .where(and(...conds));
+    .leftJoin(projectDocument, visibleDocument(userId))
+    .where(and(...conds, hasTarget));
   return row?.n ?? 0;
 }
 
@@ -397,11 +563,18 @@ export async function setNotificationRead(
   userId: string,
   id: number,
   read: boolean,
+  mcpOnly = false,
 ): Promise<boolean> {
   const rows = await db
     .update(notification)
     .set({ readAt: read ? sql`now()` : null })
-    .where(and(eq(notification.id, id), eq(notification.userId, userId)))
+    .where(
+      and(
+        eq(notification.id, id),
+        eq(notification.userId, userId),
+        mcpOnly ? mcpReachable() : undefined,
+      ),
+    )
     .returning({ id: notification.id });
   return rows.length > 0;
 }

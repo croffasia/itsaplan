@@ -1,19 +1,19 @@
-import { db, teamWorkspaceId } from '@repo/db';
+import { db, getJobSettings, teamWorkspaceId } from '@repo/db';
 import { getProjectTeamId } from '#modules/projects/service';
 import { getAgentSettings } from '#modules/settings/service';
-import { getLimits } from '#shared/limits';
+import { getLimits, getRunLimit } from '#shared/limits';
 import { framePrompt, peopleContext, runModePreamble } from './prompt/framing';
 import { agentRunStarted, recordAgentRunFinished } from './run-activity';
 import { runAdmissionDelay } from './run-admission';
 import { runRefusal } from './run-refusal';
 import {
-  agentRunConfig,
   claimDueRuns,
+  admitWorkspaceRun,
   countRunsAhead,
   deferRun,
   markRunFailed,
-  markRunExecuting,
   markRunSuccess,
+  runEnded,
   runRetryDelayMs,
   scheduleRunRetry,
   type ClaimedRun,
@@ -21,13 +21,13 @@ import {
 import { STEP_LIMIT_MESSAGE, runAgent } from './runtime';
 import { runThreadId } from './runtime/thread-ids';
 
+// How often a run at work checks that it was not canceled.
+const CANCEL_CHECK_MS = 5_000;
+
 // Drains the agent_run queue. The runtime, the model credentials and the limits are
 // all here, so the run is claimed and executed in the same process — the queue row is
 // the only thing a run is built from, so nothing about which project or which bot user
 // it acts as can be handed in from outside.
-
-// How long a run waits when its workspace has no free slot.
-const DEFERRED_RETRY_SECONDS = 30;
 
 export async function processAgentRuns(): Promise<void> {
   const runs = await claimDueRuns();
@@ -37,9 +37,10 @@ export async function processAgentRuns(): Promise<void> {
 async function processRun(run: ClaimedRun): Promise<void> {
   const teamId = await getProjectTeamId(run.projectId);
   const workspaceId = await teamWorkspaceId(teamId, db);
-  const { maxConcurrentRuns, maxRunSeconds } = await getLimits(workspaceId);
-  if (maxConcurrentRuns > 0 && (await countRunsAhead(workspaceId, run.id)) >= maxConcurrentRuns) {
-    await deferRun(run.id, DEFERRED_RETRY_SECONDS);
+  const limits = await getLimits(workspaceId);
+  const runLimit = await getRunLimit(workspaceId, limits);
+  if (runLimit > 0 && (await countRunsAhead(workspaceId, run.id)) >= runLimit) {
+    await deferRun(run.id, 30);
     return;
   }
   const wait = await runAdmissionDelay(run);
@@ -65,18 +66,20 @@ async function processRun(run: ClaimedRun): Promise<void> {
   const configuredTimeoutMs = runTimeoutMs(
     run.agentRunTimeoutSec,
     (await getAgentSettings()).maxRunSeconds,
-    maxRunSeconds,
+    limits.maxRunSeconds,
   );
   if (run.executionDeadline <= performance.now()) return;
+  const canceled = whenCanceled(run.id);
   try {
-    await agentRunStarted(run);
-    if (!(await markRunExecuting(run.id, run.attempts))) return;
+    if (!(await admitWorkspaceRun(run, workspaceId, runLimit))) return;
+    if (run.attempts === 1) await agentRunStarted(run);
     const timeoutMs = Math.floor(
       Math.min(configuredTimeoutMs, run.executionDeadline - performance.now()),
     );
     if (timeoutMs <= 0) {
-      await recordAgentRunFinished(run, 'failed');
-      await markRunFailed(run.id, 'Claim execution budget exhausted');
+      if (await markRunFailed(run.id, 'Claim execution budget exhausted')) {
+        await recordAgentRunFinished(run, 'failed');
+      }
       return;
     }
     const result = await runAgent(run.agentId, run.projectId, framePrompt(run), {
@@ -86,32 +89,55 @@ async function processRun(run: ClaimedRun): Promise<void> {
       scheduleId: run.scheduleId,
       runId: run.id,
       trigger: run.trigger,
-      contextPreamble: runModePreamble(run.trigger) + peopleContext(run),
-      abortSignal: AbortSignal.timeout(timeoutMs),
+      initiatorUserId: run.requesterUserId,
+      contextPreamble: runModePreamble(run) + peopleContext(run),
+      abortSignal: AbortSignal.any([AbortSignal.timeout(timeoutMs), canceled.signal]),
     });
+    // A canceled run is already ended, so nothing more is written for it.
+    if (canceled.signal.aborted) return;
     if (result.aborted) {
       // Mastra resolves generate() on abort, so the partial text would read as a success.
       // Not retried: a run that hits the time limit will hit it again.
-      await recordAgentRunFinished(run, 'failed');
-      await markRunFailed(run.id, `Timed out after ${Math.round(timeoutMs / 1000)}s`, result.text);
+      const error = `Timed out after ${Math.round(timeoutMs / 1000)}s`;
+      if (await markRunFailed(run.id, error, result.text)) {
+        await recordAgentRunFinished(run, 'failed');
+      }
       return;
     }
     if (result.stepLimit) {
-      await recordAgentRunFinished(run, 'failed');
-      await markRunFailed(run.id, STEP_LIMIT_MESSAGE);
+      if (await markRunFailed(run.id, STEP_LIMIT_MESSAGE)) {
+        await recordAgentRunFinished(run, 'failed');
+      }
       return;
     }
-    await recordAgentRunFinished(run, 'success');
-    await markRunSuccess(run.id, result.text, result.usage);
+    if (await markRunSuccess(run.id, result.text, result.usage)) {
+      await recordAgentRunFinished(run, 'success');
+    }
   } catch (error) {
+    if (canceled.signal.aborted) return;
     const message = error instanceof Error ? error.message : String(error);
-    if (run.attempts < agentRunConfig.maxAttempts()) {
+    if (run.attempts < (await getJobSettings()).agentRuns.maxAttempts) {
       await scheduleRunRetry(run.id, runRetryDelayMs(run.attempts), message);
       return;
     }
-    await recordAgentRunFinished(run, 'failed');
-    await markRunFailed(run.id, message);
+    if (await markRunFailed(run.id, message)) await recordAgentRunFinished(run, 'failed');
+  } finally {
+    canceled.stop();
   }
+}
+
+// Aborts once the run is canceled while at work, so its model call and tool loop stop
+// spending instead of running to an answer that is dropped.
+function whenCanceled(runId: number): { signal: AbortSignal; stop: () => void } {
+  const controller = new AbortController();
+  const timer = setInterval(() => {
+    runEnded(runId).then(
+      (ended) => ended && controller.abort(),
+      // A failed check is made again on the next tick.
+      () => {},
+    );
+  }, CANCEL_CHECK_MS);
+  return { signal: controller.signal, stop: () => clearInterval(timer) };
 }
 
 // The wall time a run gets: the agent's own limit or else the instance's maximum, never

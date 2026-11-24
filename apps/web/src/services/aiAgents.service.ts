@@ -16,8 +16,8 @@ import { useTranslations } from 'next-intl';
 import {
   type AiChatThread,
   type AiChatThreadPage,
-  listAiAgentThreads,
-  listAiAgentFavoriteThreads,
+  listChatThreads,
+  listFavoriteChatThreads,
   setAiAgentThreadFavorite,
   getAiAgentThreadMessages,
   renameAiAgentThread,
@@ -25,6 +25,7 @@ import {
 } from '@/lib/api/endpoints/agentChat';
 import {
   listAiAgents,
+  listProjectAgents,
   listAgentRuns,
   listAgentTools,
   createAiAgent,
@@ -52,6 +53,16 @@ export function useAiAgentsQuery(teamId: number | null, projectId?: number) {
   });
 }
 
+export function useAgentDirectoryQuery(
+  project: { id: number; ref: string; teamId: number } | null,
+) {
+  return useQuery({
+    queryKey: qk.agentDirectory(project?.teamId ?? 0, project?.id ?? 0),
+    queryFn: () => listProjectAgents(project!.ref),
+    enabled: project != null,
+  });
+}
+
 // An agent's triggered run history for the runs sidebar, paginated 25 at a time. Only
 // fetched when agentId is set, so the query runs when the sidebar opens.
 export function useAgentRuns(teamId: number | null, agentId: number | null) {
@@ -64,68 +75,83 @@ export function useAgentRuns(teamId: number | null, agentId: number | null) {
   });
 }
 
-// The caller's chat threads with one agent (the chat history), newest first and a
-// page at a time. Only fetched when an agent is selected. `q` searches them instead,
-// over every page, and is cached as a list of its own.
-export function useAgentThreadsQuery(projectKey: string | null, agentId: number | null, q = '') {
+// The caller's chat threads with the agents of a project (the chat history), newest first
+// and a page at a time. `q` searches them instead, over every page, and is cached as a
+// list of its own.
+export function useChatThreadsQuery(projectKey: string, q = '') {
   return useInfiniteQuery({
-    queryKey: qk.agentThreads(projectKey ?? '', agentId ?? 0, q),
-    queryFn: ({ pageParam }) => listAiAgentThreads(projectKey!, agentId!, pageParam, q),
+    queryKey: qk.chatThreads(projectKey, q),
+    queryFn: ({ pageParam }) => listChatThreads(projectKey, pageParam, q),
     initialPageParam: 0,
     getNextPageParam: (last) => last.nextPage ?? undefined,
-    enabled: projectKey != null && agentId != null,
   });
 }
 
-// The conversations starred with one agent, in one go. Read by the group on top of the
-// history and by the star in the tabs bar, which share this one request.
-export function useAgentFavoriteThreadsQuery(projectKey: string | null, agentId: number | null) {
+// The starred conversations, in one go. Read by the group on top of the history and by
+// the star of the open chat, which share this one request.
+export function useFavoriteChatThreadsQuery(projectKey: string) {
   return useQuery({
-    queryKey: qk.agentFavoriteThreads(projectKey ?? '', agentId ?? 0),
-    queryFn: () => listAiAgentFavoriteThreads(projectKey!, agentId!),
-    enabled: projectKey != null && agentId != null,
+    queryKey: qk.favoriteChatThreads(projectKey),
+    queryFn: () => listFavoriteChatThreads(projectKey),
   });
+}
+
+// What a change to one conversation names it by.
+type ThreadRef = Pick<AiChatThread, 'id' | 'agentId'>;
+
+// The loaded lists of a project with one conversation changed in all of them.
+function patchThread(
+  qc: QueryClient,
+  projectKey: string,
+  threadId: string,
+  change: Partial<AiChatThread>,
+) {
+  qc.setQueriesData<InfiniteData<AiChatThreadPage>>(
+    { queryKey: qk.chatThreadLists(projectKey) },
+    (prev) =>
+      prev && {
+        ...prev,
+        pages: prev.pages.map((page) => ({
+          ...page,
+          items: page.items.map((thread) =>
+            thread.id === threadId ? { ...thread, ...change } : thread,
+          ),
+        })),
+      },
+  );
+}
+
+function invalidateThreads(qc: QueryClient, projectKey: string) {
+  void qc.invalidateQueries({ queryKey: qk.chatThreadLists(projectKey) });
+  void qc.invalidateQueries({ queryKey: qk.favoriteChatThreads(projectKey) });
 }
 
 // Stars a conversation or takes the star off it. The star flips before the request is
 // answered — it is the whole feedback of the click — and rolls back if it fails.
-export function useToggleAgentThreadFavorite(projectKey: string | null, agentId: number | null) {
+export function useToggleChatThreadFavorite(projectKey: string) {
   const qc = useQueryClient();
-  const lists = () => qk.agentThreadLists(projectKey!, agentId!);
-  const favorites = () => qk.agentFavoriteThreads(projectKey!, agentId!);
+  const lists = qk.chatThreadLists(projectKey);
+  const favorites = qk.favoriteChatThreads(projectKey);
   return useMutation({
-    mutationFn: ({ threadId, favorite }: { threadId: string; favorite: boolean }) =>
-      setAiAgentThreadFavorite(projectKey!, agentId!, threadId, favorite),
-    onMutate: async ({ threadId, favorite }) => {
-      if (!projectKey || agentId == null) return;
+    mutationFn: ({ thread, favorite }: { thread: ThreadRef; favorite: boolean }) =>
+      setAiAgentThreadFavorite(projectKey, thread.agentId, thread.id, favorite),
+    onMutate: async ({ thread, favorite }) => {
       await Promise.all([
-        qc.cancelQueries({ queryKey: lists() }),
-        qc.cancelQueries({ queryKey: favorites() }),
+        qc.cancelQueries({ queryKey: lists }),
+        qc.cancelQueries({ queryKey: favorites }),
       ]);
       const previous = [
-        ...qc.getQueriesData({ queryKey: lists() }),
-        ...qc.getQueriesData({ queryKey: favorites() }),
+        ...qc.getQueriesData({ queryKey: lists }),
+        ...qc.getQueriesData({ queryKey: favorites }),
       ];
-      qc.setQueriesData<InfiniteData<AiChatThreadPage>>({ queryKey: lists() }, (prev) =>
-        prev
-          ? {
-              ...prev,
-              pages: prev.pages.map((page) => ({
-                ...page,
-                items: page.items.map((thread) =>
-                  thread.id === threadId ? { ...thread, favorite } : thread,
-                ),
-              })),
-            }
-          : prev,
-      );
+      patchThread(qc, projectKey, thread.id, { favorite });
       // The group holds the starred conversations themselves, so the one being starred
       // is moved into it and the one being unstarred out of it. A conversation no loaded
       // page holds is only added once the group is read again.
-      const starred = threadsOf(qc, lists()).find((thread) => thread.id === threadId);
-      qc.setQueryData<AiChatThreadPage>(favorites(), (prev) => {
+      const starred = threadsOf(qc, lists).find((loaded) => loaded.id === thread.id);
+      qc.setQueryData<AiChatThreadPage>(favorites, (prev) => {
         if (!prev) return prev;
-        const without = prev.items.filter((thread) => thread.id !== threadId);
+        const without = prev.items.filter((loaded) => loaded.id !== thread.id);
         if (!favorite) return { ...prev, items: without };
         return starred ? { ...prev, items: [{ ...starred, favorite: true }, ...without] } : prev;
       });
@@ -134,11 +160,7 @@ export function useToggleAgentThreadFavorite(projectKey: string | null, agentId:
     onError: (_err, _vars, context) => {
       for (const [key, data] of context?.previous ?? []) qc.setQueryData(key, data);
     },
-    onSettled: () => {
-      if (!projectKey || agentId == null) return;
-      void qc.invalidateQueries({ queryKey: favorites() });
-      void qc.invalidateQueries({ queryKey: lists() });
-    },
+    onSettled: () => invalidateThreads(qc, projectKey),
   });
 }
 
@@ -152,11 +174,10 @@ function threadsOf(qc: QueryClient, key: readonly unknown[]): AiChatThread[] {
 
 // The threads loaded so far, as one list: the pages of the history read until now plus
 // the starred ones, which the history keeps out of those pages. The pages it has not
-// reached are simply not in it: a tab of an older conversation falls back to its default
-// title.
-export function useLoadedAgentThreads(projectKey: string | null, agentId: number | null) {
-  const query = useAgentThreadsQuery(projectKey, agentId);
-  const favorites = useAgentFavoriteThreadsQuery(projectKey, agentId);
+// reached are simply not in it.
+export function useLoadedChatThreads(projectKey: string) {
+  const query = useChatThreadsQuery(projectKey);
+  const favorites = useFavoriteChatThreadsQuery(projectKey);
   return [
     ...(favorites.data?.items ?? []),
     ...(query.data?.pages.flatMap((page) => page.items) ?? []),
@@ -164,7 +185,8 @@ export function useLoadedAgentThreads(projectKey: string | null, agentId: number
 }
 
 // The transcript of one chat thread, to restore the conversation when a thread is
-// opened. Only fetched when a thread is selected.
+// opened. Only fetched when a thread is selected. What was said since it was read is held
+// by the chat alone, so a transcript nobody shows is not kept: it would open without that.
 export function useAgentThreadMessagesQuery(
   projectKey: string | null,
   agentId: number | null,
@@ -177,48 +199,30 @@ export function useAgentThreadMessagesQuery(
     initialPageParam: 0,
     getNextPageParam: (last) => last.nextPage ?? undefined,
     enabled: projectKey != null && agentId != null && threadId != null,
+    gcTime: 0,
   });
 }
 
-// Renames one of the caller's chat threads. The new title is put into the loaded
-// history right away: it is what the tab of that conversation is called.
-export function useRenameAgentThread(projectKey: string | null, agentId: number | null) {
+// Renames one of the caller's chat threads. The new title is put into the loaded history
+// right away: it is what the open chat is called.
+export function useRenameChatThread(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ threadId, title }: { threadId: string; title: string }) =>
-      renameAiAgentThread(projectKey!, agentId!, threadId, title),
-    onSuccess: (_res, { threadId, title }) => {
-      if (!projectKey || agentId == null) return;
-      qc.setQueriesData<InfiniteData<AiChatThreadPage>>(
-        { queryKey: qk.agentThreadLists(projectKey, agentId) },
-        (prev) =>
-          prev && {
-            ...prev,
-            pages: prev.pages.map((page) => ({
-              ...page,
-              items: page.items.map((thread) =>
-                thread.id === threadId ? { ...thread, title } : thread,
-              ),
-            })),
-          },
-      );
-      void qc.invalidateQueries({ queryKey: qk.agentFavoriteThreads(projectKey, agentId) });
+    mutationFn: ({ thread, title }: { thread: ThreadRef; title: string }) =>
+      renameAiAgentThread(projectKey, thread.agentId, thread.id, title),
+    onSuccess: (_res, { thread, title }) => {
+      patchThread(qc, projectKey, thread.id, { title });
+      void qc.invalidateQueries({ queryKey: qk.favoriteChatThreads(projectKey) });
     },
   });
 }
 
-// Deletes one of the caller's chat threads with an agent and refreshes the history
-// list it was in.
-export function useDeleteAgentThread(projectKey: string | null, agentId: number | null) {
+// Deletes one of the caller's chat threads and refreshes the history it was in.
+export function useDeleteChatThread(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (threadId: string) => deleteAiAgentThread(projectKey!, agentId!, threadId),
-    onSuccess: () => {
-      if (projectKey && agentId != null) {
-        void qc.invalidateQueries({ queryKey: qk.agentThreadLists(projectKey, agentId) });
-        void qc.invalidateQueries({ queryKey: qk.agentFavoriteThreads(projectKey, agentId) });
-      }
-    },
+    mutationFn: (thread: ThreadRef) => deleteAiAgentThread(projectKey, thread.agentId, thread.id),
+    onSuccess: () => invalidateThreads(qc, projectKey),
   });
 }
 

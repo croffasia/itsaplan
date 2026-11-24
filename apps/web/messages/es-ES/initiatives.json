@@ -3,6 +3,8 @@
   "newInitiative": "Nueva iniciativa",
   "notFound": "No se ha encontrado la iniciativa.",
   "options": "Opciones de la iniciativa",
+  "addFavorite": "Añadir a favoritos",
+  "removeFavorite": "Quitar de favoritos",
   "showDescription": "Mostrar descripción",
   "noDescription": "Sin descripción.",
   "noOwner": "Sin propietario",

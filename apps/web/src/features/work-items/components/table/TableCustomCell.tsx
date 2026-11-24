@@ -3,8 +3,8 @@ import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { Issue } from '@/lib/api/endpoints/issues';
 import { type Maps } from '@/utils/project';
 import { formatDateTimeRange, formatShortDate } from '@/utils/dates';
-import Avatar from '@/components/common/Avatar';
 import { colorDot } from '@/components/common/fields/colorDot';
+import { PersonValue } from '../shared/PersonValue';
 import { MarkdownCell } from './MarkdownCell';
 
 const DASH = <span className="text-muted-foreground/40">—</span>;
@@ -46,14 +46,10 @@ export function TableCustomCell({
   }
 
   if (field.fieldType === 'member') {
-    const member =
-      typeof entry?.value === 'string' ? maps.assigneeById.get(entry.value) : undefined;
-    if (!member) return <div>{DASH}</div>;
     return (
-      <div className="flex min-w-0 items-center gap-1.5 text-xs">
-        <Avatar name={member.name} image={member.image} className="size-4 text-[8px]" />
-        <span className="truncate">{member.name}</span>
-      </div>
+      <PersonValue
+        person={typeof entry?.value === 'string' ? maps.assigneeById.get(entry.value) : undefined}
+      />
     );
   }
 

@@ -11,6 +11,7 @@ import {
 import type { PageParams } from '@/lib/api/core/paging';
 import { qk } from '@/services/queryKeys';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
+import { usePermissions } from '@/hooks/usePermissions';
 import { revScope } from '@/utils/revScopes';
 
 // One page of the project's schedules. A page with a run still going is polled, so the
@@ -27,15 +28,21 @@ export function useAgentSchedules(projectKey: string, params: PageParams) {
   });
 }
 
+// The runner queue's marker names the agents and their runners, so it goes to readers of the
+// agents only. Anyone else polls.
 export function useAgentScheduleRuns(projectKey: string, scheduleId: number | null) {
+  const { can } = usePermissions();
+  const readsAgents = can('ai_agents', 'read');
   useLiveRefresh({
     scope: scheduleId == null ? null : revScope.runnerQueue,
     targets: [qk.agentScheduleRuns(projectKey, scheduleId ?? 0)],
+    enabled: readsAgents,
   });
   return useQuery({
     queryKey: qk.agentScheduleRuns(projectKey, scheduleId ?? 0),
     queryFn: () => listAgentScheduleRuns(projectKey, scheduleId!),
     enabled: scheduleId != null,
+    refetchInterval: readsAgents ? false : 5_000,
   });
 }
 

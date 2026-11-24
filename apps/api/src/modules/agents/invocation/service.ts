@@ -1,16 +1,16 @@
-import { db, aiAgent, agentChatMessage, agentRun } from '@repo/db';
+import { db, aiAgent, agentChatMessage, agentRun, getJobSettings } from '@repo/db';
 import { and, eq, inArray, isNotNull, lte, or, sql, exists } from 'drizzle-orm';
 import { signPayload } from '@repo/crypto';
 import { pinnedFetch } from '@repo/net';
-import { intEnv } from '#shared/lib';
-import {
-  agentRunConfig,
-  markRunFailed,
-  runRetryDelayMs,
-  scheduleRunRetry,
-} from '../core/run-queue';
+import { markRunFailed, runRetryDelayMs, scheduleRunRetry } from '../core/run-queue';
 import { recordAgentRunFinished } from '../core/run-activity';
-import { getRunnerAgent, takeNextRun, type RunnerAgent, type RunnerRun } from '../runner/service';
+import {
+  getRunnerAgent,
+  runTaken,
+  takeNextRun,
+  type RunnerAgent,
+  type RunnerRun,
+} from '../runner/service';
 import { finishMessage, takeNextMessage, type ClaimedChat } from '../chat/service';
 import { readInvocationSecret } from './secret';
 
@@ -20,15 +20,13 @@ import { readInvocationSecret } from './secret';
 // with the agent's API key. The request only hands the work over: a 2xx means the
 // endpoint took it.
 
-export const agentInvocationConfig = {
-  pollIntervalMs: () => intEnv('AGENT_INVOCATION_POLL_INTERVAL_MS', 1000),
-  timeoutMs: () => intEnv('AGENT_INVOCATION_TIMEOUT_MS', 15_000),
-};
-
 type InvocationEvent = 'agent.run' | 'agent.chat' | 'ping';
 
 // The receiver's response body, cut to what the test result shows.
 const MAX_RESPONSE_CHARS = 2000;
+
+// Runs, and chat answers, sent to one endpoint in one pass.
+const BATCH_SIZE = 5;
 
 export interface InvocationOutcome {
   ok: boolean;
@@ -67,7 +65,7 @@ async function invoke(
     apiUrl: (process.env.API_URL ?? '').replace(/\/+$/, '') || null,
     ...data,
   });
-  const timeoutMs = agentInvocationConfig.timeoutMs();
+  const { timeoutMs } = (await getJobSettings()).agentInvocations;
   const signal = AbortSignal.timeout(timeoutMs);
   const started = Date.now();
   try {
@@ -165,7 +163,7 @@ async function agentsWithDueWork(): Promise<string[]> {
 // together.
 async function takeBatch<T>(take: () => Promise<T | null>): Promise<T[]> {
   const items: T[] = [];
-  for (let i = 0; i < agentRunConfig.batchSize(); i++) {
+  for (let i = 0; i < BATCH_SIZE; i++) {
     const item = await take();
     if (!item) break;
     items.push(item);
@@ -177,14 +175,22 @@ async function takeBatch<T>(take: () => Promise<T | null>): Promise<T[]> {
 // run, and the last refusal fails it.
 async function sendRun(agent: RunnerAgent, target: Target, run: RunnerRun): Promise<void> {
   const outcome = await invoke(target, 'agent.run', agent, { run });
-  if (outcome.ok || outcome.timedOut) return;
+  // An endpoint that did not answer in time may already be working on the run. The run is
+  // the agent's then, so a start that fails on the issue is logged and the run goes on.
+  if (outcome.ok || outcome.timedOut) {
+    await runTaken(agent, run).catch((error: unknown) => {
+      console.error(`[agent-invocation] run ${run.id} could not start on its issue:`, error);
+    });
+    return;
+  }
   const error = outcome.error ?? 'The endpoint refused the run';
-  if (run.attempts < agentRunConfig.maxAttempts()) {
+  if (run.attempts < (await getJobSettings()).agentRuns.maxAttempts) {
     await scheduleRunRetry(run.id, runRetryDelayMs(run.attempts), error);
     return;
   }
-  await recordAgentRunFinished({ issueId: run.issueId, agentUserId: agent.userId }, 'failed');
-  await markRunFailed(run.id, error);
+  if (await markRunFailed(run.id, error)) {
+    await recordAgentRunFinished({ issueId: run.issueId, agentUserId: agent.userId }, 'failed');
+  }
 }
 
 // A person is waiting for the answer, so a refusal fails it at once instead of after

@@ -78,7 +78,7 @@ export default function GodSidebar() {
             href: godPath(section.slug),
             icon: section.icon,
             label: god.section(section.slug).label,
-            active: pathname.startsWith(`/god/${section.slug}`),
+            active: pathname === godPath(section.slug),
           }));
           return (
             <SidebarGroup key={group}>
@@ -91,7 +91,7 @@ export default function GodSidebar() {
                       href={godPath(section.slug)}
                       icon={section.icon}
                       label={god.section(section.slug).label}
-                      active={pathname.startsWith(`/god/${section.slug}`)}
+                      active={pathname === godPath(section.slug)}
                       disabled={false}
                     />
                   ))}

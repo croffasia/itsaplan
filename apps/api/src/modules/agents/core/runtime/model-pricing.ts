@@ -68,6 +68,8 @@ interface Table {
   byKey: Map<string, Priced>;
   // In provider, then model order, for a reader paging through them.
   listed: BuiltInPrice[];
+  // Every input size a long-input price starts from, smallest first.
+  longInputSizes: readonly number[];
 }
 
 let table: Table | null = null;
@@ -108,7 +110,8 @@ function pricedOf(cost: Cost): Priced | null {
 }
 
 function load(): Table {
-  const loaded: Table = { byKey: new Map(), listed: [] };
+  const loaded: Table = { byKey: new Map(), listed: [], longInputSizes: [] };
+  const sizes = new Set<number>();
   try {
     const data = JSON.parse(readFileSync(pricingPath(), 'utf-8')) as PricingData;
     for (const [provider, { models }] of Object.entries(data)) {
@@ -119,6 +122,7 @@ function load(): Table {
         const key = priceKey(provider, model.replace(/\./g, '-'));
         if (!loaded.byKey.has(key)) loaded.byKey.set(key, priced);
         loaded.listed.push({ provider, model, price: priced.base });
+        for (const band of priced.long) sizes.add(band.fromInput);
       }
     }
   } catch (error) {
@@ -127,6 +131,7 @@ function load(): Table {
   loaded.listed.sort(
     (a, b) => a.provider.localeCompare(b.provider) || a.model.localeCompare(b.model),
   );
+  loaded.longInputSizes = [...sizes].sort((a, b) => a - b);
   return loaded;
 }
 
@@ -184,13 +189,19 @@ export function listBuiltInPrices(
   return { items: rows.slice(window.offset, window.offset + window.limit), total: rows.length };
 }
 
+// Every input size from which some model of the table bills a call at a long-input price,
+// smallest first. Calls summed only with calls that pass the same sizes share a price
+// under any model: the dashboard sums them that way (analytics.ts, modelCalls).
+export function longInputSizes(): readonly number[] {
+  return prices().longInputSizes;
+}
+
 // What model calls cost, or null when neither the workspace's own prices nor the table
 // price such a model. `usage` is the sum of `calls` calls; a long-input price is chosen by
-// the input of one call, so a sum is priced as its average call. An own price has no
-// long-input prices. Cached reads and writes are billed at their own rates where the model
-// has them, and at the plain input rate where it does not.
-// Calls of very different sizes in one sum share a price; pricing each call would need
-// one row per call.
+// the input of one call, so a sum is priced as its average call. That is exact for a sum
+// of calls that pass the same longInputSizes, as the average then does too. An own price
+// has no long-input prices. Cached reads and writes are billed at their own rates where
+// the model has them, and at the plain input rate where it does not.
 export function estimateCost(
   provider: string,
   model: string,

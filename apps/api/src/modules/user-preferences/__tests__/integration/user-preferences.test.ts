@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { eq } from 'drizzle-orm';
+import { db, userPreference } from '@repo/db';
 import { api, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -6,6 +8,14 @@ import { resetDb } from '#tests/helpers/db';
 // Account preferences are self-scoped: a user only ever reads and writes their own
 // row, so there is no project or permission wiring to cover. A read before any write
 // returns the defaults instead of failing, and a patch leaves omitted fields alone.
+
+// Sign-up saves the browser's language with the release it ran. An account made before
+// that, or by SCIM, has no row.
+async function signUpWithoutPreferences() {
+  const u = await signUpTestUser();
+  await db.delete(userPreference).where(eq(userPreference.userId, u.userId));
+  return u;
+}
 
 describe('user preferences', () => {
   beforeEach(resetDb);
@@ -20,20 +30,25 @@ describe('user preferences', () => {
       timezone: 'UTC',
       locale: 'en',
       theme: 'system',
+      palette: 'default',
+      customTheme: null,
       issueOpenMode: 'panel',
       startPage: 'work-items',
       showChatByDefault: false,
+      agentRunsView: 'full',
       issueStatsOpen: true,
       issueStatsView: 'compact',
       issueActivityView: 'flat',
       autoWatch: true,
+      onboardingSeen: false,
+      showcaseSeen: false,
       lastProjectId: null,
       hotkeys: {},
     });
   });
 
   it('uses the preferred supported browser language when nothing was saved', async () => {
-    const u = await signUpTestUser();
+    const u = await signUpWithoutPreferences();
 
     const res = await authedApi(u.cookie, {
       'accept-language': 'ru;q=0.4,zh-CN;q=0.9,en;q=0.8',
@@ -44,7 +59,7 @@ describe('user preferences', () => {
   });
 
   it('saves the preferred browser language with the first preference update', async () => {
-    const u = await signUpTestUser();
+    const u = await signUpWithoutPreferences();
     const client = authedApi(u.cookie, {
       'accept-language': 'uk-UA,uk;q=0.9,en;q=0.8',
     });
@@ -63,13 +78,17 @@ describe('user preferences', () => {
       timezone: 'Europe/Berlin',
       locale: 'uk',
       theme: 'dark',
+      palette: 'nord',
       issueOpenMode: 'page',
       startPage: 'inbox',
       showChatByDefault: true,
+      agentRunsView: 'compact',
       issueStatsOpen: false,
       issueStatsView: 'timeline',
       issueActivityView: 'grouped',
       autoWatch: false,
+      onboardingSeen: true,
+      showcaseSeen: true,
       hotkeys: { 'issue.new': 'i' },
     });
 
@@ -79,13 +98,18 @@ describe('user preferences', () => {
       timezone: 'Europe/Berlin',
       locale: 'uk',
       theme: 'dark',
+      palette: 'nord',
+      customTheme: null,
       issueOpenMode: 'page',
       startPage: 'inbox',
       showChatByDefault: true,
+      agentRunsView: 'compact',
       issueStatsOpen: false,
       issueStatsView: 'timeline',
       issueActivityView: 'grouped',
       autoWatch: false,
+      onboardingSeen: true,
+      showcaseSeen: true,
       lastProjectId: null,
       hotkeys: { 'issue.new': 'i' },
     });
@@ -100,6 +124,61 @@ describe('user preferences', () => {
 
     expect(res.status).toBe(200);
     expect(res.data).toMatchObject({ timezone: 'Europe/Berlin', theme: 'light' });
+  });
+
+  it('keeps the custom theme when another palette is picked', async () => {
+    const u = await signUpTestUser();
+    const client = authedApi(u.cookie);
+    const customTheme = { accent: '#5e6ad2', background: '#101012', contrast: 30 };
+    await client.account.preferences.patch({ palette: 'custom', customTheme });
+
+    const res = await client.account.preferences.patch({ palette: 'github' });
+
+    expect(res.data).toMatchObject({ palette: 'github', customTheme });
+  });
+
+  it('rejects a custom palette without its colors', async () => {
+    const u = await signUpTestUser();
+
+    const res = await authedApi(u.cookie).account.preferences.patch({ palette: 'custom' });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects a custom theme color that is not a lowercase hex color', async () => {
+    const u = await signUpTestUser();
+    const client = authedApi(u.cookie);
+
+    for (const accent of ['red; color: blue', '#5E6AD2', '#5e6ad', '5e6ad2']) {
+      const res = await client.account.preferences.patch({
+        palette: 'custom',
+        customTheme: { accent, background: '#101012', contrast: 30 },
+      });
+      expect(res.status).toBe(400);
+    }
+  });
+
+  it('takes a contrast from 0 to 100 in whole steps', async () => {
+    const u = await signUpTestUser();
+    const client = authedApi(u.cookie);
+    const patch = (contrast: number) =>
+      client.account.preferences.patch({
+        palette: 'custom',
+        customTheme: { accent: '#5e6ad2', background: '#101012', contrast },
+      });
+
+    for (const contrast of [0, 100]) expect((await patch(contrast)).status).toBe(200);
+    for (const contrast of [-1, 101, 30.5]) expect((await patch(contrast)).status).toBe(400);
+  });
+
+  it('rejects an unknown palette', async () => {
+    const u = await signUpTestUser();
+
+    const res = await authedApi(u.cookie).account.preferences.patch({
+      palette: 'sepia' as 'nord',
+    });
+
+    expect(res.status).toBe(400);
   });
 
   it('rejects an unknown timezone', async () => {
@@ -125,6 +204,16 @@ describe('user preferences', () => {
 
     const res = await authedApi(u.cookie).account.preferences.patch({
       locale: 'de' as 'uk',
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects an unknown agent runs view', async () => {
+    const u = await signUpTestUser();
+
+    const res = await authedApi(u.cookie).account.preferences.patch({
+      agentRunsView: 'wide' as 'full',
     });
 
     expect(res.status).toBe(400);

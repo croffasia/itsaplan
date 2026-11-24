@@ -102,6 +102,38 @@ describe('SCIM group reconciliation', () => {
     );
   });
 
+  it('assigns a system role, and the default role when the mapping names none', async () => {
+    const setup = await setupScim();
+    const project = await createProject(setup.god, 'Marketing', 'MKT');
+    const viewer = await setup.god.api.god.roles.post({ name: 'Viewer', permissions: {} });
+    const member = (await setup.god.api.god.roles.get()).data!.find((r) => r.isDefault)!;
+    const ada = await setup.scim.scim.v2.Users.post(scimUserBody());
+    const bob = await setup.scim.scim.v2.Users.post(scimUserBody({ userName: 'bob@example.com' }));
+    const viewers = await provisionGroup(setup, 'Viewers', [ada.data!.id]);
+    const everyone = await provisionGroup(setup, 'Everyone', [bob.data!.id]);
+
+    const mapped = await setup.settings.groups({ groupId: viewers }).mappings.put({
+      mappings: [{ projectId: project.id, role: 'member', roleId: viewer.data!.id }],
+    });
+    await setup.settings.groups({ groupId: everyone }).mappings.put({
+      mappings: [{ projectId: project.id, role: 'member', roleId: null }],
+    });
+
+    expect(mapped.status).toBe(200);
+    const members = await membersOf(setup.god, 'MKT');
+    expect(members).toContainEqual(
+      expect.objectContaining({ userId: ada.data!.id, roleId: viewer.data!.id }),
+    );
+    expect(members).toContainEqual(
+      expect.objectContaining({ userId: bob.data!.id, roleId: member.id }),
+    );
+    const projects = await setup.settings.projects.get();
+    expect(projects.data!.find((p) => p.id === project.id)!.roles.map((r) => r.name)).toEqual([
+      'Member',
+      'Viewer',
+    ]);
+  });
+
   it('revokes membership when the member leaves the group', async () => {
     const setup = await setupScim();
     const project = await createProject(setup.god, 'Marketing', 'MKT');

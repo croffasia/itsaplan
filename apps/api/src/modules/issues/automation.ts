@@ -9,11 +9,12 @@ import type { ActivityActor } from './activity';
 // turns them on (modules/projects/service.ts). A closed issue is one sitting in a
 // column whose stateType is 'completed' or 'canceled'.
 //
-// The hierarchy is one level deep, so an issue is either a subtask or a parent and
-// only one of the two rules applies to it. Each rule writes through updateIssue, so
-// the moved issues get their own activity entries and webhooks — and re-enter this
-// function. That does not loop: a rule skips an issue already in the target column,
-// which is where the nested pass finds every issue it would move.
+// An issue in the middle of the hierarchy is both a subtask and a parent, so both
+// rules apply to it. Each rule writes through updateIssue, so the moved issues get
+// their own activity entries and webhooks — and re-enter this function, which
+// carries a close up and down the hierarchy one level at a time. That does not
+// loop: a rule skips an issue already closed, which is where the nested pass finds
+// every issue it would move.
 
 const CLOSED_STATE_TYPES = ['completed', 'canceled'];
 
@@ -25,11 +26,9 @@ export async function applySubtaskAutomation(
   if (!settings.completeParent && !settings.closeSubtasks) return;
   if (!(await isClosedColumn(after.columnId))) return;
 
-  if (after.parentId !== null) {
-    if (settings.completeParent) await completeParent(after.parentId, after, actorUserId);
-    return;
-  }
   if (settings.closeSubtasks) await closeSubtasks(after, actorUserId);
+  if (after.parentId !== null && settings.completeParent)
+    await completeParent(after.parentId, after, actorUserId);
 }
 
 // Moves the issue's parent into the column the issue was just closed in, once every

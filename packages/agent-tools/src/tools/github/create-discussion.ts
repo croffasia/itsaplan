@@ -12,6 +12,7 @@ interface Category {
 // first; a repository has at most 25 categories, all read at once.
 export const githubCreateDiscussion: CustomToolEntry = {
   key: 'github_create_discussion',
+  group: 'Discussions',
   label: 'GitHub Create Discussion',
   description:
     'Start a discussion in a GitHub repository, in one of its discussion categories. The body is markdown. An unknown category is answered with the list of the categories the repository has. Returns the new discussion with its number, which the other GitHub discussion tools take.',

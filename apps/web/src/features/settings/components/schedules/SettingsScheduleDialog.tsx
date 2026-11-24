@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { AiAgent } from '@/lib/api/endpoints/agents';
+import type { ProjectAgent } from '@/lib/api/endpoints/agents';
 import type { Column } from '@/lib/api/endpoints/columns';
 import type {
   AgentSchedule,
@@ -36,7 +36,7 @@ export function SettingsScheduleDialog({
   onClose,
 }: {
   projectKey: string;
-  agents: AiAgent[];
+  agents: ProjectAgent[];
   columns: Column[];
   initial?: AgentSchedule;
   saving: boolean;
@@ -139,8 +139,8 @@ export function SettingsScheduleDialog({
           </SettingsScheduleField>
         </div>
 
-        {selectedAgent?.kind === 'external' && !selectedAgent.invocationUrl && (
-          <SettingsScheduleRunnerHint agent={selectedAgent} />
+        {selectedAgent?.kind === 'external' && (
+          <SettingsScheduleRunnerHint agentId={selectedAgent.id} />
         )}
 
         {!initial && <SettingsScheduleTypeField value={type} onChange={setType} />}

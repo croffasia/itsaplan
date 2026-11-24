@@ -47,6 +47,7 @@ export default function DatePill({
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
+          fixedWeeks
           selected={parseDate(value) ?? undefined}
           disabled={disabled}
           onSelect={(d) => {

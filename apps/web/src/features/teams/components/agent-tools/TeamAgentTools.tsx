@@ -1,99 +1,107 @@
 import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { ResourcePermissions } from '@/lib/api/endpoints/roles';
 import type { ConfiguredTool } from '@/lib/api/endpoints/agentTools';
 import type { IntegrationMeta } from '@/lib/api/endpoints/integrations';
-import {
-  useConfiguredToolsPageQuery,
-  useDeleteConfiguredTool,
-} from '@/services/customTools.service';
+import { useDeleteConfiguredTool } from '@/services/customTools.service';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmptyState } from '@/components/common/page/EmptyState';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
-import ListPager from '@/components/common/ListPager';
-import { usePaging } from '@/hooks/usePaging';
-import { integrationLabel } from '@/utils/integrationLabels';
+import { integrationOf } from '@/utils/integrationLabels';
+import type { ToolSourceEntry } from '../../types/toolSource';
 import { ToolConfigRow } from './ToolConfigRow';
 
 // The team's configured tools as a table: a catalog tool bound to an integration
-// credential, callable by the internal agents of every project the team owns. Adding
-// happens in a dialog opened from the section header; deleting confirms first.
-// Enabling a configured tool on an agent is done in the agent editor.
+// credential, or a tool the team defines, callable by the agents of every project the
+// team owns. Adding happens in a dialog opened from the section header, a tool the team
+// defines opens in its source's panel; deleting confirms first. Enabling a configured
+// tool on an agent is done in the agent editor.
 export default function TeamAgentTools({
   teamId,
   catalog,
-  permissions,
+  tools,
+  pending,
+  canDelete,
+  searchTerm,
+  filtered,
+  sources,
+  onOpen,
 }: {
   teamId: number;
   catalog: IntegrationMeta[];
-  permissions: ResourcePermissions;
+  tools: ConfiguredTool[];
+  pending: boolean;
+  canDelete: boolean;
+  searchTerm: string | undefined;
+  filtered: boolean;
+  sources: ToolSourceEntry[];
+  onOpen: (tool: ConfiguredTool) => void;
 }) {
   const t = useTranslations('teams.tools');
   const tCommon = useTranslations('common');
   const [deleting, setDeleting] = useState<ConfiguredTool | null>(null);
-  const paging = usePaging();
-
-  const toolsQuery = useConfiguredToolsPageQuery(teamId, paging.params);
-  const tools = toolsQuery.data?.items ?? [];
-  const total = toolsQuery.data?.total ?? 0;
   const deleteTool = useDeleteConfiguredTool(teamId);
 
   const catalogTools = useMemo(() => catalog.flatMap((i) => i.tools), [catalog]);
   const catalogTool = (toolKey: string) => catalogTools.find((tool) => tool.key === toolKey);
-  const toolLabel = (toolKey: string) => catalogTool(toolKey)?.label ?? toolKey;
-  const toolScopes = (toolKey: string) => catalogTool(toolKey)?.scopes ?? [];
+
+  if (pending) return <ListSkeleton rows={3} rowClassName="h-12" />;
+  if (tools.length === 0) {
+    if (searchTerm !== undefined)
+      return (
+        <p className="text-sm text-muted-foreground">{t('noMatches', { query: searchTerm })}</p>
+      );
+    if (filtered) return <p className="text-sm text-muted-foreground">{t('noGroupMatches')}</p>;
+    return <EmptyState title={t('empty')} description={t('emptyHint')} />;
+  }
 
   return (
-    <>
-      {toolsQuery.isPending ? (
-        <ListSkeleton rows={3} rowClassName="h-12" />
-      ) : total === 0 ? (
-        <EmptyState title={t('empty')} description={t('emptyHint')} />
-      ) : (
-        <div className="space-y-4">
-          <div className="overflow-x-auto">
-            <Table className="min-w-[760px] table-fixed">
-              <colgroup>
-                <col className="w-[34%]" />
-                <col className="w-[52%]" />
-                <col className="w-[14%]" />
-              </colgroup>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="text-xs font-medium text-muted-foreground">
-                    {t('tool')}
-                  </TableHead>
-                  <TableHead className="text-xs font-medium text-muted-foreground">
-                    {t('scopes')}
-                  </TableHead>
-                  <TableHead className="text-end text-xs font-medium text-muted-foreground">
-                    {tCommon('actions')}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tools.map((tool) => (
-                  <ToolConfigRow
-                    key={tool.id}
-                    tool={tool}
-                    toolLabel={toolLabel(tool.toolKey)}
-                    integrationLabel={integrationLabel(catalog, tool.integrationKey)}
-                    scopes={toolScopes(tool.toolKey)}
-                    canDelete={permissions.delete}
-                    onDelete={() => setDeleting(tool)}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          <ListPager paging={paging} total={total} />
-        </div>
-      )}
+    <div className="overflow-x-auto">
+      <Table className="min-w-[760px] table-fixed">
+        <colgroup>
+          <col className="w-[50%]" />
+          <col className="w-[28%]" />
+          <col className="w-[13%]" />
+          <col className="w-[9%]" />
+        </colgroup>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="text-xs font-medium text-muted-foreground">{t('tool')}</TableHead>
+            <TableHead className="text-xs font-medium text-muted-foreground">
+              {t('scopes')}
+            </TableHead>
+            <TableHead className="text-xs font-medium text-muted-foreground">
+              {t('dateAdded')}
+            </TableHead>
+            <TableHead className="text-end text-xs font-medium text-muted-foreground">
+              {tCommon('actions')}
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {tools.map((tool) => {
+            const source = sources.find((one) => one.key === tool.source);
+            const Row = (source?.kind === 'source' && source.Row) || ToolConfigRow;
+            const integration = integrationOf(catalog, tool.integrationKey);
+            return (
+              <Row
+                key={tool.id}
+                tool={tool}
+                meta={catalogTool(tool.toolKey)}
+                integration={integration}
+                locked={source?.kind === 'locked' || !!integration.locked}
+                canDelete={canDelete}
+                onOpen={source?.kind === 'source' ? () => onOpen(tool) : undefined}
+                onDelete={() => setDeleting(tool)}
+              />
+            );
+          })}
+        </TableBody>
+      </Table>
 
       {deleting && (
         <ConfirmDialog
-          title={t('delete')}
+          title={t('deleteTitle', { tool: deleting.label })}
           confirmLabel={t('delete')}
           onConfirm={async () => {
             await deleteTool.mutateAsync(deleting.id);
@@ -101,11 +109,9 @@ export default function TeamAgentTools({
           }}
           onClose={() => setDeleting(null)}
         >
-          <div className="text-sm text-muted-foreground">
-            {t('deleteMessage', { tool: toolLabel(deleting.toolKey) })}
-          </div>
+          <div className="text-sm text-muted-foreground">{t('deleteMessage')}</div>
         </ConfirmDialog>
       )}
-    </>
+    </div>
   );
 }

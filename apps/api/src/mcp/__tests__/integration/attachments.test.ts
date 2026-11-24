@@ -100,6 +100,67 @@ describe('MCP attachments', () => {
     expect(stored.data!.description).toBe(`Before\n\n![shot](/media/attachments/${imageId}/raw)`);
   });
 
+  it('adds a file to a document and opens it as an image', async () => {
+    const { asOwner, client } = await setup();
+    const documentId = (
+      await asOwner.projects({ projectKey: 'MKT' }).documents.post({ title: 'Spec' })
+    ).data!.id;
+
+    const added = await callTool(client, {
+      name: 'add_document_asset',
+      arguments: {
+        projectKey: 'MKT',
+        documentId,
+        filename: 'shot.png',
+        contentBase64: IMAGE_BLOCK.data,
+        contentType: 'image/png',
+      },
+    });
+    expect(added.isError).toBe(false);
+    const asset = added.structuredContent?.data as { id: string; url: string; embedUrl: string };
+    // A document asset needs a session, so its url stays a path and is not made public.
+    expect(asset.url).toStartWith('/projects/');
+    expect(asset.embedUrl).toBe(`/protected-media${asset.url}`);
+
+    const viewed = await callTool(client, {
+      name: 'view_document_asset',
+      arguments: { projectKey: 'MKT', documentId, publicId: asset.id },
+    });
+    expect(viewed.content[1]).toEqual(IMAGE_BLOCK);
+    expect(named(viewed).images).toEqual([
+      { id: asset.id, filename: 'shot.png', contentType: 'image/png' },
+    ]);
+  });
+
+  it('copies a chat file into a document', async () => {
+    const { asOwner, client } = await setup();
+    const documentId = (
+      await asOwner.projects({ projectKey: 'MKT' }).documents.post({ title: 'Spec' })
+    ).data!.id;
+    const chatFile = await callTool(client, {
+      name: 'upload_chat_attachment',
+      arguments: {
+        projectKey: 'MKT',
+        filename: 'note.txt',
+        contentBase64: Buffer.from('hello').toString('base64'),
+      },
+    });
+
+    const copied = await callTool(client, {
+      name: 'add_document_asset_from_chat',
+      arguments: {
+        projectKey: 'MKT',
+        documentId,
+        chatAttachmentId: (chatFile.structuredContent?.data as { id: string }).id,
+      },
+    });
+    expect(copied.structuredContent).toMatchObject({
+      ok: true,
+      status: 201,
+      data: { filename: 'note.txt', sizeBytes: 5 },
+    });
+  });
+
   it('shows the images of an issue and lists the other files with their urls', async () => {
     const { client, issueId, imageId, noteId } = await setup();
     const listed = await client.listTools();

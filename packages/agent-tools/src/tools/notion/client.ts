@@ -8,8 +8,8 @@ import { sleep } from '../time';
 // with 529; both carry a Retry-After delay. The client waits and repeats the call, so
 // a rate limit slows a run down instead of failing it.
 
-const NOTION_BASE = 'https://api.notion.com/v1';
-const NOTION_VERSION = '2026-03-11';
+export const NOTION_BASE = 'https://api.notion.com/v1';
+export const NOTION_VERSION = '2026-03-11';
 const RETRY_STATUSES = new Set([429, 529]);
 const RETRIES = 5;
 const FALLBACK_RETRY_MS = 1000;

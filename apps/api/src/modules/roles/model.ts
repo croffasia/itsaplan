@@ -30,6 +30,9 @@ export const RoleResponse = t.Object({
   id: t.Number(),
   name: t.String(),
   isDefault: t.Boolean(),
+  system: t.Boolean({
+    description: 'A system role: every team assigns it, only god mode edits it.',
+  }),
   permissions: PermissionMatrixSchema,
   createdAt: t.String(),
 });
@@ -51,6 +54,12 @@ export const RoleUsageResponse = t.Object({
 export const PermissionCatalogResponse = t.Object({
   // `actions` is the full action set, in the order a matrix renders its columns;
   // each resource names the subset it supports.
-  resources: t.Array(t.Object({ key: t.String(), actions: t.Array(t.String()) })),
+  resources: t.Array(
+    t.Object({
+      key: t.String(),
+      actions: t.Array(t.String()),
+      from: t.Optional(t.String({ description: 'The resource it was split out of, if any.' })),
+    }),
+  ),
   actions: t.Array(t.String()),
 });

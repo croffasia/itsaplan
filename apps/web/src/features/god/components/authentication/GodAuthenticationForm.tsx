@@ -10,11 +10,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import GodSectionPage from '../GodSectionPage';
+import GodSignInLimitsSection from './GodSignInLimitsSection';
 import RegistrationModePicker from './RegistrationModePicker';
 import { MAX_INVITE_TTL_DAYS, useGodPolicyForm } from '../../hooks/useGodPolicyForm';
 
-// The registration policy and the sign-in options. The provider credentials live
-// under Integrations (Email provider, Auth provider).
+// The registration policy, the sign-in options and their rate limits. The provider
+// credentials live under Integrations (Email provider, Auth provider).
 export default function GodAuthenticationForm({
   authSettings,
 }: {
@@ -51,6 +52,7 @@ export default function GodAuthenticationForm({
             !policy.dirty ||
             !policy.inviteTtlDaysValid ||
             !policy.allowedEmailDomainsValid ||
+            !policy.limitsValid ||
             policy.saving
           }
         >
@@ -113,7 +115,7 @@ export default function GodAuthenticationForm({
           )}
         </SettingsSection>
 
-        <SettingsSection title={t('signIn')} description={t('signInHint')}>
+        <SettingsSection title={t('signIn')}>
           <SettingsCard className="divide-y divide-border/60">
             <SettingsRow
               title={t('emailPassword')}
@@ -165,6 +167,8 @@ export default function GodAuthenticationForm({
             />
           </SettingsCard>
         </SettingsSection>
+
+        <GodSignInLimitsSection policy={policy} />
       </div>
     </GodSectionPage>
   );

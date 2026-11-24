@@ -16,6 +16,8 @@ let client: QueryClient;
 let descriptors: Map<string, PropertyDescriptor | undefined>;
 const latest: Trace = {
   previousTraceId: 'old',
+  attempt: 2,
+  attempts: 2,
   trace: {
     traceId: 'new',
     status: 'success',
@@ -41,6 +43,8 @@ const latest: Trace = {
 };
 const earlier: Trace = {
   previousTraceId: null,
+  attempt: 1,
+  attempts: 2,
   trace: { ...latest.trace, traceId: 'old', startedAt: '2026-01-01T00:00:00Z' },
   spans: [{ ...latest.spans[0], spanId: 'tool-old', output: 'Earlier result' }],
 };
@@ -115,13 +119,13 @@ it('opens an earlier attempt and returns to the latest, keeping their outputs se
   assert.ok(!document.body.textContent?.includes('Earlier result'));
 });
 
-it('hides cached trace content after a refetch denies access', async () => {
+it('hides the steps once a refetch denies access', async () => {
   assert.ok(document.body.textContent?.includes('Private tool input'));
   await act(async () => {
     await client.invalidateQueries({ queryKey: qk.issueAgentRunTrace(1, 2), exact: true });
     await new Promise((resolve) => setTimeout(resolve, 0));
   });
-  assert.ok(document.querySelector('[role="alert"]'));
+  assert.ok(!document.body.textContent?.includes(issue.agentRuns.trace));
   assert.ok(!document.body.textContent?.includes('Private tool input'));
   assert.ok(!document.body.textContent?.includes('Latest result'));
   assert.equal(document.querySelectorAll('details').length, 0);

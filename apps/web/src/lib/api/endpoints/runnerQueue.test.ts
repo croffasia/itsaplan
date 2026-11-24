@@ -10,9 +10,9 @@ it('sends queue pagination as a single query string', async () => {
     return Response.json({ items: [], total: 0, page: 2, pageSize: 10, queued: 0, running: 0 });
   }) as typeof fetch;
   try {
-    await getRunnerQueue({ page: 2, pageSize: 10 });
+    await getRunnerQueue('/projects/team.RUN', { page: 2, pageSize: 10 });
     const url = new URL(requested);
-    assert.equal(url.pathname, '/agent-runs/queue');
+    assert.equal(url.pathname, '/projects/team.RUN/agent-runs/queue');
     assert.equal(url.searchParams.get('page'), '2');
     assert.equal(url.searchParams.get('pageSize'), '10');
     assert.equal(url.searchParams.has('?page'), false);

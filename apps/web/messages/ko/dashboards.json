@@ -12,11 +12,20 @@
   "saveChanges": "변경 사항 저장",
   "noWidgets": "아직 위젯이 없습니다. 위젯을 추가하여 대시보드를 구성해 보세요.",
   "addWidget": "위젯 추가",
-  "addWidgetTitle": "위젯 추가",
-  "addWidgetDescription": "이 대시보드에 추가할 위젯을 선택하세요.",
   "searchWidgets": "위젯 검색",
   "clearSearch": "검색어 지우기",
-  "noWidgetMatches": "“{query}”와 일치하는 위젯이 없습니다.",
+  "noWidgetMatches": "“{query}”와 일치하는 위젯이 없습니다. 다른 단어로 검색하거나 검색어를 지우세요.",
+  "noWidgetMatchesInGroup": "이 그룹에 “{query}”와 일치하는 위젯이 없습니다. 모든 그룹에서 찾으려면 전체를 선택하세요.",
+  "addPanel": {
+    "title": "위젯 추가",
+    "description": "위젯을 대시보드로 끌어다 놓으세요.",
+    "all": "전체",
+    "groupFilter": "위젯 그룹",
+    "added": "{count, plural, =1 {추가됨} other {#번 추가됨}}",
+    "status": "{count, plural, =0 {아직 추가한 위젯이 없습니다} other {위젯 #개 추가됨}}",
+    "undo": "마지막 항목 제거",
+    "new": "신규"
+  },
   "dragToMove": "드래그하여 이동",
   "widgetName": "위젯 이름",
   "widgetSettings": "위젯 설정",
@@ -30,48 +39,48 @@
   },
   "widgets": {
     "stat": {
-      "label": "개수",
-      "description": "필터 조건과 일치하는 이슈 수"
+      "label": "이슈 수",
+      "description": "필터와 일치하는 이슈 수, 예를 들어 열린 버그"
     },
     "recent_issues": {
       "label": "최근 이슈",
-      "description": "생성 또는 업데이트 시간을 기준으로 한 최근 이슈"
+      "description": "필터와 일치하는 새 이슈 또는 최근 업데이트된 이슈"
     },
     "activity_feed": {
       "label": "활동 피드",
-      "description": "작업자와 작업 유형으로 필터링할 수 있는 프로젝트 전체 변경 기록"
+      "description": "이슈의 최근 변경 사항과 변경한 사람"
     },
     "pulse": {
       "label": "활동 현황",
-      "description": "일별 활동을 보여주는 GitHub 스타일 히트맵"
+      "description": "시간, 일, 주 단위 프로젝트 활동 히트맵"
     },
     "throughput": {
       "label": "처리량",
-      "description": "주별 생성 및 종료된 이슈 비교"
+      "description": "주마다 생성되고 닫힌 이슈"
     },
     "burnup": {
       "label": "번업",
-      "description": "일별 전체 범위, 시작 및 완료된 이슈와 예상 완료일"
+      "description": "일별 전체 이슈와 완료된 이슈, 예상 완료일"
     },
     "breakdown": {
       "label": "분류",
-      "description": "상태, 우선순위, 유형 또는 담당자별 이슈 수"
+      "description": "상태, 우선순위, 유형, 담당자, 위임 대상별 이슈"
     },
     "agent_runs": {
       "label": "AI 에이전트 실행",
-      "description": "최근 AI 에이전트 실행 및 결과"
+      "description": "최근 실행과 실패, 대기 중 같은 상태"
     },
     "agent_health": {
       "label": "AI 에이전트 상태",
-      "description": "일정 기간 동안의 AI 에이전트 실행 성공률 및 실패 현황"
+      "description": "선택한 기간 동안 모든 에이전트의 성공률과 실패한 실행"
     },
     "webhook_health": {
       "label": "웹훅 상태",
-      "description": "웹훅 전송 결과 및 비활성화된 엔드포인트"
+      "description": "전송 결과와 연속 실패로 비활성화된 엔드포인트"
     },
     "agent_workload": {
       "label": "AI 에이전트 작업량",
-      "description": "AI 에이전트별 위임된 이슈 및 실행 결과"
+      "description": "에이전트별 위임된 열린 이슈와 성공한 실행"
     }
   },
   "breakdown": {
@@ -198,6 +207,7 @@
       "delegation": "위임으로 실행됨:",
       "field": "필드에서 실행됨:",
       "manual": "수동으로 실행됨",
+      "api": "API로 실행됨",
       "schedule": "예약 일정으로 실행됨",
       "status": "상태 변경으로 실행됨:",
       "event": "이벤트로 실행됨:"

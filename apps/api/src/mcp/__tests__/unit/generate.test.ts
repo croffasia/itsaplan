@@ -1,4 +1,7 @@
 import { describe, it, expect } from 'bun:test';
+import { t } from 'elysia';
+import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
+import type { JsonSchemaType } from '@modelcontextprotocol/sdk/validation/types.js';
 import { routeTools, mcpTool, type McpToolAnnotations } from '../../generate';
 import type { McpApp } from '../../types';
 
@@ -139,6 +142,42 @@ describe('mcp tool input schema', () => {
     );
     expect(tool.inputSchema.required).toContain('mode');
     expect(tool.inputSchema.required).not.toContain('targetId');
+  });
+
+  it('keeps a nullable field accepting null without the keyword Ajv refuses', () => {
+    const tool = toolWith({
+      body: t.Object({
+        typeId: t.Optional(t.Nullable(t.Integer())),
+        tags: t.Optional(t.Array(t.Nullable(t.String()))),
+      }),
+    });
+
+    expect(JSON.stringify(tool.inputSchema)).not.toContain('"nullable"');
+    const check = new AjvJsonSchemaValidator().getValidator(tool.inputSchema as JsonSchemaType);
+    expect(check({ thingId: 'a' }).valid).toBe(true);
+    expect(check({ thingId: 'a', typeId: null, tags: [null, 'x'] }).valid).toBe(true);
+    expect(check({ thingId: 'a', typeId: true }).valid).toBe(false);
+  });
+
+  // Elysia builds a numeric field as a numeric string with `default: 0` beside the number,
+  // and repeats the field's options on the number, so a client saw a default of 0 and the
+  // model read every description twice.
+  it('describes a numeric field once and gives it only the default the route declares', () => {
+    const tool = toolWith({
+      query: t.Object({
+        limit: t.Optional(t.Numeric({ description: 'Max results.' })),
+        page: t.Optional(t.Numeric({ default: 1 })),
+        typeId: t.Optional(t.Nullable(t.Integer({ description: 'Type id.' }))),
+      }),
+    });
+
+    const schema = JSON.stringify(tool.inputSchema);
+    expect(schema.match(/Max results\./g)).toHaveLength(1);
+    expect(schema.match(/Type id\./g)).toHaveLength(1);
+    expect(schema).not.toContain('"default":0');
+    expect(JSON.stringify(tool.inputSchema.properties.page)).toContain('"default":1');
+    const check = new AjvJsonSchemaValidator().getValidator(tool.inputSchema as JsonSchemaType);
+    expect(check({ thingId: 'a', limit: '5', page: 2, typeId: null }).valid).toBe(true);
   });
 
   it('reports whether the route declares a body, whatever the method', () => {

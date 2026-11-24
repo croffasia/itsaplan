@@ -13,7 +13,7 @@ export const markdownTitle = (filename: string) =>
     .replace(/\.(md|markdown)$/i, '')
     .trim();
 
-export const markdownJson = (editor: Editor, markdown: string): JSONContent =>
+const markdownJson = (editor: Editor, markdown: string): JSONContent =>
   createDocument(
     editor.storage.markdown.parser.parse(markdown),
     editor.schema,

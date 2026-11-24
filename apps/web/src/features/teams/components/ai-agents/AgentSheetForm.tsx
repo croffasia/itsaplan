@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Sparkles, Wrench } from 'lucide-react';
 import type { AiAgent } from '@/lib/api/endpoints/agents';
-import { teamSectionPath } from '@/utils/paths';
 import {
   useCreateAiAgent,
   useUpdateAiAgent,
@@ -31,8 +29,8 @@ import {
 } from '@/services/customTools.service';
 import { Button } from '@/components/ui/button';
 import { useAgentCan, useAgentSection } from '../../context/agentSection';
-import { AgentCapabilityList } from './AgentCapabilityList';
-import { AgentEmptyNotice } from './AgentEmptyNotice';
+import { AgentSkillsPanel } from './AgentSkillsPanel';
+import { AgentToolsPanel } from './AgentToolsPanel';
 import TeamAiAgentFields, { AGENT_EXPANDED_WIDTH } from './TeamAiAgentFields';
 import {
   initialAgentValue,
@@ -42,24 +40,21 @@ import {
   toUpdatePatch,
   type AgentFormValue,
 } from '../../utils/agentForm';
-import { integrationLabel } from '@/utils/integrationLabels';
 import { useTranslations } from 'next-intl';
 
 // The Edit tab of the agent sheet, used for both create and edit. With no agent it
 // creates one; once created (onCreated lifts it to the sheet) the same form switches
 // to editing that agent without remounting, so the entered values stay. The kind can
 // be chosen on create but not changed after. A new external agent's key is revealed
-// once in the API key section. An internal agent's enabled skills are managed once
-// the agent exists (they are linked through a separate endpoint).
+// once in the API key section. An internal agent's skills are linked through a separate
+// endpoint, right after the agent is created or saved.
 export function AgentSheetForm({
   agent,
   expanded = false,
   onCreated,
 }: {
   agent: AiAgent | null;
-  // The project a new agent starts attached to, set when the sheet is opened from
-  // inside one. An agent reaches nothing until it works in a project, so creating it
-  // there means creating it for that project.
+  // The full-width layout: one column of sections, with the footer sized to match.
   expanded?: boolean;
   onCreated: (agent: AiAgent) => void;
 }) {
@@ -109,13 +104,8 @@ export function AgentSheetForm({
     teamId,
     agent && agent.kind === 'internal' && canManageSkills ? agent.id : null,
   );
-  const toolsLibraryQuery = useConfiguredToolOptionsQuery(
-    value.kind === 'internal' && canManageTools ? teamId : null,
-  );
-  const agentToolsQuery = useAgentToolLinksQuery(
-    teamId,
-    agent && agent.kind === 'internal' && canManageTools ? agent.id : null,
-  );
+  const toolsLibraryQuery = useConfiguredToolOptionsQuery(canManageTools ? teamId : null);
+  const agentToolsQuery = useAgentToolLinksQuery(teamId, agent && canManageTools ? agent.id : null);
 
   const createAgent = useCreateAiAgent(teamId);
   const updateAgent = useUpdateAiAgent(teamId);
@@ -184,17 +174,17 @@ export function AgentSheetForm({
     if ('username' in patch) setUsernameEdited((patch.username ?? '').trim() !== '');
   }
 
-  function toggleSkill(id: number, on: boolean) {
+  function toggleSkill(ids: number[], on: boolean) {
     setSkillIds((prev) => {
       const base = prev ?? [];
-      return on ? [...new Set([...base, id])] : base.filter((x) => x !== id);
+      return on ? [...new Set([...base, ...ids])] : base.filter((x) => !ids.includes(x));
     });
   }
 
-  function toggleTool(id: number, on: boolean) {
+  function toggleTool(ids: number[], on: boolean) {
     setToolIds((prev) => {
       const base = prev ?? [];
-      return on ? [...new Set([...base, id])] : base.filter((x) => x !== id);
+      return on ? [...new Set([...base, ...ids])] : base.filter((x) => !ids.includes(x));
     });
   }
 
@@ -207,7 +197,7 @@ export function AgentSheetForm({
       if (res.agent.kind === 'internal' && canManageSkills && skillIds && skillIds.length > 0) {
         await setAgentSkills.mutateAsync({ agentId: res.agent.id, skillIds });
       }
-      if (res.agent.kind === 'internal' && canManageTools && toolIds && toolIds.length > 0) {
+      if (canManageTools && toolIds && toolIds.length > 0) {
         await setAgentTools.mutateAsync({ agentId: res.agent.id, agentToolIds: toolIds });
       }
       await saveJoinsNewProjects(res.agent.id);
@@ -218,7 +208,7 @@ export function AgentSheetForm({
       if (agent.kind === 'internal' && canManageSkills && skillIds !== null) {
         await setAgentSkills.mutateAsync({ agentId: agent.id, skillIds });
       }
-      if (agent.kind === 'internal' && canManageTools && toolIds !== null) {
+      if (canManageTools && toolIds !== null) {
         await setAgentTools.mutateAsync({ agentId: agent.id, agentToolIds: toolIds });
       }
       await saveJoinsNewProjects(agent.id);
@@ -228,65 +218,18 @@ export function AgentSheetForm({
   const skillsLibrary = skillsLibraryQuery.data ?? [];
   const showSkills = value.kind === 'internal' && canManageSkills;
 
-  // The Skills section body (the fields layout wraps it in a section). The configured
-  // skill library the agent may load.
   const skillsContent = showSkills ? (
-    skillsLibrary.length === 0 ? (
-      <AgentEmptyNotice
-        icon={Sparkles}
-        title={t('noSkills')}
-        hint={t('noSkillsHint')}
-        href={teamSectionPath(team?.ref ?? String(teamId), 'agent-skills')}
-        linkLabel={t('goToSkills')}
-      />
-    ) : (
-      <AgentCapabilityList
-        searchPlaceholder={t('searchSkills')}
-        onToggle={toggleSkill}
-        items={skillsLibrary.map((skill) => ({
-          id: skill.id,
-          checked: selectedSkills.includes(skill.id),
-          title: skill.name,
-          subtitle: skill.description || t('noDescription'),
-          search: `${skill.name} ${skill.description ?? ''}`.toLowerCase(),
-        }))}
-      />
-    )
+    <AgentSkillsPanel teamId={teamId} selected={selectedSkills} onToggle={toggleSkill} />
   ) : null;
 
   const toolsLibrary = toolsLibraryQuery.data ?? [];
-  const showTools = value.kind === 'internal' && canManageTools;
-
-  // The Tools section body: the configured custom tools the agent may call.
-  const toolsContent = showTools ? (
-    toolsLibrary.length === 0 ? (
-      <AgentEmptyNotice
-        icon={Wrench}
-        title={t('noTools')}
-        hint={t('noToolsHint')}
-        href={teamSectionPath(team?.ref ?? String(teamId), 'agent-tools')}
-        linkLabel={t('goToTools')}
-      />
-    ) : (
-      <AgentCapabilityList
-        searchPlaceholder={t('searchTools')}
-        onToggle={toggleTool}
-        items={toolsLibrary.map((tool) => {
-          const toolLabel =
-            catalog.flatMap((i) => i.tools).find((t) => t.key === tool.toolKey)?.label ??
-            tool.toolKey;
-          const integration = integrationLabel(catalog, tool.integrationKey);
-          return {
-            id: tool.id,
-            checked: selectedTools.includes(tool.id),
-            title: toolLabel,
-            subtitle: tool.credentialLabel ?? undefined,
-            group: integration,
-            search: `${toolLabel} ${integration} ${tool.credentialLabel ?? ''}`.toLowerCase(),
-          };
-        })}
-      />
-    )
+  const toolsContent = canManageTools ? (
+    <AgentToolsPanel
+      teamId={teamId}
+      catalog={catalog}
+      selected={selectedTools}
+      onToggle={toggleTool}
+    />
   ) : null;
 
   // "enabled / available" over each capability library, shown in the section header

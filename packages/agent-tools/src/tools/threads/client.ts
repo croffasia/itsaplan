@@ -5,7 +5,7 @@ import { sleep } from '../time';
 // integration credential's long-lived user access token as the access_token query
 // param. User-scoped endpoints are addressed as "me", which the API resolves to the
 // token owner, so no numeric user id needs to be configured.
-const THREADS_BASE = 'https://graph.threads.net/v1.0';
+export const THREADS_BASE = 'https://graph.threads.net/v1.0';
 
 // The access token from the integration credential.
 export function threadsToken(credential: ToolConfig): string {

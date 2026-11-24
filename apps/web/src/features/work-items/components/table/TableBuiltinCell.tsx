@@ -8,10 +8,10 @@ import {
   AssigneeAvatar,
   DateBadge,
   DelegateAvatar,
-  LabelBadge,
 } from '@/features/issue/components/shared/IssueBadges';
 import { PriorityIcon, StateIcon } from '@/features/issue/components/shared/IssueIcons';
 import { type TableColumn } from '../../utils/table';
+import { TableLabelsCell } from './TableLabelsCell';
 
 const DASH = <span className="text-muted-foreground/40">—</span>;
 
@@ -81,7 +81,7 @@ export function TableBuiltinCell({
       const assignee =
         issue.assigneeUserId != null ? maps.assigneeById.get(issue.assigneeUserId) : undefined;
       return (
-        <div className="flex justify-end">
+        <div className="flex">
           {assignee ? <AssigneeAvatar name={assignee.name} image={assignee.image} /> : DASH}
         </div>
       );
@@ -90,7 +90,7 @@ export function TableBuiltinCell({
       const delegate =
         issue.delegateUserId != null ? maps.assigneeById.get(issue.delegateUserId) : undefined;
       return (
-        <div className="flex justify-end">
+        <div className="flex">
           {delegate ? <DelegateAvatar name={delegate.name} image={delegate.image} /> : DASH}
         </div>
       );
@@ -105,18 +105,11 @@ export function TableBuiltinCell({
       return (
         <div className="truncate text-xs text-muted-foreground">{issue.cycle?.name ?? DASH}</div>
       );
-    case 'labels':
-      return (
-        <div className="flex min-w-0 flex-wrap items-center gap-1 overflow-hidden">
-          {issue.labelIds.length > 0
-            ? issue.labelIds.map((id) => {
-                const label = maps.labelById.get(id);
-                if (!label) return null;
-                return <LabelBadge key={id} color={label.color} name={label.name} />;
-              })
-            : DASH}
-        </div>
-      );
+    case 'labels': {
+      const labels = issue.labelIds.flatMap((id) => maps.labelById.get(id) ?? []);
+      if (labels.length === 0) return <div className="text-xs">{DASH}</div>;
+      return <TableLabelsCell labels={labels} />;
+    }
     case 'estimatePoints':
       return <div className="text-xs text-muted-foreground">{issue.estimatePoints ?? DASH}</div>;
     case 'estimateTime':
@@ -131,20 +124,20 @@ export function TableBuiltinCell({
           {issue.startDate ? formatShortDate(issue.startDate) : DASH}
         </div>
       );
-    case 'dueDate':
+    case 'dueDate': {
+      if (!issue.dueDate) return <div className="text-xs">{DASH}</div>;
+      // Only a missed date stands out; the rest read like the start date beside them.
+      const overdue = isDueOverdue(issue.dueDate, maps.columnById.get(issue.columnId)?.stateType);
       return (
-        <div className="text-xs">
-          {issue.dueDate ? (
-            <DateBadge
-              icon={<CalendarClock className="size-2.5" />}
-              date={issue.dueDate}
-              overdue={isDueOverdue(issue.dueDate, maps.columnById.get(issue.columnId)?.stateType)}
-            />
+        <div className="text-xs text-muted-foreground">
+          {overdue ? (
+            <DateBadge icon={<CalendarClock className="size-2.5" />} date={issue.dueDate} overdue />
           ) : (
-            DASH
+            formatShortDate(issue.dueDate)
           )}
         </div>
       );
+    }
     case 'created':
       return (
         <div className="text-xs text-muted-foreground">{formatShortDate(issue.createdAt)}</div>

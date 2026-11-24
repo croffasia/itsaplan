@@ -1,5 +1,6 @@
 {
   "newIssue": "新建工作项",
+  "addWorkItem": "添加工作项",
   "pin": "固定",
   "unpin": "取消固定",
   "collapse": "折叠",
@@ -44,6 +45,12 @@
   "calendar": {
     "previousMonth": "上个月",
     "nextMonth": "下个月",
+    "previousWeek": "上周",
+    "nextWeek": "下周",
+    "previousDays": "{count, plural, other {前 # 天}}",
+    "nextDays": "{count, plural, other {后 # 天}}",
+    "weekNumber": "第 {number} 周",
+    "range": "{from} – {to}",
     "today": "今天",
     "moreIssues": "另有 {count} 个",
     "issueCount": "{count, plural, other {# 个工作项}}",
@@ -67,8 +74,13 @@
       "custom": "所有工作项都已设置日期。"
     }
   },
+  "empty": {
+    "title": "暂无工作项",
+    "description": "工作项会显示在这里。",
+    "filteredTitle": "没有匹配的工作项",
+    "filteredDescription": "修改筛选条件以查看更多。"
+  },
   "timeline": {
-    "empty": "暂无可放入时间线的工作项。",
     "expandGroup": "展开分组",
     "collapseGroup": "折叠分组",
     "inferredStart": "根据创建日期推算开始时间",
@@ -92,20 +104,20 @@
   },
   "removal": {
     "archive": {
-      "title": "{count, plural, other {归档工作项}}",
+      "title": "{count, plural, other {归档 # 个工作项？}}",
       "confirm": "{count, plural, other {归档 # 个工作项}}",
-      "description": "{count, plural, other {归档选中的 # 个工作项？它们将离开看板，之后可以恢复。}}"
+      "description": "它们将离开看板，之后可以恢复。"
     },
     "delete": {
-      "title": "{count, plural, other {删除工作项}}",
+      "title": "{count, plural, other {删除 # 个工作项？}}",
       "confirm": "{count, plural, other {删除 # 个工作项}}",
-      "description": "{count, plural, other {删除选中的 # 个工作项？}}这还会删除评论、活动记录和附件。此操作无法撤销。"
+      "description": "其评论、活动记录和附件也会被删除。此操作无法撤销。"
     }
   },
   "share": {
     "issueTitle": "工作项",
     "issueUnavailable": "此工作项不可用。",
-    "boardUnavailable": "此共享看板不可用，链接可能已撤销。"
+    "boardUnavailable": "此共享看板不可用，链接可能已撤销或已过期。"
   },
   "groups": {
     "noAssignee": "无负责人",

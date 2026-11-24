@@ -35,43 +35,46 @@ export default function SettingsImportExportLinearScopePicker({
   }
 
   return (
-    <div className="flex flex-wrap gap-4">
-      <div className="w-64 space-y-1.5">
-        <Label htmlFor="linear-team">{t('linear.team')}</Label>
-        <Select
-          value={team?.id ?? ''}
-          onValueChange={(id) => onTeamChange(teams.find((option) => option.id === id) ?? null)}
-        >
-          <SelectTrigger id="linear-team" className="w-full">
-            <SelectValue placeholder={t('linear.teamPlaceholder')} />
-          </SelectTrigger>
-          <SelectContent>
-            {teams.map((option) => (
-              <SelectItem key={option.id} value={option.id}>
-                {option.name} ({option.key})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      {team && (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-4">
         <div className="w-64 space-y-1.5">
-          <Label htmlFor="linear-project">{t('linear.project')}</Label>
-          <Select value={projectChoice ?? ''} onValueChange={onProjectChoiceChange}>
-            <SelectTrigger id="linear-project" className="w-full">
-              <SelectValue placeholder={t('linear.projectPlaceholder')} />
+          <Label htmlFor="linear-team">{t('linear.team')}</Label>
+          <Select
+            value={team?.id ?? ''}
+            onValueChange={(id) => onTeamChange(teams.find((option) => option.id === id) ?? null)}
+          >
+            <SelectTrigger id="linear-team" className="w-full">
+              <SelectValue placeholder={t('linear.teamPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              {team.projects.map((project) => (
-                <SelectItem key={project.id} value={project.id}>
-                  {project.name}
+              {teams.map((option) => (
+                <SelectItem key={option.id} value={option.id}>
+                  {option.name} ({option.key})
                 </SelectItem>
               ))}
-              <SelectItem value={NO_PROJECT}>{t('linear.noProject')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
-      )}
+        {team && (
+          <div className="w-64 space-y-1.5">
+            <Label htmlFor="linear-project">{t('linear.project')}</Label>
+            <Select value={projectChoice ?? ''} onValueChange={onProjectChoiceChange}>
+              <SelectTrigger id="linear-project" className="w-full">
+                <SelectValue placeholder={t('linear.projectPlaceholder')} />
+              </SelectTrigger>
+              <SelectContent>
+                {team.projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name}
+                  </SelectItem>
+                ))}
+                <SelectItem value={NO_PROJECT}>{t('linear.noProject')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+      <p className="text-xs text-muted-foreground">{t('linear.scopeHint')}</p>
     </div>
   );
 }

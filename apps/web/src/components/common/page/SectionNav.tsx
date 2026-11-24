@@ -19,6 +19,17 @@ export interface SectionNavItem {
   href?: string;
 }
 
+// The entry the path is in: its own page, or one under it, such as a run of a queue. The
+// longest match wins, so a section under another is not taken for its parent.
+export function activeNavItem<T extends SectionNavItem>(
+  items: T[],
+  pathname: string,
+): T | undefined {
+  return items
+    .filter((item) => item.href && (pathname === item.href || pathname.startsWith(`${item.href}/`)))
+    .sort((a, b) => b.href!.length - a.href!.length)[0];
+}
+
 // A rail listing the sections of a page. It highlights the active one and reports
 // the section clicked. The caller places and sizes it through `className`. Collapsed,
 // it shows the icons only, each label in a tooltip; the icons run in a row below `lg`,

@@ -1,0 +1,116 @@
+{
+  "title": "Membri",
+  "description": "Persone con accesso a questo progetto.",
+  "add": {
+    "action": "Aggiungi membro",
+    "title": "Aggiungi membro",
+    "personLabel": "Membro della squadra o email",
+    "pickPlaceholder": "Seleziona qualcuno",
+    "searchPlaceholder": "Cerca nella squadra o digita un'email",
+    "searchTeamPlaceholder": "Cerca nella squadra",
+    "fromTeam": "Dalla squadra",
+    "byEmail": "Invita via email",
+    "inviteEmail": "Invita {email}",
+    "alreadyInvited": "{email} è già invitato",
+    "domainNotAllowed": "{email} è su un dominio non consentito da questa istanza",
+    "alreadyMember": "{email} è già in questo progetto",
+    "alreadyInTeam": "{email} è già nella squadra — selezionalo dall'elenco qui sopra",
+    "refused": "{email} non può essere aggiunto",
+    "typeEmail": "Nessun risultato. Digita un indirizzo email completo per invitarlo.",
+    "noCandidates": "Tutti i membri della squadra sono già in questo progetto.",
+    "willJoinTeam": "Entra nella squadra {teamName} e in questo progetto",
+    "roleLabel": "Ruolo nel progetto",
+    "rolePlaceholder": "Ruolo",
+    "submit": "Aggiungi al progetto",
+    "sendInvite": "Invia invito"
+  },
+  "columns": {
+    "member": "Membro",
+    "role": "Ruolo",
+    "timezone": "Fuso orario",
+    "joined": "Entrato",
+    "actions": "Azioni"
+  },
+  "profileHeading": "Profilo",
+  "you": "(tu)",
+  "aiAgent": "Agente AI",
+  "tabs": {
+    "all": "Tutti",
+    "people": "Persone",
+    "agents": "Agenti AI",
+    "label": "Mostra"
+  },
+  "leaveProject": "Lascia il progetto",
+  "revokeAccess": "Revoca accesso",
+  "lastOwner": "Un progetto deve mantenere almeno un proprietario",
+  "leaveTitle": "Lascia questo progetto",
+  "leaveDescription": "Perderai l'accesso a questo progetto e alle sue issue. Un proprietario potrà invitarti di nuovo in seguito.",
+  "revokeTitle": "Revoca l'accesso di {name}",
+  "revokeDescription": "{name} perderà l'accesso a questo progetto. Potrà essere invitato di nuovo in seguito.",
+  "selectRole": "Seleziona ruolo",
+  "editDescription": "Modifica descrizione",
+  "descriptionQuestionSelf": "Cosa fai in questo progetto?",
+  "descriptionQuestionOther": "Cosa fa questa persona in questo progetto?",
+  "descriptionPlaceholder": "es. Ingegnere backend, responsabile dell'API e delle integrazioni",
+  "invites": {
+    "pendingCount": "{count, plural, one {# invito in attesa} other {# inviti in attesa}}",
+    "copyLink": "Copia link",
+    "copied": "Copiato",
+    "emailQueued": "Email di invito in coda",
+    "emailUnavailable": "Invito creato, ma l'email non è stata messa in coda. Copia il link per condividerlo.",
+    "emailFailed": "L'invito è stato creato, ma la sua email non è potuta essere inviata. Copia il link per condividerlo.",
+    "resendUnavailable": "L'email non è configurata. Copia il link di invito per condividerlo.",
+    "resendEmail": "Invia email",
+    "resendingEmail": "Messa in coda…",
+    "renew": "Rinnova",
+    "renewing": "Rinnovo…",
+    "renewed": "Invito rinnovato: un nuovo link è stato inviato via email",
+    "renewedNoEmail": "Invito rinnovato. L'email non è configurata: copia il nuovo link per condividerlo.",
+    "renewedEmailFailed": "Invito rinnovato, ma la sua email non è potuta essere inviata. Copia il nuovo link per condividerlo.",
+    "revokeAction": "Revoca invito",
+    "removeAction": "Rimuovi invito",
+    "invitedBy": "Invitato da {name} · ",
+    "createdAt": "creato {date}",
+    "expiredAt": "scaduto {date}",
+    "respondedAt": "{status, select, accepted {accettato} rejected {rifiutato} other {aggiornato}} {date}",
+    "status": {
+      "pending": "In attesa",
+      "accepted": "Accettato",
+      "rejected": "Rifiutato",
+      "expired": "Scaduto"
+    },
+    "revokeTitle": "Revoca l'invito per {email}",
+    "revokeConfirm": "Revoca invito",
+    "revokeDescription": "Il link di invito smetterà di funzionare. Potrai invitare di nuovo questa email in seguito."
+  },
+  "promoted": "Membro promosso a proprietario",
+  "roleUpdated": "Ruolo del membro aggiornato",
+  "descriptionUpdated": "Descrizione del membro aggiornata",
+  "added": "Membro aggiunto",
+  "provisioned": "Gestito da SCIM",
+  "search": {
+    "all": "Cerca membri",
+    "people": "Cerca persone",
+    "agents": "Cerca agenti AI"
+  },
+  "empty": {
+    "all": {
+      "title": "Nessun membro ancora",
+      "description": "Persone e agenti AI compaiono qui una volta che entrano."
+    },
+    "human": {
+      "title": "Nessuna persona ancora",
+      "description": "Le persone compaiono qui una volta che entrano."
+    },
+    "agent": {
+      "title": "Nessun agente AI ancora",
+      "description": "Gli agenti AI compaiono qui una volta aggiunti."
+    },
+    "search": {
+      "title": "Nessun risultato",
+      "all": "Nessun membro corrisponde a questa ricerca.",
+      "human": "Nessuna persona corrisponde a questa ricerca.",
+      "agent": "Nessun agente AI corrisponde a questa ricerca."
+    }
+  }
+}

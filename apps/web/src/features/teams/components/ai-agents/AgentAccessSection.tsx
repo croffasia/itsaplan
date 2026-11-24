@@ -6,6 +6,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import type { AiAgent } from '@/lib/api/endpoints/agents';
+import { useSession } from '@/lib/auth-client';
 import type { AgentFormValue } from '../../utils/agentForm';
 import { AgentFormSection } from './AgentFormSection';
 import { useTranslations } from 'next-intl';
@@ -19,13 +21,25 @@ export default function AgentAccessSection({
   onOpenChange,
   value,
   onChange,
+  agent,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   value: AgentFormValue;
   onChange: (patch: Partial<AgentFormValue>) => void;
+  // Null while the agent is being created, when its owner is the caller.
+  agent: AiAgent | null;
 }) {
   const t = useTranslations('teams.agents');
+  const currentUserId = useSession().data?.user.id ?? null;
+
+  // An owner-scoped agent whose owner's account is deleted takes anyone's work.
+  function ownerHint() {
+    if (!agent) return t('runnerScopeOwnerHint');
+    if (!agent.ownerName) return t('runnerScopeTeamHint');
+    if (agent.ownerUserId === currentUserId) return t('runnerScopeOwnerHint');
+    return t('runnerScopeOwnerNamedHint', { name: agent.ownerName });
+  }
 
   return (
     <AgentFormSection
@@ -39,7 +53,7 @@ export default function AgentAccessSection({
         <div className="min-w-0">
           <span className="block text-sm font-medium">{t('runnerScope')}</span>
           <span className="block text-xs text-muted-foreground">
-            {value.runnerScope === 'owner' ? t('runnerScopeOwnerHint') : t('runnerScopeTeamHint')}
+            {value.runnerScope === 'owner' ? ownerHint() : t('runnerScopeTeamHint')}
           </span>
         </div>
         <Select

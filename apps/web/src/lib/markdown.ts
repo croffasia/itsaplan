@@ -2,7 +2,7 @@ import { marked } from 'marked';
 import DOMPurify, { type UponSanitizeAttributeHookEvent } from 'isomorphic-dompurify';
 import { parseChartSpec, type ChartSpec } from '@/utils/chartSpec';
 import { mediaUrl } from '@/lib/api/core/media';
-import { allowedImageStyle } from '@/utils/imageStyle';
+import { allowedImageStyle } from '@repo/editor';
 
 // Content whose links lead away from the current view (release notes, agent chat)
 // asks for newTabLinks, so following one does not replace what the reader was on.

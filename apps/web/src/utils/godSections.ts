@@ -2,12 +2,16 @@ import type { ComponentType } from 'react';
 import {
   Building2,
   FolderKanban,
+  Hash,
   HardDrive,
   Keyboard,
   KeyRound,
   Mail,
+  Mails,
   Send,
+  ShieldCheck,
   SlidersHorizontal,
+  Timer,
   Users,
   UsersRound,
   type LucideIcon,
@@ -52,6 +56,11 @@ export const GOD_SECTIONS: GodSection[] = godSections([
     icon: FolderKanban,
   },
   {
+    slug: 'roles',
+    group: 'management',
+    icon: ShieldCheck,
+  },
+  {
     slug: 'general',
     group: 'instance',
     icon: SlidersHorizontal,
@@ -62,9 +71,9 @@ export const GOD_SECTIONS: GodSection[] = godSections([
     icon: KeyRound,
   },
   {
-    slug: 'hotkeys',
+    slug: 'jobs',
     group: 'instance',
-    icon: Keyboard,
+    icon: Timer,
   },
   {
     slug: 'storage',
@@ -72,9 +81,25 @@ export const GOD_SECTIONS: GodSection[] = godSections([
     icon: HardDrive,
   },
   {
+    slug: 'email-templates',
+    group: 'instance',
+    icon: Mails,
+  },
+  {
+    slug: 'hotkeys',
+    group: 'instance',
+    icon: Keyboard,
+  },
+  {
     slug: 'telegram',
     group: 'instance',
     icon: Send,
+    integration: true,
+  },
+  {
+    slug: 'slack',
+    group: 'instance',
+    icon: Hash,
     integration: true,
   },
   {

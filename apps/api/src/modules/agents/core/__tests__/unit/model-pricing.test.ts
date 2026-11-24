@@ -3,6 +3,7 @@ import {
   builtInPrice,
   estimateCost,
   listBuiltInPrices,
+  longInputSizes,
   priceKey,
   type ModelPrice,
 } from '#modules/agents/core/runtime/model-pricing';
@@ -93,6 +94,16 @@ describe('estimateCost', () => {
     expect(cost).toBeCloseTo(0.6 * 1 + 0.2 * 1 + 0.2 * 0.5 + 2, 6);
     const usage = { inputTokens: 1_000_000, outputTokens: 1_000_000, ...NO_CACHE };
     expect(estimateCost('OpenAI-Compatible', 'Qwen', usage, 1, own)).toBeCloseTo(0.8, 6);
+  });
+});
+
+describe('longInputSizes', () => {
+  it('lists the input sizes long-input prices start from, smallest first', () => {
+    const sizes = longInputSizes();
+    // google/gemini-2-5-pro bills from 200K input tokens at its long-input price.
+    expect(sizes).toContain(200_000);
+    expect(sizes).toEqual([...sizes].sort((a, b) => a - b));
+    expect(new Set(sizes).size).toBe(sizes.length);
   });
 });
 

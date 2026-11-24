@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { api, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { clearLimits, setLimits } from '#tests/helpers/limits';
 import { createRole } from '#tests/helpers/roles';
 
 type Client = ReturnType<typeof authedApi>;
@@ -39,8 +40,28 @@ function upload(client: Client, documentId: number, filename = 'diagram.png', ty
   });
 }
 
+function addFromContent(client: Client, documentId: number) {
+  return documents(client)({ documentId }).assets.import.post({
+    filename: 'note.txt',
+    contentBase64: Buffer.from('hello').toString('base64'),
+    contentType: 'text/plain',
+  });
+}
+
+function uploadToChat(client: Client, projectKey = 'MKT') {
+  return client.projects({ projectKey })['chat-attachments'].post({
+    filename: 'note.txt',
+    contentBase64: Buffer.from('hello').toString('base64'),
+  });
+}
+
+function copyFromChat(client: Client, documentId: number, chatAttachmentId: string) {
+  return documents(client)({ documentId }).assets['from-chat'].post({ chatAttachmentId });
+}
+
 describe('document assets', () => {
   beforeEach(resetDb);
+  afterEach(clearLimits);
 
   it('uploads, lists, securely downloads, and deletes an asset', async () => {
     const { asOwner, project } = await setupProject();
@@ -187,6 +208,196 @@ describe('document assets', () => {
       version: unlocked.data!.version,
     });
     expect((await upload(asOwner, page.id)).status).toBe(409);
+  });
+
+  it('adds an asset from inline content, with the address a page shows it by', async () => {
+    const { asOwner, project } = await setupProject();
+    const page = (await documents(asOwner).post({ title: 'Guide' })).data!;
+    const added = await addFromContent(asOwner, page.id);
+    expect(added.status).toBe(201);
+    const url = `/projects/${project.teamId}.MKT/documents/${page.id}/assets/${added.data!.id}/raw`;
+    expect(added.data).toMatchObject({
+      filename: 'note.txt',
+      contentType: 'text/plain',
+      sizeBytes: 5,
+      url,
+      embedUrl: `/protected-media${url}`,
+    });
+
+    const list = await documents(asOwner)({ documentId: page.id }).assets.get();
+    expect(list.data!.map((asset) => asset.id)).toEqual([added.data!.id]);
+
+    const embedded = await documents(asOwner)({ documentId: page.id }).patch({
+      version: page.version,
+      contentJson: {
+        type: 'doc',
+        content: [{ type: 'image', attrs: { src: added.data!.embedUrl } }],
+      },
+    });
+    expect(embedded.status).toBe(200);
+  });
+
+  it('refuses an import without exactly one source, or from a private address', async () => {
+    const { asOwner } = await setupProject();
+    const page = (await documents(asOwner).post({ title: 'Guide' })).data!;
+    const { assets } = documents(asOwner)({ documentId: page.id });
+
+    expect((await assets.import.post({ filename: 'x.txt' })).status).toBe(400);
+    expect(
+      (
+        await assets.import.post({
+          filename: 'x.txt',
+          url: 'https://example.com/x.txt',
+          contentBase64: 'aGk=',
+        })
+      ).status,
+    ).toBe(400);
+    expect((await assets.import.post({ filename: 'x.txt', contentBase64: '' })).status).toBe(400);
+    expect(
+      (await assets.import.post({ filename: 'x.txt', url: 'https://127.0.0.1/x.txt' })).status,
+    ).toBe(400);
+    expect((await assets.get()).data).toEqual([]);
+  });
+
+  it('applies the rules of an upload to an import', async () => {
+    const { asOwner } = await setupProject();
+    const secret = (await documents(asOwner).post({ title: 'Secret', isPrivate: true })).data!;
+    const page = (await documents(asOwner).post({ title: 'Public' })).data!;
+    const readerRole = await createRole(asOwner, 'MKT', {
+      name: 'Reader',
+      permissions: { documents: { read: true } },
+    });
+    const reader = await addMember(asOwner, readerRole.data!.id);
+    const member = await addMember(asOwner);
+
+    expect((await addFromContent(reader.client, page.id)).status).toBe(403);
+    expect((await addFromContent(member.client, secret.id)).status).toBe(404);
+
+    await documents(asOwner)({ documentId: page.id }).lock.post({ version: page.version });
+    expect((await addFromContent(asOwner, page.id)).status).toBe(409);
+  });
+
+  it('refuses an import past the storage limit', async () => {
+    const { asOwner } = await setupProject();
+    const page = (await documents(asOwner).post({ title: 'Guide' })).data!;
+    setLimits({ maxStorageBytes: 1 });
+
+    expect((await addFromContent(asOwner, page.id)).status).toBe(413);
+    expect((await documents(asOwner)({ documentId: page.id }).assets.get()).data).toEqual([]);
+  });
+
+  it('copies a chat file into a page and leaves it in the chat', async () => {
+    const { asOwner } = await setupProject();
+    const page = (await documents(asOwner).post({ title: 'Guide' })).data!;
+    const chatFile = (await uploadToChat(asOwner)).data!;
+
+    const copied = await copyFromChat(asOwner, page.id, chatFile.id);
+    expect(copied.status).toBe(201);
+    expect(copied.data).toMatchObject({
+      filename: 'note.txt',
+      contentType: 'text/plain',
+      sizeBytes: 5,
+    });
+    expect(copied.data!.id).not.toBe(chatFile.id);
+
+    const viewed = await documents(asOwner)({ documentId: page.id })
+      .assets({ publicId: copied.data!.id })
+      .view.get();
+    expect(viewed.data).toMatchObject({ others: [{ text: 'hello' }] });
+    expect((await asOwner['chat-attachments']({ publicId: chatFile.id }).get()).status).toBe(200);
+  });
+
+  it('refuses a chat file the caller may not copy, or a page it may not change', async () => {
+    const { asOwner } = await setupProject();
+    await createProject(asOwner, { key: 'OPS', name: 'Operations' });
+    const page = (await documents(asOwner).post({ title: 'Guide' })).data!;
+    const secret = (await documents(asOwner).post({ title: 'Secret', isPrivate: true })).data!;
+    const chatFile = (await uploadToChat(asOwner)).data!;
+    const otherProjectFile = (await uploadToChat(asOwner, 'OPS')).data!;
+
+    expect((await copyFromChat(asOwner, page.id, otherProjectFile.id)).status).toBe(404);
+    expect((await copyFromChat(asOwner, page.id, crypto.randomUUID())).status).toBe(404);
+
+    const docsOnly = await createRole(asOwner, 'MKT', {
+      name: 'Docs editor',
+      permissions: { documents: { read: true, edit: true } },
+    });
+    const editor = await addMember(asOwner, docsOnly.data!.id);
+    expect((await copyFromChat(editor.client, page.id, chatFile.id)).status).toBe(403);
+
+    const member = await addMember(asOwner);
+    expect((await copyFromChat(member.client, secret.id, chatFile.id)).status).toBe(404);
+
+    await documents(asOwner)({ documentId: page.id }).lock.post({ version: page.version });
+    expect((await copyFromChat(asOwner, page.id, chatFile.id)).status).toBe(409);
+    expect((await documents(asOwner)({ documentId: page.id }).assets.get()).data).toEqual([]);
+  });
+
+  it('opens an image as the image, and a text file with its text', async () => {
+    const { asOwner } = await setupProject();
+    const page = (await documents(asOwner).post({ title: 'Guide' })).data!;
+    const assets = documents(asOwner)({ documentId: page.id }).assets;
+    const image = (await upload(asOwner, page.id)).data!;
+    const note = (await addFromContent(asOwner, page.id)).data!;
+
+    const viewedImage = await assets({ publicId: image.id }).view.get();
+    expect(viewedImage.data).toEqual({
+      images: [
+        {
+          id: image.id,
+          filename: 'diagram.png',
+          contentType: 'image/png',
+          data: Buffer.from('asset bytes').toString('base64'),
+        },
+      ],
+      others: [],
+    });
+
+    const viewedNote = await assets({ publicId: note.id }).view.get();
+    expect(viewedNote.data).toMatchObject({
+      images: [],
+      others: [
+        {
+          id: note.id,
+          filename: 'note.txt',
+          url: note.url,
+          embedUrl: note.embedUrl,
+          text: 'hello',
+        },
+      ],
+    });
+  });
+
+  it('opens an asset only for those who can read its page', async () => {
+    const { asOwner } = await setupProject();
+    const secret = (await documents(asOwner).post({ title: 'Secret', isPrivate: true })).data!;
+    const other = (await documents(asOwner).post({ title: 'Other' })).data!;
+    const asset = (await upload(asOwner, secret.id)).data!;
+    const member = await addMember(asOwner);
+    const noDocs = await createRole(asOwner, 'MKT', {
+      name: 'No docs',
+      permissions: { work_items: { read: true } },
+    });
+    const outsider = await addMember(asOwner, noDocs.data!.id);
+
+    expect(
+      (
+        await documents(outsider.client)({ documentId: other.id })
+          .assets({ publicId: asset.id })
+          .view.get()
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await documents(member.client)({ documentId: secret.id })
+          .assets({ publicId: asset.id })
+          .view.get()
+      ).status,
+    ).toBe(404);
+    expect(
+      (await documents(asOwner)({ documentId: other.id }).assets({ publicId: asset.id }).view.get())
+        .status,
+    ).toBe(404);
   });
 
   it('rejects empty uploads and cross-document asset ids', async () => {

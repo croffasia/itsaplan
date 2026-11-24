@@ -59,7 +59,13 @@
     "month": "Mois",
     "quarter": "Trimestre"
   },
+  "calendarModes": {
+    "month": "Mois",
+    "byDay": "Par jour",
+    "byWeek": "Par semaine"
+  },
   "weekStart": {
+    "6": "Samedi",
     "0": "Dimanche",
     "1": "Lundi"
   },
@@ -75,21 +81,34 @@
     "ordering": "Tri",
     "ascending": "Croissant",
     "descending": "Décroissant",
-    "showEmptyColumns": "Afficher les colonnes vides",
-    "showEmptyGroups": "Afficher les groupes vides",
-    "showLinks": "Afficher les liens",
-    "separateSubtaskCards": "Afficher les sous-tâches comme des cartes distinctes",
-    "separateSubtaskRows": "Afficher les sous-tâches comme des lignes distinctes",
-    "startSubtasksCollapsed": "Démarrer avec les sous-tâches réduites",
-    "showNestedSubtasks": "Afficher les sous-tâches imbriquées",
-    "nestedSubtasks": "Sous-tâches imbriquées",
-    "displayProperties": "Propriétés affichées",
+    "emptyColumns": "Colonnes vides",
+    "emptyGroups": "Groupes vides",
+    "links": "Liens",
+    "separateCards": "En cartes distinctes",
+    "separateRows": "En lignes distinctes",
+    "nestedInCard": "Dans la carte parente",
+    "nestedInRow": "Dans la ligne parente",
+    "subtasksCollapsed": "Réduites au départ",
+    "groupsCollapsed": "Groupes réduits au départ",
     "placeBy": "Positionner selon",
-    "startWeekOn": "Commencer la semaine le",
-    "startCollapsed": "Démarrer avec les groupes réduits",
+    "mode": "Mode",
+    "daysShown": "Jours affichés",
+    "weeksShown": "Semaines affichées",
+    "splitByDay": "Diviser par jour",
+    "weekStartsOn": "La semaine commence le",
     "scale": "Échelle",
-    "addCustomField": "Ajouter un champ personnalisé",
+    "dragToReorder": "Glisser pour réordonner",
+    "customField": "Champ personnalisé",
     "viewIcon": "Icône de la vue"
+  },
+  "sections": {
+    "board": "Tableau",
+    "rows": "Lignes",
+    "show": "Afficher",
+    "subtasks": "Sous-tâches",
+    "cardProperties": "Propriétés de la carte",
+    "columns": "Colonnes",
+    "dates": "Dates"
   },
   "layoutCommand": "Affichage {layout}"
 }

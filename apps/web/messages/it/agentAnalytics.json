@@ -1,0 +1,87 @@
+{
+  "window": "{days, plural, =1 {Ultime 24 ore} other {Ultimi # giorni}}",
+  "period": "Periodo",
+  "retentionNote": "Solo agenti interni. Le run più vecchie della conservazione dei tracciati dell'istanza non vengono conteggiate.",
+  "noComparison": "Niente da confrontare",
+  "vsPrevious": "vs {value} prima",
+  "deletedAgent": "Agente eliminato",
+  "deletedProject": "Progetto eliminato",
+  "projects": "Progetti",
+  "totalTokens": "Token totali",
+  "totalCost": "Costo totale",
+  "stats": {
+    "cost": "Costo del modello",
+    "tokens": "Token",
+    "runs": "Run",
+    "errors": "Run fallite"
+  },
+  "unpriced": "{count, plural, one {# modello non ha prezzo} other {# modelli non hanno prezzo}}",
+  "setPrices": "Imposta prezzi",
+  "measure": {
+    "tokens": "Token",
+    "cost": "Costo"
+  },
+  "series": {
+    "input": "Input",
+    "output": "Output"
+  },
+  "models": {
+    "title": "Per modello",
+    "description": "Token e costo di ogni modello.",
+    "model": "Modello",
+    "input": "Input",
+    "output": "Output",
+    "cost": "Costo",
+    "empty": "Nessuna chiamata a modelli in questo periodo"
+  },
+  "byAgent": {
+    "title": "Per agente",
+    "description": "Cosa ha usato ogni agente.",
+    "empty": "Nessuna run degli agenti in questo periodo"
+  },
+  "byProject": {
+    "title": "Per progetto",
+    "description": "Cosa hanno usato gli agenti in ogni progetto.",
+    "empty": "Nessuna run degli agenti in questo periodo"
+  },
+  "byTeam": {
+    "title": "Per team",
+    "description": "Cosa hanno usato gli agenti di ogni team.",
+    "empty": "Nessuna run degli agenti in questo periodo"
+  },
+  "overTime": {
+    "title": "Nel tempo",
+    "description": "Token e costo nel periodo.",
+    "empty": "Nessun utilizzo in questo periodo"
+  },
+  "preview": {
+    "title": "Di più in Cloud e Pro",
+    "description": "Spesa per persona, trigger, pianificazione e workflow, tempo di run e chiamate ai tool. Disponibile in Cloud e self-hosted Pro.",
+    "hide": "Nascondi",
+    "show": "Mostra",
+    "byPerson": {
+      "title": "Per persona",
+      "description": "Chi ha avviato run in una chat o con una menzione."
+    },
+    "byTrigger": {
+      "title": "Per trigger",
+      "description": "Cosa ha avviato le run."
+    },
+    "bySchedule": {
+      "title": "Per pianificazione",
+      "description": "Quanto ha speso ogni pianificazione."
+    },
+    "byWorkflow": {
+      "title": "Per workflow",
+      "description": "Cosa ha usato ogni workflow."
+    },
+    "tools": {
+      "title": "Tool",
+      "description": "Chiamate ai tool e quante sono fallite."
+    },
+    "latency": {
+      "title": "Tempo di run",
+      "description": "Mediana e 95° percentile per giorno."
+    }
+  }
+}

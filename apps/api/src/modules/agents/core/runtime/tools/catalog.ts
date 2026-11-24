@@ -10,6 +10,9 @@
 //   actions it is allowed to take. Listed only so the UI can show them (always
 //   enabled, not editable); their keys are never stored on the agent.
 //
+// An extension of the api adds actions of its own with setExtraActions, opt-in or
+// always on, in a group of the core's or one of its own.
+//
 // Every key is the name of a route tagged with mcpTool() — the exceptions are
 // get_current_date and prepare_issue_import, which have no route behind them (see
 // tools/local.ts). What a tool
@@ -22,17 +25,19 @@
 // its route asserts and is read off the route (see actionCatalog in route-tools.ts);
 // restating it here would be a second list that drifts from the guards silently.
 
-// The feature an action belongs to, so the config UI can group the catalog.
-export type ToolGroup = 'issues' | 'initiatives' | 'cycles' | 'documents' | 'notes' | 'project';
-
 export interface ToolMeta {
   key: string;
-  group: ToolGroup;
+  // issues, initiatives, cycles, documents, notes, project, or an extension's own.
+  group: string;
   label: string;
   // Shown in the config UI next to the label.
   description: string;
   // True for the read-only actions that are always granted and cannot be toggled off.
   always: boolean;
+  // Route tools that come with the action, such as the read an update cannot do without.
+  needs?: string[];
+  // An extension's action while what runs it is off: listed, given to no agent.
+  locked?: boolean;
   // What the agent's copy of the tool changes about the route: `description` is the
   // text the model reads instead of the route's own, `hide` are arguments it may not
   // set (dropped from the tool's schema and from its calls). An MCP client is
@@ -240,7 +245,202 @@ export const AGENT_ACTIONS: ToolMeta[] = [
     key: 'delete_document',
     group: 'documents',
     label: 'Delete documents',
-    description: 'Permanently delete shared project documents.',
+    description: 'Permanently delete documents this agent owns.',
+    always: false,
+  },
+  // A new thread is anchored to text the agent cannot select, so its copy only replies.
+  {
+    key: 'add_document_comment',
+    group: 'documents',
+    label: 'Comment on documents',
+    description: 'Reply in the comment threads of documents as this agent.',
+    always: false,
+    overrides: {
+      hide: ['quote', 'from', 'to', 'version'],
+      description:
+        'Reply in a comment thread of a document. `parentId` is the id of the first comment of the thread.',
+    },
+  },
+  {
+    key: 'list_document_comments',
+    group: 'documents',
+    label: 'Read document comments',
+    description: 'Read the comment threads of documents.',
+    always: false,
+  },
+  {
+    key: 'update_document_comment',
+    group: 'documents',
+    label: 'Edit document comments',
+    description: "Edit this agent's own comments, and resolve or reopen threads.",
+    always: false,
+  },
+  {
+    key: 'list_document_issues',
+    group: 'documents',
+    label: "List a document's issues",
+    description: 'See which issues are linked to a document.',
+    always: false,
+  },
+  {
+    key: 'list_issue_documents',
+    group: 'documents',
+    label: "List an issue's documents",
+    description: 'See which documents are linked to an issue.',
+    always: false,
+  },
+  {
+    key: 'link_document_issue',
+    group: 'documents',
+    label: 'Link documents to issues',
+    description: 'Link a document to an issue in the project.',
+    always: false,
+  },
+  {
+    key: 'unlink_document_issue',
+    group: 'documents',
+    label: 'Unlink documents from issues',
+    description: 'Remove the link between a document and an issue.',
+    always: false,
+  },
+  {
+    key: 'list_initiative_documents',
+    group: 'documents',
+    label: "List an initiative's documents",
+    description: 'See which documents are linked to an initiative.',
+    always: false,
+  },
+  {
+    key: 'list_document_initiatives',
+    group: 'documents',
+    label: "List a document's initiatives",
+    description: 'See which initiatives are linked to a document.',
+    always: false,
+  },
+  {
+    key: 'link_document_initiative',
+    group: 'documents',
+    label: 'Link documents to initiatives',
+    description: 'Link a document to an initiative in the project.',
+    always: false,
+  },
+  {
+    key: 'unlink_document_initiative',
+    group: 'documents',
+    label: 'Unlink documents from initiatives',
+    description: 'Remove the link between a document and an initiative.',
+    always: false,
+  },
+  {
+    key: 'list_document_assets',
+    group: 'documents',
+    label: 'List document files',
+    description: 'See the images and files of a document.',
+    always: false,
+  },
+  {
+    key: 'view_document_asset',
+    group: 'documents',
+    label: 'Open document files',
+    description: 'Open an image or file of a document.',
+    always: false,
+  },
+  {
+    key: 'add_document_asset',
+    group: 'documents',
+    label: 'Add document files',
+    description: 'Add an image or file to a document from a URL or inline content.',
+    always: false,
+  },
+  {
+    key: 'add_document_asset_from_chat',
+    group: 'documents',
+    label: 'Add chat files to documents',
+    description: 'Copy a file attached in the chat into a document.',
+    always: false,
+  },
+  {
+    key: 'delete_document_asset',
+    group: 'documents',
+    label: 'Delete document files',
+    description: 'Permanently delete images and files from documents this agent owns.',
+    always: false,
+  },
+  {
+    key: 'list_document_revisions',
+    group: 'documents',
+    label: 'List document versions',
+    description: 'See the saved versions of a document.',
+    always: false,
+  },
+  {
+    key: 'get_document_revision',
+    group: 'documents',
+    label: 'Read document versions',
+    description: 'Read the content of a saved version.',
+    always: false,
+  },
+  {
+    key: 'restore_document_revision',
+    group: 'documents',
+    label: 'Restore document versions',
+    description: 'Bring back a saved version as the current one.',
+    always: false,
+  },
+  {
+    key: 'archive_document',
+    group: 'documents',
+    label: 'Archive documents',
+    description: 'Archive a document this agent owns, with its nested pages.',
+    always: false,
+  },
+  {
+    key: 'restore_document',
+    group: 'documents',
+    label: 'Restore documents',
+    description: 'Bring back an archived document this agent owns, with its nested pages.',
+    always: false,
+  },
+  {
+    key: 'duplicate_document',
+    group: 'documents',
+    label: 'Duplicate documents',
+    description: 'Copy a document into a new one owned by this agent.',
+    always: false,
+  },
+  {
+    key: 'lock_document',
+    group: 'documents',
+    label: 'Lock documents',
+    description: 'Lock a document this agent owns against changes.',
+    always: false,
+  },
+  {
+    key: 'unlock_document',
+    group: 'documents',
+    label: 'Unlock documents',
+    description: 'Unlock a document this agent owns so it can be changed again.',
+    always: false,
+  },
+  {
+    key: 'export_document',
+    group: 'documents',
+    label: 'Export documents',
+    description: 'Get a document as a Markdown file.',
+    always: false,
+  },
+  {
+    key: 'set_document_access',
+    group: 'documents',
+    label: 'Change document access',
+    description: 'Make a document this agent owns private, or share it with the project.',
+    always: false,
+  },
+  {
+    key: 'transfer_document_ownership',
+    group: 'documents',
+    label: 'Transfer document ownership',
+    description: 'Hand a document this agent owns over to another project member.',
     always: false,
   },
   {
@@ -284,6 +484,8 @@ export const AGENT_ACTIONS: ToolMeta[] = [
     label: 'Update note boards',
     description: 'Rename a board and add, edit, or remove its notes.',
     always: false,
+    // Without the read, an update replacing the canvas whole would delete every card.
+    needs: ['get_note_board'],
     overrides: {
       hide: ['visibility', 'memberIds'],
       description:
@@ -326,6 +528,13 @@ export const ALWAYS_ON_ACTIONS: ToolMeta[] = [
     always: true,
   },
   {
+    key: 'list_project_repositories',
+    group: 'project',
+    label: 'Read connected repositories',
+    description: 'List the repositories connected to the project in its settings.',
+    always: true,
+  },
+  {
     key: 'search_issues',
     group: 'issues',
     label: 'Search issues',
@@ -337,7 +546,7 @@ export const ALWAYS_ON_ACTIONS: ToolMeta[] = [
     group: 'issues',
     label: 'List issues by filters',
     description:
-      'List issues filtered by state, type, assignee, priority, label, due date, or when they were created or updated.',
+      'List issues filtered by state, type, assignee, priority, label, due date, when they were created or updated, or blocked.',
     always: true,
   },
   {
@@ -425,19 +634,44 @@ export const ALWAYS_ON_ACTIONS: ToolMeta[] = [
   },
 ];
 
-const ACTION_KEYS = new Set(AGENT_ACTIONS.map((t) => t.key));
+const CORE_ACTIONS = [...AGENT_ACTIONS, ...ALWAYS_ON_ACTIONS];
+const CORE_KEYS = new Set(CORE_ACTIONS.map((t) => t.key));
 
-export const ALWAYS_ON_KEYS: string[] = ALWAYS_ON_ACTIONS.map((t) => t.key);
+let extraActions: ToolMeta[] = [];
 
-const BY_KEY = new Map([...AGENT_ACTIONS, ...ALWAYS_ON_ACTIONS].map((t) => [t.key, t]));
+// The actions an extension of the api adds to the catalog. Each call replaces the previous
+// ones, and a key the core has throws.
+export function setExtraActions(actions: ToolMeta[]): void {
+  const taken = actions.find((action) => CORE_KEYS.has(action.key));
+  if (taken) throw new Error(`The agent action ${taken.key} is the core's`);
+  extraActions = actions;
+}
+
+// Every action of the catalog, the core's first.
+export function allActions(): ToolMeta[] {
+  return [...CORE_ACTIONS, ...extraActions];
+}
+
+// What every internal agent is granted without asking.
+export function alwaysOnKeys(): string[] {
+  return allActions()
+    .filter((t) => t.always && !t.locked)
+    .map((t) => t.key);
+}
 
 export function toolMeta(key: string): ToolMeta | undefined {
-  return BY_KEY.get(key);
+  return allActions().find((t) => t.key === key);
 }
 
 // Keeps only keys that are grantable actions, so an agent never stores an unknown
-// or non-grantable (always-on) tool key.
-export function normalizeToolKeys(keys: unknown): string[] {
+// or non-grantable (always-on) tool key. A locked action is turned off, never on: it stays
+// only among the `kept` keys, those the agent has.
+export function normalizeToolKeys(keys: unknown, kept: string[] = []): string[] {
   if (!Array.isArray(keys)) return [];
-  return [...new Set(keys.filter((k): k is string => typeof k === 'string' && ACTION_KEYS.has(k)))];
+  const grantable = new Set(
+    allActions()
+      .filter((t) => !t.always && (!t.locked || kept.includes(t.key)))
+      .map((t) => t.key),
+  );
+  return [...new Set(keys.filter((k): k is string => typeof k === 'string' && grantable.has(k)))];
 }

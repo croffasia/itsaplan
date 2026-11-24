@@ -63,6 +63,21 @@ resolves it.
      };
      ```
 
+   Optional fields of the `Integration`:
+   - `icon`: the brand mark in `icon.ts`, one SVG path in a 24×24 box and its fill
+     color. Leave the color out for a black mark, so it follows the text color.
+     Without an icon the interface shows the label's first letters.
+   - `website`: the service's homepage, linked from the interface.
+   - `verify`: asks the service whether it accepts a credential before it is saved, in
+     `verify.ts`. Use one request that spends nothing. Answer `rejected` only for a
+     refusal the API itself sends (a bot wall answers 403 with a page). Answer
+     `unavailable` for anything else that is not a success. Call an address that comes
+     from the credential through `pinnedFetch` from `@repo/net`. Without `verify` the
+     credential is saved unchecked.
+   - `credentialOptional`: its tools also run with no credential, on the service's
+     keyless tier.
+   - `help` on a credential field: markdown shown behind a "?" by the field's label.
+
 2. Register it in `src/registry.ts`. This is the one manual step: import the
    integration and add it to the `INTEGRATIONS` array.
 
@@ -77,6 +92,20 @@ A build that extends the api adds integrations of its own at startup with
 Each call replaces the previous ones, and a call without an argument removes them. A
 key that is already taken throws. A configured tool whose integration is removed stays
 stored, and the runtime skips it.
+
+## An integration another edition runs
+
+An integration whose code another edition of the app holds is listed here alone: its
+folder under `tools/` exports an `IntegrationListing` (what the integration is, its
+credential fields and its tools, with no `inputSchema` or `execute`), and
+`LOCKED_INTEGRATIONS` in `src/registry.ts` lists it. The catalog shows it `locked: true`,
+last; `getTool` and `getIntegration` do not know it, so no credential or configured tool
+of it can be added and no agent gets one. `getLockedTool` names a configured tool kept from
+a time it ran.
+
+That edition builds the integration on `lockedListing(key)`, adding each tool's
+`inputSchema` and `execute`, and adds it with `setExtraIntegrations`. The integration then
+takes the listing's place. Its names and descriptions stay in the listing.
 
 ## An integration without a credential
 

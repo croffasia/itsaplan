@@ -1,6 +1,9 @@
+import { useMemo } from 'react';
 import { DndContext } from '@dnd-kit/core';
 import { toast } from 'sonner';
-import { ChevronDown, Eye } from 'lucide-react';
+import { useIconHover } from '@animateicons/react';
+import { ChevronDownIcon } from '@animateicons/react/lucide/chevron-down-icon';
+import { EyeIcon } from '@animateicons/react/lucide/eye-icon';
 import { useTranslations } from 'next-intl';
 import {
   buildGroups,
@@ -12,21 +15,26 @@ import {
   type WorkItemsViewProps,
   type IssueGroup,
 } from '@/utils/project';
+import type { BoardIssue } from '@/lib/api/endpoints/issues';
 import { isActiveFilterSet } from '@/utils/filters';
 import { useBoardDnd } from '../../hooks/useBoardDnd';
 import { useSortedOrderMessage } from '../../hooks/useSortedOrderMessage';
 import { useWipLimitMessage } from '../../hooks/useWipLimitMessage';
 import { countEntering, wipAllows, wipStateFor } from '../../utils/wipLimit';
 import { useGroupLabels } from '@/hooks/useGroupLabels';
+import { useStableCallback } from '@/hooks/useStableCallback';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useSelection } from '../../context/useSelection';
 import { boardCollision, issuesToMove } from '../../utils/kanban';
-import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { GroupDot } from '../shared/GroupDot';
+import { HeaderIconButton } from '../shared/HeaderIconButton';
 import { CardOverlay } from './CardOverlay';
 import { BoardColumn } from './BoardColumn';
 import { CollapsedColumn } from './CollapsedColumn';
 import { WipCount } from './WipCount';
+
+// A column with no issues gets the same empty list on every render.
+const NO_ISSUES: BoardIssue[] = [];
 
 // Flat board: one vertically-virtualized column per group, in a horizontal row. A
 // trailing "Hidden" panel holds the columns that the user hid.
@@ -41,11 +49,13 @@ export default function FlatBoard({
   readOnly,
 }: WorkItemsViewProps) {
   const t = useTranslations('workItems');
+  const hiddenHeaderHover = useIconHover();
   const groupLabels = useGroupLabels();
   const sortedOrderMessage = useSortedOrderMessage();
   const wipLimitMessage = useWipLimitMessage();
   const dnd = useBoardDnd(project, readOnly);
   const selection = useSelection();
+  const { can } = usePermissions();
   const filtered = isActiveFilterSet(filters);
 
   // Hidden columns are stored in the view's display (settings.hiddenGroups). A
@@ -78,10 +88,25 @@ export default function FlatBoard({
   const togglePin = (key: string) =>
     onSettingsChange({ ...settings, pinnedGroup: settings.pinnedGroup === key ? null : key });
 
-  const groups = buildGroups(project, settings.group, groupLabels, filters);
-  const sorted = sortIssues(project.issues, settings.sort, project);
-  const issuesByGroup = groupIssues(groups, sorted, settings.group);
-  const maps = buildMaps(project);
+  // The board's data is memoized on its inputs, so a render of the page that changes
+  // none of them hands the memoized columns and cards the same objects.
+  const groups = useMemo(
+    () => buildGroups(project, settings.group, groupLabels, filters),
+    [project, settings.group, groupLabels, filters],
+  );
+  const sorted = useMemo(
+    () => sortIssues(project.issues, settings.sort, project),
+    [project, settings.sort],
+  );
+  const issuesByGroup = useMemo(
+    () => groupIssues(groups, sorted, settings.group),
+    [groups, sorted, settings.group],
+  );
+  const maps = useMemo(() => buildMaps(project), [project]);
+  const wipByGroup = useMemo(
+    () => new Map(groups.map((g) => [g.key, wipStateFor(g.assign, project.columns, columnCounts)])),
+    [groups, project.columns, columnCounts],
+  );
 
   // Empty groups are removed when "Show empty columns" is off. A manual hide moves
   // any of the remaining groups into the "Hidden" panel.
@@ -105,9 +130,9 @@ export default function FlatBoard({
   // column is still moved, because that changes the grouping field, not the order.
   const manualOrder = settings.sort.field === 'manual';
 
-  const wipOf = (group: IssueGroup) => wipStateFor(group, project.columns, columnCounts);
+  const wipOf = (group: IssueGroup) => wipByGroup.get(group.key) ?? null;
 
-  function moveIssue(issueIds: number[], group: IssueGroup, index: number) {
+  const moveIssue = useStableCallback((issueIds: number[], group: IssueGroup, index: number) => {
     const assign = group.assign;
     if (!assign) return;
     const target = issuesByGroup.get(group.key) ?? [];
@@ -126,11 +151,14 @@ export default function FlatBoard({
     }
     const positions = positionsAt(target, index, ids.length);
     ids.forEach((id, n) => dnd.move(id, assign, positions[n]));
-  }
+  });
 
-  function addIssueTo(group: IssueGroup) {
-    onAddIssue(groupDefaults(group.assign));
-  }
+  const addIssueTo = useStableCallback((group: IssueGroup) =>
+    onAddIssue(groupDefaults(group.assign)),
+  );
+  const hideGroup = useStableCallback((group: IssueGroup) => setHidden(group.key, true));
+  const collapseGroup = useStableCallback((group: IssueGroup) => setCollapsed(group.key, true));
+  const togglePinGroup = useStableCallback((group: IssueGroup) => togglePin(group.key));
 
   return (
     <DndContext
@@ -162,7 +190,7 @@ export default function FlatBoard({
               key={group.key}
               project={project}
               group={group}
-              issues={issuesByGroup.get(group.key) ?? []}
+              issues={issuesByGroup.get(group.key) ?? NO_ISSUES}
               maps={maps}
               properties={settings.properties}
               manualOrder={manualOrder}
@@ -171,11 +199,13 @@ export default function FlatBoard({
               boardIssues={sorted}
               onMoveIssue={moveIssue}
               onOpenIssue={onOpenIssue}
-              onAddIssue={() => addIssueTo(group)}
-              onHide={() => setHidden(group.key, true)}
-              onCollapse={() => setCollapsed(group.key, true)}
+              onAddIssue={addIssueTo}
+              onHide={hideGroup}
+              onCollapse={collapseGroup}
               pinned={group === pinnedGroup}
-              onTogglePin={() => togglePin(group.key)}
+              onTogglePin={togglePinGroup}
+              canCreate={can('work_items', 'create')}
+              canEdit={can('work_items', 'edit')}
               readOnly={readOnly}
             />
           ),
@@ -183,8 +213,11 @@ export default function FlatBoard({
 
         {hiddenGroups.length > 0 && (
           <div className="ml-auto w-64 shrink-0 self-start rounded-md border p-2">
-            <div className="flex w-full items-center gap-1.5 px-1 py-1 text-sm font-medium text-muted-foreground">
-              <ChevronDown className="size-4" />
+            <div
+              {...hiddenHeaderHover.triggerProps}
+              className="flex w-full items-center gap-1.5 px-1 py-1 text-sm font-medium text-muted-foreground"
+            >
+              <ChevronDownIcon ref={hiddenHeaderHover.ref} size={16} />
               {settings.group === 'status' ? t('hiddenColumns') : t('hiddenGroups')}
             </div>
             <div className="mt-1 flex flex-col gap-1">
@@ -203,20 +236,11 @@ export default function FlatBoard({
                     />
                   </div>
                   {!readOnly && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-6 text-muted-foreground"
-                          onClick={() => setHidden(group.key, false)}
-                          aria-label={t('show')}
-                        >
-                          <Eye />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>{t('show')}</TooltipContent>
-                    </Tooltip>
+                    <HeaderIconButton
+                      icon={EyeIcon}
+                      label={t('show')}
+                      onClick={() => setHidden(group.key, false)}
+                    />
                   )}
                 </div>
               ))}

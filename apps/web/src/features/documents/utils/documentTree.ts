@@ -19,3 +19,17 @@ export function documentAncestors(
 
   return ancestors;
 }
+
+// A page whose parent is not in the list counts as a top-level page, as in the
+// page tree.
+export function documentChildren(
+  parentId: number | null,
+  documents: ProjectDocumentSummary[],
+): ProjectDocumentSummary[] {
+  const ids = new Set(documents.map((item) => item.id));
+  const visibleParentId = (item: ProjectDocumentSummary) =>
+    item.parentId !== null && ids.has(item.parentId) ? item.parentId : null;
+  return documents
+    .filter((item) => visibleParentId(item) === parentId)
+    .sort((a, b) => a.position - b.position || a.id - b.id);
+}

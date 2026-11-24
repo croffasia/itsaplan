@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import {
-  WEBHOOK_EVENT_TYPES,
-  type Webhook,
-  type WebhookEventType,
-} from '@/lib/api/endpoints/webhooks';
+import type { Webhook } from '@/lib/api/endpoints/webhooks';
+import { useWebhookEventTypesQuery } from '@/services/webhooks.service';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,13 +10,14 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 export interface WebhookFormValue {
   url: string;
-  events: WebhookEventType[];
+  events: string[];
   isActive: boolean;
 }
 
 // Add/edit dialog for a webhook: the payload URL, the set of subscribed event
 // types, and whether it is active. The secret is generated server-side and shown
-// on the row, not here.
+// on the row, not here. An event the instance no longer offers stays listed while the
+// webhook has it.
 export function SettingsWebhookDialog({
   projectKey,
   initial,
@@ -36,12 +34,14 @@ export function SettingsWebhookDialog({
   const t = useTranslations('settings.webhooks');
   const tCommon = useTranslations('common');
   const [url, setUrl] = useState(initial?.url ?? '');
-  const [events, setEvents] = useState<Set<WebhookEventType>>(new Set(initial?.events ?? []));
+  const [events, setEvents] = useState<Set<string>>(new Set(initial?.events ?? []));
+  const offered = useWebhookEventTypesQuery(projectKey).data ?? [];
+  const listed = [...offered, ...(initial?.events ?? []).filter((e) => !offered.includes(e))];
   const [isActive, setIsActive] = useState(initial?.isActive ?? true);
 
   const valid = url.trim().length > 0 && events.size > 0;
 
-  function toggleEvent(event: WebhookEventType, on: boolean) {
+  function toggleEvent(event: string, on: boolean) {
     setEvents((prev) => {
       const next = new Set(prev);
       if (on) next.add(event);
@@ -88,7 +88,7 @@ export function SettingsWebhookDialog({
         <div className="space-y-1.5">
           <span className="text-sm font-medium">{t('events')}</span>
           <div className="grid gap-2 sm:grid-cols-2">
-            {WEBHOOK_EVENT_TYPES.map((event) => (
+            {listed.map((event) => (
               <label key={event} className="flex cursor-pointer items-center gap-2">
                 <Checkbox
                   checked={events.has(event)}

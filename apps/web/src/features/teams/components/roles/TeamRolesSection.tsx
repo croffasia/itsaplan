@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { Role } from '@/lib/api/endpoints/roles';
 import {
+  useCreateRole,
   usePermissionCatalogQuery,
   useTeamRoleOptionsQuery,
   useTeamRolesQuery,
+  useUpdateRole,
 } from '@/services/roles.service';
 import { useTeam } from '@/services/teams.service';
 import SectionPageView from '@/components/common/page/SectionPageView';
@@ -15,7 +17,7 @@ import ListPager from '@/components/common/ListPager';
 import SearchInput from '@/components/common/SearchInput';
 import { usePaging } from '@/hooks/usePaging';
 import { useSearchTerm } from '@/hooks/useSearchTerm';
-import RoleEditorPanel from './RoleEditorPanel';
+import RoleEditorPanel from '@/components/common/permissions/RoleEditorPanel';
 import TeamRolesList from './TeamRolesList';
 import TeamRolesToolbar from './TeamRolesToolbar';
 
@@ -39,6 +41,8 @@ export default function TeamRolesSection({ teamId }: { teamId: number }) {
   const catalogQuery = usePermissionCatalogQuery();
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Role | null>(null);
+  const createRole = useCreateRole(teamId);
+  const updateRole = useUpdateRole(teamId);
 
   const roles = rolesQuery.data?.items ?? [];
   const total = rolesQuery.data?.total ?? 0;
@@ -97,9 +101,14 @@ export default function TeamRolesSection({ teamId }: { teamId: number }) {
 
       {editorOpen && catalog && (
         <RoleEditorPanel
-          teamId={teamId}
           role={editing}
           catalog={catalog}
+          saving={createRole.isPending || updateRole.isPending}
+          onSave={(input) =>
+            editing
+              ? updateRole.mutateAsync({ roleId: editing.id, patch: input })
+              : createRole.mutateAsync(input)
+          }
           onClose={() => {
             setCreating(false);
             setEditing(null);

@@ -170,66 +170,122 @@
     },
     "joined": "加入于 {date}"
   },
+  "roles": {
+    "newRole": "新建角色",
+    "empty": "还没有系统角色。",
+    "default": "默认",
+    "defaultUndeletable": "无法删除默认角色",
+    "columns": {
+      "role": "角色",
+      "permissions": "权限"
+    },
+    "edit": "编辑角色",
+    "delete": "删除角色",
+    "deleteTitle": "删除角色“{name}”",
+    "deleteDescription": "此操作无法撤销。"
+  },
   "general": {
     "saved": "项目默认设置已保存",
     "projectDefaults": "项目默认设置",
-    "mcpEnabled": "新项目默认启用 MCP",
-    "mcpEnabledHint": "新项目创建时即纳入所属团队的 MCP 覆盖范围。",
+    "mcpEnabled": "新项目的 MCP 访问",
+    "mcpEnabledHint": "所属团队已开启 MCP 时，新项目创建后即向 MCP 客户端开放。现有项目的设置不变。",
     "workspacesSaved": "工作区设置已保存",
     "workspaces": "工作区",
-    "personalWorkspaces": "每人一个工作区",
-    "personalWorkspacesHint": "每个账户都会获得一个以其姓名命名的专属工作区。关闭后，成员只能在被添加到的工作区中工作。",
+    "personalWorkspaces": "个人工作区",
+    "personalWorkspacesHint": "每个人都会获得一个以其姓名命名的专属工作区。关闭后，新账户不再获得，成员只能在被添加到的工作区中工作。已有的工作区会保留。",
+    "invites": "邀请",
+    "inviteSearch": "邀请时推荐成员",
+    "inviteSearchHint": "团队所有者和管理员可以按姓名或邮箱查找所有工作区中的账户。在邀请对话框中输入时会显示匹配结果。关闭后，需要输入完整地址。",
+    "invitesSaved": "邀请设置已保存",
+    "sharing": "公开链接",
+    "sharingEnabled": "允许公开链接",
+    "sharingEnabledHint": "关闭后，现有链接在重新开启前无法打开，任何人都无法分享。开启后，由各工作区决定其文档、事项和视图能否通过链接分享。",
+    "sharingSaved": "公开链接设置已保存",
+    "apiDocs": "API 文档",
+    "apiDocsAudience": "谁可以阅读 API 文档",
+    "apiDocsAudienceHint": "适用于应用内和 API 的 /docs 地址。",
+    "apiDocsAudiences": {
+      "nobody": "没有人",
+      "god": "实例管理员",
+      "everyone": "所有人"
+    },
+    "apiDocsSaved": "API 文档设置已保存",
+    "apiKeys": "API 密钥",
+    "apiKeysSaved": "API 密钥设置已保存",
+    "keyRequestsPerMinute": "每分钟请求数",
+    "keyRequestsPerMinuteHint": "一个密钥每分钟可发送的请求数，包括 MCP 工具调用。每个 API 副本分别计数。0 表示不限。",
+    "keyRequestsPerMinuteInvalid": "请输入 0 到 {max} 之间的整数。",
     "agents": "代理",
     "agentsSaved": "代理设置已保存",
+    "embedding": "嵌入",
+    "embedSites": "受信任的网站",
+    "embedSitesHint": "只有这些网站可以嵌入通过公开链接分享的文档、事项和视图。列表为空时，任何网站都不能嵌入。按 https://example.com 的格式输入每个网站，用逗号分隔。",
+    "embedSitesInvalid": "按 https://example.com 的格式输入每个网站，不带路径。",
+    "embedSaved": "受信任的网站已保存。一分钟内生效。",
     "traceRetention": "保留运行追踪",
-    "traceRetentionHint": "代理的每次运行都会记录模型和工具调用。用量面板只统计仍保留的运行。",
+    "traceRetentionHint": "运行追踪记录一次代理运行的模型和工具调用。超过此时间后会被删除，用量面板不再统计该次运行。",
     "traceDays": "{days} 天",
     "traceForever": "永久",
-    "maxRunTime": "最长运行时间",
-    "maxRunTimeHint": "单次智能体运行在被停止并记为失败之前可持续的时间。智能体自身的上限不能超过此值。",
+    "maxRunTime": "运行时间上限",
+    "maxRunTimeHint": "超过此时间的运行会被停止并记为失败。代理自身的上限只能更短。聊天不受限制。",
     "runMinutes": "{minutes, plural, other {# 分钟}}",
-    "runSeconds": "{seconds} 秒"
+    "runSeconds": "{seconds} 秒",
+    "concurrentRuns": "同时运行数",
+    "concurrentRunsHint": "此实例上可同时进行的代理运行数。其余的在队列中等待。聊天和外部代理不计入。0 表示不限。",
+    "concurrentRunsInvalid": "请输入 0 到 {max} 之间的整数。",
+    "answerLimit": "回答长度上限",
+    "answerLimitHint": "保存的代理回答字符数。超出部分会被截断。聊天中显示完整回答，但外部代理收到的历史记录只有保存的部分。0 表示不限。",
+    "answerLimitInvalid": "请输入 0 到 {max, number} 之间的整数。",
+    "answerLimitNone": "不限长度。长回答会完整保存，可能拖慢运行列表的加载。"
   },
   "authentication": {
     "saved": "身份验证设置已保存",
     "registration": "注册",
-    "registrationHint": "设置哪些人可以创建此实例的账户。",
-    "registrationPasswordlessNote": "注册和密码找回由登录提供方负责。",
+    "registrationHint": "谁可以创建账户，以及邀请的有效期。",
+    "registrationPasswordlessNote": "注册和重置密码在登录提供方处完成。",
     "inviteTtlDays": "邀请有效期（天）",
-    "inviteTtlDaysHint": "超过此期限后，邀请链接将失效；在仅限邀请注册时，也无法再用它注册。设为 0 则邀请永不过期。",
+    "inviteTtlDaysHint": "邀请在创建后满此天数即失效。新值也适用于已有的邀请。0 表示邀请永不过期。",
     "inviteTtlDaysInvalid": "请输入 0 到 {max} 之间的整数天数。",
     "allowedEmailDomains": "允许的邮箱域名",
-    "allowedEmailDomainsHint": "只有这些域名下的地址可以创建账户。用逗号分隔；留空则允许任何地址。已有账户不受影响。",
-    "allowedEmailDomainsInvalid": "每个域名应类似 example.com，最多 100 个。",
+    "allowedEmailDomainsHint": "只有这些域名下的地址可以创建账户，通过邀请也一样。已有账户保留访问权限。域名之间用逗号分隔。每个子域名需要单独添加。留空则允许任何地址。",
+    "allowedEmailDomainsInvalid": "请输入类似 example.com 的域名，最多 100 个。",
     "modes": {
       "open": {
         "label": "开放注册",
-        "description": "任何访问注册页面的人都可以创建账户。",
+        "description": "任何人都可以在注册页面创建账户。",
         "descriptionPasswordless": "任何人首次通过提供方登录即可获得账户。"
       },
       "invite": {
         "label": "仅限邀请",
-        "description": "只有收到项目邀请的邮箱可以创建账户。",
-        "descriptionPasswordless": "仅当该地址存在待处理的邀请时，通过提供方登录才会创建账户。"
+        "description": "只有拥有待处理邀请的地址可以创建账户。",
+        "descriptionPasswordless": "通过提供方登录时，只为拥有待处理邀请的地址创建账户。"
       },
       "closed": {
         "label": "关闭注册",
-        "description": "不允许创建新账户，现有账户仍可登录。",
-        "descriptionPasswordless": "不创建新账户，即使通过提供方登录也不例外。现有账户可继续登录。"
+        "description": "任何人都无法创建账户。已有账户可以继续登录。",
+        "descriptionPasswordless": "通过提供方登录不会创建账户。已有账户可以继续登录。"
       }
     },
     "signIn": "登录选项",
-    "signInHint": "登录方式。需要发送邮件的选项在配置邮件服务前不可用。",
-    "needsProvider": "请先在“邮件服务商”中完成配置。",
+    "needsProvider": "请先在 集成 → 邮件服务商 中设置邮件服务商。",
     "requireVerification": "要求验证邮箱",
-    "requireVerificationHint": "新账户必须验证邮箱后才能登录。",
+    "requireVerificationHint": "使用密码登录前必须先确认邮箱地址。已有账户同样适用：登录表单会提供重新发送确认链接的选项。",
     "magicLink": "邮箱登录链接",
-    "magicLinkHint": "通过邮件发送免密码登录链接。",
+    "magicLinkHint": "可以通过发送到邮箱的链接登录。仅在开启「邮箱和密码」时有效。",
     "trustProviderEmails": "信任登录提供方的邮箱地址",
-    "trustProviderEmailsHint": "通过 Google 或 OpenID Connect 登录时，直接进入已使用该邮箱地址的账户，无论该地址是否在此验证过。仅当由你决定谁能在提供方注册时才开启。",
+    "trustProviderEmailsHint": "Google 和 OpenID Connect 会让用户登录到使用相同邮箱地址的账户，即使该地址从未被确认。仅当你能控制谁在提供方注册时才开启，否则他人可能接管账户。",
     "emailPassword": "邮箱和密码",
-    "emailPasswordHint": "提供登录和注册表单。关闭后只能通过登录提供方进入。",
-    "needsSso": "请先在「集成」中配置登录提供方。"
+    "emailPasswordHint": "用户使用邮箱和密码注册和登录。关闭后，只能通过登录提供方或通行密钥登录。",
+    "needsSso": "请先在 集成 → 身份验证提供商 中设置登录提供方。",
+    "signInLimits": "请求限制",
+    "signInLimitsHint": "一个 IP 地址可向每个 API 副本发送的请求数。用于阻止猜测密码和邮件轰炸。在反向代理之后，代理必须设置 X-Forwarded-For，否则所有客户端共用每个限制。",
+    "signInRateLimit": "登录和注册尝试",
+    "signInRateLimitHint": "每 10 秒，包括修改密码和邮箱。",
+    "emailRateLimit": "账户邮件",
+    "emailRateLimitHint": "每分钟，针对重置密码邮件和邮箱确认邮件。",
+    "magicLinkRateLimit": "登录链接请求",
+    "magicLinkRateLimitHint": "每分钟，针对请求和打开登录链接。",
+    "signInLimitInvalid": "请输入 1 到 {max} 之间的整数。"
   },
   "hotkeys": {
     "saved": "键盘快捷键已保存"
@@ -250,14 +306,115 @@
     "quotaMb": "每个项目的存储空间（MB）",
     "quotaNote": "项目达到配额后会拒绝新上传，直到有人删除附件。"
   },
+  "jobs": {
+    "saved": "后台任务设置已保存",
+    "range": "请输入 {min, number} 到 {max, number} 之间的整数。",
+    "withRange": "{hint}范围为 {min, number} 到 {max, number}。",
+    "webhookLeaseNote": "请将租约时长设为长于超时。租约时长以秒为单位，超时以毫秒为单位。",
+    "webhookTimeoutNote": "请将超时设为短于租约时长。租约时长以秒为单位，超时以毫秒为单位。",
+    "agentLeaseNote": "请将租约时长设为长于“带端点 URL 的代理”中的超时。租约时长以秒为单位，超时以毫秒为单位。",
+    "invocationTimeoutNote": "请将超时设为短于“代理运行”和“代理聊天”中的租约时长。租约时长以秒为单位，超时以毫秒为单位。",
+    "webhooks": {
+      "title": "Webhook",
+      "description": "投递的发送与重试方式、持续失败的 Webhook 何时关闭，以及投递日志保留多久。",
+      "pollIntervalMs": "检查间隔（毫秒）",
+      "pollIntervalMsHint": "发送队列中投递和通知的频率。",
+      "batchSize": "批次大小",
+      "batchSizeHint": "每次检查发送的投递数。",
+      "timeoutMs": "超时（毫秒）",
+      "timeoutMsHint": "接收服务器的响应时限，超过后本次尝试记为失败。",
+      "maxAttempts": "最大尝试次数",
+      "maxAttemptsHint": "投递记为失败前的发送次数。",
+      "disableThreshold": "连续失败次数",
+      "disableThresholdHint": "连续失败的尝试（含重试）达到此次数后，Webhook 会被关闭。",
+      "leaseSeconds": "租约时长（秒）",
+      "leaseSecondsHint": "中断的投递会在此时长后重新发送。",
+      "retentionDays": "保留投递日志（天）",
+      "retentionDaysHint": "成功的投递在此时长后从日志中删除。失败的投递会保留。",
+      "cleanupIntervalMinutes": "清理间隔（分钟）",
+      "cleanupIntervalMinutesHint": "从投递日志中删除旧记录的频率。"
+    },
+    "notifications": {
+      "title": "通知",
+      "description": "邮件和 Telegram 通知，按 Webhook 中的“检查间隔”发送。",
+      "batchSize": "批次大小",
+      "batchSizeHint": "每次检查发送的通知数。",
+      "maxAttempts": "最大尝试次数",
+      "maxAttemptsHint": "通知记为失败前的发送次数。",
+      "leaseSeconds": "租约时长（秒）",
+      "leaseSecondsHint": "中断的通知会在此时长后重新发送。"
+    },
+    "imports": {
+      "title": "导入",
+      "description": "从其他项目管理工具导入。",
+      "pollIntervalMs": "检查间隔（毫秒）",
+      "pollIntervalMsHint": "启动队列中导入的频率。"
+    },
+    "agentRuns": {
+      "title": "代理运行",
+      "description": "队列中和定时的代理运行如何开始和重试。",
+      "pollIntervalMs": "检查间隔（毫秒）",
+      "pollIntervalMsHint": "从队列取出运行、并将到期的定时任务加入队列的频率。",
+      "maxAttempts": "最大尝试次数",
+      "maxAttemptsHint": "运行记为失败前的启动次数。",
+      "leaseSeconds": "租约时长（秒）",
+      "leaseSecondsHint": "中断的运行会在此时长后重新开始。对内部代理，此时长不会短于通用设置中的“运行时间上限”。"
+    },
+    "agentChat": {
+      "title": "代理聊天",
+      "description": "通过运行器或端点 URL 与外部代理的聊天。",
+      "leaseSeconds": "租约时长（秒）",
+      "leaseSecondsHint": "中断的回答会在此时长后重新开始。",
+      "maxAttempts": "最大尝试次数",
+      "maxAttemptsHint": "回答记为失败前代理收到消息的次数。",
+      "claimWaitMs": "运行器等待时长（毫秒）",
+      "claimWaitMsHint": "运行器请求等待新聊天消息的时长。",
+      "claimPollMs": "运行器检查间隔（毫秒）",
+      "claimPollMsHint": "新的聊天消息会在此时长内送达等待中的运行器。",
+      "streamPollMs": "回答检查间隔（毫秒）",
+      "streamPollMsHint": "打开的聊天显示回答新片段的频率。",
+      "historyMessages": "聊天历史（消息数）",
+      "historyMessagesHint": "代理随每条新消息收到的之前聊天消息数。"
+    },
+    "agentInvocations": {
+      "title": "带端点 URL 的代理",
+      "description": "发送到代理端点 URL 的任务和聊天消息。",
+      "pollIntervalMs": "检查间隔（毫秒）",
+      "pollIntervalMsHint": "向这些代理发送队列中任务和聊天消息的频率。",
+      "timeoutMs": "超时（毫秒）",
+      "timeoutMsHint": "端点的响应时限。超时后，任务或消息会在租约结束时重新发送。"
+    },
+    "sweeps": {
+      "title": "归档和清理",
+      "description": "归档长期无活动的已关闭工作项，以及删除旧运行追踪和已过期公开链接的频率。",
+      "autoArchiveMinutes": "归档间隔（分钟）",
+      "autoArchiveMinutesHint": "在开启归档的项目中，归档长期无活动的已关闭工作项的频率。",
+      "tracePruneMinutes": "追踪清理间隔（分钟）",
+      "tracePruneMinutesHint": "删除早于通用设置中“保留运行追踪”时长的运行追踪的频率。",
+      "shareExpiryMinutes": "链接清理间隔（分钟）",
+      "shareExpiryMinutesHint": "删除已过期公开链接的频率。无论此值是多少，链接到期后都无法再打开。"
+    },
+    "bot": {
+      "title": "Telegram 机器人",
+      "description": "机器人获取设置更改的速度。",
+      "configPollIntervalMs": "设置检查间隔（毫秒）",
+      "configPollIntervalMsHint": "在“Telegram”中所做的更改会在此时长内对机器人生效。"
+    }
+  },
   "telegram": {
     "saved": "Telegram 设置已保存",
     "bot": "机器人",
-    "botConfigured": "用户可以在个人资料中打开此机器人的对话，以关联 Telegram 账户。",
+    "botConfigured": "用户可以在通知设置中打开此机器人的对话，以关联 Telegram 账户。",
     "botMissing": "在 Telegram 中通过 @BotFather 创建机器人，然后在此粘贴机器人令牌。",
     "botToken": "机器人令牌",
     "botTokenHint": "保存时会通过 Telegram 验证令牌，错误令牌会立即被拒绝。",
     "resolvedHint": "根据令牌解析。用户关联账户时会看到此机器人。"
+  },
+  "slack": {
+    "saved": "Slack 设置已保存",
+    "app": "Slack 应用",
+    "appConfigured": "开启后，成员可以在通知设置中连接自己的 Slack 账号。",
+    "appMissing": "添加机器人令牌、Client ID 和客户端密钥后即可开启应用。"
   },
   "email": {
     "saved": "邮件服务商已保存",
@@ -297,6 +454,120 @@
     "clientSecret": "客户端密钥",
     "clientSecretPlaceholder": "应用注册的密钥",
     "microsoft365Hint": "以 Entra ID 应用注册的身份登录，而不是使用邮箱密码，因此邮箱可以保持开启 MFA。该应用需要 Office 365 Exchange Online 的应用程序权限 SMTP.SendAsApp 并经过管理员同意，在 Exchange 中拥有此邮箱的访问权限，并为该邮箱开启 SMTP AUTH。"
+  },
+  "emailTemplates": {
+    "saved": "邮件模板已保存",
+    "unsaved": "有未保存的更改",
+    "blankText": "请填写缺少的主题或正文后再保存",
+    "emails": "邮件",
+    "layout": "布局",
+    "edited": "已修改",
+    "subject": "主题",
+    "text": "正文",
+    "button": "按钮",
+    "formatting": "格式",
+    "heading1": "标题 1",
+    "heading2": "标题 2",
+    "bold": "粗体",
+    "italic": "斜体",
+    "strikethrough": "删除线",
+    "link": "链接",
+    "bulletedList": "项目符号列表",
+    "numberedList": "编号列表",
+    "quote": "引用",
+    "boldSample": "粗体",
+    "italicSample": "斜体",
+    "strikeSample": "文本",
+    "linkSample": "链接文本",
+    "unknownVariables": "未知变量：{names}",
+    "removeUnknownVariables": "请移除未知变量后再保存",
+    "reset": "恢复默认",
+    "test": "发送测试",
+    "testing": "正在发送…",
+    "testSent": "已发送至 {email}",
+    "testNeedsProvider": "请先设置邮件服务商",
+    "layoutHtml": "布局 HTML",
+    "layoutCss": "布局 CSS",
+    "placeholders": "占位符",
+    "variables": "变量",
+    "required": "必需",
+    "requiredPlaceholders": "请将 {names} 添加到布局后再保存",
+    "preview": "预览",
+    "previewEmail": "邮件",
+    "previewText": "纯文本",
+    "previewFailed": "预览未能加载。请刷新页面后重试。",
+    "from": "发件人",
+    "to": "收件人",
+    "groups": {
+      "signIn": "登录",
+      "invitations": "邀请",
+      "notifications": "通知",
+      "service": "其他"
+    },
+    "templates": {
+      "reset": {
+        "name": "重置密码"
+      },
+      "verify": {
+        "name": "验证邮箱地址"
+      },
+      "magic": {
+        "name": "登录链接"
+      },
+      "inviteProject": {
+        "name": "项目邀请"
+      },
+      "inviteTeam": {
+        "name": "团队邀请"
+      },
+      "assigned": {
+        "name": "工作项已分配"
+      },
+      "mentioned": {
+        "name": "在工作项中被提及"
+      },
+      "commented": {
+        "name": "新评论"
+      },
+      "stateChanged": {
+        "name": "状态已更改"
+      },
+      "reacted": {
+        "name": "评论的回应"
+      },
+      "documentMentioned": {
+        "name": "在文档中被提及"
+      },
+      "documentCommentMentioned": {
+        "name": "在文档评论中被提及"
+      },
+      "test": {
+        "name": "测试邮件",
+        "hint": "由邮件服务商页面的测试按钮发送。"
+      }
+    },
+    "placeholderText": {
+      "content": "邮件正文",
+      "button": "带链接的按钮",
+      "subject": "主题",
+      "lang": "语言代码",
+      "dir": "文字方向",
+      "site_name": "实例名称",
+      "site_url": "实例地址",
+      "logo_url": "徽标地址"
+    },
+    "variableText": {
+      "actor": "执行操作的人",
+      "ref": "工作项编号",
+      "title": "工作项标题",
+      "from": "原状态",
+      "to": "新状态",
+      "document": "文档标题",
+      "inviter": "发送邀请的人",
+      "project": "项目名称",
+      "team": "团队名称",
+      "role": "加入后的角色"
+    }
   },
   "authProvider": {
     "saved": "身份验证提供商已保存",

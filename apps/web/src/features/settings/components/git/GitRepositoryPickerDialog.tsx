@@ -22,16 +22,18 @@ import {
 export default function GitRepositoryPickerDialog({
   projectKey,
   connection,
+  initialSearch = '',
   open,
   onOpenChange,
 }: {
   projectKey: string;
   connection: GitProviderConnection;
+  initialSearch?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations('settings.git');
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(initialSearch);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const debouncedSearch = useDebouncedValue(search.trim(), 250);
   const repositoriesQuery = useAvailableGitRepositoriesQuery(

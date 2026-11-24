@@ -20,6 +20,7 @@ import { useTranslations } from 'next-intl';
 const loadThreshold = 48;
 
 export function AgentChatTranscript({
+  agentName,
   messages,
   status,
   activeTool,
@@ -29,6 +30,7 @@ export function AgentChatTranscript({
   isLoadingEarlier = false,
   onLoadEarlier,
 }: {
+  agentName: string;
   messages: ChatMessage[];
   status: ChatStatus;
   activeTool: string | null;
@@ -97,6 +99,7 @@ export function AgentChatTranscript({
               <AgentChatMessage
                 key={message.id}
                 message={message}
+                agentName={agentName}
                 complete={status === 'ready' || index < messages.length - 1}
                 showDate={!previous || dayKey(previous.createdAt) !== dayKey(message.createdAt)}
               />

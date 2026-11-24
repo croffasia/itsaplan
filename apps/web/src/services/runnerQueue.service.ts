@@ -1,27 +1,104 @@
 import { getExternalRunTrace } from '@/lib/api/endpoints/agents';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { nextPageParam } from '@/lib/api/core/paging';
-import { DEFAULT_PAGE_SIZE } from '@/hooks/usePaging';
-import { getRunnerQueue } from '@/lib/api/endpoints/runnerQueue';
+import {
+  cancelAgentRun,
+  getInternalRunTrace,
+  getRunInitiatorOptions,
+  getRunnerQueue,
+  getRunProjectOptions,
+  getRunsInFlight,
+  type RunnerQueueFilter,
+} from '@/lib/api/endpoints/runnerQueue';
 import { qk } from './queryKeys';
 
-export function useRunnerQueueQuery() {
-  return useInfiniteQuery({
-    queryKey: [...qk.runnerQueue, 'list'],
-    queryFn: ({ pageParam }) => getRunnerQueue({ page: pageParam, pageSize: DEFAULT_PAGE_SIZE }),
-    initialPageParam: 1,
-    getNextPageParam: nextPageParam,
+// How many runs the history shows at first and adds with each "load older".
+const RUNS_PAGE_SIZE = 15;
+
+// Under the runner queue key, so the queue's live refresh reloads it with the list.
+export function useRunsInFlightQuery(api: string) {
+  return useQuery({
+    queryKey: [...qk.runnerQueue, 'in-flight', api],
+    queryFn: () => getRunsInFlight(api),
   });
 }
 
-export function useRunnerQueueRunQuery(runId: number) {
-  const params = { page: 1, pageSize: 1, runId };
-  return useQuery({ queryKey: [...qk.runnerQueue, params], queryFn: () => getRunnerQueue(params) });
+// How many runs work in the project now, internal and external.
+export function useRunningRunsQuery(projectRef: string, enabled: boolean) {
+  return useQuery({
+    queryKey: qk.runningRuns(projectRef),
+    queryFn: () =>
+      getRunnerQueue(`/projects/${projectRef}`, { page: 1, pageSize: 1, state: 'active' }),
+    select: (page) => page.running,
+    enabled,
+  });
 }
 
-export function useExternalRunTraceQuery(runId: number, attempt?: number) {
+// Under the runner queue key too, so a new initiator shows with the run that brings them.
+export function useRunInitiatorOptionsQuery(api: string) {
+  return useQuery({
+    queryKey: [...qk.runnerQueue, 'initiators', api],
+    queryFn: () => getRunInitiatorOptions(api),
+  });
+}
+
+export function useRunProjectOptionsQuery(api: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...qk.runnerQueue, 'projects', api],
+    queryFn: () => getRunProjectOptions(api),
+    enabled,
+  });
+}
+
+export function useRunnerQueueQuery(api: string, filter: RunnerQueueFilter = {}) {
+  return useInfiniteQuery({
+    queryKey: [...qk.runnerQueue, 'list', api, filter],
+    queryFn: ({ pageParam }) =>
+      getRunnerQueue(api, { page: pageParam, pageSize: RUNS_PAGE_SIZE, ...filter }),
+    initialPageParam: 1,
+    getNextPageParam: nextPageParam,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useRunnerQueueRunQuery(api: string, runId: number) {
+  const params = { page: 1, pageSize: 1, runId };
+  return useQuery({
+    queryKey: [...qk.runnerQueue, api, params],
+    queryFn: () => getRunnerQueue(api, params),
+  });
+}
+
+// The latest attempt without `attempt`. The previous attempt's steps stay on screen while
+// the picked one loads.
+export function useExternalRunTraceQuery(runId: number, attempt?: number, enabled = true) {
   return useQuery({
     queryKey: [...qk.externalRunTrace(runId), attempt ?? null],
     queryFn: () => getExternalRunTrace(runId, attempt),
+    placeholderData: keepPreviousData,
+    enabled,
+  });
+}
+
+export function useInternalRunTraceQuery(runId: number, attempt?: number, enabled = true) {
+  return useQuery({
+    queryKey: [...qk.internalRunTrace(runId), attempt ?? null],
+    queryFn: () => getInternalRunTrace(runId, attempt),
+    placeholderData: keepPreviousData,
+    enabled,
+  });
+}
+
+export function useCancelAgentRun() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: cancelAgentRun,
+    onSettled: () => qc.invalidateQueries({ queryKey: qk.runnerQueue }),
   });
 }

@@ -7,6 +7,7 @@ interface SettingsWebhooksTableProps {
   webhooks: Webhook[];
   onShowDeliveries: (webhook: Webhook) => void;
   onEdit: (webhookId: number) => void;
+  onRotateSecret: (webhook: Webhook) => void;
   onDelete: (webhook: Webhook) => void;
 }
 
@@ -14,6 +15,7 @@ export function SettingsWebhooksTable({
   webhooks,
   onShowDeliveries,
   onEdit,
+  onRotateSecret,
   onDelete,
 }: SettingsWebhooksTableProps) {
   const t = useTranslations('settings.webhooks');
@@ -46,6 +48,7 @@ export function SettingsWebhooksTable({
             webhook={webhook}
             onShowDeliveries={() => onShowDeliveries(webhook)}
             onEdit={() => onEdit(webhook.id)}
+            onRotateSecret={() => onRotateSecret(webhook)}
             onDelete={() => onDelete(webhook)}
           />
         ))}

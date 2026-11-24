@@ -3,7 +3,7 @@ import Modal from './Modal';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
 
-// A modal with a destructive confirm button that owns the busy state and the
+// A modal with a confirm button that owns the busy state and the
 // try/catch around the action. Callers put the dialog-specific body in `children`
 // and supply the action. A failed action is toasted globally; the dialog stays
 // open so the user can retry. Used by the delete confirmations (label/type/state/
@@ -13,6 +13,8 @@ export default function ConfirmDialog({
   children,
   confirmLabel,
   confirmDisabled = false,
+  destructive = true,
+  wide = false,
   onConfirm,
   onClose,
 }: {
@@ -20,6 +22,8 @@ export default function ConfirmDialog({
   children?: ReactNode;
   confirmLabel: string;
   confirmDisabled?: boolean;
+  destructive?: boolean;
+  wide?: boolean | 'xl';
   onConfirm: () => Promise<void>;
   onClose: () => void;
 }) {
@@ -38,14 +42,18 @@ export default function ConfirmDialog({
   }
 
   return (
-    <Modal title={title} onClose={onClose}>
+    <Modal title={title} onClose={onClose} wide={wide}>
       <div className="space-y-4">
         {children}
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={onClose} disabled={busy}>
+          <Button variant={destructive ? 'outline' : 'ghost'} onClick={onClose} disabled={busy}>
             {t('cancel')}
           </Button>
-          <Button variant="destructive" onClick={confirm} disabled={busy || confirmDisabled}>
+          <Button
+            variant={destructive ? 'destructive' : 'default'}
+            onClick={confirm}
+            disabled={busy || confirmDisabled}
+          >
             {confirmLabel}
           </Button>
         </div>

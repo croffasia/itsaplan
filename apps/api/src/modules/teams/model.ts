@@ -1,9 +1,9 @@
 import { t } from 'elysia';
+import { TEAM_SLUG_PATTERN } from '@repo/db';
 import { pageQueryFields, pageResponse } from '#shared/pagination';
 import { PermissionMatrixSchema } from '#shared/permissions';
 import { AccessViaSchema } from '#shared/workspace-roles';
 import { StatsDto } from '#modules/analytics/model';
-import { TEAM_SLUG_PATTERN } from './ref';
 
 // Both member lists here take the filters and the window the project member list
 // defines, so a reader learns one query and it holds everywhere.
@@ -159,18 +159,16 @@ export const TeamProjectOptionListResponse = t.Array(
 export const TeamProjectDetailResponse = t.Object({
   lastActivityAt: t.Nullable(t.String()),
   stats: StatsDto,
-  viewer: t.Nullable(
-    t.Object({
+  viewer: t.Object(
+    {
       role: t.Union([t.Literal('owner'), t.Literal('member')]),
       via: AccessViaSchema,
       source: t.Union([t.Literal('invite'), t.Literal('scim')], {
         description: "A provisioned membership is the identity provider's: it cannot be left.",
       }),
       permissions: PermissionMatrixSchema,
-    }),
-    {
-      description: "The reader's own membership in the project, null when they only run the team.",
     },
+    { description: "The reader's own access to the project." },
   ),
 });
 

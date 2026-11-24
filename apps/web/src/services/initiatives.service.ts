@@ -11,9 +11,12 @@ import {
   type InitiativePatch,
   type NewInitiativeInput,
   listInitiatives,
+  listFavoriteInitiatives,
   listInitiativeOptions,
+  searchInitiatives,
   initiativeCounts,
   getInitiative,
+  setInitiativeFavorite,
   createInitiative,
   updateInitiative,
   deleteInitiative,
@@ -48,6 +51,24 @@ export function useInitiativeOptionsQuery(
   });
 }
 
+// The palette's initiative search, in one project or, with a null projectId, in every
+// project. The previous hits stay on screen while only the term changes; hits from the
+// other scope never show in this one.
+export function useInitiativeSearchQuery(
+  q: string,
+  projectId: number | null,
+  opts: { enabled: boolean },
+) {
+  const term = q.trim();
+  return useQuery({
+    queryKey: qk.initiativeSearch(term, projectId),
+    queryFn: () => searchInitiatives({ q: term, projectId: projectId ?? undefined }),
+    enabled: opts.enabled && term.length > 0,
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[2] === projectId ? previous : undefined,
+  });
+}
+
 // Per-status counts for the list's status tabs, independent of the current page.
 export function useInitiativeCountsQuery(projectKey: string | null) {
   return useQuery({
@@ -62,6 +83,26 @@ export function useInitiativeQuery(id: number | null) {
     queryKey: qk.initiative(id ?? 0),
     queryFn: () => getInitiative(id!),
     enabled: id != null,
+  });
+}
+
+export function useFavoriteInitiativesQuery(projectKey: string | null, enabled = true) {
+  return useQuery({
+    queryKey: qk.favoriteInitiatives(projectKey ?? ''),
+    queryFn: () => listFavoriteInitiatives(projectKey!),
+    enabled: projectKey != null && enabled,
+  });
+}
+
+export function useSetInitiativeFavorite(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, favorite }: { id: number; favorite: boolean }) =>
+      setInitiativeFavorite(id, favorite),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: qk.initiativesForProject(projectKey) });
+      qc.invalidateQueries({ queryKey: qk.initiative(id) });
+    },
   });
 }
 

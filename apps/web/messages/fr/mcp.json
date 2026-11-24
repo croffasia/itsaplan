@@ -24,26 +24,36 @@
     "methodTabsAria": "Méthode de connexion",
     "method": "OAuth",
     "personalKey": "Clé d'API",
-    "description": "Pour tout client MCP compatible OAuth, par exemple ChatGPT ou Claude. Vous vous connectez avec votre compte Itsaplan. Le client ne reçoit aucune clé d'API.",
+    "description": "Pour tout client MCP compatible OAuth, par exemple ChatGPT ou Claude. Vous vous connectez avec votre compte {app}. Le client ne reçoit aucune clé d'API.",
     "discovery": "Découverte OAuth",
     "steps": {
       "add": "Ajoutez une application MCP dans votre client.",
       "paste": "Collez le point d'accès MCP.",
       "choose": "Choisissez OAuth lorsque le client demande la méthode de connexion.",
-      "signIn": "Connectez-vous à Itsaplan et approuvez l'accès."
+      "signIn": "Connectez-vous à {app} et approuvez l'accès."
     },
-    "security": "OAuth utilise PKCE (S256), l'enregistrement dynamique des clients et des jetons d'accès limités à votre compte Itsaplan.",
+    "security": "OAuth utilise PKCE (S256), l'enregistrement dynamique des clients et des jetons d'accès limités à votre compte {app}.",
     "consent": {
-      "title": "{client} souhaite se connecter à votre compte",
-      "titleUnnamed": "Un client MCP souhaite se connecter à votre compte",
-      "description": "Il agira avec vos autorisations : tout ce que vous pouvez voir et modifier, il le pourra aussi.",
-      "account": "Connecté en tant que {email}",
-      "redirect": "Après votre réponse, vous revenez sur {host}.",
-      "missingCode": "Cette demande d'autorisation n'a pas de code de consentement.",
-      "cancel": "Annuler",
-      "pending": "Autorisation…",
-      "authorize": "Autoriser",
-      "failed": "Impossible de terminer l'autorisation OAuth."
+      "title": "Autoriser {client} à accéder à votre compte ?",
+      "titleUnnamed": "Autoriser une application sans nom à accéder à votre compte ?",
+      "actsAs": "Une fois autorisée, l’application agit en votre nom :",
+      "canSee": "Voit tout ce que vous pouvez voir, dans toutes vos équipes",
+      "canChange": "Crée, modifie et supprime tout ce que vous pouvez",
+      "keepsAccess": "Garde l’accès jusqu’à ce que vous la déconnectiez dans Compte › Sécurité",
+      "account": "Compte",
+      "app": "Application",
+      "thisComputer": "Sur cet ordinateur",
+      "named": "L’application s’est nommée elle-même « {client} ». N’autorisez que si vous avez lancé cette connexion.",
+      "unnamed": "L’application n’a envoyé aucun nom. N’autorisez que si vous avez lancé cette connexion.",
+      "deny": "Ne pas autoriser",
+      "allow": "Autoriser",
+      "allowing": "Autorisation…",
+      "denying": "Envoi…",
+      "expired": "Cette demande a expiré au bout de 10 minutes. Relancez la connexion dans l’application.",
+      "failed": "Votre réponse n’a pas abouti. Réessayez.",
+      "incompleteTitle": "Ce lien est incomplet",
+      "incompleteBody": "Relancez la connexion dans l’application.",
+      "brandSubtitle": "Connectez à votre compte des applications d’IA comme Claude et ChatGPT."
     }
   }
 }

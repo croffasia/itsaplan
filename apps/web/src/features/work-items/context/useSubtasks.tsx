@@ -97,14 +97,23 @@ export function useIssueSubtaskFold(): SubtaskFold {
   return useContext(FoldContext);
 }
 
-// The issue's subtasks, by issue number. Empty for a subtask, which has none.
+// The issue's direct subtasks, by issue number.
 export function useSubtasks(issueId: number): Issue[] {
   return useContext(SubtaskContext).get(issueId) ?? NONE;
 }
 
-// The issue a subtask belongs to. Undefined for an issue that stands on its own,
-// and for one whose parent is archived and therefore not on the board.
-export function useParentIssue(parentId: number | null): Issue | undefined {
+// The issues above a subtask, from the top one down to its parent. Empty for an
+// issue that stands on its own. An archived issue is not on the board, so the chain
+// stops below one.
+export function useAncestors(parentId: number | null): Issue[] {
   const byId = useContext(IssueContext);
-  return parentId === null ? undefined : byId.get(parentId);
+  const lookup = (id: number | null) => (id === null ? undefined : byId.get(id));
+  const chain: Issue[] = [];
+  for (
+    let issue = lookup(parentId);
+    issue && !chain.includes(issue);
+    issue = lookup(issue.parentId)
+  )
+    chain.push(issue);
+  return chain.reverse();
 }

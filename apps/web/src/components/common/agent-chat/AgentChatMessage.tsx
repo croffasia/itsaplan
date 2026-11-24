@@ -6,10 +6,10 @@ import type { AiChatPart, AiChatToolPart } from '@/lib/api/endpoints/agentChat';
 import { formatLongDate, formatTime } from '@/utils/dates';
 import Markdown from '@/components/common/Markdown';
 import { Bubble, BubbleContent } from '@/components/ui/bubble';
-import { Marker, MarkerContent } from '@/components/ui/marker';
-import { Message, MessageContent, MessageFooter } from '@/components/ui/message';
+import { Message, MessageContent, MessageFooter, MessageHeader } from '@/components/ui/message';
 import { MessageScrollerItem } from '@/components/ui/message-scroller';
 import AgentChatToolCalls from './AgentChatToolCalls';
+import AgentTile from './AgentTile';
 import AgentChatUserText from './AgentChatUserText';
 import { useTranslations } from 'next-intl';
 
@@ -31,17 +31,28 @@ function blocksOf(parts: AiChatPart[]): Block[] {
   return blocks;
 }
 
+// The time of a message is there while it is pointed at, and always on a touch screen.
 export default function AgentChatMessage({
   message,
+  agentName,
   showDate,
   complete = true,
 }: {
   message: ChatMessage;
+  agentName: string;
   showDate: boolean;
   complete?: boolean;
 }) {
   const t = useTranslations('common.agentChat');
   const isUser = message.role === 'user';
+  const time = (
+    <time
+      dateTime={message.createdAt}
+      className="shrink-0 text-xs text-muted-foreground tabular-nums opacity-0 transition-opacity group-hover/message:opacity-100 [@media(hover:none)]:opacity-100"
+    >
+      {formatTime(message.createdAt)}
+    </time>
+  );
 
   return (
     <MessageScrollerItem
@@ -50,33 +61,45 @@ export default function AgentChatMessage({
       className="flex flex-col gap-6 motion-safe:animate-in motion-safe:duration-300 motion-safe:fade-in motion-safe:slide-in-from-bottom-1"
     >
       {showDate && (
-        <Marker variant="separator">
-          <MarkerContent>{formatLongDate(message.createdAt)}</MarkerContent>
-        </Marker>
+        <p className="text-center text-xs text-muted-foreground">
+          {formatLongDate(message.createdAt)}
+        </p>
       )}
       <Message align={isUser ? 'end' : 'start'}>
         <MessageContent>
-          <Bubble variant={isUser ? 'muted' : 'ghost'} className={cn('gap-2', !isUser && 'w-full')}>
-            {blocksOf(message.parts).map((block, index) =>
-              'tools' in block ? (
-                <AgentChatToolCalls key={index} tools={block.tools} />
-              ) : (
-                <BubbleContent key={index} className={cn(!isUser && 'w-full')}>
-                  {isUser ? (
-                    <AgentChatUserText text={block.text} />
-                  ) : (
-                    <Markdown complete={complete}>{block.text}</Markdown>
-                  )}
-                </BubbleContent>
-              ),
-            )}
-          </Bubble>
+          {!isUser && (
+            <MessageHeader className="gap-2 text-foreground">
+              <AgentTile />
+              <span className="truncate text-[13px] font-semibold">{agentName}</span>
+              {time}
+            </MessageHeader>
+          )}
+          <div className={cn('flex min-w-0 items-center gap-3', isUser && 'justify-end')}>
+            {isUser && time}
+            <Bubble
+              variant={isUser ? 'muted' : 'ghost'}
+              className={cn('gap-2', !isUser && 'w-full')}
+            >
+              {blocksOf(message.parts).map((block, index) =>
+                'tools' in block ? (
+                  <AgentChatToolCalls key={index} tools={block.tools} />
+                ) : (
+                  <BubbleContent
+                    key={index}
+                    className={isUser ? 'rounded-2xl rounded-ee-sm' : 'w-full'}
+                  >
+                    {isUser ? (
+                      <AgentChatUserText text={block.text} />
+                    ) : (
+                      <Markdown complete={complete}>{block.text}</Markdown>
+                    )}
+                  </BubbleContent>
+                ),
+              )}
+            </Bubble>
+          </div>
           {message.error && <p className="text-xs text-destructive">{message.error}</p>}
-          <MessageFooter>
-            {message.stopped
-              ? `${t('stopped')} · ${formatTime(message.createdAt)}`
-              : formatTime(message.createdAt)}
-          </MessageFooter>
+          {message.stopped && <MessageFooter>{t('stopped')}</MessageFooter>}
         </MessageContent>
       </Message>
     </MessageScrollerItem>

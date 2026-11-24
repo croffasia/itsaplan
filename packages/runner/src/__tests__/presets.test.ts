@@ -63,6 +63,25 @@ describe('preset arguments', () => {
     expect(resumed).toEqual(['-p', '--mode', 'json', '--session-id', 'sess-9']);
   });
 
+  it('runs Mastra Code headless with the task on stdin and resumes a thread by id', () => {
+    const fresh = presetArgv(PRESETS.mastracode, null, 'context', ['--model', 'x/y'], 'do it');
+    expect(fresh).not.toContain('--thread');
+    expect(fresh).not.toContain('do it');
+    expect(fresh.slice(-2)).toEqual(['--prompt', '-']);
+
+    const resumed = presetArgv(PRESETS.mastracode, 'ee394567', '', [], 'do it');
+    expect(resumed).toEqual([
+      '--output',
+      'jsonl',
+      '--permission-mode',
+      'auto',
+      '--thread',
+      'ee394567',
+      '--prompt',
+      '-',
+    ]);
+  });
+
   it('prints through omp json mode unattended and resumes with --resume', () => {
     const fresh = presetArgv(PRESETS.omp, null, '', [], 'do it');
     expect(fresh).toContain('--auto-approve');

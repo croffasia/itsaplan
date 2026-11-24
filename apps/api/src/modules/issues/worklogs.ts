@@ -1,5 +1,5 @@
 import { db, issue, issueWorklog, user } from '@repo/db';
-import { desc, eq, inArray, sql } from 'drizzle-orm';
+import { desc, eq, inArray, sql, type SQLWrapper } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
 import { recordActivity, timeText } from './activity';
 
@@ -69,6 +69,7 @@ export async function listWorklogs(issueId: number): Promise<WorklogRow[]> {
 // whole set, the same shape as the other per-issue enrichment.
 export async function attachLoggedMinutes<T extends { id: number; loggedMinutes: number }>(
   issues: T[],
+  ids: number[] | SQLWrapper,
 ): Promise<void> {
   if (issues.length === 0) return;
   const rows = await db
@@ -77,12 +78,7 @@ export async function attachLoggedMinutes<T extends { id: number; loggedMinutes:
       minutes: sql<number>`sum(${issueWorklog.minutes})::int`,
     })
     .from(issueWorklog)
-    .where(
-      inArray(
-        issueWorklog.issueId,
-        issues.map((i) => i.id),
-      ),
-    )
+    .where(inArray(issueWorklog.issueId, ids))
     .groupBy(issueWorklog.issueId);
   const byIssue = new Map(rows.map((row) => [row.issueId, row.minutes]));
   for (const i of issues) i.loggedMinutes = byIssue.get(i.id) ?? 0;

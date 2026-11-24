@@ -12,11 +12,20 @@
   "saveChanges": "Guardar cambios",
   "noWidgets": "Todavía no hay widgets. Añade uno para construir este panel.",
   "addWidget": "Añadir widget",
-  "addWidgetTitle": "Añadir un widget",
-  "addWidgetDescription": "Elige un widget para añadir a este panel.",
   "searchWidgets": "Buscar widgets",
   "clearSearch": "Limpiar la búsqueda",
-  "noWidgetMatches": "Ningún widget coincide con «{query}».",
+  "noWidgetMatches": "Ningún widget coincide con «{query}». Prueba otra palabra o borra la búsqueda.",
+  "noWidgetMatchesInGroup": "Ningún widget de este grupo coincide con «{query}». Selecciona Todos para buscar en todos los grupos.",
+  "addPanel": {
+    "title": "Añadir widgets",
+    "description": "Arrastra un widget al panel.",
+    "all": "Todos",
+    "groupFilter": "Grupo de widgets",
+    "added": "{count, plural, one {Añadido} other {Añadido #}}",
+    "status": "{count, plural, =0 {Aún no has añadido nada} one {# widget añadido} other {# widgets añadidos}}",
+    "undo": "Quitar el último",
+    "new": "Nuevo"
+  },
   "dragToMove": "Arrastra para mover",
   "widgetName": "Nombre del widget",
   "widgetSettings": "Ajustes del widget",
@@ -30,48 +39,48 @@
   },
   "widgets": {
     "stat": {
-      "label": "Número",
-      "description": "Recuento de tickets que coinciden con un filtro"
+      "label": "Número de tickets",
+      "description": "Tickets que coinciden con un filtro, como los bugs abiertos"
     },
     "recent_issues": {
       "label": "Tickets recientes",
-      "description": "Últimos tickets por momento de creación o actualización"
+      "description": "Tickets nuevos o actualizados hace poco que coinciden con un filtro"
     },
     "activity_feed": {
       "label": "Filtro de actividad",
-      "description": "Registro de cambios de todo el proyecto, filtrable por actor y acción"
+      "description": "Últimos cambios en los tickets y quién los hizo"
     },
     "pulse": {
       "label": "Pulso",
-      "description": "Mapa de calor de actividad diaria al estilo de GitHub"
+      "description": "Mapa de calor de la actividad del proyecto por hora, día o semana"
     },
     "throughput": {
       "label": "Rendimiento",
-      "description": "Tickets creados frente a cerrados por semana"
+      "description": "Tickets creados y cerrados cada semana"
     },
     "burnup": {
       "label": "Burnup",
-      "description": "Alcance, tickets iniciados y completados por día con una fecha de finalización prevista"
+      "description": "Tickets totales y completados por día, con fecha de fin prevista"
     },
     "breakdown": {
       "label": "Desglose",
-      "description": "Recuentos de tickets por estado, prioridad, tipo o asignado"
+      "description": "Tickets por estado, prioridad, tipo, asignatario o delegado"
     },
     "agent_runs": {
       "label": "Ejecuciones del agente",
-      "description": "Últimas ejecuciones de agentes de IA con su resultado"
+      "description": "Últimas ejecuciones y su estado, como fallida o en cola"
     },
     "agent_health": {
       "label": "Salud del agente",
-      "description": "Tasa de éxito de las ejecuciones del agente y los fallos en una ventana"
+      "description": "Tasa de éxito y ejecuciones fallidas de todos los agentes en un periodo"
     },
     "webhook_health": {
       "label": "Salud del webhook",
-      "description": "Resultados de la entrega de webhooks y endpoints desactivados"
+      "description": "Resultados de entrega y endpoints desactivados tras fallos seguidos"
     },
     "agent_workload": {
       "label": "Carga del agente",
-      "description": "Tickets delegados y resultados de las ejecuciones por agente"
+      "description": "Por agente: tickets delegados abiertos y ejecuciones con éxito"
     }
   },
   "breakdown": {
@@ -198,6 +207,7 @@
       "delegation": "se ha ejecutado por una delegación de",
       "field": "se ha ejecutado por un campo de",
       "manual": "se ha ejecutado manualmente",
+      "api": "se ha ejecutado por la API",
       "schedule": "se ha ejecutado por programado",
       "status": "se ha ejecutado por un cambio de estado de",
       "event": "se ha ejecutado por un evento de"

@@ -4,6 +4,8 @@ import { authContext } from '#shared/auth-context';
 import { requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { errors } from '#shared/responses';
+import { mcpTool } from '#mcp/generate';
+import { isMcpRequest } from '#shared/mcp-request';
 import {
   AffectedCountResponse,
   NotificationPageResponse,
@@ -42,7 +44,7 @@ export const notificationRoutes = new Elysia({
 
   .get(
     '/notifications',
-    async ({ user, query }) => {
+    async ({ user, query, request }) => {
       const userId = requireUser(user).id;
       const limit = query.limit != null ? Number(query.limit) : 30;
       let before = null;
@@ -66,46 +68,62 @@ export const notificationRoutes = new Elysia({
       if (query.projectId) filters.projectId = Number(query.projectId);
       filters.includeRead = query.includeRead !== 'false';
       filters.includeSnoozed = query.includeSnoozed === 'true';
+      filters.mcpOnly = isMcpRequest(request.headers);
       return listNotifications(userId, { before, limit, filters });
     },
     {
       query: listNotificationsQuery,
       response: { 200: NotificationPageResponse, ...errors(401) },
-      detail: { summary: 'List inbox notifications' },
+      detail: {
+        summary: 'List inbox notifications',
+        description: 'List your inbox notifications, newest first.',
+        ...mcpTool('list_notifications'),
+      },
     },
   )
 
   // The badge count. Refetched when the inbox scope of GET /sync/rev moves.
   .get(
     '/notifications/unread',
-    async ({ user, query }) => {
+    async ({ user, query, request }) => {
       const userId = requireUser(user).id;
       const projectId = query.projectId ? Number(query.projectId) : undefined;
-      return { unread: await unreadCount(userId, projectId) };
+      return { unread: await unreadCount(userId, projectId, isMcpRequest(request.headers)) };
     },
     {
       query: unreadCountQuery,
       response: { 200: UnreadCountResponse, ...errors(401) },
-      detail: { summary: 'Get unread notification count' },
+      detail: {
+        summary: 'Get unread notification count',
+        description: 'Count your unread inbox notifications, in all projects or one.',
+        ...mcpTool('get_unread_notification_count'),
+      },
     },
   )
 
   .post(
     '/notifications/read-all',
-    async ({ user, body }) => {
+    async ({ user, body, request }) => {
       const userId = requireUser(user).id;
       const count = await markAllRead(userId, body?.projectId, {
         types: body?.types,
         fromUserId: body?.from,
         includeRead: body?.includeRead,
         includeSnoozed: body?.includeSnoozed ?? true,
+        mcpOnly: isMcpRequest(request.headers),
       });
       return { count };
     },
     {
       body: markAllReadBody,
       response: { 200: AffectedCountResponse, ...errors(401) },
-      detail: { summary: 'Mark all notifications read' },
+      detail: {
+        summary: 'Mark all notifications read',
+        description:
+          'Mark your unread inbox notifications as read, in ' +
+          'all projects or one. Returns the number changed.',
+        ...mcpTool('mark_all_notifications_read'),
+      },
     },
   )
 
@@ -145,10 +163,10 @@ export const notificationRoutes = new Elysia({
 
   .post(
     '/notifications/:id/read',
-    async ({ user, params, body }) => {
+    async ({ user, params, body, request }) => {
       const userId = requireUser(user).id;
       const read = body?.read ?? true;
-      const ok = await setNotificationRead(userId, params.id, read);
+      const ok = await setNotificationRead(userId, params.id, read, isMcpRequest(request.headers));
       if (!ok) throw new HttpError(404, 'Notification not found');
       return noContent();
     },
@@ -156,7 +174,11 @@ export const notificationRoutes = new Elysia({
       params: notificationParams,
       body: setNotificationReadBody,
       response: { 204: t.Void(), ...errors(401, 404) },
-      detail: { summary: 'Mark a notification read or unread' },
+      detail: {
+        summary: 'Mark a notification read or unread',
+        description: 'Mark one of your inbox notifications as read, or as unread with read false.',
+        ...mcpTool('mark_notification_read'),
+      },
     },
   )
 

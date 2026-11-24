@@ -3,8 +3,6 @@
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
-// The search box above a list that is paged on the server: typing here refetches a
-// page rather than filtering what is on screen.
 export default function SearchInput({
   value,
   onChange,

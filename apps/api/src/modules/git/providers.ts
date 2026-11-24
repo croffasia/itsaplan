@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 
 // The provider adapters behind the one inbound webhook receiver. An adapter
 // recognises a delivery by its headers, verifies it with the credential its
-// platform sends, and normalizes pull request and CI events for the handler.
+// platform sends, and normalizes pull request, CI and issue events for the handler.
 
 // A pull request delivery in provider-neutral form. `defaultBranch` is null when
 // the payload does not carry it, which turns off the merged-into-default-branch
@@ -57,7 +57,41 @@ export interface CheckEvent {
   url: string | null;
 }
 
-export type GitEvent = PullRequestEvent | BranchEvent | PipelineEvent | CheckEvent;
+// A repository issue as it stands after the change a delivery reports. The sync applies
+// the whole state, so every action that changes something becomes 'updated'.
+export interface IssueSnapshot {
+  number: number;
+  title: string;
+  body: string;
+  url: string | null;
+  state: 'open' | 'closed';
+  // Only GitHub says why an issue was closed; 'not_planned' maps to a canceled column.
+  stateReason: 'completed' | 'not_planned' | null;
+  labels: string[];
+  author: string | null;
+}
+
+export type IssueField = 'title' | 'body' | 'labels' | 'state';
+
+export interface IssueEvent extends IssueSnapshot {
+  kind: 'issue';
+  action: 'opened' | 'updated';
+  repo: string;
+  // The fields this change touched. Only those are copied, so an edit made here to a
+  // field the repository did not change is kept.
+  changed: IssueField[];
+}
+
+export interface IssueCommentEvent {
+  kind: 'issue_comment';
+  repo: string;
+  number: number;
+  body: string;
+  author: string | null;
+}
+
+export type GitEvent =
+  PullRequestEvent | BranchEvent | PipelineEvent | CheckEvent | IssueEvent | IssueCommentEvent;
 
 export type DeliveryHeaders = Record<string, string | undefined>;
 
@@ -138,6 +172,97 @@ interface GithubPayload {
     app?: { id?: number };
   };
   repository?: { full_name?: string; default_branch?: string; html_url?: string };
+  issue?: GithubIssue;
+  comment?: { body?: string | null; user?: { login?: string } };
+  // Gitea and Forgejo send comments on pull requests as issue_comment too.
+  is_pull?: boolean;
+  changes?: { title?: unknown; body?: unknown };
+}
+
+// An issue in a GitHub, Gitea or Forgejo payload or API answer; the shapes match.
+interface GithubIssue {
+  number?: number;
+  title?: string;
+  body?: string | null;
+  html_url?: string;
+  state?: string;
+  state_reason?: string | null;
+  labels?: ({ name?: string } | string)[];
+  user?: { login?: string };
+  // Set on a pull request, which both hosts also list among issues.
+  pull_request?: unknown;
+}
+
+export function githubIssueSnapshot(value: unknown): IssueSnapshot | null {
+  const issue = value as GithubIssue | null | undefined;
+  if (!issue?.number || issue.pull_request) return null;
+  const closed = issue.state === 'closed';
+  return {
+    number: issue.number,
+    title: issue.title ?? '',
+    body: issue.body ?? '',
+    url: httpUrl(issue.html_url),
+    state: closed ? 'closed' : 'open',
+    stateReason: !closed
+      ? null
+      : issue.state_reason === 'not_planned'
+        ? 'not_planned'
+        : 'completed',
+    labels: labelNames((issue.labels ?? []).map((l) => (typeof l === 'string' ? l : l?.name))),
+    author: issue.user?.login ?? null,
+  };
+}
+
+function labelNames(names: (string | undefined)[]): string[] {
+  return [...new Set(names.filter((name): name is string => !!name))];
+}
+
+const ALL_ISSUE_FIELDS: IssueField[] = ['title', 'body', 'labels', 'state'];
+
+// GitHub names the label changes labeled and unlabeled, Gitea and Forgejo
+// label_updated and label_cleared.
+function githubIssueChanges(
+  action: string | undefined,
+  changes: GithubPayload['changes'],
+): IssueField[] | null {
+  if (action === 'opened') return ALL_ISSUE_FIELDS;
+  if (action === 'closed' || action === 'reopened') return ['state'];
+  if (['labeled', 'unlabeled', 'label_updated', 'label_cleared'].includes(action ?? ''))
+    return ['labels'];
+  if (action !== 'edited') return null;
+  const fields: IssueField[] = [];
+  if (changes?.title) fields.push('title');
+  if (changes?.body) fields.push('body');
+  return fields.length > 0 ? fields : ['title', 'body'];
+}
+
+function parseGithubIssue(payload: unknown): IssueEvent | null {
+  const { action, issue, repository, changes } = payload as GithubPayload;
+  const snapshot = githubIssueSnapshot(issue);
+  const changed = githubIssueChanges(action, changes);
+  if (!snapshot || !changed || !repository?.full_name) return null;
+  return {
+    kind: 'issue',
+    action: action === 'opened' ? 'opened' : 'updated',
+    repo: repository.full_name,
+    changed,
+    ...snapshot,
+    // Forgejo sends label_cleared with the issue as it was before the labels went.
+    ...(action === 'label_cleared' ? { labels: [] } : {}),
+  };
+}
+
+function parseGithubIssueComment(payload: unknown): IssueCommentEvent | null {
+  const { action, issue, comment, repository, is_pull: isPull } = payload as GithubPayload;
+  if (action !== 'created' || isPull || issue?.pull_request || !issue?.number) return null;
+  if (!comment?.body || !repository?.full_name) return null;
+  return {
+    kind: 'issue_comment',
+    repo: repository.full_name,
+    number: issue.number,
+    body: comment.body,
+    author: comment.user?.login ?? null,
+  };
 }
 
 function githubRepo(payload: unknown): string | undefined {
@@ -179,8 +304,12 @@ function parseGithubPullRequest(payload: unknown): PullRequestEvent | null {
   const merged = action === 'closed' && pr.merged === true;
   const closed = action === 'closed' && !merged;
   const opened = action === 'opened' || action === 'reopened' || action === 'ready_for_review';
+  // GitHub names a push to the pull request 'synchronize', Gitea and Forgejo 'synchronized'.
   const updated =
-    action === 'edited' || action === 'synchronize' || action === 'converted_to_draft';
+    action === 'edited' ||
+    action === 'synchronize' ||
+    action === 'synchronized' ||
+    action === 'converted_to_draft';
   if (!opened && !updated && !merged && !closed) return null;
   return {
     kind: 'pull_request',
@@ -244,6 +373,8 @@ function parseGithubPayload(payload: unknown, headers: DeliveryHeaders): GitEven
   const event = headers['x-github-event'] ?? headers['x-gitea-event'] ?? headers['x-forgejo-event'];
   if (event === 'check_run') return parseGithubCheck(payload);
   if (event === 'create' || event === 'delete') return parseGithubBranch(payload, headers);
+  if (event === 'issues') return parseGithubIssue(payload);
+  if (event === 'issue_comment') return parseGithubIssueComment(payload);
   return parseGithubPullRequest(payload);
 }
 
@@ -300,10 +431,95 @@ interface GitlabPayload {
     squash_commit_sha?: string | null;
     draft?: boolean;
     work_in_progress?: boolean;
+    state?: string;
+    confidential?: boolean;
+    noteable_type?: string;
+    note?: string;
   };
   project?: { path_with_namespace?: string; default_branch?: string; web_url?: string };
   merge_request?: { iid?: number; source_branch?: string };
-  changes?: { draft?: { previous?: boolean; current?: boolean } };
+  issue?: { iid?: number; confidential?: boolean };
+  labels?: { title?: string }[];
+  user?: { username?: string };
+  changes?: {
+    draft?: { previous?: boolean; current?: boolean };
+    title?: unknown;
+    description?: unknown;
+    labels?: unknown;
+  };
+}
+
+// A confidential issue is never synced: its project's members may be fewer than the
+// members of the project it would be copied to.
+function parseGitlabIssue(payload: GitlabPayload): IssueEvent | null {
+  const { object_attributes: issue, project, labels, user, changes } = payload;
+  if (!issue?.iid || !project?.path_with_namespace || issue.confidential) return null;
+  let changed: IssueField[];
+  if (issue.action === 'open') changed = ALL_ISSUE_FIELDS;
+  else if (issue.action === 'close' || issue.action === 'reopen') changed = ['state'];
+  else if (issue.action === 'update') {
+    changed = [];
+    if (changes?.title) changed.push('title');
+    if (changes?.description) changed.push('body');
+    if (changes?.labels) changed.push('labels');
+  } else return null;
+  return {
+    kind: 'issue',
+    action: issue.action === 'open' ? 'opened' : 'updated',
+    repo: project.path_with_namespace,
+    changed,
+    number: issue.iid,
+    title: issue.title ?? '',
+    body: issue.description ?? '',
+    url: httpUrl(issue.url),
+    state: issue.state === 'closed' ? 'closed' : 'open',
+    stateReason: issue.state === 'closed' ? 'completed' : null,
+    labels: labelNames((labels ?? []).map((l) => l.title)),
+    author: user?.username ?? null,
+  };
+}
+
+// GitLab sends a note without an action before 16.x and with 'create' or 'update'
+// after; only a new note becomes a comment.
+function parseGitlabNote(payload: GitlabPayload): IssueCommentEvent | null {
+  const { object_attributes: note, project, issue, user } = payload;
+  if (note?.noteable_type !== 'Issue' || !note.note || !issue?.iid || issue.confidential)
+    return null;
+  if (note.action != null && note.action !== 'create') return null;
+  if (!project?.path_with_namespace) return null;
+  return {
+    kind: 'issue_comment',
+    repo: project.path_with_namespace,
+    number: issue.iid,
+    body: note.note,
+    author: user?.username ?? null,
+  };
+}
+
+// An issue in the GitLab API answer, which differs from its webhook shape.
+export function gitlabIssueSnapshot(value: unknown): IssueSnapshot | null {
+  const issue = value as {
+    iid?: number;
+    title?: string;
+    description?: string | null;
+    web_url?: string;
+    state?: string;
+    labels?: string[];
+    confidential?: boolean;
+    author?: { username?: string };
+  } | null;
+  if (!issue?.iid || issue.confidential) return null;
+  const closed = issue.state === 'closed';
+  return {
+    number: issue.iid,
+    title: issue.title ?? '',
+    body: issue.description ?? '',
+    url: httpUrl(issue.web_url),
+    state: closed ? 'closed' : 'open',
+    stateReason: closed ? 'completed' : null,
+    labels: labelNames(issue.labels ?? []),
+    author: issue.author?.username ?? null,
+  };
 }
 
 const gitlab: GitProvider = {
@@ -356,6 +572,8 @@ const gitlab: GitProvider = {
         url: httpUrl(pipelineUrl),
       };
     }
+    if (kind === 'issue') return parseGitlabIssue(payload as GitlabPayload);
+    if (kind === 'note') return parseGitlabNote(payload as GitlabPayload);
     if (kind !== 'merge_request' || !mr?.iid) return null;
     // Marking a draft merge request ready is one of the many edits GitLab reports
     // as "update"; only the changes diff says which one it was.

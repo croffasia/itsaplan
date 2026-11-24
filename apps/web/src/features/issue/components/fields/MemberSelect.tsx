@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { CircleDashed } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { MemberScope } from '@/lib/api/endpoints/customFields';
@@ -26,12 +27,15 @@ export default function MemberSelect({
   value,
   onChange,
   placeholder,
+  trigger,
 }: {
   assignees: Assignee[];
   scope: MemberScope;
   value: string | null;
   onChange: (userId: string | null) => void;
   placeholder?: string;
+  // Replaces the pill where a caller needs its own (a Timeline cell).
+  trigger?: ReactNode;
 }) {
   const t = useTranslations('issue.fieldSelects');
   const none = t('noMember');
@@ -42,14 +46,16 @@ export default function MemberSelect({
   return (
     <PopoverPick
       trigger={
-        <Pill active={!!selected}>
-          {selected ? (
-            <Avatar name={selected.name} image={selected.image} className="size-4 text-[8px]" />
-          ) : (
-            <CircleDashed />
-          )}
-          <span className="truncate">{selected?.name ?? placeholder ?? none}</span>
-        </Pill>
+        trigger ?? (
+          <Pill active={!!selected}>
+            {selected ? (
+              <Avatar name={selected.name} image={selected.image} className="size-4 text-[8px]" />
+            ) : (
+              <CircleDashed />
+            )}
+            <span className="truncate">{selected?.name ?? placeholder ?? none}</span>
+          </Pill>
+        )
       }
       inputPlaceholder={t('pickMember')}
       emptyText={t('noCandidates')}

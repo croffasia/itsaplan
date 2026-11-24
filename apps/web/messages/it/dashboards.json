@@ -1,0 +1,247 @@
+{
+  "noAccess": "Non hai accesso alle dashboard.",
+  "defaultName": "Panoramica",
+  "newDashboard": "Nuova dashboard",
+  "renameDashboard": "Rinomina dashboard",
+  "namePlaceholder": "Nome dashboard",
+  "options": "Opzioni dashboard",
+  "rename": "Rinomina",
+  "editLayout": "Modifica layout",
+  "discard": "Scarta",
+  "saveDashboard": "Salva dashboard",
+  "saveChanges": "Salva modifiche",
+  "noWidgets": "Nessun widget. Aggiungine uno per creare questa dashboard.",
+  "addWidget": "Aggiungi widget",
+  "searchWidgets": "Cerca widget",
+  "clearSearch": "Azzera ricerca",
+  "noWidgetMatches": "Nessun widget corrisponde a “{query}”. Prova un'altra parola o azzera la ricerca.",
+  "noWidgetMatchesInGroup": "Nessun widget di questo gruppo corrisponde a “{query}”. Seleziona Tutti per cercare in ogni gruppo.",
+  "addPanel": {
+    "title": "Aggiungi widget",
+    "description": "Trascina un widget sulla dashboard.",
+    "all": "Tutti",
+    "groupFilter": "Gruppo widget",
+    "added": "{count, plural, one {Aggiunto} other {Aggiunti #}}",
+    "status": "{count, plural, =0 {Nessun widget aggiunto} one {# widget aggiunto} other {# widget aggiunti}}",
+    "undo": "Rimuovi l'ultimo aggiunto",
+    "new": "Nuovo"
+  },
+  "dragToMove": "Trascina per spostare",
+  "widgetName": "Nome widget",
+  "widgetSettings": "Impostazioni widget",
+  "widgetOptions": "Opzioni widget",
+  "removeWidget": "Rimuovi widget",
+  "lastDays": "Ultimi {days} giorni",
+  "showRows": "Mostra {count}",
+  "widgetGroups": {
+    "issues": "Issue",
+    "agents": "Agenti AI e webhooks"
+  },
+  "widgets": {
+    "stat": {
+      "label": "Numero di issue",
+      "description": "Numero di issue che corrispondono a un filtro, ad esempio bug aperti"
+    },
+    "recent_issues": {
+      "label": "Issue recenti",
+      "description": "Issue più recenti o aggiornate di recente che corrispondono a un filtro"
+    },
+    "activity_feed": {
+      "label": "Feed attività",
+      "description": "Ultime modifiche alle issue e chi le ha fatte"
+    },
+    "pulse": {
+      "label": "Pulse",
+      "description": "Mappa di calore dell'attività del progetto per ora, giorno o settimana"
+    },
+    "throughput": {
+      "label": "Throughput",
+      "description": "Issue create e chiuse ogni settimana"
+    },
+    "burnup": {
+      "label": "Burnup",
+      "description": "Issue totali e completate per giorno, con data di fine prevista"
+    },
+    "breakdown": {
+      "label": "Ripartizione",
+      "description": "Issue suddivise per stato, priorità, tipo, assegnatario o delegato"
+    },
+    "agent_runs": {
+      "label": "Esecuzioni degli agenti",
+      "description": "Ultime esecuzioni e il loro stato, ad esempio fallite o in coda"
+    },
+    "agent_health": {
+      "label": "Stato degli agenti",
+      "description": "Tasso di successo ed esecuzioni fallite di tutti gli agenti in un periodo scelto"
+    },
+    "webhook_health": {
+      "label": "Stato dei webhook",
+      "description": "Risultati delle consegne e endpoint disattivati dopo fallimenti consecutivi"
+    },
+    "agent_workload": {
+      "label": "Carico degli agenti",
+      "description": "Per ogni agente: issue delegate aperte ed esecuzioni riuscite"
+    }
+  },
+  "breakdown": {
+    "empty": "Nessuna issue.",
+    "by": {
+      "status": "Stato",
+      "priority": "Priorità",
+      "type": "Tipo",
+      "assignee": "Assegnatario",
+      "delegate": "Delegato"
+    },
+    "caption": {
+      "status": "Per stato",
+      "priority": "Per priorità",
+      "type": "Per tipo",
+      "assignee": "Per assegnatario",
+      "delegate": "Per delegato"
+    }
+  },
+  "recentIssues": {
+    "empty": "Nessuna issue corrisponde a questo filtro.",
+    "captionCreated": "Più recenti prima",
+    "captionUpdated": "Aggiornate di recente",
+    "filterCount": "{count, plural, one {# filtro} other {# filtri}}",
+    "sort": {
+      "created": "Più recenti",
+      "updated": "Aggiornate"
+    }
+  },
+  "activityFeed": {
+    "empty": "Nessuna attività corrisponde a questo filtro.",
+    "someone": "Qualcuno",
+    "filterCount": "{count, plural, one {# filtro} other {# filtri}}",
+    "actions": {
+      "all": "Tutta l'attività",
+      "status": "Cambiamenti di stato",
+      "assignee": "Assegnazioni",
+      "priority": "Priorità",
+      "created": "Creazione"
+    },
+    "verbs": {
+      "comment": "ha commentato",
+      "created": "ha creato",
+      "title": "ha rinominato",
+      "description": "ha aggiornato la descrizione di",
+      "status": "ha cambiato lo stato di",
+      "assignee": "ha cambiato l'assegnatario di",
+      "priority": "ha cambiato la priorità di",
+      "type": "ha cambiato il tipo di",
+      "start_date": "ha cambiato la data di inizio di",
+      "due_date": "ha cambiato la data di scadenza di",
+      "label_add": "ha aggiunto un'etichetta a",
+      "label_remove": "ha rimosso un'etichetta da",
+      "field": "ha aggiornato un campo di",
+      "other": "ha aggiornato"
+    }
+  },
+  "pulse": {
+    "caption": {
+      "hour": "Per ora",
+      "day": "Per giorno",
+      "week": "Per settimana"
+    },
+    "unit": {
+      "hour": "Ore",
+      "day": "Giorni",
+      "week": "Settimane"
+    },
+    "events": "{count, plural, one {# evento} other {# eventi}}",
+    "eventNoun": "{count, plural, one {evento} other {eventi}}",
+    "active": "{count} attivi",
+    "less": "Meno",
+    "more": "Di più",
+    "scope": {
+      "project": "Progetto intero",
+      "me": "La mia attività"
+    }
+  },
+  "throughput": {
+    "empty": "Nessuna attività in questo periodo.",
+    "lastWeeks": "Ultime {weeks} settimane",
+    "created": "Create",
+    "closed": "Chiuse"
+  },
+  "burnup": {
+    "empty": "Nessuna issue in questo periodo.",
+    "scope": "Ambito",
+    "started": "Avviato",
+    "completed": "Completato",
+    "projection": "Proiezione",
+    "band": "Intervallo di previsione",
+    "projected": "Previsto {date}",
+    "range": "{from} – {to}",
+    "forecastShape": {
+      "line": "Linea di previsione",
+      "range": "Intervallo di previsione"
+    },
+    "noForecast": "Nessun progresso nelle ultime {weeks, plural, one {# settimana} other {# settimane}}",
+    "allDone": "Tutto fatto",
+    "velocity": "{rate}/giorno",
+    "growth": "+{rate}/giorno nuove",
+    "target": "Obiettivo {date}",
+    "targetLabel": "Obiettivo",
+    "today": "Oggi",
+    "wholeProject": "Progetto intero",
+    "forecastWeeks": "Velocità su {weeks, plural, one {# settimana} other {# settimane}}"
+  },
+  "agentRuns": {
+    "empty": "Nessuna esecuzione degli agenti.",
+    "filters": {
+      "all": "Tutte le esecuzioni",
+      "failed": "Fallite",
+      "pending": "In coda",
+      "success": "Riuscite"
+    },
+    "status": {
+      "pending": "in coda",
+      "success": "riuscita",
+      "failed": "fallita",
+      "canceled": "annullata"
+    },
+    "trigger": {
+      "mention": "avviata da una menzione in",
+      "delegation": "avviata da una delega di",
+      "field": "avviata da un campo di",
+      "manual": "avviata manualmente",
+      "api": "avviata tramite API",
+      "schedule": "avviata su pianificazione",
+      "status": "avviata dal cambio di stato di",
+      "event": "avviata da un evento di"
+    }
+  },
+  "agentHealth": {
+    "empty": "Nessuna esecuzione degli agenti.",
+    "successRate": "tasso di successo",
+    "runs": "{count, plural, one {# esecuzione} other {# esecuzioni}}",
+    "failed": "{count} fallite",
+    "queued": "{count} in coda"
+  },
+  "webhookHealth": {
+    "deliveries": "consegne",
+    "failed": "{count} fallite",
+    "pending": "{count} in attesa",
+    "allDelivered": "tutte consegnate",
+    "disabled": "{count, plural, one {# endpoint disattivato} other {# endpoint disattivati}}"
+  },
+  "agentWorkload": {
+    "empty": "Nessun agente in questo progetto.",
+    "agent": "Agente",
+    "delegated": "Delegate",
+    "runs": "Esecuzioni",
+    "failed": "{count} fallite",
+    "kind": {
+      "external": "Esterno",
+      "internal": "Interno"
+    }
+  },
+  "defaultWidgets": {
+    "open": "Aperte",
+    "inProgress": "In corso",
+    "backlog": "Backlog",
+    "unassigned": "Non assegnate"
+  }
+}

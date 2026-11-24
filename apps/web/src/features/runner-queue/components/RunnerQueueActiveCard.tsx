@@ -1,11 +1,12 @@
-import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import { cn } from '@/lib/utils';
 import { useRelativeTime } from '@/context/relativeTimeContext';
 import { formatTime } from '@/utils/dates';
-import { runIssueKey } from '../utils/runIssueKey';
+import { runPlace } from '../utils/runIssueKey';
+import { runTitle } from '../utils/runTitle';
 import { waitsForRunner } from '../utils/waitsForRunner';
+import RunnerQueueLink from './RunnerQueueLink';
 import RunnerQueueStateIcon from './RunnerQueueStateIcon';
 
 type Translate = ReturnType<typeof useTranslations<'issue.agentRuns'>>;
@@ -31,29 +32,33 @@ export default function RunnerQueueActiveCard({
   run,
   href,
   selected,
+  acrossProjects,
 }: {
   run: RunnerQueueRun;
   href: string;
   selected: boolean;
+  acrossProjects: boolean;
 }) {
   const t = useTranslations('issue.agentRuns');
   const relativeTime = useRelativeTime();
   const [label, aside] = runStatus(run, t, relativeTime);
   const meta = [
-    runIssueKey(run),
     `@${run.username}`,
+    runPlace(run, acrossProjects),
     t(`triggers.${run.trigger}`),
-    run.attempts > 1 ? t('attempts', { count: run.attempts }) : null,
+    run.initiator?.name,
+    run.attempts > 1 ? t('attemptsCount', { count: run.attempts }) : null,
   ]
     .filter(Boolean)
     .join(' · ');
   return (
-    <Link
+    <RunnerQueueLink
+      runId={run.id}
       href={href}
-      aria-current={selected ? 'page' : undefined}
+      aria-current={selected || undefined}
       className={cn(
-        'flex w-full flex-col gap-1.5 rounded-lg border bg-card p-3 text-start hover:bg-accent/50',
-        selected && 'bg-accent',
+        'flex w-full flex-col gap-1 rounded-lg bg-card px-3 py-2.5 text-start ring-1 ring-border hover:bg-accent/50',
+        selected && 'ring-[1.5px] ring-foreground',
       )}
     >
       <span
@@ -69,9 +74,9 @@ export default function RunnerQueueActiveCard({
         )}
       </span>
       <span className="line-clamp-2 text-sm font-medium" dir="auto">
-        {run.issueTitle ?? run.scheduleName ?? run.prompt}
+        {runTitle(run)}
       </span>
-      <span className="text-xs text-muted-foreground">{meta}</span>
-    </Link>
+      <span className="truncate text-xs text-muted-foreground">{meta}</span>
+    </RunnerQueueLink>
   );
 }

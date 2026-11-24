@@ -59,7 +59,13 @@
     "month": "月",
     "quarter": "季度"
   },
+  "calendarModes": {
+    "month": "月",
+    "byDay": "按天",
+    "byWeek": "按周"
+  },
   "weekStart": {
+    "6": "周六",
     "0": "周日",
     "1": "周一"
   },
@@ -75,21 +81,34 @@
     "ordering": "排序方式",
     "ascending": "升序",
     "descending": "降序",
-    "showEmptyColumns": "显示空状态列",
-    "showEmptyGroups": "显示空分组",
-    "showLinks": "显示关联",
-    "separateSubtaskCards": "将子任务显示为单独卡片",
-    "separateSubtaskRows": "将子任务显示为单独行",
-    "startSubtasksCollapsed": "默认折叠子任务",
-    "showNestedSubtasks": "显示嵌套子任务",
-    "nestedSubtasks": "嵌套子任务",
-    "displayProperties": "显示属性",
+    "emptyColumns": "空状态列",
+    "emptyGroups": "空分组",
+    "links": "关联",
+    "separateCards": "作为单独卡片",
+    "separateRows": "作为单独行",
+    "nestedInCard": "在父卡片内",
+    "nestedInRow": "在父行内",
+    "subtasksCollapsed": "默认折叠",
+    "groupsCollapsed": "默认折叠分组",
     "placeBy": "定位依据",
-    "startWeekOn": "每周起始日",
-    "startCollapsed": "默认折叠分组",
+    "mode": "模式",
+    "daysShown": "显示天数",
+    "weeksShown": "显示周数",
+    "splitByDay": "按天拆分",
+    "weekStartsOn": "每周起始日",
     "scale": "时间刻度",
-    "addCustomField": "添加自定义字段",
+    "dragToReorder": "拖动以调整顺序",
+    "customField": "自定义字段",
     "viewIcon": "视图图标"
+  },
+  "sections": {
+    "board": "看板",
+    "rows": "行",
+    "show": "显示",
+    "subtasks": "子任务",
+    "cardProperties": "卡片属性",
+    "columns": "列",
+    "dates": "日期"
   },
   "layoutCommand": "{layout}布局"
 }

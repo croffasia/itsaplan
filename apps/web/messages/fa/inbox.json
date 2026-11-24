@@ -16,7 +16,8 @@
     "assigned": "ارجاع‌شده",
     "mentioned": "منشن‌شده",
     "commented": "دیدگاه داده",
-    "state_changed": "وضعیت تغییر کرد"
+    "state_changed": "وضعیت تغییر کرد",
+    "reacted": "واکنش"
   },
   "actions": {
     "markRead": "علامت‌گذاری به‌عنوان خوانده‌شده",
@@ -33,6 +34,7 @@
     "mentioned": "{who} شما را منشن کرد",
     "commented": "{who} دیدگاه داد",
     "stateChanged": "{who} وضعیت را از {from} به {to} تغییر داد",
-    "stateChangedPlain": "{who} وضعیت را تغییر داد"
+    "stateChangedPlain": "{who} وضعیت را تغییر داد",
+    "reacted": "{who} با {emoji} به دیدگاه شما واکنش نشان داد"
   }
 }

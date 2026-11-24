@@ -1,5 +1,12 @@
 import { randomInt } from 'node:crypto';
-import { createWorkspace, db } from '@repo/db';
+import {
+  TEAM_SLUG_PATTERN,
+  createWorkspace,
+  db,
+  insertOwnedTeam,
+  isReservedSlug,
+  type DbExecutor,
+} from '@repo/db';
 import { and, eq, gt, isNull, sql, type SQL } from 'drizzle-orm';
 import { betterAuth, type BetterAuthPlugin } from 'better-auth';
 import { createAuthMiddleware, APIError } from 'better-auth/api';
@@ -13,7 +20,9 @@ import {
 } from '@better-auth/oauth-provider';
 import { jwt, openAPI, magicLink, username, genericOAuth } from 'better-auth/plugins';
 import { createLocalJWKSet, jwtVerify } from 'jose';
+import { localeFromAcceptLanguage } from '@repo/mailer';
 import * as schema from '@repo/db/schema';
+import rootPackage from '../../../package.json';
 import {
   getAuthSettings,
   admittedPastGate,
@@ -26,19 +35,12 @@ import {
   isOidcUsable,
   isAccountDeactivated,
 } from './instance';
-import { sendAuthEmail } from './mail';
+import { emailLocale, sendAuthEmail } from './mail';
 import { readAuthExtensions } from './extensions';
+import { trustedOrigins } from './origins';
 
-// Frontend origins allowed to call the auth handler. Mandatory config: cookies, the
-// WebAuthn relying party and the cookie domain are all derived from it, so a deploy
-// that misses it has to fail at startup instead of running on a localhost default.
-export const trustedOrigins = (process.env.APP_URL ?? '')
-  .split(',')
-  .map((origin) => origin.trim().replace(/\/+$/, ''))
-  .filter(Boolean);
-if (trustedOrigins.length === 0) {
-  throw new Error('APP_URL is not set: public origin(s) of the web app.');
-}
+export { trustedOrigins };
+export { composeEmail, composeEmailDraft, emailLocale, savedLocaleOf, savedLocales } from './mail';
 
 // Parent domain for a cross-subdomain session cookie (".example.com" from
 // "app.example.com"). Returns undefined for localhost, IPs, or apex domains, where
@@ -325,8 +327,8 @@ async function refreshOidcProvider(): Promise<boolean> {
           // The `account` rows hold the OIDC subject. genericOAuth reads `id` instead
           // when the discovery document lists no id_token signing algorithms.
           accountSubject: ({ profile }) => String(profile.sub ?? ''),
-          // genericOAuth passes email_verified on as sent, and some providers send a
-          // string (Amazon Cognito's userinfo does): "false" would count as verified.
+          // Only the standard email_verified claim, true or "true", says the address is
+          // verified.
           mapProfileToUser: (profile) => {
             const claim: unknown = profile.email_verified;
             return { emailVerified: claim === true || claim === 'true' };
@@ -468,16 +470,21 @@ const settled = new Set<string>();
 // it, and apps/api on every request, so an account made before personal workspaces, by
 // SCIM, or while they were off gets its own without signing in again. Nothing in the API
 // creates a workspace; an edition that lets a person own more mounts a route of its own.
-// An agent's bot user is no person.
+// An agent's bot user is no person. A person in no team and with no pending invite also
+// gets a first team in it, named after the local part of their address, so they start
+// with a team instead of a form to create one.
 // ponytail: an account with no workspace while they are off reads the setting on each
 // request; cache it with the setting if that ever shows.
 export async function ensurePersonalWorkspace(account: {
   id: string;
+  email: string;
   role?: string | null;
 }): Promise<void> {
   const userId = account.id;
   if (settled.has(userId)) return;
   if (account.role !== 'god' && !(await getAuthSettings()).personalWorkspaces) return;
+  // Read before the transaction: inside it, a pool query can wait forever for a connection.
+  const invited = await hasPendingInvite(account.email);
   await db.transaction(async (tx) => {
     // Two sign-ins at once would otherwise both find none.
     const [person] = await tx
@@ -499,10 +506,61 @@ export async function ensurePersonalWorkspace(account: {
       .where(eq(schema.aiAgent.userId, userId))
       .limit(1);
     if (owned || agent) return;
-    const name = (person.name.trim() || person.email.split('@')[0]!).slice(0, 60);
-    await createWorkspace(tx, name, userId);
+    const local = person.email.split('@')[0]!;
+    const workspaceId = await createWorkspace(
+      tx,
+      (person.name.trim() || local).slice(0, 60),
+      userId,
+    );
+    const [inTeam] = await tx
+      .select({ n: sql`1` })
+      .from(schema.teamMember)
+      .where(eq(schema.teamMember.userId, userId))
+      .limit(1);
+    if (inTeam || invited) return;
+    const slug = await freeTeamSlug(tx, local);
+    await insertOwnedTeam(tx, workspaceId, local.slice(0, 60), userId, slug);
   });
   settled.add(userId);
+}
+
+// The slug of a first team, made from the local part of an address the way the web app
+// suggests one from a name. One that is too short, reserved or taken gets a random
+// suffix, and the check repeats until the slug is free. The stem is cut to 36 characters
+// so a dash and the suffix fit in the 40 a slug may have.
+async function freeTeamSlug(executor: DbExecutor, local: string): Promise<string> {
+  const stem =
+    local
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^[^a-z]+/, '')
+      .slice(0, 36)
+      .replace(/-+$/, '') || 'team';
+  const valid = new RegExp(TEAM_SLUG_PATTERN);
+  let candidate = stem;
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const free =
+      valid.test(candidate) &&
+      !isReservedSlug(candidate) &&
+      (await executor.$count(schema.team, eq(schema.team.slug, candidate))) === 0;
+    if (free) break;
+    candidate = `${stem}-${randomSuffix()}`;
+  }
+  return candidate;
+}
+
+// A new account has already seen the release it signed up on, so the "what's new" screen
+// waits for the next upgrade. The language is the browser's, which the preferences
+// take by default anyway.
+async function startOnRunningRelease(userId: string, headers?: Headers): Promise<void> {
+  await db
+    .insert(schema.userPreference)
+    .values({
+      userId,
+      locale: localeFromAcceptLanguage(headers?.get('accept-language') ?? null),
+      seenVersion: rootPackage.version,
+    })
+    .onConflictDoNothing();
 }
 
 // After an account stops owning a workspace (it deleted or handed over its own), so the
@@ -555,6 +613,28 @@ const DAY_SEC = 24 * 60 * 60;
 export const API_KEY_DEFAULT_EXPIRES_IN_SEC = 90 * DAY_SEC;
 export const API_KEY_MAX_EXPIRES_IN_DAYS = 365;
 
+type LimitField = 'signInRateLimit' | 'emailRateLimit' | 'magicLinkRateLimit';
+
+const limitFrom =
+  (field: LimitField) => async (_request: Request, current: { window: number; max: number }) => ({
+    window: current.window,
+    max: (await getAuthSettings())[field],
+  });
+
+// The paths of better-auth's own rules for sign-in and for the endpoints that send mail.
+// The first matching key wins, so the magic link paths come before /sign-in/*. A `*` does
+// not cross a `/`: `/sign-in*` would miss `/sign-in/email`.
+export const authRateLimitRules = {
+  '/sign-in/magic-link*': limitFrom('magicLinkRateLimit'),
+  '/magic-link/verify*': limitFrom('magicLinkRateLimit'),
+  '/sign-in/*': limitFrom('signInRateLimit'),
+  '/sign-up/*': limitFrom('signInRateLimit'),
+  '/change-password*': limitFrom('signInRateLimit'),
+  '/change-email*': limitFrom('signInRateLimit'),
+  '/request-password-reset': limitFrom('emailRateLimit'),
+  '/send-verification-email': limitFrom('emailRateLimit'),
+};
+
 // Created on first use rather than on import, so a build's extendAuth (./extensions) takes
 // effect wherever a bundler puts its module, as long as it runs before the first request.
 function createAuth() {
@@ -563,6 +643,7 @@ function createAuth() {
     baseURL,
     secret: process.env.BETTER_AUTH_SECRET,
     onAPIError: { errorURL: oauthErrorURL },
+    rateLimit: { customRules: authRateLimitRules },
 
     database: drizzleAdapter(db, {
       provider: 'pg',
@@ -598,11 +679,12 @@ function createAuth() {
       // the old one ends with it. The signed-in change-password form sends
       // revokeOtherSessions for the same reason.
       revokeSessionsOnPasswordReset: true,
-      sendResetPassword: async ({ user, url }) => {
+      password: extensions.password,
+      sendResetPassword: async ({ user, url }, request) => {
         await sendAuthEmail({
           to: user.email,
-          subject: 'Reset your password',
-          text: 'Use the link below to set a new password. Ignore this email if you did not ask for it.',
+          template: 'reset',
+          locale: await emailLocale(user.email, request),
           url: withPublicOrigin(url),
         });
       },
@@ -613,13 +695,13 @@ function createAuth() {
       // the instance does not require verification.
       sendOnSignUp: true,
       autoSignInAfterVerification: true,
-      sendVerificationEmail: async ({ user, url }) => {
+      sendVerificationEmail: async ({ user, url }, request) => {
         const settings = await getAuthSettings();
         if (!settings.requireEmailVerification) return;
         await sendAuthEmail({
           to: user.email,
-          subject: 'Confirm your email address',
-          text: 'Use the link below to confirm this address and finish signing up.',
+          template: 'verify',
+          locale: await emailLocale(user.email, request),
           url: withPublicOrigin(url),
         });
       },
@@ -671,6 +753,14 @@ function createAuth() {
           required: false,
           defaultValue: true,
           input: false,
+        },
+        // When the person last used the app by any means (the web, an API key, MCP),
+        // to the hour; written by the api's auth context, read by god's user list.
+        lastSeenAt: {
+          type: 'date',
+          required: false,
+          input: false,
+          returned: false,
         },
       },
     },
@@ -831,8 +921,9 @@ function createAuth() {
               },
             };
           },
-          after: async (user) => {
+          after: async (user, ctx) => {
             await ensurePersonalWorkspace(user);
+            await startOnRunningRelease(user.id, ctx?.headers);
           },
         },
       },
@@ -871,11 +962,7 @@ function createAuth() {
       // at creation, and can list (value hidden) or delete it. Adds the `apikey` table.
       // enableSessionForAPIKeys makes a request carrying an `x-api-key` header resolve
       // to the key owner's session, so getSession (and every planner guard built on it)
-      // accepts API keys without any change in apps/api. Rate limit: 100 requests per
-      // second per key (timeWindow is in milliseconds). The ceiling is set for the
-      // heaviest legitimate caller rather than a typical one: an internal AI agent runs
-      // on its own key and dispatches every tool call through a route, and a model that
-      // emits a batch of tool calls in one step turns them into a burst of requests.
+      // accepts API keys without any change in apps/api.
       apiKey({
         enableSessionForAPIKeys: true,
         // Brand prefix so a leaked key is identifiable by secret scanners and in logs.
@@ -888,11 +975,10 @@ function createAuth() {
           defaultExpiresIn: API_KEY_DEFAULT_EXPIRES_IN_SEC,
           maxExpiresIn: API_KEY_MAX_EXPIRES_IN_DAYS,
         },
-        rateLimit: {
-          enabled: true,
-          timeWindow: 1000,
-          maxRequests: 100,
-        },
+        // The plugin's limiter restarts its window only after a pause longer than the
+        // window, and every getSession counts, so apps/api limits keys itself
+        // (shared/key-rate-limit.ts). Off here also skips the limits stored on old keys.
+        rateLimit: { enabled: false },
       }),
       // Sign-in by emailed link, offered alongside the password. Whether it is
       // available is an instance setting, so the plugin is always mounted and the
@@ -901,7 +987,7 @@ function createAuth() {
       magicLink({
         // Stored plain, an OAuth state also passes as a token (GHSA-965c-763c-88jm).
         storeToken: 'hashed',
-        sendMagicLink: async ({ email, url }) => {
+        sendMagicLink: async ({ email, url }, ctx) => {
           const settings = await getAuthSettings();
           if (!settings.magicLink) {
             throw new APIError('FORBIDDEN', {
@@ -910,8 +996,8 @@ function createAuth() {
           }
           await sendAuthEmail({
             to: email,
-            subject: 'Your sign-in link',
-            text: 'Use the link below to sign in. It works once and expires shortly.',
+            template: 'magic',
+            locale: await emailLocale(email, ctx?.request),
             url: withPublicOrigin(url),
           });
         },
@@ -944,6 +1030,9 @@ function createAuth() {
               allowUnauthenticatedClientRegistration: true,
               // Claude Code and Cursor send no application_type; "web" would refuse them.
               clientRegistrationDefaultApplicationType: 'infer',
+              // Also how long the consent page's signed request lives; the page's expired
+              // message (mcp.oauth.consent.expired) names 10 minutes.
+              codeExpiresIn: 600,
             }),
           ]
         : []),
@@ -1021,8 +1110,7 @@ export type Session = Auth['$Infer']['Session'];
 // it throw out of getSession instead of returning no session, which a caller can
 // only report as a 500. Such a request carries no session, so it is answered as
 // one, and a key that reached its expiry is refused like any other unauthenticated
-// request. A refusal for another reason, a rate-limited key among them, still
-// propagates: it is not the same answer.
+// request. A refusal for another reason still propagates: it is not the same answer.
 export async function getSessionFromHeaders(
   headers: Headers,
 ): Promise<Awaited<ReturnType<typeof auth.api.getSession>>> {
@@ -1050,6 +1138,8 @@ export {
   inviteValidSince,
   getEmailSettings,
   setEmailSettings,
+  getEmailTemplateSettings,
+  setEmailTemplateSettings,
   resolveEmailConfig,
   getGoogleSettings,
   setGoogleSettings,
@@ -1075,6 +1165,7 @@ export type {
   AuthSettings,
   InstanceEmailDto,
   InstanceEmailPatch,
+  EmailTemplateSettings,
   InstanceGoogleDto,
   InstanceGooglePatch,
   InstanceGoogleConfig,

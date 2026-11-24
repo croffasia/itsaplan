@@ -35,7 +35,7 @@ import { useTranslations } from 'next-intl';
 // it never collapses; the API key section is, because an external agent is unusable
 // until its key is in the operator's hands. A new agent starts with all of them closed:
 // nothing is filled in yet, and the key section opens itself once a key is issued.
-const DEFAULT_OPEN: Record<string, boolean> = { access: true, projects: true, token: true };
+const DEFAULT_OPEN: Record<string, boolean> = { access: true, token: true };
 
 // Radix Select forbids an empty-string item value, so the provider's default (a null
 // reasoning effort) uses this sentinel.
@@ -172,6 +172,7 @@ export default function TeamAiAgentFields({
       {...sectionProps('access')}
       value={value}
       onChange={onChange}
+      agent={agent}
     />
   );
 
@@ -386,6 +387,7 @@ export default function TeamAiAgentFields({
           tokenSection,
           accessSection,
           triggersSection,
+          toolsSection,
           connectionSection,
         ]
       : [

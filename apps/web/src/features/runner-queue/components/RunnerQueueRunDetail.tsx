@@ -1,36 +1,113 @@
+import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
+import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AgentRunExternalTrace from '@/components/common/agent-runs/AgentRunExternalTrace';
+import AgentRunInternalTrace from '@/components/common/agent-runs/AgentRunInternalTrace';
+import { useRunSteps } from '../hooks/useRunSteps';
+import RunnerQueueRunFactGrid from './RunnerQueueRunFactGrid';
 import RunnerQueueRunHeader from './RunnerQueueRunHeader';
-import RunnerQueueRunFacts from './RunnerQueueRunFacts';
+import RunnerQueueRunNotice from './RunnerQueueRunNotice';
+import RunnerQueueRunProperties from './RunnerQueueRunProperties';
 import RunnerQueueRunResult from './RunnerQueueRunResult';
-import RunnerQueueRunSection from './RunnerQueueRunSection';
+import RunnerQueueRunTask from './RunnerQueueRunTask';
 
-export default function RunnerQueueRunDetail({ run }: { run: RunnerQueueRun }) {
+type Tab = 'result' | 'steps' | 'task';
+
+// A run opens on what it produced once it answered, on what it did while it runs or after
+// it failed, and on what it was asked while it has not started.
+function firstTab(run: RunnerQueueRun): Tab {
+  if (run.output && run.executionState === 'success') return 'result';
+  if (!run.canReadSteps) return run.output ? 'result' : 'task';
+  if (run.executionState === 'queued' || run.executionState === 'canceled') {
+    return run.attempts > 0 ? 'steps' : 'task';
+  }
+  return 'steps';
+}
+
+// A run on the page of `listPath`, or in the side panel without it. `withColumn` keeps its
+// properties in a column of their own, where there is room for one.
+export default function RunnerQueueRunDetail({
+  run,
+  listPath,
+  withColumn = listPath != null,
+}: {
+  run: RunnerQueueRun;
+  listPath?: string;
+  withColumn?: boolean;
+}) {
   const t = useTranslations('issue.agentRuns');
-  const failing = run.executionState === 'failed' || run.executionState === 'queued';
+  const [tab, setTab] = useState(() => firstTab(run));
+  const steps = useRunSteps(run);
+  const failedStep = steps?.some((part) => part.error) ?? false;
+  const toolCalls = steps?.filter((part) => part.type === 'tool').length ?? 0;
+  const panels = useRef<HTMLDivElement>(null);
+
+  function showFailedStep() {
+    setTab('steps');
+    // The tab renders on this commit, before the next frame.
+    requestAnimationFrame(() =>
+      panels.current?.querySelector('[data-step-error]')?.scrollIntoView({ block: 'center' }),
+    );
+  }
+
   return (
-    <article className="max-w-3xl space-y-8">
-      <div className="space-y-6">
-        <RunnerQueueRunHeader run={run} />
-        <RunnerQueueRunFacts run={run} />
+    <article className="@container space-y-6">
+      <RunnerQueueRunHeader run={run} listPath={listPath} />
+      <RunnerQueueRunNotice run={run} onShowFailedStep={failedStep ? showFailedStep : undefined} />
+      {!withColumn && <RunnerQueueRunFactGrid run={run} />}
+      <div
+        className={cn(
+          'grid items-start gap-6',
+          withColumn && '@5xl:grid-cols-[minmax(0,1fr)_340px] @5xl:gap-10',
+        )}
+      >
+        <Tabs
+          ref={panels}
+          value={tab}
+          onValueChange={(value) => setTab(value as Tab)}
+          className="min-w-0 gap-5"
+        >
+          <TabsList variant="line">
+            <TabsTrigger value="result">{t('result')}</TabsTrigger>
+            {run.canReadSteps && (
+              <TabsTrigger value="steps">
+                {t('stepsTab')}
+                {toolCalls > 0 && (
+                  <span className="text-xs font-normal text-muted-foreground tabular-nums">
+                    {toolCalls}
+                  </span>
+                )}
+                {failedStep && (
+                  <span
+                    role="img"
+                    aria-label={t('failed')}
+                    className="size-1.5 rounded-full bg-destructive"
+                  />
+                )}
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="task">{t('task')}</TabsTrigger>
+          </TabsList>
+          <TabsContent value="result">
+            <RunnerQueueRunResult run={run} />
+          </TabsContent>
+          {run.canReadSteps && (
+            <TabsContent value="steps">
+              {run.kind === 'internal' ? (
+                <AgentRunInternalTrace runId={run.id} />
+              ) : (
+                <AgentRunExternalTrace run={run} />
+              )}
+            </TabsContent>
+          )}
+          <TabsContent value="task">
+            <RunnerQueueRunTask prompt={run.prompt} />
+          </TabsContent>
+        </Tabs>
+        {withColumn && <RunnerQueueRunProperties run={run} listPath={listPath} />}
       </div>
-      {failing && run.lastError && (
-        <RunnerQueueRunSection title={t('error')}>
-          <p className="text-[15px] whitespace-pre-wrap text-destructive" dir="auto">
-            {run.lastError}
-          </p>
-        </RunnerQueueRunSection>
-      )}
-      {run.output && <RunnerQueueRunResult output={run.output} />}
-      <RunnerQueueRunSection title={t('task')}>
-        <p className="text-sm whitespace-pre-wrap text-muted-foreground" dir="auto">
-          {run.prompt}
-        </p>
-      </RunnerQueueRunSection>
-      <RunnerQueueRunSection title={t('stepsSection')}>
-        <AgentRunExternalTrace runId={run.id} />
-      </RunnerQueueRunSection>
     </article>
   );
 }

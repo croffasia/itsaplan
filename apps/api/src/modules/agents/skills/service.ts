@@ -1,7 +1,7 @@
 import { db, agentSkill, agentSkillLink } from '@repo/db';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, ilike, inArray, or, sql } from 'drizzle-orm';
 import { transliterate } from 'transliteration';
-import { iso, rethrowDuplicate, HttpError } from '#shared/lib';
+import { iso, rethrowDuplicate, HttpError, likePattern } from '#shared/lib';
 import { putObject, getObjectText, deleteObjects } from '@repo/storage';
 import { parseFrontmatter, isDisallowedRef } from './skill-format';
 
@@ -67,12 +67,23 @@ function skillMdKey(prefix: string): string {
   return `${prefix}/SKILL.md`;
 }
 
-// One page of the team's skill library, by name, with how many it holds in total.
+// One page of the team's skill library, by name, with how many match in all.
 export async function listSkills(
   teamId: number,
   window: { limit: number; offset: number },
+  filter: { search?: string; sources?: string[] },
 ): Promise<{ items: SkillRow[]; total: number }> {
-  const where = eq(agentSkill.teamId, teamId);
+  const term = filter.search?.trim();
+  const where = and(
+    eq(agentSkill.teamId, teamId),
+    filter.sources ? inArray(agentSkill.source, filter.sources) : undefined,
+    term
+      ? or(
+          ilike(agentSkill.name, likePattern(term)),
+          ilike(agentSkill.description, likePattern(term)),
+        )
+      : undefined,
+  );
   const [rows, counted] = await Promise.all([
     db
       .select(dtoColumns)

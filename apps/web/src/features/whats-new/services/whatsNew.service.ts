@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getWhatsNew, markWhatsNewSeen } from '@/lib/api/endpoints/updates';
+import { getWhatsNew, markWhatsNewSeen, type WhatsNew } from '@/lib/api/endpoints/updates';
 import { useSession } from '@/lib/auth-client';
 import { qk } from '@/services/queryKeys';
 
@@ -23,7 +23,10 @@ export function useMarkWhatsNewSeen() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => markWhatsNewSeen(),
-    // The screen closes on click, so the write is not what the user waits for.
+    // The screen closes on click, so the write is not what the user waits for, and a failed
+    // write does not hold the startup screens after it.
+    onMutate: () =>
+      qc.setQueryData<WhatsNew>(qk.whatsNew, (data) => data && { ...data, pending: false }),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.whatsNew }),
   });
 }

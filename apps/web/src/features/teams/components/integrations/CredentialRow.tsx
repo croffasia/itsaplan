@@ -1,40 +1,54 @@
-import { KeyRound, Pencil, Trash2 } from 'lucide-react';
-import type { IntegrationCredential } from '@/lib/api/endpoints/integrations';
+import { Pencil, Trash2 } from 'lucide-react';
+import type { IntegrationCredential, IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { IntegrationIcon } from '@/components/common/IntegrationIcon';
+import NeedsProLink from '@/components/common/NeedsProLink';
+import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
-// One credential as a table row: the integration name and optional account label,
-// the redacted fields as badges, and edit/delete actions gated by permission.
+// One credential as a table row. A click on the row opens the editor. A credential of an
+// integration that comes with another edition is marked so and cannot be edited here.
 export function CredentialRow({
   credential,
-  integrationLabel,
+  integration,
   canEdit,
   canDelete,
   onEdit,
   onDelete,
 }: {
   credential: IntegrationCredential;
-  integrationLabel: string;
+  integration: Pick<IntegrationMeta, 'label' | 'kind' | 'icon' | 'locked'> &
+    Partial<Pick<IntegrationMeta, 'credentialSchema'>>;
   canEdit: boolean;
   canDelete: boolean;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const t = useTranslations('teams.integrations');
+  const editable = canEdit && !integration.locked;
   const fields = Object.entries(credential.redacted);
+  // The form's name for a field; a field the catalog no longer lists keeps its key.
+  const fieldLabel = (key: string) =>
+    integration.credentialSchema?.find((f) => f.key === key)?.label ?? key;
   return (
-    <TableRow className="group/item">
+    <TableRow
+      className={cn('group/item', editable && 'cursor-pointer')}
+      onClick={editable ? onEdit : undefined}
+    >
       <TableCell className="px-3 py-3 whitespace-normal">
         <div className="flex min-w-0 items-center gap-2.5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-            <KeyRound className="size-4" />
-          </div>
+          <IntegrationIcon integration={integration} />
           <div className="flex min-w-0 flex-col gap-0.5">
-            <span className="truncate text-sm font-medium text-foreground">{integrationLabel}</span>
+            <span className="truncate text-sm font-medium text-foreground">
+              {integration.label}
+            </span>
             {credential.label && (
               <span className="truncate text-xs text-muted-foreground">{credential.label}</span>
+            )}
+            {integration.locked && (
+              <NeedsProLink feature="agent-tools" label={t('locked')} hint={t('lockedHint')} />
             )}
           </div>
         </div>
@@ -44,7 +58,7 @@ export function CredentialRow({
           <div className="flex flex-wrap gap-1">
             {fields.map(([k, v]) => (
               <Badge key={k} variant="outline" className="font-mono text-[10px] font-normal">
-                {k}: {String(v)}
+                {fieldLabel(k)}: {String(v)}
               </Badge>
             ))}
           </div>
@@ -52,15 +66,15 @@ export function CredentialRow({
           <span className="text-xs text-muted-foreground">{t('noFields')}</span>
         )}
       </TableCell>
-      <TableCell className="px-3 py-2">
+      <TableCell className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-end gap-1">
-          {canEdit && (
+          {editable && (
             <Button
               variant="ghost"
               size="icon"
               className="size-8 text-muted-foreground hover:text-foreground"
               onClick={onEdit}
-              aria-label={t('edit')}
+              aria-label={t('editLabel', { integration: integration.label })}
             >
               <Pencil className="size-4" />
             </Button>
@@ -71,7 +85,7 @@ export function CredentialRow({
               size="icon"
               className="size-8 text-muted-foreground hover:text-destructive"
               onClick={onDelete}
-              aria-label={t('delete')}
+              aria-label={t('deleteLabel', { integration: integration.label })}
             >
               <Trash2 className="size-4" />
             </Button>

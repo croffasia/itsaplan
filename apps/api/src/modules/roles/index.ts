@@ -4,12 +4,18 @@ import { noContent } from '#shared/http';
 import { guards } from '#shared/guards';
 import { paginate } from '#shared/pagination';
 import { HttpError, rethrowDuplicate } from '#shared/lib';
-import { PERMISSION_RESOURCES, PERMISSION_ACTIONS, resourceActions } from '#shared/permissions';
+import {
+  PERMISSION_RESOURCES,
+  PERMISSION_ACTIONS,
+  extendedFrom,
+  resourceActions,
+} from '#shared/permissions';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import {
   listRoles,
   listRolesPage,
   getRole,
+  getAssignableRole,
   getRoleUsage,
   isRoleInUse,
   createRole,
@@ -29,11 +35,12 @@ import {
   updateRoleBody,
 } from './model';
 
-// Roles CRUD. A role belongs to a team and every project the team owns assigns from
-// that one list. Who may write one is the team's own ranks, not the permission
-// matrix: a member with members_manage could otherwise grant itself a more powerful
-// role. An owner or a manager creates and edits; deleting stays with the owner,
-// since a deletion moves every member, agent and invite on the role to another one.
+// Roles CRUD. Every project of a team assigns from one list: the system roles and the
+// team's own. The team writes only its own; the system roles are god mode's. Who may
+// write one is the team's own ranks, not the permission matrix: a member with
+// members_manage could otherwise grant itself a more powerful role. An owner or a
+// manager creates and edits; deleting stays with the owner, since a deletion moves
+// every member, agent and invite on the role to another one.
 export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] } })
   .use(guards)
 
@@ -41,7 +48,11 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
   .get(
     '/permission-catalog',
     () => ({
-      resources: PERMISSION_RESOURCES.map((key) => ({ key, actions: [...resourceActions(key)] })),
+      resources: PERMISSION_RESOURCES.map((key) => ({
+        key,
+        actions: [...resourceActions(key)],
+        from: extendedFrom(key),
+      })),
       actions: [...PERMISSION_ACTIONS],
     }),
     {
@@ -49,10 +60,10 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
       detail: {
         summary: 'List the permission catalog',
         description:
-          "List the resources and actions a role's permission matrix is built from. " +
-          'A resource lists the actions it supports; one it omits is always denied. ' +
-          'ai_agents is administrative: it also attaches an agent to any project of the team ' +
-          'and exposes the API key of an agent.',
+          "List the resources and actions of a role's permission matrix. Each resource lists its " +
+          'supported actions. Unlisted actions are always denied. ai_agents is an admin ' +
+          'resource: it also lets a role attach an agent ' +
+          "to any team project and read an agent's API key.",
         ...mcpTool('list_permission_catalog'),
       },
     },
@@ -73,8 +84,9 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
       detail: {
         summary: "List a team's roles",
         description:
-          'One page of the roles a team offers, oldest first. `search` matches the name. ' +
-          'Use list_role_options to read every one of them.',
+          "List a team's roles, one page at a time: system roles first, then custom roles, each " +
+          'oldest first. Only the instance owner can edit a system role (system: true). To get ' +
+          'all roles at once, use list_role_options.',
         ...mcpTool('list_roles'),
       },
     },
@@ -90,8 +102,8 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
     detail: {
       summary: "List a team's role options",
       description:
-        'Every role of the team, with its permission matrix, for the pickers that assign one. ' +
-        'Use list_roles to read them a page at a time.',
+        'List every role the team can assign, system roles included, with their permission ' +
+        'matrices. Use list_roles for pages.',
       ...mcpTool('list_role_options'),
     },
   })
@@ -156,21 +168,21 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
       detail: {
         summary: 'Count what a role is assigned to',
         description:
-          'Count the project members, AI agents, pending invites and provisioned group mappings on a role. They have to be moved to another role before it can be deleted.',
+          'Count the project members, AI agents, pending ' +
+          'invites and provisioned group mappings that use a role.',
         ...mcpTool('get_role_usage'),
       },
     },
   )
 
-  // Deletes a custom role. The default role cannot be deleted. A role that members,
-  // agents, pending invites or provisioned group mappings are on is deleted only
-  // together with targetRoleId, the role they are all moved to.
+  // Deletes a custom role. A role that members, agents, pending invites or provisioned
+  // group mappings are on is deleted only together with targetRoleId, the role they are
+  // all moved to: another of the team's roles or a system role.
   .delete(
     '/teams/:teamId/roles/:roleId',
     async ({ membership, params, query }) => {
       const role = await getRole(membership.teamId, params.roleId);
       if (!role) throw new HttpError(404, 'Role not found');
-      if (role.isDefault) throw new HttpError(400, 'The default role cannot be deleted');
 
       let targetRoleId: number | null = null;
       if (isRoleInUse(await getRoleUsage(params.roleId))) {
@@ -183,7 +195,7 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
         if (query.targetRoleId === params.roleId) {
           throw new HttpError(400, 'Move to a role other than the one being deleted');
         }
-        const target = await getRole(membership.teamId, query.targetRoleId);
+        const target = await getAssignableRole(membership.teamId, query.targetRoleId);
         if (!target) throw new HttpError(404, 'Target role not found');
         targetRoleId = target.id;
       }
@@ -199,7 +211,9 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
       detail: {
         summary: 'Delete a role',
         description:
-          'Delete a custom role. The default role cannot be deleted. A role in use requires targetRoleId, the role its members, agents, pending invites and group mappings are moved to.',
+          'Delete a custom role of the team. If the role is in use, set targetRoleId: its ' +
+          'members, agents, pending invites and group mappings ' +
+          'move to that role (another team role or a system role).',
         ...mcpTool('delete_role'),
       },
     },

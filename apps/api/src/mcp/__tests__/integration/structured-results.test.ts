@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { CallToolResultSchema, type CallToolRequest } from '@modelcontextprotocol/sdk/types.js';
+import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
+import type { JsonSchemaType } from '@modelcontextprotocol/sdk/validation/types.js';
 import { auth } from '@repo/auth';
 import { app, authedApi, ownWorkspaceId, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
@@ -39,6 +41,7 @@ describe('MCP structured results through the SDK client', () => {
     const withoutSchema = listed.tools.filter((tool) => tool.outputSchema === undefined);
     expect(withoutSchema.map((tool) => tool.name).sort()).toEqual([
       'view_attachment',
+      'view_document_asset',
       'view_initiative_images',
       'view_issue_images',
     ]);
@@ -75,6 +78,23 @@ describe('MCP structured results through the SDK client', () => {
     expect(deleted.isError).toBe(false);
     expect(deleted.content).toEqual([{ type: 'text', text: '' }]);
     expect(deleted.structuredContent).toEqual({ ok: true, status: 204, data: null });
+  });
+
+  // A client that checks arguments with Ajv refuses a tool whose schema it cannot compile,
+  // even for a call with no arguments (#805).
+  it('compiles every advertised input schema in the SDK validator', async () => {
+    const user = await signUpTestUser();
+    const client = await connect(user.userId);
+    const validator = new AjvJsonSchemaValidator();
+    const refused: string[] = [];
+    for (const tool of (await client.listTools()).tools) {
+      try {
+        validator.getValidator(tool.inputSchema as JsonSchemaType);
+      } catch {
+        refused.push(tool.name);
+      }
+    }
+    expect(refused).toEqual([]);
   });
 
   it('creates a checklist batch through the SDK and returns a validated array result', async () => {

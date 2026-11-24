@@ -9,8 +9,8 @@ import { createAgent } from '#tests/helpers/agents';
 
 // Agent conversation threads live in Mastra's tables, which carry no foreign key of
 // ours, so they are deleted explicitly when what they are bound to goes away: the
-// agent, its project, or the schedule. Archiving an issue is reversible and drops
-// none of them.
+// agent, its project, the issue, or the schedule. Archiving an issue is reversible and
+// drops none of them.
 //
 // The runtime is not exercised — a live model call would be needed to produce a thread
 // — so threads are seeded through the memory module the same way a run creates them.
@@ -31,8 +31,10 @@ async function createInternalAgent(asOwner: Api, name: string, username: string)
   return res.data!.agent;
 }
 
-async function createIssue(asOwner: Api, columnId: number, title: string) {
-  const res = await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title });
+async function createIssue(asOwner: Api, columnId: number, title: string, parentId?: number) {
+  const res = await asOwner
+    .projects({ projectKey: 'MKT' })
+    .issues.post({ columnId, title, parentId });
   return res.data!;
 }
 
@@ -182,5 +184,92 @@ describe('agent thread cleanup', () => {
     expect(await threadExists(threadA)).toBe(true);
     expect(await threadExists(threadB)).toBe(true);
     expect(await messageCount(threadA)).toBe(1);
+  });
+
+  it("deletes an issue's run threads with their messages when it is deleted", async () => {
+    const { asOwner, columnId } = await setup();
+    const a = await createInternalAgent(asOwner, 'Bot A', 'bota');
+    const b = await createInternalAgent(asOwner, 'Bot B', 'botb');
+    const issue = await createIssue(asOwner, columnId, 'Ship it');
+    const other = await createIssue(asOwner, columnId, 'Keep it');
+    const threadA = await seedIssueThread(a, issue.id);
+    const threadB = await seedIssueThread(b, issue.id);
+    const kept = await seedIssueThread(a, other.id);
+    await seedMessage(threadA, 'agent-bot');
+
+    const res = await asOwner.issues({ issueId: issue.id }).delete();
+    expect(res.status).toBe(204);
+
+    expect(await threadExists(threadA)).toBe(false);
+    expect(await threadExists(threadB)).toBe(false);
+    expect(await messageCount(threadA)).toBe(0);
+    expect(await threadExists(kept)).toBe(true);
+  });
+
+  it('deletes the run threads of the issues a bulk delete removes', async () => {
+    const { asOwner, columnId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const first = await createIssue(asOwner, columnId, 'First');
+    const second = await createIssue(asOwner, columnId, 'Second');
+    const other = await createIssue(asOwner, columnId, 'Keep it');
+    const threads = [
+      await seedIssueThread(agent, first.id),
+      await seedIssueThread(agent, second.id),
+    ];
+    const kept = await seedIssueThread(agent, other.id);
+
+    const res = await asOwner
+      .projects({ projectKey: 'MKT' })
+      .issues.bulk.delete.post({ ids: [first.id, second.id] });
+    expect(res.status).toBe(200);
+
+    for (const thread of threads) expect(await threadExists(thread)).toBe(false);
+    expect(await threadExists(kept)).toBe(true);
+  });
+
+  it('deletes the run threads of the subtasks a delete cascades to', async () => {
+    const { asOwner, columnId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const parent = await createIssue(asOwner, columnId, 'Parent');
+    const subtask = await createIssue(asOwner, columnId, 'Subtask', parent.id);
+    const thread = await seedIssueThread(agent, subtask.id);
+
+    const res = await asOwner
+      .issues({ issueId: parent.id })
+      .delete(undefined, { query: { subtasks: 'cascade' } });
+    expect(res.status).toBe(204);
+
+    expect(await threadExists(thread)).toBe(false);
+  });
+
+  it('deletes the run threads of the issues a deleted column takes with it', async () => {
+    const { asOwner } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const columns = asOwner.projects({ projectKey: 'MKT' }).columns;
+    const doomed = (await columns.post({ name: 'Doomed', stateType: 'started' })).data!;
+    const issue = await createIssue(asOwner, doomed.id, 'Ship it');
+    const thread = await seedIssueThread(agent, issue.id);
+
+    const res = await columns({ columnId: doomed.id }).delete({ mode: 'delete' });
+    expect(res.status).toBe(204);
+
+    expect(await threadExists(thread)).toBe(false);
+  });
+
+  it('keeps the run threads of the issues a deleted column moves elsewhere', async () => {
+    const { asOwner, columnId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const columns = asOwner.projects({ projectKey: 'MKT' }).columns;
+    const doomed = (await columns.post({ name: 'Doomed', stateType: 'started' })).data!;
+    const issue = await createIssue(asOwner, doomed.id, 'Ship it');
+    const thread = await seedIssueThread(agent, issue.id);
+
+    const res = await columns({ columnId: doomed.id }).delete({
+      mode: 'move',
+      targetColumnId: columnId,
+    });
+    expect(res.status).toBe(204);
+
+    expect(await threadExists(thread)).toBe(true);
   });
 });

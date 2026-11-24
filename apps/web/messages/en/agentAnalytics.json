@@ -1,11 +1,12 @@
 {
   "window": "{days, plural, =1 {Last 24 hours} other {Last # days}}",
+  "period": "Period",
   "retentionNote": "Internal agents only. Runs older than the instance's trace retention are not counted.",
   "noComparison": "Nothing to compare with",
   "vsPrevious": "vs {value} before",
   "deletedAgent": "Deleted agent",
   "deletedProject": "Deleted project",
-  "allProjects": "All projects",
+  "projects": "Projects",
   "totalTokens": "Total tokens",
   "totalCost": "Total cost",
   "stats": {
@@ -55,7 +56,7 @@
   },
   "preview": {
     "title": "More in Cloud and Pro",
-    "description": "Spend by person and trigger, run time and tool calls. Available in Cloud and self-hosted Pro.",
+    "description": "Spend by person, trigger, schedule and workflow, run time and tool calls. Available in Cloud and self-hosted Pro.",
     "hide": "Hide",
     "show": "Show",
     "byPerson": {
@@ -64,11 +65,15 @@
     },
     "byTrigger": {
       "title": "By trigger",
-      "description": "Chat, mention, schedule or issue event."
+      "description": "What started the runs."
     },
     "bySchedule": {
       "title": "By schedule",
       "description": "What each schedule spent."
+    },
+    "byWorkflow": {
+      "title": "By workflow",
+      "description": "What each workflow used."
     },
     "tools": {
       "title": "Tools",

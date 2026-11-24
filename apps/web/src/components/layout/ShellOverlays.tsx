@@ -48,12 +48,15 @@ export default function ShellOverlays({
         />
       )}
 
-      {project && overlays.newIssueDefaults != null && (
+      {project && overlays.newIssue != null && (
         <NewIssueModal
           project={project}
-          defaults={overlays.newIssueDefaults}
-          onClose={() => overlays.setNewIssueDefaults(null)}
-          onCreated={() => overlays.setNewIssueDefaults(null)}
+          defaults={overlays.newIssue.defaults}
+          onClose={() => overlays.setNewIssue(null)}
+          onCreated={(created) => {
+            overlays.newIssue?.onCreated?.(created);
+            overlays.setNewIssue(null);
+          }}
         />
       )}
 

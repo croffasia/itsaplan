@@ -1,6 +1,11 @@
 import type { McpApp } from './types';
 import type { McpRouteTool } from './generate';
-import { AGENT_PROJECT_HEADER, MCP_LOOPBACK_HEADER, setMcpOAuthToken } from '../shared/mcp-request';
+import {
+  AGENT_PROJECT_HEADER,
+  MCP_LOOPBACK_HEADER,
+  setMcpClientRequest,
+  setMcpOAuthToken,
+} from '../shared/mcp-request';
 import type { McpCredential } from './credential';
 import { structuredResult, type StructuredResult } from './result';
 import { withPublicAttachmentUrls, withStoredAttachmentUrls } from './attachment-urls';
@@ -24,12 +29,13 @@ const BASE = 'http://localhost';
 // per-project MCP toggle. An internal agent run dispatches through the same routes
 // but is not MCP, so disabling MCP on a project must not disarm its agents.
 // projectId is the project an internal agent's run works in (AGENT_PROJECT_HEADER).
+// clientRequest is the request that reached POST /mcp (setMcpClientRequest).
 export async function dispatchTool(
   app: McpApp,
   tool: McpRouteTool,
   args: Record<string, unknown>,
   credential: McpCredential,
-  opts: { viaMcpEndpoint: boolean; projectId?: number },
+  opts: { viaMcpEndpoint: boolean; projectId?: number; clientRequest?: Request },
 ): Promise<{ text: string; isError: boolean; structuredContent: StructuredResult }> {
   const rest = withStoredAttachmentUrls(args);
 
@@ -47,7 +53,10 @@ export async function dispatchTool(
   } else {
     const qs = new URLSearchParams();
     for (const [key, value] of Object.entries(rest)) {
-      if (value != null) qs.set(key, String(value));
+      // A model often fills an optional field it leaves unset with "". The route would
+      // refuse that for a fixed-value or numeric field, so it is dropped as unset.
+      if (value == null || (value === '' && !tool.inputSchema.required.includes(key))) continue;
+      qs.set(key, String(value));
     }
     const query = qs.toString();
     if (query) url += `?${query}`;
@@ -65,6 +74,7 @@ export async function dispatchTool(
     body,
   });
   if (credential.kind === 'oauth') setMcpOAuthToken(request, credential.accessToken);
+  if (opts.clientRequest) setMcpClientRequest(request, opts.clientRequest);
   const response = await app.handle(request);
   const text = withPublicAttachmentUrls(await response.text());
   return {

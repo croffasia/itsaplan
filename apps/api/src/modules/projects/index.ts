@@ -14,10 +14,10 @@ import { listIssueTypes } from '#modules/issue-types/service';
 import { listLabels, listLabelGroups } from '#modules/labels/service';
 import { listCustomFields } from '#modules/custom-fields/service';
 import { listIssueTemplates } from '#modules/issue-templates/service';
+import { projectSharingEnabled } from '#modules/workspaces/service';
 import {
   AutoArchiveResponse,
   EstimatesResponse,
-  PROJECT_DESCRIPTION_LIMIT,
   ProjectBoardResponse,
   ProjectListResponse,
   ProjectResponse,
@@ -69,9 +69,8 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       detail: {
         summary: 'List projects',
         description:
-          'List the projects you are a member of, with their latest work-item activity timestamp. ' +
-          'Search key, name, and description with q; filter by teamId; sort by key, name, created, ' +
-          'or activity. Pass permissions=true to include your permission matrix on each.',
+          'List the projects you are a member of, with ' +
+          'the time of the last issue activity in each.',
         ...mcpTool('list_projects'),
       },
     },
@@ -121,11 +120,11 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       detail: {
         summary: 'Copy a project',
         description:
-          "Copy a project's configuration into a new project you own in the same team, without " +
-          'its issues. Only an owner or a manager of that team may copy it. ' +
-          'By default the structure (states, issue types, labels, custom fields, views, ' +
-          'dashboards, documents, actions) is copied. Pass `include` to choose sections; the API ' +
-          'force-enables dependencies (e.g. a view pulls in the states it references).',
+          "Copy a project's configuration, without its issues, into a new project in the same " +
+          'team. You become its owner. Only a team owner or manager can copy. By default copies ' +
+          'states, issue types, labels, custom fields, issue templates, views, dashboards, ' +
+          'documents and actions. `include` selects sections. The sections they depend on are ' +
+          'always copied, for example the states a view uses.',
         ...mcpTool('copy_project'),
       },
     },
@@ -154,6 +153,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         issueTemplates,
         viewer,
         teamAccess,
+        sharingEnabled,
       ] = await Promise.all([
         listColumns(project.id),
         listIssueTypes(project.id),
@@ -164,6 +164,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         listIssueTemplates(project.id),
         getProjectAccess(project.id, userId),
         getTeamAccess(project.teamId, userId),
+        projectSharingEnabled(project.id),
       ]);
       // The permission guard already asserted access, so it always exists here; guard
       // against a race (access revoked mid-request).
@@ -179,6 +180,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         issueTemplates,
         viewer: { role: viewer.role, teamRole: teamAccess?.role ?? null, via: viewer.via },
         permissions: viewer.permissions,
+        sharingEnabled,
       };
     },
     {
@@ -187,9 +189,10 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       detail: {
         summary: 'Get a project',
         description:
-          'Get a project setup by key: columns, issue types, labels, custom fields, issue ' +
-          'templates, and assignable users and agents. Resolves the ids create_issue and update_issue ' +
-          'take. For issues use list_issues or search_issues.',
+          "Get a project's setup by key: columns, issue types, labels, custom fields, issue " +
+          'templates, and assignable users and agents. Gives the ids for create_issue and ' +
+          'update_issue. To find issues, use list_issues or search_issues. The repositories ' +
+          'connected to the project are listed by list_project_repositories.',
         ...mcpTool('get_project'),
       },
     },
@@ -211,11 +214,10 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       detail: {
         summary: 'Update a project',
         description:
-          "Update a project's name and/or description. The description is given to the " +
-          `agents of the project in their system prompt; up to ${PROJECT_DESCRIPTION_LIMIT} ` +
-          'characters. The key changes only when it does not match the key pattern: a key ' +
-          'created before the pattern existed, for example one that starts with a digit. ' +
-          'A key that another project of the team has is refused with 409.',
+          "Update a project's name, description or key. The project's agents get the " +
+          'description in their system prompt. Only a key that does not match the key pattern ' +
+          'can change, for example one that starts with a digit. A key used by another team ' +
+          'project returns 409.',
         ...mcpTool('update_project'),
       },
     },
@@ -343,7 +345,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       response: { 204: t.Void(), ...accessErrors },
       detail: {
         summary: 'Delete a project',
-        description: 'Permanently delete a project and everything in it. Irreversible.',
+        description: 'Permanently delete a project and everything in it.',
         ...mcpTool('delete_project'),
       },
     },

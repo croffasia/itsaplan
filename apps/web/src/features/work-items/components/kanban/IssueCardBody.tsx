@@ -19,6 +19,7 @@ import {
   DateBadge,
   DelegateAvatar,
   LabelBadge,
+  PILL,
   PriorityBadge,
 } from '@/features/issue/components/shared/IssueBadges';
 import { Badge } from '@/components/ui/badge';
@@ -71,20 +72,20 @@ export function IssueCardBody({
     <>
       {(has('id') || (has('priority') && issue.priority)) && (
         <div
-          className={cn('mb-1.5 flex items-center', has('id') ? 'justify-between' : 'justify-end')}
+          className={cn('mb-2 flex items-center', has('id') ? 'justify-between' : 'justify-end')}
         >
           {has('id') && (
             <IssueIdentifier
               issue={issue}
               className="text-xs text-muted-foreground"
-              onOpenParent={onOpen}
+              onOpenAncestor={onOpen}
             />
           )}
           {has('priority') && issue.priority && <PriorityBadge priority={issue.priority} />}
         </div>
       )}
 
-      <div className="mb-2 flex items-start gap-1.5">
+      <div className="mb-2 flex items-start gap-2">
         {has('status') && column && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -105,10 +106,7 @@ export function IssueCardBody({
           {has('statusAge') && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge
-                  variant="outline"
-                  className="rounded-full px-1.5 py-0.5 text-[10px] text-muted-foreground"
-                >
+                <Badge variant="outline" className={PILL}>
                   <Timer className="size-2.5" />
                   {formatDurationShort(issue.statusSince)}
                 </Badge>
@@ -134,10 +132,7 @@ export function IssueCardBody({
             />
           )}
           {has('type') && type && (
-            <Badge
-              variant="outline"
-              className="rounded-full px-1.5 py-0.5 text-[10px] text-muted-foreground"
-            >
+            <Badge variant="outline" className={PILL}>
               <span
                 className="inline-block h-1.5 w-1.5 rounded-full"
                 style={{ backgroundColor: type.color }}
@@ -146,37 +141,25 @@ export function IssueCardBody({
             </Badge>
           )}
           {has('initiative') && initiative && (
-            <Badge
-              variant="outline"
-              className="max-w-full rounded-full px-1.5 py-0.5 text-[10px] text-muted-foreground"
-            >
+            <Badge variant="outline" className={cn(PILL, 'max-w-full')}>
               <Target className="size-2.5 shrink-0" />
               <span className="truncate">{initiative.title}</span>
             </Badge>
           )}
           {has('cycle') && cycle && (
-            <Badge
-              variant="outline"
-              className="max-w-full rounded-full px-1.5 py-0.5 text-[10px] text-muted-foreground"
-            >
+            <Badge variant="outline" className={cn(PILL, 'max-w-full')}>
               <RefreshCw className="size-2.5 shrink-0" />
               <span className="truncate">{cycle.name}</span>
             </Badge>
           )}
           {has('estimatePoints') && issue.estimatePoints != null && (
-            <Badge
-              variant="outline"
-              className="rounded-full px-1.5 py-0.5 text-[10px] text-muted-foreground"
-            >
+            <Badge variant="outline" className={PILL}>
               <Hash className="size-2.5" />
               {issue.estimatePoints}
             </Badge>
           )}
           {has('estimateTime') && issue.estimateMinutes != null && (
-            <Badge
-              variant="outline"
-              className="rounded-full px-1.5 py-0.5 text-[10px] text-muted-foreground"
-            >
+            <Badge variant="outline" className={PILL}>
               <Clock className="size-2.5" />
               {formatMinutes(issue.estimateMinutes)}
             </Badge>

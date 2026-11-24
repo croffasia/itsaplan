@@ -1,12 +1,23 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import {
+  listWebhookEventTypes,
   listWebhooks,
   listWebhookDeliveries,
   createWebhook,
   updateWebhook,
+  rotateWebhookSecret,
   deleteWebhook,
 } from '@/lib/api/endpoints/webhooks';
 import { qk } from '@/services/queryKeys';
+
+export function useWebhookEventTypesQuery(projectKey: string) {
+  return useQuery({
+    queryKey: qk.webhookEventTypes(projectKey),
+    queryFn: () => listWebhookEventTypes(projectKey),
+  });
+}
 
 export function useWebhooksQuery(projectKey: string | null) {
   return useQuery({
@@ -45,6 +56,18 @@ export function useUpdateWebhook(projectKey: string | null) {
     mutationFn: ({ id, input }: { id: number; input: Parameters<typeof updateWebhook>[1] }) =>
       updateWebhook(id, input),
     onSuccess: () => {
+      if (projectKey) void qc.invalidateQueries({ queryKey: qk.webhooks(projectKey) });
+    },
+  });
+}
+
+export function useRotateWebhookSecret(projectKey: string | null) {
+  const t = useTranslations('settings.webhooks');
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => rotateWebhookSecret(id),
+    onSuccess: () => {
+      toast.success(t('secretRotated'));
       if (projectKey) void qc.invalidateQueries({ queryKey: qk.webhooks(projectKey) });
     },
   });

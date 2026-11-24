@@ -16,7 +16,8 @@
     "assigned": "مُسنَدة",
     "mentioned": "إشارة إليك",
     "commented": "تعليق",
-    "state_changed": "تغيّرت الحالة"
+    "state_changed": "تغيّرت الحالة",
+    "reacted": "تفاعل"
   },
   "actions": {
     "markRead": "تعليم كمقروء",
@@ -33,6 +34,7 @@
     "mentioned": "أشار إليك {who}",
     "commented": "علّق {who}",
     "stateChanged": "{who} غيّر الحالة من {from} لـ {to}",
-    "stateChangedPlain": "غيّر {who} الحالة"
+    "stateChangedPlain": "غيّر {who} الحالة",
+    "reacted": "تفاعل {who} مع تعليقك بـ {emoji}"
   }
 }

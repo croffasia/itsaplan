@@ -118,7 +118,7 @@ describe('MarkdownEditor extensions', () => {
       button: 0,
     });
     link.dispatchEvent(plain);
-    assert.equal(openLinkOnModifierClick(plain, root), false);
+    assert.equal(openLinkOnModifierClick(plain, { dom: root, editable: true }), false);
 
     for (const modifier of [{ metaKey: true }, { ctrlKey: true }]) {
       const event = new dom.window.MouseEvent('click', {
@@ -128,7 +128,7 @@ describe('MarkdownEditor extensions', () => {
         ...modifier,
       });
       link.dispatchEvent(event);
-      assert.equal(openLinkOnModifierClick(event, root), true);
+      assert.equal(openLinkOnModifierClick(event, { dom: root, editable: true }), true);
       assert.equal(event.defaultPrevented, true);
     }
 
@@ -136,6 +136,31 @@ describe('MarkdownEditor extensions', () => {
       ['https://example.com/docs', '_blank', 'noopener,noreferrer'],
       ['https://example.com/docs', '_blank', 'noopener,noreferrer'],
     ]);
+  });
+
+  it('leaves a modifier click in read-only text to the browser', () => {
+    const root = dom.window.document.querySelector('div')!;
+    root.innerHTML = '<a href="https://example.com/docs"><strong>Docs</strong></a><p>text</p>';
+    const opened: unknown[] = [];
+    dom.window.open = (...args: Parameters<typeof window.open>) => {
+      opened.push(args);
+      return null;
+    };
+
+    for (const [selector, handled] of [
+      ['strong', true],
+      ['p', false],
+    ] as const) {
+      const event = new dom.window.MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        metaKey: true,
+      });
+      root.querySelector(selector)!.dispatchEvent(event);
+      assert.equal(openLinkOnModifierClick(event, { dom: root, editable: false }), handled);
+      assert.equal(event.defaultPrevented, false);
+    }
+    assert.deepEqual(opened, []);
   });
 
   it('does not open unsafe link protocols', () => {
@@ -149,7 +174,7 @@ describe('MarkdownEditor extensions', () => {
     });
     link.dispatchEvent(event);
 
-    assert.equal(openLinkOnModifierClick(event, root), false);
+    assert.equal(openLinkOnModifierClick(event, { dom: root, editable: true }), false);
     assert.equal(event.defaultPrevented, false);
   });
 });
@@ -170,7 +195,7 @@ describe('MarkdownEditor touch links', () => {
       ],
       content: '<p><a href="https://example.com/docs"><strong>Docs</strong></a> text</p>',
       editorProps: {
-        handleClick: (view, _pos, event) => openLinkOnModifierClick(event, view.dom),
+        handleClick: (view, _pos, event) => openLinkOnModifierClick(event, view),
         handleDOMEvents: createLinkKeyboardHandlers(openOnTouch),
         handleScrollToSelection: () => true,
       },

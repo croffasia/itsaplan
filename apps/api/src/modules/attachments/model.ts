@@ -40,7 +40,7 @@ export const ViewAttachmentsResponse = t.Object({
 });
 
 export const viewAttachmentQuery = t.Object({
-  attachment: t.String({ description: "The attachment's url, or its id." }),
+  attachment: t.String({ description: 'Attachment url or id.' }),
 });
 
 export const issueParams = t.Object({ issueId: t.Numeric() });

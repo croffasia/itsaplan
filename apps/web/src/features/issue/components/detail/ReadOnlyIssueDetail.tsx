@@ -41,10 +41,27 @@ export default function ReadOnlyIssueDetail({
 
   const fieldDefs = fieldDefsForType(scaffold.customFields, issue.typeId);
 
+  const renderProperties = (className?: string) => (
+    <IssueProperties
+      project={project}
+      issue={issue}
+      fieldDefs={fieldDefs}
+      onPatch={noop}
+      onSetField={noop}
+      onToggleLabel={noop}
+      readOnly
+      className={className}
+      open={properties.open}
+      onToggle={properties.toggle}
+      groupsOpen={propertyGroups}
+    />
+  );
+
   // Content on the left (capped), the Properties panel pinned to the right edge,
-  // matching the standalone issue page.
+  // matching the standalone issue page. A phone has no room for both, so the panel
+  // follows the title there instead.
   return (
-    <div className="flex justify-between gap-8 px-8 py-8 xl:px-12">
+    <div className="flex justify-between gap-8 px-5 py-8 sm:px-8 xl:px-12">
       <div className="w-full max-w-3xl min-w-0">
         <div className="flex items-center gap-2">
           {issue.archivedAt && (
@@ -55,6 +72,7 @@ export default function ReadOnlyIssueDetail({
           <span className="text-xs text-muted-foreground tabular-nums">{issue.identifier}</span>
         </div>
         <h1 className="mt-1 text-lg font-semibold">{issue.title}</h1>
+        <div className="md:hidden">{renderProperties()}</div>
 
         {/* A share is read without a session, so an identifier links without reading the
             issue it names: the api answers that read with 401, and lib/api treats every
@@ -87,20 +105,8 @@ export default function ReadOnlyIssueDetail({
         {extended && <ReadOnlyActivityFeed feed={feed} imageByUserId={imageByUserId} />}
       </div>
 
-      <aside className="w-[340px] shrink-0">
-        <IssueProperties
-          project={project}
-          issue={issue}
-          fieldDefs={fieldDefs}
-          onPatch={noop}
-          onSetField={noop}
-          onToggleLabel={noop}
-          readOnly
-          className="mt-0 border-t-0 pt-0"
-          open={properties.open}
-          onToggle={properties.toggle}
-          groupsOpen={propertyGroups}
-        />
+      <aside className="hidden w-[340px] shrink-0 md:block">
+        {renderProperties('mt-0 border-t-0 pt-0')}
       </aside>
     </div>
   );

@@ -26,6 +26,9 @@ export interface AgentFormValue {
   memoryLastMessages: string;
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  // Whether the agent may be chatted with. Off, it drops out of the chat selector and
+  // the chat routes reject it; a mention, a delegation, and a schedule are unaffected.
+  chatEnabled: boolean;
   // The member custom fields that start a run when the agent is set into one, each
   // with its own wait.
   fieldTriggers: FormFieldTrigger[];
@@ -96,6 +99,7 @@ export function initialAgentValue(agent?: AiAgent): AgentFormValue {
     memoryLastMessages: agent?.memoryLastMessages != null ? String(agent.memoryLastMessages) : '',
     triggerOnMention: agent?.triggerOnMention ?? true,
     triggerOnAssign: agent?.triggerOnAssign ?? false,
+    chatEnabled: agent?.chatEnabled ?? true,
     fieldTriggers: (agent?.fieldTriggers ?? []).map((trigger) => ({
       fieldId: trigger.fieldId,
       delayMin: String(Math.round(trigger.delaySec / 60)),
@@ -127,6 +131,7 @@ function configFields(v: AgentFormValue) {
     instructions: v.instructions.trim() || null,
     triggerOnMention: v.triggerOnMention,
     triggerOnAssign: v.triggerOnAssign,
+    chatEnabled: v.chatEnabled,
     fieldTriggers: v.fieldTriggers.map((trigger) => ({
       fieldId: trigger.fieldId,
       delaySec: delaySecFromMinutes(trigger.delayMin),
@@ -167,18 +172,9 @@ export function toUpdatePatch(v: AgentFormValue): AiAgentPatch {
 // How many tools the agent ends up with: the granted ones plus the read-only tools
 // that are always on.
 export function grantedToolCount(tools: AgentTool[], selected: string[]): number {
-  return selected.length + tools.filter((t) => t.always).length;
-}
-
-// Buckets a list by a key, keeping the order the keys first appear in, so a grouped
-// checklist follows the order its source list came in.
-export function groupInOrder<T, K extends string>(items: T[], key: (item: T) => K): [K, T[]][] {
-  const groups = new Map<K, T[]>();
-  for (const item of items) {
-    const group = key(item);
-    const bucket = groups.get(group);
-    if (bucket) bucket.push(item);
-    else groups.set(group, [item]);
-  }
-  return [...groups];
+  const locked = new Set(tools.filter((t) => t.locked).map((t) => t.key));
+  return (
+    selected.filter((key) => !locked.has(key)).length +
+    tools.filter((t) => t.always && !t.locked).length
+  );
 }

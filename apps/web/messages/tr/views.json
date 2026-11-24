@@ -11,5 +11,21 @@
   "unfavorite": "Favorilerden çıkar",
   "shareBoard": "Panoyu paylaş",
   "newViewHint": "Mevcut filtrelerden ve görüntüleme ayarlarından yeni bir görünüm oluşturun",
-  "filter": "Filtrele"
+  "filter": "Filtrele",
+  "private": "Özel",
+  "privateHint": "Bu görünümü yalnızca siz görebilirsiniz",
+  "duplicate": "Çoğalt",
+  "copyName": "{name} (kopya)",
+  "hide": "Gizle",
+  "show": "Göster",
+  "hiddenViews": "Gizli görünümler ({count})",
+  "tabRow": "Sekme çubuğu",
+  "resetTabRow": "Çubuğu sıfırla",
+  "resetTabRowHint": "Projenin sırası, ardından özel görünümleriniz, gizli bir şey yok",
+  "pinProjectOrder": "Proje sırası yap",
+  "pinProjectOrderHint": "Kendi sekme çubuğunu düzenlememiş herkes projenin görünümlerini bu sırayla görür",
+  "publish": "Projeye ekle",
+  "publishHint": "Projedeki herkes görecek. Yeniden özel yapılamaz.",
+  "published": "{name} artık projenin bir görünümü",
+  "projectOrderSet": "Projenin görünümleri artık bu sırayı izliyor"
 }

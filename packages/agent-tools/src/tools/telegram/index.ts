@@ -1,11 +1,14 @@
 import type { Integration } from '../../types';
 import { telegramSend } from './send';
+import { telegramIcon } from './icon';
+import { verifyTelegram } from './verify';
 
 // Telegram: a bot connection. One credential is one bot; two bots are two
 // credentials.
 export const telegram: Integration = {
   key: 'telegram',
   label: 'Telegram',
+  description: 'Sends messages to Telegram chats from your bot.',
   credentialSchema: [
     {
       key: 'botToken',
@@ -13,7 +16,7 @@ export const telegram: Integration = {
       type: 'secret',
       required: true,
       placeholder: '123456:ABC-DEF...',
-      help: 'The token from @BotFather.',
+      help: 'The token from [@BotFather](https://t.me/BotFather).',
     },
     {
       key: 'defaultChatId',
@@ -23,5 +26,8 @@ export const telegram: Integration = {
       help: 'Used when the agent does not pass a chatId.',
     },
   ],
+  icon: telegramIcon,
+  website: 'https://telegram.org',
+  verify: verifyTelegram,
   tools: [telegramSend],
 };

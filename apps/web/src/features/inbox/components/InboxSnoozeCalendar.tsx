@@ -20,6 +20,7 @@ export default function InboxSnoozeCalendar({
       <PopoverContent className="w-auto p-0" align="end" onClick={(e) => e.stopPropagation()}>
         <Calendar
           mode="single"
+          fixedWeeks
           autoFocus
           disabled={{ before: new Date() }}
           onSelect={(d) => {

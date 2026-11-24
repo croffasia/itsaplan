@@ -10,8 +10,9 @@ import { qk } from '@/services/queryKeys';
 import type { RunnerQueueRun } from '@/lib/api/endpoints/runnerQueue';
 import issue from '../../../messages/en/issue.json';
 import common from '../../../messages/en/common.json';
+import teams from '../../../messages/en/teams.json';
 
-it('shows the run its URL names and hides it after access denial', async () => {
+it('shows the run its URL names, stops it while it works, names who stopped it, and hides it after access denial', async () => {
   const names = [
     'window',
     'document',
@@ -43,6 +44,7 @@ it('shows the run its URL names and hides it after access denial', async () => {
     url: 'http://localhost',
     pretendToBeVisual: true,
   });
+  const requests: string[] = [];
   const run: RunnerQueueRun = {
     id: 1,
     agentId: 1,
@@ -57,21 +59,38 @@ it('shows the run its URL names and hides it after access denial', async () => {
     lastError: null,
     createdAt: '2026-01-01T00:00:00Z',
     startedAt: null,
+    receivedAt: null,
     finishedAt: null,
     nextAttemptAt: '2026-01-01T00:00:00Z',
     issueId: null,
     sequenceNumber: null,
     issueTitle: null,
+    scheduleId: null,
     scheduleName: null,
     projectRef: 'team.RUN',
+    initiator: null,
+    startedBy: null,
+    canceledBy: null,
+    parentRun: null,
+    rootRun: null,
+    document: null,
+    canReadSteps: true,
     runnerState: 'online',
+    inputTokens: null,
+    outputTokens: null,
   };
   Object.defineProperties(globalThis, {
     window: { configurable: true, value: dom.window },
     document: { configurable: true, value: dom.window.document },
     navigator: { configurable: true, value: dom.window.navigator },
     IS_REACT_ACT_ENVIRONMENT: { configurable: true, value: true },
-    fetch: { configurable: true, value: async () => Response.json(null) },
+    fetch: {
+      configurable: true,
+      value: async (input: RequestInfo | URL, init?: RequestInit) => {
+        requests.push(`${init?.method ?? 'GET'} ${String(input)}`);
+        return Response.json(null);
+      },
+    },
   });
   for (const name of names) {
     if (name in dom.window)
@@ -102,8 +121,16 @@ it('shows the run its URL names and hides it after access denial', async () => {
   const client = new QueryClient({
     defaultOptions: { queries: { staleTime: Infinity, retry: false } },
   });
-  const detailKey = [...qk.runnerQueue, { page: 1, pageSize: 1, runId: 1 }];
-  const page = { items: [run], total: 1, page: 1, pageSize: 10, queued: 0, running: 0 };
+  const detailKey = [...qk.runnerQueue, '/projects/team.RUN', { page: 1, pageSize: 1, runId: 1 }];
+  const page = {
+    items: [run],
+    total: 1,
+    page: 1,
+    pageSize: 10,
+    queued: 0,
+    running: 0,
+    failed: 0,
+  };
   client.setQueryData(detailKey, page);
   client.setQueryData([...qk.externalRunTrace(1), null], null);
   const { default: RunnerQueueRunPage } = await import('./RunnerQueueRunPage');
@@ -114,9 +141,12 @@ it('shows the run its URL names and hides it after access denial', async () => {
       root.render(
         <QueryClientProvider client={client}>
           <SyncProvider>
-            <NextIntlClientProvider locale="en" timeZone="UTC" messages={{ issue, common }}>
+            <NextIntlClientProvider locale="en" timeZone="UTC" messages={{ issue, common, teams }}>
               <RelativeTimeProvider>
-                <RunnerQueueRunPage runId={1} queuePath="/team/RUN/agents/queue" />
+                <RunnerQueueRunPage
+                  scope={{ api: '/projects/team.RUN', path: '/team/RUN/agents/queue' }}
+                  runId={1}
+                />
               </RelativeTimeProvider>
             </NextIntlClientProvider>
           </SyncProvider>
@@ -124,6 +154,30 @@ it('shows the run its URL names and hides it after access denial', async () => {
       ),
     );
     assert.ok(document.body.textContent?.includes('Selected result'));
+    const stopButton = () =>
+      [...document.querySelectorAll('button')].find((button) => button.textContent === 'Stop run');
+    assert.equal(stopButton(), undefined);
+    await act(async () => {
+      client.setQueryData(detailKey, {
+        ...page,
+        items: [{ ...run, status: 'pending', executionState: 'running' }],
+      });
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+    await act(async () => stopButton()!.click());
+    assert.ok(requests.some((request) => /^POST .*\/agent-runs\/1\/cancel$/.test(request)));
+    assert.ok(document.body.textContent?.includes('Selected result'));
+    assert.ok(!document.body.textContent?.includes('Stopped by'));
+    await act(async () => {
+      const canceledBy = { name: 'Lead', image: null, agentUsername: 'lead' };
+      client.setQueryData(detailKey, {
+        ...page,
+        items: [{ ...run, status: 'canceled', executionState: 'canceled', canceledBy }],
+      });
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+    assert.ok(document.body.textContent?.includes('Stopped by'));
+    assert.ok(document.body.textContent?.includes('@lead'));
     await act(async () => {
       client
         .getQueryCache()

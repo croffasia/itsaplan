@@ -50,6 +50,7 @@ const OUTPUT_FORMATS = [
   'antigravity-stream-json',
   'copilot-json',
   'pi-json',
+  'mastracode-jsonl',
 ] as const;
 
 export type OutputFormat = (typeof OUTPUT_FORMATS)[number];

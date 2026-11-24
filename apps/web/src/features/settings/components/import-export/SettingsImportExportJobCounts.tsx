@@ -9,9 +9,17 @@ const ENTITY_ORDER: ImportEntityType[] = [
   'state',
   'cycle',
   'attachment',
+  'checklist',
+  'custom_field',
+  'issue_type',
+  'initiative',
+  'worklog',
 ];
 
-// Per-entity progress: how many the discover phase found in Plane against how many
+// Only some sources bring these, so they show once a job has found any.
+const SOURCE_SPECIFIC = new Set<ImportEntityType>(['issue_type', 'initiative', 'worklog']);
+
+// Per-entity progress: how many the discover phase found in the source against how many
 // exist here so far. Attachment counts are metadata captured during create, not
 // downloaded bytes — the job never transfers attachment content.
 export default function SettingsImportExportJobCounts({ counts }: { counts: ImportJob['counts'] }) {
@@ -21,6 +29,7 @@ export default function SettingsImportExportJobCounts({ counts }: { counts: Impo
       <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
         {ENTITY_ORDER.map((type) => {
           const { created, discovered } = counts[type];
+          if (SOURCE_SPECIFIC.has(type) && discovered === 0) return null;
           const pct = discovered > 0 ? Math.round((created / discovered) * 100) : 0;
           return (
             <div key={type} className="space-y-1">

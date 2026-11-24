@@ -1,6 +1,5 @@
 import type { Bot } from 'grammy';
-import { getInstanceBotConfig, isInstanceBotUsable } from '@repo/db';
-import { botConfig } from './config';
+import { getInstanceBotConfig, getJobSettings, isInstanceBotUsable } from '@repo/db';
 import { createBot } from './bot';
 
 // Keeps the running bot in step with the instance settings. The token is not env
@@ -11,6 +10,11 @@ import { createBot } from './bot';
 // Long polling means exactly one process may hold the token — Telegram hands each
 // update to a single getUpdates caller. That is why this service runs as one
 // instance and must not be scaled to several replicas.
+
+// How soon to try again after the database could not be read. Shorter than the steady
+// interval, which is itself stored in the database: at startup Postgres is often still
+// accepting its first connections.
+const RETRY_INTERVAL_MS = 5000;
 
 let current: { token: string; bot: Bot } | null = null;
 let stopped = false;
@@ -44,16 +48,14 @@ async function stopCurrent(): Promise<void> {
 
 async function loop(): Promise<void> {
   if (stopped) return;
-  const cfg = botConfig();
-  let delay = cfg.configPollIntervalMs;
+  let delay: number;
   try {
+    delay = (await getJobSettings()).bot.configPollIntervalMs;
     await reconcile();
   } catch (err) {
     // The database being briefly unreachable must not kill the service, and a bot
-    // already running keeps running meanwhile. This is the normal case at startup, so
-    // retry sooner than the steady-state interval instead of leaving the bot idle for
-    // a full poll cycle.
-    delay = cfg.configRetryIntervalMs;
+    // already running keeps running meanwhile.
+    delay = RETRY_INTERVAL_MS;
     const reason = err instanceof Error ? err.message : String(err);
     console.error(`[bot] could not read bot settings: ${reason}`);
   }

@@ -4,6 +4,8 @@
 // shows only the controls that apply to the active view. Missing fields fall
 // back to per-view defaults, so the store grows new options without a migration.
 
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import { localeWeekStart } from '@/utils/dates';
 import type { ProjectFeatureSet } from '@/utils/projectFeatures';
 import type { Sort, WorkItemsView } from '@/utils/viewTypes';
 
@@ -16,7 +18,8 @@ export type BuiltinGroupField =
   'none' | 'status' | 'assignee' | 'delegate' | 'priority' | 'type' | 'initiative' | 'cycle';
 export type GroupField = BuiltinGroupField | CustomFieldKey;
 
-// Issue properties that can be shown on a Project card or as a Table column.
+// Issue properties that can be shown on a Project card or as a Table or Timeline
+// column.
 // 'id' is the issue identifier; 'status' the state; the rest map to issue
 // fields directly.
 export type DisplayProperty =
@@ -37,9 +40,10 @@ export type DisplayProperty =
   | 'updated'
   | 'statusAge';
 
-// A custom field shown as a Table column, keyed by its id as `cf:<id>`. Kept
-// distinct from the built-in DisplayProperty union so both can live in the same
-// `properties` list. Stale keys (a since-deleted field) are ignored at render.
+// A custom field shown as a Table or Timeline column, keyed by its id as
+// `cf:<id>`. Kept distinct from the built-in DisplayProperty union so both can live
+// in the same `properties` list. Stale keys (a since-deleted field) are ignored at
+// render.
 export type CustomFieldKey = `cf:${number}`;
 export type PropertyKey = DisplayProperty | CustomFieldKey;
 
@@ -99,6 +103,11 @@ export function offeredDisplayProperties(features: ProjectFeatureSet): DisplayPr
   return DISPLAY_PROPERTIES.filter((p) => isFieldEnabled(p, features));
 }
 
+// The custom fields the Timeline offers as columns. A text or markdown value does
+// not fit a Timeline row.
+export const isTimelineField = (field: CustomField): boolean =>
+  field.fieldType !== 'text' && field.fieldType !== 'markdown';
+
 // Timeline zoom: how much horizontal space one day gets, which sets whether day
 // numbers or only week/month ticks are legible.
 export type TimelineScale = 'week' | 'month' | 'quarter';
@@ -109,8 +118,16 @@ export type TimelineScale = 'week' | 'month' | 'quarter';
 export type BuiltinDateField = 'dueDate' | 'startDate';
 export type DateField = BuiltinDateField | CustomFieldKey;
 
-// date-fns weekStartsOn: 0 Sunday, 1 Monday.
-export type WeekStart = 0 | 1;
+// date-fns weekStartsOn: 6 Saturday, 0 Sunday, 1 Monday.
+export type WeekStart = 6 | 0 | 1;
+export const WEEK_STARTS: WeekStart[] = [6, 0, 1];
+
+// How the Calendar lays out its days: a month grid, a column per day, or a column
+// per week.
+export type CalendarMode = 'month' | 'byDay' | 'byWeek';
+export const CALENDAR_MODES: CalendarMode[] = ['month', 'byDay', 'byWeek'];
+export const CALENDAR_MAX_DAYS = 7;
+export const CALENDAR_MAX_WEEKS = 4;
 
 export interface ViewSettings {
   sort: Sort;
@@ -125,9 +142,7 @@ export interface ViewSettings {
   // Timeline row. Off by default — the relations are an extra load, and most
   // boards do not use them.
   showLinks: boolean;
-  // The issues' subtasks, rendered the same way under their parent. Toggled by the
-  // Nested subtasks chip in Display properties, and by a row of its own on the
-  // Timeline, which has no chips.
+  // The issues' subtasks, rendered the same way under their parent.
   showSubtasks: boolean;
   // Whether a subtask also gets a card or row of its own next to the other issues.
   // Independent of showSubtasks: with both on it shows in both places, with both
@@ -143,6 +158,14 @@ export interface ViewSettings {
   // not update this saved preference.
   timelineCollapseAll: boolean;
   calendarDateField: DateField;
+  calendarMode: CalendarMode;
+  // How many days the by-day mode shows, and how many weeks the by-week mode shows.
+  calendarDays: number;
+  calendarWeeks: number;
+  // Whether a week column of the by-week mode splits into a section per day,
+  // or lists the week's issues in date order.
+  calendarSplitByDay: boolean;
+  calendarUnscheduledCollapsed: boolean;
   weekStart: WeekStart;
   // Group keys collapsed into the "Hidden columns" panel on the flat project (see
   // KanbanBoard). Keys are namespaced by grouping field (c<id>/a<id>/p<v>/t<id>/
@@ -163,8 +186,9 @@ export interface ViewSettings {
 
 const DEFAULT_SORT: Sort = { field: 'manual', dir: 'asc' };
 
-// Options shared by every view; group, subgroup and properties differ per view.
-const COMMON: Omit<ViewSettings, 'group' | 'subgroup' | 'properties' | 'sort'> = {
+// Options shared by every view; group, subgroup and properties differ per view, the
+// week start per language.
+const COMMON: Omit<ViewSettings, 'group' | 'subgroup' | 'properties' | 'sort' | 'weekStart'> = {
   showEmptyGroups: true,
   showLinks: false,
   showSubtasks: true,
@@ -173,7 +197,11 @@ const COMMON: Omit<ViewSettings, 'group' | 'subgroup' | 'properties' | 'sort'> =
   timelineScale: 'week',
   timelineCollapseAll: false,
   calendarDateField: 'dueDate',
-  weekStart: 0,
+  calendarMode: 'month',
+  calendarDays: CALENDAR_MAX_DAYS,
+  calendarWeeks: CALENDAR_MAX_WEEKS,
+  calendarSplitByDay: true,
+  calendarUnscheduledCollapsed: false,
   hiddenGroups: [],
   collapsedGroups: [],
   pinnedGroup: null,
@@ -184,7 +212,6 @@ const COMMON: Omit<ViewSettings, 'group' | 'subgroup' | 'properties' | 'sort'> =
 const DEFAULT_PROPERTIES: Record<WorkItemsView, DisplayProperty[]> = {
   kanban: [
     'id',
-    'status',
     'statusAge',
     'priority',
     'type',
@@ -203,6 +230,7 @@ export function defaultViewSettings(view: WorkItemsView): ViewSettings {
   const group: GroupField = view === 'calendar' ? 'none' : 'status';
   return {
     ...COMMON,
+    weekStart: localeWeekStart(),
     sort: { ...DEFAULT_SORT },
     group,
     subgroup: 'none',
@@ -226,6 +254,9 @@ const TIMELINE_SCALES: TimelineScale[] = ['week', 'month', 'quarter'];
 const isGroupField = (value: unknown): value is GroupField =>
   typeof value === 'string' &&
   (GROUP_FIELDS.includes(value as BuiltinGroupField) || isCustomFieldKey(value));
+
+const isCount = (value: unknown, max: number): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= max;
 
 function normalizeSort(sort: unknown): Sort | null {
   if (sort && typeof sort === 'object') {
@@ -311,7 +342,20 @@ export function normalizeViewSettings(
       (typeof s.calendarDateField === 'string' && isCustomFieldKey(s.calendarDateField))
         ? s.calendarDateField
         : d.calendarDateField,
-    weekStart: s.weekStart === 0 || s.weekStart === 1 ? s.weekStart : d.weekStart,
+    calendarMode: CALENDAR_MODES.includes(s.calendarMode as CalendarMode)
+      ? (s.calendarMode as CalendarMode)
+      : d.calendarMode,
+    calendarDays: isCount(s.calendarDays, CALENDAR_MAX_DAYS) ? s.calendarDays : d.calendarDays,
+    calendarWeeks: isCount(s.calendarWeeks, CALENDAR_MAX_WEEKS) ? s.calendarWeeks : d.calendarWeeks,
+    calendarSplitByDay:
+      typeof s.calendarSplitByDay === 'boolean' ? s.calendarSplitByDay : d.calendarSplitByDay,
+    calendarUnscheduledCollapsed:
+      typeof s.calendarUnscheduledCollapsed === 'boolean'
+        ? s.calendarUnscheduledCollapsed
+        : d.calendarUnscheduledCollapsed,
+    weekStart: WEEK_STARTS.includes(s.weekStart as WeekStart)
+      ? (s.weekStart as WeekStart)
+      : d.weekStart,
     hiddenGroups: Array.isArray(s.hiddenGroups)
       ? (s.hiddenGroups as unknown[]).filter((x): x is string => typeof x === 'string')
       : d.hiddenGroups,

@@ -12,10 +12,13 @@ import { listModelsForProvider } from './provider-models';
 import {
   CredentialPageResponse,
   credentialListQuery,
+  CredentialCheckResponse,
   CredentialResponse,
   IntegrationCatalogResponse,
   IntegrationOptionListResponse,
   ProviderModelListResponse,
+  checkCredentialBody,
+  checkStoredCredentialBody,
   createCredentialBody,
   credentialParams,
   integrationOptionsQuery,
@@ -28,6 +31,8 @@ import {
   createCredential,
   updateCredential,
   deleteCredential,
+  checkNewCredential,
+  checkStoredCredential,
 } from './service';
 
 // The credential store belongs to the team and serves every project it owns, so every
@@ -54,8 +59,10 @@ export const integrationRoutes = new Elysia({
     detail: {
       summary: 'List available integrations',
       description:
-        "List the integration catalog: LLM providers (kind 'llm') and tool integrations " +
-        "(kind 'tool'). A provider key here is what list_provider_models takes.",
+        "List the integration catalog: LLM providers (kind 'llm'), tool integrations ('tool'), " +
+        "and services that a team's own tools call " +
+        "('service'). A tool integration marked locked comes with another edition of the app: " +
+        'no credential or tool of it can be added. Pass a provider key to list_provider_models.',
       ...mcpTool('list_integrations'),
     },
   })
@@ -73,8 +80,8 @@ export const integrationRoutes = new Elysia({
       detail: {
         summary: "List a provider's models",
         description:
-          'List the models an LLM provider offers. An id here is what the model field on ' +
-          'create_ai_agent / update_ai_agent takes. Empty when the model registry is unreachable.',
+          'List the models of an LLM provider. Use an id as model in create_ai_agent or ' +
+          'update_ai_agent. Empty when the model registry is unreachable.',
         // The list comes from models.dev, the one route here that reads outside the tracker.
         ...mcpTool('list_provider_models', { openWorldHint: true }),
       },
@@ -110,18 +117,23 @@ export const integrationRoutes = new Elysia({
   .get(
     '/teams/:teamId/integrations',
     ({ membership, query }) =>
-      paginate(query, (window) => listCredentials(membership.teamId, window)),
+      paginate(query, (window) =>
+        listCredentials(membership.teamId, window, {
+          search: query.search,
+          kinds: query.kind?.split(','),
+        }),
+      ),
     {
       params: teamParams,
       query: credentialListQuery,
       teamPermission: ['integrations', 'read'],
-      response: { 200: CredentialPageResponse, ...accessErrors },
+      response: { 200: CredentialPageResponse, ...commonErrors },
       detail: {
         summary: 'List credentials',
         description:
-          "One page of a team's integration credentials, secrets redacted. The id of a " +
-          'credential on an LLM provider is what modelCredentialId on create_ai_agent / ' +
-          'update_ai_agent takes. A credential is added in the UI, not here.',
+          "List a team's integration credentials, one page at a time, with secrets hidden. Use " +
+          "an LLM credential's id as modelCredentialId in create_ai_agent or update_ai_agent. " +
+          'Credentials are added only in the UI.',
         ...mcpTool('list_integration_credentials'),
       },
     },
@@ -140,7 +152,48 @@ export const integrationRoutes = new Elysia({
       response: { 201: CredentialResponse, ...commonErrors },
       detail: {
         summary: 'Add a credential',
-        description: 'Store a credential for an integration.',
+        description:
+          'Store a credential for an integration. The service it is for is asked first, and a credential it refuses is not stored.',
+      },
+    },
+  )
+
+  .post(
+    '/teams/:teamId/integrations/check',
+    async ({ body }) => ({ result: await checkNewCredential(body) }),
+    {
+      params: teamParams,
+      body: checkCredentialBody,
+      teamPermission: ['integrations', 'create'],
+      response: { 200: CredentialCheckResponse, ...commonErrors },
+      detail: {
+        summary: 'Check a new credential',
+        description:
+          'Ask the service a credential is for whether it accepts it, without storing the credential.',
+      },
+    },
+  )
+
+  .post(
+    '/teams/:teamId/integrations/:credentialId/check',
+    async ({ params, membership, body }) => {
+      const result = await checkStoredCredential(
+        params.credentialId,
+        membership.teamId,
+        body.credential,
+      );
+      if (!result) throw new HttpError(404, 'Credential not found');
+      return { result };
+    },
+    {
+      params: credentialParams,
+      body: checkStoredCredentialBody,
+      teamPermission: ['integrations', 'edit'],
+      response: { 200: CredentialCheckResponse, ...commonErrors },
+      detail: {
+        summary: 'Check a changed credential',
+        description:
+          'Ask the service whether it accepts a stored credential with the given changes, without storing them. A new address has to come with the secrets.',
       },
     },
   )
@@ -161,7 +214,8 @@ export const integrationRoutes = new Elysia({
       response: { 200: CredentialResponse, ...commonErrors },
       detail: {
         summary: 'Update a credential',
-        description: "Update a credential's label or secret. The integration is fixed.",
+        description:
+          "Update a credential's label or secret. The integration is fixed. A changed credential is checked with its service like a new one.",
       },
     },
   )

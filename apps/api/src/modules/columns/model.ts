@@ -1,6 +1,6 @@
 import { t } from 'elysia';
 
-const stateType = t.Union([
+export const stateType = t.Union([
   t.Literal('backlog'),
   t.Literal('unstarted'),
   t.Literal('started'),
@@ -33,24 +33,23 @@ export const createColumnBody = t.Object({
       t.Integer({
         minimum: 1,
         description:
-          'How many issues this column should hold. null for no limit. ' +
-          'Enforced only when wipMode is "hard".',
+          'Max issues in the column, or null for no limit. Enforced only when wipMode is "hard".',
       }),
     ),
   ),
   wipMode: t.Optional(
     t.Union([t.Literal('soft'), t.Literal('hard')], {
       description:
-        'What happens at wipLimit: "soft" only warns on the board, ' +
-        '"hard" refuses an issue entering a full column with a 409.',
+        "'soft' only warns on the board. 'hard' refuses " +
+        'an issue that enters a full column, with 409.',
     }),
   ),
   autoAssignUserId: t.Optional(
     t.Nullable(
       t.String({
         description:
-          'A project member every issue entering this column is assigned to, ' +
-          'replacing its current assignee. null for no automatic assignment.',
+          'Project member to assign every issue that enters ' +
+          'the column, replacing its assignee. null turns it off.',
       }),
     ),
   ),

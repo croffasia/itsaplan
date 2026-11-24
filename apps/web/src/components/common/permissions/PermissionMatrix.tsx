@@ -21,7 +21,11 @@ export default function PermissionMatrix({
   const { actionLabel, resourceLabel, groupLabel } = usePermissionLabels();
   const supports = useMemo(() => catalogSupport(catalog), [catalog]);
   const groups = useMemo(
-    () => groupResources(catalog.resources.map((r) => r.key)),
+    () =>
+      groupResources(
+        catalog.resources.map((r) => r.key),
+        catalog.resources,
+      ),
     [catalog.resources],
   );
   const actions = useMemo(() => orderActions(catalog.actions), [catalog.actions]);

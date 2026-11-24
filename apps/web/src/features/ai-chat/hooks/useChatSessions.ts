@@ -1,233 +1,188 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { arrayMove } from '@dnd-kit/sortable';
+import type { AiChatThread } from '@/lib/api/endpoints/agentChat';
+import { forgetStoredChat, readStoredChat, writeStoredChat } from '@/utils/storedChat';
 import { uuid } from '@/utils/uuid';
 
-// One open conversation in the chat panel. `threadId` is null until the agent answers
-// the first message, and stays null for an agent that keeps no memory. `running` and
-// `hasMessages` are what the session's transcript reports back, so the panel knows what
-// is going on in a session it is not showing.
+// One conversation the chat holds. `threadId` is null until the first message starts one,
+// and stays null for an agent that keeps no memory. `title` is what the history called the
+// conversation when it was opened from there. `running` and `hasMessages` are what the
+// session's transcript reports back, so the chat knows what is going on in a session it is
+// not showing.
 export type ChatSession = {
   id: string;
   agentId: number;
   threadId: string | null;
+  title: string | null;
   running: boolean;
   hasMessages: boolean;
+  shownAt: number;
 };
 
 export type ChatSessionState = Pick<ChatSession, 'running' | 'hasMessages'>;
 
-const storageKey = (projectKey: string) => `aiChat:panel:tabs:${projectKey}`;
+export type ChatSessions = ReturnType<typeof useChatSessions>;
 
-const newSession = (agentId: number, threadId: string | null = null): ChatSession => ({
+type Chats = { sessions: ChatSession[]; activeId: string | null };
+
+const NONE: Chats = { sessions: [], activeId: null };
+
+// How many saved conversations stay mounted besides the ones that are answering.
+const KEPT = 6;
+
+const newSession = (
+  agentId: number,
+  threadId: string | null = null,
+  title: string | null = null,
+): ChatSession => ({
   id: uuid(),
   agentId,
   threadId,
+  title,
   running: false,
-  hasMessages: false,
+  hasMessages: threadId !== null,
+  shownAt: Date.now(),
 });
 
-type StoredTabs = {
-  sessions: { id: string; agentId: number; threadId: string }[];
-  activeId: string | null;
-};
+const isBlank = (session: ChatSession) => !session.threadId && !session.hasMessages;
 
-function isStored(value: unknown): value is StoredTabs {
-  if (typeof value !== 'object' || value === null) return false;
-  const tabs = value as StoredTabs;
-  return (
-    Array.isArray(tabs.sessions) &&
-    tabs.sessions.every(
-      (session) =>
-        typeof session.id === 'string' &&
-        typeof session.agentId === 'number' &&
-        typeof session.threadId === 'string',
-    ) &&
-    (typeof tabs.activeId === 'string' || tabs.activeId === null)
-  );
+const activeOf = ({ sessions, activeId }: Chats) =>
+  sessions.find((session) => session.id === activeId) ?? sessions.at(-1) ?? null;
+
+const withChange = (chats: Chats, id: string, change: Partial<ChatSession>): Chats => ({
+  ...chats,
+  sessions: chats.sessions.map((session) =>
+    session.id === id ? { ...session, ...change } : session,
+  ),
+});
+
+const withShown = (chats: Chats, id: string): Chats => ({
+  ...withChange(chats, id, { shownAt: Date.now() }),
+  activeId: id,
+});
+
+// A saved conversation that is not answering is read again when it is opened, so the ones
+// shown longest ago make room.
+function withSession({ sessions }: Chats, session: ChatSession): Chats {
+  const idle = sessions
+    .filter((other) => other.threadId && !other.running)
+    .sort((a, b) => a.shownAt - b.shownAt);
+  const dropped = new Set(idle.slice(0, Math.max(0, idle.length - KEPT + 1)));
+  return {
+    sessions: [...sessions.filter((other) => !dropped.has(other)), session],
+    activeId: session.id,
+  };
 }
 
-function read(projectKey: string): { sessions: ChatSession[]; activeId: string | null } {
-  try {
-    const raw = localStorage.getItem(storageKey(projectKey));
-    const parsed: unknown = raw ? JSON.parse(raw) : null;
-    if (!isStored(parsed)) return { sessions: [], activeId: null };
-    return {
-      sessions: parsed.sessions.map((session) => ({
-        ...session,
-        running: false,
-        hasMessages: true,
-      })),
-      activeId: parsed.activeId,
-    };
-  } catch {
-    return { sessions: [], activeId: null };
-  }
+// A chat nothing was said in is the new chat, whichever agent it was with.
+function withNewChat(chats: Chats, agentId: number): Chats {
+  const blank = chats.sessions.find(isBlank);
+  if (!blank) return withSession(chats, newSession(agentId));
+  return withShown(withChange(chats, blank.id, { agentId }), blank.id);
 }
 
-function write(projectKey: string, sessions: ChatSession[], activeId: string | null) {
-  // A session with no thread is a chat that has not started: there is nothing to
-  // restore it from, so it is not kept.
-  const stored = sessions.flatMap((session) =>
-    session.threadId
-      ? [{ id: session.id, agentId: session.agentId, threadId: session.threadId }]
-      : [],
-  );
-  try {
-    localStorage.setItem(storageKey(projectKey), JSON.stringify({ sessions: stored, activeId }));
-  } catch {
-    // Storage unavailable (private mode / quota); the tabs still work in this tab.
-  }
+function readChats(projectKey: string): Chats {
+  const stored = readStoredChat(projectKey);
+  if (!stored) return NONE;
+  const session = newSession(stored.agentId, stored.threadId, stored.title);
+  return { sessions: [session], activeId: session.id };
 }
 
-// The sessions the chat panel holds open, for one project. Every session stays mounted
-// while it is open, so a session that is not shown keeps its transcript and its composer
-// and continues to receive its reply.
+// The sessions of the chat in one project, one of them shown. A session stays mounted
+// behind the shown one, so it keeps its transcript and its composer and continues to
+// receive its reply. The chat always holds at least one, and the conversation shown last is
+// kept on the device, so a reload opens it.
 //
-// The panel always holds at least one session: closing the last one leaves a fresh chat
-// in its place. The tabs and the active one are kept on the device, so a reload opens
-// the same conversations.
-export function useChatSessions(projectKey: string | null, defaultAgentId: number | null) {
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  // The agent a new tab starts with: the one the user picked last.
-  const [lastAgentId, setLastAgentId] = useState<number | null>(null);
+// `agentIds` are the agents a new chat may start with.
+export function useChatSessions(projectKey: string, agentIds: number[]) {
+  const [held, setChats] = useState(NONE);
   const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  // The chat outlives the route: until a move to a different project has loaded that
+  // project's chats, the ones held are not its own.
+  const loaded = loadedKey === projectKey;
+  const chats = loaded ? held : NONE;
+  const { sessions } = chats;
+  const active = activeOf(chats);
+  const firstAgentId = agentIds[0] ?? null;
 
-  // The panel outlives the route, so a move to a different project loads that
-  // project's tabs. Storage is read here rather than in the state initializer: this
-  // component also renders on the server, where there is none.
+  // Storage is read here rather than in the state initializer: this component also
+  // renders on the server, where there is none.
   useEffect(() => {
-    if (!projectKey) return;
-    const stored = read(projectKey);
-    setSessions(stored.sessions);
-    setActiveId(stored.activeId);
-    setLastAgentId(null);
+    setChats(readChats(projectKey));
     setLoadedKey(projectKey);
   }, [projectKey]);
 
-  // Only once this project's tabs have been read: a fresh chat made before that would
-  // take the place of the kept ones.
+  // Only once this project's chat has been read: a fresh one made before that would take
+  // the place of the kept one.
   useEffect(() => {
-    if (defaultAgentId == null || loadedKey !== projectKey || sessions.length > 0) return;
-    const first = newSession(defaultAgentId);
-    setSessions([first]);
-    setActiveId(first.id);
-  }, [defaultAgentId, projectKey, loadedKey, sessions.length]);
+    if (firstAgentId == null || !loaded || sessions.length > 0) return;
+    setChats((prev) => withNewChat(prev, firstAgentId));
+  }, [firstAgentId, loaded, sessions.length]);
 
-  // Only once this project's tabs have been read: an empty state on the way there
-  // would overwrite them.
+  // A chat that has not started has nothing to be restored from, so the conversation
+  // before it stays the kept one.
   useEffect(() => {
-    if (projectKey && loadedKey === projectKey) write(projectKey, sessions, activeId);
-  }, [projectKey, loadedKey, sessions, activeId]);
+    if (!active?.threadId) return;
+    const { agentId, threadId, title } = active;
+    writeStoredChat(projectKey, { agentId, threadId, title });
+  }, [projectKey, active]);
 
-  const update = useCallback((id: string, change: Partial<ChatSession>) => {
-    setSessions((prev) =>
-      prev.map((session) => (session.id === id ? { ...session, ...change } : session)),
-    );
-  }, []);
-
-  const openTab = useCallback((agentId: number, threadId: string | null = null) => {
-    const session = newSession(agentId, threadId);
-    setSessions((prev) => [...prev, session]);
-    setActiveId(session.id);
-    setLastAgentId(agentId);
-  }, []);
-
-  // Opens a past conversation: one that is already open is brought forward instead of
-  // opening a second tab for it.
-  const openThread = useCallback(
-    (agentId: number, threadId: string) => {
-      const existing = sessions.find((session) => session.threadId === threadId);
-      if (existing) {
-        setActiveId(existing.id);
-        return;
-      }
-      openTab(agentId, threadId);
-    },
-    [sessions, openTab],
-  );
-
-  // The session next to the closed one takes over. Closing the last session leaves an
-  // empty chat with the agent that session used.
-  const closeSession = useCallback(
-    (id: string) => {
-      const index = sessions.findIndex((session) => session.id === id);
-      if (index < 0) return;
-      const rest = sessions.filter((session) => session.id !== id);
-      if (rest.length === 0) {
-        const fresh = newSession(sessions[index].agentId);
-        setSessions([fresh]);
-        setActiveId(fresh.id);
-        return;
-      }
-      setSessions(rest);
-      if (activeId === id) setActiveId((rest[index] ?? rest[rest.length - 1]).id);
-    },
-    [sessions, activeId],
-  );
-
-  // A tab dragged onto another one takes its place in the row. The order is what is
-  // kept on the device, so it is also the order a reload opens the chats in.
-  const moveTab = useCallback((id: string, overId: string) => {
-    setSessions((prev) => {
-      const from = prev.findIndex((session) => session.id === id);
-      const to = prev.findIndex((session) => session.id === overId);
-      if (from < 0 || to < 0) return prev;
-      return arrayMove(prev, from, to);
-    });
-  }, []);
-
-  // A chat picked from the menu of the tabs the row did not fit takes the place of the
-  // tab it appears in, so it stays in the row once another tab is selected.
-  const swapTabs = useCallback((id: string, otherId: string) => {
-    setSessions((prev) => {
-      const from = prev.findIndex((session) => session.id === id);
-      const to = prev.findIndex((session) => session.id === otherId);
-      if (from < 0 || to < 0) return prev;
-      const next = [...prev];
-      next[from] = prev[to];
-      next[to] = prev[from];
-      return next;
-    });
-  }, []);
-
-  const active = sessions.find((session) => session.id === activeId) ?? sessions[0] ?? null;
+  // A new chat starts with the agent asked for, or else the one of the shown chat, where
+  // that one may be picked.
+  const started = (prev: Chats, asked = activeOf(prev)?.agentId): Chats => {
+    const picked = asked != null && agentIds.includes(asked) ? asked : firstAgentId;
+    return picked == null ? prev : withNewChat(prev, picked);
+  };
 
   return {
     sessions,
     active,
-    setActive: setActiveId,
-    newTab: useCallback(() => {
-      const agentId = lastAgentId ?? defaultAgentId;
-      if (agentId != null) openTab(agentId);
-    }, [openTab, lastAgentId, defaultAgentId]),
-    openTab,
-    openThread,
-    closeSession,
-    moveTab,
-    swapTabs,
-    setThread: useCallback((id: string, threadId: string) => update(id, { threadId }), [update]),
-    setAgent: useCallback(
-      (id: string, agentId: number) => {
-        setLastAgentId(agentId);
-        update(id, { agentId });
-      },
-      [update],
-    ),
-    // A session reports its state on every render of its transcript. Keeping the array
-    // as it is when nothing changed is what stops that from re-rendering the panel.
-    setState: useCallback((id: string, state: ChatSessionState) => {
-      setSessions((prev) =>
-        prev.some(
-          (session) =>
-            session.id === id &&
-            (session.running !== state.running || session.hasMessages !== state.hasMessages),
-        )
-          ? prev.map((session) => (session.id === id ? { ...session, ...state } : session))
-          : prev,
+    show: (id: string) => setChats((prev) => withShown(prev, id)),
+    newChat: (asked?: number) => setChats((prev) => started(prev, asked)),
+    // Opens a past conversation: one that is held already is shown as it is.
+    openThread: (thread: AiChatThread) =>
+      setChats((prev) => {
+        const open = prev.sessions.find((session) => session.threadId === thread.id);
+        return open
+          ? withShown(prev, open.id)
+          : withSession(prev, newSession(thread.agentId, thread.id, thread.title));
+      }),
+    // Drops a conversation that was deleted. A new chat with its agent stands in for the
+    // one that was shown.
+    dropThread: (id: string) => {
+      forgetStoredChat(projectKey, id);
+      setChats((prev) => {
+        const dropped = prev.sessions.find((session) => session.threadId === id);
+        if (!dropped) return prev;
+        const rest = { ...prev, sessions: prev.sessions.filter((one) => one !== dropped) };
+        return dropped === activeOf(prev) ? started(rest, dropped.agentId) : rest;
+      });
+    },
+    // A chat that has said nothing changes its agent in place; one with a transcript keeps
+    // it, and the other agent is talked to in a new chat.
+    pickAgent: (session: ChatSession, picked: number) => {
+      if (picked === session.agentId) return;
+      setChats((prev) =>
+        session.hasMessages
+          ? started(prev, picked)
+          : withChange(prev, session.id, { agentId: picked }),
       );
+    },
+    setThread: useCallback(
+      (id: string, created: string) =>
+        setChats((prev) => withChange(prev, id, { threadId: created })),
+      [],
+    ),
+    // A session reports its state on every render of its transcript. Keeping the state as it
+    // is when nothing changed is what stops that from re-rendering the chat.
+    setState: useCallback((id: string, { running, hasMessages }: ChatSessionState) => {
+      setChats((prev) => {
+        const session = prev.sessions.find((one) => one.id === id);
+        if (!session) return prev;
+        if (session.running === running && session.hasMessages === hasMessages) return prev;
+        return withChange(prev, id, { running, hasMessages });
+      });
     }, []),
   };
 }

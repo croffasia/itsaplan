@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import type { PermissionResource, Permissions } from '@/lib/api/endpoints/roles';
 import { ACTION_ORDER, groupResources } from '@/utils/permissions';
 import { usePermissionLabels } from '@/hooks/usePermissionLabels';
+import { usePermissionCatalogQuery } from '@/services/roles.service';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -20,6 +21,7 @@ export function PermissionsPopover({
 }) {
   const t = useTranslations('permissions');
   const { actionLabel, resourceLabel, groupLabel } = usePermissionLabels();
+  const catalog = usePermissionCatalogQuery().data;
   const resources = Object.keys(permissions) as PermissionResource[];
   const total = resources.reduce(
     (sum, r) => sum + ACTION_ORDER.filter((a) => permissions[r]?.[a]).length,
@@ -28,7 +30,7 @@ export function PermissionsPopover({
 
   if (total === 0) return <span className="text-xs text-muted-foreground">{t('none')}</span>;
 
-  const groups = groupResources(resources);
+  const groups = groupResources(resources, catalog?.resources);
   const triggerLabel = label ?? t('grantedCount', { count: total });
 
   return (

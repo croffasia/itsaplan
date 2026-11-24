@@ -13,6 +13,7 @@ import {
 import { putObject, getObject, deleteObject } from '@repo/storage';
 import { HttpError } from '#shared/lib';
 import { getLimits } from '#shared/limits';
+import { pinnedFetch, ResponseTooLargeError } from '#shared/net';
 
 // Re-exported so this stays the one place every attachment-owning module (issue,
 // chat, document, initiative) imports the key/filename helpers from — the
@@ -79,6 +80,52 @@ export async function assertAttachmentFileAllowed(
   if (!mimeAllowed(contentType, limits.attachmentMimeTypes)) {
     throw new HttpError(400, `Files of type "${contentType}" are not accepted on this instance`);
   }
+}
+
+// The file of a caller that cannot send a multipart upload. A URL is fetched server-side,
+// so it is SSRF-guarded (https only in prod, no private/local hosts, no redirects) and
+// size-capped like a direct upload.
+export async function readImportedFile(input: {
+  url?: string;
+  contentBase64?: string;
+  contentType?: string;
+}): Promise<{ bytes: Buffer; contentType: string }> {
+  const { url, contentBase64 } = input;
+  if ((url == null) === (contentBase64 == null)) {
+    throw new HttpError(400, 'Provide exactly one of url or contentBase64');
+  }
+
+  let bytes: Buffer;
+  let contentType: string;
+  if (url != null) {
+    const { maxAttachmentMb } = await getStorageSettings();
+    let res: Response;
+    try {
+      res = await pinnedFetch(url, { timeoutMs: 15000, maxBytes: maxAttachmentMb * MB });
+    } catch (err) {
+      if (err instanceof HttpError) throw err;
+      if (err instanceof ResponseTooLargeError) {
+        throw new HttpError(413, `File exceeds the ${maxAttachmentMb} MB limit`);
+      }
+      throw new HttpError(400, 'Could not fetch the url');
+    }
+    if (res.status >= 300 && res.status < 400) {
+      throw new HttpError(400, 'The url redirects; provide the final url');
+    }
+    if (!res.ok) throw new HttpError(400, `Could not fetch the url (status ${res.status})`);
+    bytes = Buffer.from(await res.arrayBuffer());
+    contentType =
+      input.contentType ||
+      res.headers.get('content-type')?.split(';')[0]?.trim() ||
+      'application/octet-stream';
+  } else {
+    bytes = Buffer.from(contentBase64 as string, 'base64');
+    if (bytes.length === 0) throw new HttpError(400, 'contentBase64 is empty or not valid base64');
+    contentType = input.contentType || 'application/octet-stream';
+  }
+
+  if (bytes.length === 0) throw new HttpError(400, 'The file is empty');
+  return { bytes, contentType };
 }
 
 export async function storeAttachmentObject(
@@ -171,6 +218,8 @@ export function attachmentEtag(s3Key: string): string {
   return `"${createHash('sha256').update(s3Key).digest('base64url').slice(0, 22)}"`;
 }
 
+const INLINE_TYPE = /^(image\/(png|jpe?g|gif|webp|avif|bmp)|(video|audio)\/[\w.+-]+)$/i;
+
 export function attachmentResponseHeaders(input: {
   contentType: string;
   filename: string;
@@ -178,12 +227,12 @@ export function attachmentResponseHeaders(input: {
   etag: string;
   download: boolean;
 }): Record<string, string> {
-  const inlineSafe = /^(image\/(png|jpe?g|gif|webp|avif|bmp)|video\/|audio\/)/i.test(
-    input.contentType,
-  );
-  const inline = inlineSafe && !input.download;
+  // An inline file is sent with its bare media type: a browser reads the last type of
+  // a comma-separated value, so a stored `image/png, text/html` would render as HTML.
+  const mediaType = input.contentType.split(';')[0]?.trim() ?? '';
+  const inline = INLINE_TYPE.test(mediaType) && !input.download;
   const headers: Record<string, string> = {
-    'Content-Type': input.contentType,
+    'Content-Type': inline ? mediaType : input.contentType,
     'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(input.filename)}`,
     'X-Content-Type-Options': 'nosniff',
     'Cache-Control': 'private, no-cache',

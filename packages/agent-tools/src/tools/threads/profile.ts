@@ -7,6 +7,7 @@ const PROFILE_FIELDS = 'id,username,name,threads_profile_picture_url,threads_bio
 // The token owner's Threads profile.
 export const threadsGetProfile: CustomToolEntry = {
   key: 'threads_get_profile',
+  group: 'Posts and profile',
   label: 'Threads Get Profile',
   scopes: ['threads_basic'],
   description: 'Get your Threads profile: id, username, name, biography, and profile picture URL.',

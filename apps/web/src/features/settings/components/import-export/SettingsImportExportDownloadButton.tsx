@@ -5,16 +5,20 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { usePermissions } from '@/hooks/usePermissions';
 import { exportProject } from '@/lib/api/endpoints/importExport';
 import { splitProjectRef } from '@/utils/paths';
 
 // Downloads a self-contained JSON snapshot of the project's data. A plain read, not a
 // mutation, so it builds and triggers the file save itself rather than going through
 // React Query - same blob + createObjectURL + synthetic-anchor pattern as
-// DocumentExportDialog's document export.
+// DocumentExportDialog's document export. The API serves the export only with
+// import_export: create, so the button hides without it.
 export default function SettingsImportExportDownloadButton({ projectKey }: { projectKey: string }) {
   const t = useTranslations('settings.importExport');
+  const { can } = usePermissions();
   const [pending, setPending] = useState(false);
+  if (!can('import_export', 'create')) return null;
 
   async function download() {
     setPending(true);
@@ -41,13 +45,13 @@ export default function SettingsImportExportDownloadButton({ projectKey }: { pro
   }
 
   return (
-    <Button variant="outline" disabled={pending} onClick={() => void download()}>
+    <Button variant="ghost" size="sm" disabled={pending} onClick={() => void download()}>
       {pending ? (
-        <Loader2 className="size-4 animate-spin" />
+        <Loader2 className="size-3.5 animate-spin" />
       ) : (
-        <Download className="size-4" aria-hidden="true" />
+        <Download className="size-3.5" aria-hidden="true" />
       )}
-      {t('exportProjectData')}
+      {t('exportJson')}
     </Button>
   );
 }

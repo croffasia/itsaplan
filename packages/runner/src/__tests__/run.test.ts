@@ -156,17 +156,22 @@ it('retries a partially accepted stream batch with its original offsets', async 
     outputFormat: 'codex-jsonl',
   };
   try {
-    await runTask(config, new Client(config), {
-      id: 1,
-      attempts: 1,
-      traceEvents: true,
-      trigger: 'manual',
-      prompt: '',
-      systemPrompt: '',
-      issueId: null,
-      issueIdentifier: null,
-    });
-    expect(offsets.slice(0, 4)).toEqual([0, 200, 0, 200]);
+    await runTask(
+      config,
+      new Client(config),
+      {
+        id: 1,
+        attempts: 1,
+        traceEvents: true,
+        trigger: 'manual',
+        prompt: '',
+        systemPrompt: '',
+        issueId: null,
+        issueIdentifier: null,
+      },
+      new AbortController(),
+    );
+    expect(offsets.slice(0, 3)).toEqual([0, 200, 200]);
   } finally {
     globalThis.fetch = original;
   }
@@ -253,6 +258,45 @@ it('warns about an unavailable final trace without replacing the command outcome
   }
 });
 
+it('keeps a run whose stored batch was answered as a failure', async () => {
+  const original = globalThis.fetch;
+  const stored: AgUiEvent[] = [];
+  const reports: Record<string, unknown>[] = [];
+  let answeredAsFailure = false;
+  // The offset rule of appendRunEvents: an exact replay is fine, an overlap is refused.
+  globalThis.fetch = (async (input, init) => {
+    const body = JSON.parse(String(init?.body));
+    if (String(input).endsWith('/result')) reports.push(body);
+    if (!String(input).endsWith('/events')) return Response.json({});
+    const { offset, events } = body as { offset: number; events: AgUiEvent[] };
+    if (offset < stored.length && offset + events.length <= stored.length) {
+      return Response.json({ nextOffset: stored.length, truncated: false });
+    }
+    if (offset !== stored.length) {
+      return Response.json({ error: 'Unexpected trace offset' }, { status: 409 });
+    }
+    stored.push(...events);
+    if (answeredAsFailure) return Response.json({ nextOffset: stored.length, truncated: false });
+    answeredAsFailure = true;
+    return new Response('Bad gateway', { status: 502 });
+  }) as typeof fetch;
+  const config: RunnerConfig = {
+    ...shortTaskConfig,
+    command: 'printf one; sleep 0.7; printf two; sleep 0.7; printf three',
+  };
+  try {
+    await handleRun(config, new Client(config), () => {}, shortRun);
+    expect(answeredAsFailure).toBe(true);
+    expect(reports).toEqual([expect.objectContaining({ status: 'success', attempt: 2 })]);
+    expect(stored.filter((event) => event.type === 'RUN_STARTED')).toHaveLength(1);
+    expect(stored[stored.length - 1].type).toBe('RUN_FINISHED');
+    const deltas = stored.filter((event) => event.type === 'TEXT_MESSAGE_CONTENT');
+    expect(deltas.map((event) => event.delta).join('')).toBe('onetwothree');
+  } finally {
+    globalThis.fetch = original;
+  }
+}, 15_000);
+
 it('does not retry or ignore a final event rejection for a stale attempt', async () => {
   const original = globalThis.fetch;
   let finalAttempts = 0;
@@ -268,7 +312,7 @@ it('does not retry or ignore a final event rejection for a stale attempt', async
   }) as typeof fetch;
   try {
     await expect(
-      runTask(shortTaskConfig, new Client(shortTaskConfig), shortRun),
+      runTask(shortTaskConfig, new Client(shortTaskConfig), shortRun, new AbortController()),
     ).rejects.toMatchObject({
       status: 404,
     });
@@ -278,3 +322,23 @@ it('does not retry or ignore a final event rejection for a stale attempt', async
     globalThis.fetch = original;
   }
 });
+
+it('kills the command and reports nothing more once the server says the run was stopped', async () => {
+  const original = globalThis.fetch;
+  const paths: string[] = [];
+  globalThis.fetch = (async (input) => {
+    paths.push(new URL(String(input)).pathname);
+    return Response.json({ nextOffset: 0, truncated: false, canceled: true });
+  }) as typeof fetch;
+  const config: RunnerConfig = { ...shortTaskConfig, command: 'printf one; sleep 10; printf two' };
+  const logs: string[] = [];
+  const started = Date.now();
+  try {
+    await handleRun(config, new Client(config), (line) => logs.push(line), shortRun);
+    expect(Date.now() - started).toBeLessThan(5_000);
+    expect(paths).toEqual(['/agent-runs/1/events']);
+    expect(logs.at(-1)).toBe('run 1: stopped');
+  } finally {
+    globalThis.fetch = original;
+  }
+}, 15_000);

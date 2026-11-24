@@ -2,6 +2,7 @@
 # Writes an lcov file to coverage/lcov.info (read by CI and the VSCode
 # Coverage Gutters extension) and prints the text summary to the terminal.
 [test]
+preload = ["./src/__tests__/preload.ts"]
 coverageReporter = ["text", "lcov"]
 coverageDir = "coverage"
 # Exclude test files and everything under any __tests__ folder (helpers, fixtures)

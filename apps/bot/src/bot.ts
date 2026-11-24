@@ -3,11 +3,11 @@ import { confirmTelegramLink } from './db';
 
 // The Telegram bot itself. Today it handles one thing: the `/start <code>` deep link
 // that completes an account link. The code is minted by the api when the user presses
-// "Connect" in their account settings, and the link opens this chat with it attached.
+// "Connect" in their notification settings, and the link opens this chat with it attached.
 
 const HELP =
   'This bot delivers notifications from your project tracker.\n\n' +
-  'To connect it, open Accounts in your profile and press Connect for Telegram.';
+  'To connect it, open Notifications in your account menu and press Connect for Telegram.';
 
 export function createBot(token: string): Bot {
   const bot = new Bot(token);
@@ -46,7 +46,7 @@ export function createBot(token: string): Bot {
       return;
     }
     await ctx.reply(
-      'This link has expired. Open Accounts in your profile and press Connect again.',
+      'This link has expired. Open Notifications in your account menu and press Connect again.',
     );
   });
 

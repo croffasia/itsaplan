@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'bun:test';
 import { db, teamInvite } from '@repo/db';
 import { eq } from 'drizzle-orm';
 import { authedApi, createProject } from '#tests/helpers/app';
-import { createRole } from '#tests/helpers/roles';
+import { createRole, listProjectRoles } from '#tests/helpers/roles';
 import { addProjectMember } from '#tests/helpers/members';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -204,5 +204,79 @@ describe('role escalation guards', () => {
           .patch({ role: 'member', roleId: powerful })
       ).status,
     ).toBe(403);
+  });
+
+  it('holds the default role to the same cap when roleId is omitted', async () => {
+    const { asOwner } = await setup();
+    const handler = (
+      await createRole(asOwner, 'MKT', { name: 'Handler', permissions: handlerPermissions() })
+    ).data!.id;
+    const asHandler = await addProjectMember(asOwner, 'MKT', handler);
+    const viewer = (
+      await createRole(asOwner, 'MKT', {
+        name: 'Viewer',
+        permissions: { work_items: { read: true } },
+      })
+    ).data!.id;
+
+    // The handler holds no work_items permission, which the default role grants.
+    expect(
+      (await project(asHandler).invites.post({ email: 'new-1@example.com', role: 'member' }))
+        .status,
+    ).toBe(403);
+
+    const projects = await asOwner.projects.get();
+    const teamId = projects.data!.find((p) => p.key === 'MKT')!.teamId;
+    const newcomer = await signUpTestUser({ team: false });
+    const joined = await asOwner
+      .teams({ teamId })
+      .invites.post({ email: newcomer.email, role: 'member' });
+    await authedApi(newcomer.cookie).invites({ token: joined.data!.token }).accept.post();
+    expect(
+      (await project(asHandler).members.post({ userId: newcomer.userId, role: 'member' })).status,
+    ).toBe(403);
+    await project(asOwner).members.post({
+      userId: newcomer.userId,
+      role: 'member',
+      roleId: viewer,
+    });
+    expect(
+      (
+        await project(asHandler)
+          .members({ userId: newcomer.userId })
+          .patch({ role: 'member', roleId: null })
+      ).status,
+    ).toBe(403);
+
+    // An invite on the default role: its link is hidden from the handler, who cannot renew it.
+    const invite = await project(asOwner).invites.post({
+      email: 'new-2@example.com',
+      role: 'member',
+    });
+    const seen = (await project(asHandler).invites.get()).data!;
+    expect(seen.find((i) => i.email === 'new-2@example.com')!.token).toBeNull();
+    await db
+      .update(teamInvite)
+      .set({ createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000) })
+      .where(eq(teamInvite.token, invite.data!.token));
+    expect(
+      (await project(asHandler).invites({ inviteId: invite.data!.id }).renew.post()).status,
+    ).toBe(403);
+  });
+
+  it("lets a granter who holds the default role's permissions omit roleId", async () => {
+    const { asOwner } = await setup();
+    const defaultRole = (await listProjectRoles(asOwner, 'MKT')).data!.find((r) => r.isDefault)!;
+    const lead = (
+      await createRole(asOwner, 'MKT', {
+        name: 'Lead',
+        permissions: { ...defaultRole.permissions, ...handlerPermissions() },
+      })
+    ).data!.id;
+    const asLead = await addProjectMember(asOwner, 'MKT', lead);
+
+    expect(
+      (await project(asLead).invites.post({ email: 'new-1@example.com', role: 'member' })).status,
+    ).toBe(201);
   });
 });

@@ -1,5 +1,5 @@
 import { Elysia } from 'elysia';
-import { errorAnswer } from './shared/lib';
+import { HttpError, errorAnswer } from './shared/lib';
 import { authContext } from './shared/auth-context';
 import { projectRoutes } from './modules/projects';
 import { teamRoutes } from './modules/teams';
@@ -16,6 +16,7 @@ import { agentSkillRoutes } from './modules/agents/skills';
 import { agentToolRoutes } from './modules/agents/tools';
 import { customFieldRoutes } from './modules/custom-fields';
 import { issueTemplateRoutes } from './modules/issue-templates';
+import { projectTemplateRoutes } from './modules/project-templates';
 import { issueRoutes } from './modules/issues';
 import { initiativeRoutes } from './modules/initiatives';
 import { cycleRoutes } from './modules/cycles';
@@ -32,6 +33,7 @@ import { gitSettingsRoutes } from './modules/git';
 import { dashboardRoutes } from './modules/dashboards';
 import { noteBoardRoutes } from './modules/note-boards';
 import { documentRoutes } from './modules/documents';
+import { mentionRoutes } from './modules/mentions';
 import { analyticsRoutes } from './modules/analytics';
 import { chartRoutes } from './modules/charts';
 import { settingsRoutes } from './modules/settings';
@@ -48,6 +50,8 @@ import { notificationPreferenceRoutes } from './modules/notification-preferences
 import { userPreferenceRoutes } from './modules/user-preferences';
 import { connectedAppRoutes } from './modules/connected-apps';
 import { telegramRoutes } from './modules/telegram';
+import { slackRoutes } from './modules/slack';
+import { pushRoutes } from './modules/push';
 import { syncRoutes } from './modules/sync';
 import { linkPreviewRoutes } from './modules/link-previews';
 
@@ -67,11 +71,13 @@ export const planner = new Elysia({ name: 'planner' })
   .onError({ as: 'global' }, ({ code, error, set }) => {
     const answer = errorAnswer(code, error);
     if (answer.status === 500) console.error('[planner] unhandled error:', error);
+    if (error instanceof HttpError && error.headers) Object.assign(set.headers, error.headers);
     set.status = answer.status;
     return answer.body;
   })
   .use(projectRoutes)
   .use(teamRoutes)
+  .use(projectTemplateRoutes)
   .use(workspaceRoutes)
   .use(memberRoutes)
   .use(roleRoutes)
@@ -107,6 +113,7 @@ export const planner = new Elysia({ name: 'planner' })
   .use(dashboardRoutes)
   .use(noteBoardRoutes)
   .use(documentRoutes)
+  .use(mentionRoutes)
   .use(analyticsRoutes)
   .use(chartRoutes)
   .use(notificationRoutes)
@@ -115,6 +122,8 @@ export const planner = new Elysia({ name: 'planner' })
   .use(userPreferenceRoutes)
   .use(connectedAppRoutes)
   .use(telegramRoutes)
+  .use(slackRoutes)
+  .use(pushRoutes)
   .use(syncRoutes)
   .use(linkPreviewRoutes)
   .use(settingsRoutes)

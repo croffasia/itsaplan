@@ -42,6 +42,8 @@ import {
   instagramPublishMedia,
   instagramPublishPost,
 } from './publishing';
+import { instagramIcon } from './icon';
+import { verifyInstagram } from './verify';
 
 // Instagram Platform API (Instagram API with Facebook Login), served from the
 // Facebook Graph API host. One credential is one Instagram Business/Creator
@@ -50,6 +52,7 @@ import {
 export const instagram: Integration = {
   key: 'instagram',
   label: 'Instagram',
+  description: 'Publishes posts, manages comments and reads insights on an Instagram account.',
   credentialSchema: [
     {
       key: 'accessToken',
@@ -68,6 +71,9 @@ export const instagram: Integration = {
       help: 'The IG User ID of the Business/Creator account this token belongs to.',
     },
   ],
+  icon: instagramIcon,
+  website: 'https://www.instagram.com',
+  verify: verifyInstagram,
   tools: [
     // Account
     instagramGetAccount,

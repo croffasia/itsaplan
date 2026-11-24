@@ -35,6 +35,19 @@ export default function EmailSettings({ form }: { form: EmailForm }) {
         options={['system', 'smtp', 'resend']}
       />
 
+      {form.provider !== 'system' && (
+        <div className="space-y-1.5 sm:max-w-md">
+          <Label htmlFor="email-from">{t('from')}</Label>
+          <Input
+            id="email-from"
+            value={form.from}
+            onChange={(e) => form.setFrom(e.target.value)}
+            placeholder={"It's a Plan <noreply@example.com>"}
+          />
+          <p className="text-xs text-muted-foreground">{t('fromHint')}</p>
+        </div>
+      )}
+
       {form.provider === 'system' ? (
         <p className="text-sm text-muted-foreground">
           {settings.systemAvailable ? t('systemAvailable') : t('systemUnavailable')}

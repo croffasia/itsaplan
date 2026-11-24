@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from 'react';
 import { createAuthClient } from 'better-auth/react';
 import { inferAdditionalFields } from 'better-auth/client/plugins';
 import { magicLinkClient, usernameClient } from 'better-auth/client/plugins';
@@ -5,6 +6,10 @@ import { passkeyClient } from '@better-auth/passkey/client';
 import { oauthProviderClient } from '@better-auth/oauth-provider/client';
 import { apiKeyClient } from '@better-auth/api-key/client';
 import { API_URL, markSigningOut } from '@/lib/api/core/client';
+import { waitForPushCleanup } from '@/utils/browserNotifications';
+import { clearCommentDrafts } from '@/utils/commentDrafts';
+import { clearStoredChats } from '@/utils/storedChat';
+import { unsubscribeThisBrowser } from '@/utils/webPush';
 
 // better-auth appends its default /api/auth only to a bare origin; an API_URL with a
 // path would be used as-is, so the mount is spelled out.
@@ -63,12 +68,49 @@ export const {
   unlinkAccount,
 } = authClient;
 
+// True from the start of a sign-out until the browser leaves the page. SigningOutGate
+// swaps the app for a neutral screen meanwhile, so nothing on it asks the api for data
+// once the session is gone.
+let signingOut = false;
+const signingOutListeners = new Set<() => void>();
+
+export function isSigningOut(): boolean {
+  return signingOut;
+}
+
+export function useSigningOut(): boolean {
+  return useSyncExternalStore(
+    (listener) => {
+      signingOutListeners.add(listener);
+      return () => signingOutListeners.delete(listener);
+    },
+    isSigningOut,
+    () => false,
+  );
+}
+
 // Sign out through this wrapper rather than through the client: it tells lib/api
 // that the 401s the dropped session causes are expected, so they do not send the
-// browser to the expired-session screen.
-export async function signOut() {
+// browser to the expired-session screen. It then loads /login, or with `here` the same
+// page, as a full load: navigating inside the app would draw it again with no session.
+export async function signOut(then: 'login' | 'here' = 'login'): Promise<void> {
   markSigningOut();
-  return authClient.signOut();
+  signingOut = true;
+  for (const listener of signingOutListeners) listener();
+  // Lets React take the app down before the session goes.
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  // Unsent comments and the title of a chat must not stay readable in this browser for
+  // whoever uses it next.
+  clearCommentDrafts();
+  clearStoredChats();
+  // A browser left subscribed would show this account's notifications to whoever uses it
+  // next.
+  await waitForPushCleanup(unsubscribeThisBrowser());
+  // Leaves whatever the sign-out answered, as lib/api's endSession does: a failed
+  // request must not hold the browser on the signing-out screen.
+  await authClient.signOut().catch(() => {});
+  if (then === 'here') window.location.reload();
+  else window.location.replace('/login');
 }
 
 export type SessionUser = typeof authClient.$Infer.Session.user;

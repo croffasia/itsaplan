@@ -1,4 +1,5 @@
-import { db, teamWorkspaceId, type DbExecutor } from '@repo/db';
+import { db, teamWorkspaceId, workspace, type DbExecutor } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import type { ProjectFeature } from './features';
 
 // Ceilings on what one workspace may use across its teams, and the sections they may
@@ -12,7 +13,8 @@ export interface Limits {
   maxTeams: number;
   // Distinct people across the workspace's teams. An agent's bot user takes no seat.
   maxSeats: number;
-  // Runs of the workspace's agents in flight at once.
+  // Runs of the workspace's internal agents in flight at once. Its owner may set a lower
+  // one of their own (getRunLimit).
   maxConcurrentRuns: number;
   // Wall time one run gets before it is aborted.
   maxRunSeconds: number;
@@ -49,6 +51,22 @@ export function getLimits(workspaceId: number): Promise<Limits> {
 
 export async function getTeamLimits(teamId: number, executor: DbExecutor = db): Promise<Limits> {
   return provider(await teamWorkspaceId(teamId, executor));
+}
+
+// The lowest of the limits, leaving out the 0s, which set none; 0 when all of them are.
+export function tightestLimit(...limits: number[]): number {
+  const set = limits.filter((limit) => limit > 0);
+  return set.length > 0 ? Math.min(...set) : 0;
+}
+
+// Runs of the workspace's internal agents in flight at once: the limit its owner set, or
+// the provider's where that is lower.
+export async function getRunLimit(workspaceId: number, limits: Limits): Promise<number> {
+  const [row] = await db
+    .select({ own: workspace.maxConcurrentRuns })
+    .from(workspace)
+    .where(eq(workspace.id, workspaceId));
+  return tightestLimit(row?.own ?? 0, limits.maxConcurrentRuns);
 }
 
 // How many workspaces one person may own. A self-hosted instance gives each person one;

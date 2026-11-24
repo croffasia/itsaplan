@@ -10,7 +10,7 @@ import { sleep } from '../time';
 // belongs to. Tools that address arbitrary media/comment ids take those ids as
 // model input; the account id and token always come from the credential.
 
-const IG_BASE = 'https://graph.facebook.com/v25.0';
+export const IG_BASE = 'https://graph.facebook.com/v25.0';
 
 // Reads the access token and account id off a decrypted credential.
 export function creds(credential: ToolConfig): { token: string; igUserId: string } {

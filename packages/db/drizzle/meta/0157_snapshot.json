@@ -1,5 +1,5 @@
 {
-  "id": "672ede4c-5da2-469e-b72c-266a74c72e11",
+  "id": "62c1cef3-df16-4a57-a0ad-a01c9e74a71a",
   "prevId": "f64b2913-b5dc-47e2-bddd-d1877e675b5c",
   "version": "7",
   "dialect": "postgresql",
@@ -2531,6 +2531,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "document_id": {
+          "name": "document_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_document_comment_id": {
+          "name": "source_document_comment_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "prompt": {
           "name": "prompt",
           "type": "text",
@@ -2741,6 +2753,32 @@
           "tableTo": "issue_activity",
           "columnsFrom": [
             "source_activity_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "agent_run_document_id_project_document_id_fk": {
+          "name": "agent_run_document_id_project_document_id_fk",
+          "tableFrom": "agent_run",
+          "tableTo": "project_document",
+          "columnsFrom": [
+            "document_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "agent_run_source_document_comment_id_document_comment_id_fk": {
+          "name": "agent_run_source_document_comment_id_document_comment_id_fk",
+          "tableFrom": "agent_run",
+          "tableTo": "document_comment",
+          "columnsFrom": [
+            "source_document_comment_id"
           ],
           "columnsTo": [
             "id"
@@ -4043,13 +4081,6 @@
         },
         "show_in_body": {
           "name": "show_in_body",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "required": {
-          "name": "required",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
@@ -8702,11 +8733,23 @@
           "name": "issue_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "source_activity_id": {
           "name": "source_activity_id",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "document_id": {
+          "name": "document_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "document_comment_id": {
+          "name": "document_comment_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -8852,6 +8895,32 @@
           "onDelete": "set null",
           "onUpdate": "no action"
         },
+        "notification_document_id_project_document_id_fk": {
+          "name": "notification_document_id_project_document_id_fk",
+          "tableFrom": "notification",
+          "tableTo": "project_document",
+          "columnsFrom": [
+            "document_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "notification_document_comment_id_document_comment_id_fk": {
+          "name": "notification_document_comment_id_document_comment_id_fk",
+          "tableFrom": "notification",
+          "tableTo": "document_comment",
+          "columnsFrom": [
+            "document_comment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
         "notification_actor_user_id_user_id_fk": {
           "name": "notification_actor_user_id_user_id_fk",
           "tableFrom": "notification",
@@ -8873,6 +8942,10 @@
         "notification_type_check": {
           "name": "notification_type_check",
           "value": "\"notification\".\"type\" IN ('assigned', 'mentioned', 'commented', 'state_changed')"
+        },
+        "notification_target_check": {
+          "name": "notification_target_check",
+          "value": "(\"notification\".\"issue_id\" IS NULL) <> (\"notification\".\"document_id\" IS NULL)"
         }
       },
       "isRLSEnabled": false

@@ -1,32 +1,10 @@
-import {
-  useRef,
-  useState,
-  type CSSProperties,
-  type PointerEvent as ReactPointerEvent,
-} from 'react';
+import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { cn } from '@/lib/utils';
-import { allowedImageStyle } from '@/utils/imageStyle';
+import { imageStyleObject } from './imageStyle';
 
 // Below this an image is too small to grab again.
 const MIN_WIDTH = 60;
-
-// The node's `style` attribute holds raw CSS text; React takes the parsed form.
-function styleObject(style: string | null): CSSProperties {
-  const css = allowedImageStyle(style);
-  if (!css) return {};
-  return Object.fromEntries(
-    css.split(';').flatMap((declaration) => {
-      const [property, ...rest] = declaration.split(':');
-      const value = rest.join(':').trim();
-      if (!property?.trim() || !value) return [];
-      const camelCased = property
-        .trim()
-        .replaceAll(/-([a-z])/g, (_, letter) => letter.toUpperCase());
-      return [[camelCased, value]];
-    }),
-  );
-}
 
 // Only the width is stored — .md-content img keeps height:auto.
 export default function EditorResizableImage({
@@ -77,7 +55,10 @@ export default function EditorResizableImage({
         alt={(node.attrs.alt as string | null) ?? ''}
         title={(node.attrs.title as string | null) ?? undefined}
         // The dragged width wins over the embed's own sizing.
-        style={{ ...styleObject(node.attrs.style as string | null), ...(width ? { width } : {}) }}
+        style={{
+          ...imageStyleObject(node.attrs.style as string | null),
+          ...(width ? { width } : {}),
+        }}
         // A node view has no drag handle of its own; without one the image is stuck.
         data-drag-handle
       />

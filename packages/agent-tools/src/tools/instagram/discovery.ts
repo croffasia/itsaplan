@@ -11,6 +11,7 @@ const DEFAULT_DISCOVERY_MEDIA_FIELDS =
 // involved and grants nothing; only public data is returned.
 export const instagramBusinessDiscovery: CustomToolEntry = {
   key: 'instagram_business_discovery',
+  group: 'Discovery',
   scopes: ['instagram_basic', 'instagram_manage_insights'],
   label: 'Instagram Business Discovery',
   description:

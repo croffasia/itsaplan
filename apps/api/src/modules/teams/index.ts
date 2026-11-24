@@ -21,6 +21,7 @@ import {
   updateProject,
 } from '#modules/projects/service';
 import { copyProject } from '#modules/projects/copy';
+import { createProjectFromTemplate } from '#modules/project-templates/service';
 import {
   TeamDetailResponse,
   TeamListResponse,
@@ -84,9 +85,8 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
       detail: {
         summary: 'List teams',
         description:
-          'List the teams you are a member of, with your rank in each. Over MCP, the team is ' +
-          'taken from your key when you belong to one; call this to pick a team when a tool ' +
-          'asks for a teamId. Only teams with MCP switched on are listed there.',
+          'List the teams you are a member of, with your rank in each. Use it to get teamId when ' +
+          'a tool asks for one. Over MCP, only teams with MCP turned on are listed.',
         ...mcpTool('list_teams'),
       },
     },
@@ -182,12 +182,7 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
   .get(
     '/teams/:teamId/projects/:projectId',
     async ({ membership, params }) => {
-      const detail = await getTeamProject(
-        membership.teamId,
-        params.projectId,
-        membership.userId,
-        membership.role,
-      );
+      const detail = await getTeamProject(membership.teamId, params.projectId, membership.userId);
       if (!detail) throw new HttpError(404, 'Project not found');
       return detail;
     },
@@ -211,7 +206,6 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
           membership.teamId,
           params.projectId,
           membership.userId,
-          membership.role,
           { search: query.search, kind: query.kind, ...window },
         );
         if (!page) throw new HttpError(404, 'Project not found');
@@ -336,7 +330,10 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
     '/teams/:teamId/projects',
     async ({ body, membership, set }) => {
       set.status = 201;
-      return createProject(body, membership.userId, membership.teamId);
+      const { templateId, ...input } = body;
+      return templateId === undefined
+        ? createProject(input, membership.userId, membership.teamId)
+        : createProjectFromTemplate(membership.teamId, templateId, input, membership.userId);
     },
     {
       teamManager: true,
@@ -346,11 +343,10 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
       detail: {
         summary: 'Create a project',
         description:
-          'Create a project in a team you own or manage and become its owner. `key` is the ' +
-          "immutable prefix for issue ids, unique within the team (e.g. 'MKT' -> 'MKT-1'). " +
-          'Seeds the default columns and the issue types of the chosen `preset`. Over MCP, ' +
-          'uses the team from your key when there is one; otherwise call list_teams and pass ' +
-          'teamId.',
+          'Create a project in a team you own or manage. You become its owner. `key` is the ' +
+          "permanent prefix of issue ids, unique in the team ('MKT' gives 'MKT-1'). The project " +
+          'gets the default columns and the issue types of `preset`, or the contents of template ' +
+          '`templateId`. If the tool asks for teamId, get it from list_teams.',
         ...mcpTool('create_project'),
       },
     },

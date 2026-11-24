@@ -16,7 +16,8 @@
     "assigned": "Ditetapkan",
     "mentioned": "Disebutkan",
     "commented": "Diberi komentar",
-    "state_changed": "Status diubah"
+    "state_changed": "Status diubah",
+    "reacted": "Reaksi"
   },
   "actions": {
     "markRead": "Tandai sudah dibaca",
@@ -33,6 +34,7 @@
     "mentioned": "{who} menyebut Anda",
     "commented": "{who} berkomentar",
     "stateChanged": "{who} mengubah status dari {from} ke {to}",
-    "stateChangedPlain": "{who} mengubah status"
+    "stateChangedPlain": "{who} mengubah status",
+    "reacted": "{who} bereaksi pada komentar Anda dengan {emoji}"
   }
 }

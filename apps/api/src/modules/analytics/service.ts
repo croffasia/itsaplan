@@ -56,6 +56,12 @@ export interface StatsDto {
 
 const OPEN_STATES = sql`${projectColumn.stateType} NOT IN ('completed', 'canceled')`;
 
+// Archived issues are off the board, so the current figures leave them out. A closing
+// still counts: archiving does not undo it.
+function onBoard(projectId: number) {
+  return and(eq(issue.projectId, projectId), isNull(issue.archivedAt));
+}
+
 export async function getStats(projectId: number): Promise<StatsDto> {
   // One row per state type with its issue count; the open/backlog/in-progress
   // figures are derived from it.
@@ -63,7 +69,7 @@ export async function getStats(projectId: number): Promise<StatsDto> {
     .select({ stateType: projectColumn.stateType, count: sql<number>`count(*)::int` })
     .from(issue)
     .innerJoin(projectColumn, eq(projectColumn.id, issue.columnId))
-    .where(eq(issue.projectId, projectId))
+    .where(onBoard(projectId))
     .groupBy(projectColumn.stateType);
 
   let open = 0;
@@ -79,13 +85,13 @@ export async function getStats(projectId: number): Promise<StatsDto> {
     .select({ overdue: sql<number>`count(*)::int` })
     .from(issue)
     .innerJoin(projectColumn, eq(projectColumn.id, issue.columnId))
-    .where(and(eq(issue.projectId, projectId), sql`${issue.dueDate} < CURRENT_DATE`, OPEN_STATES));
+    .where(and(onBoard(projectId), sql`${issue.dueDate} < CURRENT_DATE`, OPEN_STATES));
 
   const [{ unassigned }] = await db
     .select({ unassigned: sql<number>`count(*)::int` })
     .from(issue)
     .innerJoin(projectColumn, eq(projectColumn.id, issue.columnId))
-    .where(and(eq(issue.projectId, projectId), isNull(issue.assigneeUserId), OPEN_STATES));
+    .where(and(onBoard(projectId), isNull(issue.assigneeUserId), OPEN_STATES));
 
   const closedRows = (await db.execute(sql`
     SELECT count(*)::int AS count
@@ -126,7 +132,7 @@ export async function getBreakdown(projectId: number, by: BreakdownBy): Promise<
         count: sql<number>`count(${issue.id})::int`,
       })
       .from(projectColumn)
-      .leftJoin(issue, eq(issue.columnId, projectColumn.id))
+      .leftJoin(issue, and(eq(issue.columnId, projectColumn.id), isNull(issue.archivedAt)))
       .where(eq(projectColumn.projectId, projectId))
       .groupBy(projectColumn.id, projectColumn.name, projectColumn.color, projectColumn.position)
       .orderBy(projectColumn.position);
@@ -140,7 +146,7 @@ export async function getBreakdown(projectId: number, by: BreakdownBy): Promise<
         count: sql<number>`count(*)::int`,
       })
       .from(issue)
-      .where(eq(issue.projectId, projectId))
+      .where(onBoard(projectId))
       .groupBy(issue.priority)
       .orderBy(desc(sql`count(*)`));
     return rows.map((r) => ({
@@ -161,7 +167,7 @@ export async function getBreakdown(projectId: number, by: BreakdownBy): Promise<
       })
       .from(issue)
       .leftJoin(issueType, eq(issueType.id, issue.typeId))
-      .where(eq(issue.projectId, projectId))
+      .where(onBoard(projectId))
       .groupBy(issueType.id, issueType.name, issueType.color)
       .orderBy(desc(sql`count(${issue.id})`));
     return rows.map((r) => ({
@@ -181,7 +187,7 @@ export async function getBreakdown(projectId: number, by: BreakdownBy): Promise<
       })
       .from(issue)
       .leftJoin(user, eq(user.id, issue.delegateUserId))
-      .where(eq(issue.projectId, projectId))
+      .where(onBoard(projectId))
       .groupBy(user.id, user.name)
       .orderBy(desc(sql`count(${issue.id})`));
     return rows.map((r) => ({ key: r.key, label: r.label, count: r.count, color: null }));
@@ -196,7 +202,7 @@ export async function getBreakdown(projectId: number, by: BreakdownBy): Promise<
     })
     .from(issue)
     .leftJoin(user, eq(user.id, issue.assigneeUserId))
-    .where(eq(issue.projectId, projectId))
+    .where(onBoard(projectId))
     .groupBy(user.id, user.name)
     .orderBy(desc(sql`count(${issue.id})`));
   return rows.map((r) => ({ key: r.key, label: r.label, count: r.count, color: null }));
@@ -380,7 +386,9 @@ export interface BurnupParams {
 // burnup asks what state every issue was in at the end of each day: the status row
 // whose stretch covers that midnight. So an issue that was reopened leaves the
 // completed line for the days it was open again, and a canceled issue leaves the
-// scope line — the chart is a history of the project, not of the events.
+// scope line — the chart is a history of the project, not of the events. An issue
+// archived unfinished leaves the scope from the day it was archived, as a canceled
+// one does; an archived finished one stays completed.
 export async function getBurnup(projectId: number, params: BurnupParams): Promise<BurnupDto> {
   const targetDate = await initiativeTargetDate(projectId, params.initiativeId);
   const initiativeFilter =
@@ -395,12 +403,13 @@ export async function getBurnup(projectId: number, params: BurnupParams): Promis
            (count(s.issue_id) FILTER (WHERE s.state_type = 'completed'))::int AS completed
       FROM d
       LEFT JOIN (
-        SELECT s.issue_id, s.state_type, s.entered_at, s.left_at
+        SELECT s.issue_id, s.state_type, s.entered_at, s.left_at, i.archived_at
           FROM issue_status s
           JOIN issue i ON i.id = s.issue_id
          WHERE i.project_id = ${projectId} ${initiativeFilter}
       ) s ON s.entered_at < d.day + 1
          AND (s.left_at IS NULL OR s.left_at >= d.day + 1)
+         AND (s.archived_at IS NULL OR s.archived_at >= d.day + 1 OR s.state_type = 'completed')
      GROUP BY d.day
      ORDER BY d.day`)) as unknown as BurnupDay[];
   const days = rows.map((r) => ({
@@ -784,7 +793,7 @@ export async function getAgentWorkload(projectId: number): Promise<AgentWorkload
     .select({ userId: issue.delegateUserId, count: sql<number>`count(*)::int` })
     .from(issue)
     .innerJoin(projectColumn, eq(projectColumn.id, issue.columnId))
-    .where(and(eq(issue.projectId, projectId), isNotNull(issue.delegateUserId), OPEN_STATES))
+    .where(and(onBoard(projectId), isNotNull(issue.delegateUserId), OPEN_STATES))
     .groupBy(issue.delegateUserId);
   const delegatedByUser = new Map(delegatedRows.map((r) => [r.userId, r.count]));
 

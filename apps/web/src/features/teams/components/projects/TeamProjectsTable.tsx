@@ -118,7 +118,7 @@ export default function TeamProjectsTable({
               </TableCell>
 
               <TableCell className="px-3 py-2 text-end">
-                {project.isMember && !project.archivedAt && (
+                {!project.archivedAt && (
                   <Button
                     asChild
                     variant="ghost"

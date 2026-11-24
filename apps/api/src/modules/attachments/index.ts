@@ -1,19 +1,17 @@
 import { Elysia, t } from 'elysia';
 import { noContent } from '#shared/http';
 import { authContext } from '#shared/auth-context';
-import { assertMcpAllowed, entityGuard } from '#shared/guards';
-import { assertPermission, assertProjectFeature } from '#shared/access';
+import { assertMcpAllowed, assertProjectReachable, entityGuard } from '#shared/guards';
+import { assertPermission } from '#shared/access';
 import { HttpError } from '#shared/lib';
-import { pinnedFetch } from '#shared/net';
 import { mcpImageTool, mcpTool } from '#mcp/generate';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { getIssueProjectId } from '#modules/issues/service';
-import { readAttachmentContent } from '#modules/chat-attachments/service';
+import { viewFile } from '#modules/chat-attachments/service';
 import {
   getInitiativeAttachment,
   getInitiativeAttachmentProjectId,
 } from '#modules/initiatives/attachments';
-import { getStorageSettings, MB } from '@repo/db';
 import {
   AttachmentResponse,
   AttachmentListResponse,
@@ -39,6 +37,7 @@ import {
   attachmentObjectKey,
   attachmentObjectResponse,
   deleteAttachmentObject,
+  readImportedFile,
   safeAttachmentFilename,
   storeAttachmentObject,
   viewAttachments,
@@ -96,8 +95,7 @@ export const attachmentRoutes = new Elysia({
         const projectId = await getInitiativeAttachmentProjectId(id);
         if (!row || projectId == null) throw new HttpError(404, 'Attachment not found');
         await assertPermission(projectId, user, 'initiatives', 'read');
-        await assertProjectFeature(projectId, 'initiatives');
-        await assertMcpAllowed(projectId, request.headers);
+        await assertProjectReachable(projectId, request, 'initiatives');
         const dto = { ...attachmentDto(row), url: `/initiative-attachments/${id}/raw` };
         return { viewed: { row, dto } };
       },
@@ -115,7 +113,7 @@ export const attachmentRoutes = new Elysia({
       response: { 200: AttachmentListResponse, ...commonErrors },
       detail: {
         summary: 'List attachments',
-        description: "List an issue's attachments by its numeric id.",
+        description: "List an issue's attachments.",
         ...mcpTool('list_attachments'),
       },
     },
@@ -164,52 +162,12 @@ export const attachmentRoutes = new Elysia({
     },
   )
 
-  // Adds an attachment from a URL or inline base64, for callers that cannot send a
-  // multipart file (internal agents). Exactly one of url / contentBase64 is given.
-  // A URL is fetched server-side, so it is SSRF-guarded (https only in prod, no
-  // private/local hosts, no redirects) and size-capped like a direct upload.
   .post(
     '/issues/:issueId/attachments/import',
     async ({ params, body, set, projectId }) => {
       const issueId = params.issueId;
       const filename = safeAttachmentFilename(body.filename);
-      const { url, contentBase64 } = body;
-      if ((url == null) === (contentBase64 == null)) {
-        throw new HttpError(400, 'Provide exactly one of url or contentBase64');
-      }
-      const limits = await getStorageSettings();
-
-      let bytes: Buffer;
-      let contentType: string;
-      if (url != null) {
-        let res: Response;
-        try {
-          res = await pinnedFetch(url, { timeoutMs: 15000 });
-        } catch (err) {
-          if (err instanceof HttpError) throw err;
-          throw new HttpError(400, 'Could not fetch the url');
-        }
-        if (res.status >= 300 && res.status < 400) {
-          throw new HttpError(400, 'The url redirects; provide the final url');
-        }
-        if (!res.ok) throw new HttpError(400, `Could not fetch the url (status ${res.status})`);
-        const declared = Number(res.headers.get('content-length') ?? '');
-        if (declared && declared > limits.maxAttachmentMb * MB) {
-          throw new HttpError(413, `File exceeds the ${limits.maxAttachmentMb} MB limit`);
-        }
-        bytes = Buffer.from(await res.arrayBuffer());
-        contentType =
-          body.contentType ||
-          res.headers.get('content-type')?.split(';')[0]?.trim() ||
-          'application/octet-stream';
-      } else {
-        bytes = Buffer.from(contentBase64 as string, 'base64');
-        if (bytes.length === 0)
-          throw new HttpError(400, 'contentBase64 is empty or not valid base64');
-        contentType = body.contentType || 'application/octet-stream';
-      }
-
-      if (bytes.length === 0) throw new HttpError(400, 'The file is empty');
+      const { bytes, contentType } = await readImportedFile(body);
       await assertAttachmentUploadAllowed(projectId, bytes.length, contentType);
 
       const key = attachmentObjectKey(projectId, 'attachments', issueId, filename);
@@ -239,7 +197,7 @@ export const attachmentRoutes = new Elysia({
       response: { 201: AttachmentResponse, ...commonErrors, ...errors(413, 502) },
       detail: {
         summary: 'Add an attachment from a URL or base64',
-        description: 'Attach a file to an issue without a multipart upload.',
+        description: 'Attach a file to an issue from `url` or `contentBase64`.',
         ...mcpTool('add_attachment'),
       },
     },
@@ -311,38 +269,26 @@ export const attachmentRoutes = new Elysia({
       response: { 204: t.Void(), ...accessErrors },
       detail: {
         summary: 'Delete an attachment',
-        description: 'Delete an attachment. Irreversible.',
+        description: 'Permanently delete an attachment.',
         ...mcpTool('delete_attachment'),
       },
     },
   )
 
-  .get(
-    '/attachments/view',
-    async ({ viewed }) => {
-      const asImage = await viewAttachments([viewed.row], () => viewed.dto);
-      if (asImage.images.length > 0) return asImage;
-      return {
-        images: [],
-        others: [{ ...viewed.dto, ...(await readAttachmentContent(viewed.row)) }],
-      };
+  .get('/attachments/view', ({ viewed }) => viewFile(viewed.row, viewed.dto), {
+    query: viewAttachmentQuery,
+    viewableAttachment: true,
+    response: { 200: ViewAttachmentsResponse, ...commonErrors, ...errors(502) },
+    detail: {
+      summary: 'View an attachment',
+      description:
+        'Open one attachment of an issue or initiative, by url or id. An image comes back as ' +
+        `the image (${VIEWABLE_IMAGES}). Other files come back in \`others\` with their url, ` +
+        'plus the full text of a PDF or text file, or the column headers and first rows of a ' +
+        '.xlsx, .csv or .docx file. A scanned PDF has no text.',
+      ...mcpImageTool('view_attachment'),
     },
-    {
-      query: viewAttachmentQuery,
-      viewableAttachment: true,
-      response: { 200: ViewAttachmentsResponse, ...commonErrors },
-      detail: {
-        summary: 'View an attachment',
-        description:
-          'Open one attachment of an issue or an initiative, given the url a result carries ' +
-          `for it or its id. An image comes back as the image itself (${VIEWABLE_IMAGES}). ` +
-          'Any other file comes back in `others` with its url and, for a PDF or a text file, ' +
-          'its full text; for a spreadsheet or document (.xlsx, .csv, .docx), its column ' +
-          'headers and first rows. A scanned PDF has no text to read.',
-        ...mcpImageTool('view_attachment'),
-      },
-    },
-  )
+  })
 
   .get(
     '/issues/:issueId/images',
@@ -354,8 +300,8 @@ export const attachmentRoutes = new Elysia({
       detail: {
         summary: 'View the images of an issue',
         description:
-          `Look at the images attached to an issue, by its numeric id: ${VIEWABLE_IMAGES}. ` +
-          'Every other attachment comes back in `others` with its url.',
+          `Show the images attached to an issue: ${VIEWABLE_IMAGES}. ` +
+          'Other attachments are returned in `others` with their url.',
         ...mcpImageTool('view_issue_images'),
       },
     },

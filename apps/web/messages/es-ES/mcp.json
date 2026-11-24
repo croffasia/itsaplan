@@ -24,26 +24,36 @@
     "methodTabsAria": "Método de conexión",
     "method": "OAuth",
     "personalKey": "Clave de API",
-    "description": "Úsalo para cualquier cliente MCP que soporte OAuth, como ChatGPT o Claude. Inicias sesión con tu cuenta de Itsaplan. El cliente nunca recibe una clave de API.",
+    "description": "Úsalo para cualquier cliente MCP que soporte OAuth, como ChatGPT o Claude. Inicias sesión con tu cuenta de {app}. El cliente nunca recibe una clave de API.",
     "discovery": "Descubrimiento de OAuth",
     "steps": {
       "add": "Añade una aplicación MCP en tu cliente.",
       "paste": "Pega el endpoint de MCP.",
       "choose": "Elige OAuth cuando el cliente pregunte cómo iniciar sesión.",
-      "signIn": "Inicia sesión en Itsaplan y aprueba el acceso."
+      "signIn": "Inicia sesión en {app} y aprueba el acceso."
     },
-    "security": "OAuth usa PKCE (S256), registración dinámica de clientes y tokens de acceso acotados a tu cuenta de Itsaplan.",
+    "security": "OAuth usa PKCE (S256), registración dinámica de clientes y tokens de acceso acotados a tu cuenta de {app}.",
     "consent": {
-      "title": "{client} quiere conectarse a tu cuenta",
-      "titleUnnamed": "Un cliente MCP quiere conectarse a tu cuenta",
-      "description": "Actuará con tus permisos: todo lo que tú puedes ver y cambiar, podrá hacerlo también.",
-      "account": "Has iniciado sesión como {email}",
-      "redirect": "Después de responder, vuelves a {host}.",
-      "missingCode": "A esta petición de autorización le falta su código de consentimiento.",
-      "cancel": "Cancelar",
-      "pending": "Autorizando…",
-      "authorize": "Autorizar",
-      "failed": "No se ha podido completar la autorización de OAuth."
+      "title": "¿Permitir que {client} acceda a tu cuenta?",
+      "titleUnnamed": "¿Permitir que una aplicación sin nombre acceda a tu cuenta?",
+      "actsAs": "Una vez permitida, la aplicación actúa en tu nombre:",
+      "canSee": "Ve todo lo que tú puedes ver, en todos tus equipos",
+      "canChange": "Crea, cambia y elimina todo lo que tú puedes",
+      "keepsAccess": "Mantiene el acceso hasta que la desconectes en Cuenta › Seguridad",
+      "account": "Cuenta",
+      "app": "Aplicación",
+      "thisComputer": "En este ordenador",
+      "named": "El nombre «{client}» lo eligió la propia aplicación. Permite el acceso solo si iniciaste tú esta conexión.",
+      "unnamed": "La aplicación no envió ningún nombre. Permite el acceso solo si iniciaste tú esta conexión.",
+      "deny": "No permitir",
+      "allow": "Permitir",
+      "allowing": "Permitiendo…",
+      "denying": "Enviando…",
+      "expired": "Esta solicitud caducó a los 10 minutos. Vuelve a iniciar la conexión en la aplicación.",
+      "failed": "Tu respuesta no llegó. Inténtalo de nuevo.",
+      "incompleteTitle": "Este enlace está incompleto",
+      "incompleteBody": "Vuelve a iniciar la conexión en la aplicación.",
+      "brandSubtitle": "Conecta a tu cuenta aplicaciones de IA como Claude y ChatGPT."
     }
   }
 }

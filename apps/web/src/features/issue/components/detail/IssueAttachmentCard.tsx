@@ -1,17 +1,12 @@
 import { type DragEvent } from 'react';
 import { Download, PenLine, Plus, Trash2 } from 'lucide-react';
 import type { Attachment } from '@/lib/api/endpoints/attachments';
-import { attachmentHtml, isImage, isVideo } from '@/components/common/editor/attachmentEmbed';
+import { isImage, setEmbedDragData } from '@/components/common/editor/attachmentEmbed';
+import { attachmentPreviewKind } from '@/components/common/attachments/attachmentPreviewKind';
 import { formatSize } from '@/utils/fileSize';
 import AttachmentThumb from '@/components/common/attachments/AttachmentThumb';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
-
-function onDragStart(e: DragEvent<HTMLElement>, a: Attachment) {
-  e.dataTransfer.setData('text/html', attachmentHtml(a));
-  e.dataTransfer.setData('text/plain', a.url);
-  e.dataTransfer.effectAllowed = 'copy';
-}
 
 // One attachment in the panel grid: a preview to recognise the file by, its name
 // and size, and the actions on top of the preview. Unless read-only, the whole
@@ -36,12 +31,12 @@ export default function IssueAttachmentCard({
 }) {
   const t = useTranslations('issue.attachments');
   const tCommon = useTranslations('common');
-  const viewable = isImage(attachment) || isVideo(attachment);
+  const viewable = attachmentPreviewKind(attachment) !== null;
   const dragProps = readOnly
     ? {}
     : {
         draggable: true,
-        onDragStart: (e: DragEvent<HTMLElement>) => onDragStart(e, attachment),
+        onDragStart: (e: DragEvent<HTMLElement>) => setEmbedDragData(e.dataTransfer, attachment),
         title: t('dragIntoDescription'),
       };
 

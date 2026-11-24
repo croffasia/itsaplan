@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { Tag } from 'lucide-react';
 import type { Label, LabelGroup } from '@/lib/api/endpoints/labels';
 import { Pill } from './Pill';
@@ -11,16 +12,19 @@ export default function LabelsSelect({
   value,
   onToggle,
   readOnly,
+  trigger: ownTrigger,
 }: {
   labels: Label[];
   groups: LabelGroup[];
   value: number[];
   onToggle: (id: number) => void;
   readOnly?: boolean;
+  // Replaces the pill where a caller needs its own (a Timeline cell).
+  trigger?: ReactNode;
 }) {
   const t = useTranslations('issue.fieldSelects');
   const selected = labels.filter((l) => value.includes(l.id));
-  const trigger = (
+  const trigger = ownTrigger ?? (
     <Pill active={selected.length > 0}>
       {selected.length > 0 ? (
         <span className="flex -space-x-1">

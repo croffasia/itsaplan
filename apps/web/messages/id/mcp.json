@@ -24,26 +24,36 @@
     "methodTabsAria": "Metode koneksi",
     "method": "OAuth",
     "personalKey": "Kunci API",
-    "description": "Gunakan ini untuk klien MCP apa pun yang mendukung OAuth, seperti ChatGPT atau Claude. Anda masuk dengan akun Itsaplan Anda. Klien tidak pernah menerima kunci API.",
+    "description": "Gunakan ini untuk klien MCP apa pun yang mendukung OAuth, seperti ChatGPT atau Claude. Anda masuk dengan akun {app} Anda. Klien tidak pernah menerima kunci API.",
     "discovery": "Penemuan OAuth",
     "steps": {
       "add": "Tambahkan aplikasi MCP di klien Anda.",
       "paste": "Tempel endpoint MCP.",
       "choose": "Pilih OAuth saat klien menanyakan cara masuk.",
-      "signIn": "Masuk ke Itsaplan dan setujui akses."
+      "signIn": "Masuk ke {app} dan setujui akses."
     },
-    "security": "OAuth menggunakan PKCE (S256), pendaftaran klien dinamis, dan token akses yang dicakupkan ke akun Itsaplan Anda.",
+    "security": "OAuth menggunakan PKCE (S256), pendaftaran klien dinamis, dan token akses yang dicakupkan ke akun {app} Anda.",
     "consent": {
-      "title": "{client} ingin terhubung ke akun Anda",
-      "titleUnnamed": "Sebuah klien MCP ingin terhubung ke akun Anda",
-      "description": "Aplikasi ini akan bertindak dengan izin Anda: apa pun yang dapat Anda lihat dan ubah, ia juga bisa.",
-      "account": "Masuk sebagai {email}",
-      "redirect": "Setelah Anda menjawab, Anda kembali ke {host}.",
-      "missingCode": "Permintaan otorisasi ini kehilangan kode persetujuannya.",
-      "cancel": "Batal",
-      "pending": "Mengotorisasi…",
-      "authorize": "Otorisasi",
-      "failed": "Tidak dapat menyelesaikan otorisasi OAuth."
+      "title": "Izinkan {client} mengakses akun Anda?",
+      "titleUnnamed": "Izinkan aplikasi tanpa nama mengakses akun Anda?",
+      "actsAs": "Setelah diizinkan, aplikasi bertindak sebagai Anda:",
+      "canSee": "Melihat semua yang dapat Anda lihat, di semua tim Anda",
+      "canChange": "Membuat, mengubah, dan menghapus apa pun yang dapat Anda lakukan",
+      "keepsAccess": "Tetap punya akses sampai Anda memutuskannya di Akun › Keamanan",
+      "account": "Akun",
+      "app": "Aplikasi",
+      "thisComputer": "Di komputer ini",
+      "named": "Aplikasi memberi dirinya nama “{client}”. Izinkan hanya jika Anda sendiri yang memulai koneksi ini.",
+      "unnamed": "Aplikasi tidak mengirim nama. Izinkan hanya jika Anda sendiri yang memulai koneksi ini.",
+      "deny": "Jangan izinkan",
+      "allow": "Izinkan",
+      "allowing": "Mengizinkan…",
+      "denying": "Mengirim…",
+      "expired": "Permintaan ini kedaluwarsa setelah 10 menit. Mulai koneksi lagi di aplikasi.",
+      "failed": "Jawaban Anda tidak terkirim. Coba lagi.",
+      "incompleteTitle": "Tautan ini tidak lengkap",
+      "incompleteBody": "Mulai koneksi lagi di aplikasi.",
+      "brandSubtitle": "Hubungkan aplikasi AI seperti Claude dan ChatGPT ke akun Anda."
     }
   }
 }

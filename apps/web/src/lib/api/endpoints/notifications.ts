@@ -1,10 +1,12 @@
 import { request } from '@/lib/api/core/client';
 import type { StateType } from '@/lib/api/endpoints/columns';
 
-// Inbox notifications. Each row is enriched with the issue and project it points at
-// so the list renders without extra calls.
-export type NotificationType = 'assigned' | 'mentioned' | 'commented' | 'state_changed';
+// Inbox notifications. Each row is enriched with the issue or the document and the
+// project it points at, so the list renders without extra calls.
+export type NotificationType = 'assigned' | 'mentioned' | 'commented' | 'state_changed' | 'reacted';
 
+// The issue fields are set on an issue's notification, the document fields on a
+// document's.
 export interface Notification {
   id: number;
   type: NotificationType;
@@ -13,16 +15,25 @@ export interface Notification {
   readAt: string | null;
   snoozedUntil: string | null;
   createdAt: string;
-  issueId: number;
-  issueSeq: number;
-  issueTitle: string;
-  issueStateType: StateType;
+  issueId: number | null;
+  issueSeq: number | null;
+  issueTitle: string | null;
+  issueStateType: StateType | null;
+  // Set while the comment it is about still exists.
+  issueCommentId: number | null;
+  documentId: number | null;
+  documentTitle: string | null;
+  documentIcon: string | null;
+  // Set when the mention is in a comment on the document.
+  documentCommentId: string | null;
   projectId: number;
   projectKey: string;
   projectName: string;
   // Only a 'state_changed' notification has them.
   fromState: string | null;
   toState: string | null;
+  // Only a 'reacted' notification has it.
+  reactionEmoji: string | null;
 }
 
 export interface NotificationCursor {
@@ -45,10 +56,10 @@ export interface NotificationFilters {
 export type NotificationDeleteScope = 'all' | 'read' | 'read-completed' | 'completed';
 
 // Inbox notifications. The list is the session user's own; projectId scopes it to
-// one project (the per-project inbox). cursor is the JSON-encoded keyset from the
-// previous page.
+// one project (the per-project inbox), and without it the list covers every project
+// (desktop notifications). cursor is the JSON-encoded keyset from the previous page.
 export const listNotifications = (
-  projectId: number,
+  projectId?: number,
   params: {
     cursor?: NotificationCursor | null;
     limit?: number;
@@ -56,7 +67,7 @@ export const listNotifications = (
   } = {},
 ) => {
   const q = new URLSearchParams();
-  q.set('projectId', String(projectId));
+  if (projectId != null) q.set('projectId', String(projectId));
   if (params.limit) q.set('limit', String(params.limit));
   if (params.cursor) q.set('cursor', JSON.stringify(params.cursor));
   const f = params.filters ?? {};

@@ -7,8 +7,7 @@ import type { ReceivedInvite } from '@/lib/api/endpoints/invites';
 import { Button } from '@/components/ui/button';
 import ListPager from '@/components/common/ListPager';
 import ReceivedInvitesList from '@/components/common/invites/ReceivedInvitesList';
-import { LocaleToggle } from '@/components/locale-toggle';
-import { ThemeToggle } from '@/components/theme-toggle';
+import InterfaceMenu from '@/components/layout/InterfaceMenu';
 import UserMenu from '@/components/layout/UserMenu';
 
 export default function InviteStartList({
@@ -36,8 +35,7 @@ export default function InviteStartList({
   return (
     <main className="relative min-h-svh">
       <div className="absolute end-4 top-3 flex items-center gap-1">
-        <LocaleToggle />
-        <ThemeToggle />
+        <InterfaceMenu />
         <UserMenu />
       </div>
       <div className="mx-auto flex min-h-svh w-full max-w-xl flex-col justify-center gap-6 px-6 py-20">

@@ -18,8 +18,8 @@ const VIEW_HOTKEYS: [HotkeyId, WorkItemsView][] = [
 // key that would land in the text being typed.
 export function useKeyboardShortcuts(opts: {
   hasProject: boolean;
-  // Whether this project has a chat panel to show at all.
-  hasChat: boolean;
+  // Whether the side panel has the project's agents to show at all.
+  hasAgents: boolean;
   // True while any modal/overlay is open, which suppresses the app bindings.
   overlayOpen: boolean;
   onToggleCommand: () => void;
@@ -29,10 +29,11 @@ export function useKeyboardShortcuts(opts: {
   onNewProject: () => void;
   onSettings: () => void;
   onToggleChat: () => void;
+  onToggleRuns: () => void;
 }) {
   const {
     hasProject,
-    hasChat,
+    hasAgents,
     overlayOpen,
     onToggleCommand,
     onChangeView,
@@ -41,6 +42,7 @@ export function useKeyboardShortcuts(opts: {
     onNewProject,
     onSettings,
     onToggleChat,
+    onToggleRuns,
   } = opts;
   const matches = useHotkeyMatch();
 
@@ -82,16 +84,21 @@ export function useKeyboardShortcuts(opts: {
         onSettings();
         return;
       }
-      if (hasChat && matches(e, 'chat.toggle')) {
+      if (hasAgents && matches(e, 'chat.toggle')) {
         e.preventDefault();
         onToggleChat();
+        return;
+      }
+      if (hasAgents && matches(e, 'runs.toggle')) {
+        e.preventDefault();
+        onToggleRuns();
       }
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [
     hasProject,
-    hasChat,
+    hasAgents,
     overlayOpen,
     matches,
     onToggleCommand,
@@ -101,5 +108,6 @@ export function useKeyboardShortcuts(opts: {
     onNewProject,
     onSettings,
     onToggleChat,
+    onToggleRuns,
   ]);
 }

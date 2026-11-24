@@ -1,7 +1,6 @@
-import { db, notificationDelivery, type DeliveryPayload } from '@repo/db';
+import { db, notificationDelivery, type DeliveryPayload, type JobSettings } from '@repo/db';
 import { eq, sql } from 'drizzle-orm';
 import { equalJitterBackoffMs } from './backoff';
-import { intEnv } from './env';
 import { deliverNotification, type SendResult } from './notification-send';
 
 // Drains the notification_delivery outbox: claims due rows and sends each one.
@@ -18,18 +17,21 @@ interface ClaimedNotification {
   attempts: number;
 }
 
-export async function processNotificationDeliveries(): Promise<void> {
-  const claimed = await claimDueDeliveries();
-  await Promise.all(claimed.map(processDelivery));
+type NotificationJobs = JobSettings['notifications'];
+
+export async function processNotificationDeliveries(jobs: NotificationJobs): Promise<void> {
+  const claimed = await claimDueDeliveries(jobs);
+  await Promise.all(claimed.map((d) => processDelivery(d, jobs.maxAttempts)));
 }
 
 // Atomically claims up to the batch size of due rows. FOR UPDATE SKIP LOCKED lets
 // multiple worker replicas run without grabbing the same row; the claim leases the
 // row by pushing next_attempt_at forward, so a row whose worker crashes mid-send
 // becomes claimable again after the lease.
-async function claimDueDeliveries(): Promise<ClaimedNotification[]> {
-  const batchSize = intEnv('NOTIFICATION_BATCH_SIZE', 20);
-  const leaseSeconds = intEnv('NOTIFICATION_LEASE_SECONDS', 120);
+async function claimDueDeliveries({
+  batchSize,
+  leaseSeconds,
+}: NotificationJobs): Promise<ClaimedNotification[]> {
   const rows = await db.execute(sql`
     UPDATE notification_delivery d
     SET attempts = d.attempts + 1,
@@ -52,7 +54,7 @@ async function claimDueDeliveries(): Promise<ClaimedNotification[]> {
   return rows as unknown as ClaimedNotification[];
 }
 
-async function processDelivery(d: ClaimedNotification): Promise<void> {
+async function processDelivery(d: ClaimedNotification, maxAttempts: number): Promise<void> {
   let result: SendResult;
   try {
     result = await deliverNotification(d);
@@ -69,7 +71,6 @@ async function processDelivery(d: ClaimedNotification): Promise<void> {
     return;
   }
 
-  const maxAttempts = intEnv('NOTIFICATION_MAX_ATTEMPTS', 5);
   const error = (result.error ?? 'delivery failed').slice(0, 500);
   if (result.retryable && d.attempts < maxAttempts) {
     const delaySeconds = Math.ceil(equalJitterBackoffMs(d.attempts, 30_000, 30 * 60_000) / 1000);

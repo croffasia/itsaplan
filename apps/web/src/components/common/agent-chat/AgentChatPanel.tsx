@@ -42,6 +42,7 @@ export function AgentChatPanel({
   onStop,
   onRemovePending,
   onReset,
+  empty,
   composerStart,
   composerEnd,
   hasEarlierMessages,
@@ -58,6 +59,8 @@ export function AgentChatPanel({
   onStop: () => void;
   onRemovePending: (id: string) => void;
   onReset?: () => void;
+  // Rendered in place of the panel's own empty state.
+  empty?: ReactNode;
   // Rendered at the start of the composer's button row, before the panel's own
   // buttons.
   composerStart?: ReactNode;
@@ -81,7 +84,12 @@ export function AgentChatPanel({
   // A message typed while the agent is answering is not refused — it waits its turn. An
   // agent with an endpoint is sent the message, so nothing has to be online.
   const runnerOffline = agent.kind === 'external' && !agent.invocationUrl && !isRunnerOnline(agent);
-  const canSend = input.trim().length > 0 && !runnerOffline;
+  // Mirrors the api refusing new messages to an agent out of chat; old threads stay readable.
+  const chatDisabled = !agent.chatEnabled;
+  const canSend = input.trim().length > 0 && !runnerOffline && !chatDisabled;
+  let placeholder = t('messagePlaceholder', { agent: agent.name });
+  if (chatDisabled) placeholder = t('chatDisabled');
+  else if (runnerOffline) placeholder = t('runnerOffline');
 
   function submit() {
     const text = input.trim();
@@ -134,17 +142,20 @@ export function AgentChatPanel({
       <MessageScrollerProvider>
         <div className="min-h-0 flex-1 overflow-hidden">
           {messages.length === 0 && pending.length === 0 ? (
-            <Empty className="h-full">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <Bot />
-                </EmptyMedia>
-                <EmptyTitle>{t('title', { agent: agent.name })}</EmptyTitle>
-                <EmptyDescription>{t('emptyHint')}</EmptyDescription>
-              </EmptyHeader>
-            </Empty>
+            (empty ?? (
+              <Empty className="h-full">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <Bot />
+                  </EmptyMedia>
+                  <EmptyTitle>{t('title', { agent: agent.name })}</EmptyTitle>
+                  <EmptyDescription>{t('emptyHint')}</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ))
           ) : (
             <AgentChatTranscript
+              agentName={agent.name}
               messages={messages}
               status={status}
               activeTool={activeTool}
@@ -158,11 +169,17 @@ export function AgentChatPanel({
         </div>
 
         <div className="chat-composer px-3 pt-2 pb-3">
-          {runnerOffline && (
+          {chatDisabled ? (
             <div className="mx-auto mb-2 flex w-full max-w-3xl flex-wrap items-center gap-x-2 gap-y-0.5">
-              <AgentRunnerStatus agent={agent} />
-              <span className="text-xs text-muted-foreground">{t('runnerOfflineHint')}</span>
+              <span className="text-xs text-muted-foreground">{t('chatDisabledHint')}</span>
             </div>
+          ) : (
+            runnerOffline && (
+              <div className="mx-auto mb-2 flex w-full max-w-3xl flex-wrap items-center gap-x-2 gap-y-0.5">
+                <AgentRunnerStatus agent={agent} />
+                <span className="text-xs text-muted-foreground">{t('runnerOfflineHint')}</span>
+              </div>
+            )
           )}
           <form
             className="mx-auto w-full max-w-3xl"
@@ -206,7 +223,7 @@ export function AgentChatPanel({
               className="hidden"
               onChange={(e) => void attach(e.target.files)}
             />
-            <InputGroup className="rounded-2xl border-transparent bg-muted has-[[data-slot=input-group-control]:focus-visible]:border-transparent has-[[data-slot=input-group-control]:focus-visible]:ring-0 dark:bg-muted/50">
+            <InputGroup className="rounded-2xl border-transparent bg-card has-[[data-slot=input-group-control]:focus-visible]:border-transparent has-[[data-slot=input-group-control]:focus-visible]:ring-0 dark:bg-card">
               <InputGroupTextarea
                 // `auto` once there is something to read, so a message keeps the
                 // script it was typed in. An empty box has nothing to read from.
@@ -229,12 +246,8 @@ export function AgentChatPanel({
                   e.preventDefault();
                   submit();
                 }}
-                placeholder={
-                  runnerOffline
-                    ? t('runnerOffline')
-                    : t('messagePlaceholder', { agent: agent.name })
-                }
-                disabled={runnerOffline}
+                placeholder={placeholder}
+                disabled={chatDisabled || runnerOffline}
                 rows={1}
               />
               <InputGroupAddon

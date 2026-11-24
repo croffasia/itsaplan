@@ -3,6 +3,7 @@ import {
   SourceRateLimitedError,
   type AttachmentDownload,
   type Page,
+  type SourceProject,
   type SourceReader,
 } from './reader';
 import type {
@@ -10,6 +11,8 @@ import type {
   CanonicalStateCategory,
   CanonicalLabel,
   CanonicalCycle,
+  CanonicalCustomField,
+  CanonicalChecklist,
   CanonicalIssue,
   CanonicalRelation,
   CanonicalComment,
@@ -216,6 +219,19 @@ export class PlaneReader implements SourceReader {
     private readonly fetch: typeof pinnedFetch = pinnedFetch,
   ) {}
 
+  async describeSource(): Promise<SourceProject> {
+    const project = await this.getJson<{ name: string }>('/');
+    // Plane Cloud serves its API and its app on two hosts; a self-hosted instance on one.
+    const app = new URL(this.credential.baseUrl);
+    if (app.host === 'api.plane.so') app.host = 'app.plane.so';
+    const base = app.href.replace(/\/$/, '');
+    const slug = encodeURIComponent(this.credential.workspaceSlug);
+    return {
+      name: project.name,
+      url: `${base}/${slug}/projects/${encodeURIComponent(this.projectId)}/issues/`,
+    };
+  }
+
   async listStates(): Promise<CanonicalState[]> {
     const rows = await this.getResults<{ id: string; name: string; group: string }>('/states/');
     return rows.map((s) => ({
@@ -306,6 +322,14 @@ export class PlaneReader implements SourceReader {
         replyToSourceId: c.reply_to_comment ?? null,
       };
     });
+  }
+
+  async listCustomFields(): Promise<CanonicalCustomField[]> {
+    return [];
+  }
+
+  async listIssueChecklists(): Promise<CanonicalChecklist[]> {
+    return [];
   }
 
   async listIssueAttachments(issueSourceId: string): Promise<CanonicalAttachment[]> {
@@ -432,6 +456,7 @@ function mapWorkItem(raw: PlaneWorkItem): CanonicalIssue {
     descriptionMarkdown: htmlToMarkdown(raw.description_html),
     stateSourceId: typeof raw.state === 'string' ? raw.state : (raw.state?.id ?? ''),
     assigneeEmail: firstAssigneeEmail(raw.assignees),
+    watcherEmails: [],
     labelSourceIds: (raw.labels ?? []).map((l) => (typeof l === 'string' ? l : l.id)),
     cycleSourceId: raw.cycle_id ?? raw.cycle ?? null,
     parentSourceId: raw.parent_id ?? raw.parent ?? null,
@@ -444,6 +469,7 @@ function mapWorkItem(raw: PlaneWorkItem): CanonicalIssue {
     customFields: [],
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
+    archivedAt: null,
   };
 }
 

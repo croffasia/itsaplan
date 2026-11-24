@@ -87,6 +87,11 @@ jobs:
       matrix:
         service: [api, worker, bot, web]
     steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: scripts/image-tags.sh
+          sparse-checkout-cone-mode: false
+
       - uses: actions/download-artifact@v8
         with:
           pattern: digest-${{ matrix.service }}-*
@@ -99,22 +104,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # A prerelease carries a suffix (v1.2.3-rc.1) and must not move `latest`.
+      # Exact, floating minor/major, and latest tags; prereleases only get their exact tag.
       - name: Tag the manifest
         env:
           IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.service }}
           TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
-          version=${TAG#v}
-          tags=(-t "$IMAGE:$version")
-          case "$version" in
-            *-*) ;;
-            *) tags+=(-t "$IMAGE:latest") ;;
-          esac
+          tag_list=$(bash scripts/image-tags.sh "$TAG")
+          mapfile -t resolved_tags <<< "$tag_list"
+          tags=()
+          for tag in "${resolved_tags[@]}"; do
+            tags+=(-t "$IMAGE:$tag")
+          done
           sources=()
           for digest in /tmp/digests/*; do
             sources+=("$IMAGE@$(cat "$digest")")
           done
           docker buildx imagetools create "${tags[@]}" "${sources[@]}"
-          docker buildx imagetools inspect "$IMAGE:$version"
+          docker buildx imagetools inspect "$IMAGE:${resolved_tags[0]}"

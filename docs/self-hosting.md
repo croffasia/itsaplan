@@ -32,8 +32,9 @@ On a machine with [Bun](https://bun.sh), the setup script generates them instead
 write the files: it prints `.env` and `apps/web/.env` for you to copy onto the server.
 
 That starts the whole stack: Postgres, RustFS, api, worker, bot, and web. The four services
-run from the images published on each release. `VERSION` in `.env` pins one release instead
-of the newest. The `migrate` service applies migrations before the api starts, and the first account you register
+run from the images published on each release. `VERSION` in `.env` pins a release instead
+of `latest` — an exact version (`1.12.0`), a minor line (`1.12`), or a major line (`1`).
+The `migrate` service applies migrations before the api starts, and the first account you register
 becomes the instance admin.
 
 For the Pro edition, start the stack with `docker compose -f docker-compose.pro.yml up -d`.

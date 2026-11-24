@@ -32,6 +32,8 @@
   "noAccess": "ليس لديك حق الوصول إلى مستندات المشروع. يمكن لمالك المشروع تغيير دورك.",
   "expand": "توسيع {title}",
   "collapse": "طي {title}",
+  "expandAll": "توسيع كل الصفحات",
+  "collapseAll": "طي كل الصفحات",
   "backToDocuments": "العودة إلى المستندات",
   "documentActions": "إجراءات الصفحة",
   "pageIcon": "أيقونة الصفحة",

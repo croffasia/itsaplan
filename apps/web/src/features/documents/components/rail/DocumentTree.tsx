@@ -5,8 +5,9 @@ import { useIsPhone } from '@/hooks/useIsPhone';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useSession } from '@/lib/auth-client';
 import { useDocumentTreeActions } from '../../hooks/useDocumentTreeActions';
-import { useDocumentTreeCollapsed } from '../../hooks/useDocumentTreeCollapsed';
+import { useDocumentTreeExpanded } from '../../hooks/useDocumentTreeExpanded';
 import { useDocumentTreeLayout } from '../../hooks/useDocumentTreeLayout';
+import { useDocumentTreeReveal } from '../../hooks/useDocumentTreeReveal';
 import { useSharedDocumentIds } from '../../services/documents.service';
 import type { DocumentSort } from '../../utils/documentList';
 import { managesDocument } from '../../utils/documentAccess';
@@ -38,7 +39,8 @@ export default function DocumentTree({
   const userId = useSession().data?.user.id ?? null;
   const isPhone = useIsPhone();
   const actions = useDocumentTreeActions(projectKey, activeId);
-  const { collapsed, toggle } = useDocumentTreeCollapsed(projectKey, activeId, documents);
+  const { expanded, expand, toggle } = useDocumentTreeExpanded(projectKey);
+  useDocumentTreeReveal(activeId, documents, expand);
   const { byId, byParent, ordered } = useDocumentTreeLayout(documents, sortBy, sortDirection);
   const shared = useSharedDocumentIds(projectKey).data;
   const canEdit = can('documents', 'edit');
@@ -56,7 +58,7 @@ export default function DocumentTree({
   const collectVisible = (parentId: number | null) => {
     for (const item of byParent.get(parentId) ?? []) {
       visibleIds.push(item.id);
-      if (!collapsed.has(item.id)) collectVisible(item.id);
+      if (expanded.has(item.id)) collectVisible(item.id);
     }
   };
   collectVisible(null);
@@ -67,7 +69,7 @@ export default function DocumentTree({
       <ul role={depth === 0 ? 'tree' : 'group'} aria-label={depth === 0 ? label : undefined}>
         {siblings.map((item) => {
           const children = byParent.get(item.id) ?? [];
-          const isCollapsed = collapsed.has(item.id);
+          const isExpanded = expanded.has(item.id);
           const creatable = canCreate && item.archivedAt === null;
           const create = () => onCreate(item.id, item.isPrivate);
           return (
@@ -78,7 +80,7 @@ export default function DocumentTree({
               depth={depth}
               active={activeId === item.id}
               shared={shared?.has(item.id) ?? false}
-              collapsed={isCollapsed}
+              expanded={isExpanded}
               hasChildren={children.length > 0}
               canCreate={creatable}
               draggable={draggable && !item.isLocked}
@@ -104,7 +106,7 @@ export default function DocumentTree({
               onToggle={() => toggle(item.id)}
               onCreate={create}
             >
-              {!isCollapsed && children.length > 0 && renderRows(item.id, depth + 1)}
+              {isExpanded && children.length > 0 && renderRows(item.id, depth + 1)}
             </SortableDocumentRow>
           );
         })}
@@ -119,7 +121,10 @@ export default function DocumentTree({
       ordered={ordered}
       visibleIds={visibleIds}
       enabled={draggable}
-      onReorder={actions.reorder}
+      onReorder={(source, placement) => {
+        if (placement.parentId !== null) expand([placement.parentId]);
+        actions.reorder(source, placement);
+      }}
     >
       {renderRows(null, 0)}
     </DocumentTreeDnd>

@@ -34,6 +34,8 @@
   "noAccess": "Anda tidak memiliki akses ke Dokumen proyek. Pemilik proyek dapat mengubah peran Anda.",
   "expand": "Perluas {title}",
   "collapse": "Ciutkan {title}",
+  "expandAll": "Perluas semua halaman",
+  "collapseAll": "Ciutkan semua halaman",
   "backToDocuments": "Kembali ke Dokumen",
   "documentActions": "Tindakan halaman",
   "pageIcon": "Ikon halaman",

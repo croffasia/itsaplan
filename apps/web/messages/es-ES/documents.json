@@ -34,6 +34,8 @@
   "noAccess": "No tienes acceso a los documentos del proyecto. Un propietario del proyecto puede cambiar tu rol.",
   "expand": "Expandir {title}",
   "collapse": "Contraer {title}",
+  "expandAll": "Expandir todas las páginas",
+  "collapseAll": "Contraer todas las páginas",
   "backToDocuments": "Volver a los documentos",
   "documentActions": "Acciones de la página",
   "pageIcon": "Icono de la página",

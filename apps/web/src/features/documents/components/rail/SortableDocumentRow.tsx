@@ -20,7 +20,7 @@ export default function SortableDocumentRow({
   depth,
   active,
   shared,
-  collapsed,
+  expanded,
   hasChildren,
   canCreate,
   draggable,
@@ -34,7 +34,7 @@ export default function SortableDocumentRow({
   depth: number;
   active: boolean;
   shared: boolean;
-  collapsed: boolean;
+  expanded: boolean;
   hasChildren: boolean;
   canCreate: boolean;
   draggable: boolean;
@@ -57,7 +57,7 @@ export default function SortableDocumentRow({
       role="treeitem"
       aria-level={depth + 1}
       aria-selected={active}
-      aria-expanded={hasChildren ? !collapsed : undefined}
+      aria-expanded={hasChildren ? expanded : undefined}
       className={cn(sortable.isDragging && 'relative z-20')}
     >
       <div
@@ -76,14 +76,14 @@ export default function SortableDocumentRow({
             !hasChildren && 'invisible',
           )}
           tabIndex={hasChildren ? 0 : -1}
-          aria-label={collapsed ? t('expand', { title }) : t('collapse', { title })}
-          aria-expanded={hasChildren ? !collapsed : undefined}
+          aria-label={expanded ? t('collapse', { title }) : t('expand', { title })}
+          aria-expanded={hasChildren ? expanded : undefined}
           onClick={onToggle}
         >
           <ChevronRight
             className={cn(
               'size-3.5 transition-transform duration-200 rtl:rotate-180',
-              !collapsed && 'rotate-90 rtl:rotate-90',
+              expanded && 'rotate-90 rtl:rotate-90',
             )}
           />
         </button>

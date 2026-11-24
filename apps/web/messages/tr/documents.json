@@ -34,6 +34,8 @@
   "noAccess": "Proje belgelerine erişiminiz yok. Bir proje sahibi rolünüzü değiştirebilir.",
   "expand": "{title} sayfasını genişlet",
   "collapse": "{title} sayfasını daralt",
+  "expandAll": "Tüm sayfaları genişlet",
+  "collapseAll": "Tüm sayfaları daralt",
   "backToDocuments": "Belgelere dön",
   "documentActions": "Sayfa işlemleri",
   "pageIcon": "Sayfa simgesi",

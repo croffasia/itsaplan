@@ -34,6 +34,8 @@
   "noAccess": "شما به مستندات پروژه دسترسی ندارید. مالک پروژه می‌تواند نقش شما را تغییر دهد.",
   "expand": "باز کردن {title}",
   "collapse": "بستن {title}",
+  "expandAll": "باز کردن همه صفحه‌ها",
+  "collapseAll": "بستن همه صفحه‌ها",
   "backToDocuments": "بازگشت به مستندات",
   "documentActions": "عملیات صفحه",
   "pageIcon": "آیکون صفحه",

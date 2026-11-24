@@ -32,6 +32,8 @@
   "noAccess": "你无权访问项目文档。项目所有者可以更改你的角色。",
   "expand": "展开 {title}",
   "collapse": "折叠 {title}",
+  "expandAll": "展开所有页面",
+  "collapseAll": "折叠所有页面",
   "backToDocuments": "返回文档",
   "documentActions": "页面操作",
   "pageIcon": "页面图标",

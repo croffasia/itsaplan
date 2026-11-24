@@ -34,6 +34,8 @@
   "noAccess": "You do not have access to project Docs. A project owner can change your role.",
   "expand": "Expand {title}",
   "collapse": "Collapse {title}",
+  "expandAll": "Expand all pages",
+  "collapseAll": "Collapse all pages",
   "backToDocuments": "Back to Docs",
   "documentActions": "Page actions",
   "pageIcon": "Page icon",

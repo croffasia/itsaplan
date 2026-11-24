@@ -34,6 +34,8 @@
   "noAccess": "Você não tem acesso aos documentos do projeto. Um proprietário do projeto pode alterar sua função.",
   "expand": "Expandir {title}",
   "collapse": "Recolher {title}",
+  "expandAll": "Expandir todas as páginas",
+  "collapseAll": "Recolher todas as páginas",
   "backToDocuments": "Voltar aos documentos",
   "documentActions": "Ações da página",
   "pageIcon": "Ícone da página",

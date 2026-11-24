@@ -33,3 +33,14 @@ export function documentChildren(
     .filter((item) => visibleParentId(item) === parentId)
     .sort((a, b) => a.position - b.position || a.id - b.id);
 }
+
+// Pages and private pages are two trees in the rail, so a subpage in the other tree does not make
+// its parent a branch.
+export function documentBranchIds(documents: ProjectDocumentSummary[]): number[] {
+  const byId = new Map(documents.map((item) => [item.id, item]));
+  const ids = new Set<number>();
+  for (const { parentId, isPrivate } of documents) {
+    if (parentId !== null && byId.get(parentId)?.isPrivate === isPrivate) ids.add(parentId);
+  }
+  return [...ids];
+}

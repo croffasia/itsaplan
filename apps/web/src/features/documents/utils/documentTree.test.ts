@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
-import { documentAncestors, documentChildren } from './documentTree';
+import { documentAncestors, documentBranchIds, documentChildren } from './documentTree';
 
 function document(id: number, parentId: number | null, title: string): ProjectDocumentSummary {
   return {
@@ -60,5 +60,21 @@ describe('documentChildren', () => {
     const orphan = document(2, 99, 'Orphan');
 
     assert.deepEqual(documentChildren(null, [orphan, root]), [root, orphan]);
+  });
+});
+
+describe('documentBranchIds', () => {
+  it('lists each page that has a subpage in the same tree', () => {
+    const root = document(1, null, 'Root');
+    const section = document(2, 1, 'Section');
+    const leaf = document(3, 2, 'Leaf');
+    const sibling = document(4, 2, 'Sibling');
+    const orphan = document(5, 99, 'Orphan');
+    const privatePage = { ...document(6, 3, 'Private'), isPrivate: true };
+
+    assert.deepEqual(
+      documentBranchIds([root, section, leaf, sibling, orphan, privatePage]),
+      [1, 2],
+    );
   });
 });

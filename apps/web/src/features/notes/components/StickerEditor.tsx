@@ -27,7 +27,7 @@ export default function StickerEditor({
     editorProps: {
       attributes: { class: 'md-content nopan focus:outline-none' },
       handleClick(view, _pos, event) {
-        return openLinkOnModifierClick(event, view.dom);
+        return openLinkOnModifierClick(event, view);
       },
       handleDOMEvents: linkKeyboardHandlers,
     },

@@ -1,8 +1,15 @@
+import type { EditorView } from '@tiptap/pm/view';
+
 const OPENABLE_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
 
-export function openLinkOnModifierClick(event: MouseEvent, root: HTMLElement): boolean {
+export function openLinkOnModifierClick(
+  event: MouseEvent,
+  view: Pick<EditorView, 'dom' | 'editable'>,
+): boolean {
   if (event.button !== 0 || (!event.metaKey && !event.ctrlKey)) return false;
-  return openLink(event, root);
+  // The browser opens the link. True keeps the editor from selecting its block.
+  if (!view.editable) return event.target instanceof Element && !!event.target.closest('a[href]');
+  return openLink(event, view.dom);
 }
 
 export function openLinkOnAuxClick(event: MouseEvent, root: HTMLElement): boolean {

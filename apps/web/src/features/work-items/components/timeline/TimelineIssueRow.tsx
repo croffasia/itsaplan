@@ -68,7 +68,7 @@ export function TimelineIssueRow({
 
   return (
     <div
-      className={cn('flex border-b hover:bg-accent/20', isDragging && 'opacity-40')}
+      className={cn('flex border-b hover:bg-accent/40', isDragging && 'opacity-40')}
       style={{ height: ROW_H }}
     >
       <div

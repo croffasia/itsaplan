@@ -57,7 +57,7 @@ export function TimelineLinkRows({
           <div
             key={link.id}
             className={cn(
-              'flex border-b border-dashed hover:bg-accent/20',
+              'flex border-b border-dashed hover:bg-accent/40',
               named && index > 0 && 'border-t',
             )}
             // Tailwind sets the border style on every side at once, and the row's

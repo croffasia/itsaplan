@@ -120,7 +120,7 @@ export default function DocumentExportDialog({
                 disabled={pending}
                 className={cn(
                   'group flex min-h-16 items-center gap-3 rounded-lg border px-3 text-start transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
-                  selected ? 'border-foreground/25 bg-muted/50' : 'hover:bg-muted/30',
+                  selected ? 'border-foreground/25 bg-accent' : 'hover:bg-accent/50',
                 )}
                 onClick={() => {
                   setFormat(key);

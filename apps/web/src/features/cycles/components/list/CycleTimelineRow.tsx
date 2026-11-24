@@ -47,7 +47,7 @@ export default function CycleTimelineRow({
   const canMove = canEdit && ends.move;
 
   return (
-    <div className="flex border-b hover:bg-accent/20" style={{ height: CYCLE_ROW_H }}>
+    <div className="flex border-b hover:bg-accent/40" style={{ height: CYCLE_ROW_H }}>
       <div
         className="sticky start-0 z-10 flex shrink-0 items-center overflow-hidden border-e bg-background px-3"
         style={{ width: labelW }}

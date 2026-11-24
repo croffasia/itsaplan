@@ -2,6 +2,7 @@
   "account": {
     "profile": "الملف الشخصي",
     "preferences": "التفضيلات",
+    "notifications": "الإشعارات",
     "accounts": "الحسابات",
     "security": "الأمان",
     "api-keys": "مفاتيح واجهة البرمجة (API keys)",

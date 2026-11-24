@@ -16,7 +16,7 @@ import { deletePushSubscription, listPushSubscriptions, savePushSubscription } f
 // The session user's Web Push subscriptions, one per browser they turned push on in.
 // Everything here is self-scoped: a user only ever reads or changes their own. Push is
 // instance-wide and on only while the VAPID keys are set (see getWebPushConfig); which
-// events it carries is chosen per project in notification-preferences.
+// events it carries is chosen in notification-preferences.
 export const pushRoutes = new Elysia({ name: 'push', detail: { tags: ['Push'] } })
   .use(authContext)
 

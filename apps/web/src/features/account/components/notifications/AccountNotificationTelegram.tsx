@@ -4,13 +4,14 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Send } from 'lucide-react';
-import AccountConnectionRow from './AccountConnectionRow';
 import {
-  useTelegramAccountLabel,
   useDisconnectTelegram,
   useStartTelegramLink,
+  useTelegramAccountLabel,
   useTelegramAccountQuery,
-} from '@/services/telegram.service';
+} from '../../services/telegram.service';
+import AccountNotificationChannelRow from './AccountNotificationChannelRow';
+import AccountNotificationConnectButton from './AccountNotificationConnectButton';
 
 // The linked Telegram account. Connecting opens the instance bot with a one-time
 // code; the bot writes the connection, so this page has no way to know it happened
@@ -22,8 +23,8 @@ const POLL_INTERVAL_MS = 2000;
 // after a user who walked away from the flow.
 const POLL_TIMEOUT_MS = 3 * 60_000;
 
-export default function AccountTelegramConnection() {
-  const t = useTranslations('account.accounts');
+export default function AccountNotificationTelegram() {
+  const t = useTranslations('account.notifications');
   const accountLabel = useTelegramAccountLabel();
   const [waiting, setWaiting] = useState(false);
   const { data } = useTelegramAccountQuery(waiting ? POLL_INTERVAL_MS : undefined);
@@ -60,20 +61,27 @@ export default function AccountTelegramConnection() {
     }
   }
 
-  // No instance bot means Telegram is not offered on this instance at all.
-  if (data && !data.botUsername) return null;
+  // An account is connected through the instance bot. A connected one stays without it: the
+  // bot of a team can still write to it.
+  if (data && !data.botUsername && !link) return null;
 
   return (
-    <AccountConnectionRow
-      icon={<Send className="size-4" />}
-      name="Telegram"
-      description={waiting ? t('telegramWaiting') : t('telegramDescription')}
-      connectedTo={link ? accountLabel(link) : null}
-      busy={start.isPending || disconnect.isPending}
-      onConnect={() => void onConnect()}
-      onDisconnect={() =>
-        disconnect.mutate(undefined, { onSuccess: () => toast.success(t('telegramDisconnected')) })
-      }
-    />
+    <AccountNotificationChannelRow
+      icon={Send}
+      name={t('telegram')}
+      info={link ? accountLabel(link) : t(waiting ? 'telegramWaiting' : 'notConnected')}
+    >
+      <AccountNotificationConnectButton
+        channel={t('telegram')}
+        connected={link !== null}
+        busy={start.isPending || disconnect.isPending}
+        onConnect={() => void onConnect()}
+        onDisconnect={() =>
+          disconnect.mutate(undefined, {
+            onSuccess: () => toast.success(t('telegramDisconnected')),
+          })
+        }
+      />
+    </AccountNotificationChannelRow>
   );
 }

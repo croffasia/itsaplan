@@ -222,8 +222,8 @@ If the members of a workspace use a different Slack workspace, the workspace own
 separate app with the same steps. The owner pastes its values in the workspace settings →
 **Slack**.
 
-Members connect their Slack account in the notification settings of a project, once for each
-Slack workspace.
+Members connect their Slack account in their notification settings, once for each Slack
+workspace.
 
 The Slack tools of an agent use a separate credential in **Integrations**. Each tool lists the
 bot scopes that it needs.

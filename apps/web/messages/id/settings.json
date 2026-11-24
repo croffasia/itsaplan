@@ -93,37 +93,6 @@
     "empty": "Belum ada agen",
     "emptyHint": "Tim mengaitkan agen dengan proyek melalui pengaturan tim."
   },
-  "notifications": {
-    "title": "Notifikasi",
-    "description": "Pilih peristiwa issue yang ingin Anda terima dan tujuan pengirimannya.",
-    "email": "Email",
-    "telegram": "Telegram",
-    "slack": "Slack",
-    "push": "Push",
-    "events": {
-      "assigned": "Ditugaskan ke suatu issue",
-      "mentioned": "Disebutkan dalam suatu issue atau dokumen",
-      "commented": "Komentar baru pada issue yang Anda pantau",
-      "state_changed": "Perubahan status pada issue yang Anda pantau",
-      "reacted": "Reaksi pada komentar Anda"
-    },
-    "eventsTitle": "Peristiwa",
-    "telegramAccount": "Akun Telegram",
-    "telegramAccountHint": "Notifikasi Telegram dikirim ke akun yang terhubung ke profil Anda, di setiap proyek yang Anda ikuti.",
-    "noTelegramAccount": "Tidak ada akun Telegram yang terhubung",
-    "slackAccount": "Akun Slack",
-    "slackAccountHint": "Notifikasi Slack dari proyek ini dikirim ke akun Anda di workspace Slack {workspace}.",
-    "noSlackAccount": "Belum ada akun Slack yang terhubung",
-    "slackConnected": "Terhubung",
-    "slackConnect": "Hubungkan",
-    "slackDisconnect": "Putuskan",
-    "slackConnectedToast": "Akun Slack terhubung",
-    "slackConnecting": "Menghubungkan akun Slack Anda…",
-    "slackConnectFailed": "Akun Slack tidak terhubung",
-    "slackConnectCancelled": "Koneksi dibatalkan di Slack. Hubungkan lagi dari pengaturan notifikasi proyek.",
-    "slackBack": "Kembali ke aplikasi",
-    "preferencesSaved": "Preferensi notifikasi disimpan"
-  },
   "transfer": {
     "actions": {
       "create": "Baru",

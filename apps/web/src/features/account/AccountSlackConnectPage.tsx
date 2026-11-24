@@ -8,13 +8,13 @@ import { useTranslations } from 'next-intl';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import BrandCardPage from '@/components/common/page/BrandCardPage';
 import { Button } from '@/components/ui/button';
-import { notificationsPath } from '@/utils/paths';
+import { accountPath } from '@/utils/accountSections';
 import { useCompleteSlackLink } from './services/slack.service';
 
-// Where Slack sends a member back after Sign in with Slack (/slack/connect). It hands the
-// code to the api and returns the member to the notification settings they started from.
-export default function SlackConnectPage() {
-  const t = useTranslations('settings.notifications');
+// Where Slack sends a user back after Sign in with Slack (/slack/connect). It hands the
+// code to the api and returns the user to their notification settings.
+export default function AccountSlackConnectPage() {
+  const t = useTranslations('account.notifications');
   const router = useRouter();
   const params = useSearchParams();
   const complete = useCompleteSlackLink();
@@ -30,9 +30,9 @@ export default function SlackConnectPage() {
     complete.mutate(
       { code, state },
       {
-        onSuccess: ({ projectRef }) => {
+        onSuccess: () => {
           toast.success(t('slackConnectedToast'));
-          router.replace(notificationsPath(projectRef));
+          router.replace(accountPath('notifications'));
         },
       },
     );
@@ -52,8 +52,8 @@ export default function SlackConnectPage() {
         {failed && (
           <>
             <p className="text-sm text-balance text-muted-foreground">{message}</p>
-            <Button asChild variant="outline">
-              <Link href="/">{t('slackBack')}</Link>
+            <Button asChild variant="ghost">
+              <Link href={accountPath('notifications')}>{t('slackBack')}</Link>
             </Button>
           </>
         )}

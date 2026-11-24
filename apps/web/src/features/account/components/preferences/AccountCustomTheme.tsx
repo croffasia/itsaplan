@@ -9,7 +9,7 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { formatCustomTheme, parseCustomTheme } from '@/utils/colorThemes';
 import type { CustomTheme } from '@/utils/customTheme';
 import AccountCustomThemeColor from './AccountCustomThemeColor';
-import AccountPreferenceRow from './AccountPreferenceRow';
+import AccountPreferenceRow from '../AccountPreferenceRow';
 
 // The fields of a custom palette. Edits go to a local draft that saves once it stops
 // changing for a moment, so dragging through a color picker sends one request.

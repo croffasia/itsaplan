@@ -404,7 +404,7 @@
   "telegram": {
     "saved": "Telegram ayarları kaydedildi",
     "bot": "Bot",
-    "botConfigured": "Kullanıcılar profillerinden bu botla sohbet açarak Telegram hesaplarını bağlarlar.",
+    "botConfigured": "Kullanıcılar bildirim ayarlarından bu botla sohbet açarak Telegram hesaplarını bağlarlar.",
     "botMissing": "Telegram'da @BotFather ile bir bot oluşturun ve jetonunu (token) buraya yapıştırın.",
     "botToken": "Bot jetonu (token)",
     "botTokenHint": "Kaydettiğinizde jeton Telegram ile doğrulanır, böylece hatalı bir jeton sessizce başarısız olmak yerine burada reddedilir.",
@@ -413,7 +413,7 @@
   "slack": {
     "saved": "Slack ayarları kaydedildi",
     "app": "Slack uygulaması",
-    "appConfigured": "Açıkken üyeler, Slack hesaplarını bir projenin bildirim ayarlarından bağlayabilir.",
+    "appConfigured": "Açıkken üyeler, Slack hesaplarını bildirim ayarlarından bağlayabilir.",
     "appMissing": "Uygulamayı açmak için bot jetonunu, Client ID'yi ve istemci parolasını ekleyin."
   },
   "email": {

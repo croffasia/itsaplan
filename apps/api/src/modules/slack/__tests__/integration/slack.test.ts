@@ -5,8 +5,8 @@ import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
 // The instance app is set up in god mode, a workspace may send through its own, and a
-// member connects their Slack account with Sign in with Slack through the app that
-// serves the project. Slack is answered by a stub: auth.test names the workspace a bot
+// member connects their Slack account with Sign in with Slack through an app that serves
+// one of their projects. Slack is answered by a stub: auth.test names the workspace a bot
 // token belongs to, and openid.connect.token answers a code with an id token.
 
 const realFetch = globalThis.fetch;
@@ -75,10 +75,11 @@ async function setup() {
 }
 
 const instance = (api: Api) => api.god['slack-settings'];
-const account = (api: Api) => api.projects({ projectKey: 'MKT' }).slack.account;
+const accounts = async (api: Api) => (await api.slack.accounts.get()).data!;
+const acme = (api: Api) => api.slack.accounts({ slackTeamId: 'T1' });
 
 async function startLink(api: Api): Promise<URL> {
-  const res = await account(api).link.post();
+  const res = await acme(api).link.post();
   expect(res.status).toBe(200);
   const url = new URL(res.data!.url);
   nonce = url.searchParams.get('nonce')!;
@@ -142,16 +143,20 @@ describe('slack', () => {
         own: false,
         instanceSlackTeamName: 'Acme',
       });
-      expect((await account(api).get()).data!.slackTeamName).toBe('Acme');
+      expect(await accounts(api)).toEqual([
+        { slackTeamId: 'T1', slackTeamName: 'Acme', available: true, link: null },
+      ]);
 
       expect((await settings.put({ enabled: true, own: true })).status).toBe(400);
       const own = await settings.put({ enabled: true, own: true, ...app, botToken: 'xoxb-own' });
       expect(own.data).toMatchObject({ own: true, slackTeamName: 'Acme Labs' });
-      expect((await account(api).get()).data!.slackTeamName).toBe('Acme Labs');
+      expect(await accounts(api)).toEqual([
+        { slackTeamId: 'T2', slackTeamName: 'Acme Labs', available: true, link: null },
+      ]);
+      expect((await acme(api).link.post()).status).toBe(404);
 
       await settings.put({ enabled: false, own: true });
-      expect((await account(api).get()).data).toEqual({ slackTeamName: null, link: null });
-      expect((await account(api).link.post()).status).toBe(400);
+      expect(await accounts(api)).toEqual([]);
     });
 
     it('is the owner’s alone', async () => {
@@ -165,7 +170,7 @@ describe('slack', () => {
   });
 
   describe('account', () => {
-    it('connects the account Slack confirms and returns to the project', async () => {
+    it('connects the account Slack confirms, and disconnects it', async () => {
       const { api } = await setup();
       await instance(api).put({ enabled: true, ...app });
 
@@ -186,30 +191,47 @@ describe('slack', () => {
         'https://slack.com/team_id': 'T1',
       });
 
-      const done = await api.slack.account.complete.post({
+      const done = await api.slack.accounts.complete.post({
         code: 'ok',
         state: url.searchParams.get('state')!,
       });
 
-      expect(done.status).toBe(200);
-      expect(done.data!.projectRef).toEndWith('.MKT');
-      expect((await account(api).get()).data).toMatchObject({
-        slackTeamName: 'Acme',
-        link: { name: 'Ann' },
-      });
+      expect(done.status).toBe(204);
+      expect(await accounts(api)).toMatchObject([{ slackTeamName: 'Acme', link: { name: 'Ann' } }]);
 
-      await account(api).delete();
-      expect((await account(api).get()).data!.link).toBeNull();
+      expect((await acme(api).delete()).status).toBe(204);
+      expect(await accounts(api)).toMatchObject([{ link: null }]);
     });
 
-    it('is refused to someone who is not a member of the project', async () => {
+    it('lists a connection no project uses any more, until it is disconnected', async () => {
+      const { api, workspaceId } = await setup();
+      await instance(api).put({ enabled: true, ...app });
+      slack.codes.ok = (nonce) => ({
+        aud: '1.2',
+        nonce,
+        name: 'Ann',
+        'https://slack.com/user_id': 'U1',
+        'https://slack.com/team_id': 'T1',
+      });
+      const state = (await startLink(api)).searchParams.get('state')!;
+      await api.slack.accounts.complete.post({ code: 'ok', state });
+
+      await api.workspaces({ workspaceId })['slack-settings'].put({ enabled: false, own: false });
+      expect(await accounts(api)).toMatchObject([
+        { slackTeamId: 'T1', slackTeamName: 'Acme', available: false, link: { name: 'Ann' } },
+      ]);
+
+      await acme(api).delete();
+      expect(await accounts(api)).toEqual([]);
+    });
+
+    it('offers nothing to someone with no project that sends to Slack', async () => {
       const { api } = await setup();
       await instance(api).put({ enabled: true, ...app });
       const other = authedApi((await signUpTestUser()).cookie);
 
-      expect((await account(other).get()).status).toBe(403);
-      expect((await account(other).link.post()).status).toBe(403);
-      expect((await account(other).delete()).status).toBe(403);
+      expect(await accounts(other)).toEqual([]);
+      expect((await acme(other).link.post()).status).toBe(404);
     });
 
     it('refuses a connection completed after it expired', async () => {
@@ -219,7 +241,7 @@ describe('slack', () => {
       // An expired request cannot be produced through the API without waiting 15 minutes.
       await db.update(slackLinkRequest).set({ expiresAt: new Date(Date.now() - 1000) });
 
-      const res = await api.slack.account.complete.post({ code: 'ok', state });
+      const res = await api.slack.accounts.complete.post({ code: 'ok', state });
 
       expect(res.status).toBe(400);
       expect(slack.asked).not.toContain('openid.connect.token');
@@ -238,15 +260,15 @@ describe('slack', () => {
       });
       const stranger = authedApi((await signUpTestUser()).cookie);
 
-      expect((await stranger.slack.account.complete.post({ code: 'other', state })).status).toBe(
+      expect((await stranger.slack.accounts.complete.post({ code: 'other', state })).status).toBe(
         404,
       );
-      const elsewhere = await api.slack.account.complete.post({ code: 'other', state });
+      const elsewhere = await api.slack.accounts.complete.post({ code: 'other', state });
       expect(elsewhere.status).toBe(400);
       expect(elsewhere.error?.value).toMatchObject({
         error: 'Sign in to the Acme Slack workspace, then connect again',
       });
-      expect((await api.slack.account.complete.post({ code: 'other', state })).status).toBe(404);
+      expect((await api.slack.accounts.complete.post({ code: 'other', state })).status).toBe(404);
     });
 
     it('moves a Slack account to the account that connects it again', async () => {
@@ -266,19 +288,19 @@ describe('slack', () => {
       });
 
       const first = await startLink(api);
-      await api.slack.account.complete.post({
+      await api.slack.accounts.complete.post({
         code: 'same',
         state: first.searchParams.get('state')!,
       });
       const second = await startLink(memberApi);
-      const res = await memberApi.slack.account.complete.post({
+      const res = await memberApi.slack.accounts.complete.post({
         code: 'same',
         state: second.searchParams.get('state')!,
       });
 
-      expect(res.status).toBe(200);
-      expect((await account(memberApi).get()).data!.link).not.toBeNull();
-      expect((await account(api).get()).data!.link).toBeNull();
+      expect(res.status).toBe(204);
+      expect((await accounts(memberApi))[0]!.link).not.toBeNull();
+      expect((await accounts(api))[0]!.link).toBeNull();
     });
   });
 });

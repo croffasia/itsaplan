@@ -37,7 +37,11 @@ export const WorkspaceSlackSettingsBody = t.Object({
 });
 
 export const SlackAccountResponse = t.Object({
+  slackTeamId: t.String(),
   slackTeamName: t.Nullable(t.String()),
+  available: t.Boolean({
+    description: "Whether one of the user's projects sends to this Slack workspace.",
+  }),
   link: t.Nullable(t.Object({ name: t.Nullable(t.String()), linkedAt: t.String() })),
 });
 
@@ -47,5 +51,3 @@ export const SlackLinkCompleteBody = t.Object({
   code: t.String({ minLength: 1, maxLength: 512 }),
   state: t.String({ minLength: 1, maxLength: 64 }),
 });
-
-export const SlackLinkCompleteResponse = t.Object({ projectRef: t.String() });

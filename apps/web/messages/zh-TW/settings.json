@@ -93,37 +93,6 @@
     "empty": "還沒有代理",
     "emptyHint": "團隊在其設定中把代理接入專案。"
   },
-  "notifications": {
-    "title": "通知",
-    "description": "選擇要接收的工作項目事件及通知管道。",
-    "email": "郵件",
-    "telegram": "Telegram",
-    "slack": "Slack",
-    "push": "推播",
-    "events": {
-      "assigned": "被指派處理某一工作項目",
-      "mentioned": "在工作項目或文件中被提及",
-      "commented": "關注的工作項目有新留言",
-      "state_changed": "關注的工作項目狀態發生變化",
-      "reacted": "你的留言有新回應"
-    },
-    "eventsTitle": "事件",
-    "telegramAccount": "Telegram 帳號",
-    "telegramAccountHint": "你參與的每個專案都會將 Telegram 通知傳送到已關聯帳號。",
-    "noTelegramAccount": "未關聯 Telegram 帳號",
-    "slackAccount": "Slack 帳號",
-    "slackAccountHint": "此專案的 Slack 通知會傳送到你在 Slack 工作區 {workspace} 的帳號。",
-    "noSlackAccount": "未連結 Slack 帳號",
-    "slackConnected": "已連結",
-    "slackConnect": "連結",
-    "slackDisconnect": "中斷連結",
-    "slackConnectedToast": "Slack 帳號已連結",
-    "slackConnecting": "正在連結你的 Slack 帳號…",
-    "slackConnectFailed": "Slack 帳號未連結",
-    "slackConnectCancelled": "已在 Slack 中取消連結。請在專案的通知設定中重新連結。",
-    "slackBack": "返回應用程式",
-    "preferencesSaved": "通知偏好已儲存"
-  },
   "transfer": {
     "actions": {
       "create": "新增",

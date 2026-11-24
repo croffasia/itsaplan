@@ -9,9 +9,7 @@ import {
 } from '@/lib/api/endpoints/telegram';
 import { qk } from '@/services/queryKeys';
 
-// The session user's Telegram account link. Shared rather than feature-local: the
-// account page manages the link, and a project's notification preferences show which
-// account its Telegram notifications will reach.
+// The session user's Telegram account link.
 
 // `pollMs` turns on polling while a connection is in progress: the bot writes the
 // link out of band, so the page only learns about it by asking again.
@@ -42,5 +40,5 @@ export function useDisconnectTelegram() {
 export function useTelegramAccountLabel() {
   const t = useTranslations('account.accounts');
   return (link: { username: string | null; firstName: string | null }) =>
-    link.username ? `@${link.username}` : (link.firstName ?? t('telegramConnectedLabel'));
+    link.username ? `@${link.username}` : (link.firstName ?? t('connected'));
 }

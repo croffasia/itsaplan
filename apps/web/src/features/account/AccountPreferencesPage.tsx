@@ -18,16 +18,14 @@ import {
 } from '@/services/preferences.service';
 import FullPageView from '@/components/common/page/FullPageView';
 import { Switch } from '@/components/ui/switch';
-import AccountPreferenceRow from './components/preferences/AccountPreferenceRow';
+import AccountPreferenceRow from './components/AccountPreferenceRow';
+import AccountSaveState from './components/AccountSaveState';
 import AccountPreferenceSelect from './components/preferences/AccountPreferenceSelect';
 import AccountPreferencesSection from './components/preferences/AccountPreferencesSection';
 import AccountPreferencesTimezone from './components/preferences/AccountPreferencesTimezone';
 import AccountPreferencesColorTheme from './components/preferences/AccountPreferencesColorTheme';
-import AccountDesktopNotifications from './components/preferences/AccountDesktopNotifications';
-import AccountPushNotifications from './components/preferences/AccountPushNotifications';
 import AccountHotkeys from './components/preferences/AccountHotkeys';
 import AccountPreferencesNav from './components/preferences/AccountPreferencesNav';
-import AccountPreferencesSaveState from './components/preferences/AccountPreferencesSaveState';
 
 const ISSUE_OPEN_MODES: IssueOpenMode[] = ['panel', 'page'];
 const AGENT_RUNS_VIEWS: AgentRunsView[] = ['full', 'compact'];
@@ -36,8 +34,7 @@ const ISSUE_ACTIVITY_VIEWS: IssueActivityView[] = ['flat', 'grouped'];
 const START_PAGES: StartPage[] = ['work-items', 'inbox', 'dashboard', 'initiatives'];
 
 // Personal interface preferences (/account/preferences). Each choice saves as soon
-// as it is made and applies on every device the user signs in from, except desktop and
-// push notifications, which are turned on per browser.
+// as it is made and applies on every device the user signs in from.
 export default function AccountPreferencesPage() {
   const t = useTranslations('account.preferences');
   const { data, isPending } = useAccountPreferencesQuery();
@@ -58,7 +55,7 @@ export default function AccountPreferencesPage() {
       label={t('label')}
       title={t('title')}
       description={t('description')}
-      actions={<AccountPreferencesSaveState saving={update.isPending} />}
+      actions={<AccountSaveState saving={update.isPending} />}
       nav={<AccountPreferencesNav />}
     >
       <AccountPreferencesSection id="appearance" title={t('sections.appearance')}>
@@ -147,22 +144,6 @@ export default function AccountPreferencesPage() {
             disabled={disabled}
           />
         </AccountPreferenceRow>
-      </AccountPreferencesSection>
-
-      <AccountPreferencesSection
-        id="notifications"
-        title={t('sections.notifications')}
-        description={t('sections.notificationsDescription')}
-      >
-        <AccountPreferenceRow label={t('autoWatch')} description={t('autoWatchDescription')}>
-          <Switch
-            checked={prefs.autoWatch}
-            onCheckedChange={(autoWatch) => save({ autoWatch })}
-            disabled={disabled}
-          />
-        </AccountPreferenceRow>
-        <AccountDesktopNotifications />
-        <AccountPushNotifications />
       </AccountPreferencesSection>
 
       <AccountPreferencesSection id="ai-chat" title={t('sections.aiChat')}>

@@ -93,37 +93,6 @@
     "empty": "Nessun agente",
     "emptyHint": "La squadra li associa a un progetto nelle sue impostazioni."
   },
-  "notifications": {
-    "title": "Notifiche",
-    "description": "Scegli quali eventi di issue ricevi e dove.",
-    "email": "Email",
-    "telegram": "Telegram",
-    "slack": "Slack",
-    "push": "Push",
-    "events": {
-      "assigned": "Assegnato a un'issue",
-      "mentioned": "Menzionato in un'issue o in un documento",
-      "commented": "Nuovo commento su un'issue che segui",
-      "state_changed": "Stato cambiato su un'issue che segui",
-      "reacted": "Reazione al tuo commento"
-    },
-    "eventsTitle": "Eventi",
-    "telegramAccount": "Account Telegram",
-    "telegramAccountHint": "Le notifiche Telegram vanno all'account collegato al tuo profilo, per ogni progetto di cui fai parte.",
-    "noTelegramAccount": "Nessun account Telegram collegato",
-    "slackAccount": "Account Slack",
-    "slackAccountHint": "Le notifiche Slack di questo progetto arrivano al tuo account nel workspace Slack {workspace}.",
-    "noSlackAccount": "Nessun account Slack connesso",
-    "slackConnected": "Connesso",
-    "slackConnect": "Connetti",
-    "slackDisconnect": "Disconnetti",
-    "slackConnectedToast": "Account Slack connesso",
-    "slackConnecting": "Connessione del tuo account Slack…",
-    "slackConnectFailed": "Account Slack non connesso",
-    "slackConnectCancelled": "La connessione è stata annullata in Slack. Connettiti di nuovo dalle impostazioni di notifica del progetto.",
-    "slackBack": "Torna all'app",
-    "preferencesSaved": "Preferenze di notifica salvate"
-  },
   "transfer": {
     "actions": {
       "create": "Nuovo",

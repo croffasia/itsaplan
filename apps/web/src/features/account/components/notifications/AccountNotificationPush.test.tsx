@@ -13,7 +13,7 @@ import account from '../../../../../messages/en/account.json';
 // instance sends no push, and says why where the browser cannot receive it. While push is
 // on, a flag in localStorage stands the desktop notifications down.
 
-const labels = account.preferences;
+const labels = account.notifications;
 const PUBLIC_KEY =
   'BP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8';
 const OTHER_KEY =
@@ -106,14 +106,14 @@ const settle = async () => {
 };
 
 async function render({ withDesktopRow = false } = {}) {
-  const { default: AccountPushNotifications } = await import('./AccountPushNotifications');
-  const { default: AccountDesktopNotifications } = await import('./AccountDesktopNotifications');
+  const { default: AccountNotificationPush } = await import('./AccountNotificationPush');
+  const { default: AccountNotificationDesktop } = await import('./AccountNotificationDesktop');
   await act(async () =>
     root.render(
       <QueryClientProvider client={client}>
         <NextIntlClientProvider locale="en" messages={{ account }} timeZone="UTC">
-          {withDesktopRow && <AccountDesktopNotifications />}
-          <AccountPushNotifications />
+          {withDesktopRow && <AccountNotificationDesktop />}
+          <AccountNotificationPush />
         </NextIntlClientProvider>
       </QueryClientProvider>,
     ),
@@ -135,7 +135,7 @@ async function tap() {
 
 beforeEach(async () => {
   dom = new JSDOM('<div id="root"></div>', {
-    url: 'https://planner.test/account/preferences',
+    url: 'https://planner.test/account/notifications',
     pretendToBeVisual: true,
   });
   dom.window.__ITSAPLAN_ENV__ = { apiUrl: 'http://api.test', privacyUrl: '', termsUrl: '' };
@@ -216,7 +216,7 @@ afterEach(async () => {
   }
 });
 
-describe('AccountPushNotifications', () => {
+describe('AccountNotificationPush', () => {
   it('is hidden while the instance sends no push', async () => {
     config = { enabled: false, publicKey: null };
     pushCapable(dom.window);
@@ -230,8 +230,8 @@ describe('AccountPushNotifications', () => {
   it('says so where the browser has no Push API', async () => {
     await render();
 
-    assert.ok(text().includes(labels.pushNotificationsUnsupported));
-    assert.ok(text().includes(labels.pushNotificationsOff));
+    assert.ok(text().includes(labels.pushUnsupported));
+    assert.ok(text().includes(labels.off));
     assert.equal(theSwitch(), null);
   });
 
@@ -240,7 +240,7 @@ describe('AccountPushNotifications', () => {
 
     await render();
 
-    assert.ok(text().includes(labels.pushNotificationsUnsupportedIos));
+    assert.ok(text().includes(labels.pushUnsupportedIos));
     assert.equal(theSwitch(), null);
   });
 
@@ -250,14 +250,14 @@ describe('AccountPushNotifications', () => {
 
     await render();
 
-    assert.ok(text().includes(labels.pushNotificationsBlocked));
+    assert.ok(text().includes(labels.browserBlocked));
     assert.equal(theSwitch(), null);
   });
 
   it('turns push on from the tap: permission, service worker, subscription, api', async () => {
     pushCapable(dom.window);
     await render();
-    assert.ok(text().includes(labels.pushNotificationsDescription));
+    assert.ok(text().includes(labels.pushDescription));
     assert.equal(theSwitch()!.getAttribute('aria-checked'), 'false');
 
     await tap();
@@ -307,7 +307,7 @@ describe('AccountPushNotifications', () => {
     assert.equal(prompts, 1);
     assert.deepEqual(registered, []);
     assert.deepEqual(writes(), []);
-    assert.ok(text().includes(labels.pushNotificationsBlocked));
+    assert.ok(text().includes(labels.browserBlocked));
   });
 
   it('shows push off for a subscription made with keys the instance no longer has', async () => {
@@ -380,16 +380,16 @@ describe('AccountPushNotifications', () => {
     pushCapable(dom.window);
     await render({ withDesktopRow: true });
     assert.equal(document.querySelectorAll('button[role="switch"]').length, 2);
-    assert.ok(!text().includes(labels.desktopNotificationsReplacedByPush));
+    assert.ok(!text().includes(labels.desktopReplacedByPush));
 
     await tap();
 
-    assert.ok(text().includes(labels.desktopNotificationsReplacedByPush));
+    assert.ok(text().includes(labels.desktopReplacedByPush));
     assert.equal(document.querySelectorAll('button[role="switch"]').length, 1);
 
     await tap();
 
-    assert.ok(!text().includes(labels.desktopNotificationsReplacedByPush));
+    assert.ok(!text().includes(labels.desktopReplacedByPush));
     assert.equal(document.querySelectorAll('button[role="switch"]').length, 2);
   });
 });

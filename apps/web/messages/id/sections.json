@@ -2,6 +2,7 @@
   "account": {
     "profile": "Profil",
     "preferences": "Preferensi",
+    "notifications": "Notifikasi",
     "accounts": "Akun",
     "security": "Keamanan",
     "api-keys": "Kunci API",

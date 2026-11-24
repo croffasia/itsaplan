@@ -185,7 +185,8 @@ export function useUpdateInstanceSlackSettings() {
     mutationFn: (patch: InstanceSlackSettingsPatch) => updateInstanceSlackSettings(patch),
     onSuccess: (data) => {
       qc.setQueryData(qk.instanceSlackSettings, data);
-      void qc.invalidateQueries({ queryKey: ['slackAccount'] });
+      void qc.invalidateQueries({ queryKey: qk.slackAccounts });
+      void qc.invalidateQueries({ queryKey: qk.notificationPreferences });
     },
   });
 }

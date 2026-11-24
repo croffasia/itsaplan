@@ -404,7 +404,7 @@
   "telegram": {
     "saved": "Pengaturan Telegram disimpan",
     "bot": "Bot",
-    "botConfigured": "Pengguna menghubungkan akun Telegram mereka dengan membuka obrolan dengan bot ini dari profil mereka.",
+    "botConfigured": "Pengguna menghubungkan akun Telegram mereka dengan membuka obrolan dengan bot ini dari pengaturan notifikasi.",
     "botMissing": "Buat bot dengan @BotFather di Telegram dan tempelkan tokennya di sini.",
     "botToken": "Token bot",
     "botTokenHint": "Token diverifikasi dengan Telegram saat Anda menyimpan, jadi token yang salah akan ditolak di sini daripada gagal tanpa peringatan nanti.",
@@ -413,7 +413,7 @@
   "slack": {
     "saved": "Pengaturan Slack disimpan",
     "app": "Aplikasi Slack",
-    "appConfigured": "Jika aktif, anggota dapat menghubungkan akun Slack mereka di pengaturan notifikasi proyek.",
+    "appConfigured": "Jika aktif, anggota dapat menghubungkan akun Slack mereka di pengaturan notifikasi.",
     "appMissing": "Tambahkan token bot, Client ID, dan rahasia klien untuk mengaktifkan aplikasi."
   },
   "email": {

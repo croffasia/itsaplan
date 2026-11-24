@@ -1,8 +1,8 @@
 import { request } from '@/lib/api/core/client';
 
 // The session user's Telegram link. `botUsername` is null when no instance bot is
-// configured, which is when Telegram is not offered at all; `link` is null while the
-// user has not connected an account.
+// configured, and then no account can be connected; `link` is null while the user has not
+// connected one.
 export interface TelegramAccount {
   botUsername: string | null;
   link: { username: string | null; firstName: string | null; linkedAt: string } | null;

@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { groupInOrder } from '../../utils/agentForm';
+import { groupInOrder } from '@/utils/groupInOrder';
 import { AgentItemInfo } from './AgentItemInfo';
 import { AgentListSearch } from './AgentListSearch';
 import type { AgentPickItem } from './AgentPickList';

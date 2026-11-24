@@ -59,10 +59,6 @@ export const runnerQueuePath = (ref: string) => aiTeamPath(ref, 'queue');
 
 export const inboxPath = (ref: string) => `${projectPath(ref)}/inbox`;
 
-// The member's own notification preferences (which events, by which channel, their
-// Telegram chat id). A main-nav Configuration destination, open to any member.
-export const notificationsPath = (ref: string) => `${projectPath(ref)}/notifications`;
-
 export const aiAgentsPath = (ref: string) => `${projectPath(ref)}/agents`;
 
 export const mcpServerPath = (ref: string) => `${projectPath(ref)}/mcp`;

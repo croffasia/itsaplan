@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import { ListChecks } from 'lucide-react';
 import type { AgentTool } from '@/lib/api/endpoints/agents';
-import { grantedToolCount, groupInOrder } from '../../utils/agentForm';
+import { groupInOrder } from '@/utils/groupInOrder';
+import { grantedToolCount } from '../../utils/agentForm';
 import { AgentFormSection } from './AgentFormSection';
 import { AgentActionGroup } from './AgentActionGroup';
 import { AgentListSearch, SEARCH_THRESHOLD } from './AgentListSearch';

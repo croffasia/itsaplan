@@ -404,7 +404,7 @@
   "telegram": {
     "saved": "Telegram 设置已保存",
     "bot": "机器人",
-    "botConfigured": "用户可以在个人资料中打开此机器人的对话，以关联 Telegram 账户。",
+    "botConfigured": "用户可以在通知设置中打开此机器人的对话，以关联 Telegram 账户。",
     "botMissing": "在 Telegram 中通过 @BotFather 创建机器人，然后在此粘贴机器人令牌。",
     "botToken": "机器人令牌",
     "botTokenHint": "保存时会通过 Telegram 验证令牌，错误令牌会立即被拒绝。",
@@ -413,7 +413,7 @@
   "slack": {
     "saved": "Slack 设置已保存",
     "app": "Slack 应用",
-    "appConfigured": "开启后，成员可以在项目的通知设置中连接自己的 Slack 账号。",
+    "appConfigured": "开启后，成员可以在通知设置中连接自己的 Slack 账号。",
     "appMissing": "添加机器人令牌、Client ID 和客户端密钥后即可开启应用。"
   },
   "email": {

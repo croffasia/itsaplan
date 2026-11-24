@@ -404,7 +404,7 @@
   "telegram": {
     "saved": "Telegram settings saved",
     "bot": "Bot",
-    "botConfigured": "People connect their Telegram account by opening a chat with this bot from their profile.",
+    "botConfigured": "People connect their Telegram account by opening a chat with this bot from their notification settings.",
     "botMissing": "Create a bot with @BotFather in Telegram and paste its token here.",
     "botToken": "Bot token",
     "botTokenHint": "The token is verified with Telegram when you save, so a wrong one is refused here rather than failing silently later.",
@@ -413,7 +413,7 @@
   "slack": {
     "saved": "Slack settings saved",
     "app": "Slack app",
-    "appConfigured": "When on, members can connect their Slack account in a project's notification settings.",
+    "appConfigured": "When on, members can connect their Slack account in their notification settings.",
     "appMissing": "Add the bot token, client ID and client secret to turn the app on."
   },
   "email": {

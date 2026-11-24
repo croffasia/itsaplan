@@ -5,16 +5,16 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ApiError } from '@/lib/api/core/client';
-import { listPushDevices, type PushDevice } from '@/lib/api/endpoints/push';
+import type { PushDevice } from '@/lib/api/endpoints/push';
 import {
   readPushBrowser,
   subscribeThisBrowser,
   unsubscribeThisBrowser,
   type PushBrowser,
 } from '@/utils/webPush';
-import { usePushConfigQuery } from '@/services/push.service';
 import { qk } from '@/services/queryKeys';
 import { setPushOnInThisBrowser } from '@/utils/browserNotifications';
+import { usePushConfigQuery, usePushDevicesQuery } from '../services/push.service';
 
 type AccountPushState =
   'hidden' | 'loading' | 'unsupported' | 'unsupportedIos' | 'blocked' | 'off' | 'on';
@@ -36,7 +36,7 @@ function pushState(
 
 // Push notifications in this browser. Hidden while the instance sends none.
 export function useAccountPushDevice() {
-  const t = useTranslations('account.preferences');
+  const t = useTranslations('account.notifications');
   const qc = useQueryClient();
   const { data: config } = usePushConfigQuery();
   const publicKey = config?.enabled ? config.publicKey : null;
@@ -45,11 +45,7 @@ export function useAccountPushDevice() {
     queryFn: () => readPushBrowser(publicKey!),
     enabled: publicKey !== null,
   });
-  const devices = useQuery({
-    queryKey: qk.pushDevices,
-    queryFn: () => listPushDevices(),
-    enabled: browser.data?.supported === true,
-  });
+  const devices = usePushDevicesQuery(browser.data?.supported === true);
   const [pending, setPending] = useState(false);
   const state = pushState(publicKey, browser.data, devices.data);
   const configLoaded = config !== undefined;
@@ -69,7 +65,7 @@ export function useAccountPushDevice() {
       if (on) await subscribeThisBrowser(publicKey);
       else await unsubscribeThisBrowser();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : t('pushNotificationsFailed'));
+      toast.error(err instanceof ApiError ? err.message : t('pushFailed'));
     } finally {
       await Promise.all([
         qc.invalidateQueries({ queryKey: qk.pushBrowser }),

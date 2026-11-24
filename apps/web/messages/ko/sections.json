@@ -2,6 +2,7 @@
   "account": {
     "profile": "프로필",
     "preferences": "환경 설정",
+    "notifications": "알림",
     "accounts": "계정",
     "security": "보안",
     "api-keys": "API 키",

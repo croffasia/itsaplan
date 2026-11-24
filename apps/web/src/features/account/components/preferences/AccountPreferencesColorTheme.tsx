@@ -7,7 +7,7 @@ import type {
 } from '@/lib/api/endpoints/userPreferences';
 import { useColorThemeChoice } from '@/hooks/useColorThemeChoice';
 import AccountCustomTheme from './AccountCustomTheme';
-import AccountPreferenceRow from './AccountPreferenceRow';
+import AccountPreferenceRow from '../AccountPreferenceRow';
 import AccountPreferenceSelect from './AccountPreferenceSelect';
 
 // The theme and palette rows of the Appearance section, and the fields of a custom

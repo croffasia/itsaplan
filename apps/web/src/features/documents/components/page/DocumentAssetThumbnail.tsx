@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { DocumentAsset } from '@/lib/api/endpoints/documents';
+import { attachmentHtml } from '@/components/common/editor/attachmentEmbed';
 import { formatSize } from '@/utils/fileSize';
 
 // An image asset of the page as a thumbnail card, its actions over the top corner.
@@ -11,9 +12,24 @@ export default function DocumentAssetThumbnail({
   actions: ReactNode;
 }) {
   return (
-    <figure className="group relative m-0 overflow-hidden rounded-lg bg-muted/70">
+    // The card is the drag source, not the <img>: Chrome adds a dragged <img> to the drop as
+    // a file, and the editor would upload it again as a new asset.
+    <figure
+      draggable
+      onDragStart={(event) => {
+        event.dataTransfer.setData('text/html', attachmentHtml(asset));
+        event.dataTransfer.setData('text/plain', asset.url);
+        event.dataTransfer.effectAllowed = 'copy';
+      }}
+      className="group relative m-0 overflow-hidden rounded-lg bg-muted/70"
+    >
       {/* eslint-disable-next-line @next/next/no-img-element -- protected assets cannot go through Next's public image optimizer. */}
-      <img src={asset.url} alt="" className="block aspect-[4/3] w-full object-cover" />
+      <img
+        src={asset.url}
+        alt=""
+        draggable={false}
+        className="block aspect-[4/3] w-full object-cover"
+      />
       <figcaption className="flex min-w-0 items-baseline gap-1.5 px-2 pt-1.5 pb-2 text-xs">
         <span className="truncate font-medium" dir="auto">
           {asset.filename}

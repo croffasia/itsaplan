@@ -36,8 +36,15 @@ export default function DocumentImageLibrary({
           aria-label={t('insertImage', { name: asset.filename })}
           onClick={() => onInsert(asset)}
         >
+          {/* Chrome adds a dragged <img> to the drop as a file, which the editor would upload
+              again as a new asset. */}
           {/* eslint-disable-next-line @next/next/no-img-element -- private media uses the session-gated proxy. */}
-          <img src={asset.url} alt="" className="aspect-[4/3] w-full object-cover" />
+          <img
+            src={asset.url}
+            alt=""
+            draggable={false}
+            className="aspect-[4/3] w-full object-cover"
+          />
         </button>
       ))}
     </div>

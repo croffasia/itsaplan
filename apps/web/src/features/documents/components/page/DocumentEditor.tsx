@@ -318,7 +318,8 @@ export default function DocumentEditor({
           ancestors={ancestors}
           editor={editor}
           canUpload={editorEditable}
-          canDeleteAssets={canManageLifecycle && editorEditable}
+          // Deleting an asset also removes it from the text, which needs the live editor.
+          canDeleteAssets={canManageLifecycle && editorEditable && collaboration.ready}
           canReadWorkItems={canReadWorkItems}
           canLinkWorkItems={canLinkWorkItems && !archived}
           onTransferOwner={canTransferOwnership ? actions.transferOwner : undefined}

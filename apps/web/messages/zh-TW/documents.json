@@ -128,7 +128,7 @@
   "copyAssetLink": "複製 {name} 的連結",
   "assetLinkCopied": "附件連結已複製",
   "deleteAsset": "刪除 {name}",
-  "deleteAssetConfirm": "刪除 {name}？現有連結和嵌入內容將無法使用。",
+  "deleteAssetConfirm": "刪除 {name}？它也會從此頁面中移除，其他地方指向它的連結將無法使用。",
   "movePage": "移動 {title}",
   "moveTo": "移動到…",
   "moveToDescription": "選擇要將此頁面移至其下的頁面。",

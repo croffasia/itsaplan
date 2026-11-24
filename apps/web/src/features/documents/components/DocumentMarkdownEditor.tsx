@@ -25,6 +25,7 @@ import { DocumentImageUpload, trackImageUpload } from '../extensions/documentIma
 import { DocumentResizableImage } from '../extensions/documentResizableImage';
 import DocumentBlockMenu from './DocumentBlockMenu';
 import DocumentSelectionActions, { type DocumentSelection } from './DocumentSelectionActions';
+import DocumentSelectionAlign from './DocumentSelectionAlign';
 import { SlashCommand } from '@/lib/tiptap-slash-command';
 import { Mention, type MentionOptions } from '@/lib/tiptap-mention';
 import { useMentionCandidates, useMentionNames } from '@/hooks/useMentionCandidates';
@@ -272,6 +273,7 @@ export default function DocumentMarkdownEditor({
       {editable && <DocumentBlockMenu editor={editor} />}
       {editable && (
         <EditorSelectionMenu editor={editor}>
+          <DocumentSelectionAlign editor={editor} />
           {projectKey && documentId && onComment && (
             <DocumentSelectionActions
               editor={editor}

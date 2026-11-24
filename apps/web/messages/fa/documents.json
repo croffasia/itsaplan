@@ -113,7 +113,7 @@
   "copyAssetLink": "کپی لینک {name}",
   "assetLinkCopied": "لینک فایل کپی شد",
   "deleteAsset": "حذف {name}",
-  "deleteAssetConfirm": "{name} حذف شود؟ لینک‌ها و جاسازی‌های موجود از کار می‌افتند.",
+  "deleteAssetConfirm": "{name} حذف شود؟ از این صفحه هم برداشته می‌شود و لینک‌های آن در جاهای دیگر از کار می‌افتند.",
   "movePage": "جابه‌جایی {title}",
   "moveTo": "انتقال به…",
   "moveToDescription": "صفحه‌ای را انتخاب کنید که این صفحه زیر آن منتقل شود.",

@@ -34,7 +34,9 @@ export default function DocumentPublicLinkExpiry({
   // expiry it saved is the current one.
   const [preset, setPreset] = useState<{ choice: Choice; expiresAt: string | null } | null>(null);
   const [dateOpen, setDateOpen] = useState(false);
-  const [date, setDate] = useState(() => (expiresAt ? toDateStr(new Date(expiresAt)) : ''));
+  const [date, setDate] = useState<string | null>(() =>
+    expiresAt ? toDateStr(new Date(expiresAt)) : null,
+  );
   let choice: Choice = expiresAt ? 'date' : 'never';
   if (preset?.expiresAt === expiresAt) choice = preset.choice;
 
@@ -104,11 +106,11 @@ export default function DocumentPublicLinkExpiry({
           }}
         >
           <DatePill
-            value={date || null}
+            value={date}
             placeholder={t('publicLink.expiryDate')}
             clearable={false}
             disabled={{ before: new Date() }}
-            onChange={(value) => setDate(value ?? '')}
+            onChange={setDate}
           />
           <Button
             type="submit"

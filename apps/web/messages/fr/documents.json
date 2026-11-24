@@ -113,7 +113,7 @@
   "copyAssetLink": "Copier le lien vers {name}",
   "assetLinkCopied": "Lien du fichier copié",
   "deleteAsset": "Supprimer {name}",
-  "deleteAssetConfirm": "Supprimer {name} ? Les liens et intégrations existants ne fonctionneront plus.",
+  "deleteAssetConfirm": "Supprimer {name} ? Il sera aussi retiré de cette page, et les liens vers lui ailleurs ne fonctionneront plus.",
   "movePage": "Déplacer {title}",
   "moveTo": "Déplacer vers…",
   "moveToDescription": "Choisissez la page sous laquelle déplacer cette page.",

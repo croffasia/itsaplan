@@ -113,7 +113,7 @@
   "copyAssetLink": "{name} bağlantısını kopyala",
   "assetLinkCopied": "Dosya bağlantısı kopyalandı",
   "deleteAsset": "{name} sil",
-  "deleteAssetConfirm": "{name} silinsin mi? Mevcut bağlantılar ve gömülü öğeler çalışmayı durduracaktır.",
+  "deleteAssetConfirm": "{name} silinsin mi? Bu sayfadan da kaldırılır ve başka yerlerdeki bağlantıları çalışmayı durdurur.",
   "movePage": "{title} sayfasını taşı",
   "moveTo": "Şuraya taşı…",
   "moveToDescription": "Bu sayfanın altına taşınacağı sayfayı seçin.",

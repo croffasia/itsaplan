@@ -5,6 +5,14 @@ import { imageStyleObject } from '@/components/common/editor/imageStyle';
 
 const MIN_PERCENT = 25;
 
+const HANDLE_CLASS =
+  'pointer-events-auto touch-none bg-background opacity-0 shadow-[var(--overlay-shadow)] transition-opacity group-hover:opacity-100';
+// The image keeps to the line-start edge, so only the line-end corners resize it.
+const CORNER_CLASSES = [
+  'top-1.5 cursor-nesw-resize rtl:cursor-nwse-resize',
+  'bottom-1.5 cursor-nwse-resize rtl:cursor-nesw-resize',
+];
+
 // An image sized as a share of the text width, 25–100%, stored as `style="width: N%"`,
 // so it keeps its proportion to the text on every screen.
 export default function DocumentPercentImage({
@@ -21,7 +29,7 @@ export default function DocumentPercentImage({
   function startResize(event: PointerEvent) {
     const frame = frameRef.current;
     const text = frame?.parentElement;
-    if (!frame || !text) return;
+    if (!frame || !text || !editor.isEditable) return;
     // Otherwise the pointerdown selects the node and starts a native drag.
     event.preventDefault();
     const rtl = getComputedStyle(frame).direction === 'rtl';
@@ -52,6 +60,8 @@ export default function DocumentPercentImage({
           ...(node.attrs.width ? { width: node.attrs.width as number } : {}),
         };
   const sized = Object.keys(sizing).length > 0;
+  // Touch has no hover: tapping selects the node, the only way in there.
+  const handlesShown = selected || dragPercent !== null;
 
   return (
     <NodeViewWrapper className="relative block max-w-full leading-none">
@@ -66,17 +76,34 @@ export default function DocumentPercentImage({
           // A node view has no drag handle of its own; without one the image is stuck.
           data-drag-handle
         />
-        {editor.isEditable && (
+        {/* Sticky to the middle of the screen, so on a tall image the handle stays in view.
+            It moves between the corner handles and never covers them. */}
+        <span className="pointer-events-none absolute end-2 top-6 bottom-6 flex items-center">
           <span
             role="presentation"
+            data-image-resize
             onPointerDown={startResize}
             className={cn(
-              'absolute -end-3 top-1/2 -mt-6 h-12 w-1.5 cursor-ew-resize touch-none rounded-full bg-muted-foreground opacity-0 transition-opacity group-hover:opacity-70',
-              // Touch has no hover: tapping selects the node, the only way in there.
-              (selected || dragPercent !== null) && 'opacity-70',
+              HANDLE_CLASS,
+              'sticky top-[calc(50%-1.5rem)] bottom-[calc(50%-1.5rem)] h-12 max-h-full w-1.5 cursor-ew-resize rounded-full',
+              handlesShown && 'opacity-100',
             )}
           />
-        )}
+        </span>
+        {CORNER_CLASSES.map((corner) => (
+          <span
+            key={corner}
+            role="presentation"
+            data-image-resize
+            onPointerDown={startResize}
+            className={cn(
+              HANDLE_CLASS,
+              'absolute end-1.5 size-3 rounded-sm',
+              corner,
+              handlesShown && 'opacity-100',
+            )}
+          />
+        ))}
       </span>
     </NodeViewWrapper>
   );

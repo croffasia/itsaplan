@@ -5,6 +5,7 @@ import type { Editor } from '@tiptap/react';
 import { Loader2, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { DocumentAsset } from '@/lib/api/endpoints/documents';
+import { removeEmbed } from '@/components/common/editor/attachmentEmbed';
 import { Button } from '@/components/ui/button';
 import { useFileDragZone } from '@/hooks/useFileDragZone';
 import { cn } from '@/lib/utils';
@@ -59,6 +60,13 @@ export default function DocumentDetailsAssets({
         marks: [{ type: 'link', attrs: { href: asset.url } }],
       })
       .run();
+  };
+
+  const removeFromPage = (asset: DocumentAsset) => {
+    if (!editor?.isEditable) return;
+    // An agent writes the API form of the path, so the asset id is what matches.
+    const suffix = `/assets/${asset.id}/raw`.toLowerCase();
+    removeEmbed(editor, (url) => url.toLowerCase().endsWith(suffix));
   };
 
   return (
@@ -122,6 +130,7 @@ export default function DocumentDetailsAssets({
           projectKey={projectKey}
           documentId={documentId}
           asset={deleting}
+          onDeleted={() => removeFromPage(deleting)}
           onClose={() => setDeleting(null)}
         />
       )}

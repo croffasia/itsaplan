@@ -128,7 +128,7 @@
   "copyAssetLink": "نسخ رابط {name}",
   "assetLinkCopied": "تم نسخ رابط الملف",
   "deleteAsset": "حذف {name}",
-  "deleteAssetConfirm": "حذف {name}؟ ستتوقف الروابط والتضمينات الحالية عن العمل.",
+  "deleteAssetConfirm": "حذف {name}؟ ستتم إزالته من هذه الصفحة أيضًا، وستتوقف الروابط إليه من أماكن أخرى عن العمل.",
   "movePage": "نقل {title}",
   "moveTo": "نقل إلى…",
   "moveToDescription": "اختر الصفحة التي تريد نقل هذه الصفحة تحتها.",

@@ -1634,7 +1634,11 @@ span.issue-ref {
 .document-prose .md-content :is(th, td) {
   border: 0;
   border-bottom: 1px solid var(--border);
+  border-inline-end: 1px solid var(--border);
   padding: 0.625rem 0.75rem;
+}
+.document-prose .md-content :is(th, td):last-child {
+  border-inline-end: 0;
 }
 .document-prose .md-content th {
   background: none;
@@ -1651,6 +1655,11 @@ span.issue-ref {
 }
 .document-prose .md-content img {
   border-radius: var(--radius-lg);
+}
+/* The page turns editable after its images render, and an image redraws only when it
+   changes, so the editor's own attribute decides whether the resize handle shows. */
+.document-prose .md-content[contenteditable='false'] [data-image-resize] {
+  display: none;
 }
 
 .document-comment-mark {

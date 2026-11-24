@@ -113,7 +113,7 @@
   "copyAssetLink": "Copy link to {name}",
   "assetLinkCopied": "Asset link copied",
   "deleteAsset": "Delete {name}",
-  "deleteAssetConfirm": "Delete {name}? Existing links and embeds will stop working.",
+  "deleteAssetConfirm": "Delete {name}? It is also removed from this page, and links to it from other places stop working.",
   "movePage": "Move {title}",
   "moveTo": "Move to…",
   "moveToDescription": "Choose the page to move this page under.",

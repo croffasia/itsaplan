@@ -59,13 +59,14 @@ export function replaceEmbed(editor: Editor, from: string, to: string) {
   if (tr.docChanged) editor.view.dispatch(tr);
 }
 
-// The same removal on a live editor: the image or video node carrying `url` as
-// src, and a link pointing at it.
-export function removeEmbed(editor: Editor, url: string) {
+// The same removal on a live editor: the image or video node whose src `matches`, and
+// a link whose href does.
+export function removeEmbed(editor: Editor, matches: (url: string) => boolean) {
   if (editor.isDestroyed) return;
+  const embeds = (url: unknown) => typeof url === 'string' && matches(url);
   const { tr, doc } = editor.state;
   doc.descendants((node, pos) => {
-    if (node.attrs.src !== url && !node.marks.some((m) => m.attrs.href === url)) return;
+    if (!embeds(node.attrs.src) && !node.marks.some((m) => embeds(m.attrs.href))) return;
     tr.delete(tr.mapping.map(pos), tr.mapping.map(pos + node.nodeSize));
     return false;
   });

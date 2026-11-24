@@ -113,7 +113,7 @@
   "copyAssetLink": "Copia il link a {name}",
   "assetLinkCopied": "Link alla risorsa copiato",
   "deleteAsset": "Elimina {name}",
-  "deleteAssetConfirm": "Elimino {name}? I link e gli embed esistenti smetteranno di funzionare.",
+  "deleteAssetConfirm": "Elimino {name}? Verrà rimosso anche da questa pagina e i link che vi puntano da altre parti smetteranno di funzionare.",
   "movePage": "Sposta {title}",
   "moveTo": "Sposta in…",
   "moveToDescription": "Scegli la pagina sotto cui spostare questa pagina.",

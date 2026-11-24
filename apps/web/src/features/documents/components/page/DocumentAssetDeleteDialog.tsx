@@ -10,11 +10,13 @@ export default function DocumentAssetDeleteDialog({
   projectKey,
   documentId,
   asset,
+  onDeleted,
   onClose,
 }: {
   projectKey: string;
   documentId: number;
   asset: DocumentAsset;
+  onDeleted: () => void;
   onClose: () => void;
 }) {
   const t = useTranslations('documents');
@@ -26,6 +28,7 @@ export default function DocumentAssetDeleteDialog({
       confirmLabel={tCommon('delete')}
       onConfirm={async () => {
         await remove.mutateAsync(asset.id);
+        onDeleted();
         toast.success(t('inspector.assetDeleted', { name: asset.filename }));
         onClose();
       }}

@@ -113,7 +113,7 @@
   "copyAssetLink": "{name} 링크 복사",
   "assetLinkCopied": "파일 링크 복사됨",
   "deleteAsset": "{name} 삭제",
-  "deleteAssetConfirm": "{name}을(를) 삭제하시겠습니까? 기존 링크와 임베드는 더 이상 작동하지 않습니다.",
+  "deleteAssetConfirm": "{name}을(를) 삭제하시겠습니까? 이 페이지에서도 제거되며, 다른 곳의 링크는 더 이상 작동하지 않습니다.",
   "movePage": "{title} 이동",
   "moveTo": "다른 위치로 이동…",
   "moveToDescription": "이 페이지를 아래에 둘 페이지를 선택하세요.",

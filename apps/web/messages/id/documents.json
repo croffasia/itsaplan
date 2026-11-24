@@ -113,7 +113,7 @@
   "copyAssetLink": "Salin tautan ke {name}",
   "assetLinkCopied": "Tautan aset disalin",
   "deleteAsset": "Hapus {name}",
-  "deleteAssetConfirm": "Hapus {name}? Tautan dan sematan yang ada tidak akan berfungsi lagi.",
+  "deleteAssetConfirm": "Hapus {name}? File ini juga dihapus dari halaman ini, dan tautan ke file ini dari tempat lain tidak akan berfungsi lagi.",
   "movePage": "Pindahkan {title}",
   "moveTo": "Pindahkan ke…",
   "moveToDescription": "Pilih halaman yang akan menjadi induk halaman ini.",

@@ -113,7 +113,7 @@
   "copyAssetLink": "Copiar link de {name}",
   "assetLinkCopied": "Link do arquivo copiado",
   "deleteAsset": "Excluir {name}",
-  "deleteAssetConfirm": "Excluir {name}? Links e incorporações existentes deixarão de funcionar.",
+  "deleteAssetConfirm": "Excluir {name}? Ele também será removido desta página, e os links para ele em outros lugares deixarão de funcionar.",
   "movePage": "Mover {title}",
   "moveTo": "Mover para…",
   "moveToDescription": "Escolha a página sob a qual esta página será movida.",

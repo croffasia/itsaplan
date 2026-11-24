@@ -147,8 +147,9 @@ export default function NewIssueModal({
   function removeAttachment(id: number) {
     const item = attachments.remove(id);
     if (!item) return;
-    if (descEditor) removeEmbed(descEditor, item.url);
-    for (const editor of fieldEditors.current.values()) removeEmbed(editor, item.url);
+    const matches = (url: string) => url === item.url;
+    if (descEditor) removeEmbed(descEditor, matches);
+    for (const editor of fieldEditors.current.values()) removeEmbed(editor, matches);
   }
 
   // The annotated image replaces the file it was drawn on, so wherever that file

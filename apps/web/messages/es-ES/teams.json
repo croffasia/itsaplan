@@ -200,6 +200,7 @@
     "downloadAction": "Descargar",
     "downloadFailed": "No se pudo descargar la plantilla.",
     "importAction": "Importar plantilla",
+    "galleryAction": "Galería de plantillas",
     "deleteAction": "Eliminar plantilla",
     "deleteDialog": {
       "title": "¿Eliminar la plantilla «{name}»?",

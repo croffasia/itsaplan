@@ -200,6 +200,7 @@
     "downloadAction": "下载",
     "downloadFailed": "无法下载模板。",
     "importAction": "导入模板",
+    "galleryAction": "模板图库",
     "deleteAction": "删除模板",
     "deleteDialog": {
       "title": "删除模板“{name}”？",

@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { Import, Plus } from 'lucide-react';
+import { ExternalLink, Import, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useWorkspaceProjectTemplatesQuery } from '@/services/projectTemplates.service';
+import { TEMPLATE_GALLERY_URL } from '@/utils/app';
 import { EmptyState } from '@/components/common/page/EmptyState';
 import SectionPageView from '@/components/common/page/SectionPageView';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
@@ -21,7 +22,13 @@ export default function WorkspaceTemplatesSection({ workspaceId }: { workspaceId
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
   const actions = (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 max-sm:flex-wrap max-sm:*:grow">
+      <Button asChild size="sm" variant="link">
+        <a href={TEMPLATE_GALLERY_URL} target="_blank" rel="noreferrer">
+          {t('templates.galleryAction')}
+          <ExternalLink />
+        </a>
+      </Button>
       <Button size="sm" variant="ghost" onClick={() => setImporting(true)}>
         <Import />
         {t('templates.importAction')}

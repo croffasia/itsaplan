@@ -81,7 +81,7 @@ export const ChatPanelBody = memo(function ChatPanelBody({
       {wide && (
         <ListColumn
           storageKey="aiChat:list:width"
-          minWidth={320}
+          minWidth={360}
           resizeLabel={t('resizeList')}
           className="bg-rail"
         >

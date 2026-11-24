@@ -200,6 +200,7 @@
     "downloadAction": "下載",
     "downloadFailed": "無法下載範本。",
     "importAction": "匯入範本",
+    "galleryAction": "範本圖庫",
     "deleteAction": "刪除範本",
     "deleteDialog": {
       "title": "刪除範本「{name}」？",

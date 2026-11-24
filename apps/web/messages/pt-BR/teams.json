@@ -200,6 +200,7 @@
     "downloadAction": "Baixar",
     "downloadFailed": "Não foi possível baixar o modelo.",
     "importAction": "Importar modelo",
+    "galleryAction": "Galeria de modelos",
     "deleteAction": "Excluir modelo",
     "deleteDialog": {
       "title": "Excluir o modelo \"{name}\"?",

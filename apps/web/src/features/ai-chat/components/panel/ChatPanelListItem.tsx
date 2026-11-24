@@ -53,8 +53,9 @@ export function ChatPanelListItem({
         <span
           className={cn(
             'text-xs text-muted-foreground tabular-nums',
-            actions && 'group-hover:invisible group-has-focus-visible:invisible',
-            actions && active && '[@media(hover:none)]:invisible',
+            actions &&
+              'group-hover:invisible group-hover:w-21 group-has-focus-visible:invisible group-has-focus-visible:w-21',
+            actions && active && '[@media(hover:none)]:invisible [@media(hover:none)]:w-21',
           )}
         >
           {when}

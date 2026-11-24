@@ -22,6 +22,12 @@ If It's a Plan looks useful to you, star the repo ⭐ and
 
 <img src="assets/screenshots/tour.gif" alt="Board, timeline, initiatives, cycles, docs, notes, dashboards, AI agents, schedules, and workflows" width="100%" />
 
+**Trusted by**
+
+<a href="https://locomotive.agency/"><img src="assets/teams/locomotive.svg" alt="LOCOMOTIVE Agency" height="24" /></a>
+
+[All teams](ADOPTERS.md) · [Add your team →](https://itsaplan.dev/account/showcase)
+
 </div>
 
 ## Why It's a Plan

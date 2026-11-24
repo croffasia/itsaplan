@@ -108,7 +108,7 @@ function fromOklch(L: number, C: number, H: number): string {
 }
 
 const clamp = (x: number) => Math.max(0, Math.min(1, x));
-const lightnessOf = (hex: string) => toOklch(hex)[0];
+export const lightnessOf = (hex: string) => toOklch(hex)[0];
 
 // Steps the lightness toward `dir` (-1 darker, 1 lighter) until `ok` holds.
 function shift(color: string, ok: (c: string) => boolean, dir: 1 | -1): string {
@@ -149,7 +149,7 @@ export function customThemeVars({ accent, background, contrast }: CustomTheme) {
   const c = Math.max(0, Math.min(100, contrast)) / 100;
   // A mid-grey background leaves no room for text on the surfaces around it, so it
   // moves away from the text color until black or white text reads at Lc 97. Below that
-  // a dark popover has no red that reads both on it and under a white label.
+  // a dark card has no red that reads both on it and under a white label.
   let bg = shift(background, (x) => apcaContrast(dark ? WHITE : BLACK, x) >= 97, dark ? -1 : 1);
   // Cards are lighter than a light background, so a white one is toned down to make room.
   if (!dark) bg = shift(bg, (x) => lightnessOf(x) <= 0.985, -1);
@@ -158,10 +158,9 @@ export function customThemeVars({ accent, background, contrast }: CustomTheme) {
   const sidebar = mix(bg, BLACK, dark ? 0.3 : 0.025);
   const column = mix(bg, BLACK, dark ? 0.2 : 0.045);
   const card = dark ? mix(bg, WHITE, 0.04) : mix(bg, WHITE, 0.6);
-  const popover = dark ? mix(bg, WHITE, 0.06) : card;
   const secondary = ink(dark ? 0.08 : 0.04);
-  const hover = ink(dark ? 0.1 : 0.055);
-  const surfaces = [bg, card, popover, sidebar, column, secondary, hover];
+  const hover = ink(dark ? 0.12 : 0.055);
+  const surfaces = [bg, card, sidebar, column, secondary, hover];
 
   // The button label is white or near-black, whichever needs the smaller change to the
   // accent; the accent then moves away from it.
@@ -175,7 +174,7 @@ export function customThemeVars({ accent, background, contrast }: CustomTheme) {
   const selected = mix(card, primary, dark ? 0.24 : 0.16);
   const blocked = mix(card, status.red, dark ? 0.1 : 0.06);
   const rowBlocked = mix(bg, status.red, 0.05);
-  const rowBlockedHover = mix(bg, status.red, 0.09);
+  const rowBlockedHover = mix(mix(bg, hover, 0.5), status.red, 0.06);
   const wipDestructive = mix(column, status.red, dark ? 0.1 : 0.07);
   const wipWarning = mix(column, status.yellow, dark ? 0.08 : 0.1);
   // The hover shades move toward the text, so they depend on it.
@@ -197,16 +196,16 @@ export function customThemeVars({ accent, background, contrast }: CustomTheme) {
   const { cardHover, blockedHover, sidebarAccent } = hoversFor(fg);
 
   const ring = shift(primary, readsOn(30, [bg]), dir);
-  const destructive = destructiveFor(status.red, [bg, card, popover]);
+  const destructive = destructiveFor(status.red, [bg, card]);
   // The overdue badge, which globals.css mixes from the red and the card.
   const overdue = mix(card, destructive, dark ? 0.12 : 0.09);
   const priority = (color: string) => shift(color, readsOn(30, [card]), dir);
   // A hairline has no APCA floor; it sits at least this far past each surface it
-  // crosses, toward the text, so it still shows on a popover.
+  // crosses, toward the text, so it still shows on a card.
   const hairline = (t: number, gap: number) =>
     shift(
       ink(t),
-      (x) => [bg, card, popover].every((s) => (lightnessOf(x) - lightnessOf(s)) * dir >= gap),
+      (x) => [bg, card].every((s) => (lightnessOf(x) - lightnessOf(s)) * dir >= gap),
       dir,
     );
   const border = hairline((dark ? 0.12 : 0.1) + 0.1 * c, 0.05);
@@ -216,7 +215,7 @@ export function customThemeVars({ accent, background, contrast }: CustomTheme) {
     foreground: fg,
     card,
     'card-foreground': fg,
-    popover,
+    popover: card,
     'popover-foreground': fg,
     primary,
     'primary-foreground': primaryFg,

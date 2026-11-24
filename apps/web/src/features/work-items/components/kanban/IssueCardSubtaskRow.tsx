@@ -42,7 +42,7 @@ export function IssueCardSubtaskRow({
           }}
           className={cn(
             '-mx-1.5 flex items-center gap-2 rounded px-1.5 py-1 text-start',
-            onOpen && 'cursor-pointer hover:bg-muted/70',
+            onOpen && 'cursor-pointer hover:bg-foreground/8',
           )}
         >
           {column && (

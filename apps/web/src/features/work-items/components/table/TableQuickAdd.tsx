@@ -37,7 +37,7 @@ export function TableQuickAdd({
       {...triggerProps}
       onClick={() => setOpen(true)}
       className={cn(
-        'flex w-full items-center gap-1.5 py-1.5 text-xs text-muted-foreground/60 transition-colors hover:bg-accent/20 hover:text-foreground',
+        'flex w-full items-center gap-1.5 py-1.5 text-xs text-muted-foreground/60 transition-colors hover:bg-accent/40 hover:text-foreground',
         rowFrame,
       )}
     >

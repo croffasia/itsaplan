@@ -55,7 +55,7 @@ export function IssueCardSubtasks({
           e.preventDefault();
           setUnfolded(!open);
         }}
-        className="-mx-1.5 flex items-center gap-1.5 rounded px-1.5 py-0.5 text-[10px] tracking-wide text-muted-foreground/70 hover:bg-muted/70 hover:text-foreground"
+        className="-mx-1.5 flex items-center gap-1.5 rounded px-1.5 py-0.5 text-[10px] tracking-wide text-muted-foreground/70 hover:bg-foreground/8 hover:text-foreground"
       >
         <Chevron {...hover.icon.chevron} size={12} className="shrink-0 text-muted-foreground" />
         <ListTreeIcon {...hover.icon.list} size={12} className="shrink-0 text-muted-foreground" />

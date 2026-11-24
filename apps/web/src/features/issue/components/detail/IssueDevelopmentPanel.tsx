@@ -54,7 +54,7 @@ export default function IssueDevelopmentPanel({
           {links.length === 0 && (
             <button
               type="button"
-              className="w-full rounded-md border border-dashed px-4 py-5 text-center text-sm text-muted-foreground hover:border-border hover:bg-muted/30 hover:text-foreground"
+              className="w-full rounded-md border border-dashed px-4 py-5 text-center text-sm text-muted-foreground hover:border-border hover:bg-accent/50 hover:text-foreground"
               onClick={() => setLinkOpen(true)}
             >
               {t('empty')}

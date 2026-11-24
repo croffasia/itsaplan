@@ -1,13 +1,15 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import {
+  PALETTES,
   colorThemeCookieValue,
   customThemeFrom,
   formatCustomTheme,
   parseColorThemeCookie,
   parseCustomTheme,
 } from './colorThemes';
-import { apcaContrast, customThemeVars, isDarkColor } from './customTheme';
+import { apcaContrast, customThemeVars, isDarkColor, lightnessOf } from './customTheme';
 
 describe('custom theme colors', () => {
   // Backgrounds and accents from both ends of the scale, including an accent that
@@ -25,7 +27,7 @@ describe('custom theme colors', () => {
           const at = `${accent} on ${background} at ${contrast}`;
           for (const surface of ['--background', '--sidebar', '--popover', '--kanban-column'])
             assert.ok(lc('--foreground', surface) >= 75, `${at}: text on ${surface}`);
-          for (const surface of ['--card', '--muted', '--kanban-column'])
+          for (const surface of ['--card', '--muted', '--accent', '--kanban-column'])
             assert.ok(lc('--muted-foreground', surface) >= 75, `${at}: muted on ${surface}`);
           assert.ok(lc('--primary-foreground', '--primary') >= 75, `${at}: button label`);
           assert.ok(lc('--ring', '--background') >= 30, `${at}: focus ring`);
@@ -46,6 +48,54 @@ describe('custom theme colors', () => {
   it('takes light or dark from the background', () => {
     assert.equal(isDarkColor('#101012'), true);
     assert.equal(isDarkColor('#f6f2ee'), false);
+  });
+});
+
+describe('highlights', () => {
+  // A highlight and a surface it is drawn on, with the least OKLCH lightness between them.
+  const highlights: [string, string, number][] = [
+    ['--accent', '--popover', 0.04],
+    ['--accent', '--card', 0.04],
+    ['--accent', '--background', 0.03],
+    ['--muted', '--popover', 0.025],
+    ['--muted', '--card', 0.025],
+    ['--sidebar-accent', '--sidebar', 0.03],
+    ['--kanban-card-hover', '--kanban-card', 0.02],
+  ];
+  const lightness = (color: string) =>
+    color.startsWith('#') ? lightnessOf(color) : Number(/^oklch\(([\d.]+)/.exec(color)![1]);
+  const assertVisible = (tokens: Record<string, string>, at: string) => {
+    for (const [highlight, surface, min] of highlights) {
+      const gap = Math.abs(lightness(tokens[highlight]) - lightness(tokens[surface]));
+      assert.ok(gap >= min, `${at}: ${highlight} on ${surface} is ${gap.toFixed(3)}`);
+    }
+  };
+
+  it('show in every built-in palette', () => {
+    const css = readFileSync(new URL('../app/globals.css', import.meta.url), 'utf8');
+    const tokensOf = (selector: string) => {
+      const start = css.indexOf(`\n${selector} {`);
+      assert.ok(start >= 0, `no ${selector} in globals.css`);
+      const block = css.slice(start, css.indexOf('\n}', start));
+      return Object.fromEntries(
+        [...block.matchAll(/(--[\w-]+): ([^;]+);/g)].map((m) => [m[1], m[2]]),
+      );
+    };
+    for (const palette of PALETTES) {
+      if (palette === 'custom') continue;
+      const root = palette === 'default' ? ':root' : `:root[data-palette='${palette}']`;
+      assertVisible(tokensOf(root), `${palette} light`);
+      assertVisible(tokensOf(palette === 'default' ? '.dark' : `${root}.dark`), `${palette} dark`);
+    }
+  });
+
+  it('show in a custom theme on any background', () => {
+    for (const background of ['#ffffff', '#f6f2ee', '#777777', '#3a0d4d', '#2e3440', '#000000'])
+      for (const contrast of [0, 100])
+        assertVisible(
+          customThemeVars({ accent: '#5e6ad2', background, contrast }),
+          `${background} at ${contrast}`,
+        );
   });
 });
 

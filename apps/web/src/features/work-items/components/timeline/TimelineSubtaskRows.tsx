@@ -60,7 +60,7 @@ export function TimelineSubtaskRows({
           <div
             key={subtask.id}
             className={cn(
-              'flex border-b hover:bg-accent/20',
+              'flex border-b hover:bg-accent/40',
               // The last sub-row closes the block against the next issue row, so
               // it keeps the solid separator; the ones inside it are dashed.
               index < subtasks.length - 1 && 'border-dashed',

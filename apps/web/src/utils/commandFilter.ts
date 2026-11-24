@@ -6,14 +6,19 @@
 // colon does that instead, since a command id never contains one.
 export const DOCUMENT_PREFIX = 'document-hit:';
 export const ISSUE_PREFIX = 'issue-hit:';
+export const INITIATIVE_PREFIX = 'initiative-hit:';
 
 // Match/rank the static action items. cmdk's default scorer is a fuzzy
 // subsequence match; this requires the typed text to appear as a substring. The
 // score is the number of occurrences of the query in the value, with a fractional
-// tiebreak (< 1) favouring an earlier hit. Server-provided issue items are handled
+// tiebreak (< 1) favouring an earlier hit. Server-provided items are handled
 // separately: they always show (score > 0), ordered by their list index.
 export function substringFilter(value: string, search: string): number {
-  if (value.startsWith(ISSUE_PREFIX) || value.startsWith(DOCUMENT_PREFIX)) {
+  if (
+    value.startsWith(ISSUE_PREFIX) ||
+    value.startsWith(DOCUMENT_PREFIX) ||
+    value.startsWith(INITIATIVE_PREFIX)
+  ) {
     const index = Number(value.slice(value.indexOf(':') + 1)) || 0;
     return 1 - index / 1e6;
   }

@@ -9,6 +9,6 @@
     "settings": "Ayarlar",
     "teamSettings": "Takım ayarları",
     "invitation": "Davet",
-    "authorizeApp": "Uygulamayı yetkilendir"
+    "allowAccess": "Erişime izin ver"
   }
 }

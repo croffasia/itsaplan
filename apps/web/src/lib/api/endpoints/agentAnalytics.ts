@@ -26,20 +26,20 @@ export interface AgentAnalytics {
   tokensPerDay: (AgentUsage & { day: string })[];
 }
 
-// What a dashboard reads: one team, all of it or one project of it, or every team of a
-// workspace.
+// What a dashboard reads: one team, all of it or some of its projects (none listed reads
+// all), or every team of a workspace.
 export type AgentAnalyticsScope =
-  { teamId: number; projectId: number | null } | { workspaceId: number };
+  { teamId: number; projectIds: number[] } | { workspaceId: number };
 
-// A team's dashboard, with the projects the caller reads it for: what `projectId`
+// A team's dashboard, with the projects the caller reads it for: what `projectIds`
 // narrows it to.
 export interface TeamAgentAnalytics extends AgentAnalytics {
   readableProjects: { projectId: number; name: string }[];
 }
 
-export const getTeamAgentAnalytics = (teamId: number, days: number, projectId: number | null) => {
+export const getTeamAgentAnalytics = (teamId: number, days: number, projectIds: number[]) => {
   const q = new URLSearchParams({ days: String(days) });
-  if (projectId != null) q.set('projectId', String(projectId));
+  if (projectIds.length > 0) q.set('projectIds', projectIds.join(','));
   return request<TeamAgentAnalytics>(`/teams/${teamId}/agent-analytics?${q}`);
 };
 

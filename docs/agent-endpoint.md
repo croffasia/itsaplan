@@ -9,8 +9,9 @@ An external agent gets its tasks in one of two ways:
 This page describes the endpoint.
 
 The endpoint gets the same tasks as a runner: delegations, mentions, field and status
-triggers, schedules, manual runs, and chat messages. Each task has the same prompt and
-system prompt. The endpoint sends the result through the same routes as a runner.
+triggers, schedules, manual runs, tasks sent through the API, and chat messages. Each task
+has the same prompt and system prompt. The endpoint sends the result through the same
+routes as a runner.
 
 ## Set it up
 
@@ -99,16 +100,16 @@ Project webhooks use the same signature, with the secret of the webhook.
 
 The status code of the answer tells the instance what to do with the task:
 
-- **2xx.** The endpoint accepted the task. The instance leases the task for
-  `AGENT_RUN_LEASE_SECONDS` (chat: `AGENT_CHAT_LEASE_SECONDS`), 300 seconds by default.
-  A heartbeat extends the lease. The result closes the task. If the lease ends before the
-  result, the instance sends the task again. It sends a task at most
-  `AGENT_RUN_MAX_ATTEMPTS` times (chat: `AGENT_CHAT_MAX_ATTEMPTS`), 3 by default.
+- **2xx.** The endpoint accepted the task. The instance leases the task for the run lease
+  (chat: the chat lease), 300 seconds by default. A heartbeat extends the lease. The result
+  closes the task. If the lease ends before the result, the instance sends the task again.
+  It sends a task at most 3 times by default. God mode sets these values under Background
+  jobs.
 - **Other status code, or a connection error.** The instance sends a run again after a
   delay. The first delay is up to 30 seconds. Each next delay is longer, up to 30 minutes.
   After the last attempt, the run fails. A chat message fails immediately, because a
   person waits for the answer.
-- **No answer in `AGENT_INVOCATION_TIMEOUT_MS`** (15 seconds by default). The instance
+- **No answer within the invocation timeout** (15 seconds by default). The instance
   treats the task as accepted and keeps it leased. Thus an endpoint that does the work
   before it answers does not get the same task again while the lease lasts.
 
@@ -133,7 +134,9 @@ uses. When the person stops the answer, the events, heartbeat and result routes 
 answer return `{ "canceled": true }`. Then stop the work on that answer.
 
 The agent reads and changes issues with the same key, through the REST API or the MCP
-server at `<apiUrl>/mcp`.
+server at `<apiUrl>/mcp`. On its MCP calls in a run, send `run.id` in the `X-Itsaplan-Run-Id`
+header. A run the agent then starts, such as by delegating an issue, works for the same person.
+Without it, that run is the project's work.
 
 ## With the runner
 

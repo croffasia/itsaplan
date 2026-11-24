@@ -1,16 +1,18 @@
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight, type LucideIcon } from 'lucide-react';
 
 // What a section of the agent form shows when the library it configures is empty:
 // what is missing, why it matters here, and, where there is one, the page that fills
-// it. Used by Model (no provider key), Projects, Skills, and Tools so they read the
-// same.
+// it or the buttons that fill it from here. Used by Model (no provider key), Projects,
+// Skills, and Tools so they read the same.
 export function AgentEmptyNotice({
   icon: Icon,
   title,
   hint,
   href,
   linkLabel,
+  children,
 }: {
   icon: LucideIcon;
   title: string;
@@ -19,6 +21,7 @@ export function AgentEmptyNotice({
   // a team with no projects at all.
   href?: string;
   linkLabel?: string;
+  children?: ReactNode;
 }) {
   return (
     <div className="flex items-start gap-3 rounded-lg bg-muted/50 px-4 py-3.5">
@@ -35,6 +38,7 @@ export function AgentEmptyNotice({
             <ArrowUpRight className="size-3.5" />
           </Link>
         )}
+        {children && <div className="pt-2">{children}</div>}
       </div>
     </div>
   );

@@ -146,12 +146,12 @@ interface SentRequest {
   init: PinnedRequestInit | undefined;
 }
 
-function readerAnswering(response: Response, sent: SentRequest[] = []): PlaneReader {
-  const credential = {
-    baseUrl: 'https://plane.example.test/',
-    workspaceSlug: 'acme',
-    apiKey: 'plane-api-key',
-  };
+function readerAnswering(
+  response: Response,
+  sent: SentRequest[] = [],
+  baseUrl = 'https://plane.example.test/',
+): PlaneReader {
+  const credential = { baseUrl, workspaceSlug: 'acme', apiKey: 'plane-api-key' };
   return new PlaneReader(credential, 'project-1', async (url, init) => {
     sent.push({ url, init });
     return response;
@@ -159,6 +159,29 @@ function readerAnswering(response: Response, sent: SentRequest[] = []): PlaneRea
 }
 
 describe('PlaneReader', () => {
+  it("names the project and links its work items in Plane's app", async () => {
+    const sent: SentRequest[] = [];
+    const reader = readerAnswering(Response.json({ id: 'project-1', name: 'Website' }), sent);
+    expect(await reader.describeSource()).toEqual({
+      name: 'Website',
+      url: 'https://plane.example.test/acme/projects/project-1/issues/',
+    });
+    expect(sent[0]!.url).toBe(
+      'https://plane.example.test/api/v1/workspaces/acme/projects/project-1/',
+    );
+  });
+
+  it("links a Plane Cloud project in the cloud's app, not its API host", async () => {
+    const reader = readerAnswering(
+      Response.json({ id: 'project-1', name: 'Website' }),
+      [],
+      'https://api.plane.so',
+    );
+    expect((await reader.describeSource()).url).toBe(
+      'https://app.plane.so/acme/projects/project-1/issues/',
+    );
+  });
+
   it('sends the API key to the project-scoped Plane endpoint', async () => {
     const sent: SentRequest[] = [];
     const reader = readerAnswering(

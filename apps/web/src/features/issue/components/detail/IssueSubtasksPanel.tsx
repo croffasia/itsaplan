@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { IssueRelations } from '@/lib/api/endpoints/issues';
 import { usePermissions } from '@/hooks/usePermissions';
-import { subtaskProgress } from '@/utils/subtasks';
+import { MAX_SUBTASK_DEPTH, subtaskProgress } from '@/utils/subtasks';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -24,12 +24,12 @@ import IssueSubtasksFilterChip from './IssueSubtasksFilterChip';
 import IssueSubtasksFilterMenu from './IssueSubtasksFilterMenu';
 import { useTranslations } from 'next-intl';
 
-// The issue's place in the subtask hierarchy: the parent it hangs under, or the
-// subtasks it has with how many of them are done. The two never show together —
-// the hierarchy is one level deep, so a subtask has no subtasks of its own. A new
-// subtask opens the ordinary create modal with the parent's properties prefilled;
-// an existing issue is attached through the search dialog. On a public share the
-// section lists the hierarchy and stays off the page when the issue has none.
+// The issue's parent, and its subtasks with how many of them are done. An issue on
+// the last level (MAX_SUBTASK_DEPTH) gets no Add menu, and its Subtasks list shows
+// only when it already has some. A new subtask opens the ordinary create modal with
+// the parent's properties prefilled; an existing issue is attached through the
+// search dialog. On a public share the section lists the hierarchy and stays off
+// the page when the issue has none.
 export default function IssueSubtasksPanel({
   project,
   issue,
@@ -57,6 +57,8 @@ export default function IssueSubtasksPanel({
 
   const parent = issue.parent;
   if (readOnly && !parent && issue.subtasks.length === 0) return null;
+  const canNest = issue.ancestors.length + 1 < MAX_SUBTASK_DEPTH;
+  const showSubtasks = !parent || issue.subtasks.length > 0 || (!readOnly && canNest);
 
   const progress = subtaskProgress(issue.subtasks, new Map(project.columns.map((c) => [c.id, c])));
   const done = progress.total > 0 ? `${progress.done}/${progress.total}` : undefined;
@@ -69,22 +71,7 @@ export default function IssueSubtasksPanel({
       previousParentId: parentId,
     });
 
-  function body() {
-    if (parent)
-      return (
-        <IssueRefList>
-          <IssueRefRow
-            project={project}
-            issue={parent}
-            scrollAnchorKey={`parent:${parent.id}`}
-            removeLabel={t('detachFromParent', { parent: parent.identifier })}
-            readOnly={readOnly}
-            onOpen={onOpenIssue && (() => onOpenIssue(parent.id))}
-            onRemove={canEdit ? () => detach(issue.id, parent.id) : undefined}
-            onChangeState={canEdit ? (columnId) => setState(parent.id, columnId) : undefined}
-          />
-        </IssueRefList>
-      );
+  function subtasksBody() {
     if (issue.subtasks.length === 0)
       return (
         <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
@@ -120,63 +107,88 @@ export default function IssueSubtasksPanel({
     // Collapsed, the heading row is all there is, so the section pulls itself up
     // against the section below it.
     <div className={`mt-6 border-t pt-5 ${open ? '' : '-mb-2'}`}>
-      {/* Fixed height: the buttons only render while the section is open, and
-          without it the row would shrink to the height of the heading text. */}
-      <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
-        <div className="flex min-w-0 items-center gap-2">
-          <IssueSectionHeading
-            label={parent ? t('parent') : t('title')}
-            open={open}
-            onToggle={toggle}
-            tally={done}
-          />
-          {open && !parent && <IssueSubtasksFilterChip filter={filter} />}
-        </div>
-        <div className="flex shrink-0 items-center gap-1">
-          {open && !parent && <IssueSubtasksFilterMenu filter={filter} />}
-          {open && !parent && canEdit && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-7"
-                  title={tCommon('add')}
-                  aria-label={tCommon('add')}
-                >
-                  <Plus className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                {canCreate && (
-                  <DropdownMenuItem onSelect={() => setCreating(true)}>
-                    {t('newSubtask')}
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuItem onSelect={() => setAttaching(true)}>
-                  {t('existingIssue')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+      {parent && (
+        <>
+          <div className={`flex h-7 items-center ${open ? 'mb-3' : ''}`}>
+            <IssueSectionHeading label={t('parent')} open={open} onToggle={toggle} />
+          </div>
+          {open && (
+            <IssueRefList>
+              <IssueRefRow
+                project={project}
+                issue={parent}
+                scrollAnchorKey={`parent:${parent.id}`}
+                removeLabel={t('detachFromParent', { parent: parent.identifier })}
+                readOnly={readOnly}
+                onOpen={onOpenIssue && (() => onOpenIssue(parent.id))}
+                onRemove={canEdit ? () => detach(issue.id, parent.id) : undefined}
+                onChangeState={canEdit ? (columnId) => setState(parent.id, columnId) : undefined}
+              />
+            </IssueRefList>
           )}
-        </div>
-      </div>
+        </>
+      )}
 
-      {open && body()}
+      {showSubtasks && (
+        <>
+          <div
+            className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''} ${parent ? 'mt-4' : ''}`}
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              <IssueSectionHeading label={t('title')} open={open} onToggle={toggle} tally={done} />
+              {open && <IssueSubtasksFilterChip filter={filter} />}
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              {open && <IssueSubtasksFilterMenu filter={filter} />}
+              {open && canNest && canEdit && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-7"
+                      title={tCommon('add')}
+                      aria-label={tCommon('add')}
+                    >
+                      <Plus className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    {canCreate && (
+                      <DropdownMenuItem onSelect={() => setCreating(true)}>
+                        {t('newSubtask')}
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onSelect={() => setAttaching(true)}>
+                      {t('existingIssue')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          </div>
+
+          {open && subtasksBody()}
+        </>
+      )}
 
       {attaching && (
         <IssuePickerDialog
           projectKey={project.project.ref}
           title={t('addExisting')}
           prompt={t('searchPrompt')}
-          // The hierarchy is one level deep, so an issue that already hangs under
-          // a parent has to be detached there first.
-          exclude={(hit) => hit.id === issue.id || hit.parentId !== null}
+          // The API rejects a pick that would nest too deep with a message of its own.
+          exclude={(hit) =>
+            hit.id === issue.id ||
+            hit.parentId === issue.id ||
+            issue.ancestors.some((ancestor) => ancestor.id === hit.id)
+          }
           onPick={(hit) => {
             setParent.mutate({
               projectKey: project.project.ref,
               issueId: hit.id,
               parentId: issue.id,
+              previousParentId: hit.parentId,
             });
             setAttaching(false);
           }}

@@ -170,66 +170,122 @@
     },
     "joined": "bergabung {date}"
   },
+  "roles": {
+    "newRole": "Peran baru",
+    "empty": "Belum ada peran sistem.",
+    "default": "Bawaan",
+    "defaultUndeletable": "Peran bawaan tidak dapat dihapus",
+    "columns": {
+      "role": "Peran",
+      "permissions": "Izin"
+    },
+    "edit": "Ubah peran",
+    "delete": "Hapus peran",
+    "deleteTitle": "Hapus peran \"{name}\"",
+    "deleteDescription": "Tindakan ini tidak dapat dibatalkan."
+  },
   "general": {
     "saved": "Pengaturan bawaan proyek disimpan",
     "projectDefaults": "Pengaturan bawaan proyek",
-    "mcpEnabled": "Aktifkan MCP pada proyek baru",
-    "mcpEnabledHint": "Proyek baru berada dalam jangkauan MCP timnya sejak saat dibuat.",
+    "mcpEnabled": "Akses MCP untuk proyek baru",
+    "mcpEnabledHint": "Proyek baru langsung terbuka untuk klien MCP jika MCP aktif di timnya. Pengaturan proyek yang sudah ada tidak berubah.",
     "workspacesSaved": "Pengaturan workspace disimpan",
     "workspaces": "Workspace",
-    "personalWorkspaces": "Workspace untuk setiap orang",
-    "personalWorkspacesHint": "Setiap akun mendapat workspace sendiri dengan nama pemiliknya. Jika nonaktif, orang hanya bekerja di workspace tempat mereka ditambahkan.",
+    "personalWorkspaces": "Workspace pribadi",
+    "personalWorkspacesHint": "Setiap orang mendapat workspace sendiri dengan namanya. Jika nonaktif, akun baru tidak mendapatkannya dan orang hanya bekerja di workspace tempat mereka ditambahkan. Workspace yang sudah ada tetap ada.",
+    "invites": "Undangan",
+    "inviteSearch": "Sarankan orang saat mengundang",
+    "inviteSearchHint": "Pemilik dan manajer tim dapat menemukan akun dari semua workspace berdasarkan nama atau email. Akun yang cocok muncul saat mereka mengetik di dialog undangan. Jika nonaktif, alamat harus diketik lengkap.",
+    "invitesSaved": "Pengaturan undangan disimpan",
+    "sharing": "Tautan publik",
+    "sharingEnabled": "Izinkan tautan publik",
+    "sharingEnabledHint": "Jika dimatikan, tautan yang ada berhenti terbuka sampai dinyalakan lagi dan tidak ada yang bisa berbagi. Jika aktif, tiap workspace menentukan apakah dokumen, isu, dan tampilannya bisa dibagikan lewat tautan.",
+    "sharingSaved": "Pengaturan tautan publik disimpan",
+    "apiDocs": "Dokumentasi API",
+    "apiDocsAudience": "Siapa yang bisa membaca dokumentasi API",
+    "apiDocsAudienceHint": "Di aplikasi dan di alamat /docs pada API.",
+    "apiDocsAudiences": {
+      "nobody": "Tidak seorang pun",
+      "god": "Pemilik instance",
+      "everyone": "Semua orang"
+    },
+    "apiDocsSaved": "Pengaturan dokumentasi API disimpan",
+    "apiKeys": "Kunci API",
+    "apiKeysSaved": "Pengaturan kunci API disimpan",
+    "keyRequestsPerMinute": "Permintaan per menit",
+    "keyRequestsPerMinuteHint": "Berapa banyak permintaan yang bisa dikirim satu kunci per menit, termasuk panggilan alat MCP. Setiap replika API menghitung sendiri. 0 berarti tanpa batas.",
+    "keyRequestsPerMinuteInvalid": "Masukkan bilangan bulat dari 0 sampai {max}.",
     "agents": "Agen",
     "agentsSaved": "Pengaturan agen disimpan",
+    "embedding": "Penyematan",
+    "embedSites": "Situs tepercaya",
+    "embedSitesHint": "Hanya situs ini yang dapat menyematkan dokumen, isu, dan tampilan yang dibagikan lewat tautan publik. Jika daftar kosong, tidak ada situs yang bisa. Tulis setiap situs seperti https://example.com, dipisahkan dengan koma.",
+    "embedSitesInvalid": "Tulis setiap situs seperti https://example.com, tanpa path.",
+    "embedSaved": "Situs tepercaya disimpan. Berlaku dalam satu menit.",
     "traceRetention": "Simpan trace eksekusi",
-    "traceRetentionHint": "Setiap eksekusi agen mencatat panggilan ke model dan alat. Dasbor penggunaan hanya menghitung eksekusi yang masih disimpan.",
+    "traceRetentionHint": "Trace mencatat panggilan model dan alat dari satu eksekusi agen. Setelah waktu ini, trace dihapus dan dasbor penggunaan tidak lagi menghitung eksekusi itu.",
     "traceDays": "{days} hari",
     "traceForever": "Selamanya",
-    "maxRunTime": "Waktu jalan maksimum",
-    "maxRunTimeHint": "Berapa lama satu jalannya agen boleh berlangsung sebelum dihentikan dan disimpan sebagai gagal. Batas milik agen tidak boleh melebihinya.",
+    "maxRunTime": "Batas waktu jalan",
+    "maxRunTimeHint": "Eksekusi yang berjalan lebih lama dihentikan dan disimpan sebagai gagal. Batas milik agen hanya bisa lebih pendek. Obrolan tidak memiliki batas.",
     "runMinutes": "{minutes, plural, other {# menit}}",
-    "runSeconds": "{seconds} dtk"
+    "runSeconds": "{seconds} dtk",
+    "concurrentRuns": "Eksekusi bersamaan",
+    "concurrentRunsHint": "Berapa banyak eksekusi agen yang berjalan bersamaan di instance ini. Sisanya menunggu dalam antrean. Obrolan dan agen eksternal tidak dihitung. 0 berarti tanpa batas.",
+    "concurrentRunsInvalid": "Masukkan bilangan bulat dari 0 sampai {max}.",
+    "answerLimit": "Batas panjang jawaban",
+    "answerLimitHint": "Berapa banyak karakter jawaban agen yang disimpan. Sisanya dipotong. Obrolan menampilkan jawaban utuh, tetapi agen eksternal hanya menerima bagian yang disimpan sebagai riwayat. 0 berarti tanpa batas.",
+    "answerLimitInvalid": "Masukkan bilangan bulat dari 0 sampai {max, number}.",
+    "answerLimitNone": "Tanpa batas. Jawaban panjang disimpan utuh dan bisa membuat daftar eksekusi lambat dimuat."
   },
   "authentication": {
     "saved": "Pengaturan autentikasi disimpan",
     "registration": "Pendaftaran",
-    "registrationHint": "Siapa yang boleh membuat akun di instance ini.",
-    "registrationPasswordlessNote": "Pendaftaran dan pemulihan kata sandi ditangani oleh penyedia masuk.",
+    "registrationHint": "Siapa yang bisa membuat akun dan berapa lama undangan berlaku.",
+    "registrationPasswordlessNote": "Pendaftaran dan atur ulang kata sandi dilakukan di penyedia masuk.",
     "inviteTtlDays": "Masa berlaku undangan (hari)",
-    "inviteTtlDaysHint": "Setelah jangka waktu ini, tautan undangan tidak berfungsi lagi dan, dengan pendaftaran khusus undangan, tidak bisa lagi dipakai untuk mendaftar. Dengan 0, undangan tidak kedaluwarsa.",
+    "inviteTtlDaysHint": "Undangan berhenti berfungsi sejumlah hari ini setelah dibuat. Nilai baru juga berlaku untuk undangan yang sudah ada. 0 berarti undangan tidak pernah kedaluwarsa.",
     "inviteTtlDaysInvalid": "Masukkan jumlah hari berupa bilangan bulat dari 0 sampai {max}.",
     "allowedEmailDomains": "Domain email yang diizinkan",
-    "allowedEmailDomainsHint": "Hanya alamat di domain ini yang bisa membuat akun. Pisahkan dengan koma, atau kosongkan untuk mengizinkan semua alamat. Akun yang sudah ada tetap bisa masuk.",
-    "allowedEmailDomainsInvalid": "Setiap domain harus berbentuk seperti example.com, maksimal 100 domain.",
+    "allowedEmailDomainsHint": "Hanya alamat di domain ini yang bisa membuat akun, termasuk lewat undangan. Akun yang sudah ada tetap punya akses. Pisahkan domain dengan koma. Setiap subdomain perlu entri sendiri. Kosongkan untuk mengizinkan alamat apa pun.",
+    "allowedEmailDomainsInvalid": "Masukkan domain seperti example.com, maksimal 100.",
     "modes": {
       "open": {
         "label": "Terbuka",
-        "description": "Siapa saja yang mengakses halaman pendaftaran dapat membuat akun.",
+        "description": "Siapa pun bisa membuat akun di halaman pendaftaran.",
         "descriptionPasswordless": "Siapa pun yang masuk melalui penyedia untuk pertama kali akan mendapatkan akun."
       },
       "invite": {
         "label": "Hanya undangan",
-        "description": "Akun hanya dapat dibuat melalui tautan undangan.",
-        "descriptionPasswordless": "Masuk melalui penyedia hanya membuat akun jika ada undangan yang tertunda untuk alamat tersebut."
+        "description": "Hanya alamat dengan undangan yang masih menunggu yang bisa membuat akun.",
+        "descriptionPasswordless": "Masuk lewat penyedia hanya membuat akun untuk alamat dengan undangan yang masih menunggu."
       },
       "closed": {
         "label": "Tertutup",
-        "description": "Tidak ada akun baru. Akun yang ada tetap dapat masuk.",
-        "descriptionPasswordless": "Tidak ada akun baru, bahkan bagi yang datang dari penyedia. Akun yang ada tetap dapat masuk."
+        "description": "Tidak ada yang bisa membuat akun. Akun yang sudah ada tetap bisa masuk.",
+        "descriptionPasswordless": "Masuk lewat penyedia tidak membuat akun. Akun yang sudah ada tetap bisa masuk."
       }
     },
     "signIn": "Opsi masuk",
-    "signInHint": "Cara orang masuk. Opsi yang mengirim email tetap nonaktif hingga penyedia dikonfigurasi.",
-    "needsProvider": "Siapkan penyedia Email di bawah Integrasi terlebih dahulu.",
+    "needsProvider": "Siapkan dulu penyedia email di Integrasi → Penyedia email.",
     "requireVerification": "Wajibkan konfirmasi email",
-    "requireVerificationHint": "Akun baru harus mengonfirmasi alamat email sebelum dapat masuk.",
+    "requireVerificationHint": "Orang harus mengonfirmasi alamat email sebelum masuk dengan kata sandi. Ini juga berlaku untuk akun yang sudah ada: formulir masuk menawarkan untuk mengirim ulang tautan konfirmasi.",
     "magicLink": "Tautan masuk",
-    "magicLinkHint": "Tawarkan masuk dengan tautan yang dikirim melalui email, selain kata sandi.",
+    "magicLinkHint": "Orang bisa masuk dengan tautan yang dikirim ke email mereka. Ini hanya berfungsi selama Email dan kata sandi aktif.",
     "trustProviderEmails": "Percayai alamat dari penyedia masuk",
-    "trustProviderEmailsHint": "Google dan OpenID Connect memasukkan orang ke akun yang sudah memiliki alamat tersebut, baik dikonfirmasi di sini atau belum. Aktifkan ini hanya jika Anda mengontrol siapa yang dapat mendaftar di penyedia.",
+    "trustProviderEmailsHint": "Google dan OpenID Connect memasukkan orang ke akun dengan alamat email yang sama, meskipun alamat itu belum pernah dikonfirmasi. Aktifkan hanya jika Anda mengendalikan siapa yang mendaftar di penyedia, atau seseorang bisa mengambil alih akun.",
     "emailPassword": "Email dan kata sandi",
-    "emailPasswordHint": "Tampilkan formulir masuk dan daftar. Nonaktifkan untuk mengizinkan masuk hanya melalui penyedia masuk.",
-    "needsSso": "Siapkan penyedia masuk di bawah Integrasi terlebih dahulu."
+    "emailPasswordHint": "Orang mendaftar dan masuk dengan email dan kata sandi. Jika dimatikan, mereka hanya bisa masuk lewat penyedia masuk atau passkey.",
+    "needsSso": "Siapkan dulu penyedia masuk di Integrasi → Penyedia autentikasi.",
+    "signInLimits": "Batas permintaan",
+    "signInLimitsHint": "Berapa banyak permintaan yang bisa dikirim satu alamat IP ke setiap replika API. Batas ini menghentikan tebakan kata sandi dan banjir email. Di balik reverse proxy, proxy harus mengisi X-Forwarded-For, atau semua klien berbagi setiap batas.",
+    "signInRateLimit": "Percobaan masuk dan pendaftaran",
+    "signInRateLimitHint": "Per 10 detik, termasuk perubahan kata sandi dan email.",
+    "emailRateLimit": "Email akun",
+    "emailRateLimitHint": "Per menit, untuk email atur ulang kata sandi dan konfirmasi email.",
+    "magicLinkRateLimit": "Permintaan tautan masuk",
+    "magicLinkRateLimitHint": "Per menit, untuk meminta dan membuka tautan masuk.",
+    "signInLimitInvalid": "Masukkan bilangan bulat dari 1 sampai {max}."
   },
   "hotkeys": {
     "saved": "Pintasan keyboard disimpan"
@@ -250,14 +306,115 @@
     "quotaMb": "Penyimpanan per proyek (MB)",
     "quotaNote": "Setelah proyek mencapai kuota, unggahan baru akan ditolak hingga seseorang menghapus lampiran."
   },
+  "jobs": {
+    "saved": "Pengaturan tugas latar belakang disimpan",
+    "range": "Masukkan bilangan bulat dari {min, number} sampai {max, number}.",
+    "withRange": "{hint} Dari {min, number} sampai {max, number}.",
+    "webhookLeaseNote": "Atur durasi lease lebih lama dari batas waktu. Durasi lease dalam detik, batas waktu dalam milidetik.",
+    "webhookTimeoutNote": "Atur batas waktu lebih pendek dari durasi lease. Durasi lease dalam detik, batas waktu dalam milidetik.",
+    "agentLeaseNote": "Atur durasi lease lebih lama dari batas waktu di Agen dengan URL endpoint. Durasi lease dalam detik, batas waktu dalam milidetik.",
+    "invocationTimeoutNote": "Atur batas waktu lebih pendek dari durasi lease di Eksekusi agen dan Chat agen. Durasi lease dalam detik, batas waktu dalam milidetik.",
+    "webhooks": {
+      "title": "Webhook",
+      "description": "Cara pengiriman dikirim dan dicoba ulang, kapan webhook yang terus gagal dinonaktifkan, dan berapa lama log disimpan.",
+      "pollIntervalMs": "Interval pemeriksaan (ms)",
+      "pollIntervalMsHint": "Seberapa sering pengiriman dan notifikasi dalam antrean dikirim.",
+      "batchSize": "Ukuran batch",
+      "batchSizeHint": "Berapa banyak pengiriman yang dikirim setiap pemeriksaan.",
+      "timeoutMs": "Batas waktu (ms)",
+      "timeoutMsHint": "Berapa lama server penerima punya waktu untuk merespons sebelum percobaan dianggap gagal.",
+      "maxAttempts": "Percobaan maksimum",
+      "maxAttemptsHint": "Berapa kali pengiriman dikirim sebelum disimpan sebagai gagal.",
+      "disableThreshold": "Gagal berturut-turut",
+      "disableThresholdHint": "Webhook dinonaktifkan setelah sebanyak ini percobaan gagal berturut-turut, termasuk percobaan ulang.",
+      "leaseSeconds": "Durasi lease (dtk)",
+      "leaseSecondsHint": "Pengiriman yang terputus dikirim lagi setelah waktu ini.",
+      "retentionDays": "Simpan log pengiriman (hari)",
+      "retentionDaysHint": "Pengiriman yang berhasil dihapus dari log setelah waktu ini. Yang gagal tetap disimpan.",
+      "cleanupIntervalMinutes": "Interval pembersihan (menit)",
+      "cleanupIntervalMinutesHint": "Seberapa sering entri lama dihapus dari log pengiriman."
+    },
+    "notifications": {
+      "title": "Notifikasi",
+      "description": "Notifikasi email dan Telegram. Notifikasi dikirim sesuai Interval pemeriksaan di Webhook.",
+      "batchSize": "Ukuran batch",
+      "batchSizeHint": "Berapa banyak notifikasi yang dikirim setiap pemeriksaan.",
+      "maxAttempts": "Percobaan maksimum",
+      "maxAttemptsHint": "Berapa kali notifikasi dikirim sebelum disimpan sebagai gagal.",
+      "leaseSeconds": "Durasi lease (dtk)",
+      "leaseSecondsHint": "Notifikasi yang terputus dikirim lagi setelah waktu ini."
+    },
+    "imports": {
+      "title": "Impor",
+      "description": "Impor dari alat pelacak lain.",
+      "pollIntervalMs": "Interval pemeriksaan (ms)",
+      "pollIntervalMsHint": "Seberapa sering impor dalam antrean dimulai."
+    },
+    "agentRuns": {
+      "title": "Eksekusi agen",
+      "description": "Cara eksekusi agen dari antrean dan jadwal dimulai dan dicoba ulang.",
+      "pollIntervalMs": "Interval pemeriksaan (ms)",
+      "pollIntervalMsHint": "Seberapa sering eksekusi diambil dari antrean dan jadwal yang sudah waktunya dimasukkan ke antrean.",
+      "maxAttempts": "Percobaan maksimum",
+      "maxAttemptsHint": "Berapa kali eksekusi dimulai sebelum disimpan sebagai gagal.",
+      "leaseSeconds": "Durasi lease (dtk)",
+      "leaseSecondsHint": "Eksekusi yang terputus dimulai ulang setelah waktu ini. Untuk agen internal, waktu ini tidak pernah lebih pendek dari Batas waktu jalan di Umum."
+    },
+    "agentChat": {
+      "title": "Chat agen",
+      "description": "Chat dengan agen eksternal, melalui runner atau URL endpoint.",
+      "leaseSeconds": "Durasi lease (dtk)",
+      "leaseSecondsHint": "Jawaban yang terputus dimulai ulang setelah waktu ini.",
+      "maxAttempts": "Percobaan maksimum",
+      "maxAttemptsHint": "Berapa kali agen menerima pesan sebelum jawabannya disimpan sebagai gagal.",
+      "claimWaitMs": "Waktu tunggu runner (ms)",
+      "claimWaitMsHint": "Berapa lama permintaan runner menunggu pesan chat baru.",
+      "claimPollMs": "Interval pemeriksaan runner (ms)",
+      "claimPollMsHint": "Pesan chat baru sampai ke runner yang menunggu dalam waktu ini.",
+      "streamPollMs": "Interval pemeriksaan jawaban (ms)",
+      "streamPollMsHint": "Seberapa sering chat yang terbuka menampilkan bagian baru dari jawaban.",
+      "historyMessages": "Riwayat chat (pesan)",
+      "historyMessagesHint": "Berapa banyak pesan chat sebelumnya yang diterima agen bersama setiap pesan baru."
+    },
+    "agentInvocations": {
+      "title": "Agen dengan URL endpoint",
+      "description": "Tugas dan pesan chat yang dikirim ke URL endpoint agen.",
+      "pollIntervalMs": "Interval pemeriksaan (ms)",
+      "pollIntervalMsHint": "Seberapa sering tugas dan pesan chat dalam antrean dikirim ke agen ini.",
+      "timeoutMs": "Batas waktu (ms)",
+      "timeoutMsHint": "Berapa lama endpoint punya waktu untuk merespons. Jika terlambat, tugas atau pesan dikirim ulang saat durasi lease-nya berakhir."
+    },
+    "sweeps": {
+      "title": "Arsip dan pembersihan",
+      "description": "Seberapa sering issue tertutup yang usang diarsipkan, serta trace eksekusi lama dan tautan publik kedaluwarsa dihapus.",
+      "autoArchiveMinutes": "Interval arsip (menit)",
+      "autoArchiveMinutesHint": "Seberapa sering issue tertutup yang usang diarsipkan di proyek yang mengaktifkan Arsip.",
+      "tracePruneMinutes": "Interval pembersihan trace (menit)",
+      "tracePruneMinutesHint": "Seberapa sering trace eksekusi yang lebih lama dari Simpan trace eksekusi di Umum dihapus.",
+      "shareExpiryMinutes": "Interval pembersihan tautan (menit)",
+      "shareExpiryMinutesHint": "Seberapa sering tautan publik kedaluwarsa dihapus. Tautan berhenti terbuka saat kedaluwarsa, berapa pun nilai ini."
+    },
+    "bot": {
+      "title": "Bot Telegram",
+      "description": "Seberapa cepat bot menerima perubahan pengaturannya.",
+      "configPollIntervalMs": "Interval pemeriksaan pengaturan (ms)",
+      "configPollIntervalMsHint": "Perubahan di Telegram sampai ke bot dalam waktu ini."
+    }
+  },
   "telegram": {
     "saved": "Pengaturan Telegram disimpan",
     "bot": "Bot",
-    "botConfigured": "Pengguna menghubungkan akun Telegram mereka dengan membuka obrolan dengan bot ini dari profil mereka.",
+    "botConfigured": "Pengguna menghubungkan akun Telegram mereka dengan membuka obrolan dengan bot ini dari pengaturan notifikasi.",
     "botMissing": "Buat bot dengan @BotFather di Telegram dan tempelkan tokennya di sini.",
     "botToken": "Token bot",
     "botTokenHint": "Token diverifikasi dengan Telegram saat Anda menyimpan, jadi token yang salah akan ditolak di sini daripada gagal tanpa peringatan nanti.",
     "resolvedHint": "Diresolusi dari token. Ini adalah bot yang akan dilihat pengguna saat menghubungkan."
+  },
+  "slack": {
+    "saved": "Pengaturan Slack disimpan",
+    "app": "Aplikasi Slack",
+    "appConfigured": "Jika aktif, anggota dapat menghubungkan akun Slack mereka di pengaturan notifikasi.",
+    "appMissing": "Tambahkan token bot, Client ID, dan rahasia klien untuk mengaktifkan aplikasi."
   },
   "email": {
     "saved": "Penyedia email disimpan",
@@ -297,6 +454,120 @@
     "clientSecret": "Rahasia klien",
     "clientSecretPlaceholder": "Rahasia pendaftaran aplikasi",
     "microsoft365Hint": "Masuk sebagai pendaftaran aplikasi Entra ID, bukan dengan kata sandi kotak surat, sehingga kotak surat tetap bisa memakai MFA. Aplikasi memerlukan izin aplikasi SMTP.SendAsApp dari Office 365 Exchange Online dengan persetujuan admin, akses ke kotak surat ini di Exchange, dan SMTP AUTH aktif untuk kotak surat."
+  },
+  "emailTemplates": {
+    "saved": "Template email disimpan",
+    "unsaved": "Ada perubahan yang belum disimpan",
+    "blankText": "Lengkapi subjek atau teks yang kosong untuk menyimpan",
+    "emails": "Email",
+    "layout": "Tata letak",
+    "edited": "Diedit",
+    "subject": "Subjek",
+    "text": "Teks",
+    "button": "Tombol",
+    "formatting": "Pemformatan",
+    "heading1": "Judul 1",
+    "heading2": "Judul 2",
+    "bold": "Tebal",
+    "italic": "Miring",
+    "strikethrough": "Coret",
+    "link": "Tautan",
+    "bulletedList": "Daftar poin",
+    "numberedList": "Daftar bernomor",
+    "quote": "Kutipan",
+    "boldSample": "tebal",
+    "italicSample": "miring",
+    "strikeSample": "teks",
+    "linkSample": "teks tautan",
+    "unknownVariables": "Variabel tidak dikenal: {names}",
+    "removeUnknownVariables": "Hapus variabel yang tidak dikenal untuk menyimpan",
+    "reset": "Kembalikan ke bawaan",
+    "test": "Kirim tes",
+    "testing": "Mengirim…",
+    "testSent": "Terkirim ke {email}",
+    "testNeedsProvider": "Siapkan penyedia email terlebih dahulu",
+    "layoutHtml": "HTML tata letak",
+    "layoutCss": "CSS tata letak",
+    "placeholders": "Placeholder",
+    "variables": "Variabel",
+    "required": "Wajib",
+    "requiredPlaceholders": "Tambahkan {names} ke tata letak untuk menyimpan",
+    "preview": "Pratinjau",
+    "previewEmail": "Email",
+    "previewText": "Teks biasa",
+    "previewFailed": "Pratinjau tidak termuat. Muat ulang halaman untuk mencoba lagi.",
+    "from": "Dari",
+    "to": "Kepada",
+    "groups": {
+      "signIn": "Masuk",
+      "invitations": "Undangan",
+      "notifications": "Notifikasi",
+      "service": "Lainnya"
+    },
+    "templates": {
+      "reset": {
+        "name": "Atur ulang kata sandi"
+      },
+      "verify": {
+        "name": "Konfirmasi alamat email"
+      },
+      "magic": {
+        "name": "Tautan masuk"
+      },
+      "inviteProject": {
+        "name": "Undangan proyek"
+      },
+      "inviteTeam": {
+        "name": "Undangan tim"
+      },
+      "assigned": {
+        "name": "Issue ditugaskan"
+      },
+      "mentioned": {
+        "name": "Disebut di issue"
+      },
+      "commented": {
+        "name": "Komentar baru"
+      },
+      "stateChanged": {
+        "name": "Status berubah"
+      },
+      "reacted": {
+        "name": "Reaksi pada komentar"
+      },
+      "documentMentioned": {
+        "name": "Disebut di dokumen"
+      },
+      "documentCommentMentioned": {
+        "name": "Disebut di komentar dokumen"
+      },
+      "test": {
+        "name": "Email tes",
+        "hint": "Dikirim oleh tombol tes di halaman penyedia email."
+      }
+    },
+    "placeholderText": {
+      "content": "Teks email",
+      "button": "Tombol dengan tautan",
+      "subject": "Subjek",
+      "lang": "Kode bahasa",
+      "dir": "Arah teks",
+      "site_name": "Nama instance",
+      "site_url": "Alamat instance",
+      "logo_url": "Alamat logo"
+    },
+    "variableText": {
+      "actor": "Pelaku tindakan",
+      "ref": "Nomor issue",
+      "title": "Judul issue",
+      "from": "Status sebelumnya",
+      "to": "Status baru",
+      "document": "Judul dokumen",
+      "inviter": "Pengirim undangan",
+      "project": "Nama proyek",
+      "team": "Nama tim",
+      "role": "Peran setelah bergabung"
+    }
   },
   "authProvider": {
     "saved": "Penyedia autentikasi disimpan",

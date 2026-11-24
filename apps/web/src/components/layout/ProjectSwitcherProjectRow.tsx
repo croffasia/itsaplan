@@ -24,9 +24,10 @@ export default function ProjectSwitcherProjectRow({
   const t = useTranslations('nav.projectPicker');
   const tw = useTranslations('teams.workspace');
   const current = project.ref === currentProjectKey;
-  // Stars and hiding are kept on the membership, which a project reached through the
-  // workspace does not have.
+  // Stars and hiding are kept on the membership, which a project reached through the team
+  // or the workspace does not have.
   const viaWorkspace = project.via === 'workspace';
+  const isMember = !viaWorkspace && project.via !== 'team';
   const relativeTime = useRelativeTime();
   const details = [
     showTeam && project.teamName,
@@ -86,8 +87,8 @@ export default function ProjectSwitcherProjectRow({
           </div>
         </div>
       </CommandItem>
-      {!viaWorkspace && !project.isHidden && <ProjectSwitcherStarButton project={project} />}
-      {!viaWorkspace && <ProjectSwitcherRowMenu project={project} />}
+      {isMember && !project.isHidden && <ProjectSwitcherStarButton project={project} />}
+      {isMember && <ProjectSwitcherRowMenu project={project} />}
     </div>
   );
 }

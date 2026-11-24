@@ -9,6 +9,7 @@ const DEFAULT_HASHTAG_MEDIA_FIELDS =
 // may query at most 30 unique hashtags per rolling 7-day period.
 export const instagramHashtagSearch: CustomToolEntry = {
   key: 'instagram_hashtag_search',
+  group: 'Hashtags',
   scopes: ['instagram_basic', 'instagram_manage_insights'],
   label: 'Instagram Hashtag Search',
   description:
@@ -28,6 +29,7 @@ export const instagramHashtagSearch: CustomToolEntry = {
 // Reads the most popular media for a hashtag.
 export const instagramHashtagTopMedia: CustomToolEntry = {
   key: 'instagram_hashtag_top_media',
+  group: 'Hashtags',
   scopes: ['instagram_basic', 'instagram_manage_insights'],
   label: 'Instagram Hashtag Top Media',
   description:
@@ -55,6 +57,7 @@ export const instagramHashtagTopMedia: CustomToolEntry = {
 // Reads recent media for a hashtag (published within the last 24 hours).
 export const instagramHashtagRecentMedia: CustomToolEntry = {
   key: 'instagram_hashtag_recent_media',
+  group: 'Hashtags',
   scopes: ['instagram_basic', 'instagram_manage_insights'],
   label: 'Instagram Hashtag Recent Media',
   description:

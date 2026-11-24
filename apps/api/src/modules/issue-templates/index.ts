@@ -52,8 +52,8 @@ export const issueTemplateRoutes = new Elysia({
       detail: {
         summary: 'Create an issue template',
         description:
-          'Create an issue template: the title, description and properties a new issue ' +
-          'starts with when it is created from the template.',
+          'Create an issue template: the title, description ' +
+          'and properties a new issue gets when created from it.',
         ...mcpTool('create_issue_template'),
       },
     },
@@ -74,8 +74,8 @@ export const issueTemplateRoutes = new Elysia({
       detail: {
         summary: 'Update an issue template',
         description:
-          'Update an issue template. A property left out of the body keeps its value; ' +
-          '`labelIds` replaces the whole label set.',
+          'Update an issue template. Omitted properties ' +
+          'keep their value. `labelIds` replaces all labels.',
         ...mcpTool('update_issue_template'),
       },
     },
@@ -94,7 +94,7 @@ export const issueTemplateRoutes = new Elysia({
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete an issue template',
-        description: 'Delete an issue template. The issues created from it are untouched.',
+        description: 'Delete an issue template. Issues created from it do not change.',
         ...mcpTool('delete_issue_template'),
       },
     },

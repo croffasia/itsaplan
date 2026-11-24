@@ -1,14 +1,17 @@
 import { pinnedFetch } from '@repo/net';
-import { AttachmentRejectedError } from './attachment-download';
+import { resolveDownloadRedirects } from './attachment-download';
 import {
   SourceRateLimitedError,
   type AttachmentDownload,
   type Page,
+  type SourceProject,
   type SourceReader,
 } from './reader';
 import type {
   CanonicalAttachment,
+  CanonicalChecklist,
   CanonicalComment,
+  CanonicalCustomField,
   CanonicalCycle,
   CanonicalIssue,
   CanonicalLabel,
@@ -48,7 +51,6 @@ const UPLOAD_HOST = 'uploads.linear.app';
 // limit for one query.
 const PAGE_SIZE = 50;
 const REQUEST_TIMEOUT_MS = 15_000;
-const MAX_UPLOAD_REDIRECTS = 3;
 // Linear's budgets refill over an hour, so no reset is honoured beyond that.
 const MAX_RATE_LIMIT_WAIT_MS = 3_600_000;
 
@@ -109,6 +111,14 @@ const ISSUE_QUERY = `query Issue($id: String!) {
   issue(id: $id) { ${ISSUE_FIELDS} }
 }`;
 
+const PROJECT_QUERY = `query Project($id: String!) {
+  project(id: $id) { name url }
+}`;
+
+const TEAM_QUERY = `query Team($id: String!) {
+  team(id: $id) { name key organization { urlKey } }
+}`;
+
 const RELATIONS_QUERY = `query Relations($id: String!, $after: String) {
   issue(id: $id) {
     connection: relations(first: ${PAGE_SIZE}, after: $after) {
@@ -164,25 +174,6 @@ export function linearRateLimitBackoffMs(
   return Math.min(MAX_RATE_LIMIT_WAIT_MS, Math.max(1000, Math.max(...resets) - nowMs));
 }
 
-export type UploadHop =
-  { kind: 'download' } | { kind: 'redirect'; url: string } | { kind: 'refused' };
-
-// What one response from the file host means for resolveAttachmentDownload.
-export function nextUploadHop(
-  currentUrl: string,
-  status: number,
-  location: string | null,
-): UploadHop {
-  if (status >= 200 && status < 300) return { kind: 'download' };
-  if (status < 300 || status >= 400) return { kind: 'refused' };
-  if (!location) throw new AttachmentRejectedError('Linear file storage redirected nowhere');
-  const next = new URL(location, currentUrl);
-  if (next.protocol !== 'https:') {
-    throw new AttachmentRejectedError('Linear file storage redirected to a non-https URL');
-  }
-  return { kind: 'redirect', url: next.toString() };
-}
-
 // The API key goes to Linear's own file host only, never to wherever it redirects.
 export function linearUploadHeaders(
   url: string,
@@ -220,6 +211,25 @@ export class LinearReader implements SourceReader {
     }
   }
 
+  // The project the job reads, or the team for its issues with no project.
+  async describeSource(): Promise<SourceProject> {
+    if (this.scope.projectFilter === 'project') {
+      const { project } = await this.graphql<{ project: { name: string; url: string } }>(
+        PROJECT_QUERY,
+        { id: this.scope.projectId },
+      );
+      return { name: project.name, url: project.url };
+    }
+    const { team } = await this.graphql<{
+      team: { name: string; key: string; organization: { urlKey: string } };
+    }>(TEAM_QUERY, { id: this.scope.teamId });
+    const workspace = encodeURIComponent(team.organization.urlKey);
+    return {
+      name: team.name,
+      url: `https://linear.app/${workspace}/team/${encodeURIComponent(team.key)}/all`,
+    };
+  }
+
   async listStates(): Promise<CanonicalState[]> {
     const nodes = await this.paginate<LinearStateNode, TeamConnectionData<LinearStateNode>>(
       STATES_QUERY,
@@ -245,6 +255,10 @@ export class LinearReader implements SourceReader {
       (data) => data.team.connection,
     );
     return mapLinearCycles(nodes);
+  }
+
+  async listCustomFields(): Promise<CanonicalCustomField[]> {
+    return [];
   }
 
   async listIssues(cursor: string | null): Promise<Page<CanonicalIssue>> {
@@ -292,32 +306,23 @@ export class LinearReader implements SourceReader {
     );
   }
 
-  // uploads.linear.app needs the API key; whether it serves the file or redirects
-  // to signed storage, pinnedFetch follows no redirect, so each hop is taken here.
-  // Every hop only reads the response head.
+  async listIssueChecklists(): Promise<CanonicalChecklist[]> {
+    return [];
+  }
+
+  // uploads.linear.app needs the API key; it serves the file or redirects to signed storage.
   async resolveAttachmentDownload(
     issueSourceId: string,
     attachmentSourceId: string,
   ): Promise<AttachmentDownload> {
-    let url = linearUploadUrl(issueSourceId, attachmentSourceId);
-    for (let hop = 0; hop <= MAX_UPLOAD_REDIRECTS; hop++) {
-      const headers = linearUploadHeaders(url, this.credential.apiKey);
-      const res = await this.fetch(url, {
-        headers,
-        timeoutMs: REQUEST_TIMEOUT_MS,
-        maxBytes: 0,
-        truncateBody: true,
-      });
-      if (res.status === 429) throw new SourceRateLimitedError(60_000, 'Linear rate limit reached');
-      const next = nextUploadHop(url, res.status, res.headers.get('location'));
-      if (next.kind === 'download') return headers ? { url, headers } : { url };
-      if (next.kind === 'refused') {
-        throw new AttachmentRejectedError(`Linear file storage answered HTTP ${res.status}`);
-      }
-      url = next.url;
-    }
-    throw new AttachmentRejectedError(
-      `Linear file storage redirected more than ${MAX_UPLOAD_REDIRECTS} times`,
+    return resolveDownloadRedirects(
+      linearUploadUrl(issueSourceId, attachmentSourceId),
+      {
+        source: 'Linear',
+        headersFor: (url) => linearUploadHeaders(url, this.credential.apiKey),
+        rateLimitWaitMs: 60_000,
+      },
+      this.fetch,
     );
   }
 

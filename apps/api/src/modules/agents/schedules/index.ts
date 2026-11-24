@@ -46,14 +46,14 @@ export const agentScheduleRoutes = new Elysia({
     ({ project, user, query }) =>
       paginate(query, (window) => listAgentSchedules(project.id, requireUser(user).id, window)),
     {
-      permission: ['ai_agents', 'read'],
+      permission: ['agent_schedules', 'read'],
       query: agentSchedulePageQuery,
       response: { 200: AgentSchedulePageResponse, ...accessErrors },
       detail: {
         summary: 'List agent schedules',
         description:
-          "One page of the project's agent schedules with their cron or column, next run, " +
-          'and last run, newest first.',
+          "List the project's agent schedules, one page at a time, newest first, with cron or " +
+          'column, next run and last run.',
         ...mcpTool('list_agent_schedules'),
       },
     },
@@ -90,14 +90,13 @@ export const agentScheduleRoutes = new Elysia({
     },
     {
       body: createScheduleBody,
-      permission: ['ai_agents', 'create'],
+      permission: ['agent_schedules', 'create'],
       response: { 201: AgentScheduleResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create an agent schedule',
         description:
-          'Create a schedule that sends a task to an agent on a cron, on an issue each ' +
-          'time one enters a column, or on a type this instance adds. It starts active ' +
-          'unless status is given.',
+          'Create a schedule that sends a task to an agent: on a cron, on each issue that enters ' +
+          'a column, or on a type this instance adds. It starts active unless status is set.',
         ...mcpTool('create_agent_schedule'),
       },
     },
@@ -150,13 +149,13 @@ export const agentScheduleRoutes = new Elysia({
     {
       params: scheduleParams,
       body: updateScheduleBody,
-      permission: ['ai_agents', 'edit'],
+      permission: ['agent_schedules', 'edit'],
       response: { 200: AgentScheduleResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Update an agent schedule',
         description:
-          "Update a schedule's agent, task, cron or column, options, or status. Its type stays " +
-          'the one it was created with. A schedule that is not supported here answers 409.',
+          "Update a schedule's agent, task, cron, column, options or status. Its type cannot " +
+          'change. A schedule this instance does not support returns 409.',
         ...mcpTool('update_agent_schedule'),
       },
     },
@@ -171,11 +170,11 @@ export const agentScheduleRoutes = new Elysia({
     },
     {
       params: scheduleParams,
-      permission: ['ai_agents', 'delete'],
+      permission: ['agent_schedules', 'delete'],
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete an agent schedule',
-        description: 'Delete a schedule with its run history. Irreversible.',
+        description: 'Permanently delete a schedule and its run history.',
         ...mcpTool('delete_agent_schedule'),
       },
     },
@@ -194,14 +193,14 @@ export const agentScheduleRoutes = new Elysia({
     },
     {
       params: scheduleParams,
-      permission: ['ai_agents', 'edit'],
+      permission: ['agent_schedules', 'edit'],
       response: { 202: QueuedRunResponse, ...commonErrors },
       detail: {
         summary: 'Run an agent schedule now',
         description:
-          'Queue a run of the schedule now and return its run id. It runs in the background; ' +
-          "read the result with list_agent_schedule_runs. Only a 'cron' schedule runs on " +
-          'demand: the runs of the others work on the issue that started them.',
+          'Queue a run of the schedule now and return its run id. Read the result with ' +
+          "list_agent_schedule_runs. Only a 'cron' schedule can run on demand. Other runs work " +
+          'on the issue that started them.',
         ...mcpTool('run_agent_schedule'),
       },
     },
@@ -219,13 +218,13 @@ export const agentScheduleRoutes = new Elysia({
     },
     {
       params: scheduleParams,
-      permission: ['ai_agents', 'edit'],
+      permission: ['agent_schedules', 'edit'],
       response: { 200: CanceledRunsResponse, ...commonErrors },
       detail: {
         summary: 'End the pending runs of an agent schedule',
         description:
-          'End every run of the schedule that has not started yet, so it is never run. ' +
-          'A run already being executed, and one that finished, are left as they are.',
+          'Cancel all runs of the schedule that have not ' +
+          'started. Runs in progress and finished runs do not change.',
         ...mcpTool('cancel_agent_schedule_runs'),
       },
     },
@@ -245,11 +244,11 @@ export const agentScheduleRoutes = new Elysia({
     },
     {
       params: scheduleRunParams,
-      permission: ['ai_agents', 'edit'],
+      permission: ['agent_schedules', 'edit'],
       response: { 200: CanceledRunsResponse, ...commonErrors },
       detail: {
         summary: 'End one pending run of an agent schedule',
-        description: 'End a run that has not started yet, so it is never run.',
+        description: 'Cancel a run that has not started.',
         ...mcpTool('cancel_agent_schedule_run'),
       },
     },
@@ -263,12 +262,12 @@ export const agentScheduleRoutes = new Elysia({
     },
     {
       params: scheduleParams,
-      permission: ['ai_agents', 'read'],
+      permission: ['agent_schedules', 'read'],
       response: { 200: ScheduleRunListResponse, ...commonErrors },
       detail: {
         summary: 'List agent schedule runs',
         description:
-          "The schedule's last 50 runs, newest first, with their status, output, and error.",
+          "List the schedule's last 50 runs, newest first, with status, output and error.",
         ...mcpTool('list_agent_schedule_runs'),
       },
     },

@@ -2,6 +2,7 @@
   "account": {
     "profile": "Profil",
     "preferences": "Préférences",
+    "notifications": "Notifications",
     "accounts": "Comptes",
     "security": "Sécurité",
     "api-keys": "Clés d'API",
@@ -25,25 +26,41 @@
       "label": "Projets",
       "description": "Tous les projets de cette instance : ce que chacun contient, sa dernière activité, et qui peut y accéder."
     },
+    "roles": {
+      "label": "Rôles système",
+      "description": "Des rôles par défaut disponibles pour toutes les équipes de cette instance."
+    },
     "general": {
       "label": "Général",
-      "description": "Les espaces de travail personnels, les valeurs par défaut des nouveaux projets, ainsi que les traces et la durée d'exécution des agents."
+      "description": "Les paramètres qui s'appliquent à tous les espaces de travail de cette instance."
     },
     "authentication": {
       "label": "Authentification",
-      "description": "Qui peut s'inscrire sur cette instance, comment les comptes sont confirmés, et les fournisseurs par lesquels les utilisateurs se connectent."
+      "description": "Qui peut s'inscrire, comment se connecter et les limites de requêtes."
     },
     "hotkeys": {
       "label": "Raccourcis clavier",
-      "description": "La touche associée à chaque commande pour tous les utilisateurs de cette instance. Chacun peut réattribuer un raccourci pour son propre compte dans ses préférences."
+      "description": "Par défaut pour tous. Chacun peut modifier les siens dans Préférences."
     },
     "storage": {
       "label": "Stockage",
       "description": "Ce que les utilisateurs peuvent envoyer : la taille maximale d'un fichier, les types de pièces jointes acceptés, et l'espace de stockage alloué à chaque projet."
     },
+    "jobs": {
+      "label": "Tâches en arrière-plan",
+      "description": "À quelle fréquence les tâches en arrière-plan s'exécutent et sont retentées. Les modifications s'appliquent sans redémarrage."
+    },
+    "email-templates": {
+      "label": "Modèles d'e-mails",
+      "description": "Gérez les modèles des e-mails système."
+    },
     "telegram": {
       "label": "Telegram",
       "description": "Le bot auquel les utilisateurs relient leur compte Telegram, et celui qui envoie les notifications Telegram des projets sans bot dédié."
+    },
+    "slack": {
+      "label": "Slack",
+      "description": "Envoie les notifications en messages directs Slack."
     },
     "email": {
       "label": "Fournisseur d'e-mail",
@@ -99,25 +116,29 @@
       "label": "Planifications",
       "description": "Exécutez des tâches d'agent selon une planification récurrente."
     },
+    "workflows": {
+      "label": "Flux",
+      "description": "Des agents qui se passent le travail."
+    },
     "webhooks": {
       "label": "Webhooks",
       "description": "Envoyez les événements du projet vers des URL externes, signés avec un secret propre à chaque webhook."
     },
+    "forms": {
+      "label": "Formulaires",
+      "description": "Toute personne disposant du lien crée ici un ticket."
+    },
     "git": {
       "label": "Dépôts",
-      "description": "Fermez les tickets quand leurs pull requests sont fusionnées sur GitHub, GitLab, Gitea, Forgejo ou Bitbucket."
+      "description": "Fermez les tickets quand leurs pull requests sont fusionnées, et synchronisez les tickets du dépôt avec le tableau."
     },
     "import-export": {
       "label": "Import/Export",
-      "description": "Importez les tickets, commentaires et étiquettes depuis une instance Plane auto-hébergée, ou exportez les données du projet au format JSON."
+      "description": "Importez des tickets depuis un autre outil de suivi, ou exportez les données de ce projet en JSON."
     },
     "ai-agents": {
       "label": "Agents",
       "description": "Des comptes bots auxquels vous pouvez déléguer des tickets."
-    },
-    "queue": {
-      "label": "Runner queue",
-      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
     }
   },
   "previews": {
@@ -188,6 +209,60 @@
         "acsUrl": "URL ACS",
         "spEntityId": "Entity ID et métadonnées"
       }
+    },
+    "forms": {
+      "new": "Nouveau formulaire",
+      "columns": {
+        "form": "Formulaire",
+        "link": "Lien"
+      },
+      "enabled": "Accepte les demandes",
+      "tabs": {
+        "form": "Formulaire",
+        "questions": "Questions",
+        "issue": "Ticket",
+        "design": "Apparence"
+      },
+      "questionsHint": "Le nom et l'e-mail sont toujours demandés.",
+      "preview": "Aperçu",
+      "name": "Votre nom",
+      "email": "E-mail"
+    },
+    "workflows": {
+      "steps": "Étapes",
+      "sendBack": "Renvoyer",
+      "runs": "Historique des exécutions",
+      "runningNow": "En cours",
+      "history": "Historique",
+      "costSoFar": "Coût à ce stade",
+      "tokensSoFar": "Tokens à ce stade",
+      "agentRuns": "Exécutions d'agents",
+      "tokens": "Tokens",
+      "cost": "Coût",
+      "took": "Durée",
+      "got": "Ce qu'elle a reçu",
+      "returned": "Ce qu'elle a rendu",
+      "task": "Tâche",
+      "notes": "Notes du renvoi",
+      "done": "Terminé",
+      "round": "Tour",
+      "fullLog": "Journal complet"
+    },
+    "portal": {
+      "title": "Portail",
+      "description": "La page où chacun envoie des demandes aux projets de l'espace de travail et les suit.",
+      "general": "Général",
+      "forms": "Formulaires publics",
+      "formsHint": "Les projets de l'espace de travail peuvent publier des formulaires que toute personne avec le lien remplit. Désactivé, leurs formulaires et portails ne s'ouvrent plus et les projets perdent leur section Formulaires ; rien n'est supprimé.",
+      "name": "Nom",
+      "nameHint": "Ce que les gens voient sur le portail et dans ses e-mails à la place du nom de l'espace de travail. Vide, c'est le nom de l'espace de travail.",
+      "address": "Adresse",
+      "addressHint": "Le portail s'ouvre à cette adresse. Tant qu'elle n'est pas définie, il s'ouvre au numéro de l'espace de travail.",
+      "link": "Lien du portail",
+      "logo": "Logo",
+      "logoHint": "Affiché sur le portail et sur les formulaires à la place du nom du portail. Un seul logo sert aux deux thèmes.",
+      "light": "Thème clair",
+      "dark": "Thème sombre"
     }
   }
 }

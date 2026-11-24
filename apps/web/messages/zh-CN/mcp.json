@@ -24,26 +24,36 @@
     "methodTabsAria": "连接方式",
     "method": "OAuth",
     "personalKey": "API 密钥",
-    "description": "适用于任何支持 OAuth 的 MCP 客户端，例如 ChatGPT 或 Claude。您使用 Itsaplan 帐户登录。客户端不会收到 API 密钥。",
+    "description": "适用于任何支持 OAuth 的 MCP 客户端，例如 ChatGPT 或 Claude。您使用 {app} 帐户登录。客户端不会收到 API 密钥。",
     "discovery": "OAuth 发现",
     "steps": {
       "add": "在客户端中添加 MCP 应用。",
       "paste": "粘贴 MCP 端点。",
       "choose": "当客户端询问登录方式时选择 OAuth。",
-      "signIn": "登录 Itsaplan 并批准访问。"
+      "signIn": "登录 {app} 并批准访问。"
     },
-    "security": "OAuth 使用 PKCE (S256)、动态客户端注册以及限定到您的 Itsaplan 帐户的访问令牌。",
+    "security": "OAuth 使用 PKCE (S256)、动态客户端注册以及限定到您的 {app} 帐户的访问令牌。",
     "consent": {
-      "title": "{client} 想要连接到你的账户",
-      "titleUnnamed": "一个 MCP 客户端想要连接到你的账户",
-      "description": "它将以你的权限行事：你能查看和修改的内容，它也都可以。",
-      "account": "已登录为 {email}",
-      "redirect": "回答后，你将返回 {host}。",
-      "missingCode": "此授权请求缺少同意代码。",
-      "cancel": "取消",
-      "pending": "正在授权…",
-      "authorize": "授权",
-      "failed": "无法完成 OAuth 授权。"
+      "title": "允许 {client} 访问你的账户？",
+      "titleUnnamed": "允许一个未命名的应用访问你的账户？",
+      "actsAs": "允许后，该应用将以你的身份操作：",
+      "canSee": "查看你在所有团队中能看到的一切",
+      "canChange": "创建、修改和删除你有权操作的任何内容",
+      "keepsAccess": "保持访问权限，直到你在“账户 › 安全”中断开连接",
+      "account": "账户",
+      "app": "应用",
+      "thisComputer": "在这台电脑上",
+      "named": "“{client}”是该应用自己设置的名称。只有在你亲自发起此连接时才允许。",
+      "unnamed": "该应用没有提供名称。只有在你亲自发起此连接时才允许。",
+      "deny": "不允许",
+      "allow": "允许",
+      "allowing": "正在允许…",
+      "denying": "正在发送…",
+      "expired": "此请求已在 10 分钟后过期。请在应用中重新发起连接。",
+      "failed": "你的答复未能送达。请重试。",
+      "incompleteTitle": "此链接不完整",
+      "incompleteBody": "请在应用中重新发起连接。",
+      "brandSubtitle": "将 Claude、ChatGPT 等 AI 应用连接到你的账户。"
     }
   }
 }

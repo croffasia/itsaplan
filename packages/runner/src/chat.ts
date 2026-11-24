@@ -33,6 +33,7 @@ export async function answer(
     message.threadId,
     String(message.id),
     async (events) => {
+      if (stop.signal.aborted) return;
       const started = reported ? undefined : (stream.startedSession() ?? undefined);
       if (started) reported = true;
       if (await client.chatEvents(message.id, events, started)) stop.abort();

@@ -1,5 +1,6 @@
 import { t } from 'elysia';
 import { REGISTRATION_MODES } from '@repo/auth';
+import { LOCALES } from '@repo/mailer';
 import { pageQueryFields, pageResponse } from '#shared/pagination';
 import { PermissionMatrixSchema } from '#shared/permissions';
 import { USER_KINDS } from './service';
@@ -15,11 +16,18 @@ export const EmailDomains = t.Array(t.String({ pattern: EMAIL_DOMAIN_PATTERN }),
   uniqueItems: true,
 });
 
+const MAX_AUTH_RATE_LIMIT = 1000;
+
+const rateLimitField = (description: string) =>
+  t.Integer({ minimum: 1, maximum: MAX_AUTH_RATE_LIMIT, description });
+
 export const userParams = t.Object({ userId: t.String() });
 
 export const projectParams = t.Object({ projectId: t.Numeric() });
 
 export const scimGroupParams = t.Object({ groupId: t.String() });
+
+export const roleParams = t.Object({ roleId: t.Numeric() });
 
 export const listUsersQuery = t.Object({
   search: t.Optional(t.String()),
@@ -50,7 +58,11 @@ export const AuthSettingsResponse = t.Object({
   trustProviderEmails: t.Boolean(),
   personalWorkspaces: t.Boolean(),
   inviteTtlDays: t.Integer(),
+  inviteSearch: t.Boolean(),
   allowedEmailDomains: t.Array(t.String()),
+  signInRateLimit: t.Integer(),
+  emailRateLimit: t.Integer(),
+  magicLinkRateLimit: t.Integer(),
   // The settings that depend on outbound email cannot be turned on without a mail
   // provider, and the UI explains why.
   hasEmailProvider: t.Boolean(),
@@ -70,7 +82,20 @@ export const AuthSettingsBody = t.Object({
   personalWorkspaces: t.Optional(t.Boolean()),
   // The cap keeps createdAt plus the lifetime inside the range a Date can hold.
   inviteTtlDays: t.Optional(t.Integer({ minimum: 0, maximum: 3650 })),
+  inviteSearch: t.Optional(t.Boolean()),
   allowedEmailDomains: t.Optional(EmailDomains),
+  // At least 1: the limits are what stops password guessing and mail floods.
+  signInRateLimit: t.Optional(
+    rateLimitField(
+      'Sign-in, sign-up and password or email changes one address may send per 10 seconds.',
+    ),
+  ),
+  emailRateLimit: t.Optional(
+    rateLimitField('Password reset and confirmation emails one address may request per minute.'),
+  ),
+  magicLinkRateLimit: t.Optional(
+    rateLimitField('Sign-in link requests and openings one address may send per minute.'),
+  ),
 });
 
 export const EmailSettingsResponse = t.Object({
@@ -118,6 +143,55 @@ export const EmailSettingsBody = t.Object({
 });
 
 export const EmailTestResponse = t.Object({ recipient: t.String() });
+
+const EmailText = t.Object({
+  subject: t.String({ maxLength: 500 }),
+  body: t.String({ maxLength: 20_000 }),
+  button: t.String({ maxLength: 200 }),
+});
+
+const EmailLayout = t.Object({
+  html: t.String({ maxLength: 200_000 }),
+  css: t.String({ maxLength: 100_000 }),
+});
+
+const EmailTextByLocale = t.Record(t.String(), EmailText);
+
+export const EmailTemplatesBody = t.Object({
+  edits: t.Record(t.String(), EmailTextByLocale),
+  layout: t.Nullable(EmailLayout),
+});
+
+export const EmailDraftBody = t.Object({
+  key: t.String(),
+  locale: t.UnionEnum([...LOCALES]),
+  text: EmailText,
+  layout: EmailLayout,
+});
+
+export const EmailTemplatesResponse = t.Object({
+  templates: t.Array(
+    t.Object({
+      key: t.String(),
+      group: t.String(),
+      variables: t.Array(t.String()),
+      hasLink: t.Boolean(),
+      defaults: EmailTextByLocale,
+      edits: EmailTextByLocale,
+    }),
+  ),
+  layout: EmailLayout,
+  defaultLayout: EmailLayout,
+  placeholders: t.Array(t.Object({ name: t.String(), required: t.Boolean() })),
+  canSend: t.Boolean(),
+});
+
+export const EmailPreviewResponse = t.Object({
+  subject: t.String(),
+  text: t.String(),
+  html: t.String(),
+  from: t.Nullable(t.String()),
+});
 
 export const GoogleSettingsResponse = t.Object({
   enabled: t.Boolean(),

@@ -1,4 +1,5 @@
 import { startOfDay } from 'date-fns';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { BoardIssue, Issue } from '@/lib/api/endpoints/issues';
 import { parseDate } from '@/utils/dates';
@@ -16,21 +17,55 @@ import {
   type IssueGroup,
 } from '@/utils/project';
 import type { Sort } from '@/utils/viewTypes';
-import type { GroupField, TimelineScale } from '@/utils/viewSettings';
+import {
+  isTimelineField,
+  type GroupField,
+  type PropertyKey,
+  type TimelineScale,
+} from '@/utils/viewSettings';
+import { columnFloor, orderedColumns, type OrderedColumn } from './table';
 
 // px per day at each zoom level. Wider days keep the per-day numbers legible;
 // narrower days fit longer ranges and fall back to weekly gridlines.
 export const SCALE_DAY_W: Record<TimelineScale, number> = { week: 32, month: 12, quarter: 5 };
 export const ROW_H = 36; // px, an issue row
+// Narrower bars show no title: a few cut letters say nothing, and the label column
+// beside the track already names the issue.
+export const MIN_TITLED_BAR_W = 64;
 export const LINK_ROW_H = 26; // px, a linked-issue sub-row under an issue row
 export const GROUP_H = 32; // px, a state group header row
 export const SUBGROUP_H = 28; // px, a sub-group header row under a group
+export const ADD_H = 28; // px, the add row that ends a section
 
 // The dragged label-column width is a client-only preference, kept per project
 // and per saved view (the tab the timeline is open on), so each of them keeps the
 // room its titles need. `null` is the project's unsaved "All" tab.
 export function labelWidthKey(projectKey: string, viewId: number | null): string {
   return `timeline-label-width:${projectKey}:${viewId ?? 'all'}`;
+}
+
+export interface TimelineColumn {
+  column: OrderedColumn;
+  width: number;
+}
+const CELL_PADDING = 12; // px-1.5 on both sides of a cell
+
+// The Table shows the assignee and the delegate as avatars only. The Timeline names
+// them, as it does a member field, so their columns get a member field's width.
+const isPersonColumn = (c: OrderedColumn): boolean =>
+  c.kind === 'builtin' && (c.col === 'assignee' || c.col === 'delegate');
+const PERSON_COLUMN_WIDTH = 120;
+
+// The property columns a row shows after its title, in the display's order. The
+// identifier, a text or markdown field and a stale key are left out.
+export function timelineColumns(
+  properties: PropertyKey[],
+  customFields: CustomField[],
+): TimelineColumn[] {
+  return orderedColumns(properties, customFields.filter(isTimelineField)).map((column) => ({
+    column,
+    width: (isPersonColumn(column) ? PERSON_COLUMN_WIDTH : columnFloor(column)) + CELL_PADDING,
+  }));
 }
 
 // An issue's bar span. Effective start is its start date, or its creation date
@@ -85,7 +120,10 @@ export type TimelineRow =
       index: number;
       assign: GroupAssign | null;
       bucket: BoardIssue[];
-    };
+    }
+  // The last row of an expanded section: creates an issue in it. `key` is the
+  // section's key.
+  | { kind: 'add'; key: string; assign: GroupAssign | null };
 
 // The span covering a section's bars, shown on its header row when collapsed.
 function sectionSpan(issueRows: { span: Span }[]): Span | null {
@@ -114,6 +152,7 @@ export function buildTimeline({
   groupLabels,
   showEmptyGroups,
   collapsedGroups,
+  canAddTo,
   viewportW,
   labelW,
   dayW,
@@ -126,6 +165,9 @@ export function buildTimeline({
   groupLabels: GroupLabels;
   showEmptyGroups: boolean;
   collapsedGroups: Set<string>;
+  // An expanded section ends with an add row when this accepts its assign. A
+  // section with no assign (a finished cycle) has no add row.
+  canAddTo: (assign: GroupAssign | null) => boolean;
   viewportW: number;
   labelW: number;
   dayW: number;
@@ -159,6 +201,10 @@ export function buildTimeline({
       issueRows.forEach(({ issue, span }, index) => {
         rows.push({ kind: 'issue', issue, span, index, assign: issueGroup.assign, bucket });
       });
+      // The single group of an ungrouped timeline has no assign and takes any issue.
+      if ((group === 'none' || issueGroup.assign) && canAddTo(issueGroup.assign)) {
+        rows.push({ kind: 'add', key: issueGroup.key, assign: issueGroup.assign });
+      }
     }
   } else {
     const nested = nestIssues(groups, subGroups, sorted, group, subgroup);
@@ -203,6 +249,9 @@ export function buildTimeline({
         issueRows.forEach(({ issue, span }, index) => {
           rows.push({ kind: 'issue', issue, span, index, assign, bucket });
         });
+        if (issueGroup.assign && sub.assign && canAddTo(assign)) {
+          rows.push({ kind: 'add', key, assign });
+        }
       }
     }
   }

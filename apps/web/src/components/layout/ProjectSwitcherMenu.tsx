@@ -18,6 +18,7 @@ export default function ProjectSwitcherMenu({
   workspaces,
   workspace,
   teams,
+  currentTeam,
   scope,
   onScopeChange,
   onPickWorkspace,
@@ -30,6 +31,7 @@ export default function ProjectSwitcherMenu({
   workspaces: WorkspaceSummary[];
   workspace?: WorkspaceSummary;
   teams: Team[];
+  currentTeam?: Team;
   scope: ProjectSwitcherScope;
   onScopeChange: (scope: ProjectSwitcherScope) => void;
   onPickWorkspace: (workspaceId: number) => void;
@@ -73,6 +75,7 @@ export default function ProjectSwitcherMenu({
         workspaces={workspaces}
         workspace={workspace}
         teams={teams}
+        currentTeam={currentTeam}
         scope={scope}
         onScopeChange={onScopeChange}
         onPickWorkspace={onPickWorkspace}

@@ -9,7 +9,8 @@ import type { OutputFormat } from './config';
 // Anything else about the invocation — MCP servers, model, working directory — is the
 // operator's, passed through `args` and the `--` tail.
 
-export type PresetName = 'claude' | 'codex' | 'opencode' | 'antigravity' | 'copilot' | 'pi' | 'omp';
+export type PresetName =
+  'claude' | 'codex' | 'opencode' | 'antigravity' | 'copilot' | 'pi' | 'omp' | 'mastracode';
 
 export interface Preset {
   bin: string;
@@ -17,8 +18,7 @@ export interface Preset {
   // A CLI that takes the prompt as an argument gets it after everything else, which is why
   // `tail` exists.
   promptVia: 'stdin' | 'arg';
-  // Only Claude Code has a flag for the run's context; the rest get it in front of the
-  // task.
+  // A CLI without a flag for the run's context gets it in front of the task.
   systemPromptFlag?: string;
   // The arguments before the operator's own, given null for a fresh session.
   head: (sessionId: string | null) => string[];
@@ -149,6 +149,24 @@ export const PRESETS: Record<PresetName, Preset> = {
       ...(sessionId ? ['--resume', sessionId] : []),
     ],
     tail: ['--'],
+  },
+
+  // --prompt is what runs Mastra Code headless, and `-` makes it read the task from stdin.
+  // --permission-mode auto approves each tool and resolves a suspended one, so nothing
+  // waits for a person. The stream names a new thread on its thread_created line, and
+  // --thread resumes it.
+  mastracode: {
+    bin: 'mastracode',
+    outputFormat: 'mastracode-jsonl',
+    promptVia: 'stdin',
+    head: (sessionId) => [
+      '--output',
+      'jsonl',
+      '--permission-mode',
+      'auto',
+      ...(sessionId ? ['--thread', sessionId] : []),
+    ],
+    tail: ['--prompt', '-'],
   },
 };
 

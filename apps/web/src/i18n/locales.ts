@@ -1,19 +1,22 @@
 // The languages the interface ships with. `en` is the source language: every key
-// exists in `messages/en.json`, and a missing translation falls back to it.
+// exists in `messages/en.json`, and a missing translation falls back to it. Every
+// language list shows this order: sorted by the name of the language in itself, so
+// Latin script comes first, then Cyrillic, Arabic, Chinese and Korean.
 export const LOCALES = [
+  'id',
   'en',
-  'uk',
+  'es-ES',
+  'fr',
+  'it',
+  'pt-BR',
+  'tr',
   'ru',
-  'zh-CN',
-  'zh-TW',
+  'uk',
   'ar',
   'fa',
-  'fr',
-  'pt-BR',
-  'id',
-  'es-ES',
+  'zh-CN',
+  'zh-TW',
   'ko',
-  'tr',
 ] as const;
 
 export type Locale = (typeof LOCALES)[number];
@@ -27,35 +30,20 @@ export const LOCALE_COOKIE = 'NEXT_LOCALE';
 
 // Each language named in itself, which is what a person scanning the list looks for.
 export const LOCALE_LABELS: Record<Locale, string> = {
+  id: 'Bahasa Indonesia',
   en: 'English',
-  uk: 'Українська',
+  'es-ES': 'Español (España)',
+  fr: 'Français',
+  it: 'Italiano',
+  'pt-BR': 'Português (Brasil)',
+  tr: 'Türkçe',
   ru: 'Русский',
-  'zh-CN': '简体中文',
-  'zh-TW': '繁體中文（台灣）',
+  uk: 'Українська',
   ar: 'العربية (المصرية)',
   fa: 'فارسی',
-  fr: 'Français',
-  'pt-BR': 'Português (Brasil)',
-  id: 'Bahasa Indonesia',
-  'es-ES': 'Español (España)',
+  'zh-CN': '简体中文',
+  'zh-TW': '繁體中文（台灣）',
   ko: '한국어',
-  tr: 'Türkçe',
-};
-
-export const LOCALE_FLAGS: Record<Locale, string> = {
-  en: '🇬🇧',
-  uk: '🇺🇦',
-  ru: '🇷🇺',
-  'zh-CN': '🇨🇳',
-  'zh-TW': '🇹🇼',
-  ar: '🇪🇬',
-  fa: '🇮🇷',
-  fr: '🇫🇷',
-  'pt-BR': '🇧🇷',
-  id: '🇮🇩',
-  'es-ES': '🇪🇸',
-  ko: '🇰🇷',
-  tr: '🇹🇷',
 };
 
 export function isLocale(value: string | undefined | null): value is Locale {

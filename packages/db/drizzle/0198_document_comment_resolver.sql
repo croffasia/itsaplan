@@ -1,0 +1,2 @@
+ALTER TABLE "document_comment" ADD COLUMN "resolved_by_user_id" text;--> statement-breakpoint
+ALTER TABLE "document_comment" ADD CONSTRAINT "document_comment_resolved_by_user_id_user_id_fk" FOREIGN KEY ("resolved_by_user_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;

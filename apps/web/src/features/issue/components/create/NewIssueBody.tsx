@@ -2,6 +2,7 @@ import { type Editor } from '@tiptap/react';
 import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { Assignee } from '@/lib/api/endpoints/projects';
 import type { IssueFieldValueInput } from '@/lib/api/endpoints/issues';
+import type { MentionSource } from '@/lib/api/endpoints/mentions';
 import { cn } from '@/lib/utils';
 import { type Embeddable } from '@/components/common/editor/attachmentEmbed';
 import { DESCRIPTION_SECTION, OTHER_SECTION, fieldSection } from '../../utils/bodySections';
@@ -25,6 +26,7 @@ export default function NewIssueBody({
   onDescriptionReady,
   bodyDefs,
   fieldValues,
+  projectKey,
   assignees,
   onFieldValue,
   onFieldEditorReady,
@@ -40,6 +42,7 @@ export default function NewIssueBody({
   onDescriptionReady: (editor: Editor | null) => void;
   bodyDefs: CustomField[];
   fieldValues: Record<number, IssueFieldValueInput>;
+  projectKey: string;
   assignees: Assignee[];
   onFieldValue: (id: number, patch: IssueFieldValueInput) => void;
   onFieldEditorReady: (id: number, editor: Editor | null) => void;
@@ -48,6 +51,7 @@ export default function NewIssueBody({
   const t = useTranslations('issue.create');
   const tEditor = useTranslations('issue.editor');
   const tFields = useTranslations('issue.fields');
+  const mentions: MentionSource = { projectKey, on: 'issue', place: 'text' };
   const markdownDefs = bodyDefs.filter((d) => d.fieldType === 'markdown');
   const pillDefs = bodyDefs.filter((d) => d.fieldType !== 'markdown');
 
@@ -64,6 +68,7 @@ export default function NewIssueBody({
       onChange={onDescriptionChange}
       onReady={onDescriptionReady}
       uploadFile={uploadFile}
+      mentions={mentions}
     />
   );
 
@@ -114,6 +119,7 @@ export default function NewIssueBody({
             onChange={(md) => onFieldValue(def.id, { value: md })}
             onReady={(editor) => onFieldEditorReady(def.id, editor)}
             uploadFile={uploadFile}
+            mentions={mentions}
           />
         </div>
       ))}

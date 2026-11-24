@@ -48,6 +48,7 @@ async function seedRun(
   startedAt: Date,
   usage: { inputTokens: number; outputTokens: number },
   failed = false,
+  call = { provider: 'openai', model: 'gpt-5-mini' },
 ): Promise<void> {
   await getStore().init();
   const store = (await getStore().getStore('observability'))!;
@@ -75,7 +76,7 @@ async function seedRun(
       isEvent: false,
       startedAt,
       endedAt: new Date(startedAt.getTime() + 1500),
-      attributes: { provider: 'openai', model: 'gpt-5-mini', usage },
+      attributes: { ...call, usage },
     },
   });
   await store.createSpan({
@@ -140,6 +141,45 @@ describe('agent analytics', () => {
     expect(body.tokensPerDay).toHaveLength(2);
   });
 
+  it('prices each call at the long-input price its own input reaches', async () => {
+    const { asOwner, teamId } = await setup();
+    const agentId = await createScout(asOwner);
+    const projectId = await projectIdOf(asOwner, 'MKT');
+    const meta = { agentId, teamId, projectId };
+    const gemini = { provider: 'google', model: 'gemini-2.5-pro' };
+    // Two calls of one agent on the same day: one long, one short.
+    const at = daysAgo(1);
+    await seedRun('an-long', meta, at, { inputTokens: 300_000, outputTokens: 0 }, false, gemini);
+    await seedRun('an-short', meta, at, { inputTokens: 10_000, outputTokens: 0 }, false, gemini);
+
+    const res = await teamDashboard(asOwner, teamId).get({ query: { days: 30 } });
+    expect(res.status).toBe(200);
+    const body = res.data!;
+    // google/gemini-2-5-pro: 1.25e-6 in up to 200K input tokens, 2.5e-6 above. Their
+    // average call is under 200K, which must not price the long one at the short rate.
+    expect(body.totals.cost).toBeCloseTo(0.3 * 2.5 + 0.01 * 1.25, 6);
+    expect(body.models).toMatchObject([{ model: 'gemini-2.5-pro', calls: 2 }]);
+    expect(body.models[0]!.cost).toBeCloseTo(body.totals.cost!, 6);
+    expect(body.tokensPerDay).toHaveLength(1);
+    expect(body.tokensPerDay[0]!.cost).toBeCloseTo(body.totals.cost!, 6);
+  });
+
+  it('prices a short call at the short-input price when longer calls share its day', async () => {
+    const { asOwner, teamId } = await setup();
+    const agentId = await createScout(asOwner);
+    const projectId = await projectIdOf(asOwner, 'MKT');
+    const meta = { agentId, teamId, projectId };
+    const gemini = { provider: 'google', model: 'gemini-2.5-pro' };
+    const at = daysAgo(1);
+    await seedRun('an-long', meta, at, { inputTokens: 500_000, outputTokens: 0 }, false, gemini);
+    await seedRun('an-short', meta, at, { inputTokens: 10_000, outputTokens: 0 }, false, gemini);
+
+    const res = await teamDashboard(asOwner, teamId).get({ query: { days: 30 } });
+    expect(res.status).toBe(200);
+    // Their average call is over 200K, which must not price the short one at the long rate.
+    expect(res.data!.totals.cost).toBeCloseTo(0.5 * 2.5 + 0.01 * 1.25, 6);
+  });
+
   it('splits the window by project', async () => {
     const { asOwner, teamId } = await setup();
     await createProject(asOwner, { key: 'OPS', name: 'Operations' });
@@ -172,10 +212,51 @@ describe('agent analytics', () => {
     await seedRun('an-mkt', { agentId, teamId, projectId: mkt }, daysAgo(1), usage);
     await seedRun('an-ops', { agentId, teamId, projectId: ops }, daysAgo(1), usage);
 
-    const res = await teamDashboard(asOwner, teamId).get({ query: { projectId: ops } });
+    const res = await teamDashboard(asOwner, teamId).get({ query: { projectIds: `${ops}` } });
     expect(res.data!.totals.runs).toBe(1);
     expect(res.data!.projects.map((p) => p.name)).toEqual(['Operations']);
     expect(res.data!.readableProjects.map((p) => p.name)).toEqual(['Marketing', 'Operations']);
+  });
+
+  it('narrows the window to several projects', async () => {
+    const { asOwner, teamId } = await setup();
+    await createProject(asOwner, { key: 'OPS', name: 'Operations' });
+    await createProject(asOwner, { key: 'DOC', name: 'Docs' });
+    const agentId = await createScout(asOwner);
+    const usage = { inputTokens: 100, outputTokens: 0 };
+    const ids: number[] = [];
+    for (const key of ['MKT', 'OPS', 'DOC']) {
+      const projectId = await projectIdOf(asOwner, key);
+      ids.push(projectId);
+      await seedRun(`an-${key}`, { agentId, teamId, projectId }, daysAgo(1), usage);
+    }
+
+    const res = await teamDashboard(asOwner, teamId).get({
+      query: { projectIds: `${ids[0]},${ids[1]}` },
+    });
+    expect(res.data!.totals.runs).toBe(2);
+    expect(res.data!.projects.map((p) => p.name).sort()).toEqual(['Marketing', 'Operations']);
+  });
+
+  it('reads nothing for a project outside the team', async () => {
+    const { asOwner, teamId } = await setup();
+    const mkt = await projectIdOf(asOwner, 'MKT');
+    const meta = { agentId: await createScout(asOwner), teamId, projectId: mkt };
+    await seedRun('an-mkt', meta, daysAgo(1), { inputTokens: 100, outputTokens: 0 });
+
+    const res = await teamDashboard(asOwner, teamId).get({
+      query: { projectIds: `${mkt + 1000}` },
+    });
+    expect(res.status).toBe(200);
+    expect(res.data!.totals.runs).toBe(0);
+  });
+
+  it('refuses a project list that is not ids', async () => {
+    const { asOwner, teamId } = await setup();
+    for (const projectIds of ['abc', '0', '1,,2']) {
+      const res = await teamDashboard(asOwner, teamId).get({ query: { projectIds } });
+      expect(res.status).toBe(400);
+    }
   });
 
   it('reads a window of a day by the hour', async () => {
@@ -258,7 +339,7 @@ describe('agent analytics', () => {
     expect(res.data!.totals.runs).toBe(1);
     expect(res.data!.projects.map((p) => p.name)).toEqual(['Marketing']);
     expect(res.data!.readableProjects.map((p) => p.name)).toEqual(['Marketing']);
-    const other = await teamDashboard(asMember, teamId).get({ query: { projectId: ops } });
+    const other = await teamDashboard(asMember, teamId).get({ query: { projectIds: `${ops}` } });
     expect(other.data!.totals.runs).toBe(0);
   });
 

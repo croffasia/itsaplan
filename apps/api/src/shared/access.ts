@@ -1,3 +1,5 @@
+import { db, project, projectMember, team, teamRole } from '@repo/db';
+import { and, eq, inArray, isNull, type SQLWrapper } from 'drizzle-orm';
 import { HttpError } from './lib';
 import {
   getProjectById,
@@ -10,9 +12,11 @@ import {
   getMemberContext,
   getProjectPermissions,
   getTeamPermissions,
+  toMemberContext,
+  type MemberRole,
 } from '#modules/members/service';
 import { getTeamMembership, runsTeam, type TeamStanding } from '#modules/teams/service';
-import { projectWorkspaceGrant, workspaceGrant } from '#modules/workspaces/service';
+import { projectGrant, projectGrants, workspaceGrant } from '#modules/workspaces/service';
 import {
   hasPermission,
   emptyPermissions,
@@ -28,6 +32,7 @@ import {
   teamAccess,
   type ProjectAccess,
   type TeamAccess,
+  type ProjectGrant,
 } from './workspace-roles';
 
 // The authenticated user carried on the request context. Populated by the
@@ -58,15 +63,16 @@ export function requireGod(user: AuthUser | undefined | null): AuthUser {
   return current;
 }
 
-// What the person holds in a project: their membership, raised to what their role in
-// the workspace grants (see workspace-roles.ts). Every access check below reads it.
+// What the person holds in a project: their membership, raised to what their rank in its
+// team and their role in the workspace grant (see workspace-roles.ts). Every access check
+// below reads it.
 export async function getProjectAccess(
   projectId: number,
   userId: string,
 ): Promise<ProjectAccess | null> {
   const [member, grant] = await Promise.all([
     getMemberContext(projectId, userId),
-    projectWorkspaceGrant(projectId, userId),
+    projectGrant(projectId, userId),
   ]);
   return projectAccess(member, grant);
 }
@@ -413,4 +419,65 @@ export async function projectsWithPermission(
   return projects
     .filter((entry) => hasPermission(entry.permissions, resource, action))
     .map((entry) => entry.projectId);
+}
+
+// The ids of the projects the user is a member of or reaches by a grant, as a subquery.
+// It starts from the user's own memberships and the granted teams, so it
+// reads indexes rather than every project of the instance.
+export function reachedProjectIds(userId: string, grantedTeams: number[]): SQLWrapper {
+  const member = db
+    .select({ id: projectMember.projectId })
+    .from(projectMember)
+    .where(eq(projectMember.userId, userId));
+  if (grantedTeams.length === 0) return member;
+  return member.union(
+    db.select({ id: project.id }).from(project).where(inArray(project.teamId, grantedTeams)),
+  );
+}
+
+// Every project the user reaches, as a member or by a grant, where their access holds each
+// permission. mcpOnly keeps the projects open to MCP clients. A caller that already read
+// the user's grants passes them.
+export async function readableProjectIds(
+  userId: string,
+  required: [PermissionResource, PermissionAction][],
+  opts: {
+    mcpOnly?: boolean;
+    includeArchived?: boolean;
+    grants?: Map<number, ProjectGrant>;
+  } = {},
+): Promise<number[]> {
+  const grants = opts.grants ?? (await projectGrants(userId));
+  const rows = await db
+    .select({
+      id: project.id,
+      teamId: project.teamId,
+      role: projectMember.role,
+      permissions: teamRole.permissions,
+    })
+    .from(project)
+    .innerJoin(team, eq(team.id, project.teamId))
+    .leftJoin(
+      projectMember,
+      and(eq(projectMember.projectId, project.id), eq(projectMember.userId, userId)),
+    )
+    .leftJoin(teamRole, eq(teamRole.id, projectMember.roleId))
+    .where(
+      and(
+        opts.includeArchived ? undefined : isNull(project.archivedAt),
+        opts.mcpOnly ? and(eq(project.mcpEnabled, true), eq(team.mcpEnabled, true)) : undefined,
+        inArray(project.id, reachedProjectIds(userId, [...grants.keys()])),
+      ),
+    );
+  return rows
+    .filter((row) => {
+      const member = row.role ? toMemberContext(row.role as MemberRole, row.permissions) : null;
+      const access = projectAccess(member, grants.get(row.teamId) ?? null);
+      return (
+        access &&
+        required.every(([resource, action]) => hasPermission(access.permissions, resource, action))
+      );
+    })
+    .map((row) => row.id)
+    .sort((a, b) => a - b);
 }

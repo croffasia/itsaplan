@@ -1,9 +1,10 @@
 import { useTranslations } from 'next-intl';
 import { PRESETS, type PresetKey } from '@/utils/projectPresets';
+import NewProjectOption from '@/components/layout/NewProjectOption';
 
-// Picks the set of issue types a new project starts with and previews the result.
-// The preview updates as the selection changes, so the outcome is visible before
-// the project exists.
+// Picks the set of issue types a blank project starts with and previews the result. The
+// preview updates as the selection changes, so the outcome is visible before the project
+// exists.
 export default function NewProjectPreset({
   value,
   onChange,
@@ -24,25 +25,16 @@ export default function NewProjectPreset({
         className="grid grid-cols-2 gap-x-2 gap-y-0.5"
       >
         {PRESETS.map((preset) => (
-          <button
+          <NewProjectOption
             key={preset.key}
-            type="button"
-            role="radio"
-            aria-checked={preset.key === value}
-            onClick={() => onChange(preset.key)}
-            className={`rounded-md px-2 py-1.5 text-left text-sm transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
-              preset.key === value
-                ? 'bg-secondary font-medium text-secondary-foreground'
-                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-            }`}
+            selected={preset.key === value}
+            onSelect={() => onChange(preset.key)}
           >
             {t(`presets.${preset.key}`)}
-          </button>
+          </NewProjectOption>
         ))}
       </div>
 
-      {/* The type list wraps to two rows at most and the line below is one row, so
-          the block keeps its height when the selection changes. */}
       <div className="space-y-2 rounded-lg bg-muted/60 p-3">
         <p className="text-xs text-muted-foreground">
           {t('typesCreated', { count: selected.types.length })}

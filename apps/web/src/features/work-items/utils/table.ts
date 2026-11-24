@@ -17,17 +17,15 @@ import {
 } from '@/utils/viewSettings';
 
 // The grid columns after the (always-present) title cell. 'id' is not here — the
-// identifier renders inside the title cell. The header label of a column is a
-// message under `workItems.columns`; assignee and delegate head their avatars
-// with an icon and have none.
+// identifier renders inside the title cell.
 export type TableColumn = Exclude<DisplayProperty, 'id'>;
 export const COLUMN_META: Record<TableColumn, { width: string }> = {
   status: { width: '130px' },
   statusAge: { width: '88px' },
   priority: { width: '88px' },
   type: { width: '120px' },
-  assignee: { width: '56px' },
-  delegate: { width: '56px' },
+  assignee: { width: '88px' },
+  delegate: { width: '88px' },
   initiative: { width: 'minmax(140px,220px)' },
   cycle: { width: 'minmax(120px,180px)' },
   labels: { width: 'minmax(120px,220px)' },
@@ -94,23 +92,30 @@ export type FlatItem =
       assign: GroupAssign | null;
       bucket: Issue[];
       dropKey: string;
-    };
+    }
+  // The last row of an expanded section: creates an issue in it. `assign` is what
+  // the new issue takes to land there.
+  | { kind: 'add'; assign: GroupAssign | null; dropKey: string };
 
 // Flatten the (optionally two-level) grouping into the virtualized item list. A
 // row's drop `assign` and `bucket` come from the cell it sits in, so the
-// virtualizer render stays a plain lookup-free map.
+// virtualizer render stays a plain lookup-free map. An expanded section ends with
+// an add row when `canAddTo` accepts its assign. A section with no assign (a
+// finished cycle) has no add row; the ungrouped list asks with null.
 export function buildTableItems({
   groups,
   subGroups,
   sorted,
   settings,
   collapsed,
+  canAddTo,
 }: {
   groups: IssueGroup[];
   subGroups: IssueGroup[];
   sorted: BoardIssue[];
   settings: ViewSettings;
   collapsed: Set<string>;
+  canAddTo: (assign: GroupAssign | null) => boolean;
 }): FlatItem[] {
   const grouped = settings.group !== 'none';
   const subgrouped = grouped && settings.subgroup !== 'none';
@@ -120,6 +125,7 @@ export function buildTableItems({
     sorted.forEach((issue, index) =>
       items.push({ kind: 'row', issue, index, assign: null, bucket: sorted, dropKey: 'all' }),
     );
+    if (canAddTo(null)) items.push({ kind: 'add', assign: null, dropKey: 'all' });
   } else if (!subgrouped) {
     const issuesByGroup = groupIssues(groups, sorted, settings.group);
     for (const group of groups) {
@@ -144,6 +150,9 @@ export function buildTableItems({
             dropKey: group.key,
           }),
         );
+        if (group.assign && canAddTo(group.assign)) {
+          items.push({ kind: 'add', assign: group.assign, dropKey: group.key });
+        }
       }
     }
   } else {
@@ -183,6 +192,9 @@ export function buildTableItems({
         issues.forEach((issue, index) =>
           items.push({ kind: 'row', issue, index, assign, bucket: issues, dropKey: key }),
         );
+        if (group.assign && sg.assign && canAddTo(assign)) {
+          items.push({ kind: 'add', assign, dropKey: key });
+        }
       }
     }
   }
@@ -195,9 +207,9 @@ export function buildTableItems({
 const CUSTOM_COLUMN_WIDTH = 'minmax(120px,180px)';
 const MARKDOWN_COLUMN_WIDTH = 'minmax(280px,480px)';
 
-// Title column: flexible but capped, so it does not stretch across the whole
-// table when few columns are shown; leftover width stays to the right.
-const TITLE_COLUMN_WIDTH = 'minmax(220px,520px)';
+// Title column: takes the width the other columns leave, so the last column ends at
+// the end edge, under the section's add button.
+const TITLE_COLUMN_WIDTH = 'minmax(220px,1fr)';
 
 // A resolved Table column, either a built-in property or a custom field. The
 // order of these follows settings.properties (reorderable in the Display panel).
@@ -220,6 +232,10 @@ function trackFloor(w: string): number {
   const minmax = w.match(/minmax\(\s*(\d+)px/);
   return (minmax ? Number(minmax[1]) : parseInt(w, 10)) || 0;
 }
+
+// The floor of a column's default track, which the Timeline uses as the column's
+// fixed width.
+export const columnFloor = (c: OrderedColumn): number => trackFloor(defaultColumnWidth(c));
 
 // Minimum outer width (px) the table needs for every track to sit at its floor:
 // the row's horizontal padding (px-4) + the inter-column gaps (gap-3) + each
@@ -246,20 +262,29 @@ interface TableLayout {
   alignTop: boolean;
 }
 
-export function resolveColumns(
+// The columns `properties` names, in its order: each built-in but 'id', and each
+// custom field found in `customFields`. Any other key is dropped.
+export function orderedColumns(
   properties: PropertyKey[],
   customFields: CustomField[],
-  widths: ColumnWidths,
-): TableLayout {
+): OrderedColumn[] {
   const builtins = new Set<string>(Object.keys(COLUMN_META));
   const fieldById = new Map(customFields.map((f) => [f.id, f]));
-  const columns: OrderedColumn[] = properties.flatMap((p): OrderedColumn[] => {
+  return properties.flatMap((p): OrderedColumn[] => {
     if (isCustomFieldKey(p)) {
       const field = fieldById.get(customFieldId(p));
       return field ? [{ kind: 'custom', field }] : [];
     }
     return builtins.has(p) ? [{ kind: 'builtin', col: p as TableColumn }] : [];
   });
+}
+
+export function resolveColumns(
+  properties: PropertyKey[],
+  customFields: CustomField[],
+  widths: ColumnWidths,
+): TableLayout {
+  const columns = orderedColumns(properties, customFields);
   const tracks = [
     trackWidth(TITLE_COLUMN_KEY, TITLE_COLUMN_WIDTH, widths),
     ...columns.map((c) => trackWidth(columnKey(c), defaultColumnWidth(c), widths)),

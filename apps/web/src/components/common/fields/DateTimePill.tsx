@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { CalendarClock } from 'lucide-react';
 import {
   formatDateTimeRange,
@@ -42,6 +42,7 @@ export default function DateTimePill({
   placeholder,
   onChange,
   readOnly,
+  trigger,
 }: {
   value: string | null;
   valueEnd: string | null;
@@ -50,6 +51,8 @@ export default function DateTimePill({
   placeholder?: string;
   onChange: (value: string | null, valueEnd: string | null) => void;
   readOnly?: boolean;
+  // Replaces the pill where a caller needs its own (a Timeline cell).
+  trigger?: ReactNode;
 }) {
   const t = useTranslations('common');
   const tField = useTranslations('issue.customFields');
@@ -62,7 +65,7 @@ export default function DateTimePill({
   const startTime = start?.time ?? DEFAULT_START;
   const endTime = end?.time ?? DEFAULT_END;
 
-  const pill = (
+  const pill = trigger ?? (
     <Pill active={!!value}>
       <CalendarClock />
       <span className="truncate">
@@ -93,6 +96,7 @@ export default function DateTimePill({
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
+          fixedWeeks
           selected={parseDate(start?.day ?? null) ?? undefined}
           onSelect={(d) => d && emit(toDateStr(d), startTime, endTime)}
           autoFocus

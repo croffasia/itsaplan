@@ -3,12 +3,25 @@ import { giteaListIssues } from './list-issues';
 import { giteaCreateIssue } from './create-issue';
 import { giteaUpdateIssue } from './update-issue';
 import { giteaCommentIssue } from './comment-issue';
+import { giteaListPullRequests } from './list-pull-requests';
+import { giteaGetPullRequest } from './get-pull-request';
+import { giteaListPullRequestFiles } from './list-pull-request-files';
+import { giteaReviewPullRequest } from './review-pull-request';
+import { giteaListReviewComments } from './list-review-comments';
+import { giteaReplyReviewComment } from './reply-review-comment';
+import { giteaResolveReviewComment } from './resolve-review-comment';
+import { giteaMergePullRequest } from './merge-pull-request';
+import { giteaIcon } from './icon';
+import { verifyGitea } from './verify';
 
-// Gitea: the issues of a repository an agent can read and act on. One credential is
-// one personal access token against one instance; a Forgejo instance works the same.
+// Gitea and Forgejo, which serves the same API: the issues and pull requests of a
+// repository an agent can read and act on. One credential is one personal access token
+// against one instance. Forgejo is in the label so that searching for it finds these tools.
 export const gitea: Integration = {
   key: 'gitea',
-  label: 'Gitea',
+  label: 'Gitea / Forgejo',
+  description:
+    'Lists, creates and updates issues, and reviews and merges pull requests on a Gitea or Forgejo server.',
   credentialSchema: [
     {
       key: 'baseUrl',
@@ -16,15 +29,31 @@ export const gitea: Integration = {
       type: 'url',
       required: true,
       placeholder: 'https://git.example.com',
-      help: 'Base URL of your Gitea instance. A Forgejo instance works the same.',
+      help: 'Base URL of your Gitea or Forgejo instance.',
     },
     {
       key: 'token',
       label: 'Access token',
       type: 'secret',
       required: true,
-      help: 'Personal access token with repository read and write scope (Settings, Applications). It reaches only the repositories the account can access.',
+      help: 'Personal access token with read and write access to issue and repository (Settings, Applications). It reaches only the repositories the account can access.',
     },
   ],
-  tools: [giteaListIssues, giteaCreateIssue, giteaUpdateIssue, giteaCommentIssue],
+  icon: giteaIcon,
+  website: 'https://about.gitea.com',
+  verify: verifyGitea,
+  tools: [
+    giteaListIssues,
+    giteaCreateIssue,
+    giteaUpdateIssue,
+    giteaCommentIssue,
+    giteaListPullRequests,
+    giteaGetPullRequest,
+    giteaListPullRequestFiles,
+    giteaReviewPullRequest,
+    giteaListReviewComments,
+    giteaReplyReviewComment,
+    giteaResolveReviewComment,
+    giteaMergePullRequest,
+  ],
 };

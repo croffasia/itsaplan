@@ -40,7 +40,8 @@ For the Pro edition, start the stack with `docker compose -f docker-compose.pro.
 It takes the same `.env` and runs the Pro images. Without a valid license they run as the core
 does; the license key is entered in god mode, under **License**. The project name and the
 volumes are those of `docker-compose.yml`, so an existing instance moves to Pro on the same
-data.
+data. [Fast Deploy](https://itsaplan.dev/pro#fast-deploy) in your Pro account installs this
+stack with Caddy for HTTPS on a new server in your Hetzner, Vultr or DigitalOcean account.
 
 `.env.example` documents every variable, including the optional ones: legal document URLs,
 passkey and cookie settings, telemetry opt-out, and worker tuning.
@@ -104,7 +105,9 @@ project's secret. Auth, email links, the browser and MCP keep using `API_URL`.
 
 The api rate-limits authentication per client address: sign-in, sign-up, password change and
 email change to 3 requests per 10 seconds, sign-in links (requesting and opening one) to 5 per
-minute, password reset and confirmation emails to 3 per minute. It reads the address from `X-Forwarded-For` and takes it only when the header holds
+minute, password reset and confirmation emails to 3 per minute. Change these numbers in god mode
+under **Authentication → Request limits**; each is at least 1. Each api replica counts on its
+own. It reads the address from `X-Forwarded-For` and takes it only when the header holds
 one address. When it finds no address it can use, every client shares one limit per route,
 and the api logs `Rate limiting could not determine a client IP` once.
 
@@ -131,6 +134,14 @@ A client that reaches the api without the proxy writes any of these headers itse
 `docker-compose.yml` publishes the api on `API_PORT` of the host; keep that port closed to
 everything but the proxy.
 
+### API key rate limit
+
+One API key may send 1200 requests a minute. Each MCP message, such as a tool call, is one request. Change the limit
+in god mode under **General → API keys**; 0 turns it off. A key over the limit gets HTTP 429
+with a `Retry-After` header that says how many seconds remain in its minute. Each key has its
+own count, and with several api replicas each replica counts on its own. A new limit applies at
+once on the replica that saved it and within a minute on the others.
+
 ## Mail
 
 The instance sends password resets, address confirmations, sign-in links and invites through
@@ -150,6 +161,72 @@ and sends as the mailbox over XOAUTH2. An empty server is filled with
 
 Then paste the tenant ID, the client ID and the secret into the page and send a test. A
 refused token is reported as rejected credentials and is not retried.
+
+## Push notifications
+
+Members can get their notifications as Web Push, next to email, Telegram and Slack, in each browser
+they turn it on in: Chrome, Edge and Firefox, Safari on macOS, and Safari on iOS and iPadOS
+16.4 or later once the app is added to the Home Screen. Push needs three variables, set on the
+api and on the worker:
+
+| Variable                     | Value                                                       |
+| ---------------------------- | ----------------------------------------------------------- |
+| `WEB_PUSH_VAPID_PUBLIC_KEY`  | from `bun run web-push:keys`                                |
+| `WEB_PUSH_VAPID_PRIVATE_KEY` | from `bun run web-push:keys`; a secret                      |
+| `WEB_PUSH_SUBJECT`           | a `mailto:` or `https:` contact the push services can reach |
+
+While any of them is unset, push is off and the app does not offer it. Generate the key pair
+once: a new pair ends every existing subscription, and members turn push on again in each
+browser. The worker sends to the browsers' push services (Google, Mozilla, Apple), so it needs
+outbound HTTPS. [docs/dev/web-push.md](dev/web-push.md) describes the whole path.
+
+## Slack notifications
+
+A Slack app sends notifications to members as direct messages. Each member connects their Slack
+account with Sign in with Slack.
+
+Configure the app for the instance:
+
+1. At [api.slack.com/apps](https://api.slack.com/apps), select **Create New App** → **From a
+   manifest**. Select your Slack workspace and paste the manifest below. Replace
+   `https://plan.example.com` with your `APP_URL`.
+2. Install the app to the Slack workspace.
+3. Copy the **Bot User OAuth Token** (`xoxb-…`) from **OAuth & Permissions**. Copy the **Client
+   ID** and the **Client Secret** from **Basic Information**.
+4. In god mode, open **Slack**. Paste the three values, set **Enabled** and save. Slack checks the
+   token when you save.
+
+```yaml
+display_information:
+  name: It's a Plan
+features:
+  bot_user:
+    display_name: It's a Plan
+    always_online: true
+  app_home:
+    messages_tab_enabled: true
+    messages_tab_read_only_enabled: true
+oauth_config:
+  redirect_urls:
+    - https://plan.example.com/slack/connect
+  scopes:
+    bot:
+      - chat:write
+settings:
+  token_rotation_enabled: false
+```
+
+Keep token rotation off. A rotated token expires after 12 hours.
+
+If the members of a workspace use a different Slack workspace, the workspace owner creates a
+separate app with the same steps. The owner pastes its values in the workspace settings →
+**Slack**.
+
+Members connect their Slack account in their notification settings, once for each Slack
+workspace.
+
+The Slack tools of an agent use a separate credential in **Integrations**. Each tool lists the
+bot scopes that it needs.
 
 ## Single sign-on
 

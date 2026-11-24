@@ -47,10 +47,10 @@ export type PendingMessage = { id: string; text: string };
 // events, so everything below is the same for either.
 //
 // When the agent has memory enabled, the run belongs to a conversation thread: the
-// thread id returned by the first message is kept so follow-up messages continue it,
-// and it is surfaced as `threadId` so the host can reflect the new thread in the
-// history list. loadThread() restores a past conversation; newChat() starts a fresh
-// one. threadId is null while a new conversation has not produced its first reply.
+// thread id the first message starts is kept so follow-up messages continue it, and it
+// is surfaced as `threadId` so the host can reflect the new thread in the history list.
+// loadThread() restores a past conversation; newChat() starts a fresh one. threadId is
+// null until the first message of a new conversation is taken.
 //
 // A message sent while a reply is running is held in `pending` and sent on its own once
 // that reply ends, one at a time and in the order it was typed. A reply that failed
@@ -158,6 +158,7 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
                 );
               }
               break;
+            case 'thread':
             case 'done':
               threadRef.current = event.threadId;
               setThreadId(event.threadId);

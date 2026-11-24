@@ -119,7 +119,7 @@ const scimGroupMapping = t.Object({
   projectId: t.Integer(),
   role: t.UnionEnum(['owner', 'member']),
   // Which team_role a member joins on. Null for an owner (owners bypass the
-  // permission matrix) or to fall back to the team's default role.
+  // permission matrix) or to fall back to the default role.
   roleId: t.Nullable(t.Integer()),
 });
 

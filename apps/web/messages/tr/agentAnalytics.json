@@ -1,11 +1,12 @@
 {
   "window": "{days, plural, =1 {Son 24 saat} other {Son # gün}}",
+  "period": "Dönem",
   "retentionNote": "Yalnızca dahili ajanlar. Örneklemin iz saklama süresinden eski çalıştırmalar dahil edilmez.",
   "noComparison": "Karşılaştırılacak veri yok",
   "vsPrevious": "önceki {value} döneme göre",
   "deletedAgent": "Silinmiş ajan",
   "deletedProject": "Silinmiş proje",
-  "allProjects": "Tüm projeler",
+  "projects": "Projeler",
   "totalTokens": "Toplam token",
   "totalCost": "Toplam maliyet",
   "stats": {
@@ -55,7 +56,7 @@
   },
   "preview": {
     "title": "Cloud ve Pro sürümlerinde daha fazlası",
-    "description": "Kişi ve tetikleyici bazında harcamalar, çalışma süresi ve araç çağrıları. Cloud ve kendi sunucunuzda barındırılan Pro sürümünde mevcuttur.",
+    "description": "Kişi, tetikleyici, zamanlama ve akış bazında harcamalar, çalışma süresi ve araç çağrıları. Cloud ve kendi sunucunuzda barındırılan Pro sürümünde mevcuttur.",
     "hide": "Gizle",
     "show": "Göster",
     "byPerson": {
@@ -64,11 +65,15 @@
     },
     "byTrigger": {
       "title": "Tetikleyiciye göre",
-      "description": "Sohbet, bahsetme, zamanlama veya iş olayı."
+      "description": "Çalıştırmaları neyin başlattığı."
     },
     "bySchedule": {
       "title": "Zamanlamaya göre",
       "description": "Her zamanlamanın yaptığı harcama."
+    },
+    "byWorkflow": {
+      "title": "Akışa göre",
+      "description": "Her akışın kullandığı kaynaklar."
     },
     "tools": {
       "title": "Araçlar",

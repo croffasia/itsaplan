@@ -13,14 +13,9 @@ import type { Permission } from '#shared/guards';
 import { dispatchTool } from '#mcp/dispatch';
 import { getMcpApp } from '#mcp/app-ref';
 import { compactProjectActivity } from './activity-result';
-import {
-  AGENT_ACTIONS,
-  ALWAYS_ON_ACTIONS,
-  ALWAYS_ON_KEYS,
-  normalizeToolKeys,
-  toolMeta,
-  type ToolMeta,
-} from './catalog';
+import { allActions, alwaysOnKeys, normalizeToolKeys, toolMeta, type ToolMeta } from './catalog';
+import { collapseNumericSchema } from './numeric-schema';
+import { actFor, type AgentWork } from '../../run-initiator';
 
 // The tools an internal agent uses to work in its project, built from the routes
 // tagged with mcpTool() — the same table the MCP endpoint serves. A tool call is
@@ -49,7 +44,7 @@ function jsonSchemaInput(schema: McpInputSchema): z.ZodType<Record<string, unkno
   return {
     [AI_SDK_SCHEMA]: true,
     _type: undefined,
-    jsonSchema: schema,
+    jsonSchema: collapseNumericSchema(schema),
     validate: undefined,
   } as unknown as z.ZodType<Record<string, unknown>>;
 }
@@ -90,7 +85,7 @@ function imageModelOutput(output: unknown) {
 // behind it, or one whose route asks only for project membership, has none.
 export function actionCatalog(): (ToolMeta & { permission?: Permission })[] {
   const byName = new Map(routeTools(getMcpApp()).map((route) => [route.name, route]));
-  return [...AGENT_ACTIONS, ...ALWAYS_ON_ACTIONS].map((action) => ({
+  return allActions().map((action) => ({
     ...action,
     permission: byName.get(action.key)?.permission,
   }));
@@ -98,22 +93,37 @@ export function actionCatalog(): (ToolMeta & { permission?: Permission })[] {
 
 // Builds the route-backed tools for one agent, keyed by tool id. The read-only
 // always-on actions are always included; a mutating action only when its key is in
-// enabledActions (the agent's granted actions, from ai_agent.tools).
+// enabledActions (the agent's granted actions, from ai_agent.tools), with what it needs.
+// A locked action gives nothing.
+// `work` is the run or chat the tools serve, passed on to the runs their calls start.
 export function buildRouteTools(
   project: ProjectRow,
   apiKey: string,
-  enabledActions: string[] = [],
+  enabledActions: string[],
+  work: AgentWork,
 ): Record<string, ReturnType<typeof createTool>> {
-  const app = getMcpApp();
-  const granted = new Set([...ALWAYS_ON_KEYS, ...normalizeToolKeys(enabledActions)]);
-  // An update replaces the board's canvas as a whole, so without the read the agent
-  // would send a canvas built from nothing and delete every card already on the board.
-  if (granted.has('update_note_board')) granted.add('get_note_board');
+  const granted = new Set(alwaysOnKeys());
+  for (const key of normalizeToolKeys(enabledActions)) {
+    const action = toolMeta(key);
+    if (!action || action.locked) continue;
+    granted.add(key);
+    for (const need of action.needs ?? []) granted.add(need);
+  }
+  return buildNamedRouteTools(project, apiKey, granted, work);
+}
 
+// The tools of the routes with these names, whatever the catalog grants.
+export function buildNamedRouteTools(
+  project: ProjectRow,
+  apiKey: string,
+  names: Iterable<string>,
+  work: AgentWork,
+): Record<string, ReturnType<typeof createTool>> {
+  const wanted = new Set(names);
   const tools: Record<string, ReturnType<typeof createTool>> = {};
-  for (const route of routeTools(app)) {
-    if (!granted.has(route.name)) continue;
-    tools[route.name] = buildOne(route, project, apiKey);
+  for (const route of routeTools(getMcpApp())) {
+    if (!wanted.has(route.name)) continue;
+    tools[route.name] = buildOne(route, project, apiKey, work);
   }
   return tools;
 }
@@ -122,6 +132,7 @@ function buildOne(
   route: McpRouteTool,
   project: ProjectRow,
   apiKey: string,
+  work: AgentWork,
 ): ReturnType<typeof createTool> {
   const overrides = toolMeta(route.name)?.overrides;
   const bindsProject = route.pathParams.includes('projectKey');
@@ -141,12 +152,14 @@ function buildOne(
       const args: Record<string, unknown> = { ...input };
       for (const name of hidden) delete args[name];
       if (bindsProject) args.projectKey = project.ref;
-      const { text, isError } = await dispatchTool(
-        getMcpApp(),
-        route,
-        args,
-        { kind: 'api-key', apiKey },
-        { viaMcpEndpoint: false, projectId: project.id },
+      const { text, isError } = await actFor(work, () =>
+        dispatchTool(
+          getMcpApp(),
+          route,
+          args,
+          { kind: 'api-key', apiKey },
+          { viaMcpEndpoint: false, projectId: project.id },
+        ),
       );
       const body = parseBody(text);
       // A route failure is returned to the model as a result rather than thrown, so

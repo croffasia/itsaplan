@@ -9,6 +9,7 @@ const LIMIT_FIELDS =
 // The token owner's current publishing quota usage (posts and replies).
 export const threadsPublishingLimit: CustomToolEntry = {
   key: 'threads_publishing_limit',
+  group: 'Publishing',
   label: 'Threads Publishing Limit',
   scopes: ['threads_basic', 'threads_content_publish'],
   description:

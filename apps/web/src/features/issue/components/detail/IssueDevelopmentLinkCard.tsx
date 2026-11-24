@@ -1,6 +1,7 @@
 import { ExternalLink, GitBranch, GitPullRequest, Unlink } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import type { DevelopmentLink } from '@/lib/api/endpoints/git';
+import { calendarSystem } from '@/utils/dates';
 import IssueDevelopmentChecks from './IssueDevelopmentChecks';
 import IssueDevelopmentCiBadge from './IssueDevelopmentCiBadge';
 import IssueDevelopmentStateBadge from './IssueDevelopmentStateBadge';
@@ -75,7 +76,7 @@ export default function IssueDevelopmentLinkCard({
               date: format.dateTime(new Date(link.updatedAt), {
                 dateStyle: 'medium',
                 timeStyle: 'short',
-                calendar: 'gregory',
+                calendar: calendarSystem(),
               }),
             })}
           </time>

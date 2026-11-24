@@ -1,7 +1,7 @@
 import { t } from 'elysia';
 
 import { pageQueryFields, pageResponse } from '#shared/pagination';
-import { agentRunTrigger, agentExecutionState, runContextTokens } from '../model';
+import { agentRunTrigger, agentExecutionState, runContextTokens, runReceivedAt } from '../model';
 
 export { agentParams, projectAgentParams } from '../model';
 
@@ -26,7 +26,7 @@ const username = t.String({
   minLength: 1,
   maxLength: 64,
   pattern: '^[a-zA-Z0-9._-]+$',
-  description: 'Mention handle (letters, digits, . _ -).',
+  description: 'Mention handle.',
 });
 
 // The reasoning effort levels the provider SDKs share (see runtime/index.ts).
@@ -39,33 +39,31 @@ const configFields = {
     t.Nullable(
       t.Number({
         description:
-          'Credential id of the LLM provider, from list_integration_credentials. Required for an ' +
-          'internal agent to run.',
+          'LLM credential id from ' +
+          'list_integration_credentials. An internal agent needs it to run.',
       }),
     ),
   ),
   model: t.Optional(
     t.Nullable(
       t.String({
-        description:
-          "Model id the provider offers, from list_provider_models, e.g. 'claude-sonnet-5'.",
+        description: "Model id from list_provider_models, such as 'claude-sonnet-5'.",
       }),
     ),
   ),
-  instructions: t.Optional(t.Nullable(t.String({ description: 'System prompt for the agent.' }))),
+  instructions: t.Optional(t.Nullable(t.String({ description: "The agent's system prompt." }))),
   tools: t.Optional(
     t.Array(t.String(), {
       description:
-        'Built-in action keys from list_ai_agent_tools the agent is granted. Tools on an ' +
-        'integration are granted separately, through set_ai_agent_configured_tools.',
+        'Built-in action keys to grant, from list_ai_agent_tools. Grant integration tools with ' +
+        'set_ai_agent_configured_tools.',
     }),
   ),
-  temperature: t.Optional(t.Nullable(t.Number({ description: 'Sampling temperature.' }))),
+  temperature: t.Optional(t.Nullable(t.Number())),
   reasoningEffort: t.Optional(
     t.Nullable(reasoningEffort, {
       description:
-        "How much a reasoning model thinks before it answers. Null leaves it to the provider's " +
-        'default.',
+        'How much a reasoning model thinks before it answers. null uses the provider default.',
     }),
   ),
   maxSteps: t.Optional(t.Nullable(t.Integer({ description: 'Max tool-call steps per run.' }))),
@@ -74,7 +72,8 @@ const configFields = {
       t.Integer({
         minimum: 1,
         description:
-          "Seconds one run may take before it is stopped and saved as failed. Null uses the instance's maximum, which also caps this value.",
+          'Seconds a run may take before it stops as failed. null ' +
+          'uses the instance maximum, which also caps this value.',
       }),
     ),
   ),
@@ -86,6 +85,13 @@ const configFields = {
   ),
   triggerOnMention: t.Optional(t.Boolean({ description: 'Run when @-mentioned in a comment.' })),
   triggerOnAssign: t.Optional(t.Boolean({ description: 'Run when assigned to an issue.' })),
+  chatEnabled: t.Optional(
+    t.Boolean({
+      description:
+        'Allow chat with the agent. When off, the agent still ' +
+        'runs on a mention, a delegation or a schedule. Default true.',
+    }),
+  ),
   fieldTriggers: t.Optional(
     t.Array(
       t.Object({
@@ -94,8 +100,8 @@ const configFields = {
       }),
       {
         description:
-          'Member custom fields (from list_custom_fields) the agent also reacts to: being set ' +
-          'into one of them starts a run after delaySec seconds. Other fields are ignored.',
+          'Member custom fields from list_custom_fields. Setting the agent in one starts a run ' +
+          'after delaySec seconds. Other fields are ignored.',
       },
     ),
   ),
@@ -109,16 +115,15 @@ const configFields = {
   projectIds: t.Optional(
     t.Array(t.Integer(), {
       description:
-        'Projects of the team the agent works in, from list_projects. Replaces the set: a ' +
-        'project left out is detached. A project of another team is rejected. The agent ' +
-        "joins on the team's default role; set_member_role changes it per project.",
+        'Team projects the agent works in, from list_projects. Replaces the whole set. Projects ' +
+        'of another team are refused. The agent joins with the ' +
+        'default role. Change it per project with set_member_role.',
     }),
   ),
   runnerScope: t.Optional(
     t.Union([t.Literal('owner'), t.Literal('team')], {
       description:
-        "Which runs an external agent's runner receives: 'owner' only the creator's, " +
-        "'team' any member's.",
+        "Runs an external agent's runner gets: 'owner' only the creator's, 'team' any member's.",
     }),
   ),
   invocationUrl: t.Optional(
@@ -127,9 +132,8 @@ const configFields = {
         minLength: 1,
         maxLength: 2048,
         description:
-          "HTTPS URL an external agent's runs and chat messages are POSTed to, signed with " +
-          'its invocation secret, instead of being claimed by a runner. Null puts the agent ' +
-          'back on a runner. Ignored for an internal agent.',
+          "HTTPS URL that gets an external agent's runs and chat messages as signed POSTs, in " +
+          'place of a runner. null returns the agent to a runner. Ignored for an internal agent.',
       }),
     ),
   ),
@@ -161,9 +165,11 @@ export const AiAgentResponse = t.Object({
   memoryLastMessages: t.Nullable(t.Number()),
   triggerOnMention: t.Boolean(),
   triggerOnAssign: t.Boolean(),
+  chatEnabled: t.Boolean(),
   fieldTriggers: t.Array(t.Object({ fieldId: t.Number(), name: t.String(), delaySec: t.Number() })),
   delegationDelaySec: t.Number(),
   ownerUserId: t.Nullable(t.String()),
+  ownerName: t.Nullable(t.String()),
   runnerScope: t.Union([t.Literal('owner'), t.Literal('team')]),
   lastSeenAt: t.Nullable(t.String()),
   invocationUrl: t.Nullable(t.String()),
@@ -192,10 +198,14 @@ export const CreateAgentResponse = t.Object({
 // The new API key secret returned once by regenerate-key.
 export const RegenerateKeyResponse = t.Object({ apiKey: t.String() });
 
-// A run's generated text and the conversation thread id (null when memory is off).
-export const RunAgentResponse = t.Object({
-  text: t.String(),
-  threadId: t.Nullable(t.String()),
+export const apiRunBody = t.Object({
+  prompt: t.String({ minLength: 1, description: 'The task for the agent.' }),
+});
+
+export const QueuedApiRunResponse = t.Object({
+  runId: t.Number({ description: 'Read it with get_agent_run.' }),
+  status: t.Literal('queued'),
+  retryAfterSeconds: t.Number({ description: 'Seconds to wait before reading the run.' }),
 });
 
 // One row of an agent's run history (AgentRunRow from run-queue).
@@ -207,11 +217,14 @@ export const AgentRunResponse = t.Object({
   issueId: t.Nullable(t.Number()),
   issueIdentifier: t.Nullable(t.String()),
   issueTitle: t.Nullable(t.String()),
+  documentId: t.Nullable(t.Number()),
+  documentTitle: t.Nullable(t.String()),
   prompt: t.String(),
   attempts: t.Number(),
   lastError: t.Nullable(t.String()),
   output: t.Nullable(t.String()),
   contextTokens: runContextTokens,
+  receivedAt: runReceivedAt,
   nextAttemptAt: t.String(),
   createdAt: t.String(),
 });
@@ -222,9 +235,10 @@ export const AgentRunPageResponse = t.Object({
   nextCursor: t.Nullable(t.Number()),
 });
 
-// One chat thread in the caller's history with an agent (ChatThreadSummary).
+// One chat thread in the caller's history (ChatThreadSummary).
 export const ChatThreadResponse = t.Object({
   id: t.String(),
+  agentId: t.Number(),
   title: t.Nullable(t.String()),
   cliSessionId: t.Nullable(
     t.String({
@@ -287,17 +301,22 @@ export const ChatMessagesResponse = t.Object({
 
 export const AiAgentListResponse = t.Array(AiAgentResponse);
 
-// One page of a caller's chat threads with an agent (ChatThreadPage).
+// What a screen needs to name an agent, for a member who may not read its configuration.
+export const ProjectAgentListResponse = t.Array(
+  t.Pick(AiAgentResponse, ['id', 'name', 'kind', 'model']),
+);
+
+// One page of a caller's chat threads (ChatThreadPage).
 export const ChatThreadListResponse = t.Object({
   items: t.Array(ChatThreadResponse),
   nextPage: t.Nullable(t.Number()),
 });
 
 export const createAgentBody = t.Object({
-  name: t.String({ minLength: 1, description: 'Display name.' }),
+  name: t.String({ minLength: 1 }),
   username,
   kind: t.Union([t.Literal('external'), t.Literal('internal')], {
-    description: "'external' (API key) or 'internal' (in-process, needs a model config).",
+    description: "'external' gets an API key. 'internal' runs in-process and needs a model config.",
   }),
   ...configFields,
 });
@@ -316,9 +335,8 @@ export const agentListQuery = t.Object({
 export const setAgentProjectsBody = t.Object({
   projectIds: t.Array(t.Integer(), {
     description:
-      'Projects of the team the agent works in. Replaces the set: a project left out is ' +
-      "detached. The agent joins on the team's default role; set_member_role changes it per " +
-      'project.',
+      'Team projects the agent works in. Replaces the whole set. The agent joins with the ' +
+      'default role. Change it per project with set_member_role.',
   }),
 });
 
@@ -445,7 +463,7 @@ export const TeamAgentAnalyticsResponse = t.Composite([
   t.Object({
     readableProjects: t.Array(t.Object({ projectId: t.Number(), name: t.String() }), {
       description:
-        'The projects of the team the caller reads the figures of: what `projectId` takes.',
+        'The projects of the team the caller reads the figures of: what `projectIds` takes.',
     }),
   }),
 ]);
@@ -458,7 +476,11 @@ export const workspaceAnalyticsQuery = t.Object({ days: analyticsDays });
 
 export const analyticsQuery = t.Object({
   days: analyticsDays,
-  projectId: t.Optional(
-    t.Numeric({ description: 'Narrows the figures to one project of the team.' }),
+  projectIds: t.Optional(
+    t.String({
+      pattern: '^[1-9][0-9]{0,8}(,[1-9][0-9]{0,8})*$',
+      maxLength: 5000,
+      description: 'Comma-separated project ids of the team; narrows the figures to them.',
+    }),
   ),
 });

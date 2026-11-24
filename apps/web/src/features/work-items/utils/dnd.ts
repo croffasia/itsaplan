@@ -8,6 +8,11 @@ export interface DropData {
   onDrop: (issueId: number) => void;
 }
 
+// dnd-kit makes every draggable focusable, so a card or row reached with Tab shows
+// this ring.
+export const DRAGGABLE_FOCUS =
+  'outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset';
+
 // Item drop targets sit inside their container target, so the pointer is always
 // over both. Prefer the item so hovering one inserts at it, while hovering the
 // empty container area falls through to the container (append).

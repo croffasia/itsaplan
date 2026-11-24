@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Search, TriangleAlert, X } from 'lucide-react';
-import type { GithubSkillCandidate, NewSkillInput } from '@/lib/api/endpoints/agentSkills';
+import type {
+  AgentSkill,
+  GithubSkillCandidate,
+  NewSkillInput,
+} from '@/lib/api/endpoints/agentSkills';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,10 +40,13 @@ function countOccurrences(haystack: string, needle: string): number {
 export function SkillCreateDialog({
   teamId,
   teamName,
+  onCreated,
   onClose,
 }: {
   teamId: number;
   teamName: string;
+  // Given the skills the dialog created, before it closes.
+  onCreated?: (skills: AgentSkill[]) => void;
   onClose: () => void;
 }) {
   const t = useTranslations('teams.skills');
@@ -136,14 +143,18 @@ export function SkillCreateDialog({
       urls.map((url) => create.mutateAsync({ source: 'github', sourceUrl: url })),
     );
     setBusy(false);
-    if (results.some((r) => r.status === 'fulfilled')) onClose();
+    const created = results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
+    if (created.length > 0) {
+      onCreated?.(created);
+      onClose();
+    }
   }
 
   async function submitInline() {
     setBusy(true);
     try {
       const input: NewSkillInput = { source, name: name.trim() || null, markdown };
-      await create.mutateAsync(input);
+      onCreated?.([await create.mutateAsync(input)]);
       onClose();
     } catch {
       setBusy(false);
@@ -281,9 +292,7 @@ export function SkillCreateDialog({
               onChange={(e) => setMarkdown(e.target.value)}
               rows={10}
               className="font-mono text-xs"
-              placeholder={
-                '---\nname: My skill\ndescription: What it does and when to use it\n---\n\nInstructions…'
-              }
+              placeholder={t('inlinePlaceholder')}
             />
           </div>
           {nameAndCreate}

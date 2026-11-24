@@ -7,6 +7,7 @@ import { resetDb } from '#tests/helpers/db';
 import { createAgent } from '#tests/helpers/agents';
 import { processAgentRuns } from '../../run-poller';
 import { setRunRefusal, type InternalWork } from '../../run-refusal';
+import { streamAgent, type AgentRunEvent } from '../../runtime';
 
 // The agent has no model credential, so work let through fails on the model rather than
 // calling one.
@@ -66,6 +67,54 @@ describe('agent run refusal', () => {
   });
 
   it('answers a refused chat with the reason', async () => {
+    const { owner, project, agent } = await setup();
+    const asked: InternalWork[] = [];
+    setRunRefusal(async (work) => {
+      asked.push(work);
+      return REASON;
+    });
+
+    const events: AgentRunEvent[] = [];
+    for await (const event of streamAgent(agent.id, project.id, 'hi', {
+      callerUserId: owner.userId,
+    })) {
+      events.push(event);
+    }
+
+    expect(events).toEqual([{ type: 'error', message: REASON }]);
+    expect(asked).toEqual([
+      { agentId: agent.id, teamId: project.teamId, projectId: project.id, userId: owner.userId },
+    ]);
+  });
+
+  // The run is asked about again when it starts, for whoever sent it, so a budget spent
+  // while the task waited in the queue still stops it.
+  it('asks about a queued API task again when it starts, for whoever sent it', async () => {
+    const { owner, asOwner, project, agent } = await setup();
+    const asked: InternalWork[] = [];
+    setRunRefusal(async (work) => {
+      asked.push(work);
+      return asked.length > 1 ? REASON : null;
+    });
+
+    const res = await asOwner
+      .projects({ projectKey: 'MKT' })
+      ['ai-agents']({ agentId: agent.id })
+      .run.post({ prompt: 'hi' });
+    await processAgentRuns();
+
+    const sent = {
+      agentId: agent.id,
+      teamId: project.teamId,
+      projectId: project.id,
+      userId: owner.userId,
+    };
+    expect(asked).toEqual([sent, sent]);
+    const [run] = await db.select().from(agentRun).where(eq(agentRun.id, res.data!.runId));
+    expect(run).toMatchObject({ status: 'failed', lastError: REASON });
+  });
+
+  it('refuses an API task with the reason, without queueing it', async () => {
     const { owner, asOwner, project, agent } = await setup();
     const asked: InternalWork[] = [];
     setRunRefusal(async (work) => {
@@ -83,5 +132,6 @@ describe('agent run refusal', () => {
     expect(asked).toEqual([
       { agentId: agent.id, teamId: project.teamId, projectId: project.id, userId: owner.userId },
     ]);
+    expect(await db.select().from(agentRun).where(eq(agentRun.agentId, agent.id))).toEqual([]);
   });
 });

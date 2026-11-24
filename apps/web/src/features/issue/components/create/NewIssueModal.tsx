@@ -4,7 +4,7 @@ import { MoreHorizontal } from 'lucide-react';
 import type { IssueTemplate } from '@/lib/api/endpoints/issueTemplates';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { CycleRef, Issue, IssueFieldValueInput } from '@/lib/api/endpoints/issues';
-import { type NewIssueDefaults } from '@/utils/project';
+import { assignableMembers, newIssueInput, type NewIssueDefaults } from '@/utils/project';
 import { parseDate } from '@/utils/dates';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/lib/auth-client';
@@ -69,40 +69,28 @@ export default function NewIssueModal({
 }) {
   const t = useTranslations('issue.create');
   const tFields = useTranslations('issue.fields');
-  const [title, setTitle] = useState(defaults.title ?? '');
-  const [description, setDescription] = useState(defaults.description ?? '');
-  const [columnId, setColumnId] = useState(defaults.columnId ?? project.columns[0]?.id ?? 0);
-  const [typeId, setTypeId] = useState<number | null>(
-    defaults.typeId === undefined
-      ? (project.issueTypes.find((t) => t.isDefault)?.id ?? null)
-      : defaults.typeId,
-  );
-  const [initiativeId, setInitiativeId] = useState<number | null>(defaults.initiativeId ?? null);
-  // A default cycle that is not among the planned ones has finished, and nothing new
-  // is planned into it — the issue is created without a cycle instead.
-  const [cycle, setCycle] = useState<CycleRef | null>(
-    () => project.plannedCycles.find((c) => c.id === defaults.cycleId) ?? null,
-  );
   const { data: session } = useSession();
-  // Assignee defaults to the creating user unless the caller set one explicitly
-  // (defaults.assigneeUserId is null for the "No assignee" board group).
-  const [assigneeUserId, setAssigneeUserId] = useState<string | null>(() => {
-    if (defaults.assigneeUserId !== undefined) return defaults.assigneeUserId;
-    const userId = session?.user.id;
-    return userId != null &&
-      project.assignees.some((a) => a.kind === 'member' && a.userId === userId)
-      ? userId
-      : null;
-  });
-  const [delegateUserId, setDelegateUserId] = useState<string | null>(
-    defaults.delegateUserId ?? null,
+  const [initial] = useState(() => newIssueInput(project, defaults, session?.user.id ?? null));
+  const [title, setTitle] = useState(initial.title);
+  const [description, setDescription] = useState(initial.description ?? '');
+  const [columnId, setColumnId] = useState(initial.columnId);
+  const [typeId, setTypeId] = useState<number | null>(initial.typeId ?? null);
+  const [initiativeId, setInitiativeId] = useState<number | null>(initial.initiativeId ?? null);
+  const [cycle, setCycle] = useState<CycleRef | null>(
+    () => project.plannedCycles.find((c) => c.id === initial.cycleId) ?? null,
   );
-  const [priority, setPriority] = useState(defaults.priority ?? '');
+  const [assigneeUserId, setAssigneeUserId] = useState<string | null>(
+    initial.assigneeUserId ?? null,
+  );
+  const [delegateUserId, setDelegateUserId] = useState<string | null>(
+    initial.delegateUserId ?? null,
+  );
+  const [priority, setPriority] = useState(initial.priority ?? '');
   const [estimatePoints, setEstimatePoints] = useState<number | null>(null);
   const [estimateMinutes, setEstimateMinutes] = useState<number | null>(null);
-  const [startDate, setStartDate] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const [labelIds, setLabelIds] = useState<number[]>(defaults.labelIds ?? []);
+  const [startDate, setStartDate] = useState(initial.startDate ?? '');
+  const [dueDate, setDueDate] = useState(initial.dueDate ?? '');
+  const [labelIds, setLabelIds] = useState<number[]>(initial.labelIds ?? []);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const { fullscreen, onToggleFullscreen } = useModalFullscreen();
@@ -159,8 +147,9 @@ export default function NewIssueModal({
   function removeAttachment(id: number) {
     const item = attachments.remove(id);
     if (!item) return;
-    if (descEditor) removeEmbed(descEditor, item.url);
-    for (const editor of fieldEditors.current.values()) removeEmbed(editor, item.url);
+    const matches = (url: string) => url === item.url;
+    if (descEditor) removeEmbed(descEditor, matches);
+    for (const editor of fieldEditors.current.values()) removeEmbed(editor, matches);
   }
 
   // The annotated image replaces the file it was drawn on, so wherever that file
@@ -233,7 +222,12 @@ export default function NewIssueModal({
     if (next.columnId != null) setColumnId(next.columnId);
     if (next.typeId != null) setTypeId(next.typeId);
     if (next.priority != null) setPriority(next.priority);
-    if (next.assigneeUserId != null) setAssigneeUserId(next.assigneeUserId);
+    if (
+      next.assigneeUserId != null &&
+      assignableMembers(project.assignees).some((a) => a.userId === next.assigneeUserId)
+    ) {
+      setAssigneeUserId(next.assigneeUserId);
+    }
     if (next.labelIds.length > 0) setLabelIds(next.labelIds);
   }
 
@@ -374,6 +368,7 @@ export default function NewIssueModal({
             onDescriptionReady={setDescEditor}
             bodyDefs={bodyDefs}
             fieldValues={fieldValues}
+            projectKey={project.project.ref}
             assignees={project.assignees}
             onFieldValue={setFieldValue}
             onFieldEditorReady={(id, editor) => {
@@ -389,7 +384,7 @@ export default function NewIssueModal({
         >
           <StatusSelect columns={project.columns} value={columnId} onChange={setColumnId} />
 
-          {project.assignees.some((a) => a.kind === 'member') && (
+          {(assignableMembers(project.assignees).length > 0 || assigneeUserId != null) && (
             <AssigneeSelect
               assignees={project.assignees}
               value={assigneeUserId}

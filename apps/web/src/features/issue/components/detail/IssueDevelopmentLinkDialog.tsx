@@ -24,6 +24,7 @@ import {
   useLinkablePullRequestsQuery,
   useLinkIssueDevelopment,
 } from '@/services/issues.service';
+import { GIT_PROVIDER_CONFIG } from '@/utils/gitProviderConfig';
 
 export default function IssueDevelopmentLinkDialog({
   issueId,
@@ -108,7 +109,7 @@ export default function IssueDevelopmentLinkDialog({
                 <SelectContent>
                   {repositoriesQuery.data?.map((repository) => (
                     <SelectItem key={repository.id} value={String(repository.id)}>
-                      {repository.fullName}
+                      {GIT_PROVIDER_CONFIG[repository.provider].label} · {repository.fullName}
                     </SelectItem>
                   ))}
                 </SelectContent>

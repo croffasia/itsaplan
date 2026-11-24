@@ -1,11 +1,12 @@
 {
   "window": "{days, plural, =1 {Dernières 24 heures} other {# derniers jours}}",
+  "period": "Période",
   "retentionNote": "Agents internes uniquement. Les exécutions plus anciennes que la conservation des traces de l'instance ne sont pas comptées.",
   "noComparison": "Rien à comparer",
   "vsPrevious": "contre {value} avant",
   "deletedAgent": "Agent supprimé",
   "deletedProject": "Projet supprimé",
-  "allProjects": "Tous les projets",
+  "projects": "Projets",
   "totalTokens": "Total des jetons",
   "totalCost": "Coût total",
   "stats": {
@@ -55,7 +56,7 @@
   },
   "preview": {
     "title": "Plus dans Cloud et Pro",
-    "description": "Dépenses par personne et par déclencheur, durée des exécutions et appels d'outils. Disponible dans Cloud et dans Pro auto-hébergé.",
+    "description": "Dépenses par personne, déclencheur, planification et flux, durée des exécutions et appels d'outils. Disponible dans Cloud et dans Pro auto-hébergé.",
     "hide": "Masquer",
     "show": "Afficher",
     "byPerson": {
@@ -64,11 +65,15 @@
     },
     "byTrigger": {
       "title": "Par déclencheur",
-      "description": "Chat, mention, planification ou événement de tâche."
+      "description": "Ce qui a lancé les exécutions."
     },
     "bySchedule": {
       "title": "Par planification",
       "description": "Ce que chaque planification a dépensé."
+    },
+    "byWorkflow": {
+      "title": "Par flux",
+      "description": "Ce que chaque flux a utilisé."
     },
     "tools": {
       "title": "Outils",

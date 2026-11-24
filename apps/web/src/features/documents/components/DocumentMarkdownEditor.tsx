@@ -4,17 +4,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { JSONContent } from '@tiptap/core';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
-import Color from '@tiptap/extension-color';
-import Highlight from '@tiptap/extension-highlight';
-import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
-import { TableKit } from '@tiptap/extension-table';
-import TaskItem from '@tiptap/extension-task-item';
-import TaskList from '@tiptap/extension-task-list';
-import TextAlign from '@tiptap/extension-text-align';
-import { TextStyle } from '@tiptap/extension-text-style';
 import { type Editor, EditorContent, useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
+import { documentExtensions, isSafeDocumentImageSource } from '@repo/editor';
 import { common, createLowlight } from 'lowlight';
 import { useTranslations } from 'next-intl';
 import { Markdown } from 'tiptap-markdown';
@@ -26,44 +18,25 @@ import { refreshDecorations } from '@/components/common/editor/refreshDecoration
 import { useIssueRefs } from '@/context/issueRefs';
 import { createLinkKeyboardHandlers } from '@/components/common/editor/linkKeyboardHandlers';
 import { openLinkOnModifierClick } from '@/components/common/editor/modifierClickLink';
-import { ResizableImage } from '@/components/common/editor/tiptap-image';
-import { MarkdownTable } from '@/components/common/editor/tiptap-table';
 import { pasteMarkdown } from '@/components/common/editor/pasteMarkdown';
 import { useDocumentAnchor } from '../hooks/useDocumentAnchor';
 import { DocumentBlockId } from '../extensions/documentBlockId';
+import { DocumentImageUpload, trackImageUpload } from '../extensions/documentImageUpload';
+import { DocumentResizableImage } from '../extensions/documentResizableImage';
 import DocumentBlockMenu from './DocumentBlockMenu';
 import DocumentSelectionActions, { type DocumentSelection } from './DocumentSelectionActions';
+import DocumentSelectionAlign from './DocumentSelectionAlign';
 import { SlashCommand } from '@/lib/tiptap-slash-command';
+import { Mention, type MentionOptions } from '@/lib/tiptap-mention';
+import { useMentionCandidates, useMentionNames } from '@/hooks/useMentionCandidates';
+import { useSession } from '@/lib/auth-client';
 
 const lowlight = createLowlight(common);
-const DOCUMENT_ASSET_PATH =
-  /^\/(?:protected-media\/)?projects\/[A-Za-z0-9._~%+-]+\/documents\/[1-9]\d*\/assets\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/raw$/i;
-
-function safeDocumentLinkHref(href: string): boolean {
-  if (
-    href.length === 0 ||
-    href.length > 2048 ||
-    [...href].some(
-      (character) => character === '\\' || /[\p{White_Space}\p{Cc}\p{Cf}]/u.test(character),
-    )
-  ) {
-    return false;
-  }
-  if (href.startsWith('#')) return true;
-  if (href.startsWith('/') && !href.startsWith('//')) return true;
-  if (/^(mailto:|tel:).+/i.test(href)) return true;
-  try {
-    const url = new URL(href);
-    return (
-      (url.protocol === 'http:' || url.protocol === 'https:') && !url.username && !url.password
-    );
-  } catch {
-    return false;
-  }
-}
-
 type EditorLabels = {
   placeholder: string;
+  // Shown on the empty line the cursor is on, once the page has text.
+  linePlaceholder?: string;
+  uploadingImage?: string;
   codeBlockLabel: string;
   tableLabel: string;
   blocks?: {
@@ -80,32 +53,24 @@ type EditorLabels = {
 
 type EditorValue = { markdown: string; json: JSONContent };
 
-export function documentEditorExtensions(labels: EditorLabels) {
+// Without `mentions` the mention node is still known, so a page that holds one parses,
+// but typing "@" offers nobody.
+export function documentEditorExtensions(labels: EditorLabels, mentions?: MentionOptions) {
   return [
-    DocumentBlockId,
-    StarterKit.configure({
-      codeBlock: false,
-      link: false,
-      heading: { levels: [1, 2, 3, 4, 5, 6] },
+    ...documentExtensions({
+      blockId: DocumentBlockId,
+      codeBlock: CodeBlockLowlight.configure({ lowlight }),
+      image: DocumentResizableImage,
+      mention: mentions ? Mention.configure(mentions) : Mention,
     }),
-    CodeBlockLowlight.configure({ lowlight }),
-    Placeholder.configure({ placeholder: labels.placeholder }),
-    Link.configure({
-      autolink: true,
-      defaultProtocol: 'https',
-      openOnClick: true,
-      HTMLAttributes: { class: 'cursor-pointer', tabindex: '0' },
-      isAllowedUri: safeDocumentLinkHref,
+    Placeholder.configure({
+      placeholder: ({ editor, node }) => {
+        if (node.type.name === 'heading')
+          return labels.blocks?.headings[(node.attrs.level as number) - 1] ?? '';
+        return editor.isEmpty ? labels.placeholder : (labels.linePlaceholder ?? '');
+      },
     }),
-    ResizableImage,
-    TableKit.configure({ table: false }),
-    MarkdownTable.configure({ resizable: false }),
-    TaskList,
-    TaskItem.configure({ nested: true }),
-    TextStyle,
-    Color,
-    Highlight.configure({ multicolor: true }),
-    TextAlign.configure({ types: ['heading', 'paragraph'] }),
+    DocumentImageUpload.configure({ label: labels.uploadingImage ?? '' }),
     SlashCommand.configure({
       codeBlockLabel: labels.codeBlockLabel,
       tableLabel: labels.tableLabel,
@@ -133,7 +98,6 @@ export default function DocumentMarkdownEditor({
   onReady,
   onChange,
   onBlur,
-  onPickImage,
   onUploadImage,
 }: {
   projectKey?: string;
@@ -148,13 +112,14 @@ export default function DocumentMarkdownEditor({
   onReady: (editor: Editor | null) => void;
   onChange: (value: EditorValue) => void;
   onBlur: (value: EditorValue) => void;
-  onPickImage?: () => void;
   onUploadImage?: (file: File) => Promise<{ url: string; filename: string }>;
 }) {
   const t = useTranslations('documents.toolbar');
   const router = useRouter();
   const issueRefs = useIssueRefs();
   const editorRef = useRef<Editor | null>(null);
+  const dragFromPage = useRef(false);
+  const imageInput = useRef<HTMLInputElement>(null);
   const linkKeyboardHandlers = useMemo(createLinkKeyboardHandlers, []);
   const editableRef = useRef(editable);
   editableRef.current = editable;
@@ -166,32 +131,55 @@ export default function DocumentMarkdownEditor({
   issueRefsRef.current = issueRefs;
   const openIssueRefRef = useRef(router.push);
   openIssueRefRef.current = (href: string) => router.push(href);
+  const mentionCandidates = useMentionCandidates(
+    projectKey && documentId ? { projectKey, on: 'document', documentId, place: 'text' } : null,
+  );
+  const mentionCandidatesRef = useRef(mentionCandidates);
+  mentionCandidatesRef.current = mentionCandidates;
+  const mentionNames = useMentionNames();
+  const mentionNamesRef = useRef(mentionNames);
+  mentionNamesRef.current = mentionNames;
+  const { data: session } = useSession();
+  const selfHandle = session?.user.username ?? '';
+  const selfHandleRef = useRef(selfHandle);
+  selfHandleRef.current = selfHandle;
 
   const editor = useEditor({
     immediatelyRender: false,
     editable,
-    extensions: documentEditorExtensions({
-      placeholder,
-      codeBlockLabel: t('codeBlock'),
-      tableLabel: t('table'),
-      blocks: {
-        paragraph: t('text'),
-        headings: [
-          t('heading1'),
-          t('heading2'),
-          t('heading3'),
-          t('heading4'),
-          t('heading5'),
-          t('heading6'),
-        ],
-        bulletList: t('bulletList'),
-        orderedList: t('numberedList'),
-        taskList: t('todoList'),
-        quote: t('quote'),
-        divider: t('divider'),
+    extensions: documentEditorExtensions(
+      {
+        placeholder,
+        linePlaceholder: t('linePlaceholder'),
+        uploadingImage: t('uploadingImage'),
+        codeBlockLabel: t('codeBlock'),
+        tableLabel: t('table'),
+        blocks: {
+          paragraph: t('text'),
+          headings: [
+            t('heading1'),
+            t('heading2'),
+            t('heading3'),
+            t('heading4'),
+            t('heading5'),
+            t('heading6'),
+          ],
+          bulletList: t('bulletList'),
+          orderedList: t('numberedList'),
+          taskList: t('todoList'),
+          quote: t('quote'),
+          divider: t('divider'),
+        },
+        // The editor is built once, often before the session takes input, so the item is
+        // always there and the input it opens renders only while the page is editable.
+        image: { label: t('image'), onPick: () => imageInput.current?.click() },
       },
-      image: onPickImage ? { label: t('uploadImage'), onPick: onPickImage } : undefined,
-    }).concat(
+      {
+        items: () => mentionCandidatesRef.current,
+        self: () => selfHandleRef.current,
+        name: (handle) => mentionNamesRef.current.get(handle),
+      },
+    ).concat(
       IssueRef.configure({
         refs: () => issueRefsRef.current.refs,
         open: (href) => openIssueRefRef.current(href),
@@ -202,7 +190,7 @@ export default function DocumentMarkdownEditor({
     editorProps: {
       handleDOMEvents: linkKeyboardHandlers,
       handleClick(view, _pos, event) {
-        return openLinkOnModifierClick(event, view.dom);
+        return openLinkOnModifierClick(event, view);
       },
       attributes: {
         role: 'textbox',
@@ -228,9 +216,11 @@ export default function DocumentMarkdownEditor({
         return pasteMarkdown(currentEditor, event.clipboardData);
       },
       handleDrop: (view, event, _slice, moved) => {
+        const fromPage = dragFromPage.current;
+        dragFromPage.current = false;
         const file = firstImageFile(event.dataTransfer?.files);
         const currentEditor = editorRef.current;
-        if (moved || !file || !onUploadImage || !currentEditor || !editableRef.current)
+        if (moved || fromPage || !file || !onUploadImage || !currentEditor || !editableRef.current)
           return false;
         const dropPoint = view.posAtCoords({ left: event.clientX, top: event.clientY });
         if (!dropPoint) return false;
@@ -263,6 +253,26 @@ export default function DocumentMarkdownEditor({
 
   useDocumentAnchor(editor);
 
+  // Chrome adds a dragged <img> to the drop as a file. A drag that starts in the page,
+  // such as an Option-drag copy, copies the content itself instead of uploading the image.
+  // A drop on the page clears the flag in handleDrop, a drag that ends elsewhere here.
+  useEffect(() => {
+    const dom = editor?.view.dom;
+    if (!dom) return;
+    const start = () => {
+      dragFromPage.current = true;
+    };
+    const end = () => {
+      dragFromPage.current = false;
+    };
+    dom.addEventListener('dragstart', start);
+    dom.addEventListener('dragend', end);
+    return () => {
+      dom.removeEventListener('dragstart', start);
+      dom.removeEventListener('dragend', end);
+    };
+  }, [editor]);
+
   useEffect(() => {
     editorRef.current = editor;
     onReady(editor);
@@ -273,7 +283,7 @@ export default function DocumentMarkdownEditor({
   useEffect(() => {
     const frame = requestAnimationFrame(() => refreshDecorations(editor));
     return () => cancelAnimationFrame(frame);
-  }, [editor, issueRefList, issueRefs.resolve, editable, focused]);
+  }, [editor, issueRefList, issueRefs.resolve, selfHandle, editable, focused]);
 
   useLayoutEffect(() => {
     syncDocumentEditorEditable(editor, editable);
@@ -282,10 +292,11 @@ export default function DocumentMarkdownEditor({
   if (!editor) return null;
 
   return (
-    <div className={`relative ${className ?? ''}`} data-document-editor="">
+    <div className={`document-prose group/doc relative ${className ?? ''}`} data-document-editor="">
       {editable && <DocumentBlockMenu editor={editor} />}
       {editable && (
         <EditorSelectionMenu editor={editor}>
+          <DocumentSelectionAlign editor={editor} />
           {projectKey && documentId && onComment && (
             <DocumentSelectionActions
               editor={editor}
@@ -298,7 +309,27 @@ export default function DocumentMarkdownEditor({
       )}
       {editable && <EditorTableMenu editor={editor} />}
       <EditorContent editor={editor} className="flex min-h-full flex-col" />
-      <EditorLinkPreview editor={editor} source={defaultJson ? '' : defaultValue} />
+      <EditorLinkPreview
+        editor={editor}
+        source={defaultJson ? '' : defaultValue}
+        editLink={editable}
+      />
+      {editable && onUploadImage && (
+        <input
+          ref={imageInput}
+          className="sr-only"
+          type="file"
+          accept="image/*"
+          tabIndex={-1}
+          aria-label={t('uploadImage')}
+          onChange={(event) => {
+            const file = firstImageFile(event.target.files);
+            event.currentTarget.value = '';
+            if (file)
+              void uploadAndInsertImage(editor, file, onUploadImage, editor.state.selection.from);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -325,25 +356,7 @@ export function insertDocumentImage(
 
 export function safeDocumentImageSource(source: string): string | null {
   const normalized = source.trim();
-  if (
-    normalized.length === 0 ||
-    normalized.length > 4096 ||
-    [...normalized].some(
-      (character) => character === '\\' || /[\p{White_Space}\p{Cc}\p{Cf}]/u.test(character),
-    )
-  ) {
-    return null;
-  }
-  if (DOCUMENT_ASSET_PATH.test(normalized)) return normalized;
-  try {
-    const url = new URL(normalized);
-    if ((url.protocol === 'http:' || url.protocol === 'https:') && !url.username && !url.password) {
-      return normalized;
-    }
-  } catch {
-    return null;
-  }
-  return null;
+  return isSafeDocumentImageSource(normalized) ? normalized : null;
 }
 
 export function firstImageFile(files: ArrayLike<File> | null | undefined): File | null {
@@ -357,12 +370,15 @@ export async function uploadAndInsertImage(
   position: number,
   isEditable: () => boolean = () => editor.isEditable,
 ): Promise<boolean> {
+  const settle = trackImageUpload(editor, position);
   try {
     const asset = await upload(file);
+    const tracked = settle();
     if (editor.isDestroyed || !editor.isEditable || !isEditable()) return false;
     const source = safeDocumentImageSource(asset.url);
     if (!source) return false;
-    const safePosition = Math.max(0, Math.min(position, editor.state.doc.content.size));
+    const target = tracked ?? position;
+    const safePosition = Math.max(0, Math.min(target, editor.state.doc.content.size));
     return editor
       .chain()
       .focus()
@@ -372,6 +388,7 @@ export async function uploadAndInsertImage(
       })
       .run();
   } catch {
+    settle();
     return false;
   }
 }

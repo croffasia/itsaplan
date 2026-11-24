@@ -1,54 +1,72 @@
+import { Fragment } from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { Issue } from '@/lib/api/endpoints/issues';
 import { noDragProps } from '@/lib/dnd';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useParentIssue } from '../../context/useSubtasks';
+import { useAncestors } from '../../context/useSubtasks';
 
-// The issue's identifier, preceded by its parent's when the issue is a subtask.
-// A subtask gets a card or a row of its own once the Subtasks display option is
-// on, and nothing else on it says what it belongs to. The parent's identifier
-// opens the parent; without onOpenParent (the drag preview) it is inert.
+// The issue's identifier, preceded by the identifiers of the issues above it when
+// the issue is a subtask: the top one and the parent, with an ellipsis for any in
+// between. A subtask gets a card or a row of its own once the Subtasks display
+// option is on, and nothing else on it says what it belongs to. Each identifier
+// opens its issue; without onOpenAncestor (the drag preview) they are inert.
 export function IssueIdentifier({
   issue,
   className,
-  onOpenParent,
+  onOpenAncestor,
 }: {
   issue: Issue;
   className?: string;
-  onOpenParent?: (id: number) => void;
+  onOpenAncestor?: (id: number) => void;
 }) {
-  const parent = useParentIssue(issue.parentId);
+  const ancestors = useAncestors(issue.parentId);
+  const hidden = ancestors.slice(1, -1);
+  const shown = hidden.length > 0 ? [ancestors[0], ancestors[ancestors.length - 1]] : ancestors;
+  const separator = (
+    <ChevronRight className="size-3 shrink-0 text-muted-foreground/60 rtl:rotate-180" />
+  );
 
   return (
     <span className={cn('flex shrink-0 items-center gap-0.5', className)}>
-      {parent && (
-        <>
+      {shown.map((ancestor, index) => (
+        <Fragment key={ancestor.id}>
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 type="button"
                 // The card and the row start a drag on press and open themselves
-                // on click; the parent link must do neither.
+                // on click; the link must do neither.
                 {...noDragProps}
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  onOpenParent?.(parent.id);
+                  onOpenAncestor?.(ancestor.id);
                 }}
                 className={cn(
                   'text-muted-foreground/60',
-                  onOpenParent && 'cursor-pointer hover:text-foreground hover:underline',
+                  onOpenAncestor && 'cursor-pointer hover:text-foreground hover:underline',
                 )}
               >
-                {parent.identifier}
+                {ancestor.identifier}
               </button>
             </TooltipTrigger>
-            <TooltipContent>{parent.title}</TooltipContent>
+            <TooltipContent>{ancestor.title}</TooltipContent>
           </Tooltip>
-          <ChevronRight className="size-3 shrink-0 text-muted-foreground/60 rtl:rotate-180" />
-        </>
-      )}
+          {separator}
+          {index === 0 && hidden.length > 0 && (
+            <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="text-muted-foreground/60">…</span>
+                </TooltipTrigger>
+                <TooltipContent>{hidden.map((h) => h.identifier).join(' › ')}</TooltipContent>
+              </Tooltip>
+              {separator}
+            </>
+          )}
+        </Fragment>
+      ))}
       {issue.identifier}
     </span>
   );

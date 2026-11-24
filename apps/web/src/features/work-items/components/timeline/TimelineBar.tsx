@@ -1,10 +1,10 @@
 import { useTranslations } from 'next-intl';
 import type { BoardIssue, Issue } from '@/lib/api/endpoints/issues';
-import { isBlocked } from '@/utils/issueLinks';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useIsBlocked } from '../../context/useIssueLinks';
 import { type TimelineDragMode } from '../../hooks/useTimelineDrag';
-import { type Span } from '../../utils/timeline';
+import { MIN_TITLED_BAR_W, type Span } from '../../utils/timeline';
 
 const BLOCKED_HATCH =
   'repeating-linear-gradient(45deg, color-mix(in oklab, var(--destructive) 70%, transparent) 0 4px, transparent 4px 9px)';
@@ -35,7 +35,7 @@ export function TimelineBar({
   onOpen: (id: number) => void;
 }) {
   const t = useTranslations('workItems.timeline');
-  const blocked = isBlocked(issue);
+  const blocked = useIsBlocked(issue);
   let cursor = 'cursor-ew-resize';
   if (readOnly) cursor = 'cursor-pointer';
   else if (active) cursor = 'cursor-grabbing';
@@ -53,7 +53,7 @@ export function TimelineBar({
         cursor,
       )}
       style={{
-        left: rect.left,
+        insetInlineStart: rect.left,
         width: rect.width,
         backgroundColor: color,
         // Held up by another issue: red hatching over the fill and a ring around
@@ -62,21 +62,25 @@ export function TimelineBar({
         backgroundImage: blocked ? BLOCKED_HATCH : undefined,
         boxShadow: blocked ? '0 0 0 1.5px var(--destructive)' : undefined,
         opacity: span.inferredStart ? 0.8 : 1,
-        borderLeft: span.inferredStart ? '2px dashed rgba(255,255,255,0.75)' : undefined,
+        borderInlineStart: span.inferredStart ? '2px dashed rgba(255,255,255,0.75)' : undefined,
       }}
     >
       {!readOnly && (
         <span
           onPointerDown={(e) => onBeginDrag(e, issue, 'start')}
-          className="absolute top-0 left-0 h-full w-1.5 cursor-ew-resize opacity-0 group-hover:opacity-100"
+          className="absolute start-0 top-0 h-full w-1.5 cursor-ew-resize opacity-0 group-hover:opacity-100"
           style={{ background: 'rgba(255,255,255,0.4)' }}
         />
       )}
-      <span className="truncate text-[11px] leading-none">{issue.title}</span>
+      {rect.width >= MIN_TITLED_BAR_W && (
+        <span dir="auto" className="truncate text-[11px] leading-none">
+          {issue.title}
+        </span>
+      )}
       {!readOnly && (
         <span
           onPointerDown={(e) => onBeginDrag(e, issue, 'end')}
-          className="absolute top-0 right-0 h-full w-1.5 cursor-ew-resize opacity-0 group-hover:opacity-100"
+          className="absolute end-0 top-0 h-full w-1.5 cursor-ew-resize opacity-0 group-hover:opacity-100"
           style={{ background: 'rgba(255,255,255,0.4)' }}
         />
       )}

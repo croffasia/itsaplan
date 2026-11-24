@@ -1,0 +1,207 @@
+{
+  "label": "Benvenuto in It's a Plan",
+  "goTo": "Vai alla diapositiva {number}",
+  "next": "Avanti",
+  "start": "Inizia",
+  "getInPro": "Disponibile in Pro",
+  "proNote": "Disponibile in Cloud e Self-hosted Pro.",
+  "replay": "Apri il tour del prodotto",
+  "slides": {
+    "dashboards": {
+      "title": "Crea le tue dashboard",
+      "body": "Crea una dashboard per ogni cosa che monitori e scegli i suoi widget: conteggi issue, scomposizioni, burn-up, throughput, attività e run degli agenti."
+    },
+    "workItems": {
+      "title": "Ogni task è un'issue",
+      "body": "Vedi le stesse issue come board kanban, tabella, timeline o calendario per mese, settimana o giorno. Salva i filtri che usi come vista."
+    },
+    "initiatives": {
+      "title": "Raggruppa issue sotto un obiettivo",
+      "body": "Un'iniziativa raccoglie le issue che spingono un obiettivo più grande. Il suo avanzamento e la sua salute si aggiornano man mano che quelle issue si muovono."
+    },
+    "cycles": {
+      "title": "Pianifica il lavoro in finestre temporali",
+      "body": "Un ciclo è un periodo fisso in cui il team pianifica le sue issue. Quando finisce, sposta le issue non completate nel successivo."
+    },
+    "documents": {
+      "title": "Scrivi accanto al lavoro",
+      "body": "Tieni spec e decisioni nei documenti. Collegali a issue e iniziative, discutili nei commenti e ripristina qualsiasi revisione precedente."
+    },
+    "notes": {
+      "title": "Bozzetta idee su una board",
+      "body": "Una board delle note è una tela libera per note adesive. Tieni una board per te o condividila con il progetto."
+    },
+    "agents": {
+      "title": "Affida il lavoro a un agente AI",
+      "body": "Assegna un'issue a un agente o chiediglielo in chat. Lavora con i tool e le skill che gli dai e riferisce cosa ha fatto."
+    },
+    "schedules": {
+      "title": "Avvia agenti su pianificazione",
+      "body": "Avvia un agente a un orario fisso o quando un'issue entra in uno stato. Pro ne avvia anche uno quando un'issue viene creata o assegnata, un'etichetta è aggiunta o un commento è pubblicato, solo per le issue che corrispondono a un filtro."
+    },
+    "workflows": {
+      "name": "Workflow",
+      "title": "Incatena agenti in un workflow",
+      "body": "Un workflow passa il lavoro da un agente al successivo. Inizia a mano, su pianificazione, su un evento di issue o da un webhook, e un passo può rimandare il lavoro per correzioni."
+    },
+    "portal": {
+      "name": "Portale di supporto",
+      "title": "Ricevi richieste da fuori dal team",
+      "body": "Metti un form sul tuo sito o dai un portale ai clienti. Ogni richiesta diventa un'issue, e il mittente riceve un'email quando qualcuno risponde."
+    },
+    "budgets": {
+      "name": "Budget AI",
+      "title": "Metti un tetto alle spese degli agenti",
+      "body": "Imposta un limite di spesa dei modelli per l'intero workspace, un team, un progetto o ogni persona, al giorno, alla settimana o al mese. Quando un budget è speso, gli agenti non avviano nuove run."
+    },
+    "analytics": {
+      "name": "Analisi AI",
+      "title": "Vedi dove vanno tempo e soldi degli agenti",
+      "body": "Scomponi le run degli agenti per persona, trigger, pianificazione e workflow, con tempo di run e le chiamate ai tool fallite."
+    },
+    "audit": {
+      "name": "Registro di audit",
+      "title": "Sappi chi ha fatto cosa",
+      "body": "Il registro di audit registra le modifiche a persone, impostazioni e dati, e ogni accesso. Esportalo quando ti serve."
+    }
+  },
+  "art": {
+    "issues": {
+      "checkout": "Riprogettazione pagina di checkout",
+      "webhooks": "Integra i webhook di Stripe",
+      "refunds": "Flusso di rimborso per il supporto",
+      "invoices": "Esportazione PDF delle fatture",
+      "twoFactor": "Autenticazione a due fattori",
+      "testKeys": "Configura le chiavi di test di Stripe",
+      "releaseNotes": "Scrivi le release notes",
+      "flakyTest": "Correggi il test di export instabile",
+      "staleIssues": "Etichetta le issue stantie",
+      "roadmap": "Bozza la roadmap del Q3",
+      "feedback": "Riassumi il feedback dei clienti"
+    },
+    "states": {
+      "todo": "Da fare",
+      "inProgress": "In corso",
+      "review": "In revisione",
+      "done": "Fatto"
+    },
+    "sprintHealth": "Salute dello sprint",
+    "initiative": "Lancio Q3",
+    "cycle": "Ciclo {number}",
+    "activeCycle": "Ciclo {number} · attivo",
+    "week": "Settimana {number}",
+    "working": "In lavorazione",
+    "steps": {
+      "read": "Leggi l'issue",
+      "search": "Cerca nel codice",
+      "pullRequest": "Apri una pull request",
+      "report": "Riferisci"
+    },
+    "schedules": {
+      "community": "Community",
+      "weeklyReport": "Report settimanale",
+      "everyMonday": "Ogni lunedì alle {time}",
+      "reviewFix": "Rivedi la correzione",
+      "entersState": "Un'issue entra in {state}",
+      "runHistory": "Storico delle run",
+      "running": "in esecuzione",
+      "triageBugs": "Triage dei bug report",
+      "when": "Quando",
+      "events": {
+        "created": "Un'issue viene creata",
+        "assigned": "Un'issue viene assegnata",
+        "labelAdded": "Un'etichetta viene aggiunta",
+        "commentAdded": "Un commento viene aggiunto"
+      },
+      "bugLabel": "bug",
+      "onlyFor": "Solo per issue",
+      "typeBug": "Tipo: Bug",
+      "priorityHigh": "Priorità: Alta",
+      "createdByAnyone": "Creato da: chiunque",
+      "howOften": "Quanto spesso",
+      "perDay": "{count} ogni 24 h",
+      "atOnce": "{count} in una volta"
+    },
+    "workflows": {
+      "name": "Release notes",
+      "on": "Su",
+      "trigger": "Trigger",
+      "issueEvent": "Evento di issue",
+      "writer": "Scrittore",
+      "draftNotes": "Bozza le note",
+      "reviewer": "Revisore",
+      "checkDraft": "Controlla la bozza",
+      "request": "Richiesta",
+      "sendBack": "Rimanda",
+      "run": "Run #{number}",
+      "running": "In esecuzione · {step}, round {round}"
+    },
+    "portal": {
+      "contactSupport": "Contatta il supporto",
+      "name": "Nome",
+      "email": "Email",
+      "message": "Messaggio",
+      "send": "Invia",
+      "request": "Richiesta",
+      "issue": "Impossibile esportare le fatture",
+      "replySent": "Risposta inviata via email",
+      "followed": "Seguito sul portale"
+    },
+    "budgets": {
+      "newBudget": "Nuovo budget",
+      "workspace": "Intero workspace",
+      "team": "Team · {name}",
+      "person": "Ogni persona",
+      "perMonth": "al mese",
+      "perWeek": "alla settimana",
+      "perDay": "al giorno",
+      "spentOf": "{spent} di {limit}",
+      "thisMonth": "Questo mese",
+      "ofLimit": "di {limit} speso",
+      "refused": "Run rifiutata",
+      "spent": "Budget esaurito"
+    },
+    "analytics": {
+      "usage": "Utilizzo degli agenti",
+      "range": "Ultimi 30 giorni",
+      "byTrigger": "Per trigger",
+      "triggers": {
+        "chat": "Chat",
+        "mention": "Menzione",
+        "schedule": "Pianificazione",
+        "issueEvent": "Evento di issue",
+        "workflow": "Workflow"
+      },
+      "total": "{cost} · {count, plural, one {# run} other {# run}}",
+      "runTime": "Tempo di run",
+      "byPerson": "Per persona"
+    },
+    "audit": {
+      "export": "Esporta",
+      "time": "Ora",
+      "who": "Chi",
+      "action": "Azione",
+      "where": "Dove",
+      "workspace": "Workspace",
+      "actions": {
+        "role": "Cambiato il ruolo di Bob in Admin",
+        "sso": "Accesso con SSO",
+        "created": "Creato ITS-241",
+        "label": "Eliminata l'etichetta \"legacy\"",
+        "tried": "Tentato di eliminare un progetto",
+        "requireSso": "Attivato Richiedi SSO"
+      },
+      "denied": "Rifiutato"
+    }
+  },
+  "showcase": {
+    "title": "Aggiungi la tua azienda all'elenco",
+    "body": "Invia il logo, il sito web e qualche parola su come il tuo team lavora in It's a Plan. Controlliamo ogni richiesta e puoi rimuovere il logo in qualsiasi momento.",
+    "open": "Aggiungi la mia azienda",
+    "dismiss": "No, grazie",
+    "art": {
+      "heading": "Chi usa It's a Plan",
+      "yourLogo": "Il tuo logo"
+    }
+  }
+}

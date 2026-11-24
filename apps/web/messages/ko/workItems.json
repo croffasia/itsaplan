@@ -1,5 +1,6 @@
 {
   "newIssue": "새 이슈",
+  "addWorkItem": "작업 추가",
   "pin": "고정",
   "unpin": "고정 해제",
   "collapse": "접기",
@@ -44,6 +45,12 @@
   "calendar": {
     "previousMonth": "이전 달",
     "nextMonth": "다음 달",
+    "previousWeek": "이전 주",
+    "nextWeek": "다음 주",
+    "previousDays": "{count, plural, other {이전 #일}}",
+    "nextDays": "{count, plural, other {다음 #일}}",
+    "weekNumber": "{number}주차",
+    "range": "{from} – {to}",
     "today": "오늘",
     "moreIssues": "외 {count}개",
     "issueCount": "{count, plural, one {이슈 #개} other {이슈 #개}}",
@@ -67,8 +74,13 @@
       "custom": "모든 이슈에 날짜가 있습니다."
     }
   },
+  "empty": {
+    "title": "이슈가 없습니다",
+    "description": "이슈가 여기에 표시됩니다.",
+    "filteredTitle": "일치하는 이슈가 없습니다",
+    "filteredDescription": "더 보려면 필터를 변경하세요."
+  },
   "timeline": {
-    "empty": "타임라인에 표시할 이슈가 아직 없습니다.",
     "expandGroup": "그룹 펼치기",
     "collapseGroup": "그룹 접기",
     "inferredStart": "생성일을 기준으로 추정한 시작일",
@@ -92,20 +104,20 @@
   },
   "removal": {
     "archive": {
-      "title": "{count, plural, one {이슈 보관} other {이슈 보관}}",
+      "title": "{count, plural, other {이슈 #개를 보관하시겠습니까?}}",
       "confirm": "{count, plural, one {이슈 #개 보관} other {이슈 #개 보관}}",
-      "description": "{count, plural, one {선택한 이슈 #개를 보관하시겠습니까? 보드에서 사라지지만 나중에 복원할 수 있습니다.} other {선택한 이슈 #개를 보관하시겠습니까? 보드에서 사라지지만 나중에 복원할 수 있습니다.}}"
+      "description": "보드에서 사라지지만 나중에 복원할 수 있습니다."
     },
     "delete": {
-      "title": "{count, plural, one {이슈 삭제} other {이슈 삭제}}",
+      "title": "{count, plural, other {이슈 #개를 삭제하시겠습니까?}}",
       "confirm": "{count, plural, one {이슈 #개 삭제} other {이슈 #개 삭제}}",
-      "description": "{count, plural, one {선택한 이슈 #개를 삭제하시겠습니까?} other {선택한 이슈 #개를 삭제하시겠습니까?}} 댓글, 활동 기록 및 첨부 파일도 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
+      "description": "댓글, 활동 기록 및 첨부 파일도 함께 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
     }
   },
   "share": {
     "issueTitle": "이슈",
     "issueUnavailable": "이 이슈를 사용할 수 없습니다.",
-    "boardUnavailable": "이 공유 보드를 사용할 수 없습니다. 공유 링크가 취소되었을 수 있습니다."
+    "boardUnavailable": "이 공유 보드를 사용할 수 없습니다. 공유 링크가 취소되었거나 만료되었을 수 있습니다."
   },
   "groups": {
     "noAssignee": "담당자 없음",

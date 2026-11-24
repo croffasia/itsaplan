@@ -2,7 +2,7 @@ import { db, issue, issueType, label, project, projectColumn, team, user } from 
 import { eq, inArray } from 'drizzle-orm';
 import { emitWebhookEvents } from '#modules/webhooks/emit';
 import type { WebhookEventType } from '#modules/webhooks/service';
-import { issueUrl, teamRef } from '#modules/teams/ref';
+import { commentUrl, issueUrl, teamRef } from '#modules/teams/ref';
 import type { ActivityActor, FeedItemRow } from './activity';
 import type { IssueRow } from './service';
 
@@ -109,7 +109,8 @@ export async function emitIssueEvent(
   );
 }
 
-// A comment payload names the issue it is on, so a receiver can link to it.
+// A comment payload links to the comment and names the issue it is on, so a receiver can
+// link to either.
 export async function emitCommentEvent(
   projectId: number,
   eventType: WebhookEventType,
@@ -132,19 +133,18 @@ export async function emitCommentEvent(
         .innerJoin(project, eq(project.id, issue.projectId))
         .innerJoin(team, eq(team.id, project.teamId))
         .where(eq(issue.id, comment.issueId));
+      if (!row) return [{ ...comment, url: null, issue: null }];
+      const ref = teamRef({ id: row.teamId, slug: row.teamSlug });
       return [
         {
           ...comment,
-          issue: row
-            ? {
-                id: comment.issueId,
-                identifier: `${row.key}-${row.seq}`,
-                title: row.title,
-                url:
-                  issueUrl(teamRef({ id: row.teamId, slug: row.teamSlug }), row.key, row.seq) ??
-                  null,
-              }
-            : null,
+          url: commentUrl(ref, row.key, row.seq, comment.id) ?? null,
+          issue: {
+            id: comment.issueId,
+            identifier: `${row.key}-${row.seq}`,
+            title: row.title,
+            url: issueUrl(ref, row.key, row.seq) ?? null,
+          },
         },
       ];
     },

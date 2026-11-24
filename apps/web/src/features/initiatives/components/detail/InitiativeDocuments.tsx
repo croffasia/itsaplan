@@ -72,7 +72,7 @@ export default function InitiativeDocuments({
       {pickerOpen && (
         <DocumentPickerDialog
           projectKey={projectKey}
-          linkedDocumentIds={linkedIds}
+          excludeIds={linkedIds}
           onClose={() => setPickerOpen(false)}
           onPick={(document) => {
             void link

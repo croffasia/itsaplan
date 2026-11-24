@@ -70,7 +70,7 @@ function createEditor(content = '[Documentation](/projects/API/work-items)') {
     onUpdate: () => updates++,
     editorProps: {
       handleClick(view, _pos, event) {
-        return openLinkOnModifierClick(event, view.dom);
+        return openLinkOnModifierClick(event, view);
       },
       handleDOMEvents: createLinkKeyboardHandlers(),
       handleScrollToSelection: () => true,
@@ -124,7 +124,7 @@ describe('StickerEditor links', () => {
     const markdown = editor.storage.markdown.getMarkdown();
     const link = editor.view.dom.querySelector('a')!;
     const click = mouseEvent(link, 'click');
-    assert.equal(openLinkOnModifierClick(click, editor.view.dom), false);
+    assert.equal(openLinkOnModifierClick(click, editor.view), false);
     const handled = editor.view.someProp('handleClick', (handler) =>
       handler(editor.view, 1, click),
     );
@@ -167,7 +167,7 @@ describe('StickerEditor links', () => {
     const editor = createEditor('Ordinary text\n\n[Documentation](https://example.com)');
     const paragraph = editor.view.dom.querySelector('p')!;
     const plain = mouseEvent(paragraph, 'click', { ctrlKey: true });
-    assert.equal(openLinkOnModifierClick(plain, editor.view.dom), false);
+    assert.equal(openLinkOnModifierClick(plain, editor.view), false);
     assert.equal(
       openLinkOnAuxClick(mouseEvent(paragraph, 'auxclick', { button: 1 }), editor.view.dom),
       false,
@@ -176,7 +176,7 @@ describe('StickerEditor links', () => {
     for (const href of ['javascript:alert(1)', 'data:text/html,unsafe', 'file:///etc/passwd']) {
       link.setAttribute('href', href);
       const click = mouseEvent(link, 'click', { ctrlKey: true });
-      assert.equal(openLinkOnModifierClick(click, editor.view.dom), false);
+      assert.equal(openLinkOnModifierClick(click, editor.view), false);
       assert.equal(
         openLinkOnAuxClick(mouseEvent(link, 'auxclick', { button: 1 }), editor.view.dom),
         false,

@@ -2,6 +2,7 @@
 
 import {
   AtSign,
+  Globe,
   KeyRound,
   LayoutDashboard,
   ScrollText,
@@ -15,22 +16,23 @@ import WorkspaceAgentBudgetsPreview from '@/features/teams/components/workspace/
 import WorkspaceAuditLogPreview from '@/features/teams/components/workspace/preview/WorkspaceAuditLogPreview';
 import WorkspaceDashboardPreview from '@/features/teams/components/workspace/preview/WorkspaceDashboardPreview';
 import WorkspaceEmailDomainsPreview from '@/features/teams/components/workspace/preview/WorkspaceEmailDomainsPreview';
+import WorkspacePortalPreview from '@/features/teams/components/workspace/preview/WorkspacePortalPreview';
 import WorkspaceScimPreview from '@/features/teams/components/workspace/preview/WorkspaceScimPreview';
 import WorkspaceSsoPreview from '@/features/teams/components/workspace/preview/WorkspaceSsoPreview';
 
-// A self-hosted instance lists the core's workspace settings sections, then previews of
-// the sections the hosted build and Pro add; they come after the core's, so a workspace
-// opens on a section it has. Those of the settings are the owner's, as they are there.
-// The hosted build returns the core's with its own added at any position, such as
-// single sign-on and billing, or with one left out.
+// A self-hosted instance lists the core's workspace settings sections with previews of
+// the sections the hosted build and Pro add, where those builds list them: the dashboard
+// first, the agent budgets after the run queue. Those of the settings, the requests portal
+// among them, are the owner's, as they are there. The hosted build returns the core's with its own added at any position,
+// such as single sign-on and billing, or with one left out.
 export default function useWorkspaceSections(
   workspace: WorkspaceSummary,
   core: WorkspaceSection[],
 ): WorkspaceSection[] {
   const t = useTranslations('sections.previews');
   const tTeams = useTranslations('teams.workspace');
+  const afterQueue = core.findIndex((section) => section.id === 'queue') + 1;
   const sections: WorkspaceSection[] = [
-    ...core,
     {
       id: 'dashboard',
       label: t('dashboard.title'),
@@ -38,6 +40,7 @@ export default function useWorkspaceSections(
       group: 'overview',
       Component: WorkspaceDashboardPreview,
     },
+    ...core.slice(0, afterQueue),
     {
       id: 'agent-budgets',
       label: t('agentBudgets.title'),
@@ -45,6 +48,7 @@ export default function useWorkspaceSections(
       group: 'overview',
       Component: WorkspaceAgentBudgetsPreview,
     },
+    ...core.slice(afterQueue),
     {
       id: 'audit-log',
       label: t('auditLog.title'),
@@ -69,6 +73,13 @@ export default function useWorkspaceSections(
       icon: KeyRound,
       group: 'settings',
       Component: WorkspaceSsoPreview,
+    },
+    {
+      id: 'portal',
+      label: t('portal.title'),
+      icon: Globe,
+      group: 'settings',
+      Component: WorkspacePortalPreview,
     },
     {
       id: 'scim',

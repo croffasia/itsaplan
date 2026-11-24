@@ -75,11 +75,16 @@ export async function getStorageSettings(): Promise<StorageSettings> {
   return { ...defaultStorageSettings(), ...(stored ?? {}) };
 }
 
-// Whether a content type passes the allowlist. An empty list accepts anything.
+const MEDIA_TYPE = /^[\w.+-]+\/[\w.+-]+$/;
+
+// Whether a content type is a single media type that passes the allowlist. An empty
+// list accepts any type. A browser reads the last type of a comma-separated value, so
+// `image/png, text/html` would pass `image/*` here and still render as HTML.
 // Entries are matched case-insensitively; setStorageSettings normalizes what it stores.
 export function mimeAllowed(contentType: string, allowed: string[]): boolean {
-  if (allowed.length === 0) return true;
   const ct = contentType.split(';')[0]?.trim().toLowerCase() ?? '';
+  if (!MEDIA_TYPE.test(ct)) return false;
+  if (allowed.length === 0) return true;
   return allowed.some((pattern) =>
     pattern.endsWith('/*') ? ct.startsWith(pattern.slice(0, -1)) : ct === pattern,
   );

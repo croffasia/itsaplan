@@ -4,6 +4,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   type NewSkillInput,
+  type SkillListParams,
   type SkillPatch,
   listSkillOptions,
   getSkill,
@@ -18,7 +19,6 @@ import {
   listAgentSkills,
   setAgentSkills,
 } from '@/lib/api/endpoints/agentSkills';
-import type { PageParams } from '@/lib/api/core/paging';
 import { qk } from '@/services/queryKeys';
 
 // The whole library, which the agent editor's skill picker needs entire.
@@ -40,7 +40,7 @@ export function useSkillQuery(teamId: number, skillId: number) {
 }
 
 // One page of the library, for the section that lists it.
-export function useSkillsPageQuery(teamId: number | null, params: PageParams) {
+export function useSkillsPageQuery(teamId: number | null, params: SkillListParams) {
   return useQuery({
     queryKey: qk.agentSkillPage(teamId ?? 0, params),
     queryFn: () => listSkills(teamId!, params),

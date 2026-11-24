@@ -7,12 +7,14 @@ import {
   Clock,
   MessageSquare,
   MoreHorizontal,
+  SmilePlus,
   UserRound,
   type LucideIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Notification, NotificationType } from '@/lib/api/endpoints/notifications';
 import { formatDurationShort } from '@/utils/dates';
+import { notificationEventText, notificationSubject } from '@/utils/inboxNotification';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,6 +46,7 @@ const TYPE_ICON: Record<NotificationType, LucideIcon> = {
   mentioned: AtSign,
   commented: MessageSquare,
   state_changed: CircleDot,
+  reacted: SmilePlus,
 };
 
 const dropdownMenu = {
@@ -62,10 +65,10 @@ const contextMenu = {
   SubContent: ContextMenuSubContent,
 };
 
-// One inbox row: the issue identifier and title, the event line, elapsed time, an
-// unread dot, and the actions menu (opened from the "…" button or a right-click).
-// Read rows are dimmed. Clicking the row selects it; the menu handles its own
-// clicks without selecting.
+// One inbox row: the issue identifier and title or the document title, the event line,
+// elapsed time, an unread dot, and the actions menu (opened from the "…" button or a
+// right-click). Read rows are dimmed. Clicking the row selects it; the menu handles its
+// own clicks without selecting.
 export default function InboxListItem({
   notification: n,
   selected,
@@ -83,16 +86,11 @@ export default function InboxListItem({
 }) {
   const tCommon = useTranslations('common');
   const te = useTranslations('inbox.event');
+  const tDocuments = useTranslations('documents');
   const [pickOpen, setPickOpen] = useState(false);
   const Icon = TYPE_ICON[n.type];
-  const who = n.actorName ?? te('someone');
-  // The verb phrase for a notification, addressed to the reader ("you").
-  const eventText =
-    n.type === 'state_changed'
-      ? n.fromState && n.toState
-        ? te('stateChanged', { who, from: n.fromState, to: n.toState })
-        : te('stateChangedPlain', { who })
-      : te(n.type, { who });
+  const subject = notificationSubject(n, tDocuments('untitled'));
+  const eventText = notificationEventText(n, te);
   const unread = n.readAt == null;
   const snoozed = n.snoozedUntil != null && new Date(n.snoozedUntil).getTime() > Date.now();
 
@@ -132,7 +130,7 @@ export default function InboxListItem({
                 unread ? 'font-medium text-foreground' : 'text-muted-foreground',
               )}
             >
-              {n.projectKey}-{n.issueSeq} {n.issueTitle}
+              {subject}
             </span>
             <span className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
               {snoozed && <Clock className="size-3 shrink-0" />}

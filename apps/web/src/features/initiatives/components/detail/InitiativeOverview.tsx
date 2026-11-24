@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import type { Initiative } from '@/lib/api/endpoints/initiatives';
 import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import InitiativeAttachments from './InitiativeAttachments';
@@ -17,6 +18,7 @@ export default function InitiativeOverview({
   projectKey: string;
 }) {
   const t = useTranslations('initiatives');
+  const features = useProjectFeatures();
   const hasDescription = initiative.description.trim().length > 0;
 
   return (
@@ -39,7 +41,9 @@ export default function InitiativeOverview({
           )}
         </div>
         <aside className="flex flex-col gap-6 @4xl:ms-auto @4xl:w-88 @4xl:shrink-0">
-          <InitiativeDocuments projectKey={projectKey} initiativeId={initiative.id} />
+          {features.documents && (
+            <InitiativeDocuments projectKey={projectKey} initiativeId={initiative.id} />
+          )}
           <InitiativeAttachments initiativeId={initiative.id} />
         </aside>
       </div>

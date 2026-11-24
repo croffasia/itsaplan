@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { eq } from 'drizzle-orm';
+import { auth } from '@repo/auth';
 import { db, team } from '@repo/db';
 import { resetDb } from '#tests/helpers/db';
-import { ownWorkspaceId, createProject } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, ownWorkspaceId, createProject } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
 import { addUser, createAgentUser, joinProject, setup, type Actor } from '../helpers';
 
 // The instance user directory under god mode: listing every account on the instance,
@@ -12,6 +14,11 @@ import { addUser, createAgentUser, joinProject, setup, type Actor } from '../hel
 // whole plugin sits behind the god guard.
 
 const ALL = { kind: 'all' as const, page: 1, pageSize: 50 };
+
+async function lastSeenOf(god: Actor, userId: string) {
+  const res = await god.api.god.users.get({ query: ALL });
+  return res.data?.items.find((u) => u.id === userId)?.lastSeenAt;
+}
 
 // Moves the person's team into the owner's workspace, so what they own there is outside
 // the workspaces they own.
@@ -76,6 +83,50 @@ describe('god users', () => {
         projectCount: 1,
       });
       expect(res.data?.items[0].lastSeenAt).not.toBeNull();
+    });
+
+    it('keeps when a person was last seen after they sign out', async () => {
+      const { god } = await setup();
+      const person = await signUpTestUser({ name: 'Ann', email: 'ann@example.com' });
+      const api = authedApi(person.cookie);
+      expect((await api.teams.get()).status).toBe(200);
+
+      const signOut = await auth.handler(
+        new Request(new URL(process.env.API_URL!).origin + '/api/auth/sign-out', {
+          method: 'POST',
+          headers: { cookie: person.cookie, origin: new URL(process.env.APP_URL!).origin },
+        }),
+      );
+      expect(signOut.status).toBe(200);
+      expect((await api.teams.get()).status).toBe(401);
+
+      expect(await lastSeenOf(god, person.userId)).not.toBeNull();
+    });
+
+    it('notes a request made with an API key and leaves updatedAt alone', async () => {
+      const { god } = await setup();
+      const person = await signUpTestUser();
+      const { key } = await auth.api.createApiKey({ body: { userId: person.userId, name: 'ci' } });
+      const api = apiKeyApi(key);
+      const before = (await api.me.get()).data;
+      expect(before).toMatchObject({ authenticated: true });
+      expect(await lastSeenOf(god, person.userId)).toBeNull();
+
+      expect((await api.teams.get()).status).toBe(200);
+
+      expect(await lastSeenOf(god, person.userId)).not.toBeNull();
+      expect((await api.me.get()).data).toEqual(before);
+    });
+
+    it('writes it once an hour, not on every request', async () => {
+      const { god } = await setup();
+      const person = await signUpTestUser();
+      const api = authedApi(person.cookie);
+      expect((await api.teams.get()).status).toBe(200);
+      const first = await lastSeenOf(god, person.userId);
+
+      expect((await api.teams.get()).status).toBe(200);
+      expect(await lastSeenOf(god, person.userId)).toEqual(first);
     });
 
     it('lists people by default and agent bot users only when asked', async () => {

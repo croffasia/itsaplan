@@ -1,6 +1,5 @@
-import { db, webhook, webhookDelivery } from '@repo/db';
+import { db, getJobSettings, webhook, webhookDelivery, type JobSettings } from '@repo/db';
 import { eq, sql } from 'drizzle-orm';
-import { workerConfig } from './config';
 
 export interface ClaimedDelivery {
   id: number;
@@ -19,8 +18,10 @@ export interface ClaimedDelivery {
 // pushes next_attempt_at forward by the lease and bumps attempts, so a row whose
 // worker crashes mid-delivery becomes claimable again after the lease — no
 // separate recovery pass. The webhook's url/secret/is_active are read inline.
-export async function claimDueDeliveries(): Promise<ClaimedDelivery[]> {
-  const { batchSize, leaseSeconds } = workerConfig();
+export async function claimDueDeliveries({
+  batchSize,
+  leaseSeconds,
+}: JobSettings['webhooks']): Promise<ClaimedDelivery[]> {
   const rows = await db.execute(sql`
     UPDATE webhook_delivery d
     SET attempts = d.attempts + 1,
@@ -122,7 +123,7 @@ export async function markSkippedInactive(deliveryId: number): Promise<void> {
 // Increments the webhook's consecutive-failure counter and auto-disables it once
 // the counter reaches the threshold, in one statement.
 async function bumpWebhookFailure(webhookId: number): Promise<void> {
-  const { disableThreshold } = workerConfig();
+  const { disableThreshold } = (await getJobSettings()).webhooks;
   await db
     .update(webhook)
     .set({
@@ -132,13 +133,12 @@ async function bumpWebhookFailure(webhookId: number): Promise<void> {
     .where(eq(webhook.id, webhookId));
 }
 
-// Deletes succeeded deliveries older than the cleanup window. Best-effort; returns
+// Deletes succeeded deliveries older than the retention window. Best-effort; returns
 // the number removed.
-export async function cleanupOldDeliveries(): Promise<number> {
-  const { cleanupDays } = workerConfig();
+export async function cleanupOldDeliveries(retentionDays: number): Promise<number> {
   const res = await db.execute(sql`
     DELETE FROM webhook_delivery
-    WHERE status = 'success' AND created_at < now() - make_interval(days => ${cleanupDays})
+    WHERE status = 'success' AND created_at < now() - make_interval(days => ${retentionDays})
   `);
   return (res as unknown as { count?: number }).count ?? 0;
 }

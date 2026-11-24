@@ -10,5 +10,12 @@
   "createTeam": "Takım oluştur",
   "noProjectsTitle": "Henüz proje yok",
   "noProjectsHint": "İşleri bir pano üzerinde planlamaya başlamak için ilk projenizi oluşturun.",
-  "createProject": "Proje oluştur"
+  "createProject": "Proje oluştur",
+  "loadFailedTitle": "Projeleriniz yüklenemedi",
+  "loadFailedHint": "Bağlantınızı kontrol edin ve sayfayı yeniden yükleyin.",
+  "desktopNotifications": {
+    "message": "Uygulama arka plandayken Gelen Kutusu'na gelen her yeni öğe için masaüstü bildirimi alın.",
+    "turnOn": "Aç",
+    "notNow": "Şimdi değil"
+  }
 }

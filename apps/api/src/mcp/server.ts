@@ -1,13 +1,16 @@
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
 import { agentTeam } from '#modules/agents/core/service';
+import { actFor, namedRunWork, type AgentWork } from '#modules/agents/core/run-initiator';
 import { listTeams } from '#modules/teams/service';
 import type { McpApp } from './types';
 import { routeTools, withoutFields, type McpRouteTool, type ViewedAttachments } from './generate';
 import { dispatchTool } from './dispatch';
-import { SERVER_INSTRUCTIONS } from './instructions';
+import { CATALOG_INSTRUCTIONS, SERVER_INSTRUCTIONS } from './instructions';
 import type { McpCredential } from './credential';
-import { toolError } from './result';
+import { toolFailure } from './result';
+import { agentMcpTools, callConfiguredTool, mcpInputSchema } from './configured-tools';
+import { PRIMARY_TOOLS, callCatalogTool, catalogTools, executeToolFor } from './catalog';
 
 // The path param of every team-scoped route.
 const TEAM_PARAM = 'teamId';
@@ -27,14 +30,22 @@ async function callerTeam(userId: string): Promise<number | null> {
 }
 
 // A low-level MCP Server for one request. tools/list returns every route tagged
-// with x-mcp; tools/call dispatches to the real route via app.handle with the
-// caller's API key. The low-level Server (not McpServer) is used so the route's
+// with x-mcp, and for an agent's key the configured tools enabled on it; tools/call
+// dispatches to the real route via app.handle with the caller's API key, or runs the
+// configured tool. The low-level Server (not McpServer) is used so the route's
 // TypeBox JSON Schema can be served as the tool inputSchema without converting to
 // Zod. Arguments are validated by the route itself, not here.
+//
+// With `catalog` (POST /mcp?tools=catalog), tools/list returns the catalog tools and the
+// primary route tools in place of the whole table, whose definitions cost a client that
+// loads them eagerly about 150,000 tokens per session. The other route tools are found
+// with discover and run through the execute tools.
 export async function buildMcpServer(
   app: McpApp,
   credential: McpCredential,
   userId: string,
+  clientRequest?: Request,
+  catalog = false,
 ): Promise<Server> {
   const server = new Server(
     // `name` is the stable programmatic identifier; `title` is the human-readable
@@ -43,7 +54,10 @@ export async function buildMcpServer(
     // `instructions` reaches the client in the initialize response and covers what
     // no single tool description can: which tool resolves ids, how a column is
     // picked, how far a request to "work on an issue" goes.
-    { capabilities: { tools: {} }, instructions: SERVER_INSTRUCTIONS },
+    {
+      capabilities: { tools: {} },
+      instructions: catalog ? CATALOG_INSTRUCTIONS : SERVER_INSTRUCTIONS,
+    },
   );
 
   const table = routeTools(app);
@@ -51,49 +65,79 @@ export async function buildMcpServer(
   const teamId = await callerTeam(userId);
   const needsTeam = (tool: McpRouteTool) => tool.pathParams.includes(TEAM_PARAM);
 
+  // A caller whose team is already known does not get to name one.
+  const inputSchemaOf = (tool: McpRouteTool) =>
+    teamId !== null && needsTeam(tool)
+      ? withoutFields(tool.inputSchema, [TEAM_PARAM])
+      : tool.inputSchema;
+
+  const catalogDefs = catalog ? catalogTools() : [];
+  const listed = catalog ? PRIMARY_TOOLS.flatMap((name) => byName.get(name) ?? []) : table;
+  const taken = new Set([...byName.keys(), ...catalogDefs.map((t) => t.name)]);
+  const configured = () => agentMcpTools(userId, taken, clientRequest);
+  // An external agent's calls in a run work for that run's initiator (see run-initiator.ts).
+  let work: Promise<AgentWork | null> | undefined;
+  const workOf = () =>
+    (work ??= clientRequest ? namedRunWork(userId, clientRequest.headers) : Promise.resolve(null));
+
   server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: table.map((t) => ({
-      name: t.name,
-      description: t.description,
-      // A caller whose team is already known does not get to name one.
-      inputSchema:
-        teamId !== null && needsTeam(t)
-          ? withoutFields(t.inputSchema, [TEAM_PARAM])
-          : t.inputSchema,
-      annotations: t.annotations,
-      outputSchema: t.images ? undefined : t.outputSchema,
-    })),
+    tools: [
+      ...catalogDefs,
+      ...listed.map((t) => ({
+        name: t.name,
+        description: t.description,
+        inputSchema: inputSchemaOf(t),
+        annotations: t.annotations,
+        outputSchema: catalog || t.images ? undefined : t.outputSchema,
+      })),
+      ...(await configured()).map((t) => ({
+        name: t.name,
+        description: t.description,
+        inputSchema: mcpInputSchema(t),
+      })),
+    ],
   }));
 
-  server.setRequestHandler(CallToolRequestSchema, async (req) => {
-    const tool = byName.get(req.params.name);
-    if (!tool) {
-      const text = `Unknown tool: ${req.params.name}`;
-      return {
-        content: [{ type: 'text', text }],
-        isError: true,
-        structuredContent: toolError(404, text),
-      };
-    }
-    const args = { ...(req.params.arguments ?? {}) };
+  const callRouteTool = async (tool: McpRouteTool, input: Record<string, unknown>) => {
+    const args = { ...input };
     if (needsTeam(tool)) {
       if (teamId !== null) args[TEAM_PARAM] = teamId;
       else if (args[TEAM_PARAM] == null) {
-        const text =
+        return toolFailure(
+          400,
           'teamId is required: no single team follows from your key. Call list_teams and ' +
-          'pass the id of the team to act in.';
-        return {
-          content: [{ type: 'text', text }],
-          isError: true,
-          structuredContent: toolError(400, text),
-        };
+            'pass the id of the team to act in.',
+        );
       }
     }
-    const { text, isError, structuredContent } = await dispatchTool(app, tool, args, credential, {
-      viaMcpEndpoint: true,
-    });
+    const { text, isError, structuredContent } = await actFor(await workOf(), () =>
+      dispatchTool(app, tool, args, credential, { viaMcpEndpoint: true, clientRequest }),
+    );
     if (tool.images && !isError) return { content: imageContent(text) };
-    return { content: [{ type: 'text', text }], isError, structuredContent };
+    return { content: [{ type: 'text' as const, text }], isError, structuredContent };
+  };
+
+  server.setRequestHandler(CallToolRequestSchema, async (req) => {
+    const { name } = req.params;
+    const args = req.params.arguments ?? {};
+    if (catalogDefs.some((t) => t.name === name)) {
+      return callCatalogTool(name, args, { table, inputSchemaOf, call: callRouteTool });
+    }
+    const tool = byName.get(name);
+    if (!tool) {
+      const own = (await configured()).find((t) => t.name === name);
+      if (own) return callConfiguredTool(own, { ...args });
+      return toolFailure(404, `Unknown tool: ${name}`);
+    }
+    // A tool the client was not shown has no annotations on its side, so a direct call
+    // would skip the confirmation the execute tools are split for.
+    if (catalog && !PRIMARY_TOOLS.includes(name)) {
+      return toolFailure(
+        400,
+        `${name} is not listed in catalog mode. Run it with ${executeToolFor(tool)}.`,
+      );
+    }
+    return callRouteTool(tool, args);
   });
 
   return server;

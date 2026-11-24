@@ -59,7 +59,13 @@
     "month": "Mes",
     "quarter": "Trimestre"
   },
+  "calendarModes": {
+    "month": "Mes",
+    "byDay": "Por día",
+    "byWeek": "Por semana"
+  },
   "weekStart": {
+    "6": "Sábado",
     "0": "Domingo",
     "1": "Lunes"
   },
@@ -75,21 +81,34 @@
     "ordering": "Orden",
     "ascending": "Ascendente",
     "descending": "Descendente",
-    "showEmptyColumns": "Mostrar columnas vacías",
-    "showEmptyGroups": "Mostrar grupos vacíos",
-    "showLinks": "Mostrar enlaces",
-    "separateSubtaskCards": "Mostrar subtareas como tarjetas separadas",
-    "separateSubtaskRows": "Mostrar subtareas como filas separadas",
-    "startSubtasksCollapsed": "Empezar con las subtareas contraídas",
-    "showNestedSubtasks": "Mostrar subtareas anidadas",
-    "nestedSubtasks": "Subtareas anidadas",
-    "displayProperties": "Propiedades visuales",
+    "emptyColumns": "Columnas vacías",
+    "emptyGroups": "Grupos vacíos",
+    "links": "Enlaces",
+    "separateCards": "Como tarjetas separadas",
+    "separateRows": "Como filas separadas",
+    "nestedInCard": "Dentro de la tarjeta padre",
+    "nestedInRow": "Dentro de la fila padre",
+    "subtasksCollapsed": "Empezar contraídas",
+    "groupsCollapsed": "Grupos contraídos al inicio",
     "placeBy": "Situar por",
-    "startWeekOn": "La semana empieza en",
-    "startCollapsed": "Empezar con los grupos contraídos",
+    "mode": "Modo",
+    "daysShown": "Días en pantalla",
+    "weeksShown": "Semanas en pantalla",
+    "splitByDay": "Dividir por día",
+    "weekStartsOn": "La semana empieza el",
     "scale": "Escala",
-    "addCustomField": "Añadir campo personalizado",
+    "dragToReorder": "Arrastra para reordenar",
+    "customField": "Campo personalizado",
     "viewIcon": "Icono de la vista"
+  },
+  "sections": {
+    "board": "Tablero",
+    "rows": "Filas",
+    "show": "Mostrar",
+    "subtasks": "Subtareas",
+    "cardProperties": "Propiedades de la tarjeta",
+    "columns": "Columnas",
+    "dates": "Fechas"
   },
   "layoutCommand": "Disposición {layout}"
 }

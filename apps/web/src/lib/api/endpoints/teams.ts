@@ -26,7 +26,7 @@ export interface Team {
   role: TeamRole;
   // 'workspace' when the caller is not in the team and reaches it through their role in
   // its workspace; source and joinedAt are then the team's defaults.
-  via: AccessVia;
+  via: 'member' | 'workspace';
   // How the caller's own membership came about. A provisioned one is the identity
   // provider's: the team cannot be left while it stands.
   source: 'invite' | 'scim';
@@ -65,8 +65,8 @@ export interface TeamMember {
   joinedAt: string;
 }
 
-// A project the team owns. `isMember` is the caller's own access to it: a team
-// member sees every project of the team, but only opens the ones they belong to.
+// A project the team owns. `isMember` is whether the caller has a membership of it; whoever
+// runs the team opens it without one.
 export interface TeamProject {
   id: number;
   key: string;
@@ -121,14 +121,14 @@ export interface TeamLead {
 export interface TeamProjectDetail {
   lastActivityAt: string | null;
   stats: AnalyticsStats;
-  // The reader's access to the project, null when they only run the team. A
-  // provisioned membership ends at the identity provider, so it cannot be left here.
+  // The reader's access to the project. A provisioned membership ends at the identity
+  // provider, so it cannot be left here.
   viewer: {
     role: MemberRole;
     via: AccessVia;
     source: 'invite' | 'scim';
     permissions: Permissions;
-  } | null;
+  };
 }
 
 // One member of a project the team owns. The access their membership resolves to is
@@ -163,24 +163,6 @@ export interface TeamMcpSettings {
 export interface TeamProjectDefaults {
   defaultAgentIds: number[];
 }
-
-// Parts of a source project the copy can carry over, one key per project settings
-// section. Passed to copyTeamProject as an include map; omitted keys are not
-// copied. The API force-enables dependencies (a view needs its
-// states/types/labels/fields).
-export type CopyProjectIncludeKey =
-  | 'states'
-  | 'issueTypes'
-  | 'labels'
-  | 'customFields'
-  | 'views'
-  | 'dashboards'
-  | 'documents'
-  | 'actions'
-  | 'configuration'
-  | 'webhooks'
-  | 'agents'
-  | 'schedules';
 
 export const listTeams = () => request<Team[]>('/teams');
 
@@ -257,9 +239,16 @@ export const updateTeamProjectDefaults = (teamId: number, defaultAgentIds: numbe
 
 // The projects a team owns: created, copied, and deleted by the team's own ranks
 // (owner/manager create and copy, owner deletes) rather than by project membership.
+// With templateId the project starts with what that project template holds.
 export const createTeamProject = (
   teamId: number,
-  input: { key: string; name: string; description?: string; preset?: string },
+  input: {
+    key: string;
+    name: string;
+    description?: string;
+    preset?: string;
+    templateId?: number;
+  },
 ) =>
   request<Project>(`/teams/${teamId}/projects`, {
     method: 'POST',
@@ -273,7 +262,9 @@ export const copyTeamProject = (
     key: string;
     name: string;
     description?: string;
-    include?: Partial<Record<CopyProjectIncludeKey, boolean>>;
+    // One key per part (useCopyColumns); an omitted key is not copied. The API
+    // force-enables dependencies (a view needs its states/types/labels/fields).
+    include?: Record<string, boolean>;
   },
 ) =>
   request<Project>(`/teams/${teamId}/projects/${projectId}/copy`, {

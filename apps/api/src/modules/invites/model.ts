@@ -26,6 +26,23 @@ export const createTeamInviteBody = t.Object({
   role: teamRole,
 });
 
+export const inviteCandidatesQuery = t.Object({
+  search: t.String({
+    minLength: 2,
+    maxLength: 200,
+    description: 'Part of the name or the address, at least 2 characters.',
+  }),
+});
+
+export const InviteCandidateListResponse = t.Array(
+  t.Object({
+    userId: t.String(),
+    name: t.String(),
+    email: t.String(),
+    image: t.Nullable(t.String()),
+  }),
+);
+
 // The manager-facing invite row (ListedInvite from the service).
 export const InviteRowResponse = t.Object({
   id: t.Number(),

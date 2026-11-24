@@ -181,6 +181,7 @@ describe('mapLinearIssue', () => {
       descriptionMarkdown: 'Body text.\n\nImported from Linear: ATO-505',
       stateSourceId: 'state-todo',
       assigneeEmail: 'atomist@atomlab.us',
+      watcherEmails: [],
       labelSourceIds: ['label-bug', 'label-api'],
       cycleSourceId: 'cycle-7',
       parentSourceId: null,
@@ -190,6 +191,7 @@ describe('mapLinearIssue', () => {
       customFields: [],
       createdAt: '2025-01-02T03:04:05.000Z',
       updatedAt: '2025-02-03T04:05:06.000Z',
+      archivedAt: null,
     });
   });
 

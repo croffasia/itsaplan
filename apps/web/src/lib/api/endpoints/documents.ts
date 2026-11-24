@@ -12,6 +12,20 @@ function withDocumentAssetUrl(asset: DocumentAsset): DocumentAsset {
   };
 }
 
+// Who sees a page: the project, its owner alone, or its owner and the members it is
+// shared with.
+export type DocumentVisibility = 'public' | 'private' | 'restricted';
+
+// Someone a private page can be shared with. `canAccess` false means their role
+// cannot read Docs at all, so the API rejects sharing with them.
+export interface DocumentAccessCandidate {
+  userId: string;
+  name: string;
+  image: string | null;
+  kind: 'member' | 'agent';
+  canAccess: boolean;
+}
+
 export interface ProjectDocumentSummary {
   id: number;
   projectId: number;
@@ -21,7 +35,9 @@ export interface ProjectDocumentSummary {
   metadata: Record<string, unknown>;
   fullWidth: boolean;
   isPrivate: boolean;
+  visibility: DocumentVisibility;
   isLocked: boolean;
+  isPinned: boolean;
   isFavorite: boolean;
   archivedAt: string | null;
   position: number;
@@ -34,8 +50,14 @@ export interface ProjectDocumentSummary {
 }
 
 export interface ProjectDocument extends ProjectDocumentSummary {
+  // The members a private page is shared with, its owner left out.
+  memberIds: string[];
   content: string;
   contentJson: Record<string, unknown> | null;
+  shareToken: string | null;
+  shareExpiresAt: string | null;
+  shareIncludeChildren: boolean;
+  shareIncludeIssues: boolean;
 }
 
 export interface DocumentIssueLink {
@@ -62,7 +84,6 @@ export interface NewProjectDocumentInput {
   contentJson?: Record<string, unknown> | null;
   icon?: string | null;
   metadata?: Record<string, unknown>;
-  fullWidth?: boolean;
   isPrivate?: boolean;
   parentId?: number | null;
 }
@@ -74,7 +95,6 @@ export interface ProjectDocumentPatch {
   contentJson?: Record<string, unknown> | null;
   icon?: string | null;
   metadata?: Record<string, unknown>;
-  fullWidth?: boolean;
   parentId?: number | null;
   position?: number;
   previousSiblingId?: number | null;
@@ -189,12 +209,25 @@ export const deleteDocument = (projectKey: string, documentId: number, version: 
 export const setDocumentAccess = (
   projectKey: string,
   documentId: number,
-  input: { version: number; isPrivate: boolean },
+  input: { version: number; isPrivate: boolean; memberIds?: string[] },
 ) =>
   request<ProjectDocument>(`/projects/${projectKey}/documents/${documentId}/access`, {
     method: 'POST',
     body: JSON.stringify(input),
   });
+
+export const transferDocumentOwnership = (
+  projectKey: string,
+  documentId: number,
+  input: { version: number; ownerUserId: string },
+) =>
+  request<ProjectDocument>(`/projects/${projectKey}/documents/${documentId}/ownership`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+
+export const listDocumentAccessCandidates = (projectKey: string) =>
+  request<DocumentAccessCandidate[]>(`/projects/${projectKey}/documents/access-candidates`);
 
 export const setDocumentLocked = (
   projectKey: string,
@@ -233,6 +266,12 @@ export const setDocumentFavorite = (projectKey: string, documentId: number, isFa
   request<{ isFavorite: boolean }>(`/projects/${projectKey}/documents/${documentId}/preferences`, {
     method: 'PATCH',
     body: JSON.stringify({ isFavorite }),
+  });
+
+export const setDocumentPinned = (projectKey: string, documentId: number, isPinned: boolean) =>
+  request<{ isPinned: boolean }>(`/projects/${projectKey}/documents/${documentId}/pin`, {
+    method: 'PATCH',
+    body: JSON.stringify({ isPinned }),
   });
 
 export const listDocumentRevisions = (projectKey: string, documentId: number) =>
@@ -300,19 +339,14 @@ export interface DocumentComment {
   to: number | null;
   orphaned: boolean;
   resolvedAt: string | null;
+  resolvedByName: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export const openDocumentSession = (
-  projectKey: string,
-  documentId: number,
-  version: number,
-  contentJson: Record<string, unknown>,
-) =>
+export const openDocumentSession = (projectKey: string, documentId: number) =>
   request<DocumentSession>(`/projects/${projectKey}/documents/${documentId}/session`, {
     method: 'POST',
-    body: JSON.stringify({ version, contentJson }),
   });
 export const getDocumentChanges = (
   projectKey: string,
@@ -366,3 +400,21 @@ export const updateDocumentComment = (
     `/projects/${projectKey}/documents/${documentId}/comments/${commentId}`,
     { method: 'PATCH', body: JSON.stringify(input) },
   );
+
+// An open thread that waits for the caller, shown by its last message. `kind` is 'mention'
+// when that message mentions the caller.
+export interface DocumentThreadForYou {
+  threadId: string;
+  documentId: number;
+  documentTitle: string;
+  documentIcon: string | null;
+  authorId: string | null;
+  authorName: string | null;
+  authorImage: string | null;
+  body: string;
+  kind: 'mention' | 'reply';
+  createdAt: string;
+}
+
+export const listDocumentThreadsForYou = (projectKey: string) =>
+  request<DocumentThreadForYou[]>(`/projects/${encodeURIComponent(projectKey)}/documents/for-you`);

@@ -34,7 +34,12 @@ export default function AttachmentThumb({
     );
   if (isVideo(attachment))
     return (
-      <video src={attachment.url} className="size-full object-cover" muted draggable={false} />
+      <video
+        src={attachment.url}
+        className="absolute inset-0 size-full object-cover"
+        muted
+        draggable={false}
+      />
     );
   return <FileIcon className="text-muted-foreground" />;
 }

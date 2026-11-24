@@ -93,6 +93,11 @@ describe('useDocumentTitle', () => {
     await render({ section: 'Acme', page: 'Acme › New' });
     assert.equal(document.title, 'Acme › New');
   });
+
+  it('settles on a title with extra whitespace', async () => {
+    await render({ section: 'Acme', page: ' ACME-1  Fix ' });
+    assert.equal(document.title, 'ACME-1 Fix');
+  });
 });
 
 describe('titlePath', () => {

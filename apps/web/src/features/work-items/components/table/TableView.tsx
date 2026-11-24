@@ -6,11 +6,14 @@ import {
   buildMaps,
   groupDefaults,
   sortIssues,
+  type GroupAssign,
   type WorkItemsViewProps,
 } from '@/utils/project';
+import { usePermissions } from '@/hooks/usePermissions';
 import { usePersistedSet } from '@/hooks/usePersistedSet';
 import { useTableColumnWidths } from '../../hooks/useTableColumnWidths';
 import { useIssueReorder } from '../../hooks/useIssueReorder';
+import { useQuickCreate } from '../../hooks/useQuickCreate';
 import { useGroupLabels } from '@/hooks/useGroupLabels';
 import {
   buildTableItems,
@@ -19,11 +22,14 @@ import {
   resolveColumns,
   type FlatItem,
 } from '../../utils/table';
+import { wipAllows, wipStateFor } from '../../utils/wipLimit';
 import { IssueDragOverlay } from '../shared/IssueDragOverlay';
+import { WorkItemsEmpty } from '../shared/WorkItemsEmpty';
 import { TableColumnHeader } from './TableColumnHeader';
 import { TableSectionHeader } from './TableSectionHeader';
 import { TableSubHeader } from './TableSubHeader';
 import { TableRow } from './TableRow';
+import { TableQuickAdd } from './TableQuickAdd';
 
 interface TableViewProps extends WorkItemsViewProps {
   // Which stored set of column widths this table uses: a saved view's own, the
@@ -38,11 +44,19 @@ export default function TableView({
   settings,
   onOpenIssue,
   onAddIssue,
+  newIssueDefaults,
+  columnCounts,
   readOnly,
   widthScope,
 }: TableViewProps) {
   const groupLabels = useGroupLabels();
+  const { can } = usePermissions();
+  const cellsReadOnly = !!readOnly || !can('work_items', 'edit');
   const reorder = useIssueReorder({ project, sort: settings.sort, readOnly });
+  const quickCreate = useQuickCreate(project);
+  const canCreate = !readOnly && can('work_items', 'create');
+  const canAddTo = (assign: GroupAssign | null) =>
+    canCreate && wipAllows(wipStateFor(assign, project.columns, columnCounts), 1);
   const collapsed = usePersistedSet(
     collapsedKey(project.project.id, settings.group, settings.subgroup),
   );
@@ -69,6 +83,7 @@ export default function TableView({
     sorted,
     settings,
     collapsed: collapsed.values,
+    canAddTo,
   });
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -77,10 +92,14 @@ export default function TableView({
     getScrollElement: () => scrollRef.current,
     estimateSize: () => 40,
     overscan: 12,
+    // A scroll step renders in a normal React update, not in flushSync inside the
+    // scroll event, which blocks every scroll event on a slow CPU.
+    useFlushSync: false,
     getItemKey: (index) => {
       const it = items[index];
       if (it.kind === 'header') return `h${it.group.key}`;
       if (it.kind === 'subheader') return `s${it.dropKey}`;
+      if (it.kind === 'add') return `a${it.dropKey}`;
       return `r${it.issue.id}`;
     },
   });
@@ -101,7 +120,7 @@ export default function TableView({
             onDrop={(id) => reorder.moveIssue(id, item.assign, item.bucket, item.bucket.length)}
             onToggle={() => collapsed.toggle(item.group.key)}
             onAddIssue={() => onAddIssue(groupDefaults(item.group.assign))}
-            readOnly={readOnly}
+            canAdd={item.group.assign != null && canAddTo(item.group.assign)}
           />
         );
       }
@@ -128,6 +147,7 @@ export default function TableView({
             indented={subgrouped}
             gridTemplate={gridTemplate}
             dropDisabled={!reorder.manualOrder && grouped}
+            readOnly={cellsReadOnly}
             onDrop={(draggedId) =>
               reorder.moveIssue(draggedId, item.assign, item.bucket, item.index)
             }
@@ -135,8 +155,21 @@ export default function TableView({
             onOpenIssue={onOpenIssue}
           />
         );
+      case 'add':
+        return (
+          <TableQuickAdd
+            indented={subgrouped}
+            gridTemplate={gridTemplate}
+            onAdd={async (title) => {
+              await quickCreate({ ...newIssueDefaults, ...groupDefaults(item.assign), title });
+            }}
+          />
+        );
     }
   }
+
+  // An ungrouped table with no issues holds only its add row.
+  if (items.every((it) => it.kind === 'add')) return <WorkItemsEmpty filters={filters} />;
 
   return (
     <DndContext

@@ -28,7 +28,7 @@ describe('project key rename', () => {
       .projects({ projectKey: `${created.teamId}.7XTR` })
       .patch({ key: 'XTR' });
     expect(renamed.status).toBe(200);
-    expect(renamed.data).toMatchObject({ key: 'XTR', ref: `${created.teamId}.XTR` });
+    expect(renamed.data).toMatchObject({ key: 'XTR', ref: `${created.teamRef}.XTR` });
 
     const again = await api.projects({ projectKey: `${created.teamId}.XTR` }).patch({ key: 'ABC' });
     expect(again.status).toBe(400);

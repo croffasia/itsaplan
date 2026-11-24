@@ -5,6 +5,7 @@ import { cyclePath } from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useElementWidth } from '@/hooks/useElementWidth';
 import { usePersistedWidth } from '@/hooks/usePersistedWidth';
+import { inlineSign } from '@/utils/inlineSign';
 import { LABEL_MAX_W, LABEL_MIN_W, LABEL_NARROW_W, LABEL_W } from '@/utils/timelineTrack';
 import { TimelineHeader } from '@/components/common/timeline/TimelineHeader';
 import { TimelineLabelResizer } from '@/components/common/timeline/TimelineLabelResizer';
@@ -58,13 +59,12 @@ export default function CyclesTimeline({
     const el = scrollRef.current;
     if (!el || scrolledToToday.current || rows.length === 0) return;
     scrolledToToday.current = true;
-    el.scrollLeft = Math.max(0, todayLeft - labelW);
+    // A right-to-left scroll area counts scrollLeft down from 0 at its right edge.
+    el.scrollLeft = inlineSign(el) * Math.max(0, todayLeft - labelW);
   }, [rows.length, todayLeft, labelW]);
 
-  // Left to right in every language, like the work items timeline: the bars are
-  // placed in pixels from the left edge, and `scrollLeft` above counts from it.
   return (
-    <div ref={scrollRef} dir="ltr" className="flex-1 overflow-auto">
+    <div ref={scrollRef} className="flex-1 overflow-auto">
       <div className="relative" style={{ width: labelW + trackWidth }}>
         <TimelineHeader
           labelW={labelW}

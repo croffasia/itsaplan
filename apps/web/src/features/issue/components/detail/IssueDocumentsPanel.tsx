@@ -78,7 +78,7 @@ export default function IssueDocumentsPanel({
       {pickerOpen && (
         <DocumentPickerDialog
           projectKey={projectKey}
-          linkedDocumentIds={linkedIds}
+          excludeIds={linkedIds}
           onClose={() => setPickerOpen(false)}
           onPick={(document) => {
             void linkDocument

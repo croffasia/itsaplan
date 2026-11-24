@@ -1,5 +1,6 @@
 {
   "newIssue": "Nova issue",
+  "addWorkItem": "Adicionar item de trabalho",
   "pin": "Fixar",
   "unpin": "Desafixar",
   "collapse": "Recolher",
@@ -44,6 +45,12 @@
   "calendar": {
     "previousMonth": "Mês anterior",
     "nextMonth": "Próximo mês",
+    "previousWeek": "Semana anterior",
+    "nextWeek": "Próxima semana",
+    "previousDays": "{count, plural, one {Dia anterior} other {# dias anteriores}}",
+    "nextDays": "{count, plural, one {Próximo dia} other {Próximos # dias}}",
+    "weekNumber": "Semana {number}",
+    "range": "{from} – {to}",
     "today": "Hoje",
     "moreIssues": "+{count} mais",
     "issueCount": "{count, plural, one {# issue} other {# issues}}",
@@ -67,8 +74,13 @@
       "custom": "Tudo tem data."
     }
   },
+  "empty": {
+    "title": "Nenhuma issue",
+    "description": "As issues aparecerão aqui.",
+    "filteredTitle": "Nenhuma issue corresponde",
+    "filteredDescription": "Altere os filtros para ver mais."
+  },
   "timeline": {
-    "empty": "Nenhuma issue para colocar na linha do tempo ainda.",
     "expandGroup": "Expandir grupo",
     "collapseGroup": "Recolher grupo",
     "inferredStart": "Início inferido da data de criação",
@@ -92,20 +104,20 @@
   },
   "removal": {
     "archive": {
-      "title": "{count, plural, one {Arquivar issue} other {Arquivar issues}}",
+      "title": "{count, plural, one {Arquivar # issue?} other {Arquivar # issues?}}",
       "confirm": "{count, plural, one {Arquivar # issue} other {Arquivar # issues}}",
-      "description": "{count, plural, one {Arquivar # issue selecionada? Ela sai do quadro e pode ser restaurada depois.} other {Arquivar # issues selecionadas? Elas saem do quadro e podem ser restauradas depois.}}"
+      "description": "{count, plural, one {Ela sai do quadro e pode ser restaurada depois.} other {Elas saem do quadro e podem ser restauradas depois.}}"
     },
     "delete": {
-      "title": "{count, plural, one {Excluir issue} other {Excluir issues}}",
+      "title": "{count, plural, one {Excluir # issue?} other {Excluir # issues?}}",
       "confirm": "{count, plural, one {Excluir # issue} other {Excluir # issues}}",
-      "description": "{count, plural, one {Excluir # issue selecionada?} other {Excluir # issues selecionadas?}} Isto também remove comentários, atividade e anexos. Isso não pode ser desfeito."
+      "description": "{count, plural, one {Seus comentários, atividade e anexos também serão excluídos.} other {Os comentários, atividade e anexos delas também serão excluídos.}} Isso não pode ser desfeito."
     }
   },
   "share": {
     "issueTitle": "Issue",
     "issueUnavailable": "Esta issue não está disponível.",
-    "boardUnavailable": "Este quadro compartilhado não está disponível. O link pode ter sido revogado."
+    "boardUnavailable": "Este quadro compartilhado não está disponível. O link pode ter sido revogado ou expirado."
   },
   "groups": {
     "noAssignee": "Sem responsável",

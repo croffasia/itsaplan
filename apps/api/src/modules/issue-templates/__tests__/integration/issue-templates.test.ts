@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
+import { addProjectMember } from '#tests/helpers/members';
 import { resetDb } from '#tests/helpers/db';
 
 // Issue templates are the presets a new issue can be created from. They belong to
@@ -39,6 +40,43 @@ async function listTemplates(client: Api, projectKey = 'MKT') {
 describe('issue-templates', () => {
   beforeEach(async () => {
     await resetDb();
+  });
+
+  describe('deactivated preset assignees', () => {
+    it('refuses a deactivated account as the preset assignee', async () => {
+      const { asOwner, ownerUserId } = await setupProject();
+      await addProjectMember(asOwner, 'MKT');
+      const project = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!;
+      const leaver = project.assignees.find((a) => a.userId !== ownerUserId)!.userId;
+      expect((await asOwner.god.users({ userId: leaver }).deactivate.post()).status).toBe(200);
+
+      const res = await templates(asOwner).post({ name: 'Bug', assigneeUserId: leaver });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('takes a save that keeps the preset assignee, and one that replaces it', async () => {
+      const { asOwner, ownerUserId } = await setupProject();
+      await addProjectMember(asOwner, 'MKT');
+      const project = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!;
+      const leaver = project.assignees.find((a) => a.userId !== ownerUserId)!.userId;
+      const template = (await templates(asOwner).post({ name: 'Bug', assigneeUserId: leaver }))
+        .data!;
+      expect((await asOwner.god.users({ userId: leaver }).deactivate.post()).status).toBe(200);
+
+      const kept = await templates(asOwner)({ templateId: template.id }).patch({
+        name: 'Defect',
+        assigneeUserId: leaver,
+      });
+      expect(kept.status).toBe(200);
+      expect(kept.data).toMatchObject({ name: 'Defect', assigneeUserId: leaver });
+
+      const replaced = await templates(asOwner)({ templateId: template.id }).patch({
+        assigneeUserId: ownerUserId,
+      });
+      expect(replaced.status).toBe(200);
+      expect(replaced.data).toMatchObject({ assigneeUserId: ownerUserId });
+    });
   });
 
   describe('create', () => {

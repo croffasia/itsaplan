@@ -56,8 +56,8 @@ export function IssueCardLinks({
                     onOpen?.(link.issue.id);
                   }}
                   className={cn(
-                    '-mx-1 flex items-center justify-between gap-2 rounded px-1 py-0.5 text-left',
-                    onOpen && 'cursor-pointer hover:bg-muted/70',
+                    '-mx-1.5 flex items-center justify-between gap-2 rounded px-1.5 py-0.5 text-start',
+                    onOpen && 'cursor-pointer hover:bg-foreground/8',
                   )}
                 >
                   <span className="flex min-w-0 items-center gap-1.5 text-[10px] tracking-wide text-muted-foreground/70">

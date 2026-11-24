@@ -8,7 +8,7 @@ import type {
 } from '@/lib/api/endpoints/integrations';
 import { manageTeamsPath } from '@/utils/paths';
 import type { AgentFormValue } from '../../utils/agentForm';
-import { integrationLabel } from '@/utils/integrationLabels';
+import { integrationOf } from '@/utils/integrationLabels';
 import { AgentFormSection } from './AgentFormSection';
 import { AgentEmptyNotice } from './AgentEmptyNotice';
 import AgentCredentialField from './AgentCredentialField';
@@ -39,7 +39,7 @@ export default function AgentModelSection({
 }) {
   const t = useTranslations('teams.agents');
   const credentialLabel = (c: IntegrationOption) => {
-    const integration = integrationLabel(catalog, c.integrationKey);
+    const integration = integrationOf(catalog, c.integrationKey).label;
     return c.label ? `${integration} · ${c.label}` : integration;
   };
 

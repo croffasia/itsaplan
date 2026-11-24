@@ -11,5 +11,21 @@
   "unfavorite": "Hapus dari favorit",
   "shareBoard": "Bagikan papan",
   "newViewHint": "Buat tampilan berdasarkan filter dan tampilan saat ini",
-  "filter": "Filter"
+  "filter": "Filter",
+  "private": "Pribadi",
+  "privateHint": "Hanya Anda yang dapat melihat tampilan ini",
+  "duplicate": "Gandakan",
+  "copyName": "{name} (salinan)",
+  "hide": "Sembunyikan",
+  "show": "Tampilkan",
+  "hiddenViews": "Tampilan tersembunyi ({count})",
+  "tabRow": "Baris tab",
+  "resetTabRow": "Atur ulang baris tab",
+  "resetTabRowHint": "Urutan proyek, tampilan pribadi Anda setelahnya, tanpa yang disembunyikan",
+  "pinProjectOrder": "Jadikan urutan proyek",
+  "pinProjectOrderHint": "Siapa pun yang belum mengatur baris tabnya sendiri melihat tampilan proyek dalam urutan ini",
+  "publish": "Tambahkan ke proyek",
+  "publishHint": "Semua orang di proyek akan melihatnya. Tampilan ini tidak dapat dijadikan pribadi lagi.",
+  "published": "{name} kini menjadi tampilan proyek",
+  "projectOrderSet": "Tampilan proyek kini mengikuti urutan ini"
 }

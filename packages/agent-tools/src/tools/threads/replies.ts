@@ -6,6 +6,7 @@ import { timeFilter, toUnixSeconds } from '../time';
 // Top-level replies to a post.
 export const threadsListReplies: CustomToolEntry = {
   key: 'threads_list_replies',
+  group: 'Replies',
   label: 'Threads List Replies',
   scopes: ['threads_basic', 'threads_read_replies'],
   description: "List the top-level replies to a Threads post, by the post's media id.",
@@ -35,6 +36,7 @@ export const threadsListReplies: CustomToolEntry = {
 // post owner can read the complete conversation.
 export const threadsGetConversation: CustomToolEntry = {
   key: 'threads_get_conversation',
+  group: 'Replies',
   label: 'Threads Get Conversation',
   scopes: ['threads_basic', 'threads_read_replies'],
   description:
@@ -64,6 +66,7 @@ export const threadsGetConversation: CustomToolEntry = {
 // The token owner's own replies.
 export const threadsListUserReplies: CustomToolEntry = {
   key: 'threads_list_user_replies',
+  group: 'Replies',
   label: 'Threads List My Replies',
   scopes: ['threads_basic', 'threads_read_replies'],
   description: 'List your own Threads replies, newest first.',
@@ -106,6 +109,7 @@ export const threadsListUserReplies: CustomToolEntry = {
 // Pending replies awaiting approval on posts with a restricted reply audience.
 export const threadsPendingReplies: CustomToolEntry = {
   key: 'threads_pending_replies',
+  group: 'Replies',
   label: 'Threads List Pending Replies',
   scopes: ['threads_basic', 'threads_read_replies'],
   description:

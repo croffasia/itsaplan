@@ -28,6 +28,7 @@ const MEDIA_METRICS = 'views,likes,replies,reposts,quotes,shares';
 // the threads_manage_insights scope.
 export const threadsMediaInsights: CustomToolEntry = {
   key: 'threads_media_insights',
+  group: 'Insights',
   label: 'Threads Post Insights',
   scopes: ['threads_basic', 'threads_manage_insights'],
   description:
@@ -54,6 +55,7 @@ const USER_METRICS = 'views,likes,replies,reposts,quotes,followers_count';
 // least 100 followers.
 export const threadsUserInsights: CustomToolEntry = {
   key: 'threads_user_insights',
+  group: 'Insights',
   label: 'Threads Account Insights',
   scopes: ['threads_basic', 'threads_manage_insights'],
   description:

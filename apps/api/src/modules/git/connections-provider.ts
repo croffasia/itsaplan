@@ -1,9 +1,12 @@
 import { HttpError } from '#shared/lib';
 import { assertPublicHttpUrl, pinnedFetch } from '#shared/net';
-import { pipelineStatus } from './providers';
-import type { PipelineEvent, PullRequestEvent, PullRequestState } from './providers';
+import { githubIssueSnapshot, gitlabIssueSnapshot, pipelineStatus } from './providers';
+import type { IssueSnapshot, PipelineEvent, PullRequestEvent, PullRequestState } from './providers';
 
 export type GitProvider = 'github' | 'gitlab' | 'gitea' | 'forgejo' | 'bitbucket';
+
+export const DEVELOPMENT_PROVIDERS = ['github', 'gitlab', 'gitea', 'forgejo'] as const;
+export type DevelopmentProvider = (typeof DEVELOPMENT_PROVIDERS)[number];
 
 export interface ProviderRepository {
   externalId: string;
@@ -136,7 +139,7 @@ function providerHeaders(provider: GitProvider, token: string): Headers {
   return headers;
 }
 
-const PROVIDER_LABEL: Record<GitProvider, string> = {
+export const PROVIDER_LABEL: Record<GitProvider, string> = {
   github: 'GitHub',
   gitlab: 'GitLab',
   gitea: 'Gitea',
@@ -384,13 +387,7 @@ export async function listProviderRepositories(
     const needle = search.toLowerCase();
     repositories = repositories.filter((repo) => repo.fullName.toLowerCase().includes(needle));
   }
-  const providerNext = response.headers.get('x-next-page');
-  const nextPage = providerNext
-    ? Number(providerNext) || null
-    : body.length === perPage
-      ? page + 1
-      : null;
-  return { repositories, nextPage };
+  return { repositories, nextPage: nextPageNumber(response, page, body.length, perPage) };
 }
 
 export async function getProviderRepository(
@@ -548,9 +545,51 @@ function githubWorkflowRun(
   };
 }
 
-function ensureDevelopmentProvider(provider: GitProvider): asserts provider is 'github' | 'gitlab' {
-  if (provider !== 'github' && provider !== 'gitlab')
-    throw new HttpError(400, 'Creating and linking pull requests supports GitHub and GitLab');
+export function ensureDevelopmentProvider(
+  provider: string,
+): asserts provider is DevelopmentProvider {
+  if (!(DEVELOPMENT_PROVIDERS as readonly string[]).includes(provider))
+    throw new HttpError(
+      400,
+      'Creating and linking pull requests supports GitHub, GitLab, Gitea and Forgejo',
+    );
+}
+
+// A Forgejo server labels its webhook deliveries 'forgejo' even on a connection saved as
+// Gitea, and a development link is matched to later deliveries by that label. Only Forgejo
+// serves this route and Gitea answers 404. Any other answer, such as a proxy refusing the
+// path, keeps the provider the connection was saved as.
+export async function resolveLinkProvider(
+  input: ProviderConnectionInput & { provider: DevelopmentProvider },
+): Promise<DevelopmentProvider> {
+  if (input.provider !== 'gitea' && input.provider !== 'forgejo') return input.provider;
+  const response = await pinnedFetch(`${input.baseUrl}/api/forgejo/v1/version`, {
+    headers: providerHeaders(input.provider, input.token),
+    timeoutMs: 15_000,
+  }).catch(() => null);
+  if (response?.ok) return 'forgejo';
+  if (response?.status === 404) return 'gitea';
+  return input.provider;
+}
+
+// Gitea and Forgejo cap the page size on the server and name the next page only in the
+// Link header, so a page shorter than requested is not always the last one.
+function nextPageNumber(
+  response: Response,
+  page: number,
+  count: number,
+  perPage: number,
+): number | null {
+  // A next page that does not advance would repeat pages forever.
+  const providerNext = Number(response.headers.get('x-next-page'));
+  if (providerNext) return providerNext > page ? providerNext : null;
+  const link = response.headers.get('link');
+  if (link) return link.includes('rel="next"') ? page + 1 : null;
+  return count === perPage ? page + 1 : null;
+}
+
+function pageSizeParam(provider: DevelopmentProvider): 'limit' | 'per_page' {
+  return provider === 'gitea' || provider === 'forgejo' ? 'limit' : 'per_page';
 }
 
 export async function listProviderPullRequests(
@@ -563,39 +602,34 @@ export async function listProviderPullRequests(
   const perPage = 50;
   const params = new URLSearchParams({
     page: String(page),
-    per_page: String(perPage),
+    [pageSizeParam(input.provider)]: String(perPage),
   });
-  if (input.provider === 'github') {
-    params.set('state', state);
-    params.set('sort', 'updated');
-    params.set('direction', 'desc');
-  } else {
+  if (input.provider === 'gitlab') {
     params.set('scope', 'all');
     params.set('state', state === 'open' ? 'opened' : 'all');
     params.set('order_by', 'updated_at');
     params.set('sort', 'desc');
+  } else if (input.provider === 'github') {
+    params.set('state', state);
+    params.set('sort', 'updated');
+    params.set('direction', 'desc');
+  } else {
+    params.set('state', state);
+    params.set('sort', 'recentupdate');
   }
   const path =
-    input.provider === 'github'
-      ? `${githubRepoPath(repository.fullName)}/pulls?${params}`
-      : `/projects/${encodeURIComponent(repository.externalId)}/merge_requests?${params}`;
+    input.provider === 'gitlab'
+      ? `/projects/${encodeURIComponent(repository.externalId)}/merge_requests?${params}`
+      : `${githubRepoPath(repository.fullName)}/pulls?${params}`;
   const response = await providerRequest(input, path);
   const body: unknown = await response.json();
   if (!Array.isArray(body))
     throw new HttpError(502, `${input.provider} returned an invalid pull request list`);
-  const normalize = input.provider === 'github' ? githubPullRequest : gitlabPullRequest;
+  const normalize = input.provider === 'gitlab' ? gitlabPullRequest : githubPullRequest;
   const pullRequests = body
     .map(normalize)
     .filter((pullRequest): pullRequest is ProviderPullRequest => pullRequest !== null);
-  const providerNext = response.headers.get('x-next-page');
-  return {
-    pullRequests,
-    nextPage: providerNext
-      ? Number(providerNext) || null
-      : body.length === perPage
-        ? page + 1
-        : null,
-  };
+  return { pullRequests, nextPage: nextPageNumber(response, page, body.length, perPage) };
 }
 
 export async function getProviderPullRequest(
@@ -606,20 +640,21 @@ export async function getProviderPullRequest(
   ensureDevelopmentProvider(input.provider);
   const currentRepository = await getProviderRepository(input, repository.externalId);
   const path =
-    input.provider === 'github'
-      ? `${githubRepoPath(repository.fullName)}/pulls/${number}`
-      : `/projects/${encodeURIComponent(repository.externalId)}/merge_requests/${number}`;
+    input.provider === 'gitlab'
+      ? `/projects/${encodeURIComponent(repository.externalId)}/merge_requests/${number}`
+      : `${githubRepoPath(repository.fullName)}/pulls/${number}`;
   const response = await providerRequest(input, path);
   const body = record(await response.json());
   if (!body) throw new HttpError(502, `${input.provider} returned an invalid pull request`);
   const pullRequest =
-    input.provider === 'github' ? githubPullRequest(body) : gitlabPullRequest(body);
+    input.provider === 'gitlab' ? gitlabPullRequest(body) : githubPullRequest(body);
   if (!pullRequest) throw new HttpError(502, `${input.provider} returned an invalid pull request`);
 
+  // No CI status for Gitea and Forgejo: their webhooks are not subscribed to it either.
   let run: PipelineEvent | null = null;
   if (input.provider === 'gitlab') {
     run = gitlabPipeline(body.head_pipeline, currentRepository, pullRequest);
-  } else if (pullRequest.headSha) {
+  } else if (input.provider === 'github' && pullRequest.headSha) {
     try {
       const params = new URLSearchParams({ head_sha: pullRequest.headSha, per_page: '1' });
       const runsResponse = await providerRequest(
@@ -647,11 +682,14 @@ export async function listProviderBranches(
   ensureDevelopmentProvider(input.provider);
   const perPage = 100;
   const currentRepository = await getProviderRepository(input, repository.externalId);
-  const params = new URLSearchParams({ page: String(page), per_page: String(perPage) });
+  const params = new URLSearchParams({
+    page: String(page),
+    [pageSizeParam(input.provider)]: String(perPage),
+  });
   const path =
-    input.provider === 'github'
-      ? `${githubRepoPath(repository.fullName)}/branches?${params}`
-      : `/projects/${encodeURIComponent(repository.externalId)}/repository/branches?${params}`;
+    input.provider === 'gitlab'
+      ? `/projects/${encodeURIComponent(repository.externalId)}/repository/branches?${params}`
+      : `${githubRepoPath(repository.fullName)}/branches?${params}`;
   const response = await providerRequest(input, path);
   const body: unknown = await response.json();
   if (!Array.isArray(body))
@@ -659,16 +697,18 @@ export async function listProviderBranches(
   const branches = body
     .map((item) => text(record(item)?.name))
     .filter((name): name is string => name !== null);
-  const providerNext = response.headers.get('x-next-page');
   return {
     branches,
     defaultBranch: currentRepository.defaultBranch ?? null,
-    nextPage: providerNext
-      ? Number(providerNext) || null
-      : body.length === perPage
-        ? page + 1
-        : null,
+    nextPage: nextPageNumber(response, page, body.length, perPage),
   };
+}
+
+function draftTitle(provider: DevelopmentProvider, title: string): string {
+  if (provider === 'github') return title;
+  if (provider === 'gitlab') return /^(draft:|wip:)/i.test(title) ? title : `Draft: ${title}`;
+  // Gitea and Forgejo have no draft flag on create; these are their default draft prefixes.
+  return /^(wip:|\[wip\])/i.test(title) ? title : `WIP: ${title}`;
 }
 
 export async function createProviderPullRequest(
@@ -678,29 +718,27 @@ export async function createProviderPullRequest(
 ): Promise<ProviderPullRequestDetails> {
   ensureDevelopmentProvider(input.provider);
   const path =
-    input.provider === 'github'
-      ? `${githubRepoPath(repository.fullName)}/pulls`
-      : `/projects/${encodeURIComponent(repository.externalId)}/merge_requests`;
-  const title =
-    input.provider === 'gitlab' && values.draft && !/^(draft:|wip:)/i.test(values.title)
-      ? `Draft: ${values.title}`
-      : values.title;
+    input.provider === 'gitlab'
+      ? `/projects/${encodeURIComponent(repository.externalId)}/merge_requests`
+      : `${githubRepoPath(repository.fullName)}/pulls`;
+  const title = values.draft ? draftTitle(input.provider, values.title) : values.title;
   const body =
-    input.provider === 'github'
+    input.provider === 'gitlab'
       ? {
-          title,
-          body: values.description,
-          head: values.sourceBranch,
-          base: values.targetBranch,
-          draft: values.draft,
-          maintainer_can_modify: true,
-        }
-      : {
           title,
           description: values.description,
           source_branch: values.sourceBranch,
           target_branch: values.targetBranch,
           allow_collaboration: true,
+        }
+      : {
+          title,
+          body: values.description,
+          head: values.sourceBranch,
+          base: values.targetBranch,
+          ...(input.provider === 'github'
+            ? { draft: values.draft, maintainer_can_modify: true }
+            : {}),
         };
   const response = await providerRequest(input, path, {
     method: 'POST',
@@ -709,7 +747,7 @@ export async function createProviderPullRequest(
   const created = record(await response.json());
   if (!created) throw new HttpError(502, `${input.provider} returned an invalid pull request`);
   const pullRequest =
-    input.provider === 'github' ? githubPullRequest(created) : gitlabPullRequest(created);
+    input.provider === 'gitlab' ? gitlabPullRequest(created) : githubPullRequest(created);
   if (!pullRequest) throw new HttpError(502, `${input.provider} returned an invalid pull request`);
   return {
     pullRequest,
@@ -736,12 +774,15 @@ function numericId(hook: Record<string, unknown> | null): string | null {
   return typeof id === 'number' || typeof id === 'string' ? String(id) : null;
 }
 
+// `issueEvents` adds the issue and comment events a repository with issue sync needs.
 function providerWebhookApi(
   provider: GitProvider,
   repository: ProviderRepository,
   payloadUrl: string,
   secret: string,
+  issueEvents: boolean,
 ): ProviderWebhookApi {
+  const issueHooks = issueEvents ? ['issues', 'issue_comment'] : [];
   const arrayBody = (body: unknown) => (Array.isArray(body) ? body : []);
   const configUrl = (hook: Record<string, unknown> | null) => text(record(hook?.config)?.url);
   if (provider === 'gitlab') {
@@ -758,6 +799,8 @@ function providerWebhookApi(
         merge_requests_events: true,
         pipeline_events: true,
         push_events: true,
+        issues_events: issueEvents,
+        note_events: issueEvents,
         enable_ssl_verification: true,
       }),
     };
@@ -773,7 +816,7 @@ function providerWebhookApi(
       body: (create) => ({
         ...(create ? { type: 'gitea' } : {}),
         active: true,
-        events: ['pull_request', 'create', 'delete'],
+        events: ['pull_request', 'create', 'delete', ...issueHooks],
         config: { url: payloadUrl, content_type: 'json', secret },
       }),
     };
@@ -812,7 +855,7 @@ function providerWebhookApi(
     body: (create) => ({
       ...(create ? { name: 'web' } : {}),
       active: true,
-      events: ['pull_request', 'check_run', 'create', 'delete'],
+      events: ['pull_request', 'check_run', 'create', 'delete', ...issueHooks],
       config: { url: payloadUrl, content_type: 'json', insecure_ssl: '0', secret },
     }),
   };
@@ -827,8 +870,9 @@ export async function installProviderWebhook(
   payloadUrl: string,
   secret: string,
   webhookExternalId: string | null,
+  issueEvents: boolean,
 ): Promise<string> {
-  const api = providerWebhookApi(input.provider, repository, payloadUrl, secret);
+  const api = providerWebhookApi(input.provider, repository, payloadUrl, secret, issueEvents);
   let existingId = webhookExternalId;
   if (existingId === null) {
     const hooksResponse = await providerRequest(input, `${api.hooksPath}${api.listQuery}`);
@@ -888,5 +932,117 @@ export async function createPullRequestComment(
   await providerRequest(input, path, {
     method: 'POST',
     body: JSON.stringify(input.provider === 'bitbucket' ? { content: { raw: body } } : { body }),
+  });
+}
+
+function repositoryApiPath(input: ProviderConnectionInput, repository: ProviderRepository): string {
+  return input.provider === 'gitlab'
+    ? `/projects/${encodeURIComponent(repository.externalId)}`
+    : githubRepoPath(repository.fullName);
+}
+
+// One page of the repository's open issues, oldest first, so a page read later still
+// starts after the issues an earlier page held.
+export async function listProviderOpenIssues(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  page: number,
+): Promise<{ issues: IssueSnapshot[]; nextPage: number | null }> {
+  ensureDevelopmentProvider(input.provider);
+  const perPage = 50;
+  const params = new URLSearchParams({
+    page: String(page),
+    [pageSizeParam(input.provider)]: String(perPage),
+  });
+  if (input.provider === 'gitlab') {
+    params.set('state', 'opened');
+    params.set('order_by', 'created_at');
+    params.set('sort', 'asc');
+  } else if (input.provider === 'github') {
+    params.set('state', 'open');
+    params.set('sort', 'created');
+    params.set('direction', 'asc');
+  } else {
+    params.set('state', 'open');
+    params.set('type', 'issues');
+  }
+  const response = await providerRequest(
+    input,
+    `${repositoryApiPath(input, repository)}/issues?${params}`,
+  );
+  const body: unknown = await response.json();
+  if (!Array.isArray(body))
+    throw new HttpError(502, `${PROVIDER_LABEL[input.provider]} returned an invalid issue list`);
+  const normalize = input.provider === 'gitlab' ? gitlabIssueSnapshot : githubIssueSnapshot;
+  return {
+    issues: body.map(normalize).filter((issue): issue is IssueSnapshot => issue !== null),
+    nextPage: nextPageNumber(response, page, body.length, perPage),
+  };
+}
+
+export interface ProviderLabel {
+  name: string;
+  // "#rrggbb", or null when the provider sent no usable color.
+  color: string | null;
+}
+
+function labelColor(value: unknown): string | null {
+  const hex = text(value)?.replace(/^#/, '');
+  return hex && /^[0-9a-f]{6}$/i.test(hex) ? `#${hex.toLowerCase()}` : null;
+}
+
+// The repository's labels, by name, up to 20 pages (1,000 labels): a server that keeps
+// naming a next page cannot hold the request.
+export async function listProviderLabels(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+): Promise<ProviderLabel[]> {
+  ensureDevelopmentProvider(input.provider);
+  const perPage = 50;
+  const labels = new Map<string, ProviderLabel>();
+  for (let page: number | null = 1; page !== null && page <= 20;) {
+    const params = new URLSearchParams({
+      page: String(page),
+      [pageSizeParam(input.provider)]: String(perPage),
+    });
+    const response = await providerRequest(
+      input,
+      `${repositoryApiPath(input, repository)}/labels?${params}`,
+    );
+    const body: unknown = await response.json();
+    if (!Array.isArray(body))
+      throw new HttpError(502, `${PROVIDER_LABEL[input.provider]} returned an invalid label list`);
+    for (const item of body) {
+      const name = text(record(item)?.name);
+      if (name) labels.set(name, { name, color: labelColor(record(item)?.color) });
+    }
+    page = nextPageNumber(response, page, body.length, perPage);
+  }
+  return [...labels.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function setProviderIssueState(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  number: number,
+  state: 'open' | 'closed',
+  reason: 'completed' | 'not_planned',
+): Promise<void> {
+  ensureDevelopmentProvider(input.provider);
+  const path = `${repositoryApiPath(input, repository)}/issues/${number}`;
+  if (input.provider === 'gitlab') {
+    await providerRequest(input, path, {
+      method: 'PUT',
+      body: JSON.stringify({ state_event: state === 'closed' ? 'close' : 'reopen' }),
+    });
+    return;
+  }
+  await providerRequest(input, path, {
+    method: 'PATCH',
+    body: JSON.stringify(
+      input.provider === 'github' && state === 'closed'
+        ? { state, state_reason: reason }
+        : { state },
+    ),
   });
 }

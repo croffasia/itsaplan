@@ -170,66 +170,122 @@
     },
     "joined": "joined {date}"
   },
+  "roles": {
+    "newRole": "New role",
+    "empty": "No system roles yet.",
+    "default": "Default",
+    "defaultUndeletable": "The default role cannot be deleted",
+    "columns": {
+      "role": "Role",
+      "permissions": "Permissions"
+    },
+    "edit": "Edit role",
+    "delete": "Delete role",
+    "deleteTitle": "Delete role \"{name}\"",
+    "deleteDescription": "This cannot be undone."
+  },
   "general": {
     "saved": "Project defaults saved",
     "projectDefaults": "Project defaults",
-    "mcpEnabled": "Enable MCP on new projects",
-    "mcpEnabledHint": "A new project is in its team's MCP reach from the moment it is created.",
+    "mcpEnabled": "MCP access for new projects",
+    "mcpEnabledHint": "A new project starts open to MCP clients when its team has MCP on. Existing projects keep their setting.",
     "workspacesSaved": "Workspace settings saved",
     "workspaces": "Workspaces",
-    "personalWorkspaces": "A workspace for everyone",
-    "personalWorkspacesHint": "Every account gets a workspace of its own, named after the person. Off, people work only in the workspaces they are added to.",
+    "personalWorkspaces": "Personal workspaces",
+    "personalWorkspacesHint": "Each person gets a workspace of their own, named after them. Off, new accounts get none, and people work only in workspaces they are added to. Existing workspaces stay.",
+    "invites": "Invites",
+    "inviteSearch": "Suggest people when inviting",
+    "inviteSearchHint": "Team owners and managers can find accounts from every workspace by name or email. Matches appear as they type in the invite dialog. Off, they enter the full address.",
+    "invitesSaved": "Invite settings saved",
+    "sharing": "Public links",
+    "sharingEnabled": "Allow public links",
+    "sharingEnabledHint": "Off, existing links stop opening until this is on again, and nobody can share. On, each workspace decides whether its documents, issues and views can be shared by link.",
+    "sharingSaved": "Public link settings saved",
+    "apiDocs": "API docs",
+    "apiDocsAudience": "Who can read API docs",
+    "apiDocsAudienceHint": "In the app and at the API's /docs address.",
+    "apiDocsAudiences": {
+      "nobody": "No one",
+      "god": "Instance owner",
+      "everyone": "Everyone"
+    },
+    "apiDocsSaved": "API docs settings saved",
+    "apiKeys": "API keys",
+    "apiKeysSaved": "API key settings saved",
+    "keyRequestsPerMinute": "Requests per minute",
+    "keyRequestsPerMinuteHint": "How many requests one key can send per minute, MCP tool calls included. Each API replica counts on its own. 0 sets no limit.",
+    "keyRequestsPerMinuteInvalid": "Enter a whole number from 0 to {max}.",
     "agents": "Agents",
     "agentsSaved": "Agent settings saved",
+    "embedding": "Embedding",
+    "embedSites": "Trusted sites",
+    "embedSitesHint": "Only these sites can embed documents, issues and views shared by public link. With none listed, no site can. Enter each as https://example.com, separated by commas.",
+    "embedSitesInvalid": "Enter each site as https://example.com, without a path.",
+    "embedSaved": "Trusted sites saved. They apply within a minute.",
     "traceRetention": "Keep run traces",
-    "traceRetentionHint": "Each agent run records its model and tool calls. Usage dashboards count only the runs still kept.",
+    "traceRetentionHint": "A trace records the model and tool calls of one agent run. After this time it is deleted, and usage dashboards stop counting the run.",
     "traceDays": "{days, plural, one {# day} other {# days}}",
     "traceForever": "Forever",
-    "maxRunTime": "Max run time",
-    "maxRunTimeHint": "How long one agent run may take before it is stopped and saved as failed. An agent's own limit cannot exceed it.",
+    "maxRunTime": "Run time limit",
+    "maxRunTimeHint": "A run that takes longer is stopped and saved as failed. An agent's own limit can only be shorter. Chats have no limit.",
     "runMinutes": "{minutes, plural, one {# minute} other {# minutes}}",
-    "runSeconds": "{seconds} s"
+    "runSeconds": "{seconds} s",
+    "concurrentRuns": "Runs at once",
+    "concurrentRunsHint": "How many agent runs work at once on this instance. The rest wait in the queue. Chats and external agents don't count. 0 sets no limit.",
+    "concurrentRunsInvalid": "Enter a whole number from 0 to {max}.",
+    "answerLimit": "Answer length limit",
+    "answerLimitHint": "How many characters of an agent's answer are saved. The rest is cut off. Chats show the whole answer, but external agents get back only the saved part as history. 0 sets no limit.",
+    "answerLimitInvalid": "Enter a whole number from 0 to {max, number}.",
+    "answerLimitNone": "No limit. Long answers are saved whole and can make agent run lists slow to load."
   },
   "authentication": {
     "saved": "Authentication settings saved",
     "registration": "Registration",
-    "registrationHint": "Who may create an account on this instance.",
-    "registrationPasswordlessNote": "Sign-up and password recovery are handled by the sign-in provider.",
+    "registrationHint": "Who can create an account and how long invites stay valid.",
+    "registrationPasswordlessNote": "People sign up and reset passwords through the sign-in provider.",
     "inviteTtlDays": "Invite expiry (days)",
-    "inviteTtlDaysHint": "After this many days an invite link stops working and, with invite-only registration, no longer lets its address sign up. 0 keeps invites valid until they are answered.",
+    "inviteTtlDaysHint": "An invite stops working this many days after it is created. A new value also applies to existing invites. 0 means invites never expire.",
     "inviteTtlDaysInvalid": "Enter a whole number of days from 0 to {max}.",
     "allowedEmailDomains": "Allowed email domains",
-    "allowedEmailDomainsHint": "Only addresses at these domains can create an account. Separate them with commas, or leave empty to allow any. Existing accounts keep their access.",
-    "allowedEmailDomainsInvalid": "Each domain should look like example.com, with up to 100 domains.",
+    "allowedEmailDomainsHint": "Only addresses at these domains can create an account, including through an invite. Existing accounts keep their access. Separate domains with commas. A subdomain needs its own entry. Leave empty to allow any address.",
+    "allowedEmailDomainsInvalid": "Enter domains like example.com, up to 100.",
     "modes": {
       "open": {
         "label": "Open",
-        "description": "Anyone who reaches the sign-up page can create an account.",
+        "description": "Anyone can create an account on the sign-up page.",
         "descriptionPasswordless": "Anyone who signs in with the provider for the first time gets an account."
       },
       "invite": {
         "label": "Invite only",
-        "description": "An account can only be created through an invite link.",
-        "descriptionPasswordless": "Signing in with the provider only creates an account when there is a pending invite for that address."
+        "description": "Only addresses with a pending invite can create an account.",
+        "descriptionPasswordless": "Signing in with the provider creates an account only for an address with a pending invite."
       },
       "closed": {
         "label": "Closed",
-        "description": "No new accounts. Existing ones keep signing in.",
-        "descriptionPasswordless": "No new accounts, not even for someone arriving from the provider. Existing ones keep signing in."
+        "description": "Nobody can create an account. Existing accounts keep signing in.",
+        "descriptionPasswordless": "Signing in with the provider creates no account. Existing accounts keep signing in."
       }
     },
     "signIn": "Sign-in options",
-    "signInHint": "How people sign in. The options that send mail stay off until a provider is configured.",
-    "needsProvider": "Set up the Email provider under Integrations first.",
+    "needsProvider": "First set up an email provider in Integrations → Email provider.",
     "requireVerification": "Require email confirmation",
-    "requireVerificationHint": "A new account must confirm its address before it can sign in.",
+    "requireVerificationHint": "People must confirm their email address before signing in with a password. This includes existing accounts: the sign-in form offers to resend the confirmation link.",
     "magicLink": "Sign-in links",
-    "magicLinkHint": "Offer signing in with a link sent by email, alongside the password.",
+    "magicLinkHint": "People can sign in with a link sent to their email. It works only while Email and password is on.",
     "trustProviderEmails": "Trust addresses from sign-in providers",
-    "trustProviderEmailsHint": "Google and OpenID Connect sign a person in to the account that already has their address, confirmed here or not. Turn this on only where you control who can register at the provider.",
+    "trustProviderEmailsHint": "Google and OpenID Connect sign people in to the account with the same email address, even if nobody confirmed it. Turn this on only if you control who registers at the provider, or someone could take over an account.",
     "emailPassword": "Email and password",
-    "emailPasswordHint": "Offer the sign-in and sign-up form. Turn it off to let people in through a sign-in provider only.",
-    "needsSso": "Set up a sign-in provider under Integrations first."
+    "emailPasswordHint": "People sign up and sign in with an email and a password. When off, they sign in only through a sign-in provider or a passkey.",
+    "needsSso": "First set up a sign-in provider in Integrations → Auth provider.",
+    "signInLimits": "Request limits",
+    "signInLimitsHint": "How many requests one IP address can send to each API replica. The limits stop password guessing and email floods. Behind a reverse proxy, the proxy must set X-Forwarded-For, or all clients share each limit.",
+    "signInRateLimit": "Sign-in and sign-up attempts",
+    "signInRateLimitHint": "Per 10 seconds, including password and email changes.",
+    "emailRateLimit": "Account emails",
+    "emailRateLimitHint": "Per minute, for password reset and email confirmation messages.",
+    "magicLinkRateLimit": "Sign-in link requests",
+    "magicLinkRateLimitHint": "Per minute, for requesting and opening sign-in links.",
+    "signInLimitInvalid": "Enter a whole number from 1 to {max}."
   },
   "hotkeys": {
     "saved": "Keyboard shortcuts saved"
@@ -250,14 +306,115 @@
     "quotaMb": "Storage per project (MB)",
     "quotaNote": "Once a project reaches the quota, new uploads are refused until someone deletes attachments."
   },
+  "jobs": {
+    "saved": "Background job settings saved",
+    "range": "Enter a whole number from {min, number} to {max, number}.",
+    "withRange": "{hint} From {min, number} to {max, number}.",
+    "webhookLeaseNote": "Set a lease longer than the timeout. Leases are in seconds, timeouts in milliseconds.",
+    "webhookTimeoutNote": "Set a timeout shorter than the lease. Leases are in seconds, timeouts in milliseconds.",
+    "agentLeaseNote": "Set a lease longer than the timeout under Agents with an endpoint URL. Leases are in seconds, timeouts in milliseconds.",
+    "invocationTimeoutNote": "Set a timeout shorter than the leases under Agent runs and Agent chat. Leases are in seconds, timeouts in milliseconds.",
+    "webhooks": {
+      "title": "Webhooks",
+      "description": "How deliveries are sent and retried, when a failing webhook is turned off, and how long the log is kept.",
+      "pollIntervalMs": "Check interval (ms)",
+      "pollIntervalMsHint": "How often queued deliveries and notifications are sent.",
+      "batchSize": "Batch size",
+      "batchSizeHint": "How many deliveries are sent per check.",
+      "timeoutMs": "Timeout (ms)",
+      "timeoutMsHint": "How long the receiving server has to answer before the attempt fails.",
+      "maxAttempts": "Max attempts",
+      "maxAttemptsHint": "How many times a delivery is sent before it is saved as failed.",
+      "disableThreshold": "Failures in a row",
+      "disableThresholdHint": "The webhook is turned off after this many failed attempts in a row, retries included.",
+      "leaseSeconds": "Lease (sec)",
+      "leaseSecondsHint": "An interrupted delivery is sent again after this time.",
+      "retentionDays": "Keep delivery log (days)",
+      "retentionDaysHint": "Successful deliveries are deleted from the log after this time. Failed ones stay.",
+      "cleanupIntervalMinutes": "Cleanup interval (min)",
+      "cleanupIntervalMinutesHint": "How often old entries are deleted from the delivery log."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Email and Telegram notifications. They are sent at the Check interval set under Webhooks.",
+      "batchSize": "Batch size",
+      "batchSizeHint": "How many notifications are sent per check.",
+      "maxAttempts": "Max attempts",
+      "maxAttemptsHint": "How many times a notification is sent before it is saved as failed.",
+      "leaseSeconds": "Lease (sec)",
+      "leaseSecondsHint": "An interrupted notification is sent again after this time."
+    },
+    "imports": {
+      "title": "Imports",
+      "description": "Imports from other trackers.",
+      "pollIntervalMs": "Check interval (ms)",
+      "pollIntervalMsHint": "How often queued imports are started."
+    },
+    "agentRuns": {
+      "title": "Agent runs",
+      "description": "How queued and scheduled agent runs start and retry.",
+      "pollIntervalMs": "Check interval (ms)",
+      "pollIntervalMsHint": "How often runs are taken from the queue and due schedules are queued.",
+      "maxAttempts": "Max attempts",
+      "maxAttemptsHint": "How many times a run is started before it is saved as failed.",
+      "leaseSeconds": "Lease (sec)",
+      "leaseSecondsHint": "An interrupted run starts again after this time. For internal agents this time is never shorter than Run time limit in General."
+    },
+    "agentChat": {
+      "title": "Agent chat",
+      "description": "Chats with external agents, through a runner or an endpoint URL.",
+      "leaseSeconds": "Lease (sec)",
+      "leaseSecondsHint": "An interrupted answer starts again after this time.",
+      "maxAttempts": "Max attempts",
+      "maxAttemptsHint": "How many times the agent gets a message before the answer is saved as failed.",
+      "claimWaitMs": "Runner wait (ms)",
+      "claimWaitMsHint": "How long a runner request waits for a new chat message.",
+      "claimPollMs": "Runner check interval (ms)",
+      "claimPollMsHint": "A new chat message reaches a waiting runner within this time.",
+      "streamPollMs": "Answer check interval (ms)",
+      "streamPollMsHint": "How often an open chat shows new parts of the answer.",
+      "historyMessages": "Chat history (messages)",
+      "historyMessagesHint": "How many earlier chat messages the agent gets with each new one."
+    },
+    "agentInvocations": {
+      "title": "Agents with an endpoint URL",
+      "description": "Tasks and chat messages sent to an agent's endpoint URL.",
+      "pollIntervalMs": "Check interval (ms)",
+      "pollIntervalMsHint": "How often queued tasks and chat messages are sent to these agents.",
+      "timeoutMs": "Timeout (ms)",
+      "timeoutMsHint": "How long the endpoint has to answer. If it is late, the task or message is sent again when its lease ends."
+    },
+    "sweeps": {
+      "title": "Archive and cleanup",
+      "description": "How often stale closed issues are archived, and old run traces and expired public links deleted.",
+      "autoArchiveMinutes": "Archive interval (min)",
+      "autoArchiveMinutesHint": "How often stale closed issues are archived in projects with Archive turned on.",
+      "tracePruneMinutes": "Trace cleanup interval (min)",
+      "tracePruneMinutesHint": "How often run traces older than Keep run traces in General are deleted.",
+      "shareExpiryMinutes": "Link cleanup interval (min)",
+      "shareExpiryMinutesHint": "How often expired public links are deleted. A link stops opening when it expires, whatever this value is."
+    },
+    "bot": {
+      "title": "Telegram bot",
+      "description": "How fast the bot picks up a change to its settings.",
+      "configPollIntervalMs": "Settings check interval (ms)",
+      "configPollIntervalMsHint": "A change under Telegram reaches the bot within this time."
+    }
+  },
   "telegram": {
     "saved": "Telegram settings saved",
     "bot": "Bot",
-    "botConfigured": "People connect their Telegram account by opening a chat with this bot from their profile.",
+    "botConfigured": "People connect their Telegram account by opening a chat with this bot from their notification settings.",
     "botMissing": "Create a bot with @BotFather in Telegram and paste its token here.",
     "botToken": "Bot token",
     "botTokenHint": "The token is verified with Telegram when you save, so a wrong one is refused here rather than failing silently later.",
     "resolvedHint": "Resolved from the token. This is the bot people will see when connecting."
+  },
+  "slack": {
+    "saved": "Slack settings saved",
+    "app": "Slack app",
+    "appConfigured": "When on, members can connect their Slack account in their notification settings.",
+    "appMissing": "Add the bot token, client ID and client secret to turn the app on."
   },
   "email": {
     "saved": "Email provider saved",
@@ -297,6 +454,120 @@
     "clientSecret": "Client secret",
     "clientSecretPlaceholder": "App registration secret",
     "microsoft365Hint": "Signs in as an app registration in Entra ID instead of with the mailbox password, so the mailbox can keep MFA on. The app needs the Office 365 Exchange Online application permission SMTP.SendAsApp with admin consent, access to this mailbox in Exchange, and SMTP AUTH turned on for the mailbox."
+  },
+  "emailTemplates": {
+    "saved": "Email templates saved",
+    "unsaved": "Unsaved changes",
+    "blankText": "Add the missing subject or text to save",
+    "emails": "Emails",
+    "layout": "Layout",
+    "edited": "Edited",
+    "subject": "Subject",
+    "text": "Text",
+    "button": "Button",
+    "formatting": "Formatting",
+    "heading1": "Heading 1",
+    "heading2": "Heading 2",
+    "bold": "Bold",
+    "italic": "Italic",
+    "strikethrough": "Strikethrough",
+    "link": "Link",
+    "bulletedList": "Bulleted list",
+    "numberedList": "Numbered list",
+    "quote": "Quote",
+    "boldSample": "bold",
+    "italicSample": "italic",
+    "strikeSample": "text",
+    "linkSample": "link text",
+    "unknownVariables": "{count, plural, one {Unknown variable: {names}} other {Unknown variables: {names}}}",
+    "removeUnknownVariables": "Remove the unknown variables to save",
+    "reset": "Reset to default",
+    "test": "Send test",
+    "testing": "Sending…",
+    "testSent": "Sent to {email}",
+    "testNeedsProvider": "Set up the email provider first",
+    "layoutHtml": "Layout HTML",
+    "layoutCss": "Layout CSS",
+    "placeholders": "Placeholders",
+    "variables": "Variables",
+    "required": "Required",
+    "requiredPlaceholders": "Add {names} to the layout to save",
+    "preview": "Preview",
+    "previewEmail": "Email",
+    "previewText": "Plain text",
+    "previewFailed": "The preview didn't load. Reload the page to try again.",
+    "from": "From",
+    "to": "To",
+    "groups": {
+      "signIn": "Sign-in",
+      "invitations": "Invitations",
+      "notifications": "Notifications",
+      "service": "Other"
+    },
+    "templates": {
+      "reset": {
+        "name": "Password reset"
+      },
+      "verify": {
+        "name": "Confirm email address"
+      },
+      "magic": {
+        "name": "Sign-in link"
+      },
+      "inviteProject": {
+        "name": "Project invitation"
+      },
+      "inviteTeam": {
+        "name": "Team invitation"
+      },
+      "assigned": {
+        "name": "Issue assigned"
+      },
+      "mentioned": {
+        "name": "Mentioned on an issue"
+      },
+      "commented": {
+        "name": "New comment"
+      },
+      "stateChanged": {
+        "name": "Status changed"
+      },
+      "reacted": {
+        "name": "Reaction to a comment"
+      },
+      "documentMentioned": {
+        "name": "Mentioned in a document"
+      },
+      "documentCommentMentioned": {
+        "name": "Mentioned in a document comment"
+      },
+      "test": {
+        "name": "Test email",
+        "hint": "Sent by the test button on the Email provider page."
+      }
+    },
+    "placeholderText": {
+      "content": "Email text",
+      "button": "Button with the link",
+      "subject": "Subject",
+      "lang": "Language code",
+      "dir": "Text direction",
+      "site_name": "Instance name",
+      "site_url": "Instance address",
+      "logo_url": "Logo address"
+    },
+    "variableText": {
+      "actor": "Who did it",
+      "ref": "Issue number",
+      "title": "Issue title",
+      "from": "Previous status",
+      "to": "New status",
+      "document": "Document title",
+      "inviter": "Who sent the invitation",
+      "project": "Project name",
+      "team": "Team name",
+      "role": "Role after joining"
+    }
   },
   "authProvider": {
     "saved": "Auth provider saved",

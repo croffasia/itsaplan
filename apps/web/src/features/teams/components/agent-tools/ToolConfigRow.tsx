@@ -1,46 +1,75 @@
-import { Trash2, Wrench } from 'lucide-react';
-import type { ConfiguredTool } from '@/lib/api/endpoints/agentTools';
+import { Trash2 } from 'lucide-react';
+import { formatDate } from '@/utils/dates';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { IntegrationIcon } from '@/components/common/IntegrationIcon';
+import NeedsProLink from '@/components/common/NeedsProLink';
+import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
+import type { ToolRowProps } from '../../types/toolSource';
+import { ClampedDescription } from '../ClampedDescription';
 
-// One configured tool as a table row: the tool name with the integration and
-// credential it runs on below, the token permissions it needs as badges, and a
-// delete action gated by permission.
 export function ToolConfigRow({
   tool,
-  toolLabel,
-  integrationLabel,
-  scopes,
+  meta,
+  integration,
+  locked,
   canDelete,
+  onOpen,
   onDelete,
-}: {
-  tool: ConfiguredTool;
-  toolLabel: string;
-  integrationLabel: string;
-  scopes: string[];
-  canDelete: boolean;
-  onDelete: () => void;
-}) {
+}: ToolRowProps) {
   const t = useTranslations('teams.tools');
-  const on = tool.credentialLabel
-    ? `${integrationLabel} · ${tool.credentialLabel}`
-    : integrationLabel;
+  const scopes = meta?.scopes ?? [];
+  // The id tells a tool on an unlabelled credential from the same tool added with none.
+  const credential =
+    tool.credentialLabel ??
+    (tool.credentialId != null ? t('credentialFallback', { id: tool.credentialId }) : null);
+  const on = credential ? `${integration.label} · ${credential}` : integration.label;
   return (
-    <TableRow className="group/item">
+    <TableRow className={cn('group/item', onOpen && 'cursor-pointer')} onClick={onOpen}>
       <TableCell className="px-3 py-3 align-top whitespace-normal">
         <div className="flex min-w-0 items-start gap-2.5">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-            <Wrench className="size-4" />
-          </div>
-          <div className="flex min-w-0 flex-col gap-0.5 pt-0.5">
-            <span className="truncate text-sm font-medium text-foreground">{toolLabel}</span>
-            <span className="truncate text-xs text-muted-foreground">{on}</span>
+          <IntegrationIcon integration={integration} />
+          <div className="flex min-w-0 flex-col gap-0.5">
+            {onOpen ? (
+              <button
+                type="button"
+                className="truncate text-start text-sm font-medium text-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpen();
+                }}
+              >
+                {tool.label}
+              </button>
+            ) : (
+              <span className="truncate text-sm font-medium text-foreground">{tool.label}</span>
+            )}
+            {tool.description && (
+              <ClampedDescription text={tool.description} className="pe-10 text-xs" />
+            )}
+            <span className="truncate text-xs text-muted-foreground/70">{on}</span>
+            {!tool.supported &&
+              (locked ? (
+                <NeedsProLink
+                  feature={tool.source ? 'http-tools' : 'agent-tools'}
+                  label={t('locked')}
+                  hint={t('lockedHint')}
+                  className="mt-1"
+                />
+              ) : (
+                <span
+                  title={t('unavailableHint')}
+                  className="mt-1 text-xs font-medium text-warning"
+                >
+                  {t('unavailable')}
+                </span>
+              ))}
           </div>
         </div>
       </TableCell>
-      <TableCell className="px-3 py-3 pt-4 align-top whitespace-normal">
+      <TableCell className="px-3 py-3 align-top whitespace-normal">
         {scopes.length > 0 ? (
           <div className="flex flex-wrap gap-1">
             {scopes.map((s) => (
@@ -50,18 +79,24 @@ export function ToolConfigRow({
             ))}
           </div>
         ) : (
-          <span className="text-xs text-muted-foreground">{t('noScopes')}</span>
+          <span className="text-xs leading-5 text-muted-foreground">{t('noScopes')}</span>
         )}
       </TableCell>
-      <TableCell className="px-3 py-2 pt-3 align-top">
+      <TableCell className="px-3 py-3 align-top text-sm text-muted-foreground">
+        {formatDate(tool.createdAt)}
+      </TableCell>
+      <TableCell className="px-3 py-2 align-top">
         <div className="flex items-center justify-end gap-1">
           {canDelete && (
             <Button
               variant="ghost"
               size="icon"
               className="size-8 text-muted-foreground hover:text-destructive"
-              onClick={onDelete}
-              aria-label={t('delete')}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              aria-label={t('deleteLabel', { tool: tool.label })}
             >
               <Trash2 className="size-4" />
             </Button>

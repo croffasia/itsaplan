@@ -1,13 +1,18 @@
 # Coding agent setup
 
 [`@itsaplan/runner`](https://www.npmjs.com/package/@itsaplan/runner) runs an external agent
-on your own machine. It has a preset for each of seven coding agent CLIs. A preset builds
+on your own machine. It has a preset for each of eight coding agent CLIs. A preset builds
 the command itself: the flags for an unattended run, and the session resume.
 
 Each preset needs two files in the working directory:
 
 - the CLI's own config, which points it at the MCP server of your instance,
 - `itsaplan-runner.json`, which points the runner at your instance.
+
+The CLI's config sends two headers: the agent's key, and the id of the run the agent works on
+(`X-Itsaplan-Run-Id`). The runner sets both for the command, as `ITSAPLAN_API_KEY` and
+`ITSAPLAN_RUN_ID`. With the run id, a run the agent starts, such as by delegating an issue, works
+for the person of the agent's run. Without it, that run is the project's work.
 
 This page holds both files for each preset, and the notes that apply to that CLI. The
 runner's own settings are in its
@@ -17,6 +22,32 @@ The instance can also send the tasks to an endpoint that you run. See
 [Agent endpoint](agent-endpoint.md).
 
 Enable MCP for the project first, in Settings, MCP Server. It is off by default.
+
+## A shorter tool list
+
+`/mcp` lists every tool, more than 200 of them, and that stays the default for existing
+clients. A client that loads all tool definitions at the start of a session spends about
+150,000 tokens on that list. Add `?tools=catalog` to the url to list 13 tools in about
+4,000 tokens:
+
+```json
+"url": "http://localhost:3000/mcp?tools=catalog"
+```
+
+- The most used tools are listed as before and are called directly: `get_current_user`,
+  `list_projects`, `get_project`, `get_issue_by_number`, `search_issues`, `list_issues`,
+  `create_issue`, `update_issue` and `add_comment`.
+- `discover` finds every other tool by the words of its name and description, best match
+  first, or by its exact name. It returns the tool's description, its input schema and the
+  execute tool that runs it. Everyday words are understood, such as "ticket" for an issue,
+  "wiki" for a document or "sprint" for a cycle. The query is in English, as the tools are.
+- `execute_read`, `execute_write` and `execute_destructive` run a discovered tool:
+  `{ "name": "delete_label", "arguments": { ... } }`. Each one accepts only the tools its
+  annotations are true for, so a client that asks before a destructive call still asks.
+  Permissions, validation and rate limits are those of a direct call.
+
+Use the default with a client that loads tool definitions on demand. Any other value of
+`tools` is refused with HTTP 400.
 
 ## Claude Code
 
@@ -28,7 +59,10 @@ Claude Code reads `.mcp.json` from the working directory:
     "itsaplan": {
       "type": "http",
       "url": "http://localhost:3000/mcp",
-      "headers": { "Authorization": "Bearer ${ITSAPLAN_API_KEY}" }
+      "headers": {
+        "Authorization": "Bearer ${ITSAPLAN_API_KEY}",
+        "X-Itsaplan-Run-Id": "${ITSAPLAN_RUN_ID}"
+      }
     }
   }
 }
@@ -57,13 +91,14 @@ Claude Code reads `.mcp.json` from the working directory:
 
 ## Codex
 
-Codex reads its MCP servers from `~/.codex/config.toml`. `bearer_token_env_var` takes the
-key from the environment that the runner sets:
+Codex reads its MCP servers from `~/.codex/config.toml`. `bearer_token_env_var` and
+`env_http_headers` take the key and the run id from the environment that the runner sets:
 
 ```toml
 [mcp_servers.itsaplan]
 url = "http://localhost:3000/mcp"
 bearer_token_env_var = "ITSAPLAN_API_KEY"
+env_http_headers = { "X-Itsaplan-Run-Id" = "ITSAPLAN_RUN_ID" }
 ```
 
 `itsaplan-runner.json`:
@@ -90,8 +125,9 @@ bearer_token_env_var = "ITSAPLAN_API_KEY"
 ## Antigravity CLI
 
 Antigravity CLI reads its MCP servers from `~/.gemini/config/mcp_config.json`, one file
-per machine. Its headers take no variables, so you write the key in the file. A remote
-server is named by `serverUrl`, not by `url` or `httpUrl`:
+per machine. Its headers take no variables, so you write the key in the file. Its calls thus
+name no run, and a run the agent starts is the project's work. A remote server is named by
+`serverUrl`, not by `url` or `httpUrl`:
 
 ```json
 {
@@ -132,7 +168,7 @@ server is named by `serverUrl`, not by `url` or `httpUrl`:
 GitHub Copilot CLI reads `.mcp.json` from the working directory, but only once you have
 trusted that directory interactively. `--additional-mcp-config` loads the same file
 without that step, which is what the runner config below passes. Its headers accept no
-variables. You thus write the key in the file:
+variables. You thus write the key in the file, and its calls name no run, as Antigravity's do:
 
 ```json
 {
@@ -183,7 +219,10 @@ thus stays out of the file:
       "type": "remote",
       "url": "http://localhost:3000/mcp",
       "enabled": true,
-      "headers": { "Authorization": "Bearer {env:ITSAPLAN_API_KEY}" }
+      "headers": {
+        "Authorization": "Bearer {env:ITSAPLAN_API_KEY}",
+        "X-Itsaplan-Run-Id": "{env:ITSAPLAN_RUN_ID}"
+      }
     }
   }
 }
@@ -222,7 +261,10 @@ The extension reads `.mcp.json` from the working directory:
     "itsaplan": {
       "type": "http",
       "url": "http://localhost:3000/mcp",
-      "headers": { "Authorization": "Bearer ${ITSAPLAN_API_KEY}" }
+      "headers": {
+        "Authorization": "Bearer ${ITSAPLAN_API_KEY}",
+        "X-Itsaplan-Run-Id": "${ITSAPLAN_RUN_ID}"
+      }
     }
   }
 }
@@ -246,8 +288,9 @@ The extension reads `.mcp.json` from the working directory:
 - Print mode does not wait for tool approval. `--approve` is only project-trust for
   `.pi/settings.json`, not tool permission.
 - Sign in once with `pi` interactively so a provider is available.
-- Headers in `.mcp.json` expand `${ITSAPLAN_API_KEY}` only if your `pi-mcp-adapter` version
-  does. If they stay literal, write the key in the file the way Copilot's config does.
+- Headers in `.mcp.json` expand `${ITSAPLAN_API_KEY}` and `${ITSAPLAN_RUN_ID}` only if your
+  `pi-mcp-adapter` version does. If they stay literal, write the key in the file the way
+  Copilot's config does.
 
 ## Oh My Pi
 
@@ -259,7 +302,10 @@ Oh My Pi reads `.mcp.json` from the working directory:
     "itsaplan": {
       "type": "http",
       "url": "http://localhost:3000/mcp",
-      "headers": { "Authorization": "Bearer ${ITSAPLAN_API_KEY}" }
+      "headers": {
+        "Authorization": "Bearer ${ITSAPLAN_API_KEY}",
+        "X-Itsaplan-Run-Id": "${ITSAPLAN_RUN_ID}"
+      }
     }
   }
 }
@@ -283,5 +329,45 @@ Oh My Pi reads `.mcp.json` from the working directory:
 - `--mode json` is the same stream Pi writes. `--resume` takes the session id from the
   opening line.
 - `--append-system-prompt` gives Oh My Pi the context of the run.
-- Headers in `.mcp.json` expand `${ITSAPLAN_API_KEY}` only if your Oh My Pi build does.
-  If they stay literal, write the key in the file the way Copilot's config does.
+- Headers in `.mcp.json` expand `${ITSAPLAN_API_KEY}` and `${ITSAPLAN_RUN_ID}` only if your Oh My
+  Pi build does. If they stay literal, write the key in the file the way Copilot's config does.
+
+## Mastra Code
+
+Mastra Code reads `.mcp.json` from the working directory. It expands `${ITSAPLAN_API_KEY}`
+in the headers, so the key stays out of the file:
+
+```json
+{
+  "mcpServers": {
+    "itsaplan": {
+      "type": "http",
+      "url": "http://localhost:3000/mcp",
+      "headers": {
+        "Authorization": "Bearer ${ITSAPLAN_API_KEY}",
+        "X-Itsaplan-Run-Id": "${ITSAPLAN_RUN_ID}"
+      }
+    }
+  }
+}
+```
+
+`itsaplan-runner.json`:
+
+```json
+{
+  "url": "http://localhost:3000",
+  "apiKey": "the key you copied on creation",
+  "agent": "mastracode",
+  "cwd": "/path/to/working-dir"
+}
+```
+
+- The binary is `mastracode`. Sign in to a model provider once by running it interactively.
+- The preset passes `--prompt -` and sends the task on stdin. Mastra Code has no
+  system-prompt flag. The preset thus puts the context of the run before the task.
+- The preset passes `--permission-mode auto`. Mastra Code then approves each tool and does
+  not wait for a person.
+- The preset passes `--output jsonl`. The stream gives the chat answer as it is written,
+  includes the tool calls, and names the thread that `--thread` resumes.
+- Add `--model provider/model` to `args` to choose the model of the run.

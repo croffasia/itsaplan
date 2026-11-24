@@ -44,7 +44,10 @@ function projectDocument(version: number, content: string): ProjectDocument {
     metadata: {},
     fullWidth: false,
     isPrivate: false,
+    visibility: 'public',
+    memberIds: [],
     isLocked: false,
+    isPinned: false,
     isFavorite: false,
     archivedAt: null,
     position: 0,
@@ -54,6 +57,10 @@ function projectDocument(version: number, content: string): ProjectDocument {
     updatedByUserId: 'user-1',
     createdAt: '2026-09-01T00:00:00.000Z',
     updatedAt: '2026-09-01T00:00:00.000Z',
+    shareToken: null,
+    shareExpiresAt: null,
+    shareIncludeChildren: false,
+    shareIncludeIssues: false,
   };
 }
 

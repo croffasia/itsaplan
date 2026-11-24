@@ -20,4 +20,7 @@ export const ActivityPayloadResponse = t.Object({
   subject: t.Optional(ActivitySide),
   from: t.Optional(ActivitySide),
   to: t.Optional(ActivitySide),
+  // 'created' carries the title and description the issue was filed with.
+  title: t.Optional(ActivitySide),
+  description: t.Optional(ActivitySide),
 });

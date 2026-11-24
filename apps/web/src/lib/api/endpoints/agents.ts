@@ -54,6 +54,8 @@ export interface AiAgent {
   // Run triggers.
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  // Off gates only the chat; mentions, delegations and schedules still run the agent.
+  chatEnabled: boolean;
   // The member custom fields that start a run when the agent is set into one, each
   // with the seconds its run waits before the agent may pick it up.
   fieldTriggers: AgentFieldTriggerRead[];
@@ -62,6 +64,7 @@ export interface AiAgent {
   // The member who created the agent, and whose runs an 'owner'-scoped runner is
   // limited to; 'team' scope serves any member's runs.
   ownerUserId: string | null;
+  ownerName: string | null;
   runnerScope: 'owner' | 'team';
   // When the agent's runner last polled, or null while none ever has.
   lastSeenAt: string | null;
@@ -89,10 +92,10 @@ export interface AiAgent {
 export type AgentRunStatus = 'pending' | 'success' | 'failed' | 'canceled';
 
 export type AgentRunTrigger =
-  'mention' | 'delegation' | 'field' | 'schedule' | 'manual' | 'status' | 'event';
+  'mention' | 'delegation' | 'field' | 'schedule' | 'manual' | 'status' | 'event' | 'api';
 
 // One row of an agent's autonomous run history. A run triggered on an issue references
-// it; a cron schedule's run and a manual one do not.
+// it; a cron schedule's run, a manual one and an API task do not.
 export interface AgentRun {
   id: number;
   status: AgentRunStatus;
@@ -101,6 +104,10 @@ export interface AgentRun {
   issueId: number | null;
   issueIdentifier: string | null;
   issueTitle: string | null;
+  // A run started by a mention in a document comment. The title is null for a document
+  // that is private now.
+  documentId: number | null;
+  documentTitle: string | null;
   prompt: string;
   attempts: number;
   lastError: string | null;
@@ -108,6 +115,8 @@ export interface AgentRun {
   // What the last model call of the run read and wrote: absent for a run that finished
   // before this was recorded and for one whose agent reports no counts.
   contextTokens?: number;
+  // When an external agent first took the run; null for one it never received.
+  receivedAt: string | null;
   nextAttemptAt: string;
   createdAt: string;
 }
@@ -124,10 +133,13 @@ export interface AgentRunPage {
 // for project membership.
 export interface AgentTool {
   key: string;
-  group: 'issues' | 'initiatives' | 'cycles' | 'notes' | 'project';
+  // One of the core's groups, or one an edition adds (`agentActionGroupIcons` of `@/cloud`).
+  group: string;
   label: string;
   description: string;
   always: boolean;
+  // Listed and kept on the agents that have it, and given to none.
+  locked?: boolean;
   permission?: [PermissionResource, PermissionAction];
 }
 
@@ -147,6 +159,7 @@ export interface NewAiAgentInput {
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  chatEnabled?: boolean;
   fieldTriggers?: AgentFieldTrigger[];
   delegationDelaySec?: number;
   projectIds?: number[];
@@ -169,6 +182,7 @@ export interface AiAgentPatch {
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  chatEnabled?: boolean;
   fieldTriggers?: AgentFieldTrigger[];
   delegationDelaySec?: number;
   projectIds?: number[];
@@ -176,11 +190,13 @@ export interface AiAgentPatch {
   invocationUrl?: string | null;
 }
 
-// One event of a streamed agent run (mirrors the API's AgentRunEvent). `text` is a
-// chunk of the answer to append; `tool-start`/`tool-end` report a capability the
-// agent is using, so the UI can show what it is doing; `done` ends the run with the
-// conversation thread id; `error` reports a failure that happened mid-run.
+// One event of a streamed agent run (mirrors the API's AgentRunEvent). `thread` names the
+// conversation the answer goes to, where the agent keeps one; `text` is a chunk of the
+// answer to append; `tool-start`/`tool-end` report a capability the agent is using, so the
+// UI can show what it is doing; `done` ends the run with the conversation thread id;
+// `error` reports a failure that happened mid-run.
 export type AgentRunEvent =
+  | { type: 'thread'; threadId: string }
   | { type: 'text'; value: string }
   | { type: 'tool-start'; toolCallId: string; toolName: string; args?: string }
   // An external agent's runner sends a call's arguments after the call itself, in
@@ -198,6 +214,12 @@ export const listAiAgents = (teamId: number, projectId?: number) =>
   request<AiAgent[]>(
     `/teams/${teamId}/ai-agents${projectId != null ? `?projectId=${projectId}` : ''}`,
   );
+
+// What a screen needs to name an agent; any member of the project reads it.
+export type ProjectAgent = Pick<AiAgent, 'id' | 'name' | 'kind' | 'model'>;
+
+export const listProjectAgents = (projectKey: string) =>
+  request<ProjectAgent[]>(`/projects/${projectKey}/ai-agents/options`);
 
 export const listAgentTools = (teamId: number) =>
   request<AgentTool[]>(`/teams/${teamId}/ai-agents/tools`);

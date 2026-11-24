@@ -34,6 +34,13 @@ export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
 
   if (!project || !viewProject) return null;
 
+  const newIssueDefaults = {
+    ...defaultsFromFilters(board.filters, {
+      cycles: project.plannedCycles,
+      initiatives: initiativeOptions,
+    }),
+    ...(cycle.status === 'completed' ? {} : { cycleId }),
+  };
   const viewProps = {
     project: viewProject,
     filters: board.filters,
@@ -45,13 +52,8 @@ export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
     onSettingsChange: board.changeSettings,
     onOpenIssue,
     onAddIssue: (defaults: Parameters<typeof onAddIssue>[0]) =>
-      onAddIssue({
-        ...defaultsFromFilters(board.filters, {
-          cycles: project.plannedCycles,
-          initiatives: initiativeOptions,
-        }),
-        ...(cycle.status === 'completed' ? defaults : { cycleId, ...defaults }),
-      }),
+      onAddIssue({ ...newIssueDefaults, ...defaults }),
+    newIssueDefaults,
   };
 
   return (

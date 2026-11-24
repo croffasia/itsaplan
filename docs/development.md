@@ -52,7 +52,8 @@ pnpm: the lockfile is `bun.lock`.
 
 Integration tests against a real Postgres, not mocks. The setup prepared a separate `*_test`
 database with `.env.test` pointing at it; the name must contain "test", since the reset
-helper TRUNCATEs every table between tests and refuses otherwise.
+helper empties every table between tests and refuses otherwise. The api suite runs in
+parallel workers on copies of it, named `<name>_1` … `<name>_5`.
 
 ```bash
 bun run test

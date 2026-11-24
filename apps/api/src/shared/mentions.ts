@@ -1,15 +1,11 @@
 import { db, projectMember, user, aiAgent } from '@repo/db';
+import { MENTION_RE } from '@repo/editor';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 
 // Mentions in a comment, an issue description or a markdown custom field. A mention
 // is written inline as @handle: a member's username, or an agent's project-scoped
 // username. Resolving one gives the user ids the notification and agent-run fan-out
 // work with.
-
-// A handle holds letters, digits and . _ -, and never ends on . or -, so a mention
-// that closes a sentence keeps the punctuation out of the handle. The lookbehind
-// keeps an email address (name@example.com) and a doubled @ from reading as one.
-const MENTION_RE = /(?<![\w@.-])@([a-zA-Z0-9_](?:[a-zA-Z0-9._-]*[a-zA-Z0-9_])?)/g;
 
 // Markup an @ belongs to rather than addressing anyone: a fenced block, an inline
 // span of code, a link or an image, and a bare URL. The editor skips the same

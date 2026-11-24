@@ -18,7 +18,6 @@ export const PROJECT_DESCRIPTION_LIMIT = 2000;
 
 const projectKey = t.String({
   pattern: PROJECT_KEY_PATTERN,
-  description: 'Upper-case letters and digits, starting with a letter, up to 10 characters.',
 });
 
 const projectBody = t.Object({
@@ -29,31 +28,35 @@ const projectBody = t.Object({
 
 // Create adds the issue-type preset: which set of types the new project starts with.
 // Omitted → "general" (a single Task). Copy takes its types from the source project,
-// so the preset applies to create only.
+// and a project created from a template from the template, so the preset applies to
+// neither.
 export const createProjectBody = t.Composite([
   projectBody,
   t.Object({
-    preset: t.Optional(
-      t.Union(
-        ISSUE_TYPE_PRESET_KEYS.map((k) => t.Literal(k)),
-        { description: `Issue-type preset: ${ISSUE_TYPE_PRESET_KEYS.join(', ')}.` },
-      ),
+    preset: t.Optional(t.Union(ISSUE_TYPE_PRESET_KEYS.map((k) => t.Literal(k)))),
+    templateId: t.Optional(
+      t.Integer({
+        description:
+          'Template from list_project_templates to ' +
+          'create the project from. preset is then ignored.',
+      }),
     ),
   }),
 ]);
 
+// Which parts of a source project a copy carries over. A key the core does not name
+// selects a section an extension of the api adds.
+export const copyInclude = t.Optional(
+  t.Object(Object.fromEntries(COPY_INCLUDE_KEYS.map((k) => [k, t.Optional(t.Boolean())])), {
+    additionalProperties: t.Boolean(),
+  }),
+);
+
 // Copy adds an optional selection of which parts of the source project to carry over.
 // Omitted → the source project's structure (states, types, labels, custom fields,
-// views, dashboards, documents, actions). Each flag maps to a project section
-// menu; the service force-enables dependencies.
-export const copyProjectBody = t.Composite([
-  projectBody,
-  t.Object({
-    include: t.Optional(
-      t.Object(Object.fromEntries(COPY_INCLUDE_KEYS.map((k) => [k, t.Optional(t.Boolean())]))),
-    ),
-  }),
-]);
+// issue templates, views, dashboards, documents, actions). Each flag maps to a project
+// section menu; the service force-enables dependencies.
+export const copyProjectBody = t.Composite([projectBody, t.Object({ include: copyInclude })]);
 
 export const updateProjectBody = t.Object({
   key: t.Optional(projectKey),
@@ -76,21 +79,21 @@ export const updateProjectPreferencesBody = t.Object(
 
 const projectSearch = t.Optional(
   t.String({
-    description: 'Case-insensitive literal substring of the project key, name, or description.',
+    description: 'Case-insensitive text in the project key, name or description.',
   }),
 );
 const projectSort = t.Optional(
   t.UnionEnum(['key', 'name', 'created', 'activity'], {
     description:
-      'Sort by key (default), name, newest creation, or newest work-item activity/comment. ' +
-      'Activity puts projects without activity last. Ties are ordered by key.',
+      "'created' and 'activity' sort newest first. 'activity' " +
+      'puts projects with no activity last. Ties sort by key.',
   }),
 );
 const projectTeamId = t.Optional(
   t.Numeric({
     minimum: 1,
     multipleOf: 1,
-    description: 'Limit results to projects in this team that you belong to.',
+    description: 'Only projects of this team.',
   }),
 );
 
@@ -99,7 +102,7 @@ export const listProjectsQuery = t.Object({
   sort: projectSort,
   teamId: projectTeamId,
   permissions: t.Optional(
-    t.String({ description: "'true' to include the caller's permission matrix per project." }),
+    t.String({ description: "'true' adds your permission matrix to each project." }),
   ),
 });
 
@@ -201,6 +204,9 @@ const AssigneeCandidateResponse = t.Object({
   restrictedToUserId: t.Nullable(t.String()),
   respondsToMention: t.Nullable(t.Boolean()),
   canReadWorkItems: t.Boolean(),
+  // False for a deactivated account: it holds the issues it had, but is not offered
+  // for new assignments and the API refuses it as a new assignee.
+  canAssign: t.Boolean(),
 });
 
 // The caller's own role in a project (from MemberContext in members/service). The
@@ -235,10 +241,15 @@ export const ProjectBoardResponse = t.Object({
   viewer: ViewerResponse,
   // The caller's resolved permission matrix (owners get every flag).
   permissions: PermissionMatrixSchema,
+  sharingEnabled: t.Boolean({
+    description:
+      'Whether this project may have public links. Off, its links are closed and a new one ' +
+      'is refused.',
+  }),
 });
 
 // Which optional sections the project shows (ProjectFeatures from the service).
-const FeaturesResponse = t.Object({
+export const FeaturesResponse = t.Object({
   initiatives: t.Boolean(),
   dashboards: t.Boolean(),
   documents: t.Boolean(),

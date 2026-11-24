@@ -12,11 +12,20 @@
   "saveChanges": "Simpan perubahan",
   "noWidgets": "Belum ada widget. Tambahkan satu untuk membangun dasbor ini.",
   "addWidget": "Tambah widget",
-  "addWidgetTitle": "Tambah widget",
-  "addWidgetDescription": "Pilih widget untuk ditambahkan ke dasbor ini.",
   "searchWidgets": "Cari widget",
   "clearSearch": "Bersihkan pencarian",
-  "noWidgetMatches": "Tidak ada widget yang cocok dengan “{query}”.",
+  "noWidgetMatches": "Tidak ada widget yang cocok dengan “{query}”. Coba kata lain atau hapus pencarian.",
+  "noWidgetMatchesInGroup": "Tidak ada widget di grup ini yang cocok dengan “{query}”. Pilih Semua untuk mencari di semua grup.",
+  "addPanel": {
+    "title": "Tambah widget",
+    "description": "Seret widget ke dasbor.",
+    "all": "Semua",
+    "groupFilter": "Grup widget",
+    "added": "{count, plural, =1 {Ditambahkan} other {Ditambahkan #}}",
+    "status": "{count, plural, =0 {Belum ada yang ditambahkan} other {# widget ditambahkan}}",
+    "undo": "Hapus yang terakhir",
+    "new": "Baru"
+  },
   "dragToMove": "Seret untuk memindahkan",
   "widgetName": "Nama widget",
   "widgetSettings": "Pengaturan widget",
@@ -30,48 +39,48 @@
   },
   "widgets": {
     "stat": {
-      "label": "Statistik",
-      "description": "Jumlah issue yang cocok dengan filter"
+      "label": "Jumlah issue",
+      "description": "Jumlah issue yang cocok dengan filter, misalnya bug yang masih terbuka"
     },
     "recent_issues": {
       "label": "Issue terbaru",
-      "description": "Issue terbaru berdasarkan waktu pembuatan atau pembaruan"
+      "description": "Issue terbaru atau yang baru diperbarui sesuai filter"
     },
     "activity_feed": {
       "label": "Aktivitas",
-      "description": "Log perubahan seluruh proyek, dapat difilter berdasarkan pelaku dan tindakan"
+      "description": "Perubahan terbaru pada issue dan siapa yang membuatnya"
     },
     "pulse": {
       "label": "Pulse",
-      "description": "Heatmap aktivitas harian gaya GitHub"
+      "description": "Heatmap aktivitas proyek per jam, hari, atau minggu"
     },
     "throughput": {
       "label": "Throughput",
-      "description": "Issue yang dibuat dibandingkan dengan yang ditutup setiap minggu"
+      "description": "Issue yang dibuat dan ditutup setiap minggu"
     },
     "burnup": {
       "label": "Burnup",
-      "description": "Cakupan, issue yang dimulai dan diselesaikan per hari dengan perkiraan tanggal selesai"
+      "description": "Total issue dan yang selesai per hari, dengan perkiraan tanggal selesai"
     },
     "breakdown": {
       "label": "Rincian",
-      "description": "Jumlah issue berdasarkan status, prioritas, jenis, atau penerima tugas"
+      "description": "Issue per status, prioritas, tipe, penerima tugas, atau delegasi"
     },
     "agent_runs": {
       "label": "Eksekusi agen",
-      "description": "Eksekusi agen AI terbaru beserta hasilnya"
+      "description": "Eksekusi terbaru dan statusnya, misalnya gagal atau dalam antrean"
     },
     "agent_health": {
       "label": "Kesehatan agen",
-      "description": "Tingkat keberhasilan dan kegagalan eksekusi agen dalam rentang waktu"
+      "description": "Tingkat keberhasilan dan eksekusi gagal semua agen dalam periode pilihan"
     },
     "webhook_health": {
       "label": "Kesehatan webhook",
-      "description": "Hasil pengiriman webhook dan endpoint yang dinonaktifkan"
+      "description": "Hasil pengiriman dan endpoint yang dimatikan setelah gagal berturut-turut"
     },
     "agent_workload": {
       "label": "Beban kerja agen",
-      "description": "Issue yang didelegasikan dan hasil eksekusi per agen"
+      "description": "Per agen: issue terbuka yang didelegasikan dan eksekusi yang berhasil"
     }
   },
   "breakdown": {
@@ -198,6 +207,7 @@
       "delegation": "berjalan saat pendelegasian",
       "field": "berjalan pada bidang",
       "manual": "dijalankan secara manual",
+      "api": "dijalankan lewat API",
       "schedule": "berjalan sesuai jadwal",
       "status": "berjalan saat perubahan status",
       "event": "berjalan saat peristiwa pada"

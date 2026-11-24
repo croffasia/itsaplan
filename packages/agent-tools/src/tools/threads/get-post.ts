@@ -5,6 +5,7 @@ import { threadsToken, threadsRequest, MEDIA_FIELDS } from './client';
 // A single Threads media object (post or reply) by its id.
 export const threadsGetPost: CustomToolEntry = {
   key: 'threads_get_post',
+  group: 'Posts and profile',
   label: 'Threads Get Post',
   scopes: ['threads_basic'],
   description: 'Get a single Threads post or reply by its media id, with its fields.',

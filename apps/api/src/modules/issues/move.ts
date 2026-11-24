@@ -16,6 +16,7 @@ import {
   projectColumn,
   projectDocumentIssue,
   projectMember,
+  subtreeIds,
 } from '@repo/db';
 import { and, asc, eq, inArray, notInArray, or, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
@@ -27,11 +28,13 @@ import { recordStatusChange } from './status-history';
 import { recordCycleChange } from './cycle-history';
 import { emitIssueEvent } from './webhook-payload';
 import { queueStatusRuns } from '#modules/agents/schedules/issue-runs';
+import { emitRunsCanceled } from '#modules/agents/core/run-finished';
 
-// Moves an issue, with its subtasks, to another project of the same team. Column,
-// type, labels and custom fields belong to one project, so they are matched by name
-// in the target and dropped when there is no match. Links and documents must stay
-// inside one project, so those that reach an issue left behind are removed.
+// Moves an issue, with its subtasks at every level, to another project of the same
+// team. Column, type, labels and custom fields belong to one project, so they are
+// matched by name in the target and dropped when there is no match. Links and
+// documents must stay inside one project, so those that reach an issue left behind
+// are removed.
 export async function moveIssue(
   issueId: number,
   target: ProjectRow,
@@ -52,6 +55,7 @@ export async function moveIssue(
   if (source.teamId !== target.teamId)
     throw new HttpError(400, 'An issue can only move to a project of the same team');
 
+  const subtree = await subtreeIds([issueId]);
   const moved = await db
     .select({
       id: issue.id,
@@ -67,7 +71,7 @@ export async function moveIssue(
     .from(issue)
     .innerJoin(projectColumn, eq(projectColumn.id, issue.columnId))
     .leftJoin(issueType, eq(issueType.id, issue.typeId))
-    .where(or(eq(issue.id, issueId), eq(issue.parentId, issueId)))
+    .where(inArray(issue.id, subtree))
     .orderBy(sql`${issue.id} <> ${issueId}`, asc(issue.sequenceNumber));
   const movedIds = moved.map((r) => r.id);
 
@@ -116,7 +120,7 @@ export async function moveIssue(
   const labels = await mapLabels(movedIds, target.id);
   const fields = await mapFields(movedIds, target.id);
 
-  await db.transaction(async (tx) => {
+  const canceledRuns = await db.transaction(async (tx) => {
     // Everything above was read without a lock. A concurrent move of the same issue, or
     // a subtask added since, would otherwise write over that state.
     const [locked] = await tx
@@ -124,14 +128,11 @@ export async function moveIssue(
       .from(issue)
       .where(eq(issue.id, issueId))
       .for('update');
-    const current = await tx
-      .select({ id: issue.id })
-      .from(issue)
-      .where(or(eq(issue.id, issueId), eq(issue.parentId, issueId)));
+    const current = await subtreeIds([issueId], tx);
     if (
       locked?.projectId !== root.projectId ||
       current.length !== movedIds.length ||
-      current.some((r) => !movedIds.includes(r.id))
+      current.some((id) => !movedIds.includes(id))
     )
       throw new HttpError(409, 'The issue changed while it was being moved; try again');
 
@@ -209,11 +210,16 @@ export async function moveIssue(
       .where(
         and(inArray(issueWatcher.issueId, movedIds), notInArray(issueWatcher.userId, [...members])),
       );
-    await tx
+    return tx
       .update(agentRun)
       .set({ status: 'canceled', executionStartedAt: null, finishedAt: sql`now()` })
-      .where(and(inArray(agentRun.issueId, movedIds), eq(agentRun.status, 'pending')));
+      .where(and(inArray(agentRun.issueId, movedIds), eq(agentRun.status, 'pending')))
+      .returning({ id: agentRun.id });
   });
+  await emitRunsCanceled(
+    canceledRuns.map((run) => run.id),
+    actorUserId,
+  );
 
   for (const p of plans) {
     await recordStatusChange([p.id], p.newColumnId);

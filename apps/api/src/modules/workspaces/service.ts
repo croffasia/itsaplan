@@ -26,8 +26,15 @@ import {
 } from 'drizzle-orm';
 import { requireUser, type AuthUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
-import { getOwnedWorkspaceLimit } from '#shared/limits';
-import { workspaceRoleGrant, type WorkspaceGrant } from '#shared/workspace-roles';
+import { getLimits, getOwnedWorkspaceLimit, tightestLimit } from '#shared/limits';
+import { getAgentSettings, getSharingSettings } from '#modules/settings/service';
+import {
+  projectGrantOf,
+  workspaceRoleGrant,
+  type ProjectGrant,
+  type WorkspaceGrant,
+} from '#shared/workspace-roles';
+import type { TeamStanding } from '#modules/teams/service';
 
 export type WorkspaceRole = 'owner' | 'admin';
 
@@ -58,20 +65,26 @@ export async function workspaceGrant(
   return row ? workspaceRoleGrant(row.role) : null;
 }
 
-export async function projectWorkspaceGrant(
+// What the person's rank in the project's team and their role in its workspace grant there.
+export async function projectGrant(
   projectId: number,
   userId: string,
-): Promise<WorkspaceGrant | null> {
+): Promise<ProjectGrant | null> {
   const [row] = await db
-    .select({ role: workspaceManager.role })
+    .select({ rank: teamMember.role, role: workspaceManager.role })
     .from(project)
     .innerJoin(team, eq(team.id, project.teamId))
-    .innerJoin(
+    .leftJoin(teamMember, and(eq(teamMember.teamId, team.id), eq(teamMember.userId, userId)))
+    .leftJoin(
       workspaceManager,
       and(eq(workspaceManager.workspaceId, team.workspaceId), eq(workspaceManager.userId, userId)),
     )
     .where(eq(project.id, projectId));
-  return row ? workspaceRoleGrant(row.role) : null;
+  if (!row) return null;
+  return projectGrantOf(
+    row.rank as TeamStanding | null,
+    row.role ? workspaceRoleGrant(row.role) : null,
+  );
 }
 
 // Every team the person reaches through a workspace role, with what the role grants.
@@ -85,6 +98,25 @@ export async function workspaceGrants(userId: string): Promise<Map<number, Works
   for (const row of rows) {
     const grant = workspaceRoleGrant(row.role);
     if (grant) out.set(row.teamId, grant);
+  }
+  return out;
+}
+
+// Every team whose projects the person reaches without a membership of them, with what
+// they hold there.
+export async function projectGrants(userId: string): Promise<Map<number, ProjectGrant>> {
+  const [ranks, grants] = await Promise.all([
+    db
+      .select({ teamId: teamMember.teamId, rank: teamMember.role })
+      .from(teamMember)
+      .where(and(eq(teamMember.userId, userId), inArray(teamMember.role, ['owner', 'manager']))),
+    workspaceGrants(userId),
+  ]);
+  const rankOf = new Map(ranks.map((row) => [row.teamId, row.rank as TeamStanding]));
+  const out = new Map<number, ProjectGrant>();
+  for (const teamId of new Set([...rankOf.keys(), ...grants.keys()])) {
+    const granted = projectGrantOf(rankOf.get(teamId) ?? null, grants.get(teamId) ?? null);
+    if (granted) out.set(teamId, granted);
   }
   return out;
 }
@@ -183,16 +215,55 @@ export async function getWorkspace(workspaceId: number, role: WorkspaceRole) {
       managerCount: db.$count(workspaceManager, eq(workspaceManager.workspaceId, workspace.id)),
       color: workspace.color,
       teamCreation: workspace.teamCreation,
+      maxConcurrentRuns: workspace.maxConcurrentRuns,
+      sharingEnabled: workspace.sharingEnabled,
+      sharingTeamsOnly: workspace.sharingTeamsOnly,
     })
     .from(workspace)
     .where(eq(workspace.id, workspaceId));
   if (!row) throw new HttpError(404, 'Workspace not found');
+  const [{ enabled: sharingAvailable }, sharingTeams] = await Promise.all([
+    getSharingSettings(),
+    db
+      .select({ id: team.id, name: team.name, selected: team.sharingSelected })
+      .from(team)
+      .where(eq(team.workspaceId, workspaceId))
+      .orderBy(asc(team.name), asc(team.id)),
+  ]);
   return {
     ...row,
     teamCreation: row.teamCreation as TeamCreation,
+    maxConcurrentRunsCap: await runLimitCap(workspaceId),
+    sharingAvailable,
+    sharingTeams,
     role,
     deletion: await workspaceDeletion(workspaceId),
   };
+}
+
+// The highest run limit its owner may set: the instance's, or the provider's where that
+// is lower. 0 when neither sets one.
+async function runLimitCap(workspaceId: number): Promise<number> {
+  const [settings, limits] = await Promise.all([getAgentSettings(), getLimits(workspaceId)]);
+  return tightestLimit(settings.maxConcurrentRuns, limits.maxConcurrentRuns);
+}
+
+// Whether a project's public links work and a new one may be made: the instance allows
+// them, its workspace allows them, and the workspace has chosen its team where it limits
+// them to chosen teams.
+export async function projectSharingEnabled(projectId: number): Promise<boolean> {
+  if (!(await getSharingSettings()).enabled) return false;
+  const [row] = await db
+    .select({
+      enabled: workspace.sharingEnabled,
+      teamsOnly: workspace.sharingTeamsOnly,
+      selected: team.sharingSelected,
+    })
+    .from(project)
+    .innerJoin(team, eq(team.id, project.teamId))
+    .innerJoin(workspace, eq(workspace.id, team.workspaceId))
+    .where(eq(project.id, projectId));
+  return !!row && row.enabled && (!row.teamsOnly || row.selected);
 }
 
 // Whether a team of the workspace has a project or an AI agent: people's work, which a
@@ -281,18 +352,67 @@ export async function createOwnWorkspace(current: AuthUser, name: string): Promi
   });
 }
 
-// A manager renames and recolours it; who creates teams is the owner's to decide, so an
-// admin cannot let themselves create teams.
+// A manager renames and recolours it and turns sharing on or off; who creates teams, how
+// many agents run at once and which teams may share are the owner's to decide, so an admin
+// cannot let themselves create teams. Sharing has nothing to set while the instance has it
+// off.
 export async function updateWorkspace(
   workspaceId: number,
   role: WorkspaceRole,
-  patch: { name?: string; color?: string | null; teamCreation?: TeamCreation },
+  patch: {
+    name?: string;
+    color?: string | null;
+    teamCreation?: TeamCreation;
+    maxConcurrentRuns?: number;
+    sharingEnabled?: boolean;
+    sharingTeamsOnly?: boolean;
+    sharingTeamIds?: number[];
+  },
 ): Promise<void> {
+  const { sharingTeamIds, ...columns } = patch;
   if (patch.teamCreation !== undefined && role !== 'owner') {
     throw new HttpError(403, 'Only the workspace owner decides who creates teams');
   }
-  if (Object.keys(patch).length === 0) return;
-  await db.update(workspace).set(patch).where(eq(workspace.id, workspaceId));
+  if (patch.maxConcurrentRuns !== undefined) {
+    if (role !== 'owner') {
+      throw new HttpError(403, 'Only the workspace owner sets how many agents run at once');
+    }
+    const cap = await runLimitCap(workspaceId);
+    if (cap > 0 && patch.maxConcurrentRuns > cap) {
+      throw new HttpError(400, `This workspace may run at most ${cap} agents at once`);
+    }
+  }
+  const choosesTeams = patch.sharingTeamsOnly !== undefined || sharingTeamIds !== undefined;
+  if (choosesTeams && role !== 'owner') {
+    throw new HttpError(403, 'Only the workspace owner chooses which teams may share');
+  }
+  if (
+    (choosesTeams || patch.sharingEnabled !== undefined) &&
+    !(await getSharingSettings()).enabled
+  ) {
+    throw new HttpError(403, 'Sharing is turned off for this instance');
+  }
+  if (sharingTeamIds) await assertTeamsOfWorkspace(workspaceId, sharingTeamIds);
+  await db.transaction(async (tx) => {
+    if (Object.keys(columns).length > 0) {
+      await tx.update(workspace).set(columns).where(eq(workspace.id, workspaceId));
+    }
+    if (sharingTeamIds) {
+      await tx
+        .update(team)
+        .set({ sharingSelected: inArray(team.id, sharingTeamIds) })
+        .where(eq(team.workspaceId, workspaceId));
+    }
+  });
+}
+
+async function assertTeamsOfWorkspace(workspaceId: number, teamIds: number[]): Promise<void> {
+  const ids = [...new Set(teamIds)];
+  const rows = await db
+    .select({ id: team.id })
+    .from(team)
+    .where(and(eq(team.workspaceId, workspaceId), inArray(team.id, ids)));
+  if (rows.length !== ids.length) throw new HttpError(400, 'A team is not in this workspace');
 }
 
 // Hands the workspace to one of its admins; the owner stays on as an admin. No core route

@@ -8,9 +8,12 @@
   },
   "scripts": {
     "lint": "eslint .",
+    "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "juice": "^12.2.1",
+    "marked": "^18.1.1",
     "nodemailer": "^10.1.0"
   },
   "devDependencies": {

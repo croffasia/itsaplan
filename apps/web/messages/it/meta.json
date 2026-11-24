@@ -1,0 +1,14 @@
+{
+  "description": "Un issue tracker self-hosted e open-source con agenti AI integrati. Assegna il lavoro a persone o agenti e gestiscilo tramite API, webhook e MCP.",
+  "screens": {
+    "signIn": "Accedi",
+    "signUp": "Registrati",
+    "forgotPassword": "Password dimenticata",
+    "resetPassword": "Reimposta password",
+    "account": "Account",
+    "settings": "Impostazioni",
+    "teamSettings": "Impostazioni del team",
+    "invitation": "Invito",
+    "allowAccess": "Consenti accesso"
+  }
+}

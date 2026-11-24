@@ -3,6 +3,8 @@
   "newInitiative": "新建計畫",
   "notFound": "未找到計畫。",
   "options": "計畫選項",
+  "addFavorite": "新增到收藏",
+  "removeFavorite": "從收藏中移除",
   "showDescription": "顯示描述",
   "noDescription": "暫無描述。",
   "noOwner": "無負責人",

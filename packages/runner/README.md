@@ -8,7 +8,8 @@ This package runs such agents on your own machine — one, or several at once.
 - Polls your instance for the agent's queued runs. Runs each one with a coding agent CLI.
   Reports the result.
 - Has presets for Claude Code, Codex, opencode, Antigravity CLI, GitHub Copilot CLI,
-  Pi, and Oh My Pi (`omp`). Each preset sets the unattended flags and the session resume.
+  Pi, Oh My Pi (`omp`), and Mastra Code. Each preset sets the unattended flags and the
+  session resume.
 - Runs your own `command` instead, if you prefer. The command takes the task on stdin.
 - Answers the agent's chat. Sends the text and the tool calls while the CLI prints them.
 - Sends the messages and the tool calls of a queued run to the issue while the run works.
@@ -23,9 +24,9 @@ of kind External. The key appears one time only, at creation.
 **2. Enable MCP** for the project, in Settings, MCP Server. MCP is off by default. The
 agent reads the issue and writes its result through it.
 
-**3. Give the coding agent the address of that server.** Claude Code, Oh My Pi, and Pi
-(through `pi-mcp-adapter`) read `.mcp.json` from the folder they run in. For the other
-CLIs, see
+**3. Give the coding agent the address of that server.** Claude Code, Oh My Pi, Mastra
+Code, and Pi (through `pi-mcp-adapter`) read `.mcp.json` from the folder they run in. For
+the other CLIs, see
 [Coding agent setup](https://github.com/croffasia/itsaplan/blob/main/docs/runner.md).
 
 ```json
@@ -34,14 +35,19 @@ CLIs, see
     "itsaplan": {
       "type": "http",
       "url": "http://localhost:3000/mcp",
-      "headers": { "Authorization": "Bearer ${ITSAPLAN_API_KEY}" }
+      "headers": {
+        "Authorization": "Bearer ${ITSAPLAN_API_KEY}",
+        "X-Itsaplan-Run-Id": "${ITSAPLAN_RUN_ID}"
+      }
     }
   }
 }
 ```
 
-The runner sets `ITSAPLAN_API_KEY` for the command that it starts. The key thus stays in
-one file.
+The runner sets `ITSAPLAN_API_KEY` and `ITSAPLAN_RUN_ID` for the command that it starts. The
+key thus stays in one file. The run id tells the instance which run a call belongs to. A run the
+agent starts, such as by delegating an issue, then works for the same person. Without it, that run
+is the project's work.
 
 **4. Write `itsaplan-runner.json`** in the same folder:
 
@@ -67,15 +73,16 @@ or mention it in a comment. The task then starts in your terminal.
 `agent` names a CLI that the runner knows. The runner then builds the command itself: the
 flags for an unattended run, and the session resume. Every preset keeps a chat session.
 
-| Agent         | Runs               |
-| ------------- | ------------------ |
-| `claude`      | Claude Code        |
-| `codex`       | Codex CLI          |
-| `opencode`    | opencode           |
-| `antigravity` | Antigravity CLI    |
-| `copilot`     | GitHub Copilot CLI |
-| `pi`          | Pi                 |
-| `omp`         | Oh My Pi           |
+| Agent         | Runs                                                                         |
+| ------------- | ---------------------------------------------------------------------------- |
+| `claude`      | [Claude Code](https://code.claude.com/docs/en/overview)                      |
+| `codex`       | [Codex CLI](https://github.com/openai/codex)                                 |
+| `opencode`    | [opencode](https://opencode.ai)                                              |
+| `antigravity` | [Antigravity CLI](https://antigravity.google/docs/getting-started?tab=cli)   |
+| `copilot`     | [GitHub Copilot CLI](https://github.com/github/copilot-cli)                  |
+| `pi`          | [Pi](https://pi.dev)                                                         |
+| `omp`         | [Oh My Pi](https://omp.sh)                                                   |
+| `mastracode`  | [Mastra Code](https://code.mastra.ai)                                        |
 
 Each preset needs the CLI's own MCP config.
 [Coding agent setup](https://github.com/croffasia/itsaplan/blob/main/docs/runner.md) holds
@@ -273,8 +280,8 @@ npx -y @itsaplan/runner --agent claude
 
 The server writes the task text. The text states what occurred, what to do, and to post
 the result as a comment on the issue. Your own `command` receives the text on **stdin**. A
-preset gives it to its CLI in the way that CLI accepts it: on stdin for `claude`, `codex`
-and `pi`, as an argument for `antigravity`, `copilot`, `opencode` and `omp`.
+preset gives it to its CLI in the way that CLI accepts it: on stdin for `claude`, `codex`,
+`pi` and `mastracode`, as an argument for `antigravity`, `copilot`, `opencode` and `omp`.
 
 The agent reads all other data through the MCP server at `$ITSAPLAN_URL/mcp`. The agent
 sends `$ITSAPLAN_API_KEY` as a bearer token, and acts as its own user with its role.
@@ -287,7 +294,7 @@ Every run holds these variables:
 | ------------------------ | --------------------------------------------------------------------------- |
 | `ITSAPLAN_URL`           | the instance that sent the task                                             |
 | `ITSAPLAN_API_KEY`       | the agent's key, for the API and the MCP server                             |
-| `ITSAPLAN_TRIGGER`       | `mention`, `delegation`, `field`, `schedule`, `manual`, `status`, or `chat` |
+| `ITSAPLAN_TRIGGER`       | `mention`, `delegation`, `field`, `schedule`, `manual`, `status`, `api`, or `chat` |
 | `ITSAPLAN_SYSTEM_PROMPT` | the context of the run, for a command that takes a system prompt            |
 | `ITSAPLAN_TIMEOUT_MS`    | the task timeout in milliseconds                                            |
 
@@ -299,7 +306,7 @@ A queued run adds three more:
 
 | Variable            | What it holds                                                   |
 | ------------------- | --------------------------------------------------------------- |
-| `ITSAPLAN_RUN_ID`   | the run's id                                                    |
+| `ITSAPLAN_RUN_ID`   | the run's id, which the MCP config sends as `X-Itsaplan-Run-Id` |
 | `ITSAPLAN_ISSUE`    | the issue key, for example `MKT-42`. Empty if there is no issue |
 | `ITSAPLAN_ISSUE_ID` | the numeric id of the issue. Empty if there is no issue         |
 
@@ -323,8 +330,8 @@ error.
 
 - `text` — all of stdout is the answer.
 - `claude-stream-json`, `codex-jsonl`, `opencode-json`, `antigravity-stream-json`,
-  `copilot-json`, `pi-json` — the event stream of that CLI. `pi` and `omp` both use
-  `pi-json`. The runner reads the text and the tool calls from it.
+  `copilot-json`, `pi-json`, `mastracode-jsonl` — the event stream of that CLI. `pi` and
+  `omp` both use `pi-json`. The runner reads the text and the tool calls from it.
 
 A preset sets `outputFormat` for you. Set it yourself only with your own `command`. If the
 output does not agree with the format, the runner uses the output as plain text.
@@ -347,6 +354,12 @@ instance. The issue shows them as the run's transcript.
 - If the last upload fails with a network or server error, the runner tries it one more
   time. Then it reports the result of the command, even with an incomplete transcript.
   Any other refusal fails the run.
+
+### Stopping a run
+
+When someone stops a run or a chat answer in the instance, the runner kills its command and
+reports nothing more for it. The runner learns of the stop at its next upload of events, or
+at its next heartbeat when the command writes nothing. A heartbeat goes out once a minute.
 
 ## Chat
 

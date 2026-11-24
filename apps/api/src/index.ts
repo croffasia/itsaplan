@@ -1,3 +1,4 @@
+import { startJobEnvMove } from '@repo/db';
 import { app } from './app';
 import { startBackgroundJobs } from './background';
 
@@ -5,6 +6,7 @@ import { startBackgroundJobs } from './background';
 // so tests can import it and drive routes in memory.
 app.listen(Number(process.env.API_PORT ?? 3000));
 
+startJobEnvMove('api');
 startBackgroundJobs();
 
 console.log(`🦊 API running at http://${app.server?.hostname}:${app.server?.port}`);

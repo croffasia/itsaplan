@@ -4,24 +4,10 @@ import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
 import { createAgent, teamOf } from '#tests/helpers/agents';
-import { agentChatConfig } from '#modules/agents/chat/service';
+import { setTestJobSettings } from '#tests/helpers/jobs';
 
 // Chatting with an external agent: a member sends a message, the agent's runner claims
-// it, reports what its command produces as AG-UI events, and closes it. The claim waits
-// for work on the server, so the wait is shortened here — otherwise every empty-feed
-// assertion would sit out the full production wait.
-process.env.AGENT_CHAT_CLAIM_WAIT_MS = '50';
-process.env.AGENT_CHAT_CLAIM_POLL_MS = '10';
-
-it('caps configured claim wait below the runner request timeout', () => {
-  const previous = process.env.AGENT_CHAT_CLAIM_WAIT_MS;
-  process.env.AGENT_CHAT_CLAIM_WAIT_MS = '60000';
-  try {
-    expect(agentChatConfig.claimWaitMs()).toBe(30_000);
-  } finally {
-    process.env.AGENT_CHAT_CLAIM_WAIT_MS = previous;
-  }
-});
+// it, reports what its command produces as AG-UI events, and closes it.
 
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
@@ -78,6 +64,9 @@ async function readStream(
 describe('external agent chat', () => {
   beforeEach(async () => {
     await resetDb();
+    // The claim waits for work on the server, so the wait is shortened here: otherwise
+    // every empty-feed assertion would sit out the full production wait.
+    await setTestJobSettings({ agentChat: { claimWaitMs: 50, claimPollMs: 10 } });
   });
 
   it('queues an answer the runner claims with the message framed as its task', async () => {
@@ -99,6 +88,17 @@ describe('external agent chat', () => {
     // is told so along with the project it works in.
     expect(claimed.data!.message!.systemPrompt).toContain('Run mode');
     expect(claimed.data!.message!.systemPrompt).toContain('Marketing');
+  });
+
+  it('rejects sending a message to a chat-disabled agent with 403', async () => {
+    const { asOwner, agent } = await setup();
+    await asOwner
+      .teams({ teamId: await teamOf(asOwner, 'MKT') })
+      ['ai-agents']({ agentId: agent.id })
+      .patch({ chatEnabled: false });
+    const res = await send(asOwner, agent.id, 'Status?');
+    expect(res.status).toBe(403);
+    expect(res.error?.value).toMatchObject({ code: 'AGENT_CHAT_DISABLED' });
   });
 
   it("mixes the agent's own instructions into the system prompt", async () => {
@@ -128,6 +128,38 @@ describe('external agent chat', () => {
     expect(second.prompt).toContain('Who owns the launch?');
     expect(second.prompt).toContain('Maria does.');
     expect(second.prompt).toContain('And the launch date?');
+  });
+
+  it('keeps the start of an answer up to the instance answer limit', async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    await asOwner.god['agent-settings'].put({ maxAnswerChars: 5 });
+    const first = await send(asOwner, agent.id, 'Who owns the launch?');
+    await answer(asRunner, 'Maria does.');
+
+    await send(asOwner, agent.id, 'And the launch date?', first.data!.threadId);
+    const second = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    expect(second.prompt).toContain('You: Maria\n');
+    expect(second.prompt).not.toContain('Maria does.');
+  });
+
+  it('keeps an answer whole when the answer limit is 0', async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    await asOwner.god['agent-settings'].put({ maxAnswerChars: 0 });
+    const first = await send(asOwner, agent.id, 'Write the report');
+    const claimed = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    // 20 deltas at the 12,000-character event cap: past the 200,000 default limit.
+    await asRunner['agent-chats']({ messageId: claimed.id }).events.post({
+      events: Array.from({ length: 20 }, () => ({
+        type: 'TEXT_MESSAGE_CONTENT' as const,
+        messageId: 'm1',
+        delta: 'x'.repeat(12_000),
+      })),
+    });
+    await asRunner['agent-chats']({ messageId: claimed.id }).result.post({ status: 'success' });
+
+    await send(asOwner, agent.id, 'Thanks', first.data!.threadId);
+    const second = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    expect(second.prompt).toContain(`You: ${'x'.repeat(240_000)}\n`);
   });
 
   it('returns nothing when the feed is empty', async () => {
@@ -397,91 +429,69 @@ describe('external agent chat', () => {
   }
 
   it('recovers the oldest expired lease and advances after exhausted attempts', async () => {
-    const previousLease = process.env.AGENT_CHAT_LEASE_SECONDS;
-    const previousAttempts = process.env.AGENT_CHAT_MAX_ATTEMPTS;
-    process.env.AGENT_CHAT_LEASE_SECONDS = '1';
-    process.env.AGENT_CHAT_MAX_ATTEMPTS = '2';
-    try {
-      const { asOwner, asRunner, agent } = await setup();
-      const first = (await send(asOwner, agent.id, 'First')).data!;
-      const next = (await send(asOwner, agent.id, 'Next', first.threadId)).data!;
-      expect((await asRunner['agent-chats'].claim.post()).data!.message).toMatchObject({
-        id: first.messageId,
-        attempts: 1,
-      });
-      await asRunner['agent-chats']({ messageId: first.messageId }).events.post({
-        events: [{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'abandoned' }],
-      });
-      expect((await asRunner['agent-chats'].claim.post()).data!.message).toBeNull();
-      await Bun.sleep(1100);
-      const claims = await Promise.all([
-        asRunner['agent-chats'].claim.post(),
-        asRunner['agent-chats'].claim.post(),
-      ]);
-      const answers = claims.flatMap((claim) => (claim.data!.message ? [claim.data!.message] : []));
-      expect(answers).toHaveLength(1);
-      expect(answers[0]).toMatchObject({ id: first.messageId, attempts: 2 });
-      const events = await chatOf(asOwner, agent.id)
-        .chat({ messageId: first.messageId })
-        .events.get();
-      expect(events.data!.items).toEqual([]);
-      await Bun.sleep(1100);
-      expect((await asRunner['agent-chats'].claim.post()).data!.message).toMatchObject({
-        id: next.messageId,
-        attempts: 1,
-      });
-      const failed = await chatOf(asOwner, agent.id)
-        .chat({ messageId: first.messageId })
-        .events.get();
-      expect(failed.data!).toMatchObject({
-        status: 'failed',
-        error: 'Runner did not report a result',
-      });
-    } finally {
-      if (previousLease === undefined) delete process.env.AGENT_CHAT_LEASE_SECONDS;
-      else process.env.AGENT_CHAT_LEASE_SECONDS = previousLease;
-      if (previousAttempts === undefined) delete process.env.AGENT_CHAT_MAX_ATTEMPTS;
-      else process.env.AGENT_CHAT_MAX_ATTEMPTS = previousAttempts;
-    }
+    await setTestJobSettings({ agentChat: { leaseSeconds: 1, maxAttempts: 2 } });
+    const { asOwner, asRunner, agent } = await setup();
+    const first = (await send(asOwner, agent.id, 'First')).data!;
+    const next = (await send(asOwner, agent.id, 'Next', first.threadId)).data!;
+    expect((await asRunner['agent-chats'].claim.post()).data!.message).toMatchObject({
+      id: first.messageId,
+      attempts: 1,
+    });
+    await asRunner['agent-chats']({ messageId: first.messageId }).events.post({
+      events: [{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'abandoned' }],
+    });
+    expect((await asRunner['agent-chats'].claim.post()).data!.message).toBeNull();
+    await Bun.sleep(1100);
+    const claims = await Promise.all([
+      asRunner['agent-chats'].claim.post(),
+      asRunner['agent-chats'].claim.post(),
+    ]);
+    const answers = claims.flatMap((claim) => (claim.data!.message ? [claim.data!.message] : []));
+    expect(answers).toHaveLength(1);
+    expect(answers[0]).toMatchObject({ id: first.messageId, attempts: 2 });
+    const events = await chatOf(asOwner, agent.id)
+      .chat({ messageId: first.messageId })
+      .events.get();
+    expect(events.data!.items).toEqual([]);
+    await Bun.sleep(1100);
+    expect((await asRunner['agent-chats'].claim.post()).data!.message).toMatchObject({
+      id: next.messageId,
+      attempts: 1,
+    });
+    const failed = await chatOf(asOwner, agent.id)
+      .chat({ messageId: first.messageId })
+      .events.get();
+    expect(failed.data!).toMatchObject({
+      status: 'failed',
+      error: 'Runner did not report a result',
+    });
   });
 
   it('claims another thread when an exhausted head expires during a long poll', async () => {
-    const previousLease = process.env.AGENT_CHAT_LEASE_SECONDS;
-    const previousAttempts = process.env.AGENT_CHAT_MAX_ATTEMPTS;
-    const previousWait = process.env.AGENT_CHAT_CLAIM_WAIT_MS;
-    process.env.AGENT_CHAT_LEASE_SECONDS = '1';
-    process.env.AGENT_CHAT_MAX_ATTEMPTS = '1';
-    process.env.AGENT_CHAT_CLAIM_WAIT_MS = '2500';
+    await setTestJobSettings({
+      agentChat: { leaseSeconds: 1, maxAttempts: 1, claimWaitMs: 2500 },
+    });
+    const { asOwner, asRunner, agent } = await setup();
+    const first = (await send(asOwner, agent.id, 'First')).data!;
+    expect((await asRunner['agent-chats'].claim.post()).data!.message).toMatchObject({
+      id: first.messageId,
+      attempts: 1,
+    });
+    const waiting = asRunner['agent-chats'].claim.post();
     try {
-      const { asOwner, asRunner, agent } = await setup();
-      const first = (await send(asOwner, agent.id, 'First')).data!;
-      expect((await asRunner['agent-chats'].claim.post()).data!.message).toMatchObject({
-        id: first.messageId,
+      await Bun.sleep(1100);
+      const expired = await chatOf(asOwner, agent.id)
+        .chat({ messageId: first.messageId })
+        .events.get();
+      expect(expired.data!.status).toBe('streaming');
+      const other = (await send(asOwner, agent.id, 'Other')).data!;
+      expect((await waiting).data!.message).toMatchObject({
+        id: other.messageId,
+        threadId: other.threadId,
         attempts: 1,
       });
-      const waiting = asRunner['agent-chats'].claim.post();
-      try {
-        await Bun.sleep(1100);
-        const expired = await chatOf(asOwner, agent.id)
-          .chat({ messageId: first.messageId })
-          .events.get();
-        expect(expired.data!.status).toBe('streaming');
-        const other = (await send(asOwner, agent.id, 'Other')).data!;
-        expect((await waiting).data!.message).toMatchObject({
-          id: other.messageId,
-          threadId: other.threadId,
-          attempts: 1,
-        });
-      } finally {
-        await waiting;
-      }
     } finally {
-      if (previousLease === undefined) delete process.env.AGENT_CHAT_LEASE_SECONDS;
-      else process.env.AGENT_CHAT_LEASE_SECONDS = previousLease;
-      if (previousAttempts === undefined) delete process.env.AGENT_CHAT_MAX_ATTEMPTS;
-      else process.env.AGENT_CHAT_MAX_ATTEMPTS = previousAttempts;
-      if (previousWait === undefined) delete process.env.AGENT_CHAT_CLAIM_WAIT_MS;
-      else process.env.AGENT_CHAT_CLAIM_WAIT_MS = previousWait;
+      await waiting;
     }
   });
 
@@ -572,6 +582,24 @@ describe('external agent chat', () => {
     expect(stream.frames[0]).toContain('Pong');
     // The runner reported no lifecycle events, so the end is stated for it.
     expect(stream.frames.at(-1)).toContain('RUN_FINISHED');
+  });
+
+  // Nothing is written while the answer waits for a runner, so the dropped connection is
+  // the only sign that nobody reads it any more.
+  it('stops reading an answer once the caller drops its stream', async () => {
+    const { owner, asOwner, agent } = await setup();
+    const sent = await send(asOwner, agent.id, 'Ping');
+    const caller = new AbortController();
+    const res = await app.handle(
+      new Request(
+        `http://localhost/projects/MKT/ai-agents/${agent.id}/chat/${sent.data!.messageId}/stream`,
+        { headers: { cookie: owner.cookie }, signal: caller.signal },
+      ),
+    );
+    const reader = res.body!.getReader();
+
+    caller.abort();
+    expect((await reader.read()).done).toBe(true);
   });
 
   it('ends a failed answer with the reason it stopped', async () => {
@@ -840,6 +868,35 @@ describe('external agent chat', () => {
     // And a member's session is not a runner.
     expect((await asOwner['agent-chats'].claim.post()).status).toBe(403);
     expect((await send(asOwner, agent.id, 'Hello')).status).toBe(200);
+  });
+
+  it('lets whoever runs the team chat and keep threads without a role in the project', async () => {
+    const { asOwner, agent } = await setup();
+    const teamId = await teamOf(asOwner, 'MKT');
+    const join = async (role: 'manager' | 'member') => {
+      const user = await signUpTestUser({ team: false });
+      const invite = await asOwner.teams({ teamId }).invites.post({ email: user.email, role });
+      const client = authedApi(user.cookie);
+      await client.invites({ token: invite.data!.token }).accept.post();
+      return client;
+    };
+    const asManager = await join('manager');
+
+    const sent = await send(asManager, agent.id, 'Hello');
+    expect(sent.status).toBe(200);
+    const { messageId, threadId } = sent.data!;
+    const chat = chatOf(asManager, agent.id);
+    expect((await chat.chat({ messageId }).events.get({ query: {} })).status).toBe(200);
+    const threads = await chat.threads.get({ query: {} });
+    expect(threads.data!.items.map((thread) => thread.id)).toEqual([threadId]);
+    expect((await chat.threads({ threadId }).messages.get({ query: {} })).status).toBe(200);
+    expect((await chat.threads({ threadId }).favorite.put()).status).toBe(204);
+    expect((await chat.threads({ threadId }).favorite.delete()).status).toBe(204);
+    expect((await chat.threads({ threadId }).patch({ title: 'Launch' })).status).toBe(204);
+    expect((await chat.chat({ messageId }).cancel.post()).status).toBe(204);
+    expect((await chat.threads({ threadId }).delete()).status).toBe(204);
+
+    expect((await send(await join('member'), agent.id, 'Hello')).status).toBe(403);
   });
 
   it("keeps an owner-scoped agent's chat to its owner", async () => {

@@ -16,7 +16,8 @@
     "assigned": "Assigned",
     "mentioned": "Mentioned",
     "commented": "Commented",
-    "state_changed": "Status changed"
+    "state_changed": "Status changed",
+    "reacted": "Reacted"
   },
   "actions": {
     "markRead": "Mark as read",
@@ -33,6 +34,7 @@
     "mentioned": "{who} mentioned you",
     "commented": "{who} commented",
     "stateChanged": "{who} changed the status from {from} to {to}",
-    "stateChangedPlain": "{who} changed the status"
+    "stateChangedPlain": "{who} changed the status",
+    "reacted": "{who} reacted to your comment with {emoji}"
   }
 }

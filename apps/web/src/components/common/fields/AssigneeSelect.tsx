@@ -1,5 +1,7 @@
+import { type ReactNode } from 'react';
 import { CircleDashed } from 'lucide-react';
 import type { Assignee } from '@/lib/api/endpoints/projects';
+import { assignableMembers } from '@/utils/project';
 import { useSession } from '@/lib/auth-client';
 import Avatar from '@/components/common/Avatar';
 import { Pill } from './Pill';
@@ -16,19 +18,24 @@ export default function AssigneeSelect({
   onChange,
   placeholder,
   readOnly,
+  trigger,
 }: {
   assignees: Assignee[];
   value: string | null;
   onChange: (userId: string | null) => void;
   placeholder?: string;
   readOnly?: boolean;
+  // Replaces the pill where a caller needs its own (a Timeline cell).
+  trigger?: ReactNode;
 }) {
   const t = useTranslations('issue.fieldSelects');
   const none = t('noAssignee');
   const { data: session } = useSession();
   const currentUserId = session?.user.id ?? null;
-  const members = assignees.filter((a) => a.kind === 'member');
-  const assignee = members.find((a) => a.userId === value);
+  // The current value still resolves against deactivated accounts so an existing
+  // assignment displays as before; only active members are offered in the list.
+  const assignee = assignees.find((a) => a.kind === 'member' && a.userId === value);
+  const members = assignableMembers(assignees);
 
   const toItem = (a: Assignee): PickItem => ({
     key: a.userId,
@@ -45,14 +52,16 @@ export default function AssigneeSelect({
     <PopoverPick
       readOnly={readOnly}
       trigger={
-        <Pill active={!!assignee}>
-          {assignee ? (
-            <Avatar name={assignee.name} image={assignee.image} className="size-4 text-[8px]" />
-          ) : (
-            <CircleDashed />
-          )}
-          <span className="truncate">{assignee?.name ?? placeholder ?? none}</span>
-        </Pill>
+        trigger ?? (
+          <Pill active={!!assignee}>
+            {assignee ? (
+              <Avatar name={assignee.name} image={assignee.image} className="size-4 text-[8px]" />
+            ) : (
+              <CircleDashed />
+            )}
+            <span className="truncate">{assignee?.name ?? placeholder ?? none}</span>
+          </Pill>
+        )
       }
       inputPlaceholder={t('assignTo')}
       emptyText={t('noMembers')}

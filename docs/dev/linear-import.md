@@ -27,6 +27,7 @@ with the personal API key as `Authorization: <key>` (no `Bearer`; an invalid key
 
 | Reader method | Query |
 |---|---|
+| `describeSource` | `project(id)` for a project scope; otherwise `team(id)` with its organization's `urlKey`, linked as `https://linear.app/{urlKey}/team/{key}/all` |
 | `listStates` | `team(id).states`, archived included |
 | `listLabels` | `issueLabels` filtered to the team's labels and the workspace's (`team: { null: true }`), archived included; groups dropped, members named `Group/Name` |
 | `listCycles` | `team(id).cycles`, archived included |
@@ -49,7 +50,7 @@ Create step costs two requests per issue.
 
 `LinearReader` throws when the scope is `projectFilter: 'project'` without a `projectId`; the
 API answers 400 for the same input when creating a job. A job whose `source` is not in the
-registry fails at once with `UnsupportedImportSourceError`, with no retry.
+registry is never claimed: it waits for a worker that reads it.
 
 ## Rate limits
 

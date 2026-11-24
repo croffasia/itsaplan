@@ -1,0 +1,20 @@
+{
+  "placeholder": "Digita un comando o cerca…",
+  "noResults": "Nessun risultato trovato.",
+  "issues": "Issue",
+  "otherProjectIssues": "Issue in altri progetti",
+  "initiatives": "Iniziative",
+  "searchScope": "Ambito della ricerca",
+  "scopeCurrent": "Questo progetto",
+  "scopeAll": "Tutti i progetti",
+  "searching": "Ricerca…",
+  "selectAllIssues": "Seleziona tutte le issue",
+  "newIssue": "Nuova issue",
+  "newInitiative": "Nuova iniziativa",
+  "newProject": "Nuovo progetto",
+  "toggleChat": "Mostra o nasconde la chat AI",
+  "toggleRuns": "Mostra o nasconde le esecuzioni degli agenti",
+  "board": "Board",
+  "commands": "Comandi",
+  "switchProject": "Cambia progetto"
+}

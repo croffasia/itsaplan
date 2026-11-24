@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { db, aiAgent, apikey, teamMember } from '@repo/db';
 import { eq } from 'drizzle-orm';
 import { authedApi, type Api, createProject } from '#tests/helpers/app';
@@ -7,7 +7,12 @@ import { resetDb } from '#tests/helpers/db';
 import { getProjectByRef } from '#modules/projects/service';
 import { getAgentById, getInternalAgentApiKey } from '../../service';
 import { actionCatalog, buildRouteTools } from '../../runtime/tools/route-tools';
-import { AGENT_ACTIONS, ALWAYS_ON_ACTIONS } from '../../runtime/tools/catalog';
+import {
+  AGENT_ACTIONS,
+  ALWAYS_ON_ACTIONS,
+  setExtraActions,
+  type ToolMeta,
+} from '../../runtime/tools/catalog';
 import { routeTools } from '#mcp/generate';
 import { getMcpApp } from '#mcp/app-ref';
 import { createRole } from '#tests/helpers/roles';
@@ -46,12 +51,26 @@ async function toolsFor(asOwner: Api, tools: string[], roleId?: number) {
   if (roleId !== undefined) {
     await setAgentProjectRole(asOwner, 'MKT', created.data!.agent.userId, roleId);
   }
+  return builtTools(agentId);
+}
+
+async function agentWith(asOwner: Api, tools: string[]) {
+  const created = await createAgent(asOwner, 'MKT', {
+    name: 'Keeper',
+    username: `keeper-${++agentSeq}`,
+    kind: 'internal',
+    tools,
+  });
+  return created.data!.agent.id;
+}
+
+async function builtTools(agentId: number) {
   const project = await getProjectByRef('MKT', '');
   if (!project) throw new Error('Test project was not created');
-  const agent = await getAgentById(agentId, project.id);
+  const agent = await getAgentById(agentId, project.teamId);
   if (!agent) throw new Error('Test agent was not found');
   const apiKey = await getInternalAgentApiKey(agent);
-  return buildRouteTools(project, apiKey, agent.tools);
+  return buildRouteTools(project, apiKey, agent.tools, { initiator: null, runId: null });
 }
 
 type ToolMap = Awaited<ReturnType<typeof toolsFor>>;
@@ -262,6 +281,76 @@ describe('internal agent route tools', () => {
     expect((await toolsFor(asOwner, ['create_note_board'])).get_note_board).toBeUndefined();
   });
 
+  describe("an extension's actions", () => {
+    const watchHooks: ToolMeta = {
+      key: 'list_webhooks',
+      group: 'automation',
+      label: 'Read webhooks',
+      description: 'List the webhooks of the project.',
+      always: false,
+      needs: ['get_webhook_stats'],
+    };
+    const readViews: ToolMeta = {
+      key: 'list_views',
+      group: 'automation',
+      label: 'Read views',
+      description: 'List the views of the project.',
+      always: true,
+    };
+
+    afterEach(() => setExtraActions([]));
+
+    it('grants an enabled action with what it needs, and an always-on one to every agent', async () => {
+      setExtraActions([watchHooks, readViews]);
+      const { asOwner } = await setup();
+
+      const granted = await toolsFor(asOwner, ['list_webhooks']);
+      expect(granted.list_webhooks).toBeDefined();
+      expect(granted.get_webhook_stats).toBeDefined();
+      expect(granted.list_views).toBeDefined();
+
+      const plain = await toolsFor(asOwner, []);
+      expect(plain.list_webhooks).toBeUndefined();
+      expect(plain.get_webhook_stats).toBeUndefined();
+      expect(plain.list_views).toBeDefined();
+    });
+
+    it('keeps a locked action on the agent, turned off but never on, and builds no tool of it', async () => {
+      setExtraActions([watchHooks, readViews]);
+      const { asOwner, teamId } = await setup();
+      const keeper = await agentWith(asOwner, ['list_webhooks']);
+      setExtraActions([
+        { ...watchHooks, locked: true },
+        { ...readViews, locked: true },
+      ]);
+
+      const tools = await builtTools(keeper);
+      expect(tools.list_webhooks).toBeUndefined();
+      expect(tools.get_webhook_stats).toBeUndefined();
+      expect(tools.list_views).toBeUndefined();
+
+      const listed = await agents(asOwner, teamId).get({ query: {} });
+      expect(listed.data?.map((agent) => agent.tools)).toEqual([['list_webhooks']]);
+      // A locked action is no action the agent can take.
+      expect(listed.data?.[0].actionCount).toBe(ALWAYS_ON_ACTIONS.length);
+      const catalog = await agents(asOwner, teamId).tools.get();
+      expect(catalog.data?.find((action) => action.key === 'list_webhooks')).toMatchObject({
+        group: 'automation',
+        locked: true,
+        permission: ['webhooks', 'read'],
+      });
+
+      const agent = agents(asOwner, teamId)({ agentId: keeper });
+      expect((await agent.patch({ tools: ['list_webhooks'] })).data?.tools).toEqual([
+        'list_webhooks',
+      ]);
+      expect((await agent.patch({ tools: [] })).data?.tools).toEqual([]);
+      expect((await agent.patch({ tools: ['list_webhooks'] })).data?.tools).toEqual([]);
+      const fresh = await agentWith(asOwner, ['list_webhooks']);
+      expect((await agents(asOwner, teamId)({ agentId: fresh }).get()).data?.tools).toEqual([]);
+    });
+  });
+
   // A hidden argument names a field of the route's own schema. Renaming the field
   // there would leave the catalog hiding something that no longer exists, and the
   // agent would silently get the argument back.
@@ -275,6 +364,30 @@ describe('internal agent route tools', () => {
     for (const { key, name } of hidden) {
       expect(Object.keys(table.get(key)?.inputSchema.properties ?? {})).toContain(name);
     }
+  });
+
+  // The tool definitions go to the model on every step; a numeric argument written as a
+  // numeric string or a number would be paid for twice.
+  it('gives the model every numeric argument as a number only', async () => {
+    const { asOwner } = await setup();
+    const tools = await toolsFor(
+      asOwner,
+      AGENT_ACTIONS.map((tool) => tool.key),
+    );
+    const schemas = Object.entries(tools).map(([key, tool]) => {
+      const input = tool.inputSchema as unknown as { getJsonSchema(): unknown };
+      return [key, JSON.stringify(input.getJsonSchema())] as const;
+    });
+    expect(schemas.length).toBeGreaterThan(0);
+
+    for (const [key, schema] of schemas) {
+      expect({ key, numericString: /"format":"(numeric|integer)"/.test(schema) }).toEqual({
+        key,
+        numericString: false,
+      });
+    }
+    const getIssue = schemas.find(([key]) => key === 'get_issue')?.[1];
+    expect(JSON.parse(getIssue!).properties.issueId).toEqual({ type: 'number' });
   });
 
   // The catalog states which role an action needs, which it can only do when it
@@ -299,6 +412,145 @@ describe('internal agent route tools', () => {
       'get_project',
       'view_attachment',
     ]);
+  });
+
+  it('links a document to an issue and an initiative, and reads each link from both sides', async () => {
+    const { asOwner } = await setup();
+    const project = asOwner.projects({ projectKey: 'MKT' });
+    const view = await project.get();
+    const issueId = (
+      await project.issues.post({ columnId: view.data!.columns[0]!.id, title: 'Task' })
+    ).data!.id;
+    const initiativeId = (await project.initiatives.post({ title: 'Launch' })).data!.id;
+    const documentId = (await project.documents.post({ title: 'Spec' })).data!.id;
+    const tools = await toolsFor(asOwner, [
+      'link_document_issue',
+      'unlink_document_issue',
+      'list_document_issues',
+      'list_issue_documents',
+      'link_document_initiative',
+      'unlink_document_initiative',
+      'list_initiative_documents',
+      'list_document_initiatives',
+    ]);
+
+    expect(await run(tools, 'link_document_issue', { documentId, issueId })).toMatchObject({
+      issueId,
+    });
+    expect(await run(tools, 'list_document_issues', { documentId })).toMatchObject([{ issueId }]);
+    expect(await run(tools, 'list_issue_documents', { issueId })).toMatchObject([{ documentId }]);
+    await run(tools, 'unlink_document_issue', { documentId, issueId });
+    expect(await run(tools, 'list_issue_documents', { issueId })).toEqual([]);
+
+    await run(tools, 'link_document_initiative', { documentId, initiativeId });
+    expect(await run(tools, 'list_initiative_documents', { initiativeId })).toMatchObject([
+      { documentId },
+    ]);
+    expect(await run(tools, 'list_document_initiatives', { documentId })).toMatchObject([
+      { initiativeId },
+    ]);
+    await run(tools, 'unlink_document_initiative', { documentId, initiativeId });
+    expect(await run(tools, 'list_document_initiatives', { documentId })).toEqual([]);
+  });
+
+  it('reads a comment thread of a document, replies in it and resolves it', async () => {
+    const { asOwner } = await setup();
+    const documents = asOwner.projects({ projectKey: 'MKT' }).documents;
+    const page = (
+      await documents.post({
+        title: 'Plan',
+        content: 'Hello world',
+        contentJson: {
+          type: 'doc',
+          content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Hello world' }] }],
+        },
+      })
+    ).data!;
+    const documentId = page.id;
+    const root = await documents({ documentId }).comments.post({
+      body: 'Is this right?',
+      quote: 'Hello',
+      from: 1,
+      to: 6,
+      version: page.version,
+    });
+    const commentId = root.data!.id;
+    const tools = await toolsFor(asOwner, [
+      'list_document_comments',
+      'add_document_comment',
+      'update_document_comment',
+    ]);
+
+    expect(await run(tools, 'list_document_comments', { documentId })).toMatchObject([
+      { id: commentId, parentId: null, quote: 'Hello', body: 'Is this right?' },
+    ]);
+    await run(tools, 'add_document_comment', { documentId, parentId: commentId, body: 'Yes' });
+    await run(tools, 'update_document_comment', { documentId, commentId, resolved: true });
+
+    const thread = (await run(tools, 'list_document_comments', { documentId })) as {
+      parentId: string | null;
+      body: string;
+      resolvedAt: string | null;
+    }[];
+    expect(thread.map((comment) => comment.body)).toEqual(['Is this right?', 'Yes']);
+    expect(thread[1]!.parentId).toBe(commentId);
+    expect(thread[0]!.resolvedAt).not.toBeNull();
+  });
+
+  it('adds a file to a document, opens it and deletes it', async () => {
+    const { asOwner } = await setup();
+    const tools = await toolsFor(asOwner, [
+      'create_document',
+      'add_document_asset',
+      'list_document_assets',
+      'view_document_asset',
+      'delete_document_asset',
+    ]);
+    // Deleting a file takes owning its page, so the agent makes the page.
+    const { id: documentId } = (await run(tools, 'create_document', { title: 'Spec' })) as {
+      id: number;
+    };
+
+    const added = (await run(tools, 'add_document_asset', {
+      documentId,
+      filename: 'note.txt',
+      contentBase64: Buffer.from('hello').toString('base64'),
+      contentType: 'text/plain',
+    })) as { id: string; embedUrl: string };
+    expect(added.embedUrl).toStartWith('/protected-media/projects/');
+    expect(await run(tools, 'list_document_assets', { documentId })).toMatchObject([
+      { id: added.id },
+    ]);
+    expect(
+      await run(tools, 'view_document_asset', { documentId, publicId: added.id }),
+    ).toMatchObject({ images: [], others: [{ id: added.id, text: 'hello' }] });
+
+    await run(tools, 'delete_document_asset', { documentId, publicId: added.id });
+    expect(await run(tools, 'list_document_assets', { documentId })).toEqual([]);
+  });
+
+  it('copies a file attached in the chat into a document', async () => {
+    const { asOwner } = await setup();
+    const tools = await toolsFor(asOwner, [
+      'create_document',
+      'add_document_asset_from_chat',
+      'view_document_asset',
+    ]);
+    const { id: documentId } = (await run(tools, 'create_document', { title: 'Spec' })) as {
+      id: number;
+    };
+    const { id: chatAttachmentId } = (await run(tools, 'upload_chat_attachment', {
+      filename: 'note.txt',
+      contentBase64: Buffer.from('hello').toString('base64'),
+    })) as { id: string };
+
+    const copied = (await run(tools, 'add_document_asset_from_chat', {
+      documentId,
+      chatAttachmentId,
+    })) as { id: string };
+    expect(
+      await run(tools, 'view_document_asset', { documentId, publicId: copied.id }),
+    ).toMatchObject({ images: [], others: [{ filename: 'note.txt', text: 'hello' }] });
   });
 
   it("provisions a legacy agent's key once, even when two runs start together", async () => {
@@ -339,7 +591,7 @@ describe('internal agent route tools', () => {
     // The listing still shows the agent once, and the key works against a real route.
     const listed = await agents(asOwner, teamId).get();
     expect(listed.data?.filter((a) => a.id === agentId)).toHaveLength(1);
-    const tools = buildRouteTools(project, first, agent.tools);
+    const tools = buildRouteTools(project, first, agent.tools, { initiator: null, runId: null });
     expect(await run(tools, 'get_project')).toMatchObject({ columns: expect.any(Array) });
   });
 
@@ -417,6 +669,48 @@ describe('internal agent route tools', () => {
     const context = await run(tools, 'get_project');
     expect(context).toMatchObject({ columns: expect.any(Array) });
   });
+
+  // A block is a relation, not text, so search_issues cannot find it.
+  it('blocked lists the issues an open issue is blocking, not those of a closed one', async () => {
+    const { asOwner } = await setup();
+    const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const columns = view.data?.columns ?? [];
+    const openId = columns.find((c) => c.stateType === 'backlog')?.id;
+    const doneId = columns.find((c) => c.stateType === 'completed')?.id;
+    if (openId === undefined || doneId === undefined) throw new Error('Missing columns');
+    const tools = await toolsFor(asOwner, ['create_issue', 'link_issues']);
+    const make = async (title: string, columnId: number) =>
+      ((await run(tools, 'create_issue', { columnId, title })) as { id: number }).id;
+    const openBlocker = await make('Open blocker', openId);
+    const held = await make('Held up', openId);
+    const doneBlocker = await make('Done blocker', doneId);
+    const freed = await make('No longer held up', openId);
+    await run(tools, 'link_issues', {
+      issueId: held,
+      targetIssueId: openBlocker,
+      kind: 'blocked_by',
+    });
+    await run(tools, 'link_issues', { issueId: doneBlocker, targetIssueId: freed, kind: 'blocks' });
+
+    const result = (await run(tools, 'list_issues', { blocked: 'true' })) as { title: string }[];
+
+    expect(result.map((i) => i.title)).toEqual(['Held up']);
+  });
+
+  it('reads an optional field filled with an empty string as unset, and refuses a wrong value', async () => {
+    const { asOwner } = await setup();
+    const tools = await toolsFor(asOwner, ['create_issue']);
+    const columnId = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!.columns[0]!.id;
+    await run(tools, 'create_issue', { columnId, title: 'Listed' });
+
+    const listed = (await run(tools, 'list_issues', { sort: '', dir: '', columnId: '' })) as {
+      title: string;
+    }[];
+    expect(listed.map((i) => i.title)).toEqual(['Listed']);
+    expect(await run(tools, 'list_issues', { sort: 'title' })).toMatchObject({
+      error: expect.anything(),
+    });
+  });
 });
 
 // A run works in one project, and its tools are bound to it: an object addressed by id
@@ -453,7 +747,10 @@ describe('internal agent route tools are bound to the run project', () => {
     if (!project) throw new Error('Test project was not created');
     const agent = await getAgentById(created.data!.agent.id, teamId);
     if (!agent) throw new Error('Test agent was not found');
-    const built = buildRouteTools(project, await getInternalAgentApiKey(agent), agent.tools);
+    const built = buildRouteTools(project, await getInternalAgentApiKey(agent), agent.tools, {
+      initiator: null,
+      runId: null,
+    });
     return { asOwner, tools: built, mktIssue, opsIssue };
   }
 

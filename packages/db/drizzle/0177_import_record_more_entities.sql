@@ -1,0 +1,4 @@
+ALTER TABLE "import_record" DROP CONSTRAINT "import_record_source_entity_type_check";--> statement-breakpoint
+ALTER TABLE "import_record" DROP CONSTRAINT "import_record_local_entity_type_check";--> statement-breakpoint
+ALTER TABLE "import_record" ADD CONSTRAINT "import_record_source_entity_type_check" CHECK ("import_record"."source_entity_type" IN ('issue', 'comment', 'label', 'state', 'cycle', 'attachment', 'checklist', 'custom_field', 'issue_type', 'initiative', 'worklog'));--> statement-breakpoint
+ALTER TABLE "import_record" ADD CONSTRAINT "import_record_local_entity_type_check" CHECK ("import_record"."local_entity_type" IS NULL OR "import_record"."local_entity_type" IN ('issue', 'comment', 'label', 'state', 'cycle', 'attachment', 'checklist', 'custom_field', 'issue_type', 'initiative', 'worklog', 'initiative_attachment'));

@@ -1,51 +1,27 @@
 import { request } from '@/lib/api/core/client';
 
-// Outgoing webhook subscription (mirrors apps/api modules/webhooks/service.ts). The event
-// types must stay in sync with WEBHOOK_EVENT_TYPES on the server.
-export type WebhookEventType =
-  | 'issue.created'
-  | 'issue.updated'
-  | 'issue.deleted'
-  | 'issue.assigned'
-  | 'issue.state_changed'
-  | 'issue.label_changed'
-  | 'issue.link_changed'
-  | 'comment.created'
-  | 'comment.updated'
-  | 'comment.deleted';
-
-export const WEBHOOK_EVENT_TYPES: WebhookEventType[] = [
-  'issue.created',
-  'issue.updated',
-  'issue.deleted',
-  'issue.assigned',
-  'issue.state_changed',
-  'issue.label_changed',
-  'issue.link_changed',
-  'comment.created',
-  'comment.updated',
-  'comment.deleted',
-];
-
+// Outgoing webhook subscription (mirrors apps/api modules/webhooks/service.ts). Its events are
+// names from listWebhookEventTypes: the core's, then those the instance adds.
 export interface Webhook {
   id: number;
   projectId: number;
   url: string;
-  secret: string;
-  events: WebhookEventType[];
+  // Null in the list for a caller who may neither create nor edit webhooks.
+  secret: string | null;
+  events: string[];
   isActive: boolean;
   createdAt: string;
 }
 
 export interface NewWebhookInput {
   url: string;
-  events: WebhookEventType[];
+  events: string[];
   isActive?: boolean;
 }
 
 export interface WebhookPatch {
   url?: string;
-  events?: WebhookEventType[];
+  events?: string[];
   isActive?: boolean;
 }
 
@@ -55,7 +31,7 @@ export interface WebhookPatch {
 export interface WebhookDelivery {
   id: number;
   eventId: string;
-  eventType: WebhookEventType;
+  eventType: string;
   status: 'pending' | 'success' | 'failed';
   attempts: number;
   payload: unknown;
@@ -71,6 +47,9 @@ export interface WebhookDeliveryPage {
   nextCursor: number | null;
 }
 
+export const listWebhookEventTypes = (projectKey: string) =>
+  request<string[]>(`/projects/${projectKey}/webhooks/event-types`);
+
 export const listWebhooks = (projectKey: string) =>
   request<Webhook[]>(`/projects/${projectKey}/webhooks`);
 
@@ -82,6 +61,9 @@ export const createWebhook = (projectKey: string, input: NewWebhookInput) =>
 
 export const updateWebhook = (webhookId: number, patch: WebhookPatch) =>
   request<Webhook>(`/webhooks/${webhookId}`, { method: 'PATCH', body: JSON.stringify(patch) });
+
+export const rotateWebhookSecret = (webhookId: number) =>
+  request<Webhook>(`/webhooks/${webhookId}/secret`, { method: 'POST' });
 
 export const deleteWebhook = (webhookId: number) =>
   request<void>(`/webhooks/${webhookId}`, { method: 'DELETE' });

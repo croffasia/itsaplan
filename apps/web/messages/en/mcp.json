@@ -24,26 +24,36 @@
     "methodTabsAria": "Connection method",
     "method": "OAuth",
     "personalKey": "API key",
-    "description": "Use this for any MCP client that supports OAuth, such as ChatGPT or Claude. You sign in with your Itsaplan account. The client never receives an API key.",
+    "description": "Use this for any MCP client that supports OAuth, such as ChatGPT or Claude. You sign in with your {app} account. The client never receives an API key.",
     "discovery": "OAuth discovery",
     "steps": {
       "add": "Add an MCP app in your client.",
       "paste": "Paste the MCP endpoint.",
       "choose": "Choose OAuth when the client asks how to sign in.",
-      "signIn": "Sign in to Itsaplan and approve access."
+      "signIn": "Sign in to {app} and approve access."
     },
-    "security": "OAuth uses PKCE (S256), dynamic client registration, and access tokens scoped to your Itsaplan account.",
+    "security": "OAuth uses PKCE (S256), dynamic client registration, and access tokens scoped to your {app} account.",
     "consent": {
-      "title": "{client} wants to connect to your account",
-      "titleUnnamed": "An MCP client wants to connect to your account",
-      "description": "It will act with your permissions: whatever you can see and change, it can too.",
-      "account": "Signed in as {email}",
-      "redirect": "After you answer, you go back to {host}.",
-      "missingCode": "This authorization request is missing its consent code.",
-      "cancel": "Cancel",
-      "pending": "Authorizing…",
-      "authorize": "Authorize",
-      "failed": "Unable to complete OAuth authorization."
+      "title": "Allow {client} to access your account?",
+      "titleUnnamed": "Allow an unnamed app to access your account?",
+      "actsAs": "Once allowed, the app acts as you:",
+      "canSee": "Sees everything you can see, in all your teams",
+      "canChange": "Creates, changes and deletes anything you can",
+      "keepsAccess": "Keeps access until you disconnect it in Account › Security",
+      "account": "Account",
+      "app": "App",
+      "thisComputer": "On this computer",
+      "named": "The app named itself “{client}”. Allow only if you started this connection.",
+      "unnamed": "The app sent no name. Allow only if you started this connection.",
+      "deny": "Don't allow",
+      "allow": "Allow",
+      "allowing": "Allowing…",
+      "denying": "Sending…",
+      "expired": "This request expired after 10 minutes. Start the connection again in the app.",
+      "failed": "Your answer did not go through. Try again.",
+      "incompleteTitle": "This link is incomplete",
+      "incompleteBody": "Start the connection again in the app.",
+      "brandSubtitle": "Connect AI apps such as Claude and ChatGPT to your account."
     }
   }
 }

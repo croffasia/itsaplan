@@ -2,6 +2,7 @@
   "account": {
     "profile": "Perfil",
     "preferences": "Preferências",
+    "notifications": "Notificações",
     "accounts": "Contas",
     "security": "Segurança",
     "api-keys": "Chaves de API",
@@ -25,25 +26,41 @@
       "label": "Projetos",
       "description": "Todo projeto nesta instância: o que cada um contém, quando esteve ativo pela última vez e quem pode alcançá-lo."
     },
+    "roles": {
+      "label": "Funções do sistema",
+      "description": "Funções padrão disponíveis para todas as equipes desta instância."
+    },
     "general": {
       "label": "Geral",
-      "description": "Workspaces pessoais, padrões para novos projetos, e rastros e tempo de execução de agentes."
+      "description": "Configurações que valem para todos os workspaces desta instância."
     },
     "authentication": {
       "label": "Autenticação",
-      "description": "Quem pode se registrar nesta instância, como contas são confirmadas e os provedores com que as pessoas entram."
+      "description": "Quem pode se cadastrar, como as pessoas entram e os limites de requisições."
     },
     "hotkeys": {
       "label": "Atalhos de teclado",
-      "description": "A tecla à qual cada comando está vinculado para todos nesta instância. Cada pessoa pode reatribuir um atalho para sua própria conta nas preferências."
+      "description": "Padrão para todos. Cada pessoa pode alterar os seus em Preferências."
     },
     "storage": {
       "label": "Armazenamento",
       "description": "Quanto as pessoas podem enviar: o tamanho de um único arquivo, os tipos de anexo aceitos e o armazenamento que cada projeto recebe."
     },
+    "jobs": {
+      "label": "Tarefas em segundo plano",
+      "description": "Com que frequência as tarefas em segundo plano rodam e são repetidas. As mudanças valem sem reiniciar."
+    },
+    "email-templates": {
+      "label": "Modelos de e-mail",
+      "description": "Gerencie os modelos de e-mails do sistema."
+    },
     "telegram": {
       "label": "Telegram",
       "description": "O bot ao qual as pessoas conectam sua conta do Telegram, e o que entrega notificações do Telegram para projetos que não definem seu próprio bot."
+    },
+    "slack": {
+      "label": "Slack",
+      "description": "Envia as notificações como mensagens diretas no Slack."
     },
     "email": {
       "label": "Provedor de e-mail",
@@ -99,25 +116,29 @@
       "label": "Agendamentos",
       "description": "Execute tarefas de agente em um horário recorrente."
     },
+    "workflows": {
+      "label": "Fluxos",
+      "description": "Agentes que passam o trabalho uns para os outros."
+    },
     "webhooks": {
       "label": "Webhooks",
       "description": "Envie eventos do projeto para URLs externas, assinados com um segredo por webhook."
     },
+    "forms": {
+      "label": "Formulários",
+      "description": "Qualquer pessoa com o link cria uma issue aqui."
+    },
     "git": {
       "label": "Repositórios",
-      "description": "Feche issues quando seus pull requests mesclam no GitHub, GitLab, Gitea, Forgejo ou Bitbucket."
+      "description": "Feche issues quando seus pull requests forem mesclados e sincronize as issues do repositório com o quadro."
     },
     "import-export": {
       "label": "Importar/Exportar",
-      "description": "Importe issues, comentários e etiquetas de uma instância Plane auto-hospedada, ou exporte os dados deste projeto como JSON."
+      "description": "Importe issues de outra ferramenta de acompanhamento ou exporte os dados deste projeto como JSON."
     },
     "ai-agents": {
       "label": "Agentes de IA",
       "description": "Agentes de IA trabalhando neste projeto."
-    },
-    "queue": {
-      "label": "Runner queue",
-      "description": "External runner tasks across all projects you can read. Running leases first; waiting tasks by due time."
     }
   },
   "previews": {
@@ -188,6 +209,60 @@
         "acsUrl": "URL de ACS",
         "spEntityId": "Entity ID e metadados"
       }
+    },
+    "forms": {
+      "new": "Novo formulário",
+      "columns": {
+        "form": "Formulário",
+        "link": "Link"
+      },
+      "enabled": "Aceita solicitações",
+      "tabs": {
+        "form": "Formulário",
+        "questions": "Perguntas",
+        "issue": "Issue",
+        "design": "Design"
+      },
+      "questionsHint": "Nome e e-mail são sempre pedidos.",
+      "preview": "Pré-visualização",
+      "name": "Seu nome",
+      "email": "E-mail"
+    },
+    "workflows": {
+      "steps": "Etapas",
+      "sendBack": "Devolver",
+      "runs": "Histórico de execuções",
+      "runningNow": "Em andamento",
+      "history": "Histórico",
+      "costSoFar": "Custo até agora",
+      "tokensSoFar": "Tokens até agora",
+      "agentRuns": "Execuções de agentes",
+      "tokens": "Tokens",
+      "cost": "Custo",
+      "took": "Duração",
+      "got": "O que recebeu",
+      "returned": "O que devolveu",
+      "task": "Tarefa",
+      "notes": "Notas da devolução",
+      "done": "Concluído",
+      "round": "Rodada",
+      "fullLog": "Log completo"
+    },
+    "portal": {
+      "title": "Portal",
+      "description": "A página onde as pessoas enviam solicitações aos projetos do espaço de trabalho e as acompanham.",
+      "general": "Geral",
+      "forms": "Formulários públicos",
+      "formsHint": "Os projetos do espaço de trabalho podem publicar formulários que qualquer pessoa com o link preenche. Desativado, seus formulários e portais deixam de abrir e os projetos perdem a seção Formulários; nada é apagado.",
+      "name": "Nome",
+      "nameHint": "O que as pessoas veem no portal e nos e-mails dele no lugar do nome do espaço de trabalho. Vazio mostra o nome do espaço de trabalho.",
+      "address": "Endereço",
+      "addressHint": "O portal abre neste endereço. Enquanto você não definir um, ele abre pelo número do espaço de trabalho.",
+      "link": "Link do portal",
+      "logo": "Logotipo",
+      "logoHint": "Aparece no portal e nos formulários no lugar do nome do portal. Um logotipo serve para os dois temas.",
+      "light": "Tema claro",
+      "dark": "Tema escuro"
     }
   }
 }

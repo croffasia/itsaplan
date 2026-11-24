@@ -45,9 +45,18 @@ export interface GithubSkillCandidate {
   url: string;
 }
 
+// What the library list asks for: the window, a search over the name and description,
+// and the sources to keep.
+export interface SkillListParams extends PageParams {
+  search?: string;
+  sources?: AgentSkill['source'][];
+}
+
 // Agent skills: the team skill library and the skills enabled on an agent.
-export const listSkills = (teamId: number, params: PageParams) =>
-  request<Page<AgentSkill>>(`/teams/${teamId}/agent-skills${pageQuery(params)}`);
+export const listSkills = (teamId: number, params: SkillListParams) =>
+  request<Page<AgentSkill>>(
+    `/teams/${teamId}/agent-skills${pageQuery(params, { search: params.search, source: params.sources?.join(',') })}`,
+  );
 
 // The whole library, which the agent editor's skill picker needs entire.
 export const listSkillOptions = (teamId: number) =>

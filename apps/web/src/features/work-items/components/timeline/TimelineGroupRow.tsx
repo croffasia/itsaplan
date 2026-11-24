@@ -1,4 +1,6 @@
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { useIconHover } from '@animateicons/react';
+import { ChevronDownIcon } from '@animateicons/react/lucide/chevron-down-icon';
+import { ChevronRightIcon } from '@animateicons/react/lucide/chevron-right-icon';
 import { useDroppable } from '@dnd-kit/core';
 import { useTranslations } from 'next-intl';
 import { DEFAULT_COLOR, type IssueGroup } from '@/utils/project';
@@ -39,6 +41,8 @@ export function TimelineGroupRow({
     disabled,
   });
   const isDrop = isOver && !disabled;
+  const { ref, triggerProps } = useIconHover();
+  const Chevron = collapsed ? ChevronRightIcon : ChevronDownIcon;
   return (
     <div
       ref={setNodeRef}
@@ -49,22 +53,19 @@ export function TimelineGroupRow({
         <TooltipTrigger asChild>
           <button
             type="button"
+            {...triggerProps}
             aria-label={collapsed ? t('expandGroup') : t('collapseGroup')}
             onClick={onToggle}
             className={cn(
-              'sticky left-0 z-10 flex shrink-0 items-center gap-2 overflow-hidden border-r px-3 text-left text-sm font-medium',
+              'sticky start-0 z-10 flex shrink-0 items-center gap-2 overflow-hidden border-e px-3 text-start text-sm font-medium',
               isDrop ? 'bg-accent/60' : 'bg-muted/40',
             )}
             style={{ width: labelW }}
           >
-            {collapsed ? (
-              <ChevronRight className="size-3.5 shrink-0" />
-            ) : (
-              <ChevronDown className="size-3.5 shrink-0" />
-            )}
+            <Chevron ref={ref} size={14} className="shrink-0" />
             <GroupDot group={group} />
-            <span className="min-w-0 flex-1 truncate">{group.name}</span>
-            <span className="shrink-0 text-muted-foreground">{count}</span>
+            <span className="min-w-0 truncate">{group.name}</span>
+            <span className="shrink-0 text-xs font-normal text-muted-foreground">{count}</span>
           </button>
         </TooltipTrigger>
         <TooltipContent>{collapsed ? t('expandGroup') : t('collapseGroup')}</TooltipContent>
@@ -74,7 +75,7 @@ export function TimelineGroupRow({
           <div
             className="absolute top-1/2 flex h-4 -translate-y-1/2 cursor-default items-center overflow-hidden rounded px-1.5 text-[10px] text-white select-none"
             style={{
-              left: aggregateRect.left,
+              insetInlineStart: aggregateRect.left,
               width: aggregateRect.width,
               backgroundColor: group.color ?? DEFAULT_COLOR,
             }}

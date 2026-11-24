@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { Agent, type AgentExecutionOptions } from '@mastra/core/agent';
+import { Agent, type AgentConfig, type AgentExecutionOptions } from '@mastra/core/agent';
 import type { TracingOptions } from '@mastra/core/observability';
 import {
+  assertChatEnabled,
   getAgentInProject,
   getInternalAgentApiKey,
   type AiAgentRow,
@@ -10,14 +11,16 @@ import {
 import { getProjectById } from '#modules/projects/service';
 import { getCredentialSecret } from '../../integrations/service';
 import { listAgentSkills } from '../../skills/service';
-import { listAgentToolsForRun } from '../../tools/service';
+import { agentToolSet } from '../../tools/service';
 import { buildCustomTools } from './tools/custom-tools';
-import { buildRouteTools } from './tools/route-tools';
+import { buildNamedRouteTools, buildRouteTools } from './tools/route-tools';
+import { runOrigin, type AgentWork } from '../run-initiator';
 import { buildLocalTools } from './tools/local';
 import { buildSkillTool, skillsPreamble } from './skill-runtime';
 import { buildMemory, ensureThread, DEFAULT_LAST_MESSAGES } from './memory';
 import { getMastra } from './observability';
 import { runRefusal } from '../run-refusal';
+import { buildOnAgent } from '../agent-build';
 import { toolArgsText, toolText } from '../../chat-parts';
 import { recordContextUsage, type ContextUsage } from '../../chat-usage';
 import { isChatThreadId, newChatThreadId } from './thread-ids';
@@ -97,11 +100,13 @@ function reasoningProviderOptions(effort: ReasoningEffort): ProviderOptions {
   };
 }
 
-// One event of a streamed agent run, sent to the caller as it happens. `text` is
-// a chunk of the answer to append; `tool-start`/`tool-end` report a capability the
-// agent is using (so the UI can show what it is doing); `done` closes the stream
-// and carries the conversation thread id; `error` reports a failure mid-stream.
+// One event of a streamed agent run, sent to the caller as it happens. `thread` names the
+// conversation the answer goes to, where the agent keeps one; `text` is a chunk of the
+// answer to append; `tool-start`/`tool-end` report a capability the agent is using (so the
+// UI can show what it is doing); `done` closes the stream and carries the conversation
+// thread id; `error` reports a failure mid-stream.
 export type AgentRunEvent =
+  | { type: 'thread'; threadId: string }
   | { type: 'text'; value: string }
   | { type: 'tool-start'; toolCallId: string; toolName: string; args?: string }
   | { type: 'tool-end'; toolCallId: string; toolName: string; result?: string }
@@ -111,21 +116,27 @@ export type AgentRunEvent =
 async function buildAgent(
   row: AiAgentRow,
   projectId: number,
-  contextPreamble: string,
+  opts: RunOpts,
   sessionId: string,
+  work: AgentWork,
 ): Promise<Agent> {
   const project = await getProjectById(projectId);
   if (!project) throw new HttpError(404, 'Project not found');
   const model = await resolveModel(row, sessionId);
   const skills = await listAgentSkills(row.id);
-  const customTools = await listAgentToolsForRun(row.id);
+  const customTools = await agentToolSet(row, { runId: opts.runId });
   const apiKey = await getInternalAgentApiKey(row);
   const instructions =
     projectPreamble(project) +
-    contextPreamble +
+    (opts.contextPreamble ?? '') +
     (row.instructions ?? DEFAULT_INSTRUCTIONS) +
     skillsPreamble(skills);
-  const agent = new Agent({
+  const coreTools = {
+    ...buildRouteTools(project, apiKey, row.tools, work),
+    ...buildLocalTools(projectId, row.tools),
+    ...(skills.length > 0 ? buildSkillTool(row.teamId, skills) : {}),
+  };
+  const config: AgentConfig = {
     id: `ai-agent-${row.id}`,
     name: row.name,
     instructions,
@@ -133,18 +144,24 @@ async function buildAgent(
     // The agent acts as its own bot user, in the project of this run. Route tools call
     // the real API with its key, so its role applies; get_current_date is the one
     // tool with no route; read_skill loads any enabled skills on demand; custom tools
-    // are the external integrations configured on the team and enabled here.
-    tools: {
-      ...buildRouteTools(project, apiKey, row.tools),
-      ...buildLocalTools(projectId, row.tools),
-      ...(skills.length > 0 ? buildSkillTool(row.teamId, skills) : {}),
-      ...buildCustomTools(customTools),
-    },
+    // are the tools configured on the team and enabled here.
+    tools: { ...coreTools, ...buildCustomTools(customTools, new Set(Object.keys(coreTools))) },
     // Conversation memory (last N messages of a thread) when enabled.
     ...(row.memoryEnabled
       ? { memory: buildMemory(row.memoryLastMessages ?? DEFAULT_LAST_MESSAGES) }
       : {}),
-  });
+  };
+  const agent = new Agent(
+    await buildOnAgent(config, {
+      agentId: row.id,
+      teamId: row.teamId,
+      projectId,
+      runId: opts.runId,
+      trigger: opts.trigger,
+      issueId: opts.issueId,
+      routeTools: (names) => buildNamedRouteTools(project, apiKey, names, work),
+    }),
+  );
   // An agent traces its run only through a container (see observability.ts).
   agent.__registerMastra(getMastra());
   return agent;
@@ -212,8 +229,8 @@ function contextOf(usage: ModelUsage | undefined): ContextUsage | null {
 
 type ModelUsage = { inputTokens?: number; outputTokens?: number };
 
-// Streams the internal agent's response as it is produced. Yields text chunks and
-// the tool calls the agent makes, then a final `done` with the thread id (see
+// Streams the internal agent's response as it is produced. Yields the thread the answer
+// goes to, text chunks and the tool calls the agent makes, then a final `done` (see
 // AgentRunEvent). Same preconditions and memory/thread handling as runAgent. A
 // failure raised while streaming is yielded as an `error` event rather than thrown,
 // so a caller consuming the stream sees it inline and the stream still ends.
@@ -230,6 +247,7 @@ export async function* streamAgent(
 ): AsyncGenerator<AgentRunEvent> {
   try {
     const { agent, row, options, threadId } = await prepareRun(agentId, projectId, prompt, opts);
+    if (threadId) yield { type: 'thread', threadId };
     const result = await agent.stream(prompt, { ...options, abortSignal: signal });
     // The size of the context is what the last call of the answer read, so each step
     // replaces the one before it rather than being added to it.
@@ -292,13 +310,20 @@ async function prepareRun(
   if (row.kind !== 'internal') {
     throw new HttpError(400, 'Only internal agents can be run');
   }
+  // A queued run's caller is the agent's own bot user, so the run names its person. A chat
+  // is for its member, or for the person behind an agent that chats.
+  const work: AgentWork =
+    opts.runId != null
+      ? { initiator: opts.initiatorUserId ?? null, runId: opts.runId }
+      : { initiator: (await runOrigin(opts.callerUserId)).requestedByUserId, runId: null };
   // A queued run was asked about in the poller, before it was recorded as started.
   if (opts.runId == null) {
+    assertChatEnabled(row);
     const refused = await runRefusal({
       agentId: row.id,
       teamId: row.teamId,
       projectId,
-      userId: opts.callerUserId,
+      userId: work.initiator,
     });
     if (refused) throw new HttpError(403, refused, 'run_refused');
   }
@@ -308,12 +333,7 @@ async function prepareRun(
   const threadId = row.memoryEnabled
     ? (opts.threadId ?? newChatThreadId(row.id, opts.callerUserId))
     : null;
-  const agent = await buildAgent(
-    row,
-    projectId,
-    opts.contextPreamble ?? '',
-    threadId ?? randomUUID(),
-  );
+  const agent = await buildAgent(row, projectId, opts, threadId ?? randomUUID(), work);
 
   // Mastra's generate/stream have overloaded options; type the shape we use. In
   // Mastra v1 the temperature belongs to the call's model settings — a flat
@@ -374,9 +394,11 @@ export type RunOpts = {
   threadId?: string | null;
   issueId?: number | null;
   scheduleId?: number | null;
-  // The queued run this executes, and what triggered it. Absent for a chat run.
+  // The queued run this executes, what triggered it and the person it is for (see
+  // run-initiator.ts). Absent for a chat run.
   runId?: number;
   trigger?: AgentRunTrigger;
+  initiatorUserId?: string | null;
   contextPreamble?: string;
 };
 

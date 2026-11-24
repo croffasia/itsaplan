@@ -52,9 +52,9 @@ function childEnv(config: RunnerConfig, task: Task): Record<string, string> {
 
 // The command gets its own process group (on Windows, its own hidden console), so the
 // Ctrl-C that stops the runner does not reach it — the runner promises to finish what is
-// in flight. The timeout and the member's stop then have to kill that group themselves,
-// or a command that is a pipeline leaves its children behind. Windows cannot signal a
-// group, so taskkill ends the process tree instead.
+// in flight. The timeout and a stop then have to kill that group themselves, or a command
+// that is a pipeline leaves its children behind. Windows cannot signal a group, so
+// taskkill ends the process tree instead.
 function killGroup(pid: number): void {
   if (process.platform === 'win32') {
     // A bare name is looked up in the current directory first, and the agent can write there.
@@ -98,7 +98,7 @@ function stdinText(preset: Preset | undefined, task: Task): string {
 
 // `onData` sees stdout as it arrives, for a caller that reports the output while the
 // command is still running. `signal` ends the command the way the timeout does, for a
-// chat answer the member stopped.
+// run or a chat answer someone stopped.
 export async function execute(
   config: RunnerConfig,
   task: Task,

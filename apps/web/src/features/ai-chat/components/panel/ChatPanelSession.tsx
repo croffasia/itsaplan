@@ -11,13 +11,14 @@ import { cn } from '@/lib/utils';
 import { AiChatSessionBadge } from '../shared/AiChatSessionBadge';
 import { AiChatThread } from '../shared/AiChatThread';
 import { ChatPanelAgentSwitcher } from './ChatPanelAgentSwitcher';
-import { ChatPanelHistory } from './ChatPanelHistory';
+import { ChatPanelNewChat } from './ChatPanelNewChat';
 import { useShownThread } from '../../hooks/useShownThread';
+import { useProviderLabel } from '../../hooks/useProviderLabel';
 import type { ChatSession, ChatSessionState } from '../../hooks/useChatSessions';
 
-// One open session of the chat panel. Every session is mounted, and the ones that are
-// not shown are hidden rather than dropped: that is what keeps their transcript and
-// their composer, and lets a reply run to the end while another session is on screen.
+// One session of the chat. Every session is mounted, and the ones that are not shown are
+// hidden rather than dropped: that is what keeps their transcript and their composer, and
+// lets a reply run to the end while another session is on screen.
 //
 // The thread is keyed by the agent, so picking a different agent for a session starts a
 // fresh conversation with it.
@@ -27,24 +28,22 @@ export function ChatPanelSession({
   agent,
   session,
   active,
-  providerLabel,
   onThreadCreated,
+  onThreadMissing,
   onStateChange,
   onSelectAgent,
-  onSelectThread,
-  onThreadDeleted,
 }: {
   projectKey: string;
+  // The agents offered by the switcher: chat-enabled only, so `agent` (the session's
+  // own, possibly chat-disabled) need not be among them.
   agents: AiAgent[];
   agent: AiAgent;
   session: ChatSession;
   active: boolean;
-  providerLabel: (key: string) => string;
   onThreadCreated: (sessionId: string, threadId: string) => void;
+  onThreadMissing: (threadId: string) => void;
   onStateChange: (sessionId: string, state: ChatSessionState) => void;
   onSelectAgent: (session: ChatSession, agentId: number) => void;
-  onSelectThread: (agentId: number, threadId: string) => void;
-  onThreadDeleted: (threadId: string) => void;
 }) {
   const handleThreadCreated = useCallback(
     (threadId: string) => onThreadCreated(session.id, threadId),
@@ -54,7 +53,8 @@ export function ChatPanelSession({
     (state: ChatSessionState) => onStateChange(session.id, state),
     [session.id, onStateChange],
   );
-  const thread = useShownThread(projectKey, agent.id, session.threadId);
+  const thread = useShownThread(projectKey, session.threadId);
+  const providerLabel = useProviderLabel();
   const t = useTranslations('aiChat');
   // An internal agent with memory off stores no thread and no message, so it has no
   // history to list and its conversation ends with the page.
@@ -68,7 +68,15 @@ export function ChatPanelSession({
         agent={agent}
         threadId={session.threadId}
         onThreadCreated={handleThreadCreated}
+        onThreadMissing={onThreadMissing}
         onStateChange={handleStateChange}
+        empty={
+          <ChatPanelNewChat
+            agents={agents}
+            selected={agent}
+            onSelect={(agentId) => onSelectAgent(session, agentId)}
+          />
+        }
         composerStart={
           <>
             <ChatPanelAgentSwitcher
@@ -78,16 +86,7 @@ export function ChatPanelSession({
               disabled={session.running}
               onSelect={(agentId) => onSelectAgent(session, agentId)}
             />
-            {keepsHistory ? (
-              <ChatPanelHistory
-                projectKey={projectKey}
-                agentId={agent.id}
-                agentName={agent.name}
-                selectedThreadId={session.threadId}
-                onSelect={(threadId) => onSelectThread(agent.id, threadId)}
-                onDeleted={onThreadDeleted}
-              />
-            ) : (
+            {!keepsHistory && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <InputGroupButton
@@ -107,7 +106,11 @@ export function ChatPanelSession({
           </>
         }
         composerEnd={
-          thread?.contextTokens !== undefined && <AgentContextSize tokens={thread.contextTokens} />
+          thread?.contextTokens !== undefined && (
+            <span className="px-1.5">
+              <AgentContextSize tokens={thread.contextTokens} withUnit />
+            </span>
+          )
         }
       />
     </div>

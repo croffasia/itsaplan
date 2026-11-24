@@ -145,6 +145,12 @@ const AGENTS = [
     agent: 'omp',
     files: [{ name: '.mcp.json', code: MCP_JSON }],
   },
+  {
+    id: 'mastracode',
+    label: 'Mastra Code',
+    agent: 'mastracode',
+    files: [{ name: '.mcp.json', code: MCP_JSON }],
+  },
   // A command of its own turns the preset off: the runner then knows nothing about
   // what it runs, keeps no session for it, and hands it the task on stdin.
   {

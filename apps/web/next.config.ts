@@ -8,6 +8,11 @@ const tracingRoot = process.env.WEB_TRACING_ROOT ?? path.join(import.meta.dirnam
 // Where `@/cloud` resolves. Unset, tsconfig resolves it to src/ce, the stubs a
 // self-hosted instance runs.
 const cloudUiEntry = process.env.CLOUD_UI_ENTRY;
+// Hosts besides localhost that may open next dev, such as a tunnel. The dev server
+// refuses the rest, and a page opened from one of them never hydrates.
+const devAllowedOrigins = process.env.DEV_ALLOWED_ORIGINS?.split(',')
+  .map((host) => host.trim())
+  .filter(Boolean);
 
 // Fixed on every response. The Content-Security-Policy is not here: it names the api
 // origin, which is read from the environment at startup (utils/runtimeEnv), while this
@@ -16,7 +21,6 @@ const cloudUiEntry = process.env.CLOUD_UI_ENTRY;
 // unaffected and one behind TLS gets it without a second setting.
 const SECURITY_HEADERS = [
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
-  { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   // Passkeys are the one powerful feature the app uses; the rest is switched off for
@@ -33,16 +37,28 @@ const nextConfig: NextConfig = {
   // standalone build for a lean docker image.
   output: 'standalone',
   poweredByHeader: false,
-  headers: async () => [{ source: '/(.*)', headers: SECURITY_HEADERS }],
+  allowedDevOrigins: devAllowedOrigins,
+  // No page may be framed, except the public ones (/share, /p) on the sites the instance
+  // owner trusts: src/proxy.ts decides those per request.
+  headers: async () => [
+    { source: '/(.*)', headers: SECURITY_HEADERS },
+    {
+      source: '/:path((?!(?:share|p)(?:/|$)).*)',
+      headers: [{ key: 'X-Frame-Options', value: 'DENY' }],
+    },
+  ],
   // Monorepo: include the repo root in file tracing for standalone.
   outputFileTracingRoot: tracingRoot,
   // isomorphic-dompurify loads jsdom on the server, and jsdom reads its own data
   // files (default-stylesheet.css) by a path relative to its module. Bundling it
   // breaks that path, so it is required from node_modules at runtime instead.
   serverExternalPackages: ['isomorphic-dompurify'],
+  // Workspace packages export raw .ts.
+  transpilePackages: ['@repo/editor'],
   // next dev otherwise appends a block of its own to apps/web/AGENTS.md on every
   // start, which leaves the working tree dirty for anyone running the dev server.
   agentRules: false,
+  experimental: { agentUpgrade: 'security' },
   // Every local image is served by app/media. Next 16 refuses a query string on
   // a local image unless its path is listed here; the attachments panel stamps a
   // replaced attachment's URL with one so the optimizer refetches it.

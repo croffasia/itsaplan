@@ -15,11 +15,15 @@ import {
 // with no entry grants nothing.
 export type WorkspaceGrant = 'owner' | Permissions;
 
-// Where a person's access to a team or a project comes from: their membership, or
-// only their role in the workspace that holds it.
-export type AccessVia = 'member' | 'workspace';
+// Where a person's access to a project comes from: their membership, or only their rank
+// in the team that owns it or their role in the workspace that holds it.
+export type AccessVia = 'member' | 'team' | 'workspace';
 
-export const AccessViaSchema = t.Union([t.Literal('member'), t.Literal('workspace')]);
+export const AccessViaSchema = t.Union([
+  t.Literal('member'),
+  t.Literal('team'),
+  t.Literal('workspace'),
+]);
 
 export function readOnlyPermissions(): Permissions {
   const matrix = emptyPermissions();
@@ -29,9 +33,10 @@ export function readOnlyPermissions(): Permissions {
   return matrix;
 }
 
-const grants = new Map<string, WorkspaceGrant>([
+// The admin's matrix is built when it is read, so it holds the resources a build adds.
+const grants = new Map<string, WorkspaceGrant | (() => Permissions)>([
   ['owner', 'owner'],
-  ['admin', readOnlyPermissions()],
+  ['admin', readOnlyPermissions],
 ]);
 
 // Sets what a workspace role grants, or with null that it grants nothing. A build that
@@ -42,7 +47,8 @@ export function setWorkspaceRoleGrant(role: string, grant: WorkspaceGrant | null
 }
 
 export function workspaceRoleGrant(role: string): WorkspaceGrant | null {
-  return grants.get(role) ?? null;
+  const grant = grants.get(role) ?? null;
+  return typeof grant === 'function' ? grant() : grant;
 }
 
 export function mergePermissions(...matrices: (Permissions | null | undefined)[]): Permissions {
@@ -58,28 +64,56 @@ export function mergePermissions(...matrices: (Permissions | null | undefined)[]
   return merged;
 }
 
+// What a person holds in a project without a membership of it.
+export interface ProjectGrant {
+  grant: WorkspaceGrant;
+  via: 'team' | 'workspace';
+}
+
+// What a rank in a team grants in its projects: an owner owns them, a manager reads them.
+function teamRankGrant(rank: TeamStanding | null): WorkspaceGrant | null {
+  if (rank === 'owner') return 'owner';
+  return rank === 'manager' ? readOnlyPermissions() : null;
+}
+
+// The grant of a rank in the project's team and of a role in its workspace, together.
+export function projectGrantOf(
+  rank: TeamStanding | null,
+  workspace: WorkspaceGrant | null,
+): ProjectGrant | null {
+  const team = teamRankGrant(rank);
+  if (!team && !workspace) return null;
+  const via = team ? 'team' : 'workspace';
+  if (team === 'owner' || workspace === 'owner') return { grant: 'owner', via };
+  return { grant: mergePermissions(team, workspace), via };
+}
+
 export interface ProjectAccess {
   role: 'owner' | 'member';
   permissions: Permissions;
   via: AccessVia;
 }
 
-// A project membership raised to the workspace grant. Null when there is neither.
+// A project membership raised to the grant. Null when there is neither.
 export function projectAccess(
   member: { role: 'owner' | 'member'; permissions: Permissions } | null,
-  grant: WorkspaceGrant | null,
+  granted: ProjectGrant | null,
 ): ProjectAccess | null {
-  if (!member && !grant) return null;
-  const via = member ? 'member' : 'workspace';
+  const via = member ? 'member' : granted?.via;
+  if (!via) return null;
+  const grant = granted?.grant ?? null;
   if (member?.role === 'owner' || grant === 'owner') {
     return { role: 'owner', permissions: fullPermissions(), via };
   }
   return { role: 'member', permissions: mergePermissions(member?.permissions, grant), via };
 }
 
+// A team is reached by a membership, or only by a role in the workspace that holds it.
+export type TeamAccessVia = 'member' | 'workspace';
+
 export interface TeamAccess {
   role: TeamStanding;
-  via: AccessVia;
+  via: TeamAccessVia;
   // The matrix the workspace grants, merged into the team permissions of someone who
   // does not run the team. Null when it grants none, and when it makes them its owner.
   grant: Permissions | null;

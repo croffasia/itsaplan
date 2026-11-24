@@ -1,12 +1,11 @@
 import { describe, it, expect } from 'bun:test';
 import type { PinnedRequestInit } from '@repo/net';
-import { AttachmentRejectedError } from '../../attachment-download';
+import { AttachmentRejectedError, nextDownloadHop } from '../../attachment-download';
 import {
   LINEAR_GRAPHQL_URL,
   LinearReader,
   linearRateLimitBackoffMs,
   linearUploadHeaders,
-  nextUploadHop,
 } from '../../linear-adapter';
 import type { LinearIssueNode, LinearScope } from '../../linear-mapping';
 import { SourceRateLimitedError } from '../../reader';
@@ -64,6 +63,41 @@ function issueNode(overrides: Partial<LinearIssueNode> = {}): LinearIssueNode {
     ...overrides,
   };
 }
+
+describe('LinearReader describeSource', () => {
+  it("names a project by Linear's own name and address", async () => {
+    const sent: SentRequest[] = [];
+    const reader = readerAnswering(
+      [
+        Response.json({
+          data: { project: { name: 'Tooling', url: 'https://linear.app/acme/project/tooling-1' } },
+        }),
+      ],
+      sent,
+    );
+    expect(await reader.describeSource()).toEqual({
+      name: 'Tooling',
+      url: 'https://linear.app/acme/project/tooling-1',
+    });
+    expect(graphqlCall(sent[0]!).variables).toEqual({ id: 'proj-tool' });
+  });
+
+  it('names the team, by its workspace and key, for its issues with no project', async () => {
+    const reader = readerAnswering(
+      [
+        Response.json({
+          data: { team: { name: 'Automation', key: 'ATO', organization: { urlKey: 'acme' } } },
+        }),
+      ],
+      [],
+      { teamId: 'team-ato', projectFilter: 'none', projectId: null },
+    );
+    expect(await reader.describeSource()).toEqual({
+      name: 'Automation',
+      url: 'https://linear.app/acme/team/ATO/all',
+    });
+  });
+});
 
 describe('LinearReader requests', () => {
   it('posts the query with the bare API key to Linear and pages until hasNextPage is false', async () => {
@@ -426,11 +460,11 @@ describe('upload helpers', () => {
   });
 
   it('reads a redirect without a location as a refusal', () => {
-    expect(() => nextUploadHop(UPLOAD, 302, null)).toThrow(
+    expect(() => nextDownloadHop('Linear', UPLOAD, 302, null)).toThrow(
       'Linear file storage redirected nowhere',
     );
-    expect(nextUploadHop(UPLOAD, 204, null)).toEqual({ kind: 'download' });
-    expect(nextUploadHop(UPLOAD, 410, null)).toEqual({ kind: 'refused' });
+    expect(nextDownloadHop('Linear', UPLOAD, 204, null)).toEqual({ kind: 'download' });
+    expect(nextDownloadHop('Linear', UPLOAD, 410, null)).toEqual({ kind: 'refused' });
   });
 });
 

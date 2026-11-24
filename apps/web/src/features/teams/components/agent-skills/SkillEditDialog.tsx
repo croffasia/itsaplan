@@ -183,7 +183,7 @@ export function SkillEditDialog({
             <div className="flex items-center gap-2 border-b border-border/60 px-5 py-2.5">
               <span className="font-mono text-xs text-foreground">{selected}</span>
               {dirtyPaths.has(selected) && (
-                <span className="text-[11px] text-muted-foreground">· unsaved</span>
+                <span className="text-[11px] text-muted-foreground">· {t('unsaved')}</span>
               )}
             </div>
             <textarea

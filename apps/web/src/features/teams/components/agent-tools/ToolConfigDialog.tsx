@@ -1,68 +1,126 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
+import { Search } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import type { ConfiguredTool } from '@/lib/api/endpoints/agentTools';
 import type { IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import Modal from '@/components/common/overlay/Modal';
-import { ToolPicker } from './ToolPicker';
-import { ToolCredentialStep } from './ToolCredentialStep';
-import { useTranslations } from 'next-intl';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
+import { EmptyState } from '@/components/common/page/EmptyState';
+import { Input } from '@/components/ui/input';
+import { useAddTools } from '../../hooks/useAddTools';
+import { CredentialDialog } from '../integrations/CredentialDialog';
+import { ToolAddFooter } from './ToolAddFooter';
+import { ToolIntegrationPane } from './ToolIntegrationPane';
+import { ToolRailSection } from './ToolRailSection';
 
-// One catalog tool tagged with the integration it belongs to.
-export interface ToolOption {
-  toolKey: string;
-  label: string;
-  description: string;
-  // OAuth scopes the credential's token must carry for this tool (may be empty).
-  scopes: string[];
-  integrationKey: string;
-  integrationLabel: string;
-  needsCredential: boolean;
-}
-
-// Add configured tools in two steps: pick one or more tools of the same integration from
-// the searchable, grouped catalog (ToolPicker), then pick a credential of that
-// integration to run them on (ToolCredentialStep), unless the integration needs none.
+// Add configured tools: the integrations on one side, those the team can use now
+// first, and the tools of the open one on the other. A selection may span integrations.
+// Each integration's tools are added on one of its credentials, picked in the same
+// view, or on none when the integration needs no credential. An integration the team
+// has no credential for offers to add one, in the credential dialog opened over this one.
+// One that comes with another edition is listed last, its tools shown and not selectable.
 export function ToolConfigDialog({
   teamId,
   teamName,
+  canAddCredential,
   catalog,
+  onAdded,
   onClose,
 }: {
   teamId: number;
   teamName: string;
+  canAddCredential: boolean;
   catalog: IntegrationMeta[];
+  // Given the configured tools the dialog added, before it closes.
+  onAdded?: (tools: ConfiguredTool[]) => void;
   onClose: () => void;
 }) {
   const t = useTranslations('teams.tools');
-  const toolOptions = useMemo<ToolOption[]>(
-    () =>
-      catalog
-        .filter((i) => i.kind === 'tool')
-        .flatMap((i) =>
-          i.tools.map((tool) => ({
-            toolKey: tool.key,
-            label: tool.label,
-            description: tool.description,
-            scopes: tool.scopes ?? [],
-            integrationKey: i.key,
-            integrationLabel: i.label,
-            needsCredential: i.credentialSchema.length > 0,
-          })),
-        ),
-    [catalog],
-  );
-
-  const [tools, setTools] = useState<ToolOption[]>([]);
+  const tools = useAddTools(teamId, catalog, (added) => {
+    onAdded?.(added);
+    onClose();
+  });
+  const { active } = tools;
+  const [connecting, setConnecting] = useState<string | null>(null);
+  const rail = { activeKey: active?.integration.key ?? null, onOpen: tools.open };
 
   return (
-    <Modal title={t('add')} scope={teamName} onClose={onClose} wide>
-      {tools.length > 0 ? (
-        <ToolCredentialStep
+    <Modal title={t('add')} scope={teamName} onClose={onClose} wide="xl" flush>
+      <div className="flex h-[min(680px,72vh)] min-h-0 flex-col">
+        <div className="relative mx-6 mb-4">
+          <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            autoFocus
+            autoComplete="off"
+            value={tools.query}
+            onChange={(e) => tools.setQuery(e.target.value)}
+            placeholder={t('search')}
+            className="ps-9"
+          />
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col border-t sm:flex-row">
+          {tools.loading ? (
+            <ListSkeleton rows={6} className="flex-1 p-4" />
+          ) : !active ? (
+            <EmptyState
+              title={t('nothingFound')}
+              description={t('noMatches', { query: tools.query.trim() })}
+            />
+          ) : (
+            <>
+              <nav className="max-h-40 shrink-0 overflow-y-auto border-b px-2 pb-2 sm:max-h-none sm:w-64 sm:border-e sm:border-b-0">
+                <ToolRailSection
+                  title={t('readyToUse')}
+                  entries={tools.entries.filter((e) => e.ready)}
+                  {...rail}
+                />
+                <ToolRailSection
+                  title={t('needsCredential')}
+                  entries={tools.entries.filter((e) => !e.ready && !e.integration.locked)}
+                  {...rail}
+                />
+                <ToolRailSection
+                  title={t('lockedSection')}
+                  entries={tools.entries.filter((e) => e.integration.locked)}
+                  {...rail}
+                />
+              </nav>
+              <ToolIntegrationPane
+                entry={active}
+                selected={tools.selected}
+                onAddCredential={
+                  canAddCredential ? () => setConnecting(active.integration.key) : undefined
+                }
+                onToggle={tools.toggle}
+                onCredential={(id) => tools.setCredential(active.integration.key, id)}
+              />
+            </>
+          )}
+        </div>
+
+        <div className="border-t px-6 py-3.5">
+          <ToolAddFooter
+            pending={tools.pending}
+            busy={tools.busy}
+            onClear={tools.clear}
+            onCancel={onClose}
+            onSubmit={tools.submit}
+          />
+        </div>
+      </div>
+      {connecting && (
+        <CredentialDialog
           teamId={teamId}
-          tools={tools}
-          onBack={() => setTools([])}
-          onDone={onClose}
+          teamName={teamName}
+          catalog={catalog}
+          existing={null}
+          integration={connecting}
+          onClose={(created) => {
+            if (created) tools.setCredential(created.integrationKey, created.id);
+            setConnecting(null);
+          }}
         />
-      ) : (
-        <ToolPicker options={toolOptions} onSubmit={setTools} />
       )}
     </Modal>
   );

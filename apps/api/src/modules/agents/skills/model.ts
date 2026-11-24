@@ -9,7 +9,7 @@ export const skillParams = t.Object({
 });
 
 const refPath = t.String({
-  description: "Reference file path from the skill's files, e.g. 'refs/example.md'.",
+  description: "Reference file path, such as 'refs/example.md'.",
 });
 
 export const refPathQuery = t.Object({ path: refPath });
@@ -37,7 +37,21 @@ export const SkillListResponse = t.Array(SkillResponse);
 
 export const SkillPageResponse = pageResponse(SkillResponse);
 
-export const skillListQuery = t.Object(pageQueryFields);
+export const skillListQuery = t.Object({
+  search: t.Optional(
+    t.String({
+      maxLength: 200,
+      description: 'Matches skill name or description.',
+    }),
+  ),
+  source: t.Optional(
+    t.String({
+      pattern: '^(upload|inline|github)(,(upload|inline|github))*$',
+      description: 'Comma-separated sources. Omit for all.',
+    }),
+  ),
+  ...pageQueryFields,
+});
 
 export const SkillMarkdownResponse = t.Object({ markdown: t.String() });
 
@@ -68,36 +82,34 @@ export const createSkillBody = t.Object({
     t.Nullable(t.String({ description: 'Defaults to the SKILL.md frontmatter description.' })),
   ),
   markdown: t.Optional(
-    t.String({ description: "SKILL.md content; required unless source is 'github'." }),
+    t.String({ description: "SKILL.md content. Required unless source is 'github'." }),
   ),
   sourceUrl: t.Optional(
     t.Nullable(
       t.String({
         description:
-          "GitHub URL of one skill folder or SKILL.md, from discover_github_skills; required for source 'github'.",
+          'GitHub URL of one skill folder or SKILL.md, from ' +
+          "discover_github_skills. Required for source 'github'.",
       }),
     ),
   ),
 });
 
 export const updateSkillBody = t.Object({
-  name: t.Optional(t.String({ minLength: 1, description: 'New skill name.' })),
-  description: t.Optional(
-    t.String({ description: 'New one-line description of what the skill is for.' }),
-  ),
-  markdown: t.Optional(t.String({ description: 'Replaces the SKILL.md content whole.' })),
+  name: t.Optional(t.String({ minLength: 1 })),
+  description: t.Optional(t.String({ description: 'One line on what the skill is for.' })),
+  markdown: t.Optional(t.String({ description: 'Replaces the whole SKILL.md.' })),
 });
 
 export const uploadReferenceBody = t.Object({ file: t.File() });
 
 export const updateReferenceBody = t.Object({
   path: refPath,
-  content: t.String({ description: 'The new file text.' }),
+  content: t.String(),
 });
 
 export const setAgentSkillsBody = t.Object({
   skillIds: t.Array(t.Number(), {
-    description:
-      'Skill ids from list_agent_skills. Replaces the whole set, so send every skill that stays enabled.',
+    description: 'Skill ids from list_agent_skills. Replaces the whole set.',
   }),
 });

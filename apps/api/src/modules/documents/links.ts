@@ -6,7 +6,8 @@ import {
   projectDocumentInitiative,
   projectDocumentIssue,
 } from '@repo/db';
-import { and, asc, eq, or } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
+import { documentVisibleTo } from './access';
 import { HttpError } from '#shared/lib';
 
 export interface DocumentIssueLinkRow {
@@ -15,6 +16,12 @@ export interface DocumentIssueLinkRow {
   identifier: string;
   title: string;
   archived: boolean;
+  createdAt: string;
+}
+
+export interface DocumentInitiativeLinkRow {
+  initiativeId: number;
+  title: string;
   createdAt: string;
 }
 
@@ -47,9 +54,6 @@ function documentLinkRow(row: {
   };
 }
 
-const documentAccess = (userId: string) =>
-  or(eq(projectDocument.isPrivate, false), eq(projectDocument.ownerUserId, userId));
-
 async function visibleDocument(
   projectId: number,
   documentId: number,
@@ -69,7 +73,7 @@ async function visibleDocument(
       and(
         eq(projectDocument.id, documentId),
         eq(projectDocument.projectId, projectId),
-        documentAccess(userId),
+        documentVisibleTo(userId),
       ),
     )
     .limit(1);
@@ -132,7 +136,7 @@ export async function listIssueDocumentLinks(
       and(
         eq(projectDocumentIssue.issueId, issueId),
         eq(projectDocument.projectId, projectId),
-        documentAccess(userId),
+        documentVisibleTo(userId),
       ),
     )
     .orderBy(asc(projectDocument.title), asc(projectDocument.id));
@@ -215,6 +219,30 @@ export async function removeDocumentIssueLink(input: {
   });
 }
 
+export async function listDocumentInitiativeLinks(
+  projectId: number,
+  documentId: number,
+  userId: string,
+): Promise<DocumentInitiativeLinkRow[] | null> {
+  if (!(await visibleDocument(projectId, documentId, userId))) return null;
+  const rows = await db
+    .select({
+      initiativeId: initiative.id,
+      title: initiative.title,
+      createdAt: projectDocumentInitiative.createdAt,
+    })
+    .from(projectDocumentInitiative)
+    .innerJoin(initiative, eq(initiative.id, projectDocumentInitiative.initiativeId))
+    .where(
+      and(
+        eq(projectDocumentInitiative.documentId, documentId),
+        eq(initiative.projectId, projectId),
+      ),
+    )
+    .orderBy(asc(initiative.title), asc(initiative.id));
+  return rows.map((row) => ({ ...row, createdAt: row.createdAt.toISOString() }));
+}
+
 export async function listInitiativeDocumentLinks(
   projectId: number,
   initiativeId: number,
@@ -242,7 +270,7 @@ export async function listInitiativeDocumentLinks(
       and(
         eq(projectDocumentInitiative.initiativeId, initiativeId),
         eq(projectDocument.projectId, projectId),
-        documentAccess(userId),
+        documentVisibleTo(userId),
       ),
     )
     .orderBy(asc(projectDocument.title), asc(projectDocument.id));

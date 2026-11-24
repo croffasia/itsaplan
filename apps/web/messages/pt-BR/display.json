@@ -59,7 +59,13 @@
     "month": "Mês",
     "quarter": "Trimestre"
   },
+  "calendarModes": {
+    "month": "Mês",
+    "byDay": "Por dia",
+    "byWeek": "Por semana"
+  },
   "weekStart": {
+    "6": "Sábado",
     "0": "Domingo",
     "1": "Segunda-feira"
   },
@@ -75,21 +81,34 @@
     "ordering": "Ordenação",
     "ascending": "Crescente",
     "descending": "Decrescente",
-    "showEmptyColumns": "Mostrar colunas vazias",
-    "showEmptyGroups": "Mostrar grupos vazios",
-    "showLinks": "Mostrar links",
-    "separateSubtaskCards": "Mostrar subtarefas como cards separados",
-    "separateSubtaskRows": "Mostrar subtarefas como linhas separadas",
-    "startSubtasksCollapsed": "Começar com subtarefas recolhidas",
-    "showNestedSubtasks": "Mostrar subtarefas aninhadas",
-    "nestedSubtasks": "Subtarefas aninhadas",
-    "displayProperties": "Exibir propriedades",
+    "emptyColumns": "Colunas vazias",
+    "emptyGroups": "Grupos vazios",
+    "links": "Links",
+    "separateCards": "Como cards separados",
+    "separateRows": "Como linhas separadas",
+    "nestedInCard": "Dentro do card pai",
+    "nestedInRow": "Dentro da linha pai",
+    "subtasksCollapsed": "Começar recolhidas",
+    "groupsCollapsed": "Grupos começam recolhidos",
     "placeBy": "Posicionar por",
-    "startWeekOn": "Iniciar semana em",
-    "startCollapsed": "Começar com grupos recolhidos",
+    "mode": "Modo",
+    "daysShown": "Dias na tela",
+    "weeksShown": "Semanas na tela",
+    "splitByDay": "Dividir por dia",
+    "weekStartsOn": "Início da semana",
     "scale": "Escala",
-    "addCustomField": "Adicionar campo personalizado",
+    "dragToReorder": "Arraste para reordenar",
+    "customField": "Campo personalizado",
     "viewIcon": "Ícone da visão"
+  },
+  "sections": {
+    "board": "Quadro",
+    "rows": "Linhas",
+    "show": "Mostrar",
+    "subtasks": "Subtarefas",
+    "cardProperties": "Propriedades do card",
+    "columns": "Colunas",
+    "dates": "Datas"
   },
   "layoutCommand": "Layout {layout}"
 }

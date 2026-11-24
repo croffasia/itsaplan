@@ -1,6 +1,8 @@
-import { describe, expect, it } from 'bun:test';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import pkg from '../../../../../package.json';
 import { app } from '../helpers/app';
+import { signUpTestUser } from '../helpers/auth';
+import { resetDb } from '../helpers/db';
 
 type Operation = {
   description?: string;
@@ -16,8 +18,18 @@ type Document = {
   paths: Record<string, Record<string, Operation>>;
 };
 
+// The document is served to a signed-in reader only.
+let cookie = '';
+
+beforeEach(async () => {
+  await resetDb();
+  cookie = (await signUpTestUser()).cookie;
+});
+
 async function document(): Promise<Document> {
-  const response = await app.handle(new Request('http://localhost/docs/json'));
+  const response = await app.handle(
+    new Request('http://localhost/docs/json', { headers: { cookie } }),
+  );
   expect(response.status).toBe(200);
   return (await response.json()) as Document;
 }

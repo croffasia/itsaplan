@@ -3,6 +3,8 @@ import {
   agentTool,
   aiAgent,
   db,
+  insertOwnedTeam,
+  isReservedSlug,
   teamWorkspaceId,
   integrationCredential,
   issue,
@@ -20,10 +22,11 @@ import {
 } from '@repo/db';
 import { and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { HttpError, iso, pgErrorCode } from '#shared/lib';
-import { isReservedSlug, projectRefSql, teamRef } from './ref';
+import { projectRefSql, teamRef } from './ref';
 import { getLimits } from '#shared/limits';
-import { defaultMemberPermissions, fullPermissions, type Permissions } from '#shared/permissions';
+import { fullPermissions, type Permissions } from '#shared/permissions';
 import {
+  dropShares,
   getMemberContext,
   getMembership,
   getMembershipSource,
@@ -39,7 +42,7 @@ import { teamSkillObjectKeys } from '#modules/agents/skills/service';
 import { deleteObjects } from '@repo/storage';
 import {
   assertMayCreateTeam,
-  projectWorkspaceGrant,
+  projectGrant,
   workspaceGrant,
   workspaceGrants,
   workspaceHoldsWork,
@@ -49,6 +52,7 @@ import {
   projectAccess,
   teamAccess,
   type AccessVia,
+  type TeamAccessVia,
 } from '#shared/workspace-roles';
 
 // The rank a person holds in a team.
@@ -80,7 +84,7 @@ export interface TeamRow {
   role: TeamStanding;
   // 'workspace' when the caller is not in the team and reaches it through their role
   // in its workspace. Their source and joinedAt are then the team's defaults.
-  via: AccessVia;
+  via: TeamAccessVia;
   // How the caller's own membership came about. 'scim' is the identity provider's, and
   // is left there rather than here.
   source: MemberSource;
@@ -116,8 +120,8 @@ export interface TeamMemberRow {
   joinedAt: string;
 }
 
-// A project the team owns. `isMember` is the caller's own access to it: a team
-// member sees every project of the team, but only opens the ones they belong to.
+// A project the team owns. `isMember` is whether the caller has a membership of it; whoever
+// runs the team opens it without one.
 export interface TeamProjectRow {
   id: number;
   key: string;
@@ -180,14 +184,13 @@ export interface TeamProjectDetail {
   // happened in it yet.
   lastActivityAt: string | null;
   stats: StatsDto;
-  // The reader's access to this project, or null when they only reach it through the
-  // team. What they may do with its members is decided from it.
+  // The reader's access to this project, which decides what they may do with its members.
   viewer: {
     role: MemberRole;
     via: AccessVia;
     source: MemberSource;
     permissions: Permissions;
-  } | null;
+  };
 }
 
 // One page of the team's members, with how many match the search.
@@ -697,22 +700,20 @@ export async function teamOwnsProject(teamId: number, projectId: number): Promis
 }
 
 // One project the team owns, with its issue stats and the reader's standing in it.
-// Returns null when the project is not owned by the team, and when the caller
-// neither runs the team nor belongs to the project, so the route answers 404 in both
-// cases.
+// Returns null when the project is not owned by the team, and when the caller has no
+// access to it, so the route answers 404 in both cases.
 export async function getTeamProject(
   teamId: number,
   projectId: number,
   userId: string,
-  standing: TeamStanding,
 ): Promise<TeamProjectDetail | null> {
   if (!(await teamOwnsProject(teamId, projectId))) return null;
 
   const viewer = projectAccess(
     await getMemberContext(projectId, userId),
-    await projectWorkspaceGrant(projectId, userId),
+    await projectGrant(projectId, userId),
   );
-  if (!runsTeam(standing) && !viewer) return null;
+  if (!viewer) return null;
 
   const [activity, stats, source] = await Promise.all([
     lastActivityAt(projectId),
@@ -723,14 +724,7 @@ export async function getTeamProject(
   return {
     lastActivityAt: activity,
     stats,
-    viewer: viewer
-      ? {
-          role: viewer.role,
-          via: viewer.via,
-          source: source ?? 'invite',
-          permissions: viewer.permissions,
-        }
-      : null,
+    viewer: { ...viewer, source: source ?? 'invite' },
   };
 }
 
@@ -741,15 +735,10 @@ export async function listTeamProjectMembers(
   teamId: number,
   projectId: number,
   userId: string,
-  standing: TeamStanding,
   options: MemberFilters & { limit: number; offset: number },
 ): Promise<TeamProjectMemberPage | null> {
   if (!(await teamOwnsProject(teamId, projectId))) return null;
-  if (
-    !runsTeam(standing) &&
-    !(await getMembership(projectId, userId)) &&
-    !(await projectWorkspaceGrant(projectId, userId))
-  ) {
+  if (!(await getMembership(projectId, userId)) && !(await projectGrant(projectId, userId))) {
     return null;
   }
 
@@ -776,28 +765,6 @@ export async function listTeamProjectMembers(
 }
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
-
-// Writes a team owned by one account, with the default role its projects assign.
-export async function insertOwnedTeam(
-  tx: Transaction,
-  workspaceId: number,
-  name: string,
-  ownerId: string,
-  slug: string | null = null,
-) {
-  const [row] = await tx.insert(team).values({ workspaceId, name, slug }).returning();
-  const [membership] = await tx
-    .insert(teamMember)
-    .values({ teamId: row.id, userId: ownerId, role: 'owner' })
-    .returning();
-  await tx.insert(teamRole).values({
-    teamId: row.id,
-    name: 'Member',
-    isDefault: true,
-    permissions: defaultMemberPermissions(),
-  });
-  return { team: row, membership };
-}
 
 // The people across the workspace's teams, which is what a seat ceiling counts. An
 // agent's bot user sits in a member list but takes no seat.
@@ -1025,6 +992,7 @@ async function dropTeamMembership(tx: Transaction, teamId: number, userId: strin
   await tx
     .delete(projectMember)
     .where(and(eq(projectMember.userId, userId), inArray(projectMember.projectId, teamProjects)));
+  await dropShares(tx, userId, teamProjects);
   // A pending invite this member created outlives them otherwise, keeping the
   // registration gate open on their behalf after they were removed.
   await tx

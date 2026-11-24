@@ -25,6 +25,7 @@ export const agentRunTrigger = t.Union([
   t.Literal('manual'),
   t.Literal('status'),
   t.Literal('event'),
+  t.Literal('api'),
 ]);
 
 export type AgentRunTrigger = typeof agentRunTrigger.static;
@@ -36,6 +37,13 @@ export const runContextTokens = t.Optional(
     description:
       'The tokens the last model call of this run read and wrote. Absent for a run that ' +
       'finished before this was recorded and for one whose agent reports no counts.',
+  }),
+);
+
+export const runReceivedAt = t.Nullable(
+  t.String({
+    description:
+      "When the agent first took the run. Null for a run an external agent never received, as one its endpoint refused, and for an internal agent's run.",
   }),
 );
 
@@ -65,6 +73,7 @@ export const contextUsageBody = t.Optional(
 // set by a search: the text around the hit, and where it was found.
 export type ChatThreadSummary = {
   id: string;
+  agentId: number;
   title: string | null;
   cliSessionId: string | null;
   contextTokens?: number | null;

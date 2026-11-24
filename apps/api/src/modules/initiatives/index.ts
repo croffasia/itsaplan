@@ -1,11 +1,11 @@
 import { Elysia, t } from 'elysia';
 import { mcpImageTool, mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
-import { guards, entityGuard } from '#shared/guards';
+import { guards, entityGuard, requiresPermission } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
-import { requireUser } from '#shared/access';
+import { readableProjectIds, requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
-import { commonErrors, errors } from '#shared/responses';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { paginate } from '#shared/pagination';
 import { deleteObjects } from '@repo/storage';
 import {
@@ -32,22 +32,28 @@ import {
   InitiativeOptionListResponse,
   InitiativePageResponse,
   InitiativeResponse,
+  InitiativeSearchHitListResponse,
   createInitiativeBody,
   initiativeFeedQuery,
   initiativeOptionsQuery,
   initiativeParams,
   listInitiativesQuery,
+  searchInitiativesQuery,
   updateInitiativeBody,
 } from './model';
 import {
   listInitiatives,
+  listFavoriteInitiatives,
   listInitiativeOptions,
+  searchInitiativesInProjects,
   initiativeStatusCounts,
   getInitiative,
   getInitiativeProjectId,
   createInitiative,
   updateInitiative,
   deleteInitiative,
+  addFavoriteInitiative,
+  removeFavoriteInitiative,
 } from './service';
 import {
   createInitiativeAttachment,
@@ -100,7 +106,7 @@ export const initiativeRoutes = new Elysia({
 
   .get(
     '/projects/:projectKey/initiatives',
-    ({ project, query }) => {
+    ({ project, query, user }) => {
       const statuses = query.status
         ? query.status
             .split(',')
@@ -108,13 +114,17 @@ export const initiativeRoutes = new Elysia({
             .filter(Boolean)
         : undefined;
       return paginate(query, (window) =>
-        listInitiatives(project.id, {
-          statuses,
-          search: query.search,
-          sort: query.sort,
-          dir: query.dir,
-          ...window,
-        }),
+        listInitiatives(
+          project.id,
+          {
+            statuses,
+            search: query.search,
+            sort: query.sort,
+            dir: query.dir,
+            ...window,
+          },
+          requireUser(user).id,
+        ),
       );
     },
     {
@@ -124,8 +134,22 @@ export const initiativeRoutes = new Elysia({
       response: { 200: InitiativePageResponse, ...commonErrors },
       detail: {
         summary: 'List initiatives',
-        description: "List a project's initiatives, filtered, sorted and paged.",
+        description: "List a project's initiatives.",
         ...mcpTool('list_initiatives'),
+      },
+    },
+  )
+
+  .get(
+    '/projects/:projectKey/initiatives/favorites',
+    ({ project, user }) => listFavoriteInitiatives(project.id, requireUser(user).id),
+    {
+      permission: ['initiatives', 'read'],
+      feature: 'initiatives',
+      response: { 200: InitiativeOptionListResponse, ...accessErrors },
+      detail: {
+        summary: 'List favorite initiatives',
+        description: "List the caller's favorite initiatives in a project.",
       },
     },
   )
@@ -180,10 +204,38 @@ export const initiativeRoutes = new Elysia({
     },
   )
 
+  // The command palette's search. This route comes before /initiatives/:initiativeId so
+  // the static "search" segment wins over the numeric param.
+  .get(
+    '/initiatives/search',
+    async ({ user, query }) => {
+      // An archived project stays readable, so its own initiatives are found once it is
+      // named; the search over every project leaves it out, as the issue search does.
+      const ids = await readableProjectIds(requireUser(user).id, [['initiatives', 'read']], {
+        includeArchived: query.projectId != null,
+      });
+      return searchInitiativesInProjects(
+        ids.filter((id) => query.projectId == null || id === query.projectId),
+        query.q,
+      );
+    },
+    {
+      query: searchInitiativesQuery,
+      response: { 200: InitiativeSearchHitListResponse, ...errors(400, 401) },
+      detail: {
+        summary: 'Search initiatives in all projects',
+        description:
+          'Search the initiatives of every project you can read them in by title, the 20 most ' +
+          'recently updated first. projectId narrows the search to one project.',
+        ...requiresPermission(['initiatives', 'read']),
+      },
+    },
+  )
+
   .get(
     '/initiatives/:initiativeId',
-    async ({ params }) => {
-      const found = await getInitiative(params.initiativeId);
+    async ({ params, user }) => {
+      const found = await getInitiative(params.initiativeId, requireUser(user).id);
       if (!found) throw new HttpError(404, 'Initiative not found');
       return found;
     },
@@ -193,8 +245,43 @@ export const initiativeRoutes = new Elysia({
       response: { 200: InitiativeResponse, ...commonErrors },
       detail: {
         summary: 'Get an initiative',
-        description: 'Get an initiative by its numeric id.',
+        description: 'Get an initiative by id.',
         ...mcpTool('get_initiative'),
+      },
+    },
+  )
+
+  // Favorites are the caller's own, so reading the initiative is enough to mark one.
+  .put(
+    '/initiatives/:initiativeId/favorite',
+    async ({ params, user }) => {
+      await addFavoriteInitiative(params.initiativeId, requireUser(user).id);
+      return noContent();
+    },
+    {
+      params: initiativeParams,
+      initiative: 'read',
+      response: { 204: t.Void(), ...commonErrors },
+      detail: {
+        summary: 'Favorite an initiative',
+        description: "Add an initiative to the caller's favorites.",
+      },
+    },
+  )
+
+  .delete(
+    '/initiatives/:initiativeId/favorite',
+    async ({ params, user }) => {
+      await removeFavoriteInitiative(params.initiativeId, requireUser(user).id);
+      return noContent();
+    },
+    {
+      params: initiativeParams,
+      initiative: 'read',
+      response: { 204: t.Void(), ...commonErrors },
+      detail: {
+        summary: 'Unfavorite an initiative',
+        description: "Remove an initiative from the caller's favorites.",
       },
     },
   )
@@ -214,8 +301,7 @@ export const initiativeRoutes = new Elysia({
       response: { 200: InitiativeResponse, ...commonErrors },
       detail: {
         summary: 'Update an initiative',
-        description:
-          "Update an initiative by its numeric id. labelIds replaces the initiative's labels.",
+        description: 'Update an initiative. labelIds replaces its labels.',
         ...mcpTool('update_initiative'),
       },
     },
@@ -237,7 +323,7 @@ export const initiativeRoutes = new Elysia({
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete an initiative',
-        description: 'Delete an initiative by its numeric id. Irreversible.',
+        description: 'Permanently delete an initiative.',
         ...mcpTool('delete_initiative'),
       },
     },
@@ -264,7 +350,7 @@ export const initiativeRoutes = new Elysia({
       response: { 200: FeedPageResponse, ...commonErrors },
       detail: {
         summary: 'Get an initiative feed',
-        description: "Get an initiative's activity feed by its numeric id.",
+        description: "Get an initiative's activity feed.",
         ...mcpTool('list_initiative_activity'),
       },
     },
@@ -279,7 +365,7 @@ export const initiativeRoutes = new Elysia({
       response: { 200: AttachmentListResponse, ...commonErrors },
       detail: {
         summary: 'List initiative attachments',
-        description: "List an initiative's attachments by its numeric id.",
+        description: "List an initiative's attachments.",
         ...mcpTool('list_initiative_attachments'),
       },
     },
@@ -296,8 +382,8 @@ export const initiativeRoutes = new Elysia({
       detail: {
         summary: 'View the images of an initiative',
         description:
-          `Look at the images attached to an initiative, by its numeric id: ${VIEWABLE_IMAGES}. ` +
-          'Every other attachment comes back in `others` with its url.',
+          `Show the images attached to an initiative: ${VIEWABLE_IMAGES}. ` +
+          'Other attachments are returned in `others` with their url.',
         ...mcpImageTool('view_initiative_images'),
       },
     },

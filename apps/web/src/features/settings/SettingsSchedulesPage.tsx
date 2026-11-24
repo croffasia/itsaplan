@@ -6,7 +6,7 @@ import { settingsSection } from '@/utils/settingsSections';
 import { useSettingsSectionText } from '@/hooks/useSectionLabels';
 import SectionPageView from '@/components/common/page/SectionPageView';
 import RequirePermission from '@/components/common/permissions/RequirePermission';
-import { useProjectAgents } from '@/hooks/useProjectAgents';
+import { useAgentDirectory } from '@/hooks/useProjectAgents';
 import { SettingsResourceProvider } from './context/settingsPermission';
 import { SettingsHeaderAddButton } from './components/crud/SettingsHeaderAddButton';
 import SettingsSchedules from './components/schedules/SettingsSchedules';
@@ -21,7 +21,7 @@ export default function SettingsSchedulesPage() {
   const sectionText = useSettingsSectionText()(section.slug);
   const { project } = useShell();
   const [addNew, setAddNew] = useState(false);
-  const agents = useProjectAgents().data ?? [];
+  const agents = useAgentDirectory().data ?? [];
   if (!project) return null;
   return (
     <SectionPageView

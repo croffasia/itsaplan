@@ -1,5 +1,6 @@
 {
   "newIssue": "Yeni iş",
+  "addWorkItem": "İş maddesi ekle",
   "pin": "Sabitle",
   "unpin": "Sabitlemeyi kaldır",
   "collapse": "Daralt",
@@ -44,6 +45,12 @@
   "calendar": {
     "previousMonth": "Önceki ay",
     "nextMonth": "Sonraki ay",
+    "previousWeek": "Önceki hafta",
+    "nextWeek": "Sonraki hafta",
+    "previousDays": "{count, plural, other {Önceki # gün}}",
+    "nextDays": "{count, plural, other {Sonraki # gün}}",
+    "weekNumber": "{number}. hafta",
+    "range": "{from} – {to}",
     "today": "Bugün",
     "moreIssues": "+{count} daha",
     "issueCount": "{count, plural, one {# iş} other {# iş}}",
@@ -67,8 +74,13 @@
       "custom": "Tüm işlerin tarihi var."
     }
   },
+  "empty": {
+    "title": "İş yok",
+    "description": "İşler burada görünecek.",
+    "filteredTitle": "Eşleşen iş yok",
+    "filteredDescription": "Daha fazlasını görmek için filtreleri değiştirin."
+  },
   "timeline": {
-    "empty": "Zaman çizelgesine yerleştirilecek henüz iş yok.",
     "expandGroup": "Grubu genişlet",
     "collapseGroup": "Grubu daralt",
     "inferredStart": "Başlangıç oluşturulma tarihine göre belirlendi",
@@ -92,20 +104,20 @@
   },
   "removal": {
     "archive": {
-      "title": "{count, plural, one {İşi arşivle} other {İşleri arşivle}}",
+      "title": "{count, plural, other {# iş arşivlensin mi?}}",
       "confirm": "{count, plural, one {# işi arşivle} other {# işi arşivle}}",
-      "description": "{count, plural, one {Seçilen # iş arşivlensin mi? Panodan kaldırılır ve daha sonra geri yüklenebilir.} other {Seçilen # iş arşivlensin mi? Panodan kaldırılır ve daha sonra geri yüklenebilir.}}"
+      "description": "Panodan kaldırılır ve daha sonra geri yüklenebilir."
     },
     "delete": {
-      "title": "{count, plural, one {İşi sil} other {İşleri sil}}",
+      "title": "{count, plural, other {# iş silinsin mi?}}",
       "confirm": "{count, plural, one {# işi sil} other {# işi sil}}",
-      "description": "{count, plural, one {Seçilen # iş silinsin mi?} other {Seçilen # iş silinsin mi?}} Bu işlem yorumları, etkinlik geçmişini ve ekleri de kalıcı olarak kaldıracaktır. Bu işlem geri alınamaz."
+      "description": "Yorumları, etkinlik geçmişi ve ekleri de silinecek. Bu işlem geri alınamaz."
     }
   },
   "share": {
     "issueTitle": "İş",
     "issueUnavailable": "Bu işe ulaşılamıyor.",
-    "boardUnavailable": "Paylaşılan panoya ulaşılamıyor. Bağlantı iptal edilmiş olabilir."
+    "boardUnavailable": "Paylaşılan panoya ulaşılamıyor. Bağlantı iptal edilmiş ya da süresi dolmuş olabilir."
   },
   "groups": {
     "noAssignee": "Sorumlu atanmamış",

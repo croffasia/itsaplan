@@ -1,4 +1,12 @@
-import { LayoutGrid, ListChecks, MessagesSquare, Plus, SquarePlus, Target } from 'lucide-react';
+import {
+  CirclePlay,
+  LayoutGrid,
+  ListChecks,
+  MessagesSquare,
+  Plus,
+  SquarePlus,
+  Target,
+} from 'lucide-react';
 import type { Project } from '@/lib/api/endpoints/projects';
 import { useTranslations } from 'next-intl';
 import { VIEWS, type WorkItemsView } from '@/utils/viewTypes';
@@ -24,6 +32,7 @@ export function useAppCommands({
   onNewProject,
   onSelectProject,
   onToggleChat,
+  onToggleRuns,
 }: {
   hasProject: boolean;
   initiativesEnabled: boolean;
@@ -40,6 +49,7 @@ export function useAppCommands({
   onNewProject: (() => void) | null;
   onSelectProject: (key: string) => void;
   onToggleChat: () => void;
+  onToggleRuns: () => void;
 }): {
   board: CommandSection | null;
   general: CommandSection | null;
@@ -105,6 +115,14 @@ export function useAppCommands({
       keywords: 'ai agents chat panel',
       shortcut: hotkey('chat.toggle') ?? undefined,
       run: onToggleChat,
+    });
+    generalItems.push({
+      id: 'general.agent-runs',
+      label: tPalette('toggleRuns'),
+      icon: <CirclePlay />,
+      keywords: 'ai agents runs queue history panel',
+      shortcut: hotkey('runs.toggle') ?? undefined,
+      run: onToggleRuns,
     });
   }
   if (onNewProject) {

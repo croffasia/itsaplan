@@ -11,11 +11,19 @@ import {
   issueFieldOption,
   issueAttachment,
   issueKeyAlias,
+  issueWorklog,
   customField,
   customFieldOption,
   initiative,
   cycle,
+  team,
+  issueLink,
+  MAX_SUBTASK_DEPTH,
+  lockIssueTree,
+  parentLinkProblem,
+  type DbExecutor,
 } from '@repo/db';
+import { alias } from 'drizzle-orm/pg-core';
 import {
   and,
   eq,
@@ -32,10 +40,12 @@ import {
   or,
   sql,
   type SQL,
+  type SQLWrapper,
 } from 'drizzle-orm';
 import type { IssueQuery } from '#modules/agents/core/issue-query';
-import { iso, num, numOrNull, HttpError } from '#shared/lib';
+import { iso, num, numOrNull, shareLive, HttpError } from '#shared/lib';
 import type { ProjectRow } from '#modules/projects/service';
+import { projectRefSql } from '#modules/teams/ref';
 import { assertProjectFeature } from '#shared/access';
 import {
   getCustomFieldById,
@@ -46,9 +56,11 @@ import {
 import {
   recordActivity,
   recordActivityEntries,
+  textSide,
   logIssueUpdate,
   labelNames,
   actorId,
+  isOutsideAuthor,
   type ActivityActor,
   userName,
   rowSide,
@@ -69,10 +81,17 @@ import {
 } from '#modules/agents/core/service';
 import { getInitiativeProjectId } from '#modules/initiatives/service';
 import { cycleStatus, getCycleRef, type CycleStatus } from '#modules/cycles/service';
-import { getMembership } from '#modules/members/service';
+import {
+  assertAssignmentEligibility,
+  getAssignmentEligibility,
+  getMembership,
+} from '#modules/members/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
+import { runOrigin } from '#modules/agents/core/run-initiator';
+import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 import { queueStatusRuns } from '#modules/agents/schedules/issue-runs';
 import { applySubtaskAutomation } from './automation';
+import { pushLinkedIssueState } from '#modules/git/issue-sync';
 import { assertWipLimit, columnAutoAssignee, wipLimitBreach } from '#modules/columns/service';
 
 // Data access for issues and their per-issue data: labels, custom field values,
@@ -108,8 +127,7 @@ export interface IssueRow {
   assigneeUserId: string | null;
   delegateUserId: string | null;
   columnId: number;
-  // The issue this one is a subtask of, or null when it stands on its own. One
-  // level deep: an issue with a parent cannot itself have subtasks.
+  // The issue this one is a subtask of, or null when it stands on its own.
   parentId: number | null;
   title: string;
   description: string;
@@ -141,6 +159,9 @@ export interface IssueRow {
   // activity) or only its title, description, state, type, priority, dates,
   // subtasks and links.
   shareExtended: boolean;
+  // When the share link stops working, or null when it never does. A link past
+  // its expiry reads as not shared (shareToken null) even before the sweep clears it.
+  shareExpiresAt: string | null;
   labelIds: number[];
   // Custom field values set on this issue, one entry per field that has a scalar
   // value or selected options (unset fields are omitted). Included so the planner
@@ -150,6 +171,7 @@ export interface IssueRow {
 }
 
 function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow {
+  const shared = row.shareToken !== null && shareLive(row.shareExpiresAt);
   return {
     id: row.id,
     projectId: row.projectId,
@@ -175,8 +197,9 @@ function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow 
     updatedAt: iso(row.updatedAt),
     archivedAt: row.archivedAt ? iso(row.archivedAt) : null,
     statusSince: iso(row.createdAt),
-    shareToken: row.shareToken,
-    shareExtended: row.shareExtended,
+    shareToken: shared ? row.shareToken : null,
+    shareExtended: shared && row.shareExtended,
+    shareExpiresAt: shared && row.shareExpiresAt ? iso(row.shareExpiresAt) : null,
     labelIds: [],
     fieldValues: [],
   };
@@ -185,20 +208,12 @@ function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow 
 // Sets each issue's statusSince to when it entered the column it is in now, leaving
 // the createdAt default (set by mapIssue) for an issue with no open stretch. One
 // query for the whole set. Mutates the passed issues in place.
-async function attachStatusSince(issues: IssueRow[]): Promise<void> {
+async function attachStatusSince(issues: IssueRow[], ids: number[] | SQLWrapper): Promise<void> {
   if (issues.length === 0) return;
   const rows = await db
     .select({ issueId: issueStatus.issueId, enteredAt: issueStatus.enteredAt })
     .from(issueStatus)
-    .where(
-      and(
-        inArray(
-          issueStatus.issueId,
-          issues.map((i) => i.id),
-        ),
-        isNull(issueStatus.leftAt),
-      ),
-    );
+    .where(and(inArray(issueStatus.issueId, ids), isNull(issueStatus.leftAt)));
   const byIssue = new Map(rows.map((r) => [r.issueId, iso(r.enteredAt)]));
   for (const i of issues) i.statusSince = byIssue.get(i.id) ?? i.statusSince;
 }
@@ -228,13 +243,11 @@ export async function listIssues(project: ProjectRow): Promise<IssueRow[]> {
     .select()
     .from(issue)
     .where(and(eq(issue.projectId, project.id), isNull(issue.archivedAt)))
-    .orderBy(issue.columnId, issue.position);
+    // Cards share a position after a move between columns; id keeps them in one order,
+    // the same one list_issues gives for sort=position.
+    .orderBy(issue.columnId, issue.position, issue.id);
   const issues = rows.map((row) => mapIssue(row, project.key));
-  await attachLabels(issues);
-  await attachFieldValues(issues);
-  await attachStatusSince(issues);
-  await attachGroupings(issues);
-  await attachLoggedMinutes(issues);
+  await attachDetails(issues, { fieldValues: true, ids: projectIssueIds(project.id, false) });
   return issues;
 }
 
@@ -247,11 +260,7 @@ export async function listArchivedIssues(project: ProjectRow): Promise<IssueRow[
     .where(and(eq(issue.projectId, project.id), isNotNull(issue.archivedAt)))
     .orderBy(sql`${issue.archivedAt} desc`);
   const issues = rows.map((row) => mapIssue(row, project.key));
-  await attachLabels(issues);
-  await attachFieldValues(issues);
-  await attachStatusSince(issues);
-  await attachGroupings(issues);
-  await attachLoggedMinutes(issues);
+  await attachDetails(issues, { fieldValues: true, ids: projectIssueIds(project.id, true) });
   return issues;
 }
 
@@ -265,18 +274,24 @@ export interface IssueSearchHit {
   identifier: string;
   title: string;
   columnId: number;
+  position: number;
   typeId: number | null;
   initiativeId: number | null;
   cycleId: number | null;
   parentId: number | null;
+  parent: { id: number; identifier: string; title: string } | null;
   assigneeUserId: string | null;
   delegateUserId: string | null;
   priority: string | null;
   dueDate: string | null;
+  estimatePoints: number | null;
+  estimateMinutes: number | null;
+  loggedMinutes: number;
   labelIds: number[];
   archived: boolean;
   createdAt: string;
   updatedAt: string;
+  statusSince: string;
   completedAt: string | null;
 }
 
@@ -292,67 +307,237 @@ const completedAt = sql<Date | null>`(
               AND p.state_type IS DISTINCT FROM 'completed'
               AND (p.entered_at, p.id) > (s.entered_at, s.id)))`.mapWith(issueStatus.enteredAt);
 
+// The same values attachStatusSince and attachLoggedMinutes give a full IssueRow.
+const statusSince = sql<Date>`coalesce(
+  (SELECT s.entered_at FROM ${issueStatus} s WHERE s.issue_id = ${issue}.id AND s.left_at IS NULL),
+  ${issue}.created_at)`.mapWith(issueStatus.enteredAt);
+const loggedMinutes = sql<number>`(
+  SELECT coalesce(sum(w.minutes), 0)::int FROM ${issueWorklog} w WHERE w.issue_id = ${issue}.id)`;
+const parentSequenceNumber = sql<number | null>`(
+  SELECT p.sequence_number FROM ${issue} p WHERE p.id = ${issue}.parent_id)`;
+const parentTitle = sql<string | null>`(
+  SELECT p.title FROM ${issue} p WHERE p.id = ${issue}.parent_id)`;
+
 // Escapes LIKE metacharacters so the query is matched literally (Postgres LIKE uses
 // '\' as the default escape character).
 function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, (c) => `\\${c}`);
 }
 
+// The issue number in a text query: a bare number, or "KEY-42".
+function parseIssueNumber(raw: string): { key: string | null; seq: number } | null {
+  if (/^\d+$/.test(raw)) return { key: null, seq: Number(raw) };
+  const m = raw.match(/^([A-Za-z][A-Za-z0-9]*)-(\d+)$/);
+  return m ? { key: m[1], seq: Number(m[2]) } : null;
+}
+
+// Text search: raw matches, case-insensitively, the title, description, scalar custom
+// field text values and select/multi_select option labels, or numberMatch.
+function textMatch(raw: string, numberMatch: SQL | undefined): SQL {
+  const pattern = `%${escapeLike(raw)}%`;
+  return or(
+    ilike(issue.title, pattern),
+    ilike(issue.description, pattern),
+    exists(
+      db
+        .select({ one: sql`1` })
+        .from(issueFieldValue)
+        .where(
+          and(eq(issueFieldValue.issueId, issue.id), ilike(issueFieldValue.valueText, pattern)),
+        ),
+    ),
+    exists(
+      db
+        .select({ one: sql`1` })
+        .from(issueFieldOption)
+        .innerJoin(customFieldOption, eq(customFieldOption.id, issueFieldOption.optionId))
+        .where(
+          and(eq(issueFieldOption.issueId, issue.id), ilike(customFieldOption.value, pattern)),
+        ),
+    ),
+    numberMatch,
+  )!;
+}
+
+function hitOrder(numberMatch: SQL | undefined): SQL[] {
+  const recent = sql`${issue.updatedAt} desc`;
+  return numberMatch ? [sql`case when ${numberMatch} then 0 else 1 end`, recent] : [recent];
+}
+
+interface IssueOrder {
+  sort?: 'position' | 'updated' | 'created' | 'dueDate' | 'priority';
+  dir?: 'asc' | 'desc';
+}
+
+// An unset or unknown priority ranks null, so it comes last in both directions.
+const priorityRank = sql`case ${issue.priority}
+  when 'urgent' then 0 when 'high' then 1 when 'medium' then 2 when 'low' then 3 end`;
+
+const sortValues = {
+  position: issue.position,
+  updated: issue.updatedAt,
+  created: issue.createdAt,
+  dueDate: issue.dueDate,
+  priority: priorityRank,
+};
+
+// id breaks ties in the same direction, so position asc matches the board and desc is its
+// exact reverse.
+function listOrder({ sort, dir }: IssueOrder, fallback: SQL[]): SQL[] {
+  if (!sort) return fallback;
+  const direction = dir === 'desc' ? sql`desc` : sql`asc`;
+  return [sql`${sortValues[sort]} ${direction} nulls last`, sql`${issue.id} ${direction}`];
+}
+
+const hitColumns = {
+  id: issue.id,
+  sequenceNumber: issue.sequenceNumber,
+  typeId: issue.typeId,
+  initiativeId: issue.initiativeId,
+  cycleId: issue.cycleId,
+  parentId: issue.parentId,
+  assigneeUserId: issue.assigneeUserId,
+  delegateUserId: issue.delegateUserId,
+  columnId: issue.columnId,
+  position: issue.position,
+  title: issue.title,
+  priority: issue.priority,
+  dueDate: issue.dueDate,
+  estimatePoints: issue.estimatePoints,
+  estimateMinutes: issue.estimateMinutes,
+  loggedMinutes,
+  archivedAt: issue.archivedAt,
+  createdAt: issue.createdAt,
+  updatedAt: issue.updatedAt,
+  statusSince,
+  completedAt,
+  parentSequenceNumber,
+  parentTitle,
+};
+
+type HitRow = Omit<
+  IssueSearchHit,
+  | 'identifier'
+  | 'parent'
+  | 'labelIds'
+  | 'archived'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'statusSince'
+  | 'completedAt'
+  | 'estimatePoints'
+> & {
+  archivedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  statusSince: Date;
+  completedAt: Date | null;
+  parentSequenceNumber: number | null;
+  parentTitle: string | null;
+  estimatePoints: string | null;
+};
+
+function toHit(
+  {
+    archivedAt,
+    createdAt,
+    updatedAt,
+    statusSince,
+    completedAt,
+    parentSequenceNumber,
+    parentTitle,
+    estimatePoints,
+    ...r
+  }: HitRow,
+  projectKey: string,
+): IssueSearchHit {
+  return {
+    ...r,
+    identifier: `${projectKey}-${r.sequenceNumber}`,
+    // A parent is always in the issue's own project, so it carries the same key.
+    parent:
+      r.parentId !== null && parentSequenceNumber !== null && parentTitle !== null
+        ? {
+            id: r.parentId,
+            identifier: `${projectKey}-${parentSequenceNumber}`,
+            title: parentTitle,
+          }
+        : null,
+    labelIds: [],
+    archived: archivedAt !== null,
+    createdAt: iso(createdAt),
+    updatedAt: iso(updatedAt),
+    statusSince: iso(statusSince),
+    completedAt: completedAt ? iso(completedAt) : null,
+    estimatePoints: numOrNull(estimatePoints),
+  };
+}
+
+type FieldFilters = Pick<
+  IssueQuery,
+  'assigneeUserId' | 'delegateUserId' | 'priority' | 'dueFrom' | 'dueTo'
+> & {
+  createdFrom?: Date;
+  createdTo?: Date;
+  updatedFrom?: Date;
+  updatedTo?: Date;
+};
+
+// The exact filters list_issues and the cross-project list share.
+function fieldConds(filters: FieldFilters): SQL[] {
+  const conds: SQL[] = [];
+  if (filters.assigneeUserId !== undefined)
+    conds.push(
+      filters.assigneeUserId === null
+        ? isNull(issue.assigneeUserId)
+        : eq(issue.assigneeUserId, filters.assigneeUserId),
+    );
+  if (filters.delegateUserId !== undefined)
+    conds.push(
+      filters.delegateUserId === null
+        ? isNull(issue.delegateUserId)
+        : eq(issue.delegateUserId, filters.delegateUserId),
+    );
+  if (filters.priority !== undefined)
+    conds.push(
+      filters.priority === null ? isNull(issue.priority) : eq(issue.priority, filters.priority),
+    );
+  // A null due date never falls in a range, so gte/lte alone exclude it.
+  if (filters.dueFrom !== undefined) conds.push(gte(issue.dueDate, filters.dueFrom));
+  if (filters.dueTo !== undefined) conds.push(lte(issue.dueDate, filters.dueTo));
+  if (filters.createdFrom) conds.push(gte(issue.createdAt, filters.createdFrom));
+  if (filters.createdTo) conds.push(lt(issue.createdAt, filters.createdTo));
+  if (filters.updatedFrom) conds.push(gte(issue.updatedAt, filters.updatedFrom));
+  if (filters.updatedTo) conds.push(lt(issue.updatedAt, filters.updatedTo));
+  return conds;
+}
+
 // Server-side issue read backing two routes: text search (search_issues) and the
-// filtered list (list_issues). Text search (filters.query) matches, case-
-// insensitively, the title, description, the issue number (a bare number, or
-// "KEY-42" for this project), scalar custom field text values, and
-// select/multi_select option labels. The other fields apply as exact filters (used
-// by list_issues). includeArchived adds archived issues to the result (search always
-// sets it; list defaults to active only).
+// filtered list (list_issues). Text search (filters.query) is textMatch, and also
+// matches the issue number: a bare number, or "KEY-42" for this project. The other
+// fields apply as exact filters (used by list_issues). includeArchived adds archived
+// issues to the result (search always sets it; list defaults to active only).
 export async function searchIssues(
   project: ProjectRow,
-  filters: IssueQuery & {
-    createdFrom?: Date;
-    createdTo?: Date;
-    updatedFrom?: Date;
-    updatedTo?: Date;
-  },
+  filters: IssueQuery &
+    IssueOrder & {
+      createdFrom?: Date;
+      createdTo?: Date;
+      updatedFrom?: Date;
+      updatedTo?: Date;
+    },
   opts: { includeArchived?: boolean } = {},
 ): Promise<IssueSearchHit[]> {
   const conds: SQL[] = [eq(issue.projectId, project.id)];
   if (!opts.includeArchived) conds.push(isNull(issue.archivedAt));
 
   const raw = filters.query?.trim();
-  let seqMatch: number | null = null;
+  let numberMatch: SQL | undefined;
   if (raw) {
-    const pattern = `%${escapeLike(raw)}%`;
-    // Recognise the issue number: a bare number, or "KEY-42" whose key matches this
-    // project. Matched against sequence_number (the identifier is not a column).
-    if (/^\d+$/.test(raw)) {
-      seqMatch = Number(raw);
-    } else {
-      const m = raw.match(/^([A-Za-z][A-Za-z0-9]*)-(\d+)$/);
-      if (m && m[1].toLowerCase() === project.key.toLowerCase()) seqMatch = Number(m[2]);
-    }
-    const textConds: SQL[] = [
-      ilike(issue.title, pattern),
-      ilike(issue.description, pattern),
-      exists(
-        db
-          .select({ one: sql`1` })
-          .from(issueFieldValue)
-          .where(
-            and(eq(issueFieldValue.issueId, issue.id), ilike(issueFieldValue.valueText, pattern)),
-          ),
-      ),
-      exists(
-        db
-          .select({ one: sql`1` })
-          .from(issueFieldOption)
-          .innerJoin(customFieldOption, eq(customFieldOption.id, issueFieldOption.optionId))
-          .where(
-            and(eq(issueFieldOption.issueId, issue.id), ilike(customFieldOption.value, pattern)),
-          ),
-      ),
-    ];
-    if (seqMatch !== null) textConds.push(eq(issue.sequenceNumber, seqMatch));
-    conds.push(or(...textConds)!);
+    const number = parseIssueNumber(raw);
+    if (number && (number.key === null || number.key.toLowerCase() === project.key.toLowerCase()))
+      numberMatch = eq(issue.sequenceNumber, number.seq);
+    conds.push(textMatch(raw, numberMatch));
   }
 
   // Exact filters, mirroring matchesIssue: undefined skips the filter, null matches
@@ -374,22 +559,7 @@ export async function searchIssues(
     conds.push(
       filters.parentId === null ? isNull(issue.parentId) : eq(issue.parentId, filters.parentId),
     );
-  if (filters.assigneeUserId !== undefined)
-    conds.push(
-      filters.assigneeUserId === null
-        ? isNull(issue.assigneeUserId)
-        : eq(issue.assigneeUserId, filters.assigneeUserId),
-    );
-  if (filters.delegateUserId !== undefined)
-    conds.push(
-      filters.delegateUserId === null
-        ? isNull(issue.delegateUserId)
-        : eq(issue.delegateUserId, filters.delegateUserId),
-    );
-  if (filters.priority !== undefined)
-    conds.push(
-      filters.priority === null ? isNull(issue.priority) : eq(issue.priority, filters.priority),
-    );
+  conds.push(...fieldConds(filters));
   // labelIds is AND: the issue must carry every supplied label.
   for (const labelId of filters.labelIds ?? []) {
     conds.push(
@@ -401,67 +571,163 @@ export async function searchIssues(
       ),
     );
   }
-  // A null due date never falls in a range, so gte/lte alone exclude it.
-  if (filters.dueFrom !== undefined) conds.push(gte(issue.dueDate, filters.dueFrom));
-  if (filters.dueTo !== undefined) conds.push(lte(issue.dueDate, filters.dueTo));
-  if (filters.createdFrom) conds.push(gte(issue.createdAt, filters.createdFrom));
-  if (filters.createdTo) conds.push(lt(issue.createdAt, filters.createdTo));
-  if (filters.updatedFrom) conds.push(gte(issue.updatedAt, filters.updatedFrom));
-  if (filters.updatedTo) conds.push(lt(issue.updatedAt, filters.updatedTo));
 
-  // Exact number match first (if any), then most recently updated.
-  const orderBy =
-    seqMatch !== null
-      ? [
-          sql`case when ${issue.sequenceNumber} = ${seqMatch} then 0 else 1 end`,
-          sql`${issue.updatedAt} desc`,
-        ]
-      : [sql`${issue.updatedAt} desc`];
+  if (filters.blocked) {
+    const blocker = alias(issue, 'blocker');
+    const blockerColumn = alias(projectColumn, 'blocker_column');
+    conds.push(
+      exists(
+        db
+          .select({ one: sql`1` })
+          .from(issueLink)
+          .innerJoin(blocker, eq(blocker.id, issueLink.sourceIssueId))
+          .innerJoin(blockerColumn, eq(blockerColumn.id, blocker.columnId))
+          .where(
+            and(
+              eq(issueLink.targetIssueId, issue.id),
+              eq(issueLink.kind, 'blocks'),
+              isNull(blocker.archivedAt),
+              notInArray(blockerColumn.stateType, ['completed', 'canceled']),
+            ),
+          ),
+      ),
+    );
+  }
 
   const base = db
-    .select({
-      id: issue.id,
-      sequenceNumber: issue.sequenceNumber,
-      typeId: issue.typeId,
-      initiativeId: issue.initiativeId,
-      cycleId: issue.cycleId,
-      parentId: issue.parentId,
-      assigneeUserId: issue.assigneeUserId,
-      delegateUserId: issue.delegateUserId,
-      columnId: issue.columnId,
-      title: issue.title,
-      priority: issue.priority,
-      dueDate: issue.dueDate,
-      archivedAt: issue.archivedAt,
-      createdAt: issue.createdAt,
-      updatedAt: issue.updatedAt,
-      completedAt,
-    })
+    .select(hitColumns)
     .from(issue)
     .where(and(...conds))
-    .orderBy(...orderBy);
+    .orderBy(...listOrder(filters, hitOrder(numberMatch)));
   const rows = filters.limit !== undefined ? await base.limit(filters.limit) : await base;
 
-  const hits: IssueSearchHit[] = rows.map((r) => ({
-    id: r.id,
-    sequenceNumber: r.sequenceNumber,
-    identifier: `${project.key}-${r.sequenceNumber}`,
-    title: r.title,
-    columnId: r.columnId,
-    typeId: r.typeId,
-    initiativeId: r.initiativeId,
-    cycleId: r.cycleId,
-    parentId: r.parentId,
-    assigneeUserId: r.assigneeUserId,
-    delegateUserId: r.delegateUserId,
-    priority: r.priority,
-    dueDate: r.dueDate,
-    labelIds: [],
-    archived: r.archivedAt !== null,
-    createdAt: iso(r.createdAt),
-    updatedAt: iso(r.updatedAt),
-    completedAt: r.completedAt ? iso(r.completedAt) : null,
-  }));
+  const hits = rows.map((r) => toHit(r, project.key));
+  await attachLabels(hits);
+  return hits;
+}
+
+export interface CrossProjectIssueHit extends IssueSearchHit {
+  projectId: number;
+  projectRef: string;
+  projectKey: string;
+  projectName: string;
+  teamName: string;
+}
+
+const crossProjectHitColumns = {
+  ...hitColumns,
+  projectId: projectTable.id,
+  projectRef: projectRefSql,
+  projectKey: projectTable.key,
+  projectName: projectTable.name,
+  teamName: team.name,
+};
+
+function toCrossProjectHit({
+  projectId,
+  projectRef,
+  projectKey,
+  projectName,
+  teamName,
+  ...r
+}: HitRow & Omit<CrossProjectIssueHit, keyof IssueSearchHit>): CrossProjectIssueHit {
+  return { ...toHit(r, projectKey), projectId, projectRef, projectKey, projectName, teamName };
+}
+
+// Text search across the given projects, archived issues included, at most
+// perProjectLimit hits from each project. "KEY-42" matches issue 42 of every listed
+// project whose key is KEY, since a key is unique only within its team.
+export async function searchIssuesInProjects(
+  projectIds: number[],
+  query: string,
+  { limit, perProjectLimit }: { limit: number; perProjectLimit: number },
+): Promise<CrossProjectIssueHit[]> {
+  const raw = query.trim();
+  if (!projectIds.length || !raw) return [];
+  const number = parseIssueNumber(raw);
+  const numberMatch = number
+    ? and(
+        eq(issue.sequenceNumber, number.seq),
+        number.key === null
+          ? undefined
+          : sql`lower(${projectTable.key}) = ${number.key.toLowerCase()}`,
+      )
+    : undefined;
+  const order = hitOrder(numberMatch);
+  // Only the id and the rank: the window sees every match, the hit columns are read
+  // for the rows that pass the cap.
+  const ranked = db
+    .select({
+      id: issue.id,
+      rank: sql<number>`row_number() over (partition by ${issue.projectId} order by ${sql.join(order, sql`, `)})`.as(
+        'rank',
+      ),
+    })
+    .from(issue)
+    .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
+    .where(and(inArray(issue.projectId, projectIds), textMatch(raw, numberMatch)))
+    .as('ranked');
+  const rows = await db
+    .select(crossProjectHitColumns)
+    .from(issue)
+    .innerJoin(ranked, eq(ranked.id, issue.id))
+    .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
+    .innerJoin(team, eq(team.id, projectTable.teamId))
+    .where(lte(ranked.rank, perProjectLimit))
+    .orderBy(...order)
+    .limit(limit);
+  const hits = rows.map(toCrossProjectHit);
+  await attachLabels(hits);
+  return hits;
+}
+
+export const ISSUE_STATE_TYPES = [
+  'backlog',
+  'unstarted',
+  'started',
+  'completed',
+  'canceled',
+] as const;
+export type IssueStateType = (typeof ISSUE_STATE_TYPES)[number];
+
+// The filtered list over the given projects, most recently updated first unless a sort
+// is chosen. The ids it takes (cycles, parents) are global, so they need no project to
+// resolve against.
+export async function listIssuesInProjects(
+  projectIds: number[],
+  filters: FieldFilters &
+    IssueOrder & {
+      cycleIds?: number[];
+      parentIds?: number[];
+      stateTypes?: IssueStateType[];
+      limit: number;
+    },
+  opts: { includeArchived?: boolean } = {},
+): Promise<CrossProjectIssueHit[]> {
+  if (!projectIds.length) return [];
+  const conds: SQL[] = [inArray(issue.projectId, projectIds), ...fieldConds(filters)];
+  if (!opts.includeArchived) conds.push(isNull(issue.archivedAt));
+  if (filters.cycleIds) conds.push(inArray(issue.cycleId, filters.cycleIds));
+  if (filters.parentIds) conds.push(inArray(issue.parentId, filters.parentIds));
+  if (filters.stateTypes)
+    conds.push(
+      inArray(
+        issue.columnId,
+        db
+          .select({ id: projectColumn.id })
+          .from(projectColumn)
+          .where(inArray(projectColumn.stateType, filters.stateTypes)),
+      ),
+    );
+  const rows = await db
+    .select(crossProjectHitColumns)
+    .from(issue)
+    .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
+    .innerJoin(team, eq(team.id, projectTable.teamId))
+    .where(and(...conds))
+    .orderBy(...listOrder(filters, hitOrder(undefined)))
+    .limit(filters.limit);
+  const hits = rows.map(toCrossProjectHit);
   await attachLabels(hits);
   return hits;
 }
@@ -512,7 +778,7 @@ export async function restoreIssue(
 // { id, title, status } / { id, name, status } in place. Both hang off the same issue rows, so one
 // query carries them; an issue linked to neither keeps the nulls mapIssue set.
 // Rendering those names on a board card needs no separate scaffold lookup this way.
-async function attachGroupings(issues: IssueRow[]): Promise<void> {
+async function attachGroupings(issues: IssueRow[], ids: number[] | SQLWrapper): Promise<void> {
   if (issues.length === 0) return;
   const rows = await db
     .select({
@@ -530,13 +796,7 @@ async function attachGroupings(issues: IssueRow[]): Promise<void> {
     .leftJoin(initiative, eq(initiative.id, issue.initiativeId))
     .leftJoin(cycle, eq(cycle.id, issue.cycleId))
     .where(
-      and(
-        inArray(
-          issue.id,
-          issues.map((i) => i.id),
-        ),
-        or(isNotNull(issue.initiativeId), isNotNull(issue.cycleId)),
-      ),
+      and(inArray(issue.id, ids), or(isNotNull(issue.initiativeId), isNotNull(issue.cycleId))),
     );
   const byIssue = new Map(rows.map((r) => [r.issueId, r]));
   for (const i of issues) {
@@ -556,21 +816,49 @@ async function attachGroupings(issues: IssueRow[]): Promise<void> {
   }
 }
 
+// The ids of a project's active or archived issues, as a subquery. A whole board
+// selects its rows by it rather than by a parameter per issue.
+function projectIssueIds(projectId: number, archived: boolean): SQLWrapper {
+  return db
+    .select({ id: issue.id })
+    .from(issue)
+    .where(
+      and(
+        eq(issue.projectId, projectId),
+        archived ? isNotNull(issue.archivedAt) : isNull(issue.archivedAt),
+      ),
+    );
+}
+
+// Fills in what an issue row leaves out: its labels, when it entered its column, its
+// initiative and cycle, the time logged on it, and its field values when asked for.
+// The reads do not depend on each other, so they run at once. `ids` selects the same
+// issues as the list does.
+async function attachDetails(
+  issues: IssueRow[],
+  opts: { fieldValues?: boolean; ids?: SQLWrapper } = {},
+) {
+  const ids = opts.ids ?? issues.map((i) => i.id);
+  await Promise.all([
+    attachLabels(issues, ids),
+    opts.fieldValues ? attachFieldValues(issues, ids) : undefined,
+    attachStatusSince(issues, ids),
+    attachGroupings(issues, ids),
+    attachLoggedMinutes(issues, ids),
+  ]);
+}
+
 // Loads every issue's label ids and merges them onto the issues in place. Generic
 // so it also enriches the lighter IssueSearchHit rows, which carry id + labelIds.
 async function attachLabels<T extends { id: number; labelIds: number[] }>(
   issues: T[],
+  ids: number[] | SQLWrapper = issues.map((i) => i.id),
 ): Promise<void> {
   if (issues.length === 0) return;
   const rows = await db
     .select({ issueId: issueLabel.issueId, labelId: issueLabel.labelId })
     .from(issueLabel)
-    .where(
-      inArray(
-        issueLabel.issueId,
-        issues.map((i) => i.id),
-      ),
-    );
+    .where(inArray(issueLabel.issueId, ids));
   const byIssue = new Map<number, number[]>();
   for (const r of rows) {
     let list = byIssue.get(r.issueId);
@@ -584,9 +872,11 @@ async function attachLabels<T extends { id: number; labelIds: number[] }>(
 // selected option ids) and merges them onto the issues. A field with no scalar
 // value and no options is omitted, so unset fields add nothing to the payload.
 // Mutates the passed issues in place.
-async function attachFieldValues(issues: IssueRow[]): Promise<void> {
+async function attachFieldValues(
+  issues: IssueRow[],
+  issueIds: number[] | SQLWrapper,
+): Promise<void> {
   if (issues.length === 0) return;
-  const issueIds = issues.map((i) => i.id);
   const [scalarRows, optionRows] = await Promise.all([
     db
       .select({
@@ -684,10 +974,7 @@ export async function getIssues(ids: number[]): Promise<IssueRow[]> {
     .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
     .where(inArray(issue.id, ids));
   const issues = rows.map((row) => mapIssue(row.issue, row.projectKey));
-  await attachLabels(issues);
-  await attachStatusSince(issues);
-  await attachGroupings(issues);
-  await attachLoggedMinutes(issues);
+  await attachDetails(issues);
   return issues;
 }
 
@@ -723,10 +1010,7 @@ export async function getIssueBySequence(
     );
   if (!rows[0]) return null;
   const mapped = mapIssue(rows[0].issue, rows[0].projectKey);
-  await attachLabels([mapped]);
-  await attachStatusSince([mapped]);
-  await attachGroupings([mapped]);
-  await attachLoggedMinutes([mapped]);
+  await attachDetails([mapped]);
   return mapped;
 }
 
@@ -755,21 +1039,23 @@ export interface NewIssueInput {
   labelIds?: number[];
 }
 
-// Enforces that assignee holds a project member and delegate holds an agent of the
-// same project. Only checks the fields present in the patch, and only when set to a
-// non-null value (clearing a field is always allowed). Throws 400 otherwise.
-async function assertAssignments(
+// Explicit edits can keep an existing assignee. Imports omit unavailable assignments.
+async function resolveIssueAssignee(
   projectId: number,
-  patch: { assigneeUserId?: string | null; delegateUserId?: string | null },
-): Promise<void> {
-  if (patch.assigneeUserId) {
-    const role = await getMembership(projectId, patch.assigneeUserId);
-    if (!role) throw new HttpError(400, 'Assignee must be a project member');
-  }
-  if (patch.delegateUserId) {
-    if (!(await isProjectAgent(projectId, patch.delegateUserId)))
-      throw new HttpError(400, 'Delegate must be an agent of this project');
-  }
+  assigneeUserId: string | null | undefined,
+  currentAssigneeUserId?: string | null,
+  skipUnavailable = false,
+): Promise<string | null | undefined> {
+  if (!assigneeUserId) return assigneeUserId;
+  const eligibility = await getAssignmentEligibility(projectId, assigneeUserId);
+  if (skipUnavailable && eligibility !== 'assignable') return undefined;
+  assertAssignmentEligibility(eligibility, assigneeUserId === currentAssigneeUserId);
+  return assigneeUserId;
+}
+
+async function assertDelegate(projectId: number, userId?: string | null): Promise<void> {
+  if (userId && !(await isProjectAgent(projectId, userId)))
+    throw new HttpError(400, 'Delegate must be an agent of this project');
 }
 
 // Enforces that a linked initiative belongs to the same project. Only checks when
@@ -817,7 +1103,7 @@ async function assertColumn(projectId: number, columnId: number | undefined): Pr
 
 // Enforces that an issue type belongs to the issue's project. Only checks when set
 // to a non-null value (clearing the type is always allowed). Throws 400 otherwise.
-async function assertIssueType(
+export async function assertIssueType(
   projectId: number,
   typeId: number | null | undefined,
 ): Promise<void> {
@@ -829,11 +1115,9 @@ async function assertIssueType(
   if (rows.length === 0) throw new HttpError(400, 'Issue type must belong to this project');
 }
 
-// Enforces the rules a parent link has to hold: both issues in the same project,
-// no issue its own parent, and one level of nesting — the parent may not be a
-// subtask itself, and an issue that already has subtasks may not become one.
-// issueId is null when the issue is being created (it has no subtasks yet).
-// Throws 400 otherwise; clearing the parent is always allowed.
+// Enforces that a parent link stays inside one project and that no issue is its own
+// parent. The tree rules are in assertTreeLink. Throws 400 otherwise; clearing the
+// parent is always allowed.
 async function assertParent(
   projectId: number,
   issueId: number | null,
@@ -843,31 +1127,32 @@ async function assertParent(
   await assertProjectFeature(projectId, 'subtasks');
   if (parentId === issueId) throw new HttpError(400, 'An issue cannot be its own parent');
   const rows = await db
-    .select({ projectId: issue.projectId, parentId: issue.parentId })
+    .select({ projectId: issue.projectId })
     .from(issue)
     .where(eq(issue.id, parentId));
   if (rows.length === 0 || rows[0].projectId !== projectId)
     throw new HttpError(400, 'Parent must belong to this project');
-  if (rows[0].parentId !== null)
-    throw new HttpError(400, 'A subtask cannot be the parent of another issue');
-  if (issueId !== null && (await hasSubtasks(issueId)))
-    throw new HttpError(400, 'An issue with subtasks cannot become a subtask');
 }
 
-// Whether the issue has subtasks, archived ones included: they stay attached to it
-// and are restored as subtasks.
-async function hasSubtasks(issueId: number): Promise<boolean> {
-  const rows = await db
-    .select({ id: issue.id })
-    .from(issue)
-    .where(eq(issue.parentId, issueId))
-    .limit(1);
-  return rows.length > 0;
+// Rejects a link that puts the issue under one of its own subtasks, or the issue
+// with its subtasks past MAX_SUBTASK_DEPTH. issueId is null for an issue being
+// created. Throws 400.
+export async function assertTreeLink(
+  issueId: number | null,
+  parentId: number | null | undefined,
+  executor: DbExecutor = db,
+): Promise<void> {
+  if (parentId == null) return;
+  const problem = await parentLinkProblem(issueId, parentId, executor);
+  if (problem === 'cycle')
+    throw new HttpError(400, 'An issue cannot become a subtask of its own subtask');
+  if (problem === 'depth')
+    throw new HttpError(400, `Subtasks can be nested at most ${MAX_SUBTASK_DEPTH} levels deep`);
 }
 
 // Enforces that every label belongs to the issue's project — the issue_label
 // foreign key only requires the label to exist somewhere. Throws 400 otherwise.
-async function assertIssueLabels(projectId: number, labelIds?: number[]): Promise<void> {
+export async function assertIssueLabels(projectId: number, labelIds?: number[]): Promise<void> {
   const ids = [...new Set(labelIds ?? [])];
   if (ids.length === 0) return;
   const rows = await db
@@ -890,22 +1175,36 @@ function assertDateOrder(startDate?: string | null, dueDate?: string | null) {
 export async function createIssue(
   project: ProjectRow,
   input: NewIssueInput,
-  actorUserId?: string | null,
+  actor?: ActivityActor,
+  opts?: { skipUnavailableAssignee?: boolean; skipWipLimit?: boolean; skipStatusRuns?: boolean },
 ): Promise<IssueRow> {
-  await assertAssignments(project.id, input);
+  const actorUserId = actorId(actor);
+  const requestedAssignee = await resolveIssueAssignee(
+    project.id,
+    input.assigneeUserId,
+    undefined,
+    opts?.skipUnavailableAssignee,
+  );
+  await assertDelegate(project.id, input.delegateUserId);
   await assertInitiative(project.id, input.initiativeId);
   await assertCycle(project.id, input.cycleId);
   await assertColumn(project.id, input.columnId);
-  await assertWipLimit(input.columnId);
+  if (!opts?.skipWipLimit) await assertWipLimit(input.columnId);
   await assertIssueType(project.id, input.typeId);
   await assertParent(project.id, null, input.parentId);
   assertDateOrder(input.startDate, input.dueDate);
   // Also checked by setIssueLabels below, but here it fails before the issue exists.
   await assertIssueLabels(project.id, input.labelIds);
-  // An issue created in a column enters it the same way a moved one does, so the
-  // column's auto-assignee applies. An assignee sent with the create wins over it.
-  const assigneeUserId = input.assigneeUserId ?? (await columnAutoAssignee(input.columnId));
+  // A named but unresolved import assignee stays unassigned. Blank cells use the column default.
+  const hasImportAssignee = opts?.skipUnavailableAssignee && input.assigneeUserId !== undefined;
+  const assigneeUserId =
+    requestedAssignee ??
+    (hasImportAssignee ? null : await columnAutoAssignee(project.id, input.columnId));
   const { id: issueId, createdAt } = await db.transaction(async (tx) => {
+    if (input.parentId != null) {
+      await lockIssueTree(tx, project.id);
+      await assertTreeLink(null, input.parentId, tx);
+    }
     const [seqRow] = await tx
       .update(projectTable)
       .set({ nextSequence: sql`next_sequence + 1` })
@@ -938,28 +1237,43 @@ export async function createIssue(
         position: Number(posRow.pos),
       })
       .returning({ id: issue.id, createdAt: issue.createdAt });
+    // The entry holds the text as filed, so the change log shows who wrote a field
+    // that was never edited.
+    await recordActivityEntries(
+      [
+        {
+          issueId: row.id,
+          event: {
+            action: 'created',
+            title: textSide(input.title),
+            description: textSide(input.description ?? ''),
+          },
+        },
+      ],
+      actor,
+      tx,
+    );
     return row;
   });
 
   // The first stretch of the status history starts when the issue does, so the
   // entries of its creation fall inside it.
   await recordStatusChange([issueId], input.columnId, createdAt);
-  await recordActivity(issueId, [{ action: 'created' }], actorUserId);
   if (input.cycleId != null) await recordCycleChange(issueId, null, input.cycleId);
-  if (input.parentId != null) await recordParentChange(issueId, null, input.parentId, actorUserId);
+  if (input.parentId != null) await recordParentChange(issueId, null, input.parentId, actor);
   // Suppress the label_changed event on creation — the initial labels are part of
   // the issue.created payload, so a separate change event would be redundant.
   if (input.labelIds?.length)
-    await setIssueLabels(project.id, issueId, input.labelIds, actorUserId, false);
+    await setIssueLabels(project.id, issueId, input.labelIds, actor, false);
   const created = (await getIssue(issueId))!;
   // The author follows what they filed; the assignee is subscribed by the
   // assignment notification below, the same as a later assignment does.
   await autoWatchIssue(project.id, issueId, [actorUserId]);
-  await emitIssueEvent('issue.created', created, actorUserId);
+  await emitIssueEvent('issue.created', created, actor);
   // An issue created already delegated to an agent enqueues a run, the same as
   // delegating one later does.
-  await enqueueDelegateRun(created, actorUserId);
-  await queueStatusRuns([issueId], input.columnId, actorUserId);
+  await enqueueDelegateRun(created, actor);
+  if (!opts?.skipStatusRuns) await queueStatusRuns([issueId], input.columnId, actorUserId);
   // An issue created already assigned to a member notifies them, the same as
   // assigning one later does.
   if (created.assigneeUserId) {
@@ -972,14 +1286,15 @@ export async function createIssue(
   }
   // A description written on creation reaches the people it mentions, the same as
   // one written into an existing issue does.
-  await notifyTextMentions({
-    projectId: project.id,
-    issueId,
-    actorUserId: actorUserId ?? null,
-    sourceActivityId: null,
-    before: '',
-    after: created.description,
-  });
+  if (!isOutsideAuthor(actor))
+    await notifyTextMentions({
+      projectId: project.id,
+      issueId,
+      actorUserId: actorUserId ?? null,
+      sourceActivityId: null,
+      before: '',
+      after: created.description,
+    });
   return created;
 }
 
@@ -1060,7 +1375,7 @@ export async function updateIssue(
   id: number,
   patch: IssuePatch,
   actor?: ActivityActor,
-  opts?: { onlyIfColumnId?: number; skipIfColumnFull?: boolean },
+  opts?: { onlyIfColumnId?: number; skipIfColumnFull?: boolean; skipAutoAssignee?: boolean },
 ): Promise<IssueRow | null> {
   const before = await loadSnapshot(id);
   if (!before) return null;
@@ -1071,7 +1386,12 @@ export async function updateIssue(
     patch.startDate !== undefined ? patch.startDate : before.startDate,
     patch.dueDate !== undefined ? patch.dueDate : before.dueDate,
   );
-  await assertAssignments(before.projectId, patch);
+  const requestedAssignee = await resolveIssueAssignee(
+    before.projectId,
+    patch.assigneeUserId,
+    before.assigneeUserId,
+  );
+  await assertDelegate(before.projectId, patch.delegateUserId);
   await assertInitiative(before.projectId, patch.initiativeId);
   await assertCycle(before.projectId, patch.cycleId, before.cycleId);
   await assertColumn(before.projectId, patch.columnId);
@@ -1087,10 +1407,10 @@ export async function updateIssue(
   await assertIssueType(before.projectId, patch.typeId);
   await assertParent(before.projectId, id, patch.parentId);
 
-  // An assignee sent with the same move wins over the column's auto-assignee.
+  // Saved actions resolve automatic assignment before checking the confirmed effect.
   const autoAssignee =
-    movedToColumnId !== null && patch.assigneeUserId === undefined
-      ? await columnAutoAssignee(movedToColumnId)
+    !opts?.skipAutoAssignee && movedToColumnId !== null && patch.assigneeUserId === undefined
+      ? await columnAutoAssignee(before.projectId, movedToColumnId)
       : null;
 
   const set: Partial<typeof issue.$inferInsert> = {};
@@ -1100,7 +1420,7 @@ export async function updateIssue(
   if (patch.parentId !== undefined) set.parentId = patch.parentId;
   if (patch.initiativeId !== undefined) set.initiativeId = patch.initiativeId;
   if (patch.cycleId !== undefined) set.cycleId = patch.cycleId;
-  if (patch.assigneeUserId !== undefined) set.assigneeUserId = patch.assigneeUserId;
+  if (requestedAssignee !== undefined) set.assigneeUserId = requestedAssignee;
   else if (autoAssignee) set.assigneeUserId = autoAssignee;
   if (patch.delegateUserId !== undefined) set.delegateUserId = patch.delegateUserId;
   if (patch.title !== undefined) set.title = patch.title;
@@ -1119,7 +1439,13 @@ export async function updateIssue(
       opts?.onlyIfColumnId == null
         ? eq(issue.id, id)
         : and(eq(issue.id, id), eq(issue.columnId, opts.onlyIfColumnId));
-    const updated = await db.update(issue).set(set).where(guard).returning({ id: issue.id });
+    const updated = await db.transaction(async (tx) => {
+      if (patch.parentId != null) {
+        await lockIssueTree(tx, before.projectId);
+        await assertTreeLink(id, patch.parentId, tx);
+      }
+      return tx.update(issue).set(set).where(guard).returning({ id: issue.id });
+    });
     if (updated.length === 0) return getIssue(id);
   }
   const after = await getIssue(id);
@@ -1141,6 +1467,7 @@ export async function updateIssue(
         await emitIssueEvent('issue.state_changed', after, actor);
         await queueStatusRuns([id], after.columnId, actorId(actor));
         await applySubtaskAutomation(after, actor);
+        await pushLinkedIssueState(id, after.columnId);
       }
     }
   }
@@ -1161,15 +1488,18 @@ async function enqueueDelegateRun(after: IssueRow, actor?: ActivityActor): Promi
     projectId: after.projectId,
     issueId: after.id,
     sourceActivityId: null,
+    ...(await runOrigin(actorId(actor))),
     prompt: `Work item ${after.identifier}: "${after.title}" has been delegated to you. Review it and take the appropriate next step.`,
     delaySeconds: agent.delegationDelaySec,
   });
 }
 
 // Deletes an issue and everything attached to it. Field options/values, labels,
-// attachments, and activity all go by their ON DELETE CASCADE on issue_id. Returns
-// the deleted attachment rows so the caller can remove their objects from the store.
-// Returns null if the issue did not exist.
+// attachments, and activity all go by their ON DELETE CASCADE on issue_id; the agents'
+// conversation threads about it live outside the cascades and are deleted after. Unlike
+// archiving, this cannot be undone, so nothing would ever read those threads again.
+// Returns the deleted attachment rows so the caller can remove their objects from the
+// store. Returns null if the issue did not exist.
 export async function deleteIssue(
   issueId: number,
   actorUserId?: string | null,
@@ -1186,6 +1516,7 @@ export async function deleteIssue(
     return removed.length ? attachmentRows.map(mapAttachment) : null;
   });
   if (!attachments) return null;
+  await deleteThreadsWhere({ issueId });
   await emitIssueEvent('issue.deleted', deleted, actorUserId);
   return attachments;
 }
@@ -1197,7 +1528,7 @@ export async function setIssueLabels(
   projectId: number,
   issueId: number,
   labelIds: number[],
-  actorUserId?: string | null,
+  actor?: ActivityActor,
   emitEvent = true,
 ): Promise<void> {
   await assertIssueLabels(projectId, labelIds);
@@ -1234,13 +1565,13 @@ export async function setIssueLabels(
     events.push({ action: 'label_add', to: rowSide(names.get(labelId), labelId) });
   for (const labelId of removed)
     events.push({ action: 'label_remove', from: rowSide(names.get(labelId), labelId) });
-  await recordActivity(issueId, events, actorUserId);
+  await recordActivity(issueId, events, actor);
 
   if (emitEvent && (added.length > 0 || removed.length > 0)) {
     const issueRow = await getIssue(issueId);
     if (issueRow) {
       const named = (ids: number[]) => ids.map((id) => ({ id, name: names.get(id) ?? null }));
-      await emitIssueEvent('issue.label_changed', issueRow, actorUserId, {
+      await emitIssueEvent('issue.label_changed', issueRow, actor, {
         labelChange: { added: named(added), removed: named(removed) },
       });
     }
@@ -1310,6 +1641,26 @@ export async function bulkUpdateIssues(
     await assertColumn(projectId, patch.columnId);
     const incoming = await countEnteringColumn(valid, patch.columnId);
     if (incoming > 0) await assertWipLimit(patch.columnId, incoming);
+  }
+  // Same reason as the WIP check: an inactive assignee that only some of the issues
+  // already hold would refuse the rest after the first ones were written.
+  const eligibility =
+    patch.assigneeUserId && valid.length > 0
+      ? await getAssignmentEligibility(projectId, patch.assigneeUserId)
+      : 'assignable';
+  if (patch.assigneeUserId && eligibility === 'inactive') {
+    const [{ changing }] = await db
+      .select({ changing: sql<number>`count(*)::int` })
+      .from(issue)
+      .where(
+        and(
+          inArray(issue.id, valid),
+          or(isNull(issue.assigneeUserId), ne(issue.assigneeUserId, patch.assigneeUserId)),
+        ),
+      );
+    assertAssignmentEligibility(eligibility, changing === 0);
+  } else {
+    assertAssignmentEligibility(eligibility);
   }
   for (const id of valid) await updateIssue(id, patch, actorUserId);
   return valid.length;
@@ -1545,6 +1896,7 @@ async function enqueueFieldRun(
     projectId,
     issueId,
     sourceActivityId: null,
+    ...(await runOrigin(actorUserId)),
     trigger: 'field',
     prompt: `Work item ${row.identifier}: "${row.title}" now has you as its "${field.name}". Review it and take the appropriate next step.`,
     delaySeconds: agent.delaySec,

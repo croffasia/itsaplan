@@ -16,10 +16,10 @@ import { useTranslations } from 'next-intl';
 // works in several projects of its team, and each has its own fields.
 type ProjectField = { field: CustomField; project: TeamProjectOption };
 
-// What starts a run: a mention in a comment, being made an issue's delegate, or being
-// set into a member custom field that holds agents. Every trigger but the mention
-// carries the wait before the run starts, so one field can start at once while
-// another leaves time to edit the issue.
+// What starts the agent: a message in the chat, a mention in a comment, being made an
+// issue's delegate, or being set into a member custom field that holds agents. The
+// delegation and the fields carry the wait before the run starts, so one field can start
+// at once while another leaves time to edit the issue.
 export default function AgentTriggersSection({
   open,
   onOpenChange,
@@ -51,8 +51,9 @@ export default function AgentTriggersSection({
       .map((field) => ({ field, project: attached[index] })),
   );
 
+  const switches = [value.chatEnabled, value.triggerOnMention, value.triggerOnAssign];
   const enabled =
-    [value.triggerOnMention, value.triggerOnAssign].filter(Boolean).length +
+    switches.filter(Boolean).length +
     memberFields.filter((f) => value.fieldTriggers.some((tr) => tr.fieldId === f.field.id)).length;
 
   function toggleField(id: number, on: boolean) {
@@ -78,8 +79,15 @@ export default function AgentTriggersSection({
       icon={Zap}
       title={t('triggers')}
       hint={t('triggersHint')}
-      headerRight={`${enabled} / ${2 + memberFields.length}`}
+      headerRight={`${enabled} / ${switches.length + memberFields.length}`}
     >
+      <label className="flex cursor-pointer items-center justify-between gap-2">
+        <span>
+          <span className="text-sm">{t('chat')}</span>
+          <span className="block text-xs text-muted-foreground">{t('chatHint')}</span>
+        </span>
+        <Switch checked={value.chatEnabled} onCheckedChange={(v) => onChange({ chatEnabled: v })} />
+      </label>
       <label className="flex cursor-pointer items-center justify-between gap-2">
         <span>
           <span className="text-sm">{t('onMention')}</span>

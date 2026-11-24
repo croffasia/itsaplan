@@ -8,6 +8,7 @@ const DEFAULT_MEDIA_FIELDS =
 // Reads a single media object by id.
 export const instagramGetMedia: CustomToolEntry = {
   key: 'instagram_get_media',
+  group: 'Media',
   scopes: ['instagram_basic'],
   label: 'Instagram Get Media',
   description: 'Read a single Instagram media object (post, reel, story) by its media id.',
@@ -29,6 +30,7 @@ export const instagramGetMedia: CustomToolEntry = {
 // Lists the child media of a carousel album.
 export const instagramMediaChildren: CustomToolEntry = {
   key: 'instagram_media_children',
+  group: 'Media',
   scopes: ['instagram_basic'],
   label: 'Instagram Media Children',
   description: 'List the child media (photos/videos) of a carousel album post.',
@@ -54,6 +56,7 @@ export const instagramMediaChildren: CustomToolEntry = {
 // Toggles comments on one of the account's own media.
 export const instagramUpdateMedia: CustomToolEntry = {
   key: 'instagram_update_media',
+  group: 'Media',
   scopes: ['instagram_basic', 'instagram_manage_comments'],
   label: 'Instagram Update Media',
   description: "Enable or disable comments on one of the connected account's own media.",
@@ -72,6 +75,7 @@ export const instagramUpdateMedia: CustomToolEntry = {
 // Deletes one of the account's own media.
 export const instagramDeleteMedia: CustomToolEntry = {
   key: 'instagram_delete_media',
+  group: 'Media',
   scopes: ['instagram_basic', 'instagram_content_publish'],
   label: 'Instagram Delete Media',
   description:

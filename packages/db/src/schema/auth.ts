@@ -25,6 +25,7 @@ export const user = pgTable("user", {
   displayUsername: text("display_username"),
   role: text("role").default("user"),
   active: boolean("active").default(true),
+  lastSeenAt: timestamp("last_seen_at"),
 });
 
 export const session = pgTable(

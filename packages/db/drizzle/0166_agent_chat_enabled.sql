@@ -1,0 +1,1 @@
+ALTER TABLE "ai_agent" ADD COLUMN "chat_enabled" boolean DEFAULT true NOT NULL;

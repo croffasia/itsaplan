@@ -1,6 +1,6 @@
 import { t } from 'elysia';
 
-const fieldType = t.Union([
+export const fieldType = t.Union([
   t.Literal('text'),
   t.Literal('markdown'),
   t.Literal('url'),
@@ -15,7 +15,7 @@ const fieldType = t.Union([
 ]);
 
 // Who a member field may hold: every candidate, the people only, or the agents only.
-const memberScope = t.Union([t.Literal('all'), t.Literal('humans'), t.Literal('agents')]);
+export const memberScope = t.Union([t.Literal('all'), t.Literal('humans'), t.Literal('agents')]);
 
 export const fieldParams = t.Object({ projectKey: t.String(), fieldId: t.Numeric() });
 

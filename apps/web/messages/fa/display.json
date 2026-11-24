@@ -59,7 +59,13 @@
     "month": "ماه",
     "quarter": "فصل"
   },
+  "calendarModes": {
+    "month": "ماه",
+    "byDay": "روزانه",
+    "byWeek": "هفتگی"
+  },
   "weekStart": {
+    "6": "شنبه",
     "0": "یکشنبه",
     "1": "دوشنبه"
   },
@@ -75,21 +81,34 @@
     "ordering": "ترتیب",
     "ascending": "صعودی",
     "descending": "نزولی",
-    "showEmptyColumns": "نمایش ستون‌های خالی",
-    "showEmptyGroups": "نمایش گروه‌های خالی",
-    "showLinks": "نمایش پیوندها",
-    "separateSubtaskCards": "نمایش زیرتسک‌ها به‌صورت کارت‌های جداگانه",
-    "separateSubtaskRows": "نمایش زیرتسک‌ها به‌صورت ردیف‌های جداگانه",
-    "startSubtasksCollapsed": "شروع با زیرتسک‌های جمع‌شده",
-    "showNestedSubtasks": "نمایش زیرتسک‌های تودرتو",
-    "nestedSubtasks": "زیرتسک‌های تودرتو",
-    "displayProperties": "نمایش ویژگی‌ها",
+    "emptyColumns": "ستون‌های خالی",
+    "emptyGroups": "گروه‌های خالی",
+    "links": "پیوندها",
+    "separateCards": "به‌صورت کارت‌های جداگانه",
+    "separateRows": "به‌صورت ردیف‌های جداگانه",
+    "nestedInCard": "داخل کارت والد",
+    "nestedInRow": "داخل ردیف والد",
+    "subtasksCollapsed": "شروع به‌صورت جمع‌شده",
+    "groupsCollapsed": "شروع با گروه‌های جمع‌شده",
     "placeBy": "قرارگیری بر اساس",
-    "startWeekOn": "شروع هفته از",
-    "startCollapsed": "شروع با گروه‌های جمع‌شده",
+    "mode": "نما",
+    "daysShown": "تعداد روزها",
+    "weeksShown": "تعداد هفته‌ها",
+    "splitByDay": "تفکیک بر اساس روز",
+    "weekStartsOn": "شروع هفته از",
     "scale": "مقیاس",
-    "addCustomField": "افزودن فیلد سفارشی",
+    "dragToReorder": "برای تغییر ترتیب بکشید",
+    "customField": "فیلد سفارشی",
     "viewIcon": "آیکون نما"
+  },
+  "sections": {
+    "board": "برد",
+    "rows": "ردیف‌ها",
+    "show": "نمایش",
+    "subtasks": "زیرتسک‌ها",
+    "cardProperties": "ویژگی‌های کارت",
+    "columns": "ستون‌ها",
+    "dates": "تاریخ‌ها"
   },
   "layoutCommand": "چیدمان {layout}"
 }

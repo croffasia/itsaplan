@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import NoteBoardAccessList from './NoteBoardAccessList';
 import NoteBoardAccessPicker from './NoteBoardAccessPicker';
-import { VISIBILITY_ICON } from '../utils/visibility';
+import { ACCESS_ICON } from '@/components/common/access/accessVisibility';
 
 export default function NoteCanvasControls({
   projectKey,
@@ -33,7 +33,7 @@ export default function NoteCanvasControls({
   onToggleFullscreen: () => void;
 }) {
   const t = useTranslations('notes');
-  const VisibilityIcon = VISIBILITY_ICON[visibility];
+  const VisibilityIcon = ACCESS_ICON[visibility];
 
   function renderAccess() {
     if (canChangeVisibility) {

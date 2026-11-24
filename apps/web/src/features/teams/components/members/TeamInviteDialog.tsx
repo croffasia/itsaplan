@@ -16,7 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useCreateTeamInvite } from '@/services/teams.service';
+import { useCreateTeamInvite, useInviteSearchQuery } from '@/services/teams.service';
+import TeamInviteSuggestions from './TeamInviteSuggestions';
 
 // The message for each refusal the API can answer with; any other error falls back
 // to 'refused'.
@@ -49,6 +50,7 @@ export default function TeamInviteDialog({
   const [role, setRole] = useState<InviteTeamRole>('member');
   const [refusal, setRefusal] = useState<string | null>(null);
   const createInvite = useCreateTeamInvite(teamId);
+  const searchEnabled = useInviteSearchQuery().data?.enabled ?? false;
 
   const ranks: InviteTeamRole[] =
     teamRole === 'owner' ? ['member', 'manager', 'owner'] : ['member'];
@@ -98,6 +100,16 @@ export default function TeamInviteDialog({
               disabled={createInvite.isPending}
             />
             {refusal && <p className="text-xs text-destructive">{refusal}</p>}
+            {searchEnabled && !createInvite.isPending && (
+              <TeamInviteSuggestions
+                teamId={teamId}
+                address={address}
+                onPick={(picked) => {
+                  setEmail(picked);
+                  setRefusal(null);
+                }}
+              />
+            )}
           </div>
 
           <div className="space-y-2">

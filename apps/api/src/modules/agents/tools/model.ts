@@ -17,6 +17,9 @@ const ToolMetaResponse = t.Object({
   label: t.String(),
   description: t.String(),
   always: t.Boolean(),
+  locked: t.Optional(
+    t.Boolean({ description: 'Listed and kept on the agents that have it, and given to none.' }),
+  ),
   // [resource, action] on the role matrix, from the route behind the action. Absent
   // when no route backs it, or when its route asks only for project membership.
   // A bounded array rather than t.Tuple: TypeBox writes a tuple as draft-7's
@@ -31,10 +34,20 @@ export const AgentToolResponse = t.Object({
   id: t.Number(),
   teamId: t.Number(),
   toolKey: t.String(),
-  // Null for a tool of an integration that needs no credential.
+  // Null for a tool added with no credential: its integration needs none, or runs
+  // without one on a keyless tier.
   credentialId: t.Nullable(t.Number()),
   integrationKey: t.String(),
   credentialLabel: t.Nullable(t.String()),
+  label: t.String(),
+  description: t.Nullable(t.String()),
+  source: t.Nullable(
+    t.String({ description: 'The extension that defines the tool; null for a catalog tool.' }),
+  ),
+  supported: t.Boolean({
+    description:
+      'False for a tool this instance does not have: no agent gets it until it does again.',
+  }),
   createdAt: t.String(),
 });
 
@@ -42,12 +55,31 @@ export const AgentToolListResponse = t.Array(AgentToolResponse);
 
 export const AgentToolPageResponse = pageResponse(AgentToolResponse);
 
-export const agentToolListQuery = t.Object(pageQueryFields);
+export const agentToolListQuery = t.Object({
+  search: t.Optional(
+    t.String({
+      maxLength: 200,
+      description: 'Matches tool name, group or integration.',
+    }),
+  ),
+  group: t.Optional(
+    t.String({
+      maxLength: 1000,
+      description:
+        'Comma-separated groups: an integration key, or ' +
+        "the `source` of the team's own tools. Omit for all.",
+    }),
+  ),
+  ...pageQueryFields,
+});
 
 export const createAgentToolBody = t.Object({
   toolKey: t.String({ minLength: 1 }),
   credentialId: t.Optional(
-    t.Number({ description: "Required unless the tool's integration needs no credential." }),
+    t.Number({
+      description:
+        "Required unless the tool's integration needs no credential or can run without one (credentialOptional).",
+    }),
   ),
 });
 

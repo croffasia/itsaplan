@@ -11,6 +11,7 @@ const MAX_COMMENTS = 100;
 // threads and are not returned.
 export const notionReadComments: CustomToolEntry = {
   key: 'notion_read_comments',
+  group: 'Comments',
   label: 'Notion Read Comments',
   scopes: ['Read comments'],
   description:

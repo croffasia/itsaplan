@@ -125,7 +125,6 @@ export const AI_PROVIDERS: ProviderMeta[] = [
   { key: 'ebcloud', label: 'EBCloud', requiresBaseUrl: false },
   { key: 'empiriolabs', label: 'EmpirioLabs AI', requiresBaseUrl: false },
   { key: 'fireworks-ai', label: 'Fireworks AI', requiresBaseUrl: false },
-  { key: 'github-models', label: 'GitHub Models', requiresBaseUrl: false },
   { key: 'hpc-ai', label: 'HPC-AI', requiresBaseUrl: false },
   { key: 'inferx', label: 'InferX', requiresBaseUrl: false },
   { key: 'io-net', label: 'IO.NET', requiresBaseUrl: false },

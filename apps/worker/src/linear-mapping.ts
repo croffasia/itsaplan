@@ -8,6 +8,7 @@ import type {
   CanonicalState,
   CanonicalStateCategory,
 } from './canonical';
+import { contentTypeForFilename, uniqueFilenames } from './attachment-download';
 
 // Pure mapping from Linear's GraphQL shapes (the fields linear-adapter.ts asks for)
 // to the canonical import shapes. No network, no @repo/db.
@@ -236,6 +237,7 @@ export function mapLinearIssue(issue: LinearIssueNode, scope: LinearScope): Cano
     descriptionMarkdown: linearIssueDescription(issue, scope),
     stateSourceId: issue.state.id,
     assigneeEmail: issue.assignee?.email || null,
+    watcherEmails: [],
     labelSourceIds: issue.labels.nodes.map((l) => l.id),
     cycleSourceId: issue.cycle?.id ?? null,
     parentSourceId: issue.parent?.id ?? null,
@@ -245,6 +247,7 @@ export function mapLinearIssue(issue: LinearIssueNode, scope: LinearScope): Cano
     customFields: [],
     createdAt: issue.createdAt,
     updatedAt: issue.updatedAt,
+    archivedAt: null,
   };
 }
 
@@ -328,33 +331,8 @@ export function linearUploadUrl(issueSourceId: string, attachmentSourceId: strin
   return url;
 }
 
-export function contentTypeForFilename(filename: string): string {
-  return Bun.file(filename).type.split(';')[0]!;
-}
-
 function lastPathSegment(url: string): string {
   return new URL(url).pathname.split('/').filter(Boolean).pop() ?? 'file';
-}
-
-// The Attachments phase reuses a file already on the issue under the same name, so
-// three screenshots pasted as "image.png" would otherwise become one.
-function uniqueFilenames(names: string[]): string[] {
-  const seen = new Map<string, number>();
-  return names.map((name) => {
-    const key = name.toLowerCase();
-    const count = (seen.get(key) ?? 0) + 1;
-    seen.set(key, count);
-    if (count === 1) return name;
-    const dot = name.lastIndexOf('.');
-    let n = count;
-    let candidate = '';
-    do {
-      candidate = dot > 0 ? `${name.slice(0, dot)} (${n})${name.slice(dot)}` : `${name} (${n})`;
-      n++;
-    } while (seen.has(candidate.toLowerCase()));
-    seen.set(candidate.toLowerCase(), 1);
-    return candidate;
-  });
 }
 
 // Files uploaded into Linear text (description, then comments, then upload-hosted

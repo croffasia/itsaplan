@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { CircleDashed } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Assignee } from '@/lib/api/endpoints/projects';
@@ -14,12 +15,15 @@ export default function DelegateSelect({
   onChange,
   placeholder,
   readOnly,
+  trigger,
 }: {
   assignees: Assignee[];
   value: string | null;
   onChange: (userId: string | null) => void;
   placeholder?: string;
   readOnly?: boolean;
+  // Replaces the pill where a caller needs its own (a Timeline cell).
+  trigger?: ReactNode;
 }) {
   const t = useTranslations('issue.fieldSelects');
   const none = t('noDelegate');
@@ -31,14 +35,16 @@ export default function DelegateSelect({
     <PopoverPick
       readOnly={readOnly}
       trigger={
-        <Pill active={!!delegate}>
-          {delegate ? (
-            <Avatar name={delegate.name} image={delegate.image} className="size-4 text-[8px]" />
-          ) : (
-            <CircleDashed />
-          )}
-          <span className="truncate">{delegate?.name ?? placeholder ?? none}</span>
-        </Pill>
+        trigger ?? (
+          <Pill active={!!delegate}>
+            {delegate ? (
+              <Avatar name={delegate.name} image={delegate.image} className="size-4 text-[8px]" />
+            ) : (
+              <CircleDashed />
+            )}
+            <span className="truncate">{delegate?.name ?? placeholder ?? none}</span>
+          </Pill>
+        )
       }
       inputPlaceholder={t('delegateTo')}
       emptyText={t('noAgents')}

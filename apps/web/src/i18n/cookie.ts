@@ -1,6 +1,6 @@
 import { LOCALE_COOKIE, type Locale } from './locales';
 
-const ONE_YEAR = 60 * 60 * 24 * 365;
+export const ONE_YEAR = 60 * 60 * 24 * 365;
 
 // Mirrors the chosen language into the cookie the server renders from. The account
 // preference stays the durable copy; this is what makes the next server render, and

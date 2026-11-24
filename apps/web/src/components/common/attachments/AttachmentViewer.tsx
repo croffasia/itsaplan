@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import type { Attachment } from '@/lib/api/endpoints/attachments';
-import { isImage } from '@/components/common/editor/attachmentEmbed';
 import Modal from '@/components/common/overlay/Modal';
 import { cn } from '@/lib/utils';
+import AttachmentPreview from './AttachmentPreview';
+import { attachmentPreviewKind } from './attachmentPreviewKind';
 
-// Looks at an attachment without inserting it anywhere: the image at its own
-// size, a video with its controls.
+// Looks at an attachment without inserting it anywhere.
 export default function AttachmentViewer({
   attachment,
   onClose,
@@ -14,7 +14,8 @@ export default function AttachmentViewer({
   onClose: () => void;
 }) {
   const [fullscreen, setFullscreen] = useState(false);
-  const size = fullscreen ? 'max-h-full' : 'max-h-[70vh]';
+  const kind = attachmentPreviewKind(attachment);
+  if (!kind) return null;
 
   return (
     <Modal
@@ -25,18 +26,7 @@ export default function AttachmentViewer({
       onToggleFullscreen={() => setFullscreen((v) => !v)}
     >
       <div className={cn('flex min-h-0 items-center justify-center', fullscreen && 'flex-1 pb-4')}>
-        {isImage(attachment) ? (
-          // Not next/image: the bytes behind the URL can be replaced, and the
-          // optimizer would keep serving the version it cached.
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={attachment.url}
-            alt={attachment.filename}
-            className={cn('max-w-full rounded-md', size)}
-          />
-        ) : (
-          <video src={attachment.url} controls className={cn('max-w-full rounded-md', size)} />
-        )}
+        <AttachmentPreview attachment={attachment} kind={kind} fullscreen={fullscreen} />
       </div>
     </Modal>
   );

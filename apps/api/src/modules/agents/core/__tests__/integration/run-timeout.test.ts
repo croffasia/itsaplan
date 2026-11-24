@@ -5,6 +5,7 @@ import { getAgentSettings, setAgentSettings } from '#modules/settings/service';
 import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { setTestJobSettings } from '#tests/helpers/jobs';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
 import { createAgent } from '#tests/helpers/agents';
 import { createCredential } from '#tests/helpers/integrations';
@@ -17,14 +18,13 @@ import { setRunAdmission } from '../../run-admission';
 
 describe('agent run timeout', () => {
   let endpoint: ReturnType<typeof Bun.serve>;
-  let previousLease: string | undefined;
   let previousSettings: Awaited<ReturnType<typeof getAgentSettings>>;
   let releaseModel: (() => void) | undefined;
   let processing: Promise<void> | undefined;
+  let asOwner: ReturnType<typeof authedApi>;
 
   beforeEach(async () => {
     await resetDb();
-    previousLease = process.env.AGENT_RUN_LEASE_SECONDS;
     previousSettings = await getAgentSettings();
     endpoint = Bun.serve({ port: 0, fetch: () => new Promise<Response>(() => {}) });
   });
@@ -32,8 +32,6 @@ describe('agent run timeout', () => {
   afterEach(async () => {
     clearLimits();
     setRunAdmission();
-    if (previousLease === undefined) delete process.env.AGENT_RUN_LEASE_SECONDS;
-    else process.env.AGENT_RUN_LEASE_SECONDS = previousLease;
     releaseModel?.();
     try {
       if (processing) await processing;
@@ -48,7 +46,7 @@ describe('agent run timeout', () => {
 
   async function queueRun(runTimeoutSec: number | null = null) {
     const owner = await signUpTestUser({ name: 'Owner' });
-    const asOwner = authedApi(owner.cookie);
+    asOwner = authedApi(owner.cookie);
     await createProject(asOwner, { key: 'MKT', name: 'Marketing' });
     const view = await asOwner.projects({ projectKey: 'MKT' }).get();
     const credentialId = await createCredential(asOwner, 'MKT', {
@@ -164,7 +162,7 @@ describe('agent run timeout', () => {
       },
     });
     const issueId = await queueRun();
-    process.env.AGENT_RUN_LEASE_SECONDS = '1';
+    await setTestJobSettings({ agentRuns: { leaseSeconds: 1 } });
     await setAgentSettings({ maxRunSeconds: 1 });
     setRunAdmission(async () => {
       await setAgentSettings({ maxRunSeconds: 1800 });
@@ -181,6 +179,32 @@ describe('agent run timeout', () => {
     });
   }, 10_000);
 
+  it('stops a run canceled while the agent works', async () => {
+    await endpoint.stop(true);
+    let modelCalled!: () => void;
+    const working = new Promise<void>((resolve) => {
+      modelCalled = resolve;
+    });
+    endpoint = Bun.serve({
+      port: 0,
+      fetch() {
+        modelCalled();
+        return new Promise<Response>(() => {});
+      },
+    });
+    const issueId = await queueRun();
+
+    processing = processAgentRuns();
+    await working;
+    const runId = (await runOf(issueId)).id;
+    expect((await asOwner['agent-runs']({ runId }).cancel.post()).status).toBe(200);
+    await processing;
+
+    expect(await runOf(issueId)).toMatchObject({ status: 'canceled', lastError: null });
+    const feed = (await asOwner.issues({ issueId }).feed.get({ query: {} })).data!.items;
+    expect(feed.filter((item) => item.action === 'agent_finished')).toHaveLength(0);
+  }, 10_000);
+
   it('does not start a run after admission exhausts the claim execution budget', async () => {
     let modelCalls = 0;
     await endpoint.stop(true);
@@ -192,7 +216,7 @@ describe('agent run timeout', () => {
       },
     });
     const issueId = await queueRun();
-    process.env.AGENT_RUN_LEASE_SECONDS = '1';
+    await setTestJobSettings({ agentRuns: { leaseSeconds: 1 } });
     await setAgentSettings({ maxRunSeconds: 1 });
     setRunAdmission(async () => {
       await new Promise((resolve) => setTimeout(resolve, 1200));

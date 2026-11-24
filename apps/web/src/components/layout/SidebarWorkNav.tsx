@@ -15,6 +15,7 @@ import {
   dashboardsPath,
   documentsPath,
   inboxPath,
+  initiativePath,
   initiativesPath,
   notesPath,
   projectPath,
@@ -23,6 +24,7 @@ import {
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
+import { useFavoriteInitiativesQuery } from '@/services/initiatives.service';
 import { useViewsQuery } from '@/services/views.service';
 import { viewIcon } from '@/utils/viewIcons';
 import { SidebarGroup, SidebarGroupContent, SidebarMenu } from '@/components/ui/sidebar';
@@ -47,6 +49,8 @@ export default function SidebarWorkNav({
   const { data: inboxUnread } = useInboxUnread(projectKey, projectId);
   const { data: views } = useViewsQuery(projectKey);
   const favorites = views?.filter((v) => v.favorite) ?? [];
+  const canReadInitiatives = features.initiatives && can('initiatives', 'read');
+  const { data: favoriteInitiatives } = useFavoriteInitiativesQuery(projectKey, canReadInitiatives);
 
   // "Work items" is the default view: active on the project root and any segment
   // that is not one of the other top-level destinations.
@@ -76,6 +80,36 @@ export default function SidebarWorkNav({
             icon: viewIcon(v.icon),
             label: v.name,
             active: pathname === viewPath(projectKey, v.id),
+          })),
+        ]
+      : null;
+
+  const onInitiatives = !!projectKey && pathname.startsWith(initiativesPath(projectKey));
+  const isFavoriteInitiativeActive = (id: number) => {
+    if (!projectKey) return false;
+    const base = initiativePath(projectKey, id);
+    return pathname === base || pathname.startsWith(`${base}/`);
+  };
+
+  // With favorites, Initiatives becomes a sub-list: all initiatives plus one
+  // entry per favorite initiative.
+  const initiativesSubmenu =
+    projectKey && favoriteInitiatives && favoriteInitiatives.length > 0
+      ? [
+          {
+            key: 'all',
+            href: initiativesPath(projectKey),
+            icon: Target,
+            label: t('allInitiatives'),
+            active:
+              onInitiatives && !favoriteInitiatives.some((i) => isFavoriteInitiativeActive(i.id)),
+          },
+          ...favoriteInitiatives.map((i) => ({
+            key: String(i.id),
+            href: initiativePath(projectKey, i.id),
+            icon: Target,
+            label: i.title,
+            active: isFavoriteInitiativeActive(i.id),
           })),
         ]
       : null;
@@ -116,15 +150,22 @@ export default function SidebarWorkNav({
               disabled={disabled}
             />
           )}
-          {features.initiatives && can('initiatives', 'read') && (
-            <SidebarNavItem
-              href={projectKey ? initiativesPath(projectKey) : '#'}
-              icon={Target}
-              label={t('initiatives')}
-              active={pathname.includes('/initiatives')}
-              disabled={disabled}
-            />
-          )}
+          {canReadInitiatives &&
+            (initiativesSubmenu ? (
+              <SidebarNavSubmenu
+                icon={Target}
+                label={t('initiatives')}
+                items={initiativesSubmenu}
+              />
+            ) : (
+              <SidebarNavItem
+                href={projectKey ? initiativesPath(projectKey) : '#'}
+                icon={Target}
+                label={t('initiatives')}
+                active={onInitiatives}
+                disabled={disabled}
+              />
+            ))}
           {features.cycles && can('cycles', 'read') && (
             <SidebarNavItem
               href={projectKey ? cyclesPath(projectKey) : '#'}

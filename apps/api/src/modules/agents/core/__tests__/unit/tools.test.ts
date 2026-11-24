@@ -1,8 +1,11 @@
-import { describe, it, expect } from 'bun:test';
+import { afterEach, describe, it, expect } from 'bun:test';
 import {
   normalizeToolKeys,
   AGENT_ACTIONS,
   ALWAYS_ON_ACTIONS,
+  allActions,
+  alwaysOnKeys,
+  setExtraActions,
   type ToolMeta,
 } from '../../runtime/tools/catalog';
 
@@ -84,6 +87,33 @@ describe('normalizeToolKeys', () => {
       'create_document',
       'update_document',
       'delete_document',
+      'add_document_comment',
+      'list_document_comments',
+      'update_document_comment',
+      'list_document_issues',
+      'list_issue_documents',
+      'link_document_issue',
+      'unlink_document_issue',
+      'list_initiative_documents',
+      'list_document_initiatives',
+      'link_document_initiative',
+      'unlink_document_initiative',
+      'list_document_assets',
+      'view_document_asset',
+      'add_document_asset',
+      'add_document_asset_from_chat',
+      'delete_document_asset',
+      'list_document_revisions',
+      'get_document_revision',
+      'restore_document_revision',
+      'archive_document',
+      'restore_document',
+      'duplicate_document',
+      'lock_document',
+      'unlock_document',
+      'export_document',
+      'set_document_access',
+      'transfer_document_ownership',
     ];
     expect(normalizeToolKeys(keys)).toEqual(keys);
   });
@@ -112,5 +142,51 @@ describe('normalizeToolKeys', () => {
       ...ALWAYS_ON_ACTIONS.map((t) => t.key),
     ]);
     for (const key of management) expect(grantable.has(key)).toBe(false);
+  });
+});
+
+describe('setExtraActions', () => {
+  const runFlows: ToolMeta = {
+    key: 'run_flow',
+    group: 'automation',
+    label: 'Run flows',
+    description: 'Start a flow.',
+    always: false,
+  };
+  const listFlows: ToolMeta = { ...runFlows, key: 'list_flows', always: true };
+
+  afterEach(() => setExtraActions([]));
+
+  it("lists an extension's actions after the core's", () => {
+    setExtraActions([runFlows, listFlows]);
+    expect(allActions().slice(-2)).toEqual([runFlows, listFlows]);
+  });
+
+  it('keeps an opt-in action on the agent and grants an always-on one without asking', () => {
+    setExtraActions([runFlows, listFlows]);
+    expect(normalizeToolKeys(['run_flow', 'list_flows'])).toEqual(['run_flow']);
+    expect(alwaysOnKeys()).toContain('list_flows');
+  });
+
+  it('keeps a locked action only on an agent that has it, and grants a locked always-on one to nobody', () => {
+    setExtraActions([
+      { ...runFlows, locked: true },
+      { ...listFlows, locked: true },
+    ]);
+    expect(normalizeToolKeys(['run_flow'], ['run_flow'])).toEqual(['run_flow']);
+    expect(normalizeToolKeys(['run_flow'])).toEqual([]);
+    expect(alwaysOnKeys()).not.toContain('list_flows');
+  });
+
+  it('replaces the previous actions on each call', () => {
+    setExtraActions([runFlows]);
+    setExtraActions([listFlows]);
+    expect(normalizeToolKeys(['run_flow'])).toEqual([]);
+  });
+
+  it("refuses a key the core's catalog has", () => {
+    expect(() => setExtraActions([{ ...runFlows, key: 'create_issue' }])).toThrow();
+    expect(() => setExtraActions([{ ...runFlows, key: 'get_issue' }])).toThrow();
+    expect(allActions()).toHaveLength(AGENT_ACTIONS.length + ALWAYS_ON_ACTIONS.length);
   });
 });

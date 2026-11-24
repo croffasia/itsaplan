@@ -16,7 +16,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const TYPES: NotificationType[] = ['assigned', 'mentioned', 'commented', 'state_changed'];
+const TYPES: NotificationType[] = [
+  'assigned',
+  'mentioned',
+  'commented',
+  'state_changed',
+  'reacted',
+];
 
 // The inbox list header: title with unread count, a type filter, display toggles
 // (show read / snoozed), and the bulk-action menu.

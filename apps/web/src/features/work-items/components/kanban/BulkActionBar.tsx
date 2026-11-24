@@ -8,6 +8,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
+import { assignableMembers } from '@/utils/project';
 import { subtaskCount } from '@/utils/subtasks';
 import { cn } from '@/lib/utils';
 import { colorDot } from '@/components/common/fields/colorDot';
@@ -48,7 +49,10 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
   const subtasks = subtaskCount(project.issues, ids);
   const canEdit = can('work_items', 'edit');
   const canDelete = can('work_items', 'delete');
-  const members = project.assignees.filter((a) => a.kind === 'member');
+  const members = assignableMembers(project.assignees);
+  const hasAssigned = project.issues.some(
+    (i) => selection.selected.has(i.id) && i.assigneeUserId != null,
+  );
   const agents = project.assignees.filter((a) => a.kind === 'agent');
   const disabled = bulk.pending;
 
@@ -57,11 +61,11 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
       <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center">
         <div
           className={cn(
-            'pointer-events-auto flex items-center gap-1 rounded-lg border bg-popover p-1 pl-3 shadow-lg',
+            'pointer-events-auto flex items-center gap-1 rounded-lg border bg-popover p-1 ps-3 shadow-lg',
             disabled && 'opacity-70',
           )}
         >
-          <span className="pr-1 text-sm font-medium whitespace-nowrap">
+          <span className="pe-1 text-sm font-medium whitespace-nowrap">
             {t('selected', { count: ids.length })}
           </span>
 
@@ -97,7 +101,7 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
                 ))}
               </BarMenu>
 
-              {members.length > 0 && (
+              {(members.length > 0 || hasAssigned) && (
                 <BarMenu
                   icon={<User className="size-4" />}
                   label={t('assignee')}

@@ -1,6 +1,13 @@
 import { t } from 'elysia';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
-import { auth, isAccountDeactivated, mcpUnauthorized, verifyMcpAccessToken } from '@repo/auth';
+import {
+  getSessionFromHeaders,
+  isAccountDeactivated,
+  mcpUnauthorized,
+  verifyMcpAccessToken,
+} from '@repo/auth';
+import { SSE_HEARTBEAT_MS } from '#shared/http';
+import { countKeyRequests } from '#shared/key-rate-limit';
 import { buildMcpServer } from './server';
 import type { McpApp } from './types';
 import type { McpCredential } from './credential';
@@ -30,10 +37,23 @@ export function mountMcp(app: any): void {
   app.post(
     '/mcp',
     async ({ request, body }: { request: Request; body: unknown }) => {
+      // ?tools=catalog is the only mode besides the default. Another value is refused:
+      // a client that asked for a short list must not get the whole table instead.
+      const tools = new URL(request.url).searchParams.get('tools');
+      if (tools !== null && tools !== 'catalog') {
+        return jsonRpcError(400, -32602, 'Unknown value of "tools". Supported: catalog.');
+      }
       const serve = async (credential: McpCredential, userId: string) => {
-        const server = await buildMcpServer(mcpApp, credential, userId);
+        const server = await buildMcpServer(
+          mcpApp,
+          credential,
+          userId,
+          request,
+          tools === 'catalog',
+        );
         const transport = new WebStandardStreamableHTTPServerTransport({
           sessionIdGenerator: undefined,
+          keepAliveMs: SSE_HEARTBEAT_MS,
         });
         await server.connect(transport);
         // Pass the body Elysia already parsed so the request stream is not read twice.
@@ -44,15 +64,17 @@ export function mountMcp(app: any): void {
       if (apiKey) {
         const headers = new Headers(request.headers);
         headers.set('x-api-key', apiKey);
-        try {
-          const session = await auth.api.getSession({ headers });
-          // A deactivated account is refused here too, the way shared/auth-context.ts
-          // refuses it for every planner route. Deactivation arrives over SCIM or from
-          // god mode, after the key was issued.
-          if (session && !isAccountDeactivated(session.user))
-            return serve({ kind: 'api-key', apiKey }, session.user.id);
-        } catch {
-          // Not an API key: it may be an OAuth access token, checked below.
+        // No session for a value that is not an API key: it may be an OAuth access token,
+        // checked below.
+        const session = await getSessionFromHeaders(headers);
+        // A deactivated account is refused here too, the way shared/auth-context.ts
+        // refuses it for every planner route. Deactivation arrives over SCIM or from
+        // god mode, after the key was issued.
+        if (session && !isAccountDeactivated(session.user)) {
+          // One request per JSON-RPC message, a batch included. The tool calls they
+          // dispatch are not counted again (requestUser).
+          await countKeyRequests(session.session.id, Array.isArray(body) ? body.length : 1);
+          return serve({ kind: 'api-key', apiKey }, session.user.id);
         }
       }
       const userId = apiKey ? await verifyMcpAccessToken(apiKey) : null;
@@ -71,9 +93,10 @@ export function mountMcp(app: any): void {
   app.delete('/mcp', methodNotAllowed, { detail: { hide: true } });
 }
 
+function jsonRpcError(status: number, code: number, message: string, headers?: HeadersInit) {
+  return Response.json({ jsonrpc: '2.0', error: { code, message }, id: null }, { status, headers });
+}
+
 function methodNotAllowed(): Response {
-  return Response.json(
-    { jsonrpc: '2.0', error: { code: -32000, message: 'Method not allowed.' }, id: null },
-    { status: 405, headers: { allow: 'POST' } },
-  );
+  return jsonRpcError(405, -32000, 'Method not allowed.', { allow: 'POST' });
 }

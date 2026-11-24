@@ -41,12 +41,14 @@ export default function Modal({
   title,
   crumb,
   headerAction,
+  controls,
   description,
   scope,
   onClose,
   onOpenAutoFocus,
   children,
   wide = false,
+  flush = false,
   fullscreen = false,
   onToggleFullscreen,
   className,
@@ -58,6 +60,8 @@ export default function Modal({
   // caller that passes one has to focus its own first field through
   // onOpenAutoFocus.
   headerAction?: ReactNode;
+  // Icon buttons shown before the fullscreen and close buttons.
+  controls?: ReactNode;
   description?: string;
   // Leading breadcrumb naming what the dialog acts in: a project key, a team.
   scope?: ReactNode;
@@ -67,6 +71,9 @@ export default function Modal({
   onOpenAutoFocus?: (event: Event) => void;
   children: ReactNode;
   wide?: boolean | 'xl';
+  // The body runs edge to edge, so dividers between its parts span the dialog. Only
+  // the header keeps the padding; the caller pads its own parts.
+  flush?: boolean;
   // On the dialog itself, for a caller that has to adjust its padding.
   className?: string;
   // Controlled by the caller: in fullscreen the content is a flex column, so the
@@ -90,15 +97,16 @@ export default function Modal({
           // max-width switch to/from `auto`/`none` and do not interpolate.
           'transition-none',
           fullscreen
-            ? 'top-0 left-0 flex h-screen w-screen max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-none border-0 sm:max-w-none'
+            ? 'top-0 left-0 flex h-dvh w-screen max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-none border-0 sm:max-w-none'
             : // A flex column, not the grid DialogContent defaults to: an auto grid
               // row keeps its content height under a capped container, so the body
               // never shrinks and never scrolls.
               cn('flex max-h-[85vh] flex-col overflow-hidden', MAX_WIDTH[`${wide}`]),
+          flush && 'gap-0 p-0',
           className,
         )}
       >
-        <DialogHeader>
+        <DialogHeader className={cn(flush && 'px-6 pt-6 pb-4')}>
           <DialogTitle className="flex items-center gap-2">
             {scope && (
               <>
@@ -134,6 +142,7 @@ export default function Modal({
         {/* After the body: Radix focuses the first tabbable node on open, which
             should be a field of the body, not a control. */}
         <div className="absolute end-3 top-3 flex items-center gap-1">
+          {controls}
           {onToggleFullscreen && (
             <Button
               variant="ghost"

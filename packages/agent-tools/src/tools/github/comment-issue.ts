@@ -4,9 +4,10 @@ import { githubRequest, issueInput, numberRef, repoInput, repoPath } from './cli
 
 export const githubCommentIssue: CustomToolEntry = {
   key: 'github_comment_issue',
+  group: 'Issues',
   label: 'GitHub Comment Issue',
   description:
-    'Comment on an issue in a GitHub repository. The text is markdown. Returns the id of the new comment.',
+    'Comment on an issue or a pull request in a GitHub repository. The text is markdown. Returns the id of the new comment.',
   inputSchema: z.object({
     ...repoInput,
     issue: issueInput,

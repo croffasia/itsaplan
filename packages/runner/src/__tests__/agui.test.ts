@@ -545,6 +545,101 @@ describe('answer stream', () => {
     expect(result.content.endsWith('TAIL')).toBe(true);
   });
 
+  it("reads Mastra Code's jsonl as text, tool calls and the thread it created", async () => {
+    const sink = collect();
+    const stream = new AnswerStream('mastracode-jsonl', 'chat:1:u:x', '7', sink.send);
+
+    stream.write(
+      [
+        JSON.stringify({ type: 'thread_created', thread: { id: 'ee394567' } }),
+        JSON.stringify({ type: 'message_start', message: { id: 'u1', role: 'signal' } }),
+        JSON.stringify({
+          type: 'message_update',
+          id: 'u1',
+          event: { type: 'text-delta', delta: 'task' },
+        }),
+        JSON.stringify({ type: 'message_start', message: { id: 'a1', role: 'assistant' } }),
+        JSON.stringify({
+          type: 'message_update',
+          id: 'a1',
+          event: { type: 'text-delta', delta: 'Reading' },
+        }),
+        JSON.stringify({
+          type: 'usage_update',
+          usage: { promptTokens: 9000, completionTokens: 40 },
+        }),
+        JSON.stringify({
+          type: 'tool_start',
+          toolCallId: 'call_1',
+          toolName: 'view',
+          args: { path: 'a.txt' },
+        }),
+        JSON.stringify({ type: 'tool_end', toolCallId: 'call_1', result: 'hello', isError: false }),
+        JSON.stringify({ type: 'message_start', message: { id: 'a2', role: 'assistant' } }),
+        JSON.stringify({
+          type: 'message_update',
+          id: 'a2',
+          event: { type: 'text-delta', delta: 'hello' },
+        }),
+        JSON.stringify({
+          type: 'usage_update',
+          usage: { promptTokens: 9100, completionTokens: 5 },
+        }),
+        JSON.stringify({
+          type: 'result',
+          status: 'completed',
+          text: 'hello',
+          threadId: 'ee394567',
+        }),
+        // The terminal reset Mastra Code writes to stdout as it exits, with no newline.
+        '\x1b[?2004l\x1b[<u\x1b[>4;0m\x1b[?25h',
+      ].join('\n'),
+    );
+    await stream.finish('');
+
+    expect(types(sink.events)).toEqual([
+      'RUN_STARTED',
+      'TEXT_MESSAGE_START',
+      'TEXT_MESSAGE_CONTENT',
+      'TOOL_CALL_START',
+      'TOOL_CALL_ARGS',
+      'TOOL_CALL_END',
+      'TOOL_CALL_RESULT',
+      'TEXT_MESSAGE_CONTENT',
+      'TEXT_MESSAGE_END',
+      'RUN_FINISHED',
+    ]);
+    expect(text(sink.events)).toBe('Readinghello');
+    expect(stream.answer()).toBe('hello');
+    expect(stream.startedSession()).toBe('ee394567');
+    expect(stream.contextUsage()).toEqual({ inputTokens: 9100, outputTokens: 5 });
+    const result = sink.events.find((e) => e.type === 'TOOL_CALL_RESULT');
+    expect((result as { content: string }).content).toBe('hello');
+  });
+
+  it('takes the Mastra Code result text, or its error, when no delta arrived', async () => {
+    const answered = collect();
+    const answeredStream = new AnswerStream('mastracode-jsonl', 'chat:1:u:x', '7', answered.send);
+    answeredStream.write(
+      `${JSON.stringify({ type: 'result', status: 'completed', text: 'Done.' })}\n`,
+    );
+    await answeredStream.finish('');
+    expect(text(answered.events)).toBe('Done.');
+
+    const failed = collect();
+    const failedStream = new AnswerStream('mastracode-jsonl', 'chat:1:u:x', '7', failed.send);
+    failedStream.write(
+      `${JSON.stringify({
+        type: 'result',
+        status: 'error',
+        text: '',
+        error: { name: 'ProviderAuthRequiredError', message: 'Anthropic sign-in expired.' },
+      })}\n`,
+    );
+    await failedStream.fail('Command exited with 1', 'raw output');
+    expect(text(failed.events)).toBe('Anthropic sign-in expired.');
+  });
+
   it('reports what a denied Copilot tool call said', async () => {
     const sink = collect();
     const stream = new AnswerStream('copilot-json', 'chat:1:u:x', '7', sink.send);
@@ -569,6 +664,7 @@ describe('answer stream', () => {
       'antigravity-stream-json',
       'copilot-json',
       'pi-json',
+      'mastracode-jsonl',
     ] as const) {
       const sink = collect();
       const stream = new AnswerStream(format, 'chat:1:u:x', '7', sink.send);

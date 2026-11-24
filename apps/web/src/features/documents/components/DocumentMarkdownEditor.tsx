@@ -190,7 +190,7 @@ export default function DocumentMarkdownEditor({
     editorProps: {
       handleDOMEvents: linkKeyboardHandlers,
       handleClick(view, _pos, event) {
-        return openLinkOnModifierClick(event, view.dom);
+        return openLinkOnModifierClick(event, view);
       },
       attributes: {
         role: 'textbox',

@@ -192,7 +192,7 @@ export default function MarkdownEditor({
         class: 'md-content flex-1 focus:outline-none',
       },
       handleClick(view, _pos, event) {
-        return openLinkOnModifierClick(event, view.dom);
+        return openLinkOnModifierClick(event, view);
       },
       handleDOMEvents: linkKeyboardHandlers,
       // Files dropped from the OS are uploaded, then inserted at the drop

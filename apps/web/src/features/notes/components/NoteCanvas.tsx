@@ -11,7 +11,6 @@ import {
   type Edge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useTheme } from 'next-themes';
 import type { NoteBoard } from '@/lib/api/endpoints/noteBoards';
 import { cn } from '@/lib/utils';
 import { useSetNoteBoardVisibility } from '../services/noteBoards.service';
@@ -49,7 +48,6 @@ export default function NoteCanvas({
   }, [fullscreen]);
 
   const { screenToFlowPosition } = useReactFlow();
-  const { resolvedTheme } = useTheme();
 
   const setVisibility = useSetNoteBoardVisibility(projectKey);
   const { canEdit, canChangeVisibility } = useNoteBoardAccess(board);
@@ -124,9 +122,10 @@ export default function NoteCanvas({
         // Cap the fit zoom at 1:1 so a board with a single small note is not
         // blown up to fill the viewport.
         fitViewOptions={{ maxZoom: 1, padding: 0.3 }}
-        colorMode={resolvedTheme === 'light' ? 'light' : 'dark'}
+        // xyflow's dark mode puts the class `dark` on its root, where the app's `.dark` rule sets
+        // the default palette over the one picked. globals.css sets the canvas colors instead.
+        colorMode="light"
         proOptions={{ hideAttribution: true }}
-        className="bg-background"
       >
         <Background />
         <Controls />

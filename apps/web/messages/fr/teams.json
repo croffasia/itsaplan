@@ -315,7 +315,7 @@
     "from": "Adresse d'expédition",
     "fromHint": "Obligatoire pour Resend. Avec SMTP, elle reprend le nom d'utilisateur par défaut.",
     "telegramBot": "Bot Telegram",
-    "telegramBotHint": "Le bot qui envoie les notifications pour chaque projet de l'équipe. Les membres choisissent leur propre discussion dans leurs préférences. Le jeton est stocké chiffré.",
+    "telegramBotHint": "Le bot qui envoie les notifications pour chaque projet de l'équipe. Les membres choisissent leur propre discussion dans leurs paramètres de notification. Le jeton est stocké chiffré.",
     "botToken": "Token d'API du bot (facultatif)",
     "emailSaved": "Fournisseur d'e-mail enregistré",
     "telegramSaved": "Fournisseur Telegram enregistré"

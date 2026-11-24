@@ -315,7 +315,7 @@
     "from": "Indirizzo mittente",
     "fromHint": "Necessario per Resend. Con SMTP il valore predefinito è il nome utente.",
     "telegramBot": "Bot Telegram",
-    "telegramBotHint": "Il bot che invia le notifiche per ogni progetto della squadra. I membri scelgono la propria chat nelle preferenze. Il token è salvato cifrato.",
+    "telegramBotHint": "Il bot che invia le notifiche per ogni progetto della squadra. I membri scelgono la propria chat nelle impostazioni di notifica. Il token è salvato cifrato.",
     "botToken": "Token API del bot (facoltativo)",
     "emailSaved": "Provider email salvato",
     "telegramSaved": "Provider Telegram salvato"

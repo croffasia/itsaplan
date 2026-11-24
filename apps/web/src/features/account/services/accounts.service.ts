@@ -8,8 +8,6 @@ import { linkSocial, listAccounts, unlinkAccount } from '@/lib/auth-client';
 
 // Data for the Accounts page: the sign-in providers connected to the account, read
 // and changed through better-auth (so its baseURL and the session cookie are reused).
-// The Telegram link is the planner API's own and lives in @/services/telegram.service,
-// since the project notification settings show it too.
 
 // One sign-in provider connected to the account, as better-auth reports it.
 export interface LinkedAccount {

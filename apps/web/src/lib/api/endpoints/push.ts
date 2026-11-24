@@ -1,8 +1,7 @@
 import { request } from '@/lib/api/core/client';
 
 // Web Push is the instance's: `enabled` is false, and `publicKey` null, while its keys are
-// not set. Which events reach a browser is chosen per project in the notification
-// preferences.
+// not set. Which events reach a browser is chosen in the notification preferences.
 export interface PushConfig {
   enabled: boolean;
   publicKey: string | null;

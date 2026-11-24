@@ -93,37 +93,6 @@
     "empty": "Агентів поки немає",
     "emptyHint": "Команда підключає їх до проєкту у своїх налаштуваннях."
   },
-  "notifications": {
-    "title": "Сповіщення",
-    "description": "Виберіть, про які події ви дізнаєтесь і куди.",
-    "email": "Пошта",
-    "telegram": "Telegram",
-    "slack": "Slack",
-    "push": "Push",
-    "events": {
-      "assigned": "Призначено на задачу",
-      "mentioned": "Згадали в задачі або документі",
-      "commented": "Новий коментар до задачі, за якою ви стежите",
-      "state_changed": "Змінився статус задачі, за якою ви стежите",
-      "reacted": "Реакція на ваш коментар"
-    },
-    "eventsTitle": "Події",
-    "telegramAccount": "Акаунт Telegram",
-    "telegramAccountHint": "Telegram-сповіщення йдуть на акаунт, підключений до вашого профілю, для всіх проєктів, де ви є.",
-    "noTelegramAccount": "Акаунт Telegram не підключено",
-    "slackAccount": "Акаунт Slack",
-    "slackAccountHint": "Сповіщення Slack із цього проєкту надходять у ваш акаунт у робочому просторі Slack {workspace}.",
-    "noSlackAccount": "Акаунт Slack не підключено",
-    "slackConnected": "Підключено",
-    "slackConnect": "Підключити",
-    "slackDisconnect": "Відключити",
-    "slackConnectedToast": "Акаунт Slack підключено",
-    "slackConnecting": "Підключаємо акаунт Slack…",
-    "slackConnectFailed": "Акаунт Slack не підключено",
-    "slackConnectCancelled": "Підключення скасовано в Slack. Підключіть знову в налаштуваннях сповіщень проєкту.",
-    "slackBack": "Повернутися в застосунок",
-    "preferencesSaved": "Налаштування сповіщень збережено"
-  },
   "transfer": {
     "actions": {
       "create": "Новий",

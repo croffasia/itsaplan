@@ -1,44 +1,32 @@
 import { Elysia, t } from 'elysia';
 import { authContext } from '#shared/auth-context';
-import { guards } from '#shared/guards';
 import { requireUser } from '#shared/access';
 import { noContent } from '#shared/http';
-import { accessErrors, commonErrors, errors } from '#shared/responses';
-import {
-  SlackAccountResponse,
-  SlackLinkCompleteBody,
-  SlackLinkCompleteResponse,
-  SlackLinkStartResponse,
-} from './model';
-import { completeSlackLink, getSlackAccount, startSlackLink, unlinkSlack } from './service';
+import { errors } from '#shared/responses';
+import { SlackAccountResponse, SlackLinkCompleteBody, SlackLinkStartResponse } from './model';
+import { completeSlackLink, getSlackAccounts, startSlackLink, unlinkSlack } from './service';
 
-// The session user's own Slack connection for a project: the Slack account its
-// notifications go to, in the Slack workspace of the app that serves the project. Every
-// route is self-scoped. The app itself is set up in god mode and per workspace.
+// The session user's own Slack connections, one per Slack workspace their projects send
+// to. Every route is self-scoped. The app itself is set up in god mode and per workspace.
 export const slackRoutes = new Elysia({ name: 'slack', detail: { tags: ['Slack'] } })
   .use(authContext)
-  .use(guards)
 
-  .get(
-    '/projects/:projectKey/slack/account',
-    ({ project, user }) => getSlackAccount(requireUser(user).id, project.id),
-    {
-      projectMember: true,
-      response: { 200: SlackAccountResponse, ...accessErrors },
-      detail: {
-        summary: 'Get the connected Slack account',
-        description:
-          "The Slack workspace the project's notifications go to (null while Slack is off for it), and the session user's account there.",
-      },
+  .get('/slack/accounts', ({ user }) => getSlackAccounts(requireUser(user).id), {
+    response: { 200: t.Array(SlackAccountResponse), ...errors(401) },
+    detail: {
+      summary: 'List connected Slack accounts',
+      description:
+        "The Slack workspaces the session user's projects send to and those the user is connected to, with their account in each.",
     },
-  )
+  })
 
   .post(
-    '/projects/:projectKey/slack/account/link',
-    async ({ project, user }) => ({ url: await startSlackLink(requireUser(user).id, project.id) }),
+    '/slack/accounts/:slackTeamId/link',
+    async ({ params, user }) => ({
+      url: await startSlackLink(requireUser(user).id, params.slackTeamId),
+    }),
     {
-      projectMember: true,
-      response: { 200: SlackLinkStartResponse, ...commonErrors },
+      response: { 200: SlackLinkStartResponse, ...errors(401, 404) },
       detail: {
         summary: 'Start connecting a Slack account',
         description: 'Returns the Sign in with Slack address that completes the connection.',
@@ -47,26 +35,26 @@ export const slackRoutes = new Elysia({ name: 'slack', detail: { tags: ['Slack']
   )
 
   .delete(
-    '/projects/:projectKey/slack/account',
-    async ({ project, user }) => {
-      await unlinkSlack(requireUser(user).id, project.id);
+    '/slack/accounts/:slackTeamId',
+    async ({ params, user }) => {
+      await unlinkSlack(requireUser(user).id, params.slackTeamId);
       return noContent();
     },
     {
-      projectMember: true,
-      response: { 204: t.Void(), ...accessErrors },
-      detail: { summary: 'Disconnect the Slack account' },
+      response: { 204: t.Void(), ...errors(401) },
+      detail: { summary: 'Disconnect a Slack account' },
     },
   )
 
   .post(
-    '/slack/account/complete',
-    async ({ user, body }) => ({
-      projectRef: await completeSlackLink(requireUser(user).id, body.code, body.state),
-    }),
+    '/slack/accounts/complete',
+    async ({ user, body }) => {
+      await completeSlackLink(requireUser(user).id, body.code, body.state);
+      return noContent();
+    },
     {
       body: SlackLinkCompleteBody,
-      response: { 200: SlackLinkCompleteResponse, ...errors(400, 401, 404, 409) },
+      response: { 204: t.Void(), ...errors(400, 401, 404, 409) },
       detail: {
         summary: 'Complete connecting a Slack account',
         description: 'Takes the code and state Slack sent back to the redirect URL.',

@@ -660,14 +660,14 @@ describe('slack notifications', () => {
       clientId: '1.2',
       clientSecret: 'secret',
     });
-    const account = member.api.projects({ projectKey: 'MKT' }).slack.account;
-    const url = new URL((await account.link.post()).data!.url);
+    const { accounts } = member.api.slack;
+    const url = new URL((await accounts({ slackTeamId: 'T1' }).link.post()).data!.url);
     nonce = url.searchParams.get('nonce')!;
-    const done = await member.api.slack.account.complete.post({
+    const done = await accounts.complete.post({
       code: 'code',
       state: url.searchParams.get('state')!,
     });
-    expect(done.status).toBe(200);
+    expect(done.status).toBe(204);
   }
 
   function queuedSlack() {

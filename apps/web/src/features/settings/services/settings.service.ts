@@ -1,9 +1,8 @@
 // React Query hooks for everything the settings feature reads and writes: the
 // project's structural entities (columns, issue types, labels and label groups,
-// custom fields, issue templates), the workflow configuration, and the session
-// member's own notification preferences. Structural writes go through
-// useProjectMutation and invalidate the project detail; the settings and
-// notification writes return the stored result and put it straight into the cache.
+// custom fields, issue templates) and the workflow configuration. Structural writes go
+// through useProjectMutation and invalidate the project detail; the settings writes
+// return the stored result and put it straight into the cache.
 // This module wraps the low-level fetch client (api.ts).
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -75,11 +74,6 @@ import {
   updateLabelGroup,
   deleteLabelGroup,
 } from '@/lib/api/endpoints/labels';
-import {
-  type NotificationPreferences,
-  getNotificationPreferences,
-  setNotificationPreferences,
-} from '@/lib/api/endpoints/notificationPreferences';
 import { useInvalidateProject } from '@/services/projects.service';
 import { qk } from '@/services/queryKeys';
 
@@ -409,23 +403,6 @@ export function useUpdateProjectFeatures(projectKey: string) {
     mutationFn: (input: Partial<ProjectFeatures>) =>
       updateProjectSettings(projectKey, { features: input }),
     onSuccess: () => invalidate(),
-  });
-}
-
-// The session member's own notification preferences for a project. A write returns
-// the normalized result, which replaces the cache directly.
-export function useNotificationPreferencesQuery(projectKey: string) {
-  return useQuery({
-    queryKey: qk.notificationPreferences(projectKey),
-    queryFn: () => getNotificationPreferences(projectKey),
-  });
-}
-
-export function useUpdateNotificationPreferences(projectKey: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: NotificationPreferences) => setNotificationPreferences(projectKey, input),
-    onSuccess: (data) => qc.setQueryData(qk.notificationPreferences(projectKey), data),
   });
 }
 

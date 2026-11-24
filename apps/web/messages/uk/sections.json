@@ -2,6 +2,7 @@
   "account": {
     "profile": "Профіль",
     "preferences": "Налаштування",
+    "notifications": "Сповіщення",
     "accounts": "Акаунти",
     "security": "Безпека",
     "api-keys": "API-ключі",

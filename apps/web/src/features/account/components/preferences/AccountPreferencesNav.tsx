@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell, Bot, Clock, Compass, Keyboard, ListChecks, Palette } from 'lucide-react';
+import { Bot, Clock, Compass, Keyboard, ListChecks, Palette } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { SectionNav, type SectionNavItem } from '@/components/common/page/SectionNav';
 import { useSectionScrollSpy } from '@/hooks/useSectionScrollSpy';
@@ -12,7 +12,6 @@ const SECTIONS = [
   { id: 'date-and-time', labelKey: 'dateAndTime', icon: Clock },
   { id: 'navigation', labelKey: 'navigation', icon: Compass },
   { id: 'issue-settings', labelKey: 'issueSettings', icon: ListChecks },
-  { id: 'notifications', labelKey: 'notifications', icon: Bell },
   { id: 'ai-chat', labelKey: 'aiChat', icon: Bot },
   { id: 'shortcuts', labelKey: 'shortcuts', icon: Keyboard },
 ] as const;

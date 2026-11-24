@@ -157,7 +157,8 @@ export function useUpdateWorkspaceSlackSettings(workspaceId: number) {
       updateWorkspaceSlackSettings(workspaceId, patch),
     onSuccess: (data) => {
       qc.setQueryData(qk.workspaceSlack(workspaceId), data);
-      void qc.invalidateQueries({ queryKey: ['slackAccount'] });
+      void qc.invalidateQueries({ queryKey: qk.slackAccounts });
+      void qc.invalidateQueries({ queryKey: qk.notificationPreferences });
     },
   });
 }

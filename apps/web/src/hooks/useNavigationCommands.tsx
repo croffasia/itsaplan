@@ -1,6 +1,5 @@
 import { useRouter } from 'next/navigation';
 import {
-  Bell,
   BookOpenText,
   Braces,
   Inbox,
@@ -26,11 +25,11 @@ import {
   manageTeamsPath,
   mcpServerPath,
   membersPath,
-  notificationsPath,
   projectPath,
 } from '@/utils/paths';
-import { ACCOUNT_SECTIONS, accountPath } from '@/utils/accountSections';
+import { accountPath } from '@/utils/accountSections';
 import { AI_AGENTS_SECTION } from '@/utils/settingsSections';
+import { useAccountSections } from '@/hooks/useAccountSections';
 import { useAiTeamSections } from '@/hooks/useSettingsNavGroups';
 import { GOD_SECTIONS } from '@/utils/godSections';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -54,8 +53,9 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
   const sectionText = useSettingsSectionText();
   const godText = useGodSectionText();
   const accountLabel = useAccountSectionLabel();
+  const accountSections = useAccountSections();
   const router = useRouter();
-  const { can, isMember } = usePermissions();
+  const { can } = usePermissions();
   const aiTeamSections = useAiTeamSections();
   const features = useProjectFeatures();
   const { data: session } = useSession();
@@ -110,14 +110,6 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
         'ai team agents',
       );
     add('nav.members', t('members'), <Users />, membersPath(key), 'team people invite');
-    if (isMember)
-      add(
-        'nav.notifications',
-        t('notificationPreferences'),
-        <Bell />,
-        notificationsPath(key),
-        'email telegram slack',
-      );
     // The settings destinations, already permission-filtered by the hook the
     // settings sidebar uses. The group label is a keyword so "workflow" or
     // "automation" finds its sections.
@@ -143,8 +135,14 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
     manageTeamsPath(),
     'account rename leave projects delete copy',
   );
-  for (const s of ACCOUNT_SECTIONS) {
-    add(`nav.account.${s.slug}`, accountLabel(s.slug), <s.icon />, accountPath(s.slug), 'account');
+  for (const s of accountSections) {
+    add(
+      `nav.account.${s.slug}`,
+      accountLabel(s.slug),
+      <s.icon />,
+      accountPath(s.slug),
+      `account ${s.keywords ?? ''}`,
+    );
   }
 
   // Instance administration, owner account only. The API enforces the same, so

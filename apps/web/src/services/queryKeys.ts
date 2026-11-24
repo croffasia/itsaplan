@@ -99,8 +99,6 @@ export const qk = {
     ['gitConnections', projectKey, connectionId, 'repositories', search] as const,
   gitRepositoryMapping: (projectKey: string, repositoryId: number) =>
     ['gitConnections', projectKey, 'mapping', repositoryId] as const,
-  // The member's own notification preferences for a project.
-  notificationPreferences: (projectKey: string) => ['notificationPreferences', projectKey] as const,
   views: (projectKey: string) => ['views', projectKey] as const,
   actions: (projectKey: string) => ['actions', projectKey] as const,
   webhooks: (projectKey: string) => ['webhooks', projectKey] as const,
@@ -347,12 +345,13 @@ export const qk = {
   passkeys: ['passkeys'] as const,
   // The OAuth applications the signed-in user authorized (account security page).
   connectedApps: ['connectedApps'] as const,
-  // The signed-in user's connected external accounts (accounts page): the linked
-  // Telegram account, and the auth providers better-auth reports.
-  telegramAccount: ['telegramAccount'] as const,
-  // The session member's Slack account for a project: one per Slack workspace.
-  slackAccount: (projectKey: string) => ['slackAccount', projectKey] as const,
+  // The auth providers better-auth reports for the signed-in user (accounts page).
   linkedAccounts: ['linkedAccounts'] as const,
+  // The signed-in user's notification preferences in every project, and the accounts the
+  // notifications go to: Telegram, and one per Slack workspace (notifications page).
+  notificationPreferences: ['notificationPreferences'] as const,
+  telegramAccount: ['telegramAccount'] as const,
+  slackAccounts: ['slackAccounts'] as const,
   // Whether the instance sends Web Push, the browsers the signed-in user turned it on in,
   // and this browser's own subscription and permission.
   pushConfig: ['pushConfig'] as const,

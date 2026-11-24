@@ -2,19 +2,20 @@
 
 Web Push is a notification channel next to email, Telegram and Slack. It uses the same
 outbox, `notification_delivery`, and the same worker loop. It is on for the whole instance
-while its keys are set, and each member chooses its events per project.
+while its keys are set, and each user chooses its events in Account › Notifications.
 
 ## One push, start to end
 
-1. A member turns on **Push notifications on this device** in Account › Preferences ›
-   Notifications. On that tap the browser asks for permission. The page then registers
-   `apps/web/public/sw.js`, subscribes with the public key from `GET /push/config`, and sends
-   the subscription to `POST /push/subscriptions`.
+1. A user turns on **Push** under Channels in Account › Notifications. On that tap the browser
+   asks for permission. The page then registers `apps/web/public/sw.js`, subscribes with the
+   public key from `GET /push/config`, and sends the subscription to `POST /push/subscriptions`.
 2. The api takes only an https endpoint whose host resolves to a public address, and never a
    host `SSRF_ALLOWED_HOSTS` trusts. It stores the browser in `push_subscription` with the VAPID
    public key it subscribed with, at most 10 per user, and drops the oldest one past that.
-3. The member ticks the events in the Push column of a project's notification preferences
-   (`user_notification_preference.push_events`).
+3. The user ticks the events in the Push column, in the defaults
+   (`user_notification_default.push_events`) or in a project
+   (`user_notification_preference.push_events`). A project without a row of its own follows
+   the defaults.
 4. An inbox notification runs `enqueueOutbound` in `apps/api/src/modules/notifications/outbound.ts`.
    For each browser of a member who wants the event, made with the current VAPID key, it queues
    one row: channel `push`, recipient the `push_subscription` id, payload
@@ -43,12 +44,12 @@ and the worker deletes the row.
 A browser does not merge a push with the in-page desktop notification of the same item, even
 with the same tag: Chrome and Edge keep page and service-worker notifications apart. So the two
 never run in one browser. Where push is on, `useDesktopNotifications` shows and reads nothing,
-and the Desktop notifications row says push replaces it. The in-page path stays for browsers
+and the Desktop row says it is off while push is on. The in-page path stays for browsers
 without push and for instances with push off.
 
 The switch keeps a flag for this in the browser's localStorage (`apps/web/src/utils/browserNotifications.ts`).
 It is set after a subscribe and cleared on unsubscribe, on sign-out and when the session
-ends. Each time the preferences page loads, `useAccountPushDevice` sets it from the real
+ends. Each time the notifications page loads, `useAccountPushDevice` sets it from the real
 subscription, so a subscription the browser revoked, one made with old keys, or push turned
 off on the instance clears it. A change fires the desktop setting's change event in the tab,
 and other tabs read it from their `storage` event.
@@ -65,7 +66,8 @@ and other tabs read it from their `storage` event.
 `packages/db/src/domains/web-push.ts` reads the three on every call, in the api and in the
 worker, and returns null while any is unset. Then `GET /push/config` answers
 `{ enabled: false }`, the web hides the switch and the Push column, the api refuses new
-subscriptions, and `enqueueOutbound` queues no push.
+subscriptions, and `enqueueOutbound` queues no push. While push is on, the column shows once
+the user turned push on in any browser.
 
 A browser subscription is bound to the public key it was made with, and the api stores that key
 with the row. A new pair ends every existing subscription: `enqueueOutbound` queues nothing for
@@ -79,8 +81,8 @@ while the api already stores rows made with the new ones.
 1. Run `bun run web-push:keys`, put the two key lines in the root `.env`, add
    `WEB_PUSH_SUBJECT=mailto:you@example.com`, and restart `bun run dev`.
 2. Open <http://localhost:3001> in Chrome or Firefox. `localhost` counts as a secure origin, so
-   the service worker registers over http. Turn on push in Account › Preferences ›
-   Notifications, then tick a Push box in a project's Notifications page.
+   the service worker registers over http. Turn on push in Account › Notifications, then tick
+   a Push box under Defaults.
 3. From a second account, assign an issue to the first one. The worker sends on its next pass.
 4. DevTools › Application › Service workers shows `sw.js`. Its **Push** button sends a plain
    text message, which the worker shows as the body.
@@ -98,9 +100,9 @@ Safari tab the switch says so.
 | the push service's answers                  | `apps/worker/src/__tests__/integration/push-send.test.ts`         |
 | the routes                                  | `apps/api/src/modules/push/__tests__/integration/push.test.ts`    |
 | what is queued                              | `apps/api/src/modules/notifications/__tests__/integration/notifications.test.ts` |
-| the switch, the flag                        | `apps/web/src/features/account/components/preferences/AccountPushNotifications.test.tsx` |
+| the switch, the flag                        | `apps/web/src/features/account/components/notifications/AccountNotificationPush.test.tsx` |
 | desktop notifications standing down         | `apps/web/src/hooks/useDesktopNotifications.test.tsx`             |
-| the Push column                             | `apps/web/src/features/settings/components/notifications/NotificationPreferences.test.tsx` |
+| the Push column                             | `apps/web/src/features/account/components/notifications/AccountNotifications.test.tsx` |
 | signing out                                 | `apps/web/src/lib/auth-client.test.ts`                            |
 | the end of a session                        | `apps/web/src/lib/api/core/client.test.ts`                        |
 | the service worker                          | `apps/web/src/utils/sw.test.ts`                                   |

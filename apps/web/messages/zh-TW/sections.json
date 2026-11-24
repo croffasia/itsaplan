@@ -2,6 +2,7 @@
   "account": {
     "profile": "個人資料",
     "preferences": "偏好設定",
+    "notifications": "通知",
     "accounts": "關聯帳號",
     "security": "安全",
     "api-keys": "API 金鑰",

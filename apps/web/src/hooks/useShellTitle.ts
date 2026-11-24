@@ -15,7 +15,6 @@ const SECTION_LABELS = {
   docs: 'documents',
   notes: 'notes',
   members: 'members',
-  notifications: 'notifications',
   public: 'public',
   api: 'apiDocs',
   mcp: 'mcpServer',

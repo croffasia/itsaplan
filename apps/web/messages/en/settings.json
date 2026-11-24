@@ -93,37 +93,6 @@
     "empty": "No agents yet",
     "emptyHint": "The team attaches them to a project in its settings."
   },
-  "notifications": {
-    "title": "Notifications",
-    "description": "Choose which issue events you get and where.",
-    "email": "Email",
-    "telegram": "Telegram",
-    "slack": "Slack",
-    "push": "Push",
-    "events": {
-      "assigned": "Assigned to an issue",
-      "mentioned": "Mentioned on an issue or a document",
-      "commented": "New comment on an issue you watch",
-      "state_changed": "State changed on an issue you watch",
-      "reacted": "Reaction to your comment"
-    },
-    "eventsTitle": "Events",
-    "telegramAccount": "Telegram account",
-    "telegramAccountHint": "Telegram notifications go to the account connected to your profile, for every project you are in.",
-    "noTelegramAccount": "No Telegram account connected",
-    "slackAccount": "Slack account",
-    "slackAccountHint": "Slack notifications from this project go to your account in the {workspace} Slack workspace.",
-    "noSlackAccount": "No Slack account connected",
-    "slackConnected": "Connected",
-    "slackConnect": "Connect",
-    "slackDisconnect": "Disconnect",
-    "slackConnectedToast": "Slack account connected",
-    "slackConnecting": "Connecting your Slack account…",
-    "slackConnectFailed": "Slack account not connected",
-    "slackConnectCancelled": "The connection was cancelled in Slack. Connect again from the project's notification settings.",
-    "slackBack": "Back to the app",
-    "preferencesSaved": "Notification preferences saved"
-  },
   "transfer": {
     "actions": {
       "create": "New",

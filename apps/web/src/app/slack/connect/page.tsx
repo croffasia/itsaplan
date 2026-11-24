@@ -1,5 +1,5 @@
-import SlackConnectPage from '@/features/settings/SlackConnectPage';
+import AccountSlackConnectPage from '@/features/account/AccountSlackConnectPage';
 
 export default function Page() {
-  return <SlackConnectPage />;
+  return <AccountSlackConnectPage />;
 }

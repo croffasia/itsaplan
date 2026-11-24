@@ -404,7 +404,7 @@
   "telegram": {
     "saved": "Telegram 설정이 저장되었습니다",
     "bot": "봇",
-    "botConfigured": "사용자는 프로필에서 이 봇과의 채팅을 열어 Telegram 계정을 연결할 수 있습니다.",
+    "botConfigured": "사용자는 알림 설정에서 이 봇과의 채팅을 열어 Telegram 계정을 연결할 수 있습니다.",
     "botMissing": "Telegram에서 @BotFather를 사용해 봇을 생성한 후 토큰을 여기에 붙여넣으세요.",
     "botToken": "봇 토큰",
     "botTokenHint": "저장할 때 Telegram에서 토큰이 유효한지 확인합니다. 잘못된 토큰은 이 화면에서 거부됩니다.",
@@ -413,7 +413,7 @@
   "slack": {
     "saved": "Slack 설정이 저장되었습니다",
     "app": "Slack 앱",
-    "appConfigured": "켜면 멤버가 프로젝트 알림 설정에서 Slack 계정을 연결할 수 있습니다.",
+    "appConfigured": "켜면 멤버가 알림 설정에서 Slack 계정을 연결할 수 있습니다.",
     "appMissing": "앱을 켜려면 봇 토큰, Client ID, 클라이언트 시크릿을 추가하세요."
   },
   "email": {

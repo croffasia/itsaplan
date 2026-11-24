@@ -1,10 +1,11 @@
 import { randomBytes } from 'node:crypto';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { trustedOrigins } from '@repo/auth';
 import { encryptSecret } from '@repo/crypto';
 import {
   db,
   project,
+  projectMember,
   slackLinkRequest,
   team,
   userSlackAccount,
@@ -15,19 +16,19 @@ import {
   isSlackAppUsable,
   readWorkspaceSlackConfig,
   slackAppForProject,
+  slackAppForWorkspace,
   type InstanceSlackConfig,
   type SlackApp,
   type WorkspaceSlackConfig,
 } from '@repo/db';
 import { HttpError, iso, pgErrorCode } from '#shared/lib';
-import { projectRef } from '#modules/teams/ref';
 
 // Slack notifications. The instance app is set up in god mode, and a workspace may send
 // through an app of its own instead; the stored shapes and the reader that picks the app
 // are in @repo/db, shared with the worker. What is here is the write side and the account
-// connection. A member connects their Slack account with Sign in with Slack through the
-// app that serves the project they start from. A Slack user id belongs to one Slack
-// workspace, so a member keeps one connection per Slack workspace.
+// connection. A member connects their Slack account with Sign in with Slack through an app
+// that serves one of their projects. A Slack user id belongs to one Slack workspace, so a
+// member keeps one connection per Slack workspace.
 
 // Long enough to approve the request in Slack, short enough that a leaked link is useless.
 const LINK_TTL_MINUTES = 15;
@@ -182,31 +183,78 @@ export async function setWorkspaceSlackSettings(
 // ── Account connections ───────────────────────────────────────────────────────
 
 export interface SlackAccountDto {
-  // The Slack workspace the project's notifications go to; null while Slack is off for it.
+  slackTeamId: string;
   slackTeamName: string | null;
+  // Whether a project of the user sends to this Slack workspace, so it can be connected.
+  available: boolean;
   link: { name: string | null; linkedAt: string } | null;
 }
 
-export async function getSlackAccount(userId: string, projectId: number): Promise<SlackAccountDto> {
-  const app = await slackAppForProject(projectId);
-  if (!app) return { slackTeamName: null, link: null };
-  const [row] = await db
-    .select({ name: userSlackAccount.name, linkedAt: userSlackAccount.linkedAt })
-    .from(userSlackAccount)
-    .where(
-      and(eq(userSlackAccount.userId, userId), eq(userSlackAccount.slackTeamId, app.slackTeamId)),
-    );
-  return {
-    slackTeamName: app.slackTeamName,
-    link: row ? { name: row.name, linkedAt: iso(row.linkedAt) } : null,
-  };
+// The app of each workspace; one with Slack off is absent.
+export async function slackAppsByWorkspace(workspaceIds: number[]): Promise<Map<number, SlackApp>> {
+  const apps = await Promise.all(
+    workspaceIds.map(async (id) => [id, await slackAppForWorkspace(id)] as const),
+  );
+  return new Map(apps.flatMap(([id, app]) => (app ? [[id, app] as const] : [])));
+}
+
+// The apps that serve the user's projects, one per Slack workspace, each with a project
+// it serves.
+async function slackAppsForUser(
+  userId: string,
+): Promise<Map<string, { app: SlackApp; projectId: number }>> {
+  const rows = await db
+    .select({
+      workspaceId: team.workspaceId,
+      projectId: sql<number>`min(${project.id})`,
+    })
+    .from(projectMember)
+    .innerJoin(project, eq(project.id, projectMember.projectId))
+    .innerJoin(team, eq(team.id, project.teamId))
+    .where(and(eq(projectMember.userId, userId), isNull(project.archivedAt)))
+    .groupBy(team.workspaceId);
+  const apps = await slackAppsByWorkspace(rows.map((row) => row.workspaceId));
+  return new Map(
+    rows.flatMap(({ workspaceId, projectId }) => {
+      const app = apps.get(workspaceId);
+      return app ? [[app.slackTeamId, { app, projectId }] as const] : [];
+    }),
+  );
+}
+
+// The Slack workspaces the user's projects send to, and those the user is still connected
+// to while none of them does.
+export async function getSlackAccounts(userId: string): Promise<SlackAccountDto[]> {
+  const [served, links] = await Promise.all([
+    slackAppsForUser(userId),
+    db
+      .select({
+        slackTeamId: userSlackAccount.slackTeamId,
+        slackTeamName: userSlackAccount.slackTeamName,
+        name: userSlackAccount.name,
+        linkedAt: userSlackAccount.linkedAt,
+      })
+      .from(userSlackAccount)
+      .where(eq(userSlackAccount.userId, userId)),
+  ]);
+  const linkByTeam = new Map(links.map((link) => [link.slackTeamId, link]));
+  return [...new Set([...served.keys(), ...linkByTeam.keys()])].sort().map((slackTeamId) => {
+    const link = linkByTeam.get(slackTeamId);
+    return {
+      slackTeamId,
+      slackTeamName: served.get(slackTeamId)?.app.slackTeamName ?? link?.slackTeamName ?? null,
+      available: served.has(slackTeamId),
+      link: link ? { name: link.name, linkedAt: iso(link.linkedAt) } : null,
+    };
+  });
 }
 
 // Starts a connection and returns the Sign in with Slack address. A connection already in
 // place stays until Slack confirms the new one.
-export async function startSlackLink(userId: string, projectId: number): Promise<string> {
-  const app = await slackAppForProject(projectId);
-  if (!app) throw new HttpError(400, "Slack is not set up for this project's workspace");
+export async function startSlackLink(userId: string, slackTeamId: string): Promise<string> {
+  const served = (await slackAppsForUser(userId)).get(slackTeamId);
+  if (!served) throw new HttpError(404, 'None of your projects sends to this Slack workspace');
+  const { app, projectId } = served;
   const code = randomBytes(16).toString('base64url');
   const expiresAt = new Date(Date.now() + LINK_TTL_MINUTES * 60_000);
   await db
@@ -267,13 +315,12 @@ async function exchangeCode(app: SlackApp, code: string): Promise<IdTokenClaims>
   return readIdToken(body.id_token);
 }
 
-// Completes a connection with what Slack sent back, for the user who started it. Returns
-// the ref of the project it was started from, so the member lands back there.
+// Completes a connection with what Slack sent back, for the user who started it.
 export async function completeSlackLink(
   userId: string,
   code: string,
   state: string,
-): Promise<string> {
+): Promise<void> {
   // Used once, and only by the account that started it: a link from someone else's
   // browser cannot attach their Slack account to this one.
   const [request] = await db
@@ -283,12 +330,12 @@ export async function completeSlackLink(
   if (!request)
     throw new HttpError(
       404,
-      "This Slack connection was started from another account. Connect again from the project's notification settings",
+      'This Slack connection was started from another account. Connect again from your notification settings',
     );
   if (request.expiresAt.getTime() < Date.now()) {
     throw new HttpError(
       400,
-      "This Slack connection has expired. Connect again from the project's notification settings",
+      'This Slack connection has expired. Connect again from your notification settings',
     );
   }
   const app = await slackAppForProject(request.projectId);
@@ -335,24 +382,13 @@ export async function completeSlackLink(
     }
     throw err;
   }
-
-  const [row] = await db
-    .select({ key: project.key, teamId: team.id, slug: team.slug })
-    .from(project)
-    .innerJoin(team, eq(team.id, project.teamId))
-    .where(eq(project.id, request.projectId));
-  return projectRef({ id: row!.teamId, slug: row!.slug }, row!.key);
 }
 
-// Removes the connection to the Slack workspace the project's notifications go to.
-export async function unlinkSlack(userId: string, projectId: number): Promise<void> {
-  const app = await slackAppForProject(projectId);
-  if (!app) return;
+// Removes the user's connection to one Slack workspace.
+export async function unlinkSlack(userId: string, slackTeamId: string): Promise<void> {
   await db
     .delete(userSlackAccount)
-    .where(
-      and(eq(userSlackAccount.userId, userId), eq(userSlackAccount.slackTeamId, app.slackTeamId)),
-    );
+    .where(and(eq(userSlackAccount.userId, userId), eq(userSlackAccount.slackTeamId, slackTeamId)));
 }
 
 // The Slack user ids of several users in one Slack workspace, for the notification

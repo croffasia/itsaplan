@@ -1,12 +1,10 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { getPushConfig } from '@/lib/api/endpoints/push';
+import { getPushConfig, listPushDevices } from '@/lib/api/endpoints/push';
 import { qk } from '@/services/queryKeys';
 
-// Whether the instance sends Web Push. Shared rather than feature-local: the account
-// page turns push on in a browser, and a project's notification preferences show the
-// Push column only while the instance sends it.
+// Whether the instance sends Web Push.
 export function usePushConfigQuery() {
   return useQuery({
     queryKey: qk.pushConfig,
@@ -14,4 +12,9 @@ export function usePushConfigQuery() {
     // Changes only when the instance restarts with other keys.
     staleTime: 5 * 60_000,
   });
+}
+
+// The browsers the signed-in user turned push on in.
+export function usePushDevicesQuery(enabled: boolean) {
+  return useQuery({ queryKey: qk.pushDevices, queryFn: () => listPushDevices(), enabled });
 }

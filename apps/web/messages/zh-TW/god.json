@@ -404,7 +404,7 @@
   "telegram": {
     "saved": "Telegram 設定已儲存",
     "bot": "機器人",
-    "botConfigured": "使用者可以在個人資料中開啟此機器人的對話，以關聯 Telegram 帳號。",
+    "botConfigured": "使用者可以在通知設定中開啟此機器人的對話，以關聯 Telegram 帳號。",
     "botMissing": "在 Telegram 中透過 @BotFather 建立機器人，然後在此貼上機器人權杖。",
     "botToken": "機器人權杖",
     "botTokenHint": "儲存時會透過 Telegram 驗證權杖，錯誤權杖會立即被拒絕。",
@@ -413,7 +413,7 @@
   "slack": {
     "saved": "Slack 設定已儲存",
     "app": "Slack 應用程式",
-    "appConfigured": "開啟後，成員可以在專案的通知設定中連結自己的 Slack 帳號。",
+    "appConfigured": "開啟後，成員可以在通知設定中連結自己的 Slack 帳號。",
     "appMissing": "新增機器人權杖、Client ID 和用戶端金鑰後即可開啟應用程式。"
   },
   "email": {

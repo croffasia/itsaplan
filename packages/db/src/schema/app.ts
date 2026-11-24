@@ -1185,7 +1185,7 @@ export const teamNotificationSetting = pgTable('team_notification_setting', {
 
 // A member's own notification preferences for one project: for each issue event
 // type, whether they want it by email, Telegram, Slack and/or Web Push. One row per
-// (user, project); absent means the member has not opted in and receives nothing.
+// (user, project); absent means the member follows their user_notification_default.
 // email_events/telegram_events/slack_events/push_events are EventToggles jsonb keyed by
 // the inbox notification types. Email is sent to the member's account address; Telegram
 // to the chat of the account they linked in user_telegram_account; Slack to the account
@@ -1210,6 +1210,20 @@ export const userNotificationPreference = pgTable(
   },
   (t) => [unique('user_notification_pref_user_project_unique').on(t.userId, t.projectId)],
 );
+
+// What a user gets from every project they have no user_notification_preference row for.
+// The same events and channels; no row means nothing.
+export const userNotificationDefault = pgTable('user_notification_default', {
+  userId: text('user_id')
+    .primaryKey()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  emailEvents: jsonb('email_events').notNull().default({}),
+  telegramEvents: jsonb('telegram_events').notNull().default({}),
+  slackEvents: jsonb('slack_events').notNull().default({}),
+  pushEvents: jsonb('push_events').notNull().default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
 
 // The Telegram account a user has linked, instance-wide (one row per user, whatever
 // the project). Linking runs through the instance bot: the user asks for a link, the
@@ -1260,8 +1274,8 @@ export const workspaceSlackSetting = pgTable('workspace_slack_setting', {
 
 // The Slack accounts a user connected, one per Slack workspace (slack_team_id): a Slack
 // user id belongs to one Slack workspace, and the app a product workspace sends through
-// can be in any. Connected with Sign in with Slack through the app that serves the
-// project the user started from. One Slack account serves one product account.
+// can be in any. Connected with Sign in with Slack through an app that serves one of the
+// user's projects. One Slack account serves one product account.
 export const userSlackAccount = pgTable(
   'user_slack_account',
   {
@@ -1282,8 +1296,8 @@ export const userSlackAccount = pgTable(
 );
 
 // A Slack connection a user started and Slack has not answered yet. `code` is the OAuth
-// state and nonce. The project names the app that serves it and the page the user returns
-// to. A user keeps one: starting another replaces it.
+// state and nonce. The project names the app that serves it. A user keeps one: starting
+// another replaces it.
 export const slackLinkRequest = pgTable('slack_link_request', {
   code: text('code').primaryKey(),
   userId: text('user_id')

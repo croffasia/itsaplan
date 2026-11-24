@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { groupInOrder } from '../../utils/agentForm';
+import { groupInOrder } from '@/utils/groupInOrder';
 import { AgentPicker } from './AgentPicker';
 import { AgentPickRow } from './AgentPickRow';
 

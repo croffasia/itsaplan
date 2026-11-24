@@ -2,6 +2,7 @@
   "account": {
     "profile": "Perfil",
     "preferences": "Preferencias",
+    "notifications": "Notificaciones",
     "accounts": "Cuentas",
     "security": "Seguridad",
     "api-keys": "Claves de API",

@@ -1,7 +1,7 @@
 import { usePathname } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Bell, Globe, Settings, Users } from 'lucide-react';
-import { membersPath, notificationsPath, publicSharesPath } from '@/utils/paths';
+import { Globe, Settings, Users } from 'lucide-react';
+import { membersPath, publicSharesPath } from '@/utils/paths';
 import { useSettingsNavGroups } from '@/hooks/useSettingsNavGroups';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
@@ -12,15 +12,15 @@ import {
 } from '@/components/ui/sidebar';
 import SidebarNavItem from '@/components/layout/SidebarNavItem';
 
-// The Configuration sidebar group: Members, Notifications, Public (the project's
-// public links) and the "Project settings" entry. That entry links to the first settings section the viewer may
+// The Configuration sidebar group: Members, Public (the project's public links) and the
+// "Project settings" entry. That entry links to the first settings section the viewer may
 // read and switches the sidebar into settings mode (see AppSidebar).
 export default function SidebarConfigNav({ projectKey }: { projectKey: string | null }) {
   const t = useTranslations('nav');
   const pathname = usePathname();
   const disabled = !projectKey;
   const { firstHref } = useSettingsNavGroups(projectKey);
-  const { can, isMember } = usePermissions();
+  const { can } = usePermissions();
 
   return (
     <SidebarGroup>
@@ -33,15 +33,6 @@ export default function SidebarConfigNav({ projectKey }: { projectKey: string | 
               icon={Users}
               label={t('members')}
               active={pathname.includes('/members')}
-              disabled={disabled}
-            />
-          )}
-          {isMember && (
-            <SidebarNavItem
-              href={projectKey ? notificationsPath(projectKey) : '#'}
-              icon={Bell}
-              label={t('notifications')}
-              active={!!projectKey && pathname === notificationsPath(projectKey)}
               disabled={disabled}
             />
           )}

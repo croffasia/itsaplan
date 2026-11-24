@@ -20,27 +20,24 @@ export interface SlackAppPatch {
   clientSecret?: string;
 }
 
-// The session member's Slack account for a project: `slackTeamName` is the Slack
-// workspace its notifications go to, null while Slack is off for the project.
+// The session user's account in one Slack workspace. `available` says whether one of their
+// projects sends to it; a connection outlives that until it is disconnected.
 export interface SlackAccount {
+  slackTeamId: string;
   slackTeamName: string | null;
+  available: boolean;
   link: { name: string | null; linkedAt: string } | null;
 }
 
-export const getSlackAccount = (projectKey: string) =>
-  request<SlackAccount>(`/projects/${projectKey}/slack/account`);
+export const listSlackAccounts = () => request<SlackAccount[]>('/slack/accounts');
 
 // The Sign in with Slack address that completes the connection.
-export const startSlackLink = (projectKey: string) =>
-  request<{ url: string }>(`/projects/${projectKey}/slack/account/link`, { method: 'POST' });
+export const startSlackLink = (slackTeamId: string) =>
+  request<{ url: string }>(`/slack/accounts/${slackTeamId}/link`, { method: 'POST' });
 
-export const unlinkSlackAccount = (projectKey: string) =>
-  request<void>(`/projects/${projectKey}/slack/account`, { method: 'DELETE' });
+export const unlinkSlackAccount = (slackTeamId: string) =>
+  request<void>(`/slack/accounts/${slackTeamId}`, { method: 'DELETE' });
 
-// Takes what Slack sent back to the redirect URL; answers with the project the
-// connection was started from.
+// Takes what Slack sent back to the redirect URL.
 export const completeSlackLink = (input: { code: string; state: string }) =>
-  request<{ projectRef: string }>('/slack/account/complete', {
-    method: 'POST',
-    body: JSON.stringify(input),
-  });
+  request<void>('/slack/accounts/complete', { method: 'POST', body: JSON.stringify(input) });

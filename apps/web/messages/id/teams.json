@@ -315,7 +315,7 @@
     "from": "Alamat pengirim (From)",
     "fromHint": "Wajib untuk Resend. Dengan SMTP, nilai bawaannya adalah nama pengguna.",
     "telegramBot": "Bot Telegram",
-    "telegramBotHint": "Bot yang mengirimkan notifikasi untuk setiap proyek tim. Anggota memilih obrolan masing-masing di preferensi mereka. Token disimpan secara terenkripsi.",
+    "telegramBotHint": "Bot yang mengirimkan notifikasi untuk setiap proyek tim. Anggota memilih obrolan masing-masing di pengaturan notifikasi. Token disimpan secara terenkripsi.",
     "botToken": "Token API bot (opsional)",
     "emailSaved": "Penyedia email disimpan",
     "telegramSaved": "Penyedia Telegram disimpan"

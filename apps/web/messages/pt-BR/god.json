@@ -404,7 +404,7 @@
   "telegram": {
     "saved": "Configurações do Telegram salvas",
     "bot": "Bot",
-    "botConfigured": "As pessoas conectam sua conta do Telegram abrindo um chat com este bot em seu perfil.",
+    "botConfigured": "As pessoas conectam sua conta do Telegram abrindo um chat com este bot nas configurações de notificação.",
     "botMissing": "Crie um bot com @BotFather no Telegram e cole seu token aqui.",
     "botToken": "Token do bot",
     "botTokenHint": "O token é verificado com o Telegram ao salvar, então um errado é recusado aqui em vez de falhar silenciosamente depois.",
@@ -413,7 +413,7 @@
   "slack": {
     "saved": "Configurações do Slack salvas",
     "app": "App do Slack",
-    "appConfigured": "Quando ativado, os membros podem conectar a conta do Slack nas configurações de notificação de um projeto.",
+    "appConfigured": "Quando ativado, os membros podem conectar a conta do Slack nas suas configurações de notificação.",
     "appMissing": "Adicione o token do bot, o Client ID e o segredo do cliente para ativar o app."
   },
   "email": {

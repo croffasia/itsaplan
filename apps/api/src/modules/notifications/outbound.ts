@@ -418,7 +418,7 @@ export async function enqueueOutbound(
     }
     if (telegramEnabled && prefs.telegramEvents[n.type]) {
       // No linked Telegram account means nowhere to send; the member sees the prompt
-      // to link one in the project's notification settings.
+      // to link one in their notification settings.
       const chatId = chatIdByUser.get(n.userId);
       if (chatId) {
         out.push({
@@ -431,7 +431,7 @@ export async function enqueueOutbound(
     }
     if (slackApp && prefs.slackEvents[n.type]) {
       // No connected account in that Slack workspace means nowhere to send; the member
-      // sees the prompt to connect one in the project's notification settings.
+      // sees the prompt to connect one in their notification settings.
       const slackUserId = slackIdByUser.get(n.userId);
       if (slackUserId) {
         out.push({

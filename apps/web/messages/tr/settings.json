@@ -93,37 +93,6 @@
     "empty": "Henüz ajan yok",
     "emptyHint": "Takım yöneticileri ayarlar üzerinden projeye ajan ekleyebilir."
   },
-  "notifications": {
-    "title": "Bildirimler",
-    "description": "Hangi iş olaylarının nereye bildirileceğini seçin.",
-    "email": "E-posta",
-    "telegram": "Telegram",
-    "slack": "Slack",
-    "push": "Anlık",
-    "events": {
-      "assigned": "Bir işe sorumlu olarak atandığımda",
-      "mentioned": "Bir işte veya belgede benden bahsedildiğinde",
-      "commented": "Takip ettiğim bir işe yeni yorum yapıldığında",
-      "state_changed": "Takip ettiğim bir işin durumu değiştiğinde",
-      "reacted": "Yorumuma tepki verildiğinde"
-    },
-    "eventsTitle": "Olaylar",
-    "telegramAccount": "Telegram hesabı",
-    "telegramAccountHint": "Telegram bildirimleri, dahil olduğunuz tüm projeler için profilinize bağlı olan hesaba gönderilir.",
-    "noTelegramAccount": "Bağlı Telegram hesabı yok",
-    "slackAccount": "Slack hesabı",
-    "slackAccountHint": "Bu projenin Slack bildirimleri, {workspace} Slack çalışma alanındaki hesabınıza gider.",
-    "noSlackAccount": "Bağlı Slack hesabı yok",
-    "slackConnected": "Bağlı",
-    "slackConnect": "Bağla",
-    "slackDisconnect": "Bağlantıyı kes",
-    "slackConnectedToast": "Slack hesabı bağlandı",
-    "slackConnecting": "Slack hesabınız bağlanıyor…",
-    "slackConnectFailed": "Slack hesabı bağlanmadı",
-    "slackConnectCancelled": "Bağlantı Slack'te iptal edildi. Projenin bildirim ayarlarından yeniden bağlayın.",
-    "slackBack": "Uygulamaya dön",
-    "preferencesSaved": "Bildirim tercihleri kaydedildi"
-  },
   "transfer": {
     "actions": {
       "create": "Yeni",

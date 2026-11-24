@@ -2,6 +2,7 @@
   "account": {
     "profile": "Profil",
     "preferences": "Tercihler",
+    "notifications": "Bildirimler",
     "accounts": "Hesaplar",
     "security": "Güvenlik",
     "api-keys": "API anahtarları",

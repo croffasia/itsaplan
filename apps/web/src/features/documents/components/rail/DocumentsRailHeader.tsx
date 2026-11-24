@@ -8,6 +8,7 @@ import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from '@/compon
 import { cn } from '@/lib/utils';
 import { useDocumentsRailView } from '../../hooks/useDocumentsRailView';
 import DocumentIconButton from '../DocumentIconButton';
+import DocumentsRailTreeToggle from './DocumentsRailTreeToggle';
 import DocumentsRailViewMenu from './DocumentsRailViewMenu';
 
 // The popover spans the rail under its header rather than hanging off the button.
@@ -45,6 +46,7 @@ export default function DocumentsRailHeader({
           )}
           {showTools && (
             <div className="ms-auto flex gap-0.5">
+              <DocumentsRailTreeToggle projectKey={projectKey} documents={documents} />
               <PopoverTrigger asChild>
                 <DocumentIconButton
                   label={

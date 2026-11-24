@@ -34,6 +34,8 @@
   "noAccess": "프로젝트 문서에 접근할 수 없습니다. 프로젝트 소유자가 역할을 변경할 수 있습니다.",
   "expand": "{title} 펼치기",
   "collapse": "{title} 접기",
+  "expandAll": "모든 페이지 펼치기",
+  "collapseAll": "모든 페이지 접기",
   "backToDocuments": "문서로 돌아가기",
   "documentActions": "페이지 작업",
   "pageIcon": "페이지 아이콘",

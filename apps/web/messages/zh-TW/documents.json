@@ -32,6 +32,8 @@
   "noAccess": "你無權存取專案文件。專案擁有者可以變更你的角色。",
   "expand": "展開 {title}",
   "collapse": "收合 {title}",
+  "expandAll": "展開所有頁面",
+  "collapseAll": "收合所有頁面",
   "backToDocuments": "返回文件",
   "documentActions": "頁面操作",
   "pageIcon": "頁面圖示",

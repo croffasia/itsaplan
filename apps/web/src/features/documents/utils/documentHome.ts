@@ -1,4 +1,4 @@
-import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
+import type { DocumentPinPlacement, ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import type { DocumentVisit } from '@/hooks/useDocumentNavigation';
 import { documentChildren } from './documentTree';
 
@@ -20,11 +20,12 @@ export type DocumentHomeDay = 'today' | 'yesterday' | 'week' | 'earlier';
 
 const DAYS: DocumentHomeDay[] = ['today', 'yesterday', 'week', 'earlier'];
 
-// A card for each pinned page, from the list of live pages the viewer can read.
+// A card for each pinned page in the order the project chose, from the list of live pages the
+// viewer can read.
 export function documentHomePinned(documents: ProjectDocumentSummary[]): DocumentHomeCard[] {
   return documents
     .filter((document) => document.isPinned)
-    .sort((a, b) => a.position - b.position || a.id - b.id)
+    .sort((a, b) => (a.pinPosition ?? 0) - (b.pinPosition ?? 0) || a.id - b.id)
     .map((page) => {
       const children = documentChildren(page.id, documents);
       const updatedAt = children.reduce(
@@ -34,6 +35,25 @@ export function documentHomePinned(documents: ProjectDocumentSummary[]): Documen
       );
       return { page, children, updatedAt };
     });
+}
+
+// The pinned pages a pinned page sits between once the pinned pages are in the order `ids`.
+export function documentPinPlacement(ids: number[], documentId: number): DocumentPinPlacement {
+  const index = ids.indexOf(documentId);
+  return { afterId: ids[index - 1], beforeId: ids[index + 1] };
+}
+
+// The pinned pages in the order `ids`, numbered 1024 apart until the list reloads with the
+// places the server gave them.
+export function applyDocumentPinOrder(
+  documents: ProjectDocumentSummary[],
+  ids: number[],
+): ProjectDocumentSummary[] {
+  const places = new Map(ids.map((id, index) => [id, (index + 1) * 1024]));
+  return documents.map((document) => {
+    const pinPosition = places.get(document.id);
+    return pinPosition === undefined ? document : { ...document, pinPosition };
+  });
 }
 
 // The pages the viewer opened, newest visit first, leaving out pages no longer in the list.

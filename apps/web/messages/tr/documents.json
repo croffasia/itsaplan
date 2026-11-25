@@ -321,6 +321,7 @@
     "mentionedYou": "<b>{name}</b>, <b>{page}</b> sayfasında sizden bahsetti",
     "repliedToYou": "<b>{name}</b>, <b>{page}</b> sayfasında size yanıt verdi",
     "pinnedMeta": "{count, plural, one {# sayfa} other {# sayfa}} · {time} güncellendi",
+    "pinnedMoved": "{title}, {count} sayfa içinde {place}. sıraya taşındı",
     "recent": "Son kullanılanlar",
     "openedByMe": "Açtıklarım",
     "updated": "Güncellenenler",

@@ -321,6 +321,7 @@
     "mentionedYou": "<b>{name}</b> te ha mencionado en <b>{page}</b>",
     "repliedToYou": "<b>{name}</b> te ha respondido en <b>{page}</b>",
     "pinnedMeta": "{count, plural, one {# página} other {# páginas}} · actualizada {time}",
+    "pinnedMoved": "{title} movida al puesto {place} de {count}",
     "recent": "Recientes",
     "openedByMe": "Abiertas por mí",
     "updated": "Actualizadas",

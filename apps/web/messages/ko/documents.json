@@ -321,6 +321,7 @@
     "mentionedYou": "<b>{name}</b>님이 <b>{page}</b>에서 나를 언급했습니다",
     "repliedToYou": "<b>{name}</b>님이 <b>{page}</b>에서 내게 답글을 남겼습니다",
     "pinnedMeta": "페이지 {count, plural, other {#개}} · {time} 업데이트",
+    "pinnedMoved": "{title}을(를) {count}개 중 {place}번째로 옮겼습니다",
     "recent": "최근",
     "openedByMe": "내가 연 페이지",
     "updated": "업데이트됨",

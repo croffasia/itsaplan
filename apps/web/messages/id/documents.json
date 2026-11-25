@@ -321,6 +321,7 @@
     "mentionedYou": "<b>{name}</b> menyebut Anda di <b>{page}</b>",
     "repliedToYou": "<b>{name}</b> membalas Anda di <b>{page}</b>",
     "pinnedMeta": "{count, plural, other {# halaman}} · diperbarui {time}",
+    "pinnedMoved": "{title} dipindahkan ke urutan {place} dari {count}",
     "recent": "Terbaru",
     "openedByMe": "Dibuka oleh saya",
     "updated": "Diperbarui",

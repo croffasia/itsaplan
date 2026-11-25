@@ -321,6 +321,7 @@
     "mentionedYou": "<b>{name}</b> згадує вас на сторінці <b>{page}</b>",
     "repliedToYou": "<b>{name}</b> відповідає вам на сторінці <b>{page}</b>",
     "pinnedMeta": "{count, plural, one {# сторінка} few {# сторінки} many {# сторінок} other {# сторінки}} · оновлено {time}",
+    "pinnedMoved": "«{title}» переміщено на місце {place} з {count}",
     "recent": "Нещодавні",
     "openedByMe": "Відкриті мною",
     "updated": "Оновлені",

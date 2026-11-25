@@ -44,6 +44,7 @@ import {
   listProjectShares,
 } from '@/lib/api/endpoints/share';
 import { qk } from '@/services/queryKeys';
+import { applyDocumentPinOrder, documentPinPlacement } from '../utils/documentHome';
 import { applyOptimisticDocumentMove } from '../utils/documentMove';
 
 function summaryOf(document: ProjectDocument): ProjectDocumentSummary {
@@ -395,6 +396,34 @@ export function useSetDocumentPinned(projectKey: string | null) {
       if (!projectKey) return;
       void qc.invalidateQueries({ queryKey: qk.document(projectKey, documentId) });
       invalidateLists(qc, projectKey);
+    },
+  });
+}
+
+// Moves a pinned page so the pinned pages take the order `order`. The lists show that order at
+// once and go back to the one they had when the request fails.
+export function useMovePinnedDocument(projectKey: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ documentId, order }: { documentId: number; order: number[] }) =>
+      setDocumentPinned(projectKey!, documentId, true, documentPinPlacement(order, documentId)),
+    onMutate: async ({ order }) => {
+      if (!projectKey) return { snapshots: [] };
+      await qc.cancelQueries({ queryKey: qk.documentListsForProject(projectKey) });
+      const snapshots = qc.getQueriesData<ProjectDocumentSummary[]>({
+        queryKey: qk.documentListsForProject(projectKey),
+      });
+      qc.setQueriesData<ProjectDocumentSummary[]>(
+        { queryKey: qk.documentListsForProject(projectKey) },
+        (previous) => (previous ? applyDocumentPinOrder(previous, order) : previous),
+      );
+      return { snapshots };
+    },
+    onError: (_error, _variables, context) => {
+      for (const [queryKey, data] of context?.snapshots ?? []) qc.setQueryData(queryKey, data);
+    },
+    onSettled: () => {
+      if (projectKey) invalidateLists(qc, projectKey);
     },
   });
 }

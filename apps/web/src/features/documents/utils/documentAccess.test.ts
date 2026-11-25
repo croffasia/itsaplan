@@ -16,6 +16,7 @@ function page(id: number, patch: Partial<ProjectDocumentSummary> = {}): ProjectD
     visibility: 'public',
     isLocked: false,
     isPinned: false,
+    pinPosition: null,
     isFavorite: false,
     archivedAt: null,
     position: id,

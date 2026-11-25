@@ -61,6 +61,7 @@ const projectDocument: ProjectDocument = {
   memberIds: [],
   isLocked: false,
   isPinned: false,
+  pinPosition: null,
   isFavorite: false,
   archivedAt: null,
   position: 0,

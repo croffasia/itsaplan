@@ -1,30 +1,53 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { FileText } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRelativeTime } from '@/context/relativeTimeContext';
+import { cn } from '@/lib/utils';
 import { documentPath } from '@/utils/paths';
 import type { DocumentHomeCard } from '../../utils/documentHome';
-import DocumentsHomeUnpinButton from './DocumentsHomeUnpinButton';
 
 const CHILD_LIMIT = 4;
 
 export default function DocumentsHomeCard({
   projectKey,
   card,
+  draggable,
+  menu,
 }: {
   projectKey: string;
   card: DocumentHomeCard;
+  draggable: boolean;
+  menu: ReactNode;
 }) {
   const t = useTranslations('documents');
   const relativeTime = useRelativeTime();
   const { page, children } = card;
+  const sortable = useSortable({ id: page.id, disabled: !draggable });
+  // A key pressed on a link or on the menu keeps its own meaning, so a card is dragged only by
+  // a pointer. From the keyboard, its menu moves it.
+  const { onKeyDown: _keyboard, ...pointerListeners } = sortable.listeners ?? {};
   const href = documentPath(projectKey, page.id);
   const focus = 'outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
   return (
-    <article className="group relative flex min-w-0 flex-col rounded-xl bg-card p-2 shadow-[var(--tile-shadow)]">
+    <article
+      ref={sortable.setNodeRef}
+      style={{
+        transform: CSS.Translate.toString(sortable.transform),
+        transition: sortable.transition,
+      }}
+      {...pointerListeners}
+      className={cn(
+        'group relative flex min-w-0 flex-col rounded-xl bg-card p-2 shadow-[var(--tile-shadow)]',
+        draggable && 'cursor-grab',
+        sortable.isDragging && 'opacity-40',
+      )}
+    >
       <Link
         href={href}
         className={`flex items-center gap-3 rounded-lg p-2 pe-10 transition-colors hover:bg-accent ${focus}`}
@@ -44,7 +67,7 @@ export default function DocumentsHomeCard({
           </span>
         </span>
       </Link>
-      <DocumentsHomeUnpinButton projectKey={projectKey} page={page} />
+      {menu}
       {children.length > 0 && (
         <ul className="mt-1">
           {children.slice(0, CHILD_LIMIT).map((child) => (

@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import {
+  applyDocumentPinOrder,
   documentHomeDays,
   documentHomeOpened,
   documentHomePinned,
   documentHomeUpdated,
+  documentPinPlacement,
 } from './documentHome';
 
 const page = (id: number, parentId: number | null, extra: Partial<ProjectDocumentSummary> = {}) =>
@@ -15,6 +17,7 @@ const page = (id: number, parentId: number | null, extra: Partial<ProjectDocumen
     position: id,
     title: `Page ${id}`,
     isPinned: false,
+    pinPosition: null,
     isFavorite: false,
     updatedAt: `2026-01-${String(id).padStart(2, '0')}T00:00:00.000Z`,
     ...extra,
@@ -52,6 +55,54 @@ describe('documentHomePinned', () => {
 
   test('makes no card when nothing is pinned', () => {
     assert.deepEqual(documentHomePinned([page(1, null), page(2, 1)]), []);
+  });
+
+  test('orders the cards by the place the project chose, then by id', () => {
+    const pinned = documentHomePinned([
+      page(1, null, { isPinned: true, pinPosition: 3072 }),
+      page(2, null, { isPinned: true, pinPosition: 1024, position: 9 }),
+      page(3, 1, { isPinned: true, pinPosition: 2048 }),
+      page(4, null, { isPinned: true, pinPosition: 1024 }),
+    ]);
+    assert.deepEqual(
+      pinned.map((card) => card.page.id),
+      [2, 4, 3, 1],
+    );
+  });
+});
+
+describe('documentPinPlacement', () => {
+  test('names the pinned pages a page sits between in a new order', () => {
+    assert.deepEqual(documentPinPlacement([3, 1, 2], 3), { afterId: undefined, beforeId: 1 });
+    assert.deepEqual(documentPinPlacement([1, 3, 2], 3), { afterId: 1, beforeId: 2 });
+    assert.deepEqual(documentPinPlacement([1, 2, 3], 3), { afterId: 2, beforeId: undefined });
+  });
+});
+
+describe('applyDocumentPinOrder', () => {
+  test('numbers the pinned pages in the new order and leaves the other pages alone', () => {
+    const loose = page(9, null);
+    const documents = applyDocumentPinOrder(
+      [
+        page(1, null, { isPinned: true, pinPosition: 1024 }),
+        page(2, null, { isPinned: true, pinPosition: 2048 }),
+        loose,
+      ],
+      [2, 1],
+    );
+    assert.deepEqual(
+      documents.map((document) => [document.id, document.pinPosition]),
+      [
+        [1, 2048],
+        [2, 1024],
+        [9, null],
+      ],
+    );
+    assert.equal(documents[2], loose);
+    assert.deepEqual(
+      documentHomePinned(documents).map((card) => card.page.id),
+      [2, 1],
+    );
   });
 });
 

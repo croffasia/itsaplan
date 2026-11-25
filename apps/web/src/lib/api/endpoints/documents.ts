@@ -38,6 +38,8 @@ export interface ProjectDocumentSummary {
   visibility: DocumentVisibility;
   isLocked: boolean;
   isPinned: boolean;
+  // The place of a pinned page on the Docs home, lowest first. Null when it is not pinned.
+  pinPosition: number | null;
   isFavorite: boolean;
   archivedAt: string | null;
   position: number;
@@ -268,10 +270,21 @@ export const setDocumentFavorite = (projectKey: string, documentId: number, isFa
     body: JSON.stringify({ isFavorite }),
   });
 
-export const setDocumentPinned = (projectKey: string, documentId: number, isPinned: boolean) =>
+// The pinned pages a pinned page goes right after and right before.
+export interface DocumentPinPlacement {
+  afterId?: number;
+  beforeId?: number;
+}
+
+export const setDocumentPinned = (
+  projectKey: string,
+  documentId: number,
+  isPinned: boolean,
+  placement: DocumentPinPlacement = {},
+) =>
   request<{ isPinned: boolean }>(`/projects/${projectKey}/documents/${documentId}/pin`, {
     method: 'PATCH',
-    body: JSON.stringify({ isPinned }),
+    body: JSON.stringify({ isPinned, ...placement }),
   });
 
 export const listDocumentRevisions = (projectKey: string, documentId: number) =>

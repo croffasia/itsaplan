@@ -12,6 +12,7 @@
   "activityLoadFailed": "Não foi possível carregar a atividade.",
   "fields": {
     "state": "Estado",
+    "blocked": "Bloqueada",
     "priority": "Prioridade",
     "assignee": "Responsável",
     "delegate": "Delegado",
@@ -42,6 +43,7 @@
     "preview": "Visualizar",
     "goToIssue": "Ir para a issue",
     "status": "Status",
+    "unblock": "Desbloquear",
     "priority": "Prioridade",
     "assignee": "Responsável",
     "delegate": "Delegado",
@@ -65,6 +67,17 @@
     "noCycle": "Sem ciclo",
     "copyFailed": "Não foi possível copiar",
     "promptCopied": "Prompt copiado para a área de transferência"
+  },
+  "blocked": {
+    "byLinks": "Retida pelas issues que a bloqueiam. Volta quando elas são fechadas.",
+    "noReason": "Nenhum motivo informado.",
+    "unblock": "Desbloquear"
+  },
+  "blockedReason": {
+    "title": "Por que está bloqueada?",
+    "description": "O motivo aparece no cartão até a issue sair da coluna de bloqueadas.",
+    "placeholder": "Aguardando as chaves de API do fornecedor",
+    "submit": "Bloquear"
   },
   "commands": {
     "preview": "Visualizar issue",

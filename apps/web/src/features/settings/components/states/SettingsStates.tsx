@@ -16,6 +16,7 @@ import SettingsColorField from '../crud/SettingsColorField';
 import { SettingsEmpty } from '../crud/SettingsEmpty';
 import { SettingsInlineEditForm } from '../crud/SettingsInlineEditForm';
 import SettingsWipLimitField from '../crud/SettingsWipLimitField';
+import SettingsBlockedColumnField from '../crud/SettingsBlockedColumnField';
 import { useSettingsCan } from '../../context/settingsPermission';
 import {
   useCreateColumn,
@@ -39,6 +40,7 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
     mode: 'soft',
   });
   const [editAutoAssign, setEditAutoAssign] = useState<string | null>(null);
+  const [editBlocked, setEditBlocked] = useState(false);
   const [deleting, setDeleting] = useState<Column | null>(null);
   const t = useTranslations('settings.states');
   const tCommon = useTranslations('common');
@@ -101,6 +103,7 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
     setEditColor(c.color);
     setEditWip({ limit: c.wipLimit, mode: c.wipMode });
     setEditAutoAssign(c.autoAssignUserId);
+    setEditBlocked(c.blocked);
   }
 
   async function saveEdit(c: Column) {
@@ -113,6 +116,7 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
         wipLimit: editWip.limit,
         wipMode: editWip.mode,
         autoAssignUserId: editAutoAssign,
+        ...(editBlocked !== c.blocked && { blocked: editBlocked }),
       },
     });
     setEditingId(null);
@@ -185,6 +189,12 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
                                 mode={editWip.mode}
                                 onChange={(limit, mode) => setEditWip({ limit, mode })}
                               />
+                              {(s === 'unstarted' || s === 'started') && (
+                                <SettingsBlockedColumnField
+                                  value={editBlocked}
+                                  onChange={setEditBlocked}
+                                />
+                              )}
                             </>
                           }
                         />

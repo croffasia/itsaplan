@@ -10,6 +10,7 @@ import { localeDirection, type Locale } from '@/i18n/locales';
 import { HotkeysProvider } from '@/context/useHotkeys';
 import { OnboardingTourProvider } from '@/context/onboardingTour';
 import { SyncProvider } from '@/context/syncContext';
+import { BlockedReasonCanceled, BlockedReasonProvider } from '@/context/blockedReason';
 import { RelativeTimeProvider } from '@/context/relativeTimeContext';
 import { Toaster } from '@/components/ui/sonner';
 import PreferencesSync from '@/components/preferences-sync';
@@ -44,7 +45,7 @@ export function Providers({ children }: { children: ReactNode }) {
         // query renders its own empty/loading state in place.
         mutationCache: new MutationCache({
           onError: (error, _vars, _ctx, mutation) => {
-            if (mutation.meta?.suppressErrorToast) return;
+            if (mutation.meta?.suppressErrorToast || error instanceof BlockedReasonCanceled) return;
             toast.error(errorMessage(error, fallback.current));
           },
         }),
@@ -70,7 +71,9 @@ export function Providers({ children }: { children: ReactNode }) {
           <RelativeTimeProvider>
             <HotkeysProvider>
               <OnboardingTourProvider>
-                <SigningOutGate>{children}</SigningOutGate>
+                <BlockedReasonProvider>
+                  <SigningOutGate>{children}</SigningOutGate>
+                </BlockedReasonProvider>
               </OnboardingTourProvider>
             </HotkeysProvider>
           </RelativeTimeProvider>

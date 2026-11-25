@@ -92,6 +92,7 @@ export const ProjectTemplateContentsResponse = t.Object({
       position: t.Number(),
       wipLimit: t.Nullable(t.Number()),
       wipMode: t.String(),
+      blocked: t.Optional(t.Boolean()),
     }),
   ),
   issueTypes: t.Array(
@@ -221,6 +222,7 @@ const sharedSnapshot = strict({
       position: t.Integer(),
       wipLimit: t.Nullable(t.Integer({ minimum: 1 })),
       wipMode: t.Union([t.Literal('soft'), t.Literal('hard')]),
+      blocked: t.Optional(t.Boolean()),
     }),
   ),
   issueTypes: t.Array(

@@ -22,9 +22,9 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
   .use(guards)
   .post(
     '/projects/:projectKey/columns',
-    async ({ project, body, set }) => {
+    async ({ project, body, set, user }) => {
       set.status = 201;
-      return createColumn({ projectId: project.id, ...body });
+      return createColumn({ projectId: project.id, ...body }, requireUser(user).id);
     },
     {
       body: createColumnBody,
@@ -58,8 +58,8 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
 
   .patch(
     '/projects/:projectKey/columns/:columnId',
-    async ({ params, project, body }) => {
-      const column = await updateColumn(params.columnId, project.id, body);
+    async ({ params, project, body, user }) => {
+      const column = await updateColumn(params.columnId, project.id, body, requireUser(user).id);
       if (!column) throw new HttpError(404, 'Column not found');
       return column;
     },
@@ -70,7 +70,8 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
       response: { 200: ColumnResponse, ...commonErrors },
       detail: {
         summary: 'Update a column',
-        description: "Update a column's name, state type, color, WIP limit or auto-assignee.",
+        description:
+          "Update a column's name, state type, color, WIP limit, auto-assignee or blocked flag.",
         ...mcpTool('update_column'),
       },
     },

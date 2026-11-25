@@ -6,8 +6,9 @@ import {
   issueLabel,
   issueFieldValue,
   issueFieldOption,
+  type DbExecutor,
 } from '@repo/db';
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, ne, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
 import { assertAssignableMember, getAssignmentEligibility } from '#modules/members/service';
 import { recordActivityForIssues, statusSide } from '#modules/issues/activity';
@@ -18,6 +19,12 @@ import { recordStatusChange } from '#modules/issues/status-history';
 import { hasUnfinishedStatusRuns, queueStatusRuns } from '#modules/agents/schedules/issue-runs';
 import { pushLinkedIssueState } from '#modules/git/issue-sync';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
+import {
+  BLOCKABLE_STATE_TYPES,
+  blockedTargetIds,
+  openBlockedIssueIds,
+  syncBlockedIssues,
+} from '#modules/issues/blocked';
 
 export interface ColumnRow {
   id: number;
@@ -29,6 +36,7 @@ export interface ColumnRow {
   wipLimit: number | null;
   wipMode: string;
   autoAssignUserId: string | null;
+  blocked: boolean;
 }
 
 function mapColumn(row: typeof projectColumn.$inferSelect): ColumnRow {
@@ -42,6 +50,7 @@ function mapColumn(row: typeof projectColumn.$inferSelect): ColumnRow {
     wipLimit: row.wipLimit,
     wipMode: row.wipMode,
     autoAssignUserId: row.autoAssignUserId,
+    blocked: row.blocked,
   };
 }
 
@@ -127,34 +136,72 @@ export async function listColumns(projectId: number): Promise<ColumnRow[]> {
   return rows.map(mapColumn);
 }
 
-export async function createColumn(input: {
-  projectId: number;
-  name: string;
-  stateType: string;
-  color?: string;
-  wipLimit?: number | null;
-  wipMode?: string;
-  autoAssignUserId?: string | null;
-}): Promise<ColumnRow> {
+export async function createColumn(
+  input: {
+    projectId: number;
+    name: string;
+    stateType: string;
+    color?: string;
+    wipLimit?: number | null;
+    wipMode?: string;
+    autoAssignUserId?: string | null;
+    blocked?: boolean;
+  },
+  actorUserId?: string | null,
+): Promise<ColumnRow> {
   await assertAssignableMember(input.projectId, input.autoAssignUserId, undefined, 'Auto-assignee');
+  assertBlockedStateType(input.blocked ?? false, input.stateType);
   const [{ pos }] = await db
     .select({ pos: sql<number>`COALESCE(MAX(${projectColumn.position}), -1) + 1` })
     .from(projectColumn)
     .where(eq(projectColumn.projectId, input.projectId));
-  const [row] = await db
-    .insert(projectColumn)
-    .values({
-      projectId: input.projectId,
-      name: input.name,
-      stateType: input.stateType,
-      color: input.color ?? '#6b7280',
-      position: Number(pos),
-      wipLimit: input.wipLimit ?? null,
-      wipMode: input.wipMode ?? 'soft',
-      autoAssignUserId: input.autoAssignUserId ?? null,
-    })
-    .returning();
+  const row = await db.transaction(async (tx) => {
+    if (input.blocked) await releaseBlockedColumn(tx, input.projectId, null);
+    const [created] = await tx
+      .insert(projectColumn)
+      .values({
+        projectId: input.projectId,
+        name: input.name,
+        stateType: input.stateType,
+        color: input.color ?? '#6b7280',
+        position: Number(pos),
+        wipLimit: input.wipLimit ?? null,
+        wipMode: input.wipMode ?? 'soft',
+        autoAssignUserId: input.autoAssignUserId ?? null,
+        blocked: input.blocked ?? false,
+      })
+      .returning();
+    return created;
+  });
+  if (row.blocked) await syncBlockedIssues(await openBlockedIssueIds(input.projectId), actorUserId);
   return mapColumn(row);
+}
+
+function assertBlockedStateType(blocked: boolean, stateType: string): void {
+  if (blocked && !BLOCKABLE_STATE_TYPES.includes(stateType))
+    throw new HttpError(400, 'The blocked column must be an unstarted or started state');
+}
+
+// Clears the blocked flag of the project's blocked column other than keepId, and the
+// blocked state of the issues in it. A project has one blocked column, so a column
+// that takes the flag takes it from the one that had it.
+async function releaseBlockedColumn(tx: DbExecutor, projectId: number, keepId: number | null) {
+  const released = await tx
+    .update(projectColumn)
+    .set({ blocked: false })
+    .where(
+      and(
+        eq(projectColumn.projectId, projectId),
+        eq(projectColumn.blocked, true),
+        keepId === null ? undefined : ne(projectColumn.id, keepId),
+      ),
+    )
+    .returning({ id: projectColumn.id });
+  if (released.length)
+    await tx
+      .update(issue)
+      .set({ blockedReason: null, blockedFromColumnId: null })
+      .where(inArray(issue.columnId, released.map((r) => r.id)));
 }
 
 async function getColumnById(id: number): Promise<ColumnRow | null> {
@@ -176,21 +223,22 @@ export async function updateColumn(
     wipMode?: string;
     // null clears the automatic assignment; absent leaves it as it is.
     autoAssignUserId?: string | null;
+    blocked?: boolean;
   },
+  actorUserId?: string | null,
 ): Promise<ColumnRow | null> {
   const scope = and(eq(projectColumn.id, id), eq(projectColumn.projectId, projectId));
+  const [current] = await db.select().from(projectColumn).where(scope);
+  if (!current) return null;
   if (patch.autoAssignUserId) {
-    const [current] = await db
-      .select({ userId: projectColumn.autoAssignUserId })
-      .from(projectColumn)
-      .where(scope);
     await assertAssignableMember(
       projectId,
       patch.autoAssignUserId,
-      current?.userId ?? null,
+      current.autoAssignUserId,
       'Auto-assignee',
     );
   }
+  assertBlockedStateType(patch.blocked ?? current.blocked, patch.stateType ?? current.stateType);
   const set: Partial<typeof projectColumn.$inferInsert> = {};
   if (patch.name !== undefined) set.name = patch.name;
   if (patch.color !== undefined) set.color = patch.color;
@@ -198,12 +246,19 @@ export async function updateColumn(
   if (patch.wipLimit !== undefined) set.wipLimit = patch.wipLimit;
   if (patch.wipMode !== undefined) set.wipMode = patch.wipMode;
   if (patch.autoAssignUserId !== undefined) set.autoAssignUserId = patch.autoAssignUserId;
-  if (Object.keys(set).length === 0) {
-    const rows = await db.select().from(projectColumn).where(scope);
-    return rows[0] ? mapColumn(rows[0]) : null;
-  }
-  const [row] = await db.update(projectColumn).set(set).where(scope).returning();
-  return row ? mapColumn(row) : null;
+  if (patch.blocked !== undefined) set.blocked = patch.blocked;
+  if (Object.keys(set).length === 0) return mapColumn(current);
+  const row = await db.transaction(async (tx) => {
+    if (patch.blocked === true) await releaseBlockedColumn(tx, projectId, id);
+    if (patch.blocked === false && current.blocked)
+      await releaseBlockedColumn(tx, projectId, null);
+    const [updated] = await tx.update(projectColumn).set(set).where(scope).returning();
+    return updated;
+  });
+  if (!row) return null;
+  if (row.blocked && !current.blocked)
+    await syncBlockedIssues(await openBlockedIssueIds(projectId), actorUserId);
+  return mapColumn(row);
 }
 
 // Any column missing from orderedIds is appended in its current order. The two-pass
@@ -284,7 +339,12 @@ export async function deleteColumn(
     if (opts.mode === 'move') {
       rows = await tx
         .update(issue)
-        .set({ columnId: opts.targetColumnId, updatedAt: sql`now()` })
+        .set({
+          columnId: opts.targetColumnId,
+          blockedReason: null,
+          blockedFromColumnId: null,
+          updatedAt: sql`now()`,
+        })
         .where(eq(issue.columnId, columnId))
         .returning({ id: issue.id });
     } else {
@@ -310,6 +370,7 @@ export async function deleteColumn(
     await emitIssueEvents(projectId, 'issue.state_changed', moved, actorUserId);
     await queueStatusRuns(columnIssueIds, target.id, actorUserId);
     for (const issueId of columnIssueIds) await pushLinkedIssueState(issueId, target.id);
+    await syncBlockedIssues(await blockedTargetIds(columnIssueIds), actorUserId);
   } else {
     for (const issueId of columnIssueIds) await deleteThreadsWhere({ issueId });
     await emitWebhookEvents(projectId, 'issue.deleted', async () => deletedPayloads, actorUserId);

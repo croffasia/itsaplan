@@ -194,6 +194,10 @@
       "hardHelp": "Durum doluyken hiçbir yerden bu duruma yeni iş taşınamaz.",
       "badgeSoft": "en fazla {limit}",
       "badgeHard": "en fazla {limit}, zorunlu"
+    },
+    "blocked": {
+      "label": "Engellenenler sütunu",
+      "help": "Açık bir iş öğesinin engellediği öğeler buraya taşınır ve o kapanınca kendi sütununa döner. Bir öğeyi buraya taşımak neden ister. Bir projede bir engellenenler sütunu olur."
     }
   },
   "issueTypes": {

@@ -194,6 +194,10 @@
       "hardHelp": "Los tickets no se pueden mover al estado mientras esté lleno, desde ningún lado.",
       "badgeSoft": "máx {limit}",
       "badgeHard": "máx {limit}, forzado"
+    },
+    "blocked": {
+      "label": "Columna de bloqueadas",
+      "help": "Las incidencias bloqueadas por una incidencia abierta pasan aquí y vuelven a su columna cuando se cierra. Mover una incidencia aquí pide un motivo. Un proyecto tiene una sola columna de bloqueadas."
     }
   },
   "issueTypes": {

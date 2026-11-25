@@ -341,7 +341,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     '/projects/:projectKey/issues',
     async ({ project, body, user, set }) => {
       set.status = 201;
-      return createIssue(project, body, requireUser(user).id);
+      return createIssue(project, body, requireUser(user).id, { requireBlockedReason: true });
     },
     {
       body: createIssueBody,
@@ -777,7 +777,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       const actorUserId = requireUser(user).id;
       const issueId = params.issueId;
       const { labelIds, ...patch } = body;
-      const issue = await updateIssue(issueId, patch, actorUserId);
+      const issue = await updateIssue(issueId, patch, actorUserId, { requireBlockedReason: true });
       if (!issue) throw new HttpError(404, 'Issue not found');
       if (labelIds) {
         await setIssueLabels(projectId, issueId, labelIds, actorUserId);
@@ -794,7 +794,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         summary: 'Update an issue',
         description:
           'Update an issue. Moving it into a column at a ' +
-          'hard WIP limit returns 409 (code wip_limit_exceeded).',
+          'hard WIP limit returns 409 (code wip_limit_exceeded). Moving it into the ' +
+          'blocked column without blockedReason returns 400 (code blocked_reason_required).',
         ...mcpTool('update_issue'),
       },
     },

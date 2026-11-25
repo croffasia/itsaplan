@@ -12,6 +12,7 @@
   "activityLoadFailed": "無法載入活動。",
   "fields": {
     "state": "狀態",
+    "blocked": "已封鎖",
     "priority": "優先順序",
     "assignee": "負責人",
     "delegate": "執行代理",
@@ -42,6 +43,7 @@
     "preview": "預覽",
     "goToIssue": "開啟工作項目",
     "status": "狀態",
+    "unblock": "解除封鎖",
     "priority": "優先順序",
     "assignee": "負責人",
     "delegate": "執行代理",
@@ -65,6 +67,17 @@
     "noCycle": "無週期",
     "copyFailed": "無法複製到剪貼簿",
     "promptCopied": "提示詞已複製到剪貼簿"
+  },
+  "blocked": {
+    "byLinks": "被封鎖它的事項擋住。這些事項關閉後它會返回。",
+    "noReason": "未填寫原因。",
+    "unblock": "解除封鎖"
+  },
+  "blockedReason": {
+    "title": "為什麼被封鎖？",
+    "description": "在事項離開封鎖欄之前，原因會顯示在卡片上。",
+    "placeholder": "等待供應商提供 API 金鑰",
+    "submit": "封鎖"
   },
   "commands": {
     "preview": "預覽工作項目",

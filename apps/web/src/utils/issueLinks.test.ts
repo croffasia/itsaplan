@@ -42,4 +42,10 @@ describe('isBlocked', () => {
     ]);
     assert.equal(isBlocked(card, new Map([[2, other]]), columnById), false);
   });
+
+  it('holds while the issue sits in the blocked column', () => {
+    const blockedColumn = { id: 4, stateType: 'started', blocked: true } as Column;
+    const byId = new Map([...columnById, [blockedColumn.id, blockedColumn]]);
+    assert.equal(isBlocked(issue(1, blockedColumn.id), new Map(), byId), true);
+  });
 });

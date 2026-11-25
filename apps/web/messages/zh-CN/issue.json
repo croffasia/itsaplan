@@ -12,6 +12,7 @@
   "activityLoadFailed": "无法加载活动。",
   "fields": {
     "state": "状态",
+    "blocked": "已阻塞",
     "priority": "优先级",
     "assignee": "负责人",
     "delegate": "执行代理",
@@ -42,6 +43,7 @@
     "preview": "预览",
     "goToIssue": "打开工作项",
     "status": "状态",
+    "unblock": "解除阻塞",
     "priority": "优先级",
     "assignee": "负责人",
     "delegate": "执行代理",
@@ -65,6 +67,17 @@
     "noCycle": "无周期",
     "copyFailed": "无法复制到剪贴板",
     "promptCopied": "提示词已复制到剪贴板"
+  },
+  "blocked": {
+    "byLinks": "被阻塞它的事项挡住。这些事项关闭后它会返回。",
+    "noReason": "未填写原因。",
+    "unblock": "解除阻塞"
+  },
+  "blockedReason": {
+    "title": "为什么被阻塞？",
+    "description": "在事项离开阻塞列之前，原因会显示在卡片上。",
+    "placeholder": "等待供应商提供 API 密钥",
+    "submit": "阻塞"
   },
   "commands": {
     "preview": "预览工作项",

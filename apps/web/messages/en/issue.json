@@ -12,6 +12,7 @@
   "activityLoadFailed": "Could not load the activity.",
   "fields": {
     "state": "State",
+    "blocked": "Blocked",
     "priority": "Priority",
     "assignee": "Assignee",
     "delegate": "Delegate",
@@ -42,6 +43,7 @@
     "preview": "Preview",
     "goToIssue": "Go to issue",
     "status": "Status",
+    "unblock": "Unblock",
     "priority": "Priority",
     "assignee": "Assignee",
     "delegate": "Delegate",
@@ -65,6 +67,17 @@
     "noCycle": "No cycle",
     "copyFailed": "Could not copy to clipboard",
     "promptCopied": "Prompt copied to clipboard"
+  },
+  "blocked": {
+    "byLinks": "Held by the issues that block it. It returns when they close.",
+    "noReason": "No reason given.",
+    "unblock": "Unblock"
+  },
+  "blockedReason": {
+    "title": "Why is this blocked?",
+    "description": "The reason shows on the card until the issue leaves the blocked column.",
+    "placeholder": "Waiting for the API keys from the vendor",
+    "submit": "Block"
   },
   "commands": {
     "preview": "Preview issue",

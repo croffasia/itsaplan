@@ -26,6 +26,7 @@ import { getIssue, recordParentChange, type IssueRow } from './service';
 import { recordActivity, textSide } from './activity';
 import { recordStatusChange } from './status-history';
 import { recordCycleChange } from './cycle-history';
+import { syncBlockedIssues } from './blocked';
 import { emitIssueEvent } from './webhook-payload';
 import { queueStatusRuns } from '#modules/agents/schedules/issue-runs';
 import { emitRunsCanceled } from '#modules/agents/core/run-finished';
@@ -120,6 +121,7 @@ export async function moveIssue(
   const labels = await mapLabels(movedIds, target.id);
   const fields = await mapFields(movedIds, target.id);
 
+  let leftBlocked: number[] = [];
   const canceledRuns = await db.transaction(async (tx) => {
     // Everything above was read without a lock. A concurrent move of the same issue, or
     // a subtask added since, would otherwise write over that state.
@@ -166,6 +168,8 @@ export async function moveIssue(
           assigneeUserId: member(p.assigneeUserId),
           delegateUserId: member(p.delegateUserId),
           position: Number(posRow.pos),
+          blockedReason: null,
+          blockedFromColumnId: null,
           updatedAt: sql`now()`,
         })
         .where(eq(issue.id, p.id));
@@ -190,7 +194,7 @@ export async function moveIssue(
       }
     }
 
-    await tx
+    const cutLinks = await tx
       .delete(issueLink)
       .where(
         or(
@@ -203,7 +207,12 @@ export async function moveIssue(
             notInArray(issueLink.sourceIssueId, movedIds),
           ),
         ),
-      );
+      )
+      .returning({ kind: issueLink.kind, targetIssueId: issueLink.targetIssueId });
+    // The issues left behind that a moved issue blocked.
+    leftBlocked = cutLinks
+      .filter((link) => link.kind === 'blocks' && !movedIds.includes(link.targetIssueId))
+      .map((link) => link.targetIssueId);
     await tx.delete(projectDocumentIssue).where(inArray(projectDocumentIssue.issueId, movedIds));
     await tx
       .delete(issueWatcher)
@@ -241,6 +250,7 @@ export async function moveIssue(
     await emitIssueEvent('issue.updated', after, actorUserId);
     await queueStatusRuns([p.id], p.newColumnId, actorUserId);
   }
+  await syncBlockedIssues(leftBlocked, actorUserId);
   return (await getIssue(issueId))!;
 }
 

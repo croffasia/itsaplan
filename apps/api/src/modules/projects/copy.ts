@@ -213,10 +213,11 @@ type Row<T extends { $inferSelect: object }, K extends keyof T['$inferSelect']> 
 // A part the selection left out is empty.
 export interface ProjectSnapshot {
   flags: { [K in keyof typeof PROJECT_FLAGS]: boolean };
-  columns: Row<
+  // blocked is absent in a template saved before columns had it.
+  columns: (Row<
     typeof projectColumn,
     'id' | 'name' | 'stateType' | 'color' | 'position' | 'wipLimit' | 'wipMode'
-  >[];
+  > & { blocked?: boolean })[];
   issueTypes: Row<typeof issueType, 'id' | 'name' | 'icon' | 'color' | 'isDefault' | 'position'>[];
   labelGroups: Row<typeof labelGroup, 'id' | 'name' | 'color'>[];
   labels: Row<typeof label, 'id' | 'groupId' | 'name' | 'color'>[];
@@ -269,6 +270,7 @@ async function readProjectSnapshot(projectId: number, inc: Include): Promise<Pro
             position: projectColumn.position,
             wipLimit: projectColumn.wipLimit,
             wipMode: projectColumn.wipMode,
+            blocked: projectColumn.blocked,
           })
           .from(projectColumn)
           .where(eq(projectColumn.projectId, projectId))

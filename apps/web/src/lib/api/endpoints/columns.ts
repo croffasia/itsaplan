@@ -16,6 +16,8 @@ export interface Column {
   // The member every issue entering this column is assigned to, replacing whoever
   // held it.
   autoAssignUserId: string | null;
+  // The column blocked issues wait in. At most one per project, never a closed state.
+  blocked: boolean;
 }
 
 export type WipMode = 'soft' | 'hard';
@@ -29,6 +31,7 @@ export const createColumn = (
     wipLimit?: number | null;
     wipMode?: WipMode;
     autoAssignUserId?: string | null;
+    blocked?: boolean;
   },
 ) =>
   request<Column>(`/projects/${projectKey}/columns`, {
@@ -48,6 +51,7 @@ export const updateColumn = (
     wipMode?: WipMode;
     // null clears the automatic assignment; absent leaves it as it is.
     autoAssignUserId?: string | null;
+    blocked?: boolean;
   },
 ) =>
   request<Column>(`/projects/${projectKey}/columns/${columnId}`, {

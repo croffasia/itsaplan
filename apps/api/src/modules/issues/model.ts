@@ -107,6 +107,8 @@ export const IssueResponse = t.Object({
   startDate: t.Nullable(t.String()),
   dueDate: t.Nullable(t.String()),
   position: t.Number(),
+  blockedReason: t.Nullable(t.String()),
+  blockedFromColumnId: t.Nullable(t.Number()),
   createdAt: t.String(),
   updatedAt: t.String(),
   archivedAt: t.Nullable(t.String()),
@@ -455,6 +457,13 @@ export const IssueCycleResponse = t.Object({
 
 export const projectKeyParams = t.Object({ projectKey: t.String() });
 
+const BlockedReasonSchema = t.String({
+  maxLength: 1000,
+  description:
+    "Why the issue is blocked. Required when columnId is the project's blocked column " +
+    '(the column with blocked: true).',
+});
+
 export const createIssueBody = t.Object({
   typeId: t.Optional(t.Nullable(t.Integer({ description: 'Issue type id from get_project.' }))),
   initiativeId: t.Optional(
@@ -507,6 +516,7 @@ export const createIssueBody = t.Object({
   estimateMinutes: t.Optional(EstimateMinutesSchema),
   startDate: t.Optional(t.Nullable(isoDate())),
   dueDate: t.Optional(t.Nullable(isoDate())),
+  blockedReason: t.Optional(BlockedReasonSchema),
   labelIds: t.Optional(t.Array(t.Integer(), { description: 'Label ids from get_project.labels.' })),
 });
 
@@ -524,6 +534,7 @@ export const bulkUpdateIssuesBody = t.Object({
     estimateMinutes: t.Optional(EstimateMinutesSchema),
     startDate: t.Optional(t.Nullable(isoDate())),
     dueDate: t.Optional(t.Nullable(isoDate())),
+    blockedReason: t.Optional(BlockedReasonSchema),
   }),
 });
 
@@ -705,6 +716,7 @@ export const updateIssueBody = t.Object({
   estimateMinutes: t.Optional(EstimateMinutesSchema),
   startDate: t.Optional(t.Nullable(isoDate())),
   dueDate: t.Optional(t.Nullable(isoDate())),
+  blockedReason: t.Optional(BlockedReasonSchema),
   labelIds: t.Optional(t.Array(t.Integer(), { description: 'Replaces all labels.' })),
 });
 

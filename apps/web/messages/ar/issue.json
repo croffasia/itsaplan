@@ -12,6 +12,7 @@
   "activityLoadFailed": "تعذّر تحميل النشاط.",
   "fields": {
     "state": "الحالة",
+    "blocked": "محظور",
     "priority": "الأولوية",
     "assignee": "المسؤول",
     "delegate": "المفوَّض",
@@ -42,6 +43,7 @@
     "preview": "معاينة",
     "goToIssue": "الانتقال إلى المهمة",
     "status": "الحالة",
+    "unblock": "إلغاء الحظر",
     "priority": "الأولوية",
     "assignee": "المسؤول",
     "delegate": "المفوَّض",
@@ -65,6 +67,17 @@
     "noCycle": "بلا دورة",
     "copyFailed": "تعذّر النسخ إلى الحافظة",
     "promptCopied": "تم نسخ التوجيه إلى الحافظة"
+  },
+  "blocked": {
+    "byLinks": "تحتجزها المشكلات التي تحظرها. تعود عند إغلاقها.",
+    "noReason": "لم يُذكر سبب.",
+    "unblock": "إلغاء الحظر"
+  },
+  "blockedReason": {
+    "title": "لماذا هذه المشكلة محظورة؟",
+    "description": "يظهر السبب على البطاقة حتى تغادر المشكلة عمود الحظر.",
+    "placeholder": "بانتظار مفاتيح API من المورّد",
+    "submit": "حظر"
   },
   "commands": {
     "preview": "معاينة المهمة",

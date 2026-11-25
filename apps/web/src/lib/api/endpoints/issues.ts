@@ -60,6 +60,10 @@ export interface Issue {
   startDate: string | null;
   dueDate: string | null;
   position: number;
+  // Set while the issue is in the blocked column: the reason a person gave, or null
+  // when its blocking issues hold it there, and the column it returns to.
+  blockedReason: string | null;
+  blockedFromColumnId: number | null;
   createdAt: string;
   updatedAt: string;
   // When the issue was archived (hidden from the board but kept), or null when it
@@ -273,6 +277,8 @@ export interface NewIssueInput {
   estimateMinutes?: number | null;
   startDate?: string | null;
   dueDate?: string | null;
+  // Required by the API when columnId is the blocked column.
+  blockedReason?: string;
   labelIds?: number[];
 }
 
@@ -290,6 +296,7 @@ export interface BulkIssuePatch {
   estimateMinutes?: number | null;
   startDate?: string | null;
   dueDate?: string | null;
+  blockedReason?: string;
 }
 
 export interface IssuePatch {
@@ -308,6 +315,8 @@ export interface IssuePatch {
   estimateMinutes?: number | null;
   startDate?: string | null;
   dueDate?: string | null;
+  // Required by the API when columnId moves the issue into the blocked column.
+  blockedReason?: string;
   labelIds?: number[];
 }
 

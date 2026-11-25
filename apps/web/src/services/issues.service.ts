@@ -44,6 +44,7 @@ import {
   createIssue,
 } from '@/lib/api/endpoints/issues';
 import { qk } from '@/services/queryKeys';
+import { useWithBlockedReason } from '@/context/blockedReason';
 
 // Deleting or archiving one issue. `subtasks` says what happens to the subtasks
 // hanging under it, and is required whenever it has any.
@@ -221,9 +222,12 @@ export function useOtherProjectIssueSearch(
 // activity are invalidated too, since an edit produces new activity events.
 export function useUpdateIssue(projectKey: string | null) {
   const qc = useQueryClient();
+  const withBlockedReason = useWithBlockedReason();
   return useMutation({
     mutationFn: ({ id, patch, actionId }: { id: number; patch: IssuePatch; actionId?: number }) =>
-      actionId === undefined ? updateIssue(id, patch) : applyIssueAction(id, actionId, patch),
+      actionId === undefined
+        ? withBlockedReason((blockedReason) => updateIssue(id, { ...patch, blockedReason }))
+        : applyIssueAction(id, actionId, patch),
     onMutate: async ({ id, patch }) => {
       if (!projectKey) return {};
       const key = qk.boardIssues(projectKey);
@@ -418,9 +422,12 @@ export function useSetFieldValue(projectKey: string | null) {
 
 export function useBulkUpdateIssues(projectKey: string) {
   const qc = useQueryClient();
+  const withBlockedReason = useWithBlockedReason();
   return useMutation({
     mutationFn: ({ ids, patch }: { ids: number[]; patch: BulkIssuePatch }) =>
-      bulkUpdateIssues(projectKey, ids, patch),
+      withBlockedReason((blockedReason) =>
+        bulkUpdateIssues(projectKey, ids, { ...patch, blockedReason }),
+      ),
     onMutate: async ({ ids, patch }) => {
       const key = qk.boardIssues(projectKey);
       await qc.cancelQueries({ queryKey: key });
@@ -515,9 +522,10 @@ export function useBulkDeleteIssues(projectKey: string) {
 
 export function useCreateIssue() {
   const qc = useQueryClient();
+  const withBlockedReason = useWithBlockedReason();
   return useMutation({
     mutationFn: ({ projectKey, input }: { projectKey: string; input: NewIssueInput }) =>
-      createIssue(projectKey, input),
+      withBlockedReason((blockedReason) => createIssue(projectKey, { ...input, blockedReason })),
     onSuccess: (_data, { projectKey }) => {
       void qc.invalidateQueries({ queryKey: qk.boardIssues(projectKey) });
       invalidateGroupings(qc);

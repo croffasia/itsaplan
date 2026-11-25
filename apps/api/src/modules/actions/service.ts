@@ -117,7 +117,10 @@ export async function applyAction(
 
   const { labelIds, ...patch } = effective;
   await assertIssueLabels(projectId, labelIds);
-  const updated = await updateIssue(issueId, patch, actorUserId, { skipAutoAssignee: true });
+  const updated = await updateIssue(issueId, patch, actorUserId, {
+    skipAutoAssignee: true,
+    requireBlockedReason: true,
+  });
   if (!updated) throw new HttpError(404, 'Issue not found');
   if (labelIds) {
     await setIssueLabels(projectId, issueId, labelIds, actorUserId);

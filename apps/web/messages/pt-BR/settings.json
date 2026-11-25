@@ -194,6 +194,10 @@
       "hardHelp": "Issues não podem ser movidas para o estado enquanto ele estiver cheio, de lugar nenhum.",
       "badgeSoft": "máx {limit}",
       "badgeHard": "máx {limit}, aplicado"
+    },
+    "blocked": {
+      "label": "Coluna de bloqueadas",
+      "help": "Issues bloqueadas por uma issue aberta vêm para cá e voltam para a coluna delas quando ela é fechada. Mover uma issue para cá pede um motivo. Um projeto tem uma coluna de bloqueadas."
     }
   },
   "issueTypes": {

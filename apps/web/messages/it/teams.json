@@ -177,7 +177,8 @@
       "actions": {
         "create": "Nuovo",
         "update": "Sovrascrivi",
-        "skip": "Salta (ruolo di sistema)"
+        "skip": "Salta (ruolo di sistema)",
+        "invalid": "Salta (permessi fuori ordine)"
       }
     },
     "transferErrors": {

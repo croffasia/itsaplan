@@ -177,7 +177,8 @@
       "actions": {
         "create": "새로 생성",
         "update": "덮어쓰기",
-        "skip": "건너뛰기 (시스템 역할)"
+        "skip": "건너뛰기 (시스템 역할)",
+        "invalid": "건너뛰기 (권한 순서가 맞지 않음)"
       }
     },
     "transferErrors": {

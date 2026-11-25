@@ -65,7 +65,7 @@ export default function TeamRolesToolbar({
     }
     try {
       const parsed = parseRolesText(text, catalog);
-      setImporting(planRolesImport(parsed, roles));
+      setImporting(planRolesImport(parsed, roles, catalog));
     } catch (err) {
       // parseRolesText rejects with the key of the reason it refused; anything else
       // reaching here has no key of its own.

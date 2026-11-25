@@ -194,7 +194,7 @@ describe('external run events', () => {
     for (const [permissions, status] of [
       [{ work_items: { read: true } }, 403],
       [{ ai_agents: { read: true } }, 403],
-      [{ ai_agents: { read: true, edit: true } }, 200],
+      [{ ai_agents: { read: true, create: true, edit: true } }, 200],
     ] as const) {
       const role = (
         await createRole(api, 'RUN', { name: JSON.stringify(permissions), permissions })

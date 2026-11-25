@@ -61,5 +61,10 @@
     "cellAria": "{resource} : {action}",
     "saveRole": "Enregistrer le rôle",
     "createRole": "Créer le rôle"
+  },
+  "gaps": {
+    "title": "Permissions dans le désordre",
+    "description": "Chaque permission nécessite toutes celles qui la précèdent sur sa ligne. Corrigez les lignes signalées pour enregistrer le rôle.",
+    "hint": "Certaines permissions sont dans le désordre. Modifiez le rôle pour les corriger."
   }
 }

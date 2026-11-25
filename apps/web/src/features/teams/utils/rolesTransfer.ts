@@ -5,7 +5,7 @@
 // one of its own.
 
 import type { PermissionCatalog, Permissions, Role } from '@/lib/api/endpoints/roles';
-import { matrixFromCatalog } from '@/utils/permissions';
+import { matrixFromCatalog, permissionGaps } from '@/utils/permissions';
 
 const PAYLOAD_TYPE = 'plan.roles';
 const PAYLOAD_VERSION = 1;
@@ -24,8 +24,9 @@ interface RolesEnvelope {
 // A parsed role paired with what applying it would do to the current team.
 export interface PlannedRole extends RoleTransfer {
   // 'create' — no role with this name yet. 'update' — a custom role with this name is
-  // overwritten. 'skip' — a default role has this name and is left untouched.
-  action: 'create' | 'update' | 'skip';
+  // overwritten. 'skip' — a default role has this name and is left untouched. 'invalid' —
+  // its matrix is out of granting order, so the API would refuse it.
+  action: 'create' | 'update' | 'skip' | 'invalid';
   existingId?: number;
 }
 
@@ -69,12 +70,17 @@ export function parseRolesText(text: string, catalog: PermissionCatalog): RoleTr
 
 // Decides what applying each incoming role does against the current roles, matching
 // by name (case-insensitive). A system role with the same name is skipped.
-export function planRolesImport(incoming: RoleTransfer[], existing: Role[]): PlannedRole[] {
+export function planRolesImport(
+  incoming: RoleTransfer[],
+  existing: Role[],
+  catalog: PermissionCatalog,
+): PlannedRole[] {
   const byName = new Map(existing.map((r) => [r.name.toLowerCase(), r]));
   return incoming.map((role) => {
     const match = byName.get(role.name.toLowerCase());
+    if (match?.system) return { ...role, action: 'skip', existingId: match.id };
+    if (permissionGaps(catalog, role.permissions).length > 0) return { ...role, action: 'invalid' };
     if (!match) return { ...role, action: 'create' };
-    if (match.system) return { ...role, action: 'skip', existingId: match.id };
     return { ...role, action: 'update', existingId: match.id };
   });
 }

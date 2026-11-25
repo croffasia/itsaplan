@@ -1,39 +1,21 @@
 'use client';
 
-import { Fragment, useMemo, useState } from 'react';
-import { X } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { TriangleAlert, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type {
-  PermissionAction,
-  PermissionCatalog,
-  PermissionResource,
-  Permissions,
-  Role,
-} from '@/lib/api/endpoints/roles';
+import type { PermissionCatalog, Permissions, Role } from '@/lib/api/endpoints/roles';
 import { useExitOnEscape } from '@/hooks/useExitOnEscape';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MatrixCheckbox } from './MatrixCheckbox';
-import {
-  catalogSupport,
-  groupResources,
-  matrixFromCatalog,
-  orderActions,
-} from '@/utils/permissions';
-import { usePermissionLabels } from '@/hooks/usePermissionLabels';
-
-// The check state of a set of cells: all on, all off, or mixed.
-function triState(values: boolean[]): boolean | 'indeterminate' {
-  if (values.length > 0 && values.every(Boolean)) return true;
-  if (values.some(Boolean)) return 'indeterminate';
-  return false;
-}
+import { matrixFromCatalog, permissionGaps } from '@/utils/permissions';
+import RoleEditorMatrix from './RoleEditorMatrix';
 
 // Create or edit a role in a right-hand side panel: a team's role or a system role,
-// whichever `onSave` writes. Escape or a backdrop click closes it. The permission
-// matrix groups resources and offers quick toggles per column (all resources) and
-// per group. On failure the reason is toasted globally and the panel stays open.
+// whichever `onSave` writes. Escape or a backdrop click closes it. A role saved before
+// the granting order can hold rows out of it: they are marked, and the role is not saved
+// until they are fixed. On failure the reason is toasted globally and the panel stays open.
 export default function RoleEditorPanel({
   role,
   catalog,
@@ -49,37 +31,13 @@ export default function RoleEditorPanel({
 }) {
   const t = useTranslations('permissions');
   const tCommon = useTranslations('common');
-  const { actionLabel, resourceLabel, groupLabel } = usePermissionLabels();
   const [name, setName] = useState(role?.name ?? '');
   const [matrix, setMatrix] = useState<Permissions>(() =>
     matrixFromCatalog(catalog, role?.permissions),
   );
   useExitOnEscape(onClose);
 
-  const supports = useMemo(() => catalogSupport(catalog), [catalog]);
-  const resourceKeys = useMemo(() => catalog.resources.map((r) => r.key), [catalog.resources]);
-  const groups = useMemo(
-    () => groupResources(resourceKeys, catalog.resources),
-    [resourceKeys, catalog.resources],
-  );
-  const actions = useMemo(() => orderActions(catalog.actions), [catalog.actions]);
-
-  // Set `value` on every supported (resource, action) pair in the given sets.
-  function apply(resources: PermissionResource[], actions: PermissionAction[], value: boolean) {
-    setMatrix((m) => {
-      const next = { ...m };
-      for (const resource of resources) {
-        next[resource] = { ...next[resource] };
-        for (const action of actions) {
-          if (supports(resource, action)) next[resource][action] = value;
-        }
-      }
-      return next;
-    });
-  }
-
-  const cellsFor = (resources: PermissionResource[], actions: PermissionAction[]) =>
-    resources.flatMap((r) => actions.filter((a) => supports(r, a)).map((a) => matrix[r][a]));
+  const gaps = useMemo(() => permissionGaps(catalog, matrix), [catalog, matrix]);
 
   async function save() {
     const trimmed = name.trim();
@@ -127,106 +85,22 @@ export default function RoleEditorPanel({
             />
           </div>
 
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="py-2 pr-2 text-left text-xs font-medium">{t('resourceColumn')}</th>
-                {actions.map((action) => {
-                  const state = triState(cellsFor(resourceKeys, [action]));
-                  return (
-                    <th key={action} className="px-1 py-2">
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="text-[11px] font-medium text-muted-foreground">
-                          {actionLabel(action)}
-                        </span>
-                        <MatrixCheckbox
-                          checked={state}
-                          onCheckedChange={() => apply(resourceKeys, [action], state !== true)}
-                          title={t('editor.toggleActionAll', { action: actionLabel(action) })}
-                          aria-label={t('editor.toggleActionAll', { action: actionLabel(action) })}
-                        />
-                      </div>
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              {groups.map((group) => {
-                const groupState = triState(cellsFor(group.resources, actions));
-                return (
-                  <Fragment key={group.key}>
-                    <tr className="border-b bg-muted/40">
-                      <td className="py-1.5 pr-2">
-                        <div className="flex items-center gap-2">
-                          <MatrixCheckbox
-                            checked={groupState}
-                            onCheckedChange={() =>
-                              apply(group.resources, actions, groupState !== true)
-                            }
-                            title={t('editor.toggleGroupAll', { group: groupLabel(group.key) })}
-                            aria-label={t('editor.toggleGroupAll', {
-                              group: groupLabel(group.key),
-                            })}
-                          />
-                          <span className="text-xs font-medium">{groupLabel(group.key)}</span>
-                        </div>
-                      </td>
-                      {actions.map((action) => {
-                        const state = triState(cellsFor(group.resources, [action]));
-                        return (
-                          <td key={action} className="px-1 py-1.5 text-center">
-                            <MatrixCheckbox
-                              checked={state}
-                              onCheckedChange={() =>
-                                apply(group.resources, [action], state !== true)
-                              }
-                              title={t('editor.toggleActionGroup', {
-                                action: actionLabel(action),
-                                group: groupLabel(group.key),
-                              })}
-                              aria-label={t('editor.toggleActionGroup', {
-                                action: actionLabel(action),
-                                group: groupLabel(group.key),
-                              })}
-                            />
-                          </td>
-                        );
-                      })}
-                    </tr>
-                    {group.resources.map((resource) => (
-                      <tr key={resource} className="border-b last:border-b-0">
-                        <td className="py-2 pr-2 pl-6">{resourceLabel(resource)}</td>
-                        {actions.map((action) => (
-                          <td key={action} className="px-1 py-2 text-center">
-                            {supports(resource, action) && (
-                              <MatrixCheckbox
-                                checked={matrix[resource][action]}
-                                onCheckedChange={() =>
-                                  apply([resource], [action], !matrix[resource][action])
-                                }
-                                aria-label={t('editor.cellAria', {
-                                  resource: resourceLabel(resource),
-                                  action: actionLabel(action),
-                                })}
-                              />
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </Fragment>
-                );
-              })}
-            </tbody>
-          </table>
+          {gaps.length > 0 && (
+            <Alert className="border-warning/35 bg-warning/10 [&>svg]:text-warning">
+              <TriangleAlert />
+              <AlertTitle>{t('gaps.title')}</AlertTitle>
+              <AlertDescription>{t('gaps.description')}</AlertDescription>
+            </Alert>
+          )}
+
+          <RoleEditorMatrix catalog={catalog} matrix={matrix} gaps={gaps} onChange={setMatrix} />
         </div>
 
         <div className="flex shrink-0 items-center justify-end gap-2 border-t px-6 py-3">
           <Button variant="outline" onClick={onClose} disabled={saving}>
             {tCommon('cancel')}
           </Button>
-          <Button onClick={save} disabled={saving || !name.trim()}>
+          <Button onClick={save} disabled={saving || !name.trim() || gaps.length > 0}>
             {role ? t('editor.saveRole') : t('editor.createRole')}
           </Button>
         </div>

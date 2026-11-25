@@ -505,7 +505,7 @@ describe('members', () => {
       const other = await addMember(owner);
       const role = await createRole(owner.api, 'MKT', {
         name: 'People',
-        permissions: { members_manage: { read: true, edit: true } },
+        permissions: { members_manage: { read: true, create: true, edit: true } },
       });
       await owner.api
         .projects({ projectKey: 'MKT' })
@@ -525,7 +525,7 @@ describe('members', () => {
       const other = await addMember(owner);
       const role = await createRole(owner.api, 'MKT', {
         name: 'People',
-        permissions: { members_manage: { read: true, edit: true } },
+        permissions: { members_manage: { read: true, create: true, edit: true } },
       });
       await owner.api
         .projects({ projectKey: 'MKT' })

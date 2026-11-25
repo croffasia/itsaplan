@@ -743,7 +743,7 @@ describe('webhooks', () => {
 
       const editRole = await createRole(asOwner, 'MKT', {
         name: 'Webhook editor',
-        permissions: { webhooks: { read: true, edit: true } },
+        permissions: { webhooks: { read: true, create: true, edit: true } },
       });
       const asEditor = await addProjectMember(asOwner, 'MKT', editRole.data!.id);
       const edited = await asEditor.projects({ projectKey: 'MKT' }).webhooks.get();

@@ -1175,7 +1175,7 @@ describe('ai agents', () => {
       const role = await createRole(asOwner, 'MKT', {
         name: 'Agent handler',
         permissions: {
-          ai_agents: { read: true, edit: true, delete: true },
+          ai_agents: { read: true, create: true, edit: true, delete: true },
           agent_skills: { read: true },
         },
       });

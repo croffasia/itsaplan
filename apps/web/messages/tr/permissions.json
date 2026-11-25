@@ -61,5 +61,10 @@
     "cellAria": "{resource}: {action}",
     "saveRole": "Rolü kaydet",
     "createRole": "Rol oluştur"
+  },
+  "gaps": {
+    "title": "İzinlerin sırası uygun değil",
+    "description": "Her izin, satırında kendinden önceki tüm izinleri gerektirir. Rolü kaydetmek için işaretli satırları düzeltin.",
+    "hint": "Bazı izinlerin sırası uygun değil. Düzeltmek için rolü düzenleyin."
   }
 }

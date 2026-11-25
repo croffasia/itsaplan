@@ -177,7 +177,8 @@
       "actions": {
         "create": "新建",
         "update": "覆蓋",
-        "skip": "跳過（系統角色）"
+        "skip": "跳過（系統角色）",
+        "invalid": "跳過（權限順序不正確）"
       }
     },
     "transferErrors": {

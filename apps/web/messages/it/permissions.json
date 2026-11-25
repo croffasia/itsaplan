@@ -61,5 +61,10 @@
     "cellAria": "{resource}: {action}",
     "saveRole": "Salva ruolo",
     "createRole": "Crea ruolo"
+  },
+  "gaps": {
+    "title": "Permessi fuori ordine",
+    "description": "Ogni permesso richiede tutti quelli che lo precedono nella riga. Correggi le righe evidenziate per salvare il ruolo.",
+    "hint": "Alcuni permessi sono fuori ordine. Modifica il ruolo per correggerli."
   }
 }

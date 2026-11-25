@@ -114,7 +114,8 @@ describe('internal run trace', () => {
         (await createRole(api, 'RUN', { name, permissions: { ai_agents } })).data!.id,
       );
 
-    expect((await trace(await role('Edit', { read: true, edit: true })).get()).status).toBe(200);
+    const edit = { read: true, create: true, edit: true };
+    expect((await trace(await role('Edit', edit)).get()).status).toBe(200);
     expect((await trace(await role('Create', { read: true, create: true })).get()).status).toBe(
       200,
     );

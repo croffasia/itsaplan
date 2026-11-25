@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { eq } from 'drizzle-orm';
-import { db, projectView, projectViewPreference } from '@repo/db';
+import { db, projectView, projectViewPreference, teamRole } from '@repo/db';
 import { deleteAccount } from '#shared/account-deletion';
 import { reorderViews } from '#modules/views/service';
 import { app, authedApi, createProject } from '#tests/helpers/app';
@@ -18,10 +18,12 @@ async function addMemberWithViews(
   const user = await signUpTestUser();
   const role = await createRole(asOwner, 'MKT', {
     name: `Views ${user.userId}`,
-    permissions: {
-      views: { read: !!views.read, create: false, edit: !!views.edit, delete: false },
-    },
+    permissions: { views: { read: !!views.read } },
   });
+  // A stored role can edit without reading; the API refuses to save one.
+  if (views.edit) {
+    await db.update(teamRole).set({ permissions: { views } }).where(eq(teamRole.id, role.data!.id));
+  }
   const invite = await asOwner
     .projects({ projectKey: 'MKT' })
     .invites.post({ email: user.email, role: 'member' });

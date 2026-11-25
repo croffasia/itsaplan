@@ -61,5 +61,10 @@
     "cellAria": "{resource}：{action}",
     "saveRole": "保存角色",
     "createRole": "新建角色"
+  },
+  "gaps": {
+    "title": "权限顺序不正确",
+    "description": "每项权限都需要同一行中它之前的所有权限。请修正标记的行后再保存角色。",
+    "hint": "部分权限的顺序不正确。请编辑角色进行修正。"
   }
 }

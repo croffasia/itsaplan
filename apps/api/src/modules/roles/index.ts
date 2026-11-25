@@ -61,7 +61,8 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
         summary: 'List the permission catalog',
         description:
           "List the resources and actions of a role's permission matrix. Each resource lists its " +
-          'supported actions. Unlisted actions are always denied. ai_agents is an admin ' +
+          'supported actions. Unlisted actions are always denied. `actions` is in granting order: ' +
+          'granting an action requires every supported one before it. ai_agents is an admin ' +
           'resource: it also lets a role attach an agent ' +
           "to any team project and read an agent's API key.",
         ...mcpTool('list_permission_catalog'),

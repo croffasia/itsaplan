@@ -5,6 +5,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Role } from '@/lib/api/endpoints/roles';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
+import { PermissionGapsMark } from '@/components/common/permissions/PermissionGapsMark';
 import { PermissionsPopover } from '@/components/common/permissions/PermissionsPopover';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -58,6 +59,7 @@ export default function GodRolesTable({
               <TableCell className="px-3 py-3">
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="truncate text-sm font-medium">{role.name}</span>
+                  <PermissionGapsMark permissions={role.permissions} />
                   {role.isDefault && (
                     <Badge
                       variant="secondary"

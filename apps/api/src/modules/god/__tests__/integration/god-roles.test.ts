@@ -55,6 +55,15 @@ describe('god system roles', () => {
     expect(await names()).toEqual(['Member']);
   });
 
+  it('refuses a matrix that grants an action without one before it', async () => {
+    const { god } = await setup();
+    const permissions = { work_items: { edit: true } };
+    const { id } = (await god.api.god.roles.post({ name: 'Viewer', permissions: {} })).data!;
+
+    expect((await god.api.god.roles.post({ name: 'Gap', permissions })).status).toBe(400);
+    expect((await god.api.god.roles({ roleId: id }).patch({ permissions })).status).toBe(400);
+  });
+
   it('refuses a second system role with the same name', async () => {
     const { god } = await setup();
     await god.api.god.roles.post({ name: 'Viewer', permissions: {} });

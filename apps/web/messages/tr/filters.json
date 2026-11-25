@@ -4,6 +4,10 @@
   "valuePlaceholder": "değer",
   "noOptions": "Seçenek yok",
   "selected": "{count} seçildi",
+  "me": "Ben",
+  "isAnyOf": "şunlardan biridir:",
+  "menuPlaceholder": "Filtrele…",
+  "fieldPlaceholder": "{field}…",
   "operators": {
     "is": "şudur:",
     "is_not": "şu değildir:",

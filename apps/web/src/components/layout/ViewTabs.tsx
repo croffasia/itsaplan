@@ -7,7 +7,6 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
-import { FilterIcon } from '@animateicons/react/lucide/filter-icon';
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { View } from '@/lib/api/endpoints/views';
@@ -20,16 +19,15 @@ import HiddenViewsMenu from '@/components/layout/HiddenViewsMenu';
 import MobileViewSwitcher from '@/components/layout/MobileViewSwitcher';
 import SavedViewTab from '@/components/layout/SavedViewTab';
 import TabRowMenu from '@/components/layout/TabRowMenu';
-import ToolbarIconButton from '@/components/layout/ToolbarIconButton';
 import ViewTabChrome from '@/components/layout/ViewTabChrome';
 import ViewTabLabel from '@/components/layout/ViewTabLabel';
 
 // The row of saved-view tabs above a project, plus a New view button and, on the
-// right, the filter and display toggles. The leading "All" tab is implicit and
+// right, the filter and display buttons. The leading "All" tab is implicit and
 // has no filters; it cannot be deleted. The saved tabs are the caller's own tab row, a
 // horizontal sortable list — dragging one rearranges it and persists via onArrangeRow, and
-// the views the caller hid are listed in their own menu. The filter toggle
-// shows the filter row, which filters the current screen only; onEdit opens the
+// the views the caller hid are listed in their own menu. The filter button
+// opens the filter menu, which filters the current screen only; onEdit opens the
 // edit bar for a view (see WorkItemsPage).
 export default function ViewTabs({
   views,
@@ -45,7 +43,7 @@ export default function ViewTabs({
   onShow,
   onResetRow,
   onPinProjectOrder,
-  onToggleFilter,
+  filterControl,
   displayControl,
 }: {
   views: View[];
@@ -61,7 +59,7 @@ export default function ViewTabs({
   onShow: (view: View) => void;
   onResetRow: () => void;
   onPinProjectOrder: () => void;
-  onToggleFilter: () => void;
+  filterControl: ReactNode;
   displayControl: ReactNode;
 }) {
   const t = useTranslations('views');
@@ -199,7 +197,7 @@ export default function ViewTabs({
       </div>
 
       <div className="flex shrink-0 items-center gap-0.5 pl-2">
-        <ToolbarIconButton icon={FilterIcon} title={t('filter')} onClick={onToggleFilter} />
+        {filterControl}
         {displayControl}
       </div>
     </div>

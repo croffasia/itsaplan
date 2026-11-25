@@ -23,6 +23,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import ViewTabs from '@/components/layout/ViewTabs';
 import ViewIconPicker from '@/components/layout/ViewIconPicker';
 import FilterBar from '@/components/layout/FilterBar';
+import FilterMenuButton from '@/components/layout/FilterMenuButton';
 import DisplayPopover from '@/components/layout/DisplayPopover';
 import { IssueLinksProvider } from './context/useIssueLinks';
 import { SubtasksProvider } from './context/useSubtasks';
@@ -200,7 +201,14 @@ export default function WorkItemsPage() {
         onShow={editor.showView}
         onResetRow={editor.resetTabRow}
         onPinProjectOrder={editor.pinProjectOrder}
-        onToggleFilter={editor.toggleFilters}
+        filterControl={
+          <FilterMenuButton
+            filters={editor.filters}
+            onChange={editor.changeFilters}
+            project={project}
+            customFields={customFields}
+          />
+        }
         displayControl={<DisplayPopover {...displayProps} />}
       />
 

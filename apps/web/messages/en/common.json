@@ -79,6 +79,9 @@
       },
       "board": {
         "select-all": "Select all issues on the board"
+      },
+      "filter": {
+        "open": "Open the filter menu"
       }
     },
     "conflict": "Also used by {command}. Change one of them."

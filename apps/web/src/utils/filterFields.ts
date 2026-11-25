@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { FilterOperator, FilterValue } from '@/utils/filters';
 
 // The kind of value a field holds, which decides its operators and value editor.
@@ -6,7 +7,11 @@ export type FieldKind = 'set' | 'date' | 'text' | 'number' | 'boolean';
 export interface FieldOption {
   value: FilterValue;
   label: string;
-  color?: string;
+  // Drawn before the label in the filter menu and on a condition: what the issue
+  // fields show for the value, such as an avatar or a colour dot.
+  icon?: ReactNode;
+  // More words the filter menu search matches, besides the label.
+  keywords?: string[];
   // Draws a rule above this option, which splits a list into groups — the values
   // that stand for a whole status of the cycle or the initiative, then the ones
   // that name a single one.
@@ -20,6 +25,7 @@ export interface FieldOption {
 export interface FieldSpec {
   field: string;
   label: string;
+  icon: ReactNode;
   kind: FieldKind;
   options?: FieldOption[];
 }
@@ -53,3 +59,11 @@ export const BUILTIN_FILTER_FIELDS = [
 ] as const;
 
 export type BuiltinFilterField = (typeof BUILTIN_FILTER_FIELDS)[number];
+
+// How the filter menu search matches a field or a value: the search is part of its
+// name or of one of its keywords. The default fuzzy match of the command list would
+// also offer values whose letters merely appear in order.
+export function matchWords(_value: string, search: string, keywords?: string[]): number {
+  const q = search.trim().toLowerCase();
+  return keywords?.some((word) => word.toLowerCase().includes(q)) ? 1 : 0;
+}

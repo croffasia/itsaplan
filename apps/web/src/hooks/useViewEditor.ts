@@ -11,13 +11,7 @@ import {
   useReorderViews,
   useUpdateView,
 } from '@/services/views.service';
-import {
-  EMPTY_FILTER_SET,
-  isActiveFilterSet,
-  toFilterSet,
-  withExistingFields,
-  type FilterSet,
-} from '@/utils/filters';
+import { EMPTY_FILTER_SET, toFilterSet, withExistingFields, type FilterSet } from '@/utils/filters';
 import {
   defaultViewSettings,
   getViewSettings,
@@ -136,9 +130,6 @@ export function useViewEditor(
   // a member of the project who reads its views: making one the project's is the
   // deliberate choice.
   const [draftPrivate, setDraftPrivate] = useState(true);
-  // Whether the filter row is shown. It is also shown once the live filters differ
-  // from the selection's own filters, so ad-hoc filters can never be hidden.
-  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const createView = useCreateView(projectKey);
   const updateView = useUpdateView(projectKey);
@@ -259,10 +250,6 @@ export function useViewEditor(
     if (!editing && projectKey) storeFilters(projectKey, activeViewId, next);
   }
 
-  function toggleFilters() {
-    setFiltersOpen((open) => !open);
-  }
-
   // Reset the live filters/display back to the selected view and leave edit mode.
   function cancelEdits() {
     setEditing(false);
@@ -367,9 +354,9 @@ export function useViewEditor(
     settings,
     filters,
     effectiveFilters,
-    // The filter row is open on request, while editing, or while an ad-hoc filter
-    // applies, so an applied filter can never be hidden.
-    showFilters: filtersOpen || editing || isActiveFilterSet(filters),
+    // The filter row is shown while editing or while there is an ad-hoc condition,
+    // so a condition can never be hidden.
+    showFilters: editing || filters.conditions.length > 0,
     activeViewId,
     activeView,
     editing,
@@ -383,7 +370,6 @@ export function useViewEditor(
     changeView,
     changeSettings,
     changeFilters,
-    toggleFilters,
     // Selecting a saved view (or the All tab when id is null) navigates; the load
     // effect then applies its display and leaves edit mode.
     selectView: onSelectView,

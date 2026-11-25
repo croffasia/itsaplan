@@ -79,6 +79,9 @@
       },
       "board": {
         "select-all": "보드의 모든 이슈 선택"
+      },
+      "filter": {
+        "open": "필터 메뉴 열기"
       }
     },
     "conflict": "{command}에서도 사용 중입니다. 둘 중 하나를 변경하세요."

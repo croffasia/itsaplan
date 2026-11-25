@@ -4,6 +4,10 @@
   "valuePlaceholder": "значення",
   "noOptions": "Немає варіантів",
   "selected": "Вибрано: {count}",
+  "me": "Я",
+  "isAnyOf": "дорівнює одному з",
+  "menuPlaceholder": "Фільтр…",
+  "fieldPlaceholder": "{field}…",
   "operators": {
     "is": "дорівнює",
     "is_not": "не дорівнює",

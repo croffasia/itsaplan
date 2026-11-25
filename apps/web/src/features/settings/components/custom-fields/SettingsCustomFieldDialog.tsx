@@ -7,12 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import {
-  FIELD_TYPES,
-  FIELD_TYPE_ICONS,
-  MEMBER_SCOPES,
-  useFieldTypeLabel,
-} from '../../utils/fieldTypes';
+import { FIELD_TYPE_ICONS } from '@/components/common/fields/fieldTypeIcons';
+import { FIELD_TYPES, MEMBER_SCOPES, useFieldTypeLabel } from '../../utils/fieldTypes';
 import SettingsWarningBanner from '../SettingsWarningBanner';
 import FieldOptionsEditor, { parseOptionValues, type OptionDraft } from './FieldOptionsEditor';
 

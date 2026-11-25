@@ -8,6 +8,7 @@ import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue } from '@/lib/api/endpoints/issues';
 import { dayKey } from '@/utils/dates';
 import { BUILTIN_FILTER_FIELDS, OPERATORS_BY_KIND } from '@/utils/filterFields';
+import { uuid } from '@/utils/uuid';
 import { isCustomFieldKey } from '@/utils/viewSettings';
 
 // The built-in fields a condition can target. Custom fields are targeted with
@@ -272,6 +273,74 @@ export function applyFilters<T extends Issue>(
   const columnStateType = new Map(project.columns.map((c) => [c.id, c.stateType]));
   const active = filters!.conditions.filter(isEffectiveCondition);
   return issues.filter((t) => active.every((cond) => matchCondition(t, cond, columnStateType)));
+}
+
+// How many of the issues hold each value of a set or boolean field, counted the way
+// a condition matches them: an issue in the active cycle counts for that cycle and
+// for "Active cycle", and an issue with no assignee counts for null.
+export function countIssuesByValue(
+  issues: Issue[],
+  field: string,
+  project: ProjectDetail,
+): Map<FilterValue, number> {
+  const columnStateType = new Map(project.columns.map((c) => [c.id, c.stateType]));
+  const cfId = parseCustomFieldKey(field);
+  const counts = new Map<FilterValue, number>();
+  for (const issue of issues) {
+    const values =
+      cfId != null
+        ? customFieldValues(issue, cfId)
+        : builtinSetValues(issue, field as BuiltinFilterField, columnStateType);
+    for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+  return counts;
+}
+
+// The field's first "is" condition, which a value picked for the field joins.
+export function fieldCondition(filters: FilterSet, field: string): FilterCondition | undefined {
+  return filters.conditions.find((c) => c.field === field && c.op === 'is');
+}
+
+// The set with "field is value": the value joins the field's first "is" condition,
+// or a new condition holds it. Also returns that condition's id.
+export function withFieldValue(
+  filters: FilterSet,
+  field: string,
+  value: FilterValue,
+): { filters: FilterSet; id: string } {
+  const existing = fieldCondition(filters, field);
+  if (!existing) {
+    const added: FilterCondition = { id: uuid(), field, op: 'is', values: [value] };
+    return { filters: { conditions: [...filters.conditions, added] }, id: added.id };
+  }
+  const values = existing.values.includes(value) ? existing.values : [...existing.values, value];
+  return {
+    filters: {
+      conditions: filters.conditions.map((c) => (c.id === existing.id ? { ...c, values } : c)),
+    },
+    id: existing.id,
+  };
+}
+
+// The set with `value` added to the condition `id`, or taken out of it. A condition
+// left with no value is dropped, so no empty condition stays behind.
+export function toggleConditionValue(
+  filters: FilterSet,
+  id: string,
+  value: FilterValue,
+): FilterSet {
+  const conditions: FilterCondition[] = [];
+  for (const c of filters.conditions) {
+    if (c.id !== id) {
+      conditions.push(c);
+      continue;
+    }
+    const values = c.values.includes(value)
+      ? c.values.filter((v) => v !== value)
+      : [...c.values, value];
+    if (values.length > 0) conditions.push({ ...c, values });
+  }
+  return { conditions };
 }
 
 // Whether one issue satisfies every effective condition in the set. An empty or

@@ -4,6 +4,10 @@
   "valuePlaceholder": "مقدار",
   "noOptions": "بدون گزینه",
   "selected": "{count} انتخاب‌شده",
+  "me": "من",
+  "isAnyOf": "یکی از این‌ها",
+  "menuPlaceholder": "فیلتر…",
+  "fieldPlaceholder": "{field}…",
   "operators": {
     "is": "هست",
     "is_not": "نیست",

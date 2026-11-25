@@ -20,7 +20,8 @@ export type HotkeyId =
   | 'project.settings'
   | 'chat.toggle'
   | 'runs.toggle'
-  | 'board.select-all';
+  | 'board.select-all'
+  | 'filter.open';
 
 // The heading a shortcut is listed under in the editor. The name of a group, and
 // what a shortcut does, are messages under `common.hotkeys`.
@@ -82,6 +83,7 @@ export const HOTKEYS: HotkeyDef[] = [
     combo: 'mod+a',
     scope: 'app',
   },
+  { id: 'filter.open', group: 'workItems', combo: 'f', scope: 'app' },
 ];
 
 export type HotkeyCombos = Record<HotkeyId, string>;

@@ -4,6 +4,10 @@
   "valuePlaceholder": "valor",
   "noOptions": "No hay opciones",
   "selected": "{count} seleccionados",
+  "me": "Yo",
+  "isAnyOf": "es cualquiera de",
+  "menuPlaceholder": "Filtrar…",
+  "fieldPlaceholder": "{field}…",
   "operators": {
     "is": "es",
     "is_not": "no es",

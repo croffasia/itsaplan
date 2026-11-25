@@ -4,6 +4,10 @@
   "valuePlaceholder": "值",
   "noOptions": "无可用选项",
   "selected": "已选择 {count} 项",
+  "me": "我",
+  "isAnyOf": "是以下之一",
+  "menuPlaceholder": "筛选…",
+  "fieldPlaceholder": "{field}…",
   "operators": {
     "is": "是",
     "is_not": "不是",

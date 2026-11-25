@@ -79,6 +79,9 @@
       },
       "board": {
         "select-all": "Panodaki tüm işleri seç"
+      },
+      "filter": {
+        "open": "Filtre menüsünü aç"
       }
     },
     "conflict": "{command} komutu da bunu kullanıyor. İkisinden birini değiştirin."

@@ -18,6 +18,8 @@ const VIEW_HOTKEYS: [HotkeyId, WorkItemsView][] = [
 // key that would land in the text being typed.
 export function useKeyboardShortcuts(opts: {
   hasProject: boolean;
+  // True on the work items routes, where the filter menu is.
+  onBoard: boolean;
   // Whether the side panel has the project's agents to show at all.
   hasAgents: boolean;
   // True while any modal/overlay is open, which suppresses the app bindings.
@@ -30,9 +32,11 @@ export function useKeyboardShortcuts(opts: {
   onSettings: () => void;
   onToggleChat: () => void;
   onToggleRuns: () => void;
+  onOpenFilter: () => void;
 }) {
   const {
     hasProject,
+    onBoard,
     hasAgents,
     overlayOpen,
     onToggleCommand,
@@ -43,6 +47,7 @@ export function useKeyboardShortcuts(opts: {
     onSettings,
     onToggleChat,
     onToggleRuns,
+    onOpenFilter,
   } = opts;
   const matches = useHotkeyMatch();
 
@@ -92,12 +97,19 @@ export function useKeyboardShortcuts(opts: {
       if (hasAgents && matches(e, 'runs.toggle')) {
         e.preventDefault();
         onToggleRuns();
+        return;
+      }
+      // Last, so a key someone already gave another command keeps running that one.
+      if (hasProject && onBoard && matches(e, 'filter.open')) {
+        e.preventDefault();
+        onOpenFilter();
       }
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [
     hasProject,
+    onBoard,
     hasAgents,
     overlayOpen,
     matches,
@@ -109,5 +121,6 @@ export function useKeyboardShortcuts(opts: {
     onSettings,
     onToggleChat,
     onToggleRuns,
+    onOpenFilter,
   ]);
 }

@@ -1,16 +1,16 @@
-import { useMemo, useRef, useState } from 'react';
+import { memo, useMemo, useRef, useState } from 'react';
 import { useLinkInputCapabilities } from './useLinkInputCapabilities';
-import { copyPresentedLinks, staticLinkBlocks } from './staticLinkPresentation';
-import LinkBlockControls from './LinkBlockControls';
+import { blockLinks, copyPresentedLinks } from './staticLinkPresentation';
+import { isElement } from './markdownBlocks';
 import LinkPreviewDialog, { type LinkPreviewItem } from './LinkPreviewDialog';
-import styles from './LinkPresentation.module.css';
+import MarkdownLinkBlock from './MarkdownLinkBlock';
 
-export default function MarkdownLinkContent({
-  html,
+function MarkdownLinkContent({
+  nodes,
   bareUrls,
   complete,
 }: {
-  html: string;
+  nodes: ChildNode[];
   bareUrls: ReadonlySet<string>;
   complete: boolean;
 }) {
@@ -20,49 +20,41 @@ export default function MarkdownLinkContent({
     links: LinkPreviewItem[];
     trigger: HTMLButtonElement;
   } | null>(null);
+  const presented = complete && capabilities.explicit;
   const blocks = useMemo(
     () =>
-      complete && capabilities.explicit
-        ? staticLinkBlocks(html, bareUrls, window.location.origin)
-        : null,
-    [html, bareUrls, complete, capabilities.explicit],
+      nodes.map((node) => ({
+        node,
+        presentation:
+          presented && isElement(node) ? blockLinks(node, bareUrls, window.location.origin) : null,
+      })),
+    [nodes, bareUrls, presented],
   );
+  const last = nodes.findLast(isElement);
   return (
     <div ref={ref} className="md-content" tabIndex={-1} onCopy={copyPresentedLinks}>
-      {blocks ? (
-        blocks.map((block, index) => (
-          <div
-            key={index}
-            className={
-              block.bare && capabilities.compact ? styles.staticCompact : styles.staticBlock
-            }
-          >
-            {!(block.bare && capabilities.compact) && (
-              <div dangerouslySetInnerHTML={{ __html: block.html }} />
-            )}
-            {block.bare && capabilities.compact && (
-              <div
-                data-link-original=""
-                className={styles.original}
-                dangerouslySetInnerHTML={{ __html: block.html }}
-              />
-            )}
-            {block.links.length > 0 && (
-              <LinkBlockControls
-                links={block.links}
-                compact={block.bare && capabilities.compact}
-                expanded={dialog?.links === block.links}
-                onPreview={(links, trigger) => setDialog({ links, trigger })}
-              />
-            )}
-          </div>
-        ))
-      ) : (
-        <div dangerouslySetInnerHTML={{ __html: html }} />
-      )}
+      {blocks.map(({ node, presentation }, index) => {
+        if (!isElement(node)) return node.textContent;
+        return (
+          <MarkdownLinkBlock
+            // The opening tag: an answer is re-split on every streamed token, and a block
+            // that turned into another element has to be mounted anew.
+            key={`${index}${(node.cloneNode(false) as Element).outerHTML}`}
+            element={node}
+            writing={!complete && node === last}
+            presentation={presentation}
+            compact={capabilities.compact}
+            expanded={!!dialog && dialog.links === presentation?.links}
+            onPreview={(links, trigger) => setDialog({ links, trigger })}
+          />
+        );
+      })}
       {dialog && (
         <LinkPreviewDialog {...dialog} container={ref.current} onClose={() => setDialog(null)} />
       )}
     </div>
   );
 }
+
+// The transcript renders on every streamed token, and only the answer being written changes.
+export default memo(MarkdownLinkContent);

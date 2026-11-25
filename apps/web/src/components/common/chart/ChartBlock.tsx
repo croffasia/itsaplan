@@ -62,7 +62,7 @@ function ChartBlock({ spec }: { spec: ChartSpec; source: string }) {
     // `min-w-64` gives the figure an intrinsic width: the chart container is sized in
     // percentages, so it contributes nothing to the fit-content width of the chat
     // bubble around it and a chart-only answer would collapse to the header row.
-    <figure className="my-3 w-full min-w-64">
+    <figure className="w-full min-w-64">
       <div className="mb-2 flex items-center gap-2">
         {spec.title && (
           <figcaption className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">

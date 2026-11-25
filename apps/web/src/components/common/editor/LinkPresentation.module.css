@@ -113,12 +113,6 @@
 .widget {
   display: block;
 }
-.staticBlock {
-  display: contents;
-}
-.staticCompact {
-  margin-block: 0.25rem;
-}
 .original {
   display: none;
 }

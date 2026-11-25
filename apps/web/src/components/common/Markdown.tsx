@@ -34,7 +34,7 @@ export default function Markdown({
   // `dir="auto"` reads the direction from the text itself, so an Arabic comment in
   // an English interface — and the reverse — is laid out the way it was written.
   return (
-    <div dir="auto">
+    <div dir="auto" className="markdown-prose">
       {segments.map((segment, index) => {
         if (segment.kind === 'chart') {
           return <ChartBlock key={index} spec={segment.spec} source={segment.source} />;
@@ -45,12 +45,12 @@ export default function Markdown({
         // The fence is still streaming in: hold its place rather than showing the
         // half-written JSON that would turn into the chart a moment later.
         if (segment.kind === 'pending') {
-          return <Skeleton key={index} className="my-3 h-[220px] w-full" />;
+          return <Skeleton key={index} className="h-[220px] w-full" />;
         }
         return (
           <MarkdownLinkContent
             key={index}
-            html={segment.html}
+            nodes={segment.nodes}
             bareUrls={bareUrls}
             complete={complete}
           />

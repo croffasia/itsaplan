@@ -12,9 +12,10 @@ import {
   previewUrl,
 } from './linkPresentation';
 import { createEditorLinkPresentation } from './editorLinkPresentation';
-import { copyPresentedLinks, staticLinkBlocks } from './staticLinkPresentation';
+import { isElement } from './markdownBlocks';
+import { blockLinks, copyPresentedLinks } from './staticLinkPresentation';
 import type { ClipboardEvent } from 'react';
-import { renderMarkdown } from '@/lib/markdown';
+import { markdownNodes } from '@/lib/markdown';
 
 let dom: JSDOM;
 let originals: Map<string, PropertyDescriptor | undefined>;
@@ -51,6 +52,12 @@ afterEach(() => {
     else Reflect.deleteProperty(globalThis, key);
   }
 });
+
+function staticLinks(source: string, bareUrls: ReadonlySet<string>) {
+  return markdownNodes(source, { newTabLinks: true })
+    .filter(isElement)
+    .map((element) => blockLinks(element, bareUrls, 'https://planner.test'));
+}
 
 function makeEditor(source: string) {
   editor = new Editor({
@@ -134,25 +141,21 @@ describe('link presentation classification', () => {
   it('keeps static sanitizer output and excludes code, images, downloads and tables', () => {
     const source =
       'https://example.com/one\n\n[human label](https://example.com/two)\n\n`https://example.com/code`';
-    const html = renderMarkdown(source, { newTabLinks: true });
-    const blocks = staticLinkBlocks(html, bareMarkdownUrls(source), 'https://planner.test');
+    const blocks = staticLinks(source, bareMarkdownUrls(source));
     assert.equal(blocks.filter((block) => block.bare).length, 1);
     assert.equal(blocks.flatMap((block) => block.links).length, 2);
     assert.equal(blocks.flatMap((block) => block.links)[1].label, 'human label');
-    const excluded = staticLinkBlocks(
+    const excluded = staticLinks(
       '<p><a href="https://example.com/file" download>File</a></p><table><tr><td><a href="https://example.com/table">Table</a></td></tr></table><p><a href="https://example.com/image"><img src="/image"></a></p>',
       new Set(),
-      'https://planner.test',
     );
     assert.equal(excluded.flatMap((block) => block.links).length, 0);
   });
 
   it('preserves safe new-tab navigation through the actual static render path', () => {
     const source = '[Outside](https://example.com/A?key=%2F#part)';
-    const html = renderMarkdown(source, { newTabLinks: true });
-    const blocks = staticLinkBlocks(html, bareMarkdownUrls(source), 'https://planner.test');
-    const parsed = new DOMParser().parseFromString(blocks[0].html, 'text/html');
-    const link = parsed.querySelector('a')!;
+    const [block] = markdownNodes(source, { newTabLinks: true }).filter(isElement);
+    const link = block.querySelector('a')!;
     assert.equal(link.getAttribute('target'), '_blank');
     assert.equal(link.getAttribute('rel'), 'noreferrer');
     assert.equal(link.getAttribute('href'), 'https://example.com/A?key=%2F#part');
@@ -161,7 +164,7 @@ describe('link presentation classification', () => {
   it('copies actual static selections with block and hard-break separators', () => {
     const element = document.getElementById('editor')!;
     element.innerHTML =
-      '<div><p>First <a href="https://first.test">Alpha</a></p><span data-link-presentation><button data-link-preview-control>Preview link</button></span></div><div><p>Second <a href="https://second.test">Beta</a><br>Third line</p></div>';
+      '<p>First <a href="https://first.test">Alpha</a></p><span data-link-presentation><button data-link-preview-control>Preview link</button></span><p>Second <a href="https://second.test">Beta</a><br>Third line</p><div><div data-code-bar>ts</div><pre>code</pre></div>';
     const range = document.createRange();
     range.selectNodeContents(element);
     window.getSelection()!.addRange(range);
@@ -174,8 +177,8 @@ describe('link presentation classification', () => {
       clipboardData: { setData: (type: string, value: string) => copied.set(type, value) },
     } as unknown as ClipboardEvent<HTMLElement>);
     assert.equal(prevented, true);
-    assert.equal(copied.get('text/plain'), 'First Alpha\nSecond Beta\nThird line');
-    assert.doesNotMatch(copied.get('text/html')!, /Preview link/);
+    assert.equal(copied.get('text/plain'), 'First Alpha\nSecond Beta\nThird line\ncode');
+    assert.doesNotMatch(copied.get('text/html')!, /Preview link|data-code-bar/);
   });
 
   it('copies compact source labels once without metadata or hidden duplicates', () => {

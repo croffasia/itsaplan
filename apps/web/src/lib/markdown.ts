@@ -26,17 +26,21 @@ function restrictImageStyle(node: Element, data: UponSanitizeAttributeHookEvent)
   else data.keepAttr = false;
 }
 
-// HTML that arrives already rendered, made safe for dangerouslySetInnerHTML. Used
-// for release notes, which GitHub renders and the api passes through unchanged.
-export function sanitizeHtml(html: string, options?: HtmlOptions): string {
+function withHooks<T>(options: HtmlOptions | undefined, sanitize: () => T): T {
   DOMPurify.addHook('uponSanitizeAttribute', restrictImageStyle);
   if (options?.newTabLinks) DOMPurify.addHook('afterSanitizeAttributes', newTab);
   try {
-    return DOMPurify.sanitize(html);
+    return sanitize();
   } finally {
     DOMPurify.removeHook('afterSanitizeAttributes', newTab);
     DOMPurify.removeHook('uponSanitizeAttribute', restrictImageStyle);
   }
+}
+
+// HTML that arrives already rendered, made safe for dangerouslySetInnerHTML. Used
+// for release notes, which GitHub renders and the api passes through unchanged.
+export function sanitizeHtml(html: string, options?: HtmlOptions): string {
+  return withHooks(options, () => DOMPurify.sanitize(html));
 }
 
 // Markdown to display-ready HTML. `marked` passes raw HTML in the source
@@ -46,8 +50,28 @@ export function sanitizeHtml(html: string, options?: HtmlOptions): string {
 // breaks:true so a single newline becomes a line break, matching the
 // MarkdownEditor used in the issue detail (tiptap-markdown breaks:true).
 export function renderMarkdown(value: string, options?: HtmlOptions): string {
-  const html = marked.parse(value, { async: false, breaks: true }) as string;
-  return sanitizeHtml(html, options);
+  return sanitizeHtml(toHtml(value), options);
+}
+
+function toHtml(value: string): string {
+  return marked.parse(value, { async: false, breaks: true });
+}
+
+// The same, as the nodes at its top level. `.md-content` spaces its direct children, so each
+// of them has to be rendered as one, with no wrapper around it.
+export function markdownNodes(value: string, options?: HtmlOptions): ChildNode[] {
+  const fragment = withHooks(options, () =>
+    DOMPurify.sanitize(toHtml(value), { RETURN_DOM_FRAGMENT: true }),
+  );
+  for (const table of fragment.querySelectorAll('table')) wrapTable(table);
+  return Array.from(fragment.childNodes);
+}
+
+function wrapTable(table: Element): void {
+  const wrapper = table.ownerDocument.createElement('div');
+  wrapper.className = 'tableWrapper';
+  table.replaceWith(wrapper);
+  wrapper.append(table);
 }
 
 // A file the user attached to a chat message arrives as a marker with the
@@ -78,7 +102,7 @@ function linkFileMarkers(text: string): string {
 // places it in the text. Splitting the fences out is what draws them as charts
 // instead of the JSON code block `marked` would produce.
 export type MarkdownSegment =
-  | { kind: 'markdown'; html: string }
+  | { kind: 'markdown'; nodes: ChildNode[] }
   // The fence is still open: the answer is streaming in and the spec is incomplete.
   | { kind: 'pending' }
   // `source` is the fence body the spec was parsed from: the answer is re-split on
@@ -146,7 +170,7 @@ export function markdownSegments(value: string, options?: HtmlOptions): Markdown
     const text = buffer.join('\n');
     buffer = [];
     if (text.trim())
-      segments.push({ kind: 'markdown', html: renderMarkdown(linkFileMarkers(text), options) });
+      segments.push({ kind: 'markdown', nodes: markdownNodes(linkFileMarkers(text), options) });
   }
 
   for (let i = 0; i < lines.length; i++) {

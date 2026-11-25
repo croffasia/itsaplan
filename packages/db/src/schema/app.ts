@@ -2423,9 +2423,10 @@ export const projectDocument = pgTable(
     fullWidth: boolean('full_width').notNull().default(false),
     isPrivate: boolean('is_private').notNull().default(false),
     isLocked: boolean('is_locked').notNull().default(false),
-    // Shown first among its siblings to everyone in the project, while the page is public and
-    // active.
+    // Shown on the Docs home to everyone in the project, while the page is public and active.
     isPinned: boolean('is_pinned').notNull().default(false),
+    // The place of a pinned page on the Docs home, lowest first.
+    pinPosition: doublePrecision('pin_position'),
     archivedAt: timestamp('archived_at', { withTimezone: true }),
     archivedByAncestorId: integer('archived_by_ancestor_id').references(
       (): AnyPgColumn => projectDocument.id,
@@ -2459,6 +2460,10 @@ export const projectDocument = pgTable(
     index('project_document_owner_idx').on(t.ownerUserId),
     index('project_document_project_archive_idx').on(t.projectId, t.archivedAt),
     check('project_document_version_check', sql`${t.version} > 0`),
+    check(
+      'project_document_pin_position_check',
+      sql`${t.isPinned} = (${t.pinPosition} is not null)`,
+    ),
   ],
 );
 

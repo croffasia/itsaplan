@@ -321,6 +321,7 @@
     "mentionedYou": "أشار <b>{name}</b> إليك في <b>{page}</b>",
     "repliedToYou": "ردّ <b>{name}</b> عليك في <b>{page}</b>",
     "pinnedMeta": "{count, plural, zero {لا صفحات} one {صفحة واحدة} two {صفحتان} few {# صفحات} many {# صفحة} other {# صفحة}} · آخر تحديث {time}",
+    "pinnedMoved": "تم نقل {title} إلى الموضع {place} من {count}",
     "recent": "الأخيرة",
     "openedByMe": "فتحتُها",
     "updated": "المحدّثة",

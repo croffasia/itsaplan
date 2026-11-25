@@ -321,6 +321,7 @@
     "mentionedYou": "<b>{name}</b> 在 <b>{page}</b> 中提到了你",
     "repliedToYou": "<b>{name}</b> 在 <b>{page}</b> 中回覆了你",
     "pinnedMeta": "{count, plural, other {# 個頁面}} · 更新於 {time}",
+    "pinnedMoved": "已將 {title} 移到第 {place} 位，共 {count} 個",
     "recent": "最近",
     "openedByMe": "我開啟的",
     "updated": "已更新",

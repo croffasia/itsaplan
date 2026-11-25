@@ -93,6 +93,7 @@ export interface DocumentSummaryRow {
   visibility: DocumentVisibility;
   isLocked: boolean;
   isPinned: boolean;
+  pinPosition: number | null;
   isFavorite: boolean;
   archivedAt: string | null;
   position: number;
@@ -171,13 +172,15 @@ function mapDocument(
 ): DocumentRow {
   const { archivedByAncestorId: _archivedByAncestorId, ...publicRow } = row;
   const shared = row.shareToken !== null && shareLive(row.shareExpiresAt);
+  // A pin is kept while its page is private or archived, and shows again in its place once the
+  // page is public and active.
+  const isPinned = row.isPinned && !row.isPrivate && row.archivedAt === null;
   return {
     ...publicRow,
     visibility: visibilityOf(row.isPrivate, memberIds.length > 0),
     memberIds,
-    // A pin is kept while its page is private or archived, and shows again once the page is
-    // public and active.
-    isPinned: row.isPinned && !row.isPrivate && row.archivedAt === null,
+    isPinned,
+    pinPosition: isPinned ? row.pinPosition : null,
     isFavorite,
     archivedAt: row.archivedAt ? iso(row.archivedAt) : null,
     shareToken: shared ? row.shareToken : null,
@@ -1658,20 +1661,128 @@ export async function setDocumentPreference(
   return { isFavorite };
 }
 
+// Where a page goes among the pinned pages: right after one, right before one, or between
+// the two it is dropped between.
+interface DocumentPinPlacement {
+  afterId?: number;
+  beforeId?: number;
+}
+
+// A new pin goes last. Pin writes take the project's tree lock, so two of them cannot
+// read the same order.
 export async function setDocumentPinned(
   projectId: number,
   documentId: number,
   userId: string,
   isPinned: boolean,
+  placement: DocumentPinPlacement = {},
 ): Promise<{ isPinned: boolean } | null> {
-  const current = await selectDocument(db, projectId, documentId, userId);
-  if (!current) return null;
-  if (isPinned) {
+  const placed = placement.afterId !== undefined || placement.beforeId !== undefined;
+  if (placed && !isPinned) {
+    throw new HttpError(400, 'Only a pinned page can take a place among the pinned pages.');
+  }
+  if (placement.afterId === documentId || placement.beforeId === documentId) {
+    throw new HttpError(400, 'A document cannot be its own pin anchor.');
+  }
+  return db.transaction(async (tx) => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(${DOCUMENT_TREE_LOCK_NAMESPACE}, ${projectId})`,
+    );
+    const current = await selectDocument(tx, projectId, documentId, userId);
+    if (!current) return null;
+    if (!isPinned) {
+      await tx
+        .update(projectDocument)
+        .set({ isPinned: false, pinPosition: null })
+        .where(eq(projectDocument.id, documentId));
+      return { isPinned };
+    }
     assertActive(current);
     if (current.isPrivate) throw new HttpError(400, 'A private document cannot be pinned.');
+    if (placed) {
+      // A move is for a page that is still pinned. One unpinned since the mover read the list
+      // stays unpinned: the move must not pin it again for everyone.
+      if (!current.isPinned) {
+        throw new HttpError(409, 'The pinned pages changed elsewhere. Reload them before moving.');
+      }
+      await placePinnedDocument(tx, projectId, documentId, placement);
+    } else if (!current.isPinned) {
+      const [last] = await tx
+        .select({ value: sql<number>`coalesce(max(${projectDocument.pinPosition}), 0)` })
+        .from(projectDocument)
+        .where(eq(projectDocument.projectId, projectId));
+      await tx
+        .update(projectDocument)
+        .set({ isPinned: true, pinPosition: Number(last?.value ?? 0) + 1024 })
+        .where(eq(projectDocument.id, documentId));
+    }
+    return { isPinned };
+  });
+}
+
+// Places a pinned page between its pinned neighbours, as a tree move does among siblings. A pin
+// hidden while its page is private or archived keeps its place among the others, but only a pin
+// the project sees can be an anchor.
+async function placePinnedDocument(
+  executor: Executor,
+  projectId: number,
+  documentId: number,
+  { afterId, beforeId }: DocumentPinPlacement,
+): Promise<void> {
+  const pinned = (
+    await executor
+      .select({
+        id: projectDocument.id,
+        // Set on every pinned page: project_document_pin_position_check.
+        position: sql<number>`${projectDocument.pinPosition}`,
+        isPrivate: projectDocument.isPrivate,
+        archivedAt: projectDocument.archivedAt,
+      })
+      .from(projectDocument)
+      .where(and(eq(projectDocument.projectId, projectId), eq(projectDocument.isPinned, true)))
+      .orderBy(asc(projectDocument.pinPosition), asc(projectDocument.id))
+  ).filter((page) => page.id !== documentId);
+  const shownIndex = (id: number | undefined) =>
+    pinned.findIndex((page) => page.id === id && !page.isPrivate && page.archivedAt === null);
+  const afterIndex = shownIndex(afterId);
+  const beforeIndex = shownIndex(beforeId);
+  if (
+    (afterId !== undefined && afterIndex < 0) ||
+    (beforeId !== undefined && beforeIndex < 0) ||
+    (afterId !== undefined && beforeId !== undefined && afterIndex >= beforeIndex)
+  ) {
+    throw new HttpError(409, 'The pinned pages changed elsewhere. Reload them before moving.');
   }
-  await db.update(projectDocument).set({ isPinned }).where(eq(projectDocument.id, documentId));
-  return { isPinned };
+  const index = afterId !== undefined ? afterIndex + 1 : beforeIndex;
+  const position = safeDocumentPosition(pinned[index - 1], pinned[index], pinned);
+  await executor
+    .update(projectDocument)
+    .set({ pinPosition: position ?? (index + 1) * 1024 })
+    .where(eq(projectDocument.id, documentId));
+  if (position !== null) return;
+
+  // No room is left between the two neighbours, so the other pins are numbered again. As in a
+  // tree rebalance, that adds no page history and leaves the Docs revision to the write above.
+  await executor.execute(sql`select set_config('app.document_rebalance', 'true', true)`);
+  const cases = sql.join(
+    pinned.map(
+      (page, at) =>
+        sql`when ${page.id} then ${(at < index ? at + 1 : at + 2) * 1024}::double precision`,
+    ),
+    sql` `,
+  );
+  await executor
+    .update(projectDocument)
+    .set({ pinPosition: sql`case ${projectDocument.id} ${cases} end` })
+    .where(
+      and(
+        eq(projectDocument.projectId, projectId),
+        inArray(
+          projectDocument.id,
+          pinned.map((page) => page.id),
+        ),
+      ),
+    );
 }
 
 export async function listDocumentRevisions(

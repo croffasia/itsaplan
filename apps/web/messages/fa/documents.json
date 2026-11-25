@@ -321,6 +321,7 @@
     "mentionedYou": "<b>{name}</b> در <b>{page}</b> از شما نام برد",
     "repliedToYou": "<b>{name}</b> در <b>{page}</b> به شما پاسخ داد",
     "pinnedMeta": "{count, plural, one {# صفحه} other {# صفحه}} · به‌روزرسانی {time}",
+    "pinnedMoved": "{title} به جایگاه {place} از {count} منتقل شد",
     "recent": "اخیر",
     "openedByMe": "باز‌شده توسط من",
     "updated": "به‌روزشده",

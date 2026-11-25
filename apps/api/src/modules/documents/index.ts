@@ -951,6 +951,7 @@ export const documentRoutes = new Elysia({
         params.documentId,
         requireUser(user).id,
         body.isPinned,
+        { afterId: body.afterId, beforeId: body.beforeId },
       );
       if (!pin) throw new HttpError(404, 'Document not found');
       return pin;
@@ -962,10 +963,12 @@ export const documentRoutes = new Elysia({
       body: documentPinBody,
       response: { 200: DocumentPinResponse, ...commonErrors, ...errors(409) },
       detail: {
-        summary: 'Pin or unpin a document',
+        summary: 'Pin, unpin or move a pinned document',
         description:
-          'Show a public document first among its siblings for everyone in the project, or ' +
-          'stop doing so.',
+          'Pin a public document to the Docs home for everyone in the project, or unpin it. ' +
+          'A new pin goes last. To put a pinned page in another place, send isPinned true ' +
+          'with afterId, beforeId or both: pinned pages from list_documents, ordered by ' +
+          'pinPosition. A stale order, or a page that is no longer pinned, returns 409.',
         ...mcpTool('set_document_pin'),
       },
     },

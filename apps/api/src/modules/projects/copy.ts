@@ -688,6 +688,7 @@ export async function copyProject(
             isPrivate: d.isPrivate,
             isLocked: d.isLocked,
             isPinned: d.isPinned,
+            pinPosition: d.pinPosition,
             archivedAt: d.archivedAt,
             position: d.position,
             ownerUserId: ownerId,

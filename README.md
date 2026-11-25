@@ -13,7 +13,8 @@ Self-hosted, on your own server.
 <a href="https://trendshift.io/repositories/95056?utm_source=trendshift-badge&utm_medium=badge&utm_campaign=badge-trendshift-95056" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/95056/daily?language=TypeScript" alt="#13 TypeScript Repository of the Day on Trendshift" width="250" height="55"/></a>
 
 If It's a Plan looks useful to you, star the repo ⭐ and
-[leave a review on Product Hunt](https://www.producthunt.com/products/it-s-a-plan/reviews).
+[leave a review on Product Hunt](https://www.producthunt.com/products/it-s-a-plan/reviews).<br>
+For news and updates, [follow us on Threads](https://www.threads.com/@itsaplandev).
 
 <a href="https://railway.com/deploy/its-a-plan?referralCode=lQ5O6i&utm_medium=integration&utm_source=button&utm_campaign=itsaplan"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="40" /></a>
 <a href="docs/coolify.md"><img src="assets/coolify-button.svg" alt="Deploy on Coolify" height="40" /></a>

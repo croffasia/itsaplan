@@ -1,6 +1,7 @@
 import type { projectTemplate } from '@repo/db';
 import { HttpError } from '#shared/lib';
 import type { CopyIdMaps, ProjectSnapshot } from '#modules/projects/copy';
+import { BLOCKABLE_STATE_TYPES } from '#modules/issues/blocked';
 import {
   mapDisplay,
   mapEffect,
@@ -151,6 +152,10 @@ function importedSnapshot(template: SharedProjectTemplate): ProjectSnapshot {
     snapshot.columns.map((column) => column.position),
     'Column positions',
   );
+  const blocked = snapshot.columns.filter((column) => column.blocked);
+  if (blocked.length > 1) throw new HttpError(400, 'Only one column can be the blocked column');
+  if (blocked.some((column) => !BLOCKABLE_STATE_TYPES.includes(column.stateType)))
+    throw new HttpError(400, 'The blocked column must be an unstarted or started state');
   assertUnique(
     snapshot.issueTypes.map((type) => type.name),
     'Issue type names',

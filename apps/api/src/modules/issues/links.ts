@@ -5,6 +5,7 @@ import { HttpError } from '#shared/lib';
 import { recordActivityEntries, rowSide, textSide, type ActivityInput } from './activity';
 import { emitIssueEvents } from './webhook-payload';
 import { getIssues } from './service';
+import { syncBlockedIssues } from './blocked';
 
 // Relations between issues of one project. A relation is one row (issue_link);
 // which side of it an issue sits on decides how the relation reads for that
@@ -284,6 +285,7 @@ export async function addIssueLink(
     () => getIssues([issueId, targetIssueId]),
     actorUserId,
   );
+  if (stored.kind === 'blocks') await syncBlockedIssues([stored.targetIssueId], actorUserId);
 
   return {
     id: linkId,
@@ -363,7 +365,11 @@ export async function removeIssueLink(
       actorUserId,
       tx,
     );
-    return { projectId: self.projectId, issueIds: [issueId, otherIssueId] };
+    return {
+      projectId: self.projectId,
+      issueIds: [issueId, otherIssueId],
+      blockedId: kind === 'blocks' ? rows[0].targetIssueId : null,
+    };
   });
 
   if (!removed) return false;
@@ -373,5 +379,6 @@ export async function removeIssueLink(
     () => getIssues(removed.issueIds),
     actorUserId,
   );
+  if (removed.blockedId !== null) await syncBlockedIssues([removed.blockedId], actorUserId);
   return true;
 }

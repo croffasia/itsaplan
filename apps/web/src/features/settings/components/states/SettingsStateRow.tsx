@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Pencil, Trash2, UserPlus } from 'lucide-react';
+import { CircleSlash, GripVertical, Pencil, Trash2, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Column } from '@/lib/api/endpoints/columns';
 import type { Assignee } from '@/lib/api/endpoints/projects';
@@ -77,6 +77,17 @@ export function SettingsStateRow({
             </span>
           </TooltipTrigger>
           <TooltipContent>{t('autoAssign.rowTitle', { name: autoAssignee.name })}</TooltipContent>
+        </Tooltip>
+      )}
+      {column.blocked && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+              <CircleSlash className="size-3.5" />
+              {t('blocked.label')}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-64">{t('blocked.help')}</TooltipContent>
         </Tooltip>
       )}
       {column.wipLimit != null && (

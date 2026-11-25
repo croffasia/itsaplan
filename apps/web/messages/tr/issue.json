@@ -12,6 +12,7 @@
   "activityLoadFailed": "Etkinlikler yüklenemedi.",
   "fields": {
     "state": "Durum",
+    "blocked": "Engellendi",
     "priority": "Öncelik",
     "assignee": "Sorumlu",
     "delegate": "Temsilci",
@@ -42,6 +43,7 @@
     "preview": "Önizle",
     "goToIssue": "İşe git",
     "status": "Durum",
+    "unblock": "Engeli kaldır",
     "priority": "Öncelik",
     "assignee": "Sorumlu",
     "delegate": "Temsilci",
@@ -65,6 +67,17 @@
     "noCycle": "Döngü yok",
     "copyFailed": "Panoya kopyalanamadı",
     "promptCopied": "Prompt panoya kopyalandı"
+  },
+  "blocked": {
+    "byLinks": "Onu engelleyen iş öğeleri tutuyor. Onlar kapanınca geri döner.",
+    "noReason": "Neden belirtilmedi.",
+    "unblock": "Engeli kaldır"
+  },
+  "blockedReason": {
+    "title": "Neden engellendi?",
+    "description": "Neden, iş öğesi engellenenler sütunundan çıkana kadar kartta görünür.",
+    "placeholder": "Tedarikçiden API anahtarları bekleniyor",
+    "submit": "Engelle"
   },
   "commands": {
     "preview": "İşi önizle",

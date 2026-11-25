@@ -56,20 +56,35 @@ export function linkRelation(link: IssueLink): IssueLinkInputKind {
   return 'relates';
 }
 
-// Whether another issue holds this one up, which the board views tint the card
-// or row for. A blocker in a completed or canceled column no longer does; one the
-// board cannot find still counts, since the relation stands.
+// Whether the issue is held up, which the board views tint the card or row for: it
+// sits in the blocked column, or another issue blocks it. A blocker in a completed
+// or canceled column no longer does; one the board cannot find still counts, since
+// the relation stands.
 export function isBlocked(
   issue: BoardIssue,
   issueById: Map<number, Issue>,
   columnById: Map<number, Column>,
 ): boolean {
+  if (columnById.get(issue.columnId)?.blocked) return true;
   return issue.links.some((link) => {
     if (link.relation !== 'blocked_by') return false;
     const blocker = issueById.get(link.issueId);
     const stateType = blocker && columnById.get(blocker.columnId)?.stateType;
     return stateType !== 'completed' && stateType !== 'canceled';
   });
+}
+
+// The column an issue leaves the blocked column for: the one it came from, else the
+// first planned column, else the first started one. Matches the API's choice when a
+// blocker closes.
+export function unblockColumnId(issue: Issue, columns: Column[]): number | null {
+  if (issue.blockedFromColumnId != null) return issue.blockedFromColumnId;
+  const open = columns.filter((c) => !c.blocked);
+  return (
+    open.find((c) => c.stateType === 'unstarted')?.id ??
+    open.find((c) => c.stateType === 'started')?.id ??
+    null
+  );
 }
 
 // The same relation read from the other end, for naming it on the issue on that

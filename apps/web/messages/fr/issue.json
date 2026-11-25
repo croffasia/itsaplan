@@ -12,6 +12,7 @@
   "activityLoadFailed": "Impossible de charger l'activité.",
   "fields": {
     "state": "État",
+    "blocked": "Bloqué",
     "priority": "Priorité",
     "assignee": "Responsable",
     "delegate": "Délégué",
@@ -42,6 +43,7 @@
     "preview": "Aperçu",
     "goToIssue": "Aller au ticket",
     "status": "État",
+    "unblock": "Débloquer",
     "priority": "Priorité",
     "assignee": "Responsable",
     "delegate": "Délégué",
@@ -65,6 +67,17 @@
     "noCycle": "Aucun cycle",
     "copyFailed": "Impossible de copier dans le presse-papiers",
     "promptCopied": "Prompt copié dans le presse-papiers"
+  },
+  "blocked": {
+    "byLinks": "Retenu par les tickets qui le bloquent. Il revient quand ils sont fermés.",
+    "noReason": "Aucune raison indiquée.",
+    "unblock": "Débloquer"
+  },
+  "blockedReason": {
+    "title": "Pourquoi est-il bloqué ?",
+    "description": "La raison s’affiche sur la carte jusqu’à ce que le ticket quitte la colonne des bloqués.",
+    "placeholder": "En attente des clés API du fournisseur",
+    "submit": "Bloquer"
   },
   "commands": {
     "preview": "Aperçu du ticket",

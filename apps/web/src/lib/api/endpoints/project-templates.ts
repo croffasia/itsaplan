@@ -24,6 +24,7 @@ export interface TemplateContents {
     color: string;
     wipLimit: number | null;
     wipMode: 'soft' | 'hard';
+    blocked?: boolean;
   }[];
   issueTypes: { id: number; name: string; icon: string; color: string; isDefault: boolean }[];
   labelGroups: { id: number; name: string; color: string }[];

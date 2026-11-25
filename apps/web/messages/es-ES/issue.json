@@ -12,6 +12,7 @@
   "activityLoadFailed": "No se ha podido cargar la actividad.",
   "fields": {
     "state": "Estado",
+    "blocked": "Bloqueada",
     "priority": "Prioridad",
     "assignee": "Asignatario",
     "delegate": "Delegado",
@@ -42,6 +43,7 @@
     "preview": "Previsualizar",
     "goToIssue": "Ir al ticket",
     "status": "Estado",
+    "unblock": "Desbloquear",
     "priority": "Prioridad",
     "assignee": "Asignatario",
     "delegate": "Delegado",
@@ -65,6 +67,17 @@
     "noCycle": "Sin ciclo",
     "copyFailed": "No se pudo copiar al portapapeles",
     "promptCopied": "La consigna se ha copiado al portapapeles"
+  },
+  "blocked": {
+    "byLinks": "La retienen las incidencias que la bloquean. Vuelve cuando se cierran.",
+    "noReason": "Sin motivo indicado.",
+    "unblock": "Desbloquear"
+  },
+  "blockedReason": {
+    "title": "¿Por qué está bloqueada?",
+    "description": "El motivo se muestra en la tarjeta hasta que la incidencia sale de la columna de bloqueadas.",
+    "placeholder": "Esperando las claves de API del proveedor",
+    "submit": "Bloquear"
   },
   "commands": {
     "preview": "Previsualizar el ticket",

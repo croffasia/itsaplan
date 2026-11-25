@@ -12,6 +12,7 @@
   "activityLoadFailed": "활동을 불러올 수 없습니다.",
   "fields": {
     "state": "상태",
+    "blocked": "차단됨",
     "priority": "우선순위",
     "assignee": "담당자",
     "delegate": "위임 대상",
@@ -42,6 +43,7 @@
     "preview": "미리보기",
     "goToIssue": "이슈로 이동",
     "status": "상태",
+    "unblock": "차단 해제",
     "priority": "우선순위",
     "assignee": "담당자",
     "delegate": "위임 대상",
@@ -65,6 +67,17 @@
     "noCycle": "사이클 없음",
     "copyFailed": "클립보드에 복사할 수 없습니다.",
     "promptCopied": "프롬프트가 클립보드에 복사되었습니다."
+  },
+  "blocked": {
+    "byLinks": "이 이슈를 차단하는 이슈 때문에 보류 중입니다. 해당 이슈가 닫히면 돌아갑니다.",
+    "noReason": "사유가 없습니다.",
+    "unblock": "차단 해제"
+  },
+  "blockedReason": {
+    "title": "왜 차단되었나요?",
+    "description": "이슈가 차단 열을 벗어날 때까지 카드에 사유가 표시됩니다.",
+    "placeholder": "공급업체의 API 키를 기다리는 중",
+    "submit": "차단"
   },
   "commands": {
     "preview": "이슈 미리보기",

@@ -194,6 +194,10 @@
       "hardHelp": "Aucun ticket ne peut être déplacé dans cet état tant qu'il est plein, d'où qu'il vienne.",
       "badgeSoft": "max {limit}",
       "badgeHard": "max {limit}, appliqué"
+    },
+    "blocked": {
+      "label": "Colonne des bloqués",
+      "help": "Les tickets bloqués par un ticket ouvert arrivent ici et retournent dans leur colonne quand il est fermé. Déplacer un ticket ici demande une raison. Un projet a une seule colonne des bloqués."
     }
   },
   "issueTypes": {

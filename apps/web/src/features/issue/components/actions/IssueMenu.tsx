@@ -7,6 +7,7 @@ import {
   Bot,
   CalendarClock,
   CircleDashed,
+  CircleSlash,
   ClipboardCopy,
   PanelRight,
   RefreshCw,
@@ -37,6 +38,7 @@ import { buildIssueBranchName, buildIssuePrompt } from '../../utils/issuePrompt'
 import { writeClipboardText } from '../../utils/clipboard';
 import { delegatableAgents } from '../../utils/delegates';
 import { assignableMembers } from '@/utils/project';
+import { unblockColumnId } from '@/utils/issueLinks';
 import { useSession } from '@/lib/auth-client';
 import { calendarSystem, toDateStr } from '@/utils/dates';
 import { colorDot } from '@/components/common/fields/colorDot';
@@ -128,6 +130,7 @@ export default function IssueMenu({
     copyText(`${window.location.origin}${issuePath(project.project.ref, issue.sequenceNumber)}`);
 
   const currentColumn = project.columns.find((c) => c.id === issue.columnId);
+  const unblockTo = unblockColumnId(issue, project.columns);
   const currentPriority =
     PRIORITY_FIELDS.find((p) => p.value === (issue.priority ?? '')) ?? PRIORITY_FIELDS[0];
   const members = assignableMembers(project.assignees);
@@ -175,6 +178,13 @@ export default function IssueMenu({
                 ))}
               </ContextMenuSubContent>
             </ContextMenuSub>
+
+            {currentColumn?.blocked && unblockTo != null && (
+              <ContextMenuItem onSelect={() => patch({ columnId: unblockTo })}>
+                <CircleSlash />
+                {t('unblock')}
+              </ContextMenuItem>
+            )}
 
             <ContextMenuSub>
               <ContextMenuSubTrigger>

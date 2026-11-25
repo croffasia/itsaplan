@@ -12,6 +12,7 @@
   "activityLoadFailed": "Tidak dapat memuat aktivitas.",
   "fields": {
     "state": "Status",
+    "blocked": "Terblokir",
     "priority": "Prioritas",
     "assignee": "Penerima tugas",
     "delegate": "Delegasi",
@@ -42,6 +43,7 @@
     "preview": "Pratinjau",
     "goToIssue": "Buka issue",
     "status": "Status",
+    "unblock": "Buka blokir",
     "priority": "Prioritas",
     "assignee": "Penerima tugas",
     "delegate": "Delegasi",
@@ -65,6 +67,17 @@
     "noCycle": "Tanpa cycle",
     "copyFailed": "Gagal menyalin ke papan klip",
     "promptCopied": "Prompt disalin ke papan klip"
+  },
+  "blocked": {
+    "byLinks": "Ditahan oleh isu yang memblokirnya. Kembali saat isu tersebut ditutup.",
+    "noReason": "Tidak ada alasan.",
+    "unblock": "Buka blokir"
+  },
+  "blockedReason": {
+    "title": "Mengapa ini terblokir?",
+    "description": "Alasan tampil di kartu sampai isu keluar dari kolom terblokir.",
+    "placeholder": "Menunggu kunci API dari vendor",
+    "submit": "Blokir"
   },
   "commands": {
     "preview": "Pratinjau issue",

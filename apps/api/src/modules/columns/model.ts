@@ -20,6 +20,7 @@ export const ColumnResponse = t.Object({
   wipLimit: t.Union([t.Number(), t.Null()]),
   wipMode: t.String(),
   autoAssignUserId: t.Union([t.String(), t.Null()]),
+  blocked: t.Boolean(),
 });
 
 export const ColumnListResponse = t.Array(ColumnResponse);
@@ -52,6 +53,14 @@ export const createColumnBody = t.Object({
           'the column, replacing its assignee. null turns it off.',
       }),
     ),
+  ),
+  blocked: t.Optional(
+    t.Boolean({
+      description:
+        'Makes this the blocked column. An issue an open issue blocks is moved here, and ' +
+        'back when no open issue blocks it. One per project: setting it clears it on the ' +
+        'other column. Only on an unstarted or started state.',
+    }),
   ),
 });
 

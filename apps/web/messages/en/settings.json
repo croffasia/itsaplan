@@ -194,6 +194,10 @@
       "hardHelp": "Issues cannot be moved into the state while it is full, from anywhere.",
       "badgeSoft": "max {limit}",
       "badgeHard": "max {limit}, enforced"
+    },
+    "blocked": {
+      "label": "Blocked column",
+      "help": "Issues blocked by an open issue move here and return to their column when it closes. Moving an issue here asks for a reason. A project has one blocked column."
     }
   },
   "issueTypes": {

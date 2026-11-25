@@ -529,6 +529,9 @@ export const projectColumn = pgTable(
     autoAssignUserId: text('auto_assign_user_id').references(() => user.id, {
       onDelete: 'set null',
     }),
+    // The column blocked issues are kept in. An issue blocked by an open issue is moved
+    // here, and moved back when no open issue blocks it. A project has at most one.
+    blocked: boolean('blocked').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -539,6 +542,9 @@ export const projectColumn = pgTable(
     check('project_column_wip_mode_check', sql`${t.wipMode} IN ('soft', 'hard')`),
     check('project_column_wip_limit_check', sql`${t.wipLimit} IS NULL OR ${t.wipLimit} > 0`),
     unique().on(t.projectId, t.position),
+    uniqueIndex('project_column_blocked_uq')
+      .on(t.projectId)
+      .where(sql`${t.blocked}`),
   ],
 );
 
@@ -1780,6 +1786,14 @@ export const issue = pgTable(
     startDate: date('start_date'),
     dueDate: date('due_date'),
     position: doublePrecision('position').notNull().default(0),
+    // Set while the issue is in the project's blocked column. blockedReason is what a
+    // person entered when they moved it there; NULL means its blocking issues hold it,
+    // and it returns once none of them is open. blockedFromColumnId is the column it
+    // returns to.
+    blockedReason: text('blocked_reason'),
+    blockedFromColumnId: integer('blocked_from_column_id').references(() => projectColumn.id, {
+      onDelete: 'set null',
+    }),
     // When set, the issue is archived: hidden from the board and lists but kept and
     // restorable. Set manually (archive action) or by the worker's auto-archive
     // sweep for issues that sat in a completed/canceled column past the project's

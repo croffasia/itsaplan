@@ -21,6 +21,7 @@ import InitiativeSelect from '../fields/InitiativeSelect';
 import CycleSelect from '../fields/CycleSelect';
 import CycleHistoryBadge from '../fields/CycleHistoryBadge';
 import EstimatePill from '../fields/EstimatePill';
+import IssueBlockedField from '../fields/IssueBlockedField';
 import IssueTimeTracking from '../fields/IssueTimeTracking';
 import IssueCustomFieldControl from '../fields/IssueCustomFieldControl';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
@@ -31,6 +32,7 @@ import IssuePropertyGroupHeading from './IssuePropertyGroupHeading';
 import { type Embeddable } from '@/components/common/editor/attachmentEmbed';
 import { parseDate } from '@/utils/dates';
 import { assignableMembers } from '@/utils/project';
+import { unblockColumnId } from '@/utils/issueLinks';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
@@ -88,6 +90,8 @@ export default function IssueProperties({
   // start. Equal dates are allowed.
   const latestStart = parseDate(issue.dueDate);
   const earliestDue = parseDate(issue.startDate);
+  const blocked = project.columns.find((c) => c.id === issue.columnId)?.blocked ?? false;
+  const unblockTo = unblockColumnId(issue, project.columns);
   const groups: {
     key: 'groupState' | 'groupPeople' | 'groupPlanning' | 'groupLabels' | 'groupCustom';
     rows: ReactNode[];
@@ -103,6 +107,22 @@ export default function IssueProperties({
             readOnly={readOnly}
           />
         </IssuePropertyRow>,
+
+        ...(blocked
+          ? [
+              <IssuePropertyRow key="blocked" label={t('blocked')}>
+                <IssueBlockedField
+                  reason={issue.blockedReason}
+                  heldByLinks={issue.blockedFromColumnId != null}
+                  onUnblock={
+                    readOnly || unblockTo == null
+                      ? undefined
+                      : () => onPatch({ columnId: unblockTo })
+                  }
+                />
+              </IssuePropertyRow>,
+            ]
+          : []),
 
         <IssuePropertyRow key="priority" label={t('priority')}>
           <PrioritySelect

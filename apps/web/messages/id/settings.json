@@ -194,6 +194,10 @@
       "hardHelp": "Issue tidak dapat dipindahkan ke status ini saat penuh, dari mana pun.",
       "badgeSoft": "maks {limit}",
       "badgeHard": "maks {limit}, ketat"
+    },
+    "blocked": {
+      "label": "Kolom terblokir",
+      "help": "Isu yang diblokir oleh isu terbuka pindah ke sini dan kembali ke kolomnya saat isu itu ditutup. Memindahkan isu ke sini meminta alasan. Satu proyek punya satu kolom terblokir."
     }
   },
   "issueTypes": {

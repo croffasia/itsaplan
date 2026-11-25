@@ -1,5 +1,5 @@
 // Permission model for team roles. A role carries a matrix: for each resource the
-// create/edit/read/delete flags. The matrix is stored as jsonb on team_role and
+// read/create/edit/delete flags. The matrix is stored as jsonb on team_role and
 // enforced by the API (apps/api/src/shared/access.ts). Owners bypass the matrix
 // entirely (full access).
 
@@ -36,7 +36,9 @@ export type PermissionResource = (typeof CORE_RESOURCES)[number];
 // The resources in the order a matrix lists them, with those setPermissionExtensions added.
 export const PERMISSION_RESOURCES: PermissionResource[] = [...CORE_RESOURCES];
 
-export const PERMISSION_ACTIONS = ['create', 'edit', 'read', 'delete'] as const;
+// In granting order: a role is saved with an action only together with every supported
+// one before it.
+export const PERMISSION_ACTIONS = ['read', 'create', 'edit', 'delete'] as const;
 export type PermissionAction = (typeof PERMISSION_ACTIONS)[number];
 
 export type ResourcePermissions = Record<PermissionAction, boolean>;
@@ -100,7 +102,7 @@ function allowAll(resource: PermissionResource): ResourcePermissions {
 }
 
 function denyAll(): ResourcePermissions {
-  return { create: false, edit: false, read: false, delete: false };
+  return { read: false, create: false, edit: false, delete: false };
 }
 
 // All flags false — the base a normalizer starts from.
@@ -155,6 +157,17 @@ export function normalizePermissions(input: unknown): Permissions {
       return [resource, normalizeResource(resource, src[resource] ?? (from && src[from]))];
     }),
   ) as Permissions;
+}
+
+// The resources where a matrix grants an action without one before it. A role stored
+// before the rule can hold some; the API refuses to save them.
+export function permissionGaps(permissions: Permissions): PermissionResource[] {
+  return PERMISSION_RESOURCES.filter((resource) => {
+    const row = PERMISSION_ACTIONS.filter((a) => resourceActions(resource).includes(a)).map(
+      (a) => permissions[resource][a],
+    );
+    return row.some((granted, i) => granted && row[i - 1] === false);
+  });
 }
 
 export function hasPermission(

@@ -61,5 +61,10 @@
     "cellAria": "{resource}: {action}",
     "saveRole": "Guardar el rol",
     "createRole": "Crear el rol"
+  },
+  "gaps": {
+    "title": "Permisos fuera de orden",
+    "description": "Cada permiso necesita todos los anteriores de su fila. Corrige las filas marcadas para guardar el rol.",
+    "hint": "Algunos permisos están fuera de orden. Edita el rol para corregirlos."
   }
 }

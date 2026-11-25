@@ -61,5 +61,10 @@
     "cellAria": "{resource}: {action}",
     "saveRole": "Save role",
     "createRole": "Create role"
+  },
+  "gaps": {
+    "title": "Permissions out of order",
+    "description": "Each permission needs all the ones before it in its row. Fix the marked rows to save the role.",
+    "hint": "Some permissions are out of order. Edit the role to fix them."
   }
 }

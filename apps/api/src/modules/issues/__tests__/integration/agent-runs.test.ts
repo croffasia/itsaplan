@@ -110,7 +110,7 @@ describe('issue agent runs', () => {
     };
     expect(await read({ work_items: { read: true } })).toEqual([403, 403]);
     expect(await read({ ai_agents: { read: true } })).toEqual([200, 403]);
-    expect(await read({ ai_agents: { read: true, edit: true } })).toEqual([200, 200]);
+    expect(await read({ ai_agents: { read: true, create: true, edit: true } })).toEqual([200, 200]);
   });
 
   it('rejects missing issues and invalid page bounds', async () => {

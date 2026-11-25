@@ -188,7 +188,7 @@ describe('agent traces', () => {
     });
     const editor = await createRole(asOwner, 'MKT', {
       name: 'Agent editor',
-      permissions: { ai_agents: { read: true, edit: true } },
+      permissions: { ai_agents: { read: true, create: true, edit: true } },
     });
     const asReader = await addProjectMember(asOwner, 'MKT', reader.data!.id);
     const asEditor = await addProjectMember(asOwner, 'MKT', editor.data!.id);

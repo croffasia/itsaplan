@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Minus, Plus, RefreshCw } from 'lucide-react';
+import { CircleAlert, Minus, Plus, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import Modal from '@/components/common/overlay/Modal';
@@ -16,12 +16,13 @@ const ACTION_STYLE = {
   create: { Icon: Plus, tint: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
   update: { Icon: RefreshCw, tint: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
   skip: { Icon: Minus, tint: 'bg-muted text-muted-foreground' },
+  invalid: { Icon: CircleAlert, tint: 'bg-warning/10 text-warning' },
 } as const;
 
 // Confirms a roles paste before applying it: lists each incoming role, whether it is
 // created or overwrites an existing one, and a preview of its permission matrix. On
-// confirm, created and overwritten roles are applied; default-name collisions are
-// left untouched.
+// confirm, created and overwritten roles are applied; default-name collisions and roles
+// out of granting order are left untouched.
 export default function RolesImportDialog({
   teamId,
   planned,
@@ -37,7 +38,8 @@ export default function RolesImportDialog({
   const updateRole = useUpdateRole(teamId);
   const [busy, setBusy] = useState(false);
 
-  const applicable = planned.filter((p) => p.action !== 'skip');
+  const isApplied = (p: PlannedRole) => p.action === 'create' || p.action === 'update';
+  const applicable = planned.filter(isApplied);
 
   async function apply() {
     setBusy(true);
@@ -82,7 +84,7 @@ export default function RolesImportDialog({
               key={role.name}
               className={cn(
                 'flex items-center gap-2.5 rounded-lg bg-muted/30 px-3 py-2.5',
-                role.action === 'skip' && 'opacity-60',
+                !isApplied(role) && 'opacity-60',
               )}
             >
               <Tooltip>

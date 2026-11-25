@@ -9,6 +9,7 @@ export {
   fullPermissions,
   defaultMemberPermissions,
   normalizePermissions,
+  permissionGaps,
   hasPermission,
   resourceActions,
   extendedFrom,

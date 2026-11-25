@@ -61,5 +61,10 @@
     "cellAria": "{resource}: {action}",
     "saveRole": "Salvar função",
     "createRole": "Criar função"
+  },
+  "gaps": {
+    "title": "Permissões fora de ordem",
+    "description": "Cada permissão precisa de todas as anteriores na linha. Corrija as linhas destacadas para salvar a função.",
+    "hint": "Algumas permissões estão fora de ordem. Edite a função para corrigi-las."
   }
 }

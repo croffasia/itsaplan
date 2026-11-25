@@ -177,7 +177,8 @@
       "actions": {
         "create": "Baru",
         "update": "Timpa",
-        "skip": "Lewati (peran sistem)"
+        "skip": "Lewati (peran sistem)",
+        "invalid": "Lewati (urutan izin tidak sesuai)"
       }
     },
     "transferErrors": {

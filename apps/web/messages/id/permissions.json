@@ -61,5 +61,10 @@
     "cellAria": "{resource}: {action}",
     "saveRole": "Simpan peran",
     "createRole": "Buat peran"
+  },
+  "gaps": {
+    "title": "Urutan izin tidak sesuai",
+    "description": "Setiap izin memerlukan semua izin sebelumnya di barisnya. Perbaiki baris yang ditandai untuk menyimpan peran.",
+    "hint": "Urutan sebagian izin tidak sesuai. Ubah peran untuk memperbaikinya."
   }
 }

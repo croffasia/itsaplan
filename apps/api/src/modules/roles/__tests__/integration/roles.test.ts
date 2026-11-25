@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { db, teamRole } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import { api, authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -172,9 +174,10 @@ describe('roles', () => {
   describe('options — GET /teams/:teamId/roles/options', () => {
     it('answers with every role of the team, matrices included', async () => {
       const owner = await setupOwner();
-      await owner.api
-        .teams({ teamId: owner.teamId })
-        .roles.post({ name: 'Editor', permissions: { work_items: { edit: true } } });
+      await owner.api.teams({ teamId: owner.teamId }).roles.post({
+        name: 'Editor',
+        permissions: { work_items: { read: true, create: true, edit: true } },
+      });
 
       const res = await owner.api.teams({ teamId: owner.teamId }).roles.options.get();
 
@@ -212,6 +215,33 @@ describe('roles', () => {
       expect(res.data?.permissions.work_items.create).toBe(false);
       expect(res.data?.permissions.members_manage.read).toBe(false);
       expect((res.data?.permissions as Record<string, unknown>).not_a_resource).toBeUndefined();
+    });
+
+    it('refuses an action granted without one before it', async () => {
+      const owner = await setupOwner();
+      const roles = owner.api.teams({ teamId: owner.teamId }).roles;
+
+      const gap = await roles.post({
+        name: 'Gap',
+        permissions: {
+          work_items: { read: true, edit: true },
+          labels: { create: true },
+          cycles: { read: true },
+        },
+      });
+      expect(gap.status).toBe(400);
+      expect((gap.error!.value as { error: string }).error).toEndWith('Fix: work_items, labels');
+
+      // An action the resource does not support is not one that has to be granted.
+      const narrow = await roles.post({
+        name: 'Narrow',
+        permissions: {
+          members_invite: { read: true, create: true, delete: true },
+          workflow_config: { read: true, edit: true },
+          repositories: { edit: true },
+        },
+      });
+      expect(narrow.status).toBe(201);
     });
 
     it('returns 409 for a duplicate role name in the same team', async () => {
@@ -310,6 +340,35 @@ describe('roles', () => {
       expect(res.status).toBe(200);
       expect(res.data?.permissions.members_manage.read).toBe(true);
       expect(res.data?.permissions.members_manage.edit).toBe(false);
+    });
+
+    it('refuses an action granted without one before it', async () => {
+      const owner = await setupOwner();
+      const roleId = await makeRole(owner);
+
+      const res = await owner.api
+        .teams({ teamId: owner.teamId })
+        .roles({ roleId })
+        .patch({ permissions: { work_items: { read: true, delete: true } } });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('keeps a stored matrix that is out of order until the matrix itself is saved', async () => {
+      const owner = await setupOwner();
+      const roleId = await makeRole(owner);
+      await db
+        .update(teamRole)
+        .set({ permissions: { work_items: { edit: true } } })
+        .where(eq(teamRole.id, roleId));
+      const role = owner.api.teams({ teamId: owner.teamId }).roles({ roleId });
+
+      const renamed = await role.patch({ name: 'Reviewer' });
+      expect(renamed.status).toBe(200);
+      expect(renamed.data?.permissions.work_items).toMatchObject({ read: false, edit: true });
+
+      const { permissions } = renamed.data!;
+      expect((await role.patch({ permissions })).status).toBe(400);
     });
 
     it('leaves the role unchanged for an empty body', async () => {

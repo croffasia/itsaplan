@@ -64,7 +64,10 @@ describe('role escalation guards', () => {
     const powerful = (
       await createRole(asOwner, 'MKT', {
         name: 'Powerful',
-        permissions: { ...handlerPermissions(), ai_agents: { read: true, edit: true } },
+        permissions: {
+          ...handlerPermissions(),
+          ai_agents: { read: true, create: true, edit: true },
+        },
       })
     ).data!.id;
     const asHandler = await addProjectMember(asOwner, 'MKT', handler);
@@ -100,7 +103,10 @@ describe('role escalation guards', () => {
     const powerful = (
       await createRole(asOwner, 'MKT', {
         name: 'Powerful',
-        permissions: { ...handlerPermissions(), ai_agents: { read: true, edit: true } },
+        permissions: {
+          ...handlerPermissions(),
+          ai_agents: { read: true, create: true, edit: true },
+        },
       })
     ).data!.id;
     const asHandler = await addProjectMember(asOwner, 'MKT', handler);
@@ -133,7 +139,10 @@ describe('role escalation guards', () => {
     const powerful = (
       await createRole(asOwner, 'MKT', {
         name: 'Powerful',
-        permissions: { ...handlerPermissions(), ai_agents: { read: true, edit: true } },
+        permissions: {
+          ...handlerPermissions(),
+          ai_agents: { read: true, create: true, edit: true },
+        },
       })
     ).data!.id;
     const asHandler = await addProjectMember(asOwner, 'MKT', handler);
@@ -164,7 +173,10 @@ describe('role escalation guards', () => {
     const powerful = (
       await createRole(asOwner, 'MKT', {
         name: 'Powerful',
-        permissions: { ...handlerPermissions(), ai_agents: { read: true, edit: true } },
+        permissions: {
+          ...handlerPermissions(),
+          ai_agents: { read: true, create: true, edit: true },
+        },
       })
     ).data!.id;
     const asHandler = await addProjectMember(asOwner, 'MKT', handler);

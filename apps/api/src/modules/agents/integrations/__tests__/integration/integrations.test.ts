@@ -298,7 +298,7 @@ describe('integrations', () => {
     });
     const role = await createRole(asOwner, 'MKT', {
       name: 'Integrator',
-      permissions: { integrations: { read: true, edit: true } },
+      permissions: { integrations: { read: true, create: true, edit: true } },
     });
     const asMember = await addProjectMember(asOwner, 'MKT', role.data!.id);
 

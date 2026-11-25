@@ -186,7 +186,7 @@ describe('document assets', () => {
 
     const editorRole = await createRole(asOwner, 'MKT', {
       name: 'Docs editor',
-      permissions: { documents: { read: true, edit: true } },
+      permissions: { documents: { read: true, create: true, edit: true } },
     });
     const editor = await addMember(asOwner, editorRole.data!.id);
     const editorAsset = await upload(editor.client, page.id, 'editor.png');
@@ -320,7 +320,7 @@ describe('document assets', () => {
 
     const docsOnly = await createRole(asOwner, 'MKT', {
       name: 'Docs editor',
-      permissions: { documents: { read: true, edit: true } },
+      permissions: { documents: { read: true, create: true, edit: true } },
     });
     const editor = await addMember(asOwner, docsOnly.data!.id);
     expect((await copyFromChat(editor.client, page.id, chatFile.id)).status).toBe(403);

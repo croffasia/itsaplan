@@ -23,7 +23,7 @@ describe('permission extensions', () => {
     const { data } = await owner['permission-catalog'].get();
     expect(data!.resources.find((one) => one.key === 'agent_extra')).toMatchObject({
       from: 'ai_agents',
-      actions: ['create', 'edit', 'read', 'delete'],
+      actions: ['read', 'create', 'edit', 'delete'],
     });
   });
 
@@ -42,7 +42,7 @@ describe('permission extensions', () => {
     setPermissionExtensions([{ resource: 'agent_extra', from: 'ai_agents' }]);
     const created = await createRole(owner, 'MKT', {
       name: 'Extra',
-      permissions: { agent_extra: { edit: true } },
+      permissions: { agent_extra: { read: true, create: true, edit: true } },
     });
     const permissions = created.data!.permissions as Matrix;
     expect(permissions.agent_extra.edit).toBe(true);

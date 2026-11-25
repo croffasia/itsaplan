@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { PermissionGapsMark } from '@/components/common/permissions/PermissionGapsMark';
 import { PermissionsPopover } from '@/components/common/permissions/PermissionsPopover';
 import DeleteRoleDialog from './DeleteRoleDialog';
 
@@ -85,6 +86,7 @@ export default function TeamRolesList({
               <TableCell className="px-3 py-3">
                 <div className="flex min-w-0 items-center gap-2">
                   <span className="truncate text-sm font-medium">{role.name}</span>
+                  {!role.system && <PermissionGapsMark permissions={role.permissions} />}
                   {role.system && (
                     <Badge
                       variant="outline"

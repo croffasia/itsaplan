@@ -7,6 +7,7 @@ import {
   extendedFrom,
   hasPermission,
   normalizePermissions,
+  permissionGaps,
   resourceActions,
   setPermissionExtensions,
   type PermissionResource,
@@ -69,6 +70,15 @@ describe('normalizePermissions', () => {
     expect(hasPermission(p, 'work_items', 'create')).toBe(false);
     expect(hasPermission(p, 'work_items', 'edit')).toBe(false);
     expect(hasPermission(p, 'work_items', 'delete')).toBe(false);
+  });
+});
+
+describe('permissionGaps', () => {
+  it('finds none in the matrices the code builds', () => {
+    expect(permissionGaps(emptyPermissions())).toEqual([]);
+    expect(permissionGaps(fullPermissions())).toEqual([]);
+    expect(permissionGaps(defaultMemberPermissions())).toEqual([]);
+    expect(permissionGaps(readOnlyPermissions())).toEqual([]);
   });
 });
 

@@ -66,8 +66,8 @@ export interface RoleUsage {
 
 // The resources and actions the role editor renders. Fetched so the UI matches the
 // API's matrix without hardcoding the list in two places. `actions` is the full
-// column set; a resource lists the subset it supports, and a cell outside that
-// subset is always denied.
+// column set in granting order; a resource lists the subset it supports, and a cell
+// outside that subset is always denied.
 export interface PermissionCatalogResource {
   key: PermissionResource;
   actions: PermissionAction[];

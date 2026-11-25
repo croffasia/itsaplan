@@ -1,6 +1,6 @@
 import { t } from 'elysia';
 import { pageQueryFields, pageResponse } from '#shared/pagination';
-import { PermissionMatrixSchema } from '#shared/permissions';
+import { PERMISSION_ACTIONS, PermissionMatrixSchema } from '#shared/permissions';
 
 export const teamParams = t.Object({ teamId: t.Numeric() });
 
@@ -13,7 +13,11 @@ export const deleteRoleQuery = t.Object({ targetRoleId: t.Optional(t.Numeric()) 
 // Permission matrix carried on create/update. Kept loose (a jsonb blob) and
 // sanitized by normalizePermissions in the service: unknown keys are dropped,
 // values coerced to booleans, missing entries defaulted to false.
-const permissions = t.Any();
+const permissions = t.Any({
+  description:
+    'Permission matrix: resource to action to boolean. Granting an action requires every ' +
+    `supported one before it in the order ${PERMISSION_ACTIONS.join(', ')}.`,
+});
 
 export const createRoleBody = t.Object({
   name: t.String({ minLength: 1 }),
@@ -52,8 +56,8 @@ export const RoleUsageResponse = t.Object({
 });
 
 export const PermissionCatalogResponse = t.Object({
-  // `actions` is the full action set, in the order a matrix renders its columns;
-  // each resource names the subset it supports.
+  // `actions` is the full action set in granting order, which is also the order a
+  // matrix renders its columns; each resource names the subset it supports.
   resources: t.Array(
     t.Object({
       key: t.String(),

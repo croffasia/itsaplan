@@ -493,7 +493,7 @@ describe('runner queue', () => {
 
     const role = await createRole(api, 'RUN', {
       name: 'Agent editor',
-      permissions: { ai_agents: { read: true, edit: true } },
+      permissions: { ai_agents: { read: true, create: true, edit: true } },
     });
     const reader = await addProjectMember(api, 'RUN', role.data!.id);
 

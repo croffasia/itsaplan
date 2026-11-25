@@ -177,7 +177,8 @@
       "actions": {
         "create": "Nouveau",
         "update": "Écraser",
-        "skip": "Ignorer (rôle système)"
+        "skip": "Ignorer (rôle système)",
+        "invalid": "Ignorer (permissions dans le désordre)"
       }
     },
     "transferErrors": {

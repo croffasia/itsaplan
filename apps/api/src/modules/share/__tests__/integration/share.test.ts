@@ -1045,7 +1045,10 @@ describe('share', () => {
       // Documents edit shares the page; turning on linked issues also takes work_items edit.
       const editorRole = await createRole(asOwner, 'MKT', {
         name: 'Doc editor',
-        permissions: { documents: { read: true, edit: true }, work_items: { read: true } },
+        permissions: {
+          documents: { read: true, create: true, edit: true },
+          work_items: { read: true },
+        },
       });
       await asOwner
         .projects({ projectKey: 'MKT' })

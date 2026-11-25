@@ -6,24 +6,39 @@ import type {
   Permissions,
 } from '@/lib/api/endpoints/roles';
 
-// Column display order for the permission matrix. An action not listed (one added
-// on the API) sorts to the end, keeping its catalog order.
-export const ACTION_ORDER: PermissionAction[] = ['read', 'create', 'edit', 'delete'];
-
-export function orderActions(actions: PermissionAction[]): PermissionAction[] {
-  const rank = (a: PermissionAction) => {
-    const i = ACTION_ORDER.indexOf(a);
-    return i === -1 ? ACTION_ORDER.length : i;
-  };
-  return [...actions].sort((a, b) => rank(a) - rank(b));
-}
-
 // Reads the catalog's per-resource action subsets: a cell outside its resource's
 // subset carries no permission and is not rendered.
 export function catalogSupport(catalog: PermissionCatalog) {
   const byResource = new Map(catalog.resources.map((r) => [r.key, new Set(r.actions)]));
   return (resource: PermissionResource, action: PermissionAction) =>
     byResource.get(resource)?.has(action) === true;
+}
+
+// The actions switched together with one: granting it grants every action before it,
+// denying it denies every action after it. `actions` are in catalog order.
+export function linkedActions(
+  actions: PermissionAction[],
+  action: PermissionAction,
+  granted: boolean,
+): PermissionAction[] {
+  const at = actions.indexOf(action);
+  return granted ? actions.slice(0, at + 1) : actions.slice(at);
+}
+
+// The resources where a matrix grants an action without one before it, which the API
+// refuses to save.
+export function permissionGaps(
+  catalog: PermissionCatalog,
+  permissions: Permissions,
+): PermissionResource[] {
+  return catalog.resources
+    .filter(({ key, actions }) => {
+      const row = catalog.actions
+        .filter((action) => actions.includes(action))
+        .map((action) => permissions[key]?.[action] === true);
+      return row.some((granted, i) => granted && row[i - 1] === false);
+    })
+    .map((resource) => resource.key);
 }
 
 // A full matrix over the catalog, reading each flag from `source` and defaulting

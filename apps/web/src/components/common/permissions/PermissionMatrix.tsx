@@ -4,7 +4,7 @@ import { Fragment, useMemo } from 'react';
 import { Check, Minus } from 'lucide-react';
 import type { PermissionCatalog, Permissions } from '@/lib/api/endpoints/roles';
 import { useTranslations } from 'next-intl';
-import { catalogSupport, groupResources, orderActions } from '@/utils/permissions';
+import { catalogSupport, groupResources } from '@/utils/permissions';
 import { usePermissionLabels } from '@/hooks/usePermissionLabels';
 
 // A read-only permission matrix: resources down, actions across, a check where the
@@ -28,7 +28,7 @@ export default function PermissionMatrix({
       ),
     [catalog.resources],
   );
-  const actions = useMemo(() => orderActions(catalog.actions), [catalog.actions]);
+  const { actions } = catalog;
 
   return (
     <table className="w-full border-collapse text-sm">

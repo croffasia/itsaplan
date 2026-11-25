@@ -18,8 +18,8 @@ async function setup() {
       name: 'Agent handler',
       permissions: {
         ai_agents: { read: true, create: true, edit: true, delete: true },
-        agent_tools: { read: true, edit: true },
-        agent_skills: { read: true, edit: true },
+        agent_tools: { read: true, create: true, edit: true },
+        agent_skills: { read: true, create: true, edit: true },
       },
     })
   ).data!;

@@ -177,7 +177,8 @@
       "actions": {
         "create": "New",
         "update": "Overwrite",
-        "skip": "Skip (system role)"
+        "skip": "Skip (system role)",
+        "invalid": "Skip (permissions out of order)"
       }
     },
     "transferErrors": {

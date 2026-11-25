@@ -1,7 +1,12 @@
 import { db, teamRole, projectMember, aiAgent, teamInvite, scimGroupMapping } from '@repo/db';
 import { and, asc, count, eq, ilike, isNull, or, sql } from 'drizzle-orm';
-import { iso } from '#shared/lib';
-import { normalizePermissions, type Permissions } from '#shared/permissions';
+import { HttpError, iso } from '#shared/lib';
+import {
+  PERMISSION_ACTIONS,
+  normalizePermissions,
+  permissionGaps,
+  type Permissions,
+} from '#shared/permissions';
 
 // Data access for roles: the permission matrices projects assign to their members.
 // Owners bypass roles. A role belongs to a team, or to no team: a system role, which
@@ -120,6 +125,19 @@ export async function getMemberRole(
   return id == null ? null : getAssignableRole(teamId, id);
 }
 
+function writablePermissions(input: unknown): Permissions {
+  const permissions = normalizePermissions(input);
+  const gaps = permissionGaps(permissions);
+  if (gaps.length > 0) {
+    throw new HttpError(
+      400,
+      'Granting an action requires every supported one before it in the order ' +
+        `${PERMISSION_ACTIONS.join(', ')}. Fix: ${gaps.join(', ')}`,
+    );
+  }
+  return permissions;
+}
+
 export async function createRole(
   teamId: number | null,
   input: { name: string; permissions: unknown },
@@ -130,7 +148,7 @@ export async function createRole(
       teamId,
       name: input.name,
       isDefault: false,
-      permissions: normalizePermissions(input.permissions),
+      permissions: writablePermissions(input.permissions),
     })
     .returning();
   return mapRole(row);
@@ -143,7 +161,7 @@ export async function updateRole(
 ): Promise<RoleRow | null> {
   const set: { name?: string; permissions?: Permissions } = {};
   if (input.name !== undefined) set.name = input.name;
-  if (input.permissions !== undefined) set.permissions = normalizePermissions(input.permissions);
+  if (input.permissions !== undefined) set.permissions = writablePermissions(input.permissions);
   if (Object.keys(set).length === 0) return getRole(teamId, roleId);
   const [row] = await db
     .update(teamRole)

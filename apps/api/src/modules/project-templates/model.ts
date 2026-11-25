@@ -121,6 +121,7 @@ export const ProjectTemplateContentsResponse = t.Object({
       fieldType: t.String(),
       memberScope: t.Nullable(t.String()),
       showInBody: t.Boolean(),
+      required: t.Optional(t.Boolean()),
       position: t.Number(),
       options: t.Array(
         t.Object({ id: t.Number(), value: t.String(), color: t.String(), position: t.Number() }),
@@ -245,6 +246,7 @@ const sharedSnapshot = strict({
       fieldType,
       memberScope: t.Nullable(memberScope),
       showInBody: t.Boolean(),
+      required: t.Optional(t.Boolean()),
       position: t.Integer(),
       options: t.Array(
         strict({ id: entityId, value: entityName, color: t.String(), position: t.Integer() }),

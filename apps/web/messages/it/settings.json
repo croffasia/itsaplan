@@ -296,6 +296,8 @@
     },
     "mainInfo": "Info principali",
     "mainInfoTooltip": "Mostrato nel corpo dell'issue, non in Proprietà",
+    "required": "Obbligatorio",
+    "requiredTooltip": "Una nuova issue richiede un valore, e il valore non può essere cancellato",
     "mainInfoMeta": "Info principali",
     "menu": "Import ed export campi personalizzati",
     "copy": "Copia campi personalizzati",

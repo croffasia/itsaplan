@@ -6,6 +6,7 @@ import type { MentionSource } from '@/lib/api/endpoints/mentions';
 import { cn } from '@/lib/utils';
 import { type Embeddable } from '@/components/common/editor/attachmentEmbed';
 import { DESCRIPTION_SECTION, OTHER_SECTION, fieldSection } from '../../utils/bodySections';
+import { fieldLabel } from '../../utils/fieldDefs';
 import { hasFieldValue } from '../../utils/fieldValues';
 import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import NewIssueBodyFields from './NewIssueBodyFields';
@@ -78,14 +79,14 @@ export default function NewIssueBody({
     { value: DESCRIPTION_SECTION, label: t('description'), filled: description.trim() !== '' },
     ...markdownDefs.map((def) => ({
       value: fieldSection(def.id),
-      label: def.name,
+      label: fieldLabel(def),
       filled: hasFieldValue(fieldValues[def.id]),
     })),
     ...(pillDefs.length > 0
       ? [
           {
             value: OTHER_SECTION,
-            label: t('other'),
+            label: pillDefs.some((def) => def.required) ? `${t('other')} *` : t('other'),
             filled: pillDefs.some((def) => hasFieldValue(fieldValues[def.id])),
           },
         ]

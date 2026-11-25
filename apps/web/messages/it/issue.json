@@ -140,6 +140,7 @@
     "description": "Descrizione",
     "other": "Altro",
     "submit": "Crea issue",
+    "requiredFieldsMissing": "Compila i campi obbligatori: {names}",
     "template": "Modello",
     "applyTemplate": "Applica modello…",
     "noTemplates": "Nessun modello."

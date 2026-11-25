@@ -21,6 +21,7 @@ export interface FieldFormValues {
   fieldType: CustomFieldType;
   memberScope?: MemberScope;
   showInBody: boolean;
+  required: boolean;
   options: { id?: number; value: string }[];
 }
 
@@ -58,6 +59,7 @@ export default function SettingsCustomFieldDialog({
   const [fieldType, setFieldType] = useState<CustomFieldType>(initial?.fieldType ?? 'text');
   const [memberScope, setMemberScope] = useState<MemberScope>(initial?.memberScope ?? 'all');
   const [showInBody, setShowInBody] = useState(initial?.showInBody ?? false);
+  const [required, setRequired] = useState(initial?.required ?? false);
   const [options, setOptions] = useState<OptionDraft[]>(
     () => initial?.options.map((o) => ({ key: `option-${o.id}`, id: o.id, value: o.value })) ?? [],
   );
@@ -90,6 +92,7 @@ export default function SettingsCustomFieldDialog({
       fieldType,
       memberScope: isMember ? memberScope : undefined,
       showInBody,
+      required,
       options: holdsOptions(fieldType)
         ? [
             ...options.map((o) => ({ id: o.id, value: o.value.trim() })).filter((o) => o.value),
@@ -195,13 +198,20 @@ export default function SettingsCustomFieldDialog({
           )}
         </div>
 
-        <div className="border-t border-border/50 pt-5">
+        <div className="space-y-4 border-t border-border/50 pt-5">
           <label className="flex cursor-pointer items-center justify-between gap-4">
             <span>
               <span className="text-sm">{t('mainInfo')}</span>
               <span className="block text-xs text-muted-foreground">{t('mainInfoTooltip')}</span>
             </span>
             <Switch checked={showInBody} onCheckedChange={setShowInBody} />
+          </label>
+          <label className="flex cursor-pointer items-center justify-between gap-4">
+            <span>
+              <span className="text-sm">{t('required')}</span>
+              <span className="block text-xs text-muted-foreground">{t('requiredTooltip')}</span>
+            </span>
+            <Switch checked={required} onCheckedChange={setRequired} />
           </label>
         </div>
 

@@ -520,6 +520,311 @@ describe('custom-fields', () => {
     });
   });
 
+  describe('required', () => {
+    async function setupRequired() {
+      const { asOwner } = await setupProject();
+      const bug = (await createType(asOwner, 'Bug')).data!;
+      const severity = (
+        await fields(asOwner).post({
+          issueTypeId: bug.id,
+          name: 'Severity',
+          fieldType: 'select',
+          options: ['S1', 'S2'],
+          required: true,
+        })
+      ).data!;
+      const steps = (
+        await fields(asOwner).post({
+          issueTypeId: bug.id,
+          name: 'Steps',
+          fieldType: 'text',
+          required: true,
+        })
+      ).data!;
+      const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+      return { asOwner, bug, severity, steps, columnId: view.data!.columns[0].id };
+    }
+
+    const issues = (client: Api) => client.projects({ projectKey: 'MKT' }).issues;
+
+    it('is off by default and can be turned on and off', async () => {
+      const { asOwner } = await setupProject();
+      const field = (await fields(asOwner).post({ name: 'Env', fieldType: 'text' })).data!;
+      expect(field.required).toBe(false);
+
+      const on = await fields(asOwner)({ fieldId: field.id }).patch({ required: true });
+      expect(on.data!.required).toBe(true);
+      const off = await fields(asOwner)({ fieldId: field.id }).patch({ required: false });
+      expect(off.data!.required).toBe(false);
+    });
+
+    it('refuses a new issue that leaves a required field empty, naming the fields', async () => {
+      const { asOwner, bug, severity, columnId } = await setupRequired();
+
+      const res = await issues(asOwner).post({ typeId: bug.id, columnId, title: 'Crash' });
+      expect(res.status).toBe(400);
+      expect(JSON.stringify(res.error?.value)).toContain('Severity');
+      expect(JSON.stringify(res.error?.value)).toContain('Steps');
+
+      const partial = await issues(asOwner).post({
+        typeId: bug.id,
+        columnId,
+        title: 'Crash',
+        fields: [{ fieldId: severity.id, optionIds: [severity.options[0].id] }],
+      });
+      expect(partial.status).toBe(400);
+      expect(JSON.stringify(partial.error?.value)).toContain('Steps');
+
+      const list = await issues(asOwner).get({ query: {} });
+      expect(list.data!.length).toBe(0);
+    });
+
+    it('creates the issue with the values it was given', async () => {
+      const { asOwner, bug, severity, steps, columnId } = await setupRequired();
+
+      const res = await issues(asOwner).post({
+        typeId: bug.id,
+        columnId,
+        title: 'Crash',
+        fields: [
+          { fieldId: severity.id, optionIds: [severity.options[1].id] },
+          { fieldId: steps.id, value: 'Open the map' },
+        ],
+      });
+      expect(res.status).toBe(201);
+      const issueId = res.data!.id;
+      expect((await issueValue(asOwner, issueId, severity.id))?.optionIds).toEqual([
+        severity.options[1].id,
+      ]);
+      expect((await issueValue(asOwner, issueId, steps.id))?.value).toBe('Open the map');
+    });
+
+    it('does not apply a type-scoped required field to another type', async () => {
+      const { asOwner, columnId } = await setupRequired();
+      const res = await issues(asOwner).post({ columnId, title: 'Untyped' });
+      expect(res.status).toBe(201);
+    });
+
+    it('rejects a field that does not apply, or a value the field cannot hold, before creating', async () => {
+      const { asOwner, bug, severity, steps, columnId } = await setupRequired();
+      const other = (await createType(asOwner, 'Chore')).data!;
+      const url = (
+        await fields(asOwner).post({ issueTypeId: bug.id, name: 'Trace', fieldType: 'url' })
+      ).data!;
+      const required = [
+        { fieldId: severity.id, optionIds: [severity.options[0].id] },
+        { fieldId: steps.id, value: 'Open the map' },
+      ];
+
+      const wrongType = await issues(asOwner).post({
+        typeId: other.id,
+        columnId,
+        title: 'Task',
+        fields: [{ fieldId: steps.id, value: 'x' }],
+      });
+      expect(wrongType.status).toBe(400);
+
+      const badUrl = await issues(asOwner).post({
+        typeId: bug.id,
+        columnId,
+        title: 'Crash',
+        fields: [...required, { fieldId: url.id, value: 'not a url' }],
+      });
+      expect(badUrl.status).toBe(400);
+
+      const list = await issues(asOwner).get({ query: {} });
+      expect(list.data!.length).toBe(0);
+    });
+
+    it('sets a member given in fields, and refuses someone outside the project', async () => {
+      const { asOwner, bug, severity, steps, columnId } = await setupRequired();
+      const me = (await asOwner.me.get()).data!;
+      if (!me.authenticated) throw new Error('the owner is signed in');
+      const ownerId = me.user.id;
+      const owner = (
+        await fields(asOwner).post({ issueTypeId: bug.id, name: 'Owner', fieldType: 'member' })
+      ).data!;
+      const required = [
+        { fieldId: severity.id, optionIds: [severity.options[0].id] },
+        { fieldId: steps.id, value: 'Open the map' },
+      ];
+
+      const outsider = await issues(asOwner).post({
+        typeId: bug.id,
+        columnId,
+        title: 'Crash',
+        fields: [...required, { fieldId: owner.id, value: 'not-a-member' }],
+      });
+      expect(outsider.status).toBe(400);
+      expect((await issues(asOwner).get({ query: {} })).data!.length).toBe(0);
+
+      const res = await issues(asOwner).post({
+        typeId: bug.id,
+        columnId,
+        title: 'Crash',
+        fields: [...required, { fieldId: owner.id, value: ownerId }],
+      });
+      expect(res.status).toBe(201);
+      expect((await issueValue(asOwner, res.data!.id, owner.id))?.value).toBe(ownerId);
+    });
+
+    it('refuses an option that belongs to another field', async () => {
+      const { asOwner, bug, severity, steps, columnId } = await setupRequired();
+      const other = (
+        await fields(asOwner).post({
+          issueTypeId: bug.id,
+          name: 'Area',
+          fieldType: 'select',
+          options: ['Search'],
+        })
+      ).data!;
+
+      const res = await issues(asOwner).post({
+        typeId: bug.id,
+        columnId,
+        title: 'Crash',
+        fields: [
+          { fieldId: severity.id, optionIds: [other.options[0].id] },
+          { fieldId: steps.id, value: 'Open the map' },
+        ],
+      });
+      expect(res.status).toBe(400);
+      expect((await issues(asOwner).get({ query: {} })).data!.length).toBe(0);
+    });
+
+    it('refuses a member value that is not a user id, on create and on update', async () => {
+      const { asOwner, bug, severity, steps, columnId } = await setupRequired();
+      const me = (await asOwner.me.get()).data!;
+      if (!me.authenticated) throw new Error('the owner is signed in');
+      const ownerId = me.user.id;
+      const owner = (
+        await fields(asOwner).post({
+          issueTypeId: bug.id,
+          name: 'Owner',
+          fieldType: 'member',
+          required: true,
+        })
+      ).data!;
+      const required = [
+        { fieldId: severity.id, optionIds: [severity.options[0].id] },
+        { fieldId: steps.id, value: 'Open the map' },
+      ];
+
+      for (const value of [false, 42]) {
+        const res = await issues(asOwner).post({
+          typeId: bug.id,
+          columnId,
+          title: 'Crash',
+          fields: [...required, { fieldId: owner.id, value }],
+        });
+        expect(res.status).toBe(400);
+      }
+      expect((await issues(asOwner).get({ query: {} })).data!.length).toBe(0);
+
+      const issueId = (
+        await issues(asOwner).post({
+          typeId: bug.id,
+          columnId,
+          title: 'Crash',
+          fields: [...required, { fieldId: owner.id, value: ownerId }],
+        })
+      ).data!.id;
+      const field = asOwner.issues({ issueId }).fields({ fieldId: owner.id });
+      expect((await field.put({ value: false })).status).toBe(400);
+      expect((await field.put({ value: 42 })).status).toBe(400);
+      expect((await issueValue(asOwner, issueId, owner.id))?.value).toBe(ownerId);
+    });
+
+    it('refuses an option given twice without creating the issue or changing the selection', async () => {
+      const { asOwner, bug, severity, steps, columnId } = await setupRequired();
+      const platforms = (
+        await fields(asOwner).post({
+          issueTypeId: bug.id,
+          name: 'Platforms',
+          fieldType: 'multi_select',
+          options: ['iOS', 'Android'],
+          required: true,
+        })
+      ).data!;
+      const [ios, android] = platforms.options.map((o) => o.id);
+      const required = [
+        { fieldId: severity.id, optionIds: [severity.options[0].id] },
+        { fieldId: steps.id, value: 'Open the map' },
+      ];
+
+      const twice = await issues(asOwner).post({
+        typeId: bug.id,
+        columnId,
+        title: 'Crash',
+        fields: [...required, { fieldId: platforms.id, optionIds: [ios, ios] }],
+      });
+      expect(twice.status).toBe(400);
+      expect((await issues(asOwner).get({ query: {} })).data!.length).toBe(0);
+
+      const issueId = (
+        await issues(asOwner).post({
+          typeId: bug.id,
+          columnId,
+          title: 'Crash',
+          fields: [...required, { fieldId: platforms.id, optionIds: [ios] }],
+        })
+      ).data!.id;
+      const field = asOwner.issues({ issueId }).fields({ fieldId: platforms.id });
+      expect((await field.put({ optionIds: [android, android] })).status).toBe(400);
+      expect((await issueValue(asOwner, issueId, platforms.id))?.optionIds).toEqual([ios]);
+    });
+
+    it('refuses a field given twice, or a number field given a boolean, before creating', async () => {
+      const { asOwner, bug, severity, steps, columnId } = await setupRequired();
+      const build = (
+        await fields(asOwner).post({ issueTypeId: bug.id, name: 'Build', fieldType: 'number' })
+      ).data!;
+      const required = [
+        { fieldId: severity.id, optionIds: [severity.options[0].id] },
+        { fieldId: steps.id, value: 'Open the map' },
+      ];
+
+      const twice = await issues(asOwner).post({
+        typeId: bug.id,
+        columnId,
+        title: 'Crash',
+        fields: [...required, { fieldId: steps.id, value: 'Open the map again' }],
+      });
+      expect(twice.status).toBe(400);
+
+      const boolean = await issues(asOwner).post({
+        typeId: bug.id,
+        columnId,
+        title: 'Crash',
+        fields: [...required, { fieldId: build.id, value: true }],
+      });
+      expect(boolean.status).toBe(400);
+      expect((await issues(asOwner).get({ query: {} })).data!.length).toBe(0);
+    });
+
+    it('keeps a required value from being cleared on an existing issue', async () => {
+      const { asOwner, bug, severity, steps, columnId } = await setupRequired();
+      const issueId = (
+        await issues(asOwner).post({
+          typeId: bug.id,
+          columnId,
+          title: 'Crash',
+          fields: [
+            { fieldId: severity.id, optionIds: [severity.options[0].id] },
+            { fieldId: steps.id, value: 'Open the map' },
+          ],
+        })
+      ).data!.id;
+      const field = (id: number) => asOwner.issues({ issueId }).fields({ fieldId: id });
+
+      expect((await field(steps.id).put({ value: '' })).status).toBe(400);
+      expect((await field(steps.id).put({ value: null })).status).toBe(400);
+      expect((await field(severity.id).put({ optionIds: [] })).status).toBe(400);
+      expect((await field(steps.id).put({ value: 'Open the map, zoom in' })).status).toBe(200);
+      expect((await issueValue(asOwner, issueId, steps.id))?.value).toBe('Open the map, zoom in');
+    });
+  });
+
   describe('access', () => {
     it('returns 404 for an unknown project on create', async () => {
       const { asOwner } = await setupProject();

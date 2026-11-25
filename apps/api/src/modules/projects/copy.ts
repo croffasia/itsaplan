@@ -223,7 +223,11 @@ export interface ProjectSnapshot {
   customFields: (Row<
     typeof customField,
     'id' | 'issueTypeId' | 'name' | 'fieldType' | 'memberScope' | 'showInBody' | 'position'
-  > & { options: Row<typeof customFieldOption, 'id' | 'value' | 'color' | 'position'>[] })[];
+  > &
+    // A template stored or exported before a field could be required has no flag: false applies.
+    Partial<Row<typeof customField, 'required'>> & {
+      options: Row<typeof customFieldOption, 'id' | 'value' | 'color' | 'position'>[];
+    })[];
   issueTemplates: (Row<
     typeof issueTemplate,
     | 'name'
@@ -309,6 +313,7 @@ async function readProjectSnapshot(projectId: number, inc: Include): Promise<Pro
             fieldType: customField.fieldType,
             memberScope: customField.memberScope,
             showInBody: customField.showInBody,
+            required: customField.required,
             position: customField.position,
           })
           .from(customField)

@@ -17,6 +17,7 @@ import { colorDot } from '@/components/common/fields/colorDot';
 import DatePill from '@/components/common/fields/DatePill';
 import DateTimePill from '@/components/common/fields/DateTimePill';
 import { Pill } from '@/components/common/fields/Pill';
+import { fieldLabel } from '../../utils/fieldDefs';
 import MemberSelect from './MemberSelect';
 import { useTranslations } from 'next-intl';
 
@@ -37,6 +38,7 @@ export default function IssueCustomFieldPill({
 }) {
   const t = useTranslations('issue.customFields');
   const [open, setOpen] = useState(defaultOpen);
+  const name = fieldLabel(def);
 
   if (def.fieldType === 'member') {
     return (
@@ -44,7 +46,7 @@ export default function IssueCustomFieldPill({
         assignees={assignees}
         scope={def.memberScope ?? 'all'}
         value={(value?.value as string | null) ?? null}
-        placeholder={def.name}
+        placeholder={name}
         onChange={(userId) => onChange({ value: userId })}
       />
     );
@@ -60,16 +62,16 @@ export default function IssueCustomFieldPill({
             on && 'border-primary bg-primary',
           )}
         />
-        <span className="truncate">{def.name}</span>
+        <span className="truncate">{name}</span>
       </Pill>
     );
   }
 
   if (def.fieldType === 'select' || def.fieldType === 'multi_select') {
     const selected = value?.optionIds ?? [];
-    let label = def.name;
+    let label = name;
     if (def.fieldType === 'select')
-      label = def.options.find((o) => o.id === selected[0])?.value ?? def.name;
+      label = def.options.find((o) => o.id === selected[0])?.value ?? name;
     else if (selected.length > 0) label = `${def.name}: ${selected.length}`;
     return (
       <Popover open={open} onOpenChange={setOpen}>
@@ -132,7 +134,7 @@ export default function IssueCustomFieldPill({
     return (
       <DatePill
         value={(value?.value as string | null) ?? null}
-        placeholder={def.name}
+        placeholder={name}
         onChange={(v) => onChange({ value: v })}
       />
     );
@@ -144,7 +146,7 @@ export default function IssueCustomFieldPill({
         value={(value?.value as string | null) ?? null}
         valueEnd={value?.valueEnd ?? null}
         range={def.fieldType === 'datetime_range'}
-        placeholder={def.name}
+        placeholder={name}
         onChange={(v, valueEnd) => onChange({ value: v, valueEnd })}
       />
     );
@@ -157,7 +159,7 @@ export default function IssueCustomFieldPill({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Pill active={hasValue}>
-          <span className="max-w-[160px] truncate">{hasValue ? String(raw) : def.name}</span>
+          <span className="max-w-[160px] truncate">{hasValue ? String(raw) : name}</span>
         </Pill>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-2" align="start">

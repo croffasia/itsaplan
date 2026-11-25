@@ -140,6 +140,7 @@
     "description": "Descrição",
     "other": "Outro",
     "submit": "Criar issue",
+    "requiredFieldsMissing": "Preencha os campos obrigatórios: {names}",
     "template": "Modelo",
     "applyTemplate": "Aplicar modelo…",
     "noTemplates": "Sem modelos."

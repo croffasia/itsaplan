@@ -17,6 +17,7 @@ export interface FieldTransfer {
   fieldType: CustomFieldType;
   memberScope: MemberScope | null;
   showInBody: boolean;
+  required: boolean;
   options: string[];
   // The issue type's name this field is scoped to, or null for a global field.
   type: string | null;
@@ -54,6 +55,7 @@ export function serializeCustomFields(
       fieldType: f.fieldType,
       memberScope: f.memberScope,
       showInBody: f.showInBody,
+      required: f.required,
       options: f.options.map((o) => o.value),
       type: f.issueTypeId != null ? (typeNameById.get(f.issueTypeId) ?? null) : null,
     })),
@@ -85,6 +87,7 @@ export function parseCustomFieldsText(text: string): FieldTransfer[] {
         ? (raw.memberScope as MemberScope)
         : null,
       showInBody: raw?.showInBody === true,
+      required: raw?.required === true,
       options: Array.isArray(raw?.options)
         ? raw.options.filter((o): o is string => typeof o === 'string')
         : [],

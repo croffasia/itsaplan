@@ -760,6 +760,42 @@ describe('project templates', () => {
       expect(view.data?.labels.map((l) => l.name)).toEqual(['bug']);
     });
 
+    it('keeps a required field, and imports a template that has no required flag', async () => {
+      const { api, teamId, source, templates } = await setup();
+      await api.projects({ projectKey: 'SRC' })['custom-fields'].post({
+        name: 'Size',
+        fieldType: 'text',
+        required: true,
+      });
+      const saved = await templates.post({ projectId: source.id, name: 'Required' });
+      const doc = (await templates({ templateId: saved.data!.id }).export.get()).data!;
+      expect(doc.snapshot.customFields).toMatchObject([{ name: 'Size', required: true }]);
+      const unflagged = {
+        ...doc,
+        snapshot: {
+          ...doc.snapshot,
+          customFields: doc.snapshot.customFields.map(({ required: _, ...field }) => field),
+        },
+      };
+
+      for (const [template, key] of [
+        [doc, 'REQ'],
+        [unflagged, 'OLD'],
+      ] as const) {
+        const imported = await templates.import.post({ template, name: key });
+        expect(imported.status).toBe(201);
+        expect((await templates({ templateId: imported.data!.id }).export.get()).status).toBe(200);
+        const created = await api
+          .teams({ teamId })
+          .projects.post({ key, name: key, templateId: imported.data!.id });
+        expect(created.status).toBe(201);
+      }
+      const fieldOf = async (projectKey: string) =>
+        (await api.projects({ projectKey }).get()).data!.customFields[0];
+      expect(await fieldOf('REQ')).toMatchObject({ name: 'Size', required: true });
+      expect(await fieldOf('OLD')).toMatchObject({ name: 'Size', required: false });
+    });
+
     it('drops the people a pasted template names', async () => {
       const { doc, templates } = await exported();
       const action = { ...doc.snapshot.actions[0], effect: { assigneeUserId: 'someone' } };

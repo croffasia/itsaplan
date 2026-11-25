@@ -47,6 +47,7 @@ import {
   setIssueLabels,
   setIssueFieldValue,
   getIssueFieldValues,
+  assertRequiredFields,
 } from './service';
 import {
   listFeed,
@@ -340,6 +341,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   .post(
     '/projects/:projectKey/issues',
     async ({ project, body, user, set }) => {
+      await assertRequiredFields(project.id, body.typeId ?? null, body.fields ?? []);
       set.status = 201;
       return createIssue(project, body, requireUser(user).id);
     },
@@ -351,7 +353,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         summary: 'Create an issue',
         description:
           'Create an issue in a project. Returns 409 (code wip_limit_exceeded) if the target ' +
-          'column is at a hard WIP limit.',
+          'column is at a hard WIP limit, and 400 if a required custom field has no value in ' +
+          'fields.',
         ...mcpTool('create_issue'),
       },
     },

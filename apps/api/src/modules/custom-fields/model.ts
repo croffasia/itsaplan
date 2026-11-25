@@ -37,8 +37,14 @@ export const CustomFieldResponse = t.Object({
   fieldType,
   memberScope: t.Nullable(memberScope),
   showInBody: t.Boolean(),
+  required: t.Boolean(),
   position: t.Number(),
   options: t.Array(CustomFieldOptionResponse),
+});
+
+const required = t.Boolean({
+  description:
+    'When true, creating an issue the field applies to needs a value for it in fields, and the value cannot be cleared.',
 });
 
 export const CustomFieldListResponse = t.Array(CustomFieldResponse);
@@ -50,6 +56,7 @@ export const createCustomFieldBody = t.Object({
   // Only read for a member field, where it defaults to 'all'.
   memberScope: t.Optional(memberScope),
   showInBody: t.Optional(t.Boolean()),
+  required: t.Optional(required),
   options: t.Optional(t.Array(t.String({ minLength: 1 }))),
 });
 
@@ -64,6 +71,8 @@ const updateFieldOption = t.Object({
 export const updateCustomFieldBody = t.Object({
   name: t.Optional(t.String({ minLength: 1 })),
   showInBody: t.Optional(t.Boolean()),
+  // Issues that already exist keep an empty value until someone writes one.
+  required: t.Optional(required),
   // Changing the type clears the values issues hold in this field: they are stored
   // in the column of the type they were written under.
   fieldType: t.Optional(fieldType),

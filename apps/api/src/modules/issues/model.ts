@@ -455,6 +455,14 @@ export const IssueCycleResponse = t.Object({
 
 export const projectKeyParams = t.Object({ projectKey: t.String() });
 
+const fieldValueProps = {
+  value: t.Optional(
+    t.Nullable(t.Union([t.String({ maxLength: ISSUE_TEXT_LIMIT }), t.Number(), t.Boolean()])),
+  ),
+  valueEnd: t.Optional(t.Nullable(t.String())),
+  optionIds: t.Optional(t.Array(t.Integer())),
+};
+
 export const createIssueBody = t.Object({
   typeId: t.Optional(t.Nullable(t.Integer({ description: 'Issue type id from get_project.' }))),
   initiativeId: t.Optional(
@@ -508,6 +516,12 @@ export const createIssueBody = t.Object({
   startDate: t.Optional(t.Nullable(isoDate())),
   dueDate: t.Optional(t.Nullable(isoDate())),
   labelIds: t.Optional(t.Array(t.Integer(), { description: 'Label ids from get_project.labels.' })),
+  fields: t.Optional(
+    t.Array(t.Object({ fieldId: t.Integer(), ...fieldValueProps }), {
+      description:
+        'Custom field values, from list_custom_fields: optionIds for select and multi_select, value for other types, valueEnd for the end of a datetime_range. A required field must have a value.',
+    }),
+  ),
 });
 
 export const bulkUpdateIssuesBody = t.Object({
@@ -713,13 +727,7 @@ export const subtaskDispositionQuery = t.Object({
   newParentId: t.Optional(t.Numeric(NewParentIdSchema)),
 });
 
-export const setIssueFieldValueBody = t.Object({
-  value: t.Optional(
-    t.Nullable(t.Union([t.String({ maxLength: ISSUE_TEXT_LIMIT }), t.Number(), t.Boolean()])),
-  ),
-  valueEnd: t.Optional(t.Nullable(t.String())),
-  optionIds: t.Optional(t.Array(t.Integer())),
-});
+export const setIssueFieldValueBody = t.Object(fieldValueProps);
 
 export const issueFieldParams = t.Object({ issueId: t.Numeric(), fieldId: t.Numeric() });
 

@@ -1,0 +1,1 @@
+ALTER TABLE "custom_field" ADD COLUMN "required" boolean DEFAULT false NOT NULL;

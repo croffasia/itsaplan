@@ -968,7 +968,7 @@ export const documentRoutes = new Elysia({
           'Pin a public document to the Docs home for everyone in the project, or unpin it. ' +
           'A new pin goes last. To put a pinned page in another place, send isPinned true ' +
           'with afterId, beforeId or both: pinned pages from list_documents, ordered by ' +
-          'pinPosition. A stale order returns 409.',
+          'pinPosition. A stale order, or a page that is no longer pinned, returns 409.',
         ...mcpTool('set_document_pin'),
       },
     },

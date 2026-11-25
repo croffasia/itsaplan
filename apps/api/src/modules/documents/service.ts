@@ -1679,7 +1679,7 @@ export async function setDocumentPinned(
 ): Promise<{ isPinned: boolean } | null> {
   const placed = placement.afterId !== undefined || placement.beforeId !== undefined;
   if (placed && !isPinned) {
-    throw new HttpError(400, 'Only a page being pinned can take a place among the pinned pages.');
+    throw new HttpError(400, 'Only a pinned page can take a place among the pinned pages.');
   }
   if (placement.afterId === documentId || placement.beforeId === documentId) {
     throw new HttpError(400, 'A document cannot be its own pin anchor.');
@@ -1700,6 +1700,11 @@ export async function setDocumentPinned(
     assertActive(current);
     if (current.isPrivate) throw new HttpError(400, 'A private document cannot be pinned.');
     if (placed) {
+      // A move is for a page that is still pinned. One unpinned since the mover read the list
+      // stays unpinned: the move must not pin it again for everyone.
+      if (!current.isPinned) {
+        throw new HttpError(409, 'The pinned pages changed elsewhere. Reload them before moving.');
+      }
       await placePinnedDocument(tx, projectId, documentId, placement);
     } else if (!current.isPinned) {
       const [last] = await tx
@@ -1715,9 +1720,9 @@ export async function setDocumentPinned(
   });
 }
 
-// Places a page between its pinned neighbours, as a tree move does among siblings. A pin hidden
-// while its page is private or archived keeps its place among the others, but only a pin the
-// project sees can be an anchor.
+// Places a pinned page between its pinned neighbours, as a tree move does among siblings. A pin
+// hidden while its page is private or archived keeps its place among the others, but only a pin
+// the project sees can be an anchor.
 async function placePinnedDocument(
   executor: Executor,
   projectId: number,
@@ -1752,7 +1757,7 @@ async function placePinnedDocument(
   const position = safeDocumentPosition(pinned[index - 1], pinned[index], pinned);
   await executor
     .update(projectDocument)
-    .set({ isPinned: true, pinPosition: position ?? (index + 1) * 1024 })
+    .set({ pinPosition: position ?? (index + 1) * 1024 })
     .where(eq(projectDocument.id, documentId));
   if (position !== null) return;
 

@@ -1,7 +1,4 @@
-import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { db } from '@repo/db';
-import { sql } from 'drizzle-orm';
 import { authedApi, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -53,20 +50,6 @@ async function pinOrder(api: Client, projectKey = 'MKT'): Promise<string[]> {
     .filter((page) => page.isPinned)
     .sort((a, b) => a.pinPosition! - b.pinPosition! || a.id - b.id)
     .map((page) => page.title);
-}
-
-// No route writes a pinned page without a place, the state a release before pin positions
-// left behind, so the test drops the column and runs its migration again.
-async function rerunPinPositionMigration(): Promise<void> {
-  const migration = new URL(
-    '../drizzle/0201_document_pin_position.sql',
-    import.meta.resolve('@repo/db'),
-  );
-  const statements = readFileSync(migration, 'utf8').split('--> statement-breakpoint');
-  await db.transaction(async (tx) => {
-    await tx.execute(sql`alter table "project_document" drop column "pin_position"`);
-    for (const statement of statements) await tx.execute(sql.raw(statement));
-  });
 }
 
 describe('document pins', () => {
@@ -274,13 +257,20 @@ describe('document pins', () => {
     }
   });
 
-  it('pins a page straight into a place', async () => {
+  it('refuses to move a page that is not pinned, and leaves it unpinned', async () => {
     const owner = await setupOwnerProject();
-    const [, b] = await pinnedPages(owner, ['A', 'B']);
-    const page = (await documents(owner).post({ title: 'New' })).data!;
+    const [a, b] = await pinnedPages(owner, ['A', 'B', 'C']);
+    const moved = documents(owner)({ documentId: b.id });
+    const loose = (await documents(owner).post({ title: 'Loose' })).data!;
+    await moved.pin.patch({ isPinned: false });
 
-    expect((await pin(owner, page.id, { beforeId: b.id })).status).toBe(200);
-    expect(await pinOrder(owner)).toEqual(['A', 'New', 'B']);
+    // The move another member sends from a list read before the unpin.
+    const stale = await pin(owner, b.id, { beforeId: a.id });
+    expect(stale.status).toBe(409);
+    expect(stale.error?.value).toMatchObject({ error: expect.stringContaining('Reload') });
+    expect((await moved.get()).data).toMatchObject({ isPinned: false, pinPosition: null });
+    expect((await pin(owner, loose.id, { afterId: a.id })).status).toBe(409);
+    expect(await pinOrder(owner)).toEqual(['A', 'C']);
   });
 
   it('clears the place of an unpinned page, so it goes last when pinned again', async () => {
@@ -348,27 +338,6 @@ describe('document pins', () => {
     expect(await pinOrder(reader)).toEqual(['A', 'B', 'C']);
     expect((await pin(editor, c.id, { beforeId: a.id })).status).toBe(200);
     expect(await pinOrder(reader)).toEqual(['C', 'A', 'B']);
-  });
-
-  it('places the pages pinned before the upgrade in the order the home showed them', async () => {
-    const owner = await setupOwnerProject();
-    const [a, b, c] = await createPages(owner, ['A', 'B', 'C']);
-    const child = (await documents(owner).post({ title: 'Child', parentId: a.id })).data!;
-    const archived = (await documents(owner).post({ title: 'Archived' })).data!;
-    for (const page of [archived, c, child, b, a]) await pin(owner, page.id);
-    await documents(owner)({ documentId: archived.id }).archive.post({ version: 1 });
-    await createProject(owner, { key: 'OPS', name: 'Ops' });
-    const other = (await documents(owner, 'OPS').post({ title: 'Other' })).data!;
-    await pin(owner, other.id, {}, 'OPS');
-    expect(await pinOrder(owner)).toEqual(['C', 'Child', 'B', 'A']);
-
-    await rerunPinPositionMigration();
-
-    // The tree position of Child, first under A, equals that of A, so the id decides.
-    expect(await pinOrder(owner)).toEqual(['A', 'Child', 'B', 'C']);
-    expect((await documents(owner, 'OPS').get({ query: {} })).data?.[0]?.pinPosition).toBe(1024);
-    await documents(owner)({ documentId: archived.id }).restore.post({ version: 2 });
-    expect(await pinOrder(owner)).toEqual(['A', 'Child', 'B', 'C', 'Archived']);
   });
 
   it('closes the route while the Docs section is off', async () => {

@@ -71,7 +71,13 @@ let answerPin: (status: number, list: ProjectDocumentSummary[] | null) => void;
 let serverList: ProjectDocumentSummary[] | null;
 let originals: Map<string, PropertyDescriptor | undefined>;
 
-async function render(permissions: Record<string, Record<string, boolean>>) {
+// onPress hears every press that reaches the cards' ancestors through React, as a draggable
+// card under an open menu would.
+async function render(
+  permissions: Record<string, Record<string, boolean>>,
+  onPress: (type: string) => void = () => {},
+) {
+  const press = (event: { type: string }) => onPress(event.type);
   const project = {
     project: { id: 1, ref: 'MKT', teamId: 1 },
     viewer: { role: 'member', teamRole: 'member', via: 'member' },
@@ -89,7 +95,9 @@ async function render(permissions: Record<string, Record<string, boolean>>) {
         <NextIntlClientProvider locale="en" timeZone="UTC" messages={{ documents }}>
           <RelativeTimeProvider>
             <ShellCtx.Provider value={{ project } as unknown as ShellContext}>
-              <Home />
+              <div onPointerDown={press} onMouseDown={press} onTouchStart={press}>
+                <Home />
+              </div>
             </ShellCtx.Provider>
           </RelativeTimeProvider>
         </NextIntlClientProvider>
@@ -249,6 +257,23 @@ describe('DocumentsHomePinnedCards', () => {
     await settle();
     assert.deepEqual(order(), ['A', 'B', 'C']);
     assert.equal(failures.length, 1);
+  });
+
+  it('keeps a press in the open menu from the card, where it would start a drag', async () => {
+    const presses: string[] = [];
+    await render({ documents: { read: true, edit: true } }, (type) => presses.push(type));
+    const item = (await openMenu('A')).get(documents.moveDown)!;
+    const press = (target: Element) =>
+      act(async () => {
+        for (const type of ['pointerdown', 'mousedown', 'touchstart'])
+          target.dispatchEvent(new MouseEvent(type, { bubbles: true }));
+      });
+
+    await press(item);
+    assert.deepEqual(presses, []);
+    // A press on the card itself is heard, so the silence above is the menu's doing.
+    await press(document.querySelector('article')!);
+    assert.deepEqual(presses, ['pointerdown', 'mousedown', 'touchstart']);
   });
 
   it('shows a member who may not pin the order with no menu and no drag', async () => {

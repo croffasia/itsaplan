@@ -43,7 +43,10 @@ export default function DocumentsHomeCardMenu({
           <Ellipsis />
         </DocumentIconButton>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-44">
+      {/* The menu is drawn outside the card, yet a press in it still reaches the card through
+          React: without this, moving the pointer a little while pressing an item drags the card
+          and the click is lost. */}
+      <DropdownMenuContent align="end" className="min-w-44" {...noDragProps}>
         <DropdownMenuItem disabled={pending || !canMoveUp} onSelect={() => onMove(-1)}>
           <ArrowUp />
           {t('moveUp')}

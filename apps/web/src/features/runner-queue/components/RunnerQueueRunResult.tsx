@@ -30,7 +30,7 @@ export default function RunnerQueueRunResult({ run }: { run: RunnerQueueRun }) {
         {output.startsWith('…') && (
           <p className="text-xs text-muted-foreground">{t('outputTail')}</p>
         )}
-        <div className="-my-1.5">
+        <div className="-my-1">
           <Markdown>{output}</Markdown>
         </div>
       </div>

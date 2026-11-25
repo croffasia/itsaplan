@@ -17,18 +17,18 @@ export default function AgentChatImportCard({ importId }: { importId: string }) 
 
   if (error && !draft) {
     return (
-      <div className="my-2 flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm">
+      <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm">
         <XCircle className="size-4 shrink-0 text-destructive" />
         <span className="text-destructive">{error}</span>
       </div>
     );
   }
   if (!draft) {
-    return <Skeleton className="my-2 h-[180px] w-full rounded-lg" />;
+    return <Skeleton className="h-[180px] w-full rounded-lg" />;
   }
 
   return (
-    <div className="my-2 flex flex-col gap-3 rounded-lg border bg-background px-3 py-3">
+    <div className="flex flex-col gap-3 rounded-lg border bg-background px-3 py-3">
       <div className="flex items-center gap-2 text-sm font-medium" dir="auto">
         <FileSpreadsheet className="size-4 shrink-0 text-muted-foreground" />
         <span className="truncate">{draft.filename}</span>

@@ -12,7 +12,6 @@ import {
   MessageScroller,
   MessageScrollerButton,
   MessageScrollerContent,
-  MessageScrollerItem,
   MessageScrollerViewport,
 } from '@/components/ui/message-scroller';
 import { useTranslations } from 'next-intl';
@@ -42,10 +41,11 @@ export function AgentChatTranscript({
 }) {
   const t = useTranslations('common.agentChat');
 
-  let statusLabel: string;
+  // While a reply runs, the last message is the one it is written into.
+  let statusLabel: string | null = null;
   if (status === 'queued') statusLabel = t('waitingForRunner');
   else if (activeTool) statusLabel = t('usingTool', { tool: activeTool });
-  else statusLabel = t('thinking');
+  else if (status === 'streaming') statusLabel = t('thinking');
 
   const loadLocked = useRef(false);
   const hasLeftStart = useRef(false);
@@ -91,7 +91,7 @@ export function AgentChatTranscript({
       >
         <MessageScrollerContent
           aria-busy={status !== 'ready' || isLoadingEarlier}
-          className="mx-auto w-full max-w-3xl gap-6 p-4 pb-10"
+          className="mx-auto w-full max-w-3xl gap-8 p-4 pb-10"
         >
           {messages.map((message, index) => {
             const previous = messages[index - 1];
@@ -100,19 +100,11 @@ export function AgentChatTranscript({
                 key={message.id}
                 message={message}
                 agentName={agentName}
-                complete={status === 'ready' || index < messages.length - 1}
+                statusLabel={index === messages.length - 1 ? statusLabel : null}
                 showDate={!previous || dayKey(previous.createdAt) !== dayKey(message.createdAt)}
               />
             );
           })}
-
-          {status !== 'ready' && (
-            <MessageScrollerItem messageId="stream-status">
-              <Marker role="status">
-                <MarkerContent className="shimmer">{statusLabel}</MarkerContent>
-              </Marker>
-            </MessageScrollerItem>
-          )}
 
           {pending.map((message) => (
             <AgentChatPendingMessage

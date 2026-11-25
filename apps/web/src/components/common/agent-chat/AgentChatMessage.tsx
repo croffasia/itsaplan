@@ -6,6 +6,7 @@ import type { AiChatPart, AiChatToolPart } from '@/lib/api/endpoints/agentChat';
 import { formatLongDate, formatTime } from '@/utils/dates';
 import Markdown from '@/components/common/Markdown';
 import { Bubble, BubbleContent } from '@/components/ui/bubble';
+import { Marker, MarkerContent } from '@/components/ui/marker';
 import { Message, MessageContent, MessageFooter, MessageHeader } from '@/components/ui/message';
 import { MessageScrollerItem } from '@/components/ui/message-scroller';
 import AgentChatToolCalls from './AgentChatToolCalls';
@@ -32,19 +33,21 @@ function blocksOf(parts: AiChatPart[]): Block[] {
 }
 
 // The time of a message is there while it is pointed at, and always on a touch screen.
+// `statusLabel` is what the agent is doing while it writes this message.
 export default function AgentChatMessage({
   message,
   agentName,
   showDate,
-  complete = true,
+  statusLabel,
 }: {
   message: ChatMessage;
   agentName: string;
   showDate: boolean;
-  complete?: boolean;
+  statusLabel: string | null;
 }) {
   const t = useTranslations('common.agentChat');
   const isUser = message.role === 'user';
+  const blocks = blocksOf(message.parts);
   const time = (
     <time
       dateTime={message.createdAt}
@@ -78,9 +81,9 @@ export default function AgentChatMessage({
             {isUser && time}
             <Bubble
               variant={isUser ? 'muted' : 'ghost'}
-              className={cn('gap-2', !isUser && 'w-full')}
+              className={cn('gap-3', !isUser && 'w-full')}
             >
-              {blocksOf(message.parts).map((block, index) =>
+              {blocks.map((block, index) =>
                 'tools' in block ? (
                   <AgentChatToolCalls key={index} tools={block.tools} />
                 ) : (
@@ -91,10 +94,18 @@ export default function AgentChatMessage({
                     {isUser ? (
                       <AgentChatUserText text={block.text} />
                     ) : (
-                      <Markdown complete={complete}>{block.text}</Markdown>
+                      // Only the last block is still written to.
+                      <Markdown complete={statusLabel === null || index < blocks.length - 1}>
+                        {block.text}
+                      </Markdown>
                     )}
                   </BubbleContent>
                 ),
+              )}
+              {statusLabel !== null && (
+                <Marker role="status">
+                  <MarkerContent className="shimmer">{statusLabel}</MarkerContent>
+                </Marker>
               )}
             </Bubble>
           </div>

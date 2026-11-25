@@ -961,10 +961,6 @@
   font-size: var(--text-sm);
   line-height: 1.857; /* 26px on the 4px grid */
 }
-/* A chat's answers are read in a narrow column, where the body leading is too loose. */
-[data-slot='bubble-content'] .md-content {
-  line-height: 1.625;
-}
 /* Table cells hold short lines, where the body leading reads as too loose. */
 .md-content.text-xs {
   line-height: 1.667;
@@ -1249,7 +1245,7 @@ span.issue-ref {
 }
 /* A table keeps its column widths and scrolls on its own instead of squeezing the
    columns into the width it is given. Rendered markdown puts the table straight into
-   the content; the editor wraps it in a div of its own. */
+   the content; the editor and an agent's answer wrap it in a div of its own. */
 .md-content > table {
   display: block;
   width: max-content;
@@ -1615,21 +1611,26 @@ span.issue-ref {
   display: flex;
 }
 .document-prose .md-content ul[data-type='taskList'] input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+}
+:is(.document-prose .md-content ul[data-type='taskList'], .markdown-prose .md-content)
+  input[type='checkbox'] {
   appearance: none;
   display: grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
   margin: 0;
   border-radius: 5px;
   box-shadow: inset 0 0 0 1.5px var(--input);
   transition: background-color 0.15s;
 }
-.document-prose .md-content ul[data-type='taskList'] input[type='checkbox']:checked {
+:is(.document-prose .md-content ul[data-type='taskList'], .markdown-prose .md-content)
+  input[type='checkbox']:checked {
   background: var(--primary);
   box-shadow: none;
 }
-.document-prose .md-content ul[data-type='taskList'] input[type='checkbox']:checked::after {
+:is(.document-prose .md-content ul[data-type='taskList'], .markdown-prose .md-content)
+  input[type='checkbox']:checked::after {
   content: '';
   width: 12px;
   height: 12px;
@@ -1676,6 +1677,200 @@ span.issue-ref {
    changes, so the editor's own attribute decides whether the resize handle shows. */
 .document-prose .md-content[contenteditable='false'] [data-image-resize] {
   display: none;
+}
+
+/* Rendered markdown (components/common/Markdown). */
+.markdown-prose {
+  overflow-wrap: break-word;
+}
+.markdown-prose > * + * {
+  margin-top: 1rem;
+}
+.markdown-prose .md-content {
+  line-height: 1.625;
+}
+.markdown-prose .md-content > * + * {
+  margin-top: 0.75rem;
+}
+.markdown-prose .md-content > :where(p) + :where(ul, ol) {
+  margin-top: 0.5rem;
+}
+.markdown-prose .md-content > :where(.md-code, .tableWrapper, blockquote) + *,
+.markdown-prose .md-content > * + :where(.md-code, .tableWrapper, blockquote) {
+  margin-top: 1rem;
+}
+.markdown-prose .md-content > :where(h1, h2) + * {
+  margin-top: 0.5rem;
+}
+.markdown-prose .md-content > :where(h3, h4, h5, h6, .md-lead) + * {
+  margin-top: 0.375rem;
+}
+.markdown-prose .md-content > * + :where(h1, h2) {
+  margin-top: 1.75rem;
+}
+.markdown-prose .md-content > * + :where(h3, h4, h5, h6, .md-lead) {
+  margin-top: 1.375rem;
+}
+.markdown-prose .md-content > :where(h1) + :where(h2),
+.markdown-prose .md-content > :where(h1, h2) + :where(h3),
+.markdown-prose .md-content > :where(h1, h2, h3) + :where(h4, h5, h6, .md-lead) {
+  margin-top: 1rem;
+}
+.markdown-prose .md-content > * + :where(hr),
+.markdown-prose .md-content > :where(hr) + * {
+  margin-top: 1.5rem;
+}
+.markdown-prose .md-content > [data-link-presentation],
+.markdown-prose .md-content > :has(> [data-link-original]) + :has(> [data-link-original]) {
+  margin-top: 0.25rem;
+}
+.markdown-prose .md-content :is(h1, h2, h3, h4, h5, h6, .md-lead) {
+  font-weight: 600;
+  text-wrap: balance;
+}
+.markdown-prose .md-content :is(h1, h2, h3, h4, h5, h6, .md-lead) strong {
+  font-weight: inherit;
+}
+.markdown-prose .md-content h1 {
+  font-size: 1.25rem;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+}
+.markdown-prose .md-content h2 {
+  font-size: 1.0625rem;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.markdown-prose .md-content h3 {
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+.markdown-prose .md-content a {
+  color: inherit;
+  text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+  text-underline-offset: 3px;
+}
+.markdown-prose .md-content a:hover {
+  text-decoration-color: currentColor;
+}
+.markdown-prose .md-content ul {
+  padding-inline-start: 1.25rem;
+}
+.markdown-prose .md-content ol {
+  padding-inline-start: 1.5rem;
+}
+.markdown-prose .md-content li {
+  padding-inline-start: 2px;
+}
+.markdown-prose .md-content li::marker {
+  color: color-mix(in oklab, var(--foreground) 55%, transparent);
+}
+.markdown-prose .md-content ul ul {
+  list-style: circle;
+}
+.markdown-prose .md-content li + li {
+  margin-top: 0.5rem;
+}
+.markdown-prose .md-content li > * + p,
+.markdown-prose .md-content li > :is(pre, blockquote, .tableWrapper) {
+  margin-top: 0.375rem;
+}
+.markdown-prose .md-content :is(li > :is(ul, ol), li li + li) {
+  margin-top: 0.25rem;
+}
+.markdown-prose .md-content li:has(> input[type='checkbox'], > p > input[type='checkbox']) {
+  position: relative;
+  list-style: none;
+  margin-inline-start: -1.25rem;
+  padding-inline-start: 1.625rem;
+}
+.markdown-prose .md-content li:has(> input:checked, > p > input:checked) {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in oklab, currentColor 40%, transparent);
+}
+.markdown-prose .md-content input[type='checkbox'] {
+  position: absolute;
+  inset-inline-start: 0;
+  top: calc((1lh - 1rem) / 2);
+  width: 1rem;
+  height: 1rem;
+}
+.markdown-prose .md-content code {
+  border-radius: 5px;
+  padding: 0.15em 0.4em;
+  font-size: 0.875em;
+  box-decoration-break: clone;
+  overflow-wrap: anywhere;
+}
+.markdown-prose .md-content kbd {
+  background: var(--muted);
+  border-radius: 5px;
+  padding: 0.15em 0.45em;
+  font-size: 0.8125em;
+  box-shadow: inset 0 -1px 0 var(--input);
+}
+.markdown-prose .md-content pre {
+  background: color-mix(in oklab, var(--muted) 70%, transparent);
+  border-radius: var(--radius-lg);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.78125rem;
+  line-height: 1.65;
+}
+.markdown-prose .md-content .md-code pre {
+  background: none;
+  padding-top: 0.375rem;
+  padding-bottom: 0.875rem;
+}
+.markdown-prose .md-content pre code {
+  padding: 0;
+  font-size: inherit;
+}
+.markdown-prose .md-content blockquote {
+  padding-inline-start: 0.875rem;
+}
+.markdown-prose .md-content blockquote > * + * {
+  margin-top: 0.5rem;
+}
+.markdown-prose .md-content table {
+  width: max-content;
+  min-width: 100%;
+  line-height: 1.5;
+}
+.markdown-prose .md-content :is(th, td) {
+  max-width: 10rem;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  vertical-align: top;
+}
+.markdown-prose .md-content :is(th, td):first-child {
+  padding-inline-start: 0;
+}
+.markdown-prose .md-content :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+.markdown-prose .md-content :is(th, td)[align='center'] {
+  text-align: center;
+}
+.markdown-prose .md-content :is(th, td)[align='right'] {
+  text-align: end;
+}
+.markdown-prose .md-content td {
+  font-variant-numeric: tabular-nums;
+}
+.markdown-prose .md-content th {
+  background: none;
+  padding-block: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+.markdown-prose .md-content tr:last-child > td {
+  border-bottom: 0;
+}
+.markdown-prose .md-content img {
+  border-radius: var(--radius-lg);
 }
 
 .document-comment-mark {

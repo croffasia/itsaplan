@@ -11,7 +11,7 @@ import DisplayPopover from '@/components/layout/DisplayPopover';
 import BoardLayout from '@/features/work-items/components/BoardLayout';
 import { useLocalBoardSettings } from '@/hooks/useLocalBoardSettings';
 
-// Where this board's layout and display settings are kept, per initiative.
+// Where this board's layout, display settings and filters are kept, per initiative.
 const INITIATIVE_BOARD_STORE_KEY = 'planner_initiative_board_settings';
 
 // The initiative's issues rendered as the work items board (kanban/table/timeline/
@@ -58,7 +58,7 @@ export default function InitiativeIssuesBoard({ initiativeId }: { initiativeId: 
       <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
         <FilterBar
           filters={board.filters}
-          onChange={board.setFilters}
+          onChange={board.changeFilters}
           project={project}
           customFields={customFields}
         />

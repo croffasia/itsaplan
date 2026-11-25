@@ -3,15 +3,16 @@ import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
-import type { FilterCondition, FilterSet } from '@/utils/filters';
+import { EMPTY_FILTER_SET, type FilterCondition, type FilterSet } from '@/utils/filters';
 import type { FieldSpec } from '@/utils/filterFields';
 import { newCondition, useFilterFields } from '@/hooks/useFilterFields';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import FilterConditionPill from '@/components/layout/FilterConditionPill';
 
-// The row of filter condition pills plus an add-condition button. Filters apply
-// to whichever layout is active; empty/half-built conditions are ignored.
+// The row of filter condition pills, an add-condition button and a button that
+// clears every condition. Filters apply to whichever layout is active;
+// empty/half-built conditions are ignored.
 export default function FilterBar({
   filters,
   onChange,
@@ -24,6 +25,7 @@ export default function FilterBar({
   customFields: CustomField[];
 }) {
   const t = useTranslations('filters');
+  const tCommon = useTranslations('common');
   const { fieldSpecs } = useFilterFields(project.project.ref);
   const [addOpen, setAddOpen] = useState(false);
   const specs = fieldSpecs(project, customFields);
@@ -80,6 +82,19 @@ export default function FilterBar({
           ))}
         </PopoverContent>
       </Popover>
+
+      {/* Also shown for a single condition: one on a deleted field has no pill to
+          remove it from. */}
+      {filters.conditions.length > 0 && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="ms-auto h-6 px-2 text-xs text-muted-foreground"
+          onClick={() => onChange(EMPTY_FILTER_SET)}
+        >
+          {tCommon('clearFilters')}
+        </Button>
+      )}
     </div>
   );
 }

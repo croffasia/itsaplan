@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { WorkItemsView } from '@/utils/viewTypes';
 import { normalizeViewSettings, type ViewSettings } from '@/utils/viewSettings';
-import { EMPTY_FILTER_SET, toFilterSet, type FilterSet } from '@/utils/filters';
+import { EMPTY_FILTER_SET, toFilterSet, withExistingFields, type FilterSet } from '@/utils/filters';
 
 // Display settings and filters for an issue board that has no saved views — the one
 // an initiative or a cycle shows. Persisted in localStorage under `storeKey`, keyed by
@@ -40,7 +40,12 @@ function viewsOf(stored: Stored | undefined): Views {
   return views ?? { [layout ?? 'kanban']: flat };
 }
 
-export function useLocalBoardSettings(storeKey: string, id: number) {
+// `customFields` are the project's custom fields, or null until they are known.
+export function useLocalBoardSettings(
+  storeKey: string,
+  id: number,
+  customFields: readonly { id: number }[] | null = null,
+) {
   const key = String(id);
   const [state, setState] = useState<{ view: WorkItemsView; settings: ViewSettings }>(() => {
     const stored = readStore(storeKey)[key];
@@ -54,6 +59,13 @@ export function useLocalBoardSettings(storeKey: string, id: number) {
   useEffect(() => {
     setFilters(toFilterSet(readStore(storeKey)[key]?.filters));
   }, [storeKey, key]);
+
+  // A stored condition on a custom field deleted since is dropped once the fields are
+  // known, whichever of the two arrives first. The updater runs after a set loaded in
+  // the same commit; the stored entry loses it on the next change.
+  useEffect(() => {
+    if (customFields) setFilters((current) => withExistingFields(current, customFields));
+  }, [customFields, filters]);
 
   const persist = useCallback(
     (view: WorkItemsView, settings: ViewSettings) => {

@@ -20,7 +20,11 @@ const INITIATIVE_BOARD_STORE_KEY = 'planner_initiative_board_settings';
 // real issues and the live board refresh keeps it current.
 export default function InitiativeIssuesBoard({ initiativeId }: { initiativeId: number }) {
   const { project, customFields, onOpenIssue, onAddIssue } = useShell();
-  const board = useLocalBoardSettings(INITIATIVE_BOARD_STORE_KEY, initiativeId);
+  const board = useLocalBoardSettings(
+    INITIATIVE_BOARD_STORE_KEY,
+    initiativeId,
+    project ? customFields : null,
+  );
   const initiativeOptions = useInitiativeOptionsQuery(project?.project.ref ?? null).data ?? [];
 
   const viewProject = useMemo(() => {

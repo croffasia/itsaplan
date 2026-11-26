@@ -42,10 +42,10 @@ let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
 let originalFetch: typeof fetch;
 let editor: ReturnType<typeof useViewEditor>;
 
-type Tab = { projectKey: string; activeViewId: number | null };
+type Tab = { projectKey: string; activeViewId: number | null; fields?: { id: number }[] | null };
 
-function EditorProbe({ projectKey, activeViewId }: Tab) {
-  editor = useViewEditor(projectKey, views, activeViewId, () => {}, true);
+function EditorProbe({ projectKey, activeViewId, fields = null }: Tab) {
+  editor = useViewEditor(projectKey, views, activeViewId, () => {}, true, fields);
   return null;
 }
 
@@ -201,5 +201,50 @@ describe('useViewEditor filters', () => {
     assert.deepEqual(editor.filters, { conditions: [mine] });
     render({ projectKey: 'P', activeViewId: 7 });
     assert.deepEqual(editor.filters, EMPTY_FILTER_SET);
+  });
+
+  it('drops a stored condition on a deleted custom field once the fields are known', () => {
+    const onField: FilterCondition = { id: 'd', field: 'cf:7', op: 'is', values: [1] };
+    const onDeletedField: FilterCondition = { id: 'e', field: 'cf:42', op: 'is', values: [2] };
+    const set = { conditions: [mine, onField, onDeletedField] };
+    localStorage.setItem(FILTERS_KEY, JSON.stringify({ P: { all: set, 7: set } }));
+    const fields = [{ id: 7 }];
+
+    // Fields not loaded yet: nothing can be told apart, so nothing is dropped.
+    render({ projectKey: 'P', activeViewId: null });
+    assert.deepEqual(editor.filters, set);
+    render({ projectKey: 'P', activeViewId: null, fields });
+    assert.deepEqual(editor.filters, { conditions: [mine, onField] });
+    assert.deepEqual(
+      editor.effectiveFilters.conditions.map((c) => c.field),
+      ['assignee', 'cf:7'],
+    );
+
+    // Fields already known when another tab loads its stored set.
+    render({ projectKey: 'P', activeViewId: 7, fields });
+    assert.deepEqual(editor.filters, { conditions: [mine, onField] });
+
+    // The next change stores the set without it.
+    act(() => editor.changeFilters({ conditions: [onField] }));
+    assert.deepEqual(stored().P[7], { conditions: [onField] });
+  });
+  it('reads the fields against the set of the project they belong to', () => {
+    const inP: FilterCondition = { id: 'p', field: 'cf:7', op: 'is', values: [1] };
+    const inQ: FilterCondition = { id: 'q', field: 'cf:9', op: 'is', values: [1] };
+    localStorage.setItem(
+      FILTERS_KEY,
+      JSON.stringify({ P: { all: { conditions: [inP] } }, Q: { all: { conditions: [inQ] } } }),
+    );
+    render({ projectKey: 'P', activeViewId: null, fields: [{ id: 7 }] });
+    assert.deepEqual(editor.filters, { conditions: [inP] });
+
+    // Q's fields are already known when its set loads: P's set, still live in that
+    // commit, must not be what is kept.
+    render({ projectKey: 'Q', activeViewId: null, fields: [{ id: 9 }] });
+    assert.deepEqual(editor.filters, { conditions: [inQ] });
+    assert.deepEqual(stored(), {
+      P: { all: { conditions: [inP] } },
+      Q: { all: { conditions: [inQ] } },
+    });
   });
 });

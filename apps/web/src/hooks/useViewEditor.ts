@@ -11,7 +11,13 @@ import {
   useReorderViews,
   useUpdateView,
 } from '@/services/views.service';
-import { EMPTY_FILTER_SET, isActiveFilterSet, toFilterSet, type FilterSet } from '@/utils/filters';
+import {
+  EMPTY_FILTER_SET,
+  isActiveFilterSet,
+  toFilterSet,
+  withExistingFields,
+  type FilterSet,
+} from '@/utils/filters';
 import {
   defaultViewSettings,
   getViewSettings,
@@ -108,12 +114,15 @@ function toDisplay(view: WorkItemsView, settings: ViewSettings): SavedViewDispla
 // not shown in the filter row: they are part of the view and are merged in behind
 // it (see effectiveFilters). Edit view folds them into `filters` so they can be
 // changed, and Save writes that set back to the view.
+//
+// `customFields` are the project's custom fields, or null until they are known.
 export function useViewEditor(
   projectKey: string | null,
   views: View[],
   activeViewId: number | null,
   onSelectView: (id: number | null) => void,
   keepsPrivateViews: boolean,
+  customFields: readonly { id: number }[] | null = null,
 ) {
   const [view, setView] = useState<WorkItemsView>(loadView);
   const [settings, setSettings] = useState<ViewSettings>(() => defaultViewSettings(loadView()));
@@ -191,6 +200,13 @@ export function useViewEditor(
     openEditNext.current = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectKey, activeViewId, views]);
+
+  // A stored condition on a custom field deleted since is dropped once the project's
+  // fields are known, whichever of the two arrives first. The updater runs after a
+  // selection loaded in the same commit; the stored entry loses it on the next change.
+  useEffect(() => {
+    if (customFields) setFilters((current) => withExistingFields(current, customFields));
+  }, [customFields, filters]);
 
   // Enters edit mode, seeding the name and icon inputs from the given view (or
   // blank for a new/All-tab draft).

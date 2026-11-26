@@ -114,6 +114,18 @@ export function toFilterSet(raw: unknown): FilterSet {
     : EMPTY_FILTER_SET;
 }
 
+// The set without its conditions on a custom field missing from `fields`. A stored
+// condition outlives a field deleted since: it would match no issue, and the filter
+// bar has no pill to remove it from. The same set comes back when nothing is dropped.
+export function withExistingFields(set: FilterSet, fields: readonly { id: number }[]): FilterSet {
+  const ids = new Set(fields.map((f) => f.id));
+  const kept = set.conditions.filter((c) => {
+    const id = parseCustomFieldKey(c.field);
+    return id == null || ids.has(id);
+  });
+  return kept.length === set.conditions.length ? set : { conditions: kept };
+}
+
 // Normalizes any date the store returns to a "YYYY-MM-DD" day for comparison:
 // due/start dates are already that; a moment (created/updated, a datetime custom
 // field) is taken by the day it falls on in the user's zone, which is the day the

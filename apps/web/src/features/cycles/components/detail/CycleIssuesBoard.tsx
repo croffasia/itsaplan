@@ -23,7 +23,11 @@ const CYCLE_BOARD_STORE_KEY = 'planner_cycle_board_settings';
 export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
   const { project, customFields, onOpenIssue, onAddIssue } = useShell();
   const cycleId = cycle.id;
-  const board = useLocalBoardSettings(CYCLE_BOARD_STORE_KEY, cycleId);
+  const board = useLocalBoardSettings(
+    CYCLE_BOARD_STORE_KEY,
+    cycleId,
+    project ? customFields : null,
+  );
   const initiativeOptions = useInitiativeOptionsQuery(project?.project.ref ?? null).data ?? [];
 
   const viewProject = useMemo(() => {

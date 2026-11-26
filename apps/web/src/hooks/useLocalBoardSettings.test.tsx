@@ -15,9 +15,11 @@ let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
 let board: ReturnType<typeof useLocalBoardSettings>;
 
 const mine: FilterCondition = { id: 'a', field: 'assignee', op: 'is', values: ['user-1'] };
+const onField: FilterCondition = { id: 'b', field: 'cf:7', op: 'is', values: [1] };
+const onDeletedField: FilterCondition = { id: 'c', field: 'cf:42', op: 'is', values: [2] };
 
-function BoardProbe({ id = 1 }: { id?: number }) {
-  board = useLocalBoardSettings(STORE_KEY, id);
+function BoardProbe({ id = 1, fields = null }: { id?: number; fields?: { id: number }[] | null }) {
+  board = useLocalBoardSettings(STORE_KEY, id, fields);
   return null;
 }
 
@@ -91,5 +93,30 @@ describe('useLocalBoardSettings', () => {
     localStorage.setItem(STORE_KEY, JSON.stringify({ 1: { filters: { conditions: 'mine' } } }));
     act(() => root.render(<BoardProbe key="again" />));
     assert.deepEqual(board.filters, EMPTY_FILTER_SET);
+  });
+
+  it('drops a stored condition on a deleted custom field once the fields are known', () => {
+    const stored = { conditions: [mine, onField, onDeletedField] };
+    localStorage.setItem(
+      STORE_KEY,
+      JSON.stringify({ 1: { filters: stored }, 2: { filters: stored } }),
+    );
+    const fields = [{ id: 7 }];
+
+    // Fields not loaded yet: nothing can be told apart, so nothing is dropped.
+    act(() => root.render(<BoardProbe />));
+    assert.deepEqual(board.filters, stored);
+    act(() => root.render(<BoardProbe fields={fields} />));
+    assert.deepEqual(board.filters, { conditions: [mine, onField] });
+
+    // Fields already known when another board loads its stored set.
+    act(() => root.render(<BoardProbe id={2} fields={fields} />));
+    assert.deepEqual(board.filters, { conditions: [mine, onField] });
+
+    // The next change stores the set without it.
+    act(() => board.changeFilters({ conditions: [onField] }));
+    assert.deepEqual(JSON.parse(localStorage.getItem(STORE_KEY) ?? 'null')[2].filters, {
+      conditions: [onField],
+    });
   });
 });

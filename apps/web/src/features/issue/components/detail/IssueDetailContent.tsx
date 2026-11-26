@@ -10,13 +10,9 @@ import ResizeGrip from '@/components/common/ResizeGrip';
 import { useIssueDetail } from '../../hooks/useIssueDetail';
 import { usePersistedOpen, usePersistedOpenGroups } from '@/hooks/usePersistedOpen';
 import { useFilePaste } from '../../hooks/useFilePaste';
-import IssueAttachmentsPanel from './IssueAttachmentsPanel';
-import IssueChecklistsPanel from './IssueChecklistsPanel';
-import IssueLinksPanel from './IssueLinksPanel';
-import IssueDevelopmentPanel from './IssueDevelopmentPanel';
-import IssueDocumentsPanel from './IssueDocumentsPanel';
-import IssueWorklogPanel from './IssueWorklogPanel';
-import IssueSubtasksPanel from './IssueSubtasksPanel';
+import { fieldSaveKey } from '../../utils/fieldValues';
+import IssueAddBar, { type IssueAddTarget } from './IssueAddBar';
+import IssueDetailSections from './IssueDetailSections';
 import IssueActivityFeed from './IssueActivityFeed';
 import LastCommentBubble from './LastCommentBubble';
 import IssueDetailSkeleton from './IssueDetailSkeleton';
@@ -24,6 +20,7 @@ import IssueStatusTimeline from './IssueStatusTimeline';
 import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueProperties from './IssueProperties';
+import IssuePropertyPills from './IssuePropertyPills';
 import IssueActionsBar from '../actions/IssueActionsBar';
 import {
   PROPERTIES_MAX_W,
@@ -34,11 +31,11 @@ import {
 import { useTranslations } from 'next-intl';
 
 // The body of a issue — title, description, markdown custom fields, the
-// Properties grid, attachments, and the activity feed. Shared by the side panel
-// (IssueDetail) and the full-page view (IssueViewPage); each supplies its own
-// surrounding chrome (close button / breadcrumbs). Without work_items edit every
-// part of it renders as a static value. Data loading and mutations live in
-// useIssueDetail; this component is layout only.
+// Properties, the add bar, the sections that have something in them, and the
+// activity feed. Shared by the side panel (IssueDetail) and the full-page view
+// (IssueViewPage); each supplies its own surrounding chrome (close button /
+// breadcrumbs). Without work_items edit every part of it renders as a static value.
+// Data loading and mutations live in useIssueDetail; this component is layout only.
 export default function IssueDetailContent({
   project,
   issueId,
@@ -87,9 +84,6 @@ export default function IssueDetailContent({
       ? { ...activityView, tab: 'all' as const }
       : activityView;
   const canEdit = permissions.can('work_items', 'edit');
-  const canManageDevelopment = permissions.can('repositories', 'edit');
-  const canReadDocuments = permissions.can('documents', 'read');
-  const canLinkDocuments = canEdit && permissions.can('documents', 'edit');
   const features = useProjectFeatures();
   useFilePaste(canEdit && issue ? (files) => void attachFiles(files) : null);
   const properties = usePersistedOpen('issue-properties-open');
@@ -110,6 +104,11 @@ export default function IssueDetailContent({
     place: 'text',
   };
   const feedRef = useRef<HTMLDivElement>(null);
+  // What the person is adding, from the add bar or from a section's heading. Held here
+  // because both open the same dialog or inline form, and an empty section shows only
+  // while it is being added to.
+  const [adding, setAdding] = useState<IssueAddTarget | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   if (!issue) return <IssueDetailSkeleton />;
 
@@ -133,7 +132,7 @@ export default function IssueDetailContent({
             rows={1}
             placeholder={t('titlePlaceholder')}
             defaultValue={issue.title}
-            key={`title-${issue.updatedAt}`}
+            key={`title-${issue.title}`}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -158,7 +157,10 @@ export default function IssueDetailContent({
           className="mt-4"
           placeholder={tEditor('descriptionPlaceholder')}
           defaultValue={issue.description}
-          key={`desc-${issue.updatedAt}-${replacements}`}
+          // Remounted only when the stored text changes: the editor renders nothing
+          // for a moment while it mounts, which shortens the page under the reader
+          // and resets its scroll.
+          key={`desc-${replacements}-${issue.description}`}
           editable={canEdit}
           onReady={setDescEditor}
           uploadFile={uploadFile}
@@ -172,62 +174,45 @@ export default function IssueDetailContent({
 
       {fieldDefs
         .filter((def) => def.showInBody)
-        .map((def) => (
-          <IssueCustomFieldBody
-            key={def.id}
-            def={def}
-            current={issue.fields.find((f) => f.fieldId === def.id)}
-            assignees={project.assignees}
-            saveKey={`${def.id}-${issue.updatedAt}-${replacements}`}
-            uploadFile={uploadFile}
-            imageAttachments={imageAttachments}
-            onSetField={setField}
-            readOnly={!canEdit}
-            mentions={textMentions}
-          />
-        ))}
+        .map((def) => {
+          const current = issue.fields.find((f) => f.fieldId === def.id);
+          return (
+            <IssueCustomFieldBody
+              key={def.id}
+              def={def}
+              current={current}
+              assignees={project.assignees}
+              saveKey={`${fieldSaveKey(def.id, current)}-${replacements}`}
+              uploadFile={uploadFile}
+              imageAttachments={imageAttachments}
+              onSetField={setField}
+              readOnly={!canEdit}
+              mentions={textMentions}
+            />
+          );
+        })}
     </>
   );
 
-  // The collapsible sections under the written content. Where the Properties are
-  // not a sidebar of their own they go between the two, so the sections stay at
-  // the bottom of the column.
   const sections = (
-    <>
-      <IssueAttachmentsPanel
-        issueId={issue.id}
-        onInsert={insertAttachment}
-        onReplaced={() => setReplacements((n) => n + 1)}
-        readOnly={!canEdit}
-      />
-
-      {features.subtasks && <IssueSubtasksPanel project={project} issue={issue} />}
-
-      {features.checklists && <IssueChecklistsPanel issue={issue} />}
-
-      {features.timeLogging && <IssueWorklogPanel project={project} issue={issue} />}
-
-      <IssueDevelopmentPanel
-        issueId={issue.id}
-        identifier={issue.identifier}
-        issueTitle={issue.title}
-        links={issue.development ?? []}
-        repositoryIssue={issue.repositoryIssue ?? null}
-        canEdit={canEdit}
-        canManage={canManageDevelopment}
-      />
-
-      {features.documents && (
-        <IssueDocumentsPanel
-          projectKey={project.project.ref}
-          issueId={issue.id}
-          canRead={canReadDocuments}
-          canLink={canLinkDocuments}
-        />
-      )}
-
-      <IssueLinksPanel project={project} issue={issue} />
-    </>
+    <IssueDetailSections
+      project={project}
+      issue={issue}
+      adding={adding}
+      onAddingChange={setAdding}
+      fileInput={fileInput}
+      onInsertAttachment={insertAttachment}
+      onReplaceAttachment={() => setReplacements((n) => n + 1)}
+    />
+  );
+  const renderAddBar = (className: string) => (
+    <IssueAddBar
+      project={project}
+      issue={issue}
+      onAdd={setAdding}
+      onAddFiles={() => fileInput.current?.click()}
+      className={className}
+    />
   );
 
   const renderProperties = (className?: string) => (
@@ -325,6 +310,7 @@ export default function IssueDetailContent({
             {actions}
           </div>
           {heading}
+          {renderAddBar('mt-5')}
           <div className="xl:hidden">{renderProperties()}</div>
           {sections}
           {activity}
@@ -355,6 +341,7 @@ export default function IssueDetailContent({
           <div className="min-w-0 flex-1">
             <div className="@3xl:hidden">{actions}</div>
             {heading}
+            {renderAddBar('mt-5')}
             <div className="@3xl:hidden">{renderProperties()}</div>
             {sections}
             {activity}
@@ -373,13 +360,26 @@ export default function IssueDetailContent({
   }
 
   // The panel renders the actions in its header row (see IssueDetail), so the
-  // panel body omits them. The wrapper is what the bubble sticks inside: without
-  // it the bubble's parent would be the panel's scroll container, which bounds a
-  // sticky child to the first screen of the scroll.
+  // panel body omits them. Its properties are a row of pills under the description.
+  // The wrapper is what the bubble sticks inside: without it the bubble's parent would
+  // be the panel's scroll container, which bounds a sticky child to the first screen
+  // of the scroll.
   return (
     <div>
       {heading}
-      {renderProperties()}
+      <IssuePropertyPills
+        project={project}
+        issue={issue}
+        fieldDefs={fieldDefs}
+        onPatch={patch}
+        onSetField={setField}
+        onToggleLabel={toggleLabel}
+        uploadFile={uploadFile}
+        imageAttachments={imageAttachments}
+        watchers={issue.watchers}
+        readOnly={!canEdit}
+      />
+      {renderAddBar('mt-5 -mb-2 border-t pt-3')}
       {sections}
       {activity}
     </div>

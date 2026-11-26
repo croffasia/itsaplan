@@ -36,7 +36,7 @@ export default function IssueChecklistItemRow({
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        'group flex items-center gap-2 rounded-md px-2 py-1 hover:bg-accent/50',
+        'group relative flex min-h-8 items-center gap-2.5 rounded-md px-2 hover:bg-accent/50',
         isDragging && 'opacity-40',
       )}
     >
@@ -44,7 +44,7 @@ export default function IssueChecklistItemRow({
         canEdit={canEdit}
         attributes={attributes}
         listeners={listeners}
-        className="group-hover:text-muted-foreground"
+        className="-start-4 group-hover:opacity-100"
       />
 
       <Checkbox
@@ -59,14 +59,14 @@ export default function IssueChecklistItemRow({
         maxLength={CHECKLIST_ITEM_MAX}
         readOnly={!canEdit}
         onCommit={onRename}
-        className={cn('text-sm', item.done && 'text-muted-foreground line-through')}
+        className={cn('text-sm', item.done && 'text-muted-foreground/70')}
       />
 
       {canEdit && (
         <Button
           variant="ghost"
           size="icon"
-          className="size-6 shrink-0 opacity-0 group-hover:opacity-100 hover:text-destructive"
+          className="size-6 shrink-0 text-muted-foreground/70 opacity-0 group-hover:opacity-100 hover:text-destructive focus-visible:opacity-100 max-sm:opacity-100"
           aria-label={t('removeItem', { item: item.content })}
           onClick={onRemove}
         >

@@ -6,6 +6,7 @@ import { useTimelineQuery } from '../../services/comments.service';
 import { buildLifecycleMetrics, buildTimelineLayout } from '../../utils/timeline';
 import IssueTimelineCompact from './IssueTimelineCompact';
 import IssueTimelineLanes from './IssueTimelineLanes';
+import IssueSection from './IssueSection';
 import IssueSectionHeading from './IssueSectionHeading';
 import { useTranslations } from 'next-intl';
 
@@ -47,25 +48,24 @@ export default function IssueStatusTimeline({
   const open = openHere ?? prefs.issueStatsOpen;
   const showTimeline = timelineHere ?? prefs.issueStatsView === 'timeline';
   return (
-    // Collapsed, the row is all there is, so the section pulls itself up against the
-    // activity log below: the heading would otherwise sit off-centre between the two
-    // rules, its own padding above and the activity log's margin below.
-    <div className={`mt-6 border-t pt-5 ${open ? '' : '-mb-2'}`}>
-      {/* Fixed height: the view button only renders while the section is open, and
-          without it the row would shrink to the height of the heading text. */}
-      <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-4' : ''}`}>
-        <IssueSectionHeading label={t('title')} open={open} onToggle={() => setOpenHere(!open)} />
-        {open && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-xs text-muted-foreground"
-            onClick={() => setTimelineHere(!showTimeline)}
-          >
-            {showTimeline ? t('compact') : t('timeline')}
-          </Button>
-        )}
-      </div>
+    <IssueSection collapsed={!open}>
+      <IssueSectionHeading
+        label={t('title')}
+        open={open}
+        onToggle={() => setOpenHere(!open)}
+        actions={
+          open && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-xs text-muted-foreground/70 hover:text-foreground"
+              onClick={() => setTimelineHere(!showTimeline)}
+            >
+              {showTimeline ? t('compact') : t('timeline')}
+            </Button>
+          )
+        }
+      />
       {/* The bars and the axis ticks are placed as a percentage from the left edge,
           and time runs left to right in every language, so the chart keeps its
           direction inside a mirrored page. */}
@@ -83,6 +83,6 @@ export default function IssueStatusTimeline({
           )}
         </div>
       )}
-    </div>
+    </IssueSection>
   );
 }

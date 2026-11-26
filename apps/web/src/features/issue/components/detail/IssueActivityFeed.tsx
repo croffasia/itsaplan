@@ -84,8 +84,8 @@ export default function IssueActivityFeed({
   }
 
   return (
-    <div className="mt-6 border-t pt-5">
-      <h3 className="mb-4 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+    <div className="mt-8">
+      <h3 className="mb-4 text-xs font-medium tracking-wide text-muted-foreground/70 uppercase">
         {tIssue('activityHeading')}
       </h3>
 

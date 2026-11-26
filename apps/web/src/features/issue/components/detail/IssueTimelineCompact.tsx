@@ -3,10 +3,10 @@ import IssueTimelineMetric from './IssueTimelineMetric';
 import IssueTimelineShare from './IssueTimelineShare';
 import { useTranslations } from 'next-intl';
 
-// The whole life of the issue as one bar: a share per status, sized by the total time
-// spent in it (repeat visits merged), with the same figures and the lifecycle metrics
-// spread across the row under it, in the project's own order. A completed status is not
-// scaled: it takes the width of its own name, and the rest split what is left.
+// The whole life of the issue as one thin bar: a share per status, sized by the total
+// time spent in it (repeat visits merged), with the names, the figures and the lifecycle
+// metrics in the row under it, in the project's own order. A completed status is not
+// scaled: it takes a short fixed width, and the rest split what is left.
 
 export default function IssueTimelineCompact({
   issueId,
@@ -33,7 +33,7 @@ export default function IssueTimelineCompact({
 
   return (
     <div>
-      <div className="flex h-8 gap-0.5">
+      <div className="flex h-2 gap-0.5 overflow-hidden rounded-sm">
         {ordered.map((lane) => (
           <IssueTimelineShare
             key={lane.label}
@@ -46,7 +46,7 @@ export default function IssueTimelineCompact({
         ))}
       </div>
 
-      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-x-5 gap-y-2 text-xs text-muted-foreground">
+      <div className="mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-1.5 text-xs text-muted-foreground">
         {ordered.map((lane) => {
           const duration = durationLabel(lane.totalMs);
           return (

@@ -144,12 +144,19 @@
     "applyTemplate": "Applica modello…",
     "noTemplates": "Nessun modello."
   },
+  "addBar": {
+    "subtask": "Sotto-task",
+    "checklist": "Checklist",
+    "link": "Collega issue",
+    "doc": "Documento",
+    "file": "File",
+    "development": "Branch o PR",
+    "worklog": "Registra tempo"
+  },
   "attachments": {
     "title": "Allegati",
     "add": "Aggiungi",
     "uploading": "Caricamento…",
-    "empty": "Nessun allegato.",
-    "emptyHint": "Rilascia i file qui, oppure usa Aggiungi per caricarli.",
     "dropToUpload": "Rilascia i file per caricarli",
     "uploadFailed": "Caricamento non riuscito",
     "uploadFailedCount": "{count, plural, one {Non è stato possibile caricare il file} other {Non è stato possibile caricare # file}}",
@@ -177,8 +184,6 @@
   },
   "checklists": {
     "title": "Checklist",
-    "empty": "Nessuna checklist.",
-    "emptyHint": "Usa Aggiungi per tracciare piccoli step senza creare sotto-task.",
     "titlePlaceholder": "Titolo checklist…",
     "addItem": "Aggiungi un elemento…",
     "dragToReorder": "Trascina per riordinare",
@@ -188,8 +193,6 @@
   },
   "worklog": {
     "title": "Tempo registrato",
-    "empty": "Nessun tempo registrato.",
-    "emptyHint": "Usa Aggiungi per registrare il tempo passato su questa issue.",
     "time": "Tempo trascorso",
     "timePlaceholder": "1h 30m",
     "note": "Nota",
@@ -200,7 +203,6 @@
   "links": {
     "title": "Link",
     "remove": "Rimuovi il link a {issue}",
-    "emptyHint": "Usa Aggiungi per collegare un'issue che blocca, duplica o riguarda questa.",
     "newIssue": "Nuova issue"
   },
   "linkDialog": {
@@ -215,8 +217,6 @@
     "parent": "Genitore",
     "newSubtask": "Nuovo sotto-task",
     "addExisting": "Aggiungi un'issue esistente come sotto-task",
-    "empty": "Nessun sotto-task.",
-    "emptyHint": "Usa Aggiungi per scomporre questa issue in sotto-task.",
     "detach": "Scollega {subtask}",
     "detachFromParent": "Scollega da {parent}",
     "subtaskOf": "Sotto-task di {issue}",
@@ -388,7 +388,6 @@
     "unlink": "Scollega elemento di sviluppo",
     "branch": "Branch",
     "add": "Aggiungi",
-    "empty": "Collega un pull request esistente o creane uno da un branch",
     "linkExisting": "Collega esistente",
     "linkExistingDescription": "Scegli un pull request o merge request da un repository connesso.",
     "createPullRequest": "Crea pull request",
@@ -426,7 +425,6 @@
     "createdSuccess": "Pull request creato e collegato",
     "createFailed": "Non è stato possibile creare questo pull request",
     "draft": "Bozza",
-    "ready": "Pronto",
     "open": "Aperto",
     "merged": "Mergiato",
     "closed": "Chiuso",

@@ -144,12 +144,19 @@
     "applyTemplate": "اعمال قالب…",
     "noTemplates": "قالبی نیست."
   },
+  "addBar": {
+    "subtask": "زیرتسک",
+    "checklist": "چک‌لیست",
+    "link": "اتصال تسک",
+    "doc": "مستند",
+    "file": "فایل",
+    "development": "شاخه یا PR",
+    "worklog": "ثبت زمان"
+  },
   "attachments": {
     "title": "پیوست‌ها",
     "add": "افزودن",
     "uploading": "در حال بارگذاری…",
-    "empty": "هنوز پیوستی وجود ندارد.",
-    "emptyHint": "فایل‌ها را اینجا رها کنید، یا از افزودن برای بارگذاری استفاده کنید.",
     "dropToUpload": "فایل‌ها را برای بارگذاری رها کنید",
     "uploadFailed": "بارگذاری ناموفق بود",
     "uploadFailedCount": "{count, plural, one {فایل بارگذاری نشد} other {# فایل بارگذاری نشد}}",
@@ -177,8 +184,6 @@
   },
   "checklists": {
     "title": "چک‌لیست‌ها",
-    "empty": "هنوز چک‌لیستی وجود ندارد.",
-    "emptyHint": "از افزودن استفاده کنید تا مراحل کوچک را بدون ساخت زیرتسک پیگیری کنید.",
     "titlePlaceholder": "عنوان چک‌لیست…",
     "addItem": "افزودن آیتم…",
     "dragToReorder": "برای جابه‌جایی بکشید",
@@ -188,8 +193,6 @@
   },
   "worklog": {
     "title": "زمان ثبت‌شده",
-    "empty": "هنوز زمانی ثبت نشده است.",
-    "emptyHint": "از افزودن استفاده کنید تا زمان صرف‌شده روی این تسک را ثبت کنید.",
     "time": "زمان صرف‌شده",
     "timePlaceholder": "1h 30m",
     "note": "یادداشت",
@@ -200,7 +203,6 @@
   "links": {
     "title": "پیوندها",
     "remove": "حذف پیوند به {issue}",
-    "emptyHint": "از افزودن استفاده کنید تا تسکی را پیوند دهید که مانع، تکراری یا مرتبط با این یکی است.",
     "newIssue": "تسک جدید"
   },
   "linkDialog": {
@@ -215,8 +217,6 @@
     "parent": "والد",
     "newSubtask": "زیرتسک جدید",
     "addExisting": "افزودن یک تسک موجود به‌عنوان زیرتسک",
-    "empty": "هنوز زیرتسکی وجود ندارد.",
-    "emptyHint": "از افزودن استفاده کنید تا این تسک را به زیرتسک‌ها تقسیم کنید.",
     "detach": "جدا کردن {subtask}",
     "detachFromParent": "جدا کردن از {parent}",
     "subtaskOf": "زیرتسکِ {issue}",
@@ -388,7 +388,6 @@
     "unlink": "حذف اتصال مورد توسعه",
     "branch": "شاخه",
     "add": "افزودن",
-    "empty": "یک pull request موجود را متصل کنید یا از یک شاخه یکی بسازید",
     "linkExisting": "اتصال مورد موجود",
     "linkExistingDescription": "یک pull request یا merge request از یک مخزن متصل انتخاب کنید.",
     "createPullRequest": "ساخت pull request",
@@ -426,7 +425,6 @@
     "createdSuccess": "pull request ساخته و متصل شد",
     "createFailed": "ساخت این pull request ممکن نشد",
     "draft": "پیش‌نویس",
-    "ready": "آماده",
     "open": "باز",
     "merged": "Merge شده",
     "closed": "بسته",

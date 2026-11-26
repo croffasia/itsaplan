@@ -10,10 +10,12 @@ import { useTranslations } from 'next-intl';
 type Sortable = ReturnType<typeof useSortable>;
 
 // The title row of one checklist: its drag handle, the title edited in place, how
-// many of its items are done, and the control that deletes the whole list.
+// many of its items are done when the issue has more than one list, and the control
+// that deletes the whole list.
 export default function IssueChecklistHeader({
   checklist,
   canEdit,
+  showCount,
   attributes,
   listeners,
   onRename,
@@ -21,6 +23,8 @@ export default function IssueChecklistHeader({
 }: {
   checklist: Checklist;
   canEdit: boolean;
+  // With one checklist the section heading already counts its items.
+  showCount: boolean;
   attributes: Sortable['attributes'];
   listeners: Sortable['listeners'];
   onRename: (title: string) => void;
@@ -30,12 +34,12 @@ export default function IssueChecklistHeader({
   const done = checklist.items.filter((item) => item.done).length;
 
   return (
-    <div className="mb-1 flex items-center gap-2 px-1">
+    <div className="relative flex min-h-7 items-center gap-2">
       <IssueChecklistGrip
         canEdit={canEdit}
         attributes={attributes}
         listeners={listeners}
-        className="group-hover/list:text-muted-foreground"
+        className="-start-6 group-hover/list:opacity-100"
       />
 
       <IssueChecklistEditableText
@@ -43,11 +47,11 @@ export default function IssueChecklistHeader({
         maxLength={CHECKLIST_TITLE_MAX}
         readOnly={!canEdit}
         onCommit={onRename}
-        className="text-sm font-medium"
+        className="text-[13px] font-medium text-muted-foreground"
       />
 
-      {checklist.items.length > 0 && (
-        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+      {showCount && checklist.items.length > 0 && (
+        <span className="shrink-0 text-xs text-muted-foreground/70 tabular-nums">
           {done}/{checklist.items.length}
         </span>
       )}
@@ -56,7 +60,7 @@ export default function IssueChecklistHeader({
         <Button
           variant="ghost"
           size="icon"
-          className="size-6 shrink-0 opacity-0 group-hover/list:opacity-100 hover:text-destructive"
+          className="size-6 shrink-0 text-muted-foreground/70 opacity-0 group-hover/list:opacity-100 hover:text-destructive focus-visible:opacity-100 max-sm:opacity-100"
           aria-label={t('deleteChecklist', { title: checklist.title })}
           onClick={onDelete}
         >

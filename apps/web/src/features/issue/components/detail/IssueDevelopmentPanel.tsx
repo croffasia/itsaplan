@@ -1,14 +1,20 @@
-import { useState } from 'react';
 import type { DevelopmentLink, LinkedRepositoryIssue } from '@/lib/api/endpoints/git';
 import { usePersistedOpen } from '@/hooks/usePersistedOpen';
 import IssueDevelopmentAddMenu from './IssueDevelopmentAddMenu';
 import IssueDevelopmentCreateDialog from './IssueDevelopmentCreateDialog';
-import IssueDevelopmentLinkCard from './IssueDevelopmentLinkCard';
+import IssueDevelopmentLinkRow from './IssueDevelopmentLinkRow';
 import IssueDevelopmentLinkDialog from './IssueDevelopmentLinkDialog';
-import IssueDevelopmentRepositoryIssueCard from './IssueDevelopmentRepositoryIssueCard';
+import IssueDevelopmentRepositoryIssueRow from './IssueDevelopmentRepositoryIssueRow';
+import IssueSection from './IssueSection';
+import IssueSectionAddButton from './IssueSectionAddButton';
 import IssueSectionHeading from './IssueSectionHeading';
 import { useTranslations } from 'next-intl';
 
+export type IssueDevelopmentAdding = 'link' | 'create';
+
+// The pull requests, merge requests and the repository issue linked to the issue.
+// The section stays off the page while nothing is linked; the issue's add bar opens
+// the same two dialogs as the heading's menu.
 export default function IssueDevelopmentPanel({
   issueId,
   identifier,
@@ -17,6 +23,8 @@ export default function IssueDevelopmentPanel({
   repositoryIssue,
   canEdit,
   canManage,
+  adding,
+  onAddingChange,
 }: {
   issueId: number;
   identifier: string;
@@ -25,43 +33,56 @@ export default function IssueDevelopmentPanel({
   repositoryIssue: LinkedRepositoryIssue | null;
   canEdit: boolean;
   canManage: boolean;
+  // Which dialog is open. Held by the issue detail, whose add bar opens them too.
+  adding: IssueDevelopmentAdding | null;
+  onAddingChange: (adding: IssueDevelopmentAdding | null) => void;
 }) {
   const t = useTranslations('issue.development');
   const { open, toggle } = usePersistedOpen('issue-development-open');
-  const [linkOpen, setLinkOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
-  if (links.length === 0 && !repositoryIssue && !canManage) return null;
+  const dialogOpenChange = (mode: IssueDevelopmentAdding) => (next: boolean) =>
+    onAddingChange(next ? mode : null);
+
+  const dialogs = (
+    <>
+      <IssueDevelopmentLinkDialog
+        issueId={issueId}
+        open={adding === 'link'}
+        onOpenChange={dialogOpenChange('link')}
+      />
+      <IssueDevelopmentCreateDialog
+        issueId={issueId}
+        identifier={identifier}
+        issueTitle={issueTitle}
+        open={adding === 'create'}
+        onOpenChange={dialogOpenChange('create')}
+      />
+    </>
+  );
+
+  if (links.length === 0 && !repositoryIssue) return dialogs;
 
   return (
-    <div className={`mt-6 border-t pt-5 ${open ? '' : '-mb-2'}`}>
-      <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
-        <IssueSectionHeading
-          label={t('title')}
-          tally={String(links.length + (repositoryIssue ? 1 : 0))}
-          open={open}
-          onToggle={toggle}
-        />
-        {canManage && (
-          <IssueDevelopmentAddMenu
-            onLink={() => setLinkOpen(true)}
-            onCreate={() => setCreateOpen(true)}
-          />
-        )}
-      </div>
+    <IssueSection collapsed={!open}>
+      <IssueSectionHeading
+        label={t('title')}
+        tally={String(links.length + (repositoryIssue ? 1 : 0))}
+        open={open}
+        onToggle={toggle}
+        actions={
+          canManage && (
+            <IssueDevelopmentAddMenu
+              onLink={() => onAddingChange('link')}
+              onCreate={() => onAddingChange('create')}
+              trigger={<IssueSectionAddButton label={t('add')} />}
+            />
+          )
+        }
+      />
       {open && (
-        <div className="space-y-2">
-          {repositoryIssue && <IssueDevelopmentRepositoryIssueCard issue={repositoryIssue} />}
-          {links.length === 0 && (
-            <button
-              type="button"
-              className="w-full rounded-md border border-dashed px-4 py-5 text-center text-sm text-muted-foreground hover:border-border hover:bg-accent/50 hover:text-foreground"
-              onClick={() => setLinkOpen(true)}
-            >
-              {t('empty')}
-            </button>
-          )}
+        <div className="-mx-2 flex flex-col">
+          {repositoryIssue && <IssueDevelopmentRepositoryIssueRow issue={repositoryIssue} />}
           {links.map((link) => (
-            <IssueDevelopmentLinkCard
+            <IssueDevelopmentLinkRow
               key={link.id}
               issueId={issueId}
               link={link}
@@ -70,14 +91,7 @@ export default function IssueDevelopmentPanel({
           ))}
         </div>
       )}
-      <IssueDevelopmentLinkDialog issueId={issueId} open={linkOpen} onOpenChange={setLinkOpen} />
-      <IssueDevelopmentCreateDialog
-        issueId={issueId}
-        identifier={identifier}
-        issueTitle={issueTitle}
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-      />
-    </div>
+      {dialogs}
+    </IssueSection>
   );
 }

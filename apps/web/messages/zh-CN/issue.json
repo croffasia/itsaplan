@@ -144,12 +144,19 @@
     "applyTemplate": "套用模板…",
     "noTemplates": "没有模板。"
   },
+  "addBar": {
+    "subtask": "子任务",
+    "checklist": "检查清单",
+    "link": "关联工作项",
+    "doc": "文档",
+    "file": "文件",
+    "development": "分支或 PR",
+    "worklog": "记录工时"
+  },
   "attachments": {
     "title": "附件",
     "add": "添加",
     "uploading": "正在上传…",
-    "empty": "暂无附件。",
-    "emptyHint": "将文件拖到此处，或点击“添加”上传。",
     "dropToUpload": "松开以上传文件",
     "uploadFailed": "上传失败",
     "uploadFailedCount": "{count, plural, other {无法上传 # 个文件}}",
@@ -177,8 +184,6 @@
   },
   "checklists": {
     "title": "检查清单",
-    "empty": "暂无检查清单。",
-    "emptyHint": "点击“添加”跟踪简单步骤，无需创建子任务。",
     "titlePlaceholder": "检查清单标题…",
     "addItem": "添加清单项…",
     "dragToReorder": "拖动以重新排序",
@@ -188,8 +193,6 @@
   },
   "worklog": {
     "title": "已记录工时",
-    "empty": "尚未记录工时。",
-    "emptyHint": "点击“添加”记录你在该事项上花费的时间。",
     "time": "花费时间",
     "timePlaceholder": "1h 30m",
     "note": "备注",
@@ -200,7 +203,6 @@
   "links": {
     "title": "关联",
     "remove": "移除与 {issue} 的关联",
-    "emptyHint": "点击“添加”，关联阻塞、重复或相关的工作项。",
     "newIssue": "新建工作项"
   },
   "linkDialog": {
@@ -215,8 +217,6 @@
     "parent": "父工作项",
     "newSubtask": "新建子任务",
     "addExisting": "将现有工作项添加为子任务",
-    "empty": "暂无子任务。",
-    "emptyHint": "点击“添加”将此工作项拆分为子任务。",
     "detach": "分离 {subtask}",
     "detachFromParent": "从 {parent} 分离",
     "subtaskOf": "{issue} 的子任务",
@@ -388,7 +388,6 @@
     "unlink": "取消关联开发项",
     "branch": "分支",
     "add": "添加",
-    "empty": "关联现有拉取请求，或从分支创建一个",
     "linkExisting": "关联现有请求",
     "linkExistingDescription": "从已连接的仓库中选择拉取请求或合并请求。",
     "createPullRequest": "创建拉取请求",
@@ -426,7 +425,6 @@
     "createdSuccess": "拉取请求已创建并关联",
     "createFailed": "无法创建此拉取请求",
     "draft": "草稿",
-    "ready": "可合并",
     "open": "打开",
     "merged": "已合并",
     "closed": "已关闭",

@@ -188,6 +188,29 @@ describe('agent runner queue', () => {
     expect(history.data!.items[0].output).toBe('a😀');
   });
 
+  it('saves an output and an error that carry a NUL character, which text cannot hold', async () => {
+    const { asOwner, asRunner, agent, columnId } = await setup();
+    await queueRun(asOwner, columnId, agent.username);
+    const run = (await asRunner['agent-runs'].claim.post()).data!.run!;
+
+    const res = await asRunner['agent-runs']({ runId: run.id }).result.post({
+      status: 'failed',
+      output: 'cat image.png\n\u0000PNG',
+      error: 'exit\u00001',
+    });
+
+    expect(res.status).toBe(204);
+    const history = await asOwner
+      .teams({ teamId: await teamOf(asOwner, 'MKT') })
+      ['ai-agents']({ agentId: agent.id })
+      .runs.get({ query: {} });
+    expect(history.data!.items[0]).toMatchObject({
+      status: 'failed',
+      output: 'cat image.png\n\uFFFDPNG',
+      lastError: 'exit\uFFFD1',
+    });
+  });
+
   it('saves an output whole when the answer limit is 0', async () => {
     const { asOwner, asRunner, agent, columnId } = await setup();
     await asOwner.god['agent-settings'].put({ maxAnswerChars: 0 });

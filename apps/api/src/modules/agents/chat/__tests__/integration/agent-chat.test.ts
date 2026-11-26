@@ -130,6 +130,25 @@ describe('external agent chat', () => {
     expect(second.prompt).toContain('And the launch date?');
   });
 
+  it('keeps an answer and an error that carry a NUL character, which text cannot hold', async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    const first = await send(asOwner, agent.id, 'What is in the file?');
+    const answer = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    const events = await asRunner['agent-chats']({ messageId: answer.id }).events.post({
+      events: [{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'Bytes \u0000 and text.' }],
+    });
+    expect(events.status).toBe(200);
+    const result = await asRunner['agent-chats']({ messageId: answer.id }).result.post({
+      status: 'failed',
+      error: 'exit\u00001',
+    });
+    expect(result.status).toBe(204);
+
+    await send(asOwner, agent.id, 'Thanks.', first.data!.threadId);
+    const second = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    expect(second.prompt).toContain('Bytes \uFFFD and text.');
+  });
+
   it('keeps the start of an answer up to the instance answer limit', async () => {
     const { asOwner, asRunner, agent } = await setup();
     await asOwner.god['agent-settings'].put({ maxAnswerChars: 5 });

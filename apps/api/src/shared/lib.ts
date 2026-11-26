@@ -63,6 +63,21 @@ export function likePattern(term: string): string {
   return `%${term.replace(/([\\%_])/g, '\\$1')}%`;
 }
 
+// Postgres holds no NUL character, in text (22021) or in jsonb (22P05). A runner forwards
+// what its command printed, and a NUL from a binary file or a terminal would fail the
+// write on every retry of the batch. Each one becomes U+FFFD, in any string or object
+// key at any depth.
+export function withoutNul<T>(value: T): T {
+  if (typeof value === 'string') return value.replaceAll('\u0000', '\uFFFD') as T;
+  if (Array.isArray(value)) return value.map(withoutNul) as T;
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [withoutNul(key), withoutNul(item)]),
+    ) as T;
+  }
+  return value;
+}
+
 // The Postgres SQLSTATE of a driver error. Drizzle wraps the driver error in a
 // DrizzleQueryError with the original as `.cause`, so the code may be one level
 // down; unwrap the cause chain to find it.

@@ -1,5 +1,22 @@
 import { describe, it, expect } from 'bun:test';
-import { HttpError, iso, num, pgErrorCode, rethrowDuplicate } from '../../lib';
+import { HttpError, iso, num, pgErrorCode, rethrowDuplicate, withoutNul } from '../../lib';
+
+describe('withoutNul', () => {
+  it('replaces every NUL in strings and keys at any depth, and leaves the rest as it is', () => {
+    const value: unknown = {
+      type: 'TOOL_CALL_RESULT',
+      content: 'a\u0000b\u0000',
+      nested: [{ 'k\u0000': ['\u0000'] }, 7, true, null],
+    };
+    expect(withoutNul(value)).toEqual({
+      type: 'TOOL_CALL_RESULT',
+      content: 'a\uFFFDb\uFFFD',
+      nested: [{ 'k\uFFFD': ['\uFFFD'] }, 7, true, null],
+    });
+    expect(withoutNul('clean')).toBe('clean');
+    expect(withoutNul(undefined)).toBeUndefined();
+  });
+});
 
 describe('HttpError', () => {
   it('carries a status and message and is an Error', () => {

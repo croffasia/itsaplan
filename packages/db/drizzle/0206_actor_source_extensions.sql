@@ -1,0 +1,1 @@
+ALTER TABLE "issue_activity" DROP CONSTRAINT "issue_activity_actor_source_check";

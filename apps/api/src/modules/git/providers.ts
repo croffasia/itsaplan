@@ -22,11 +22,42 @@ export interface DeliveryOrigin {
   sender: string | null;
 }
 
-// An activity entry's actor as one line of text, for places that show no host icon:
+// A source of activity entries an extension of the api adds, such as a public form: its key
+// in `issue_activity.actor_source`, and its name in text that shows no icon.
+export interface ActorSourceDefinition {
+  key: string;
+  label: string;
+}
+
+let extensionSources: ActorSourceDefinition[] = [];
+
+// Replaces the sources an extension adds. An entry of a source taken away keeps it, and shows
+// its author's name alone. A key a repository host or another source has throws.
+export function setActorSources(next: ActorSourceDefinition[] = []): void {
+  const taken = new Set<string>(GIT_PROVIDER_KEYS);
+  for (const one of next) {
+    if (taken.has(one.key)) throw new Error(`Actor source '${one.key}' is taken`);
+    taken.add(one.key);
+  }
+  extensionSources = next;
+}
+
+function sourceLabel(source: string): string | undefined {
+  return (
+    PROVIDER_LABEL[source as GitProviderKey] ??
+    extensionSources.find((one) => one.key === source)?.label
+  );
+}
+
+export function isActorSource(source: string): boolean {
+  return sourceLabel(source) !== undefined;
+}
+
+// An activity entry's actor as one line of text, for places that show no source icon:
 // "octocat (GitHub)".
 export function actorText(name: string | null, source: string | null): string | null {
-  const host = source ? PROVIDER_LABEL[source as GitProviderKey] : undefined;
-  return name && host && name !== host ? `${name} (${host})` : name;
+  const where = source ? sourceLabel(source) : undefined;
+  return name && where && name !== where ? `${name} (${where})` : name;
 }
 
 // The activity actor for an account on the host, or the host itself when there is none.

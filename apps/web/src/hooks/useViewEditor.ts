@@ -11,7 +11,13 @@ import {
   useReorderViews,
   useUpdateView,
 } from '@/services/views.service';
-import { EMPTY_FILTER_SET, isActiveFilterSet, type FilterSet } from '@/utils/filters';
+import {
+  EMPTY_FILTER_SET,
+  isActiveFilterSet,
+  toFilterSet,
+  withExistingFields,
+  type FilterSet,
+} from '@/utils/filters';
 import {
   defaultViewSettings,
   getViewSettings,
@@ -35,6 +41,43 @@ function loadView(): WorkItemsView {
     : 'kanban';
 }
 
+// The ad-hoc filters of every tab, stored per project: the All tab's under `all`, a
+// saved view's under its id.
+const FILTERS_KEY = 'planner_view_filters';
+
+type FiltersStore = Record<string, Record<string, unknown>>;
+
+function readFiltersStore(): FiltersStore {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(FILTERS_KEY) ?? 'null');
+    return parsed && typeof parsed === 'object' ? (parsed as FiltersStore) : {};
+  } catch {
+    return {};
+  }
+}
+
+function tabKey(viewId: number | null): string {
+  return viewId == null ? 'all' : String(viewId);
+}
+
+function loadFilters(projectKey: string | null, viewId: number | null): FilterSet {
+  if (!projectKey) return EMPTY_FILTER_SET;
+  return toFilterSet(readFiltersStore()[projectKey]?.[tabKey(viewId)]);
+}
+
+function storeFilters(projectKey: string, viewId: number | null, filters: FilterSet) {
+  const store = readFiltersStore();
+  const tabs = { ...store[projectKey] };
+  if (filters.conditions.length > 0) tabs[tabKey(viewId)] = filters;
+  else delete tabs[tabKey(viewId)];
+  store[projectKey] = tabs;
+  try {
+    localStorage.setItem(FILTERS_KEY, JSON.stringify(store));
+  } catch {
+    // Storage unavailable (private mode / quota): the filters still apply.
+  }
+}
+
 // The conditions of a saved view followed by the ad-hoc ones, re-keyed so the two
 // sources cannot collide on a condition id.
 function mergeFilters(base: FilterSet | null | undefined, extra: FilterSet): FilterSet {
@@ -56,24 +99,30 @@ function toDisplay(view: WorkItemsView, settings: ViewSettings): SavedViewDispla
 // controlled: it comes from the caller (the route param) and selecting a view
 // calls onSelectView to navigate. This hook owns the live layout, its display
 // settings, the live filter set and the inline edit-bar state, and loads the
-// selection's display whenever the active view (or project) changes.
+// selection's display and stored filters whenever the active view (or project)
+// changes.
 //
-// Filters and display settings are live, transient state: changing them filters
-// the current screen and never writes to a saved view. On the All tab the layout
-// and its settings also persist to localStorage as the ad-hoc default. A view is
-// written only from the edit bar, which is opened explicitly by Edit view (update
-// the active view) or New view (create one from the live state).
+// Filters and display settings are live state: changing them filters the current
+// screen and never writes to a saved view. The ad-hoc filters persist to
+// localStorage per tab (the All tab and each saved view), so a tab opens with the
+// filters it had last. On the All tab the layout and its settings also persist there
+// as the ad-hoc default. A view is written only from the edit bar, which is opened
+// explicitly by Edit view (update the active view) or New view (create one from the
+// live state).
 //
 // `filters` holds only the ad-hoc conditions. A saved view's own conditions are
 // not shown in the filter row: they are part of the view and are merged in behind
 // it (see effectiveFilters). Edit view folds them into `filters` so they can be
 // changed, and Save writes that set back to the view.
+//
+// `customFields` are the project's custom fields, or null until they are known.
 export function useViewEditor(
   projectKey: string | null,
   views: View[],
   activeViewId: number | null,
   onSelectView: (id: number | null) => void,
   keepsPrivateViews: boolean,
+  customFields: readonly { id: number }[] | null = null,
 ) {
   const [view, setView] = useState<WorkItemsView>(loadView);
   const [settings, setSettings] = useState<ViewSettings>(() => defaultViewSettings(loadView()));
@@ -109,13 +158,13 @@ export function useViewEditor(
     [editing, filters, activeView],
   );
 
-  // Load the live layout/settings for a selection and drop the ad-hoc filters: the
+  // Load the live layout/settings and the stored ad-hoc filters of a selection: the
   // All tab restores the persisted global layout and its stored settings; a saved
   // view uses its own stored display. forEdit loads the view's own conditions into
-  // the filter row, for the edit bar to change them.
+  // the filter row ahead of the stored ones, for the edit bar to change them.
   function loadSelection(id: number | null, forEdit = false) {
     if (id == null) {
-      setFilters(EMPTY_FILTER_SET);
+      setFilters(loadFilters(projectKey, null));
       const allView = loadView();
       setView(allView);
       if (projectKey) setSettings(getViewSettings(projectKey, allView));
@@ -123,7 +172,8 @@ export function useViewEditor(
     }
     const v = views.find((x) => x.id === id);
     if (!v) return;
-    setFilters(forEdit ? mergeFilters(v.filters, EMPTY_FILTER_SET) : EMPTY_FILTER_SET);
+    const stored = loadFilters(projectKey, id);
+    setFilters(forEdit ? mergeFilters(v.filters, stored) : stored);
     setView(v.display.layout);
     const { layout: _layout, ...s } = v.display;
     setSettings(s);
@@ -150,6 +200,13 @@ export function useViewEditor(
     openEditNext.current = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectKey, activeViewId, views]);
+
+  // A stored condition on a custom field deleted since is dropped once the project's
+  // fields are known, whichever of the two arrives first. The updater runs after a
+  // selection loaded in the same commit; the stored entry loses it on the next change.
+  useEffect(() => {
+    if (customFields) setFilters((current) => withExistingFields(current, customFields));
+  }, [customFields, filters]);
 
   // Enters edit mode, seeding the name and icon inputs from the given view (or
   // blank for a new/All-tab draft).
@@ -195,6 +252,13 @@ export function useViewEditor(
     if (activeViewId == null && !editing && projectKey) setViewSettings(projectKey, view, next);
   }
 
+  // Not stored while editing: the row is then the draft of a view, live until Save or
+  // Cancel.
+  function changeFilters(next: FilterSet) {
+    setFilters(next);
+    if (!editing && projectKey) storeFilters(projectKey, activeViewId, next);
+  }
+
   function toggleFilters() {
     setFiltersOpen((open) => !open);
   }
@@ -208,7 +272,8 @@ export function useViewEditor(
   // Update the current saved view (also applying any rename), or create a new
   // view from the draft when there is no active view and select it. The edited
   // conditions become the view's own, so the filter row is emptied: they now apply
-  // through the view.
+  // through the view. An update also clears the view's stored ad-hoc filters, which
+  // the edit row held and the view now carries.
   async function saveEdits() {
     if (!projectKey) return;
     const name = draftName.trim();
@@ -218,6 +283,7 @@ export function useViewEditor(
         id: activeView.id,
         input: { name: name || activeView.name, icon: draftIcon, filters, display },
       });
+      storeFilters(projectKey, activeView.id, EMPTY_FILTER_SET);
       setFilters(EMPTY_FILTER_SET);
       setEditing(false);
     } else {
@@ -316,7 +382,7 @@ export function useViewEditor(
     beginNewView,
     changeView,
     changeSettings,
-    changeFilters: setFilters,
+    changeFilters,
     toggleFilters,
     // Selecting a saved view (or the All tab when id is null) navigates; the load
     // effect then applies its display and leaves edit mode.

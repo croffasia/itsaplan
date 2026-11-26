@@ -63,6 +63,7 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
     activeViewId,
     (id) => projectKey && router.push(viewPath(projectKey, id)),
     isMember && can('views', 'read'),
+    scaffold?.customFields ?? null,
   );
 
   // An address naming a view the caller cannot see (deleted, or someone else's

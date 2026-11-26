@@ -12,7 +12,7 @@ import FilterBar from '@/components/layout/FilterBar';
 import DisplayPopover from '@/components/layout/DisplayPopover';
 import BoardLayout from '@/features/work-items/components/BoardLayout';
 
-// Where this board's layout and display settings are kept, per cycle.
+// Where this board's layout, display settings and filters are kept, per cycle.
 const CYCLE_BOARD_STORE_KEY = 'planner_cycle_board_settings';
 
 // The cycle's issues rendered as the work items board (kanban/table/timeline/
@@ -23,7 +23,11 @@ const CYCLE_BOARD_STORE_KEY = 'planner_cycle_board_settings';
 export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
   const { project, customFields, onOpenIssue, onAddIssue } = useShell();
   const cycleId = cycle.id;
-  const board = useLocalBoardSettings(CYCLE_BOARD_STORE_KEY, cycleId);
+  const board = useLocalBoardSettings(
+    CYCLE_BOARD_STORE_KEY,
+    cycleId,
+    project ? customFields : null,
+  );
   const initiativeOptions = useInitiativeOptionsQuery(project?.project.ref ?? null).data ?? [];
 
   const viewProject = useMemo(() => {
@@ -61,7 +65,7 @@ export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
       <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
         <FilterBar
           filters={board.filters}
-          onChange={board.setFilters}
+          onChange={board.changeFilters}
           project={project}
           customFields={customFields}
         />

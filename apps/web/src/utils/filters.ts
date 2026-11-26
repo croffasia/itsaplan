@@ -7,6 +7,8 @@ import type { StateType } from '@/lib/api/endpoints/columns';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue } from '@/lib/api/endpoints/issues';
 import { dayKey } from '@/utils/dates';
+import { BUILTIN_FILTER_FIELDS, OPERATORS_BY_KIND } from '@/utils/filterFields';
+import { isCustomFieldKey } from '@/utils/viewSettings';
 
 // The built-in fields a condition can target. Custom fields are targeted with
 // the string `cf:<fieldId>` (see customFieldKey / parseCustomFieldKey).
@@ -81,6 +83,47 @@ export function isActiveFilterSet(filters: FilterSet | null | undefined): boolea
 export function isEffectiveCondition(cond: FilterCondition): boolean {
   if (cond.op === 'is_set' || cond.op === 'is_not_set') return true;
   return Array.isArray(cond.values) && cond.values.length > 0;
+}
+
+const BUILTIN_FIELDS = new Set<unknown>(BUILTIN_FILTER_FIELDS);
+const OPERATORS = new Set<unknown>(Object.values(OPERATORS_BY_KIND).flat());
+
+function isFilterValue(value: unknown): value is FilterValue {
+  return value === null || ['string', 'number', 'boolean'].includes(typeof value);
+}
+
+function isFilterCondition(value: unknown): value is FilterCondition {
+  const c = value as Partial<Record<keyof FilterCondition, unknown>> | null;
+  return (
+    typeof c?.id === 'string' &&
+    typeof c.field === 'string' &&
+    (BUILTIN_FIELDS.has(c.field) || isCustomFieldKey(c.field)) &&
+    OPERATORS.has(c.op) &&
+    Array.isArray(c.values) &&
+    c.values.every(isFilterValue)
+  );
+}
+
+// A filter set read back from browser storage, which an older version or a hand edit
+// may have left in any shape. A condition the filter bar or the matching could not
+// read is dropped; anything that is not a set reads as no filter.
+export function toFilterSet(raw: unknown): FilterSet {
+  const conditions = (raw as { conditions?: unknown } | null | undefined)?.conditions;
+  return Array.isArray(conditions)
+    ? { conditions: conditions.filter(isFilterCondition) }
+    : EMPTY_FILTER_SET;
+}
+
+// The set without its conditions on a custom field missing from `fields`. A stored
+// condition outlives a field deleted since: it would match no issue, and the filter
+// bar has no pill to remove it from. The same set comes back when nothing is dropped.
+export function withExistingFields(set: FilterSet, fields: readonly { id: number }[]): FilterSet {
+  const ids = new Set(fields.map((f) => f.id));
+  const kept = set.conditions.filter((c) => {
+    const id = parseCustomFieldKey(c.field);
+    return id == null || ids.has(id);
+  });
+  return kept.length === set.conditions.length ? set : { conditions: kept };
 }
 
 // Normalizes any date the store returns to a "YYYY-MM-DD" day for comparison:

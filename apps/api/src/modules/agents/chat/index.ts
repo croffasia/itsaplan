@@ -5,7 +5,7 @@ import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
 import { requireUser } from '#shared/access';
 import { noContent, sseFrame, sseResponse } from '#shared/http';
-import { HttpError } from '#shared/lib';
+import { HttpError, withoutNul } from '#shared/lib';
 import { commonErrors, errors } from '#shared/responses';
 import { assertChatEnabled, getAgentInProject, isTriggerableBy } from '../core/service';
 import { runnerAuth } from '../runner-auth';
@@ -189,7 +189,8 @@ export const agentChatRoutes = new Elysia({ name: 'agent-chat', detail: { tags: 
 
   .post(
     '/agent-chats/:messageId/events',
-    async ({ agent, params, body }) => {
+    async ({ agent, params, body: raw }) => {
+      const body = withoutNul(raw);
       const ack = await appendEvents(agent.id, params.messageId, body.events);
       if (!ack) throw new HttpError(404, 'Message not found');
       if (body.sessionId) await setThreadSession(agent.id, params.messageId, body.sessionId);
@@ -235,7 +236,7 @@ export const agentChatRoutes = new Elysia({ name: 'agent-chat', detail: { tags: 
   .post(
     '/agent-chats/:messageId/result',
     async ({ agent, params, body }) => {
-      const ok = await finishMessage(agent.id, params.messageId, body);
+      const ok = await finishMessage(agent.id, params.messageId, withoutNul(body));
       if (!ok) throw new HttpError(404, 'Message not found');
       return noContent();
     },

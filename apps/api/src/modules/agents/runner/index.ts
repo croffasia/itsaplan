@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia';
 import { noContent } from '#shared/http';
-import { HttpError } from '#shared/lib';
+import { HttpError, withoutNul } from '#shared/lib';
 import { commonErrors, errors } from '#shared/responses';
 import { runnerAuth } from '../runner-auth';
 import {
@@ -59,7 +59,7 @@ export const agentRunnerRoutes = new Elysia({
 
   .post(
     '/agent-runs/:runId/events',
-    ({ agent, params, body }) => appendRunEvents(agent.id, params.runId, body),
+    ({ agent, params, body }) => appendRunEvents(agent.id, params.runId, withoutNul(body)),
     {
       runnerAgent: true,
       params: runParams,
@@ -78,7 +78,7 @@ export const agentRunnerRoutes = new Elysia({
   .post(
     '/agent-runs/:runId/result',
     async ({ agent, params, body }) => {
-      const ok = await finishRun(agent, params.runId, body);
+      const ok = await finishRun(agent, params.runId, withoutNul(body));
       if (!ok) throw new HttpError(404, 'Run not found');
       return noContent();
     },

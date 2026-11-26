@@ -128,6 +128,29 @@ describe('external run events', () => {
     expect((await api['agent-runs']({ runId: run.id }).trace.get()).data).toEqual(trace);
   }, 20_000);
 
+  it('stores events that carry a NUL character, which a jsonb column cannot hold', async () => {
+    const { api, runner, run } = await setup();
+    const route = runner['agent-runs']({ runId: run.id }).events;
+    const output = {
+      type: 'TOOL_CALL_RESULT' as const,
+      toolCallId: 'tool-1',
+      messageId: 'm',
+      content: 'header\u0000binary\u0000tail',
+    };
+    const first = await route.post({ attempt: 1, offset: 0, events: [output], sessionId });
+    expect(first.data).toEqual({ nextOffset: 1, truncated: false, canceled: false });
+    expect((await route.post({ attempt: 1, offset: 1, events })).data).toEqual({
+      nextOffset: 4,
+      truncated: false,
+      canceled: false,
+    });
+    const trace = (await api['agent-runs']({ runId: run.id }).trace.get()).data!;
+    expect(trace.events.map((e) => e.event)).toEqual([
+      { ...output, content: 'header\uFFFDbinary\uFFFDtail' },
+      ...events,
+    ]);
+  }, 20_000);
+
   it('acknowledges overlapping batches after truncation without storing more events', async () => {
     const { api, runner, run } = await setup();
     const route = runner['agent-runs']({ runId: run.id }).events;

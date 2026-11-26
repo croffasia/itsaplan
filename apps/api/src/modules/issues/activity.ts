@@ -13,6 +13,7 @@ import {
 } from '@repo/db';
 import { and, asc, desc, eq, gte, inArray, isNull, lt, ne, sql } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
+import type { GitProviderKey } from '#modules/git/providers';
 import { emitCommentEvent } from './webhook-payload';
 import { addedMentionHandles, parseMentionHandles, resolveMentionHandles } from '#shared/mentions';
 import { mentionReach, queueMentionRuns } from '#modules/mentions/service';
@@ -42,6 +43,7 @@ export interface FeedItemRow {
   replyToId: number | null;
   actorUserId: string | null;
   actorName: string | null;
+  actorSource: ActorSource | null;
   body: string | null;
   action: string | null;
   payload: ActivityPayload;
@@ -73,6 +75,7 @@ function mapFeedItem(row: {
   replyToId: number | null;
   actorUserId: string | null;
   actorName: string | null;
+  actorSource: string | null;
   body: string | null;
   action: string | null;
   payload: ActivityPayload;
@@ -86,6 +89,7 @@ function mapFeedItem(row: {
     replyToId: row.replyToId,
     actorUserId: row.actorUserId,
     actorName: row.actorName,
+    actorSource: row.actorSource as ActorSource | null,
     body: row.body,
     action: row.action,
     payload: row.payload,
@@ -149,6 +153,7 @@ export async function listFeed(issueId: number, opts: FeedPageOptions = {}): Pro
       replyToId: issueActivity.replyToId,
       actorUserId: issueActivity.actorUserId,
       actorName: issueActivity.actorName,
+      actorSource: issueActivity.actorSource,
       body: issueActivity.body,
       action: issueActivity.action,
       payload: issueActivity.payload,
@@ -341,6 +346,8 @@ export async function createComment(input: {
   // The name of an author without an account, such as someone writing in through a
   // build's public page. Their mentions reach nobody: they are not in the team.
   authorName?: string;
+  // The repository host the comment was written on, by authorName.
+  authorSource?: ActorSource;
 }): Promise<FeedItemRow> {
   const actorUserId = input.actorUserId ?? null;
   const actorName = input.authorName ?? (await userName(actorUserId));
@@ -361,6 +368,7 @@ export async function createComment(input: {
       replyToId,
       actorUserId,
       actorName,
+      actorSource: input.authorSource ?? null,
       body: input.body,
     })
     .returning();
@@ -541,11 +549,14 @@ export interface ActivityInput extends ActivityPayload {
   action: string;
 }
 
+// The repository host behind an entry written for an account there.
+export type ActorSource = GitProviderKey;
+
 // The actor behind a write: the session user's id (a member or an agent's bot
 // user), null/undefined for an anonymous system write, or a named system actor
-// ({ system: 'GitHub' }) whose name is stored as the entry's actor_name without a
-// user behind it.
-export type ActivityActor = string | null | undefined | { system: string };
+// ({ system: 'Auto-archive' }) whose name is stored as the entry's actor_name without
+// a user behind it. A repository account also names its host as `source`.
+export type ActivityActor = string | null | undefined | { system: string; source?: ActorSource };
 
 // The user id of an actor, or null when it is a system write.
 export function actorId(actor: ActivityActor): string | null {
@@ -599,6 +610,7 @@ export async function recordActivityEntries(
 ): Promise<{ id: number; action: string | null }[]> {
   if (!entries.length) return [];
   const resolvedActorId = actorId(actor);
+  const actorSource = actor && typeof actor === 'object' ? (actor.source ?? null) : null;
   const actorName =
     actor && typeof actor === 'object'
       ? actor.system
@@ -615,6 +627,7 @@ export async function recordActivityEntries(
         kind: 'activity' as const,
         actorUserId: resolvedActorId,
         actorName,
+        actorSource,
         action,
         payload,
       })),

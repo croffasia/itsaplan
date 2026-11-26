@@ -19,13 +19,20 @@ import {
 import { createComment, type ActivityActor } from '#modules/issues/activity';
 import { getProjectById, type ProjectRow } from '#modules/projects/service';
 import {
-  PROVIDER_LABEL,
   listProviderOpenIssues,
   setProviderIssueState,
   type GitProvider,
 } from './connections-provider';
 import { providerCallArgs, providerCallColumns } from './connections-service';
-import type { GitProviderKey, IssueCommentEvent, IssueEvent, IssueSnapshot } from './providers';
+import {
+  PROVIDER_LABEL,
+  hostActor,
+  type DeliveryOrigin,
+  type GitProviderKey,
+  type IssueCommentEvent,
+  type IssueEvent,
+  type IssueSnapshot,
+} from './providers';
 import { columnStateTypes, firstColumnId, gitIntegrationEnabled } from './service';
 
 // Issue sync between a connected repository and its project. In both modes a new
@@ -98,10 +105,6 @@ async function syncedRepository(
   return row ? synced(row) : null;
 }
 
-function authorName(author: string | null, providerLabel: string): string {
-  return author ? `${author} (${providerLabel})` : providerLabel;
-}
-
 async function intakeColumnId(repository: SyncedRepository): Promise<number> {
   const columnId = repository.issueColumnId ?? (await firstColumnId(repository.projectId));
   if (columnId == null) throw new HttpError(400, 'The project has no columns');
@@ -168,7 +171,7 @@ async function createLinkedIssue(
   project: ProjectRow,
   repository: SyncedRepository,
   snapshot: IssueSnapshot,
-  providerLabel: string,
+  origin: Pick<DeliveryOrigin, 'key' | 'label'>,
   opts?: { skipStatusRuns?: boolean },
 ): Promise<boolean> {
   const claimId = await claimIssueLink(repository.id, snapshot);
@@ -184,7 +187,7 @@ async function createLinkedIssue(
         labelIds: mapped.labelIds,
         ...(mapped.typeId != null ? { typeId: mapped.typeId } : {}),
       },
-      { system: authorName(snapshot.author, providerLabel) },
+      hostActor(snapshot.author, origin),
       { skipWipLimit: true, skipStatusRuns: opts?.skipStatusRuns },
     );
     await db.update(gitIssueLink).set({ issueId: created.id }).where(eq(gitIssueLink.id, claimId));
@@ -252,7 +255,7 @@ async function applyLabels(
 async function applyIssueChange(
   repository: SyncedRepository,
   event: IssueEvent,
-  providerLabel: string,
+  origin: DeliveryOrigin,
 ): Promise<boolean> {
   const link = await linkedIssue(repository, event.number);
   if (!link) return false;
@@ -264,7 +267,7 @@ async function applyIssueChange(
   const changed = new Set(event.changed);
   const current = await getIssue(link.issueId);
   if (!current || current.archivedAt) return false;
-  const actor: ActivityActor = { system: providerLabel };
+  const actor: ActivityActor = hostActor(origin.sender, origin);
   const patch: IssuePatch = {};
   if (changed.has('title') && event.title && event.title !== current.title)
     patch.title = event.title;
@@ -284,34 +287,34 @@ async function applyIssueChange(
 
 export async function handleIssueEvent(
   project: ProjectRow,
-  providerKey: GitProviderKey,
-  providerLabel: string,
+  origin: DeliveryOrigin,
   event: IssueEvent,
 ): Promise<'issue' | 'ignored'> {
-  const repository = await syncedRepository(project.id, providerKey, event.repo);
+  const repository = await syncedRepository(project.id, origin.key, event.repo);
   if (!repository) return 'ignored';
   if (event.action === 'opened') {
-    await createLinkedIssue(project, repository, event, providerLabel);
+    await createLinkedIssue(project, repository, event, origin);
     return 'issue';
   }
   if (repository.issueSync !== 'two_way') return 'ignored';
-  return (await applyIssueChange(repository, event, providerLabel)) ? 'issue' : 'ignored';
+  return (await applyIssueChange(repository, event, origin)) ? 'issue' : 'ignored';
 }
 
 export async function handleIssueComment(
   project: ProjectRow,
-  providerKey: GitProviderKey,
-  providerLabel: string,
+  origin: DeliveryOrigin,
   event: IssueCommentEvent,
 ): Promise<'comment' | 'ignored'> {
-  const repository = await syncedRepository(project.id, providerKey, event.repo);
+  const repository = await syncedRepository(project.id, origin.key, event.repo);
   if (!repository?.issueComments) return 'ignored';
   const link = await linkedIssue(repository, event.number);
   if (!link) return 'ignored';
+  const author = hostActor(event.author, origin);
   await createComment({
     issueId: link.issueId,
     body: event.body,
-    authorName: authorName(event.author, providerLabel),
+    authorName: author.system,
+    authorSource: author.source,
   });
   return 'comment';
 }
@@ -344,12 +347,12 @@ export async function importRepositoryIssues(
   const call = providerCallArgs(row);
   const { issues, nextPage } = await listProviderOpenIssues(call.input, call.repository, page);
   const repository = synced(row);
-  const providerLabel = PROVIDER_LABEL[call.input.provider];
+  const origin = { key: call.input.provider, label: PROVIDER_LABEL[call.input.provider] };
   // One agent run per imported issue would start hundreds of runs at once.
   const options = { skipStatusRuns: true };
   let created = 0;
   for (const snapshot of issues) {
-    if (await createLinkedIssue(project, repository, snapshot, providerLabel, options)) created++;
+    if (await createLinkedIssue(project, repository, snapshot, origin, options)) created++;
   }
   return { created, skipped: issues.length - created, nextPage };
 }

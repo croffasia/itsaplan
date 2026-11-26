@@ -32,6 +32,7 @@ import { limitAnswer } from './answer-limit';
 import { documentVisibleTo } from '#modules/documents/access';
 import { equalJitterBackoffMs } from './helpers/backoff';
 import { emitRunsFinished } from './run-finished';
+import { actorText } from '#modules/git/providers';
 
 // The agent_run outbox: data access for triggered runs and run history. The api's
 // run poller claims pending rows, runs them, and records the outcome.
@@ -428,20 +429,27 @@ async function loadThreadContext(sourceActivityId: number | null): Promise<strin
   if (sourceActivityId == null) return null;
   const rows = await db.execute(sql`
     WITH RECURSIVE chain AS (
-      SELECT a.id, a.reply_to_id, a.actor_name, a.body, 0 AS depth
+      SELECT a.id, a.reply_to_id, a.actor_name, a.actor_source, a.body, 0 AS depth
         FROM issue_activity a
        WHERE a.id = ${sourceActivityId}
       UNION ALL
-      SELECT p.id, p.reply_to_id, p.actor_name, p.body, c.depth + 1
+      SELECT p.id, p.reply_to_id, p.actor_name, p.actor_source, p.body, c.depth + 1
         FROM issue_activity p
         JOIN chain c ON p.id = c.reply_to_id
        WHERE c.depth < ${THREAD_CONTEXT_DEPTH}
     )
-    SELECT actor_name AS "actorName", body FROM chain WHERE depth > 0 ORDER BY depth DESC
+    SELECT actor_name AS "actorName", actor_source AS "actorSource", body
+      FROM chain WHERE depth > 0 ORDER BY depth DESC
   `);
-  const ancestors = rows as unknown as { actorName: string | null; body: string | null }[];
+  const ancestors = rows as unknown as {
+    actorName: string | null;
+    actorSource: string | null;
+    body: string | null;
+  }[];
   if (ancestors.length === 0) return null;
-  return ancestors.map((a) => `${a.actorName ?? 'Unknown'}: ${a.body ?? ''}`).join('\n\n');
+  return ancestors
+    .map((a) => `${actorText(a.actorName, a.actorSource) ?? 'Unknown'}: ${a.body ?? ''}`)
+    .join('\n\n');
 }
 
 // True once the run is no longer waiting or at work: canceled, or deleted with its issue.

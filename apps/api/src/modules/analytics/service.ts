@@ -16,6 +16,7 @@ import {
 import { and, desc, eq, gte, inArray, isNull, isNotNull, lt, sql } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
 import type { AgentRunTrigger } from '#modules/agents/model';
+import type { ActorSource } from '#modules/issues/activity';
 
 // Read-only project metrics for the dashboards feature. Every figure is derived
 // from the existing issue / project_column / issue_activity / issue_status tables —
@@ -532,6 +533,7 @@ export interface ActivityItem {
   kind: string;
   actorUserId: string | null;
   actorName: string | null;
+  actorSource: ActorSource | null;
   body: string | null;
   action: string | null;
   payload: ActivityPayload;
@@ -585,6 +587,7 @@ export async function listActivity(
       kind: issueActivity.kind,
       actorUserId: issueActivity.actorUserId,
       actorName: issueActivity.actorName,
+      actorSource: issueActivity.actorSource,
       body: issueActivity.body,
       action: issueActivity.action,
       payload: issueActivity.payload,
@@ -611,6 +614,7 @@ export async function listActivity(
       kind: row.kind,
       actorUserId: row.actorUserId,
       actorName: row.actorName,
+      actorSource: row.actorSource as ActorSource | null,
       body: row.body,
       action: row.action,
       payload: row.payload,

@@ -262,7 +262,11 @@ describe('Repository issue sync', () => {
     const feed = (await s.asOwner.issues({ issueId: created!.id }).feed.get({ query: {} })).data!;
     expect(feed.items).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ action: 'created', actorName: 'contributor (GitHub)' }),
+        expect.objectContaining({
+          action: 'created',
+          actorName: 'contributor',
+          actorSource: 'github',
+        }),
       ]),
     );
   });
@@ -402,16 +406,22 @@ describe('Repository issue sync', () => {
     expect(issue).toMatchObject({ title: 'Crash on launch', description: 'Steps to reproduce' });
     expect([...issue.labelIds].sort()).toEqual([feature.id, local.id].sort());
 
-    await deliver(
-      s,
-      'issues',
-      issueEvent('closed', { ...opened, state: 'closed' }, { stateReason: 'not_planned' }),
-    );
+    await deliver(s, 'issues', {
+      ...issueEvent('closed', { ...opened, state: 'closed' }, { stateReason: 'not_planned' }),
+      sender: { login: 'maintainer' },
+    });
     issue = (await s.asOwner.issues({ issueId: created!.id }).get()).data!;
     expect(issue.columnId).toBe(canceled.id);
     expect(issue.repositoryIssue).toMatchObject({ state: 'closed' });
     // The move came from the repository, so nothing is sent back to it.
     expect(fake.stateChanges).toEqual([]);
+    const history = await s.asOwner
+      .issues({ issueId: created!.id })
+      .feed.get({ query: { filter: 'history' } });
+    expect(history.data!.items.find((item) => item.action === 'status')).toMatchObject({
+      actorName: 'maintainer',
+      actorSource: 'github',
+    });
 
     await deliver(s, 'issues', issueEvent('reopened', opened));
     issue = (await s.asOwner.issues({ issueId: created!.id }).get()).data!;
@@ -486,7 +496,9 @@ describe('Repository issue sync', () => {
 
     const feed = (await s.asOwner.issues({ issueId: created!.id }).feed.get({ query: {} })).data!;
     const comments = feed.items.filter((item) => item.kind === 'comment');
-    expect(comments).toMatchObject([{ body: 'Same here', actorName: 'reviewer (GitHub)' }]);
+    expect(comments).toMatchObject([
+      { body: 'Same here', actorName: 'reviewer', actorSource: 'github' },
+    ]);
   });
 
   it('imports open issues page by page and skips the ones already linked', async () => {

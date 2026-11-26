@@ -2268,6 +2268,9 @@ export const issueActivity = pgTable(
       onDelete: 'set null',
     }),
     actorName: text('actor_name'),
+    // The repository host an entry came from: a synced issue or comment, or a change a
+    // repository webhook made. Without a user, actor_name holds the account on that host.
+    actorSource: text('actor_source'),
     body: text('body'),
     action: text('action'),
     payload: jsonb('payload').$type<ActivityPayload>().notNull().default({}),
@@ -2277,6 +2280,10 @@ export const issueActivity = pgTable(
   },
   (t) => [
     check('issue_activity_kind_check', sql`${t.kind} IN ('comment', 'activity')`),
+    check(
+      'issue_activity_actor_source_check',
+      sql`${t.actorSource} IN ('github', 'gitlab', 'gitea', 'forgejo', 'bitbucket')`,
+    ),
     // Exactly one owner: an issue row or an initiative row, never both or neither.
     check(
       'issue_activity_owner_check',

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link2, Pencil, Reply, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { FeedItem } from '@/lib/api/endpoints/activity';
+import ActorSourceIcon from '@/components/common/git/ActorSourceIcon';
 import Avatar from '@/components/common/Avatar';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
@@ -92,7 +93,10 @@ export default function CommentItem({
       )}
       <div className="flex items-center gap-2.5">
         <Avatar name={author} image={image} className="size-6 shrink-0 text-[10px]" />
-        <span className="truncate text-[13px] font-semibold">{author}</span>
+        <span className="flex min-w-0 items-center gap-1">
+          <span className="truncate text-[13px] font-semibold">{author}</span>
+          {item.actorSource && <ActorSourceIcon source={item.actorSource} />}
+        </span>
         <span className="shrink-0 text-xs text-muted-foreground">
           · {relativeTime(item.createdAt)}
           {item.editedAt && ` · ${t('edited')}`}

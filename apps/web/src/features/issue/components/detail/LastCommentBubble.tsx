@@ -1,6 +1,7 @@
 import { useEffect, useState, type RefObject } from 'react';
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import ActorSourceIcon from '@/components/common/git/ActorSourceIcon';
 import Avatar from '@/components/common/Avatar';
 import { useRelativeTime } from '@/context/relativeTimeContext';
 import { cn } from '@/lib/utils';
@@ -99,6 +100,9 @@ export default function LastCommentBubble({
             <span className="min-w-0">
               <span className="flex items-baseline gap-2">
                 <span className="truncate text-sm font-medium">{author}</span>
+                {comment.actorSource && (
+                  <ActorSourceIcon source={comment.actorSource} className="self-center" />
+                )}
                 <span className="shrink-0 text-xs text-muted-foreground">
                   · {relativeTime(comment.createdAt)}
                 </span>

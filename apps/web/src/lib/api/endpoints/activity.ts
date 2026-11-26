@@ -1,4 +1,5 @@
 import { request } from '@/lib/api/core/client';
+import type { GitConnectionProvider } from '@/lib/api/endpoints/git';
 
 // Which entries a feed page holds: only comments, only the change log without time
 // entries, or only time entries. Absent serves every entry.
@@ -31,6 +32,7 @@ export interface ActivityItem {
   kind: 'comment' | 'activity';
   actorUserId: string | null;
   actorName: string | null;
+  actorSource: GitConnectionProvider | null;
   body: string | null;
   action: ActivityAction | null;
   payload: ActivityPayload;
@@ -114,7 +116,8 @@ export interface CommentReaction {
 
 // One entry in an issue's timeline. kind selects which fields are set: a 'comment'
 // carries body; an 'activity' carries action and payload.
-// actorName is the author/actor snapshot (null when it was never set).
+// actorName is the author/actor snapshot (null when it was never set). actorSource
+// names the repository host when actorName is an account there.
 export interface FeedItem {
   id: number;
   issueId: number;
@@ -123,6 +126,7 @@ export interface FeedItem {
   replyToId: number | null;
   actorUserId: string | null;
   actorName: string | null;
+  actorSource: GitConnectionProvider | null;
   body: string | null;
   action: ActivityAction | null;
   payload: ActivityPayload;

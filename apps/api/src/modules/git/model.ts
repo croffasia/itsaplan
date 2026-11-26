@@ -1,10 +1,15 @@
 import { t } from 'elysia';
+import { GIT_PROVIDER_KEYS } from './providers';
 
 export const webhookParams = t.Object({ webhookId: t.String() });
 
 export const webhookBody = t.String();
 
 export const WebhookAckResponse = t.Object({ ok: t.Boolean(), handled: t.String() });
+
+// The repository host an activity entry came from. Without actorUserId, actorName is the
+// account's name on the host.
+export const ActorSourceResponse = t.Nullable(t.UnionEnum(GIT_PROVIDER_KEYS));
 
 export const DevelopmentRepositoryResponse = t.Object({
   id: t.Number(),

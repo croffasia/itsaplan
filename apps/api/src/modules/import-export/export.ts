@@ -12,6 +12,7 @@ import {
 } from '@repo/db';
 import { eq, and, inArray } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
+import { actorText } from '#modules/git/providers';
 
 // A project's own data, read directly (no import_job involved) and shaped into a
 // self-contained, human-readable snapshot: states/cycles/parents/relations are named,
@@ -131,6 +132,7 @@ export async function exportProject(projectId: number): Promise<ProjectExport> {
           id: issueActivity.id,
           issueId: issueActivity.issueId,
           actorName: issueActivity.actorName,
+          actorSource: issueActivity.actorSource,
           actorUserId: issueActivity.actorUserId,
           body: issueActivity.body,
           createdAt: issueActivity.createdAt,
@@ -204,7 +206,7 @@ export async function exportProject(projectId: number): Promise<ProjectExport> {
       assigneeEmail:
         row.assigneeUserId != null ? (emailByUserId.get(row.assigneeUserId) ?? null) : null,
       comments: issueComments.map((c) => ({
-        authorName: c.actorName,
+        authorName: actorText(c.actorName, c.actorSource),
         authorEmail: c.actorUserId != null ? (emailByUserId.get(c.actorUserId) ?? null) : null,
         body: c.body ?? '',
         createdAt: c.createdAt.toISOString(),

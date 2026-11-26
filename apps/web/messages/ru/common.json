@@ -340,5 +340,6 @@
     "redirectUrlHint": "Добавьте его в Slack: OAuth & Permissions → Redirect URLs.",
     "workspace": "Рабочее пространство Slack",
     "workspaceHint": "Рабочее пространство Slack, в которое установлено приложение. Подключить можно только аккаунты из него."
-  }
+  },
+  "fromHost": "Из {host}"
 }

@@ -39,10 +39,13 @@ async function receive({
   } catch {
     throw new HttpError(400, 'Invalid JSON payload');
   }
-  const providerLabel = provider.label(headers);
-  const providerKey = provider.key(headers);
+  const origin = {
+    key: provider.key(headers),
+    label: provider.label(headers),
+    sender: provider.sender(payload),
+  };
   const repo = provider.repo(payload);
-  if (repo) await recordGitEvent(found.projectId, repo, providerLabel);
+  if (repo) await recordGitEvent(found.projectId, repo, origin.label);
 
   const event = provider.parse(payload, headers);
   if (!event) return { ok: true, handled: 'ignored' };
@@ -55,13 +58,7 @@ async function receive({
   if (deliveryId && !(await claimGitDelivery(found.projectId, deliveryId)))
     return { ok: true, handled: 'duplicate' };
   try {
-    const handled = await handleGitEvent(
-      project,
-      found.settings,
-      providerKey,
-      providerLabel,
-      event,
-    );
+    const handled = await handleGitEvent(project, found.settings, origin, event);
     return { ok: true, handled };
   } catch (err) {
     if (deliveryId) await releaseGitDelivery(found.projectId, deliveryId);

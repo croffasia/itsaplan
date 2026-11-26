@@ -1,6 +1,11 @@
 import { HttpError } from '#shared/lib';
 import { assertPublicHttpUrl, pinnedFetch } from '#shared/net';
-import { githubIssueSnapshot, gitlabIssueSnapshot, pipelineStatus } from './providers';
+import {
+  PROVIDER_LABEL,
+  githubIssueSnapshot,
+  gitlabIssueSnapshot,
+  pipelineStatus,
+} from './providers';
 import type { IssueSnapshot, PipelineEvent, PullRequestEvent, PullRequestState } from './providers';
 
 export type GitProvider = 'github' | 'gitlab' | 'gitea' | 'forgejo' | 'bitbucket';
@@ -138,14 +143,6 @@ function providerHeaders(provider: GitProvider, token: string): Headers {
   }
   return headers;
 }
-
-export const PROVIDER_LABEL: Record<GitProvider, string> = {
-  github: 'GitHub',
-  gitlab: 'GitLab',
-  gitea: 'Gitea',
-  forgejo: 'Forgejo',
-  bitbucket: 'Bitbucket',
-};
 
 export function providerErrorMessage(
   provider: GitProvider,

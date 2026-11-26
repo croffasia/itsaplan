@@ -340,5 +340,6 @@
     "redirectUrlHint": "أضفه في Slack ضمن OAuth & Permissions → Redirect URLs.",
     "workspace": "مساحة عمل Slack",
     "workspaceHint": "مساحة عمل Slack المثبّت فيها التطبيق. يمكن ربط حسابات هذه المساحة فقط."
-  }
+  },
+  "fromHost": "من {host}"
 }

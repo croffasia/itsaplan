@@ -1,6 +1,6 @@
-import { CirclePlus, Plus } from 'lucide-react';
+import { type ReactNode } from 'react';
+import { CirclePlus } from 'lucide-react';
 import type { IssueLinkInputKind } from '@/lib/api/endpoints/issues';
-import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,28 +16,27 @@ import { useLinkRelationLabel } from '@/hooks/useLinkRelationLabel';
 import { useTranslations } from 'next-intl';
 
 // The relations themselves link an issue found through the search dialog; the
-// submenu below them names the relation for an issue created on the spot.
+// submenu below them names the relation for an issue created on the spot. The Links
+// heading and the issue's add bar open it from their own triggers.
 export default function IssueLinksAddMenu({
+  trigger,
+  align = 'end',
   canCreate,
   onLinkExisting,
   onCreateNew,
 }: {
+  trigger: ReactNode;
+  align?: 'start' | 'end';
   canCreate: boolean;
   onLinkExisting: (relation: IssueLinkInputKind) => void;
   onCreateNew: (relation: IssueLinkInputKind) => void;
 }) {
-  const tCommon = useTranslations('common');
   const t = useTranslations('issue.links');
   const relationLabel = useLinkRelationLabel();
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-7 gap-1.5">
-          <Plus className="size-4" />
-          {tCommon('add')}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-44">
+      <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+      <DropdownMenuContent align={align} className="w-44">
         {LINK_RELATIONS.map((relation) => {
           const Icon = LINK_RELATION_ICONS[relation];
           return (

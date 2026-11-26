@@ -144,12 +144,19 @@
     "applyTemplate": "套用範本…",
     "noTemplates": "沒有範本。"
   },
+  "addBar": {
+    "subtask": "子任務",
+    "checklist": "檢查清單",
+    "link": "關聯工作項目",
+    "doc": "文件",
+    "file": "檔案",
+    "development": "分支或 PR",
+    "worklog": "記錄工時"
+  },
   "attachments": {
     "title": "附件",
     "add": "新增",
     "uploading": "正在上傳…",
-    "empty": "暫無附件。",
-    "emptyHint": "將檔案拖到此處，或點選「新增」上傳。",
     "dropToUpload": "鬆開以上傳檔案",
     "uploadFailed": "上傳失敗",
     "uploadFailedCount": "{count, plural, other {無法上傳 # 個檔案}}",
@@ -177,8 +184,6 @@
   },
   "checklists": {
     "title": "檢查清單",
-    "empty": "暫無檢查清單。",
-    "emptyHint": "點選「新增」追蹤簡單步驟，無需建立子任務。",
     "titlePlaceholder": "檢查清單標題…",
     "addItem": "新增清單項…",
     "dragToReorder": "拖曳以重新排序",
@@ -188,8 +193,6 @@
   },
   "worklog": {
     "title": "已記錄工時",
-    "empty": "尚未記錄工時。",
-    "emptyHint": "點選「新增」記錄你在該工作項目上花費的時間。",
     "time": "花費時間",
     "timePlaceholder": "1h 30m",
     "note": "備註",
@@ -200,7 +203,6 @@
   "links": {
     "title": "關聯",
     "remove": "移除與 {issue} 的關聯",
-    "emptyHint": "點選「新增」，關聯阻塞、重複或相關的工作項目。",
     "newIssue": "新建工作項目"
   },
   "linkDialog": {
@@ -215,8 +217,6 @@
     "parent": "父工作項目",
     "newSubtask": "新建子任務",
     "addExisting": "將現有工作項目新增為子任務",
-    "empty": "暫無子任務。",
-    "emptyHint": "點選「新增」將此工作項目拆分為子任務。",
     "detach": "分離 {subtask}",
     "detachFromParent": "從 {parent} 分離",
     "subtaskOf": "{issue} 的子任務",
@@ -381,7 +381,6 @@
     "unlink": "取消關聯開發項",
     "branch": "分支",
     "add": "新增",
-    "empty": "關聯現有 Pull Request，或從分支建立一個",
     "linkExisting": "關聯現有請求",
     "linkExistingDescription": "從已連線的存放庫中選擇 Pull Request 或合併請求。",
     "createPullRequest": "建立 Pull Request",
@@ -419,7 +418,6 @@
     "createdSuccess": "Pull Request 已建立並關聯",
     "createFailed": "無法建立此 Pull Request",
     "draft": "草稿",
-    "ready": "就緒",
     "open": "開啟",
     "merged": "已合併",
     "closed": "已關閉",

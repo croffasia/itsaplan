@@ -26,12 +26,12 @@ export default function IssueWorklogRow({
   const name = entry.userName ?? '';
 
   return (
-    <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-accent/50">
+    <div className="group flex min-h-9 items-center gap-2.5 rounded-md px-2 hover:bg-accent/50">
       <Avatar name={name} image={entry.userImage} />
       <span className="shrink-0 text-sm font-medium tabular-nums">
         {formatMinutes(entry.minutes)}
       </span>
-      <span className="shrink-0 text-xs text-muted-foreground">
+      <span className="shrink-0 text-xs text-muted-foreground/70">
         {formatShortDate(entry.spentOn)}
       </span>
       {entry.note && (
@@ -39,14 +39,14 @@ export default function IssueWorklogRow({
           {entry.note}
         </span>
       )}
-      <span className="ms-auto shrink-0 text-xs text-muted-foreground">{name}</span>
+      <span className="ms-auto shrink-0 text-xs text-muted-foreground/70">{name}</span>
 
       {canEdit && (
         <>
           <Button
             variant="ghost"
             size="icon"
-            className="size-6 shrink-0 opacity-0 group-hover:opacity-100"
+            className="size-6 shrink-0 text-muted-foreground/70 opacity-0 group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 max-sm:opacity-100"
             aria-label={t('edit')}
             onClick={onEdit}
           >
@@ -55,7 +55,7 @@ export default function IssueWorklogRow({
           <Button
             variant="ghost"
             size="icon"
-            className="size-6 shrink-0 opacity-0 group-hover:opacity-100 hover:text-destructive"
+            className="size-6 shrink-0 text-muted-foreground/70 opacity-0 group-hover:opacity-100 hover:text-destructive focus-visible:opacity-100 max-sm:opacity-100"
             aria-label={t('remove')}
             onClick={onRemove}
           >

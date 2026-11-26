@@ -1,34 +1,45 @@
-import { useState } from 'react';
 import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Plus } from 'lucide-react';
 import type { IssueWithWatchers } from '@/lib/api/endpoints/issues';
 import { usePermissions } from '@/hooks/usePermissions';
-import { Button } from '@/components/ui/button';
 import { useDndSensors } from '@/lib/dnd';
 import { CHECKLIST_TITLE_MAX, checklistProgress, reorderIds } from '../../utils/checklists';
 import { usePersistedOpen } from '@/hooks/usePersistedOpen';
 import { useCreateChecklist, useReorderChecklists } from '../../services/checklists.service';
 import IssueChecklistAddInput from './IssueChecklistAddInput';
 import IssueChecklistCard from './IssueChecklistCard';
+import IssueSection from './IssueSection';
+import IssueSectionAddButton from './IssueSectionAddButton';
 import IssueSectionHeading from './IssueSectionHeading';
 import { useTranslations } from 'next-intl';
 
 // The issue's checklists: lists of small steps that do not warrant subtasks of
 // their own. The tally counts every item of every checklist, so the heading says
-// how much of the card is done without expanding it.
-export default function IssueChecklistsPanel({ issue }: { issue: IssueWithWatchers }) {
+// how much of the card is done without expanding it. With no checklist the section
+// stays off the page until the person starts one, here or from the issue's add bar.
+export default function IssueChecklistsPanel({
+  issue,
+  adding,
+  onAddingChange,
+}: {
+  issue: IssueWithWatchers;
+  // Whether the title input of a new checklist is open. Held by the issue detail,
+  // whose add bar opens it too.
+  adding: boolean;
+  onAddingChange: (adding: boolean) => void;
+}) {
   const tCommon = useTranslations('common');
   const t = useTranslations('issue.checklists');
   const { can } = usePermissions();
   const canEdit = can('work_items', 'edit');
-  const [adding, setAdding] = useState(false);
   const { open, toggle } = usePersistedOpen('issue-checklists-open');
   const sensors = useDndSensors();
   const createChecklist = useCreateChecklist();
   const reorderChecklists = useReorderChecklists();
 
   const checklists = issue.checklists;
+  // Opening the input from the add bar has to show it, whatever the heading was left at.
+  const expanded = open || adding;
   const progress = checklistProgress(checklists);
   const tally = progress.total > 0 ? `${progress.done}/${progress.total}` : undefined;
 
@@ -38,24 +49,27 @@ export default function IssueChecklistsPanel({ issue }: { issue: IssueWithWatche
     if (orderedIds) reorderChecklists.mutate({ issueId: issue.id, orderedIds });
   }
 
-  return (
-    <div className={`mt-6 border-t pt-5 ${open ? '' : '-mb-2'}`}>
-      <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
-        <IssueSectionHeading label={t('title')} open={open} onToggle={toggle} tally={tally} />
-        {open && canEdit && !adding && (
-          <Button variant="ghost" size="sm" className="h-7 gap-1.5" onClick={() => setAdding(true)}>
-            <Plus className="size-4" /> {tCommon('add')}
-          </Button>
-        )}
-      </div>
+  if (checklists.length === 0 && !adding) return null;
 
-      {open && (
+  return (
+    <IssueSection collapsed={!expanded}>
+      <IssueSectionHeading
+        label={t('title')}
+        open={expanded}
+        onToggle={toggle}
+        tally={tally}
+        actions={
+          expanded &&
+          canEdit &&
+          !adding && (
+            <IssueSectionAddButton label={tCommon('add')} onClick={() => onAddingChange(true)} />
+          )
+        }
+      />
+
+      {expanded && (
         <>
-          {checklists.length === 0 && !adding ? (
-            <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-              {canEdit ? t('emptyHint') : t('empty')}
-            </p>
-          ) : (
+          {checklists.length > 0 && (
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -65,13 +79,14 @@ export default function IssueChecklistsPanel({ issue }: { issue: IssueWithWatche
                 items={checklists.map((checklist) => checklist.id)}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-4">
                   {checklists.map((checklist) => (
                     <IssueChecklistCard
                       key={checklist.id}
                       issueId={issue.id}
                       checklist={checklist}
                       canEdit={canEdit}
+                      showCount={checklists.length > 1}
                     />
                   ))}
                 </div>
@@ -80,17 +95,17 @@ export default function IssueChecklistsPanel({ issue }: { issue: IssueWithWatche
           )}
 
           {adding && (
-            <div className="mt-2">
+            <div className={checklists.length > 0 ? 'mt-4' : ''}>
               <IssueChecklistAddInput
                 placeholder={t('titlePlaceholder')}
                 maxLength={CHECKLIST_TITLE_MAX}
                 onSubmit={(title) => createChecklist.mutate({ issueId: issue.id, title })}
-                onClose={() => setAdding(false)}
+                onClose={() => onAddingChange(false)}
               />
             </div>
           )}
         </>
       )}
-    </div>
+    </IssueSection>
   );
 }

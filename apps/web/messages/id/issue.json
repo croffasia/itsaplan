@@ -144,12 +144,19 @@
     "applyTemplate": "Terapkan templat…",
     "noTemplates": "Tidak ada templat."
   },
+  "addBar": {
+    "subtask": "Subtugas",
+    "checklist": "Daftar periksa",
+    "link": "Tautkan issue",
+    "doc": "Dokumen",
+    "file": "File",
+    "development": "Branch atau PR",
+    "worklog": "Catat waktu"
+  },
   "attachments": {
     "title": "Lampiran",
     "add": "Tambah",
     "uploading": "Mengunggah…",
-    "empty": "Belum ada lampiran.",
-    "emptyHint": "Tarik dan letakkan file di sini, atau gunakan Tambah untuk mengunggah.",
     "dropToUpload": "Lepaskan file untuk mengunggah",
     "uploadFailed": "Unggahan gagal",
     "uploadFailedCount": "{count, plural, one {Tidak dapat mengunggah file} other {Tidak dapat mengunggah # file}}",
@@ -177,8 +184,6 @@
   },
   "checklists": {
     "title": "Daftar periksa",
-    "empty": "Belum ada daftar periksa.",
-    "emptyHint": "Gunakan Tambah untuk melacak langkah kecil tanpa membuat subtugas.",
     "titlePlaceholder": "Judul daftar periksa…",
     "addItem": "Tambah item…",
     "dragToReorder": "Tarik untuk mengatur ulang",
@@ -188,8 +193,6 @@
   },
   "worklog": {
     "title": "Waktu dicatat",
-    "empty": "Belum ada waktu yang dicatat.",
-    "emptyHint": "Gunakan Tambah untuk mencatat waktu yang Anda habiskan pada issue ini.",
     "time": "Waktu yang dihabiskan",
     "timePlaceholder": "1h 30m",
     "note": "Catatan",
@@ -200,7 +203,6 @@
   "links": {
     "title": "Tautan",
     "remove": "Hapus tautan ke {issue}",
-    "emptyHint": "Gunakan Tambah untuk menautkan issue yang memblokir, menduplikasi, atau berkaitan dengan issue ini.",
     "newIssue": "Issue baru"
   },
   "linkDialog": {
@@ -215,8 +217,6 @@
     "parent": "Induk",
     "newSubtask": "Subtugas baru",
     "addExisting": "Tambahkan issue yang ada sebagai subtugas",
-    "empty": "Belum ada subtugas.",
-    "emptyHint": "Gunakan Tambah untuk memecah issue ini menjadi subtugas.",
     "detach": "Lepaskan {subtask}",
     "detachFromParent": "Lepaskan dari {parent}",
     "subtaskOf": "Subtugas dari {issue}",
@@ -381,7 +381,6 @@
     "unlink": "Putuskan tautan item pengembangan",
     "branch": "Branch",
     "add": "Tambah",
-    "empty": "Tautkan pull request yang ada atau buat pull request dari branch",
     "linkExisting": "Tautkan yang ada",
     "linkExistingDescription": "Pilih pull request atau merge request dari repositori yang terhubung.",
     "createPullRequest": "Buat pull request",
@@ -419,7 +418,6 @@
     "createdSuccess": "Pull request berhasil dibuat dan ditautkan",
     "createFailed": "Tidak dapat membuat pull request ini",
     "draft": "Draf",
-    "ready": "Siap",
     "open": "Terbuka",
     "merged": "Digabungkan",
     "closed": "Ditutup",

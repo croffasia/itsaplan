@@ -144,12 +144,19 @@
     "applyTemplate": "Aplicar la plantilla…",
     "noTemplates": "Sin plantillas."
   },
+  "addBar": {
+    "subtask": "Subtarea",
+    "checklist": "Lista de verificación",
+    "link": "Enlazar ticket",
+    "doc": "Documento",
+    "file": "Archivo",
+    "development": "Rama o PR",
+    "worklog": "Registrar tiempo"
+  },
   "attachments": {
     "title": "Adjuntos",
     "add": "Añadir",
     "uploading": "Subiendo…",
-    "empty": "Todavía no hay adjuntos.",
-    "emptyHint": "Suelta ficheros aquí, o usa Añadir para subirlos.",
     "dropToUpload": "Suelta ficheros para subirlos",
     "uploadFailed": "No se ha podido subir",
     "uploadFailedCount": "No se {count, plural, one {ha podido subir el fichero} other {han podido subir # ficheros}}",
@@ -177,8 +184,6 @@
   },
   "checklists": {
     "title": "Listas de verificación",
-    "empty": "Todavía no hay listas de verificación.",
-    "emptyHint": "Usa Añadir para seguir pasos pequeños sin crear subtareas.",
     "titlePlaceholder": "Título de la lista…",
     "addItem": "Añadir un elemento…",
     "dragToReorder": "Arrastra para reordenar",
@@ -188,8 +193,6 @@
   },
   "worklog": {
     "title": "Tiempo registrado",
-    "empty": "Todavía no hay tiempo registrado.",
-    "emptyHint": "Usa Añadir para registrar el tiempo que has dedicado a este ticket.",
     "time": "Tiempo dedicado",
     "timePlaceholder": "1h 30m",
     "note": "Nota",
@@ -200,7 +203,6 @@
   "links": {
     "title": "Enlaces",
     "remove": "Quitar el enlace a {issue}",
-    "emptyHint": "Usa Añadir para enlazar un ticket que bloquea, duplica o se relaciona con esta.",
     "newIssue": "Nuevo ticket"
   },
   "linkDialog": {
@@ -215,8 +217,6 @@
     "parent": "Padre",
     "newSubtask": "Nueva subtarea",
     "addExisting": "Añadir un ticket existente como subtarea",
-    "empty": "Todavía no hay subtareas.",
-    "emptyHint": "Usa Añadir para descomponer este ticket en subtareas.",
     "detach": "Desvincular {subtask}",
     "detachFromParent": "Desvincular de {parent}",
     "subtaskOf": "Subtarea de {issue}",
@@ -381,7 +381,6 @@
     "unlink": "Desenlazar un elemento de desarrollo",
     "branch": "Rama",
     "add": "Añadir",
-    "empty": "Enlaza un pull request existente o crea una desde una rama",
     "linkExisting": "Enlazar una existente",
     "linkExistingDescription": "Elige un pull request o merge request de un repositorio conectado.",
     "createPullRequest": "Crear un pull request",
@@ -419,7 +418,6 @@
     "createdSuccess": "El pull request se ha creado y enlazado",
     "createFailed": "No se ha podido crear este pull request",
     "draft": "Borrador",
-    "ready": "Lista",
     "open": "Abierta",
     "merged": "Integrada",
     "closed": "Cerrada",

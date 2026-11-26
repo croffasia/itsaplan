@@ -24,7 +24,7 @@ export default function IssueTimelineLane({
         <span className="size-2 shrink-0 rounded-xs" style={{ backgroundColor: lane.color }} />
         <span className="truncate">{lane.label}</span>
       </div>
-      <div className={`relative h-5 flex-1 rounded-sm bg-muted/60 ${hasFixedTail ? 'mr-12' : ''}`}>
+      <div className={`relative h-2 flex-1 rounded-sm bg-muted/60 ${hasFixedTail ? 'mr-12' : ''}`}>
         {lane.bars.map((bar) => (
           <IssueTimelineBar
             key={bar.segment.from}

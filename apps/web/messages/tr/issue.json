@@ -144,12 +144,19 @@
     "applyTemplate": "Şablon uygula…",
     "noTemplates": "Şablon yok."
   },
+  "addBar": {
+    "subtask": "Alt iş",
+    "checklist": "Kontrol listesi",
+    "link": "İş bağla",
+    "doc": "Belge",
+    "file": "Dosya",
+    "development": "Dal veya PR",
+    "worklog": "Süre kaydet"
+  },
   "attachments": {
     "title": "Ekler",
     "add": "Ekle",
     "uploading": "Yükleniyor…",
-    "empty": "Henüz ek yok.",
-    "emptyHint": "Dosyaları buraya bırakın veya yüklemek için Ekle butonunu kullanın.",
     "dropToUpload": "Yüklemek için dosyaları bırakın",
     "uploadFailed": "Yükleme başarısız",
     "uploadFailedCount": "{count, plural, one {Dosya yüklenemedi} other {# dosya yüklenemedi}}",
@@ -177,8 +184,6 @@
   },
   "checklists": {
     "title": "Kontrol Listeleri",
-    "empty": "Henüz kontrol listesi yok.",
-    "emptyHint": "Alt iş oluşturmadan küçük adımları takip etmek için Ekle'yi kullanın.",
     "titlePlaceholder": "Kontrol listesi başlığı…",
     "addItem": "Öğe ekle…",
     "dragToReorder": "Sıralamak için sürükleyin",
@@ -188,8 +193,6 @@
   },
   "worklog": {
     "title": "Kaydedilen süre",
-    "empty": "Henüz süre kaydedilmedi.",
-    "emptyHint": "Bu işe harcadığınız süreyi kaydetmek için Ekle'yi kullanın.",
     "time": "Harcanan süre",
     "timePlaceholder": "1sa 30dk",
     "note": "Not",
@@ -200,7 +203,6 @@
   "links": {
     "title": "Bağlantılar",
     "remove": "{issue} bağlantısını kaldır",
-    "emptyHint": "Bu işi engelleyen, yineleyen veya ilgili olan bir işe bağlamak için Ekle'yi kullanın.",
     "newIssue": "Yeni iş"
   },
   "linkDialog": {
@@ -215,8 +217,6 @@
     "parent": "Ana İş",
     "newSubtask": "Yeni alt iş",
     "addExisting": "Mevcut bir işi alt iş olarak ekle",
-    "empty": "Henüz alt iş yok.",
-    "emptyHint": "Bu işi alt işlere bölmek için Ekle'yi kullanın.",
     "detach": "{subtask} bağını ayır",
     "detachFromParent": "{parent} ana işinden ayır",
     "subtaskOf": "{issue} alt işi",
@@ -381,7 +381,6 @@
     "unlink": "Geliştirme bağlantısını kaldır",
     "branch": "Dal (Branch)",
     "add": "Ekle",
-    "empty": "Mevcut bir pull request'i bağlayın veya bir daldan yeni oluşturun",
     "linkExisting": "Mevcut olanı bağla",
     "linkExistingDescription": "Bağlı bir kod deposundan bir pull request veya merge request seçin.",
     "createPullRequest": "Pull request oluştur",
@@ -419,7 +418,6 @@
     "createdSuccess": "Pull request oluşturuldu ve bağlandı",
     "createFailed": "Bu pull request oluşturulamadı",
     "draft": "Taslak",
-    "ready": "Hazır",
     "open": "Açık",
     "merged": "Birleşti",
     "closed": "Kapatıldı",

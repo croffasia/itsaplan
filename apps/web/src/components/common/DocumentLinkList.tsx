@@ -73,18 +73,18 @@ export default function DocumentLinkList({
   }
 
   return (
-    <div className={cn('space-y-1.5', className)}>
+    <div className={cn('-mx-2 flex flex-col', className)}>
       {links.data.map((link) => (
         <div
           key={link.documentId}
-          className="group flex items-center gap-2 rounded-lg border bg-card/40 px-2.5 py-2"
+          className="group flex min-h-9 items-center gap-2.5 rounded-md px-2 hover:bg-accent/50"
         >
           <Link
             href={documentPath(projectKey, link.documentId)}
-            className="flex min-w-0 flex-1 items-center gap-2 rounded focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="flex min-w-0 flex-1 items-center gap-2.5 rounded focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
-            <span className="grid size-7 shrink-0 place-items-center rounded-md border bg-muted/30 text-sm">
-              {link.icon || <FileText className="size-3.5" />}
+            <span className="grid size-4 shrink-0 place-items-center text-sm leading-none text-muted-foreground/70">
+              {link.icon || <FileText className="size-4" />}
             </span>
             <span className="min-w-0 flex-1 truncate text-sm" dir="auto">
               {link.title.trim() || t('untitled')}
@@ -97,7 +97,7 @@ export default function DocumentLinkList({
               type="button"
               variant="ghost"
               size="icon-xs"
-              className="shrink-0 text-muted-foreground opacity-100 hover:text-destructive sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
+              className="shrink-0 text-muted-foreground/70 opacity-100 hover:text-destructive sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
               aria-label={t('remove', { title: link.title || t('untitled') })}
               disabled={unlinkingId !== null}
               onClick={() => onUnlink(link.documentId)}

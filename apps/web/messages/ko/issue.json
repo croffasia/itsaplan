@@ -144,12 +144,19 @@
     "applyTemplate": "템플릿 적용…",
     "noTemplates": "템플릿이 없습니다."
   },
+  "addBar": {
+    "subtask": "하위 이슈",
+    "checklist": "체크리스트",
+    "link": "이슈 연결",
+    "doc": "문서",
+    "file": "파일",
+    "development": "브랜치 또는 PR",
+    "worklog": "시간 기록"
+  },
   "attachments": {
     "title": "첨부 파일",
     "add": "추가",
     "uploading": "업로드 중…",
-    "empty": "아직 첨부 파일이 없습니다.",
-    "emptyHint": "파일을 여기에 끌어다 놓거나 추가를 눌러 업로드하세요.",
     "dropToUpload": "파일을 놓아 업로드",
     "uploadFailed": "업로드에 실패했습니다.",
     "uploadFailedCount": "{count, plural, one {파일을 업로드할 수 없습니다.} other {파일 #개를 업로드할 수 없습니다.}}",
@@ -177,8 +184,6 @@
   },
   "checklists": {
     "title": "체크리스트",
-    "empty": "아직 체크리스트가 없습니다.",
-    "emptyHint": "하위 이슈를 생성하지 않고 간단한 작업 단계를 관리하려면 추가를 사용하세요.",
     "titlePlaceholder": "체크리스트 제목…",
     "addItem": "항목 추가…",
     "dragToReorder": "드래그하여 순서 변경",
@@ -188,8 +193,6 @@
   },
   "worklog": {
     "title": "기록된 작업 시간",
-    "empty": "아직 기록된 작업 시간이 없습니다.",
-    "emptyHint": "이 이슈에 사용한 시간을 기록하려면 추가를 사용하세요.",
     "time": "작업 시간",
     "timePlaceholder": "1h 30m",
     "note": "메모",
@@ -200,7 +203,6 @@
   "links": {
     "title": "링크",
     "remove": "{issue} 링크 제거",
-    "emptyHint": "차단, 중복 또는 관련 관계를 설정하려면 이슈를 연결하세요.",
     "newIssue": "새 이슈"
   },
   "linkDialog": {
@@ -215,8 +217,6 @@
     "parent": "상위 이슈",
     "newSubtask": "새 하위 이슈",
     "addExisting": "기존 이슈를 하위 이슈로 추가",
-    "empty": "아직 하위 이슈가 없습니다.",
-    "emptyHint": "이 이슈를 더 작은 작업으로 나누려면 하위 이슈를 추가하세요.",
     "detach": "{subtask} 연결 해제",
     "detachFromParent": "{parent}에서 연결 해제",
     "subtaskOf": "{issue}의 하위 이슈",
@@ -381,7 +381,6 @@
     "unlink": "개발 항목 연결 해제",
     "branch": "브랜치",
     "add": "추가",
-    "empty": "기존 Pull Request를 연결하거나 브랜치에서 새로 생성하세요.",
     "linkExisting": "기존 항목 연결",
     "linkExistingDescription": "연결된 저장소에서 Pull Request 또는 Merge Request를 선택하세요.",
     "createPullRequest": "Pull Request 생성",
@@ -419,7 +418,6 @@
     "createdSuccess": "Pull Request가 생성되고 연결되었습니다.",
     "createFailed": "이 Pull Request를 생성할 수 없습니다.",
     "draft": "초안",
-    "ready": "준비됨",
     "open": "열림",
     "merged": "병합됨",
     "closed": "종료됨",

@@ -144,12 +144,19 @@
     "applyTemplate": "Appliquer un modèle…",
     "noTemplates": "Aucun modèle."
   },
+  "addBar": {
+    "subtask": "Sous-tâche",
+    "checklist": "Checklist",
+    "link": "Lier un ticket",
+    "doc": "Document",
+    "file": "Fichier",
+    "development": "Branche ou PR",
+    "worklog": "Saisir du temps"
+  },
   "attachments": {
     "title": "Pièces jointes",
     "add": "Ajouter",
     "uploading": "Envoi…",
-    "empty": "Aucune pièce jointe pour l'instant.",
-    "emptyHint": "Déposez des fichiers ici, ou utilisez Ajouter pour les envoyer.",
     "dropToUpload": "Déposez des fichiers pour les envoyer",
     "uploadFailed": "Échec de l'envoi",
     "uploadFailedCount": "{count, plural, one {Impossible d'envoyer le fichier} other {Impossible d'envoyer # fichiers}}",
@@ -177,8 +184,6 @@
   },
   "checklists": {
     "title": "Checklists",
-    "empty": "Aucune checklist pour l'instant.",
-    "emptyHint": "Utilisez Ajouter pour suivre de petites étapes sans créer de sous-tâches.",
     "titlePlaceholder": "Titre de la checklist…",
     "addItem": "Ajouter un élément…",
     "dragToReorder": "Faites glisser pour réordonner",
@@ -188,8 +193,6 @@
   },
   "worklog": {
     "title": "Temps enregistré",
-    "empty": "Aucun temps enregistré pour l'instant.",
-    "emptyHint": "Utilisez Ajouter pour enregistrer le temps passé sur ce ticket.",
     "time": "Temps passé",
     "timePlaceholder": "1h 30m",
     "note": "Note",
@@ -200,7 +203,6 @@
   "links": {
     "title": "Liens",
     "remove": "Retirer le lien vers {issue}",
-    "emptyHint": "Utilisez Ajouter pour lier un ticket qui bloque celui-ci, en est un doublon ou s'y rapporte.",
     "newIssue": "Nouveau ticket"
   },
   "linkDialog": {
@@ -215,8 +217,6 @@
     "parent": "Parent",
     "newSubtask": "Nouvelle sous-tâche",
     "addExisting": "Ajouter un ticket existant comme sous-tâche",
-    "empty": "Aucune sous-tâche pour l'instant.",
-    "emptyHint": "Utilisez Ajouter pour découper ce ticket en sous-tâches.",
     "detach": "Détacher {subtask}",
     "detachFromParent": "Détacher de {parent}",
     "subtaskOf": "Sous-tâche de {issue}",
@@ -381,7 +381,6 @@
     "unlink": "Délier l'élément de développement",
     "branch": "Branche",
     "add": "Ajouter",
-    "empty": "Lier une pull request existante ou en créer une depuis une branche",
     "linkExisting": "Lier une pull request",
     "linkExistingDescription": "Choisissez une pull request ou une merge request dans un dépôt connecté.",
     "createPullRequest": "Créer une pull request",
@@ -419,7 +418,6 @@
     "createdSuccess": "Pull request créée et liée",
     "createFailed": "Impossible de créer cette pull request",
     "draft": "Brouillon",
-    "ready": "Prête",
     "open": "Ouverte",
     "merged": "Fusionnée",
     "closed": "Fermée",

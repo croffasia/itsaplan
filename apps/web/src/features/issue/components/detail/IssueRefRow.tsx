@@ -11,11 +11,14 @@ import {
   historyScrollRestorationLinkProps,
 } from '@/hooks/useHistoryScrollRestoration';
 import { StateIcon } from '../shared/IssueIcons';
+import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
 // One other issue in the Links or Subtasks panel — the far end of a relation, a
-// subtask, or the parent an issue hangs under — with its status, opening its page
-// on click. onRemove and onChangeState are absent when the member cannot edit; removeLabel names what
+// subtask, or the parent an issue hangs under — with its status icon, opening its
+// page on click. The icon changes the status, the way the board's does. A done or
+// canceled issue reads muted. onRemove and onChangeState are absent when the member
+// cannot edit; removeLabel names what
 // removing it does, for the screen reader. A public share has no issue pages to
 // link to, so it passes onOpen and the row opens the issue where it stands; a
 // share that cannot open it at all (a single shared issue) passes neither and the
@@ -41,11 +44,14 @@ export default function IssueRefRow({
 }) {
   const t = useTranslations('issue.fieldSelects');
   const column = project.columns.find((c) => c.id === issue.columnId);
+  const closed = column?.stateType === 'completed' || column?.stateType === 'canceled';
   const label = (
     <>
-      <span className="font-mono text-xs text-muted-foreground">{issue.identifier}</span>
+      <span className="text-[13px] text-muted-foreground/70 tabular-nums">{issue.identifier}</span>
       <span className="flex min-w-0 items-center gap-2">
-        <span className="truncate text-sm">{issue.title}</span>
+        <span className={cn('truncate text-sm', closed && 'text-muted-foreground/70')}>
+          {issue.title}
+        </span>
         {issue.archived && <ArchivedBadge />}
       </span>
     </>
@@ -72,24 +78,24 @@ export default function IssueRefRow({
     );
   }
 
+  const stateIcon = column && <StateIcon stateType={column.stateType} color={column.color} />;
+
   return (
-    <div className="group col-span-full grid grid-cols-subgrid items-center rounded-md px-2 py-1.5 hover:bg-accent/50">
-      {column && (
-        <StateIcon className="col-start-1" stateType={column.stateType} color={column.color} />
-      )}
-      {renderName()}
+    <div className="group col-span-full grid min-h-9 grid-cols-subgrid items-center rounded-md px-2 hover:bg-accent/50">
       {column &&
         (onChangeState ? (
           <PopoverPick
-            align="end"
+            align="start"
             inputPlaceholder={t('changeState')}
             emptyText={t('noState')}
             trigger={
               <button
                 type="button"
-                className="col-start-4 text-start text-xs text-muted-foreground hover:text-foreground"
+                className="col-start-1 flex rounded-sm"
+                title={column.name}
+                aria-label={t('changeState')}
               >
-                {column.name}
+                {stateIcon}
               </button>
             }
             items={project.columns.map((c) => ({
@@ -102,13 +108,16 @@ export default function IssueRefRow({
             }))}
           />
         ) : (
-          <span className="col-start-4 text-xs text-muted-foreground">{column.name}</span>
+          <span className="col-start-1 flex" title={column.name}>
+            {stateIcon}
+          </span>
         ))}
+      {renderName()}
       {onRemove && (
         <Button
           variant="ghost"
           size="icon"
-          className="col-start-5 size-6 opacity-0 group-hover:opacity-100 hover:text-destructive"
+          className="col-start-4 size-6 text-muted-foreground/70 opacity-0 group-hover:opacity-100 hover:text-destructive focus-visible:opacity-100 max-sm:opacity-100"
           aria-label={removeLabel}
           onClick={onRemove}
         >

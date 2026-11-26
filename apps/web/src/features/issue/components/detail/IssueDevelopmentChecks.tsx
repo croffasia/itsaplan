@@ -1,18 +1,18 @@
 import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { DevelopmentCheck } from '@/lib/api/endpoints/git';
-import IssueDevelopmentCiBadge from './IssueDevelopmentCiBadge';
+import IssueDevelopmentCiStatus from './IssueDevelopmentCiStatus';
 
 export default function IssueDevelopmentChecks({ checks }: { checks: DevelopmentCheck[] }) {
   const t = useTranslations('issue.development');
   if (checks.length === 0) return null;
 
   return (
-    <details className="mt-2 border-t pt-2">
-      <summary className="cursor-pointer text-xs text-muted-foreground select-none">
+    <details className="mt-1">
+      <summary className="cursor-pointer text-xs text-muted-foreground/70 select-none hover:text-foreground">
         {t('checks', { count: checks.length })}
       </summary>
-      <div className="mt-2 space-y-1.5">
+      <div className="mt-1.5 space-y-1">
         {checks.map((check) => (
           <div key={check.id} className="flex items-center justify-between gap-3 text-xs">
             {check.url ? (
@@ -32,7 +32,7 @@ export default function IssueDevelopmentChecks({ checks }: { checks: Development
                 {check.name}
               </span>
             )}
-            <IssueDevelopmentCiBadge status={check.status} />
+            <IssueDevelopmentCiStatus status={check.status} />
           </div>
         ))}
       </div>

@@ -36,7 +36,7 @@ export default function IssueTimelineBar({
       <button
         type="button"
         title={[status, duration, span].filter(Boolean).join(' · ')}
-        className={`absolute top-0.5 bottom-0.5 min-w-1 cursor-pointer rounded-xs opacity-90 hover:opacity-100 ${fixed ? 'ml-1 w-11' : ''}`}
+        className={`absolute inset-y-0 min-w-1 cursor-pointer rounded-sm opacity-90 hover:opacity-100 ${fixed ? 'ml-1 w-11' : ''}`}
         style={{
           left: `${bar.leftPct}%`,
           width: fixed ? undefined : `${bar.widthPct}%`,

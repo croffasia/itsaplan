@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-import { Download, Plus } from 'lucide-react';
+import { type RefObject, useState } from 'react';
+import { Download } from 'lucide-react';
 import type { Attachment } from '@/lib/api/endpoints/attachments';
 import { useFileDragZone } from '@/hooks/useFileDragZone';
 import { usePersistedOpen } from '@/hooks/usePersistedOpen';
@@ -11,25 +11,31 @@ import {
 } from '../../services/attachments.service';
 import { baseName } from '../../utils/filename';
 import IssueImageAnnotator from '../IssueImageAnnotator';
-import IssueAttachmentCard from './IssueAttachmentCard';
+import IssueAttachmentRow from './IssueAttachmentRow';
 import AttachmentViewer from '@/components/common/attachments/AttachmentViewer';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
+import IssueSection from './IssueSection';
+import IssueSectionAddButton from './IssueSectionAddButton';
 import IssueSectionHeading from './IssueSectionHeading';
 import { useStorageSettingsQuery } from '@/services/storage.service';
 import { attachmentAccept, attachmentError, attachmentLimitHint } from '@/utils/uploadLimits';
-import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
 
-// Attachments for one issue, as a grid of preview cards: upload, look at,
+// Attachments for one issue, as a list of rows: upload, look at,
 // annotate, download, delete, and insert into the description. onInsert hands the
-// attachment back to the parent, which embeds it via the live editor.
+// attachment back to the parent, which embeds it via the live editor. With no files
+// the section stays off the page, and only its file picker is rendered, for the
+// issue's add bar to open.
 export default function IssueAttachmentsPanel({
   issueId,
+  fileInput,
   onInsert,
   onReplaced,
   readOnly,
 }: {
   issueId: number;
+  // The section's file picker, which the issue's add bar opens as well.
+  fileInput: RefObject<HTMLInputElement | null>;
   onInsert: (attachment: Attachment) => void;
   onReplaced: () => void;
   // When true the files can only be viewed and downloaded.
@@ -51,7 +57,6 @@ export default function IssueAttachmentsPanel({
   // thumbnail under. Stamping the ones replaced here tells the two versions apart.
   const [replacedAt, setReplacedAt] = useState<Record<string, number>>({});
   const { open, toggle } = usePersistedOpen('issue-attachments-open');
-  const fileInput = useRef<HTMLInputElement>(null);
 
   const uploading = uploadAttachment.isPending;
 
@@ -83,63 +88,60 @@ export default function IssueAttachmentsPanel({
 
   const { draggedFiles, dragHandlers } = useFileDragZone((files) => void upload(files));
 
+  const picker = (
+    <input
+      ref={fileInput}
+      type="file"
+      multiple
+      accept={attachmentAccept(limits)}
+      className="hidden"
+      onChange={(e) => void upload(e.target.files)}
+    />
+  );
+  // An upload in flight or one that failed shows the section, so its progress and its
+  // error have somewhere to appear before the first file lands.
+  if (items.length === 0 && !uploading && !error) return picker;
+
   return (
-    // Collapsed, the heading row is all there is, so the section pulls itself up
-    // the way the Links one below it does.
-    <div
-      className={`relative mt-6 border-t pt-5 ${open ? '' : '-mb-2'}`}
-      {...(readOnly ? {} : dragHandlers)}
-    >
-      {/* Fixed height: the Add button only renders while the section is open, and
-          without it the row would shrink to the height of the heading text. */}
-      <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
-        <IssueSectionHeading label={t('title')} open={open} onToggle={toggle} />
-        {open && !readOnly && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 gap-1.5"
-            disabled={uploading}
-            title={attachmentLimitHint(limits)}
-            onClick={() => fileInput.current?.click()}
-          >
-            <Plus className="size-4" />
-            {uploading ? t('uploading') : t('add')}
-          </Button>
-        )}
-        <input
-          ref={fileInput}
-          type="file"
-          multiple
-          accept={attachmentAccept(limits)}
-          className="hidden"
-          onChange={(e) => void upload(e.target.files)}
-        />
-      </div>
+    <IssueSection collapsed={!open} className="relative" {...(readOnly ? {} : dragHandlers)}>
+      <IssueSectionHeading
+        label={t('title')}
+        open={open}
+        onToggle={toggle}
+        actions={
+          <>
+            {open && !readOnly && (
+              <IssueSectionAddButton
+                label={uploading ? t('uploading') : t('add')}
+                busy={uploading}
+                disabled={uploading}
+                title={attachmentLimitHint(limits)}
+                onClick={() => fileInput.current?.click()}
+              />
+            )}
+            {picker}
+          </>
+        }
+      />
 
       {error && <p className="mb-2 text-xs text-destructive">{error}</p>}
 
-      {open &&
-        (items.length === 0 ? (
-          <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-            {readOnly ? t('empty') : t('emptyHint')}
-          </p>
-        ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-2">
-            {items.map((a) => (
-              <IssueAttachmentCard
-                key={a.id}
-                attachment={a}
-                thumbnailUrl={thumbnailUrl(a)}
-                onOpen={() => setViewing(a)}
-                onInsert={() => onInsert(a)}
-                onAnnotate={() => setAnnotating(a)}
-                onDelete={() => setDeleting(a)}
-                readOnly={readOnly}
-              />
-            ))}
-          </div>
-        ))}
+      {open && items.length > 0 && (
+        <div className="-mx-2 flex flex-col">
+          {items.map((a) => (
+            <IssueAttachmentRow
+              key={a.id}
+              attachment={a}
+              thumbnailUrl={thumbnailUrl(a)}
+              onOpen={() => setViewing(a)}
+              onInsert={() => onInsert(a)}
+              onAnnotate={() => setAnnotating(a)}
+              onDelete={() => setDeleting(a)}
+              readOnly={readOnly}
+            />
+          ))}
+        </div>
+      )}
 
       {viewing && <AttachmentViewer attachment={viewing} onClose={() => setViewing(null)} />}
 
@@ -190,6 +192,6 @@ export default function IssueAttachmentsPanel({
           <span className="text-sm font-medium">{t('dropToUpload')}</span>
         </div>
       )}
-    </div>
+    </IssueSection>
   );
 }

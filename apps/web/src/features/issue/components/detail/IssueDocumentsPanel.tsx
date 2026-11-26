@@ -1,8 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import DocumentLinkList from '@/components/common/DocumentLinkList';
 import DocumentPickerDialog from '@/features/documents/components/DocumentPickerDialog';
 import {
@@ -12,55 +9,72 @@ import {
 } from '@/features/documents/services/documents.service';
 import { useTranslations } from 'next-intl';
 import { usePersistedOpen } from '@/hooks/usePersistedOpen';
+import IssueSection from './IssueSection';
+import IssueSectionAddButton from './IssueSectionAddButton';
 import IssueSectionHeading from './IssueSectionHeading';
 
+// The Docs pages linked to the issue. The section stays off the page while none is
+// linked; the issue's add bar opens the same picker as the heading's button.
 export default function IssueDocumentsPanel({
   projectKey,
   issueId,
   canRead,
   canLink,
+  adding,
+  onAddingChange,
 }: {
   projectKey: string;
   issueId: number;
   canRead: boolean;
   canLink: boolean;
+  // Whether the page picker is open. Held by the issue detail, whose add bar opens it
+  // too.
+  adding: boolean;
+  onAddingChange: (adding: boolean) => void;
 }) {
   const t = useTranslations('issue.documents');
   const { open, toggle } = usePersistedOpen('issue-documents-open');
-  const [pickerOpen, setPickerOpen] = useState(false);
   const links = useIssueDocumentLinksQuery(projectKey, issueId, canRead);
   const linkDocument = useLinkDocumentIssue(projectKey);
   const unlinkDocument = useUnlinkDocumentIssue(projectKey);
   const linkedIds = new Set((links.data ?? []).map((link) => link.documentId));
 
-  if (!canRead || (!links.isLoading && !links.isError && linkedIds.size === 0 && !canLink)) {
-    return null;
-  }
+  if (!canRead) return null;
+
+  const picker = adding && (
+    <DocumentPickerDialog
+      projectKey={projectKey}
+      excludeIds={linkedIds}
+      onClose={() => onAddingChange(false)}
+      onPick={(document) => {
+        void linkDocument
+          .mutateAsync({ documentId: document.id, issueId })
+          .then(() => onAddingChange(false))
+          .catch(() => undefined);
+      }}
+    />
+  );
+
+  // A failed read still shows the section, so its error is not mistaken for no links.
+  if (linkedIds.size === 0 && !links.isError) return picker;
 
   return (
-    <div className={`mt-6 border-t pt-5 ${open ? '' : '-mb-2'}`}>
-      <div className={`flex h-7 items-center gap-2 ${open ? 'mb-3' : ''}`}>
-        <IssueSectionHeading
-          label={t('title')}
-          tally={linkedIds.size > 0 ? String(linkedIds.size) : undefined}
-          open={open}
-          onToggle={toggle}
-        />
-        {canLink && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            className="ms-auto"
-            aria-label={t('add')}
-            title={t('add')}
-            disabled={linkDocument.isPending}
-            onClick={() => setPickerOpen(true)}
-          >
-            <Plus />
-          </Button>
-        )}
-      </div>
+    <IssueSection collapsed={!open}>
+      <IssueSectionHeading
+        label={t('title')}
+        tally={linkedIds.size > 0 ? String(linkedIds.size) : undefined}
+        open={open}
+        onToggle={toggle}
+        actions={
+          canLink && (
+            <IssueSectionAddButton
+              label={t('add')}
+              disabled={linkDocument.isPending}
+              onClick={() => onAddingChange(true)}
+            />
+          )
+        }
+      />
 
       {open && (
         <DocumentLinkList
@@ -75,19 +89,7 @@ export default function IssueDocumentsPanel({
         />
       )}
 
-      {pickerOpen && (
-        <DocumentPickerDialog
-          projectKey={projectKey}
-          excludeIds={linkedIds}
-          onClose={() => setPickerOpen(false)}
-          onPick={(document) => {
-            void linkDocument
-              .mutateAsync({ documentId: document.id, issueId })
-              .then(() => setPickerOpen(false))
-              .catch(() => undefined);
-          }}
-        />
-      )}
-    </div>
+      {picker}
+    </IssueSection>
   );
 }

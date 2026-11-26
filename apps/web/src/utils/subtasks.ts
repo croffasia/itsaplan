@@ -97,3 +97,8 @@ export function subtaskProgress(
   }
   return { done, total };
 }
+
+// Whether an issue may take subtasks: one more level has to stay within the limit.
+export function canHaveSubtasks(issue: { ancestors: unknown[] }): boolean {
+  return issue.ancestors.length + 1 < MAX_SUBTASK_DEPTH;
+}

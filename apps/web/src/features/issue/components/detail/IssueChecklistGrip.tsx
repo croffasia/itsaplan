@@ -9,8 +9,7 @@ type Sortable = ReturnType<typeof useSortable>;
 
 // The drag handle of a checklist or one of its items. The row itself is the
 // sortable node and this is its handle, so the checkbox and the inline text stay
-// clickable. Without the permission to edit it renders as a spacer, keeping the
-// row's columns aligned with the ones that do have a handle.
+// clickable. A phone has no hover, so there it stays shown, in the row itself.
 export default function IssueChecklistGrip({
   canEdit,
   attributes,
@@ -23,14 +22,14 @@ export default function IssueChecklistGrip({
   className: string;
 }) {
   const t = useTranslations('issue.checklists');
-  if (!canEdit) return <span className="-ml-1 size-4" />;
+  if (!canEdit) return null;
 
   return (
     <button
       type="button"
       {...attributes}
       {...listeners}
-      className={`-ml-1 cursor-grab touch-none text-muted-foreground/50 ${className}`}
+      className={`absolute top-1/2 -translate-y-1/2 cursor-grab touch-none text-muted-foreground/50 opacity-0 focus-visible:opacity-100 max-sm:static max-sm:translate-y-0 max-sm:opacity-100 ${className}`}
       title={t('dragToReorder')}
     >
       <GripVertical className="size-4" />

@@ -8,9 +8,10 @@ export const webhookBody = t.String();
 
 export const WebhookAckResponse = t.Object({ ok: t.Boolean(), handled: t.String() });
 
-// The repository host an activity entry came from. Without actorUserId, actorName is the
-// account's name on the host.
-export const ActorSourceResponse = t.Nullable(t.UnionEnum(GIT_PROVIDER_KEYS));
+// Where an activity entry came from: a repository host, or a source an extension of the api
+// adds (setActorSources). Without actorUserId, actorName is the account on the host or the
+// name the source gave.
+export const ActorSourceResponse = t.Nullable(t.String());
 
 // The copy of a comment on the synced repository issue.
 export const RepositoryCommentResponse = t.Nullable(

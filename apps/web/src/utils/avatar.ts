@@ -5,8 +5,9 @@
 // Two-letter avatar initials for an assignee. Names use the first letter of
 // their first two words ("Jane Doe" → "JD"); a single token (or an email) uses
 // its first two letters, with the email domain dropped first ("jane@x.io" → "JA").
+// A note in parentheses is not part of the name: "Ana (ana@x.io)" → "AN".
 export function initials(name: string): string {
-  const base = name.split('@')[0].trim();
+  const base = (name.replace(/\([^)]*\)/g, '').trim() || name).split('@')[0].trim();
   const parts = base.split(/[\s._-]+/).filter(Boolean);
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return base.slice(0, 2).toUpperCase();

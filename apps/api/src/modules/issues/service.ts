@@ -1955,8 +1955,9 @@ export async function setIssueFieldValue(
     valueEnd?: string | null;
     optionIds?: number[];
   },
-  actorUserId?: string | null,
+  actor?: ActivityActor,
 ): Promise<void> {
+  const actorUserId = actorId(actor);
   const field = await getCustomFieldById(projectId, fieldId);
   if (!field) throw new HttpError(404, 'Custom field not found');
 
@@ -2076,7 +2077,7 @@ export async function setIssueFieldValue(
         to: rowSide(loggedValue, loggedId),
       },
     ],
-    actorUserId,
+    actor,
   );
 
   if (memberUserId && memberUserId !== previousMemberUserId) {
@@ -2086,11 +2087,11 @@ export async function setIssueFieldValue(
 
   // A markdown field is written in the same editor as the description and reaches
   // the people it mentions the same way.
-  if (field.fieldType === 'markdown') {
+  if (field.fieldType === 'markdown' && !isOutsideAuthor(actor)) {
     await notifyTextMentions({
       projectId,
       issueId,
-      actorUserId: actorUserId ?? null,
+      actorUserId,
       sourceActivityId: entry?.id ?? null,
       before: previousMarkdown,
       after: typeof input.value === 'string' ? input.value : '',

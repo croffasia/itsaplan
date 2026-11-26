@@ -6,6 +6,7 @@ import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
 import { createComment } from '#modules/issues/activity';
+import { setActorSources } from '#modules/git/providers';
 import { claimDueRuns } from '../../run-queue';
 import { createAgent } from '#tests/helpers/agents';
 
@@ -125,6 +126,41 @@ describe('agent mention runs', () => {
     expect(run.threadContext).toContain('note 2');
     expect(run.threadContext).not.toContain('note 1');
     expect(run.threadContext).not.toContain('note 0');
+  });
+
+  it('names an author from a source an extension adds, and refuses a source nobody adds', async () => {
+    const { asOwner, columnId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const issue = (await createIssue(asOwner, columnId)).data!;
+    const write = () =>
+      createComment({
+        issueId: issue.id,
+        body: 'it still fails',
+        authorName: 'Ana',
+        authorSource: 'helpdesk',
+      });
+    await expect(write()).rejects.toThrow("Unknown actor source 'helpdesk'");
+    expect(() => setActorSources([{ key: 'github', label: 'Mine' }])).toThrow();
+
+    setActorSources([{ key: 'helpdesk', label: 'Helpdesk' }]);
+    try {
+      const sent = await write();
+      const client = asOwner.issues({ issueId: issue.id });
+      await client.comments.post({ body: mention(agent.username), replyToId: sent.id });
+
+      const feed = (await client.feed.get({ query: {} })).data!.items;
+      expect(feed.find((item) => item.id === sent.id)).toMatchObject({
+        actorUserId: null,
+        actorName: 'Ana',
+        actorSource: 'helpdesk',
+      });
+      const claimed = await claimDueRuns();
+      expect(claimed.find((r) => r.issueId === issue.id)!.threadContext).toContain(
+        'Ana (Helpdesk): it still fails',
+      );
+    } finally {
+      setActorSources();
+    }
   });
 
   it('leaves the thread context empty for a top-level mention', async () => {

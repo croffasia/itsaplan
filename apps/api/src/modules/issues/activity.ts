@@ -13,7 +13,7 @@ import {
 } from '@repo/db';
 import { and, asc, desc, eq, gte, inArray, isNull, lt, ne, sql } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
-import type { GitProviderKey } from '#modules/git/providers';
+import { isActorSource } from '#modules/git/providers';
 import { emitCommentEvent } from './webhook-payload';
 import { addedMentionHandles, parseMentionHandles, resolveMentionHandles } from '#shared/mentions';
 import { mentionReach, queueMentionRuns } from '#modules/mentions/service';
@@ -364,8 +364,8 @@ export async function createComment(input: {
   // The name of an author without an account, such as someone writing in through a
   // build's public page. Their mentions reach nobody: they are not in the team.
   authorName?: string;
-  // The repository host the comment was written on, by authorName or by the member who
-  // connected that account. Its mentions name the host's users and reach nobody here.
+  // Where the comment was written: a repository host, by authorName or by the member who
+  // connected that account there, or a source an extension adds. Its mentions reach nobody here.
   authorSource?: ActorSource;
 }): Promise<FeedItemRow> {
   const actorUserId = input.actorUserId ?? null;
@@ -387,7 +387,7 @@ export async function createComment(input: {
       replyToId,
       actorUserId,
       actorName,
-      actorSource: input.authorSource ?? null,
+      actorSource: knownSource(input.authorSource),
       body: input.body,
     })
     .returning();
@@ -585,8 +585,15 @@ export interface ActivityInput extends ActivityPayload {
   action: string;
 }
 
-// The repository host behind an entry written for an account there.
-export type ActorSource = GitProviderKey;
+// A repository host, or a source an extension of the api adds (setActorSources).
+export type ActorSource = string;
+
+// A source nobody adds would be stored with no name or icon to show it by.
+function knownSource(source: ActorSource | null | undefined): ActorSource | null {
+  if (source == null) return null;
+  if (!isActorSource(source)) throw new Error(`Unknown actor source '${source}'`);
+  return source;
+}
 
 // The actor behind a write: the session user's id (a member or an agent's bot
 // user), null/undefined for an anonymous system write, or a named system actor
@@ -646,7 +653,7 @@ export async function recordActivityEntries(
 ): Promise<{ id: number; action: string | null }[]> {
   if (!entries.length) return [];
   const resolvedActorId = actorId(actor);
-  const actorSource = actor && typeof actor === 'object' ? (actor.source ?? null) : null;
+  const actorSource = knownSource(actor && typeof actor === 'object' ? actor.source : null);
   const actorName =
     actor && typeof actor === 'object'
       ? actor.system

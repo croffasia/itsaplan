@@ -135,6 +135,8 @@ export interface FeedItem {
   editedAt: string | null;
   // The emoji reactions of a comment; empty on a change-log entry.
   reactions: CommentReaction[];
+  // The copy of a comment on the synced repository issue, null when it has none.
+  repositoryComment: { provider: GitConnectionProvider; url: string } | null;
 }
 
 // Opaque keyset cursor returned by the feed endpoint; pass it back to load the

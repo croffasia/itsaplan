@@ -1,10 +1,12 @@
 import {
   db,
+  gitCommentLink,
   gitIssueLink,
   gitManagedRepository,
   gitProviderConnection,
   gitRepositoryLabel,
   issue,
+  issueActivity,
 } from '@repo/db';
 import { and, asc, eq, inArray, isNull, lt, ne, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
@@ -16,14 +18,23 @@ import {
   type IssuePatch,
   type IssueRow,
 } from '#modules/issues/service';
-import { createComment, type ActivityActor } from '#modules/issues/activity';
+import {
+  createComment,
+  deleteComment,
+  updateComment,
+  type ActivityActor,
+} from '#modules/issues/activity';
 import { getProjectById, type ProjectRow } from '#modules/projects/service';
 import {
+  listProviderIssueComments,
   listProviderOpenIssues,
   setProviderIssueState,
   type GitProvider,
+  type ProviderIssueComment,
 } from './connections-provider';
 import { providerCallArgs, providerCallColumns } from './connections-service';
+import { memberForAccount } from './accounts';
+import { SYNC_MARKER, fromRepositoryText } from './comment-sync';
 import {
   PROVIDER_LABEL,
   hostActor,
@@ -39,6 +50,8 @@ import { columnStateTypes, firstColumnId, gitIntegrationEnabled } from './servic
 // repository issue becomes an issue here, and moving that issue between an open and a
 // closed state closes or reopens the repository issue. In 'two_way' mode a change of
 // the repository issue (title, description, labels, state) also comes back here.
+// With issueComments a new repository comment is copied here; in 'two_way' mode its
+// edits and its deletion follow, and comment-sync.ts sends comments the other way.
 
 const CLOSED_STATE_TYPES = ['completed', 'canceled'];
 
@@ -50,6 +63,8 @@ interface SyncedRepository {
   issueSync: IssueSyncMode;
   issueColumnId: number | null;
   issueComments: boolean;
+  // The host's address, which names a member's account there.
+  baseUrl: string;
 }
 
 export interface LinkedRepositoryIssue {
@@ -58,6 +73,8 @@ export interface LinkedRepositoryIssue {
   number: number;
   url: string | null;
   state: 'open' | 'closed';
+  baseUrl: string;
+  pushComments: boolean;
 }
 
 const syncedColumns = {
@@ -66,6 +83,7 @@ const syncedColumns = {
   issueSync: gitManagedRepository.issueSync,
   issueColumnId: gitManagedRepository.issueColumnId,
   issueComments: gitManagedRepository.issueComments,
+  baseUrl: gitProviderConnection.baseUrl,
 };
 
 function synced(
@@ -165,18 +183,62 @@ async function claimIssueLink(repositoryId: number, snapshot: IssueSnapshot) {
   return claim?.id ?? null;
 }
 
+// Copies a repository comment to the issue, as the member who connected its author's
+// account when there is one. Returns false for a comment already here: one written here
+// and come back, or one a redelivery or an import brings again.
+async function copyComment(
+  repository: SyncedRepository,
+  issueId: number,
+  comment: ProviderIssueComment,
+  origin: Pick<DeliveryOrigin, 'key' | 'label'>,
+): Promise<boolean> {
+  if (comment.body.includes(SYNC_MARKER)) return false;
+  const [known] = await db
+    .select({ id: gitCommentLink.id })
+    .from(gitCommentLink)
+    .where(
+      and(
+        eq(gitCommentLink.repositoryId, repository.id),
+        eq(gitCommentLink.externalId, comment.id),
+      ),
+    )
+    .limit(1);
+  if (known) return false;
+  const memberId = comment.author
+    ? await memberForAccount(repository.projectId, repository.baseUrl, comment.author)
+    : null;
+  const author = hostActor(comment.author, origin);
+  const created = await createComment({
+    issueId,
+    body: fromRepositoryText(comment.body),
+    actorUserId: memberId,
+    ...(memberId ? {} : { authorName: author.system }),
+    authorSource: author.source,
+  });
+  await db
+    .insert(gitCommentLink)
+    .values({ repositoryId: repository.id, activityId: created.id, externalId: comment.id })
+    .onConflictDoNothing();
+  return true;
+}
+
 // Creates the issue a repository issue becomes. Returns false when it already has one.
 // A full column still takes it: the repository sends the issue once and never retries.
+// `comments` loads the repository comments to copy. They are read before the issue is
+// created, so a failed read leaves nothing behind and the next import tries again.
 async function createLinkedIssue(
   project: ProjectRow,
   repository: SyncedRepository,
   snapshot: IssueSnapshot,
   origin: Pick<DeliveryOrigin, 'key' | 'label'>,
-  opts?: { skipStatusRuns?: boolean },
+  opts?: { skipStatusRuns?: boolean; comments?: () => Promise<ProviderIssueComment[]> },
 ): Promise<boolean> {
   const claimId = await claimIssueLink(repository.id, snapshot);
   if (claimId == null) return false;
+  let issueId: number;
+  let comments: ProviderIssueComment[];
   try {
+    comments = (await opts?.comments?.()) ?? [];
     const mapped = await mappedTargets(repository.id, snapshot.labels);
     const created = await createIssue(
       project,
@@ -191,11 +253,13 @@ async function createLinkedIssue(
       { skipWipLimit: true, skipStatusRuns: opts?.skipStatusRuns },
     );
     await db.update(gitIssueLink).set({ issueId: created.id }).where(eq(gitIssueLink.id, claimId));
-    return true;
+    issueId = created.id;
   } catch (error) {
     await db.delete(gitIssueLink).where(eq(gitIssueLink.id, claimId));
     throw error;
   }
+  for (const comment of comments) await copyComment(repository, issueId, comment, origin);
+  return true;
 }
 
 // An issue moved to another project keeps its link but no longer syncs: that
@@ -307,16 +371,56 @@ export async function handleIssueComment(
 ): Promise<'comment' | 'ignored'> {
   const repository = await syncedRepository(project.id, origin.key, event.repo);
   if (!repository?.issueComments) return 'ignored';
-  const link = await linkedIssue(repository, event.number);
-  if (!link) return 'ignored';
-  const author = hostActor(event.author, origin);
-  await createComment({
-    issueId: link.issueId,
-    body: event.body,
-    authorName: author.system,
-    authorSource: author.source,
-  });
-  return 'comment';
+  if (event.action === 'created') {
+    const link = await linkedIssue(repository, event.number);
+    if (!link) return 'ignored';
+    return (await copyComment(repository, link.issueId, event, origin)) ? 'comment' : 'ignored';
+  }
+  if (repository.issueSync !== 'two_way') return 'ignored';
+  return (await applyCommentChange(repository, event, origin)) ? 'comment' : 'ignored';
+}
+
+// An edit or a delete of a repository comment that has a copy here. The change comes
+// from the repository, so it is not sent back there. An edit that matches the copy is
+// the echo of one made here.
+async function applyCommentChange(
+  repository: SyncedRepository,
+  event: IssueCommentEvent,
+  origin: DeliveryOrigin,
+): Promise<boolean> {
+  const [link] = await db
+    .select({
+      activityId: gitCommentLink.activityId,
+      issueId: issue.id,
+      body: issueActivity.body,
+      replyToId: issueActivity.replyToId,
+    })
+    .from(gitCommentLink)
+    .innerJoin(issueActivity, eq(gitCommentLink.activityId, issueActivity.id))
+    .innerJoin(issue, eq(issueActivity.issueId, issue.id))
+    .where(
+      and(
+        eq(gitCommentLink.repositoryId, repository.id),
+        eq(gitCommentLink.externalId, event.id),
+        eq(issue.projectId, repository.projectId),
+      ),
+    )
+    .limit(1);
+  if (!link) return false;
+  const actor: ActivityActor = hostActor(origin.sender, origin);
+  if (event.action === 'deleted') {
+    // A repository issue has no threads, so a comment deleted there takes no other with
+    // it. Its replies here stay, one level up.
+    await db
+      .update(issueActivity)
+      .set({ replyToId: link.replyToId })
+      .where(eq(issueActivity.replyToId, link.activityId));
+    return deleteComment(link.activityId, actor, repository.projectId);
+  }
+  const body = fromRepositoryText(event.body);
+  if (!body || body === link.body) return false;
+  await updateComment(link.activityId, body, actor, repository.projectId);
+  return true;
 }
 
 // Creates an issue for each open issue on one page of the repository's issues. The
@@ -348,10 +452,14 @@ export async function importRepositoryIssues(
   const { issues, nextPage } = await listProviderOpenIssues(call.input, call.repository, page);
   const repository = synced(row);
   const origin = { key: call.input.provider, label: PROVIDER_LABEL[call.input.provider] };
-  // One agent run per imported issue would start hundreds of runs at once.
-  const options = { skipStatusRuns: true };
   let created = 0;
   for (const snapshot of issues) {
+    const comments =
+      repository.issueComments && snapshot.hasComments
+        ? () => listProviderIssueComments(call.input, call.repository, snapshot.number)
+        : undefined;
+    // One agent run per imported issue would start hundreds of runs at once.
+    const options = { skipStatusRuns: true, comments };
     if (await createLinkedIssue(project, repository, snapshot, origin, options)) created++;
   }
   return { created, skipped: issues.length - created, nextPage };
@@ -433,6 +541,11 @@ export async function getLinkedRepositoryIssue(
       number: gitIssueLink.number,
       url: gitIssueLink.url,
       state: gitIssueLink.state,
+      baseUrl: gitProviderConnection.baseUrl,
+      projectId: gitManagedRepository.projectId,
+      issueSync: gitManagedRepository.issueSync,
+      issueComments: gitManagedRepository.issueComments,
+      issueCommentsPush: gitManagedRepository.issueCommentsPush,
     })
     .from(gitIssueLink)
     .innerJoin(issue, eq(gitIssueLink.issueId, issue.id))
@@ -444,9 +557,15 @@ export async function getLinkedRepositoryIssue(
     .where(and(eq(gitIssueLink.issueId, issueId), sameProject))
     .limit(1);
   if (!row) return null;
+  const { projectId, issueSync, issueComments, issueCommentsPush, ...linked } = row;
   return {
-    ...row,
+    ...linked,
     provider: row.provider as GitProvider,
     state: row.state === 'closed' ? 'closed' : 'open',
+    pushComments:
+      issueSync === 'two_way' &&
+      issueComments &&
+      issueCommentsPush &&
+      (await gitIntegrationEnabled(projectId)),
   };
 }

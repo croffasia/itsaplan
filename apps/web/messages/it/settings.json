@@ -503,7 +503,7 @@
     "issueColumnHint": "Anche le issue importate finiscono qui. Con la sincronizzazione bidirezionale, anche quelle riaperte.",
     "issueColumnNone": "Prima colonna",
     "issueComments": "Copia i commenti",
-    "issueCommentsHint": "I nuovi commenti del repository vengono copiati nell'issue della board. I commenti scritti nella board restano lì.",
+    "issueCommentsHint": "I nuovi commenti del repository vengono copiati nella issue della board.",
     "importIssues": "Importa issue aperte",
     "importIssuesHint": "Le issue già presenti nella board vengono saltate.",
     "importIssuesAction": "Importa",
@@ -522,7 +522,21 @@
     "changeType": "Cambia tipo…",
     "noType": "Nessun tipo.",
     "noRepositoryLabels": "Questo repository non ha etichette.",
-    "manualSetupHint": "Per un repository che nessun account provider può raggiungere. Così le issue non si sincronizzano."
+    "manualSetupHint": "Per un repository che nessun account provider può raggiungere. Così le issue non si sincronizzano.",
+    "issueCommentsPush": "Invia i commenti al repository",
+    "issueCommentsPushHint": "I commenti scritti qui vengono pubblicati nella issue del repository con l'account del loro autore.",
+    "issueCommentsPushAs": "I tuoi vengono inviati come {login}.",
+    "issueCommentsPushNotice": "Vengono inviati solo i commenti dei membri che hanno collegato il proprio account {provider} nel profilo. I tuoi restano qui.",
+    "accountConnectAction": "Collega account {provider}",
+    "accountConnectTitle": "Collega il tuo account del repository",
+    "accountConnectHint": "Serve ad agire nel repository a tuo nome.",
+    "accountHost": "Servizio",
+    "accountTokenHint": "Usa un token che possa scrivere commenti sulle issue. Viene cifrato e non sarà più mostrato.",
+    "accountCheck": "Verifica token",
+    "accountSignsInAs": "Il token accede come {login}.",
+    "accountConnectThis": "Collega questo account",
+    "accountCheckFailed": "Impossibile verificare il token.",
+    "accountConnected": "Account {provider} collegato"
   },
   "importExport": {
     "jiraPreview": {

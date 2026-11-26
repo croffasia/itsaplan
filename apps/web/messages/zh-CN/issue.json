@@ -271,7 +271,13 @@
     "deleteCommentConfirmation": "该评论及其所有回复将被永久删除。",
     "reactions": "回应",
     "addReaction": "添加回应",
-    "reactedBy": "{names} 回应了 {emoji}"
+    "reactedBy": "{names} 回应了 {emoji}",
+    "unsentTitle": "这条评论不会同步到 {provider}",
+    "unsentBody": "这个事项的评论会以各作者自己的账号发送到 {provider}。你还没有连接账号，所以这条评论只保留在这里。",
+    "unsentHide": "不再显示",
+    "unsentPostHere": "只发在这里",
+    "unsentConnect": "连接 {provider}",
+    "openOnHost": "在 {provider} 中打开"
   },
   "stats": {
     "title": "统计",

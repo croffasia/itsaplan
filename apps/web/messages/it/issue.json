@@ -271,7 +271,13 @@
     "deleteCommentConfirmation": "Il commento e le sue risposte verranno eliminati definitivamente.",
     "reactions": "Reazioni",
     "addReaction": "Aggiungi reazione",
-    "reactedBy": "{names} hanno reagito con {emoji}"
+    "reactedBy": "{names} hanno reagito con {emoji}",
+    "unsentTitle": "Questo commento non arriverà su {provider}",
+    "unsentBody": "I commenti di questa issue vanno su {provider} con l'account di ciascun autore. Non hai collegato il tuo, quindi questo resta qui.",
+    "unsentHide": "Non mostrare",
+    "unsentPostHere": "Pubblica solo qui",
+    "unsentConnect": "Collega {provider}",
+    "openOnHost": "Apri in {provider}"
   },
   "stats": {
     "title": "Statistiche",

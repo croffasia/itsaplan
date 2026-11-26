@@ -25,6 +25,13 @@ import {
 } from '#modules/notifications/service';
 import { listStatusTimeline } from './status-history';
 import { listReactions, type CommentReactionRow } from './reactions';
+import {
+  pushCreatedComment,
+  pushDeletedComment,
+  pushEditedComment,
+  repositoryComments,
+  type RepositoryComment,
+} from '#modules/git/comment-sync';
 
 // Issue timeline: comments and change-log activity in one table (issue_activity).
 // kind selects which columns a row uses. The author is the session user
@@ -52,6 +59,8 @@ export interface FeedItemRow {
   editedAt: string | null;
   // The emoji reactions of a comment; empty on a change-log entry.
   reactions: CommentReactionRow[];
+  // The copy of a comment on the synced repository issue, null when it has none.
+  repositoryComment: RepositoryComment | null;
 }
 
 // Opaque page cursor: the (created_at, id) of the last returned item. id breaks
@@ -96,15 +105,23 @@ function mapFeedItem(row: {
     createdAt: iso(row.createdAt),
     editedAt: row.editedAt ? iso(row.editedAt) : null,
     reactions: [],
+    repositoryComment: null,
   };
 }
 
-// Fills in the reactions of the comments among the given entries, in one query.
-async function withReactions(items: FeedItemRow[]): Promise<FeedItemRow[]> {
-  const reactions = await listReactions(
-    items.filter((item) => item.kind === 'comment').map((item) => item.id),
-  );
-  return items.map((item) => ({ ...item, reactions: reactions.get(item.id) ?? [] }));
+// Fills in the reactions of the comments among the given entries and where each one is
+// on a synced repository issue, one query for each.
+async function withCommentDetails(items: FeedItemRow[]): Promise<FeedItemRow[]> {
+  const commentIds = items.filter((item) => item.kind === 'comment').map((item) => item.id);
+  const [reactions, copies] = await Promise.all([
+    listReactions(commentIds),
+    repositoryComments(commentIds),
+  ]);
+  return items.map((item) => ({
+    ...item,
+    reactions: reactions.get(item.id) ?? [],
+    repositoryComment: copies.get(item.id) ?? null,
+  }));
 }
 
 export type FeedFilter = 'comments' | 'history' | 'worklog';
@@ -181,7 +198,7 @@ export async function listFeed(issueId: number, opts: FeedPageOptions = {}): Pro
   const items = page.map(mapFeedItem);
   const replies = await listReplies(items.map((item) => item.id));
   return {
-    items: await withReactions([...items, ...replies]),
+    items: await withCommentDetails([...items, ...replies]),
     nextCursor: hasMore && last ? { ts: last.cursorTs, id: last.id } : null,
   };
 }
@@ -261,7 +278,7 @@ export async function listFeedRange(
       ),
     )
     .orderBy(issueActivity.createdAt, issueActivity.id);
-  return withReactions(rows.map(mapFeedItem));
+  return withCommentDetails(rows.map(mapFeedItem));
 }
 
 // One stretch of the grouped feed: the status the issue was in, and the entries of
@@ -346,7 +363,8 @@ export async function createComment(input: {
   // The name of an author without an account, such as someone writing in through a
   // build's public page. Their mentions reach nobody: they are not in the team.
   authorName?: string;
-  // The repository host the comment was written on, by authorName.
+  // The repository host the comment was written on, by authorName or by the member who
+  // connected that account. Its mentions name the host's users and reach nobody here.
   authorSource?: ActorSource;
 }): Promise<FeedItemRow> {
   const actorUserId = input.actorUserId ?? null;
@@ -382,12 +400,14 @@ export async function createComment(input: {
   if (projectId != null) {
     await emitCommentEvent(projectId, 'comment.created', comment, actorUserId);
     // Resolved once: the agent halves start runs, the member half is notified.
+    const outside = input.authorName !== undefined || input.authorSource !== undefined;
     const mentioned = await resolveMentionHandles(
       projectId,
-      input.authorName === undefined ? parseMentionHandles(comment.body ?? '') : [],
+      outside ? [] : parseMentionHandles(comment.body ?? ''),
     );
     await enqueueMentionRuns(projectId, comment, mentioned.agentUserIds);
     await notifyComment(projectId, comment, mentioned);
+    await pushCreatedComment(comment);
   }
 
   return comment;
@@ -420,12 +440,15 @@ export async function getCommentRef(
 // webhook, and the mentions the edit newly adds (agents get a run, members a
 // notification); a handle the comment already named is not told again. Who may
 // change whose is settled by the route guard.
+// A named system actor is a change that came from a synced repository: it is not sent
+// back there, and its mentions reach nobody.
 export async function updateComment(
   commentId: number,
   body: string,
-  actorUserId: string | null,
+  actor: ActivityActor,
   projectId: number,
 ): Promise<FeedItemRow> {
+  const actorUserId = actorId(actor);
   const [before] = await db
     .select()
     .from(issueActivity)
@@ -437,10 +460,14 @@ export async function updateComment(
     .where(eq(issueActivity.id, commentId))
     .returning();
   if (!row) throw new HttpError(404, 'Comment not found');
-  const [comment] = await withReactions([mapFeedItem(row)]);
+  const [comment] = await withCommentDetails([mapFeedItem(row)]);
 
-  await recordActivity(comment.issueId, [{ action: 'comment_edited' }], actorUserId);
+  await recordActivity(comment.issueId, [{ action: 'comment_edited' }], actor);
   await emitCommentEvent(projectId, 'comment.updated', comment, actorUserId);
+  if (isOutsideAuthor(actor)) return comment;
+  // The host gets the change only from the comment's author: a project owner who edits
+  // a member's comment must not write there as that member.
+  if (actorUserId !== null && actorUserId === comment.actorUserId) await pushEditedComment(comment);
 
   const added = addedMentionHandles(before.body ?? '', body);
   if (added.length > 0) {
@@ -464,7 +491,7 @@ export async function updateComment(
 // it read. Returns false when there is no such comment.
 export async function deleteComment(
   commentId: number,
-  actorUserId: string | null,
+  actor: ActivityActor,
   projectId: number,
 ): Promise<boolean> {
   const [before] = await db
@@ -473,9 +500,17 @@ export async function deleteComment(
     .where(and(eq(issueActivity.id, commentId), eq(issueActivity.kind, 'comment')));
   if (!before) return false;
   // Read first: the reactions are deleted with the comment.
-  const [comment] = await withReactions([mapFeedItem(before)]);
+  const [comment] = await withCommentDetails([mapFeedItem(before)]);
+  const actorUserId = actorId(actor);
+  // Before the rows go: their links to the repository comments go with them. As with an
+  // edit, only the author's own delete reaches the host. The replies go with the comment
+  // here, so their copies go there too, each through its own author's account.
+  if (actorUserId !== null && actorUserId === comment.actorUserId) {
+    for (const entry of [comment, ...(await listReplies([commentId]))])
+      await pushDeletedComment(entry);
+  }
   await db.delete(issueActivity).where(eq(issueActivity.id, commentId));
-  await recordActivity(comment.issueId, [{ action: 'comment_deleted' }], actorUserId);
+  await recordActivity(comment.issueId, [{ action: 'comment_deleted' }], actor);
   await emitCommentEvent(projectId, 'comment.deleted', comment, actorUserId);
   return true;
 }

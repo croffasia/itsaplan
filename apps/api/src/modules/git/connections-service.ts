@@ -15,7 +15,7 @@ import {
   DEVELOPMENT_PROVIDERS,
   resolveLinkProvider,
   ensureDevelopmentProvider,
-  getProviderAccount,
+  getProviderProfile,
   getProviderPullRequest,
   getProviderRepository,
   installProviderWebhook,
@@ -59,6 +59,7 @@ export interface GitManagedRepositoryDto {
   issueSync: IssueSyncMode;
   issueColumnId: number | null;
   issueComments: boolean;
+  issueCommentsPush: boolean;
 }
 
 export interface RepositoryLabelMapping {
@@ -91,6 +92,7 @@ const repositoryColumns = {
   issueSync: gitManagedRepository.issueSync,
   issueColumnId: gitManagedRepository.issueColumnId,
   issueComments: gitManagedRepository.issueComments,
+  issueCommentsPush: gitManagedRepository.issueCommentsPush,
 };
 
 function mapRepository(row: {
@@ -103,6 +105,7 @@ function mapRepository(row: {
   issueSync: string;
   issueColumnId: number | null;
   issueComments: boolean;
+  issueCommentsPush: boolean;
 }): GitManagedRepositoryDto {
   return {
     ...row,
@@ -369,7 +372,11 @@ export async function connectGitProvider(
   const token = input.token.trim();
   if (!token) throw new HttpError(400, 'token is required');
   const baseUrl = await normalizeProviderBaseUrl(input.provider, input.baseUrl);
-  const accountLogin = await getProviderAccount({ provider: input.provider, baseUrl, token });
+  const { login: accountLogin } = await getProviderProfile({
+    provider: input.provider,
+    baseUrl,
+    token,
+  });
   const encrypted = encryptSecret(token);
   // A team can hold several connections of one account: the migration from
   // project-owned connections keeps each project's token. Saving the account
@@ -680,6 +687,7 @@ export async function updateManagedRepository(
     issueSync?: IssueSyncMode;
     issueColumnId?: number | null;
     issueComments?: boolean;
+    issueCommentsPush?: boolean;
     labelMappings?: RepositoryLabelMapping[];
   },
 ): Promise<GitManagedRepositoryDto> {
@@ -716,6 +724,7 @@ export async function updateManagedRepository(
   if (patch.issueSync !== undefined) fields.issueSync = patch.issueSync;
   if (patch.issueColumnId !== undefined) fields.issueColumnId = patch.issueColumnId;
   if (patch.issueComments !== undefined) fields.issueComments = patch.issueComments;
+  if (patch.issueCommentsPush !== undefined) fields.issueCommentsPush = patch.issueCommentsPush;
   const [updated] = await db
     .update(gitManagedRepository)
     .set({ ...fields, updatedAt: new Date() })

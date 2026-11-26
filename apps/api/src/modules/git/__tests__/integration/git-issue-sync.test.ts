@@ -5,6 +5,7 @@ import { authedApi, type Api, createProject } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent } from '#tests/helpers/agents';
+import { addProjectMember } from '#tests/helpers/members';
 
 // Issue sync with a repository connected through a provider account, against a GitHub
 // served on localhost. The SSRF guard refuses http and loopback hosts under
@@ -17,15 +18,22 @@ interface FakeIssue {
   state: 'open' | 'closed';
   labels: string[];
   pullRequest?: boolean;
+  comments?: string[];
 }
 
 function fakeGithub() {
   const hooks = new Map<number, { url: string; events: string[] }>();
   const issues: FakeIssue[] = [];
   const stateChanges: { number: number; state: string; reason?: string }[] = [];
+  const commentReads: number[] = [];
+  // Comments written, edited and deleted on the fake, with the token each call used.
+  const commentWrites: { method: string; id: number; body?: string; token: string }[] = [];
+  // The login /user answers for a token; any other token signs in as 'octo'.
+  const logins: Record<string, string> = {};
   // labelPages: 'endless' names a next page of new labels forever; 'stuck' names page 1 again.
   const control = {
     refuseIssueWrites: false,
+    refuseCommentReads: false,
     labelPages: null as 'endless' | 'stuck' | null,
   };
   const labels = ['bug', 'enhancement'];
@@ -34,7 +42,8 @@ function fakeGithub() {
     async fetch(req) {
       const url = new URL(req.url);
       const path = url.pathname.replace(/^\/api\/v3/, '');
-      if (path === '/user') return Response.json({ login: 'octo' });
+      const token = req.headers.get('authorization')?.replace(/^Bearer /, '') ?? '';
+      if (path === '/user') return Response.json({ login: logins[token] ?? 'octo' });
       if (path === '/repositories/1')
         return Response.json({
           id: 1,
@@ -78,6 +87,37 @@ function fakeGithub() {
           open.slice((page - 1) * perPage, page * perPage).map((issue) => githubIssue(issue)),
         );
       }
+      const comments = path.match(/^\/repos\/acme\/site\/issues\/(\d+)\/comments$/);
+      if (comments && req.method === 'POST') {
+        const { body } = (await req.json()) as { body: string };
+        const id = 5000 + commentWrites.length;
+        commentWrites.push({ method: 'POST', id, body, token });
+        return Response.json({ id, body }, { status: 201 });
+      }
+      const written = path.match(/^\/repos\/acme\/site\/issues\/comments\/(\d+)$/);
+      if (written && (req.method === 'PATCH' || req.method === 'DELETE')) {
+        const body =
+          req.method === 'PATCH' ? ((await req.json()) as { body: string }).body : undefined;
+        commentWrites.push({ method: req.method, id: Number(written[1]), body, token });
+        return req.method === 'PATCH'
+          ? Response.json({ id: Number(written[1]), body })
+          : new Response(null, { status: 204 });
+      }
+      if (comments) {
+        if (control.refuseCommentReads)
+          return Response.json({ message: 'Server Error' }, { status: 500 });
+        const number = Number(comments[1]);
+        commentReads.push(number);
+        const page = Number(url.searchParams.get('page'));
+        const perPage = Number(url.searchParams.get('per_page'));
+        const all = issues.find((item) => item.number === number)?.comments ?? [];
+        return Response.json(
+          all
+            .map((body, i) => ({ id: number * 1000 + i, body, user: { login: 'reviewer' } }))
+            .slice((page - 1) * perPage, page * perPage),
+          { headers: page * perPage < all.length ? { link: '<x>; rel="next"' } : {} },
+        );
+      }
       const issue = path.match(/^\/repos\/acme\/site\/issues\/(\d+)$/);
       if (issue && req.method === 'PATCH') {
         if (control.refuseIssueWrites)
@@ -101,6 +141,9 @@ function fakeGithub() {
     hooks,
     issues,
     stateChanges,
+    commentReads,
+    commentWrites,
+    logins,
     control,
     stop: () => server.stop(true),
   };
@@ -116,6 +159,7 @@ function githubIssue(issue: FakeIssue, stateReason: string | null = null) {
     state_reason: stateReason,
     labels: issue.labels.map((name) => ({ name })),
     user: { login: 'contributor' },
+    comments: issue.comments?.length ?? 0,
     ...(issue.pullRequest ? { pull_request: { url: 'x' } } : {}),
   };
 }
@@ -476,10 +520,11 @@ describe('Repository issue sync', () => {
     await repository(s).patch({ issueSync: 'one_way' });
     await deliver(s, 'issues', issueEvent('opened', opened));
     const [created] = await boardIssues(s.asOwner);
+    let nextId = 1;
     const comment = (body: string, pullRequest = false) => ({
       action: 'created',
       issue: githubIssue({ ...opened, pullRequest }),
-      comment: { body, user: { login: 'reviewer' } },
+      comment: { id: nextId++, body, user: { login: 'reviewer' } },
       repository: { full_name: 'acme/site' },
     });
 
@@ -524,6 +569,299 @@ describe('Repository issue sync', () => {
     expect(again.data).toMatchObject({ created: 0, skipped: 50 });
 
     expect(await boardIssues(s.asOwner)).toHaveLength(52);
+  });
+
+  it('copies the comments of imported issues only while comment sync is on', async () => {
+    const s = await setup(fake);
+    await repository(s).patch({ issueSync: 'one_way' });
+    const issue = (number: number, title: string, comments?: string[]): FakeIssue => ({
+      number,
+      title,
+      body: '',
+      state: 'open',
+      labels: [],
+      comments,
+    });
+    fake.issues.push(issue(1, 'Before', ['Early']));
+    await repository(s).issues.import.post({});
+    await repository(s).patch({ issueComments: true });
+    const many = Array.from({ length: 101 }, (_, i) => `Comment ${i + 1}`);
+    fake.issues.push(issue(2, 'Discussed', many), issue(3, 'Quiet'));
+
+    const imported = await repository(s).issues.import.post({});
+    expect(imported.data).toMatchObject({ created: 2, skipped: 1 });
+
+    const commentsOf = async (title: string, order: 'asc' | 'desc' = 'asc') => {
+      const found = (await boardIssues(s.asOwner)).find((item) => item.title === title)!;
+      const feed = await s.asOwner
+        .issues({ issueId: found.id })
+        .feed.get({ query: { filter: 'comments', order, limit: 100 } });
+      return feed.data!.items;
+    };
+    expect(await commentsOf('Before')).toEqual([]);
+    const oldest = await commentsOf('Discussed');
+    expect(oldest.map((item) => item.body)).toEqual(many.slice(0, 100));
+    expect(oldest[0]).toMatchObject({ actorName: 'reviewer', actorSource: 'github' });
+    expect((await commentsOf('Discussed', 'desc'))[0]).toMatchObject({ body: 'Comment 101' });
+    expect(fake.commentReads).toEqual([2, 2]);
+  });
+
+  it('creates no issue when its comments cannot be read, so the next import copies both', async () => {
+    const s = await setup(fake);
+    await repository(s).patch({ issueSync: 'one_way', issueComments: true });
+    fake.issues.push({
+      number: 1,
+      title: 'Discussed',
+      body: '',
+      state: 'open',
+      labels: [],
+      comments: ['First'],
+    });
+    fake.control.refuseCommentReads = true;
+
+    expect((await repository(s).issues.import.post({})).status).toBe(502);
+    expect(await boardIssues(s.asOwner)).toHaveLength(0);
+
+    fake.control.refuseCommentReads = false;
+    expect((await repository(s).issues.import.post({})).data).toMatchObject({ created: 1 });
+    const [created] = await boardIssues(s.asOwner);
+    const feed = (await s.asOwner.issues({ issueId: created!.id }).feed.get({ query: {} })).data!;
+    expect(feed.items.filter((item) => item.kind === 'comment')).toMatchObject([{ body: 'First' }]);
+  });
+
+  describe('comments in two-way sync', () => {
+    const repo = { full_name: 'acme/site' };
+    const commentEvent = (action: string, id: number, body: string | null, login = 'reviewer') => ({
+      action,
+      issue: githubIssue(opened),
+      comment: { id, body, user: { login } },
+      repository: repo,
+      sender: { login },
+    });
+
+    async function linkedIssueId(s: Setup) {
+      await repository(s).patch({ issueSync: 'two_way', issueComments: true });
+      await deliver(s, 'issues', issueEvent('opened', opened));
+      const [created] = await boardIssues(s.asOwner);
+      return created!.id;
+    }
+
+    async function connectAccount(s: Setup) {
+      fake.logins['own-token'] = 'owner-gh';
+      const res = await s.asOwner.account['git-accounts'].post({
+        provider: 'github',
+        baseUrl: fake.baseUrl,
+        token: 'own-token',
+      });
+      expect(res.status).toBe(201);
+    }
+
+    async function comments(s: Setup, issueId: number) {
+      const feed = await s.asOwner
+        .issues({ issueId })
+        .feed.get({ query: { filter: 'comments', order: 'asc' } });
+      return feed.data!.items;
+    }
+
+    it("sends a comment written here under its author's account, with mentions kept quiet", async () => {
+      const s = await setup(fake);
+      const issueId = await linkedIssueId(s);
+      await connectAccount(s);
+
+      const posted = await s.asOwner
+        .issues({ issueId })
+        .comments.post({ body: 'Ping @someone, not `@code`' });
+
+      expect(posted.status).toBe(201);
+      const sent = 'Ping @&#8203;someone, not `@code`\n\n<!-- itsaplan -->';
+      expect(fake.commentWrites).toEqual([
+        { method: 'POST', id: 5000, body: sent, token: 'own-token' },
+      ]);
+      expect((await s.asOwner.issues({ issueId }).get()).data!.repositoryIssue).toMatchObject({
+        pushComments: true,
+        baseUrl: fake.baseUrl,
+      });
+      // The repository sends it back; it is not copied a second time.
+      expect(
+        await deliver(s, 'issue_comment', commentEvent('created', 5000, sent, 'owner-gh')),
+      ).toMatchObject({ handled: 'ignored' });
+      expect(await comments(s, issueId)).toMatchObject([
+        {
+          body: 'Ping @someone, not `@code`',
+          repositoryComment: {
+            provider: 'github',
+            url: 'https://github.example/acme/site/issues/7#issuecomment-5000',
+          },
+        },
+      ]);
+    });
+
+    it('keeps a comment here without an account, with the push off, or in one-way sync', async () => {
+      const s = await setup(fake);
+      const issueId = await linkedIssueId(s);
+
+      await s.asOwner.issues({ issueId }).comments.post({ body: 'No account yet' });
+      await connectAccount(s);
+      await repository(s).patch({ issueCommentsPush: false });
+      await s.asOwner.issues({ issueId }).comments.post({ body: 'Push off' });
+      await repository(s).patch({ issueCommentsPush: true, issueSync: 'one_way' });
+      await s.asOwner.issues({ issueId }).comments.post({ body: 'One way' });
+
+      expect(fake.commentWrites).toEqual([]);
+      expect((await s.asOwner.issues({ issueId }).get()).data!.repositoryIssue).toMatchObject({
+        pushComments: false,
+      });
+    });
+
+    it("edits and deletes the repository comment through its author's account", async () => {
+      const s = await setup(fake);
+      const issueId = await linkedIssueId(s);
+      await connectAccount(s);
+      const posted = await s.asOwner.issues({ issueId }).comments.post({ body: 'First' });
+      const commentId = posted.data!.id;
+
+      await s.asOwner.comments({ commentId }).patch({ body: 'Second' });
+      const sent = 'Second\n\n<!-- itsaplan -->';
+      // The edit comes back from the repository with the text sent and changes nothing.
+      expect(
+        await deliver(s, 'issue_comment', commentEvent('edited', 5000, sent, 'owner-gh')),
+      ).toMatchObject({ handled: 'ignored' });
+      await s.asOwner.comments({ commentId }).delete();
+
+      expect(fake.commentWrites).toEqual([
+        { method: 'POST', id: 5000, body: 'First\n\n<!-- itsaplan -->', token: 'own-token' },
+        { method: 'PATCH', id: 5000, body: sent, token: 'own-token' },
+        { method: 'DELETE', id: 5000, body: undefined, token: 'own-token' },
+      ]);
+      expect(await comments(s, issueId)).toEqual([]);
+    });
+
+    it('copies edits and deletes of a repository comment only in two-way sync', async () => {
+      const s = await setup(fake);
+      const issueId = await linkedIssueId(s);
+      await deliver(s, 'issue_comment', commentEvent('created', 77, 'Typo'));
+
+      expect(await deliver(s, 'issue_comment', commentEvent('edited', 77, 'Fixed'))).toMatchObject({
+        handled: 'comment',
+      });
+      expect(await comments(s, issueId)).toMatchObject([
+        { body: 'Fixed', actorName: 'reviewer', editedAt: expect.any(Date) },
+      ]);
+      await repository(s).patch({ issueSync: 'one_way' });
+      expect(await deliver(s, 'issue_comment', commentEvent('deleted', 77, null))).toMatchObject({
+        handled: 'ignored',
+      });
+      await repository(s).patch({ issueSync: 'two_way' });
+      expect(await deliver(s, 'issue_comment', commentEvent('deleted', 77, null))).toMatchObject({
+        handled: 'comment',
+      });
+
+      expect(await comments(s, issueId)).toEqual([]);
+      expect(fake.commentWrites).toEqual([]);
+    });
+
+    it('keeps the replies here of a comment deleted on the repository', async () => {
+      const s = await setup(fake);
+      const issueId = await linkedIssueId(s);
+      await deliver(s, 'issue_comment', commentEvent('created', 78, 'Question'));
+      const [question] = await comments(s, issueId);
+      const answer = await s.asOwner
+        .issues({ issueId })
+        .comments.post({ body: 'Answer', replyToId: question!.id });
+      await s.asOwner
+        .issues({ issueId })
+        .comments.post({ body: 'Follow-up', replyToId: answer.data!.id });
+
+      await deliver(s, 'issue_comment', commentEvent('deleted', 78, null));
+
+      expect(await comments(s, issueId)).toMatchObject([
+        { body: 'Answer', replyToId: null },
+        { body: 'Follow-up', replyToId: answer.data!.id },
+      ]);
+    });
+
+    it('shows a repository comment as the member who connected its author', async () => {
+      const s = await setup(fake);
+      const issueId = await linkedIssueId(s);
+      await connectAccount(s);
+
+      await deliver(s, 'issue_comment', commentEvent('created', 88, 'Mine', 'owner-gh'));
+
+      const [comment] = await comments(s, issueId);
+      expect(comment).toMatchObject({
+        body: 'Mine',
+        actorName: 'Owner',
+        actorSource: 'github',
+        repositoryComment: { url: 'https://github.example/acme/site/issues/7#issuecomment-88' },
+      });
+      expect(comment!.actorUserId).toBeString();
+      expect(fake.commentWrites).toEqual([]);
+    });
+
+    it('deletes on the host the replies that go with a deleted comment', async () => {
+      const s = await setup(fake);
+      const issueId = await linkedIssueId(s);
+      await connectAccount(s);
+      const asMember = await addProjectMember(s.asOwner, 'MKT');
+      fake.logins['member-token'] = 'member-gh';
+      await asMember.account['git-accounts'].post({
+        provider: 'github',
+        baseUrl: fake.baseUrl,
+        token: 'member-token',
+      });
+      const posted = await s.asOwner.issues({ issueId }).comments.post({ body: 'Question' });
+      const commentId = posted.data!.id;
+      await asMember.issues({ issueId }).comments.post({ body: 'Answer', replyToId: commentId });
+
+      await s.asOwner.comments({ commentId }).delete();
+
+      expect(fake.commentWrites.filter((write) => write.method === 'DELETE')).toEqual([
+        { method: 'DELETE', id: 5000, body: undefined, token: 'own-token' },
+        { method: 'DELETE', id: 5001, body: undefined, token: 'member-token' },
+      ]);
+      expect(await comments(s, issueId)).toEqual([]);
+    });
+
+    it('keeps on the host the comment of a member that the owner edits or deletes here', async () => {
+      const s = await setup(fake);
+      const issueId = await linkedIssueId(s);
+      const asMember = await addProjectMember(s.asOwner, 'MKT');
+      fake.logins['member-token'] = 'member-gh';
+      await asMember.account['git-accounts'].post({
+        provider: 'github',
+        baseUrl: fake.baseUrl,
+        token: 'member-token',
+      });
+      const posted = await asMember.issues({ issueId }).comments.post({ body: 'By member' });
+      const commentId = posted.data!.id;
+
+      expect((await s.asOwner.comments({ commentId }).patch({ body: 'By owner' })).status).toBe(
+        200,
+      );
+      expect((await s.asOwner.comments({ commentId }).delete()).status).toBe(204);
+
+      expect(fake.commentWrites).toEqual([
+        { method: 'POST', id: 5000, body: 'By member\n\n<!-- itsaplan -->', token: 'member-token' },
+      ]);
+    });
+
+    it('shows a repository comment under its host login when its account is outside the project', async () => {
+      const s = await setup(fake);
+      const issueId = await linkedIssueId(s);
+      const outsider = authedApi((await signUpTestUser({ name: 'Outsider' })).cookie);
+      fake.logins['outsider-token'] = 'outsider-gh';
+      await outsider.account['git-accounts'].post({
+        provider: 'github',
+        baseUrl: fake.baseUrl,
+        token: 'outsider-token',
+      });
+
+      await deliver(s, 'issue_comment', commentEvent('created', 89, 'Hi', 'outsider-gh'));
+
+      expect(await comments(s, issueId)).toMatchObject([
+        { body: 'Hi', actorUserId: null, actorName: 'outsider-gh', actorSource: 'github' },
+      ]);
+    });
   });
 
   it('refuses an import while the sync is off', async () => {

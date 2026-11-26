@@ -116,8 +116,12 @@ export interface IssueEvent extends IssueSnapshot {
 
 export interface IssueCommentEvent {
   kind: 'issue_comment';
+  action: 'created' | 'edited' | 'deleted';
   repo: string;
   number: number;
+  // The comment's id on the host.
+  id: string;
+  // Empty on a deleted comment.
   body: string;
   author: string | null;
 }
@@ -207,7 +211,7 @@ interface GithubPayload {
   };
   repository?: { full_name?: string; default_branch?: string; html_url?: string };
   issue?: GithubIssue;
-  comment?: { body?: string | null; user?: { login?: string } };
+  comment?: { id?: number; body?: string | null; user?: { login?: string } };
   // Gitea and Forgejo send comments on pull requests as issue_comment too.
   is_pull?: boolean;
   sender?: { login?: string };
@@ -287,15 +291,21 @@ function parseGithubIssue(payload: unknown): IssueEvent | null {
   };
 }
 
+const COMMENT_ACTIONS = ['created', 'edited', 'deleted'] as const;
+
 function parseGithubIssueComment(payload: unknown): IssueCommentEvent | null {
   const { action, issue, comment, repository, is_pull: isPull } = payload as GithubPayload;
-  if (action !== 'created' || isPull || issue?.pull_request || !issue?.number) return null;
-  if (!comment?.body || !repository?.full_name) return null;
+  const commentAction = COMMENT_ACTIONS.find((known) => known === action);
+  if (!commentAction || isPull || issue?.pull_request || !issue?.number) return null;
+  if (!comment?.id || !repository?.full_name) return null;
+  if (commentAction !== 'deleted' && !comment.body) return null;
   return {
     kind: 'issue_comment',
+    action: commentAction,
     repo: repository.full_name,
     number: issue.number,
-    body: comment.body,
+    id: String(comment.id),
+    body: comment.body ?? '',
     author: comment.user?.login ?? null,
   };
 }
@@ -521,17 +531,20 @@ function parseGitlabIssue(payload: GitlabPayload): IssueEvent | null {
 }
 
 // GitLab sends a note without an action before 16.x and with 'create' or 'update'
-// after; only a new note becomes a comment.
+// after. It sends nothing when a note is deleted.
 function parseGitlabNote(payload: GitlabPayload): IssueCommentEvent | null {
   const { object_attributes: note, project, issue, user } = payload;
-  if (note?.noteable_type !== 'Issue' || !note.note || !issue?.iid || issue.confidential)
-    return null;
-  if (note.action != null && note.action !== 'create') return null;
+  if (note?.noteable_type !== 'Issue' || !note.note || !note.id || !issue?.iid) return null;
+  if (issue.confidential) return null;
+  const action = note.action == null || note.action === 'create' ? 'created' : note.action;
+  if (action !== 'created' && action !== 'update') return null;
   if (!project?.path_with_namespace) return null;
   return {
     kind: 'issue_comment',
+    action: action === 'update' ? 'edited' : 'created',
     repo: project.path_with_namespace,
     number: issue.iid,
+    id: String(note.id),
     body: note.note,
     author: user?.username ?? null,
   };

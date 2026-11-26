@@ -271,7 +271,13 @@
     "deleteCommentConfirmation": "Коментар і відповіді на нього буде видалено безповоротно.",
     "reactions": "Реакції",
     "addReaction": "Додати реакцію",
-    "reactedBy": "{names}: реакція {emoji}"
+    "reactedBy": "{names}: реакція {emoji}",
+    "unsentTitle": "Цей коментар не потрапить у {provider}",
+    "unsentBody": "Коментарі до цієї задачі надсилаються в {provider} від акаунта кожного автора. Ви свій не підключили, тож цей залишиться тут.",
+    "unsentHide": "Не показувати",
+    "unsentPostHere": "Надіслати лише сюди",
+    "unsentConnect": "Підключити {provider}",
+    "openOnHost": "Відкрити в {provider}"
   },
   "stats": {
     "title": "Статистика",

@@ -77,7 +77,7 @@
   "accounts": {
     "label": "Comptes",
     "title": "Comptes",
-    "description": "Connectez des comptes externes pour vous connecter avec eux.",
+    "description": "Les comptes avec lesquels vous vous connectez et vos comptes sur les services de dépôts.",
     "googleDescription": "Connectez-vous avec votre compte Google.",
     "connected": "Connecté",
     "setPasswordFirst": "Définissez d'abord un mot de passe",
@@ -87,7 +87,10 @@
     "disconnect": "Déconnecter",
     "loadFailed": "Impossible de charger les comptes connectés.",
     "connectFailed": "Impossible de connecter Google.",
-    "disconnectFailed": "Impossible de déconnecter ce compte."
+    "disconnectFailed": "Impossible de déconnecter ce compte.",
+    "repositoryAccount": "Compte de dépôt",
+    "repositoryAccountDescription": "Agit dans les dépôts en votre nom.",
+    "repositoryAccountDisconnected": "Compte de dépôt déconnecté"
   },
   "preferences": {
     "label": "Préférences",

@@ -14,7 +14,7 @@ export default function SettingsRow({
 }: {
   title: string;
   description: string;
-  note?: string;
+  note?: ReactNode;
   control: ReactNode;
 }) {
   return (

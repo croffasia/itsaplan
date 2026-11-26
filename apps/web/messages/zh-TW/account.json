@@ -77,7 +77,7 @@
   "accounts": {
     "label": "關聯帳號",
     "title": "關聯帳號",
-    "description": "關聯外部帳號，用於登入。",
+    "description": "用於登入的帳號，以及你在儲存庫服務上的帳號。",
     "googleDescription": "使用 Google 帳號登入。",
     "connected": "已連線",
     "setPasswordFirst": "請先設定密碼",
@@ -87,7 +87,10 @@
     "disconnect": "斷開連線",
     "loadFailed": "無法載入關聯帳號。",
     "connectFailed": "無法連線 Google。",
-    "disconnectFailed": "無法斷開此帳號。"
+    "disconnectFailed": "無法斷開此帳號。",
+    "repositoryAccount": "儲存庫帳號",
+    "repositoryAccountDescription": "以你的身分在儲存庫中操作。",
+    "repositoryAccountDisconnected": "已中斷儲存庫帳號連結"
   },
   "preferences": {
     "label": "偏好設定",

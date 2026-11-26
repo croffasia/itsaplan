@@ -503,7 +503,7 @@
     "issueColumnHint": "Issue yang diimpor juga masuk ke sini. Pada sinkronisasi dua arah, issue yang dibuka kembali juga.",
     "issueColumnNone": "Kolom pertama",
     "issueComments": "Salin komentar",
-    "issueCommentsHint": "Komentar baru di repositori disalin ke issue di papan. Komentar yang dibuat di papan tetap di sana.",
+    "issueCommentsHint": "Komentar baru dari repositori disalin ke isu papan.",
     "importIssues": "Impor issue terbuka",
     "importIssuesHint": "Issue yang sudah ada di papan dilewati.",
     "importIssuesAction": "Impor",
@@ -522,7 +522,21 @@
     "changeType": "Ubah tipe…",
     "noType": "Tidak ada tipe.",
     "noRepositoryLabels": "Repositori ini tidak memiliki label.",
-    "manualSetupHint": "Untuk repositori yang tidak dapat dijangkau akun penyedia mana pun. Dengan cara ini, issue tidak disinkronkan."
+    "manualSetupHint": "Untuk repositori yang tidak dapat dijangkau akun penyedia mana pun. Dengan cara ini, issue tidak disinkronkan.",
+    "issueCommentsPush": "Kirim komentar ke repositori",
+    "issueCommentsPushHint": "Komentar yang ditulis di sini diposting ke isu repositori dengan akun penulisnya sendiri.",
+    "issueCommentsPushAs": "Komentar Anda dikirim sebagai {login}.",
+    "issueCommentsPushNotice": "Hanya komentar anggota yang menghubungkan akun {provider} di profilnya yang dikirim. Komentar Anda tetap di sini.",
+    "accountConnectAction": "Hubungkan akun {provider}",
+    "accountConnectTitle": "Hubungkan akun repositori Anda",
+    "accountConnectHint": "Digunakan untuk bertindak di repositori atas nama Anda.",
+    "accountHost": "Layanan",
+    "accountTokenHint": "Gunakan token yang bisa menulis komentar isu. Token dienkripsi dan tidak ditampilkan lagi.",
+    "accountCheck": "Periksa token",
+    "accountSignsInAs": "Token ini masuk sebagai {login}.",
+    "accountConnectThis": "Hubungkan akun ini",
+    "accountCheckFailed": "Tidak dapat memeriksa token.",
+    "accountConnected": "Akun {provider} terhubung"
   },
   "importExport": {
     "jiraPreview": {

@@ -503,7 +503,7 @@
     "issueColumnHint": "Les tickets importés arrivent aussi ici. En double sens, les tickets rouverts aussi.",
     "issueColumnNone": "Première colonne",
     "issueComments": "Copier les commentaires",
-    "issueCommentsHint": "Les nouveaux commentaires du dépôt sont copiés dans le ticket du tableau. Les commentaires écrits sur le tableau y restent.",
+    "issueCommentsHint": "Les nouveaux commentaires du dépôt sont copiés dans le ticket du tableau.",
     "importIssues": "Importer les tickets ouverts",
     "importIssuesHint": "Les tickets déjà sur le tableau sont ignorés.",
     "importIssuesAction": "Importer",
@@ -522,7 +522,21 @@
     "changeType": "Changer de type…",
     "noType": "Aucun type.",
     "noRepositoryLabels": "Ce dépôt n'a aucune étiquette.",
-    "manualSetupHint": "Pour un dépôt qu'aucun compte de fournisseur ne peut atteindre. Les tickets ne se synchronisent pas de cette façon."
+    "manualSetupHint": "Pour un dépôt qu'aucun compte de fournisseur ne peut atteindre. Les tickets ne se synchronisent pas de cette façon.",
+    "issueCommentsPush": "Envoyer les commentaires au dépôt",
+    "issueCommentsPushHint": "Les commentaires écrits ici sont publiés dans le ticket du dépôt avec le compte de leur auteur.",
+    "issueCommentsPushAs": "Les vôtres partent au nom de {login}.",
+    "issueCommentsPushNotice": "Seuls les commentaires des membres qui ont connecté leur compte {provider} dans leur profil sont envoyés. Les vôtres restent ici.",
+    "accountConnectAction": "Connecter le compte {provider}",
+    "accountConnectTitle": "Connecter votre compte de dépôt",
+    "accountConnectHint": "Sert à agir dans le dépôt en votre nom.",
+    "accountHost": "Service",
+    "accountTokenHint": "Utilisez un jeton qui peut écrire des commentaires sur les tickets. Il est chiffré et ne sera plus affiché.",
+    "accountCheck": "Vérifier le jeton",
+    "accountSignsInAs": "Le jeton se connecte en tant que {login}.",
+    "accountConnectThis": "Connecter ce compte",
+    "accountCheckFailed": "Impossible de vérifier le jeton.",
+    "accountConnected": "Compte {provider} connecté"
   },
   "importExport": {
     "jiraPreview": {

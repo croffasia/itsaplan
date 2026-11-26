@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
-import type { GitManagedRepository } from '@/lib/api/endpoints/git';
+import type { GitManagedRepository, GitProviderConnection } from '@/lib/api/endpoints/git';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import SettingsRow from '@/components/common/page/SettingsRow';
 import {
@@ -14,6 +14,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { useUpdateGitRepository } from '../../services/settings.service';
 import GitColumnSelect from './GitColumnSelect';
+import GitCommentPushRow from './GitCommentPushRow';
 import GitIssueImport from './GitIssueImport';
 import GitIssueSyncModeSelect from './GitIssueSyncModeSelect';
 import GitLabelMappingList from './GitLabelMappingList';
@@ -21,10 +22,12 @@ import GitLabelMappingList from './GitLabelMappingList';
 // The issue sync of one connected repository. Every control writes immediately.
 export default function GitRepositorySettingsDialog({
   project,
+  connection,
   repository,
   onClose,
 }: {
   project: ProjectDetail;
+  connection: GitProviderConnection;
   repository: GitManagedRepository;
   onClose: () => void;
 }) {
@@ -84,6 +87,13 @@ export default function GitRepositorySettingsDialog({
                   />
                 }
               />
+              {repository.issueSync === 'two_way' && repository.issueComments && (
+                <GitCommentPushRow
+                  connection={connection}
+                  checked={repository.issueCommentsPush}
+                  onChange={(issueCommentsPush) => change({ issueCommentsPush })}
+                />
+              )}
               <GitIssueImport
                 projectKey={projectKey}
                 repositoryId={repository.id}

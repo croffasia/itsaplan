@@ -40,7 +40,7 @@ export default function AccountConnectionRow({
       return <span className="shrink-0 text-xs text-muted-foreground">{disconnectHint}</span>;
     }
     return (
-      <Button variant="outline" size="sm" disabled={busy} onClick={onDisconnect}>
+      <Button variant="ghost" size="sm" disabled={busy} onClick={onDisconnect}>
         {t('disconnect')}
       </Button>
     );

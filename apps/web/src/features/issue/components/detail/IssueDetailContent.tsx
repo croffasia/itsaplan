@@ -293,6 +293,7 @@ export default function IssueDetailContent({
           view={effectiveActivityView}
           canReadAgentRuns={canReadAgentRuns}
           commentId={commentId}
+          repositoryIssue={issue.repositoryIssue ?? null}
         />
       </div>
       {/* The reader came for that comment, and the bubble would rise while the feed

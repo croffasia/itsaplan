@@ -104,6 +104,7 @@ export default function GitRepositories({
       {editing && (
         <GitRepositorySettingsDialog
           project={project}
+          connection={editing.connection}
           repository={editing.repository}
           onClose={() => setEditingId(null)}
         />

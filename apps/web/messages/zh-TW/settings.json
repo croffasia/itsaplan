@@ -503,7 +503,7 @@
     "issueColumnHint": "匯入的工作項目也會放在這裡。雙向同步時，重新開啟的工作項目也是。",
     "issueColumnNone": "第一欄",
     "issueComments": "複製留言",
-    "issueCommentsHint": "存放庫中的新留言會複製到看板上的工作項目。在看板上發表的留言只保留在看板上。",
+    "issueCommentsHint": "儲存庫中的新留言會複製到看板上的事項。",
     "importIssues": "匯入未關閉的工作項目",
     "importIssuesHint": "已在看板上的工作項目會被略過。",
     "importIssuesAction": "匯入",
@@ -522,7 +522,21 @@
     "changeType": "變更類型…",
     "noType": "沒有類型。",
     "noRepositoryLabels": "此存放庫沒有標籤。",
-    "manualSetupHint": "用於任何程式碼託管平臺帳號都無法存取的存放庫。此方式不會同步工作項目。"
+    "manualSetupHint": "用於任何程式碼託管平臺帳號都無法存取的存放庫。此方式不會同步工作項目。",
+    "issueCommentsPush": "將留言傳送到儲存庫",
+    "issueCommentsPushHint": "在這裡寫的留言會以作者本人的帳號發佈到儲存庫事項。",
+    "issueCommentsPushAs": "你的留言以 {login} 的身分傳送。",
+    "issueCommentsPushNotice": "只有在個人資料中連結了 {provider} 帳號的成員，其留言才會傳送。你的留言只保留在這裡。",
+    "accountConnectAction": "連結 {provider} 帳號",
+    "accountConnectTitle": "連結你的儲存庫帳號",
+    "accountConnectHint": "用於以你的身分在儲存庫中操作。",
+    "accountHost": "服務",
+    "accountTokenHint": "請使用能寫事項留言的權杖。權杖會加密保存，不再顯示。",
+    "accountCheck": "檢查權杖",
+    "accountSignsInAs": "此權杖以 {login} 登入。",
+    "accountConnectThis": "連結此帳號",
+    "accountCheckFailed": "無法檢查權杖。",
+    "accountConnected": "已連結 {provider} 帳號"
   },
   "importExport": {
     "jiraPreview": {

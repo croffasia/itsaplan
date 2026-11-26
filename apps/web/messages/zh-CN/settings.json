@@ -503,7 +503,7 @@
     "issueColumnHint": "导入的工作项也会放在这里。双向同步时，重新打开的工作项也是。",
     "issueColumnNone": "第一列",
     "issueComments": "复制评论",
-    "issueCommentsHint": "仓库中的新评论会复制到看板上的工作项。在看板上发表的评论只保留在看板上。",
+    "issueCommentsHint": "仓库中的新评论会复制到看板上的事项。",
     "importIssues": "导入未关闭的工作项",
     "importIssuesHint": "已在看板上的工作项会被跳过。",
     "importIssuesAction": "导入",
@@ -522,7 +522,21 @@
     "changeType": "更改类型…",
     "noType": "没有类型。",
     "noRepositoryLabels": "此仓库没有标签。",
-    "manualSetupHint": "用于任何代码托管平台账户都无法访问的仓库。此方式不会同步工作项。"
+    "manualSetupHint": "用于任何代码托管平台账户都无法访问的仓库。此方式不会同步工作项。",
+    "issueCommentsPush": "将评论发送到仓库",
+    "issueCommentsPushHint": "在这里写的评论会以作者本人的账号发布到仓库事项。",
+    "issueCommentsPushAs": "你的评论以 {login} 的身份发送。",
+    "issueCommentsPushNotice": "只有在个人资料中连接了 {provider} 账号的成员，其评论才会发送。你的评论只保留在这里。",
+    "accountConnectAction": "连接 {provider} 账号",
+    "accountConnectTitle": "连接你的仓库账号",
+    "accountConnectHint": "用于以你的身份在仓库中操作。",
+    "accountHost": "服务",
+    "accountTokenHint": "请使用能写事项评论的令牌。令牌会加密保存，不再显示。",
+    "accountCheck": "检查令牌",
+    "accountSignsInAs": "该令牌以 {login} 登录。",
+    "accountConnectThis": "连接此账号",
+    "accountCheckFailed": "无法检查令牌。",
+    "accountConnected": "已连接 {provider} 账号"
   },
   "importExport": {
     "jiraPreview": {

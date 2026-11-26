@@ -271,7 +271,13 @@
     "deleteCommentConfirmation": "該留言及其所有回覆將被永久刪除。",
     "reactions": "回應",
     "addReaction": "新增回應",
-    "reactedBy": "{names} 回應了 {emoji}"
+    "reactedBy": "{names} 回應了 {emoji}",
+    "unsentTitle": "這則留言不會同步到 {provider}",
+    "unsentBody": "這個事項的留言會以各作者自己的帳號傳送到 {provider}。你還沒有連結帳號，所以這則留言只保留在這裡。",
+    "unsentHide": "不再顯示",
+    "unsentPostHere": "只發在這裡",
+    "unsentConnect": "連結 {provider}",
+    "openOnHost": "在 {provider} 中開啟"
   },
   "stats": {
     "title": "統計",

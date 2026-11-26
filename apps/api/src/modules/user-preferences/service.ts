@@ -71,6 +71,9 @@ export interface UserPreferenceDto {
   onboardingSeen: boolean;
   // Whether the instance owner closed the request to list the company on itsaplan.dev.
   showcaseSeen: boolean;
+  // Whether the user turned off the notice that a comment on a synced issue stays here
+  // until they connect their account on the repository host.
+  unsentCommentNoticeHidden: boolean;
   // The project the user was in last, or null before they opened one. The app root
   // reopens it; a deleted project clears it through the FK.
   lastProjectId: number | null;
@@ -99,6 +102,7 @@ export function defaults(locale: Locale = DEFAULT_LOCALE): UserPreferenceDto {
     autoWatch: true,
     onboardingSeen: false,
     showcaseSeen: false,
+    unsentCommentNoticeHidden: false,
     lastProjectId: null,
     hotkeys: {},
   };
@@ -131,6 +135,7 @@ function toDto(row: {
   autoWatch: boolean;
   onboardingSeen: boolean;
   showcaseSeen: boolean;
+  unsentCommentNoticeHidden: boolean;
   lastProjectId: number | null;
   hotkeys: Record<string, string> | null;
 }): UserPreferenceDto {
@@ -150,6 +155,7 @@ function toDto(row: {
     autoWatch: row.autoWatch,
     onboardingSeen: row.onboardingSeen,
     showcaseSeen: row.showcaseSeen,
+    unsentCommentNoticeHidden: row.unsentCommentNoticeHidden,
     lastProjectId: row.lastProjectId,
     hotkeys: row.hotkeys ?? {},
   };
@@ -177,6 +183,7 @@ export async function getPreferences(
       autoWatch: userPreference.autoWatch,
       onboardingSeen: userPreference.onboardingSeen,
       showcaseSeen: userPreference.showcaseSeen,
+      unsentCommentNoticeHidden: userPreference.unsentCommentNoticeHidden,
       lastProjectId: userPreference.lastProjectId,
       hotkeys: userPreference.hotkeys,
     })

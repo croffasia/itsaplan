@@ -27,9 +27,8 @@ import {
   membersPath,
   projectPath,
 } from '@/utils/paths';
-import { accountPath } from '@/utils/accountSections';
+import { accountPath, ACCOUNT_SECTIONS } from '@/utils/accountSections';
 import { AI_AGENTS_SECTION } from '@/utils/settingsSections';
-import { useAccountSections } from '@/hooks/useAccountSections';
 import { useAiTeamSections } from '@/hooks/useSettingsNavGroups';
 import { GOD_SECTIONS } from '@/utils/godSections';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -53,7 +52,6 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
   const sectionText = useSettingsSectionText();
   const godText = useGodSectionText();
   const accountLabel = useAccountSectionLabel();
-  const accountSections = useAccountSections();
   const router = useRouter();
   const { can } = usePermissions();
   const aiTeamSections = useAiTeamSections();
@@ -135,7 +133,7 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
     manageTeamsPath(),
     'account rename leave projects delete copy',
   );
-  for (const s of accountSections) {
+  for (const s of ACCOUNT_SECTIONS) {
     add(
       `nav.account.${s.slug}`,
       accountLabel(s.slug),

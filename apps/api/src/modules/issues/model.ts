@@ -6,6 +6,7 @@ import {
   ActorSourceResponse,
   DevelopmentLinkResponse,
   LinkedRepositoryIssueResponse,
+  RepositoryCommentResponse,
 } from '#modules/git/model';
 import { AgentTraceDetailResponse } from '#modules/agents/core/model';
 import { instantQuery, isoDate } from '#shared/schemas';
@@ -385,6 +386,7 @@ export const FeedItemResponse = t.Object({
   createdAt: t.String(),
   editedAt: t.Nullable(t.String()),
   reactions: t.Array(CommentReactionResponse),
+  repositoryComment: RepositoryCommentResponse,
 });
 
 export const FeedCursorResponse = t.Nullable(t.Object({ ts: t.String(), id: t.Number() }));

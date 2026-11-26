@@ -271,7 +271,13 @@
     "deleteCommentConfirmation": "Komentar dan balasannya akan dihapus secara permanen.",
     "reactions": "Reaksi",
     "addReaction": "Tambahkan reaksi",
-    "reactedBy": "{names} bereaksi dengan {emoji}"
+    "reactedBy": "{names} bereaksi dengan {emoji}",
+    "unsentTitle": "Komentar ini tidak akan sampai ke {provider}",
+    "unsentBody": "Komentar di isu ini dikirim ke {provider} dengan akun masing-masing penulis. Anda belum menghubungkan akun, jadi komentar ini tetap di sini.",
+    "unsentHide": "Jangan tampilkan",
+    "unsentPostHere": "Posting di sini saja",
+    "unsentConnect": "Hubungkan {provider}",
+    "openOnHost": "Buka di {provider}"
   },
   "stats": {
     "title": "Statistik",

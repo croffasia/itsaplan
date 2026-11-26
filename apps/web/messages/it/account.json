@@ -77,7 +77,7 @@
   "accounts": {
     "label": "Account",
     "title": "Account",
-    "description": "Collega account esterni per accedere con essi.",
+    "description": "Gli account con cui accedi e i tuoi account sui servizi di repository.",
     "googleDescription": "Accedi con il tuo account Google.",
     "connected": "Connesso",
     "setPasswordFirst": "Imposta prima una password",
@@ -87,7 +87,10 @@
     "disconnect": "Disconnetti",
     "loadFailed": "Non è stato possibile caricare gli account connessi.",
     "connectFailed": "Non è stato possibile collegare Google.",
-    "disconnectFailed": "Non è stato possibile disconnettere questo account."
+    "disconnectFailed": "Non è stato possibile disconnettere questo account.",
+    "repositoryAccount": "Account del repository",
+    "repositoryAccountDescription": "Agisce nei repository a tuo nome.",
+    "repositoryAccountDisconnected": "Account del repository scollegato"
   },
   "preferences": {
     "label": "Preferenze",

@@ -1,5 +1,6 @@
 import { t } from 'elysia';
 import { GIT_PROVIDER_KEYS } from './providers';
+import { DEVELOPMENT_PROVIDERS } from './connections-provider';
 
 export const webhookParams = t.Object({ webhookId: t.String() });
 
@@ -10,6 +11,11 @@ export const WebhookAckResponse = t.Object({ ok: t.Boolean(), handled: t.String(
 // The repository host an activity entry came from. Without actorUserId, actorName is the
 // account's name on the host.
 export const ActorSourceResponse = t.Nullable(t.UnionEnum(GIT_PROVIDER_KEYS));
+
+// The copy of a comment on the synced repository issue.
+export const RepositoryCommentResponse = t.Nullable(
+  t.Object({ provider: t.UnionEnum(GIT_PROVIDER_KEYS), url: t.String() }),
+);
 
 export const DevelopmentRepositoryResponse = t.Object({
   id: t.Number(),
@@ -114,6 +120,10 @@ export const GitManagedRepositoryResponse = t.Object({
   issueSync: IssueSyncMode,
   issueColumnId: t.Nullable(t.Number({ description: 'Null puts new issues in the first column.' })),
   issueComments: t.Boolean(),
+  issueCommentsPush: t.Boolean({
+    description:
+      "In two-way sync with issueComments, a comment written here also goes to the repository issue, under its author's own account on the host.",
+  }),
 });
 
 const RepositoryLabelMapping = t.Object({
@@ -126,6 +136,7 @@ export const updateManagedRepositoryBody = t.Object({
   issueSync: t.Optional(IssueSyncMode),
   issueColumnId: t.Optional(t.Nullable(t.Number())),
   issueComments: t.Optional(t.Boolean()),
+  issueCommentsPush: t.Optional(t.Boolean()),
   labelMappings: t.Optional(t.Array(RepositoryLabelMapping, { maxItems: 500 })),
 });
 
@@ -150,6 +161,13 @@ export const LinkedRepositoryIssueResponse = t.Object({
   number: t.Number(),
   url: t.Nullable(t.String()),
   state: t.Union([t.Literal('open'), t.Literal('closed')]),
+  baseUrl: t.String({
+    description: 'Address of the provider instance, such as https://github.com.',
+  }),
+  pushComments: t.Boolean({
+    description:
+      'Whether a comment written here goes to the repository issue, for an author who connected their account on the host.',
+  }),
 });
 
 export const GitProviderConnectionResponse = t.Object({
@@ -215,3 +233,29 @@ export const connectRepositoriesBody = t.Object({
     maxItems: 50,
   }),
 });
+
+const DevelopmentProviderSchema = t.UnionEnum(DEVELOPMENT_PROVIDERS);
+
+export const GitAccountResponse = t.Object({
+  id: t.Number(),
+  provider: DevelopmentProviderSchema,
+  baseUrl: t.String(),
+  accountLogin: t.String(),
+  createdAt: t.String(),
+});
+
+export const gitAccountBody = t.Object({
+  provider: DevelopmentProviderSchema,
+  baseUrl: t.Optional(t.String({ maxLength: 2048 })),
+  token: t.String({ minLength: 1, maxLength: 8192 }),
+});
+
+export const GitAccountCheckResponse = t.Object({
+  provider: DevelopmentProviderSchema,
+  baseUrl: t.String(),
+  accountLogin: t.String(),
+  accountName: t.Nullable(t.String()),
+  avatarUrl: t.Nullable(t.String()),
+});
+
+export const gitAccountParams = t.Object({ accountId: t.Numeric() });

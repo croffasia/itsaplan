@@ -238,15 +238,34 @@ async function providerRequest(
   return response;
 }
 
-export async function getProviderAccount(input: ProviderConnectionInput): Promise<string> {
+export interface ProviderProfile {
+  login: string;
+  name: string | null;
+  avatarUrl: string | null;
+}
+
+// The account a token signs in as.
+export async function getProviderProfile(input: ProviderConnectionInput): Promise<ProviderProfile> {
   const response = await providerRequest(input, '/user');
   const body = record(await response.json());
-  const login =
-    input.provider === 'bitbucket'
-      ? (text(body?.nickname) ?? text(body?.username) ?? text(body?.display_name))
-      : text(body?.[input.provider === 'gitlab' ? 'username' : 'login']);
+  if (input.provider === 'bitbucket') {
+    const login = text(body?.nickname) ?? text(body?.username) ?? text(body?.display_name);
+    if (!login) throw new HttpError(502, `${input.provider} returned an invalid account`);
+    return {
+      login,
+      name: text(body?.display_name),
+      avatarUrl: httpUrl(record(record(body?.links)?.avatar)?.href),
+    };
+  }
+  const login = text(body?.[input.provider === 'gitlab' ? 'username' : 'login']);
   if (!login) throw new HttpError(502, `${input.provider} returned an invalid account`);
-  return login;
+  return {
+    login,
+    name: text(
+      body?.[input.provider === 'gitlab' || input.provider === 'github' ? 'name' : 'full_name'],
+    ),
+    avatarUrl: httpUrl(body?.avatar_url),
+  };
 }
 
 export function githubRepository(value: unknown): ProviderRepository | null {
@@ -780,8 +799,8 @@ interface ProviderWebhookApi {
   body(create: boolean): unknown;
 }
 
-function numericId(hook: Record<string, unknown> | null): string | null {
-  const id = hook?.id;
+function numericId(row: Record<string, unknown> | null): string | null {
+  const id = row?.id;
   return typeof id === 'number' || typeof id === 'string' ? String(id) : null;
 }
 
@@ -958,7 +977,7 @@ export async function listProviderOpenIssues(
   input: ProviderConnectionInput,
   repository: ProviderRepository,
   page: number,
-): Promise<{ issues: IssueSnapshot[]; nextPage: number | null }> {
+): Promise<{ issues: (IssueSnapshot & { hasComments: boolean })[]; nextPage: number | null }> {
   ensureDevelopmentProvider(input.provider);
   const perPage = 50;
   const params = new URLSearchParams({
@@ -986,9 +1005,130 @@ export async function listProviderOpenIssues(
     throw new HttpError(502, `${PROVIDER_LABEL[input.provider]} returned an invalid issue list`);
   const normalize = input.provider === 'gitlab' ? gitlabIssueSnapshot : githubIssueSnapshot;
   return {
-    issues: body.map(normalize).filter((issue): issue is IssueSnapshot => issue !== null),
+    issues: body.flatMap((item) => {
+      const issue = normalize(item);
+      // A count the provider did not send is not taken as zero.
+      const count = record(item)?.comments ?? record(item)?.user_notes_count;
+      return issue ? [{ ...issue, hasComments: typeof count !== 'number' || count > 0 }] : [];
+    }),
     nextPage: nextPageNumber(response, page, body.length, perPage),
   };
+}
+
+export interface ProviderIssueComment {
+  id: string;
+  body: string;
+  author: string | null;
+}
+
+function issueCommentsPath(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  number: number,
+): string {
+  const kind = input.provider === 'gitlab' ? 'notes' : 'comments';
+  return `${repositoryApiPath(input, repository)}/issues/${number}/${kind}`;
+}
+
+// GitLab keeps a note under its issue; GitHub, Gitea and Forgejo name a comment by its
+// id alone.
+function issueCommentPath(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  number: number,
+  id: string,
+): string {
+  return input.provider === 'gitlab'
+    ? `${issueCommentsPath(input, repository, number)}/${encodeURIComponent(id)}`
+    : `${githubRepoPath(repository.fullName)}/issues/comments/${encodeURIComponent(id)}`;
+}
+
+// The comments of one repository issue, oldest first, up to 20 pages. Gitea and Forgejo
+// do not page this list and send every comment at once. GitLab system notes and internal
+// notes are left out.
+export async function listProviderIssueComments(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  number: number,
+): Promise<ProviderIssueComment[]> {
+  ensureDevelopmentProvider(input.provider);
+  const gitlab = input.provider === 'gitlab';
+  const paged = gitlab || input.provider === 'github';
+  const path = issueCommentsPath(input, repository, number);
+  const perPage = 100;
+  const comments: ProviderIssueComment[] = [];
+  for (let page: number | null = 1; page !== null && page <= 20;) {
+    const params = new URLSearchParams(
+      paged ? { page: String(page), per_page: String(perPage) } : {},
+    );
+    if (gitlab) {
+      params.set('order_by', 'created_at');
+      params.set('sort', 'asc');
+    }
+    const query = params.toString();
+    const response = await providerRequest(input, query ? `${path}?${query}` : path);
+    const body: unknown = await response.json();
+    if (!Array.isArray(body))
+      throw new HttpError(
+        502,
+        `${PROVIDER_LABEL[input.provider]} returned an invalid comment list`,
+      );
+    for (const item of body) {
+      const row = record(item);
+      const id = numericId(row);
+      const content = text(row?.body);
+      if (!row || !id || !content || row.system === true || row.internal === true) continue;
+      const author = gitlab ? record(row.author)?.username : record(row.user)?.login;
+      comments.push({ id, body: content, author: text(author) });
+    }
+    page = paged ? nextPageNumber(response, page, body.length, perPage) : null;
+  }
+  return comments;
+}
+
+// Writes a comment on a repository issue and returns its id there.
+export async function createProviderIssueComment(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  number: number,
+  body: string,
+): Promise<string> {
+  ensureDevelopmentProvider(input.provider);
+  const response = await providerRequest(input, issueCommentsPath(input, repository, number), {
+    method: 'POST',
+    body: JSON.stringify({ body }),
+  });
+  const id = numericId(record(await response.json()));
+  if (!id)
+    throw new HttpError(502, `${PROVIDER_LABEL[input.provider]} returned an invalid comment`);
+  return id;
+}
+
+export async function updateProviderIssueComment(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  number: number,
+  id: string,
+  body: string,
+): Promise<void> {
+  ensureDevelopmentProvider(input.provider);
+  await providerRequest(input, issueCommentPath(input, repository, number, id), {
+    method: input.provider === 'gitlab' ? 'PUT' : 'PATCH',
+    body: JSON.stringify({ body }),
+  });
+}
+
+// A comment the repository no longer has counts as deleted.
+export async function deleteProviderIssueComment(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  number: number,
+  id: string,
+): Promise<void> {
+  ensureDevelopmentProvider(input.provider);
+  await providerRequest(input, issueCommentPath(input, repository, number, id), {
+    method: 'DELETE',
+  });
 }
 
 export interface ProviderLabel {

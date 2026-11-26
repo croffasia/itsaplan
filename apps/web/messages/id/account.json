@@ -77,7 +77,7 @@
   "accounts": {
     "label": "Akun",
     "title": "Akun",
-    "description": "Hubungkan akun eksternal untuk masuk.",
+    "description": "Akun yang Anda gunakan untuk masuk, dan akun Anda di layanan repositori.",
     "googleDescription": "Masuk dengan akun Google Anda.",
     "connected": "Terhubung",
     "setPasswordFirst": "Atur kata sandi terlebih dahulu",
@@ -87,7 +87,10 @@
     "disconnect": "Putuskan",
     "loadFailed": "Gagal memuat akun yang terhubung.",
     "connectFailed": "Gagal menghubungkan Google.",
-    "disconnectFailed": "Gagal memutuskan akun ini."
+    "disconnectFailed": "Gagal memutuskan akun ini.",
+    "repositoryAccount": "Akun repositori",
+    "repositoryAccountDescription": "Bertindak di repositori atas nama Anda.",
+    "repositoryAccountDisconnected": "Akun repositori diputuskan"
   },
   "preferences": {
     "label": "Preferensi",

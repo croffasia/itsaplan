@@ -336,14 +336,51 @@ describe('repository provider events', () => {
       provider.parse(
         {
           object_kind: 'note',
-          object_attributes: { noteable_type: 'Issue', note: 'Same here' },
+          object_attributes: { id: 31, noteable_type: 'Issue', note: 'Same here' },
           issue: { iid: 4 },
           user: { username: 'dev' },
           project,
         },
         headers,
       ),
-    ).toMatchObject({ kind: 'issue_comment', number: 4, body: 'Same here', author: 'dev' });
+    ).toMatchObject({
+      kind: 'issue_comment',
+      action: 'created',
+      id: '31',
+      number: 4,
+      body: 'Same here',
+      author: 'dev',
+    });
+    expect(
+      provider.parse(
+        {
+          object_kind: 'note',
+          object_attributes: { id: 31, noteable_type: 'Issue', note: 'Fixed', action: 'update' },
+          issue: { iid: 4 },
+          project,
+        },
+        headers,
+      ),
+    ).toMatchObject({ action: 'edited', id: '31', body: 'Fixed' });
+  });
+
+  it('reads a GitHub comment edit and delete, and skips a comment without an id', () => {
+    const headers = { 'x-github-event': 'issue_comment' };
+    const provider = detectProvider(headers)!;
+    const base = { issue: { number: 7 }, repository: { full_name: 'acme/site' } };
+    const comment = { id: 9, body: 'Edited', user: { login: 'octo' } };
+    expect(provider.parse({ ...base, action: 'edited', comment }, headers)).toMatchObject({
+      action: 'edited',
+      id: '9',
+      body: 'Edited',
+    });
+    expect(
+      provider.parse({ ...base, action: 'deleted', comment: { ...comment, body: null } }, headers),
+    ).toMatchObject({ action: 'deleted', id: '9', body: '' });
+    expect(
+      provider.parse({ ...base, action: 'created', comment: { body: 'No id' } }, headers),
+    ).toBeNull();
+    expect(provider.parse({ ...base, action: 'pinned', comment }, headers)).toBeNull();
   });
 
   it('reads a Gitea label change and skips its comments on pull requests', () => {

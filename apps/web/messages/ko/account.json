@@ -77,7 +77,7 @@
   "accounts": {
     "label": "계정",
     "title": "계정",
-    "description": "외부 계정을 연결하여 해당 계정으로 로그인할 수 있습니다.",
+    "description": "로그인에 쓰는 계정과 저장소 서비스의 내 계정입니다.",
     "googleDescription": "Google 계정으로 로그인합니다.",
     "connected": "연결됨",
     "setPasswordFirst": "먼저 비밀번호를 설정하세요",
@@ -87,7 +87,10 @@
     "disconnect": "연결 해제",
     "loadFailed": "연결된 계정을 불러올 수 없습니다.",
     "connectFailed": "Google에 연결할 수 없습니다.",
-    "disconnectFailed": "이 계정의 연결을 해제할 수 없습니다."
+    "disconnectFailed": "이 계정의 연결을 해제할 수 없습니다.",
+    "repositoryAccount": "저장소 계정",
+    "repositoryAccountDescription": "저장소에서 나를 대신해 작업합니다.",
+    "repositoryAccountDisconnected": "저장소 계정 연결이 해제되었습니다"
   },
   "preferences": {
     "label": "환경 설정",

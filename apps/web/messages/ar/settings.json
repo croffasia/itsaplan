@@ -503,7 +503,7 @@
     "issueColumnHint": "تأتي المهام المستوردة إلى هنا أيضًا. وفي المزامنة في الاتجاهين، المهام المعاد فتحها أيضًا.",
     "issueColumnNone": "العمود الأول",
     "issueComments": "نسخ التعليقات",
-    "issueCommentsHint": "تُنسخ التعليقات الجديدة في المستودع إلى المهمة على اللوحة. التعليقات المكتوبة على اللوحة تبقى هناك.",
+    "issueCommentsHint": "تُنسخ تعليقات المستودع الجديدة إلى مشكلة اللوحة.",
     "importIssues": "استيراد المهام المفتوحة",
     "importIssuesHint": "يتم تخطي المهام الموجودة على اللوحة.",
     "importIssuesAction": "استيراد",
@@ -522,7 +522,21 @@
     "changeType": "تغيير النوع…",
     "noType": "لا يوجد نوع.",
     "noRepositoryLabels": "لا توجد وسوم في هذا المستودع.",
-    "manualSetupHint": "لمستودع لا يصل إليه أي حساب مزوّد. بهذه الطريقة لا تُزامَن المهام."
+    "manualSetupHint": "لمستودع لا يصل إليه أي حساب مزوّد. بهذه الطريقة لا تُزامَن المهام.",
+    "issueCommentsPush": "إرسال التعليقات إلى المستودع",
+    "issueCommentsPushHint": "تُنشر التعليقات المكتوبة هنا في مشكلة المستودع بحساب كاتبها نفسه.",
+    "issueCommentsPushAs": "تُرسل تعليقاتك باسم {login}.",
+    "issueCommentsPushNotice": "تُرسل التعليقات فقط من الأعضاء الذين ربطوا حساب {provider} في ملفهم الشخصي. تبقى تعليقاتك هنا.",
+    "accountConnectAction": "ربط حساب {provider}",
+    "accountConnectTitle": "ربط حساب المستودع الخاص بك",
+    "accountConnectHint": "يُستخدم للعمل في المستودع نيابةً عنك.",
+    "accountHost": "الخدمة",
+    "accountTokenHint": "استخدم رمزًا يمكنه كتابة تعليقات المشكلات. يُشفَّر ولا يُعرض مرة أخرى.",
+    "accountCheck": "التحقق من الرمز",
+    "accountSignsInAs": "يسجّل الرمز الدخول باسم {login}.",
+    "accountConnectThis": "ربط هذا الحساب",
+    "accountCheckFailed": "تعذّر التحقق من الرمز.",
+    "accountConnected": "تم ربط حساب {provider}"
   },
   "importExport": {
     "jiraPreview": {

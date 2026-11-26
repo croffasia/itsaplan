@@ -271,7 +271,13 @@
     "deleteCommentConfirmation": "Комментарий и ответы на него будут удалены безвозвратно.",
     "reactions": "Реакции",
     "addReaction": "Добавить реакцию",
-    "reactedBy": "{names}: реакция {emoji}"
+    "reactedBy": "{names}: реакция {emoji}",
+    "unsentTitle": "Этот комментарий не попадёт в {provider}",
+    "unsentBody": "Комментарии к этой задаче уходят в {provider} от аккаунта каждого автора. Вы свой не подключили, поэтому этот останется здесь.",
+    "unsentHide": "Не показывать",
+    "unsentPostHere": "Отправить только сюда",
+    "unsentConnect": "Подключить {provider}",
+    "openOnHost": "Открыть в {provider}"
   },
   "stats": {
     "title": "Статистика",

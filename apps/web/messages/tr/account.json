@@ -77,7 +77,7 @@
   "accounts": {
     "label": "Hesaplar",
     "title": "Hesaplar",
-    "description": "Giriş yapmak için harici hesapları bağlayın.",
+    "description": "Oturum açtığınız hesaplar ve depo hizmetlerindeki hesaplarınız.",
     "googleDescription": "Google hesabınızla giriş yapın.",
     "connected": "Bağlandı",
     "setPasswordFirst": "Önce bir şifre belirleyin",
@@ -87,7 +87,10 @@
     "disconnect": "Bağlantıyı kes",
     "loadFailed": "Bağlı hesaplar yüklenemedi.",
     "connectFailed": "Google hesabı bağlanamadı.",
-    "disconnectFailed": "Bu hesabın bağlantısı kesilemedi."
+    "disconnectFailed": "Bu hesabın bağlantısı kesilemedi.",
+    "repositoryAccount": "Depo hesabı",
+    "repositoryAccountDescription": "Depolarda sizin adınıza işlem yapar.",
+    "repositoryAccountDisconnected": "Depo hesabının bağlantısı kesildi"
   },
   "preferences": {
     "label": "Tercihler",

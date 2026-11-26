@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 import type { Column } from '@/lib/api/endpoints/columns';
+import type { LinkedRepositoryIssue } from '@/lib/api/endpoints/git';
 import { useSession } from '@/lib/auth-client';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { type ActivityFeedView, type ActivityTab } from '../../hooks/useActivityFeedView';
@@ -28,6 +29,7 @@ export default function IssueActivityFeed({
   view,
   canReadAgentRuns,
   commentId,
+  repositoryIssue,
 }: {
   issueId: number;
   projectKey: string;
@@ -37,6 +39,7 @@ export default function IssueActivityFeed({
   view: ActivityFeedView;
   canReadAgentRuns: boolean;
   commentId: number | null;
+  repositoryIssue: LinkedRepositoryIssue | null;
 }) {
   const tIssue = useTranslations('issue');
   const t = useTranslations('issue.comments');
@@ -50,6 +53,7 @@ export default function IssueActivityFeed({
     userId: user?.id ?? null,
     authorName: user?.name || user?.email || t('you'),
     authorImage: (user as { image?: string | null } | null)?.image ?? null,
+    repositoryIssue,
   };
   const emptyText = tIssue(EMPTY_TEXT[view.tab]);
 

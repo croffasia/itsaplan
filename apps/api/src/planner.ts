@@ -29,7 +29,7 @@ import { viewRoutes } from './modules/views';
 import { shareRoutes } from './modules/share';
 import { actionRoutes } from './modules/actions';
 import { webhookRoutes } from './modules/webhooks';
-import { gitSettingsRoutes } from './modules/git';
+import { gitAccountRoutes, gitSettingsRoutes } from './modules/git';
 import { dashboardRoutes } from './modules/dashboards';
 import { noteBoardRoutes } from './modules/note-boards';
 import { documentRoutes } from './modules/documents';
@@ -104,6 +104,7 @@ export const planner = new Elysia({ name: 'planner' })
   .use(actionRoutes)
   .use(webhookRoutes)
   .use(gitSettingsRoutes)
+  .use(gitAccountRoutes)
   .use(agentScheduleRoutes)
   .use(modelPriceRoutes)
   .use(agentRunnerRoutes)

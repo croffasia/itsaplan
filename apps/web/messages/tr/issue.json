@@ -271,7 +271,13 @@
     "deleteCommentConfirmation": "Yorum ve yanıtları kalıcı olarak silinecektir.",
     "reactions": "Tepkiler",
     "addReaction": "Tepki ekle",
-    "reactedBy": "{names}, {emoji} ile tepki verdi"
+    "reactedBy": "{names}, {emoji} ile tepki verdi",
+    "unsentTitle": "Bu yorum {provider} tarafına ulaşmayacak",
+    "unsentBody": "Bu işteki yorumlar her yazarın kendi hesabıyla {provider} tarafına gider. Hesabınızı bağlamadınız, bu yorum burada kalır.",
+    "unsentHide": "Gösterme",
+    "unsentPostHere": "Yalnızca burada gönder",
+    "unsentConnect": "{provider} bağla",
+    "openOnHost": "{provider} üzerinde aç"
   },
   "stats": {
     "title": "İstatistikler",

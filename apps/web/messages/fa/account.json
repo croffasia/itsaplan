@@ -77,7 +77,7 @@
   "accounts": {
     "label": "حساب‌ها",
     "title": "حساب‌ها",
-    "description": "حساب‌های خارجی را متصل کنید تا با آن‌ها وارد شوید.",
+    "description": "حساب‌هایی که با آن‌ها وارد می‌شوید و حساب‌های شما در سرویس‌های مخزن.",
     "googleDescription": "با حساب Google خود وارد شوید.",
     "connected": "متصل",
     "setPasswordFirst": "ابتدا گذرواژه تعیین کنید",
@@ -87,7 +87,10 @@
     "disconnect": "قطع اتصال",
     "loadFailed": "بارگذاری حساب‌های متصل ممکن نشد.",
     "connectFailed": "اتصال Google ممکن نشد.",
-    "disconnectFailed": "قطع اتصال این حساب ممکن نشد."
+    "disconnectFailed": "قطع اتصال این حساب ممکن نشد.",
+    "repositoryAccount": "حساب مخزن",
+    "repositoryAccountDescription": "از طرف شما در مخزن‌ها کار انجام می‌دهد.",
+    "repositoryAccountDisconnected": "اتصال حساب مخزن قطع شد"
   },
   "preferences": {
     "label": "ترجیحات",

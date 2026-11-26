@@ -503,7 +503,7 @@
     "issueColumnHint": "Imported issues go here too. In two-way sync, so do reopened ones.",
     "issueColumnNone": "First column",
     "issueComments": "Copy comments",
-    "issueCommentsHint": "New repository comments are copied to the board issue. Comments made on the board stay there.",
+    "issueCommentsHint": "New repository comments are copied to the board issue.",
     "importIssues": "Import open issues",
     "importIssuesHint": "Issues already on the board are skipped.",
     "importIssuesAction": "Import",
@@ -522,7 +522,21 @@
     "changeType": "Change type…",
     "noType": "No type.",
     "noRepositoryLabels": "This repository has no labels.",
-    "manualSetupHint": "For a repository no provider account can reach. Issues don't sync this way."
+    "manualSetupHint": "For a repository no provider account can reach. Issues don't sync this way.",
+    "issueCommentsPush": "Send comments to the repository",
+    "issueCommentsPushHint": "Comments written here are posted to the repository issue under their author's own account.",
+    "issueCommentsPushAs": "Yours go as {login}.",
+    "issueCommentsPushNotice": "Comments go out only from members who connected their {provider} account in their profile. Yours stay here.",
+    "accountConnectAction": "Connect {provider} account",
+    "accountConnectTitle": "Connect your repository account",
+    "accountConnectHint": "Used to act in the repository on your behalf.",
+    "accountHost": "Service",
+    "accountTokenHint": "Use a token that can write issue comments. It is encrypted and never shown again.",
+    "accountCheck": "Check token",
+    "accountSignsInAs": "The token signs in as {login}.",
+    "accountConnectThis": "Connect this account",
+    "accountCheckFailed": "Could not check the token.",
+    "accountConnected": "{provider} account connected"
   },
   "importExport": {
     "jiraPreview": {
